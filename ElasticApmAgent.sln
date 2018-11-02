@@ -1,0 +1,29 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3734A52F-2222-454B-BF58-1BA5C1F29D77}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Agent.AspNetCore", "src\Agent.AspNetCore\Agent.AspNetCore.csproj", "{152B8847-57D9-4EFC-9ED8-30DD161CE30E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Agent.Core", "src\Agent.Core\Agent.Core.csproj", "{603CBAD5-C92D-4E1A-AE5C-BA675838D1F7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{152B8847-57D9-4EFC-9ED8-30DD161CE30E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{152B8847-57D9-4EFC-9ED8-30DD161CE30E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{152B8847-57D9-4EFC-9ED8-30DD161CE30E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{152B8847-57D9-4EFC-9ED8-30DD161CE30E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{603CBAD5-C92D-4E1A-AE5C-BA675838D1F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{603CBAD5-C92D-4E1A-AE5C-BA675838D1F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{603CBAD5-C92D-4E1A-AE5C-BA675838D1F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{603CBAD5-C92D-4E1A-AE5C-BA675838D1F7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{152B8847-57D9-4EFC-9ED8-30DD161CE30E} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
+		{603CBAD5-C92D-4E1A-AE5C-BA675838D1F7} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
+	EndGlobalSection
+EndGlobal
