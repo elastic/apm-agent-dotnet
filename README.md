@@ -1,5 +1,8 @@
 # apm-agent-dotnet
 
+Please fill out this survey to help us prioritizing framework support:
+[https://goo.gl/forms/FHHbhptcDx8eDNx92](https://goo.gl/forms/FHHbhptcDx8eDNx92)
+
 This agent is in prototyping state and under heavy development. Do not deploy into production!
 
 Currently work is done on the [prototype branch](https://github.com/elastic/apm-agent-dotnet/tree/prototype)
