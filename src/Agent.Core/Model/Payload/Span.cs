@@ -7,7 +7,7 @@ namespace Elastic.Agent.Core.Model.Payload
     public class Span
     {
         public ContextC Context { get; set; }
-        public int Duration { get; set; }
+        public double Duration { get; set; }
 
         public String Name { get; set; }
 

@@ -15,7 +15,10 @@ namespace Elastic.Agent.Core.Model.Payload
 
         public String Result { get; set; }
 
-        public String Timestamp { get; set; } //Should be DateTime, since we calculate with this. 
+        public String Timestamp => TimestampInDateTime.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
+
+        //TOOD: not part of intake, hide from serialization
+        public DateTime TimestampInDateTime { get; set; }
 
         public Context Context { get; set; }
 

@@ -28,9 +28,9 @@ namespace Elastic.Agent.EntityFrameworkCore
                     {
                         var newSpan = new Span();
 
-                        //TODO: should not parse -> change datatype of Timestamp
-                        DateTime.TryParse(TransactionContainer.Transactions[0].Timestamp, out DateTime transactionStartTime);
-                        newSpan.Start = (decimal)(DateTime.UtcNow - transactionStartTime).TotalMilliseconds;
+                        var transactionStartTime = TransactionContainer.Transactions[0].TimestampInDateTime;  
+                        var utcNow = DateTime.UtcNow;
+                        newSpan.Start = (decimal)(utcNow - transactionStartTime).TotalMilliseconds;
                         _spans.TryAdd(commandEventData.CommandId, newSpan);
                     }
                     break;
@@ -48,9 +48,9 @@ namespace Elastic.Agent.EntityFrameworkCore
                                     Type = "sql"
                                 }
                             };
-                            span.Duration = (int)commandExecutedEventData.Duration.TotalMilliseconds; //TODO: don't cast!
+                            span.Duration = commandExecutedEventData.Duration.TotalMilliseconds;
                             span.Name = "EFCore Db";
-                            span.Type = commandExecutedEventData.Command.CommandType.ToString();
+                            span.Type = "Db";
 
                             TransactionContainer.Transactions[0].Spans.Add(span);
                         }

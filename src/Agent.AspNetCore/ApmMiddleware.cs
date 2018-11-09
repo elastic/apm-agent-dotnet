@@ -25,16 +25,14 @@ namespace Elastic.Agent.AspNetCore
         public async Task InvokeAsync(HttpContext context)
         {
             var sw = Stopwatch.StartNew();
-            var transactionstart = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
-
+          
             var transactions = new List<Transaction> {
                     new Transaction {
                         Name = $"{context.Request.Method} {context.Request.Path}",
                         
                         Id = Guid.NewGuid(),
                         Type = "request",
-                        
-                        Timestamp = transactionstart,
+                        TimestampInDateTime = DateTime.UtcNow,
                         Context = new Context
                         {
                             Request = new Request
