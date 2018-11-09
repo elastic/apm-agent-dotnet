@@ -22,9 +22,13 @@ namespace SampleAspNetCoreApp.Controllers
         public async Task<IActionResult> Index()
         {
             //TODO: Show this on the real UI
-            foreach (var item in _sampleDataContext.Users)
+
+            for (int i = 0; i < 5; i++)
             {
-                Console.WriteLine(item.Name);
+                foreach (var item in _sampleDataContext.Users)
+                {
+                    Console.WriteLine(item.Name);
+                }
             }
 
             //TODO: turn this into a more realistic sample

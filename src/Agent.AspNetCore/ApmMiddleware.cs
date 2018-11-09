@@ -52,7 +52,7 @@ namespace Elastic.Agent.AspNetCore
                     }
                 };
 
-            TransactionContainer.Transactions = transactions;
+            TransactionContainer.Transactions.Value = transactions;
 
             await _next(context);
 
@@ -82,7 +82,7 @@ namespace Elastic.Agent.AspNetCore
 
             };
 
-            payload.Transactions = TransactionContainer.Transactions;
+            payload.Transactions = TransactionContainer.Transactions.Value;
             await payloadSender.SendPayload(payload); //TODO: Make it background!
         }
     }

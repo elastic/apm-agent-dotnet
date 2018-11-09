@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using Elastic.Agent.Core.Model.Payload;
 
 namespace Elastic.Agent.Core
@@ -11,6 +12,8 @@ namespace Elastic.Agent.Core
     {
         //Dummy storage, we need logic here to store multiple onces across threads, etc.
         //Plan: AsyncLocal<T>
-        public static List<Transaction> Transactions { get; set; }
+        //public static List<Transaction> Transactions { get; set; }
+
+        public static AsyncLocal<List<Transaction>> Transactions { get; set; } = new AsyncLocal<List<Transaction>>();
     }
 }

@@ -43,14 +43,14 @@ namespace Elastic.Agent.Core.DiagnosticListeners
                     var response = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Response").GetValue(kv.Value) as HttpResponseMessage;
                     var requestTaskStatus = (TaskStatus)kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("RequestTaskStatus").GetValue(kv.Value);
 
-                    var transactionStartTime = TransactionContainer.Transactions[0].TimestampInDateTime;
+                    var transactionStartTime = TransactionContainer.Transactions.Value[0].TimestampInDateTime;
                     var utcNow = DateTime.UtcNow;
 
                     var span = new Span
                     {
                         Start = (decimal)(utcNow - transactionStartTime).TotalMilliseconds,
-                        Name = "Http request",
-                        Type = request.Method.Method,
+                        Name =  $"{request.Method} {request.RequestUri.ToString()}",
+                        Type =  "Http",
                         Context = new Span.ContextC
                         {
                             Http = new Http
@@ -66,7 +66,7 @@ namespace Elastic.Agent.Core.DiagnosticListeners
                         span.Duration = requestDuration.TotalMilliseconds;
                     }
 
-                    TransactionContainer.Transactions[0].Spans.Add(span);
+                    TransactionContainer.Transactions.Value[0].Spans.Add(span);
                     break;
                 default:
                     break;
