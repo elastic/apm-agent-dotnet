@@ -31,9 +31,10 @@ namespace Elastic.Agent.Core.DiagnosticListeners
             switch (kv.Key)
             {
                 case "System.Net.Http.HttpRequestOut.Start": //TODO: look for consts 
-                    if(kv.Value is HttpRequestMessage requestMessage)
+                    var val = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Request").GetValue(kv.Value) as HttpRequestMessage;
+                    if (val != null)
                     {
-                        _startedRequests.TryAdd(requestMessage, DateTime.UtcNow);
+                        var added = _startedRequests.TryAdd(val, DateTime.UtcNow);
                     }
                     break;
 
@@ -57,7 +58,7 @@ namespace Elastic.Agent.Core.DiagnosticListeners
               
                     if (_startedRequests.TryRemove(request, out DateTime requestStart))
                     {
-                        var requestDuration = DateTime.UtcNow - requestStart;
+                        var requestDuration = DateTime.UtcNow - requestStart; //TODO: there are better ways
                         span.Duration = (int)requestDuration.TotalMilliseconds; //TODO: don't cast!
                     }
 

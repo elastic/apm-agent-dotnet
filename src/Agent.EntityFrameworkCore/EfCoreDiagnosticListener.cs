@@ -49,7 +49,7 @@ namespace Elastic.Agent.EntityFrameworkCore
                                 }
                             };
                             span.Duration = (int)commandExecutedEventData.Duration.TotalMilliseconds; //TODO: don't cast!
-                            span.Name = "EF Core request";
+                            span.Name = "EFCore Db";
                             span.Type = commandExecutedEventData.Command.CommandType.ToString();
 
                             TransactionContainer.Transactions[0].Spans.Add(span);
