@@ -12,6 +12,7 @@
   <ItemGroup>
     <Folder Include="Report\" />
     <Folder Include="DiagnosticSource\" />
+    <Folder Include="DiagnosticListeners\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />

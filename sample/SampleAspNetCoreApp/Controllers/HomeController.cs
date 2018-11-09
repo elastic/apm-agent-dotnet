@@ -19,14 +19,20 @@ namespace SampleAspNetCoreApp.Controllers
             _sampleDataContext = sampleDataContext;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             //TODO: Show this on the real UI
             foreach (var item in _sampleDataContext.Users)
             {
                 Console.WriteLine(item.Name);
             }
-           
+
+            //TODO: turn this into a more realistic sample
+            var httpClient = new HttpClient();
+            var responseMsg = await httpClient.GetAsync("https://elastic.co");
+            var responseStr = await responseMsg.Content.ReadAsStringAsync();
+            Console.WriteLine(responseStr.Length);
+
             return View();
         }
 

@@ -6,13 +6,12 @@ namespace Elastic.Agent.Core.DiagnosticSource
 {
     public class DiagnosticInitializer : IObserver<DiagnosticListener>, IDisposable
     {
-        private readonly IDiagnosticListener _listener; //TODO: make this a List, we'll have more from those
+        private readonly IEnumerable<IDiagnosticListener> _listeners;
 
-        public DiagnosticInitializer(IDiagnosticListener listener)
+        public DiagnosticInitializer(IEnumerable<IDiagnosticListener> listeners)
         {
-            _listener = listener;
+            _listeners = listeners;
         }
-
 
         public void Dispose()
         {
@@ -31,10 +30,12 @@ namespace Elastic.Agent.Core.DiagnosticSource
 
         public void OnNext(DiagnosticListener value)
         {
-            if(value.Name == _listener.Name)
+            foreach (var listener in _listeners)
             {
-                Console.WriteLine($"Registered {_listener.Name}");
-                value.Subscribe(_listener);
+                if (value.Name == listener.Name)
+                {
+                    value.Subscribe(listener);
+                }
             }
         }
     }
