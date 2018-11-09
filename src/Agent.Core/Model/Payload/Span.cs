@@ -27,6 +27,7 @@ namespace Elastic.Agent.Core.Model.Payload
         public class ContextC
         {
             public Db Db { get; set; }
+            public Http Http { get; set; }
         }
     }
 
@@ -39,5 +40,10 @@ namespace Elastic.Agent.Core.Model.Payload
         public String Statement { get; set; }
 
         public String Type { get; set; }
+    }
+
+    public class Http 
+    {
+        public String Url { get; set; }
     }
 }
