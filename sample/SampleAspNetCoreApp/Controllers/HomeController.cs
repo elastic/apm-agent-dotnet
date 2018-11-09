@@ -22,15 +22,11 @@ namespace SampleAspNetCoreApp.Controllers
         public async Task<IActionResult> Index()
         {
             //TODO: Show this on the real UI
-
-            for (int i = 0; i < 5; i++)
+            foreach (var item in _sampleDataContext.Users)
             {
-                foreach (var item in _sampleDataContext.Users)
-                {
-                    Console.WriteLine(item.Name);
-                }
+                Console.WriteLine(item.Name);
             }
-
+        
             //TODO: turn this into a more realistic sample
             var httpClient = new HttpClient();
             var responseMsg = await httpClient.GetAsync("https://elastic.co");
