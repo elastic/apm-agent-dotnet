@@ -2,16 +2,46 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using SampleAspNetCoreApp.Data;
 using SampleAspNetCoreApp.Models;
 
 namespace SampleAspNetCoreApp.Controllers
 {
     public class HomeController : Controller
     {
+        SampleDataContext _sampleDataContext;
+
+        public HomeController(SampleDataContext sampleDataContext)
+        {
+            _sampleDataContext = sampleDataContext;
+        }
+
         public IActionResult Index()
         {
+            //TODO: Show this on the real UI
+            foreach (var item in _sampleDataContext.Users)
+            {
+                Console.WriteLine(item.Name);
+            }
+           
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddNewUser(string enteredName)
+        {
+            _sampleDataContext.Users.Add(
+                new User
+                {
+                    Name = "TestName"
+                });
+
+            //TODO: get the real data
+            await _sampleDataContext.SaveChangesAsync();
+
             return View();
         }
 
@@ -30,6 +60,11 @@ namespace SampleAspNetCoreApp.Controllers
         }
 
         public IActionResult Privacy()
+        {
+            return View();
+        }
+
+        public IActionResult AddNewUser()
         {
             return View();
         }

@@ -4,9 +4,9 @@ using System.Text;
 
 namespace Elastic.Agent.Core.Model.Payload
 {
-    internal class Agent
+    public class Agent
     {
-		public String Name { get; set; }
-		public String Version { get; set; }
-	}
+        public String Name { get; set; }
+        public String Version { get; set; }
+    }
 }

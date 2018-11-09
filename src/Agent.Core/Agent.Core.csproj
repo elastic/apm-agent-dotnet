@@ -7,11 +7,15 @@
 
   <ItemGroup>
     <Compile Remove="Class1.cs" />
+    <Compile Remove="Report\SpanReporter.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Report\" />
+    <Folder Include="DiagnosticSource\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <!-- TODO: Are we ok with this reference/version? -->
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.0.0" />
   </ItemGroup>
 </Project>

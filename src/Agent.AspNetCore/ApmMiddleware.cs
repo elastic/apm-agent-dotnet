@@ -25,10 +25,48 @@ namespace Elastic.Agent.AspNetCore
         public async Task InvokeAsync(HttpContext context)
         {
             var sw = Stopwatch.StartNew();
+            var transactionstart = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
+
+            var transactions = new List<Transaction> {
+                    new Transaction {
+                        Name = $"{context.Request.Method} {context.Request.Path}",
+                        
+                        Id = Guid.NewGuid(),
+                        Type = "request",
+                        
+                        Timestamp = transactionstart,
+                        Context = new Context
+                        {
+                            Request = new Request
+                            {
+                                Method = context.Request.Method,
+                                Socket = new Socket{ Encrypted = context.Request.IsHttps, Remote_address = context.Connection.RemoteIpAddress.ToString()},
+                                Url = new Url
+                                {
+                                    Full = context.Request?.Path.Value,
+                                    HostName = context.Request.Host.Host,
+                                    Protocol = "HTTP", //TODO
+                                    Raw = context.Request?.Path.Value
+                                }
+                                //HttpVersion TODO
+                            },
+                        },
+                    }
+                };
+
+            TransactionContainer.Transactions = transactions;
 
             await _next(context);
 
             sw.Stop();
+
+            transactions[0].Duration = sw.ElapsedMilliseconds;
+            transactions[0].Result = context.Response.StatusCode >= 200 && context.Response.StatusCode < 300 ? "success" : "failed";
+            transactions[0].Context.Response = new Response
+            {
+                Finished = context.Response.HasStarted, //TODO ?
+                Status_code = context.Response.StatusCode
+            };
 
             var payload = new Payload
             {
@@ -46,47 +84,8 @@ namespace Elastic.Agent.AspNetCore
 
             };
 
-            var transactions = new List<Transaction> {
-                    new Transaction {
-                        Name = $"{context.Request.Method} {context.Request.Path}",
-                        Duration = sw.ElapsedMilliseconds,
-                        Id = Guid.NewGuid(),
-                        Type = "request",
-                        Result = context.Response.StatusCode >= 200 && context.Response.StatusCode < 300 ? "success" : "failed",
-                        Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ"),
-                        Context = new Context
-                        {
-                            Request = new Request
-                            {
-                                Method = context.Request.Method,
-                                Socket = new Socket{ Encrypted = context.Request.IsHttps, Remote_address = context.Connection.RemoteIpAddress.ToString()},
-                                Url = new Url
-                                {
-                                    Full = context.Request?.Path.Value,
-                                    HostName = context.Request.Host.Host,
-                                    Protocol = "HTTP", //TODO
-									Raw = context.Request?.Path.Value
-                                }
-								//HttpVersion TODO
-							},
-                            Response = new Response
-                            {
-                                Finished = context.Response.HasStarted, //TODO ?
-								Status_code = context.Response.StatusCode
-                            }
-                        },
-                    }
-                };
-
-            if (SpanReporter.Spans.Count > 0)
-            {
-                transactions[0].Spans = SpanReporter.Spans;
-            }
-
-            payload.Transactions = transactions;
-
+            payload.Transactions = TransactionContainer.Transactions;
             await payloadSender.SendPayload(payload); //TODO: Make it background!
-            SpanReporter.Spans.Clear();
         }
     }
 }

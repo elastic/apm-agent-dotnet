@@ -4,23 +4,23 @@ using System.Text;
 
 namespace Elastic.Agent.Core.Model.Payload
 {
-    class Service
+    public class Service
     {
-		public Agent Agent { get; set; }
-		public String Name { get; set; }
-		public Framework Framework { get; set; }
-		public Language Language { get; set; }
-	}
+        public Agent Agent { get; set; }
+        public String Name { get; set; }
+        public Framework Framework { get; set; }
+        public Language Language { get; set; }
+    }
 
 
-	class Framework
-	{
-		public String Name { get; set; }
-		public String Version { get; set; }
-	}
+    public class Framework
+    {
+        public String Name { get; set; }
+        public String Version { get; set; }
+    }
 
-	class Language
-	{
-		public String Name { get; set; }
-	}
+    public class Language
+    {
+        public String Name { get; set; }
+    }
 }

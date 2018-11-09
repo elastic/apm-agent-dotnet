@@ -11,6 +11,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using Elastic.Agent.AspNetCore;
+using Elastic.Agent.EntityFrameworkCore;
+using SampleAspNetCoreApp.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace SampleAspNetCoreApp
 {
@@ -33,6 +36,9 @@ namespace SampleAspNetCoreApp
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
+            var connection = @"Data Source=blogging.db";
+            services.AddDbContext<SampleDataContext>
+                (options => options.UseSqlite(connection));
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
@@ -41,6 +47,8 @@ namespace SampleAspNetCoreApp
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             app.UseElasticApm();
+
+            new EfCoreListener().Start();
 
             if (env.IsDevelopment())
             {

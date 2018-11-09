@@ -4,9 +4,9 @@ using System.Text;
 
 namespace Elastic.Agent.Core.Model.Payload
 {
-    class Response
+    public class Response
     {
-		public bool Finished { get; set; }
-		public int Status_code { get; set; }
-	}
+        public bool Finished { get; set; }
+        public int Status_code { get; set; }
+    }
 }

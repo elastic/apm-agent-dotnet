@@ -4,10 +4,10 @@ using System.Text;
 
 namespace Elastic.Agent.Core.Model.Payload
 {
-    class Context
+    public class Context
     {
-		public Request Request { get; set; }
+        public Request Request { get; set; }
 
-		public Response Response { get; set; }
-	}
+        public Response Response { get; set; }
+    }
 }
