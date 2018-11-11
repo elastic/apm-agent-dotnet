@@ -14,6 +14,7 @@ using Elastic.Agent.AspNetCore;
 using Elastic.Agent.EntityFrameworkCore;
 using SampleAspNetCoreApp.Data;
 using Microsoft.EntityFrameworkCore;
+using Elastic.Agent.Core.DiagnosticSource;
 
 namespace SampleAspNetCoreApp
 {
@@ -47,9 +48,9 @@ namespace SampleAspNetCoreApp
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             app.UseElasticApm();
-
-            new EfCoreListener().Start();
-
+            new ElasticCoreListeners().Start();
+            new ElasticEntityFrameworkCoreListener().Start();
+           
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

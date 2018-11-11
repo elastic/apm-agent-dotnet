@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Elastic.Agent.EntityFrameworkCore
 {
-    public class EfCoreDiagnosticListener : IDiagnosticListener
+    internal class EfCoreDiagnosticListener : IDiagnosticListener
     {
         public string Name => "Microsoft.EntityFrameworkCore";
 

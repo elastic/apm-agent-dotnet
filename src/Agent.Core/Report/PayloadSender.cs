@@ -10,6 +10,7 @@ using Newtonsoft.Json.Serialization;
 //TODO: It'd be nice to move this into the .csproj
 using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Agent.AspNetCore")]
+[assembly: InternalsVisibleTo("Agent.EntityFrameworkCore")]
 
 namespace Elastic.Agent.Core.Report
 {

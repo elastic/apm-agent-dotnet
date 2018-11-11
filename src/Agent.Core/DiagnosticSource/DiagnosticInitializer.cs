@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace Elastic.Agent.Core.DiagnosticSource
 {
-    public class DiagnosticInitializer : IObserver<DiagnosticListener>, IDisposable
+    internal class DiagnosticInitializer : IObserver<DiagnosticListener>, IDisposable
     {
         private readonly IEnumerable<IDiagnosticListener> _listeners;
 
