@@ -31,8 +31,6 @@ namespace Elastic.Agent.Core.Model.Payload
         }
     }
 
-
-
     public class Db
     {
         public String Instance { get; set; }
@@ -45,5 +43,7 @@ namespace Elastic.Agent.Core.Model.Payload
     public class Http 
     {
         public String Url { get; set; }
+        public int Status_code { get; set; }
+        public String Method { get; set; }
     }
 }

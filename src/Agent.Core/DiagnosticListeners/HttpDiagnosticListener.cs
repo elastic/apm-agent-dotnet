@@ -53,10 +53,25 @@ namespace Elastic.Agent.Core.DiagnosticListeners
 
                 case "System.Net.Http.HttpRequestOut.Stop":
                     var response = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Response").GetValue(kv.Value) as HttpResponseMessage;
-                    var requestTaskStatus = (TaskStatus)kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("RequestTaskStatus").GetValue(kv.Value);
+                    var requestTaskStatusObj = (TaskStatus)kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("RequestTaskStatus").GetValue(kv.Value);
+                    var requestTaskStatus = (TaskStatus)requestTaskStatusObj;
 
                     var transactionStartTime = TransactionContainer.Transactions.Value[0].TimestampInDateTime;
                     var utcNow = DateTime.UtcNow;
+
+                    var http = new Http
+                    {
+                        Url = request.RequestUri.ToString(),
+                        Method = request.Method.Method,
+                    };
+
+                    //TODO: response can be null if for example the request Task is Faulted. 
+                    //E.g. writing this from an airplane without internet, and requestTaskStatus is "Faulted" and response is null
+                    //How do we report this? There is no response code in that case.
+                    if (response != null) 
+                    {
+                        http.Status_code = (int)response.StatusCode;
+                    }
 
                     var span = new Span
                     {
@@ -65,10 +80,7 @@ namespace Elastic.Agent.Core.DiagnosticListeners
                         Type = "Http",
                         Context = new Span.ContextC
                         {
-                            Http = new Http
-                            {
-                                Url = request.RequestUri.ToString() //TODO: don't we repost response code, and other things? Intake
-                            }
+                            Http = http
                         }
                     };
 
