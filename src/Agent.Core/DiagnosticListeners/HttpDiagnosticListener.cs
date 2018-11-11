@@ -13,6 +13,13 @@ namespace Elastic.Agent.Core.DiagnosticListeners
     {
         public string Name => "HttpHandlerDiagnosticListener";
 
+        private Config _agentConfig;
+
+        public HttpDiagnosticListener(Config config)
+        {
+            _agentConfig = config;
+        }
+
         //TODO: find better way to keep track of respones
         private readonly ConcurrentDictionary<HttpRequestMessage, DateTime> _startedRequests = new ConcurrentDictionary<HttpRequestMessage, DateTime>();
 
@@ -28,18 +35,23 @@ namespace Elastic.Agent.Core.DiagnosticListeners
 
         public void OnNext(KeyValuePair<string, object> kv)
         {
+            var request = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Request")?.GetValue(kv.Value) as HttpRequestMessage;
+
+            if (IsRequestFiltered(request?.RequestUri))
+            {
+                return;
+            }
+
             switch (kv.Key)
             {
-                case "System.Net.Http.HttpRequestOut.Start": //TODO: look for consts 
-                    var val = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Request").GetValue(kv.Value) as HttpRequestMessage;
-                    if (val != null)
+                case "System.Net.Http.HttpRequestOut.Start": //TODO: look for consts
+                    if (request != null)
                     {
-                        var added = _startedRequests.TryAdd(val, DateTime.UtcNow);
+                        var added = _startedRequests.TryAdd(request, DateTime.UtcNow);
                     }
                     break;
 
                 case "System.Net.Http.HttpRequestOut.Stop":
-                    var request = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Request").GetValue(kv.Value) as HttpRequestMessage;
                     var response = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Response").GetValue(kv.Value) as HttpResponseMessage;
                     var requestTaskStatus = (TaskStatus)kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("RequestTaskStatus").GetValue(kv.Value);
 
@@ -49,8 +61,8 @@ namespace Elastic.Agent.Core.DiagnosticListeners
                     var span = new Span
                     {
                         Start = (decimal)(utcNow - transactionStartTime).TotalMilliseconds,
-                        Name =  $"{request.Method} {request.RequestUri.ToString()}",
-                        Type =  "Http",
+                        Name = $"{request.Method} {request.RequestUri.ToString()}",
+                        Type = "Http",
                         Context = new Span.ContextC
                         {
                             Http = new Http
@@ -59,7 +71,7 @@ namespace Elastic.Agent.Core.DiagnosticListeners
                             }
                         }
                     };
-              
+
                     if (_startedRequests.TryRemove(request, out DateTime requestStart))
                     {
                         var requestDuration = DateTime.UtcNow - requestStart; //TODO: there are better ways
@@ -71,6 +83,21 @@ namespace Elastic.Agent.Core.DiagnosticListeners
                 default:
                     break;
             }
+        }
+
+        /// <summary>
+        /// Tells if the given request should be filtered from being captured. 
+        /// </summary>
+        /// <returns><c>true</c>, if request should not be captured, <c>false</c> otherwise.</returns>
+        /// <param name="requestUri">Request URI. Can be null, which is not filtered</param>
+        private bool IsRequestFiltered(Uri requestUri)
+        {
+            if (requestUri == null)
+            {
+                return false;
+            }
+
+            return _agentConfig.ServerUri.IsBaseOf(requestUri) ? true : false;
         }
     }
 }

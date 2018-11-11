@@ -26,12 +26,19 @@ namespace SampleAspNetCoreApp.Controllers
             {
                 Console.WriteLine(item.Name);
             }
-        
-            //TODO: turn this into a more realistic sample
-            var httpClient = new HttpClient();
-            var responseMsg = await httpClient.GetAsync("https://elastic.co");
-            var responseStr = await responseMsg.Content.ReadAsStringAsync();
-            Console.WriteLine(responseStr.Length);
+
+            try
+            {
+                //TODO: turn this into a more realistic sample
+                var httpClient = new HttpClient();
+                var responseMsg = await httpClient.GetAsync("https://elastic.co");
+                var responseStr = await responseMsg.Content.ReadAsStringAsync();
+                Console.WriteLine(responseStr.Length);
+            }
+            catch
+            {
+                Console.WriteLine("Failed HTTP GET elastic.co");
+            }
 
             return View();
         }

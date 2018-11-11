@@ -14,7 +14,7 @@ namespace Elastic.Agent.AspNetCore
 {
     public class ApmMiddleware
     {
-        private readonly PayloadSender payloadSender = new PayloadSender();
+        private readonly PayloadSender payloadSender = new PayloadSender(new Config()); //TODO: Config should be passed from outside
         private readonly RequestDelegate _next;
 
         public ApmMiddleware(RequestDelegate next)

@@ -15,6 +15,13 @@ namespace Elastic.Agent.Core.Report
 {
     internal class PayloadSender
     {
+        private Config _agentConfig;
+
+        public PayloadSender(Config agentConfig)
+        {
+            _agentConfig = agentConfig;
+        }
+
         public String ServerUrlBase { get; set; } = "http://127.0.0.1:8200";
         public async Task SendPayload(Payload payload)
         {
@@ -24,7 +31,7 @@ namespace Elastic.Agent.Core.Report
 
             try
             {
-                var result = await httpClient.PostAsync(ServerUrlBase + "/v1/transactions", content);
+                var result = await httpClient.PostAsync(ServerUrlBase + Consts.IntakeV1Transactions, content);
 
                 var isSucc = result.IsSuccessStatusCode;
                 var str = await result.Content.ReadAsStringAsync();
