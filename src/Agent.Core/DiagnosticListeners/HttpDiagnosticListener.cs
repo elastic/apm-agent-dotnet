@@ -50,6 +50,11 @@ namespace Elastic.Agent.Core.DiagnosticListeners
                 case "System.Net.Http.HttpRequestOut.Start": //TODO: look for consts
                     if (request != null)
                     {
+                        if(TransactionContainer.Transactions == null || TransactionContainer.Transactions.Value == null)
+                        {
+                            return;
+                        }
+
                         var transactionStartTime = TransactionContainer.Transactions.Value[0].TimestampInDateTime;
                         var utcNow = DateTime.UtcNow;
 
@@ -128,7 +133,7 @@ namespace Elastic.Agent.Core.DiagnosticListeners
                         //todo: log
                     }
 
-                    TransactionContainer.Transactions.Value[0].Spans.Add(mspan);
+                    TransactionContainer.Transactions?.Value[0]?.Spans?.Add(mspan);
                     break;
                 default:
                     break;
