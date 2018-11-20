@@ -7,6 +7,7 @@ namespace Elastic.Agent.Core.Model.Payload
     public class Span
     {
         public ContextC Context { get; set; }
+
         public double Duration { get; set; }
 
         public String Name { get; set; }
@@ -16,6 +17,8 @@ namespace Elastic.Agent.Core.Model.Payload
         public Decimal Start { get; set; }
 
         public int Id { get; set; }
+
+        public List<Stacktrace> Stacktrace { get; set; }
 
         public Span()
         {
@@ -45,5 +48,13 @@ namespace Elastic.Agent.Core.Model.Payload
         public String Url { get; set; }
         public int Status_code { get; set; }
         public String Method { get; set; }
+    }
+
+    public class Stacktrace
+    {
+        public int Lineno { get; set; }
+        public string Filename { get; set; }
+        public string Function { get; set; }
+        public String Module { get; set; }
     }
 }

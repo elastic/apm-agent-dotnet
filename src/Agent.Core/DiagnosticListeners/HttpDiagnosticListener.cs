@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Elastic.Agent.Core.DiagnosticSource;
 using Elastic.Agent.Core.Model.Payload;
 
+
 namespace Elastic.Agent.Core.DiagnosticListeners
 {
     public class HttpDiagnosticListener : IDiagnosticListener
@@ -20,8 +21,10 @@ namespace Elastic.Agent.Core.DiagnosticListeners
             _agentConfig = config;
         }
 
-        //TODO: find better way to keep track of respones
-        private readonly ConcurrentDictionary<HttpRequestMessage, DateTime> _startedRequests = new ConcurrentDictionary<HttpRequestMessage, DateTime>();
+        /// <summary>
+        /// Keeps track of ongoing requests
+        /// </summary>
+        private readonly ConcurrentDictionary<HttpRequestMessage, Span> _processingRequests = new ConcurrentDictionary<HttpRequestMessage, Span>();
 
         public void OnCompleted()
         {
@@ -47,7 +50,56 @@ namespace Elastic.Agent.Core.DiagnosticListeners
                 case "System.Net.Http.HttpRequestOut.Start": //TODO: look for consts
                     if (request != null)
                     {
-                        var added = _startedRequests.TryAdd(request, DateTime.UtcNow);
+                        var transactionStartTime = TransactionContainer.Transactions.Value[0].TimestampInDateTime;
+                        var utcNow = DateTime.UtcNow;
+
+                        var http = new Http
+                        {
+                            Url = request.RequestUri.ToString(),
+                            Method = request.Method.Method,
+                        };
+
+                        var span = new Span
+                        {
+                            Start = (decimal)(utcNow - transactionStartTime).TotalMilliseconds,
+                            Name = $"{request.Method} {request.RequestUri.ToString()}",
+                            Type = "Http",
+                            Context = new Span.ContextC
+                            {
+                                Http = http
+                            }
+                        };
+
+                        if (_processingRequests.TryAdd(request, span))
+                        {
+                            var frames = new System.Diagnostics.StackTrace().GetFrames();
+                            var stackFrames = new List<Stacktrace>(); //TODO: use known size
+
+                            try
+                            {
+                                foreach (var item in frames)
+                                {
+                                    var fileName = item?.GetMethod()?.DeclaringType?.Assembly?.GetName()?.Name;
+                                    if (String.IsNullOrEmpty(fileName))
+                                    {
+                                        continue; //since filename is required by the server, if we don't have it we skip the frame
+                                    }
+
+                                    stackFrames.Add(new Stacktrace
+                                    {
+                                        Function = item?.GetMethod()?.Name,
+                                        Filename = fileName,
+                                        Module = item?.GetMethod()?.ReflectedType?.Name
+                                    });
+                                }
+                            }
+                            catch
+                            {
+                                //TODO: log
+                            }
+
+                            span.Stacktrace = stackFrames;
+                        }
                     }
                     break;
 
@@ -56,41 +108,27 @@ namespace Elastic.Agent.Core.DiagnosticListeners
                     var requestTaskStatusObj = (TaskStatus)kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("RequestTaskStatus").GetValue(kv.Value);
                     var requestTaskStatus = (TaskStatus)requestTaskStatusObj;
 
-                    var transactionStartTime = TransactionContainer.Transactions.Value[0].TimestampInDateTime;
-                    var utcNow = DateTime.UtcNow;
-
-                    var http = new Http
+                    if (_processingRequests.TryRemove(request, out Span mspan))
                     {
-                        Url = request.RequestUri.ToString(),
-                        Method = request.Method.Method,
-                    };
-
-                    //TODO: response can be null if for example the request Task is Faulted. 
-                    //E.g. writing this from an airplane without internet, and requestTaskStatus is "Faulted" and response is null
-                    //How do we report this? There is no response code in that case.
-                    if (response != null) 
-                    {
-                        http.Status_code = (int)response.StatusCode;
-                    }
-
-                    var span = new Span
-                    {
-                        Start = (decimal)(utcNow - transactionStartTime).TotalMilliseconds,
-                        Name = $"{request.Method} {request.RequestUri.ToString()}",
-                        Type = "Http",
-                        Context = new Span.ContextC
+                        //TODO: response can be null if for example the request Task is Faulted. 
+                        //E.g. writing this from an airplane without internet, and requestTaskStatus is "Faulted" and response is null
+                        //How do we report this? There is no response code in that case.
+                        if (response != null)
                         {
-                            Http = http
+                            mspan.Context.Http.Status_code = (int)response.StatusCode;
                         }
-                    };
 
-                    if (_startedRequests.TryRemove(request, out DateTime requestStart))
+                        //TODO: there are better ways
+                        var transactionStartTime = TransactionContainer.Transactions.Value[0].TimestampInDateTime;
+                        var endTime = (DateTime.UtcNow - transactionStartTime).TotalMilliseconds;
+                        mspan.Duration = endTime - (double)mspan.Start;
+                    }
+                    else
                     {
-                        var requestDuration = DateTime.UtcNow - requestStart; //TODO: there are better ways
-                        span.Duration = requestDuration.TotalMilliseconds;
+                        //todo: log
                     }
 
-                    TransactionContainer.Transactions.Value[0].Spans.Add(span);
+                    TransactionContainer.Transactions.Value[0].Spans.Add(mspan);
                     break;
                 default:
                     break;

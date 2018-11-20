@@ -4,11 +4,6 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Elastic.Agent.Core</RootNamespace>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Class1.cs" />
-    <Compile Remove="Report\SpanReporter.cs" />
-  </ItemGroup>
   <ItemGroup>
     <Folder Include="Report\" />
     <Folder Include="DiagnosticSource\" />
