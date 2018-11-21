@@ -12,14 +12,20 @@ using System.Reflection;
 
 namespace Elastic.Agent.AspNetCore
 {
-    public class ApmMiddleware
+    public class ApmMiddleware : IDisposable
     {
-        private readonly PayloadSender payloadSender = new PayloadSender(new Config()); //TODO: Config should be passed from outside
+        private PayloadSender _payloadSender = new PayloadSender(new Config()); //TODO: Config should be passed from outside
         private readonly RequestDelegate _next;
 
         public ApmMiddleware(RequestDelegate next)
         {
             _next = next;
+        }
+
+        public void Dispose()
+        {
+            _payloadSender.Dispose();
+            _payloadSender = null;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -83,7 +89,7 @@ namespace Elastic.Agent.AspNetCore
             };
 
             payload.Transactions = TransactionContainer.Transactions.Value;
-            await payloadSender.SendPayload(payload); //TODO: Make it background!
+            _payloadSender.QueuePayload(payload);
         }
     }
 }
