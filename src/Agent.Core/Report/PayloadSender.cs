@@ -11,9 +11,12 @@ using Newtonsoft.Json.Serialization;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Collections.Concurrent;
+using Elastic.Agent.Core.Logging;
+using System.Linq;
 
 [assembly: InternalsVisibleTo("Agent.AspNetCore")]
 [assembly: InternalsVisibleTo("Agent.EntityFrameworkCore")]
+[assembly: InternalsVisibleTo("Agent.Core.Tests")]
 
 namespace Elastic.Agent.Core.Report
 {
@@ -23,36 +26,36 @@ namespace Elastic.Agent.Core.Report
     /// </summary>
     internal class PayloadSender : IDisposable
     {
-        private readonly Config _agentConfig;
+        private readonly Config agentConfig;
+        private readonly AbstractLogger logger;
 
         /// <summary>
         /// The work of sending data back to the server is done on this thread
         /// </summary>
-        private Thread _workerThread;
+        private Thread workerThread;
 
         /// <summary>
         /// Contains data that will be sent to the server
         /// </summary>
-        private BlockingCollection<Payload> _payloads = new BlockingCollection<Payload>();
+        private BlockingCollection<Payload> payloads = new BlockingCollection<Payload>();
 
         public String ServerUrlBase { get; set; } = "http://127.0.0.1:8200";
 
         public PayloadSender(Config agentConfig)
         {
-            _agentConfig = agentConfig;
-            _workerThread = new Thread(StartWork)
+            this.agentConfig = agentConfig;
+            logger = Apm.Agent.CreateLogger(nameof(PayloadSender));
+            workerThread = new Thread(StartWork)
             {
                 IsBackground = true
             };
-            _workerThread.Start();
+            workerThread.Start();
         }
-
 
         public void QueuePayload(Payload payload)
         {
-            _payloads.Add(payload);
+            payloads.Add(payload);
         }
-
 
         public async void StartWork()
         {
@@ -60,7 +63,7 @@ namespace Elastic.Agent.Core.Report
 
             while (true)
             {
-                var item = _payloads.Take();
+                var item = payloads.Take();
 
                 try
                 {
@@ -73,15 +76,16 @@ namespace Elastic.Agent.Core.Report
                 }
                 catch (Exception e)
                 {
-                    //TODO: log
+                    logger.LogWarning($"Failed sending transaction {item.Transactions.FirstOrDefault()?.Name}");
+                    logger.LogDebug($"{e.GetType().Name}: {e.Message}");
                 }
             }
         }
 
         public void Dispose()
         {
-            _payloads?.Dispose();
-            _payloads = null;
+            payloads?.Dispose();
+            payloads = null;
         }
     }
 }

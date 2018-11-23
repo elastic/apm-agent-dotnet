@@ -5,8 +5,8 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using Elastic.Agent.Core.DiagnosticSource;
+using Elastic.Agent.Core.Logging;
 using Elastic.Agent.Core.Model.Payload;
-
 
 namespace Elastic.Agent.Core.DiagnosticListeners
 {
@@ -14,26 +14,28 @@ namespace Elastic.Agent.Core.DiagnosticListeners
     {
         public string Name => "HttpHandlerDiagnosticListener";
 
-        private Config _agentConfig;
-
-        public HttpDiagnosticListener(Config config)
-        {
-            _agentConfig = config;
-        }
-
         /// <summary>
         /// Keeps track of ongoing requests
         /// </summary>
-        private readonly ConcurrentDictionary<HttpRequestMessage, Span> _processingRequests = new ConcurrentDictionary<HttpRequestMessage, Span>();
+        private readonly ConcurrentDictionary<HttpRequestMessage, Span> processingRequests = new ConcurrentDictionary<HttpRequestMessage, Span>();
+        private readonly Config agentConfig;
+
+        private readonly AbstractLogger logger;
+        internal AbstractLogger Logger => logger;
+
+        public HttpDiagnosticListener(Config config)
+        {
+            agentConfig = config;
+            logger = A.CreateLogger(Name);
+        }
 
         public void OnCompleted()
         {
-            throw new NotImplementedException();
         }
 
         public void OnError(Exception error)
         {
-            throw new NotImplementedException();
+            logger.LogError($"Exception in OnError, Exception-type:{error.GetType().Name}, Message:{error.Message}");
         }
 
         public void OnNext(KeyValuePair<string, object> kv)
@@ -50,7 +52,7 @@ namespace Elastic.Agent.Core.DiagnosticListeners
                 case "System.Net.Http.HttpRequestOut.Start": //TODO: look for consts
                     if (request != null)
                     {
-                        if(TransactionContainer.Transactions == null || TransactionContainer.Transactions.Value == null)
+                        if (TransactionContainer.Transactions == null || TransactionContainer.Transactions.Value == null)
                         {
                             return;
                         }
@@ -75,7 +77,7 @@ namespace Elastic.Agent.Core.DiagnosticListeners
                             }
                         };
 
-                        if (_processingRequests.TryAdd(request, span))
+                        if (processingRequests.TryAdd(request, span))
                         {
                             var frames = new System.Diagnostics.StackTrace().GetFrames();
                             var stackFrames = new List<Stacktrace>(); //TODO: use known size
@@ -98,9 +100,11 @@ namespace Elastic.Agent.Core.DiagnosticListeners
                                     });
                                 }
                             }
-                            catch
+                            catch (Exception e)
                             {
-                                //TODO: log
+                                logger.LogWarning($"Failed capturing stacktrace for {span.Name}");
+                                logger.LogDebug($"{e.GetType().Name}: {e.Message}");
+
                             }
 
                             span.Stacktrace = stackFrames;
@@ -113,7 +117,7 @@ namespace Elastic.Agent.Core.DiagnosticListeners
                     var requestTaskStatusObj = (TaskStatus)kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("RequestTaskStatus").GetValue(kv.Value);
                     var requestTaskStatus = (TaskStatus)requestTaskStatusObj;
 
-                    if (_processingRequests.TryRemove(request, out Span mspan))
+                    if (processingRequests.TryRemove(request, out Span mspan))
                     {
                         //TODO: response can be null if for example the request Task is Faulted. 
                         //E.g. writing this from an airplane without internet, and requestTaskStatus is "Faulted" and response is null
@@ -135,8 +139,6 @@ namespace Elastic.Agent.Core.DiagnosticListeners
 
                     TransactionContainer.Transactions?.Value[0]?.Spans?.Add(mspan);
                     break;
-                default:
-                    break;
             }
         }
 
@@ -147,12 +149,7 @@ namespace Elastic.Agent.Core.DiagnosticListeners
         /// <param name="requestUri">Request URI. Can be null, which is not filtered</param>
         private bool IsRequestFiltered(Uri requestUri)
         {
-            if (requestUri == null)
-            {
-                return false;
-            }
-
-            return _agentConfig.ServerUri.IsBaseOf(requestUri) ? true : false;
+            return requestUri != null && agentConfig.ServerUri.IsBaseOf(requestUri);
         }
     }
 }
