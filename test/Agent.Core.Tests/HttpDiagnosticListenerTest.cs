@@ -29,7 +29,6 @@ namespace Elastic.Agent.Core.Tests
             Assert.Equal($"Error {listener.Name}: Exception in OnError, Exception-type:{nameof(Exception)}, Message:{exceptionMessage}", (listener.Logger as TestLogger)?.Lines?.FirstOrDefault());
         }
 
-
         [Fact]
         public async Task TestSimpleOutgoingHttpRequest()
         {
@@ -49,7 +48,7 @@ namespace Elastic.Agent.Core.Tests
             using (LocalServer localServer = new LocalServer())
             {
                 var httpClient = new HttpClient();
-                var res = await httpClient.GetAsync("http://localhost:8082");
+                var res = await httpClient.GetAsync(localServer.Uri);
 
                 Assert.True(res.IsSuccessStatusCode);
                 Assert.Equal(localServer.Uri, TransactionContainer.Transactions.Value[0].Spans[0].Context.Http.Url);
