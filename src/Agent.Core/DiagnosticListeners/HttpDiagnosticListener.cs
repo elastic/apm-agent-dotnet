@@ -26,7 +26,7 @@ namespace Elastic.Agent.Core.DiagnosticListeners
         public HttpDiagnosticListener(Config config)
         {
             agentConfig = config;
-            logger = A.CreateLogger(Name);
+            logger = Apm.Agent.CreateLogger(Name);
         }
 
         public void OnCompleted()
@@ -131,13 +131,14 @@ namespace Elastic.Agent.Core.DiagnosticListeners
                         var transactionStartTime = TransactionContainer.Transactions.Value[0].TimestampInDateTime;
                         var endTime = (DateTime.UtcNow - transactionStartTime).TotalMilliseconds;
                         mspan.Duration = endTime - (double)mspan.Start;
+
+                        TransactionContainer.Transactions?.Value[0]?.Spans?.Add(mspan);
                     }
                     else
                     {
                         //todo: log
                     }
-
-                    TransactionContainer.Transactions?.Value[0]?.Spans?.Add(mspan);
+                    
                     break;
             }
         }
