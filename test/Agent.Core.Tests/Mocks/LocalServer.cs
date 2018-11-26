@@ -9,7 +9,7 @@ namespace Elastic.Agent.Core.Tests.Mocks
         HttpListener httpListener = new HttpListener();
         public string Uri => "http://localhost:8082/";
 
-        public LocalServer()
+        public LocalServer(Action<HttpListenerContext> testAction = null)
         {
             httpListener.Prefixes.Add(Uri);
             httpListener.Start();
@@ -17,7 +17,16 @@ namespace Elastic.Agent.Core.Tests.Mocks
             Task.Run(() =>
             {
                 var context = httpListener.GetContext();
-                context.Response.StatusCode = 200;
+
+                if (testAction == null)
+                {
+                    context.Response.StatusCode = 200;
+                }
+                else
+                {
+                    testAction(context);
+                }
+
                 context.Response.OutputStream.Close();
                 context.Response.Close();
             });

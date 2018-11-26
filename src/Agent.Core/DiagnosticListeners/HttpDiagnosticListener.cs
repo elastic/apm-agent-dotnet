@@ -10,6 +10,9 @@ using Elastic.Agent.Core.Model.Payload;
 
 namespace Elastic.Agent.Core.DiagnosticListeners
 {
+    /// <summary>
+    /// Captures web requests initiated by <see cref="System.Net.Http.HttpClient"/>
+    /// </summary>
     public class HttpDiagnosticListener : IDiagnosticListener
     {
         public string Name => "HttpHandlerDiagnosticListener";
@@ -17,7 +20,7 @@ namespace Elastic.Agent.Core.DiagnosticListeners
         /// <summary>
         /// Keeps track of ongoing requests
         /// </summary>
-        private readonly ConcurrentDictionary<HttpRequestMessage, Span> processingRequests = new ConcurrentDictionary<HttpRequestMessage, Span>();
+        internal readonly ConcurrentDictionary<HttpRequestMessage, Span> processingRequests = new ConcurrentDictionary<HttpRequestMessage, Span>();
         private readonly Config agentConfig;
 
         private readonly AbstractLogger logger;
@@ -32,9 +35,7 @@ namespace Elastic.Agent.Core.DiagnosticListeners
         public void OnCompleted() { }
 
         public void OnError(Exception error)
-        {
-            logger.LogError($"Exception in OnError, Exception-type:{error.GetType().Name}, Message:{error.Message}");
-        }
+            => logger.LogError($"Exception in OnError, Exception-type:{error.GetType().Name}, Message:{error.Message}");
 
         public void OnNext(KeyValuePair<string, object> kv)
         {
@@ -43,9 +44,7 @@ namespace Elastic.Agent.Core.DiagnosticListeners
                 return;
             }
 
-            var request = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Request")?.GetValue(kv.Value) as HttpRequestMessage;
-
-            if (request == null)
+            if (!(kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Request")?.GetValue(kv.Value) is HttpRequestMessage request))
             {
                 return;
             }
@@ -68,14 +67,14 @@ namespace Elastic.Agent.Core.DiagnosticListeners
 
                     var http = new Http
                     {
-                        Url = request.RequestUri.ToString(),
-                        Method = request.Method.Method,
+                        Url = request?.RequestUri?.ToString(),
+                        Method = request?.Method?.Method,
                     };
 
                     var span = new Span
                     {
                         Start = (decimal)(utcNow - transactionStartTime).TotalMilliseconds,
-                        Name = $"{request.Method} {request.RequestUri.ToString()}",
+                        Name = $"{request?.Method} {request?.RequestUri?.ToString()}",
                         Type = "Http",
                         Context = new Span.ContextC
                         {
@@ -110,7 +109,6 @@ namespace Elastic.Agent.Core.DiagnosticListeners
                         {
                             logger.LogWarning($"Failed capturing stacktrace for {span.Name}");
                             logger.LogDebug($"{e.GetType().Name}: {e.Message}");
-
                         }
 
                         span.Stacktrace = stackFrames;
@@ -119,8 +117,11 @@ namespace Elastic.Agent.Core.DiagnosticListeners
 
                 case "System.Net.Http.HttpRequestOut.Stop":
                     var response = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Response").GetValue(kv.Value) as HttpResponseMessage;
-                    var requestTaskStatusObj = (TaskStatus)kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("RequestTaskStatus").GetValue(kv.Value);
-                    var requestTaskStatus = (TaskStatus)requestTaskStatusObj;
+                    var requestTaskStatusObj = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("RequestTaskStatus")?.GetValue(kv.Value);
+                    if (requestTaskStatusObj != null)
+                    {
+                        var requestTaskStatus = (TaskStatus)requestTaskStatusObj;
+                    }
 
                     if (processingRequests.TryRemove(request, out Span mspan))
                     {
@@ -142,8 +143,8 @@ namespace Elastic.Agent.Core.DiagnosticListeners
                     {
                         logger.LogWarning($"Failed capturing request"
                             + (!String.IsNullOrEmpty(request?.RequestUri?.AbsoluteUri) && !String.IsNullOrEmpty(request?.Method?.ToString()) ? $" '{request?.Method.ToString()} " : " ")
-                            + (String.IsNullOrEmpty(request?.RequestUri?.AbsoluteUri) ? "" : $" {request?.RequestUri.AbsoluteUri}' ")
-                            + "in System.Net.Http.HttpRequestOut.Stop. This Span will be skipped.");
+                            + (String.IsNullOrEmpty(request?.RequestUri?.AbsoluteUri) ? "" : $"{request?.RequestUri.AbsoluteUri}' ")
+                            + "in System.Net.Http.HttpRequestOut.Stop. This Span will be skipped in case it wasn't captured before.");
                     }
                     break;
             }
@@ -155,8 +156,6 @@ namespace Elastic.Agent.Core.DiagnosticListeners
         /// <returns><c>true</c>, if request should not be captured, <c>false</c> otherwise.</returns>
         /// <param name="requestUri">Request URI. Can be null, which is not filtered</param>
         private bool IsRequestFiltered(Uri requestUri)
-        {
-            return requestUri != null && agentConfig.ServerUri.IsBaseOf(requestUri);
-        }
+            => requestUri != null && agentConfig.ServerUri.IsBaseOf(requestUri);
     }
 }
