@@ -40,6 +40,11 @@ namespace Elastic.Agent.Core.DiagnosticListeners
 
         public void OnNext(KeyValuePair<string, object> kv)
         {
+            if(kv.Value == null || String.IsNullOrEmpty(kv.Key))
+            {
+                return;
+            }
+
             var request = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Request")?.GetValue(kv.Value) as HttpRequestMessage;
 
             if (IsRequestFiltered(request?.RequestUri))

@@ -21,7 +21,7 @@ namespace Elastic.Agent.Core.Tests
         {
             LogWithLevel(LogLevel.Error);
 
-            Assert.Equal(1, (logger as TestLogger).Lines.Count);
+            Assert.Single((logger as TestLogger).Lines);
             Assert.Equal("Error Test: Error log", (logger as TestLogger).Lines[0]);
         }
 
