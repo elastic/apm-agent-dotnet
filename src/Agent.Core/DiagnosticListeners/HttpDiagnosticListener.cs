@@ -29,9 +29,7 @@ namespace Elastic.Agent.Core.DiagnosticListeners
             logger = Apm.Agent.CreateLogger(Name);
         }
 
-        public void OnCompleted()
-        {
-        }
+        public void OnCompleted() { }
 
         public void OnError(Exception error)
         {
@@ -40,12 +38,17 @@ namespace Elastic.Agent.Core.DiagnosticListeners
 
         public void OnNext(KeyValuePair<string, object> kv)
         {
-            if(kv.Value == null || String.IsNullOrEmpty(kv.Key))
+            if (kv.Value == null || String.IsNullOrEmpty(kv.Key))
             {
                 return;
             }
 
             var request = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Request")?.GetValue(kv.Value) as HttpRequestMessage;
+
+            if (request == null)
+            {
+                return;
+            }
 
             if (IsRequestFiltered(request?.RequestUri))
             {
@@ -55,65 +58,62 @@ namespace Elastic.Agent.Core.DiagnosticListeners
             switch (kv.Key)
             {
                 case "System.Net.Http.HttpRequestOut.Start": //TODO: look for consts
-                    if (request != null)
+                    if (TransactionContainer.Transactions == null || TransactionContainer.Transactions.Value == null)
                     {
-                        if (TransactionContainer.Transactions == null || TransactionContainer.Transactions.Value == null)
+                        return;
+                    }
+
+                    var transactionStartTime = TransactionContainer.Transactions.Value[0].TimestampInDateTime;
+                    var utcNow = DateTime.UtcNow;
+
+                    var http = new Http
+                    {
+                        Url = request.RequestUri.ToString(),
+                        Method = request.Method.Method,
+                    };
+
+                    var span = new Span
+                    {
+                        Start = (decimal)(utcNow - transactionStartTime).TotalMilliseconds,
+                        Name = $"{request.Method} {request.RequestUri.ToString()}",
+                        Type = "Http",
+                        Context = new Span.ContextC
                         {
-                            return;
+                            Http = http
                         }
+                    };
 
-                        var transactionStartTime = TransactionContainer.Transactions.Value[0].TimestampInDateTime;
-                        var utcNow = DateTime.UtcNow;
+                    if (processingRequests.TryAdd(request, span))
+                    {
+                        var frames = new System.Diagnostics.StackTrace().GetFrames();
+                        var stackFrames = new List<Stacktrace>(frames.Length);
 
-                        var http = new Http
+                        try
                         {
-                            Url = request.RequestUri.ToString(),
-                            Method = request.Method.Method,
-                        };
-
-                        var span = new Span
-                        {
-                            Start = (decimal)(utcNow - transactionStartTime).TotalMilliseconds,
-                            Name = $"{request.Method} {request.RequestUri.ToString()}",
-                            Type = "Http",
-                            Context = new Span.ContextC
+                            foreach (var item in frames)
                             {
-                                Http = http
-                            }
-                        };
-
-                        if (processingRequests.TryAdd(request, span))
-                        {
-                            var frames = new System.Diagnostics.StackTrace().GetFrames();
-                            var stackFrames = new List<Stacktrace>(); //TODO: use known size
-
-                            try
-                            {
-                                foreach (var item in frames)
+                                var fileName = item?.GetMethod()?.DeclaringType?.Assembly?.GetName()?.Name;
+                                if (String.IsNullOrEmpty(fileName))
                                 {
-                                    var fileName = item?.GetMethod()?.DeclaringType?.Assembly?.GetName()?.Name;
-                                    if (String.IsNullOrEmpty(fileName))
-                                    {
-                                        continue; //since filename is required by the server, if we don't have it we skip the frame
-                                    }
-
-                                    stackFrames.Add(new Stacktrace
-                                    {
-                                        Function = item?.GetMethod()?.Name,
-                                        Filename = fileName,
-                                        Module = item?.GetMethod()?.ReflectedType?.Name
-                                    });
+                                    continue; //since filename is required by the server, if we don't have it we skip the frame
                                 }
-                            }
-                            catch (Exception e)
-                            {
-                                logger.LogWarning($"Failed capturing stacktrace for {span.Name}");
-                                logger.LogDebug($"{e.GetType().Name}: {e.Message}");
 
+                                stackFrames.Add(new Stacktrace
+                                {
+                                    Function = item?.GetMethod()?.Name,
+                                    Filename = fileName,
+                                    Module = item?.GetMethod()?.ReflectedType?.Name
+                                });
                             }
-
-                            span.Stacktrace = stackFrames;
                         }
+                        catch (Exception e)
+                        {
+                            logger.LogWarning($"Failed capturing stacktrace for {span.Name}");
+                            logger.LogDebug($"{e.GetType().Name}: {e.Message}");
+
+                        }
+
+                        span.Stacktrace = stackFrames;
                     }
                     break;
 
@@ -133,17 +133,18 @@ namespace Elastic.Agent.Core.DiagnosticListeners
                         }
 
                         //TODO: there are better ways
-                        var transactionStartTime = TransactionContainer.Transactions.Value[0].TimestampInDateTime;
-                        var endTime = (DateTime.UtcNow - transactionStartTime).TotalMilliseconds;
+                        var endTime = (DateTime.UtcNow - TransactionContainer.Transactions.Value[0].TimestampInDateTime).TotalMilliseconds;
                         mspan.Duration = endTime - (double)mspan.Start;
 
                         TransactionContainer.Transactions?.Value[0]?.Spans?.Add(mspan);
                     }
                     else
                     {
-                        //todo: log
+                        logger.LogWarning($"Failed capturing request"
+                            + (!String.IsNullOrEmpty(request?.RequestUri?.AbsoluteUri) && !String.IsNullOrEmpty(request?.Method?.ToString()) ? $" '{request?.Method.ToString()} " : " ")
+                            + (String.IsNullOrEmpty(request?.RequestUri?.AbsoluteUri) ? "" : $" {request?.RequestUri.AbsoluteUri}' ")
+                            + "in System.Net.Http.HttpRequestOut.Stop. This Span will be skipped.");
                     }
-                    
                     break;
             }
         }

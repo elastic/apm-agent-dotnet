@@ -116,7 +116,7 @@ namespace Elastic.Agent.Core.Tests
             }
 
             Assert.Equal(200, TransactionContainer.Transactions.Value[0].Spans[0].Context.Http.Status_code);
-            Assert.Equal("GET", TransactionContainer.Transactions.Value[0].Spans[0].Context.Http.Method);
+            Assert.Equal(HttpMethod.Get.ToString(), TransactionContainer.Transactions.Value[0].Spans[0].Context.Http.Method);
         }
     }
 }
