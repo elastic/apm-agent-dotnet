@@ -24,7 +24,7 @@ namespace Elastic.Agent.Core.Report
     /// Responsible for sending the data to the server. 
     /// Each instance creates its own thread to do the work. Therefore instances should be reused if possible.
     /// </summary>
-    internal class PayloadSender : IDisposable
+    internal class PayloadSender : IDisposable, IPayloadSender
     {
         private readonly Config agentConfig;
         private readonly AbstractLogger logger;

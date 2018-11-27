@@ -14,18 +14,29 @@ namespace Elastic.Agent.AspNetCore
 {
     public class ApmMiddleware : IDisposable
     {
-        private PayloadSender _payloadSender = new PayloadSender(new Config()); //TODO: Config should be passed from outside
-        private readonly RequestDelegate _next;
+        private IPayloadSender payloadSender;
+        private readonly RequestDelegate next;
 
-        public ApmMiddleware(RequestDelegate next)
+        public ApmMiddleware(RequestDelegate next, IPayloadSender payloadSender = null)
         {
-            _next = next;
+            if(payloadSender == null)
+            {
+                this.payloadSender = new PayloadSender(new Config()); //TODO: Config should be passed from outside
+            }
+            else
+            {
+                this.payloadSender = payloadSender;
+            }
+            this.next = next;
         }
 
         public void Dispose()
         {
-            _payloadSender.Dispose();
-            _payloadSender = null;
+            if (payloadSender is IDisposable dispPayloadSender)
+            {
+                dispPayloadSender.Dispose();
+                dispPayloadSender = null;
+            }
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -44,7 +55,7 @@ namespace Elastic.Agent.AspNetCore
                             Request = new Request
                             {
                                 Method = context.Request.Method,
-                                Socket = new Socket{ Encrypted = context.Request.IsHttps, Remote_address = context.Connection.RemoteIpAddress.ToString()},
+                                Socket = new Socket{ Encrypted = context.Request.IsHttps, Remote_address = context.Connection?.RemoteIpAddress?.ToString()},
                                 Url = new Url
                                 {
                                     Full = context.Request?.Path.Value,
@@ -60,7 +71,7 @@ namespace Elastic.Agent.AspNetCore
 
             TransactionContainer.Transactions.Value = transactions;
 
-            await _next(context);
+            await next(context);
 
             sw.Stop();
 
@@ -89,7 +100,7 @@ namespace Elastic.Agent.AspNetCore
             };
 
             payload.Transactions = TransactionContainer.Transactions.Value;
-            _payloadSender.QueuePayload(payload);
+            payloadSender.QueuePayload(payload);
         }
     }
 }
