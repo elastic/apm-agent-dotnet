@@ -9,6 +9,7 @@ using Elastic.Agent.Core.Report;
 using Elastic.Agent.Core.Model.Payload;
 using Elastic.Agent.Core;
 using System.Reflection;
+using System.Globalization;
 
 namespace Elastic.Agent.AspNetCore
 {
@@ -19,14 +20,7 @@ namespace Elastic.Agent.AspNetCore
 
         public ApmMiddleware(RequestDelegate next, IPayloadSender payloadSender = null)
         {
-            if(payloadSender == null)
-            {
-                this.payloadSender = new PayloadSender(new Config()); //TODO: Config should be passed from outside
-            }
-            else
-            {
-                this.payloadSender = payloadSender;
-            }
+            this.payloadSender = payloadSender ?? new PayloadSender(new Config());
             this.next = next;
         }
 
@@ -42,11 +36,11 @@ namespace Elastic.Agent.AspNetCore
         public async Task InvokeAsync(HttpContext context)
         {
             var sw = Stopwatch.StartNew();
-          
+
             var transactions = new List<Transaction> {
                     new Transaction {
                         Name = $"{context.Request.Method} {context.Request.Path}",
-                        
+
                         Id = Guid.NewGuid(),
                         Type = "request",
                         TimestampInDateTime = DateTime.UtcNow,
@@ -55,17 +49,21 @@ namespace Elastic.Agent.AspNetCore
                             Request = new Request
                             {
                                 Method = context.Request.Method,
-                                Socket = new Socket{ Encrypted = context.Request.IsHttps, Remote_address = context.Connection?.RemoteIpAddress?.ToString()},
+                                Socket = new Socket
+                                {
+                                    Encrypted = context.Request.IsHttps, 
+                                    Remote_address = context.Connection?.RemoteIpAddress?.ToString()
+                                },
                                 Url = new Url
                                 {
                                     Full = context.Request?.Path.Value,
                                     HostName = context.Request.Host.Host,
-                                    Protocol = "HTTP", //TODO
-                                    Raw = context.Request?.Path.Value
-                                }
-                                //HttpVersion TODO
-                            },
-                        },
+                                    Protocol = GetProtocolName(context.Request.Protocol),
+                                    Raw = context.Request?.Path.Value //TODO
+                                },
+                                HttpVersion = GetHttpVersion(context.Request.Protocol)
+                            }
+                        }
                     }
                 };
 
@@ -76,7 +74,7 @@ namespace Elastic.Agent.AspNetCore
             sw.Stop();
 
             transactions[0].Duration = sw.ElapsedMilliseconds;
-            transactions[0].Result = context.Response.StatusCode >= 200 && context.Response.StatusCode < 300 ? "success" : "failed";
+            transactions[0].Result = $"{GetProtocolName(context.Request.Protocol)} {context.Response.StatusCode.ToString()[0]}xx";
             transactions[0].Context.Response = new Response
             {
                 Finished = context.Response.HasStarted, //TODO ?
@@ -101,6 +99,34 @@ namespace Elastic.Agent.AspNetCore
 
             payload.Transactions = TransactionContainer.Transactions.Value;
             payloadSender.QueuePayload(payload);
+        }
+
+        private string GetProtocolName(String protocol)
+        {
+            switch (protocol)
+            {
+                case String s when String.IsNullOrEmpty(s):
+                    return String.Empty;
+                case String s when s.StartsWith("HTTP", StringComparison.InvariantCulture): //in case of HTTP/2.x we only need HTTP
+                    return "HTTP";
+                default:
+                    return protocol;
+            }
+        }
+
+        private string GetHttpVersion(String protocolString)
+        {
+            switch (protocolString)
+            {
+                case "HTTP/1.0":
+                    return "1.0";
+                case "HTTP/1.1":
+                    return "1.1";
+                case "HTTP/2.0":
+                    return "2.0";
+                default:
+                    return protocolString.Replace("HTTP/", String.Empty);
+            }
         }
     }
 }

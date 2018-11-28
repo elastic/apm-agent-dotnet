@@ -17,6 +17,7 @@ using System.Linq;
 [assembly: InternalsVisibleTo("Agent.AspNetCore")]
 [assembly: InternalsVisibleTo("Agent.EntityFrameworkCore")]
 [assembly: InternalsVisibleTo("Agent.Core.Tests")]
+[assembly: InternalsVisibleTo("Agent.AspNetCore.Tests")]
 
 namespace Elastic.Agent.Core.Report
 {
