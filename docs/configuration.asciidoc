@@ -25,4 +25,4 @@ To adapt the Elastic APM agent to your needs, you can configure it using environ
 The URLs for your APM Servers. The URLs must be fully qualified, including protocol (`http` or `https`) and port. To add multiple servers separate them with comma (`,`).
 
 
-NOTE: Providing multiple URLs only works if intake API v2 is enabled.
+NOTE: Providing multiple URLs only works with APM Server v6.5+.
