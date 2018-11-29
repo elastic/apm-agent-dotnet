@@ -1,0 +1,25 @@
+ifdef::env-github[]
+NOTE: For the best reading experience,
+please view this documentation at https://www.elastic.co/guide/en/apm/agent/dotnet[elastic.co]
+endif::[]
+
+[[intro]]
+
+== Introduction
+
+Welcome to the APM .NET Agent documentation.
+
+Elastic APM automatically measures the performance of your application and tracks errors.
+For example, it records spans for database queries and transactions for incoming HTTP requests.
+
+Spans are grouped in transactions - by default one for each incoming HTTP request.
+But it's possible to create custom transactions not associated with an HTTP request.
+
+By default the agent comes with support for ASP.NET Core out-of-the-box.
+To instrument other events, you can use custom spans.
+
+The agent is only one of multiple components you need to get started with APM.
+Please also have a look at the documentation for
+
+* {apm-server-ref}/index.html[APM Server]
+* {ref}/index.html[Elasticsearch]

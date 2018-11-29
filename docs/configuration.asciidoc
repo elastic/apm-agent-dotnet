@@ -1,0 +1,28 @@
+[[configuration]]
+== Configuration
+
+To adapt the Elastic APM agent to your needs, you can configure it using environment variables.
+
+
+[[config-reporter]]
+=== Reporter configuration options
+[float]
+[[config-server-urls]]
+==== `server_urls`
+
+[options="header"]
+|============
+| Environment variable name
+| `ELASTIC_APM_SERVER_URLS`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `http://localhost:8200` | List
+|============
+
+The URLs for your APM Servers. The URLs must be fully qualified, including protocol (`http` or `https`) and port. To add multiple servers separate them with comma (`,`).
+
+
+NOTE: Providing multiple URLs only works if intake API v2 is enabled.
