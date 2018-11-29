@@ -22,7 +22,7 @@ namespace Elastic.Agent.Core.Tests
         public void OnErrorLog()
         {
             Apm.Agent.SetLoggerType<TestLogger>();
-            var listener = new HttpDiagnosticListener(new Config());
+            var listener = new HttpDiagnosticListener();
 
             var exceptionMessage = "Ooops, this went wrong";
             var fakeException = new Exception(exceptionMessage);
@@ -39,7 +39,7 @@ namespace Elastic.Agent.Core.Tests
         public void OnNextWithStart()
         {
             StartTransaction();
-            var listener = new HttpDiagnosticListener(new Config());
+            var listener = new HttpDiagnosticListener();
 
             var request = new HttpRequestMessage(HttpMethod.Get, "https://elastic.co");
 
@@ -60,7 +60,7 @@ namespace Elastic.Agent.Core.Tests
         public void OnNextWithStartAndStop()
         {
             StartTransaction();
-            var listener = new HttpDiagnosticListener(new Config());
+            var listener = new HttpDiagnosticListener();
 
             var request = new HttpRequestMessage(HttpMethod.Get, "https://elastic.co");
             var response = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
@@ -86,7 +86,7 @@ namespace Elastic.Agent.Core.Tests
             StartTransaction();
             Apm.Agent.SetLoggerType<TestLogger>();
             Apm.Agent.LogLevel = LogLevel.Warning; //make sure we have high enough log level
-            var listener = new HttpDiagnosticListener(new Config());
+            var listener = new HttpDiagnosticListener();
 
             var request = new HttpRequestMessage(HttpMethod.Get, "https://elastic.co");
             var response = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
@@ -113,7 +113,7 @@ namespace Elastic.Agent.Core.Tests
         [Fact]
         public void UnknownObjectToOnNext()
         {           
-            var listener = new HttpDiagnosticListener(new Config());
+            var listener = new HttpDiagnosticListener();
             var myFake = new StringBuilder(); //just a random type that is not planned to be passed into OnNext
 
             var exception = 
@@ -132,7 +132,7 @@ namespace Elastic.Agent.Core.Tests
         [Fact]
         public void NullValueToOnNext()
         {
-            var listener = new HttpDiagnosticListener(new Config());
+            var listener = new HttpDiagnosticListener();
 
             var exception =
                 Record.Exception(() =>
@@ -150,7 +150,7 @@ namespace Elastic.Agent.Core.Tests
         [Fact]
         public void NullKeyValueToOnNext()
         {
-            var listener = new HttpDiagnosticListener(new Config());
+            var listener = new HttpDiagnosticListener();
 
             var exception =
                 Record.Exception(() =>

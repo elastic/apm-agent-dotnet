@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
+using Elastic.Agent.Core.Config;
 using Elastic.Agent.Core.DiagnosticSource;
 using Elastic.Agent.Core.Logging;
 using Elastic.Agent.Core.Model.Payload;
@@ -21,14 +23,14 @@ namespace Elastic.Agent.Core.DiagnosticListeners
         /// Keeps track of ongoing requests
         /// </summary>
         internal readonly ConcurrentDictionary<HttpRequestMessage, Span> processingRequests = new ConcurrentDictionary<HttpRequestMessage, Span>();
-        private readonly Config agentConfig;
+        private readonly IConfig agentConfig;
 
         private readonly AbstractLogger logger;
         internal AbstractLogger Logger => logger;
 
-        public HttpDiagnosticListener(Config config)
+        public HttpDiagnosticListener()
         {
-            agentConfig = config;
+            agentConfig = Apm.Agent.Config;
             logger = Apm.Agent.CreateLogger(Name);
         }
 
@@ -156,6 +158,16 @@ namespace Elastic.Agent.Core.DiagnosticListeners
         /// <returns><c>true</c>, if request should not be captured, <c>false</c> otherwise.</returns>
         /// <param name="requestUri">Request URI. Can be null, which is not filtered</param>
         private bool IsRequestFiltered(Uri requestUri)
-            => requestUri != null && agentConfig.ServerUri.IsBaseOf(requestUri);
+        {
+            switch (requestUri)
+            {
+                case Uri uri when uri == null:
+                    return true;
+                case Uri uri when Apm.Agent.Config.ServerUrls.Any(n => n.IsBaseOf(uri)): //TODO: measure the perf of this!
+                    return true;
+                default:
+                    return false;
+            }
+        }
     }
 }

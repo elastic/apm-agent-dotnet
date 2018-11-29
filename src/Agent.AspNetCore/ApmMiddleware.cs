@@ -10,6 +10,7 @@ using Elastic.Agent.Core.Model.Payload;
 using Elastic.Agent.Core;
 using System.Reflection;
 using System.Globalization;
+using Elastic.Agent.Core.Config;
 
 namespace Elastic.Agent.AspNetCore
 {
@@ -20,7 +21,7 @@ namespace Elastic.Agent.AspNetCore
 
         public ApmMiddleware(RequestDelegate next, IPayloadSender payloadSender = null)
         {
-            this.payloadSender = payloadSender ?? new PayloadSender(new Config());
+            this.payloadSender = payloadSender ?? new PayloadSender();
             this.next = next;
         }
 

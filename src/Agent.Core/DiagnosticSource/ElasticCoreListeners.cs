@@ -9,8 +9,6 @@ namespace Elastic.Agent.Core.DiagnosticSource
     /// </summary>
     public class ElasticCoreListeners
     {
-        private Config _agentConfig = new Config(); //TODO: Config should be passed from outside
-
         /// <summary>
         /// Start listening for diagnosticsource events. Only listens for sources that are part of the Agent.Core package.
         /// </summary>
@@ -18,8 +16,7 @@ namespace Elastic.Agent.Core.DiagnosticSource
         {
             System.Diagnostics.DiagnosticListener
             .AllListeners
-            .Subscribe(new DiagnosticInitializer(new List<IDiagnosticListener> {new HttpDiagnosticListener(_agentConfig) }));
-
+                  .Subscribe(new DiagnosticInitializer(new List<IDiagnosticListener> {new HttpDiagnosticListener()}));
         }
     }
 }

@@ -1,4 +1,6 @@
 ﻿using System;
+using Elastic.Agent.Core;
+using Elastic.Agent.Core.Config;
 using Elastic.Agent.Core.Logging;
 
 
@@ -8,7 +10,26 @@ namespace Elastic.Apm
 {
     public static class Agent
     {
-        public static LogLevel LogLevel { get; set; } = LogLevel.Info;
+        public static LogLevel LogLevel { get; set; } = LogLevel.Error;
+
+        private static IConfig config = new EnvironmentVariableConfig();
+        public static IConfig Config 
+        {
+            get
+            {
+                if (config.Logger == null)
+                {
+                    config.Logger = CreateLogger("Config");
+                }
+
+                return config;
+            }
+            set
+            {
+                config = value;
+                config.Logger = CreateLogger("Config");
+            } 
+        }
 
         /// <summary>
         /// Returns a logger with a specific prefix. The idea behind this class 

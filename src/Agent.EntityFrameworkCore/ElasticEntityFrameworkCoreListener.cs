@@ -12,8 +12,6 @@ namespace Elastic.Agent.EntityFrameworkCore
     /// </summary>
     public class ElasticEntityFrameworkCoreListener
     {
-        private Config _agentConfig = new Config(); //TODO: Config should be passed from outside
-
         /// <summary>
         /// Start listening for EF Core diagnosticsource events
         /// </summary>

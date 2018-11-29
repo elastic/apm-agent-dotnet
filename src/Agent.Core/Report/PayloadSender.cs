@@ -13,6 +13,7 @@ using System.Threading;
 using System.Collections.Concurrent;
 using Elastic.Agent.Core.Logging;
 using System.Linq;
+using Elastic.Agent.Core.Config;
 
 [assembly: InternalsVisibleTo("Agent.AspNetCore")]
 [assembly: InternalsVisibleTo("Agent.EntityFrameworkCore")]
@@ -27,8 +28,9 @@ namespace Elastic.Agent.Core.Report
     /// </summary>
     internal class PayloadSender : IDisposable, IPayloadSender
     {
-        private readonly Config agentConfig;
+        private readonly IConfig agentConfig;
         private readonly AbstractLogger logger;
+        private readonly Uri serverUrlBase;
 
         /// <summary>
         /// The work of sending data back to the server is done on this thread
@@ -40,12 +42,11 @@ namespace Elastic.Agent.Core.Report
         /// </summary>
         private BlockingCollection<Payload> payloads = new BlockingCollection<Payload>();
 
-        public String ServerUrlBase { get; set; } = "http://127.0.0.1:8200";
-
-        public PayloadSender(Config agentConfig)
+        public PayloadSender()
         {
-            this.agentConfig = agentConfig;
+            agentConfig = Apm.Agent.Config;
             logger = Apm.Agent.CreateLogger(nameof(PayloadSender));
+            serverUrlBase = agentConfig.ServerUrls[0];
             workerThread = new Thread(StartWork)
             {
                 IsBackground = true
@@ -60,7 +61,8 @@ namespace Elastic.Agent.Core.Report
 
         public async void StartWork()
         {
-            HttpClient httpClient = new HttpClient();           
+            HttpClient httpClient = new HttpClient();
+            httpClient.BaseAddress = serverUrlBase;
 
             while (true)
             {
@@ -70,7 +72,7 @@ namespace Elastic.Agent.Core.Report
                 {
                     string json = JsonConvert.SerializeObject(item, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
                     var content = new StringContent(json, Encoding.UTF8, "application/json");
-                    var result = await httpClient.PostAsync(ServerUrlBase + Consts.IntakeV1Transactions, content);
+                    var result = await httpClient.PostAsync(Consts.IntakeV1Transactions, content);
 
                     var isSucc = result.IsSuccessStatusCode;
                     var str = await result.Content.ReadAsStringAsync();
