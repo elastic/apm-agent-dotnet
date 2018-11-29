@@ -18,6 +18,9 @@ But it's possible to create custom transactions not associated with an HTTP requ
 By default the agent comes with support for ASP.NET Core out-of-the-box.
 To instrument other events, you can use custom spans.
 
+[float]
+[[additional-components]]
+=== Additional Components
 The agent is only one of multiple components you need to get started with APM.
 Please also have a look at the documentation for
 
