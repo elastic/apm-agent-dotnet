@@ -10,14 +10,20 @@ namespace Elastic.Apm
 {
     public static class Agent
     {
-        public static LogLevel LogLevel { get; set; } = LogLevel.Error;
+        private static LogLevel? logLevel;
+        public static LogLevel LogLevel
+        {
+            get => logLevel?? Config.LogLevel;
+            set => logLevel = value;
+
+        }
 
         private static IConfig config = new EnvironmentVariableConfig();
         public static IConfig Config 
         {
             get
             {
-                if (config.Logger == null)
+                if (config?.Logger == null)
                 {
                     config.Logger = CreateLogger("Config");
                 }

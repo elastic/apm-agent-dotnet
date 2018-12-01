@@ -9,5 +9,7 @@ namespace Elastic.Agent.Core.Config
         AbstractLogger Logger { get; set; }
 
         List<Uri> ServerUrls { get; }
+
+        LogLevel LogLevel { get; }
     }
 }

@@ -6,8 +6,9 @@ namespace Elastic.Agent.Core.Config
 {
     public class EnvironmentVariableConfig : IConfig
     {
-        private List<Uri> serverUrls = new List<Uri>();
+        public AbstractLogger Logger { get; set; }
 
+        private List<Uri> serverUrls = new List<Uri>();
         public List<Uri> ServerUrls { 
             get 
             {
@@ -40,12 +41,9 @@ namespace Elastic.Agent.Core.Config
                     {
                         AddDefaultWithDebug();
                     }
-                    return serverUrls;
                 }
-                else
-                {
-                    return serverUrls;
-                }
+
+                return serverUrls;
 
                 void AddDefaultWithDebug()
                 {
@@ -55,11 +53,34 @@ namespace Elastic.Agent.Core.Config
             }
         }
 
-        public AbstractLogger Logger { get; set; }
+        private LogLevel? logLevel;
+        public LogLevel LogLevel
+        {
+            get
+            {
+                if(!logLevel.HasValue)
+                {
+                    var logLevelStr = Environment.GetEnvironmentVariable(EnvVarConsts.LogLevel);
+
+                    if(Enum.TryParse("Active", out LogLevel parsedLogLevel))
+                    {
+                        logLevel = parsedLogLevel;
+                    }
+                    else
+                    {
+                        logLevel = LogLevel.Error;
+                        Logger?.LogError($"Failed parsing log level from environment variable: {EnvVarConsts.LogLevel}, value: {logLevelStr}. Defaulting to log level 'Error'");
+                    }
+                }
+
+                return logLevel.Value;
+            }
+        }
     }
 
     public static class EnvVarConsts
     {
-        public static String ServerUrls => "ELASTIC_APM_SERVER_URLS";       
+        public static String ServerUrls => "ELASTIC_APM_SERVER_URLS";
+        public static String LogLevel => "ELASTIC_APM_LOG_LEVEL";
     }
 }
