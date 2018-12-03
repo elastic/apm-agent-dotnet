@@ -10,11 +10,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-using Elastic.Agent.AspNetCore;
-using Elastic.Agent.EntityFrameworkCore;
+using Elastic.Apm.AspNetCore;
+using Elastic.Apm.EntityFrameworkCore;
 using SampleAspNetCoreApp.Data;
 using Microsoft.EntityFrameworkCore;
-using Elastic.Agent.Core.DiagnosticSource;
+using Elastic.Apm.DiagnosticSource;
 
 namespace SampleAspNetCoreApp
 {
