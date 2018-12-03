@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Elastic.Agent.Core.Logging;
 
 namespace Elastic.Agent.Core.Config
@@ -32,7 +33,7 @@ namespace Elastic.Agent.Core.Config
                         }
                         catch (Exception e)
                         {
-                            Logger?.LogError($"Failed parsing Server URL from environment variable: {EnvVarConsts.ServerUrls}, value: {url}");
+                            Logger?.LogError($"Failed parsing server URL from environment variable: {EnvVarConsts.ServerUrls}, value: {url}");
                             Logger?.LogDebug($"{e.GetType().Name}: {e.Message}");
                         }
                     }
@@ -68,7 +69,7 @@ namespace Elastic.Agent.Core.Config
                         return logLevel.Value;
                     }
                   
-                    if (Enum.TryParse("Active", out LogLevel parsedLogLevel))
+                    if (Enum.TryParse(logLevelStr, out LogLevel parsedLogLevel))
                     {
                         logLevel = parsedLogLevel;
                     }
@@ -78,9 +79,12 @@ namespace Elastic.Agent.Core.Config
                         Logger?.LogError($"Failed parsing log level from environment variable: {EnvVarConsts.LogLevel}, value: {logLevelStr}. Defaulting to log level 'Error'");
                     }
                 }
-
+               // Console.WriteLine("GetLogLevel");
+                //Console.WriteLine(Environment.StackTrace.Substring(0,1580).ToString());
                 return logLevel.Value;
             }
+
+            set => logLevel = value;
         }
     }
 

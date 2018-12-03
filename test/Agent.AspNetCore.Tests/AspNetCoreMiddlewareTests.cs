@@ -19,6 +19,8 @@ using System.Reflection;
 using System.Net.Http;
 using Elastic.Agent.Core;
 
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
+
 namespace Agent.AspNetCore.Tests
 {
     public class AspNetCoreMiddlewareTests

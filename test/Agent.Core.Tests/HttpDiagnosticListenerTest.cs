@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Elastic.Agent.Core.Config;
 using Elastic.Agent.Core.DiagnosticListeners;
 using Elastic.Agent.Core.DiagnosticSource;
 using Elastic.Agent.Core.Logging;
@@ -15,6 +17,19 @@ namespace Elastic.Agent.Core.Tests
 {
     public class HttpDiagnosticListenerTest
     {
+        public HttpDiagnosticListenerTest()
+        {
+            //reset the static type APM.Agent
+            Type staticType = typeof(Apm.Agent);
+            ConstructorInfo ci = staticType.TypeInitializer;
+            object[] parameters = new object[0];
+            ci.Invoke(null, parameters);
+          
+            //unset environment variables
+            Environment.SetEnvironmentVariable(EnvVarConsts.LogLevel, null);
+            Environment.SetEnvironmentVariable(EnvVarConsts.ServerUrls, null);
+        }
+        
         /// <summary>
         /// Calls the OnError method on the HttpDiagnosticListener and makes sure that the correct error message is logged.
         /// </summary>
@@ -85,7 +100,7 @@ namespace Elastic.Agent.Core.Tests
         {
             StartTransaction();
             Apm.Agent.SetLoggerType<TestLogger>();
-            Apm.Agent.LogLevel = LogLevel.Warning; //make sure we have high enough log level
+            Apm.Agent.Config.LogLevel = LogLevel.Warning; //make sure we have high enough log level
             var listener = new HttpDiagnosticListener();
 
             var request = new HttpRequestMessage(HttpMethod.Get, "https://elastic.co");

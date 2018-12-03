@@ -18,7 +18,7 @@ namespace Elastic.Agent.Core.Logging
 
         public void LogInfo(String info)
         {
-            if (Apm.Agent.LogLevel >= LogLevel.Info)
+            if (Apm.Agent.Config.LogLevel >= LogLevel.Info)
             {
                 PrintLogline($"{GetPrefixString(LogLevel.Info)}{info}");
             }
@@ -26,7 +26,7 @@ namespace Elastic.Agent.Core.Logging
 
         public void LogWarning(String warning)
         {
-            if (Apm.Agent.LogLevel >= LogLevel.Warning)
+            if (Apm.Agent.Config.LogLevel >= LogLevel.Warning)
             {
                 PrintLogline($"{GetPrefixString(LogLevel.Warning)}{warning}");
             }
@@ -34,7 +34,7 @@ namespace Elastic.Agent.Core.Logging
 
         public void LogError(String error)
         {
-            if (Apm.Agent.LogLevel >= LogLevel.Error)
+            if (Apm.Agent.Config.LogLevel >= LogLevel.Error)
             {
                 PrintLogline($"{GetPrefixString(LogLevel.Error)}{error}");
             }
@@ -42,7 +42,7 @@ namespace Elastic.Agent.Core.Logging
 
         public void LogDebug(String debugInfo)
         {
-            if (Apm.Agent.LogLevel >= LogLevel.Debug)
+            if (Apm.Agent.Config.LogLevel >= LogLevel.Debug)
             {
                 PrintLogline($"{GetPrefixString(LogLevel.Debug)}{debugInfo}");
             }

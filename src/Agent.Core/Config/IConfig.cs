@@ -10,6 +10,6 @@ namespace Elastic.Agent.Core.Config
 
         List<Uri> ServerUrls { get; }
 
-        LogLevel LogLevel { get; }
+        LogLevel LogLevel { get; set; }
     }
 }

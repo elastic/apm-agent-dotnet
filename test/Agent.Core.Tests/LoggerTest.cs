@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Reflection;
+using Elastic.Agent.Core.Config;
 using Elastic.Agent.Core.Logging;
 using Elastic.Agent.Core.Tests.Mocks;
 
@@ -12,6 +14,16 @@ namespace Elastic.Agent.Core.Tests
 
         public LoggerTest()
         {
+            //reset the static type APM.Agent
+            Type staticType = typeof(Apm.Agent);
+            ConstructorInfo ci = staticType.TypeInitializer;
+            object[] parameters = new object[0];
+            ci.Invoke(null, parameters);
+          
+            //unset environment variables
+            Environment.SetEnvironmentVariable(EnvVarConsts.LogLevel, null);
+            Environment.SetEnvironmentVariable(EnvVarConsts.ServerUrls, null);
+            
             Apm.Agent.SetLoggerType<TestLogger>();
             logger = Apm.Agent.CreateLogger("Test");           
         }
@@ -60,7 +72,7 @@ namespace Elastic.Agent.Core.Tests
 
         private void LogWithLevel(LogLevel logLevel)
         {
-            Apm.Agent.LogLevel = logLevel;
+            Apm.Agent.Config.LogLevel = logLevel;
 
             logger.LogError("Error log");
             logger.LogWarning("Warning log");

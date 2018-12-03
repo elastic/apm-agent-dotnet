@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Reflection;
 using Elastic.Agent.Core.Config;
+using Elastic.Agent.Core.Logging;
 using Elastic.Agent.Core.Tests.Mocks;
 using Xunit;
+
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace Elastic.Agent.Core.Tests
 {
@@ -18,6 +21,12 @@ namespace Elastic.Agent.Core.Tests
             ConstructorInfo ci = staticType.TypeInitializer;
             object[] parameters = new object[0];
             ci.Invoke(null, parameters);
+          
+            //unset environment variables
+            Environment.SetEnvironmentVariable(EnvVarConsts.LogLevel, null);
+            Environment.SetEnvironmentVariable(EnvVarConsts.ServerUrls, null);
+            
+            Console.WriteLine("Ctor runs");
         }
 
         [Fact]
@@ -45,7 +54,7 @@ namespace Elastic.Agent.Core.Tests
             Environment.SetEnvironmentVariable(EnvVarConsts.ServerUrls, serverUrl);
             Assert.Equal(ConfigConsts.DefaultServerUri.ToString(), Apm.Agent.Config.ServerUrls[0].ToString());
 
-            Assert.Equal($"Error Config: Failed parsing Server URL from environment variable: {EnvVarConsts.ServerUrls}, value: {serverUrl}",
+            Assert.Equal($"Error Config: Failed parsing server URL from environment variable: {EnvVarConsts.ServerUrls}, value: {serverUrl}",
                          (Apm.Agent.Config.Logger as TestLogger).Lines[0]);
         }
 
@@ -88,8 +97,53 @@ namespace Elastic.Agent.Core.Tests
             Assert.Equal(serverUrl3, Apm.Agent.Config.ServerUrls[1].OriginalString);
             Assert.Equal(serverUrl3.ToLower() + "/", Apm.Agent.Config.ServerUrls[1].ToString().ToLower());
 
-            Assert.Equal($"Error Config: Failed parsing Server URL from environment variable: {EnvVarConsts.ServerUrls}, value: {serverUrl2}",
+            Assert.Equal($"Error Config: Failed parsing server URL from environment variable: {EnvVarConsts.ServerUrls}, value: {serverUrl2}",
                         (Apm.Agent.Config.Logger as TestLogger).Lines[0]);
+        }
+
+        [Fact]
+        public void DefaultLogLevelTest()
+        {
+            Assert.Equal(LogLevel.Error, Apm.Agent.Config.LogLevel);
+        }
+
+        [Fact]
+        public void SetDebugLogLevelTest()
+        {
+            Environment.SetEnvironmentVariable(EnvVarConsts.LogLevel, $"Debug");
+            Assert.Equal(LogLevel.Debug, Apm.Agent.Config.LogLevel);
+        }
+
+        [Fact]
+        public void SetErrorLogLevelTest()
+        {
+            Environment.SetEnvironmentVariable(EnvVarConsts.LogLevel, $"Error");
+            Assert.Equal(LogLevel.Error, Apm.Agent.Config.LogLevel);
+        }
+
+//        [Fact]
+//        public void SetInfoLogLevelTest()
+//        {
+//            Environment.SetEnvironmentVariable(EnvVarConsts.LogLevel, $"Info");
+//            Assert.Equal(LogLevel.Info, Apm.Agent.Config.LogLevel);
+//        }
+
+        [Fact]
+        public void SetWarningLogLevelTest()
+        {
+            Environment.SetEnvironmentVariable(EnvVarConsts.LogLevel, $"Warning");
+            Assert.Equal(LogLevel.Warning, Apm.Agent.Config.LogLevel);
+        }
+        [Fact]
+        public void SetInvalidLogLevelTest()
+        {
+            var logLevelValue = "InvalidLogLevel";
+            Apm.Agent.SetLoggerType<TestLogger>();
+            Environment.SetEnvironmentVariable(EnvVarConsts.LogLevel, logLevelValue);
+
+            Assert.Equal(LogLevel.Error, Apm.Agent.Config.LogLevel);
+            Assert.Equal($"Error Config: Failed parsing log level from environment variable: {EnvVarConsts.LogLevel}, value: {logLevelValue}. Defaulting to log level 'Error'", (Apm.Agent.Config.Logger as TestLogger).Lines[0]);
+
         }
     }
 }
