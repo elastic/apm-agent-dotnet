@@ -4,7 +4,7 @@ using Elastic.Agent.Core.Logging;
 
 namespace Elastic.Agent.Core.Config
 {
-    public class EnvironmentVariableConfig : IConfig
+    internal class EnvironmentVariableConfig : IConfig
     {
         public AbstractLogger Logger { get; set; }
 
@@ -62,7 +62,13 @@ namespace Elastic.Agent.Core.Config
                 {
                     var logLevelStr = Environment.GetEnvironmentVariable(EnvVarConsts.LogLevel);
 
-                    if(Enum.TryParse("Active", out LogLevel parsedLogLevel))
+                    if (String.IsNullOrEmpty(logLevelStr))
+                    {
+                        logLevel = LogLevel.Error;
+                        return logLevel.Value;
+                    }
+                  
+                    if (Enum.TryParse("Active", out LogLevel parsedLogLevel))
                     {
                         logLevel = parsedLogLevel;
                     }
@@ -78,7 +84,7 @@ namespace Elastic.Agent.Core.Config
         }
     }
 
-    public static class EnvVarConsts
+    internal static class EnvVarConsts
     {
         public static String ServerUrls => "ELASTIC_APM_SERVER_URLS";
         public static String LogLevel => "ELASTIC_APM_LOG_LEVEL";
