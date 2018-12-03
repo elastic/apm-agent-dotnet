@@ -121,12 +121,12 @@ namespace Elastic.Agent.Core.Tests
             Assert.Equal(LogLevel.Error, Apm.Agent.Config.LogLevel);
         }
 
-//        [Fact]
-//        public void SetInfoLogLevelTest()
-//        {
-//            Environment.SetEnvironmentVariable(EnvVarConsts.LogLevel, $"Info");
-//            Assert.Equal(LogLevel.Info, Apm.Agent.Config.LogLevel);
-//        }
+        [Fact]
+        public void SetInfoLogLevelTest()
+        {
+            Environment.SetEnvironmentVariable(EnvVarConsts.LogLevel, $"Info");
+            Assert.Equal(LogLevel.Info, Apm.Agent.Config.LogLevel);
+        }
 
         [Fact]
         public void SetWarningLogLevelTest()
