@@ -5,8 +5,6 @@ Please fill out this survey to help us prioritizing framework support:
 
 This agent is in prototyping state and under heavy development. Do not deploy into production!
 
-Currently work is done on the [prototype branch](https://github.com/elastic/apm-agent-dotnet/tree/prototype)
-
 
 ## Getting Help
 

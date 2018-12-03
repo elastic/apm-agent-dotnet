@@ -1,0 +1,61 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3734A52F-2222-454B-BF58-1BA5C1F29D77}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{3C791D9C-6F19-4F46-B367-2EC0F818762D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleAspNetCoreApp", "sample\SampleAspNetCoreApp\SampleAspNetCoreApp.csproj", "{0ADF687D-4DB7-417E-80B4-27B3FD86875E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{267A241E-571F-458F-B04C-B6C4DE79E735}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm", "src\Elastic.Apm\Elastic.Apm.csproj", "{90BC9629-C8D2-4FD5-863E-EA2D5FB37341}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.AspNetCore", "src\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj", "{D35FFCED-CFF1-45D6-BD30-02CEA0DDE2AC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.EntityFrameworkCore", "src\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj", "{CB373BA1-19BF-4463-BCA4-BCA78F3C6FF3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Tests", "test\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj", "{4BEAD125-6F93-4566-A1D3-362F55D7AD4C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.AspNetCore.Tests", "test\Elastic.Apm.AspNetCore.Tests\Elastic.Apm.AspNetCore.Tests.csproj", "{36D72723-2161-4322-A04B-E97D0CB48EF6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0ADF687D-4DB7-417E-80B4-27B3FD86875E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0ADF687D-4DB7-417E-80B4-27B3FD86875E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0ADF687D-4DB7-417E-80B4-27B3FD86875E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0ADF687D-4DB7-417E-80B4-27B3FD86875E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90BC9629-C8D2-4FD5-863E-EA2D5FB37341}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90BC9629-C8D2-4FD5-863E-EA2D5FB37341}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90BC9629-C8D2-4FD5-863E-EA2D5FB37341}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90BC9629-C8D2-4FD5-863E-EA2D5FB37341}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D35FFCED-CFF1-45D6-BD30-02CEA0DDE2AC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D35FFCED-CFF1-45D6-BD30-02CEA0DDE2AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D35FFCED-CFF1-45D6-BD30-02CEA0DDE2AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D35FFCED-CFF1-45D6-BD30-02CEA0DDE2AC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CB373BA1-19BF-4463-BCA4-BCA78F3C6FF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CB373BA1-19BF-4463-BCA4-BCA78F3C6FF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CB373BA1-19BF-4463-BCA4-BCA78F3C6FF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CB373BA1-19BF-4463-BCA4-BCA78F3C6FF3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4BEAD125-6F93-4566-A1D3-362F55D7AD4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BEAD125-6F93-4566-A1D3-362F55D7AD4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BEAD125-6F93-4566-A1D3-362F55D7AD4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BEAD125-6F93-4566-A1D3-362F55D7AD4C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36D72723-2161-4322-A04B-E97D0CB48EF6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36D72723-2161-4322-A04B-E97D0CB48EF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36D72723-2161-4322-A04B-E97D0CB48EF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36D72723-2161-4322-A04B-E97D0CB48EF6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0ADF687D-4DB7-417E-80B4-27B3FD86875E} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
+		{90BC9629-C8D2-4FD5-863E-EA2D5FB37341} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
+		{D35FFCED-CFF1-45D6-BD30-02CEA0DDE2AC} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
+		{CB373BA1-19BF-4463-BCA4-BCA78F3C6FF3} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
+		{4BEAD125-6F93-4566-A1D3-362F55D7AD4C} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{36D72723-2161-4322-A04B-E97D0CB48EF6} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+	EndGlobalSection
+EndGlobal
