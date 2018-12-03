@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace Elastic.Apm.DiagnosticSource
 {
-    internal class DiagnosticInitializer : IObserver<DiagnosticListener>, IDisposable
+    internal class DiagnosticInitializer : IObserver<DiagnosticListener>
     {
         private readonly IEnumerable<IDiagnosticListener> _listeners;
 
@@ -13,20 +13,8 @@ namespace Elastic.Apm.DiagnosticSource
             _listeners = listeners;
         }
 
-        public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void OnCompleted()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void OnError(Exception error)
-        {
-            throw new NotImplementedException();
-        }
+        public void OnCompleted(){}
+        public void OnError(Exception error){}
 
         public void OnNext(DiagnosticListener value)
         {
