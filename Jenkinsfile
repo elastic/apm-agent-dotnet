@@ -90,7 +90,7 @@ pipeline {
               junit(allowEmptyResults: true, 
                 keepLongStdio: true, 
                 testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
-              codecov("apm-agent-dotnet")
+              codecov(repo: 'apm-agent-dotnet', basedir: "${BASE_DIR}")
             }
           }
         }
