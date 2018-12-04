@@ -23,7 +23,7 @@ pipeline {
       environment {
         ELASTIC_DOCS = "${env.WORKSPACE}/elastic/docs"
         HOME = "${env.WORKSPACE}"
-        PATH = "${env.PATH}:${env.HOME}/bin:${env.HOME}/dotnet:${env.HOME}.dotnet/tools"
+        PATH = "${env.PATH}:${env.HOME}/bin:${env.HOME}/dotnet:${env.HOME}/.dotnet/tools"
         DOTNET_ROOT = "${env.HOME}/dotnet"
       }
       stages {
@@ -76,7 +76,6 @@ pipeline {
                 done
                 dotnet tool install -g dotnet-xunit-to-junit
                 dotnet test -v n -r target -d target/diag.log --logger:"xunit" || echo -e "\033[31;49mTests FAILED\033[0m"
-                
                 for i in $(find . -name TestResults.xml)
                 do
                   DIR=$(dirname "$i")
