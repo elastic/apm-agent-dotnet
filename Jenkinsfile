@@ -75,7 +75,7 @@ pipeline {
                   dotnet add "$i" package XunitXml.TestLogger --version 2.0.0
                 done
                 dotnet tool install -g dotnet-xunit-to-junit
-                dotnet test -v n -r target -d target/diag.log --logger:"xunit"
+                dotnet test -v n -r target -d target/diag.log --logger:"xunit" || echo -e "\033[31;49mTests FAILED\033[0m"
                 
                 for i in $(find . -name TestResults.xml)
                 do
