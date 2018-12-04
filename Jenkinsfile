@@ -79,6 +79,9 @@ pipeline {
                   dotnet add "$i" package coverlet.msbuild
                 done
                 
+                # build
+                dotnet build
+                
                 # run tests
                 dotnet test -v n -r target -d target/diag.log --logger:"xunit" --no-build \
                   /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura \
