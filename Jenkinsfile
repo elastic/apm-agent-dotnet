@@ -70,12 +70,21 @@ pipeline {
               dir("${BASE_DIR}"){
                 sh '''#!/bin/bash
                 set -euxo pipefail
+                
+                # install tools
+                dotnet tool install -g dotnet-xunit-to-junit
                 for i in $(find . -name '*.??proj') 
                 do 
                   dotnet add "$i" package XunitXml.TestLogger --version 2.0.0
+                  dotnet add "$i" package coverlet.msbuild
                 done
-                dotnet tool install -g dotnet-xunit-to-junit
-                dotnet test -v n -r target -d target/diag.log --logger:"xunit" || echo -e "\033[31;49mTests FAILED\033[0m"
+                
+                # run tests
+                dotnet test -v n -r target -d target/diag.log --logger:"xunit" --no-build \
+                  /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura \
+                  /p:CoverletOutput=target/Coverage/ || echo -e "\033[31;49mTests FAILED\033[0m"
+
+                #convert xunit files to junit files
                 for i in $(find . -name TestResults.xml)
                 do
                   DIR=$(dirname "$i")
