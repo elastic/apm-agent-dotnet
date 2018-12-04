@@ -23,7 +23,7 @@ namespace Elastic.Apm.DiagnosticListeners
         /// Keeps track of ongoing requests
         /// </summary>
         internal readonly ConcurrentDictionary<HttpRequestMessage, Span> processingRequests = new ConcurrentDictionary<HttpRequestMessage, Span>();
-        private readonly IConfig agentConfig;
+        private readonly AbstractAgentConfig agentConfig;
 
         private readonly AbstractLogger logger;
         internal AbstractLogger Logger => logger;

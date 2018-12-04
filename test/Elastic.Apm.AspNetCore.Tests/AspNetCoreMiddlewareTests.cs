@@ -83,7 +83,7 @@ namespace Elastic.Apm.AspNetCore.Tests
                 {
                     n.Configure(app =>
                     {
-                        app.UseElasticApm(payloadSender);
+                        app.UseElasticApm(payloadSender: payloadSender);
                         new ElasticCoreListeners().Start();
                         new ElasticEntityFrameworkCoreListener().Start();
 

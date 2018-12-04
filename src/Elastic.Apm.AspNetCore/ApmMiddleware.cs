@@ -10,6 +10,7 @@ using System.Globalization;
 using Elastic.Apm;
 using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Report;
+using Microsoft.Extensions.Configuration;
 
 namespace Elastic.Apm.AspNetCore
 {

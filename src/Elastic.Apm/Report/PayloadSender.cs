@@ -18,7 +18,7 @@ namespace Elastic.Apm.Report
     /// </summary>
     internal class PayloadSender : IDisposable, IPayloadSender
     {
-        private readonly IConfig agentConfig;
+        private readonly AbstractAgentConfig agentConfig;
         private readonly AbstractLogger logger;
         private readonly Uri serverUrlBase;
 

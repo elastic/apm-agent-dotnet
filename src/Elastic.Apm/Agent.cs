@@ -14,8 +14,8 @@ namespace Elastic.Apm
 {
     public static class Agent
     {
-        private static IConfig config = new EnvironmentVariableConfig();
-        public static IConfig Config 
+        private static AbstractAgentConfig config = new EnvironmentVariableConfig();
+        public static AbstractAgentConfig Config 
         {
             get
             {
