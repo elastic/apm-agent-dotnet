@@ -33,7 +33,7 @@ NOTE: By simply calling `app.UseElasticApm()` without the overload, the agent wi
 
 This is a typical `appsettings.json` file that contains some sample configuration. The part below `ElasticApm` is fetched by the agent if the corresponding `IConfiguration` is passed to the agent.
 
-[listing]
+[source,js]
 ----
 {
   "Logging": {
@@ -53,7 +53,7 @@ This is a typical `appsettings.json` file that contains some sample configuratio
 [[config-reporter]]
 === Reporter configuration options
 [float]
-[[config-server-urls]]
+[[config-ServerUrls]]
 ==== `ServerUrls`
 
 [options="header"]
@@ -74,7 +74,7 @@ The URLs for your APM Servers. The URLs must be fully qualified, including proto
 NOTE: Providing multiple URLs only works with APM Server v6.5+.
 
 [float]
-[[config-server-urls]]
+[[config-LogLevel]]
 ==== `LogLevel`
 
 [options="header"]
