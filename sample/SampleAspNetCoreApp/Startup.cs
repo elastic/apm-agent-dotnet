@@ -10,11 +10,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-using Elastic.Agent.AspNetCore;
-using Elastic.Agent.EntityFrameworkCore;
+using Elastic.Apm.AspNetCore;
+using Elastic.Apm.EntityFrameworkCore;
 using SampleAspNetCoreApp.Data;
 using Microsoft.EntityFrameworkCore;
-using Elastic.Agent.Core.DiagnosticSource;
+using Elastic.Apm.DiagnosticSource;
 
 namespace SampleAspNetCoreApp
 {
@@ -47,7 +47,7 @@ namespace SampleAspNetCoreApp
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            app.UseElasticApm();
+            app.UseElasticApm(Configuration);
             new ElasticCoreListeners().Start();
             new ElasticEntityFrameworkCoreListener().Start();
            
