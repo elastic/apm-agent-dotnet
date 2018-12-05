@@ -1,19 +1,65 @@
 [[configuration]]
 == Configuration
 
-To adapt the Elastic APM agent to your needs, you can configure it using environment variables.
+To adapt the Elastic APM agent to your needs, you can configure it using different configuration sources, which have different naming conventions for the property key. 
 
+By default the agent uses environment variables. Additionally on ASP.NET Core the agent can plug into the https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-2.2[Microsoft.Extensions.Configuration] infrastructure.
+
+=== Configuration on ASP.NET Core
+The `UseElasticApm()` extension method offers an overload to pass an `IConfiguration` instance to the APM Agent. By using this overload in a typical ASP.NET Core application the `Startup.cs` file would contain code similar to the following:
+
+[source,csharp]
+----
+public class Startup
+{
+    public Startup(IConfiguration configuration)
+    {
+        Configuration = configuration;
+    }
+
+    public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+    {
+        //Registers the agent with an IConfiguration instance:
+        app.UseElasticApm(Configuration);
+
+        //Rest of the Configure() method...
+    }
+}
+----
+
+With this you can use any configuration source that you configured on the `IConfiguration` instance that you passed to the APM Agent. You can find the key of each configuration below in the IConfiguration key column.
+
+NOTE: By simply calling `app.UseElasticApm()` without the overload, the agent will read configurations only from environment variables.
+
+This is a typical `appsettings.json` file that contains some sample configuration. The part below `ElasticApm` is fetched by the agent if the corresponding `IConfiguration` is passed to the agent.
+
+[listing]
+----
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "ElasticApm":
+    {
+      "LogLevel":  "Debug",
+      "ServerUrls":  "http://myapmserver:8200"
+    }
+}
+----
 
 [[config-reporter]]
 === Reporter configuration options
 [float]
 [[config-server-urls]]
-==== `server_urls`
+==== `ServerUrls`
 
 [options="header"]
 |============
-| Environment variable name
-| `ELASTIC_APM_SERVER_URLS`
+| Environment variable name | IConfiguration key
+| `ELASTIC_APM_SERVER_URLS` | ElasticApm:ServerUrls
 |============
 
 [options="header"]
@@ -26,3 +72,23 @@ The URLs for your APM Servers. The URLs must be fully qualified, including proto
 
 
 NOTE: Providing multiple URLs only works with APM Server v6.5+.
+
+[float]
+[[config-server-urls]]
+==== `LogLevel`
+
+[options="header"]
+|============
+| Environment variable name | IConfiguration key
+| `ELASTIC_APM_LOG_LEVEL`   | ElasticApm:LogLevel
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `Error`                 | String
+|============
+
+Sets the logging level for the agent.
+
+Valid options: `Error`, `Warning`, `Info`, `Debug`.
