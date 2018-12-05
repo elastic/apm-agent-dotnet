@@ -112,18 +112,15 @@ pipeline {
         stage('Documentation') {
           when {
             beforeAgent true
-            allOf {
-              anyOf {
-                not {
-                  changeRequest()
-                }
-                branch 'master'
-                branch "\\d+\\.\\d+"
-                branch "v\\d?"
-                tag "v\\d+\\.\\d+\\.\\d+*"
-                environment name: 'Run_As_Master_Branch', value: 'true'
+            anyOf {
+              not {
+                changeRequest()
               }
-              environment name: 'doc_ci', value: 'true'
+              branch 'master'
+              branch "\\d+\\.\\d+"
+              branch "v\\d?"
+              tag "v\\d+\\.\\d+\\.\\d+*"
+              expression { return params.Run_As_Master_Branch }
             }
           }
           steps {
