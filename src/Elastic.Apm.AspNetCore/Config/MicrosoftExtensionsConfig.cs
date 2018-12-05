@@ -32,7 +32,7 @@ namespace Elastic.Apm.AspNetCore.Config
         }
     }
 
-    class MicrosoftExtensionConfigConsts
+    internal static class MicrosoftExtensionConfigConsts
     {
         public static string ServerUrls => "ElasticApm:ServerUrls";
         public static string LogLevel => "ElasticApm:LogLevel";

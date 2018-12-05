@@ -11,6 +11,10 @@ using Elastic.Apm;
 using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Report;
 using Microsoft.Extensions.Configuration;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("Elastic.Apm.Tests")]
+[assembly: InternalsVisibleTo("Elastic.Apm.AspNetCore.Tests")]
 
 namespace Elastic.Apm.AspNetCore
 {

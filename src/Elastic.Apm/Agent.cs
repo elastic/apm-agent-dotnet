@@ -14,7 +14,19 @@ namespace Elastic.Apm
 {
     public static class Agent
     {
+        /// <summary>
+        /// By default the agent reads configs from environment variables and it uses the <see cref="EnvironmentVariableConfig"/> class.
+        /// This behaviour can be overwritten via the <see cref="Config"/> property. 
+        /// For example in ASP.NET Core a <see cref="Elastic.Apm.AspNetCore.Config.MicrosoftExtensionsConfig"/> 
+        /// with the actual <see cref="IConfiguration"/> instance can be created and passed to the agent. 
+        /// With that the agent will read configs from the <see cref="IConfiguration"/> instance.
+        /// </summary>
         private static AbstractAgentConfig config = new EnvironmentVariableConfig();
+
+        /// <summary>
+        /// The current agent config. This property stores all configs.
+        /// </summary>
+        /// <value>The config.</value>
         public static AbstractAgentConfig Config 
         {
             get
