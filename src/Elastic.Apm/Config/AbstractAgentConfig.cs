@@ -73,20 +73,16 @@ namespace Elastic.Apm.Config
                 {
                     (string logLevelStr,string configType, string configKey) = ReadLogLevel();
 
-                    if (String.IsNullOrEmpty(logLevelStr))
-                    {
-                        logLevel = LogLevel.Error;
-                        return logLevel.Value;
-                    }
+                    (var parsedLogLevel, var isError) = ParseLogLevel(logLevelStr);
 
-                    if (Enum.TryParse(logLevelStr, out LogLevel parsedLogLevel))
-                    {
-                        logLevel = parsedLogLevel;
-                    }
-                    else
+                    if(isError)
                     {
                         logLevel = LogLevel.Error;
                         Logger?.LogError($"Failed parsing log level from {configType}: {configKey}, value: {logLevelStr}. Defaulting to log level 'Error'");
+                    }
+                    else
+                    {
+                        logLevel = parsedLogLevel.HasValue ? parsedLogLevel : LogLevel.Error;
                     }
                 }
 
@@ -95,6 +91,20 @@ namespace Elastic.Apm.Config
 
             set => logLevel = value;
         }
-    }
 
+        protected (LogLevel? level, bool error) ParseLogLevel(string logLevelStr)
+        {
+            if (String.IsNullOrEmpty(logLevelStr))
+            {
+                return (null, false);
+            }
+
+            if (Enum.TryParse(logLevelStr, out LogLevel parsedLogLevel))
+            {
+                return (parsedLogLevel, false);
+            }
+
+            return (null, true);
+        }
+    }
 }

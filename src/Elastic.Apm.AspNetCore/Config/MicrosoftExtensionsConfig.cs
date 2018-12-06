@@ -17,7 +17,10 @@ namespace Elastic.Apm.AspNetCore.Config
         public MicrosoftExtensionsConfig(IConfiguration configuration)
         {
             this.configuration = configuration;
+            this.configuration.GetSection("ElasticApm")?
+                .GetReloadToken().RegisterChangeCallback(ChangeCallback, configuration.GetSection("ElasticApm"));
         }
+
 
         protected override (string value, string configType, string configKey) ReadServerUrls()
         {
@@ -29,6 +32,23 @@ namespace Elastic.Apm.AspNetCore.Config
         {
             var configValue = configuration[MicrosoftExtensionConfigConsts.LogLevel];
             return String.IsNullOrEmpty(configValue) ? (configuration[EnvVarConsts.LogLevel], "environment variable", EnvVarConsts.LogLevel) : (configValue, "IConfiguration", MicrosoftExtensionConfigConsts.LogLevel);
+        }
+
+        private void ChangeCallback(Object obj)
+        {
+            (var newlogLevel, var isError)
+                = ParseLogLevel((obj as IConfigurationSection)?[MicrosoftExtensionConfigConsts.LogLevel.Split(':')[1]]);
+
+            if(!isError && newlogLevel.HasValue && newlogLevel.Value != logLevel)
+            {
+                logLevel = newlogLevel;
+                Logger?.LogInfo($"Updated log level to {logLevel}");
+            }
+
+            if(isError)
+            {
+                Logger?.LogInfo($"Updating log level failed, current log level: {logLevel}");
+            }
         }
     }
 
