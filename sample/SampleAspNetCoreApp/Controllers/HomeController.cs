@@ -82,6 +82,12 @@ namespace SampleAspNetCoreApp.Controllers
             return View();
         }
 
+        public IActionResult TriggerError()
+        {
+            throw new Exception("This is a test exception!");
+            return View();
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

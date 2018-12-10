@@ -1,23 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using Elastic.Apm.AspNetCore.Tests.Mock;
-using Elastic.Apm.AspNetCore;
-using Elastic.Apm.EntityFrameworkCore;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
-
-
-using SampleAspNetCoreApp.Data;
-using Microsoft.EntityFrameworkCore;
 using System.Reflection;
-using System.Net.Http;
-using Elastic.Apm;
-using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Tests;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 
@@ -29,7 +16,10 @@ namespace Elastic.Apm.AspNetCore.Tests
         private readonly WebApplicationFactory<SampleAspNetCoreApp.Startup> factory;
 
         public AspNetCoreMiddlewareTests(WebApplicationFactory<SampleAspNetCoreApp.Startup> factory)
-         => this.factory = factory;
+        {
+            this.factory = factory;
+            TestHelper.ResetAgentAndEnvVars();
+        }
 
         /// <summary>
         /// Simulates and HTTP GET call to /home/about and asserts on what the agent should send to the server
@@ -39,7 +29,7 @@ namespace Elastic.Apm.AspNetCore.Tests
         public async Task HomeAboutTransactionTest(string url)
         {
             var capturedPayload = new MockPayloadSender();
-            var client = GetClient(capturedPayload);
+            var client = Helper.GetClient(capturedPayload, factory);
 
             var response = await client.GetAsync(url);
 
@@ -76,52 +66,5 @@ namespace Elastic.Apm.AspNetCore.Tests
             //test transaction.context.request.encrypted
             Assert.False(transaction.Context.Request.Socket.Encrypted);
         }
-
-        private HttpClient GetClient(MockPayloadSender payloadSender)
-            => factory
-                .WithWebHostBuilder(n =>
-                {
-                    n.Configure(app =>
-                    {
-                        app.UseElasticApm(payloadSender: payloadSender);
-                        new ElasticCoreListeners().Start();
-                        new ElasticEntityFrameworkCoreListener().Start();
-
-                        app.UseDeveloperExceptionPage();
-
-                        app.UseHsts();
-
-                        app.UseHttpsRedirection();
-                        app.UseStaticFiles();
-                        app.UseCookiePolicy();
-
-                        app.UseMvc(routes =>
-                        {
-                            routes.MapRoute(
-                                name: "default",
-                                template: "{controller=Home}/{action=Index}/{id?}");
-                        });
-                    });
-
-                    n.ConfigureServices((services) =>
-                    {
-                        services.Configure<CookiePolicyOptions>(options =>
-                        {
-                            options.CheckConsentNeeded = context => true;
-                            options.MinimumSameSitePolicy = SameSiteMode.None;
-                        });
-
-                        var connection = @"Data Source=blogging.db";
-                        services.AddDbContext<SampleDataContext>
-                            (options => options.UseSqlite(connection));
-
-                        services.AddMvc()
-                                //this is needed bacuase of a (probably) bug:
-                                //https://github.com/aspnet/Mvc/issues/5992
-                                .AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))))
-                                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-                    });
-                })
-            .CreateClient();
     }
 }

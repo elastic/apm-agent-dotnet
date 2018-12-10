@@ -5,6 +5,8 @@ namespace Elastic.Apm.Model.Payload
 {
     public class Transaction
     {
+        internal Service service;
+
         public Guid Id { get; set; }
         public long Duration { get; set; } //TODO datatype?
 

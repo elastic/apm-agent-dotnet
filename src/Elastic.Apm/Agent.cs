@@ -3,6 +3,7 @@
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using System.Runtime.CompilerServices;
+using Elastic.Apm.Report;
 
 //TODO: It'd be nice to move this into the .csproj
 [assembly: InternalsVisibleTo("Elastic.Apm.AspNetCore")]
@@ -27,7 +28,7 @@ namespace Elastic.Apm
         /// The current agent config. This property stores all configs.
         /// </summary>
         /// <value>The config.</value>
-        public static AbstractAgentConfig Config 
+        public static AbstractAgentConfig Config
         {
             get
             {
@@ -42,8 +43,28 @@ namespace Elastic.Apm
             {
                 config = value;
                 config.Logger = CreateLogger("Config");
-            } 
+            }
         }
+
+        private static IPayloadSender payloadSender;
+        public static IPayloadSender PayloadSender
+        {
+            get
+            {
+                if (payloadSender == null)
+                {
+                    payloadSender = new PayloadSender();
+                }
+
+                return payloadSender;
+            }
+
+            internal set 
+            {
+                payloadSender = value;
+            }
+        }
+
 
         /// <summary>
         /// Returns a logger with a specific prefix. The idea behind this class 

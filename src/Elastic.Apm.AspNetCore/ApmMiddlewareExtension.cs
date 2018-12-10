@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using Elastic.Apm.AspNetCore.Config;
+using Elastic.Apm.AspNetCore.DiagnosticListener;
+using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Report;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -24,7 +26,16 @@ namespace Elastic.Apm.AspNetCore
             {
                 Agent.Config = new MicrosoftExtensionsConfig(configuration);
             }
-            return payloadSender == null ? builder.UseMiddleware<ApmMiddleware>() : builder.UseMiddleware<ApmMiddleware>(payloadSender);
+
+            if(payloadSender != null)
+            {
+                Agent.PayloadSender = payloadSender;
+            }
+
+            System.Diagnostics.DiagnosticListener.AllListeners
+            .Subscribe(new DiagnosticInitializer(new List<IDiagnosticListener> { new AspNetCoreDiagnosticListener() }));
+
+            return builder.UseMiddleware<ApmMiddleware>();
         }
     }
 }

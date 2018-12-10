@@ -16,5 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\" />
+    <Folder Include="DiagnosticListener\" />
   </ItemGroup>
 </Project>

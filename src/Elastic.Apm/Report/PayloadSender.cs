@@ -30,7 +30,7 @@ namespace Elastic.Apm.Report
         /// <summary>
         /// Contains data that will be sent to the server
         /// </summary>
-        private BlockingCollection<Payload> payloads = new BlockingCollection<Payload>();
+        private BlockingCollection<Object> payloads = new BlockingCollection<Object>();
 
         public PayloadSender()
         {
@@ -45,14 +45,17 @@ namespace Elastic.Apm.Report
         }
 
         public void QueuePayload(Payload payload)
-        {
-            payloads.Add(payload);
-        }
+         => payloads.Add(payload);
+
+        public void QueueError(Error error)
+         => payloads.Add(error);
 
         public async void StartWork()
         {
-            HttpClient httpClient = new HttpClient();
-            httpClient.BaseAddress = serverUrlBase;
+            HttpClient httpClient = new HttpClient
+            {
+                BaseAddress = serverUrlBase
+            };
 
             while (true)
             {
@@ -62,15 +65,33 @@ namespace Elastic.Apm.Report
                 {
                     string json = JsonConvert.SerializeObject(item, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
                     var content = new StringContent(json, Encoding.UTF8, "application/json");
-                    var result = await httpClient.PostAsync(Consts.IntakeV1Transactions, content);
+
+                    HttpResponseMessage result = null;
+                    switch (item)
+                    {
+                        case Payload p:
+                            result = await httpClient.PostAsync(Consts.IntakeV1Transactions, content);
+                            break;
+                        case Error e:
+                            result = await httpClient.PostAsync(Consts.IntakeV1Errors, content);
+                            break;                        
+                    }                   
 
                     var isSucc = result.IsSuccessStatusCode;
                     var str = await result.Content.ReadAsStringAsync();
                 }
                 catch (Exception e)
                 {
-                    logger.LogWarning($"Failed sending transaction {item.Transactions.FirstOrDefault()?.Name}");
-                    logger.LogDebug($"{e.GetType().Name}: {e.Message}");
+                    if (item is Payload p)
+                    {
+                        logger.LogWarning($"Failed sending transaction {p.Transactions.FirstOrDefault()?.Name}");
+                        logger.LogDebug($"{e.GetType().Name}: {e.Message}");
+                    }
+                    if(item is Error err)
+                    {
+                        logger.LogWarning($"Failed sending Error {err.Errors[0]?.Id}");
+                        logger.LogDebug($"{e.GetType().Name}: {e.Message}");
+                    }
                 }
             }
         }

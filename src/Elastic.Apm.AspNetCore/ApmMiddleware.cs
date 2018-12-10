@@ -18,34 +18,33 @@ using System.Runtime.CompilerServices;
 
 namespace Elastic.Apm.AspNetCore
 {
-    public class ApmMiddleware : IDisposable
+    public class ApmMiddleware
     {
-        private IPayloadSender payloadSender;
         private readonly RequestDelegate next;
 
-        public ApmMiddleware(RequestDelegate next, IPayloadSender payloadSender = null)
-        {
-            this.payloadSender = payloadSender ?? new PayloadSender();
-            this.next = next;
-        }
-
-        public void Dispose()
-        {
-            if (payloadSender is IDisposable disposablePayloadSender)
-            {
-                disposablePayloadSender.Dispose();
-                disposablePayloadSender = null;
-            }
-        }
+        public ApmMiddleware(RequestDelegate next)
+            => this.next = next;
 
         public async Task InvokeAsync(HttpContext context)
         {
             var sw = Stopwatch.StartNew();
 
+            var service = new Service
+            {
+                Agent = new Apm.Model.Payload.Agent
+                {
+                    Name = Consts.AgentName,
+                    Version = Consts.AgentVersion
+                },
+                Name = Assembly.GetEntryAssembly()?.GetName()?.Name,
+                Framework = new Framework { Name = "ASP.NET Core", Version = "2.1" }, //TODO: Get version
+                Language = new Language { Name = "C#" } //TODO
+            };
+
             var transactions = new List<Transaction> {
                     new Transaction {
                         Name = $"{context.Request.Method} {context.Request.Path}",
-
+                        service = service,
                         Id = Guid.NewGuid(),
                         Type = "request",
                         TimestampInDateTime = DateTime.UtcNow,
@@ -88,22 +87,11 @@ namespace Elastic.Apm.AspNetCore
 
             var payload = new Payload
             {
-                Service = new Service
-                {
-                    Agent = new Apm.Model.Payload.Agent
-                    {
-                        Name = Consts.AgentName,
-                        Version = Consts.AgentVersion
-                    },
-                    Name = Assembly.GetEntryAssembly()?.GetName()?.Name,
-                    Framework = new Framework { Name = "ASP.NET Core", Version = "2.1" }, //TODO: Get version
-                    Language = new Language { Name = "C#" } //TODO
-                },
-
+                Service = service,
+                Transactions = TransactionContainer.Transactions.Value
             };
 
-            payload.Transactions = TransactionContainer.Transactions.Value;
-            payloadSender.QueuePayload(payload);
+            Agent.PayloadSender.QueuePayload(payload);
         }
 
         private string GetProtocolName(String protocol)
