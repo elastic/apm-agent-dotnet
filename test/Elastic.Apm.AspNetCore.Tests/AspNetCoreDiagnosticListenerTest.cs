@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Elastic.Apm.AspNetCore.Tests.Mock;
 using Elastic.Apm.Tests;
+using Elastic.Apm.Tests.Mock;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 
@@ -38,7 +38,7 @@ namespace Elastic.Apm.AspNetCore.Tests
             Assert.Single(capturedPayload.Payloads[0].Transactions);
 
             //This should be .Single, but despite 'CollectionBehavior(DisableTestParallelization = true)' it sometimes contains 2 errors when all tests are runnning. 
-            //TODO: This must be further investigated, based on first look it seem XUnit related - from what I see we don't capture or send errors twice.
+            //TODO: This must be further investigated, based on first look it seems to be XUnit related - from what I see we don't capture or send errors twice.
             Assert.NotEmpty(capturedPayload.Errors);
             Assert.Single(capturedPayload.Errors[0].Errors);
 
@@ -47,7 +47,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
             Assert.Equal("/Home/TriggerError", capturedPayload.Errors[0].Errors[0].Context.Request.Url.Full);
             Assert.Equal(HttpMethod.Get.Method, capturedPayload.Errors[0].Errors[0].Context.Request.Method);
-            Assert.Equal(false, capturedPayload.Errors[0].Errors[0].Exception.Handled);
+            Assert.False(capturedPayload.Errors[0].Errors[0].Exception.Handled);
         }
     }
 }

@@ -14,7 +14,7 @@ namespace Elastic.Apm.Model.Payload
             public CapturedException Exception { get; set; }
             public Guid Id { get; set; }
             public Trans Transaction { get; set; }
-            public String TimeStamp { get; set; }
+            public String Timestamp { get; set; }
             public String Culprit { get; set; }
 
             public class Trans

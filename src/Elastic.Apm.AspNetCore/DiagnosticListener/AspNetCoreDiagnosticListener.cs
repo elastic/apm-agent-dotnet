@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
 using Microsoft.AspNetCore.Http;
@@ -51,7 +52,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
                                     Type = exception.GetType().FullName,
                                     Handled = kv.Key  == "Microsoft.AspNetCore.Diagnostics.HandledException"
                                 },
-                                TimeStamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ"),
+                                Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ"),
                                 Context = transaction.Context
                             }
                         },
@@ -61,32 +62,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
                 if(exception != null)
                 {
                     var frames = new System.Diagnostics.StackTrace(exception).GetFrames();
-                    var stackFrames = new List<Stacktrace>(frames.Length);
-                    try
-                    {
-                        foreach (var item in frames)
-                        {
-                            var fileName = item?.GetMethod()?.DeclaringType?.Assembly?.GetName()?.Name;
-                            if (String.IsNullOrEmpty(fileName))
-                            {
-                                continue; //since filename is required by the server, if we don't have it we skip the frame
-                            }
-
-                            stackFrames.Add(new Stacktrace
-                            {
-                                Function = item?.GetMethod()?.Name,
-                                Filename = fileName,
-                                Module = item?.GetMethod()?.ReflectedType?.Name
-                            });
-                        }
-
-                        error.Errors[0].Exception.Stacktrace = stackFrames;
-                    }
-                    catch (Exception e)
-                    {
-                        logger.LogWarning($"Failed capturing stacktrace Error {error.Errors[0].Id}");
-                        logger.LogDebug($"{e.GetType().Name}: {e.Message}");
-                    }
+                    error.Errors[0].Exception.Stacktrace = StacktraceHelper.GenerateApmStackTrace(frames, logger, "failed ASP.NET Core request");
                 }
 
                 Agent.PayloadSender.QueueError(error);

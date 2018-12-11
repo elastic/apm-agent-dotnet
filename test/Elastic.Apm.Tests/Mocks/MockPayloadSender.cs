@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Report;
 
-namespace Elastic.Apm.AspNetCore.Tests.Mock
+namespace Elastic.Apm.Tests.Mock
 {
     public class MockPayloadSender : IPayloadSender
     {

@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
 
@@ -58,6 +59,49 @@ namespace Elastic.Apm.DiagnosticListeners
 
             switch (kv.Key)
             {
+                case "System.Net.Http.Exception":
+                    var exception = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Exception").GetValue(kv.Value) as Exception;
+                    var transaction = TransactionContainer.Transactions?.Value[0];
+
+                    var error = new Error
+                    {
+                        Errors = new List<Error.Err>
+                        {
+                            new Error.Err
+                            {
+                                Culprit = "Failed outgoing HTTP request",
+                                Exception = new CapturedException
+                                {
+                                    Message = exception.Message,
+                                    Type = exception.GetType().FullName
+                                    //Handled  TODO: this exception can be handled later
+                                },
+                                Transaction = new Error.Err.Trans
+                                {
+                                    Id = transaction.Id
+                                },
+                                Id = Guid.NewGuid(),
+                                Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ")
+                            }
+                        },
+
+                        Service = transaction.service
+                    };
+
+                    if(!String.IsNullOrEmpty(exception.StackTrace))
+                    {
+                        error.Errors[0].Exception.Stacktrace
+                             = StacktraceHelper.GenerateApmStackTrace(new System.Diagnostics.StackTrace(exception).GetFrames(), logger, "failed outgoing HTTP request");
+                    }
+
+                    if(transaction.Context != null)
+                    {
+                        error.Errors[0].Context = transaction.Context;
+                    }
+
+                    Agent.PayloadSender.QueueError(error);
+
+                    break;
                 case "System.Net.Http.HttpRequestOut.Start": //TODO: look for consts
                     if (TransactionContainer.Transactions == null || TransactionContainer.Transactions.Value == null)
                     {
@@ -87,43 +131,13 @@ namespace Elastic.Apm.DiagnosticListeners
                     if (processingRequests.TryAdd(request, span))
                     {
                         var frames = new System.Diagnostics.StackTrace().GetFrames();
-                        var stackFrames = new List<Stacktrace>(frames.Length);
-
-                        try
-                        {
-                            foreach (var item in frames)
-                            {
-                                var fileName = item?.GetMethod()?.DeclaringType?.Assembly?.GetName()?.Name;
-                                if (String.IsNullOrEmpty(fileName))
-                                {
-                                    continue; //since filename is required by the server, if we don't have it we skip the frame
-                                }
-
-                                stackFrames.Add(new Stacktrace
-                                {
-                                    Function = item?.GetMethod()?.Name,
-                                    Filename = fileName,
-                                    Module = item?.GetMethod()?.ReflectedType?.Name
-                                });
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            logger.LogWarning($"Failed capturing stacktrace for {span.Name}");
-                            logger.LogDebug($"{e.GetType().Name}: {e.Message}");
-                        }
-
+                        var stackFrames = StacktraceHelper.GenerateApmStackTrace(frames, logger, span.Name);
                         span.Stacktrace = stackFrames;
                     }
                     break;
 
                 case "System.Net.Http.HttpRequestOut.Stop":
                     var response = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Response").GetValue(kv.Value) as HttpResponseMessage;
-                    var requestTaskStatusObj = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("RequestTaskStatus")?.GetValue(kv.Value);
-                    if (requestTaskStatusObj != null)
-                    {
-                        var requestTaskStatus = (TaskStatus)requestTaskStatusObj;
-                    }
 
                     if (processingRequests.TryRemove(request, out Span mspan))
                     {

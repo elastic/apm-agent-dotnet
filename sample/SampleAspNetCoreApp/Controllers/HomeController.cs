@@ -82,6 +82,15 @@ namespace SampleAspNetCoreApp.Controllers
             return View();
         }
 
+        public async Task<IActionResult> FailingOutGoingHttpCall()
+        {
+            var client = new HttpClient();
+            var result = await client.GetAsync("http://dsfklgjdfgkdfg.mmmm");
+            Console.WriteLine(result.IsSuccessStatusCode);
+
+            return View();
+        }
+
         public IActionResult TriggerError()
         {
             throw new Exception("This is a test exception!");

@@ -13,6 +13,7 @@ using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
 using Xunit;
+using Elastic.Apm.Tests.Mock;
 
 namespace Elastic.Apm.Tests
 {
@@ -212,6 +213,59 @@ namespace Elastic.Apm.Tests
 
             Assert.Equal(500, TransactionContainer.Transactions.Value[0].Spans[0].Context.Http.Status_code);
             Assert.Equal(HttpMethod.Post.ToString(), TransactionContainer.Transactions.Value[0].Spans[0].Context.Http.Method);
+        }
+
+        /// <summary>
+        /// Starts an HTTP call to a non existing URL and makes sure that an error is captured. 
+        /// This uses an HttpClient instance directly
+        /// </summary>
+        [Fact]
+        public async Task CaptureErrorOnFailingHttpCall_HttpClient()
+        {
+            var payloadSender = new MockPayloadSender();
+            Agent.PayloadSender = payloadSender;
+            RegisterListenerAndStartTransaction();
+
+            var httpClient = new HttpClient();
+            try
+            {
+                var res = await httpClient.GetAsync("http://nonexistenturl_dsfdsf.ghkdehfn");
+                Assert.True(false); //Make it fail if no exception is thown
+            }
+            catch(Exception e)
+            {
+                Assert.NotNull(e);
+            }
+
+            Assert.NotEmpty(payloadSender.Errors);
+        }
+
+        /// <summary>
+        /// Passes an exception to <see cref="HttpDiagnosticListener"/> and makes sure that the exception is captured
+        /// Unlike the <see cref="CaptureErrorOnFailingHttpCall_HttpClient"/> method this does not use HttpClient, instead here we call the OnNext method directly.
+        /// </summary>
+        [Fact]
+        public void CaptureErrorOnFailingHttpCall_DirectCall()
+        {
+            var payloadSender = new MockPayloadSender();
+            Agent.PayloadSender = payloadSender;
+            RegisterListenerAndStartTransaction();
+
+            var listener = new HttpDiagnosticListener();
+
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://elastic.co");
+
+            //Simulate Start
+            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Start", new { Request = request }));
+
+            var exceptionMsg = "Sample exception msg";
+            var exception = new Exception(exceptionMsg);
+            //Simulate Exception
+            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Exception", new { Request = request, Exception = exception }));
+
+            Assert.NotEmpty(payloadSender.Errors);
+            Assert.Equal(exceptionMsg, payloadSender.Errors[0].Errors[0].Exception.Message);
+            Assert.Equal(typeof(Exception).FullName, payloadSender.Errors[0].Errors[0].Exception.Type);
         }
 
         private void RegisterListenerAndStartTransaction()

@@ -1,10 +1,10 @@
 using System;
 using System.Threading.Tasks;
-using Elastic.Apm.AspNetCore.Tests.Mock;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 using System.Reflection;
 using Elastic.Apm.Tests;
+using Elastic.Apm.Tests.Mock;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net.Http;
-using Elastic.Apm.AspNetCore.Tests.Mock;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.EntityFrameworkCore;
 using Microsoft.AspNetCore.Builder;
@@ -14,7 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using SampleAspNetCoreApp.Data;
 using Microsoft.EntityFrameworkCore;
-
+using Elastic.Apm.Tests.Mock;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
