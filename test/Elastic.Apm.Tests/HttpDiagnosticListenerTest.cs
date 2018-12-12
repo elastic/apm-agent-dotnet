@@ -268,6 +268,46 @@ namespace Elastic.Apm.Tests
             Assert.Equal(typeof(Exception).FullName, payloadSender.Errors[0].Errors[0].Exception.Type);
         }
 
+        /// <summary>
+        /// Makes sure we set the correct type and subtype for external, http spans
+        /// </summary>
+        [Fact]
+        public async Task SpanTypeAndSubtype()
+        {
+            RegisterListenerAndStartTransaction();
+
+            using (LocalServer localServer = new LocalServer())
+            {
+                var httpClient = new HttpClient();
+                var res = await httpClient.GetAsync(localServer.Uri);
+
+                Assert.True(res.IsSuccessStatusCode);
+            }
+
+            Assert.Equal(Consts.EXTERNAL, TransactionContainer.Transactions.Value[0].Spans[0].Type);
+            Assert.Equal(Consts.HTTP, TransactionContainer.Transactions.Value[0].Spans[0].Subtype);
+            Assert.Null(TransactionContainer.Transactions.Value[0].Spans[0].Action); //we don't set Action for HTTP calls
+        }
+
+        /// <summary>
+        /// Makes sure we generate the correct span name
+        /// </summary>
+        [Fact]
+        public async Task SpanName()
+        {
+            RegisterListenerAndStartTransaction();
+
+            using (LocalServer localServer = new LocalServer())
+            {
+                var httpClient = new HttpClient();
+                var res = await httpClient.GetAsync(localServer.Uri);
+
+                Assert.True(res.IsSuccessStatusCode);
+            }
+
+            Assert.Equal("GET localhost", TransactionContainer.Transactions.Value[0].Spans[0].Name);
+        }
+
         private void RegisterListenerAndStartTransaction()
         {
             new ElasticCoreListeners().Start();

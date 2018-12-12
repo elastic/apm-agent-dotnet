@@ -13,6 +13,10 @@ namespace Elastic.Apm.Model.Payload
 
         public String Type { get; set; }
 
+        public String Subtype { get; set; }
+
+        public String Action { get; set; }
+
         public Decimal Start { get; set; }
 
         public int Id { get; set; }

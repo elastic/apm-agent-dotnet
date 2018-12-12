@@ -120,8 +120,9 @@ namespace Elastic.Apm.DiagnosticListeners
                     var span = new Span
                     {
                         Start = (decimal)(utcNow - transactionStartTime).TotalMilliseconds,
-                        Name = $"{request?.Method} {request?.RequestUri?.ToString()}",
-                        Type = "Http",
+                        Name = $"{request?.Method} {request?.RequestUri?.Host?.ToString()}",
+                        Type = Consts.EXTERNAL,
+                        Subtype = Consts.HTTP,
                         Context = new Span.ContextC
                         {
                             Http = http
