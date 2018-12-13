@@ -48,7 +48,38 @@ namespace Elastic.Apm.EntityFrameworkCore
                             };
                             span.Duration = commandExecutedEventData.Duration.TotalMilliseconds;
                             span.Name = commandExecutedEventData.Command.CommandText;
-                            span.Type = "Db";
+                            span.Type = Consts.DB;
+
+                            var providerType = commandExecutedEventData.Command.Connection.GetType().FullName;
+
+                            switch (providerType)
+                            {
+                                case string str when str.Contains("Sqlite"):
+                                    span.Subtype = Consts.SQLITE;
+                                    break;
+                                case string str when str.Contains("SqlConnection"):
+                                    span.Subtype = Consts.MSSQL;
+                                    break;
+                                default:
+                                    span.Subtype = providerType; //TODO, TBD: this is an unknown provider
+                                    break;
+                            }
+
+                            switch (commandExecutedEventData.Command.CommandType)
+                            { 
+                                case System.Data.CommandType.Text:
+                                    span.Action = Consts.QUERY;
+                                    break;
+                                case System.Data.CommandType.StoredProcedure:
+                                    span.Action = Consts.STOREDPROCEDURE;
+                                    break;
+                                case System.Data.CommandType.TableDirect:
+                                    span.Action = "tabledirect";
+                                    break;
+                                default:
+                                    //TODO log
+                                    break;
+                            }
 
                             TransactionContainer.Transactions.Value[0].Spans.Add(span);
                         }

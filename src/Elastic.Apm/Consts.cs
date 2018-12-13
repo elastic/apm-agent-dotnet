@@ -14,5 +14,10 @@ namespace Elastic.Apm
         public const String EXTERNAL = "external";
 
         public const String HTTP = "http";
+        public const String MSSQL = "mssql";
+        public const String SQLITE = "sqlite";
+
+        public const String QUERY = "query";
+        public const String STOREDPROCEDURE = "storedprocedure";
     }
 }
