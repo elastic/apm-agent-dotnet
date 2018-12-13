@@ -18,6 +18,6 @@ namespace Elastic.Apm
         public const String SQLITE = "sqlite";
 
         public const String QUERY = "query";
-        public const String STOREDPROCEDURE = "storedprocedure";
+        public const String EXEC = "exec";
     }
 }

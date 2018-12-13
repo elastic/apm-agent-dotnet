@@ -71,7 +71,7 @@ namespace Elastic.Apm.EntityFrameworkCore
                                     span.Action = Consts.QUERY;
                                     break;
                                 case System.Data.CommandType.StoredProcedure:
-                                    span.Action = Consts.STOREDPROCEDURE;
+                                    span.Action = Consts.EXEC;
                                     break;
                                 case System.Data.CommandType.TableDirect:
                                     span.Action = "tabledirect";
