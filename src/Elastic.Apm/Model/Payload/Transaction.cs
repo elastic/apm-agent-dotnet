@@ -20,6 +20,11 @@ namespace Elastic.Apm.Model.Payload
 
         public String Name { get; set; }
 
+        /// <summary>
+        /// A string describing the result of the transaction. 
+        /// This is typically the HTTP status code, or e.g. "success" for a background task.
+        /// </summary>
+        /// <value>The result.</value>
         public String Result { get; set; }
 
         public String Timestamp => StartDate.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");

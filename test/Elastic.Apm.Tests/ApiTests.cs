@@ -48,5 +48,25 @@ namespace Elastic.Apm.Tests
             var transaction = Api.ElasticApm.StartTransaction(transactionName, transacitonType);
             Assert.Empty(payloadSender.Payloads);
         }
+
+        /// <summary>
+        /// Starts a transaction, sets its result to 'success' and
+        /// makes sure the result is captured by the agent.
+        /// </summary>
+        [Fact]
+        public void TransactionResultTest()
+        {
+            var transactionName = "TestTransaction";
+            var transacitonType = "UnitTest";
+            var payloadSender = new MockPayloadSender();
+            Agent.PayloadSender = payloadSender;
+
+            var transaction = Api.ElasticApm.StartTransaction(transactionName, transacitonType);
+            var result = "success";
+            transaction.Result = result;
+            transaction.End();
+
+            Assert.Equal(result, payloadSender.Payloads[0].Transactions[0].Result);
+        }
     }
 }
