@@ -77,8 +77,8 @@ namespace Elastic.Apm.Tests
             listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Stop", new { Request = request, Response = response }));
             Assert.Empty(listener.processingRequests);
 
-            Assert.Equal(request.RequestUri.ToString(), TransactionContainer.Transactions.Value[0].Spans[0].Context.Http.Url);
-            Assert.Equal(HttpMethod.Get.ToString(), TransactionContainer.Transactions.Value[0].Spans[0].Context.Http.Method);
+            Assert.Equal(request.RequestUri.ToString(), TransactionContainer.Transactions.Value.Spans[0].Context.Http.Url);
+            Assert.Equal(HttpMethod.Get.ToString(), TransactionContainer.Transactions.Value.Spans[0].Context.Http.Method);
         }
 
         /// <summary>
@@ -106,10 +106,10 @@ namespace Elastic.Apm.Tests
 
             Console.Write("lines: " + (listener.Logger as TestLogger).Lines.Count);
 
-            Assert.Equal($"{LogLevel.Warning} {listener.Name}: Failed capturing request '{HttpMethod.Get} {request.RequestUri}' in System.Net.Http.HttpRequestOut.Stop. This Span will be skipped in case it wasn't captured before.", 
+            Assert.Equal($"{LogLevel.Warning} {listener.Name}: Failed capturing request '{HttpMethod.Get} {request.RequestUri}' in System.Net.Http.HttpRequestOut.Stop. This Span will be skipped in case it wasn't captured before.",
                          (listener.Logger as TestLogger).Lines[0]);
-            Assert.Single(TransactionContainer.Transactions.Value);
-            Assert.Single(TransactionContainer.Transactions.Value[0].Spans);
+            Assert.NotNull(TransactionContainer.Transactions.Value);
+            Assert.Single(TransactionContainer.Transactions.Value.Spans);
         }
 
         /// <summary>
@@ -118,11 +118,11 @@ namespace Elastic.Apm.Tests
         /// </summary>
         [Fact]
         public void UnknownObjectToOnNext()
-        {           
+        {
             var listener = new HttpDiagnosticListener();
             var myFake = new StringBuilder(); //just a random type that is not planned to be passed into OnNext
 
-            var exception = 
+            var exception =
                 Record.Exception(() =>
                 {
                     listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Start", myFake));
@@ -182,11 +182,11 @@ namespace Elastic.Apm.Tests
                 var res = await httpClient.GetAsync(localServer.Uri);
 
                 Assert.True(res.IsSuccessStatusCode);
-                Assert.Equal(localServer.Uri, TransactionContainer.Transactions.Value[0].Spans[0].Context.Http.Url);
+                Assert.Equal(localServer.Uri, TransactionContainer.Transactions.Value.Spans[0].Context.Http.Url);
             }
 
-            Assert.Equal(200, TransactionContainer.Transactions.Value[0].Spans[0].Context.Http.Status_code);
-            Assert.Equal(HttpMethod.Get.ToString(), TransactionContainer.Transactions.Value[0].Spans[0].Context.Http.Method);
+            Assert.Equal(200, TransactionContainer.Transactions.Value.Spans[0].Context.Http.Status_code);
+            Assert.Equal(HttpMethod.Get.ToString(), TransactionContainer.Transactions.Value.Spans[0].Context.Http.Method);
         }
 
         /// <summary>
@@ -208,11 +208,11 @@ namespace Elastic.Apm.Tests
                 var res = await httpClient.PostAsync(localServer.Uri, new StringContent("foo"));
 
                 Assert.False(res.IsSuccessStatusCode);
-                Assert.Equal(localServer.Uri, TransactionContainer.Transactions.Value[0].Spans[0].Context.Http.Url);
+                Assert.Equal(localServer.Uri, TransactionContainer.Transactions.Value.Spans[0].Context.Http.Url);
             }
 
-            Assert.Equal(500, TransactionContainer.Transactions.Value[0].Spans[0].Context.Http.Status_code);
-            Assert.Equal(HttpMethod.Post.ToString(), TransactionContainer.Transactions.Value[0].Spans[0].Context.Http.Method);
+            Assert.Equal(500, TransactionContainer.Transactions.Value.Spans[0].Context.Http.Status_code);
+            Assert.Equal(HttpMethod.Post.ToString(), TransactionContainer.Transactions.Value.Spans[0].Context.Http.Method);
         }
 
         /// <summary>
@@ -232,7 +232,7 @@ namespace Elastic.Apm.Tests
                 var res = await httpClient.GetAsync("http://nonexistenturl_dsfdsf.ghkdehfn");
                 Assert.True(false); //Make it fail if no exception is thown
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Assert.NotNull(e);
             }
@@ -284,9 +284,9 @@ namespace Elastic.Apm.Tests
                 Assert.True(res.IsSuccessStatusCode);
             }
 
-            Assert.Equal(Consts.EXTERNAL, TransactionContainer.Transactions.Value[0].Spans[0].Type);
-            Assert.Equal(Consts.HTTP, TransactionContainer.Transactions.Value[0].Spans[0].Subtype);
-            Assert.Null(TransactionContainer.Transactions.Value[0].Spans[0].Action); //we don't set Action for HTTP calls
+            Assert.Equal(Consts.EXTERNAL, TransactionContainer.Transactions.Value.Spans[0].Type);
+            Assert.Equal(Consts.HTTP, TransactionContainer.Transactions.Value.Spans[0].Subtype);
+            Assert.Null(TransactionContainer.Transactions.Value.Spans[0].Action); //we don't set Action for HTTP calls
         }
 
         /// <summary>
@@ -305,7 +305,7 @@ namespace Elastic.Apm.Tests
                 Assert.True(res.IsSuccessStatusCode);
             }
 
-            Assert.Equal("GET localhost", TransactionContainer.Transactions.Value[0].Spans[0].Name);
+            Assert.Equal("GET localhost", TransactionContainer.Transactions.Value.Spans[0].Name);
         }
 
         private void RegisterListenerAndStartTransaction()
@@ -315,16 +315,13 @@ namespace Elastic.Apm.Tests
         }
 
 
-        private void StartTransaction() 
-        => TransactionContainer.Transactions.Value = new List<Transaction>()
-        {
-                new Transaction()
+        private void StartTransaction()
+        => TransactionContainer.Transactions.Value =
+                new Transaction($"{nameof(TestSimpleOutgoingHttpRequest)}", 
+                                Transaction.TYPE_REQUEST)
                 {
-                    Name = $"{nameof(TestSimpleOutgoingHttpRequest)}",
                     Id = Guid.NewGuid(),
-                    Type = "request",
-                    TimestampInDateTime = DateTime.UtcNow,
-                }
-        };
+                    StartDate = DateTime.UtcNow,
+                };
     }
 }

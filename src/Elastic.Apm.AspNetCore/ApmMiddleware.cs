@@ -41,45 +41,43 @@ namespace Elastic.Apm.AspNetCore
                 Language = new Language { Name = "C#" } //TODO
             };
 
-            var transactions = new List<Transaction> {
-                    new Transaction {
-                        Name = $"{context.Request.Method} {context.Request.Path}",
-                        service = service,
-                        Id = Guid.NewGuid(),
-                        Type = "request",
-                        TimestampInDateTime = DateTime.UtcNow,
-                        Context = new Context
+            var transaction = new Transaction($"{context.Request.Method} {context.Request.Path}",
+                                             Transaction.TYPE_REQUEST)
+            {
+                service = service,
+                Id = Guid.NewGuid(),
+                StartDate = DateTime.UtcNow,
+                Context = new Context
+                {
+                    Request = new Request
+                    {
+                        Method = context.Request.Method,
+                        Socket = new Socket
                         {
-                            Request = new Request
-                            {
-                                Method = context.Request.Method,
-                                Socket = new Socket
-                                {
-                                    Encrypted = context.Request.IsHttps, 
-                                    Remote_address = context.Connection?.RemoteIpAddress?.ToString()
-                                },
-                                Url = new Url
-                                {
-                                    Full = context.Request?.Path.Value,
-                                    HostName = context.Request.Host.Host,
-                                    Protocol = GetProtocolName(context.Request.Protocol),
-                                    Raw = context.Request?.Path.Value //TODO
-                                },
-                                HttpVersion = GetHttpVersion(context.Request.Protocol)
-                            }
-                        }
+                            Encrypted = context.Request.IsHttps,
+                            Remote_address = context.Connection?.RemoteIpAddress?.ToString()
+                        },
+                        Url = new Url
+                        {
+                            Full = context.Request?.Path.Value,
+                            HostName = context.Request.Host.Host,
+                            Protocol = GetProtocolName(context.Request.Protocol),
+                            Raw = context.Request?.Path.Value //TODO
+                        },
+                        HttpVersion = GetHttpVersion(context.Request.Protocol)
                     }
-                };
+                }
+            };
 
-            TransactionContainer.Transactions.Value = transactions;
+            TransactionContainer.Transactions.Value = transaction;
 
             await next(context);
 
             sw.Stop();
 
-            transactions[0].Duration = sw.ElapsedMilliseconds;
-            transactions[0].Result = $"{GetProtocolName(context.Request.Protocol)} {context.Response.StatusCode.ToString()[0]}xx";
-            transactions[0].Context.Response = new Response
+            transaction.Duration = sw.ElapsedMilliseconds;
+            transaction.Result = $"{GetProtocolName(context.Request.Protocol)} {context.Response.StatusCode.ToString()[0]}xx";
+            transaction.Context.Response = new Response
             {
                 Finished = context.Response.HasStarted, //TODO ?
                 Status_code = context.Response.StatusCode
@@ -88,7 +86,7 @@ namespace Elastic.Apm.AspNetCore
             var payload = new Payload
             {
                 Service = service,
-                Transactions = TransactionContainer.Transactions.Value
+                Transactions = new List<Transaction> { TransactionContainer.Transactions.Value }
             };
 
             Agent.PayloadSender.QueuePayload(payload);

@@ -61,7 +61,7 @@ namespace Elastic.Apm.DiagnosticListeners
             {
                 case "System.Net.Http.Exception":
                     var exception = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Exception").GetValue(kv.Value) as Exception;
-                    var transaction = TransactionContainer.Transactions?.Value[0];
+                    var transaction = TransactionContainer.Transactions?.Value;
 
                     var error = new Error
                     {
@@ -108,7 +108,7 @@ namespace Elastic.Apm.DiagnosticListeners
                         return;
                     }
 
-                    var transactionStartTime = TransactionContainer.Transactions.Value[0].TimestampInDateTime;
+                    var transactionStartTime = TransactionContainer.Transactions.Value.StartDate;
                     var utcNow = DateTime.UtcNow;
 
                     var http = new Http
@@ -151,10 +151,10 @@ namespace Elastic.Apm.DiagnosticListeners
                         }
 
                         //TODO: there are better ways
-                        var endTime = (DateTime.UtcNow - TransactionContainer.Transactions.Value[0].TimestampInDateTime).TotalMilliseconds;
+                        var endTime = (DateTime.UtcNow - TransactionContainer.Transactions.Value.StartDate).TotalMilliseconds;
                         mspan.Duration = endTime - (double)mspan.Start;
 
-                        TransactionContainer.Transactions?.Value[0]?.Spans?.Add(mspan);
+                        TransactionContainer.Transactions?.Value?.Spans?.Add(mspan);
                     }
                     else
                     {

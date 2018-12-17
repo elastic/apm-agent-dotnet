@@ -12,6 +12,7 @@
     <Folder Include="Logging\" />
     <Folder Include="Config\" />
     <Folder Include="Helpers\" />
+    <Folder Include="Api\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />

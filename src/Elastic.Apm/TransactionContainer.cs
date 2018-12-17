@@ -9,6 +9,6 @@ namespace Elastic.Apm
     /// </summary>
     public static class TransactionContainer //TODO: make it internal and friend other elastic.apm dlls
     {
-        public static AsyncLocal<List<Transaction>> Transactions { get; set; } = new AsyncLocal<List<Transaction>>();
+        public static AsyncLocal<Transaction> Transactions { get; set; } = new AsyncLocal<Transaction>();
     }
 }

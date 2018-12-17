@@ -29,7 +29,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
                 var context = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("httpContext").GetValue(kv.Value) as HttpContext;
                 var exception = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("exception").GetValue(kv.Value) as Exception;
 
-                var transaction = TransactionContainer.Transactions?.Value[0];
+                var transaction = TransactionContainer.Transactions?.Value;
                 if (transaction == null)
                 {
                     return;

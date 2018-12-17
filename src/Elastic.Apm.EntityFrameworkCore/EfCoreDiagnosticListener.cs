@@ -26,7 +26,7 @@ namespace Elastic.Apm.EntityFrameworkCore
                     {
                         var newSpan = new Span();
 
-                        var transactionStartTime = TransactionContainer.Transactions.Value[0].TimestampInDateTime;  
+                        var transactionStartTime = TransactionContainer.Transactions.Value.StartDate;  
                         var utcNow = DateTime.UtcNow;
                         newSpan.Start = (decimal)(utcNow - transactionStartTime).TotalMilliseconds;
                         _spans.TryAdd(commandEventData.CommandId, newSpan);
@@ -81,7 +81,7 @@ namespace Elastic.Apm.EntityFrameworkCore
                                     break;
                             }
 
-                            TransactionContainer.Transactions.Value[0].Spans.Add(span);
+                            TransactionContainer.Transactions.Value.Spans.Add(span);
                         }
                     }
                     break;
