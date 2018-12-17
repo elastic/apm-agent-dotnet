@@ -121,6 +121,7 @@ namespace Elastic.Apm.Tests
             Environment.SetEnvironmentVariable(EnvVarConsts.LogLevel, $"Warning");
             Assert.Equal(LogLevel.Warning, Apm.Agent.Config.LogLevel);
         }
+
         [Fact]
         public void SetInvalidLogLevelTest()
         {

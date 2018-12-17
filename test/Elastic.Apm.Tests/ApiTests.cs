@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading.Tasks;
+using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Tests.Mock;
 using Xunit;
 
@@ -67,6 +69,59 @@ namespace Elastic.Apm.Tests
             transaction.End();
 
             Assert.Equal(result, payloadSender.Payloads[0].Transactions[0].Result);
+        }
+
+        /// <summary>
+        /// Calls ElasticApm.CurrentTransaction without starting any transaction.
+        /// Makes sure the returned CurrentTransaction is null and nothing else happens.
+        /// </summary>
+        [Fact]
+        public void GetCurrentTransactionWithNoTransaction()
+        {
+            var currentTransaction = Api.ElasticApm.CurrentTransaction;
+            Assert.Null(currentTransaction);
+        }
+
+        /// <summary>
+        /// Starts a transaction in a Task, does some work in a subtask, and after that it calls ElasticApm.CurrentTransaction.
+        /// Makes sure the current transaction is not null - we assert on multiple points
+        /// </summary>
+        [Fact]
+        public async Task GetCurrentTransactionWithNotNull()
+        {
+            var transactionName = "TestTransaction";
+
+            StartTransaction(); //Start transaction on the current task
+            await DoAsynWork(); //Do work in subtask
+            var currentTransaction = Api.ElasticApm.CurrentTransaction; //Get transaction in the current task
+
+            Assert.NotNull(currentTransaction);
+            Assert.Equal(transactionName, currentTransaction.Name);
+            Assert.Equal(Transaction.TYPE_REQUEST, currentTransaction.Type);
+
+            void StartTransaction()
+              =>  TransactionContainer.Transactions.Value =
+                                  new Transaction(transactionName,
+                                  Transaction.TYPE_REQUEST)
+                  {
+                      Id = Guid.NewGuid(),
+                      StartDate = DateTime.UtcNow,
+                  };
+
+            async Task DoAsynWork()
+            {
+                //Make sure we have a transaction in the subtask before the async work
+                Assert.NotNull(Api.ElasticApm.CurrentTransaction);
+                Assert.Equal(transactionName, Api.ElasticApm.CurrentTransaction.Name);
+                Assert.Equal(Transaction.TYPE_REQUEST, Api.ElasticApm.CurrentTransaction.Type);
+
+                await Task.Delay(50);
+
+                //and after the async work
+                Assert.NotNull(Api.ElasticApm.CurrentTransaction);
+                Assert.Equal(transactionName, Api.ElasticApm.CurrentTransaction.Name);
+                Assert.Equal(Transaction.TYPE_REQUEST, Api.ElasticApm.CurrentTransaction.Type);
+            }
         }
     }
 }
