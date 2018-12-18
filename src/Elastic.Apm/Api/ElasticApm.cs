@@ -34,23 +34,17 @@ namespace Elastic.Apm.Api
         }
 
         public static Transaction CurrentTransaction
-        {
-            get
-            {
-                return TransactionContainer.Transactions.Value;
-            }
-        }
+            => TransactionContainer.Transactions.Value;
 
         public static Transaction StartTransaction(string name, string type)
         {
             var retVal = new Transaction(name, type)
             {
-                StartDate = DateTime.UtcNow
+                Name = name,
+                Type = type,
+                service = Service,
+                Id = Guid.NewGuid()
             };
-            retVal.Name = name;
-            retVal.Type = type;
-            retVal.service = Service;
-            retVal.Id = Guid.NewGuid();
 
             TransactionContainer.Transactions.Value = retVal;
             return retVal;

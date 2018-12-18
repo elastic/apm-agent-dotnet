@@ -46,7 +46,6 @@ namespace Elastic.Apm.AspNetCore
             {
                 service = service,
                 Id = Guid.NewGuid(),
-                StartDate = DateTime.UtcNow,
                 Context = new Context
                 {
                     Request = new Request

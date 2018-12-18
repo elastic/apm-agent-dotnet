@@ -27,10 +27,13 @@ namespace Elastic.Apm.Tests
 
             var transaction = Api.ElasticApm.StartTransaction(transactionName, transacitonType);
 
+            System.Threading.Thread.Sleep(5); //Make sure we have duration > 0
+
             transaction.End();
             Assert.Single(payloadSender.Payloads);
             Assert.Equal(transactionName, payloadSender.Payloads[0].Transactions[0].Name);
             Assert.Equal(transacitonType, payloadSender.Payloads[0].Transactions[0].Type);
+            Assert.True(payloadSender.Payloads[0].Transactions[0].Duration > 0);
 
             Assert.NotNull(payloadSender.Payloads[0].Service);
         }
@@ -104,8 +107,7 @@ namespace Elastic.Apm.Tests
                                   new Transaction(transactionName,
                                   Transaction.TYPE_REQUEST)
                   {
-                      Id = Guid.NewGuid(),
-                      StartDate = DateTime.UtcNow,
+                      Id = Guid.NewGuid()
                   };
 
             async Task DoAsynWork()
@@ -122,6 +124,89 @@ namespace Elastic.Apm.Tests
                 Assert.Equal(transactionName, Api.ElasticApm.CurrentTransaction.Name);
                 Assert.Equal(Transaction.TYPE_REQUEST, Api.ElasticApm.CurrentTransaction.Type);
             }
+        }
+
+        /// <summary>
+        /// Starts a transaction and then starts a span, ends both of them probably.
+        /// Makes sure that the transaction and the span are captured.
+        /// </summary>
+        [Fact]
+        public void TransactionWithSpan()
+        {
+            var transactionName = "TestTransaction";
+            var transacitonType = "UnitTest";
+            var spanName = "TestSpan";
+            var payloadSender = new MockPayloadSender();
+            Agent.PayloadSender = payloadSender;
+
+            var transaction = Api.ElasticApm.StartTransaction(transactionName, transacitonType);
+
+            var span = transaction.StartSpan(spanName, Span.TYPE_EXTERNAL);
+
+            System.Threading.Thread.Sleep(5); //Make sure we have duration > 0
+
+            span.End();
+            transaction.End();
+            Assert.NotEmpty(payloadSender.Payloads);
+            Assert.NotEmpty(payloadSender.Payloads[0].Transactions[0].Spans);
+
+            Assert.Equal(spanName, payloadSender.Payloads[0].Transactions[0].Spans[0].Name);
+            Assert.True(payloadSender.Payloads[0].Transactions[0].Spans[0].Duration > 0);
+            Assert.NotNull(payloadSender.Payloads[0].Service);
+        }
+
+        /// <summary>
+        /// Starts a transaction and then calls transaction.StartSpan, but doesn't call Span.End().
+        /// Makes sure that the transaction is recorded, but the span isn't.
+        /// </summary>
+        [Fact]
+        public void TransactionWithSpanWithoutEnd()
+        {
+            var transactionName = "TestTransaction";
+            var transacitonType = "UnitTest";
+            var spanName = "TestSpan";
+            var payloadSender = new MockPayloadSender();
+            Agent.PayloadSender = payloadSender;
+
+            var transaction = Api.ElasticApm.StartTransaction(transactionName, transacitonType);
+
+            var span = transaction.StartSpan(spanName, Span.TYPE_EXTERNAL);
+
+            System.Threading.Thread.Sleep(5); //Make sure we have duration > 0
+
+            transaction.End(); //Ends transaction, but doesn't end span.
+            Assert.NotEmpty(payloadSender.Payloads);
+            Assert.Empty(payloadSender.Payloads[0].Transactions[0].Spans);
+
+            Assert.NotNull(payloadSender.Payloads[0].Service);
+        }
+
+        /// <summary>
+        /// Starts a transaction and a span with subtype and action and ends them properly.
+        /// Makes sure the subtype and the action are recorded
+        /// </summary>
+        [Fact]
+        public void TransactionWithSpanWithSubTypeAndAction()
+        {
+            var transactionName = "TestTransaction";
+            var transacitonType = "UnitTest";
+            var spanName = "TestSpan";
+            var payloadSender = new MockPayloadSender();
+            Agent.PayloadSender = payloadSender;
+
+            var transaction = Api.ElasticApm.StartTransaction(transactionName, transacitonType);
+            var span = transaction.StartSpan(spanName, Span.TYPE_DB, Span.SUBTYPE_MSSQL, Span.ACTION_QUERY);
+            span.End();
+            transaction.End();
+
+            Assert.NotEmpty(payloadSender.Payloads);
+            Assert.NotEmpty(payloadSender.Payloads[0].Transactions[0].Spans);
+
+            Assert.Equal(Span.TYPE_DB, payloadSender.Payloads[0].Transactions[0].Spans[0].Type);
+            Assert.Equal(Span.SUBTYPE_MSSQL, payloadSender.Payloads[0].Transactions[0].Spans[0].Subtype);
+            Assert.Equal(Span.ACTION_QUERY, payloadSender.Payloads[0].Transactions[0].Spans[0].Action);
+
+            Assert.NotNull(payloadSender.Payloads[0].Service);
         }
     }
 }

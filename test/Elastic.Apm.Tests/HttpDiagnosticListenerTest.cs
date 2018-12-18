@@ -284,8 +284,8 @@ namespace Elastic.Apm.Tests
                 Assert.True(res.IsSuccessStatusCode);
             }
 
-            Assert.Equal(Consts.EXTERNAL, TransactionContainer.Transactions.Value.Spans[0].Type);
-            Assert.Equal(Consts.HTTP, TransactionContainer.Transactions.Value.Spans[0].Subtype);
+            Assert.Equal(Span.TYPE_EXTERNAL, TransactionContainer.Transactions.Value.Spans[0].Type);
+            Assert.Equal(Span.SUBTYPE_HTTP, TransactionContainer.Transactions.Value.Spans[0].Subtype);
             Assert.Null(TransactionContainer.Transactions.Value.Spans[0].Action); //we don't set Action for HTTP calls
         }
 
@@ -320,8 +320,7 @@ namespace Elastic.Apm.Tests
                 new Transaction($"{nameof(TestSimpleOutgoingHttpRequest)}", 
                                 Transaction.TYPE_REQUEST)
                 {
-                    Id = Guid.NewGuid(),
-                    StartDate = DateTime.UtcNow,
+                    Id = Guid.NewGuid()
                 };
     }
 }

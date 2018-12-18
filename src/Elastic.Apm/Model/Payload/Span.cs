@@ -5,6 +5,16 @@ namespace Elastic.Apm.Model.Payload
 {
     public class Span
     {
+        public const String TYPE_DB = "db";
+        public const String TYPE_EXTERNAL = "external";
+
+        public const String SUBTYPE_HTTP = "http";
+        public const String SUBTYPE_MSSQL = "mssql";
+        public const String SUBTYPE_SQLITE = "sqlite";
+
+        public const String ACTION_QUERY = "query";
+        public const String ACTION_EXEC = "exec";
+
         public ContextC Context { get; set; }
 
         public double Duration { get; set; }
@@ -23,11 +33,25 @@ namespace Elastic.Apm.Model.Payload
 
         public List<Stacktrace> Stacktrace { get; set; }
 
-        public Span()
+        public Guid Transaction_id { get; set; } //TODO: probably not needed
+        internal Transaction transaction;
+
+        private readonly DateTime _startDateTime;
+
+        public Span(string name, string type)
         {
-            //TODO: just a test
+            _startDateTime = DateTime.UtcNow;
+            this.Name = name;
+            this.Type = type;
+
             Random rnd = new Random();
             Id = rnd.Next();
+        }
+
+        public void End()
+        {
+            this.Duration = (DateTime.UtcNow - _startDateTime).TotalMilliseconds;
+            transaction?.Spans.Add(this);
         }
 
         public class ContextC

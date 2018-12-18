@@ -24,9 +24,9 @@ namespace Elastic.Apm.EntityFrameworkCore
                 case string k when k == RelationalEventId.CommandExecuting.Name:
                     if (kv.Value is CommandEventData commandEventData)
                     {
-                        var newSpan = new Span();
+                        var newSpan = new Span(commandEventData.Command.CommandText, Span.TYPE_DB);
 
-                        var transactionStartTime = TransactionContainer.Transactions.Value.StartDate;  
+                        var transactionStartTime = TransactionContainer.Transactions.Value._startDate;  
                         var utcNow = DateTime.UtcNow;
                         newSpan.Start = (decimal)(utcNow - transactionStartTime).TotalMilliseconds;
                         _spans.TryAdd(commandEventData.CommandId, newSpan);
@@ -47,18 +47,16 @@ namespace Elastic.Apm.EntityFrameworkCore
                                 }
                             };
                             span.Duration = commandExecutedEventData.Duration.TotalMilliseconds;
-                            span.Name = commandExecutedEventData.Command.CommandText;
-                            span.Type = Consts.DB;
 
                             var providerType = commandExecutedEventData.Command.Connection.GetType().FullName;
 
                             switch (providerType)
                             {
                                 case string str when str.Contains("Sqlite"):
-                                    span.Subtype = Consts.SQLITE;
+                                    span.Subtype = Span.SUBTYPE_SQLITE;
                                     break;
                                 case string str when str.Contains("SqlConnection"):
-                                    span.Subtype = Consts.MSSQL;
+                                    span.Subtype = Span.SUBTYPE_MSSQL;
                                     break;
                                 default:
                                     span.Subtype = providerType; //TODO, TBD: this is an unknown provider
@@ -68,10 +66,10 @@ namespace Elastic.Apm.EntityFrameworkCore
                             switch (commandExecutedEventData.Command.CommandType)
                             { 
                                 case System.Data.CommandType.Text:
-                                    span.Action = Consts.QUERY;
+                                    span.Action = Span.ACTION_QUERY;
                                     break;
                                 case System.Data.CommandType.StoredProcedure:
-                                    span.Action = Consts.EXEC;
+                                    span.Action = Span.ACTION_EXEC;
                                     break;
                                 case System.Data.CommandType.TableDirect:
                                     span.Action = "tabledirect";
@@ -81,6 +79,7 @@ namespace Elastic.Apm.EntityFrameworkCore
                                     break;
                             }
 
+                            span.Transaction_id = TransactionContainer.Transactions.Value.Id;
                             TransactionContainer.Transactions.Value.Spans.Add(span);
                         }
                     }

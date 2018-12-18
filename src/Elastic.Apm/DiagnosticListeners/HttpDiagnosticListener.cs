@@ -108,7 +108,7 @@ namespace Elastic.Apm.DiagnosticListeners
                         return;
                     }
 
-                    var transactionStartTime = TransactionContainer.Transactions.Value.StartDate;
+                    var transactionStartTime = TransactionContainer.Transactions.Value._startDate;
                     var utcNow = DateTime.UtcNow;
 
                     var http = new Http
@@ -117,12 +117,10 @@ namespace Elastic.Apm.DiagnosticListeners
                         Method = request?.Method?.Method,
                     };
 
-                    var span = new Span
+                    var span = new Span($"{request?.Method} {request?.RequestUri?.Host?.ToString()}", Span.TYPE_EXTERNAL)
                     {
                         Start = (decimal)(utcNow - transactionStartTime).TotalMilliseconds,
-                        Name = $"{request?.Method} {request?.RequestUri?.Host?.ToString()}",
-                        Type = Consts.EXTERNAL,
-                        Subtype = Consts.HTTP,
+                        Subtype = Span.SUBTYPE_HTTP,
                         Context = new Span.ContextC
                         {
                             Http = http
@@ -151,9 +149,13 @@ namespace Elastic.Apm.DiagnosticListeners
                         }
 
                         //TODO: there are better ways
-                        var endTime = (DateTime.UtcNow - TransactionContainer.Transactions.Value.StartDate).TotalMilliseconds;
+                        var endTime = (DateTime.UtcNow - TransactionContainer.Transactions.Value._startDate).TotalMilliseconds;
                         mspan.Duration = endTime - (double)mspan.Start;
 
+                        if(TransactionContainer.Transactions?.Value?.Id != null)
+                        {
+                           mspan.Transaction_id = TransactionContainer.Transactions.Value.Id;
+                        }
                         TransactionContainer.Transactions?.Value?.Spans?.Add(mspan);
                     }
                     else
