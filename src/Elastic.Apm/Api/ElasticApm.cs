@@ -1,11 +1,26 @@
 ﻿using System;
 using System.Reflection;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
 
 namespace Elastic.Apm.Api
 {
     public static class ElasticApm
     {
+        private static AbstractLogger publicApiLogger;
+        public static AbstractLogger PublicApiLogger
+        {
+            get
+            {
+                if(publicApiLogger == null)
+                {
+                    publicApiLogger = Agent.CreateLogger("AgentAPI");
+                }
+
+                return publicApiLogger;
+            }
+        }
+
         private static Service service;
 
         public static Service Service

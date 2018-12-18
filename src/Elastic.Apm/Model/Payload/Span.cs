@@ -54,6 +54,9 @@ namespace Elastic.Apm.Model.Payload
             transaction?.Spans.Add(this);
         }
 
+        public void CaptureException(Exception exception, string culprit = null)
+            => transaction?.CaptureException(exception, culprit);
+
         public class ContextC
         {
             public Db Db { get; set; }

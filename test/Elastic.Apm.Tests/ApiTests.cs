@@ -208,5 +208,110 @@ namespace Elastic.Apm.Tests
 
             Assert.NotNull(payloadSender.Payloads[0].Service);
         }
+
+        /// <summary>
+        /// Starts and ends a transaction properly and captures an error in between.
+        /// Makes sure the error is captured.
+        /// </summary>
+        [Fact]
+        public void ErrorOnTransaction()
+        {
+            ErrorOnTransactionCommon();
+        }
+
+        /// <summary>
+        /// Same as <see cref="ErrorOnTransaction"/>, but this time a Culprit is also provided
+        /// </summary>
+        [Fact]
+        public void ErrorOnTransactionWithCulprit()
+        {
+            ErrorOnTransactionCommon("TestCulprit");
+        }
+
+        /// <summary>
+        /// Shared between ErrorOnTransaction and ErrorOnTransactionWithCulprit
+        /// </summary>
+        /// <param name="culprit">Culprit.</param>
+        private void ErrorOnTransactionCommon(String culprit = null)
+        {
+            var transactionName = "TestTransaction";
+            var transacitonType = "UnitTest";
+            var exceptionMessage = "Foo!";
+            var payloadSender = new MockPayloadSender();
+            Agent.PayloadSender = payloadSender;
+
+            var transaction = Api.ElasticApm.StartTransaction(transactionName, transacitonType);
+
+            System.Threading.Thread.Sleep(5); //Make sure we have duration > 0
+            try
+            {
+                throw new InvalidOperationException(exceptionMessage);
+            }
+            catch (Exception e)
+            {
+                if (String.IsNullOrEmpty(culprit))
+                {
+                    transaction.CaptureException(e);
+                }
+                else
+                {
+                    transaction.CaptureException(e, culprit);
+                }
+            }
+
+            transaction.End();
+
+            Assert.Single(payloadSender.Payloads);
+            Assert.Single(payloadSender.Errors);
+            Assert.Equal(exceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
+            Assert.Equal(exceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
+
+            if (!String.IsNullOrEmpty(culprit))
+            {
+                Assert.Equal(culprit, payloadSender.Errors[0].Errors[0].Culprit);
+            }
+            else
+            {
+                Assert.Equal("PublicAPI-CaptureException", payloadSender.Errors[0].Errors[0].Culprit); //this is the default Culprit if the customer doesn't provide us anything.
+            }
+        }
+
+        /// <summary>
+        /// Starts a transaction with a span, ends the transaction and the span properly and call CaptureException() on the span.
+        /// Makes sure the exception is captured.
+        /// </summary>
+        [Fact]
+        public void ErrorOnSpan()
+        {
+            var transactionName = "TestTransaction";
+            var transacitonType = "UnitTest";
+            var spanName = "TestSpan";
+            var exceptionMessage = "Foo!";
+            var payloadSender = new MockPayloadSender();
+            Agent.PayloadSender = payloadSender;
+
+            var transaction = Api.ElasticApm.StartTransaction(transactionName, transacitonType);
+
+            var span = transaction.StartSpan(spanName, Span.TYPE_EXTERNAL);
+
+            System.Threading.Thread.Sleep(5); //Make sure we have duration > 0
+
+            try
+            {
+                throw new InvalidOperationException(exceptionMessage);
+            }
+            catch(Exception e)
+            {
+                span.CaptureException(e);
+            }
+
+            span.End();
+            transaction.End();
+
+            Assert.Single(payloadSender.Payloads);
+            Assert.Single(payloadSender.Errors);
+            Assert.Equal(exceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
+            Assert.Equal(exceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
+        }
     }
 }
