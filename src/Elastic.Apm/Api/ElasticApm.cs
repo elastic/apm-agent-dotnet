@@ -22,7 +22,11 @@ namespace Elastic.Apm.Api
         }
 
         private static Service service;
-
+        /// <summary>
+        /// Identifies the monitored service. If this remains unset the agent
+        /// automatically populates it based on the entry assembly.
+        /// </summary>
+        /// <value>The service.</value>
         public static Service Service
         {
             get
@@ -57,8 +61,7 @@ namespace Elastic.Apm.Api
             {
                 Name = name,
                 Type = type,
-                service = Service,
-                Id = Guid.NewGuid()
+                service = Service
             };
 
             TransactionContainer.Transactions.Value = retVal;

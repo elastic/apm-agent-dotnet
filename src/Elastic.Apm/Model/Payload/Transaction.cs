@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Elastic.Apm.Helpers;
 
@@ -10,13 +11,21 @@ namespace Elastic.Apm.Model.Payload
 
         public Transaction(String name, string type)
         {
-            _startDate = DateTime.UtcNow;
+            start = DateTimeOffset.UtcNow;
             this.Name = name;
             this.Type = type;
+            this.Id = Guid.NewGuid();
         }
 
-        public Guid Id { get; set; }
-        public long Duration { get; set; } //TODO datatype?, TODO: Greg, imo should be internal, TBD!
+        public Guid Id { get; private set; }
+
+        /// <summary>
+        /// The duration of the transaction.
+        /// If it's not set (HasValue returns false) then the value 
+        /// is automatically calculated when <see cref="End"/> is called.
+        /// </summary>
+        /// <value>The duration.</value>
+        public long? Duration { get; set; } //TODO datatype?, TODO: Greg, imo should be internal, TBD!
 
         public String Type { get; set; }
 
@@ -29,19 +38,25 @@ namespace Elastic.Apm.Model.Payload
         /// <value>The result.</value>
         public String Result { get; set; }
 
-        public String Timestamp => _startDate.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
-        internal readonly DateTime _startDate;
+        public String Timestamp => start.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
+        internal readonly DateTimeOffset start;
 
         public Context Context { get; set; }
 
-        public List<Span> Spans { get; set; } = new List<Span>(); //TODO: make lazy, TODO: make it internal & make sure serialization works
+        //TODO: probably won't need with intake v2
+        public Span[] Spans => spans.ToArray();
+
+        //TODO: measure! What about List<T> with lock() in our case?
+        internal BlockingCollection<Span> spans = new BlockingCollection<Span>();
 
         public const string TYPE_REQUEST = "request";
 
         public void End()
         {
-            var duration = DateTime.UtcNow - _startDate;
-            this.Duration = (long)duration.TotalMilliseconds;
+            if (!Duration.HasValue)
+            {
+                this.Duration = (long)(DateTimeOffset.UtcNow - start).TotalMilliseconds;
+            }
 
             Apm.Agent.PayloadSender.QueuePayload(new Payload
             {
@@ -56,7 +71,7 @@ namespace Elastic.Apm.Model.Payload
 
         public Span StartSpan(string name, string type, string subType = null, String action = null)
         {
-            var retVal = new Span(name, type);
+            var retVal = new Span(name, type, this);
            
             if(subType != null)
             {
@@ -68,14 +83,13 @@ namespace Elastic.Apm.Model.Payload
                 retVal.Action = action;
             }
 
-            var currentTime = DateTime.UtcNow;
-            retVal.Start = (Decimal)(currentTime - this._startDate).TotalMilliseconds;
-            retVal.Transaction_id = this.Id;
+            var currentTime = DateTimeOffset.UtcNow;
+            retVal.Start = (Decimal)(currentTime - this.start).TotalMilliseconds;
             retVal.transaction = this;
             return retVal;
         }
 
-        public void CaptureException(Exception exception, string culprit = null)
+        public void CaptureException(Exception exception, string culprit = null, bool isHandled = false)
         {
             var capturedCulprit = String.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
             var error = new Error.Err
@@ -84,15 +98,13 @@ namespace Elastic.Apm.Model.Payload
                 Exception = new CapturedException
                 {
                     Message = exception.Message,
-                    Type = exception.GetType().FullName
-                    //Handled  TODO: this exception can be handled later
+                    Type = exception.GetType().FullName,
+                    Handled = isHandled
                 },
                 Transaction = new Error.Err.Trans
                 {
                     Id = this.Id
-                },
-                Id = Guid.NewGuid(),
-                Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ")
+                }
             };
 
             if (!String.IsNullOrEmpty(exception.StackTrace))
@@ -102,7 +114,7 @@ namespace Elastic.Apm.Model.Payload
             }
 
             error.Context = this.Context;
-            Elastic.Apm.Agent.PayloadSender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = this.service});
+            Apm.Agent.PayloadSender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = this.service});
         }
     }
 }

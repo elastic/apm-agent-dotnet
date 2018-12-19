@@ -50,6 +50,7 @@ namespace Elastic.Apm.AspNetCore.Tests
             Assert.Equal("HTTP 2xx", transaction.Result);
             Assert.True(transaction.Duration > 0);
             Assert.Equal("request", transaction.Type);
+            Assert.True(transaction.Id != Guid.Empty);
 
             //test transaction.context.response
             Assert.Equal(200, transaction.Context.Response.Status_code);

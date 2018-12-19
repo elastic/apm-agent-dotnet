@@ -63,44 +63,8 @@ namespace Elastic.Apm.DiagnosticListeners
                     var exception = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Exception").GetValue(kv.Value) as Exception;
                     var transaction = TransactionContainer.Transactions?.Value;
 
-                    var error = new Error
-                    {
-                        Errors = new List<Error.Err>
-                        {
-                            new Error.Err
-                            {
-                                Culprit = "Failed outgoing HTTP request",
-                                Exception = new CapturedException
-                                {
-                                    Message = exception.Message,
-                                    Type = exception.GetType().FullName
-                                    //Handled  TODO: this exception can be handled later
-                                },
-                                Transaction = new Error.Err.Trans
-                                {
-                                    Id = transaction.Id
-                                },
-                                Id = Guid.NewGuid(),
-                                Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ")
-                            }
-                        },
-
-                        Service = transaction.service
-                    };
-
-                    if(!String.IsNullOrEmpty(exception.StackTrace))
-                    {
-                        error.Errors[0].Exception.Stacktrace
-                             = StacktraceHelper.GenerateApmStackTrace(new System.Diagnostics.StackTrace(exception).GetFrames(), logger, "failed outgoing HTTP request");
-                    }
-
-                    if(transaction.Context != null)
-                    {
-                        error.Errors[0].Context = transaction.Context;
-                    }
-
-                    Agent.PayloadSender.QueueError(error);
-
+                    transaction.CaptureException(exception, "Failed outgoing HTTP request");
+                    //TODO: we don't know if exception is handled, currently reports handled = false
                     break;
                 case "System.Net.Http.HttpRequestOut.Start": //TODO: look for consts
                     if (TransactionContainer.Transactions == null || TransactionContainer.Transactions.Value == null)
@@ -108,27 +72,22 @@ namespace Elastic.Apm.DiagnosticListeners
                         return;
                     }
 
-                    var transactionStartTime = TransactionContainer.Transactions.Value._startDate;
-                    var utcNow = DateTime.UtcNow;
+                    transaction = TransactionContainer.Transactions.Value;
 
-                    var http = new Http
-                    {
-                        Url = request?.RequestUri?.ToString(),
-                        Method = request?.Method?.Method,
-                    };
-
-                    var span = new Span($"{request?.Method} {request?.RequestUri?.Host?.ToString()}", Span.TYPE_EXTERNAL)
-                    {
-                        Start = (decimal)(utcNow - transactionStartTime).TotalMilliseconds,
-                        Subtype = Span.SUBTYPE_HTTP,
-                        Context = new Span.ContextC
-                        {
-                            Http = http
-                        }
-                    };
+                    var span = transaction.StartSpan($"{request?.Method} {request?.RequestUri?.Host?.ToString()}", Span.TYPE_EXTERNAL,
+                                                     Span.SUBTYPE_HTTP);
 
                     if (processingRequests.TryAdd(request, span))
                     {
+                        span.Context = new Span.ContextC
+                        {
+                            Http = new Http
+                            {
+                                Url = request?.RequestUri?.ToString(),
+                                Method = request?.Method?.Method,
+                            }
+                        };
+
                         var frames = new System.Diagnostics.StackTrace().GetFrames();
                         var stackFrames = StacktraceHelper.GenerateApmStackTrace(frames, logger, span.Name);
                         span.Stacktrace = stackFrames;
@@ -148,15 +107,7 @@ namespace Elastic.Apm.DiagnosticListeners
                             mspan.Context.Http.Status_code = (int)response.StatusCode;
                         }
 
-                        //TODO: there are better ways
-                        var endTime = (DateTime.UtcNow - TransactionContainer.Transactions.Value._startDate).TotalMilliseconds;
-                        mspan.Duration = endTime - (double)mspan.Start;
-
-                        if(TransactionContainer.Transactions?.Value?.Id != null)
-                        {
-                           mspan.Transaction_id = TransactionContainer.Transactions.Value.Id;
-                        }
-                        TransactionContainer.Transactions?.Value?.Spans?.Add(mspan);
+                        mspan.End();
                     }
                     else
                     {

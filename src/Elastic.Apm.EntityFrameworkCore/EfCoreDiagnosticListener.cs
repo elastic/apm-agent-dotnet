@@ -24,11 +24,9 @@ namespace Elastic.Apm.EntityFrameworkCore
                 case string k when k == RelationalEventId.CommandExecuting.Name:
                     if (kv.Value is CommandEventData commandEventData)
                     {
-                        var newSpan = new Span(commandEventData.Command.CommandText, Span.TYPE_DB);
-
-                        var transactionStartTime = TransactionContainer.Transactions.Value._startDate;  
-                        var utcNow = DateTime.UtcNow;
-                        newSpan.Start = (decimal)(utcNow - transactionStartTime).TotalMilliseconds;
+                        var newSpan = TransactionContainer.Transactions.Value.StartSpan(
+                                            commandEventData.Command.CommandText, Span.TYPE_DB);
+                      
                         _spans.TryAdd(commandEventData.CommandId, newSpan);
                     }
                     break;
@@ -79,8 +77,7 @@ namespace Elastic.Apm.EntityFrameworkCore
                                     break;
                             }
 
-                            span.Transaction_id = TransactionContainer.Transactions.Value.Id;
-                            TransactionContainer.Transactions.Value.Spans.Add(span);
+                            span.End();
                         }
                     }
                     break;

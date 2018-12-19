@@ -308,6 +308,51 @@ namespace Elastic.Apm.Tests
             Assert.Equal("GET localhost", TransactionContainer.Transactions.Value.Spans[0].Name);
         }
 
+        /// <summary>
+        /// Makes sure that the duration of an HTTP Request is captured by the agent
+        /// </summary>
+        /// <returns>The request duration.</returns>
+        [Fact]
+        public async Task HtppRequestDuration()
+        {
+            RegisterListenerAndStartTransaction();
+
+            using (LocalServer localServer = new LocalServer( ctx =>
+            {
+                ctx.Response.StatusCode = 200;
+                System.Threading.Thread.Sleep(5); //Make sure duration is really > 0 
+            }))
+            {
+                var httpClient = new HttpClient();
+                var res = await httpClient.GetAsync(localServer.Uri);
+
+                Assert.True(res.IsSuccessStatusCode);
+                Assert.Equal(localServer.Uri, TransactionContainer.Transactions.Value.Spans[0].Context.Http.Url);
+            }
+
+            Assert.True(TransactionContainer.Transactions.Value.Spans[0].Duration > 0);
+        }
+
+        /// <summary>
+        /// Makes sure spans have an Id
+        /// </summary>
+        [Fact]
+        public async Task HttpRequestSpanGuid()
+        {
+            RegisterListenerAndStartTransaction();
+
+            using (LocalServer localServer = new LocalServer())
+            {
+                var httpClient = new HttpClient();
+                var res = await httpClient.GetAsync(localServer.Uri);
+
+                Assert.True(res.IsSuccessStatusCode);
+                Assert.Equal(localServer.Uri, TransactionContainer.Transactions.Value.Spans[0].Context.Http.Url);
+            }
+
+            Assert.True(TransactionContainer.Transactions.Value.Spans[0].Id > 0);
+        }
+
         private void RegisterListenerAndStartTransaction()
         {
             new ElasticCoreListeners().Start();
@@ -317,10 +362,7 @@ namespace Elastic.Apm.Tests
 
         private void StartTransaction()
         => TransactionContainer.Transactions.Value =
-                new Transaction($"{nameof(TestSimpleOutgoingHttpRequest)}", 
-                                Transaction.TYPE_REQUEST)
-                {
-                    Id = Guid.NewGuid()
-                };
+                new Transaction($"{nameof(TestSimpleOutgoingHttpRequest)}",
+                                Transaction.TYPE_REQUEST);
     }
 }

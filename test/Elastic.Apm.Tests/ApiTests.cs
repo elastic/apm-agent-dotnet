@@ -34,6 +34,7 @@ namespace Elastic.Apm.Tests
             Assert.Equal(transactionName, payloadSender.Payloads[0].Transactions[0].Name);
             Assert.Equal(transacitonType, payloadSender.Payloads[0].Transactions[0].Type);
             Assert.True(payloadSender.Payloads[0].Transactions[0].Duration > 0);
+            Assert.True(payloadSender.Payloads[0].Transactions[0].Id != Guid.Empty);
 
             Assert.NotNull(payloadSender.Payloads[0].Service);
         }
@@ -103,12 +104,8 @@ namespace Elastic.Apm.Tests
             Assert.Equal(Transaction.TYPE_REQUEST, currentTransaction.Type);
 
             void StartTransaction()
-              =>  TransactionContainer.Transactions.Value =
-                                  new Transaction(transactionName,
-                                  Transaction.TYPE_REQUEST)
-                  {
-                      Id = Guid.NewGuid()
-                  };
+              => TransactionContainer.Transactions.Value =
+                        new Transaction(transactionName, Transaction.TYPE_REQUEST);
 
             async Task DoAsynWork()
             {
@@ -152,6 +149,7 @@ namespace Elastic.Apm.Tests
 
             Assert.Equal(spanName, payloadSender.Payloads[0].Transactions[0].Spans[0].Name);
             Assert.True(payloadSender.Payloads[0].Transactions[0].Spans[0].Duration > 0);
+            Assert.True(payloadSender.Payloads[0].Transactions[0].Spans[0].Id > 0);
             Assert.NotNull(payloadSender.Payloads[0].Service);
         }
 

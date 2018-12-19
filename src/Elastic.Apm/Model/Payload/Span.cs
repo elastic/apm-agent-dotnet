@@ -17,7 +17,13 @@ namespace Elastic.Apm.Model.Payload
 
         public ContextC Context { get; set; }
 
-        public double Duration { get; set; }
+        /// <summary>
+        /// The duration of the span.
+        /// If it's not set (HasValue returns false) then the value 
+        /// is automatically calculated when <see cref="End"/> is called.
+        /// </summary>
+        /// <value>The duration.</value>
+        public double? Duration { get; set; }
 
         public String Name { get; set; }
 
@@ -33,14 +39,16 @@ namespace Elastic.Apm.Model.Payload
 
         public List<Stacktrace> Stacktrace { get; set; }
 
-        public Guid Transaction_id { get; set; } //TODO: probably not needed
+        public Guid Transaction_id => transaction.Id;
         internal Transaction transaction;
 
-        private readonly DateTime _startDateTime;
+        private readonly DateTimeOffset start;
 
-        public Span(string name, string type)
+        public Span(string name, string type, Transaction transaction)
         {
-            _startDateTime = DateTime.UtcNow;
+            this.transaction = transaction;
+            start = DateTimeOffset.UtcNow;
+            Start = (decimal)(start - transaction.start).TotalMilliseconds;
             this.Name = name;
             this.Type = type;
 
@@ -50,8 +58,12 @@ namespace Elastic.Apm.Model.Payload
 
         public void End()
         {
-            this.Duration = (DateTime.UtcNow - _startDateTime).TotalMilliseconds;
-            transaction?.Spans.Add(this);
+            if (!Duration.HasValue)
+            {
+                this.Duration = (DateTimeOffset.UtcNow - start).TotalMilliseconds;
+            }
+
+            transaction?.spans.Add(this);
         }
 
         public void CaptureException(Exception exception, string culprit = null)

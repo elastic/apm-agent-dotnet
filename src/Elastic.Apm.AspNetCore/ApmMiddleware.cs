@@ -1,16 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
 using System.Reflection;
-using System.Globalization;
-using Elastic.Apm;
 using Elastic.Apm.Model.Payload;
-using Elastic.Apm.Report;
-using Microsoft.Extensions.Configuration;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Elastic.Apm.Tests")]
@@ -21,15 +14,13 @@ namespace Elastic.Apm.AspNetCore
     public class ApmMiddleware
     {
         private readonly RequestDelegate next;
+        private readonly Service service;
 
         public ApmMiddleware(RequestDelegate next)
-            => this.next = next;
-
-        public async Task InvokeAsync(HttpContext context)
         {
-            var sw = Stopwatch.StartNew();
+            this.next = next;
 
-            var service = new Service
+            service = new Service
             {
                 Agent = new Apm.Model.Payload.Agent
                 {
@@ -41,40 +32,37 @@ namespace Elastic.Apm.AspNetCore
                 Language = new Language { Name = "C#" } //TODO
             };
 
-            var transaction = new Transaction($"{context.Request.Method} {context.Request.Path}",
-                                             Transaction.TYPE_REQUEST)
+            Api.ElasticApm.Service = service;
+        }
+
+        public async Task InvokeAsync(HttpContext context)
+        {           
+            var transaction = Api.ElasticApm.StartTransaction($"{context.Request.Method} {context.Request.Path}",
+                                                              Transaction.TYPE_REQUEST);
+
+            transaction.Context = new Context
             {
-                service = service,
-                Id = Guid.NewGuid(),
-                Context = new Context
+                Request = new Request
                 {
-                    Request = new Request
+                    Method = context.Request.Method,
+                    Socket = new Socket
                     {
-                        Method = context.Request.Method,
-                        Socket = new Socket
-                        {
-                            Encrypted = context.Request.IsHttps,
-                            Remote_address = context.Connection?.RemoteIpAddress?.ToString()
-                        },
-                        Url = new Url
-                        {
-                            Full = context.Request?.Path.Value,
-                            HostName = context.Request.Host.Host,
-                            Protocol = GetProtocolName(context.Request.Protocol),
-                            Raw = context.Request?.Path.Value //TODO
-                        },
-                        HttpVersion = GetHttpVersion(context.Request.Protocol)
-                    }
+                        Encrypted = context.Request.IsHttps,
+                        Remote_address = context.Connection?.RemoteIpAddress?.ToString()
+                    },
+                    Url = new Url
+                    {
+                        Full = context.Request?.Path.Value,
+                        HostName = context.Request.Host.Host,
+                        Protocol = GetProtocolName(context.Request.Protocol),
+                        Raw = context.Request?.Path.Value //TODO
+                    },
+                    HttpVersion = GetHttpVersion(context.Request.Protocol)
                 }
             };
 
-            TransactionContainer.Transactions.Value = transaction;
-
             await next(context);
 
-            sw.Stop();
-
-            transaction.Duration = sw.ElapsedMilliseconds;
             transaction.Result = $"{GetProtocolName(context.Request.Protocol)} {context.Response.StatusCode.ToString()[0]}xx";
             transaction.Context.Response = new Response
             {
@@ -82,13 +70,7 @@ namespace Elastic.Apm.AspNetCore
                 Status_code = context.Response.StatusCode
             };
 
-            var payload = new Payload
-            {
-                Service = service,
-                Transactions = new List<Transaction> { TransactionContainer.Transactions.Value }
-            };
-
-            Agent.PayloadSender.QueuePayload(payload);
+            transaction.End();
         }
 
         private string GetProtocolName(String protocol)
