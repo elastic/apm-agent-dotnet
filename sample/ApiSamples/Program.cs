@@ -10,7 +10,11 @@ namespace ApiSamples
     {
         static void Main(string[] args)
         {
-            SampleError();
+            try
+            {
+                SampleCustomTransactionWithConvinientApi().Wait();
+            }
+            catch{}
             //WIP: if the process terminates the agent
             //potentially does not have time to send the transaction to the server.
             Thread.Sleep(1000);
@@ -65,6 +69,16 @@ namespace ApiSamples
             transaction.End();
 
             Console.WriteLine($"{nameof(SampleError)} finished");
+        }
+
+        public static async Task SampleCustomTransactionWithConvinientApi()
+        {
+            await  ElasticApm.CaptureTransaction("transaction1", "type1", async() =>
+           {
+               await Task.Delay(100);
+               throw new Exception("bamm!");
+               return 4;
+            });
         }
     }
 }

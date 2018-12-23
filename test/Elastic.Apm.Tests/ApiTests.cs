@@ -7,7 +7,9 @@ using Xunit;
 namespace Elastic.Apm.Tests
 {
     /// <summary>
-    /// Tests the API for manual instrumentation
+    /// Tests the API for manual instrumentation.
+    /// Only tests scenarios with manually calling StartTransaction, StartSpan, and End.
+    /// The convenient API is covered by <see cref="ConvenientApiTests"/>
     /// </summary>
     public class ApiTests
     {

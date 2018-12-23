@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Reflection;
+using System.Threading.Tasks;
+using System.Transactions;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
+using Transaction = Elastic.Apm.Model.Payload.Transaction;
 
 namespace Elastic.Apm.Api
 {
@@ -29,7 +32,7 @@ namespace Elastic.Apm.Api
         /// <value>The service.</value>
         public static Service Service
         {
-            get
+            private get
             {
                 if(service == null)
                 {
@@ -46,10 +49,7 @@ namespace Elastic.Apm.Api
 
                 return service;
             }
-            set
-            {
-                service = value;
-            }
+            set => service = value;
         }
 
         public static Transaction CurrentTransaction
@@ -66,6 +66,149 @@ namespace Elastic.Apm.Api
 
             TransactionContainer.Transactions.Value = retVal;
             return retVal;
+        }
+
+        public static void CaptureTransaction(string name, string type, Action<Transaction> action)
+        {
+            var transaction = StartTransaction(name, type);
+
+            try
+            {
+                action(transaction);
+            }
+            catch (Exception e) when (Capture(e, transaction)) { }
+            finally
+            {
+                transaction.End();
+            }
+        }
+
+        public static void CaptureTransaction(string name, string type, Action action)
+        {
+            var transaction = StartTransaction(name, type);
+
+            try
+            {
+                action();
+            }
+            catch (Exception e) when (Capture(e, transaction)) { }
+            finally
+            {
+                transaction.End();
+            }
+        }
+
+        public static T CaptureTransaction<T>(string name, string type, Func<Transaction, T> func)
+        {
+            var transaction = StartTransaction(name, type);
+            T retVal = default(T);
+            try
+            {
+                retVal = func(transaction);
+            }
+            catch (Exception e) when (Capture(e, transaction)) { }
+            finally
+            {
+                transaction.End();
+            }
+
+            return retVal;
+        }
+
+        public static T CaptureTransaction<T>(string name, string type, Func<T> func)
+        {
+            var transaction = StartTransaction(name, type);
+            T retVal = default(T);
+            try
+            {
+                 retVal = func();
+            }
+            catch (Exception e) when (Capture(e, transaction)) { }
+            finally
+            {
+                transaction.End();
+            }
+
+            return retVal;
+        }
+
+        public static Task CaptureTransaction(string name, string type, Func<Task> func)
+        {
+            var transaction = StartTransaction(name, type);
+            var task = func();
+            RegisterContinuation(task, transaction);
+            return task;
+        }
+
+        public static Task CaptureTransaction(string name, string type, Func<Transaction, Task> func)
+        {
+            var transaction = StartTransaction(name, type);
+            var task = func(transaction);
+            RegisterContinuation(task, transaction);
+            return task;
+        }
+
+        public static Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func)
+        {
+            var transaction = StartTransaction(name, type);
+            var task = func();
+            RegisterContinuation(task, transaction);
+
+            return task;
+        }
+
+        public static  Task<T> CaptureTransaction<T>(string name, string type, Func<Transaction, Task<T>> func)
+        {
+            var transaction = StartTransaction(name, type);
+            var task = func(transaction);
+            RegisterContinuation(task, transaction);
+            return task;
+        }
+
+        /// <summary>
+        /// Registers a continuation on the task.
+        /// Within the continuation it ends the transaction and captures errors
+        /// </summary>
+        /// <param name="task">Task.</param>
+        /// <param name="transaction">Transaction.</param>
+        private static void RegisterContinuation(Task task, Transaction transaction)
+        {
+            task.ContinueWith((t) =>
+            {
+                if (t.IsFaulted)
+                {
+                    if (t.Exception != null)
+                    {
+                        if (t.Exception is AggregateException aggregateException )
+                        {
+                            Capture(
+                                aggregateException.InnerExceptions.Count == 1
+                                    ? aggregateException.InnerExceptions[0]
+                                    : aggregateException.Flatten(), transaction);
+                        }
+                        else
+                        {
+                            Capture(t.Exception, transaction);
+                        }
+                    }
+                    else
+                    {
+                        //TODO capture error
+                    }
+                }
+                else if (t.IsCanceled)
+                {
+                    //TODO: capture error
+                }
+               
+                transaction.End();
+            }, TaskContinuationOptions.ExecuteSynchronously);
+        }
+
+        private static bool Capture(Exception e, Transaction transaction)
+        {
+            transaction.CaptureException(e);
+            return false;
         }
     }
 }
