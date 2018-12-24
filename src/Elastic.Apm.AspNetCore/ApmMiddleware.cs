@@ -32,12 +32,12 @@ namespace Elastic.Apm.AspNetCore
                 Language = new Language { Name = "C#" } //TODO
             };
 
-            Api.ElasticApm.Service = service;
+            Agent.GetApi().Service = service;
         }
 
         public async Task InvokeAsync(HttpContext context)
         {           
-            var transaction = Api.ElasticApm.StartTransaction($"{context.Request.Method} {context.Request.Path}",
+            var transaction = Agent.GetApi().StartTransaction($"{context.Request.Method} {context.Request.Path}",
                                                               Transaction.TYPE_REQUEST);
 
             transaction.Context = new Context

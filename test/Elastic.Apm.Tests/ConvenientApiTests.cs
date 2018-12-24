@@ -11,7 +11,7 @@ namespace Elastic.Apm.Tests
     /// <summary>
     /// Tests the API for manual instrumentation.
     /// Only tests scenarios with when using the convenient API
-    /// Scenarios with manually calling <see cref="ElasticApm.StartTransaction"/>,
+    /// Scenarios with manually calling <see cref="Agent.GetApi().StartTransaction"/>,
     /// <see cref="Transaction.StartSpan"/>, <see cref="Transaction.End"/>
     /// are covered by <see cref="ApiTests"/>
     /// </summary>
@@ -26,7 +26,7 @@ namespace Elastic.Apm.Tests
             => TestHelper.ResetAgentAndEnvVars();
 
         /// <summary>
-        /// Tests the <see cref="ElasticApm.CaptureTransaction(string,string,System.Action)"/> method.
+        /// Tests the <see cref="Agent.GetApi().CaptureTransaction(string,string,System.Action)"/> method.
         /// It wraps a fake transaction (Thread.Sleep) into the CaptureTransaction method
         /// and it makes sure that the transaction is captured by the agent.
         /// </summary>
@@ -34,7 +34,7 @@ namespace Elastic.Apm.Tests
         public void SimpleAction()
         => AssertWith1Transaction(() =>
            {
-            ElasticApm.CaptureTransaction(TransactionName, TransactionType,
+            Agent.GetApi().CaptureTransaction(TransactionName, TransactionType,
                    () =>
                    {
                        Thread.Sleep(SleepLength);
@@ -42,7 +42,7 @@ namespace Elastic.Apm.Tests
            });
 
         /// <summary>
-        /// Tests the <see cref="ElasticApm.CaptureTransaction(string,string,System.Action)"/> method with an exception.
+        /// Tests the <see cref="Agent.GetApi().CaptureTransaction(string,string,System.Action)"/> method with an exception.
         /// It wraps a fake transaction (Thread.Sleep) that throws an exception into the CaptureTransaction method
         /// and it makes sure that the transaction and the exception are captured by the agent.
         /// </summary>
@@ -52,7 +52,7 @@ namespace Elastic.Apm.Tests
            {
                Assert.Throws<InvalidOperationException>(() =>
                {
-                ElasticApm.CaptureTransaction(TransactionName, TransactionType, new Action(() =>
+                Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, new Action(() =>
                         {
                             Thread.Sleep(SleepLength);
                             throw new InvalidOperationException(ExceptionMessage);
@@ -61,7 +61,7 @@ namespace Elastic.Apm.Tests
            });
 
         /// <summary>
-        /// Tests the <see cref="ElasticApm.CaptureTransaction(string,string,System.Action{Elastic.Apm.Model.Payload.Transaction})"/> method.
+        /// Tests the <see cref="Agent.GetApi().CaptureTransaction(string,string,System.Action{Elastic.Apm.Model.Payload.Transaction})"/> method.
         /// It wraps a fake transaction (Thread.Sleep) into the CaptureTransaction method with an <see cref="Action{Transaction}"/> parameter
         /// and it makes sure that the transaction is captured by the agent and the <see cref="Action{Transaction}"/> parameter is not null
         /// </summary>
@@ -69,7 +69,7 @@ namespace Elastic.Apm.Tests
         public void SimpleActionWithParameter()
         => AssertWith1Transaction(() =>
         {
-            ElasticApm.CaptureTransaction(TransactionName, TransactionType,
+            Agent.GetApi().CaptureTransaction(TransactionName, TransactionType,
                    (t) =>
                    {
                        Assert.NotNull(t);
@@ -78,7 +78,7 @@ namespace Elastic.Apm.Tests
         });
 
         /// <summary>
-        /// Tests the <see cref="ElasticApm.CaptureTransaction(string,string,System.Action{Elastic.Apm.Model.Payload.Transaction})"/> method with an exception.
+        /// Tests the <see cref="Agent.GetApi().CaptureTransaction(string,string,System.Action{Elastic.Apm.Model.Payload.Transaction})"/> method with an exception.
         /// It wraps a fake transaction (Thread.Sleep) that throws an exception into the CaptureTransaction method with an <see cref="Action{Transaction}"/> parameter
         /// and it makes sure that the transaction and the error are captured by the agent and the <see cref="Action{Transaction}"/> parameter is not null
         /// </summary>
@@ -88,7 +88,7 @@ namespace Elastic.Apm.Tests
         {
            Assert.Throws<InvalidOperationException>(() =>
            {
-                ElasticApm.CaptureTransaction(TransactionName, TransactionType, new Action<Transaction>((t) =>
+                Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, new Action<Transaction>((t) =>
                {
                     Assert.NotNull(t);
                     Thread.Sleep(SleepLength);
@@ -99,7 +99,7 @@ namespace Elastic.Apm.Tests
        });
 
         /// <summary>
-        /// Tests the <see cref="ElasticApm.CaptureTransaction{T}(string,string,System.Func{T})"/> method.
+        /// Tests the <see cref="Agent.GetApi().CaptureTransaction{T}(string,string,System.Func{T})"/> method.
         /// It wraps a fake transaction (Thread.Sleep) with a return value into the CaptureTransaction method
         /// and it makes sure that the transaction is captured by the agent and the return value is correct.
         /// </summary>
@@ -107,7 +107,7 @@ namespace Elastic.Apm.Tests
         public void SimpleActionWithReturnType()
         => AssertWith1Transaction(() =>
         {
-            var res = ElasticApm.CaptureTransaction(TransactionName, TransactionType, () =>
+            var res = Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, () =>
               {
                   Thread.Sleep(SleepLength);
                   return 42;
@@ -117,7 +117,7 @@ namespace Elastic.Apm.Tests
         });
 
         /// <summary>
-        /// Tests the <see cref="ElasticApm.CaptureTransaction{T}(string,string,System.Func{Transaction,T})"/> method.
+        /// Tests the <see cref="Agent.GetApi().CaptureTransaction{T}(string,string,System.Func{Transaction,T})"/> method.
         /// It wraps a fake transaction (Thread.Sleep) with a return value into the CaptureTransaction method with an <see cref="Action{Transaction}"/> parameter
         /// and it makes sure that the transaction is captured by the agent and the return value is correct and the <see cref="Action{Transaction}"/> is not null. 
         /// </summary>
@@ -125,7 +125,7 @@ namespace Elastic.Apm.Tests
         public void SimpleActionWithReturnTypeAndParameter()
         => AssertWith1Transaction(() =>
             {
-                var res = ElasticApm.CaptureTransaction(TransactionName, TransactionType,
+                var res = Agent.GetApi().CaptureTransaction(TransactionName, TransactionType,
                     (t) =>
                     {
                         Assert.NotNull(t);
@@ -137,7 +137,7 @@ namespace Elastic.Apm.Tests
             });
 
         /// <summary>
-        /// Tests the <see cref="ElasticApm.CaptureTransaction{T}(string,string,System.Func{Transaction,T})"/> method with an exception.
+        /// Tests the <see cref="Agent.GetApi().CaptureTransaction{T}(string,string,System.Func{Transaction,T})"/> method with an exception.
         /// It wraps a fake transaction (Thread.Sleep) with a return value that throws an exception into the CaptureTransaction method with an <see cref="Action{Transaction}"/> parameter
         /// and it makes sure that the transaction and the error are captured by the agent and the return value is correct and the <see cref="Action{Transaction}"/> is not null. 
         /// </summary>
@@ -147,7 +147,7 @@ namespace Elastic.Apm.Tests
          {
              Assert.Throws<InvalidOperationException>(() =>
              {
-                 var result = ElasticApm.CaptureTransaction(TransactionName, TransactionType, (t) =>
+                 var result = Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, (t) =>
                  {
                      Assert.NotNull(t);
                      Thread.Sleep(SleepLength);
@@ -166,7 +166,7 @@ namespace Elastic.Apm.Tests
          });
 
         /// <summary>
-        /// Tests the <see cref="ElasticApm.CaptureTransaction{T}(string,string,System.Func{T})"/> method with an exception.
+        /// Tests the <see cref="Agent.GetApi().CaptureTransaction{T}(string,string,System.Func{T})"/> method with an exception.
         /// It wraps a fake transaction (Thread.Sleep) with a return value that throws an exception into the CaptureTransaction method
         /// and it makes sure that the transaction and the error are captured by the agent. 
         /// </summary>
@@ -176,7 +176,7 @@ namespace Elastic.Apm.Tests
            {
                Assert.Throws<InvalidOperationException>(() =>
                {
-                   var result = ElasticApm.CaptureTransaction(TransactionName, TransactionType, () =>
+                   var result = Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, () =>
                    {
                        Thread.Sleep(SleepLength);
 
@@ -194,7 +194,7 @@ namespace Elastic.Apm.Tests
            });
 
         /// <summary>
-        /// Tests the <see cref="ElasticApm.CaptureTransaction(string,string,System.Func{Task})"/> method.
+        /// Tests the <see cref="Agent.GetApi().CaptureTransaction(string,string,System.Func{Task})"/> method.
         /// It wraps a fake async transaction (Task.Delay) into the CaptureTransaction method
         /// and it makes sure that the transaction is captured.
         /// </summary>
@@ -203,13 +203,13 @@ namespace Elastic.Apm.Tests
         {
             await AssertWith1TransactionAsync(async () =>
             {
-                await ElasticApm.CaptureTransaction(TransactionName, TransactionType,
+                await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType,
                     async () => { await Task.Delay(SleepLength); });
             });
         }
         
         /// <summary>
-        /// Tests the <see cref="ElasticApm.CaptureTransaction(string,string,System.Func{Task})"/> method with an exception
+        /// Tests the <see cref="Agent.GetApi().CaptureTransaction(string,string,System.Func{Task})"/> method with an exception
         /// It wraps a fake async transaction (Task.Delay) that throws an exception into the CaptureTransaction method
         /// and it makes sure that the transaction and the error are captured.
         /// </summary>
@@ -219,7 +219,7 @@ namespace Elastic.Apm.Tests
             {
                 await Assert.ThrowsAsync<InvalidOperationException>(async() =>
                 {
-                    await ElasticApm.CaptureTransaction(TransactionName, TransactionType, async () =>
+                    await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, async () =>
                     {
                         await Task.Delay(SleepLength);
                         throw new InvalidOperationException(ExceptionMessage);
@@ -228,7 +228,7 @@ namespace Elastic.Apm.Tests
             });
 
         /// <summary>
-        /// Tests the <see cref="ElasticApm.CaptureTransaction(string,string,System.Func{Transaction, Task})"/> method.
+        /// Tests the <see cref="Agent.GetApi().CaptureTransaction(string,string,System.Func{Transaction, Task})"/> method.
         /// It wraps a fake async transaction (Task.Delay) into the CaptureTransaction method with an <see cref="Action{Transaction}"/> parameter
         /// and it makes sure that the transaction is captured and the <see cref="Action{Transaction}"/> parameter is not null.
         /// </summary>
@@ -236,7 +236,7 @@ namespace Elastic.Apm.Tests
         public async Task AsyncTaskWithParameter()
             => await AssertWith1TransactionAsync(async () =>
             {
-                await ElasticApm.CaptureTransaction(TransactionName, TransactionType,
+                await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType,
                     async(t) =>
                     {
                         Assert.NotNull(t);
@@ -245,7 +245,7 @@ namespace Elastic.Apm.Tests
             });
         
         /// <summary>
-        /// Tests the <see cref="ElasticApm.CaptureTransaction(string,string,System.Func{Transaction, Task})"/> method with an exception.
+        /// Tests the <see cref="Agent.GetApi().CaptureTransaction(string,string,System.Func{Transaction, Task})"/> method with an exception.
         /// It wraps a fake async transaction (Task.Delay) that throws an exception into the CaptureTransaction method with an <see cref="Action{Transaction}"/> parameter
         /// and it makes sure that the transaction and the error are captured and the <see cref="Action{Transaction}"/> parameter is not null.
         /// </summary>
@@ -255,7 +255,7 @@ namespace Elastic.Apm.Tests
             {
                 await Assert.ThrowsAsync<InvalidOperationException>(async () =>
                 {
-                   await ElasticApm.CaptureTransaction(TransactionName, TransactionType, async (t) =>
+                   await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, async (t) =>
                     {
                         Assert.NotNull(t);
                         await Task.Delay(SleepLength);
@@ -266,7 +266,7 @@ namespace Elastic.Apm.Tests
             });
         
         /// <summary>
-        /// Tests the <see cref="ElasticApm.CaptureTransaction{T}(string,string,System.Func{Task{T}})"/> method.
+        /// Tests the <see cref="Agent.GetApi().CaptureTransaction{T}(string,string,System.Func{Task{T}})"/> method.
         /// It wraps a fake async transaction (Task.Delay) with a return value into the CaptureTransaction method
         /// and it makes sure that the transaction is captured by the agent and the return value is correct.
         /// </summary>
@@ -274,7 +274,7 @@ namespace Elastic.Apm.Tests
         public async Task AsyncTaskWithReturnType()
             => await AssertWith1TransactionAsync(async () =>
             {
-                var res = await ElasticApm.CaptureTransaction(TransactionName, TransactionType, async () =>
+                var res = await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, async () =>
                 {
                     await Task.Delay(SleepLength);
                     return 42;
@@ -283,7 +283,7 @@ namespace Elastic.Apm.Tests
             });
         
         /// <summary>
-        /// Tests the <see cref="ElasticApm.CaptureTransaction{T}(string,string,System.Func{Transaction,Task{T}})"/> method.
+        /// Tests the <see cref="Agent.GetApi().CaptureTransaction{T}(string,string,System.Func{Transaction,Task{T}})"/> method.
         /// It wraps a fake async transaction (Task.Delay) with a return value into the CaptureTransaction method with an <see cref="Action{Transaction}"/> parameter
         /// and it makes sure that the transaction is captured by the agent and the return value is correct and the <see cref="Action{Transaction}"/> is not null. 
         /// </summary>
@@ -291,7 +291,7 @@ namespace Elastic.Apm.Tests
         public async Task AsyncTaskWithReturnTypeAndParameter()
         => await AssertWith1TransactionAsync(async () =>
             {
-                var res =  await ElasticApm.CaptureTransaction(TransactionName, TransactionType,
+                var res =  await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType,
                     async (t) =>
                     {
                         Assert.NotNull(t);
@@ -303,7 +303,7 @@ namespace Elastic.Apm.Tests
             });
 
         /// <summary>
-        /// Tests the <see cref="ElasticApm.CaptureTransaction{T}(string,string,System.Func{Transaction,Task{T}})"/> method with an exception.
+        /// Tests the <see cref="Agent.GetApi().CaptureTransaction{T}(string,string,System.Func{Transaction,Task{T}})"/> method with an exception.
         /// It wraps a fake async transaction (Task.Delay) with a return value that throws an exception into the CaptureTransaction method with an <see cref="Action{Transaction}"/> parameter
         /// and it makes sure that the transaction and the error are captured by the agent and the return value is correct and the <see cref="Action{Transaction}"/> is not null. 
         /// </summary>
@@ -313,7 +313,7 @@ namespace Elastic.Apm.Tests
          {
              await Assert.ThrowsAsync<InvalidOperationException>(async () =>
              {
-                 var result = await ElasticApm.CaptureTransaction(TransactionName, TransactionType, async (t) =>
+                 var result = await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, async (t) =>
                  {
                      Assert.NotNull(t);
                      await Task.Delay(SleepLength);
@@ -332,7 +332,7 @@ namespace Elastic.Apm.Tests
          });
 
         /// <summary>
-        /// Tests the <see cref="ElasticApm.CaptureTransaction{T}(string,string,System.Func{Task{T}})"/> method with an exception.
+        /// Tests the <see cref="Agent.GetApi().CaptureTransaction{T}(string,string,System.Func{Task{T}})"/> method with an exception.
         /// It wraps a fake async transaction (Task.Delay) with a return value that throws an exception into the CaptureTransaction method
         /// and it makes sure that the transaction and the error are captured by the agent. 
         /// </summary>
@@ -342,7 +342,7 @@ namespace Elastic.Apm.Tests
            {
                await Assert.ThrowsAsync<InvalidOperationException>(async () =>
                {
-                   var result = await ElasticApm.CaptureTransaction(TransactionName, TransactionType, async () =>
+                   var result = await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, async () =>
                    {
                        await Task.Delay(SleepLength);
 
@@ -371,7 +371,7 @@ namespace Elastic.Apm.Tests
 
             await Assert.ThrowsAsync<OperationCanceledException>(async () =>
             {
-                await ElasticApm.CaptureTransaction(TransactionName, TransactionType,
+                await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType,
                     async () =>
                     {
                         // ReSharper disable once MethodSupportsCancellation, we want to delay before we throw the exception

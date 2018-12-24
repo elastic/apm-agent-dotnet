@@ -9,7 +9,7 @@ using Transaction = Elastic.Apm.Model.Payload.Transaction;
 
 namespace Elastic.Apm.Api
 {
-    public static class ElasticApm
+    internal class ElasticApm : IElasticApm
     {
         private static AbstractLogger publicApiLogger;
         public static AbstractLogger PublicApiLogger
@@ -25,15 +25,15 @@ namespace Elastic.Apm.Api
             }
         }
 
-        private static Service service;
+        private Service service;
         /// <summary>
         /// Identifies the monitored service. If this remains unset the agent
         /// automatically populates it based on the entry assembly.
         /// </summary>
         /// <value>The service.</value>
-        public static Service Service
+        public Service Service
         {
-            private get
+            get
             {
                 if(service == null)
                 {
@@ -53,10 +53,10 @@ namespace Elastic.Apm.Api
             set => service = value;
         }
 
-        public static Transaction CurrentTransaction
+        public Transaction CurrentTransaction
             => TransactionContainer.Transactions.Value;
 
-        public static Transaction StartTransaction(string name, string type)
+        public Transaction StartTransaction(string name, string type)
         {
             var retVal = new Transaction(name, type)
             {
@@ -69,7 +69,7 @@ namespace Elastic.Apm.Api
             return retVal;
         }
 
-        public static void CaptureTransaction(string name, string type, Action<Transaction> action)
+        public void CaptureTransaction(string name, string type, Action<Transaction> action)
         {
             var transaction = StartTransaction(name, type);
 
@@ -84,7 +84,7 @@ namespace Elastic.Apm.Api
             }
         }
 
-        public static void CaptureTransaction(string name, string type, Action action)
+        public void CaptureTransaction(string name, string type, Action action)
         {
             var transaction = StartTransaction(name, type);
 
@@ -99,7 +99,7 @@ namespace Elastic.Apm.Api
             }
         }
 
-        public static T CaptureTransaction<T>(string name, string type, Func<Transaction, T> func)
+        public T CaptureTransaction<T>(string name, string type, Func<Transaction, T> func)
         {
             var transaction = StartTransaction(name, type);
             T retVal = default(T);
@@ -116,7 +116,7 @@ namespace Elastic.Apm.Api
             return retVal;
         }
 
-        public static T CaptureTransaction<T>(string name, string type, Func<T> func)
+        public T CaptureTransaction<T>(string name, string type, Func<T> func)
         {
             var transaction = StartTransaction(name, type);
             T retVal = default(T);
@@ -133,7 +133,7 @@ namespace Elastic.Apm.Api
             return retVal;
         }
 
-        public static Task CaptureTransaction(string name, string type, Func<Task> func)
+        public Task CaptureTransaction(string name, string type, Func<Task> func)
         {
             var transaction = StartTransaction(name, type);
             var task = func();
@@ -141,7 +141,7 @@ namespace Elastic.Apm.Api
             return task;
         }
 
-        public static Task CaptureTransaction(string name, string type, Func<Transaction, Task> func)
+        public Task CaptureTransaction(string name, string type, Func<Transaction, Task> func)
         {
             var transaction = StartTransaction(name, type);
             var task = func(transaction);
@@ -149,7 +149,7 @@ namespace Elastic.Apm.Api
             return task;
         }
 
-        public static Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func)
+        public Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func)
         {
             var transaction = StartTransaction(name, type);
             var task = func();
@@ -158,7 +158,7 @@ namespace Elastic.Apm.Api
             return task;
         }
 
-        public static  Task<T> CaptureTransaction<T>(string name, string type, Func<Transaction, Task<T>> func)
+        public  Task<T> CaptureTransaction<T>(string name, string type, Func<Transaction, Task<T>> func)
         {
             var transaction = StartTransaction(name, type);
             var task = func(transaction);
@@ -172,7 +172,7 @@ namespace Elastic.Apm.Api
         /// </summary>
         /// <param name="task">Task.</param>
         /// <param name="transaction">Transaction.</param>
-        private static void RegisterContinuation(Task task, Transaction transaction)
+        private void RegisterContinuation(Task task, Transaction transaction)
         {
             task.ContinueWith((t) =>
             {
@@ -213,7 +213,7 @@ namespace Elastic.Apm.Api
             }, TaskContinuationOptions.ExecuteSynchronously);
         }
 
-        private static bool Capture(Exception e, Transaction transaction)
+        private bool Capture(Exception e, Transaction transaction)
         {
             transaction.CaptureException(e);
             return false;

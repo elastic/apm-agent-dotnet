@@ -23,7 +23,7 @@ namespace ApiSamples
         public static void SampleCustomTransaction()
         {
             Console.WriteLine($"{nameof(SampleCustomTransaction)} started");
-            var transaction = ElasticApm.StartTransaction("SampleTransaction", Transaction.TYPE_REQUEST);
+            var transaction = Elastic.Apm.Agent.GetApi().StartTransaction("SampleTransaction", Transaction.TYPE_REQUEST);
 
             Thread.Sleep(500); //simulate work...
            
@@ -34,7 +34,7 @@ namespace ApiSamples
         public static void SampleCustomTransactionWithSpan()
         {
             Console.WriteLine($"{nameof(SampleCustomTransactionWithSpan)} started");
-            var transaction = ElasticApm.StartTransaction("SampleTransactionWithSpan", Transaction.TYPE_REQUEST);
+            var transaction = Elastic.Apm.Agent.GetApi().StartTransaction("SampleTransactionWithSpan", Transaction.TYPE_REQUEST);
 
             Thread.Sleep(500);
 
@@ -49,7 +49,7 @@ namespace ApiSamples
         public static void SampleError()
         {
             Console.WriteLine($"{nameof(SampleError)} started");
-            var transaction = ElasticApm.StartTransaction("SampleError", Transaction.TYPE_REQUEST);
+            var transaction = Elastic.Apm.Agent.GetApi().StartTransaction("SampleError", Transaction.TYPE_REQUEST);
 
             Thread.Sleep(500); //simulate work...
             var span = transaction.StartSpan("SampleSpan", Span.TYPE_EXTERNAL);
@@ -73,7 +73,7 @@ namespace ApiSamples
 
         public static async Task SampleCustomTransactionWithConvinientApi()
         {
-            await  ElasticApm.CaptureTransaction("transaction1", "type1", async() =>
+            await  Elastic.Apm.Agent.GetApi().CaptureTransaction("transaction1", "type1", async() =>
            {
                await Task.Delay(100);
                throw new Exception("bamm!");
