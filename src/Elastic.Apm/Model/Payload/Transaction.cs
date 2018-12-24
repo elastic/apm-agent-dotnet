@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Model.Payload
@@ -111,6 +112,31 @@ namespace Elastic.Apm.Model.Payload
             {
                   error.Exception.Stacktrace
                        = StacktraceHelper.GenerateApmStackTrace(new System.Diagnostics.StackTrace(exception).GetFrames(), Api.ElasticApm.PublicApiLogger, "failed capturing stacktrace");
+            }
+
+            error.Context = this.Context;
+            Apm.Agent.PayloadSender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = this.service});
+        }
+
+        public void CaptureError(string message, string culprit, StackFrame[] frames)
+        {
+            var error = new Error.Err
+            {
+                Culprit = culprit,
+                Exception = new CapturedException
+                {
+                    Message = message
+                },
+                Transaction = new Error.Err.Trans
+                {
+                    Id = this.Id
+                }
+            };
+
+            if (frames != null)
+            {
+                error.Exception.Stacktrace
+                    = StacktraceHelper.GenerateApmStackTrace(frames, Api.ElasticApm.PublicApiLogger, "failed capturing stacktrace");
             }
 
             error.Context = this.Context;

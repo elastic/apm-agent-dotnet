@@ -362,16 +362,38 @@ namespace Elastic.Apm.Tests
         [Fact]
         public async Task CancelledAsyncTask()
         {
-            var cancellationTokenSource = new CancellationTokenSource();
-            CancellationToken token = cancellationTokenSource.Token;
-            cancellationTokenSource.Cancel();
+            var payloadSender = new MockPayloadSender();
+            Agent.PayloadSender = payloadSender;
             
-            await ElasticApm.CaptureTransaction(TransactionName, TransactionType,
+            var cancellationTokenSource = new CancellationTokenSource();
+            var token = cancellationTokenSource.Token;
+            cancellationTokenSource.Cancel();
+
+            await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+            {
+                await ElasticApm.CaptureTransaction(TransactionName, TransactionType,
                     async () =>
                     {
-                        await Task.Delay(SleepLength, token);
+                        // ReSharper disable once MethodSupportsCancellation, we want to delay before we throw the exception
+                        await Task.Delay(SleepLength);
                         token.ThrowIfCancellationRequested();
                     });
+            });
+            
+            Assert.NotEmpty(payloadSender.Payloads);
+            Assert.NotEmpty(payloadSender.Payloads[0].Transactions);
+
+            Assert.Equal(TransactionName, payloadSender.Payloads[0].Transactions[0].Name);
+            Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
+
+            Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= SleepLength);
+
+
+            Assert.NotEmpty(payloadSender.Errors);
+            Assert.NotEmpty(payloadSender.Errors[0].Errors);
+
+            Assert.Equal("A task was canceled", payloadSender.Errors[0].Errors[0].Culprit);
+            Assert.Equal("Task canceled", payloadSender.Errors[0].Errors[0].Exception.Message);
         }
         
         /// <summary>

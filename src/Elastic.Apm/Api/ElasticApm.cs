@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -193,12 +194,19 @@ namespace Elastic.Apm.Api
                     }
                     else
                     {
-                        //TODO capture error
+                        transaction.CaptureError("Task faulted", "A task faulted", new StackTrace().GetFrames());
                     }
                 }
                 else if (t.IsCanceled)
                 {
-                    //TODO: capture error
+                    if (t.Exception == null)
+                    {
+                        transaction.CaptureError("Task canceled", "A task was canceled", new StackTrace().GetFrames()); //TODO: this async stacktrace is hard to use, make it readable!
+                    }
+                    else
+                    {
+                        transaction.CaptureException(t.Exception);
+                    }
                 }
                
                 transaction.End();
