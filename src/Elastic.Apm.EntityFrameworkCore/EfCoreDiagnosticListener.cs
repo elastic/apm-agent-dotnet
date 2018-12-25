@@ -22,7 +22,7 @@ namespace Elastic.Apm.EntityFrameworkCore
             switch (kv.Key)
             {
                 case string k when k == RelationalEventId.CommandExecuting.Name:
-                    if (kv.Value is CommandEventData commandEventData)
+                    if (TransactionContainer.Transactions.Value != null && kv.Value is CommandEventData commandEventData)
                     {
                         var newSpan = TransactionContainer.Transactions.Value.StartSpan(
                                             commandEventData.Command.CommandText, Span.TYPE_DB);
