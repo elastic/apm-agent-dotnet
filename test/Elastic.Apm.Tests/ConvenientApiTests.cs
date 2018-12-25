@@ -11,7 +11,7 @@ namespace Elastic.Apm.Tests
     /// <summary>
     /// Tests the API for manual instrumentation.
     /// Only tests scenarios with when using the convenient API
-    /// Scenarios with manually calling <see cref="Agent.GetApi().StartTransaction"/>,
+    /// Scenarios with manually calling <see cref="ElasticApm.StartTransaction"/>,
     /// <see cref="Transaction.StartSpan"/>, <see cref="Transaction.End"/>
     /// are covered by <see cref="ApiTests"/>
     /// </summary>
@@ -26,7 +26,7 @@ namespace Elastic.Apm.Tests
             => TestHelper.ResetAgentAndEnvVars();
 
         /// <summary>
-        /// Tests the <see cref="Agent.GetApi().CaptureTransaction(string,string,System.Action)"/> method.
+        /// Tests the <see cref="ElasticApm.CaptureTransaction(string,string,System.Action)"/> method.
         /// It wraps a fake transaction (Thread.Sleep) into the CaptureTransaction method
         /// and it makes sure that the transaction is captured by the agent.
         /// </summary>
@@ -42,7 +42,7 @@ namespace Elastic.Apm.Tests
            });
 
         /// <summary>
-        /// Tests the <see cref="Agent.GetApi().CaptureTransaction(string,string,System.Action)"/> method with an exception.
+        /// Tests the <see cref="ElasticApm.CaptureTransaction(string,string,System.Action)"/> method with an exception.
         /// It wraps a fake transaction (Thread.Sleep) that throws an exception into the CaptureTransaction method
         /// and it makes sure that the transaction and the exception are captured by the agent.
         /// </summary>
@@ -61,9 +61,9 @@ namespace Elastic.Apm.Tests
            });
 
         /// <summary>
-        /// Tests the <see cref="Agent.GetApi().CaptureTransaction(string,string,System.Action{Elastic.Apm.Model.Payload.Transaction})"/> method.
-        /// It wraps a fake transaction (Thread.Sleep) into the CaptureTransaction method with an <see cref="Action{Transaction}"/> parameter
-        /// and it makes sure that the transaction is captured by the agent and the <see cref="Action{Transaction}"/> parameter is not null
+        /// Tests the <see cref="ElasticApm.CaptureTransaction(string,string,System.Action{ITransaction})"/> method.
+        /// It wraps a fake transaction (Thread.Sleep) into the CaptureTransaction method with an <see cref="Action{ITransaction}"/> parameter
+        /// and it makes sure that the transaction is captured by the agent and the <see cref="Action{ITransaction}"/> parameter is not null
         /// </summary>
         [Fact]
         public void SimpleActionWithParameter()
@@ -78,9 +78,9 @@ namespace Elastic.Apm.Tests
         });
 
         /// <summary>
-        /// Tests the <see cref="Agent.GetApi().CaptureTransaction(string,string,System.Action{Elastic.Apm.Model.Payload.Transaction})"/> method with an exception.
-        /// It wraps a fake transaction (Thread.Sleep) that throws an exception into the CaptureTransaction method with an <see cref="Action{Transaction}"/> parameter
-        /// and it makes sure that the transaction and the error are captured by the agent and the <see cref="Action{Transaction}"/> parameter is not null
+        /// Tests the <see cref="ElasticApm.CaptureTransaction(string,string,System.Action{ITransaction})"/> method with an exception.
+        /// It wraps a fake transaction (Thread.Sleep) that throws an exception into the CaptureTransaction method with an <see cref="Action{ITransaction}"/> parameter
+        /// and it makes sure that the transaction and the error are captured by the agent and the <see cref="Action{ITransaction}"/> parameter is not null
         /// </summary>
         [Fact]
         public void SimpleActionWithExceptionAndParameter()
@@ -88,7 +88,7 @@ namespace Elastic.Apm.Tests
         {
            Assert.Throws<InvalidOperationException>(() =>
            {
-                Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, new Action<Transaction>((t) =>
+                Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, new Action<ITransaction>((t) =>
                {
                     Assert.NotNull(t);
                     Thread.Sleep(SleepLength);
@@ -99,7 +99,7 @@ namespace Elastic.Apm.Tests
        });
 
         /// <summary>
-        /// Tests the <see cref="Agent.GetApi().CaptureTransaction{T}(string,string,System.Func{T})"/> method.
+        /// Tests the <see cref="ElasticApm.CaptureTransaction{T}(string,string,System.Func{T})"/> method.
         /// It wraps a fake transaction (Thread.Sleep) with a return value into the CaptureTransaction method
         /// and it makes sure that the transaction is captured by the agent and the return value is correct.
         /// </summary>
@@ -117,9 +117,9 @@ namespace Elastic.Apm.Tests
         });
 
         /// <summary>
-        /// Tests the <see cref="Agent.GetApi().CaptureTransaction{T}(string,string,System.Func{Transaction,T})"/> method.
-        /// It wraps a fake transaction (Thread.Sleep) with a return value into the CaptureTransaction method with an <see cref="Action{Transaction}"/> parameter
-        /// and it makes sure that the transaction is captured by the agent and the return value is correct and the <see cref="Action{Transaction}"/> is not null. 
+        /// Tests the <see cref="ElasticApm.CaptureTransaction{T}(string,string,System.Func{ITransaction,T})"/> method.
+        /// It wraps a fake transaction (Thread.Sleep) with a return value into the CaptureTransaction method with an <see cref="Action{ITransaction}"/> parameter
+        /// and it makes sure that the transaction is captured by the agent and the return value is correct and the <see cref="Action{ITransaction}"/> is not null. 
         /// </summary>
         [Fact]
         public void SimpleActionWithReturnTypeAndParameter()
@@ -137,9 +137,9 @@ namespace Elastic.Apm.Tests
             });
 
         /// <summary>
-        /// Tests the <see cref="Agent.GetApi().CaptureTransaction{T}(string,string,System.Func{Transaction,T})"/> method with an exception.
-        /// It wraps a fake transaction (Thread.Sleep) with a return value that throws an exception into the CaptureTransaction method with an <see cref="Action{Transaction}"/> parameter
-        /// and it makes sure that the transaction and the error are captured by the agent and the return value is correct and the <see cref="Action{Transaction}"/> is not null. 
+        /// Tests the <see cref="ElasticApm.CaptureTransaction{T}(string,string,System.Func{ITransaction,T})"/> method with an exception.
+        /// It wraps a fake transaction (Thread.Sleep) with a return value that throws an exception into the CaptureTransaction method with an <see cref="Action{ITransaction}"/> parameter
+        /// and it makes sure that the transaction and the error are captured by the agent and the return value is correct and the <see cref="Action{ITransaction}"/> is not null. 
         /// </summary>
         [Fact]
         public void SimpleActionWithReturnTypeAndExceptionAndParameter()
@@ -166,7 +166,7 @@ namespace Elastic.Apm.Tests
          });
 
         /// <summary>
-        /// Tests the <see cref="Agent.GetApi().CaptureTransaction{T}(string,string,System.Func{T})"/> method with an exception.
+        /// Tests the <see cref="ElasticApm.CaptureTransaction{T}(string,string,System.Func{T})"/> method with an exception.
         /// It wraps a fake transaction (Thread.Sleep) with a return value that throws an exception into the CaptureTransaction method
         /// and it makes sure that the transaction and the error are captured by the agent. 
         /// </summary>
@@ -194,7 +194,7 @@ namespace Elastic.Apm.Tests
            });
 
         /// <summary>
-        /// Tests the <see cref="Agent.GetApi().CaptureTransaction(string,string,System.Func{Task})"/> method.
+        /// Tests the <see cref="ElasticApm.CaptureTransaction(string,string,System.Func{Task})"/> method.
         /// It wraps a fake async transaction (Task.Delay) into the CaptureTransaction method
         /// and it makes sure that the transaction is captured.
         /// </summary>
@@ -209,7 +209,7 @@ namespace Elastic.Apm.Tests
         }
         
         /// <summary>
-        /// Tests the <see cref="Agent.GetApi().CaptureTransaction(string,string,System.Func{Task})"/> method with an exception
+        /// Tests the <see cref="ElasticApm.CaptureTransaction(string,string,System.Func{Task})"/> method with an exception
         /// It wraps a fake async transaction (Task.Delay) that throws an exception into the CaptureTransaction method
         /// and it makes sure that the transaction and the error are captured.
         /// </summary>
@@ -228,9 +228,9 @@ namespace Elastic.Apm.Tests
             });
 
         /// <summary>
-        /// Tests the <see cref="Agent.GetApi().CaptureTransaction(string,string,System.Func{Transaction, Task})"/> method.
-        /// It wraps a fake async transaction (Task.Delay) into the CaptureTransaction method with an <see cref="Action{Transaction}"/> parameter
-        /// and it makes sure that the transaction is captured and the <see cref="Action{Transaction}"/> parameter is not null.
+        /// Tests the <see cref="ElasticApm.CaptureTransaction(string,string,System.Func{ITransaction, Task})"/> method.
+        /// It wraps a fake async transaction (Task.Delay) into the CaptureTransaction method with an <see cref="Action{ITransaction}"/> parameter
+        /// and it makes sure that the transaction is captured and the <see cref="Action{ITransaction}"/> parameter is not null.
         /// </summary>
         [Fact]
         public async Task AsyncTaskWithParameter()
@@ -245,9 +245,9 @@ namespace Elastic.Apm.Tests
             });
         
         /// <summary>
-        /// Tests the <see cref="Agent.GetApi().CaptureTransaction(string,string,System.Func{Transaction, Task})"/> method with an exception.
-        /// It wraps a fake async transaction (Task.Delay) that throws an exception into the CaptureTransaction method with an <see cref="Action{Transaction}"/> parameter
-        /// and it makes sure that the transaction and the error are captured and the <see cref="Action{Transaction}"/> parameter is not null.
+        /// Tests the <see cref="ElasticApm.CaptureTransaction(string,string,System.Func{ITransaction, Task})"/> method with an exception.
+        /// It wraps a fake async transaction (Task.Delay) that throws an exception into the CaptureTransaction method with an <see cref="Action{ITransaction}"/> parameter
+        /// and it makes sure that the transaction and the error are captured and the <see cref="Action{ITransaction}"/> parameter is not null.
         /// </summary>
         [Fact]
         public async Task AsyncTaskWithExceptionAndParameter()
@@ -266,7 +266,7 @@ namespace Elastic.Apm.Tests
             });
         
         /// <summary>
-        /// Tests the <see cref="Agent.GetApi().CaptureTransaction{T}(string,string,System.Func{Task{T}})"/> method.
+        /// Tests the <see cref="ElasticApm.CaptureTransaction{T}(string,string,System.Func{Task{T}})"/> method.
         /// It wraps a fake async transaction (Task.Delay) with a return value into the CaptureTransaction method
         /// and it makes sure that the transaction is captured by the agent and the return value is correct.
         /// </summary>
@@ -283,9 +283,9 @@ namespace Elastic.Apm.Tests
             });
         
         /// <summary>
-        /// Tests the <see cref="Agent.GetApi().CaptureTransaction{T}(string,string,System.Func{Transaction,Task{T}})"/> method.
-        /// It wraps a fake async transaction (Task.Delay) with a return value into the CaptureTransaction method with an <see cref="Action{Transaction}"/> parameter
-        /// and it makes sure that the transaction is captured by the agent and the return value is correct and the <see cref="Action{Transaction}"/> is not null. 
+        /// Tests the <see cref="ElasticApm.CaptureTransaction{T}(string,string,System.Func{ITransaction,Task{T}})"/> method.
+        /// It wraps a fake async transaction (Task.Delay) with a return value into the CaptureTransaction method with an <see cref="Action{ITransaction}"/> parameter
+        /// and it makes sure that the transaction is captured by the agent and the return value is correct and the <see cref="Action{IElasticApmTransaction}"/> is not null. 
         /// </summary>
         [Fact]
         public async Task AsyncTaskWithReturnTypeAndParameter()
@@ -303,9 +303,9 @@ namespace Elastic.Apm.Tests
             });
 
         /// <summary>
-        /// Tests the <see cref="Agent.GetApi().CaptureTransaction{T}(string,string,System.Func{Transaction,Task{T}})"/> method with an exception.
-        /// It wraps a fake async transaction (Task.Delay) with a return value that throws an exception into the CaptureTransaction method with an <see cref="Action{Transaction}"/> parameter
-        /// and it makes sure that the transaction and the error are captured by the agent and the return value is correct and the <see cref="Action{Transaction}"/> is not null. 
+        /// Tests the <see cref="ElasticApm.CaptureTransaction{T}(string,string,System.Func{ITransaction,Task{T}})"/> method with an exception.
+        /// It wraps a fake async transaction (Task.Delay) with a return value that throws an exception into the CaptureTransaction method with an <see cref="Action{ITransaction}"/> parameter
+        /// and it makes sure that the transaction and the error are captured by the agent and the return value is correct and the <see cref="Action{ITransaction}"/> is not null. 
         /// </summary>
         [Fact]
         public async Task AsyncTaskWithReturnTypeAndExceptionAndParameter()
@@ -332,7 +332,7 @@ namespace Elastic.Apm.Tests
          });
 
         /// <summary>
-        /// Tests the <see cref="Agent.GetApi().CaptureTransaction{T}(string,string,System.Func{Task{T}})"/> method with an exception.
+        /// Tests the <see cref="ElasticApm.CaptureTransaction{T}(string,string,System.Func{Task{T}})"/> method with an exception.
         /// It wraps a fake async transaction (Task.Delay) with a return value that throws an exception into the CaptureTransaction method
         /// and it makes sure that the transaction and the error are captured by the agent. 
         /// </summary>

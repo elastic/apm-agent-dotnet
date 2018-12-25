@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using Elastic.Apm.Api;
 
 namespace Elastic.Apm.Model.Payload
 {
-    public class Span
+    public class Span : ISpan
     {
         public const String TYPE_DB = "db";
         public const String TYPE_EXTERNAL = "external";
@@ -15,7 +17,7 @@ namespace Elastic.Apm.Model.Payload
         public const String ACTION_QUERY = "query";
         public const String ACTION_EXEC = "exec";
 
-        public ContextC Context { get; set; }
+        public IContext Context { get; set; }
 
         /// <summary>
         /// The duration of the span.
@@ -69,24 +71,27 @@ namespace Elastic.Apm.Model.Payload
         public void CaptureException(Exception exception, string culprit = null)
             => transaction?.CaptureException(exception, culprit);
 
-        public class ContextC
+        public void CaptureError(string message, string culprit, StackFrame[] frames)
+            => transaction?.CaptureError(message, culprit, frames);
+
+        public class ContextC : IContext
         {
-            public Db Db { get; set; }
-            public Http Http { get; set; }
+            public IDb Db { get; set; }
+            public IHttp Http { get; set; }
         }
     }
 
-    public class Db
+    public class Db : IDb
     {
-        public String Instance { get; set; }
-        public String Statement { get; set; }
-        public String Type { get; set; }
+        public string Instance { get; set; }
+        public string Statement { get; set; }
+        public string Type { get; set; }
     }
 
-    public class Http 
+    public class Http : IHttp
     {
-        public String Url { get; set; }
+        public string Url { get; set; }
         public int Status_code { get; set; }
-        public String Method { get; set; }
+        public string Method { get; set; }
     }
 }

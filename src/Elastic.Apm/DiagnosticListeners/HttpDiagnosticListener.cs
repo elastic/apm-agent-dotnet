@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
+using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Helpers;
@@ -23,7 +24,7 @@ namespace Elastic.Apm.DiagnosticListeners
         /// <summary>
         /// Keeps track of ongoing requests
         /// </summary>
-        internal readonly ConcurrentDictionary<HttpRequestMessage, Span> processingRequests = new ConcurrentDictionary<HttpRequestMessage, Span>();
+        internal readonly ConcurrentDictionary<HttpRequestMessage, ISpan> processingRequests = new ConcurrentDictionary<HttpRequestMessage, ISpan>();
         private readonly AbstractAgentConfig agentConfig;
 
         private readonly AbstractLogger logger;
@@ -97,7 +98,7 @@ namespace Elastic.Apm.DiagnosticListeners
                 case "System.Net.Http.HttpRequestOut.Stop":
                     var response = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Response").GetValue(kv.Value) as HttpResponseMessage;
 
-                    if (processingRequests.TryRemove(request, out Span mspan))
+                    if (processingRequests.TryRemove(request, out ISpan mspan))
                     {
                         //TODO: response can be null if for example the request Task is Faulted. 
                         //E.g. writing this from an airplane without internet, and requestTaskStatus is "Faulted" and response is null

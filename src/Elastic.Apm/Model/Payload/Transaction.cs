@@ -2,11 +2,13 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
+using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Model.Payload
 {
-    public class Transaction
+    public class Transaction : ITransaction
     {
         internal Service service;
 
@@ -45,7 +47,7 @@ namespace Elastic.Apm.Model.Payload
         public Context Context { get; set; }
 
         //TODO: probably won't need with intake v2
-        public Span[] Spans => spans.ToArray();
+        public ISpan[] Spans => spans.ToArray();
 
         //TODO: measure! What about List<T> with lock() in our case?
         internal BlockingCollection<Span> spans = new BlockingCollection<Span>();
@@ -70,7 +72,7 @@ namespace Elastic.Apm.Model.Payload
             TransactionContainer.Transactions.Value = null;
         }
 
-        public Span StartSpan(string name, string type, string subType = null, String action = null)
+        public ISpan StartSpan(string name, string type, string subType = null, String action = null)
         {
             var retVal = new Span(name, type, this);
            
@@ -141,6 +143,146 @@ namespace Elastic.Apm.Model.Payload
 
             error.Context = this.Context;
             Apm.Agent.PayloadSender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = this.service});
+        }
+
+        public void CaptureSpan(string name, string type, Action<ISpan> action)
+        {
+            var span = StartSpan(name, type);
+
+            try
+            {
+                action(span);
+            }
+            catch (Exception e) when (Capture(e, span)) { }
+            finally
+            {
+                span.End();
+            }
+        }
+
+        public void CaptureSpan(string name, string type, Action action)
+        {
+            var span = StartSpan(name, type);
+
+            try
+            {
+                action();
+            }
+            catch (Exception e) when (Capture(e, span)) { }
+            finally
+            {
+                span.End();
+            }
+        }
+
+        public T CaptureSpan<T>(string name, string type, Func<ISpan, T> func)
+        {
+            var span = StartSpan(name, type);
+            var retVal = default(T);
+            try
+            {
+                retVal = func(span);
+            }
+            catch (Exception e) when (Capture(e, span)) { }
+            finally
+            {
+                span.End();
+            }
+
+            return retVal;
+        }
+
+        public T CaptureSpan<T>(string name, string type, Func<T> func)
+        {
+            var span = StartSpan(name, type);
+            var retVal = default(T);
+            try
+            {
+                retVal = func();
+            }
+            catch (Exception e) when (Capture(e, span)) { }
+            finally
+            {
+                span.End();
+            }
+
+            return retVal;
+        }
+
+        public Task CaptureSpan(string name, string type, Func<Task> func)
+        {
+            var span = StartSpan(name, type);
+            var task = func();
+            RegisterContinuation(task, span);
+            return task;
+        }
+
+        public Task CaptureSpan(string name, string type, Func<ISpan, Task> func)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func)
+        {
+            throw new NotImplementedException();
+        }
+        
+        /// <summary>
+        /// Registers a continuation on the task.
+        /// Within the continuation it ends the transaction and captures errors
+        /// </summary>
+        /// <param name="task">Task.</param>
+        /// <param name="transaction">Transaction.</param>
+        private void RegisterContinuation(Task task, ISpan span)
+        {
+            task.ContinueWith((t) =>
+            {
+                if (t.IsFaulted)
+                {
+                    if (t.Exception != null)
+                    {
+                        if (t.Exception is AggregateException aggregateException )
+                        {
+                            Capture(
+                                aggregateException.InnerExceptions.Count == 1
+                                    ? aggregateException.InnerExceptions[0]
+                                    : aggregateException.Flatten(), span);
+                        }
+                        else
+                        {
+                            Capture(t.Exception, span);
+                        }
+                    }
+                    else
+                    {
+                        span.CaptureError("Task faulted", "A task faulted", new StackTrace().GetFrames());
+                    }
+                }
+                else if (t.IsCanceled)
+                {
+                    if (t.Exception == null)
+                    {
+                        span.CaptureError("Task canceled", "A task was canceled", new StackTrace().GetFrames()); //TODO: this async stacktrace is hard to use, make it readable!
+                    }
+                    else
+                    {
+                        span.CaptureException(t.Exception);
+                    }
+                }
+               
+                span.End();
+            }, TaskContinuationOptions.ExecuteSynchronously);
+        }
+        
+        private bool Capture(Exception e, ISpan span)
+        {
+            span.CaptureException(e);
+            return false;
         }
     }
 }
