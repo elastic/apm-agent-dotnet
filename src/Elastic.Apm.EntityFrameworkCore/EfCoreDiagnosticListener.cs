@@ -21,7 +21,7 @@ namespace Elastic.Apm.EntityFrameworkCore
         {
             switch (kv.Key)
             {
-                case string k when k == RelationalEventId.CommandExecuting.Name:
+                case string k when k == RelationalEventId.CommandExecuting.Name && TransactionContainer.Transactions.Value != null:
                     if (kv.Value is CommandEventData commandEventData)
                     {
                         var newSpan = TransactionContainer.Transactions.Value.StartSpan(
@@ -30,7 +30,7 @@ namespace Elastic.Apm.EntityFrameworkCore
                         _spans.TryAdd(commandEventData.CommandId, newSpan);
                     }
                     break;
-                case string k when k == RelationalEventId.CommandExecuted.Name:
+                case string k when k == RelationalEventId.CommandExecuted.Name && TransactionContainer.Transactions.Value != null:
                     if (kv.Value is CommandExecutedEventData commandExecutedEventData)
                     {
                         if (_spans.TryRemove(commandExecutedEventData.CommandId, out Span span))
