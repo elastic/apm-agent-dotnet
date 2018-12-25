@@ -11,8 +11,8 @@
   </ItemGroup>
   <ItemGroup>
   <!-- We should probably lower the version number -->
-    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.0.0" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\" />
