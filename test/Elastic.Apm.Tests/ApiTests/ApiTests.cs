@@ -27,7 +27,7 @@ namespace Elastic.Apm.Tests.ApiTests
             var payloadSender = new MockPayloadSender();
             Agent.PayloadSender = payloadSender;
 
-            var transaction = Agent.GetApi().StartTransaction(transactionName, transacitonType);
+            var transaction = Agent.Api.StartTransaction(transactionName, transacitonType);
 
             System.Threading.Thread.Sleep(5); //Make sure we have duration > 0
 
@@ -53,7 +53,7 @@ namespace Elastic.Apm.Tests.ApiTests
             var payloadSender = new MockPayloadSender();
             Agent.PayloadSender = payloadSender;
 
-            var unused = Agent.GetApi().StartTransaction(transactionName, transacitonType);
+            var unused = Agent.Api.StartTransaction(transactionName, transacitonType);
             Assert.Empty(payloadSender.Payloads);
         }
 
@@ -69,7 +69,7 @@ namespace Elastic.Apm.Tests.ApiTests
             var payloadSender = new MockPayloadSender();
             Agent.PayloadSender = payloadSender;
 
-            var transaction = Agent.GetApi().StartTransaction(transactionName, transacitonType);
+            var transaction = Agent.Api.StartTransaction(transactionName, transacitonType);
             var result = "success";
             transaction.Result = result;
             transaction.End();
@@ -84,7 +84,7 @@ namespace Elastic.Apm.Tests.ApiTests
         [Fact]
         public void GetCurrentTransactionWithNoTransaction()
         {
-            var currentTransaction = Agent.GetApi().CurrentTransaction;
+            var currentTransaction = Agent.Api.CurrentTransaction;
             Assert.Null(currentTransaction);
         }
 
@@ -99,7 +99,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
             StartTransaction(); //Start transaction on the current task
             await DoAsynWork(); //Do work in subtask
-            var currentTransaction = Agent.GetApi().CurrentTransaction; //Get transaction in the current task
+            var currentTransaction = Agent.Api.CurrentTransaction; //Get transaction in the current task
 
             Assert.NotNull(currentTransaction);
             Assert.Equal(transactionName, currentTransaction.Name);
@@ -112,16 +112,16 @@ namespace Elastic.Apm.Tests.ApiTests
             async Task DoAsynWork()
             {
                 //Make sure we have a transaction in the subtask before the async work
-                Assert.NotNull(Agent.GetApi().CurrentTransaction);
-                Assert.Equal(transactionName, Agent.GetApi().CurrentTransaction.Name);
-                Assert.Equal(Transaction.TYPE_REQUEST, Agent.GetApi().CurrentTransaction.Type);
+                Assert.NotNull(Agent.Api.CurrentTransaction);
+                Assert.Equal(transactionName, Agent.Api.CurrentTransaction.Name);
+                Assert.Equal(Transaction.TYPE_REQUEST, Agent.Api.CurrentTransaction.Type);
 
                 await Task.Delay(50);
 
                 //and after the async work
-                Assert.NotNull(Agent.GetApi().CurrentTransaction);
-                Assert.Equal(transactionName, Agent.GetApi().CurrentTransaction.Name);
-                Assert.Equal(Transaction.TYPE_REQUEST, Agent.GetApi().CurrentTransaction.Type);
+                Assert.NotNull(Agent.Api.CurrentTransaction);
+                Assert.Equal(transactionName, Agent.Api.CurrentTransaction.Name);
+                Assert.Equal(Transaction.TYPE_REQUEST, Agent.Api.CurrentTransaction.Type);
             }
         }
 
@@ -138,7 +138,7 @@ namespace Elastic.Apm.Tests.ApiTests
             var payloadSender = new MockPayloadSender();
             Agent.PayloadSender = payloadSender;
 
-            var transaction = Agent.GetApi().StartTransaction(transactionName, transacitonType);
+            var transaction = Agent.Api.StartTransaction(transactionName, transacitonType);
 
             var span = transaction.StartSpan(spanName, Span.TYPE_EXTERNAL);
 
@@ -168,7 +168,7 @@ namespace Elastic.Apm.Tests.ApiTests
             var payloadSender = new MockPayloadSender();
             Agent.PayloadSender = payloadSender;
 
-            var transaction = Agent.GetApi().StartTransaction(transactionName, transacitonType);
+            var transaction = Agent.Api.StartTransaction(transactionName, transacitonType);
 
             var unused = transaction.StartSpan(spanName, Span.TYPE_EXTERNAL);
 
@@ -194,7 +194,7 @@ namespace Elastic.Apm.Tests.ApiTests
             var payloadSender = new MockPayloadSender();
             Agent.PayloadSender = payloadSender;
 
-            var transaction = Agent.GetApi().StartTransaction(transactionName, transacitonType);
+            var transaction = Agent.Api.StartTransaction(transactionName, transacitonType);
             var span = transaction.StartSpan(spanName, Span.TYPE_DB, Span.SUBTYPE_MSSQL, Span.ACTION_QUERY);
             span.End();
             transaction.End();
@@ -240,7 +240,7 @@ namespace Elastic.Apm.Tests.ApiTests
             var payloadSender = new MockPayloadSender();
             Agent.PayloadSender = payloadSender;
 
-            var transaction = Agent.GetApi().StartTransaction(transactionName, transacitonType);
+            var transaction = Agent.Api.StartTransaction(transactionName, transacitonType);
 
             System.Threading.Thread.Sleep(5); //Make sure we have duration > 0
             try
@@ -290,7 +290,7 @@ namespace Elastic.Apm.Tests.ApiTests
             var payloadSender = new MockPayloadSender();
             Agent.PayloadSender = payloadSender;
 
-            var transaction = Agent.GetApi().StartTransaction(transactionName, transacitonType);
+            var transaction = Agent.Api.StartTransaction(transactionName, transacitonType);
 
             var span = transaction.StartSpan(spanName, Span.TYPE_EXTERNAL);
 

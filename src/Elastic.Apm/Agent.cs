@@ -91,10 +91,9 @@ namespace Elastic.Apm
             loggerType = typeof(T);
         }
 
-        private static ElasticApm apm;
+        private static ElasticApm api;
 
-        public static IElasticApm GetApi()
-         => apm ?? (apm = new ElasticApm());
+        public static IElasticApm Api => api ?? (api = new ElasticApm());
 
         static Type loggerType = typeof(ConsoleLogger);
     }

@@ -379,7 +379,7 @@ namespace Elastic.Apm.Tests.ApiTests
             var token = cancellationTokenSource.Token;
             cancellationTokenSource.Cancel();
 
-            await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, async (t) =>
+            await Agent.Api.CaptureTransaction(TransactionName, TransactionType, async (t) =>
             {
                 await Assert.ThrowsAsync<OperationCanceledException>(async () =>
                 {
@@ -402,7 +402,7 @@ namespace Elastic.Apm.Tests.ApiTests
             var payloadSender = new MockPayloadSender();
             Agent.PayloadSender = payloadSender;
 
-            await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, async (t) =>
+            await Agent.Api.CaptureTransaction(TransactionName, TransactionType, async (t) =>
             {
                 await Task.Delay(TransactionSleepLength);
                 await func(t);
@@ -438,7 +438,7 @@ namespace Elastic.Apm.Tests.ApiTests
                 var payloadSender = new MockPayloadSender();
                 Agent.PayloadSender = payloadSender;
 
-                await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, async(t) =>
+                await Agent.Api.CaptureTransaction(TransactionName, TransactionType, async(t) =>
                 {
                     await Task.Delay(TransactionSleepLength);
                     await func(t);
@@ -466,7 +466,7 @@ namespace Elastic.Apm.Tests.ApiTests
             var payloadSender = new MockPayloadSender();
             Agent.PayloadSender = payloadSender;
 
-            Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, (t) =>
+            Agent.Api.CaptureTransaction(TransactionName, TransactionType, (t) =>
             {
                 Thread.Sleep(SpanSleepLength);
                 action(t);
@@ -486,7 +486,6 @@ namespace Elastic.Apm.Tests.ApiTests
             Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= TransactionSleepLength + SpanSleepLength);
         }
 
-
         /// <summary>
         /// Asserts on 1 transaction with 1 span and 1 error
         /// </summary>
@@ -495,7 +494,7 @@ namespace Elastic.Apm.Tests.ApiTests
             var payloadSender = new MockPayloadSender();
             Agent.PayloadSender = payloadSender;
 
-            Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, (t) =>
+            Agent.Api.CaptureTransaction(TransactionName, TransactionType, (t) =>
             {
 
                 Thread.Sleep(SpanSleepLength);

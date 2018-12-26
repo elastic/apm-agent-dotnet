@@ -39,7 +39,7 @@ namespace Elastic.Apm.Tests.ApiTests
         public void SimpleAction()
         => AssertWith1Transaction(() =>
            {
-            Agent.GetApi().CaptureTransaction(TransactionName, TransactionType,
+            Agent.Api.CaptureTransaction(TransactionName, TransactionType,
                    () =>
                    {
                        Thread.Sleep(SleepLength);
@@ -57,7 +57,7 @@ namespace Elastic.Apm.Tests.ApiTests
            {
                Assert.Throws<InvalidOperationException>(() =>
                {
-                Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, new Action(() =>
+                Agent.Api.CaptureTransaction(TransactionName, TransactionType, new Action(() =>
                         {
                             Thread.Sleep(SleepLength);
                             throw new InvalidOperationException(ExceptionMessage);
@@ -74,7 +74,7 @@ namespace Elastic.Apm.Tests.ApiTests
         public void SimpleActionWithParameter()
         => AssertWith1Transaction(() =>
         {
-            Agent.GetApi().CaptureTransaction(TransactionName, TransactionType,
+            Agent.Api.CaptureTransaction(TransactionName, TransactionType,
                    (t) =>
                    {
                        Assert.NotNull(t);
@@ -93,7 +93,7 @@ namespace Elastic.Apm.Tests.ApiTests
         {
            Assert.Throws<InvalidOperationException>(() =>
            {
-                Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, new Action<ITransaction>((t) =>
+                Agent.Api.CaptureTransaction(TransactionName, TransactionType, new Action<ITransaction>((t) =>
                {
                     Assert.NotNull(t);
                     Thread.Sleep(SleepLength);
@@ -112,7 +112,7 @@ namespace Elastic.Apm.Tests.ApiTests
         public void SimpleActionWithReturnType()
         => AssertWith1Transaction(() =>
         {
-            var res = Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, () =>
+            var res = Agent.Api.CaptureTransaction(TransactionName, TransactionType, () =>
               {
                   Thread.Sleep(SleepLength);
                   return 42;
@@ -130,7 +130,7 @@ namespace Elastic.Apm.Tests.ApiTests
         public void SimpleActionWithReturnTypeAndParameter()
         => AssertWith1Transaction(() =>
             {
-                var res = Agent.GetApi().CaptureTransaction(TransactionName, TransactionType,
+                var res = Agent.Api.CaptureTransaction(TransactionName, TransactionType,
                     (t) =>
                     {
                         Assert.NotNull(t);
@@ -152,7 +152,7 @@ namespace Elastic.Apm.Tests.ApiTests
          {
              Assert.Throws<InvalidOperationException>(() =>
              {
-                 var result = Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, (t) =>
+                 var result = Agent.Api.CaptureTransaction(TransactionName, TransactionType, (t) =>
                  {
                      Assert.NotNull(t);
                      Thread.Sleep(SleepLength);
@@ -181,7 +181,7 @@ namespace Elastic.Apm.Tests.ApiTests
            {
                Assert.Throws<InvalidOperationException>(() =>
                {
-                   var result = Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, () =>
+                   var result = Agent.Api.CaptureTransaction(TransactionName, TransactionType, () =>
                    {
                        Thread.Sleep(SleepLength);
 
@@ -208,7 +208,7 @@ namespace Elastic.Apm.Tests.ApiTests
         {
             await AssertWith1TransactionAsync(async () =>
             {
-                await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType,
+                await Agent.Api.CaptureTransaction(TransactionName, TransactionType,
                     async () => { await Task.Delay(SleepLength); });
             });
         }
@@ -224,7 +224,7 @@ namespace Elastic.Apm.Tests.ApiTests
             {
                 await Assert.ThrowsAsync<InvalidOperationException>(async() =>
                 {
-                    await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, async () =>
+                    await Agent.Api.CaptureTransaction(TransactionName, TransactionType, async () =>
                     {
                         await Task.Delay(SleepLength);
                         throw new InvalidOperationException(ExceptionMessage);
@@ -241,7 +241,7 @@ namespace Elastic.Apm.Tests.ApiTests
         public async Task AsyncTaskWithParameter()
             => await AssertWith1TransactionAsync(async () =>
             {
-                await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType,
+                await Agent.Api.CaptureTransaction(TransactionName, TransactionType,
                     async(t) =>
                     {
                         Assert.NotNull(t);
@@ -260,7 +260,7 @@ namespace Elastic.Apm.Tests.ApiTests
             {
                 await Assert.ThrowsAsync<InvalidOperationException>(async () =>
                 {
-                   await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, async (t) =>
+                   await Agent.Api.CaptureTransaction(TransactionName, TransactionType, async (t) =>
                     {
                         Assert.NotNull(t);
                         await Task.Delay(SleepLength);
@@ -279,7 +279,7 @@ namespace Elastic.Apm.Tests.ApiTests
         public async Task AsyncTaskWithReturnType()
             => await AssertWith1TransactionAsync(async () =>
             {
-                var res = await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, async () =>
+                var res = await Agent.Api.CaptureTransaction(TransactionName, TransactionType, async () =>
                 {
                     await Task.Delay(SleepLength);
                     return 42;
@@ -296,7 +296,7 @@ namespace Elastic.Apm.Tests.ApiTests
         public async Task AsyncTaskWithReturnTypeAndParameter()
         => await AssertWith1TransactionAsync(async () =>
             {
-                var res =  await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType,
+                var res =  await Agent.Api.CaptureTransaction(TransactionName, TransactionType,
                     async (t) =>
                     {
                         Assert.NotNull(t);
@@ -318,7 +318,7 @@ namespace Elastic.Apm.Tests.ApiTests
          {
              await Assert.ThrowsAsync<InvalidOperationException>(async () =>
              {
-                 var result = await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, async (t) =>
+                 var result = await Agent.Api.CaptureTransaction(TransactionName, TransactionType, async (t) =>
                  {
                      Assert.NotNull(t);
                      await Task.Delay(SleepLength);
@@ -347,7 +347,7 @@ namespace Elastic.Apm.Tests.ApiTests
            {
                await Assert.ThrowsAsync<InvalidOperationException>(async () =>
                {
-                   var result = await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType, async () =>
+                   var result = await Agent.Api.CaptureTransaction(TransactionName, TransactionType, async () =>
                    {
                        await Task.Delay(SleepLength);
 
@@ -380,7 +380,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
             await Assert.ThrowsAsync<OperationCanceledException>(async () =>
             {
-                await Agent.GetApi().CaptureTransaction(TransactionName, TransactionType,
+                await Agent.Api.CaptureTransaction(TransactionName, TransactionType,
                     async () =>
                     {
                         // ReSharper disable once MethodSupportsCancellation, we want to delay before we throw the exception
