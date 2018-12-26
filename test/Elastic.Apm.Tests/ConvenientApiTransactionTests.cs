@@ -10,19 +10,20 @@ namespace Elastic.Apm.Tests
 {
     /// <summary>
     /// Tests the API for manual instrumentation.
-    /// Only tests scenarios with when using the convenient API
+    /// Only tests scenarios when using the convenient API and only test transactions.
+    /// Spans are covered by <see cref="ConvenientApiSpanTests"/>.
     /// Scenarios with manually calling <see cref="ElasticApm.StartTransaction"/>,
     /// <see cref="Transaction.StartSpan"/>, <see cref="Transaction.End"/>
     /// are covered by <see cref="ApiTests"/>
     /// </summary>
-    public class ConvenientApiTests
+    public class ConvenientApiTransactionTests
     {
         private const int SleepLength = 10;
         private const string TransactionName = "ConvenientApiTest";
         private const string TransactionType = "Test";
         private const string ExceptionMessage = "Foo";
 
-        public ConvenientApiTests()
+        public ConvenientApiTransactionTests()
             => TestHelper.ResetAgentAndEnvVars();
 
         /// <summary>

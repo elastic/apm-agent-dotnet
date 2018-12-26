@@ -46,20 +46,20 @@ namespace Elastic.Apm.Api
 
         void CaptureError(string message, string culprit, StackFrame[] frames);
         
-        void CaptureSpan(string name, string type, Action<ISpan> action);
+        void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null);
         
-        void CaptureSpan(string name, string type, Action action);
+        void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null);
         
-        T CaptureSpan<T>(string name, string type, Func<ISpan, T> func);
+        T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null);
         
-        T CaptureSpan<T>(string name, string type, Func<T> func);
+        T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null);
         
-        Task CaptureSpan(string name, string type, Func<Task> func);
+        Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null);
         
-        Task CaptureSpan(string name, string type, Func<ISpan, Task> func);
+        Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null);
 
-        Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func);
+        Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null);
 
-        Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func);
+        Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null);
     }
 }

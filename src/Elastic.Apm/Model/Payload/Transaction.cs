@@ -63,7 +63,8 @@ namespace Elastic.Apm.Model.Payload
 
             Apm.Agent.PayloadSender.QueuePayload(new Payload
             {
-                Transactions = new List<Transaction>{
+                Transactions = new List<Transaction>
+                {
                     this
                 },
                 Service =  this.service
@@ -72,16 +73,16 @@ namespace Elastic.Apm.Model.Payload
             TransactionContainer.Transactions.Value = null;
         }
 
-        public ISpan StartSpan(string name, string type, string subType = null, String action = null)
+        public ISpan StartSpan(string name, string type, string subType = null, string action = null)
         {
             var retVal = new Span(name, type, this);
            
-            if(subType != null)
+            if(!String.IsNullOrEmpty(subType))
             {
                 retVal.Subtype = subType;
             }
 
-            if(action != null)
+            if(!String.IsNullOrEmpty(action))
             {
                 retVal.Action = action;
             }
@@ -145,13 +146,13 @@ namespace Elastic.Apm.Model.Payload
             Apm.Agent.PayloadSender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = this.service});
         }
 
-        public void CaptureSpan(string name, string type, Action<ISpan> action)
+        public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)
         {
-            var span = StartSpan(name, type);
+            var span = StartSpan(name, type, subType, action);
 
             try
             {
-                action(span);
+                capturedAction(span);
             }
             catch (Exception e) when (Capture(e, span)) { }
             finally
@@ -160,13 +161,13 @@ namespace Elastic.Apm.Model.Payload
             }
         }
 
-        public void CaptureSpan(string name, string type, Action action)
+        public void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null)
         {
-            var span = StartSpan(name, type);
+            var span = StartSpan(name, type, subType, action);
 
             try
             {
-                action();
+                capturedAction();
             }
             catch (Exception e) when (Capture(e, span)) { }
             finally
@@ -175,9 +176,9 @@ namespace Elastic.Apm.Model.Payload
             }
         }
 
-        public T CaptureSpan<T>(string name, string type, Func<ISpan, T> func)
+        public T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null)
         {
-            var span = StartSpan(name, type);
+            var span = StartSpan(name, type, subType, action);
             var retVal = default(T);
             try
             {
@@ -192,9 +193,9 @@ namespace Elastic.Apm.Model.Payload
             return retVal;
         }
 
-        public T CaptureSpan<T>(string name, string type, Func<T> func)
+        public T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null)
         {
-            var span = StartSpan(name, type);
+            var span = StartSpan(name, type, subType, action);
             var retVal = default(T);
             try
             {
@@ -209,27 +210,37 @@ namespace Elastic.Apm.Model.Payload
             return retVal;
         }
 
-        public Task CaptureSpan(string name, string type, Func<Task> func)
+        public Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null)
         {
-            var span = StartSpan(name, type);
+            var span =  StartSpan(name, type, subType, action);
             var task = func();
             RegisterContinuation(task, span);
             return task;
         }
 
-        public Task CaptureSpan(string name, string type, Func<ISpan, Task> func)
+        public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null)
         {
-            throw new NotImplementedException();
+            var span =  StartSpan(name, type, subType, action);
+            var task = func(span);
+            RegisterContinuation(task, span);
+            return task;
         }
 
-        public Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func)
+        public Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null)
         {
-            throw new NotImplementedException();
+            var span =  StartSpan(name, type, subType, action);
+            var task = func();
+            RegisterContinuation(task, span);
+
+            return task;
         }
 
-        public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func)
+        public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null)
         {
-            throw new NotImplementedException();
+            var span =  StartSpan(name, type, subType, action);
+            var task = func(span);
+            RegisterContinuation(task, span);
+            return task;
         }
         
         /// <summary>

@@ -53,7 +53,7 @@ namespace Elastic.Apm.Tests
             var payloadSender = new MockPayloadSender();
             Agent.PayloadSender = payloadSender;
 
-            var transaction = Agent.GetApi().StartTransaction(transactionName, transacitonType);
+            var unused = Agent.GetApi().StartTransaction(transactionName, transacitonType);
             Assert.Empty(payloadSender.Payloads);
         }
 
@@ -170,7 +170,7 @@ namespace Elastic.Apm.Tests
 
             var transaction = Agent.GetApi().StartTransaction(transactionName, transacitonType);
 
-            var span = transaction.StartSpan(spanName, Span.TYPE_EXTERNAL);
+            var unused = transaction.StartSpan(spanName, Span.TYPE_EXTERNAL);
 
             System.Threading.Thread.Sleep(5); //Make sure we have duration > 0
 

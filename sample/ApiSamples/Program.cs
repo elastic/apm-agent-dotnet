@@ -12,7 +12,7 @@ namespace ApiSamples
         {
             try
             {
-                SampleCustomTransactionWithConvinientApi().Wait();
+                SampleCustomTransactionWithConvenientApi();
             }
             catch{}
             //WIP: if the process terminates the agent
@@ -71,14 +71,17 @@ namespace ApiSamples
             Console.WriteLine($"{nameof(SampleError)} finished");
         }
 
-        public static async Task SampleCustomTransactionWithConvinientApi()
+        public static void SampleCustomTransactionWithConvenientApi()
         {
-            await  Elastic.Apm.Agent.GetApi().CaptureTransaction("transaction1", "type1", async() =>
-           {
-               await Task.Delay(100);
-               throw new Exception("bamm!");
-               return 4;
-            });
+            Elastic.Apm.Agent.GetApi().CaptureTransaction("TestTransaction", "TestType",
+                (t) =>
+                {
+                    Thread.Sleep(10);
+                    t.CaptureSpan("TestSpan", "TestSpanName", () =>
+                    {
+                        Thread.Sleep(20);
+                    });
+                });
         }
     }
 }
