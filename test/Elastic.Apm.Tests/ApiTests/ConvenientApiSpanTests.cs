@@ -496,7 +496,6 @@ namespace Elastic.Apm.Tests.ApiTests
 
             Agent.Api.CaptureTransaction(TransactionName, TransactionType, (t) =>
             {
-
                 Thread.Sleep(SpanSleepLength);
                 action(t);
             });
