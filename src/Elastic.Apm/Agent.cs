@@ -3,6 +3,7 @@
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using System.Runtime.CompilerServices;
+using Elastic.Apm.Api;
 using Elastic.Apm.Report;
 
 //TODO: It'd be nice to move this into the .csproj
@@ -89,6 +90,10 @@ namespace Elastic.Apm
         {
             loggerType = typeof(T);
         }
+
+        private static ElasticApm api;
+
+        public static IElasticApm Api => api ?? (api = new ElasticApm());
 
         static Type loggerType = typeof(ConsoleLogger);
     }

@@ -10,7 +10,11 @@ namespace ApiSamples
     {
         static void Main(string[] args)
         {
-            SampleError();
+            try
+            {
+                SampleCustomTransactionWithConvenientApi();
+            }
+            catch{}
             //WIP: if the process terminates the agent
             //potentially does not have time to send the transaction to the server.
             Thread.Sleep(1000);
@@ -19,7 +23,7 @@ namespace ApiSamples
         public static void SampleCustomTransaction()
         {
             Console.WriteLine($"{nameof(SampleCustomTransaction)} started");
-            var transaction = ElasticApm.StartTransaction("SampleTransaction", Transaction.TYPE_REQUEST);
+            var transaction = Elastic.Apm.Agent.Api.StartTransaction("SampleTransaction", Transaction.TYPE_REQUEST);
 
             Thread.Sleep(500); //simulate work...
            
@@ -30,7 +34,7 @@ namespace ApiSamples
         public static void SampleCustomTransactionWithSpan()
         {
             Console.WriteLine($"{nameof(SampleCustomTransactionWithSpan)} started");
-            var transaction = ElasticApm.StartTransaction("SampleTransactionWithSpan", Transaction.TYPE_REQUEST);
+            var transaction = Elastic.Apm.Agent.Api.StartTransaction("SampleTransactionWithSpan", Transaction.TYPE_REQUEST);
 
             Thread.Sleep(500);
 
@@ -45,7 +49,7 @@ namespace ApiSamples
         public static void SampleError()
         {
             Console.WriteLine($"{nameof(SampleError)} started");
-            var transaction = ElasticApm.StartTransaction("SampleError", Transaction.TYPE_REQUEST);
+            var transaction = Elastic.Apm.Agent.Api.StartTransaction("SampleError", Transaction.TYPE_REQUEST);
 
             Thread.Sleep(500); //simulate work...
             var span = transaction.StartSpan("SampleSpan", Span.TYPE_EXTERNAL);
@@ -65,6 +69,19 @@ namespace ApiSamples
             transaction.End();
 
             Console.WriteLine($"{nameof(SampleError)} finished");
+        }
+
+        public static void SampleCustomTransactionWithConvenientApi()
+        {
+            Elastic.Apm.Agent.Api.CaptureTransaction("TestTransaction", "TestType",
+                (t) =>
+                {
+                    Thread.Sleep(10);
+                    t.CaptureSpan("TestSpan", "TestSpanName", () =>
+                    {
+                        Thread.Sleep(20);
+                    });
+                });
         }
     }
 }

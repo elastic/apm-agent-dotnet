@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Model.Payload;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -11,7 +12,7 @@ namespace Elastic.Apm.EntityFrameworkCore
     {
         public string Name => "Microsoft.EntityFrameworkCore";
 
-        private readonly ConcurrentDictionary<Guid, Span> _spans = new ConcurrentDictionary<Guid, Span>();
+        private readonly ConcurrentDictionary<Guid, ISpan> _spans = new ConcurrentDictionary<Guid, ISpan>();
 
         public void OnCompleted() {}
 
@@ -33,7 +34,7 @@ namespace Elastic.Apm.EntityFrameworkCore
                 case string k when k == RelationalEventId.CommandExecuted.Name && TransactionContainer.Transactions.Value != null:
                     if (kv.Value is CommandExecutedEventData commandExecutedEventData)
                     {
-                        if (_spans.TryRemove(commandExecutedEventData.CommandId, out Span span))
+                        if (_spans.TryRemove(commandExecutedEventData.CommandId, out ISpan span))
                         {
                             span.Context = new Span.ContextC
                             {
