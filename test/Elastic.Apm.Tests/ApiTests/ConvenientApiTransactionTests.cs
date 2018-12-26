@@ -6,7 +6,7 @@ using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Tests.Mock;
 using Xunit;
 
-namespace Elastic.Apm.Tests
+namespace Elastic.Apm.Tests.ApiTests
 {
     /// <summary>
     /// Tests the API for manual instrumentation.
@@ -15,6 +15,10 @@ namespace Elastic.Apm.Tests
     /// Scenarios with manually calling <see cref="ElasticApm.StartTransaction"/>,
     /// <see cref="Transaction.StartSpan"/>, <see cref="Transaction.End"/>
     /// are covered by <see cref="ApiTests"/>
+    /// 
+    /// Very similar to <see cref="ConvenientApiSpanTests"/>. The test cases are the same,
+    /// but this one tests the CaptureTransaction method - including every single overload.
+    /// 
     /// </summary>
     public class ConvenientApiTransactionTests
     {
@@ -282,11 +286,11 @@ namespace Elastic.Apm.Tests
                 });
                 Assert.Equal(42, res);
             });
-        
+
         /// <summary>
         /// Tests the <see cref="ElasticApm.CaptureTransaction{T}(string,string,System.Func{ITransaction,Task{T}})"/> method.
         /// It wraps a fake async transaction (Task.Delay) with a return value into the CaptureTransaction method with an <see cref="Action{ITransaction}"/> parameter
-        /// and it makes sure that the transaction is captured by the agent and the return value is correct and the <see cref="Action{IElasticApmTransaction}"/> is not null. 
+        /// and it makes sure that the transaction is captured by the agent and the return value is correct and the <see cref="ITransaction"/> is not null. 
         /// </summary>
         [Fact]
         public async Task AsyncTaskWithReturnTypeAndParameter()
@@ -360,6 +364,10 @@ namespace Elastic.Apm.Tests
                });
            });
 
+        /// <summary>
+        /// Wraps a cancelled task into the CaptureTransaction method and 
+        /// makes sure that the cancelled task is captured by the agent.
+        /// </summary>       
         [Fact]
         public async Task CancelledAsyncTask()
         {

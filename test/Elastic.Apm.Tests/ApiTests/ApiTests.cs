@@ -4,12 +4,12 @@ using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Tests.Mock;
 using Xunit;
 
-namespace Elastic.Apm.Tests
+namespace Elastic.Apm.Tests.ApiTests
 {
     /// <summary>
     /// Tests the API for manual instrumentation.
     /// Only tests scenarios with manually calling StartTransaction, StartSpan, and End.
-    /// The convenient API is covered by <see cref="ConvenientApiTests"/>
+    /// The convenient API is covered by <see cref="ConvenientApiSpanTests"/> and <see cref="ConvenientApiTransactionTests"/>
     /// </summary>
     public class ApiTests
     {
