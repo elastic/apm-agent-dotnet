@@ -112,7 +112,7 @@ namespace Elastic.Apm.Api
         /// The <see cref="ISpan"/> parameter gives you access to the span which is created by this method.</param>
         /// <param name="subType">The subtype of the span.</param>
         /// <param name="action">The action of the span.</param>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="T">The return type of the code that you want to capture as span.</typeparam>
         /// <returns>The result of the <param name="func"></param>.</returns>
         T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null);
         
@@ -125,7 +125,7 @@ namespace Elastic.Apm.Api
         /// <param name="func">The <see cref="Func{T}"/> that points to the code with a return value that you want to capture as a span.</param>
         /// <param name="subType">The subtype of the span.</param>
         /// <param name="action">The action of the span.</param>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="T">The return type of the code that you want to capture as span.</typeparam>
         /// <returns>The result of the <param name="func"></param>.</returns>
         T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null);
         
