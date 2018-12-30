@@ -15,8 +15,8 @@ namespace Elastic.Apm.Api
         /// <summary>
         /// Starts and returns a custom transaction.
         /// </summary>
-        /// <param name="name">The name of the transaction</param>
-        /// <param name="type">The type of the transaction</param>
+        /// <param name="name">The name of the transaction.</param>
+        /// <param name="type">The type of the transaction.</param>
         /// <returns></returns>
         ITransaction StartTransaction(string name, string type);
 

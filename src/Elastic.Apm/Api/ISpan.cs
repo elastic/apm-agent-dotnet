@@ -18,7 +18,7 @@ namespace Elastic.Apm.Api
         double? Duration { get; set; }
 
         /// <summary>
-        /// The name of the span
+        /// The name of the span.
         /// </summary>
         string Name { get; set; }
 
@@ -66,16 +66,16 @@ namespace Elastic.Apm.Api
         /// <summary>
         /// Captures an exception and reports it to the APM server.
         /// </summary>
-        /// <param name="exception">The exception to capture</param>
-        /// <param name="culprit">The value of this parameter is shown as 'Culprit' on the APM UI</param>
+        /// <param name="exception">The exception to capture.</param>
+        /// <param name="culprit">The value of this parameter is shown as 'Culprit' on the APM UI.</param>
         void CaptureException(Exception exception, string culprit = null);
         
         /// <summary>
         /// Captures a custom error and reports it to the APM server.
         /// </summary>
-        /// <param name="message">The error message</param>
-        /// <param name="culprit">The culprit of the error</param>
-        /// <param name="frames">The stack trace when the error occured</param>
+        /// <param name="message">The error message.</param>
+        /// <param name="culprit">The culprit of the error.</param>
+        /// <param name="frames">The stack trace when the error occured.</param>
         void CaptureError(string message, string culprit, StackFrame[] frames);
     }
     
