@@ -32,3 +32,4 @@ These are the main folders within the repository:
     * `Elastic.Apm.Tests`: Tests the `Elastic.Apm` project.
     * `Elastic.Apm.AspNetCore.Tests`: Tests the `Elastic.Apm.AspNetCore` project.
 * docs: This folder contains the official documentation.
+* sample: Sample applications that are monitored by the APM .NET Agent. These are also very useful for development: you can start one of these applications and debug the agent through them.
