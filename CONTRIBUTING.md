@@ -73,7 +73,7 @@ Once your changes are ready to submit for review:
 
 The test suite consists of xUnit tests.
 
-To run all tests, including the integration tests, execute these two commands from the root of the respository:
+To run all tests, including the integration tests, execute these two commands from the root of the repository:
 
 ```bash
 dotnet test test/Elastic.Apm.Tests/
