@@ -34,7 +34,8 @@ Example:
 
 [source,csharp]
 ----
-var transaction = Elastic.Apm.Agent.Api.StartTransaction("MyTransaction", Transaction.TYPE_REQUEST);
+var transaction = Elastic.Apm.Agent
+        .Api.StartTransaction("MyTransaction", Transaction.TYPE_REQUEST);
 try
 {
     //application code that is captured as a transaction
@@ -42,6 +43,7 @@ try
 catch (Exception e)
 {
     transaction.CaptureException(e);
+    throw e;
 }
 finally
 {
@@ -85,7 +87,8 @@ It has 3 parameters:
 The following code is the equivalent of previous example with the convenient API. It automaticall starts and ends the transaction and reports unhandled exceptions. The `t` parameter gives you access to the `ITransaction` instance.
 [source,csharp]
 ----
-Elastic.Apm.Agent.Api.CaptureTransaction("TestTransaction", Transaction.TYPE_REQUEST, (t) =>
+Elastic.Apm.Agent.Api
+        .CaptureTransaction("TestTransaction", Transaction.TYPE_REQUEST, (t) =>
 {
    //application code that is captured as a transaction
 });
@@ -98,7 +101,8 @@ NOTE: The duration of the transaction will be the timespan between the first and
 Example:
 [source,csharp]
 ----
-await Elastic.Apm.Agent.Api.CaptureTransaction("TestTransaction", "TestType", async (t) =>
+await Elastic.Apm.Agent.Api
+        .CaptureTransaction("TestTransaction", "TestType", async (t) =>
 {
     //application code that is captured as a transaction
     await Task.Delay(500); //sample async code
@@ -121,8 +125,6 @@ See <<api-current-transaction>> on how to get a reference of the current transac
 
 NOTE: Calling any of the transaction's methods after <<api-transaction-end>> has been called is illegal.
 You may only interact with transaction when you have control over its lifecycle.
-For example, if a span is ended in another thread you must not add tags if there is a chance for a race between the <<api-transaction-end>>
-and the <<api-transaction-add-tag>> method.
 
 [float]
 [[api-transaction-create-span]]
@@ -133,18 +135,23 @@ It is important to call <<api-span-end>> when the span has ended or to use the <
 A best practice is to use the span in a try-catch-finally block.
 Example:
 
-[source,java]
+[source,csharp]
 ----
-Span span = parent.createSpan();
-try {
-    span.setName("SELECT FROM customer");
-    span.setType("db.mysql.query");
-    // do your thing...
-} catch (Exception e) {
-    ElasticApm.captureException(e);
+ISpan span = transaction.StartSpan("Select FROM customer", Span.TYPE_DB);
+try
+{
+    span.Subtype = Span.SUBTYPE_MSSQL;
+    span.Action = Span.ACTION_QUERY;
+    //execute db query
+}
+catch(Exception e)
+{
+    span.CaptureException(e);
     throw e;
-} finally {
-    span.end();
+}
+finally
+{
+    span.End();
 }
 ----
 
@@ -157,7 +164,7 @@ It is illegal to call any methods on a span instance which has already ended.
 This also includes this method and <<api-transaction-create-span>>.
 Example:
 
-[source,java]
+[source,csharp]
 ----
 transaction.End();
 ----
@@ -171,7 +178,7 @@ NOTE: If you use the <<convenient-capture-transaction>> method you must not call
 Captures an exception and reports it to the APM server.
 
 [float]
-[[api-transaction-capture-exception]]
+[[api-transaction-capture-error]]
 ==== `void CaptureError(string message, string culprit, StackFrame[] frames)`
 Captures a custom error and reports it to the APM server. This method is typically used when you want to report an error, but you don't have an `Exception` instance.
 
@@ -204,8 +211,8 @@ ITransaction transaction = Elastic.Apm.Agent.Api.CurrentTransaction;
 
 transaction.CaptureSpan("SampleSpan", Span.TYPE_DB, (s) =>
 {
-    //application code that is captured as a span
-});
+    //execute db query
+},Span.SUBTYPE_MSSQL, Span.ACTION_QUERY);
 ----
 
 Similarly to the <<convenient-capture-transaction>> API this method also supports `async` methods with the `Func<Task>` overloads.
@@ -216,7 +223,7 @@ This example shows you how to track an `async` code block that returns a result 
 [source,csharp]
 ----
 ITransaction transaction = Elastic.Apm.Agent.Api.CurrentTransaction;
-var asyncResult = await transaction.CaptureSpan("SampleSpan", Span.TYPE_DB, async(s) =>
+var asyncResult = await transaction.CaptureSpan("Select FROM customer", Span.TYPE_DB, async(s) =>
 {
     //application code that is captured as a span
     await Task.Delay(500); //sample async code
@@ -245,7 +252,7 @@ and the type will hold information about the database type.
 Captures an exception and reports it to the APM server.
 
 [float]
-[[api-span-capture-exception]]
+[[api-span-capture-error]]
 ==== `void CaptureError(string message, string culprit, StackFrame[] frames)`
 Captures a custom error and reports it to the APM server. This method is typically used when you want to report an error, but you don't have an `Exception` instance.
 
