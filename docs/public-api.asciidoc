@@ -43,7 +43,7 @@ try
 catch (Exception e)
 {
     transaction.CaptureException(e);
-    throw e;
+    throw;
 }
 finally
 {
@@ -148,7 +148,7 @@ try
 catch(Exception e)
 {
     span.CaptureException(e);
-    throw e;
+    throw;
 }
 finally
 {
