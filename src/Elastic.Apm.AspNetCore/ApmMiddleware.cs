@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using System.Reflection;
 using Elastic.Apm.Model.Payload;
 using System.Runtime.CompilerServices;
+using Elastic.Apm.Helpers;
 
 [assembly: InternalsVisibleTo("Elastic.Apm.Tests")]
 [assembly: InternalsVisibleTo("Elastic.Apm.AspNetCore.Tests")]
@@ -61,18 +62,25 @@ namespace Elastic.Apm.AspNetCore
                 }
             };
 
-            await next(context);
-
-            transaction.Result = $"{GetProtocolName(context.Request.Protocol)} {context.Response.StatusCode.ToString()[0]}xx";
-            transaction.Context.Response = new Response
+            try
             {
-                Finished = context.Response.HasStarted, //TODO ?
-                Status_code = context.Response.StatusCode
-            };
+                await next(context);
+            }
+            catch(Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
+            finally
+            {
+                transaction.Result =
+                    $"{GetProtocolName(context.Request.Protocol)} {context.Response.StatusCode.ToString()[0]}xx";
+                transaction.Context.Response = new Response
+                {
+                    Finished = context.Response.HasStarted, //TODO ?
+                    Status_code = context.Response.StatusCode
+                };
 
-            transaction.End();
+                transaction.End();
+            }
         }
-
+        
         private string GetProtocolName(String protocol)
         {
             switch (protocol)
