@@ -25,8 +25,6 @@ Use this method to create a custom transaction.
 
 Note that in the case of auto-instrumentation, the agent will automatically do this for you. For example, if you have incoming HTTP calls in an ASP.NET Core application, the agent automatically starts a transaction. In these instances, this method is not needed.
 
-You only need to use this method to create custom transactions.
-
 It's important to call <<api-transaction-end>> when the transaction has ended.
 A best practice is to use the transaction in a try-catch-finally block or to use the <<convenient-capture-transaction>> method.
 
@@ -117,9 +115,7 @@ NOTE: The <<convenient-capture-transaction>> method does not start any `Task` fo
 [[api-transaction]]
 === Transaction API
 //----------------------------
-A transaction is the data captured by an agent representing an event occurring in a monitored service
-and groups multiple spans in a logical group.
-A transaction is the first <<api-span,`Span`>> of a service, and is also known under the term entry span.
+A transaction describes an event captured by an Elastic APM agent monitoring a service. Transactions help combine multiple <<api-span,Spans>> into logical groups, and they are the first <<api-span,Span>> of a service. More information on Transactions and Spans is available in the {apm-overview-ref-v}/apm-data-model.html[APM data model] documentation.
 
 See <<api-current-transaction>> on how to get a reference of the current transaction.
 
@@ -161,6 +157,7 @@ finally
 [[api-transaction-end]]
 ==== `void End()`
 Ends the transaction and schedules it to be reported to the APM Server.
+
 It is illegal to call any methods on a span instance which has already ended.
 This also includes this method and <<api-transaction-create-span>>.
 
@@ -182,7 +179,9 @@ Captures an exception and reports it to the APM server.
 [float]
 [[api-transaction-capture-error]]
 ==== `void CaptureError(string message, string culprit, StackFrame[] frames)`
-Captures a custom error and reports it to the APM server. This method is typically used when you want to report an error, but you don't have an `Exception` instance.
+Captures a custom error and reports it to the APM server.
+
+This method is typically used when you want to report an error, but you don't have an `Exception` instance.
 
 [float]
 [[convenient-capture-span]]
@@ -256,10 +255,13 @@ Captures an exception and reports it to the APM server.
 [float]
 [[api-span-capture-error]]
 ==== `void CaptureError(string message, string culprit, StackFrame[] frames)`
-Captures a custom error and reports it to the APM server. This method is typically used when you want to report an error, but you don't have an `Exception` instance.
+Captures a custom error and reports it to the APM server.
+
+This method is typically used when you want to report an error, but you don't have an `Exception` instance.
 
 [float]
 [[api-span-end]]
 ==== `void End()`
 Ends the span and schedules it to be reported to the APM Server.
+
 It is illegal to call any methods on a span instance which has already ended.
