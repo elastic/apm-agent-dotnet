@@ -52,7 +52,7 @@ Once your changes are ready to submit for review:
     if we ask you to make changes,
     add them as separate commits.
     This makes them easier to review.
-    As a final step before merging we will either ask you to squash all commits yourself or we'll do it for you.
+    As a final step before merging, we will either ask you to squash all commits yourself or we'll do it for you.
 
 4. Submit a pull request
 
@@ -60,7 +60,7 @@ Once your changes are ready to submit for review:
     In the pull request,
     choose a title which sums up the changes that you have made,
     and in the body provide more details about what your changes do.
-    Also mention the number of the issue where discussion has taken place,
+    Also mention the number of the issue where the discussion has taken place,
     eg "Closes #123".
 
 5. Be patient
