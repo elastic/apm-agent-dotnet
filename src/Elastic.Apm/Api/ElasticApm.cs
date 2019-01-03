@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Transactions;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
 using Transaction = Elastic.Apm.Model.Payload.Transaction;
@@ -77,7 +78,7 @@ namespace Elastic.Apm.Api
             {
                 action(transaction);
             }
-            catch (Exception e) when (Capture(e, transaction)) { }
+            catch (Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
             finally
             {
                 transaction.End();
@@ -92,7 +93,7 @@ namespace Elastic.Apm.Api
             {
                 action();
             }
-            catch (Exception e) when (Capture(e, transaction)) { }
+            catch (Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
             finally
             {
                 transaction.End();
@@ -107,7 +108,7 @@ namespace Elastic.Apm.Api
             {
                 retVal = func(transaction);
             }
-            catch (Exception e) when (Capture(e, transaction)) { }
+            catch (Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
             finally
             {
                 transaction.End();
@@ -124,7 +125,7 @@ namespace Elastic.Apm.Api
             {
                  retVal = func();
             }
-            catch (Exception e) when (Capture(e, transaction)) { }
+            catch (Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
             finally
             {
                 transaction.End();
@@ -182,14 +183,14 @@ namespace Elastic.Apm.Api
                     {
                         if (t.Exception is AggregateException aggregateException )
                         {
-                            Capture(
+                            ExceptionFilter.Capture(
                                 aggregateException.InnerExceptions.Count == 1
                                     ? aggregateException.InnerExceptions[0]
                                     : aggregateException.Flatten(), transaction);
                         }
                         else
                         {
-                            Capture(t.Exception, transaction);
+                             ExceptionFilter.Capture(t.Exception, transaction);
                         }
                     }
                     else
@@ -211,12 +212,6 @@ namespace Elastic.Apm.Api
                
                 transaction.End();
             }, TaskContinuationOptions.ExecuteSynchronously);
-        }
-
-        private bool Capture(Exception e, ITransaction transaction)
-        {
-            transaction.CaptureException(e);
-            return false;
         }
     }
 }

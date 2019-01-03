@@ -154,7 +154,7 @@ namespace Elastic.Apm.Model.Payload
             {
                 capturedAction(span);
             }
-            catch (Exception e) when (Capture(e, span)) { }
+            catch (Exception e) when (ExceptionFilter.Capture(e, span)) { }
             finally
             {
                 span.End();
@@ -169,7 +169,7 @@ namespace Elastic.Apm.Model.Payload
             {
                 capturedAction();
             }
-            catch (Exception e) when (Capture(e, span)) { }
+            catch (Exception e) when (ExceptionFilter.Capture(e, span)) { }
             finally
             {
                 span.End();
@@ -184,7 +184,7 @@ namespace Elastic.Apm.Model.Payload
             {
                 retVal = func(span);
             }
-            catch (Exception e) when (Capture(e, span)) { }
+            catch (Exception e) when (ExceptionFilter.Capture(e, span)) { }
             finally
             {
                 span.End();
@@ -201,7 +201,7 @@ namespace Elastic.Apm.Model.Payload
             {
                 retVal = func();
             }
-            catch (Exception e) when (Capture(e, span)) { }
+            catch (Exception e) when (ExceptionFilter.Capture(e, span)) { }
             finally
             {
                 span.End();
@@ -259,14 +259,14 @@ namespace Elastic.Apm.Model.Payload
                     {
                         if (t.Exception is AggregateException aggregateException )
                         {
-                            Capture(
+                            ExceptionFilter.Capture(
                                 aggregateException.InnerExceptions.Count == 1
                                     ? aggregateException.InnerExceptions[0]
                                     : aggregateException.Flatten(), span);
                         }
                         else
                         {
-                            Capture(t.Exception, span);
+                            ExceptionFilter.Capture(t.Exception, span);
                         }
                     }
                     else
@@ -288,12 +288,6 @@ namespace Elastic.Apm.Model.Payload
                
                 span.End();
             }, TaskContinuationOptions.ExecuteSynchronously);
-        }
-        
-        private bool Capture(Exception e, ISpan span)
-        {
-            span.CaptureException(e);
-            return false;
         }
     }
 }

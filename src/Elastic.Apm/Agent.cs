@@ -91,6 +91,11 @@ namespace Elastic.Apm
             loggerType = typeof(T);
         }
 
+        /// <summary>
+        /// The entry point for manual instrumentation. The <see cref="Api"/> property returns the tracer,
+        /// which you access to the currently active transaction and span and it also enables you to manually start
+        /// a transaction.
+        /// </summary>
         private static ElasticApm api;
 
         public static IElasticApm Api => api ?? (api = new ElasticApm());

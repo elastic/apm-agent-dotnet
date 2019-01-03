@@ -67,5 +67,25 @@ namespace Elastic.Apm.AspNetCore.Tests
             //test transaction.context.request.encrypted
             Assert.False(transaction.Context.Request.Socket.Encrypted);
         }
+        
+        /// <summary>
+        /// Configures an ASP.NET Core application without an error page.
+        /// With other words: there is no error page with an exception handler configured in the ASP.NET Core pipeline.
+        /// Makes sure that we still capture the failed request.
+        /// </summary>
+        [Fact]
+        public async Task FailingRequestWithoutConfiguredExceptionPage()
+        {
+            var capturedPayload = new MockPayloadSender();
+            var client = Helper.GetClientWithoutExceptionPage(capturedPayload, factory);
+
+            await Assert.ThrowsAsync<Exception>(async () => { await client.GetAsync("Home/TriggerError");});
+            
+            Assert.Single(capturedPayload.Payloads);
+            Assert.Single(capturedPayload.Payloads[0].Transactions);
+
+            Assert.Single(capturedPayload.Errors);
+            Assert.Single(capturedPayload.Errors[0].Errors);
+        }
     }
 }
