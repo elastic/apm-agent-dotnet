@@ -49,6 +49,13 @@ namespace Elastic.Apm.Api
                     };
                 }
 
+                //TODO: the line above to get the entry assembly name does not seem to work on full framework.
+                //As a workaround we set it to unknown now. This should be fixed.
+                if(String.IsNullOrEmpty(service.Name))
+                {
+                    service.Name = "unknown";
+                }
+
                 return service;
             }
             set => service = value;
