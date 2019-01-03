@@ -34,6 +34,7 @@ pipeline {
         */
         stage('Checkout') {
           steps {
+            deleteDir()
             gitCheckout(basedir: "${BASE_DIR}")
             stash allowEmpty: true, name: 'source', useDefaultExcludes: false
             
@@ -49,15 +50,14 @@ pipeline {
         */
         stage('Build') {
           steps {
-            withEnvWrapper() {
-              unstash 'source'
-              unstash 'dotnet'
-              dir("${BASE_DIR}"){
-                sh """#!/bin/bash
-                set -euxo pipefail
-                dotnet build
-                """
-              }
+            deleteDir()
+            unstash 'source'
+            unstash 'dotnet'
+            dir("${BASE_DIR}"){
+              sh """#!/bin/bash
+              set -euxo pipefail
+              dotnet build
+              """
             }
           }
         }
@@ -66,37 +66,36 @@ pipeline {
         */
         stage('Test') {
           steps {
-            withEnvWrapper() {
-              unstash 'source'
-              unstash 'dotnet'
-              dir("${BASE_DIR}"){
-                sh '''#!/bin/bash
-                set -euxo pipefail
-                
-                # install tools
-                dotnet tool install -g dotnet-xunit-to-junit
-                for i in $(find . -name '*.??proj') 
-                do 
-                  dotnet add "$i" package XunitXml.TestLogger --version 2.0.0
-                  dotnet add "$i" package coverlet.msbuild
-                done
-                
-                # build
-                dotnet build
-                
-                # run tests
-                dotnet test -v n -r target -d target/diag.log --logger:"xunit" --no-build \
-                  /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura \
-                  /p:CoverletOutput=target/Coverage/ || echo -e "\033[31;49mTests FAILED\033[0m"
+            deleteDir()
+            unstash 'source'
+            unstash 'dotnet'
+            dir("${BASE_DIR}"){
+              sh '''#!/bin/bash
+              set -euxo pipefail
+              
+              # install tools
+              dotnet tool install -g dotnet-xunit-to-junit
+              for i in $(find . -name '*.??proj') 
+              do 
+                dotnet add "$i" package XunitXml.TestLogger --version 2.0.0
+                dotnet add "$i" package coverlet.msbuild
+              done
+              
+              # build
+              dotnet build
+              
+              # run tests
+              dotnet test -v n -r target -d target/diag.log --logger:"xunit" --no-build \
+                /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura \
+                /p:CoverletOutput=target/Coverage/ || echo -e "\033[31;49mTests FAILED\033[0m"
 
-                #convert xunit files to junit files
-                for i in $(find . -name TestResults.xml)
-                do
-                  DIR=$(dirname "$i")
-                  dotnet xunit-to-junit "$i" "${DIR}/junit-testTesults.xml"
-                done
-                '''
-              }
+              #convert xunit files to junit files
+              for i in $(find . -name TestResults.xml)
+              do
+                DIR=$(dirname "$i")
+                dotnet xunit-to-junit "$i" "${DIR}/junit-testTesults.xml"
+              done
+              '''
             }
           }
           post { 
@@ -126,21 +125,20 @@ pipeline {
             }
           }
           steps {
-            withEnvWrapper() {
-              unstash 'source'
-              checkoutElasticDocsTools(basedir: "${ELASTIC_DOCS}")
-              dir("${BASE_DIR}"){
-                sh '''#!/usr/bin/env bash
+            deleteDir()
+            unstash 'source'
+            checkoutElasticDocsTools(basedir: "${ELASTIC_DOCS}")
+            dir("${BASE_DIR}"){
+              sh '''#!/usr/bin/env bash
 
-                if [ -z "${ELASTIC_DOCS}" -o ! -d "${ELASTIC_DOCS}" ]; then
-                  echo "ELASTIC_DOCS is not defined, it should point to a folder where you checkout https://github.com/elastic/docs.git."
-                  echo "You also can define BUILD_DOCS_ARGS for aditional build options."
-                  exit 1
-                fi
+              if [ -z "${ELASTIC_DOCS}" -o ! -d "${ELASTIC_DOCS}" ]; then
+                echo "ELASTIC_DOCS is not defined, it should point to a folder where you checkout https://github.com/elastic/docs.git."
+                echo "You also can define BUILD_DOCS_ARGS for aditional build options."
+                exit 1
+              fi
 
-                ${ELASTIC_DOCS}/build_docs.pl --chunk=1 ${BUILD_DOCS_ARGS} --doc docs/index.asciidoc -out docs/html
-                '''
-              }
+              ${ELASTIC_DOCS}/build_docs.pl --chunk=1 ${BUILD_DOCS_ARGS} --doc docs/index.asciidoc -out docs/html
+              '''
             }
           }
           post{
