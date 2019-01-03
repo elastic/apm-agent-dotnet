@@ -72,11 +72,11 @@ pipeline {
                 set -euxo pipefail
                 
                 # install tools
-                dotnet tool install -g dotnet-xunit-to-junit
+                dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
                 for i in $(find . -name '*.??proj') 
                 do 
                   dotnet add "$i" package XunitXml.TestLogger --version 2.0.0
-                  dotnet add "$i" package coverlet.msbuild
+                  dotnet add "$i" package coverlet.msbuild --version 2.5.0
                 done
                 
                 # build
