@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SampleAspNetCoreApp.Data;
 using SampleAspNetCoreApp.Models;
 
@@ -21,6 +22,7 @@ namespace SampleAspNetCoreApp.Controllers
 
         public async Task<IActionResult> Index()
         {
+            _sampleDataContext.Database.Migrate();
             //TODO: Show this on the real UI
             foreach (var item in _sampleDataContext.Users)
             {
