@@ -19,7 +19,8 @@ namespace Elastic.Apm.DiagnosticListeners
     /// </summary>
     public class HttpDiagnosticListener : IDiagnosticListener
     {
-        public string Name => "HttpHandlerDiagnosticListener";
+        //WIP: "System.Net.Http.Desktop" seems to be used on full framework, "HttpHandlerDiagnosticListener" seems to be used on .NET Core.
+        public string Name => "System.Net.Http.Desktop"; // "HttpHandlerDiagnosticListener";
 
         /// <summary>
         /// Keeps track of ongoing requests
