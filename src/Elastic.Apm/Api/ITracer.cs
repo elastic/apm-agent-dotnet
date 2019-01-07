@@ -5,7 +5,7 @@ using Elastic.Apm.Model.Payload;
 
 namespace Elastic.Apm.Api
 {
-    public interface IElasticApm
+    public interface ITracer
     {
         /// <summary>
         /// Returns the currently active transaction.
