@@ -23,7 +23,7 @@ namespace Elastic.Apm.AspNetCore
 
             service = new Service
             {
-                Agent = new Apm.Model.Payload.Agent
+                Agent = new Service.AgentC
                 {
                     Name = Consts.AgentName,
                     Version = Consts.AgentVersion
@@ -33,12 +33,12 @@ namespace Elastic.Apm.AspNetCore
                 Language = new Language { Name = "C#" } //TODO
             };
 
-            Agent.Api.Service = service;
+            Agent.Tracer.Service = service;
         }
 
         public async Task InvokeAsync(HttpContext context)
         {           
-            var transaction = Agent.Api.StartTransaction($"{context.Request.Method} {context.Request.Path}",
+            var transaction = Agent.Tracer.StartTransaction($"{context.Request.Method} {context.Request.Path}",
                                                               Transaction.TYPE_REQUEST);
 
             transaction.Context = new Context
