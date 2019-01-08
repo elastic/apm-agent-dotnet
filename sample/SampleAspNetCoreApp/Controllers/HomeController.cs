@@ -76,15 +76,11 @@ namespace SampleAspNetCoreApp.Controllers
 			var result = await client.GetAsync("http://dsfklgjdfgkdfg.mmmm");
 			Console.WriteLine(result.IsSuccessStatusCode);
 
+			// ReSharper disable once Mvc.ViewNotResolved
 			return View();
 		}
 
-		public IActionResult TriggerError()
-		{
-			throw new Exception("This is a test exception!");
-
-			return View();
-		}
+		public IActionResult TriggerError() => throw new Exception("This is a test exception!");
 
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 		public IActionResult Error() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
