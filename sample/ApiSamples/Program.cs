@@ -23,7 +23,7 @@ namespace ApiSamples
         public static void SampleCustomTransaction()
         {
             Console.WriteLine($"{nameof(SampleCustomTransaction)} started");
-            var transaction = Elastic.Apm.Agent.Api.StartTransaction("SampleTransaction", Transaction.TYPE_REQUEST);
+            var transaction = Elastic.Apm.Agent.Tracer.StartTransaction("SampleTransaction", Transaction.TYPE_REQUEST);
 
             Thread.Sleep(500); //simulate work...
            
@@ -34,7 +34,7 @@ namespace ApiSamples
         public static void SampleCustomTransactionWithSpan()
         {
             Console.WriteLine($"{nameof(SampleCustomTransactionWithSpan)} started");
-            var transaction = Elastic.Apm.Agent.Api.StartTransaction("SampleTransactionWithSpan", Transaction.TYPE_REQUEST);
+            var transaction = Elastic.Apm.Agent.Tracer.StartTransaction("SampleTransactionWithSpan", Transaction.TYPE_REQUEST);
 
             Thread.Sleep(500);
 
@@ -49,7 +49,7 @@ namespace ApiSamples
         public static void SampleError()
         {
             Console.WriteLine($"{nameof(SampleError)} started");
-            var transaction = Elastic.Apm.Agent.Api.StartTransaction("SampleError", Transaction.TYPE_REQUEST);
+            var transaction = Elastic.Apm.Agent.Tracer.StartTransaction("SampleError", Transaction.TYPE_REQUEST);
 
             Thread.Sleep(500); //simulate work...
             var span = transaction.StartSpan("SampleSpan", Span.TYPE_EXTERNAL);
@@ -73,7 +73,7 @@ namespace ApiSamples
 
         public static void SampleCustomTransactionWithConvenientApi()
         {
-            Elastic.Apm.Agent.Api.CaptureTransaction("TestTransaction", "TestType",
+            Elastic.Apm.Agent.Tracer.CaptureTransaction("TestTransaction", "TestType",
                 (t) =>
                 {
                     Thread.Sleep(10);

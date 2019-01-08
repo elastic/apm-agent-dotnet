@@ -12,7 +12,7 @@ namespace Elastic.Apm.Tests.ApiTests
     /// Tests the API for manual instrumentation.
     /// Only tests scenarios when using the convenient API and only test spans.
     /// Transactions are covered by <see cref="ConvenientApiTransactionTests"/>.
-    /// Scenarios with manually calling <see cref="ElasticApm.StartTransaction"/>,
+    /// Scenarios with manually calling <see cref="Tracer.StartTransaction"/>,
     /// <see cref="Transaction.StartSpan"/>, <see cref="Transaction.End"/>
     /// are covered by <see cref="ApiTests"/>
     /// 
@@ -379,7 +379,7 @@ namespace Elastic.Apm.Tests.ApiTests
             var token = cancellationTokenSource.Token;
             cancellationTokenSource.Cancel();
 
-            await Agent.Api.CaptureTransaction(TransactionName, TransactionType, async (t) =>
+            await Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async (t) =>
             {
                 await Assert.ThrowsAsync<OperationCanceledException>(async () =>
                 {
@@ -402,7 +402,7 @@ namespace Elastic.Apm.Tests.ApiTests
             var payloadSender = new MockPayloadSender();
             Agent.PayloadSender = payloadSender;
 
-            await Agent.Api.CaptureTransaction(TransactionName, TransactionType, async (t) =>
+            await Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async (t) =>
             {
                 await Task.Delay(TransactionSleepLength);
                 await func(t);
@@ -438,7 +438,7 @@ namespace Elastic.Apm.Tests.ApiTests
                 var payloadSender = new MockPayloadSender();
                 Agent.PayloadSender = payloadSender;
 
-                await Agent.Api.CaptureTransaction(TransactionName, TransactionType, async(t) =>
+                await Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async(t) =>
                 {
                     await Task.Delay(TransactionSleepLength);
                     await func(t);
@@ -466,7 +466,7 @@ namespace Elastic.Apm.Tests.ApiTests
             var payloadSender = new MockPayloadSender();
             Agent.PayloadSender = payloadSender;
 
-            Agent.Api.CaptureTransaction(TransactionName, TransactionType, (t) =>
+            Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, (t) =>
             {
                 Thread.Sleep(SpanSleepLength);
                 action(t);
@@ -494,7 +494,7 @@ namespace Elastic.Apm.Tests.ApiTests
             var payloadSender = new MockPayloadSender();
             Agent.PayloadSender = payloadSender;
 
-            Agent.Api.CaptureTransaction(TransactionName, TransactionType, (t) =>
+            Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, (t) =>
             {
                 Thread.Sleep(SpanSleepLength);
                 action(t);

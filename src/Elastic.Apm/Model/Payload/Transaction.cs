@@ -114,7 +114,7 @@ namespace Elastic.Apm.Model.Payload
             if (!String.IsNullOrEmpty(exception.StackTrace))
             {
                   error.Exception.Stacktrace
-                       = StacktraceHelper.GenerateApmStackTrace(new System.Diagnostics.StackTrace(exception).GetFrames(), Api.ElasticApm.PublicApiLogger, "failed capturing stacktrace");
+                       = StacktraceHelper.GenerateApmStackTrace(new System.Diagnostics.StackTrace(exception).GetFrames(), Api.Tracer.PublicTracerLogger, "failed capturing stacktrace");
             }
 
             error.Context = this.Context;
@@ -139,7 +139,7 @@ namespace Elastic.Apm.Model.Payload
             if (frames != null)
             {
                 error.Exception.Stacktrace
-                    = StacktraceHelper.GenerateApmStackTrace(frames, Api.ElasticApm.PublicApiLogger, "failed capturing stacktrace");
+                    = StacktraceHelper.GenerateApmStackTrace(frames, Api.Tracer.PublicTracerLogger, "failed capturing stacktrace");
             }
 
             error.Context = this.Context;

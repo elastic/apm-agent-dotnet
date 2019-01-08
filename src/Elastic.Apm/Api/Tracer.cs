@@ -10,23 +10,24 @@ using Transaction = Elastic.Apm.Model.Payload.Transaction;
 
 namespace Elastic.Apm.Api
 {
-    internal class ElasticApm : IElasticApm
+    internal class Tracer : ITracer
     {
-        private static AbstractLogger publicApiLogger;
-        public static AbstractLogger PublicApiLogger
+        private static AbstractLogger publicTracerLogger;
+        public static AbstractLogger PublicTracerLogger
         {
             get
             {
-                if(publicApiLogger == null)
+                if(publicTracerLogger == null)
                 {
-                    publicApiLogger = Agent.CreateLogger("AgentAPI");
+                    publicTracerLogger = Agent.CreateLogger("AgentAPI");
                 }
 
-                return publicApiLogger;
+                return publicTracerLogger;
             }
         }
 
         private Service service;
+        /// <inheritdoc />
         /// <summary>
         /// Identifies the monitored service. If this remains unset the agent
         /// automatically populates it based on the entry assembly.
@@ -41,7 +42,7 @@ namespace Elastic.Apm.Api
                     service = new Service
                     {
                         Name = Assembly.GetEntryAssembly()?.GetName()?.Name,
-                        Agent = new Model.Payload.Agent
+                        Agent = new Service.AgentC
                         {
                             Name = Consts.AgentName,
                             Version = Consts.AgentVersion

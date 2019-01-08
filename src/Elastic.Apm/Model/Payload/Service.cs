@@ -4,10 +4,16 @@ namespace Elastic.Apm.Model.Payload
 {
     public class Service
     {
-        public Apm.Model.Payload.Agent Agent { get; set; }
+        public AgentC Agent { get; set; }
         public String Name { get; set; }
         public Framework Framework { get; set; }
         public Language Language { get; set; }
+        
+        public class AgentC
+        {
+            public String Name { get; set; }
+            public String Version { get; set; }
+        }
     }
 
     public class Framework
