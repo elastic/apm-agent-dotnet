@@ -89,7 +89,7 @@ csharp_preferred_modifier_order = public,private,protected,internal,static,exter
 # formatting conventions https://docs.microsoft.com/en-us/visualstudio/ide/editorconfig-code-style-settings-reference#formatting-conventions
 
 # Newline settings (Allman yo!)
-csharp_new_line_before_open_brace = all:error
+csharp_new_line_before_open_brace = all
 csharp_new_line_before_else = true:error
 csharp_new_line_before_catch = true:error
 csharp_new_line_before_finally = true:error
