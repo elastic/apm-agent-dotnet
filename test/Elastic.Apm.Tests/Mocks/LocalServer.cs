@@ -6,17 +6,17 @@ namespace Elastic.Apm.Tests.Mocks
 {
     public class LocalServer : IDisposable
     {
-        HttpListener httpListener = new HttpListener();
+        HttpListener _httpListener = new HttpListener();
         public string Uri => "http://localhost:8082/";
 
         public LocalServer(Action<HttpListenerContext> testAction = null)
         {
-            httpListener.Prefixes.Add(Uri);
-            httpListener.Start();
+            _httpListener.Prefixes.Add(Uri);
+            _httpListener.Start();
 
             Task.Run(() =>
             {
-                var context = httpListener.GetContext();
+                var context = _httpListener.GetContext();
 
                 if (testAction == null)
                 {
@@ -34,8 +34,8 @@ namespace Elastic.Apm.Tests.Mocks
 
         public void Dispose()
         {
-            this.httpListener.Abort();
-            ((IDisposable)this.httpListener).Dispose();
+            this._httpListener.Abort();
+            ((IDisposable)this._httpListener).Dispose();
         }
     }
 }

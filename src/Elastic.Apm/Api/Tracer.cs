@@ -12,21 +12,21 @@ namespace Elastic.Apm.Api
 {
     internal class Tracer : ITracer
     {
-        private static AbstractLogger publicTracerLogger;
+        private static AbstractLogger _publicTracerLogger;
         public static AbstractLogger PublicTracerLogger
         {
             get
             {
-                if(publicTracerLogger == null)
+                if(_publicTracerLogger == null)
                 {
-                    publicTracerLogger = Agent.CreateLogger("AgentAPI");
+                    _publicTracerLogger = Agent.CreateLogger("AgentAPI");
                 }
 
-                return publicTracerLogger;
+                return _publicTracerLogger;
             }
         }
 
-        private Service service;
+        private Service _service;
         /// <inheritdoc />
         /// <summary>
         /// Identifies the monitored service. If this remains unset the agent
@@ -37,9 +37,9 @@ namespace Elastic.Apm.Api
         {
             get
             {
-                if(service == null)
+                if(_service == null)
                 {
-                    service = new Service
+                    _service = new Service
                     {
                         Name = Assembly.GetEntryAssembly()?.GetName()?.Name,
                         Agent = new Service.AgentC
@@ -50,9 +50,9 @@ namespace Elastic.Apm.Api
                     };
                 }
 
-                return service;
+                return _service;
             }
-            set => service = value;
+            set => _service = value;
         }
 
         public ITransaction CurrentTransaction
@@ -64,7 +64,7 @@ namespace Elastic.Apm.Api
             {
                 Name = name,
                 Type = type,
-                service = Service
+                Service = Service
             };
 
             TransactionContainer.Transactions.Value = retVal;

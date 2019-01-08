@@ -7,15 +7,15 @@ namespace Elastic.Apm.Model.Payload
 {
     public class Span : ISpan
     {
-        public const String TYPE_DB = "db";
-        public const String TYPE_EXTERNAL = "external";
+        public const String TypeDb = "db";
+        public const String TypeExternal = "external";
 
-        public const String SUBTYPE_HTTP = "http";
-        public const String SUBTYPE_MSSQL = "mssql";
-        public const String SUBTYPE_SQLITE = "sqlite";
+        public const String SubtypeHttp = "http";
+        public const String SubtypeMssql = "mssql";
+        public const String SubtypeSqlite = "sqlite";
 
-        public const String ACTION_QUERY = "query";
-        public const String ACTION_EXEC = "exec";
+        public const String ActionQuery = "query";
+        public const String ActionExec = "exec";
 
         public IContext Context { get; set; }
 
@@ -41,16 +41,16 @@ namespace Elastic.Apm.Model.Payload
 
         public List<Stacktrace> Stacktrace { get; set; }
 
-        public Guid Transaction_id => transaction.Id;
-        internal Transaction transaction;
+        public Guid TransactionId => Transaction.Id;
+        internal Transaction Transaction;
 
-        private readonly DateTimeOffset start;
+        private readonly DateTimeOffset _start;
 
         public Span(string name, string type, Transaction transaction)
         {
-            this.transaction = transaction;
-            start = DateTimeOffset.UtcNow;
-            Start = (decimal)(start - transaction.start).TotalMilliseconds;
+            this.Transaction = transaction;
+            _start = DateTimeOffset.UtcNow;
+            Start = (decimal)(_start - transaction.Start).TotalMilliseconds;
             this.Name = name;
             this.Type = type;
 
@@ -62,17 +62,17 @@ namespace Elastic.Apm.Model.Payload
         {
             if (!Duration.HasValue)
             {
-                this.Duration = (DateTimeOffset.UtcNow - start).TotalMilliseconds;
+                this.Duration = (DateTimeOffset.UtcNow - _start).TotalMilliseconds;
             }
 
-            transaction?.spans.Add(this);
+            Transaction?.SpanCollection.Add(this);
         }
 
         public void CaptureException(Exception exception, string culprit = null)
-            => transaction?.CaptureException(exception, culprit);
+            => Transaction?.CaptureException(exception, culprit);
 
         public void CaptureError(string message, string culprit, StackFrame[] frames)
-            => transaction?.CaptureError(message, culprit, frames);
+            => Transaction?.CaptureError(message, culprit, frames);
 
         public class ContextC : IContext
         {
@@ -91,7 +91,7 @@ namespace Elastic.Apm.Model.Payload
     public class Http : IHttp
     {
         public string Url { get; set; }
-        public int Status_code { get; set; }
+        public int StatusCode { get; set; }
         public string Method { get; set; }
     }
 }

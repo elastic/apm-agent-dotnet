@@ -13,11 +13,11 @@ namespace Elastic.Apm.AspNetCore.Tests
     public class AspNetCoreMiddlewareTests
         : IClassFixture<WebApplicationFactory<SampleAspNetCoreApp.Startup>>
     {
-        private readonly WebApplicationFactory<SampleAspNetCoreApp.Startup> factory;
+        private readonly WebApplicationFactory<SampleAspNetCoreApp.Startup> _factory;
 
         public AspNetCoreMiddlewareTests(WebApplicationFactory<SampleAspNetCoreApp.Startup> factory)
         {
-            this.factory = factory;
+            this._factory = factory;
             TestHelper.ResetAgentAndEnvVars();
         }
 
@@ -29,7 +29,7 @@ namespace Elastic.Apm.AspNetCore.Tests
         public async Task HomeAboutTransactionTest(string url)
         {
             var capturedPayload = new MockPayloadSender();
-            var client = Helper.GetClient(capturedPayload, factory);
+            var client = Helper.GetClient(capturedPayload, _factory);
 
             var response = await client.GetAsync(url);
 
@@ -53,7 +53,7 @@ namespace Elastic.Apm.AspNetCore.Tests
             Assert.True(transaction.Id != Guid.Empty);
 
             //test transaction.context.response
-            Assert.Equal(200, transaction.Context.Response.Status_code);
+            Assert.Equal(200, transaction.Context.Response.StatusCode);
 
             //test transaction.context.request
             Assert.Equal("2.0", transaction.Context.Request.HttpVersion);
@@ -77,7 +77,7 @@ namespace Elastic.Apm.AspNetCore.Tests
         public async Task FailingRequestWithoutConfiguredExceptionPage()
         {
             var capturedPayload = new MockPayloadSender();
-            var client = Helper.GetClientWithoutExceptionPage(capturedPayload, factory);
+            var client = Helper.GetClientWithoutExceptionPage(capturedPayload, _factory);
 
             await Assert.ThrowsAsync<Exception>(async () => { await client.GetAsync("Home/TriggerError");});
             

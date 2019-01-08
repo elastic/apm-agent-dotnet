@@ -18,48 +18,48 @@ namespace Elastic.Apm.Report
     /// </summary>
     internal class PayloadSender : IDisposable, IPayloadSender
     {
-        private readonly AbstractAgentConfig agentConfig;
-        private readonly AbstractLogger logger;
-        private readonly Uri serverUrlBase;
+        private readonly AbstractAgentConfig _agentConfig;
+        private readonly AbstractLogger _logger;
+        private readonly Uri _serverUrlBase;
 
         /// <summary>
         /// The work of sending data back to the server is done on this thread
         /// </summary>
-        private Thread workerThread;
+        private Thread _workerThread;
 
         /// <summary>
         /// Contains data that will be sent to the server
         /// </summary>
-        private BlockingCollection<Object> payloads = new BlockingCollection<Object>();
+        private BlockingCollection<Object> _payloads = new BlockingCollection<Object>();
 
         public PayloadSender()
         {
-            agentConfig = Apm.Agent.Config;
-            logger = Apm.Agent.CreateLogger(nameof(PayloadSender));
-            serverUrlBase = agentConfig.ServerUrls[0];
-            workerThread = new Thread(StartWork)
+            _agentConfig = Apm.Agent.Config;
+            _logger = Apm.Agent.CreateLogger(nameof(PayloadSender));
+            _serverUrlBase = _agentConfig.ServerUrls[0];
+            _workerThread = new Thread(StartWork)
             {
                 IsBackground = true
             };
-            workerThread.Start();
+            _workerThread.Start();
         }
 
         public void QueuePayload(Payload payload)
-         => payloads.Add(payload);
+         => _payloads.Add(payload);
 
         public void QueueError(Error error)
-         => payloads.Add(error);
+         => _payloads.Add(error);
 
         public async void StartWork()
         {
             HttpClient httpClient = new HttpClient
             {
-                BaseAddress = serverUrlBase
+                BaseAddress = _serverUrlBase
             };
 
             while (true)
             {
-                var item = payloads.Take();
+                var item = _payloads.Take();
 
                 try
                 {
@@ -84,13 +84,13 @@ namespace Elastic.Apm.Report
                 {
                     if (item is Payload p)
                     {
-                        logger.LogWarning($"Failed sending transaction {p.Transactions.FirstOrDefault()?.Name}");
-                        logger.LogDebug($"{e.GetType().Name}: {e.Message}");
+                        _logger.LogWarning($"Failed sending transaction {p.Transactions.FirstOrDefault()?.Name}");
+                        _logger.LogDebug($"{e.GetType().Name}: {e.Message}");
                     }
                     if(item is Error err)
                     {
-                        logger.LogWarning($"Failed sending Error {err.Errors[0]?.Id}");
-                        logger.LogDebug($"{e.GetType().Name}: {e.Message}");
+                        _logger.LogWarning($"Failed sending Error {err.Errors[0]?.Id}");
+                        _logger.LogDebug($"{e.GetType().Name}: {e.Message}");
                     }
                 }
             }
@@ -98,8 +98,8 @@ namespace Elastic.Apm.Report
 
         public void Dispose()
         {
-            payloads?.Dispose();
-            payloads = null;
+            _payloads?.Dispose();
+            _payloads = null;
         }
     }
 }

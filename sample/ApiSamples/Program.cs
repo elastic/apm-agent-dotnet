@@ -23,7 +23,7 @@ namespace ApiSamples
         public static void SampleCustomTransaction()
         {
             Console.WriteLine($"{nameof(SampleCustomTransaction)} started");
-            var transaction = Elastic.Apm.Agent.Tracer.StartTransaction("SampleTransaction", Transaction.TYPE_REQUEST);
+            var transaction = Elastic.Apm.Agent.Tracer.StartTransaction("SampleTransaction", Transaction.TypeRequest);
 
             Thread.Sleep(500); //simulate work...
            
@@ -34,11 +34,11 @@ namespace ApiSamples
         public static void SampleCustomTransactionWithSpan()
         {
             Console.WriteLine($"{nameof(SampleCustomTransactionWithSpan)} started");
-            var transaction = Elastic.Apm.Agent.Tracer.StartTransaction("SampleTransactionWithSpan", Transaction.TYPE_REQUEST);
+            var transaction = Elastic.Apm.Agent.Tracer.StartTransaction("SampleTransactionWithSpan", Transaction.TypeRequest);
 
             Thread.Sleep(500);
 
-            var span = transaction.StartSpan("SampleSpan", Span.TYPE_EXTERNAL);
+            var span = transaction.StartSpan("SampleSpan", Span.TypeExternal);
             Thread.Sleep(200);
             span.End();
 
@@ -49,10 +49,10 @@ namespace ApiSamples
         public static void SampleError()
         {
             Console.WriteLine($"{nameof(SampleError)} started");
-            var transaction = Elastic.Apm.Agent.Tracer.StartTransaction("SampleError", Transaction.TYPE_REQUEST);
+            var transaction = Elastic.Apm.Agent.Tracer.StartTransaction("SampleError", Transaction.TypeRequest);
 
             Thread.Sleep(500); //simulate work...
-            var span = transaction.StartSpan("SampleSpan", Span.TYPE_EXTERNAL);
+            var span = transaction.StartSpan("SampleSpan", Span.TypeExternal);
             try
             {
                 throw new Exception("bamm");

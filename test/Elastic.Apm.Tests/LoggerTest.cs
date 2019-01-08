@@ -9,14 +9,14 @@ namespace Elastic.Apm.Tests
 {
     public class LoggerTest
     {
-        readonly AbstractLogger logger;
+        readonly AbstractLogger _logger;
 
         public LoggerTest()
         {
             TestHelper.ResetAgentAndEnvVars();
 
             Apm.Agent.SetLoggerType<TestLogger>();
-            logger = Apm.Agent.CreateLogger("Test");
+            _logger = Apm.Agent.CreateLogger("Test");
         }
 
         [Fact]
@@ -24,8 +24,8 @@ namespace Elastic.Apm.Tests
         {
             LogWithLevel(LogLevel.Error);
 
-            Assert.Single((logger as TestLogger).Lines);
-            Assert.Equal("Error Test: Error log", (logger as TestLogger).Lines[0]);
+            Assert.Single((_logger as TestLogger).Lines);
+            Assert.Equal("Error Test: Error log", (_logger as TestLogger).Lines[0]);
         }
 
         [Fact]
@@ -33,9 +33,9 @@ namespace Elastic.Apm.Tests
         {
             LogWithLevel(LogLevel.Warning);
 
-            Assert.Equal(2, (logger as TestLogger).Lines.Count);
-            Assert.Equal("Error Test: Error log", (logger as TestLogger).Lines[0]);
-            Assert.Equal("Warning Test: Warning log", (logger as TestLogger).Lines[1]);
+            Assert.Equal(2, (_logger as TestLogger).Lines.Count);
+            Assert.Equal("Error Test: Error log", (_logger as TestLogger).Lines[0]);
+            Assert.Equal("Warning Test: Warning log", (_logger as TestLogger).Lines[1]);
         }
 
         [Fact]
@@ -43,10 +43,10 @@ namespace Elastic.Apm.Tests
         {
             LogWithLevel(LogLevel.Info);
 
-            Assert.Equal(3, (logger as TestLogger).Lines.Count);
-            Assert.Equal("Error Test: Error log", (logger as TestLogger).Lines[0]);
-            Assert.Equal("Warning Test: Warning log", (logger as TestLogger).Lines[1]);
-            Assert.Equal("Info Test: Info log", (logger as TestLogger).Lines[2]);
+            Assert.Equal(3, (_logger as TestLogger).Lines.Count);
+            Assert.Equal("Error Test: Error log", (_logger as TestLogger).Lines[0]);
+            Assert.Equal("Warning Test: Warning log", (_logger as TestLogger).Lines[1]);
+            Assert.Equal("Info Test: Info log", (_logger as TestLogger).Lines[2]);
         }
 
         [Fact]
@@ -54,21 +54,21 @@ namespace Elastic.Apm.Tests
         {
             LogWithLevel(LogLevel.Debug);
 
-            Assert.Equal(4, (logger as TestLogger).Lines.Count);
-            Assert.Equal("Error Test: Error log", (logger as TestLogger).Lines[0]);
-            Assert.Equal("Warning Test: Warning log", (logger as TestLogger).Lines[1]);
-            Assert.Equal("Info Test: Info log", (logger as TestLogger).Lines[2]);
-            Assert.Equal("Debug Test: Debug log", (logger as TestLogger).Lines[3]);
+            Assert.Equal(4, (_logger as TestLogger).Lines.Count);
+            Assert.Equal("Error Test: Error log", (_logger as TestLogger).Lines[0]);
+            Assert.Equal("Warning Test: Warning log", (_logger as TestLogger).Lines[1]);
+            Assert.Equal("Info Test: Info log", (_logger as TestLogger).Lines[2]);
+            Assert.Equal("Debug Test: Debug log", (_logger as TestLogger).Lines[3]);
         }
 
         private void LogWithLevel(LogLevel logLevel)
         {
             Apm.Agent.Config.LogLevel = logLevel;
 
-            logger.LogError("Error log");
-            logger.LogWarning("Warning log");
-            logger.LogInfo("Info log");
-            logger.LogDebug("Debug log");
+            _logger.LogError("Error log");
+            _logger.LogWarning("Warning log");
+            _logger.LogInfo("Info log");
+            _logger.LogDebug("Debug log");
         }
     }
 }

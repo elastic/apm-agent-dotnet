@@ -26,7 +26,7 @@ namespace Elastic.Apm.EntityFrameworkCore
                     if (kv.Value is CommandEventData commandEventData)
                     {
                         var newSpan = TransactionContainer.Transactions.Value.StartSpan(
-                                            commandEventData.Command.CommandText, Span.TYPE_DB);
+                                            commandEventData.Command.CommandText, Span.TypeDb);
                       
                         _spans.TryAdd(commandEventData.CommandId, newSpan);
                     }
@@ -52,10 +52,10 @@ namespace Elastic.Apm.EntityFrameworkCore
                             switch (providerType)
                             {
                                 case string str when str.Contains("Sqlite"):
-                                    span.Subtype = Span.SUBTYPE_SQLITE;
+                                    span.Subtype = Span.SubtypeSqlite;
                                     break;
                                 case string str when str.Contains("SqlConnection"):
-                                    span.Subtype = Span.SUBTYPE_MSSQL;
+                                    span.Subtype = Span.SubtypeMssql;
                                     break;
                                 default:
                                     span.Subtype = providerType; //TODO, TBD: this is an unknown provider
@@ -65,10 +65,10 @@ namespace Elastic.Apm.EntityFrameworkCore
                             switch (commandExecutedEventData.Command.CommandType)
                             { 
                                 case System.Data.CommandType.Text:
-                                    span.Action = Span.ACTION_QUERY;
+                                    span.Action = Span.ActionQuery;
                                     break;
                                 case System.Data.CommandType.StoredProcedure:
-                                    span.Action = Span.ACTION_EXEC;
+                                    span.Action = Span.ActionExec;
                                     break;
                                 case System.Data.CommandType.TableDirect:
                                     span.Action = "tabledirect";

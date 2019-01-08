@@ -12,26 +12,26 @@ namespace Elastic.Apm.AspNetCore.Config
     /// </summary>
     public class MicrosoftExtensionsConfig : AbstractAgentConfig
     {
-        private readonly IConfiguration configuration;
+        private readonly IConfiguration _configuration;
 
         public MicrosoftExtensionsConfig(IConfiguration configuration)
         {
-            this.configuration = configuration;
-            this.configuration.GetSection("ElasticApm")?
+            this._configuration = configuration;
+            this._configuration.GetSection("ElasticApm")?
                 .GetReloadToken().RegisterChangeCallback(ChangeCallback, configuration.GetSection("ElasticApm"));
         }
 
 
         protected override (string value, string configType, string configKey) ReadServerUrls()
         {
-            var configValue = configuration[MicrosoftExtensionConfigConsts.ServerUrls];
-            return String.IsNullOrEmpty(configValue) ? (configuration[EnvVarConsts.ServerUrls], "environment variable", EnvVarConsts.ServerUrls) : (configValue, "IConfiguration", MicrosoftExtensionConfigConsts.ServerUrls);
+            var configValue = _configuration[MicrosoftExtensionConfigConsts.ServerUrls];
+            return String.IsNullOrEmpty(configValue) ? (_configuration[EnvVarConsts.ServerUrls], "environment variable", EnvVarConsts.ServerUrls) : (configValue, "IConfiguration", MicrosoftExtensionConfigConsts.ServerUrls);
         }
 
         protected override (string value, string configType, string configKey) ReadLogLevel()
         {
-            var configValue = configuration[MicrosoftExtensionConfigConsts.LogLevel];
-            return String.IsNullOrEmpty(configValue) ? (configuration[EnvVarConsts.LogLevel], "environment variable", EnvVarConsts.LogLevel) : (configValue, "IConfiguration", MicrosoftExtensionConfigConsts.LogLevel);
+            var configValue = _configuration[MicrosoftExtensionConfigConsts.LogLevel];
+            return String.IsNullOrEmpty(configValue) ? (_configuration[EnvVarConsts.LogLevel], "environment variable", EnvVarConsts.LogLevel) : (configValue, "IConfiguration", MicrosoftExtensionConfigConsts.LogLevel);
         }
 
         private void ChangeCallback(Object obj)

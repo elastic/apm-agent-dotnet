@@ -13,10 +13,10 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
     {
         public string Name => "Microsoft.AspNetCore";
 
-        private readonly AbstractLogger logger;
+        private readonly AbstractLogger _logger;
 
         public AspNetCoreDiagnosticListener()
-            => logger = Agent.CreateLogger(Name);
+            => _logger = Agent.CreateLogger(Name);
 
         public void OnCompleted() { }
 

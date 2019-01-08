@@ -3,6 +3,6 @@
     public class Response
     {
         public bool Finished { get; set; }
-        public int Status_code { get; set; }
+        public int StatusCode { get; set; }
     }
 }

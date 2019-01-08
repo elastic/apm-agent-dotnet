@@ -103,25 +103,25 @@ namespace Elastic.Apm.Tests.ApiTests
 
             Assert.NotNull(currentTransaction);
             Assert.Equal(transactionName, currentTransaction.Name);
-            Assert.Equal(Transaction.TYPE_REQUEST, currentTransaction.Type);
+            Assert.Equal(Transaction.TypeRequest, currentTransaction.Type);
 
             void StartTransaction()
               => TransactionContainer.Transactions.Value =
-                        new Transaction(transactionName, Transaction.TYPE_REQUEST);
+                        new Transaction(transactionName, Transaction.TypeRequest);
 
             async Task DoAsynWork()
             {
                 //Make sure we have a transaction in the subtask before the async work
                 Assert.NotNull(Agent.Tracer.CurrentTransaction);
                 Assert.Equal(transactionName, Agent.Tracer.CurrentTransaction.Name);
-                Assert.Equal(Transaction.TYPE_REQUEST, Agent.Tracer.CurrentTransaction.Type);
+                Assert.Equal(Transaction.TypeRequest, Agent.Tracer.CurrentTransaction.Type);
 
                 await Task.Delay(50);
 
                 //and after the async work
                 Assert.NotNull(Agent.Tracer.CurrentTransaction);
                 Assert.Equal(transactionName, Agent.Tracer.CurrentTransaction.Name);
-                Assert.Equal(Transaction.TYPE_REQUEST, Agent.Tracer.CurrentTransaction.Type);
+                Assert.Equal(Transaction.TypeRequest, Agent.Tracer.CurrentTransaction.Type);
             }
         }
 
@@ -140,7 +140,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
             var transaction = Agent.Tracer.StartTransaction(transactionName, transacitonType);
 
-            var span = transaction.StartSpan(spanName, Span.TYPE_EXTERNAL);
+            var span = transaction.StartSpan(spanName, Span.TypeExternal);
 
             System.Threading.Thread.Sleep(5); //Make sure we have duration > 0
 
@@ -170,7 +170,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
             var transaction = Agent.Tracer.StartTransaction(transactionName, transacitonType);
 
-            var unused = transaction.StartSpan(spanName, Span.TYPE_EXTERNAL);
+            var unused = transaction.StartSpan(spanName, Span.TypeExternal);
 
             System.Threading.Thread.Sleep(5); //Make sure we have duration > 0
 
@@ -195,16 +195,16 @@ namespace Elastic.Apm.Tests.ApiTests
             Agent.PayloadSender = payloadSender;
 
             var transaction = Agent.Tracer.StartTransaction(transactionName, transacitonType);
-            var span = transaction.StartSpan(spanName, Span.TYPE_DB, Span.SUBTYPE_MSSQL, Span.ACTION_QUERY);
+            var span = transaction.StartSpan(spanName, Span.TypeDb, Span.SubtypeMssql, Span.ActionQuery);
             span.End();
             transaction.End();
 
             Assert.NotEmpty(payloadSender.Payloads);
             Assert.NotEmpty(payloadSender.Payloads[0].Transactions[0].Spans);
 
-            Assert.Equal(Span.TYPE_DB, payloadSender.Payloads[0].Transactions[0].Spans[0].Type);
-            Assert.Equal(Span.SUBTYPE_MSSQL, payloadSender.Payloads[0].Transactions[0].Spans[0].Subtype);
-            Assert.Equal(Span.ACTION_QUERY, payloadSender.Payloads[0].Transactions[0].Spans[0].Action);
+            Assert.Equal(Span.TypeDb, payloadSender.Payloads[0].Transactions[0].Spans[0].Type);
+            Assert.Equal(Span.SubtypeMssql, payloadSender.Payloads[0].Transactions[0].Spans[0].Subtype);
+            Assert.Equal(Span.ActionQuery, payloadSender.Payloads[0].Transactions[0].Spans[0].Action);
 
             Assert.NotNull(payloadSender.Payloads[0].Service);
         }
@@ -292,7 +292,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
             var transaction = Agent.Tracer.StartTransaction(transactionName, transacitonType);
 
-            var span = transaction.StartSpan(spanName, Span.TYPE_EXTERNAL);
+            var span = transaction.StartSpan(spanName, Span.TypeExternal);
 
             System.Threading.Thread.Sleep(5); //Make sure we have duration > 0
 

@@ -55,7 +55,7 @@ namespace Elastic.Apm.Api
         /// <summary>
         /// UUID of the enclosing transaction.
         /// </summary>
-        Guid Transaction_id { get; }
+        Guid TransactionId { get; }
 
         /// <summary>
         /// Ends the span and schedules it to be reported to the APM Server.
@@ -95,7 +95,7 @@ namespace Elastic.Apm.Api
     public interface IHttp 
     {
         string Url { get; set; }
-        int Status_code { get; set; }
+        int StatusCode { get; set; }
         string Method { get; set; }
     }
 }

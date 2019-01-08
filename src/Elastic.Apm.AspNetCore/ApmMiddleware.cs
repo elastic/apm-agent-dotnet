@@ -14,14 +14,14 @@ namespace Elastic.Apm.AspNetCore
 {
     public class ApmMiddleware
     {
-        private readonly RequestDelegate next;
-        private readonly Service service;
+        private readonly RequestDelegate _next;
+        private readonly Service _service;
 
         public ApmMiddleware(RequestDelegate next)
         {
-            this.next = next;
+            this._next = next;
 
-            service = new Service
+            _service = new Service
             {
                 Agent = new Service.AgentC
                 {
@@ -33,13 +33,13 @@ namespace Elastic.Apm.AspNetCore
                 Language = new Language { Name = "C#" } //TODO
             };
 
-            Agent.Tracer.Service = service;
+            Agent.Tracer.Service = _service;
         }
 
         public async Task InvokeAsync(HttpContext context)
         {           
             var transaction = Agent.Tracer.StartTransaction($"{context.Request.Method} {context.Request.Path}",
-                                                              Transaction.TYPE_REQUEST);
+                                                              Transaction.TypeRequest);
 
             transaction.Context = new Context
             {
@@ -49,7 +49,7 @@ namespace Elastic.Apm.AspNetCore
                     Socket = new Socket
                     {
                         Encrypted = context.Request.IsHttps,
-                        Remote_address = context.Connection?.RemoteIpAddress?.ToString()
+                        RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
                     },
                     Url = new Url
                     {
@@ -64,7 +64,7 @@ namespace Elastic.Apm.AspNetCore
 
             try
             {
-                await next(context);
+                await _next(context);
             }
             catch(Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
             finally
@@ -74,7 +74,7 @@ namespace Elastic.Apm.AspNetCore
                 transaction.Context.Response = new Response
                 {
                     Finished = context.Response.HasStarted, //TODO ?
-                    Status_code = context.Response.StatusCode
+                    StatusCode = context.Response.StatusCode
                 };
 
                 transaction.End();

@@ -51,9 +51,9 @@ namespace Elastic.Apm.Tests
 
             //Simulate Start
             listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Start", new { Request = request }));
-            Assert.Single(listener.processingRequests);
-            Assert.Equal(request.RequestUri.ToString(), listener.processingRequests[request].Context.Http.Url);
-            Assert.Equal(HttpMethod.Get.ToString(), listener.processingRequests[request].Context.Http.Method);
+            Assert.Single(listener.ProcessingRequests);
+            Assert.Equal(request.RequestUri.ToString(), listener.ProcessingRequests[request].Context.Http.Url);
+            Assert.Equal(HttpMethod.Get.ToString(), listener.ProcessingRequests[request].Context.Http.Method);
         }
 
         /// <summary>
@@ -75,7 +75,7 @@ namespace Elastic.Apm.Tests
             listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Start", new { Request = request }));
             //Simulate Stop
             listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Stop", new { Request = request, Response = response }));
-            Assert.Empty(listener.processingRequests);
+            Assert.Empty(listener.ProcessingRequests);
 
             Assert.Equal(request.RequestUri.ToString(), TransactionContainer.Transactions.Value.Spans[0].Context.Http.Url);
             Assert.Equal(HttpMethod.Get.ToString(), TransactionContainer.Transactions.Value.Spans[0].Context.Http.Method);
@@ -185,7 +185,7 @@ namespace Elastic.Apm.Tests
                 Assert.Equal(localServer.Uri, TransactionContainer.Transactions.Value.Spans[0].Context.Http.Url);
             }
 
-            Assert.Equal(200, TransactionContainer.Transactions.Value.Spans[0].Context.Http.Status_code);
+            Assert.Equal(200, TransactionContainer.Transactions.Value.Spans[0].Context.Http.StatusCode);
             Assert.Equal(HttpMethod.Get.ToString(), TransactionContainer.Transactions.Value.Spans[0].Context.Http.Method);
         }
 
@@ -211,7 +211,7 @@ namespace Elastic.Apm.Tests
                 Assert.Equal(localServer.Uri, TransactionContainer.Transactions.Value.Spans[0].Context.Http.Url);
             }
 
-            Assert.Equal(500, TransactionContainer.Transactions.Value.Spans[0].Context.Http.Status_code);
+            Assert.Equal(500, TransactionContainer.Transactions.Value.Spans[0].Context.Http.StatusCode);
             Assert.Equal(HttpMethod.Post.ToString(), TransactionContainer.Transactions.Value.Spans[0].Context.Http.Method);
         }
 
@@ -284,8 +284,8 @@ namespace Elastic.Apm.Tests
                 Assert.True(res.IsSuccessStatusCode);
             }
 
-            Assert.Equal(Span.TYPE_EXTERNAL, TransactionContainer.Transactions.Value.Spans[0].Type);
-            Assert.Equal(Span.SUBTYPE_HTTP, TransactionContainer.Transactions.Value.Spans[0].Subtype);
+            Assert.Equal(Span.TypeExternal, TransactionContainer.Transactions.Value.Spans[0].Type);
+            Assert.Equal(Span.SubtypeHttp, TransactionContainer.Transactions.Value.Spans[0].Subtype);
             Assert.Null(TransactionContainer.Transactions.Value.Spans[0].Action); //we don't set Action for HTTP calls
         }
 
@@ -363,6 +363,6 @@ namespace Elastic.Apm.Tests
         private void StartTransaction()
         => TransactionContainer.Transactions.Value =
                 new Transaction($"{nameof(TestSimpleOutgoingHttpRequest)}",
-                                Transaction.TYPE_REQUEST);
+                                Transaction.TypeRequest);
     }
 }

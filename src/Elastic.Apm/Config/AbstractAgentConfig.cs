@@ -13,24 +13,25 @@ namespace Elastic.Apm.Config
         /// </summary>
         /// <returns>
         /// value: the value of the setting,
-        /// configType: the type of the config, eg. 'environment variable', 
+        /// configType: the type of the config, eg. 'environment variable',
         /// configKey: the key (eg. 'ELASTIC_APM_SERVER_URLS') </returns>
         protected abstract (string value, string configType, string configKey) ReadServerUrls();
         protected abstract (string value, string configType, string configKey) ReadLogLevel();
 
-        protected List<Uri> serverUrls = new List<Uri>();
+        private List<Uri> _serverUrls = new List<Uri>();
         public List<Uri> ServerUrls
-        {
+		{
+			protected set => _serverUrls = value;
             get
             {
-                if (serverUrls.Count == 0)
+                if (_serverUrls.Count == 0)
                 {
                     (string urlsStr, string configType, string configKey) = ReadServerUrls();
 
                     if (String.IsNullOrEmpty(urlsStr))
                     {
                         AddDefaultWithDebug();
-                        return serverUrls;
+                        return _serverUrls;
                     }
 
                     var urls = urlsStr?.Split(',');
@@ -39,7 +40,7 @@ namespace Elastic.Apm.Config
                     {
                         try
                         {
-                            serverUrls.Add(new Uri(url));
+                            _serverUrls.Add(new Uri(url));
                         }
                         catch (Exception e)
                         {
@@ -48,28 +49,28 @@ namespace Elastic.Apm.Config
                         }
                     }
 
-                    if (serverUrls.Count == 0)
+                    if (_serverUrls.Count == 0)
                     {
                         AddDefaultWithDebug();
                     }
                 }
 
-                return serverUrls;
+                return _serverUrls;
 
                 void AddDefaultWithDebug()
                 {
-                    serverUrls.Add(ConfigConsts.DefaultServerUri);
+                    _serverUrls.Add(ConfigConsts.DefaultServerUri);
                     Logger?.LogDebug($"Using default ServerUrl: {ConfigConsts.DefaultServerUri}");
                 }
             }
         }
 
-        protected LogLevel? logLevel;
+        private LogLevel? _logLevel;
         public LogLevel LogLevel
         {
             get
             {
-                if (!logLevel.HasValue)
+                if (!_logLevel.HasValue)
                 {
                     (string logLevelStr,string configType, string configKey) = ReadLogLevel();
 
@@ -77,19 +78,19 @@ namespace Elastic.Apm.Config
 
                     if(isError)
                     {
-                        logLevel = LogLevel.Error;
+                        _logLevel = LogLevel.Error;
                         Logger?.LogError($"Failed parsing log level from {configType}: {configKey}, value: {logLevelStr}. Defaulting to log level 'Error'");
                     }
                     else
                     {
-                        logLevel = parsedLogLevel.HasValue ? parsedLogLevel : LogLevel.Error;
+                        _logLevel = parsedLogLevel.HasValue ? parsedLogLevel : LogLevel.Error;
                     }
                 }
 
-                return logLevel.Value;
+                return _logLevel.Value;
             }
 
-            set => logLevel = value;
+            set => _logLevel = value;
         }
 
         protected (LogLevel? level, bool error) ParseLogLevel(string logLevelStr)

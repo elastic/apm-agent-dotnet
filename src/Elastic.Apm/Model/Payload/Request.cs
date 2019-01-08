@@ -14,7 +14,7 @@ namespace Elastic.Apm.Model.Payload
     public class Socket
     {
         public bool Encrypted { get; set; }
-        public String Remote_address { get; set; }
+        public String RemoteAddress { get; set; }
     }
 
     public class Url

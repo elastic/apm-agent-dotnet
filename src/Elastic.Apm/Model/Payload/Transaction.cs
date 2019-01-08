@@ -10,11 +10,11 @@ namespace Elastic.Apm.Model.Payload
 {
     public class Transaction : ITransaction
     {
-        internal Service service;
+        internal Service Service;
 
         public Transaction(String name, string type)
         {
-            start = DateTimeOffset.UtcNow;
+            Start = DateTimeOffset.UtcNow;
             this.Name = name;
             this.Type = type;
             this.Id = Guid.NewGuid();
@@ -41,24 +41,24 @@ namespace Elastic.Apm.Model.Payload
         /// <value>The result.</value>
         public String Result { get; set; }
 
-        public String Timestamp => start.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
-        internal readonly DateTimeOffset start;
+        public String Timestamp => Start.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
+        internal readonly DateTimeOffset Start;
 
         public Context Context { get; set; }
 
         //TODO: probably won't need with intake v2
-        public ISpan[] Spans => spans.ToArray();
+        public ISpan[] Spans => SpanCollection.ToArray();
 
         //TODO: measure! What about List<T> with lock() in our case?
-        internal BlockingCollection<Span> spans = new BlockingCollection<Span>();
+        internal BlockingCollection<Span> SpanCollection = new BlockingCollection<Span>();
 
-        public const string TYPE_REQUEST = "request";
+        public const string TypeRequest = "request";
 
         public void End()
         {
             if (!Duration.HasValue)
             {
-                this.Duration = (long)(DateTimeOffset.UtcNow - start).TotalMilliseconds;
+                this.Duration = (long)(DateTimeOffset.UtcNow - Start).TotalMilliseconds;
             }
 
             Apm.Agent.PayloadSender.QueuePayload(new Payload
@@ -67,7 +67,7 @@ namespace Elastic.Apm.Model.Payload
                 {
                     this
                 },
-                Service =  this.service
+                Service =  this.Service
             });
 
             TransactionContainer.Transactions.Value = null;
@@ -88,8 +88,8 @@ namespace Elastic.Apm.Model.Payload
             }
 
             var currentTime = DateTimeOffset.UtcNow;
-            retVal.Start = (Decimal)(currentTime - this.start).TotalMilliseconds;
-            retVal.transaction = this;
+            retVal.Start = (Decimal)(currentTime - this.Start).TotalMilliseconds;
+            retVal.Transaction = this;
             return retVal;
         }
 
@@ -118,7 +118,7 @@ namespace Elastic.Apm.Model.Payload
             }
 
             error.Context = this.Context;
-            Apm.Agent.PayloadSender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = this.service});
+            Apm.Agent.PayloadSender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = this.Service});
         }
 
         public void CaptureError(string message, string culprit, StackFrame[] frames)
@@ -143,7 +143,7 @@ namespace Elastic.Apm.Model.Payload
             }
 
             error.Context = this.Context;
-            Apm.Agent.PayloadSender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = this.service});
+            Apm.Agent.PayloadSender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = this.Service});
         }
 
         public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)

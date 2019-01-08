@@ -23,7 +23,7 @@ namespace Elastic.Apm
         /// with the actual <see cref="IConfiguration"/> instance can be created and passed to the agent. 
         /// With that the agent will read configs from the <see cref="IConfiguration"/> instance.
         /// </summary>
-        private static AbstractAgentConfig config = new EnvironmentVariableConfig();
+        private static AbstractAgentConfig _config = new EnvironmentVariableConfig();
 
         /// <summary>
         /// The current agent config. This property stores all configs.
@@ -33,36 +33,36 @@ namespace Elastic.Apm
         {
             get
             {
-                if (config?.Logger == null)
+                if (_config?.Logger == null)
                 {
-                    config.Logger = CreateLogger("Config");
+                    _config.Logger = CreateLogger("Config");
                 }
 
-                return config;
+                return _config;
             }
             set
             {
-                config = value;
-                config.Logger = CreateLogger("Config");
+                _config = value;
+                _config.Logger = CreateLogger("Config");
             }
         }
 
-        private static IPayloadSender payloadSender;
+        private static IPayloadSender _payloadSender;
         public static IPayloadSender PayloadSender
         {
             get
             {
-                if (payloadSender == null)
+                if (_payloadSender == null)
                 {
-                    payloadSender = new PayloadSender();
+                    _payloadSender = new PayloadSender();
                 }
 
-                return payloadSender;
+                return _payloadSender;
             }
 
             internal set 
             {
-                payloadSender = value;
+                _payloadSender = value;
             }
         }
 
@@ -76,7 +76,7 @@ namespace Elastic.Apm
         /// <param name="prefix">Prefix.</param>
         public static AbstractLogger CreateLogger(String prefix = "")
         {
-            var logger = Activator.CreateInstance(loggerType) as AbstractLogger;
+            var logger = Activator.CreateInstance(_loggerType) as AbstractLogger;
             logger.Prefix = prefix;
             return logger;          
         }
@@ -88,7 +88,7 @@ namespace Elastic.Apm
         /// <typeparam name="T">The 1st type parameter.</typeparam>
         internal static void SetLoggerType<T>() where T : AbstractLogger, new()
         {
-            loggerType = typeof(T);
+            _loggerType = typeof(T);
         }
 
         /// <summary>
@@ -96,10 +96,10 @@ namespace Elastic.Apm
         /// which you access to the currently active transaction and span and it also enables you to manually start
         /// a transaction.
         /// </summary>
-        private static Tracer tracer;
+        private static Tracer _tracer;
 
-        public static ITracer Tracer => tracer ?? (tracer = new Tracer());
+        public static ITracer Tracer => _tracer ?? (_tracer = new Tracer());
 
-        static Type loggerType = typeof(ConsoleLogger);
+        static Type _loggerType = typeof(ConsoleLogger);
     }
 }

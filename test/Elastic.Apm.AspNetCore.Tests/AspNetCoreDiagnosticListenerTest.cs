@@ -13,11 +13,11 @@ namespace Elastic.Apm.AspNetCore.Tests
     /// </summary>
     public class AspNetCoreDiagnosticListenerTest : IClassFixture<WebApplicationFactory<SampleAspNetCoreApp.Startup>>
     {
-        private readonly WebApplicationFactory<SampleAspNetCoreApp.Startup> factory;
+        private readonly WebApplicationFactory<SampleAspNetCoreApp.Startup> _factory;
 
         public AspNetCoreDiagnosticListenerTest(WebApplicationFactory<SampleAspNetCoreApp.Startup> factory)
         {
-            this.factory = factory;
+            this._factory = factory;
             TestHelper.ResetAgentAndEnvVars();
         }
 
@@ -30,7 +30,7 @@ namespace Elastic.Apm.AspNetCore.Tests
         public async Task TestErrorInAspNetCore()
         {
             var capturedPayload = new MockPayloadSender();
-            var client = Helper.GetClient(capturedPayload, factory);
+            var client = Helper.GetClient(capturedPayload, _factory);
 
             var response = await client.GetAsync("/Home/TriggerError");
 

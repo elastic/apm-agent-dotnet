@@ -24,22 +24,22 @@ namespace Elastic.Apm.DiagnosticListeners
         /// <summary>
         /// Keeps track of ongoing requests
         /// </summary>
-        internal readonly ConcurrentDictionary<HttpRequestMessage, ISpan> processingRequests = new ConcurrentDictionary<HttpRequestMessage, ISpan>();
-        private readonly AbstractAgentConfig agentConfig;
+        internal readonly ConcurrentDictionary<HttpRequestMessage, ISpan> ProcessingRequests = new ConcurrentDictionary<HttpRequestMessage, ISpan>();
+        private readonly AbstractAgentConfig _agentConfig;
 
-        private readonly AbstractLogger logger;
-        internal AbstractLogger Logger => logger;
+        private readonly AbstractLogger _logger;
+        internal AbstractLogger Logger => _logger;
 
         public HttpDiagnosticListener()
         {
-            agentConfig = Apm.Agent.Config;
-            logger = Apm.Agent.CreateLogger(Name);
+            _agentConfig = Apm.Agent.Config;
+            _logger = Apm.Agent.CreateLogger(Name);
         }
 
         public void OnCompleted() { }
 
         public void OnError(Exception error)
-            => logger.LogError($"Exception in OnError, Exception-type:{error.GetType().Name}, Message:{error.Message}");
+            => _logger.LogError($"Exception in OnError, Exception-type:{error.GetType().Name}, Message:{error.Message}");
 
         public void OnNext(KeyValuePair<string, object> kv)
         {
@@ -75,10 +75,10 @@ namespace Elastic.Apm.DiagnosticListeners
 
                     transaction = TransactionContainer.Transactions.Value;
 
-                    var span = transaction.StartSpan($"{request?.Method} {request?.RequestUri?.Host?.ToString()}", Span.TYPE_EXTERNAL,
-                                                     Span.SUBTYPE_HTTP);
+                    var span = transaction.StartSpan($"{request?.Method} {request?.RequestUri?.Host?.ToString()}", Span.TypeExternal,
+                                                     Span.SubtypeHttp);
 
-                    if (processingRequests.TryAdd(request, span))
+                    if (ProcessingRequests.TryAdd(request, span))
                     {
                         span.Context = new Span.ContextC
                         {
@@ -90,7 +90,7 @@ namespace Elastic.Apm.DiagnosticListeners
                         };
 
                         var frames = new System.Diagnostics.StackTrace().GetFrames();
-                        var stackFrames = StacktraceHelper.GenerateApmStackTrace(frames, logger, span.Name);
+                        var stackFrames = StacktraceHelper.GenerateApmStackTrace(frames, _logger, span.Name);
                         span.Stacktrace = stackFrames;
                     }
                     break;
@@ -98,21 +98,21 @@ namespace Elastic.Apm.DiagnosticListeners
                 case "System.Net.Http.HttpRequestOut.Stop":
                     var response = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Response").GetValue(kv.Value) as HttpResponseMessage;
 
-                    if (processingRequests.TryRemove(request, out ISpan mspan))
+                    if (ProcessingRequests.TryRemove(request, out ISpan mspan))
                     {
                         //TODO: response can be null if for example the request Task is Faulted. 
                         //E.g. writing this from an airplane without internet, and requestTaskStatus is "Faulted" and response is null
                         //How do we report this? There is no response code in that case.
                         if (response != null)
                         {
-                            mspan.Context.Http.Status_code = (int)response.StatusCode;
+                            mspan.Context.Http.StatusCode = (int)response.StatusCode;
                         }
 
                         mspan.End();
                     }
                     else
                     {
-                        logger.LogWarning($"Failed capturing request"
+                        _logger.LogWarning($"Failed capturing request"
                             + (!String.IsNullOrEmpty(request?.RequestUri?.AbsoluteUri) && !String.IsNullOrEmpty(request?.Method?.ToString()) ? $" '{request?.Method.ToString()} " : " ")
                             + (String.IsNullOrEmpty(request?.RequestUri?.AbsoluteUri) ? "" : $"{request?.RequestUri.AbsoluteUri}' ")
                             + "in System.Net.Http.HttpRequestOut.Stop. This Span will be skipped in case it wasn't captured before.");
