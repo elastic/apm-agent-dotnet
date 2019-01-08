@@ -2,7 +2,7 @@
 
 namespace Elastic.Apm.Logging
 {
-    public class ConsoleLogger : AbstractLogger
+    internal class ConsoleLogger : AbstractLogger
     {
         public ConsoleLogger() => Prefix = String.Empty;
         public ConsoleLogger(String prefix) => Prefix = prefix;

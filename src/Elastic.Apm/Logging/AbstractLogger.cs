@@ -17,7 +17,7 @@ namespace Elastic.Apm.Logging
 
         private String GetPrefixString(LogLevel logLevel) => $"{logLevel.ToString()} {Prefix}: ";
 
-        public void LogInfo(String info)
+        internal void LogInfo(String info)
         {
             if (Apm.Agent.Config.LogLevel >= LogLevel.Info)
             {
@@ -25,7 +25,7 @@ namespace Elastic.Apm.Logging
             }
         }
 
-        public void LogWarning(String warning)
+        internal void LogWarning(String warning)
         {
             if (Apm.Agent.Config.LogLevel >= LogLevel.Warning)
             {
@@ -33,7 +33,7 @@ namespace Elastic.Apm.Logging
             }
         }
 
-        public void LogError(String error)
+        internal void LogError(String error)
         {
             if (Apm.Agent.Config.LogLevel >= LogLevel.Error)
             {
@@ -41,7 +41,7 @@ namespace Elastic.Apm.Logging
             }
         }
 
-        public void LogDebug(String debugInfo)
+        internal void LogDebug(String debugInfo)
         {
             if (Apm.Agent.Config.LogLevel >= LogLevel.Debug)
             {
@@ -50,7 +50,7 @@ namespace Elastic.Apm.Logging
         }
 
         /// <summary>
-        /// Subclasses implement this method to write the logline to wherever 
+        /// Subclasses implement this method to write the logline to wherever
         /// they need to write it (e.g. into a file, to the console)
         /// </summary>
         /// <param name="logline">This line that must be logged - it already contains the prefix and the loglevel</param>
