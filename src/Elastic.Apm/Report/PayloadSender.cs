@@ -25,7 +25,7 @@ namespace Elastic.Apm.Report
 		/// <summary>
 		/// Contains data that will be sent to the server
 		/// </summary>
-		private BlockingCollection<Object> payloads = new BlockingCollection<Object>();
+		private BlockingCollection<object> payloads = new BlockingCollection<object>();
 
 		/// <summary>
 		/// The work of sending data back to the server is done on this thread

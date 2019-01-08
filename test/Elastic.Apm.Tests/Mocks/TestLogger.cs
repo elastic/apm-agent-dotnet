@@ -6,7 +6,7 @@ namespace Elastic.Apm.Tests.Mocks
 {
 	public class TestLogger : AbstractLogger
 	{
-		public List<String> Lines { get; } = new List<string>();
+		public List<string> Lines { get; } = new List<string>();
 
 		protected override void PrintLogline(string logline) => Lines.Add(logline);
 	}

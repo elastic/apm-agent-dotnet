@@ -22,7 +22,7 @@ namespace Elastic.Apm.Helpers
 				foreach (var item in frames)
 				{
 					var fileName = item?.GetMethod()?.DeclaringType?.Assembly?.GetName()?.Name;
-					if (String.IsNullOrEmpty(fileName)) continue; //since filename is required by the server, if we don't have it we skip the frame
+					if (string.IsNullOrEmpty(fileName)) continue; //since filename is required by the server, if we don't have it we skip the frame
 
 					retVal.Add(new Stacktrace
 					{

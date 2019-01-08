@@ -25,25 +25,25 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// The name of the span.
 		/// </summary>
-		String Name { get; set; }
+		string Name { get; set; }
 
 		/// <summary>
 		/// A string describing the result of the transaction.
 		/// This is typically the HTTP status code, or e.g. "success" for a background task.
 		/// </summary>
 		/// <value>The result.</value>
-		String Result { get; set; }
+		string Result { get; set; }
 
 		//TODO: probably won't need with intake v2
 		ISpan[] Spans { get; }
 
-		String Timestamp { get; }
+		string Timestamp { get; }
 
 		/// <summary>
 		/// The type of the transaction.
 		/// Example: 'request'
 		/// </summary>
-		String Type { get; set; }
+		string Type { get; set; }
 
 		/// <summary>
 		/// Ends the transaction and schedules it to be reported to the APM Server.

@@ -84,20 +84,20 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		private string GetProtocolName(String protocol)
+		private string GetProtocolName(string protocol)
 		{
 			switch (protocol)
 			{
-				case String s when String.IsNullOrEmpty(s):
-					return String.Empty;
-				case String s when s.StartsWith("HTTP", StringComparison.InvariantCulture): //in case of HTTP/2.x we only need HTTP
+				case string s when string.IsNullOrEmpty(s):
+					return string.Empty;
+				case string s when s.StartsWith("HTTP", StringComparison.InvariantCulture): //in case of HTTP/2.x we only need HTTP
 					return "HTTP";
 				default:
 					return protocol;
 			}
 		}
 
-		private string GetHttpVersion(String protocolString)
+		private string GetHttpVersion(string protocolString)
 		{
 			switch (protocolString)
 			{
@@ -108,7 +108,7 @@ namespace Elastic.Apm.AspNetCore
 				case "HTTP/2.0":
 					return "2.0";
 				default:
-					return protocolString.Replace("HTTP/", String.Empty);
+					return protocolString.Replace("HTTP/", string.Empty);
 			}
 		}
 	}

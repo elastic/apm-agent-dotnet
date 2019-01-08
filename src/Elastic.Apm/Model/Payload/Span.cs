@@ -7,15 +7,15 @@ namespace Elastic.Apm.Model.Payload
 {
 	public class Span : ISpan
 	{
-		public const String ACTION_EXEC = "exec";
+		public const string ACTION_EXEC = "exec";
 
-		public const String ACTION_QUERY = "query";
+		public const string ACTION_QUERY = "query";
 
-		public const String SUBTYPE_HTTP = "http";
-		public const String SUBTYPE_MSSQL = "mssql";
-		public const String SUBTYPE_SQLITE = "sqlite";
-		public const String TYPE_DB = "db";
-		public const String TYPE_EXTERNAL = "external";
+		public const string SUBTYPE_HTTP = "http";
+		public const string SUBTYPE_MSSQL = "mssql";
+		public const string SUBTYPE_SQLITE = "sqlite";
+		public const string TYPE_DB = "db";
+		public const string TYPE_EXTERNAL = "external";
 		internal Transaction transaction;
 
 		private readonly DateTimeOffset start;
@@ -32,7 +32,7 @@ namespace Elastic.Apm.Model.Payload
 			Id = rnd.Next();
 		}
 
-		public String Action { get; set; }
+		public string Action { get; set; }
 
 		public IContext Context { get; set; }
 
@@ -46,17 +46,17 @@ namespace Elastic.Apm.Model.Payload
 
 		public int Id { get; set; }
 
-		public String Name { get; set; }
+		public string Name { get; set; }
 
 		public List<Stacktrace> Stacktrace { get; set; }
 
-		public Decimal Start { get; set; }
+		public decimal Start { get; set; }
 
-		public String Subtype { get; set; }
+		public string Subtype { get; set; }
 
 		public Guid Transaction_id => transaction.Id;
 
-		public String Type { get; set; }
+		public string Type { get; set; }
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames)
 			=> transaction?.CaptureError(message, culprit, frames);

@@ -42,7 +42,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		public void OnNext(KeyValuePair<string, object> kv)
 		{
-			if (kv.Value == null || String.IsNullOrEmpty(kv.Key)) return;
+			if (kv.Value == null || string.IsNullOrEmpty(kv.Key)) return;
 
 			if (!(kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Request")?.GetValue(kv.Value) is HttpRequestMessage request)) return;
 
@@ -96,10 +96,10 @@ namespace Elastic.Apm.DiagnosticListeners
 					}
 					else
 						Logger.LogWarning($"Failed capturing request"
-							+ (!String.IsNullOrEmpty(request?.RequestUri?.AbsoluteUri) && !String.IsNullOrEmpty(request?.Method?.ToString())
+							+ (!string.IsNullOrEmpty(request?.RequestUri?.AbsoluteUri) && !string.IsNullOrEmpty(request?.Method?.ToString())
 								? $" '{request?.Method.ToString()} "
 								: " ")
-							+ (String.IsNullOrEmpty(request?.RequestUri?.AbsoluteUri) ? "" : $"{request?.RequestUri.AbsoluteUri}' ")
+							+ (string.IsNullOrEmpty(request?.RequestUri?.AbsoluteUri) ? "" : $"{request?.RequestUri.AbsoluteUri}' ")
 							+ "in System.Net.Http.HttpRequestOut.Stop. This Span will be skipped in case it wasn't captured before.");
 					break;
 			}

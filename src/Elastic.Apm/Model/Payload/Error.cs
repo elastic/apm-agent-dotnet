@@ -17,10 +17,10 @@ namespace Elastic.Apm.Model.Payload
 			}
 
 			public Context Context { get; set; }
-			public String Culprit { get; set; }
+			public string Culprit { get; set; }
 			public CapturedException Exception { get; set; }
 			public Guid Id { get; private set; }
-			public String Timestamp { get; private set; }
+			public string Timestamp { get; private set; }
 			public Trans Transaction { get; set; }
 
 			public class Trans
@@ -32,16 +32,16 @@ namespace Elastic.Apm.Model.Payload
 
 	public class CapturedException
 	{
-		public String Code { get; set; } //TODO
+		public string Code { get; set; } //TODO
 
 		public bool Handled { get; set; }
 
-		public String Message { get; set; }
+		public string Message { get; set; }
 
-		public String Module { get; set; }
+		public string Module { get; set; }
 
 		public List<Stacktrace> Stacktrace { get; set; }
 
-		public String Type { get; set; }
+		public string Type { get; set; }
 	}
 }

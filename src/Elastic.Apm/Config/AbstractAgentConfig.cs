@@ -45,7 +45,7 @@ namespace Elastic.Apm.Config
 				{
 					var (urlsStr, configType, configKey) = ReadServerUrls();
 
-					if (String.IsNullOrEmpty(urlsStr))
+					if (string.IsNullOrEmpty(urlsStr))
 					{
 						AddDefaultWithDebug();
 						return serverUrls;
@@ -93,7 +93,7 @@ namespace Elastic.Apm.Config
 
 		protected (LogLevel? level, bool error) ParseLogLevel(string logLevelStr)
 		{
-			if (String.IsNullOrEmpty(logLevelStr)) return (null, false);
+			if (string.IsNullOrEmpty(logLevelStr)) return (null, false);
 
 			if (Enum.TryParse(logLevelStr, out LogLevel parsedLogLevel)) return (parsedLogLevel, false);
 
