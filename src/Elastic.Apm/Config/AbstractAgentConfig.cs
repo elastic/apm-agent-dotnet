@@ -4,107 +4,100 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
 {
-    public abstract class AbstractAgentConfig
-    {
-        public AbstractLogger Logger { get; set; }
+	public abstract class AbstractAgentConfig
+	{
+		protected LogLevel? logLevel;
 
-        /// <summary>
-        /// Returns the value of the ServerUrls config
-        /// </summary>
-        /// <returns>
-        /// value: the value of the setting,
-        /// configType: the type of the config, eg. 'environment variable', 
-        /// configKey: the key (eg. 'ELASTIC_APM_SERVER_URLS') </returns>
-        protected abstract (string value, string configType, string configKey) ReadServerUrls();
-        protected abstract (string value, string configType, string configKey) ReadLogLevel();
+		protected List<Uri> serverUrls = new List<Uri>();
+		public AbstractLogger Logger { get; set; }
 
-        protected List<Uri> serverUrls = new List<Uri>();
-        public List<Uri> ServerUrls
-        {
-            get
-            {
-                if (serverUrls.Count == 0)
-                {
-                    (string urlsStr, string configType, string configKey) = ReadServerUrls();
+		public LogLevel LogLevel
+		{
+			get
+			{
+				if (!logLevel.HasValue)
+				{
+					var (logLevelStr, configType, configKey) = ReadLogLevel();
 
-                    if (String.IsNullOrEmpty(urlsStr))
-                    {
-                        AddDefaultWithDebug();
-                        return serverUrls;
-                    }
+					var (parsedLogLevel, isError) = ParseLogLevel(logLevelStr);
 
-                    var urls = urlsStr?.Split(',');
+					if (isError)
+					{
+						logLevel = LogLevel.Error;
+						Logger?.LogError(
+							$"Failed parsing log level from {configType}: {configKey}, value: {logLevelStr}. Defaulting to log level 'Error'");
+					}
+					else
+						logLevel = parsedLogLevel.HasValue ? parsedLogLevel : LogLevel.Error;
+				}
 
-                    foreach (var url in urls)
-                    {
-                        try
-                        {
-                            serverUrls.Add(new Uri(url));
-                        }
-                        catch (Exception e)
-                        {
-                            Logger?.LogError($"Failed parsing server URL from {configType}: {configKey}, value: {url}");
-                            Logger?.LogDebug($"{e.GetType().Name}: {e.Message}");
-                        }
-                    }
+				return logLevel.Value;
+			}
 
-                    if (serverUrls.Count == 0)
-                    {
-                        AddDefaultWithDebug();
-                    }
-                }
+			set => logLevel = value;
+		}
 
-                return serverUrls;
+		public List<Uri> ServerUrls
+		{
+			get
+			{
+				if (serverUrls.Count == 0)
+				{
+					var (urlsStr, configType, configKey) = ReadServerUrls();
 
-                void AddDefaultWithDebug()
-                {
-                    serverUrls.Add(ConfigConsts.DefaultServerUri);
-                    Logger?.LogDebug($"Using default ServerUrl: {ConfigConsts.DefaultServerUri}");
-                }
-            }
-        }
+					if (String.IsNullOrEmpty(urlsStr))
+					{
+						AddDefaultWithDebug();
+						return serverUrls;
+					}
 
-        protected LogLevel? logLevel;
-        public LogLevel LogLevel
-        {
-            get
-            {
-                if (!logLevel.HasValue)
-                {
-                    (string logLevelStr,string configType, string configKey) = ReadLogLevel();
+					var urls = urlsStr?.Split(',');
 
-                    (var parsedLogLevel, var isError) = ParseLogLevel(logLevelStr);
+					foreach (var url in urls)
+					{
+						try
+						{
+							serverUrls.Add(new Uri(url));
+						}
+						catch (Exception e)
+						{
+							Logger?.LogError($"Failed parsing server URL from {configType}: {configKey}, value: {url}");
+							Logger?.LogDebug($"{e.GetType().Name}: {e.Message}");
+						}
+					}
 
-                    if(isError)
-                    {
-                        logLevel = LogLevel.Error;
-                        Logger?.LogError($"Failed parsing log level from {configType}: {configKey}, value: {logLevelStr}. Defaulting to log level 'Error'");
-                    }
-                    else
-                    {
-                        logLevel = parsedLogLevel.HasValue ? parsedLogLevel : LogLevel.Error;
-                    }
-                }
+					if (serverUrls.Count == 0) AddDefaultWithDebug();
+				}
 
-                return logLevel.Value;
-            }
+				return serverUrls;
 
-            set => logLevel = value;
-        }
+				void AddDefaultWithDebug()
+				{
+					serverUrls.Add(ConfigConsts.DefaultServerUri);
+					Logger?.LogDebug($"Using default ServerUrl: {ConfigConsts.DefaultServerUri}");
+				}
+			}
+		}
 
-        protected (LogLevel? level, bool error) ParseLogLevel(string logLevelStr)
-        {
-            if (String.IsNullOrEmpty(logLevelStr))
-            {
-                return (null, false);
-            }
+		/// <summary>
+		/// Returns the value of the ServerUrls config
+		/// </summary>
+		/// <returns>
+		/// value: the value of the setting,
+		/// configType: the type of the config, eg. 'environment variable',
+		/// configKey: the key (eg. 'ELASTIC_APM_SERVER_URLS')
+		/// </returns>
+		protected abstract (string value, string configType, string configKey) ReadServerUrls();
 
-            if (Enum.TryParse(logLevelStr, out LogLevel parsedLogLevel))
-            {
-                return (parsedLogLevel, false);
-            }
+		protected abstract (string value, string configType, string configKey) ReadLogLevel();
 
-            return (null, true);
-        }
-    }
+		protected (LogLevel? level, bool error) ParseLogLevel(string logLevelStr)
+		{
+			if (String.IsNullOrEmpty(logLevelStr)) return (null, false);
+
+			if (Enum.TryParse(logLevelStr, out LogLevel parsedLogLevel)) return (parsedLogLevel, false);
+
+			return (null, true);
+		}
+	}
 }

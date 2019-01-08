@@ -2,42 +2,37 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model.Payload;
 using Microsoft.AspNetCore.Http;
 
 namespace Elastic.Apm.AspNetCore.DiagnosticListener
 {
-    public class AspNetCoreDiagnosticListener : IDiagnosticListener
-    {
-        public string Name => "Microsoft.AspNetCore";
+	public class AspNetCoreDiagnosticListener : IDiagnosticListener
+	{
+		private readonly AbstractLogger logger;
 
-        private readonly AbstractLogger logger;
+		public AspNetCoreDiagnosticListener()
+			=> logger = Agent.CreateLogger(Name);
 
-        public AspNetCoreDiagnosticListener()
-            => logger = Agent.CreateLogger(Name);
+		public string Name => "Microsoft.AspNetCore";
 
-        public void OnCompleted() { }
+		public void OnCompleted() { }
 
-        public void OnError(Exception error) { }
+		public void OnError(Exception error) { }
 
-        public void OnNext(KeyValuePair<string, object> kv)
-        {
-            if (kv.Key == "Microsoft.AspNetCore.Diagnostics.UnhandledException" || kv.Key == "Microsoft.AspNetCore.Diagnostics.HandledException")
-            {
-                var context = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("httpContext").GetValue(kv.Value) as HttpContext;
-                var exception = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("exception").GetValue(kv.Value) as Exception;
+		public void OnNext(KeyValuePair<string, object> kv)
+		{
+			if (kv.Key == "Microsoft.AspNetCore.Diagnostics.UnhandledException" || kv.Key == "Microsoft.AspNetCore.Diagnostics.HandledException")
+			{
+				var context = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("httpContext").GetValue(kv.Value) as HttpContext;
+				var exception = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("exception").GetValue(kv.Value) as Exception;
 
-                var transaction = TransactionContainer.Transactions?.Value;
-                if (transaction == null)
-                {
-                    return;
-                }
+				var transaction = TransactionContainer.Transactions?.Value;
+				if (transaction == null) return;
 
-                transaction.CaptureException(exception, "ASP.NET Core Unhandled Exception",
-                                            kv.Key == "Microsoft.AspNetCore.Diagnostics.HandledException");
-            }
-        }
-    }
+				transaction.CaptureException(exception, "ASP.NET Core Unhandled Exception",
+					kv.Key == "Microsoft.AspNetCore.Diagnostics.HandledException");
+			}
+		}
+	}
 }
