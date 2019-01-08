@@ -290,3 +290,4 @@ namespace Elastic.Apm.Model.Payload
             }, System.Threading.CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
     }
+}
