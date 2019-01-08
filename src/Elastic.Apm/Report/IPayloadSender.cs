@@ -2,9 +2,10 @@
 
 namespace Elastic.Apm.Report
 {
-    public interface IPayloadSender
-    {
-        void QueuePayload(Payload payload);
-        void QueueError(Error error);
-    }
+	public interface IPayloadSender
+	{
+		void QueuePayload(Payload payload);
+
+		void QueueError(Error error);
+	}
 }
