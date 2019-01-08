@@ -25,7 +25,7 @@ namespace Elastic.Apm.AspNetCore.Config
 		protected override (string value, string configType, string configKey) ReadServerUrls()
 		{
 			var configValue = configuration[MicrosoftExtensionConfigConsts.ServerUrls];
-			return String.IsNullOrEmpty(configValue)
+			return string.IsNullOrEmpty(configValue)
 				? (configuration[EnvVarConsts.ServerUrls], "environment variable", EnvVarConsts.ServerUrls)
 				: (configValue, "IConfiguration", MicrosoftExtensionConfigConsts.ServerUrls);
 		}
@@ -33,12 +33,12 @@ namespace Elastic.Apm.AspNetCore.Config
 		protected override (string value, string configType, string configKey) ReadLogLevel()
 		{
 			var configValue = configuration[MicrosoftExtensionConfigConsts.LogLevel];
-			return String.IsNullOrEmpty(configValue)
+			return string.IsNullOrEmpty(configValue)
 				? (configuration[EnvVarConsts.LogLevel], "environment variable", EnvVarConsts.LogLevel)
 				: (configValue, "IConfiguration", MicrosoftExtensionConfigConsts.LogLevel);
 		}
 
-		private void ChangeCallback(Object obj)
+		private void ChangeCallback(object obj)
 		{
 			var (newlogLevel, isError)
 				= ParseLogLevel((obj as IConfigurationSection)?[MicrosoftExtensionConfigConsts.LogLevel.Split(':')[1]]);

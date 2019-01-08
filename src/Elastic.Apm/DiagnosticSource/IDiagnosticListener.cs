@@ -13,6 +13,6 @@ namespace Elastic.Apm.DiagnosticSource
 		/// Represents the component associated with the event.
 		/// </summary>
 		/// <value>The name.</value>
-		String Name { get; }
+		string Name { get; }
 	}
 }

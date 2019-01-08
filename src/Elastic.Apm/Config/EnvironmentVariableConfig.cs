@@ -13,7 +13,7 @@ namespace Elastic.Apm.Config
 
 	internal static class EnvVarConsts
 	{
-		public static String LogLevel => "ELASTIC_APM_LOG_LEVEL";
-		public static String ServerUrls => "ELASTIC_APM_SERVER_URLS";
+		public static string LogLevel => "ELASTIC_APM_LOG_LEVEL";
+		public static string ServerUrls => "ELASTIC_APM_SERVER_URLS";
 	}
 }

@@ -17,7 +17,7 @@ namespace Elastic.Apm.Model.Payload
 		//TODO: measure! What about List<T> with lock() in our case?
 		internal BlockingCollection<Span> spans = new BlockingCollection<Span>();
 
-		public Transaction(String name, string type)
+		public Transaction(string name, string type)
 		{
 			start = DateTimeOffset.UtcNow;
 			Name = name;
@@ -37,21 +37,21 @@ namespace Elastic.Apm.Model.Payload
 
 		public Guid Id { get; private set; }
 
-		public String Name { get; set; }
+		public string Name { get; set; }
 
 		/// <summary>
 		/// A string describing the result of the transaction.
 		/// This is typically the HTTP status code, or e.g. "success" for a background task.
 		/// </summary>
 		/// <value>The result.</value>
-		public String Result { get; set; }
+		public string Result { get; set; }
 
 		//TODO: probably won't need with intake v2
 		public ISpan[] Spans => spans.ToArray();
 
-		public String Timestamp => start.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
+		public string Timestamp => start.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
 
-		public String Type { get; set; }
+		public string Type { get; set; }
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames)
 		{
@@ -80,7 +80,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false)
 		{
-			var capturedCulprit = String.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
+			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 			var error = new Error.Err
 			{
 				Culprit = capturedCulprit,
@@ -96,7 +96,7 @@ namespace Elastic.Apm.Model.Payload
 				}
 			};
 
-			if (!String.IsNullOrEmpty(exception.StackTrace))
+			if (!string.IsNullOrEmpty(exception.StackTrace))
 			{
 				error.Exception.Stacktrace
 					= StacktraceHelper.GenerateApmStackTrace(new StackTrace(exception).GetFrames(), Tracer.PublicTracerLogger,
@@ -224,12 +224,12 @@ namespace Elastic.Apm.Model.Payload
 		{
 			var retVal = new Span(name, type, this);
 
-			if (!String.IsNullOrEmpty(subType)) retVal.Subtype = subType;
+			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 
-			if (!String.IsNullOrEmpty(action)) retVal.Action = action;
+			if (!string.IsNullOrEmpty(action)) retVal.Action = action;
 
 			var currentTime = DateTimeOffset.UtcNow;
-			retVal.Start = (Decimal)(currentTime - start).TotalMilliseconds;
+			retVal.Start = (decimal)(currentTime - start).TotalMilliseconds;
 			retVal.transaction = this;
 			return retVal;
 		}

@@ -229,7 +229,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// Shared between ErrorOnTransaction and ErrorOnTransactionWithCulprit
 		/// </summary>
 		/// <param name="culprit">Culprit.</param>
-		private void ErrorOnTransactionCommon(String culprit = null)
+		private void ErrorOnTransactionCommon(string culprit = null)
 		{
 			var transactionName = "TestTransaction";
 			var transacitonType = "UnitTest";
@@ -246,7 +246,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			}
 			catch (Exception e)
 			{
-				if (String.IsNullOrEmpty(culprit))
+				if (string.IsNullOrEmpty(culprit))
 					transaction.CaptureException(e);
 				else
 					transaction.CaptureException(e, culprit);
@@ -259,7 +259,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(exceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
 			Assert.Equal(exceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
 
-			if (!String.IsNullOrEmpty(culprit))
+			if (!string.IsNullOrEmpty(culprit))
 				Assert.Equal(culprit, payloadSender.Errors[0].Errors[0].Culprit);
 			else
 				Assert.Equal("PublicAPI-CaptureException",

@@ -85,7 +85,7 @@ namespace Elastic.Apm
 		/// </summary>
 		/// <returns>The logger.</returns>
 		/// <param name="prefix">Prefix.</param>
-		public static AbstractLogger CreateLogger(String prefix = "")
+		public static AbstractLogger CreateLogger(string prefix = "")
 		{
 			var logger = Activator.CreateInstance(loggerType) as AbstractLogger;
 			logger.Prefix = prefix;

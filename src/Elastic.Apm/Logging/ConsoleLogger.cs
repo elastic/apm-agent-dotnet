@@ -4,9 +4,9 @@ namespace Elastic.Apm.Logging
 {
 	public class ConsoleLogger : AbstractLogger
 	{
-		public ConsoleLogger() => Prefix = String.Empty;
+		public ConsoleLogger() => Prefix = string.Empty;
 
-		public ConsoleLogger(String prefix) => Prefix = prefix;
+		public ConsoleLogger(string prefix) => Prefix = prefix;
 
 		protected override void PrintLogline(string logline) => Console.WriteLine(logline);
 	}

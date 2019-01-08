@@ -13,26 +13,26 @@ namespace Elastic.Apm.Logging
 		/// Every log message is prefixed with this string
 		/// </summary>
 		/// <value>The prefix.</value>
-		internal String Prefix { get; set; }
+		internal string Prefix { get; set; }
 
-		private String GetPrefixString(LogLevel logLevel) => $"{logLevel.ToString()} {Prefix}: ";
+		private string GetPrefixString(LogLevel logLevel) => $"{logLevel.ToString()} {Prefix}: ";
 
-		public void LogInfo(String info)
+		public void LogInfo(string info)
 		{
 			if (Agent.Config.LogLevel >= LogLevel.Info) PrintLogline($"{GetPrefixString(LogLevel.Info)}{info}");
 		}
 
-		public void LogWarning(String warning)
+		public void LogWarning(string warning)
 		{
 			if (Agent.Config.LogLevel >= LogLevel.Warning) PrintLogline($"{GetPrefixString(LogLevel.Warning)}{warning}");
 		}
 
-		public void LogError(String error)
+		public void LogError(string error)
 		{
 			if (Agent.Config.LogLevel >= LogLevel.Error) PrintLogline($"{GetPrefixString(LogLevel.Error)}{error}");
 		}
 
-		public void LogDebug(String debugInfo)
+		public void LogDebug(string debugInfo)
 		{
 			if (Agent.Config.LogLevel >= LogLevel.Debug) PrintLogline($"{GetPrefixString(LogLevel.Debug)}{debugInfo}");
 		}
@@ -42,6 +42,6 @@ namespace Elastic.Apm.Logging
 		/// they need to write it (e.g. into a file, to the console)
 		/// </summary>
 		/// <param name="logline">This line that must be logged - it already contains the prefix and the loglevel</param>
-		protected abstract void PrintLogline(String logline);
+		protected abstract void PrintLogline(string logline);
 	}
 }
