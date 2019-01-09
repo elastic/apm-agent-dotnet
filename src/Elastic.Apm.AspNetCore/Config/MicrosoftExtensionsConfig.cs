@@ -39,12 +39,12 @@ namespace Elastic.Apm.AspNetCore.Config
 
 		private void ChangeCallback(object obj)
 		{
-			var (newlogLevel, isError)
+			var (newLogLevel, isError)
 				= ParseLogLevel((obj as IConfigurationSection)?[MicrosoftExtensionConfigConsts.LogLevel.Split(':')[1]]);
 
-			if (!isError && newlogLevel.HasValue && newlogLevel.Value != LogLevelBackingField)
+			if (!isError && newLogLevel.HasValue && newLogLevel.Value != LogLevelBackingField)
 			{
-				LogLevelBackingField = newlogLevel;
+				LogLevelBackingField = newLogLevel;
 				Logger?.LogInfo($"Updated log level to {LogLevelBackingField.ToString()}");
 			}
 
