@@ -212,7 +212,7 @@ namespace Elastic.Apm.Api
                 }
                
                 transaction.End();
-            }, TaskContinuationOptions.ExecuteSynchronously);
+            }, System.Threading.CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
     }
 }
