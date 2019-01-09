@@ -23,7 +23,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public Span(string name, string type, Transaction transaction)
 		{
-			this.Transaction = transaction;
+			Transaction = transaction;
 			_start = DateTimeOffset.UtcNow;
 			Start = (decimal)(_start - transaction.Start).TotalMilliseconds;
 			Name = name;

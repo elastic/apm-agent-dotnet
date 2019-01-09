@@ -22,7 +22,7 @@ namespace Elastic.Apm.AspNetCore
 
 		public ApmMiddleware(RequestDelegate next)
 		{
-			this._next = next;
+			_next = next;
 
 			var service = new Service
 			{

@@ -13,8 +13,8 @@ namespace Elastic.Apm.AspNetCore.Config
 
 		public MicrosoftExtensionsConfig(IConfiguration configuration)
 		{
-			this._configuration = configuration;
-			this._configuration.GetSection("ElasticApm")
+			_configuration = configuration;
+			_configuration.GetSection("ElasticApm")
 				?
 				.GetReloadToken()
 				.RegisterChangeCallback(ChangeCallback, configuration.GetSection("ElasticApm"));

@@ -18,7 +18,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		public AspNetCoreDiagnosticListenerTest(WebApplicationFactory<Startup> factory)
 		{
-			this._factory = factory;
+			_factory = factory;
 			TestHelper.ResetAgentAndEnvVars();
 		}
 

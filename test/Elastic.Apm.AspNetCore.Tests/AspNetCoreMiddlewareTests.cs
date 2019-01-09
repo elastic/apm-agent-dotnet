@@ -18,7 +18,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory)
 		{
-			this._factory = factory;
+			_factory = factory;
 			TestHelper.ResetAgentAndEnvVars();
 		}
 
