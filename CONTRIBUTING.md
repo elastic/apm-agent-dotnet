@@ -93,7 +93,7 @@ should "Squash and merge".
 
 ### Coding guidelines
 
-Coming soon.
+The repository contains a [.editorconfig file](.editorconfig) which is automatically picked up by Visual Studio and JetBrains Rider. Additionally, we also have a [.DotSettings file](ElasticApmAgent.sln.DotSettings). If you auto-format your code in Visual Studio or Rider, you will automatically confirm to our code styling. If you want to know more details about the specific conventions we use, feel free to look into the [.editorconfig file](.editorconfig). 
 
 ### Adding support for instrumenting new libraries/frameworks/APIs
 
