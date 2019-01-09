@@ -4,107 +4,99 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
 {
-    public abstract class AbstractAgentConfig
-    {
-        public AbstractLogger Logger { get; set; }
+	public abstract class AbstractAgentConfig
+	{
+		protected abstract (string value, string configType, string configKey) ReadLogLevel();
 
-        /// <summary>
-        /// Returns the value of the ServerUrls config
-        /// </summary>
-        /// <returns>
-        /// value: the value of the setting,
-        /// configType: the type of the config, eg. 'environment variable', 
-        /// configKey: the key (eg. 'ELASTIC_APM_SERVER_URLS') </returns>
-        protected abstract (string value, string configType, string configKey) ReadServerUrls();
-        protected abstract (string value, string configType, string configKey) ReadLogLevel();
+		/// <summary>
+		/// Returns the value of the ServerUrls config
+		/// </summary>
+		/// <returns>
+		/// value: the value of the setting,
+		/// configType: the type of the config, eg. 'environment variable',
+		/// configKey: the key (eg. 'ELASTIC_APM_SERVER_URLS')
+		/// </returns>
+		protected abstract (string value, string configType, string configKey) ReadServerUrls();
 
-        protected List<Uri> serverUrls = new List<Uri>();
-        public List<Uri> ServerUrls
-        {
-            get
-            {
-                if (serverUrls.Count == 0)
-                {
-                    (string urlsStr, string configType, string configKey) = ReadServerUrls();
+		public AbstractLogger Logger { get; set; }
 
-                    if (String.IsNullOrEmpty(urlsStr))
-                    {
-                        AddDefaultWithDebug();
-                        return serverUrls;
-                    }
+		protected LogLevel? LogLevelBackingField;
 
-                    var urls = urlsStr?.Split(',');
+		public LogLevel LogLevel
+		{
+			get
+			{
+				if (LogLevelBackingField.HasValue) return LogLevelBackingField.Value;
 
-                    foreach (var url in urls)
-                    {
-                        try
-                        {
-                            serverUrls.Add(new Uri(url));
-                        }
-                        catch (Exception e)
-                        {
-                            Logger?.LogError($"Failed parsing server URL from {configType}: {configKey}, value: {url}");
-                            Logger?.LogDebug($"{e.GetType().Name}: {e.Message}");
-                        }
-                    }
+				var (logLevelStr, configType, configKey) = ReadLogLevel();
 
-                    if (serverUrls.Count == 0)
-                    {
-                        AddDefaultWithDebug();
-                    }
-                }
+				var (parsedLogLevel, isError) = ParseLogLevel(logLevelStr);
 
-                return serverUrls;
+				if (isError)
+				{
+					LogLevelBackingField = LogLevel.Error;
+					Logger?.LogError(
+						$"Failed parsing log level from {configType}: {configKey}, value: {logLevelStr}. Defaulting to log level 'Error'");
+				}
+				else
+					LogLevelBackingField = parsedLogLevel ?? LogLevel.Error;
 
-                void AddDefaultWithDebug()
-                {
-                    serverUrls.Add(ConfigConsts.DefaultServerUri);
-                    Logger?.LogDebug($"Using default ServerUrl: {ConfigConsts.DefaultServerUri}");
-                }
-            }
-        }
+				return LogLevelBackingField.Value;
+			}
 
-        protected LogLevel? logLevel;
-        public LogLevel LogLevel
-        {
-            get
-            {
-                if (!logLevel.HasValue)
-                {
-                    (string logLevelStr,string configType, string configKey) = ReadLogLevel();
+			set => LogLevelBackingField = value;
+		}
 
-                    (var parsedLogLevel, var isError) = ParseLogLevel(logLevelStr);
+		private readonly List<Uri> _serverUrls = new List<Uri>();
 
-                    if(isError)
-                    {
-                        logLevel = LogLevel.Error;
-                        Logger?.LogError($"Failed parsing log level from {configType}: {configKey}, value: {logLevelStr}. Defaulting to log level 'Error'");
-                    }
-                    else
-                    {
-                        logLevel = parsedLogLevel.HasValue ? parsedLogLevel : LogLevel.Error;
-                    }
-                }
+		public List<Uri> ServerUrls
+		{
+			get
+			{
+				if (_serverUrls.Count != 0) return _serverUrls;
 
-                return logLevel.Value;
-            }
+				var (urlsStr, configType, configKey) = ReadServerUrls();
 
-            set => logLevel = value;
-        }
+				if (string.IsNullOrEmpty(urlsStr))
+				{
+					AddDefaultWithDebug();
+					return _serverUrls;
+				}
 
-        protected (LogLevel? level, bool error) ParseLogLevel(string logLevelStr)
-        {
-            if (String.IsNullOrEmpty(logLevelStr))
-            {
-                return (null, false);
-            }
+				var urls = urlsStr?.Split(',');
 
-            if (Enum.TryParse(logLevelStr, out LogLevel parsedLogLevel))
-            {
-                return (parsedLogLevel, false);
-            }
+				foreach (var url in urls)
+				{
+					try
+					{
+						_serverUrls.Add(new Uri(url));
+					}
+					catch (Exception e)
+					{
+						Logger?.LogError($"Failed parsing server URL from {configType}: {configKey}, value: {url}");
+						Logger?.LogDebug($"{e.GetType().Name}: {e.Message}");
+					}
+				}
 
-            return (null, true);
-        }
-    }
+				if (_serverUrls.Count == 0) AddDefaultWithDebug();
+
+				return _serverUrls;
+
+				void AddDefaultWithDebug()
+				{
+					_serverUrls.Add(ConfigConsts.DefaultServerUri);
+					Logger?.LogDebug($"Using default ServerUrl: {ConfigConsts.DefaultServerUri}");
+				}
+			}
+		}
+
+		protected (LogLevel? level, bool error) ParseLogLevel(string logLevelStr)
+		{
+			if (string.IsNullOrEmpty(logLevelStr)) return (null, false);
+
+			if (Enum.TryParse(logLevelStr, out LogLevel parsedLogLevel)) return (parsedLogLevel, false);
+
+			return (null, true);
+		}
+	}
 }

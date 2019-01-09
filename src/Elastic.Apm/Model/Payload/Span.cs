@@ -2,96 +2,97 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.Api;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Elastic.Apm.Model.Payload
 {
-    public class Span : ISpan
-    {
-        public const String TYPE_DB = "db";
-        public const String TYPE_EXTERNAL = "external";
+	public class Span : ISpan
+	{
+		public const string ActionExec = "exec";
 
-        public const String SUBTYPE_HTTP = "http";
-        public const String SUBTYPE_MSSQL = "mssql";
-        public const String SUBTYPE_SQLITE = "sqlite";
+		public const string ActionQuery = "query";
 
-        public const String ACTION_QUERY = "query";
-        public const String ACTION_EXEC = "exec";
+		public const string SubtypeHttp = "http";
+		public const string SubtypeMssql = "mssql";
+		public const string SubtypeSqLite = "sqlite";
+		public const string TypeDb = "db";
+		public const string TypeExternal = "external";
 
-        public IContext Context { get; set; }
+		private readonly DateTimeOffset _start;
 
-        /// <summary>
-        /// The duration of the span.
-        /// If it's not set (HasValue returns false) then the value 
-        /// is automatically calculated when <see cref="End"/> is called.
-        /// </summary>
-        /// <value>The duration.</value>
-        public double? Duration { get; set; }
+		public Span(string name, string type, Transaction transaction)
+		{
+			this.Transaction = transaction;
+			_start = DateTimeOffset.UtcNow;
+			Start = (decimal)(_start - transaction.Start).TotalMilliseconds;
+			Name = name;
+			Type = type;
 
-        public String Name { get; set; }
+			var rnd = new Random();
+			Id = rnd.Next();
+		}
 
-        public String Type { get; set; }
+		public string Action { get; set; }
 
-        public String Subtype { get; set; }
+		public IContext Context { get; set; }
 
-        public String Action { get; set; }
+		/// <inheritdoc />
+		/// <summary>
+		/// The duration of the span.
+		/// If it's not set (HasValue returns false) then the value
+		/// is automatically calculated when <see cref="End" /> is called.
+		/// </summary>
+		/// <value>The duration.</value>
+		public double? Duration { get; set; }
 
-        public Decimal Start { get; set; }
+		public int Id { get; set; }
 
-        public int Id { get; set; }
+		public string Name { get; set; }
 
-        public List<Stacktrace> Stacktrace { get; set; }
+		[JsonProperty("Stacktrace")]
+		public List<Stacktrace> StackTrace { get; set; }
 
-        public Guid Transaction_id => transaction.Id;
-        internal Transaction transaction;
+		public decimal Start { get; set; }
 
-        private readonly DateTimeOffset start;
+		public string Subtype { get; set; }
+		internal Transaction Transaction;
 
-        public Span(string name, string type, Transaction transaction)
-        {
-            this.transaction = transaction;
-            start = DateTimeOffset.UtcNow;
-            Start = (decimal)(start - transaction.start).TotalMilliseconds;
-            this.Name = name;
-            this.Type = type;
+		public Guid TransactionId => Transaction.Id;
 
-            Random rnd = new Random();
-            Id = rnd.Next();
-        }
+		public string Type { get; set; }
 
-        public void End()
-        {
-            if (!Duration.HasValue)
-            {
-                this.Duration = (DateTimeOffset.UtcNow - start).TotalMilliseconds;
-            }
+		public void End()
+		{
+			if (!Duration.HasValue) Duration = (DateTimeOffset.UtcNow - _start).TotalMilliseconds;
 
-            transaction?.spans.Add(this);
-        }
+			Transaction?.SpansInternal.Add(this);
+		}
 
-        public void CaptureException(Exception exception, string culprit = null)
-            => transaction?.CaptureException(exception, culprit);
+		public void CaptureException(Exception exception, string culprit = null)
+			=> Transaction?.CaptureException(exception, culprit);
 
-        public void CaptureError(string message, string culprit, StackFrame[] frames)
-            => transaction?.CaptureError(message, culprit, frames);
+		public void CaptureError(string message, string culprit, StackFrame[] frames)
+			=> Transaction?.CaptureError(message, culprit, frames);
 
-        public class ContextC : IContext
-        {
-            public IDb Db { get; set; }
-            public IHttp Http { get; set; }
-        }
-    }
+		public class ContextC : IContext
+		{
+			public IDb Db { get; set; }
+			public IHttp Http { get; set; }
+		}
+	}
 
-    public class Db : IDb
-    {
-        public string Instance { get; set; }
-        public string Statement { get; set; }
-        public string Type { get; set; }
-    }
+	public class Db : IDb
+	{
+		public string Instance { get; set; }
+		public string Statement { get; set; }
+		public string Type { get; set; }
+	}
 
-    public class Http : IHttp
-    {
-        public string Url { get; set; }
-        public int Status_code { get; set; }
-        public string Method { get; set; }
-    }
+	public class Http : IHttp
+	{
+		public string Method { get; set; }
+		public int StatusCode { get; set; }
+		public string Url { get; set; }
+	}
 }

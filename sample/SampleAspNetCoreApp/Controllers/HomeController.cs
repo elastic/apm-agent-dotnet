@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -11,98 +9,82 @@ using SampleAspNetCoreApp.Models;
 
 namespace SampleAspNetCoreApp.Controllers
 {
-    public class HomeController : Controller
-    {
-        SampleDataContext _sampleDataContext;
+	public class HomeController : Controller
+	{
+		public HomeController(SampleDataContext sampleDataContext) => _sampleDataContext = sampleDataContext;
 
-        public HomeController(SampleDataContext sampleDataContext)
-        {
-            _sampleDataContext = sampleDataContext;
-        }
+		private readonly SampleDataContext _sampleDataContext;
 
-        public async Task<IActionResult> Index()
-        {
-            _sampleDataContext.Database.Migrate();
-            //TODO: Show this on the real UI
-            foreach (var item in _sampleDataContext.Users)
-            {
-                Console.WriteLine(item.Name);
-            }
+		public async Task<IActionResult> Index()
+		{
+			_sampleDataContext.Database.Migrate();
+			//TODO: Show this on the real UI
+			foreach (var item in _sampleDataContext.Users) Console.WriteLine(item.Name);
 
-            try
-            {
-                //TODO: turn this into a more realistic sample
-                var httpClient = new HttpClient();
-                var responseMsg = await httpClient.GetAsync("https://elastic.co");
-                var responseStr = await responseMsg.Content.ReadAsStringAsync();
-                Console.WriteLine(responseStr.Length);
-            }
-            catch
-            {
-                Console.WriteLine("Failed HTTP GET elastic.co");
-            }
+			try
+			{
+				//TODO: turn this into a more realistic sample
+				var httpClient = new HttpClient();
+				var responseMsg = await httpClient.GetAsync("https://elastic.co");
+				var responseStr = await responseMsg.Content.ReadAsStringAsync();
+				Console.WriteLine(responseStr.Length);
+			}
+			catch
+			{
+				Console.WriteLine("Failed HTTP GET elastic.co");
+			}
 
-            return View();
-        }
+			return View();
+		}
 
-        [HttpPost]
-        public async Task<IActionResult> AddNewUser(string enteredName)
-        {
-            _sampleDataContext.Users.Add(
-                new User
-                {
-                    Name = "TestName"
-                });
+		[HttpPost]
+		public async Task<IActionResult> AddNewUser(string enteredName)
+		{
+			_sampleDataContext.Users.Add(
+				new User
+				{
+					Name = "TestName"
+				});
 
-            //TODO: get the real data
-            await _sampleDataContext.SaveChangesAsync();
+			//TODO: get the real data
+			await _sampleDataContext.SaveChangesAsync();
 
-            return View();
-        }
+			return View();
+		}
 
-        public IActionResult About()
-        {
-            ViewData["Message"] = "Your application description page.";
+		public IActionResult About()
+		{
+			ViewData["Message"] = "Your application description page.";
 
-            return View();
-        }
+			return View();
+		}
 
-        public IActionResult Contact()
-        {
-            ViewData["Message"] = "Your contact page.";
+		public IActionResult Contact()
+		{
+			ViewData["Message"] = "Your contact page.";
 
-            return View();
-        }
+			return View();
+		}
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
+		public IActionResult Privacy() => View();
 
-        public IActionResult AddNewUser()
-        {
-            return View();
-        }
+		public IActionResult AddNewUser() => View();
 
-        public async Task<IActionResult> FailingOutGoingHttpCall()
-        {
-            var client = new HttpClient();
-            var result = await client.GetAsync("http://dsfklgjdfgkdfg.mmmm");
-            Console.WriteLine(result.IsSuccessStatusCode);
+		public async Task<IActionResult> FailingOutGoingHttpCall()
+		{
+			var client = new HttpClient();
+			var result = await client.GetAsync("http://dsfklgjdfgkdfg.mmmm");
+			Console.WriteLine(result.IsSuccessStatusCode);
 
-            return View();
-        }
+			return Ok();
+		}
 
-        public IActionResult TriggerError()
-        {
-            throw new Exception("This is a test exception!");
-            return View();
-        }
+		public IActionResult TriggerError()
+		{
+			throw new Exception("This is a test exception!");
+		}
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
-    }
+		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+		public IActionResult Error() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+	}
 }
