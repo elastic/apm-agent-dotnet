@@ -9,9 +9,7 @@ namespace ApiSamples
 	{
 		private static void Main(string[] args)
 		{
-
 			SampleCustomTransactionWithConvenientApi();
-
 
 			//WIP: if the process terminates the agent
 			//potentially does not have time to send the transaction to the server.
