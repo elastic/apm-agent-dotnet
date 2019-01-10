@@ -34,7 +34,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		internal AbstractLogger Logger { get; }
 
-		public string Name => "HttpHandlerDiagnosticListener";
+		public string Name => "System.Net.Http.Desktop"; // "HttpHandlerDiagnosticListener";
 
 		public void OnCompleted() { }
 
