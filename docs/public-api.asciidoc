@@ -15,7 +15,7 @@ as well as track errors.
 === Tracer API
 The tracer gives you access to the currently active transaction and it enables you to manually start a transaction.
 
-You can access the API by using the static property on the Agent: `Elastic.Apm.Agent.Api`.
+You can access the API by using the static property on the Agent: `Elastic.Apm.Agent.Tracer`.
 
 [float]
 [[api-start-transaction]]
@@ -33,7 +33,7 @@ Example:
 [source,csharp]
 ----
 var transaction = Elastic.Apm.Agent
-        .Api.StartTransaction("MyTransaction", Transaction.TYPE_REQUEST);
+        .Tracer.StartTransaction("MyTransaction", Transaction.TypeRequest);
 try
 {
     //application code that is captured as a transaction
@@ -60,7 +60,7 @@ this method will return null.
 
 [source,csharp]
 ----
-var transaction = Elastic.Apm.Agent.Api.CurrentTransaction;
+var transaction = Elastic.Apm.Agent.Tracer.CurrentTransaction;
 ----
 
 [float]
@@ -85,8 +85,8 @@ It has 3 parameters:
 The following code is the equivalent of the previous example with the convenient API. It automatically starts and ends the transaction and reports unhandled exceptions. The `t` parameter gives you access to the `ITransaction` instance which represents the transaction that you just created.
 [source,csharp]
 ----
-Elastic.Apm.Agent.Api
-        .CaptureTransaction("TestTransaction", Transaction.TYPE_REQUEST, (t) =>
+Elastic.Apm.Agent.Tracer
+        .CaptureTransaction("TestTransaction", Transaction.TypeRequest, (t) =>
 {
    //application code that is captured as a transaction
 });
@@ -99,7 +99,7 @@ NOTE: The duration of the transaction will be the timespan between the first and
 Example:
 [source,csharp]
 ----
-await Elastic.Apm.Agent.Api
+await Elastic.Apm.Agent.Tracer
         .CaptureTransaction("TestTransaction", "TestType", async () =>
 {
     //application code that is captured as a transaction
@@ -134,11 +134,10 @@ Example:
 
 [source,csharp]
 ----
-ISpan span = transaction.StartSpan("Select FROM customer", Span.TYPE_DB);
+ISpan span = transaction.StartSpan("Select FROM customer",
+     Span.TypeDb, Span.SubtypeMssql, Span.ActionQuery);
 try
 {
-    span.Subtype = Span.SUBTYPE_MSSQL;
-    span.Action = Span.ACTION_QUERY;
     //execute db query
 }
 catch(Exception e)
@@ -208,12 +207,12 @@ The following code is the equivalent of the previous example from the <<api-tran
 
 [source,csharp]
 ----
-ITransaction transaction = Elastic.Apm.Agent.Api.CurrentTransaction;
+ITransaction transaction = Elastic.Apm.Agent.Tracer.CurrentTransaction;
 
-transaction.CaptureSpan("SampleSpan", Span.TYPE_DB, (s) =>
+transaction.CaptureSpan("SampleSpan", Span.TypeDb, (s) =>
 {
     //execute db query
-},Span.SUBTYPE_MSSQL, Span.ACTION_QUERY);
+},Span.SubtypeMssql, Span.ActionQuery);
 ----
 
 Similar to the <<convenient-capture-transaction>> API, this method also supports `async` methods with the `Func<Task>` overloads.
@@ -223,8 +222,8 @@ NOTE: The duration of the span will be the timespan between the first and the la
 This example shows you how to track an `async` code block that returns a result (`Task<T>`) as a span:
 [source,csharp]
 ----
-ITransaction transaction = Elastic.Apm.Agent.Api.CurrentTransaction;
-var asyncResult = await transaction.CaptureSpan("Select FROM customer", Span.TYPE_DB, async(s) =>
+ITransaction transaction = Elastic.Apm.Agent.Tracer.CurrentTransaction;
+var asyncResult = await transaction.CaptureSpan("Select FROM customer", Span.TypeDb, async(s) =>
 {
     //application code that is captured as a span
     await Task.Delay(500); //sample async code

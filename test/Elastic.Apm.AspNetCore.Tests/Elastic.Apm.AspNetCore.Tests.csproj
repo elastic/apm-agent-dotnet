@@ -4,6 +4,8 @@
     <IsPackable>false</IsPackable>
     <AssemblyName>Elastic.Apm.AspNetCore.Tests</AssemblyName>
     <RootNamespace>Elastic.Apm.AspNetCore.Tests</RootNamespace>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\elasticapm.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" />

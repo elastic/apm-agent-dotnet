@@ -1,12 +1,11 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace SampleAspNetCoreApp.Data
 {
-    public class SampleDataContext : DbContext
-    {
-        public SampleDataContext(DbContextOptions<SampleDataContext> dbContextOptions):base(dbContextOptions){ }
+	public class SampleDataContext : DbContext
+	{
+		public SampleDataContext(DbContextOptions<SampleDataContext> dbContextOptions) : base(dbContextOptions) { }
 
-        public DbSet<User> Users { get; set; }
-    }
+		public DbSet<User> Users { get; set; }
+	}
 }

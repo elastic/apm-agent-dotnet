@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
-using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
@@ -14,130 +14,116 @@ using Elastic.Apm.Model.Payload;
 
 namespace Elastic.Apm.DiagnosticListeners
 {
-    /// <summary>
-    /// Captures web requests initiated by <see cref="System.Net.Http.HttpClient"/>
-    /// </summary>
-    public class HttpDiagnosticListener : IDiagnosticListener
-    {
-        //WIP: "System.Net.Http.Desktop" seems to be used on full framework, "HttpHandlerDiagnosticListener" seems to be used on .NET Core.
-        public string Name => "System.Net.Http.Desktop"; // "HttpHandlerDiagnosticListener";
+	/// <summary>
+	/// Captures web requests initiated by <see cref="System.Net.Http.HttpClient" />
+	/// </summary>
+	public class HttpDiagnosticListener : IDiagnosticListener
+	{
+		/// <summary>
+		/// Keeps track of ongoing requests
+		/// </summary>
+		internal readonly ConcurrentDictionary<HttpRequestMessage, ISpan> ProcessingRequests = new ConcurrentDictionary<HttpRequestMessage, ISpan>();
 
-        /// <summary>
-        /// Keeps track of ongoing requests
-        /// </summary>
-        internal readonly ConcurrentDictionary<HttpRequestMessage, ISpan> processingRequests = new ConcurrentDictionary<HttpRequestMessage, ISpan>();
-        private readonly AbstractAgentConfig agentConfig;
+		private readonly AbstractAgentConfig _agentConfig;
 
-        private readonly AbstractLogger logger;
-        internal AbstractLogger Logger => logger;
+		public HttpDiagnosticListener()
+		{
+			_agentConfig = Agent.Config;
+			Logger = Agent.CreateLogger(Name);
+		}
 
-        public HttpDiagnosticListener()
-        {
-            agentConfig = Apm.Agent.Config;
-            logger = Apm.Agent.CreateLogger(Name);
-        }
+		internal AbstractLogger Logger { get; }
 
-        public void OnCompleted() { }
+		public string Name => "System.Net.Http.Desktop"; // "HttpHandlerDiagnosticListener";
 
-        public void OnError(Exception error)
-            => logger.LogError($"Exception in OnError, Exception-type:{error.GetType().Name}, Message:{error.Message}");
+		public void OnCompleted() { }
 
-        public void OnNext(KeyValuePair<string, object> kv)
-        {
-            if (kv.Value == null || String.IsNullOrEmpty(kv.Key))
-            {
-                return;
-            }
+		public void OnError(Exception error)
+			=> Logger.LogError($"Exception in OnError, Exception-type:{error.GetType().Name}, Message:{error.Message}");
 
-            if (!(kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Request")?.GetValue(kv.Value) is HttpRequestMessage request))
-            {
-                return;
-            }
+		public void OnNext(KeyValuePair<string, object> kv)
+		{
+			if (kv.Value == null || string.IsNullOrEmpty(kv.Key)) return;
 
-            if (IsRequestFiltered(request?.RequestUri))
-            {
-                return;
-            }
+			if (!(kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Request")?.GetValue(kv.Value) is HttpRequestMessage request)) return;
 
-            switch (kv.Key)
-            {
-                case "System.Net.Http.Exception":
-                    var exception = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Exception").GetValue(kv.Value) as Exception;
-                    var transaction = TransactionContainer.Transactions?.Value;
+			if (IsRequestFiltered(request?.RequestUri)) return;
 
-                    transaction.CaptureException(exception, "Failed outgoing HTTP request");
-                    //TODO: we don't know if exception is handled, currently reports handled = false
-                    break;
-                case "System.Net.Http.HttpRequestOut.Start": //TODO: look for consts
-                    if (TransactionContainer.Transactions == null || TransactionContainer.Transactions.Value == null)
-                    {
-                        return;
-                    }
+			switch (kv.Key)
+			{
+				case "System.Net.Http.Exception":
+					var exception = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Exception").GetValue(kv.Value) as Exception;
+					var transaction = TransactionContainer.Transactions?.Value;
 
-                    transaction = TransactionContainer.Transactions.Value;
+					transaction.CaptureException(exception, "Failed outgoing HTTP request");
+					//TODO: we don't know if exception is handled, currently reports handled = false
+					break;
+				case "System.Net.Http.HttpRequestOut.Start": //TODO: look for consts
+					if (TransactionContainer.Transactions == null || TransactionContainer.Transactions.Value == null) return;
 
-                    var span = transaction.StartSpan($"{request?.Method} {request?.RequestUri?.Host?.ToString()}", Span.TYPE_EXTERNAL,
-                                                     Span.SUBTYPE_HTTP);
+					transaction = TransactionContainer.Transactions.Value;
 
-                    if (processingRequests.TryAdd(request, span))
-                    {
-                        span.Context = new Span.ContextC
-                        {
-                            Http = new Http
-                            {
-                                Url = request?.RequestUri?.ToString(),
-                                Method = request?.Method?.Method,
-                            }
-                        };
+					var span = transaction.StartSpan($"{request?.Method} {request?.RequestUri?.Host}", Span.TypeExternal,
+						Span.SubtypeHttp);
 
-                        var frames = new System.Diagnostics.StackTrace().GetFrames();
-                        var stackFrames = StacktraceHelper.GenerateApmStackTrace(frames, logger, span.Name);
-                        span.Stacktrace = stackFrames;
-                    }
-                    break;
+					if (ProcessingRequests.TryAdd(request, span))
+					{
+						span.Context = new Span.ContextC
+						{
+							Http = new Http
+							{
+								Url = request?.RequestUri?.ToString(),
+								Method = request?.Method?.Method
+							}
+						};
 
-                case "System.Net.Http.HttpRequestOut.Stop":
-                    var response = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Response").GetValue(kv.Value) as HttpResponseMessage;
+						var frames = new StackTrace().GetFrames();
+						var stackFrames = StacktraceHelper.GenerateApmStackTrace(frames, Logger, span.Name);
+						span.StackTrace = stackFrames;
+					}
+					break;
 
-                    if (processingRequests.TryRemove(request, out ISpan mspan))
-                    {
-                        //TODO: response can be null if for example the request Task is Faulted. 
-                        //E.g. writing this from an airplane without internet, and requestTaskStatus is "Faulted" and response is null
-                        //How do we report this? There is no response code in that case.
-                        if (response != null)
-                        {
-                            mspan.Context.Http.Status_code = (int)response.StatusCode;
-                        }
+				case "System.Net.Http.HttpRequestOut.Stop":
+					var response = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Response").GetValue(kv.Value) as HttpResponseMessage;
 
-                        mspan.End();
-                    }
-                    else
-                    {
-                        logger.LogWarning($"Failed capturing request"
-                            + (!String.IsNullOrEmpty(request?.RequestUri?.AbsoluteUri) && !String.IsNullOrEmpty(request?.Method?.ToString()) ? $" '{request?.Method.ToString()} " : " ")
-                            + (String.IsNullOrEmpty(request?.RequestUri?.AbsoluteUri) ? "" : $"{request?.RequestUri.AbsoluteUri}' ")
-                            + "in System.Net.Http.HttpRequestOut.Stop. This Span will be skipped in case it wasn't captured before.");
-                    }
-                    break;
-            }
-        }
+					if (ProcessingRequests.TryRemove(request, out var mspan))
+					{
+						//TODO: response can be null if for example the request Task is Faulted.
+						//E.g. writing this from an airplane without internet, and requestTaskStatus is "Faulted" and response is null
+						//How do we report this? There is no response code in that case.
+						if (response != null) mspan.Context.Http.StatusCode = (int)response.StatusCode;
 
-        /// <summary>
-        /// Tells if the given request should be filtered from being captured. 
-        /// </summary>
-        /// <returns><c>true</c>, if request should not be captured, <c>false</c> otherwise.</returns>
-        /// <param name="requestUri">Request URI. Can be null, which is not filtered</param>
-        private bool IsRequestFiltered(Uri requestUri)
-        {
-            switch (requestUri)
-            {
-                case Uri uri when uri == null:
-                    return true;
-                case Uri uri when Apm.Agent.Config.ServerUrls.Any(n => n.IsBaseOf(uri)): //TODO: measure the perf of this!
-                    return true;
-                default:
-                    return false;
-            }
-        }
-    }
+						mspan.End();
+					}
+					else
+					{
+						Logger.LogWarning("Failed capturing request"
+							+ (!string.IsNullOrEmpty(request?.RequestUri?.AbsoluteUri) && !string.IsNullOrEmpty(request?.Method?.ToString())
+								? $" '{request?.Method} "
+								: " ")
+							+ (string.IsNullOrEmpty(request?.RequestUri?.AbsoluteUri) ? "" : $"{request?.RequestUri.AbsoluteUri}' ")
+							+ "in System.Net.Http.HttpRequestOut.Stop. This Span will be skipped in case it wasn't captured before.");
+					}
+					break;
+			}
+		}
+
+		/// <summary>
+		/// Tells if the given request should be filtered from being captured.
+		/// </summary>
+		/// <returns><c>true</c>, if request should not be captured, <c>false</c> otherwise.</returns>
+		/// <param name="requestUri">Request URI. Can be null, which is not filtered</param>
+		private bool IsRequestFiltered(Uri requestUri)
+		{
+			switch (requestUri)
+			{
+				case Uri uri when uri == null:
+					return true;
+				case Uri uri when Agent.Config.ServerUrls.Any(n => n.IsBaseOf(uri)): //TODO: measure the perf of this!
+					return true;
+				default:
+					return false;
+			}
+		}
+	}
 }
