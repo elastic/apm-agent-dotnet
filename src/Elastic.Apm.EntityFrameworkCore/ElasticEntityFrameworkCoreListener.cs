@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.EntityFrameworkCore
 {
@@ -12,8 +13,8 @@ namespace Elastic.Apm.EntityFrameworkCore
 		/// <summary>
 		/// Start listening for EF Core diagnosticsource events
 		/// </summary>
-		public void Start() => DiagnosticListener
+		public void Start(AbstractLogger logger) => DiagnosticListener
 			.AllListeners
-			.Subscribe(new DiagnosticInitializer(new List<IDiagnosticListener> { new EfCoreDiagnosticListener() }));
+			.Subscribe(new DiagnosticInitializer(new [] { new EfCoreDiagnosticListener(logger) }));
 	}
 }

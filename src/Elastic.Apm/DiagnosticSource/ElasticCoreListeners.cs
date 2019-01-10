@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.DiagnosticListeners;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.DiagnosticSource
 {
@@ -12,8 +13,8 @@ namespace Elastic.Apm.DiagnosticSource
 		/// <summary>
 		/// Start listening for diagnosticsource events. Only listens for sources that are part of the Agent.Core package.
 		/// </summary>
-		public void Start() => DiagnosticListener
+		public void Start(AbstractLogger logger) => DiagnosticListener
 			.AllListeners
-			.Subscribe(new DiagnosticInitializer(new List<IDiagnosticListener> { new HttpDiagnosticListener() }));
+			.Subscribe(new DiagnosticInitializer(new [] { new HttpDiagnosticListener(logger) }));
 	}
 }

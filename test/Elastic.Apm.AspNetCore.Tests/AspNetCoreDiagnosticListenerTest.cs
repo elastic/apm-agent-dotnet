@@ -30,8 +30,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task TestErrorInAspNetCore()
 		{
-			var capturedPayload = new MockPayloadSender();
-			var client = Helper.GetClient(capturedPayload, _factory);
+			var agent = new ApmAgent(new TestAgentConfiguration());
+			var capturedPayload = agent.Config.PayloadSender as MockPayloadSender;
+			var client = Helper.GetClient(agent, _factory);
 
 			var response = await client.GetAsync("/Home/TriggerError");
 

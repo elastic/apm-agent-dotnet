@@ -6,16 +6,19 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Report;
 
 namespace Elastic.Apm.Model.Payload
 {
 	public class Transaction : ITransaction
 	{
+		private readonly IPayloadSender _sender;
 		public const string TypeRequest = "request";
 		internal readonly DateTimeOffset Start;
 
-		public Transaction(string name, string type)
+		public Transaction(string name, string type, IPayloadSender sender)
 		{
+			_sender = sender;
 			Start = DateTimeOffset.UtcNow;
 			Name = name;
 			Type = type;
@@ -61,7 +64,7 @@ namespace Elastic.Apm.Model.Payload
 		{
 			if (!Duration.HasValue) Duration = (long)(DateTimeOffset.UtcNow - Start).TotalMilliseconds;
 
-			Agent.PayloadSender.QueuePayload(new Payload
+			_sender.QueuePayload(new Payload
 			{
 				Transactions = new List<Transaction>
 				{
@@ -113,7 +116,7 @@ namespace Elastic.Apm.Model.Payload
 			}
 
 			error.Context = Context;
-			Agent.PayloadSender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = Service });
+			_sender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = Service });
 		}
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames)
@@ -138,7 +141,7 @@ namespace Elastic.Apm.Model.Payload
 			}
 
 			error.Context = Context;
-			Agent.PayloadSender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = Service });
+			_sender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = Service });
 		}
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)

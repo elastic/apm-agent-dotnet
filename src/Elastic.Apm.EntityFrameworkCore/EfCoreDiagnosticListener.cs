@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
@@ -12,6 +13,11 @@ namespace Elastic.Apm.EntityFrameworkCore
 	internal class EfCoreDiagnosticListener : IDiagnosticListener
 	{
 		private readonly ConcurrentDictionary<Guid, ISpan> _spans = new ConcurrentDictionary<Guid, ISpan>();
+
+		public EfCoreDiagnosticListener(AbstractLogger logger) => Logger = logger;
+
+		private AbstractLogger Logger { get; }
+
 		public string Name => "Microsoft.EntityFrameworkCore";
 
 		public void OnCompleted() { }

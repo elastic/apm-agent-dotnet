@@ -29,8 +29,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[InlineData("/Home/About")]
 		public async Task HomeAboutTransactionTest(string url)
 		{
-			var capturedPayload = new MockPayloadSender();
-			var client = Helper.GetClient(capturedPayload, _factory);
+			var agent = new ApmAgent(new TestAgentConfiguration());
+			var capturedPayload = agent.Config.PayloadSender as MockPayloadSender;
+			var client = Helper.GetClient(agent, _factory);
 
 			var response = await client.GetAsync(url);
 
@@ -77,8 +78,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task FailingRequestWithoutConfiguredExceptionPage()
 		{
-			var capturedPayload = new MockPayloadSender();
-			var client = Helper.GetClientWithoutExceptionPage(capturedPayload, _factory);
+			var agent = new ApmAgent(new TestAgentConfiguration());
+			var capturedPayload = agent.Config.PayloadSender as MockPayloadSender;
+			var client = Helper.GetClientWithoutExceptionPage(agent, _factory);
 
 			await Assert.ThrowsAsync<Exception>(async () => { await client.GetAsync("Home/TriggerError"); });
 

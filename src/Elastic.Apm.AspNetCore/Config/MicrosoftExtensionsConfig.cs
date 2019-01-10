@@ -1,4 +1,7 @@
 ﻿using Elastic.Apm.Config;
+using Elastic.Apm.Logging;
+using Elastic.Apm.Model.Payload;
+using Elastic.Apm.Report;
 using Microsoft.Extensions.Configuration;
 
 namespace Elastic.Apm.AspNetCore.Config
@@ -11,7 +14,12 @@ namespace Elastic.Apm.AspNetCore.Config
 	{
 		private readonly IConfiguration _configuration;
 
-		public MicrosoftExtensionsConfig(IConfiguration configuration)
+		public MicrosoftExtensionsConfig(
+			IConfiguration configuration,
+			AbstractLogger logger = null,
+			Service service = null,
+			IPayloadSender sender = null
+			) : base(logger, service, sender)
 		{
 			_configuration = configuration;
 			_configuration.GetSection("ElasticApm")

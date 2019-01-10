@@ -24,22 +24,16 @@ namespace Elastic.Apm.DiagnosticListeners
 		/// </summary>
 		internal readonly ConcurrentDictionary<HttpRequestMessage, ISpan> ProcessingRequests = new ConcurrentDictionary<HttpRequestMessage, ISpan>();
 
-		private readonly AbstractAgentConfig _agentConfig;
+		public HttpDiagnosticListener(AbstractLogger logger) => Logger = logger;
 
-		public HttpDiagnosticListener()
-		{
-			_agentConfig = Agent.Config;
-			Logger = Agent.CreateLogger(Name);
-		}
-
-		internal AbstractLogger Logger { get; }
+		private AbstractLogger Logger { get; }
 
 		public string Name => "HttpHandlerDiagnosticListener";
 
 		public void OnCompleted() { }
 
 		public void OnError(Exception error)
-			=> Logger.LogError($"Exception in OnError, Exception-type:{error.GetType().Name}, Message:{error.Message}");
+			=> Logger.LogError(Name, $"Exception in OnError, Exception-type:{error.GetType().Name}, Message:{error.Message}");
 
 		public void OnNext(KeyValuePair<string, object> kv)
 		{
@@ -97,7 +91,7 @@ namespace Elastic.Apm.DiagnosticListeners
 					}
 					else
 					{
-						Logger.LogWarning("Failed capturing request"
+						Logger.LogWarning(Name, "Failed capturing request"
 							+ (!string.IsNullOrEmpty(request?.RequestUri?.AbsoluteUri) && !string.IsNullOrEmpty(request?.Method?.ToString())
 								? $" '{request?.Method} "
 								: " ")
@@ -117,8 +111,7 @@ namespace Elastic.Apm.DiagnosticListeners
 		{
 			switch (requestUri)
 			{
-				case Uri uri when uri == null:
-					return true;
+				case Uri uri when uri == null: return true;
 				case Uri uri when Agent.Config.ServerUrls.Any(n => n.IsBaseOf(uri)): //TODO: measure the perf of this!
 					return true;
 				default:

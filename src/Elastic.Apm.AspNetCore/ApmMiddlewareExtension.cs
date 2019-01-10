@@ -1,7 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 using Elastic.Apm.AspNetCore.Config;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
+using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Logging;
+using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Report;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -24,14 +28,28 @@ namespace Elastic.Apm.AspNetCore
 			this IApplicationBuilder builder, IConfiguration configuration = null, IPayloadSender payloadSender = null
 		)
 		{
-			if (configuration != null) Agent.Config = new MicrosoftExtensionsConfig(configuration);
+			var service = new Service
+			{
+				Agent = new Service.AgentC
+				{
+					Name = Consts.AgentName,
+					Version = Consts.AgentVersion
+				},
+				Name = Assembly.GetEntryAssembly()?.GetName().Name,
+				Framework = new Framework { Name = "ASP.NET Core", Version = "2.1" }, //TODO: Get version
+				Language = new Language { Name = "C#" } //TODO
+			};
+			var config = configuration != null ? new MicrosoftExtensionsConfig(configuration, service: service) : null;
+			Agent.Setup(config);
+			return UseElasticApm(builder, Agent.Instance);
+		}
 
-			if (payloadSender != null) Agent.PayloadSender = payloadSender;
-
+		internal static IApplicationBuilder UseElasticApm(this IApplicationBuilder builder, ApmAgent agent)
+		{
 			System.Diagnostics.DiagnosticListener.AllListeners
-				.Subscribe(new DiagnosticInitializer(new List<IDiagnosticListener> { new AspNetCoreDiagnosticListener() }));
+				.Subscribe(new DiagnosticInitializer(new[] { new AspNetCoreDiagnosticListener(agent.Config.Logger) }));
 
-			return builder.UseMiddleware<ApmMiddleware>();
+			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer);
 		}
 	}
 }

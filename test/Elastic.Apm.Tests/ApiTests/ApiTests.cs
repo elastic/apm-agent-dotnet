@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Model.Payload;
+using Elastic.Apm.Report;
 using Elastic.Apm.Tests.Mocks;
 using Xunit;
 
@@ -26,9 +27,9 @@ namespace Elastic.Apm.Tests.ApiTests
 			var transactionName = "TestTransaction";
 			var transactionType = "UnitTest";
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentConfiguration(payloadSender: payloadSender));
 
-			var transaction = Agent.Tracer.StartTransaction(transactionName, transactionType);
+			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
 			Thread.Sleep(5); //Make sure we have duration > 0
 
@@ -52,9 +53,9 @@ namespace Elastic.Apm.Tests.ApiTests
 			var transactionName = "TestTransaction";
 			var transactionType = "UnitTest";
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentConfiguration(payloadSender: payloadSender));
 
-			var unused = Agent.Tracer.StartTransaction(transactionName, transactionType);
+			var unused = agent.Tracer.StartTransaction(transactionName, transactionType);
 			Assert.Empty(payloadSender.Payloads);
 		}
 
@@ -68,9 +69,9 @@ namespace Elastic.Apm.Tests.ApiTests
 			var transactionType = "TestTransaction";
 			var transacitonType = "UnitTest";
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentConfiguration(payloadSender: payloadSender));
 
-			var transaction = Agent.Tracer.StartTransaction(transactionType, transacitonType);
+			var transaction = agent.Tracer.StartTransaction(transactionType, transacitonType);
 			var result = "success";
 			transaction.Result = result;
 			transaction.End();
@@ -85,7 +86,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void GetCurrentTransactionWithNoTransaction()
 		{
-			var currentTransaction = Agent.Tracer.CurrentTransaction;
+			var agent = new ApmAgent(new TestAgentConfiguration());
+			var currentTransaction = agent.Tracer.CurrentTransaction;
 			Assert.Null(currentTransaction);
 		}
 
@@ -97,10 +99,12 @@ namespace Elastic.Apm.Tests.ApiTests
 		public async Task GetCurrentTransactionWithNotNull()
 		{
 			var transactionName = "TestTransaction";
+			var agent = new ApmAgent(new TestAgentConfiguration());
 
 			StartTransaction(); //Start transaction on the current task
 			await DoAsyncWork(); //Do work in subtask
-			var currentTransaction = Agent.Tracer.CurrentTransaction; //Get transaction in the current task
+
+			var currentTransaction = agent.Tracer.CurrentTransaction; //Get transaction in the current task
 
 			Assert.NotNull(currentTransaction);
 			Assert.Equal(transactionName, currentTransaction.Name);
@@ -109,22 +113,22 @@ namespace Elastic.Apm.Tests.ApiTests
 			void StartTransaction()
 			{
 				TransactionContainer.Transactions.Value =
-					new Transaction(transactionName, Transaction.TypeRequest);
+					new Transaction(transactionName, Transaction.TypeRequest,agent.Config.PayloadSender);
 			}
 
 			async Task DoAsyncWork()
 			{
 				//Make sure we have a transaction in the subtask before the async work
-				Assert.NotNull(Agent.Tracer.CurrentTransaction);
-				Assert.Equal(transactionName, Agent.Tracer.CurrentTransaction.Name);
-				Assert.Equal(Transaction.TypeRequest, Agent.Tracer.CurrentTransaction.Type);
+				Assert.NotNull(agent.Tracer.CurrentTransaction);
+				Assert.Equal(transactionName, agent.Tracer.CurrentTransaction.Name);
+				Assert.Equal(Transaction.TypeRequest, agent.Tracer.CurrentTransaction.Type);
 
 				await Task.Delay(50);
 
 				//and after the async work
-				Assert.NotNull(Agent.Tracer.CurrentTransaction);
-				Assert.Equal(transactionName, Agent.Tracer.CurrentTransaction.Name);
-				Assert.Equal(Transaction.TypeRequest, Agent.Tracer.CurrentTransaction.Type);
+				Assert.NotNull(agent.Tracer.CurrentTransaction);
+				Assert.Equal(transactionName, agent.Tracer.CurrentTransaction.Name);
+				Assert.Equal(Transaction.TypeRequest, agent.Tracer.CurrentTransaction.Type);
 			}
 		}
 
@@ -139,9 +143,9 @@ namespace Elastic.Apm.Tests.ApiTests
 			var transactionType = "UnitTest";
 			var spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentConfiguration(payloadSender: payloadSender));
 
-			var transaction = Agent.Tracer.StartTransaction(transactionName, transactionType);
+			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
 			var span = transaction.StartSpan(spanName, Span.TypeExternal);
 
@@ -169,9 +173,9 @@ namespace Elastic.Apm.Tests.ApiTests
 			var transactionType = "UnitTest";
 			var spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentConfiguration(payloadSender: payloadSender));
 
-			var transaction = Agent.Tracer.StartTransaction(transactionName, transactionType);
+			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
 			var unused = transaction.StartSpan(spanName, Span.TypeExternal);
 
@@ -195,9 +199,9 @@ namespace Elastic.Apm.Tests.ApiTests
 			var transactionType = "UnitTest";
 			var spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentConfiguration(payloadSender: payloadSender));
 
-			var transaction = Agent.Tracer.StartTransaction(transactionName, transactionType);
+			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 			var span = transaction.StartSpan(spanName, Span.TypeDb, Span.SubtypeMssql, Span.ActionQuery);
 			span.End();
 			transaction.End();
@@ -235,9 +239,9 @@ namespace Elastic.Apm.Tests.ApiTests
 			var transacitonType = "UnitTest";
 			var exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentConfiguration(payloadSender: payloadSender));
 
-			var transaction = Agent.Tracer.StartTransaction(transactionName, transacitonType);
+			var transaction = agent.Tracer.StartTransaction(transactionName, transacitonType);
 
 			Thread.Sleep(5); //Make sure we have duration > 0
 			try
@@ -274,9 +278,9 @@ namespace Elastic.Apm.Tests.ApiTests
 			var spanName = "TestSpan";
 			var exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentConfiguration(payloadSender: payloadSender));
 
-			var transaction = Agent.Tracer.StartTransaction(transactionName, transactionType);
+			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
 			var span = transaction.StartSpan(spanName, Span.TypeExternal);
 

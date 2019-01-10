@@ -18,15 +18,13 @@ namespace Elastic.Apm.Report
 	/// </summary>
 	internal class PayloadSender : IDisposable, IPayloadSender
 	{
-		private readonly AbstractAgentConfig _agentConfig;
 		private readonly AbstractLogger _logger;
-		private readonly Uri _serverUrlBase;
+		private readonly Func<Uri> _serverUrlBaseGetter;
 
-		public PayloadSender()
+		public PayloadSender(AbstractLogger logger, Func<Uri> serverUrlBase)
 		{
-			_agentConfig = Agent.Config;
-			_logger = Agent.CreateLogger(nameof(PayloadSender));
-			_serverUrlBase = _agentConfig.ServerUrls[0];
+			_logger = logger;
+			_serverUrlBaseGetter = serverUrlBase;
 			_workerThread = new Thread(StartWork)
 			{
 				IsBackground = true
@@ -54,7 +52,7 @@ namespace Elastic.Apm.Report
 		{
 			var httpClient = new HttpClient
 			{
-				BaseAddress = _serverUrlBase
+				BaseAddress = _serverUrlBaseGetter()
 			};
 
 			while (true)
