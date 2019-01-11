@@ -22,27 +22,36 @@ using Elastic.Apm.Report;
 
 namespace Elastic.Apm
 {
-	internal class ApmAgent
+	public interface IApmAgent
 	{
-		public ApmAgent(AbstractAgentConfig agentConfiguration)
-		{
-			Config = agentConfiguration ?? new EnvironmentVariableConfig(logger: null, service: null);
-			Tracer = new Tracer(Config, Config.PayloadSender);
+		AbstractLogger Logger { get; }
 
-		}
-		public Tracer Tracer { get; }
-		public AbstractAgentConfig Config { get; }
+		IPayloadSender PayloadSender { get; }
+
+		IConfigurationReader ConfigurationReader { get; }
+
+		ITracer Tracer { get; }
+	}
+
+	internal class ApmAgent : IApmAgent
+	{
+		public ApmAgent(AgentComponents agentComponents) =>
+			Components = agentComponents ?? new AgentComponents(logger: null, service: null);
+
+		internal AgentComponents Components { get; }
+		public ITracer Tracer => Components.Tracer;
+		public IPayloadSender PayloadSender => Components.PayloadSender;
+		public AbstractLogger Logger => Components.Logger;
+		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
 	}
 
 	public static class Agent
 	{
 		private static readonly Lazy<ApmAgent> Lazy = new Lazy<ApmAgent>(()=> new ApmAgent(_config));
 
-		private static AbstractAgentConfig _config;
+		private static AgentComponents _config;
 
-		public static AbstractAgentConfig Config => Lazy.Value.Config;
-
-		public static IPayloadSender PayloadSender => Config.PayloadSender;
+		public static IConfigurationReader Config => Lazy.Value.ConfigurationReader;
 
 		internal static ApmAgent Instance => Lazy.Value;
 
@@ -51,13 +60,13 @@ namespace Elastic.Apm
 		/// which you access to the currently active transaction and span and it also enables you to manually start
 		/// a transaction.
 		/// </summary>
-		public static ITracer Tracer => Lazy.Value.Tracer;
+		public static ITracer Tracer => Instance.Tracer;
 
-		public static void Setup(AbstractAgentConfig agentConfiguration)
+		public static void Setup(AgentComponents agentComponents)
 		{
 			if (Lazy.IsValueCreated) throw new Exception("The singleton APM agent has already been instantiated and can no longer be configured");
 
-			_config = agentConfiguration;
+			_config = agentComponents;
 		}
 	}
 }

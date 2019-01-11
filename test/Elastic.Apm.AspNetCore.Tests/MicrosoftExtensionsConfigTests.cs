@@ -17,8 +17,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// </summary>
 	public class MicrosoftExtensionsConfigTests
 	{
-		public MicrosoftExtensionsConfigTests() => TestHelper.ResetAgentAndEnvVars();
-
 		/// <summary>
 		/// Builds an IConfiguration instance with the TestConfigs/appsettings_valid.json config file and passes it to the agent.
 		/// Makes sure that the values from the config file are applied to the agent.
@@ -43,7 +41,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Assert.Equal(LogLevel.Error, config.LogLevel);
 
 			Assert.Equal(
-				$"Error Config: Failed parsing log level from IConfiguration: {MicrosoftExtensionConfigConsts.LogLevel}, value: DbeugMisspelled. Defaulting to log level 'Error'",
+				$"Error Config: Failed parsing log level from {MicrosoftExtensionsConfig.Origin}: {MicrosoftExtensionsConfig.Keys.Level}, value: DbeugMisspelled. Defaulting to log level 'Error'",
 				logger.Lines[0]);
 		}
 
@@ -59,7 +57,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Assert.Equal(LogLevel.Error, config.LogLevel);
 
 			Assert.Equal(
-				$"Error Config: Failed parsing log level from IConfiguration: {MicrosoftExtensionConfigConsts.LogLevel}, value: DbeugMisspelled. Defaulting to log level 'Error'",
+				$"Error Config: Failed parsing log level from {MicrosoftExtensionsConfig.Origin}: {MicrosoftExtensionsConfig.Keys.Level}, value: DbeugMisspelled. Defaulting to log level 'Error'",
 				logger.Lines[0]);
 		}
 
@@ -70,9 +68,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public void ReadConfingsFromEnvVarsViaIConfig()
 		{
-			Environment.SetEnvironmentVariable(EnvVarConsts.LogLevel, "Debug");
+			Environment.SetEnvironmentVariable(EnvironmentConfigurationReader.Keys.Level, "Debug");
 			var serverUrl = "http://myServerFromEnvVar.com:1234";
-			Environment.SetEnvironmentVariable(EnvVarConsts.ServerUrls, serverUrl);
+			Environment.SetEnvironmentVariable(EnvironmentConfigurationReader.Keys.Urls, serverUrl);
 			var configBuilder = new ConfigurationBuilder()
 				.AddEnvironmentVariables()
 				.Build();

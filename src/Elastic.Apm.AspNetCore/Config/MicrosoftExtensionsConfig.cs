@@ -1,4 +1,6 @@
-﻿using Elastic.Apm.Config;
+﻿using System;
+using System.Collections.Generic;
+using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Report;
@@ -10,59 +12,60 @@ namespace Elastic.Apm.AspNetCore.Config
 	/// An agent-config provider based on Microsoft.Extensions.Configuration.IConfiguration.
 	/// It uses environment variables as fallback
 	/// </summary>
-	public class MicrosoftExtensionsConfig : AbstractAgentConfig
+	public class MicrosoftExtensionsConfig : AbstractConfigurationReader, IConfigurationReader
 	{
 		private readonly IConfiguration _configuration;
 
-		public MicrosoftExtensionsConfig(
-			IConfiguration configuration,
-			AbstractLogger logger = null,
-			Service service = null,
-			IPayloadSender sender = null
-			) : base(logger, service, sender)
+		internal const string Origin = "Configuration Provider";
+
+		public static (string LevelSubKey, string Level, string Urls) Keys = (
+			LevelSubKey: "LogLevel",
+			Level: $"ElasticApm:LogLevel",
+			Urls: "ElasticApm:ServerUrls"
+		);
+
+		public MicrosoftExtensionsConfig(IConfiguration configuration, AbstractLogger logger = null) : base(logger)
 		{
 			_configuration = configuration;
-			_configuration.GetSection("ElasticApm")
-				?
+			_configuration.GetSection("ElasticApm")?
 				.GetReloadToken()
 				.RegisterChangeCallback(ChangeCallback, configuration.GetSection("ElasticApm"));
 		}
 
-
-		protected override (string value, string configType, string configKey) ReadServerUrls()
+		private LogLevel? _logLevel;
+		public LogLevel LogLevel
 		{
-			var configValue = _configuration[MicrosoftExtensionConfigConsts.ServerUrls];
-			return string.IsNullOrEmpty(configValue)
-				? (_configuration[EnvVarConsts.ServerUrls], "environment variable", EnvVarConsts.ServerUrls)
-				: (configValue, "IConfiguration", MicrosoftExtensionConfigConsts.ServerUrls);
+			get
+			{
+				if (_logLevel.HasValue) return _logLevel.Value;
+
+				var l = ParseLogLevel(ReadFallBack(Keys.Level, EnvironmentConfigurationReader.Keys.Level));
+				_logLevel = l;
+				return l;
+			}
 		}
 
-		protected override (string value, string configType, string configKey) ReadLogLevel()
+		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(ReadFallBack(Keys.Urls, EnvironmentConfigurationReader.Keys.Urls));
+
+		private ConfigurationKeyValue Read(string key) => Kv(key, _configuration[key], Origin);
+
+		private ConfigurationKeyValue ReadFallBack(string key, string fallBack)
 		{
-			var configValue = _configuration[MicrosoftExtensionConfigConsts.LogLevel];
-			return string.IsNullOrEmpty(configValue)
-				? (_configuration[EnvVarConsts.LogLevel], "environment variable", EnvVarConsts.LogLevel)
-				: (configValue, "IConfiguration", MicrosoftExtensionConfigConsts.LogLevel);
+			var primary = Read(key);
+			if (!string.IsNullOrWhiteSpace(primary.Value)) return primary;
+			var secondary = Kv(key, _configuration[fallBack], EnvironmentConfigurationReader.Origin);
+			return secondary;
 		}
 
 		private void ChangeCallback(object obj)
 		{
-			var (newLogLevel, isError)
-				= ParseLogLevel((obj as IConfigurationSection)?[MicrosoftExtensionConfigConsts.LogLevel.Split(':')[1]]);
+			if (!(obj is IConfigurationSection section)) return;
 
-			if (!isError && newLogLevel.HasValue && newLogLevel.Value != LogLevelBackingField)
-			{
-				LogLevelBackingField = newLogLevel;
-				Logger?.LogInfo($"Updated log level to {LogLevelBackingField.ToString()}");
-			}
+			var newLogLevel = ParseLogLevel(Kv(Keys.LevelSubKey, section[Keys.LevelSubKey], Origin));
+			if (_logLevel.HasValue && newLogLevel == _logLevel.Value) return;
 
-			if (isError) Logger?.LogInfo($"Updating log level failed, current log level: {LogLevelBackingField.ToString()}");
+			_logLevel = newLogLevel;
+			Logger?.LogInfo($"Updated log level to {newLogLevel}");
 		}
-	}
-
-	internal static class MicrosoftExtensionConfigConsts
-	{
-		public static string LogLevel => "ElasticApm:LogLevel";
-		public static string ServerUrls => "ElasticApm:ServerUrls";
 	}
 }

@@ -14,7 +14,7 @@ namespace Elastic.Apm.EntityFrameworkCore
 	{
 		private readonly ConcurrentDictionary<Guid, ISpan> _spans = new ConcurrentDictionary<Guid, ISpan>();
 
-		public EfCoreDiagnosticListener(AbstractLogger logger) => Logger = logger;
+		public EfCoreDiagnosticListener(IApmAgent agent) => Logger = agent.Logger;
 
 		private AbstractLogger Logger { get; }
 

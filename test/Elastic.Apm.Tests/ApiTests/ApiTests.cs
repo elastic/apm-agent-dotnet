@@ -15,8 +15,6 @@ namespace Elastic.Apm.Tests.ApiTests
 	/// </summary>
 	public class ApiTests
 	{
-		public ApiTests() => TestHelper.ResetAgentAndEnvVars();
-
 		/// <summary>
 		/// Starts and ends a transaction with the public API
 		/// and makes sure that the transaction is captured by the agent
@@ -27,7 +25,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var transactionName = "TestTransaction";
 			var transactionType = "UnitTest";
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentConfiguration(payloadSender: payloadSender));
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
@@ -53,7 +51,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var transactionName = "TestTransaction";
 			var transactionType = "UnitTest";
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentConfiguration(payloadSender: payloadSender));
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			var unused = agent.Tracer.StartTransaction(transactionName, transactionType);
 			Assert.Empty(payloadSender.Payloads);
@@ -69,7 +67,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var transactionType = "TestTransaction";
 			var transacitonType = "UnitTest";
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentConfiguration(payloadSender: payloadSender));
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			var transaction = agent.Tracer.StartTransaction(transactionType, transacitonType);
 			var result = "success";
@@ -86,7 +84,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void GetCurrentTransactionWithNoTransaction()
 		{
-			var agent = new ApmAgent(new TestAgentConfiguration());
+			var agent = new ApmAgent(new TestAgentComponents());
 			var currentTransaction = agent.Tracer.CurrentTransaction;
 			Assert.Null(currentTransaction);
 		}
@@ -99,7 +97,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		public async Task GetCurrentTransactionWithNotNull()
 		{
 			var transactionName = "TestTransaction";
-			var agent = new ApmAgent(new TestAgentConfiguration());
+			var agent = new ApmAgent(new TestAgentComponents());
 
 			StartTransaction(); //Start transaction on the current task
 			await DoAsyncWork(); //Do work in subtask
@@ -113,7 +111,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			void StartTransaction()
 			{
 				TransactionContainer.Transactions.Value =
-					new Transaction(transactionName, Transaction.TypeRequest,agent.Config.PayloadSender);
+					new Transaction(agent, transactionName, Transaction.TypeRequest);
 			}
 
 			async Task DoAsyncWork()
@@ -143,7 +141,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var transactionType = "UnitTest";
 			var spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentConfiguration(payloadSender: payloadSender));
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
@@ -173,7 +171,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var transactionType = "UnitTest";
 			var spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentConfiguration(payloadSender: payloadSender));
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
@@ -199,7 +197,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var transactionType = "UnitTest";
 			var spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentConfiguration(payloadSender: payloadSender));
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 			var span = transaction.StartSpan(spanName, Span.TypeDb, Span.SubtypeMssql, Span.ActionQuery);
@@ -239,7 +237,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var transacitonType = "UnitTest";
 			var exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentConfiguration(payloadSender: payloadSender));
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			var transaction = agent.Tracer.StartTransaction(transactionName, transacitonType);
 
@@ -278,7 +276,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var spanName = "TestSpan";
 			var exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentConfiguration(payloadSender: payloadSender));
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 

@@ -24,9 +24,11 @@ namespace Elastic.Apm.DiagnosticListeners
 		/// </summary>
 		internal readonly ConcurrentDictionary<HttpRequestMessage, ISpan> ProcessingRequests = new ConcurrentDictionary<HttpRequestMessage, ISpan>();
 
-		public HttpDiagnosticListener(AbstractLogger logger) => Logger = logger;
+		public HttpDiagnosticListener(IApmAgent components) =>
+			(Logger, ConfigurationReader) = (components.Logger, components.ConfigurationReader);
 
 		private AbstractLogger Logger { get; }
+		private IConfigurationReader ConfigurationReader { get; }
 
 		public string Name => "HttpHandlerDiagnosticListener";
 
@@ -112,7 +114,7 @@ namespace Elastic.Apm.DiagnosticListeners
 			switch (requestUri)
 			{
 				case Uri uri when uri == null: return true;
-				case Uri uri when Agent.Config.ServerUrls.Any(n => n.IsBaseOf(uri)): //TODO: measure the perf of this!
+				case Uri uri when ConfigurationReader.ServerUrls.Any(n => n.IsBaseOf(uri)): //TODO: measure the perf of this!
 					return true;
 				default:
 					return false;

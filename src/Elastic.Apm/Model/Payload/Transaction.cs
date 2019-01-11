@@ -6,18 +6,24 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 
 namespace Elastic.Apm.Model.Payload
 {
 	public class Transaction : ITransaction
 	{
+		private readonly AbstractLogger _logger;
 		private readonly IPayloadSender _sender;
 		public const string TypeRequest = "request";
 		internal readonly DateTimeOffset Start;
 
-		public Transaction(string name, string type, IPayloadSender sender)
+		public Transaction(IApmAgent agent, string name, string type)
+			: this(agent.Logger, name, type, agent.PayloadSender) { }
+
+		public Transaction(AbstractLogger logger, string name, string type, IPayloadSender sender)
 		{
+			_logger = logger;
 			_sender = sender;
 			Start = DateTimeOffset.UtcNow;
 			Name = name;
@@ -111,7 +117,7 @@ namespace Elastic.Apm.Model.Payload
 			if (!string.IsNullOrEmpty(exception.StackTrace))
 			{
 				error.Exception.StacktTrace
-					= StacktraceHelper.GenerateApmStackTrace(new StackTrace(exception).GetFrames(), Tracer.PublicTracerLogger,
+					= StacktraceHelper.GenerateApmStackTrace(new StackTrace(exception).GetFrames(), _logger,
 						"failed capturing stacktrace");
 			}
 
@@ -137,7 +143,7 @@ namespace Elastic.Apm.Model.Payload
 			if (frames != null)
 			{
 				error.Exception.StacktTrace
-					= StacktraceHelper.GenerateApmStackTrace(frames, Tracer.PublicTracerLogger, "failed capturing stacktrace");
+					= StacktraceHelper.GenerateApmStackTrace(frames, _logger, "failed capturing stacktrace");
 			}
 
 			error.Context = Context;

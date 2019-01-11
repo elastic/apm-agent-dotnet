@@ -8,4 +8,12 @@ namespace Elastic.Apm.Logging
 
 		protected override void PrintLogline(string logline) => Console.WriteLine(logline);
 	}
+	internal class NoopLogger : AbstractLogger
+	{
+		protected NoopLogger() : base(LogLevelDefault) { }
+
+		protected override void PrintLogline(string logline) { }
+
+		public static NoopLogger Instance { get; } = new NoopLogger();
+	}
 }

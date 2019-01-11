@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using Elastic.Apm.AspNetCore.Config;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
@@ -14,6 +15,8 @@ namespace Elastic.Apm.AspNetCore
 {
 	public static class ApmMiddlewareExtension
 	{
+		public static readonly IDiagnosticsSubscriber[] DefaultDiagnosticsSubscribers = {  };
+
 		/// <summary>
 		/// Adds the Elastic APM Middleware to the ASP.NET Core pipeline
 		/// </summary>
@@ -24,8 +27,11 @@ namespace Elastic.Apm.AspNetCore
 		/// doing this the agent will read agent related configurations through this IConfiguration instance.
 		/// </param>
 		/// <param name="payloadSender">Payload sender.</param>
+		/// <param name="subscribers">Specify which diagnostic source subscribers you want to connect</param>
 		public static IApplicationBuilder UseElasticApm(
-			this IApplicationBuilder builder, IConfiguration configuration = null, IPayloadSender payloadSender = null
+			this IApplicationBuilder builder,
+			IConfiguration configuration = null,
+			params IDiagnosticsSubscriber[] subscribers
 		)
 		{
 			var service = new Service
@@ -39,15 +45,25 @@ namespace Elastic.Apm.AspNetCore
 				Framework = new Framework { Name = "ASP.NET Core", Version = "2.1" }, //TODO: Get version
 				Language = new Language { Name = "C#" } //TODO
 			};
-			var config = configuration != null ? new MicrosoftExtensionsConfig(configuration, service: service) : null;
+			var configReader = configuration != null ? new MicrosoftExtensionsConfig(configuration) : null;
+			var config = new AgentComponents(null, configurationReader: configReader, service: service);
 			Agent.Setup(config);
 			return UseElasticApm(builder, Agent.Instance);
 		}
 
-		internal static IApplicationBuilder UseElasticApm(this IApplicationBuilder builder, ApmAgent agent)
+		internal static IApplicationBuilder UseElasticApm(
+			this IApplicationBuilder builder,
+			ApmAgent agent,
+			params IDiagnosticsSubscriber[] subscribers
+		)
 		{
+			subscribers = subscribers ?? Array.Empty<IDiagnosticsSubscriber>();
 			System.Diagnostics.DiagnosticListener.AllListeners
-				.Subscribe(new DiagnosticInitializer(new[] { new AspNetCoreDiagnosticListener(agent.Config.Logger) }));
+				.Subscribe(new DiagnosticInitializer(new[] { new AspNetCoreDiagnosticListener(agent.Logger) }));
+
+			foreach (var s in subscribers)
+				s.Subscribe(agent.Components);
+
 
 			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer);
 		}

@@ -19,12 +19,12 @@ namespace Elastic.Apm.Report
 	internal class PayloadSender : IDisposable, IPayloadSender
 	{
 		private readonly AbstractLogger _logger;
-		private readonly Func<Uri> _serverUrlBaseGetter;
+		private readonly Uri _serverUrlBase;
 
-		public PayloadSender(AbstractLogger logger, Func<Uri> serverUrlBase)
+		public PayloadSender(AbstractLogger logger, IConfigurationReader configurationReader)
 		{
 			_logger = logger;
-			_serverUrlBaseGetter = serverUrlBase;
+			_serverUrlBase = configurationReader.ServerUrls.First();
 			_workerThread = new Thread(StartWork)
 			{
 				IsBackground = true
@@ -42,17 +42,15 @@ namespace Elastic.Apm.Report
 		/// </summary>
 		private readonly Thread _workerThread;
 
-		public void QueuePayload(Payload payload)
-			=> _payloads.Add(payload);
+		public void QueuePayload(Payload payload) => _payloads.Add(payload);
 
-		public void QueueError(Error error)
-			=> _payloads.Add(error);
+		public void QueueError(Error error) => _payloads.Add(error);
 
 		public async void StartWork()
 		{
 			var httpClient = new HttpClient
 			{
-				BaseAddress = _serverUrlBaseGetter()
+				BaseAddress = _serverUrlBase
 			};
 
 			while (true)
