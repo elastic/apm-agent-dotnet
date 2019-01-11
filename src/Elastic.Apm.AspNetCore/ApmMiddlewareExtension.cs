@@ -57,13 +57,10 @@ namespace Elastic.Apm.AspNetCore
 			params IDiagnosticsSubscriber[] subscribers
 		)
 		{
-			subscribers = subscribers ?? Array.Empty<IDiagnosticsSubscriber>();
-			System.Diagnostics.DiagnosticListener.AllListeners
-				.Subscribe(new DiagnosticInitializer(new[] { new AspNetCoreDiagnosticListener(agent.Logger) }));
+			var subs = new List<IDiagnosticsSubscriber>(subscribers ?? Array.Empty<IDiagnosticsSubscriber>());
+			subs.Add(new AspNetCoreDiagnosticsSubscriber());
 
-			foreach (var s in subscribers)
-				s.Subscribe(agent.Components);
-
+			foreach (var s in subs) s.Subscribe(agent.Components);
 
 			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer);
 		}

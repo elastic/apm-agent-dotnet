@@ -22,7 +22,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				{
 					n.Configure(app =>
 					{
-						app.UseElasticApm(agent, new ElasticCoreListeners(), new ElasticEntityFrameworkCoreListener());
+						app.UseElasticApm(agent, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
 
 						app.UseDeveloperExceptionPage();
 
@@ -50,7 +50,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				{
 					n.Configure(app =>
 					{
-						app.UseElasticApm(agent, new ElasticCoreListeners(), new ElasticEntityFrameworkCoreListener());
+						app.UseElasticApm(agent, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
 
 						app.UseMvc(routes =>
 						{

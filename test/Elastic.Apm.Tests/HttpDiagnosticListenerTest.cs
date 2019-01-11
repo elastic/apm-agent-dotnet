@@ -359,7 +359,7 @@ namespace Elastic.Apm.Tests
 		private void RegisterListenerAndStartTransaction(ApmAgent agent)
 		{
 			agent = agent ?? new ApmAgent(new TestAgentComponents());
-			new ElasticCoreListeners().Subscribe(agent);
+			new HttpDiagnosticsSubscriber().Subscribe(agent);
 			StartTransaction(agent);
 		}
 
