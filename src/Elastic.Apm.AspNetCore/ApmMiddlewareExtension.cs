@@ -15,8 +15,6 @@ namespace Elastic.Apm.AspNetCore
 {
 	public static class ApmMiddlewareExtension
 	{
-		public static readonly IDiagnosticsSubscriber[] DefaultDiagnosticsSubscribers = {  };
-
 		/// <summary>
 		/// Adds the Elastic APM Middleware to the ASP.NET Core pipeline
 		/// </summary>
@@ -58,10 +56,7 @@ namespace Elastic.Apm.AspNetCore
 		)
 		{
 			var subs = new List<IDiagnosticsSubscriber>(subscribers ?? Array.Empty<IDiagnosticsSubscriber>());
-			subs.Add(new AspNetCoreDiagnosticsSubscriber());
-
-			foreach (var s in subs) s.Subscribe(agent.Components);
-
+			agent.Subscribe(subs.ToArray());
 			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer);
 		}
 	}

@@ -17,7 +17,7 @@ namespace Elastic.Apm.Config
 			IPayloadSender payloadSender = null)
 		{
 			Service = service ?? Service.Default;
-			Logger = logger ?? NoopLogger.Instance;
+			Logger = logger ?? ConsoleLogger.Instance;
 			ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(Logger);
 			PayloadSender = payloadSender ?? new PayloadSender(Logger, ConfigurationReader);
 			Tracer = new Tracer(Logger, Service, PayloadSender);

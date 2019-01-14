@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
+using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Report;
@@ -61,6 +62,17 @@ namespace Elastic.Apm
 		/// a transaction.
 		/// </summary>
 		public static ITracer Tracer => Instance.Tracer;
+
+		/// <summary>
+		/// Sets up multiple <see cref="IDiagnosticsSubscriber" />'s to start listening to one or more <see cref="IDiagnosticListener" />'s
+		/// </summary>
+		/// <param name="subscribers">
+		/// An array of <see cref="IDiagnosticSubscriber" /> that will set up <see cref="IDiagnosticListener" /> subscriptions
+		/// </param>
+		/// <returns>
+		/// A disposable referencing all the subscriptions, disposing this is not necessary for clean up only to unsubscribe if desired.
+		/// </returns>
+		public static IDisposable Subscribe(params IDiagnosticsSubscriber[] subscribers) => Instance.Subscribe(subscribers);
 
 		public static void Setup(AgentComponents agentComponents)
 		{
