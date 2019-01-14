@@ -1,4 +1,5 @@
 ﻿using System;
+using Elastic.Apm.Config;
 
 namespace Elastic.Apm.Logging
 {
@@ -7,13 +8,7 @@ namespace Elastic.Apm.Logging
 		protected ConsoleLogger(LogLevel level) : base(level) { }
 
 		protected override void PrintLogline(string logline) => Console.WriteLine(logline);
-	}
-	internal class NoopLogger : AbstractLogger
-	{
-		protected NoopLogger() : base(LogLevelDefault) { }
 
-		protected override void PrintLogline(string logline) { }
-
-		public static NoopLogger Instance { get; } = new NoopLogger();
+		public static ConsoleLogger Instance { get; } = new ConsoleLogger(LogLevelDefault);
 	}
 }

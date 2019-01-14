@@ -6,8 +6,6 @@ using Elastic.Apm.Tests.Mocks;
 using Microsoft.VisualStudio.TestPlatform.Common.ExtensionFramework;
 using Xunit;
 
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
-
 namespace Elastic.Apm.Tests
 {
 	/// <summary>
@@ -29,7 +27,7 @@ namespace Elastic.Apm.Tests
 		{
 			var serverUrl = "InvalidUrl";
 			var agent = new ApmAgent(new TestAgentComponents(serverUrls: serverUrl));
-			Assert.Equal(AbstractConfigurationReader.DefaultServerUri.ToString(), agent.ConfigurationReader.ServerUrls[0].ToString());
+			Assert.Equal(ConfigConsts.DefaultServerUri.ToString(), agent.ConfigurationReader.ServerUrls[0].ToString());
 		}
 
 		[Fact]
@@ -38,7 +36,7 @@ namespace Elastic.Apm.Tests
 			var serverUrl = "InvalidUrl";
 			var logger = new TestLogger();
 			var agent = new ApmAgent(new TestAgentComponents(logger: logger, serverUrls: serverUrl));
-			Assert.Equal(AbstractConfigurationReader.DefaultServerUri.ToString(), agent.ConfigurationReader.ServerUrls[0].ToString());
+			Assert.Equal(ConfigConsts.DefaultServerUri.ToString(), agent.ConfigurationReader.ServerUrls[0].ToString());
 
 			Assert.Equal($"Error {nameof(TestAgentConfigurationReader)}: Failed parsing server URL from {TestAgentConfigurationReader.Origin}: {TestAgentConfigurationReader.Keys.Urls}, value: {serverUrl}",
 				logger.Lines[0]);

@@ -46,9 +46,9 @@ namespace Elastic.Apm.AspNetCore
 				Language = new Language { Name = "C#" } //TODO
 			};
 			var configReader = configuration != null ? new MicrosoftExtensionsConfig(configuration) : null;
-			var config = new AgentComponents(null, configurationReader: configReader, service: service);
+			var config = new AgentComponents(configurationReader: configReader, service: service);
 			Agent.Setup(config);
-			return UseElasticApm(builder, Agent.Instance);
+			return UseElasticApm(builder, Agent.Instance, subscribers);
 		}
 
 		internal static IApplicationBuilder UseElasticApm(

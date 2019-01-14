@@ -7,8 +7,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
 using Xunit;
 
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
-
 namespace Elastic.Apm.AspNetCore.Tests
 {
 	public class AspNetCoreMiddlewareTests
