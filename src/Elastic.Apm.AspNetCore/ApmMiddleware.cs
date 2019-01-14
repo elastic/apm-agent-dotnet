@@ -2,6 +2,9 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Elastic.Apm.Api;
+using Elastic.Apm.AspNetCore.Config;
+using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model.Payload;
 using Microsoft.AspNetCore.Http;
@@ -19,29 +22,17 @@ namespace Elastic.Apm.AspNetCore
 	public class ApmMiddleware
 	{
 		private readonly RequestDelegate _next;
+		private readonly ITracer _tracer;
 
-		public ApmMiddleware(RequestDelegate next)
+		public ApmMiddleware(RequestDelegate next, ITracer tracer)
 		{
 			_next = next;
-
-			var service = new Service
-			{
-				Agent = new Service.AgentC
-				{
-					Name = Consts.AgentName,
-					Version = Consts.AgentVersion
-				},
-				Name = Assembly.GetEntryAssembly()?.GetName().Name,
-				Framework = new Framework { Name = "ASP.NET Core", Version = "2.1" }, //TODO: Get version
-				Language = new Language { Name = "C#" } //TODO
-			};
-
-			Agent.Tracer.Service = service;
+			_tracer = tracer;
 		}
 
 		public async Task InvokeAsync(HttpContext context)
 		{
-			var transaction = Agent.Tracer.StartTransaction($"{context.Request.Method} {context.Request.Path}",
+			var transaction = _tracer.StartTransaction($"{context.Request.Method} {context.Request.Path}",
 				Transaction.TypeRequest);
 
 			transaction.Context = new Context

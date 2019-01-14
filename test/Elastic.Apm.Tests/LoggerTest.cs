@@ -6,66 +6,57 @@ namespace Elastic.Apm.Tests
 {
 	public class LoggerTest
 	{
-		private readonly TestLogger _logger;
-
-		public LoggerTest()
-		{
-			TestHelper.ResetAgentAndEnvVars();
-
-			Agent.SetLoggerType<TestLogger>();
-			_logger = (TestLogger)Agent.CreateLogger("Test");
-		}
-
 		[Fact]
 		public void TestLogError()
 		{
-			LogWithLevel(LogLevel.Error);
+			var logger = LogWithLevel(LogLevel.Error);
 
-			Assert.Single(_logger.Lines);
-			Assert.Equal("Error Test: Error log", (_logger).Lines[0]);
+			Assert.Single(logger.Lines);
+			Assert.Equal("Error Test: Error log", logger.Lines[0]);
 		}
 
 		[Fact]
 		public void TestLogWarning()
 		{
-			LogWithLevel(LogLevel.Warning);
+			var logger =LogWithLevel(LogLevel.Warning);
 
-			Assert.Equal(2, (_logger).Lines.Count);
-			Assert.Equal("Error Test: Error log", (_logger).Lines[0]);
-			Assert.Equal("Warning Test: Warning log", (_logger).Lines[1]);
+			Assert.Equal(2, logger.Lines.Count);
+			Assert.Equal("Error Test: Error log", logger.Lines[0]);
+			Assert.Equal("Warning Test: Warning log", logger.Lines[1]);
 		}
 
 		[Fact]
 		public void TestLogInfo()
 		{
-			LogWithLevel(LogLevel.Info);
+			var logger =LogWithLevel(LogLevel.Info);
 
-			Assert.Equal(3, (_logger).Lines.Count);
-			Assert.Equal("Error Test: Error log", (_logger).Lines[0]);
-			Assert.Equal("Warning Test: Warning log", (_logger).Lines[1]);
-			Assert.Equal("Info Test: Info log", (_logger).Lines[2]);
+			Assert.Equal(3, logger.Lines.Count);
+			Assert.Equal("Error Test: Error log", logger.Lines[0]);
+			Assert.Equal("Warning Test: Warning log", logger.Lines[1]);
+			Assert.Equal("Info Test: Info log", logger.Lines[2]);
 		}
 
 		[Fact]
 		public void TestLogDebug()
 		{
-			LogWithLevel(LogLevel.Debug);
+			var logger = LogWithLevel(LogLevel.Debug);
 
-			Assert.Equal(4, (_logger).Lines.Count);
-			Assert.Equal("Error Test: Error log", (_logger).Lines[0]);
-			Assert.Equal("Warning Test: Warning log", (_logger).Lines[1]);
-			Assert.Equal("Info Test: Info log", (_logger).Lines[2]);
-			Assert.Equal("Debug Test: Debug log", (_logger).Lines[3]);
+			Assert.Equal(4, logger.Lines.Count);
+			Assert.Equal("Error Test: Error log", logger.Lines[0]);
+			Assert.Equal("Warning Test: Warning log", logger.Lines[1]);
+			Assert.Equal("Info Test: Info log", logger.Lines[2]);
+			Assert.Equal("Debug Test: Debug log", logger.Lines[3]);
 		}
 
-		private void LogWithLevel(LogLevel logLevel)
+		private TestLogger LogWithLevel(LogLevel logLevel)
 		{
-			Agent.Config.LogLevel = logLevel;
+			var logger = new TestLogger(logLevel);
 
-			_logger.LogError("Error log");
-			_logger.LogWarning("Warning log");
-			_logger.LogInfo("Info log");
-			_logger.LogDebug("Debug log");
+			logger.LogError("Test", "Error log");
+			logger.LogWarning("Test", "Warning log");
+			logger.LogInfo("Test", "Info log");
+			logger.LogDebug("Test", "Debug log");
+			return logger;
 		}
 	}
 }

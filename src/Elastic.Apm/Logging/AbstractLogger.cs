@@ -14,32 +14,36 @@
 		/// <param name="logline">This line that must be logged - it already contains the prefix and the loglevel</param>
 		protected abstract void PrintLogline(string logline);
 
-		/// <summary>
-		/// Every log message is prefixed with this string
-		/// </summary>
-		/// <value>The prefix.</value>
-		internal string Prefix { get; set; }
+		private string GetPrefixString(LogLevel logLevel, string prefix) =>
+			string.IsNullOrWhiteSpace(prefix) ? $"{logLevel.ToString()} " : $"{logLevel.ToString()} {prefix}: ";
 
-		private string GetPrefixString(LogLevel logLevel) => $"{logLevel.ToString()} {Prefix}: ";
+		protected AbstractLogger(LogLevel level) => LogLevel = level;
 
-		internal void LogInfo(string info)
+		public LogLevel LogLevel { get; }
+		protected internal static LogLevel LogLevelDefault { get; } = LogLevel.Error;
+
+		internal void LogInfo(string info) => LogInfo(null, info);
+		internal void LogInfo(string prefix, string info)
 		{
-			if (Agent.Config.LogLevel >= LogLevel.Info) PrintLogline($"{GetPrefixString(LogLevel.Info)}{info}");
+			if (LogLevel >= LogLevel.Info) PrintLogline($"{GetPrefixString(LogLevel.Info, prefix)}{info}");
 		}
 
-		internal void LogWarning(string warning)
+		internal void LogWarning(string warning) => LogWarning(null, warning);
+		internal void LogWarning(string prefix, string warning)
 		{
-			if (Agent.Config.LogLevel >= LogLevel.Warning) PrintLogline($"{GetPrefixString(LogLevel.Warning)}{warning}");
+			if (LogLevel >= LogLevel.Warning) PrintLogline($"{GetPrefixString(LogLevel.Warning, prefix)}{warning}");
 		}
 
-		internal void LogError(string error)
+		internal void LogError(string error) => LogError(null, error);
+		internal void LogError(string prefix, string error)
 		{
-			if (Agent.Config.LogLevel >= LogLevel.Error) PrintLogline($"{GetPrefixString(LogLevel.Error)}{error}");
+			if (LogLevel >= LogLevel.Error) PrintLogline($"{GetPrefixString(LogLevel.Error, prefix)}{error}");
 		}
 
-		internal void LogDebug(string debugInfo)
+		internal void LogDebug(string debug) => LogDebug(null, debug);
+		internal void LogDebug(string prefix, string debug)
 		{
-			if (Agent.Config.LogLevel >= LogLevel.Debug) PrintLogline($"{GetPrefixString(LogLevel.Debug)}{debugInfo}");
+			if (LogLevel >= LogLevel.Debug) PrintLogline($"{GetPrefixString(LogLevel.Debug, prefix)}{debug}");
 		}
 	}
 }

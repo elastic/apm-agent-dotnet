@@ -2,7 +2,9 @@
 using System.Runtime.CompilerServices;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
+using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Report;
 
 //TODO: It'd be nice to move this into the .csproj
@@ -21,80 +23,62 @@ using Elastic.Apm.Report;
 
 namespace Elastic.Apm
 {
+	public interface IApmAgent
+	{
+		AbstractLogger Logger { get; }
+
+		IPayloadSender PayloadSender { get; }
+
+		IConfigurationReader ConfigurationReader { get; }
+
+		ITracer Tracer { get; }
+	}
+
+	internal class ApmAgent : IApmAgent
+	{
+		public ApmAgent(AgentComponents agentComponents) =>
+			Components = agentComponents ?? new AgentComponents(logger: null, service: null);
+
+		internal AgentComponents Components { get; }
+		public ITracer Tracer => Components.Tracer;
+		public IPayloadSender PayloadSender => Components.PayloadSender;
+		public AbstractLogger Logger => Components.Logger;
+		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
+	}
+
 	public static class Agent
 	{
-		/// <summary>
-		/// By default the agent reads configs from environment variables and it uses the <see cref="EnvironmentVariableConfig" />
-		/// class.
-		/// This behaviour can be overwritten via the <see cref="Config" /> property.
-		/// For example in ASP.NET Core "Elastic.Apm.AspNetCore.Config.MicrosoftExtensionsConfig"
-		/// with the actual "IConfiguration" instance can be created and passed to the agent.
-		/// With that the agent will read configs from the "IConfiguration" instance.
-		/// </summary>
-		private static AbstractAgentConfig _config = new EnvironmentVariableConfig();
+		private static readonly Lazy<ApmAgent> Lazy = new Lazy<ApmAgent>(()=> new ApmAgent(_config));
 
-		private static Type _loggerType = typeof(ConsoleLogger);
+		private static AgentComponents _config;
 
-		private static IPayloadSender _payloadSender;
+		public static IConfigurationReader Config => Lazy.Value.ConfigurationReader;
+
+		internal static ApmAgent Instance => Lazy.Value;
 
 		/// <summary>
 		/// The entry point for manual instrumentation. The <see cref="Tracer" /> property returns the tracer,
 		/// which you access to the currently active transaction and span and it also enables you to manually start
 		/// a transaction.
 		/// </summary>
-		private static Tracer _tracer;
+		public static ITracer Tracer => Instance.Tracer;
 
 		/// <summary>
-		/// The current agent config. This property stores all configs.
+		/// Sets up multiple <see cref="IDiagnosticsSubscriber" />'s to start listening to one or more <see cref="IDiagnosticListener" />'s
 		/// </summary>
-		/// <value>The config.</value>
-		public static AbstractAgentConfig Config
+		/// <param name="subscribers">
+		/// An array of <see cref="IDiagnosticSubscriber" /> that will set up <see cref="IDiagnosticListener" /> subscriptions
+		/// </param>
+		/// <returns>
+		/// A disposable referencing all the subscriptions, disposing this is not necessary for clean up only to unsubscribe if desired.
+		/// </returns>
+		public static IDisposable Subscribe(params IDiagnosticsSubscriber[] subscribers) => Instance.Subscribe(subscribers);
+
+		public static void Setup(AgentComponents agentComponents)
 		{
-			get
-			{
-				if (_config?.Logger != null) return _config;
+			if (Lazy.IsValueCreated) throw new Exception("The singleton APM agent has already been instantiated and can no longer be configured");
 
-				if (_config != null)
-					_config.Logger = CreateLogger("Config");
-
-				return _config;
-			}
-			set
-			{
-				_config = value;
-				_config.Logger = CreateLogger("Config");
-			}
+			_config = agentComponents;
 		}
-
-		public static IPayloadSender PayloadSender
-		{
-			get => _payloadSender ?? (_payloadSender = new PayloadSender());
-			internal set => _payloadSender = value;
-		}
-
-		public static ITracer Tracer => _tracer ?? (_tracer = new Tracer());
-
-
-		/// <summary>
-		/// Returns a logger with a specific prefix. The idea behind this class
-		/// is that each component in the agent creates its own agent with a
-		/// specific <paramref name="prefix" /> which makes correlating logs easier
-		/// </summary>
-		/// <returns>The logger.</returns>
-		/// <param name="prefix">Prefix.</param>
-		public static AbstractLogger CreateLogger(string prefix = "")
-		{
-			if (!(Activator.CreateInstance(_loggerType) is AbstractLogger logger)) return null;
-
-			logger.Prefix = prefix;
-			return logger;
-		}
-
-		/// <summary>
-		/// Sets the type of the logger.
-		/// </summary>
-		/// <param name="t">T.</param>
-		/// <typeparam name="T">The 1st type parameter.</typeparam>
-		internal static void SetLoggerType<T>() where T : AbstractLogger, new() => _loggerType = typeof(T);
 	}
 }

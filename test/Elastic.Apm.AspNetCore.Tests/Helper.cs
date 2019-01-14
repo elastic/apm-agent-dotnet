@@ -16,15 +16,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 {
 	public static class Helper
 	{
-		internal static HttpClient GetClient<T>(MockPayloadSender payloadSender, WebApplicationFactory<T> factory) where T : class
+		internal static HttpClient GetClient<T>(ApmAgent agent, WebApplicationFactory<T> factory) where T : class
 			=> factory
 				.WithWebHostBuilder(n =>
 				{
 					n.Configure(app =>
 					{
-						app.UseElasticApm(payloadSender: payloadSender);
-						new ElasticCoreListeners().Start();
-						new ElasticEntityFrameworkCoreListener().Start();
+						app.UseElasticApm(agent, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
 
 						app.UseDeveloperExceptionPage();
 
@@ -46,15 +44,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 				})
 				.CreateClient();
 
-		internal static HttpClient GetClientWithoutExceptionPage<T>(MockPayloadSender payloadSender, WebApplicationFactory<T> factory) where T : class
+		internal static HttpClient GetClientWithoutExceptionPage<T>(ApmAgent agent, WebApplicationFactory<T> factory) where T : class
 			=> factory
 				.WithWebHostBuilder(n =>
 				{
 					n.Configure(app =>
 					{
-						app.UseElasticApm(payloadSender: payloadSender);
-						new ElasticCoreListeners().Start();
-						new ElasticEntityFrameworkCoreListener().Start();
+						app.UseElasticApm(agent, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
 
 						app.UseMvc(routes =>
 						{

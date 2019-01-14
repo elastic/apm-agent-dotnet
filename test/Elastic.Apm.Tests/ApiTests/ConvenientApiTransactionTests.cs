@@ -25,21 +25,17 @@ namespace Elastic.Apm.Tests.ApiTests
 		private const string TransactionName = "ConvenientApiTest";
 		private const string TransactionType = "Test";
 
-		public ConvenientApiTransactionTests()
-			=> TestHelper.ResetAgentAndEnvVars();
-
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action)" /> method.
 		/// It wraps a fake transaction (Thread.Sleep) into the CaptureTransaction method
 		/// and it makes sure that the transaction is captured by the agent.
 		/// </summary>
 		[Fact]
-		public void SimpleAction()
-			=> AssertWith1Transaction(() =>
-			{
-				Agent.Tracer.CaptureTransaction(TransactionName, TransactionType,
-					() => { Thread.Sleep(SleepLength); });
-			});
+		public void SimpleAction() => AssertWith1Transaction((agent) =>
+		{
+			agent.Tracer.CaptureTransaction(TransactionName, TransactionType,
+				() => { Thread.Sleep(SleepLength); });
+		});
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action)" /> method with an exception.
@@ -47,18 +43,17 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// and it makes sure that the transaction and the exception are captured by the agent.
 		/// </summary>
 		[Fact]
-		public void SimpleActionWithException()
-			=> AssertWith1TransactionAnd1Error(() =>
+		public void SimpleActionWithException() => AssertWith1TransactionAnd1Error((agent) =>
+		{
+			Assert.Throws<InvalidOperationException>(() =>
 			{
-				Assert.Throws<InvalidOperationException>(() =>
+				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, new Action(() =>
 				{
-					Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, new Action(() =>
-					{
-						Thread.Sleep(SleepLength);
-						throw new InvalidOperationException(ExceptionMessage);
-					}));
-				});
+					Thread.Sleep(SleepLength);
+					throw new InvalidOperationException(ExceptionMessage);
+				}));
 			});
+		});
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action{ITransaction})" /> method.
@@ -68,16 +63,15 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// is not null
 		/// </summary>
 		[Fact]
-		public void SimpleActionWithParameter()
-			=> AssertWith1Transaction(() =>
-			{
-				Agent.Tracer.CaptureTransaction(TransactionName, TransactionType,
-					t =>
-					{
-						Assert.NotNull(t);
-						Thread.Sleep(SleepLength);
-					});
-			});
+		public void SimpleActionWithParameter() => AssertWith1Transaction((agent) =>
+		{
+			agent.Tracer.CaptureTransaction(TransactionName, TransactionType,
+				t =>
+				{
+					Assert.NotNull(t);
+					Thread.Sleep(SleepLength);
+				});
+		});
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action{ITransaction})" /> method with an exception.
@@ -87,19 +81,18 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// <see cref="Action{ITransaction}" /> parameter is not null
 		/// </summary>
 		[Fact]
-		public void SimpleActionWithExceptionAndParameter()
-			=> AssertWith1TransactionAnd1Error(() =>
+		public void SimpleActionWithExceptionAndParameter() => AssertWith1TransactionAnd1Error((agent) =>
+		{
+			Assert.Throws<InvalidOperationException>(() =>
 			{
-				Assert.Throws<InvalidOperationException>(() =>
+				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, new Action<ITransaction>(t =>
 				{
-					Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, new Action<ITransaction>(t =>
-					{
-						Assert.NotNull(t);
-						Thread.Sleep(SleepLength);
-						throw new InvalidOperationException(ExceptionMessage);
-					}));
-				});
+					Assert.NotNull(t);
+					Thread.Sleep(SleepLength);
+					throw new InvalidOperationException(ExceptionMessage);
+				}));
 			});
+		});
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{T})" /> method.
@@ -107,17 +100,16 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// and it makes sure that the transaction is captured by the agent and the return value is correct.
 		/// </summary>
 		[Fact]
-		public void SimpleActionWithReturnType()
-			=> AssertWith1Transaction(() =>
+		public void SimpleActionWithReturnType() => AssertWith1Transaction((agent) =>
+		{
+			var res = agent.Tracer.CaptureTransaction(TransactionName, TransactionType, () =>
 			{
-				var res = Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, () =>
-				{
-					Thread.Sleep(SleepLength);
-					return 42;
-				});
-
-				Assert.Equal(42, res);
+				Thread.Sleep(SleepLength);
+				return 42;
 			});
+
+			Assert.Equal(42, res);
+		});
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,T})" /> method.
@@ -127,19 +119,18 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// <see cref="Action{ITransaction}" /> is not null.
 		/// </summary>
 		[Fact]
-		public void SimpleActionWithReturnTypeAndParameter()
-			=> AssertWith1Transaction(() =>
-			{
-				var res = Agent.Tracer.CaptureTransaction(TransactionName, TransactionType,
-					t =>
-					{
-						Assert.NotNull(t);
-						Thread.Sleep(SleepLength);
-						return 42;
-					});
+		public void SimpleActionWithReturnTypeAndParameter() => AssertWith1Transaction((agent) =>
+		{
+			var res = agent.Tracer.CaptureTransaction(TransactionName, TransactionType,
+				t =>
+				{
+					Assert.NotNull(t);
+					Thread.Sleep(SleepLength);
+					return 42;
+				});
 
-				Assert.Equal(42, res);
-			});
+			Assert.Equal(42, res);
+		});
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,T})" /> method with an
@@ -150,26 +141,25 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// <see cref="Action{ITransaction}" /> is not null.
 		/// </summary>
 		[Fact]
-		public void SimpleActionWithReturnTypeAndExceptionAndParameter()
-			=> AssertWith1TransactionAnd1Error(() =>
+		public void SimpleActionWithReturnTypeAndExceptionAndParameter() => AssertWith1TransactionAnd1Error((agent) =>
+		{
+			Assert.Throws<InvalidOperationException>(() =>
 			{
-				Assert.Throws<InvalidOperationException>(() =>
+				var result = agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 				{
-					var result = Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
-					{
-						Assert.NotNull(t);
-						Thread.Sleep(SleepLength);
+					Assert.NotNull(t);
+					Thread.Sleep(SleepLength);
 
-						if (new Random().Next(1) == 0) //avoid unreachable code warning.
-							throw new InvalidOperationException(ExceptionMessage);
+					if (new Random().Next(1) == 0) //avoid unreachable code warning.
+						throw new InvalidOperationException(ExceptionMessage);
 
-						return 42;
-					});
-
-					Assert.True(false); //Should not be executed because the agent isn't allowed to catch an exception.
-					Assert.Equal(42, result); //But if it'd not throw it'd be 42.
+					return 42;
 				});
+
+				Assert.True(false); //Should not be executed because the agent isn't allowed to catch an exception.
+				Assert.Equal(42, result); //But if it'd not throw it'd be 42.
 			});
+		});
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{T})" /> method with an exception.
@@ -178,25 +168,24 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// and it makes sure that the transaction and the error are captured by the agent.
 		/// </summary>
 		[Fact]
-		public void SimpleActionWithReturnTypeAndException()
-			=> AssertWith1TransactionAnd1Error(() =>
+		public void SimpleActionWithReturnTypeAndException() => AssertWith1TransactionAnd1Error((agent) =>
+		{
+			Assert.Throws<InvalidOperationException>(() =>
 			{
-				Assert.Throws<InvalidOperationException>(() =>
+				var result = agent.Tracer.CaptureTransaction(TransactionName, TransactionType, () =>
 				{
-					var result = Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, () =>
-					{
-						Thread.Sleep(SleepLength);
+					Thread.Sleep(SleepLength);
 
-						if (new Random().Next(1) == 0) //avoid unreachable code warning.
-							throw new InvalidOperationException(ExceptionMessage);
+					if (new Random().Next(1) == 0) //avoid unreachable code warning.
+						throw new InvalidOperationException(ExceptionMessage);
 
-						return 42;
-					});
-
-					Assert.True(false); //Should not be executed because the agent isn't allowed to catch an exception.
-					Assert.Equal(42, result); //But if it'd not throw it'd be 42.
+					return 42;
 				});
+
+				Assert.True(false); //Should not be executed because the agent isn't allowed to catch an exception.
+				Assert.Equal(42, result); //But if it'd not throw it'd be 42.
 			});
+		});
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Func{Task})" /> method.
@@ -204,9 +193,9 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// and it makes sure that the transaction is captured.
 		/// </summary>
 		[Fact]
-		public async Task AsyncTask() => await AssertWith1TransactionAsync(async () =>
+		public async Task AsyncTask() => await AssertWith1TransactionAsync(async (agent) =>
 		{
-			await Agent.Tracer.CaptureTransaction(TransactionName, TransactionType,
+			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType,
 				async () => { await Task.Delay(SleepLength); });
 		});
 
@@ -216,18 +205,17 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// and it makes sure that the transaction and the error are captured.
 		/// </summary>
 		[Fact]
-		public async Task AsyncTaskWithException()
-			=> await AssertWith1TransactionAnd1ErrorAsync(async () =>
+		public async Task AsyncTaskWithException() => await AssertWith1TransactionAnd1ErrorAsync(async (agent) =>
+		{
+			await Assert.ThrowsAsync<InvalidOperationException>(async () =>
 			{
-				await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+				await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async () =>
 				{
-					await Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async () =>
-					{
-						await Task.Delay(SleepLength);
-						throw new InvalidOperationException(ExceptionMessage);
-					});
+					await Task.Delay(SleepLength);
+					throw new InvalidOperationException(ExceptionMessage);
 				});
 			});
+		});
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Func{ITransaction, Task})" /> method.
@@ -236,16 +224,15 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// and it makes sure that the transaction is captured and the <see cref="Action{ITransaction}" /> parameter is not null.
 		/// </summary>
 		[Fact]
-		public async Task AsyncTaskWithParameter()
-			=> await AssertWith1TransactionAsync(async () =>
-			{
-				await Agent.Tracer.CaptureTransaction(TransactionName, TransactionType,
-					async t =>
-					{
-						Assert.NotNull(t);
-						await Task.Delay(SleepLength);
-					});
-			});
+		public async Task AsyncTaskWithParameter() => await AssertWith1TransactionAsync(async (agent) =>
+		{
+			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType,
+				async t =>
+				{
+					Assert.NotNull(t);
+					await Task.Delay(SleepLength);
+				});
+		});
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Func{ITransaction, Task})" /> method with an
@@ -256,19 +243,18 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// is not null.
 		/// </summary>
 		[Fact]
-		public async Task AsyncTaskWithExceptionAndParameter()
-			=> await AssertWith1TransactionAnd1ErrorAsync(async () =>
+		public async Task AsyncTaskWithExceptionAndParameter() => await AssertWith1TransactionAnd1ErrorAsync(async (agent) =>
+		{
+			await Assert.ThrowsAsync<InvalidOperationException>(async () =>
 			{
-				await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+				await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 				{
-					await Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
-					{
-						Assert.NotNull(t);
-						await Task.Delay(SleepLength);
-						throw new InvalidOperationException(ExceptionMessage);
-					});
+					Assert.NotNull(t);
+					await Task.Delay(SleepLength);
+					throw new InvalidOperationException(ExceptionMessage);
 				});
 			});
+		});
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{Task{T}})" /> method.
@@ -276,16 +262,15 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// and it makes sure that the transaction is captured by the agent and the return value is correct.
 		/// </summary>
 		[Fact]
-		public async Task AsyncTaskWithReturnType()
-			=> await AssertWith1TransactionAsync(async () =>
+		public async Task AsyncTaskWithReturnType() => await AssertWith1TransactionAsync(async (agent) =>
+		{
+			var res = await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async () =>
 			{
-				var res = await Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async () =>
-				{
-					await Task.Delay(SleepLength);
-					return 42;
-				});
-				Assert.Equal(42, res);
+				await Task.Delay(SleepLength);
+				return 42;
 			});
+			Assert.Equal(42, res);
+		});
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,Task{T}})" /> method.
@@ -295,19 +280,18 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// <see cref="ITransaction" /> is not null.
 		/// </summary>
 		[Fact]
-		public async Task AsyncTaskWithReturnTypeAndParameter()
-			=> await AssertWith1TransactionAsync(async () =>
-			{
-				var res = await Agent.Tracer.CaptureTransaction(TransactionName, TransactionType,
-					async t =>
-					{
-						Assert.NotNull(t);
-						await Task.Delay(SleepLength);
-						return 42;
-					});
+		public async Task AsyncTaskWithReturnTypeAndParameter() => await AssertWith1TransactionAsync(async (agent) =>
+		{
+			var res = await agent.Tracer.CaptureTransaction(TransactionName, TransactionType,
+				async t =>
+				{
+					Assert.NotNull(t);
+					await Task.Delay(SleepLength);
+					return 42;
+				});
 
-				Assert.Equal(42, res);
-			});
+			Assert.Equal(42, res);
+		});
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,Task{T}})" /> method with an
@@ -318,26 +302,25 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// <see cref="Action{ITransaction}" /> is not null.
 		/// </summary>
 		[Fact]
-		public async Task AsyncTaskWithReturnTypeAndExceptionAndParameter()
-			=> await AssertWith1TransactionAnd1ErrorAsync(async () =>
+		public async Task AsyncTaskWithReturnTypeAndExceptionAndParameter() => await AssertWith1TransactionAnd1ErrorAsync(async (agent) =>
+		{
+			await Assert.ThrowsAsync<InvalidOperationException>(async () =>
 			{
-				await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+				var result = await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 				{
-					var result = await Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
-					{
-						Assert.NotNull(t);
-						await Task.Delay(SleepLength);
+					Assert.NotNull(t);
+					await Task.Delay(SleepLength);
 
-						if (new Random().Next(1) == 0) //avoid unreachable code warning.
-							throw new InvalidOperationException(ExceptionMessage);
+					if (new Random().Next(1) == 0) //avoid unreachable code warning.
+						throw new InvalidOperationException(ExceptionMessage);
 
-						return 42;
-					});
-
-					Assert.True(false); //Should not be executed because the agent isn't allowed to catch an exception.
-					Assert.Equal(42, result); //But if it'd not throw it'd be 42.
+					return 42;
 				});
+
+				Assert.True(false); //Should not be executed because the agent isn't allowed to catch an exception.
+				Assert.Equal(42, result); //But if it'd not throw it'd be 42.
 			});
+		});
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{Task{T}})" /> method with an exception.
@@ -346,25 +329,24 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// and it makes sure that the transaction and the error are captured by the agent.
 		/// </summary>
 		[Fact]
-		public async Task AsyncTaskWithReturnTypeAndException()
-			=> await AssertWith1TransactionAnd1ErrorAsync(async () =>
+		public async Task AsyncTaskWithReturnTypeAndException() => await AssertWith1TransactionAnd1ErrorAsync(async (agent) =>
+		{
+			await Assert.ThrowsAsync<InvalidOperationException>(async () =>
 			{
-				await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+				var result = await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async () =>
 				{
-					var result = await Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async () =>
-					{
-						await Task.Delay(SleepLength);
+					await Task.Delay(SleepLength);
 
-						if (new Random().Next(1) == 0) //avoid unreachable code warning.
-							throw new InvalidOperationException(ExceptionMessage);
+					if (new Random().Next(1) == 0) //avoid unreachable code warning.
+						throw new InvalidOperationException(ExceptionMessage);
 
-						return 42;
-					});
-
-					Assert.True(false); //Should not be executed because the agent isn't allowed to catch an exception.
-					Assert.Equal(42, result); //But if it'd not throw it'd be 42.
+					return 42;
 				});
+
+				Assert.True(false); //Should not be executed because the agent isn't allowed to catch an exception.
+				Assert.Equal(42, result); //But if it'd not throw it'd be 42.
 			});
+		});
 
 		/// <summary>
 		/// Wraps a cancelled task into the CaptureTransaction method and
@@ -374,7 +356,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		public async Task CancelledAsyncTask()
 		{
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			var cancellationTokenSource = new CancellationTokenSource();
 			var token = cancellationTokenSource.Token;
@@ -382,7 +364,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			await Assert.ThrowsAsync<OperationCanceledException>(async () =>
 			{
-				await Agent.Tracer.CaptureTransaction(TransactionName, TransactionType,
+				await agent.Tracer.CaptureTransaction(TransactionName, TransactionType,
 					async () =>
 					{
 						// ReSharper disable once MethodSupportsCancellation, we want to delay before we throw the exception
@@ -410,12 +392,12 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// <summary>
 		/// Asserts on 1 transaction with async code
 		/// </summary>
-		private async Task AssertWith1TransactionAsync(Func<Task> func)
+		private async Task AssertWith1TransactionAsync(Func<ApmAgent, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			await func();
+			await func(agent);
 
 			Assert.NotEmpty(payloadSender.Payloads);
 			Assert.NotEmpty(payloadSender.Payloads[0].Transactions);
@@ -429,12 +411,12 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// <summary>
 		/// Asserts on 1 async transaction and 1 error
 		/// </summary>
-		private async Task AssertWith1TransactionAnd1ErrorAsync(Func<Task> func)
+		private async Task AssertWith1TransactionAnd1ErrorAsync(Func<ApmAgent, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			await func();
+			await func(agent);
 
 			Assert.NotEmpty(payloadSender.Payloads);
 			Assert.NotEmpty(payloadSender.Payloads[0].Transactions);
@@ -455,12 +437,12 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// <summary>
 		/// Asserts on 1 transaction
 		/// </summary>
-		private void AssertWith1Transaction(Action action)
+		private void AssertWith1Transaction(Action<ApmAgent> action)
 		{
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			action();
+			action(agent);
 
 			Assert.NotEmpty(payloadSender.Payloads);
 			Assert.NotEmpty(payloadSender.Payloads[0].Transactions);
@@ -474,12 +456,12 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// <summary>
 		/// Asserts on 1 transaction and 1 error
 		/// </summary>
-		private void AssertWith1TransactionAnd1Error(Action action)
+		private void AssertWith1TransactionAnd1Error(Action<ApmAgent> action)
 		{
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			action();
+			action(agent);
 
 			Assert.NotEmpty(payloadSender.Payloads);
 			Assert.NotEmpty(payloadSender.Payloads[0].Transactions);

@@ -28,9 +28,6 @@ namespace Elastic.Apm.Tests.ApiTests
 		private const int TransactionSleepLength = 10;
 		private const string TransactionType = "Test";
 
-		public ConvenientApiSpanTests()
-			=> TestHelper.ResetAgentAndEnvVars();
-
 		/// <summary>
 		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Action,string,string)" /> method.
 		/// It wraps a fake span (Thread.Sleep) into the CaptureSpan method
@@ -371,14 +368,13 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public async Task CancelledAsyncTask()
 		{
-			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentComponents());
 
 			var cancellationTokenSource = new CancellationTokenSource();
 			var token = cancellationTokenSource.Token;
 			cancellationTokenSource.Cancel();
 
-			await Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
+			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 			{
 				await Assert.ThrowsAsync<OperationCanceledException>(async () =>
 				{
@@ -398,9 +394,9 @@ namespace Elastic.Apm.Tests.ApiTests
 		private async Task AssertWith1TransactionAnd1ErrorAnd1SpanAsync(Func<ITransaction, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			await Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
+			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 			{
 				await Task.Delay(TransactionSleepLength);
 				await func(t);
@@ -434,9 +430,9 @@ namespace Elastic.Apm.Tests.ApiTests
 		private async Task AssertWith1TransactionAnd1SpanAsync(Func<ITransaction, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			await Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
+			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 			{
 				await Task.Delay(TransactionSleepLength);
 				await func(t);
@@ -462,9 +458,9 @@ namespace Elastic.Apm.Tests.ApiTests
 		private void AssertWith1TransactionAnd1Span(Action<ITransaction> action)
 		{
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
+			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 			{
 				Thread.Sleep(SpanSleepLength);
 				action(t);
@@ -489,10 +485,11 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// </summary>
 		private void AssertWith1TransactionAnd1SpanAnd1Error(Action<ITransaction> action)
 		{
-			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
 
-			Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 			{
 				Thread.Sleep(SpanSleepLength);
 				action(t);

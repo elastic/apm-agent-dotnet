@@ -1,4 +1,6 @@
-﻿namespace Elastic.Apm.Model.Payload
+﻿using System.Reflection;
+
+namespace Elastic.Apm.Model.Payload
 {
 	public class Service
 	{
@@ -12,6 +14,16 @@
 			public string Name { get; set; }
 			public string Version { get; set; }
 		}
+
+		internal static Service Default => new Service
+		{
+			Name = Assembly.GetEntryAssembly()?.GetName().Name,
+			Agent = new AgentC
+			{
+				Name = Consts.AgentName,
+				Version = Consts.AgentVersion
+			}
+		};
 	}
 
 	public class Framework

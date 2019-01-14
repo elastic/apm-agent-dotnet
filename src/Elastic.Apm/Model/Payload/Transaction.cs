@@ -6,16 +6,25 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
+using Elastic.Apm.Report;
 
 namespace Elastic.Apm.Model.Payload
 {
 	public class Transaction : ITransaction
 	{
+		private readonly AbstractLogger _logger;
+		private readonly IPayloadSender _sender;
 		public const string TypeRequest = "request";
 		internal readonly DateTimeOffset Start;
 
-		public Transaction(string name, string type)
+		public Transaction(IApmAgent agent, string name, string type)
+			: this(agent.Logger, name, type, agent.PayloadSender) { }
+
+		public Transaction(AbstractLogger logger, string name, string type, IPayloadSender sender)
 		{
+			_logger = logger;
+			_sender = sender;
 			Start = DateTimeOffset.UtcNow;
 			Name = name;
 			Type = type;
@@ -61,7 +70,7 @@ namespace Elastic.Apm.Model.Payload
 		{
 			if (!Duration.HasValue) Duration = (long)(DateTimeOffset.UtcNow - Start).TotalMilliseconds;
 
-			Agent.PayloadSender.QueuePayload(new Payload
+			_sender.QueuePayload(new Payload
 			{
 				Transactions = new List<Transaction>
 				{
@@ -108,12 +117,12 @@ namespace Elastic.Apm.Model.Payload
 			if (!string.IsNullOrEmpty(exception.StackTrace))
 			{
 				error.Exception.StacktTrace
-					= StacktraceHelper.GenerateApmStackTrace(new StackTrace(exception).GetFrames(), Tracer.PublicTracerLogger,
+					= StacktraceHelper.GenerateApmStackTrace(new StackTrace(exception).GetFrames(), _logger,
 						"failed capturing stacktrace");
 			}
 
 			error.Context = Context;
-			Agent.PayloadSender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = Service });
+			_sender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = Service });
 		}
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames)
@@ -134,11 +143,11 @@ namespace Elastic.Apm.Model.Payload
 			if (frames != null)
 			{
 				error.Exception.StacktTrace
-					= StacktraceHelper.GenerateApmStackTrace(frames, Tracer.PublicTracerLogger, "failed capturing stacktrace");
+					= StacktraceHelper.GenerateApmStackTrace(frames, _logger, "failed capturing stacktrace");
 			}
 
 			error.Context = Context;
-			Agent.PayloadSender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = Service });
+			_sender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = Service });
 		}
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)

@@ -12,12 +12,6 @@ namespace Elastic.Apm.Api
 		ITransaction CurrentTransaction { get; }
 
 		/// <summary>
-		/// Identifies the monitored service. If this remains unset the agent
-		/// automatically populates it based on the entry assembly.
-		/// </summary>
-		Service Service { get; set; }
-
-		/// <summary>
 		/// This is a convenient method which starts and ends a transaction and captures unhandled exceptions
 		/// and schedules it to be reported to the APM Server.
 		/// </summary>

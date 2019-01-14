@@ -6,6 +6,7 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Tests;
 using Elastic.Apm.Tests.Mocks;
 using Microsoft.Extensions.Configuration;
+using Microsoft.VisualStudio.TestPlatform.Common.ExtensionFramework;
 using Xunit;
 
 namespace Elastic.Apm.AspNetCore.Tests
@@ -16,8 +17,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// </summary>
 	public class MicrosoftExtensionsConfigTests
 	{
-		public MicrosoftExtensionsConfigTests() => TestHelper.ResetAgentAndEnvVars();
-
 		/// <summary>
 		/// Builds an IConfiguration instance with the TestConfigs/appsettings_valid.json config file and passes it to the agent.
 		/// Makes sure that the values from the config file are applied to the agent.
@@ -25,9 +24,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public void ReadValidConfigsFromAppSettingsJson()
 		{
-			Agent.Config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"));
-			Assert.Equal(LogLevel.Debug, Agent.Config.LogLevel);
-			Assert.Equal(new Uri("http://myServerFromTheConfigFile:8080"), Agent.Config.ServerUrls[0]);
+			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"));
+			Assert.Equal(LogLevel.Debug, config.LogLevel);
+			Assert.Equal(new Uri("http://myServerFromTheConfigFile:8080"), config.ServerUrls[0]);
 		}
 
 		/// <summary>
@@ -37,14 +36,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public void ReadInvalidLogLevelConfigFromAppsettingsJson()
 		{
-			Agent.SetLoggerType<TestLogger>();
-
-			Agent.Config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"));
-			Assert.Equal(LogLevel.Error, Agent.Config.LogLevel);
+			var logger = new TestLogger();
+			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger);
+			Assert.Equal(LogLevel.Error, config.LogLevel);
 
 			Assert.Equal(
-				$"Error Config: Failed parsing log level from IConfiguration: {MicrosoftExtensionConfigConsts.LogLevel}, value: DbeugMisspelled. Defaulting to log level 'Error'",
-				(Agent.Config.Logger as TestLogger)?.Lines[0]);
+				$"Error Config: Failed parsing log level from {MicrosoftExtensionsConfig.Origin}: {MicrosoftExtensionsConfig.Keys.Level}, value: DbeugMisspelled. Defaulting to log level 'Error'",
+				logger.Lines[0]);
 		}
 
 		/// <summary>
@@ -54,14 +52,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public void ReadInvalidServerUrlsConfigFromAppsettingsJson()
 		{
-			Agent.SetLoggerType<TestLogger>();
-
-			Agent.Config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"));
-			Assert.Equal(LogLevel.Error, Agent.Config.LogLevel);
+			var logger = new TestLogger();
+			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger);
+			Assert.Equal(LogLevel.Error, config.LogLevel);
 
 			Assert.Equal(
-				$"Error Config: Failed parsing log level from IConfiguration: {MicrosoftExtensionConfigConsts.LogLevel}, value: DbeugMisspelled. Defaulting to log level 'Error'",
-				(Agent.Config.Logger as TestLogger)?.Lines[0]);
+				$"Error Config: Failed parsing log level from {MicrosoftExtensionsConfig.Origin}: {MicrosoftExtensionsConfig.Keys.Level}, value: DbeugMisspelled. Defaulting to log level 'Error'",
+				logger.Lines[0]);
 		}
 
 		/// <summary>
@@ -71,16 +68,16 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public void ReadConfingsFromEnvVarsViaIConfig()
 		{
-			Environment.SetEnvironmentVariable(EnvVarConsts.LogLevel, "Debug");
+			Environment.SetEnvironmentVariable(EnvironmentConfigurationReader.Keys.Level, "Debug");
 			var serverUrl = "http://myServerFromEnvVar.com:1234";
-			Environment.SetEnvironmentVariable(EnvVarConsts.ServerUrls, serverUrl);
-			var config = new ConfigurationBuilder()
+			Environment.SetEnvironmentVariable(EnvironmentConfigurationReader.Keys.Urls, serverUrl);
+			var configBuilder = new ConfigurationBuilder()
 				.AddEnvironmentVariables()
 				.Build();
 
-			Agent.Config = new MicrosoftExtensionsConfig(config);
-			Assert.Equal(LogLevel.Debug, Agent.Config.LogLevel);
-			Assert.Equal(new Uri(serverUrl), Agent.Config.ServerUrls[0]);
+			var config = new MicrosoftExtensionsConfig(configBuilder);
+			Assert.Equal(LogLevel.Debug, config.LogLevel);
+			Assert.Equal(new Uri(serverUrl), config.ServerUrls[0]);
 		}
 
 		private IConfiguration GetConfig(string path)

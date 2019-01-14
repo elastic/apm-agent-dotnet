@@ -3,50 +3,37 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
+using Elastic.Apm.Report;
 
 namespace Elastic.Apm.Api
 {
 	internal class Tracer : ITracer
 	{
-		private static AbstractLogger _publicTracerLogger;
+		public ITransaction CurrentTransaction => TransactionContainer.Transactions.Value;
 
-		public ITransaction CurrentTransaction
-			=> TransactionContainer.Transactions.Value;
+		private readonly AbstractLogger _logger;
+		private readonly Service _service;
+		private readonly IPayloadSender _sender;
 
-		public static AbstractLogger PublicTracerLogger => _publicTracerLogger ?? (_publicTracerLogger = Agent.CreateLogger("AgentAPI"));
-
-		private Service _service;
-
-		/// <inheritdoc />
-		/// <summary>
-		/// Identifies the monitored service. If this remains unset the agent
-		/// automatically populates it based on the entry assembly.
-		/// </summary>
-		/// <value>The service.</value>
-		public Service Service
+		public Tracer(AbstractLogger logger, Service service, IPayloadSender payloadSender)
 		{
-			get => _service ?? (_service = new Service
-			{
-				Name = Assembly.GetEntryAssembly()?.GetName().Name,
-				Agent = new Service.AgentC
-				{
-					Name = Consts.AgentName,
-					Version = Consts.AgentVersion
-				}
-			});
-			set => _service = value;
+			_logger = logger;
+			_service = service;
+			_sender = payloadSender;
 		}
+
 
 		public ITransaction StartTransaction(string name, string type)
 		{
-			var retVal = new Transaction(name, type)
+			var retVal = new Transaction(_logger, name, type, _sender)
 			{
 				Name = name,
 				Type = type,
-				Service = Service
+				Service = _service
 			};
 
 			TransactionContainer.Transactions.Value = retVal;

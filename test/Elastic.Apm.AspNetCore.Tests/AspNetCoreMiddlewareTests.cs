@@ -7,8 +7,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
 using Xunit;
 
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
-
 namespace Elastic.Apm.AspNetCore.Tests
 {
 	public class AspNetCoreMiddlewareTests
@@ -16,11 +14,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 	{
 		private readonly WebApplicationFactory<Startup> _factory;
 
-		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory)
-		{
-			_factory = factory;
-			TestHelper.ResetAgentAndEnvVars();
-		}
+		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory) => _factory = factory;
 
 		/// <summary>
 		/// Simulates and HTTP GET call to /home/about and asserts on what the agent should send to the server
@@ -29,8 +23,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[InlineData("/Home/About")]
 		public async Task HomeAboutTransactionTest(string url)
 		{
-			var capturedPayload = new MockPayloadSender();
-			var client = Helper.GetClient(capturedPayload, _factory);
+			var agent = new ApmAgent(new TestAgentComponents());
+			var capturedPayload = agent.PayloadSender as MockPayloadSender;
+			var client = Helper.GetClient(agent, _factory);
 
 			var response = await client.GetAsync(url);
 
@@ -77,8 +72,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task FailingRequestWithoutConfiguredExceptionPage()
 		{
-			var capturedPayload = new MockPayloadSender();
-			var client = Helper.GetClientWithoutExceptionPage(capturedPayload, _factory);
+			var agent = new ApmAgent(new TestAgentComponents());
+			var capturedPayload = agent.PayloadSender as MockPayloadSender;
+			var client = Helper.GetClientWithoutExceptionPage(agent, _factory);
 
 			await Assert.ThrowsAsync<Exception>(async () => { await client.GetAsync("Home/TriggerError"); });
 
