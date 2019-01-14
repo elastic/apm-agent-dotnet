@@ -3,11 +3,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using Elastic.Apm.AspNetCore.Config;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
-using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
-using Elastic.Apm.Report;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 
@@ -56,6 +53,7 @@ namespace Elastic.Apm.AspNetCore
 		)
 		{
 			var subs = new List<IDiagnosticsSubscriber>(subscribers ?? Array.Empty<IDiagnosticsSubscriber>());
+			subs.Add(new AspNetCoreDiagnosticsSubscriber());
 			agent.Subscribe(subs.ToArray());
 			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer);
 		}
