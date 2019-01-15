@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using Elastic.Apm.Tests;
@@ -9,37 +11,47 @@ using Xunit;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
+	/// <summary>
+	/// Uses the samples/SampleAspNetCoreApp as the test application and tests the agent with it.
+	/// It's basically an integration test.
+	/// </summary>
 	public class AspNetCoreMiddlewareTests
 		: IClassFixture<WebApplicationFactory<Startup>>
 	{
 		private readonly WebApplicationFactory<Startup> _factory;
+		private readonly HttpClient _client;
+		private readonly MockPayloadSender _capturedPayload;
+		private readonly ApmAgent _agent;
 
-		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory) => _factory = factory;
+		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory)
+		{
+			_factory = factory;
+			 _agent = new ApmAgent(new TestAgentComponents());
+			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
+			_client = Helper.GetClient(_agent, _factory);
+
+		}
 
 		/// <summary>
-		/// Simulates and HTTP GET call to /home/about and asserts on what the agent should send to the server
+		/// Simulates an HTTP GET call to /home/about and asserts on what the agent should send to the server
 		/// </summary>
-		[Theory]
-		[InlineData("/Home/About")]
-		public async Task HomeAboutTransactionTest(string url)
+		[Fact]
+		public async Task HomeAboutTransactionTest()
 		{
-			var agent = new ApmAgent(new TestAgentComponents());
-			var capturedPayload = agent.PayloadSender as MockPayloadSender;
-			var client = Helper.GetClient(agent, _factory);
 
-			var response = await client.GetAsync(url);
+			var response = await _client.GetAsync("/Home/About");
 
-			Assert.Single(capturedPayload.Payloads);
-			Assert.Single(capturedPayload.Payloads[0].Transactions);
+			Assert.Single(_capturedPayload.Payloads);
+			Assert.Single(_capturedPayload.Payloads[0].Transactions);
 
-			var payload = capturedPayload.Payloads[0];
+			var payload = _capturedPayload.Payloads[0];
 
 			//test payload
 			Assert.Equal(Assembly.GetEntryAssembly()?.GetName()?.Name, payload.Service.Name);
 			Assert.Equal(Consts.AgentName, payload.Service.Agent.Name);
 			Assert.Equal(Consts.AgentVersion, payload.Service.Agent.Version);
 
-			var transaction = capturedPayload.Payloads[0].Transactions[0];
+			var transaction = _capturedPayload.Payloads[0].Transactions[0];
 
 			//test transaction
 			Assert.Equal($"{response.RequestMessage.Method} {response.RequestMessage.RequestUri.AbsolutePath}", transaction.Name);
@@ -65,6 +77,23 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		/// <summary>
+		/// Simulates an HTTP GET call to /home/index and asserts that the agent captures spans.
+		/// Prerequisite: The /home/index has to generate spans (which should be the case).
+		/// </summary>
+		[Fact]
+		public async Task HomeIndexSpanTest()
+		{
+			var response = await _client.GetAsync("/Home/Index");
+			Assert.True(response.IsSuccessStatusCode);
+
+			var transaction = _capturedPayload.Payloads[0].Transactions[0];
+			Assert.NotEmpty(transaction.Spans);
+
+			//one of the spans is a DB call:
+			Assert.True(transaction.Spans.Any(n => n.Context.Db != null));
+		}
+
+		/// <summary>
 		/// Configures an ASP.NET Core application without an error page.
 		/// With other words: there is no error page with an exception handler configured in the ASP.NET Core pipeline.
 		/// Makes sure that we still capture the failed request.
@@ -72,17 +101,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task FailingRequestWithoutConfiguredExceptionPage()
 		{
-			var agent = new ApmAgent(new TestAgentComponents());
-			var capturedPayload = agent.PayloadSender as MockPayloadSender;
-			var client = Helper.GetClientWithoutExceptionPage(agent, _factory);
+//			await Assert.ThrowsAsync<Exception>(async () => { });
+			await _client.GetAsync("Home/TriggerError");
 
-			await Assert.ThrowsAsync<Exception>(async () => { await client.GetAsync("Home/TriggerError"); });
+			Assert.Single(_capturedPayload.Payloads);
+			Assert.Single(_capturedPayload.Payloads[0].Transactions);
 
-			Assert.Single(capturedPayload.Payloads);
-			Assert.Single(capturedPayload.Payloads[0].Transactions);
-
-			Assert.Single(capturedPayload.Errors);
-			Assert.Single(capturedPayload.Errors[0].Errors);
+			Assert.NotEmpty(_capturedPayload.Errors);
+			Assert.Single(_capturedPayload.Errors[0].Errors);
 		}
 	}
 }

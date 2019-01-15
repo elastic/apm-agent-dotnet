@@ -17,10 +17,8 @@ namespace Elastic.Apm.Model.Payload
 		private readonly IPayloadSender _sender;
 		public const string TypeRequest = "request";
 		internal readonly DateTimeOffset Start;
-    
-		private readonly Lazy<Context> _context = new Lazy<Context>();
 
-		public Transaction(string name, string type)
+		private readonly Lazy<Context> _context = new Lazy<Context>();
 
 		public Transaction(IApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, agent.PayloadSender) { }
