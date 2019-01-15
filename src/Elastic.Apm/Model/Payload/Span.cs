@@ -57,6 +57,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public string Subtype { get; set; }
 
+		[JsonIgnore]
 		public Dictionary<string, string> Tags => Context.Tags;
 
 		internal Transaction Transaction;

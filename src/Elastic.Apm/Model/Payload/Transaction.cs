@@ -8,6 +8,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
+using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
 {
@@ -64,6 +65,7 @@ namespace Elastic.Apm.Model.Payload
 		//TODO: measure! What about List<T> with lock() in our case?
 		internal BlockingCollection<Span> SpansInternal = new BlockingCollection<Span>();
 
+		[JsonIgnore]
 		public Dictionary<string, string> Tags => Context.Tags;
 
 		public string Timestamp => Start.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
