@@ -569,7 +569,6 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// </summary>
 		private void AssertWith1TransactionAnd1SpanAnd1Error(Action<ITransaction> action)
 		{
-
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 

@@ -2,7 +2,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Model.Payload;
-using Elastic.Apm.Report;
 using Elastic.Apm.Tests.Mocks;
 using Xunit;
 

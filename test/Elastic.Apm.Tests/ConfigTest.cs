@@ -1,9 +1,6 @@
-﻿using System;
-using Elastic.Apm.Config;
+﻿using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Tests.Mocks;
-using Microsoft.VisualStudio.TestPlatform.Common.ExtensionFramework;
 using Xunit;
 
 namespace Elastic.Apm.Tests
@@ -35,10 +32,11 @@ namespace Elastic.Apm.Tests
 		{
 			var serverUrl = "InvalidUrl";
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger: logger, serverUrls: serverUrl));
+			var agent = new ApmAgent(new TestAgentComponents(logger, serverUrl));
 			Assert.Equal(ConfigConsts.DefaultServerUri.ToString(), agent.ConfigurationReader.ServerUrls[0].ToString());
 
-			Assert.Equal($"Error {nameof(TestAgentConfigurationReader)}: Failed parsing server URL from {TestAgentConfigurationReader.Origin}: {TestAgentConfigurationReader.Keys.Urls}, value: {serverUrl}",
+			Assert.Equal(
+				$"Error {nameof(TestAgentConfigurationReader)}: Failed parsing server URL from {TestAgentConfigurationReader.Origin}: {TestAgentConfigurationReader.Keys.Urls}, value: {serverUrl}",
 				logger.Lines[0]);
 		}
 
@@ -53,7 +51,7 @@ namespace Elastic.Apm.Tests
 			var serverUrls = $"{serverUrl1},{serverUrl2}";
 
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger: logger, serverUrls: serverUrls));
+			var agent = new ApmAgent(new TestAgentComponents(logger, serverUrls));
 
 			Assert.Equal(serverUrl1, agent.ConfigurationReader.ServerUrls[0].OriginalString);
 			Assert.Equal(serverUrl1.ToLower() + "/", agent.ConfigurationReader.ServerUrls[0].ToString().ToLower());
@@ -69,13 +67,12 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void ServerUrlsMultipleUrlsWith1InvalidUrlTest()
 		{
-
 			var serverUrl1 = "http://myServer1.com:1234";
 			var serverUrl2 = "invalidUrl";
 			var serverUrl3 = "http://myServer2.com:1234";
 			var serverUrls = $"{serverUrl1},{serverUrl2},{serverUrl3}";
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger: logger, serverUrls: serverUrls));
+			var agent = new ApmAgent(new TestAgentComponents(logger, serverUrls));
 
 			Assert.Equal(serverUrl1, agent.ConfigurationReader.ServerUrls[0].OriginalString);
 			Assert.Equal(serverUrl1.ToLower() + "/", agent.ConfigurationReader.ServerUrls[0].ToString().ToLower());
@@ -83,7 +80,8 @@ namespace Elastic.Apm.Tests
 			Assert.Equal(serverUrl3, agent.ConfigurationReader.ServerUrls[1].OriginalString);
 			Assert.Equal(serverUrl3.ToLower() + "/", agent.ConfigurationReader.ServerUrls[1].ToString().ToLower());
 
-			Assert.Equal($"Error {nameof(TestAgentConfigurationReader)}: Failed parsing server URL from {TestAgentConfigurationReader.Origin}: {TestAgentConfigurationReader.Keys.Urls}, value: {serverUrl2}",
+			Assert.Equal(
+				$"Error {nameof(TestAgentConfigurationReader)}: Failed parsing server URL from {TestAgentConfigurationReader.Origin}: {TestAgentConfigurationReader.Keys.Urls}, value: {serverUrl2}",
 				logger.Lines[0]);
 		}
 
@@ -93,28 +91,28 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void SetDebugLogLevelTest()
 		{
-			var agent = new ApmAgent(new TestAgentComponents(logLevel: "Debug"));
+			var agent = new ApmAgent(new TestAgentComponents("Debug"));
 			Assert.Equal(LogLevel.Debug, agent.ConfigurationReader.LogLevel);
 		}
 
 		[Fact]
 		public void SetErrorLogLevelTest()
 		{
-			var agent = new ApmAgent(new TestAgentComponents(logLevel: "Error"));
+			var agent = new ApmAgent(new TestAgentComponents("Error"));
 			Assert.Equal(LogLevel.Error, agent.ConfigurationReader.LogLevel);
 		}
 
 		[Fact]
 		public void SetInfoLogLevelTest()
 		{
-			var agent = new ApmAgent(new TestAgentComponents(logLevel: "Info"));
+			var agent = new ApmAgent(new TestAgentComponents("Info"));
 			Assert.Equal(LogLevel.Info, agent.ConfigurationReader.LogLevel);
 		}
 
 		[Fact]
 		public void SetWarningLogLevelTest()
 		{
-			var agent = new ApmAgent(new TestAgentComponents(logLevel: "Warning"));
+			var agent = new ApmAgent(new TestAgentComponents("Warning"));
 			Assert.Equal(LogLevel.Warning, agent.ConfigurationReader.LogLevel);
 		}
 
@@ -122,7 +120,7 @@ namespace Elastic.Apm.Tests
 		public void SetInvalidLogLevelTest()
 		{
 			var logLevelValue = "InvalidLogLevel";
-			var agent = new ApmAgent(new TestAgentComponents(logLevel: logLevelValue));
+			var agent = new ApmAgent(new TestAgentComponents(logLevelValue));
 			var logger = agent.Logger as TestLogger;
 
 			Assert.Equal(LogLevel.Error, agent.ConfigurationReader.LogLevel);

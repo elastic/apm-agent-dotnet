@@ -18,7 +18,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void TestLogWarning()
 		{
-			var logger =LogWithLevel(LogLevel.Warning);
+			var logger = LogWithLevel(LogLevel.Warning);
 
 			Assert.Equal(2, logger.Lines.Count);
 			Assert.Equal("Error Test: Error log", logger.Lines[0]);
@@ -28,7 +28,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void TestLogInfo()
 		{
-			var logger =LogWithLevel(LogLevel.Info);
+			var logger = LogWithLevel(LogLevel.Info);
 
 			Assert.Equal(3, logger.Lines.Count);
 			Assert.Equal("Error Test: Error log", logger.Lines[0]);

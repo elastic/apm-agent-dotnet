@@ -399,7 +399,6 @@ namespace Elastic.Apm.Tests.ApiTests
 			var payloadSender = AssertWith1Transaction(
 				t =>
 				{
-
 					t.Tracer.CaptureTransaction(TransactionName, TransactionType, transaction =>
 					{
 						Thread.Sleep(SleepLength);

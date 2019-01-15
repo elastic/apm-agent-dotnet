@@ -7,15 +7,15 @@ namespace Elastic.Apm.Tests.Mocks
 {
 	public class TestAgentConfigurationReader : AbstractConfigurationReader, IConfigurationReader
 	{
-		private readonly string _logLevel;
-		private readonly string _serverUrls;
-
 		public const string Origin = "unit test configuration";
 
 		internal static (string Level, string Urls) Keys = (
 			Level: "ELASTIC_APM_LOG_LEVEL",
 			Urls: "ELASTIC_APM_SERVER_URLS"
 		);
+
+		private readonly string _logLevel;
+		private readonly string _serverUrls;
 
 		public TestAgentConfigurationReader(
 			AbstractLogger logger,
