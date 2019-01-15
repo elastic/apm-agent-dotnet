@@ -6,6 +6,8 @@ namespace Elastic.Apm.Tests.Mocks
 {
 	public class LocalServer : IDisposable
 	{
+		private readonly HttpListener _httpListener = new HttpListener();
+
 		public LocalServer(Action<HttpListenerContext> testAction = null)
 		{
 			_httpListener.Prefixes.Add(Uri);
@@ -25,7 +27,6 @@ namespace Elastic.Apm.Tests.Mocks
 			});
 		}
 
-		private readonly HttpListener _httpListener = new HttpListener();
 		public string Uri => "http://localhost:8082/";
 
 		public void Dispose()

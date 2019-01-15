@@ -22,7 +22,6 @@
     <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Mock\" />
     <Folder Include="TestConfigs\" />
   </ItemGroup>
   <ItemGroup>

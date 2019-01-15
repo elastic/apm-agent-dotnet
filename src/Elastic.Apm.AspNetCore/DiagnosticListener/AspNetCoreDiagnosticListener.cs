@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
-using Microsoft.AspNetCore.Http;
 
 namespace Elastic.Apm.AspNetCore.DiagnosticListener
 {

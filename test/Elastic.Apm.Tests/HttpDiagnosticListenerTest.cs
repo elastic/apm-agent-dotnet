@@ -24,7 +24,7 @@ namespace Elastic.Apm.Tests
 		public void OnErrorLog()
 		{
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger: logger));
+			var agent = new ApmAgent(new TestAgentComponents(logger));
 			var listener = new HttpDiagnosticListener(agent);
 
 			var exceptionMessage = "Ooops, this went wrong";
@@ -43,7 +43,7 @@ namespace Elastic.Apm.Tests
 		public void OnNextWithStart()
 		{
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger: logger));
+			var agent = new ApmAgent(new TestAgentComponents(logger));
 			StartTransaction(agent);
 			var listener = new HttpDiagnosticListener(agent);
 
@@ -66,7 +66,7 @@ namespace Elastic.Apm.Tests
 		public void OnNextWithStartAndStop()
 		{
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger: logger));
+			var agent = new ApmAgent(new TestAgentComponents(logger));
 			StartTransaction(agent);
 			var listener = new HttpDiagnosticListener(agent);
 
@@ -92,7 +92,7 @@ namespace Elastic.Apm.Tests
 		public void OnNextWithStartAndStopTwice()
 		{
 			var logger = new TestLogger(LogLevel.Warning);
-			var agent = new ApmAgent(new TestAgentComponents(logger: logger));
+			var agent = new ApmAgent(new TestAgentComponents(logger));
 			StartTransaction(agent);
 			var listener = new HttpDiagnosticListener(agent);
 

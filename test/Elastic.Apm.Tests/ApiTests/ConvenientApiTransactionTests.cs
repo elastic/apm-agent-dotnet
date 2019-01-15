@@ -390,9 +390,87 @@ namespace Elastic.Apm.Tests.ApiTests
 		}
 
 		/// <summary>
+		/// Creates a custom transaction and adds a tag to it.
+		/// Makes sure that the tag is stored on Transaction.Context.
+		/// </summary>
+		[Fact]
+		public void TagsOnTransaction()
+		{
+			var payloadSender = AssertWith1Transaction(
+				t =>
+				{
+					t.Tracer.CaptureTransaction(TransactionName, TransactionType, transaction =>
+					{
+						Thread.Sleep(SleepLength);
+						transaction.Tags["foo"] = "bar";
+					});
+				});
+
+			//According to the Intake API tags are stored on the Context (and not on Transaction.Tags directly).
+			Assert.Equal("bar", payloadSender.Payloads[0].Transactions[0].Context.Tags["foo"]);
+
+			//Also make sure the tag is visible directly on Transaction.Tags.
+			Assert.Equal("bar", payloadSender.Payloads[0].Transactions[0].Tags["foo"]);
+		}
+
+		/// <summary>
+		/// Creates a custom async transaction and adds a tag to it.
+		/// Makes sure that the tag is stored on Transaction.Context.
+		/// </summary>
+		[Fact]
+		public async Task TagsOnTransactionAsync()
+		{
+			var payloadSender = await AssertWith1TransactionAsync(
+				async t =>
+				{
+					await t.Tracer.CaptureTransaction(TransactionName, TransactionType, async transaction =>
+					{
+						await Task.Delay(SleepLength);
+						transaction.Tags["foo"] = "bar";
+					});
+				});
+
+			//According to the Intake API tags are stored on the Context (and not on Transaction.Tags directly).
+			Assert.Equal("bar", payloadSender.Payloads[0].Transactions[0].Context.Tags["foo"]);
+
+			//Also make sure the tag is visible directly on Transaction.Tags.
+			Assert.Equal("bar", payloadSender.Payloads[0].Transactions[0].Tags["foo"]);
+		}
+
+		/// <summary>
+		/// Creates a custom async Transaction that ends with an error and adds a tag to it.
+		/// Makes sure that the tag is stored on Transaction.Context.
+		/// </summary>
+		[Fact]
+		public async Task TagsOnTransactionAsyncError()
+		{
+			var payloadSender = await AssertWith1TransactionAnd1ErrorAsync(
+				async t =>
+				{
+					await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+					{
+						await t.Tracer.CaptureTransaction(TransactionName, TransactionType, async transaction =>
+						{
+							await Task.Delay(SleepLength);
+							transaction.Tags["foo"] = "bar";
+
+							if (new Random().Next(1) == 0) //avoid unreachable code warning.
+								throw new InvalidOperationException(ExceptionMessage);
+						});
+					});
+				});
+
+			//According to the Intake API tags are stored on the Context (and not on Transaction.Tags directly).
+			Assert.Equal("bar", payloadSender.Payloads[0].Transactions[0].Context.Tags["foo"]);
+
+			//Also make sure the tag is visible directly on Transaction.Tags.
+			Assert.Equal("bar", payloadSender.Payloads[0].Transactions[0].Tags["foo"]);
+		}
+
+		/// <summary>
 		/// Asserts on 1 transaction with async code
 		/// </summary>
-		private async Task AssertWith1TransactionAsync(Func<ApmAgent, Task> func)
+		private async Task<MockPayloadSender> AssertWith1TransactionAsync(Func<ApmAgent, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
@@ -406,12 +484,13 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
 
 			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= SleepLength);
+			return payloadSender;
 		}
 
 		/// <summary>
 		/// Asserts on 1 async transaction and 1 error
 		/// </summary>
-		private async Task AssertWith1TransactionAnd1ErrorAsync(Func<ApmAgent, Task> func)
+		private async Task<MockPayloadSender> AssertWith1TransactionAnd1ErrorAsync(Func<ApmAgent, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
@@ -432,12 +511,13 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			Assert.Equal(typeof(InvalidOperationException).FullName, payloadSender.Errors[0].Errors[0].Exception.Type);
 			Assert.Equal(ExceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
+			return payloadSender;
 		}
 
 		/// <summary>
 		/// Asserts on 1 transaction
 		/// </summary>
-		private void AssertWith1Transaction(Action<ApmAgent> action)
+		private MockPayloadSender AssertWith1Transaction(Action<ApmAgent> action)
 		{
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
@@ -451,6 +531,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
 
 			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= SleepLength);
+
+			return payloadSender;
 		}
 
 		/// <summary>

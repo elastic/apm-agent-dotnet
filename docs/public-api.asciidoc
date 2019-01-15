@@ -153,6 +153,27 @@ finally
 
 
 [float]
+[[api-transaction-tags]]
+==== `Dictionary<string,string> Tags`
+A flat mapping of user-defined tags with string values. 
+
+NOTE: Tags are indexed in Elasticsearch so that they are searchable and aggregatable. By all means, you should avoid that user specified data, like URL parameters, is used as a tag key as it can lead to mapping explosions.
+
+[source,csharp]
+----
+Ageny.Tracer
+ .CaptureTransaction(TransactionName, TransactionType, 
+    transaction =>
+    {
+        transaction.Tags["foo"] = "bar";
+        //application code that is captured as a transaction
+    });
+----
+
+* `key`:   The tag key
+* `value`: The tag value
+
+[float]
 [[api-transaction-end]]
 ==== `void End()`
 Ends the transaction and schedules it to be reported to the APM Server.
@@ -245,6 +266,23 @@ If for example a database query happens within a recorded transaction,
 a span representing this database query may be created.
 In such a case, the name of the span will contain information about the query itself,
 and the type will hold information about the database type.
+
+[float]
+[[api-span-tags]]
+==== `Dictionary<string,string> Tags`
+Similar to <<api-transaction-tags>> on the <<api-transaction>>: A flat mapping of user-defined tags with string values. 
+
+NOTE: Tags are indexed in Elasticsearch so that they are searchable and aggregatable. By all means, you should avoid that user specified data, like URL parameters, is used as a tag key as it can lead to mapping explosions.
+
+[source,csharp]
+----
+transaction.CaptureSpan(SpanName, SpanType, 
+span =>
+    {
+        span.Tags["foo"] = "bar";
+        //application code that is captured as a span
+    });
+----
 
 [float]
 [[api-span-capture-exception]]

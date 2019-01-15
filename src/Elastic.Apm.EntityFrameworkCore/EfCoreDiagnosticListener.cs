@@ -42,14 +42,11 @@ namespace Elastic.Apm.EntityFrameworkCore
 					{
 						if (_spans.TryRemove(commandExecutedEventData.CommandId, out var span))
 						{
-							span.Context = new Span.ContextC
+							span.Context.Db = new Db
 							{
-								Db = new Db
-								{
-									Statement = commandExecutedEventData.Command.CommandText,
-									Instance = commandExecutedEventData.Command.Connection.Database,
-									Type = "sql"
-								}
+								Statement = commandExecutedEventData.Command.CommandText,
+								Instance = commandExecutedEventData.Command.Connection.Database,
+								Type = "sql"
 							};
 							span.Duration = commandExecutedEventData.Duration.TotalMilliseconds;
 

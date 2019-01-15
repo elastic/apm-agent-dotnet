@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.Api;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Elastic.Apm.Model.Payload
 {
@@ -18,6 +17,8 @@ namespace Elastic.Apm.Model.Payload
 
 		public const string TypeDb = "db";
 		public const string TypeExternal = "external";
+
+		private readonly Lazy<ContextImpl> _context = new Lazy<ContextImpl>();
 
 		private readonly DateTimeOffset _start;
 
@@ -34,8 +35,7 @@ namespace Elastic.Apm.Model.Payload
 		}
 
 		public string Action { get; set; }
-
-		public IContext Context { get; set; }
+		public IContext Context => _context.Value;
 
 		/// <inheritdoc />
 		/// <summary>
@@ -56,6 +56,10 @@ namespace Elastic.Apm.Model.Payload
 		public decimal Start { get; set; }
 
 		public string Subtype { get; set; }
+
+		[JsonIgnore]
+		public Dictionary<string, string> Tags => Context.Tags;
+
 		internal Transaction Transaction;
 
 		public Guid TransactionId => Transaction.Id;
@@ -75,10 +79,13 @@ namespace Elastic.Apm.Model.Payload
 		public void CaptureError(string message, string culprit, StackFrame[] frames)
 			=> Transaction?.CaptureError(message, culprit, frames);
 
-		public class ContextC : IContext
+		private class ContextImpl : IContext
 		{
 			public IDb Db { get; set; }
 			public IHttp Http { get; set; }
+
+			private readonly Lazy<Dictionary<string, string>> _tags = new Lazy<Dictionary<string, string>>();
+			public Dictionary<string, string> Tags => _tags.Value;
 		}
 	}
 

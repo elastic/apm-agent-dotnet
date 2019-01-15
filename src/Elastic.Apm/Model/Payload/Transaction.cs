@@ -8,6 +8,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
+using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
 {
@@ -17,6 +18,8 @@ namespace Elastic.Apm.Model.Payload
 		private readonly IPayloadSender _sender;
 		public const string TypeRequest = "request";
 		internal readonly DateTimeOffset Start;
+
+		private readonly Lazy<Context> _context = new Lazy<Context>();
 
 		public Transaction(IApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, agent.PayloadSender) { }
@@ -31,7 +34,7 @@ namespace Elastic.Apm.Model.Payload
 			Id = Guid.NewGuid();
 		}
 
-		public Context Context { get; set; }
+		public Context Context => _context.Value;
 
 		/// <inheritdoc />
 		/// <summary>
@@ -56,11 +59,14 @@ namespace Elastic.Apm.Model.Payload
 
 		internal Service Service;
 
+		//TODO: probably won't need with intake v2
+		public ISpan[] Spans => SpansInternal.ToArray();
+
 		//TODO: measure! What about List<T> with lock() in our case?
 		internal BlockingCollection<Span> SpansInternal = new BlockingCollection<Span>();
 
-		//TODO: probably won't need with intake v2
-		public ISpan[] Spans => SpansInternal.ToArray();
+		[JsonIgnore]
+		public Dictionary<string, string> Tags => Context.Tags;
 
 		public string Timestamp => Start.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
 

@@ -64,13 +64,10 @@ namespace Elastic.Apm.DiagnosticListeners
 
 					if (ProcessingRequests.TryAdd(request, span))
 					{
-						span.Context = new Span.ContextC
+						span.Context.Http = new Http
 						{
-							Http = new Http
-							{
-								Url = request?.RequestUri?.ToString(),
-								Method = request?.Method?.Method
-							}
+							Url = request?.RequestUri?.ToString(),
+							Method = request?.Method?.Method
 						};
 
 						var frames = new StackTrace().GetFrames();

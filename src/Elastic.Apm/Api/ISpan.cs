@@ -13,7 +13,10 @@ namespace Elastic.Apm.Api
 		/// </summary>
 		string Action { get; set; }
 
-		IContext Context { get; set; }
+		/// <summary>
+		/// Any other arbitrary data captured by the agent, optionally provided by the user.
+		/// </summary>
+		IContext Context { get; }
 
 		/// <summary>
 		/// The duration of the span.
@@ -45,6 +48,11 @@ namespace Elastic.Apm.Api
 		/// Examples: 'http', 'mssql'.
 		/// </summary>
 		string Subtype { get; set; }
+
+		/// <summary>
+		/// A flat mapping of user-defined tags with string values.
+		/// </summary>
+		Dictionary<string, string> Tags { get; }
 
 		/// <summary>
 		/// UUID of the enclosing transaction.
@@ -83,6 +91,7 @@ namespace Elastic.Apm.Api
 	{
 		IDb Db { get; set; }
 		IHttp Http { get; set; }
+		Dictionary<string, string> Tags { get; }
 	}
 
 	public interface IDb
