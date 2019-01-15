@@ -35,7 +35,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Single(payloadSender.Payloads);
 			Assert.Equal(transactionName, payloadSender.Payloads[0].Transactions[0].Name);
 			Assert.Equal(transactionType, payloadSender.Payloads[0].Transactions[0].Type);
-			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration > 0);
+			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= 5);
 			Assert.True(payloadSender.Payloads[0].Transactions[0].Id != Guid.Empty);
 
 			Assert.NotNull(payloadSender.Payloads[0].Service);
@@ -155,8 +155,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.NotEmpty(payloadSender.Payloads[0].Transactions[0].Spans);
 
 			Assert.Equal(spanName, payloadSender.Payloads[0].Transactions[0].Spans[0].Name);
-			Assert.True(payloadSender.Payloads[0].Transactions[0].Spans[0].Duration > 0);
-			Assert.True(payloadSender.Payloads[0].Transactions[0].Spans[0].Id > 0);
+			Assert.True(payloadSender.Payloads[0].Transactions[0].Spans[0].Duration >= 5);
+			Assert.True(payloadSender.Payloads[0].Transactions[0].Spans[0].Id >= 5);
 			Assert.NotNull(payloadSender.Payloads[0].Service);
 		}
 
@@ -300,6 +300,60 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Single(payloadSender.Errors);
 			Assert.Equal(exceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
 			Assert.Equal(exceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
+		}
+
+		/// <summary>
+		/// Creates 1 transaction and 1 span with 2 tags on both of them.
+		/// Makes sure that the tags are captured.
+		/// </summary>
+		[Fact]
+		public void TagsOnTransactionAndSpan()
+		{
+			var transactionName = "TestTransaction";
+			var transactionType = "UnitTest";
+			var spanName = "TestSpan";
+			var exceptionMessage = "Foo!";
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
+			transaction.Tags["fooTransaction1"] = "barTransaction1";
+			transaction.Tags["fooTransaction2"] = "barTransaction2";
+
+			var span = transaction.StartSpan(spanName, Span.TypeExternal);
+			span.Tags["fooSpan1"] = "barSpan1";
+			span.Tags["fooSpan2"] = "barSpan2";
+
+			Thread.Sleep(5); //Make sure we have duration > 0
+
+			try
+			{
+				throw new InvalidOperationException(exceptionMessage);
+			}
+			catch (Exception e)
+			{
+				span.CaptureException(e);
+			}
+
+			span.End();
+			transaction.End();
+
+			Assert.Single(payloadSender.Payloads);
+			Assert.Single(payloadSender.Errors);
+			Assert.Equal(exceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
+			Assert.Equal(exceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
+
+			Assert.Equal("barTransaction1", payloadSender.Payloads[0].Transactions[0].Tags["fooTransaction1"]);
+			Assert.Equal("barTransaction1", payloadSender.Payloads[0].Transactions[0].Context.Tags["fooTransaction1"]);
+
+			Assert.Equal("barTransaction2", payloadSender.Payloads[0].Transactions[0].Tags["fooTransaction2"]);
+			Assert.Equal("barTransaction2", payloadSender.Payloads[0].Transactions[0].Context.Tags["fooTransaction2"]);
+
+			Assert.Equal("barSpan1", payloadSender.Payloads[0].Transactions[0].Spans[0].Tags["fooSpan1"]);
+			Assert.Equal("barSpan1", payloadSender.Payloads[0].Transactions[0].Spans[0].Context.Tags["fooSpan1"]);
+
+			Assert.Equal("barSpan2", payloadSender.Payloads[0].Transactions[0].Spans[0].Tags["fooSpan2"]);
+			Assert.Equal("barSpan2", payloadSender.Payloads[0].Transactions[0].Spans[0].Context.Tags["fooSpan2"]);
 		}
 	}
 }
