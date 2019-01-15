@@ -35,25 +35,22 @@ namespace Elastic.Apm.AspNetCore
 			var transaction = _tracer.StartTransaction($"{context.Request.Method} {context.Request.Path}",
 				Transaction.TypeRequest);
 
-			transaction.Context = new Context
+			transaction.Context.Request = new Request
 			{
-				Request = new Request
+				Method = context.Request.Method,
+				Socket = new Socket
 				{
-					Method = context.Request.Method,
-					Socket = new Socket
-					{
-						Encrypted = context.Request.IsHttps,
-						RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
-					},
-					Url = new Url
-					{
-						Full = context.Request?.Path.Value,
-						HostName = context.Request.Host.Host,
-						Protocol = GetProtocolName(context.Request.Protocol),
-						Raw = context.Request?.Path.Value //TODO
-					},
-					HttpVersion = GetHttpVersion(context.Request.Protocol)
-				}
+					Encrypted = context.Request.IsHttps,
+					RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
+				},
+				Url = new Url
+				{
+					Full = context.Request?.Path.Value,
+					HostName = context.Request.Host.Host,
+					Protocol = GetProtocolName(context.Request.Protocol),
+					Raw = context.Request?.Path.Value //TODO
+				},
+				HttpVersion = GetHttpVersion(context.Request.Protocol)
 			};
 
 			try

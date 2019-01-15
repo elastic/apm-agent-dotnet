@@ -70,8 +70,13 @@ namespace ApiSamples
 		public static void SampleCustomTransactionWithConvenientApi() => Agent.Tracer.CaptureTransaction("TestTransaction", "TestType",
 			t =>
 			{
+				t.Context.Tags["fooTransaction"] = "barTransaction";
 				Thread.Sleep(10);
-				t.CaptureSpan("TestSpan", "TestSpanName", () => { Thread.Sleep(20); });
+				t.CaptureSpan("TestSpan", "TestSpanName", (s) =>
+				{
+					Thread.Sleep(20);
+					s.Tags["fooSpan"] = "barSpan";
+				});
 			});
 	}
 }
