@@ -14,9 +14,9 @@ namespace Elastic.Apm
 			Service service = null,
 			IPayloadSender payloadSender = null)
 		{
-			Service = service ?? Service.Default;
 			Logger = logger ?? ConsoleLogger.Instance;
 			ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(Logger);
+			Service = service ?? Service.GetDefaultService(ConfigurationReader);
 			PayloadSender = payloadSender ?? new PayloadSender(Logger, ConfigurationReader);
 			Tracer = new Tracer(Logger, Service, PayloadSender);
 		}

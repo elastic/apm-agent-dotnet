@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Elastic.Apm.Config;
 
 namespace Elastic.Apm.Model.Payload
 {
@@ -9,22 +10,28 @@ namespace Elastic.Apm.Model.Payload
 		public Language Language { get; set; }
 		public string Name { get; set; }
 
+		private Service() { }
+
 		public class AgentC
 		{
 			public string Name { get; set; }
 			public string Version { get; set; }
 		}
 
-		internal static Service Default => new Service
+		internal static Service GetDefaultService(IConfigurationReader configurationReader)
 		{
-			Name = Assembly.GetEntryAssembly()?.GetName().Name.Replace('.', '_'),
-
-			Agent = new AgentC
+			var n = new Service
 			{
-				Name = Consts.AgentName,
-				Version = Consts.AgentVersion
-			}
-		};
+				Name = configurationReader.ServiceName,
+				Agent = new AgentC
+				{
+					Name = Consts.AgentName,
+					Version = Consts.AgentVersion
+				}
+			};
+
+			return n;
+		}
 	}
 
 	public class Framework

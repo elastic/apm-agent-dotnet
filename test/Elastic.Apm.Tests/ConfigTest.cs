@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
@@ -38,7 +40,7 @@ namespace Elastic.Apm.Tests
 			Assert.Equal(ConfigConsts.DefaultServerUri.ToString(), agent.ConfigurationReader.ServerUrls[0].ToString());
 
 			Assert.Equal(
-				$"Error {nameof(TestAgentConfigurationReader)}: Failed parsing server URL from {TestAgentConfigurationReader.Origin}: {TestAgentConfigurationReader.Keys.Urls}, value: {serverUrl}",
+				$"Error {nameof(TestAgentConfigurationReader)}: Failed parsing server URL from {TestAgentConfigurationReader.Origin}: {ConfigConsts.ConfigKeys.Urls}, value: {serverUrl}",
 				logger.Lines[0]);
 		}
 
@@ -83,7 +85,7 @@ namespace Elastic.Apm.Tests
 			Assert.Equal(serverUrl3.ToLower() + "/", agent.ConfigurationReader.ServerUrls[1].ToString().ToLower());
 
 			Assert.Equal(
-				$"Error {nameof(TestAgentConfigurationReader)}: Failed parsing server URL from {TestAgentConfigurationReader.Origin}: {TestAgentConfigurationReader.Keys.Urls}, value: {serverUrl2}",
+				$"Error {nameof(TestAgentConfigurationReader)}: Failed parsing server URL from {TestAgentConfigurationReader.Origin}: {ConfigConsts.ConfigKeys.Urls}, value: {serverUrl2}",
 				logger.Lines[0]);
 		}
 
@@ -127,7 +129,7 @@ namespace Elastic.Apm.Tests
 
 			Assert.Equal(LogLevel.Error, agent.ConfigurationReader.LogLevel);
 			Assert.Equal(
-				$"Error Config: Failed parsing log level from {TestAgentConfigurationReader.Origin}: {TestAgentConfigurationReader.Keys.Level}, value: {logLevelValue}. Defaulting to log level 'Error'",
+				$"Error Config: Failed parsing log level from {TestAgentConfigurationReader.Origin}: {ConfigConsts.ConfigKeys.Level}, value: {logLevelValue}. Defaulting to log level 'Error'",
 				logger.Lines[0]);
 		}
 
@@ -142,7 +144,45 @@ namespace Elastic.Apm.Tests
 			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
 			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", (t) => {  Thread.Sleep(2);  });
 
-			//Assert.Equal("Elastic_Apm_Tests", payloadSender.Payloads[0].Service.Name); - WIP
+			//By default XUnit uses 'testhost' as the entry assembly, and that is what the
+			//agent reports if we don't set it to anything:
+			Assert.False(string.IsNullOrEmpty(payloadSender.Payloads[0].Service.Name));
+			Assert.False(payloadSender.Payloads[0].Service.Name.Contains('.'));
+		}
+
+		/// <summary>
+		/// Sets the ELASTIC_APM_SERVICE_NAME environment variable and makes sure that
+		/// when the agent sends data to the server it has the value from the
+		/// ELASTIC_APM_SERVICE_NAME environment variable as service name.
+		/// </summary>
+		[Fact]
+		public void ReadServiceNameViaEnvironmentVariable()
+		{
+			var serviceName = "MyService123";
+			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.ServiceName, serviceName);
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", (t) => {  Thread.Sleep(2);  });
+
+			Assert.Equal(serviceName, payloadSender.Payloads[0].Service.Name);
+		}
+
+		/// <summary>
+		/// Sets the ELASTIC_APM_SERVICE_NAME environment variable to a value that contains a '.'
+		/// Makes sure that when the agent sends data to the server it has the value from the
+		/// ELASTIC_APM_SERVICE_NAME environment variable as service name and also makes sure that
+		/// the '.' is replaced.
+		/// </summary>
+		[Fact]
+		public void ReadServiceNameWithDotViaEnvironmentVariable()
+		{
+			var serviceName = "My.Service.Test";
+			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.ServiceName, serviceName);
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", (t) => {  Thread.Sleep(2);  });
+
+			Assert.Equal(serviceName.Replace('.', '_'), payloadSender.Payloads[0].Service.Name);
 			Assert.False(payloadSender.Payloads[0].Service.Name.Contains('.'));
 		}
 	}

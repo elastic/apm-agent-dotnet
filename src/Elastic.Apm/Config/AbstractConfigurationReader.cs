@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
@@ -64,6 +65,27 @@ namespace Elastic.Apm.Config
 
 				return uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps;
 			}
+		}
+
+		protected string ParseServiceName(ConfigurationKeyValue kv)
+		{
+			var retVal = kv.Value;
+			if (string.IsNullOrEmpty(retVal))
+			{
+				retVal = Assembly.GetEntryAssembly()?.GetName().Name;
+			}
+
+			if (string.IsNullOrEmpty(retVal))
+			{
+				//Stackwalk
+			}
+
+			if (string.IsNullOrEmpty(retVal))
+			{
+				retVal = "unknown";
+			}
+
+		 	return retVal.Replace('.', '_');
 		}
 	}
 }

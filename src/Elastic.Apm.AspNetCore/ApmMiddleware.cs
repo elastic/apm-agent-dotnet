@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.AspNetCore.Config;
-using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model.Payload;
 using Microsoft.AspNetCore.Http;
