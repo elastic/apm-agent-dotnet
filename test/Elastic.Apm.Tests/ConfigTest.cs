@@ -1,4 +1,6 @@
-﻿using Elastic.Apm.Config;
+﻿using System.Reflection;
+using System.Threading;
+using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
 using Xunit;
@@ -127,6 +129,21 @@ namespace Elastic.Apm.Tests
 			Assert.Equal(
 				$"Error Config: Failed parsing log level from {TestAgentConfigurationReader.Origin}: {TestAgentConfigurationReader.Keys.Level}, value: {logLevelValue}. Defaulting to log level 'Error'",
 				logger.Lines[0]);
+		}
+
+		/// <summary>
+		/// The server doesn't accept services with '.' in it.
+		/// This test makes sure we don't have '.' in the default service name.
+		/// </summary>
+		[Fact]
+		public void DefaultServiceNameTest()
+		{
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", (t) => {  Thread.Sleep(2);  });
+
+			//Assert.Equal("Elastic_Apm_Tests", payloadSender.Payloads[0].Service.Name); - WIP
+			Assert.False(payloadSender.Payloads[0].Service.Name.Contains('.'));
 		}
 	}
 }

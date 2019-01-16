@@ -59,8 +59,8 @@ namespace Elastic.Apm.DiagnosticListeners
 
 					transaction = TransactionContainer.Transactions.Value;
 
-					var span = transaction.StartSpan($"{request?.Method} {request?.RequestUri?.Host}", Span.TypeExternal,
-						Span.SubtypeHttp);
+					var span = transaction.StartSpan($"{request?.Method} {request?.RequestUri?.Host}", ApiConstants.TypeExternal,
+						ApiConstants.SubtypeHttp);
 
 					if (ProcessingRequests.TryAdd(request, span))
 					{

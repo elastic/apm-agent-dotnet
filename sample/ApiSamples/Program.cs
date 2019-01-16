@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Elastic.Apm;
+using Elastic.Apm.Api;
 using Elastic.Apm.Model.Payload;
 
 namespace ApiSamples
@@ -19,7 +20,7 @@ namespace ApiSamples
 		public static void SampleCustomTransaction()
 		{
 			Console.WriteLine($"{nameof(SampleCustomTransaction)} started");
-			var transaction = Agent.Tracer.StartTransaction("SampleTransaction", Transaction.TypeRequest);
+			var transaction = Agent.Tracer.StartTransaction("SampleTransaction", ApiConstants.TypeRequest);
 
 			Thread.Sleep(500); //simulate work...
 
@@ -30,11 +31,11 @@ namespace ApiSamples
 		public static void SampleCustomTransactionWithSpan()
 		{
 			Console.WriteLine($"{nameof(SampleCustomTransactionWithSpan)} started");
-			var transaction = Agent.Tracer.StartTransaction("SampleTransactionWithSpan", Transaction.TypeRequest);
+			var transaction = Agent.Tracer.StartTransaction("SampleTransactionWithSpan", ApiConstants.TypeRequest);
 
 			Thread.Sleep(500);
 
-			var span = transaction.StartSpan("SampleSpan", Span.TypeExternal);
+			var span = transaction.StartSpan("SampleSpan", ApiConstants.TypeExternal);
 			Thread.Sleep(200);
 			span.End();
 
@@ -45,10 +46,10 @@ namespace ApiSamples
 		public static void SampleError()
 		{
 			Console.WriteLine($"{nameof(SampleError)} started");
-			var transaction = Agent.Tracer.StartTransaction("SampleError", Transaction.TypeRequest);
+			var transaction = Agent.Tracer.StartTransaction("SampleError", ApiConstants.TypeRequest);
 
 			Thread.Sleep(500); //simulate work...
-			var span = transaction.StartSpan("SampleSpan", Span.TypeExternal);
+			var span = transaction.StartSpan("SampleSpan", ApiConstants.TypeExternal);
 			try
 			{
 				throw new Exception("bamm");

@@ -17,7 +17,8 @@ namespace Elastic.Apm.Model.Payload
 
 		internal static Service Default => new Service
 		{
-			Name = Assembly.GetEntryAssembly()?.GetName().Name,
+			Name = Assembly.GetEntryAssembly()?.GetName().Name.Replace('.', '_'),
+
 			Agent = new AgentC
 			{
 				Name = Consts.AgentName,

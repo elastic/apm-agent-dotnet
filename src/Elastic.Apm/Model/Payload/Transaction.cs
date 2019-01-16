@@ -12,11 +12,10 @@ using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
 {
-	public class Transaction : ITransaction
+	internal class Transaction : ITransaction
 	{
 		private readonly AbstractLogger _logger;
 		private readonly IPayloadSender _sender;
-		public const string TypeRequest = "request";
 		internal readonly DateTimeOffset Start;
 
 		private readonly Lazy<Context> _context = new Lazy<Context>();
@@ -78,7 +77,7 @@ namespace Elastic.Apm.Model.Payload
 
 			_sender.QueuePayload(new Payload
 			{
-				Transactions = new List<Transaction>
+				Transactions = new List<ITransaction>
 				{
 					this
 				},

@@ -33,7 +33,7 @@ namespace Elastic.Apm.AspNetCore
 		public async Task InvokeAsync(HttpContext context)
 		{
 			var transaction = _tracer.StartTransaction($"{context.Request.Method} {context.Request.Path}",
-				Transaction.TypeRequest);
+				ApiConstants.TypeRequest);
 
 			transaction.Context.Request = new Request
 			{
