@@ -90,7 +90,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Assert.NotEmpty(transaction.Spans);
 
 			//one of the spans is a DB call:
-			Assert.True(transaction.Spans.Any(n => n.Context.Db != null));
+			Assert.Contains(transaction.Spans, n => n.Context.Db != null);
 		}
 
 		/// <summary>
