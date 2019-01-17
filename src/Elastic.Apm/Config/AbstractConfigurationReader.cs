@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using Elastic.Apm.Logging;
 
@@ -72,20 +74,58 @@ namespace Elastic.Apm.Config
 			var retVal = kv.Value;
 			if (string.IsNullOrEmpty(retVal))
 			{
+				Logger?.LogInfo("Config", $"The agent was started without a service name. The service name will be automatically calculated.");
 				retVal = Assembly.GetEntryAssembly()?.GetName().Name;
 			}
 
 			if (string.IsNullOrEmpty(retVal))
 			{
-				//Stackwalk
+				var stackFrames = new StackTrace().GetFrames();
+				foreach (var frame in stackFrames)
+				{
+					var currentAssembly = frame.GetMethod()?.DeclaringType.Assembly;
+					var token =  currentAssembly.GetName().GetPublicKeyToken();
+					if (currentAssembly != null
+						&& !IsMsOrElastic(currentAssembly.GetName().GetPublicKeyToken()))
+					{
+						retVal = currentAssembly.GetName().Name;
+						break;
+					}
+				}
 			}
 
 			if (string.IsNullOrEmpty(retVal))
 			{
+				Logger?.LogError("Config", $"Failed calculating service name, the service name will be 'unknown'." +
+					$" You can fix this by setting the service name to a specific value (e.g. by using the environment variable {ConfigConsts.ConfigKeys.ServiceName})");
 				retVal = "unknown";
 			}
 
 		 	return retVal.Replace('.', '_');
+		}
+
+		internal static bool IsMsOrElastic(byte[] array)
+		{
+			var elasticToken = new byte[] { 174, 116, 0, 210, 193, 137, 207, 34 };
+			var mscorlibToken = new byte[] { 183, 122, 92, 86, 25, 52, 224, 137 };
+
+			if (array.Length != 8)
+				return false;
+
+			var isMsCorLib = true;
+			var isElasticApm = true;
+			for (var i = 0; i < 8; i++)
+			{
+				if (array[i] != elasticToken[i])
+					isElasticApm = false;
+				if (array[i] != mscorlibToken[i])
+					isMsCorLib = false;
+
+				if (!isMsCorLib && !isElasticApm)
+					return false;
+			}
+
+			return true;
 		}
 	}
 }

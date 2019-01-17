@@ -185,5 +185,27 @@ namespace Elastic.Apm.Tests
 			Assert.Equal(serviceName.Replace('.', '_'), payloadSender.Payloads[0].Service.Name);
 			Assert.False(payloadSender.Payloads[0].Service.Name.Contains('.'));
 		}
+
+		/// <summary>
+		/// In case the user does not provide us a service name we try to calculate it based on the callstack.
+		/// This test makes sure we recognize mscorlib and our own assemblies correctly in the
+		/// <see cref="AbstractConfigurationReader.IsMsOrElastic(byte[])"/> method.
+		/// </summary>
+		[Fact]
+		public void TestAbstractConfigurationReaderIsMsOrElastic()
+		{
+			var elasticToken = new byte[] { 174, 116, 0, 210, 193, 137, 207, 34 };
+			var mscorlibToken = new byte[] { 183, 122, 92, 86, 25, 52, 224, 137 };
+
+			Assert.True(AbstractConfigurationReader.IsMsOrElastic(elasticToken));
+			Assert.True(AbstractConfigurationReader.IsMsOrElastic(elasticToken));
+
+			Assert.False(AbstractConfigurationReader.IsMsOrElastic(new byte[] { 0, }));
+			Assert.False(AbstractConfigurationReader.IsMsOrElastic(new byte[] { }));
+
+			Assert.False(AbstractConfigurationReader
+				.IsMsOrElastic(new byte[] { elasticToken[0], mscorlibToken[1], elasticToken[2],
+					mscorlibToken[3], elasticToken[4], mscorlibToken[5], elasticToken[6], mscorlibToken[7]}));
+		}
 	}
 }
