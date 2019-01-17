@@ -19,8 +19,7 @@ namespace Elastic.Apm.Model.Payload
 		}
 
 		internal static Service GetDefaultService(IConfigurationReader configurationReader)
-		{
-			var n = new Service
+		=> new Service
 			{
 				Name = configurationReader.ServiceName,
 				Agent = new AgentC
@@ -29,9 +28,6 @@ namespace Elastic.Apm.Model.Payload
 					Version = Consts.AgentVersion
 				}
 			};
-
-			return n;
-		}
 	}
 
 	public class Framework
