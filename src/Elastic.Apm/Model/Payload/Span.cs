@@ -6,18 +6,8 @@ using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
 {
-	public class Span : ISpan
+	internal class Span : ISpan
 	{
-		public const string ActionExec = "exec";
-		public const string ActionQuery = "query";
-
-		public const string SubtypeHttp = "http";
-		public const string SubtypeMssql = "mssql";
-		public const string SubtypeSqLite = "sqlite";
-
-		public const string TypeDb = "db";
-		public const string TypeExternal = "external";
-
 		private readonly Lazy<ContextImpl> _context = new Lazy<ContextImpl>();
 
 		private readonly DateTimeOffset _start;

@@ -8,16 +8,14 @@ namespace Elastic.Apm.Config
 	{
 		internal const string Origin = "environment";
 
-		internal static (string Level, string Urls) Keys = (
-			Level: "ELASTIC_APM_LOG_LEVEL",
-			Urls: "ELASTIC_APM_SERVER_URLS"
-		);
 
 		public EnvironmentConfigurationReader(AbstractLogger logger = null) : base(logger) { }
 
-		public LogLevel LogLevel => ParseLogLevel(Read(Keys.Level));
+		public LogLevel LogLevel => ParseLogLevel(Read(ConfigConsts.ConfigKeys.Level));
 
-		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Read(Keys.Urls));
+		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Read(ConfigConsts.ConfigKeys.Urls));
+
+		public string ServiceName => ParseServiceName(Read(ConfigConsts.ConfigKeys.ServiceName));
 
 		private static ConfigurationKeyValue Read(string key) =>
 			new ConfigurationKeyValue(key, Environment.GetEnvironmentVariable(key), Origin);

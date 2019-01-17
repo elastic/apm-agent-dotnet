@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
@@ -284,8 +285,8 @@ namespace Elastic.Apm.Tests
 				Assert.True(res.IsSuccessStatusCode);
 			}
 
-			Assert.Equal(Span.TypeExternal, TransactionContainer.Transactions.Value.Spans[0].Type);
-			Assert.Equal(Span.SubtypeHttp, TransactionContainer.Transactions.Value.Spans[0].Subtype);
+			Assert.Equal(ApiConstants.TypeExternal, TransactionContainer.Transactions.Value.Spans[0].Type);
+			Assert.Equal(ApiConstants.SubtypeHttp, TransactionContainer.Transactions.Value.Spans[0].Subtype);
 			Assert.Null(TransactionContainer.Transactions.Value.Spans[0].Action); //we don't set Action for HTTP calls
 		}
 
@@ -366,6 +367,6 @@ namespace Elastic.Apm.Tests
 
 		private void StartTransaction(ApmAgent agent)
 			=> TransactionContainer.Transactions.Value =
-				new Transaction(agent, $"{nameof(TestSimpleOutgoingHttpRequest)}", Transaction.TypeRequest);
+				new Transaction(agent, $"{nameof(TestSimpleOutgoingHttpRequest)}", ApiConstants.TypeRequest);
 	}
 }

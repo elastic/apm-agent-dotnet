@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Elastic.Apm.Api;
 using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Tests.Mocks;
 using Xunit;
@@ -105,12 +106,12 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			Assert.NotNull(currentTransaction);
 			Assert.Equal(transactionName, currentTransaction.Name);
-			Assert.Equal(Transaction.TypeRequest, currentTransaction.Type);
+			Assert.Equal(ApiConstants.TypeRequest, currentTransaction.Type);
 
 			void StartTransaction()
 			{
 				TransactionContainer.Transactions.Value =
-					new Transaction(agent, transactionName, Transaction.TypeRequest);
+					new Transaction(agent, transactionName, ApiConstants.TypeRequest);
 			}
 
 			async Task DoAsyncWork()
@@ -118,14 +119,14 @@ namespace Elastic.Apm.Tests.ApiTests
 				//Make sure we have a transaction in the subtask before the async work
 				Assert.NotNull(agent.Tracer.CurrentTransaction);
 				Assert.Equal(transactionName, agent.Tracer.CurrentTransaction.Name);
-				Assert.Equal(Transaction.TypeRequest, agent.Tracer.CurrentTransaction.Type);
+				Assert.Equal(ApiConstants.TypeRequest, agent.Tracer.CurrentTransaction.Type);
 
 				await Task.Delay(50);
 
 				//and after the async work
 				Assert.NotNull(agent.Tracer.CurrentTransaction);
 				Assert.Equal(transactionName, agent.Tracer.CurrentTransaction.Name);
-				Assert.Equal(Transaction.TypeRequest, agent.Tracer.CurrentTransaction.Type);
+				Assert.Equal(ApiConstants.TypeRequest, agent.Tracer.CurrentTransaction.Type);
 			}
 		}
 
@@ -144,7 +145,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
-			var span = transaction.StartSpan(spanName, Span.TypeExternal);
+			var span = transaction.StartSpan(spanName, ApiConstants.TypeExternal);
 
 			Thread.Sleep(5); //Make sure we have duration > 0
 
@@ -174,7 +175,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
-			var unused = transaction.StartSpan(spanName, Span.TypeExternal);
+			var unused = transaction.StartSpan(spanName, ApiConstants.TypeExternal);
 
 			Thread.Sleep(5); //Make sure we have duration > 0
 
@@ -199,16 +200,16 @@ namespace Elastic.Apm.Tests.ApiTests
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
-			var span = transaction.StartSpan(spanName, Span.TypeDb, Span.SubtypeMssql, Span.ActionQuery);
+			var span = transaction.StartSpan(spanName, ApiConstants.TypeDb, ApiConstants.SubtypeMssql, ApiConstants.ActionQuery);
 			span.End();
 			transaction.End();
 
 			Assert.NotEmpty(payloadSender.Payloads);
 			Assert.NotEmpty(payloadSender.Payloads[0].Transactions[0].Spans);
 
-			Assert.Equal(Span.TypeDb, payloadSender.Payloads[0].Transactions[0].Spans[0].Type);
-			Assert.Equal(Span.SubtypeMssql, payloadSender.Payloads[0].Transactions[0].Spans[0].Subtype);
-			Assert.Equal(Span.ActionQuery, payloadSender.Payloads[0].Transactions[0].Spans[0].Action);
+			Assert.Equal(ApiConstants.TypeDb, payloadSender.Payloads[0].Transactions[0].Spans[0].Type);
+			Assert.Equal(ApiConstants.SubtypeMssql, payloadSender.Payloads[0].Transactions[0].Spans[0].Subtype);
+			Assert.Equal(ApiConstants.ActionQuery, payloadSender.Payloads[0].Transactions[0].Spans[0].Action);
 
 			Assert.NotNull(payloadSender.Payloads[0].Service);
 		}
@@ -279,7 +280,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
-			var span = transaction.StartSpan(spanName, Span.TypeExternal);
+			var span = transaction.StartSpan(spanName, ApiConstants.TypeExternal);
 
 			Thread.Sleep(5); //Make sure we have duration > 0
 
@@ -319,7 +320,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			transaction.Tags["fooTransaction1"] = "barTransaction1";
 			transaction.Tags["fooTransaction2"] = "barTransaction2";
 
-			var span = transaction.StartSpan(spanName, Span.TypeExternal);
+			var span = transaction.StartSpan(spanName, ApiConstants.TypeExternal);
 			span.Tags["fooSpan1"] = "barSpan1";
 			span.Tags["fooSpan2"] = "barSpan2";
 

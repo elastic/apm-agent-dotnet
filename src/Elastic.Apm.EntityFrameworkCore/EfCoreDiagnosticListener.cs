@@ -32,7 +32,7 @@ namespace Elastic.Apm.EntityFrameworkCore
 					if (kv.Value is CommandEventData commandEventData)
 					{
 						var newSpan = TransactionContainer.Transactions.Value.StartSpan(
-							commandEventData.Command.CommandText, Span.TypeDb);
+							commandEventData.Command.CommandText, ApiConstants.TypeDb);
 
 						_spans.TryAdd(commandEventData.CommandId, newSpan);
 					}
@@ -55,10 +55,10 @@ namespace Elastic.Apm.EntityFrameworkCore
 							switch (providerType)
 							{
 								case string str when str.Contains("Sqlite"):
-									span.Subtype = Span.SubtypeSqLite;
+									span.Subtype = ApiConstants.SubtypeSqLite;
 									break;
 								case string str when str.Contains("SqlConnection"):
-									span.Subtype = Span.SubtypeMssql;
+									span.Subtype = ApiConstants.SubtypeMssql;
 									break;
 								default:
 									span.Subtype = providerType; //TODO, TBD: this is an unknown provider
@@ -68,10 +68,10 @@ namespace Elastic.Apm.EntityFrameworkCore
 							switch (commandExecutedEventData.Command.CommandType)
 							{
 								case CommandType.Text:
-									span.Action = Span.ActionQuery;
+									span.Action = ApiConstants.ActionQuery;
 									break;
 								case CommandType.StoredProcedure:
-									span.Action = Span.ActionExec;
+									span.Action = ApiConstants.ActionExec;
 									break;
 								case CommandType.TableDirect:
 									span.Action = "tabledirect";

@@ -18,10 +18,11 @@ namespace Elastic.Apm.AspNetCore.Config
 
 		internal const string Origin = "Configuration Provider";
 
-		public static (string LevelSubKey, string Level, string Urls) Keys = (
+		public static (string LevelSubKey, string Level, string Urls, string ServiceName) Keys = (
 			LevelSubKey: "LogLevel",
 			Level: $"ElasticApm:LogLevel",
-			Urls: "ElasticApm:ServerUrls"
+			Urls: "ElasticApm:ServerUrls",
+			ServiceName: "ElasticApm:ServiceName"
 		);
 
 		public MicrosoftExtensionsConfig(IConfiguration configuration, AbstractLogger logger = null) : base(logger)
@@ -39,13 +40,15 @@ namespace Elastic.Apm.AspNetCore.Config
 			{
 				if (_logLevel.HasValue) return _logLevel.Value;
 
-				var l = ParseLogLevel(ReadFallBack(Keys.Level, EnvironmentConfigurationReader.Keys.Level));
+				var l = ParseLogLevel(ReadFallBack(Keys.Level, ConfigConsts.ConfigKeys.Level));
 				_logLevel = l;
 				return l;
 			}
 		}
 
-		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(ReadFallBack(Keys.Urls, EnvironmentConfigurationReader.Keys.Urls));
+		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(ReadFallBack(Keys.Urls, ConfigConsts.ConfigKeys.Urls));
+
+		public string ServiceName => ParseServiceName(ReadFallBack(Keys.ServiceName, ConfigConsts.ConfigKeys.ServiceName));
 
 		private ConfigurationKeyValue Read(string key) => Kv(key, _configuration[key], Origin);
 

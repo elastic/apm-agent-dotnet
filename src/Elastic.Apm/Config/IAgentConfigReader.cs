@@ -8,5 +8,6 @@ namespace Elastic.Apm.Config
 	{
 		LogLevel LogLevel { get; }
 		IReadOnlyList<Uri> ServerUrls { get; }
+		String ServiceName { get; }
 	}
 }

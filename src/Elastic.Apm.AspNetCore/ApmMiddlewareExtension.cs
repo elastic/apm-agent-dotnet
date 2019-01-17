@@ -29,18 +29,12 @@ namespace Elastic.Apm.AspNetCore
 			params IDiagnosticsSubscriber[] subscribers
 		)
 		{
-			var service = new Service
-			{
-				Agent = new Service.AgentC
-				{
-					Name = Consts.AgentName,
-					Version = Consts.AgentVersion
-				},
-				Name = Assembly.GetEntryAssembly()?.GetName().Name,
-				Framework = new Framework { Name = "ASP.NET Core", Version = "2.1" }, //TODO: Get version
-				Language = new Language { Name = "C#" } //TODO
-			};
 			var configReader = configuration != null ? new MicrosoftExtensionsConfig(configuration) : null;
+
+			var service = Service.GetDefaultService((configReader));
+			service.Framework = new Framework { Name = "ASP.NET Core", Version = "2.1" }; //TODO: Get version
+			service.Language = new Language { Name = "C#" }; //TODO
+
 			var config = new AgentComponents(configurationReader: configReader, service: service);
 			Agent.Setup(config);
 			return UseElasticApm(builder, Agent.Instance, subscribers);

@@ -27,6 +27,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"));
 			Assert.Equal(LogLevel.Debug, config.LogLevel);
 			Assert.Equal(new Uri("http://myServerFromTheConfigFile:8080"), config.ServerUrls[0]);
+			Assert.Equal("My_Test_Application", config.ServiceName);
 		}
 
 		/// <summary>
@@ -68,9 +69,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public void ReadConfingsFromEnvVarsViaIConfig()
 		{
-			Environment.SetEnvironmentVariable(EnvironmentConfigurationReader.Keys.Level, "Debug");
+			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.Level, "Debug");
 			var serverUrl = "http://myServerFromEnvVar.com:1234";
-			Environment.SetEnvironmentVariable(EnvironmentConfigurationReader.Keys.Urls, serverUrl);
+			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.Urls, serverUrl);
+			var serviceName = "MyServiceName123";
+			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.ServiceName, serviceName);
 			var configBuilder = new ConfigurationBuilder()
 				.AddEnvironmentVariables()
 				.Build();
@@ -78,6 +81,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var config = new MicrosoftExtensionsConfig(configBuilder);
 			Assert.Equal(LogLevel.Debug, config.LogLevel);
 			Assert.Equal(new Uri(serverUrl), config.ServerUrls[0]);
+			Assert.Equal(serviceName, config.ServiceName);
 		}
 
 		private IConfiguration GetConfig(string path)
