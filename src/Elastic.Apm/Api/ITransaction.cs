@@ -19,7 +19,7 @@ namespace Elastic.Apm.Api
 		/// is automatically calculated when <see cref="End" /> is called.
 		/// </summary>
 		/// <value>The duration.</value>
-		long? Duration { get; set; } //TODO datatype?, TODO: Greg, imo should be internal, TBD!
+		long? Duration { get; set; } //TODO datatype?
 
 		Guid Id { get; }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -355,6 +356,71 @@ namespace Elastic.Apm.Tests
 			}
 
 			Assert.True(TransactionContainer.Transactions.Value.Spans[0].Id > 0);
+		}
+
+		/// <summary>
+		/// Creates an HTTP call without registering the <see cref="HttpDiagnosticsSubscriber"/>.
+		/// This is something like having a console application and just referencing the agent library.
+		/// By default the agent does not subscribe in that scenario to any diagnostic source.
+		/// Makes sure that no HTTP call is captured.
+		/// </summary>
+		[Fact]
+		public async Task HttpCallWithoutRegisteredListener()
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
+
+			await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async(t) =>
+			{
+				Thread.Sleep(5);
+
+				var httpClient = new HttpClient();
+				try
+				{
+					await httpClient.GetAsync("https://elastic.co");
+				}
+				catch (Exception e)
+				{
+					t.CaptureException(e);
+				}
+			});
+
+			Assert.NotEmpty(mockPayloadSender.Payloads[0].Transactions);
+			Assert.Empty(mockPayloadSender.Payloads[0].Transactions[0].Spans);
+		}
+
+		/// <summary>
+		/// Same as <see cref="HttpCallWithoutRegisteredListener"/> but this one registers <see cref="HttpDiagnosticsSubscriber"/>.
+		/// Makes sure that the outgoing web request is captured.
+		/// </summary>
+		[Fact]
+		public async Task HttpCallWithRegisteredListener()
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
+			agent.Subscribe(new HttpDiagnosticsSubscriber());
+
+			var url = "https://elastic.co/";
+			await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async(t) =>
+			{
+				Thread.Sleep(5);
+
+				var httpClient = new HttpClient();
+				try
+				{
+					await httpClient.GetAsync(url);
+				}
+				catch (Exception e)
+				{
+					t.CaptureException(e);
+				}
+			});
+
+			Assert.NotEmpty(mockPayloadSender.Payloads[0].Transactions);
+			Assert.NotEmpty(mockPayloadSender.Payloads[0].Transactions[0].Spans);
+
+			Assert.NotNull(mockPayloadSender.Payloads[0].Transactions[0].Spans[0].Context.Http);
+			Assert.Equal(url, mockPayloadSender.Payloads[0].Transactions[0].Spans[0].Context.Http.Url);
 		}
 
 		private void RegisterListenerAndStartTransaction(ApmAgent agent)

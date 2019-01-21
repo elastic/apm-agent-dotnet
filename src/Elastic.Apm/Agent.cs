@@ -39,7 +39,7 @@ namespace Elastic.Apm
 		public ApmAgent(AgentComponents agentComponents) =>
 			Components = agentComponents ?? new AgentComponents(logger: null, service: null);
 
-		internal AgentComponents Components { get; }
+		private AgentComponents Components { get; }
 		public ITracer Tracer => Components.Tracer;
 		public IPayloadSender PayloadSender => Components.PayloadSender;
 		public AbstractLogger Logger => Components.Logger;
@@ -67,10 +67,10 @@ namespace Elastic.Apm
 		/// Sets up multiple <see cref="IDiagnosticsSubscriber" />'s to start listening to one or more <see cref="IDiagnosticListener" />'s
 		/// </summary>
 		/// <param name="subscribers">
-		/// An array of <see cref="IDiagnosticSubscriber" /> that will set up <see cref="IDiagnosticListener" /> subscriptions
+		/// An array of <see cref="IDiagnosticsSubscriber" /> that will set up <see cref="IDiagnosticListener" /> subscriptions
 		/// </param>
 		/// <returns>
-		/// A disposable referencing all the subscriptions, disposing this is not necessary for clean up only to unsubscribe if desired.
+		/// A disposable referencing all the subscriptions, disposing this is not necessary for clean up, only to unsubscribe if desired.
 		/// </returns>
 		public static IDisposable Subscribe(params IDiagnosticsSubscriber[] subscribers) => Instance.Subscribe(subscribers);
 

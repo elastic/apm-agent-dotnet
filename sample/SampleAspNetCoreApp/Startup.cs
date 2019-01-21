@@ -39,7 +39,7 @@ namespace SampleAspNetCoreApp
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 		{
-			app.UseElasticApm(Configuration, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
+			app.UseElasticApm(Configuration);
 
 			if (env.IsDevelopment())
 				app.UseDeveloperExceptionPage();
