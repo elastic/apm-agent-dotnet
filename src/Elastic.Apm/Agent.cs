@@ -4,7 +4,6 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Report;
 
 //TODO: It'd be nice to move this into the .csproj
@@ -44,6 +43,8 @@ namespace Elastic.Apm
 		public IPayloadSender PayloadSender => Components.PayloadSender;
 		public AbstractLogger Logger => Components.Logger;
 		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
+
+		internal TransactionContainer TransactionContainer => Components.TransactionContainer;
 	}
 
 	public static class Agent
@@ -73,6 +74,8 @@ namespace Elastic.Apm
 		/// A disposable referencing all the subscriptions, disposing this is not necessary for clean up, only to unsubscribe if desired.
 		/// </returns>
 		public static IDisposable Subscribe(params IDiagnosticsSubscriber[] subscribers) => Instance.Subscribe(subscribers);
+
+		internal static TransactionContainer TransactionContainer => Instance.TransactionContainer;
 
 		public static void Setup(AgentComponents agentComponents)
 		{

@@ -3,10 +3,8 @@ using System.IO;
 using Elastic.Apm.AspNetCore.Config;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Tests;
 using Elastic.Apm.Tests.Mocks;
 using Microsoft.Extensions.Configuration;
-using Microsoft.VisualStudio.TestPlatform.Common.ExtensionFramework;
 using Xunit;
 
 namespace Elastic.Apm.AspNetCore.Tests

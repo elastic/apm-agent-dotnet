@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Elastic.Apm.Config;
+﻿using Elastic.Apm.Config;
 
 namespace Elastic.Apm.Model.Payload
 {

@@ -49,15 +49,15 @@ namespace Elastic.Apm.DiagnosticListeners
 			{
 				case "System.Net.Http.Exception":
 					var exception = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Exception").GetValue(kv.Value) as Exception;
-					var transaction = TransactionContainer.Transactions?.Value;
+					var transaction = Agent.TransactionContainer.Transactions?.Value;
 
 					transaction.CaptureException(exception, "Failed outgoing HTTP request");
 					//TODO: we don't know if exception is handled, currently reports handled = false
 					break;
 				case "System.Net.Http.HttpRequestOut.Start": //TODO: look for consts
-					if (TransactionContainer.Transactions == null || TransactionContainer.Transactions.Value == null) return;
+					if (Agent.TransactionContainer.Transactions == null || Agent.TransactionContainer.Transactions.Value == null) return;
 
-					transaction = TransactionContainer.Transactions.Value;
+					transaction = Agent.TransactionContainer.Transactions.Value;
 
 					var span = transaction.StartSpan($"{request?.Method} {request?.RequestUri?.Host}", ApiConstants.TypeExternal,
 						ApiConstants.SubtypeHttp);

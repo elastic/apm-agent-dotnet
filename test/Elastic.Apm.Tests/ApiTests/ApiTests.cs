@@ -110,7 +110,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			void StartTransaction()
 			{
-				TransactionContainer.Transactions.Value =
+				Agent.TransactionContainer.Transactions.Value =
 					new Transaction(agent, transactionName, ApiConstants.TypeRequest);
 			}
 

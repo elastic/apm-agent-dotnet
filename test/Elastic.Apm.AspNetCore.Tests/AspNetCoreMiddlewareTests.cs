@@ -1,9 +1,7 @@
 using System;
-using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
-using Elastic.Apm.Tests;
 using Elastic.Apm.Tests.Mocks;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;

@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.EntityFrameworkCore
 {

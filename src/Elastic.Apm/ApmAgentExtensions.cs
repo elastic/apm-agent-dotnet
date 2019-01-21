@@ -13,7 +13,7 @@ namespace Elastic.Apm
 		/// </summary>
 		/// <param name="agent">The agent to report diagnostics over</param>
 		/// <param name="subscribers">
-		/// An array of <see cref="IDiagnosticSubscriber" /> that will set up
+		/// An array of <see cref="IDiagnosticsSubscriber" /> that will set up
 		/// <see cref="IDiagnosticListener" /> subscriptions
 		/// </param>
 		/// <returns>
@@ -33,7 +33,7 @@ namespace Elastic.Apm
 
 		private bool _isDisposed;
 
-		private List<IDisposable> _disposables = new List<IDisposable>();
+		private readonly List<IDisposable> _disposables = new List<IDisposable>();
 
 		public CompositeDisposable Add(IDisposable disposable)
 		{

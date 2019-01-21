@@ -6,8 +6,8 @@ namespace Elastic.Apm
 	/// <summary>
 	/// Transaction container storing and managing transactions that are in progress (started, but not ended)
 	/// </summary>
-	internal static class TransactionContainer
+	internal class TransactionContainer
 	{
-		public static AsyncLocal<Transaction> Transactions { get; set; } = new AsyncLocal<Transaction>();
+		public AsyncLocal<Transaction> Transactions { get; set; } = new AsyncLocal<Transaction>();
 	}
 }

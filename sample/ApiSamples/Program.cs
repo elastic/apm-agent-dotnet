@@ -2,7 +2,6 @@
 using System.Threading;
 using Elastic.Apm;
 using Elastic.Apm.Api;
-using Elastic.Apm.Model.Payload;
 
 namespace ApiSamples
 {

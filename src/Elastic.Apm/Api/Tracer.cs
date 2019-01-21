@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
@@ -13,7 +11,7 @@ namespace Elastic.Apm.Api
 {
 	internal class Tracer : ITracer
 	{
-		public ITransaction CurrentTransaction => TransactionContainer.Transactions.Value;
+		public ITransaction CurrentTransaction => Agent.TransactionContainer.Transactions.Value;
 
 		private readonly AbstractLogger _logger;
 		private readonly Service _service;
@@ -36,7 +34,7 @@ namespace Elastic.Apm.Api
 				Service = _service
 			};
 
-			TransactionContainer.Transactions.Value = retVal;
+			Agent.TransactionContainer.Transactions.Value = retVal;
 			return retVal;
 		}
 
