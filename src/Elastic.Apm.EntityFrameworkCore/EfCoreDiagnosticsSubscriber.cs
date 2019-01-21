@@ -12,8 +12,17 @@ namespace Elastic.Apm.EntityFrameworkCore
 		/// <summary>
 		/// Start listening for EF Core diagnosticsource events
 		/// </summary>
-		public IDisposable Subscribe(IApmAgent agentComponents) => DiagnosticListener
-			.AllListeners
-			.Subscribe(new DiagnosticInitializer(new [] { new EfCoreDiagnosticListener(agentComponents) }));
+		public IDisposable Subscribe(IApmAgent agentComponents)
+		{
+			var retVal = new CompositeDisposable();
+			var efCoreListener = new EfCoreDiagnosticListener(agentComponents);
+			retVal.Add(efCoreListener);
+
+			retVal.Add(DiagnosticListener
+				.AllListeners
+				.Subscribe(new DiagnosticInitializer(new[] { efCoreListener })));
+
+			return retVal;
+		}
 	}
 }

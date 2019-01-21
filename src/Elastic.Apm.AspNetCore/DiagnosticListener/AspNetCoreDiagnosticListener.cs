@@ -6,13 +6,14 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.AspNetCore.DiagnosticListener
 {
-	public class AspNetCoreDiagnosticListener : IDiagnosticListener
+	public class AspNetCoreDiagnosticListener : IDiagnosticListener, IDisposable
 	{
 		private readonly AbstractLogger _logger;
 
 		public AspNetCoreDiagnosticListener(IApmAgent agent) => _logger = agent.Logger;
 
 		public string Name => "Microsoft.AspNetCore";
+		public IDisposable SourceSubscription { get; set; }
 
 		public void OnCompleted() { }
 
@@ -30,5 +31,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 			transaction?.CaptureException(exception, "ASP.NET Core Unhandled Exception",
 				kv.Key == "Microsoft.AspNetCore.Diagnostics.HandledException");
 		}
+
+		public void Dispose() => SourceSubscription?.Dispose();
 	}
 }

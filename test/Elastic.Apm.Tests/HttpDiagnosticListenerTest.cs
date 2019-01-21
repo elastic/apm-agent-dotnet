@@ -173,7 +173,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task TestSimpleOutgoingHttpRequest()
 		{
-			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
+			var (listener, _, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
 			using (var localServer = new LocalServer())
@@ -197,7 +197,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task TestNotSuccesfulOutgoingHttpPostRequest()
 		{
-			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
+			var (listener, _, _) = RegisterListenerAndStartTransaction();
 
 			using(listener)
 			using (var localServer = new LocalServer(ctx => { ctx.Response.StatusCode = 500; }))
@@ -220,21 +220,24 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task CaptureErrorOnFailingHttpCall_HttpClient()
 		{
-			var (listener, payloadSender, agent) = RegisterListenerAndStartTransaction();
+			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
 
-			var httpClient = new HttpClient();
-			try
+			using (listener)
 			{
-				var res = await httpClient.GetAsync("http://nonexistenturl_dsfdsf.ghkdehfn");
-				Assert.True(false); //Make it fail if no exception is thrown
-			}
-			catch (Exception e)
-			{
-				Assert.NotNull(e);
-			}
-			finally
-			{
-				listener.Dispose();
+				var httpClient = new HttpClient();
+				try
+				{
+					await httpClient.GetAsync("http://nonexistenturl_dsfdsf.ghkdehfn");
+					Assert.True(false); //Make it fail if no exception is thrown
+				}
+				catch (Exception e)
+				{
+					Assert.NotNull(e);
+				}
+				finally
+				{
+					listener.Dispose();
+				}
 			}
 
 			Assert.NotEmpty(payloadSender.Errors);
@@ -276,7 +279,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task SpanTypeAndSubtype()
 		{
-			var (listener, payloadSender, agent) = RegisterListenerAndStartTransaction();
+			var (listener, _, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
 			using (var localServer = new LocalServer())
@@ -298,7 +301,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task SpanName()
 		{
-			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
+			var (listener, _, _) = RegisterListenerAndStartTransaction();
 
 			using(listener)
 			using (var localServer = new LocalServer())
@@ -319,7 +322,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task HttpRequestDuration()
 		{
-			var (listener, payloadSender, agent) = RegisterListenerAndStartTransaction();
+			var (listener, _, _) = RegisterListenerAndStartTransaction();
 
 			using(listener)
 			using (var localServer = new LocalServer(ctx =>
@@ -344,7 +347,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task HttpRequestSpanGuid()
 		{
-			var (listener, payloadSender, agent) = RegisterListenerAndStartTransaction();
+			var (listener, _, _) = RegisterListenerAndStartTransaction();
 
 			using(listener)
 			using (var localServer = new LocalServer())
@@ -399,8 +402,9 @@ namespace Elastic.Apm.Tests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
+			var subscriber = new HttpDiagnosticsSubscriber();
 
-			using(var sub = agent.Subscribe(new HttpDiagnosticsSubscriber()))
+			using(agent.Subscribe(subscriber))
 			{
 				var url = "https://elastic.co/";
 				await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async (t) =>
@@ -426,7 +430,6 @@ namespace Elastic.Apm.Tests
 			}
 		}
 
-
 		/// <summary>
 		/// Subscribes to diagnostic events then unsubscribes.
 		/// Makes sure unsubscribing worked.
@@ -436,13 +439,29 @@ namespace Elastic.Apm.Tests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
+			var url = "https://elastic.co/";
+			var subscriber = new HttpDiagnosticsSubscriber();
 
-			var sub = agent.Subscribe(new HttpDiagnosticsSubscriber()); //subscribe
+			using (agent.Subscribe(subscriber)) //subscribe
 			{
+				await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async (t) =>
+				{
+					Thread.Sleep(5);
 
+					var httpClient = new HttpClient();
+					try
+					{
+						await httpClient.GetAsync(url);
+					}
+					catch (Exception e)
+					{
+						t.CaptureException(e);
+					}
+				});
 			} //and then unsubscribe
 
-			var url = "https://elastic.co/";
+			mockPayloadSender.Payloads.Clear();
+
 			await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async (t) =>
 			{
 				Thread.Sleep(5);
@@ -458,7 +477,7 @@ namespace Elastic.Apm.Tests
 				}
 			});
 
-			Assert.NotNull(Agent.TransactionContainer.Transactions.Value);
+			Assert.NotNull(mockPayloadSender.Payloads[0].Transactions[0]);
 			Assert.Empty(mockPayloadSender.Payloads[0].Transactions[0].Spans);
 		}
 
@@ -466,12 +485,12 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
-			var sub = agent.Subscribe(new HttpDiagnosticsSubscriber());
+			var subscriber = new HttpDiagnosticsSubscriber();
+			var sub = agent.Subscribe(subscriber);
 			StartTransaction(agent);
 
 			return (sub, payloadSender, agent);
 		}
-
 
 		private void StartTransaction(ApmAgent agent)
 			=> Agent.TransactionContainer.Transactions.Value =

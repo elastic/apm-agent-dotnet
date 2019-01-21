@@ -17,8 +17,9 @@ namespace Elastic.Apm.DiagnosticListeners
 	/// <summary>
 	/// Captures web requests initiated by <see cref="System.Net.Http.HttpClient" />
 	/// </summary>
-	public class HttpDiagnosticListener : IDiagnosticListener
+	public class HttpDiagnosticListener : IDiagnosticListener, IDisposable
 	{
+
 		/// <summary>
 		/// Keeps track of ongoing requests
 		/// </summary>
@@ -31,6 +32,7 @@ namespace Elastic.Apm.DiagnosticListeners
 		private IConfigurationReader ConfigurationReader { get; }
 
 		public string Name => "HttpHandlerDiagnosticListener";
+		public IDisposable SourceSubscription { get; set; }
 
 		public void OnCompleted() { }
 
@@ -117,5 +119,7 @@ namespace Elastic.Apm.DiagnosticListeners
 					return false;
 			}
 		}
+
+		public void Dispose() => SourceSubscription?.Dispose();
 	}
 }

@@ -17,7 +17,7 @@ namespace Elastic.Apm
 		/// <see cref="IDiagnosticListener" /> subscriptions
 		/// </param>
 		/// <returns>
-		/// A disposable referencing all the subscriptions, disposing this is not necessary for clean up only to
+		/// A disposable referencing all the subscriptions, disposing this is not necessary for clean up, only to
 		/// unsubscribe if desired.
 		/// </returns>
 		public static IDisposable Subscribe(this IApmAgent agent, params IDiagnosticsSubscriber[] subscribers)

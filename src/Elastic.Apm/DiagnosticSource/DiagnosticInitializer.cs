@@ -18,7 +18,10 @@ namespace Elastic.Apm.DiagnosticSource
 		{
 			foreach (var listener in _listeners)
 			{
-				if (value.Name == listener.Name) value.Subscribe(listener);
+				if (value.Name != listener.Name) continue;
+
+				var sourceSubscription = value.Subscribe(listener);
+				listener.SourceSubscription = sourceSubscription;
 			}
 		}
 	}
