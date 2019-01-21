@@ -17,17 +17,16 @@ namespace Elastic.Apm.AspNetCore.Tests
 		: IClassFixture<WebApplicationFactory<Startup>>
 	{
 		private readonly WebApplicationFactory<Startup> _factory;
-		private readonly HttpClient _client;
+		private HttpClient _client;
 		private readonly MockPayloadSender _capturedPayload;
 		private readonly ApmAgent _agent;
 
 		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory)
 		{
 			_factory = factory;
-			 _agent = new ApmAgent(new TestAgentComponents());
+			_agent = new ApmAgent(new TestAgentComponents());
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
 			_client = Helper.GetClient(_agent, _factory);
-
 		}
 
 		/// <summary>
@@ -36,7 +35,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task HomeAboutTransactionTest()
 		{
-
 			var response = await _client.GetAsync("/Home/About");
 
 			Assert.Single(_capturedPayload.Payloads);
@@ -99,8 +97,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task FailingRequestWithoutConfiguredExceptionPage()
 		{
-//			await Assert.ThrowsAsync<Exception>(async () => { });
-			await _client.GetAsync("Home/TriggerError");
+			_client = Helper.GetClientWithoutExceptionPage(_agent, _factory);
+			await Assert.ThrowsAsync<Exception>(async () => { await _client.GetAsync("Home/TriggerError"); });
 
 			Assert.Single(_capturedPayload.Payloads);
 			Assert.Single(_capturedPayload.Payloads[0].Transactions);
