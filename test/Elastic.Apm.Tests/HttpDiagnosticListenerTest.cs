@@ -357,6 +357,35 @@ namespace Elastic.Apm.Tests
 			Assert.True(TransactionContainer.Transactions.Value.Spans[0].Id > 0);
 		}
 
+		/// <summary> Make sure HttpDiagnosticSubscriber does not report spans after its disposed</summary>
+		[Fact]
+		public async Task SubscriptionOnlyRegistersSpansDuringItsLifeTime()
+		{
+			var agent = new ApmAgent(new TestAgentComponents());
+			StartTransaction(agent);
+
+			var spans = TransactionContainer.Transactions.Value.Spans;
+
+			using (var localServer = new LocalServer())
+			using (var httpClient = new HttpClient())
+			{
+				Assert.True(spans.Length == 0, $"Expected 0 spans has count: {spans.Length}");
+				using (agent.Subscribe(new HttpDiagnosticsSubscriber()))
+				{
+					var res = await httpClient.GetAsync(localServer.Uri);
+					res = await httpClient.GetAsync(localServer.Uri);
+					Assert.True(res.IsSuccessStatusCode);
+				}
+				spans = TransactionContainer.Transactions.Value.Spans;
+				Assert.True(spans.Length == 2, $"Expected 2 but spans has count: {spans.Length}");
+				foreach (var i in Enumerable.Range(0, 10))
+					await httpClient.GetAsync(localServer.Uri);
+
+				Assert.True(localServer.SeenRequests > 10, "Make sure we actually performed more than 1 request to our local server");
+			}
+			Assert.True(spans.Length == 2, $"Expected 1 span because the listener is disposed but spans has count: {spans.Length}");
+		}
+
 		private void RegisterListenerAndStartTransaction(ApmAgent agent)
 		{
 			agent = agent ?? new ApmAgent(new TestAgentComponents());
