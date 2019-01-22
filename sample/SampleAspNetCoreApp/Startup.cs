@@ -1,4 +1,4 @@
-﻿using Elastic.Apm.AspNetCore;
+﻿using Elastic.Apm.All;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;

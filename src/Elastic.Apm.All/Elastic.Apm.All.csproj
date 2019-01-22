@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+<PropertyGroup>
+  <TargetFramework>netstandard2.0</TargetFramework>
+  <AssemblyName>Elastic.Apm.All</AssemblyName>
+  <RootNamespace>Elastic.Apm.All</RootNamespace>
+  <SignAssembly>true</SignAssembly>
+  <AssemblyOriginatorKeyFile>..\..\elasticapm.snk</AssemblyOriginatorKeyFile>
+  <DelaySign>false</DelaySign>
+</PropertyGroup>
+
+<ItemGroup>
+  <ProjectReference Include="..\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
+  <ProjectReference Include="..\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj" />
+  <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+</ItemGroup>
+</Project>
