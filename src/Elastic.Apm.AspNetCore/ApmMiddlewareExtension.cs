@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using Elastic.Apm.AspNetCore.Config;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
+using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.Model.Payload;
@@ -32,11 +35,7 @@ namespace Elastic.Apm.AspNetCore
 		)
 		{
 			var configReader = configuration != null ? new MicrosoftExtensionsConfig(configuration) : null;
-
-			var service = Service.GetDefaultService((configReader));
-			service.Framework = new Framework { Name = "ASP.NET Core", Version = "2.1" }; //TODO: Get version
-			service.Language = new Language { Name = "C#" }; //TODO
-
+			var service = GetService(configReader);
 			var config = new AgentComponents(configurationReader: configReader, service: service);
 			Agent.Setup(config);
 			return UseElasticApm(builder, Agent.Instance, subscribers);
@@ -56,6 +55,29 @@ namespace Elastic.Apm.AspNetCore
 			};
 			agent.Subscribe(subs.ToArray());
 			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer);
+		}
+
+		internal static Service GetService(IConfigurationReader configReader)
+		{
+			string version;
+			var versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name == "Microsoft.AspNetCore");
+			var assemblies = versionQuery as Assembly[] ?? versionQuery.ToArray();
+			if (assemblies.Any())
+			{
+				version = assemblies.First().GetName().Version.ToString();
+			}
+			else
+			{
+				versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name.Contains("Microsoft.AspNetCore"));
+				var enumerable = versionQuery as Assembly[] ?? versionQuery.ToArray();
+				version = enumerable.Any() ? enumerable.FirstOrDefault()?.GetName().Version.ToString() : "n/a";
+			}
+
+			var service = Service.GetDefaultService((configReader));
+			service.Framework = new Framework { Name = "ASP.NET Core", Version = version };
+			service.Language = new Language { Name = "C#" }; //TODO
+
+			return service;
 		}
 	}
 }
