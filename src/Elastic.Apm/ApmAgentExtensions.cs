@@ -23,7 +23,12 @@ namespace Elastic.Apm
 		public static IDisposable Subscribe(this IApmAgent agent, params IDiagnosticsSubscriber[] subscribers)
 		{
 			var subs = subscribers ?? Array.Empty<IDiagnosticsSubscriber>();
-			return subs.Aggregate(new CompositeDisposable(), (d, s) => d.Add(s.Subscribe(agent)));
+			var retVal = subs.Aggregate(new CompositeDisposable(), (d, s) => d.Add(s.Subscribe(agent)));
+
+			if (agent is ApmAgent apmAgent)
+				apmAgent._disposables.Add(retVal);
+
+			return retVal;
 		}
 	}
 

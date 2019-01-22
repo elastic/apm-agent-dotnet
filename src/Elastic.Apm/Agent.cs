@@ -33,7 +33,7 @@ namespace Elastic.Apm
 		ITracer Tracer { get; }
 	}
 
-	internal class ApmAgent : IApmAgent
+	internal class ApmAgent : IApmAgent, IDisposable
 	{
 		public ApmAgent(AgentComponents agentComponents) =>
 			Components = agentComponents ?? new AgentComponents(logger: null, service: null);
@@ -45,6 +45,10 @@ namespace Elastic.Apm
 		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
 
 		internal TransactionContainer TransactionContainer => Components.TransactionContainer;
+
+		internal readonly CompositeDisposable _disposables = new CompositeDisposable();
+
+		public void Dispose() => _disposables?.Dispose();
 	}
 
 	public static class Agent

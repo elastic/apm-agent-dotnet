@@ -13,8 +13,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// Uses the samples/SampleAspNetCoreApp as the test application and tests the agent with it.
 	/// It's basically an integration test.
 	/// </summary>
+	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
 	public class AspNetCoreMiddlewareTests
-		: IClassFixture<WebApplicationFactory<Startup>>
+		: IClassFixture<WebApplicationFactory<Startup>>, IDisposable
 	{
 		private readonly WebApplicationFactory<Startup> _factory;
 		private HttpClient _client;
@@ -105,6 +106,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			Assert.NotEmpty(_capturedPayload.Errors);
 			Assert.Single(_capturedPayload.Errors[0].Errors);
+		}
+
+		public void Dispose()
+		{
+			_agent?.Dispose();
+			_factory?.Dispose();
+			_client?.Dispose();
 		}
 	}
 }
