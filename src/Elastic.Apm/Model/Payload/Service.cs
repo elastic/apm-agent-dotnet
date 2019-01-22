@@ -1,4 +1,5 @@
-﻿using Elastic.Apm.Config;
+﻿using System.Reflection;
+using Elastic.Apm.Config;
 
 namespace Elastic.Apm.Model.Payload
 {
@@ -24,7 +25,7 @@ namespace Elastic.Apm.Model.Payload
 				Agent = new AgentC
 				{
 					Name = Consts.AgentName,
-					Version = Consts.AgentVersion
+					Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "n/a",
 				}
 			};
 	}

@@ -5,6 +5,7 @@
     <RootNamespace>Elastic.Apm.AspNetCore</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\elasticapm.snk</AssemblyOriginatorKeyFile>
+    <AssemblyVersion>0.0.1.0</AssemblyVersion>
     <DelaySign>false</DelaySign>
   </PropertyGroup>
 
