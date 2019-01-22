@@ -46,9 +46,8 @@ namespace Elastic.Apm
 
 		internal TransactionContainer TransactionContainer => Components.TransactionContainer;
 
-		internal readonly CompositeDisposable _disposables = new CompositeDisposable();
-
-		public void Dispose() => _disposables?.Dispose();
+		internal readonly CompositeDisposable Disposables = new CompositeDisposable();
+		public void Dispose() => Disposables?.Dispose();
 	}
 
 	public static class Agent

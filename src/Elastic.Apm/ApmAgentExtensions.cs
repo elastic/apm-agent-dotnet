@@ -26,7 +26,7 @@ namespace Elastic.Apm
 			var retVal = subs.Aggregate(new CompositeDisposable(), (d, s) => d.Add(s.Subscribe(agent)));
 
 			if (agent is ApmAgent apmAgent)
-				apmAgent._disposables.Add(retVal);
+				apmAgent.Disposables.Add(retVal);
 
 			return retVal;
 		}

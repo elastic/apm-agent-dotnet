@@ -10,20 +10,18 @@ namespace Elastic.Apm.DiagnosticSource
 	/// </summary>
 	public class HttpDiagnosticsSubscriber : IDiagnosticsSubscriber
 	{
-		private HttpDiagnosticListener _listener;
-
 		/// <summary>
 		/// Start listening for HttpClient diagnostic source events.
 		/// </summary>
 		public IDisposable Subscribe(IApmAgent agent)
 		{
 			var retVal = new CompositeDisposable();
-			_listener = new HttpDiagnosticListener(agent);
-			retVal.Add(_listener);
+			var initializer = new DiagnosticInitializer(new[] { new HttpDiagnosticListener(agent) });
+			retVal.Add(initializer);
 
 			retVal.Add(DiagnosticListener
 				.AllListeners
-				.Subscribe(new DiagnosticInitializer(new[] { _listener })));
+				.Subscribe(initializer));
 
 			return retVal;
 		}

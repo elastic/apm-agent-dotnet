@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Elastic.Apm.EntityFrameworkCore
 {
-	internal class EfCoreDiagnosticListener : IDiagnosticListener, IDisposable
+	internal class EfCoreDiagnosticListener : IDiagnosticListener
 	{
 		private readonly ConcurrentDictionary<Guid, ISpan> _spans = new ConcurrentDictionary<Guid, ISpan>();
 
@@ -88,7 +88,5 @@ namespace Elastic.Apm.EntityFrameworkCore
 					break;
 			}
 		}
-
-		public void Dispose() => SourceSubscription?.Dispose();
 	}
 }
