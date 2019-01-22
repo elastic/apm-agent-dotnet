@@ -63,6 +63,37 @@ namespace Elastic.Apm.AspNetCore.Tests
 				})
 				.CreateClient();
 
+		/// <summary>
+		/// Configures the sample app without any diagnostic listener
+		/// </summary>
+		internal static HttpClient GetClientWithoutDiagnosticListeners<T>(ApmAgent agent, WebApplicationFactory<T> factory) where T : class
+		 => factory.WithWebHostBuilder(n =>
+		{
+			n.Configure(app =>
+			{
+				app.UseMiddleware<ApmMiddleware>(agent.Tracer);
+
+				app.UseDeveloperExceptionPage();
+
+				app.UseHsts();
+
+				app.UseHttpsRedirection();
+				app.UseStaticFiles();
+				app.UseCookiePolicy();
+
+				app.UseMvc(routes =>
+				{
+					routes.MapRoute(
+						"default",
+						"{controller=Home}/{action=Index}/{id?}");
+				});
+			});
+
+			n.ConfigureServices(Helper.ConfigureServices);
+		})
+		.CreateClient();
+
+
 		private static void ConfigureServices(IServiceCollection services)
 		{
 			services.Configure<CookiePolicyOptions>(options =>
