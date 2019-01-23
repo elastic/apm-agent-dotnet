@@ -5,7 +5,7 @@ namespace Elastic.Apm.DiagnosticSource
 {
 	/// <summary>
 	/// Common interface for every diagnostic listener
-	/// The DiagnisticInitializer works through this interface with the different listeners
+	/// The DiagnosticInitializer works through this interface with the different listeners
 	/// </summary>
 	public interface IDiagnosticListener : IObserver<KeyValuePair<string, object>>
 	{
@@ -14,5 +14,11 @@ namespace Elastic.Apm.DiagnosticSource
 		/// </summary>
 		/// <value>The name.</value>
 		string Name { get; }
+
+		/// <summary>
+		/// Reference to the source subscription.
+		/// This is set by <see cref="DiagnosticInitializer"/>
+		/// </summary>
+		IDisposable SourceSubscription { get; set; }
 	}
 }

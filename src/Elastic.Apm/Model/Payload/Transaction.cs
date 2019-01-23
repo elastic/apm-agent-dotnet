@@ -84,7 +84,7 @@ namespace Elastic.Apm.Model.Payload
 				Service = Service
 			});
 
-			TransactionContainer.Transactions.Value = null;
+			Agent.TransactionContainer.Transactions.Value = null;
 		}
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)

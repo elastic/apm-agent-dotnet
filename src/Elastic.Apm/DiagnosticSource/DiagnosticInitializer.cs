@@ -4,9 +4,10 @@ using System.Diagnostics;
 
 namespace Elastic.Apm.DiagnosticSource
 {
-	internal class DiagnosticInitializer : IObserver<DiagnosticListener>
+	internal class DiagnosticInitializer : IObserver<DiagnosticListener>, IDisposable
 	{
 		private readonly IEnumerable<IDiagnosticListener> _listeners;
+		private IDisposable _sourceSubscription;
 
 		public DiagnosticInitializer(IEnumerable<IDiagnosticListener> listeners) => _listeners = listeners;
 
@@ -18,8 +19,10 @@ namespace Elastic.Apm.DiagnosticSource
 		{
 			foreach (var listener in _listeners)
 			{
-				if (value.Name == listener.Name) value.Subscribe(listener);
+				if (value.Name == listener.Name) _sourceSubscription = value.Subscribe(listener);
 			}
 		}
+
+		public void Dispose() => _sourceSubscription?.Dispose();
 	}
 }

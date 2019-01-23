@@ -19,6 +19,7 @@ namespace Elastic.Apm
 			Service = service ?? Service.GetDefaultService(ConfigurationReader);
 			PayloadSender = payloadSender ?? new PayloadSender(Logger, ConfigurationReader);
 			Tracer = new Tracer(Logger, Service, PayloadSender);
+			TransactionContainer = new TransactionContainer();
 		}
 
 		public AbstractLogger Logger { get; }
@@ -29,11 +30,13 @@ namespace Elastic.Apm
 
 		public ITracer Tracer { get; }
 
+		internal TransactionContainer TransactionContainer { get; }
+
 		/// <summary>
 		/// Identifies the monitored service. If this remains unset the agent
 		/// automatically populates it based on the entry assembly.
 		/// </summary>
 		/// <value>The service.</value>
-		public Service Service { get; }
+		private Service Service { get; }
 	}
 }

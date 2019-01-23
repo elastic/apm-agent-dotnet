@@ -2,7 +2,6 @@
 using System.Threading;
 using Elastic.Apm;
 using Elastic.Apm.Api;
-using Elastic.Apm.Model.Payload;
 
 namespace ApiSamples
 {
@@ -71,7 +70,7 @@ namespace ApiSamples
 		public static void SampleCustomTransactionWithConvenientApi() => Agent.Tracer.CaptureTransaction("TestTransaction", "TestType",
 			t =>
 			{
-				t.Context.Tags["fooTransaction"] = "barTransaction";
+				t.Tags["fooTransaction"] = "barTransaction";
 				Thread.Sleep(10);
 				t.CaptureSpan("TestSpan", "TestSpanName", (s) =>
 				{

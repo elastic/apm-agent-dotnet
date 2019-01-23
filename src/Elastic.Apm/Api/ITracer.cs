@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Elastic.Apm.Model.Payload;
 
 namespace Elastic.Apm.Api
 {

@@ -4,7 +4,6 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Report;
 
 //TODO: It'd be nice to move this into the .csproj
@@ -20,6 +19,12 @@ using Elastic.Apm.Report;
 [assembly:
 	InternalsVisibleTo(
 		"Elastic.Apm.AspNetCore.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.All, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.All.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
 
 namespace Elastic.Apm
 {
@@ -34,16 +39,21 @@ namespace Elastic.Apm
 		ITracer Tracer { get; }
 	}
 
-	internal class ApmAgent : IApmAgent
+	internal class ApmAgent : IApmAgent, IDisposable
 	{
 		public ApmAgent(AgentComponents agentComponents) =>
 			Components = agentComponents ?? new AgentComponents(logger: null, service: null);
 
-		internal AgentComponents Components { get; }
+		private AgentComponents Components { get; }
 		public ITracer Tracer => Components.Tracer;
 		public IPayloadSender PayloadSender => Components.PayloadSender;
 		public AbstractLogger Logger => Components.Logger;
 		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
+
+		internal TransactionContainer TransactionContainer => Components.TransactionContainer;
+
+		internal readonly CompositeDisposable Disposables = new CompositeDisposable();
+		public void Dispose() => Disposables?.Dispose();
 	}
 
 	public static class Agent
@@ -67,12 +77,14 @@ namespace Elastic.Apm
 		/// Sets up multiple <see cref="IDiagnosticsSubscriber" />'s to start listening to one or more <see cref="IDiagnosticListener" />'s
 		/// </summary>
 		/// <param name="subscribers">
-		/// An array of <see cref="IDiagnosticSubscriber" /> that will set up <see cref="IDiagnosticListener" /> subscriptions
+		/// An array of <see cref="IDiagnosticsSubscriber" /> that will set up <see cref="IDiagnosticListener" /> subscriptions
 		/// </param>
 		/// <returns>
-		/// A disposable referencing all the subscriptions, disposing this is not necessary for clean up only to unsubscribe if desired.
+		/// A disposable referencing all the subscriptions, disposing this is not necessary for clean up, only to unsubscribe if desired.
 		/// </returns>
 		public static IDisposable Subscribe(params IDiagnosticsSubscriber[] subscribers) => Instance.Subscribe(subscribers);
+
+		internal static TransactionContainer TransactionContainer => Instance.TransactionContainer;
 
 		public static void Setup(AgentComponents agentComponents)
 		{

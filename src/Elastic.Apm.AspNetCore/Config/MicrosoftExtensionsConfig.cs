@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model.Payload;
-using Elastic.Apm.Report;
 using Microsoft.Extensions.Configuration;
 
 namespace Elastic.Apm.AspNetCore.Config

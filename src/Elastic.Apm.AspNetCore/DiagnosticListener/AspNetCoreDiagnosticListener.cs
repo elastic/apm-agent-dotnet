@@ -13,6 +13,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 		public AspNetCoreDiagnosticListener(IApmAgent agent) => _logger = agent.Logger;
 
 		public string Name => "Microsoft.AspNetCore";
+		public IDisposable SourceSubscription { get; set; }
 
 		public void OnCompleted() { }
 
@@ -25,7 +26,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 			var exception = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("exception").GetValue(kv.Value) as Exception;
 
-			var transaction = TransactionContainer.Transactions?.Value;
+			var transaction = Agent.TransactionContainer.Transactions?.Value;
 
 			transaction?.CaptureException(exception, "ASP.NET Core Unhandled Exception",
 				kv.Key == "Microsoft.AspNetCore.Diagnostics.HandledException");
