@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.EntityFrameworkCore
 {
@@ -15,8 +12,17 @@ namespace Elastic.Apm.EntityFrameworkCore
 		/// <summary>
 		/// Start listening for EF Core diagnosticsource events
 		/// </summary>
-		public IDisposable Subscribe(IApmAgent agentComponents) => DiagnosticListener
-			.AllListeners
-			.Subscribe(new DiagnosticInitializer(new [] { new EfCoreDiagnosticListener(agentComponents) }));
+		public IDisposable Subscribe(IApmAgent agentComponents)
+		{
+			var retVal = new CompositeDisposable();
+			var subscriber = new DiagnosticInitializer(new[] { new EfCoreDiagnosticListener(agentComponents) });
+			retVal.Add(subscriber);
+
+			retVal.Add(DiagnosticListener
+				.AllListeners
+				.Subscribe(subscriber));
+
+			return retVal;
+		}
 	}
 }

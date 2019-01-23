@@ -19,6 +19,7 @@ namespace Elastic.Apm.EntityFrameworkCore
 		private AbstractLogger Logger { get; }
 
 		public string Name => "Microsoft.EntityFrameworkCore";
+		public IDisposable SourceSubscription { get; set; }
 
 		public void OnCompleted() { }
 
@@ -28,16 +29,16 @@ namespace Elastic.Apm.EntityFrameworkCore
 		{
 			switch (kv.Key)
 			{
-				case string k when k == RelationalEventId.CommandExecuting.Name && TransactionContainer.Transactions.Value != null:
+				case string k when k == RelationalEventId.CommandExecuting.Name && Agent.TransactionContainer.Transactions.Value != null:
 					if (kv.Value is CommandEventData commandEventData)
 					{
-						var newSpan = TransactionContainer.Transactions.Value.StartSpan(
+						var newSpan = Agent.TransactionContainer.Transactions.Value.StartSpan(
 							commandEventData.Command.CommandText, ApiConstants.TypeDb);
 
 						_spans.TryAdd(commandEventData.CommandId, newSpan);
 					}
 					break;
-				case string k when k == RelationalEventId.CommandExecuted.Name && TransactionContainer.Transactions.Value != null:
+				case string k when k == RelationalEventId.CommandExecuted.Name && Agent.TransactionContainer.Transactions.Value != null:
 					if (kv.Value is CommandExecutedEventData commandExecutedEventData)
 					{
 						if (_spans.TryRemove(commandExecutedEventData.CommandId, out var span))

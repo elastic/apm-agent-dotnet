@@ -1,7 +1,4 @@
-﻿using Elastic.Apm;
-using Elastic.Apm.AspNetCore;
-using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.EntityFrameworkCore;
+﻿using Elastic.Apm.All;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -39,7 +36,7 @@ namespace SampleAspNetCoreApp
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 		{
-			app.UseElasticApm(Configuration, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
+			app.UseElasticApm(Configuration);
 
 			if (env.IsDevelopment())
 				app.UseDeveloperExceptionPage();

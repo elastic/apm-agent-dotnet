@@ -1,5 +1,4 @@
 ﻿using System;
-using Elastic.Apm.Config;
 
 namespace Elastic.Apm.Logging
 {

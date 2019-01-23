@@ -1,9 +1,7 @@
 using System;
-using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
-using Elastic.Apm.Tests;
 using Elastic.Apm.Tests.Mocks;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
@@ -15,21 +13,21 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// Uses the samples/SampleAspNetCoreApp as the test application and tests the agent with it.
 	/// It's basically an integration test.
 	/// </summary>
+	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
 	public class AspNetCoreMiddlewareTests
-		: IClassFixture<WebApplicationFactory<Startup>>
+		: IClassFixture<WebApplicationFactory<Startup>>, IDisposable
 	{
 		private readonly WebApplicationFactory<Startup> _factory;
-		private readonly HttpClient _client;
+		private HttpClient _client;
 		private readonly MockPayloadSender _capturedPayload;
 		private readonly ApmAgent _agent;
 
 		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory)
 		{
 			_factory = factory;
-			 _agent = new ApmAgent(new TestAgentComponents());
+			_agent = new ApmAgent(new TestAgentComponents());
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
 			_client = Helper.GetClient(_agent, _factory);
-
 		}
 
 		/// <summary>
@@ -38,7 +36,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task HomeAboutTransactionTest()
 		{
-
 			var response = await _client.GetAsync("/Home/About");
 
 			Assert.Single(_capturedPayload.Payloads);
@@ -101,14 +98,21 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task FailingRequestWithoutConfiguredExceptionPage()
 		{
-//			await Assert.ThrowsAsync<Exception>(async () => { });
-			await _client.GetAsync("Home/TriggerError");
+			_client = Helper.GetClientWithoutExceptionPage(_agent, _factory);
+			await Assert.ThrowsAsync<Exception>(async () => { await _client.GetAsync("Home/TriggerError"); });
 
 			Assert.Single(_capturedPayload.Payloads);
 			Assert.Single(_capturedPayload.Payloads[0].Transactions);
 
 			Assert.NotEmpty(_capturedPayload.Errors);
 			Assert.Single(_capturedPayload.Errors[0].Errors);
+		}
+
+		public void Dispose()
+		{
+			_agent?.Dispose();
+			_factory?.Dispose();
+			_client?.Dispose();
 		}
 	}
 }
