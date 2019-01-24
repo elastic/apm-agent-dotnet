@@ -10,8 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
-    <ProjectReference Include="..\..\src\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\..\src\Elastic.Apm.All\Elastic.Apm.All.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Data\" />

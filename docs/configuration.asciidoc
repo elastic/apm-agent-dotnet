@@ -50,7 +50,7 @@ This is a typical `appsettings.json` file that contains some sample configuratio
 }
 ----
 
-[[config-reporter]]
+[[config-core]]
 === Core configuration options
 
 [float]
