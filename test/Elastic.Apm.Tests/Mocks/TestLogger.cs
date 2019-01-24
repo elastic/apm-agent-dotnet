@@ -11,6 +11,6 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public List<string> Lines { get; } = new List<string>();
 
-		protected override void PrintLogline(string logline) => Lines.Add(logline);
+		protected override void PrintLogLine(string logline) => Lines.Add(logline);
 	}
 }

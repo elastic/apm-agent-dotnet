@@ -4,10 +4,10 @@ namespace Elastic.Apm.Logging
 {
 	internal class ConsoleLogger : AbstractLogger
 	{
-		protected ConsoleLogger(LogLevel level) : base(level) { }
+		private ConsoleLogger(LogLevel level) : base(level) { }
 
-		protected override void PrintLogline(string logline) => Console.WriteLine(logline);
+		protected override void PrintLogLine(string logLine) => Console.WriteLine(logLine);
 
-		public static ConsoleLogger Instance { get; } = new ConsoleLogger(LogLevelDefault);
+		internal static ConsoleLogger Instance { get; } = new ConsoleLogger(LogLevelDefault);
 	}
 }

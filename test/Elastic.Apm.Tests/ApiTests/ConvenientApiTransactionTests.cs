@@ -407,7 +407,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				});
 
 			//According to the Intake API tags are stored on the Context (and not on Transaction.Tags directly).
-			Assert.Equal("bar", payloadSender.Payloads[0].Transactions[0].Context.Tags["foo"]);
+			Assert.Equal("bar", payloadSender.FirstTransaction.Context.Tags["foo"]);
 
 			//Also make sure the tag is visible directly on Transaction.Tags.
 			Assert.Equal("bar", payloadSender.Payloads[0].Transactions[0].Tags["foo"]);
@@ -431,7 +431,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				});
 
 			//According to the Intake API tags are stored on the Context (and not on Transaction.Tags directly).
-			Assert.Equal("bar", payloadSender.Payloads[0].Transactions[0].Context.Tags["foo"]);
+			Assert.Equal("bar", payloadSender.FirstTransaction.Context.Tags["foo"]);
 
 			//Also make sure the tag is visible directly on Transaction.Tags.
 			Assert.Equal("bar", payloadSender.Payloads[0].Transactions[0].Tags["foo"]);
@@ -461,7 +461,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				});
 
 			//According to the Intake API tags are stored on the Context (and not on Transaction.Tags directly).
-			Assert.Equal("bar", payloadSender.Payloads[0].Transactions[0].Context.Tags["foo"]);
+			Assert.Equal("bar", payloadSender.FirstTransaction.Context.Tags["foo"]);
 
 			//Also make sure the tag is visible directly on Transaction.Tags.
 			Assert.Equal("bar", payloadSender.Payloads[0].Transactions[0].Tags["foo"]);

@@ -17,12 +17,12 @@ namespace Elastic.Apm.Model.Payload
 				Id = Guid.NewGuid();
 			}
 
-			public Context Context { get; set; }
+			internal Context Context { get; set; }
 			public string Culprit { get; set; }
 			public CapturedException Exception { get; set; }
-			public Guid Id { get; }
-			public string Timestamp { get; }
-			public Trans Transaction { get; set; }
+			internal Guid Id { get; }
+			private string Timestamp { get; }
+			internal Trans Transaction { get; set; }
 
 			public class Trans
 			{
@@ -33,17 +33,23 @@ namespace Elastic.Apm.Model.Payload
 
 	public class CapturedException
 	{
-		public string Code { get; set; } //TODO
+		internal string Code { get; set; } //TODO
 
-		public bool Handled { get; set; }
+		internal bool Handled { get; set; }
 
+		/// <summary>
+		/// The exception message, see: <see cref="Exception.Message"/>
+		/// </summary>
 		public string Message { get; set; }
 
-		public string Module { get; set; }
+		internal string Module { get; set; }
 
 		[JsonProperty("Stacktrace")]
-		public List<Stacktrace> StacktTrace { get; set; }
+		internal List<Stacktrace> StacktTrace { get; set; }
 
+		/// <summary>
+		/// The type of the exception class
+		/// </summary>
 		public string Type { get; set; }
 	}
 }

@@ -18,7 +18,7 @@ namespace Elastic.Apm
 			ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(Logger);
 			Service = service ?? Service.GetDefaultService(ConfigurationReader);
 			PayloadSender = payloadSender ?? new PayloadSender(Logger, ConfigurationReader);
-			Tracer = new Tracer(Logger, Service, PayloadSender);
+			TracerInternal = new Tracer(Logger, Service, PayloadSender);
 			TransactionContainer = new TransactionContainer();
 		}
 
@@ -28,7 +28,9 @@ namespace Elastic.Apm
 
 		public IConfigurationReader ConfigurationReader { get; }
 
-		public ITracer Tracer { get; }
+		public ITracer Tracer => TracerInternal;
+
+		internal Tracer TracerInternal { get; }
 
 		internal TransactionContainer TransactionContainer { get; }
 

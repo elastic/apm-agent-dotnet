@@ -25,6 +25,10 @@ namespace Elastic.Apm.Model.Payload
 		}
 
 		public string Action { get; set; }
+
+		/// <summary>
+		/// Any other arbitrary data captured by the agent, optionally provided by the user.
+		/// </summary>
 		public IContext Context => _context.Value;
 
 		/// <inheritdoc />
@@ -79,14 +83,34 @@ namespace Elastic.Apm.Model.Payload
 		}
 	}
 
-	public class Db : IDb
+	internal interface IContext
+	{
+		IDb Db { get; set; }
+		IHttp Http { get; set; }
+		Dictionary<string, string> Tags { get; }
+	}
+
+	internal interface IDb
+	{
+		string Statement { get; set; }
+		string Type { get; set; }
+	}
+
+	internal interface IHttp
+	{
+		string Method { get; set; }
+		int StatusCode { get; set; }
+		string Url { get; set; }
+	}
+
+	internal class Db : IDb
 	{
 		public string Instance { get; set; }
 		public string Statement { get; set; }
 		public string Type { get; set; }
 	}
 
-	public class Http : IHttp
+	internal class Http : IHttp
 	{
 		public string Method { get; set; }
 		public int StatusCode { get; set; }

@@ -52,7 +52,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Assembly.CreateQualifiedName("ASP.NET Core", payload.Service.Framework.Name);
 			Assembly.CreateQualifiedName(Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString(), payload.Service.Framework.Version);
 
-			var transaction = _capturedPayload.Payloads[0].Transactions[0];
+			var transaction = _capturedPayload.FirstTransaction;
 
 			//test transaction
 			Assert.Equal($"{response.RequestMessage.Method} {response.RequestMessage.RequestUri.AbsolutePath}", transaction.Name);
@@ -88,10 +88,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Assert.True(response.IsSuccessStatusCode);
 
 			var transaction = _capturedPayload.Payloads[0].Transactions[0];
-			Assert.NotEmpty(transaction.Spans);
+			Assert.NotEmpty(_capturedPayload.SpansOnFirstTransaction);
 
 			//one of the spans is a DB call:
-			Assert.Contains(transaction.Spans, n => n.Context.Db != null);
+			Assert.Contains(_capturedPayload.SpansOnFirstTransaction, n => n.Context.Db != null);
 		}
 
 		/// <summary>

@@ -7,14 +7,14 @@ using Elastic.Apm.Model.Payload;
 
 namespace Elastic.Apm.Helpers
 {
-	public static class StacktraceHelper
+	internal static class StacktraceHelper
 	{
 		/// <summary>
 		/// Turns a System.Diagnostic.StackFrame[] into a <see cref="Stacktrace" /> list which can be reported to the APM Server
 		/// </summary>
 		/// <param name="capturingFor">Just for logging.</param>
 		/// <returns>A prepared List that can be passed to the APM server</returns>
-		public static List<Stacktrace> GenerateApmStackTrace(StackFrame[] frames, AbstractLogger logger, string capturingFor)
+		internal static List<Stacktrace> GenerateApmStackTrace(StackFrame[] frames, AbstractLogger logger, string capturingFor)
 		{
 			var retVal = new List<Stacktrace>(frames.Length);
 

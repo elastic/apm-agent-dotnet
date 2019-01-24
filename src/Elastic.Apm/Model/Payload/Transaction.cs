@@ -33,6 +33,9 @@ namespace Elastic.Apm.Model.Payload
 			Id = Guid.NewGuid();
 		}
 
+		/// <summary>
+		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
+		/// </summary>
 		public Context Context => _context.Value;
 
 		/// <inheritdoc />
@@ -88,7 +91,11 @@ namespace Elastic.Apm.Model.Payload
 		}
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
+			=> StartSpanInternal(name, type, subType, action);
+
+		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
+
 			var retVal = new Span(name, type, this);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;

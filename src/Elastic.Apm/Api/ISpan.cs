@@ -14,11 +14,6 @@ namespace Elastic.Apm.Api
 		string Action { get; set; }
 
 		/// <summary>
-		/// Any other arbitrary data captured by the agent, optionally provided by the user.
-		/// </summary>
-		IContext Context { get; }
-
-		/// <summary>
 		/// The duration of the span.
 		/// If it's not set (its HasValue property is false) then the value
 		/// is automatically calculated when <see cref="End" /> is called.
@@ -35,8 +30,6 @@ namespace Elastic.Apm.Api
 		/// The name of the span.
 		/// </summary>
 		string Name { get; set; }
-
-		List<Stacktrace> StackTrace { get; set; }
 
 		/// <summary>
 		/// Offset relative to the transaction's timestamp identifying the start of the span, in milliseconds.
@@ -85,26 +78,5 @@ namespace Elastic.Apm.Api
 		/// It is illegal to call any methods on a span instance which has already ended.
 		/// </summary>
 		void End();
-	}
-
-	public interface IContext
-	{
-		IDb Db { get; set; }
-		IHttp Http { get; set; }
-		Dictionary<string, string> Tags { get; }
-	}
-
-	public interface IDb
-	{
-		string Instance { get; set; }
-		string Statement { get; set; }
-		string Type { get; set; }
-	}
-
-	public interface IHttp
-	{
-		string Method { get; set; }
-		int StatusCode { get; set; }
-		string Url { get; set; }
 	}
 }

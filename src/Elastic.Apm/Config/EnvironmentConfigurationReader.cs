@@ -4,7 +4,7 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
 {
-	public class EnvironmentConfigurationReader : AbstractConfigurationReader, IConfigurationReader
+	internal class EnvironmentConfigurationReader : AbstractConfigurationReader, IConfigurationReader
 	{
 		internal const string Origin = "environment";
 

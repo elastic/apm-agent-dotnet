@@ -54,6 +54,8 @@ namespace Elastic.Apm
 
 		internal readonly CompositeDisposable Disposables = new CompositeDisposable();
 		public void Dispose() => Disposables?.Dispose();
+
+		internal Tracer TracerInternal => Tracer as Tracer;
 	}
 
 	public static class Agent

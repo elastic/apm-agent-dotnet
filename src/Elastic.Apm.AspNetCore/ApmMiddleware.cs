@@ -16,12 +16,12 @@ using Microsoft.AspNetCore.Http;
 namespace Elastic.Apm.AspNetCore
 {
 	// ReSharper disable once ClassNeverInstantiated.Global
-	public class ApmMiddleware
+	internal class ApmMiddleware
 	{
 		private readonly RequestDelegate _next;
-		private readonly ITracer _tracer;
+		private readonly Tracer _tracer;
 
-		public ApmMiddleware(RequestDelegate next, ITracer tracer)
+		public ApmMiddleware(RequestDelegate next, Tracer tracer)
 		{
 			_next = next;
 			_tracer = tracer;
@@ -29,7 +29,7 @@ namespace Elastic.Apm.AspNetCore
 
 		public async Task InvokeAsync(HttpContext context)
 		{
-			var transaction = _tracer.StartTransaction($"{context.Request.Method} {context.Request.Path}",
+			var transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
 				ApiConstants.TypeRequest);
 
 			transaction.Context.Request = new Request

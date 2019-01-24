@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Elastic.Apm.Model.Payload
 {
-	public class Context
+	internal class Context
 	{
 		public Request Request { get; set; }
 

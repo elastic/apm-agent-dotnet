@@ -406,10 +406,10 @@ namespace Elastic.Apm.Tests.ApiTests
 				});
 
 			//According to the Intake API tags are stored on the Context (and not on Spans.Tags directly).
-			Assert.Equal("bar", payloadSender.Payloads[0].Transactions[0].Spans[0].Context.Tags["foo"]);
+			Assert.Equal("bar", payloadSender.SpansOnFirstTransaction[0].Context.Tags["foo"]);
 
 			//Also make sure the tag is visible directly on Span.Tags.
-			Assert.Equal("bar", payloadSender.Payloads[0].Transactions[0].Spans[0].Tags["foo"]);
+			Assert.Equal("bar", payloadSender.SpansOnFirstTransaction[0].Tags["foo"]);
 		}
 
 		/// <summary>
@@ -430,10 +430,10 @@ namespace Elastic.Apm.Tests.ApiTests
 				});
 
 			//According to the Intake API tags are stored on the Context (and not on Spans.Tags directly).
-			Assert.Equal("bar", payloadSender.Payloads[0].Transactions[0].Spans[0].Context.Tags["foo"]);
+			Assert.Equal("bar", payloadSender.SpansOnFirstTransaction[0].Context.Tags["foo"]);
 
 			//Also make sure the tag is visible directly on Span.Tags.
-			Assert.Equal("bar", payloadSender.Payloads[0].Transactions[0].Spans[0].Tags["foo"]);
+			Assert.Equal("bar", payloadSender.SpansOnFirstTransaction[0].Tags["foo"]);
 		}
 
 		/// <summary>
@@ -460,10 +460,10 @@ namespace Elastic.Apm.Tests.ApiTests
 				});
 
 			//According to the Intake API tags are stored on the Context (and not on Spans.Tags directly).
-			Assert.Equal("bar", payloadSender.Payloads[0].Transactions[0].Spans[0].Context.Tags["foo"]);
+			Assert.Equal("bar", payloadSender.SpansOnFirstTransaction[0].Context.Tags["foo"]);
 
 			//Also make sure the tag is visible directly on Span.Tags.
-			Assert.Equal("bar", payloadSender.Payloads[0].Transactions[0].Spans[0].Tags["foo"]);
+			Assert.Equal("bar", payloadSender.SpansOnFirstTransaction[0].Tags["foo"]);
 		}
 
 		/// <summary>
@@ -488,10 +488,10 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= TransactionSleepLength + SpanSleepLength);
 
-			Assert.NotEmpty(payloadSender.Payloads[0].Transactions[0].Spans);
+			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
 
-			Assert.Equal(SpanName, payloadSender.Payloads[0].Transactions[0].Spans[0].Name);
-			Assert.Equal(SpanType, payloadSender.Payloads[0].Transactions[0].Spans[0].Type);
+			Assert.Equal(SpanName, payloadSender.SpansOnFirstTransaction[0].Name);
+			Assert.Equal(SpanType, payloadSender.SpansOnFirstTransaction[0].Type);
 
 
 			Assert.NotEmpty(payloadSender.Errors);
@@ -526,10 +526,10 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= TransactionSleepLength + SpanSleepLength);
 
-			Assert.NotEmpty(payloadSender.Payloads[0].Transactions[0].Spans);
+			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
 
-			Assert.Equal(SpanName, payloadSender.Payloads[0].Transactions[0].Spans[0].Name);
-			Assert.Equal(SpanType, payloadSender.Payloads[0].Transactions[0].Spans[0].Type);
+			Assert.Equal(SpanName, payloadSender.SpansOnFirstTransaction[0].Name);
+			Assert.Equal(SpanType, payloadSender.SpansOnFirstTransaction[0].Type);
 
 			return payloadSender;
 		}
@@ -554,10 +554,10 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(TransactionName, payloadSender.Payloads[0].Transactions[0].Name);
 			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
 
-			Assert.NotEmpty(payloadSender.Payloads[0].Transactions[0].Spans);
+			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
 
-			Assert.Equal(SpanName, payloadSender.Payloads[0].Transactions[0].Spans[0].Name);
-			Assert.Equal(SpanType, payloadSender.Payloads[0].Transactions[0].Spans[0].Type);
+			Assert.Equal(SpanName, payloadSender.SpansOnFirstTransaction[0].Name);
+			Assert.Equal(SpanType, payloadSender.SpansOnFirstTransaction[0].Type);
 
 			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= TransactionSleepLength + SpanSleepLength);
 
@@ -586,10 +586,10 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= TransactionSleepLength + SpanSleepLength);
 
-			Assert.NotEmpty(payloadSender.Payloads[0].Transactions[0].Spans);
+			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
 
-			Assert.Equal(SpanName, payloadSender.Payloads[0].Transactions[0].Spans[0].Name);
-			Assert.Equal(SpanType, payloadSender.Payloads[0].Transactions[0].Spans[0].Type);
+			Assert.Equal(SpanName, payloadSender.SpansOnFirstTransaction[0].Name);
+			Assert.Equal(SpanType, payloadSender.SpansOnFirstTransaction[0].Type);
 
 			Assert.NotEmpty(payloadSender.Errors);
 			Assert.NotEmpty(payloadSender.Errors[0].Errors);

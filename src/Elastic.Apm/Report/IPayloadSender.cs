@@ -6,6 +6,6 @@ namespace Elastic.Apm.Report
 	{
 		void QueueError(Error error);
 
-		void QueuePayload(Payload payload);
+		void QueuePayload(IPayload payload);
 	}
 }
