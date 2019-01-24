@@ -174,7 +174,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task TestSimpleOutgoingHttpRequest()
 		{
-			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
+			var (listener, _, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
 			using (var localServer = new LocalServer())
@@ -196,9 +196,9 @@ namespace Elastic.Apm.Tests
 		/// the response code correctly
 		/// </summary>
 		[Fact]
-		public async Task TestNotSuccesfulOutgoingHttpPostRequest()
+		public async Task TestNotSuccessfulOutgoingHttpPostRequest()
 		{
-			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
+			var (listener, _, _) = RegisterListenerAndStartTransaction();
 
 			using(listener)
 			using (var localServer = new LocalServer(ctx => { ctx.Response.StatusCode = 500; }))
@@ -323,7 +323,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task HttpRequestDuration()
 		{
-			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
+			var (listener, _, _) = RegisterListenerAndStartTransaction();
 
 			using(listener)
 			using (var localServer = new LocalServer(ctx =>
@@ -348,7 +348,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task HttpRequestSpanGuid()
 		{
-			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
+			var (listener, _, _) = RegisterListenerAndStartTransaction();
 
 			using(listener)
 			using (var localServer = new LocalServer())
