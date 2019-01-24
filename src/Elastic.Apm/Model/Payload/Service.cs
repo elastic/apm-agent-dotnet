@@ -25,7 +25,7 @@ namespace Elastic.Apm.Model.Payload
 				Agent = new AgentC
 				{
 					Name = Consts.AgentName,
-					Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "n/a",
+					Version = typeof(Agent).Assembly.GetName().Version?.ToString() ?? "n/a",
 				}
 			};
 	}
