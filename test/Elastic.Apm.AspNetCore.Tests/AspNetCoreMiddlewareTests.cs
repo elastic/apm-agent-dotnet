@@ -25,7 +25,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory)
 		{
 			_factory = factory;
-			_agent = new ApmAgent(new TestAgentComponents());
+			//The agent is instantiated with ApmMiddlewareExtension.GetService, so we can also test the calculation of the service instance.
+			//(e.g. ASP.NET Core version)
+			_agent = new ApmAgent(new TestAgentComponents(service: ApmMiddlewareExtension.GetService(new TestAgentConfigurationReader(new TestLogger()))));
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
 			_client = Helper.GetClient(_agent, _factory);
 		}
@@ -46,7 +48,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			//test payload
 			Assert.Equal(Assembly.GetEntryAssembly()?.GetName()?.Name, payload.Service.Name);
 			Assert.Equal(Consts.AgentName, payload.Service.Agent.Name);
-			Assert.Equal(Consts.AgentVersion, payload.Service.Agent.Version);
+			Assert.Equal(Assembly.Load("Elastic.Apm").GetName().Version.ToString(), payload.Service.Agent.Version);
+			Assembly.CreateQualifiedName("ASP.NET Core", payload.Service.Framework.Name);
+			Assembly.CreateQualifiedName(Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString(), payload.Service.Framework.Version);
 
 			var transaction = _capturedPayload.Payloads[0].Transactions[0];
 
