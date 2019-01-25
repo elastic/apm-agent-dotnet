@@ -7,14 +7,16 @@ namespace Elastic.Apm.Tests.Mocks
 {
 	internal class MockPayloadSender : IPayloadSender
 	{
-		public readonly List<Error> Errors = new List<Error>();
+		public readonly List<IError> Errors = new List<IError>();
 		public readonly List<IPayload> Payloads = new List<IPayload>();
 
-		public void QueueError(Error error) => Errors.Add(error);
+		public void QueueError(IError error) => Errors.Add(error);
 		public void QueuePayload(IPayload payload) => Payloads.Add(payload);
 
 		public Span[] SpansOnFirstTransaction => (Payloads[0].Transactions[0] as Transaction)?.Spans as Span[];
 		public Transaction FirstTransaction => Payloads[0].Transactions[0] as Transaction;
+
+		public Error.ErrorDetail FirstErrorDetail => Errors[0].Errors[0] as Error.ErrorDetail;
 
 		/// <summary>
 		/// The 1. Span on the 1. Transaction

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Tests.Mocks;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
@@ -42,9 +43,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 				Assert.Equal("This is a test exception!", capturedPayload.Errors[0].Errors[0].Exception.Message);
 				Assert.Equal(typeof(Exception).FullName, capturedPayload.Errors[0].Errors[0].Exception.Type);
 
-				Assert.Equal("/Home/TriggerError", capturedPayload.Errors[0].Errors[0].Context.Request.Url.Full);
-				Assert.Equal(HttpMethod.Get.Method, capturedPayload.Errors[0].Errors[0].Context.Request.Method);
-				Assert.False(capturedPayload.Errors[0].Errors[0].Exception.Handled);
+				Assert.Equal("/Home/TriggerError", capturedPayload.FirstErrorDetail.Context.Request.Url.Full);
+				Assert.Equal(HttpMethod.Get.Method, capturedPayload.FirstErrorDetail.Context.Request.Method);
+				Assert.False((capturedPayload.FirstErrorDetail.Exception as CapturedException)?.Handled);
 			}
 		}
 	}

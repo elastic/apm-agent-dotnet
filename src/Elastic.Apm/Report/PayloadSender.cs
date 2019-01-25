@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
+using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
@@ -39,7 +40,7 @@ namespace Elastic.Apm.Report
 
 		public void QueuePayload(IPayload payload) => _payloads.Add(payload);
 
-		public void QueueError(Error error) => _payloads.Add(error);
+		public void QueueError(IError error) => _payloads.Add(error);
 
 		private async void StartWork()
 		{

@@ -1,10 +1,11 @@
-﻿using Elastic.Apm.Model.Payload;
+﻿using Elastic.Apm.Api;
+using Elastic.Apm.Model.Payload;
 
 namespace Elastic.Apm.Report
 {
 	public interface IPayloadSender
 	{
-		void QueueError(Error error);
+		void QueueError(IError error);
 
 		void QueuePayload(IPayload payload);
 	}
