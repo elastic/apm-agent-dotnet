@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Net;
@@ -29,12 +29,7 @@ namespace Elastic.Apm.Report
 
 		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
 
-		static PayloadSender()
-		{
-			ServicePointManager.DnsRefreshTimeout = DnsTimeout;
-			ServicePointManager.DefaultConnectionLimit = 20;
-		}
-
+		static PayloadSender() => ServicePointManager.DnsRefreshTimeout = DnsTimeout;
 
 		internal PayloadSender(AbstractLogger logger, IConfigurationReader configurationReader)
 		{
@@ -42,7 +37,10 @@ namespace Elastic.Apm.Report
 			_settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 
 			var serverUrlBase = configurationReader.ServerUrls.First();
-			ServicePointManager.FindServicePoint(serverUrlBase).ConnectionLeaseTimeout = DnsTimeout;
+			var servicePoint = ServicePointManager.FindServicePoint(serverUrlBase);
+
+			servicePoint.ConnectionLeaseTimeout = DnsTimeout;
+			servicePoint.ConnectionLimit = 20;
 
 			_httpClient = new HttpClient
 			{
