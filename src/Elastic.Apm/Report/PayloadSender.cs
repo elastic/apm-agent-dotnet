@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
 using Elastic.Apm.Api;
+using System.Threading.Tasks.Dataflow;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
@@ -20,54 +22,70 @@ namespace Elastic.Apm.Report
 	internal class PayloadSender : IDisposable, IPayloadSender
 	{
 		private readonly AbstractLogger _logger;
-		private readonly Uri _serverUrlBase;
+
+		private readonly HttpClient _httpClient;
+
+		private readonly JsonSerializerSettings _settings;
+
+		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
+
+		static PayloadSender()
+		{
+			ServicePointManager.DnsRefreshTimeout = DnsTimeout;
+			ServicePointManager.DefaultConnectionLimit = 20;
+		}
+
 
 		internal PayloadSender(AbstractLogger logger, IConfigurationReader configurationReader)
 		{
 			_logger = logger;
-			_serverUrlBase = configurationReader.ServerUrls.First();
+			_settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
+
+			var serverUrlBase = configurationReader.ServerUrls.First();
+			ServicePointManager.FindServicePoint(serverUrlBase).ConnectionLeaseTimeout = DnsTimeout;
+
+			_httpClient = new HttpClient
+			{
+				BaseAddress = serverUrlBase
+			};
+
 			var workerThread = new Thread(StartWork)
 			{
 				IsBackground = true
 			};
 			workerThread.Start();
 		}
+		private readonly BatchBlock<object> _queue =
+			new BatchBlock<object>(batchSize: 1, dataflowBlockOptions: new GroupingDataflowBlockOptions() { BoundedCapacity = 1_000_000 });
 
-		/// <summary>
-		/// Contains data that will be sent to the server
-		/// </summary>
-		private BlockingCollection<object> _payloads = new BlockingCollection<object>();
+		public void QueuePayload(IPayload payload) => _queue.SendAsync(payload);
 
-		public void QueuePayload(IPayload payload) => _payloads.Add(payload);
-
-		public void QueueError(IError error) => _payloads.Add(error);
+		public void QueueError(IError error) => _queue.SendAsync(error);
 
 		private async void StartWork()
 		{
-			var httpClient = new HttpClient
+			while (await _queue.OutputAvailableAsync())
 			{
-				BaseAddress = _serverUrlBase
-			};
+				var batch = await _queue.ReceiveAsync();
 
-			while (true)
-			{
-				var item = _payloads.Take();
-
+				var item = batch.FirstOrDefault();
 				try
 				{
-					var json = JsonConvert.SerializeObject(item,
-						new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+					var json = JsonConvert.SerializeObject(item, _settings);
 					var content = new StringContent(json, Encoding.UTF8, "application/json");
 
+					HttpResponseMessage result = null;
 					switch (item)
 					{
 						case Payload _:
-							await httpClient.PostAsync(Consts.IntakeV1Transactions, content);
+							result = await _httpClient.PostAsync(Consts.IntakeV1Transactions, content);
 							break;
 						case Error _:
-							await httpClient.PostAsync(Consts.IntakeV1Errors, content);
+							result = await _httpClient.PostAsync(Consts.IntakeV1Errors, content);
 							break;
 					}
+
+					// TODO: handle unsuccesful status codes
 				}
 				catch (Exception e)
 				{
@@ -89,8 +107,8 @@ namespace Elastic.Apm.Report
 
 		public void Dispose()
 		{
-			_payloads?.Dispose();
-			_payloads = null;
+			_httpClient.Dispose();
+			_queue.Complete();
 		}
 	}
 }
