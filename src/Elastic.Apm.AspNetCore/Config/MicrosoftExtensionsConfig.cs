@@ -12,26 +12,28 @@ namespace Elastic.Apm.AspNetCore.Config
 	/// </summary>
 	internal class MicrosoftExtensionsConfig : AbstractConfigurationReader, IConfigurationReader
 	{
-		private readonly IConfiguration _configuration;
-
 		internal const string Origin = "Configuration Provider";
 
 		public static (string LevelSubKey, string Level, string Urls, string ServiceName) Keys = (
 			LevelSubKey: "LogLevel",
-			Level: $"ElasticApm:LogLevel",
+			Level: "ElasticApm:LogLevel",
 			Urls: "ElasticApm:ServerUrls",
 			ServiceName: "ElasticApm:ServiceName"
 		);
 
+		private readonly IConfiguration _configuration;
+
 		public MicrosoftExtensionsConfig(IConfiguration configuration, AbstractLogger logger = null) : base(logger)
 		{
 			_configuration = configuration;
-			_configuration.GetSection("ElasticApm")?
+			_configuration.GetSection("ElasticApm")
+				?
 				.GetReloadToken()
 				.RegisterChangeCallback(ChangeCallback, configuration.GetSection("ElasticApm"));
 		}
 
 		private LogLevel? _logLevel;
+
 		public LogLevel LogLevel
 		{
 			get
@@ -54,6 +56,7 @@ namespace Elastic.Apm.AspNetCore.Config
 		{
 			var primary = Read(key);
 			if (!string.IsNullOrWhiteSpace(primary.Value)) return primary;
+
 			var secondary = Kv(key, _configuration[fallBack], EnvironmentConfigurationReader.Origin);
 			return secondary;
 		}

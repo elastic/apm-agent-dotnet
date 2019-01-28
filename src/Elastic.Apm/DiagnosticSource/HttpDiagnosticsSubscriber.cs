@@ -5,8 +5,8 @@ using Elastic.Apm.DiagnosticListeners;
 namespace Elastic.Apm.DiagnosticSource
 {
 	/// <summary>
-	/// Activates the <see cref="HttpDiagnosticListener"/> which enables
-	/// capturing outgoing web requests created by <see cref="System.Net.Http.HttpClient"/>.
+	/// Activates the <see cref="HttpDiagnosticListener" /> which enables
+	/// capturing outgoing web requests created by <see cref="System.Net.Http.HttpClient" />.
 	/// </summary>
 	public class HttpDiagnosticsSubscriber : IDiagnosticsSubscriber
 	{

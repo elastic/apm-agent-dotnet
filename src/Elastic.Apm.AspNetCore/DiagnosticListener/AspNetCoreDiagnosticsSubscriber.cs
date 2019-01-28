@@ -4,7 +4,7 @@ using Elastic.Apm.DiagnosticSource;
 namespace Elastic.Apm.AspNetCore.DiagnosticListener
 {
 	/// <summary>
-	/// Activates the <see cref="AspNetCoreDiagnosticListener"/> which enables
+	/// Activates the <see cref="AspNetCoreDiagnosticListener" /> which enables
 	/// capturing errors within an ASP.NET Core application.
 	/// </summary>
 	public class AspNetCoreDiagnosticsSubscriber : IDiagnosticsSubscriber

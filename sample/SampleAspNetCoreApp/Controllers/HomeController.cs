@@ -11,9 +11,9 @@ namespace SampleAspNetCoreApp.Controllers
 {
 	public class HomeController : Controller
 	{
-		public HomeController(SampleDataContext sampleDataContext) => _sampleDataContext = sampleDataContext;
-
 		private readonly SampleDataContext _sampleDataContext;
+
+		public HomeController(SampleDataContext sampleDataContext) => _sampleDataContext = sampleDataContext;
 
 		public async Task<IActionResult> Index()
 		{
@@ -79,10 +79,7 @@ namespace SampleAspNetCoreApp.Controllers
 			return Ok();
 		}
 
-		public IActionResult TriggerError()
-		{
-			throw new Exception("This is a test exception!");
-		}
+		public IActionResult TriggerError() => throw new Exception("This is a test exception!");
 
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 		public IActionResult Error() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });

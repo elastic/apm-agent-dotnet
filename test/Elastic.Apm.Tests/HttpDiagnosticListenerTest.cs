@@ -200,7 +200,7 @@ namespace Elastic.Apm.Tests
 		{
 			var (listener, _, _) = RegisterListenerAndStartTransaction();
 
-			using(listener)
+			using (listener)
 			using (var localServer = new LocalServer(ctx => { ctx.Response.StatusCode = 500; }))
 			{
 				var httpClient = new HttpClient();
@@ -304,7 +304,7 @@ namespace Elastic.Apm.Tests
 		{
 			var (listener, _, _) = RegisterListenerAndStartTransaction();
 
-			using(listener)
+			using (listener)
 			using (var localServer = new LocalServer())
 			{
 				var httpClient = new HttpClient();
@@ -325,7 +325,7 @@ namespace Elastic.Apm.Tests
 		{
 			var (listener, _, _) = RegisterListenerAndStartTransaction();
 
-			using(listener)
+			using (listener)
 			using (var localServer = new LocalServer(ctx =>
 			{
 				ctx.Response.StatusCode = 200;
@@ -350,7 +350,7 @@ namespace Elastic.Apm.Tests
 		{
 			var (listener, _, _) = RegisterListenerAndStartTransaction();
 
-			using(listener)
+			using (listener)
 			using (var localServer = new LocalServer())
 			{
 				var httpClient = new HttpClient();
@@ -364,7 +364,7 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Creates an HTTP call without registering the <see cref="HttpDiagnosticsSubscriber"/>.
+		/// Creates an HTTP call without registering the <see cref="HttpDiagnosticsSubscriber" />.
 		/// This is something like having a console application and just referencing the agent library.
 		/// By default the agent does not subscribe in that scenario to any diagnostic source.
 		/// Makes sure that no HTTP call is captured.
@@ -375,7 +375,7 @@ namespace Elastic.Apm.Tests
 			var mockPayloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
-			await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async(t) =>
+			await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async t =>
 			{
 				Thread.Sleep(5);
 
@@ -427,7 +427,8 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Same as <see cref="HttpCallWithoutRegisteredListener"/> but this one registers <see cref="HttpDiagnosticsSubscriber"/>.
+		/// Same as <see cref="HttpCallWithoutRegisteredListener" /> but this one registers
+		/// <see cref="HttpDiagnosticsSubscriber" />.
 		/// Makes sure that the outgoing web request is captured.
 		/// </summary>
 		[Fact]
@@ -437,10 +438,10 @@ namespace Elastic.Apm.Tests
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 			var subscriber = new HttpDiagnosticsSubscriber();
 
-			using(agent.Subscribe(subscriber))
+			using (agent.Subscribe(subscriber))
 			{
 				var url = "https://elastic.co/";
-				await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async (t) =>
+				await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async t =>
 				{
 					Thread.Sleep(5);
 
@@ -477,7 +478,7 @@ namespace Elastic.Apm.Tests
 
 			using (agent.Subscribe(subscriber)) //subscribe
 			{
-				await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async (t) =>
+				await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async t =>
 				{
 					Thread.Sleep(5);
 
@@ -495,7 +496,7 @@ namespace Elastic.Apm.Tests
 
 			mockPayloadSender.Payloads.Clear();
 
-			await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async (t) =>
+			await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async t =>
 			{
 				Thread.Sleep(5);
 

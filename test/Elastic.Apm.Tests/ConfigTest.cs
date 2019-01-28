@@ -140,7 +140,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
-			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", (t) => {  Thread.Sleep(2);  });
+			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
 			//By default XUnit uses 'testhost' as the entry assembly, and that is what the
 			//agent reports if we don't set it to anything:
@@ -160,7 +160,7 @@ namespace Elastic.Apm.Tests
 			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.ServiceName, serviceName);
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
-			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", (t) => {  Thread.Sleep(2);  });
+			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
 			Assert.Equal(serviceName, payloadSender.Payloads[0].Service.Name);
 		}
@@ -178,7 +178,7 @@ namespace Elastic.Apm.Tests
 			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.ServiceName, serviceName);
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
-			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", (t) => {  Thread.Sleep(2);  });
+			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
 			Assert.Equal(serviceName.Replace('.', '_'), payloadSender.Payloads[0].Service.Name);
 			Assert.False(payloadSender.Payloads[0].Service.Name.Contains('.'));
@@ -187,7 +187,7 @@ namespace Elastic.Apm.Tests
 		/// <summary>
 		/// In case the user does not provide us a service name we try to calculate it based on the callstack.
 		/// This test makes sure we recognize mscorlib and our own assemblies correctly in the
-		/// <see cref="AbstractConfigurationReader.IsMsOrElastic(byte[])"/> method.
+		/// <see cref="AbstractConfigurationReader.IsMsOrElastic(byte[])" /> method.
 		/// </summary>
 		[Fact]
 		public void TestAbstractConfigurationReaderIsMsOrElastic()
@@ -198,12 +198,15 @@ namespace Elastic.Apm.Tests
 			Assert.True(AbstractConfigurationReader.IsMsOrElastic(elasticToken));
 			Assert.True(AbstractConfigurationReader.IsMsOrElastic(elasticToken));
 
-			Assert.False(AbstractConfigurationReader.IsMsOrElastic(new byte[] { 0, }));
+			Assert.False(AbstractConfigurationReader.IsMsOrElastic(new byte[] { 0 }));
 			Assert.False(AbstractConfigurationReader.IsMsOrElastic(new byte[] { }));
 
 			Assert.False(AbstractConfigurationReader
-				.IsMsOrElastic(new byte[] { elasticToken[0], mscorlibToken[1], elasticToken[2],
-					mscorlibToken[3], elasticToken[4], mscorlibToken[5], elasticToken[6], mscorlibToken[7]}));
+				.IsMsOrElastic(new[]
+				{
+					elasticToken[0], mscorlibToken[1], elasticToken[2],
+					mscorlibToken[3], elasticToken[4], mscorlibToken[5], elasticToken[6], mscorlibToken[7]
+				}));
 		}
 	}
 }

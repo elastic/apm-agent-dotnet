@@ -18,7 +18,7 @@ namespace Elastic.Apm.Api
 	public interface ICapturedException
 	{
 		/// <summary>
-		/// The exception message, see: <see cref="Exception.Message"/>
+		/// The exception message, see: <see cref="Exception.Message" />
 		/// </summary>
 		string Message { get; set; }
 

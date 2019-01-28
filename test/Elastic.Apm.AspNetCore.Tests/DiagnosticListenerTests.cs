@@ -16,9 +16,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 	[Collection("DiagnosticListenerTest")]
 	public class DiagnosticListenerTests : IClassFixture<WebApplicationFactory<Startup>>, IDisposable
 	{
-		private HttpClient _client;
-		private readonly MockPayloadSender _capturedPayload;
 		private readonly ApmAgent _agent;
+		private readonly MockPayloadSender _capturedPayload;
 
 		public DiagnosticListenerTests(WebApplicationFactory<Startup> factory)
 		{
@@ -30,10 +29,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_client = Helper.GetClientWithoutDiagnosticListeners(_agent, factory);
 		}
 
+		private readonly HttpClient _client;
+
 		/// <summary>
-		/// Manually starts <see cref="AspNetCoreDiagnosticsSubscriber"/> and does 1 HTTP call
+		/// Manually starts <see cref="AspNetCoreDiagnosticsSubscriber" /> and does 1 HTTP call
 		/// that throws an exception,
-		/// then it disposes the <see cref="AspNetCoreDiagnosticsSubscriber"/> (aka unsubsribes)
+		/// then it disposes the <see cref="AspNetCoreDiagnosticsSubscriber" /> (aka unsubsribes)
 		/// and does another HTTP call that throws an exception.
 		/// It makes sure that for the 1. HTTP call the errors is captured and for the 2. it isn't.
 		/// </summary>
@@ -67,9 +68,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		/// <summary>
-		/// Manually starts <see cref="EfCoreDiagnosticsSubscriber"/> and does 1 HTTP call
+		/// Manually starts <see cref="EfCoreDiagnosticsSubscriber" /> and does 1 HTTP call
 		/// that triggers db calls,
-		/// then it disposes the <see cref="EfCoreDiagnosticsSubscriber"/> (aka unsubsribes)
+		/// then it disposes the <see cref="EfCoreDiagnosticsSubscriber" /> (aka unsubsribes)
 		/// and does another HTTP call that triggers db calls.
 		/// It makes sure that for the 1. HTTP call the db calls are captured and for the 2. they aren't.
 		/// </summary>
@@ -84,7 +85,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				Assert.Single(_capturedPayload.Payloads[0].Transactions);
 
 				Assert.NotEmpty(_capturedPayload.SpansOnFirstTransaction);
-				Assert.Contains(_capturedPayload.SpansOnFirstTransaction, n => n.Context.Db != null );
+				Assert.Contains(_capturedPayload.SpansOnFirstTransaction, n => n.Context.Db != null);
 			} //here we unsubsribe, so no errors should be captured after this line.
 
 			_capturedPayload.Payloads.Clear();

@@ -34,15 +34,15 @@ namespace Elastic.Apm
 
 	internal class CompositeDisposable : IDisposable
 	{
+		private readonly List<IDisposable> _disposables = new List<IDisposable>();
 		private readonly object _lock = new object();
 
 		private bool _isDisposed;
 
-		private readonly List<IDisposable> _disposables = new List<IDisposable>();
-
 		public CompositeDisposable Add(IDisposable disposable)
 		{
 			if (_isDisposed) throw new ObjectDisposedException(nameof(CompositeDisposable));
+
 			_disposables.Add(disposable);
 			return this;
 		}

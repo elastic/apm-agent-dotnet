@@ -12,7 +12,8 @@ namespace Elastic.Apm
 			AbstractLogger logger = null,
 			IConfigurationReader configurationReader = null,
 			Service service = null,
-			IPayloadSender payloadSender = null)
+			IPayloadSender payloadSender = null
+		)
 		{
 			Logger = logger ?? ConsoleLogger.Instance;
 			ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(Logger);
@@ -22,17 +23,11 @@ namespace Elastic.Apm
 			TransactionContainer = new TransactionContainer();
 		}
 
+		public IConfigurationReader ConfigurationReader { get; }
+
 		public AbstractLogger Logger { get; }
 
 		public IPayloadSender PayloadSender { get; }
-
-		public IConfigurationReader ConfigurationReader { get; }
-
-		public ITracer Tracer => TracerInternal;
-
-		internal Tracer TracerInternal { get; }
-
-		internal TransactionContainer TransactionContainer { get; }
 
 		/// <summary>
 		/// Identifies the monitored service. If this remains unset the agent
@@ -40,5 +35,11 @@ namespace Elastic.Apm
 		/// </summary>
 		/// <value>The service.</value>
 		private Service Service { get; }
+
+		public ITracer Tracer => TracerInternal;
+
+		internal Tracer TracerInternal { get; }
+
+		internal TransactionContainer TransactionContainer { get; }
 	}
 }
