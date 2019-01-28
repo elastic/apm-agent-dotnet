@@ -483,7 +483,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(TransactionName, payloadSender.Payloads[0].Transactions[0].Name);
 			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
 
-			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= SleepLength);
+			var duration = payloadSender.FirstTransaction.Duration;
+			Assert.True(duration >= SleepLength, $"Expected {duration} to be greater or equal to: {SleepLength}");
 			return payloadSender;
 		}
 
