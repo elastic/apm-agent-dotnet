@@ -24,8 +24,10 @@ namespace Elastic.Apm.Api
 			_sender = payloadSender;
 		}
 
-
 		public ITransaction StartTransaction(string name, string type)
+			=> StartTransactionInternal(name, type);
+
+		internal Transaction StartTransactionInternal(string name, string type)
 		{
 			var retVal = new Transaction(_logger, name, type, _sender)
 			{

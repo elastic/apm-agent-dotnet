@@ -9,11 +9,6 @@ namespace Elastic.Apm.Api
 	public interface ITransaction
 	{
 		/// <summary>
-		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
-		/// </summary>
-		Context Context { get; }
-
-		/// <summary>
 		/// The duration of the transaction.
 		/// If it's not set (its HasValue property is false) then the value
 		/// is automatically calculated when <see cref="End" /> is called.
@@ -35,15 +30,10 @@ namespace Elastic.Apm.Api
 		/// <value>The result.</value>
 		string Result { get; set; }
 
-		//TODO: probably won't need with intake v2
-		ISpan[] Spans { get; }
-
 		/// <summary>
 		/// A flat mapping of user-defined tags with string values.
 		/// </summary>
 		Dictionary<string, string> Tags { get; }
-
-		string Timestamp { get; }
 
 		/// <summary>
 		/// The type of the transaction.

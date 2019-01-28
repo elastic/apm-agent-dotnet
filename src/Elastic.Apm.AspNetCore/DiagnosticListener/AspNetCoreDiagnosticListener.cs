@@ -6,14 +6,13 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.AspNetCore.DiagnosticListener
 {
-	public class AspNetCoreDiagnosticListener : IDiagnosticListener
+	internal class AspNetCoreDiagnosticListener : IDiagnosticListener
 	{
 		private readonly AbstractLogger _logger;
 
 		public AspNetCoreDiagnosticListener(IApmAgent agent) => _logger = agent.Logger;
 
 		public string Name => "Microsoft.AspNetCore";
-		public IDisposable SourceSubscription { get; set; }
 
 		public void OnCompleted() { }
 

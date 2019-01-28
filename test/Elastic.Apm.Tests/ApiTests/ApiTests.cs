@@ -152,11 +152,11 @@ namespace Elastic.Apm.Tests.ApiTests
 			span.End();
 			transaction.End();
 			Assert.NotEmpty(payloadSender.Payloads);
-			Assert.NotEmpty(payloadSender.Payloads[0].Transactions[0].Spans);
+			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
 
-			Assert.Equal(spanName, payloadSender.Payloads[0].Transactions[0].Spans[0].Name);
-			Assert.True(payloadSender.Payloads[0].Transactions[0].Spans[0].Duration >= 5);
-			Assert.True(payloadSender.Payloads[0].Transactions[0].Spans[0].Id >= 5);
+			Assert.Equal(spanName, payloadSender.SpansOnFirstTransaction[0].Name);
+			Assert.True(payloadSender.SpansOnFirstTransaction[0].Duration >= 5);
+			Assert.True(payloadSender.SpansOnFirstTransaction[0].Id >= 5);
 			Assert.NotNull(payloadSender.Payloads[0].Service);
 		}
 
@@ -181,7 +181,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			transaction.End(); //Ends transaction, but doesn't end span.
 			Assert.NotEmpty(payloadSender.Payloads);
-			Assert.Empty(payloadSender.Payloads[0].Transactions[0].Spans);
+			Assert.Empty(payloadSender.SpansOnFirstTransaction);
 
 			Assert.NotNull(payloadSender.Payloads[0].Service);
 		}
@@ -205,11 +205,11 @@ namespace Elastic.Apm.Tests.ApiTests
 			transaction.End();
 
 			Assert.NotEmpty(payloadSender.Payloads);
-			Assert.NotEmpty(payloadSender.Payloads[0].Transactions[0].Spans);
+			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
 
-			Assert.Equal(ApiConstants.TypeDb, payloadSender.Payloads[0].Transactions[0].Spans[0].Type);
-			Assert.Equal(ApiConstants.SubtypeMssql, payloadSender.Payloads[0].Transactions[0].Spans[0].Subtype);
-			Assert.Equal(ApiConstants.ActionQuery, payloadSender.Payloads[0].Transactions[0].Spans[0].Action);
+			Assert.Equal(ApiConstants.TypeDb, payloadSender.SpansOnFirstTransaction[0].Type);
+			Assert.Equal(ApiConstants.SubtypeMssql, payloadSender.SpansOnFirstTransaction[0].Subtype);
+			Assert.Equal(ApiConstants.ActionQuery, payloadSender.SpansOnFirstTransaction[0].Action);
 
 			Assert.NotNull(payloadSender.Payloads[0].Service);
 		}
@@ -344,16 +344,16 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(exceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
 
 			Assert.Equal("barTransaction1", payloadSender.Payloads[0].Transactions[0].Tags["fooTransaction1"]);
-			Assert.Equal("barTransaction1", payloadSender.Payloads[0].Transactions[0].Context.Tags["fooTransaction1"]);
+			Assert.Equal("barTransaction1", payloadSender.FirstTransaction.Context.Tags["fooTransaction1"]);
 
 			Assert.Equal("barTransaction2", payloadSender.Payloads[0].Transactions[0].Tags["fooTransaction2"]);
-			Assert.Equal("barTransaction2", payloadSender.Payloads[0].Transactions[0].Context.Tags["fooTransaction2"]);
+			Assert.Equal("barTransaction2", payloadSender.FirstTransaction.Context.Tags["fooTransaction2"]);
 
-			Assert.Equal("barSpan1", payloadSender.Payloads[0].Transactions[0].Spans[0].Tags["fooSpan1"]);
-			Assert.Equal("barSpan1", payloadSender.Payloads[0].Transactions[0].Spans[0].Context.Tags["fooSpan1"]);
+			Assert.Equal("barSpan1", payloadSender.SpansOnFirstTransaction[0].Tags["fooSpan1"]);
+			Assert.Equal("barSpan1", payloadSender.SpansOnFirstTransaction[0].Context.Tags["fooSpan1"]);
 
-			Assert.Equal("barSpan2", payloadSender.Payloads[0].Transactions[0].Spans[0].Tags["fooSpan2"]);
-			Assert.Equal("barSpan2", payloadSender.Payloads[0].Transactions[0].Spans[0].Context.Tags["fooSpan2"]);
+			Assert.Equal("barSpan2", payloadSender.SpansOnFirstTransaction[0].Tags["fooSpan2"]);
+			Assert.Equal("barSpan2", payloadSender.SpansOnFirstTransaction[0].Context.Tags["fooSpan2"]);
 		}
 	}
 }

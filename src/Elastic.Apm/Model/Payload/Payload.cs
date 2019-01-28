@@ -3,7 +3,7 @@ using Elastic.Apm.Api;
 
 namespace Elastic.Apm.Model.Payload
 {
-	public class Payload
+	internal class Payload : IPayload
 	{
 		public Service Service { get; set; }
 

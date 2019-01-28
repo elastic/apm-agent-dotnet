@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
+using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
@@ -21,15 +22,15 @@ namespace Elastic.Apm.Report
 		private readonly AbstractLogger _logger;
 		private readonly Uri _serverUrlBase;
 
-		public PayloadSender(AbstractLogger logger, IConfigurationReader configurationReader)
+		internal PayloadSender(AbstractLogger logger, IConfigurationReader configurationReader)
 		{
 			_logger = logger;
 			_serverUrlBase = configurationReader.ServerUrls.First();
-			_workerThread = new Thread(StartWork)
+			var workerThread = new Thread(StartWork)
 			{
 				IsBackground = true
 			};
-			_workerThread.Start();
+			workerThread.Start();
 		}
 
 		/// <summary>
@@ -37,16 +38,11 @@ namespace Elastic.Apm.Report
 		/// </summary>
 		private BlockingCollection<object> _payloads = new BlockingCollection<object>();
 
-		/// <summary>
-		/// The work of sending data back to the server is done on this thread
-		/// </summary>
-		private readonly Thread _workerThread;
+		public void QueuePayload(IPayload payload) => _payloads.Add(payload);
 
-		public void QueuePayload(Payload payload) => _payloads.Add(payload);
+		public void QueueError(IError error) => _payloads.Add(error);
 
-		public void QueueError(Error error) => _payloads.Add(error);
-
-		public async void StartWork()
+		private async void StartWork()
 		{
 			var httpClient = new HttpClient
 			{
@@ -63,23 +59,20 @@ namespace Elastic.Apm.Report
 						new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
 					var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-					HttpResponseMessage result = null;
 					switch (item)
 					{
-						case Payload p:
-							result = await httpClient.PostAsync(Consts.IntakeV1Transactions, content);
+						case Payload _:
+							await httpClient.PostAsync(Consts.IntakeV1Transactions, content);
 							break;
-						case Error e:
-							result = await httpClient.PostAsync(Consts.IntakeV1Errors, content);
+						case Error _:
+							await httpClient.PostAsync(Consts.IntakeV1Errors, content);
 							break;
 					}
-
-					var isSucc = result.IsSuccessStatusCode;
-					var str = await result.Content.ReadAsStringAsync();
 				}
 				catch (Exception e)
 				{
-					switch (item) {
+					switch (item)
+					{
 						case Payload p:
 							_logger.LogWarning($"Failed sending transaction {p.Transactions.FirstOrDefault()?.Name}");
 							_logger.LogDebug($"{e.GetType().Name}: {e.Message}");
@@ -91,6 +84,7 @@ namespace Elastic.Apm.Report
 					}
 				}
 			}
+			// ReSharper disable once FunctionNeverReturns
 		}
 
 		public void Dispose()

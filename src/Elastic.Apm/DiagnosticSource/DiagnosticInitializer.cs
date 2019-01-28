@@ -9,7 +9,7 @@ namespace Elastic.Apm.DiagnosticSource
 		private readonly IEnumerable<IDiagnosticListener> _listeners;
 		private IDisposable _sourceSubscription;
 
-		public DiagnosticInitializer(IEnumerable<IDiagnosticListener> listeners) => _listeners = listeners;
+		internal DiagnosticInitializer(IEnumerable<IDiagnosticListener> listeners) => _listeners = listeners;
 
 		public void OnCompleted() { }
 

@@ -2,7 +2,7 @@
 
 namespace Elastic.Apm.Model.Payload
 {
-	public class Request
+	internal class Request
 	{
 		public string HttpVersion { get; set; }
 
@@ -11,7 +11,7 @@ namespace Elastic.Apm.Model.Payload
 		public Url Url { get; set; }
 	}
 
-	public class Socket
+	internal class Socket
 	{
 		public bool Encrypted { get; set; }
 
@@ -19,7 +19,7 @@ namespace Elastic.Apm.Model.Payload
 		public string RemoteAddress { get; set; }
 	}
 
-	public class Url
+	internal class Url
 	{
 		public string Full { get; set; }
 		public string HostName { get; set; }

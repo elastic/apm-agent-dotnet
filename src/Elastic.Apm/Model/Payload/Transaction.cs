@@ -33,6 +33,9 @@ namespace Elastic.Apm.Model.Payload
 			Id = Guid.NewGuid();
 		}
 
+		/// <summary>
+		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
+		/// </summary>
 		public Context Context => _context.Value;
 
 		/// <inheritdoc />
@@ -88,7 +91,11 @@ namespace Elastic.Apm.Model.Payload
 		}
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
+			=> StartSpanInternal(name, type, subType, action);
+
+		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
+
 			var retVal = new Span(name, type, this);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
@@ -104,16 +111,19 @@ namespace Elastic.Apm.Model.Payload
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false)
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
-			var error = new Error.Err
+
+			var capturedException = new CapturedException
+			{
+				Message = exception.Message,
+				Type = exception.GetType().FullName,
+				Handled = isHandled
+			};
+
+			var error = new Error.ErrorDetail()
 			{
 				Culprit = capturedCulprit,
-				Exception = new CapturedException
-				{
-					Message = exception.Message,
-					Type = exception.GetType().FullName,
-					Handled = isHandled
-				},
-				Transaction = new Error.Err.Trans
+				Exception = capturedException,
+				Transaction = new Error.ErrorDetail.TransactionReference()
 				{
 					Id = Id
 				}
@@ -121,25 +131,26 @@ namespace Elastic.Apm.Model.Payload
 
 			if (!string.IsNullOrEmpty(exception.StackTrace))
 			{
-				error.Exception.StacktTrace
+				capturedException.StacktTrace
 					= StacktraceHelper.GenerateApmStackTrace(new StackTrace(exception).GetFrames(), _logger,
 						"failed capturing stacktrace");
 			}
 
 			error.Context = Context;
-			_sender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = Service });
+			_sender.QueueError(new Error { Errors = new List<IErrorDetail> { error }, Service = Service });
 		}
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames)
 		{
-			var error = new Error.Err
+			var capturedException = new CapturedException
+			{
+				Message = message
+			};
+			var error = new Error.ErrorDetail
 			{
 				Culprit = culprit,
-				Exception = new CapturedException
-				{
-					Message = message
-				},
-				Transaction = new Error.Err.Trans
+				Exception = capturedException,
+				Transaction = new Error.ErrorDetail.TransactionReference()
 				{
 					Id = Id
 				}
@@ -147,12 +158,12 @@ namespace Elastic.Apm.Model.Payload
 
 			if (frames != null)
 			{
-				error.Exception.StacktTrace
+				capturedException.StacktTrace
 					= StacktraceHelper.GenerateApmStackTrace(frames, _logger, "failed capturing stacktrace");
 			}
 
 			error.Context = Context;
-			_sender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = Service });
+			_sender.QueueError(new Error { Errors = new List<IErrorDetail> { error }, Service = Service });
 		}
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)

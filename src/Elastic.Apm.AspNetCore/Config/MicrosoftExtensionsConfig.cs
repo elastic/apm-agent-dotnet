@@ -10,7 +10,7 @@ namespace Elastic.Apm.AspNetCore.Config
 	/// An agent-config provider based on Microsoft.Extensions.Configuration.IConfiguration.
 	/// It uses environment variables as fallback
 	/// </summary>
-	public class MicrosoftExtensionsConfig : AbstractConfigurationReader, IConfigurationReader
+	internal class MicrosoftExtensionsConfig : AbstractConfigurationReader, IConfigurationReader
 	{
 		private readonly IConfiguration _configuration;
 

@@ -14,16 +14,17 @@ using Elastic.Apm.Model.Payload;
 
 namespace Elastic.Apm.DiagnosticListeners
 {
+	/// <inheritdoc />
 	/// <summary>
-	/// Captures web requests initiated by <see cref="System.Net.Http.HttpClient" />
+	/// Captures web requests initiated by <see cref="T:System.Net.Http.HttpClient" />
 	/// </summary>
-	public class HttpDiagnosticListener : IDiagnosticListener
+	internal class HttpDiagnosticListener : IDiagnosticListener
 	{
 
 		/// <summary>
 		/// Keeps track of ongoing requests
 		/// </summary>
-		internal readonly ConcurrentDictionary<HttpRequestMessage, ISpan> ProcessingRequests = new ConcurrentDictionary<HttpRequestMessage, ISpan>();
+		internal readonly ConcurrentDictionary<HttpRequestMessage, Span> ProcessingRequests = new ConcurrentDictionary<HttpRequestMessage, Span>();
 
 		public HttpDiagnosticListener(IApmAgent components) =>
 			(Logger, ConfigurationReader) = (components.Logger, components.ConfigurationReader);
@@ -32,7 +33,6 @@ namespace Elastic.Apm.DiagnosticListeners
 		private IConfigurationReader ConfigurationReader { get; }
 
 		public string Name => "HttpHandlerDiagnosticListener";
-		public IDisposable SourceSubscription { get; set; }
 
 		public void OnCompleted() { }
 
@@ -61,7 +61,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 					transaction = Agent.TransactionContainer.Transactions.Value;
 
-					var span = transaction.StartSpan($"{request?.Method} {request?.RequestUri?.Host}", ApiConstants.TypeExternal,
+					var span = transaction.StartSpanInternal($"{request?.Method} {request?.RequestUri?.Host}", ApiConstants.TypeExternal,
 						ApiConstants.SubtypeHttp);
 
 					if (ProcessingRequests.TryAdd(request, span))

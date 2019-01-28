@@ -12,14 +12,13 @@ namespace Elastic.Apm.EntityFrameworkCore
 {
 	internal class EfCoreDiagnosticListener : IDiagnosticListener
 	{
-		private readonly ConcurrentDictionary<Guid, ISpan> _spans = new ConcurrentDictionary<Guid, ISpan>();
+		private readonly ConcurrentDictionary<Guid, Span> _spans = new ConcurrentDictionary<Guid, Span>();
 
 		public EfCoreDiagnosticListener(IApmAgent agent) => Logger = agent.Logger;
 
 		private AbstractLogger Logger { get; }
 
 		public string Name => "Microsoft.EntityFrameworkCore";
-		public IDisposable SourceSubscription { get; set; }
 
 		public void OnCompleted() { }
 
@@ -32,7 +31,7 @@ namespace Elastic.Apm.EntityFrameworkCore
 				case string k when k == RelationalEventId.CommandExecuting.Name && Agent.TransactionContainer.Transactions.Value != null:
 					if (kv.Value is CommandEventData commandEventData)
 					{
-						var newSpan = Agent.TransactionContainer.Transactions.Value.StartSpan(
+						var newSpan = Agent.TransactionContainer.Transactions.Value.StartSpanInternal(
 							commandEventData.Command.CommandText, ApiConstants.TypeDb);
 
 						_spans.TryAdd(commandEventData.CommandId, newSpan);

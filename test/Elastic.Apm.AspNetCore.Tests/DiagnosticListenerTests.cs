@@ -83,8 +83,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 				Assert.Single(_capturedPayload.Payloads);
 				Assert.Single(_capturedPayload.Payloads[0].Transactions);
 
-				Assert.NotEmpty(_capturedPayload.Payloads[0].Transactions[0].Spans);
-				Assert.Contains(_capturedPayload.Payloads[0].Transactions[0].Spans, n => n.Context.Db != null );
+				Assert.NotEmpty(_capturedPayload.SpansOnFirstTransaction);
+				Assert.Contains(_capturedPayload.SpansOnFirstTransaction, n => n.Context.Db != null );
 			} //here we unsubsribe, so no errors should be captured after this line.
 
 			_capturedPayload.Payloads.Clear();
@@ -95,7 +95,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Assert.Single(_capturedPayload.Payloads);
 			Assert.Single(_capturedPayload.Payloads[0].Transactions);
 
-			Assert.Empty(_capturedPayload.Payloads[0].Transactions[0].Spans);
+			Assert.Empty(_capturedPayload.SpansOnFirstTransaction);
 		}
 
 		public void Dispose()

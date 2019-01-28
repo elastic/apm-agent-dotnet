@@ -2,7 +2,7 @@
 
 namespace Elastic.Apm.Model.Payload
 {
-	public class Response
+	internal class Response
 	{
 		public bool Finished { get; set; }
 

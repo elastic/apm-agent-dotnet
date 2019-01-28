@@ -67,7 +67,8 @@ namespace Elastic.Apm.Tests
 		public void OnNextWithStartAndStop()
 		{
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger));
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(logger, payloadSender: payloadSender));
 			StartTransaction(agent);
 			var listener = new HttpDiagnosticListener(agent);
 
@@ -80,8 +81,8 @@ namespace Elastic.Apm.Tests
 			listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Stop", new { Request = request, Response = response }));
 			Assert.Empty(listener.ProcessingRequests);
 
-			Assert.Equal(request.RequestUri.ToString(), Agent.TransactionContainer.Transactions.Value.Spans[0].Context.Http.Url);
-			Assert.Equal(HttpMethod.Get.ToString(), Agent.TransactionContainer.Transactions.Value.Spans[0].Context.Http.Method);
+			Assert.Equal(request.RequestUri.ToString(), (Agent.TransactionContainer.Transactions.Value.Spans[0] as Span)?.Context.Http.Url);
+			Assert.Equal(HttpMethod.Get.ToString(), (Agent.TransactionContainer.Transactions.Value.Spans[0] as Span)?.Context.Http.Method);
 		}
 
 		/// <summary>
@@ -182,11 +183,11 @@ namespace Elastic.Apm.Tests
 				var res = await httpClient.GetAsync(localServer.Uri);
 
 				Assert.True(res.IsSuccessStatusCode);
-				Assert.Equal(localServer.Uri, Agent.TransactionContainer.Transactions.Value.Spans[0].Context.Http.Url);
+				Assert.Equal(localServer.Uri, (Agent.TransactionContainer.Transactions.Value.Spans[0] as Span)?.Context.Http.Url);
 			}
 
-			Assert.Equal(200, Agent.TransactionContainer.Transactions.Value.Spans[0].Context.Http.StatusCode);
-			Assert.Equal(HttpMethod.Get.ToString(), Agent.TransactionContainer.Transactions.Value.Spans[0].Context.Http.Method);
+			Assert.Equal(200, (Agent.TransactionContainer.Transactions.Value.Spans[0] as Span)?.Context.Http.StatusCode);
+			Assert.Equal(HttpMethod.Get.ToString(), (Agent.TransactionContainer.Transactions.Value.Spans[0] as Span)?.Context.Http.Method);
 		}
 
 		/// <summary>
@@ -195,7 +196,7 @@ namespace Elastic.Apm.Tests
 		/// the response code correctly
 		/// </summary>
 		[Fact]
-		public async Task TestNotSuccesfulOutgoingHttpPostRequest()
+		public async Task TestNotSuccessfulOutgoingHttpPostRequest()
 		{
 			var (listener, _, _) = RegisterListenerAndStartTransaction();
 
@@ -206,11 +207,11 @@ namespace Elastic.Apm.Tests
 				var res = await httpClient.PostAsync(localServer.Uri, new StringContent("foo"));
 
 				Assert.False(res.IsSuccessStatusCode);
-				Assert.Equal(localServer.Uri, Agent.TransactionContainer.Transactions.Value.Spans[0].Context.Http.Url);
+				Assert.Equal(localServer.Uri, (Agent.TransactionContainer.Transactions.Value.Spans[0] as Span)?.Context.Http.Url);
 			}
 
-			Assert.Equal(500, Agent.TransactionContainer.Transactions.Value.Spans[0].Context.Http.StatusCode);
-			Assert.Equal(HttpMethod.Post.ToString(), Agent.TransactionContainer.Transactions.Value.Spans[0].Context.Http.Method);
+			Assert.Equal(500, (Agent.TransactionContainer.Transactions.Value.Spans[0] as Span)?.Context.Http.StatusCode);
+			Assert.Equal(HttpMethod.Post.ToString(), (Agent.TransactionContainer.Transactions.Value.Spans[0] as Span)?.Context.Http.Method);
 		}
 
 		/// <summary>
@@ -335,7 +336,7 @@ namespace Elastic.Apm.Tests
 				var res = await httpClient.GetAsync(localServer.Uri);
 
 				Assert.True(res.IsSuccessStatusCode);
-				Assert.Equal(localServer.Uri, Agent.TransactionContainer.Transactions.Value.Spans[0].Context.Http.Url);
+				Assert.Equal(localServer.Uri, (Agent.TransactionContainer.Transactions.Value.Spans[0] as Span)?.Context.Http.Url);
 			}
 
 			Assert.True(Agent.TransactionContainer.Transactions.Value.Spans[0].Duration > 0);
@@ -356,7 +357,7 @@ namespace Elastic.Apm.Tests
 				var res = await httpClient.GetAsync(localServer.Uri);
 
 				Assert.True(res.IsSuccessStatusCode);
-				Assert.Equal(localServer.Uri, Agent.TransactionContainer.Transactions.Value.Spans[0].Context.Http.Url);
+				Assert.Equal(localServer.Uri, (Agent.TransactionContainer.Transactions.Value.Spans[0] as Span)?.Context.Http.Url);
 			}
 
 			Assert.True(Agent.TransactionContainer.Transactions.Value.Spans[0].Id > 0);
@@ -390,10 +391,12 @@ namespace Elastic.Apm.Tests
 			});
 
 			Assert.NotEmpty(mockPayloadSender.Payloads[0].Transactions);
-			Assert.Empty(mockPayloadSender.Payloads[0].Transactions[0].Spans);
+			Assert.Empty(mockPayloadSender.SpansOnFirstTransaction);
 		}
 
-		/// <summary> Make sure HttpDiagnosticSubscriber does not report spans after its disposed</summary>
+		/// <summary>
+		/// Make sure HttpDiagnosticSubscriber does not report spans after its disposed
+		/// </summary>
 		[Fact]
 		public async Task SubscriptionOnlyRegistersSpansDuringItsLifeTime()
 		{
@@ -409,12 +412,13 @@ namespace Elastic.Apm.Tests
 				using (agent.Subscribe(new HttpDiagnosticsSubscriber()))
 				{
 					var res = await httpClient.GetAsync(localServer.Uri);
+					Assert.True(res.IsSuccessStatusCode);
 					res = await httpClient.GetAsync(localServer.Uri);
 					Assert.True(res.IsSuccessStatusCode);
 				}
 				spans = Agent.TransactionContainer.Transactions.Value.Spans;
 				Assert.True(spans.Length == 2, $"Expected 2 but spans has count: {spans.Length}");
-				foreach (var i in Enumerable.Range(0, 10))
+				foreach (var _ in Enumerable.Range(0, 10))
 					await httpClient.GetAsync(localServer.Uri);
 
 				Assert.True(localServer.SeenRequests > 10, "Make sure we actually performed more than 1 request to our local server");
@@ -452,10 +456,10 @@ namespace Elastic.Apm.Tests
 				});
 
 				Assert.NotEmpty(mockPayloadSender.Payloads[0].Transactions);
-				Assert.NotEmpty(mockPayloadSender.Payloads[0].Transactions[0].Spans);
+				Assert.NotEmpty(mockPayloadSender.SpansOnFirstTransaction);
 
-				Assert.NotNull(mockPayloadSender.Payloads[0].Transactions[0].Spans[0].Context.Http);
-				Assert.Equal(url, mockPayloadSender.Payloads[0].Transactions[0].Spans[0].Context.Http.Url);
+				Assert.NotNull(mockPayloadSender.SpansOnFirstTransaction[0].Context.Http);
+				Assert.Equal(url, mockPayloadSender.SpansOnFirstTransaction[0].Context.Http.Url);
 			}
 		}
 
@@ -507,22 +511,22 @@ namespace Elastic.Apm.Tests
 			});
 
 			Assert.NotNull(mockPayloadSender.Payloads[0].Transactions[0]);
-			Assert.Empty(mockPayloadSender.Payloads[0].Transactions[0].Spans);
+			Assert.Empty(mockPayloadSender.SpansOnFirstTransaction);
 		}
 
 		private (IDisposable, MockPayloadSender, ApmAgent) RegisterListenerAndStartTransaction()
 		{
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
-			var subscriber = new HttpDiagnosticsSubscriber();
-			var sub = agent.Subscribe(subscriber);
+			var sub = agent.Subscribe(new HttpDiagnosticsSubscriber());
 			StartTransaction(agent);
 
 			return (sub, payloadSender, agent);
 		}
 
 		private void StartTransaction(ApmAgent agent)
-			=> Agent.TransactionContainer.Transactions.Value =
-				new Transaction(agent, $"{nameof(TestSimpleOutgoingHttpRequest)}", ApiConstants.TypeRequest);
+			//	=> agent.TransactionContainer.Transactions.Value =
+			//		new Transaction(agent, $"{nameof(TestSimpleOutgoingHttpRequest)}", ApiConstants.TypeRequest);
+			=> agent.Tracer.StartTransaction($"{nameof(TestSimpleOutgoingHttpRequest)}", ApiConstants.TypeRequest);
 	}
 }
