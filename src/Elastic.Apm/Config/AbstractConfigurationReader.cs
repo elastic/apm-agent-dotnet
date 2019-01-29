@@ -10,7 +10,7 @@ namespace Elastic.Apm.Config
 	{
 		protected AbstractConfigurationReader(AbstractLogger logger) => Logger = logger;
 
-		internal AbstractLogger Logger { get; }
+		protected AbstractLogger Logger { get; }
 
 		protected static ConfigurationKeyValue Kv(string key, string value, string origin) =>
 			new ConfigurationKeyValue(key, value, origin);

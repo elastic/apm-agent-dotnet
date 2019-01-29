@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
@@ -10,7 +11,7 @@ namespace Elastic.Apm.Tests
 	/// <summary>
 	/// Tests the configuration through environment variables
 	/// </summary>
-	public class EnvVarConfigTest
+	public class EnvVarConfigTest : IDisposable
 	{
 		[Fact]
 		public void ServerUrlsSimpleTest()
@@ -210,14 +211,24 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Makes sure that even if the <see cref="EnvironmentConfigurationReader" /> is initialized without a logger
-		/// it still defaults to some kind of logger.
+		/// Makes sure that the <see cref="EnvironmentConfigurationReader" /> logs
+		/// in case it reads an invalid URL.
 		/// </summary>
 		[Fact]
 		public void LoggerNotNull()
 		{
-			var config = new EnvironmentConfigurationReader();
-			Assert.NotNull(config.Logger);
+			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.Urls, "localhost"); //invalid, it should be "http://localhost"
+			var testLogger = new TestLogger();
+			var config = new EnvironmentConfigurationReader(testLogger);
+			var serverUrl = config.ServerUrls.FirstOrDefault();
+
+			Assert.NotNull(serverUrl);
+			Assert.NotEmpty(testLogger.Lines);
+		}
+
+		public void Dispose()
+		{
+			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.Urls, null);
 		}
 	}
 }

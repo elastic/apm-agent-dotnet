@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.AspNetCore.Config;
@@ -26,7 +27,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public void ReadValidConfigsFromAppSettingsJson()
 		{
-			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"));
+			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"), new TestLogger());
 			Assert.Equal(LogLevel.Debug, config.LogLevel);
 			Assert.Equal(new Uri("http://myServerFromTheConfigFile:8080"), config.ServerUrls[0]);
 			Assert.Equal("My_Test_Application", config.ServiceName);
@@ -80,21 +81,24 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.AddEnvironmentVariables()
 				.Build();
 
-			var config = new MicrosoftExtensionsConfig(configBuilder);
+			var config = new MicrosoftExtensionsConfig(configBuilder, new TestLogger());
 			Assert.Equal(LogLevel.Debug, config.LogLevel);
 			Assert.Equal(new Uri(serverUrl), config.ServerUrls[0]);
 			Assert.Equal(serviceName, config.ServiceName);
 		}
 
 		/// <summary>
-		/// Makes sure that even if the <see cref="MicrosoftExtensionsConfig" /> is initialized without a logger
-		/// it still defaults to some kind of logger.
+		/// Makes sure that <see cref="MicrosoftExtensionsConfig" />  logs
+		/// in case it reads an invalid URL.
 		/// </summary>
 		[Fact]
 		public void LoggerNotNull()
 		{
-			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"));
-			Assert.NotNull(config.Logger);
+			var testLogger = new TestLogger();
+			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), testLogger);
+			var serverUrl = config.ServerUrls.FirstOrDefault();
+			Assert.NotNull(serverUrl);
+			Assert.NotEmpty(testLogger.Lines);
 		}
 
 		internal static IConfiguration GetConfig(string path)

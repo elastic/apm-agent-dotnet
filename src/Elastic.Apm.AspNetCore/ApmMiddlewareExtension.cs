@@ -6,6 +6,7 @@ using Elastic.Apm.AspNetCore.Config;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -34,13 +35,14 @@ namespace Elastic.Apm.AspNetCore
 			params IDiagnosticsSubscriber[] subscribers
 		)
 		{
+			var logger = ConsoleLogger.Instance;
 			var configReader = configuration == null
-				? new EnvironmentConfigurationReader()
-				: new MicrosoftExtensionsConfig(configuration) as IConfigurationReader;
+				? new EnvironmentConfigurationReader(logger)
+				: new MicrosoftExtensionsConfig(configuration, logger) as IConfigurationReader;
 
 			var service = GetService(configReader);
 
-			var config = new AgentComponents(configurationReader: configReader, service: service);
+			var config = new AgentComponents(configurationReader: configReader, service: service, logger: logger);
 			Agent.Setup(config);
 			return UseElasticApm(builder, Agent.Instance, subscribers);
 		}

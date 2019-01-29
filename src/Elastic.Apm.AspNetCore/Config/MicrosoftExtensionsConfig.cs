@@ -23,7 +23,7 @@ namespace Elastic.Apm.AspNetCore.Config
 
 		private readonly IConfiguration _configuration;
 
-		public MicrosoftExtensionsConfig(IConfiguration configuration, AbstractLogger logger = null) : base(logger ?? ConsoleLogger.Instance)
+		public MicrosoftExtensionsConfig(IConfiguration configuration, AbstractLogger logger) : base(logger)
 		{
 			_configuration = configuration;
 			_configuration.GetSection("ElasticApm")
