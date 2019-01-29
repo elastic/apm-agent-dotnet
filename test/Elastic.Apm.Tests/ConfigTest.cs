@@ -208,5 +208,16 @@ namespace Elastic.Apm.Tests
 					mscorlibToken[3], elasticToken[4], mscorlibToken[5], elasticToken[6], mscorlibToken[7]
 				}));
 		}
+
+		/// <summary>
+		/// Makes sure that even if the <see cref="EnvironmentConfigurationReader" /> is initialized without a logger
+		/// it still defaults to some kind of logger.
+		/// </summary>
+		[Fact]
+		public void LoggerNotNull()
+		{
+			var config = new EnvironmentConfigurationReader();
+			Assert.NotNull(config.Logger);
+		}
 	}
 }

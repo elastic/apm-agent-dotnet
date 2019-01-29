@@ -10,7 +10,7 @@ namespace Elastic.Apm.Config
 	{
 		protected AbstractConfigurationReader(AbstractLogger logger) => Logger = logger;
 
-		protected AbstractLogger Logger { get; }
+		internal AbstractLogger Logger { get; }
 
 		protected static ConfigurationKeyValue Kv(string key, string value, string origin) =>
 			new ConfigurationKeyValue(key, value, origin);
@@ -24,7 +24,7 @@ namespace Elastic.Apm.Config
 
 			if (Enum.TryParse<LogLevel>(kv.Value, out var logLevel)) return logLevel;
 
-			Logger?.LogError("Config",
+			Logger.LogError("Config",
 				$"Failed parsing log level from {kv.ReadFrom}: {kv.Key}, value: {kv.Value}. Defaulting to log level 'Error'");
 
 			return AbstractLogger.LogLevelDefault;
@@ -45,7 +45,7 @@ namespace Elastic.Apm.Config
 					continue;
 				}
 
-				Logger?.LogError(name, $"Failed parsing server URL from {kv.ReadFrom}: {kv.Key}, value: {u}");
+				Logger.LogError(name, $"Failed parsing server URL from {kv.ReadFrom}: {kv.Key}, value: {u}");
 			}
 
 			return list.Count == 0 ? LogAndReturnDefault().AsReadOnly() : list.AsReadOnly();
@@ -53,7 +53,7 @@ namespace Elastic.Apm.Config
 			List<Uri> LogAndReturnDefault()
 			{
 				list.Add(ConfigConsts.DefaultServerUri);
-				Logger?.LogDebug(name, $"Using default ServerUrl: {ConfigConsts.DefaultServerUri}");
+				Logger.LogDebug(name, $"Using default ServerUrl: {ConfigConsts.DefaultServerUri}");
 				return list;
 			}
 
@@ -73,7 +73,7 @@ namespace Elastic.Apm.Config
 			var retVal = kv.Value;
 			if (string.IsNullOrEmpty(retVal))
 			{
-				Logger?.LogInfo("Config", "The agent was started without a service name. The service name will be automatically calculated.");
+				Logger.LogInfo("Config", "The agent was started without a service name. The service name will be automatically calculated.");
 				retVal = Assembly.GetEntryAssembly()?.GetName().Name;
 			}
 
@@ -95,7 +95,7 @@ namespace Elastic.Apm.Config
 
 			if (string.IsNullOrEmpty(retVal))
 			{
-				Logger?.LogError("Config", "Failed calculating service name, the service name will be \'unknown\'." +
+				Logger.LogError("Config", "Failed calculating service name, the service name will be \'unknown\'." +
 					$" You can fix this by setting the service name to a specific value (e.g. by using the environment variable {ConfigConsts.ConfigKeys.ServiceName})");
 				retVal = "unknown";
 			}

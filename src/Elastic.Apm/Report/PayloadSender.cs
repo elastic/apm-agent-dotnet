@@ -1,12 +1,11 @@
 using System;
-using System.Collections.Concurrent;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
-using Elastic.Apm.Api;
 using System.Threading.Tasks.Dataflow;
+using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
@@ -21,13 +20,16 @@ namespace Elastic.Apm.Report
 	/// </summary>
 	internal class PayloadSender : IDisposable, IPayloadSender
 	{
-		private readonly AbstractLogger _logger;
+		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
 
 		private readonly HttpClient _httpClient;
+		private readonly AbstractLogger _logger;
+
+		private readonly BatchBlock<object> _queue =
+			new BatchBlock<object>(1, new GroupingDataflowBlockOptions
+				{ BoundedCapacity = 1_000_000 });
 
 		private readonly JsonSerializerSettings _settings;
-
-		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
 
 		static PayloadSender() => ServicePointManager.DnsRefreshTimeout = DnsTimeout;
 
@@ -53,8 +55,6 @@ namespace Elastic.Apm.Report
 			};
 			workerThread.Start();
 		}
-		private readonly BatchBlock<object> _queue =
-			new BatchBlock<object>(batchSize: 1, dataflowBlockOptions: new GroupingDataflowBlockOptions() { BoundedCapacity = 1_000_000 });
 
 		public void QueuePayload(IPayload payload) => _queue.SendAsync(payload);
 
