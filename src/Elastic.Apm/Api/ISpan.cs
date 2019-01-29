@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Elastic.Apm.Model.Payload;
 
 namespace Elastic.Apm.Api
 {

@@ -10,8 +10,6 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly HttpListener _httpListener = new HttpListener();
 		private readonly Task _task;
 		private readonly CancellationTokenSource _tokenSource;
-		private long _seenRequests;
-		public long SeenRequests => _seenRequests;
 
 		public LocalServer(Action<HttpListenerContext> testAction = null)
 		{
@@ -32,8 +30,11 @@ namespace Elastic.Apm.Tests.Mocks
 					context.Response.OutputStream.Close();
 					context.Response.Close();
 				} while (!_tokenSource.IsCancellationRequested);
-			},_tokenSource.Token);
+			}, _tokenSource.Token);
 		}
+
+		private long _seenRequests;
+		public long SeenRequests => _seenRequests;
 
 		public string Uri => "http://localhost:8082/";
 

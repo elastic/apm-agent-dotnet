@@ -20,7 +20,6 @@ namespace Elastic.Apm.DiagnosticListeners
 	/// </summary>
 	internal class HttpDiagnosticListener : IDiagnosticListener
 	{
-
 		/// <summary>
 		/// Keeps track of ongoing requests
 		/// </summary>
@@ -29,8 +28,9 @@ namespace Elastic.Apm.DiagnosticListeners
 		public HttpDiagnosticListener(IApmAgent components) =>
 			(Logger, ConfigurationReader) = (components.Logger, components.ConfigurationReader);
 
-		private AbstractLogger Logger { get; }
 		private IConfigurationReader ConfigurationReader { get; }
+
+		private AbstractLogger Logger { get; }
 
 		public string Name => "HttpHandlerDiagnosticListener";
 

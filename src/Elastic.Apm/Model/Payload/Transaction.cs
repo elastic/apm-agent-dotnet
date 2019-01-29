@@ -14,11 +14,11 @@ namespace Elastic.Apm.Model.Payload
 {
 	internal class Transaction : ITransaction
 	{
-		private readonly AbstractLogger _logger;
-		private readonly IPayloadSender _sender;
 		internal readonly DateTimeOffset Start;
 
 		private readonly Lazy<Context> _context = new Lazy<Context>();
+		private readonly AbstractLogger _logger;
+		private readonly IPayloadSender _sender;
 
 		public Transaction(IApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, agent.PayloadSender) { }
@@ -95,7 +95,6 @@ namespace Elastic.Apm.Model.Payload
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
-
 			var retVal = new Span(name, type, this);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
@@ -119,11 +118,11 @@ namespace Elastic.Apm.Model.Payload
 				Handled = isHandled
 			};
 
-			var error = new Error.ErrorDetail()
+			var error = new Error.ErrorDetail
 			{
 				Culprit = capturedCulprit,
 				Exception = capturedException,
-				Transaction = new Error.ErrorDetail.TransactionReference()
+				Transaction = new Error.ErrorDetail.TransactionReference
 				{
 					Id = Id
 				}
@@ -150,7 +149,7 @@ namespace Elastic.Apm.Model.Payload
 			{
 				Culprit = culprit,
 				Exception = capturedException,
-				Transaction = new Error.ErrorDetail.TransactionReference()
+				Transaction = new Error.ErrorDetail.TransactionReference
 				{
 					Id = Id
 				}

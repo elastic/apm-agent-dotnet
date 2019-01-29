@@ -30,39 +30,39 @@ namespace Elastic.Apm
 {
 	public interface IApmAgent
 	{
+		IConfigurationReader ConfigurationReader { get; }
 		AbstractLogger Logger { get; }
 
 		IPayloadSender PayloadSender { get; }
-
-		IConfigurationReader ConfigurationReader { get; }
 
 		ITracer Tracer { get; }
 	}
 
 	internal class ApmAgent : IApmAgent, IDisposable
 	{
+		internal readonly CompositeDisposable Disposables = new CompositeDisposable();
+
 		public ApmAgent(AgentComponents agentComponents) =>
-			Components = agentComponents ?? new AgentComponents(logger: null, service: null);
+			Components = agentComponents ?? new AgentComponents(null, service: null);
 
 		private AgentComponents Components { get; }
-		public ITracer Tracer => Components.Tracer;
-		public IPayloadSender PayloadSender => Components.PayloadSender;
-		public AbstractLogger Logger => Components.Logger;
 		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
+		public AbstractLogger Logger => Components.Logger;
+		public IPayloadSender PayloadSender => Components.PayloadSender;
+		public ITracer Tracer => Components.Tracer;
+
+		internal Tracer TracerInternal => Tracer as Tracer;
 
 		internal TransactionContainer TransactionContainer => Components.TransactionContainer;
 
-		internal readonly CompositeDisposable Disposables = new CompositeDisposable();
 		public void Dispose() => Disposables?.Dispose();
-
-		internal Tracer TracerInternal => Tracer as Tracer;
 	}
 
 	public static class Agent
 	{
-		private static readonly Lazy<ApmAgent> Lazy = new Lazy<ApmAgent>(()=> new ApmAgent(_config));
-
+		private static readonly Lazy<ApmAgent> Lazy = new Lazy<ApmAgent>(() => new ApmAgent(_config));
 		private static AgentComponents _config;
+
 
 		public static IConfigurationReader Config => Lazy.Value.ConfigurationReader;
 
@@ -75,18 +75,20 @@ namespace Elastic.Apm
 		/// </summary>
 		public static ITracer Tracer => Instance.Tracer;
 
+		internal static TransactionContainer TransactionContainer => Instance.TransactionContainer;
+
 		/// <summary>
-		/// Sets up multiple <see cref="IDiagnosticsSubscriber" />'s to start listening to one or more <see cref="IDiagnosticListener" />'s
+		/// Sets up multiple <see cref="IDiagnosticsSubscriber" />'s to start listening to one or more
+		/// <see cref="IDiagnosticListener" />'s
 		/// </summary>
 		/// <param name="subscribers">
 		/// An array of <see cref="IDiagnosticsSubscriber" /> that will set up <see cref="IDiagnosticListener" /> subscriptions
 		/// </param>
 		/// <returns>
-		/// A disposable referencing all the subscriptions, disposing this is not necessary for clean up, only to unsubscribe if desired.
+		/// A disposable referencing all the subscriptions, disposing this is not necessary for clean up, only to unsubscribe if
+		/// desired.
 		/// </returns>
 		public static IDisposable Subscribe(params IDiagnosticsSubscriber[] subscribers) => Instance.Subscribe(subscribers);
-
-		internal static TransactionContainer TransactionContainer => Instance.TransactionContainer;
 
 		public static void Setup(AgentComponents agentComponents)
 		{

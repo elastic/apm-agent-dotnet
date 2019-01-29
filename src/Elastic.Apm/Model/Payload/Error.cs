@@ -39,7 +39,7 @@ namespace Elastic.Apm.Model.Payload
 		public bool Handled { get; set; }
 
 		/// <summary>
-		/// The exception message, see: <see cref="Exception.Message"/>
+		/// The exception message, see: <see cref="Exception.Message" />
 		/// </summary>
 		public string Message { get; set; }
 

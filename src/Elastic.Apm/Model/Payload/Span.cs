@@ -75,10 +75,9 @@ namespace Elastic.Apm.Model.Payload
 
 		private class ContextImpl : IContext
 		{
+			private readonly Lazy<Dictionary<string, string>> _tags = new Lazy<Dictionary<string, string>>();
 			public IDb Db { get; set; }
 			public IHttp Http { get; set; }
-
-			private readonly Lazy<Dictionary<string, string>> _tags = new Lazy<Dictionary<string, string>>();
 			public Dictionary<string, string> Tags => _tags.Value;
 		}
 	}

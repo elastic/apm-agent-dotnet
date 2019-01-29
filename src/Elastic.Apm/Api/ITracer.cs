@@ -45,7 +45,8 @@ namespace Elastic.Apm.Api
 		/// The <see cref="ITransaction" /> parameter gives you access to the transaction which is created by this method.
 		/// </param>
 		/// <typeparam name="T">The return type of the code that you want to capture as transaction.</typeparam>
-		/// <returns>The result of the
+		/// <returns>
+		/// The result of the
 		/// <param name="func"></param>
 		/// .
 		/// </returns>

@@ -11,11 +11,9 @@ namespace Elastic.Apm.Api
 {
 	internal class Tracer : ITracer
 	{
-		public ITransaction CurrentTransaction => Agent.TransactionContainer.Transactions.Value;
-
 		private readonly AbstractLogger _logger;
-		private readonly Service _service;
 		private readonly IPayloadSender _sender;
+		private readonly Service _service;
 
 		public Tracer(AbstractLogger logger, Service service, IPayloadSender payloadSender)
 		{
@@ -23,6 +21,8 @@ namespace Elastic.Apm.Api
 			_service = service;
 			_sender = payloadSender;
 		}
+
+		public ITransaction CurrentTransaction => Agent.TransactionContainer.Transactions.Value;
 
 		public ITransaction StartTransaction(string name, string type)
 			=> StartTransactionInternal(name, type);

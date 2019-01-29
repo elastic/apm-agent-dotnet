@@ -73,7 +73,7 @@ namespace Elastic.Apm.Config
 			var retVal = kv.Value;
 			if (string.IsNullOrEmpty(retVal))
 			{
-				Logger?.LogInfo("Config", $"The agent was started without a service name. The service name will be automatically calculated.");
+				Logger?.LogInfo("Config", "The agent was started without a service name. The service name will be automatically calculated.");
 				retVal = Assembly.GetEntryAssembly()?.GetName().Name;
 			}
 
@@ -83,7 +83,7 @@ namespace Elastic.Apm.Config
 				foreach (var frame in stackFrames)
 				{
 					var currentAssembly = frame.GetMethod()?.DeclaringType.Assembly;
-					var token =  currentAssembly.GetName().GetPublicKeyToken();
+					var token = currentAssembly.GetName().GetPublicKeyToken();
 					if (currentAssembly != null
 						&& !IsMsOrElastic(currentAssembly.GetName().GetPublicKeyToken()))
 					{
@@ -95,12 +95,12 @@ namespace Elastic.Apm.Config
 
 			if (string.IsNullOrEmpty(retVal))
 			{
-				Logger?.LogError("Config", $"Failed calculating service name, the service name will be 'unknown'." +
+				Logger?.LogError("Config", "Failed calculating service name, the service name will be \'unknown\'." +
 					$" You can fix this by setting the service name to a specific value (e.g. by using the environment variable {ConfigConsts.ConfigKeys.ServiceName})");
 				retVal = "unknown";
 			}
 
-		 	return retVal.Replace('.', '_');
+			return retVal.Replace('.', '_');
 		}
 
 		internal static bool IsMsOrElastic(byte[] array)

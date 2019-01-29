@@ -17,20 +17,22 @@ namespace Elastic.Apm.AspNetCore.Tests
 	public class AspNetCoreMiddlewareTests
 		: IClassFixture<WebApplicationFactory<Startup>>, IDisposable
 	{
-		private readonly WebApplicationFactory<Startup> _factory;
-		private HttpClient _client;
-		private readonly MockPayloadSender _capturedPayload;
 		private readonly ApmAgent _agent;
+		private readonly MockPayloadSender _capturedPayload;
+		private readonly WebApplicationFactory<Startup> _factory;
 
 		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory)
 		{
 			_factory = factory;
 			//The agent is instantiated with ApmMiddlewareExtension.GetService, so we can also test the calculation of the service instance.
 			//(e.g. ASP.NET Core version)
-			_agent = new ApmAgent(new TestAgentComponents(service: ApmMiddlewareExtension.GetService(new TestAgentConfigurationReader(new TestLogger()))));
+			_agent = new ApmAgent(
+				new TestAgentComponents(service: ApmMiddlewareExtension.GetService(new TestAgentConfigurationReader(new TestLogger()))));
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
 			_client = Helper.GetClient(_agent, _factory);
 		}
+
+		private HttpClient _client;
 
 		/// <summary>
 		/// Simulates an HTTP GET call to /home/about and asserts on what the agent should send to the server
