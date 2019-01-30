@@ -19,8 +19,10 @@ namespace Elastic.Apm.DiagnosticSource
 		public void OnNext(DiagnosticListener value)
 		{
 			foreach (var listener in _listeners)
+			{
 				if (value.Name == listener.Name)
 					_sourceSubscription = value.Subscribe(listener);
+			}
 		}
 
 		public void Dispose() => _sourceSubscription?.Dispose();

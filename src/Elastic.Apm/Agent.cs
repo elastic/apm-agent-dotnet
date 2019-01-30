@@ -60,8 +60,8 @@ namespace Elastic.Apm
 
 	public static class Agent
 	{
-		private static readonly Lazy<ApmAgent> Lazy = new Lazy<ApmAgent>(() => new ApmAgent(_config));
-		private static AgentComponents _config;
+		private static readonly Lazy<ApmAgent> Lazy = new Lazy<ApmAgent>(() => new ApmAgent(_components));
+		private static AgentComponents _components;
 
 
 		public static IConfigurationReader Config => Lazy.Value.ConfigurationReader;
@@ -94,7 +94,7 @@ namespace Elastic.Apm
 		{
 			if (Lazy.IsValueCreated) throw new Exception("The singleton APM agent has already been instantiated and can no longer be configured");
 
-			_config = agentComponents;
+			_components = agentComponents;
 		}
 	}
 }
