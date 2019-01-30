@@ -26,18 +26,16 @@ namespace Elastic.Apm.DiagnosticListeners
 		internal readonly ConcurrentDictionary<HttpRequestMessage, Span> ProcessingRequests = new ConcurrentDictionary<HttpRequestMessage, Span>();
 
 		public HttpDiagnosticListener(IApmAgent components) =>
-			(Logger, ConfigurationReader) = (components.Logger, components.ConfigurationReader);
+			(Logger, ConfigurationReader) = (components.Logger?.Scoped(nameof(HttpDiagnosticListener)), components.ConfigurationReader);
 
+		private ScopedLogger Logger { get; }
 		private IConfigurationReader ConfigurationReader { get; }
-
-		private AbstractLogger Logger { get; }
 
 		public string Name => "HttpHandlerDiagnosticListener";
 
 		public void OnCompleted() { }
 
-		public void OnError(Exception error)
-			=> Logger.LogError(Name, $"Exception in OnError, Exception-type:{error.GetType().Name}, Message:{error.Message}");
+		public void OnError(Exception error) => Logger.LogErrorException(error, nameof(OnError));
 
 		public void OnNext(KeyValuePair<string, object> kv)
 		{
@@ -92,12 +90,10 @@ namespace Elastic.Apm.DiagnosticListeners
 					}
 					else
 					{
-						Logger.LogWarning(Name, "Failed capturing request"
-							+ (!string.IsNullOrEmpty(request?.RequestUri?.AbsoluteUri) && !string.IsNullOrEmpty(request?.Method?.ToString())
-								? $" '{request?.Method} "
-								: " ")
-							+ (string.IsNullOrEmpty(request?.RequestUri?.AbsoluteUri) ? "" : $"{request?.RequestUri.AbsoluteUri}' ")
-							+ "in System.Net.Http.HttpRequestOut.Stop. This Span will be skipped in case it wasn't captured before.");
+						const string message = "Failed capturing request '{HttpMethod} {Url}' in System.Net.Http.HttpRequestOut.Stop. This Span will be skipped in case it wasn't captured before.";
+						var url = request?.RequestUri?.AbsoluteUri;
+						var method = request?.Method?.Method;
+						Logger.LogWarning(message, method, url);
 					}
 					break;
 			}

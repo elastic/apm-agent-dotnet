@@ -12,7 +12,7 @@ namespace Elastic.Apm.Tests
 			var logger = LogWithLevel(LogLevel.Error);
 
 			Assert.Single(logger.Lines);
-			Assert.Equal("Error Test: Error log", logger.Lines[0]);
+			Assert.Equal("Error log", logger.Lines[0]);
 		}
 
 		[Fact]
@@ -21,19 +21,19 @@ namespace Elastic.Apm.Tests
 			var logger = LogWithLevel(LogLevel.Warning);
 
 			Assert.Equal(2, logger.Lines.Count);
-			Assert.Equal("Error Test: Error log", logger.Lines[0]);
-			Assert.Equal("Warning Test: Warning log", logger.Lines[1]);
+			Assert.Equal("Error log", logger.Lines[0]);
+			Assert.Equal("Warning log", logger.Lines[1]);
 		}
 
 		[Fact]
 		public void TestLogInfo()
 		{
-			var logger = LogWithLevel(LogLevel.Info);
+			var logger = LogWithLevel(LogLevel.Information);
 
 			Assert.Equal(3, logger.Lines.Count);
-			Assert.Equal("Error Test: Error log", logger.Lines[0]);
-			Assert.Equal("Warning Test: Warning log", logger.Lines[1]);
-			Assert.Equal("Info Test: Info log", logger.Lines[2]);
+			Assert.Equal("Error log", logger.Lines[0]);
+			Assert.Equal("Warning log", logger.Lines[1]);
+			Assert.Equal("Info log", logger.Lines[2]);
 		}
 
 		[Fact]
@@ -42,20 +42,20 @@ namespace Elastic.Apm.Tests
 			var logger = LogWithLevel(LogLevel.Debug);
 
 			Assert.Equal(4, logger.Lines.Count);
-			Assert.Equal("Error Test: Error log", logger.Lines[0]);
-			Assert.Equal("Warning Test: Warning log", logger.Lines[1]);
-			Assert.Equal("Info Test: Info log", logger.Lines[2]);
-			Assert.Equal("Debug Test: Debug log", logger.Lines[3]);
+			Assert.Equal("Error log", logger.Lines[0]);
+			Assert.Equal("Warning log", logger.Lines[1]);
+			Assert.Equal("Info log", logger.Lines[2]);
+			Assert.Equal("Debug log", logger.Lines[3]);
 		}
 
 		private TestLogger LogWithLevel(LogLevel logLevel)
 		{
 			var logger = new TestLogger(logLevel);
 
-			logger.LogError("Test", "Error log");
-			logger.LogWarning("Test", "Warning log");
-			logger.LogInfo("Test", "Info log");
-			logger.LogDebug("Test", "Debug log");
+			logger.LogError("Error log");
+			logger.LogWarning("Warning log");
+			logger.LogInfo("Info log");
+			logger.LogDebug("Debug log");
 			return logger;
 		}
 	}

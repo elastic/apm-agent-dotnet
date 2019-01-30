@@ -32,7 +32,7 @@ namespace Elastic.Apm.Tests
 			var fakeException = new Exception(exceptionMessage);
 			listener.OnError(fakeException);
 
-			Assert.Equal($"Error {listener.Name}: Exception in OnError, Exception-type:{nameof(Exception)}, Message:{exceptionMessage}",
+			Assert.Equal($"{{{nameof(HttpDiagnosticListener)}}} {nameof(Exception)} in OnError: {exceptionMessage}",
 				logger.Lines?.FirstOrDefault());
 		}
 
@@ -109,7 +109,7 @@ namespace Elastic.Apm.Tests
 			listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Stop", new { Request = request, Response = response }));
 
 			Assert.Equal(
-				$"{LogLevel.Warning} {listener.Name}: Failed capturing request '{HttpMethod.Get} {request.RequestUri}' in System.Net.Http.HttpRequestOut.Stop. This Span will be skipped in case it wasn't captured before.",
+				$"{{{nameof(HttpDiagnosticListener)}}} Failed capturing request '{HttpMethod.Get} {request.RequestUri}' in System.Net.Http.HttpRequestOut.Stop. This Span will be skipped in case it wasn't captured before.",
 				logger.Lines[0]);
 			Assert.NotNull(Agent.TransactionContainer.Transactions.Value);
 			Assert.Single(Agent.TransactionContainer.Transactions.Value.Spans);

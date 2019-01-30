@@ -14,7 +14,7 @@ namespace Elastic.Apm.Helpers
 		/// </summary>
 		/// <param name="capturingFor">Just for logging.</param>
 		/// <returns>A prepared List that can be passed to the APM server</returns>
-		internal static List<Stacktrace> GenerateApmStackTrace(StackFrame[] frames, AbstractLogger logger, string capturingFor)
+		internal static List<Stacktrace> GenerateApmStackTrace(StackFrame[] frames, IApmLogger logger, string capturingFor)
 		{
 			var retVal = new List<Stacktrace>(frames.Length);
 
@@ -33,8 +33,8 @@ namespace Elastic.Apm.Helpers
 			}
 			catch (Exception e)
 			{
-				logger.LogWarning($"Failed capturing stacktrace for {capturingFor}");
-				logger.LogDebug($"{e.GetType().Name}: {e.Message}");
+				logger?.LogWarning(e, nameof(StacktraceHelper), "Failed capturing stacktrace for {ApmContext}", capturingFor);
+				logger?.LogDebug(e, nameof(StacktraceHelper), "Exception {ExceptionName}: {ExceptionMessage}", e.GetType().Name, e.Message);
 			}
 
 			return retVal;

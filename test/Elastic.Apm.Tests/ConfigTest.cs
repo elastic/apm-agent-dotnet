@@ -39,7 +39,7 @@ namespace Elastic.Apm.Tests
 			Assert.Equal(ConfigConsts.DefaultServerUri.ToString(), agent.ConfigurationReader.ServerUrls[0].ToString());
 
 			Assert.Equal(
-				$"Error {nameof(TestAgentConfigurationReader)}: Failed parsing server URL from {TestAgentConfigurationReader.Origin}: {ConfigConsts.ConfigKeys.Urls}, value: {serverUrl}",
+				$"{{{nameof(TestAgentConfigurationReader)}}} Failed parsing server URL from {TestAgentConfigurationReader.Origin}: {ConfigConsts.ConfigKeys.Urls}, value: {serverUrl}",
 				logger.Lines[0]);
 		}
 
@@ -84,7 +84,7 @@ namespace Elastic.Apm.Tests
 			Assert.Equal(serverUrl3.ToLower() + "/", agent.ConfigurationReader.ServerUrls[1].ToString().ToLower());
 
 			Assert.Equal(
-				$"Error {nameof(TestAgentConfigurationReader)}: Failed parsing server URL from {TestAgentConfigurationReader.Origin}: {ConfigConsts.ConfigKeys.Urls}, value: {serverUrl2}",
+				$"{{{nameof(TestAgentConfigurationReader)}}} Failed parsing server URL from {TestAgentConfigurationReader.Origin}: {ConfigConsts.ConfigKeys.Urls}, value: {serverUrl2}",
 				logger.Lines[0]);
 		}
 
@@ -116,8 +116,8 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void SetInfoLogLevelTest()
 		{
-			var agent = new ApmAgent(new TestAgentComponents("Info"));
-			Assert.Equal(LogLevel.Info, agent.ConfigurationReader.LogLevel);
+			var agent = new ApmAgent(new TestAgentComponents("Information"));
+			Assert.Equal(LogLevel.Information, agent.ConfigurationReader.LogLevel);
 		}
 
 		[Fact]
@@ -136,7 +136,7 @@ namespace Elastic.Apm.Tests
 
 			Assert.Equal(LogLevel.Error, agent.ConfigurationReader.LogLevel);
 			Assert.Equal(
-				$"Error Config: Failed parsing log level from {TestAgentConfigurationReader.Origin}: {ConfigConsts.ConfigKeys.Level}, value: {logLevelValue}. Defaulting to log level 'Error'",
+				$"{{{nameof(TestAgentConfigurationReader)}}} Failed parsing log level from {TestAgentConfigurationReader.Origin}: {ConfigConsts.ConfigKeys.Level}, value: {logLevelValue}. Defaulting to log level 'Error'",
 				logger.Lines[0]);
 		}
 

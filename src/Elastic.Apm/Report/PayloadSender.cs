@@ -23,8 +23,9 @@ namespace Elastic.Apm.Report
 	{
 		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
 
+		private readonly ScopedLogger _logger;
+
 		private readonly HttpClient _httpClient;
-		private readonly AbstractLogger _logger;
 
 		private readonly BatchBlock<object> _queue =
 			new BatchBlock<object>(1, new GroupingDataflowBlockOptions
@@ -34,9 +35,9 @@ namespace Elastic.Apm.Report
 
 		static PayloadSender() => ServicePointManager.DnsRefreshTimeout = DnsTimeout;
 
-		internal PayloadSender(AbstractLogger logger, IConfigurationReader configurationReader, HttpMessageHandler handler = null)
+		internal PayloadSender(IApmLogger logger, IConfigurationReader configurationReader, HttpMessageHandler handler = null)
 		{
-			_logger = logger;
+			_logger = logger?.Scoped(nameof(PayloadSender));
 			_settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 
 			var serverUrlBase = configurationReader.ServerUrls.First();
@@ -47,7 +48,7 @@ namespace Elastic.Apm.Report
 
 			_httpClient = new HttpClient(handler ?? new HttpClientHandler())
 			{
-				BaseAddress = serverUrlBase,
+				BaseAddress = serverUrlBase
 			};
 
 			if (configurationReader.SecretToken != null)
@@ -102,12 +103,12 @@ namespace Elastic.Apm.Report
 					switch (item)
 					{
 						case Payload p:
-							_logger.LogWarning($"Failed sending transaction {p.Transactions.FirstOrDefault()?.Name}");
-							_logger.LogDebug($"{e.GetType().Name}: {e.Message}");
+							_logger.LogWarning(nameof(PayloadSender), "Failed sending transaction {TransactionName}", p.Transactions.FirstOrDefault()?.Name);
+							_logger.LogDebugException(e);
 							break;
 						case Error err:
-							_logger.LogWarning($"Failed sending Error {err.Errors[0]?.Id}");
-							_logger.LogDebug($"{e.GetType().Name}: {e.Message}");
+							_logger.LogWarning(nameof(PayloadSender), "Failed sending Error {ErrorId}", err.Errors[0]?.Id);
+							_logger.LogDebugException(e);
 							break;
 					}
 				}
