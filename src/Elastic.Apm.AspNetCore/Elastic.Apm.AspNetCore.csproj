@@ -3,6 +3,8 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>Elastic.Apm.AspNetCore</AssemblyName>
     <AssemblyVersion>0.0.1.0</AssemblyVersion>
+    <InformationalVersion>0.0.1.0</InformationalVersion>
+    <FileVersion>0.0.1.0</FileVersion>
     <RootNamespace>Elastic.Apm.AspNetCore</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>

@@ -4,6 +4,8 @@
     <AssemblyName>Elastic.Apm.All</AssemblyName>
     <RootNamespace>Elastic.Apm.All</RootNamespace>
     <AssemblyVersion>0.0.1.0</AssemblyVersion>
+    <InformationalVersion>0.0.1.0</InformationalVersion>
+    <FileVersion>0.0.1.0</FileVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
