@@ -8,16 +8,14 @@
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
     <PackageVersion>0.0.1.0</PackageVersion>
-    <authors>Elastic and contributors</authors>
-    <owners>Elastic</owners>
+    <Authors>Elastic and contributors</Authors>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <PackageId>Elastic.Apm.EntityFrameworkCore</PackageId>
-    <copyright>2019 Elasticsearch BV</copyright>
+    <Copyright>2019 Elasticsearch BV</Copyright>
     <PackageLicenseUrl>https://github.com/elastic/apm-agent-dotnet/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/elastic/apm-agent-dotnet</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/elastic/apm-agent-dotnet/master/build/nuget-icon.png</PackageIconUrl>
     <Description>Elastic APM for Entity Framework Core. This package contains auto instrumentation for Entity Framework Core. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
-    <Summary>Elastic APM for Entity Framework Core. This package contains auto instrumentation for Entity Framework Core. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Summary>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, entiryframeworkcore, efcore</PackageTags>
   </PropertyGroup>
   <ItemGroup>

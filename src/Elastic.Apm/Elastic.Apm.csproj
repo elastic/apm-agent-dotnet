@@ -3,13 +3,12 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Elastic.Apm</RootNamespace>
     <AssemblyName>Elastic.Apm</AssemblyName>
-    <!--<AssemblyVersion>0.0.1.0</AssemblyVersion>-->
+    <AssemblyVersion>0.0.1.0</AssemblyVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
     <PackageVersion>0.0.1.0</PackageVersion>
-    <authors>Elastic and contributors</authors>
-    <owners>Elastic</owners>
+    <Authors>Elastic and contributors</Authors>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <PackageId>Elastic.Apm</PackageId>
     <copyright>2019 Elasticsearch BV</copyright>
@@ -17,7 +16,6 @@
     <PackageProjectUrl>https://github.com/elastic/apm-agent-dotnet</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/elastic/apm-agent-dotnet/master/build/nuget-icon.png</PackageIconUrl>
     <Description>Elastic APM .NET Agent base package. This package provides core functionality for transmitting of all Elastic APM types and is a dependent package for all other Elastic APM package. Additionally this package contains the public Agent API that allows you to manually capture transactions and spans. Please install the platform specific package for the best experience. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
-    <Summary>Elastic APM .NET Agent base package. This package provides core functionality for transmitting of all Elastic APM types and is a dependent package for all other Elastic APM package. Additionally this package contains the public Agent API that allows you to manually capture transactions and spans. Please install the platform specific package for the best experience. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Summary>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, sdk</PackageTags>
   </PropertyGroup>
   <ItemGroup>
