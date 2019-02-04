@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SampleAspNetCoreApp.Data;
 using SampleAspNetCoreApp.Models;
-using SQLitePCL;
 
 namespace SampleAspNetCoreApp.Controllers
 {
