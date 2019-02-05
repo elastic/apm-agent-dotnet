@@ -37,8 +37,7 @@ namespace SampleAspNetCoreApp.Data
 						Close = decimal.Parse(items[1].Replace(',', '.'), System.Globalization.CultureInfo.InvariantCulture),
 						High = decimal.Parse(items[2].Replace(',', '.'), System.Globalization.CultureInfo.InvariantCulture),
 						Low = decimal.Parse(items[3].Replace(',', '.'), System.Globalization.CultureInfo.InvariantCulture),
-						Open = decimal.Parse(items[4].Replace(',', '.'), System.Globalization.CultureInfo.InvariantCulture),
-						Volume = long.Parse(items[6].Replace(',', '.'), System.Globalization.CultureInfo.InvariantCulture)
+						Open = decimal.Parse(items[4].Replace(',', '.'), System.Globalization.CultureInfo.InvariantCulture)
 					});
 				}
 			}
