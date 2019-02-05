@@ -55,6 +55,11 @@ namespace SampleAspNetCoreApp.Controllers
 			return Redirect("/Home/Index");
 		}
 
+		public IActionResult SimplePage()
+		{
+			return View();
+		}
+
 		public IActionResult Privacy() => View();
 
 		public IActionResult AddNewUser() => View();
