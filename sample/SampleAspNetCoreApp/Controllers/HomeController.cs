@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Elastic.Apm;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
@@ -58,6 +59,16 @@ namespace SampleAspNetCoreApp.Controllers
 		public IActionResult SimplePage()
 		{
 			return View();
+		}
+
+		public async Task<IActionResult> ChartPage()
+		{
+			var csvDataReader = new CsvDataReader($"Data{System.IO.Path.DirectorySeparatorChar}HistoricalData");
+
+			var historicalData =
+				await Agent.Tracer.CurrentTransaction.CaptureSpan("ReadData", "csvRead", async () => await csvDataReader.GetHistoricalQuotes("ESTC"));
+
+			return View(historicalData);
 		}
 
 		public IActionResult Privacy() => View();
