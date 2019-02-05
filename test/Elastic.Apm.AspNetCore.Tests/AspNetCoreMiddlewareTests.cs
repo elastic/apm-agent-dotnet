@@ -35,12 +35,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		private HttpClient _client;
 
 		/// <summary>
-		/// Simulates an HTTP GET call to /home/about and asserts on what the agent should send to the server
+		/// Simulates an HTTP GET call to /home/simplePage and asserts on what the agent should send to the server
 		/// </summary>
 		[Fact]
-		public async Task HomeAboutTransactionTest()
+		public async Task HomeSimplePageTransactionTest()
 		{
-			var response = await _client.GetAsync("/Home/About");
+			var response = await _client.GetAsync("/Home/SimplePage");
 
 			Assert.Single(_capturedPayload.Payloads);
 			Assert.Single(_capturedPayload.Payloads[0].Transactions);
