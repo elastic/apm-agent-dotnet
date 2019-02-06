@@ -33,7 +33,6 @@ namespace HttpListenerSample
 				// Capture the incoming request as a transaction with the agent
 				await Agent.Tracer.CaptureTransaction("Request", ApiConstants.TypeRequest, async () =>
 				{
-					Console.WriteLine("Started");
 					var request = context.Request;
 					// Obtain a response object.
 					var response = context.Response;
@@ -46,7 +45,6 @@ namespace HttpListenerSample
 					output.Write(buffer, 0, buffer.Length);
 					// You must close the output stream.
 					output.Close();
-					Console.WriteLine("Closed");
 				});
 			}
 
