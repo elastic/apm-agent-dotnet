@@ -142,6 +142,7 @@ pipeline {
                       mkdir -p ${HOME}/dotnet
                       cd ${HOME}/dotnet
                       Invoke-WebRequest https://download.visualstudio.microsoft.com/download/pr/c332d70f-6582-4471-96af-4b0c17a616ad/5f3043d4bc506bf91cb89fa90462bb58/dotnet-sdk-2.2.103-win-x64.zip -OutFile dotnet.zip
+                      Add-Type -As System.IO.Compression.FileSystem
                       [IO.Compression.ZipFile]::ExtractToDirectory('dotnet.zip', '.')
                       """
                       stash allowEmpty: true, name: 'dotnet-win64', includes: "dotnet/**", useDefaultExcludes: false
@@ -156,7 +157,7 @@ pipeline {
                       unstash 'source'
                       unstash 'dotnet-win64'
                       dir("${BASE_DIR}"){
-                        powershell "dotnet build"
+                        bat "dotnet build"
                       }
                     }
                   }
@@ -170,23 +171,21 @@ pipeline {
                       unstash 'dotnet-win64'
                       dir("${BASE_DIR}"){
                         powershell '''
-                        dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
+                        & dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
 
                         Get-ChildItem '.' -Filter *.??proj |
                         Foreach-Object {
-                          dotnet add $_.FullName package XunitXml.TestLogger --version 2.0.0
-                          dotnet add $_.FullName package coverlet.msbuild --version 2.5.0
+                          & dotnet add $_.FullName package XunitXml.TestLogger --version 2.0.0
+                          & dotnet add $_.FullName package coverlet.msbuild --version 2.5.0
                         }
 
-                        dotnet build
+                        & dotnet build
 
-                        dotnet test -v n -r target -d target\\diag.log --logger:xunit --no-build \
-                        /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura \
-                        /p:CoverletOutput=target\\Coverage\\
+                        & dotnet test -v n -r target -d target\\diag.log --logger:xunit --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=target\\Coverage\\
 
                         Get-ChildItem '.' -Filter TestResults.xml |
                         Foreach-Object {
-                          dotnet xunit-to-junit $_.FullName $_.parent.FullName + '\\junit-testTesults.xml'
+                          & dotnet xunit-to-junit $_.FullName $_.parent.FullName + '\\junit-testTesults.xml'
                         }
                         '''
                       }
