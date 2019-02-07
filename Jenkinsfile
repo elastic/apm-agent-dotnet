@@ -119,7 +119,6 @@ pipeline {
                         keepLongStdio: true,
                         testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                         codecov(repo: 'apm-agent-dotnet', basedir: "${BASE_DIR}")
-                        cleanWs()
                       }
                     }
                   }
@@ -207,7 +206,6 @@ pipeline {
                         junit(allowEmptyResults: true,
                           keepLongStdio: true,
                           testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
-                          cleanWs()
                         }
                       }
                     }
