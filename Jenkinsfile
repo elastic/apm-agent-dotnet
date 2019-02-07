@@ -26,6 +26,15 @@ pipeline {
   stages {
     stage('Initializing'){
       stages {
+        stage('Checkout') {
+          agent { label 'linux && immutable' }
+          options { skipDefaultCheckout() }
+          steps {
+            deleteDir()
+            gitCheckout(basedir: "${BASE_DIR}")
+            stash allowEmpty: true, name: 'source', useDefaultExcludes: false
+          }
+        }
         stage('Parallel'){
           parallel{
             stage('Linux'){
@@ -40,17 +49,14 @@ pipeline {
                 /**
                 Checkout the code and stash it, to use it on other stages.
                 */
-                stage('Checkout') {
+                stage('Install .Net SDK') {
                   steps {
                     deleteDir()
-                    gitCheckout(basedir: "${BASE_DIR}")
-                    stash allowEmpty: true, name: 'source', useDefaultExcludes: false
-
                     sh """#!/bin/bash
                     curl -o dotnet.tar.gz -L https://download.microsoft.com/download/4/0/9/40920432-3302-47a8-b13c-bbc4848ad114/dotnet-sdk-2.1.302-linux-x64.tar.gz
                     mkdir -p ${HOME}/dotnet && tar zxf dotnet.tar.gz -C ${HOME}/dotnet
                     """
-                    stash allowEmpty: true, name: 'dotnet', includes: "dotnet/**", useDefaultExcludes: false
+                    stash allowEmpty: true, name: 'dotnet-linux', includes: "dotnet/**", useDefaultExcludes: false
                   }
                 }
                 /**
@@ -60,7 +66,7 @@ pipeline {
                   steps {
                     deleteDir()
                     unstash 'source'
-                    unstash 'dotnet'
+                    unstash 'dotnet-linux'
                     dir("${BASE_DIR}"){
                       sh """#!/bin/bash
                       set -euxo pipefail
@@ -76,7 +82,7 @@ pipeline {
                   steps {
                     deleteDir()
                     unstash 'source'
-                    unstash 'dotnet'
+                    unstash 'dotnet-linux'
                     dir("${BASE_DIR}"){
                       sh '''#!/bin/bash
                       set -euxo pipefail
@@ -129,19 +135,16 @@ pipeline {
                   /**
                   Checkout the code and stash it, to use it on other stages.
                   */
-                  stage('Checkout') {
+                  stage('Install .Net SDK') {
                     steps {
                       deleteDir()
-                      gitCheckout(basedir: "${BASE_DIR}")
-                      stash allowEmpty: true, name: 'source', useDefaultExcludes: false
-
                       powershell label: 'Download and install .Net SDK', script: """
                       mkdir -p ${HOME}/dotnet
                       cd ${HOME}/dotnet
                       Invoke-WebRequest https://download.visualstudio.microsoft.com/download/pr/c332d70f-6582-4471-96af-4b0c17a616ad/5f3043d4bc506bf91cb89fa90462bb58/dotnet-sdk-2.2.103-win-x64.zip -OutFile dotnet.zip
                       [IO.Compression.ZipFile]::ExtractToDirectory('dotnet.zip', '.')
                       """
-                      stash allowEmpty: true, name: 'dotnet', includes: "dotnet/**", useDefaultExcludes: false
+                      stash allowEmpty: true, name: 'dotnet-win64', includes: "dotnet/**", useDefaultExcludes: false
                     }
                   }
                   /**
@@ -151,7 +154,7 @@ pipeline {
                     steps {
                       deleteDir()
                       unstash 'source'
-                      unstash 'dotnet'
+                      unstash 'dotnet-win64'
                       dir("${BASE_DIR}"){
                         powershell "dotnet build"
                       }
@@ -164,7 +167,7 @@ pipeline {
                     steps {
                       deleteDir()
                       unstash 'source'
-                      unstash 'dotnet'
+                      unstash 'dotnet-win64'
                       dir("${BASE_DIR}"){
                         powershell '''
                         dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
