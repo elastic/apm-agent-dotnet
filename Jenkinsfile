@@ -90,7 +90,7 @@ pipeline {
 
                       # install tools
                       dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
-                      for i in $(find . -name '*.??proj')
+                      for i in $(find . -name '*.csproj')
                       do
                       dotnet add "$i" package XunitXml.TestLogger --version 2.0.0
                       dotnet add "$i" package coverlet.msbuild --version 2.5.0
@@ -177,7 +177,7 @@ pipeline {
                         powershell label: 'Install tools', script: '''
                         & dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
 
-                        Get-ChildItem '.' -Filter *.??proj |
+                        Get-ChildItem -Path . -Recurse -Filter *.csproj |
                         Foreach-Object {
                           & dotnet add $_.FullName package XunitXml.TestLogger --version 2.0.0
                           & dotnet add $_.FullName package coverlet.msbuild --version 2.5.0
@@ -189,7 +189,7 @@ pipeline {
                         bat label: 'Test & Coverage', script: 'dotnet test -v n -r target -d target\\diag.log --logger:xunit --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=target\\Coverage\\'
 
                         powershell label: 'Conver Test Results to xunit format', script: '''
-                        Get-ChildItem '.' -Filter TestResults.xml |
+                        Get-ChildItem -Path . -Recurse -Filter TestResults.xml |
                         Foreach-Object {
                           & dotnet xunit-to-junit $_.FullName $_.parent.FullName + '\\junit-testTesults.xml'
                         }
