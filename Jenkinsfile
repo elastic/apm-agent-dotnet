@@ -129,7 +129,7 @@ pipeline {
                 options { skipDefaultCheckout() }
                 environment {
                   HOME = "${env.WORKSPACE}"
-                  DOTNET_ROOT = "${env.HOME}/dotnet"
+                  DOTNET_ROOT = "${env.HOME}\\dotnet"
                   PATH = "${env.PATH};${env.HOME}\\bin;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools"
                 }
                 stages{
@@ -188,7 +188,7 @@ pipeline {
 
                         bat label: 'Test & Coverage', script: 'dotnet test -v n -r target -d target\\diag.log --logger:xunit --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=target\\Coverage\\'
 
-                        powershell label: 'Conver Test Results to xunit format', script: '''
+                        powershell label: 'Conver Test Results to junit format', script: '''
                         Get-ChildItem -Path . -Recurse -Filter TestResults.xml |
                         Foreach-Object {
                           & dotnet xunit-to-junit $_.FullName $_.parent.FullName + '\\junit-testTesults.xml'
