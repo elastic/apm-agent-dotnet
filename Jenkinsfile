@@ -119,6 +119,7 @@ pipeline {
                         keepLongStdio: true,
                         testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                         codecov(repo: 'apm-agent-dotnet', basedir: "${BASE_DIR}")
+                        cleanWs()
                       }
                     }
                   }
@@ -128,9 +129,8 @@ pipeline {
                 agent { label 'windows-2016' }
                 options { skipDefaultCheckout() }
                 environment {
-                  HOME = "${env.WORKSPACE}"
-                  DOTNET_ROOT = "${env.HOME}\\dotnet"
-                  PATH = "${env.PATH};${env.HOME}\\bin;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools"
+                  DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
+                  PATH = "${env.PATH};${env.HOME}\\bin;${env.HOME}\\.dotnet\\tools;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools"
                 }
                 stages{
                   /**
@@ -176,6 +176,7 @@ pipeline {
                       dir("${BASE_DIR}"){
                         powershell label: 'Install tools', script: '''
                         & dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
+                        & dotnet tool install -g Codecov.Tool --version 1.2.0
 
                         Get-ChildItem -Path . -Recurse -Filter *.csproj |
                         Foreach-Object {
@@ -191,9 +192,11 @@ pipeline {
                         powershell label: 'Conver Test Results to junit format', script: '''
                         Get-ChildItem -Path . -Recurse -Filter TestResults.xml |
                         Foreach-Object {
-                          & dotnet xunit-to-junit $_.FullName $_.parent.FullName + '\\junit-testTesults.xml'
+                          & \\xunit-to-junit $_.FullName $_.parent.FullName + '\\junit-testTesults.xml'
                         }
                         '''
+
+                        bat label: 'Codecov', script: "codecov -t ${getVaultSecret('apm-agent-dotnet-codecov')?.data?.value}"
                       }
                     }
                     post {
@@ -201,7 +204,7 @@ pipeline {
                         junit(allowEmptyResults: true,
                           keepLongStdio: true,
                           testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
-                          codecov(repo: 'apm-agent-dotnet', basedir: "${BASE_DIR}")
+                          cleanWs()
                         }
                       }
                     }
