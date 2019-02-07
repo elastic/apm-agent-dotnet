@@ -124,7 +124,7 @@ pipeline {
                 }
               }
               stage('Windows'){
-                agent { label 'windows' }
+                agent { label 'windows-2016' }
                 options { skipDefaultCheckout() }
                 environment {
                   HOME = "${env.WORKSPACE}"
