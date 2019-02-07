@@ -56,7 +56,6 @@ pipeline {
                     curl -o dotnet.tar.gz -L https://download.microsoft.com/download/4/0/9/40920432-3302-47a8-b13c-bbc4848ad114/dotnet-sdk-2.1.302-linux-x64.tar.gz
                     mkdir -p ${HOME}/dotnet && tar zxf dotnet.tar.gz -C ${HOME}/dotnet
                     """
-                    stash allowEmpty: true, name: 'dotnet-linux', includes: "dotnet/**", useDefaultExcludes: false
                   }
                 }
                 /**
@@ -64,9 +63,10 @@ pipeline {
                 */
                 stage('Build') {
                   steps {
-                    deleteDir()
+                    dir("${BASE_DIR}"){
+                      deleteDir()
+                    }
                     unstash 'source'
-                    unstash 'dotnet-linux'
                     dir("${BASE_DIR}"){
                       sh """#!/bin/bash
                       set -euxo pipefail
@@ -80,9 +80,10 @@ pipeline {
                 */
                 stage('Test') {
                   steps {
-                    deleteDir()
+                    dir("${BASE_DIR}"){
+                      deleteDir()
+                    }
                     unstash 'source'
-                    unstash 'dotnet-linux'
                     dir("${BASE_DIR}"){
                       sh '''#!/bin/bash
                       set -euxo pipefail
@@ -147,7 +148,6 @@ pipeline {
                         [IO.Compression.ZipFile]::ExtractToDirectory('dotnet.zip', '.')
                         """
                       }
-                      stash allowEmpty: true, name: 'dotnet-win64', includes: "dotnet/**", useDefaultExcludes: false
                     }
                   }
                   /**
@@ -155,9 +155,10 @@ pipeline {
                   */
                   stage('Build') {
                     steps {
-                      deleteDir()
+                      dir("${BASE_DIR}"){
+                        deleteDir()
+                      }
                       unstash 'source'
-                      unstash 'dotnet-win64'
                       dir("${BASE_DIR}"){
                         bat "dotnet build"
                       }
@@ -168,11 +169,12 @@ pipeline {
                   */
                   stage('Test') {
                     steps {
-                      deleteDir()
-                      unstash 'source'
-                      unstash 'dotnet-win64'
                       dir("${BASE_DIR}"){
-                        powershell '''
+                        deleteDir()
+                      }
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        powershell label: 'Install tools', script: '''
                         & dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
 
                         Get-ChildItem '.' -Filter *.??proj |
@@ -180,11 +182,13 @@ pipeline {
                           & dotnet add $_.FullName package XunitXml.TestLogger --version 2.0.0
                           & dotnet add $_.FullName package coverlet.msbuild --version 2.5.0
                         }
+                        '''
 
-                        & dotnet build
+                        bat label: 'Build', script:'dotnet build'
 
-                        & dotnet test -v n -r target -d target\\diag.log --logger:xunit --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=target\\Coverage\\
+                        bat label: 'Test & Coverage', script: 'dotnet test -v n -r target -d target\\diag.log --logger:xunit --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=target\\Coverage\\'
 
+                        powershell label: 'Conver Test Results to xunit format', script: '''
                         Get-ChildItem '.' -Filter TestResults.xml |
                         Foreach-Object {
                           & dotnet xunit-to-junit $_.FullName $_.parent.FullName + '\\junit-testTesults.xml'
