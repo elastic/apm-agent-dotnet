@@ -138,13 +138,15 @@ pipeline {
                   stage('Install .Net SDK') {
                     steps {
                       deleteDir()
-                      powershell label: 'Download and install .Net SDK', script: """
-                      mkdir -p ${HOME}/dotnet
-                      cd ${HOME}/dotnet
-                      Invoke-WebRequest https://download.visualstudio.microsoft.com/download/pr/c332d70f-6582-4471-96af-4b0c17a616ad/5f3043d4bc506bf91cb89fa90462bb58/dotnet-sdk-2.2.103-win-x64.zip -OutFile dotnet.zip
-                      Add-Type -As System.IO.Compression.FileSystem
-                      [IO.Compression.ZipFile]::ExtractToDirectory('dotnet.zip', '.')
-                      """
+                      dir("${HOME}/dotnet"){
+                        powershell label: 'Download .Net SDK', script: """
+                        Invoke-WebRequest https://download.visualstudio.microsoft.com/download/pr/c332d70f-6582-4471-96af-4b0c17a616ad/5f3043d4bc506bf91cb89fa90462bb58/dotnet-sdk-2.2.103-win-x64.zip -OutFile dotnet.zip
+                        """
+                        powershell label: 'Install .Net SDK', script: """
+                        Add-Type -As System.IO.Compression.FileSystem
+                        [IO.Compression.ZipFile]::ExtractToDirectory('dotnet.zip', '.')
+                        """
+                      }
                       stash allowEmpty: true, name: 'dotnet-win64', includes: "dotnet/**", useDefaultExcludes: false
                     }
                   }
