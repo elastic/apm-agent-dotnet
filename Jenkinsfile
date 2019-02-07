@@ -147,6 +147,7 @@ pipeline {
                         Add-Type -As System.IO.Compression.FileSystem
                         [IO.Compression.ZipFile]::ExtractToDirectory('dotnet.zip', '.')
                         """
+                        bat "set"
                       }
                     }
                   }
@@ -190,13 +191,14 @@ pipeline {
                         bat label: 'Test & Coverage', script: 'dotnet test -v n -r target -d target\\diag.log --logger:xunit --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=target\\Coverage\\'
 
                         powershell label: 'Conver Test Results to junit format', script: '''
+                        [System.Environment]::SetEnvironmentVariable("PATH", $Env:Path + ";" + $Env:USERPROFILE + "\\.dotnet\\tools")
                         Get-ChildItem -Path . -Recurse -Filter TestResults.xml |
                         Foreach-Object {
-                          & \\xunit-to-junit $_.FullName $_.parent.FullName + '\\junit-testTesults.xml'
+                          & dotnet xunit-to-junit $_.FullName $_.parent.FullName + '\\junit-testTesults.xml'
                         }
                         '''
 
-                        bat label: 'Codecov', script: "codecov -t ${getVaultSecret('apm-agent-dotnet-codecov')?.data?.value}"
+                        bat label: 'Codecov', script: "%USERPROFILE%\\.dotnet\\tools\\codecov -t ${getVaultSecret('apm-agent-dotnet-codecov')?.data?.value}"
                       }
                     }
                     post {
