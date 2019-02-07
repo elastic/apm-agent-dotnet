@@ -121,3 +121,11 @@ resharper_csharp_braces_for_fixed=required_for_multiline
 resharper_csharp_braces_for_ifelse=required_for_multiline
 
 resharper_csharp_accessor_owner_body=expression_body
+
+[Jenkinsfile]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
