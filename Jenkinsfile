@@ -247,7 +247,9 @@ pipeline {
             steps {
               deleteDir()
               unstash 'source'
-              buildDocs(docsDir: "docs", archive: true)
+              dir("${BASE_DIR}"){
+                buildDocs(docsDir: "docs", archive: true)
+              }
             }
           }
           stage('Release') {
@@ -270,9 +272,7 @@ pipeline {
               deleteDir()
               unstash 'source'
               dir("${BASE_DIR}"){
-                sh '''#!/usr/bin/env bash
-                  dotnet pack -c Release
-                '''
+                sh label: 'Release', script: 'dotnet pack -c Release'
               }
             }
             post{
