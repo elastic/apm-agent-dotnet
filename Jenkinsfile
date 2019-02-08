@@ -56,6 +56,7 @@ pipeline {
                     curl -o dotnet.tar.gz -L https://download.microsoft.com/download/4/0/9/40920432-3302-47a8-b13c-bbc4848ad114/dotnet-sdk-2.1.302-linux-x64.tar.gz
                     mkdir -p ${HOME}/dotnet && tar zxf dotnet.tar.gz -C ${HOME}/dotnet
                     """
+                    stash allowEmpty: true, name: 'dotnet-linux', includes: "${HOME}/dotnet/**", useDefaultExcludes: false
                   }
                 }
                 /**
@@ -255,6 +256,11 @@ pipeline {
           stage('Release') {
             agent { label 'linux && immutable' }
             options { skipDefaultCheckout() }
+            environment {
+              HOME = "${env.WORKSPACE}"
+              PATH = "${env.PATH}:${env.HOME}/bin:${env.HOME}/dotnet:${env.HOME}/.dotnet/tools"
+              DOTNET_ROOT = "${env.HOME}/dotnet"
+            }
             when {
               beforeAgent true
               anyOf {
@@ -271,6 +277,7 @@ pipeline {
             steps {
               deleteDir()
               unstash 'source'
+              unstash('dotnet-linux')
               dir("${BASE_DIR}"){
                 sh label: 'Release', script: 'dotnet pack -c Release'
               }
