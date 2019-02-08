@@ -201,10 +201,10 @@ pipeline {
                         script {
                           def codecovId = getVaultSecret('apm-agent-dotnet-codecov')?.data?.value
                           powershell label: 'Send covertura report to Codecov', script:"""
-                          [System.Environment]::SetEnvironmentVariable("PATH", $Env:Path + ";" + $Env:USERPROFILE + "\\.dotnet\\tools")
+                          [System.Environment]::SetEnvironmentVariable("PATH", \$Env:Path + ";" + \$Env:USERPROFILE + "\\.dotnet\\tools")
                           Get-ChildItem -Path . -Recurse -Filter coverage.cobertura.xml |
                           Foreach-Object {
-                            & codecov -t ${codecovId} -f $_.FullName
+                            & codecov -t ${codecovId} -f \$_.FullName
                           }
                           """
                         }
