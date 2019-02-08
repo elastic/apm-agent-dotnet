@@ -52,7 +52,7 @@ pipeline {
                 stage('Install .Net SDK') {
                   steps {
                     deleteDir()
-                    sh """#!/bin/bash
+                    sh label: 'Download and install .Net SDK', script: """#!/bin/bash
                     curl -o dotnet.tar.gz -L https://download.microsoft.com/download/4/0/9/40920432-3302-47a8-b13c-bbc4848ad114/dotnet-sdk-2.1.302-linux-x64.tar.gz
                     mkdir -p ${HOME}/dotnet && tar zxf dotnet.tar.gz -C ${HOME}/dotnet
                     """
@@ -68,10 +68,7 @@ pipeline {
                     }
                     unstash 'source'
                     dir("${BASE_DIR}"){
-                      sh """#!/bin/bash
-                      set -euxo pipefail
-                      dotnet build
-                      """
+                      sh 'dotnet build'
                     }
                   }
                 }
@@ -85,30 +82,34 @@ pipeline {
                     }
                     unstash 'source'
                     dir("${BASE_DIR}"){
-                      sh '''#!/bin/bash
+                      sh label: 'Install tools', script: '''#!/bin/bash
                       set -euxo pipefail
-
                       # install tools
                       dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
                       for i in $(find . -name '*.csproj')
                       do
-                      dotnet add "$i" package XunitXml.TestLogger --version 2.0.0
-                      dotnet add "$i" package coverlet.msbuild --version 2.5.0
+                        dotnet add "$i" package XunitXml.TestLogger --version 2.0.0
+                        dotnet add "$i" package coverlet.msbuild --version 2.5.0
                       done
+                      '''
 
-                      # build
-                      dotnet build
+                      sh label: 'Build', script: 'dotnet build'
 
+                      sh label: 'Test & coverage', script: '''#!/bin/bash
+                      set -euxo pipefail
                       # run tests
                       dotnet test -v n -r target -d target/diag.log --logger:"xunit" --no-build \
-                      /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura \
-                      /p:CoverletOutput=target/Coverage/ || echo -e "\033[31;49mTests FAILED\033[0m"
+                        /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura \
+                        /p:CoverletOutput=target/Coverage/ || echo -e "\033[31;49mTests FAILED\033[0m"
+                      '''
 
+                      sh label: 'Convert Test Results to junit format', script: '''#!/bin/bash
+                      set -euxo pipefail
                       #convert xunit files to junit files
                       for i in $(find . -name TestResults.xml)
                       do
-                      DIR=$(dirname "$i")
-                      dotnet xunit-to-junit "$i" "${DIR}/junit-testTesults.xml"
+                        DIR=$(dirname "$i")
+                        dotnet xunit-to-junit "$i" "${DIR}/junit-testTesults.xml"
                       done
                       '''
                     }
@@ -118,7 +119,7 @@ pipeline {
                       junit(allowEmptyResults: true,
                         keepLongStdio: true,
                         testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
-                        codecov(repo: 'apm-agent-dotnet', basedir: "${BASE_DIR}")
+                      codecov(repo: 'apm-agent-dotnet', basedir: "${BASE_DIR}")
                       }
                     }
                   }
@@ -147,7 +148,6 @@ pipeline {
                         Add-Type -As System.IO.Compression.FileSystem
                         [IO.Compression.ZipFile]::ExtractToDirectory('dotnet.zip', '.')
                         """
-                        bat "set"
                       }
                     }
                   }
@@ -190,7 +190,7 @@ pipeline {
 
                         bat label: 'Test & Coverage', script: 'dotnet test -v n -r target -d target\\diag.log --logger:xunit --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=target\\Coverage\\'
 
-                        powershell label: 'Conver Test Results to junit format', script: '''
+                        powershell label: 'Convert Test Results to junit format', script: '''
                         [System.Environment]::SetEnvironmentVariable("PATH", $Env:Path + ";" + $Env:USERPROFILE + "\\.dotnet\\tools")
                         Get-ChildItem -Path . -Recurse -Filter TestResults.xml |
                         Foreach-Object {
@@ -198,7 +198,16 @@ pipeline {
                         }
                         '''
 
-                        bat label: 'Codecov', script: "%USERPROFILE%\\.dotnet\\tools\\codecov -t ${getVaultSecret('apm-agent-dotnet-codecov')?.data?.value}"
+                        script {
+                          def codecovId = getVaultSecret('apm-agent-dotnet-codecov')?.data?.value
+                          powershell label: 'Send covertura report to Codecov', script:"""
+                          [System.Environment]::SetEnvironmentVariable("PATH", \$Env:Path + ";" + \$Env:USERPROFILE + "\\.dotnet\\tools")
+                          Get-ChildItem -Path . -Recurse -Filter coverage.cobertura.xml |
+                          Foreach-Object {
+                            & codecov -t ${codecovId} -f \$_.FullName
+                          }
+                          """
+                        }
                       }
                     }
                     post {
@@ -217,8 +226,9 @@ pipeline {
           Build the documentation.
           */
           stage('Documentation') {
+            agent { label 'linux && immutable' }
+            options { skipDefaultCheckout() }
             environment {
-              ELASTIC_DOCS = "${env.WORKSPACE}/elastic/docs"
               HOME = "${env.WORKSPACE}"
             }
             when {
@@ -237,27 +247,12 @@ pipeline {
             steps {
               deleteDir()
               unstash 'source'
-              checkoutElasticDocsTools(basedir: "${ELASTIC_DOCS}")
-              dir("${BASE_DIR}"){
-                sh '''#!/usr/bin/env bash
-
-                if [ -z "${ELASTIC_DOCS}" -o ! -d "${ELASTIC_DOCS}" ]; then
-                echo "ELASTIC_DOCS is not defined, it should point to a folder where you checkout https://github.com/elastic/docs.git."
-                echo "You also can define BUILD_DOCS_ARGS for aditional build options."
-                exit 1
-                fi
-
-                ${ELASTIC_DOCS}/build_docs.pl --chunk=1 ${BUILD_DOCS_ARGS} --doc docs/index.asciidoc -out docs/html
-                '''
-              }
-            }
-            post{
-              success {
-                tar(file: "doc-files.tgz", archive: true, dir: "html", pathPrefix: "${BASE_DIR}/docs")
-              }
+              buildDocs(docsDir: "docs", archive: true)
             }
           }
           stage('Release') {
+            agent { label 'linux && immutable' }
+            options { skipDefaultCheckout() }
             when {
               beforeAgent true
               anyOf {
