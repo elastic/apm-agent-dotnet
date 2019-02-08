@@ -1,27 +1,29 @@
-﻿using System;
+﻿using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
 {
-    public class Request
-    {
-        public String HttpVersion { get; set; }
-        public Socket Socket { get; set; }
-        public Url Url { get; set; }
+	internal class Request
+	{
+		public string HttpVersion { get; set; }
 
-        public String Method { get; set; }
-    }
+		public string Method { get; set; }
+		public Socket Socket { get; set; }
+		public Url Url { get; set; }
+	}
 
-    public class Socket
-    {
-        public bool Encrypted { get; set; }
-        public String Remote_address { get; set; }
-    }
+	internal class Socket
+	{
+		public bool Encrypted { get; set; }
 
-    public class Url
-    {
-        public String Raw { get; set; }
-        public String Protocol { get; set; }
-        public String Full { get; set; }
-        public String HostName { get; set; }
-    }
+		[JsonProperty("Remote_address")]
+		public string RemoteAddress { get; set; }
+	}
+
+	internal class Url
+	{
+		public string Full { get; set; }
+		public string HostName { get; set; }
+		public string Protocol { get; set; }
+		public string Raw { get; set; }
+	}
 }

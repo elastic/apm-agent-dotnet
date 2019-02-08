@@ -1,9 +1,11 @@
-﻿using System;
-using System.Collections.Concurrent;
+using System;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks.Dataflow;
+using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
@@ -12,94 +14,99 @@ using Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Report
 {
-    /// <summary>
-    /// Responsible for sending the data to the server. 
-    /// Each instance creates its own thread to do the work. Therefore instances should be reused if possible.
-    /// </summary>
-    internal class PayloadSender : IDisposable, IPayloadSender
-    {
-        private readonly AbstractAgentConfig agentConfig;
-        private readonly AbstractLogger logger;
-        private readonly Uri serverUrlBase;
+	/// <summary>
+	/// Responsible for sending the data to the server.
+	/// Each instance creates its own thread to do the work. Therefore instances should be reused if possible.
+	/// </summary>
+	internal class PayloadSender : IDisposable, IPayloadSender
+	{
+		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
 
-        /// <summary>
-        /// The work of sending data back to the server is done on this thread
-        /// </summary>
-        private Thread workerThread;
+		private readonly HttpClient _httpClient;
+		private readonly AbstractLogger _logger;
 
-        /// <summary>
-        /// Contains data that will be sent to the server
-        /// </summary>
-        private BlockingCollection<Object> payloads = new BlockingCollection<Object>();
+		private readonly BatchBlock<object> _queue =
+			new BatchBlock<object>(1, new GroupingDataflowBlockOptions
+				{ BoundedCapacity = 1_000_000 });
 
-        public PayloadSender()
-        {
-            agentConfig = Apm.Agent.Config;
-            logger = Apm.Agent.CreateLogger(nameof(PayloadSender));
-            serverUrlBase = agentConfig.ServerUrls[0];
-            workerThread = new Thread(StartWork)
-            {
-                IsBackground = true
-            };
-            workerThread.Start();
-        }
+		private readonly JsonSerializerSettings _settings;
 
-        public void QueuePayload(Payload payload)
-         => payloads.Add(payload);
+		static PayloadSender() => ServicePointManager.DnsRefreshTimeout = DnsTimeout;
 
-        public void QueueError(Error error)
-         => payloads.Add(error);
+		internal PayloadSender(AbstractLogger logger, IConfigurationReader configurationReader)
+		{
+			_logger = logger;
+			_settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 
-        public async void StartWork()
-        {
-            HttpClient httpClient = new HttpClient
-            {
-                BaseAddress = serverUrlBase
-            };
+			var serverUrlBase = configurationReader.ServerUrls.First();
+			var servicePoint = ServicePointManager.FindServicePoint(serverUrlBase);
 
-            while (true)
-            {
-                var item = payloads.Take();
+			servicePoint.ConnectionLeaseTimeout = DnsTimeout;
+			servicePoint.ConnectionLimit = 20;
 
-                try
-                {
-                    string json = JsonConvert.SerializeObject(item, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+			_httpClient = new HttpClient
+			{
+				BaseAddress = serverUrlBase
+			};
 
-                    HttpResponseMessage result = null;
-                    switch (item)
-                    {
-                        case Payload p:
-                            result = await httpClient.PostAsync(Consts.IntakeV1Transactions, content);
-                            break;
-                        case Error e:
-                            result = await httpClient.PostAsync(Consts.IntakeV1Errors, content);
-                            break;                        
-                    }                   
+			var workerThread = new Thread(StartWork)
+			{
+				IsBackground = true
+			};
+			workerThread.Start();
+		}
 
-                    var isSucc = result.IsSuccessStatusCode;
-                    var str = await result.Content.ReadAsStringAsync();
-                }
-                catch (Exception e)
-                {
-                    if (item is Payload p)
-                    {
-                        logger.LogWarning($"Failed sending transaction {p.Transactions.FirstOrDefault()?.Name}");
-                        logger.LogDebug($"{e.GetType().Name}: {e.Message}");
-                    }
-                    if(item is Error err)
-                    {
-                        logger.LogWarning($"Failed sending Error {err.Errors[0]?.Id}");
-                        logger.LogDebug($"{e.GetType().Name}: {e.Message}");
-                    }
-                }
-            }
-        }
+		public void QueuePayload(IPayload payload) => _queue.SendAsync(payload);
 
-        public void Dispose()
-        {
-            payloads?.Dispose();
-            payloads = null;
-        }
-    }
+		public void QueueError(IError error) => _queue.SendAsync(error);
+
+		private async void StartWork()
+		{
+			while (await _queue.OutputAvailableAsync())
+			{
+				var batch = await _queue.ReceiveAsync();
+
+				var item = batch.FirstOrDefault();
+				try
+				{
+					var json = JsonConvert.SerializeObject(item, _settings);
+					var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+					HttpResponseMessage result = null;
+					switch (item)
+					{
+						case Payload _:
+							result = await _httpClient.PostAsync(Consts.IntakeV1Transactions, content);
+							break;
+						case Error _:
+							result = await _httpClient.PostAsync(Consts.IntakeV1Errors, content);
+							break;
+					}
+
+					// TODO: handle unsuccesful status codes
+				}
+				catch (Exception e)
+				{
+					switch (item)
+					{
+						case Payload p:
+							_logger.LogWarning($"Failed sending transaction {p.Transactions.FirstOrDefault()?.Name}");
+							_logger.LogDebug($"{e.GetType().Name}: {e.Message}");
+							break;
+						case Error err:
+							_logger.LogWarning($"Failed sending Error {err.Errors[0]?.Id}");
+							_logger.LogDebug($"{e.GetType().Name}: {e.Message}");
+							break;
+					}
+				}
+			}
+			// ReSharper disable once FunctionNeverReturns
+		}
+
+		public void Dispose()
+		{
+			_httpClient.Dispose();
+			_queue.Complete();
+		}
+	}
 }

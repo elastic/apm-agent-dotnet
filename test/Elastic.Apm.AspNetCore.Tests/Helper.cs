@@ -1,95 +1,120 @@
-﻿using System;
-using System.Net.Http;
+﻿using System.Net.Http;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.EntityFrameworkCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-
-using System.Reflection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
-
-using SampleAspNetCoreApp.Data;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
-using Elastic.Apm.Tests.Mock;
-using Microsoft.AspNetCore.Hosting.Internal;
+using Microsoft.Extensions.DependencyInjection;
+using SampleAspNetCoreApp.Data;
+
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.All.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
-    public static class Helper
-    {
-        internal static HttpClient GetClient<T>(MockPayloadSender payloadSender, WebApplicationFactory<T> factory)  where T : class
-        => factory
-            .WithWebHostBuilder(n =>
-            {
-                n.Configure(app =>
-                {
-                    app.UseElasticApm(payloadSender: payloadSender);
-                    new ElasticCoreListeners().Start();
-                    new ElasticEntityFrameworkCoreListener().Start();
+	public static class Helper
+	{
+		internal static HttpClient GetClient<T>(ApmAgent agent, WebApplicationFactory<T> factory) where T : class
+			=> factory
+				.WithWebHostBuilder(n =>
+				{
+					n.Configure(app =>
+					{
+						app.UseElasticApm(agent, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
 
-                    app.UseDeveloperExceptionPage();
+						app.UseDeveloperExceptionPage();
 
-                    app.UseHsts();
+						app.UseHsts();
 
-                    app.UseHttpsRedirection();
-                    app.UseStaticFiles();
-                    app.UseCookiePolicy();
+						app.UseHttpsRedirection();
+						app.UseStaticFiles();
+						app.UseCookiePolicy();
 
-                    app.UseMvc(routes =>
-                    {
-                        routes.MapRoute(
-                            name: "default",
-                            template: "{controller=Home}/{action=Index}/{id?}");
-                    });
-                });
+						app.UseMvc(routes =>
+						{
+							routes.MapRoute(
+								"default",
+								"{controller=Home}/{action=Index}/{id?}");
+						});
+					});
 
-                n.ConfigureServices(ConfigureServices);
-            })
-        .CreateClient();
-      
-        internal static HttpClient GetClientWithoutExceptionPage<T>(MockPayloadSender payloadSender, WebApplicationFactory<T> factory)  where T : class
-            => factory
-                .WithWebHostBuilder(n =>
-                {
-                    n.Configure(app =>
-                    {
-                        app.UseElasticApm(payloadSender: payloadSender);
-                        new ElasticCoreListeners().Start();
-                        new ElasticEntityFrameworkCoreListener().Start();
+					n.ConfigureServices(ConfigureServices);
+				})
+				.CreateClient();
 
-                        app.UseMvc(routes =>
-                        {
-                            routes.MapRoute(
-                                name: "default",
-                                template: "{controller=Home}/{action=Index}/{id?}");
-                        });
-                    });
+		internal static HttpClient GetClientWithoutExceptionPage<T>(ApmAgent agent, WebApplicationFactory<T> factory) where T : class
+			=> factory
+				.WithWebHostBuilder(n =>
+				{
+					n.Configure(app =>
+					{
+						app.UseElasticApm(agent);
 
-                    n.ConfigureServices(ConfigureServices);
-                
-                })
-                .CreateClient();
+						app.UseMvc(routes =>
+						{
+							routes.MapRoute(
+								"default",
+								"{controller=Home}/{action=Index}/{id?}");
+						});
+					});
 
-        private static void ConfigureServices(IServiceCollection services)
-        {
-            services.Configure<CookiePolicyOptions>(options =>
-            {
-                options.CheckConsentNeeded = context => true;
-                options.MinimumSameSitePolicy = SameSiteMode.None;
-            });
+					n.ConfigureServices(ConfigureServices);
+				})
+				.CreateClient();
 
-            var connection = @"Data Source=blogging.db";
-            services.AddDbContext<SampleDataContext>
-                (options => options.UseSqlite(connection));
+		/// <summary>
+		/// Configures the sample app without any diagnostic listener
+		/// </summary>
+		internal static HttpClient GetClientWithoutDiagnosticListeners<T>(ApmAgent agent, WebApplicationFactory<T> factory) where T : class
+			=> factory.WithWebHostBuilder(n =>
+				{
+					n.Configure(app =>
+					{
+						app.UseMiddleware<ApmMiddleware>(agent.Tracer);
 
-            services.AddMvc()
-                //this is needed because of a (probably) bug:
-                //https://github.com/aspnet/Mvc/issues/5992
-                .AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))))
-                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-        }
-    }
+						app.UseDeveloperExceptionPage();
+
+						app.UseHsts();
+
+						app.UseHttpsRedirection();
+						app.UseStaticFiles();
+						app.UseCookiePolicy();
+
+						app.UseMvc(routes =>
+						{
+							routes.MapRoute(
+								"default",
+								"{controller=Home}/{action=Index}/{id?}");
+						});
+					});
+
+					n.ConfigureServices(ConfigureServices);
+				})
+				.CreateClient();
+
+		internal static void ConfigureServices(IServiceCollection services)
+		{
+			services.Configure<CookiePolicyOptions>(options =>
+			{
+				options.CheckConsentNeeded = context => true;
+				options.MinimumSameSitePolicy = SameSiteMode.None;
+			});
+
+			var connection = @"Data Source=blogging.db";
+			services.AddDbContext<SampleDataContext>
+				(options => options.UseSqlite(connection));
+
+			services.AddMvc()
+				//this is needed because of a (probably) bug:
+				//https://github.com/aspnet/Mvc/issues/5992
+				.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))))
+				.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+		}
+	}
 }

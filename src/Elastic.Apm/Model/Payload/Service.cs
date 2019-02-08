@@ -1,23 +1,42 @@
-﻿using System;
+﻿using Elastic.Apm.Config;
 
 namespace Elastic.Apm.Model.Payload
 {
-    public class Service
-    {
-        public Apm.Model.Payload.Agent Agent { get; set; }
-        public String Name { get; set; }
-        public Framework Framework { get; set; }
-        public Language Language { get; set; }
-    }
+	public class Service
+	{
+		private Service() { }
 
-    public class Framework
-    {
-        public String Name { get; set; }
-        public String Version { get; set; }
-    }
+		public AgentC Agent { get; set; }
+		public Framework Framework { get; set; }
+		public Language Language { get; set; }
+		public string Name { get; set; }
 
-    public class Language
-    {
-        public String Name { get; set; }
-    }
+		internal static Service GetDefaultService(IConfigurationReader configurationReader)
+			=> new Service
+			{
+				Name = configurationReader.ServiceName,
+				Agent = new AgentC
+				{
+					Name = Consts.AgentName,
+					Version = typeof(Agent).Assembly.GetName().Version?.ToString() ?? "n/a"
+				}
+			};
+
+		public class AgentC
+		{
+			public string Name { get; set; }
+			public string Version { get; set; }
+		}
+	}
+
+	public class Framework
+	{
+		public string Name { get; set; }
+		public string Version { get; set; }
+	}
+
+	public class Language
+	{
+		public string Name { get; set; }
+	}
 }

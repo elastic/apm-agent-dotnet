@@ -1,41 +1,49 @@
 ﻿using System;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Elastic.Apm.Tests.Mocks
 {
-    public class LocalServer : IDisposable
-    {
-        HttpListener httpListener = new HttpListener();
-        public string Uri => "http://localhost:8082/";
+	public class LocalServer : IDisposable
+	{
+		private readonly HttpListener _httpListener = new HttpListener();
+		private readonly Task _task;
+		private readonly CancellationTokenSource _tokenSource;
 
-        public LocalServer(Action<HttpListenerContext> testAction = null)
-        {
-            httpListener.Prefixes.Add(Uri);
-            httpListener.Start();
+		public LocalServer(Action<HttpListenerContext> testAction = null)
+		{
+			_httpListener.Prefixes.Add(Uri);
+			_httpListener.Start();
+			_tokenSource = new CancellationTokenSource();
+			_task = Task.Run(() =>
+			{
+				do
+				{
+					var context = _httpListener.GetContext();
+					Interlocked.Increment(ref _seenRequests);
+					if (testAction == null)
+						context.Response.StatusCode = 200;
+					else
+						testAction(context);
 
-            Task.Run(() =>
-            {
-                var context = httpListener.GetContext();
+					context.Response.OutputStream.Close();
+					context.Response.Close();
+				} while (!_tokenSource.IsCancellationRequested);
+			}, _tokenSource.Token);
+		}
 
-                if (testAction == null)
-                {
-                    context.Response.StatusCode = 200;
-                }
-                else
-                {
-                    testAction(context);
-                }
+		private long _seenRequests;
+		public long SeenRequests => _seenRequests;
 
-                context.Response.OutputStream.Close();
-                context.Response.Close();
-            });
-        }
+		public string Uri => "http://localhost:8082/";
 
-        public void Dispose()
-        {
-            this.httpListener.Abort();
-            ((IDisposable)this.httpListener).Dispose();
-        }
-    }
+		public void Dispose()
+		{
+			_httpListener.Abort();
+			((IDisposable)_httpListener).Dispose();
+			_tokenSource.Cancel();
+			_tokenSource.Dispose();
+		}
+	}
 }

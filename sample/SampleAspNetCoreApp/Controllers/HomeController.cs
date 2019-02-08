@@ -1,106 +1,92 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Elastic.Apm;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using SampleAspNetCoreApp.Data;
 using SampleAspNetCoreApp.Models;
 
 namespace SampleAspNetCoreApp.Controllers
 {
-    public class HomeController : Controller
-    {
-        SampleDataContext _sampleDataContext;
+	public class HomeController : Controller
+	{
+		private readonly SampleDataContext _sampleDataContext;
 
-        public HomeController(SampleDataContext sampleDataContext)
-        {
-            _sampleDataContext = sampleDataContext;
-        }
+		public HomeController(SampleDataContext sampleDataContext) => _sampleDataContext = sampleDataContext;
 
-        public async Task<IActionResult> Index()
-        {
-            //TODO: Show this on the real UI
-            foreach (var item in _sampleDataContext.Users)
-            {
-                Console.WriteLine(item.Name);
-            }
+		public async Task<IActionResult> Index()
+		{
+			_sampleDataContext.Database.Migrate();
+			var model = _sampleDataContext.Users.Select(item => item.Name).ToList();
 
-            try
-            {
-                //TODO: turn this into a more realistic sample
-                var httpClient = new HttpClient();
-                var responseMsg = await httpClient.GetAsync("https://elastic.co");
-                var responseStr = await responseMsg.Content.ReadAsStringAsync();
-                Console.WriteLine(responseStr.Length);
-            }
-            catch
-            {
-                Console.WriteLine("Failed HTTP GET elastic.co");
-            }
+			try
+			{
+				var httpClient = new HttpClient();
+				httpClient.DefaultRequestHeaders.Add("User-Agent", "APM-Sample-App");
+				var responseMsg = await httpClient.GetAsync("https://api.github.com/repos/elastic/apm-agent-dotnet");
+				var responseStr = await responseMsg.Content.ReadAsStringAsync();
+				ViewData["stargazers_count"] = JObject.Parse(responseStr)["stargazers_count"];
+			}
+			catch
+			{
+				Console.WriteLine("Failed HTTP GET elastic.co");
+			}
 
-            return View();
-        }
+			return View(model);
+		}
 
-        [HttpPost]
-        public async Task<IActionResult> AddNewUser(string enteredName)
-        {
-            _sampleDataContext.Users.Add(
-                new User
-                {
-                    Name = "TestName"
-                });
+		[HttpPost]
+		public async Task<IActionResult> AddNewUser([FromForm] string enteredName)
+		{
+			if (String.IsNullOrEmpty(enteredName))
+				throw new ArgumentNullException(nameof(enteredName));
 
-            //TODO: get the real data
-            await _sampleDataContext.SaveChangesAsync();
+			_sampleDataContext.Users.Add(
+				new User
+				{
+					Name = enteredName
+				});
 
-            return View();
-        }
+			await _sampleDataContext.SaveChangesAsync();
 
-        public IActionResult About()
-        {
-            ViewData["Message"] = "Your application description page.";
+			return Redirect("/Home/Index");
+		}
 
-            return View();
-        }
+		public IActionResult SimplePage()
+		{
+			return View();
+		}
 
-        public IActionResult Contact()
-        {
-            ViewData["Message"] = "Your contact page.";
+		public async Task<IActionResult> ChartPage()
+		{
+			var csvDataReader = new CsvDataReader($"Data{System.IO.Path.DirectorySeparatorChar}HistoricalData");
 
-            return View();
-        }
+			var historicalData =
+				await Agent.Tracer.CurrentTransaction.CaptureSpan("ReadData", "csvRead", async () => await csvDataReader.GetHistoricalQuotes("ESTC"));
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
+			return View(historicalData);
+		}
 
-        public IActionResult AddNewUser()
-        {
-            return View();
-        }
+		public IActionResult Privacy() => View();
 
-        public async Task<IActionResult> FailingOutGoingHttpCall()
-        {
-            var client = new HttpClient();
-            var result = await client.GetAsync("http://dsfklgjdfgkdfg.mmmm");
-            Console.WriteLine(result.IsSuccessStatusCode);
+		public IActionResult AddNewUser() => View();
 
-            return View();
-        }
+		public async Task<IActionResult> FailingOutGoingHttpCall()
+		{
+			var client = new HttpClient();
+			var result = await client.GetAsync("http://dsfklgjdfgkdfg.mmmm");
+			Console.WriteLine(result.IsSuccessStatusCode);
 
-        public IActionResult TriggerError()
-        {
-            throw new Exception("This is a test exception!");
-            return View();
-        }
+			return Ok();
+		}
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
-    }
+		public IActionResult TriggerError() => throw new Exception("This is a test exception!");
+
+		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+		public IActionResult Error() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+	}
 }

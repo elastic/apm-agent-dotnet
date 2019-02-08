@@ -1,9 +1,8 @@
-﻿using System;
-namespace SampleAspNetCoreApp.Data
+﻿namespace SampleAspNetCoreApp.Data
 {
-    public class User
-    {
-        public int Id { get; set; }
-        public String Name { get; set; }
-    }
+	public class User
+	{
+		public int Id { get; set; }
+		public string Name { get; set; }
+	}
 }

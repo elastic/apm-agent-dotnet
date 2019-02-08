@@ -1,105 +1,100 @@
 ﻿using System;
-
-using Elastic.Apm.Config;
-using Elastic.Apm.Logging;
 using System.Runtime.CompilerServices;
 using Elastic.Apm.Api;
+using Elastic.Apm.Config;
+using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 
 //TODO: It'd be nice to move this into the .csproj
-[assembly: InternalsVisibleTo("Elastic.Apm.AspNetCore")]
-[assembly: InternalsVisibleTo("Elastic.Apm.EntityFrameworkCore")]
-[assembly: InternalsVisibleTo("Elastic.Apm.Tests")]
-[assembly: InternalsVisibleTo("Elastic.Apm.AspNetCore.Tests")]
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.AspNetCore, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.EntityFrameworkCore, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.AspNetCore.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.All, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.All.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
 
 namespace Elastic.Apm
 {
-    public static class Agent
-    {
-        /// <summary>
-        /// By default the agent reads configs from environment variables and it uses the <see cref="EnvironmentVariableConfig"/> class.
-        /// This behaviour can be overwritten via the <see cref="Config"/> property. 
-        /// For example in ASP.NET Core a <see cref="Elastic.Apm.AspNetCore.Config.MicrosoftExtensionsConfig"/> 
-        /// with the actual <see cref="IConfiguration"/> instance can be created and passed to the agent. 
-        /// With that the agent will read configs from the <see cref="IConfiguration"/> instance.
-        /// </summary>
-        private static AbstractAgentConfig config = new EnvironmentVariableConfig();
+	public interface IApmAgent
+	{
+		IConfigurationReader ConfigurationReader { get; }
+		AbstractLogger Logger { get; }
 
-        /// <summary>
-        /// The current agent config. This property stores all configs.
-        /// </summary>
-        /// <value>The config.</value>
-        public static AbstractAgentConfig Config
-        {
-            get
-            {
-                if (config?.Logger == null)
-                {
-                    config.Logger = CreateLogger("Config");
-                }
+		IPayloadSender PayloadSender { get; }
 
-                return config;
-            }
-            set
-            {
-                config = value;
-                config.Logger = CreateLogger("Config");
-            }
-        }
+		ITracer Tracer { get; }
+	}
 
-        private static IPayloadSender payloadSender;
-        public static IPayloadSender PayloadSender
-        {
-            get
-            {
-                if (payloadSender == null)
-                {
-                    payloadSender = new PayloadSender();
-                }
+	internal class ApmAgent : IApmAgent, IDisposable
+	{
+		internal readonly CompositeDisposable Disposables = new CompositeDisposable();
 
-                return payloadSender;
-            }
+		public ApmAgent(AgentComponents agentComponents) =>
+			Components = agentComponents ?? new AgentComponents(null, service: null);
 
-            internal set 
-            {
-                payloadSender = value;
-            }
-        }
+		private AgentComponents Components { get; }
+		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
+		public AbstractLogger Logger => Components.Logger;
+		public IPayloadSender PayloadSender => Components.PayloadSender;
+		public ITracer Tracer => Components.Tracer;
+
+		internal Tracer TracerInternal => Tracer as Tracer;
+
+		internal TransactionContainer TransactionContainer => Components.TransactionContainer;
+
+		public void Dispose() => Disposables?.Dispose();
+	}
+
+	public static class Agent
+	{
+		private static readonly Lazy<ApmAgent> Lazy = new Lazy<ApmAgent>(() => new ApmAgent(_components));
+		private static AgentComponents _components;
 
 
-        /// <summary>
-        /// Returns a logger with a specific prefix. The idea behind this class 
-        /// is that each component in the agent creates its own agent with a
-        /// specific <paramref name="prefix"/> which makes correlating logs easier
-        /// </summary>
-        /// <returns>The logger.</returns>
-        /// <param name="prefix">Prefix.</param>
-        public static AbstractLogger CreateLogger(String prefix = "")
-        {
-            var logger = Activator.CreateInstance(loggerType) as AbstractLogger;
-            logger.Prefix = prefix;
-            return logger;          
-        }
+		public static IConfigurationReader Config => Lazy.Value.ConfigurationReader;
 
-        /// <summary>
-        /// Sets the type of the logger.
-        /// </summary>
-        /// <param name="t">T.</param>
-        /// <typeparam name="T">The 1st type parameter.</typeparam>
-        internal static void SetLoggerType<T>() where T : AbstractLogger, new()
-        {
-            loggerType = typeof(T);
-        }
+		internal static ApmAgent Instance => Lazy.Value;
 
-        /// <summary>
-        /// The entry point for manual instrumentation. The <see cref="Api"/> property returns the tracer,
-        /// which you access to the currently active transaction and span and it also enables you to manually start
-        /// a transaction.
-        /// </summary>
-        private static ElasticApm api;
+		/// <summary>
+		/// The entry point for manual instrumentation. The <see cref="Tracer" /> property returns the tracer,
+		/// which you access to the currently active transaction and span and it also enables you to manually start
+		/// a transaction.
+		/// </summary>
+		public static ITracer Tracer => Instance.Tracer;
 
-        public static IElasticApm Api => api ?? (api = new ElasticApm());
+		internal static TransactionContainer TransactionContainer => Instance.TransactionContainer;
 
-        static Type loggerType = typeof(ConsoleLogger);
-    }
+		/// <summary>
+		/// Sets up multiple <see cref="IDiagnosticsSubscriber" />'s to start listening to one or more
+		/// <see cref="IDiagnosticListener" />'s
+		/// </summary>
+		/// <param name="subscribers">
+		/// An array of <see cref="IDiagnosticsSubscriber" /> that will set up <see cref="IDiagnosticListener" /> subscriptions
+		/// </param>
+		/// <returns>
+		/// A disposable referencing all the subscriptions, disposing this is not necessary for clean up, only to unsubscribe if
+		/// desired.
+		/// </returns>
+		public static IDisposable Subscribe(params IDiagnosticsSubscriber[] subscribers) => Instance.Subscribe(subscribers);
+
+		public static void Setup(AgentComponents agentComponents)
+		{
+			if (Lazy.IsValueCreated) throw new Exception("The singleton APM agent has already been instantiated and can no longer be configured");
+
+			_components = agentComponents;
+		}
+	}
 }

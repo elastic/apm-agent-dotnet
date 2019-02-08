@@ -1,74 +1,62 @@
-﻿using System;
-using System.Reflection;
+﻿using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
-using Elastic.Apm.Config;
-using Elastic.Apm.Logging;
 using Xunit;
 
 namespace Elastic.Apm.Tests
 {
-    public class LoggerTest
-    {
-        readonly AbstractLogger logger;
+	public class LoggerTest
+	{
+		[Fact]
+		public void TestLogError()
+		{
+			var logger = LogWithLevel(LogLevel.Error);
 
-        public LoggerTest()
-        {
-            TestHelper.ResetAgentAndEnvVars();
+			Assert.Single(logger.Lines);
+			Assert.Equal("Error Test: Error log", logger.Lines[0]);
+		}
 
-            Apm.Agent.SetLoggerType<TestLogger>();
-            logger = Apm.Agent.CreateLogger("Test");
-        }
+		[Fact]
+		public void TestLogWarning()
+		{
+			var logger = LogWithLevel(LogLevel.Warning);
 
-        [Fact]
-        public void TestLogError()
-        {
-            LogWithLevel(LogLevel.Error);
+			Assert.Equal(2, logger.Lines.Count);
+			Assert.Equal("Error Test: Error log", logger.Lines[0]);
+			Assert.Equal("Warning Test: Warning log", logger.Lines[1]);
+		}
 
-            Assert.Single((logger as TestLogger).Lines);
-            Assert.Equal("Error Test: Error log", (logger as TestLogger).Lines[0]);
-        }
+		[Fact]
+		public void TestLogInfo()
+		{
+			var logger = LogWithLevel(LogLevel.Info);
 
-        [Fact]
-        public void TestLogWarning()
-        {
-            LogWithLevel(LogLevel.Warning);
+			Assert.Equal(3, logger.Lines.Count);
+			Assert.Equal("Error Test: Error log", logger.Lines[0]);
+			Assert.Equal("Warning Test: Warning log", logger.Lines[1]);
+			Assert.Equal("Info Test: Info log", logger.Lines[2]);
+		}
 
-            Assert.Equal(2, (logger as TestLogger).Lines.Count);
-            Assert.Equal("Error Test: Error log", (logger as TestLogger).Lines[0]);
-            Assert.Equal("Warning Test: Warning log", (logger as TestLogger).Lines[1]);
-        }
+		[Fact]
+		public void TestLogDebug()
+		{
+			var logger = LogWithLevel(LogLevel.Debug);
 
-        [Fact]
-        public void TestLogInfo()
-        {
-            LogWithLevel(LogLevel.Info);
+			Assert.Equal(4, logger.Lines.Count);
+			Assert.Equal("Error Test: Error log", logger.Lines[0]);
+			Assert.Equal("Warning Test: Warning log", logger.Lines[1]);
+			Assert.Equal("Info Test: Info log", logger.Lines[2]);
+			Assert.Equal("Debug Test: Debug log", logger.Lines[3]);
+		}
 
-            Assert.Equal(3, (logger as TestLogger).Lines.Count);
-            Assert.Equal("Error Test: Error log", (logger as TestLogger).Lines[0]);
-            Assert.Equal("Warning Test: Warning log", (logger as TestLogger).Lines[1]);
-            Assert.Equal("Info Test: Info log", (logger as TestLogger).Lines[2]);
-        }
+		private TestLogger LogWithLevel(LogLevel logLevel)
+		{
+			var logger = new TestLogger(logLevel);
 
-        [Fact]
-        public void TestLogDebug()
-        {
-            LogWithLevel(LogLevel.Debug);
-
-            Assert.Equal(4, (logger as TestLogger).Lines.Count);
-            Assert.Equal("Error Test: Error log", (logger as TestLogger).Lines[0]);
-            Assert.Equal("Warning Test: Warning log", (logger as TestLogger).Lines[1]);
-            Assert.Equal("Info Test: Info log", (logger as TestLogger).Lines[2]);
-            Assert.Equal("Debug Test: Debug log", (logger as TestLogger).Lines[3]);
-        }
-
-        private void LogWithLevel(LogLevel logLevel)
-        {
-            Apm.Agent.Config.LogLevel = logLevel;
-
-            logger.LogError("Error log");
-            logger.LogWarning("Warning log");
-            logger.LogInfo("Info log");
-            logger.LogDebug("Debug log");
-        }
-    }
+			logger.LogError("Test", "Error log");
+			logger.LogWarning("Test", "Warning log");
+			logger.LogInfo("Test", "Info log");
+			logger.LogDebug("Test", "Debug log");
+			return logger;
+		}
+	}
 }

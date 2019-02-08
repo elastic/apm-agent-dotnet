@@ -1,47 +1,56 @@
 ﻿using System;
 using System.Collections.Generic;
+using Elastic.Apm.Api;
+using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
 {
-    public class Error
-    {
-        public Service Service { get; set; }
-        public List<Err> Errors { get; set; }
+	internal class Error : IError
+	{
+		public List<IErrorDetail> Errors { get; set; }
+		public Service Service { get; set; }
 
-        public class Err
-        {
-            public Context Context { get; set; }
-            public CapturedException Exception { get; set; }
-            public Guid Id { get; private set; }
-            public Trans Transaction { get; set; }
-            public String Timestamp { get; private set; }
-            public String Culprit { get; set; }
+		public class ErrorDetail : IErrorDetail
+		{
+			public ErrorDetail()
+			{
+				Timestamp = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
+				Id = Guid.NewGuid();
+			}
 
-            public Err()
-            {
-                this.Timestamp = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
-                Id = Guid.NewGuid();
-            }
+			internal Context Context { get; set; }
+			public string Culprit { get; set; }
+			public ICapturedException Exception { get; set; }
+			public Guid Id { get; }
+			public string Timestamp { get; }
+			public TransactionReference Transaction { get; set; }
 
-            public class Trans
-            {
-                public Guid Id { get; set; }
-            }
-        }
-    }
+			public class TransactionReference
+			{
+				public Guid Id { get; set; }
+			}
+		}
+	}
 
-    public class CapturedException
-    {
-        public String Code { get; set; } //TODO
+	internal class CapturedException : ICapturedException
+	{
+		internal string Code { get; set; } //TODO
 
-        public String Message { get; set; }
+		public bool Handled { get; set; }
 
-        public String Module { get; set; }
+		/// <summary>
+		/// The exception message, see: <see cref="Exception.Message" />
+		/// </summary>
+		public string Message { get; set; }
 
-        public List<Stacktrace> Stacktrace { get; set; }
+		public string Module { get; set; }
 
-        public bool Handled { get; set; }
+		[JsonProperty("Stacktrace")]
+		public List<Stacktrace> StacktTrace { get; set; }
 
-        public String Type { get; set; }
-    }
+		/// <summary>
+		/// The type of the exception class
+		/// </summary>
+		public string Type { get; set; }
+	}
 }
