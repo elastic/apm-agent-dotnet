@@ -22,10 +22,10 @@ namespace Elastic.Apm.Tests.ApiTests
 	{
 		private const string ExceptionMessage = "Foo";
 		private const string SpanName = "TestSpan";
-		private const int SpanSleepLength = 25;
+		private const int SpanSleepLength = 33;
 		private const string SpanType = "TestSpan";
 		private const string TransactionName = "ConvenientApiTest";
-		private const int TransactionSleepLength = 20;
+		private const int TransactionSleepLength = 32;
 		private const string TransactionType = "Test";
 
 		/// <summary>
