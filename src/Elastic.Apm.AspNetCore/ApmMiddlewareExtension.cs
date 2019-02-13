@@ -1,8 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using Elastic.Apm.AspNetCore.Config;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
+using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.Report;
+using Elastic.Apm.Logging;
+using Elastic.Apm.Model.Payload;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 
@@ -18,20 +23,63 @@ namespace Elastic.Apm.AspNetCore
 		/// <param name="configuration">
 		/// You can optionally pass the IConfiguration of your application to the Elastic APM Agent. By
 		/// doing this the agent will read agent related configurations through this IConfiguration instance.
+		/// If no <see cref="IConfiguration" /> is passed to the agent then it will read configs from environment variables.
 		/// </param>
-		/// <param name="payloadSender">Payload sender.</param>
+		/// <param name="subscribers">
+		/// Specify which diagnostic source subscribers you want to connect. The
+		/// <see cref="AspNetCoreDiagnosticsSubscriber" /> is by default enabled.
+		/// </param>
 		public static IApplicationBuilder UseElasticApm(
-			this IApplicationBuilder builder, IConfiguration configuration = null, IPayloadSender payloadSender = null
+			this IApplicationBuilder builder,
+			IConfiguration configuration = null,
+			params IDiagnosticsSubscriber[] subscribers
 		)
 		{
-			if (configuration != null) Agent.Config = new MicrosoftExtensionsConfig(configuration);
+			var logger = ConsoleLogger.Instance;
+			var configReader = configuration == null
+				? new EnvironmentConfigurationReader(logger)
+				: new MicrosoftExtensionsConfig(configuration, logger) as IConfigurationReader;
 
-			if (payloadSender != null) Agent.PayloadSender = payloadSender;
+			var service = GetService(configReader);
 
-			System.Diagnostics.DiagnosticListener.AllListeners
-				.Subscribe(new DiagnosticInitializer(new List<IDiagnosticListener> { new AspNetCoreDiagnosticListener() }));
+			var config = new AgentComponents(configurationReader: configReader, service: service, logger: logger);
+			Agent.Setup(config);
+			return UseElasticApm(builder, Agent.Instance, subscribers);
+		}
 
-			return builder.UseMiddleware<ApmMiddleware>();
+		internal static IApplicationBuilder UseElasticApm(
+			this IApplicationBuilder builder,
+			ApmAgent agent,
+			params IDiagnosticsSubscriber[] subscribers
+		)
+		{
+			var subs = new List<IDiagnosticsSubscriber>(subscribers ?? Array.Empty<IDiagnosticsSubscriber>())
+			{
+				new AspNetCoreDiagnosticsSubscriber()
+			};
+			agent.Subscribe(subs.ToArray());
+			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer);
+		}
+
+		internal static Service GetService(IConfigurationReader configReader)
+		{
+			string version;
+			var versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name == "Microsoft.AspNetCore");
+			var assemblies = versionQuery as Assembly[] ?? versionQuery.ToArray();
+			if (assemblies.Any())
+				version = assemblies.First().GetName().Version.ToString();
+			else
+			{
+				versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name.Contains("Microsoft.AspNetCore"));
+				var enumerable = versionQuery as Assembly[] ?? versionQuery.ToArray();
+				version = enumerable.Any() ? enumerable.FirstOrDefault()?.GetName().Version.ToString() : "n/a";
+			}
+
+			var service = Service.GetDefaultService(configReader);
+			service.Framework = new Framework { Name = "ASP.NET Core", Version = version };
+			service.Language = new Language { Name = "C#" }; //TODO
+
+			return service;
 		}
 	}
 }

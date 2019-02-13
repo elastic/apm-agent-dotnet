@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Elastic.Apm;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using SampleAspNetCoreApp.Data;
 using SampleAspNetCoreApp.Models;
 
@@ -11,59 +14,61 @@ namespace SampleAspNetCoreApp.Controllers
 {
 	public class HomeController : Controller
 	{
-		public HomeController(SampleDataContext sampleDataContext) => _sampleDataContext = sampleDataContext;
-
 		private readonly SampleDataContext _sampleDataContext;
+
+		public HomeController(SampleDataContext sampleDataContext) => _sampleDataContext = sampleDataContext;
 
 		public async Task<IActionResult> Index()
 		{
 			_sampleDataContext.Database.Migrate();
-			//TODO: Show this on the real UI
-			foreach (var item in _sampleDataContext.Users) Console.WriteLine(item.Name);
+			var model = _sampleDataContext.Users.Select(item => item.Name).ToList();
 
 			try
 			{
-				//TODO: turn this into a more realistic sample
 				var httpClient = new HttpClient();
-				var responseMsg = await httpClient.GetAsync("https://elastic.co");
+				httpClient.DefaultRequestHeaders.Add("User-Agent", "APM-Sample-App");
+				var responseMsg = await httpClient.GetAsync("https://api.github.com/repos/elastic/apm-agent-dotnet");
 				var responseStr = await responseMsg.Content.ReadAsStringAsync();
-				Console.WriteLine(responseStr.Length);
+				ViewData["stargazers_count"] = JObject.Parse(responseStr)["stargazers_count"];
 			}
 			catch
 			{
 				Console.WriteLine("Failed HTTP GET elastic.co");
 			}
 
-			return View();
+			return View(model);
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> AddNewUser(string enteredName)
+		public async Task<IActionResult> AddNewUser([FromForm] string enteredName)
 		{
+			if (String.IsNullOrEmpty(enteredName))
+				throw new ArgumentNullException(nameof(enteredName));
+
 			_sampleDataContext.Users.Add(
 				new User
 				{
-					Name = "TestName"
+					Name = enteredName
 				});
 
-			//TODO: get the real data
 			await _sampleDataContext.SaveChangesAsync();
 
+			return Redirect("/Home/Index");
+		}
+
+		public IActionResult SimplePage()
+		{
 			return View();
 		}
 
-		public IActionResult About()
+		public async Task<IActionResult> ChartPage()
 		{
-			ViewData["Message"] = "Your application description page.";
+			var csvDataReader = new CsvDataReader($"Data{System.IO.Path.DirectorySeparatorChar}HistoricalData");
 
-			return View();
-		}
+			var historicalData =
+				await Agent.Tracer.CurrentTransaction.CaptureSpan("ReadData", "csvRead", async () => await csvDataReader.GetHistoricalQuotes("ESTC"));
 
-		public IActionResult Contact()
-		{
-			ViewData["Message"] = "Your contact page.";
-
-			return View();
+			return View(historicalData);
 		}
 
 		public IActionResult Privacy() => View();
@@ -79,10 +84,7 @@ namespace SampleAspNetCoreApp.Controllers
 			return Ok();
 		}
 
-		public IActionResult TriggerError()
-		{
-			throw new Exception("This is a test exception!");
-		}
+		public IActionResult TriggerError() => throw new Exception("This is a test exception!");
 
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 		public IActionResult Error() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });

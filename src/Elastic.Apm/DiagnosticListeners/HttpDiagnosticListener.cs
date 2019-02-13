@@ -14,32 +14,30 @@ using Elastic.Apm.Model.Payload;
 
 namespace Elastic.Apm.DiagnosticListeners
 {
+	/// <inheritdoc />
 	/// <summary>
-	/// Captures web requests initiated by <see cref="System.Net.Http.HttpClient" />
+	/// Captures web requests initiated by <see cref="T:System.Net.Http.HttpClient" />
 	/// </summary>
-	public class HttpDiagnosticListener : IDiagnosticListener
+	internal class HttpDiagnosticListener : IDiagnosticListener
 	{
 		/// <summary>
 		/// Keeps track of ongoing requests
 		/// </summary>
-		internal readonly ConcurrentDictionary<HttpRequestMessage, ISpan> ProcessingRequests = new ConcurrentDictionary<HttpRequestMessage, ISpan>();
+		internal readonly ConcurrentDictionary<HttpRequestMessage, Span> ProcessingRequests = new ConcurrentDictionary<HttpRequestMessage, Span>();
 
-		private readonly AbstractAgentConfig _agentConfig;
+		public HttpDiagnosticListener(IApmAgent components) =>
+			(Logger, ConfigurationReader) = (components.Logger, components.ConfigurationReader);
 
-		public HttpDiagnosticListener()
-		{
-			_agentConfig = Agent.Config;
-			Logger = Agent.CreateLogger(Name);
-		}
+		private IConfigurationReader ConfigurationReader { get; }
 
-		internal AbstractLogger Logger { get; }
+		private AbstractLogger Logger { get; }
 
 		public string Name => "System.Net.Http.Desktop"; // "HttpHandlerDiagnosticListener";
 
 		public void OnCompleted() { }
 
 		public void OnError(Exception error)
-			=> Logger.LogError($"Exception in OnError, Exception-type:{error.GetType().Name}, Message:{error.Message}");
+			=> Logger.LogError(Name, $"Exception in OnError, Exception-type:{error.GetType().Name}, Message:{error.Message}");
 
 		public void OnNext(KeyValuePair<string, object> kv)
 		{
@@ -53,28 +51,25 @@ namespace Elastic.Apm.DiagnosticListeners
 			{
 				case "System.Net.Http.Exception":
 					var exception = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Exception").GetValue(kv.Value) as Exception;
-					var transaction = TransactionContainer.Transactions?.Value;
+					var transaction = Agent.TransactionContainer.Transactions?.Value;
 
 					transaction.CaptureException(exception, "Failed outgoing HTTP request");
 					//TODO: we don't know if exception is handled, currently reports handled = false
 					break;
 				case "System.Net.Http.HttpRequestOut.Start": //TODO: look for consts
-					if (TransactionContainer.Transactions == null || TransactionContainer.Transactions.Value == null) return;
+					if (Agent.TransactionContainer.Transactions == null || Agent.TransactionContainer.Transactions.Value == null) return;
 
-					transaction = TransactionContainer.Transactions.Value;
+					transaction = Agent.TransactionContainer.Transactions.Value;
 
-					var span = transaction.StartSpan($"{request?.Method} {request?.RequestUri?.Host}", Span.TypeExternal,
-						Span.SubtypeHttp);
+					var span = transaction.StartSpanInternal($"{request?.Method} {request?.RequestUri?.Host}", ApiConstants.TypeExternal,
+						ApiConstants.SubtypeHttp);
 
 					if (ProcessingRequests.TryAdd(request, span))
 					{
-						span.Context = new Span.ContextC
+						span.Context.Http = new Http
 						{
-							Http = new Http
-							{
-								Url = request?.RequestUri?.ToString(),
-								Method = request?.Method?.Method
-							}
+							Url = request?.RequestUri?.ToString(),
+							Method = request?.Method?.Method
 						};
 
 						var frames = new StackTrace().GetFrames();
@@ -97,7 +92,7 @@ namespace Elastic.Apm.DiagnosticListeners
 					}
 					else
 					{
-						Logger.LogWarning("Failed capturing request"
+						Logger.LogWarning(Name, "Failed capturing request"
 							+ (!string.IsNullOrEmpty(request?.RequestUri?.AbsoluteUri) && !string.IsNullOrEmpty(request?.Method?.ToString())
 								? $" '{request?.Method} "
 								: " ")
@@ -117,9 +112,8 @@ namespace Elastic.Apm.DiagnosticListeners
 		{
 			switch (requestUri)
 			{
-				case Uri uri when uri == null:
-					return true;
-				case Uri uri when Agent.Config.ServerUrls.Any(n => n.IsBaseOf(uri)): //TODO: measure the perf of this!
+				case Uri uri when uri == null: return true;
+				case Uri uri when ConfigurationReader.ServerUrls.Any(n => n.IsBaseOf(uri)): //TODO: measure the perf of this!
 					return true;
 				default:
 					return false;

@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model.Payload;
 using Microsoft.AspNetCore.Http;
@@ -16,53 +16,38 @@ using Microsoft.AspNetCore.Http;
 namespace Elastic.Apm.AspNetCore
 {
 	// ReSharper disable once ClassNeverInstantiated.Global
-	public class ApmMiddleware
+	internal class ApmMiddleware
 	{
 		private readonly RequestDelegate _next;
+		private readonly Tracer _tracer;
 
-		public ApmMiddleware(RequestDelegate next)
+		public ApmMiddleware(RequestDelegate next, Tracer tracer)
 		{
 			_next = next;
-
-			var service = new Service
-			{
-				Agent = new Service.AgentC
-				{
-					Name = Consts.AgentName,
-					Version = Consts.AgentVersion
-				},
-				Name = Assembly.GetEntryAssembly()?.GetName().Name,
-				Framework = new Framework { Name = "ASP.NET Core", Version = "2.1" }, //TODO: Get version
-				Language = new Language { Name = "C#" } //TODO
-			};
-
-			Agent.Tracer.Service = service;
+			_tracer = tracer;
 		}
 
 		public async Task InvokeAsync(HttpContext context)
 		{
-			var transaction = Agent.Tracer.StartTransaction($"{context.Request.Method} {context.Request.Path}",
-				Transaction.TypeRequest);
+			var transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
+				ApiConstants.TypeRequest);
 
-			transaction.Context = new Context
+			transaction.Context.Request = new Request
 			{
-				Request = new Request
+				Method = context.Request.Method,
+				Socket = new Socket
 				{
-					Method = context.Request.Method,
-					Socket = new Socket
-					{
-						Encrypted = context.Request.IsHttps,
-						RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
-					},
-					Url = new Url
-					{
-						Full = context.Request?.Path.Value,
-						HostName = context.Request.Host.Host,
-						Protocol = GetProtocolName(context.Request.Protocol),
-						Raw = context.Request?.Path.Value //TODO
-					},
-					HttpVersion = GetHttpVersion(context.Request.Protocol)
-				}
+					Encrypted = context.Request.IsHttps,
+					RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
+				},
+				Url = new Url
+				{
+					Full = context.Request?.Path.Value,
+					HostName = context.Request.Host.Host,
+					Protocol = GetProtocolName(context.Request.Protocol),
+					Raw = context.Request?.Path.Value //TODO
+				},
+				HttpVersion = GetHttpVersion(context.Request.Protocol)
 			};
 
 			try

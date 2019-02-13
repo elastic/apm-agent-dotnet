@@ -3,16 +3,14 @@ using System.Collections.Generic;
 using System.Reflection;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
-using Microsoft.AspNetCore.Http;
 
 namespace Elastic.Apm.AspNetCore.DiagnosticListener
 {
-	public class AspNetCoreDiagnosticListener : IDiagnosticListener
+	internal class AspNetCoreDiagnosticListener : IDiagnosticListener
 	{
 		private readonly AbstractLogger _logger;
 
-		public AspNetCoreDiagnosticListener()
-			=> _logger = Agent.CreateLogger(Name);
+		public AspNetCoreDiagnosticListener(IApmAgent agent) => _logger = agent.Logger;
 
 		public string Name => "Microsoft.AspNetCore";
 
@@ -27,7 +25,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 			var exception = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("exception").GetValue(kv.Value) as Exception;
 
-			var transaction = TransactionContainer.Transactions?.Value;
+			var transaction = Agent.TransactionContainer.Transactions?.Value;
 
 			transaction?.CaptureException(exception, "ASP.NET Core Unhandled Exception",
 				kv.Key == "Microsoft.AspNetCore.Diagnostics.HandledException");

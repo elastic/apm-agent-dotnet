@@ -28,9 +28,6 @@ namespace Elastic.Apm.Tests.ApiTests
 		private const int TransactionSleepLength = 10;
 		private const string TransactionType = "Test";
 
-		public ConvenientApiSpanTests()
-			=> TestHelper.ResetAgentAndEnvVars();
-
 		/// <summary>
 		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Action,string,string)" /> method.
 		/// It wraps a fake span (Thread.Sleep) into the CaptureSpan method
@@ -371,14 +368,13 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public async Task CancelledAsyncTask()
 		{
-			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentComponents());
 
 			var cancellationTokenSource = new CancellationTokenSource();
 			var token = cancellationTokenSource.Token;
 			cancellationTokenSource.Cancel();
 
-			await Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
+			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 			{
 				await Assert.ThrowsAsync<OperationCanceledException>(async () =>
 				{
@@ -393,14 +389,92 @@ namespace Elastic.Apm.Tests.ApiTests
 		}
 
 		/// <summary>
+		/// Creates a custom span and adds a tag to it.
+		/// Makes sure that the tag is stored on Span.Context.
+		/// </summary>
+		[Fact]
+		public void TagsOnSpan()
+		{
+			var payloadSender = AssertWith1TransactionAnd1Span(
+				t =>
+				{
+					t.CaptureSpan(SpanName, SpanType, span =>
+					{
+						Thread.Sleep(SpanSleepLength);
+						span.Tags["foo"] = "bar";
+					});
+				});
+
+			//According to the Intake API tags are stored on the Context (and not on Spans.Tags directly).
+			Assert.Equal("bar", payloadSender.SpansOnFirstTransaction[0].Context.Tags["foo"]);
+
+			//Also make sure the tag is visible directly on Span.Tags.
+			Assert.Equal("bar", payloadSender.SpansOnFirstTransaction[0].Tags["foo"]);
+		}
+
+		/// <summary>
+		/// Creates a custom async span and adds a tag to it.
+		/// Makes sure that the tag is stored on Span.Context.
+		/// </summary>
+		[Fact]
+		public async Task TagsOnSpanAsync()
+		{
+			var payloadSender = await AssertWith1TransactionAnd1SpanAsync(
+				async t =>
+				{
+					await t.CaptureSpan(SpanName, SpanType, async span =>
+					{
+						await Task.Delay(SpanSleepLength);
+						span.Tags["foo"] = "bar";
+					});
+				});
+
+			//According to the Intake API tags are stored on the Context (and not on Spans.Tags directly).
+			Assert.Equal("bar", payloadSender.SpansOnFirstTransaction[0].Context.Tags["foo"]);
+
+			//Also make sure the tag is visible directly on Span.Tags.
+			Assert.Equal("bar", payloadSender.SpansOnFirstTransaction[0].Tags["foo"]);
+		}
+
+		/// <summary>
+		/// Creates a custom async span that ends with an error and adds a tag to it.
+		/// Makes sure that the tag is stored on Span.Context.
+		/// </summary>
+		[Fact]
+		public async Task TagsOnSpanAsyncError()
+		{
+			var payloadSender = await AssertWith1TransactionAnd1ErrorAnd1SpanAsync(
+				async t =>
+				{
+					await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+					{
+						await t.CaptureSpan(SpanName, SpanType, async span =>
+						{
+							await Task.Delay(SpanSleepLength);
+							span.Tags["foo"] = "bar";
+
+							if (new Random().Next(1) == 0) //avoid unreachable code warning.
+								throw new InvalidOperationException(ExceptionMessage);
+						});
+					});
+				});
+
+			//According to the Intake API tags are stored on the Context (and not on Spans.Tags directly).
+			Assert.Equal("bar", payloadSender.SpansOnFirstTransaction[0].Context.Tags["foo"]);
+
+			//Also make sure the tag is visible directly on Span.Tags.
+			Assert.Equal("bar", payloadSender.SpansOnFirstTransaction[0].Tags["foo"]);
+		}
+
+		/// <summary>
 		/// Asserts on 1 transaction with 1 async span and 1 error
 		/// </summary>
-		private async Task AssertWith1TransactionAnd1ErrorAnd1SpanAsync(Func<ITransaction, Task> func)
+		private async Task<MockPayloadSender> AssertWith1TransactionAnd1ErrorAnd1SpanAsync(Func<ITransaction, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			await Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
+			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 			{
 				await Task.Delay(TransactionSleepLength);
 				await func(t);
@@ -414,10 +488,10 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= TransactionSleepLength + SpanSleepLength);
 
-			Assert.NotEmpty(payloadSender.Payloads[0].Transactions[0].Spans);
+			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
 
-			Assert.Equal(SpanName, payloadSender.Payloads[0].Transactions[0].Spans[0].Name);
-			Assert.Equal(SpanType, payloadSender.Payloads[0].Transactions[0].Spans[0].Type);
+			Assert.Equal(SpanName, payloadSender.SpansOnFirstTransaction[0].Name);
+			Assert.Equal(SpanType, payloadSender.SpansOnFirstTransaction[0].Type);
 
 
 			Assert.NotEmpty(payloadSender.Errors);
@@ -425,18 +499,20 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			Assert.Equal(typeof(InvalidOperationException).FullName, payloadSender.Errors[0].Errors[0].Exception.Type);
 			Assert.Equal(ExceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
+
+			return payloadSender;
 		}
 
 
 		/// <summary>
 		/// Asserts on 1 transaction with 1 async Span
 		/// </summary>
-		private async Task AssertWith1TransactionAnd1SpanAsync(Func<ITransaction, Task> func)
+		private async Task<MockPayloadSender> AssertWith1TransactionAnd1SpanAsync(Func<ITransaction, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			await Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
+			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 			{
 				await Task.Delay(TransactionSleepLength);
 				await func(t);
@@ -448,23 +524,26 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(TransactionName, payloadSender.Payloads[0].Transactions[0].Name);
 			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
 
-			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= TransactionSleepLength + SpanSleepLength);
+			var duration = payloadSender.FirstTransaction.Duration;
+			Assert.True(duration >= TransactionSleepLength + SpanSleepLength, $"Expected {duration} to be greater or equal to: {TransactionSleepLength + SpanSleepLength}");
 
-			Assert.NotEmpty(payloadSender.Payloads[0].Transactions[0].Spans);
+			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
 
-			Assert.Equal(SpanName, payloadSender.Payloads[0].Transactions[0].Spans[0].Name);
-			Assert.Equal(SpanType, payloadSender.Payloads[0].Transactions[0].Spans[0].Type);
+			Assert.Equal(SpanName, payloadSender.SpansOnFirstTransaction[0].Name);
+			Assert.Equal(SpanType, payloadSender.SpansOnFirstTransaction[0].Type);
+
+			return payloadSender;
 		}
 
 		/// <summary>
 		/// Asserts on 1 transaction with 1 span
 		/// </summary>
-		private void AssertWith1TransactionAnd1Span(Action<ITransaction> action)
+		private MockPayloadSender AssertWith1TransactionAnd1Span(Action<ITransaction> action)
 		{
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
+			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 			{
 				Thread.Sleep(SpanSleepLength);
 				action(t);
@@ -476,12 +555,14 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(TransactionName, payloadSender.Payloads[0].Transactions[0].Name);
 			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
 
-			Assert.NotEmpty(payloadSender.Payloads[0].Transactions[0].Spans);
+			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
 
-			Assert.Equal(SpanName, payloadSender.Payloads[0].Transactions[0].Spans[0].Name);
-			Assert.Equal(SpanType, payloadSender.Payloads[0].Transactions[0].Spans[0].Type);
+			Assert.Equal(SpanName, payloadSender.SpansOnFirstTransaction[0].Name);
+			Assert.Equal(SpanType, payloadSender.SpansOnFirstTransaction[0].Type);
 
 			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= TransactionSleepLength + SpanSleepLength);
+
+			return payloadSender;
 		}
 
 		/// <summary>
@@ -490,9 +571,9 @@ namespace Elastic.Apm.Tests.ApiTests
 		private void AssertWith1TransactionAnd1SpanAnd1Error(Action<ITransaction> action)
 		{
 			var payloadSender = new MockPayloadSender();
-			Agent.PayloadSender = payloadSender;
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			Agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
+			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 			{
 				Thread.Sleep(SpanSleepLength);
 				action(t);
@@ -506,10 +587,10 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= TransactionSleepLength + SpanSleepLength);
 
-			Assert.NotEmpty(payloadSender.Payloads[0].Transactions[0].Spans);
+			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
 
-			Assert.Equal(SpanName, payloadSender.Payloads[0].Transactions[0].Spans[0].Name);
-			Assert.Equal(SpanType, payloadSender.Payloads[0].Transactions[0].Spans[0].Type);
+			Assert.Equal(SpanName, payloadSender.SpansOnFirstTransaction[0].Name);
+			Assert.Equal(SpanType, payloadSender.SpansOnFirstTransaction[0].Type);
 
 			Assert.NotEmpty(payloadSender.Errors);
 			Assert.NotEmpty(payloadSender.Errors[0].Errors);

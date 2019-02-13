@@ -1,4 +1,7 @@
-﻿using Elastic.Apm.Config;
+﻿using System;
+using System.Collections.Generic;
+using Elastic.Apm.Config;
+using Elastic.Apm.Logging;
 using Microsoft.Extensions.Configuration;
 
 namespace Elastic.Apm.AspNetCore.Config
@@ -7,11 +10,20 @@ namespace Elastic.Apm.AspNetCore.Config
 	/// An agent-config provider based on Microsoft.Extensions.Configuration.IConfiguration.
 	/// It uses environment variables as fallback
 	/// </summary>
-	public class MicrosoftExtensionsConfig : AbstractAgentConfig
+	internal class MicrosoftExtensionsConfig : AbstractConfigurationReader, IConfigurationReader
 	{
+		internal const string Origin = "Configuration Provider";
+
+		public static (string LevelSubKey, string Level, string Urls, string ServiceName) Keys = (
+			LevelSubKey: "LogLevel",
+			Level: "ElasticApm:LogLevel",
+			Urls: "ElasticApm:ServerUrls",
+			ServiceName: "ElasticApm:ServiceName"
+		);
+
 		private readonly IConfiguration _configuration;
 
-		public MicrosoftExtensionsConfig(IConfiguration configuration)
+		public MicrosoftExtensionsConfig(IConfiguration configuration, AbstractLogger logger) : base(logger)
 		{
 			_configuration = configuration;
 			_configuration.GetSection("ElasticApm")
@@ -20,41 +32,44 @@ namespace Elastic.Apm.AspNetCore.Config
 				.RegisterChangeCallback(ChangeCallback, configuration.GetSection("ElasticApm"));
 		}
 
+		private LogLevel? _logLevel;
 
-		protected override (string value, string configType, string configKey) ReadServerUrls()
+		public LogLevel LogLevel
 		{
-			var configValue = _configuration[MicrosoftExtensionConfigConsts.ServerUrls];
-			return string.IsNullOrEmpty(configValue)
-				? (_configuration[EnvVarConsts.ServerUrls], "environment variable", EnvVarConsts.ServerUrls)
-				: (configValue, "IConfiguration", MicrosoftExtensionConfigConsts.ServerUrls);
+			get
+			{
+				if (_logLevel.HasValue) return _logLevel.Value;
+
+				var l = ParseLogLevel(ReadFallBack(Keys.Level, ConfigConsts.ConfigKeys.Level));
+				_logLevel = l;
+				return l;
+			}
 		}
 
-		protected override (string value, string configType, string configKey) ReadLogLevel()
+		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(ReadFallBack(Keys.Urls, ConfigConsts.ConfigKeys.Urls));
+
+		public string ServiceName => ParseServiceName(ReadFallBack(Keys.ServiceName, ConfigConsts.ConfigKeys.ServiceName));
+
+		private ConfigurationKeyValue Read(string key) => Kv(key, _configuration[key], Origin);
+
+		private ConfigurationKeyValue ReadFallBack(string key, string fallBack)
 		{
-			var configValue = _configuration[MicrosoftExtensionConfigConsts.LogLevel];
-			return string.IsNullOrEmpty(configValue)
-				? (_configuration[EnvVarConsts.LogLevel], "environment variable", EnvVarConsts.LogLevel)
-				: (configValue, "IConfiguration", MicrosoftExtensionConfigConsts.LogLevel);
+			var primary = Read(key);
+			if (!string.IsNullOrWhiteSpace(primary.Value)) return primary;
+
+			var secondary = Kv(key, _configuration[fallBack], EnvironmentConfigurationReader.Origin);
+			return secondary;
 		}
 
 		private void ChangeCallback(object obj)
 		{
-			var (newLogLevel, isError)
-				= ParseLogLevel((obj as IConfigurationSection)?[MicrosoftExtensionConfigConsts.LogLevel.Split(':')[1]]);
+			if (!(obj is IConfigurationSection section)) return;
 
-			if (!isError && newLogLevel.HasValue && newLogLevel.Value != LogLevelBackingField)
-			{
-				LogLevelBackingField = newLogLevel;
-				Logger?.LogInfo($"Updated log level to {LogLevelBackingField.ToString()}");
-			}
+			var newLogLevel = ParseLogLevel(Kv(Keys.LevelSubKey, section[Keys.LevelSubKey], Origin));
+			if (_logLevel.HasValue && newLogLevel == _logLevel.Value) return;
 
-			if (isError) Logger?.LogInfo($"Updating log level failed, current log level: {LogLevelBackingField.ToString()}");
+			_logLevel = newLogLevel;
+			Logger?.LogInfo($"Updated log level to {newLogLevel}");
 		}
-	}
-
-	internal static class MicrosoftExtensionConfigConsts
-	{
-		public static string LogLevel => "ElasticApm:LogLevel";
-		public static string ServerUrls => "ElasticApm:ServerUrls";
 	}
 }

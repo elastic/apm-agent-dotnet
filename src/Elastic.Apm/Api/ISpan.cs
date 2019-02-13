@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Elastic.Apm.Model.Payload;
 
 namespace Elastic.Apm.Api
 {
@@ -12,8 +11,6 @@ namespace Elastic.Apm.Api
 		/// Examples: 'query'.
 		/// </summary>
 		string Action { get; set; }
-
-		IContext Context { get; set; }
 
 		/// <summary>
 		/// The duration of the span.
@@ -33,8 +30,6 @@ namespace Elastic.Apm.Api
 		/// </summary>
 		string Name { get; set; }
 
-		List<Stacktrace> StackTrace { get; set; }
-
 		/// <summary>
 		/// Offset relative to the transaction's timestamp identifying the start of the span, in milliseconds.
 		/// </summary>
@@ -45,6 +40,11 @@ namespace Elastic.Apm.Api
 		/// Examples: 'http', 'mssql'.
 		/// </summary>
 		string Subtype { get; set; }
+
+		/// <summary>
+		/// A flat mapping of user-defined tags with string values.
+		/// </summary>
+		Dictionary<string, string> Tags { get; }
 
 		/// <summary>
 		/// UUID of the enclosing transaction.
@@ -77,25 +77,5 @@ namespace Elastic.Apm.Api
 		/// It is illegal to call any methods on a span instance which has already ended.
 		/// </summary>
 		void End();
-	}
-
-	public interface IContext
-	{
-		IDb Db { get; set; }
-		IHttp Http { get; set; }
-	}
-
-	public interface IDb
-	{
-		string Instance { get; set; }
-		string Statement { get; set; }
-		string Type { get; set; }
-	}
-
-	public interface IHttp
-	{
-		string Method { get; set; }
-		int StatusCode { get; set; }
-		string Url { get; set; }
 	}
 }

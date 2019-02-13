@@ -1,26 +1,19 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Elastic.Apm.Model.Payload;
 
 namespace Elastic.Apm.Api
 {
 	public interface ITransaction
 	{
 		/// <summary>
-		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
-		/// </summary>
-		Context Context { get; set; }
-
-		/// <summary>
 		/// The duration of the transaction.
 		/// If it's not set (its HasValue property is false) then the value
 		/// is automatically calculated when <see cref="End" /> is called.
 		/// </summary>
 		/// <value>The duration.</value>
-		long? Duration { get; set; } //TODO datatype?, TODO: Greg, imo should be internal, TBD!
+		long? Duration { get; set; } //TODO datatype?
 
 		Guid Id { get; }
 
@@ -36,10 +29,10 @@ namespace Elastic.Apm.Api
 		/// <value>The result.</value>
 		string Result { get; set; }
 
-		//TODO: probably won't need with intake v2
-		ISpan[] Spans { get; }
-
-		string Timestamp { get; }
+		/// <summary>
+		/// A flat mapping of user-defined tags with string values.
+		/// </summary>
+		Dictionary<string, string> Tags { get; }
 
 		/// <summary>
 		/// The type of the transaction.
@@ -101,7 +94,8 @@ namespace Elastic.Apm.Api
 		/// <param name="subType">The subtype of the span.</param>
 		/// <param name="action">The action of the span.</param>
 		/// <typeparam name="T">The return type of the code that you want to capture as span.</typeparam>
-		/// <returns>The result of the
+		/// <returns>
+		/// The result of the
 		/// <param name="func"></param>
 		/// .
 		/// </returns>

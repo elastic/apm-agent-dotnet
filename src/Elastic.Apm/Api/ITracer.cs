@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Elastic.Apm.Model.Payload;
 
 namespace Elastic.Apm.Api
 {
@@ -10,12 +9,6 @@ namespace Elastic.Apm.Api
 		/// Returns the currently active transaction.
 		/// </summary>
 		ITransaction CurrentTransaction { get; }
-
-		/// <summary>
-		/// Identifies the monitored service. If this remains unset the agent
-		/// automatically populates it based on the entry assembly.
-		/// </summary>
-		Service Service { get; set; }
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a transaction and captures unhandled exceptions
@@ -52,7 +45,8 @@ namespace Elastic.Apm.Api
 		/// The <see cref="ITransaction" /> parameter gives you access to the transaction which is created by this method.
 		/// </param>
 		/// <typeparam name="T">The return type of the code that you want to capture as transaction.</typeparam>
-		/// <returns>The result of the
+		/// <returns>
+		/// The result of the
 		/// <param name="func"></param>
 		/// .
 		/// </returns>

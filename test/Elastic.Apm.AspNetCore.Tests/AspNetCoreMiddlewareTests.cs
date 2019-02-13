@@ -1,50 +1,60 @@
 using System;
+using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
-using Elastic.Apm.Tests;
 using Elastic.Apm.Tests.Mocks;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
 using Xunit;
 
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
-
 namespace Elastic.Apm.AspNetCore.Tests
 {
+	/// <summary>
+	/// Uses the samples/SampleAspNetCoreApp as the test application and tests the agent with it.
+	/// It's basically an integration test.
+	/// </summary>
+	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
 	public class AspNetCoreMiddlewareTests
-		: IClassFixture<WebApplicationFactory<Startup>>
+		: IClassFixture<WebApplicationFactory<Startup>>, IDisposable
 	{
+		private readonly ApmAgent _agent;
+		private readonly MockPayloadSender _capturedPayload;
 		private readonly WebApplicationFactory<Startup> _factory;
 
 		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory)
 		{
 			_factory = factory;
-			TestHelper.ResetAgentAndEnvVars();
+			//The agent is instantiated with ApmMiddlewareExtension.GetService, so we can also test the calculation of the service instance.
+			//(e.g. ASP.NET Core version)
+			_agent = new ApmAgent(
+				new TestAgentComponents(service: ApmMiddlewareExtension.GetService(new TestAgentConfigurationReader(new TestLogger()))));
+			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
+			_client = Helper.GetClient(_agent, _factory);
 		}
 
+		private HttpClient _client;
+
 		/// <summary>
-		/// Simulates and HTTP GET call to /home/about and asserts on what the agent should send to the server
+		/// Simulates an HTTP GET call to /home/simplePage and asserts on what the agent should send to the server
 		/// </summary>
-		[Theory]
-		[InlineData("/Home/About")]
-		public async Task HomeAboutTransactionTest(string url)
+		[Fact]
+		public async Task HomeSimplePageTransactionTest()
 		{
-			var capturedPayload = new MockPayloadSender();
-			var client = Helper.GetClient(capturedPayload, _factory);
+			var response = await _client.GetAsync("/Home/SimplePage");
 
-			var response = await client.GetAsync(url);
+			Assert.Single(_capturedPayload.Payloads);
+			Assert.Single(_capturedPayload.Payloads[0].Transactions);
 
-			Assert.Single(capturedPayload.Payloads);
-			Assert.Single(capturedPayload.Payloads[0].Transactions);
-
-			var payload = capturedPayload.Payloads[0];
+			var payload = _capturedPayload.Payloads[0];
 
 			//test payload
 			Assert.Equal(Assembly.GetEntryAssembly()?.GetName()?.Name, payload.Service.Name);
 			Assert.Equal(Consts.AgentName, payload.Service.Agent.Name);
-			Assert.Equal(Consts.AgentVersion, payload.Service.Agent.Version);
+			Assert.Equal(Assembly.Load("Elastic.Apm").GetName().Version.ToString(), payload.Service.Agent.Version);
+			Assembly.CreateQualifiedName("ASP.NET Core", payload.Service.Framework.Name);
+			Assembly.CreateQualifiedName(Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString(), payload.Service.Framework.Version);
 
-			var transaction = capturedPayload.Payloads[0].Transactions[0];
+			var transaction = _capturedPayload.FirstTransaction;
 
 			//test transaction
 			Assert.Equal($"{response.RequestMessage.Method} {response.RequestMessage.RequestUri.AbsolutePath}", transaction.Name);
@@ -70,6 +80,23 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		/// <summary>
+		/// Simulates an HTTP GET call to /home/index and asserts that the agent captures spans.
+		/// Prerequisite: The /home/index has to generate spans (which should be the case).
+		/// </summary>
+		[Fact]
+		public async Task HomeIndexSpanTest()
+		{
+			var response = await _client.GetAsync("/Home/Index");
+			Assert.True(response.IsSuccessStatusCode);
+
+			var transaction = _capturedPayload.Payloads[0].Transactions[0];
+			Assert.NotEmpty(_capturedPayload.SpansOnFirstTransaction);
+
+			//one of the spans is a DB call:
+			Assert.Contains(_capturedPayload.SpansOnFirstTransaction, n => n.Context.Db != null);
+		}
+
+		/// <summary>
 		/// Configures an ASP.NET Core application without an error page.
 		/// With other words: there is no error page with an exception handler configured in the ASP.NET Core pipeline.
 		/// Makes sure that we still capture the failed request.
@@ -77,16 +104,21 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task FailingRequestWithoutConfiguredExceptionPage()
 		{
-			var capturedPayload = new MockPayloadSender();
-			var client = Helper.GetClientWithoutExceptionPage(capturedPayload, _factory);
+			_client = Helper.GetClientWithoutExceptionPage(_agent, _factory);
+			await Assert.ThrowsAsync<Exception>(async () => { await _client.GetAsync("Home/TriggerError"); });
 
-			await Assert.ThrowsAsync<Exception>(async () => { await client.GetAsync("Home/TriggerError"); });
+			Assert.Single(_capturedPayload.Payloads);
+			Assert.Single(_capturedPayload.Payloads[0].Transactions);
 
-			Assert.Single(capturedPayload.Payloads);
-			Assert.Single(capturedPayload.Payloads[0].Transactions);
+			Assert.NotEmpty(_capturedPayload.Errors);
+			Assert.Single(_capturedPayload.Errors[0].Errors);
+		}
 
-			Assert.Single(capturedPayload.Errors);
-			Assert.Single(capturedPayload.Errors[0].Errors);
+		public void Dispose()
+		{
+			_agent?.Dispose();
+			_factory?.Dispose();
+			_client?.Dispose();
 		}
 	}
 }

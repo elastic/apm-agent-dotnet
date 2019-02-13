@@ -6,23 +6,37 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
+using Elastic.Apm.Report;
+using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
 {
-	public class Transaction : ITransaction
+	internal class Transaction : ITransaction
 	{
-		public const string TypeRequest = "request";
 		internal readonly DateTimeOffset Start;
 
-		public Transaction(string name, string type)
+		private readonly Lazy<Context> _context = new Lazy<Context>();
+		private readonly AbstractLogger _logger;
+		private readonly IPayloadSender _sender;
+
+		public Transaction(IApmAgent agent, string name, string type)
+			: this(agent.Logger, name, type, agent.PayloadSender) { }
+
+		public Transaction(AbstractLogger logger, string name, string type, IPayloadSender sender)
 		{
+			_logger = logger;
+			_sender = sender;
 			Start = DateTimeOffset.UtcNow;
 			Name = name;
 			Type = type;
 			Id = Guid.NewGuid();
 		}
 
-		public Context Context { get; set; }
+		/// <summary>
+		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
+		/// </summary>
+		public Context Context => _context.Value;
 
 		/// <inheritdoc />
 		/// <summary>
@@ -47,11 +61,14 @@ namespace Elastic.Apm.Model.Payload
 
 		internal Service Service;
 
+		//TODO: probably won't need with intake v2
+		public ISpan[] Spans => SpansInternal.ToArray();
+
 		//TODO: measure! What about List<T> with lock() in our case?
 		internal BlockingCollection<Span> SpansInternal = new BlockingCollection<Span>();
 
-		//TODO: probably won't need with intake v2
-		public ISpan[] Spans => SpansInternal.ToArray();
+		[JsonIgnore]
+		public Dictionary<string, string> Tags => Context.Tags;
 
 		public string Timestamp => Start.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
 
@@ -61,19 +78,22 @@ namespace Elastic.Apm.Model.Payload
 		{
 			if (!Duration.HasValue) Duration = (long)(DateTimeOffset.UtcNow - Start).TotalMilliseconds;
 
-			Agent.PayloadSender.QueuePayload(new Payload
+			_sender.QueuePayload(new Payload
 			{
-				Transactions = new List<Transaction>
+				Transactions = new List<ITransaction>
 				{
 					this
 				},
 				Service = Service
 			});
 
-			TransactionContainer.Transactions.Value = null;
+			Agent.TransactionContainer.Transactions.Value = null;
 		}
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
+			=> StartSpanInternal(name, type, subType, action);
+
+		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
 			var retVal = new Span(name, type, this);
 
@@ -90,16 +110,19 @@ namespace Elastic.Apm.Model.Payload
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false)
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
-			var error = new Error.Err
+
+			var capturedException = new CapturedException
+			{
+				Message = exception.Message,
+				Type = exception.GetType().FullName,
+				Handled = isHandled
+			};
+
+			var error = new Error.ErrorDetail
 			{
 				Culprit = capturedCulprit,
-				Exception = new CapturedException
-				{
-					Message = exception.Message,
-					Type = exception.GetType().FullName,
-					Handled = isHandled
-				},
-				Transaction = new Error.Err.Trans
+				Exception = capturedException,
+				Transaction = new Error.ErrorDetail.TransactionReference
 				{
 					Id = Id
 				}
@@ -107,25 +130,26 @@ namespace Elastic.Apm.Model.Payload
 
 			if (!string.IsNullOrEmpty(exception.StackTrace))
 			{
-				error.Exception.StacktTrace
-					= StacktraceHelper.GenerateApmStackTrace(new StackTrace(exception).GetFrames(), Tracer.PublicTracerLogger,
+				capturedException.StacktTrace
+					= StacktraceHelper.GenerateApmStackTrace(new StackTrace(exception).GetFrames(), _logger,
 						"failed capturing stacktrace");
 			}
 
 			error.Context = Context;
-			Agent.PayloadSender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = Service });
+			_sender.QueueError(new Error { Errors = new List<IErrorDetail> { error }, Service = Service });
 		}
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames)
 		{
-			var error = new Error.Err
+			var capturedException = new CapturedException
+			{
+				Message = message
+			};
+			var error = new Error.ErrorDetail
 			{
 				Culprit = culprit,
-				Exception = new CapturedException
-				{
-					Message = message
-				},
-				Transaction = new Error.Err.Trans
+				Exception = capturedException,
+				Transaction = new Error.ErrorDetail.TransactionReference
 				{
 					Id = Id
 				}
@@ -133,12 +157,12 @@ namespace Elastic.Apm.Model.Payload
 
 			if (frames != null)
 			{
-				error.Exception.StacktTrace
-					= StacktraceHelper.GenerateApmStackTrace(frames, Tracer.PublicTracerLogger, "failed capturing stacktrace");
+				capturedException.StacktTrace
+					= StacktraceHelper.GenerateApmStackTrace(frames, _logger, "failed capturing stacktrace");
 			}
 
 			error.Context = Context;
-			Agent.PayloadSender.QueueError(new Error { Errors = new List<Error.Err> { error }, Service = Service });
+			_sender.QueueError(new Error { Errors = new List<IErrorDetail> { error }, Service = Service });
 		}
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)

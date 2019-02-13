@@ -1,11 +1,26 @@
-﻿namespace Elastic.Apm.Model.Payload
+﻿using Elastic.Apm.Config;
+
+namespace Elastic.Apm.Model.Payload
 {
 	public class Service
 	{
+		private Service() { }
+
 		public AgentC Agent { get; set; }
 		public Framework Framework { get; set; }
 		public Language Language { get; set; }
 		public string Name { get; set; }
+
+		internal static Service GetDefaultService(IConfigurationReader configurationReader)
+			=> new Service
+			{
+				Name = configurationReader.ServiceName,
+				Agent = new AgentC
+				{
+					Name = Consts.AgentName,
+					Version = typeof(Agent).Assembly.GetName().Version?.ToString() ?? "n/a"
+				}
+			};
 
 		public class AgentC
 		{

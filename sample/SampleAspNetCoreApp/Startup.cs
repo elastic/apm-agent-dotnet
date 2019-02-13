@@ -1,6 +1,4 @@
-﻿using Elastic.Apm.AspNetCore;
-using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.EntityFrameworkCore;
+﻿using Elastic.Apm.All;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -39,8 +37,6 @@ namespace SampleAspNetCoreApp
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 		{
 			app.UseElasticApm(Configuration);
-			new ElasticCoreListeners().Start();
-			new ElasticEntityFrameworkCoreListener().Start();
 
 			if (env.IsDevelopment())
 				app.UseDeveloperExceptionPage();
