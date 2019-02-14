@@ -22,10 +22,10 @@ namespace Elastic.Apm.Tests.ApiTests
 	{
 		private const string ExceptionMessage = "Foo";
 		private const string SpanName = "TestSpan";
-		private const int SpanSleepLength = 450;
+		private const int SpanSleepLength = 30;
 		private const string SpanType = "TestSpan";
 		private const string TransactionName = "ConvenientApiTest";
-		private const int TransactionSleepLength = 600;
+		private const int TransactionSleepLength = 60;
 		private const string TransactionType = "Test";
 
 		/// <summary>
@@ -486,7 +486,10 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(TransactionName, payloadSender.Payloads[0].Transactions[0].Name);
 			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
 
-			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= TransactionSleepLength + SpanSleepLength);
+			//`await Task.Delay` is inaccurate, so we enable 10% error in the test
+			var expectedTransactionLength = (TransactionSleepLength + SpanSleepLength) - (TransactionSleepLength * 0.1 + SpanSleepLength * 0.1);
+			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
+			Assert.True(duration >= expectedTransactionLength, $"Expected {duration} to be greater or equal to: {expectedTransactionLength}");
 
 			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
 
@@ -524,8 +527,10 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(TransactionName, payloadSender.Payloads[0].Transactions[0].Name);
 			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
 
-			var duration = payloadSender.FirstTransaction.Duration;
-			Assert.True(duration >= TransactionSleepLength + SpanSleepLength, $"Expected {duration} to be greater or equal to: {TransactionSleepLength + SpanSleepLength}");
+			//`await Task.Delay` is inaccurate, so we enable 10% error in the test
+			var expectedTransactionLength = (TransactionSleepLength + SpanSleepLength) - (TransactionSleepLength * 0.1 + SpanSleepLength * 0.1);
+			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
+			Assert.True(duration >= expectedTransactionLength, $"Expected {duration} to be greater or equal to: {expectedTransactionLength}");
 
 			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
 
@@ -560,8 +565,10 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(SpanName, payloadSender.SpansOnFirstTransaction[0].Name);
 			Assert.Equal(SpanType, payloadSender.SpansOnFirstTransaction[0].Type);
 
+			//`await Task.Delay` is inaccurate, so we enable 10% error in the test
+			var expectedTransactionLength = (TransactionSleepLength + SpanSleepLength) - (TransactionSleepLength * 0.1 + SpanSleepLength * 0.1);
 			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
-			Assert.True(duration >= TransactionSleepLength + SpanSleepLength, $"Expected {duration} to be greater or equal to: {TransactionSleepLength + SpanSleepLength}");
+			Assert.True(duration >= expectedTransactionLength, $"Expected {duration} to be greater or equal to: {expectedTransactionLength}");
 
 			return payloadSender;
 		}
@@ -586,8 +593,10 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(TransactionName, payloadSender.Payloads[0].Transactions[0].Name);
 			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
 
+			//`await Task.Delay` is inaccurate, so we enable 10% error in the test
+			var expectedTransactionLength = (TransactionSleepLength + SpanSleepLength) - (TransactionSleepLength * 0.1 + SpanSleepLength * 0.1);
 			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
-			Assert.True(duration >= TransactionSleepLength + SpanSleepLength, $"Expected {duration} to be greater or equal to: {TransactionSleepLength + SpanSleepLength}");
+			Assert.True(duration >= expectedTransactionLength, $"Expected {duration} to be greater or equal to: {expectedTransactionLength}");
 
 			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
 
