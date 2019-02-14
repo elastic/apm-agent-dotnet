@@ -189,7 +189,7 @@ pipeline {
 
                         bat label: 'Build', script:'dotnet build'
 
-                        bat label: 'Test & Coverage', script: 'dotnet test -v n -r target -d target\\diag.log --logger:xunit --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=target\\Coverage\\'
+                        bat label: 'Test & Coverage', script: 'dotnet test -v n -r target -d target\\diag.log --logger:xunit --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=target\\Coverage\\ /p:Threshold=50 /p:ThresholdType=line'
 
                         powershell label: 'Convert Test Results to junit format', script: '''
                         [System.Environment]::SetEnvironmentVariable("PATH", $Env:Path + ";" + $Env:USERPROFILE + "\\.dotnet\\tools")
