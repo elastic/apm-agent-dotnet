@@ -21,7 +21,7 @@ namespace Elastic.Apm.Tests.ApiTests
 	public class ConvenientApiTransactionTests
 	{
 		private const string ExceptionMessage = "Foo";
-		private const int SleepLength = 150;
+		private const int SleepLength = 450;
 		private const string TransactionName = "ConvenientApiTest";
 		private const string TransactionType = "Test";
 
@@ -504,8 +504,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(TransactionName, payloadSender.Payloads[0].Transactions[0].Name);
 			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
 
-			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= SleepLength);
-
+			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
+			Assert.True(duration >= SleepLength, $"Expected {duration} to be greater or equal to: {SleepLength}");
 
 			Assert.NotEmpty(payloadSender.Errors);
 			Assert.NotEmpty(payloadSender.Errors[0].Errors);
@@ -531,7 +531,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(TransactionName, payloadSender.Payloads[0].Transactions[0].Name);
 			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
 
-			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= SleepLength);
+			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
+			Assert.True(duration >= SleepLength, $"Expected {duration} to be greater or equal to: {SleepLength}");
 
 			return payloadSender;
 		}

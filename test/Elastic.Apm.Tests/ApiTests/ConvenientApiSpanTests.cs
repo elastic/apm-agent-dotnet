@@ -22,10 +22,10 @@ namespace Elastic.Apm.Tests.ApiTests
 	{
 		private const string ExceptionMessage = "Foo";
 		private const string SpanName = "TestSpan";
-		private const int SpanSleepLength = 150;
+		private const int SpanSleepLength = 450;
 		private const string SpanType = "TestSpan";
 		private const string TransactionName = "ConvenientApiTest";
-		private const int TransactionSleepLength = 130;
+		private const int TransactionSleepLength = 600;
 		private const string TransactionType = "Test";
 
 		/// <summary>
@@ -545,7 +545,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 			{
-				Thread.Sleep(SpanSleepLength);
+				Thread.Sleep(TransactionSleepLength);
 				action(t);
 			});
 
@@ -560,7 +560,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(SpanName, payloadSender.SpansOnFirstTransaction[0].Name);
 			Assert.Equal(SpanType, payloadSender.SpansOnFirstTransaction[0].Type);
 
-			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= TransactionSleepLength + SpanSleepLength);
+			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
+			Assert.True(duration >= TransactionSleepLength + SpanSleepLength, $"Expected {duration} to be greater or equal to: {TransactionSleepLength + SpanSleepLength}");
 
 			return payloadSender;
 		}
@@ -575,7 +576,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 			{
-				Thread.Sleep(SpanSleepLength);
+				Thread.Sleep(TransactionSleepLength);
 				action(t);
 			});
 
@@ -585,7 +586,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(TransactionName, payloadSender.Payloads[0].Transactions[0].Name);
 			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
 
-			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= TransactionSleepLength + SpanSleepLength);
+			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
+			Assert.True(duration >= TransactionSleepLength + SpanSleepLength, $"Expected {duration} to be greater or equal to: {TransactionSleepLength + SpanSleepLength}");
 
 			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
 
