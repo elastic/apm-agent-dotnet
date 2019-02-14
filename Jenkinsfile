@@ -90,7 +90,7 @@ pipeline {
                       for i in $(find . -name '*.csproj')
                       do
                         dotnet add "$i" package XunitXml.TestLogger --version 2.0.0
-                        dotnet add "$i" package coverlet.msbuild --version 2.5.0
+                        dotnet add "$i" package coverlet.msbuild --version 2.5.1
                       done
                       '''
 
@@ -101,7 +101,9 @@ pipeline {
                       # run tests
                       dotnet test -v n -r target -d target/diag.log --logger:"xunit" --no-build \
                         /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura \
-                        /p:CoverletOutput=target/Coverage/ || echo -e "\033[31;49mTests FAILED\033[0m"
+                        /p:CoverletOutput=target/Coverage/ \
+                        /p:Exclude=\\"[*]Elastic.Apm.Tests,[*]SampleAspNetCoreApp*,[*]xunit*\\" \
+                        || echo -e "\033[31;49mTests FAILED\033[0m"
                       '''
 
                       sh label: 'Convert Test Results to junit format', script: '''#!/bin/bash
@@ -183,13 +185,13 @@ pipeline {
                         Get-ChildItem -Path . -Recurse -Filter *.csproj |
                         Foreach-Object {
                           & dotnet add $_.FullName package XunitXml.TestLogger --version 2.0.0
-                          & dotnet add $_.FullName package coverlet.msbuild --version 2.5.0
+                          & dotnet add $_.FullName package coverlet.msbuild --version 2.5.1
                         }
                         '''
 
                         bat label: 'Build', script:'dotnet build'
 
-                        bat label: 'Test & Coverage', script: 'dotnet test -v n -r target -d target\\diag.log --logger:xunit --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=target\\Coverage\\ /p:Threshold=50 /p:ThresholdType=line'
+                        bat label: 'Test & Coverage', script: 'dotnet test -v n -r target -d target\\diag.log --logger:xunit --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=target\\Coverage\\ /p:Exclude=\\"[*]Elastic.Apm.Tests,[*]SampleAspNetCoreApp*,[*]xunit*\\" /p:Threshold=50 /p:ThresholdType=line'
 
                         powershell label: 'Convert Test Results to junit format', script: '''
                         [System.Environment]::SetEnvironmentVariable("PATH", $Env:Path + ";" + $Env:USERPROFILE + "\\.dotnet\\tools")
