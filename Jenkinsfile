@@ -102,7 +102,8 @@ pipeline {
                       dotnet test -v n -r target -d target/diag.log --logger:"xunit" --no-build \
                         /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura \
                         /p:CoverletOutput=target/Coverage/ \
-                        /p:Exclude=\\"[*]Elastic.Apm.Tests,[*]SampleAspNetCoreApp*,[*]xunit*\\" \
+                        /p:Exclude='"[Elastic.Apm.Tests]*,[SampleAspNetCoreApp]*,[xunit*]*"' \
+                        /p:Threshold=0 /p:ThresholdType=branch /p:ThresholdStat=total \
                         || echo -e "\033[31;49mTests FAILED\033[0m"
                       '''
 
@@ -191,7 +192,7 @@ pipeline {
 
                         bat label: 'Build', script:'dotnet build'
 
-                        bat label: 'Test & Coverage', script: 'dotnet test -v n -r target -d target\\diag.log --logger:xunit --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=target\\Coverage\\ /p:Exclude=\\"[*]Elastic.Apm.Tests,[*]SampleAspNetCoreApp*,[*]xunit*\\" /p:Threshold=50 /p:ThresholdType=line'
+                        bat label: 'Test & Coverage', script: 'dotnet test -v n -r target -d target\\diag.log --logger:xunit --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=target\\Coverage\\ /p:Exclude=\\"[Elastic.Apm.Tests]*,[SampleAspNetCoreApp]*,[xunit*]*\\" /p:Threshold=0 /p:ThresholdType=branch /p:ThresholdStat=total'
 
                         powershell label: 'Convert Test Results to junit format', script: '''
                         [System.Environment]::SetEnvironmentVariable("PATH", $Env:Path + ";" + $Env:USERPROFILE + "\\.dotnet\\tools")
