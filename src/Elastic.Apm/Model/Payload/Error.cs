@@ -18,6 +18,7 @@ namespace Elastic.Apm.Model.Payload
 				Id = Guid.NewGuid();
 			}
 
+			[JsonProperty]
 			internal Context Context { get; set; }
 			public string Culprit { get; set; }
 			public ICapturedException Exception { get; set; }
