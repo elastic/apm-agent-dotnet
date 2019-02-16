@@ -27,7 +27,8 @@ namespace Elastic.Apm.Helpers
 					{
 						Function = item?.GetMethod()?.Name,
 						FileName = fileName,
-						Module = item?.GetMethod()?.ReflectedType?.Name
+						Module = item?.GetMethod()?.ReflectedType?.Name,
+						LineNo = item.GetFileLineNumber()
 					});
 			}
 			catch (Exception e)
