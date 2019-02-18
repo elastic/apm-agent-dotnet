@@ -45,7 +45,7 @@ namespace Elastic.Apm.Model.Payload
 		/// is automatically calculated when <see cref="End" /> is called.
 		/// </summary>
 		/// <value>The duration.</value>
-		public long? Duration { get; set; } //TODO datatype?, TODO: Greg, imo should be internal, TBD!
+		public double? Duration { get; set; } //TODO datatype?, TODO: Greg, imo should be internal, TBD!
 
 		public Guid Id { get; }
 
@@ -76,7 +76,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public void End()
 		{
-			if (!Duration.HasValue) Duration = (long)(DateTimeOffset.UtcNow - Start).TotalMilliseconds;
+			if (!Duration.HasValue) Duration = (DateTimeOffset.UtcNow - Start).TotalMilliseconds;
 
 			_sender.QueuePayload(new Payload
 			{

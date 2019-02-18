@@ -22,8 +22,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void StartEndTransaction()
 		{
-			var transactionName = "TestTransaction";
-			var transactionType = "UnitTest";
+			const string transactionName = "TestTransaction";
+			const string transactionType = "UnitTest";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
@@ -48,8 +48,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void StartNoEndTransaction()
 		{
-			var transactionName = "TestTransaction";
-			var transactionType = "UnitTest";
+			const string transactionName = "TestTransaction";
+			const string transactionType = "UnitTest";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
@@ -64,13 +64,13 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void TransactionResultTest()
 		{
-			var transactionType = "TestTransaction";
-			var transacitonType = "UnitTest";
+			const string transactionName = "TestTransaction";
+			const string transactionType = "UnitTest";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			var transaction = agent.Tracer.StartTransaction(transactionType, transacitonType);
-			var result = "success";
+			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
+			const string result = "success";
 			transaction.Result = result;
 			transaction.End();
 
@@ -96,7 +96,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public async Task GetCurrentTransactionWithNotNull()
 		{
-			var transactionName = "TestTransaction";
+			const string transactionName = "TestTransaction";
 			var agent = new ApmAgent(new TestAgentComponents());
 
 			StartTransaction(); //Start transaction on the current task
@@ -137,9 +137,9 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void TransactionWithSpan()
 		{
-			var transactionName = "TestTransaction";
-			var transactionType = "UnitTest";
-			var spanName = "TestSpan";
+			const string transactionName = "TestTransaction";
+			const string transactionType = "UnitTest";
+			const string spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
@@ -167,9 +167,9 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void TransactionWithSpanWithoutEnd()
 		{
-			var transactionName = "TestTransaction";
-			var transactionType = "UnitTest";
-			var spanName = "TestSpan";
+			const string transactionName = "TestTransaction";
+			const string transactionType = "UnitTest";
+			const string spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
@@ -193,9 +193,9 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void TransactionWithSpanWithSubTypeAndAction()
 		{
-			var transactionName = "TestTransaction";
-			var transactionType = "UnitTest";
-			var spanName = "TestSpan";
+			const string transactionName = "TestTransaction";
+			const string transactionType = "UnitTest";
+			const string spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
@@ -231,11 +231,11 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// Shared between ErrorOnTransaction and ErrorOnTransactionWithCulprit
 		/// </summary>
 		/// <param name="culprit">Culprit.</param>
-		private void ErrorOnTransactionCommon(string culprit = null)
+		private static void ErrorOnTransactionCommon(string culprit = null)
 		{
-			var transactionName = "TestTransaction";
-			var transacitonType = "UnitTest";
-			var exceptionMessage = "Foo!";
+			const string transactionName = "TestTransaction";
+			const string transacitonType = "UnitTest";
+			const string exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
@@ -271,10 +271,10 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void ErrorOnSpan()
 		{
-			var transactionName = "TestTransaction";
-			var transactionType = "UnitTest";
-			var spanName = "TestSpan";
-			var exceptionMessage = "Foo!";
+			const string transactionName = "TestTransaction";
+			const string transactionType = "UnitTest";
+			const string spanName = "TestSpan";
+			const string exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
@@ -309,10 +309,10 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void TagsOnTransactionAndSpan()
 		{
-			var transactionName = "TestTransaction";
-			var transactionType = "UnitTest";
-			var spanName = "TestSpan";
-			var exceptionMessage = "Foo!";
+			const string transactionName = "TestTransaction";
+			const string transactionType = "UnitTest";
+			const string spanName = "TestSpan";
+			const string exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
