@@ -47,11 +47,6 @@ namespace Elastic.Apm.Api
 		Dictionary<string, string> Tags { get; }
 
 		/// <summary>
-		/// A list of user defined custom fields.
-		/// </summary>
-		Dictionary<string, object> Custom { get; }
-
-		/// <summary>
 		/// UUID of the enclosing transaction.
 		/// </summary>
 		Guid TransactionId { get; }

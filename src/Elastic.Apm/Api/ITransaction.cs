@@ -41,11 +41,6 @@ namespace Elastic.Apm.Api
 		Dictionary<string, string> Tags { get; }
 
 		/// <summary>
-		/// A list of user defined custom fields.
-		/// </summary>
-		Dictionary<string, object> Custom { get; }
-
-		/// <summary>
 		/// The type of the transaction.
 		/// Example: 'request'
 		/// </summary>
