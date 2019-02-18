@@ -84,7 +84,12 @@ namespace SampleAspNetCoreApp.Controllers
 			return Ok();
 		}
 
-		public IActionResult TriggerError() => throw new Exception("This is a test exception!");
+		public IActionResult TriggerError()
+		{
+			Agent.Tracer.CurrentTransaction.Tags["foo"] = "bar";
+			throw new Exception("This is a test exception!");
+		}
+
 
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 		public IActionResult Error() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
