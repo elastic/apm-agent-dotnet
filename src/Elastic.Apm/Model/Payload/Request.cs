@@ -2,7 +2,7 @@
 
 namespace Elastic.Apm.Model.Payload
 {
-	internal class Request
+	internal class Request : IRequest
 	{
 		public string HttpVersion { get; set; }
 		public string Body { get; set; }

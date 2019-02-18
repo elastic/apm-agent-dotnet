@@ -2,11 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Elastic.Apm.Model.Payload;
 
 namespace Elastic.Apm.Api
 {
 	public interface ITransaction
 	{
+		/// <summary>
+		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
+		/// </summary>
+		IRequest Request { get; }
+
 		/// <summary>
 		/// The duration of the transaction.
 		/// If it's not set (its HasValue property is false) then the value

@@ -38,6 +38,8 @@ namespace Elastic.Apm.Model.Payload
 		/// </summary>
 		public Context Context => _context.Value;
 
+		public IRequest Request => _context.Value?.Request;
+
 		/// <inheritdoc />
 		/// <summary>
 		/// The duration of the transaction.

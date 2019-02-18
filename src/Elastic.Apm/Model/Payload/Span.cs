@@ -87,6 +87,10 @@ namespace Elastic.Apm.Model.Payload
 		}
 	}
 
+	public interface IRequest
+	{
+		string Body { get; set; }
+	}
 	internal interface IContext
 	{
 		IDb Db { get; set; }
