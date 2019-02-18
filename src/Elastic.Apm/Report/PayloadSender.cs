@@ -34,7 +34,7 @@ namespace Elastic.Apm.Report
 
 		static PayloadSender() => ServicePointManager.DnsRefreshTimeout = DnsTimeout;
 
-		internal PayloadSender(AbstractLogger logger, IConfigurationReader configurationReader, HttpMessageHandler handler)
+		internal PayloadSender(AbstractLogger logger, IConfigurationReader configurationReader, HttpMessageHandler handler = null)
 		{
 			_logger = logger;
 			_settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
