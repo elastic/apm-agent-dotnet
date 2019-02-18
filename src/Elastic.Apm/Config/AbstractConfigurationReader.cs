@@ -18,6 +18,12 @@ namespace Elastic.Apm.Config
 		protected internal static LogLevel ParseLogLevel(string value) =>
 			Enum.TryParse<LogLevel>(value, out var logLevel) ? logLevel : AbstractLogger.LogLevelDefault;
 
+		protected string ParseSecretToken(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return null;
+			return kv.Value;
+		}
+
 		protected LogLevel ParseLogLevel(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return AbstractLogger.LogLevelDefault;

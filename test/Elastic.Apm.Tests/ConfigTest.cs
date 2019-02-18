@@ -89,6 +89,14 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
+		public void SecretTokenSimpleTest()
+		{
+			var secretToken = "secretToken";
+			var agent = new ApmAgent(new TestAgentComponents(secretToken: secretToken));
+			Assert.Equal(secretToken, agent.ConfigurationReader.SecretToken);
+		}
+
+		[Fact]
 		public void DefaultLogLevelTest() => Assert.Equal(LogLevel.Error, Agent.Config.LogLevel);
 
 		[Fact]
