@@ -54,6 +54,9 @@ namespace Elastic.Apm.Model.Payload
 		[JsonIgnore]
 		public Dictionary<string, string> Tags => Context.Tags;
 
+		[JsonIgnore]
+		public Dictionary<string, object> Custom => Context.Custom;
+
 		internal Transaction Transaction;
 
 		public Guid TransactionId => Transaction.Id;
@@ -76,9 +79,11 @@ namespace Elastic.Apm.Model.Payload
 		private class ContextImpl : IContext
 		{
 			private readonly Lazy<Dictionary<string, string>> _tags = new Lazy<Dictionary<string, string>>();
+			private readonly Lazy<Dictionary<string, object>> _custom = new Lazy<Dictionary<string, object>>();
 			public IDb Db { get; set; }
 			public IHttp Http { get; set; }
 			public Dictionary<string, string> Tags => _tags.Value;
+			public Dictionary<string, object> Custom => _custom.Value;
 		}
 	}
 
@@ -87,6 +92,7 @@ namespace Elastic.Apm.Model.Payload
 		IDb Db { get; set; }
 		IHttp Http { get; set; }
 		Dictionary<string, string> Tags { get; }
+		Dictionary<string, object> Custom { get; }
 	}
 
 	internal interface IDb
