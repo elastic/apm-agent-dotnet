@@ -14,11 +14,12 @@ namespace Elastic.Apm.AspNetCore.Config
 	{
 		internal const string Origin = "Configuration Provider";
 
-		public static (string LevelSubKey, string Level, string Urls, string ServiceName) Keys = (
+		public static (string LevelSubKey, string Level, string Urls, string ServiceName, string SecretToken) Keys = (
 			LevelSubKey: "LogLevel",
 			Level: "ElasticApm:LogLevel",
 			Urls: "ElasticApm:ServerUrls",
-			ServiceName: "ElasticApm:ServiceName"
+			ServiceName: "ElasticApm:ServiceName",
+			SecretToken: "ElasticApm:SecretToken"
 		);
 
 		private readonly IConfiguration _configuration;
@@ -49,6 +50,8 @@ namespace Elastic.Apm.AspNetCore.Config
 		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(ReadFallBack(Keys.Urls, ConfigConsts.ConfigKeys.Urls));
 
 		public string ServiceName => ParseServiceName(ReadFallBack(Keys.ServiceName, ConfigConsts.ConfigKeys.ServiceName));
+
+		public string SecretToken => ParseSecretToken(ReadFallBack(Keys.SecretToken, ConfigConsts.ConfigKeys.SecretToken));
 
 		private ConfigurationKeyValue Read(string key) => Kv(key, _configuration[key], Origin);
 

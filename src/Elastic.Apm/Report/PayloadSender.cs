@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks.Dataflow;
@@ -33,7 +34,7 @@ namespace Elastic.Apm.Report
 
 		static PayloadSender() => ServicePointManager.DnsRefreshTimeout = DnsTimeout;
 
-		internal PayloadSender(AbstractLogger logger, IConfigurationReader configurationReader)
+		internal PayloadSender(AbstractLogger logger, IConfigurationReader configurationReader, HttpMessageHandler handler = null)
 		{
 			_logger = logger;
 			_settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
@@ -44,10 +45,16 @@ namespace Elastic.Apm.Report
 			servicePoint.ConnectionLeaseTimeout = DnsTimeout;
 			servicePoint.ConnectionLimit = 20;
 
-			_httpClient = new HttpClient
+			_httpClient = new HttpClient(handler ?? new HttpClientHandler())
 			{
-				BaseAddress = serverUrlBase
+				BaseAddress = serverUrlBase,
 			};
+
+			if (configurationReader.SecretToken != null)
+			{
+				_httpClient.DefaultRequestHeaders.Authorization =
+					new AuthenticationHeaderValue("Bearer", configurationReader.SecretToken);
+			}
 
 			var workerThread = new Thread(StartWork)
 			{
