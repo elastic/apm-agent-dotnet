@@ -23,7 +23,7 @@ namespace Elastic.Apm.Tests
 			var (listener, _, _) = HttpDiagnosticListenerTest.RegisterListenerAndStartTransaction();
 
 			using (listener)
-			using (var localServer = new LocalServer())
+			using (var localServer = new LocalServer(uri: "http://localhost:8083/"))
 			{
 				var httpClient = new HttpClient();
 				var res = await httpClient.GetAsync(localServer.Uri);
