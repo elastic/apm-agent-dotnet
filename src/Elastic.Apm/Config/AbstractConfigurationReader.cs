@@ -79,7 +79,7 @@ namespace Elastic.Apm.Config
 
 			if (string.IsNullOrEmpty(retVal))
 			{
-				var stackFrames = new StackTrace(true).GetFrames();
+				var stackFrames = new StackTrace().GetFrames();
 				foreach (var frame in stackFrames)
 				{
 					var currentAssembly = frame.GetMethod()?.DeclaringType.Assembly;
