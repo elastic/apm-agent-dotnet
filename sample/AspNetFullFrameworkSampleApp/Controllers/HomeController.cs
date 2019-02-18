@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using Elastic.Apm.Api;
 
 namespace AspNetFullFrameworkSampleApp.Controllers
 {
@@ -13,7 +14,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
     {
         public async Task<ActionResult> Index()
         {
-            return await Elastic.Apm.Agent.Api.CaptureTransaction("/Home/Index", Transaction.TYPE_REQUEST, async () =>
+            return await Elastic.Apm.Agent.Tracer.CaptureTransaction("/Home/Index", ApiConstants.TypeRequest, async () =>
             {
                 HttpClient httpClient = new HttpClient();
                 await httpClient.GetAsync("https://elastic.co");
