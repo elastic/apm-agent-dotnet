@@ -515,7 +515,7 @@ namespace Elastic.Apm.Tests
 			Assert.Empty(mockPayloadSender.SpansOnFirstTransaction);
 		}
 
-		private (IDisposable, MockPayloadSender, ApmAgent) RegisterListenerAndStartTransaction()
+		internal static (IDisposable, MockPayloadSender, ApmAgent) RegisterListenerAndStartTransaction()
 		{
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
@@ -525,7 +525,7 @@ namespace Elastic.Apm.Tests
 			return (sub, payloadSender, agent);
 		}
 
-		private void StartTransaction(ApmAgent agent)
+		private static void StartTransaction(ApmAgent agent)
 			//	=> agent.TransactionContainer.Transactions.Value =
 			//		new Transaction(agent, $"{nameof(TestSimpleOutgoingHttpRequest)}", ApiConstants.TypeRequest);
 			=> agent.Tracer.StartTransaction($"{nameof(TestSimpleOutgoingHttpRequest)}", ApiConstants.TypeRequest);

@@ -18,7 +18,7 @@ namespace Elastic.Apm.Model.Payload
 				Id = Guid.NewGuid();
 			}
 
-			internal Context Context { get; set; }
+			public Context Context { get; set; }
 			public string Culprit { get; set; }
 			public ICapturedException Exception { get; set; }
 			public Guid Id { get; }

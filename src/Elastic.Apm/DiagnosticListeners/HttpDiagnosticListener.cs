@@ -72,7 +72,7 @@ namespace Elastic.Apm.DiagnosticListeners
 							Method = request?.Method?.Method
 						};
 
-						var frames = new StackTrace().GetFrames();
+						var frames = new StackTrace(true).GetFrames();
 						var stackFrames = StacktraceHelper.GenerateApmStackTrace(frames, Logger, span.Name);
 						span.StackTrace = stackFrames;
 					}
