@@ -83,7 +83,12 @@ namespace Elastic.Apm.Report
 							break;
 					}
 
-					// TODO: handle unsuccesful status codes
+					if (result != null && !result.IsSuccessStatusCode)
+					{
+						var str = await result.Content.ReadAsStringAsync();
+
+						throw new Exception(str);
+					}
 				}
 				catch (Exception e)
 				{
