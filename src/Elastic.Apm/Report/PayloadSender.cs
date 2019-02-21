@@ -87,7 +87,7 @@ namespace Elastic.Apm.Report
 					{
 						var str = await result.Content.ReadAsStringAsync();
 
-						throw new Exception(str);
+						_logger.LogError($"Failed sending transaction. {str}");
 					}
 				}
 				catch (Exception e)
