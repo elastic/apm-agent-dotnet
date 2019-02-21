@@ -95,9 +95,6 @@ namespace Elastic.Apm.Model.Payload
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
-			if (name.Length > 1024)
-				name = $"{name.Substring(0, 1021)}...";
-
 			var retVal = new Span(name, type, this);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
