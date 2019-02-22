@@ -131,7 +131,7 @@ namespace Elastic.Apm.Model.Payload
 			if (!string.IsNullOrEmpty(exception.StackTrace))
 			{
 				capturedException.StacktTrace
-					= StacktraceHelper.GenerateApmStackTrace(new StackTrace(exception).GetFrames(), _logger,
+					= StacktraceHelper.GenerateApmStackTrace(new StackTrace(exception, true).GetFrames(), _logger,
 						"failed capturing stacktrace");
 			}
 
@@ -283,14 +283,14 @@ namespace Elastic.Apm.Model.Payload
 						ExceptionFilter.Capture(t.Exception, span);
 				}
 				else
-					span.CaptureError("Task faulted", "A task faulted", new StackTrace().GetFrames());
+					span.CaptureError("Task faulted", "A task faulted", new StackTrace(true).GetFrames());
 			}
 			else if (t.IsCanceled)
 			{
 				if (t.Exception == null)
 				{
 					span.CaptureError("Task canceled", "A task was canceled",
-						new StackTrace().GetFrames()); //TODO: this async stacktrace is hard to use, make it readable!
+						new StackTrace(true).GetFrames()); //TODO: this async stacktrace is hard to use, make it readable!
 				}
 				else
 					span.CaptureException(t.Exception);

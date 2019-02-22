@@ -1,7 +1,15 @@
+using System;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using Elastic.Apm.Logging;
+using Elastic.Apm.Model.Payload;
+using Elastic.Apm.Report;
 using Elastic.Apm.Tests.Mocks;
 using Xunit;
 
@@ -53,6 +61,31 @@ namespace Elastic.Apm.Tests
 			Assert.Equal(1024, payloadSender.FirstSpan.Name.Length);
 			Assert.Equal(spanName.ToString(0, 1021), payloadSender.FirstSpan.Name.Substring(0, 1021));
 			Assert.Equal("...", payloadSender.FirstSpan.Name.Substring(1021, 3));
+		}
+    
+		[Fact]
+		public void PayloadSentWithBearerToken()
+		{
+			AuthenticationHeaderValue authHeader = null;
+			var handler = new MockHttpMessageHandler((r, c) =>
+			{
+				authHeader = r.Headers.Authorization;
+				return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+			});
+
+			var secretToken = "SecretToken";
+			var logger = ConsoleLogger.Instance;
+			var payloadSender = new PayloadSender(logger, new TestAgentConfigurationReader(logger, secretToken: secretToken), handler);
+
+			using (var agent = new ApmAgent(new TestAgentComponents(secretToken: secretToken, payloadSender: payloadSender)))
+				agent.PayloadSender.QueuePayload(new Payload());
+
+			// ideally, introduce a mechanism to flush payloads
+			Thread.Sleep(TimeSpan.FromSeconds(2));
+
+			Assert.NotNull(authHeader);
+			Assert.Equal("Bearer", authHeader.Scheme);
+			Assert.Equal(secretToken, authHeader.Parameter);
 		}
 	}
 }

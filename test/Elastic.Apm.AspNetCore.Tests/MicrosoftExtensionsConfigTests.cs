@@ -77,6 +77,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.Urls, serverUrl);
 			var serviceName = "MyServiceName123";
 			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.ServiceName, serviceName);
+			var secretToken = "SecretToken";
+			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.SecretToken, secretToken);
 			var configBuilder = new ConfigurationBuilder()
 				.AddEnvironmentVariables()
 				.Build();
@@ -85,6 +87,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Assert.Equal(LogLevel.Debug, config.LogLevel);
 			Assert.Equal(new Uri(serverUrl), config.ServerUrls[0]);
 			Assert.Equal(serviceName, config.ServiceName);
+			Assert.Equal(secretToken, config.SecretToken);
 		}
 
 		/// <summary>
