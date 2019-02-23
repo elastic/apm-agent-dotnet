@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
@@ -24,7 +25,13 @@ namespace Elastic.Apm.Model.Payload
 			Id = rnd.Next();
 		}
 
-		public string Action { get; set; }
+		private string _action;
+
+		public string Action
+		{
+			get => _action;
+			set => _action = value.TrimToMaxLength();
+		}
 
 		/// <summary>
 		/// Any other arbitrary data captured by the agent, optionally provided by the user.
@@ -46,12 +53,7 @@ namespace Elastic.Apm.Model.Payload
 		public string Name
 		{
 			get => _name;
-			set
-			{
-				if (value.Length > Consts.PropertyMaxLength)
-					value = $"{value.Substring(0, Consts.PropertyMaxLength-3)}...";
-				_name = value;
-			}
+			set => _name = value.TrimToMaxLength();
 		}
 
 		[JsonProperty("Stacktrace")]
@@ -59,7 +61,13 @@ namespace Elastic.Apm.Model.Payload
 
 		public decimal Start { get; set; }
 
-		public string Subtype { get; set; }
+		private string _subtype;
+
+		public string Subtype
+		{
+			get => _subtype;
+			set => _subtype = value.TrimToMaxLength();
+		}
 
 		[JsonIgnore]
 		public Dictionary<string, string> Tags => Context.Tags;

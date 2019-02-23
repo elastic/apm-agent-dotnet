@@ -51,7 +51,15 @@ namespace Elastic.Apm.Model.Payload
 
 		public Guid Id { get; }
 
-		public string Name { get; set; }
+		private string _name;
+
+		public string Name
+		{
+			get => _name;
+			set => _name = value.TrimToMaxLength();
+		}
+
+		private string _result;
 
 		/// <inheritdoc />
 		/// <summary>
@@ -59,7 +67,11 @@ namespace Elastic.Apm.Model.Payload
 		/// This is typically the HTTP status code, or e.g. "success" for a background task.
 		/// </summary>
 		/// <value>The result.</value>
-		public string Result { get; set; }
+		public string Result
+		{
+			get => _result;
+			set => _result = value.TrimToMaxLength();
+		}
 
 		internal Service Service;
 
@@ -74,7 +86,13 @@ namespace Elastic.Apm.Model.Payload
 
 		public string Timestamp => Start.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
 
-		public string Type { get; set; }
+		private string _type;
+
+		public string Type
+		{
+			get => _type;
+			set => _type = value.TrimToMaxLength();
+		}
 
 		public void End()
 		{
