@@ -15,7 +15,7 @@ namespace Elastic.Apm.Model.Payload
 			set => _httpVersion = value.TrimToMaxLength();
 		}
 
-		public string Body { get; set; }
+		public object Body { get; set; }
 
 		public string Method
 		{

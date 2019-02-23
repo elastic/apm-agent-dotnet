@@ -6,6 +6,6 @@ namespace Elastic.Apm.Api
 	{
 		string HttpVersion { get; set; }
 		string Method { get; set; }
-		string Body { get; set; }
+		object Body { get; set; }
 	}
 }
