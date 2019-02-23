@@ -81,11 +81,6 @@ namespace Elastic.Apm.Model.Payload
 			public Dictionary<string, string> Tags => _tags.Value;
 		}
 	}
-
-	public interface IRequest
-	{
-		string Body { get; set; }
-	}
 	internal interface IContext
 	{
 		IDb Db { get; set; }

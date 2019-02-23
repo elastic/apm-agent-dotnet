@@ -1,11 +1,12 @@
-﻿using Newtonsoft.Json;
+﻿using Elastic.Apm.Api;
+using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
 {
 	internal class Request : IRequest
 	{
 		public string HttpVersion { get; set; }
-
+		public string Body { get; set; }
 		public string Method { get; set; }
 		public Socket Socket { get; set; }
 		public Url Url { get; set; }

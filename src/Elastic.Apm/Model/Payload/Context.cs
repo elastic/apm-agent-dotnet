@@ -5,11 +5,22 @@ namespace Elastic.Apm.Model.Payload
 {
 	internal class Context
 	{
-		private readonly Lazy<Dictionary<string, string>> tags = new Lazy<Dictionary<string, string>>();
-		public Request Request { get; set; }
+		private readonly Lazy<Dictionary<string, string>> _tags = new Lazy<Dictionary<string, string>>();
+		private Request _request;
+		private Response _response;
 
-		public Response Response { get; set; }
+		public Request Request
+		{
+			get => _request ?? (_request = new Request());
+			set => _request = value;
+		}
 
-		public Dictionary<string, string> Tags => tags.Value;
+		public Response Response
+		{
+			get => _response ?? (_response = new Response());
+			set => _response = value;
+		}
+
+		public Dictionary<string, string> Tags => _tags.Value;
 	}
 }
