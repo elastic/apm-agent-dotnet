@@ -14,6 +14,8 @@ namespace Elastic.Apm.Config
 
 		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Read(ConfigConsts.ConfigKeys.Urls));
 
+		public string SecretToken => ParseSecretToken(Read(ConfigConsts.ConfigKeys.SecretToken));
+
 		public string ServiceName => ParseServiceName(Read(ConfigConsts.ConfigKeys.ServiceName));
 
 		private static ConfigurationKeyValue Read(string key) =>

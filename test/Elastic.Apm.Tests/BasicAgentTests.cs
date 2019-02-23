@@ -1,6 +1,15 @@
+using System;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using Elastic.Apm.Logging;
+using Elastic.Apm.Model.Payload;
+using Elastic.Apm.Report;
 using Elastic.Apm.Tests.Mocks;
 using Xunit;
 
@@ -29,6 +38,54 @@ namespace Elastic.Apm.Tests
 				agent.Tracer.CaptureTransaction("TestName", "TestType", () => { Thread.Sleep(5); });
 
 			Assert.Equal(Assembly.Load("Elastic.Apm").GetName().Version.ToString(), payloadSender.Payloads[0].Service.Agent.Version);
+		}
+
+		/// <summary>
+		/// Starts a custom span with name length > 1024.
+		/// Makes sure that the name is truncated.
+		/// Reason: server rejects spans with name length > 1024.
+		/// </summary>
+		[Fact]
+		public void SpanNameLengthTest()
+		{
+			var spanName = new StringBuilder();
+
+			for (var i = 0; i < 1030; i++) spanName.Append('a');
+
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t) => { t.CaptureSpan(spanName.ToString(), "test", () => { }); });
+
+			Assert.NotNull(payloadSender.FirstSpan);
+			Assert.Equal(1024, payloadSender.FirstSpan.Name.Length);
+			Assert.Equal(spanName.ToString(0, 1021), payloadSender.FirstSpan.Name.Substring(0, 1021));
+			Assert.Equal("...", payloadSender.FirstSpan.Name.Substring(1021, 3));
+		}
+    
+		[Fact]
+		public void PayloadSentWithBearerToken()
+		{
+			AuthenticationHeaderValue authHeader = null;
+			var handler = new MockHttpMessageHandler((r, c) =>
+			{
+				authHeader = r.Headers.Authorization;
+				return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+			});
+
+			var secretToken = "SecretToken";
+			var logger = ConsoleLogger.Instance;
+			var payloadSender = new PayloadSender(logger, new TestAgentConfigurationReader(logger, secretToken: secretToken), handler);
+
+			using (var agent = new ApmAgent(new TestAgentComponents(secretToken: secretToken, payloadSender: payloadSender)))
+				agent.PayloadSender.QueuePayload(new Payload());
+
+			// ideally, introduce a mechanism to flush payloads
+			Thread.Sleep(TimeSpan.FromSeconds(2));
+
+			Assert.NotNull(authHeader);
+			Assert.Equal("Bearer", authHeader.Scheme);
+			Assert.Equal(secretToken, authHeader.Parameter);
 		}
 	}
 }

@@ -2,6 +2,7 @@ using System;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
+using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Tests.Mocks;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
@@ -112,6 +113,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			Assert.NotEmpty(_capturedPayload.Errors);
 			Assert.Single(_capturedPayload.Errors[0].Errors);
+
+			//also make sure the tag is captured
+			Assert.Equal(((_capturedPayload.Errors[0] as Error)?.Errors[0] as Error.ErrorDetail)?.Context.Tags["foo"], "bar");
 		}
 
 		public void Dispose()
