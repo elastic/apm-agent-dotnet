@@ -21,18 +21,18 @@
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, sdk</PackageTags>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="Report\" />
-    <Folder Include="DiagnosticSource\" />
-    <Folder Include="DiagnosticListeners\" />
-    <Folder Include="Logging\" />
-    <Folder Include="Config\" />
-    <Folder Include="Helpers\" />
-    <Folder Include="Api\" />
+    <Folder Include="Report\"/>
+    <Folder Include="DiagnosticSource\"/>
+    <Folder Include="DiagnosticListeners\"/>
+    <Folder Include="Logging\"/>
+    <Folder Include="Config\"/>
+    <Folder Include="Helpers\"/>
+    <Folder Include="Api\"/>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2"/>
     <!-- TODO: Are we ok with this reference/version? -->
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.0.0" />
-    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.0.0"/>
+    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0"/>
   </ItemGroup>
 </Project>

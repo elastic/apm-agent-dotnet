@@ -99,6 +99,7 @@ namespace Elastic.Apm.Model.Payload
 			public Dictionary<string, string> Tags => _tags.Value;
 		}
 	}
+
 	internal interface IContext
 	{
 		IDb Db { get; set; }
