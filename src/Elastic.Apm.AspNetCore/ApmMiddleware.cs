@@ -32,7 +32,7 @@ namespace Elastic.Apm.AspNetCore
 			var transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
 				ApiConstants.TypeRequest);
 
-			var transactionRequest = transaction.Context.Request.Value;
+			var transactionRequest = transaction.Context.Request;
 
 			transactionRequest.Method = context.Request.Method;
 			transactionRequest.Socket = new Socket
@@ -60,8 +60,8 @@ namespace Elastic.Apm.AspNetCore
 				transaction.Result =
 					$"{GetProtocolName(context.Request.Protocol)} {context.Response.StatusCode.ToString()[0]}xx";
 
-				transaction.Context.Response.Value.Finished = context.Response.HasStarted;
-				transaction.Context.Response.Value.StatusCode = context.Response.StatusCode;
+				transaction.Context.Response.Finished = context.Response.HasStarted;
+				transaction.Context.Response.StatusCode = context.Response.StatusCode;
 
 				transaction.End();
 			}

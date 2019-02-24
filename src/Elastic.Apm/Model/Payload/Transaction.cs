@@ -38,7 +38,7 @@ namespace Elastic.Apm.Model.Payload
 		/// </summary>
 		public Context Context => _context.Value;
 
-		public IRequest Request => _context.Value?.Request?.Value;
+		public IRequest Request => _context.Value?.Request;
 
 		/// <inheritdoc />
 		/// <summary>
@@ -85,7 +85,7 @@ namespace Elastic.Apm.Model.Payload
 		public Dictionary<string, string> Tags => Context.Tags;
 
 		[JsonIgnore]
-		public IUser User => Context.User?.Value;
+		public IUser User => Context.User;
 
 		public string Timestamp => Start.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
 

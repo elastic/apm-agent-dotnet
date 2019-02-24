@@ -64,10 +64,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Assert.Equal("request", transaction.Type);
 			Assert.True(transaction.Id != Guid.Empty);
 
-			var request = transaction.Context.Request.Value;
+			var request = transaction.Context.Request;
 
 			//test transaction.context.response
-			Assert.Equal(200, transaction.Context.Response.Value.StatusCode);
+			Assert.Equal(200, transaction.Context.Response.StatusCode);
 
 			//test transaction.context.request
 			Assert.Equal("2.0", request.HttpVersion);
