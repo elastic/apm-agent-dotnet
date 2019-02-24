@@ -64,20 +64,22 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Assert.Equal("request", transaction.Type);
 			Assert.True(transaction.Id != Guid.Empty);
 
+			var request = transaction.Context.Request.Value;
+
 			//test transaction.context.response
-			Assert.Equal(200, transaction.Context.Response.StatusCode);
+			Assert.Equal(200, transaction.Context.Response.Value.StatusCode);
 
 			//test transaction.context.request
-			Assert.Equal("2.0", transaction.Context.Request.HttpVersion);
-			Assert.Equal("GET", transaction.Context.Request.Method);
+			Assert.Equal("2.0", request.HttpVersion);
+			Assert.Equal("GET", request.Method);
 
 			//test transaction.context.request.url
-			Assert.Equal(response.RequestMessage.RequestUri.AbsolutePath, transaction.Context.Request.Url.Full);
-			Assert.Equal("localhost", transaction.Context.Request.Url.HostName);
-			Assert.Equal("HTTP", transaction.Context.Request.Url.Protocol);
+			Assert.Equal(response.RequestMessage.RequestUri.AbsolutePath, request.Url.Full);
+			Assert.Equal("localhost", request.Url.HostName);
+			Assert.Equal("HTTP", request.Url.Protocol);
 
 			//test transaction.context.request.encrypted
-			Assert.False(transaction.Context.Request.Socket.Encrypted);
+			Assert.False(request.Socket.Encrypted);
 		}
 
 		/// <summary>

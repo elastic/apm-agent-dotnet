@@ -32,23 +32,23 @@ namespace Elastic.Apm.AspNetCore
 			var transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
 				ApiConstants.TypeRequest);
 
-			transaction.Context.Request = new Request
+			var transactionRequest = transaction.Context.Request.Value;
+
+			transactionRequest.Method = context.Request.Method;
+			transactionRequest.Socket = new Socket
 			{
-				Method = context.Request.Method,
-				Socket = new Socket
-				{
-					Encrypted = context.Request.IsHttps,
-					RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
-				},
-				Url = new Url
-				{
-					Full = context.Request?.Path.Value,
-					HostName = context.Request.Host.Host,
-					Protocol = GetProtocolName(context.Request.Protocol),
-					Raw = context.Request?.Path.Value //TODO
-				},
-				HttpVersion = GetHttpVersion(context.Request.Protocol)
+				Encrypted = context.Request.IsHttps,
+				RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
 			};
+			transactionRequest.Url = new Url
+			{
+				Full = context.Request?.Path.Value,
+				HostName = context.Request.Host.Host,
+				Protocol = GetProtocolName(context.Request.Protocol),
+				Raw = context.Request?.Path.Value //TODO
+			};
+
+			transactionRequest.HttpVersion = GetHttpVersion(context.Request.Protocol);
 
 			try
 			{
@@ -59,11 +59,9 @@ namespace Elastic.Apm.AspNetCore
 			{
 				transaction.Result =
 					$"{GetProtocolName(context.Request.Protocol)} {context.Response.StatusCode.ToString()[0]}xx";
-				transaction.Context.Response = new Response
-				{
-					Finished = context.Response.HasStarted, //TODO ?
-					StatusCode = context.Response.StatusCode
-				};
+
+				transaction.Context.Response.Value.Finished = context.Response.HasStarted;
+				transaction.Context.Response.Value.StatusCode = context.Response.StatusCode;
 
 				transaction.End();
 			}
