@@ -11,7 +11,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public string HttpVersion
 		{
-			get => _httpVersion;
+			get => _httpVersion ?? "";
 			set => _httpVersion = value.TrimToMaxLength();
 		}
 
@@ -19,7 +19,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public string Method
 		{
-			get => _method;
+			get => _method ?? "";
 			set => _method = value.TrimToMaxLength();
 		}
 
@@ -44,26 +44,26 @@ namespace Elastic.Apm.Model.Payload
 
 		public string Full
 		{
-			get => _full;
+			get => _full ?? "";
 			set => _full = value.TrimToMaxLength();
 		}
 
 		public string HostName
 		{
-			get => _hostName;
+			get => _hostName ?? "";
 			set => _hostName = value.TrimToMaxLength();
 		}
 
 		public string Protocol
 		{
-			get => _protocol;
+			get => _protocol ?? "";
 			set => _protocol = value.TrimToMaxLength();
 		}
 
 
 		public string Raw
 		{
-			get => _raw;
+			get => _raw ?? "";
 			set => _raw = value.TrimToMaxLength();
 		}
 	}

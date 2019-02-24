@@ -11,21 +11,21 @@ namespace Elastic.Apm.Model.Payload
 
 		public string Id
 		{
-			get => _id;
+			get => _id ?? "";
 			set => _id = value.TrimToMaxLength();
 		}
 
 
 		public string Email
 		{
-			get => _email;
+			get => _email ?? "";
 			set => _email = value.TrimToMaxLength();
 		}
 
 
 		public string UserName
 		{
-			get => _userName;
+			get => _userName ?? "";
 			set => _userName = value.TrimToMaxLength();
 		}
 	}

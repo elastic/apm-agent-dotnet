@@ -55,7 +55,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public string Name
 		{
-			get => _name;
+			get => _name ?? "";
 			set => _name = value.TrimToMaxLength();
 		}
 
@@ -69,7 +69,7 @@ namespace Elastic.Apm.Model.Payload
 		/// <value>The result.</value>
 		public string Result
 		{
-			get => _result;
+			get => _result ?? "";
 			set => _result = value.TrimToMaxLength();
 		}
 
@@ -93,7 +93,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public string Type
 		{
-			get => _type;
+			get => _type ?? "";
 			set => _type = value.TrimToMaxLength();
 		}
 

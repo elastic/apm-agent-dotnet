@@ -29,7 +29,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public string Action
 		{
-			get => _action;
+			get => _action ?? "";
 			set => _action = value.TrimToMaxLength();
 		}
 
@@ -52,7 +52,7 @@ namespace Elastic.Apm.Model.Payload
 		private string _name;
 		public string Name
 		{
-			get => _name;
+			get => _name ?? "";
 			set => _name = value.TrimToMaxLength();
 		}
 
@@ -65,7 +65,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public string Subtype
 		{
-			get => _subtype;
+			get => _subtype ?? "";
 			set => _subtype = value.TrimToMaxLength();
 		}
 
