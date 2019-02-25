@@ -13,11 +13,11 @@ namespace SampleAspNetCoreApp.Data
 	/// </summary>
 	public class CsvDataReader
 	{
-		private string _folderPath;
+		private readonly string _folderPath;
 
-		public CsvDataReader(String folderPath) => _folderPath = folderPath;
+		public CsvDataReader(string folderPath) => _folderPath = folderPath;
 
-		public async Task<IEnumerable<HistoricalValue>> GetHistoricalQuotes(String symbol)
+		public async Task<IEnumerable<HistoricalValue>> GetHistoricalQuotes(string symbol)
 		{
 			var retVal = new List<HistoricalValue>();
 			symbol = symbol.Replace('.', '_');

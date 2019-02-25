@@ -234,9 +234,6 @@ namespace Elastic.Apm.Tests
 			Assert.NotEmpty(testLogger.Lines);
 		}
 
-		public void Dispose()
-		{
-			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.Urls, null);
-		}
+		public void Dispose() => Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.Urls, null);
 	}
 }
