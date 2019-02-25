@@ -22,7 +22,7 @@ namespace Elastic.Apm.Tests.Mocks
 			string secretToken = null
 		) : base(logger)
 		{
-			Logger = logger;
+			Logger = logger ?? new TestLogger();
 			_serverUrls = serverUrls;
 			_logLevel = logLevel;
 			_serviceName = serviceName;

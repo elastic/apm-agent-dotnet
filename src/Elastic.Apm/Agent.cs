@@ -37,9 +37,9 @@ namespace Elastic.Apm
 
 		IPayloadSender PayloadSender { get; }
 
-		ITracer Tracer { get; }
-
 		Service Service { get; }
+
+		ITracer Tracer { get; }
 	}
 
 	internal class ApmAgent : IApmAgent, IDisposable
@@ -66,7 +66,6 @@ namespace Elastic.Apm
 	{
 		private static readonly Lazy<ApmAgent> Lazy = new Lazy<ApmAgent>(() => new ApmAgent(_components));
 		private static AgentComponents _components;
-
 
 		public static IConfigurationReader Config => Lazy.Value.ConfigurationReader;
 
