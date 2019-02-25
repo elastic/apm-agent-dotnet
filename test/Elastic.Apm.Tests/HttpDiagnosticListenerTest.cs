@@ -32,7 +32,7 @@ namespace Elastic.Apm.Tests
 			var fakeException = new Exception(exceptionMessage);
 			listener.OnError(fakeException);
 
-			Assert.Equal($"{{{nameof(HttpDiagnosticListener)}}} {nameof(Exception)} in OnError: {exceptionMessage}",
+			Assert.Equal($"{{{nameof(HttpDiagnosticListener)}}} {nameof(Exception)} in OnError ({nameof(HttpDiagnosticListener)}.cs:38): {exceptionMessage}",
 				logger.Lines?.FirstOrDefault());
 		}
 

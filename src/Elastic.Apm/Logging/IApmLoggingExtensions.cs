@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 
 namespace Elastic.Apm.Logging
 {
@@ -30,8 +31,18 @@ namespace Elastic.Apm.Logging
 		public static void LogDebugException(this IApmLogger logger, Exception exception) =>
 			logger?.LogDebug(exception, "{ExceptionName}: {ExceptionMessage}", exception?.GetType().Name, exception?.Message);
 
-		public static void LogErrorException(this IApmLogger logger, Exception exception, string method) =>
-			logger?.LogError(exception, "{ExceptionName} in {Method}: {ExceptionMessage}", exception?.GetType().Name, method, exception?.Message);
+		public static void LogErrorException(this IApmLogger logger, Exception exception,
+			[System.Runtime.CompilerServices.CallerMemberName]
+			string method = "",
+			[System.Runtime.CompilerServices.CallerFilePath]
+			string filepath = "",
+			[System.Runtime.CompilerServices.CallerLineNumber]
+			int lineNumber = 0
+		)
+		{
+			var file = string.IsNullOrEmpty(filepath) ? string.Empty : new FileInfo(filepath).Name;
+			logger?.LogError(exception, "{ExceptionName} in {Method} ({File}:{LineNumber}): {ExceptionMessage}", exception?.GetType().Name, method, file, lineNumber, exception?.Message);
+		}
 
 		public static ScopedLogger Scoped(this IApmLogger logger, string scope) =>
 			 new ScopedLogger((logger is ScopedLogger s ? s.Logger : logger), scope);
