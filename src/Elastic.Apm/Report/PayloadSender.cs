@@ -103,11 +103,11 @@ namespace Elastic.Apm.Report
 					switch (item)
 					{
 						case Payload p:
-							_logger.LogWarning(nameof(PayloadSender), "Failed sending transaction {TransactionName}", p.Transactions.FirstOrDefault()?.Name);
+							_logger.LogWarning("Failed sending transaction {TransactionName}", p.Transactions.FirstOrDefault()?.Name);
 							_logger.LogDebugException(e);
 							break;
 						case Error err:
-							_logger.LogWarning(nameof(PayloadSender), "Failed sending Error {ErrorId}", err.Errors[0]?.Id);
+							_logger.LogWarning("Failed sending Error {ErrorId}", err.Errors[0]?.Id);
 							_logger.LogDebugException(e);
 							break;
 					}

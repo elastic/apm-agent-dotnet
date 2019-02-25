@@ -1,15 +1,10 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Net.Http;
-using System.Runtime.InteropServices;
 
 namespace Elastic.Apm.Logging
 {
-	internal static partial class LoggingExtensions
+	internal static class LoggingExtensions
 	{
-		private static ConcurrentDictionary<string, string> ScopedMessages { get; } = new ConcurrentDictionary<string, string>();
 		private static ConcurrentDictionary<string, LogValuesFormatter> Formatters { get; } = new ConcurrentDictionary<string, LogValuesFormatter>();
 
 		public static void LogError(this IApmLogger logger, string message, params object[] args) => logger?.LogError(null, message, args);
