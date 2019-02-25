@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 
 namespace Elastic.Apm.Logging
@@ -22,7 +22,7 @@ namespace Elastic.Apm.Logging
 		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{
 			//TODO: Discuss UtcNow?
-			var dateTime = DateTime.Now;
+			var dateTime = DateTime.UtcNow;
 
 			var message = formatter(state, e);
 			var fullMessage = $"[{dateTime.ToString("yyyy-M-d hh:mm:ss")}][{Level(level)}] - {message}";
