@@ -375,23 +375,27 @@ namespace Elastic.Apm.Tests
 			var mockPayloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
-			await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async t =>
+			using (var localServer = new LocalServer())
 			{
-				Thread.Sleep(5);
-
-				var httpClient = new HttpClient();
-				try
+				await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async t =>
 				{
-					await httpClient.GetAsync("https://elastic.co");
-				}
-				catch (Exception e)
-				{
-					t.CaptureException(e);
-				}
-			});
+					Thread.Sleep(5);
 
-			Assert.NotEmpty(mockPayloadSender.Payloads[0].Transactions);
-			Assert.Empty(mockPayloadSender.SpansOnFirstTransaction);
+					var httpClient = new HttpClient();
+					try
+					{
+						await httpClient.GetAsync(localServer.Uri);
+					}
+					catch (Exception e)
+					{
+						t.CaptureException(e);
+					}
+				});
+
+				Assert.NotEmpty(mockPayloadSender.Payloads[0].Transactions);
+				Assert.Empty(mockPayloadSender.SpansOnFirstTransaction);
+
+			}
 		}
 
 		/// <summary>
@@ -438,9 +442,10 @@ namespace Elastic.Apm.Tests
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 			var subscriber = new HttpDiagnosticsSubscriber();
 
+			using (var localServer = new LocalServer())
 			using (agent.Subscribe(subscriber))
 			{
-				var url = "https://elastic.co/";
+				var url = localServer.Uri;
 				await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async t =>
 				{
 					Thread.Sleep(5);
@@ -473,11 +478,31 @@ namespace Elastic.Apm.Tests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
-			var url = "https://elastic.co/";
 			var subscriber = new HttpDiagnosticsSubscriber();
 
-			using (agent.Subscribe(subscriber)) //subscribe
+			using (var localServer = new LocalServer())
 			{
+				var url = localServer.Uri;
+				using (agent.Subscribe(subscriber)) //subscribe
+				{
+					await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async t =>
+					{
+						Thread.Sleep(5);
+
+						var httpClient = new HttpClient();
+						try
+						{
+							await httpClient.GetAsync(url);
+						}
+						catch (Exception e)
+						{
+							t.CaptureException(e);
+						}
+					});
+				} //and then unsubscribe
+
+				mockPayloadSender.Payloads.Clear();
+
 				await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async t =>
 				{
 					Thread.Sleep(5);
@@ -492,27 +517,10 @@ namespace Elastic.Apm.Tests
 						t.CaptureException(e);
 					}
 				});
-			} //and then unsubscribe
 
-			mockPayloadSender.Payloads.Clear();
-
-			await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async t =>
-			{
-				Thread.Sleep(5);
-
-				var httpClient = new HttpClient();
-				try
-				{
-					await httpClient.GetAsync(url);
-				}
-				catch (Exception e)
-				{
-					t.CaptureException(e);
-				}
-			});
-
-			Assert.NotNull(mockPayloadSender.Payloads[0].Transactions[0]);
-			Assert.Empty(mockPayloadSender.SpansOnFirstTransaction);
+				Assert.NotNull(mockPayloadSender.Payloads[0].Transactions[0]);
+				Assert.Empty(mockPayloadSender.SpansOnFirstTransaction);
+			}
 		}
 
 		internal static (IDisposable, MockPayloadSender, ApmAgent) RegisterListenerAndStartTransaction()

@@ -21,7 +21,7 @@ namespace Elastic.Apm.Tests.ApiTests
 	public class ConvenientApiTransactionTests
 	{
 		private const string ExceptionMessage = "Foo";
-		private const int SleepLength = 450;
+		private const int SleepLength = 45;
 		private const string TransactionName = "ConvenientApiTest";
 		private const string TransactionType = "Test";
 
