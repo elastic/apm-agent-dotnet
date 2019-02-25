@@ -16,8 +16,8 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public TestAgentConfigurationReader(
 			IApmLogger logger,
+			string logLevel = null,
 			string serverUrls = null,
-			string logLevel = "Debug",
 			string serviceName = null,
 			string secretToken = null
 		) : base(logger)

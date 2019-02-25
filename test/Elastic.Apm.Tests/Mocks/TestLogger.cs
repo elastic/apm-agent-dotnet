@@ -8,15 +8,15 @@ namespace Elastic.Apm.Tests.Mocks
 	{
 		public TestLogger() : this(LogLevel.Error) { }
 
-		public TestLogger(LogLevel level) => LogLevel = level;
+		public TestLogger(LogLevel level) => Level = level;
 
 		public List<string> Lines { get; } = new List<string>();
 
-		public LogLevel LogLevel { get; }
+		public LogLevel Level { get; }
 
 		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{
-			if (level >= LogLevel) Lines.Add(formatter(state, e));
+			if (level >= Level) Lines.Add(formatter(state, e));
 		}
 	}
 }

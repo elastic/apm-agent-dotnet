@@ -4,6 +4,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Report;
 
 //TODO: It'd be nice to move this into the .csproj
@@ -37,20 +38,22 @@ namespace Elastic.Apm
 		IPayloadSender PayloadSender { get; }
 
 		ITracer Tracer { get; }
+
+		Service Service { get; }
 	}
 
 	internal class ApmAgent : IApmAgent, IDisposable
 	{
 		internal readonly CompositeDisposable Disposables = new CompositeDisposable();
 
-		public ApmAgent(AgentComponents agentComponents) =>
-			Components = agentComponents ?? new AgentComponents(null, service: null);
+		public ApmAgent(AgentComponents agentComponents) => Components = agentComponents ?? new AgentComponents();
 
 		private AgentComponents Components { get; }
 		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
 		public IApmLogger Logger => Components.Logger;
 		public IPayloadSender PayloadSender => Components.PayloadSender;
 		public ITracer Tracer => Components.Tracer;
+		public Service Service => Components.Service;
 
 		internal Tracer TracerInternal => Tracer as Tracer;
 

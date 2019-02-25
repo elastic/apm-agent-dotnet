@@ -145,8 +145,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				MicrosoftExtensionsConfigTests.GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), _logger);
 
 			_agent = new ApmAgent(
-				new AgentComponents(payloadSender: _capturedPayload, configurationReader: config,
-					service: ApmMiddlewareExtension.GetService(new TestAgentConfigurationReader(new TestLogger())), logger: _logger));
+				new AgentComponents(payloadSender: _capturedPayload, configurationReader: config, logger: _logger));
 			_client = Helper.GetClient(_agent, _factory);
 		}
 

@@ -121,6 +121,7 @@ namespace Elastic.Apm.Tests
 		{
 			var agent = new ApmAgent(new TestAgentComponents("Debug"));
 			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Debug);
+			agent.Logger.Level.Should().Be(LogLevel.Debug);
 		}
 
 		[Fact]
@@ -128,6 +129,7 @@ namespace Elastic.Apm.Tests
 		{
 			var agent = new ApmAgent(new TestAgentComponents("Error"));
 			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Error);
+			agent.Logger.Level.Should().Be(LogLevel.Error);
 		}
 
 		[Fact]
@@ -135,6 +137,7 @@ namespace Elastic.Apm.Tests
 		{
 			var agent = new ApmAgent(new TestAgentComponents("Information"));
 			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Information);
+			agent.Logger.Level.Should().Be(LogLevel.Information);
 		}
 
 		[Fact]
@@ -142,6 +145,7 @@ namespace Elastic.Apm.Tests
 		{
 			var agent = new ApmAgent(new TestAgentComponents("Warning"));
 			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Warning);
+			agent.Logger.Level.Should().Be(LogLevel.Warning);
 		}
 
 		[Fact]

@@ -40,9 +40,9 @@ namespace Elastic.Apm.AspNetCore
 				? new EnvironmentConfigurationReader(logger)
 				: new MicrosoftExtensionsConfig(configuration, logger) as IConfigurationReader;
 
-			var service = GetService(configReader);
+			var config = new AgentComponents(configurationReader: configReader);
+			UpdateServiceInformation(config.Service);
 
-			var config = new AgentComponents(configurationReader: configReader, service: service, logger: logger);
 			Agent.Setup(config);
 			return UseElasticApm(builder, Agent.Instance, subscribers);
 		}
@@ -61,7 +61,7 @@ namespace Elastic.Apm.AspNetCore
 			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer);
 		}
 
-		internal static Service GetService(IConfigurationReader configReader)
+		internal static void UpdateServiceInformation(Service service)
 		{
 			string version;
 			var versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name == "Microsoft.AspNetCore");
@@ -75,11 +75,8 @@ namespace Elastic.Apm.AspNetCore
 				version = enumerable.Any() ? enumerable.FirstOrDefault()?.GetName().Version.ToString() : "n/a";
 			}
 
-			var service = Service.GetDefaultService(configReader);
 			service.Framework = new Framework { Name = "ASP.NET Core", Version = version };
 			service.Language = new Language { Name = "C#" }; //TODO
-
-			return service;
 		}
 	}
 }

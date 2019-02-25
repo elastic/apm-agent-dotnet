@@ -17,21 +17,33 @@ namespace Elastic.Apm.Config
 		protected static ConfigurationKeyValue Kv(string key, string value, string origin) =>
 			new ConfigurationKeyValue(key, value, origin);
 
+		private static bool TryParseLogLevel(string value, out LogLevel? level)
+		{
+			level = null;
+			if (string.IsNullOrEmpty(value)) return false;
+			level = DefaultLogLevel();
+			return level != null;
 
+			LogLevel? DefaultLogLevel()
+			{
+				switch (value.ToLowerInvariant())
+				{
+					case "trace": return LogLevel.Trace;
+					case "debug": return LogLevel.Debug;
+					case "information":
+					case "info": return LogLevel.Information;
+					case "warning": return LogLevel.Warning;
+					case "error": return LogLevel.Error;
+					case "critical": return LogLevel.Critical;
+					case "none": return LogLevel.None;
+					default: return null;
+				}
+			}
+		}
 		protected internal static LogLevel ParseLogLevel(string value)
 		{
-			switch (value.ToLowerInvariant())
-			{
-				case "trace": return LogLevel.Trace;
-				case "debug": return LogLevel.Debug;
-				case "information":
-				case "info": return LogLevel.Information;
-				case "warning": return LogLevel.Warning;
-				case "error": return LogLevel.Error;
-				case "critical": return LogLevel.Critical;
-				case "none" : return LogLevel.None;
-				default: return ConsoleLogger.DefaultLogLevel;
-			}
+			if (TryParseLogLevel(value, out var level)) return level.Value;
+			return ConsoleLogger.DefaultLogLevel;
 		}
 
 		protected string ParseSecretToken(ConfigurationKeyValue kv)
@@ -42,9 +54,7 @@ namespace Elastic.Apm.Config
 
 		protected LogLevel ParseLogLevel(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return ConsoleLogger.DefaultLogLevel;
-
-			if (Enum.TryParse<LogLevel>(kv.Value, out var logLevel)) return logLevel;
+			if (TryParseLogLevel(kv?.Value, out var level)) return level.Value;
 
 			Logger?.LogError("Failed parsing log level from {Origin}: {Key}, value: {Value}. Defaulting to log level '{DefaultLogLevel}'",
 				kv.ReadFrom, kv.Key, kv.Value, ConsoleLogger.DefaultLogLevel);

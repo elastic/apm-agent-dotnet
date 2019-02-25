@@ -27,10 +27,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory)
 		{
 			_factory = factory;
+			_agent = new ApmAgent(new TestAgentComponents(reader: new TestAgentConfigurationReader(new TestLogger())));
+			ApmMiddlewareExtension.UpdateServiceInformation(_agent.Service);
 			//The agent is instantiated with ApmMiddlewareExtension.GetService, so we can also test the calculation of the service instance.
 			//(e.g. ASP.NET Core version)
-			_agent = new ApmAgent(
-				new TestAgentComponents(service: ApmMiddlewareExtension.GetService(new TestAgentConfigurationReader(new TestLogger()))));
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
 			_client = Helper.GetClient(_agent, _factory);
 		}
