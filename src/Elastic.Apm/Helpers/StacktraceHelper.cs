@@ -12,6 +12,8 @@ namespace Elastic.Apm.Helpers
 		/// <summary>
 		/// Turns a System.Diagnostic.StackFrame[] into a <see cref="Stacktrace" /> list which can be reported to the APM Server
 		/// </summary>
+		/// <param name="frames">The stack frames to rewrite into APM stack traces</param>
+		/// <param name="logger">The logger to emit exceptions on should one occur</param>
 		/// <param name="capturingFor">Just for logging.</param>
 		/// <returns>A prepared List that can be passed to the APM server</returns>
 		internal static List<Stacktrace> GenerateApmStackTrace(StackFrame[] frames, IApmLogger logger, string capturingFor)
@@ -33,8 +35,8 @@ namespace Elastic.Apm.Helpers
 			}
 			catch (Exception e)
 			{
-				logger?.LogWarning(e, nameof(StacktraceHelper), "Failed capturing stacktrace for {ApmContext}", capturingFor);
-				logger?.LogDebug(e, nameof(StacktraceHelper), "Exception {ExceptionName}: {ExceptionMessage}", e.GetType().Name, e.Message);
+				logger?.LogWarning(e, "Failed capturing stacktrace for {ApmContext}", capturingFor);
+				logger?.LogDebug(e, "Exception {ExceptionName}: {ExceptionMessage}", e.GetType().Name, e.Message);
 			}
 
 			return retVal;
