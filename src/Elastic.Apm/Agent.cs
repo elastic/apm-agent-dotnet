@@ -31,7 +31,8 @@ namespace Elastic.Apm
 	public interface IApmAgent
 	{
 		IConfigurationReader ConfigurationReader { get; }
-		AbstractLogger Logger { get; }
+
+		IApmLogger Logger { get; }
 
 		IPayloadSender PayloadSender { get; }
 
@@ -47,7 +48,7 @@ namespace Elastic.Apm
 
 		private AgentComponents Components { get; }
 		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
-		public AbstractLogger Logger => Components.Logger;
+		public IApmLogger Logger => Components.Logger;
 		public IPayloadSender PayloadSender => Components.PayloadSender;
 		public ITracer Tracer => Components.Tracer;
 

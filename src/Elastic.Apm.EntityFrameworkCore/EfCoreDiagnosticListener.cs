@@ -14,9 +14,9 @@ namespace Elastic.Apm.EntityFrameworkCore
 	{
 		private readonly ConcurrentDictionary<Guid, Span> _spans = new ConcurrentDictionary<Guid, Span>();
 
-		public EfCoreDiagnosticListener(IApmAgent agent) => Logger = agent.Logger;
+		public EfCoreDiagnosticListener(IApmAgent agent) => Logger = agent.Logger?.Scoped(nameof(EfCoreDiagnosticListener));
 
-		private AbstractLogger Logger { get; }
+		private ScopedLogger Logger { get; }
 
 		public string Name => "Microsoft.EntityFrameworkCore";
 

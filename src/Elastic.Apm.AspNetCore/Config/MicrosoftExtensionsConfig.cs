@@ -24,7 +24,7 @@ namespace Elastic.Apm.AspNetCore.Config
 
 		private readonly IConfiguration _configuration;
 
-		public MicrosoftExtensionsConfig(IConfiguration configuration, AbstractLogger logger) : base(logger)
+		public MicrosoftExtensionsConfig(IConfiguration configuration, IApmLogger logger = null) : base(logger)
 		{
 			_configuration = configuration;
 			_configuration.GetSection("ElasticApm")
@@ -72,7 +72,7 @@ namespace Elastic.Apm.AspNetCore.Config
 			if (_logLevel.HasValue && newLogLevel == _logLevel.Value) return;
 
 			_logLevel = newLogLevel;
-			Logger?.LogInfo($"Updated log level to {newLogLevel}");
+			Logger.LogInfo("Updated log level to {LogLevel}", newLogLevel);
 		}
 	}
 }

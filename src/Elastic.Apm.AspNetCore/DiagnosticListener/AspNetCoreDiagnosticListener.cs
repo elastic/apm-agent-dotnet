@@ -8,9 +8,9 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 {
 	internal class AspNetCoreDiagnosticListener : IDiagnosticListener
 	{
-		private readonly AbstractLogger _logger;
+		private readonly ScopedLogger _logger;
 
-		public AspNetCoreDiagnosticListener(IApmAgent agent) => _logger = agent.Logger;
+		public AspNetCoreDiagnosticListener(IApmAgent agent) => _logger = agent.Logger?.Scoped(nameof(AspNetCoreDiagnosticListener));
 
 		public string Name => "Microsoft.AspNetCore";
 

@@ -32,7 +32,7 @@ namespace Elastic.Apm.Tests
 			var fakeException = new Exception(exceptionMessage);
 			listener.OnError(fakeException);
 
-			Assert.Equal($"Error {listener.Name}: Exception in OnError, Exception-type:{nameof(Exception)}, Message:{exceptionMessage}",
+			Assert.Equal($"{{{nameof(HttpDiagnosticListener)}}} {nameof(Exception)} in OnError ({nameof(HttpDiagnosticListener)}.cs:38): {exceptionMessage}",
 				logger.Lines?.FirstOrDefault());
 		}
 
@@ -109,7 +109,7 @@ namespace Elastic.Apm.Tests
 			listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Stop", new { Request = request, Response = response }));
 
 			Assert.Equal(
-				$"{LogLevel.Warning} {listener.Name}: Failed capturing request '{HttpMethod.Get} {request.RequestUri}' in System.Net.Http.HttpRequestOut.Stop. This Span will be skipped in case it wasn't captured before.",
+				$"{{{nameof(HttpDiagnosticListener)}}} Failed capturing request '{HttpMethod.Get} {request.RequestUri}' in System.Net.Http.HttpRequestOut.Stop. This Span will be skipped in case it wasn't captured before.",
 				logger.Lines[0]);
 			Assert.NotNull(Agent.TransactionContainer.Transactions.Value);
 			Assert.Single(Agent.TransactionContainer.Transactions.Value.Spans);
@@ -515,7 +515,7 @@ namespace Elastic.Apm.Tests
 			Assert.Empty(mockPayloadSender.SpansOnFirstTransaction);
 		}
 
-		private (IDisposable, MockPayloadSender, ApmAgent) RegisterListenerAndStartTransaction()
+		internal static (IDisposable, MockPayloadSender, ApmAgent) RegisterListenerAndStartTransaction()
 		{
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
@@ -525,7 +525,7 @@ namespace Elastic.Apm.Tests
 			return (sub, payloadSender, agent);
 		}
 
-		private void StartTransaction(ApmAgent agent)
+		private static void StartTransaction(ApmAgent agent)
 			//	=> agent.TransactionContainer.Transactions.Value =
 			//		new Transaction(agent, $"{nameof(TestSimpleOutgoingHttpRequest)}", ApiConstants.TypeRequest);
 			=> agent.Tracer.StartTransaction($"{nameof(TestSimpleOutgoingHttpRequest)}", ApiConstants.TypeRequest);

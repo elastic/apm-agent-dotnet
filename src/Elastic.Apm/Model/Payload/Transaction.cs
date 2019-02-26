@@ -17,15 +17,15 @@ namespace Elastic.Apm.Model.Payload
 		internal readonly DateTimeOffset Start;
 
 		private readonly Lazy<Context> _context = new Lazy<Context>();
-		private readonly AbstractLogger _logger;
+		private readonly ScopedLogger _logger;
 		private readonly IPayloadSender _sender;
 
 		public Transaction(IApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, agent.PayloadSender) { }
 
-		public Transaction(AbstractLogger logger, string name, string type, IPayloadSender sender)
+		public Transaction(IApmLogger logger, string name, string type, IPayloadSender sender)
 		{
-			_logger = logger;
+			_logger = logger?.Scoped(nameof(Transaction));
 			_sender = sender;
 			Start = DateTimeOffset.UtcNow;
 			Name = name;
@@ -131,7 +131,7 @@ namespace Elastic.Apm.Model.Payload
 			if (!string.IsNullOrEmpty(exception.StackTrace))
 			{
 				capturedException.StacktTrace
-					= StacktraceHelper.GenerateApmStackTrace(new StackTrace(exception).GetFrames(), _logger,
+					= StacktraceHelper.GenerateApmStackTrace(new StackTrace(exception, true).GetFrames(), _logger,
 						"failed capturing stacktrace");
 			}
 
@@ -283,14 +283,14 @@ namespace Elastic.Apm.Model.Payload
 						ExceptionFilter.Capture(t.Exception, span);
 				}
 				else
-					span.CaptureError("Task faulted", "A task faulted", new StackTrace().GetFrames());
+					span.CaptureError("Task faulted", "A task faulted", new StackTrace(true).GetFrames());
 			}
 			else if (t.IsCanceled)
 			{
 				if (t.Exception == null)
 				{
 					span.CaptureError("Task canceled", "A task was canceled",
-						new StackTrace().GetFrames()); //TODO: this async stacktrace is hard to use, make it readable!
+						new StackTrace(true).GetFrames()); //TODO: this async stacktrace is hard to use, make it readable!
 				}
 				else
 					span.CaptureException(t.Exception);

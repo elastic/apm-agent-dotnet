@@ -11,8 +11,9 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly Task _task;
 		private readonly CancellationTokenSource _tokenSource;
 
-		public LocalServer(Action<HttpListenerContext> testAction = null)
+		public LocalServer(Action<HttpListenerContext> testAction = null, string uri = "http://localhost:8082/")
 		{
+			Uri = uri;
 			_httpListener.Prefixes.Add(Uri);
 			_httpListener.Start();
 			_tokenSource = new CancellationTokenSource();
@@ -36,7 +37,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private long _seenRequests;
 		public long SeenRequests => _seenRequests;
 
-		public string Uri => "http://localhost:8082/";
+		public string Uri { get; private set; }
 
 		public void Dispose()
 		{

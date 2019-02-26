@@ -42,7 +42,7 @@ namespace SampleAspNetCoreApp.Controllers
 		[HttpPost]
 		public async Task<IActionResult> AddNewUser([FromForm] string enteredName)
 		{
-			if (String.IsNullOrEmpty(enteredName))
+			if (string.IsNullOrEmpty(enteredName))
 				throw new ArgumentNullException(nameof(enteredName));
 
 			_sampleDataContext.Users.Add(
@@ -56,10 +56,7 @@ namespace SampleAspNetCoreApp.Controllers
 			return Redirect("/Home/Index");
 		}
 
-		public IActionResult SimplePage()
-		{
-			return View();
-		}
+		public IActionResult SimplePage() => View();
 
 		public async Task<IActionResult> ChartPage()
 		{
@@ -84,7 +81,12 @@ namespace SampleAspNetCoreApp.Controllers
 			return Ok();
 		}
 
-		public IActionResult TriggerError() => throw new Exception("This is a test exception!");
+		public IActionResult TriggerError()
+		{
+			Agent.Tracer.CurrentTransaction.Tags["foo"] = "bar";
+			throw new Exception("This is a test exception!");
+		}
+
 
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 		public IActionResult Error() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });

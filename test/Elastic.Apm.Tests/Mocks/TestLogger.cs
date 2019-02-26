@@ -1,16 +1,22 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Tests.Mocks
 {
-	public class TestLogger : AbstractLogger
+	public class TestLogger : IApmLogger
 	{
-		public TestLogger() : base(LogLevelDefault) { }
+		public TestLogger() : this(LogLevel.Error) { }
 
-		public TestLogger(LogLevel level) : base(level) { }
+		public TestLogger(LogLevel level) => LogLevel = level;
 
 		public List<string> Lines { get; } = new List<string>();
 
-		protected override void PrintLogLine(string logline) => Lines.Add(logline);
+		public LogLevel LogLevel { get; }
+
+		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
+		{
+			if (level >= LogLevel) Lines.Add(formatter(state, e));
+		}
 	}
 }

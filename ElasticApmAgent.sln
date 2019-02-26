@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+﻿
+>>>>>>> aa554574f23e8369e02496b56161741b8b28d1a7
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2050
@@ -27,6 +31,17 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpListenerSample", "sample\HttpListenerSample\HttpListenerSample.csproj", "{1AAB1A30-42C0-4C76-AE2E-9D7293945D80}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspNetFullFrameworkSampleApp", "sample\AspNetFullFrameworkSampleApp\AspNetFullFrameworkSampleApp.csproj", "{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "files", "files", "{B406113B-0917-4531-AFEE-66DDB952590F}"
+ProjectSection(SolutionItems) = preProject
+	.editorconfig = .editorconfig
+	.gitignore = .gitignore
+	codecov.yml = codecov.yml
+	CONTRIBUTING.md = CONTRIBUTING.md
+	Jenkinsfile = Jenkinsfile
+	LICENSE = LICENSE
+	README.md = README.md
+EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
