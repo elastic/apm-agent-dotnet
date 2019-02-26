@@ -511,6 +511,7 @@ namespace Elastic.Apm.Tests.ApiTests
 						transaction.Request.UrlRaw = "https://elastic.co";
 						transaction.Request.SocketRemoteAddress = "127.0.0.1";
 						transaction.Request.UrlHostName = "elastic";
+						transaction.Request.Body = "123";
 					});
 				});
 
@@ -523,6 +524,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal("https://elastic.co", payloadSender.FirstTransaction.Context.Request.Url.Raw);
 			Assert.Equal("127.0.0.1", payloadSender.FirstTransaction.Context.Request.Socket.RemoteAddress);
 			Assert.Equal("elastic", payloadSender.FirstTransaction.Context.Request.Url.HostName);
+			Assert.Equal("123", payloadSender.FirstTransaction.Context.Request.Body);
 		}
 
 		/// <summary>

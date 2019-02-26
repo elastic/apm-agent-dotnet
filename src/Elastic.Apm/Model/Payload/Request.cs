@@ -10,6 +10,7 @@ namespace Elastic.Apm.Model.Payload
 		public string Method { get; set; }
 		public Socket Socket { get; set; }
 		public Url Url { get; set; }
+		public object Body { get; set; }
 	}
 
 	internal class Socket

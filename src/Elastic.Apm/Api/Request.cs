@@ -10,6 +10,7 @@ namespace Elastic.Apm.Api
 
 		public string HttpVersion { get; set; }
 		public string Method { get; }
+		public object Body { get; set; }
 
 		public bool SocketEncrypted { get; set; }
 		public string SocketRemoteAddress { get; set; }

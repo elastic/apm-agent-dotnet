@@ -86,6 +86,7 @@ namespace Elastic.Apm.Model.Payload
 					new Url { Full = Request.UrlFull, Protocol = Request.UrlProtocol, Raw = Request.UrlRaw, HostName = Request.UrlHostName })
 				{
 					HttpVersion = Request.HttpVersion,
+					Body =  Request.Body,
 					Socket = new Socket { Encrypted = Request.SocketEncrypted, RemoteAddress = Request.SocketRemoteAddress }
 				};
 			}
