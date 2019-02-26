@@ -5,6 +5,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Tests.Mocks;
 using Xunit;
+using Request = Elastic.Apm.Api.Request;
 
 namespace Elastic.Apm.Tests.ApiTests
 {
@@ -380,7 +381,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
 
 			//`await Task.Delay` is inaccurate, so we enable 10% error in the test
-			var expectedTransactionLength = SleepLength - (SleepLength * 0.1);
+			var expectedTransactionLength = SleepLength - SleepLength * 0.1;
 			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
 			Assert.True(duration >= expectedTransactionLength, $"Expected {duration} to be greater or equal to: {expectedTransactionLength}");
 
@@ -470,6 +471,61 @@ namespace Elastic.Apm.Tests.ApiTests
 		}
 
 		/// <summary>
+		/// Creates a transaction and attaches a Request to this transaction.
+		/// Makes sure that the transaction details are captured.
+		/// </summary>
+		[Fact]
+		public void TransactionWithRequest()
+		{
+			var payloadSender = AssertWith1Transaction(
+				n =>
+				{
+					n.Tracer.CaptureTransaction(TransactionName, TransactionType, transaction =>
+					{
+						Thread.Sleep(SleepLength);
+						transaction.Request = new Request("GET", "HTTP");
+					});
+				});
+
+			Assert.Equal("GET", payloadSender.FirstTransaction.Context.Request.Method);
+			Assert.Equal("HTTP", payloadSender.FirstTransaction.Context.Request.Url.Protocol);
+		}
+
+		/// <summary>
+		/// Creates a transaction and attaches a Request to this transaction. It fills all the fields on the Request.
+		/// Makes sure that all the transaction details are captured.
+		/// </summary>
+		[Fact]
+		public void TransactionWithRequestDetailed()
+		{
+			var payloadSender = AssertWith1Transaction(
+				n =>
+				{
+					n.Tracer.CaptureTransaction(TransactionName, TransactionType, transaction =>
+					{
+						Thread.Sleep(SleepLength);
+						transaction.Request = new Request("GET", "HTTP");
+						transaction.Request.HttpVersion = "2.0";
+						transaction.Request.SocketEncrypted = true;
+						transaction.Request.UrlFull = "https://elastic.co";
+						transaction.Request.UrlRaw = "https://elastic.co";
+						transaction.Request.SocketRemoteAddress = "127.0.0.1";
+						transaction.Request.UrlHostName = "elastic";
+					});
+				});
+
+			Assert.Equal("GET", payloadSender.FirstTransaction.Context.Request.Method);
+			Assert.Equal("HTTP", payloadSender.FirstTransaction.Context.Request.Url.Protocol);
+
+			Assert.Equal("2.0", payloadSender.FirstTransaction.Context.Request.HttpVersion);
+			Assert.True(payloadSender.FirstTransaction.Context.Request.Socket.Encrypted);
+			Assert.Equal("https://elastic.co", payloadSender.FirstTransaction.Context.Request.Url.Full);
+			Assert.Equal("https://elastic.co", payloadSender.FirstTransaction.Context.Request.Url.Raw);
+			Assert.Equal("127.0.0.1", payloadSender.FirstTransaction.Context.Request.Socket.RemoteAddress);
+			Assert.Equal("elastic", payloadSender.FirstTransaction.Context.Request.Url.HostName);
+		}
+
+		/// <summary>
 		/// Asserts on 1 transaction with async code
 		/// </summary>
 		private async Task<MockPayloadSender> AssertWith1TransactionAsync(Func<ApmAgent, Task> func)
@@ -486,7 +542,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
 
 			//`await Task.Delay` is inaccurate, so we enable 10% error in the test
-			var expectedTransactionLength = SleepLength - (SleepLength * 0.1);
+			var expectedTransactionLength = SleepLength - SleepLength * 0.1;
 			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
 			Assert.True(duration >= expectedTransactionLength, $"Expected {duration} to be greater or equal to: {expectedTransactionLength}");
 
@@ -510,7 +566,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
 
 			//`await Task.Delay` is inaccurate, so we enable 10% error in the test
-			var expectedTransactionLength = SleepLength - (SleepLength * 0.1);
+			var expectedTransactionLength = SleepLength - SleepLength * 0.1;
 			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
 			Assert.True(duration >= expectedTransactionLength, $"Expected {duration} to be greater or equal to: {expectedTransactionLength}");
 
@@ -539,7 +595,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
 
 			//`await Task.Delay` is inaccurate, so we enable 10% error in the test
-			var expectedTransactionLength = SleepLength - (SleepLength * 0.1);
+			var expectedTransactionLength = SleepLength - SleepLength * 0.1;
 			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
 			Assert.True(duration >= expectedTransactionLength, $"Expected {duration} to be greater or equal to: {expectedTransactionLength}");
 
@@ -564,7 +620,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 
 			//`await Task.Delay` is inaccurate, so we enable 10% error in the test
-			var expectedTransactionLength = SleepLength - (SleepLength * 0.1);
+			var expectedTransactionLength = SleepLength - SleepLength * 0.1;
 			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
 			Assert.True(duration >= expectedTransactionLength, $"Expected {duration} to be greater or equal to: {expectedTransactionLength}");
 

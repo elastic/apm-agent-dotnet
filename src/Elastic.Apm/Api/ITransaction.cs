@@ -22,6 +22,15 @@ namespace Elastic.Apm.Api
 		/// </summary>
 		string Name { get; set; }
 
+
+		/// <summary>
+		/// If a log record was generated as a result of a http request, the http interface can be used to collect this
+		/// information.
+		/// This property is by default null! You have to assign a <see cref="Request" /> instance to this property in order to use
+		/// it.
+		/// </summary>
+		Request Request { get; set; }
+
 		/// <summary>
 		/// A string describing the result of the transaction.
 		/// This is typically the HTTP status code, or e.g. "success" for a background task.

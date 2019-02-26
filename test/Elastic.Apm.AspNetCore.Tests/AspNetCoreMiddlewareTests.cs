@@ -115,7 +115,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Assert.Single(_capturedPayload.Errors[0].Errors);
 
 			//also make sure the tag is captured
-			Assert.Equal(((_capturedPayload.Errors[0] as Error)?.Errors[0] as Error.ErrorDetail)?.Context.Tags["foo"], "bar");
+			Assert.Equal("bar", ((_capturedPayload.Errors[0] as Error)?.Errors[0] as Error.ErrorDetail)?.Context.Tags["foo"]);
 		}
 
 		public void Dispose()

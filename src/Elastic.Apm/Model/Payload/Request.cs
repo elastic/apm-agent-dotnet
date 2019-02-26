@@ -4,6 +4,8 @@ namespace Elastic.Apm.Model.Payload
 {
 	internal class Request
 	{
+		public Request(string method, Url url) => (Method, Url) = (method, url);
+
 		public string HttpVersion { get; set; }
 
 		public string Method { get; set; }
