@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Tests.Mocks;
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
 using Xunit;
@@ -34,18 +36,24 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 				var response = await client.GetAsync("/Home/TriggerError");
 
-				Assert.Single(capturedPayload.Payloads);
-				Assert.Single(capturedPayload.Payloads[0].Transactions);
+				capturedPayload.Should().NotBeNull();
+				capturedPayload.Payloads.Should().ContainSingle();
+				capturedPayload.Payloads[0].Transactions.Should().ContainSingle();
 
-				Assert.Single(capturedPayload.Errors);
-				Assert.Single(capturedPayload.Errors[0].Errors);
+				capturedPayload.Errors.Should().ContainSingle();
+				capturedPayload.Errors[0].Errors.Should().ContainSingle();
 
-				Assert.Equal("This is a test exception!", capturedPayload.Errors[0].Errors[0].Exception.Message);
-				Assert.Equal(typeof(Exception).FullName, capturedPayload.Errors[0].Errors[0].Exception.Type);
+				var errorException = capturedPayload.Errors[0].Errors[0].Exception;
+				errorException.Message.Should().Be("This is a test exception!");
+				errorException.Type.Should().Be(typeof(Exception).FullName);
 
-				Assert.Equal("/Home/TriggerError", capturedPayload.FirstErrorDetail.Context.Request.Url.Full);
-				Assert.Equal(HttpMethod.Get.Method, capturedPayload.FirstErrorDetail.Context.Request.Method);
-				Assert.False((capturedPayload.FirstErrorDetail.Exception as CapturedException)?.Handled);
+				var context = capturedPayload.FirstErrorDetail.Context;
+				context.Request.Url.Full.Should().Be("/Home/TriggerError");
+				context.Request.Method.Should().Be(HttpMethod.Get.Method);
+
+				var capturedException = errorException as CapturedException;
+				capturedException.Should().NotBeNull();
+				capturedException.Handled.Should().BeFalse();
 			}
 		}
 	}

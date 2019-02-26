@@ -11,6 +11,7 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Report;
 using Elastic.Apm.Tests.Mocks;
+using FluentAssertions;
 using Xunit;
 
 [assembly:
@@ -37,7 +38,7 @@ namespace Elastic.Apm.Tests
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 				agent.Tracer.CaptureTransaction("TestName", "TestType", () => { Thread.Sleep(5); });
 
-			Assert.Equal(Assembly.Load("Elastic.Apm").GetName().Version.ToString(), payloadSender.Payloads[0].Service.Agent.Version);
+			payloadSender.Payloads[0].Service.Agent.Version.Should().Be(Assembly.Load("Elastic.Apm").GetName().Version.ToString());
 		}
 
 		/// <summary>
@@ -57,12 +58,12 @@ namespace Elastic.Apm.Tests
 
 			agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t) => { t.CaptureSpan(spanName.ToString(), "test", () => { }); });
 
-			Assert.NotNull(payloadSender.FirstSpan);
-			Assert.Equal(1024, payloadSender.FirstSpan.Name.Length);
-			Assert.Equal(spanName.ToString(0, 1021), payloadSender.FirstSpan.Name.Substring(0, 1021));
-			Assert.Equal("...", payloadSender.FirstSpan.Name.Substring(1021, 3));
+			payloadSender.FirstSpan.Should().NotBeNull();
+			payloadSender.FirstSpan.Name.Length.Should().Be(1024);
+			spanName.ToString(0, 1021).Should().Be(payloadSender.FirstSpan.Name.Substring(0, 1021));
+			payloadSender.FirstSpan.Name.Substring(1021, 3).Should().Be("...");
 		}
-    
+
 		[Fact]
 		public void PayloadSentWithBearerToken()
 		{
@@ -83,9 +84,9 @@ namespace Elastic.Apm.Tests
 			// ideally, introduce a mechanism to flush payloads
 			Thread.Sleep(TimeSpan.FromSeconds(2));
 
-			Assert.NotNull(authHeader);
-			Assert.Equal("Bearer", authHeader.Scheme);
-			Assert.Equal(secretToken, authHeader.Parameter);
+			authHeader.Should().NotBeNull();
+			authHeader.Scheme.Should().Be("Bearer");
+			authHeader.Parameter.Should().Be(secretToken);
 		}
 	}
 }
