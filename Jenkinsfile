@@ -165,7 +165,7 @@ pipeline {
                       }
                       unstash 'source'
                       dir("${BASE_DIR}"){
-                        bat "dotnet build"
+                        bat "dotnet msbuild sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj"
                       }
                     }
                   }
