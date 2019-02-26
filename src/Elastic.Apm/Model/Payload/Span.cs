@@ -15,7 +15,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public Span(string name, string type, Transaction transaction)
 		{
-			Transaction = transaction;
+			//Transaction = transaction;
 			_start = DateTimeOffset.UtcNow;
 			Start = (decimal)(_start - transaction.Start).TotalMilliseconds;
 			Name = name;
@@ -69,7 +69,7 @@ namespace Elastic.Apm.Model.Payload
 		{
 			if (!Duration.HasValue) Duration = (DateTimeOffset.UtcNow - _start).TotalMilliseconds;
 
-			Transaction?.SpansInternal.Add(this);
+			//Transaction?.SpansInternal.Add(this);
 		}
 
 		public void CaptureException(Exception exception, string culprit = null)

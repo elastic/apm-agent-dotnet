@@ -13,8 +13,19 @@ using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
 {
+	public class SpanCount
+	{
+		public int Started { get; set; }
+	}
+
 	internal class Transaction : ITransaction
 	{
+		[JsonProperty("span_count")]
+		public SpanCount SpanCount { get; set; }
+
+		[JsonProperty("trace_id")]
+		public string TraceId { get; set; }
+
 		internal readonly DateTimeOffset Start;
 
 		private readonly Lazy<Context> _context = new Lazy<Context>();
@@ -28,10 +39,14 @@ namespace Elastic.Apm.Model.Payload
 		{
 			_logger = logger?.Scoped(nameof(Transaction));
 			_sender = sender;
-			Start = DateTimeOffset.UtcNow;
+			Start = DateTimeOffset.Now;
+
 			Name = name;
 			Type = type;
 			Id = Guid.NewGuid();
+			TraceId = Guid.NewGuid().ToString();
+
+			SpanCount = new SpanCount(); //TODO
 		}
 
 		/// <summary>
@@ -73,7 +88,14 @@ namespace Elastic.Apm.Model.Payload
 		[JsonIgnore]
 		public Dictionary<string, string> Tags => Context.Tags;
 
-		public string Timestamp => Start.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
+		public long Timestamp => Start.ToUnixTimeMilliseconds() * 1000;
+
+
+		private static long ToUnixTime(DateTime date) //TODO: offset?
+		{
+			var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+			return Convert.ToInt64((date - epoch).TotalSeconds);
+		}
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
@@ -82,14 +104,7 @@ namespace Elastic.Apm.Model.Payload
 		{
 			if (!Duration.HasValue) Duration = (DateTimeOffset.UtcNow - Start).TotalMilliseconds;
 
-			_sender.QueuePayload(new Payload
-			{
-				Transactions = new List<ITransaction>
-				{
-					this
-				},
-				Service = Service
-			});
+			_sender.QueueTransaction(this);
 
 			Agent.TransactionContainer.Transactions.Value = null;
 		}

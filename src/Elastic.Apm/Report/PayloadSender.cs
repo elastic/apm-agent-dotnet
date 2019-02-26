@@ -67,6 +67,8 @@ namespace Elastic.Apm.Report
 
 		public void QueuePayload(IPayload payload) => _queue.SendAsync(payload);
 
+		public void QueueTransaction(ITransaction transaction) => throw new NotImplementedException();
+
 		public void QueueError(IError error) => _queue.SendAsync(error);
 
 		private async void StartWork()
