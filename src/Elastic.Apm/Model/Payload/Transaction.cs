@@ -33,8 +33,6 @@ namespace Elastic.Apm.Model.Payload
 			Id = Guid.NewGuid();
 		}
 
-		private Api.Request _request;
-
 		/// <summary>
 		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
 		/// </summary>
@@ -53,20 +51,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public string Name { get; set; }
 
-		public Api.Request Request
-		{
-			get => _request;
-			set
-			{
-				_request = value;
-				_context.Value.Request = new Request(value.Method,
-					new Url { Full = value.UrlFull, Protocol = value.UrlProtocol, Raw = value.UrlRaw, HostName = value.UrlHostName })
-				{
-					HttpVersion = value.HttpVersion,
-					Socket = new Socket { Encrypted = value.SocketEncrypted, RemoteAddress = value.SocketRemoteAddress }
-				};
-			}
-		}
+		public Api.Request Request { get; set; }
 
 		/// <inheritdoc />
 		/// <summary>
@@ -94,6 +79,16 @@ namespace Elastic.Apm.Model.Payload
 		public void End()
 		{
 			if (!Duration.HasValue) Duration = (DateTimeOffset.UtcNow - Start).TotalMilliseconds;
+
+			if (_context?.Value != null && _context.Value.Request == null && Request != null)
+			{
+				_context.Value.Request = new Request(Request.Method,
+					new Url { Full = Request.UrlFull, Protocol = Request.UrlProtocol, Raw = Request.UrlRaw, HostName = Request.UrlHostName })
+				{
+					HttpVersion = Request.HttpVersion,
+					Socket = new Socket { Encrypted = Request.SocketEncrypted, RemoteAddress = Request.SocketRemoteAddress }
+				};
+			}
 
 			_sender.QueuePayload(new Payload
 			{

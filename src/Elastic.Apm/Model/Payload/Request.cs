@@ -7,7 +7,6 @@ namespace Elastic.Apm.Model.Payload
 		public Request(string method, Url url) => (Method, Url) = (method, url);
 
 		public string HttpVersion { get; set; }
-
 		public string Method { get; set; }
 		public Socket Socket { get; set; }
 		public Url Url { get; set; }
