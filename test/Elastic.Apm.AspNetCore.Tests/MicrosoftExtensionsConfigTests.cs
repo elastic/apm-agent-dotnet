@@ -45,7 +45,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Assert.Equal(LogLevel.Error, config.LogLevel);
 
 			Assert.Equal(
-				$"Error Config: Failed parsing log level from {MicrosoftExtensionsConfig.Origin}: {MicrosoftExtensionsConfig.Keys.Level}, value: DbeugMisspelled. Defaulting to log level 'Error'",
+				$"{{MicrosoftExtensionsConfig}} Failed parsing log level from {MicrosoftExtensionsConfig.Origin}: {MicrosoftExtensionsConfig.Keys.Level}, value: DbeugMisspelled. Defaulting to log level 'Error'",
 				logger.Lines[0]);
 		}
 
@@ -61,7 +61,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Assert.Equal(LogLevel.Error, config.LogLevel);
 
 			Assert.Equal(
-				$"Error Config: Failed parsing log level from {MicrosoftExtensionsConfig.Origin}: {MicrosoftExtensionsConfig.Keys.Level}, value: DbeugMisspelled. Defaulting to log level 'Error'",
+				$"{{MicrosoftExtensionsConfig}} Failed parsing log level from {MicrosoftExtensionsConfig.Origin}: {MicrosoftExtensionsConfig.Keys.Level}, value: DbeugMisspelled. Defaulting to log level 'Error'",
 				logger.Lines[0]);
 		}
 

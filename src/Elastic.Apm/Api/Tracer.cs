@@ -11,13 +11,13 @@ namespace Elastic.Apm.Api
 {
 	internal class Tracer : ITracer
 	{
-		private readonly AbstractLogger _logger;
+		private readonly ScopedLogger _logger;
 		private readonly IPayloadSender _sender;
 		private readonly Service _service;
 
-		public Tracer(AbstractLogger logger, Service service, IPayloadSender payloadSender)
+		public Tracer(IApmLogger logger, Service service, IPayloadSender payloadSender)
 		{
-			_logger = logger;
+			_logger = logger?.Scoped(nameof(Tracer));
 			_service = service;
 			_sender = payloadSender;
 		}
