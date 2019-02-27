@@ -6,9 +6,9 @@ namespace Elastic.Apm.Api
 	/// Encapsulates Request related information that can be attached to an <see cref="ITransaction" /> through <see cref="ITransaction.Context" />
 	/// See <see cref="Context.Request" />
 	/// </summary>
-	public class Request
+	public struct Request
 	{
-		public Request(string method, Url url) => (Method, Url) = (method, url);
+		public Request(string method, Url url) => (Method, Url, Body, HttpVersion, Socket) = (method, url, null, null, new Socket());
 
 		public string HttpVersion { get; set; }
 
@@ -19,7 +19,7 @@ namespace Elastic.Apm.Api
 		public object Body { get; set; }
 	}
 
-	public class Socket
+	public struct Socket
 	{
 		public bool Encrypted { get; set; }
 
@@ -27,7 +27,7 @@ namespace Elastic.Apm.Api
 		public string RemoteAddress { get; set; }
 	}
 
-	public class Url
+	public struct Url
 	{
 		public string Full { get; set; }
 		public string HostName { get; set; }
