@@ -22,10 +22,10 @@ namespace Elastic.Apm.Tests.ApiTests
 	{
 		private const string ExceptionMessage = "Foo";
 		private const string SpanName = "TestSpan";
-		private const int SpanSleepLength = 450;
+
 		private const string SpanType = "TestSpan";
 		private const string TransactionName = "ConvenientApiTest";
-		private const int TransactionSleepLength = 300;
+
 		private const string TransactionType = "Test";
 
 		/// <summary>
@@ -35,7 +35,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// </summary>
 		[Fact]
 		public void SimpleAction()
-			=> AssertWith1TransactionAnd1Span(t => { t.CaptureSpan(SpanName, SpanType, () => { Thread.Sleep(SpanSleepLength); }); });
+			=> AssertWith1TransactionAnd1Span(t => { t.CaptureSpan(SpanName, SpanType, () => { WaitHelpers.Sleep2XMinimum(); }); });
 
 		/// <summary>
 		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Action,string,string)" /> method with an exception.
@@ -50,7 +50,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				{
 					t.CaptureSpan(SpanName, SpanType, new Action(() =>
 					{
-						Thread.Sleep(SpanSleepLength);
+						WaitHelpers.Sleep2XMinimum();
 						throw new InvalidOperationException(ExceptionMessage);
 					}));
 				});
@@ -69,7 +69,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					s =>
 					{
 						Assert.NotNull(s);
-						Thread.Sleep(SpanSleepLength);
+						WaitHelpers.Sleep2XMinimum();
 					});
 			});
 
@@ -90,7 +90,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					t.CaptureSpan(SpanName, SpanType, new Action<ISpan>(s =>
 					{
 						Assert.NotNull(s);
-						Thread.Sleep(SpanSleepLength);
+						WaitHelpers.Sleep2XMinimum();
 						throw new InvalidOperationException(ExceptionMessage);
 					}));
 				});
@@ -107,7 +107,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			{
 				var res = t.CaptureSpan(SpanName, SpanType, () =>
 				{
-					Thread.Sleep(SpanSleepLength);
+					WaitHelpers.Sleep2XMinimum();
 					return 42;
 				});
 
@@ -128,7 +128,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				var res = t.CaptureSpan(SpanName, SpanType, s =>
 				{
 					Assert.NotNull(t);
-					Thread.Sleep(SpanSleepLength);
+					WaitHelpers.Sleep2XMinimum();
 					return 42;
 				});
 
@@ -152,7 +152,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					var result = t.CaptureSpan(SpanName, SpanType, s =>
 					{
 						Assert.NotNull(s);
-						Thread.Sleep(SpanSleepLength);
+						WaitHelpers.Sleep2XMinimum();
 
 						if (new Random().Next(1) == 0) //avoid unreachable code warning.
 							throw new InvalidOperationException(ExceptionMessage);
@@ -181,7 +181,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				{
 					var result = t.CaptureSpan(SpanName, SpanType, () =>
 					{
-						Thread.Sleep(SpanSleepLength);
+						WaitHelpers.Sleep2XMinimum();
 
 						if (new Random().Next(1) == 0) //avoid unreachable code warning.
 							throw new InvalidOperationException(ExceptionMessage);
@@ -203,7 +203,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		public async Task AsyncTask()
 			=> await AssertWith1TransactionAnd1SpanAsync(async t =>
 			{
-				await t.CaptureSpan(SpanName, SpanType, async () => { await Task.Delay(SpanSleepLength); });
+				await t.CaptureSpan(SpanName, SpanType, async () => { await WaitHelpers.Delay2XMinimum(); });
 			});
 
 		/// <summary>
@@ -220,7 +220,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				{
 					await t.CaptureSpan(SpanName, SpanType, async () =>
 					{
-						await Task.Delay(SpanSleepLength);
+						await WaitHelpers.Delay2XMinimum();
 						throw new InvalidOperationException(ExceptionMessage);
 					});
 				});
@@ -239,7 +239,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					async s =>
 					{
 						Assert.NotNull(s);
-						await Task.Delay(SpanSleepLength);
+						await WaitHelpers.Delay2XMinimum();
 					});
 			});
 
@@ -259,7 +259,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					await t.CaptureSpan(SpanName, SpanType, async s =>
 					{
 						Assert.NotNull(s);
-						await Task.Delay(SpanSleepLength);
+						await WaitHelpers.Delay2XMinimum();
 						throw new InvalidOperationException(ExceptionMessage);
 					});
 				});
@@ -276,7 +276,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			{
 				var res = await t.CaptureSpan(SpanName, SpanType, async () =>
 				{
-					await Task.Delay(SpanSleepLength);
+					await WaitHelpers.Delay2XMinimum();
 					return 42;
 				});
 				Assert.Equal(42, res);
@@ -297,7 +297,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					async s =>
 					{
 						Assert.NotNull(s);
-						await Task.Delay(SpanSleepLength);
+						await WaitHelpers.Delay2XMinimum();
 						return 42;
 					});
 
@@ -321,7 +321,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					var result = await t.CaptureSpan(SpanName, SpanType, async s =>
 					{
 						Assert.NotNull(s);
-						await Task.Delay(SpanSleepLength);
+						await WaitHelpers.Delay2XMinimum();
 
 						if (new Random().Next(1) == 0) //avoid unreachable code warning.
 							throw new InvalidOperationException(ExceptionMessage);
@@ -348,7 +348,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				{
 					var result = await t.CaptureSpan(SpanName, SpanType, async () =>
 					{
-						await Task.Delay(SpanSleepLength);
+						await WaitHelpers.Delay2XMinimum();
 
 						if (new Random().Next(1) == 0) //avoid unreachable code warning.
 							throw new InvalidOperationException(ExceptionMessage);
@@ -381,7 +381,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					await t.CaptureSpan(SpanName, SpanType, async () =>
 					{
 						// ReSharper disable once MethodSupportsCancellation, we want to delay before we throw the exception
-						await Task.Delay(SpanSleepLength);
+						await WaitHelpers.Delay2XMinimum();
 						token.ThrowIfCancellationRequested();
 					});
 				});
@@ -400,7 +400,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				{
 					t.CaptureSpan(SpanName, SpanType, span =>
 					{
-						Thread.Sleep(SpanSleepLength);
+						WaitHelpers.Sleep2XMinimum();
 						span.Tags["foo"] = "bar";
 					});
 				});
@@ -424,7 +424,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				{
 					await t.CaptureSpan(SpanName, SpanType, async span =>
 					{
-						await Task.Delay(SpanSleepLength);
+						await WaitHelpers.Delay2XMinimum();
 						span.Tags["foo"] = "bar";
 					});
 				});
@@ -450,7 +450,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					{
 						await t.CaptureSpan(SpanName, SpanType, async span =>
 						{
-							await Task.Delay(SpanSleepLength);
+							await WaitHelpers.Delay2XMinimum();
 							span.Tags["foo"] = "bar";
 
 							if (new Random().Next(1) == 0) //avoid unreachable code warning.
@@ -476,7 +476,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 			{
-				await Task.Delay(TransactionSleepLength);
+				await WaitHelpers.DelayMinimum();
 				await func(t);
 			});
 
@@ -486,10 +486,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(TransactionName, payloadSender.Payloads[0].Transactions[0].Name);
 			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
 
-			//`await Task.Delay` is inaccurate, so we enable 10% error in the test
-			var expectedTransactionLength = (TransactionSleepLength + SpanSleepLength) - (TransactionSleepLength * 0.1 + SpanSleepLength * 0.1);
 			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
-			Assert.True(duration >= expectedTransactionLength, $"Expected {duration} to be greater or equal to: {expectedTransactionLength}");
+			WaitHelpers.Assert3XMinimumSleepLength(duration);
 
 			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
 
@@ -517,7 +515,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 			{
-				await Task.Delay(TransactionSleepLength);
+				await WaitHelpers.DelayMinimum();
 				await func(t);
 			});
 
@@ -527,10 +525,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(TransactionName, payloadSender.Payloads[0].Transactions[0].Name);
 			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
 
-			//`await Task.Delay` is inaccurate, so we enable 10% error in the test
-			var expectedTransactionLength = (TransactionSleepLength + SpanSleepLength) - (TransactionSleepLength * 0.1 + SpanSleepLength * 0.1);
 			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
-			Assert.True(duration >= expectedTransactionLength, $"Expected {duration} to be greater or equal to: {expectedTransactionLength}");
+			WaitHelpers.Assert3XMinimumSleepLength(duration);
 
 			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
 
@@ -550,7 +546,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 			{
-				Thread.Sleep(TransactionSleepLength);
+				WaitHelpers.SleepMinimum();
 				action(t);
 			});
 
@@ -565,10 +561,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(SpanName, payloadSender.SpansOnFirstTransaction[0].Name);
 			Assert.Equal(SpanType, payloadSender.SpansOnFirstTransaction[0].Type);
 
-			//`await Task.Delay` is inaccurate, so we enable 10% error in the test
-			var expectedTransactionLength = (TransactionSleepLength + SpanSleepLength) - (TransactionSleepLength * 0.1 + SpanSleepLength * 0.1);
 			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
-			Assert.True(duration >= expectedTransactionLength, $"Expected {duration} to be greater or equal to: {expectedTransactionLength}");
+			WaitHelpers.Assert3XMinimumSleepLength(duration);
 
 			return payloadSender;
 		}
@@ -583,7 +577,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 			{
-				Thread.Sleep(TransactionSleepLength);
+				WaitHelpers.SleepMinimum();
 				action(t);
 			});
 
@@ -593,10 +587,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			Assert.Equal(TransactionName, payloadSender.Payloads[0].Transactions[0].Name);
 			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
 
-			//`await Task.Delay` is inaccurate, so we enable 10% error in the test
-			var expectedTransactionLength = (TransactionSleepLength + SpanSleepLength) - (TransactionSleepLength * 0.1 + SpanSleepLength * 0.1);
 			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
-			Assert.True(duration >= expectedTransactionLength, $"Expected {duration} to be greater or equal to: {expectedTransactionLength}");
+			WaitHelpers.Assert3XMinimumSleepLength(duration);
 
 			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
 
