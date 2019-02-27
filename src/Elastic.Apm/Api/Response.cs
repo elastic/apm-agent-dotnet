@@ -6,7 +6,7 @@ namespace Elastic.Apm.Api
 	/// Encapsulates Response related information that can be attached to an <see cref="ITransaction" /> through <see cref="ITransaction.Context" />
 	/// See <see cref="Context.Response" />
 	/// </summary>
-	public class Response
+	public struct Response
 	{
 		public bool Finished { get; set; }
 
