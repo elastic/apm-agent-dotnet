@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Model.Payload;
 using Microsoft.AspNetCore.Http;
 
 [assembly:
@@ -32,20 +31,20 @@ namespace Elastic.Apm.AspNetCore
 			var transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
 				ApiConstants.TypeRequest);
 
-			transaction.Context.Request = new Request
+			var url = new Url
 			{
-				Method = context.Request.Method,
+				Full = context.Request?.Path.Value,
+				HostName = context.Request.Host.Host,
+				Protocol = GetProtocolName(context.Request.Protocol),
+				Raw = context.Request?.Path.Value //TODO
+			};
+
+			transaction.Context.Request = new Request( context.Request.Method, url)
+			{
 				Socket = new Socket
 				{
 					Encrypted = context.Request.IsHttps,
 					RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
-				},
-				Url = new Url
-				{
-					Full = context.Request?.Path.Value,
-					HostName = context.Request.Host.Host,
-					Protocol = GetProtocolName(context.Request.Protocol),
-					Raw = context.Request?.Path.Value //TODO
 				},
 				HttpVersion = GetHttpVersion(context.Request.Protocol)
 			};
