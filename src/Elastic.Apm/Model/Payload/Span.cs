@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.Api;
+using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
@@ -43,6 +44,7 @@ namespace Elastic.Apm.Model.Payload
 		public int Id { get; set; }
 
 		private string _name;
+
 		public string Name
 		{
 			get => _name;

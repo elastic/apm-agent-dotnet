@@ -9,11 +9,15 @@ namespace ApiSamples
 	{
 		private static void Main(string[] args)
 		{
+			Console.WriteLine("Start");
 			SampleCustomTransactionWithConvenientApi();
 
 			//WIP: if the process terminates the agent
 			//potentially does not have time to send the transaction to the server.
 			Thread.Sleep(1000);
+
+			Console.WriteLine("Done");
+			Thread.Sleep(Int32.MaxValue);
 		}
 
 		public static void SampleCustomTransaction()

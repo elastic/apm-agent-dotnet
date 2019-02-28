@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks.Dataflow;
@@ -10,7 +12,9 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
+using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Report
@@ -38,7 +42,7 @@ namespace Elastic.Apm.Report
 		internal PayloadSender(IApmLogger logger, IConfigurationReader configurationReader, HttpMessageHandler handler = null)
 		{
 			_logger = logger?.Scoped(nameof(PayloadSender));
-			_settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
+			_settings = new JsonSerializerSettings { ContractResolver = new StringTruncationValueResolver() };
 
 			var serverUrlBase = configurationReader.ServerUrls.First();
 			var servicePoint = ServicePointManager.FindServicePoint(serverUrlBase);
@@ -77,9 +81,18 @@ namespace Elastic.Apm.Report
 				var item = batch.FirstOrDefault();
 				try
 				{
-					var json = JsonConvert.SerializeObject(item, _settings);
-					var content = new StringContent(json, Encoding.UTF8, "application/json");
+					StringContent content = null;
 
+					try
+
+					{
+						var json = JsonConvert.SerializeObject(item, _settings);
+						content  = new StringContent(json, Encoding.UTF8, "application/json");
+					}
+					catch (Exception e)
+					{
+
+					}
 					HttpResponseMessage result = null;
 					switch (item)
 					{
