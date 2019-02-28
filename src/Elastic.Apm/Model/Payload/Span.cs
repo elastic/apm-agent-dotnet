@@ -43,18 +43,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public int Id { get; set; }
 
-		private string _name;
-
-		public string Name
-		{
-			get => _name;
-			set
-			{
-				if (value.Length > Consts.PropertyMaxLength)
-					value = $"{value.Substring(0, Consts.PropertyMaxLength-3)}...";
-				_name = value;
-			}
-		}
+		public string Name { get; set; }
 
 		[JsonProperty("Stacktrace")]
 		public List<Stacktrace> StackTrace { get; set; }

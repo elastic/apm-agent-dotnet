@@ -81,18 +81,9 @@ namespace Elastic.Apm.Report
 				var item = batch.FirstOrDefault();
 				try
 				{
-					StringContent content = null;
+					var json = JsonConvert.SerializeObject(item, _settings);
+					var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-					try
-
-					{
-						var json = JsonConvert.SerializeObject(item, _settings);
-						content  = new StringContent(json, Encoding.UTF8, "application/json");
-					}
-					catch (Exception e)
-					{
-
-					}
 					HttpResponseMessage result = null;
 					switch (item)
 					{

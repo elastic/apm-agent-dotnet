@@ -40,29 +40,6 @@ namespace Elastic.Apm.Tests
 			Assert.Equal(Assembly.Load("Elastic.Apm").GetName().Version.ToString(), payloadSender.Payloads[0].Service.Agent.Version);
 		}
 
-		/// <summary>
-		/// Starts a custom span with name length > 1024.
-		/// Makes sure that the name is truncated.
-		/// Reason: server rejects spans with name length > 1024.
-		/// </summary>
-		[Fact]
-		public void SpanNameLengthTest()
-		{
-			var spanName = new StringBuilder();
-
-			for (var i = 0; i < 1030; i++) spanName.Append('a');
-
-			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
-
-			agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t) => { t.CaptureSpan(spanName.ToString(), "test", () => { }); });
-
-			Assert.NotNull(payloadSender.FirstSpan);
-			Assert.Equal(1024, payloadSender.FirstSpan.Name.Length);
-			Assert.Equal(spanName.ToString(0, 1021), payloadSender.FirstSpan.Name.Substring(0, 1021));
-			Assert.Equal("...", payloadSender.FirstSpan.Name.Substring(1021, 3));
-		}
-    
 		[Fact]
 		public void PayloadSentWithBearerToken()
 		{
