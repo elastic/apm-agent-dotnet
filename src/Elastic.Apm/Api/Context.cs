@@ -10,7 +10,7 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// If a log record was generated as a result of a http request, the http interface can be used to collect this
 		/// information.
-		/// This property by default contains empty values! You have to assign a <see cref="Request" /> instance to this property in order to use
+		/// This property is by default null! You have to assign a <see cref="Request" /> instance to this property in order to use
 		/// it.
 		/// </summary>
 		public Request Request { get; set; }
@@ -18,7 +18,7 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// If a log record was generated as a result of a http request, the http interface can be used to collect this
 		/// information.
-		/// This property by default contains empty values! You have to assign a <see cref="Response" /> instance to this property in order to use
+		/// This property is by default null! You have to assign a <see cref="Response" /> instance to this property in order to use
 		/// it.
 		/// </summary>
 		public Response Response { get; set; }
