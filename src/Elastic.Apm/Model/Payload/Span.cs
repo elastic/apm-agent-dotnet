@@ -105,15 +105,20 @@ namespace Elastic.Apm.Model.Payload
 
 	internal class Db : IDb
 	{
+		[NoTruncationInJsonNet]
 		public string Instance { get; set; }
+		[NoTruncationInJsonNet]
 		public string Statement { get; set; }
+		[NoTruncationInJsonNet]
 		public string Type { get; set; }
 	}
 
 	internal class Http : IHttp
 	{
+		[NoTruncationInJsonNet]
 		public string Method { get; set; }
 		public int StatusCode { get; set; }
+		[NoTruncationInJsonNet]
 		public string Url { get; set; }
 	}
 }

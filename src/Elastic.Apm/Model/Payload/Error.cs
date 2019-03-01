@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Elastic.Apm.Api;
+using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
@@ -41,6 +42,7 @@ namespace Elastic.Apm.Model.Payload
 		/// <summary>
 		/// The exception message, see: <see cref="Exception.Message" />
 		/// </summary>
+		[NoTruncationInJsonNet]
 		public string Message { get; set; }
 
 		public string Module { get; set; }

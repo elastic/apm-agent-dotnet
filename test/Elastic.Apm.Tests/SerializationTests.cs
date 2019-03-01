@@ -119,6 +119,27 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
+		/// Creates a db instance with a statement that is longer than <see cref="Consts.PropertyMaxLength" />.
+		/// Makes sure the statement is not truncated.
+		/// </summary>
+		[Fact]
+		public void DbStatementLengthTest()
+		{
+			var sb = new StringBuilder();
+			for (var i = 0; i < 1200; i++) sb.Append('a');
+			var db = new Db { Statement = sb.ToString() };
+
+			var settings = new JsonSerializerSettings { ContractResolver = new StringTruncationValueResolver() };
+			var json = JsonConvert.SerializeObject(db, settings);
+			var deserializedDb = JsonConvert.DeserializeObject<Db>(json);
+
+			Assert.NotNull(deserializedDb);
+
+			Assert.Equal(sb.Length, deserializedDb.Statement.Length);
+			Assert.Equal(sb.ToString(), deserializedDb.Statement);
+		}
+
+		/// <summary>
 		/// A dummy type to attach <see cref="NoTruncationInJsonNetAttribute"/> to some of its properties.
 		/// It's used by test methods.
 		/// </summary>
