@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -43,8 +42,9 @@ namespace Elastic.Apm.Model.Payload
 
 			Name = name;
 			Type = type;
-			Id = Guid.NewGuid();
-			TraceId = Guid.NewGuid().ToString();
+			Random rnd = new Random();
+			Id = rnd.Next().ToString();
+			TraceId = rnd.Next().ToString();
 
 			SpanCount = new SpanCount(); //TODO
 		}
@@ -63,7 +63,7 @@ namespace Elastic.Apm.Model.Payload
 		/// <value>The duration.</value>
 		public double? Duration { get; set; } //TODO datatype?, TODO: Greg, imo should be internal, TBD!
 
-		public Guid Id { get; }
+		public string Id { get; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
@@ -78,12 +78,6 @@ namespace Elastic.Apm.Model.Payload
 		public string Result { get; set; }
 
 		internal Service Service;
-
-		//TODO: probably won't need with intake v2
-		public ISpan[] Spans => SpansInternal.ToArray();
-
-		//TODO: measure! What about List<T> with lock() in our case?
-		internal BlockingCollection<Span> SpansInternal = new BlockingCollection<Span>();
 
 		[JsonIgnore]
 		public Dictionary<string, string> Tags => Context.Tags;
@@ -114,7 +108,7 @@ namespace Elastic.Apm.Model.Payload
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
-			var retVal = new Span(name, type, this);
+			var retVal = new Span(name, type, this, _sender);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 
@@ -122,7 +116,6 @@ namespace Elastic.Apm.Model.Payload
 
 			var currentTime = DateTimeOffset.UtcNow;
 			retVal.Start = (decimal)(currentTime - Start).TotalMilliseconds;
-			retVal.Transaction = this;
 			return retVal;
 		}
 

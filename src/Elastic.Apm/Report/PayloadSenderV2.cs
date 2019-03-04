@@ -20,6 +20,7 @@ namespace Elastic.Apm.Report
 	{
 		private IConfigurationReader _configurationReader;
 		private IApmLogger _logger;
+		private readonly Service _service;
 
 		public void QueueError(IError error) { }
 
@@ -27,19 +28,22 @@ namespace Elastic.Apm.Report
 
 		private readonly JsonSerializerSettings _settings;
 
-		private BlockingCollection<ITransaction> _transactions = new BlockingCollection<ITransaction>();
+		private readonly BlockingCollection<object> _eventQueue = new BlockingCollection<object>();
 
 		public void QueueTransaction(ITransaction transaction)
 		{
-			_transactions.Add(transaction);
+			_eventQueue.Add(transaction);
 		}
 
-		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, HttpMessageHandler handler = null)
+		public void QueueSpan(ISpan span) => _eventQueue.Add(span);
+
+		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, HttpMessageHandler handler = null)
 		{
-			_settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver(), Formatting = Formatting.None};
+			_settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver(), Formatting = Formatting.None };
 			_configurationReader = configurationReader;
+			_service = service;
 			_logger = logger;
-			Thread t = new Thread(DoWork);
+			var t = new Thread(DoWork);
 			t.Start();
 		}
 
@@ -52,28 +56,28 @@ namespace Elastic.Apm.Report
 
 			while (true)
 			{
+				var item = (_eventQueue.Take());
 
-				var item = (_transactions.Take()  as Transaction);
-
-				if(item == null)
+				if (item == null)
 					continue;
 
-				var metadata = new Metadata { Service = item.Service };
+				var itemJson = JsonConvert.SerializeObject(item, _settings);
 
+				var json = "";
+				var metadata = new Metadata { Service = _service };
 				var metadataJson = JsonConvert.SerializeObject(metadata, _settings);
-				var serviceJson = JsonConvert.SerializeObject(item, _settings);
+				json = "{\"metadata\": " + metadataJson + "}" + "\n";
 
-//				Console.WriteLine(json);
-//
-//				var sb = new StringBuilder();
-//				using (var textWriter = new StringWriter(sb))
-//				{
-//					JsonExtensions.ToNewlineDelimitedJson(textWriter, new List<String> {json} );
-//				}
-//
-//				var ndjson = sb.ToString();
+				switch (item)
+				{
+					case Transaction t:
+						json += "{\"transaction\": " + itemJson + "}";
+						break;
+					case Span s:
+						json += "{\"span\": " + itemJson + "}";
+						break;
+				}
 
-				var json = "{\"metadata\": " + metadataJson + "}" + "\n" + "{\"transaction\": " + serviceJson + "}";
 				Console.WriteLine(json);
 
 				var content = new StringContent(json, Encoding.UTF8, "application/x-ndjson");
@@ -86,7 +90,6 @@ namespace Elastic.Apm.Report
 				{
 					_logger.LogDebug($"Failed sending data to the server, {e.GetType()} - {e.Message}");
 				}
-
 			}
 			// ReSharper disable once FunctionNeverReturns
 		}
