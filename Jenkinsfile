@@ -70,7 +70,7 @@ pipeline {
                         Invoke-WebRequest "https://aka.ms/vs/15/release/vs_BuildTools.exe" -OutFile vs_BuildTools.exe -UseBasicParsing
                         """*/
                         //--installPath ${env.WORKSPACE}\\vs2017
-                        bat "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vs_installer.exe --add Microsoft.VisualStudio.Component.NuGet --add Microsoft.Net.Core.Component.SDK --add Microsoft.VisualStudio.Workload.MSBuildTools --add Microsoft.VisualStudio.Component.WebDeploy --add Microsoft.VisualStudio.Workload.WebBuildTools --Microsoft.VisualStudio.Component.NuGet.BuildTools -Wait --passive -q"
+                        bat "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vs_installershell.exe --add Microsoft.VisualStudio.Component.NuGet --add Microsoft.Net.Core.Component.SDK --add Microsoft.VisualStudio.Workload.MSBuildTools --add Microsoft.VisualStudio.Component.WebDeploy --add Microsoft.VisualStudio.Workload.WebBuildTools --Microsoft.VisualStudio.Component.NuGet.BuildTools -Wait -q"
                       }
                     }
                   }
