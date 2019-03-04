@@ -27,7 +27,7 @@ namespace Elastic.Apm.Model.Payload
 
 			public class TransactionReference
 			{
-				public Guid Id { get; set; }
+				public string Id { get; set; }
 			}
 		}
 	}

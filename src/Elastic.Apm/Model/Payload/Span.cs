@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.Api;
+using Elastic.Apm.Report;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
@@ -11,17 +12,22 @@ namespace Elastic.Apm.Model.Payload
 		private readonly Lazy<ContextImpl> _context = new Lazy<ContextImpl>();
 
 		private readonly DateTimeOffset _start;
+		private IPayloadSender _payloadSender;
 
-		public Span(string name, string type, Transaction transaction)
+		public Span(string name, string type, Transaction transaction, IPayloadSender payloadSender)
 		{
 			//Transaction = transaction;
 			_start = DateTimeOffset.UtcNow;
+			_payloadSender = payloadSender;
 			Start = (decimal)(_start - transaction.Start).TotalMilliseconds;
 			Name = name;
 			Type = type;
 
-			var rnd = new Random();
-			Id = rnd.Next();
+			Random rnd = new Random();
+			Id = rnd.Next().ToString();
+			ParentId = transaction.Id; //TODO
+			TransactionId = transaction.Id;
+			TraceId = transaction.TraceId; //TODO
 		}
 
 		public string Action { get; set; }
@@ -40,9 +46,15 @@ namespace Elastic.Apm.Model.Payload
 		/// <value>The duration.</value>
 		public double? Duration { get; set; }
 
-		public int Id { get; set; }
+		public string Id { get; set; }
 
 		public string Name { get; set; }
+
+		[JsonProperty("parent_id")]
+		public string ParentId { get; set; }
+
+		[JsonProperty("trace_id")]
+		public string TraceId { get; set; }
 
 		[JsonProperty("Stacktrace")]
 		public List<Stacktrace> StackTrace { get; set; }
@@ -54,24 +66,22 @@ namespace Elastic.Apm.Model.Payload
 		[JsonIgnore]
 		public Dictionary<string, string> Tags => Context.Tags;
 
-		internal Transaction Transaction;
-
-		public Guid TransactionId => Transaction.Id;
+		[JsonProperty("Transaction_id")]
+		public string TransactionId { get; set; }
 
 		public string Type { get; set; }
 
 		public void End()
 		{
 			if (!Duration.HasValue) Duration = (DateTimeOffset.UtcNow - _start).TotalMilliseconds;
-
+			_payloadSender.QueueSpan(this);
 			//Transaction?.SpansInternal.Add(this);
 		}
 
-		public void CaptureException(Exception exception, string culprit = null)
-			=> Transaction?.CaptureException(exception, culprit);
+		public void CaptureException(Exception exception, string culprit = null) { } //TODO: Transaction?.CaptureException(exception, culprit);
 
-		public void CaptureError(string message, string culprit, StackFrame[] frames)
-			=> Transaction?.CaptureError(message, culprit, frames);
+		public void
+			CaptureError(string message, string culprit, StackFrame[] frames) { } //TODO: => Transaction?.CaptureError(message, culprit, frames);
 
 		private class ContextImpl : IContext
 		{

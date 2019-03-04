@@ -23,7 +23,7 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// The id of the span.
 		/// </summary>
-		int Id { get; set; }
+		string Id { get; set; }
 
 		/// <summary>
 		/// The name of the span.
@@ -49,7 +49,7 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// UUID of the enclosing transaction.
 		/// </summary>
-		Guid TransactionId { get; }
+		string TransactionId { get; }
 
 		/// <summary>
 		/// The type of the span.

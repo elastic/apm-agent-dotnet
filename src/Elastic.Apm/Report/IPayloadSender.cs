@@ -10,5 +10,7 @@ namespace Elastic.Apm.Report
 		void QueuePayload(IPayload payload);
 
 		void QueueTransaction(ITransaction transaction);
+
+		void QueueSpan(ISpan span);
 	}
 }

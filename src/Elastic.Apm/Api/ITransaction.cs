@@ -15,7 +15,7 @@ namespace Elastic.Apm.Api
 		/// <value>The duration.</value>
 		double? Duration { get; set; }
 
-		Guid Id { get; }
+		string Id { get; }
 
 		/// <summary>
 		/// The name of the span.

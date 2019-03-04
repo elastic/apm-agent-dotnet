@@ -26,5 +26,7 @@ namespace Elastic.Apm.Tests.Mocks
 		public void QueuePayload(IPayload payload) => Payloads.Add(payload);
 
 		public void QueueTransaction(ITransaction transaction) => throw new System.NotImplementedException();
+
+		public void QueueSpan(ISpan span) => throw new System.NotImplementedException();
 	}
 }
