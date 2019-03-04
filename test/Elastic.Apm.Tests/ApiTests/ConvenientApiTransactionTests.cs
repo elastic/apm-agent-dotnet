@@ -149,7 +149,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		{
 			Action act = () =>
 			{
-				var result = agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
+				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 				{
 					t.Should().NotBeNull();
 					WaitHelpers.SleepMinimum();
@@ -175,7 +175,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		{
 			Action act = () =>
 			{
-				var result = agent.Tracer.CaptureTransaction(TransactionName, TransactionType, () =>
+				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, () =>
 				{
 					WaitHelpers.SleepMinimum();
 
@@ -310,7 +310,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		{
 			Func<Task> act = async () =>
 			{
-				var result = await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
+				await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 				{
 					t.Should().NotBeNull();
 					await WaitHelpers.DelayMinimum();
@@ -335,7 +335,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		{
 			Func<Task> act = async () =>
 			{
-				var result = await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async () =>
+				await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async () =>
 				{
 					await WaitHelpers.DelayMinimum();
 
@@ -467,6 +467,120 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			//Also make sure the tag is visible directly on Transaction.Tags.
 			payloadSender.Payloads[0].Transactions[0].Tags.Should().Contain("foo", "bar");
+		}
+
+		/// <summary>
+		/// Creates a transaction and attaches a Request to this transaction.
+		/// Makes sure that the transaction details are captured.
+		/// </summary>
+		[Fact]
+		public void TransactionWithRequest()
+		{
+			var payloadSender = AssertWith1Transaction(
+				n =>
+				{
+					n.Tracer.CaptureTransaction(TransactionName, TransactionType, transaction =>
+					{
+						WaitHelpers.SleepMinimum();
+						transaction.Context.Request = new Request("GET", new Url { Protocol = "HTTP" });
+					});
+				});
+
+			payloadSender.FirstTransaction.Context.Request.Method.Should().Be("GET");
+			payloadSender.FirstTransaction.Context.Request.Url.Protocol.Should().Be("HTTP");
+		}
+
+		/// <summary>
+		/// Creates a transaction and attaches a Request to this transaction. It fills all the fields on the Request.
+		/// Makes sure that all the transaction details are captured.
+		/// </summary>
+		[Fact]
+		public void TransactionWithRequestDetailed()
+		{
+			var payloadSender = AssertWith1Transaction(
+				n =>
+				{
+					n.Tracer.CaptureTransaction(TransactionName, TransactionType, transaction =>
+					{
+						WaitHelpers.SleepMinimum();
+						transaction.Context.Request = new Request("GET", new Url
+						{
+							Full = "https://elastic.co",
+							Raw = "https://elastic.co",
+							HostName = "elastic",
+							Protocol = "HTTP"
+						})
+						{
+							HttpVersion = "2.0",
+							Socket = new Socket
+							{
+								Encrypted = true,
+								RemoteAddress = "127.0.0.1"
+							},
+							Body = "123"
+						};
+					});
+				});
+
+			payloadSender.FirstTransaction.Context.Request.Method.Should().Be("GET");
+			payloadSender.FirstTransaction.Context.Request.Url.Protocol.Should().Be("HTTP");
+
+			payloadSender.FirstTransaction.Context.Request.HttpVersion.Should().Be("2.0");
+			payloadSender.FirstTransaction.Context.Request.Socket.Encrypted.Should().BeTrue();
+			payloadSender.FirstTransaction.Context.Request.Url.Full.Should().Be("https://elastic.co");
+			payloadSender.FirstTransaction.Context.Request.Url.Raw.Should().Be("https://elastic.co");
+			payloadSender.FirstTransaction.Context.Request.Socket.RemoteAddress.Should().Be("127.0.0.1");
+			payloadSender.FirstTransaction.Context.Request.Url.HostName.Should().Be("elastic");
+			payloadSender.FirstTransaction.Context.Request.Body.Should().Be("123");
+		}
+
+		/// <summary>
+		/// Creates a transaction and attaches a Response to this transaction.
+		/// Makes sure that the transaction details are captured.
+		/// </summary>
+		[Fact]
+		public void TransactionWithResponse()
+		{
+			var payloadSender = AssertWith1Transaction(
+				n =>
+				{
+					n.Tracer.CaptureTransaction(TransactionName, TransactionType, transaction =>
+					{
+						WaitHelpers.SleepMinimum();
+						transaction.Context.Response = new Response
+							{ Finished = true, StatusCode = 200 };
+					});
+				});
+
+			payloadSender.FirstTransaction.Context.Response.Finished.Should().BeTrue();
+			payloadSender.FirstTransaction.Context.Response.StatusCode.Should().Be(200);
+		}
+
+		/// <summary>
+		/// Creates a transaction and attaches a Response and a request to this transaction. It sets 1 property on each.
+		/// Makes sure that the transaction details are captured.
+		/// </summary>
+		[Fact]
+		public void TransactionWithResponseAndRequest()
+		{
+			var payloadSender = AssertWith1Transaction(
+				n =>
+				{
+					n.Tracer.CaptureTransaction(TransactionName, TransactionType, transaction =>
+					{
+						WaitHelpers.SleepMinimum();
+						transaction.Context.Response = new Response
+							{ Finished = true};
+						transaction.Context.Request = new Request("GET", new Url());
+
+						transaction.Context.Response.StatusCode = 200;
+						transaction.Context.Request.Url.Full = "https://elastic.co";
+					});
+				});
+
+			payloadSender.FirstTransaction.Context.Response.Finished.Should().BeTrue();
+			payloadSender.FirstTransaction.Context.Response.StatusCode.Should().Be(200);
+			payloadSender.FirstTransaction.Context.Request.Url.Full.Should().Be("https://elastic.co");
 		}
 
 		/// <summary>
