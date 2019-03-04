@@ -17,7 +17,7 @@ namespace Elastic.Apm.Config
 		protected static ConfigurationKeyValue Kv(string key, string value, string origin) =>
 			new ConfigurationKeyValue(key, value, origin);
 
-		private static bool TryParseLogLevel(string value, out LogLevel? level)
+		protected internal static bool TryParseLogLevel(string value, out LogLevel? level)
 		{
 			level = null;
 			if (string.IsNullOrEmpty(value)) return false;
@@ -40,12 +40,6 @@ namespace Elastic.Apm.Config
 				}
 			}
 		}
-		protected internal static LogLevel ParseLogLevel(string value)
-		{
-			if (TryParseLogLevel(value, out var level)) return level.Value;
-			return ConsoleLogger.DefaultLogLevel;
-		}
-
 		protected string ParseSecretToken(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return null;
