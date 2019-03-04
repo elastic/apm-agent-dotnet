@@ -30,7 +30,6 @@ namespace Elastic.Apm.Logging
 
 		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{
-			//TODO: Discuss UtcNow?
 			var dateTime = DateTime.UtcNow;
 
 			var message = formatter(state, e);
