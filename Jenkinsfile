@@ -59,18 +59,11 @@ pipeline {
                         & ./dotnet-install.ps1 -Channel LTS -InstallDir ./dotnet
                         """
 
-/*
-'--add Microsoft.Net.Core.Component.SDK', \
-'--add Microsoft.VisualStudio.Workload.MSBuildTools', \
-'--add Microsoft.VisualStudio.Component.WebDeploy', \
-'--add Microsoft.VisualStudio.Workload.WebBuildTools', \
-*/
                         powershell label: 'Install MSBuild Tools', script: """
-                        Invoke-WebRequest "https://aka.ms/vs/15/release/vs_BuildTools.exe" -OutFile vs_BuildTools.exe -UseBasicParsing ; \
-                        	Start-Process -FilePath 'vs_BuildTools.exe' -ArgumentList '--quiet', '--norestart', \
-                          '--Microsoft.VisualStudio.Component.NuGet.BuildTools', \
-                          -Wait ;
+                        Invoke-WebRequest "https://aka.ms/vs/15/release/vs_BuildTools.exe" -OutFile vs_BuildTools.exe -UseBasicParsing
                         """
+                        //--installPath ${env.WORKSPACE}\\vs2017
+                        bat "vs_BuildTools.exe --add Microsoft.Net.Core.Component.SDK --add Microsoft.VisualStudio.Workload.MSBuildTools --add Microsoft.VisualStudio.Component.WebDeploy --add Microsoft.VisualStudio.Workload.WebBuildTools --Microsoft.VisualStudio.Component.NuGet.BuildTools -Wait --passive"
                       }
                     }
                   }
@@ -90,7 +83,7 @@ pipeline {
                         */
                         bat """
                         echo %PATH%
-                        dir 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\MSBuild\\15.0\\Bin\\SdkResolvers'
+                        dir "${VS_HOME}\\BuildTools\\MSBuild\\15.0\\Bin"
                         msbuild
                         """
                       }
