@@ -38,7 +38,7 @@ pipeline {
         //https://dot.net/v1/dotnet-install.sh
         //https://download.microsoft.com/download/D/7/5/D75188CA-848C-4634-B402-4B746E9F516A/DotNetCore.1.0.1-VS2015Tools.Preview2.0.4.exe
               stage('Windows'){
-                agent { label 'windows' }
+                agent { label 'windows-2016' }
                 options { skipDefaultCheckout() }
                 environment {
                   HOME = "${env.WORKSPACE}"
@@ -51,7 +51,8 @@ pipeline {
                       deleteDir()
                       dir("${HOME}"){
                         powershell label: 'Download .Net SDK', script: """
-                        Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-install.ps1
+                        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+                        Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-install.ps1 -UseBasicParsing ;
                         """
                         powershell label: 'Install .Net SDK', script: """
                         & ./dotnet-install.ps1 -Channel LTS -InstallDir ./dotnet
@@ -82,7 +83,8 @@ pipeline {
                       dir("${BASE_DIR}"){
                         bat """
                         echo %PATH%
-                        nuget restore ElasticApmAgent.sln
+                        ;nuget restore ElasticApmAgent.sln
+                        dotnet restore
                         msbuild
                         """
                       }
