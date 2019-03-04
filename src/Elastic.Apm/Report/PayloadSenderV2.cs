@@ -7,6 +7,8 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
@@ -28,14 +30,18 @@ namespace Elastic.Apm.Report
 
 		private readonly JsonSerializerSettings _settings;
 
-		private readonly BlockingCollection<object> _eventQueue = new BlockingCollection<object>();
+		private readonly BatchBlock<object> _eventQueue =
+			new BatchBlock<object>(1, new GroupingDataflowBlockOptions
+				{ BoundedCapacity = 1_000_000 });
+
 
 		public void QueueTransaction(ITransaction transaction)
 		{
-			_eventQueue.Add(transaction);
+			_eventQueue.Post(transaction);
+			_eventQueue.TriggerBatch();
 		}
 
-		public void QueueSpan(ISpan span) => _eventQueue.Add(span);
+		public void QueueSpan(ISpan span) => _eventQueue.Post(span);
 
 		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, HttpMessageHandler handler = null)
 		{
@@ -43,11 +49,23 @@ namespace Elastic.Apm.Report
 			_configurationReader = configurationReader;
 			_service = service;
 			_logger = logger;
-			var t = new Thread(DoWork);
-			t.Start();
+
+
+			var t = Task.Factory.StartNew(
+				async () =>
+				{
+					while (true)
+					{
+						try
+						{
+							await DoWork();
+						}
+						catch (TaskCanceledException ex) { }
+					}
+				}, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 		}
 
-		private void DoWork()
+		private async Task DoWork()
 		{
 			var httpClient = new HttpClient()
 			{
@@ -56,35 +74,38 @@ namespace Elastic.Apm.Report
 
 			while (true)
 			{
-				var item = (_eventQueue.Take());
+				var queueItems = await _eventQueue.ReceiveAsync();
 
-				if (item == null)
-					continue;
 
-				var itemJson = JsonConvert.SerializeObject(item, _settings);
+				//var itemJson = JsonConvert.SerializeObject(item, _settings);
 
 				var json = "";
 				var metadata = new Metadata { Service = _service };
 				var metadataJson = JsonConvert.SerializeObject(metadata, _settings);
 				json = "{\"metadata\": " + metadataJson + "}" + "\n";
 
-				switch (item)
+				foreach (var item in queueItems)
 				{
-					case Transaction t:
-						json += "{\"transaction\": " + itemJson + "}";
-						break;
-					case Span s:
-						json += "{\"span\": " + itemJson + "}";
-						break;
+					var serialized = JsonConvert.SerializeObject(item, _settings);
+					switch (item)
+					{
+						case Transaction t:
+							json += "{\"transaction\": " + serialized + "}";
+							break;
+						case Span s:
+							json += "{\"span\": " + serialized + "}";
+							break;
+					}
 				}
 
-				Console.WriteLine(json);
+				Console.WriteLine($"ThreadID {Thread.CurrentThread.ManagedThreadId} ");
+				//Console.WriteLine(json);
 
 				var content = new StringContent(json, Encoding.UTF8, "application/x-ndjson");
 
 				try
 				{
-					var result = httpClient.PostAsync(Consts.IntakeV2Events, content);
+					var result = await httpClient.PostAsync(Consts.IntakeV2Events, content);
 				}
 				catch (Exception e)
 				{
