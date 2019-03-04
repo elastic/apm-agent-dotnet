@@ -43,7 +43,7 @@ pipeline {
                 environment {
                   HOME = "${env.WORKSPACE}"
                   DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
-                  PATH = "${env.PATH};${env.HOME}\\bin;${env.HOME}\\.dotnet\\tools;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;'C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\MSBuild\\15.0\\Bin'"
+                  PATH = "${env.PATH};${env.HOME}\\bin;${env.HOME}\\.dotnet\\tools;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;\"C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\MSBuild\\15.0\\Bin\""
                 }
                 stages{
                   stage('Install .Net SDK from URL') {
@@ -60,13 +60,14 @@ pipeline {
                         powershell label: 'Install MSBuild Tools', script: """
                         Invoke-WebRequest "https://aka.ms/vs/15/release/vs_BuildTools.exe" -OutFile vs_BuildTools.exe -UseBasicParsing ; \
                         	Start-Process -FilePath 'vs_BuildTools.exe' -ArgumentList '--quiet', '--norestart', \
-                          '--installPath ${WORKSPACE}\\vs2017' \
-                          '--add Microsoft.Net.Core.Component.SDK' \
-                          '--add Microsoft.VisualStudio.Workload.MSBuildTools' \
-                          '--add Microsoft.VisualStudio.Component.WebDeploy' \
-                          '--add Microsoft.VisualStudio.Workload.WebBuildTools' \
+                          '--installPath ${WORKSPACE}\\vs2017', \
+                          '--add Microsoft.Net.Core.Component.SDK', \
+                          '--add Microsoft.VisualStudio.Workload.MSBuildTools', \
+                          '--add Microsoft.VisualStudio.Component.WebDeploy', \
+                          '--add Microsoft.VisualStudio.Workload.WebBuildTools', \
                           -Wait ;
                         """
+                        vs_BuildTools.exe --add Microsoft.VisualStudio.Workload.MSBuildTools
                         */
                       }
                     }
@@ -80,6 +81,7 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         bat """
+                        echo %PATH%
                         nuget restore ElasticApmAgent.sln
                         msbuild
                         """
