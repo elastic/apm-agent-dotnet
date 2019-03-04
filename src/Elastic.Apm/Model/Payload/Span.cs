@@ -16,7 +16,6 @@ namespace Elastic.Apm.Model.Payload
 
 		public Span(string name, string type, Transaction transaction, IPayloadSender payloadSender)
 		{
-			//Transaction = transaction;
 			_start = DateTimeOffset.UtcNow;
 			_payloadSender = payloadSender;
 			Start = (decimal)(_start - transaction.Start).TotalMilliseconds;
