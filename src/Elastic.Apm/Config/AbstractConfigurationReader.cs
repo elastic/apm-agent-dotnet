@@ -50,8 +50,13 @@ namespace Elastic.Apm.Config
 		{
 			if (TryParseLogLevel(kv?.Value, out var level)) return level.Value;
 
-			Logger?.LogError("Failed parsing log level from {Origin}: {Key}, value: {Value}. Defaulting to log level '{DefaultLogLevel}'",
-				kv.ReadFrom, kv.Key, kv.Value, ConsoleLogger.DefaultLogLevel);
+			if (kv?.Value == null)
+				Logger?.LogDebug("No log level provided. Defaulting to log level '{DefaultLogLevel}'", ConsoleLogger.DefaultLogLevel);
+			else
+			{
+				Logger?.LogError("Failed parsing log level from {Origin}: {Key}, value: {Value}. Defaulting to log level '{DefaultLogLevel}'",
+					kv.ReadFrom, kv.Key, kv.Value, ConsoleLogger.DefaultLogLevel);
+			}
 
 			return ConsoleLogger.DefaultLogLevel;
 		}
