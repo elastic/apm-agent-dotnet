@@ -84,6 +84,9 @@ pipeline {
                         bat """
                         echo %PATH%
                         dir "${VS_HOME}\\BuildTools\\MSBuild\\15.0\\Bin\\SdkResolvers\\Microsoft.Build.NuGetSdkResolver"
+                        dir "${VS_HOME}\\BuildTools\\Common7\\IDE\\CommonExtensions\\Microsoft\\NuGet\\Microsoft.Build.NuGetSdkResolver.dll"
+                        dir "${VS_HOME}\\BuildTools\\Common7\\IDE\\CommonExtensions\\Microsoft\\NuGet"
+                        dir "${VS_HOME}\\BuildTools\\Common7\\IDE\\CommonExtensions\\Microsoft"
                         msbuild
                         """
                       }
