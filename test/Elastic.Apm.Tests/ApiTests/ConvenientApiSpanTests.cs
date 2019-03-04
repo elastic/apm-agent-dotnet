@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Model.Payload;
+using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
@@ -485,7 +486,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.Payloads[0].Transactions[0].Type.Should().Be(TransactionType);
 
 			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
-			WaitHelpers.Assert3XMinimumSleepLength(duration);
+			duration.Should().BeGreaterOrEqualToMinimumSleepLength(numberOfSleeps: 3);
 
 			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
@@ -524,7 +525,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.Payloads[0].Transactions[0].Type.Should().Be(TransactionType);
 
 			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
-			WaitHelpers.Assert3XMinimumSleepLength(duration);
+			duration.Should().BeGreaterOrEqualToMinimumSleepLength(numberOfSleeps: 3);
 
 			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
@@ -560,7 +561,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.SpansOnFirstTransaction[0].Type.Should().Be(SpanType);
 
 			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
-			WaitHelpers.Assert3XMinimumSleepLength(duration);
+			duration.Should().BeGreaterOrEqualToMinimumSleepLength(numberOfSleeps: 3);
 
 			return payloadSender;
 		}
@@ -586,7 +587,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.Payloads[0].Transactions[0].Type.Should().Be(TransactionType);
 
 			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
-			WaitHelpers.Assert3XMinimumSleepLength(duration);
+			duration.Should().BeGreaterOrEqualToMinimumSleepLength(numberOfSleeps: 3);
 
 			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 

@@ -1,9 +1,10 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Xunit;
 
-namespace Elastic.Apm.Tests
+namespace Elastic.Apm.Tests.Extensions
 {
 	/// <summary>
 	/// Helper class that runs Task.Delay and Thread.Sleep
@@ -32,15 +33,7 @@ namespace Elastic.Apm.Tests
 
 		public static void SleepMinimum() => Thread.Sleep(SleepLength);
 
-		public static int A(this string str) => 24;
-
-		public static void AssertMinimumSleepLength(double? duration)
-			=> Assert.True(duration >= SleepLength, $"Expected {duration} to be greater or equal to: {SleepLength}");
-
-		public static void Assert3XMinimumSleepLength(double? duration)
-		{
-			var expectedTransactionLength = SleepLength + 2 *  SleepLength;
-			Assert.True(duration >= expectedTransactionLength, $"Expected {duration} to be greater or equal to: {expectedTransactionLength}");
-		}
+		public static void Assert3XMinimumSleepLength(double? duration) => duration.Should().BeGreaterOrEqualToMinimumSleepLength(numberOfSleeps: 3);
 	}
+
 }
