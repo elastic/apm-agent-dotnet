@@ -66,8 +66,9 @@ pipeline {
 
                         powershell label: 'Install MSBuild Tools', script: """
                         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-                        Invoke-WebRequest "https://aka.ms/vs/15/release/vs_BuildTools.exe" -OutFile vs_BuildTools.exe -UseBasicParsing
+                        Invoke-WebRequest "https://aka.ms/vs/15/release/vs_enterprise.exe" -OutFile vs_BuildTools.exe -UseBasicParsing
                         """
+
                         //--installPath ${env.WORKSPACE}\\vs2017
                         bat "vs_BuildTools.exe --installPath ${env.WORKSPACE}\\vs2017 --add Microsoft.VisualStudio.Component.NuGet --add Microsoft.Net.Core.Component.SDK --add Microsoft.VisualStudio.Workload.MSBuildTools --add Microsoft.VisualStudio.Component.WebDeploy --add Microsoft.VisualStudio.Workload.WebBuildTools --add Microsoft.VisualStudio.Component.NuGet.BuildTools --wait -q"
                       }
