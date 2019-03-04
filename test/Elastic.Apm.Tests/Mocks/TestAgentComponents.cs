@@ -5,7 +5,7 @@ using Elastic.Apm.Report;
 
 namespace Elastic.Apm.Tests.Mocks
 {
-	public class TestAgentComponents : AgentComponents
+	internal class TestAgentComponents : AgentComponents
 	{
 		public TestAgentComponents()
 			: this(new TestAgentConfigurationReader(new TestLogger(AbstractConfigurationReader.ParseLogLevel("Debug")))) { }

@@ -6,12 +6,11 @@ namespace Elastic.Apm.Logging
 	internal class ConsoleLogger : IApmLogger
 	{
 		private readonly TextWriter _errorOut;
-		private readonly LogLevel _level;
 		private readonly TextWriter _standardOut;
 
 		public ConsoleLogger(LogLevel level, TextWriter standardOut = null, TextWriter errorOut = null)
 		{
-			_level = level;
+			Level = level;
 			_standardOut = standardOut ?? Console.Out;
 			_errorOut = standardOut ?? Console.Error;
 		}
@@ -25,29 +24,27 @@ namespace Elastic.Apm.Logging
 			return Instance;
 		}
 
-		public LogLevel Level => _level;
-
+		public LogLevel Level { get; }
 
 		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{
 			var dateTime = DateTime.UtcNow;
 
 			var message = formatter(state, e);
-			var fullMessage = $"[{dateTime.ToString("yyyy-M-d hh:mm:ss")}][{LevelToString(level)}] - {message}";
+			var fullMessage = $"[{dateTime.ToString("yyyy-MM-dd hh:mm:ss")}][{LevelToString(level)}] - {message}";
 			switch (level)
 			{
-				case LogLevel.Critical when _level >= LogLevel.Critical:
-				case LogLevel.Error when _level >= LogLevel.Error:
+				case LogLevel.Critical when Level <= LogLevel.Critical:
+				case LogLevel.Error when Level <= LogLevel.Error:
 					_errorOut.WriteLineAsync(fullMessage);
 					break;
-				case LogLevel.Warning when _level >= LogLevel.Warning:
-				case LogLevel.Debug when _level >= LogLevel.Debug:
-				case LogLevel.Information when _level >= LogLevel.Information:
-				case LogLevel.Trace when _level >= LogLevel.Trace:
+				case LogLevel.Warning when Level <= LogLevel.Warning:
+				case LogLevel.Debug when Level <= LogLevel.Debug:
+				case LogLevel.Information when Level <= LogLevel.Information:
+				case LogLevel.Trace when Level <= LogLevel.Trace:
 					_standardOut.WriteLineAsync(fullMessage);
 					break;
 				case LogLevel.None: break;
-				default: break;
 			}
 		}
 
