@@ -35,29 +35,39 @@ pipeline {
             stash allowEmpty: true, name: 'source', useDefaultExcludes: false
           }
         }
+        //https://dot.net/v1/dotnet-install.sh
+        //https://download.microsoft.com/download/D/7/5/D75188CA-848C-4634-B402-4B746E9F516A/DotNetCore.1.0.1-VS2015Tools.Preview2.0.4.exe
               stage('Windows'){
-                agent { label 'windows-2016' }
+                agent { label 'windows' }
                 options { skipDefaultCheckout() }
                 environment {
                   HOME = "${env.WORKSPACE}"
                   DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
-                  PATH = "${env.PATH};${env.HOME}\\bin;${env.HOME}\\.dotnet\\tools;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools"
+                  PATH = "${env.PATH};${env.HOME}\\bin;${env.HOME}\\.dotnet\\tools;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;'C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\MSBuild\\15.0\\Bin'"
                 }
                 stages{
-                  /**
-                  Checkout the code and stash it, to use it on other stages.
-                  */
-                  stage('Install .Net SDK') {
+                  stage('Install .Net SDK from URL') {
                     steps {
                       deleteDir()
-                      dir("${HOME}/dotnet"){
+                      dir("${HOME}"){
                         powershell label: 'Download .Net SDK', script: """
-                        Invoke-WebRequest https://download.visualstudio.microsoft.com/download/pr/c332d70f-6582-4471-96af-4b0c17a616ad/5f3043d4bc506bf91cb89fa90462bb58/dotnet-sdk-2.2.103-win-x64.zip -OutFile dotnet.zip
+                        Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-install.ps1
                         """
                         powershell label: 'Install .Net SDK', script: """
-                        Add-Type -As System.IO.Compression.FileSystem
-                        [IO.Compression.ZipFile]::ExtractToDirectory('dotnet.zip', '.')
+                        & ./dotnet-install.ps1 -Channel LTS -InstallDir ./dotnet
                         """
+                        /*
+                        powershell label: 'Install MSBuild Tools', script: """
+                        Invoke-WebRequest "https://aka.ms/vs/15/release/vs_BuildTools.exe" -OutFile vs_BuildTools.exe -UseBasicParsing ; \
+                        	Start-Process -FilePath 'vs_BuildTools.exe' -ArgumentList '--quiet', '--norestart', \
+                          '--installPath ${WORKSPACE}\\vs2017' \
+                          '--add Microsoft.Net.Core.Component.SDK' \
+                          '--add Microsoft.VisualStudio.Workload.MSBuildTools' \
+                          '--add Microsoft.VisualStudio.Component.WebDeploy' \
+                          '--add Microsoft.VisualStudio.Workload.WebBuildTools' \
+                          -Wait ;
+                        """
+                        */
                       }
                     }
                   }
@@ -66,13 +76,30 @@ pipeline {
                   */
                   stage('Build') {
                     steps {
+                      deleteDir()
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        bat """
+                        nuget restore ElasticApmAgent.sln
+                        msbuild
+                        """
+                      }
+                    }
+                  }
+                  /**
+                  Build the project from code..
+                  */
+                  stage('Build - dotnet') {
+                    steps {
                       dir("${BASE_DIR}"){
                         deleteDir()
                       }
                       unstash 'source'
                       dir("${BASE_DIR}"){
-                        bat returnStatus: true, script: 'msbuild'
-                        bat "dotnet msbuild sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj"
+                        bat """
+                        dotnet sln remove sample\\AspNetFullFrameworkSampleApp\\AspNetFullFrameworkSampleApp.csproj
+                        dotnet build
+                        """
                       }
                     }
                   }
