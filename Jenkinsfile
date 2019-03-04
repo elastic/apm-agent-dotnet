@@ -38,7 +38,7 @@ pipeline {
         //https://dot.net/v1/dotnet-install.sh
         //https://download.microsoft.com/download/D/7/5/D75188CA-848C-4634-B402-4B746E9F516A/DotNetCore.1.0.1-VS2015Tools.Preview2.0.4.exe
               stage('Windows'){
-                agent { label 'windows' }
+                agent { label 'windows-2012r2' }
                 options { skipDefaultCheckout() }
                 environment {
                   HOME = "${env.WORKSPACE}"
@@ -64,12 +64,13 @@ pipeline {
                         Invoke-WebRequest "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile dotnet\\nuget.exe -UseBasicParsing ;
                         """
 
+                        /*
                         powershell label: 'Install MSBuild Tools', script: """
                         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
                         Invoke-WebRequest "https://aka.ms/vs/15/release/vs_BuildTools.exe" -OutFile vs_BuildTools.exe -UseBasicParsing
-                        """
+                        """*/
                         //--installPath ${env.WORKSPACE}\\vs2017
-                        bat "vs_BuildTools.exe --add Microsoft.VisualStudio.Component.NuGet --add Microsoft.Net.Core.Component.SDK --add Microsoft.VisualStudio.Workload.MSBuildTools --add Microsoft.VisualStudio.Component.WebDeploy --add Microsoft.VisualStudio.Workload.WebBuildTools --Microsoft.VisualStudio.Component.NuGet.BuildTools -Wait --passive"
+                        //bat "vs_BuildTools.exe --add Microsoft.VisualStudio.Component.NuGet --add Microsoft.Net.Core.Component.SDK --add Microsoft.VisualStudio.Workload.MSBuildTools --add Microsoft.VisualStudio.Component.WebDeploy --add Microsoft.VisualStudio.Workload.WebBuildTools --Microsoft.VisualStudio.Component.NuGet.BuildTools -Wait --passive"
                       }
                     }
                   }
@@ -88,7 +89,6 @@ pipeline {
                         dotnet restore
                         */
                         bat """
-                        echo %PATH%
                         nuget restore ElasticApmAgent.sln
                         msbuild
                         """
