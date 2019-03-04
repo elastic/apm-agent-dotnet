@@ -58,19 +58,19 @@ pipeline {
                         powershell label: 'Install .Net SDK', script: """
                         & ./dotnet-install.ps1 -Channel LTS -InstallDir ./dotnet
                         """
-                        /*
+
+/*
+'--add Microsoft.Net.Core.Component.SDK', \
+'--add Microsoft.VisualStudio.Workload.MSBuildTools', \
+'--add Microsoft.VisualStudio.Component.WebDeploy', \
+'--add Microsoft.VisualStudio.Workload.WebBuildTools', \
+*/
                         powershell label: 'Install MSBuild Tools', script: """
                         Invoke-WebRequest "https://aka.ms/vs/15/release/vs_BuildTools.exe" -OutFile vs_BuildTools.exe -UseBasicParsing ; \
                         	Start-Process -FilePath 'vs_BuildTools.exe' -ArgumentList '--quiet', '--norestart', \
-                          '--installPath ${WORKSPACE}\\vs2017', \
-                          '--add Microsoft.Net.Core.Component.SDK', \
-                          '--add Microsoft.VisualStudio.Workload.MSBuildTools', \
-                          '--add Microsoft.VisualStudio.Component.WebDeploy', \
-                          '--add Microsoft.VisualStudio.Workload.WebBuildTools', \
+                          '--Microsoft.VisualStudio.Component.NuGet.BuildTools', \
                           -Wait ;
                         """
-                        vs_BuildTools.exe --add Microsoft.VisualStudio.Workload.MSBuildTools
-                        */
                       }
                     }
                   }
