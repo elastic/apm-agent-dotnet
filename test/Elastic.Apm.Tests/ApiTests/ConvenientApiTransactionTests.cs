@@ -584,6 +584,92 @@ namespace Elastic.Apm.Tests.ApiTests
 		}
 
 		/// <summary>
+		/// Creates a transaction and attaches a Request to this transaction.
+		/// Makes sure that the transaction details are captured.
+		/// </summary>
+		[Fact]
+		public void TransactionWithRequest()
+		{
+			var payloadSender = AssertWith1Transaction(
+				n =>
+				{
+					n.Tracer.CaptureTransaction(TransactionName, TransactionType, transaction =>
+					{
+						WaitHelpers.SleepMinimum();
+						transaction.Context.Request = new Request("GET", new Url{Protocol = "HTTP"});
+					});
+				});
+
+			Assert.Equal("GET", payloadSender.FirstTransaction.Context.Request.Method);
+			Assert.Equal("HTTP", payloadSender.FirstTransaction.Context.Request.Url.Protocol);
+		}
+
+		/// <summary>
+		/// Creates a transaction and attaches a Request to this transaction. It fills all the fields on the Request.
+		/// Makes sure that all the transaction details are captured.
+		/// </summary>
+		[Fact]
+		public void TransactionWithRequestDetailed()
+		{
+			var payloadSender = AssertWith1Transaction(
+				n =>
+				{
+					n.Tracer.CaptureTransaction(TransactionName, TransactionType, transaction =>
+					{
+						WaitHelpers.SleepMinimum();
+						transaction.Context.Request = new Request("GET", new Url()
+						{
+							Full = "https://elastic.co",
+							Raw = "https://elastic.co",
+							HostName = "elastic",
+							Protocol = "HTTP"
+						})
+						{
+							HttpVersion = "2.0",
+							Socket = new Socket()
+							{
+								Encrypted = true,
+								RemoteAddress = "127.0.0.1",
+							},
+							Body = "123"
+						};
+					});
+				});
+
+			Assert.Equal("GET", payloadSender.FirstTransaction.Context.Request.Method);
+			Assert.Equal("HTTP", payloadSender.FirstTransaction.Context.Request.Url.Protocol);
+
+			Assert.Equal("2.0", payloadSender.FirstTransaction.Context.Request.HttpVersion);
+			Assert.True(payloadSender.FirstTransaction.Context.Request.Socket.Encrypted);
+			Assert.Equal("https://elastic.co", payloadSender.FirstTransaction.Context.Request.Url.Full);
+			Assert.Equal("https://elastic.co", payloadSender.FirstTransaction.Context.Request.Url.Raw);
+			Assert.Equal("127.0.0.1", payloadSender.FirstTransaction.Context.Request.Socket.RemoteAddress);
+			Assert.Equal("elastic", payloadSender.FirstTransaction.Context.Request.Url.HostName);
+			Assert.Equal("123", payloadSender.FirstTransaction.Context.Request.Body);
+		}
+
+		/// <summary>
+		/// Creates a transaction and attaches a Response to this transaction.
+		/// Makes sure that the transaction details are captured.
+		/// </summary>
+		[Fact]
+		public void TransactionWithResponse()
+		{
+			var payloadSender = AssertWith1Transaction(
+				n =>
+				{
+					n.Tracer.CaptureTransaction(TransactionName, TransactionType, transaction =>
+					{
+						WaitHelpers.SleepMinimum();
+						transaction.Context.Response = new Response() { Finished = true, StatusCode = 200 };
+					});
+				});
+
+			Assert.True(payloadSender.FirstTransaction.Context.Response.Finished);
+			Assert.Equal(200, payloadSender.FirstTransaction.Context.Response.StatusCode);
+		}
+
+		/// <summary>
 		/// Asserts on 1 transaction with async code
 		/// </summary>
 		private async Task<MockPayloadSender> AssertWith1TransactionAsync(Func<ApmAgent, Task> func)
