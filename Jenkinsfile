@@ -51,7 +51,7 @@ pipeline {
                     steps {
                       deleteDir()
                       dir("${HOME}"){
-                        powershell label: 'Download .Net SDK', script: """
+                        powershell label: 'Download .Net SDK installer script', script: """
                         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
                         Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-install.ps1 -UseBasicParsing ;
                         """
@@ -79,13 +79,15 @@ pipeline {
                   */
                   stage('Build') {
                     steps {
-                      deleteDir()
+                      dir("${BASE_DIR}"){
+                        deleteDir()
+                      }
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         bat """
                         echo %PATH%
                         ;nuget restore ElasticApmAgent.sln
-                        ${DOTNET_ROOT}\\dotnet restore
+                        dotnet restore
                         msbuild
                         """
                       }
