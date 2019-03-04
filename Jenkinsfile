@@ -90,7 +90,7 @@ pipeline {
                         */
                         bat """
                         echo %PATH%
-                        dit 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\MSBuild\\15.0\\Bin\\SdkResolvers'
+                        dir 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\MSBuild\\15.0\\Bin\\SdkResolvers'
                         msbuild
                         """
                       }
