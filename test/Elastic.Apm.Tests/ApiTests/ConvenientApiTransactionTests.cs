@@ -86,7 +86,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void SimpleActionWithExceptionAndParameter() => AssertWith1TransactionAnd1Error(agent =>
 		{
-			Assert.Throws<InvalidOperationException>(() =>
+			Action act = () =>
 			{
 				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, new Action<ITransaction>(t =>
 				{
@@ -94,7 +94,8 @@ namespace Elastic.Apm.Tests.ApiTests
 					WaitHelpers.SleepMinimum();
 					throw new InvalidOperationException(ExceptionMessage);
 				}));
-			});
+			};
+			act.Should().Throw<InvalidOperationException>();
 		});
 
 		/// <summary>
@@ -319,9 +320,6 @@ namespace Elastic.Apm.Tests.ApiTests
 
 					return 42;
 				});
-
-				Assert.True(false); //Should not be executed because the agent isn't allowed to catch an exception.
-				result.Should().Be(42); //But if it'd not throw it'd be 42.
 			};
 			await act.Should().ThrowAsync<InvalidOperationException>();
 		});
@@ -346,9 +344,6 @@ namespace Elastic.Apm.Tests.ApiTests
 
 					return 42;
 				});
-
-				Assert.True(false); //Should not be executed because the agent isn't allowed to catch an exception.
-				result.Should().Be(42); //But if it'd not throw it'd be 42.
 			};
 			await act.Should().ThrowAsync<InvalidOperationException>();
 		});
@@ -386,7 +381,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.Payloads[0].Transactions[0].Type.Should().Be(TransactionType);
 
 			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
-			Assert.True(duration >= WaitHelpers.SleepLength, $"Expected {duration} to be greater or equal to: {WaitHelpers.SleepLength}");
+			duration.Should().BeGreaterOrEqualToMinimumSleepLength();
 
 			payloadSender.Errors.Should().NotBeEmpty();
 			payloadSender.Errors[0].Errors.Should().NotBeEmpty();
