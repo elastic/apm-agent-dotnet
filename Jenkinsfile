@@ -77,17 +77,19 @@ pipeline {
                   /**
                   Build the project from code..
                   */
-                  stage('Build') {
+                  stage('Build - MSBuild') {
                     steps {
                       dir("${BASE_DIR}"){
                         deleteDir()
                       }
                       unstash 'source'
                       dir("${BASE_DIR}"){
-                        bat """
-                        echo %PATH%
+                        /*
                         ;nuget restore ElasticApmAgent.sln
                         dotnet restore
+                        */
+                        bat """
+                        echo %PATH%
                         msbuild
                         """
                       }
