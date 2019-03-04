@@ -59,7 +59,13 @@ pipeline {
                         & ./dotnet-install.ps1 -Channel LTS -InstallDir ./dotnet
                         """
 
+                        powershell label: 'Install NuGet Tool', script: """
+                        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+                        Invoke-WebRequest "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile dotnet\\nuget.exe -UseBasicParsing ;
+                        """
+
                         powershell label: 'Install MSBuild Tools', script: """
+                        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
                         Invoke-WebRequest "https://aka.ms/vs/15/release/vs_BuildTools.exe" -OutFile vs_BuildTools.exe -UseBasicParsing
                         """
                         //--installPath ${env.WORKSPACE}\\vs2017
