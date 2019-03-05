@@ -25,6 +25,7 @@ namespace Elastic.Apm.Model.Payload
 			Id = rnd.Next();
 		}
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Action { get; set; }
 
 		/// <summary>
@@ -43,6 +44,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public int Id { get; set; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
 
 		[JsonProperty("Stacktrace")]
@@ -50,6 +52,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public decimal Start { get; set; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Subtype { get; set; }
 
 		[JsonIgnore]
@@ -59,6 +62,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public Guid TransactionId => Transaction.Id;
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
 
 		public void End()
@@ -87,6 +91,7 @@ namespace Elastic.Apm.Model.Payload
 	{
 		IDb Db { get; set; }
 		IHttp Http { get; set; }
+		[JsonConverter(typeof(TagsJsonConverter))]
 		Dictionary<string, string> Tags { get; }
 	}
 
@@ -105,20 +110,16 @@ namespace Elastic.Apm.Model.Payload
 
 	internal class Db : IDb
 	{
-		[NoTruncationInJsonNet]
+
 		public string Instance { get; set; }
-		[NoTruncationInJsonNet]
 		public string Statement { get; set; }
-		[NoTruncationInJsonNet]
 		public string Type { get; set; }
 	}
 
 	internal class Http : IHttp
 	{
-		[NoTruncationInJsonNet]
 		public string Method { get; set; }
 		public int StatusCode { get; set; }
-		[NoTruncationInJsonNet]
 		public string Url { get; set; }
 	}
 }

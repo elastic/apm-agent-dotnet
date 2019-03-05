@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using Elastic.Apm.Report.Serialization;
+using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
 {
@@ -10,6 +12,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public Response Response { get; set; }
 
+		[JsonConverter(typeof(TagsJsonConverter))]
 		public Dictionary<string, string> Tags => tags.Value;
 	}
 }

@@ -42,9 +42,9 @@ namespace Elastic.Apm.Model.Payload
 		/// <summary>
 		/// The exception message, see: <see cref="Exception.Message" />
 		/// </summary>
-		[NoTruncationInJsonNet]
 		public string Message { get; set; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Module { get; set; }
 
 		[JsonProperty("Stacktrace")]
@@ -53,6 +53,7 @@ namespace Elastic.Apm.Model.Payload
 		/// <summary>
 		/// The type of the exception class
 		/// </summary>
+		 [JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
 	}
 }

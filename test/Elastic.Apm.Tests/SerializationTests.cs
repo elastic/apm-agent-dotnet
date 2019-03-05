@@ -5,6 +5,7 @@ using Elastic.Apm.Report.Serialization;
 using Elastic.Apm.Tests.Mocks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using Xunit;
 
 namespace Elastic.Apm.Tests
@@ -15,7 +16,7 @@ namespace Elastic.Apm.Tests
 	public class SerializationTests
 	{
 		/// <summary>
-		/// Tests the <see cref="StringTruncationValueResolver" />. It serializes a transaction with Transaction.Name.Length > 1024.
+		/// Tests the <see cref="TrimmedStringJsonConverter" />. It serializes a transaction with Transaction.Name.Length > 1024.
 		/// Makes sure that the Transaction.Name is truncated correctly.
 		/// </summary>
 		[Fact]
@@ -27,7 +28,7 @@ namespace Elastic.Apm.Tests
 
 			var transaction = new Transaction(new TestAgentComponents(), sb.ToString(), "test") { Duration = 1, Result = "fail" };
 
-			var settings = new JsonSerializerSettings { ContractResolver = new StringTruncationValueResolver() };
+			var settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 			var json = JsonConvert.SerializeObject(transaction, settings);
 			var deserializedTransaction = JsonConvert.DeserializeObject(json) as JObject;
 
@@ -40,11 +41,10 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Test <see cref="NoTruncationInJsonNetAttribute" />.
 		/// It creates an instance of <see cref="DummyType" /> with a <see cref="DummyType.StringProp" /> that has a string
 		/// which is longer than <see cref="Consts.PropertyMaxLength" />.
 		/// Makes sure that the serialized instance still contains the whole string (aka it was not trimmed), since
-		/// the property pointing to the string was marked with <see cref="NoTruncationInJsonNetAttribute" />.
+		/// the property pointing to the string wasn't marked with any attributes, so it's not trimmed.
 		/// </summary>
 		[Fact]
 		public void StringNoTruncateAttributeTest()
@@ -55,7 +55,7 @@ namespace Elastic.Apm.Tests
 
 			var dummyInstance = new DummyType { IntProp = 42, StringProp = sb.ToString() };
 
-			var settings = new JsonSerializerSettings { ContractResolver = new StringTruncationValueResolver() };
+			var settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 			var json = JsonConvert.SerializeObject(dummyInstance, settings);
 			var deserializedDummyInstance = JsonConvert.DeserializeObject<DummyType>(json);
 
@@ -81,7 +81,7 @@ namespace Elastic.Apm.Tests
 			var context = new Context();
 			context.Tags["foo"] = sb.ToString();
 
-			var settings = new JsonSerializerSettings { ContractResolver = new StringTruncationValueResolver() };
+			var settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 			var json = JsonConvert.SerializeObject(context, settings);
 			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
 
@@ -92,11 +92,10 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Test <see cref="NoTruncationInJsonNetAttribute" />.
 		/// It creates an instance of <see cref="DummyType" /> with a <see cref="DummyType.DictionaryProp" /> that has a value
 		/// which is longer than <see cref="Consts.PropertyMaxLength" />.
 		/// Makes sure that the serialized instance still contains the whole value (aka it was not trimmed), since
-		/// the property pointing to the string was marked with <see cref="NoTruncationInJsonNetAttribute" />.
+		/// the property pointing to the string is not marked with any attributes, so it is not trimmed.
 		/// </summary>
 		[Fact]
 		public void DictionaryNoTruncateAttributeTest()
@@ -108,7 +107,7 @@ namespace Elastic.Apm.Tests
 			var dummyInstance = new DummyType();
 			dummyInstance.DictionaryProp["foo"] = sb.ToString();
 
-			var settings = new JsonSerializerSettings { ContractResolver = new StringTruncationValueResolver() };
+			var settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 			var json = JsonConvert.SerializeObject(dummyInstance, settings);
 			var deserializedDummyInstance = JsonConvert.DeserializeObject(json) as JObject;
 
@@ -129,7 +128,7 @@ namespace Elastic.Apm.Tests
 			for (var i = 0; i < 1200; i++) sb.Append('a');
 			var db = new Db { Statement = sb.ToString() };
 
-			var settings = new JsonSerializerSettings { ContractResolver = new StringTruncationValueResolver() };
+			var settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 			var json = JsonConvert.SerializeObject(db, settings);
 			var deserializedDb = JsonConvert.DeserializeObject<Db>(json);
 
@@ -140,17 +139,14 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// A dummy type to attach <see cref="NoTruncationInJsonNetAttribute"/> to some of its properties.
-		/// It's used by test methods.
+		/// A dummy type for tests.
 		/// </summary>
 		private class DummyType
 		{
 			public int IntProp { get; set; }
 
-			[NoTruncationInJsonNet]
 			public string StringProp { get; set; }
 
-			[NoTruncationInJsonNet]
 			// ReSharper disable once CollectionNeverQueried.Local - it's by JsonConvert
 			public Dictionary<string, string> DictionaryProp { get; } = new Dictionary<string, string>();
 		}

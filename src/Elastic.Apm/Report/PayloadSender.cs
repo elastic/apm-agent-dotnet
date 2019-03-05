@@ -12,6 +12,7 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Report
 {
@@ -38,7 +39,7 @@ namespace Elastic.Apm.Report
 		internal PayloadSender(IApmLogger logger, IConfigurationReader configurationReader, HttpMessageHandler handler = null)
 		{
 			_logger = logger?.Scoped(nameof(PayloadSender));
-			_settings = new JsonSerializerSettings { ContractResolver = new StringTruncationValueResolver() };
+			_settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 
 			var serverUrlBase = configurationReader.ServerUrls.First();
 			var servicePoint = ServicePointManager.FindServicePoint(serverUrlBase);

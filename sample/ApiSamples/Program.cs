@@ -74,7 +74,8 @@ namespace ApiSamples
 		public static void SampleCustomTransactionWithConvenientApi() => Agent.Tracer.CaptureTransaction("TestTransaction", "TestType",
 			t =>
 			{
-				t.Tags["fooTransaction"] = "barTransaction";
+				t.Tags["fooTransaction1"] = "barTransaction1";
+				t.Tags["fooTransaction2"] = "barTransaction2";
 				Thread.Sleep(10);
 				t.CaptureSpan("TestSpan", "TestSpanName", s =>
 				{
