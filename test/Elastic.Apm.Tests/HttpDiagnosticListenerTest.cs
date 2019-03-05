@@ -36,8 +36,8 @@ namespace Elastic.Apm.Tests
 			logger.Lines.Should().NotBeEmpty();
 			logger.Lines[0]
 				.Should()
-				.StartWith($"{{{nameof(HttpDiagnosticListener)}}}")
-				.And.ContainAll(
+				.ContainAll(
+					$"{{{nameof(HttpDiagnosticListener)}}}",
 					"in OnError",
 					".cs:",
 					exceptionMessage
@@ -121,8 +121,8 @@ namespace Elastic.Apm.Tests
 			logger.Lines.Should().NotBeEmpty();
 			logger.Lines[0]
 				.Should()
-				.StartWith($"{{{nameof(HttpDiagnosticListener)}}}")
-				.And.ContainAll(
+				.ContainAll(
+					$"{{{nameof(HttpDiagnosticListener)}}}",
 					"Failed capturing request",
 					HttpMethod.Get.Method,
 					request.RequestUri.AbsoluteUri
