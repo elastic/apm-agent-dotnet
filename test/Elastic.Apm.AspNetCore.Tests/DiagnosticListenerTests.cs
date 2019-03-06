@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.Tests.Mocks;
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
 using Xunit;
@@ -47,12 +48,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 //			{
 //				await _client.GetAsync("/Home/TriggerError");
 //
-//				Assert.Single(_capturedPayload.Payloads);
-//				Assert.Single(_capturedPayload.Payloads[0].Transactions);
+//				_capturedPayload.Payloads.Should().ContainSingle();
+//				_capturedPayload.Payloads[0].Transactions.Should().ContainSingle();
 //
-//				Assert.NotEmpty(_capturedPayload.Errors);
-//				Assert.Single(_capturedPayload.Errors[0].Errors);
-//				Assert.Equal(typeof(Exception).FullName, _capturedPayload.Errors[0].Errors[0].Exception.Type);
+//				_capturedPayload.Errors.Should().NotBeEmpty();
+//				_capturedPayload.Errors[0].Errors.Should().ContainSingle();
+//				 _capturedPayload.Errors[0].Errors[0].Exception.Type.Should().Be(typeof(Exception).FullName);
 //			} //here we unsubsribe, so no errors should be captured after this line.
 
 			_agent.Dispose();
@@ -61,8 +62,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			await _client.GetAsync("/Home/TriggerError");
 
-			Assert.Single(_capturedPayload.Transactions);
-			Assert.Empty(_capturedPayload.Errors);
+			_capturedPayload.Payloads.Should().ContainSingle();
+			_capturedPayload.Payloads[0].Transactions.Should().ContainSingle();
+			_capturedPayload.Errors.Should().BeEmpty();
 		}
 
 		/// <summary>
@@ -79,19 +81,21 @@ namespace Elastic.Apm.AspNetCore.Tests
 			{
 				await _client.GetAsync("/Home/Index");
 
-				Assert.Single(_capturedPayload.Transactions);
+				_capturedPayload.Payloads.Should().ContainSingle();
+				_capturedPayload.Payloads[0].Transactions.Should().ContainSingle();
 
-				Assert.NotEmpty(_capturedPayload.SpansOnFirstTransaction);
-				Assert.Contains(_capturedPayload.SpansOnFirstTransaction, n => n.Context.Db != null);
+				_capturedPayload.SpansOnFirstTransaction.Should().NotBeEmpty()
+					.And.Contain(n => n.Context.Db != null);
 			} //here we unsubsribe, so no errors should be captured after this line.
 
 			_capturedPayload.Clear();
 
 			await _client.GetAsync("/Home/Index");
 
-			Assert.Single(_capturedPayload.Transactions);
+			_capturedPayload.Payloads.Should().ContainSingle();
+			_capturedPayload.Payloads[0].Transactions.Should().ContainSingle();
 
-			Assert.Empty(_capturedPayload.SpansOnFirstTransaction);
+			_capturedPayload.SpansOnFirstTransaction.Should().BeEmpty();
 		}
 
 		public void Dispose()

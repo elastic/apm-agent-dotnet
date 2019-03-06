@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3734A52F-2222-454B-BF58-1BA5C1F29D77}"
@@ -24,6 +24,17 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.All", "src\Elastic.Apm.All\Elastic.Apm.All.csproj", "{C0F1E546-4388-4EA5-8C7C-ACA8CFA4CE2F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpListenerSample", "sample\HttpListenerSample\HttpListenerSample.csproj", "{1AAB1A30-42C0-4C76-AE2E-9D7293945D80}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "files", "files", "{B406113B-0917-4531-AFEE-66DDB952590F}"
+ProjectSection(SolutionItems) = preProject
+	.editorconfig = .editorconfig
+	.gitignore = .gitignore
+	codecov.yml = codecov.yml
+	CONTRIBUTING.md = CONTRIBUTING.md
+	Jenkinsfile = Jenkinsfile
+	LICENSE = LICENSE
+	README.md = README.md
+EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

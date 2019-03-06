@@ -50,7 +50,17 @@ namespace Elastic.Apm.Model.Payload
 
 		public string Id { get; set; }
 
-		public string Name { get; set; }
+		private string _name;
+		public string Name
+		{
+			get => _name;
+			set
+			{
+				if (value.Length > Consts.PropertyMaxLength)
+					value = $"{value.Substring(0, Consts.PropertyMaxLength-3)}...";
+				_name = value;
+			}
+		}
 
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }

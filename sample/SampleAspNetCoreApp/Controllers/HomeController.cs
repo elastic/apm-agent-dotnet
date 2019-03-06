@@ -42,7 +42,7 @@ namespace SampleAspNetCoreApp.Controllers
 		[HttpPost]
 		public async Task<IActionResult> AddNewUser([FromForm] string enteredName)
 		{
-			if (String.IsNullOrEmpty(enteredName))
+			if (string.IsNullOrEmpty(enteredName))
 				throw new ArgumentNullException(nameof(enteredName));
 
 			_sampleDataContext.Users.Add(
@@ -56,10 +56,7 @@ namespace SampleAspNetCoreApp.Controllers
 			return Redirect("/Home/Index");
 		}
 
-		public IActionResult SimplePage()
-		{
-			return View();
-		}
+		public IActionResult SimplePage() => View();
 
 		public async Task<IActionResult> ChartPage()
 		{

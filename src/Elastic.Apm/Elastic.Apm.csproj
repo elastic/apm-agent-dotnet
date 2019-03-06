@@ -19,16 +19,8 @@
     <PackageIconUrl>https://raw.githubusercontent.com/elastic/apm-agent-dotnet/master/build/nuget-icon.png</PackageIconUrl>
     <Description>Elastic APM .NET Agent base package. This package provides core functionality for transmitting of all Elastic APM types and is a dependent package for all other Elastic APM package. Additionally this package contains the public Agent API that allows you to manually capture transactions and spans. Please install the platform specific package for the best experience. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, sdk</PackageTags>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
-  <ItemGroup>
-    <Folder Include="Report\"/>
-    <Folder Include="DiagnosticSource\"/>
-    <Folder Include="DiagnosticListeners\"/>
-    <Folder Include="Logging\"/>
-    <Folder Include="Config\"/>
-    <Folder Include="Helpers\"/>
-    <Folder Include="Api\"/>
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2"/>
     <!-- TODO: Are we ok with this reference/version? -->

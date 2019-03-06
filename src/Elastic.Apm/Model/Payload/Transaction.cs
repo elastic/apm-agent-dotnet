@@ -22,15 +22,15 @@ namespace Elastic.Apm.Model.Payload
 		private readonly DateTimeOffset _start;
 
 		private readonly Lazy<Context> _context = new Lazy<Context>();
-		private readonly AbstractLogger _logger;
+		private readonly ScopedLogger _logger;
 		private readonly IPayloadSender _sender;
 
 		public Transaction(IApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, agent.PayloadSender) { }
 
-		public Transaction(AbstractLogger logger, string name, string type, IPayloadSender sender)
+		public Transaction(IApmLogger logger, string name, string type, IPayloadSender sender)
 		{
-			_logger = logger;
+			_logger = logger?.Scoped(nameof(Transaction));
 			_sender = sender;
 			_start = DateTimeOffset.Now;
 

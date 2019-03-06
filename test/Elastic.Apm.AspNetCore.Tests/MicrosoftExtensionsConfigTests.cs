@@ -7,6 +7,7 @@ using Elastic.Apm.AspNetCore.Config;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using SampleAspNetCoreApp;
@@ -27,10 +28,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public void ReadValidConfigsFromAppSettingsJson()
 		{
-			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"), new TestLogger());
-			Assert.Equal(LogLevel.Debug, config.LogLevel);
-			Assert.Equal(new Uri("http://myServerFromTheConfigFile:8080"), config.ServerUrls[0]);
-			Assert.Equal("My_Test_Application", config.ServiceName);
+			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
+				new TestLogger());
+			config.LogLevel.Should().Be(LogLevel.Debug);
+			config.ServerUrls[0].Should().Be(new Uri("http://myServerFromTheConfigFile:8080"));
+			config.ServiceName.Should().Be("My_Test_Application");
 		}
 
 		/// <summary>
@@ -42,11 +44,17 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			var logger = new TestLogger();
 			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger);
-			Assert.Equal(LogLevel.Error, config.LogLevel);
+			config.LogLevel.Should().Be(LogLevel.Error);
 
-			Assert.Equal(
-				$"Error Config: Failed parsing log level from {MicrosoftExtensionsConfig.Origin}: {MicrosoftExtensionsConfig.Keys.Level}, value: DbeugMisspelled. Defaulting to log level 'Error'",
-				logger.Lines[0]);
+			logger.Lines.Should().NotBeEmpty();
+			logger.Lines[0].Should()
+				.ContainAll(
+					$"{{{nameof(MicrosoftExtensionsConfig)}}}",
+					"Failed parsing log level from",
+					MicrosoftExtensionsConfig.Origin,
+					MicrosoftExtensionsConfig.Keys.Level,
+					"Defaulting to "
+				);
 		}
 
 		/// <summary>
@@ -58,11 +66,18 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			var logger = new TestLogger();
 			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger);
-			Assert.Equal(LogLevel.Error, config.LogLevel);
+			config.LogLevel.Should().Be(LogLevel.Error);
 
-			Assert.Equal(
-				$"Error Config: Failed parsing log level from {MicrosoftExtensionsConfig.Origin}: {MicrosoftExtensionsConfig.Keys.Level}, value: DbeugMisspelled. Defaulting to log level 'Error'",
-				logger.Lines[0]);
+			logger.Lines.Should().NotBeEmpty();
+			logger.Lines[0].Should()
+				.ContainAll(
+					$"{{{nameof(MicrosoftExtensionsConfig)}}}",
+					"Failed parsing log level from",
+					MicrosoftExtensionsConfig.Origin,
+					MicrosoftExtensionsConfig.Keys.Level,
+					"Defaulting to ",
+					"DbeugMisspelled"
+				);
 		}
 
 		/// <summary>
@@ -84,10 +99,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.Build();
 
 			var config = new MicrosoftExtensionsConfig(configBuilder, new TestLogger());
-			Assert.Equal(LogLevel.Debug, config.LogLevel);
-			Assert.Equal(new Uri(serverUrl), config.ServerUrls[0]);
-			Assert.Equal(serviceName, config.ServiceName);
-			Assert.Equal(secretToken, config.SecretToken);
+			config.LogLevel.Should().Be(LogLevel.Debug);
+			config.ServerUrls[0].Should().Be(new Uri(serverUrl));
+			config.ServiceName.Should().Be(serviceName);
+			config.SecretToken.Should().Be(secretToken);
 		}
 
 		/// <summary>
@@ -100,8 +115,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var testLogger = new TestLogger();
 			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), testLogger);
 			var serverUrl = config.ServerUrls.FirstOrDefault();
-			Assert.NotNull(serverUrl);
-			Assert.NotEmpty(testLogger.Lines);
+			serverUrl.Should().NotBeNull();
+			testLogger.Lines.Should().NotBeEmpty();
 		}
 
 		internal static IConfiguration GetConfig(string path)
@@ -130,8 +145,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				MicrosoftExtensionsConfigTests.GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), _logger);
 
 			_agent = new ApmAgent(
-				new AgentComponents(payloadSender: _capturedPayload, configurationReader: config,
-					service: ApmMiddlewareExtension.GetService(new TestAgentConfigurationReader(new TestLogger())), logger: _logger));
+				new AgentComponents(payloadSender: _capturedPayload, configurationReader: config, logger: _logger));
 			_client = Helper.GetClient(_agent, _factory);
 		}
 
@@ -149,10 +163,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task InvalidUrlTest()
 		{
 			var response = await _client.GetAsync("/Home/Index");
-			Assert.True(response.IsSuccessStatusCode);
+			response.IsSuccessStatusCode.Should().BeTrue();
 
-			Assert.NotEmpty(_logger.Lines);
-			Assert.Contains(_logger.Lines, n => n.Contains("Failed parsing server URL from"));
+			_logger.Lines.Should().NotBeEmpty()
+				.And.Contain(n => n.Contains("Failed parsing server URL from"));
 		}
 
 		public void Dispose()

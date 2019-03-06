@@ -1,5 +1,6 @@
 ﻿using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
+using FluentAssertions;
 using Xunit;
 
 namespace Elastic.Apm.Tests
@@ -11,8 +12,8 @@ namespace Elastic.Apm.Tests
 		{
 			var logger = LogWithLevel(LogLevel.Error);
 
-			Assert.Single(logger.Lines);
-			Assert.Equal("Error Test: Error log", logger.Lines[0]);
+			logger.Lines.Should().ContainSingle();
+			logger.Lines[0].Should().EndWith("[Error] - Error log");
 		}
 
 		[Fact]
@@ -20,20 +21,20 @@ namespace Elastic.Apm.Tests
 		{
 			var logger = LogWithLevel(LogLevel.Warning);
 
-			Assert.Equal(2, logger.Lines.Count);
-			Assert.Equal("Error Test: Error log", logger.Lines[0]);
-			Assert.Equal("Warning Test: Warning log", logger.Lines[1]);
+			logger.Lines.Count.Should().Be(2);
+			logger.Lines[0].Should().EndWith("[Error] - Error log");
+			logger.Lines[1].Should().EndWith("[Warning] - Warning log");
 		}
 
 		[Fact]
 		public void TestLogInfo()
 		{
-			var logger = LogWithLevel(LogLevel.Info);
+			var logger = LogWithLevel(LogLevel.Information);
 
-			Assert.Equal(3, logger.Lines.Count);
-			Assert.Equal("Error Test: Error log", logger.Lines[0]);
-			Assert.Equal("Warning Test: Warning log", logger.Lines[1]);
-			Assert.Equal("Info Test: Info log", logger.Lines[2]);
+			logger.Lines.Count.Should().Be(3);
+			logger.Lines[0].Should().EndWith("[Error] - Error log");
+			logger.Lines[1].Should().EndWith("[Warning] - Warning log");
+			logger.Lines[2].Should().EndWith("[Info] - Info log");
 		}
 
 		[Fact]
@@ -41,21 +42,21 @@ namespace Elastic.Apm.Tests
 		{
 			var logger = LogWithLevel(LogLevel.Debug);
 
-			Assert.Equal(4, logger.Lines.Count);
-			Assert.Equal("Error Test: Error log", logger.Lines[0]);
-			Assert.Equal("Warning Test: Warning log", logger.Lines[1]);
-			Assert.Equal("Info Test: Info log", logger.Lines[2]);
-			Assert.Equal("Debug Test: Debug log", logger.Lines[3]);
+			logger.Lines.Count.Should().Be(4);
+			logger.Lines[0].Should().EndWith("[Error] - Error log");
+			logger.Lines[1].Should().EndWith("[Warning] - Warning log");
+			logger.Lines[2].Should().EndWith("[Info] - Info log");
+			logger.Lines[3].Should().EndWith("[Debug] - Debug log");
 		}
 
 		private TestLogger LogWithLevel(LogLevel logLevel)
 		{
 			var logger = new TestLogger(logLevel);
 
-			logger.LogError("Test", "Error log");
-			logger.LogWarning("Test", "Warning log");
-			logger.LogInfo("Test", "Info log");
-			logger.LogDebug("Test", "Debug log");
+			logger.LogError("Error log");
+			logger.LogWarning("Warning log");
+			logger.LogInfo("Info log");
+			logger.LogDebug("Debug log");
 			return logger;
 		}
 	}

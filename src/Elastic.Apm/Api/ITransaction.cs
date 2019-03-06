@@ -8,6 +8,12 @@ namespace Elastic.Apm.Api
 	public interface ITransaction
 	{
 		/// <summary>
+		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
+		/// This field is lazily initialized, you don't have to assign a value to it and you don't have to null check it either.
+		/// </summary>
+		Context Context { get; }
+
+		/// <summary>
 		/// The duration of the transaction.
 		/// If it's not set (its HasValue property is false) then the value
 		/// is automatically calculated when <see cref="End" /> is called.
