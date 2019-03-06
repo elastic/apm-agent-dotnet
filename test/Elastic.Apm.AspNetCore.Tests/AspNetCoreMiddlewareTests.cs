@@ -21,14 +21,16 @@ namespace Elastic.Apm.AspNetCore.Tests
 		private readonly ApmAgent _agent;
 		private readonly MockPayloadSender _capturedPayload;
 		private readonly WebApplicationFactory<Startup> _factory;
+		private readonly Service _service;
 
 		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory)
 		{
 			_factory = factory;
+			_service = ApmMiddlewareExtension.GetService(new TestAgentConfigurationReader(new TestLogger()));
 			//The agent is instantiated with ApmMiddlewareExtension.GetService, so we can also test the calculation of the service instance.
 			//(e.g. ASP.NET Core version)
 			_agent = new ApmAgent(
-				new TestAgentComponents(service: ApmMiddlewareExtension.GetService(new TestAgentConfigurationReader(new TestLogger()))));
+				new TestAgentComponents(service: _service));
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
 			_client = Helper.GetClient(_agent, _factory);
 		}
@@ -43,17 +45,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			var response = await _client.GetAsync("/Home/SimplePage");
 
-			Assert.Single(_capturedPayload.Payloads);
-			Assert.Single(_capturedPayload.Payloads[0].Transactions);
-
-			var payload = _capturedPayload.Payloads[0];
+			Assert.Single(_capturedPayload.Transactions);
 
 			//test payload
-			Assert.Equal(Assembly.GetEntryAssembly()?.GetName()?.Name, payload.Service.Name);
-			Assert.Equal(Consts.AgentName, payload.Service.Agent.Name);
-			Assert.Equal(Assembly.Load("Elastic.Apm").GetName().Version.ToString(), payload.Service.Agent.Version);
-			Assembly.CreateQualifiedName("ASP.NET Core", payload.Service.Framework.Name);
-			Assembly.CreateQualifiedName(Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString(), payload.Service.Framework.Version);
+			Assert.Equal(Assembly.GetEntryAssembly()?.GetName()?.Name, _service.Name);
+			Assert.Equal(Consts.AgentName, _service.Agent.Name);
+			Assert.Equal(Assembly.Load("Elastic.Apm").GetName().Version.ToString(), _service.Agent.Version);
+			Assembly.CreateQualifiedName("ASP.NET Core", _service.Framework.Name);
+			Assembly.CreateQualifiedName(Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString(), _service.Framework.Version);
 
 			var transaction = _capturedPayload.FirstTransaction;
 
@@ -62,7 +61,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Assert.Equal("HTTP 2xx", transaction.Result);
 			Assert.True(transaction.Duration > 0);
 			Assert.Equal("request", transaction.Type);
-			Assert.True(transaction.Id != Guid.Empty);
+			Assert.False(string.IsNullOrEmpty(transaction.Id));
 
 			//test transaction.context.response
 			Assert.Equal(200, transaction.Context.Response.StatusCode);
@@ -90,7 +89,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var response = await _client.GetAsync("/Home/Index");
 			Assert.True(response.IsSuccessStatusCode);
 
-			var transaction = _capturedPayload.Payloads[0].Transactions[0];
+			var transaction = _capturedPayload.FirstTransaction;
 			Assert.NotEmpty(_capturedPayload.SpansOnFirstTransaction);
 
 			//one of the spans is a DB call:
@@ -108,14 +107,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_client = Helper.GetClientWithoutExceptionPage(_agent, _factory);
 			await Assert.ThrowsAsync<Exception>(async () => { await _client.GetAsync("Home/TriggerError"); });
 
-			Assert.Single(_capturedPayload.Payloads);
-			Assert.Single(_capturedPayload.Payloads[0].Transactions);
+			Assert.Single(_capturedPayload.Transactions);
 
 			Assert.NotEmpty(_capturedPayload.Errors);
-			Assert.Single(_capturedPayload.Errors[0].Errors);
+			Assert.Single(_capturedPayload.Errors);
 
 			//also make sure the tag is captured
-			Assert.Equal(((_capturedPayload.Errors[0] as Error)?.Errors[0] as Error.ErrorDetail)?.Context.Tags["foo"], "bar");
+			Assert.Equal(_capturedPayload.FirstError.Context.Tags["foo"], "bar");
 		}
 
 		public void Dispose()

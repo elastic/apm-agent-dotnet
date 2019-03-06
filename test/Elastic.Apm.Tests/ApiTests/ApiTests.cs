@@ -32,11 +32,11 @@ namespace Elastic.Apm.Tests.ApiTests
 			Thread.Sleep(5); //Make sure we have duration > 0
 
 			transaction.End();
-			Assert.Single(payloadSender.Payloads);
-			Assert.Equal(transactionName, payloadSender.Payloads[0].Transactions[0].Name);
-			Assert.Equal(transactionType, payloadSender.Payloads[0].Transactions[0].Type);
-			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= 5);
-			Assert.True(payloadSender.Payloads[0].Transactions[0].Id != Guid.Empty);
+			Assert.Single(payloadSender.Transactions);
+			Assert.Equal(transactionName, payloadSender.FirstTransaction.Name);
+			Assert.Equal(transactionType, payloadSender.FirstTransaction.Type);
+			Assert.True(payloadSender.FirstTransaction.Duration >= 5);
+			Assert.False(string.IsNullOrEmpty(payloadSender.FirstTransaction.Id));
 
 			Assert.NotNull(payloadSender.Payloads[0].Service);
 		}

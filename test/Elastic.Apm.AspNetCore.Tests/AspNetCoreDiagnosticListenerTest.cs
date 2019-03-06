@@ -34,18 +34,17 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 				var response = await client.GetAsync("/Home/TriggerError");
 
-				Assert.Single(capturedPayload.Payloads);
-				Assert.Single(capturedPayload.Payloads[0].Transactions);
+				Assert.Single(capturedPayload.Transactions);
 
 				Assert.Single(capturedPayload.Errors);
-				Assert.Single(capturedPayload.Errors[0].Errors);
+				//Assert.Single(capturedPayload.Errors[0].Errors);
 
-				Assert.Equal("This is a test exception!", capturedPayload.Errors[0].Errors[0].Exception.Message);
-				Assert.Equal(typeof(Exception).FullName, capturedPayload.Errors[0].Errors[0].Exception.Type);
+				Assert.Equal("This is a test exception!", capturedPayload.Errors[0].Exception.Message);
+				Assert.Equal(typeof(Exception).FullName, capturedPayload.Errors[0].Exception.Type);
 
-				Assert.Equal("/Home/TriggerError", capturedPayload.FirstErrorDetail.Context.Request.Url.Full);
-				Assert.Equal(HttpMethod.Get.Method, capturedPayload.FirstErrorDetail.Context.Request.Method);
-				Assert.False((capturedPayload.FirstErrorDetail.Exception as CapturedException)?.Handled);
+				Assert.Equal("/Home/TriggerError", capturedPayload.FirstError.Context.Request.Url.Full);
+				Assert.Equal(HttpMethod.Get.Method, capturedPayload.FirstError.Context.Request.Method);
+				Assert.False(capturedPayload.FirstError.Exception.Handled);
 			}
 		}
 	}

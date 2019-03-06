@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Report;
@@ -8,25 +9,34 @@ namespace Elastic.Apm.Tests.Mocks
 	internal class MockPayloadSender : IPayloadSender
 	{
 		public readonly List<IError> Errors = new List<IError>();
-		public readonly List<IPayload> Payloads = new List<IPayload>();
+		public readonly List<ITransaction> Transactions = new List<ITransaction>();
+		public readonly List<ISpan> Spans = new List<ISpan>();
 
-		public Error.ErrorDetail FirstErrorDetail => Errors[0].Errors[0] as Error.ErrorDetail;
+		public Error FirstError => Errors.First() as Error;
 
 		/// <summary>
 		/// The 1. Span on the 1. Transaction
 		/// </summary>
-		public Span FirstSpan => (Payloads[0].Transactions[0] as Transaction)?.Spans[0] as Span;
+		public Span FirstSpan => Spans.First() as Span;
 
-		public Transaction FirstTransaction => Payloads[0].Transactions[0] as Transaction;
+		public Transaction FirstTransaction => Transactions.First() as Transaction;
 
-		public Span[] SpansOnFirstTransaction => (Payloads[0].Transactions[0] as Transaction)?.Spans as Span[];
+		public Span[] SpansOnFirstTransaction => Spans.Where(n => n.TransactionId == Transactions.First().Id).Select(n => n as Span).ToArray();
 
 		public void QueueError(IError error) => Errors.Add(error);
 
-		public void QueuePayload(IPayload payload) => Payloads.Add(payload);
+		//TODO: remove
+		public void QueuePayload(IPayload payload) { }
 
-		public void QueueTransaction(ITransaction transaction) => throw new System.NotImplementedException();
+		public void QueueTransaction(ITransaction transaction) =>  Transactions.Add(transaction);
 
-		public void QueueSpan(ISpan span) => throw new System.NotImplementedException();
+		public void QueueSpan(ISpan span) => Spans.Add(span);
+
+		public void Clear()
+		{
+			Spans.Clear();
+			Errors.Clear();
+			Transactions.Clear();
+		}
 	}
 }

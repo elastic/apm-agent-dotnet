@@ -57,13 +57,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			_agent.Dispose();
 
-			_capturedPayload.Payloads.Clear();
-			_capturedPayload.Errors.Clear();
+			_capturedPayload.Clear();
 
 			await _client.GetAsync("/Home/TriggerError");
 
-			Assert.Single(_capturedPayload.Payloads);
-			Assert.Single(_capturedPayload.Payloads[0].Transactions);
+			Assert.Single(_capturedPayload.Transactions);
 			Assert.Empty(_capturedPayload.Errors);
 		}
 
@@ -81,20 +79,17 @@ namespace Elastic.Apm.AspNetCore.Tests
 			{
 				await _client.GetAsync("/Home/Index");
 
-				Assert.Single(_capturedPayload.Payloads);
-				Assert.Single(_capturedPayload.Payloads[0].Transactions);
+				Assert.Single(_capturedPayload.Transactions);
 
 				Assert.NotEmpty(_capturedPayload.SpansOnFirstTransaction);
 				Assert.Contains(_capturedPayload.SpansOnFirstTransaction, n => n.Context.Db != null);
 			} //here we unsubsribe, so no errors should be captured after this line.
 
-			_capturedPayload.Payloads.Clear();
-			_capturedPayload.Errors.Clear();
+			_capturedPayload.Clear();
 
 			await _client.GetAsync("/Home/Index");
 
-			Assert.Single(_capturedPayload.Payloads);
-			Assert.Single(_capturedPayload.Payloads[0].Transactions);
+			Assert.Single(_capturedPayload.Transactions);
 
 			Assert.Empty(_capturedPayload.SpansOnFirstTransaction);
 		}
