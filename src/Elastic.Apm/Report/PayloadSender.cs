@@ -105,7 +105,7 @@ namespace Elastic.Apm.Report
 							_logger.LogDebug($"{e.GetType().Name}: {e.Message}");
 							break;
 						case Error err:
-							_logger.LogWarning($"Failed sending Error {err.Errors[0]?.Id}");
+							_logger.LogWarning($"Failed sending Error {err.Id}");
 							_logger.LogDebug($"{e.GetType().Name}: {e.Message}");
 							break;
 					}

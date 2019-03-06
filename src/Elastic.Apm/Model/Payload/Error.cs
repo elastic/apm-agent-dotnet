@@ -7,50 +7,41 @@ namespace Elastic.Apm.Model.Payload
 {
 	internal class Error : IError
 	{
-		public List<IErrorDetail> Errors { get; set; }
-		public Service Service { get; set; }
+		public string Id { get; set; }
 
-		public class ErrorDetail : IErrorDetail
+		[JsonProperty("trace_id")]
+		public string TraceId { get; set; }
+
+		[JsonProperty("transaction_id")]
+		public string TransactionId { get; set; }
+
+		[JsonProperty("parent_id")]
+		public string ParentId { get; set; }
+
+		public ExceptionDetails Exception { get; set; }
+
+		public string Culprit { get; set; }
+
+		public Context Context { get; set; }
+
+		public Error(ExceptionDetails exceptionDetails, string traceId, string transactionId, string parentId) : this(exceptionDetails) =>
+			(TraceId, TransactionId, ParentId) = (traceId, transactionId, parentId);
+
+		public Error(ExceptionDetails exceptionDetails)
 		{
-			public ErrorDetail()
-			{
-				Timestamp = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
-				Id = Guid.NewGuid();
-			}
-
-			public Context Context { get; set; }
-			public string Culprit { get; set; }
-			public ICapturedException Exception { get; set; }
-			public Guid Id { get; }
-			public string Timestamp { get; }
-			public TransactionReference Transaction { get; set; }
-
-			public class TransactionReference
-			{
-				public string Id { get; set; }
-			}
+			var rnd = new Random();
+			Id = rnd.Next().ToString("X");
+			Exception = exceptionDetails;
 		}
 	}
 
-	internal class CapturedException : ICapturedException
+
+	public class ExceptionDetails
 	{
-		internal string Code { get; set; } //TODO
-
-		public bool Handled { get; set; }
-
-		/// <summary>
-		/// The exception message, see: <see cref="Exception.Message" />
-		/// </summary>
+		public int Code { get; set; }
 		public string Message { get; set; }
-
-		public string Module { get; set; }
-
-		[JsonProperty("Stacktrace")]
-		public List<Stacktrace> StacktTrace { get; set; }
-
-		/// <summary>
-		/// The type of the exception class
-		/// </summary>
+		public List<StackFrame> Stacktrace { get; set; }
 		public string Type { get; set; }
+		public bool Handled { get; set; }
 	}
 }
