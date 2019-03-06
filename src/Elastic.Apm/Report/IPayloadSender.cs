@@ -8,5 +8,9 @@ namespace Elastic.Apm.Report
 		void QueueError(IError error);
 
 		void QueuePayload(IPayload payload);
+
+		void QueueTransaction(ITransaction transaction);
+
+		void QueueSpan(ISpan span);
 	}
 }

@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using Elastic.Apm.Model.Payload;
 
 namespace Elastic.Apm.Api
 {
 	public interface IError
 	{
-		List<IErrorDetail> Errors { get; set; }
+		//List<IErrorDetail> Errors { get; set; }
+		 ExceptionDetails Exception { get; set; }
 	}
 
 	public interface IErrorDetail

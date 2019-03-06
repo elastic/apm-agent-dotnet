@@ -2,7 +2,7 @@
 
 namespace Elastic.Apm.Model.Payload
 {
-	internal class Stacktrace
+	public class StackFrame
 	{
 		[JsonProperty("Filename")]
 		public string FileName { get; set; }

@@ -58,8 +58,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			_agent.Dispose();
 
-			_capturedPayload.Payloads.Clear();
-			_capturedPayload.Errors.Clear();
+			_capturedPayload.Clear();
 
 			await _client.GetAsync("/Home/TriggerError");
 
@@ -89,8 +88,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 					.And.Contain(n => n.Context.Db != null);
 			} //here we unsubsribe, so no errors should be captured after this line.
 
-			_capturedPayload.Payloads.Clear();
-			_capturedPayload.Errors.Clear();
+			_capturedPayload.Clear();
 
 			await _client.GetAsync("/Home/Index");
 

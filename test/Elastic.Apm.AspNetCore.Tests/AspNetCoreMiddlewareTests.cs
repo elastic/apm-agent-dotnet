@@ -23,6 +23,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		private readonly ApmAgent _agent;
 		private readonly MockPayloadSender _capturedPayload;
 		private readonly WebApplicationFactory<Startup> _factory;
+		private readonly Service _service;
 
 		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory)
 		{
@@ -98,7 +99,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			var response = await _client.GetAsync("/Home/Index");
 			response.IsSuccessStatusCode.Should().BeTrue();
-
 			_capturedPayload.SpansOnFirstTransaction.Should().NotBeEmpty().And.Contain(n => n.Context.Db != null);
 		}
 

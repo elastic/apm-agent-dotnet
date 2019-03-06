@@ -33,6 +33,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			Thread.Sleep(5); //Make sure we have duration > 0
 
 			transaction.End();
+      
 			payloadSender.Payloads.Should().ContainSingle();
 			var capturedTransaction = payloadSender.Payloads[0].Transactions[0];
 			capturedTransaction.Name.Should().Be(transactionName);
