@@ -23,14 +23,17 @@ namespace Elastic.Apm.AspNetCore.Tests
 		private readonly ApmAgent _agent;
 		private readonly MockPayloadSender _capturedPayload;
 		private readonly WebApplicationFactory<Startup> _factory;
+		private readonly Service _service;
 
 		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory)
 		{
 			_factory = factory;
-			_agent = new ApmAgent(new TestAgentComponents(reader: new TestAgentConfigurationReader(new TestLogger())));
-			ApmMiddlewareExtension.UpdateServiceInformation(_agent.Service);
+
 			//The agent is instantiated with ApmMiddlewareExtension.GetService, so we can also test the calculation of the service instance.
 			//(e.g. ASP.NET Core version)
+			_agent = new ApmAgent(new TestAgentComponents(reader: new TestAgentConfigurationReader(new TestLogger())));
+			ApmMiddlewareExtension.UpdateServiceInformation(_agent.Service);
+
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
 			_client = Helper.GetClient(_agent, _factory);
 		}
@@ -45,26 +48,21 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			var response = await _client.GetAsync("/Home/SimplePage");
 
-			_capturedPayload.Payloads.Should().ContainSingle();
-			_capturedPayload.Payloads[0].Transactions.Should().ContainSingle();
-
-			var payload = _capturedPayload.Payloads[0];
-
-			payload.Service.Name.Should().NotBeNullOrWhiteSpace()
+			//test service
+			_service.Name.Should().NotBeNullOrWhiteSpace()
 				.And.Be(Assembly.GetEntryAssembly()?.GetName()?.Name);
 
-			payload.Service.Agent.Name.Should().Be(Consts.AgentName);
+			_service.Agent.Name.Should().Be(Consts.AgentName);
 			var apmVersion = Assembly.Load("Elastic.Apm").GetName().Version.ToString();
-			payload.Service.Agent.Version.Should().Be(apmVersion);
+			_service.Agent.Version.Should().Be(apmVersion);
 
-			payload.Service.Framework.Name.Should().Be("ASP.NET Core");
+			_service.Framework.Name.Should().Be("ASP.NET Core");
 
 			var aspNetCoreVersion = Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString();
-			payload.Service.Framework.Version.Should().Be(aspNetCoreVersion);
+			_service.Framework.Version.Should().Be(aspNetCoreVersion);
 
+			_capturedPayload.Transactions.Should().ContainSingle();
 			var transaction = _capturedPayload.FirstTransaction;
-
-			//test transaction
 			var transactionName = $"{response.RequestMessage.Method} {response.RequestMessage.RequestUri.AbsolutePath}";
 			transaction.Name.Should().Be(transactionName);
 			transaction.Result.Should().Be("HTTP 2xx");
@@ -97,8 +95,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task HomeIndexSpanTest()
 		{
 			var response = await _client.GetAsync("/Home/Index");
-			response.IsSuccessStatusCode.Should().BeTrue();
 
+			response.IsSuccessStatusCode.Should().BeTrue();
 			_capturedPayload.SpansOnFirstTransaction.Should().NotBeEmpty().And.Contain(n => n.Context.Db != null);
 		}
 
@@ -115,18 +113,16 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Func<Task> act = async () => await _client.GetAsync("Home/TriggerError");
 			await act.Should().ThrowAsync<Exception>();
 
-			_capturedPayload.Payloads.Should().ContainSingle();
-			_capturedPayload.Payloads[0].Transactions.Should().ContainSingle();
+			_capturedPayload.Transactions.Should().ContainSingle();
 
 			_capturedPayload.Errors.Should().NotBeEmpty();
-			_capturedPayload.Errors[0].Errors.Should().ContainSingle();
+			_capturedPayload.Errors.Should().ContainSingle();
 
 			//also make sure the tag is captured
 			var error = _capturedPayload.Errors[0] as Error;
 			error.Should().NotBeNull();
-			var errorDetail = error.Errors[0] as Error.ErrorDetail;
-			errorDetail.Should().NotBeNull();
-			var tags = errorDetail.Context.Tags;
+			error.Should().NotBeNull();
+			var tags = error.Context.Tags;
 			tags.Should().NotBeEmpty().And.ContainKey("foo").And.Contain("foo", "bar");
 		}
 

@@ -33,14 +33,15 @@ namespace Elastic.Apm.Tests.ApiTests
 			Thread.Sleep(5); //Make sure we have duration > 0
 
 			transaction.End();
-			payloadSender.Payloads.Should().ContainSingle();
-			var capturedTransaction = payloadSender.Payloads[0].Transactions[0];
+
+			payloadSender.Transactions.Should().ContainSingle();
+			var capturedTransaction = payloadSender.Transactions[0];
 			capturedTransaction.Name.Should().Be(transactionName);
 			capturedTransaction.Type.Should().Be(transactionType);
 			capturedTransaction.Duration.Should().BeGreaterOrEqualTo(5);
 			capturedTransaction.Id.Should().NotBeEmpty();
 
-			payloadSender.Payloads[0].Service.Should().NotBeNull();
+			agent.Service.Should().NotBeNull();
 		}
 
 		/// <summary>
