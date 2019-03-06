@@ -41,9 +41,10 @@ namespace Elastic.Apm.Tests
 			agent.ConfigurationReader.ServerUrls[0].Should().Be(ConfigConsts.DefaultServerUri);
 
 			logger.Lines.Should().NotBeEmpty();
-			logger.Lines[0].Should()
-				.StartWith($"{{{nameof(TestAgentConfigurationReader)}}}")
-				.And.ContainAll(
+			logger.Lines[0]
+				.Should()
+				.ContainAll(
+					$"{{{nameof(TestAgentConfigurationReader)}}}",
 					"Failed parsing server URL from",
 					TestAgentConfigurationReader.Origin,
 					ConfigConsts.ConfigKeys.Urls,
@@ -95,9 +96,10 @@ namespace Elastic.Apm.Tests
 			parsedUrls[1].AbsoluteUri.Should().BeEquivalentTo($"{serverUrl3}/");
 
 			logger.Lines.Should().NotBeEmpty();
-			logger.Lines[0].Should()
-				.StartWith($"{{{nameof(TestAgentConfigurationReader)}}}")
-				.And.ContainAll(
+			logger.Lines[0]
+				.Should()
+				.ContainAll(
+					$"{{{nameof(TestAgentConfigurationReader)}}}",
 					"Failed parsing server URL from",
 					TestAgentConfigurationReader.Origin,
 					ConfigConsts.ConfigKeys.Urls,
@@ -121,6 +123,7 @@ namespace Elastic.Apm.Tests
 		{
 			var agent = new ApmAgent(new TestAgentComponents("Debug"));
 			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Debug);
+			agent.Logger.Level.Should().Be(LogLevel.Debug);
 		}
 
 		[Fact]
@@ -128,6 +131,7 @@ namespace Elastic.Apm.Tests
 		{
 			var agent = new ApmAgent(new TestAgentComponents("Error"));
 			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Error);
+			agent.Logger.Level.Should().Be(LogLevel.Error);
 		}
 
 		[Fact]
@@ -135,6 +139,7 @@ namespace Elastic.Apm.Tests
 		{
 			var agent = new ApmAgent(new TestAgentComponents("Information"));
 			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Information);
+			agent.Logger.Level.Should().Be(LogLevel.Information);
 		}
 
 		[Fact]
@@ -142,6 +147,7 @@ namespace Elastic.Apm.Tests
 		{
 			var agent = new ApmAgent(new TestAgentComponents("Warning"));
 			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Warning);
+			agent.Logger.Level.Should().Be(LogLevel.Warning);
 		}
 
 		[Fact]
@@ -153,9 +159,10 @@ namespace Elastic.Apm.Tests
 
 			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Error);
 			logger.Lines.Should().NotBeEmpty();
-			logger.Lines[0].Should()
-				.StartWith($"{{{nameof(TestAgentConfigurationReader)}}}")
-				.And.ContainAll(
+			logger.Lines[0]
+				.Should()
+				.ContainAll(
+					$"{{{nameof(TestAgentConfigurationReader)}}}",
 					"Failed parsing log level from",
 					TestAgentConfigurationReader.Origin,
 					ConfigConsts.ConfigKeys.Level,
@@ -239,7 +246,9 @@ namespace Elastic.Apm.Tests
 				{
 					elasticToken[0], mscorlibToken[1], elasticToken[2],
 					mscorlibToken[3], elasticToken[4], mscorlibToken[5], elasticToken[6], mscorlibToken[7]
-				}).Should().BeFalse();
+				})
+				.Should()
+				.BeFalse();
 		}
 
 		/// <summary>

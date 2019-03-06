@@ -13,7 +13,7 @@ namespace Elastic.Apm.Tests
 			var logger = LogWithLevel(LogLevel.Error);
 
 			logger.Lines.Should().ContainSingle();
-			logger.Lines[0].Should().Be("Error log");
+			logger.Lines[0].Should().EndWith("[Error] - Error log");
 		}
 
 		[Fact]
@@ -22,8 +22,8 @@ namespace Elastic.Apm.Tests
 			var logger = LogWithLevel(LogLevel.Warning);
 
 			logger.Lines.Count.Should().Be(2);
-			logger.Lines[0].Should().Be("Error log");
-			logger.Lines[1].Should().Be("Warning log");
+			logger.Lines[0].Should().EndWith("[Error] - Error log");
+			logger.Lines[1].Should().EndWith("[Warning] - Warning log");
 		}
 
 		[Fact]
@@ -32,9 +32,9 @@ namespace Elastic.Apm.Tests
 			var logger = LogWithLevel(LogLevel.Information);
 
 			logger.Lines.Count.Should().Be(3);
-			logger.Lines[0].Should().Be("Error log");
-			logger.Lines[1].Should().Be("Warning log");
-			logger.Lines[2].Should().Be("Info log");
+			logger.Lines[0].Should().EndWith("[Error] - Error log");
+			logger.Lines[1].Should().EndWith("[Warning] - Warning log");
+			logger.Lines[2].Should().EndWith("[Info] - Info log");
 		}
 
 		[Fact]
@@ -43,10 +43,10 @@ namespace Elastic.Apm.Tests
 			var logger = LogWithLevel(LogLevel.Debug);
 
 			logger.Lines.Count.Should().Be(4);
-			logger.Lines[0].Should().Be("Error log");
-			logger.Lines[1].Should().Be("Warning log");
-			logger.Lines[2].Should().Be("Info log");
-			logger.Lines[3].Should().Be("Debug log");
+			logger.Lines[0].Should().EndWith("[Error] - Error log");
+			logger.Lines[1].Should().EndWith("[Warning] - Warning log");
+			logger.Lines[2].Should().EndWith("[Info] - Info log");
+			logger.Lines[3].Should().EndWith("[Debug] - Debug log");
 		}
 
 		private TestLogger LogWithLevel(LogLevel logLevel)

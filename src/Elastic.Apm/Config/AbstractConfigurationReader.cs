@@ -17,23 +17,29 @@ namespace Elastic.Apm.Config
 		protected static ConfigurationKeyValue Kv(string key, string value, string origin) =>
 			new ConfigurationKeyValue(key, value, origin);
 
-
-		protected internal static LogLevel ParseLogLevel(string value)
+		protected internal static bool TryParseLogLevel(string value, out LogLevel? level)
 		{
-			switch (value.ToLowerInvariant())
+			level = null;
+			if (string.IsNullOrEmpty(value)) return false;
+			level = DefaultLogLevel();
+			return level != null;
+
+			LogLevel? DefaultLogLevel()
 			{
-				case "trace": return LogLevel.Trace;
-				case "debug": return LogLevel.Debug;
-				case "information":
-				case "info": return LogLevel.Information;
-				case "warning": return LogLevel.Warning;
-				case "error": return LogLevel.Error;
-				case "critical": return LogLevel.Critical;
-				case "none" : return LogLevel.None;
-				default: return ConsoleLogger.DefaultLogLevel;
+				switch (value.ToLowerInvariant())
+				{
+					case "trace": return LogLevel.Trace;
+					case "debug": return LogLevel.Debug;
+					case "information":
+					case "info": return LogLevel.Information;
+					case "warning": return LogLevel.Warning;
+					case "error": return LogLevel.Error;
+					case "critical": return LogLevel.Critical;
+					case "none": return LogLevel.None;
+					default: return null;
+				}
 			}
 		}
-
 		protected string ParseSecretToken(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return null;
@@ -42,12 +48,15 @@ namespace Elastic.Apm.Config
 
 		protected LogLevel ParseLogLevel(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return ConsoleLogger.DefaultLogLevel;
+			if (TryParseLogLevel(kv?.Value, out var level)) return level.Value;
 
-			if (Enum.TryParse<LogLevel>(kv.Value, out var logLevel)) return logLevel;
-
-			Logger?.LogError("Failed parsing log level from {Origin}: {Key}, value: {Value}. Defaulting to log level '{DefaultLogLevel}'",
-				kv.ReadFrom, kv.Key, kv.Value, ConsoleLogger.DefaultLogLevel);
+			if (kv?.Value == null)
+				Logger?.LogDebug("No log level provided. Defaulting to log level '{DefaultLogLevel}'", ConsoleLogger.DefaultLogLevel);
+			else
+			{
+				Logger?.LogError("Failed parsing log level from {Origin}: {Key}, value: {Value}. Defaulting to log level '{DefaultLogLevel}'",
+					kv.ReadFrom, kv.Key, kv.Value, ConsoleLogger.DefaultLogLevel);
+			}
 
 			return ConsoleLogger.DefaultLogLevel;
 		}

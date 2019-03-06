@@ -48,8 +48,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			logger.Lines.Should().NotBeEmpty();
 			logger.Lines[0].Should()
-				.StartWith($"{{{nameof(MicrosoftExtensionsConfig)}}}")
-				.And.ContainAll(
+				.ContainAll(
+					$"{{{nameof(MicrosoftExtensionsConfig)}}}",
 					"Failed parsing log level from",
 					MicrosoftExtensionsConfig.Origin,
 					MicrosoftExtensionsConfig.Keys.Level,
@@ -70,8 +70,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			logger.Lines.Should().NotBeEmpty();
 			logger.Lines[0].Should()
-				.StartWith($"{{{nameof(MicrosoftExtensionsConfig)}}}")
-				.And.ContainAll(
+				.ContainAll(
+					$"{{{nameof(MicrosoftExtensionsConfig)}}}",
 					"Failed parsing log level from",
 					MicrosoftExtensionsConfig.Origin,
 					MicrosoftExtensionsConfig.Keys.Level,
@@ -145,8 +145,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				MicrosoftExtensionsConfigTests.GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), _logger);
 
 			_agent = new ApmAgent(
-				new AgentComponents(payloadSender: _capturedPayload, configurationReader: config,
-					service: ApmMiddlewareExtension.GetService(new TestAgentConfigurationReader(new TestLogger())), logger: _logger));
+				new AgentComponents(payloadSender: _capturedPayload, configurationReader: config, logger: _logger));
 			_client = Helper.GetClient(_agent, _factory);
 		}
 
