@@ -24,8 +24,7 @@ namespace Elastic.Apm.Report
 		private IApmLogger _logger;
 		private readonly Service _service;
 
-		public void QueueError(IError error) { }
-
+		//TODO: not needed
 		public void QueuePayload(IPayload payload) { }
 
 		private readonly JsonSerializerSettings _settings;
@@ -42,6 +41,8 @@ namespace Elastic.Apm.Report
 		}
 
 		public void QueueSpan(ISpan span) => _eventQueue.Post(span);
+
+		public void QueueError(IError error) => _eventQueue.Post(error);
 
 		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, HttpMessageHandler handler = null)
 		{
@@ -77,12 +78,9 @@ namespace Elastic.Apm.Report
 				var queueItems = await _eventQueue.ReceiveAsync();
 
 
-				//var itemJson = JsonConvert.SerializeObject(item, _settings);
-
-				var json = "";
 				var metadata = new Metadata { Service = _service };
 				var metadataJson = JsonConvert.SerializeObject(metadata, _settings);
-				json = "{\"metadata\": " + metadataJson + "}" + "\n";
+				var json = "{\"metadata\": " + metadataJson + "}" + "\n";
 
 				foreach (var item in queueItems)
 				{
@@ -95,11 +93,11 @@ namespace Elastic.Apm.Report
 						case Span s:
 							json += "{\"span\": " + serialized + "}";
 							break;
+						case Error e:
+							json += "{\"error\": " + serialized + "}";
+							break;
 					}
 				}
-
-				Console.WriteLine($"ThreadID {Thread.CurrentThread.ManagedThreadId} ");
-				//Console.WriteLine(json);
 
 				var content = new StringContent(json, Encoding.UTF8, "application/x-ndjson");
 

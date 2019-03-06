@@ -52,7 +52,9 @@ namespace Elastic.Apm.Api
 		/// <param name="message">The error message.</param>
 		/// <param name="culprit">The culprit of the error.</param>
 		/// <param name="frames">The stack trace when the error occured.</param>
-		void CaptureError(string message, string culprit, StackFrame[] frames);
+		/// <param name="parentId">The parent ID that is attached to the error. In case it's null the parent
+		/// will be automatically set to the current instance </param>
+		void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null);
 
 		/// <summary>
 		/// Captures an exception and reports it to the APM server.
@@ -60,7 +62,9 @@ namespace Elastic.Apm.Api
 		/// <param name="exception">The exception to capture.</param>
 		/// <param name="culprit">The value of this parameter is shown as 'Culprit' on the APM UI.</param>
 		/// <param name="isHandled">Indicates whether the exception is handled or not.</param>
-		void CaptureException(Exception exception, string culprit = null, bool isHandled = false);
+		/// <param name="parentId">The parent ID that is attached to the error. In case it's null the parent
+		/// will be automatically set to the current instance </param>
+		void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a span on the given transaction and captures unhandled exceptions

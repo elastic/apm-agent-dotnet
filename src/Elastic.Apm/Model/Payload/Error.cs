@@ -8,52 +8,44 @@ namespace Elastic.Apm.Model.Payload
 {
 	internal class Error : IError
 	{
-		public List<IErrorDetail> Errors { get; set; }
-		public Service Service { get; set; }
+		public string Id { get; set; }
 
-		public class ErrorDetail : IErrorDetail
-		{
-			public ErrorDetail()
-			{
-				Timestamp = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
-				Id = Guid.NewGuid();
-			}
+		[JsonProperty("trace_id")]
+		public string TraceId { get; set; }
 
-			public Context Context { get; set; }
-			public string Culprit { get; set; }
-			public ICapturedException Exception { get; set; }
-			public Guid Id { get; }
-			public string Timestamp { get; }
-			public TransactionReference Transaction { get; set; }
+		[JsonProperty("transaction_id")]
+		public string TransactionId { get; set; }
 
-			public class TransactionReference
-			{
-				public string Id { get; set; }
-			}
-		}
-	}
+		[JsonProperty("parent_id")]
+		public string ParentId { get; set; }
 
-	internal class CapturedException : ICapturedException
-	{
-		internal string Code { get; set; } //TODO
-
-		public bool Handled { get; set; }
-
-		/// <summary>
-		/// The exception message, see: <see cref="Exception.Message" />
-		/// </summary>
-		public string Message { get; set; }
+		public ExceptionDetails Exception { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Module { get; set; }
 
-		[JsonProperty("Stacktrace")]
-		public List<Stacktrace> StacktTrace { get; set; }
+		public string Culprit { get; set; }
 
-		/// <summary>
-		/// The type of the exception class
-		/// </summary>
-		 [JsonConverter(typeof(TrimmedStringJsonConverter))]
+		public Context Context { get; set; }
+
+		public Error(ExceptionDetails exceptionDetails, string traceId, string transactionId, string parentId) : this(exceptionDetails) =>
+			(TraceId, TransactionId, ParentId) = (traceId, transactionId, parentId);
+
+		public Error(ExceptionDetails exceptionDetails)
+		{
+			var rnd = new Random();
+			Id = rnd.Next().ToString("X");
+			Exception = exceptionDetails;
+		}
+	}
+
+
+	public class ExceptionDetails
+	{
+		public int Code { get; set; }
+		public string Message { get; set; }
+		public List<StackFrame> Stacktrace { get; set; }
 		public string Type { get; set; }
+		public bool Handled { get; set; }
 	}
 }

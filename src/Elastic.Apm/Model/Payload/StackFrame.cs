@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
 {
-	internal class Stacktrace
+	public class StackFrame
 	{
 
 		[JsonProperty("Filename")]
