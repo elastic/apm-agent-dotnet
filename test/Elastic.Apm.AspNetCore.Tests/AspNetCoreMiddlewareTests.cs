@@ -50,7 +50,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 			//test service
 			_capturedPayload.Transactions.Should().ContainSingle();
 
-			//TODO: this service should come through PayloadSenderV2
 			_agent.Service.Name.Should().NotBeNullOrWhiteSpace()
 				.And.Be(Assembly.GetEntryAssembly()?.GetName()?.Name);
 
