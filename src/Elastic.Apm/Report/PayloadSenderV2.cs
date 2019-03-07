@@ -30,7 +30,7 @@ namespace Elastic.Apm.Report
 		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
 
 		private readonly BatchBlock<object> _eventQueue =
-			new BatchBlock<object>(1, new GroupingDataflowBlockOptions
+			new BatchBlock<object>(20, new GroupingDataflowBlockOptions
 				{ BoundedCapacity = 1_000_000 });
 
 		private readonly HttpClient _httpClient;
@@ -95,7 +95,8 @@ namespace Elastic.Apm.Report
 				{
 					var metadata = new Metadata { Service = _service };
 					var metadataJson = JsonConvert.SerializeObject(metadata, _settings);
-					var json = "{\"metadata\": " + metadataJson + "}" + "\n";
+					var json = new StringBuilder();
+					json.Append("{\"metadata\": " + metadataJson + "}" + "\n");
 
 					foreach (var item in queueItems)
 					{
@@ -103,18 +104,18 @@ namespace Elastic.Apm.Report
 						switch (item)
 						{
 							case Transaction _:
-								json += "{\"transaction\": " + serialized + "}";
+								json.AppendLine("{\"transaction\": " + serialized + "}");
 								break;
 							case Span _:
-								json += "{\"span\": " + serialized + "}";
+								json.AppendLine("{\"span\": " + serialized + "}");
 								break;
 							case Error _:
-								json += "{\"error\": " + serialized + "}";
+								json.AppendLine("{\"error\": " + serialized + "}");
 								break;
 						}
 					}
 
-					var content = new StringContent(json, Encoding.UTF8, "application/x-ndjson");
+					var content = new StringContent(json.ToString(), Encoding.UTF8, "application/x-ndjson");
 
 					var result = await _httpClient.PostAsync(Consts.IntakeV2Events, content);
 
@@ -122,6 +123,16 @@ namespace Elastic.Apm.Report
 					{
 						var str = await result.Content.ReadAsStringAsync();
 						_logger.LogError($"Failed sending event. {str}");
+					}
+					if (result != null && result.IsSuccessStatusCode)
+					{
+						var sb = new StringBuilder();
+						sb.AppendLine("Sent items to server:");
+						foreach (var item in queueItems)
+						{
+							sb.AppendLine(item.ToString());
+						}
+						_logger.LogDebug(sb.ToString());
 					}
 				}
 				catch (Exception e)
