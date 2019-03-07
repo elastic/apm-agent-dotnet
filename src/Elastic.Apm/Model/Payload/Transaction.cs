@@ -13,17 +13,11 @@ namespace Elastic.Apm.Model.Payload
 {
 	internal class Transaction : ITransaction
 	{
-		[JsonProperty("span_count")]
-		public SpanCount SpanCount { get; set; }
-
-		[JsonProperty("trace_id")]
-		public string TraceId { get; set; }
-
-		private readonly DateTimeOffset _start;
-
 		private readonly Lazy<Context> _context = new Lazy<Context>();
 		private readonly ScopedLogger _logger;
 		private readonly IPayloadSender _sender;
+
+		private readonly DateTimeOffset _start;
 
 		public Transaction(IApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, agent.PayloadSender) { }
@@ -36,7 +30,7 @@ namespace Elastic.Apm.Model.Payload
 
 			Name = name;
 			Type = type;
-			Random rnd = new Random();
+			var rnd = new Random();
 			Id = rnd.Next().ToString("x");
 			TraceId = rnd.Next().ToString("x");
 
@@ -71,18 +65,20 @@ namespace Elastic.Apm.Model.Payload
 
 		internal Service Service;
 
+		[JsonProperty("span_count")]
+		public SpanCount SpanCount { get; set; }
+
 		[JsonIgnore]
 		public Dictionary<string, string> Tags => Context.Tags;
 
 		public long Timestamp => _start.ToUnixTimeMilliseconds() * 1000;
 
-		private static long ToUnixTime(DateTime date) //TODO: offset?
-		{
-			var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-			return Convert.ToInt64((date - epoch).TotalSeconds);
-		}
+		[JsonProperty("trace_id")]
+		public string TraceId { get; set; }
 
 		public string Type { get; set; }
+
+		public override string ToString() => $"Transaction, Id: {Id}, TraceId: {TraceId}, Name: {Name}, Type: {Type}";
 
 		public void End()
 		{
@@ -90,7 +86,7 @@ namespace Elastic.Apm.Model.Payload
 
 			_sender.QueueTransaction(this);
 
-			_logger.LogDebug($"Ending Span: {Name}, {Type}");
+			_logger.LogDebug($"Ending {ToString()}");
 			Agent.TransactionContainer.Transactions.Value = null;
 		}
 
@@ -104,15 +100,13 @@ namespace Elastic.Apm.Model.Payload
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 
 			if (!string.IsNullOrEmpty(action)) retVal.Action = action;
-
-			var currentTime = DateTimeOffset.UtcNow;
 			SpanCount.Started++;
 
-			_logger.LogDebug($"Starting Span: Id:{Id}, TraceId:{TraceId} Name:{Name}, Type:{Type}");
+			_logger.LogDebug($"Starting {retVal}");
 			return retVal;
 		}
 
-		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false , string parentId = null)
+		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
@@ -130,12 +124,11 @@ namespace Elastic.Apm.Model.Payload
 						"failed capturing stacktrace");
 			}
 
-			_sender.QueueError(new Error(ed, this.TraceId, this.Id, parentId ?? this.Id) { Culprit = capturedCulprit, Context = Context });
+			_sender.QueueError(new Error(ed, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit, Context = Context });
 		}
 
 		public void CaptureError(string message, string culprit, System.Diagnostics.StackFrame[] frames, string parentId = null)
 		{
-
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
 			var ed = new ExceptionDetails()
@@ -149,7 +142,7 @@ namespace Elastic.Apm.Model.Payload
 					= StacktraceHelper.GenerateApmStackTrace(frames, _logger, "failed capturing stacktrace");
 			}
 
-			_sender.QueueError(new Error(ed, this.TraceId, this.Id, parentId ?? this.Id) { Culprit = capturedCulprit, Context = Context });
+			_sender.QueueError(new Error(ed, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit, Context = Context });
 		}
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)

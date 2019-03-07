@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,20 +16,24 @@ using Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Report
 {
+	/// <summary>
+	/// Responsible for sending the data to the server. Implements Intake V2.
+	/// Each instance creates its own thread to do the work. Therefore instances should be reused if possible.
+	/// </summary>
 	public class PayloadSenderV2 : IPayloadSender
 	{
-		private readonly IConfigurationReader _configurationReader;
 		private readonly ScopedLogger _logger;
 		private readonly Service _service;
 
-		//TODO: not needed
-		public void QueuePayload(IPayload payload) { }
-
 		private readonly JsonSerializerSettings _settings;
+
+		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
 
 		private readonly BatchBlock<object> _eventQueue =
 			new BatchBlock<object>(1, new GroupingDataflowBlockOptions
 				{ BoundedCapacity = 1_000_000 });
+
+		private readonly HttpClient _httpClient;
 
 
 		public void QueueTransaction(ITransaction transaction)
@@ -47,12 +49,27 @@ namespace Elastic.Apm.Report
 		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, HttpMessageHandler handler = null)
 		{
 			_settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver(), Formatting = Formatting.None };
-			_configurationReader = configurationReader;
 			_service = service;
 			_logger = logger?.Scoped(nameof(PayloadSenderV2));
 
+			var serverUrlBase = configurationReader.ServerUrls.First();
+			var servicePoint = ServicePointManager.FindServicePoint(serverUrlBase);
 
-			var t = Task.Factory.StartNew(
+			servicePoint.ConnectionLeaseTimeout = DnsTimeout;
+			servicePoint.ConnectionLimit = 20;
+
+			_httpClient = new HttpClient(handler ?? new HttpClientHandler())
+			{
+				BaseAddress = serverUrlBase
+			};
+
+			if (configurationReader.SecretToken != null)
+			{
+				_httpClient.DefaultRequestHeaders.Authorization =
+					new AuthenticationHeaderValue("Bearer", configurationReader.SecretToken);
+			}
+
+			Task.Factory.StartNew(
 				async () =>
 				{
 					while (true)
@@ -61,91 +78,70 @@ namespace Elastic.Apm.Report
 						{
 							await DoWork();
 						}
-						catch (TaskCanceledException ex) { }
+						catch (TaskCanceledException ex)
+						{
+							_logger.LogDebugException(ex);
+						}
 					}
 				}, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 		}
 
 		private async Task DoWork()
 		{
-			var httpClient = new HttpClient()
-			{
-				BaseAddress = _configurationReader.ServerUrls.First()
-			};
-
 			while (true)
 			{
 				var queueItems = await _eventQueue.ReceiveAsync();
-
-
-				var metadata = new Metadata { Service = _service };
-				var metadataJson = JsonConvert.SerializeObject(metadata, _settings);
-				var json = "{\"metadata\": " + metadataJson + "}" + "\n";
-
-				foreach (var item in queueItems)
-				{
-					var serialized = JsonConvert.SerializeObject(item, _settings);
-					switch (item)
-					{
-						case Transaction t:
-							json += "{\"transaction\": " + serialized + "}";
-							break;
-						case Span s:
-							json += "{\"span\": " + serialized + "}";
-							break;
-						case Error e:
-							json += "{\"error\": " + serialized + "}";
-							break;
-					}
-				}
-
-				var content = new StringContent(json, Encoding.UTF8, "application/x-ndjson");
-
 				try
 				{
-					var result = await httpClient.PostAsync(Consts.IntakeV2Events, content);
+					var metadata = new Metadata { Service = _service };
+					var metadataJson = JsonConvert.SerializeObject(metadata, _settings);
+					var json = "{\"metadata\": " + metadataJson + "}" + "\n";
+
+					foreach (var item in queueItems)
+					{
+						var serialized = JsonConvert.SerializeObject(item, _settings);
+						switch (item)
+						{
+							case Transaction _:
+								json += "{\"transaction\": " + serialized + "}";
+								break;
+							case Span _:
+								json += "{\"span\": " + serialized + "}";
+								break;
+							case Error _:
+								json += "{\"error\": " + serialized + "}";
+								break;
+						}
+					}
+
+					var content = new StringContent(json, Encoding.UTF8, "application/x-ndjson");
+
+					var result = await _httpClient.PostAsync(Consts.IntakeV2Events, content);
+
+					if (result != null && !result.IsSuccessStatusCode)
+					{
+						var str = await result.Content.ReadAsStringAsync();
+						_logger.LogError($"Failed sending event. {str}");
+					}
 				}
 				catch (Exception e)
 				{
-					_logger.LogDebug($"Failed sending data to the server, {e.GetType()} - {e.Message}");
+					var sb = new StringBuilder();
+					sb.AppendLine("Following events were not transferred successfully to the server:");
+					foreach (var item in queueItems)
+					{
+						sb.AppendLine(item.ToString());
+					}
+
+					_logger.LogWarning(sb.ToString());
 				}
 			}
 			// ReSharper disable once FunctionNeverReturns
 		}
 	}
 
-	class Metadata
+	internal class Metadata
 	{
 		public Service Service { get; set; }
-	}
-
-	public static partial class JsonExtensions
-	{
-		public static void ToNewlineDelimitedJson<T>(Stream stream, IEnumerable<T> items)
-		{
-			// Let caller dispose the underlying stream
-			using (var textWriter = new StreamWriter(stream, new UTF8Encoding(false, true), 1024, true))
-			{
-				ToNewlineDelimitedJson(textWriter, items);
-			}
-		}
-
-		public static void ToNewlineDelimitedJson<T>(TextWriter textWriter, IEnumerable<T> items)
-		{
-			var serializer = JsonSerializer.CreateDefault();
-
-			foreach (var item in items)
-			{
-				// Formatting.None is the default; I set it here for clarity.
-				using (var writer = new JsonTextWriter(textWriter) { Formatting = Formatting.None, CloseOutput = false })
-				{
-					serializer.Serialize(writer, item);
-				}
-				// http://specs.okfnlabs.org/ndjson/
-				// Each JSON text MUST conform to the [RFC7159] standard and MUST be written to the stream followed by the newline character \n (0x0A).
-				// The newline charater MAY be preceeded by a carriage return \r (0x0D). The JSON texts MUST NOT contain newlines or carriage returns.
-				textWriter.Write("\n");
-			}
-		}
 	}
 }

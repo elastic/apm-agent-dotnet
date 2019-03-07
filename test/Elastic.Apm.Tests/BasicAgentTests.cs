@@ -77,10 +77,11 @@ namespace Elastic.Apm.Tests
 
 			var secretToken = "SecretToken";
 			var logger = ConsoleLogger.Instance;
-			var payloadSender = new PayloadSender(logger, new TestAgentConfigurationReader(logger, secretToken: secretToken), handler);
+			var payloadSender = new PayloadSenderV2(logger, new TestAgentConfigurationReader(logger, secretToken: secretToken),
+				Service.GetDefaultService(new TestAgentConfigurationReader(logger)), handler);
 
 			using (var agent = new ApmAgent(new TestAgentComponents(secretToken: secretToken, payloadSender: payloadSender)))
-				agent.PayloadSender.QueuePayload(new Payload());
+				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
 
 			// ideally, introduce a mechanism to flush payloads
 			Thread.Sleep(TimeSpan.FromSeconds(2));

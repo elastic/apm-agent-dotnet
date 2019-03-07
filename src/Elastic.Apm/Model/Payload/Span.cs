@@ -12,10 +12,10 @@ namespace Elastic.Apm.Model.Payload
 	internal class Span : ISpan
 	{
 		private readonly Lazy<ContextImpl> _context = new Lazy<ContextImpl>();
+		private readonly ScopedLogger _logger;
+		private readonly IPayloadSender _payloadSender;
 
 		private readonly DateTimeOffset _start;
-		private readonly IPayloadSender _payloadSender;
-		private readonly ScopedLogger _logger;
 
 		public Span(string name, string type, Transaction transaction, IPayloadSender payloadSender, IApmLogger logger)
 		{
@@ -31,6 +31,8 @@ namespace Elastic.Apm.Model.Payload
 			TransactionId = transaction.Id;
 			TraceId = transaction.TraceId; //TODO
 		}
+
+		private string _name;
 
 		public string Action { get; set; }
 
@@ -50,14 +52,13 @@ namespace Elastic.Apm.Model.Payload
 
 		public string Id { get; set; }
 
-		private string _name;
 		public string Name
 		{
 			get => _name;
 			set
 			{
 				if (value.Length > Consts.PropertyMaxLength)
-					value = $"{value.Substring(0, Consts.PropertyMaxLength-3)}...";
+					value = $"{value.Substring(0, Consts.PropertyMaxLength - 3)}...";
 				_name = value;
 			}
 		}
@@ -65,28 +66,31 @@ namespace Elastic.Apm.Model.Payload
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
 
-		[JsonProperty("trace_id")]
-		public string TraceId { get; set; }
-
 		[JsonProperty("Stacktrace")]
 		public List<StackFrame> StackTrace { get; set; }
-
-		//public decimal Start { get; set; }
-		public long Timestamp => _start.ToUnixTimeMilliseconds() * 1000;
 
 		public string Subtype { get; set; }
 
 		[JsonIgnore]
 		public Dictionary<string, string> Tags => Context.Tags;
 
+		//public decimal Start { get; set; }
+		public long Timestamp => _start.ToUnixTimeMilliseconds() * 1000;
+
+		[JsonProperty("trace_id")]
+		public string TraceId { get; set; }
+
 		[JsonProperty("Transaction_id")]
 		public string TransactionId { get; set; }
 
 		public string Type { get; set; }
 
+		public override string ToString() => $"Span, Id: {Id}, TransactionId: {TransactionId}, ParentId: {ParentId}, Name: {Name}, Type: {Type}";
+
 		public void End()
 		{
-			if (!Duration.HasValue)  Duration = (DateTimeOffset.UtcNow - _start).TotalMilliseconds;
+			_logger.LogDebug($"Ending {ToString()}");
+			if (!Duration.HasValue) Duration = (DateTimeOffset.UtcNow - _start).TotalMilliseconds;
 			_payloadSender.QueueSpan(this);
 		}
 
@@ -108,7 +112,7 @@ namespace Elastic.Apm.Model.Payload
 						"failed capturing stacktrace");
 			}
 
-			_payloadSender.QueueError(new Error(ed, this.TraceId, this.Id, parentId ?? this.Id) { Culprit = capturedCulprit /*, Context = Context */ });
+			_payloadSender.QueueError(new Error(ed, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit /*, Context = Context */ });
 		}
 
 		public void CaptureError(string message, string culprit, System.Diagnostics.StackFrame[] frames, string parentId = null)
@@ -126,14 +130,10 @@ namespace Elastic.Apm.Model.Payload
 					= StacktraceHelper.GenerateApmStackTrace(frames, _logger, "failed capturing stacktrace");
 			}
 
-			_payloadSender.QueueError(new Error(ed, this.TraceId, this.Id, parentId ?? this.Id) { Culprit = capturedCulprit /*, Context = Context */});
+			_payloadSender.QueueError(new Error(ed, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit /*, Context = Context */ });
 		}
 
-//		public void CaptureException(Exception exception, string culprit = null) { } //TODO: Transaction?.CaptureException(exception, culprit);
-
-//		public void
-//			CaptureError(string message, string culprit, StackFrame[] frames) { } //TODO: => Transaction?.CaptureError(message, culprit, frames);
-
+		// ReSharper disable once ClassNeverInstantiated.Local - instantiated with Lazy<T>
 		private class ContextImpl : IContext
 		{
 			private readonly Lazy<Dictionary<string, string>> _tags = new Lazy<Dictionary<string, string>>();
