@@ -112,7 +112,6 @@ namespace Elastic.Apm.Report
 							_logger.LogDebugException(e);
 							break;
 						case Error err:
-
 							_logger.LogWarning("Failed sending Error {ErrorId}", err.Id);
 							_logger.LogDebugException(e);
 

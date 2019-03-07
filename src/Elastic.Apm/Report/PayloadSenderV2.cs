@@ -20,8 +20,9 @@ namespace Elastic.Apm.Report
 {
 	public class PayloadSenderV2 : IPayloadSender
 	{
-		private IConfigurationReader _configurationReader;
-		private IApmLogger _logger;
+		private readonly IConfigurationReader _configurationReader;
+		private readonly ScopedLogger _logger;
+
 		private readonly Service _service;
 
 		//TODO: not needed
@@ -49,7 +50,7 @@ namespace Elastic.Apm.Report
 			_settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver(), Formatting = Formatting.None };
 			_configurationReader = configurationReader;
 			_service = service;
-			_logger = logger;
+			_logger = logger?.Scoped(nameof(PayloadSenderV2));
 
 
 			var t = Task.Factory.StartNew(

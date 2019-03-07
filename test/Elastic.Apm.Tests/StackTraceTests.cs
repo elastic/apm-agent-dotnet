@@ -21,7 +21,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task HttpClientStackTrace()
 		{
-			var (listener, _, _) = HttpDiagnosticListenerTest.RegisterListenerAndStartTransaction();
+			var (listener, payloadSender, _) = HttpDiagnosticListenerTest.RegisterListenerAndStartTransaction();
 
 			using (listener)
 			using (var localServer = new LocalServer(uri: "http://localhost:8083/"))
@@ -32,7 +32,7 @@ namespace Elastic.Apm.Tests
 				res.IsSuccessStatusCode.Should().BeTrue();
 			}
 
-			var stackFrames = (Agent.TransactionContainer.Transactions.Value.Spans[0] as Span)?.StackTrace;
+			var stackFrames = payloadSender.FirstSpan?.StackTrace;
 
 			stackFrames.Should().NotBeEmpty().And.Contain(frame => frame.LineNo != 0);
 		}

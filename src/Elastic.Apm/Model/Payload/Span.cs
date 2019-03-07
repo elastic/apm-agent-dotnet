@@ -16,13 +16,14 @@ namespace Elastic.Apm.Model.Payload
 
 		private readonly DateTimeOffset _start;
 		private readonly IPayloadSender _payloadSender;
-		private readonly IApmLogger _logger;
+
+		private readonly ScopedLogger _logger;
 
 		public Span(string name, string type, Transaction transaction, IPayloadSender payloadSender, IApmLogger logger)
 		{
 			_start = DateTimeOffset.Now;
 			_payloadSender = payloadSender;
-			_logger = logger;
+			_logger = logger?.Scoped(nameof(Span));
 			Name = name;
 			Type = type;
 

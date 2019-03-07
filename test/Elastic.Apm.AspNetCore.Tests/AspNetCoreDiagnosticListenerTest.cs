@@ -37,9 +37,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 				var response = await client.GetAsync("/Home/TriggerError");
 
 				capturedPayload.Should().NotBeNull();
+
 				capturedPayload.Transactions.Should().ContainSingle();
 
-				capturedPayload.Errors.Should().ContainSingle();
 				capturedPayload.Errors.Should().ContainSingle();
 
 				var errorException = capturedPayload.Errors[0].Exception;
