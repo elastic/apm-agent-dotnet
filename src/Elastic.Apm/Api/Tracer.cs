@@ -37,6 +37,7 @@ namespace Elastic.Apm.Api
 			};
 
 			Agent.TransactionContainer.Transactions.Value = retVal;
+			_logger.LogDebug($"Starting {retVal}");
 			return retVal;
 		}
 

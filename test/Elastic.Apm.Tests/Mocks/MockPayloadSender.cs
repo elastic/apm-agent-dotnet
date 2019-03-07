@@ -25,9 +25,6 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public void QueueError(IError error) => Errors.Add(error);
 
-		//TODO: remove
-		public void QueuePayload(IPayload payload) { }
-
 		public void QueueTransaction(ITransaction transaction) =>  Transactions.Add(transaction);
 
 		public void QueueSpan(ISpan span) => Spans.Add(span);
