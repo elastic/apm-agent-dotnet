@@ -41,8 +41,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			capturedTransaction.Duration.Should().BeGreaterOrEqualTo(5);
 			capturedTransaction.Id.Should().NotBeEmpty();
 
-			//TODO:
-			//payloadSender.Payloads[0].Service.Should().NotBeNull();
+			agent.Service.Should().NotBeNull();
 		}
 
 		/// <summary>
@@ -160,8 +159,8 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(spanName);
 			payloadSender.SpansOnFirstTransaction[0].Duration.Should().BeGreaterOrEqualTo(5);
-			//TODO:
-			//payloadSender.Payloads[0].Service.Should().NotBeNull();
+
+			agent.Service.Should().NotBeNull();
 		}
 
 		/// <summary>
@@ -187,8 +186,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.Transactions.Should().NotBeEmpty();
 			payloadSender.SpansOnFirstTransaction.Should().BeEmpty();
 
-			//TODO:
-			//payloadSender.Payloads[0].Service.Should().NotBeNull();
+			agent.Service.Should().NotBeNull();
 		}
 
 		/// <summary>
@@ -216,8 +214,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.SpansOnFirstTransaction[0].Subtype.Should().Be(ApiConstants.SubtypeMssql);
 			payloadSender.SpansOnFirstTransaction[0].Action.Should().Be(ApiConstants.ActionQuery);
 
-			//TODO:
-			//payloadSender.Payloads[0].Service.Should().NotBeNull();
+			agent.Service.Should().NotBeNull();
 		}
 
 		/// <summary>
@@ -240,12 +237,12 @@ namespace Elastic.Apm.Tests.ApiTests
 		private static void ErrorOnTransactionCommon(string culprit = null)
 		{
 			const string transactionName = "TestTransaction";
-			const string transacitonType = "UnitTest";
+			const string transactionType = "UnitTest";
 			const string exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			var transaction = agent.Tracer.StartTransaction(transactionName, transacitonType);
+			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
 			Thread.Sleep(5); //Make sure we have duration > 0
 			try
