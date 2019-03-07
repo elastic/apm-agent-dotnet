@@ -62,8 +62,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			await _client.GetAsync("/Home/TriggerError");
 
-			_capturedPayload.Payloads.Should().ContainSingle();
-			_capturedPayload.Payloads[0].Transactions.Should().ContainSingle();
+			_capturedPayload.Transactions.Should().ContainSingle();
 			_capturedPayload.Errors.Should().BeEmpty();
 		}
 
@@ -81,8 +80,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			{
 				await _client.GetAsync("/Home/Index");
 
-				_capturedPayload.Payloads.Should().ContainSingle();
-				_capturedPayload.Payloads[0].Transactions.Should().ContainSingle();
+				_capturedPayload.Transactions.Should().ContainSingle();
 
 				_capturedPayload.SpansOnFirstTransaction.Should().NotBeEmpty()
 					.And.Contain(n => n.Context.Db != null);
@@ -92,8 +90,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			await _client.GetAsync("/Home/Index");
 
-			_capturedPayload.Payloads.Should().ContainSingle();
-			_capturedPayload.Payloads[0].Transactions.Should().ContainSingle();
+			_capturedPayload.Transactions.Should().ContainSingle();
 
 			_capturedPayload.SpansOnFirstTransaction.Should().BeEmpty();
 		}

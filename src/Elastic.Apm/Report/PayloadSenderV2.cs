@@ -21,7 +21,7 @@ namespace Elastic.Apm.Report
 	public class PayloadSenderV2 : IPayloadSender
 	{
 		private readonly IConfigurationReader _configurationReader;
-		private readonly AbstractLogger _logger;
+		private readonly ScopedLogger _logger;
 		private readonly Service _service;
 
 		//TODO: not needed
@@ -44,12 +44,12 @@ namespace Elastic.Apm.Report
 
 		public void QueueError(IError error) => _eventQueue.Post(error);
 
-		public PayloadSenderV2(AbstractLogger logger, IConfigurationReader configurationReader, Service service, HttpMessageHandler handler = null)
+		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, HttpMessageHandler handler = null)
 		{
 			_settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver(), Formatting = Formatting.None };
 			_configurationReader = configurationReader;
 			_service = service;
-			_logger = logger;
+			_logger = logger?.Scoped(nameof(PayloadSenderV2));
 
 
 			var t = Task.Factory.StartNew(

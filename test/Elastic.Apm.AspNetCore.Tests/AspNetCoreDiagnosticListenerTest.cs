@@ -37,23 +37,20 @@ namespace Elastic.Apm.AspNetCore.Tests
 				var response = await client.GetAsync("/Home/TriggerError");
 
 				capturedPayload.Should().NotBeNull();
-				capturedPayload.Payloads.Should().ContainSingle();
-				capturedPayload.Payloads[0].Transactions.Should().ContainSingle();
+				capturedPayload.Transactions.Should().ContainSingle();;
 
 				capturedPayload.Errors.Should().ContainSingle();
-				capturedPayload.Errors[0].Errors.Should().ContainSingle();
 
-				var errorException = capturedPayload.Errors[0].Errors[0].Exception;
+				var errorException = capturedPayload.Errors[0].Exception;
 				errorException.Message.Should().Be("This is a test exception!");
 				errorException.Type.Should().Be(typeof(Exception).FullName);
 
-				var context = capturedPayload.FirstErrorDetail.Context;
+				var context = capturedPayload.FirstError.Context;
 				context.Request.Url.Full.Should().Be("/Home/TriggerError");
 				context.Request.Method.Should().Be(HttpMethod.Get.Method);
 
-				var capturedException = errorException as CapturedException;
-				capturedException.Should().NotBeNull();
-				capturedException.Handled.Should().BeFalse();
+				errorException.Should().NotBeNull();
+				errorException.Handled.Should().BeFalse();
 			}
 		}
 	}

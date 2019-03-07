@@ -23,7 +23,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 		private readonly ApmAgent _agent;
 		private readonly MockPayloadSender _capturedPayload;
 		private readonly WebApplicationFactory<Startup> _factory;
-		private readonly Service _service;
 
 		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory)
 		{
@@ -46,22 +45,20 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			var response = await _client.GetAsync("/Home/SimplePage");
 
-			_capturedPayload.Payloads.Should().ContainSingle();
-			_capturedPayload.Payloads[0].Transactions.Should().ContainSingle();
+			_capturedPayload.Transactions.Should().ContainSingle();
 
-			var payload = _capturedPayload.Payloads[0];
-
-			payload.Service.Name.Should().NotBeNullOrWhiteSpace()
+			//TODO: this service should come through PayloadSenderV2
+			_agent.Service.Name.Should().NotBeNullOrWhiteSpace()
 				.And.Be(Assembly.GetEntryAssembly()?.GetName()?.Name);
 
-			payload.Service.Agent.Name.Should().Be(Consts.AgentName);
+			_agent.Service.Agent.Name.Should().Be(Consts.AgentName);
 			var apmVersion = Assembly.Load("Elastic.Apm").GetName().Version.ToString();
-			payload.Service.Agent.Version.Should().Be(apmVersion);
+			_agent.Service.Agent.Version.Should().Be(apmVersion);
 
-			payload.Service.Framework.Name.Should().Be("ASP.NET Core");
+			_agent.Service.Framework.Name.Should().Be("ASP.NET Core");
 
 			var aspNetCoreVersion = Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString();
-			payload.Service.Framework.Version.Should().Be(aspNetCoreVersion);
+			_agent.Service.Framework.Version.Should().Be(aspNetCoreVersion);
 
 			var transaction = _capturedPayload.FirstTransaction;
 
@@ -115,18 +112,16 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Func<Task> act = async () => await _client.GetAsync("Home/TriggerError");
 			await act.Should().ThrowAsync<Exception>();
 
-			_capturedPayload.Payloads.Should().ContainSingle();
-			_capturedPayload.Payloads[0].Transactions.Should().ContainSingle();
+			_capturedPayload.Transactions.Should().ContainSingle();
 
 			_capturedPayload.Errors.Should().NotBeEmpty();
-			_capturedPayload.Errors[0].Errors.Should().ContainSingle();
 
 			//also make sure the tag is captured
 			var error = _capturedPayload.Errors[0] as Error;
 			error.Should().NotBeNull();
-			var errorDetail = error.Errors[0] as Error.ErrorDetail;
+			var errorDetail = error.Exception;
 			errorDetail.Should().NotBeNull();
-			var tags = errorDetail.Context.Tags;
+			var tags = error.Context.Tags;
 			tags.Should().NotBeEmpty().And.ContainKey("foo").And.Contain("foo", "bar");
 		}
 
