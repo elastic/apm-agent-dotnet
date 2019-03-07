@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
+
 namespace Elastic.Apm.Api
 {
 	public class Context
@@ -24,7 +25,7 @@ namespace Elastic.Apm.Api
 		/// it.
 		/// </summary>
 		public Response Response { get; set; }
-
+    
 		[JsonConverter(typeof(TagsJsonConverter))]
 		public Dictionary<string, string> Tags => tags.Value;
 	}

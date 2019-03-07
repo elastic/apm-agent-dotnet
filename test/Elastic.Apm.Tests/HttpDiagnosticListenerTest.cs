@@ -237,7 +237,7 @@ namespace Elastic.Apm.Tests
 		/// This uses an HttpClient instance directly
 		/// </summary>
 		[Fact]
-		public void CaptureErrorOnFailingHttpCall_HttpClient()
+		public async Task CaptureErrorOnFailingHttpCall_HttpClient()
 		{
 			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
 

@@ -79,6 +79,7 @@ namespace ApiSamples
 
 				t.Tags["fooTransaction1"] = "barTransaction1";
 				t.Tags["fooTransaction2"] = "barTransaction2";
+
 				Thread.Sleep(10);
 				t.CaptureSpan("TestSpan", "TestSpanName", s =>
 				{
