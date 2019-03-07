@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.Api;
+using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
@@ -24,6 +25,7 @@ namespace Elastic.Apm.Model.Payload
 			Id = rnd.Next();
 		}
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Action { get; set; }
 
 		/// <summary>
@@ -42,23 +44,15 @@ namespace Elastic.Apm.Model.Payload
 
 		public int Id { get; set; }
 
-		private string _name;
-		public string Name
-		{
-			get => _name;
-			set
-			{
-				if (value.Length > Consts.PropertyMaxLength)
-					value = $"{value.Substring(0, Consts.PropertyMaxLength-3)}...";
-				_name = value;
-			}
-		}
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		public string Name { get; set; }
 
 		[JsonProperty("Stacktrace")]
 		public List<Stacktrace> StackTrace { get; set; }
 
 		public decimal Start { get; set; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Subtype { get; set; }
 
 		[JsonIgnore]
@@ -68,6 +62,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public Guid TransactionId => Transaction.Id;
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
 
 		public void End()
@@ -96,6 +91,7 @@ namespace Elastic.Apm.Model.Payload
 	{
 		IDb Db { get; set; }
 		IHttp Http { get; set; }
+		[JsonConverter(typeof(TagsJsonConverter))]
 		Dictionary<string, string> Tags { get; }
 	}
 
@@ -114,6 +110,7 @@ namespace Elastic.Apm.Model.Payload
 
 	internal class Db : IDb
 	{
+
 		public string Instance { get; set; }
 		public string Statement { get; set; }
 		public string Type { get; set; }

@@ -10,6 +10,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
+using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 

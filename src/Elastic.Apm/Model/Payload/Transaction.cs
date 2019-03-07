@@ -8,6 +8,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
+using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
@@ -49,6 +50,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public Guid Id { get; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
 
 		/// <inheritdoc />
@@ -57,6 +59,7 @@ namespace Elastic.Apm.Model.Payload
 		/// This is typically the HTTP status code, or e.g. "success" for a background task.
 		/// </summary>
 		/// <value>The result.</value>
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Result { get; set; }
 
 		internal Service Service;
@@ -72,6 +75,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public string Timestamp => Start.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
 
 		public void End()

@@ -9,11 +9,15 @@ namespace ApiSamples
 	{
 		private static void Main(string[] args)
 		{
+			Console.WriteLine("Start");
 			SampleCustomTransactionWithConvenientApi();
 
 			//WIP: if the process terminates the agent
 			//potentially does not have time to send the transaction to the server.
 			Thread.Sleep(1000);
+
+			Console.WriteLine("Done");
+			Console.ReadKey();
 		}
 
 		public static void SampleCustomTransaction()
@@ -72,7 +76,10 @@ namespace ApiSamples
 			{
 				t.Context.Response = new Response() { Finished = true, StatusCode = 200 };
 				t.Context.Request = new Request("GET", new Url{Protocol = "HTTP"});
-				t.Tags["fooTransaction"] = "barTransaction";
+
+				t.Tags["fooTransaction1"] = "barTransaction1";
+				t.Tags["fooTransaction2"] = "barTransaction2";
+
 				Thread.Sleep(10);
 				t.CaptureSpan("TestSpan", "TestSpanName", s =>
 				{

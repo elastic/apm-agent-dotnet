@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Elastic.Apm.Api;
+using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
@@ -43,6 +44,7 @@ namespace Elastic.Apm.Model.Payload
 		/// </summary>
 		public string Message { get; set; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Module { get; set; }
 
 		[JsonProperty("Stacktrace")]
@@ -51,6 +53,7 @@ namespace Elastic.Apm.Model.Payload
 		/// <summary>
 		/// The type of the exception class
 		/// </summary>
+		 [JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
 	}
 }
