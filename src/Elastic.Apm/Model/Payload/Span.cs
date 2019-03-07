@@ -80,7 +80,7 @@ namespace Elastic.Apm.Model.Payload
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
 
-		public override string ToString() => $"Span, Id: {Id}, TransactionId: {TransactionId}, ParentId: {ParentId}, Name: {Name}, Type: {Type}";
+		public override string ToString() => $"Span, Id: {Id}, TransactionId: {TransactionId}, ParentId: {ParentId}, TraceId:{TraceId}, Name: {Name}, Type: {Type}";
 
 		public void End()
 		{
