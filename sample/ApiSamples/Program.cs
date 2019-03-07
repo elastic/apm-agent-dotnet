@@ -17,7 +17,7 @@ namespace ApiSamples
 			Thread.Sleep(1000);
 
 			Console.WriteLine("Done");
-			Thread.Sleep(Int32.MaxValue);
+		Console.ReadKey();
 		}
 
 		public static void SampleCustomTransaction()
