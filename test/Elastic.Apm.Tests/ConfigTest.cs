@@ -4,6 +4,7 @@ using System.Threading;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
+using FluentAssertions;
 using Xunit;
 
 namespace Elastic.Apm.Tests
@@ -18,8 +19,9 @@ namespace Elastic.Apm.Tests
 		{
 			var serverUrl = "http://myServer.com:1234";
 			var agent = new ApmAgent(new TestAgentComponents(serverUrls: serverUrl));
-			Assert.Equal(serverUrl, agent.ConfigurationReader.ServerUrls[0].OriginalString);
-			Assert.Equal(serverUrl.ToLower() + "/", agent.ConfigurationReader.ServerUrls[0].ToString().ToLower());
+			agent.ConfigurationReader.ServerUrls[0].OriginalString.Should().Be(serverUrl);
+			var rootedUrl = serverUrl + "/";
+			rootedUrl.Should().BeEquivalentTo(agent.ConfigurationReader.ServerUrls[0].AbsoluteUri);
 		}
 
 		[Fact]
@@ -27,7 +29,7 @@ namespace Elastic.Apm.Tests
 		{
 			var serverUrl = "InvalidUrl";
 			var agent = new ApmAgent(new TestAgentComponents(serverUrls: serverUrl));
-			Assert.Equal(ConfigConsts.DefaultServerUri.ToString(), agent.ConfigurationReader.ServerUrls[0].ToString());
+			agent.ConfigurationReader.ServerUrls[0].Should().Be(ConfigConsts.DefaultServerUri);
 		}
 
 		[Fact]
@@ -36,11 +38,18 @@ namespace Elastic.Apm.Tests
 			var serverUrl = "InvalidUrl";
 			var logger = new TestLogger();
 			var agent = new ApmAgent(new TestAgentComponents(logger, serverUrl));
-			Assert.Equal(ConfigConsts.DefaultServerUri.ToString(), agent.ConfigurationReader.ServerUrls[0].ToString());
+			agent.ConfigurationReader.ServerUrls[0].Should().Be(ConfigConsts.DefaultServerUri);
 
-			Assert.Equal(
-				$"{{{nameof(TestAgentConfigurationReader)}}} Failed parsing server URL from {TestAgentConfigurationReader.Origin}: {ConfigConsts.ConfigKeys.Urls}, value: {serverUrl}",
-				logger.Lines[0]);
+			logger.Lines.Should().NotBeEmpty();
+			logger.Lines[0]
+				.Should()
+				.ContainAll(
+					$"{{{nameof(TestAgentConfigurationReader)}}}",
+					"Failed parsing server URL from",
+					TestAgentConfigurationReader.Origin,
+					ConfigConsts.ConfigKeys.Urls,
+					serverUrl
+				);
 		}
 
 		/// <summary>
@@ -56,11 +65,12 @@ namespace Elastic.Apm.Tests
 			var logger = new TestLogger();
 			var agent = new ApmAgent(new TestAgentComponents(logger, serverUrls));
 
-			Assert.Equal(serverUrl1, agent.ConfigurationReader.ServerUrls[0].OriginalString);
-			Assert.Equal(serverUrl1.ToLower() + "/", agent.ConfigurationReader.ServerUrls[0].ToString().ToLower());
+			var parsedUrls = agent.ConfigurationReader.ServerUrls;
+			parsedUrls[0].OriginalString.Should().Be(serverUrl1);
+			parsedUrls[0].AbsoluteUri.Should().BeEquivalentTo($"{serverUrl1}/");
 
-			Assert.Equal(serverUrl2, agent.ConfigurationReader.ServerUrls[1].OriginalString);
-			Assert.Equal(serverUrl2.ToLower() + "/", agent.ConfigurationReader.ServerUrls[1].ToString().ToLower());
+			parsedUrls[1].OriginalString.Should().Be(serverUrl2);
+			parsedUrls[1].AbsoluteUri.Should().BeEquivalentTo($"{serverUrl2}/");
 		}
 
 		/// <summary>
@@ -77,15 +87,24 @@ namespace Elastic.Apm.Tests
 			var logger = new TestLogger();
 			var agent = new ApmAgent(new TestAgentComponents(logger, serverUrls));
 
-			Assert.Equal(serverUrl1, agent.ConfigurationReader.ServerUrls[0].OriginalString);
-			Assert.Equal(serverUrl1.ToLower() + "/", agent.ConfigurationReader.ServerUrls[0].ToString().ToLower());
+			var parsedUrls = agent.ConfigurationReader.ServerUrls;
+			parsedUrls.Should().NotBeEmpty().And.HaveCount(2, "seeded 3 but one was invalid");
+			parsedUrls[0].OriginalString.Should().Be(serverUrl1);
+			parsedUrls[0].AbsoluteUri.Should().BeEquivalentTo($"{serverUrl1}/");
 
-			Assert.Equal(serverUrl3, agent.ConfigurationReader.ServerUrls[1].OriginalString);
-			Assert.Equal(serverUrl3.ToLower() + "/", agent.ConfigurationReader.ServerUrls[1].ToString().ToLower());
+			parsedUrls[1].OriginalString.Should().Be(serverUrl3);
+			parsedUrls[1].AbsoluteUri.Should().BeEquivalentTo($"{serverUrl3}/");
 
-			Assert.Equal(
-				$"{{{nameof(TestAgentConfigurationReader)}}} Failed parsing server URL from {TestAgentConfigurationReader.Origin}: {ConfigConsts.ConfigKeys.Urls}, value: {serverUrl2}",
-				logger.Lines[0]);
+			logger.Lines.Should().NotBeEmpty();
+			logger.Lines[0]
+				.Should()
+				.ContainAll(
+					$"{{{nameof(TestAgentConfigurationReader)}}}",
+					"Failed parsing server URL from",
+					TestAgentConfigurationReader.Origin,
+					ConfigConsts.ConfigKeys.Urls,
+					serverUrl2
+				);
 		}
 
 		[Fact]
@@ -93,38 +112,42 @@ namespace Elastic.Apm.Tests
 		{
 			var secretToken = "secretToken";
 			var agent = new ApmAgent(new TestAgentComponents(secretToken: secretToken));
-			Assert.Equal(secretToken, agent.ConfigurationReader.SecretToken);
+			agent.ConfigurationReader.SecretToken.Should().Be(secretToken);
 		}
 
 		[Fact]
-		public void DefaultLogLevelTest() => Assert.Equal(LogLevel.Error, Agent.Config.LogLevel);
+		public void DefaultLogLevelTest() => Agent.Config.LogLevel.Should().Be(LogLevel.Error);
 
 		[Fact]
 		public void SetDebugLogLevelTest()
 		{
 			var agent = new ApmAgent(new TestAgentComponents("Debug"));
-			Assert.Equal(LogLevel.Debug, agent.ConfigurationReader.LogLevel);
+			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Debug);
+			agent.Logger.Level.Should().Be(LogLevel.Debug);
 		}
 
 		[Fact]
 		public void SetErrorLogLevelTest()
 		{
 			var agent = new ApmAgent(new TestAgentComponents("Error"));
-			Assert.Equal(LogLevel.Error, agent.ConfigurationReader.LogLevel);
+			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Error);
+			agent.Logger.Level.Should().Be(LogLevel.Error);
 		}
 
 		[Fact]
 		public void SetInfoLogLevelTest()
 		{
 			var agent = new ApmAgent(new TestAgentComponents("Information"));
-			Assert.Equal(LogLevel.Information, agent.ConfigurationReader.LogLevel);
+			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Information);
+			agent.Logger.Level.Should().Be(LogLevel.Information);
 		}
 
 		[Fact]
 		public void SetWarningLogLevelTest()
 		{
 			var agent = new ApmAgent(new TestAgentComponents("Warning"));
-			Assert.Equal(LogLevel.Warning, agent.ConfigurationReader.LogLevel);
+			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Warning);
+			agent.Logger.Level.Should().Be(LogLevel.Warning);
 		}
 
 		[Fact]
@@ -134,10 +157,17 @@ namespace Elastic.Apm.Tests
 			var agent = new ApmAgent(new TestAgentComponents(logLevelValue));
 			var logger = agent.Logger as TestLogger;
 
-			Assert.Equal(LogLevel.Error, agent.ConfigurationReader.LogLevel);
-			Assert.Equal(
-				$"{{{nameof(TestAgentConfigurationReader)}}} Failed parsing log level from {TestAgentConfigurationReader.Origin}: {ConfigConsts.ConfigKeys.Level}, value: {logLevelValue}. Defaulting to log level 'Error'",
-				logger.Lines[0]);
+			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Error);
+			logger.Lines.Should().NotBeEmpty();
+			logger.Lines[0]
+				.Should()
+				.ContainAll(
+					$"{{{nameof(TestAgentConfigurationReader)}}}",
+					"Failed parsing log level from",
+					TestAgentConfigurationReader.Origin,
+					ConfigConsts.ConfigKeys.Level,
+					"Defaulting to "
+				);
 		}
 
 		/// <summary>
@@ -153,8 +183,9 @@ namespace Elastic.Apm.Tests
 
 			//By default XUnit uses 'testhost' as the entry assembly, and that is what the
 			//agent reports if we don't set it to anything:
-			Assert.False(string.IsNullOrEmpty(payloadSender.Payloads[0].Service.Name));
-			Assert.False(payloadSender.Payloads[0].Service.Name.Contains('.'));
+			var serviceName = payloadSender.Payloads[0].Service.Name;
+			serviceName.Should().NotBeNullOrWhiteSpace();
+			serviceName.Should().NotContain(".");
 		}
 
 		/// <summary>
@@ -171,7 +202,7 @@ namespace Elastic.Apm.Tests
 			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
 			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
-			Assert.Equal(serviceName, payloadSender.Payloads[0].Service.Name);
+			payloadSender.Payloads[0].Service.Name.Should().Be(serviceName);
 		}
 
 		/// <summary>
@@ -189,8 +220,9 @@ namespace Elastic.Apm.Tests
 			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
 			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
-			Assert.Equal(serviceName.Replace('.', '_'), payloadSender.Payloads[0].Service.Name);
-			Assert.False(payloadSender.Payloads[0].Service.Name.Contains('.'));
+
+			payloadSender.Payloads[0].Service.Name.Should().Be(serviceName.Replace('.', '_'));
+			payloadSender.Payloads[0].Service.Name.Should().NotContain(".");
 		}
 
 		/// <summary>
@@ -204,18 +236,19 @@ namespace Elastic.Apm.Tests
 			var elasticToken = new byte[] { 174, 116, 0, 210, 193, 137, 207, 34 };
 			var mscorlibToken = new byte[] { 183, 122, 92, 86, 25, 52, 224, 137 };
 
-			Assert.True(AbstractConfigurationReader.IsMsOrElastic(elasticToken));
-			Assert.True(AbstractConfigurationReader.IsMsOrElastic(elasticToken));
+			AbstractConfigurationReader.IsMsOrElastic(elasticToken).Should().BeTrue();
 
-			Assert.False(AbstractConfigurationReader.IsMsOrElastic(new byte[] { 0 }));
-			Assert.False(AbstractConfigurationReader.IsMsOrElastic(new byte[] { }));
+			AbstractConfigurationReader.IsMsOrElastic(new byte[] { 0 }).Should().BeFalse();
+			AbstractConfigurationReader.IsMsOrElastic(new byte[] { }).Should().BeFalse();
 
-			Assert.False(AbstractConfigurationReader
+			AbstractConfigurationReader
 				.IsMsOrElastic(new[]
 				{
 					elasticToken[0], mscorlibToken[1], elasticToken[2],
 					mscorlibToken[3], elasticToken[4], mscorlibToken[5], elasticToken[6], mscorlibToken[7]
-				}));
+				})
+				.Should()
+				.BeFalse();
 		}
 
 		/// <summary>
@@ -230,8 +263,8 @@ namespace Elastic.Apm.Tests
 			var config = new EnvironmentConfigurationReader(testLogger);
 			var serverUrl = config.ServerUrls.FirstOrDefault();
 
-			Assert.NotNull(serverUrl);
-			Assert.NotEmpty(testLogger.Lines);
+			serverUrl.Should().NotBeNull();
+			testLogger.Lines.Should().NotBeEmpty();
 		}
 
 		public void Dispose() => Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.Urls, null);

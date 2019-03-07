@@ -5,34 +5,37 @@ using Elastic.Apm.Report;
 
 namespace Elastic.Apm.Tests.Mocks
 {
-	public class TestAgentComponents : AgentComponents
+	internal class TestAgentComponents : AgentComponents
 	{
+		public TestAgentComponents()
+			: this(new TestAgentConfigurationReader(new TestLogger(ParseWithoutLogging("Debug")))) { }
+
 		public TestAgentComponents(
 			string logLevel = "Debug",
 			string serverUrls = null,
-			Service service = null,
 			string secretToken = null,
 			IPayloadSender payloadSender = null
 		)
 			: this(new TestAgentConfigurationReader(
-				new TestLogger(AbstractConfigurationReader.ParseLogLevel(logLevel)),
-				logLevel: logLevel,
+				new TestLogger(ParseWithoutLogging(logLevel)),
 				serverUrls: serverUrls,
-				secretToken: secretToken
-			), service, payloadSender) { }
+				secretToken: secretToken,
+				logLevel: logLevel
+			), payloadSender) { }
 
-		public TestAgentComponents(TestLogger logger, string serverUrls = null, Service service = null,
-			IPayloadSender payloadSender = null
-		)
-			: this(new TestAgentConfigurationReader(logger,
-				logLevel: logger.LogLevel.ToString(),
-				serverUrls: serverUrls
-			), service, payloadSender) { }
+		public TestAgentComponents(TestLogger logger, string serverUrls = null, IPayloadSender payloadSender = null)
+			: this(new TestAgentConfigurationReader(logger, serverUrls: serverUrls), payloadSender) { }
 
 		public TestAgentComponents(
 			TestAgentConfigurationReader reader,
-			Service service = null,
 			IPayloadSender payloadSender = null
-		) : base(reader.Logger, reader, service, payloadSender ?? new MockPayloadSender()) { }
+		) : base(reader.Logger, reader, payloadSender ?? new MockPayloadSender()) { }
+
+		protected internal static LogLevel ParseWithoutLogging(string value)
+		{
+			if (AbstractConfigurationReader.TryParseLogLevel(value, out var level)) return level.Value;
+			return ConsoleLogger.DefaultLogLevel;
+		}
+
 	}
 }

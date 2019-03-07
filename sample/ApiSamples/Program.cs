@@ -74,6 +74,9 @@ namespace ApiSamples
 		public static void SampleCustomTransactionWithConvenientApi() => Agent.Tracer.CaptureTransaction("TestTransaction", "TestType",
 			t =>
 			{
+				t.Context.Response = new Response() { Finished = true, StatusCode = 200 };
+				t.Context.Request = new Request("GET", new Url{Protocol = "HTTP"});
+
 				t.Tags["fooTransaction1"] = "barTransaction1";
 				t.Tags["fooTransaction2"] = "barTransaction2";
 				Thread.Sleep(10);

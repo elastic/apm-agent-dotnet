@@ -11,13 +11,13 @@ namespace Elastic.Apm
 		public AgentComponents(
 			IApmLogger logger = null,
 			IConfigurationReader configurationReader = null,
-			Service service = null,
 			IPayloadSender payloadSender = null
 		)
 		{
-			Logger = logger ?? ConsoleLogger.Instance;
+
+			Logger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 			ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(Logger);
-			Service = service ?? Service.GetDefaultService(ConfigurationReader);
+			Service = Service.GetDefaultService(ConfigurationReader);
 			PayloadSender = payloadSender ?? new PayloadSender(Logger, ConfigurationReader);
 			TracerInternal = new Tracer(Logger, Service, PayloadSender);
 			TransactionContainer = new TransactionContainer();
@@ -34,7 +34,7 @@ namespace Elastic.Apm
 		/// automatically populates it based on the entry assembly.
 		/// </summary>
 		/// <value>The service.</value>
-		private Service Service { get; }
+		public Service Service { get; }
 
 		public ITracer Tracer => TracerInternal;
 
