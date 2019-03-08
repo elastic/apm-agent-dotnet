@@ -1,6 +1,6 @@
 ﻿using Elastic.Apm.Config;
 
-namespace Elastic.Apm.Model.Payload
+namespace Elastic.Apm.Api
 {
 	public class Service
 	{

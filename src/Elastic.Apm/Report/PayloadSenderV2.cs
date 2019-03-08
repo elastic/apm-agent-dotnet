@@ -20,7 +20,7 @@ namespace Elastic.Apm.Report
 	/// Responsible for sending the data to the server. Implements Intake V2.
 	/// Each instance creates its own thread to do the work. Therefore instances should be reused if possible.
 	/// </summary>
-	public class PayloadSenderV2 : IPayloadSender
+	internal class PayloadSenderV2 : IPayloadSender
 	{
 		private readonly ScopedLogger _logger;
 		private readonly Service _service;
@@ -45,6 +45,8 @@ namespace Elastic.Apm.Report
 		public void QueueSpan(ISpan span) => _eventQueue.Post(span);
 
 		public void QueueError(IError error) => _eventQueue.Post(error);
+
+
 
 		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, HttpMessageHandler handler = null)
 		{
@@ -138,6 +140,11 @@ namespace Elastic.Apm.Report
 				catch (Exception e)
 				{
 					var sb = new StringBuilder();
+					sb.AppendLine("Failed sending events. ");
+					sb.Append("Exception: ");
+					sb.Append(e.GetType().FullName);
+					sb.Append(", Message: ");
+					sb.AppendLine(e.Message);
 					sb.AppendLine("Following events were not transferred successfully to the server:");
 					foreach (var item in queueItems)
 					{

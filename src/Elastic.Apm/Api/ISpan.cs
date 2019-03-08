@@ -65,7 +65,7 @@ namespace Elastic.Apm.Api
 		/// <param name="message">The error message.</param>
 		/// <param name="culprit">The culprit of the error.</param>
 		/// <param name="frames">The stack trace when the error occured.</param>
-		void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null);
+		void CaptureError(string message, string culprit, System.Diagnostics.StackFrame[] frames, string parentId = null);
 
 		/// <summary>
 		/// Captures an exception and reports it to the APM server.

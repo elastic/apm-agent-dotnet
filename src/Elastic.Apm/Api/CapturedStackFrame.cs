@@ -1,15 +1,15 @@
 ﻿using Newtonsoft.Json;
 
-namespace Elastic.Apm.Model.Payload
+namespace Elastic.Apm.Api
 {
-	public class StackFrame
+	public class CapturedStackFrame
 	{
-		[JsonProperty("Filename")]
+		[JsonProperty("filename")]
 		public string FileName { get; set; }
 
 		public string Function { get; set; }
 
-		[JsonProperty("Lineno")]
+		[JsonProperty("lineno")]
 		public int LineNo { get; set; }
 
 		public string Module { get; set; }

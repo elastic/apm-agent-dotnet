@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
@@ -22,7 +23,7 @@ namespace Elastic.Apm.Model.Payload
 		public Transaction(IApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, agent.PayloadSender) { }
 
-		public Transaction(IApmLogger logger, string name, string type, IPayloadSender sender)
+		public Transaction(IApmLogger logger, string name, string type, IPayloadSender sender, string traceId = null)
 		{
 			_logger = logger?.Scoped(nameof(Transaction));
 			_sender = sender;
@@ -30,11 +31,22 @@ namespace Elastic.Apm.Model.Payload
 
 			Name = name;
 			Type = type;
-			var rnd = new Random();
-			Id = rnd.Next().ToString("x");
-			TraceId = rnd.Next().ToString("x");
+			var idBytes = new byte[8];
+			RandomGenerator.GetRandomBytes(idBytes);
+			Id = BitConverter.ToString(idBytes).Replace("-","");
 
-			SpanCount = new SpanCount(); //TODO
+			if (traceId == null)
+			{
+				idBytes = new byte[16];
+				RandomGenerator.GetRandomBytes(idBytes);
+				TraceId = BitConverter.ToString(idBytes).Replace("-","");
+			}
+			else
+			{
+				TraceId = traceId;
+			}
+
+			SpanCount = new SpanCount();
 		}
 
 		/// <summary>
@@ -110,7 +122,7 @@ namespace Elastic.Apm.Model.Payload
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
-			var ed = new ExceptionDetails()
+			var ed = new CapturedException()
 			{
 				Message = exception.Message,
 				Type = exception.GetType().FullName,
@@ -131,7 +143,7 @@ namespace Elastic.Apm.Model.Payload
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
-			var ed = new ExceptionDetails()
+			var ed = new CapturedException()
 			{
 				Message = message,
 			};

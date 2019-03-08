@@ -118,7 +118,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			//also make sure the tag is captured
 			var error = _capturedPayload.Errors[0] as Error;
 			error.Should().NotBeNull();
-			var errorDetail = error.Exception;
+			var errorDetail = error.CapturedException;
 			errorDetail.Should().NotBeNull();
 			var tags = error.Context.Tags;
 			tags.Should().NotBeEmpty().And.ContainKey("foo").And.Contain("foo", "bar");
