@@ -2,27 +2,31 @@
 using System.Collections.Generic;
 using Elastic.Apm.Api;
 using Elastic.Apm.Report.Serialization;
+using Elastic.Apm.Helpers;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
 {
 	internal class Error : IError
 	{
-		public Error(ExceptionDetails exceptionDetails, string traceId, string transactionId, string parentId) : this(exceptionDetails) =>
+		public Error(CapturedException capturedException, string traceId, string transactionId, string parentId) : this(capturedException) =>
 			(TraceId, TransactionId, ParentId) = (traceId, transactionId, parentId);
 
-		public Error(ExceptionDetails exceptionDetails)
+		public Error(CapturedException capturedException)
 		{
-			var rnd = new Random();
-			Id = rnd.Next().ToString("X");
-			Exception = exceptionDetails;
+			var idBytes = new byte[8];
+			RandomGenerator.GetRandomBytes(idBytes);
+			Id = BitConverter.ToString(idBytes).Replace("-","");
+
+			CapturedException = capturedException;
 		}
 
 		public Context Context { get; set; }
 
 		public string Culprit { get; set; }
 
-		public ExceptionDetails Exception { get; set; }
+		public CapturedException CapturedException { get; set; }
+
 		public string Id { get; set; }
 
 		[JsonProperty("parent_id")]
@@ -35,15 +39,5 @@ namespace Elastic.Apm.Model.Payload
 		public string TransactionId { get; set; }
 
 		public override string ToString() => $"Error, Id: {Id}, TraceId: {TraceId}, ParentId: {ParentId}, TransactionId: {TransactionId}";
-	}
-
-
-	public class ExceptionDetails
-	{
-		public int Code { get; set; }
-		public bool Handled { get; set; }
-		public string Message { get; set; }
-		public List<StackFrame> Stacktrace { get; set; }
-		public string Type { get; set; }
 	}
 }

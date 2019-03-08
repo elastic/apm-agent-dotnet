@@ -54,7 +54,7 @@ namespace Elastic.Apm.Api
 		/// <param name="frames">The stack trace when the error occured.</param>
 		/// <param name="parentId">The parent ID that is attached to the error. In case it's null the parent
 		/// will be automatically set to the current instance </param>
-		void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null);
+		void CaptureError(string message, string culprit, System.Diagnostics.StackFrame[] frames, string parentId = null);
 
 		/// <summary>
 		/// Captures an exception and reports it to the APM server.

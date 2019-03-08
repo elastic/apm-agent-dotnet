@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.Config;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.Config;

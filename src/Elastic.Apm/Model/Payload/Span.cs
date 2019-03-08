@@ -26,8 +26,9 @@ namespace Elastic.Apm.Model.Payload
 			Name = name;
 			Type = type;
 
-			var rnd = new Random();
-			Id = rnd.Next().ToString("x");
+			var idBytes = new byte[8];
+			RandomGenerator.GetRandomBytes(idBytes);
+			Id = BitConverter.ToString(idBytes).Replace("-","");
 			ParentId = transaction.Id; //TODO
 			TransactionId = transaction.Id;
 			TraceId = transaction.TraceId; //TODO
@@ -60,7 +61,7 @@ namespace Elastic.Apm.Model.Payload
 		public string ParentId { get; set; }
 
 		[JsonProperty("Stacktrace")]
-		public List<StackFrame> StackTrace { get; set; }
+		public List<CapturedStackFrame> StackTrace { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Subtype { get; set; }
@@ -93,7 +94,7 @@ namespace Elastic.Apm.Model.Payload
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
-			var ed = new ExceptionDetails()
+			var ed = new CapturedException()
 			{
 				Message = exception.Message,
 				Type = exception.GetType().FullName,
@@ -114,7 +115,7 @@ namespace Elastic.Apm.Model.Payload
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
-			var ed = new ExceptionDetails()
+			var ed = new CapturedException()
 			{
 				Message = message,
 			};
