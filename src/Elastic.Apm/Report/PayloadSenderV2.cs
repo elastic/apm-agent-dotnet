@@ -98,19 +98,20 @@ namespace Elastic.Apm.Report
 		/// </summary>
 		internal async Task FlushAndFinishAsync()
 		{
-			_logger.LogDebug("FlushAndFinish called - PayloadSender will became invalid");
+			_logger.LogDebug("FlushAndFinish called - PayloadSenderV2 will became invalid");
 			await _creation;
 			_isProcessingLoopRunning = false;
 			_eventQueue.TriggerBatch();
 
 			try
 			{
-				var vv = _eventQueue.Receive(timeout: TimeSpan.FromSeconds(1));
-				await ProcessQueueItems(vv);
+				//Either this wins, or the other one from DoWork.
+				var queueItems = _eventQueue.Receive(timeout: TimeSpan.FromSeconds(1));
+				await ProcessQueueItems(queueItems);
 			}
-			catch (Exception e)
+			catch
 			{
-				Console.WriteLine(e);
+				_logger.LogDebug("Reading from BatchBlock did not work, BatchBlock is empty.");
 			}
 
 			_batchBlockReceiveAsyncCts.Cancel();
@@ -198,6 +199,7 @@ namespace Elastic.Apm.Report
 
 	internal class Metadata
 	{
+		// ReSharper disable once UnusedAutoPropertyAccessor.Global - used by Json.Net
 		public Service Service { get; set; }
 	}
 

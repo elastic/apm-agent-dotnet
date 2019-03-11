@@ -55,7 +55,7 @@ namespace Elastic.Apm.Tests
 			});
 
 			const string secretToken = "SecretToken";
-			var logger = ConsoleLogger.LoggerOrDefault(LogLevel.Debug);
+			var logger = ConsoleLogger.Instance;
 			var payloadSender = new PayloadSenderV2(logger, new TestAgentConfigurationReader(logger, secretToken: secretToken),
 				Service.GetDefaultService(new TestAgentConfigurationReader(logger)), handler);
 
