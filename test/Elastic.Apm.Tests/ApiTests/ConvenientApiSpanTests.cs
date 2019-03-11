@@ -383,7 +383,7 @@ namespace Elastic.Apm.Tests.ApiTests
 						token.ThrowIfCancellationRequested();
 					});
 				};
-				act.Should().Throw<OperationCanceledException>();
+				await act.Should().ThrowAsync<OperationCanceledException>();
 			});
 		}
 
@@ -455,7 +455,7 @@ namespace Elastic.Apm.Tests.ApiTests
 							throw new InvalidOperationException(ExceptionMessage);
 					});
 				};
-				act.Should().Throw<InvalidOperationException>();
+				await act.Should().ThrowAsync<InvalidOperationException>();
 			});
 
 			//According to the Intake API tags are stored on the Context (and not on Spans.Tags directly).

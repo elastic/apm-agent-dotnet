@@ -247,7 +247,7 @@ namespace Elastic.Apm.Tests
 				var httpClient = new HttpClient();
 
 				Func<Task> act = async () => await httpClient.GetAsync("http://nonexistenturl_dsfdsf.ghkdehfn");
-				act.Should().Throw<Exception>();
+				await act.Should().ThrowAsync<Exception>();
 			}
 
 			payloadSender.Errors.Should().NotBeEmpty();
