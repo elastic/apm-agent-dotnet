@@ -18,14 +18,14 @@ namespace Elastic.Apm.Model.Payload
 			RandomGenerator.GetRandomBytes(idBytes);
 			Id = BitConverter.ToString(idBytes).Replace("-","");
 
-			CapturedException = capturedException;
+			Exception = capturedException;
 		}
 
 		public Context Context { get; set; }
 
 		public string Culprit { get; set; }
 
-		public CapturedException CapturedException { get; set; }
+		public CapturedException Exception { get; set; }
 
 		public string Id { get; set; }
 

@@ -495,8 +495,8 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			payloadSender.Errors.Should().NotBeEmpty();
 
-			payloadSender.FirstError.CapturedException.Type.Should().Be(typeof(InvalidOperationException).FullName);
-			payloadSender.FirstError.CapturedException.Message.Should().Be(ExceptionMessage);
+			payloadSender.FirstError.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
+			payloadSender.FirstError.Exception.Message.Should().Be(ExceptionMessage);
 
 			return payloadSender;
 		}
@@ -592,8 +592,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.Errors.Should().NotBeEmpty();
 			payloadSender.Errors.Should().NotBeEmpty();
 
-			payloadSender.FirstError.CapturedException.Type.Should().Be(typeof(InvalidOperationException).FullName);
-			payloadSender.FirstError.CapturedException.Message.Should().Be(ExceptionMessage);
+			payloadSender.FirstError.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
+			payloadSender.FirstError.Exception.Message.Should().Be(ExceptionMessage);
 		}
 	}
 }

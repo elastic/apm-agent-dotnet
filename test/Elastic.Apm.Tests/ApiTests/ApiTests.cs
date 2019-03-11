@@ -263,8 +263,8 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			payloadSender.Transactions.Should().ContainSingle();
 			payloadSender.Errors.Should().ContainSingle();
-			payloadSender.FirstError.CapturedException.Message.Should().Be(exceptionMessage);
-			payloadSender.FirstError.CapturedException.Message.Should().Be(exceptionMessage);
+			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
+			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 
 			payloadSender.FirstError.Culprit.Should().Be(!string.IsNullOrEmpty(culprit) ? culprit : "PublicAPI-CaptureException");
 		}
@@ -303,7 +303,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			payloadSender.Transactions.Should().ContainSingle();
 			payloadSender.Errors.Should().ContainSingle();
-			payloadSender.FirstError.CapturedException.Message.Should().Be(exceptionMessage);
+			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 		}
 
 		/// <summary>
@@ -344,7 +344,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			payloadSender.Transactions.Should().ContainSingle();
 			payloadSender.Errors.Should().ContainSingle();
-			payloadSender.FirstError.CapturedException.Message.Should().Be(exceptionMessage);
+			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 
 			payloadSender.FirstTransaction.Tags.Should().Contain("fooTransaction1", "barTransaction1");
 			payloadSender.FirstTransaction.Context.Tags.Should().Contain("fooTransaction1", "barTransaction1");

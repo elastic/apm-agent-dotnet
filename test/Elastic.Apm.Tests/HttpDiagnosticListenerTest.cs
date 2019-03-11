@@ -278,8 +278,8 @@ namespace Elastic.Apm.Tests
 				listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Exception", new { Request = request, Exception = exception }));
 
 				payloadSender.Errors.Should().NotBeEmpty();
-				payloadSender.FirstError.CapturedException.Message.Should().Be(exceptionMsg);
-				payloadSender.FirstError.CapturedException.Type.Should().Be(typeof(Exception).FullName);
+				payloadSender.FirstError.Exception.Message.Should().Be(exceptionMsg);
+				payloadSender.FirstError.Exception.Type.Should().Be(typeof(Exception).FullName);
 			}
 		}
 

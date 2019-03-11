@@ -124,7 +124,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var error = _capturedPayload.Errors[0] as Error;
 			error.Should().NotBeNull();
 
-			var errorDetail = error.CapturedException;
+			var errorDetail = error.Exception;
 			errorDetail.Should().NotBeNull();
 
 			var tags = error.Context.Tags;

@@ -6,6 +6,6 @@ namespace Elastic.Apm.Api
 {
 	public interface IError
 	{
-		 CapturedException CapturedException { get; set; }
+		 CapturedException Exception { get; set; }
 	}
 }
