@@ -26,7 +26,7 @@ namespace Elastic.Apm.Report
 	{
 		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
 
-		internal readonly Task Creation;
+		private readonly Task _creation;
 
 		private readonly BatchBlock<object> _eventQueue =
 			new BatchBlock<object>(20, new GroupingDataflowBlockOptions
@@ -65,7 +65,7 @@ namespace Elastic.Apm.Report
 				_httpClient.DefaultRequestHeaders.Authorization =
 					new AuthenticationHeaderValue("Bearer", configurationReader.SecretToken);
 			}
-			Creation = Task.Factory.StartNew(
+			_creation = Task.Factory.StartNew(
 				() =>
 				{
 					try
@@ -99,9 +99,19 @@ namespace Elastic.Apm.Report
 		internal async Task FlushAndFinishAsync()
 		{
 			_logger.LogDebug("FlushAndFinish called - PayloadSender will became invalid");
-			await Creation;
+			await _creation;
 			_isProcessingLoopRunning = false;
 			_eventQueue.TriggerBatch();
+
+			try
+			{
+				var vv = _eventQueue.Receive(timeout: TimeSpan.FromSeconds(1));
+				await ProcessQueueItems(vv);
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e);
+			}
 
 			_batchBlockReceiveAsyncCts.Cancel();
 
@@ -123,60 +133,65 @@ namespace Elastic.Apm.Report
 			while (_isProcessingLoopRunning)
 			{
 				var queueItems = await _eventQueue.ReceiveAsync(_batchBlockReceiveAsyncCts.Token);
-				try
+				await ProcessQueueItems(queueItems);
+			}
+		}
+
+		private async Task ProcessQueueItems(object[] queueItems)
+		{
+			try
+			{
+				var metadata = new Metadata { Service = _service };
+				var metadataJson = JsonConvert.SerializeObject(metadata, _settings);
+				var json = new StringBuilder();
+				json.Append("{\"metadata\": " + metadataJson + "}" + "\n");
+
+				foreach (var item in queueItems)
 				{
-					var metadata = new Metadata { Service = _service };
-					var metadataJson = JsonConvert.SerializeObject(metadata, _settings);
-					var json = new StringBuilder();
-					json.Append("{\"metadata\": " + metadataJson + "}" + "\n");
-
-					foreach (var item in queueItems)
+					var serialized = JsonConvert.SerializeObject(item, _settings);
+					switch (item)
 					{
-						var serialized = JsonConvert.SerializeObject(item, _settings);
-						switch (item)
-						{
-							case Transaction _:
-								json.AppendLine("{\"transaction\": " + serialized + "}");
-								break;
-							case Span _:
-								json.AppendLine("{\"span\": " + serialized + "}");
-								break;
-							case Error _:
-								json.AppendLine("{\"error\": " + serialized + "}");
-								break;
-						}
-					}
-
-					var content = new StringContent(json.ToString(), Encoding.UTF8, "application/x-ndjson");
-
-					var result = await _httpClient.PostAsync(Consts.IntakeV2Events, content);
-
-					if (result != null && !result.IsSuccessStatusCode)
-					{
-						var str = await result.Content.ReadAsStringAsync();
-						_logger.LogError($"Failed sending event. {str}");
-					}
-					if (result != null && result.IsSuccessStatusCode)
-					{
-						var sb = new StringBuilder();
-						sb.AppendLine("Sent items to server:");
-						foreach (var item in queueItems) sb.AppendLine(item.ToString());
-						_logger.LogDebug(sb.ToString());
+						case Transaction _:
+							json.AppendLine("{\"transaction\": " + serialized + "}");
+							break;
+						case Span _:
+							json.AppendLine("{\"span\": " + serialized + "}");
+							break;
+						case Error _:
+							json.AppendLine("{\"error\": " + serialized + "}");
+							break;
 					}
 				}
-				catch (Exception e)
+
+				var content = new StringContent(json.ToString(), Encoding.UTF8, "application/x-ndjson");
+
+				var result = await _httpClient.PostAsync(Consts.IntakeV2Events, content);
+
+				if (result != null && !result.IsSuccessStatusCode)
+				{
+					var str = await result.Content.ReadAsStringAsync();
+					_logger.LogError($"Failed sending event. {str}");
+				}
+				if (result != null && result.IsSuccessStatusCode)
 				{
 					var sb = new StringBuilder();
-					sb.AppendLine("Failed sending events. ");
-					sb.Append("Exception: ");
-					sb.Append(e.GetType().FullName);
-					sb.Append(", Message: ");
-					sb.AppendLine(e.Message);
-					sb.AppendLine("Following events were not transferred successfully to the server:");
+					sb.AppendLine("Sent items to server:");
 					foreach (var item in queueItems) sb.AppendLine(item.ToString());
-
-					_logger.LogWarning(sb.ToString());
+					_logger.LogDebug(sb.ToString());
 				}
+			}
+			catch (Exception e)
+			{
+				var sb = new StringBuilder();
+				sb.AppendLine("Failed sending events. ");
+				sb.Append("Exception: ");
+				sb.Append(e.GetType().FullName);
+				sb.Append(", Message: ");
+				sb.AppendLine(e.Message);
+				sb.AppendLine("Following events were not transferred successfully to the server:");
+				foreach (var item in queueItems) sb.AppendLine(item.ToString());
+
+				_logger.LogWarning(sb.ToString());
 			}
 		}
 	}
