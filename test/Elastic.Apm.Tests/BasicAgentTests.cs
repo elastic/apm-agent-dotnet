@@ -55,15 +55,14 @@ namespace Elastic.Apm.Tests
 			});
 
 			const string secretToken = "SecretToken";
-			var logger = ConsoleLogger.Instance;
+			var logger = ConsoleLogger.LoggerOrDefault(LogLevel.Debug);
 			var payloadSender = new PayloadSenderV2(logger, new TestAgentConfigurationReader(logger, secretToken: secretToken),
 				Service.GetDefaultService(new TestAgentConfigurationReader(logger)), handler);
 
 			using (var agent = new ApmAgent(new TestAgentComponents(secretToken: secretToken, payloadSender: payloadSender)))
-			{
 				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
-				await payloadSender.FlushAndFinishAsync();
-			}
+
+			await payloadSender.FlushAndFinishAsync();
 
 			authHeader.Should().NotBeNull();
 			authHeader.Scheme.Should().Be("Bearer");
