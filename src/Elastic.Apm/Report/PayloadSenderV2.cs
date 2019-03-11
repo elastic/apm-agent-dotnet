@@ -20,7 +20,7 @@ namespace Elastic.Apm.Report
 {
 	/// <summary>
 	/// Responsible for sending the data to the server. Implements Intake V2.
-	/// Each instance creates its own thread to do the work. Therefore instances should be reused if possible.
+	/// Each instance creates its own thread to do the work. Therefore, instances should be reused if possible.
 	/// </summary>
 	internal class PayloadSenderV2 : IPayloadSender
 	{
