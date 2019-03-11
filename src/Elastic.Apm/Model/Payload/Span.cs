@@ -20,7 +20,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public Span(string name, string type, Transaction transaction, IPayloadSender payloadSender, IApmLogger logger)
 		{
-			_start = DateTimeOffset.Now;
+			_start = DateTimeOffset.UtcNow;
 			_payloadSender = payloadSender;
 			_logger = logger?.Scoped(nameof(Span));
 			Name = name;

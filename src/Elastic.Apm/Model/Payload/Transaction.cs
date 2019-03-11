@@ -28,7 +28,7 @@ namespace Elastic.Apm.Model.Payload
 		{
 			_logger = logger?.Scoped(nameof(Transaction));
 			_sender = sender;
-			_start = DateTimeOffset.Now;
+			_start = DateTimeOffset.UtcNow;
 
 			Name = name;
 			Type = type;

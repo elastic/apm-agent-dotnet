@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using Elastic.Apm.Api;
-using Elastic.Apm.Report.Serialization;
 using Elastic.Apm.Helpers;
 using Newtonsoft.Json;
 
@@ -9,14 +7,17 @@ namespace Elastic.Apm.Model.Payload
 {
 	internal class Error : IError
 	{
+		private readonly DateTimeOffset _start;
+
 		public Error(CapturedException capturedException, string traceId, string transactionId, string parentId) : this(capturedException) =>
 			(TraceId, TransactionId, ParentId) = (traceId, transactionId, parentId);
 
 		public Error(CapturedException capturedException)
 		{
+			_start = DateTimeOffset.UtcNow;
 			var idBytes = new byte[8];
 			RandomGenerator.GetRandomBytes(idBytes);
-			Id = BitConverter.ToString(idBytes).Replace("-","");
+			Id = BitConverter.ToString(idBytes).Replace("-", "");
 
 			Exception = capturedException;
 		}
@@ -31,6 +32,8 @@ namespace Elastic.Apm.Model.Payload
 
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
+
+		public long Timestamp => _start.ToUnixTimeMilliseconds() * 1000;
 
 		[JsonProperty("trace_id")]
 		public string TraceId { get; set; }
