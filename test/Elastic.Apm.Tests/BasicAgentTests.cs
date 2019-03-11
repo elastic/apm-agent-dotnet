@@ -45,7 +45,7 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
-		public void PayloadSentWithBearerToken()
+		public async Task PayloadSentWithBearerToken()
 		{
 			AuthenticationHeaderValue authHeader = null;
 			var handler = new MockHttpMessageHandler((r, c) =>
@@ -54,16 +54,16 @@ namespace Elastic.Apm.Tests
 				return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
 			});
 
-			var secretToken = "SecretToken";
+			const string secretToken = "SecretToken";
 			var logger = ConsoleLogger.Instance;
 			var payloadSender = new PayloadSenderV2(logger, new TestAgentConfigurationReader(logger, secretToken: secretToken),
 				Service.GetDefaultService(new TestAgentConfigurationReader(logger)), handler);
 
 			using (var agent = new ApmAgent(new TestAgentComponents(secretToken: secretToken, payloadSender: payloadSender)))
+			{
 				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
-
-			// ideally, introduce a mechanism to flush payloads
-			Thread.Sleep(TimeSpan.FromSeconds(2));
+				await payloadSender.FlushAndFinishAsync();
+			}
 
 			authHeader.Should().NotBeNull();
 			authHeader.Scheme.Should().Be("Bearer");
