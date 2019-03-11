@@ -29,9 +29,9 @@ namespace Elastic.Apm.Model.Payload
 			var idBytes = new byte[8];
 			RandomGenerator.GetRandomBytes(idBytes);
 			Id = BitConverter.ToString(idBytes).Replace("-","");
-			ParentId = transaction.Id; //TODO
+			ParentId = transaction.Id;
 			TransactionId = transaction.Id;
-			TraceId = transaction.TraceId; //TODO
+			TraceId = transaction.TraceId;
 		}
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]

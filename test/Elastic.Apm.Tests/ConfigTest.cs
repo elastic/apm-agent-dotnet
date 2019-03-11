@@ -183,10 +183,9 @@ namespace Elastic.Apm.Tests
 
 			//By default XUnit uses 'testhost' as the entry assembly, and that is what the
 			//agent reports if we don't set it to anything:
-			//TODO:
-			//var serviceName = payloadSender.Payloads[0].Service.Name;
-			//serviceName.Should().NotBeNullOrWhiteSpace();
-			//serviceName.Should().NotContain(".");
+			var serviceName = agent.Service.Name;
+			serviceName.Should().NotBeNullOrWhiteSpace();
+			serviceName.Should().NotContain(".");
 		}
 
 		/// <summary>
@@ -203,8 +202,7 @@ namespace Elastic.Apm.Tests
 			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
 			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
-			//TODO:
-			//payloadSender.Payloads[0].Service.Name.Should().Be(serviceName);
+			agent.Service.Name.Should().Be(serviceName);
 		}
 
 		/// <summary>
@@ -222,9 +220,9 @@ namespace Elastic.Apm.Tests
 			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
 			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
-			//TODO:
-			//payloadSender.Payloads[0].Service.Name.Should().Be(serviceName.Replace('.', '_'));
-			//payloadSender.Payloads[0].Service.Name.Should().NotContain(".");
+
+			agent.Service.Name.Should().Be(serviceName.Replace('.', '_'));
+			agent.Service.Name.Should().NotContain(".");
 		}
 
 		/// <summary>
