@@ -59,6 +59,8 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new PayloadSenderV2(logger, new TestAgentConfigurationReader(logger, secretToken: secretToken),
 				Service.GetDefaultService(new TestAgentConfigurationReader(logger)), handler);
 
+			await payloadSender.Creation;
+
 			using (var agent = new ApmAgent(new TestAgentComponents(secretToken: secretToken, payloadSender: payloadSender)))
 				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
 

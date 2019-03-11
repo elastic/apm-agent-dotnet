@@ -26,7 +26,7 @@ namespace Elastic.Apm.Report
 	{
 		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
 
-		private readonly Task _creation;
+		internal readonly Task Creation;
 
 		private readonly BatchBlock<object> _eventQueue =
 			new BatchBlock<object>(20, new GroupingDataflowBlockOptions
@@ -65,7 +65,7 @@ namespace Elastic.Apm.Report
 				_httpClient.DefaultRequestHeaders.Authorization =
 					new AuthenticationHeaderValue("Bearer", configurationReader.SecretToken);
 			}
-			_creation = Task.Factory.StartNew(
+			Creation = Task.Factory.StartNew(
 				() =>
 				{
 					try
@@ -99,7 +99,7 @@ namespace Elastic.Apm.Report
 		internal async Task FlushAndFinishAsync()
 		{
 			_logger.LogDebug("FlushAndFinish called - PayloadSender will became invalid");
-			await _creation;
+			await Creation;
 			_isProcessingLoopRunning = false;
 			_eventQueue.TriggerBatch();
 
