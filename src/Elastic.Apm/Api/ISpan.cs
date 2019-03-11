@@ -31,11 +31,9 @@ namespace Elastic.Apm.Api
 		string Name { get; set; }
 
 		/// <summary>
-		/// Offset relative to the transaction's timestamp identifying the start of the span, in milliseconds.
+		/// Hex encoded 64 random bits ID of the parent transaction or span.
 		/// </summary>
-		//decimal Start { get; set; }
-
-		long Timestamp { get; }
+		string ParentId { get; }
 
 		/// <summary>
 		/// The subtype of the span.
@@ -47,6 +45,18 @@ namespace Elastic.Apm.Api
 		/// A flat mapping of user-defined tags with string values.
 		/// </summary>
 		Dictionary<string, string> Tags { get; }
+
+		/// <summary>
+		/// Offset relative to the transaction's timestamp identifying the start of the span, in milliseconds.
+		/// </summary>
+		//decimal Start { get; set; }
+
+		long Timestamp { get; }
+
+		/// <summary>
+		/// Hex encoded 128 random bits ID of the correlated trace.
+		/// </summary>
+		string TraceId { get; }
 
 		/// <summary>
 		/// UUID of the enclosing transaction.
@@ -65,7 +75,7 @@ namespace Elastic.Apm.Api
 		/// <param name="message">The error message.</param>
 		/// <param name="culprit">The culprit of the error.</param>
 		/// <param name="frames">The stack trace when the error occured.</param>
-		void CaptureError(string message, string culprit, System.Diagnostics.StackFrame[] frames, string parentId = null);
+		void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null);
 
 		/// <summary>
 		/// Captures an exception and reports it to the APM server.

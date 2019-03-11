@@ -60,7 +60,7 @@ namespace Elastic.Apm.Model.Payload
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
 
-		[JsonProperty("Stacktrace")]
+		[JsonProperty("stacktrace")]
 		public List<CapturedStackFrame> StackTrace { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
@@ -75,7 +75,7 @@ namespace Elastic.Apm.Model.Payload
 		[JsonProperty("trace_id")]
 		public string TraceId { get; set; }
 
-		[JsonProperty("Transaction_id")]
+		[JsonProperty("transaction_id")]
 		public string TransactionId { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]

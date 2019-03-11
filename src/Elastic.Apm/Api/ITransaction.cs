@@ -41,6 +41,11 @@ namespace Elastic.Apm.Api
 		Dictionary<string, string> Tags { get; }
 
 		/// <summary>
+		/// "Hex encoded 128 random bits ID of the correlated trace."
+		/// </summary>
+		string TraceId { get; }
+
+		/// <summary>
 		/// The type of the transaction.
 		/// Example: 'request'
 		/// </summary>
@@ -52,9 +57,11 @@ namespace Elastic.Apm.Api
 		/// <param name="message">The error message.</param>
 		/// <param name="culprit">The culprit of the error.</param>
 		/// <param name="frames">The stack trace when the error occured.</param>
-		/// <param name="parentId">The parent ID that is attached to the error. In case it's null the parent
-		/// will be automatically set to the current instance </param>
-		void CaptureError(string message, string culprit, System.Diagnostics.StackFrame[] frames, string parentId = null);
+		/// <param name="parentId">
+		/// The parent ID that is attached to the error. In case it's null the parent
+		/// will be automatically set to the current instance
+		/// </param>
+		void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null);
 
 		/// <summary>
 		/// Captures an exception and reports it to the APM server.
@@ -62,8 +69,10 @@ namespace Elastic.Apm.Api
 		/// <param name="exception">The exception to capture.</param>
 		/// <param name="culprit">The value of this parameter is shown as 'Culprit' on the APM UI.</param>
 		/// <param name="isHandled">Indicates whether the exception is handled or not.</param>
-		/// <param name="parentId">The parent ID that is attached to the error. In case it's null the parent
-		/// will be automatically set to the current instance </param>
+		/// <param name="parentId">
+		/// The parent ID that is attached to the error. In case it's null the parent
+		/// will be automatically set to the current instance
+		/// </param>
 		void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null);
 
 		/// <summary>

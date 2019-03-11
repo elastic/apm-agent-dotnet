@@ -109,7 +109,7 @@ namespace Elastic.Apm.Report
 			{
 				await _worker;
 			}
-			catch (Exception e)
+			catch (TaskCanceledException)
 			{
 				_logger.LogDebug("worker task cancelled");
 			}
