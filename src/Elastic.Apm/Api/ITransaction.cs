@@ -52,6 +52,11 @@ namespace Elastic.Apm.Api
 		string Type { get; set; }
 
 		/// <summary>
+		/// Hex encoded 64 random bits ID of the parent transaction or span. Only root transactions of a trace do not have a parent_id, otherwise it needs to be set.
+		/// </summary>
+		string ParentId { get; }
+
+		/// <summary>
 		/// Captures a custom error and reports it to the APM server.
 		/// </summary>
 		/// <param name="message">The error message.</param>

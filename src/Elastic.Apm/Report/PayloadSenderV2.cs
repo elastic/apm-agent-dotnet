@@ -111,6 +111,10 @@ namespace Elastic.Apm.Report
 			{
 				_logger.LogDebug("worker task cancelled");
 			}
+			finally
+			{
+				_batchBlockReceiveAsyncCts.Dispose();
+			}
 
 			if (_eventQueue.TryReceiveAll(out var queueItems))
 				await ProcessQueueItems(queueItems.SelectMany(n => n).ToArray());
@@ -162,9 +166,9 @@ namespace Elastic.Apm.Report
 				if (result != null && !result.IsSuccessStatusCode)
 				{
 					var str = await result.Content.ReadAsStringAsync();
-					_logger.LogError($"Failed sending event. {str}");
+					_logger.LogError("Failed sending event. {ApmServerResponse}", str);
 				}
-				if (result != null && result.IsSuccessStatusCode)
+				else
 				{
 					var sb = new StringBuilder();
 					sb.AppendLine("Sent items to server:");
@@ -208,7 +212,7 @@ namespace Elastic.Apm.Report
 		{
 			_cancellationToken = cancellationToken;
 			_taskQueue = new BlockingCollection<Task>();
-			new Thread(RunOnCurrentThread) { Name = "STTS Thread", IsBackground = true }.Start();
+			new Thread(RunOnCurrentThread) { Name = "ElasticApmPayloadSender", IsBackground = true }.Start();
 		}
 
 		private void RunOnCurrentThread()

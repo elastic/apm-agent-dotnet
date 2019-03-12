@@ -6,6 +6,6 @@ namespace Elastic.Apm.Api
 {
 	public interface IError
 	{
-		string Id { get; set; }
+		string Id { get; }
 	}
 }

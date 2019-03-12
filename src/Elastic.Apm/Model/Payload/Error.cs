@@ -30,7 +30,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public CapturedException Exception { get; set; }
 
-		public string Id { get; set; }
+		public string Id { get; }
 
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }

@@ -106,7 +106,7 @@ namespace Elastic.Apm.Model.Payload
 			{
 				ed.Stacktrace
 					= StacktraceHelper.GenerateApmStackTrace(new StackTrace(exception, true).GetFrames(), _logger,
-						"failed capturing stacktrace");
+						$"{nameof(Span)}.{nameof(CaptureException)}");
 			}
 
 			_payloadSender.QueueError(new Error(ed, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit /*, Context = Context */ });
@@ -116,18 +116,18 @@ namespace Elastic.Apm.Model.Payload
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
-			var ed = new CapturedException()
+			var capturedException = new CapturedException()
 			{
 				Message = message,
 			};
 
 			if (frames != null)
 			{
-				ed.Stacktrace
-					= StacktraceHelper.GenerateApmStackTrace(frames, _logger, "failed capturing stacktrace");
+				capturedException.Stacktrace
+					= StacktraceHelper.GenerateApmStackTrace(frames, _logger, $"{nameof(Span)}.{nameof(CaptureError)}");
 			}
 
-			_payloadSender.QueueError(new Error(ed, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit /*, Context = Context */ });
+			_payloadSender.QueueError(new Error(capturedException, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit /*, Context = Context */ });
 		}
 
 		// ReSharper disable once ClassNeverInstantiated.Local - instantiated with Lazy<T>

@@ -24,7 +24,7 @@ namespace Elastic.Apm.Model.Payload
 		public Transaction(IApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, agent.PayloadSender) { }
 
-		public Transaction(IApmLogger logger, string name, string type, IPayloadSender sender, string traceId = null)
+		public Transaction(IApmLogger logger, string name, string type, IPayloadSender sender, string traceId = null, string parentId = null)
 		{
 			_logger = logger?.Scoped(nameof(Transaction));
 			_sender = sender;
@@ -45,6 +45,7 @@ namespace Elastic.Apm.Model.Payload
 				TraceId = traceId;
 			}
 
+			ParentId = parentId;
 			SpanCount = new SpanCount();
 		}
 
@@ -62,6 +63,7 @@ namespace Elastic.Apm.Model.Payload
 		/// <value>The duration.</value>
 		public double? Duration { get; set; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Id { get; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
@@ -86,8 +88,13 @@ namespace Elastic.Apm.Model.Payload
 
 		public long Timestamp => _start.ToUnixTimeMilliseconds() * 1000;
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("trace_id")]
-		public string TraceId { get; set; }
+		public string TraceId { get; }
+
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonProperty("parent_id")]
+		public string ParentId { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
