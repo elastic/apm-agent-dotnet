@@ -1,6 +1,7 @@
 ﻿using System;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
@@ -24,6 +25,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public Context Context { get; set; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Culprit { get; set; }
 
 		public CapturedException Exception { get; set; }

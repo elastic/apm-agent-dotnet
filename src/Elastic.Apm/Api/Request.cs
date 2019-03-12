@@ -10,6 +10,7 @@ namespace Elastic.Apm.Api
 	{
 		public Request(string method, Url url) => (Method, Url) = (method, url);
 
+		[JsonProperty("http_version")]
 		public string HttpVersion { get; set; }
 
 		public string Method { get; set; }
@@ -23,7 +24,7 @@ namespace Elastic.Apm.Api
 	{
 		public bool Encrypted { get; set; }
 
-		[JsonProperty("Remote_address")]
+		[JsonProperty("remote_address")]
 		public string RemoteAddress { get; set; }
 	}
 

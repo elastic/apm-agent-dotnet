@@ -33,14 +33,12 @@ namespace Elastic.Apm.Model.Payload
 			Name = name;
 			Type = type;
 			var idBytes = new byte[8];
-			RandomGenerator.GetRandomBytes(idBytes);
-			Id = BitConverter.ToString(idBytes).Replace("-","");
+			Id = RandomGenerator.GetRandomBytesAsString(idBytes);
 
 			if (traceId == null)
 			{
 				idBytes = new byte[16];
-				RandomGenerator.GetRandomBytes(idBytes);
-				TraceId = BitConverter.ToString(idBytes).Replace("-","");
+				TraceId = RandomGenerator.GetRandomBytesAsString(idBytes);
 			}
 			else
 			{

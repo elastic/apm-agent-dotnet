@@ -42,7 +42,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 				capturedPayload.Errors.Should().ContainSingle();
 
-				var errorException = capturedPayload.Errors[0].Exception;
+				var errorException = capturedPayload.FirstError.Exception;
 				errorException.Message.Should().Be("This is a test exception!");
 				errorException.Type.Should().Be(typeof(Exception).FullName);
 

@@ -1,14 +1,12 @@
-﻿using Elastic.Apm.Report.Serialization;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
-namespace Elastic.Apm.Api
+namespace Elastic.Apm.Model.Payload
 {
-	public class CapturedStackFrame
+	internal class CapturedStackFrame
 	{
 		[JsonProperty("filename")]
 		public string FileName { get; set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Function { get; set; }
 
 		[JsonProperty("lineno")]

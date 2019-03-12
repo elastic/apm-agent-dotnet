@@ -13,7 +13,7 @@ namespace Elastic.Apm.Model.Payload
 	internal class Span : ISpan
 	{
 		private readonly Lazy<ContextImpl> _context = new Lazy<ContextImpl>();
-		private readonly ScopedLogger _logger;
+		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _payloadSender;
 
 		private readonly DateTimeOffset _start;
@@ -26,9 +26,7 @@ namespace Elastic.Apm.Model.Payload
 			Name = name;
 			Type = type;
 
-			var idBytes = new byte[8];
-			RandomGenerator.GetRandomBytes(idBytes);
-			Id = BitConverter.ToString(idBytes).Replace("-","");
+			Id = RandomGenerator.GetRandomBytesAsString(new byte[8]);
 			ParentId = transaction.Id;
 			TransactionId = transaction.Id;
 			TraceId = transaction.TraceId;
@@ -51,12 +49,13 @@ namespace Elastic.Apm.Model.Payload
 		/// <value>The duration.</value>
 		public double? Duration { get; set; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Id { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
 
-
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
 
@@ -72,9 +71,11 @@ namespace Elastic.Apm.Model.Payload
 		//public decimal Start { get; set; }
 		public long Timestamp => _start.ToUnixTimeMilliseconds() * 1000;
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("trace_id")]
 		public string TraceId { get; set; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("transaction_id")]
 		public string TransactionId { get; set; }
 
@@ -111,7 +112,7 @@ namespace Elastic.Apm.Model.Payload
 			_payloadSender.QueueError(new Error(ed, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit /*, Context = Context */ });
 		}
 
-		public void CaptureError(string message, string culprit, System.Diagnostics.StackFrame[] frames, string parentId = null)
+		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null)
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 

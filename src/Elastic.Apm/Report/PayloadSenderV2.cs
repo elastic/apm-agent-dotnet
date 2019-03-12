@@ -79,7 +79,6 @@ namespace Elastic.Apm.Report
 				}, CancellationToken.None, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
 		}
 
-		private bool _isProcessingLoopRunning = true;
 		private Task _worker;
 
 		public void QueueTransaction(ITransaction transaction)
@@ -100,19 +99,7 @@ namespace Elastic.Apm.Report
 		{
 			_logger.LogDebug("FlushAndFinish called - PayloadSenderV2 will became invalid");
 			await _creation;
-			_isProcessingLoopRunning = false;
 			_eventQueue.TriggerBatch();
-
-			try
-			{
-				//Either this wins, or the other one from DoWork.
-				var queueItems = _eventQueue.Receive(timeout: TimeSpan.FromSeconds(1));
-				await ProcessQueueItems(queueItems);
-			}
-			catch
-			{
-				_logger.LogDebug("Reading from BatchBlock did not work, BatchBlock is empty.");
-			}
 
 			_batchBlockReceiveAsyncCts.Cancel();
 
@@ -125,17 +112,21 @@ namespace Elastic.Apm.Report
 				_logger.LogDebug("worker task cancelled");
 			}
 
+			if (_eventQueue.TryReceiveAll(out var queueItems))
+				await ProcessQueueItems(queueItems.SelectMany(n => n).ToArray());
+
 			_eventQueue.Complete();
 		}
 
 		private async Task DoWork()
 		{
 			_batchBlockReceiveAsyncCts = new CancellationTokenSource();
-			while (_isProcessingLoopRunning)
+			while (true)
 			{
 				var queueItems = await _eventQueue.ReceiveAsync(_batchBlockReceiveAsyncCts.Token);
 				await ProcessQueueItems(queueItems);
 			}
+			// ReSharper disable once FunctionNeverReturns
 		}
 
 		private async Task ProcessQueueItems(object[] queueItems)

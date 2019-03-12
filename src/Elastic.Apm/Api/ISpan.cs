@@ -47,10 +47,8 @@ namespace Elastic.Apm.Api
 		Dictionary<string, string> Tags { get; }
 
 		/// <summary>
-		/// Offset relative to the transaction's timestamp identifying the start of the span, in milliseconds.
+		/// The timestamp of the span
 		/// </summary>
-		//decimal Start { get; set; }
-
 		long Timestamp { get; }
 
 		/// <summary>
@@ -59,7 +57,7 @@ namespace Elastic.Apm.Api
 		string TraceId { get; }
 
 		/// <summary>
-		/// UUID of the enclosing transaction.
+		/// Hex encoded 64 random bits ID of the correlated transaction.
 		/// </summary>
 		string TransactionId { get; }
 
