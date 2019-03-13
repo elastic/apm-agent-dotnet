@@ -1,4 +1,5 @@
-﻿using Elastic.Apm.Api;
+﻿using System;
+using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
@@ -6,7 +7,7 @@ using Elastic.Apm.Report;
 
 namespace Elastic.Apm
 {
-	public class AgentComponents : IApmAgent
+	public class AgentComponents : IApmAgent, IDisposable
 	{
 		public AgentComponents(
 			IApmLogger logger = null,
@@ -43,5 +44,13 @@ namespace Elastic.Apm
 		private Tracer TracerInternal { get; }
 
 		internal TransactionContainer TransactionContainer { get; }
+
+		public void Dispose()
+		{
+			if (PayloadSender is IDisposable disposable)
+			{
+				disposable?.Dispose();
+			}
+		}
 	}
 }

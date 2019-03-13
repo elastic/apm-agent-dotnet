@@ -22,7 +22,7 @@ namespace Elastic.Apm.Report
 	/// Responsible for sending the data to the server. Implements Intake V2.
 	/// Each instance creates its own thread to do the work. Therefore, instances should be reused if possible.
 	/// </summary>
-	internal class PayloadSenderV2 : IPayloadSender
+	internal class PayloadSenderV2 : IPayloadSender, IDisposable
 	{
 		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
 
@@ -189,6 +189,11 @@ namespace Elastic.Apm.Report
 
 				_logger.LogWarning(sb.ToString());
 			}
+		}
+
+		public void Dispose()
+		{
+			_batchBlockReceiveAsyncCts?.Dispose();
 		}
 	}
 

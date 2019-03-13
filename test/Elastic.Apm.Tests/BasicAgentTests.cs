@@ -60,9 +60,10 @@ namespace Elastic.Apm.Tests
 				Service.GetDefaultService(new TestAgentConfigurationReader(logger)), handler);
 
 			using (var agent = new ApmAgent(new TestAgentComponents(secretToken: secretToken, payloadSender: payloadSender)))
+			{
 				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
-
-			await payloadSender.FlushAndFinishAsync();
+				await payloadSender.FlushAndFinishAsync();
+			}
 
 			authHeader.Should().NotBeNull();
 			authHeader.Scheme.Should().Be("Bearer");
