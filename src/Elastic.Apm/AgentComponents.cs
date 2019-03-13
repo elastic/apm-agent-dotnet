@@ -1,4 +1,5 @@
-﻿using Elastic.Apm.Api;
+﻿using System;
+using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
@@ -6,7 +7,7 @@ using Elastic.Apm.Report;
 
 namespace Elastic.Apm
 {
-	public class AgentComponents : IApmAgent
+	public class AgentComponents : IApmAgent, IDisposable
 	{
 		public AgentComponents(
 			IApmLogger logger = null,
@@ -17,8 +18,10 @@ namespace Elastic.Apm
 
 			Logger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 			ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(Logger);
-			Service = Service.GetDefaultService(ConfigurationReader);
-			PayloadSender = payloadSender ?? new PayloadSender(Logger, ConfigurationReader);
+
+			Service =  Service.GetDefaultService(ConfigurationReader);
+
+			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigurationReader, Service);
 			TracerInternal = new Tracer(Logger, Service, PayloadSender);
 			TransactionContainer = new TransactionContainer();
 		}
@@ -38,8 +41,16 @@ namespace Elastic.Apm
 
 		public ITracer Tracer => TracerInternal;
 
-		internal Tracer TracerInternal { get; }
+		private Tracer TracerInternal { get; }
 
 		internal TransactionContainer TransactionContainer { get; }
+
+		public void Dispose()
+		{
+			if (PayloadSender is IDisposable disposable)
+			{
+				disposable?.Dispose();
+			}
+		}
 	}
 }

@@ -13,7 +13,7 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// The HTTP status code of the response.
 		/// </summary>
-		[JsonProperty("Status_code")]
+		[JsonProperty("status_code")]
 		public int StatusCode { get; set; }
 	}
 }

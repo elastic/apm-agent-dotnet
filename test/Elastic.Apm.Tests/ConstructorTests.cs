@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
+using FluentAssertions;
 using Xunit;
 
 namespace Elastic.Apm.Tests {
@@ -27,8 +28,8 @@ namespace Elastic.Apm.Tests {
 			var agent = new ApmAgent(new AgentComponents(configurationReader: new LogConfig(LogLevel.Warning)));
 			var logger = agent.Logger as ConsoleLogger;
 
-			Assert.NotNull(logger);
-			Assert.Equal(logger.Level, LogLevel.Warning);
+			logger.Should().NotBeNull();
+			logger?.Level.Should().Be(LogLevel.Warning);
 		}
 	}
 }

@@ -23,7 +23,7 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// The id of the span.
 		/// </summary>
-		int Id { get; set; }
+		string Id { get; set; }
 
 		/// <summary>
 		/// The name of the span.
@@ -31,9 +31,9 @@ namespace Elastic.Apm.Api
 		string Name { get; set; }
 
 		/// <summary>
-		/// Offset relative to the transaction's timestamp identifying the start of the span, in milliseconds.
+		/// Hex encoded 64 random bits ID of the parent transaction or span.
 		/// </summary>
-		decimal Start { get; set; }
+		string ParentId { get; }
 
 		/// <summary>
 		/// The subtype of the span.
@@ -47,9 +47,19 @@ namespace Elastic.Apm.Api
 		Dictionary<string, string> Tags { get; }
 
 		/// <summary>
-		/// UUID of the enclosing transaction.
+		/// The timestamp of the span
 		/// </summary>
-		Guid TransactionId { get; }
+		long Timestamp { get; }
+
+		/// <summary>
+		/// Hex encoded 128 random bits ID of the correlated trace.
+		/// </summary>
+		string TraceId { get; }
+
+		/// <summary>
+		/// Hex encoded 64 random bits ID of the correlated transaction.
+		/// </summary>
+		string TransactionId { get; }
 
 		/// <summary>
 		/// The type of the span.
@@ -63,14 +73,14 @@ namespace Elastic.Apm.Api
 		/// <param name="message">The error message.</param>
 		/// <param name="culprit">The culprit of the error.</param>
 		/// <param name="frames">The stack trace when the error occured.</param>
-		void CaptureError(string message, string culprit, StackFrame[] frames);
+		void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null);
 
 		/// <summary>
 		/// Captures an exception and reports it to the APM server.
 		/// </summary>
 		/// <param name="exception">The exception to capture.</param>
 		/// <param name="culprit">The value of this parameter is shown as 'Culprit' on the APM UI.</param>
-		void CaptureException(Exception exception, string culprit = null);
+		void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null);
 
 		/// <summary>
 		/// Ends the span and schedules it to be reported to the APM Server.

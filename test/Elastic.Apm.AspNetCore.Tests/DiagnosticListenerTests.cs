@@ -48,23 +48,20 @@ namespace Elastic.Apm.AspNetCore.Tests
 //			{
 //				await _client.GetAsync("/Home/TriggerError");
 //
-//				_capturedPayload.Payloads.Should().ContainSingle();
-//				_capturedPayload.Payloads[0].Transactions.Should().ContainSingle();
+//				_capturedPayload.Transactions.Should().ContainSingle();
 //
 //				_capturedPayload.Errors.Should().NotBeEmpty();
-//				_capturedPayload.Errors[0].Errors.Should().ContainSingle();
-//				 _capturedPayload.Errors[0].Errors[0].Exception.Type.Should().Be(typeof(Exception).FullName);
+//				_capturedPayload.Errors.Should().ContainSingle();
+//				 _capturedPayload.Errors[0].CapturedException.Type.Should().Be(typeof(Exception).FullName);
 //			} //here we unsubsribe, so no errors should be captured after this line.
 
 			_agent.Dispose();
 
-			_capturedPayload.Payloads.Clear();
-			_capturedPayload.Errors.Clear();
+			_capturedPayload.Clear();
 
 			await _client.GetAsync("/Home/TriggerError");
 
-			_capturedPayload.Payloads.Should().ContainSingle();
-			_capturedPayload.Payloads[0].Transactions.Should().ContainSingle();
+			_capturedPayload.Transactions.Should().ContainSingle();
 			_capturedPayload.Errors.Should().BeEmpty();
 		}
 
@@ -82,20 +79,18 @@ namespace Elastic.Apm.AspNetCore.Tests
 			{
 				await _client.GetAsync("/Home/Index");
 
-				_capturedPayload.Payloads.Should().ContainSingle();
-				_capturedPayload.Payloads[0].Transactions.Should().ContainSingle();
+				_capturedPayload.Transactions.Should().ContainSingle();
 
-				_capturedPayload.SpansOnFirstTransaction.Should().NotBeEmpty()
+				_capturedPayload.SpansOnFirstTransaction.Should()
+					.NotBeEmpty()
 					.And.Contain(n => n.Context.Db != null);
-			} //here we unsubsribe, so no errors should be captured after this line.
+			} //here we unsubscribe, so no errors should be captured after this line.
 
-			_capturedPayload.Payloads.Clear();
-			_capturedPayload.Errors.Clear();
+			_capturedPayload.Clear();
 
 			await _client.GetAsync("/Home/Index");
 
-			_capturedPayload.Payloads.Should().ContainSingle();
-			_capturedPayload.Payloads[0].Transactions.Should().ContainSingle();
+			_capturedPayload.Transactions.Should().ContainSingle();
 
 			_capturedPayload.SpansOnFirstTransaction.Should().BeEmpty();
 		}

@@ -383,7 +383,7 @@ namespace Elastic.Apm.Tests.ApiTests
 						token.ThrowIfCancellationRequested();
 					});
 				};
-				act.Should().Throw<OperationCanceledException>();
+				await act.Should().ThrowAsync<OperationCanceledException>();
 			});
 		}
 
@@ -455,7 +455,7 @@ namespace Elastic.Apm.Tests.ApiTests
 							throw new InvalidOperationException(ExceptionMessage);
 					});
 				};
-				act.Should().Throw<InvalidOperationException>();
+				await act.Should().ThrowAsync<InvalidOperationException>();
 			});
 
 			//According to the Intake API tags are stored on the Context (and not on Spans.Tags directly).
@@ -479,13 +479,12 @@ namespace Elastic.Apm.Tests.ApiTests
 				await func(t);
 			});
 
-			payloadSender.Payloads.Should().NotBeEmpty();
-			payloadSender.Payloads[0].Transactions.Should().NotBeEmpty();
+			payloadSender.Transactions.Should().NotBeEmpty();
 
-			payloadSender.Payloads[0].Transactions[0].Name.Should().Be(TransactionName);
-			payloadSender.Payloads[0].Transactions[0].Type.Should().Be(TransactionType);
+			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
+			payloadSender.FirstTransaction.Type.Should().Be(TransactionType);
 
-			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
+			var duration = payloadSender.FirstTransaction.Duration;
 			duration.Should().BeGreaterOrEqualToMinimumSleepLength(numberOfSleeps: 3);
 
 			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
@@ -495,10 +494,9 @@ namespace Elastic.Apm.Tests.ApiTests
 
 
 			payloadSender.Errors.Should().NotBeEmpty();
-			payloadSender.Errors[0].Errors.Should().NotBeEmpty();
 
-			payloadSender.Errors[0].Errors[0].Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
-			payloadSender.Errors[0].Errors[0].Exception.Message.Should().Be(ExceptionMessage);
+			payloadSender.FirstError.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
+			payloadSender.FirstError.Exception.Message.Should().Be(ExceptionMessage);
 
 			return payloadSender;
 		}
@@ -518,13 +516,12 @@ namespace Elastic.Apm.Tests.ApiTests
 				await func(t);
 			});
 
-			payloadSender.Payloads.Should().NotBeEmpty();
-			payloadSender.Payloads[0].Transactions.Should().NotBeEmpty();
+			payloadSender.Transactions.Should().NotBeEmpty();
 
-			payloadSender.Payloads[0].Transactions[0].Name.Should().Be(TransactionName);
-			payloadSender.Payloads[0].Transactions[0].Type.Should().Be(TransactionType);
+			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
+			payloadSender.FirstTransaction.Type.Should().Be(TransactionType);
 
-			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
+			var duration = payloadSender.FirstTransaction.Duration;
 			duration.Should().BeGreaterOrEqualToMinimumSleepLength(numberOfSleeps: 3);
 
 			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
@@ -549,19 +546,18 @@ namespace Elastic.Apm.Tests.ApiTests
 				action(t);
 			});
 
-			payloadSender.Payloads.Should().NotBeEmpty();
-			payloadSender.Payloads[0].Transactions.Should().NotBeEmpty();
+			payloadSender.Transactions.Should().NotBeEmpty();
 
-			payloadSender.Payloads[0].Transactions[0].Name.Should().Be(TransactionName);
-			payloadSender.Payloads[0].Transactions[0].Type.Should().Be(TransactionType);
+			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
+			payloadSender.FirstTransaction.Type.Should().Be(TransactionType);
 
 			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
 			payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(SpanName);
 			payloadSender.SpansOnFirstTransaction[0].Type.Should().Be(SpanType);
 
-			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
-			duration.Should().BeGreaterOrEqualToMinimumSleepLength(numberOfSleeps: 3);
+			var duration = payloadSender.FirstTransaction.Duration;
+			duration.Should().BeGreaterOrEqualToMinimumSleepLength(3);
 
 			return payloadSender;
 		}
@@ -580,14 +576,13 @@ namespace Elastic.Apm.Tests.ApiTests
 				action(t);
 			});
 
-			payloadSender.Payloads.Should().NotBeEmpty();
-			payloadSender.Payloads[0].Transactions.Should().NotBeEmpty();
+			payloadSender.Transactions.Should().NotBeEmpty();
 
-			payloadSender.Payloads[0].Transactions[0].Name.Should().Be(TransactionName);
-			payloadSender.Payloads[0].Transactions[0].Type.Should().Be(TransactionType);
+			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
+			payloadSender.FirstTransaction.Type.Should().Be(TransactionType);
 
-			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
-			duration.Should().BeGreaterOrEqualToMinimumSleepLength(numberOfSleeps: 3);
+			var duration = payloadSender.FirstTransaction.Duration;
+			duration.Should().BeGreaterOrEqualToMinimumSleepLength(3);
 
 			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
@@ -595,10 +590,10 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.SpansOnFirstTransaction[0].Type.Should().Be(SpanType);
 
 			payloadSender.Errors.Should().NotBeEmpty();
-			payloadSender.Errors[0].Errors.Should().NotBeEmpty();
+			payloadSender.Errors.Should().NotBeEmpty();
 
-			payloadSender.Errors[0].Errors[0].Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
-			payloadSender.Errors[0].Errors[0].Exception.Message.Should().Be(ExceptionMessage);
+			payloadSender.FirstError.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
+			payloadSender.FirstError.Exception.Message.Should().Be(ExceptionMessage);
 		}
 	}
 }

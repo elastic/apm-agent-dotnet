@@ -59,7 +59,11 @@ namespace Elastic.Apm
 
 		internal TransactionContainer TransactionContainer => Components.TransactionContainer;
 
-		public void Dispose() => Disposables?.Dispose();
+		public void Dispose()
+		{
+			Disposables?.Dispose();
+			Components?.Dispose();
+		}
 	}
 
 	public static class Agent

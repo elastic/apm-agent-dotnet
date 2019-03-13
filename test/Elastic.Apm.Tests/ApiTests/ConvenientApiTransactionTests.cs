@@ -374,20 +374,18 @@ namespace Elastic.Apm.Tests.ApiTests
 			};
 			await act.Should().ThrowAsync<OperationCanceledException>();
 
-			payloadSender.Payloads.Should().NotBeEmpty();
-			payloadSender.Payloads[0].Transactions.Should().NotBeEmpty();
+			payloadSender.Transactions.Should().NotBeEmpty();
 
-			payloadSender.Payloads[0].Transactions[0].Name.Should().Be(TransactionName);
-			payloadSender.Payloads[0].Transactions[0].Type.Should().Be(TransactionType);
+			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
+			payloadSender.FirstTransaction.Type.Should().Be(TransactionType);
 
-			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
+			var duration = payloadSender.FirstTransaction.Duration;
 			duration.Should().BeGreaterOrEqualToMinimumSleepLength();
 
 			payloadSender.Errors.Should().NotBeEmpty();
-			payloadSender.Errors[0].Errors.Should().NotBeEmpty();
 
-			payloadSender.Errors[0].Errors[0].Culprit.Should().Be("A task was canceled");
-			payloadSender.Errors[0].Errors[0].Exception.Message.Should().Be("Task canceled");
+			payloadSender.FirstError.Culprit.Should().Be("A task was canceled");
+			payloadSender.FirstError.Exception.Message.Should().Be("Task canceled");
 		}
 
 		/// <summary>
@@ -411,7 +409,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstTransaction.Context.Tags.Should().Contain("foo", "bar");
 
 			//Also make sure the tag is visible directly on Transaction.Tags.
-			payloadSender.Payloads[0].Transactions[0].Tags.Should().Contain("foo", "bar");
+			payloadSender.FirstTransaction.Tags.Should().Contain("foo", "bar");
 		}
 
 		/// <summary>
@@ -435,7 +433,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstTransaction.Context.Tags.Should().Contain("foo", "bar");
 
 			//Also make sure the tag is visible directly on Transaction.Tags.
-			payloadSender.Payloads[0].Transactions[0].Tags.Should().Contain("foo", "bar");
+			payloadSender.FirstTransaction.Tags.Should().Contain("foo", "bar");
 		}
 
 		/// <summary>
@@ -466,7 +464,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstTransaction.Context.Tags.Should().Contain("foo", "bar");
 
 			//Also make sure the tag is visible directly on Transaction.Tags.
-			payloadSender.Payloads[0].Transactions[0].Tags.Should().Contain("foo", "bar");
+			payloadSender.FirstTransaction.Tags.Should().Contain("foo", "bar");
 		}
 
 		/// <summary>
@@ -593,13 +591,13 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			await func(agent);
 
-			payloadSender.Payloads.Should().NotBeEmpty();
-			payloadSender.Payloads[0].Transactions.Should().NotBeEmpty();
+			payloadSender.Transactions.Should().NotBeEmpty();
+			payloadSender.Transactions.Should().NotBeEmpty();
 
-			payloadSender.Payloads[0].Transactions[0].Name.Should().Be(TransactionName);
-			payloadSender.Payloads[0].Transactions[0].Type.Should().Be(TransactionType);
+			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
+			payloadSender.FirstTransaction.Type.Should().Be(TransactionType);
 
-			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
+			var duration = payloadSender.FirstTransaction.Duration;
 			duration.Should().BeGreaterOrEqualToMinimumSleepLength();
 
 			return payloadSender;
@@ -615,20 +613,20 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			await func(agent);
 
-			payloadSender.Payloads.Should().NotBeEmpty();
-			payloadSender.Payloads[0].Transactions.Should().NotBeEmpty();
+			payloadSender.Transactions.Should().NotBeEmpty();
+			payloadSender.Transactions.Should().NotBeEmpty();
 
-			payloadSender.Payloads[0].Transactions[0].Name.Should().Be(TransactionName);
-			payloadSender.Payloads[0].Transactions[0].Type.Should().Be(TransactionType);
+			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
+			payloadSender.FirstTransaction.Type.Should().Be(TransactionType);
 
-			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
+			var duration = payloadSender.FirstTransaction.Duration;
 			duration.Should().BeGreaterOrEqualToMinimumSleepLength();
 
 			payloadSender.Errors.Should().NotBeEmpty();
-			payloadSender.Errors[0].Errors.Should().NotBeEmpty();
+			payloadSender.Errors.Should().NotBeEmpty();
 
-			payloadSender.Errors[0].Errors[0].Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
-			payloadSender.Errors[0].Errors[0].Exception.Message.Should().Be(ExceptionMessage);
+			payloadSender.FirstError.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
+			payloadSender.FirstError.Exception.Message.Should().Be(ExceptionMessage);
 			return payloadSender;
 		}
 
@@ -642,13 +640,13 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			action(agent);
 
-			payloadSender.Payloads.Should().NotBeEmpty();
-			payloadSender.Payloads[0].Transactions.Should().NotBeEmpty();
+			payloadSender.Transactions.Should().NotBeEmpty();
+			payloadSender.Transactions.Should().NotBeEmpty();
 
-			payloadSender.Payloads[0].Transactions[0].Name.Should().Be(TransactionName);
-			payloadSender.Payloads[0].Transactions[0].Type.Should().Be(TransactionType);
+			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
+			payloadSender.FirstTransaction.Type.Should().Be(TransactionType);
 
-			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
+			var duration = payloadSender.FirstTransaction.Duration;
 			duration.Should().BeGreaterOrEqualToMinimumSleepLength();
 
 			return payloadSender;
@@ -664,20 +662,20 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			action(agent);
 
-			payloadSender.Payloads.Should().NotBeEmpty();
-			payloadSender.Payloads[0].Transactions.Should().NotBeEmpty();
+			payloadSender.Transactions.Should().NotBeEmpty();
+			payloadSender.Transactions.Should().NotBeEmpty();
 
-			payloadSender.Payloads[0].Transactions[0].Name.Should().Be(TransactionName);
-			payloadSender.Payloads[0].Transactions[0].Type.Should().Be(TransactionType);
+			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
+			payloadSender.FirstTransaction.Type.Should().Be(TransactionType);
 
-			var duration = payloadSender.Payloads[0].Transactions[0].Duration;
+			var duration = payloadSender.FirstTransaction.Duration;
 			duration.Should().BeGreaterOrEqualToMinimumSleepLength();
 
 			payloadSender.Errors.Should().NotBeEmpty();
-			payloadSender.Errors[0].Errors.Should().NotBeEmpty();
+			payloadSender.Errors.Should().NotBeEmpty();
 
-			payloadSender.Errors[0].Errors[0].Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
-			payloadSender.Errors[0].Errors[0].Exception.Message.Should().Be(ExceptionMessage);
+			payloadSender.FirstError.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
+			payloadSender.FirstError.Exception.Message.Should().Be(ExceptionMessage);
 		}
 	}
 }

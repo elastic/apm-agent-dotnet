@@ -33,14 +33,17 @@ namespace Elastic.Apm.Tests.ApiTests
 			Thread.Sleep(5); //Make sure we have duration > 0
 
 			transaction.End();
-			payloadSender.Payloads.Should().ContainSingle();
-			var capturedTransaction = payloadSender.Payloads[0].Transactions[0];
+
+			payloadSender.Transactions.Should().ContainSingle();
+
+			var capturedTransaction = payloadSender.Transactions[0];
+
 			capturedTransaction.Name.Should().Be(transactionName);
 			capturedTransaction.Type.Should().Be(transactionType);
 			capturedTransaction.Duration.Should().BeGreaterOrEqualTo(5);
 			capturedTransaction.Id.Should().NotBeEmpty();
 
-			payloadSender.Payloads[0].Service.Should().NotBeNull();
+			agent.Service.Should().NotBeNull();
 		}
 
 		/// <summary>
@@ -56,7 +59,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			var unused = agent.Tracer.StartTransaction(transactionName, transactionType);
-			payloadSender.Payloads.Should().BeEmpty();
+			payloadSender.Transactions.Should().BeEmpty();
 		}
 
 		/// <summary>
@@ -76,7 +79,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			transaction.Result = result;
 			transaction.End();
 
-			payloadSender.Payloads[0].Transactions[0].Result.Should().Be(result);
+			payloadSender.Transactions[0].Result.Should().Be(result);
 		}
 
 		/// <summary>
@@ -153,12 +156,13 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			span.End();
 			transaction.End();
-			payloadSender.Payloads.Should().NotBeEmpty();
+			payloadSender.Transactions.Should().NotBeEmpty();
 			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
 			payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(spanName);
 			payloadSender.SpansOnFirstTransaction[0].Duration.Should().BeGreaterOrEqualTo(5);
-			payloadSender.Payloads[0].Service.Should().NotBeNull();
+
+			agent.Service.Should().NotBeNull();
 		}
 
 		/// <summary>
@@ -181,10 +185,10 @@ namespace Elastic.Apm.Tests.ApiTests
 			Thread.Sleep(5); //Make sure we have duration > 0
 
 			transaction.End(); //Ends transaction, but doesn't end span.
-			payloadSender.Payloads.Should().NotBeEmpty();
+			payloadSender.Transactions.Should().NotBeEmpty();
 			payloadSender.SpansOnFirstTransaction.Should().BeEmpty();
 
-			payloadSender.Payloads[0].Service.Should().NotBeNull();
+			agent.Service.Should().NotBeNull();
 		}
 
 		/// <summary>
@@ -205,14 +209,14 @@ namespace Elastic.Apm.Tests.ApiTests
 			span.End();
 			transaction.End();
 
-			payloadSender.Payloads.Should().NotBeEmpty();
+			payloadSender.Transactions.Should().NotBeEmpty();
 			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
 			payloadSender.SpansOnFirstTransaction[0].Type.Should().Be(ApiConstants.TypeDb);
 			payloadSender.SpansOnFirstTransaction[0].Subtype.Should().Be(ApiConstants.SubtypeMssql);
 			payloadSender.SpansOnFirstTransaction[0].Action.Should().Be(ApiConstants.ActionQuery);
 
-			payloadSender.Payloads[0].Service.Should().NotBeNull();
+			agent.Service.Should().NotBeNull();
 		}
 
 		/// <summary>
@@ -235,12 +239,12 @@ namespace Elastic.Apm.Tests.ApiTests
 		private static void ErrorOnTransactionCommon(string culprit = null)
 		{
 			const string transactionName = "TestTransaction";
-			const string transacitonType = "UnitTest";
+			const string transactionType = "UnitTest";
 			const string exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			var transaction = agent.Tracer.StartTransaction(transactionName, transacitonType);
+			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
 			Thread.Sleep(5); //Make sure we have duration > 0
 			try
@@ -257,12 +261,12 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			transaction.End();
 
-			payloadSender.Payloads.Should().ContainSingle();
+			payloadSender.Transactions.Should().ContainSingle();
 			payloadSender.Errors.Should().ContainSingle();
-			payloadSender.Errors[0].Errors[0].Exception.Message.Should().Be(exceptionMessage);
-			payloadSender.Errors[0].Errors[0].Exception.Message.Should().Be(exceptionMessage);
+			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
+			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 
-			payloadSender.Errors[0].Errors[0].Culprit.Should().Be(!string.IsNullOrEmpty(culprit) ? culprit : "PublicAPI-CaptureException");
+			payloadSender.FirstError.Culprit.Should().Be(!string.IsNullOrEmpty(culprit) ? culprit : "PublicAPI-CaptureException");
 		}
 
 		/// <summary>
@@ -297,9 +301,9 @@ namespace Elastic.Apm.Tests.ApiTests
 			span.End();
 			transaction.End();
 
-			payloadSender.Payloads.Should().ContainSingle();
+			payloadSender.Transactions.Should().ContainSingle();
 			payloadSender.Errors.Should().ContainSingle();
-			payloadSender.Errors[0].Errors[0].Exception.Message.Should().Be(exceptionMessage);
+			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 		}
 
 		/// <summary>
@@ -338,14 +342,14 @@ namespace Elastic.Apm.Tests.ApiTests
 			span.End();
 			transaction.End();
 
-			payloadSender.Payloads.Should().ContainSingle();
+			payloadSender.Transactions.Should().ContainSingle();
 			payloadSender.Errors.Should().ContainSingle();
-			payloadSender.Errors[0].Errors[0].Exception.Message.Should().Be(exceptionMessage);
+			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 
-			payloadSender.Payloads[0].Transactions[0].Tags.Should().Contain("fooTransaction1", "barTransaction1");
+			payloadSender.FirstTransaction.Tags.Should().Contain("fooTransaction1", "barTransaction1");
 			payloadSender.FirstTransaction.Context.Tags.Should().Contain("fooTransaction1", "barTransaction1");
 
-			payloadSender.Payloads[0].Transactions[0].Tags.Should().Contain("fooTransaction2", "barTransaction2");
+			payloadSender.FirstTransaction.Tags.Should().Contain("fooTransaction2", "barTransaction2");
 			payloadSender.FirstTransaction.Context.Tags.Should().Contain("fooTransaction2", "barTransaction2");
 
 			payloadSender.SpansOnFirstTransaction[0].Tags.Should().Contain("fooSpan1", "barSpan1");
