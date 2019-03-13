@@ -82,7 +82,8 @@ namespace Elastic.Apm.Model.Payload
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
 
-		public override string ToString() => $"Span, Id: {Id}, TransactionId: {TransactionId}, ParentId: {ParentId}, TraceId:{TraceId}, Name: {Name}, Type: {Type}";
+		public override string ToString() =>
+			$"Span, Id: {Id}, TransactionId: {TransactionId}, ParentId: {ParentId}, TraceId:{TraceId}, Name: {Name}, Type: {Type}";
 
 		public void End()
 		{
@@ -91,23 +92,18 @@ namespace Elastic.Apm.Model.Payload
 			_payloadSender.QueueSpan(this);
 		}
 
-		public void CaptureException(Exception exception, string culprit = null, string parentId = null)
+		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
-			var ed = new CapturedException()
+			var ed = new CapturedException
 			{
 				Message = exception.Message,
 				Type = exception.GetType().FullName,
-				//Handled = isHandled,
+				Handled = isHandled,
+				Stacktrace = StacktraceHelper.GenerateApmStackTrace(exception, _logger,
+					$"{nameof(Span)}.{nameof(CaptureException)}")
 			};
-
-			if (!string.IsNullOrEmpty(exception.StackTrace))
-			{
-				ed.Stacktrace
-					= StacktraceHelper.GenerateApmStackTrace(new StackTrace(exception, true).GetFrames(), _logger,
-						$"{nameof(Span)}.{nameof(CaptureException)}");
-			}
 
 			_payloadSender.QueueError(new Error(ed, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit /*, Context = Context */ });
 		}
@@ -127,7 +123,8 @@ namespace Elastic.Apm.Model.Payload
 					= StacktraceHelper.GenerateApmStackTrace(frames, _logger, $"{nameof(Span)}.{nameof(CaptureError)}");
 			}
 
-			_payloadSender.QueueError(new Error(capturedException, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit /*, Context = Context */ });
+			_payloadSender.QueueError(
+				new Error(capturedException, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit /*, Context = Context */ });
 		}
 
 		// ReSharper disable once ClassNeverInstantiated.Local - instantiated with Lazy<T>
@@ -144,6 +141,7 @@ namespace Elastic.Apm.Model.Payload
 	{
 		IDb Db { get; set; }
 		IHttp Http { get; set; }
+
 		[JsonConverter(typeof(TagsJsonConverter))]
 		Dictionary<string, string> Tags { get; }
 	}
@@ -163,7 +161,6 @@ namespace Elastic.Apm.Model.Payload
 
 	internal class Db : IDb
 	{
-
 		public string Instance { get; set; }
 		public string Statement { get; set; }
 		public string Type { get; set; }

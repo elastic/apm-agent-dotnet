@@ -80,7 +80,7 @@ namespace Elastic.Apm.Api
 		/// </summary>
 		/// <param name="exception">The exception to capture.</param>
 		/// <param name="culprit">The value of this parameter is shown as 'Culprit' on the APM UI.</param>
-		void CaptureException(Exception exception, string culprit = null, string parentId = null);
+		void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null);
 
 		/// <summary>
 		/// Ends the span and schedules it to be reported to the APM Server.

@@ -17,7 +17,7 @@ namespace Elastic.Apm.Helpers
 		/// <param name="logger">The logger to emit exceptions on should one occur</param>
 		/// <param name="capturingFor">Just for logging.</param>
 		/// <returns>A prepared List that can be passed to the APM server</returns>
-		internal static List<CapturedStackFrame> GenerateApmStackTrace(System.Diagnostics.StackFrame[] frames, IApmLogger logger, string capturingFor)
+		internal static List<CapturedStackFrame> GenerateApmStackTrace(StackFrame[] frames, IApmLogger logger, string capturingFor)
 		{
 			var retVal = new List<CapturedStackFrame>(frames.Length);
 
@@ -41,6 +41,28 @@ namespace Elastic.Apm.Helpers
 			}
 
 			return retVal;
+		}
+
+		/// <summary>
+		///  Turns an <see cref="Exception"/> into a <see cref="CapturedStackFrame" /> list which can be reported to the APM Server
+		/// </summary>
+		/// <param name="exception">The exception to rewrite into APM stack traces</param>
+		/// <param name="logger">The logger to emit exceptions on should one occur</param>
+		/// <param name="capturingFor">Just for logging.</param>
+		/// <returns>A prepared List that can be passed to the APM server</returns>
+		internal static List<CapturedStackFrame> GenerateApmStackTrace(Exception exception, IApmLogger logger, string capturingFor)
+		{
+			try
+			{
+				return GenerateApmStackTrace(new StackTrace(exception, true).GetFrames(), logger, capturingFor);
+			}
+			catch (Exception e)
+			{
+				logger?.LogWarning(e, "Failed extracting exception from stackTrace for {ApmContext}", capturingFor);
+				logger?.LogDebug(e, "Exception {ExceptionName}: {ExceptionMessage}", e.GetType().Name, e.Message);
+			}
+
+			return null;
 		}
 	}
 }

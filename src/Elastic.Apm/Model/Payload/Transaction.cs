@@ -131,24 +131,19 @@ namespace Elastic.Apm.Model.Payload
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
-			var ed = new CapturedException()
+			var ed = new CapturedException
 			{
 				Message = exception.Message,
 				Type = exception.GetType().FullName,
 				Handled = isHandled,
+				Stacktrace = StacktraceHelper.GenerateApmStackTrace(exception, _logger,
+					$"{nameof(Transaction)}.{nameof(CaptureException)}"),
 			};
-
-			if (!string.IsNullOrEmpty(exception.StackTrace))
-			{
-				ed.Stacktrace
-					= StacktraceHelper.GenerateApmStackTrace(new StackTrace(exception, true).GetFrames(), _logger,
-						"failed capturing stacktrace");
-			}
 
 			_sender.QueueError(new Error(ed, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit, Context = Context });
 		}
 
-		public void CaptureError(string message, string culprit, System.Diagnostics.StackFrame[] frames, string parentId = null)
+		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null)
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
