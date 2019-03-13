@@ -16,7 +16,7 @@ namespace Elastic.Apm.Model.Payload
 	internal class Transaction : ITransaction
 	{
 		private readonly Lazy<Context> _context = new Lazy<Context>();
-		private readonly ScopedLogger _logger;
+		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
 
 		private readonly DateTimeOffset _start;

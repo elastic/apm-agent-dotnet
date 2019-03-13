@@ -18,6 +18,7 @@ using Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Report
 {
+	/// <inheritdoc />
 	/// <summary>
 	/// Responsible for sending the data to the server. Implements Intake V2.
 	/// Each instance creates its own thread to do the work. Therefore, instances should be reused if possible.
@@ -33,7 +34,7 @@ namespace Elastic.Apm.Report
 				{ BoundedCapacity = 1_000_000 });
 
 		private readonly HttpClient _httpClient;
-		private readonly ScopedLogger _logger;
+		private readonly IApmLogger _logger;
 
 		private readonly Service _service;
 
@@ -97,7 +98,7 @@ namespace Elastic.Apm.Report
 		/// </summary>
 		internal async Task FlushAndFinishAsync()
 		{
-			_logger.LogDebug("FlushAndFinish called - PayloadSenderV2 will became invalid");
+			_logger.LogDebug("FlushAndFinish called - PayloadSenderV2 will become invalid");
 			await _creation;
 			_eventQueue.TriggerBatch();
 
