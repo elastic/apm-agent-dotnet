@@ -73,10 +73,7 @@ namespace Elastic.Apm.Logging
 			internal readonly LogDelegate Log;
 
 			public MaybeLogger(IApmLogger logger, LogLevel level)
-				=> Log = (message, args) =>
-				{
-					logger.DoLog(level, message, null, args);
-				};
+				=> Log = (message, args) => logger.DoLog(level, message, null, args);
 		}
 	}
 }
