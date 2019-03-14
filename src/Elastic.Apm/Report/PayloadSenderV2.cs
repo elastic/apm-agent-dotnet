@@ -171,24 +171,31 @@ namespace Elastic.Apm.Report
 				}
 				else
 				{
-					var sb = new StringBuilder();
-					sb.AppendLine("Sent items to server:");
-					foreach (var item in queueItems) sb.AppendLine(item.ToString());
-					_logger.LogDebug(sb.ToString());
+					_logger.IfLevel(LogLevel.Debug)
+						?.Log(() =>
+						{
+							var sb = new StringBuilder();
+							sb.AppendLine("Sent items to server:");
+							foreach (var item in queueItems) sb.AppendLine(item.ToString());
+							return sb.ToString();
+						});
 				}
 			}
 			catch (Exception e)
 			{
-				var sb = new StringBuilder();
-				sb.AppendLine("Failed sending events. ");
-				sb.Append("Exception: ");
-				sb.Append(e.GetType().FullName);
-				sb.Append(", Message: ");
-				sb.AppendLine(e.Message);
-				sb.AppendLine("Following events were not transferred successfully to the server:");
-				foreach (var item in queueItems) sb.AppendLine(item.ToString());
+				_logger.IfLevel(LogLevel.Warning)?.Log(() =>
+				{
+					var sb = new StringBuilder();
+					sb.AppendLine("Failed sending events. ");
+					sb.Append("Exception: ");
+					sb.Append(e.GetType().FullName);
+					sb.Append(", Message: ");
+					sb.AppendLine(e.Message);
+					sb.AppendLine("Following events were not transferred successfully to the server:");
+					foreach (var item in queueItems) sb.AppendLine(item.ToString());
 
-				_logger.LogWarning(sb.ToString());
+					return sb.ToString();
+				});
 			}
 		}
 

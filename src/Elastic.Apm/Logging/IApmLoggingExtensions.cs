@@ -56,5 +56,33 @@ namespace Elastic.Apm.Logging
 			var logValues = formatter.GetState(args);
 			logger?.Log(level, logValues, e, (s, _) => formatter.Format(args));
 		}
+
+		/// <summary>
+		/// Depending on the two parameters it either returns a MaybeLogger instance or null.
+		/// By using this class with `?.` you can avoid allocating delegates that are not necessary to allocate
+		/// in case the log won't be printed because the loglevel would not allow it.
+		/// </summary>
+		/// <param name="logger"></param>
+		/// <param name="level"></param>
+		/// <returns>If the return value is not null you can call <see cref="MaybeLogger.Log"/> to log</returns>
+		internal static MaybeLogger? IfLevel(this IApmLogger logger, LogLevel level) => logger.Level <= level ? new MaybeLogger(logger, level) : (MaybeLogger?)null;
+		internal readonly struct MaybeLogger
+		{
+			private readonly IApmLogger _logger;
+			private readonly LogLevel _level;
+
+			public MaybeLogger(IApmLogger source, LogLevel level)
+			{
+				_logger = source;
+				_level = level;
+			}
+
+			public void Log(Func<String> getLog)
+			{
+				var lineToPrint = getLog();
+				//Do the logging
+				//WIP: must be extended to handle args, but that should be doable
+			}
+		}
 	}
 }
