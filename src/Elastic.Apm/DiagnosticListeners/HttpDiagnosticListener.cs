@@ -8,6 +8,7 @@ using System.Reflection;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
@@ -64,6 +65,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 					if (ProcessingRequests.TryAdd(request, span))
 					{
+						request.Headers.Add(TraceParent.TraceParentHeaderName, TraceParent.GetTraceParentVal(span.TraceId, span.Id));
 						span.Context.Http = new Http
 						{
 							Url = request?.RequestUri?.ToString(),

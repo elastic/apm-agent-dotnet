@@ -35,6 +35,8 @@ namespace Elastic.Apm.AspNetCore
 			var transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
 				ApiConstants.TypeRequest);
 
+			//Get traceparent and parse
+
 			var url = new Url
 			{
 				Full = context.Request?.Path.Value,
