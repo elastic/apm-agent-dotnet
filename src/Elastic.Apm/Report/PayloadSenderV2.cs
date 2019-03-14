@@ -166,36 +166,20 @@ namespace Elastic.Apm.Report
 
 				if (result != null && !result.IsSuccessStatusCode)
 				{
-					var str = await result.Content.ReadAsStringAsync();
-					_logger.LogError("Failed sending event. {ApmServerResponse}", str);
+					_logger?.IfLevel(LogLevel.Error)?.Log("Failed sending event. {ApmServerResponse}", await result.Content.ReadAsStringAsync());
 				}
 				else
 				{
 					_logger.IfLevel(LogLevel.Debug)
-						?.Log(() =>
-						{
-							var sb = new StringBuilder();
-							sb.AppendLine("Sent items to server:");
-							foreach (var item in queueItems) sb.AppendLine(item.ToString());
-							return sb.ToString();
-						});
+						?.Log("Sent items to server: \n{items}", string.Join(",\n", queueItems.ToArray()));
 				}
 			}
 			catch (Exception e)
 			{
-				_logger.IfLevel(LogLevel.Warning)?.Log(() =>
-				{
-					var sb = new StringBuilder();
-					sb.AppendLine("Failed sending events. ");
-					sb.Append("Exception: ");
-					sb.Append(e.GetType().FullName);
-					sb.Append(", Message: ");
-					sb.AppendLine(e.Message);
-					sb.AppendLine("Following events were not transferred successfully to the server:");
-					foreach (var item in queueItems) sb.AppendLine(item.ToString());
-
-					return sb.ToString();
-				});
+				_logger.IfLevel(LogLevel.Warning)
+					?.Log(
+						"Failed sending events. \nException: {ExceptionFullName}, Message: {ExceptionMessage} \nFollowing events were not transferred successfully to the server:\n{items}",
+						e.GetType().FullName, e.Message, string.Join(",\n", queueItems.ToArray()));
 			}
 		}
 
