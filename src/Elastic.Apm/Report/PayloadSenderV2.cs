@@ -177,9 +177,9 @@ namespace Elastic.Apm.Report
 			catch (Exception e)
 			{
 				_logger.IfLevel(LogLevel.Warning)
-					?.Log(
-						"Failed sending events. \nException: {ExceptionFullName}, Message: {ExceptionMessage} \nFollowing events were not transferred successfully to the server:\n{items}",
-						e.GetType().FullName, e.Message, string.Join(",\n", queueItems.ToArray()));
+					?.LogException(
+						e, "Failed sending events. Following events were not transferred successfully to the server:\n{items}",
+						string.Join(",\n", queueItems.ToArray()));
 			}
 		}
 

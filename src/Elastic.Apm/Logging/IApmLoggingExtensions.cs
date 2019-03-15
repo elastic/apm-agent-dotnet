@@ -68,12 +68,16 @@ namespace Elastic.Apm.Logging
 		internal static MaybeLogger? IfLevel(this IApmLogger logger, LogLevel level) => logger.Level <= level ? new MaybeLogger(logger, level) : (MaybeLogger?)null;
 		internal readonly struct MaybeLogger
 		{
-			internal delegate void LogDelegate(string s, params object[] args);
+			private readonly IApmLogger _logger;
+			private readonly LogLevel _level;
 
-			internal readonly LogDelegate Log;
+			public MaybeLogger(IApmLogger logger, LogLevel level) => (_logger, _level) = (logger, level);
 
-			public MaybeLogger(IApmLogger logger, LogLevel level)
-				=> Log = (message, args) => logger.DoLog(level, message, null, args);
+			public void Log(string message, params object[] args) => _logger.DoLog(_level, message, null, args);
+
+			public void LogException(Exception exception, string message, params object[] args) =>
+ 				_logger.DoLog(_level, $"Exception: {{ExceptionType}}, Message: {{ExceptionMsg}} \n{message}", exception,
+					new object[]{ exception.GetType().FullName, exception.Message, args });
 		}
 	}
 }
