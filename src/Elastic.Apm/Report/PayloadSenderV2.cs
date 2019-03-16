@@ -98,7 +98,7 @@ namespace Elastic.Apm.Report
 		/// </summary>
 		internal async Task FlushAndFinishAsync()
 		{
-			_logger.LogDebug("FlushAndFinish called - PayloadSenderV2 will become invalid");
+			_logger.Debug()?.Log("FlushAndFinish called - PayloadSenderV2 will become invalid");
 			await _creation;
 			_eventQueue.TriggerBatch();
 
@@ -110,7 +110,7 @@ namespace Elastic.Apm.Report
 			}
 			catch (TaskCanceledException)
 			{
-				_logger.LogDebug("worker task cancelled");
+				_logger.Debug()?.Log("worker task cancelled");
 			}
 			finally
 			{
@@ -166,17 +166,17 @@ namespace Elastic.Apm.Report
 
 				if (result != null && !result.IsSuccessStatusCode)
 				{
-					_logger?.IfLevel(LogLevel.Error)?.Log("Failed sending event. {ApmServerResponse}", await result.Content.ReadAsStringAsync());
+					_logger?.Error()?.Log("Failed sending event. {ApmServerResponse}", await result.Content.ReadAsStringAsync());
 				}
 				else
 				{
-					_logger.IfLevel(LogLevel.Debug)
+					_logger?.Debug()
 						?.Log("Sent items to server: \n{items}", string.Join(",\n", queueItems.ToArray()));
 				}
 			}
 			catch (Exception e)
 			{
-				_logger.IfLevel(LogLevel.Warning)
+				_logger?.Warning()
 					?.LogException(
 						e, "Failed sending events. Following events were not transferred successfully to the server:\n{items}",
 						string.Join(",\n", queueItems.ToArray()));

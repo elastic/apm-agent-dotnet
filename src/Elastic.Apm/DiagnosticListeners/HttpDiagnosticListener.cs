@@ -35,7 +35,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		public void OnCompleted() { }
 
-		public void OnError(Exception error) => Logger.LogErrorException(error, nameof(OnError));
+		public void OnError(Exception error) { }  //TODO =>   //Logger.LogErrorException(error, nameof(OnError));
 
 		public void OnNext(KeyValuePair<string, object> kv)
 		{
@@ -93,7 +93,7 @@ namespace Elastic.Apm.DiagnosticListeners
 						const string message = "Failed capturing request '{HttpMethod} {Url}' in System.Net.Http.HttpRequestOut.Stop. This Span will be skipped in case it wasn't captured before.";
 						var url = request?.RequestUri?.AbsoluteUri;
 						var method = request?.Method?.Method;
-						Logger.LogWarning(message, method, url);
+						Logger?.Warning()?.Log(message, method, url);
 					}
 					break;
 			}

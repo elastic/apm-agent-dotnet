@@ -107,7 +107,7 @@ namespace Elastic.Apm.Model.Payload
 
 			_sender.QueueTransaction(this);
 
-			_logger.LogDebug($"Ending {ToString()}");
+			_logger.Debug()?.Log("Ending {TransactionDetails}", ToString());
 			Agent.TransactionContainer.Transactions.Value = null;
 		}
 
@@ -123,7 +123,7 @@ namespace Elastic.Apm.Model.Payload
 			if (!string.IsNullOrEmpty(action)) retVal.Action = action;
 			SpanCount.Started++;
 
-			_logger.LogDebug($"Starting {retVal}");
+			_logger.Debug()?.Log("Starting {SpanDetails}", retVal.ToString());
 			return retVal;
 		}
 

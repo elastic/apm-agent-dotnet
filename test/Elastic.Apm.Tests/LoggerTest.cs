@@ -53,10 +53,10 @@ namespace Elastic.Apm.Tests
 		{
 			var logger = new TestLogger(logLevel);
 
-			logger.LogError("Error log");
-			logger.LogWarning("Warning log");
-			logger.LogInfo("Info log");
-			logger.LogDebug("Debug log");
+			logger.Error()?.Log("Error log");
+			logger.Warning()?.Log("Warning log");
+			logger.Info()?.Log("Info log");
+			logger.Debug()?.Log("Debug log");
 			return logger;
 		}
 	}

@@ -36,7 +36,7 @@ namespace Elastic.Apm.Helpers
 			}
 			catch (Exception e)
 			{
-				logger?.LogWarning(e, "Failed capturing stacktrace for {ApmContext}", capturingFor);
+				logger?.Warning()?.LogException(e, "Failed capturing stacktrace for {ApmContext}", capturingFor);
 				logger?.LogDebug(e, "Exception {ExceptionName}: {ExceptionMessage}", e.GetType().Name, e.Message);
 			}
 
@@ -58,7 +58,7 @@ namespace Elastic.Apm.Helpers
 			}
 			catch (Exception e)
 			{
-				logger?.LogWarning(e, "Failed extracting exception from stackTrace for {ApmContext}", capturingFor);
+				logger?.Warning()?.LogException(e, "Failed extracting exception from stackTrace for {ApmContext}", capturingFor);
 				logger?.LogDebug(e, "Exception {ExceptionName}: {ExceptionMessage}", e.GetType().Name, e.Message);
 			}
 
