@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace Elastic.Apm.Logging
 {
@@ -8,46 +9,10 @@ namespace Elastic.Apm.Logging
 	{
 		private static ConcurrentDictionary<string, LogValuesFormatter> Formatters { get; } = new ConcurrentDictionary<string, LogValuesFormatter>();
 
-//		public static void LogError(this IApmLogger logger, string message, params object[] args) => logger?.LogError(null, message, args);
-//
-//		public static void LogError(this IApmLogger logger, Exception exception, string message, params object[] args) =>
-//			logger?.DoLog(LogLevel.Error, message, exception, args);
-//
-//		public static void LogWarning(this IApmLogger logger, string message, params object[] args) => logger?.LogWarning(null, message, args);
-//
-//		public static void LogWarning(this IApmLogger logger, Exception exception, string message, params object[] args) =>
-//			logger?.DoLog(LogLevel.Warning, message, exception, args);
-//
-//		public static void LogInfo(this IApmLogger logger, string message, params object[] args) => logger?.LogInfo(null, message, args);
-//
-//		public static void LogInfo(this IApmLogger logger, Exception exception, string message, params object[] args) =>
-//			logger?.DoLog(LogLevel.Information, message, exception, args);
-//
-//		public static void LogDebug(this IApmLogger logger, string message, params object[] args) => logger?.LogDebug(null, message, args);
-
-		public static void LogDebug(this IApmLogger logger, Exception exception, string message, params object[] args) =>
-			logger?.DoLog(LogLevel.Debug, message, exception, args);
-
-		public static void LogDebugException(this IApmLogger logger, Exception exception) =>
-			logger?.LogDebug(exception, "{ExceptionName}: {ExceptionMessage}", exception?.GetType().Name, exception?.Message);
-
-//		public static void LogErrorException(this IApmLogger logger, Exception exception,
-//			[System.Runtime.CompilerServices.CallerMemberName]
-//			string method = "",
-//			[System.Runtime.CompilerServices.CallerFilePath]
-//			string filepath = "",
-//			[System.Runtime.CompilerServices.CallerLineNumber]
-//			int lineNumber = 0
-//		)
-//		{
-//			var file = string.IsNullOrEmpty(filepath) ? string.Empty : new FileInfo(filepath).Name;
-//			logger?.LogError(exception, "{ExceptionName} in {Method} ({File}:{LineNumber}): {ExceptionMessage}", exception?.GetType().Name, method, file, lineNumber, exception?.Message);
-//		}
-
 		public static ScopedLogger Scoped(this IApmLogger logger, string scope) =>
-			 new ScopedLogger((logger is ScopedLogger s ? s.Logger : logger), scope);
+			new ScopedLogger(logger is ScopedLogger s ? s.Logger : logger, scope);
 
-		private static void DoLog(this IApmLogger logger, LogLevel level, string message, Exception e, object[] args)
+		private static void DoLog(this IApmLogger logger, LogLevel level, string message, Exception e, params object[] args)
 		{
 			var formatter = logger is ScopedLogger sl
 				? sl.GetOrAddFormatter(message, args.Length)
@@ -59,22 +24,52 @@ namespace Elastic.Apm.Logging
 
 		/// <summary>
 		/// Depending on the two parameters it either returns a MaybeLogger instance or null.
-		/// By using this class with `?.` you can avoid allocating delegates that are not necessary to allocate
+		/// </summary>
+		/// <param name="logger">The logger you want to log with</param>
+		/// <param name="level">The level to compare with</param>
+		/// <returns>If the return value is not null you can call <see cref="MaybeLogger.Log" /> to log</returns>
+		private static MaybeLogger? IfLevel(this IApmLogger logger, LogLevel level) =>
+			logger.Level <= level ? new MaybeLogger(logger, level) : (MaybeLogger?)null;
+
+		/// <summary>
+		/// If the logger has a loglevel, which is higher than Debug then it returns a MaybeLogger instance,
+		/// otherwise it returns null.
+		/// By using the return value with `?.` you can avoid executing code that is not necessary to execute
 		/// in case the log won't be printed because the loglevel would not allow it.
 		/// </summary>
-		/// <param name="logger"></param>
-		/// <param name="level"></param>
-		/// <returns>If the return value is not null you can call <see cref="MaybeLogger.Log"/> to log</returns>
-		//internal static MaybeLogger? IfLevel(this IApmLogger logger, LogLevel level) => logger.Level <= level ? new MaybeLogger(logger, level) : (MaybeLogger?)null;
+		/// <param name="logger">The logger instance you want to log with</param>
+		/// <returns>Either a MaybeLogger or null</returns>
+		internal static MaybeLogger? Debug(this IApmLogger logger) => IfLevel(logger, LogLevel.Debug);
 
-		internal static MaybeLogger? Debug(this IApmLogger logger) => logger.Level <= LogLevel.Debug ? new MaybeLogger(logger, LogLevel.Debug) : (MaybeLogger?)null;
+		/// <summary>
+		/// If the logger has a loglevel, which is higher than Error then it returns a MaybeLogger instance,
+		/// otherwise it returns null.
+		/// By using the return value with `?.` you can avoid executing code that is not necessary to execute
+		/// in case the log won't be printed because the loglevel would not allow it.
+		/// </summary>
+		/// <param name="logger">The logger instance you want to log with</param>
+		/// <returns>Either a MaybeLogger or null</returns>
+		internal static MaybeLogger? Error(this IApmLogger logger) => IfLevel(logger, LogLevel.Error);
 
-		internal static MaybeLogger? Error(this IApmLogger logger) => logger.Level <= LogLevel.Error ? new MaybeLogger(logger, LogLevel.Error) : (MaybeLogger?)null;
+		/// <summary>
+		/// If the logger has a loglevel, which is higher than Warning then it returns a MaybeLogger instance,
+		/// otherwise it returns null.
+		/// By using the return value with `?.` you can avoid executing code that is not necessary to execute
+		/// in case the log won't be printed because the loglevel would not allow it.
+		/// </summary>
+		/// <param name="logger">The logger instance you want to log with</param>
+		/// <returns>Either a MaybeLogger or null</returns>
+		internal static MaybeLogger? Warning(this IApmLogger logger) => IfLevel(logger, LogLevel.Warning);
 
-		internal static MaybeLogger? Warning(this IApmLogger logger) => logger.Level <= LogLevel.Warning ? new MaybeLogger(logger, LogLevel.Warning) : (MaybeLogger?)null;
-
-		internal static MaybeLogger? Info(this IApmLogger logger) => logger.Level <= LogLevel.Information ? new MaybeLogger(logger, LogLevel.Information) : (MaybeLogger?)null;
-
+		/// <summary>
+		/// If the logger has a loglevel, which is higher than Info then it returns a MaybeLogger instance,
+		/// otherwise it returns null.
+		/// By using the return value with `?.` you can avoid executing code that is not necessary to execute
+		/// in case the log won't be printed because the loglevel would not allow it.
+		/// </summary>
+		/// <param name="logger">The logger instance you want to log with</param>
+		/// <returns>Either a MaybeLogger or null</returns>
+		internal static MaybeLogger? Info(this IApmLogger logger) => IfLevel(logger, LogLevel.Information);
 
 		internal readonly struct MaybeLogger
 		{
@@ -86,8 +81,19 @@ namespace Elastic.Apm.Logging
 			public void Log(string message, params object[] args) => _logger.DoLog(_level, message, null, args);
 
 			public void LogException(Exception exception, string message, params object[] args) =>
- 				_logger.DoLog(_level, $"Exception: {{ExceptionType}}, Message: {{ExceptionMsg}} \n{message}", exception,
-					new object[]{ exception.GetType().FullName, exception.Message, args });
+				_logger.DoLog(_level, $"Exception: {{ExceptionType}}, Message: {{ExceptionMsg}} \n{message}", exception,
+					exception.GetType().FullName, exception.Message, args);
+
+			public void LogExceptionWithCaller(Exception exception,
+				[CallerMemberName] string method = "",
+				[CallerFilePath] string filepath = "",
+				[CallerLineNumber] int lineNumber = 0
+			)
+			{
+				var file = string.IsNullOrEmpty(filepath) ? string.Empty : new FileInfo(filepath).Name;
+				_logger?.DoLog(_level, "{ExceptionName} in {Method} ({File}:{LineNumber}): {ExceptionMessage}", exception,
+					exception?.GetType().Name, method, file, lineNumber, exception?.Message);
+			}
 		}
 	}
 }

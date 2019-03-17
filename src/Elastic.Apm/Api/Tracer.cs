@@ -36,7 +36,8 @@ namespace Elastic.Apm.Api
 				Service = _service
 			};
 
-			_logger.Debug()?.Log("Starting {TransactionValue}", Agent.TransactionContainer.Transactions.Value);
+			Agent.TransactionContainer.Transactions.Value = retVal;
+			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);
 			return retVal;
 		}
 

@@ -35,7 +35,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		public void OnCompleted() { }
 
-		public void OnError(Exception error) { }  //TODO =>   //Logger.LogErrorException(error, nameof(OnError));
+		public void OnError(Exception error) => Logger.Error()?.LogExceptionWithCaller(error, nameof(OnError));
 
 		public void OnNext(KeyValuePair<string, object> kv)
 		{
@@ -51,7 +51,7 @@ namespace Elastic.Apm.DiagnosticListeners
 					var exception = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Exception").GetValue(kv.Value) as Exception;
 					var transaction = Agent.TransactionContainer.Transactions?.Value;
 
-					transaction.CaptureException(exception, "Failed outgoing HTTP request");
+					transaction?.CaptureException(exception, "Failed outgoing HTTP request");
 					//TODO: we don't know if exception is handled, currently reports handled = false
 					break;
 				case "System.Net.Http.HttpRequestOut.Start": //TODO: look for consts

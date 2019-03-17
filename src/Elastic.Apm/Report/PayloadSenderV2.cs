@@ -18,7 +18,6 @@ using Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Report
 {
-	/// <inheritdoc />
 	/// <summary>
 	/// Responsible for sending the data to the server. Implements Intake V2.
 	/// Each instance creates its own thread to do the work. Therefore, instances should be reused if possible.
@@ -75,7 +74,7 @@ namespace Elastic.Apm.Report
 					}
 					catch (TaskCanceledException ex)
 					{
-						_logger.LogDebugException(ex);
+						_logger?.Debug()?.LogExceptionWithCaller(ex);
 					}
 				}, CancellationToken.None, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
 		}
