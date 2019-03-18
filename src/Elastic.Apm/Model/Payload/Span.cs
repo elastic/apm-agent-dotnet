@@ -87,7 +87,7 @@ namespace Elastic.Apm.Model.Payload
 
 		public void End()
 		{
-			_logger.LogDebug($"Ending {ToString()}");
+			_logger.Debug()?.Log("Ending {SpanDetails}" , ToString());
 			if (!Duration.HasValue) Duration = (DateTimeOffset.UtcNow - _start).TotalMilliseconds;
 			_payloadSender.QueueSpan(this);
 		}

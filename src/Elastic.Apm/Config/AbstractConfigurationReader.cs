@@ -51,10 +51,10 @@ namespace Elastic.Apm.Config
 			if (TryParseLogLevel(kv?.Value, out var level)) return level.Value;
 
 			if (kv?.Value == null)
-				Logger?.LogDebug("No log level provided. Defaulting to log level '{DefaultLogLevel}'", ConsoleLogger.DefaultLogLevel);
+				Logger?.Debug()?.Log("No log level provided. Defaulting to log level '{DefaultLogLevel}'", ConsoleLogger.DefaultLogLevel);
 			else
 			{
-				Logger?.LogError("Failed parsing log level from {Origin}: {Key}, value: {Value}. Defaulting to log level '{DefaultLogLevel}'",
+				Logger?.Error()?.Log("Failed parsing log level from {Origin}: {Key}, value: {Value}. Defaulting to log level '{DefaultLogLevel}'",
 					kv.ReadFrom, kv.Key, kv.Value, ConsoleLogger.DefaultLogLevel);
 			}
 
@@ -75,7 +75,7 @@ namespace Elastic.Apm.Config
 					continue;
 				}
 
-				Logger?.LogError("Failed parsing server URL from {Origin}: {Key}, value: {Value}", kv.ReadFrom, kv.Key, u);
+				Logger?.Error()?.Log("Failed parsing server URL from {Origin}: {Key}, value: {Value}", kv.ReadFrom, kv.Key, u);
 			}
 
 			return list.Count == 0 ? LogAndReturnDefault().AsReadOnly() : list.AsReadOnly();
@@ -83,7 +83,7 @@ namespace Elastic.Apm.Config
 			List<Uri> LogAndReturnDefault()
 			{
 				list.Add(ConfigConsts.DefaultServerUri);
-				Logger?.LogDebug("Using default ServerUrl: {ServerUrl}", ConfigConsts.DefaultServerUri);
+				Logger?.Debug()?.Log("Using default ServerUrl: {ServerUrl}", ConfigConsts.DefaultServerUri);
 				return list;
 			}
 
@@ -103,9 +103,9 @@ namespace Elastic.Apm.Config
 			var retVal = kv.Value;
 			if (string.IsNullOrEmpty(retVal))
 			{
-				Logger?.LogInfo("The agent was started without a service name. The service name will be automatically calculated.");
+				Logger?.Info()?.Log("The agent was started without a service name. The service name will be automatically calculated.");
 				retVal = Assembly.GetEntryAssembly()?.GetName().Name;
-				Logger?.LogInfo("The agent was started without a service name. The Service name sis {ServiceName}", retVal);
+				Logger?.Info()?.Log("The agent was started without a service name. The Service name sis {ServiceName}", retVal);
 			}
 
 			if (string.IsNullOrEmpty(retVal))
@@ -126,7 +126,7 @@ namespace Elastic.Apm.Config
 
 			if (string.IsNullOrEmpty(retVal))
 			{
-				Logger?.LogError("Failed calculating service name, the service name will be 'unknown'." +
+				Logger?.Error()?.Log("Failed calculating service name, the service name will be 'unknown'." +
 					" You can fix this by setting the service name to a specific value (e.g. by using the environment variable {ServiceNameVariable})", ConfigConsts.ConfigKeys.ServiceName);
 				retVal = "unknown";
 			}

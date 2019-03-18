@@ -18,7 +18,6 @@ using Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Report
 {
-	/// <inheritdoc />
 	/// <summary>
 	/// Responsible for sending the data to the server. Implements Intake V2.
 	/// Each instance creates its own thread to do the work. Therefore, instances should be reused if possible.
@@ -75,7 +74,7 @@ namespace Elastic.Apm.Report
 					}
 					catch (TaskCanceledException ex)
 					{
-						_logger.LogDebugException(ex);
+						_logger?.Debug()?.LogExceptionWithCaller(ex);
 					}
 				}, CancellationToken.None, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
 		}
@@ -98,7 +97,7 @@ namespace Elastic.Apm.Report
 		/// </summary>
 		internal async Task FlushAndFinishAsync()
 		{
-			_logger.LogDebug("FlushAndFinish called - PayloadSenderV2 will become invalid");
+			_logger.Debug()?.Log("FlushAndFinish called - PayloadSenderV2 will become invalid");
 			await _creation;
 			_eventQueue.TriggerBatch();
 
@@ -110,7 +109,7 @@ namespace Elastic.Apm.Report
 			}
 			catch (TaskCanceledException)
 			{
-				_logger.LogDebug("worker task cancelled");
+				_logger.Debug()?.Log("worker task cancelled");
 			}
 			finally
 			{
@@ -166,29 +165,20 @@ namespace Elastic.Apm.Report
 
 				if (result != null && !result.IsSuccessStatusCode)
 				{
-					var str = await result.Content.ReadAsStringAsync();
-					_logger.LogError("Failed sending event. {ApmServerResponse}", str);
+					_logger?.Error()?.Log("Failed sending event. {ApmServerResponse}", await result.Content.ReadAsStringAsync());
 				}
 				else
 				{
-					var sb = new StringBuilder();
-					sb.AppendLine("Sent items to server:");
-					foreach (var item in queueItems) sb.AppendLine(item.ToString());
-					_logger.LogDebug(sb.ToString());
+					_logger?.Debug()
+						?.Log($"Sent items to server: {Environment.NewLine}{{items}}", string.Join($",{Environment.NewLine}", queueItems.ToArray()));
 				}
 			}
 			catch (Exception e)
 			{
-				var sb = new StringBuilder();
-				sb.AppendLine("Failed sending events. ");
-				sb.Append("Exception: ");
-				sb.Append(e.GetType().FullName);
-				sb.Append(", Message: ");
-				sb.AppendLine(e.Message);
-				sb.AppendLine("Following events were not transferred successfully to the server:");
-				foreach (var item in queueItems) sb.AppendLine(item.ToString());
-
-				_logger.LogWarning(sb.ToString());
+				_logger?.Warning()
+					?.LogException(
+						e, "Failed sending events. Following events were not transferred successfully to the server:\n{items}",
+						string.Join($",{Environment.NewLine}", queueItems.ToArray()));
 			}
 		}
 
