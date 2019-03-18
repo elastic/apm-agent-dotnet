@@ -42,7 +42,7 @@ namespace Elastic.Apm.EntityFrameworkCore
 					{
 						if (_spans.TryRemove(commandExecutedEventData.CommandId, out var span))
 						{
-							span.Context.Db = new Db
+							span.Context.Db = new Database
 							{
 								Statement = commandExecutedEventData.Command.CommandText,
 								Instance = commandExecutedEventData.Command.Connection.Database,

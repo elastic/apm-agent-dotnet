@@ -127,11 +127,11 @@ namespace Elastic.Apm.Tests
 		{
 			var sb = new StringBuilder();
 			for (var i = 0; i < 1200; i++) sb.Append('a');
-			var db = new Db { Statement = sb.ToString() };
+			var db = new Database{ Statement = sb.ToString() };
 
 			var settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 			var json = JsonConvert.SerializeObject(db, settings);
-			var deserializedDb = JsonConvert.DeserializeObject<Db>(json);
+			var deserializedDb = JsonConvert.DeserializeObject<Database>(json);
 
 			Assert.NotNull(deserializedDb);
 
