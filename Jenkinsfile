@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-@Library('apm@v1.0.6') _
+@Library('apm@current') _
 
 pipeline {
   agent any
@@ -16,6 +16,8 @@ pipeline {
     ansiColor('xterm')
     disableResume()
     durabilityHint('PERFORMANCE_OPTIMIZED')
+    rateLimitBuilds(throttle: [count: 60, durationName: 'hour', userBoost: true])
+    quietPeriod(10)
   }
   triggers {
     issueCommentTrigger('.*(?:jenkins\\W+)?run\\W+(?:the\\W+)?tests(?:\\W+please)?.*')
