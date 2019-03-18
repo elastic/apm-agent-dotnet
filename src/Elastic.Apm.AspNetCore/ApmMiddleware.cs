@@ -40,9 +40,14 @@ namespace Elastic.Apm.AspNetCore
 				Raw = context.Request?.Path.Value //TODO
 			};
 
-			var requestHeaders = new Dictionary<string, object>();
-			foreach (var header in context.Request.Headers)
-				requestHeaders.Add(header.Key, header.Value.ToString());
+			Dictionary<string, object> requestHeaders = null;
+			if (Agent.Config.CaptureHeaders)
+			{
+				requestHeaders = new Dictionary<string, object>();
+
+				foreach (var header in context.Request.Headers)
+					requestHeaders.Add(header.Key, header.Value.ToString());
+			}
 
 			transaction.Context.Request = new Request(context.Request.Method, url)
 			{
@@ -62,12 +67,17 @@ namespace Elastic.Apm.AspNetCore
 			catch (Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
 			finally
 			{
-				var responseHeaders = new Dictionary<string, object>();
-				foreach (var header in context.Response.Headers)
-					responseHeaders.Add(header.Key, header.Value.ToString());
+				Dictionary<string, object> responseHeaders = null;
 
-				transaction.Result =
-					$"{GetProtocolName(context.Request.Protocol)} {context.Response.StatusCode.ToString()[0]}xx";
+				if (Agent.Config.CaptureHeaders)
+				{
+					responseHeaders = new Dictionary<string, object>();
+
+					foreach (var header in context.Response.Headers)
+						responseHeaders.Add(header.Key, header.Value.ToString());
+				}
+
+				transaction.Result = $"{GetProtocolName(context.Request.Protocol)} {context.Response.StatusCode.ToString()[0]}xx";
 				transaction.Context.Response = new Response
 				{
 					Finished = context.Response.HasStarted, //TODO ?
