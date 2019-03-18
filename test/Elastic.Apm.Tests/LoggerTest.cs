@@ -64,8 +64,8 @@ namespace Elastic.Apm.Tests
 
 			logger.Warning()
 				?.LogException(
-					new Exception("Something want wrong"), "Failed sending events. Following events were not transferred successfully to the server:\n{items}",
-					string.Join(",\n", new List<string>{"Item1", "Item2", "Item3"} ));
+					new Exception("Something went wrong"), "Failed sending events. Following events were not transferred successfully to the server:\n{items}",
+					string.Join($",{Environment.NewLine}", new List<string>{"Item1", "Item2", "Item3"} ));
 
 			logger.Lines[0]
 				.Should()
@@ -80,7 +80,7 @@ namespace Elastic.Apm.Tests
 				.ContainAll(new List<string>
 				{
 					"System.Exception",
-					"Something want wrong"
+					"Something went wrong"
 				});
 		}
 
