@@ -74,6 +74,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			//test transaction.context.response
 			transaction.Context.Response.StatusCode.Should().Be(200);
+			if (_agent.ConfigurationReader.CaptureHeaders)
+			{
+				transaction.Context.Response.Headers.Should().NotBeNull();
+				transaction.Context.Response.Headers.Should().NotBeEmpty();
+			}
+			else
+				transaction.Context.Response.Headers.Should().BeNull();
 
 			//test transaction.context.request
 			transaction.Context.Request.HttpVersion.Should().Be("2.0");
@@ -83,6 +90,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 			transaction.Context.Request.Url.Full.Should().Be(response.RequestMessage.RequestUri.AbsolutePath);
 			transaction.Context.Request.Url.HostName.Should().Be("localhost");
 			transaction.Context.Request.Url.Protocol.Should().Be("HTTP");
+
+			if (_agent.ConfigurationReader.CaptureHeaders)
+			{
+				transaction.Context.Request.Headers.Should().NotBeNull();
+				transaction.Context.Request.Headers.Should().NotBeEmpty();
+			}
+			else
+				transaction.Context.Request.Headers.Should().BeNull();
 
 			//test transaction.context.request.encrypted
 			transaction.Context.Request.Socket.Encrypted.Should().BeFalse();

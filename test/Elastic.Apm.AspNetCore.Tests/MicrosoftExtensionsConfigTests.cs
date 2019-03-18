@@ -33,6 +33,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.LogLevel.Should().Be(LogLevel.Debug);
 			config.ServerUrls[0].Should().Be(new Uri("http://myServerFromTheConfigFile:8080"));
 			config.ServiceName.Should().Be("My_Test_Application");
+			config.CaptureHeaders.Should().Be(false);
 		}
 
 		/// <summary>
@@ -45,6 +46,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var logger = new TestLogger();
 			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger);
 			config.LogLevel.Should().Be(LogLevel.Error);
+
+			config.CaptureHeaders.Should().Be(true);
 
 			logger.Lines.Should().NotBeEmpty();
 			logger.Lines[0].Should()
@@ -94,6 +97,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.ServiceName, serviceName);
 			var secretToken = "SecretToken";
 			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.SecretToken, secretToken);
+			var captureHeaders = false;
+			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.CaptureHeaders, captureHeaders.ToString());
 			var configBuilder = new ConfigurationBuilder()
 				.AddEnvironmentVariables()
 				.Build();
@@ -103,6 +108,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.ServerUrls[0].Should().Be(new Uri(serverUrl));
 			config.ServiceName.Should().Be(serviceName);
 			config.SecretToken.Should().Be(secretToken);
+			config.CaptureHeaders.Should().Be(captureHeaders);
 		}
 
 		/// <summary>
