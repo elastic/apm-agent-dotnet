@@ -170,7 +170,7 @@ namespace Elastic.Apm.Report
 				else
 				{
 					_logger?.Debug()
-						?.Log("Sent items to server: \n{items}", string.Join(",\n", queueItems.ToArray()));
+						?.Log($"Sent items to server: {Environment.NewLine}{{items}}", string.Join($",{Environment.NewLine}", queueItems.ToArray()));
 				}
 			}
 			catch (Exception e)
@@ -178,7 +178,7 @@ namespace Elastic.Apm.Report
 				_logger?.Warning()
 					?.LogException(
 						e, "Failed sending events. Following events were not transferred successfully to the server:\n{items}",
-						string.Join(",\n", queueItems.ToArray()));
+						string.Join($",{Environment.NewLine}", queueItems.ToArray()));
 			}
 		}
 

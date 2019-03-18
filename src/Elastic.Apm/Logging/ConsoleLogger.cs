@@ -33,7 +33,7 @@ namespace Elastic.Apm.Logging
 			var message = formatter(state, e);
 
 			var fullMessage = e == null ? $"[{dateTime.ToString("yyyy-MM-dd hh:mm:ss")}][{LevelToString(level)}] - {message}"
-				: $"[{dateTime.ToString("yyyy-MM-dd hh:mm:ss")}][{LevelToString(level)}] - {message}\nException: {e.GetType().FullName}, Message: {e.Message}";
+				: $"[{dateTime.ToString("yyyy-MM-dd hh:mm:ss")}][{LevelToString(level)}] - {message}{Environment.NewLine}Exception: {e.GetType().FullName}, Message: {e.Message}";
 
 			switch (level)
 			{
