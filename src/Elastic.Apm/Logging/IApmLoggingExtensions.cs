@@ -81,16 +81,15 @@ namespace Elastic.Apm.Logging
 			public void Log(string message, params object[] args) => _logger.DoLog(_level, message, null, args);
 
 			public void LogException(Exception exception, string message, params object[] args) =>
-				_logger.DoLog(_level, $"Exception: {{ExceptionType}}, Message: {{ExceptionMsg}} \n{message}", exception,
-					exception.GetType().FullName, exception.Message, args);
+				_logger.DoLog(_level, message, exception, args, exception.GetType().FullName, exception.Message);
 
 			public void LogExceptionWithCaller(Exception exception,
 				[CallerMemberName] string method = "",
-				[CallerFilePath] string filepath = "",
+				[CallerFilePath] string filePath = "",
 				[CallerLineNumber] int lineNumber = 0
 			)
 			{
-				var file = string.IsNullOrEmpty(filepath) ? string.Empty : new FileInfo(filepath).Name;
+				var file = string.IsNullOrEmpty(filePath) ? string.Empty : new FileInfo(filePath).Name;
 				_logger?.DoLog(_level, "{ExceptionName} in {Method} ({File}:{LineNumber}): {ExceptionMessage}", exception,
 					exception?.GetType().Name, method, file, lineNumber, exception?.Message);
 			}

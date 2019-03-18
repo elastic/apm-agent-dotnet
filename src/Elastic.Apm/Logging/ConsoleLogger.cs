@@ -12,7 +12,7 @@ namespace Elastic.Apm.Logging
 		{
 			Level = level;
 			_standardOut = standardOut ?? Console.Out;
-			_errorOut = standardOut ?? Console.Error;
+			_errorOut = errorOut ?? Console.Error;
 		}
 
 		protected internal static LogLevel DefaultLogLevel { get; } = LogLevel.Error;
@@ -31,7 +31,10 @@ namespace Elastic.Apm.Logging
 			var dateTime = DateTime.UtcNow;
 
 			var message = formatter(state, e);
-			var fullMessage = $"[{dateTime.ToString("yyyy-MM-dd hh:mm:ss")}][{LevelToString(level)}] - {message}";
+
+			var fullMessage = e == null ? $"[{dateTime.ToString("yyyy-MM-dd hh:mm:ss")}][{LevelToString(level)}] - {message}"
+				: $"[{dateTime.ToString("yyyy-MM-dd hh:mm:ss")}][{LevelToString(level)}] - {message}\nException: {e.GetType().FullName}, Message: {e.Message}";
+
 			switch (level)
 			{
 				case LogLevel.Critical when Level <= LogLevel.Critical:
