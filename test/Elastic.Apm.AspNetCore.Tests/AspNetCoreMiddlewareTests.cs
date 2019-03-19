@@ -45,6 +45,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task HomeSimplePageTransactionTest()
 		{
+			var headerKey = "X-Additional-Header";
+			var headerValue = "For-Elastic-Apm-Agent";
+			_client.DefaultRequestHeaders.Add(headerKey, headerValue);
 			var response = await _client.GetAsync("/Home/SimplePage");
 
 			//test service
@@ -78,9 +81,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 			{
 				transaction.Context.Response.Headers.Should().NotBeNull();
 				transaction.Context.Response.Headers.Should().NotBeEmpty();
+
+				transaction.Context.Response.Headers.Should().ContainKeys(headerKey);
+				transaction.Context.Response.Headers[headerKey].Should().Be(headerValue);
 			}
-			else
-				transaction.Context.Response.Headers.Should().BeNull();
 
 			//test transaction.context.request
 			transaction.Context.Request.HttpVersion.Should().Be("2.0");
@@ -95,9 +99,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 			{
 				transaction.Context.Request.Headers.Should().NotBeNull();
 				transaction.Context.Request.Headers.Should().NotBeEmpty();
+
+				transaction.Context.Request.Headers.Should().ContainKeys(headerKey);
+				transaction.Context.Request.Headers[headerKey].Should().Be(headerValue);
 			}
-			else
-				transaction.Context.Request.Headers.Should().BeNull();
 
 			//test transaction.context.request.encrypted
 			transaction.Context.Request.Socket.Encrypted.Should().BeFalse();
