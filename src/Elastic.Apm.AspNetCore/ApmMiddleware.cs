@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Microsoft.AspNetCore.Http;
 
@@ -20,11 +21,13 @@ namespace Elastic.Apm.AspNetCore
 	{
 		private readonly RequestDelegate _next;
 		private readonly Tracer _tracer;
+		private readonly IConfigurationReader _configurationReader;
 
-		public ApmMiddleware(RequestDelegate next, Tracer tracer)
+		public ApmMiddleware(RequestDelegate next, Tracer tracer, IConfigurationReader configurationReader)
 		{
 			_next = next;
 			_tracer = tracer;
+			_configurationReader = configurationReader;
 		}
 
 		public async Task InvokeAsync(HttpContext context)
@@ -40,10 +43,10 @@ namespace Elastic.Apm.AspNetCore
 				Raw = context.Request?.Path.Value //TODO
 			};
 
-			Dictionary<string, object> requestHeaders = null;
-			if (Agent.Config.CaptureHeaders)
+			Dictionary<string, string> requestHeaders = null;
+			if (_configurationReader.CaptureHeaders)
 			{
-				requestHeaders = new Dictionary<string, object>();
+				requestHeaders = new Dictionary<string, string>();
 
 				foreach (var header in context.Request.Headers)
 					requestHeaders.Add(header.Key, header.Value.ToString());
@@ -67,11 +70,11 @@ namespace Elastic.Apm.AspNetCore
 			catch (Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
 			finally
 			{
-				Dictionary<string, object> responseHeaders = null;
+				Dictionary<string, string> responseHeaders = null;
 
-				if (Agent.Config.CaptureHeaders)
+				if (_configurationReader.CaptureHeaders)
 				{
-					responseHeaders = new Dictionary<string, object>();
+					responseHeaders = new Dictionary<string, string>();
 
 					foreach (var header in context.Response.Headers)
 						responseHeaders.Add(header.Key, header.Value.ToString());
