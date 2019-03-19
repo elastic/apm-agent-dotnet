@@ -19,8 +19,7 @@ namespace Elastic.Apm.Api
 		public Url Url { get; set; }
 
 		public object Body { get; set; }
-		[JsonProperty("headers")]
-		public Dictionary<string, object> Headers { get; set; }
+		public Dictionary<string, string> Headers { get; set; }
 	}
 
 	public class Socket

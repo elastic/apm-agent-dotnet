@@ -16,7 +16,6 @@ namespace Elastic.Apm.Api
 		/// </summary>
 		[JsonProperty("status_code")]
 		public int StatusCode { get; set; }
-		[JsonProperty("headers")]
-		public Dictionary<string, object> Headers { get; set; }
+		public Dictionary<string, string> Headers { get; set; }
 	}
 }
