@@ -14,12 +14,14 @@ namespace Elastic.Apm.Tests.Mocks
 			string logLevel = "Debug",
 			string serverUrls = null,
 			string secretToken = null,
+			string captureHeaders = null,
 			IPayloadSender payloadSender = null
 		)
 			: this(new TestAgentConfigurationReader(
 				new TestLogger(ParseWithoutLogging(logLevel)),
 				serverUrls: serverUrls,
 				secretToken: secretToken,
+				captureHeaders: captureHeaders,
 				logLevel: logLevel
 			), payloadSender) { }
 

@@ -56,7 +56,11 @@ namespace SampleAspNetCoreApp.Controllers
 			return Redirect("/Home/Index");
 		}
 
-		public IActionResult SimplePage() => View();
+		public IActionResult SimplePage()
+		{
+			Response.Headers.Add("X-Additional-Header", "For-Elastic-Apm-Agent");
+			return View();
+		}
 
 		public async Task<IActionResult> ChartPage()
 		{

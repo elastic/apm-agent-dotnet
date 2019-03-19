@@ -18,6 +18,8 @@ namespace Elastic.Apm.Config
 
 		public string ServiceName => ParseServiceName(Read(ConfigConsts.ConfigKeys.ServiceName));
 
+		public bool CaptureHeaders => ParseCaptureHeaders(Read(ConfigConsts.ConfigKeys.CaptureHeaders));
+
 		private static ConfigurationKeyValue Read(string key) =>
 			new ConfigurationKeyValue(key, Environment.GetEnvironmentVariable(key), Origin);
 	}

@@ -116,6 +116,17 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
+		public void DefaultCaptureHeadersTest() => Agent.Config.CaptureHeaders.Should().Be(true);
+
+		[Fact]
+		public void SetCaptureHeadersTest()
+		{
+			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.CaptureHeaders, "false");
+			var config = new EnvironmentConfigurationReader();
+			config.CaptureHeaders.Should().Be(false);
+		}
+
+		[Fact]
 		public void DefaultLogLevelTest() => Agent.Config.LogLevel.Should().Be(LogLevel.Error);
 
 		[Fact]

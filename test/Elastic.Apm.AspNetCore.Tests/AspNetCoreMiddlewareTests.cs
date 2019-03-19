@@ -45,6 +45,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task HomeSimplePageTransactionTest()
 		{
+			var headerKey = "X-Additional-Header";
+			var headerValue = "For-Elastic-Apm-Agent";
+			_client.DefaultRequestHeaders.Add(headerKey, headerValue);
 			var response = await _client.GetAsync("/Home/SimplePage");
 
 			//test service
@@ -74,6 +77,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			//test transaction.context.response
 			transaction.Context.Response.StatusCode.Should().Be(200);
+			if (_agent.ConfigurationReader.CaptureHeaders)
+			{
+				transaction.Context.Response.Headers.Should().NotBeNull();
+				transaction.Context.Response.Headers.Should().NotBeEmpty();
+
+				transaction.Context.Response.Headers.Should().ContainKeys(headerKey);
+				transaction.Context.Response.Headers[headerKey].Should().Be(headerValue);
+			}
 
 			//test transaction.context.request
 			transaction.Context.Request.HttpVersion.Should().Be("2.0");
@@ -83,6 +94,15 @@ namespace Elastic.Apm.AspNetCore.Tests
 			transaction.Context.Request.Url.Full.Should().Be(response.RequestMessage.RequestUri.AbsolutePath);
 			transaction.Context.Request.Url.HostName.Should().Be("localhost");
 			transaction.Context.Request.Url.Protocol.Should().Be("HTTP");
+
+			if (_agent.ConfigurationReader.CaptureHeaders)
+			{
+				transaction.Context.Request.Headers.Should().NotBeNull();
+				transaction.Context.Request.Headers.Should().NotBeEmpty();
+
+				transaction.Context.Request.Headers.Should().ContainKeys(headerKey);
+				transaction.Context.Request.Headers[headerKey].Should().Be(headerValue);
+			}
 
 			//test transaction.context.request.encrypted
 			transaction.Context.Request.Socket.Encrypted.Should().BeFalse();

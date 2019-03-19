@@ -40,10 +40,18 @@ namespace Elastic.Apm.Config
 				}
 			}
 		}
+
 		protected string ParseSecretToken(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return null;
 			return kv.Value;
+		}
+
+		protected bool ParseCaptureHeaders(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return true;
+			if (bool.TryParse(kv.Value, out var value)) return value;
+			return true;
 		}
 
 		protected LogLevel ParseLogLevel(ConfigurationKeyValue kv)

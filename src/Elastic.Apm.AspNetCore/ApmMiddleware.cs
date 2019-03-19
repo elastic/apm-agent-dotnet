@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Microsoft.AspNetCore.Http;
 
@@ -19,11 +21,13 @@ namespace Elastic.Apm.AspNetCore
 	{
 		private readonly RequestDelegate _next;
 		private readonly Tracer _tracer;
+		private readonly IConfigurationReader _configurationReader;
 
-		public ApmMiddleware(RequestDelegate next, Tracer tracer)
+		public ApmMiddleware(RequestDelegate next, Tracer tracer, IConfigurationReader configurationReader)
 		{
 			_next = next;
 			_tracer = tracer;
+			_configurationReader = configurationReader;
 		}
 
 		public async Task InvokeAsync(HttpContext context)
@@ -39,14 +43,24 @@ namespace Elastic.Apm.AspNetCore
 				Raw = context.Request?.Path.Value //TODO
 			};
 
-			transaction.Context.Request = new Request( context.Request.Method, url)
+			Dictionary<string, string> requestHeaders = null;
+			if (_configurationReader.CaptureHeaders)
+			{
+				requestHeaders = new Dictionary<string, string>();
+
+				foreach (var header in context.Request.Headers)
+					requestHeaders.Add(header.Key, header.Value.ToString());
+			}
+
+			transaction.Context.Request = new Request(context.Request.Method, url)
 			{
 				Socket = new Socket
 				{
 					Encrypted = context.Request.IsHttps,
 					RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
 				},
-				HttpVersion = GetHttpVersion(context.Request.Protocol)
+				HttpVersion = GetHttpVersion(context.Request.Protocol),
+				Headers = requestHeaders
 			};
 
 			try
@@ -56,12 +70,22 @@ namespace Elastic.Apm.AspNetCore
 			catch (Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
 			finally
 			{
-				transaction.Result =
-					$"{GetProtocolName(context.Request.Protocol)} {context.Response.StatusCode.ToString()[0]}xx";
+				Dictionary<string, string> responseHeaders = null;
+
+				if (_configurationReader.CaptureHeaders)
+				{
+					responseHeaders = new Dictionary<string, string>();
+
+					foreach (var header in context.Response.Headers)
+						responseHeaders.Add(header.Key, header.Value.ToString());
+				}
+
+				transaction.Result = $"{GetProtocolName(context.Request.Protocol)} {context.Response.StatusCode.ToString()[0]}xx";
 				transaction.Context.Response = new Response
 				{
 					Finished = context.Response.HasStarted, //TODO ?
-					StatusCode = context.Response.StatusCode
+					StatusCode = context.Response.StatusCode,
+					Headers = responseHeaders
 				};
 
 				transaction.End();

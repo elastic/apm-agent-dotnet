@@ -5,7 +5,8 @@ using Elastic.Apm.Logging;
 using FluentAssertions;
 using Xunit;
 
-namespace Elastic.Apm.Tests {
+namespace Elastic.Apm.Tests
+{
 	public class ConstructorTests
 	{
 		private class LogConfig : IConfigurationReader
@@ -15,7 +16,7 @@ namespace Elastic.Apm.Tests {
 			public IReadOnlyList<Uri> ServerUrls => new List<Uri> { ConfigConsts.DefaultServerUri };
 			public string ServiceName { get; }
 			public string SecretToken { get; }
-
+			public bool CaptureHeaders { get; }
 		}
 
 		///<summary>
