@@ -46,7 +46,7 @@ namespace Elastic.Apm.EntityFrameworkCore
 							{
 								Statement = commandExecutedEventData.Command.CommandText,
 								Instance = commandExecutedEventData.Command.Connection.Database,
-								Type = "sql"
+								Type = Database.TypeSql
 							};
 							span.Duration = commandExecutedEventData.Duration.TotalMilliseconds;
 

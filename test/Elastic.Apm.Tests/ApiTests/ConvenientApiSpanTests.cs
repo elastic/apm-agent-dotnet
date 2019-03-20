@@ -493,7 +493,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					span.Context.Db = new Database
 					{
 						Statement = "Select * from MyTable",
-						Type = "MSSQL",
+						Type = Database.TypeSql,
 						Instance = "MyInstance"
 					};
 				});
@@ -506,7 +506,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			payloadSender.Spans[1].Name.Should().Be("SampleSpan2");
 			payloadSender.Spans[1].Context.Db.Statement.Should().Be("Select * from MyTable");
-			payloadSender.Spans[1].Context.Db.Type.Should().Be("MSSQL");
+			payloadSender.Spans[1].Context.Db.Type.Should().Be(Database.TypeSql);
 			payloadSender.Spans[1].Context.Db.Instance.Should().Be("MyInstance");
 		}
 

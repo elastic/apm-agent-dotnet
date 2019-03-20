@@ -9,5 +9,8 @@ namespace Elastic.Apm.Api
 		public string Instance { get; set; }
 		public string Statement { get; set; }
 		public string Type { get; set; }
+
+		public const string TypeSql = "sql";
+		public const string TypeElasticsearch = "elasticsearch";
 	}
 }

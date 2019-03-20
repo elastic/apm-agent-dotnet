@@ -32,8 +32,8 @@ namespace ApiSamples
 				{
 					span.Context.Db = new Database
 					{
-						Statement = "Select * from MyTable",
-						Type = ApiConstants.SubtypeMssql,
+						Statement = "GET /_all/_search?q=tag:wow",
+						Type = Database.TypeElasticsearch,
 					};
 				});
 			});
@@ -57,8 +57,8 @@ namespace ApiSamples
 				{
 					span.Context.Db = new Database
 					{
-						Statement = "Select * from MyTable",
-						Type = ApiConstants.SubtypeMssql,
+						Statement = "GET /_all/_search?q=tag:wow",
+						Type = Database.TypeElasticsearch,
 						Instance = "MyInstance"
 					};
 				});
