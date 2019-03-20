@@ -27,7 +27,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				{
 					n.Configure(app =>
 					{
-						app.UseElasticApm(agent, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
+						app.UseElasticApm(agent,  agent.Logger, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
 
 						app.UseDeveloperExceptionPage();
 
@@ -55,7 +55,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				{
 					n.Configure(app =>
 					{
-						app.UseElasticApm(agent);
+						app.UseElasticApm(agent, agent.Logger);
 
 						app.UseMvc(routes =>
 						{
@@ -77,7 +77,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				{
 					n.Configure(app =>
 					{
-						app.UseMiddleware<ApmMiddleware>(agent.Tracer, agent.ConfigurationReader);
+						app.UseMiddleware<ApmMiddleware>(agent.Tracer, agent.ConfigurationReader, agent.Logger);
 
 						app.UseDeveloperExceptionPage();
 

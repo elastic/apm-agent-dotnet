@@ -6,6 +6,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
 using Microsoft.AspNetCore.Http;
 
 [assembly:
@@ -23,26 +24,27 @@ namespace Elastic.Apm.AspNetCore
 		private readonly RequestDelegate _next;
 		private readonly Tracer _tracer;
 		private readonly IConfigurationReader _configurationReader;
+		private readonly IApmLogger _logger;
 
-		public ApmMiddleware(RequestDelegate next, Tracer tracer, IConfigurationReader configurationReader)
+		public ApmMiddleware(RequestDelegate next, Tracer tracer, IConfigurationReader configurationReader, IApmLogger logger)
 		{
 			_next = next;
 			_tracer = tracer;
 			_configurationReader = configurationReader;
+			_logger = logger.Scoped(nameof(ApmMiddleware));
 		}
 
 		public async Task InvokeAsync(HttpContext context)
 		{
 			Elastic.Apm.Model.Payload.Transaction transaction = null;
 
-			//Get traceparent and parse
-
 			if (context.Request.Headers.ContainsKey(TraceParent.TraceParentHeaderName))
 			{
 				var headerValue = context.Request.Headers[TraceParent.TraceParentHeaderName].ToString();
 				var (traceId, parentId) = TraceParent.ParseTraceParentString(headerValue);
 
-				//_tracer.StartTransactionInternal()
+				transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
+					ApiConstants.TypeRequest, traceId, parentId);
 			}
 			else
 			{

@@ -56,9 +56,13 @@ namespace SampleAspNetCoreApp.Controllers
 			return Redirect("/Home/Index");
 		}
 
-		public IActionResult SimplePage()
+		public async Task<IActionResult> SimplePage()
 		{
 			Response.Headers.Add("X-Additional-Header", "For-Elastic-Apm-Agent");
+
+			var httpClient = new HttpClient();
+			var retVal = await httpClient.GetAsync("http://localhost:5005/api/Values");
+			Console.WriteLine(await retVal.Content.ReadAsStringAsync());
 			return View();
 		}
 
