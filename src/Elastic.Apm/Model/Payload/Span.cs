@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.Api;
-using Elastic.Apm.Report.Serialization;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
+using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
@@ -82,12 +82,19 @@ namespace Elastic.Apm.Model.Payload
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
 
-		public override string ToString() =>
-			$"Span, Id: {Id}, TransactionId: {TransactionId}, ParentId: {ParentId}, TraceId:{TraceId}, Name: {Name}, Type: {Type}";
+		public override string ToString() => new ToStringBuilder(nameof(Span))
+		{
+			["Id"] = Id,
+			["TransactionId"] = TransactionId,
+			["ParentId"] = ParentId,
+			["TraceId"] = TraceId,
+			["Name"] = Name,
+			["Type"] = Type
+		}.ToString();
 
 		public void End()
 		{
-			_logger.Debug()?.Log("Ending {SpanDetails}" , ToString());
+			_logger.Debug()?.Log("Ending {SpanDetails}", ToString());
 			if (!Duration.HasValue) Duration = (DateTimeOffset.UtcNow - _start).TotalMilliseconds;
 			_payloadSender.QueueSpan(this);
 		}
@@ -112,9 +119,9 @@ namespace Elastic.Apm.Model.Payload
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
-			var capturedException = new CapturedException()
+			var capturedException = new CapturedException
 			{
-				Message = message,
+				Message = message
 			};
 
 			if (frames != null)

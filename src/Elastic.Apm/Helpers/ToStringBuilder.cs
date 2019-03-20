@@ -19,14 +19,13 @@ namespace Elastic.Apm.Helpers
 			set => Add(propertyName, value);
 		}
 
-		public ToStringBuilder Add(string propertyName, object propertyValue)
+		private void Add(string propertyName, object propertyValue)
 		{
 			if (_addedAny) _stringBuilder.Append(", ");
 
 			_stringBuilder.Append(propertyName).Append(": ").Append(propertyValue);
 
 			_addedAny = true;
-			return this;
 		}
 
 		public override string ToString() => _stringBuilder + "}";
