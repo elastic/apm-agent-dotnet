@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
+using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Microsoft.AspNetCore.Http;
 
@@ -32,10 +33,23 @@ namespace Elastic.Apm.AspNetCore
 
 		public async Task InvokeAsync(HttpContext context)
 		{
-			var transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
-				ApiConstants.TypeRequest);
+			Elastic.Apm.Model.Payload.Transaction transaction = null;
 
 			//Get traceparent and parse
+
+			if (context.Request.Headers.ContainsKey(TraceParent.TraceParentHeaderName))
+			{
+				var headerValue = context.Request.Headers[TraceParent.TraceParentHeaderName].ToString();
+				var (traceId, parentId) = TraceParent.ParseTraceParentString(headerValue);
+
+				//_tracer.StartTransactionInternal()
+			}
+			else
+			{
+				transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
+					ApiConstants.TypeRequest);
+			}
+			//TraceParent.
 
 			var url = new Url
 			{
