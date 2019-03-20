@@ -472,7 +472,6 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void FillSpanContext()
 		{
-
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 

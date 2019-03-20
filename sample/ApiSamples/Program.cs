@@ -33,7 +33,7 @@ namespace ApiSamples
 					span.Context.Db = new Database
 					{
 						Statement = "Select * from MyTable",
-						Type = "MSSQL"
+						Type = ApiConstants.SubtypeMssql,
 					};
 				});
 			});
@@ -58,7 +58,7 @@ namespace ApiSamples
 					span.Context.Db = new Database
 					{
 						Statement = "Select * from MyTable",
-						Type = "MSSQL",
+						Type = ApiConstants.SubtypeMssql,
 						Instance = "MyInstance"
 					};
 				});
