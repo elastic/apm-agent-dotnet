@@ -23,11 +23,9 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void StringTruncationTest()
 		{
-			var sb = new StringBuilder();
+			var str = new string('a', 1200);
 
-			for (var i = 0; i < 1200; i++) sb.Append('a');
-
-			var transaction = new Transaction(new TestAgentComponents(), sb.ToString(), "test") { Duration = 1, Result = "fail" };
+			var transaction = new Transaction(new TestAgentComponents(), str, "test") { Duration = 1, Result = "fail" };
 
 			var settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 			var json = JsonConvert.SerializeObject(transaction, settings);
@@ -50,11 +48,9 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void StringNoTruncateAttributeTest()
 		{
-			var sb = new StringBuilder();
+			var str = new string('a', 1200);
 
-			for (var i = 0; i < 1200; i++) sb.Append('a');
-
-			var dummyInstance = new DummyType { IntProp = 42, StringProp = sb.ToString() };
+			var dummyInstance = new DummyType { IntProp = 42, StringProp = str };
 
 			var settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 			var json = JsonConvert.SerializeObject(dummyInstance, settings);
@@ -62,8 +58,8 @@ namespace Elastic.Apm.Tests
 
 			Assert.NotNull(deserializedDummyInstance);
 
-			Assert.Equal(sb.Length, deserializedDummyInstance.StringProp.Length);
-			Assert.Equal(sb.ToString(), deserializedDummyInstance.StringProp);
+			Assert.Equal(str.Length, deserializedDummyInstance.StringProp.Length);
+			Assert.Equal(str, deserializedDummyInstance.StringProp);
 			Assert.Equal(42, deserializedDummyInstance.IntProp);
 		}
 
@@ -75,12 +71,10 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void TagsTruncation()
 		{
-			var sb = new StringBuilder();
-
-			for (var i = 0; i < 1200; i++) sb.Append('a');
+			var str = new string('a', 1200);
 
 			var context = new Context();
-			context.Tags["foo"] = sb.ToString();
+			context.Tags["foo"] = str;
 
 			var settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 			var json = JsonConvert.SerializeObject(context, settings);
@@ -101,12 +95,10 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void DictionaryNoTruncateAttributeTest()
 		{
-			var sb = new StringBuilder();
-
-			for (var i = 0; i < 1200; i++) sb.Append('a');
+			var str = new string('a', 1200);
 
 			var dummyInstance = new DummyType();
-			dummyInstance.DictionaryProp["foo"] = sb.ToString();
+			dummyInstance.DictionaryProp["foo"] = str;
 
 			var settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 			var json = JsonConvert.SerializeObject(dummyInstance, settings);
@@ -114,8 +106,8 @@ namespace Elastic.Apm.Tests
 
 			Assert.NotNull(deserializedDummyInstance);
 
-			Assert.Equal(sb.Length, deserializedDummyInstance["dictionaryProp"].Value<JObject>()["foo"]?.Value<string>()?.Length);
-			Assert.Equal(sb.ToString(), deserializedDummyInstance["dictionaryProp"].Value<JObject>()["foo"].Value<string>());
+			Assert.Equal(str.Length, deserializedDummyInstance["dictionaryProp"].Value<JObject>()["foo"]?.Value<string>()?.Length);
+			Assert.Equal(str, deserializedDummyInstance["dictionaryProp"].Value<JObject>()["foo"].Value<string>());
 		}
 
 		/// <summary>
@@ -125,18 +117,17 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void DbStatementLengthTest()
 		{
-			var sb = new StringBuilder();
-			for (var i = 0; i < 1200; i++) sb.Append('a');
-			var db = new Db { Statement = sb.ToString() };
+			var str = new string('a', 1200);
+			var db = new Database{ Statement = str };
 
 			var settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 			var json = JsonConvert.SerializeObject(db, settings);
-			var deserializedDb = JsonConvert.DeserializeObject<Db>(json);
+			var deserializedDb = JsonConvert.DeserializeObject<Database>(json);
 
 			Assert.NotNull(deserializedDb);
 
-			Assert.Equal(sb.Length, deserializedDb.Statement.Length);
-			Assert.Equal(sb.ToString(), deserializedDb.Statement);
+			Assert.Equal(str.Length, deserializedDb.Statement.Length);
+			Assert.Equal(str, deserializedDb.Statement);
 		}
 
 		/// <summary>

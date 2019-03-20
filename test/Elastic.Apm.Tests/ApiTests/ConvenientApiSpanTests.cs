@@ -153,7 +153,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			{
 				Action act = () =>
 				{
-					var result = t.CaptureSpan(SpanName, SpanType, s =>
+					t.CaptureSpan(SpanName, SpanType, s =>
 					{
 						s.Should().NotBeNull();
 						WaitHelpers.Sleep2XMinimum();
@@ -320,7 +320,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			{
 				Func<Task> act = async () =>
 				{
-					var result = await t.CaptureSpan(SpanName, SpanType, async s =>
+					await t.CaptureSpan(SpanName, SpanType, async s =>
 					{
 						s.Should().NotBeNull();
 						await WaitHelpers.Delay2XMinimum();
@@ -346,7 +346,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			{
 				Func<Task> act = async () =>
 				{
-					var result = await t.CaptureSpan(SpanName, SpanType, async () =>
+					await t.CaptureSpan(SpanName, SpanType, async () =>
 					{
 						await WaitHelpers.Delay2XMinimum();
 
@@ -463,6 +463,51 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			//Also make sure the tag is visible directly on Span.Tags.
 			payloadSender.SpansOnFirstTransaction[0].Tags.Should().Contain("foo","bar");
+		}
+
+		/// <summary>
+		/// Creates 1 span with db information on it and creates a 2. span with http information on it.
+		/// Makes sure the db and http info is captured on the span's context.
+		/// </summary>
+		[Fact]
+		public void FillSpanContext()
+		{
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
+			{
+				WaitHelpers.SleepMinimum();
+				t.CaptureSpan("SampleSpan1", "SampleSpanType", span =>
+				{
+					span.Context.Http = new Http
+					{
+						Url = "http://mysite.com",
+						Method = "GET",
+						StatusCode = 200,
+					};
+				});
+
+				t.CaptureSpan("SampleSpan2", "SampleSpanType", span =>
+				{
+					span.Context.Db = new Database
+					{
+						Statement = "Select * from MyTable",
+						Type = Database.TypeSql,
+						Instance = "MyInstance"
+					};
+				});
+			});
+
+			payloadSender.Spans[0].Name.Should().Be("SampleSpan1");
+			payloadSender.Spans[0].Context.Http.Url.Should().Be("http://mysite.com");
+			payloadSender.Spans[0].Context.Http.Method.Should().Be("GET");
+			payloadSender.Spans[0].Context.Http.StatusCode.Should().Be(200);
+
+			payloadSender.Spans[1].Name.Should().Be("SampleSpan2");
+			payloadSender.Spans[1].Context.Db.Statement.Should().Be("Select * from MyTable");
+			payloadSender.Spans[1].Context.Db.Type.Should().Be(Database.TypeSql);
+			payloadSender.Spans[1].Context.Db.Instance.Should().Be("MyInstance");
 		}
 
 		/// <summary>

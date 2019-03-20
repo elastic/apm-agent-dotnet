@@ -13,6 +13,11 @@ namespace Elastic.Apm.Api
 		string Action { get; set; }
 
 		/// <summary>
+		/// Any other arbitrary data captured by the agent, optionally provided by the user.
+		/// </summary>
+		SpanContext Context { get; }
+
+		/// <summary>
 		/// The duration of the span.
 		/// If it's not set (its HasValue property is false) then the value
 		/// is automatically calculated when <see cref="End" /> is called.

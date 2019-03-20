@@ -12,7 +12,7 @@ namespace Elastic.Apm.Model.Payload
 {
 	internal class Span : ISpan
 	{
-		private readonly Lazy<ContextImpl> _context = new Lazy<ContextImpl>();
+		private readonly Lazy<SpanContext> _context = new Lazy<SpanContext>();
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _payloadSender;
 
@@ -38,7 +38,7 @@ namespace Elastic.Apm.Model.Payload
 		/// <summary>
 		/// Any other arbitrary data captured by the agent, optionally provided by the user.
 		/// </summary>
-		public IContext Context => _context.Value;
+		public SpanContext Context => _context.Value;
 
 		/// <inheritdoc />
 		/// <summary>
@@ -126,50 +126,5 @@ namespace Elastic.Apm.Model.Payload
 			_payloadSender.QueueError(
 				new Error(capturedException, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit /*, Context = Context */ });
 		}
-
-		// ReSharper disable once ClassNeverInstantiated.Local - instantiated with Lazy<T>
-		private class ContextImpl : IContext
-		{
-			private readonly Lazy<Dictionary<string, string>> _tags = new Lazy<Dictionary<string, string>>();
-			public IDb Db { get; set; }
-			public IHttp Http { get; set; }
-			public Dictionary<string, string> Tags => _tags.Value;
-		}
-	}
-
-	internal interface IContext
-	{
-		IDb Db { get; set; }
-		IHttp Http { get; set; }
-
-		[JsonConverter(typeof(TagsJsonConverter))]
-		Dictionary<string, string> Tags { get; }
-	}
-
-	internal interface IDb
-	{
-		string Statement { get; set; }
-		string Type { get; set; }
-	}
-
-	internal interface IHttp
-	{
-		string Method { get; set; }
-		int StatusCode { get; set; }
-		string Url { get; set; }
-	}
-
-	internal class Db : IDb
-	{
-		public string Instance { get; set; }
-		public string Statement { get; set; }
-		public string Type { get; set; }
-	}
-
-	internal class Http : IHttp
-	{
-		public string Method { get; set; }
-		public int StatusCode { get; set; }
-		public string Url { get; set; }
 	}
 }
