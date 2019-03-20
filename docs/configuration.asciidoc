@@ -1,3 +1,8 @@
+ifdef::env-github[]
+NOTE: For the best reading experience,
+please view this documentation at https://www.elastic.co/guide/en/apm/agent/dotnet[elastic.co]
+endif::[]
+
 [[configuration]]
 == Configuration
 
@@ -76,6 +81,28 @@ NOTE: The service name must conform to this regular expression: ^[a-zA-Z0-9 _-]+
 
 [[config-reporter]]
 === Reporter configuration options
+
+[float]
+[[config-secret-token]]
+==== `SecretToken`
+
+[options="header"]
+|============
+| Environment variable name | IConfiguration key
+| `ELASTIC_APM_SECRET_TOKEN` | `ElasticApm:SecretToken`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `<none>`                | String
+|============
+
+This string is used to ensure that only your agents can send data to your APM server.
+
+Both the agents and the APM server have to be configured with the same secret token.
+Use this setting in case the APM Server requires a token (e.g. APM Server in Elastic Cloud).
+
 [float]
 [[config-server-urls]]
 ==== `ServerUrls`
@@ -93,7 +120,6 @@ NOTE: The service name must conform to this regular expression: ^[a-zA-Z0-9 _-]+
 |============
 
 The URLs for your APM Servers. The URLs must be fully qualified, including protocol (`http` or `https`) and port. To add multiple servers, separate them with a comma (`,`).
-
 
 NOTE: Providing multiple URLs only works with APM Server v6.5+.
 
@@ -116,3 +142,27 @@ NOTE: Providing multiple URLs only works with APM Server v6.5+.
 Sets the logging level for the agent.
 
 Valid options: `Error`, `Warning`, `Info`, `Debug`.
+
+[[config-http]]
+=== HTTP configuration options
+
+[float]
+[[config-capture-headers]]
+==== `CaptureHeaders` (performance)
+
+[options="header"]
+|============
+| Environment variable name     | IConfiguration key
+| `ELASTIC_APM_CAPTURE_HEADERS` | `ElasticApm:CaptureHeaders`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `true`                  | Boolean
+|============
+
+If set to `true`,
+the agent will capture request and response headers, including cookies.
+
+NOTE: Setting this to `false` reduces network bandwidth, disk space and object allocations.
