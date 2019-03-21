@@ -13,9 +13,8 @@ namespace Elastic.Apm.PerfTests
 			var summary = BenchmarkRunner.Run<Program>();
 		}
 
-
 		[Benchmark]
-		public void H100KTransactions100KSpans()
+		public void SimmpleTransactions10Spans()
 		{
 			var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender()));
 
