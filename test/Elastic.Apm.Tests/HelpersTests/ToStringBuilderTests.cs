@@ -49,7 +49,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 			public override string ToString() => new ToStringBuilder(nameof(ClassWithOneProperty))
 			{
-				["prop"] = _intPropertyValue
+				{ "prop", _intPropertyValue }
 			}.ToString();
 		}
 
@@ -69,11 +69,11 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 			public override string ToString() => new ToStringBuilder(nameof(ClassWithAFewProperties))
 			{
-				["A"] = _propertyA,
-				["Ax2"] = _propertyA * 2,
-				["B"] = _propertyB,
-				["C"] = _propertyC,
-				["D"] = _propertyD
+				{ "A", _propertyA },
+				{ "Ax2", _propertyA * 2 },
+				{ "B", _propertyB },
+				{ "C", _propertyC },
+				{ "D", _propertyD }
 			}.ToString();
 		}
 	}

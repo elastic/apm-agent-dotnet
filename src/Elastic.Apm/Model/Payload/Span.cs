@@ -84,12 +84,12 @@ namespace Elastic.Apm.Model.Payload
 
 		public override string ToString() => new ToStringBuilder(nameof(Span))
 		{
-			["Id"] = Id,
-			["TransactionId"] = TransactionId,
-			["ParentId"] = ParentId,
-			["TraceId"] = TraceId,
-			["Name"] = Name,
-			["Type"] = Type
+			{ "Id", Id },
+			{ "TransactionId", TransactionId },
+			{ "ParentId", ParentId },
+			{ "TraceId", TraceId },
+			{ "Name", Name },
+			{ "Type", Type }
 		}.ToString();
 
 		public void End()

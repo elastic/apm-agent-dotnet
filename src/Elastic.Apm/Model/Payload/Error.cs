@@ -45,10 +45,10 @@ namespace Elastic.Apm.Model.Payload
 
 		public override string ToString() => new ToStringBuilder(nameof(Error))
 		{
-			["Id"] = Id,
-			["TraceId"] = TraceId,
-			["ParentId"] = ParentId,
-			["TransactionId"] = TransactionId
+			{"Id", Id},
+			{"TraceId", TraceId},
+			{"ParentId", ParentId},
+			{"TransactionId", TransactionId}
 		}.ToString();
 	}
 }

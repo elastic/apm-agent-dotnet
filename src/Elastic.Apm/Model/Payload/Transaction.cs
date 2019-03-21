@@ -98,10 +98,10 @@ namespace Elastic.Apm.Model.Payload
 
 		public override string ToString() => new ToStringBuilder(nameof(Transaction))
 		{
-			["Id"] = Id,
-			["TraceId"] = TraceId,
-			["Name"] = Name,
-			["Type"] = Type
+			{ "Id", Id },
+			{ "TraceId", TraceId },
+			{ "Name", Name },
+			{ "Type", Type }
 		}.ToString();
 
 		public void End()
