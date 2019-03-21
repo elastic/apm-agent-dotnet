@@ -10,14 +10,14 @@ namespace Elastic.Apm.Tests.HelpersTests
 		///  Tests use case for a class without any properties
 		/// </summary>
 		[Fact(DisplayName = "No properties")]
-		public void no_properties() =>
+		public void NoProperties() =>
 			new ClassWithoutAnyProperties().ToString().Should().Be(nameof(ClassWithoutAnyProperties) + "{}");
 
 		/// <summary>
 		///  Tests use case for a class with one property
 		/// </summary>
 		[Fact]
-		public void one_property() => new ClassWithOneProperty(321).ToString()
+		public void OneProperty() => new ClassWithOneProperty(321).ToString()
 			.Should()
 			.Be(nameof(ClassWithOneProperty) + "{prop: 321}");
 
@@ -25,7 +25,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 		///  Tests use case for a class with a few properties
 		/// </summary>
 		[Fact]
-		public void a_few_properties() => new ClassWithAFewProperties(123, "456", 789).ToString()
+		public void AFewProperties() => new ClassWithAFewProperties(123, "456", 789).ToString()
 			.Should()
 			.Be(nameof(ClassWithAFewProperties) +
 				"{" +
