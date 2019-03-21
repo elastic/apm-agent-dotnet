@@ -17,12 +17,11 @@ namespace Elastic.Apm.Helpers
 		public ToStringBuilder(string className)
 		{
 			_stringBuilder = new StringBuilder(_stringBuilderInitialCapacity);
-			_stringBuilder.Append(className);
-			_stringBuilder.Append("{");
+			_stringBuilder.Append(className).Append("{");
 			_addedAny = false;
 		}
 
-		public void Add<T>(string propertyName, T propertyValue)
+		public void Add(string propertyName, object propertyValue)
 		{
 			if (_addedAny) _stringBuilder.Append(", ");
 			_stringBuilder.Append(propertyName).Append(": ").Append(propertyValue);
