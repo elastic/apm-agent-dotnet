@@ -41,7 +41,7 @@ pipeline {
           agent { label 'windows-2012r2' }
           steps{
             bat 'dir "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\MSBuild\\15.0\\bin\\SdkResolvers\\Microsoft.Build.NuGetSdkResolver"'
-            bat 'dir "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\Common7\\IDE"'
+            bat 'dir "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\Common7\\IDE\\CommonExtensions"'
             //bat 'dir "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\Common7\\IDE\\CommonExtensions\\Microsoft\\NuGet"'
           }
         }
