@@ -58,19 +58,19 @@ pipeline {
                         powershell label: 'Install .Net SDK', script: """
                         & ./dotnet-install.ps1 -Channel LTS -InstallDir ./dotnet
                         """
-
-                        powershell label: 'Install NuGet Tool', script: """
-                        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-                        Invoke-WebRequest "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile dotnet\\nuget.exe -UseBasicParsing ;
-                        """
-
-                        powershell label: 'Install MSBuild Tools', script: """
-                        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-                        Invoke-WebRequest "https://aka.ms/vs/15/release/vs_enterprise.exe" -OutFile vs_BuildTools.exe -UseBasicParsing
-                        """
+                        //
+                        // powershell label: 'Install NuGet Tool', script: """
+                        // [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+                        // Invoke-WebRequest "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile dotnet\\nuget.exe -UseBasicParsing ;
+                        // """
+                        //
+                        // powershell label: 'Install MSBuild Tools', script: """
+                        // [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+                        // Invoke-WebRequest "https://aka.ms/vs/15/release/vs_enterprise.exe" -OutFile vs_BuildTools.exe -UseBasicParsing
+                        // """
 
                         //--installPath ${env.WORKSPACE}\\vs2017
-                        bat "vs_BuildTools.exe --installPath ${env.WORKSPACE}\\vs2017 --add Microsoft.VisualStudio.Component.NuGet --add Microsoft.Net.Core.Component.SDK --add Microsoft.VisualStudio.Workload.MSBuildTools --add Microsoft.VisualStudio.Component.WebDeploy --add Microsoft.VisualStudio.Workload.WebBuildTools --add Microsoft.VisualStudio.Component.NuGet.BuildTools --wait -q"
+                        //bat "vs_BuildTools.exe --installPath ${env.WORKSPACE}\\vs2017 --add Microsoft.VisualStudio.Component.NuGet --add Microsoft.Net.Core.Component.SDK --add Microsoft.VisualStudio.Workload.MSBuildTools --add Microsoft.VisualStudio.Component.WebDeploy --add Microsoft.VisualStudio.Workload.WebBuildTools --add Microsoft.VisualStudio.Component.NuGet.BuildTools --wait -q"
                       }
                     }
                   }
