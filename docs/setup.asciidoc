@@ -1,0 +1,30 @@
+[[setup]]
+== Set up
+The agent ships as a set of NuGet packages via https://nuget.org[nuget.org].
+
+The following packages are available:
+
+* https://www.nuget.org/packages/Elastic.Apm.All[Elastic.Apm.All]: This is a meta package that references every other Elastic APM .NET agent package. If you plan to monitor a typical ASP.NET Core application that depends on the https://www.nuget.org/packages/Microsoft.AspNetCore.All[Microsoft.AspNetCore.All] package and uses Entity Framework Core then you should reference this package. 
+In order to avoid adding unnecessary dependencies in applications that aren’t depending on the https://www.nuget.org/packages/Microsoft.AspNetCore.All[Microsoft.AspNetCore.All] package we also shipped some other packages - those are all referenced by the `Elastic.Apm.All` package.
+* https://www.nuget.org/packages/Elastic.Apm[Elastic.Apm]: This is the core of the agent, which we didn’t name “Core”, because someone already took that name :) This package also contains the <<public-api>> and it is a .NET Standard 2.0 package. We also ship every tracing component that traces classes that are part of .NET Standard 2.0 in this package, which includes the monitoring part for HttpClient. Every other Elastic APM package references this package.
+* https://www.nuget.org/packages/Elastic.Apm.AspNetCore[Elastic.Apm.AspNetCore]: This package contains ASP.NET Core monitoring related code. The main difference between this package and the `Elastic.Apm.All` package is that this package does not reference the `Elastic.Apm.EntityFrameworkCore` package, so if you have an ASP.NET Core application that does not use EF Core and you want to avoid adding additional unused references, you should use this package.
+* https://www.nuget.org/packages/Elastic.Apm.EntityFrameworkCore[Elastic.Apm.EntityFrameworkCore]: This package contains EF Core monitoring related code.
+
+You simply add the agent to your .NET application by referencing one of these packages.
+
+For ASP.NET Core, once you referenced either the `Elastic.Apm.All` or the `Elastic.Apm.AspNetCore` package, you can enable auto instrumentation by calling the `UseElasticApm()` extension method:
+
+[source,csharp]
+----
+public class Startup
+{
+  public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+  {
+    app.UseElasticApm(Configuration);
+    //…rest of the method
+  }
+  //…rest of the class
+}
+----
+
+In case you only want to use the <<public-api>>, you don't need to can any initalization, you can simply start using the API and the agent will send the data to the APM Server.
