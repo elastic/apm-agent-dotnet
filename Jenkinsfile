@@ -29,7 +29,7 @@ pipeline {
     stage('Initializing'){
       stages {
         stage('Checkout') {
-          agent { label 'linux && immutable' }
+          agent { label 'master || immutable' }
           options { skipDefaultCheckout() }
           steps {
             deleteDir()
@@ -40,13 +40,13 @@ pipeline {
         stage('Check Resolver - windows-2012r2'){
           agent { label 'windows-2012r2' }
           steps{
-            bat 'dir "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\MSBuild\\15.0\\bin\\SdkResolvers"'
+            bat 'dir "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\MSBuild\\15.0\\bin\\SdkResolvers\\Microsoft.Build.NuGetSdkResolver"'
           }
         }
         stage('Check Resolver - windows-2016'){
           agent { label 'windows-2016' }
           steps{
-            bat 'dir "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\MSBuild\\15.0\\bin\\SdkResolvers"'
+            bat 'dir "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\MSBuild\\15.0\\bin\\SdkResolvers\\Microsoft.Build.NuGetSdkResolver"'
           }
         }
         //https://dot.net/v1/dotnet-install.sh
