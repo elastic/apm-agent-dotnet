@@ -49,7 +49,7 @@ pipeline {
                   PATH = "${env.PATH};${env.HOME}\\bin;${env.HOME}\\.dotnet\\tools;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;\"${env.VS_HOME}\\BuildTools\\MSBuild\\15.0\\Bin\""
                 }
                 stages{
-                  stage('Install .Net SDK from URL') {
+                  stage('Install .Net SDK') {
                     steps {
                       deleteDir()
                       dir("${HOME}"){
@@ -60,12 +60,12 @@ pipeline {
                         powershell label: 'Install .Net SDK', script: """
                         & ./dotnet-install.ps1 -Channel LTS -InstallDir ./dotnet
                         """
-                        //
-                        // powershell label: 'Install NuGet Tool', script: """
-                        // [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-                        // Invoke-WebRequest "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile dotnet\\nuget.exe -UseBasicParsing ;
-                        // """
-                        //
+
+                        powershell label: 'Install NuGet Tool', script: """
+                        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+                        Invoke-WebRequest "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile dotnet\\nuget.exe -UseBasicParsing ;
+                        """
+
                         // powershell label: 'Install MSBuild Tools', script: """
                         // [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
                         // Invoke-WebRequest "https://aka.ms/vs/15/release/vs_enterprise.exe" -OutFile vs_BuildTools.exe -UseBasicParsing
