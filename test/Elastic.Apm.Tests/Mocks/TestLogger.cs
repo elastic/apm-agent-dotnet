@@ -1,22 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Tests.Mocks
 {
-	public class TestLogger : IApmLogger
+	internal class TestLogger : ConsoleLogger
 	{
-		public TestLogger() : this(LogLevel.Error) { }
+		private readonly StringWriter _writer;
 
-		public TestLogger(LogLevel level) => LogLevel = level;
+		public TestLogger() : this(LogLevel.Error, new StringWriter()) { }
 
-		public List<string> Lines { get; } = new List<string>();
+		public TestLogger(LogLevel level) : this(level, new StringWriter()) { }
 
-		public LogLevel LogLevel { get; }
+		public TestLogger(LogLevel level, StringWriter writer) : base(level, writer, writer) => _writer = writer;
 
-		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
-		{
-			if (level >= LogLevel) Lines.Add(formatter(state, e));
-		}
+		public List<string> Lines => _writer.GetStringBuilder().ToString().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).ToList();
 	}
 }

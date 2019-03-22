@@ -10,5 +10,6 @@ namespace Elastic.Apm.Config
 		IReadOnlyList<Uri> ServerUrls { get; }
 		string ServiceName { get; }
 		string SecretToken { get; }
+		bool CaptureHeaders { get; }
 	}
 }

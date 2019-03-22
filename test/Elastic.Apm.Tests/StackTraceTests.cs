@@ -3,6 +3,7 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
 using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Tests.Mocks;
+using FluentAssertions;
 using Xunit;
 
 namespace Elastic.Apm.Tests
@@ -20,7 +21,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task HttpClientStackTrace()
 		{
-			var (listener, _, _) = HttpDiagnosticListenerTest.RegisterListenerAndStartTransaction();
+			var (listener, payloadSender, _) = HttpDiagnosticListenerTest.RegisterListenerAndStartTransaction();
 
 			using (listener)
 			using (var localServer = new LocalServer(uri: "http://localhost:8083/"))
@@ -28,13 +29,12 @@ namespace Elastic.Apm.Tests
 				var httpClient = new HttpClient();
 				var res = await httpClient.GetAsync(localServer.Uri);
 
-				Assert.True(res.IsSuccessStatusCode);
+				res.IsSuccessStatusCode.Should().BeTrue();
 			}
 
-			var stackFrames = (Agent.TransactionContainer.Transactions.Value.Spans[0] as Span)?.StackTrace;
+			var stackFrames = payloadSender.FirstSpan?.StackTrace;
 
-			Assert.NotNull(stackFrames);
-			Assert.Contains(stackFrames, frame => frame.LineNo!=0);
+			stackFrames.Should().NotBeEmpty().And.Contain(frame => frame.LineNo != 0);
 		}
 	}
 }

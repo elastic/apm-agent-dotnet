@@ -39,6 +39,8 @@ ProjectSection(SolutionItems) = preProject
 	README.md = README.md
 EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.PerfTests", "test\Elastic.Apm.PerfTests\Elastic.Apm.PerfTests.csproj", "{F069CE99-F418-4BC2-9E44-8F03497D8DA8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -84,9 +86,17 @@ Global
 		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F069CE99-F418-4BC2-9E44-8F03497D8DA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F069CE99-F418-4BC2-9E44-8F03497D8DA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F069CE99-F418-4BC2-9E44-8F03497D8DA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F069CE99-F418-4BC2-9E44-8F03497D8DA8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{0ADF687D-4DB7-417E-80B4-27B3FD86875E} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
@@ -98,9 +108,5 @@ Global
 		{19C9C1BA-4BCC-4708-92C3-8F5AE18B44F8} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{C0F1E546-4388-4EA5-8C7C-ACA8CFA4CE2F} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{1AAB1A30-42C0-4C76-AE2E-9D7293945D80} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
-		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}
 	EndGlobalSection
 EndGlobal
