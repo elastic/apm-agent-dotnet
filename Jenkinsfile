@@ -37,21 +37,21 @@ pipeline {
             stash allowEmpty: true, name: 'source', useDefaultExcludes: false
           }
         }
-        stage('Check Resolver - windows-2012r2'){
-          agent { label 'windows-2012r2' }
-          steps{
-            bat 'dir "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\MSBuild\\15.0\\bin\\SdkResolvers\\Microsoft.Build.NuGetSdkResolver"'
-            bat 'dir "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\Common7\\IDE\\CommonExtensions"'
-            //bat 'dir "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\Common7\\IDE\\CommonExtensions\\Microsoft\\NuGet"'
-          }
-        }
-        stage('Check Resolver - windows-2016'){
-          agent { label 'windows-2016' }
-          steps{
-            bat 'dir "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\MSBuild\\15.0\\bin\\SdkResolvers\\Microsoft.Build.NuGetSdkResolver"'
-            bat 'dir "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\Common7\\IDE\\CommonExtensions\\Microsoft\\NuGet"'
-          }
-        }
+        // stage('Check Resolver - windows-2012r2'){
+        //   agent { label 'windows-2012r2' }
+        //   steps{
+        //     bat 'dir "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\MSBuild\\15.0\\bin\\SdkResolvers\\Microsoft.Build.NuGetSdkResolver"'
+        //     bat 'dir "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\Common7\\IDE\\CommonExtensions"'
+        //     //bat 'dir "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\Common7\\IDE\\CommonExtensions\\Microsoft\\NuGet"'
+        //   }
+        // }
+        // stage('Check Resolver - windows-2016'){
+        //   agent { label 'windows-2016' }
+        //   steps{
+        //     bat 'dir "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\MSBuild\\15.0\\bin\\SdkResolvers\\Microsoft.Build.NuGetSdkResolver"'
+        //     bat 'dir "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\Common7\\IDE\\CommonExtensions\\Microsoft\\NuGet"'
+        //   }
+        // }
         //https://dot.net/v1/dotnet-install.sh
         //https://download.microsoft.com/download/D/7/5/D75188CA-848C-4634-B402-4B746E9F516A/DotNetCore.1.0.1-VS2015Tools.Preview2.0.4.exe
               stage('Windows'){
