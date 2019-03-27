@@ -1,4 +1,5 @@
 using System;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.DistributedTracing
 {
@@ -14,7 +15,36 @@ namespace Elastic.Apm.DistributedTracing
 	/// </summary>
 	internal struct TraceParent
 	{
-		public byte[] TraceFlag { get; set; }
+
+		private const int TraceParentLength = 55;
+		private const byte FlagRecorded = 1; // 00000001
+
+		public static bool ValidateTraceParentValue(string traceParentValue, IApmLogger logger)
+		{
+			if (traceParentValue.Length != 55)
+			{
+				logger.Warning()
+					?.Log("Traceparent contains invalid length, expected: {ExpectedTraceParentLength}, got: {GotLength}", TraceParentLength,
+						traceParentValue.Length);
+				return false;
+			}
+
+			if (!traceParentValue.StartsWith("00-"))
+			{
+				logger.Warning()
+					?.Log("Only version 00 of the traceparent header is supported, but was {GotVersion}", traceParentValue.Substring(0, 3));
+				return false;
+			}
+
+			// ReSharper disable once InvertIf
+			if (traceParentValue[35] != '-' || traceParentValue[52] != '-')
+			{
+				logger.Warning()?.Log("Invalid traceparent format, got: {TraceParentValue}", traceParentValue);
+				return false;
+			}
+
+			return true;
+		}
 
 		public static string GetTraceParentVal(string traceId, string spanId)
 			=> $"00-{traceId}-{spanId}-01";
@@ -38,10 +68,5 @@ namespace Elastic.Apm.DistributedTracing
 				bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
 			return bytes;
 		}
-	}
-
-	internal static class Consts
-	{
-		private static byte Version0 = 00000000;
 	}
 }

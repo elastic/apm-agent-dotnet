@@ -36,22 +36,47 @@ namespace Elastic.Apm.AspNetCore
 
 		public async Task InvokeAsync(HttpContext context)
 		{
-			Elastic.Apm.Model.Payload.Transaction transaction = null;
+			Model.Payload.Transaction transaction;
 
 			if (context.Request.Headers.ContainsKey(TraceParent.TraceParentHeaderName))
 			{
 				var headerValue = context.Request.Headers[TraceParent.TraceParentHeaderName].ToString();
-				var (traceId, parentId) = TraceParent.ParseTraceParentString(headerValue);
 
-				transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
-					ApiConstants.TypeRequest, traceId, parentId);
+				if (TraceParent.ValidateTraceParentValue(headerValue, _logger))
+				{
+					var traceId = string.Empty;
+					var parentId = string.Empty;
+					try
+					{
+						(traceId, parentId) = TraceParent.ParseTraceParentString(headerValue);
+					}
+					catch (Exception e)
+					{
+						_logger.Warning()?.LogException(e, "Failed parsing traceparent.");
+					}
+					finally
+					{
+						transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
+							ApiConstants.TypeRequest, traceId, parentId);
+
+						_logger.Debug()
+							?.Log("Incoming request with {TraceParentHeaderName} header. TraceId: {TraceId}, ParentId: {ParentId}. Starting Trace.",
+								TraceParent.TraceParentHeaderName, traceId, parentId);
+					}
+				}
+				else
+				{
+					_logger.Debug()?.Log("Incoming request with invalid traceparent, Starting trace with new trace id");
+					transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
+						ApiConstants.TypeRequest);
+				}
 			}
 			else
 			{
+				_logger.Debug()?.Log("Incoming request. Starting Trace.");
 				transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
 					ApiConstants.TypeRequest);
 			}
-			//TraceParent.
 
 			var url = new Url
 			{
