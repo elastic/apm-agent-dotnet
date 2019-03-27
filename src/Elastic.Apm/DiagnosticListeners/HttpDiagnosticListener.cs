@@ -31,7 +31,7 @@ namespace Elastic.Apm.DiagnosticListeners
 		private ScopedLogger Logger { get; }
 		private IConfigurationReader ConfigurationReader { get; }
 
-		public string Name => "HttpHandlerDiagnosticListener";
+		public string Name => "HttpHandlerDiagnosticListener"; // "HttpHandlerDiagnosticListener" for .NET Core, "System.Net.Http.Desktop" for Full .NET Framework
 
 		public void OnCompleted() { }
 
