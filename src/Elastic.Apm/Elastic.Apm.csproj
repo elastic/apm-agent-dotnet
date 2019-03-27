@@ -3,13 +3,13 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Elastic.Apm</RootNamespace>
     <AssemblyName>Elastic.Apm</AssemblyName>
-    <AssemblyVersion>0.0.1.0</AssemblyVersion>
-    <InformationalVersion>0.0.1.0</InformationalVersion>
-    <FileVersion>0.0.1.0</FileVersion>
+    <AssemblyVersion>0.0.2.0</AssemblyVersion>
+    <InformationalVersion>0.0.2.0</InformationalVersion>
+    <FileVersion>0.0.2.0</FileVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
-    <PackageVersion>0.0.1.0-alpha</PackageVersion>
+    <PackageVersion>0.0.2.0-alpha</PackageVersion>
     <Authors>Elastic and contributors</Authors>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <PackageId>Elastic.Apm</PackageId>
