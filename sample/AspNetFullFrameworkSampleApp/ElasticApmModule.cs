@@ -1,13 +1,14 @@
-﻿using Elastic.Apm.DiagnosticSource;
-using System;
+﻿using System;
 using System.Web;
-using Elastic.Apm;
 
 namespace AspNetFullFrameworkSampleApp
 {
-	public class MyModule1 : IHttpModule
+	public class ElasticApmModule : IHttpModule
 	{
-		private IDisposable _httpDiagnosticsSubscription;
+		public void OnLogRequest(object source, EventArgs e)
+		{
+			//custom logging logic can go here
+		}
 
 		/// <summary>
 		/// You will need to configure this module in the Web.config file of your
@@ -17,15 +18,10 @@ namespace AspNetFullFrameworkSampleApp
 
 		#region IHttpModule Members
 
-		public void Dispose() => _httpDiagnosticsSubscription.Dispose();
+		public void Dispose() { }
 
 		public void Init(HttpApplication context)
 		{
-			//start listening for outgoing HTTP requests in the Elastic APM Agent.
-			// TODO: Sergey Kleyman: uncomment - new ElasticCoreListeners().Start();
-			// new ElasticCoreListeners().Start();
-			_httpDiagnosticsSubscription = Agent.Subscribe(new HttpDiagnosticsSubscriber());
-
 			// Below is an example of how you can handle LogRequest event and provide 
 			// custom logging implementation for it
 			context.LogRequest += OnLogRequest;
@@ -44,10 +40,5 @@ namespace AspNetFullFrameworkSampleApp
 		}
 
 		#endregion
-
-		public void OnLogRequest(Object source, EventArgs e)
-		{
-			//custom logging logic can go here
-		}
 	}
 }
