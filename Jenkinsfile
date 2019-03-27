@@ -96,6 +96,9 @@ pipeline {
                       dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
                       for i in $(find . -name '*.csproj')
                       do
+                        if [[ $i == *"AspNetFullFrameworkSampleApp.csproj"* ]]; then
+                            continue
+                        fi
                         dotnet add "$i" package XunitXml.TestLogger --version 2.0.0
                         dotnet add "$i" package coverlet.msbuild --version 2.5.1
                       done
