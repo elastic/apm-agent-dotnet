@@ -72,7 +72,7 @@ pipeline {
                     unstash 'source'
                     dir("${BASE_DIR}"){
                       sh '''
-                      dotnet sln remove sample\\AspNetFullFrameworkSampleApp\\AspNetFullFrameworkSampleApp.csproj
+                      dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
                       dotnet build
                       '''
                     }
@@ -90,7 +90,7 @@ pipeline {
                     dir("${BASE_DIR}"){
                       sh label: 'Install tools', script: '''#!/bin/bash
                       set -euxo pipefail
-                      dotnet sln remove sample\\AspNetFullFrameworkSampleApp\\AspNetFullFrameworkSampleApp.csproj
+                      dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
 
                       # install tools
                       dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
@@ -197,7 +197,7 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         bat """
-                        dotnet sln remove sample\\AspNetFullFrameworkSampleApp\\AspNetFullFrameworkSampleApp.csproj
+                        dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
                         dotnet build
                         """
                       }
@@ -214,7 +214,7 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         powershell label: 'Install tools', script: '''
-                        & dotnet sln remove sample\\AspNetFullFrameworkSampleApp\\AspNetFullFrameworkSampleApp.csproj
+                        & dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
 
                         & dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
                         & dotnet tool install -g Codecov.Tool --version 1.2.0
