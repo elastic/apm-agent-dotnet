@@ -21,7 +21,7 @@ namespace Elastic.Apm.Helpers
 			_addedAny = false;
 		}
 
-		public void Add<T>(string propertyName, T propertyValue)
+		public void Add(string propertyName, object propertyValue)
 		{
 			if (_addedAny) _stringBuilder.Append(", ");
 			_stringBuilder.Append(propertyName).Append(": ").Append(propertyValue);
