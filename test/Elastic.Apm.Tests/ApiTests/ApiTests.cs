@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Tests.Mocks;
+using FluentAssertions;
 using Xunit;
 
 namespace Elastic.Apm.Tests.ApiTests
@@ -22,8 +23,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void StartEndTransaction()
 		{
-			var transactionName = "TestTransaction";
-			var transactionType = "UnitTest";
+			const string transactionName = "TestTransaction";
+			const string transactionType = "UnitTest";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
@@ -32,13 +33,17 @@ namespace Elastic.Apm.Tests.ApiTests
 			Thread.Sleep(5); //Make sure we have duration > 0
 
 			transaction.End();
-			Assert.Single(payloadSender.Payloads);
-			Assert.Equal(transactionName, payloadSender.Payloads[0].Transactions[0].Name);
-			Assert.Equal(transactionType, payloadSender.Payloads[0].Transactions[0].Type);
-			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= 5);
-			Assert.True(payloadSender.Payloads[0].Transactions[0].Id != Guid.Empty);
 
-			Assert.NotNull(payloadSender.Payloads[0].Service);
+			payloadSender.Transactions.Should().ContainSingle();
+
+			var capturedTransaction = payloadSender.Transactions[0];
+
+			capturedTransaction.Name.Should().Be(transactionName);
+			capturedTransaction.Type.Should().Be(transactionType);
+			capturedTransaction.Duration.Should().BeGreaterOrEqualTo(5);
+			capturedTransaction.Id.Should().NotBeEmpty();
+
+			agent.Service.Should().NotBeNull();
 		}
 
 		/// <summary>
@@ -48,13 +53,13 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void StartNoEndTransaction()
 		{
-			var transactionName = "TestTransaction";
-			var transactionType = "UnitTest";
+			const string transactionName = "TestTransaction";
+			const string transactionType = "UnitTest";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			var unused = agent.Tracer.StartTransaction(transactionName, transactionType);
-			Assert.Empty(payloadSender.Payloads);
+			payloadSender.Transactions.Should().BeEmpty();
 		}
 
 		/// <summary>
@@ -64,17 +69,17 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void TransactionResultTest()
 		{
-			var transactionType = "TestTransaction";
-			var transacitonType = "UnitTest";
+			const string transactionName = "TestTransaction";
+			const string transactionType = "UnitTest";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			var transaction = agent.Tracer.StartTransaction(transactionType, transacitonType);
-			var result = "success";
+			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
+			const string result = "success";
 			transaction.Result = result;
 			transaction.End();
 
-			Assert.Equal(result, payloadSender.Payloads[0].Transactions[0].Result);
+			payloadSender.Transactions[0].Result.Should().Be(result);
 		}
 
 		/// <summary>
@@ -86,7 +91,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		{
 			var agent = new ApmAgent(new TestAgentComponents());
 			var currentTransaction = agent.Tracer.CurrentTransaction;
-			Assert.Null(currentTransaction);
+			currentTransaction.Should().BeNull();
 		}
 
 		/// <summary>
@@ -96,7 +101,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public async Task GetCurrentTransactionWithNotNull()
 		{
-			var transactionName = "TestTransaction";
+			const string transactionName = "TestTransaction";
 			var agent = new ApmAgent(new TestAgentComponents());
 
 			StartTransaction(); //Start transaction on the current task
@@ -104,9 +109,9 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			var currentTransaction = agent.Tracer.CurrentTransaction; //Get transaction in the current task
 
-			Assert.NotNull(currentTransaction);
-			Assert.Equal(transactionName, currentTransaction.Name);
-			Assert.Equal(ApiConstants.TypeRequest, currentTransaction.Type);
+			currentTransaction.Should().NotBeNull();
+			currentTransaction.Name.Should().Be(transactionName);
+			currentTransaction.Type.Should().Be(ApiConstants.TypeRequest);
 
 			void StartTransaction()
 			{
@@ -117,16 +122,16 @@ namespace Elastic.Apm.Tests.ApiTests
 			async Task DoAsyncWork()
 			{
 				//Make sure we have a transaction in the subtask before the async work
-				Assert.NotNull(agent.Tracer.CurrentTransaction);
-				Assert.Equal(transactionName, agent.Tracer.CurrentTransaction.Name);
-				Assert.Equal(ApiConstants.TypeRequest, agent.Tracer.CurrentTransaction.Type);
+				agent.Tracer.CurrentTransaction.Should().NotBeNull();
+				agent.Tracer.CurrentTransaction.Name.Should().Be(transactionName);
+				agent.Tracer.CurrentTransaction.Type.Should().Be(ApiConstants.TypeRequest);
 
 				await Task.Delay(50);
 
 				//and after the async work
-				Assert.NotNull(agent.Tracer.CurrentTransaction);
-				Assert.Equal(transactionName, agent.Tracer.CurrentTransaction.Name);
-				Assert.Equal(ApiConstants.TypeRequest, agent.Tracer.CurrentTransaction.Type);
+				agent.Tracer.CurrentTransaction.Should().NotBeNull();
+				agent.Tracer.CurrentTransaction.Name.Should().Be(transactionName);
+				agent.Tracer.CurrentTransaction.Type.Should().Be(ApiConstants.TypeRequest);
 			}
 		}
 
@@ -137,9 +142,9 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void TransactionWithSpan()
 		{
-			var transactionName = "TestTransaction";
-			var transactionType = "UnitTest";
-			var spanName = "TestSpan";
+			const string transactionName = "TestTransaction";
+			const string transactionType = "UnitTest";
+			const string spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
@@ -151,13 +156,13 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			span.End();
 			transaction.End();
-			Assert.NotEmpty(payloadSender.Payloads);
-			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
+			payloadSender.Transactions.Should().NotBeEmpty();
+			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
-			Assert.Equal(spanName, payloadSender.SpansOnFirstTransaction[0].Name);
-			Assert.True(payloadSender.SpansOnFirstTransaction[0].Duration >= 5);
-			Assert.True(payloadSender.SpansOnFirstTransaction[0].Id >= 5);
-			Assert.NotNull(payloadSender.Payloads[0].Service);
+			payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(spanName);
+			payloadSender.SpansOnFirstTransaction[0].Duration.Should().BeGreaterOrEqualTo(5);
+
+			agent.Service.Should().NotBeNull();
 		}
 
 		/// <summary>
@@ -167,9 +172,9 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void TransactionWithSpanWithoutEnd()
 		{
-			var transactionName = "TestTransaction";
-			var transactionType = "UnitTest";
-			var spanName = "TestSpan";
+			const string transactionName = "TestTransaction";
+			const string transactionType = "UnitTest";
+			const string spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
@@ -180,10 +185,10 @@ namespace Elastic.Apm.Tests.ApiTests
 			Thread.Sleep(5); //Make sure we have duration > 0
 
 			transaction.End(); //Ends transaction, but doesn't end span.
-			Assert.NotEmpty(payloadSender.Payloads);
-			Assert.Empty(payloadSender.SpansOnFirstTransaction);
+			payloadSender.Transactions.Should().NotBeEmpty();
+			payloadSender.SpansOnFirstTransaction.Should().BeEmpty();
 
-			Assert.NotNull(payloadSender.Payloads[0].Service);
+			agent.Service.Should().NotBeNull();
 		}
 
 		/// <summary>
@@ -193,9 +198,9 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void TransactionWithSpanWithSubTypeAndAction()
 		{
-			var transactionName = "TestTransaction";
-			var transactionType = "UnitTest";
-			var spanName = "TestSpan";
+			const string transactionName = "TestTransaction";
+			const string transactionType = "UnitTest";
+			const string spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
@@ -204,14 +209,14 @@ namespace Elastic.Apm.Tests.ApiTests
 			span.End();
 			transaction.End();
 
-			Assert.NotEmpty(payloadSender.Payloads);
-			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
+			payloadSender.Transactions.Should().NotBeEmpty();
+			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
-			Assert.Equal(ApiConstants.TypeDb, payloadSender.SpansOnFirstTransaction[0].Type);
-			Assert.Equal(ApiConstants.SubtypeMssql, payloadSender.SpansOnFirstTransaction[0].Subtype);
-			Assert.Equal(ApiConstants.ActionQuery, payloadSender.SpansOnFirstTransaction[0].Action);
+			payloadSender.SpansOnFirstTransaction[0].Type.Should().Be(ApiConstants.TypeDb);
+			payloadSender.SpansOnFirstTransaction[0].Subtype.Should().Be(ApiConstants.SubtypeMssql);
+			payloadSender.SpansOnFirstTransaction[0].Action.Should().Be(ApiConstants.ActionQuery);
 
-			Assert.NotNull(payloadSender.Payloads[0].Service);
+			agent.Service.Should().NotBeNull();
 		}
 
 		/// <summary>
@@ -231,15 +236,15 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// Shared between ErrorOnTransaction and ErrorOnTransactionWithCulprit
 		/// </summary>
 		/// <param name="culprit">Culprit.</param>
-		private void ErrorOnTransactionCommon(string culprit = null)
+		private static void ErrorOnTransactionCommon(string culprit = null)
 		{
-			var transactionName = "TestTransaction";
-			var transacitonType = "UnitTest";
-			var exceptionMessage = "Foo!";
+			const string transactionName = "TestTransaction";
+			const string transactionType = "UnitTest";
+			const string exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			var transaction = agent.Tracer.StartTransaction(transactionName, transacitonType);
+			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
 			Thread.Sleep(5); //Make sure we have duration > 0
 			try
@@ -256,12 +261,12 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			transaction.End();
 
-			Assert.Single(payloadSender.Payloads);
-			Assert.Single(payloadSender.Errors);
-			Assert.Equal(exceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
-			Assert.Equal(exceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
+			payloadSender.Transactions.Should().ContainSingle();
+			payloadSender.Errors.Should().ContainSingle();
+			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
+			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 
-			Assert.Equal(!string.IsNullOrEmpty(culprit) ? culprit : "PublicAPI-CaptureException", payloadSender.Errors[0].Errors[0].Culprit);
+			payloadSender.FirstError.Culprit.Should().Be(!string.IsNullOrEmpty(culprit) ? culprit : "PublicAPI-CaptureException");
 		}
 
 		/// <summary>
@@ -271,10 +276,10 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void ErrorOnSpan()
 		{
-			var transactionName = "TestTransaction";
-			var transactionType = "UnitTest";
-			var spanName = "TestSpan";
-			var exceptionMessage = "Foo!";
+			const string transactionName = "TestTransaction";
+			const string transactionType = "UnitTest";
+			const string spanName = "TestSpan";
+			const string exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
@@ -296,10 +301,9 @@ namespace Elastic.Apm.Tests.ApiTests
 			span.End();
 			transaction.End();
 
-			Assert.Single(payloadSender.Payloads);
-			Assert.Single(payloadSender.Errors);
-			Assert.Equal(exceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
-			Assert.Equal(exceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
+			payloadSender.Transactions.Should().ContainSingle();
+			payloadSender.Errors.Should().ContainSingle();
+			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 		}
 
 		/// <summary>
@@ -309,10 +313,10 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void TagsOnTransactionAndSpan()
 		{
-			var transactionName = "TestTransaction";
-			var transactionType = "UnitTest";
-			var spanName = "TestSpan";
-			var exceptionMessage = "Foo!";
+			const string transactionName = "TestTransaction";
+			const string transactionType = "UnitTest";
+			const string spanName = "TestSpan";
+			const string exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
@@ -338,22 +342,21 @@ namespace Elastic.Apm.Tests.ApiTests
 			span.End();
 			transaction.End();
 
-			Assert.Single(payloadSender.Payloads);
-			Assert.Single(payloadSender.Errors);
-			Assert.Equal(exceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
-			Assert.Equal(exceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
+			payloadSender.Transactions.Should().ContainSingle();
+			payloadSender.Errors.Should().ContainSingle();
+			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 
-			Assert.Equal("barTransaction1", payloadSender.Payloads[0].Transactions[0].Tags["fooTransaction1"]);
-			Assert.Equal("barTransaction1", payloadSender.FirstTransaction.Context.Tags["fooTransaction1"]);
+			payloadSender.FirstTransaction.Tags.Should().Contain("fooTransaction1", "barTransaction1");
+			payloadSender.FirstTransaction.Context.Tags.Should().Contain("fooTransaction1", "barTransaction1");
 
-			Assert.Equal("barTransaction2", payloadSender.Payloads[0].Transactions[0].Tags["fooTransaction2"]);
-			Assert.Equal("barTransaction2", payloadSender.FirstTransaction.Context.Tags["fooTransaction2"]);
+			payloadSender.FirstTransaction.Tags.Should().Contain("fooTransaction2", "barTransaction2");
+			payloadSender.FirstTransaction.Context.Tags.Should().Contain("fooTransaction2", "barTransaction2");
 
-			Assert.Equal("barSpan1", payloadSender.SpansOnFirstTransaction[0].Tags["fooSpan1"]);
-			Assert.Equal("barSpan1", payloadSender.SpansOnFirstTransaction[0].Context.Tags["fooSpan1"]);
+			payloadSender.SpansOnFirstTransaction[0].Tags.Should().Contain("fooSpan1", "barSpan1");
+			payloadSender.SpansOnFirstTransaction[0].Context.Tags.Should().Contain("fooSpan1", "barSpan1");
 
-			Assert.Equal("barSpan2", payloadSender.SpansOnFirstTransaction[0].Tags["fooSpan2"]);
-			Assert.Equal("barSpan2", payloadSender.SpansOnFirstTransaction[0].Context.Tags["fooSpan2"]);
+			payloadSender.SpansOnFirstTransaction[0].Tags.Should().Contain("fooSpan2", "barSpan2");
+			payloadSender.SpansOnFirstTransaction[0].Context.Tags.Should().Contain("fooSpan2", "barSpan2");
 		}
 	}
 }

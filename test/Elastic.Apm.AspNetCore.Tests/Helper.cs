@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Elastic.Apm.DiagnosticSource;
@@ -76,7 +77,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				{
 					n.Configure(app =>
 					{
-						app.UseMiddleware<ApmMiddleware>(agent.Tracer);
+						app.UseMiddleware<ApmMiddleware>(agent.Tracer, agent.ConfigurationReader);
 
 						app.UseDeveloperExceptionPage();
 

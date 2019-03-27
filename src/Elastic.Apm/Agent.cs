@@ -4,6 +4,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Model.Payload;
 using Elastic.Apm.Report;
 
 //TODO: It'd be nice to move this into the .csproj
@@ -25,15 +26,21 @@ using Elastic.Apm.Report;
 [assembly:
 	InternalsVisibleTo(
 		"Elastic.Apm.All.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.PerfTests, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
 
 namespace Elastic.Apm
 {
 	public interface IApmAgent
 	{
 		IConfigurationReader ConfigurationReader { get; }
-		AbstractLogger Logger { get; }
+
+		IApmLogger Logger { get; }
 
 		IPayloadSender PayloadSender { get; }
+
+		Service Service { get; }
 
 		ITracer Tracer { get; }
 	}
@@ -42,27 +49,30 @@ namespace Elastic.Apm
 	{
 		internal readonly CompositeDisposable Disposables = new CompositeDisposable();
 
-		public ApmAgent(AgentComponents agentComponents) =>
-			Components = agentComponents ?? new AgentComponents(null, service: null);
+		public ApmAgent(AgentComponents agentComponents) => Components = agentComponents ?? new AgentComponents();
 
 		private AgentComponents Components { get; }
 		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
-		public AbstractLogger Logger => Components.Logger;
+		public IApmLogger Logger => Components.Logger;
 		public IPayloadSender PayloadSender => Components.PayloadSender;
 		public ITracer Tracer => Components.Tracer;
+		public Service Service => Components.Service;
 
 		internal Tracer TracerInternal => Tracer as Tracer;
 
 		internal TransactionContainer TransactionContainer => Components.TransactionContainer;
 
-		public void Dispose() => Disposables?.Dispose();
+		public void Dispose()
+		{
+			Disposables?.Dispose();
+			Components?.Dispose();
+		}
 	}
 
 	public static class Agent
 	{
 		private static readonly Lazy<ApmAgent> Lazy = new Lazy<ApmAgent>(() => new ApmAgent(_components));
 		private static AgentComponents _components;
-
 
 		public static IConfigurationReader Config => Lazy.Value.ConfigurationReader;
 

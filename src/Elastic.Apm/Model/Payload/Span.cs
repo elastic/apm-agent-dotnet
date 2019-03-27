@@ -2,34 +2,43 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.Api;
+using Elastic.Apm.Report.Serialization;
+using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
+using Elastic.Apm.Report;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
 {
 	internal class Span : ISpan
 	{
-		private readonly Lazy<ContextImpl> _context = new Lazy<ContextImpl>();
+		private readonly Lazy<SpanContext> _context = new Lazy<SpanContext>();
+		private readonly IApmLogger _logger;
+		private readonly IPayloadSender _payloadSender;
 
 		private readonly DateTimeOffset _start;
 
-		public Span(string name, string type, Transaction transaction)
+		public Span(string name, string type, Transaction transaction, IPayloadSender payloadSender, IApmLogger logger)
 		{
-			Transaction = transaction;
 			_start = DateTimeOffset.UtcNow;
-			Start = (decimal)(_start - transaction.Start).TotalMilliseconds;
+			_payloadSender = payloadSender;
+			_logger = logger?.Scoped(nameof(Span));
 			Name = name;
 			Type = type;
 
-			var rnd = new Random();
-			Id = rnd.Next();
+			Id = RandomGenerator.GetRandomBytesAsString(new byte[8]);
+			ParentId = transaction.Id;
+			TransactionId = transaction.Id;
+			TraceId = transaction.TraceId;
 		}
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Action { get; set; }
 
 		/// <summary>
 		/// Any other arbitrary data captured by the agent, optionally provided by the user.
 		/// </summary>
-		public IContext Context => _context.Value;
+		public SpanContext Context => _context.Value;
 
 		/// <inheritdoc />
 		/// <summary>
@@ -40,79 +49,82 @@ namespace Elastic.Apm.Model.Payload
 		/// <value>The duration.</value>
 		public double? Duration { get; set; }
 
-		public int Id { get; set; }
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		public string Id { get; set; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
 
-		[JsonProperty("Stacktrace")]
-		public List<Stacktrace> StackTrace { get; set; }
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonProperty("parent_id")]
+		public string ParentId { get; set; }
 
-		public decimal Start { get; set; }
+		[JsonProperty("stacktrace")]
+		public List<CapturedStackFrame> StackTrace { get; set; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Subtype { get; set; }
 
 		[JsonIgnore]
 		public Dictionary<string, string> Tags => Context.Tags;
 
-		internal Transaction Transaction;
+		//public decimal Start { get; set; }
+		public long Timestamp => _start.ToUnixTimeMilliseconds() * 1000;
 
-		public Guid TransactionId => Transaction.Id;
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonProperty("trace_id")]
+		public string TraceId { get; set; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonProperty("transaction_id")]
+		public string TransactionId { get; set; }
+
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
+
+		public override string ToString() =>
+			$"Span, Id: {Id}, TransactionId: {TransactionId}, ParentId: {ParentId}, TraceId:{TraceId}, Name: {Name}, Type: {Type}";
 
 		public void End()
 		{
+			_logger.Debug()?.Log("Ending {SpanDetails}" , ToString());
 			if (!Duration.HasValue) Duration = (DateTimeOffset.UtcNow - _start).TotalMilliseconds;
-
-			Transaction?.SpansInternal.Add(this);
+			_payloadSender.QueueSpan(this);
 		}
 
-		public void CaptureException(Exception exception, string culprit = null)
-			=> Transaction?.CaptureException(exception, culprit);
-
-		public void CaptureError(string message, string culprit, StackFrame[] frames)
-			=> Transaction?.CaptureError(message, culprit, frames);
-
-		private class ContextImpl : IContext
+		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
 		{
-			private readonly Lazy<Dictionary<string, string>> _tags = new Lazy<Dictionary<string, string>>();
-			public IDb Db { get; set; }
-			public IHttp Http { get; set; }
-			public Dictionary<string, string> Tags => _tags.Value;
+			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
+
+			var ed = new CapturedException
+			{
+				Message = exception.Message,
+				Type = exception.GetType().FullName,
+				Handled = isHandled,
+				Stacktrace = StacktraceHelper.GenerateApmStackTrace(exception, _logger,
+					$"{nameof(Span)}.{nameof(CaptureException)}")
+			};
+
+			_payloadSender.QueueError(new Error(ed, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit /*, Context = Context */ });
 		}
-	}
 
-	internal interface IContext
-	{
-		IDb Db { get; set; }
-		IHttp Http { get; set; }
-		Dictionary<string, string> Tags { get; }
-	}
+		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null)
+		{
+			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
-	internal interface IDb
-	{
-		string Statement { get; set; }
-		string Type { get; set; }
-	}
+			var capturedException = new CapturedException()
+			{
+				Message = message,
+			};
 
-	internal interface IHttp
-	{
-		string Method { get; set; }
-		int StatusCode { get; set; }
-		string Url { get; set; }
-	}
+			if (frames != null)
+			{
+				capturedException.Stacktrace
+					= StacktraceHelper.GenerateApmStackTrace(frames, _logger, $"{nameof(Span)}.{nameof(CaptureError)}");
+			}
 
-	internal class Db : IDb
-	{
-		public string Instance { get; set; }
-		public string Statement { get; set; }
-		public string Type { get; set; }
-	}
-
-	internal class Http : IHttp
-	{
-		public string Method { get; set; }
-		public int StatusCode { get; set; }
-		public string Url { get; set; }
+			_payloadSender.QueueError(
+				new Error(capturedException, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit /*, Context = Context */ });
+		}
 	}
 }

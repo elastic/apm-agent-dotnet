@@ -14,16 +14,18 @@ namespace Elastic.Apm.AspNetCore.Config
 	{
 		internal const string Origin = "Configuration Provider";
 
-		public static (string LevelSubKey, string Level, string Urls, string ServiceName) Keys = (
+		public static (string LevelSubKey, string Level, string Urls, string ServiceName, string SecretToken, string CaptureHeaders) Keys = (
 			LevelSubKey: "LogLevel",
 			Level: "ElasticApm:LogLevel",
 			Urls: "ElasticApm:ServerUrls",
-			ServiceName: "ElasticApm:ServiceName"
+			ServiceName: "ElasticApm:ServiceName",
+			SecretToken: "ElasticApm:SecretToken",
+			CaptureHeaders: "ElasticApm:CaptureHeaders"
 		);
 
 		private readonly IConfiguration _configuration;
 
-		public MicrosoftExtensionsConfig(IConfiguration configuration, AbstractLogger logger) : base(logger)
+		public MicrosoftExtensionsConfig(IConfiguration configuration, IApmLogger logger = null) : base(logger)
 		{
 			_configuration = configuration;
 			_configuration.GetSection("ElasticApm")
@@ -50,6 +52,10 @@ namespace Elastic.Apm.AspNetCore.Config
 
 		public string ServiceName => ParseServiceName(ReadFallBack(Keys.ServiceName, ConfigConsts.ConfigKeys.ServiceName));
 
+		public string SecretToken => ParseSecretToken(ReadFallBack(Keys.SecretToken, ConfigConsts.ConfigKeys.SecretToken));
+
+		public bool CaptureHeaders => ParseCaptureHeaders(ReadFallBack(Keys.CaptureHeaders, ConfigConsts.ConfigKeys.CaptureHeaders));
+
 		private ConfigurationKeyValue Read(string key) => Kv(key, _configuration[key], Origin);
 
 		private ConfigurationKeyValue ReadFallBack(string key, string fallBack)
@@ -69,7 +75,7 @@ namespace Elastic.Apm.AspNetCore.Config
 			if (_logLevel.HasValue && newLogLevel == _logLevel.Value) return;
 
 			_logLevel = newLogLevel;
-			Logger?.LogInfo($"Updated log level to {newLogLevel}");
+			Logger.Info()?.Log("Updated log level to {LogLevel}", newLogLevel);
 		}
 	}
 }

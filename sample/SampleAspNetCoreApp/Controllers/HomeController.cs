@@ -42,7 +42,7 @@ namespace SampleAspNetCoreApp.Controllers
 		[HttpPost]
 		public async Task<IActionResult> AddNewUser([FromForm] string enteredName)
 		{
-			if (String.IsNullOrEmpty(enteredName))
+			if (string.IsNullOrEmpty(enteredName))
 				throw new ArgumentNullException(nameof(enteredName));
 
 			_sampleDataContext.Users.Add(
@@ -58,6 +58,7 @@ namespace SampleAspNetCoreApp.Controllers
 
 		public IActionResult SimplePage()
 		{
+			Response.Headers.Add("X-Additional-Header", "For-Elastic-Apm-Agent");
 			return View();
 		}
 
@@ -84,7 +85,12 @@ namespace SampleAspNetCoreApp.Controllers
 			return Ok();
 		}
 
-		public IActionResult TriggerError() => throw new Exception("This is a test exception!");
+		public IActionResult TriggerError()
+		{
+			Agent.Tracer.CurrentTransaction.Tags["foo"] = "bar";
+			throw new Exception("This is a test exception!");
+		}
+
 
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 		public IActionResult Error() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });

@@ -1,16 +1,21 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Tests.Mocks
 {
-	public class TestLogger : AbstractLogger
+	internal class TestLogger : ConsoleLogger
 	{
-		public TestLogger() : base(LogLevelDefault) { }
+		private readonly StringWriter _writer;
 
-		public TestLogger(LogLevel level) : base(level) { }
+		public TestLogger() : this(LogLevel.Error, new StringWriter()) { }
 
-		public List<string> Lines { get; } = new List<string>();
+		public TestLogger(LogLevel level) : this(level, new StringWriter()) { }
 
-		protected override void PrintLogLine(string logline) => Lines.Add(logline);
+		public TestLogger(LogLevel level, StringWriter writer) : base(level, writer, writer) => _writer = writer;
+
+		public List<string> Lines => _writer.GetStringBuilder().ToString().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).ToList();
 	}
 }

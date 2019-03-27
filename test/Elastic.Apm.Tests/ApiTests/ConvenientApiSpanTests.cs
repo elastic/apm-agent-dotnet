@@ -3,7 +3,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Model.Payload;
+using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Mocks;
+using FluentAssertions;
 using Xunit;
 
 namespace Elastic.Apm.Tests.ApiTests
@@ -22,10 +24,10 @@ namespace Elastic.Apm.Tests.ApiTests
 	{
 		private const string ExceptionMessage = "Foo";
 		private const string SpanName = "TestSpan";
-		private const int SpanSleepLength = 20;
+
 		private const string SpanType = "TestSpan";
 		private const string TransactionName = "ConvenientApiTest";
-		private const int TransactionSleepLength = 10;
+
 		private const string TransactionType = "Test";
 
 		/// <summary>
@@ -35,7 +37,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// </summary>
 		[Fact]
 		public void SimpleAction()
-			=> AssertWith1TransactionAnd1Span(t => { t.CaptureSpan(SpanName, SpanType, () => { Thread.Sleep(SpanSleepLength); }); });
+			=> AssertWith1TransactionAnd1Span(t => { t.CaptureSpan(SpanName, SpanType, () => { WaitHelpers.Sleep2XMinimum(); }); });
 
 		/// <summary>
 		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Action,string,string)" /> method with an exception.
@@ -46,14 +48,15 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void SimpleActionWithException()
 			=> AssertWith1TransactionAnd1SpanAnd1Error(t =>
 			{
-				Assert.Throws<InvalidOperationException>(() =>
+				Action act = () =>
 				{
 					t.CaptureSpan(SpanName, SpanType, new Action(() =>
 					{
-						Thread.Sleep(SpanSleepLength);
+						WaitHelpers.Sleep2XMinimum();
 						throw new InvalidOperationException(ExceptionMessage);
 					}));
-				});
+				};
+				act.Should().Throw<InvalidOperationException>();
 			});
 
 		/// <summary>
@@ -68,8 +71,8 @@ namespace Elastic.Apm.Tests.ApiTests
 				t.CaptureSpan(SpanName, SpanType,
 					s =>
 					{
-						Assert.NotNull(s);
-						Thread.Sleep(SpanSleepLength);
+						s.Should().NotBeNull();
+						WaitHelpers.Sleep2XMinimum();
 					});
 			});
 
@@ -85,15 +88,16 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void SimpleActionWithExceptionAndParameter()
 			=> AssertWith1TransactionAnd1SpanAnd1Error(t =>
 			{
-				Assert.Throws<InvalidOperationException>(() =>
+				Action act = () =>
 				{
 					t.CaptureSpan(SpanName, SpanType, new Action<ISpan>(s =>
 					{
-						Assert.NotNull(s);
-						Thread.Sleep(SpanSleepLength);
+						s.Should().NotBeNull();
+						WaitHelpers.Sleep2XMinimum();
 						throw new InvalidOperationException(ExceptionMessage);
 					}));
-				});
+				};
+				act.Should().Throw<InvalidOperationException>().WithMessage(ExceptionMessage);
 			});
 
 		/// <summary>
@@ -107,11 +111,11 @@ namespace Elastic.Apm.Tests.ApiTests
 			{
 				var res = t.CaptureSpan(SpanName, SpanType, () =>
 				{
-					Thread.Sleep(SpanSleepLength);
+					WaitHelpers.Sleep2XMinimum();
 					return 42;
 				});
 
-				Assert.Equal(42, res);
+				res.Should().Be(42);
 			});
 
 		/// <summary>
@@ -127,12 +131,12 @@ namespace Elastic.Apm.Tests.ApiTests
 			{
 				var res = t.CaptureSpan(SpanName, SpanType, s =>
 				{
-					Assert.NotNull(t);
-					Thread.Sleep(SpanSleepLength);
+					t.Should().NotBeNull();
+					WaitHelpers.Sleep2XMinimum();
 					return 42;
 				});
 
-				Assert.Equal(42, res);
+				res.Should().Be(42);
 			});
 
 		/// <summary>
@@ -147,22 +151,21 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void SimpleActionWithReturnTypeAndExceptionAndParameter()
 			=> AssertWith1TransactionAnd1SpanAnd1Error(t =>
 			{
-				Assert.Throws<InvalidOperationException>(() =>
+				Action act = () =>
 				{
-					var result = t.CaptureSpan(SpanName, SpanType, s =>
+					t.CaptureSpan(SpanName, SpanType, s =>
 					{
-						Assert.NotNull(s);
-						Thread.Sleep(SpanSleepLength);
+						s.Should().NotBeNull();
+						WaitHelpers.Sleep2XMinimum();
 
 						if (new Random().Next(1) == 0) //avoid unreachable code warning.
 							throw new InvalidOperationException(ExceptionMessage);
 
 						return 42;
 					});
-
-					Assert.True(false); //Should not be executed because the agent isn't allowed to catch an exception.
-					Assert.Equal(42, result); //But if it'd not throw it'd be 42.
-				});
+					throw new Exception("CaptureSpan should not eat exception and continue");
+				};
+				act.Should().Throw<InvalidOperationException>().WithMessage(ExceptionMessage);
 			});
 
 		/// <summary>
@@ -177,21 +180,17 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void SimpleActionWithReturnTypeAndException()
 			=> AssertWith1TransactionAnd1SpanAnd1Error(t =>
 			{
-				Assert.Throws<InvalidOperationException>(() =>
+				var alwaysThrow = new Random().Next(1) == 0;
+				Func<int> act = () => t.CaptureSpan(SpanName, SpanType, () =>
 				{
-					var result = t.CaptureSpan(SpanName, SpanType, () =>
-					{
-						Thread.Sleep(SpanSleepLength);
+					WaitHelpers.Sleep2XMinimum();
 
-						if (new Random().Next(1) == 0) //avoid unreachable code warning.
-							throw new InvalidOperationException(ExceptionMessage);
+					if (alwaysThrow) //avoid unreachable code warning.
+						throw new InvalidOperationException(ExceptionMessage);
 
-						return 42;
-					});
-
-					Assert.True(false); //Should not be executed because the agent isn't allowed to catch an exception.
-					Assert.Equal(42, result); //But if it'd not throw it'd be 42.
+					return 42;
 				});
+				act.Should().Throw<InvalidOperationException>().WithMessage(ExceptionMessage);
 			});
 
 		/// <summary>
@@ -203,7 +202,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		public async Task AsyncTask()
 			=> await AssertWith1TransactionAnd1SpanAsync(async t =>
 			{
-				await t.CaptureSpan(SpanName, SpanType, async () => { await Task.Delay(SpanSleepLength); });
+				await t.CaptureSpan(SpanName, SpanType, async () => { await WaitHelpers.Delay2XMinimum(); });
 			});
 
 		/// <summary>
@@ -216,14 +215,16 @@ namespace Elastic.Apm.Tests.ApiTests
 		public async Task AsyncTaskWithException()
 			=> await AssertWith1TransactionAnd1ErrorAnd1SpanAsync(async t =>
 			{
-				await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+				Func<Task> act = async () =>
 				{
 					await t.CaptureSpan(SpanName, SpanType, async () =>
 					{
-						await Task.Delay(SpanSleepLength);
+						await WaitHelpers.Delay2XMinimum();
 						throw new InvalidOperationException(ExceptionMessage);
 					});
-				});
+				};
+				var should = await act.Should().ThrowAsync<InvalidOperationException>();
+				should.WithMessage(ExceptionMessage);
 			});
 
 		/// <summary>
@@ -238,8 +239,8 @@ namespace Elastic.Apm.Tests.ApiTests
 				await t.CaptureSpan(SpanName, SpanType,
 					async s =>
 					{
-						Assert.NotNull(s);
-						await Task.Delay(SpanSleepLength);
+						s.Should().NotBeNull();
+						await WaitHelpers.Delay2XMinimum();
 					});
 			});
 
@@ -254,15 +255,16 @@ namespace Elastic.Apm.Tests.ApiTests
 		public async Task AsyncTaskWithExceptionAndParameter()
 			=> await AssertWith1TransactionAnd1ErrorAnd1SpanAsync(async t =>
 			{
-				await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+				Func<Task> act = async () =>
 				{
 					await t.CaptureSpan(SpanName, SpanType, async s =>
 					{
-						Assert.NotNull(s);
-						await Task.Delay(SpanSleepLength);
+						s.Should().NotBeNull();
+						await WaitHelpers.Delay2XMinimum();
 						throw new InvalidOperationException(ExceptionMessage);
 					});
-				});
+				};
+				await act.Should().ThrowAsync<InvalidOperationException>();
 			});
 
 		/// <summary>
@@ -276,10 +278,10 @@ namespace Elastic.Apm.Tests.ApiTests
 			{
 				var res = await t.CaptureSpan(SpanName, SpanType, async () =>
 				{
-					await Task.Delay(SpanSleepLength);
+					await WaitHelpers.Delay2XMinimum();
 					return 42;
 				});
-				Assert.Equal(42, res);
+				res.Should().Be(42);
 			});
 
 		/// <summary>
@@ -296,12 +298,12 @@ namespace Elastic.Apm.Tests.ApiTests
 				var res = await t.CaptureSpan(SpanName, SpanType,
 					async s =>
 					{
-						Assert.NotNull(s);
-						await Task.Delay(SpanSleepLength);
+						s.Should().NotBeNull();
+						await WaitHelpers.Delay2XMinimum();
 						return 42;
 					});
 
-				Assert.Equal(42, res);
+				res.Should().Be(42);
 			});
 
 		/// <summary>
@@ -316,22 +318,20 @@ namespace Elastic.Apm.Tests.ApiTests
 		public async Task AsyncTaskWithReturnTypeAndExceptionAndParameter()
 			=> await AssertWith1TransactionAnd1ErrorAnd1SpanAsync(async t =>
 			{
-				await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+				Func<Task> act = async () =>
 				{
-					var result = await t.CaptureSpan(SpanName, SpanType, async s =>
+					await t.CaptureSpan(SpanName, SpanType, async s =>
 					{
-						Assert.NotNull(s);
-						await Task.Delay(SpanSleepLength);
+						s.Should().NotBeNull();
+						await WaitHelpers.Delay2XMinimum();
 
 						if (new Random().Next(1) == 0) //avoid unreachable code warning.
 							throw new InvalidOperationException(ExceptionMessage);
 
 						return 42;
 					});
-
-					Assert.True(false); //Should not be executed because the agent isn't allowed to catch an exception.
-					Assert.Equal(42, result); //But if it'd not throw it'd be 42.
-				});
+				};
+				await act.Should().ThrowAsync<InvalidOperationException>();
 			});
 
 		/// <summary>
@@ -344,21 +344,19 @@ namespace Elastic.Apm.Tests.ApiTests
 		public async Task AsyncTaskWithReturnTypeAndException()
 			=> await AssertWith1TransactionAnd1ErrorAnd1SpanAsync(async t =>
 			{
-				await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+				Func<Task> act = async () =>
 				{
-					var result = await t.CaptureSpan(SpanName, SpanType, async () =>
+					await t.CaptureSpan(SpanName, SpanType, async () =>
 					{
-						await Task.Delay(SpanSleepLength);
+						await WaitHelpers.Delay2XMinimum();
 
 						if (new Random().Next(1) == 0) //avoid unreachable code warning.
 							throw new InvalidOperationException(ExceptionMessage);
 
 						return 42;
 					});
-
-					Assert.True(false); //Should not be executed because the agent isn't allowed to catch an exception.
-					Assert.Equal(42, result); //But if it'd not throw it'd be 42.
-				});
+				};
+				await act.Should().ThrowAsync<InvalidOperationException>();
 			});
 
 		/// <summary>
@@ -376,15 +374,16 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 			{
-				await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+				Func<Task> act = async () =>
 				{
 					await t.CaptureSpan(SpanName, SpanType, async () =>
 					{
 						// ReSharper disable once MethodSupportsCancellation, we want to delay before we throw the exception
-						await Task.Delay(SpanSleepLength);
+						await WaitHelpers.Delay2XMinimum();
 						token.ThrowIfCancellationRequested();
 					});
-				});
+				};
+				await act.Should().ThrowAsync<OperationCanceledException>();
 			});
 		}
 
@@ -400,16 +399,16 @@ namespace Elastic.Apm.Tests.ApiTests
 				{
 					t.CaptureSpan(SpanName, SpanType, span =>
 					{
-						Thread.Sleep(SpanSleepLength);
+						WaitHelpers.Sleep2XMinimum();
 						span.Tags["foo"] = "bar";
 					});
 				});
 
 			//According to the Intake API tags are stored on the Context (and not on Spans.Tags directly).
-			Assert.Equal("bar", payloadSender.SpansOnFirstTransaction[0].Context.Tags["foo"]);
+			payloadSender.SpansOnFirstTransaction[0].Context.Tags.Should().Contain("foo","bar");
 
 			//Also make sure the tag is visible directly on Span.Tags.
-			Assert.Equal("bar", payloadSender.SpansOnFirstTransaction[0].Tags["foo"]);
+			payloadSender.SpansOnFirstTransaction[0].Tags.Should().Contain("foo","bar");
 		}
 
 		/// <summary>
@@ -424,16 +423,16 @@ namespace Elastic.Apm.Tests.ApiTests
 				{
 					await t.CaptureSpan(SpanName, SpanType, async span =>
 					{
-						await Task.Delay(SpanSleepLength);
+						await WaitHelpers.Delay2XMinimum();
 						span.Tags["foo"] = "bar";
 					});
 				});
 
 			//According to the Intake API tags are stored on the Context (and not on Spans.Tags directly).
-			Assert.Equal("bar", payloadSender.SpansOnFirstTransaction[0].Context.Tags["foo"]);
+			payloadSender.SpansOnFirstTransaction[0].Context.Tags.Should().Contain("foo","bar");
 
 			//Also make sure the tag is visible directly on Span.Tags.
-			Assert.Equal("bar", payloadSender.SpansOnFirstTransaction[0].Tags["foo"]);
+			payloadSender.SpansOnFirstTransaction[0].Tags.Should().Contain("foo","bar");
 		}
 
 		/// <summary>
@@ -443,27 +442,72 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public async Task TagsOnSpanAsyncError()
 		{
-			var payloadSender = await AssertWith1TransactionAnd1ErrorAnd1SpanAsync(
-				async t =>
+			var payloadSender = await AssertWith1TransactionAnd1ErrorAnd1SpanAsync(async t =>
+			{
+				Func<Task> act = async () =>
 				{
-					await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+					await t.CaptureSpan(SpanName, SpanType, async span =>
 					{
-						await t.CaptureSpan(SpanName, SpanType, async span =>
-						{
-							await Task.Delay(SpanSleepLength);
-							span.Tags["foo"] = "bar";
+						await WaitHelpers.Delay2XMinimum();
+						span.Tags["foo"] = "bar";
 
-							if (new Random().Next(1) == 0) //avoid unreachable code warning.
-								throw new InvalidOperationException(ExceptionMessage);
-						});
+						if (new Random().Next(1) == 0) //avoid unreachable code warning.
+							throw new InvalidOperationException(ExceptionMessage);
 					});
-				});
+				};
+				await act.Should().ThrowAsync<InvalidOperationException>();
+			});
 
 			//According to the Intake API tags are stored on the Context (and not on Spans.Tags directly).
-			Assert.Equal("bar", payloadSender.SpansOnFirstTransaction[0].Context.Tags["foo"]);
+			payloadSender.SpansOnFirstTransaction[0].Context.Tags.Should().Contain("foo","bar");
 
 			//Also make sure the tag is visible directly on Span.Tags.
-			Assert.Equal("bar", payloadSender.SpansOnFirstTransaction[0].Tags["foo"]);
+			payloadSender.SpansOnFirstTransaction[0].Tags.Should().Contain("foo","bar");
+		}
+
+		/// <summary>
+		/// Creates 1 span with db information on it and creates a 2. span with http information on it.
+		/// Makes sure the db and http info is captured on the span's context.
+		/// </summary>
+		[Fact]
+		public void FillSpanContext()
+		{
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
+			{
+				WaitHelpers.SleepMinimum();
+				t.CaptureSpan("SampleSpan1", "SampleSpanType", span =>
+				{
+					span.Context.Http = new Http
+					{
+						Url = "http://mysite.com",
+						Method = "GET",
+						StatusCode = 200,
+					};
+				});
+
+				t.CaptureSpan("SampleSpan2", "SampleSpanType", span =>
+				{
+					span.Context.Db = new Database
+					{
+						Statement = "Select * from MyTable",
+						Type = Database.TypeSql,
+						Instance = "MyInstance"
+					};
+				});
+			});
+
+			payloadSender.Spans[0].Name.Should().Be("SampleSpan1");
+			payloadSender.Spans[0].Context.Http.Url.Should().Be("http://mysite.com");
+			payloadSender.Spans[0].Context.Http.Method.Should().Be("GET");
+			payloadSender.Spans[0].Context.Http.StatusCode.Should().Be(200);
+
+			payloadSender.Spans[1].Name.Should().Be("SampleSpan2");
+			payloadSender.Spans[1].Context.Db.Statement.Should().Be("Select * from MyTable");
+			payloadSender.Spans[1].Context.Db.Type.Should().Be(Database.TypeSql);
+			payloadSender.Spans[1].Context.Db.Instance.Should().Be("MyInstance");
 		}
 
 		/// <summary>
@@ -476,29 +520,28 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 			{
-				await Task.Delay(TransactionSleepLength);
+				await WaitHelpers.DelayMinimum();
 				await func(t);
 			});
 
-			Assert.NotEmpty(payloadSender.Payloads);
-			Assert.NotEmpty(payloadSender.Payloads[0].Transactions);
+			payloadSender.Transactions.Should().NotBeEmpty();
 
-			Assert.Equal(TransactionName, payloadSender.Payloads[0].Transactions[0].Name);
-			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
+			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
+			payloadSender.FirstTransaction.Type.Should().Be(TransactionType);
 
-			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= TransactionSleepLength + SpanSleepLength);
+			var duration = payloadSender.FirstTransaction.Duration;
+			duration.Should().BeGreaterOrEqualToMinimumSleepLength(numberOfSleeps: 3);
 
-			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
+			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
-			Assert.Equal(SpanName, payloadSender.SpansOnFirstTransaction[0].Name);
-			Assert.Equal(SpanType, payloadSender.SpansOnFirstTransaction[0].Type);
+			payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(SpanName);
+			payloadSender.SpansOnFirstTransaction[0].Type.Should().Be(SpanType);
 
 
-			Assert.NotEmpty(payloadSender.Errors);
-			Assert.NotEmpty(payloadSender.Errors[0].Errors);
+			payloadSender.Errors.Should().NotBeEmpty();
 
-			Assert.Equal(typeof(InvalidOperationException).FullName, payloadSender.Errors[0].Errors[0].Exception.Type);
-			Assert.Equal(ExceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
+			payloadSender.FirstError.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
+			payloadSender.FirstError.Exception.Message.Should().Be(ExceptionMessage);
 
 			return payloadSender;
 		}
@@ -514,23 +557,22 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 			{
-				await Task.Delay(TransactionSleepLength);
+				await WaitHelpers.DelayMinimum();
 				await func(t);
 			});
 
-			Assert.NotEmpty(payloadSender.Payloads);
-			Assert.NotEmpty(payloadSender.Payloads[0].Transactions);
+			payloadSender.Transactions.Should().NotBeEmpty();
 
-			Assert.Equal(TransactionName, payloadSender.Payloads[0].Transactions[0].Name);
-			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
+			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
+			payloadSender.FirstTransaction.Type.Should().Be(TransactionType);
 
 			var duration = payloadSender.FirstTransaction.Duration;
-			Assert.True(duration >= TransactionSleepLength + SpanSleepLength, $"Expected {duration} to be greater or equal to: {TransactionSleepLength + SpanSleepLength}");
+			duration.Should().BeGreaterOrEqualToMinimumSleepLength(numberOfSleeps: 3);
 
-			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
+			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
-			Assert.Equal(SpanName, payloadSender.SpansOnFirstTransaction[0].Name);
-			Assert.Equal(SpanType, payloadSender.SpansOnFirstTransaction[0].Type);
+			payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(SpanName);
+			payloadSender.SpansOnFirstTransaction[0].Type.Should().Be(SpanType);
 
 			return payloadSender;
 		}
@@ -545,22 +587,22 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 			{
-				Thread.Sleep(SpanSleepLength);
+				WaitHelpers.SleepMinimum();
 				action(t);
 			});
 
-			Assert.NotEmpty(payloadSender.Payloads);
-			Assert.NotEmpty(payloadSender.Payloads[0].Transactions);
+			payloadSender.Transactions.Should().NotBeEmpty();
 
-			Assert.Equal(TransactionName, payloadSender.Payloads[0].Transactions[0].Name);
-			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
+			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
+			payloadSender.FirstTransaction.Type.Should().Be(TransactionType);
 
-			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
+			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
-			Assert.Equal(SpanName, payloadSender.SpansOnFirstTransaction[0].Name);
-			Assert.Equal(SpanType, payloadSender.SpansOnFirstTransaction[0].Type);
+			payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(SpanName);
+			payloadSender.SpansOnFirstTransaction[0].Type.Should().Be(SpanType);
 
-			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= TransactionSleepLength + SpanSleepLength);
+			var duration = payloadSender.FirstTransaction.Duration;
+			duration.Should().BeGreaterOrEqualToMinimumSleepLength(3);
 
 			return payloadSender;
 		}
@@ -575,28 +617,28 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 			{
-				Thread.Sleep(SpanSleepLength);
+				WaitHelpers.SleepMinimum();
 				action(t);
 			});
 
-			Assert.NotEmpty(payloadSender.Payloads);
-			Assert.NotEmpty(payloadSender.Payloads[0].Transactions);
+			payloadSender.Transactions.Should().NotBeEmpty();
 
-			Assert.Equal(TransactionName, payloadSender.Payloads[0].Transactions[0].Name);
-			Assert.Equal(TransactionType, payloadSender.Payloads[0].Transactions[0].Type);
+			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
+			payloadSender.FirstTransaction.Type.Should().Be(TransactionType);
 
-			Assert.True(payloadSender.Payloads[0].Transactions[0].Duration >= TransactionSleepLength + SpanSleepLength);
+			var duration = payloadSender.FirstTransaction.Duration;
+			duration.Should().BeGreaterOrEqualToMinimumSleepLength(3);
 
-			Assert.NotEmpty(payloadSender.SpansOnFirstTransaction);
+			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
-			Assert.Equal(SpanName, payloadSender.SpansOnFirstTransaction[0].Name);
-			Assert.Equal(SpanType, payloadSender.SpansOnFirstTransaction[0].Type);
+			payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(SpanName);
+			payloadSender.SpansOnFirstTransaction[0].Type.Should().Be(SpanType);
 
-			Assert.NotEmpty(payloadSender.Errors);
-			Assert.NotEmpty(payloadSender.Errors[0].Errors);
+			payloadSender.Errors.Should().NotBeEmpty();
+			payloadSender.Errors.Should().NotBeEmpty();
 
-			Assert.Equal(typeof(InvalidOperationException).FullName, payloadSender.Errors[0].Errors[0].Exception.Type);
-			Assert.Equal(ExceptionMessage, payloadSender.Errors[0].Errors[0].Exception.Message);
+			payloadSender.FirstError.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
+			payloadSender.FirstError.Exception.Message.Should().Be(ExceptionMessage);
 		}
 	}
 }

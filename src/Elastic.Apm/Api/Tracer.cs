@@ -11,13 +11,13 @@ namespace Elastic.Apm.Api
 {
 	internal class Tracer : ITracer
 	{
-		private readonly AbstractLogger _logger;
+		private readonly ScopedLogger _logger;
 		private readonly IPayloadSender _sender;
 		private readonly Service _service;
 
-		public Tracer(AbstractLogger logger, Service service, IPayloadSender payloadSender)
+		public Tracer(IApmLogger logger, Service service, IPayloadSender payloadSender)
 		{
-			_logger = logger;
+			_logger = logger?.Scoped(nameof(Tracer));
 			_service = service;
 			_sender = payloadSender;
 		}
@@ -37,6 +37,7 @@ namespace Elastic.Apm.Api
 			};
 
 			Agent.TransactionContainer.Transactions.Value = retVal;
+			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);
 			return retVal;
 		}
 
@@ -158,14 +159,14 @@ namespace Elastic.Apm.Api
 						ExceptionFilter.Capture(t.Exception, transaction);
 				}
 				else
-					transaction.CaptureError("Task faulted", "A task faulted", new StackTrace().GetFrames());
+					transaction.CaptureError("Task faulted", "A task faulted", new StackTrace(true).GetFrames());
 			}
 			else if (t.IsCanceled)
 			{
 				if (t.Exception == null)
 				{
 					transaction.CaptureError("Task canceled", "A task was canceled",
-						new StackTrace().GetFrames()); //TODO: this async stacktrace is hard to use, make it readable!
+						new StackTrace(true).GetFrames()); //TODO: this async stacktrace is hard to use, make it readable!
 				}
 				else
 					transaction.CaptureException(t.Exception);

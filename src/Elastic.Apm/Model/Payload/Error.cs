@@ -1,56 +1,48 @@
 ﻿using System;
-using System.Collections.Generic;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
+using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model.Payload
 {
 	internal class Error : IError
 	{
-		public List<IErrorDetail> Errors { get; set; }
-		public Service Service { get; set; }
+		private readonly DateTimeOffset _start;
 
-		public class ErrorDetail : IErrorDetail
+		public Error(CapturedException capturedException, string traceId, string transactionId, string parentId) : this(capturedException) =>
+			(TraceId, TransactionId, ParentId) = (traceId, transactionId, parentId);
+
+		public Error(CapturedException capturedException)
 		{
-			public ErrorDetail()
-			{
-				Timestamp = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.FFFZ");
-				Id = Guid.NewGuid();
-			}
+			_start = DateTimeOffset.UtcNow;
+			var idBytes = new byte[8];
+			RandomGenerator.GetRandomBytes(idBytes);
+			Id = BitConverter.ToString(idBytes).Replace("-", "");
 
-			internal Context Context { get; set; }
-			public string Culprit { get; set; }
-			public ICapturedException Exception { get; set; }
-			public Guid Id { get; }
-			public string Timestamp { get; }
-			public TransactionReference Transaction { get; set; }
-
-			public class TransactionReference
-			{
-				public Guid Id { get; set; }
-			}
+			Exception = capturedException;
 		}
-	}
 
-	internal class CapturedException : ICapturedException
-	{
-		internal string Code { get; set; } //TODO
+		public Context Context { get; set; }
 
-		public bool Handled { get; set; }
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		public string Culprit { get; set; }
 
-		/// <summary>
-		/// The exception message, see: <see cref="Exception.Message" />
-		/// </summary>
-		public string Message { get; set; }
+		public CapturedException Exception { get; set; }
 
-		public string Module { get; set; }
+		public string Id { get; }
 
-		[JsonProperty("Stacktrace")]
-		public List<Stacktrace> StacktTrace { get; set; }
+		[JsonProperty("parent_id")]
+		public string ParentId { get; set; }
 
-		/// <summary>
-		/// The type of the exception class
-		/// </summary>
-		public string Type { get; set; }
+		public long Timestamp => _start.ToUnixTimeMilliseconds() * 1000;
+
+		[JsonProperty("trace_id")]
+		public string TraceId { get; set; }
+
+		[JsonProperty("transaction_id")]
+		public string TransactionId { get; set; }
+
+		public override string ToString() => $"Error, Id: {Id}, TraceId: {TraceId}, ParentId: {ParentId}, TransactionId: {TransactionId}";
 	}
 }

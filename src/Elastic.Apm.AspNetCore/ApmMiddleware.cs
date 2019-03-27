@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Model.Payload;
 using Microsoft.AspNetCore.Http;
 
 [assembly:
@@ -20,11 +21,13 @@ namespace Elastic.Apm.AspNetCore
 	{
 		private readonly RequestDelegate _next;
 		private readonly Tracer _tracer;
+		private readonly IConfigurationReader _configurationReader;
 
-		public ApmMiddleware(RequestDelegate next, Tracer tracer)
+		public ApmMiddleware(RequestDelegate next, Tracer tracer, IConfigurationReader configurationReader)
 		{
 			_next = next;
 			_tracer = tracer;
+			_configurationReader = configurationReader;
 		}
 
 		public async Task InvokeAsync(HttpContext context)
@@ -32,22 +35,32 @@ namespace Elastic.Apm.AspNetCore
 			var transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
 				ApiConstants.TypeRequest);
 
-			transaction.Context.Request = new Request
+			var url = new Url
 			{
-				Method = context.Request.Method,
+				Full = context.Request?.Path.Value,
+				HostName = context.Request.Host.Host,
+				Protocol = GetProtocolName(context.Request.Protocol),
+				Raw = context.Request?.Path.Value //TODO
+			};
+
+			Dictionary<string, string> requestHeaders = null;
+			if (_configurationReader.CaptureHeaders)
+			{
+				requestHeaders = new Dictionary<string, string>();
+
+				foreach (var header in context.Request.Headers)
+					requestHeaders.Add(header.Key, header.Value.ToString());
+			}
+
+			transaction.Context.Request = new Request(context.Request.Method, url)
+			{
 				Socket = new Socket
 				{
 					Encrypted = context.Request.IsHttps,
 					RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
 				},
-				Url = new Url
-				{
-					Full = context.Request?.Path.Value,
-					HostName = context.Request.Host.Host,
-					Protocol = GetProtocolName(context.Request.Protocol),
-					Raw = context.Request?.Path.Value //TODO
-				},
-				HttpVersion = GetHttpVersion(context.Request.Protocol)
+				HttpVersion = GetHttpVersion(context.Request.Protocol),
+				Headers = requestHeaders
 			};
 
 			try
@@ -57,12 +70,22 @@ namespace Elastic.Apm.AspNetCore
 			catch (Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
 			finally
 			{
-				transaction.Result =
-					$"{GetProtocolName(context.Request.Protocol)} {context.Response.StatusCode.ToString()[0]}xx";
+				Dictionary<string, string> responseHeaders = null;
+
+				if (_configurationReader.CaptureHeaders)
+				{
+					responseHeaders = new Dictionary<string, string>();
+
+					foreach (var header in context.Response.Headers)
+						responseHeaders.Add(header.Key, header.Value.ToString());
+				}
+
+				transaction.Result = $"{GetProtocolName(context.Request.Protocol)} {context.Response.StatusCode.ToString()[0]}xx";
 				transaction.Context.Response = new Response
 				{
 					Finished = context.Response.HasStarted, //TODO ?
-					StatusCode = context.Response.StatusCode
+					StatusCode = context.Response.StatusCode,
+					Headers = responseHeaders
 				};
 
 				transaction.End();

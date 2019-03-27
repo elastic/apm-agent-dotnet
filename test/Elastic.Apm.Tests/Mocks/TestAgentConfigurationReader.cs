@@ -12,24 +12,32 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _logLevel;
 		private readonly string _serverUrls;
 		private readonly string _serviceName;
+		private readonly string _secretToken;
+		private readonly string _captureHeaders;
 
 		public TestAgentConfigurationReader(
-			AbstractLogger logger,
+			IApmLogger logger,
+			string logLevel = null,
 			string serverUrls = null,
-			string logLevel = "Debug",
-			string serviceName = null
+			string serviceName = null,
+			string secretToken = null,
+			string captureHeaders = null
 		) : base(logger)
 		{
-			Logger = logger;
+			Logger = logger ?? new TestLogger();
 			_serverUrls = serverUrls;
 			_logLevel = logLevel;
 			_serviceName = serviceName;
+			_secretToken = secretToken;
+			_captureHeaders = captureHeaders;
 		}
 
-		public new AbstractLogger Logger { get; }
+		public new IApmLogger Logger { get; }
 
 		public LogLevel LogLevel => ParseLogLevel(Kv(ConfigConsts.ConfigKeys.Level, _logLevel, Origin));
 		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Kv(ConfigConsts.ConfigKeys.Urls, _serverUrls, Origin));
 		public string ServiceName => ParseServiceName(Kv(ConfigConsts.ConfigKeys.ServiceName, _serviceName, Origin));
+		public string SecretToken => ParseSecretToken(Kv(ConfigConsts.ConfigKeys.SecretToken, _secretToken, Origin));
+		public bool CaptureHeaders => ParseCaptureHeaders(Kv(ConfigConsts.ConfigKeys.CaptureHeaders, _captureHeaders, Origin));
 	}
 }

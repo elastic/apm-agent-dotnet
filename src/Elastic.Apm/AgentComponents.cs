@@ -1,4 +1,5 @@
-﻿using Elastic.Apm.Api;
+﻿using System;
+using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
@@ -6,26 +7,28 @@ using Elastic.Apm.Report;
 
 namespace Elastic.Apm
 {
-	public class AgentComponents : IApmAgent
+	public class AgentComponents : IApmAgent, IDisposable
 	{
 		public AgentComponents(
-			AbstractLogger logger = null,
+			IApmLogger logger = null,
 			IConfigurationReader configurationReader = null,
-			Service service = null,
 			IPayloadSender payloadSender = null
 		)
 		{
-			Logger = logger ?? ConsoleLogger.Instance;
+
+			Logger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 			ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(Logger);
-			Service = service ?? Service.GetDefaultService(ConfigurationReader);
-			PayloadSender = payloadSender ?? new PayloadSender(Logger, ConfigurationReader);
+
+			Service =  Service.GetDefaultService(ConfigurationReader);
+
+			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigurationReader, Service);
 			TracerInternal = new Tracer(Logger, Service, PayloadSender);
 			TransactionContainer = new TransactionContainer();
 		}
 
 		public IConfigurationReader ConfigurationReader { get; }
 
-		public AbstractLogger Logger { get; }
+		public IApmLogger Logger { get; }
 
 		public IPayloadSender PayloadSender { get; }
 
@@ -34,12 +37,20 @@ namespace Elastic.Apm
 		/// automatically populates it based on the entry assembly.
 		/// </summary>
 		/// <value>The service.</value>
-		private Service Service { get; }
+		public Service Service { get; }
 
 		public ITracer Tracer => TracerInternal;
 
-		internal Tracer TracerInternal { get; }
+		private Tracer TracerInternal { get; }
 
 		internal TransactionContainer TransactionContainer { get; }
+
+		public void Dispose()
+		{
+			if (PayloadSender is IDisposable disposable)
+			{
+				disposable?.Dispose();
+			}
+		}
 	}
 }

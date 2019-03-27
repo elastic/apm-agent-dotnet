@@ -9,5 +9,7 @@ namespace Elastic.Apm.Config
 		LogLevel LogLevel { get; }
 		IReadOnlyList<Uri> ServerUrls { get; }
 		string ServiceName { get; }
+		string SecretToken { get; }
+		bool CaptureHeaders { get; }
 	}
 }

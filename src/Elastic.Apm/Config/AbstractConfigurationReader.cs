@@ -8,31 +8,69 @@ namespace Elastic.Apm.Config
 {
 	public abstract class AbstractConfigurationReader
 	{
-		protected AbstractConfigurationReader(AbstractLogger logger) => Logger = logger;
+		protected AbstractConfigurationReader(IApmLogger logger) => ScopedLogger = logger?.Scoped(GetType().Name);
 
-		protected AbstractLogger Logger { get; }
+		private ScopedLogger ScopedLogger { get; }
+
+		protected IApmLogger Logger => ScopedLogger;
 
 		protected static ConfigurationKeyValue Kv(string key, string value, string origin) =>
 			new ConfigurationKeyValue(key, value, origin);
 
-		protected internal static LogLevel ParseLogLevel(string value) =>
-			Enum.TryParse<LogLevel>(value, out var logLevel) ? logLevel : AbstractLogger.LogLevelDefault;
+		protected internal static bool TryParseLogLevel(string value, out LogLevel? level)
+		{
+			level = null;
+			if (string.IsNullOrEmpty(value)) return false;
+			level = DefaultLogLevel();
+			return level != null;
+
+			LogLevel? DefaultLogLevel()
+			{
+				switch (value.ToLowerInvariant())
+				{
+					case "trace": return LogLevel.Trace;
+					case "debug": return LogLevel.Debug;
+					case "information":
+					case "info": return LogLevel.Information;
+					case "warning": return LogLevel.Warning;
+					case "error": return LogLevel.Error;
+					case "critical": return LogLevel.Critical;
+					case "none": return LogLevel.None;
+					default: return null;
+				}
+			}
+		}
+
+		protected string ParseSecretToken(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return null;
+			return kv.Value;
+		}
+
+		protected bool ParseCaptureHeaders(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return true;
+			if (bool.TryParse(kv.Value, out var value)) return value;
+			return true;
+		}
 
 		protected LogLevel ParseLogLevel(ConfigurationKeyValue kv)
 		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return AbstractLogger.LogLevelDefault;
+			if (TryParseLogLevel(kv?.Value, out var level)) return level.Value;
 
-			if (Enum.TryParse<LogLevel>(kv.Value, out var logLevel)) return logLevel;
+			if (kv?.Value == null)
+				Logger?.Debug()?.Log("No log level provided. Defaulting to log level '{DefaultLogLevel}'", ConsoleLogger.DefaultLogLevel);
+			else
+			{
+				Logger?.Error()?.Log("Failed parsing log level from {Origin}: {Key}, value: {Value}. Defaulting to log level '{DefaultLogLevel}'",
+					kv.ReadFrom, kv.Key, kv.Value, ConsoleLogger.DefaultLogLevel);
+			}
 
-			Logger.LogError("Config",
-				$"Failed parsing log level from {kv.ReadFrom}: {kv.Key}, value: {kv.Value}. Defaulting to log level 'Error'");
-
-			return AbstractLogger.LogLevelDefault;
+			return ConsoleLogger.DefaultLogLevel;
 		}
 
 		protected IReadOnlyList<Uri> ParseServerUrls(ConfigurationKeyValue kv)
 		{
-			var name = GetType().Name;
 			var list = new List<Uri>();
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return LogAndReturnDefault().AsReadOnly();
 
@@ -45,7 +83,7 @@ namespace Elastic.Apm.Config
 					continue;
 				}
 
-				Logger.LogError(name, $"Failed parsing server URL from {kv.ReadFrom}: {kv.Key}, value: {u}");
+				Logger?.Error()?.Log("Failed parsing server URL from {Origin}: {Key}, value: {Value}", kv.ReadFrom, kv.Key, u);
 			}
 
 			return list.Count == 0 ? LogAndReturnDefault().AsReadOnly() : list.AsReadOnly();
@@ -53,7 +91,7 @@ namespace Elastic.Apm.Config
 			List<Uri> LogAndReturnDefault()
 			{
 				list.Add(ConfigConsts.DefaultServerUri);
-				Logger.LogDebug(name, $"Using default ServerUrl: {ConfigConsts.DefaultServerUri}");
+				Logger?.Debug()?.Log("Using default ServerUrl: {ServerUrl}", ConfigConsts.DefaultServerUri);
 				return list;
 			}
 
@@ -73,8 +111,9 @@ namespace Elastic.Apm.Config
 			var retVal = kv.Value;
 			if (string.IsNullOrEmpty(retVal))
 			{
-				Logger.LogInfo("Config", "The agent was started without a service name. The service name will be automatically calculated.");
+				Logger?.Info()?.Log("The agent was started without a service name. The service name will be automatically calculated.");
 				retVal = Assembly.GetEntryAssembly()?.GetName().Name;
+				Logger?.Info()?.Log("The agent was started without a service name. The Service name sis {ServiceName}", retVal);
 			}
 
 			if (string.IsNullOrEmpty(retVal))
@@ -95,8 +134,8 @@ namespace Elastic.Apm.Config
 
 			if (string.IsNullOrEmpty(retVal))
 			{
-				Logger.LogError("Config", "Failed calculating service name, the service name will be \'unknown\'." +
-					$" You can fix this by setting the service name to a specific value (e.g. by using the environment variable {ConfigConsts.ConfigKeys.ServiceName})");
+				Logger?.Error()?.Log("Failed calculating service name, the service name will be 'unknown'." +
+					" You can fix this by setting the service name to a specific value (e.g. by using the environment variable {ServiceNameVariable})", ConfigConsts.ConfigKeys.ServiceName);
 				retVal = "unknown";
 			}
 

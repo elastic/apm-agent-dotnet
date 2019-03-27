@@ -14,9 +14,9 @@ namespace Elastic.Apm.EntityFrameworkCore
 	{
 		private readonly ConcurrentDictionary<Guid, Span> _spans = new ConcurrentDictionary<Guid, Span>();
 
-		public EfCoreDiagnosticListener(IApmAgent agent) => Logger = agent.Logger;
+		public EfCoreDiagnosticListener(IApmAgent agent) => Logger = agent.Logger?.Scoped(nameof(EfCoreDiagnosticListener));
 
-		private AbstractLogger Logger { get; }
+		private ScopedLogger Logger { get; }
 
 		public string Name => "Microsoft.EntityFrameworkCore";
 
@@ -42,11 +42,11 @@ namespace Elastic.Apm.EntityFrameworkCore
 					{
 						if (_spans.TryRemove(commandExecutedEventData.CommandId, out var span))
 						{
-							span.Context.Db = new Db
+							span.Context.Db = new Database
 							{
 								Statement = commandExecutedEventData.Command.CommandText,
 								Instance = commandExecutedEventData.Command.Connection.Database,
-								Type = "sql"
+								Type = Database.TypeSql
 							};
 							span.Duration = commandExecutedEventData.Duration.TotalMilliseconds;
 

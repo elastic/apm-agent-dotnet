@@ -2,14 +2,14 @@
 
 namespace Elastic.Apm.Model.Payload
 {
-	internal class Stacktrace
+	internal class CapturedStackFrame
 	{
-		[JsonProperty("Filename")]
+		[JsonProperty("filename")]
 		public string FileName { get; set; }
 
 		public string Function { get; set; }
 
-		[JsonProperty("Lineno")]
+		[JsonProperty("lineno")]
 		public int LineNo { get; set; }
 
 		public string Module { get; set; }
