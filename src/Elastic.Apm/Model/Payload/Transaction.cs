@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
@@ -41,9 +40,7 @@ namespace Elastic.Apm.Model.Payload
 				TraceId = RandomGenerator.GetRandomBytesAsString(idBytes);
 			}
 			else
-			{
 				TraceId = traceId;
-			}
 
 			ParentId = parentId;
 			SpanCount = new SpanCount();
@@ -69,6 +66,10 @@ namespace Elastic.Apm.Model.Payload
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonProperty("parent_id")]
+		public string ParentId { get; set; }
+
 		/// <inheritdoc />
 		/// <summary>
 		/// A string describing the result of the transaction.
@@ -93,13 +94,15 @@ namespace Elastic.Apm.Model.Payload
 		public string TraceId { get; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
-		[JsonProperty("parent_id")]
-		public string ParentId { get; set; }
-
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
 
-		public override string ToString() => $"Transaction, Id: {Id}, TraceId: {TraceId}, Name: {Name}, Type: {Type}";
+		public override string ToString() => new ToStringBuilder(nameof(Transaction))
+		{
+			{ "Id", Id },
+			{ "TraceId", TraceId },
+			{ "Name", Name },
+			{ "Type", Type }
+		}.ToString();
 
 		public void End()
 		{
@@ -137,7 +140,7 @@ namespace Elastic.Apm.Model.Payload
 				Type = exception.GetType().FullName,
 				Handled = isHandled,
 				Stacktrace = StacktraceHelper.GenerateApmStackTrace(exception, _logger,
-					$"{nameof(Transaction)}.{nameof(CaptureException)}"),
+					$"{nameof(Transaction)}.{nameof(CaptureException)}")
 			};
 
 			_sender.QueueError(new Error(ed, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit, Context = Context });
@@ -147,9 +150,9 @@ namespace Elastic.Apm.Model.Payload
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
-			var ed = new CapturedException()
+			var ed = new CapturedException
 			{
-				Message = message,
+				Message = message
 			};
 
 			if (frames != null)
