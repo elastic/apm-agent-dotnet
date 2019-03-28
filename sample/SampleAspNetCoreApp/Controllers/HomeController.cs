@@ -56,14 +56,30 @@ namespace SampleAspNetCoreApp.Controllers
 			return Redirect("/Home/Index");
 		}
 
-		public async Task<IActionResult> SimplePage()
+		public IActionResult SimplePage()
 		{
 			Response.Headers.Add("X-Additional-Header", "For-Elastic-Apm-Agent");
-
-			var httpClient = new HttpClient();
-			var retVal = await httpClient.GetAsync("http://localhost:5005/api/Values");
-			Console.WriteLine(await retVal.Content.ReadAsStringAsync());
 			return View();
+		}
+
+		public async Task<IActionResult> DistributedTracingMiniSample()
+		{
+			var httpClient = new HttpClient();
+
+			try
+			{
+				var retVal = await httpClient.GetAsync("http://localhost:5050/api/values");
+
+				var resultInStr = await retVal.Content.ReadAsStringAsync();
+				var list = resultInStr.Split(',');
+				return View(list.ToList());
+			}
+			catch (Exception e)
+			{
+				ViewData["Fail"] =
+					$"Failed calling http://localhost:5050/api/values, make sure the WebApiSample listens on localhost:5050, {e.Message}";
+				return View();
+			}
 		}
 
 		public async Task<IActionResult> ChartPage()

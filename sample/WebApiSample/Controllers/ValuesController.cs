@@ -15,9 +15,19 @@ namespace WebApiSample.Controllers
 		[HttpGet]
 		public async Task<ActionResult<IEnumerable<string>>> Get()
 		{
-			var httpClient = new HttpClient();
-			var elasticRes = await httpClient.GetAsync("https://elastic.co");
-			return new string[] { "value1", "value2", elasticRes.IsSuccessStatusCode.ToString() };
+			var lastValue = "call to elastic.co: ";
+			try
+			{
+				var httpClient = new HttpClient();
+				var elasticRes = await httpClient.GetAsync("https://elastic.co");
+				lastValue += elasticRes.StatusCode;
+			}
+			catch (Exception e)
+			{
+				lastValue += "failed";
+			}
+
+			return new[] { "value1", "value2", lastValue };
 		}
 
 		// GET api/values/5

@@ -1,0 +1,27 @@
+@model List<string>
+
+<div class="alert alert-info" role="alert">
+	This sample demonstrates distributed tracing support. The app creates an HTTP GET request to "TODO URL". In case the WebApiSample listen on that URL
+	you see some values from the Web API sample below. In this case the agent will create a trace and in Kibana you will be able to see that the two apps are connected.
+</div>
+
+
+<div>
+	Data from the WebApiSample service:
+	
+	@if(ViewData["Fail"] == null)
+	{
+		<ul>
+			@{
+				foreach (var item in @Model)
+				{
+					<li>@item</li>
+				}
+			}
+		</ul>
+	}
+	else
+	{
+		@ViewData["Fail"];
+	}
+</div>
