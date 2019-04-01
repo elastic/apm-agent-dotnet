@@ -3,21 +3,22 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.DistributedTracing
 {
-	//00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
-
-
 	/// <summary>
-	/// This is an implementation of the "https://w3c.github.io/distributed-tracing/report-trace-context.html#traceparent-field" w3c traceparent header draft.
-	/// traceparent: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
-	/// (_________)  () (______________________________) (______________) ()
-	///      v       v                 v                        v         v
-	/// Header name  Version        Trace-Id                Span-Id     Flags
+	/// This is an implementation of the
+	/// "https://www.w3.org/TR/trace-context/#traceparent-field" w3c 'traceparent' header draft.
+	/// elastic-apm-traceparent: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
+	/// (______________________)  () (______________________________) (______________) ()
+	///      v                     v                 v                        v         v
+	///  Header name           Version           Trace-Id                Span-Id     Flags
+	/// Since the w3c document is just a draft at the moment,
+	/// we don't use the official header name but prepend the custom prefix "Elastic-Apm-".
 	/// </summary>
 	internal struct TraceParent
 	{
-
 		private const int TraceParentLength = 55;
 		private const byte FlagRecorded = 1; // 00000001
+
+		internal const string TraceParentHeaderName = "elastic-apm-traceparent";
 
 		public static bool ValidateTraceParentValue(string traceParentValue, IApmLogger logger)
 		{
@@ -49,24 +50,13 @@ namespace Elastic.Apm.DistributedTracing
 		public static string GetTraceParentVal(string traceId, string spanId)
 			=> $"00-{traceId}-{spanId}-01";
 
-		public static (string parent, string traceId) ParseTraceParentString(string traceParent)
+		public static (string parent, string traceId, bool isRecordedFalgActive) ParseTraceParentString(string traceParent)
 		{
 			var traceParentByte = traceParent.Substring(3, 32);
 			var parentId = traceParent.Substring(36, 16);
+			var isRecordedFlagActive = (Convert.ToByte(traceParent.Substring(53, 2)) & FlagRecorded) == FlagRecorded;
 
-			return (traceParentByte, parentId);
-		}
-
-
-		internal const string TraceParentHeaderName = "traceparent";
-
-		private static byte[] StringToByteArray(string hex)
-		{
-			var NumberChars = hex.Length;
-			var bytes = new byte[NumberChars / 2];
-			for (var i = 0; i < NumberChars; i += 2)
-				bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
-			return bytes;
+			return (traceParentByte, parentId, isRecordedFlagActive);
 		}
 	}
 }

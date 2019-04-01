@@ -46,9 +46,10 @@ namespace Elastic.Apm.AspNetCore
 				{
 					var traceId = string.Empty;
 					var parentId = string.Empty;
+					var isRecorded = false; //Currently only used for logging. Later it can be useful to make sampling decisions.
 					try
 					{
-						(traceId, parentId) = TraceParent.ParseTraceParentString(headerValue);
+						(traceId, parentId, isRecorded) = TraceParent.ParseTraceParentString(headerValue);
 					}
 					catch (Exception e)
 					{
@@ -60,8 +61,8 @@ namespace Elastic.Apm.AspNetCore
 							ApiConstants.TypeRequest, traceId, parentId);
 
 						_logger.Debug()
-							?.Log("Incoming request with {TraceParentHeaderName} header. TraceId: {TraceId}, ParentId: {ParentId}. Starting Trace.",
-								TraceParent.TraceParentHeaderName, traceId, parentId);
+							?.Log("Incoming request with {TraceParentHeaderName} header. TraceId: {TraceId}, ParentId: {ParentId}, Recorded: {IsRecorded}. Starting Trace.",
+								TraceParent.TraceParentHeaderName, traceId, parentId, isRecorded);
 					}
 				}
 				else

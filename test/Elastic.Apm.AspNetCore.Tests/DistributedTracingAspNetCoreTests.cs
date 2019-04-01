@@ -1,10 +1,8 @@
-using System;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.EntityFrameworkCore;
-using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
@@ -28,12 +26,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 	{
 		private readonly MockPayloadSender _payloadSender1 = new MockPayloadSender();
 		private readonly MockPayloadSender _payloadSender2 = new MockPayloadSender();
-		private readonly Task _task1;
-		private readonly Task _task2;
 
 		public DistributedTracingAspNetCoreTests()
 		{
-			_task1 = SampleAspNetCoreApp.Program.CreateWebHostBuilder(null)
+			var unused = SampleAspNetCoreApp.Program.CreateWebHostBuilder(null)
 				.ConfigureServices(services =>
 					{
 						var connection = @"Data Source=blogging.db";
@@ -53,7 +49,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.Build()
 				.RunAsync();
 
-			_task2 = WebApiSample.Program.CreateWebHostBuilder(null)
+			var unused1 = WebApiSample.Program.CreateWebHostBuilder(null)
 				.ConfigureServices(services =>
 				{
 					services.AddMvc()

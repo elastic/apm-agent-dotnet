@@ -11,14 +11,27 @@ namespace Elastic.Apm.Tests
 	{
 
 		[Fact]
-		public void ParseValidTraceParent()
+		public void ParseValidTraceParentRecorded()
 		{
 			const string traceParent = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01";
 
-			var(parent, traceId) = TraceParent.ParseTraceParentString(traceParent);
+			var(parent, traceId, isRecorded) = TraceParent.ParseTraceParentString(traceParent);
 
 			parent.Should().Be("0af7651916cd43dd8448eb211c80319c");
 			traceId.Should().Be("b7ad6b7169203331");
+			isRecorded.Should().BeTrue();
+		}
+
+		[Fact]
+		public void ParseValidTraceParentNotRecorded()
+		{
+			const string traceParent = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-00";
+
+			var(parent, traceId, isRecorded) = TraceParent.ParseTraceParentString(traceParent);
+
+			parent.Should().Be("0af7651916cd43dd8448eb211c80319c");
+			traceId.Should().Be("b7ad6b7169203331");
+			isRecorded.Should().BeFalse();
 		}
 
 		[Fact]

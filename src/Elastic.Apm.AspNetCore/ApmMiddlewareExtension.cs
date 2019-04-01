@@ -8,7 +8,6 @@ using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model.Payload;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 

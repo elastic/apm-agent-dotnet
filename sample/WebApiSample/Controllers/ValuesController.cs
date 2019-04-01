@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +20,7 @@ namespace WebApiSample.Controllers
 				var elasticRes = await httpClient.GetAsync("https://elastic.co");
 				lastValue += elasticRes.StatusCode;
 			}
-			catch (Exception e)
+			catch
 			{
 				lastValue += "failed";
 			}
