@@ -55,7 +55,6 @@ namespace Elastic.Apm.DiagnosticListeners
 					var transaction = Agent.TransactionContainer.Transactions?.Value;
 
 					transaction?.CaptureException(exception, "Failed outgoing HTTP request");
-					//!!TODO: We should set the status code here! the span must be updated!
 					//TODO: we don't know if exception is handled, currently reports handled = false
 					break;
 				case "System.Net.Http.HttpRequestOut.Start": //TODO: look for consts
