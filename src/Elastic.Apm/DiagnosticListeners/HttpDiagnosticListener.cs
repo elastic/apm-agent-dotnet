@@ -73,7 +73,9 @@ namespace Elastic.Apm.DiagnosticListeners
 
 					if (ProcessingRequests.TryAdd(request, span))
 					{
-						request.Headers.Add(TraceParent.TraceParentHeaderName, TraceParent.GetTraceParentVal(span.TraceId, span.Id));
+						if(!request.Headers.Contains(TraceParent.TraceParentHeaderName))
+							request.Headers.Add(TraceParent.TraceParentHeaderName, TraceParent.GetTraceParentVal(span.TraceId, span.Id));
+
 						span.Context.Http = new Http
 						{
 							Url = request?.RequestUri?.ToString(),
