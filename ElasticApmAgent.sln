@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2050
@@ -41,6 +41,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.PerfTests", "test\Elastic.Apm.PerfTests\Elastic.Apm.PerfTests.csproj", "{F069CE99-F418-4BC2-9E44-8F03497D8DA8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspNetFullFrameworkSampleApp", "sample\AspNetFullFrameworkSampleApp\AspNetFullFrameworkSampleApp.csproj", "{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApiSample", "sample\WebApiSample\WebApiSample.csproj", "{319E2094-D2E1-46C5-8985-9693CD8DDCBD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -91,6 +93,10 @@ Global
 		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{319E2094-D2E1-46C5-8985-9693CD8DDCBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{319E2094-D2E1-46C5-8985-9693CD8DDCBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{319E2094-D2E1-46C5-8985-9693CD8DDCBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{319E2094-D2E1-46C5-8985-9693CD8DDCBD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -108,6 +114,7 @@ Global
 		{1AAB1A30-42C0-4C76-AE2E-9D7293945D80} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{F069CE99-F418-4BC2-9E44-8F03497D8DA8} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
+		{319E2094-D2E1-46C5-8985-9693CD8DDCBD} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}
