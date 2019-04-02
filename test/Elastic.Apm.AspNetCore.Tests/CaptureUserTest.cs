@@ -15,16 +15,19 @@ using Xunit;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
-	public class CaptureUserTest
+	[Collection("DiagnosticListenerTest")]
+	public class CaptureUserTest : IDisposable
 	{
 		private readonly MockPayloadSender _payloadSender = new MockPayloadSender();
+		private ApmAgent _agent;
 
 		public CaptureUserTest()
 		{
 			var unused = Program.CreateWebHostBuilder(null)
 				.Configure(app =>
 				{
-					app.UseElasticApm(new ApmAgent(new AgentComponents(payloadSender: _payloadSender)));
+					_agent = new ApmAgent(new AgentComponents(payloadSender: _payloadSender));
+					app.UseElasticApm(_agent);
 					Startup.ConfigureAllExceptAgent(app);
 				})
 				.ConfigureServices(services =>
@@ -76,5 +79,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.Context.User.UserName.Should()
 				.Be(userName);
 		}
+
+		public void Dispose() => _agent?.Dispose();
 	}
 }

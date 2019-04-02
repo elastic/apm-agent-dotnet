@@ -24,24 +24,12 @@ namespace SampleAspNetCoreApp
 			ConfigureServicesExceptMvc(services);
 
 			services.AddMvc()
-				.AddMvcOptions(options =>
-				{
-					options.Filters.Add(new IgnoreAntiforgeryTokenAttribute());
-					//options.Conventions.ConfigureFilter(new IgnoreAntiforgeryTokenAttribute());
-				})
 				.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 		}
 
 		public static void ConfigureServicesExceptMvc(IServiceCollection services)
 		{
-			services.Configure<CookiePolicyOptions>(options =>
-			{
-				// This lambda determines whether user consent for non-essential cookies is needed for a given request.
-				options.CheckConsentNeeded = context => false;
-				options.MinimumSameSitePolicy = SameSiteMode.None;
-			});
-
-			var connection = @"Data Source=blogging.db";
+			const string connection = @"Data Source=blogging.db";
 			services.AddDbContext<SampleDataContext>
 				(options => options.UseSqlite(connection));
 
@@ -65,7 +53,6 @@ namespace SampleAspNetCoreApp
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 		{
 			app.UseElasticApm(Configuration);
-
 			ConfigureAllExceptAgent(app);
 		}
 
