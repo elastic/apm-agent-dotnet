@@ -568,7 +568,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					{
 						WaitHelpers.SleepMinimum();
 						transaction.Context.Response = new Response
-							{ Finished = true};
+							{ Finished = true };
 						transaction.Context.Request = new Request("GET", new Url());
 
 						transaction.Context.Response.StatusCode = 200;
@@ -580,6 +580,34 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstTransaction.Context.Response.StatusCode.Should().Be(200);
 			payloadSender.FirstTransaction.Context.Request.Url.Full.Should().Be("https://elastic.co");
 		}
+
+		/// <summary>
+		/// Creates a transaction and captures a user on this transaction.
+		/// Makes sure the user is captured by the agent.
+		/// </summary>
+		[Fact]
+		public void TransactionWithUser()
+		{
+			const string userId = "123";
+			const string userName = "TestUser";
+			const string emailAddress = "test@user.com";
+
+			var payloadSender = AssertWith1Transaction(
+				n =>
+				{
+					n.Tracer.CaptureTransaction(TransactionName, TransactionType, transaction =>
+					{
+						WaitHelpers.SleepMinimum();
+						transaction.Context.User = new User
+							{ Id = userId, UserName = userName, Email = emailAddress };
+					});
+				});
+
+			payloadSender.FirstTransaction.Context.User.Id.Should().Be(userId);
+			payloadSender.FirstTransaction.Context.User.UserName.Should().Be(userName);
+			payloadSender.FirstTransaction.Context.User.Email.Should().Be(emailAddress);
+		}
+
 
 		/// <summary>
 		/// Asserts on 1 transaction with async code

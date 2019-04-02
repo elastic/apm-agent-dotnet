@@ -15,6 +15,12 @@ using Xunit;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
+	/// <summary>
+	/// Integration test that makes sure that the ASP.NET Core auto instrumentation captures logged in users.
+	/// It starts up the <see cref="SampleAspNetCoreApp"/> and creates a user
+	/// then it logs in the user and then it sends an HTTP GET request to /Home/SimplePage (with the logged in user)
+	/// It makes sure that this last transaction contains the user.
+	/// </summary>
 	[Collection("DiagnosticListenerTest")]
 	public class CaptureUserTest : IDisposable
 	{
@@ -45,7 +51,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		[Fact]
-		public async Task Test()
+		public async Task RegisterAndLogInUse()
 		{
 			const string userName = "TestUser";
 			const string password = "aaaaaa";
