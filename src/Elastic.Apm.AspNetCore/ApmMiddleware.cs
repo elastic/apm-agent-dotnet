@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
@@ -74,10 +75,7 @@ namespace Elastic.Apm.AspNetCore
 
 				if (_configurationReader.CaptureHeaders)
 				{
-					responseHeaders = new Dictionary<string, string>();
-
-					foreach (var header in context.Response.Headers)
-						responseHeaders.Add(header.Key, header.Value.ToString());
+					responseHeaders = context.Response.Headers.ToDictionary(header => header.Key, header => header.Value.ToString());
 				}
 
 				transaction.Result = $"{GetProtocolName(context.Request.Protocol)} {context.Response.StatusCode.ToString()[0]}xx";
@@ -87,6 +85,20 @@ namespace Elastic.Apm.AspNetCore
 					StatusCode = context.Response.StatusCode,
 					Headers = responseHeaders
 				};
+
+				if (context.User?.Identity != null && context.User.Identity.IsAuthenticated && context.User.Identity != null
+					&& transaction.Context.User == null)
+				{
+					transaction.Context.User = new User { UserName = context.User.Identity.Name };
+
+					var id = context.User.Claims.Where(n => n.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
+					if (id.Any())
+						transaction.Context.User.Id = id.FirstOrDefault().Value;
+
+					var mail = context.User.Claims.Where(n => n.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
+					if (mail.Any())
+						transaction.Context.User.Email = mail.FirstOrDefault().Value;
+				}
 
 				transaction.End();
 			}
