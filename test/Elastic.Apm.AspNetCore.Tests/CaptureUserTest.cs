@@ -45,7 +45,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 						.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))))
 						.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 				})
-				.UseUrls("https://localhost:5900")
+				.UseUrls("http://localhost:5900") //CI doesn't like https, so we roll with http
 				.Build()
 				.RunAsync();
 		}
@@ -56,7 +56,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			const string userName = "TestUser";
 			const string password = "aaaaaa";
 
-			var client = new HttpClient() { BaseAddress = new Uri("https://localhost:5900") };
+			var client = new HttpClient() { BaseAddress = new Uri("http://localhost:5900") };
 
 			//Home/Index runs the migrations, so this makes sure the DB exists
 			var homeResult = await client.GetAsync("/Home/Index");
