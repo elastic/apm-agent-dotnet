@@ -91,13 +91,15 @@ namespace Elastic.Apm.AspNetCore
 				{
 					transaction.Context.User = new User { UserName = context.User.Identity.Name };
 
-					var id = context.User.Claims.Where(n => n.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
-					if (id.Any())
-						transaction.Context.User.Id = id.FirstOrDefault().Value;
+					var idQuery = context.User.Claims.Where(n => n.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
+					var idClaims = idQuery.ToList();
+					if (idClaims.Any())
+						transaction.Context.User.Id = idClaims.FirstOrDefault()?.Value;
 
-					var mail = context.User.Claims.Where(n => n.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
-					if (mail.Any())
-						transaction.Context.User.Email = mail.FirstOrDefault().Value;
+					var mailQuery = context.User.Claims.Where(n => n.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
+					var mailClaims = mailQuery.ToList();
+					if (mailClaims.Any())
+						transaction.Context.User.Email = mailClaims.FirstOrDefault()?.Value;
 				}
 
 				transaction.End();
