@@ -1,7 +1,9 @@
-﻿using Elastic.Apm.All;
+﻿using System;
+using Elastic.Apm.All;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -19,6 +21,12 @@ namespace SampleAspNetCoreApp
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
+			ConfigureServicesExceptMvc(services);
+			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+		}
+
+		public static void ConfigureServicesExceptMvc(IServiceCollection services)
+		{
 			services.Configure<CookiePolicyOptions>(options =>
 			{
 				// This lambda determines whether user consent for non-essential cookies is needed for a given request.
@@ -30,7 +38,29 @@ namespace SampleAspNetCoreApp
 			services.AddDbContext<SampleDataContext>
 				(options => options.UseSqlite(connection));
 
-			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+			services.AddDefaultIdentity<IdentityUser>()
+				.AddEntityFrameworkStores<SampleDataContext>();
+
+			services.Configure<IdentityOptions>(options =>
+			{
+				// Password settings.
+				options.Password.RequireDigit = false;
+				options.Password.RequireLowercase = false;
+				options.Password.RequireNonAlphanumeric = false;
+				options.Password.RequireUppercase = false;
+				options.Password.RequiredLength = 5;
+			});
+
+			services.ConfigureApplicationCookie(options =>
+			{
+				// Cookie settings
+				options.Cookie.HttpOnly = true;
+				options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
+
+				options.LoginPath = "/Account/Login";
+				options.AccessDeniedPath = "/Account/AccessDenied";
+				options.SlidingExpiration = true;
+			});
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -49,6 +79,8 @@ namespace SampleAspNetCoreApp
 			app.UseHttpsRedirection();
 			app.UseStaticFiles();
 			app.UseCookiePolicy();
+
+			app.UseAuthentication();
 
 			app.UseMvc(routes =>
 			{

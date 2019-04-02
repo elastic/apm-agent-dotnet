@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
@@ -19,5 +19,6 @@
   <ItemGroup>
     <Folder Include="Data\" />
     <Folder Include="Data\HistoricalData" />
+    <Folder Include="Migrations" />
   </ItemGroup>
 </Project>

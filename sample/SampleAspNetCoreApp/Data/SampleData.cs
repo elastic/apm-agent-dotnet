@@ -1,6 +1,6 @@
 ﻿namespace SampleAspNetCoreApp.Data
 {
-	public class User
+	public class SampleData
 	{
 		public int Id { get; set; }
 		public string Name { get; set; }
