@@ -22,7 +22,14 @@ namespace SampleAspNetCoreApp
 		public void ConfigureServices(IServiceCollection services)
 		{
 			ConfigureServicesExceptMvc(services);
-			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+
+			services.AddMvc()
+				.AddMvcOptions(options =>
+				{
+					options.Filters.Add(new IgnoreAntiforgeryTokenAttribute());
+					//options.Conventions.ConfigureFilter(new IgnoreAntiforgeryTokenAttribute());
+				})
+				.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 		}
 
 		public static void ConfigureServicesExceptMvc(IServiceCollection services)
@@ -30,7 +37,7 @@ namespace SampleAspNetCoreApp
 			services.Configure<CookiePolicyOptions>(options =>
 			{
 				// This lambda determines whether user consent for non-essential cookies is needed for a given request.
-				options.CheckConsentNeeded = context => true;
+				options.CheckConsentNeeded = context => false;
 				options.MinimumSameSitePolicy = SameSiteMode.None;
 			});
 
@@ -43,23 +50,14 @@ namespace SampleAspNetCoreApp
 
 			services.Configure<IdentityOptions>(options =>
 			{
-				// Password settings.
+				// Password settings
+				// Not meant for production! To make testing/playing with the sample app we use very simple,
+				// but insecure settings
 				options.Password.RequireDigit = false;
 				options.Password.RequireLowercase = false;
 				options.Password.RequireNonAlphanumeric = false;
 				options.Password.RequireUppercase = false;
 				options.Password.RequiredLength = 5;
-			});
-
-			services.ConfigureApplicationCookie(options =>
-			{
-				// Cookie settings
-				options.Cookie.HttpOnly = true;
-				options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
-
-				options.LoginPath = "/Account/Login";
-				options.AccessDeniedPath = "/Account/AccessDenied";
-				options.SlidingExpiration = true;
 			});
 		}
 
@@ -68,20 +66,18 @@ namespace SampleAspNetCoreApp
 		{
 			app.UseElasticApm(Configuration);
 
-			if (env.IsDevelopment())
-				app.UseDeveloperExceptionPage();
-			else
-			{
-				app.UseExceptionHandler("/Home/Error");
-				app.UseHsts();
-			}
+			ConfigureAllExceptAgent(app);
+		}
+
+		public static void ConfigureAllExceptAgent(IApplicationBuilder app)
+		{
+			app.UseDeveloperExceptionPage();
 
 			app.UseHttpsRedirection();
 			app.UseStaticFiles();
 			app.UseCookiePolicy();
 
 			app.UseAuthentication();
-
 			app.UseMvc(routes =>
 			{
 				routes.MapRoute(
