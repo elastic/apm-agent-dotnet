@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace SampleAspNetCoreApp.Controllers
 {
-	[IgnoreAntiforgeryToken(Order = 1001)]
 	public class AccountController : Controller
 	{
 		private readonly SignInManager<IdentityUser> _signInManager;
