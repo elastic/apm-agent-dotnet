@@ -49,7 +49,6 @@ namespace Elastic.Apm.DiagnosticListeners
 			switch (kv.Key)
 			{
 				case "System.Net.Http.Exception":
-
 					_logger.Debug()?.Log("System.Net.Http.Exception - {url}", request.RequestUri);
 					var exception = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Exception").GetValue(kv.Value) as Exception;
 					var transaction = Agent.TransactionContainer.Transactions?.Value;

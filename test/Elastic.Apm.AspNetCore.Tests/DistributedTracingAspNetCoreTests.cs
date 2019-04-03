@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -42,7 +43,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 				)
 				.Configure(app =>
 				{
-					app.UseElasticApm(new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender1)), new TestLogger(), new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
+					app.UseElasticApm(new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender1)), new TestLogger(),
+						new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
 					SampleAspNetCoreApp.Startup.ConfigureAllExceptAgent(app);
 				})
 				.UseUrls("http://localhost:5900")
@@ -58,7 +60,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 				})
 				.Configure(app =>
 				{
-					app.UseElasticApm(new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender2)), new TestLogger(), new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
+					app.UseElasticApm(new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender2)), new TestLogger(),
+						new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
 					WebApiSample.Startup.ConfigureAllExceptAgent(app);
 				})
 				.UseUrls("http://localhost:5050")
@@ -79,6 +82,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 			//make sure all spans have the same traceid:
 			_payloadSender1.Spans.Should().NotContain(n => n.TraceId != _payloadSender1.FirstTransaction.TraceId);
 			_payloadSender2.Spans.Should().NotContain(n => n.TraceId != _payloadSender1.FirstTransaction.TraceId);
+
+			//make sure the parent of the 2. transaction is the spanid of the outgoing HTTP request from the 1. transaction:
+			_payloadSender2.FirstTransaction.ParentId.Should()
+				.Be(_payloadSender1.Spans.First(n => n.Context.Http.Url.Contains("api/values")).Id);
 		}
 	}
 }
