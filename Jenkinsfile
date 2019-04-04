@@ -31,7 +31,7 @@ pipeline {
       options { skipDefaultCheckout() }
       steps {
         bat 'tree /f "C:\\Program Files (x86)\\Microsoft Visual Studio" > windows-2012r2-files.txt'
-        bat '"C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vs_installer.exe" export --installpath "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools" --config "windows-2012r2-export.config" –q'
+        bat '"C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vs_installer.exe" export --installpath "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools" --config "windows-2012r2-export.config" --passive'
         archiveArtifacts(allowEmptyArchive: true,
           artifacts: "windows-2012r2-files.txt,windows-2012r2-export.txt",
           onlyIfSuccessful: true)
@@ -42,7 +42,7 @@ pipeline {
       options { skipDefaultCheckout() }
       steps {
         bat 'tree /f "C:\\Program Files (x86)\\Microsoft Visual Studio" > windows-2016-files.txt'
-        bat '"C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vs_installer.exe" export --installpath "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools" --config "windows-2016-export.config" –q'
+        bat '"C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vs_installer.exe" export --installpath "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools" --config "windows-2016-export.config" --passive'
         archiveArtifacts(allowEmptyArchive: true,
           artifacts: "windows-2016-files.txt,windows-2016-export.txt",
           onlyIfSuccessful: true)
