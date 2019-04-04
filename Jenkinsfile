@@ -32,7 +32,6 @@ pipeline {
       steps {
         deleteDir()
         bat 'tree /f "C:\\Program Files (x86)\\Microsoft Visual Studio" > windows-2012r2-files.txt'
-        bat '"C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vs_installer.exe" export --installpath "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools" --config "' + env.WORKSPACE + '\\windows-2012r2-export.config" --passive'
         archiveArtifacts(allowEmptyArchive: true,
           artifacts: "windows-2012r2-files.txt,windows-2012r2-export.txt",
           onlyIfSuccessful: true)
