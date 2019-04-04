@@ -26,6 +26,26 @@ pipeline {
     booleanParam(name: 'Run_As_Master_Branch', defaultValue: false, description: 'Allow to run any steps on a PR, some steps normally only run on master branch.')
   }
   stages {
+    stage('Check files windows-2012r2') {
+      agent { label 'windows-2012r2' }
+      options { skipDefaultCheckout() }
+      steps {
+        bat 'tree /f "C:\\Program Files (x86)\\Microsoft Visual Studio" > windows-2012r2-files.txt'
+        archiveArtifacts(allowEmptyArchive: true,
+          artifacts: "windows-2012r2-files.txt",
+          onlyIfSuccessful: true)
+      }
+    }
+    stage('Check files windows-2016') {
+      agent { label 'windows-2016' }
+      options { skipDefaultCheckout() }
+      steps {
+        bat 'tree /f "C:\\Program Files (x86)\\Microsoft Visual Studio" > windows-2016-files.txt'
+        archiveArtifacts(allowEmptyArchive: true,
+          artifacts: "windows-2016-files.txt",
+          onlyIfSuccessful: true)
+      }
+    }
     stage('Initializing'){
       stages {
         stage('Checkout') {
