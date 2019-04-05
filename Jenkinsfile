@@ -276,15 +276,17 @@ pipeline {
             }
             when {
               beforeAgent true
-              anyOf {
+              allOf{
                 not {
                   changeRequest()
                 }
-                branch 'master'
-                branch "\\d+\\.\\d+"
-                branch "v\\d?"
-                tag "\\d+\\.\\d+\\.\\d+*"
-                expression { return params.Run_As_Master_Branch }
+                anyOf {
+                  branch 'master'
+                  branch "\\d+\\.\\d+"
+                  branch "v\\d?"
+                  tag "\\d+\\.\\d+\\.\\d+*"
+                  expression { return params.Run_As_Master_Branch }
+                }
               }
             }
             steps {
@@ -306,10 +308,12 @@ pipeline {
             when {
               beforeAgent true
               anyOf {
-                not {
-                  changeRequest()
+                allOf {
+                  not {
+                    changeRequest()
+                  }
+                  branch 'master'
                 }
-                branch 'master'
                 expression { return params.Run_As_Master_Branch }
               }
             }
@@ -340,10 +344,12 @@ pipeline {
             when {
               beforeAgent true
               anyOf {
-                not {
-                  changeRequest()
+                allOf {
+                  not {
+                    changeRequest()
+                  }
+                  tag "\\d+\\.\\d+\\.\\d+*"
                 }
-                tag "\\d+\\.\\d+\\.\\d+*"
                 expression { return params.Run_As_Master_Branch }
               }
             }
