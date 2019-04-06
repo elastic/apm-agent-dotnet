@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
@@ -91,15 +92,24 @@ namespace Elastic.Apm.AspNetCore
 				{
 					transaction.Context.User = new User { UserName = context.User.Identity.Name };
 
-					var idQuery = context.User.Claims.Where(n => n.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
-					var idClaims = idQuery.ToList();
-					if (idClaims.Any())
-						transaction.Context.User.Id = idClaims.FirstOrDefault()?.Value;
+					var nameId = GetClaimValue(ClaimTypes.NameIdentifier);
+					if (string.IsNullOrEmpty(nameId))
+						nameId = GetClaimValue("sub"); //OpenID fallback
 
-					var mailQuery = context.User.Claims.Where(n => n.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
-					var mailClaims = mailQuery.ToList();
-					if (mailClaims.Any())
-						transaction.Context.User.Email = mailClaims.FirstOrDefault()?.Value;
+					transaction.Context.User.Id = nameId;
+
+					var mail = GetClaimValue(ClaimTypes.Email);
+					if (string.IsNullOrEmpty(mail))
+						mail = GetClaimValue("email"); //OpenID fallback
+
+					transaction.Context.User.Email = mail;
+				}
+
+				string GetClaimValue(string claimType)
+				{
+					var idQuery = context.User.Claims.Where(n => n.Type == claimType);
+					var idClaims = idQuery.ToList();
+					return idClaims.Any() ? idClaims.First().Value : string.Empty;
 				}
 
 				transaction.End();
