@@ -76,7 +76,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				{
 					n.Configure(app =>
 					{
-						app.UseMiddleware<ApmMiddleware>(agent.Tracer, agent.ConfigurationReader, agent.Logger);
+						app.UseMiddleware<ApmMiddleware>(agent.Tracer, agent);
 
 						app.UseDeveloperExceptionPage();
 

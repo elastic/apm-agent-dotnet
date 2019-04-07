@@ -59,7 +59,7 @@ namespace Elastic.Apm.AspNetCore
 				new AspNetCoreDiagnosticsSubscriber()
 			};
 			agent.Subscribe(subs.ToArray());
-			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer, agent.ConfigurationReader, logger);
+			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer, agent);
 		}
 
 		internal static void UpdateServiceInformation(Service service)

@@ -26,12 +26,12 @@ namespace Elastic.Apm.AspNetCore
 		private readonly IConfigurationReader _configurationReader;
 		private readonly IApmLogger _logger;
 
-		public ApmMiddleware(RequestDelegate next, Tracer tracer, IConfigurationReader configurationReader, IApmLogger logger)
+		public ApmMiddleware(RequestDelegate next, Tracer tracer, IApmAgent agent)
 		{
 			_next = next;
 			_tracer = tracer;
-			_configurationReader = configurationReader;
-			_logger = logger.Scoped(nameof(ApmMiddleware));
+			_configurationReader = agent.ConfigurationReader;
+			_logger = agent.Logger.Scoped(nameof(ApmMiddleware));
 		}
 
 		public async Task InvokeAsync(HttpContext context)
