@@ -21,9 +21,9 @@ namespace Elastic.Apm.AspNetCore
 	// ReSharper disable once ClassNeverInstantiated.Global
 	internal class ApmMiddleware
 	{
+		private readonly IConfigurationReader _configurationReader;
 		private readonly RequestDelegate _next;
 		private readonly Tracer _tracer;
-		private readonly IConfigurationReader _configurationReader;
 
 		public ApmMiddleware(RequestDelegate next, Tracer tracer, IConfigurationReader configurationReader)
 		{
@@ -75,9 +75,7 @@ namespace Elastic.Apm.AspNetCore
 				Dictionary<string, string> responseHeaders = null;
 
 				if (_configurationReader.CaptureHeaders)
-				{
 					responseHeaders = context.Response.Headers.ToDictionary(header => header.Key, header => header.Value.ToString());
-				}
 
 				transaction.Result = $"{GetProtocolName(context.Request.Protocol)} {context.Response.StatusCode.ToString()[0]}xx";
 				transaction.Context.Response = new Response
@@ -90,26 +88,19 @@ namespace Elastic.Apm.AspNetCore
 				if (context.User?.Identity != null && context.User.Identity.IsAuthenticated && context.User.Identity != null
 					&& transaction.Context.User == null)
 				{
-					transaction.Context.User = new User { UserName = context.User.Identity.Name };
-
-					var nameId = GetClaimValue(ClaimTypes.NameIdentifier);
-					if (string.IsNullOrEmpty(nameId))
-						nameId = GetClaimValue("sub"); //OpenID fallback
-
-					transaction.Context.User.Id = nameId;
-
-					var mail = GetClaimValue(ClaimTypes.Email);
-					if (string.IsNullOrEmpty(mail))
-						mail = GetClaimValue("email"); //OpenID fallback
-
-					transaction.Context.User.Email = mail;
+					transaction.Context.User = new User
+					{
+						UserName = context.User.Identity.Name,
+						Id = GetClaimWithFallbackValue(ClaimTypes.NameIdentifier, "sub"),
+						Email = GetClaimWithFallbackValue(ClaimTypes.Email, "email")
+					};
 				}
 
-				string GetClaimValue(string claimType)
+				string GetClaimWithFallbackValue(string claimType, string fallbackClaimType)
 				{
-					var idQuery = context.User.Claims.Where(n => n.Type == claimType);
-					var idClaims = idQuery.ToList();
-					return idClaims.Any() ? idClaims.First().Value : string.Empty;
+					var idClaims = context.User.Claims.Where(n => n.Type == claimType || n.Type == fallbackClaimType);
+					var enumerable = idClaims.ToList();
+					return enumerable.Any() ? enumerable.First().Value : string.Empty;
 				}
 
 				transaction.End();
