@@ -29,11 +29,11 @@ namespace Elastic.Apm.DistributedTracing
 		internal const string TraceParentHeaderName = "elastic-apm-traceparent";
 
 		/// <summary>
-		/// Checks if the <paramref name="traceOptions" /> flag contains the <see cref="FlagRecorded" /> flag.
+		/// Checks if the <paramref name="traceFields" /> flag contains the <see cref="FlagRecorded" /> flag.
 		/// </summary>
-		/// <param name="traceOptions">The traceOptions flags return from <see cref="TryExtractTraceparent" />.</param>
-		/// <returns>true if <paramref name="traceOptions" /> contains <see cref="FlagRecorded" />, false otherwise.</returns>
-		public static bool IsFlagRecordedActive(byte[] traceOptions) => (traceOptions[0] & FlagRecorded) == FlagRecorded;
+		/// <param name="traceFields">The traceOptions flags return from <see cref="TryExtractTraceparent" />.</param>
+		/// <returns>true if <paramref name="traceFields" /> contains <see cref="FlagRecorded" />, false otherwise.</returns>
+		public static bool IsFlagRecordedActive(byte traceFields) => (traceFields & FlagRecorded) == FlagRecorded;
 
 		/// <summary>
 		/// Parses the traceparent header
@@ -41,13 +41,13 @@ namespace Elastic.Apm.DistributedTracing
 		/// <param name="traceParentValue">The value of the traceparent header</param>
 		/// <param name="traceId">The parsed traceId</param>
 		/// <param name="prentId">The parsed parentId</param>
-		/// <param name="traceOptions">The parsed traceOptions flags</param>
+		/// <param name="traceFields">The parsed traceOptions flags</param>
 		/// <returns>True if parsing was successful, false otherwise.</returns>
-		internal static bool TryExtractTraceparent(string traceParentValue, out string traceId, out string prentId, out byte[] traceOptions)
+		internal static bool TryExtractTraceparent(string traceParentValue, out string traceId, out string prentId, out byte traceFields)
 		{
 			traceId = string.Empty;
 			prentId = string.Empty;
-			traceOptions = null;
+			traceFields = 0;
 
 			var bestAttempt = false;
 
@@ -112,7 +112,10 @@ namespace Elastic.Apm.DistributedTracing
 
 			try
 			{
-				traceOptions = StringToByteArray(traceParentValue, VersionAndTraceIdAndSpanIdLength, OptionsLength);
+				var fields = StringToByteArray(traceParentValue, VersionAndTraceIdAndSpanIdLength, OptionsLength);
+
+				if (fields != null && fields.Length > 0)
+					traceFields = fields[0];
 			}
 			catch (ArgumentOutOfRangeException)
 			{
@@ -166,7 +169,7 @@ namespace Elastic.Apm.DistributedTracing
 			return table;
 		}
 
-		public static string GetTraceParentVal(string traceId, string spanId)
+		public static string BuildTraceparent(string traceId, string spanId)
 			=> $"00-{traceId}-{spanId}-01";
 
 		private static byte[] StringToByteArray(string src, int start = 0, int len = -1)
