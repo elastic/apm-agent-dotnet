@@ -60,8 +60,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 				})
 				.Configure(app =>
 				{
-					app.UseElasticApm(new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender2)), new TestLogger(),
-						new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
+					//normally we would also subscribe to HttpDiagnosticsSubscriber and EfCoreDiagnosticsSubscriber,
+					//but in this test 2 web apps run in a single process, so subscribing once is enough, and we
+					//already do it above when we configure the SampleAspNetCoreApp.
+					app.UseElasticApm(new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender2)), new TestLogger());
 					WebApiSample.Startup.ConfigureAllExceptAgent(app);
 				})
 				.UseUrls("http://localhost:5050")
