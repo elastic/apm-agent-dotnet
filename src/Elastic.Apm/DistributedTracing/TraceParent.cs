@@ -14,7 +14,7 @@ namespace Elastic.Apm.DistributedTracing
 	/// Since the w3c document is just a draft at the moment,
 	/// we don't use the official header name but prepend the custom prefix "Elastic-Apm-".
 	/// </summary>
-	internal struct TraceParent
+	internal static class TraceParent
 	{
 		private const int VersionPrefixIdLength = 3;
 		private const int VersionLength = 2;
