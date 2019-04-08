@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Elastic.Apm.DistributedTracing
 {
@@ -16,17 +15,15 @@ namespace Elastic.Apm.DistributedTracing
 	/// </summary>
 	internal static class TraceParent
 	{
-		private const int VersionPrefixIdLength = 3;
-		private const int VersionLength = 2;
-		private const int VersionAndTraceIdLength = 36;
-
-		private const int TraceIdLength = 32;
-		private const int VersionAndTraceIdAndSpanIdLength = 53;
-		private const int SpanIdLength = 16;
-		private const int OptionsLength = 2;
-
 		private const byte FlagRecorded = 1; // 00000001
+		private const int OptionsLength = 2;
+		private const int SpanIdLength = 16;
+		private const int TraceIdLength = 32;
 		internal const string TraceParentHeaderName = "elastic-apm-traceparent";
+		private const int VersionAndTraceIdAndSpanIdLength = 53;
+		private const int VersionAndTraceIdLength = 36;
+		private const int VersionLength = 2;
+		private const int VersionPrefixIdLength = 3;
 
 		/// <summary>
 		/// Checks if the <paramref name="traceFields" /> flag contains the <see cref="FlagRecorded" /> flag.
@@ -75,11 +72,11 @@ namespace Elastic.Apm.DistributedTracing
 
 			try
 			{
-				//parse value to byte array and back to string:
-				//TODO: probably we should just validate the chars
-				var traceIdVal = ByteArrayToString(StringToByteArray(traceParentValue, VersionPrefixIdLength, TraceIdLength));
+				var traceIdVal =
+					traceParentValue.Substring(VersionPrefixIdLength,
+						TraceIdLength); // ByteArrayToString(StringToByteArray(traceParentValue, VersionPrefixIdLength, TraceIdLength));
 
-				if (traceIdVal == "00000000000000000000000000000000")
+				if (!IsHex(traceIdVal) || traceIdVal == "00000000000000000000000000000000")
 					return false;
 
 				traceId = traceIdVal;
@@ -94,11 +91,8 @@ namespace Elastic.Apm.DistributedTracing
 
 			try
 			{
-				//parse value to byte array and back to string:
-				//TODO: probably we should just validate the chars
-				var prentIdVal = ByteArrayToString(StringToByteArray(traceParentValue, VersionAndTraceIdLength, SpanIdLength));
-
-				if (prentIdVal == "0000000000000000")
+				var prentIdVal = traceParentValue.Substring(VersionAndTraceIdLength, SpanIdLength);
+				if (!IsHex(prentIdVal) || prentIdVal == "0000000000000000")
 					return false;
 
 				prentId = prentIdVal;
@@ -132,41 +126,22 @@ namespace Elastic.Apm.DistributedTracing
 					return false;
 			}
 
+			bool IsHex(IEnumerable<char> chars)
+			{
+				// ReSharper disable once LoopCanBeConvertedToQuery - I benchmarked, that'd make parsing ~2x slower, don't do it!
+				foreach (var c in chars)
+				{
+					var isHex = c >= '0' && c <= '9' ||
+						c >= 'a' && c <= 'f' ||
+						c >= 'A' && c <= 'F';
+
+					if (!isHex)
+						return false;
+				}
+				return true;
+			}
+
 			return true;
-		}
-
-		private static string ByteArrayToString(IEnumerable<byte> bytes)
-		{
-			var sb = new StringBuilder();
-			foreach (var t in bytes) sb.Append(ByteToHexCharArray(t));
-
-			return sb.ToString();
-
-			char[] ByteToHexCharArray(byte b)
-			{
-				var result = new char[2];
-
-				result[0] = (char)ByteToHexLookupTable[b];
-				result[1] = (char)(ByteToHexLookupTable[b] >> 16);
-
-				return result;
-			}
-		}
-
-		private static readonly uint[] ByteToHexLookupTable = CreateLookupTable();
-
-		// https://stackoverflow.com/a/24343727
-		private static uint[] CreateLookupTable()
-		{
-			var table = new uint[256];
-			for (var i = 0; i < 256; i++)
-			{
-				var s = i.ToString("x2");
-				table[i] = s[0];
-				table[i] += (uint)s[1] << 16;
-			}
-
-			return table;
 		}
 
 		public static string BuildTraceparent(string traceId, string spanId)
