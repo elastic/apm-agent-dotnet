@@ -1,7 +1,4 @@
-using System.Linq;
 using Elastic.Apm.DistributedTracing;
-using Elastic.Apm.Logging;
-using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
 
@@ -9,17 +6,16 @@ namespace Elastic.Apm.Tests
 {
 	public class DistributedTracingTests
 	{
-
 		[Fact]
 		public void ParseValidTraceParentRecorded()
 		{
 			const string traceParent = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01";
 
-			var(parent, traceId, isRecorded) = TraceParent.ParseTraceParentString(traceParent);
-
-			parent.Should().Be("0af7651916cd43dd8448eb211c80319c");
-			traceId.Should().Be("b7ad6b7169203331");
-			isRecorded.Should().BeTrue();
+			var res = TraceParent.TryExtractTraceparent(traceParent, out var traceId, out var parentId, out var traceOptions);
+			res.Should().BeTrue();
+			traceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
+			parentId.Should().Be("b7ad6b7169203331");
+			TraceParent.IsFlagRecordedActive(traceOptions).Should().BeTrue();
 		}
 
 		[Fact]
@@ -27,54 +23,48 @@ namespace Elastic.Apm.Tests
 		{
 			const string traceParent = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-00";
 
-			var(parent, traceId, isRecorded) = TraceParent.ParseTraceParentString(traceParent);
+			TraceParent.TryExtractTraceparent(traceParent, out var traceId, out var parentId, out var traceOptions);
 
-			parent.Should().Be("0af7651916cd43dd8448eb211c80319c");
-			traceId.Should().Be("b7ad6b7169203331");
-			isRecorded.Should().BeFalse();
+			traceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
+			parentId.Should().Be("b7ad6b7169203331");
+			TraceParent.IsFlagRecordedActive(traceOptions).Should().BeFalse();
 		}
 
 		[Fact]
-		public void ValidateValidTraceParent()
-		{
-			const string traceParent = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01";
-
-			var testLogger = new TestLogger();
-			var isValid = TraceParent.ValidateTraceParentValue(traceParent, testLogger);
-			isValid.Should().BeTrue();
-		}
-
-		[Fact]
-		public void ValidateTraceParentWithInvalidVersion()
+		public void ValidateTraceParentWithFutureVersion()
 		{
 			const string traceParent = "99-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01";
 
-			var testLogger = new TestLogger(LogLevel.Warning);
-			var isValid = TraceParent.ValidateTraceParentValue(traceParent, testLogger);
-			isValid.Should().BeFalse();
-			testLogger.Lines.First().Should().Contain("Only version 00 of the traceparent header is supported, but was 99-");
+			//Best attempt, even if it's a future version we still try to read the traceId and parentId
+			var res = TraceParent.TryExtractTraceparent(traceParent, out var traceId, out var parentId, out var traceOptions);
+			traceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
+			parentId.Should().Be("b7ad6b7169203331");
+			TraceParent.IsFlagRecordedActive(traceOptions).Should().BeTrue();
+			res.Should().BeTrue();
 		}
 
 		[Fact]
 		public void ValidateTraceParentWithInvalidLength()
 		{
 			const string traceParent = "99-af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"; //TraceId is 1 char shorter than expected
-
-			var testLogger = new TestLogger(LogLevel.Warning);
-			var isValid = TraceParent.ValidateTraceParentValue(traceParent, testLogger);
-			isValid.Should().BeFalse();
-			testLogger.Lines.First().Should().Contain("Traceparent contains invalid length, expected: 55, got: 54");
+			var res = TraceParent.TryExtractTraceparent(traceParent, out _, out _, out _);
+			res.Should().BeFalse();
 		}
 
 		[Fact]
 		public void ValidateTraceParentWithInvalidTraceIdLength()
 		{
 			const string traceParent = "00-0af7651916cd43dd8448eb211c80319ca-7ad6b7169203331-01"; //TraceId is 1 char longer than expected, and parentId is 1 char longer
+			var res = TraceParent.TryExtractTraceparent(traceParent, out _, out _, out _);
+			res.Should().BeFalse();
+		}
 
-			var testLogger = new TestLogger(LogLevel.Warning);
-			var isValid = TraceParent.ValidateTraceParentValue(traceParent, testLogger);
-			isValid.Should().BeFalse();
-			testLogger.Lines.First().Should().Contain("Invalid traceparent format, got: 00-0af7651916cd43dd8448eb211c80319ca-7ad6b7169203331-01");
+		[Fact]
+		public void TraceParentHeaderName()
+		{
+			//currently we use a non-standard header name - awaiting trace context to became a standard.
+			//this will be renamed in the future.
+			TraceParent.TraceParentHeaderName.Should().Be("elastic-apm-traceparent");
 		}
 	}
 }

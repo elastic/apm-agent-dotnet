@@ -42,32 +42,18 @@ namespace Elastic.Apm.AspNetCore
 			{
 				var headerValue = context.Request.Headers[TraceParent.TraceParentHeaderName].ToString();
 
-				if (TraceParent.ValidateTraceParentValue(headerValue, _logger))
+				if (TraceParent.TryExtractTraceparent(headerValue, out var traceId, out var parentId, out var traceoptions))
 				{
-					var traceId = string.Empty;
-					var parentId = string.Empty;
-					var isRecorded = false; //Currently only used for logging. Later it can be useful to make sampling decisions.
-					try
-					{
-						(traceId, parentId, isRecorded) = TraceParent.ParseTraceParentString(headerValue);
-					}
-					catch (Exception e)
-					{
-						_logger.Warning()?.LogException(e, "Failed parsing traceparent.");
-					}
-					finally
-					{
-						transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
+					transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
 							ApiConstants.TypeRequest, traceId, parentId);
 
 						_logger.Debug()
 							?.Log("Incoming request with {TraceParentHeaderName} header. TraceId: {TraceId}, ParentId: {ParentId}, Recorded: {IsRecorded}. Starting Trace.",
-								TraceParent.TraceParentHeaderName, traceId, parentId, isRecorded);
-					}
+								TraceParent.TraceParentHeaderName, traceId, parentId, TraceParent.IsFlagRecordedActive(traceoptions));
 				}
 				else
 				{
-					_logger.Debug()?.Log("Incoming request with invalid traceparent, Starting trace with new trace id");
+					_logger.Debug()?.Log("Incoming request with invalid traceparent (received traceparent value: {ReceivedTraceparent}). Starting trace with new trace id", headerValue);
 					transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
 						ApiConstants.TypeRequest);
 				}
