@@ -74,7 +74,7 @@ namespace Elastic.Apm.DistributedTracing
 			{
 				var traceIdVal =
 					traceParentValue.Substring(VersionPrefixIdLength,
-						TraceIdLength); // ByteArrayToString(StringToByteArray(traceParentValue, VersionPrefixIdLength, TraceIdLength));
+						TraceIdLength);
 
 				if (!IsHex(traceIdVal) || traceIdVal == "00000000000000000000000000000000")
 					return false;
