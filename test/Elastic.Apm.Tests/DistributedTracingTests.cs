@@ -16,6 +16,11 @@ namespace Elastic.Apm.Tests
 			traceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
 			parentId.Should().Be("b7ad6b7169203331");
 			TraceParent.IsFlagRecordedActive(traceOptions).Should().BeTrue();
+
+			//try also with flag options C6
+			const string traceParent2 = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-E7";
+			TraceParent.TryExtractTraceparent(traceParent2, out _, out _, out var traceOptions2);
+			TraceParent.IsFlagRecordedActive(traceOptions2).Should().BeTrue();
 		}
 
 		[Fact]
@@ -28,6 +33,12 @@ namespace Elastic.Apm.Tests
 			traceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
 			parentId.Should().Be("b7ad6b7169203331");
 			TraceParent.IsFlagRecordedActive(traceOptions).Should().BeFalse();
+
+
+			//try also with flag options C6
+			const string traceParent2 = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-C6";
+			TraceParent.TryExtractTraceparent(traceParent2, out _, out _, out var traceOptions2);
+			TraceParent.IsFlagRecordedActive(traceOptions2).Should().BeFalse();
 		}
 
 		[Fact]
