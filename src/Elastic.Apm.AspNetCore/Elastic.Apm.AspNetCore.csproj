@@ -21,15 +21,15 @@
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, aspnetcore</PackageTags>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj"/>
+    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
   </ItemGroup>
   <ItemGroup>
     <!-- We should probably lower the version number -->
-    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.0.0"/>
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.0.0"/>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Config\"/>
-    <Folder Include="DiagnosticListener\"/>
+    <Folder Include="Config\" />
+    <Folder Include="DiagnosticListener\" />
   </ItemGroup>
 </Project>

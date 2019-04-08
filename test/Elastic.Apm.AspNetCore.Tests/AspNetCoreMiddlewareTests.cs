@@ -8,7 +8,6 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
 using Xunit;
-using Xunit.Sdk;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
@@ -56,7 +55,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_agent.Service.Name.Should().NotBeNullOrWhiteSpace()
 				.And.Be(Assembly.GetEntryAssembly()?.GetName()?.Name);
 
-			_agent.Service.Agent.Name.Should().Be(Consts.AgentName);
+			_agent.Service.Agent.Name.Should().Be(Elastic.Apm.Consts.AgentName);
 			var apmVersion = Assembly.Load("Elastic.Apm").GetName().Version.ToString();
 			_agent.Service.Agent.Version.Should().Be(apmVersion);
 

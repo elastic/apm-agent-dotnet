@@ -30,7 +30,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		private readonly MockPayloadSender _payloadSender = new MockPayloadSender();
 		private ApmAgent _agent;
 
-		private void SetUpSud()
+		private void SetUpSut()
 		{
 			var unused = Program.CreateWebHostBuilder(null)
 				.Configure(app =>
@@ -64,7 +64,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task RegisterAndLogInUser()
 		{
-			SetUpSud();
+			SetUpSut();
 
 			const string userName = "TestUser";
 			const string password = "aaaaaa";
