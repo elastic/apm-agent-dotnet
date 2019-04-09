@@ -53,7 +53,7 @@ namespace Elastic.Apm.DistributedTracing
 
 			try
 			{
-				var versionArray = StringTwoCharToByte(traceParentValue);
+				var versionArray = HexStringTwoCharToByte(traceParentValue);
 				if (versionArray == 255)
 					return false;
 
@@ -105,7 +105,7 @@ namespace Elastic.Apm.DistributedTracing
 
 			try
 			{
-				traceFields = StringTwoCharToByte(traceParentValue, VersionAndTraceIdAndSpanIdLength);
+				traceFields = HexStringTwoCharToByte(traceParentValue, VersionAndTraceIdAndSpanIdLength);
 			}
 			catch (ArgumentOutOfRangeException)
 			{
@@ -149,7 +149,7 @@ namespace Elastic.Apm.DistributedTracing
 		/// <param name="src">The string to convert - must be at least 2 char long</param>
 		/// <param name="start">The position of the first character to convert.</param>
 		/// <returns>The byte representation of the string</returns>
-		private static byte StringTwoCharToByte(string src, int start = 0)
+		private static byte HexStringTwoCharToByte(string src, int start = 0)
 		{
 			if (string.IsNullOrWhiteSpace(src) || src.Length <= start + 1)
 				throw new Exception("String is expected to be at least 2 char long");
