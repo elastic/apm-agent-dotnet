@@ -2,7 +2,10 @@ namespace Elastic.Apm.AspNetCore
 {
 	internal static class Consts
 	{
-		internal const string Sub = "sub";
-		internal const string Email = "email";
+		internal static class OpenIdClaimTypes
+		{
+			internal const string UserId = "sub";
+			internal const string Email = "email";
+		}
 	}
 }

@@ -91,8 +91,8 @@ namespace Elastic.Apm.AspNetCore
 					transaction.Context.User = new User
 					{
 						UserName = context.User.Identity.Name,
-						Id = GetClaimWithFallbackValue(ClaimTypes.NameIdentifier, Consts.Sub), //fallback is OpenID claim type
-						Email = GetClaimWithFallbackValue(ClaimTypes.Email, Consts.Email) //fallback is OpenID claim type
+						Id = GetClaimWithFallbackValue(ClaimTypes.NameIdentifier, Consts.OpenIdClaimTypes.UserId),
+						Email = GetClaimWithFallbackValue(ClaimTypes.Email, Consts.OpenIdClaimTypes.Email)
 					};
 				}
 
