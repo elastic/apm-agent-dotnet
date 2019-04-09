@@ -36,7 +36,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.Configure(app =>
 				{
 					_agent = new ApmAgent(new AgentComponents(payloadSender: _payloadSender));
-					app.UseElasticApm(_agent);
+					app.UseElasticApm(_agent, _agent.Logger);
 					Startup.ConfigureAllExceptAgent(app);
 				})
 				.ConfigureServices(services =>
@@ -123,7 +123,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 					}, "someAuthTypeName"))
 				};
 
-				var middleware = new ApmMiddleware(async (innerHttpContext) => { await Task.Delay(1);}, agent.Tracer as Tracer, agent.ConfigurationReader);
+				var middleware = new ApmMiddleware(async (innerHttpContext) => { await Task.Delay(1);}, agent.Tracer as Tracer, agent);
 
 				await middleware.InvokeAsync(context);
 			}

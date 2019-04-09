@@ -27,7 +27,7 @@ pipeline {
   }
   stages {
     stage('Initializing'){
-      stages {
+      stages{
         stage('Checkout') {
           agent { label 'master || immutable' }
           options { skipDefaultCheckout() }
@@ -276,15 +276,17 @@ pipeline {
             }
             when {
               beforeAgent true
-              anyOf {
+              allOf{
                 not {
                   changeRequest()
                 }
-                branch 'master'
-                branch "\\d+\\.\\d+"
-                branch "v\\d?"
-                tag "v\\d+\\.\\d+\\.\\d+*"
-                expression { return params.Run_As_Master_Branch }
+                anyOf {
+                  branch 'master'
+                  branch "\\d+\\.\\d+"
+                  branch "v\\d?"
+                  tag "\\d+\\.\\d+\\.\\d+*"
+                  expression { return params.Run_As_Master_Branch }
+                }
               }
             }
             steps {
@@ -295,7 +297,7 @@ pipeline {
               }
             }
           }
-          stage('Release') {
+          stage('Release to AppVeyor') {
             agent { label 'linux && immutable' }
             options { skipDefaultCheckout() }
             environment {
@@ -306,13 +308,12 @@ pipeline {
             when {
               beforeAgent true
               anyOf {
-                not {
-                  changeRequest()
+                allOf {
+                  not {
+                    changeRequest()
+                  }
+                  branch 'master'
                 }
-                branch 'master'
-                branch "\\d+\\.\\d+"
-                branch "v\\d?"
-                tag "v\\d+\\.\\d+\\.\\d+*"
                 expression { return params.Run_As_Master_Branch }
               }
             }
@@ -321,33 +322,83 @@ pipeline {
               unstash 'source'
               unstash('dotnet-linux')
               dir("${BASE_DIR}"){
-                sh label: 'Release', script: 'dotnet pack -c Release'
+                release('secret/apm-team/ci/elastic-observability-appveyor')
               }
             }
             post{
               success {
                 archiveArtifacts(allowEmptyArchive: true,
-                  artifacts: "${BASE_DIR}/bin/release/**/*",
+                  artifacts: "${BASE_DIR}/**/bin/Release/**/*.nupkg",
                   onlyIfSuccessful: true)
               }
             }
           }
-        }
-      }
-    }
-    post {
-      success {
-        echoColor(text: '[SUCCESS]', colorfg: 'green', colorbg: 'default')
-      }
-      aborted {
-        echoColor(text: '[ABORTED]', colorfg: 'magenta', colorbg: 'default')
-      }
-      failure {
-        echoColor(text: '[FAILURE]', colorfg: 'red', colorbg: 'default')
-        step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: "${NOTIFY_TO}", sendToIndividuals: false])
-      }
-      unstable {
-        echoColor(text: '[UNSTABLE]', colorfg: 'yellow', colorbg: 'default')
+          stage('Release to NuGet') {
+            agent { label 'linux && immutable' }
+            options { skipDefaultCheckout() }
+            environment {
+              HOME = "${env.WORKSPACE}"
+              PATH = "${env.PATH}:${env.HOME}/bin:${env.HOME}/dotnet:${env.HOME}/.dotnet/tools"
+              DOTNET_ROOT = "${env.HOME}/dotnet"
+            }
+            when {
+              beforeAgent true
+              anyOf {
+                allOf {
+                  not {
+                    changeRequest()
+                  }
+                  tag "\\d+\\.\\d+\\.\\d+*"
+                }
+                expression { return params.Run_As_Master_Branch }
+              }
+            }
+            steps {
+              input(message: 'Should we release a new version on NuGet?', ok: 'Yes, we should.')
+              deleteDir()
+              unstash 'source'
+              unstash('dotnet-linux')
+              dir("${BASE_DIR}"){
+                release('secret/apm-team/ci/elastic-observability-nuget')
+              }
+            }
+          }
       }
     }
   }
+  post {
+    success {
+      echoColor(text: '[SUCCESS]', colorfg: 'green', colorbg: 'default')
+    }
+    aborted {
+      echoColor(text: '[ABORTED]', colorfg: 'magenta', colorbg: 'default')
+    }
+    failure {
+      echoColor(text: '[FAILURE]', colorfg: 'red', colorbg: 'default')
+      step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: "${NOTIFY_TO}", sendToIndividuals: false])
+    }
+    unstable {
+      echoColor(text: '[UNSTABLE]', colorfg: 'yellow', colorbg: 'default')
+    }
+  }
+}
+
+def release(secret){
+  sh(label: 'Release', script: '''
+    dotnet sln remove test/Elastic.Apm.PerfTests/Elastic.Apm.PerfTests.csproj
+    dotnet pack -c Release
+    ''')
+  def repo = getVaultSecret(secret: secret)
+  wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [
+    [var: 'REPO_API_KEY', password: repo.apiKey],
+    [var: 'REPO_API_URL', password: repo.url],
+    ]]) {
+      sh(label: 'Deploy',
+        script: """
+        for nupkg in \$(find . -name '*.nupkg')
+        do
+          dotnet nuget push \${nupkg} -k ${repo.data.apiKey} -s ${repo.data.url}
+        done
+        """)
+    }
+}

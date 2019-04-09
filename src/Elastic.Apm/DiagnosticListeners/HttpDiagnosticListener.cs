@@ -8,6 +8,7 @@ using System.Reflection;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
@@ -26,16 +27,16 @@ namespace Elastic.Apm.DiagnosticListeners
 		internal readonly ConcurrentDictionary<HttpRequestMessage, Span> ProcessingRequests = new ConcurrentDictionary<HttpRequestMessage, Span>();
 
 		public HttpDiagnosticListener(IApmAgent components) =>
-			(Logger, ConfigurationReader) = (components.Logger?.Scoped(nameof(HttpDiagnosticListener)), components.ConfigurationReader);
+			(_logger, _configurationReader) = (components.Logger?.Scoped(nameof(HttpDiagnosticListener)), components.ConfigurationReader);
 
-		private ScopedLogger Logger { get; }
-		private IConfigurationReader ConfigurationReader { get; }
+		private readonly ScopedLogger _logger;
+		private readonly IConfigurationReader _configurationReader;
 
 		public string Name => "HttpHandlerDiagnosticListener"; // "HttpHandlerDiagnosticListener" for .NET Core, "System.Net.Http.Desktop" for Full .NET Framework
 
 		public void OnCompleted() { }
 
-		public void OnError(Exception error) => Logger.Error()?.LogExceptionWithCaller(error, nameof(OnError));
+		public void OnError(Exception error) => _logger.Error()?.LogExceptionWithCaller(error, nameof(OnError));
 
 		public void OnNext(KeyValuePair<string, object> kv)
 		{
@@ -48,6 +49,7 @@ namespace Elastic.Apm.DiagnosticListeners
 			switch (kv.Key)
 			{
 				case "System.Net.Http.Exception":
+					_logger.Debug()?.Log("System.Net.Http.Exception - {url}", request.RequestUri);
 					var exception = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Exception").GetValue(kv.Value) as Exception;
 					var transaction = Agent.TransactionContainer.Transactions?.Value;
 
@@ -55,7 +57,12 @@ namespace Elastic.Apm.DiagnosticListeners
 					//TODO: we don't know if exception is handled, currently reports handled = false
 					break;
 				case "System.Net.Http.HttpRequestOut.Start": //TODO: look for consts
-					if (Agent.TransactionContainer.Transactions == null || Agent.TransactionContainer.Transactions.Value == null) return;
+					_logger.Debug()?.Log("System.Net.Http.Start - {url}", request.RequestUri);
+					if (Agent.TransactionContainer.Transactions == null || Agent.TransactionContainer.Transactions.Value == null)
+					{
+						_logger.Debug()?.Log("No active transaction, skip creating span for outgoing HTTP request");
+						return;
+					}
 
 					transaction = Agent.TransactionContainer.Transactions.Value;
 
@@ -64,6 +71,9 @@ namespace Elastic.Apm.DiagnosticListeners
 
 					if (ProcessingRequests.TryAdd(request, span))
 					{
+						if(!request.Headers.Contains(TraceParent.TraceParentHeaderName))
+							request.Headers.Add(TraceParent.TraceParentHeaderName, TraceParent.BuildTraceparent(span.TraceId, span.Id));
+
 						span.Context.Http = new Http
 						{
 							Url = request?.RequestUri?.ToString(),
@@ -71,12 +81,13 @@ namespace Elastic.Apm.DiagnosticListeners
 						};
 
 						var frames = new StackTrace(true).GetFrames();
-						var stackFrames = StacktraceHelper.GenerateApmStackTrace(frames, Logger, span.Name);
+						var stackFrames = StacktraceHelper.GenerateApmStackTrace(frames, _logger, span.Name);
 						span.StackTrace = stackFrames;
 					}
 					break;
 
 				case "System.Net.Http.HttpRequestOut.Stop":
+					_logger.Debug()?.Log("System.Net.Http.Stop - {url}", request.RequestUri);
 					var response = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Response").GetValue(kv.Value) as HttpResponseMessage;
 
 					if (ProcessingRequests.TryRemove(request, out var mspan))
@@ -93,7 +104,7 @@ namespace Elastic.Apm.DiagnosticListeners
 						const string message = "Failed capturing request '{HttpMethod} {Url}' in System.Net.Http.HttpRequestOut.Stop. This Span will be skipped in case it wasn't captured before.";
 						var url = request?.RequestUri?.AbsoluteUri;
 						var method = request?.Method?.Method;
-						Logger?.Warning()?.Log(message, method, url);
+						_logger?.Warning()?.Log(message, method, url);
 					}
 					break;
 			}
@@ -109,7 +120,7 @@ namespace Elastic.Apm.DiagnosticListeners
 			switch (requestUri)
 			{
 				case Uri uri when uri == null: return true;
-				case Uri uri when ConfigurationReader.ServerUrls.Any(n => n.IsBaseOf(uri)): //TODO: measure the perf of this!
+				case Uri uri when _configurationReader.ServerUrls.Any(n => n.IsBaseOf(uri)): //TODO: measure the perf of this!
 					return true;
 				default:
 					return false;

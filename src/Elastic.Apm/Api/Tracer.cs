@@ -27,9 +27,9 @@ namespace Elastic.Apm.Api
 		public ITransaction StartTransaction(string name, string type)
 			=> StartTransactionInternal(name, type);
 
-		internal Transaction StartTransactionInternal(string name, string type)
+		internal Transaction StartTransactionInternal(string name, string type, string traceId = null, string parentId = null)
 		{
-			var retVal = new Transaction(_logger, name, type, _sender)
+			var retVal = new Transaction(_logger, name, type, _sender, traceId, parentId)
 			{
 				Name = name,
 				Type = type,

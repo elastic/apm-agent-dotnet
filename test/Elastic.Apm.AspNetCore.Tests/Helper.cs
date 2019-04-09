@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Elastic.Apm.DiagnosticSource;
@@ -27,7 +26,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				{
 					n.Configure(app =>
 					{
-						app.UseElasticApm(agent, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
+						app.UseElasticApm(agent,  agent.Logger, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
 
 						app.UseDeveloperExceptionPage();
 
@@ -57,7 +56,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				{
 					n.Configure(app =>
 					{
-						app.UseElasticApm(agent);
+						app.UseElasticApm(agent, agent.Logger);
 
 						app.UseAuthentication();
 
@@ -81,7 +80,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				{
 					n.Configure(app =>
 					{
-						app.UseMiddleware<ApmMiddleware>(agent.Tracer, agent.ConfigurationReader);
+						app.UseMiddleware<ApmMiddleware>(agent.Tracer, agent);
 
 						app.UseDeveloperExceptionPage();
 

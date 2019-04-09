@@ -29,7 +29,7 @@ namespace Elastic.Apm.Helpers
 		public static string GetRandomBytesAsString(byte[] bytes)
 		{
 			GetRandomBytes(bytes);
-			return BitConverter.ToString(bytes).Replace("-", "");
+			return BitConverter.ToString(bytes).Replace("-", "").ToLower();
 		}
 	}
 }

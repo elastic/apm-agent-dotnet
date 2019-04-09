@@ -8,7 +8,6 @@ using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model.Payload;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 
@@ -45,12 +44,13 @@ namespace Elastic.Apm.AspNetCore
 			UpdateServiceInformation(config.Service);
 
 			Agent.Setup(config);
-			return UseElasticApm(builder, Agent.Instance, subscribers);
+			return UseElasticApm(builder, Agent.Instance, logger, subscribers);
 		}
 
 		internal static IApplicationBuilder UseElasticApm(
 			this IApplicationBuilder builder,
 			ApmAgent agent,
+			IApmLogger logger,
 			params IDiagnosticsSubscriber[] subscribers
 		)
 		{
@@ -59,7 +59,7 @@ namespace Elastic.Apm.AspNetCore
 				new AspNetCoreDiagnosticsSubscriber()
 			};
 			agent.Subscribe(subs.ToArray());
-			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer, agent.ConfigurationReader);
+			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer, agent);
 		}
 
 		internal static void UpdateServiceInformation(Service service)

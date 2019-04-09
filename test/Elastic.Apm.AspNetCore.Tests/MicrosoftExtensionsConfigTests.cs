@@ -97,8 +97,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.ServiceName, serviceName);
 			var secretToken = "SecretToken";
 			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.SecretToken, secretToken);
-			var captureHeaders = false;
-			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.CaptureHeaders, captureHeaders.ToString());
+			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.CaptureHeaders, false.ToString());
 			var configBuilder = new ConfigurationBuilder()
 				.AddEnvironmentVariables()
 				.Build();
@@ -108,7 +107,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.ServerUrls[0].Should().Be(new Uri(serverUrl));
 			config.ServiceName.Should().Be(serviceName);
 			config.SecretToken.Should().Be(secretToken);
-			config.CaptureHeaders.Should().Be(captureHeaders);
+			config.CaptureHeaders.Should().Be(false);
 		}
 
 		/// <summary>
@@ -142,7 +141,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			_factory = factory;
 			_logger = new TestLogger();
-			_capturedPayload = new MockPayloadSender();
+			var capturedPayload = new MockPayloadSender();
 
 			//The agent is instantiated with ApmMiddlewareExtension.GetService, so we can also test the calculation of the service instance.
 			//(e.g. ASP.NET Core version)
@@ -151,12 +150,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 				MicrosoftExtensionsConfigTests.GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), _logger);
 
 			_agent = new ApmAgent(
-				new AgentComponents(payloadSender: _capturedPayload, configurationReader: config, logger: _logger));
+				new AgentComponents(payloadSender: capturedPayload, configurationReader: config, logger: _logger));
 			_client = Helper.GetClient(_agent, _factory);
 		}
 
 		private readonly ApmAgent _agent;
-		private readonly MockPayloadSender _capturedPayload;
 		private readonly HttpClient _client;
 		private readonly WebApplicationFactory<Startup> _factory;
 		private readonly TestLogger _logger;
