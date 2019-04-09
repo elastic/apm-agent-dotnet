@@ -131,6 +131,8 @@ namespace Elastic.Apm.AspNetCore
 						Id = GetClaimWithFallbackValue(ClaimTypes.NameIdentifier, Consts.OpenIdClaimTypes.UserId),
 						Email = GetClaimWithFallbackValue(ClaimTypes.Email, Consts.OpenIdClaimTypes.Email)
 					};
+
+					_logger.Debug()?.Log("Captured user - {CapturedUser}", transaction.Context.User);
 				}
 
 				string GetClaimWithFallbackValue(string claimType, string fallbackClaimType)

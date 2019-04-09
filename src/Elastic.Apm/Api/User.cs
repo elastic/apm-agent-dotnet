@@ -1,3 +1,4 @@
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
@@ -14,5 +15,12 @@ namespace Elastic.Apm.Api
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Email { get; set; }
+
+		public override string ToString() => new ToStringBuilder(nameof(User))
+		{
+			{ "Id", Id },
+			{ "UserName", UserName },
+			{ "Email", Email },
+		}.ToString();
 	}
 }
