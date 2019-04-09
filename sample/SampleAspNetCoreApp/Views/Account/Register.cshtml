@@ -1,0 +1,16 @@
+<br/>
+<br/>
+
+<form method="POST" asp-controller="Account" asp-action="RegisterUser">
+	<label>Name</label>
+	<input type="text" id="username" name="username" placeholder="username"/>
+	<input type="text" id="password" name="password" placeholder="password"/>
+	<input type="submit"/>
+</form>
+
+<br/>
+
+@if (ViewData["msg"] != null)
+{
+	@ViewData["msg"]
+}

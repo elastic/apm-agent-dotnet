@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
@@ -24,6 +26,7 @@ namespace Elastic.Apm.AspNetCore
 	{
 		private readonly IConfigurationReader _configurationReader;
 		private readonly IApmLogger _logger;
+
 		private readonly RequestDelegate _next;
 		private readonly Tracer _tracer;
 
@@ -109,12 +112,7 @@ namespace Elastic.Apm.AspNetCore
 				Dictionary<string, string> responseHeaders = null;
 
 				if (_configurationReader.CaptureHeaders)
-				{
-					responseHeaders = new Dictionary<string, string>();
-
-					foreach (var header in context.Response.Headers)
-						responseHeaders.Add(header.Key, header.Value.ToString());
-				}
+					responseHeaders = context.Response.Headers.ToDictionary(header => header.Key, header => header.Value.ToString());
 
 				transaction.Result = $"{GetProtocolName(context.Request.Protocol)} {context.Response.StatusCode.ToString()[0]}xx";
 				transaction.Context.Response = new Response
@@ -123,6 +121,26 @@ namespace Elastic.Apm.AspNetCore
 					StatusCode = context.Response.StatusCode,
 					Headers = responseHeaders
 				};
+
+				if (context.User?.Identity != null && context.User.Identity.IsAuthenticated && context.User.Identity != null
+					&& transaction.Context.User == null)
+				{
+					transaction.Context.User = new User
+					{
+						UserName = context.User.Identity.Name,
+						Id = GetClaimWithFallbackValue(ClaimTypes.NameIdentifier, Consts.OpenIdClaimTypes.UserId),
+						Email = GetClaimWithFallbackValue(ClaimTypes.Email, Consts.OpenIdClaimTypes.Email)
+					};
+
+					_logger.Debug()?.Log("Captured user - {CapturedUser}", transaction.Context.User);
+				}
+
+				string GetClaimWithFallbackValue(string claimType, string fallbackClaimType)
+				{
+					var idClaims = context.User.Claims.Where(n => n.Type == claimType || n.Type == fallbackClaimType);
+					var enumerable = idClaims.ToList();
+					return enumerable.Any() ? enumerable.First().Value : string.Empty;
+				}
 
 				transaction.End();
 			}

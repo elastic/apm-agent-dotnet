@@ -1,11 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace SampleAspNetCoreApp.Data
 {
-	public class SampleDataContext : DbContext
+	public class SampleDataContext : IdentityDbContext
 	{
-		public SampleDataContext(DbContextOptions<SampleDataContext> dbContextOptions) : base(dbContextOptions) { }
+		public SampleDataContext(DbContextOptions dbContextOptions) : base(dbContextOptions) { }
 
-		public DbSet<User> Users { get; set; }
+		public DbSet<SampleData> SampleTable { get; set; }
 	}
 }

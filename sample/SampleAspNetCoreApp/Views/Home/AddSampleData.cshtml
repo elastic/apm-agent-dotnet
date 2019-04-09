@@ -1,7 +1,4 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+﻿@{
 }
 
 @model string
@@ -12,8 +9,8 @@
 </div>
 
 <br/>
-<form method="POST" asp-controller="Home" asp-action="AddNewUser">
+<form method="POST" asp-controller="Home" asp-action="AddSampleData">
 	<label>Name</label>
-	<input type="text" id="enteredName" name="enteredName" placeholder="New username goes here"/>
+	<input type="text" id="enteredName" name="enteredName" placeholder="New sample string goes here"/>
 	<input type="submit"/>
 </form>

@@ -1,7 +1,9 @@
-﻿using Elastic.Apm.All;
+﻿using System;
+using Elastic.Apm.All;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -19,18 +21,32 @@ namespace SampleAspNetCoreApp
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
-			services.Configure<CookiePolicyOptions>(options =>
-			{
-				// This lambda determines whether user consent for non-essential cookies is needed for a given request.
-				options.CheckConsentNeeded = context => true;
-				options.MinimumSameSitePolicy = SameSiteMode.None;
-			});
+			ConfigureServicesExceptMvc(services);
 
-			var connection = @"Data Source=blogging.db";
+			services.AddMvc()
+				.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+		}
+
+		public static void ConfigureServicesExceptMvc(IServiceCollection services)
+		{
+			const string connection = @"Data Source=blogging.db";
 			services.AddDbContext<SampleDataContext>
 				(options => options.UseSqlite(connection));
 
-			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+			services.AddDefaultIdentity<IdentityUser>()
+				.AddEntityFrameworkStores<SampleDataContext>();
+
+			services.Configure<IdentityOptions>(options =>
+			{
+				// Password settings
+				// Not meant for production! To make testing/playing with the sample app we use very simple,
+				// but insecure settings
+				options.Password.RequireDigit = false;
+				options.Password.RequireLowercase = false;
+				options.Password.RequireNonAlphanumeric = false;
+				options.Password.RequireUppercase = false;
+				options.Password.RequiredLength = 5;
+			});
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -48,6 +64,7 @@ namespace SampleAspNetCoreApp
 			app.UseStaticFiles();
 			app.UseCookiePolicy();
 
+			app.UseAuthentication();
 			app.UseMvc(routes =>
 			{
 				routes.MapRoute(

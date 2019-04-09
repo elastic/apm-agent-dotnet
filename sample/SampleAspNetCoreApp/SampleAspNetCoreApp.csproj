@@ -19,5 +19,6 @@
   <ItemGroup>
     <Folder Include="Data\" />
     <Folder Include="Data\HistoricalData" />
+    <Folder Include="Migrations" />
   </ItemGroup>
 </Project>

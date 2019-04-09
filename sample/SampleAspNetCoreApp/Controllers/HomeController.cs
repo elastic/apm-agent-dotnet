@@ -23,7 +23,7 @@ namespace SampleAspNetCoreApp.Controllers
 		public async Task<IActionResult> Index()
 		{
 			_sampleDataContext.Database.Migrate();
-			var model = _sampleDataContext.Users.Select(item => item.Name).ToList();
+			var model = _sampleDataContext.SampleTable.Select(item => item.Name).ToList();
 
 			try
 			{
@@ -42,13 +42,13 @@ namespace SampleAspNetCoreApp.Controllers
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> AddNewUser([FromForm] string enteredName)
+		public async Task<IActionResult> AddSampleData([FromForm] string enteredName)
 		{
 			if (string.IsNullOrEmpty(enteredName))
 				throw new ArgumentNullException(nameof(enteredName));
 
-			_sampleDataContext.Users.Add(
-				new User
+			_sampleDataContext.SampleTable.Add(
+				new SampleData
 				{
 					Name = enteredName
 				});
@@ -96,7 +96,7 @@ namespace SampleAspNetCoreApp.Controllers
 
 		public IActionResult Privacy() => View();
 
-		public IActionResult AddNewUser() => View();
+		public IActionResult AddSampleData() => View();
 
 		public async Task<IActionResult> FailingOutGoingHttpCall()
 		{

@@ -36,6 +36,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 						app.UseStaticFiles();
 						app.UseCookiePolicy();
 
+						app.UseAuthentication();
+
 						app.UseMvc(routes =>
 						{
 							routes.MapRoute(
@@ -55,6 +57,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 					n.Configure(app =>
 					{
 						app.UseElasticApm(agent, agent.Logger);
+
+						app.UseAuthentication();
 
 						app.UseMvc(routes =>
 						{
@@ -86,6 +90,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 						app.UseStaticFiles();
 						app.UseCookiePolicy();
 
+						app.UseAuthentication();
+
 						app.UseMvc(routes =>
 						{
 							routes.MapRoute(
@@ -100,16 +106,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		internal static void ConfigureServices(IServiceCollection services)
 		{
-			services.Configure<CookiePolicyOptions>(options =>
-			{
-				options.CheckConsentNeeded = context => true;
-				options.MinimumSameSitePolicy = SameSiteMode.None;
-			});
-
-			var connection = @"Data Source=blogging.db";
-			services.AddDbContext<SampleDataContext>
-				(options => options.UseSqlite(connection));
-
+			SampleAspNetCoreApp.Startup.ConfigureServicesExceptMvc(services);
 			services.AddMvc()
 				//this is needed because of a (probably) bug:
 				//https://github.com/aspnet/Mvc/issues/5992

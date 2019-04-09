@@ -18,7 +18,7 @@
 </head>
 <body>
 <nav class="navbar navbar-inverse navbar-fixed-top">
-	<div class="container">
+	<div class="container-fullwidth">
 		<div class="navbar-header">
 			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
 				<span class="sr-only">Toggle navigation</span>
@@ -34,7 +34,7 @@
 					<a asp-area="" asp-controller="Home" asp-action="Index">Home</a>
 				</li>
 				<li>
-					<a asp-area="" asp-controller="Home" asp-action="AddNewUser">New User</a>
+					<a asp-area="" asp-controller="Home" asp-action="AddSampleData">InsertDb Sample</a>
 				</li>
 				<li>
 					<a asp-area="" asp-controller="Home" asp-action="SimplePage">SimplePage</a>
@@ -46,12 +46,14 @@
 					<a asp-area="" asp-controller="Home" asp-action="TriggerError">SimpleException</a>
 				</li>
 				<li>
-					<a asp-area="" asp-controller="Home" asp-action="FailingOutGoingHttpCall">FailingOutgoingHttpCall</a>
+					<a asp-area="" asp-controller="Home" asp-action="FailingOutGoingHttpCall">FailingOutgoingHttp</a>
 				</li>
 				<li>
 					<a asp-area="" asp-controller="Home" asp-action="DistributedTracingMiniSample">DistributedTracingMiniSample</a>
 				</li>
 			</ul>
+			
+			<partial name="_LoginPartial" />
 		</div>
 	</div>
 </nav>

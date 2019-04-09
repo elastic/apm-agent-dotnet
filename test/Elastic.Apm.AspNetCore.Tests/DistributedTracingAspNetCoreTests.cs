@@ -42,9 +42,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var unused = Program.CreateWebHostBuilder(null)
 				.ConfigureServices(services =>
 					{
-						var connection = @"Data Source=blogging.db";
-						services.AddDbContext<SampleDataContext>
-							(options => options.UseSqlite(connection));
+						Startup.ConfigureServicesExceptMvc(services);
+
 						services.AddMvc()
 							.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))))
 							.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
@@ -56,7 +55,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 						new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
 					Startup.ConfigureAllExceptAgent(app);
 				})
-				.UseUrls("http://localhost:5900")
+				.UseUrls("http://localhost:5901")
 				.Build()
 				.RunAsync();
 
@@ -84,8 +83,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task DistributedTraceAcross2Service()
 		{
 			var client = new HttpClient();
-			var res = await client.GetAsync("http://localhost:5900/Home/DistributedTracingMiniSample");
+			var res = await client.GetAsync("http://localhost:5901/Home/DistributedTracingMiniSample");
 			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.Transactions.Should().NotBeEmpty();
+			_payloadSender2.Transactions.Should().NotBeEmpty();
 
 			//make sure the 2 transactions have the same traceid:
 			_payloadSender2.FirstTransaction.TraceId.Should().Be(_payloadSender1.FirstTransaction.TraceId);
