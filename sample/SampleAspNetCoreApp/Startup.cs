@@ -37,14 +37,12 @@ namespace SampleAspNetCoreApp
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 		{
 			app.UseElasticApm(Configuration);
+			ConfigureAllExceptAgent(app);
+		}
 
-			if (env.IsDevelopment())
-				app.UseDeveloperExceptionPage();
-			else
-			{
-				app.UseExceptionHandler("/Home/Error");
-				app.UseHsts();
-			}
+		public static void ConfigureAllExceptAgent(IApplicationBuilder app)
+		{
+			app.UseDeveloperExceptionPage();
 
 			app.UseHttpsRedirection();
 			app.UseStaticFiles();

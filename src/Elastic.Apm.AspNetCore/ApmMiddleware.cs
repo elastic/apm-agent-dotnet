@@ -4,7 +4,10 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
+using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
+using Elastic.Apm.Model.Payload;
 using Microsoft.AspNetCore.Http;
 
 [assembly:
@@ -19,21 +22,54 @@ namespace Elastic.Apm.AspNetCore
 	// ReSharper disable once ClassNeverInstantiated.Global
 	internal class ApmMiddleware
 	{
+		private readonly IConfigurationReader _configurationReader;
+		private readonly IApmLogger _logger;
 		private readonly RequestDelegate _next;
 		private readonly Tracer _tracer;
-		private readonly IConfigurationReader _configurationReader;
 
-		public ApmMiddleware(RequestDelegate next, Tracer tracer, IConfigurationReader configurationReader)
+		public ApmMiddleware(RequestDelegate next, Tracer tracer, IApmAgent agent)
 		{
 			_next = next;
 			_tracer = tracer;
-			_configurationReader = configurationReader;
+			_configurationReader = agent.ConfigurationReader;
+			_logger = agent.Logger.Scoped(nameof(ApmMiddleware));
 		}
 
 		public async Task InvokeAsync(HttpContext context)
 		{
-			var transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
-				ApiConstants.TypeRequest);
+			Transaction transaction;
+
+			if (context.Request.Headers.ContainsKey(TraceParent.TraceParentHeaderName))
+			{
+				var headerValue = context.Request.Headers[TraceParent.TraceParentHeaderName].ToString();
+
+				if (TraceParent.TryExtractTraceparent(headerValue, out var traceId, out var parentId, out var traceoptions))
+				{
+					_logger.Debug()
+						?.Log(
+							"Incoming request with {TraceParentHeaderName} header. TraceId: {TraceId}, ParentId: {ParentId}, Recorded: {IsRecorded}. Continuing trace.",
+							TraceParent.TraceParentHeaderName, traceId, parentId, TraceParent.IsFlagRecordedActive(traceoptions));
+
+					transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
+						ApiConstants.TypeRequest, traceId, parentId);
+				}
+				else
+				{
+					_logger.Debug()
+						?.Log(
+							"Incoming request with invalid {TraceParentHeaderName} header (received value: {TraceParentHeaderValue}). Starting trace with new trace id.",
+							TraceParent.TraceParentHeaderName, headerValue);
+
+					transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
+						ApiConstants.TypeRequest);
+				}
+			}
+			else
+			{
+				_logger.Debug()?.Log("Incoming request. Starting Trace.");
+				transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
+					ApiConstants.TypeRequest);
+			}
 
 			var url = new Url
 			{

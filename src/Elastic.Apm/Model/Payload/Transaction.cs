@@ -34,7 +34,7 @@ namespace Elastic.Apm.Model.Payload
 			var idBytes = new byte[8];
 			Id = RandomGenerator.GetRandomBytesAsString(idBytes);
 
-			if (traceId == null)
+			if (string.IsNullOrEmpty(traceId))
 			{
 				idBytes = new byte[16];
 				TraceId = RandomGenerator.GetRandomBytesAsString(idBytes);

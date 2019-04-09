@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 using Elastic.Apm;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SampleAspNetCoreApp.Data;
 using SampleAspNetCoreApp.Models;
@@ -60,6 +62,26 @@ namespace SampleAspNetCoreApp.Controllers
 		{
 			Response.Headers.Add("X-Additional-Header", "For-Elastic-Apm-Agent");
 			return View();
+		}
+
+		public async Task<IActionResult> DistributedTracingMiniSample()
+		{
+			var httpClient = new HttpClient();
+
+			try
+			{
+				var retVal = await httpClient.GetAsync("http://localhost:5050/api/values");
+
+				var resultInStr = await retVal.Content.ReadAsStringAsync();
+				var list = JsonConvert.DeserializeObject<List<string>>(resultInStr);
+				return View(list);
+			}
+			catch (Exception e)
+			{
+				ViewData["Fail"] =
+					$"Failed calling http://localhost:5050/api/values, make sure the WebApiSample listens on localhost:5050, {e.Message}";
+				return View();
+			}
 		}
 
 		public async Task<IActionResult> ChartPage()

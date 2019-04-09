@@ -1,5 +1,7 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿using System.Diagnostics;
+using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
+using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
 
@@ -48,6 +50,15 @@ namespace Elastic.Apm.PerfTests
 					}
 				});
 			}
+		}
+
+		[Benchmark]
+		public void ParseTraceparentHeader()
+		{
+			const string traceParent = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01";
+
+			var res = TraceParent.TryExtractTraceparent(traceParent, out var traceId, out var parentId, out var traceOptions);
+			Debug.WriteLine($"{res}, {traceId}, {parentId}, {traceOptions}");
 		}
 	}
 }
