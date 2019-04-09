@@ -48,10 +48,10 @@ namespace Elastic.Apm.Tests
 
 			//Best attempt, even if it's a future version we still try to read the traceId and parentId
 			var res = TraceParent.TryExtractTraceparent(traceParent, out var traceId, out var parentId, out var traceOptions);
+			res.Should().BeTrue();
 			traceId.Should().Be("0af7651916cd43dd8448eb211c80319c");
 			parentId.Should().Be("b7ad6b7169203331");
 			TraceParent.IsFlagRecordedActive(traceOptions).Should().BeTrue();
-			res.Should().BeTrue();
 		}
 
 		[Fact]

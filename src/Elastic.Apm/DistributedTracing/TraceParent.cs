@@ -22,7 +22,6 @@ namespace Elastic.Apm.DistributedTracing
 		internal const string TraceParentHeaderName = "elastic-apm-traceparent";
 		private const int VersionAndTraceIdAndSpanIdLength = 53;
 		private const int VersionAndTraceIdLength = 36;
-		private const int VersionLength = 2;
 		private const int VersionPrefixIdLength = 3;
 
 		/// <summary>
@@ -54,11 +53,11 @@ namespace Elastic.Apm.DistributedTracing
 
 			try
 			{
-				var versionArray = StringToByteArray(traceParentValue, 0, VersionLength);
-				if (versionArray[0] == 255)
+				var versionArray = StringTwoCharToByte(traceParentValue);
+				if (versionArray == 255)
 					return false;
 
-				if (versionArray[0] > 0)
+				if (versionArray > 0)
 					// expected version is 00
 					// for higher versions - best attempt parsing of trace id, span id, etc.
 					bestAttempt = true;
@@ -91,11 +90,11 @@ namespace Elastic.Apm.DistributedTracing
 
 			try
 			{
-				var prentIdVal = traceParentValue.Substring(VersionAndTraceIdLength, SpanIdLength);
-				if (!IsHex(prentIdVal) || prentIdVal == "0000000000000000")
+				var parentIdVal = traceParentValue.Substring(VersionAndTraceIdLength, SpanIdLength);
+				if (!IsHex(parentIdVal) || parentIdVal == "0000000000000000")
 					return false;
 
-				prentId = prentIdVal;
+				prentId = parentIdVal;
 			}
 			catch (ArgumentOutOfRangeException)
 			{
@@ -106,10 +105,7 @@ namespace Elastic.Apm.DistributedTracing
 
 			try
 			{
-				var fields = StringToByteArray(traceParentValue, VersionAndTraceIdAndSpanIdLength, OptionsLength);
-
-				if (fields != null && fields.Length > 0)
-					traceFields = fields[0];
+				traceFields = StringTwoCharToByte(traceParentValue, VersionAndTraceIdAndSpanIdLength);
 			}
 			catch (ArgumentOutOfRangeException)
 			{
@@ -147,20 +143,22 @@ namespace Elastic.Apm.DistributedTracing
 		public static string BuildTraceparent(string traceId, string spanId)
 			=> $"00-{traceId}-{spanId}-01";
 
-		private static byte[] StringToByteArray(string src, int start = 0, int len = -1)
+		/// <summary>
+		/// Converts 2 selected chars from the input string into a byte
+		/// </summary>
+		/// <param name="src">The string to convert - must be at least 2 char long</param>
+		/// <param name="start">The position of the first character to convert.</param>
+		/// <returns>The byte representation of the string</returns>
+		private static byte StringTwoCharToByte(string src, int start = 0)
 		{
-			if (len == -1) len = src.Length;
+			if (string.IsNullOrWhiteSpace(src) || src.Length <= start + 1)
+				throw new Exception("String is expected to be at least 2 char long");
 
-			var size = len / 2;
-			var bytes = new byte[size];
-			for (int i = 0, j = start; i < size; i++)
-			{
-				var high = HexCharToInt(src[j++]);
-				var low = HexCharToInt(src[j++]);
-				bytes[i] = (byte)((high << 4) | low);
-			}
+			var high = HexCharToInt(src[start]);
+			var low = HexCharToInt(src[start + 1]);
+			var retVal = (byte)((high << 4) | low);
 
-			return bytes;
+			return retVal;
 
 			int HexCharToInt(char c)
 			{

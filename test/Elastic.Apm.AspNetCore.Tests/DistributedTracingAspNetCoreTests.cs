@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using SampleAspNetCoreApp;
 using SampleAspNetCoreApp.Data;
 using Xunit;
 
@@ -17,20 +19,27 @@ namespace Elastic.Apm.AspNetCore.Tests
 {
 	/// <summary>
 	/// Distributed tracing integration test.
-	/// It starts <see cref="SampleAspNetCoreApp"/> with 1 agent and <see cref="WebApiSample"/> with another agent.
-	/// It calls the 'DistributedTracingMiniSample' in <see cref="SampleAspNetCoreApp"/>, which generates a simple HTTP response
-	/// by calling <see cref="WebApiSample"/> via HTTP.
+	/// It starts <see cref="SampleAspNetCoreApp" /> with 1 agent and <see cref="WebApiSample" /> with another agent.
+	/// It calls the 'DistributedTracingMiniSample' in <see cref="SampleAspNetCoreApp" />, which generates a simple HTTP
+	/// response
+	/// by calling <see cref="WebApiSample" /> via HTTP.
 	/// Makes sure that all spans and transactions across the 2 services have the same trace id.
 	/// </summary>
 	[Collection("DiagnosticListenerTest")]
-	public class DistributedTracingAspNetCoreTests
+	public class DistributedTracingAspNetCoreTests : IDisposable
 	{
+		private readonly ApmAgent _agent1;
+		private readonly ApmAgent _agent2;
+
 		private readonly MockPayloadSender _payloadSender1 = new MockPayloadSender();
 		private readonly MockPayloadSender _payloadSender2 = new MockPayloadSender();
 
 		public DistributedTracingAspNetCoreTests()
 		{
-			var unused = SampleAspNetCoreApp.Program.CreateWebHostBuilder(null)
+			_agent1 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender1));
+			_agent2 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender2));
+
+			var unused = Program.CreateWebHostBuilder(null)
 				.ConfigureServices(services =>
 					{
 						var connection = @"Data Source=blogging.db";
@@ -43,9 +52,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 				)
 				.Configure(app =>
 				{
-					app.UseElasticApm(new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender1)), new TestLogger(),
+					app.UseElasticApm(_agent1, new TestLogger(),
 						new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
-					SampleAspNetCoreApp.Startup.ConfigureAllExceptAgent(app);
+					Startup.ConfigureAllExceptAgent(app);
 				})
 				.UseUrls("http://localhost:5900")
 				.Build()
@@ -63,7 +72,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 					//normally we would also subscribe to HttpDiagnosticsSubscriber and EfCoreDiagnosticsSubscriber,
 					//but in this test 2 web apps run in a single process, so subscribing once is enough, and we
 					//already do it above when we configure the SampleAspNetCoreApp.
-					app.UseElasticApm(new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender2)), new TestLogger());
+					app.UseElasticApm(_agent2, new TestLogger());
 					WebApiSample.Startup.ConfigureAllExceptAgent(app);
 				})
 				.UseUrls("http://localhost:5050")
@@ -88,6 +97,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 			//make sure the parent of the 2. transaction is the spanid of the outgoing HTTP request from the 1. transaction:
 			_payloadSender2.FirstTransaction.ParentId.Should()
 				.Be(_payloadSender1.Spans.First(n => n.Context.Http.Url.Contains("api/values")).Id);
+		}
+
+		public void Dispose()
+		{
+			_agent1?.Dispose();
+			_agent2?.Dispose();
 		}
 	}
 }
