@@ -15,21 +15,23 @@ namespace Elastic.Apm.Model.Payload
 		private readonly Lazy<SpanContext> _context = new Lazy<SpanContext>();
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _payloadSender;
+		private readonly Transaction _enclosingTransaction;
 
 		private readonly DateTimeOffset _start;
 
-		public Span(string name, string type, Transaction transaction, IPayloadSender payloadSender, IApmLogger logger)
+		public Span(string name, string type, string parentId, string traceId, Transaction enclosingTransaction, IPayloadSender payloadSender, IApmLogger logger)
 		{
 			_start = DateTimeOffset.UtcNow;
 			_payloadSender = payloadSender;
+			_enclosingTransaction = enclosingTransaction;
 			_logger = logger?.Scoped(nameof(Span));
 			Name = name;
 			Type = type;
 
 			Id = RandomGenerator.GetRandomBytesAsString(new byte[8]);
-			ParentId = transaction.Id;
-			TransactionId = transaction.Id;
-			TraceId = transaction.TraceId;
+			ParentId = parentId;
+			TraceId = traceId;
+			enclosingTransaction.SpanCount.Started++;
 		}
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
@@ -77,7 +79,7 @@ namespace Elastic.Apm.Model.Payload
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("transaction_id")]
-		public string TransactionId { get; set; }
+		public string TransactionId => _enclosingTransaction.Id;
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
@@ -91,6 +93,21 @@ namespace Elastic.Apm.Model.Payload
 			{ "Name", Name },
 			{ "Type", Type }
 		}.ToString();
+
+
+		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
+			=> StartSpanInternal(name, type, subType, action);
+
+		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
+		{
+			var retVal = new Span(name, type, ParentId, TraceId, _enclosingTransaction, _payloadSender, _logger );
+			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
+
+			if (!string.IsNullOrEmpty(action)) retVal.Action = action;
+
+			_logger.Debug()?.Log("Starting {SpanDetails}", retVal.ToString());
+			return retVal;
+		}
 
 		public void End()
 		{

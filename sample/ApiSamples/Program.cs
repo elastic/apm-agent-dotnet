@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using Elastic.Apm;
 using Elastic.Apm.Api;
 
@@ -14,7 +15,7 @@ namespace ApiSamples
 		private static void Main(string[] args)
 		{
 			Console.WriteLine("Start");
-			SampleSpamWithCustomContextFillAll();
+			TwoTransactionWith2Spans();
 
 			//WIP: if the process terminates the agent
 			//potentially does not have time to send the transaction to the server.
@@ -132,5 +133,38 @@ namespace ApiSamples
 					s.Tags["fooSpan"] = "barSpan";
 				});
 			});
+
+
+		//1. transaction with 2 subspan
+		//1. transaction with 1 span that has a subspan
+		public static void TwoTransactionWith2Spans()
+		{
+
+			Agent.Tracer.CaptureTransaction("TestTransaction1", "TestType1",
+				t =>
+				{
+
+					t.CaptureSpan("TestSpan", "TestSpanName", s =>
+					{
+						Thread.Sleep(20);
+						t.CaptureSpan("TestSpan2", "TestSpanName", s2 => { Thread.Sleep(20); });
+					});
+
+				});
+
+			Agent.Tracer.CaptureTransaction("TestTransaction2", "TestType2",
+				t =>
+				{
+
+
+					t.CaptureSpan("TestSpan", "TestSpanName", s =>
+					{
+						Thread.Sleep(20);
+						var subSpan = s.StartSpan("TestSpan2", "TestSpanName");
+						Thread.Sleep(20);
+						subSpan.End();
+					});
+				});
+		}
 	}
 }

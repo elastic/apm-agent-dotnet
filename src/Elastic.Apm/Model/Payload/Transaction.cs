@@ -119,7 +119,7 @@ namespace Elastic.Apm.Model.Payload
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
-			var retVal = new Span(name, type, this, _sender, _logger);
+			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 

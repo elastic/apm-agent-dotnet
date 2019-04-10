@@ -88,6 +88,16 @@ namespace Elastic.Apm.Api
 		void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null);
 
 		/// <summary>
+		/// Start and return a new custom span as a child of this span.
+		/// </summary>
+		/// <param name="name">The name of the span.</param>
+		/// <param name="type">The type of the span.</param>
+		/// <param name="subType">The subtype of the span.</param>
+		/// <param name="action">The action of the span.</param>
+		/// <returns>Returns the newly created and active span.</returns>
+		ISpan StartSpan(string name, string type, string subType = null, string action = null);
+
+		/// <summary>
 		/// Ends the span and schedules it to be reported to the APM Server.
 		/// It is illegal to call any methods on a span instance which has already ended.
 		/// </summary>
