@@ -8,6 +8,7 @@ pipeline {
     BASE_DIR="src/github.com/elastic/apm-agent-dotnet"
     NOTIFY_TO = credentials('notify-to')
     JOB_GCS_BUCKET = credentials('gcs-bucket')
+    CODECOV_SECRET = 'secret/apm-team/ci/apm-agent-dotnet-codecov'
   }
   options {
     timeout(time: 1, unit: 'HOURS')
@@ -133,7 +134,7 @@ pipeline {
                       junit(allowEmptyResults: true,
                         keepLongStdio: true,
                         testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
-                      codecov(repo: 'apm-agent-dotnet', basedir: "${BASE_DIR}")
+                      codecov(repo: 'apm-agent-dotnet', basedir: "${BASE_DIR}", secret: "${CODECOV_SECRET}")
                       }
                     }
                   }
@@ -276,17 +277,12 @@ pipeline {
             }
             when {
               beforeAgent true
-              allOf{
-                not {
-                  changeRequest()
-                }
-                anyOf {
-                  branch 'master'
-                  branch "\\d+\\.\\d+"
-                  branch "v\\d?"
-                  tag "\\d+\\.\\d+\\.\\d+*"
-                  expression { return params.Run_As_Master_Branch }
-                }
+              anyOf {
+                branch 'master'
+                branch "\\d+\\.\\d+"
+                branch "v\\d?"
+                tag "\\d+\\.\\d+\\.\\d+*"
+                expression { return params.Run_As_Master_Branch }
               }
             }
             steps {
@@ -308,12 +304,7 @@ pipeline {
             when {
               beforeAgent true
               anyOf {
-                allOf {
-                  not {
-                    changeRequest()
-                  }
-                  branch 'master'
-                }
+                branch 'master'
                 expression { return params.Run_As_Master_Branch }
               }
             }
@@ -344,12 +335,7 @@ pipeline {
             when {
               beforeAgent true
               anyOf {
-                allOf {
-                  not {
-                    changeRequest()
-                  }
-                  tag "\\d+\\.\\d+\\.\\d+*"
-                }
+                tag "\\d+\\.\\d+\\.\\d+*"
                 expression { return params.Run_As_Master_Branch }
               }
             }
