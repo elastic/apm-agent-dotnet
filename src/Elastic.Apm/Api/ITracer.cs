@@ -20,7 +20,7 @@ namespace Elastic.Apm.Api
 		/// The <see cref="Action{ITransaction}" /> that points to the code that you want to capture as a transaction.
 		/// The <see cref="ITransaction" /> parameter gives you access to the transaction which is created by this method.
 		/// </param>
-		void CaptureTransaction(string name, string type, Action<ITransaction> action);
+		void CaptureTransaction(string name, string type, Action<ITransaction> action, (string traceId, string parentId) traceContext = new ValueTuple<string, string>());
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a transaction and captures unhandled exceptions
@@ -32,7 +32,7 @@ namespace Elastic.Apm.Api
 		/// The <see cref="Action{ITransaction}" /> that points to the code that you want to capture as a
 		/// transaction.
 		/// </param>
-		void CaptureTransaction(string name, string type, Action action);
+		void CaptureTransaction(string name, string type, Action action, (string traceId, string parentId) traceContext = new ValueTuple<string, string>());
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a transaction and captures unhandled exceptions
@@ -50,7 +50,7 @@ namespace Elastic.Apm.Api
 		/// <param name="func"></param>
 		/// .
 		/// </returns>
-		T CaptureTransaction<T>(string name, string type, Func<ITransaction, T> func);
+		T CaptureTransaction<T>(string name, string type, Func<ITransaction, T> func, (string traceId, string parentId) traceContext = new ValueTuple<string, string>());
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a transaction and captures unhandled exceptions
@@ -68,7 +68,7 @@ namespace Elastic.Apm.Api
 		/// <param name="func"></param>
 		/// .
 		/// </returns>
-		T CaptureTransaction<T>(string name, string type, Func<T> func);
+		T CaptureTransaction<T>(string name, string type, Func<T> func, (string traceId, string parentId) traceContext = new ValueTuple<string, string>());
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a transaction and captures unhandled exceptions
@@ -81,7 +81,7 @@ namespace Elastic.Apm.Api
 		/// transaction.
 		/// </param>
 		/// <returns>The <see cref="Task" /> that you can await on.</returns>
-		Task CaptureTransaction(string name, string type, Func<Task> func);
+		Task CaptureTransaction(string name, string type, Func<Task> func, (string traceId, string parentId) traceContext = new ValueTuple<string, string>());
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a transaction and captures unhandled exceptions
@@ -94,7 +94,7 @@ namespace Elastic.Apm.Api
 		/// The <see cref="ITransaction" /> parameter gives you access to the transaction which is created by this method.
 		/// </param>
 		/// <returns>The <see cref="Task" /> that you can await on.</returns>
-		Task CaptureTransaction(string name, string type, Func<ITransaction, Task> func);
+		Task CaptureTransaction(string name, string type, Func<ITransaction, Task> func, (string traceId, string parentId) traceContext = new ValueTuple<string, string>());
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a transaction and captures unhandled exceptions
@@ -108,7 +108,7 @@ namespace Elastic.Apm.Api
 		/// </param>
 		/// <typeparam name="T">The return type of the <see cref="Task{T}" /> that you want to capture as transaction.</typeparam>
 		/// <returns>The <see cref="Task{T}" /> that you can await on.</returns>
-		Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func);
+		Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func, (string traceId, string parentId) traceContext = new ValueTuple<string, string>());
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a transaction and captures unhandled exceptions
@@ -123,14 +123,17 @@ namespace Elastic.Apm.Api
 		/// </param>
 		/// <typeparam name="T">The return type of the <see cref="Task{T}" /> that you want to capture as transaction.</typeparam>
 		/// <returns>The <see cref="Task{T}" /> that you can await on.</returns>
-		Task<T> CaptureTransaction<T>(string name, string type, Func<ITransaction, Task<T>> func);
+		Task<T> CaptureTransaction<T>(string name, string type, Func<ITransaction, Task<T>> func, (string traceId, string parentId) traceContext = new ValueTuple<string, string>());
 
 		/// <summary>
 		/// Starts and returns a custom transaction.
 		/// </summary>
 		/// <param name="name">The name of the transaction.</param>
 		/// <param name="type">The type of the transaction.</param>
-		/// <returns></returns>
-		ITransaction StartTransaction(string name, string type);
+		/// <param name="traceContext">In case of a distributed trace, you can pass a the Trace Context to the API. By doing so, the new transaction will be
+		/// automatically part of a distributed trace. The Trace Context encapsulates a trace id, which is the id of the whole distributed trace, and a
+		/// parent id, which is the id of the span or the transaction that initiated the new transaction. Both values must be present.</param>
+		/// <returns>The transaction that is created based on the parameters. This transaction is already active.</returns>
+		ITransaction StartTransaction(string name, string type, (string traceId, string parentId) traceContext = new ValueTuple<string, string>());
 	}
 }

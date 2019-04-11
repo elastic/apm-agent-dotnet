@@ -99,6 +99,7 @@ namespace Elastic.Apm.Model
 		{
 			{ "Id", Id },
 			{ "TraceId", TraceId },
+			{ "ParentId", ParentId },
 			{ "Name", Name },
 			{ "Type", Type }
 		}.ToString();

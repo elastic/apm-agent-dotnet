@@ -117,7 +117,7 @@ namespace Elastic.Apm.Config
 			{
 				Logger?.Info()?.Log("The agent was started without a service name. The service name will be automatically calculated.");
 				retVal = Assembly.GetEntryAssembly()?.GetName().Name;
-				Logger?.Info()?.Log("The agent was started without a service name. The Service name sis {ServiceName}", retVal);
+				Logger?.Info()?.Log("The agent was started without a service name. The Service name is {ServiceName}", retVal);
 			}
 
 			if (string.IsNullOrEmpty(retVal))

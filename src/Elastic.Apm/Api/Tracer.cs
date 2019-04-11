@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
@@ -24,8 +25,16 @@ namespace Elastic.Apm.Api
 
 		public ITransaction CurrentTransaction => Agent.TransactionContainer.Transactions.Value;
 
-		public ITransaction StartTransaction(string name, string type)
-			=> StartTransactionInternal(name, type);
+		public ITransaction StartTransaction(string name, string type,
+			(string traceId, string parentId) traceContext = new ValueTuple<string, string>())
+		{
+			var (traceId, parentId) = traceContext;
+			if (TraceParent.IsTraceIdValid(traceId) && TraceParent.IsTraceParentValid(parentId))
+			{
+				return  StartTransactionInternal(name, type, traceId, parentId);
+			}
+			return StartTransactionInternal(name, type);
+		}
 
 		internal Transaction StartTransactionInternal(string name, string type, string traceId = null, string parentId = null)
 		{
@@ -41,9 +50,9 @@ namespace Elastic.Apm.Api
 			return retVal;
 		}
 
-		public void CaptureTransaction(string name, string type, Action<ITransaction> action)
+		public void CaptureTransaction(string name, string type, Action<ITransaction> action, (string traceId, string parentId) traceContext = new ValueTuple<string, string>())
 		{
-			var transaction = StartTransaction(name, type);
+			var transaction = StartTransaction(name, type, traceContext);
 
 			try
 			{
@@ -56,9 +65,9 @@ namespace Elastic.Apm.Api
 			}
 		}
 
-		public void CaptureTransaction(string name, string type, Action action)
+		public void CaptureTransaction(string name, string type, Action action, (string traceId, string parentId) traceContext = new ValueTuple<string, string>())
 		{
-			var transaction = StartTransaction(name, type);
+			var transaction = StartTransaction(name, type, traceContext);
 
 			try
 			{
@@ -71,9 +80,9 @@ namespace Elastic.Apm.Api
 			}
 		}
 
-		public T CaptureTransaction<T>(string name, string type, Func<ITransaction, T> func)
+		public T CaptureTransaction<T>(string name, string type, Func<ITransaction, T> func, (string traceId, string parentId) traceContext = new ValueTuple<string, string>())
 		{
-			var transaction = StartTransaction(name, type);
+			var transaction = StartTransaction(name, type, traceContext);
 			var retVal = default(T);
 			try
 			{
@@ -88,9 +97,9 @@ namespace Elastic.Apm.Api
 			return retVal;
 		}
 
-		public T CaptureTransaction<T>(string name, string type, Func<T> func)
+		public T CaptureTransaction<T>(string name, string type, Func<T> func, (string traceId, string parentId) traceContext = new ValueTuple<string, string>())
 		{
-			var transaction = StartTransaction(name, type);
+			var transaction = StartTransaction(name, type, traceContext);
 			var retVal = default(T);
 			try
 			{
@@ -105,34 +114,34 @@ namespace Elastic.Apm.Api
 			return retVal;
 		}
 
-		public Task CaptureTransaction(string name, string type, Func<Task> func)
+		public Task CaptureTransaction(string name, string type, Func<Task> func, (string traceId, string parentId) traceContext = new ValueTuple<string, string>())
 		{
-			var transaction = StartTransaction(name, type);
+			var transaction = StartTransaction(name, type, traceContext);
 			var task = func();
 			RegisterContinuation(task, transaction);
 			return task;
 		}
 
-		public Task CaptureTransaction(string name, string type, Func<ITransaction, Task> func)
+		public Task CaptureTransaction(string name, string type, Func<ITransaction, Task> func, (string traceId, string parentId) traceContext = new ValueTuple<string, string>())
 		{
-			var transaction = StartTransaction(name, type);
+			var transaction = StartTransaction(name, type, traceContext);
 			var task = func(transaction);
 			RegisterContinuation(task, transaction);
 			return task;
 		}
 
-		public Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func)
+		public Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func, (string traceId, string parentId) traceContext = new ValueTuple<string, string>())
 		{
-			var transaction = StartTransaction(name, type);
+			var transaction = StartTransaction(name, type, traceContext);
 			var task = func();
 			RegisterContinuation(task, transaction);
 
 			return task;
 		}
 
-		public Task<T> CaptureTransaction<T>(string name, string type, Func<ITransaction, Task<T>> func)
+		public Task<T> CaptureTransaction<T>(string name, string type, Func<ITransaction, Task<T>> func, (string traceId, string parentId) traceContext = new ValueTuple<string, string>())
 		{
-			var transaction = StartTransaction(name, type);
+			var transaction = StartTransaction(name, type, traceContext);
 			var task = func(transaction);
 			RegisterContinuation(task, transaction);
 			return task;

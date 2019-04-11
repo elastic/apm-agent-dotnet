@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
-using System.Threading.Tasks;
 using Elastic.Apm;
 using Elastic.Apm.Api;
 
@@ -14,15 +13,35 @@ namespace ApiSamples
 	{
 		private static void Main(string[] args)
 		{
-			Console.WriteLine("Start");
-			TwoTransactionWith2Spans();
+			if (args.Length == 2) //in case it's started with 2 arguments we try to parse it as a TraceContext
+			{
+				Console.WriteLine($"Continue trace, traceId: {args[0]}, parentId: {args[1]}");
+				var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransaction", (args[0], args[1]));
 
-			//WIP: if the process terminates the agent
-			//potentially does not have time to send the transaction to the server.
-			Thread.Sleep(1000);
+				try
+				{
+					transaction2.CaptureSpan("TestSpan", "TestSpanType", () => Thread.Sleep(200));
+				}
+				finally
+				{
+					transaction2.End();
+				}
 
-			Console.WriteLine("Done");
-			Console.ReadKey();
+				Thread.Sleep(200);
+				Console.WriteLine("Continue trace finished");
+			}
+			else
+			{
+				Console.WriteLine("Start");
+				PassTraceContext();
+
+				//WIP: if the process terminates the agent
+				//potentially does not have time to send the transaction to the server.
+				Thread.Sleep(1000);
+
+				Console.WriteLine("Done");
+				Console.ReadKey();
+			}
 		}
 
 		public static void SampleSpamWithCustomContext()
@@ -139,7 +158,6 @@ namespace ApiSamples
 		//1 transaction with 1 span that has a sub span
 		public static void TwoTransactionWith2Spans()
 		{
-
 			//1 transaction 2 spans (both have the transaction as parent)
 			Agent.Tracer.CaptureTransaction("TestTransaction1", "TestType1",
 				t =>
@@ -150,7 +168,6 @@ namespace ApiSamples
 						//this span is also started on the transaction:
 						t.CaptureSpan("TestSpan2", "TestSpanName", s2 => { Thread.Sleep(20); });
 					});
-
 				});
 
 			//1 transaction then 1 span on that transaction and then 1 span on that previous span
@@ -164,6 +181,30 @@ namespace ApiSamples
 						s.CaptureSpan("TestSpan2", "TestSpanName", () => Thread.Sleep(20));
 					});
 				});
+		}
+
+		public static void PassTraceContext()
+		{
+			var transaction = Agent.Tracer.StartTransaction("Transaction1", "TestTransaction");
+
+			try
+			{
+				Thread.Sleep(300);
+
+				//We start the sample app again with a new service name and we pass TraceContext to it
+				//In the main method we check for this and continue the trace.
+				var p = new Process();
+				p.StartInfo.Environment["ELASTIC_APM_SERVICE_NAME"] = "Service2";
+				p.StartInfo.Arguments = $"run {transaction.TraceId} {transaction.Id}";
+				p.StartInfo.FileName = "dotnet";
+				p.Start();
+
+				Thread.Sleep(500);
+			}
+			finally
+			{
+				transaction.End();
+			}
 		}
 	}
 }
