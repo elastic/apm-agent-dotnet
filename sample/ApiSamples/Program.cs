@@ -27,7 +27,7 @@ namespace ApiSamples
 					transaction2.End();
 				}
 
-				Thread.Sleep(200);
+				Thread.Sleep(1000);
 				Console.WriteLine("Continue trace finished");
 			}
 			else
@@ -199,7 +199,7 @@ namespace ApiSamples
 				p.StartInfo.FileName = "dotnet";
 				p.Start();
 
-				Thread.Sleep(500);
+				Thread.Sleep(1100);
 			}
 			finally
 			{
