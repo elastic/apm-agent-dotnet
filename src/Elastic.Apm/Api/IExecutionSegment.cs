@@ -7,7 +7,7 @@ namespace Elastic.Apm.Api
 {
 	/// <summary>
 	/// A base interface that encapsulates basic functionality of a piece of work that the agent can measure (e.g.
-	/// <see cref="ISpan" /> and <see cref="ITracer" />
+	/// <see cref="ISpan" /> and <see cref="ITracer" />)
 	/// </summary>
 	public interface IExecutionSegment
 	{

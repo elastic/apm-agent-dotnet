@@ -135,34 +135,33 @@ namespace ApiSamples
 			});
 
 
-		//1. transaction with 2 subspan
-		//1. transaction with 1 span that has a subspan
+		//1 transaction with 2 sub span
+		//1 transaction with 1 span that has a sub span
 		public static void TwoTransactionWith2Spans()
 		{
 
+			//1 transaction 2 spans (both have the transaction as parent)
 			Agent.Tracer.CaptureTransaction("TestTransaction1", "TestType1",
 				t =>
 				{
-
 					t.CaptureSpan("TestSpan", "TestSpanName", s =>
 					{
 						Thread.Sleep(20);
+						//this span is also started on the transaction:
 						t.CaptureSpan("TestSpan2", "TestSpanName", s2 => { Thread.Sleep(20); });
 					});
 
 				});
 
+			//1 transaction then 1 span on that transaction and then 1 span on that previous span
 			Agent.Tracer.CaptureTransaction("TestTransaction2", "TestType2",
 				t =>
 				{
-
-
 					t.CaptureSpan("TestSpan", "TestSpanName", s =>
 					{
 						Thread.Sleep(20);
-						var subSpan = s.StartSpan("TestSpan2", "TestSpanName");
-						Thread.Sleep(20);
-						subSpan.End();
+						//this span is a subspan of the `s` span:
+						s.CaptureSpan("TestSpan2", "TestSpanName", () => Thread.Sleep(20));
 					});
 				});
 		}
