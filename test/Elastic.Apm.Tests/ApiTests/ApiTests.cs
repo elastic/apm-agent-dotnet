@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.Model.Payload;
+using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
@@ -357,6 +358,45 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			payloadSender.SpansOnFirstTransaction[0].Tags.Should().Contain("fooSpan2", "barSpan2");
 			payloadSender.SpansOnFirstTransaction[0].Context.Tags.Should().Contain("fooSpan2", "barSpan2");
+		}
+
+		/// <summary>
+		/// Creates a transaction and then a span inside this transaction and then a 2. span within the 1. span (aka sub span)
+		/// Makes sure the relationship between the transaction and the spans are captured correctly.
+		/// </summary>
+		[Fact]
+		public void CreateSubSpan()
+		{
+			const string transactionName = "TestTransaction";
+			const string transactionType = "UnitTest";
+			const string spanName1 = "TestSpan1";
+			const string spanName2 = "TestSpan1";
+			const string spanType = "TestSpan!";
+
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
+				Thread.Sleep(5);
+				var span1 = transaction.StartSpan(spanName1, spanType);
+				Thread.Sleep(5);
+				var span2 = span1.StartSpan(spanName2, spanType);
+				Thread.Sleep(5);
+				span2.End();
+				span1.End();
+				transaction.End();
+			}
+
+			var orderedSpans = payloadSender.Spans.OrderBy(n => n.Timestamp).ToList();
+
+			var firstSpan = orderedSpans.First();
+			var innerSpan = orderedSpans.Last();
+
+			firstSpan.ParentId.Should().Be(payloadSender.FirstTransaction.Id);
+			innerSpan.ParentId.Should().Be(firstSpan.Id);
+
+			firstSpan.TransactionId.Should().Be(payloadSender.FirstTransaction.Id);
+			innerSpan.TransactionId.Should().Be(payloadSender.FirstTransaction.Id);
 		}
 	}
 }

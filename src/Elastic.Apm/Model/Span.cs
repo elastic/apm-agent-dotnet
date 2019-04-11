@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -8,18 +9,20 @@ using Elastic.Apm.Report;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
-namespace Elastic.Apm.Model.Payload
+namespace Elastic.Apm.Model
 {
 	internal class Span : ISpan
 	{
 		private readonly Lazy<SpanContext> _context = new Lazy<SpanContext>();
+		private readonly Transaction _enclosingTransaction;
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _payloadSender;
-		private readonly Transaction _enclosingTransaction;
 
 		private readonly DateTimeOffset _start;
 
-		public Span(string name, string type, string parentId, string traceId, Transaction enclosingTransaction, IPayloadSender payloadSender, IApmLogger logger)
+		public Span(string name, string type, string parentId, string traceId, Transaction enclosingTransaction, IPayloadSender payloadSender,
+			IApmLogger logger
+		)
 		{
 			_start = DateTimeOffset.UtcNow;
 			_payloadSender = payloadSender;
@@ -94,13 +97,12 @@ namespace Elastic.Apm.Model.Payload
 			{ "Type", Type }
 		}.ToString();
 
-
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
 			=> StartSpanInternal(name, type, subType, action);
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
-			var retVal = new Span(name, type, ParentId, TraceId, _enclosingTransaction, _payloadSender, _logger );
+			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger);
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 
 			if (!string.IsNullOrEmpty(action)) retVal.Action = action;
@@ -117,38 +119,34 @@ namespace Elastic.Apm.Model.Payload
 		}
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
-		{
-			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
+			=> ExecutionSegmentCommon.CaptureException(exception, _logger, _payloadSender, this, _enclosingTransaction?.Context, culprit, isHandled,
+				parentId);
 
-			var ed = new CapturedException
-			{
-				Message = exception.Message,
-				Type = exception.GetType().FullName,
-				Handled = isHandled,
-				Stacktrace = StacktraceHelper.GenerateApmStackTrace(exception, _logger,
-					$"{nameof(Span)}.{nameof(CaptureException)}")
-			};
+		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), capturedAction);
 
-			_payloadSender.QueueError(new Error(ed, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit /*, Context = Context */ });
-		}
+		public void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), capturedAction);
+
+		public T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
+
+		public T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
+
+		public Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
+
+		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
+
+		public Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
+
+		public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null)
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null)
-		{
-			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
-
-			var capturedException = new CapturedException
-			{
-				Message = message
-			};
-
-			if (frames != null)
-			{
-				capturedException.Stacktrace
-					= StacktraceHelper.GenerateApmStackTrace(frames, _logger, $"{nameof(Span)}.{nameof(CaptureError)}");
-			}
-
-			_payloadSender.QueueError(
-				new Error(capturedException, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit /*, Context = Context */ });
-		}
+			=> ExecutionSegmentCommon.CaptureError(message, culprit, frames, _payloadSender, _logger, this, _enclosingTransaction?.Context, parentId);
 	}
 }
