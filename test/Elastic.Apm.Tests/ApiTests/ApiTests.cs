@@ -17,6 +17,11 @@ namespace Elastic.Apm.Tests.ApiTests
 	/// </summary>
 	public class ApiTests
 	{
+		private const string TestSpan1 = "TestSpan1";
+		private const string TestSpan2 = "TestSpan1";
+		private const string TestTransaction = "TestTransaction";
+		private const string UnitTest = "UnitTest";
+
 		/// <summary>
 		/// Starts and ends a transaction with the public API
 		/// and makes sure that the transaction is captured by the agent
@@ -24,8 +29,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void StartEndTransaction()
 		{
-			const string transactionName = "TestTransaction";
-			const string transactionType = "UnitTest";
+			const string transactionName = TestTransaction;
+			const string transactionType = UnitTest;
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
@@ -54,8 +59,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void StartNoEndTransaction()
 		{
-			const string transactionName = "TestTransaction";
-			const string transactionType = "UnitTest";
+			const string transactionName = TestTransaction;
+			const string transactionType = UnitTest;
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
@@ -70,8 +75,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void TransactionResultTest()
 		{
-			const string transactionName = "TestTransaction";
-			const string transactionType = "UnitTest";
+			const string transactionName = TestTransaction;
+			const string transactionType = UnitTest;
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
@@ -102,7 +107,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public async Task GetCurrentTransactionWithNotNull()
 		{
-			const string transactionName = "TestTransaction";
+			const string transactionName = TestTransaction;
 			var agent = new ApmAgent(new TestAgentComponents());
 
 			StartTransaction(); //Start transaction on the current task
@@ -143,8 +148,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void TransactionWithSpan()
 		{
-			const string transactionName = "TestTransaction";
-			const string transactionType = "UnitTest";
+			const string transactionName = TestTransaction;
+			const string transactionType = UnitTest;
 			const string spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
@@ -173,8 +178,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void TransactionWithSpanWithoutEnd()
 		{
-			const string transactionName = "TestTransaction";
-			const string transactionType = "UnitTest";
+			const string transactionName = TestTransaction;
+			const string transactionType = UnitTest;
 			const string spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
@@ -199,8 +204,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void TransactionWithSpanWithSubTypeAndAction()
 		{
-			const string transactionName = "TestTransaction";
-			const string transactionType = "UnitTest";
+			const string transactionName = TestTransaction;
+			const string transactionType = UnitTest;
 			const string spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
@@ -239,8 +244,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// <param name="culprit">Culprit.</param>
 		private static void ErrorOnTransactionCommon(string culprit = null)
 		{
-			const string transactionName = "TestTransaction";
-			const string transactionType = "UnitTest";
+			const string transactionName = TestTransaction;
+			const string transactionType = UnitTest;
 			const string exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
@@ -277,8 +282,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void ErrorOnSpan()
 		{
-			const string transactionName = "TestTransaction";
-			const string transactionType = "UnitTest";
+			const string transactionName = TestTransaction;
+			const string transactionType = UnitTest;
 			const string spanName = "TestSpan";
 			const string exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
@@ -314,8 +319,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void TagsOnTransactionAndSpan()
 		{
-			const string transactionName = "TestTransaction";
-			const string transactionType = "UnitTest";
+			const string transactionName = TestTransaction;
+			const string transactionType = UnitTest;
 			const string spanName = "TestSpan";
 			const string exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
@@ -367,21 +372,29 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void CreateSubSpan()
 		{
-			const string transactionName = "TestTransaction";
-			const string transactionType = "UnitTest";
-			const string spanName1 = "TestSpan1";
-			const string spanName2 = "TestSpan1";
-			const string spanType = "TestSpan!";
-
 			var payloadSender = new MockPayloadSender();
+			StartTransactionAndSpanWithSubSpan(payloadSender, s => { });
+		}
+
+		/// <summary>
+		/// Helper method. It creates a transaction, and a span on it, and then a sub span on that span.
+		/// Then it runs <paramref name="action" /> by passing the subspan as parameter
+		/// </summary>
+		/// <param name="payloadSender"></param>
+		/// <param name="action"></param>
+		private void StartTransactionAndSpanWithSubSpan(MockPayloadSender payloadSender, Action<ISpan> action)
+		{
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
+				var transaction = agent.Tracer.StartTransaction(TestTransaction, UnitTest);
 				Thread.Sleep(5);
-				var span1 = transaction.StartSpan(spanName1, spanType);
+				var span1 = transaction.StartSpan(TestSpan1, ApiConstants.TypeExternal);
 				Thread.Sleep(5);
-				var span2 = span1.StartSpan(spanName2, spanType);
+				var span2 = span1.StartSpan(TestSpan2, ApiConstants.TypeExternal);
 				Thread.Sleep(5);
+
+				action(span2);
+
 				span2.End();
 				span1.End();
 				transaction.End();
@@ -397,6 +410,51 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			firstSpan.TransactionId.Should().Be(payloadSender.FirstTransaction.Id);
 			innerSpan.TransactionId.Should().Be(payloadSender.FirstTransaction.Id);
+		}
+
+		/// <summary>
+		/// Creates a transaction, then a span and then a sub span, which captures an exception.
+		/// Makes sure that the exception is captured by the agent.
+		/// </summary>
+		[Fact]
+		public void SubSpanWithError()
+		{
+			var payloadSender = new MockPayloadSender();
+			StartTransactionAndSpanWithSubSpan(payloadSender, span2 =>
+			{
+				try
+				{
+					throw new TestException("test exception");
+				}
+				catch (Exception e)
+				{
+					span2.CaptureException(e);
+				}
+			});
+
+			payloadSender.Errors.Should().NotBeEmpty();
+			payloadSender.FirstError.Exception.Type.Should().Be(typeof(TestException).ToString());
+			payloadSender.FirstError.Exception.Message.Should().Be("test exception");
+		}
+
+		/// <summary>
+		/// Creates a transaction, then a span and then a sub span, which captures a tag.
+		/// Makes sure that the tag is captured by the agent.
+		/// </summary>
+		[Fact]
+		public void SubSpanWithTags()
+		{
+			var payloadSender = new MockPayloadSender();
+			StartTransactionAndSpanWithSubSpan(payloadSender, span2 => { span2.Tags["foo"] = "bar"; });
+
+			payloadSender.FirstSpan.Context.Tags.Should().NotBeEmpty();
+			payloadSender.FirstSpan.Context.Tags.Should().ContainKey("foo");
+			payloadSender.FirstSpan.Context.Tags["foo"].Should().Be("bar");
+		}
+
+		private class TestException : Exception
+		{
+			public TestException(string message) : base(message) { }
 		}
 	}
 }
