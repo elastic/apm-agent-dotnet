@@ -32,24 +32,26 @@ namespace Elastic.Apm.Tests.ApiTests
 			const string transactionName = TestTransaction;
 			const string transactionType = UnitTest;
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
-			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
+				Thread.Sleep(5); //Make sure we have duration > 0
 
-			Thread.Sleep(5); //Make sure we have duration > 0
+				transaction.End();
 
-			transaction.End();
 
-			payloadSender.Transactions.Should().ContainSingle();
+				payloadSender.Transactions.Should().ContainSingle();
 
-			var capturedTransaction = payloadSender.Transactions[0];
+				var capturedTransaction = payloadSender.Transactions[0];
 
-			capturedTransaction.Name.Should().Be(transactionName);
-			capturedTransaction.Type.Should().Be(transactionType);
-			capturedTransaction.Duration.Should().BeGreaterOrEqualTo(5);
-			capturedTransaction.Id.Should().NotBeEmpty();
+				capturedTransaction.Name.Should().Be(transactionName);
+				capturedTransaction.Type.Should().Be(transactionType);
+				capturedTransaction.Duration.Should().BeGreaterOrEqualTo(5);
+				capturedTransaction.Id.Should().NotBeEmpty();
 
-			agent.Service.Should().NotBeNull();
+				agent.Service.Should().NotBeNull();
+			}
 		}
 
 		/// <summary>
@@ -62,9 +64,10 @@ namespace Elastic.Apm.Tests.ApiTests
 			const string transactionName = TestTransaction;
 			const string transactionType = UnitTest;
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
-
-			var unused = agent.Tracer.StartTransaction(transactionName, transactionType);
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				var unused = agent.Tracer.StartTransaction(transactionName, transactionType);
+			}
 			payloadSender.Transactions.Should().BeEmpty();
 		}
 
@@ -78,14 +81,16 @@ namespace Elastic.Apm.Tests.ApiTests
 			const string transactionName = TestTransaction;
 			const string transactionType = UnitTest;
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
-			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
-			const string result = "success";
-			transaction.Result = result;
-			transaction.End();
+				const string result = "success";
+				transaction.Result = result;
+				transaction.End();
 
-			payloadSender.Transactions[0].Result.Should().Be(result);
+				payloadSender.Transactions[0].Result.Should().Be(result);
+			}
 		}
 
 		/// <summary>
@@ -95,9 +100,11 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void GetCurrentTransactionWithNoTransaction()
 		{
-			var agent = new ApmAgent(new TestAgentComponents());
-			var currentTransaction = agent.Tracer.CurrentTransaction;
-			currentTransaction.Should().BeNull();
+			using (var agent = new ApmAgent(new TestAgentComponents()))
+			{
+				var currentTransaction = agent.Tracer.CurrentTransaction;
+				currentTransaction.Should().BeNull();
+			}
 		}
 
 		/// <summary>
@@ -108,24 +115,25 @@ namespace Elastic.Apm.Tests.ApiTests
 		public async Task GetCurrentTransactionWithNotNull()
 		{
 			const string transactionName = TestTransaction;
-			var agent = new ApmAgent(new TestAgentComponents());
+			using (var agent = new ApmAgent(new TestAgentComponents()))
+			{
+				StartTransaction(agent); //Start transaction on the current task
+				await DoAsyncWork(agent); //Do work in subtask
 
-			StartTransaction(); //Start transaction on the current task
-			await DoAsyncWork(); //Do work in subtask
+				var currentTransaction = agent.Tracer.CurrentTransaction; //Get transaction in the current task
 
-			var currentTransaction = agent.Tracer.CurrentTransaction; //Get transaction in the current task
+				currentTransaction.Should().NotBeNull();
+				currentTransaction.Name.Should().Be(transactionName);
+				currentTransaction.Type.Should().Be(ApiConstants.TypeRequest);
+			}
 
-			currentTransaction.Should().NotBeNull();
-			currentTransaction.Name.Should().Be(transactionName);
-			currentTransaction.Type.Should().Be(ApiConstants.TypeRequest);
-
-			void StartTransaction()
+			void StartTransaction(ApmAgent agent)
 			{
 				Agent.TransactionContainer.Transactions.Value =
 					new Transaction(agent, transactionName, ApiConstants.TypeRequest);
 			}
 
-			async Task DoAsyncWork()
+			async Task DoAsyncWork(ApmAgent agent)
 			{
 				//Make sure we have a transaction in the subtask before the async work
 				agent.Tracer.CurrentTransaction.Should().NotBeNull();
@@ -152,23 +160,24 @@ namespace Elastic.Apm.Tests.ApiTests
 			const string transactionType = UnitTest;
 			const string spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
-			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
+				var span = transaction.StartSpan(spanName, ApiConstants.TypeExternal);
 
-			var span = transaction.StartSpan(spanName, ApiConstants.TypeExternal);
+				Thread.Sleep(5); //Make sure we have duration > 0
 
-			Thread.Sleep(5); //Make sure we have duration > 0
+				span.End();
+				transaction.End();
+				payloadSender.Transactions.Should().NotBeEmpty();
+				payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
-			span.End();
-			transaction.End();
-			payloadSender.Transactions.Should().NotBeEmpty();
-			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
+				payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(spanName);
+				payloadSender.SpansOnFirstTransaction[0].Duration.Should().BeGreaterOrEqualTo(5);
 
-			payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(spanName);
-			payloadSender.SpansOnFirstTransaction[0].Duration.Should().BeGreaterOrEqualTo(5);
-
-			agent.Service.Should().NotBeNull();
+				agent.Service.Should().NotBeNull();
+			}
 		}
 
 		/// <summary>
@@ -182,19 +191,20 @@ namespace Elastic.Apm.Tests.ApiTests
 			const string transactionType = UnitTest;
 			const string spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
-			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
+				var unused = transaction.StartSpan(spanName, ApiConstants.TypeExternal);
 
-			var unused = transaction.StartSpan(spanName, ApiConstants.TypeExternal);
+				Thread.Sleep(5); //Make sure we have duration > 0
 
-			Thread.Sleep(5); //Make sure we have duration > 0
+				transaction.End(); //Ends transaction, but doesn't end span.
+				payloadSender.Transactions.Should().NotBeEmpty();
+				payloadSender.SpansOnFirstTransaction.Should().BeEmpty();
 
-			transaction.End(); //Ends transaction, but doesn't end span.
-			payloadSender.Transactions.Should().NotBeEmpty();
-			payloadSender.SpansOnFirstTransaction.Should().BeEmpty();
-
-			agent.Service.Should().NotBeNull();
+				agent.Service.Should().NotBeNull();
+			}
 		}
 
 		/// <summary>
@@ -208,21 +218,23 @@ namespace Elastic.Apm.Tests.ApiTests
 			const string transactionType = UnitTest;
 			const string spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
 
-			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
-			var span = transaction.StartSpan(spanName, ApiConstants.TypeDb, ApiConstants.SubtypeMssql, ApiConstants.ActionQuery);
-			span.End();
-			transaction.End();
+				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
+				var span = transaction.StartSpan(spanName, ApiConstants.TypeDb, ApiConstants.SubtypeMssql, ApiConstants.ActionQuery);
+				span.End();
+				transaction.End();
 
-			payloadSender.Transactions.Should().NotBeEmpty();
-			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
+				payloadSender.Transactions.Should().NotBeEmpty();
+				payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
-			payloadSender.SpansOnFirstTransaction[0].Type.Should().Be(ApiConstants.TypeDb);
-			payloadSender.SpansOnFirstTransaction[0].Subtype.Should().Be(ApiConstants.SubtypeMssql);
-			payloadSender.SpansOnFirstTransaction[0].Action.Should().Be(ApiConstants.ActionQuery);
+				payloadSender.SpansOnFirstTransaction[0].Type.Should().Be(ApiConstants.TypeDb);
+				payloadSender.SpansOnFirstTransaction[0].Subtype.Should().Be(ApiConstants.SubtypeMssql);
+				payloadSender.SpansOnFirstTransaction[0].Action.Should().Be(ApiConstants.ActionQuery);
 
-			agent.Service.Should().NotBeNull();
+				agent.Service.Should().NotBeNull();
+			}
 		}
 
 		/// <summary>
@@ -248,24 +260,26 @@ namespace Elastic.Apm.Tests.ApiTests
 			const string transactionType = UnitTest;
 			const string exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
-
-			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
-
-			Thread.Sleep(5); //Make sure we have duration > 0
-			try
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-				throw new InvalidOperationException(exceptionMessage);
-			}
-			catch (Exception e)
-			{
-				if (string.IsNullOrEmpty(culprit))
-					transaction.CaptureException(e);
-				else
-					transaction.CaptureException(e, culprit);
-			}
 
-			transaction.End();
+				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
+
+				Thread.Sleep(5); //Make sure we have duration > 0
+				try
+				{
+					throw new InvalidOperationException(exceptionMessage);
+				}
+				catch (Exception e)
+				{
+					if (string.IsNullOrEmpty(culprit))
+						transaction.CaptureException(e);
+					else
+						transaction.CaptureException(e, culprit);
+				}
+
+				transaction.End();
+			}
 
 			payloadSender.Transactions.Should().ContainSingle();
 			payloadSender.Errors.Should().ContainSingle();
@@ -287,25 +301,27 @@ namespace Elastic.Apm.Tests.ApiTests
 			const string spanName = "TestSpan";
 			const string exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
-
-			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
-
-			var span = transaction.StartSpan(spanName, ApiConstants.TypeExternal);
-
-			Thread.Sleep(5); //Make sure we have duration > 0
-
-			try
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-				throw new InvalidOperationException(exceptionMessage);
-			}
-			catch (Exception e)
-			{
-				span.CaptureException(e);
-			}
 
-			span.End();
-			transaction.End();
+				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
+
+				var span = transaction.StartSpan(spanName, ApiConstants.TypeExternal);
+
+				Thread.Sleep(5); //Make sure we have duration > 0
+
+				try
+				{
+					throw new InvalidOperationException(exceptionMessage);
+				}
+				catch (Exception e)
+				{
+					span.CaptureException(e);
+				}
+
+				span.End();
+				transaction.End();
+			}
 
 			payloadSender.Transactions.Should().ContainSingle();
 			payloadSender.Errors.Should().ContainSingle();
@@ -324,29 +340,31 @@ namespace Elastic.Apm.Tests.ApiTests
 			const string spanName = "TestSpan";
 			const string exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
-
-			var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
-			transaction.Tags["fooTransaction1"] = "barTransaction1";
-			transaction.Tags["fooTransaction2"] = "barTransaction2";
-
-			var span = transaction.StartSpan(spanName, ApiConstants.TypeExternal);
-			span.Tags["fooSpan1"] = "barSpan1";
-			span.Tags["fooSpan2"] = "barSpan2";
-
-			Thread.Sleep(5); //Make sure we have duration > 0
-
-			try
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-				throw new InvalidOperationException(exceptionMessage);
-			}
-			catch (Exception e)
-			{
-				span.CaptureException(e);
-			}
 
-			span.End();
-			transaction.End();
+				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
+				transaction.Tags["fooTransaction1"] = "barTransaction1";
+				transaction.Tags["fooTransaction2"] = "barTransaction2";
+
+				var span = transaction.StartSpan(spanName, ApiConstants.TypeExternal);
+				span.Tags["fooSpan1"] = "barSpan1";
+				span.Tags["fooSpan2"] = "barSpan2";
+
+				Thread.Sleep(5); //Make sure we have duration > 0
+
+				try
+				{
+					throw new InvalidOperationException(exceptionMessage);
+				}
+				catch (Exception e)
+				{
+					span.CaptureException(e);
+				}
+
+				span.End();
+				transaction.End();
+			}
 
 			payloadSender.Transactions.Should().ContainSingle();
 			payloadSender.Errors.Should().ContainSingle();
