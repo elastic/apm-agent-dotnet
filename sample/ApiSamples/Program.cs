@@ -135,7 +135,7 @@ namespace ApiSamples
 			});
 
 
-		//1 transaction with 2 sub span
+		//1 transaction with 2 spans
 		//1 transaction with 1 span that has a sub span
 		public static void TwoTransactionWith2Spans()
 		{
