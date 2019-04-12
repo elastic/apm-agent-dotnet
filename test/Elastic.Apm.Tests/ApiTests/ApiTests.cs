@@ -220,7 +220,6 @@ namespace Elastic.Apm.Tests.ApiTests
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-
 				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 				var span = transaction.StartSpan(spanName, ApiConstants.TypeDb, ApiConstants.SubtypeMssql, ApiConstants.ActionQuery);
 				span.End();
@@ -262,7 +261,6 @@ namespace Elastic.Apm.Tests.ApiTests
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-
 				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
 				Thread.Sleep(5); //Make sure we have duration > 0
@@ -303,7 +301,6 @@ namespace Elastic.Apm.Tests.ApiTests
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-
 				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
 				var span = transaction.StartSpan(spanName, ApiConstants.TypeExternal);
@@ -342,7 +339,6 @@ namespace Elastic.Apm.Tests.ApiTests
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-
 				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 				transaction.Tags["fooTransaction1"] = "barTransaction1";
 				transaction.Tags["fooTransaction2"] = "barTransaction2";
@@ -471,7 +467,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		}
 
 		/// <summary>
-		/// Passes a valid trace context to <see cref="Tracer.StartTransaction"/>.
+		/// Passes a valid trace context to <see cref="Tracer.StartTransaction" />.
 		/// Makes sure the agent continued the trace.
 		/// </summary>
 		[Fact]
@@ -503,7 +499,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		}
 
 		/// <summary>
-		/// Passes different invalid (TraceId, ParentId) combination to <see cref="Tracer.StartTransaction"/>
+		/// Passes different invalid (TraceId, ParentId) combination to <see cref="Tracer.StartTransaction" />
 		/// Makes sure a new trace was created, so the created transaction has a new TraceId and no ParentId
 		/// </summary>
 		/// <param name="traceId"></param>
@@ -515,19 +511,20 @@ namespace Elastic.Apm.Tests.ApiTests
 		[InlineData("null", "5ec5de4fdae36f4c")]
 		[InlineData("005a66g3c2fb9591a0e53d322df6c3e2", "null")]
 		[InlineData("00000000000000000000000000000000", "0000000000000000")]
-		[InlineData("005a66g3c2fb9591a0e53d322df6c3e2", "5ec5de4fdae36f4c")]  //1 non-hex in TraceId
-		[InlineData("005a66a3c2fb9591a0e53d322df6c3e2", "5ec5de4fdaei6f4c")]  //1 non-hex in ParentId
-		[InlineData("005a6663c2fb9591a0e53d322d6c3e2", "5ec5de4fdae36f4c")]   //Trace Id 1 shorter than expected
-		[InlineData("005a6663c2fb9591a0e53d322df6c3e2", "5ec5defdae36f4c")]   //Parent Id 1 shorter than expected
+		[InlineData("005a66g3c2fb9591a0e53d322df6c3e2", "5ec5de4fdae36f4c")] //1 non-hex in TraceId
+		[InlineData("005a66a3c2fb9591a0e53d322df6c3e2", "5ec5de4fdaei6f4c")] //1 non-hex in ParentId
+		[InlineData("005a6663c2fb9591a0e53d322d6c3e2", "5ec5de4fdae36f4c")] //Trace Id 1 shorter than expected
+		[InlineData("005a6663c2fb9591a0e53d322df6c3e2", "5ec5defdae36f4c")] //Parent Id 1 shorter than expected
 		[InlineData("005a6663c2fb95291a0e53d322df6c3e2", "5ec5de4fdae36f4c")] //Trace Id 1 longer than expected
-		[InlineData("005a6663c2fb9591a0e53d322df6c3e2", "56ec5de4fdae36f4c")] //Parent Id 1 longer than expected
+		[InlineData("005a6663c2fb9591a0e53d322df6c3e2", "56ec5de4fdae36f4c")]
+		//Parent Id 1 longer than expected
 		public void InvalidTraceContextTest(string traceId, string parentId)
 		{
 			var payloadSender1 = new MockPayloadSender();
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender1)))
 			{
-				var transaction = agent.Tracer.StartTransaction(TestTransaction, UnitTest);
+				var transaction = agent.Tracer.StartTransaction(TestTransaction, UnitTest, (traceId, parentId));
 				transaction.End();
 			}
 
