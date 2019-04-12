@@ -25,8 +25,7 @@ namespace Elastic.Apm.Api
 
 		public ITransaction CurrentTransaction => Agent.TransactionContainer.Transactions.Value;
 
-		public ITransaction StartTransaction(string name, string type,
-			(string traceId, string parentId) traceContext = new ValueTuple<string, string>())
+		public ITransaction StartTransaction(string name, string type, (string traceId, string parentId) traceContext = default)
 		{
 			var (traceId, parentId) = traceContext;
 			if (TraceParent.IsTraceIdValid(traceId) && TraceParent.IsTraceParentValid(parentId))
@@ -50,7 +49,7 @@ namespace Elastic.Apm.Api
 			return retVal;
 		}
 
-		public void CaptureTransaction(string name, string type, Action<ITransaction> action, (string traceId, string parentId) traceContext = new ValueTuple<string, string>())
+		public void CaptureTransaction(string name, string type, Action<ITransaction> action, (string traceId, string parentId) traceContext = default)
 		{
 			var transaction = StartTransaction(name, type, traceContext);
 
@@ -65,7 +64,7 @@ namespace Elastic.Apm.Api
 			}
 		}
 
-		public void CaptureTransaction(string name, string type, Action action, (string traceId, string parentId) traceContext = new ValueTuple<string, string>())
+		public void CaptureTransaction(string name, string type, Action action, (string traceId, string parentId) traceContext = default)
 		{
 			var transaction = StartTransaction(name, type, traceContext);
 
@@ -80,7 +79,7 @@ namespace Elastic.Apm.Api
 			}
 		}
 
-		public T CaptureTransaction<T>(string name, string type, Func<ITransaction, T> func, (string traceId, string parentId) traceContext = new ValueTuple<string, string>())
+		public T CaptureTransaction<T>(string name, string type, Func<ITransaction, T> func, (string traceId, string parentId) traceContext = default)
 		{
 			var transaction = StartTransaction(name, type, traceContext);
 			var retVal = default(T);
@@ -97,7 +96,7 @@ namespace Elastic.Apm.Api
 			return retVal;
 		}
 
-		public T CaptureTransaction<T>(string name, string type, Func<T> func, (string traceId, string parentId) traceContext = new ValueTuple<string, string>())
+		public T CaptureTransaction<T>(string name, string type, Func<T> func, (string traceId, string parentId) traceContext = default)
 		{
 			var transaction = StartTransaction(name, type, traceContext);
 			var retVal = default(T);
@@ -114,7 +113,7 @@ namespace Elastic.Apm.Api
 			return retVal;
 		}
 
-		public Task CaptureTransaction(string name, string type, Func<Task> func, (string traceId, string parentId) traceContext = new ValueTuple<string, string>())
+		public Task CaptureTransaction(string name, string type, Func<Task> func, (string traceId, string parentId) traceContext = default)
 		{
 			var transaction = StartTransaction(name, type, traceContext);
 			var task = func();
@@ -122,7 +121,7 @@ namespace Elastic.Apm.Api
 			return task;
 		}
 
-		public Task CaptureTransaction(string name, string type, Func<ITransaction, Task> func, (string traceId, string parentId) traceContext = new ValueTuple<string, string>())
+		public Task CaptureTransaction(string name, string type, Func<ITransaction, Task> func, (string traceId, string parentId) traceContext = default)
 		{
 			var transaction = StartTransaction(name, type, traceContext);
 			var task = func(transaction);
@@ -130,7 +129,7 @@ namespace Elastic.Apm.Api
 			return task;
 		}
 
-		public Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func, (string traceId, string parentId) traceContext = new ValueTuple<string, string>())
+		public Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func, (string traceId, string parentId) traceContext = default)
 		{
 			var transaction = StartTransaction(name, type, traceContext);
 			var task = func();
@@ -139,7 +138,7 @@ namespace Elastic.Apm.Api
 			return task;
 		}
 
-		public Task<T> CaptureTransaction<T>(string name, string type, Func<ITransaction, Task<T>> func, (string traceId, string parentId) traceContext = new ValueTuple<string, string>())
+		public Task<T> CaptureTransaction<T>(string name, string type, Func<ITransaction, Task<T>> func, (string traceId, string parentId) traceContext = default)
 		{
 			var transaction = StartTransaction(name, type, traceContext);
 			var task = func(transaction);
