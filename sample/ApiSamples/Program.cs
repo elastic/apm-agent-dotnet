@@ -13,7 +13,7 @@ namespace ApiSamples
 	{
 		private static void Main(string[] args)
 		{
-			if (args.Length == 2) //in case it's started with 2 arguments we try to parse it as a TraceContext
+			if (args.Length == 2) //in case it's started with 2 arguments we try to parse those 2 args as a TraceContext
 			{
 				Console.WriteLine($"Continue trace, traceId: {args[0]}, parentId: {args[1]}");
 				var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransaction", (args[0], args[1]));
