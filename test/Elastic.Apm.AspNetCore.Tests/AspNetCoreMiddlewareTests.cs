@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -66,7 +67,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			_capturedPayload.Transactions.Should().ContainSingle();
 			var transaction = _capturedPayload.FirstTransaction;
-			var transactionName = $"{response.RequestMessage.Method} {response.RequestMessage.RequestUri.AbsolutePath}";
+			var transactionName = $"{response.RequestMessage.Method} Home/SimplePage";
 			transaction.Name.Should().Be(transactionName);
 			transaction.Result.Should().Be("HTTP 2xx");
 			transaction.Duration.Should().BeGreaterThan(0);

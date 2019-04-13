@@ -113,6 +113,7 @@ namespace SampleAspNetCoreApp.Controllers
 			throw new Exception("This is a test exception!");
 		}
 
+		//Used as test for optional route parameters
 		public IActionResult Sample(int id)
 		{
 			return Ok(id);

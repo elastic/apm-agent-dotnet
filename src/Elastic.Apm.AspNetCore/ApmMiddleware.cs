@@ -110,21 +110,15 @@ namespace Elastic.Apm.AspNetCore
 			catch (Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
 			finally
 			{
+				//fixup Transaction.Name - e.g. /user/profile/1 -> /user/profile/{id}
 				var routeData = (context.Features[typeof(IRoutingFeature)] as IRoutingFeature)?.RouteData;
 				if (routeData != null)
 				{
-					//WIP!!
-					if (routeData.Values.Count >= 3)
+					var name = GetNameFromRouteContext(routeData.Values);
+
+					if (!string.IsNullOrWhiteSpace(name))
 					{
-						try
-						{
-							transaction.Name =
-								$"{context.Request.Method} {routeData.Values["controller"]}/{routeData.Values["action"]}/{{id}}";
-						}
-						catch
-						{
-							_logger.Debug()?.Log("failed calculating transaction name based on route values");
-						}
+						transaction.Name = $"{context.Request.Method} {name}";
 					}
 				}
 
@@ -165,7 +159,58 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		private string GetProtocolName(string protocol)
+		//credit: https://github.com/Microsoft/ApplicationInsights-aspnetcore
+		private static string GetNameFromRouteContext(IDictionary<string, object> routeValues)
+		{
+			string name = null;
+
+			if (routeValues.Count <= 0) return null;
+
+			routeValues.TryGetValue("controller", out var controller);
+			var controllerString = (controller == null) ? string.Empty : controller.ToString();
+
+			if (!string.IsNullOrEmpty(controllerString))
+			{
+				name = controllerString;
+
+				routeValues.TryGetValue("action", out var action);
+				var actionString = (action == null) ? string.Empty : action.ToString();
+
+				if (!string.IsNullOrEmpty(actionString))
+				{
+					name += "/" + actionString;
+				}
+
+				if (routeValues.Keys.Count <= 2) return name;
+
+				// Add parameters
+				var sortedKeys = routeValues.Keys
+					.Where(key =>
+						!string.Equals(key, "controller", StringComparison.OrdinalIgnoreCase) &&
+						!string.Equals(key, "action", StringComparison.OrdinalIgnoreCase) &&
+						!string.Equals(key, "!__route_group", StringComparison.OrdinalIgnoreCase))
+					.OrderBy(key => key, StringComparer.OrdinalIgnoreCase)
+					.ToArray();
+
+				if (sortedKeys.Length <= 0) return name;
+
+				var arguments = string.Join(@"/", sortedKeys);
+				name += " {" + arguments + "}";
+			}
+			else
+			{
+				routeValues.TryGetValue("page", out var page);
+				var pageString = (page == null) ? string.Empty : page.ToString();
+				if (!string.IsNullOrEmpty(pageString))
+				{
+					name = pageString;
+				}
+			}
+
+			return name;
+		}
+
+		private static string GetProtocolName(string protocol)
 		{
 			switch (protocol)
 			{
@@ -178,7 +223,7 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		private string GetHttpVersion(string protocolString)
+		private static string GetHttpVersion(string protocolString)
 		{
 			switch (protocolString)
 			{
