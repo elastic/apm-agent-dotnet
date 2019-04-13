@@ -11,6 +11,7 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 
 [assembly:
 	InternalsVisibleTo(
@@ -109,6 +110,24 @@ namespace Elastic.Apm.AspNetCore
 			catch (Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
 			finally
 			{
+				var routeData = (context.Features[typeof(IRoutingFeature)] as IRoutingFeature)?.RouteData;
+				if (routeData != null)
+				{
+					//WIP!!
+					if (routeData.Values.Count >= 3)
+					{
+						try
+						{
+							transaction.Name =
+								$"{context.Request.Method} {routeData.Values["controller"]}/{routeData.Values["action"]}/{{id}}";
+						}
+						catch
+						{
+							_logger.Debug()?.Log("failed calculating transaction name based on route values");
+						}
+					}
+				}
+
 				Dictionary<string, string> responseHeaders = null;
 
 				if (_configurationReader.CaptureHeaders)

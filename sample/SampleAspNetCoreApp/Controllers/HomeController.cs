@@ -113,6 +113,10 @@ namespace SampleAspNetCoreApp.Controllers
 			throw new Exception("This is a test exception!");
 		}
 
+		public IActionResult Sample(int id)
+		{
+			return Ok(id);
+		}
 
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 		public IActionResult Error() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });

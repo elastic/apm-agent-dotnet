@@ -27,5 +27,12 @@ namespace WebApiSample.Controllers
 
 			return new[] { "value1", "value2", lastValue };
 		}
+
+		// GET api/values/5
+		[HttpGet("{id}")]
+		public ActionResult<string> Get(int id)
+		{
+			return "value" + id;
+		}
 	}
 }
