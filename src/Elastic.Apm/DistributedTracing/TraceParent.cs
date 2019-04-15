@@ -36,13 +36,13 @@ namespace Elastic.Apm.DistributedTracing
 		/// </summary>
 		/// <param name="traceParentValue">The value of the traceparent header</param>
 		/// <param name="traceId">The parsed traceId</param>
-		/// <param name="prentId">The parsed parentId</param>
+		/// <param name="parentId">The parsed parentId</param>
 		/// <param name="traceFields">The parsed traceOptions flags</param>
 		/// <returns>True if parsing was successful, false otherwise.</returns>
-		internal static bool TryExtractTraceparent(string traceParentValue, out string traceId, out string prentId, out byte traceFields)
+		internal static bool TryExtractTraceparent(string traceParentValue, out string traceId, out string parentId, out byte traceFields)
 		{
 			traceId = string.Empty;
-			prentId = string.Empty;
+			parentId = string.Empty;
 			traceFields = 0;
 
 			var bestAttempt = false;

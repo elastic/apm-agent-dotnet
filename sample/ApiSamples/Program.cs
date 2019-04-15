@@ -44,7 +44,7 @@ namespace ApiSamples
 			}
 		}
 
-		public static void SampleSpamWithCustomContext()
+		public static void SampleSpanWithCustomContext()
 		{
 			Agent.Tracer.CaptureTransaction("SampleTransaction", "SampleTransactionType", transaction =>
 			{
@@ -59,7 +59,7 @@ namespace ApiSamples
 			});
 		}
 
-		public static void SampleSpamWithCustomContextFillAll()
+		public static void SampleSpanWithCustomContextFillAll()
 		{
 			Agent.Tracer.CaptureTransaction("SampleTransaction", "SampleTransactionType", transaction =>
 			{
@@ -146,7 +146,7 @@ namespace ApiSamples
 				t.Tags["fooTransaction2"] = "barTransaction2";
 
 				Thread.Sleep(10);
-				t.CaptureSpan("TestSpan", "TestSpanName", s =>
+				t.CaptureSpan("TestSpan", "TestSpanType", s =>
 				{
 					Thread.Sleep(20);
 					s.Tags["fooSpan"] = "barSpan";
@@ -162,11 +162,11 @@ namespace ApiSamples
 			Agent.Tracer.CaptureTransaction("TestTransaction1", "TestType1",
 				t =>
 				{
-					t.CaptureSpan("TestSpan", "TestSpanName", s =>
+					t.CaptureSpan("TestSpan", "TestSpanType", s =>
 					{
 						Thread.Sleep(20);
 						//this span is also started on the transaction:
-						t.CaptureSpan("TestSpan2", "TestSpanName", s2 => { Thread.Sleep(20); });
+						t.CaptureSpan("TestSpan2", "TestSpanType", s2 => { Thread.Sleep(20); });
 					});
 				});
 
@@ -174,11 +174,11 @@ namespace ApiSamples
 			Agent.Tracer.CaptureTransaction("TestTransaction2", "TestType2",
 				t =>
 				{
-					t.CaptureSpan("TestSpan", "TestSpanName", s =>
+					t.CaptureSpan("TestSpan", "TestSpanType", s =>
 					{
 						Thread.Sleep(20);
 						//this span is a subspan of the `s` span:
-						s.CaptureSpan("TestSpan2", "TestSpanName", () => Thread.Sleep(20));
+						s.CaptureSpan("TestSpan2", "TestSpanType", () => Thread.Sleep(20));
 					});
 				});
 		}

@@ -69,8 +69,9 @@ namespace Elastic.Apm.Api
 		void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null);
 
 		/// <summary>
-		/// This is a convenient method which starts and ends a span on the given transaction and captures unhandled exceptions
+		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled exceptions
 		/// and schedules it to be reported to the APM Server.
+		/// The created span will be a child span of this execution segment.
 		/// </summary>
 		/// <param name="name">The name of the span.</param>
 		/// <param name="type">The type of the span.</param>
@@ -83,8 +84,9 @@ namespace Elastic.Apm.Api
 		void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null);
 
 		/// <summary>
-		/// This is a convenient method which starts and ends a span on the given transaction and captures unhandled exceptions
+		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled exceptions
 		/// and schedules it to be reported to the APM Server.
+		/// The created span will be a child span of this execution segment.
 		/// </summary>
 		/// <param name="name">The name of the span.</param>
 		/// <param name="type">The type of the span.</param>
@@ -94,8 +96,9 @@ namespace Elastic.Apm.Api
 		void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null);
 
 		/// <summary>
-		/// This is a convenient method which starts and ends a span on the given transaction and captures unhandled exceptions
+		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled exceptions
 		/// and schedules it to be reported to the APM Server.
+		/// The created span will be a child span of this execution segment.
 		/// </summary>
 		/// <param name="name">The name of the span.</param>
 		/// <param name="type">The type of the span.</param>
@@ -114,8 +117,9 @@ namespace Elastic.Apm.Api
 		T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null);
 
 		/// <summary>
-		/// This is a convenient method which starts and ends a span on the given transaction and captures unhandled exceptions
+		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled exceptions
 		/// and schedules it to be reported to the APM Server.
+		/// The created span will be a child span of this execution segment.
 		/// </summary>
 		/// <param name="name">The name of the span.</param>
 		/// <param name="type">The type of the span.</param>
@@ -134,8 +138,9 @@ namespace Elastic.Apm.Api
 		T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null);
 
 		/// <summary>
-		/// This is a convenient method which starts and ends a span on the given transaction and captures unhandled exceptions
+		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled exceptions
 		/// and schedules it to be reported to the APM Server.
+		/// The created span will be a child span of this execution segment.
 		/// </summary>
 		/// <param name="name">The name of the span.</param>
 		/// <param name="type">The type of the span.</param>
@@ -146,8 +151,9 @@ namespace Elastic.Apm.Api
 		Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null);
 
 		/// <summary>
-		/// This is a convenient method which starts and ends a span on the given transaction and captures unhandled exceptions
+		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled exceptions
 		/// and schedules it to be reported to the APM Server.
+		/// The created span will be a child span of this execution segment.
 		/// </summary>
 		/// <param name="name">The name of the span.</param>
 		/// <param name="type">The type of the span.</param>
@@ -161,8 +167,9 @@ namespace Elastic.Apm.Api
 		Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null);
 
 		/// <summary>
-		/// This is a convenient method which starts and ends a span on the given transaction and captures unhandled exceptions
+		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled exceptions
 		/// and schedules it to be reported to the APM Server.
+		/// The created span will be a child span of this execution segment.
 		/// </summary>
 		/// <param name="name">The name of the span.</param>
 		/// <param name="type">The type of the span.</param>
@@ -177,8 +184,9 @@ namespace Elastic.Apm.Api
 		Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null);
 
 		/// <summary>
-		/// This is a convenient method which starts and ends a span on the given transaction and captures unhandled exceptions
+		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled exceptions
 		/// and schedules it to be reported to the APM Server.
+		/// The created span will be a child span of this execution segment.
 		/// </summary>
 		/// <param name="name">The name of the span.</param>
 		/// <param name="type">The type of the span.</param>
@@ -200,7 +208,7 @@ namespace Elastic.Apm.Api
 		void End();
 
 		/// <summary>
-		/// Start and return a new custom span as a child of this transaction.
+		/// Start and return a new custom span as a child of this execution segment.
 		/// </summary>
 		/// <param name="name">The name of the span.</param>
 		/// <param name="type">The type of the span.</param>
