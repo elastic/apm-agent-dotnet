@@ -1,5 +1,5 @@
 ﻿using System.Threading;
-using Elastic.Apm.Model.Payload;
+using Elastic.Apm.Model;
 
 namespace Elastic.Apm
 {
