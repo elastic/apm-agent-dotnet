@@ -95,7 +95,7 @@ namespace Elastic.Apm.DistributedTracing
 				if(!IsTraceParentValid(parentIdVal))
 					return false;
 
-				prentId = parentIdVal;
+				parentId = parentIdVal;
 			}
 			catch (ArgumentOutOfRangeException)
 			{
