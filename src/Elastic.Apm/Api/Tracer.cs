@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model.Payload;
@@ -14,12 +15,14 @@ namespace Elastic.Apm.Api
 		private readonly ScopedLogger _logger;
 		private readonly IPayloadSender _sender;
 		private readonly Service _service;
+		private readonly Sampler _sampler;
 
-		public Tracer(IApmLogger logger, Service service, IPayloadSender payloadSender)
+		public Tracer(IApmLogger logger, Service service, IPayloadSender payloadSender, IConfigurationReader configurationReader)
 		{
 			_logger = logger?.Scoped(nameof(Tracer));
 			_service = service;
 			_sender = payloadSender;
+			_sampler = new Sampler(1.0);
 		}
 
 		public ITransaction CurrentTransaction => Agent.TransactionContainer.Transactions.Value;
