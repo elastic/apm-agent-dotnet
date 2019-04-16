@@ -12,7 +12,7 @@ using System.Threading.Tasks.Dataflow;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model.Payload;
+using Elastic.Apm.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 

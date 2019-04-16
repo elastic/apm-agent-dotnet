@@ -5,7 +5,7 @@ using System.Data;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model.Payload;
+using Elastic.Apm.Model;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Elastic.Apm.EntityFrameworkCore

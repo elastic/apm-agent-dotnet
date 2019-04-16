@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
@@ -10,7 +9,7 @@ using Elastic.Apm.Report;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
-namespace Elastic.Apm.Model.Payload
+namespace Elastic.Apm.Model
 {
 	internal class Transaction : ITransaction
 	{
@@ -100,6 +99,7 @@ namespace Elastic.Apm.Model.Payload
 		{
 			{ "Id", Id },
 			{ "TraceId", TraceId },
+			{ "ParentId", ParentId },
 			{ "Name", Name },
 			{ "Type", Type }
 		}.ToString();
@@ -119,7 +119,7 @@ namespace Elastic.Apm.Model.Payload
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
-			var retVal = new Span(name, type, this, _sender, _logger);
+			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 
@@ -131,171 +131,33 @@ namespace Elastic.Apm.Model.Payload
 		}
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
-		{
-			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
-
-			var ed = new CapturedException
-			{
-				Message = exception.Message,
-				Type = exception.GetType().FullName,
-				Handled = isHandled,
-				Stacktrace = StacktraceHelper.GenerateApmStackTrace(exception, _logger,
-					$"{nameof(Transaction)}.{nameof(CaptureException)}")
-			};
-
-			_sender.QueueError(new Error(ed, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit, Context = Context });
-		}
+			=> ExecutionSegmentCommon.CaptureException(exception, _logger, _sender, this, Context, culprit, isHandled, parentId);
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null)
-		{
-			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
-
-			var ed = new CapturedException
-			{
-				Message = message
-			};
-
-			if (frames != null)
-			{
-				ed.Stacktrace
-					= StacktraceHelper.GenerateApmStackTrace(frames, _logger, "failed capturing stacktrace");
-			}
-
-			_sender.QueueError(new Error(ed, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit, Context = Context });
-		}
+			=> ExecutionSegmentCommon.CaptureError(message, culprit, frames, _sender, _logger, this, Context, parentId);
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)
-		{
-			var span = StartSpan(name, type, subType, action);
-
-			try
-			{
-				capturedAction(span);
-			}
-			catch (Exception e) when (ExceptionFilter.Capture(e, span)) { }
-			finally
-			{
-				span.End();
-			}
-		}
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), capturedAction);
 
 		public void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null)
-		{
-			var span = StartSpan(name, type, subType, action);
-
-			try
-			{
-				capturedAction();
-			}
-			catch (Exception e) when (ExceptionFilter.Capture(e, span)) { }
-			finally
-			{
-				span.End();
-			}
-		}
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), capturedAction);
 
 		public T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null)
-		{
-			var span = StartSpan(name, type, subType, action);
-			var retVal = default(T);
-			try
-			{
-				retVal = func(span);
-			}
-			catch (Exception e) when (ExceptionFilter.Capture(e, span)) { }
-			finally
-			{
-				span.End();
-			}
-
-			return retVal;
-		}
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 
 		public T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null)
-		{
-			var span = StartSpan(name, type, subType, action);
-			var retVal = default(T);
-			try
-			{
-				retVal = func();
-			}
-			catch (Exception e) when (ExceptionFilter.Capture(e, span)) { }
-			finally
-			{
-				span.End();
-			}
-
-			return retVal;
-		}
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 
 		public Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null)
-		{
-			var span = StartSpan(name, type, subType, action);
-			var task = func();
-			RegisterContinuation(task, span);
-			return task;
-		}
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 
 		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null)
-		{
-			var span = StartSpan(name, type, subType, action);
-			var task = func(span);
-			RegisterContinuation(task, span);
-			return task;
-		}
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 
 		public Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null)
-		{
-			var span = StartSpan(name, type, subType, action);
-			var task = func();
-			RegisterContinuation(task, span);
-
-			return task;
-		}
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 
 		public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null)
-		{
-			var span = StartSpan(name, type, subType, action);
-			var task = func(span);
-			RegisterContinuation(task, span);
-			return task;
-		}
-
-		/// <summary>
-		/// Registers a continuation on the task.
-		/// Within the continuation it ends the transaction and captures errors
-		/// </summary>
-		private static void RegisterContinuation(Task task, ISpan span) => task.ContinueWith(t =>
-		{
-			if (t.IsFaulted)
-			{
-				if (t.Exception != null)
-				{
-					if (t.Exception is AggregateException aggregateException)
-					{
-						ExceptionFilter.Capture(
-							aggregateException.InnerExceptions.Count == 1
-								? aggregateException.InnerExceptions[0]
-								: aggregateException.Flatten(), span);
-					}
-					else
-						ExceptionFilter.Capture(t.Exception, span);
-				}
-				else
-					span.CaptureError("Task faulted", "A task faulted", new StackTrace(true).GetFrames());
-			}
-			else if (t.IsCanceled)
-			{
-				if (t.Exception == null)
-				{
-					span.CaptureError("Task canceled", "A task was canceled",
-						new StackTrace(true).GetFrames()); //TODO: this async stacktrace is hard to use, make it readable!
-				}
-				else
-					span.CaptureException(t.Exception);
-			}
-
-			span.End();
-		}, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 	}
 }

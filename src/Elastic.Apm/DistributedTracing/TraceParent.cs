@@ -36,13 +36,13 @@ namespace Elastic.Apm.DistributedTracing
 		/// </summary>
 		/// <param name="traceParentValue">The value of the traceparent header</param>
 		/// <param name="traceId">The parsed traceId</param>
-		/// <param name="prentId">The parsed parentId</param>
+		/// <param name="parentId">The parsed parentId</param>
 		/// <param name="traceFields">The parsed traceOptions flags</param>
 		/// <returns>True if parsing was successful, false otherwise.</returns>
-		internal static bool TryExtractTraceparent(string traceParentValue, out string traceId, out string prentId, out byte traceFields)
+		internal static bool TryExtractTraceparent(string traceParentValue, out string traceId, out string parentId, out byte traceFields)
 		{
 			traceId = string.Empty;
-			prentId = string.Empty;
+			parentId = string.Empty;
 			traceFields = 0;
 
 			var bestAttempt = false;
@@ -75,7 +75,7 @@ namespace Elastic.Apm.DistributedTracing
 					traceParentValue.Substring(VersionPrefixIdLength,
 						TraceIdLength);
 
-				if (!IsHex(traceIdVal) || traceIdVal == "00000000000000000000000000000000")
+				if (!IsTraceIdValid(traceIdVal))
 					return false;
 
 				traceId = traceIdVal;
@@ -91,10 +91,11 @@ namespace Elastic.Apm.DistributedTracing
 			try
 			{
 				var parentIdVal = traceParentValue.Substring(VersionAndTraceIdLength, SpanIdLength);
-				if (!IsHex(parentIdVal) || parentIdVal == "0000000000000000")
+
+				if(!IsTraceParentValid(parentIdVal))
 					return false;
 
-				prentId = parentIdVal;
+				parentId = parentIdVal;
 			}
 			catch (ArgumentOutOfRangeException)
 			{
@@ -122,26 +123,32 @@ namespace Elastic.Apm.DistributedTracing
 					return false;
 			}
 
-			bool IsHex(IEnumerable<char> chars)
+			return true;
+		}
+
+		private static bool IsHex(IEnumerable<char> chars)
+		{
+			// ReSharper disable once LoopCanBeConvertedToQuery - I benchmarked, that'd make parsing ~2x slower, don't do it!
+			foreach (var c in chars)
 			{
-				// ReSharper disable once LoopCanBeConvertedToQuery - I benchmarked, that'd make parsing ~2x slower, don't do it!
-				foreach (var c in chars)
-				{
-					var isHex = c >= '0' && c <= '9' ||
-						c >= 'a' && c <= 'f' ||
-						c >= 'A' && c <= 'F';
+				var isHex = c >= '0' && c <= '9' ||
+					c >= 'a' && c <= 'f' ||
+					c >= 'A' && c <= 'F';
 
-					if (!isHex)
-						return false;
-				}
-				return true;
+				if (!isHex)
+					return false;
 			}
-
 			return true;
 		}
 
 		public static string BuildTraceparent(string traceId, string spanId)
 			=> $"00-{traceId}-{spanId}-01";
+
+		internal static bool IsTraceIdValid(string traceId)
+		 =>  !string.IsNullOrWhiteSpace(traceId) && traceId.Length == 32 && IsHex(traceId) && traceId != "00000000000000000000000000000000";
+
+		internal static bool IsTraceParentValid(string parentId)
+		 => !string.IsNullOrWhiteSpace(parentId) && parentId.Length == 16 && IsHex(parentId) && parentId != "0000000000000000";
 
 		/// <summary>
 		/// Converts 2 selected chars from the input string into a byte

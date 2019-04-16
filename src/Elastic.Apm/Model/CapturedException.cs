@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
-namespace Elastic.Apm.Model.Payload
+namespace Elastic.Apm.Model
 {
 	internal class CapturedException
 	{

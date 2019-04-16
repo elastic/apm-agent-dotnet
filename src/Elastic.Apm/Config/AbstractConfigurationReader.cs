@@ -10,9 +10,9 @@ namespace Elastic.Apm.Config
 	{
 		protected AbstractConfigurationReader(IApmLogger logger) => ScopedLogger = logger?.Scoped(GetType().Name);
 
-		private ScopedLogger ScopedLogger { get; }
-
 		protected IApmLogger Logger => ScopedLogger;
+
+		private ScopedLogger ScopedLogger { get; }
 
 		protected static ConfigurationKeyValue Kv(string key, string value, string origin) =>
 			new ConfigurationKeyValue(key, value, origin);
@@ -21,6 +21,7 @@ namespace Elastic.Apm.Config
 		{
 			level = null;
 			if (string.IsNullOrEmpty(value)) return false;
+
 			level = DefaultLogLevel();
 			return level != null;
 
@@ -44,6 +45,7 @@ namespace Elastic.Apm.Config
 		protected string ParseSecretToken(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return null;
+
 			return kv.Value;
 		}
 
@@ -51,6 +53,7 @@ namespace Elastic.Apm.Config
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return true;
 			if (bool.TryParse(kv.Value, out var value)) return value;
+
 			return true;
 		}
 
@@ -62,8 +65,9 @@ namespace Elastic.Apm.Config
 				Logger?.Debug()?.Log("No log level provided. Defaulting to log level '{DefaultLogLevel}'", ConsoleLogger.DefaultLogLevel);
 			else
 			{
-				Logger?.Error()?.Log("Failed parsing log level from {Origin}: {Key}, value: {Value}. Defaulting to log level '{DefaultLogLevel}'",
-					kv.ReadFrom, kv.Key, kv.Value, ConsoleLogger.DefaultLogLevel);
+				Logger?.Error()
+					?.Log("Failed parsing log level from {Origin}: {Key}, value: {Value}. Defaulting to log level '{DefaultLogLevel}'",
+						kv.ReadFrom, kv.Key, kv.Value, ConsoleLogger.DefaultLogLevel);
 			}
 
 			return ConsoleLogger.DefaultLogLevel;
@@ -113,33 +117,33 @@ namespace Elastic.Apm.Config
 			{
 				Logger?.Info()?.Log("The agent was started without a service name. The service name will be automatically calculated.");
 				retVal = Assembly.GetEntryAssembly()?.GetName().Name;
-				Logger?.Info()?.Log("The agent was started without a service name. The Service name sis {ServiceName}", retVal);
+				Logger?.Info()?.Log("The agent was started without a service name. The Service name is {ServiceName}", retVal);
 			}
 
 			if (string.IsNullOrEmpty(retVal))
 			{
 				var stackFrames = new StackTrace().GetFrames();
-				foreach (var frame in stackFrames)
+				if (stackFrames != null)
 				{
-					var currentAssembly = frame.GetMethod()?.DeclaringType.Assembly;
-					var token = currentAssembly.GetName().GetPublicKeyToken();
-					if (currentAssembly != null
-						&& !IsMsOrElastic(currentAssembly.GetName().GetPublicKeyToken()))
+					foreach (var frame in stackFrames)
 					{
+						var currentAssembly = frame?.GetMethod()?.DeclaringType?.Assembly;
+						if (currentAssembly == null || IsMsOrElastic(currentAssembly.GetName().GetPublicKeyToken())) continue;
+
 						retVal = currentAssembly.GetName().Name;
 						break;
 					}
 				}
 			}
 
-			if (string.IsNullOrEmpty(retVal))
-			{
-				Logger?.Error()?.Log("Failed calculating service name, the service name will be 'unknown'." +
-					" You can fix this by setting the service name to a specific value (e.g. by using the environment variable {ServiceNameVariable})", ConfigConsts.ConfigKeys.ServiceName);
-				retVal = "unknown";
-			}
+			if (!string.IsNullOrEmpty(retVal)) return retVal.Replace('.', '_');
 
-			return retVal.Replace('.', '_');
+			Logger?.Error()
+				?.Log("Failed calculating service name, the service name will be 'unknown'." +
+					" You can fix this by setting the service name to a specific value (e.g. by using the environment variable {ServiceNameVariable})",
+					ConfigConsts.ConfigKeys.ServiceName);
+
+			return "unknown";
 		}
 
 		internal static bool IsMsOrElastic(byte[] array)

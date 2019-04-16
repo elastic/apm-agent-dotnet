@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.Model.Payload;
+using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
@@ -28,7 +28,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private const string TransactionType = "Test";
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action)" /> method.
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action, ValueTuple{string, string})" /> method.
 		/// It wraps a fake transaction (Thread.Sleep) into the CaptureTransaction method
 		/// and it makes sure that the transaction is captured by the agent.
 		/// </summary>
@@ -40,7 +40,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action)" /> method with an exception.
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action, ValueTuple{string, string})" /> method with an exception.
 		/// It wraps a fake transaction (Thread.Sleep) that throws an exception into the CaptureTransaction method
 		/// and it makes sure that the transaction and the exception are captured by the agent.
 		/// </summary>
@@ -59,7 +59,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action{ITransaction})" /> method.
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action{ITransaction}, ValueTuple{string, string})" /> method.
 		/// It wraps a fake transaction (Thread.Sleep) into the CaptureTransaction method with an <see cref="Action{T}" />
 		/// parameter
 		/// and it makes sure that the transaction is captured by the agent and the <see cref="Action{ITransaction}" /> parameter
@@ -77,7 +77,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action{ITransaction})" /> method with an exception.
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action{ITransaction}, ValueTuple{string, string})" /> method with an exception.
 		/// It wraps a fake transaction (Thread.Sleep) that throws an exception into the CaptureTransaction method with an
 		/// <see cref="Action{ITransaction}" /> parameter
 		/// and it makes sure that the transaction and the error are captured by the agent and the
@@ -99,7 +99,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{T})" /> method.
+		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{T}, ValueTuple{string, string})" /> method.
 		/// It wraps a fake transaction (Thread.Sleep) with a return value into the CaptureTransaction method
 		/// and it makes sure that the transaction is captured by the agent and the return value is correct.
 		/// </summary>
@@ -116,7 +116,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,T})" /> method.
+		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,T}, ValueTuple{string, string})" /> method.
 		/// It wraps a fake transaction (Thread.Sleep) with a return value into the CaptureTransaction method with an
 		/// <see cref="Action{ITransaction}" /> parameter
 		/// and it makes sure that the transaction is captured by the agent and the return value is correct and the
@@ -137,7 +137,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,T})" /> method with an
+		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,T}, ValueTuple{string, string})" /> method with an
 		/// exception.
 		/// It wraps a fake transaction (Thread.Sleep) with a return value that throws an exception into the CaptureTransaction
 		/// method with an <see cref="Action{ITransaction}" /> parameter
@@ -165,7 +165,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{T})" /> method with an exception.
+		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{T}, ValueTuple{string, string})" /> method with an exception.
 		/// It wraps a fake transaction (Thread.Sleep) with a return value that throws an exception into the CaptureTransaction
 		/// method
 		/// and it makes sure that the transaction and the error are captured by the agent.
@@ -190,7 +190,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Func{Task})" /> method.
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Func{Task}, ValueTuple{string, string})" /> method.
 		/// It wraps a fake async transaction (Task.Delay) into the CaptureTransaction method
 		/// and it makes sure that the transaction is captured.
 		/// </summary>
@@ -202,7 +202,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Func{Task})" /> method with an exception
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Func{Task}, ValueTuple{string, string})" /> method with an exception
 		/// It wraps a fake async transaction (Task.Delay) that throws an exception into the CaptureTransaction method
 		/// and it makes sure that the transaction and the error are captured.
 		/// </summary>
@@ -221,7 +221,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Func{ITransaction, Task})" /> method.
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Func{ITransaction, Task}, ValueTuple{string, string})" /> method.
 		/// It wraps a fake async transaction (Task.Delay) into the CaptureTransaction method with an
 		/// <see cref="Action{ITransaction}" /> parameter
 		/// and it makes sure that the transaction is captured and the <see cref="Action{ITransaction}" /> parameter is not null.
@@ -238,7 +238,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Func{ITransaction, Task})" /> method with an
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Func{ITransaction, Task}, ValueTuple{string, string})" /> method with an
 		/// exception.
 		/// It wraps a fake async transaction (Task.Delay) that throws an exception into the CaptureTransaction method with an
 		/// <see cref="Action{ITransaction}" /> parameter
@@ -261,7 +261,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{Task{T}})" /> method.
+		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{Task{T}}, ValueTuple{string, string})" /> method.
 		/// It wraps a fake async transaction (Task.Delay) with a return value into the CaptureTransaction method
 		/// and it makes sure that the transaction is captured by the agent and the return value is correct.
 		/// </summary>
@@ -277,7 +277,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,Task{T}})" /> method.
+		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,Task{T}}, ValueTuple{string, string})" /> method.
 		/// It wraps a fake async transaction (Task.Delay) with a return value into the CaptureTransaction method with an
 		/// <see cref="Action{ITransaction}" /> parameter
 		/// and it makes sure that the transaction is captured by the agent and the return value is correct and the
@@ -298,7 +298,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,Task{T}})" /> method with an
+		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,Task{T}}, ValueTuple{string, string})" /> method with an
 		/// exception.
 		/// It wraps a fake async transaction (Task.Delay) with a return value that throws an exception into the CaptureTransaction
 		/// method with an <see cref="Action{ITransaction}" /> parameter
@@ -325,7 +325,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{Task{T}})" /> method with an exception.
+		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{Task{T}}, ValueTuple{string, string})" /> method with an exception.
 		/// It wraps a fake async transaction (Task.Delay) with a return value that throws an exception into the CaptureTransaction
 		/// method
 		/// and it makes sure that the transaction and the error are captured by the agent.
