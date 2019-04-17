@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
@@ -15,11 +14,12 @@ namespace Elastic.Apm.Tests.ApiTests
 	/// <summary>
 	/// Tests the TraceContext parameter on the Public Agent API
 	/// </summary>
-	public class TraceContextTests
+	public class DistributedTracingDataTests
 	{
 		private const string TestTransaction = "TestTransaction";
 		private const string UnitTest = "UnitTest";
 		private const string ValidParentId = "5ec5de4fdae36f4c";
+		private const string ValidTraceFlags = "01";
 		private const string ValidTraceId = "005a6663c2fb9591a0e53d322df6c3e2";
 
 		/// <summary>
@@ -44,7 +44,8 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender2)))
 			{
-				var transaction = agent.Tracer.StartTransaction(TestTransaction, UnitTest, BuildDistributedTracingData(traceId, parentId));
+				var transaction =
+					agent.Tracer.StartTransaction(TestTransaction, UnitTest, BuildDistributedTracingData(traceId, parentId, ValidTraceFlags));
 				Thread.Sleep(50);
 				transaction.End();
 			}
@@ -60,15 +61,17 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// </summary>
 		/// <param name="traceId"></param>
 		/// <param name="parentId"></param>
+		/// <param name="traceFlags"></param>
 		[Theory]
 		[ClassData(typeof(InvalidTraceContextData))]
-		public void InvalidTraceContextTest(string traceId, string parentId)
+		public void InvalidTraceContextTest(string traceId, string parentId, string traceFlags)
 		{
 			var payloadSender1 = new MockPayloadSender();
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender1)))
 			{
-				var transaction = agent.Tracer.StartTransaction(TestTransaction, UnitTest, BuildDistributedTracingData(traceId, parentId));
+				var transaction =
+					agent.Tracer.StartTransaction(TestTransaction, UnitTest, BuildDistributedTracingData(traceId, parentId, traceFlags));
 				transaction.End();
 			}
 
@@ -77,44 +80,45 @@ namespace Elastic.Apm.Tests.ApiTests
 		}
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action, (string, string))" /> method with a valid
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action, DistributedTracingData)" /> method with a
+		/// valid
 		/// TraceContext parameter
 		/// </summary>
 		[Fact]
 		public void TraceContextWithSimpleAction_Valid() =>
 			AssertValidTraceContext(agent => agent.Tracer.CaptureTransaction(TestTransaction,
-				UnitTest, () => { WaitHelpers.SleepMinimum(); }, BuildDistributedTracingData(ValidTraceId, ValidParentId)));
+				UnitTest, () => { WaitHelpers.SleepMinimum(); }, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
 		[ClassData(typeof(InvalidTraceContextData))]
-		public void TraceContextWithSimpleAction_Invalid(string traceId, string parentId) =>
+		public void TraceContextWithSimpleAction_Invalid(string traceId, string parentId, string traceFlags) =>
 			AssertInvalidTraceContext(agent => agent.Tracer.CaptureTransaction(TestTransaction,
-				UnitTest, () => { WaitHelpers.SleepMinimum(); }, BuildDistributedTracingData(traceId, parentId)), traceId);
+				UnitTest, () => { WaitHelpers.SleepMinimum(); }, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
 
 		/// <summary>
 		/// Tests the
-		/// <see cref="Tracer.CaptureTransaction(string,string,System.Action{ITransaction}, ValueTuple{string, string})" /> method
+		/// <see cref="Tracer.CaptureTransaction(string,string,System.Action{ITransaction}, DistributedTracingData)" /> method
 		/// with valid TraceContext parameter.
 		/// </summary>
 		[Fact]
 		public void TraceContextWitSimpleActionWithParameter_Valid() =>
 			AssertValidTraceContext(agent => agent.Tracer.CaptureTransaction(TestTransaction,
-				UnitTest, t => { WaitHelpers.SleepMinimum(); }, BuildDistributedTracingData(ValidTraceId, ValidParentId)));
+				UnitTest, t => { WaitHelpers.SleepMinimum(); }, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
 		[ClassData(typeof(InvalidTraceContextData))]
-		public void TraceContextWitSimpleActionWithParameter_Invalid(string traceId, string parentId) =>
+		public void TraceContextWitSimpleActionWithParameter_Invalid(string traceId, string parentId, string traceFlags) =>
 			AssertInvalidTraceContext(agent => agent.Tracer.CaptureTransaction(TestTransaction,
 				UnitTest, t =>
 				{
 					t.Should().NotBeNull();
 					WaitHelpers.SleepMinimum();
-				}, BuildDistributedTracingData(traceId, parentId)), traceId);
+				}, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
 		/// <summary>
 		/// Tests the
-		/// <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,T}, ValueTuple{string, string})" />
+		/// <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,T}, DistributedTracingData)" />
 		/// method
 		/// with valid TraceContext parameter.
 		/// </summary>
@@ -126,21 +130,21 @@ namespace Elastic.Apm.Tests.ApiTests
 					t.Should().NotBeNull();
 					WaitHelpers.SleepMinimum();
 					return 42;
-				}, BuildDistributedTracingData(ValidTraceId, ValidParentId)));
+				}, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
 		[ClassData(typeof(InvalidTraceContextData))]
-		public void SimpleActionWithReturnTypeAndParameter_Invalid(string traceId, string parentId) =>
+		public void SimpleActionWithReturnTypeAndParameter_Invalid(string traceId, string parentId, string traceFlags) =>
 			AssertInvalidTraceContext(agent => agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
 				t =>
 				{
 					t.Should().NotBeNull();
 					WaitHelpers.SleepMinimum();
 					return 42;
-				}, BuildDistributedTracingData(traceId, parentId)), traceId);
+				}, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{T}, ValueTuple{string, string})" /> method
+		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{T}, DistributedTracingData)" /> method
 		/// with valid TraceContext parameter.
 		/// </summary>
 		[Fact]
@@ -149,35 +153,35 @@ namespace Elastic.Apm.Tests.ApiTests
 			{
 				WaitHelpers.SleepMinimum();
 				return 42;
-			}, BuildDistributedTracingData(ValidTraceId, ValidParentId)));
+			}, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
 		[ClassData(typeof(InvalidTraceContextData))]
-		public void SimpleActionWithReturnType_Invalid(string traceId, string parentId) =>
+		public void SimpleActionWithReturnType_Invalid(string traceId, string parentId, string traceFlags) =>
 			AssertInvalidTraceContext(agent => agent.Tracer.CaptureTransaction(TestTransaction, UnitTest, () =>
 			{
 				WaitHelpers.SleepMinimum();
 				return 42;
-			}, BuildDistributedTracingData(traceId, parentId)), traceId);
+			}, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Func{Task}, ValueTuple{string, string})" /> method
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Func{Task}, DistributedTracingData)" /> method
 		/// with valid TraceContext parameter.
 		/// </summary>
 		[Fact]
 		public async Task AsyncTask_Valid() =>
 			await AssertValidTraceContext(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
-				async () => { await WaitHelpers.DelayMinimum(); }, BuildDistributedTracingData(ValidTraceId, ValidParentId)));
+				async () => { await WaitHelpers.DelayMinimum(); }, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
 		[ClassData(typeof(InvalidTraceContextData))]
-		public async Task AsyncTask_Invalid(string traceId, string parentId) =>
+		public async Task AsyncTask_Invalid(string traceId, string parentId, string traceFlags) =>
 			await AssertInvalidTraceContext(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
-				async () => { await WaitHelpers.DelayMinimum(); }, BuildDistributedTracingData(traceId, parentId)), traceId);
+				async () => { await WaitHelpers.DelayMinimum(); }, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
 		/// <summary>
 		/// Tests the
-		/// <see cref="Tracer.CaptureTransaction(string,string,System.Func{ITransaction,Task}, ValueTuple{string, string})" />
+		/// <see cref="Tracer.CaptureTransaction(string,string,System.Func{ITransaction,Task}, DistributedTracingData)" />
 		/// method
 		/// with valid TraceContext parameter.
 		/// </summary>
@@ -188,21 +192,21 @@ namespace Elastic.Apm.Tests.ApiTests
 				{
 					t.Should().NotBeNull();
 					await WaitHelpers.DelayMinimum();
-				}, BuildDistributedTracingData(ValidTraceId, ValidParentId)));
+				}, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
 		[ClassData(typeof(InvalidTraceContextData))]
-		public async Task AsyncTaskWithParameter_Invalid(string traceId, string parentId) =>
+		public async Task AsyncTaskWithParameter_Invalid(string traceId, string parentId, string traceFlags) =>
 			await AssertInvalidTraceContext(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
 				async t =>
 				{
 					t.Should().NotBeNull();
 					await WaitHelpers.DelayMinimum();
-				}, BuildDistributedTracingData(traceId, parentId)), traceId);
+				}, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
 		/// <summary>
 		/// Tests the
-		/// <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,Task{T}}, ValueTuple{string, string})" />
+		/// <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,Task{T}}, DistributedTracingData)" />
 		/// method
 		/// with valid TraceContext parameter.
 		/// </summary>
@@ -214,21 +218,21 @@ namespace Elastic.Apm.Tests.ApiTests
 					t.Should().NotBeNull();
 					await WaitHelpers.DelayMinimum();
 					return 42;
-				}, BuildDistributedTracingData(ValidTraceId, ValidParentId)));
+				}, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
 		[ClassData(typeof(InvalidTraceContextData))]
-		public async Task AsyncTaskWithReturnTypeAndParameter_Invalid(string traceId, string parentId) =>
+		public async Task AsyncTaskWithReturnTypeAndParameter_Invalid(string traceId, string parentId, string traceFlags) =>
 			await AssertInvalidTraceContext(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
 				async t =>
 				{
 					t.Should().NotBeNull();
 					await WaitHelpers.DelayMinimum();
 					return 42;
-				}, BuildDistributedTracingData(traceId, parentId)), traceId);
+				}, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{Task{T}}, ValueTuple{string, string})" />
+		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{Task{T}}, DistributedTracingData)" />
 		/// method
 		/// with valid TraceContext parameter.
 		/// </summary>
@@ -239,17 +243,17 @@ namespace Elastic.Apm.Tests.ApiTests
 				{
 					await WaitHelpers.DelayMinimum();
 					return 42;
-				}, BuildDistributedTracingData(ValidTraceId, ValidParentId)));
+				}, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
 		[ClassData(typeof(InvalidTraceContextData))]
-		public async Task AsyncTaskWithReturnType_Invalid(string traceId, string parentId) =>
+		public async Task AsyncTaskWithReturnType_Invalid(string traceId, string parentId, string traceFlags) =>
 			await AssertInvalidTraceContext(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
 				async () =>
 				{
 					await WaitHelpers.DelayMinimum();
 					return 42;
-				}, BuildDistributedTracingData(traceId, parentId)), traceId);
+				}, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
 		private static void AssertValidTraceContext(Action<IApmAgent> transactionCreator)
 		{
@@ -291,31 +295,29 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstTransaction.ParentId.Should().BeNullOrWhiteSpace();
 		}
 
-		private static DistributedTracingData BuildDistributedTracingData(string traceId, string parentId)
-		{
-			if (!TraceParent.IsTraceIdValid(traceId)) return null;
-
-			if (!TraceParent.IsTraceParentValid(parentId)) return null;
-
-			return new DistributedTracingData(traceId, parentId, true);
-		}
+		private static DistributedTracingData BuildDistributedTracingData(string traceId, string parentId, string traceFlags) =>
+			DistributedTracingData.TryDeserializeFromString(
+				"00-" + // version
+				(traceId == null ? "" : $"{traceId}") +
+				(parentId == null ? "" : $"-{parentId}") +
+				(traceFlags == null ? "" : $"-{traceFlags}"));
 
 		private class InvalidTraceContextData : IEnumerable<object[]>
 		{
 			public IEnumerator<object[]> GetEnumerator()
 			{
-				yield return new object[] { "", "" };
-				yield return new object[] { null, null };
-				yield return new object[] { "aaa", "bbb" };
-				yield return new object[] { "null", "5ec5de4fdae36f4c" };
-				yield return new object[] { "005a66g3c2fb9591a0e53d322df6c3e2", "null" };
-				yield return new object[] { "00000000000000000000000000000000", "0000000000000000" };
-				yield return new object[] { "005a66g3c2fb9591a0e53d322df6c3e2", "5ec5de4fdae36f4c" }; //1 non-hex in TraceId
-				yield return new object[] { "005a66a3c2fb9591a0e53d322df6c3e2", "5ec5de4fdaei6f4c" }; //1 non-hex in ParentId
-				yield return new object[] { "005a6663c2fb9591a0e53d322d6c3e2", "5ec5de4fdae36f4c" }; //Trace Id 1 shorter than expected
-				yield return new object[] { "005a6663c2fb9591a0e53d322df6c3e2", "5ec5defdae36f4c" }; //Parent Id 1 shorter than expected
-				yield return new object[] { "005a6663c2fb95291a0e53d322df6c3e2", "5ec5de4fdae36f4c" }; //Trace Id 1 longer than expected
-				yield return new object[] { "005a6663c2fb9591a0e53d322df6c3e2", "56ec5de4fdae36f4c" }; //ParentId Id 1 longer than expected
+				yield return new object[] { "", "", "" };
+				yield return new object[] { null, null, null };
+				yield return new object[] { "aaa", "bbb", "ccc" };
+				yield return new object[] { "null", "5ec5de4fdae36f4c", "01" };
+				yield return new object[] { "005a66g3c2fb9591a0e53d322df6c3e2", "null", "01" };
+				yield return new object[] { "00000000000000000000000000000000", "0000000000000000", "00" };
+				yield return new object[] { "005a66g3c2fb9591a0e53d322df6c3e2", "5ec5de4fdae36f4c", "01" }; //1 non-hex in TraceId
+				yield return new object[] { "005a66a3c2fb9591a0e53d322df6c3e2", "5ec5de4fdaei6f4c", "01" }; //1 non-hex in ParentId
+				yield return new object[] { "005a6663c2fb9591a0e53d322d6c3e2", "5ec5de4fdae36f4c", "01" }; //Trace Id 1 shorter than expected
+				yield return new object[] { "005a6663c2fb9591a0e53d322df6c3e2", "5ec5defdae36f4c", "01" }; //Parent Id 1 shorter than expected
+				yield return new object[] { "005a6663c2fb95291a0e53d322df6c3e2", "5ec5de4fdae36f4c", "01" }; //Trace Id 1 longer than expected
+				yield return new object[] { "005a6663c2fb9591a0e53d322df6c3e2", "56ec5de4fdae36f4c", "01" }; //ParentId Id 1 longer than expected
 			}
 
 			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
