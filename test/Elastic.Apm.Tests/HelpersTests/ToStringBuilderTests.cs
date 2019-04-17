@@ -36,6 +36,20 @@ namespace Elastic.Apm.Tests.HelpersTests
 				"D: " + nameof(ClassWithOneProperty) + "{prop: 789}" +
 				"}");
 
+		/// <summary>
+		///  Tests that null value is printed as "null"
+		/// </summary>
+		[Fact]
+		public void NullValue() => new ClassWithAFewProperties(123, null, 789).ToString()
+			.Should()
+			.Be(nameof(ClassWithAFewProperties) +
+				"{" +
+				"A: 123, " +
+				"Ax2: 246, " +
+				"B: null, " +
+				"C: " + nameof(ClassWithoutAnyProperties) + "{}, " +
+				"D: " + nameof(ClassWithOneProperty) + "{prop: 789}" +
+				"}");
 		private class ClassWithoutAnyProperties
 		{
 			public override string ToString() => new ToStringBuilder(nameof(ClassWithoutAnyProperties)).ToString();
