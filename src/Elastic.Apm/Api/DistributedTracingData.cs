@@ -17,9 +17,9 @@ namespace Elastic.Apm.Api
 
 		internal string TraceId { get; }
 
-		public string Serialize() => TraceParent.BuildTraceparent(this);
+		public string SerializeToString() => TraceParent.BuildTraceparent(this);
 
-		public static DistributedTracingData TryDeserialize(string serialized) => TraceParent.TryExtractTraceparent(serialized);
+		public static DistributedTracingData TryDeserializeFromString(string serialized) => TraceParent.TryExtractTraceparent(serialized);
 
 		public override string ToString() => new ToStringBuilder(nameof(DistributedTracingData))
 		{
