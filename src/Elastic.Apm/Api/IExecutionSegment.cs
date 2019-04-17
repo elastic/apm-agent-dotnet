@@ -50,6 +50,11 @@ namespace Elastic.Apm.Api
 		bool IsSampled { get; }
 
 		/// <summary>
+		/// Distributed tracing data for this segment as the distributed tracing caller.
+		/// </summary>
+		DistributedTracingData OutgoingDistributedTracingData { get; }
+
+		/// <summary>
 		/// Captures a custom error and reports it to the APM server.
 		/// </summary>
 		/// <param name="message">The error message.</param>

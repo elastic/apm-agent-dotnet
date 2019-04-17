@@ -38,10 +38,5 @@ namespace Elastic.Apm.Api
 		/// Examples: 'db', 'external'.
 		/// </summary>
 		string Type { get; set; }
-
-		/// <summary>
-		/// Distributed tracing data for this segment as the distributed tracing caller.
-		/// </summary>
-		DistributedTracingData OutgoingDistributedTracingData { get; }
 	}
 }
