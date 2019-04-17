@@ -15,8 +15,8 @@ namespace ApiSamples
 		{
 			if (args.Length == 1) //in case it's started with an argument we try to parse the argument as a DistributedTracingData
 			{
-				Console.WriteLine($"Continue trace, distributedTracingData: {args[0]}");
-				var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransaction", DistributedTracingData.TryDeserialize(args[0]));
+				Console.WriteLine($"Started callee side - continuing trace with distributedTracingData: {args[0]}");
+				var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransaction", DistributedTracingData.TryDeserializeFromString(args[0]));
 
 				try
 				{
@@ -28,18 +28,18 @@ namespace ApiSamples
 				}
 
 				Thread.Sleep(1000);
-				Console.WriteLine("Continue trace finished");
+				Console.WriteLine("Callee side finished");
 			}
 			else
 			{
-				Console.WriteLine("Start");
+				Console.WriteLine("Started caller side");
 				PassTraceContext();
 
 				//WIP: if the process terminates the agent
 				//potentially does not have time to send the transaction to the server.
 				Thread.Sleep(1000);
 
-				Console.WriteLine("Done");
+				Console.WriteLine("Caller side is about to exit - press any key...");
 				Console.ReadKey();
 			}
 		}
@@ -195,8 +195,10 @@ namespace ApiSamples
 				//In the main method we check for this and continue the trace.
 				var p = new Process();
 				p.StartInfo.Environment["ELASTIC_APM_SERVICE_NAME"] = "Service2";
-				p.StartInfo.Arguments = $"run {transaction.TraceId} {transaction.Id}";
+				var outgoingDistributedTracingData = transaction.OutgoingDistributedTracingData.SerializeToString();
+				p.StartInfo.Arguments = $"run {outgoingDistributedTracingData}";
 				p.StartInfo.FileName = "dotnet";
+				Console.WriteLine($"Spawning callee process with outgoingDistributedTracingData: {outgoingDistributedTracingData}...");
 				p.Start();
 
 				Thread.Sleep(1100);
