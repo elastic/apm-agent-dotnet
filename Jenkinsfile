@@ -141,7 +141,7 @@ pipeline {
                 }
               }
               stage('Windows'){
-                agent { label 'cpk-windows-testing' }
+                agent { label 'windows-2016' }
                 options { skipDefaultCheckout() }
                 environment {
                   HOME = "${env.WORKSPACE}"
