@@ -80,53 +80,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.RunAsync();
 		}
 
-		[Fact]
-		public async Task DistributedTraceAcross2Service()
-		{
-			var client = new HttpClient();
-			var res = await client.GetAsync("http://localhost:5901/Home/DistributedTracingMiniSample");
-			res.IsSuccessStatusCode.Should().BeTrue();
-
-			_payloadSender1.Transactions.Should().NotBeEmpty();
-			_payloadSender2.Transactions.Should().NotBeEmpty();
-
-			//make sure the 2 transactions have the same traceid:
-			_payloadSender2.FirstTransaction.TraceId.Should().Be(_payloadSender1.FirstTransaction.TraceId);
-
-			//make sure all spans have the same traceid:
-			_payloadSender1.Spans.Should().NotContain(n => n.TraceId != _payloadSender1.FirstTransaction.TraceId);
-			_payloadSender2.Spans.Should().NotContain(n => n.TraceId != _payloadSender1.FirstTransaction.TraceId);
-
-			//make sure the parent of the 2. transaction is the spanid of the outgoing HTTP request from the 1. transaction:
-			_payloadSender2.FirstTransaction.ParentId.Should()
-				.Be(_payloadSender1.Spans.First(n => n.Context.Http.Url.Contains("api/values")).Id);
-		}
-
-		[Fact]
-		public async Task NonsampledDistributedTraceAcross2Service()
-		{
-			_payloadSender1.Transactions.Should().BeEmpty();
-			_payloadSender2.Transactions.Should().BeEmpty();
-
-//			var client = new HttpClient();
-//			var res = await client.GetAsync("http://localhost:5901/Home/DistributedTracingMiniSample");
-//			res.IsSuccessStatusCode.Should().BeTrue();
-//
-//			_payloadSender1.Transactions.Should().NotBeEmpty();
-//			_payloadSender2.Transactions.Should().NotBeEmpty();
-//
-//			//make sure the 2 transactions have the same traceid:
-//			_payloadSender2.FirstTransaction.TraceId.Should().Be(_payloadSender1.FirstTransaction.TraceId);
-//
-//			//make sure all spans have the same traceid:
-//			_payloadSender1.Spans.Should().NotContain(n => n.TraceId != _payloadSender1.FirstTransaction.TraceId);
-//			_payloadSender2.Spans.Should().NotContain(n => n.TraceId != _payloadSender1.FirstTransaction.TraceId);
-//
-//			//make sure the parent of the 2. transaction is the spanid of the outgoing HTTP request from the 1. transaction:
-//			_payloadSender2.FirstTransaction.ParentId.Should()
-//				.Be(_payloadSender1.Spans.First(n => n.Context.Http.Url.Contains("api/values")).Id);
-		}
-
 //		[Fact]
 //		public async Task DistributedTraceAcross2Service()
 //		{
@@ -143,25 +96,25 @@ namespace Elastic.Apm.AspNetCore.Tests
 //			_payloadSender2.FirstTransaction.ParentId.Should()
 //				.Be(_payloadSender1.Spans.First(n => n.Context.Http.Url.Contains("api/values")).Id);
 //		}
-//
-//		[Fact]
-//		public async Task NonsampledDistributedTraceAcross2Service()
-//		{
-//			_agent1.TracerInternal.Sampler = new Sampler(0);
-//
-//			await ExecuteAndCheckDistributedCall();
-//
-//			// Since the trace is not sampled both transactions should me marked as not sampled
-//			_payloadSender1.FirstTransaction.IsSampled.Should().BeFalse();
-//			_payloadSender2.FirstTransaction.IsSampled.Should().BeFalse();
-//
-//			// Since the trace is not sampled there should NOT be any spans
-//			_payloadSender1.Spans.Should().BeEmpty();
-//			_payloadSender2.Spans.Should().BeEmpty();
-//
-//			// Since the trace is not sampled the parent ID of the 2nd transaction is the 1st transaction ID (not span ID as it was in sampled case)
-//			_payloadSender2.FirstTransaction.ParentId.Should().Be(_payloadSender1.FirstTransaction.Id);
-//		}
+
+		[Fact]
+		public async Task NonsampledDistributedTraceAcross2Service()
+		{
+			_agent1.TracerInternal.Sampler = new Sampler(0);
+
+			await ExecuteAndCheckDistributedCall();
+
+			// Since the trace is not sampled both transactions should me marked as not sampled
+			_payloadSender1.FirstTransaction.IsSampled.Should().BeFalse();
+			_payloadSender2.FirstTransaction.IsSampled.Should().BeFalse();
+
+			// Since the trace is not sampled there should NOT be any spans
+			_payloadSender1.Spans.Should().BeEmpty();
+			_payloadSender2.Spans.Should().BeEmpty();
+
+			// Since the trace is not sampled the parent ID of the 2nd transaction is the 1st transaction ID (not span ID as it was in sampled case)
+			_payloadSender2.FirstTransaction.ParentId.Should().Be(_payloadSender1.FirstTransaction.Id);
+		}
 
 		public void Dispose()
 		{
@@ -169,17 +122,17 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_agent2?.Dispose();
 		}
 
-//		private async Task ExecuteAndCheckDistributedCall()
-//		{
-//			var client = new HttpClient();
-//			var res = await client.GetAsync("http://localhost:5901/Home/DistributedTracingMiniSample");
-//			res.IsSuccessStatusCode.Should().BeTrue();
-//
-//			_payloadSender1.Transactions.Count.Should().Be(1);
-//			_payloadSender2.Transactions.Count.Should().Be(1);
-//
-//			//make sure the 2 transactions have the same traceid:
-//			_payloadSender2.FirstTransaction.TraceId.Should().Be(_payloadSender1.FirstTransaction.TraceId);
-//		}
+		private async Task ExecuteAndCheckDistributedCall()
+		{
+			var client = new HttpClient();
+			var res = await client.GetAsync("http://localhost:5901/Home/DistributedTracingMiniSample");
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.Transactions.Count.Should().Be(1);
+			_payloadSender2.Transactions.Count.Should().Be(1);
+
+			//make sure the 2 transactions have the same traceid:
+			_payloadSender2.FirstTransaction.TraceId.Should().Be(_payloadSender1.FirstTransaction.TraceId);
+		}
 	}
 }
