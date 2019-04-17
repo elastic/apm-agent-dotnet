@@ -176,7 +176,7 @@ pipeline {
                   /**
                   Build the project from code..
                   */
-                  stage('Build - MSBuild (disabled)') {
+                  stage('Build - MSBuild') {
                     steps {
                       dir("${BASE_DIR}"){
                         deleteDir()
