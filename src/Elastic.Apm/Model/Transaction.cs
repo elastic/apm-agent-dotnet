@@ -60,8 +60,15 @@ namespace Elastic.Apm.Model
 
 		/// <summary>
 		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
+		/// <seealso cref="ShouldSerializeContext" />
 		/// </summary>
 		public Context Context => _context.Value;
+
+		/// <summary>
+		/// Method to conditionally serialize <see cref="Context" /> because context should be serialized only when the transaction is sampled.
+		/// See <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
+		/// </summary>
+		public bool ShouldSerializeContext() => IsSampled;
 
 		/// <inheritdoc />
 		/// <summary>

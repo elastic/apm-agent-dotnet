@@ -13,6 +13,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
+using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -39,13 +40,12 @@ namespace Elastic.Apm.Report
 
 		private CancellationTokenSource _batchBlockReceiveAsyncCts;
 
-		private readonly JsonSerializerSettings _settings;
+		private readonly PayloadItemSerializer _payloadItemSerializer = new PayloadItemSerializer();
 
 		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler = new SingleThreadTaskScheduler(CancellationToken.None);
 
 		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, HttpMessageHandler handler = null)
 		{
-			_settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver(), Formatting = Formatting.None };
 			_service = service;
 			_logger = logger?.Scoped(nameof(PayloadSenderV2));
 
@@ -138,29 +138,29 @@ namespace Elastic.Apm.Report
 			try
 			{
 				var metadata = new Metadata { Service = _service };
-				var metadataJson = JsonConvert.SerializeObject(metadata, _settings);
-				var json = new StringBuilder();
-				json.Append("{\"metadata\": " + metadataJson + "}" + "\n");
+				var metadataJson = _payloadItemSerializer.SerializeObject(metadata);
+				var ndjson = new StringBuilder();
+				ndjson.Append("{\"metadata\": " + metadataJson + "}" + "\n");
 
 				foreach (var item in queueItems)
 				{
-					var serialized = JsonConvert.SerializeObject(item, _settings);
+					var serialized = _payloadItemSerializer.SerializeObject(item);
 					switch (item)
 					{
 						case Transaction _:
-							json.AppendLine("{\"transaction\": " + serialized + "}");
+							ndjson.AppendLine("{\"transaction\": " + serialized + "}");
 							break;
 						case Span _:
-							json.AppendLine("{\"span\": " + serialized + "}");
+							ndjson.AppendLine("{\"span\": " + serialized + "}");
 							break;
 						case Error _:
-							json.AppendLine("{\"error\": " + serialized + "}");
+							ndjson.AppendLine("{\"error\": " + serialized + "}");
 							break;
 					}
 					_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItemToSend}", item, serialized);
 				}
 
-				var content = new StringContent(json.ToString(), Encoding.UTF8, "application/x-ndjson");
+				var content = new StringContent(ndjson.ToString(), Encoding.UTF8, "application/x-ndjson");
 
 				var result = await _httpClient.PostAsync(Consts.IntakeV2Events, content);
 
