@@ -74,6 +74,8 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(
 			TraceId,
+			// When transaction is not sampled then outgoing distributed tracing data should have transaction ID for parent-id part
+			// and not span ID as it does for sampled case.
 			IsSampled ? Id : TransactionId,
 			IsSampled);
 

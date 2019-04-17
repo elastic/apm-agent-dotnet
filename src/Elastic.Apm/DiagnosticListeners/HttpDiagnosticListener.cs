@@ -72,6 +72,9 @@ namespace Elastic.Apm.DiagnosticListeners
 					if (ProcessingRequests.TryAdd(request, span))
 					{
 						if(!request.Headers.Contains(TraceParent.TraceParentHeaderName))
+							// We call TraceParent.BuildTraceparent explicitly instead of DistributedTracingData.SerializeToString because
+							// in the future we might change DistributedTracingData.SerializeToString to use some other internal format
+							// but here we want the string to be in W3C 'traceparent' header format.
 							request.Headers.Add(TraceParent.TraceParentHeaderName, TraceParent.BuildTraceparent(span.OutgoingDistributedTracingData));
 
 						span.Context.Http = new Http

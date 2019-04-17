@@ -20,11 +20,11 @@ namespace Elastic.Apm.Model
 
 		private readonly DateTimeOffset _start;
 
-		// Sergye_Kleyman TODO: Why do we need this ctor?
-		public Transaction(IApmAgent agent, string name, string type)
+		// This constructor is used only by tests that don't care about sampling and distributed tracing
+		internal Transaction(IApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender) { }
 
-		public Transaction(
+		internal Transaction(
 			IApmLogger logger,
 			string name,
 			string type,
@@ -75,8 +75,14 @@ namespace Elastic.Apm.Model
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Id { get; }
 
+		[JsonProperty("sampled")]
+		public bool IsSampled { get; }
+
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
+
+		[JsonIgnore]
+		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(TraceId, Id, IsSampled);
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("parent_id")]
@@ -108,9 +114,6 @@ namespace Elastic.Apm.Model
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
-
-		[JsonProperty("sampled")]
-		public bool IsSampled { get; }
 
 		public override string ToString() => new ToStringBuilder(nameof(Transaction))
 		{
