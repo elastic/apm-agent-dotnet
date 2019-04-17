@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Elastic.Apm.EntityFrameworkCore</RootNamespace>
     <AssemblyName>Elastic.Apm.EntityFrameworkCore</AssemblyName>
     <AssemblyVersion>0.0.2.0</AssemblyVersion>
