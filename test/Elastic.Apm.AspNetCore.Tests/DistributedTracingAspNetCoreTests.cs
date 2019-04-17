@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
@@ -10,10 +11,8 @@ using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SampleAspNetCoreApp;
-using SampleAspNetCoreApp.Data;
 using Xunit;
 
 namespace Elastic.Apm.AspNetCore.Tests
@@ -32,15 +31,20 @@ namespace Elastic.Apm.AspNetCore.Tests
 		private readonly ApmAgent _agent1;
 		private readonly ApmAgent _agent2;
 
+		private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
 		private readonly MockPayloadSender _payloadSender1 = new MockPayloadSender();
 		private readonly MockPayloadSender _payloadSender2 = new MockPayloadSender();
+
+		private readonly Task _taskForApp1;
+		private readonly Task _taskForApp2;
 
 		public DistributedTracingAspNetCoreTests()
 		{
 			_agent1 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender1));
 			_agent2 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender2));
 
-			var unused = Program.CreateWebHostBuilder(null)
+			_taskForApp1 = Program.CreateWebHostBuilder(null)
 				.ConfigureServices(services =>
 					{
 						Startup.ConfigureServicesExceptMvc(services);
@@ -58,9 +62,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 				})
 				.UseUrls("http://localhost:5901")
 				.Build()
-				.RunAsync();
+				.RunAsync(_cancellationTokenSource.Token);
 
-			var unused1 = WebApiSample.Program.CreateWebHostBuilder(null)
+			_taskForApp2 = WebApiSample.Program.CreateWebHostBuilder(null)
 				.ConfigureServices(services =>
 				{
 					services.AddMvc()
@@ -77,28 +81,28 @@ namespace Elastic.Apm.AspNetCore.Tests
 				})
 				.UseUrls("http://localhost:5050")
 				.Build()
-				.RunAsync();
+				.RunAsync(_cancellationTokenSource.Token);
 		}
 
-//		[Fact]
-//		public async Task DistributedTraceAcross2Service()
-//		{
-//			await ExecuteAndCheckDistributedCall();
-//
-//			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
-//			_payloadSender2.FirstTransaction.IsSampled.Should().BeTrue();
-//
-//			//make sure all spans have the same traceid:
-//			_payloadSender1.Spans.Should().NotContain(n => n.TraceId != _payloadSender1.FirstTransaction.TraceId);
-//			_payloadSender2.Spans.Should().NotContain(n => n.TraceId != _payloadSender1.FirstTransaction.TraceId);
-//
-//			//make sure the parent of the 2. transaction is the spanid of the outgoing HTTP request from the 1. transaction:
-//			_payloadSender2.FirstTransaction.ParentId.Should()
-//				.Be(_payloadSender1.Spans.First(n => n.Context.Http.Url.Contains("api/values")).Id);
-//		}
+		[Fact]
+		public async Task DistributedTraceAcross2Service()
+		{
+			await ExecuteAndCheckDistributedCall();
+
+			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
+			_payloadSender2.FirstTransaction.IsSampled.Should().BeTrue();
+
+			//make sure all spans have the same traceid:
+			_payloadSender1.Spans.Should().NotContain(n => n.TraceId != _payloadSender1.FirstTransaction.TraceId);
+			_payloadSender2.Spans.Should().NotContain(n => n.TraceId != _payloadSender1.FirstTransaction.TraceId);
+
+			//make sure the parent of the 2. transaction is the spanid of the outgoing HTTP request from the 1. transaction:
+			_payloadSender2.FirstTransaction.ParentId.Should()
+				.Be(_payloadSender1.Spans.First(n => n.Context.Http.Url.Contains("api/values")).Id);
+		}
 
 		[Fact]
-		public async Task NonsampledDistributedTraceAcross2Service()
+		public async Task NonSampledDistributedTraceAcross2Service()
 		{
 			_agent1.TracerInternal.Sampler = new Sampler(0);
 
@@ -118,6 +122,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		public void Dispose()
 		{
+			_cancellationTokenSource.Cancel();
+
+			// While it's generally is not a good idea to call blocking Task.Wait - it's the simplest solution here since it's not production code
+			_taskForApp1.Wait();
+			_taskForApp2.Wait();
+
 			_agent1?.Dispose();
 			_agent2?.Dispose();
 		}
