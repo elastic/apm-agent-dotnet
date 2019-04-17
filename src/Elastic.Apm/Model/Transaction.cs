@@ -14,15 +14,24 @@ namespace Elastic.Apm.Model
 	internal class Transaction : ITransaction
 	{
 		private readonly Lazy<Context> _context = new Lazy<Context>();
+
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
 
 		private readonly DateTimeOffset _start;
 
+		// Sergye_Kleyman TODO: Why do we need this ctor?
 		public Transaction(IApmAgent agent, string name, string type)
-			: this(agent.Logger, name, type, agent.PayloadSender) { }
+			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender) { }
 
-		public Transaction(IApmLogger logger, string name, string type, IPayloadSender sender, string traceId = null, string parentId = null)
+		public Transaction(
+			IApmLogger logger,
+			string name,
+			string type,
+			Sampler sampler,
+			DistributedTracingData distributedTracingData,
+			IPayloadSender sender
+		)
 		{
 			_logger = logger?.Scoped(nameof(Transaction));
 			_sender = sender;
@@ -31,17 +40,21 @@ namespace Elastic.Apm.Model
 			Name = name;
 			Type = type;
 			var idBytes = new byte[8];
-			Id = RandomGenerator.GetRandomBytesAsString(idBytes);
+			Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 
-			if (string.IsNullOrEmpty(traceId))
+			if (distributedTracingData == null)
 			{
 				idBytes = new byte[16];
-				TraceId = RandomGenerator.GetRandomBytesAsString(idBytes);
+				TraceId = RandomGenerator.GenerateRandomBytesAsString(idBytes);
+				IsSampled = sampler.DecideIfToSample();
 			}
 			else
-				TraceId = traceId;
+			{
+				TraceId = distributedTracingData.TraceId;
+				ParentId = distributedTracingData.ParentId;
+				IsSampled = distributedTracingData.FlagRecorded;
+			}
 
-			ParentId = parentId;
 			SpanCount = new SpanCount();
 		}
 
@@ -86,6 +99,7 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		public Dictionary<string, string> Tags => Context.Tags;
 
+		// ReSharper disable once ImpureMethodCallOnReadonlyValueField
 		public long Timestamp => _start.ToUnixTimeMilliseconds() * 1000;
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
@@ -95,13 +109,17 @@ namespace Elastic.Apm.Model
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
 
+		[JsonProperty("sampled")]
+		public bool IsSampled { get; }
+
 		public override string ToString() => new ToStringBuilder(nameof(Transaction))
 		{
 			{ "Id", Id },
 			{ "TraceId", TraceId },
 			{ "ParentId", ParentId },
 			{ "Name", Name },
-			{ "Type", Type }
+			{ "Type", Type },
+			{ "IsSampled", IsSampled }
 		}.ToString();
 
 		public void End()
@@ -119,7 +137,7 @@ namespace Elastic.Apm.Model
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
-			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger);
+			var retVal = new Span(name, type, Id, TraceId, this, IsSampled, _sender, _logger);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 

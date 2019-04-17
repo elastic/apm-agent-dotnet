@@ -57,8 +57,8 @@ namespace Elastic.Apm.PerfTests
 		{
 			const string traceParent = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01";
 
-			var res = TraceParent.TryExtractTraceparent(traceParent, out var traceId, out var parentId, out var traceOptions);
-			Debug.WriteLine($"{res}, {traceId}, {parentId}, {traceOptions}");
+			var res = TraceParent.TryExtractTraceparent(traceParent);
+			Debug.WriteLine($"{res}");
 		}
 	}
 }

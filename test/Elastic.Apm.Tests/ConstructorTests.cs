@@ -17,6 +17,7 @@ namespace Elastic.Apm.Tests
 			public string ServiceName { get; }
 			public string SecretToken { get; }
 			public bool CaptureHeaders { get; }
+			public double TransactionSampleRate { get; }
 		}
 
 		///<summary>

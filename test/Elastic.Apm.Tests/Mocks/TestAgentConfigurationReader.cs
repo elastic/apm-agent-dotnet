@@ -14,6 +14,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _serviceName;
 		private readonly string _secretToken;
 		private readonly string _captureHeaders;
+		private readonly string _transactionSampleRate;
 
 		public TestAgentConfigurationReader(
 			IApmLogger logger,
@@ -21,7 +22,8 @@ namespace Elastic.Apm.Tests.Mocks
 			string serverUrls = null,
 			string serviceName = null,
 			string secretToken = null,
-			string captureHeaders = null
+			string captureHeaders = null,
+			string transactionSampleRate = null
 		) : base(logger)
 		{
 			Logger = logger ?? new TestLogger();
@@ -30,14 +32,16 @@ namespace Elastic.Apm.Tests.Mocks
 			_serviceName = serviceName;
 			_secretToken = secretToken;
 			_captureHeaders = captureHeaders;
+			_transactionSampleRate = transactionSampleRate;
 		}
 
 		public new IApmLogger Logger { get; }
 
-		public LogLevel LogLevel => ParseLogLevel(Kv(ConfigConsts.ConfigKeys.Level, _logLevel, Origin));
-		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Kv(ConfigConsts.ConfigKeys.Urls, _serverUrls, Origin));
-		public string ServiceName => ParseServiceName(Kv(ConfigConsts.ConfigKeys.ServiceName, _serviceName, Origin));
-		public string SecretToken => ParseSecretToken(Kv(ConfigConsts.ConfigKeys.SecretToken, _secretToken, Origin));
-		public bool CaptureHeaders => ParseCaptureHeaders(Kv(ConfigConsts.ConfigKeys.CaptureHeaders, _captureHeaders, Origin));
+		public LogLevel LogLevel => ParseLogLevel(Kv(ConfigConsts.EnvVarNames.LogLevel, _logLevel, Origin));
+		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Kv(ConfigConsts.EnvVarNames.ServerUrls, _serverUrls, Origin));
+		public string ServiceName => ParseServiceName(Kv(ConfigConsts.EnvVarNames.ServiceName, _serviceName, Origin));
+		public string SecretToken => ParseSecretToken(Kv(ConfigConsts.EnvVarNames.SecretToken, _secretToken, Origin));
+		public bool CaptureHeaders => ParseCaptureHeaders(Kv(ConfigConsts.EnvVarNames.CaptureHeaders, _captureHeaders, Origin));
+		public double TransactionSampleRate => ParseTransactionSampleRate(Kv(ConfigConsts.EnvVarNames.TransactionSampleRate, _transactionSampleRate, Origin));
 	}
 }

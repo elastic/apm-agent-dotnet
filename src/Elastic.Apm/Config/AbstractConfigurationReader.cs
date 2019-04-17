@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
@@ -141,9 +142,47 @@ namespace Elastic.Apm.Config
 			Logger?.Error()
 				?.Log("Failed calculating service name, the service name will be 'unknown'." +
 					" You can fix this by setting the service name to a specific value (e.g. by using the environment variable {ServiceNameVariable})",
-					ConfigConsts.ConfigKeys.ServiceName);
+					ConfigConsts.EnvVarNames.ServiceName);
 
 			return "unknown";
+		}
+
+		protected double ParseTransactionSampleRate(ConfigurationKeyValue kv)
+		{
+			if (kv?.Value == null)
+			{
+				Logger?.Debug()
+					?.Log("No transaction sample rate provided. Defaulting to '{DefaultTransactionSampleRate}'",
+						ConfigConsts.DefaultValues.TransactionSampleRate);
+				return ConfigConsts.DefaultValues.TransactionSampleRate;
+			}
+
+			if (!double.TryParse(kv.Value, out var parsedValue))
+			{
+				Logger?.Error()
+					?.Log("Failed to parse provided transaction sample rate `{ProvidedTransactionSampleRate}' - " +
+						"using default: {DefaultTransactionSampleRate}",
+						kv.Value,
+						ConfigConsts.DefaultValues.TransactionSampleRate);
+				return ConfigConsts.DefaultValues.TransactionSampleRate;
+			}
+
+			if (!Sampler.IsValidRate(parsedValue))
+			{
+				Logger?.Error()
+					?.Log(
+						"Provided transaction sample rate is invalid {ProvidedTransactionSampleRate} - " +
+						"using default: {DefaultTransactionSampleRate}",
+						parsedValue,
+						ConfigConsts.DefaultValues.TransactionSampleRate);
+				return ConfigConsts.DefaultValues.TransactionSampleRate;
+			}
+
+			Logger?.Debug()
+				?.Log("Using provided transaction sample rate `{ProvidedTransactionSampleRate}' parsed as {ProvidedTransactionSampleRate}",
+					kv.Value,
+					parsedValue);
+			return parsedValue;
 		}
 
 		internal static bool IsMsOrElastic(byte[] array)

@@ -17,7 +17,7 @@ namespace Elastic.Apm.Model
 		{
 			_start = DateTimeOffset.UtcNow;
 			var idBytes = new byte[8];
-			RandomGenerator.GetRandomBytes(idBytes);
+			RandomGenerator.GenerateRandomBytes(idBytes);
 			Id = BitConverter.ToString(idBytes).Replace("-", "");
 
 			Exception = capturedException;
