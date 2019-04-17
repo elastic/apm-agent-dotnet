@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <AssemblyName>Elastic.Apm.AspNetCore</AssemblyName>
     <AssemblyVersion>0.0.2.0</AssemblyVersion>
     <InformationalVersion>0.0.2.0</InformationalVersion>
