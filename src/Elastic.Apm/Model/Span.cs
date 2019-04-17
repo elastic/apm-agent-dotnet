@@ -42,7 +42,9 @@ namespace Elastic.Apm.Model
 			Id = RandomGenerator.GenerateRandomBytesAsString(new byte[8]);
 			ParentId = parentId;
 			TraceId = traceId;
-			enclosingTransaction.SpanCount.Started++;
+
+			// Started spans should be counted only for sampled transactions
+			if (IsSampled) enclosingTransaction.SpanCount.Started++;
 		}
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
