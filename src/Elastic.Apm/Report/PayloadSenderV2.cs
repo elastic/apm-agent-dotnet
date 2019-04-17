@@ -157,6 +157,7 @@ namespace Elastic.Apm.Report
 							json.AppendLine("{\"error\": " + serialized + "}");
 							break;
 					}
+					_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItemToSend}", item, serialized);
 				}
 
 				var content = new StringContent(json.ToString(), Encoding.UTF8, "application/x-ndjson");
