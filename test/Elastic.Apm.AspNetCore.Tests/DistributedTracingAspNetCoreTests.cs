@@ -18,7 +18,7 @@ using Xunit;
 namespace Elastic.Apm.AspNetCore.Tests
 {
 	[Collection("DiagnosticListenerTest")]
-	public class DistributedTracingAspNetCoreTests : IDisposable
+	public class DistributedTracingAspNetCoreTests : IDisposable, IAsyncLifetime
 	{
 		private readonly ApmAgent _agent1;
 		private readonly ApmAgent _agent2;
@@ -76,6 +76,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.RunAsync(_cancellationTokenSource.Token);
 		}
 
+		public Task InitializeAsync() => Task.CompletedTask;
+
 		/// <summary>
 		/// Distributed tracing integration test.
 		/// It starts <see cref="SampleAspNetCoreApp" /> with 1 agent and <see cref="WebApiSample" /> with another agent.
@@ -105,7 +107,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// The same as <see cref="DistributedTraceAcross2Service" /> except that the 1st agent configured with sampling rate 0
 		/// (to non-sample all the transaction) causing both transactions to be non-sampled (since is-sampled decision is passed
 		/// via distributed tracing to downstream agents).
-		/// Makes sure that both transactions are non-sampled so there should be no spans and parent ID passed to the downstream agent
+		/// Makes sure that both transactions are non-sampled so there should be no spans and parent ID passed to the downstream
+		/// agent
 		/// is transaction ID (not span ID as it was in sampled case).
 		/// </summary>
 		[Fact]
@@ -127,14 +130,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_payloadSender2.FirstTransaction.ParentId.Should().Be(_payloadSender1.FirstTransaction.Id);
 		}
 
-		public void Dispose()
+		public async Task DisposeAsync()
 		{
 			_cancellationTokenSource.Cancel();
+			await Task.WhenAll(_taskForApp1, _taskForApp2);
+		}
 
-			// While it's generally is not a good idea to call blocking Task.Wait - it's the simplest solution here since it's not production code
-			_taskForApp1.Wait();
-			_taskForApp2.Wait();
-
+		public void Dispose()
+		{
 			_agent1?.Dispose();
 			_agent2?.Dispose();
 		}
