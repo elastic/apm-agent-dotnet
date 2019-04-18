@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,6 +19,7 @@ namespace Elastic.Apm.Tests.ApiTests
 	/// </summary>
 	public class ApiTests
 	{
+		private const string CustomTransactionTypeForTests = "custom transaction type for tests";
 		private const string TestSpan1 = "TestSpan1";
 		private const string TestSpan2 = "TestSpan1";
 		private const string TestTransaction = "TestTransaction";
@@ -465,6 +468,81 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstSpan.Context.Tags.Should().ContainKey("foo");
 			payloadSender.FirstSpan.Context.Tags["foo"].Should().Be("bar");
 		}
+
+		// ReSharper disable once MemberCanBePrivate.Global
+		public static IEnumerable<object[]> ErrorShouldContainTransactionDataParamVariants()
+		{
+			var boolValues = new[] { false, true };
+			foreach (var isSampled in boolValues)
+			{
+				foreach (var captureOnSpan in boolValues)
+				{
+					foreach (var captureAsError in boolValues)
+						yield return new object[] { isSampled, captureOnSpan, captureAsError };
+				}
+			}
+		}
+
+		/// <summary>
+		/// Creates a sampled or non-sampled transaction (depending on isSampled argument),
+		/// then a child span (depending on isOnSpan argument)
+		/// which captures an error or exception (depending on isError argument).
+		/// Makes sure that the sent error data contains transaction data.
+		/// </summary>
+		[Theory]
+		[MemberData(nameof(ErrorShouldContainTransactionDataParamVariants))]
+		public void ErrorShouldContainTransactionData(bool isSampled, bool captureOnSpan, bool captureAsError)
+		{
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				agent.TracerInternal.Sampler = new Sampler(isSampled ? 1 : 0);
+				agent.Tracer.CaptureTransaction(TestTransaction, CustomTransactionTypeForTests, transaction =>
+				{
+					IExecutionSegment capturingExecutionSegment;
+					ISpan span = null;
+					if (captureOnSpan)
+					{
+						span = transaction.StartSpan(TestSpan1, ApiConstants.TypeExternal);
+						capturingExecutionSegment = span;
+					}
+					else
+						capturingExecutionSegment = transaction;
+
+					if (captureAsError)
+						capturingExecutionSegment.CaptureError("Test error message", "Test error culprit", new StackTrace(true).GetFrames());
+					else
+						capturingExecutionSegment.CaptureException(new TestException("test exception"));
+
+					span?.End();
+				});
+			}
+
+			payloadSender.Errors.Count.Should().Be(1);
+			payloadSender.FirstError.Transaction.IsSampled.Should().Be(isSampled);
+			payloadSender.FirstError.Transaction.Type.Should().Be(CustomTransactionTypeForTests);
+		}
+
+		/// <summary>
+		/// Creates a transaction, then a child span which captures an error.
+		/// Makes sure that the captured error contains transaction data.
+		/// </summary>
+		[Fact]
+		public void CapturedErrorOnSpanShouldContainTransactionData() { }
+
+		/// <summary>
+		/// Creates a transaction which captures an exception.
+		/// Makes sure that the captured error contains transaction data.
+		/// </summary>
+		[Fact]
+		public void CapturedExceptionOnTransactionShouldContainTransactionData() { }
+
+		/// <summary>
+		/// Creates a transaction, then a child span which captures an exception.
+		/// Makes sure that the captured error contains transaction data.
+		/// </summary>
+		[Fact]
+		public void CapturedExceptionOnSpanShouldContainTransactionData() { }
 
 		private class TestException : Exception
 		{

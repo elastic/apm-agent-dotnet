@@ -141,8 +141,17 @@ namespace Elastic.Apm.Model
 		}
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
-			=> ExecutionSegmentCommon.CaptureException(exception, _logger, _payloadSender, this, _enclosingTransaction?.Context, culprit, isHandled,
-				parentId);
+			=> ExecutionSegmentCommon.CaptureException(
+				exception,
+				_logger,
+				_payloadSender,
+				this,
+				_enclosingTransaction?.Context,
+				_enclosingTransaction,
+				culprit,
+				isHandled,
+				parentId
+			);
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), capturedAction);
@@ -169,6 +178,16 @@ namespace Elastic.Apm.Model
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null)
-			=> ExecutionSegmentCommon.CaptureError(message, culprit, frames, _payloadSender, _logger, this, _enclosingTransaction?.Context, parentId);
+			=> ExecutionSegmentCommon.CaptureError(
+				message,
+				culprit,
+				frames,
+				_payloadSender,
+				_logger,
+				this,
+				_enclosingTransaction?.Context,
+				_enclosingTransaction,
+				parentId
+			);
 	}
 }

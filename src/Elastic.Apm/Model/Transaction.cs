@@ -64,12 +64,6 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		public Context Context => _context.Value;
 
-		/// <summary>
-		/// Method to conditionally serialize <see cref="Context" /> because context should be serialized only when the transaction is sampled.
-		/// See <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
-		/// </summary>
-		public bool ShouldSerializeContext() => IsSampled;
-
 		/// <inheritdoc />
 		/// <summary>
 		/// The duration of the transaction.
@@ -122,6 +116,14 @@ namespace Elastic.Apm.Model
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
 
+		/// <summary>
+		/// Method to conditionally serialize <see cref="Context" /> because context should be serialized only when the transaction
+		/// is sampled.
+		/// See
+		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
+		/// </summary>
+		public bool ShouldSerializeContext() => IsSampled;
+
 		public override string ToString() => new ToStringBuilder(nameof(Transaction))
 		{
 			{ "Id", Id },
@@ -159,10 +161,30 @@ namespace Elastic.Apm.Model
 		}
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
-			=> ExecutionSegmentCommon.CaptureException(exception, _logger, _sender, this, Context, culprit, isHandled, parentId);
+			=> ExecutionSegmentCommon.CaptureException(
+				exception,
+				_logger,
+				_sender,
+				this,
+				Context,
+				this,
+				culprit,
+				isHandled,
+				parentId
+			);
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null)
-			=> ExecutionSegmentCommon.CaptureError(message, culprit, frames, _sender, _logger, this, Context, parentId);
+			=> ExecutionSegmentCommon.CaptureError(
+				message,
+				culprit,
+				frames,
+				_sender,
+				_logger,
+				this,
+				Context,
+				this,
+				parentId
+			);
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), capturedAction);
