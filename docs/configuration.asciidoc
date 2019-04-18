@@ -89,7 +89,9 @@ To reduce overhead and storage requirements, you can set the sample rate to a va
 The agent will still record the overall time and result for unsampled transactions,
 but no context information, labels, or spans will be recorded.
 
-NOTE: When parsing value for this option agent doesn't consider the current culture and it expects that dot is used to separate an integer component and a fraction part of a floating-point number.
+NOTE: When parsing the value for this option, the agent doesn't consider the current culture.
+It also expects that a period (`.`) is used to separate the integer and the fraction of a floating-point number.
+========
 
 [options="header"]
 |============
