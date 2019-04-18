@@ -37,7 +37,7 @@ namespace Elastic.Apm.Api
 		}
 
 		/// <summary>
-		/// Determines if to sample or not this time
+		/// Decides if to sample or not this time
 		/// </summary>
 		/// <returns>True if and only if the decision is to sample</returns>
 		internal bool DecideIfToSample()
@@ -49,5 +49,7 @@ namespace Elastic.Apm.Api
 		}
 
 		internal static bool IsValidRate(double rate) => 0 <= rate && rate <= 1.0;
+
+		internal bool? Constant => _isConstant ? _constantValue : default(bool?);
 	}
 }
