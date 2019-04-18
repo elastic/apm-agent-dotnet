@@ -154,7 +154,6 @@ namespace Elastic.Apm.Model
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 
 			if (!string.IsNullOrEmpty(action)) retVal.Action = action;
-			SpanCount.Started++;
 
 			_logger.Debug()?.Log("Starting {SpanDetails}", retVal.ToString());
 			return retVal;

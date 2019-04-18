@@ -53,7 +53,7 @@ namespace Elastic.Apm.Tests
 
 		[Theory]
 		[MemberData(nameof(RateVariantsToTest))]
-		public void UniformDistribution(double rate)
+		public void DistributionShouldBeUniform(double rate)
 		{
 			const int total = 1_000_000;
 			var startCheckingAfter = Convert.ToInt32(total * 0.1); // i.e., after 10%
