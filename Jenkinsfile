@@ -146,8 +146,9 @@ pipeline {
                 environment {
                   HOME = "${env.WORKSPACE}"
                   DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
-                  VS_HOME = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017"
-                  PATH = "${env.PATH};${env.HOME}\\bin;${env.HOME}\\.dotnet\\tools;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;\"${env.VS_HOME}\\BuildTools\\MSBuild\\15.0\\Bin\""
+                  VS_HOME = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise"
+                  MSBuildSDKsPath = "${env.DOTNET_ROOT}\\sdk\\2.1.505\\Sdks"
+                  PATH = "${env.PATH};${env.HOME}\\bin;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
                 }
                 stages{
                   /**
@@ -175,18 +176,17 @@ pipeline {
                   /**
                   Build the project from code..
                   */
-                  stage('Build - MSBuild (disabled)') {
+                  stage('Build - MSBuild') {
                     steps {
                       dir("${BASE_DIR}"){
                         deleteDir()
                       }
                       unstash 'source'
                       dir("${BASE_DIR}"){
-                        // bat """
-                        // nuget restore ElasticApmAgent.sln
-                        // msbuild
-                        // """
-                        echo "NOOP"
+                        bat """
+                        nuget restore ElasticApmAgent.sln
+                        msbuild
+                        """
                       }
                     }
                   }
