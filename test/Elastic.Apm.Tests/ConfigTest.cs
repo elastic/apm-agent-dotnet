@@ -127,7 +127,8 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
-		public void DefaultTransactionSampleRateTest() => Agent.Config.TransactionSampleRate.Should().Be(1.0);
+		public void DefaultTransactionSampleRateTest() =>
+			Agent.Config.TransactionSampleRate.Should().Be(ConfigConsts.DefaultValues.TransactionSampleRate);
 
 		[Fact]
 		public void SetTransactionSampleRateTest()
@@ -135,6 +136,15 @@ namespace Elastic.Apm.Tests
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate, "0.789");
 			var config = new EnvironmentConfigurationReader();
 			config.TransactionSampleRate.Should().Be(0.789);
+		}
+
+		[Fact]
+		public void TransactionSampleRateExpectsDotForFloatingPoint()
+		{
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate, "0,789");
+			var config = new EnvironmentConfigurationReader();
+			// Since comma was used instead of dot then default value will be used
+			config.TransactionSampleRate.Should().Be(ConfigConsts.DefaultValues.TransactionSampleRate);
 		}
 
 		[Fact]

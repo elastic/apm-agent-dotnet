@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Reflection;
 using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
@@ -147,6 +148,10 @@ namespace Elastic.Apm.Config
 			return "unknown";
 		}
 
+		// ReSharper disable once MemberCanBePrivate.Global
+		protected static bool TryParseFloatingPoint(string valueAsString, out double result) =>
+			double.TryParse(valueAsString, NumberStyles.Any, CultureInfo.GetCultureInfo("en-US"), out result);
+
 		protected double ParseTransactionSampleRate(ConfigurationKeyValue kv)
 		{
 			if (kv?.Value == null)
@@ -157,7 +162,7 @@ namespace Elastic.Apm.Config
 				return ConfigConsts.DefaultValues.TransactionSampleRate;
 			}
 
-			if (!double.TryParse(kv.Value, out var parsedValue))
+			if (!TryParseFloatingPoint(kv.Value, out var parsedValue))
 			{
 				Logger?.Error()
 					?.Log("Failed to parse provided transaction sample rate `{ProvidedTransactionSampleRate}' - " +
