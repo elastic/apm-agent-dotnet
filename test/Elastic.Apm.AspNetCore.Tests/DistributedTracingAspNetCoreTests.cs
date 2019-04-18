@@ -17,14 +17,6 @@ using Xunit;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
-	/// <summary>
-	/// Distributed tracing integration test.
-	/// It starts <see cref="SampleAspNetCoreApp" /> with 1 agent and <see cref="WebApiSample" /> with another agent.
-	/// It calls the 'DistributedTracingMiniSample' in <see cref="SampleAspNetCoreApp" />, which generates a simple HTTP
-	/// response
-	/// by calling <see cref="WebApiSample" /> via HTTP.
-	/// Makes sure that all spans and transactions across the 2 services have the same trace id.
-	/// </summary>
 	[Collection("DiagnosticListenerTest")]
 	public class DistributedTracingAspNetCoreTests : IDisposable
 	{
@@ -84,6 +76,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.RunAsync(_cancellationTokenSource.Token);
 		}
 
+		/// <summary>
+		/// Distributed tracing integration test.
+		/// It starts <see cref="SampleAspNetCoreApp" /> with 1 agent and <see cref="WebApiSample" /> with another agent.
+		/// It calls the 'DistributedTracingMiniSample' in <see cref="SampleAspNetCoreApp" />, which generates a simple HTTP
+		/// response
+		/// by calling <see cref="WebApiSample" /> via HTTP.
+		/// Makes sure that all spans and transactions across the 2 services have the same trace id.
+		/// </summary>
 		[Fact]
 		public async Task DistributedTraceAcross2Service()
 		{
@@ -101,6 +101,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.Be(_payloadSender1.Spans.First(n => n.Context.Http.Url.Contains("api/values")).Id);
 		}
 
+		/// <summary>
+		/// The same as <see cref="DistributedTraceAcross2Service" /> except that the 1st agent configured with sampling rate 0
+		/// (to non-sample all the transaction) causing both transactions to be non-sampled (since is-sampled decision is passed
+		/// via distributed tracing to downstream agents).
+		/// Makes sure that both transactions are non-sampled so there should be no spans and parent ID passed to the downstream agent
+		/// is transaction ID (not span ID as it was in sampled case).
+		/// </summary>
 		[Fact]
 		public async Task NonSampledDistributedTraceAcross2Service()
 		{
@@ -108,7 +115,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			await ExecuteAndCheckDistributedCall();
 
-			// Since the trace is not sampled both transactions should me marked as not sampled
+			// Since the trace is non-sampled both transactions should me marked as not sampled
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeFalse();
 			_payloadSender2.FirstTransaction.IsSampled.Should().BeFalse();
 
@@ -116,7 +123,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_payloadSender1.Spans.Should().BeEmpty();
 			_payloadSender2.Spans.Should().BeEmpty();
 
-			// Since the trace is not sampled the parent ID of the 2nd transaction is the 1st transaction ID (not span ID as it was in sampled case)
+			// Since the trace is non-sampled the parent ID of the 2nd transaction is the 1st transaction ID (not span ID as it was in sampled case)
 			_payloadSender2.FirstTransaction.ParentId.Should().Be(_payloadSender1.FirstTransaction.Id);
 		}
 
