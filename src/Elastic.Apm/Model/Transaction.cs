@@ -44,9 +44,9 @@ namespace Elastic.Apm.Model
 
 			if (distributedTracingData == null)
 			{
-				idBytes = new byte[16];
-				TraceId = RandomGenerator.GenerateRandomBytesAsString(idBytes);
-				IsSampled = sampler.DecideIfToSample();
+				var traceIdBytes = new byte[16];
+				TraceId = RandomGenerator.GenerateRandomBytesAsString(traceIdBytes);
+				IsSampled = sampler.DecideIfToSample(idBytes);
 			}
 			else
 			{

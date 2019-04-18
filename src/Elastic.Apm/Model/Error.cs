@@ -47,7 +47,6 @@ namespace Elastic.Apm.Model
 		[JsonProperty("trace_id")]
 		public string TraceId { get; set; }
 
-		// ReSharper disable once UnusedMember.Global, MemberCanBePrivate.Global, UnusedAutoPropertyAccessor.Global
 		public TransactionData Transaction { get; }
 
 		[JsonProperty("transaction_id")]
@@ -72,7 +71,6 @@ namespace Elastic.Apm.Model
 			[JsonProperty("sampled")]
 			public bool IsSampled { get; }
 
-			// ReSharper disable once MemberCanBePrivate.Global, UnusedAutoPropertyAccessor.Global
 			[JsonConverter(typeof(TrimmedStringJsonConverter))]
 			public string Type { get; }
 
