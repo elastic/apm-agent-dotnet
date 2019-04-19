@@ -18,20 +18,20 @@ using Xunit;
 namespace Elastic.Apm.AspNetCore.Tests
 {
 	[Collection("DiagnosticListenerTest")]
-	public class DistributedTracingAspNetCoreTests : IDisposable, IAsyncLifetime
+	public class DistributedTracingAspNetCoreTests : IAsyncLifetime
 	{
-		private readonly ApmAgent _agent1;
-		private readonly ApmAgent _agent2;
+		private ApmAgent _agent1;
+		private ApmAgent _agent2;
 
 		private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
 		private readonly MockPayloadSender _payloadSender1 = new MockPayloadSender();
 		private readonly MockPayloadSender _payloadSender2 = new MockPayloadSender();
 
-		private readonly Task _taskForApp1;
-		private readonly Task _taskForApp2;
+		private Task _taskForApp1;
+		private Task _taskForApp2;
 
-		public DistributedTracingAspNetCoreTests()
+		public Task InitializeAsync()
 		{
 			_agent1 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender1));
 			_agent2 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender2));
@@ -74,9 +74,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.UseUrls("http://localhost:5050")
 				.Build()
 				.RunAsync(_cancellationTokenSource.Token);
-		}
 
-		public Task InitializeAsync() => Task.CompletedTask;
+			return Task.CompletedTask;
+		}
 
 		/// <summary>
 		/// Distributed tracing integration test.
@@ -134,10 +134,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			_cancellationTokenSource.Cancel();
 			await Task.WhenAll(_taskForApp1, _taskForApp2);
-		}
 
-		public void Dispose()
-		{
 			_agent1?.Dispose();
 			_agent2?.Dispose();
 		}
