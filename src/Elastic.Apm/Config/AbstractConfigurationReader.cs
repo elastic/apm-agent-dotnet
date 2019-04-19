@@ -148,8 +148,7 @@ namespace Elastic.Apm.Config
 			return "unknown";
 		}
 
-		// ReSharper disable once MemberCanBePrivate.Global
-		protected static bool TryParseFloatingPoint(string valueAsString, out double result) =>
+		private static bool TryParseFloatingPoint(string valueAsString, out double result) =>
 			double.TryParse(valueAsString, NumberStyles.Float, CultureInfo.InvariantCulture, out result);
 
 		protected double ParseTransactionSampleRate(ConfigurationKeyValue kv)
