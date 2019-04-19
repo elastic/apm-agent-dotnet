@@ -91,7 +91,6 @@ but no context information, labels, or spans will be recorded.
 
 NOTE: When parsing the value for this option, the agent doesn't consider the current culture.
 It also expects that a period (`.`) is used to separate the integer and the fraction of a floating-point number.
-========
 
 [options="header"]
 |============
