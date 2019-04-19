@@ -1,7 +1,7 @@
 using System;
 using Elastic.Apm.Helpers;
 
-namespace Elastic.Apm.Api
+namespace Elastic.Apm
 {
 
 	/// <summary>
