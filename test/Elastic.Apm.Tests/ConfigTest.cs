@@ -47,7 +47,7 @@ namespace Elastic.Apm.Tests
 					$"{{{nameof(TestAgentConfigurationReader)}}}",
 					"Failed parsing server URL from",
 					TestAgentConfigurationReader.Origin,
-					ConfigConsts.ConfigKeys.Urls,
+					ConfigConsts.EnvVarNames.ServerUrls,
 					serverUrl
 				);
 		}
@@ -102,7 +102,7 @@ namespace Elastic.Apm.Tests
 					$"{{{nameof(TestAgentConfigurationReader)}}}",
 					"Failed parsing server URL from",
 					TestAgentConfigurationReader.Origin,
-					ConfigConsts.ConfigKeys.Urls,
+					ConfigConsts.EnvVarNames.ServerUrls,
 					serverUrl2
 				);
 		}
@@ -121,9 +121,30 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void SetCaptureHeadersTest()
 		{
-			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.CaptureHeaders, "false");
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.CaptureHeaders, "false");
 			var config = new EnvironmentConfigurationReader();
 			config.CaptureHeaders.Should().Be(false);
+		}
+
+		[Fact]
+		public void DefaultTransactionSampleRateTest() =>
+			Agent.Config.TransactionSampleRate.Should().Be(ConfigConsts.DefaultValues.TransactionSampleRate);
+
+		[Fact]
+		public void SetTransactionSampleRateTest()
+		{
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate, "0.789");
+			var config = new EnvironmentConfigurationReader();
+			config.TransactionSampleRate.Should().Be(0.789);
+		}
+
+		[Fact]
+		public void TransactionSampleRateExpectsDotForFloatingPoint()
+		{
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate, "0,789");
+			var config = new EnvironmentConfigurationReader();
+			// Since comma was used instead of dot then default value will be used
+			config.TransactionSampleRate.Should().Be(ConfigConsts.DefaultValues.TransactionSampleRate);
 		}
 
 		[Fact]
@@ -176,7 +197,7 @@ namespace Elastic.Apm.Tests
 					$"{{{nameof(TestAgentConfigurationReader)}}}",
 					"Failed parsing log level from",
 					TestAgentConfigurationReader.Origin,
-					ConfigConsts.ConfigKeys.Level,
+					ConfigConsts.EnvVarNames.LogLevel,
 					"Defaulting to "
 				);
 		}
@@ -208,7 +229,7 @@ namespace Elastic.Apm.Tests
 		public void ReadServiceNameViaEnvironmentVariable()
 		{
 			var serviceName = "MyService123";
-			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.ServiceName, serviceName);
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceName, serviceName);
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
 			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
@@ -226,7 +247,7 @@ namespace Elastic.Apm.Tests
 		public void ReadServiceNameWithDotViaEnvironmentVariable()
 		{
 			var serviceName = "My.Service.Test";
-			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.ServiceName, serviceName);
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceName, serviceName);
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
 			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
@@ -269,7 +290,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void LoggerNotNull()
 		{
-			Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.Urls, "localhost"); //invalid, it should be "http://localhost"
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServerUrls, "localhost"); //invalid, it should be "http://localhost"
 			var testLogger = new TestLogger();
 			var config = new EnvironmentConfigurationReader(testLogger);
 			var serverUrl = config.ServerUrls.FirstOrDefault();
@@ -278,6 +299,6 @@ namespace Elastic.Apm.Tests
 			testLogger.Lines.Should().NotBeEmpty();
 		}
 
-		public void Dispose() => Environment.SetEnvironmentVariable(ConfigConsts.ConfigKeys.Urls, null);
+		public void Dispose() => Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServerUrls, null);
 	}
 }

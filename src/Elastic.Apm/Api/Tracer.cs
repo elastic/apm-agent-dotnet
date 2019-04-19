@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Elastic.Apm.Config;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -16,28 +17,24 @@ namespace Elastic.Apm.Api
 		private readonly IPayloadSender _sender;
 		private readonly Service _service;
 
-		public Tracer(IApmLogger logger, Service service, IPayloadSender payloadSender)
+		public Tracer(IApmLogger logger, Service service, IPayloadSender payloadSender, IConfigurationReader configurationReader)
 		{
 			_logger = logger?.Scoped(nameof(Tracer));
 			_service = service;
 			_sender = payloadSender;
+			Sampler = new Sampler(configurationReader.TransactionSampleRate);
 		}
+
+		internal Sampler Sampler { get; set; }
 
 		public ITransaction CurrentTransaction => Agent.TransactionContainer.Transactions.Value;
 
-		public ITransaction StartTransaction(string name, string type, (string traceId, string parentId) traceContext = default)
-		{
-			var (traceId, parentId) = traceContext;
-			if (TraceParent.IsTraceIdValid(traceId) && TraceParent.IsTraceParentValid(parentId))
-			{
-				return  StartTransactionInternal(name, type, traceId, parentId);
-			}
-			return StartTransactionInternal(name, type);
-		}
+		public ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null) =>
+			StartTransactionInternal(name, type, distributedTracingData);
 
-		internal Transaction StartTransactionInternal(string name, string type, string traceId = null, string parentId = null)
+		internal Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null)
 		{
-			var retVal = new Transaction(_logger, name, type, _sender, traceId, parentId)
+			var retVal = new Transaction(_logger, name, type, Sampler, distributedTracingData, _sender)
 			{
 				Name = name,
 				Type = type,
@@ -49,9 +46,9 @@ namespace Elastic.Apm.Api
 			return retVal;
 		}
 
-		public void CaptureTransaction(string name, string type, Action<ITransaction> action, (string traceId, string parentId) traceContext = default)
+		public void CaptureTransaction(string name, string type, Action<ITransaction> action, DistributedTracingData distributedTracingData = null)
 		{
-			var transaction = StartTransaction(name, type, traceContext);
+			var transaction = StartTransaction(name, type, distributedTracingData);
 
 			try
 			{
@@ -64,9 +61,9 @@ namespace Elastic.Apm.Api
 			}
 		}
 
-		public void CaptureTransaction(string name, string type, Action action, (string traceId, string parentId) traceContext = default)
+		public void CaptureTransaction(string name, string type, Action action, DistributedTracingData distributedTracingData = null)
 		{
-			var transaction = StartTransaction(name, type, traceContext);
+			var transaction = StartTransaction(name, type, distributedTracingData);
 
 			try
 			{
@@ -79,9 +76,9 @@ namespace Elastic.Apm.Api
 			}
 		}
 
-		public T CaptureTransaction<T>(string name, string type, Func<ITransaction, T> func, (string traceId, string parentId) traceContext = default)
+		public T CaptureTransaction<T>(string name, string type, Func<ITransaction, T> func, DistributedTracingData distributedTracingData = null)
 		{
-			var transaction = StartTransaction(name, type, traceContext);
+			var transaction = StartTransaction(name, type, distributedTracingData);
 			var retVal = default(T);
 			try
 			{
@@ -96,9 +93,9 @@ namespace Elastic.Apm.Api
 			return retVal;
 		}
 
-		public T CaptureTransaction<T>(string name, string type, Func<T> func, (string traceId, string parentId) traceContext = default)
+		public T CaptureTransaction<T>(string name, string type, Func<T> func, DistributedTracingData distributedTracingData = null)
 		{
-			var transaction = StartTransaction(name, type, traceContext);
+			var transaction = StartTransaction(name, type, distributedTracingData);
 			var retVal = default(T);
 			try
 			{
@@ -113,34 +110,34 @@ namespace Elastic.Apm.Api
 			return retVal;
 		}
 
-		public Task CaptureTransaction(string name, string type, Func<Task> func, (string traceId, string parentId) traceContext = default)
+		public Task CaptureTransaction(string name, string type, Func<Task> func, DistributedTracingData distributedTracingData = null)
 		{
-			var transaction = StartTransaction(name, type, traceContext);
+			var transaction = StartTransaction(name, type, distributedTracingData);
 			var task = func();
 			RegisterContinuation(task, transaction);
 			return task;
 		}
 
-		public Task CaptureTransaction(string name, string type, Func<ITransaction, Task> func, (string traceId, string parentId) traceContext = default)
+		public Task CaptureTransaction(string name, string type, Func<ITransaction, Task> func, DistributedTracingData distributedTracingData = null)
 		{
-			var transaction = StartTransaction(name, type, traceContext);
+			var transaction = StartTransaction(name, type, distributedTracingData);
 			var task = func(transaction);
 			RegisterContinuation(task, transaction);
 			return task;
 		}
 
-		public Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func, (string traceId, string parentId) traceContext = default)
+		public Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func, DistributedTracingData distributedTracingData = null)
 		{
-			var transaction = StartTransaction(name, type, traceContext);
+			var transaction = StartTransaction(name, type, distributedTracingData);
 			var task = func();
 			RegisterContinuation(task, transaction);
 
 			return task;
 		}
 
-		public Task<T> CaptureTransaction<T>(string name, string type, Func<ITransaction, Task<T>> func, (string traceId, string parentId) traceContext = default)
+		public Task<T> CaptureTransaction<T>(string name, string type, Func<ITransaction, Task<T>> func, DistributedTracingData distributedTracingData = null)
 		{
-			var transaction = StartTransaction(name, type, traceContext);
+			var transaction = StartTransaction(name, type, distributedTracingData);
 			var task = func(transaction);
 			RegisterContinuation(task, transaction);
 			return task;

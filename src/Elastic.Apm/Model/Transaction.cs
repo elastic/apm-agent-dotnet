@@ -14,15 +14,24 @@ namespace Elastic.Apm.Model
 	internal class Transaction : ITransaction
 	{
 		private readonly Lazy<Context> _context = new Lazy<Context>();
+
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
 
 		private readonly DateTimeOffset _start;
 
-		public Transaction(IApmAgent agent, string name, string type)
-			: this(agent.Logger, name, type, agent.PayloadSender) { }
+		// This constructor is used only by tests that don't care about sampling and distributed tracing
+		internal Transaction(IApmAgent agent, string name, string type)
+			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender) { }
 
-		public Transaction(IApmLogger logger, string name, string type, IPayloadSender sender, string traceId = null, string parentId = null)
+		internal Transaction(
+			IApmLogger logger,
+			string name,
+			string type,
+			Sampler sampler,
+			DistributedTracingData distributedTracingData,
+			IPayloadSender sender
+		)
 		{
 			_logger = logger?.Scoped(nameof(Transaction));
 			_sender = sender;
@@ -31,22 +40,27 @@ namespace Elastic.Apm.Model
 			Name = name;
 			Type = type;
 			var idBytes = new byte[8];
-			Id = RandomGenerator.GetRandomBytesAsString(idBytes);
+			Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 
-			if (string.IsNullOrEmpty(traceId))
+			if (distributedTracingData == null)
 			{
-				idBytes = new byte[16];
-				TraceId = RandomGenerator.GetRandomBytesAsString(idBytes);
+				var traceIdBytes = new byte[16];
+				TraceId = RandomGenerator.GenerateRandomBytesAsString(traceIdBytes);
+				IsSampled = sampler.DecideIfToSample(idBytes);
 			}
 			else
-				TraceId = traceId;
+			{
+				TraceId = distributedTracingData.TraceId;
+				ParentId = distributedTracingData.ParentId;
+				IsSampled = distributedTracingData.FlagRecorded;
+			}
 
-			ParentId = parentId;
 			SpanCount = new SpanCount();
 		}
 
 		/// <summary>
 		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
+		/// <seealso cref="ShouldSerializeContext" />
 		/// </summary>
 		public Context Context => _context.Value;
 
@@ -62,8 +76,14 @@ namespace Elastic.Apm.Model
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Id { get; }
 
+		[JsonProperty("sampled")]
+		public bool IsSampled { get; }
+
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
+
+		[JsonIgnore]
+		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(TraceId, Id, IsSampled);
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("parent_id")]
@@ -86,6 +106,7 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		public Dictionary<string, string> Tags => Context.Tags;
 
+		// ReSharper disable once ImpureMethodCallOnReadonlyValueField
 		public long Timestamp => _start.ToUnixTimeMilliseconds() * 1000;
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
@@ -95,13 +116,22 @@ namespace Elastic.Apm.Model
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
 
+		/// <summary>
+		/// Method to conditionally serialize <see cref="Context" /> because context should be serialized only when the transaction
+		/// is sampled.
+		/// See
+		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
+		/// </summary>
+		public bool ShouldSerializeContext() => IsSampled;
+
 		public override string ToString() => new ToStringBuilder(nameof(Transaction))
 		{
 			{ "Id", Id },
 			{ "TraceId", TraceId },
 			{ "ParentId", ParentId },
 			{ "Name", Name },
-			{ "Type", Type }
+			{ "Type", Type },
+			{ "IsSampled", IsSampled }
 		}.ToString();
 
 		public void End()
@@ -119,22 +149,39 @@ namespace Elastic.Apm.Model
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
-			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger);
+			var retVal = new Span(name, type, Id, TraceId, this, IsSampled, _sender, _logger);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 
 			if (!string.IsNullOrEmpty(action)) retVal.Action = action;
-			SpanCount.Started++;
 
 			_logger.Debug()?.Log("Starting {SpanDetails}", retVal.ToString());
 			return retVal;
 		}
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
-			=> ExecutionSegmentCommon.CaptureException(exception, _logger, _sender, this, Context, culprit, isHandled, parentId);
+			=> ExecutionSegmentCommon.CaptureException(
+				exception,
+				_logger,
+				_sender,
+				this,
+				this,
+				culprit,
+				isHandled,
+				parentId
+			);
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null)
-			=> ExecutionSegmentCommon.CaptureError(message, culprit, frames, _sender, _logger, this, Context, parentId);
+			=> ExecutionSegmentCommon.CaptureError(
+				message,
+				culprit,
+				frames,
+				_sender,
+				_logger,
+				this,
+				this,
+				parentId
+			);
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), capturedAction);

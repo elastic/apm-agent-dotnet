@@ -45,6 +45,16 @@ namespace Elastic.Apm.Api
 		string TraceId { get; }
 
 		/// <summary>
+		/// It's true if and only of this segment is sampled.
+		/// </summary>
+		bool IsSampled { get; }
+
+		/// <summary>
+		/// Distributed tracing data for this segment as the distributed tracing caller.
+		/// </summary>
+		DistributedTracingData OutgoingDistributedTracingData { get; }
+
+		/// <summary>
 		/// Captures a custom error and reports it to the APM server.
 		/// </summary>
 		/// <param name="message">The error message.</param>

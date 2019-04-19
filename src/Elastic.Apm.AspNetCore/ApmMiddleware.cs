@@ -47,15 +47,18 @@ namespace Elastic.Apm.AspNetCore
 			{
 				var headerValue = context.Request.Headers[TraceParent.TraceParentHeaderName].ToString();
 
-				if (TraceParent.TryExtractTraceparent(headerValue, out var traceId, out var parentId, out var traceoptions))
+				var distributedTracingData = TraceParent.TryExtractTraceparent(headerValue);
+				if (distributedTracingData != null)
 				{
 					_logger.Debug()
 						?.Log(
-							"Incoming request with {TraceParentHeaderName} header. TraceId: {TraceId}, ParentId: {ParentId}, Recorded: {IsRecorded}. Continuing trace.",
-							TraceParent.TraceParentHeaderName, traceId, parentId, TraceParent.IsFlagRecordedActive(traceoptions));
+							"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData}. Continuing trace.",
+							TraceParent.TraceParentHeaderName, distributedTracingData);
 
-					transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
-						ApiConstants.TypeRequest, traceId, parentId);
+					transaction = _tracer.StartTransactionInternal(
+						$"{context.Request.Method} {context.Request.Path}",
+						ApiConstants.TypeRequest,
+						distributedTracingData);
 				}
 				else
 				{

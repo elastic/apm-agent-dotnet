@@ -138,14 +138,20 @@ namespace Elastic.Apm.Model
 			span.End();
 		}, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
 
-		public static void CaptureException(Exception exception, IApmLogger logger, IPayloadSender payloadSender, IExecutionSegment t,
-			Context context,
-			string culprit = null, bool isHandled = false, string parentId = null
+		public static void CaptureException(
+			Exception exception,
+			IApmLogger logger,
+			IPayloadSender payloadSender,
+			IExecutionSegment executionSegment,
+			Transaction transaction,
+			string culprit = null,
+			bool isHandled = false,
+			string parentId = null
 		)
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
-			var ed = new CapturedException
+			var capturedException = new CapturedException
 			{
 				Message = exception.Message,
 				Type = exception.GetType().FullName,
@@ -154,27 +160,42 @@ namespace Elastic.Apm.Model
 					$"{nameof(Transaction)}.{nameof(CaptureException)}")
 			};
 
-			payloadSender.QueueError(new Error(ed, t.TraceId, t.Id, parentId ?? t.Id) { Culprit = capturedCulprit, Context = context });
+			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id)
+			{
+				Culprit = capturedCulprit,
+				Context = transaction.Context
+			});
 		}
 
-		public static void CaptureError(string message, string culprit, StackFrame[] frames, IPayloadSender payloadSender, IApmLogger logger,
-			IExecutionSegment t, Context context, string parentId = null
+		public static void CaptureError(
+			string message,
+			string culprit,
+			StackFrame[] frames,
+			IPayloadSender payloadSender,
+			IApmLogger logger,
+			IExecutionSegment executionSegment,
+			Transaction transaction,
+			string parentId = null
 		)
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
-			var ed = new CapturedException
+			var capturedException = new CapturedException
 			{
 				Message = message
 			};
 
 			if (frames != null)
 			{
-				ed.Stacktrace
+				capturedException.Stacktrace
 					= StacktraceHelper.GenerateApmStackTrace(frames, logger, "failed capturing stacktrace");
 			}
 
-			payloadSender.QueueError(new Error(ed, t.TraceId, t.Id, parentId ?? t.Id) { Culprit = capturedCulprit, Context = context });
+			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id)
+			{
+				Culprit = capturedCulprit,
+				Context = transaction.Context
+			});
 		}
 	}
 }

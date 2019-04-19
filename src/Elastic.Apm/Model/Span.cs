@@ -20,7 +20,14 @@ namespace Elastic.Apm.Model
 
 		private readonly DateTimeOffset _start;
 
-		public Span(string name, string type, string parentId, string traceId, Transaction enclosingTransaction, IPayloadSender payloadSender,
+		public Span(
+			string name,
+			string type,
+			string parentId,
+			string traceId,
+			Transaction enclosingTransaction,
+			bool isSampled,
+			IPayloadSender payloadSender,
 			IApmLogger logger
 		)
 		{
@@ -30,11 +37,14 @@ namespace Elastic.Apm.Model
 			_logger = logger?.Scoped(nameof(Span));
 			Name = name;
 			Type = type;
+			IsSampled = isSampled;
 
-			Id = RandomGenerator.GetRandomBytesAsString(new byte[8]);
+			Id = RandomGenerator.GenerateRandomBytesAsString(new byte[8]);
 			ParentId = parentId;
 			TraceId = traceId;
-			enclosingTransaction.SpanCount.Started++;
+
+			// Started spans should be counted only for sampled transactions
+			if (IsSampled) enclosingTransaction.SpanCount.Started++;
 		}
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
@@ -57,8 +67,19 @@ namespace Elastic.Apm.Model
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Id { get; set; }
 
+		[JsonIgnore]
+		public bool IsSampled { get; }
+
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
+
+		[JsonIgnore]
+		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(
+			TraceId,
+			// When transaction is not sampled then outgoing distributed tracing data should have transaction ID for parent-id part
+			// and not span ID as it does for sampled case.
+			IsSampled ? Id : TransactionId,
+			IsSampled);
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("parent_id")]
@@ -94,7 +115,8 @@ namespace Elastic.Apm.Model
 			{ "ParentId", ParentId },
 			{ "TraceId", TraceId },
 			{ "Name", Name },
-			{ "Type", Type }
+			{ "Type", Type },
+			{ "IsSampled", IsSampled }
 		}.ToString();
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
@@ -102,7 +124,7 @@ namespace Elastic.Apm.Model
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
-			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger);
+			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, IsSampled, _payloadSender, _logger);
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 
 			if (!string.IsNullOrEmpty(action)) retVal.Action = action;
@@ -115,12 +137,20 @@ namespace Elastic.Apm.Model
 		{
 			_logger.Debug()?.Log("Ending {SpanDetails}", ToString());
 			if (!Duration.HasValue) Duration = (DateTimeOffset.UtcNow - _start).TotalMilliseconds;
-			_payloadSender.QueueSpan(this);
+			if (IsSampled) _payloadSender.QueueSpan(this);
 		}
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
-			=> ExecutionSegmentCommon.CaptureException(exception, _logger, _payloadSender, this, _enclosingTransaction?.Context, culprit, isHandled,
-				parentId);
+			=> ExecutionSegmentCommon.CaptureException(
+				exception,
+				_logger,
+				_payloadSender,
+				this,
+				_enclosingTransaction,
+				culprit,
+				isHandled,
+				parentId
+			);
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), capturedAction);
@@ -147,6 +177,15 @@ namespace Elastic.Apm.Model
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null)
-			=> ExecutionSegmentCommon.CaptureError(message, culprit, frames, _payloadSender, _logger, this, _enclosingTransaction?.Context, parentId);
+			=> ExecutionSegmentCommon.CaptureError(
+				message,
+				culprit,
+				frames,
+				_payloadSender,
+				_logger,
+				this,
+				_enclosingTransaction,
+				parentId
+			);
 	}
 }

@@ -22,7 +22,7 @@ namespace Elastic.Apm
 			Service =  Service.GetDefaultService(ConfigurationReader);
 
 			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigurationReader, Service);
-			TracerInternal = new Tracer(Logger, Service, PayloadSender);
+			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationReader);
 			TransactionContainer = new TransactionContainer();
 		}
 

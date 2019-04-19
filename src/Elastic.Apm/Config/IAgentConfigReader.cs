@@ -11,5 +11,6 @@ namespace Elastic.Apm.Config
 		string ServiceName { get; }
 		string SecretToken { get; }
 		bool CaptureHeaders { get; }
+		double TransactionSampleRate { get; }
 	}
 }

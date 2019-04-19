@@ -10,14 +10,20 @@ namespace Elastic.Apm.Model
 	{
 		private readonly DateTimeOffset _start;
 
-		public Error(CapturedException capturedException, string traceId, string transactionId, string parentId) : this(capturedException) =>
-			(TraceId, TransactionId, ParentId) = (traceId, transactionId, parentId);
+		public Error(CapturedException capturedException, Transaction transaction, string parentId)
+			: this(capturedException)
+		{
+			TraceId = transaction.TraceId;
+			TransactionId = transaction.Id;
+			ParentId = parentId;
+			Transaction = new TransactionData(transaction.IsSampled, transaction.Type);
+		}
 
-		public Error(CapturedException capturedException)
+		private Error(CapturedException capturedException)
 		{
 			_start = DateTimeOffset.UtcNow;
 			var idBytes = new byte[8];
-			RandomGenerator.GetRandomBytes(idBytes);
+			RandomGenerator.GenerateRandomBytes(idBytes);
 			Id = BitConverter.ToString(idBytes).Replace("-", "");
 
 			Exception = capturedException;
@@ -35,20 +41,44 @@ namespace Elastic.Apm.Model
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
 
+		// ReSharper disable once UnusedMember.Global, ImpureMethodCallOnReadonlyValueField
 		public long Timestamp => _start.ToUnixTimeMilliseconds() * 1000;
 
 		[JsonProperty("trace_id")]
 		public string TraceId { get; set; }
+
+		public TransactionData Transaction { get; }
 
 		[JsonProperty("transaction_id")]
 		public string TransactionId { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(Error))
 		{
-			{"Id", Id},
-			{"TraceId", TraceId},
-			{"ParentId", ParentId},
-			{"TransactionId", TransactionId}
+			{ "Id", Id },
+			{ "TraceId", TraceId },
+			{ "ParentId", ParentId },
+			{ "TransactionId", TransactionId },
 		}.ToString();
+
+		public class TransactionData
+		{
+			internal TransactionData(bool isSampled, string type)
+			{
+				IsSampled = isSampled;
+				Type = type;
+			}
+
+			[JsonProperty("sampled")]
+			public bool IsSampled { get; }
+
+			[JsonConverter(typeof(TrimmedStringJsonConverter))]
+			public string Type { get; }
+
+			public override string ToString() => new ToStringBuilder(nameof(TransactionData))
+			{
+				{ "IsSampled", IsSampled },
+				{ "Type", Type },
+			}.ToString();
+		}
 	}
 }

@@ -50,7 +50,8 @@ This is a typical `appsettings.json` file that contains some sample configuratio
   "ElasticApm":
     {
       "LogLevel":  "Debug",
-      "ServerUrls":  "http://myapmserver:8200"
+      "ServerUrls":  "http://myapmserver:8200",
+      "TransactionSampleRate": 1.0
     }
 }
 ----
@@ -77,6 +78,30 @@ NOTE: The service name must conform to this regular expression: ^[a-zA-Z0-9 _-]+
 |============
 | Default                          | Type
 | Name of the entry assembly       | String 
+|============
+
+[float]
+[[config-transaction-sample-rate]]
+==== `TransactionSampleRate`
+
+By default, the agent will sample every transaction (e.g. a request to your service).
+To reduce overhead and storage requirements, you can set the sample rate to a value between 0.0 and 1.0.
+The agent will still record the overall time and result for unsampled transactions,
+but no context information, labels, or spans will be recorded.
+
+NOTE: When parsing the value for this option, the agent doesn't consider the current culture.
+It also expects that a period (`.`) is used to separate the integer and the fraction of a floating-point number.
+
+[options="header"]
+|============
+| Environment variable name             | IConfiguration key 
+| `ELASTIC_APM_TRANSACTION_SAMPLE_RATE` | `ElasticApm:TransactionSampleRate`
+|============
+
+[options="header"]
+|============
+| Default | Type
+| 1.0     | Double 
 |============
 
 [[config-reporter]]
