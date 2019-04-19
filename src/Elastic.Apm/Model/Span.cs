@@ -146,7 +146,6 @@ namespace Elastic.Apm.Model
 				_logger,
 				_payloadSender,
 				this,
-				_enclosingTransaction?.Context,
 				_enclosingTransaction,
 				culprit,
 				isHandled,
@@ -185,7 +184,6 @@ namespace Elastic.Apm.Model
 				_payloadSender,
 				_logger,
 				this,
-				_enclosingTransaction?.Context,
 				_enclosingTransaction,
 				parentId
 			);

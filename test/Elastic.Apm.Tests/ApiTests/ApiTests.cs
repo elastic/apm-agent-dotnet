@@ -494,6 +494,9 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void ErrorShouldContainTransactionData(bool isSampled, bool captureOnSpan, bool captureAsError)
 		{
 			var payloadSender = new MockPayloadSender();
+			var expectedErrorContext = new Context();
+			expectedErrorContext.Tags["one"] = "1";
+			expectedErrorContext.Tags["twenty two"] = "22";
 
 			ITransaction capturedTransaction = null;
 			IExecutionSegment errorCapturingExecutionSegment = null;
@@ -503,6 +506,8 @@ namespace Elastic.Apm.Tests.ApiTests
 				agent.Tracer.CaptureTransaction(TestTransaction, CustomTransactionTypeForTests, transaction =>
 				{
 					capturedTransaction = transaction;
+					foreach (var keyValue in expectedErrorContext.Tags)
+						transaction.Context.Tags[keyValue.Key] = keyValue.Value;
 					ISpan span = null;
 					if (captureOnSpan)
 					{
@@ -517,6 +522,9 @@ namespace Elastic.Apm.Tests.ApiTests
 					else
 						errorCapturingExecutionSegment.CaptureException(new TestException("test exception"));
 
+					// Immutable snapshot of the context should be captured instead of reference to a mutable object
+					// transaction.Context.Tags["three hundred thirty three"] = "333";
+
 					span?.End();
 				});
 			}
@@ -527,28 +535,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstError.TransactionId.Should().Be(capturedTransaction.Id);
 			payloadSender.FirstError.TraceId.Should().Be(capturedTransaction.TraceId);
 			payloadSender.FirstError.ParentId.Should().Be(errorCapturingExecutionSegment.Id);
+			payloadSender.FirstError.Context.Should().BeEquivalentTo(expectedErrorContext);
 		}
-
-		/// <summary>
-		/// Creates a transaction, then a child span which captures an error.
-		/// Makes sure that the captured error contains transaction data.
-		/// </summary>
-		[Fact]
-		public void CapturedErrorOnSpanShouldContainTransactionData() { }
-
-		/// <summary>
-		/// Creates a transaction which captures an exception.
-		/// Makes sure that the captured error contains transaction data.
-		/// </summary>
-		[Fact]
-		public void CapturedExceptionOnTransactionShouldContainTransactionData() { }
-
-		/// <summary>
-		/// Creates a transaction, then a child span which captures an exception.
-		/// Makes sure that the captured error contains transaction data.
-		/// </summary>
-		[Fact]
-		public void CapturedExceptionOnSpanShouldContainTransactionData() { }
 
 		private class TestException : Exception
 		{

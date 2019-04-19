@@ -165,7 +165,6 @@ namespace Elastic.Apm.Model
 				_logger,
 				_sender,
 				this,
-				Context,
 				this,
 				culprit,
 				isHandled,
@@ -180,7 +179,6 @@ namespace Elastic.Apm.Model
 				_sender,
 				_logger,
 				this,
-				Context,
 				this,
 				parentId
 			);

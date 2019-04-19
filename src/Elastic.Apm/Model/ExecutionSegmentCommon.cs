@@ -143,7 +143,6 @@ namespace Elastic.Apm.Model
 			IApmLogger logger,
 			IPayloadSender payloadSender,
 			IExecutionSegment executionSegment,
-			Context context,
 			Transaction transaction,
 			string culprit = null,
 			bool isHandled = false,
@@ -164,7 +163,7 @@ namespace Elastic.Apm.Model
 			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id)
 			{
 				Culprit = capturedCulprit,
-				Context = context
+				Context = transaction.Context
 			});
 		}
 
@@ -175,7 +174,6 @@ namespace Elastic.Apm.Model
 			IPayloadSender payloadSender,
 			IApmLogger logger,
 			IExecutionSegment executionSegment,
-			Context context,
 			Transaction transaction,
 			string parentId = null
 		)
@@ -196,7 +194,7 @@ namespace Elastic.Apm.Model
 			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id)
 			{
 				Culprit = capturedCulprit,
-				Context = context
+				Context = transaction.Context
 			});
 		}
 	}
