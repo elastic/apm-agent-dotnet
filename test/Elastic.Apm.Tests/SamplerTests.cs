@@ -106,7 +106,7 @@ namespace Elastic.Apm.Tests
 				{
 					sampler.DecideIfToSample(bytes);
 				}
-				catch (ArgumentException ex)
+				catch (ArgumentException)
 				{
 					bytes.Length.Should().BeLessThan(8);
 				}

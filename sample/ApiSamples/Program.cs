@@ -15,7 +15,7 @@ namespace ApiSamples
 		{
 			if (args.Length == 1) //in case it's started with an argument we try to parse the argument as a DistributedTracingData
 			{
-				Console.WriteLine($"Started callee side - continuing trace with distributedTracingData: {args[0]}");
+				WriteLineToConsole($"Callee process started - continuing trace with distributed tracing data: {args[0]}");
 				var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransaction", DistributedTracingData.TryDeserializeFromString(args[0]));
 
 				try
@@ -28,18 +28,18 @@ namespace ApiSamples
 				}
 
 				Thread.Sleep(1000);
-				Console.WriteLine("Callee side finished");
+				WriteLineToConsole("About to exit");
 			}
 			else
 			{
-				Console.WriteLine("Started caller side");
-				PassTraceContext();
+				WriteLineToConsole("Started");
+				PassDistributedTracingData();
 
 				//WIP: if the process terminates the agent
 				//potentially does not have time to send the transaction to the server.
 				Thread.Sleep(1000);
 
-				Console.WriteLine("Caller side is about to exit - press any key...");
+				WriteLineToConsole("About to exit - press any key...");
 				Console.ReadKey();
 			}
 		}
@@ -87,18 +87,18 @@ namespace ApiSamples
 
 		public static void SampleCustomTransaction()
 		{
-			Console.WriteLine($"{nameof(SampleCustomTransaction)} started");
+			WriteLineToConsole($"{nameof(SampleCustomTransaction)} started");
 			var transaction = Agent.Tracer.StartTransaction("SampleTransaction", ApiConstants.TypeRequest);
 
 			Thread.Sleep(500); //simulate work...
 
 			transaction.End();
-			Console.WriteLine($"{nameof(SampleCustomTransaction)} finished");
+			WriteLineToConsole($"{nameof(SampleCustomTransaction)} finished");
 		}
 
 		public static void SampleCustomTransactionWithSpan()
 		{
-			Console.WriteLine($"{nameof(SampleCustomTransactionWithSpan)} started");
+			WriteLineToConsole($"{nameof(SampleCustomTransactionWithSpan)} started");
 			var transaction = Agent.Tracer.StartTransaction("SampleTransactionWithSpan", ApiConstants.TypeRequest);
 
 			Thread.Sleep(500);
@@ -108,12 +108,12 @@ namespace ApiSamples
 			span.End();
 
 			transaction.End();
-			Console.WriteLine($"{nameof(SampleCustomTransactionWithSpan)} finished");
+			WriteLineToConsole($"{nameof(SampleCustomTransactionWithSpan)} finished");
 		}
 
 		public static void SampleError()
 		{
-			Console.WriteLine($"{nameof(SampleError)} started");
+			WriteLineToConsole($"{nameof(SampleError)} started");
 			var transaction = Agent.Tracer.StartTransaction("SampleError", ApiConstants.TypeRequest);
 
 			Thread.Sleep(500); //simulate work...
@@ -133,7 +133,7 @@ namespace ApiSamples
 
 			transaction.End();
 
-			Console.WriteLine($"{nameof(SampleError)} finished");
+			WriteLineToConsole($"{nameof(SampleError)} finished");
 		}
 
 		public static void SampleCustomTransactionWithConvenientApi() => Agent.Tracer.CaptureTransaction("TestTransaction", "TestType",
@@ -183,7 +183,7 @@ namespace ApiSamples
 				});
 		}
 
-		public static void PassTraceContext()
+		public static void PassDistributedTracingData()
 		{
 			var transaction = Agent.Tracer.StartTransaction("Transaction1", "TestTransaction");
 
@@ -191,22 +191,32 @@ namespace ApiSamples
 			{
 				Thread.Sleep(300);
 
-				//We start the sample app again with a new service name and we pass TraceContext to it
+				//We start the sample app again with a new service name and we pass DistributedTracingData to it
 				//In the main method we check for this and continue the trace.
-				var p = new Process();
-				p.StartInfo.Environment["ELASTIC_APM_SERVICE_NAME"] = "Service2";
+				var startInfo = new ProcessStartInfo();
+				startInfo.Environment["ELASTIC_APM_SERVICE_NAME"] = "Service2";
 				var outgoingDistributedTracingData = transaction.OutgoingDistributedTracingData.SerializeToString();
-				p.StartInfo.Arguments = $"run {outgoingDistributedTracingData}";
-				p.StartInfo.FileName = "dotnet";
-				Console.WriteLine($"Spawning callee process with outgoingDistributedTracingData: {outgoingDistributedTracingData}...");
-				p.Start();
+				startInfo.FileName = "dotnet";
+				startInfo.Arguments = $"run {outgoingDistributedTracingData}";
+				WriteLineToConsole($"Spawning callee process and passing outgoing distributed tracing data: {outgoingDistributedTracingData} to it...");
+				var calleeProcess = Process.Start(startInfo);
+				WriteLineToConsole($"Spawned callee process");
 
 				Thread.Sleep(1100);
+
+				WriteLineToConsole($"Waiting for callee process to exit...");
+				calleeProcess.WaitForExit();
+				WriteLineToConsole($"Callee process exited");
 			}
 			finally
 			{
 				transaction.End();
 			}
+		}
+
+		private static void WriteLineToConsole(string line)
+		{
+			Console.WriteLine($"[{Process.GetCurrentProcess().Id}] {line}");
 		}
 	}
 }

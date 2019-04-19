@@ -12,7 +12,7 @@ using Xunit;
 namespace Elastic.Apm.Tests.ApiTests
 {
 	/// <summary>
-	/// Tests the TraceContext parameter on the Public Agent API
+	/// Tests the DistributedTracingData parameter on the Public Agent API
 	/// </summary>
 	public class DistributedTracingDataTests
 	{
@@ -27,7 +27,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// Makes sure the agent continued the trace.
 		/// </summary>
 		[Fact]
-		public void ValidTraceContextTest()
+		public void ValidDistributedTracingDataTest()
 		{
 			var payloadSender1 = new MockPayloadSender();
 			var payloadSender2 = new MockPayloadSender();
@@ -63,8 +63,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// <param name="parentId"></param>
 		/// <param name="traceFlags"></param>
 		[Theory]
-		[ClassData(typeof(InvalidTraceContextData))]
-		public void InvalidTraceContextTest(string traceId, string parentId, string traceFlags)
+		[ClassData(typeof(InvalidDistributedTracingDataData))]
+		public void InvalidDistributedTracingDataTest(string traceId, string parentId, string traceFlags)
 		{
 			var payloadSender1 = new MockPayloadSender();
 
@@ -82,34 +82,34 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action, DistributedTracingData)" /> method with a
 		/// valid
-		/// TraceContext parameter
+		/// DistributedTracingData parameter
 		/// </summary>
 		[Fact]
-		public void TraceContextWithSimpleAction_Valid() =>
-			AssertValidTraceContext(agent => agent.Tracer.CaptureTransaction(TestTransaction,
+		public void DistributedTracingDataWithSimpleAction_Valid() =>
+			AssertValidDistributedTracingData(agent => agent.Tracer.CaptureTransaction(TestTransaction,
 				UnitTest, () => { WaitHelpers.SleepMinimum(); }, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
-		[ClassData(typeof(InvalidTraceContextData))]
-		public void TraceContextWithSimpleAction_Invalid(string traceId, string parentId, string traceFlags) =>
-			AssertInvalidTraceContext(agent => agent.Tracer.CaptureTransaction(TestTransaction,
+		[ClassData(typeof(InvalidDistributedTracingDataData))]
+		public void DistributedTracingDataWithSimpleAction_Invalid(string traceId, string parentId, string traceFlags) =>
+			AssertInvalidDistributedTracingData(agent => agent.Tracer.CaptureTransaction(TestTransaction,
 				UnitTest, () => { WaitHelpers.SleepMinimum(); }, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
 
 		/// <summary>
 		/// Tests the
 		/// <see cref="Tracer.CaptureTransaction(string,string,System.Action{ITransaction}, DistributedTracingData)" /> method
-		/// with valid TraceContext parameter.
+		/// with valid DistributedTracingData parameter.
 		/// </summary>
 		[Fact]
-		public void TraceContextWitSimpleActionWithParameter_Valid() =>
-			AssertValidTraceContext(agent => agent.Tracer.CaptureTransaction(TestTransaction,
+		public void DistributedTracingDataWitSimpleActionWithParameter_Valid() =>
+			AssertValidDistributedTracingData(agent => agent.Tracer.CaptureTransaction(TestTransaction,
 				UnitTest, t => { WaitHelpers.SleepMinimum(); }, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
-		[ClassData(typeof(InvalidTraceContextData))]
-		public void TraceContextWitSimpleActionWithParameter_Invalid(string traceId, string parentId, string traceFlags) =>
-			AssertInvalidTraceContext(agent => agent.Tracer.CaptureTransaction(TestTransaction,
+		[ClassData(typeof(InvalidDistributedTracingDataData))]
+		public void DistributedTracingDataWitSimpleActionWithParameter_Invalid(string traceId, string parentId, string traceFlags) =>
+			AssertInvalidDistributedTracingData(agent => agent.Tracer.CaptureTransaction(TestTransaction,
 				UnitTest, t =>
 				{
 					t.Should().NotBeNull();
@@ -120,11 +120,11 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// Tests the
 		/// <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,T}, DistributedTracingData)" />
 		/// method
-		/// with valid TraceContext parameter.
+		/// with valid DistributedTracingData parameter.
 		/// </summary>
 		[Fact]
 		public void SimpleActionWithReturnTypeAndParameter_Valid() =>
-			AssertValidTraceContext(agent => agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
+			AssertValidDistributedTracingData(agent => agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
 				t =>
 				{
 					t.Should().NotBeNull();
@@ -133,9 +133,9 @@ namespace Elastic.Apm.Tests.ApiTests
 				}, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
-		[ClassData(typeof(InvalidTraceContextData))]
+		[ClassData(typeof(InvalidDistributedTracingDataData))]
 		public void SimpleActionWithReturnTypeAndParameter_Invalid(string traceId, string parentId, string traceFlags) =>
-			AssertInvalidTraceContext(agent => agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
+			AssertInvalidDistributedTracingData(agent => agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
 				t =>
 				{
 					t.Should().NotBeNull();
@@ -145,20 +145,20 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{T}, DistributedTracingData)" /> method
-		/// with valid TraceContext parameter.
+		/// with valid DistributedTracingData parameter.
 		/// </summary>
 		[Fact]
 		public void SimpleActionWithReturnType_Valid() =>
-			AssertValidTraceContext(agent => agent.Tracer.CaptureTransaction(TestTransaction, UnitTest, () =>
+			AssertValidDistributedTracingData(agent => agent.Tracer.CaptureTransaction(TestTransaction, UnitTest, () =>
 			{
 				WaitHelpers.SleepMinimum();
 				return 42;
 			}, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
-		[ClassData(typeof(InvalidTraceContextData))]
+		[ClassData(typeof(InvalidDistributedTracingDataData))]
 		public void SimpleActionWithReturnType_Invalid(string traceId, string parentId, string traceFlags) =>
-			AssertInvalidTraceContext(agent => agent.Tracer.CaptureTransaction(TestTransaction, UnitTest, () =>
+			AssertInvalidDistributedTracingData(agent => agent.Tracer.CaptureTransaction(TestTransaction, UnitTest, () =>
 			{
 				WaitHelpers.SleepMinimum();
 				return 42;
@@ -166,28 +166,28 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Func{Task}, DistributedTracingData)" /> method
-		/// with valid TraceContext parameter.
+		/// with valid DistributedTracingData parameter.
 		/// </summary>
 		[Fact]
 		public async Task AsyncTask_Valid() =>
-			await AssertValidTraceContext(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
+			await AssertValidDistributedTracingData(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
 				async () => { await WaitHelpers.DelayMinimum(); }, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
-		[ClassData(typeof(InvalidTraceContextData))]
+		[ClassData(typeof(InvalidDistributedTracingDataData))]
 		public async Task AsyncTask_Invalid(string traceId, string parentId, string traceFlags) =>
-			await AssertInvalidTraceContext(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
+			await AssertInvalidDistributedTracingData(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
 				async () => { await WaitHelpers.DelayMinimum(); }, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
 		/// <summary>
 		/// Tests the
 		/// <see cref="Tracer.CaptureTransaction(string,string,System.Func{ITransaction,Task}, DistributedTracingData)" />
 		/// method
-		/// with valid TraceContext parameter.
+		/// with valid DistributedTracingData parameter.
 		/// </summary>
 		[Fact]
 		public async Task AsyncTaskWithParameter_Valid() =>
-			await AssertValidTraceContext(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
+			await AssertValidDistributedTracingData(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
 				async t =>
 				{
 					t.Should().NotBeNull();
@@ -195,9 +195,9 @@ namespace Elastic.Apm.Tests.ApiTests
 				}, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
-		[ClassData(typeof(InvalidTraceContextData))]
+		[ClassData(typeof(InvalidDistributedTracingDataData))]
 		public async Task AsyncTaskWithParameter_Invalid(string traceId, string parentId, string traceFlags) =>
-			await AssertInvalidTraceContext(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
+			await AssertInvalidDistributedTracingData(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
 				async t =>
 				{
 					t.Should().NotBeNull();
@@ -208,11 +208,11 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// Tests the
 		/// <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,Task{T}}, DistributedTracingData)" />
 		/// method
-		/// with valid TraceContext parameter.
+		/// with valid DistributedTracingData parameter.
 		/// </summary>
 		[Fact]
 		public async Task AsyncTaskWithReturnTypeAndParameter_Valid() =>
-			await AssertValidTraceContext(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
+			await AssertValidDistributedTracingData(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
 				async t =>
 				{
 					t.Should().NotBeNull();
@@ -221,9 +221,9 @@ namespace Elastic.Apm.Tests.ApiTests
 				}, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
-		[ClassData(typeof(InvalidTraceContextData))]
+		[ClassData(typeof(InvalidDistributedTracingDataData))]
 		public async Task AsyncTaskWithReturnTypeAndParameter_Invalid(string traceId, string parentId, string traceFlags) =>
-			await AssertInvalidTraceContext(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
+			await AssertInvalidDistributedTracingData(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
 				async t =>
 				{
 					t.Should().NotBeNull();
@@ -234,11 +234,11 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{Task{T}}, DistributedTracingData)" />
 		/// method
-		/// with valid TraceContext parameter.
+		/// with valid DistributedTracingData parameter.
 		/// </summary>
 		[Fact]
 		public async Task AsyncTaskWithReturnType_Valid() =>
-			await AssertValidTraceContext(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
+			await AssertValidDistributedTracingData(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
 				async () =>
 				{
 					await WaitHelpers.DelayMinimum();
@@ -246,16 +246,16 @@ namespace Elastic.Apm.Tests.ApiTests
 				}, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
-		[ClassData(typeof(InvalidTraceContextData))]
+		[ClassData(typeof(InvalidDistributedTracingDataData))]
 		public async Task AsyncTaskWithReturnType_Invalid(string traceId, string parentId, string traceFlags) =>
-			await AssertInvalidTraceContext(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
+			await AssertInvalidDistributedTracingData(async agent => await agent.Tracer.CaptureTransaction(TestTransaction, UnitTest,
 				async () =>
 				{
 					await WaitHelpers.DelayMinimum();
 					return 42;
 				}, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
-		private static void AssertValidTraceContext(Action<IApmAgent> transactionCreator)
+		private static void AssertValidDistributedTracingData(Action<IApmAgent> transactionCreator)
 		{
 			var payloadSender = new MockPayloadSender();
 
@@ -265,7 +265,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstTransaction.ParentId.Should().Be(ValidParentId);
 		}
 
-		private static void AssertInvalidTraceContext(Action<IApmAgent> transactionCreator, string traceId)
+		private static void AssertInvalidDistributedTracingData(Action<IApmAgent> transactionCreator, string traceId)
 		{
 			var payloadSender = new MockPayloadSender();
 
@@ -275,7 +275,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstTransaction.ParentId.Should().BeNullOrWhiteSpace();
 		}
 
-		private static async Task AssertValidTraceContext(Func<IApmAgent, Task> transactionCreator)
+		private static async Task AssertValidDistributedTracingData(Func<IApmAgent, Task> transactionCreator)
 		{
 			var payloadSender = new MockPayloadSender();
 
@@ -285,7 +285,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstTransaction.ParentId.Should().Be(ValidParentId);
 		}
 
-		private static async Task AssertInvalidTraceContext(Func<IApmAgent, Task> transactionCreator, string traceId)
+		private static async Task AssertInvalidDistributedTracingData(Func<IApmAgent, Task> transactionCreator, string traceId)
 		{
 			var payloadSender = new MockPayloadSender();
 
@@ -302,7 +302,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				(parentId == null ? "" : $"-{parentId}") +
 				(traceFlags == null ? "" : $"-{traceFlags}"));
 
-		private class InvalidTraceContextData : IEnumerable<object[]>
+		private class InvalidDistributedTracingDataData : IEnumerable<object[]>
 		{
 			public IEnumerator<object[]> GetEnumerator()
 			{
