@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Elastic.Apm.Tests
 {
-	public class TransactionSampling
+	public class TransactionSamplingTests
 	{
 		[Theory]
 		[InlineData(true)]

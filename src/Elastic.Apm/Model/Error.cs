@@ -10,11 +10,11 @@ namespace Elastic.Apm.Model
 	{
 		private readonly DateTimeOffset _start;
 
-		public Error(CapturedException capturedException, string traceId, string transactionId, string parentId, Transaction transaction)
+		public Error(CapturedException capturedException, Transaction transaction, string parentId)
 			: this(capturedException)
 		{
-			TraceId = traceId;
-			TransactionId = transactionId;
+			TraceId = transaction.TraceId;
+			TransactionId = transaction.Id;
 			ParentId = parentId;
 			Transaction = new TransactionData(transaction.IsSampled, transaction.Type);
 		}

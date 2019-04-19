@@ -494,25 +494,28 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void ErrorShouldContainTransactionData(bool isSampled, bool captureOnSpan, bool captureAsError)
 		{
 			var payloadSender = new MockPayloadSender();
+
+			ITransaction capturedTransaction = null;
+			IExecutionSegment errorCapturingExecutionSegment = null;
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
 				agent.TracerInternal.Sampler = new Sampler(isSampled ? 1 : 0);
 				agent.Tracer.CaptureTransaction(TestTransaction, CustomTransactionTypeForTests, transaction =>
 				{
-					IExecutionSegment capturingExecutionSegment;
+					capturedTransaction = transaction;
 					ISpan span = null;
 					if (captureOnSpan)
 					{
 						span = transaction.StartSpan(TestSpan1, ApiConstants.TypeExternal);
-						capturingExecutionSegment = span;
+						errorCapturingExecutionSegment = span;
 					}
 					else
-						capturingExecutionSegment = transaction;
+						errorCapturingExecutionSegment = transaction;
 
 					if (captureAsError)
-						capturingExecutionSegment.CaptureError("Test error message", "Test error culprit", new StackTrace(true).GetFrames());
+						errorCapturingExecutionSegment.CaptureError("Test error message", "Test error culprit", new StackTrace(true).GetFrames());
 					else
-						capturingExecutionSegment.CaptureException(new TestException("test exception"));
+						errorCapturingExecutionSegment.CaptureException(new TestException("test exception"));
 
 					span?.End();
 				});
@@ -521,6 +524,9 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.Errors.Count.Should().Be(1);
 			payloadSender.FirstError.Transaction.IsSampled.Should().Be(isSampled);
 			payloadSender.FirstError.Transaction.Type.Should().Be(CustomTransactionTypeForTests);
+			payloadSender.FirstError.TransactionId.Should().Be(capturedTransaction.Id);
+			payloadSender.FirstError.TraceId.Should().Be(capturedTransaction.TraceId);
+			payloadSender.FirstError.ParentId.Should().Be(errorCapturingExecutionSegment.Id);
 		}
 
 		/// <summary>
