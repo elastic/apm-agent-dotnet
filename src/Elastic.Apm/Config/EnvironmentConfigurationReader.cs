@@ -10,15 +10,17 @@ namespace Elastic.Apm.Config
 
 		public EnvironmentConfigurationReader(IApmLogger logger = null) : base(logger) { }
 
-		public LogLevel LogLevel => ParseLogLevel(Read(ConfigConsts.ConfigKeys.Level));
+		public LogLevel LogLevel => ParseLogLevel(Read(ConfigConsts.EnvVarNames.LogLevel));
 
-		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Read(ConfigConsts.ConfigKeys.Urls));
+		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Read(ConfigConsts.EnvVarNames.ServerUrls));
 
-		public string SecretToken => ParseSecretToken(Read(ConfigConsts.ConfigKeys.SecretToken));
+		public string SecretToken => ParseSecretToken(Read(ConfigConsts.EnvVarNames.SecretToken));
 
-		public string ServiceName => ParseServiceName(Read(ConfigConsts.ConfigKeys.ServiceName));
+		public string ServiceName => ParseServiceName(Read(ConfigConsts.EnvVarNames.ServiceName));
 
-		public bool CaptureHeaders => ParseCaptureHeaders(Read(ConfigConsts.ConfigKeys.CaptureHeaders));
+		public bool CaptureHeaders => ParseCaptureHeaders(Read(ConfigConsts.EnvVarNames.CaptureHeaders));
+
+		public double TransactionSampleRate => ParseTransactionSampleRate(Read(ConfigConsts.EnvVarNames.TransactionSampleRate));
 
 		private static ConfigurationKeyValue Read(string key) =>
 			new ConfigurationKeyValue(key, Environment.GetEnvironmentVariable(key), Origin);

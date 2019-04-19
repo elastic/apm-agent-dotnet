@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
@@ -10,20 +9,29 @@ using Elastic.Apm.Report;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
-namespace Elastic.Apm.Model.Payload
+namespace Elastic.Apm.Model
 {
 	internal class Transaction : ITransaction
 	{
 		private readonly Lazy<Context> _context = new Lazy<Context>();
+
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
 
 		private readonly DateTimeOffset _start;
 
-		public Transaction(IApmAgent agent, string name, string type)
-			: this(agent.Logger, name, type, agent.PayloadSender) { }
+		// This constructor is used only by tests that don't care about sampling and distributed tracing
+		internal Transaction(IApmAgent agent, string name, string type)
+			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender) { }
 
-		public Transaction(IApmLogger logger, string name, string type, IPayloadSender sender, string traceId = null, string parentId = null)
+		internal Transaction(
+			IApmLogger logger,
+			string name,
+			string type,
+			Sampler sampler,
+			DistributedTracingData distributedTracingData,
+			IPayloadSender sender
+		)
 		{
 			_logger = logger?.Scoped(nameof(Transaction));
 			_sender = sender;
@@ -32,22 +40,27 @@ namespace Elastic.Apm.Model.Payload
 			Name = name;
 			Type = type;
 			var idBytes = new byte[8];
-			Id = RandomGenerator.GetRandomBytesAsString(idBytes);
+			Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 
-			if (string.IsNullOrEmpty(traceId))
+			if (distributedTracingData == null)
 			{
-				idBytes = new byte[16];
-				TraceId = RandomGenerator.GetRandomBytesAsString(idBytes);
+				var traceIdBytes = new byte[16];
+				TraceId = RandomGenerator.GenerateRandomBytesAsString(traceIdBytes);
+				IsSampled = sampler.DecideIfToSample(idBytes);
 			}
 			else
-				TraceId = traceId;
+			{
+				TraceId = distributedTracingData.TraceId;
+				ParentId = distributedTracingData.ParentId;
+				IsSampled = distributedTracingData.FlagRecorded;
+			}
 
-			ParentId = parentId;
 			SpanCount = new SpanCount();
 		}
 
 		/// <summary>
 		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
+		/// <seealso cref="ShouldSerializeContext" />
 		/// </summary>
 		public Context Context => _context.Value;
 
@@ -63,8 +76,14 @@ namespace Elastic.Apm.Model.Payload
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Id { get; }
 
+		[JsonProperty("sampled")]
+		public bool IsSampled { get; }
+
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
+
+		[JsonIgnore]
+		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(TraceId, Id, IsSampled);
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("parent_id")]
@@ -87,6 +106,7 @@ namespace Elastic.Apm.Model.Payload
 		[JsonIgnore]
 		public Dictionary<string, string> Tags => Context.Tags;
 
+		// ReSharper disable once ImpureMethodCallOnReadonlyValueField
 		public long Timestamp => _start.ToUnixTimeMilliseconds() * 1000;
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
@@ -96,12 +116,22 @@ namespace Elastic.Apm.Model.Payload
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
 
+		/// <summary>
+		/// Method to conditionally serialize <see cref="Context" /> because context should be serialized only when the transaction
+		/// is sampled.
+		/// See
+		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
+		/// </summary>
+		public bool ShouldSerializeContext() => IsSampled;
+
 		public override string ToString() => new ToStringBuilder(nameof(Transaction))
 		{
 			{ "Id", Id },
 			{ "TraceId", TraceId },
+			{ "ParentId", ParentId },
 			{ "Name", Name },
-			{ "Type", Type }
+			{ "Type", Type },
+			{ "IsSampled", IsSampled }
 		}.ToString();
 
 		public void End()
@@ -119,183 +149,62 @@ namespace Elastic.Apm.Model.Payload
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
-			var retVal = new Span(name, type, this, _sender, _logger);
+			var retVal = new Span(name, type, Id, TraceId, this, IsSampled, _sender, _logger);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 
 			if (!string.IsNullOrEmpty(action)) retVal.Action = action;
-			SpanCount.Started++;
 
 			_logger.Debug()?.Log("Starting {SpanDetails}", retVal.ToString());
 			return retVal;
 		}
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
-		{
-			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
-
-			var ed = new CapturedException
-			{
-				Message = exception.Message,
-				Type = exception.GetType().FullName,
-				Handled = isHandled,
-				Stacktrace = StacktraceHelper.GenerateApmStackTrace(exception, _logger,
-					$"{nameof(Transaction)}.{nameof(CaptureException)}")
-			};
-
-			_sender.QueueError(new Error(ed, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit, Context = Context });
-		}
+			=> ExecutionSegmentCommon.CaptureException(
+				exception,
+				_logger,
+				_sender,
+				this,
+				this,
+				culprit,
+				isHandled,
+				parentId
+			);
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null)
-		{
-			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
-
-			var ed = new CapturedException
-			{
-				Message = message
-			};
-
-			if (frames != null)
-			{
-				ed.Stacktrace
-					= StacktraceHelper.GenerateApmStackTrace(frames, _logger, "failed capturing stacktrace");
-			}
-
-			_sender.QueueError(new Error(ed, TraceId, Id, parentId ?? Id) { Culprit = capturedCulprit, Context = Context });
-		}
+			=> ExecutionSegmentCommon.CaptureError(
+				message,
+				culprit,
+				frames,
+				_sender,
+				_logger,
+				this,
+				this,
+				parentId
+			);
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)
-		{
-			var span = StartSpan(name, type, subType, action);
-
-			try
-			{
-				capturedAction(span);
-			}
-			catch (Exception e) when (ExceptionFilter.Capture(e, span)) { }
-			finally
-			{
-				span.End();
-			}
-		}
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), capturedAction);
 
 		public void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null)
-		{
-			var span = StartSpan(name, type, subType, action);
-
-			try
-			{
-				capturedAction();
-			}
-			catch (Exception e) when (ExceptionFilter.Capture(e, span)) { }
-			finally
-			{
-				span.End();
-			}
-		}
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), capturedAction);
 
 		public T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null)
-		{
-			var span = StartSpan(name, type, subType, action);
-			var retVal = default(T);
-			try
-			{
-				retVal = func(span);
-			}
-			catch (Exception e) when (ExceptionFilter.Capture(e, span)) { }
-			finally
-			{
-				span.End();
-			}
-
-			return retVal;
-		}
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 
 		public T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null)
-		{
-			var span = StartSpan(name, type, subType, action);
-			var retVal = default(T);
-			try
-			{
-				retVal = func();
-			}
-			catch (Exception e) when (ExceptionFilter.Capture(e, span)) { }
-			finally
-			{
-				span.End();
-			}
-
-			return retVal;
-		}
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 
 		public Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null)
-		{
-			var span = StartSpan(name, type, subType, action);
-			var task = func();
-			RegisterContinuation(task, span);
-			return task;
-		}
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 
 		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null)
-		{
-			var span = StartSpan(name, type, subType, action);
-			var task = func(span);
-			RegisterContinuation(task, span);
-			return task;
-		}
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 
 		public Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null)
-		{
-			var span = StartSpan(name, type, subType, action);
-			var task = func();
-			RegisterContinuation(task, span);
-
-			return task;
-		}
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 
 		public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null)
-		{
-			var span = StartSpan(name, type, subType, action);
-			var task = func(span);
-			RegisterContinuation(task, span);
-			return task;
-		}
-
-		/// <summary>
-		/// Registers a continuation on the task.
-		/// Within the continuation it ends the transaction and captures errors
-		/// </summary>
-		private static void RegisterContinuation(Task task, ISpan span) => task.ContinueWith(t =>
-		{
-			if (t.IsFaulted)
-			{
-				if (t.Exception != null)
-				{
-					if (t.Exception is AggregateException aggregateException)
-					{
-						ExceptionFilter.Capture(
-							aggregateException.InnerExceptions.Count == 1
-								? aggregateException.InnerExceptions[0]
-								: aggregateException.Flatten(), span);
-					}
-					else
-						ExceptionFilter.Capture(t.Exception, span);
-				}
-				else
-					span.CaptureError("Task faulted", "A task faulted", new StackTrace(true).GetFrames());
-			}
-			else if (t.IsCanceled)
-			{
-				if (t.Exception == null)
-				{
-					span.CaptureError("Task canceled", "A task was canceled",
-						new StackTrace(true).GetFrames()); //TODO: this async stacktrace is hard to use, make it readable!
-				}
-				else
-					span.CaptureException(t.Exception);
-			}
-
-			span.End();
-		}, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 	}
 }

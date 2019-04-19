@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Elastic.Apm.Model.Payload
+namespace Elastic.Apm.Model
 {
 	internal class CapturedStackFrame
 	{

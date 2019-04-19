@@ -9,8 +9,9 @@ using Elastic.Apm.Config;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model.Payload;
+using Elastic.Apm.Model;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 
 [assembly:
 	InternalsVisibleTo(
@@ -46,15 +47,18 @@ namespace Elastic.Apm.AspNetCore
 			{
 				var headerValue = context.Request.Headers[TraceParent.TraceParentHeaderName].ToString();
 
-				if (TraceParent.TryExtractTraceparent(headerValue, out var traceId, out var parentId, out var traceoptions))
+				var distributedTracingData = TraceParent.TryExtractTraceparent(headerValue);
+				if (distributedTracingData != null)
 				{
 					_logger.Debug()
 						?.Log(
-							"Incoming request with {TraceParentHeaderName} header. TraceId: {TraceId}, ParentId: {ParentId}, Recorded: {IsRecorded}. Continuing trace.",
-							TraceParent.TraceParentHeaderName, traceId, parentId, TraceParent.IsFlagRecordedActive(traceoptions));
+							"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData}. Continuing trace.",
+							TraceParent.TraceParentHeaderName, distributedTracingData);
 
-					transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
-						ApiConstants.TypeRequest, traceId, parentId);
+					transaction = _tracer.StartTransactionInternal(
+						$"{context.Request.Method} {context.Request.Path}",
+						ApiConstants.TypeRequest,
+						distributedTracingData);
 				}
 				else
 				{
@@ -109,6 +113,18 @@ namespace Elastic.Apm.AspNetCore
 			catch (Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
 			finally
 			{
+				//fixup Transaction.Name - e.g. /user/profile/1 -> /user/profile/{id}
+				var routeData = (context.Features[typeof(IRoutingFeature)] as IRoutingFeature)?.RouteData;
+				if (routeData != null)
+				{
+					var name = GetNameFromRouteContext(routeData.Values);
+
+					if (!string.IsNullOrWhiteSpace(name))
+					{
+						transaction.Name = $"{context.Request.Method} {name}";
+					}
+				}
+
 				Dictionary<string, string> responseHeaders = null;
 
 				if (_configurationReader.CaptureHeaders)
@@ -146,7 +162,58 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		private string GetProtocolName(string protocol)
+		//credit: https://github.com/Microsoft/ApplicationInsights-aspnetcore
+		private static string GetNameFromRouteContext(IDictionary<string, object> routeValues)
+		{
+			string name = null;
+
+			if (routeValues.Count <= 0) return null;
+
+			routeValues.TryGetValue("controller", out var controller);
+			var controllerString = (controller == null) ? string.Empty : controller.ToString();
+
+			if (!string.IsNullOrEmpty(controllerString))
+			{
+				name = controllerString;
+
+				routeValues.TryGetValue("action", out var action);
+				var actionString = (action == null) ? string.Empty : action.ToString();
+
+				if (!string.IsNullOrEmpty(actionString))
+				{
+					name += "/" + actionString;
+				}
+
+				if (routeValues.Keys.Count <= 2) return name;
+
+				// Add parameters
+				var sortedKeys = routeValues.Keys
+					.Where(key =>
+						!string.Equals(key, "controller", StringComparison.OrdinalIgnoreCase) &&
+						!string.Equals(key, "action", StringComparison.OrdinalIgnoreCase) &&
+						!string.Equals(key, "!__route_group", StringComparison.OrdinalIgnoreCase))
+					.OrderBy(key => key, StringComparer.OrdinalIgnoreCase)
+					.ToArray();
+
+				if (sortedKeys.Length <= 0) return name;
+
+				var arguments = string.Join(@"/", sortedKeys);
+				name += " {" + arguments + "}";
+			}
+			else
+			{
+				routeValues.TryGetValue("page", out var page);
+				var pageString = (page == null) ? string.Empty : page.ToString();
+				if (!string.IsNullOrEmpty(pageString))
+				{
+					name = pageString;
+				}
+			}
+
+			return name;
+		}
+
+		private static string GetProtocolName(string protocol)
 		{
 			switch (protocol)
 			{
@@ -159,7 +226,7 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		private string GetHttpVersion(string protocolString)
+		private static string GetHttpVersion(string protocolString)
 		{
 			switch (protocolString)
 			{

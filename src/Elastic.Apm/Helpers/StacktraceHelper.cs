@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model.Payload;
+using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Helpers
 {

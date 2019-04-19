@@ -11,7 +11,7 @@ using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model.Payload;
+using Elastic.Apm.Model;
 
 namespace Elastic.Apm.DiagnosticListeners
 {
@@ -72,7 +72,10 @@ namespace Elastic.Apm.DiagnosticListeners
 					if (ProcessingRequests.TryAdd(request, span))
 					{
 						if(!request.Headers.Contains(TraceParent.TraceParentHeaderName))
-							request.Headers.Add(TraceParent.TraceParentHeaderName, TraceParent.BuildTraceparent(span.TraceId, span.Id));
+							// We call TraceParent.BuildTraceparent explicitly instead of DistributedTracingData.SerializeToString because
+							// in the future we might change DistributedTracingData.SerializeToString to use some other internal format
+							// but here we want the string to be in W3C 'traceparent' header format.
+							request.Headers.Add(TraceParent.TraceParentHeaderName, TraceParent.BuildTraceparent(span.OutgoingDistributedTracingData));
 
 						span.Context.Http = new Http
 						{

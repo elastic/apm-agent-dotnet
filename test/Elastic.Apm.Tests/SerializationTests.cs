@@ -1,12 +1,11 @@
 using System.Collections.Generic;
-using System.Text;
 using Elastic.Apm.Api;
-using Elastic.Apm.Model.Payload;
+using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
 using Elastic.Apm.Tests.Mocks;
+using FluentAssertions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using Xunit;
 
 namespace Elastic.Apm.Tests
@@ -27,8 +26,7 @@ namespace Elastic.Apm.Tests
 
 			var transaction = new Transaction(new TestAgentComponents(), str, "test") { Duration = 1, Result = "fail" };
 
-			var settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
-			var json = JsonConvert.SerializeObject(transaction, settings);
+			var json = SerializePayloadItem(transaction);
 			var deserializedTransaction = JsonConvert.DeserializeObject(json) as JObject;
 
 			Assert.NotNull(deserializedTransaction);
@@ -52,8 +50,7 @@ namespace Elastic.Apm.Tests
 
 			var dummyInstance = new DummyType { IntProp = 42, StringProp = str };
 
-			var settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
-			var json = JsonConvert.SerializeObject(dummyInstance, settings);
+			var json = SerializePayloadItem(dummyInstance);
 			var deserializedDummyInstance = JsonConvert.DeserializeObject<DummyType>(json);
 
 			Assert.NotNull(deserializedDummyInstance);
@@ -64,7 +61,7 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Creates a <see cref="Context"/> that has <see cref="Context.Tags"/>
+		/// Creates a <see cref="Context" /> that has <see cref="Context.Tags" />
 		/// with strings longer than <see cref="Consts.PropertyMaxLength" />.
 		/// Makes sure that the long string is trimmed.
 		/// </summary>
@@ -76,8 +73,7 @@ namespace Elastic.Apm.Tests
 			var context = new Context();
 			context.Tags["foo"] = str;
 
-			var settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
-			var json = JsonConvert.SerializeObject(context, settings);
+			var json = SerializePayloadItem(context);
 			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
 
 			Assert.NotNull(deserializedContext);
@@ -100,8 +96,7 @@ namespace Elastic.Apm.Tests
 			var dummyInstance = new DummyType();
 			dummyInstance.DictionaryProp["foo"] = str;
 
-			var settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
-			var json = JsonConvert.SerializeObject(dummyInstance, settings);
+			var json = SerializePayloadItem(dummyInstance);
 			var deserializedDummyInstance = JsonConvert.DeserializeObject(json) as JObject;
 
 			Assert.NotNull(deserializedDummyInstance);
@@ -118,10 +113,9 @@ namespace Elastic.Apm.Tests
 		public void DbStatementLengthTest()
 		{
 			var str = new string('a', 1200);
-			var db = new Database{ Statement = str };
+			var db = new Database { Statement = str };
 
-			var settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
-			var json = JsonConvert.SerializeObject(db, settings);
+			var json = SerializePayloadItem(db);
 			var deserializedDb = JsonConvert.DeserializeObject<Database>(json);
 
 			Assert.NotNull(deserializedDb);
@@ -131,16 +125,53 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
+		/// Verifies that <see cref="Transaction.Context" /> is serialized only when the transaction is sampled.
+		/// </summary>
+		[Fact]
+		public void TransactionContextShouldBeSerializedOnlyWhenSampled()
+		{
+			var agent = new TestAgentComponents();
+			// Create a transaction that is sampled (because the sampler is constant sampling-everything sampler
+			var sampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(1.0), null, agent.PayloadSender);
+			sampledTransaction.Context.Request = new Request("GET", new Url
+			{
+				Full = "https://elastic.co",
+				Raw = "https://elastic.co",
+				HostName = "elastic.co",
+				Protocol = "HTTP"
+			});
+
+			// Create a transaction that is not sampled (because the sampler is constant not-sampling-anything sampler
+			var nonSampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(0.0), null, agent.PayloadSender);
+			nonSampledTransaction.Context.Request = sampledTransaction.Context.Request;
+
+			var serializedSampledTransaction = SerializePayloadItem(sampledTransaction);
+			var deserializedSampledTransaction = JsonConvert.DeserializeObject(serializedSampledTransaction) as JObject;
+			var serializedNonSampledTransaction = SerializePayloadItem(nonSampledTransaction);
+			var deserializedNonSampledTransaction = JsonConvert.DeserializeObject(serializedNonSampledTransaction) as JObject;
+
+			deserializedSampledTransaction["sampled"].Value<bool>().Should().BeTrue();
+			deserializedSampledTransaction["context"].Value<JObject>()["request"].Value<JObject>()["url"].Value<JObject>()["full"]
+				.Should()
+				.Equals("https://elastic.co");
+
+			deserializedNonSampledTransaction["sampled"].Value<bool>().Should().BeFalse();
+			deserializedNonSampledTransaction.Should().NotContainKey("context");
+		}
+
+		private static string SerializePayloadItem(object item) =>
+			new PayloadItemSerializer().SerializeObject(item);
+
+		/// <summary>
 		/// A dummy type for tests.
 		/// </summary>
 		private class DummyType
 		{
+			// ReSharper disable once CollectionNeverQueried.Local - it's by JsonConvert
+			public Dictionary<string, string> DictionaryProp { get; } = new Dictionary<string, string>();
 			public int IntProp { get; set; }
 
 			public string StringProp { get; set; }
-
-			// ReSharper disable once CollectionNeverQueried.Local - it's by JsonConvert
-			public Dictionary<string, string> DictionaryProp { get; } = new Dictionary<string, string>();
 		}
 	}
 }

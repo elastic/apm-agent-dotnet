@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Elastic.Apm.Api;
 
 namespace Elastic.Apm.DistributedTracing
 {
@@ -25,37 +26,23 @@ namespace Elastic.Apm.DistributedTracing
 		private const int VersionPrefixIdLength = 3;
 
 		/// <summary>
-		/// Checks if the <paramref name="traceFields" /> flag contains the <see cref="FlagRecorded" /> flag.
-		/// </summary>
-		/// <param name="traceFields">The traceOptions flags return from <see cref="TryExtractTraceparent" />.</param>
-		/// <returns>true if <paramref name="traceFields" /> contains <see cref="FlagRecorded" />, false otherwise.</returns>
-		public static bool IsFlagRecordedActive(byte traceFields) => (traceFields & FlagRecorded) == FlagRecorded;
-
-		/// <summary>
 		/// Parses the traceparent header
 		/// </summary>
 		/// <param name="traceParentValue">The value of the traceparent header</param>
-		/// <param name="traceId">The parsed traceId</param>
-		/// <param name="prentId">The parsed parentId</param>
-		/// <param name="traceFields">The parsed traceOptions flags</param>
-		/// <returns>True if parsing was successful, false otherwise.</returns>
-		internal static bool TryExtractTraceparent(string traceParentValue, out string traceId, out string prentId, out byte traceFields)
+		/// <returns>The parsed data if parsing was successful, null otherwise.</returns>
+		internal static DistributedTracingData TryExtractTraceparent(string traceParentValue)
 		{
-			traceId = string.Empty;
-			prentId = string.Empty;
-			traceFields = 0;
-
 			var bestAttempt = false;
 
-			if (string.IsNullOrWhiteSpace(traceParentValue)) return false;
+			if (string.IsNullOrWhiteSpace(traceParentValue)) return null;
 
-			if (traceParentValue.Length < VersionPrefixIdLength || traceParentValue[VersionPrefixIdLength - 1] != '-') return false;
+			if (traceParentValue.Length < VersionPrefixIdLength || traceParentValue[VersionPrefixIdLength - 1] != '-') return null;
 
 			try
 			{
 				var versionArray = HexStringTwoCharToByte(traceParentValue);
 				if (versionArray == 255)
-					return false;
+					return null;
 
 				if (versionArray > 0)
 					// expected version is 00
@@ -64,84 +51,94 @@ namespace Elastic.Apm.DistributedTracing
 			}
 			catch
 			{
-				return false;
+				return null;
 			}
 
-			if (traceParentValue.Length < VersionAndTraceIdLength || traceParentValue[VersionAndTraceIdLength - 1] != '-') return false;
+			if (traceParentValue.Length < VersionAndTraceIdLength || traceParentValue[VersionAndTraceIdLength - 1] != '-') return null;
 
+			string traceId;
 			try
 			{
 				var traceIdVal =
 					traceParentValue.Substring(VersionPrefixIdLength,
 						TraceIdLength);
 
-				if (!IsHex(traceIdVal) || traceIdVal == "00000000000000000000000000000000")
-					return false;
+				if (!IsTraceIdValid(traceIdVal))
+					return null;
 
 				traceId = traceIdVal;
 			}
 			catch (ArgumentOutOfRangeException)
 			{
-				return false;
+				return null;
 			}
 
 			if (traceParentValue.Length < VersionAndTraceIdAndSpanIdLength
-				|| traceParentValue[VersionAndTraceIdAndSpanIdLength - 1] != '-') return false;
+				|| traceParentValue[VersionAndTraceIdAndSpanIdLength - 1] != '-') return null;
 
+			string parentId;
 			try
 			{
 				var parentIdVal = traceParentValue.Substring(VersionAndTraceIdLength, SpanIdLength);
-				if (!IsHex(parentIdVal) || parentIdVal == "0000000000000000")
-					return false;
 
-				prentId = parentIdVal;
+				if (!IsTraceParentValid(parentIdVal))
+					return null;
+
+				parentId = parentIdVal;
 			}
 			catch (ArgumentOutOfRangeException)
 			{
-				return false;
+				return null;
 			}
 
-			if (traceParentValue.Length < VersionAndTraceIdAndSpanIdLength + OptionsLength) return false;
+			if (traceParentValue.Length < VersionAndTraceIdAndSpanIdLength + OptionsLength) return null;
 
+			byte traceFlags;
 			try
 			{
-				traceFields = HexStringTwoCharToByte(traceParentValue, VersionAndTraceIdAndSpanIdLength);
+				traceFlags = HexStringTwoCharToByte(traceParentValue, VersionAndTraceIdAndSpanIdLength);
 			}
 			catch (ArgumentOutOfRangeException)
 			{
-				return false;
+				return null;
 			}
 
-			if (!bestAttempt && traceParentValue.Length != VersionAndTraceIdAndSpanIdLength + OptionsLength) return false;
+			if (!bestAttempt && traceParentValue.Length != VersionAndTraceIdAndSpanIdLength + OptionsLength) return null;
 
 			// ReSharper disable once InvertIf - imo that would make it hard to read.
 			if (bestAttempt)
 			{
 				if (traceParentValue.Length > VersionAndTraceIdAndSpanIdLength + OptionsLength &&
 					traceParentValue[VersionAndTraceIdAndSpanIdLength + OptionsLength] != '-')
+					return null;
+			}
+
+			return new DistributedTracingData(traceId, parentId, (traceFlags & FlagRecorded) == FlagRecorded);
+		}
+
+		private static bool IsHex(IEnumerable<char> chars)
+		{
+			// ReSharper disable once LoopCanBeConvertedToQuery - I benchmarked, that'd make parsing ~2x slower, don't do it!
+			foreach (var c in chars)
+			{
+				var isHex = c >= '0' && c <= '9' ||
+					c >= 'a' && c <= 'f' ||
+					c >= 'A' && c <= 'F';
+
+				if (!isHex)
 					return false;
 			}
-
-			bool IsHex(IEnumerable<char> chars)
-			{
-				// ReSharper disable once LoopCanBeConvertedToQuery - I benchmarked, that'd make parsing ~2x slower, don't do it!
-				foreach (var c in chars)
-				{
-					var isHex = c >= '0' && c <= '9' ||
-						c >= 'a' && c <= 'f' ||
-						c >= 'A' && c <= 'F';
-
-					if (!isHex)
-						return false;
-				}
-				return true;
-			}
-
 			return true;
 		}
 
-		public static string BuildTraceparent(string traceId, string spanId)
-			=> $"00-{traceId}-{spanId}-01";
+		public static string BuildTraceparent(DistributedTracingData distributedTracingData)
+			=> $"00-{distributedTracingData.TraceId}-{distributedTracingData.ParentId}-{(distributedTracingData.FlagRecorded ? "01" : "00")}";
+
+		internal static bool IsTraceIdValid(string traceId)
+			=> !string.IsNullOrWhiteSpace(traceId) && traceId.Length == 32 && IsHex(traceId) && traceId != "00000000000000000000000000000000";
+
+		internal static bool IsTraceParentValid(string parentId)
+			=> !string.IsNullOrWhiteSpace(parentId) && parentId.Length == 16 && IsHex(parentId) && parentId != "0000000000000000";
 
 		/// <summary>
 		/// Converts 2 selected chars from the input string into a byte

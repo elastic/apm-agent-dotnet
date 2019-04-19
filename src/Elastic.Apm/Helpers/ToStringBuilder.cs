@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Text;
 
 namespace Elastic.Apm.Helpers
@@ -10,13 +9,13 @@ namespace Elastic.Apm.Helpers
 	//
 	public struct ToStringBuilder : IEnumerable
 	{
-		private const int _stringBuilderInitialCapacity = 100;
+		private const int StringBuilderInitialCapacity = 100;
 		private readonly StringBuilder _stringBuilder;
 		private bool _addedAny;
 
 		public ToStringBuilder(string className)
 		{
-			_stringBuilder = new StringBuilder(_stringBuilderInitialCapacity);
+			_stringBuilder = new StringBuilder(StringBuilderInitialCapacity);
 			_stringBuilder.Append(className).Append("{");
 			_addedAny = false;
 		}
@@ -24,7 +23,11 @@ namespace Elastic.Apm.Helpers
 		public void Add(string propertyName, object propertyValue)
 		{
 			if (_addedAny) _stringBuilder.Append(", ");
-			_stringBuilder.Append(propertyName).Append(": ").Append(propertyValue);
+			_stringBuilder.Append(propertyName).Append(": ");
+			if (propertyValue == null)
+				_stringBuilder.Append("null");
+			else
+				_stringBuilder.Append(propertyValue);
 			_addedAny = true;
 		}
 

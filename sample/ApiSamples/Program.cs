@@ -13,18 +13,38 @@ namespace ApiSamples
 	{
 		private static void Main(string[] args)
 		{
-			Console.WriteLine("Start");
-			SampleSpamWithCustomContextFillAll();
+			if (args.Length == 1) //in case it's started with an argument we try to parse the argument as a DistributedTracingData
+			{
+				WriteLineToConsole($"Callee process started - continuing trace with distributed tracing data: {args[0]}");
+				var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransaction", DistributedTracingData.TryDeserializeFromString(args[0]));
 
-			//WIP: if the process terminates the agent
-			//potentially does not have time to send the transaction to the server.
-			Thread.Sleep(1000);
+				try
+				{
+					transaction2.CaptureSpan("TestSpan", "TestSpanType", () => Thread.Sleep(200));
+				}
+				finally
+				{
+					transaction2.End();
+				}
 
-			Console.WriteLine("Done");
-			Console.ReadKey();
+				Thread.Sleep(1000);
+				WriteLineToConsole("About to exit");
+			}
+			else
+			{
+				WriteLineToConsole("Started");
+				PassDistributedTracingData();
+
+				//WIP: if the process terminates the agent
+				//potentially does not have time to send the transaction to the server.
+				Thread.Sleep(1000);
+
+				WriteLineToConsole("About to exit - press any key...");
+				Console.ReadKey();
+			}
 		}
 
-		public static void SampleSpamWithCustomContext()
+		public static void SampleSpanWithCustomContext()
 		{
 			Agent.Tracer.CaptureTransaction("SampleTransaction", "SampleTransactionType", transaction =>
 			{
@@ -39,7 +59,7 @@ namespace ApiSamples
 			});
 		}
 
-		public static void SampleSpamWithCustomContextFillAll()
+		public static void SampleSpanWithCustomContextFillAll()
 		{
 			Agent.Tracer.CaptureTransaction("SampleTransaction", "SampleTransactionType", transaction =>
 			{
@@ -67,18 +87,18 @@ namespace ApiSamples
 
 		public static void SampleCustomTransaction()
 		{
-			Console.WriteLine($"{nameof(SampleCustomTransaction)} started");
+			WriteLineToConsole($"{nameof(SampleCustomTransaction)} started");
 			var transaction = Agent.Tracer.StartTransaction("SampleTransaction", ApiConstants.TypeRequest);
 
 			Thread.Sleep(500); //simulate work...
 
 			transaction.End();
-			Console.WriteLine($"{nameof(SampleCustomTransaction)} finished");
+			WriteLineToConsole($"{nameof(SampleCustomTransaction)} finished");
 		}
 
 		public static void SampleCustomTransactionWithSpan()
 		{
-			Console.WriteLine($"{nameof(SampleCustomTransactionWithSpan)} started");
+			WriteLineToConsole($"{nameof(SampleCustomTransactionWithSpan)} started");
 			var transaction = Agent.Tracer.StartTransaction("SampleTransactionWithSpan", ApiConstants.TypeRequest);
 
 			Thread.Sleep(500);
@@ -88,12 +108,12 @@ namespace ApiSamples
 			span.End();
 
 			transaction.End();
-			Console.WriteLine($"{nameof(SampleCustomTransactionWithSpan)} finished");
+			WriteLineToConsole($"{nameof(SampleCustomTransactionWithSpan)} finished");
 		}
 
 		public static void SampleError()
 		{
-			Console.WriteLine($"{nameof(SampleError)} started");
+			WriteLineToConsole($"{nameof(SampleError)} started");
 			var transaction = Agent.Tracer.StartTransaction("SampleError", ApiConstants.TypeRequest);
 
 			Thread.Sleep(500); //simulate work...
@@ -113,7 +133,7 @@ namespace ApiSamples
 
 			transaction.End();
 
-			Console.WriteLine($"{nameof(SampleError)} finished");
+			WriteLineToConsole($"{nameof(SampleError)} finished");
 		}
 
 		public static void SampleCustomTransactionWithConvenientApi() => Agent.Tracer.CaptureTransaction("TestTransaction", "TestType",
@@ -126,11 +146,77 @@ namespace ApiSamples
 				t.Tags["fooTransaction2"] = "barTransaction2";
 
 				Thread.Sleep(10);
-				t.CaptureSpan("TestSpan", "TestSpanName", s =>
+				t.CaptureSpan("TestSpan", "TestSpanType", s =>
 				{
 					Thread.Sleep(20);
 					s.Tags["fooSpan"] = "barSpan";
 				});
 			});
+
+
+		//1 transaction with 2 spans
+		//1 transaction with 1 span that has a sub span
+		public static void TwoTransactionWith2Spans()
+		{
+			//1 transaction 2 spans (both have the transaction as parent)
+			Agent.Tracer.CaptureTransaction("TestTransaction1", "TestType1",
+				t =>
+				{
+					t.CaptureSpan("TestSpan", "TestSpanType", s =>
+					{
+						Thread.Sleep(20);
+						//this span is also started on the transaction:
+						t.CaptureSpan("TestSpan2", "TestSpanType", s2 => { Thread.Sleep(20); });
+					});
+				});
+
+			//1 transaction then 1 span on that transaction and then 1 span on that previous span
+			Agent.Tracer.CaptureTransaction("TestTransaction2", "TestType2",
+				t =>
+				{
+					t.CaptureSpan("TestSpan", "TestSpanType", s =>
+					{
+						Thread.Sleep(20);
+						//this span is a subspan of the `s` span:
+						s.CaptureSpan("TestSpan2", "TestSpanType", () => Thread.Sleep(20));
+					});
+				});
+		}
+
+		public static void PassDistributedTracingData()
+		{
+			var transaction = Agent.Tracer.StartTransaction("Transaction1", "TestTransaction");
+
+			try
+			{
+				Thread.Sleep(300);
+
+				//We start the sample app again with a new service name and we pass DistributedTracingData to it
+				//In the main method we check for this and continue the trace.
+				var startInfo = new ProcessStartInfo();
+				startInfo.Environment["ELASTIC_APM_SERVICE_NAME"] = "Service2";
+				var outgoingDistributedTracingData = transaction.OutgoingDistributedTracingData.SerializeToString();
+				startInfo.FileName = "dotnet";
+				startInfo.Arguments = $"run {outgoingDistributedTracingData}";
+				WriteLineToConsole($"Spawning callee process and passing outgoing distributed tracing data: {outgoingDistributedTracingData} to it...");
+				var calleeProcess = Process.Start(startInfo);
+				WriteLineToConsole($"Spawned callee process");
+
+				Thread.Sleep(1100);
+
+				WriteLineToConsole($"Waiting for callee process to exit...");
+				calleeProcess.WaitForExit();
+				WriteLineToConsole($"Callee process exited");
+			}
+			finally
+			{
+				transaction.End();
+			}
+		}
+
+		private static void WriteLineToConsole(string line)
+		{
+			Console.WriteLine($"[{Process.GetCurrentProcess().Id}] {line}");
+		}
 	}
 }

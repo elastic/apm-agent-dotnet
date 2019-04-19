@@ -2,7 +2,7 @@
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model.Payload;
+using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 
 namespace Elastic.Apm
@@ -22,7 +22,7 @@ namespace Elastic.Apm
 			Service =  Service.GetDefaultService(ConfigurationReader);
 
 			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigurationReader, Service);
-			TracerInternal = new Tracer(Logger, Service, PayloadSender);
+			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationReader);
 			TransactionContainer = new TransactionContainer();
 		}
 

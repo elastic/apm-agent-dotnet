@@ -14,14 +14,16 @@ namespace Elastic.Apm.AspNetCore.Config
 	{
 		internal const string Origin = "Configuration Provider";
 
-		public static (string LevelSubKey, string Level, string Urls, string ServiceName, string SecretToken, string CaptureHeaders) Keys = (
-			LevelSubKey: "LogLevel",
-			Level: "ElasticApm:LogLevel",
-			Urls: "ElasticApm:ServerUrls",
-			ServiceName: "ElasticApm:ServiceName",
-			SecretToken: "ElasticApm:SecretToken",
-			CaptureHeaders: "ElasticApm:CaptureHeaders"
-		);
+		internal static class Keys
+		{
+			internal const string LogLevelSubKey = "LogLevel";
+			internal const string LogLevel = "ElasticApm:LogLevel";
+			internal const string ServerUrls = "ElasticApm:ServerUrls";
+			internal const string ServiceName = "ElasticApm:ServiceName";
+			internal const string SecretToken = "ElasticApm:SecretToken";
+			internal const string CaptureHeaders = "ElasticApm:CaptureHeaders";
+			internal const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
+		}
 
 		private readonly IConfiguration _configuration;
 
@@ -42,28 +44,30 @@ namespace Elastic.Apm.AspNetCore.Config
 			{
 				if (_logLevel.HasValue) return _logLevel.Value;
 
-				var l = ParseLogLevel(ReadFallBack(Keys.Level, ConfigConsts.ConfigKeys.Level));
+				var l = ParseLogLevel(ReadFallBack(Keys.LogLevel, ConfigConsts.EnvVarNames.LogLevel));
 				_logLevel = l;
 				return l;
 			}
 		}
 
-		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(ReadFallBack(Keys.Urls, ConfigConsts.ConfigKeys.Urls));
+		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(ReadFallBack(Keys.ServerUrls, ConfigConsts.EnvVarNames.ServerUrls));
 
-		public string ServiceName => ParseServiceName(ReadFallBack(Keys.ServiceName, ConfigConsts.ConfigKeys.ServiceName));
+		public string ServiceName => ParseServiceName(ReadFallBack(Keys.ServiceName, ConfigConsts.EnvVarNames.ServiceName));
 
-		public string SecretToken => ParseSecretToken(ReadFallBack(Keys.SecretToken, ConfigConsts.ConfigKeys.SecretToken));
+		public string SecretToken => ParseSecretToken(ReadFallBack(Keys.SecretToken, ConfigConsts.EnvVarNames.SecretToken));
 
-		public bool CaptureHeaders => ParseCaptureHeaders(ReadFallBack(Keys.CaptureHeaders, ConfigConsts.ConfigKeys.CaptureHeaders));
+		public bool CaptureHeaders => ParseCaptureHeaders(ReadFallBack(Keys.CaptureHeaders, ConfigConsts.EnvVarNames.CaptureHeaders));
+
+		public double TransactionSampleRate => ParseTransactionSampleRate(ReadFallBack(Keys.TransactionSampleRate, ConfigConsts.EnvVarNames.TransactionSampleRate));
 
 		private ConfigurationKeyValue Read(string key) => Kv(key, _configuration[key], Origin);
 
-		private ConfigurationKeyValue ReadFallBack(string key, string fallBack)
+		private ConfigurationKeyValue ReadFallBack(string key, string fallBackEnvVarName)
 		{
 			var primary = Read(key);
 			if (!string.IsNullOrWhiteSpace(primary.Value)) return primary;
 
-			var secondary = Kv(key, _configuration[fallBack], EnvironmentConfigurationReader.Origin);
+			var secondary = Kv(key, _configuration[fallBackEnvVarName], EnvironmentConfigurationReader.Origin);
 			return secondary;
 		}
 
@@ -71,7 +75,7 @@ namespace Elastic.Apm.AspNetCore.Config
 		{
 			if (!(obj is IConfigurationSection section)) return;
 
-			var newLogLevel = ParseLogLevel(Kv(Keys.LevelSubKey, section[Keys.LevelSubKey], Origin));
+			var newLogLevel = ParseLogLevel(Kv(Keys.LogLevelSubKey, section[Keys.LogLevelSubKey], Origin));
 			if (_logLevel.HasValue && newLogLevel == _logLevel.Value) return;
 
 			_logLevel = newLogLevel;
