@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
+using Elastic.Apm.Config;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
@@ -54,7 +55,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.Transactions.Should().ContainSingle();
 
 			_agent.Service.Name.Should().NotBeNullOrWhiteSpace()
-				.And.Be(Assembly.GetEntryAssembly()?.GetName()?.Name);
+				.And.NotBe(ConfigConsts.DefaultValues.ServiceName);
 
 			_agent.Service.Agent.Name.Should().Be(Elastic.Apm.Consts.AgentName);
 			var apmVersion = Assembly.Load("Elastic.Apm").GetName().Version.ToString();
@@ -91,7 +92,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			transaction.Context.Request.Method.Should().Be("GET");
 
 			//test transaction.context.request.url
-			transaction.Context.Request.Url.Full.Should().Be(response.RequestMessage.RequestUri.AbsolutePath);
+			transaction.Context.Request.Url.Full.Should().Be(response.RequestMessage.RequestUri.AbsoluteUri);
 			transaction.Context.Request.Url.HostName.Should().Be("localhost");
 			transaction.Context.Request.Url.Protocol.Should().Be("HTTP");
 
