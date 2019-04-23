@@ -74,6 +74,7 @@ pipeline {
                     dir("${BASE_DIR}"){
                       sh '''
                       dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
+                      dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFramework.csproj
                       dotnet build
                       '''
                     }
@@ -92,12 +93,15 @@ pipeline {
                       sh label: 'Install tools', script: '''#!/bin/bash
                       set -euxo pipefail
                       dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
+                      dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFramework.csproj
 
                       # install tools
                       dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
                       for i in $(find . -name '*.csproj')
                       do
                         if [[ $i == *"AspNetFullFrameworkSampleApp.csproj"* ]]; then
+                            continue
+                        if [[ $i == *"Elastic.Apm.AspNetFullFramework.csproj"* ]]; then
                             continue
                         fi
                         dotnet add "$i" package XunitXml.TestLogger --version 2.0.0
@@ -202,6 +206,7 @@ pipeline {
                       dir("${BASE_DIR}"){
                         bat """
                         dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
+                        dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFramework.csproj
                         dotnet build
                         """
                       }
@@ -219,6 +224,7 @@ pipeline {
                       dir("${BASE_DIR}"){
                         powershell label: 'Install tools', script: '''
                         & dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
+                        & dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFramework.csproj
 
                         & dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
                         & dotnet tool install -g Codecov.Tool --version 1.2.0
