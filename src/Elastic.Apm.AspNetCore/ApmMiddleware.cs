@@ -11,6 +11,8 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Routing;
 
 [assembly:
@@ -108,14 +110,20 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
+		private string GetRawUrl(HttpRequest httpRequest)
+		{
+			var rawPathAndQuery = httpRequest.HttpContext.Features.Get<IHttpRequestFeature>()?.RawTarget;
+			return rawPathAndQuery == null ? null : UriHelper.BuildAbsolute(httpRequest.Scheme, httpRequest.Host, rawPathAndQuery);
+		}
+
 		private void FillSampledTransactionContextRequest(HttpContext context, Transaction transaction)
 		{
 			var url = new Url
 			{
-				Full = context.Request?.Path.Value,
+				Full = context.Request?.GetEncodedUrl(),
 				HostName = context.Request.Host.Host,
 				Protocol = GetProtocolName(context.Request.Protocol),
-				Raw = context.Request?.Path.Value //TODO
+				Raw = GetRawUrl(context.Request) ?? context.Request?.GetEncodedUrl()
 			};
 
 			Dictionary<string, string> requestHeaders = null;
