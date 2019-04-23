@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Web;
 using Elastic.Apm.Api;
-using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 
@@ -11,29 +10,38 @@ namespace Elastic.Apm.AspNetFullFramework
 {
 	public class ElasticApmModule : IHttpModule
 	{
-		private static readonly Lazy<ApmAgent> Agent = new Lazy<ApmAgent>(SetupElasticApmAgent);
-		private static bool _isCaptureHeadersEnabled;
+		private static readonly bool _isCaptureHeadersEnabled;
+		private static readonly IApmLogger _logger;
 
-		private Transaction _currentTransaction;
-		private IApmLogger _logger;
-
-		/// <summary>
-		/// You will need to configure this module in the Web.config file of your
-		/// web and register it with IIS before being able to use it. For more information
-		/// see the following link: https://go.microsoft.com/?linkid=8101007
-		/// </summary>
-		public void Dispose()
+		static ElasticApmModule()
 		{
-			// TODO: There can be multiple IHttpModule instances
-			// Agent.Instance.Dispose();
+			var configReader = new FullFrameworkConfigReader(ConsoleLogger.Instance);
+			var agentComponents = new AgentComponents(configurationReader: configReader);
+			UpdateServiceInformation(agentComponents.Service);
+			Agent.Setup(agentComponents);
+			_logger = Agent.Instance.Logger.Scoped(nameof(ElasticApmModule));
+			_isCaptureHeadersEnabled = Agent.Instance.ConfigurationReader.CaptureHeaders;
 		}
 
-		public void Init(HttpApplication context)
-		{
-			_logger = Agent.Value.Logger.Scoped(nameof(ElasticApmModule));
+		// We can store current transaction because each IHttpModule is used for at most one request at a time
+		// For example See https://bytes.com/topic/asp-net/answers/324305-httpmodule-multithreading-request-response-corelation
+		private Transaction _currentTransaction;
 
-			context.BeginRequest += OnBeginRequest;
-			context.EndRequest += OnEndRequest;
+		private static void UpdateServiceInformation(Service service)
+		{
+			service.Framework = new Framework { Name = "ASP.NET", Version = Environment.Version.ToString() };
+			service.Language = new Language { Name = "C#" }; //TODO
+		}
+
+		public void Init(HttpApplication httpApp)
+		{
+			httpApp.BeginRequest += OnBeginRequest;
+			httpApp.EndRequest += OnEndRequest;
+		}
+
+		public void Dispose()
+		{
+			// There's nothing to dispose because there's no disposable state kept per instance
 		}
 
 		private void OnBeginRequest(object eventSender, EventArgs eventArgs)
@@ -46,7 +54,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (Exception ex)
 			{
-				_logger.Error()?.Log("Processing BeginRequest event failed", ex);
+				_logger.Error()?.Log("Processing BeginRequest event failed. Exception: {Exception}", ex);
 			}
 		}
 
@@ -60,7 +68,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (Exception ex)
 			{
-				_logger.Error()?.Log("Processing EndRequest event failed", ex);
+				_logger.Error()?.Log("Processing EndRequest event failed. Exception: {Exception}", ex);
 			}
 		}
 
@@ -69,7 +77,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			var httpApp = (HttpApplication)eventSender;
 			var httpRequest = httpApp.Context.Request;
 
-			_currentTransaction = Apm.Agent.Instance.TracerInternal.StartTransactionInternal(
+			_currentTransaction = Agent.Instance.TracerInternal.StartTransactionInternal(
 				$"{httpRequest.HttpMethod} {httpRequest.Path}",
 				ApiConstants.TypeRequest);
 
@@ -159,25 +167,6 @@ namespace Elastic.Apm.AspNetFullFramework
 			};
 
 			_logger.Debug()?.Log("Captured user - {CapturedUser}", transaction.Context.User);
-		}
-
-		private static ApmAgent SetupElasticApmAgent()
-		{
-//			var configReader = configuration == null
-//				? new EnvironmentConfigurationReader(logger)
-//				: new MicrosoftExtensionsConfig(configuration, logger) as IConfigurationReader;
-//
-			var configReader = new EnvironmentConfigurationReader(ConsoleLogger.Instance);
-
-//			UpdateServiceInformation(config.Service);
-
-			Apm.Agent.Setup(new AgentComponents(configurationReader: configReader));
-
-//			Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
-
-			_isCaptureHeadersEnabled = Apm.Agent.Instance.ConfigurationReader.CaptureHeaders;
-
-			return Apm.Agent.Instance;
 		}
 	}
 }
