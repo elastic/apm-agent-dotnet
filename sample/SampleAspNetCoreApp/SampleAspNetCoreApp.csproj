@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\..\build\elasticapmsample.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
