@@ -156,8 +156,7 @@ namespace Elastic.Apm.AspNetCore
 
 		private void FillSampledTransactionContextUser(HttpContext context, Transaction transaction)
 		{
-			if (context.User?.Identity != null && context.User.Identity.IsAuthenticated && context.User.Identity != null
-				&& transaction.Context.User == null)
+			if (context.User?.Identity != null && context.User.Identity.IsAuthenticated && transaction.Context.User == null)
 			{
 				transaction.Context.User = new User
 				{
