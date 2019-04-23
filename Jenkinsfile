@@ -101,6 +101,7 @@ pipeline {
                       do
                         if [[ $i == *"AspNetFullFrameworkSampleApp.csproj"* ]]; then
                             continue
+                        fi
                         if [[ $i == *"Elastic.Apm.AspNetFullFramework.csproj"* ]]; then
                             continue
                         fi
