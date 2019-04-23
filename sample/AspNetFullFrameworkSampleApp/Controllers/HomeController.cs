@@ -1,34 +1,33 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Mvc;
-using Elastic.Apm.Api;
 
 namespace AspNetFullFrameworkSampleApp.Controllers
 {
-    public class HomeController : Controller
-    {
-        public async Task<ActionResult> Index()
-        {
-            return await Elastic.Apm.Agent.Tracer.CaptureTransaction("/Home/Index", ApiConstants.TypeRequest, async () =>
-            {
-                HttpClient httpClient = new HttpClient();
-                await httpClient.GetAsync("https://elastic.co");
-                return View();
-            });
-        }
+	public class HomeController : Controller
+	{
+		public ActionResult Index()
+		{
+			return View();
+		}
 
-        public ActionResult About()
-        {
-            ViewBag.Message = "Your application description page.";
+		public ActionResult About()
+		{
+			ViewBag.Message = "Your application description page.";
 
-            return View();
-        }
+			return View();
+		}
 
-        public ActionResult Contact()
-        {
-            ViewBag.Message = "Your contact page.";
+		public async Task<ActionResult> Contact()
+		{
+			var httpClient = new HttpClient();
+			Console.WriteLine("Getting `https://elastic.co'...");
+			var httpCallResponse = await httpClient.GetAsync("https://elastic.co");
+			Console.WriteLine($"Response status code from `https://elastic.co' - {httpCallResponse.StatusCode}");
+			ViewBag.Message = $"Your contact page. Response code from https://elastic.co is {httpCallResponse.StatusCode}.";
 
-            return View();
-        }
-    }
+			return View();
+		}
+	}
 }

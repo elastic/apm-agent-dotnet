@@ -78,6 +78,38 @@ namespace Elastic.Apm.AspNetCore
 					ApiConstants.TypeRequest);
 			}
 
+			if (transaction.IsSampled) FillSampledTransactionContextRequest(context, transaction);
+
+			try
+			{
+				await _next(context);
+			}
+			catch (Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
+			finally
+			{
+				//fixup Transaction.Name - e.g. /user/profile/1 -> /user/profile/{id}
+				var routeData = (context.Features[typeof(IRoutingFeature)] as IRoutingFeature)?.RouteData;
+				if (routeData != null)
+				{
+					var name = GetNameFromRouteContext(routeData.Values);
+
+					if (!string.IsNullOrWhiteSpace(name)) transaction.Name = $"{context.Request.Method} {name}";
+				}
+
+				transaction.Result = Transaction.StatusCodeToResult(GetProtocolName(context.Request.Protocol), context.Response.StatusCode);
+
+				if (transaction.IsSampled)
+				{
+					FillSampledTransactionContextResponse(context, transaction);
+					FillSampledTransactionContextUser(context, transaction);
+				}
+
+				transaction.End();
+			}
+		}
+
+		private void FillSampledTransactionContextRequest(HttpContext context, Transaction transaction)
+		{
 			var url = new Url
 			{
 				Full = context.Request?.Path.Value,
@@ -105,60 +137,43 @@ namespace Elastic.Apm.AspNetCore
 				HttpVersion = GetHttpVersion(context.Request.Protocol),
 				Headers = requestHeaders
 			};
+		}
 
-			try
+		private void FillSampledTransactionContextResponse(HttpContext context, Transaction transaction)
+		{
+			Dictionary<string, string> responseHeaders = null;
+
+			if (_configurationReader.CaptureHeaders)
+				responseHeaders = context.Response.Headers.ToDictionary(header => header.Key, header => header.Value.ToString());
+
+			transaction.Context.Response = new Response
 			{
-				await _next(context);
-			}
-			catch (Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
-			finally
+				Finished = context.Response.HasStarted, //TODO ?
+				StatusCode = context.Response.StatusCode,
+				Headers = responseHeaders
+			};
+		}
+
+		private void FillSampledTransactionContextUser(HttpContext context, Transaction transaction)
+		{
+			if (context.User?.Identity != null && context.User.Identity.IsAuthenticated && context.User.Identity != null
+				&& transaction.Context.User == null)
 			{
-				//fixup Transaction.Name - e.g. /user/profile/1 -> /user/profile/{id}
-				var routeData = (context.Features[typeof(IRoutingFeature)] as IRoutingFeature)?.RouteData;
-				if (routeData != null)
+				transaction.Context.User = new User
 				{
-					var name = GetNameFromRouteContext(routeData.Values);
-
-					if (!string.IsNullOrWhiteSpace(name))
-					{
-						transaction.Name = $"{context.Request.Method} {name}";
-					}
-				}
-
-				Dictionary<string, string> responseHeaders = null;
-
-				if (_configurationReader.CaptureHeaders)
-					responseHeaders = context.Response.Headers.ToDictionary(header => header.Key, header => header.Value.ToString());
-
-				transaction.Result = $"{GetProtocolName(context.Request.Protocol)} {context.Response.StatusCode.ToString()[0]}xx";
-				transaction.Context.Response = new Response
-				{
-					Finished = context.Response.HasStarted, //TODO ?
-					StatusCode = context.Response.StatusCode,
-					Headers = responseHeaders
+					UserName = context.User.Identity.Name,
+					Id = GetClaimWithFallbackValue(ClaimTypes.NameIdentifier, Consts.OpenIdClaimTypes.UserId),
+					Email = GetClaimWithFallbackValue(ClaimTypes.Email, Consts.OpenIdClaimTypes.Email)
 				};
 
-				if (context.User?.Identity != null && context.User.Identity.IsAuthenticated && context.User.Identity != null
-					&& transaction.Context.User == null)
-				{
-					transaction.Context.User = new User
-					{
-						UserName = context.User.Identity.Name,
-						Id = GetClaimWithFallbackValue(ClaimTypes.NameIdentifier, Consts.OpenIdClaimTypes.UserId),
-						Email = GetClaimWithFallbackValue(ClaimTypes.Email, Consts.OpenIdClaimTypes.Email)
-					};
+				_logger.Debug()?.Log("Captured user - {CapturedUser}", transaction.Context.User);
+			}
 
-					_logger.Debug()?.Log("Captured user - {CapturedUser}", transaction.Context.User);
-				}
-
-				string GetClaimWithFallbackValue(string claimType, string fallbackClaimType)
-				{
-					var idClaims = context.User.Claims.Where(n => n.Type == claimType || n.Type == fallbackClaimType);
-					var enumerable = idClaims.ToList();
-					return enumerable.Any() ? enumerable.First().Value : string.Empty;
-				}
-
-				transaction.End();
+			string GetClaimWithFallbackValue(string claimType, string fallbackClaimType)
+			{
+				var idClaims = context.User.Claims.Where(n => n.Type == claimType || n.Type == fallbackClaimType);
+				var enumerable = idClaims.ToList();
+				return enumerable.Any() ? enumerable.First().Value : string.Empty;
 			}
 		}
 
@@ -170,19 +185,16 @@ namespace Elastic.Apm.AspNetCore
 			if (routeValues.Count <= 0) return null;
 
 			routeValues.TryGetValue("controller", out var controller);
-			var controllerString = (controller == null) ? string.Empty : controller.ToString();
+			var controllerString = controller == null ? string.Empty : controller.ToString();
 
 			if (!string.IsNullOrEmpty(controllerString))
 			{
 				name = controllerString;
 
 				routeValues.TryGetValue("action", out var action);
-				var actionString = (action == null) ? string.Empty : action.ToString();
+				var actionString = action == null ? string.Empty : action.ToString();
 
-				if (!string.IsNullOrEmpty(actionString))
-				{
-					name += "/" + actionString;
-				}
+				if (!string.IsNullOrEmpty(actionString)) name += "/" + actionString;
 
 				if (routeValues.Keys.Count <= 2) return name;
 
@@ -203,11 +215,8 @@ namespace Elastic.Apm.AspNetCore
 			else
 			{
 				routeValues.TryGetValue("page", out var page);
-				var pageString = (page == null) ? string.Empty : page.ToString();
-				if (!string.IsNullOrEmpty(pageString))
-				{
-					name = pageString;
-				}
+				var pageString = page == null ? string.Empty : page.ToString();
+				if (!string.IsNullOrEmpty(pageString)) name = pageString;
 			}
 
 			return name;
