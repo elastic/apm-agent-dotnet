@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Web;
 using Elastic.Apm.Api;
+using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 
@@ -21,6 +22,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			Agent.Setup(agentComponents);
 			_logger = Agent.Instance.Logger.Scoped(nameof(ElasticApmModule));
 			_isCaptureHeadersEnabled = Agent.Instance.ConfigurationReader.CaptureHeaders;
+			Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
 		}
 
 		// We can store current transaction because each IHttpModule is used for at most one request at a time
