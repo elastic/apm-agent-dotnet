@@ -118,12 +118,14 @@ namespace Elastic.Apm.AspNetCore
 
 		private void FillSampledTransactionContextRequest(HttpContext context, Transaction transaction)
 		{
+			if (context.Request == null) return;
+
 			var url = new Url
 			{
-				Full = context.Request?.GetEncodedUrl(),
+				Full = context.Request.GetEncodedUrl(),
 				HostName = context.Request.Host.Host,
 				Protocol = GetProtocolName(context.Request.Protocol),
-				Raw = GetRawUrl(context.Request) ?? context.Request?.GetEncodedUrl()
+				Raw = GetRawUrl(context.Request) ?? context.Request.GetEncodedUrl()
 			};
 
 			Dictionary<string, string> requestHeaders = null;
