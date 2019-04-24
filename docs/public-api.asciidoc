@@ -157,7 +157,12 @@ finally
 ==== `Dictionary<string,string> Tags`
 A flat mapping of user-defined tags with string values. 
 
-NOTE: Tags are indexed in Elasticsearch so that they are searchable and aggregatable. By all means, you should avoid that user specified data, like URL parameters, is used as a tag key as it can lead to mapping explosions.
+TIP: Before using custom tags, ensure you understand the different types of
+{apm-overview-ref-v}/metadata.html[metadata] that are available.
+
+WARNING: Avoid defining too many user-specified tags.
+Defining too many unique fields in an index is a condition that can lead to a
+{ref}/mapping.html#mapping-limit-settings[mapping explosion].
 
 [source,csharp]
 ----
@@ -270,9 +275,14 @@ and the type will hold information about the database type.
 [float]
 [[api-span-tags]]
 ==== `Dictionary<string,string> Tags`
-Similar to <<api-transaction-tags>> on the <<api-transaction>>: A flat mapping of user-defined tags with string values. 
+Similar to <<api-transaction-tags>> on the <<api-transaction>>: A flat mapping of user-defined tags with string values.
 
-NOTE: Tags are indexed in Elasticsearch so that they are searchable and aggregatable. By all means, you should avoid that user specified data, like URL parameters, is used as a tag key as it can lead to mapping explosions.
+TIP: Before using custom tags, ensure you understand the different types of
+{apm-overview-ref-v}/metadata.html[metadata] that are available.
+
+WARNING: Avoid defining too many user-specified tags.
+Defining too many unique fields in an index is a condition that can lead to a
+{ref}/mapping.html#mapping-limit-settings[mapping explosion].
 
 [source,csharp]
 ----
