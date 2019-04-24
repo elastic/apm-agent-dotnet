@@ -47,7 +47,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		protected abstract void RequestHeadersAdd(TRequest request, string headerName, string headerValue);
 
-		protected abstract bool RequestHeadersContains(TRequest request, string headerName);
+		protected abstract bool RequestHeadersContain(TRequest request, string headerName);
 
 		protected abstract int ResponseGetStatusCode(TResponse response);
 
@@ -119,7 +119,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		private void ProcessStartEvent(object eventValue, TRequest request, Uri requestUrl)
 		{
-			_logger.Trace()?.Log("Processing start event - {RequestUrl}...", requestUrl);
+			_logger.Trace()?.Log("Processing start event... Request URL: {RequestUrl}", requestUrl);
 			if (Agent.TransactionContainer.Transactions == null || Agent.TransactionContainer.Transactions.Value == null)
 			{
 				_logger.Debug()?.Log("No active transaction, skip creating span for outgoing HTTP request");
@@ -140,7 +140,7 @@ namespace Elastic.Apm.DiagnosticListeners
 				return;
 			}
 
-			if (!RequestHeadersContains(request, TraceParent.TraceParentHeaderName))
+			if (!RequestHeadersContain(request, TraceParent.TraceParentHeaderName))
 				// We call TraceParent.BuildTraceparent explicitly instead of DistributedTracingData.SerializeToString because
 				// in the future we might change DistributedTracingData.SerializeToString to use some other internal format
 				// but here we want the string to be in W3C 'traceparent' header format.
@@ -162,7 +162,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		private void ProcessStopEvent(object eventValue, TRequest request, Uri requestUrl)
 		{
-			_logger.Trace()?.Log("Processing stop event - {RequestUrl}...", requestUrl);
+			_logger.Trace()?.Log("Processing stop event... Request URL: {RequestUrl}", requestUrl);
 
 			if (!ProcessingRequests.TryRemove(request, out var span))
 			{
@@ -196,7 +196,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		private void ProcessExceptionEvent(object eventValue, TRequest request, Uri requestUrl)
 		{
-			_logger.Trace()?.Log("Processing exception event - {RequestUrl}...", requestUrl);
+			_logger.Trace()?.Log("Processing exception event... Request URL: {RequestUrl}", requestUrl);
 			var exception = eventValue.GetType().GetTypeInfo().GetDeclaredProperty(EventExceptionPropertyName).GetValue(eventValue) as Exception;
 			var transaction = Agent.TransactionContainer.Transactions?.Value;
 

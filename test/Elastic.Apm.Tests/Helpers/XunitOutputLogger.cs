@@ -9,8 +9,6 @@ namespace Elastic.Apm.Tests.Helpers
 {
 	internal class XunitOutputLogger : AsyncLineWriterLogger
 	{
-		private readonly ITestOutputHelper _xUnitOutputHelper;
-
 		internal XunitOutputLogger(ITestOutputHelper xUnitOutputHelper, LogLevel level = LogLevel.Trace)
 			: base(level, new XunitOutputToAsyncLineWriterAdapter(xUnitOutputHelper)) { }
 

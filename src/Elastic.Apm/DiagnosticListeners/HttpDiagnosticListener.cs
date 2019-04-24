@@ -28,7 +28,7 @@ namespace Elastic.Apm.DiagnosticListeners
 			}
 
 			logger.Debug()
-				?.Log("Current runtime is not detected as Full Framework - assuming that it's Core. " +
+				?.Log("Current runtime is not detected as Full Framework - returning implementation for Core. " +
 					"RuntimeInformation.FrameworkDescription: {RuntimeInformation.FrameworkDescription}",
 					RuntimeInformation.FrameworkDescription);
 			return new HttpDiagnosticListenerCoreImpl(components);
