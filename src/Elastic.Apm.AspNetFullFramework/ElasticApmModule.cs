@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Runtime.InteropServices;
 using System.Web;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
@@ -18,22 +19,34 @@ namespace Elastic.Apm.AspNetFullFramework
 		{
 			var configReader = new FullFrameworkConfigReader(ConsoleLogger.Instance);
 			var agentComponents = new AgentComponents(configurationReader: configReader);
-			UpdateServiceInformation(agentComponents.Service);
+			SetServiceInformation(agentComponents.Service);
 			Agent.Setup(agentComponents);
 			_logger = Agent.Instance.Logger.Scoped(nameof(ElasticApmModule));
+
+			_logger.Debug()?.Log($"Initializing {nameof(ElasticApmModule)}... ASP.NET: {AspNetVersion}, CLR: {ClrDescription}, IIS: {IisVersion}");
+
 			_isCaptureHeadersEnabled = Agent.Instance.ConfigurationReader.CaptureHeaders;
+
 			Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
 		}
 
 		// We can store current transaction because each IHttpModule is used for at most one request at a time
-		// For example See https://bytes.com/topic/asp-net/answers/324305-httpmodule-multithreading-request-response-corelation
+		// For example see https://bytes.com/topic/asp-net/answers/324305-httpmodule-multithreading-request-response-corelation
 		private Transaction _currentTransaction;
 
-		private static void UpdateServiceInformation(Service service)
+		private static void SetServiceInformation(Service service)
 		{
-			service.Framework = new Framework { Name = "ASP.NET", Version = Environment.Version.ToString() };
+			service.Framework = new Framework
+			{
+				Name = "ASP.NET",
+				Version = AspNetVersion.ToString()
+			};
 			service.Language = new Language { Name = "C#" }; //TODO
 		}
+
+		private static Version AspNetVersion => typeof(HttpRuntime).Assembly.GetName().Version;
+		private static string ClrDescription => RuntimeInformation.FrameworkDescription;
+		private static Version IisVersion => HttpRuntime.IISVersion;
 
 		public void Init(HttpApplication httpApp)
 		{
