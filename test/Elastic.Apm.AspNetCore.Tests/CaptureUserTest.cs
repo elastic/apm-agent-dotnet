@@ -19,7 +19,6 @@ using Xunit;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
-
 	/// <summary>
 	/// The ASP.NET Core auto instrumentation is able to capture logged in users.
 	/// This class tests that feature.
@@ -35,7 +34,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var unused = Program.CreateWebHostBuilder(null)
 				.Configure(app =>
 				{
-					_agent = new ApmAgent(new AgentComponents(payloadSender: _payloadSender));
+					_agent = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender));
 					app.UseElasticApm(_agent, _agent.Logger);
 					Startup.ConfigureAllExceptAgent(app);
 				})
@@ -55,11 +54,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		/// <summary>
 		/// Integration test that makes sure that the ASP.NET Core auto instrumentation captures logged in users.
-		/// It starts up the <see cref="SampleAspNetCoreApp"/> and creates a user
+		/// It starts up the <see cref="SampleAspNetCoreApp" /> and creates a user
 		/// then it logs in the user and then it sends an HTTP GET request to /Home/SimplePage (with the logged in user)
 		/// It makes sure that this last transaction contains the user.
-		/// This test uses the test app that is built on top of the default ASP.NET Core  <see cref="UserManager{TUser}"/>
-		/// and <see cref="UserManager{TUser}"/>.
+		/// This test uses the test app that is built on top of the default ASP.NET Core  <see cref="UserManager{TUser}" />
+		/// and <see cref="UserManager{TUser}" />.
 		/// </summary>
 		[Fact]
 		public async Task RegisterAndLogInUser()
@@ -100,9 +99,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		/// <summary>
-		/// A unit test that directly calls InvokeAsync on the <see cref="ApmMiddleware"/>.
+		/// A unit test that directly calls InvokeAsync on the <see cref="ApmMiddleware" />.
 		/// It tests for OpenID claims.
-		/// It creates a <see cref="DefaultHttpContext"/> with email and sub claims on it (those are OpenID standard)
+		/// It creates a <see cref="DefaultHttpContext" /> with email and sub claims on it (those are OpenID standard)
 		/// and make sure that the agent captured the userid and the email address of the user.
 		/// </summary>
 		[Fact]
@@ -123,7 +122,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 					}, "someAuthTypeName"))
 				};
 
-				var middleware = new ApmMiddleware(async (innerHttpContext) => { await Task.Delay(1);}, agent.Tracer as Tracer, agent);
+				var middleware = new ApmMiddleware(async (innerHttpContext) => { await Task.Delay(1); }, agent.Tracer as Tracer, agent);
 
 				await middleware.InvokeAsync(context);
 			}
