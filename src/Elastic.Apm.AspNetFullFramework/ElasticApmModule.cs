@@ -23,12 +23,14 @@ namespace Elastic.Apm.AspNetFullFramework
 			Agent.Setup(agentComponents);
 			_logger = Agent.Instance.Logger.Scoped(nameof(ElasticApmModule));
 
-			_logger.Debug()?.Log($"Initializing {nameof(ElasticApmModule)}... ASP.NET: {AspNetVersion}, CLR: {ClrDescription}, IIS: {IisVersion}");
+			_logger.Debug()?.Log($"Entered {nameof(ElasticApmModule)} static ctor: ASP.NET: {AspNetVersion}, CLR: {ClrDescription}, IIS: {IisVersion}");
 
 			_isCaptureHeadersEnabled = Agent.Instance.ConfigurationReader.CaptureHeaders;
 
 			Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
 		}
+
+		private HttpApplication _httpApp;
 
 		// We can store current transaction because each IHttpModule is used for at most one request at a time
 		// For example see https://bytes.com/topic/asp-net/answers/324305-httpmodule-multithreading-request-response-corelation
@@ -50,13 +52,19 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		public void Init(HttpApplication httpApp)
 		{
-			httpApp.BeginRequest += OnBeginRequest;
-			httpApp.EndRequest += OnEndRequest;
+			_httpApp = httpApp;
+			_httpApp.BeginRequest += OnBeginRequest;
+			_httpApp.EndRequest += OnEndRequest;
 		}
 
 		public void Dispose()
 		{
-			// There's nothing to dispose because there's no disposable state kept per instance
+			if (_httpApp != null)
+			{
+				_httpApp.BeginRequest -= OnBeginRequest;
+				_httpApp.EndRequest -= OnEndRequest;
+				_httpApp = null;
+			}
 		}
 
 		private void OnBeginRequest(object eventSender, EventArgs eventArgs)
