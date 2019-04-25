@@ -1,11 +1,10 @@
 using System.Net.Http;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
-using Elastic.Apm.Logging;
-using Elastic.Apm.Tests.Helpers;
+using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
@@ -14,10 +13,6 @@ namespace Elastic.Apm.Tests
 	/// </summary>
 	public class StackTraceTests
 	{
-		private readonly XunitOutputLogger _xUnitOutputLogger;
-
-		public StackTraceTests(ITestOutputHelper xUnitOutputHelper) => _xUnitOutputLogger = new XunitOutputLogger(xUnitOutputHelper);
-
 		/// <summary>
 		/// Captures an HTTP request
 		/// and makes sure that we have at least 1 stack frame with LineNo != 0
@@ -26,7 +21,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task HttpClientStackTrace()
 		{
-			var (listener, payloadSender, _) = HttpDiagnosticListenerTest.RegisterListenerAndStartTransaction(_xUnitOutputLogger);
+			var (listener, payloadSender, _) = HttpDiagnosticListenerTest.RegisterListenerAndStartTransaction();
 
 			using (listener)
 			using (var localServer = new LocalServer(uri: "http://localhost:8083/"))

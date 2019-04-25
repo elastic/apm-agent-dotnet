@@ -578,7 +578,7 @@ namespace Elastic.Apm.Tests
 		internal static (IDisposable, MockPayloadSender, ApmAgent) RegisterListenerAndStartTransaction(IApmLogger customLogger = null)
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, customLogger: customLogger));
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 			var sub = agent.Subscribe(new HttpDiagnosticsSubscriber());
 			StartTransaction(agent);
 
