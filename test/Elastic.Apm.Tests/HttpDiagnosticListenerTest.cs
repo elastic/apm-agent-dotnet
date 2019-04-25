@@ -13,12 +13,47 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Xunit;
 
 namespace Elastic.Apm.Tests
 {
 	public class HttpDiagnosticListenerTest
 	{
+		private static TResult DispatchToImpl<TResult>(
+			IDiagnosticListener listener,
+			Func<HttpDiagnosticListenerCoreImpl, TResult> coreImplFunc,
+			Func<HttpDiagnosticListenerFullFrameworkImpl, TResult> fullFrameworkImplFunc
+		)
+		{
+			switch (listener)
+			{
+				case HttpDiagnosticListenerCoreImpl impl:
+					return coreImplFunc(impl);
+				case HttpDiagnosticListenerFullFrameworkImpl impl:
+					return fullFrameworkImplFunc(impl);
+				default:
+					throw new AssertionFailedException($"Unrecognized {nameof(HttpDiagnosticListener)} implementation - {listener.GetType()}");
+			}
+		}
+
+		private static string StartEventKey(IDiagnosticListener listener) =>
+			DispatchToImpl(listener, impl => impl.StartEventKey, impl => impl.StartEventKey);
+
+		private static string StopEventKey(IDiagnosticListener listener) =>
+			DispatchToImpl(listener, impl => impl.StopEventKey, impl => impl.StopEventKey);
+
+		private static int ProcessingRequestsCount(IDiagnosticListener listener) =>
+			DispatchToImpl(listener, impl => impl.ProcessingRequests.Count, impl => impl.ProcessingRequests.Count);
+
+		private static Span GetSpanForRequest(IDiagnosticListener listener, object request) =>
+			DispatchToImpl(
+				listener,
+				impl => impl.ProcessingRequests[(HttpRequestMessage)request],
+				impl => impl.ProcessingRequests[(HttpWebRequest)request]
+			);
+
+
 		/// <summary>
 		/// Calls the OnError method on the HttpDiagnosticListener and makes sure that the correct error message is logged.
 		/// </summary>
@@ -60,9 +95,9 @@ namespace Elastic.Apm.Tests
 
 			//Simulate Start
 			listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Start", new { Request = request }));
-			HttpDiagnosticListener.ProcessingRequestsCount(listener).Should().Be(1);
-			HttpDiagnosticListener.GetSpanForRequest(listener, request).Context.Http.Url.Should().Be(request.RequestUri.ToString());
-			HttpDiagnosticListener.GetSpanForRequest(listener, request).Context.Http.Method.Should().Be(HttpMethod.Get.ToString());
+			ProcessingRequestsCount(listener).Should().Be(1);
+			GetSpanForRequest(listener, request).Context.Http.Url.Should().Be(request.RequestUri.ToString());
+			GetSpanForRequest(listener, request).Context.Http.Method.Should().Be(HttpMethod.Get.ToString());
 		}
 
 		/// <summary>
@@ -84,10 +119,10 @@ namespace Elastic.Apm.Tests
 			var response = new HttpResponseMessage(HttpStatusCode.OK);
 
 			//Simulate Start
-			listener.OnNext(new KeyValuePair<string, object>(HttpDiagnosticListener.StartEventKey(listener), new { Request = request }));
+			listener.OnNext(new KeyValuePair<string, object>(StartEventKey(listener), new { Request = request }));
 			//Simulate Stop
-			listener.OnNext(new KeyValuePair<string, object>(HttpDiagnosticListener.StopEventKey(listener), new { Request = request, Response = response }));
-			HttpDiagnosticListener.ProcessingRequestsCount(listener).Should().Be(0);
+			listener.OnNext(new KeyValuePair<string, object>(StopEventKey(listener), new { Request = request, Response = response }));
+			ProcessingRequestsCount(listener).Should().Be(0);
 
 			var firstSpan = payloadSender.FirstSpan;
 			firstSpan.Should().NotBeNull();
@@ -113,11 +148,11 @@ namespace Elastic.Apm.Tests
 			var response = new HttpResponseMessage(HttpStatusCode.OK);
 
 			//Simulate Start
-			listener.OnNext(new KeyValuePair<string, object>(HttpDiagnosticListener.StartEventKey(listener), new { Request = request }));
+			listener.OnNext(new KeyValuePair<string, object>(StartEventKey(listener), new { Request = request }));
 			//Simulate Stop
-			listener.OnNext(new KeyValuePair<string, object>(HttpDiagnosticListener.StopEventKey(listener), new { Request = request, Response = response }));
+			listener.OnNext(new KeyValuePair<string, object>(StopEventKey(listener), new { Request = request, Response = response }));
 			//Simulate Stop again. This should not happen, still we test for this.
-			listener.OnNext(new KeyValuePair<string, object>(HttpDiagnosticListener.StopEventKey(listener), new { Request = request, Response = response }));
+			listener.OnNext(new KeyValuePair<string, object>(StopEventKey(listener), new { Request = request, Response = response }));
 
 			logger.Lines.Should().NotBeEmpty();
 			logger.Lines[0]
