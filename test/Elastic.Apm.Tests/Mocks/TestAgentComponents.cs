@@ -15,10 +15,11 @@ namespace Elastic.Apm.Tests.Mocks
 			string serverUrls = null,
 			string secretToken = null,
 			string captureHeaders = null,
-			IPayloadSender payloadSender = null
+			IPayloadSender payloadSender = null,
+			IApmLogger customLogger = null
 		)
 			: this(new TestAgentConfigurationReader(
-				new TestLogger(ParseWithoutLogging(logLevel)),
+				customLogger ?? new TestLogger(ParseWithoutLogging(logLevel)),
 				serverUrls: serverUrls,
 				secretToken: secretToken,
 				captureHeaders: captureHeaders,

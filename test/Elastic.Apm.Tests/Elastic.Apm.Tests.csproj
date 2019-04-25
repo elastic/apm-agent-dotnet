@@ -25,6 +25,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="HelpersTests" />
+    <Folder Include="Helpers" />
     <Folder Include="Mocks\" />
     <Folder Include="ApiTests\" />
   </ItemGroup>
