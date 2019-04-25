@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using Elastic.Apm.DiagnosticListeners;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.DiagnosticSource
 {
@@ -15,8 +16,10 @@ namespace Elastic.Apm.DiagnosticSource
 		/// </summary>
 		public IDisposable Subscribe(IApmAgent agent)
 		{
+			var logger = agent.Logger.Scoped(nameof(HttpDiagnosticsSubscriber));
+
 			var retVal = new CompositeDisposable();
-			var initializer = new DiagnosticInitializer(new[] { new HttpDiagnosticListener(agent) });
+			var initializer = new DiagnosticInitializer(agent.Logger, new[] { HttpDiagnosticListener.New(agent) });
 			retVal.Add(initializer);
 
 			retVal.Add(DiagnosticListener

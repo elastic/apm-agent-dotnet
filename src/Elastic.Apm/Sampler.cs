@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 
 namespace Elastic.Apm
 {
@@ -16,6 +17,7 @@ namespace Elastic.Apm
 		private readonly bool _constantValue;
 		private readonly bool _isConstant;
 		private readonly ulong _maxSampledUInt64;
+		private readonly double _rate;
 
 		/// <summary>
 		/// Constructs a new Sampler
@@ -27,7 +29,8 @@ namespace Elastic.Apm
 		{
 			if (!IsValidRate(rate)) throw new ArgumentOutOfRangeException($"Invalid rate: {rate} - it must be between 0 and 1 (including both)");
 
-			switch (rate)
+			_rate = rate;
+			switch (_rate)
 			{
 				case 0:
 					_isConstant = true;
@@ -65,5 +68,22 @@ namespace Elastic.Apm
 		}
 
 		internal static bool IsValidRate(double rate) => 0 <= rate && rate <= 1.0;
+
+		public override string ToString()
+		{
+			var retVal = new StringBuilder();
+			retVal.Append(nameof(Sampler));
+			retVal.Append("{ ");
+			if (_isConstant)
+			{
+				retVal.Append($"constant: {_constantValue}");
+			}
+			else
+			{
+				retVal.Append($"rate: {_rate}");
+			}
+			retVal.Append(" }");
+			return retVal.ToString();
+		}
 	}
 }

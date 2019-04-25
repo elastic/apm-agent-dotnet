@@ -47,7 +47,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				errorException.Type.Should().Be(typeof(Exception).FullName);
 
 				var context = capturedPayload.FirstError.Context;
-				context.Request.Url.Full.Should().Be("/Home/TriggerError");
+				context.Request.Url.Full.Should().Be("http://localhost/Home/TriggerError");
 				context.Request.Method.Should().Be(HttpMethod.Get.Method);
 
 				errorException.Should().NotBeNull();

@@ -13,12 +13,47 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Xunit;
 
 namespace Elastic.Apm.Tests
 {
 	public class HttpDiagnosticListenerTest
 	{
+		private static TResult DispatchToImpl<TResult>(
+			IDiagnosticListener listener,
+			Func<HttpDiagnosticListenerCoreImpl, TResult> coreImplFunc,
+			Func<HttpDiagnosticListenerFullFrameworkImpl, TResult> fullFrameworkImplFunc
+		)
+		{
+			switch (listener)
+			{
+				case HttpDiagnosticListenerCoreImpl impl:
+					return coreImplFunc(impl);
+				case HttpDiagnosticListenerFullFrameworkImpl impl:
+					return fullFrameworkImplFunc(impl);
+				default:
+					throw new AssertionFailedException($"Unrecognized {nameof(HttpDiagnosticListener)} implementation - {listener.GetType()}");
+			}
+		}
+
+		private static string StartEventKey(IDiagnosticListener listener) =>
+			DispatchToImpl(listener, impl => impl.StartEventKey, impl => impl.StartEventKey);
+
+		private static string StopEventKey(IDiagnosticListener listener) =>
+			DispatchToImpl(listener, impl => impl.StopEventKey, impl => impl.StopEventKey);
+
+		private static int ProcessingRequestsCount(IDiagnosticListener listener) =>
+			DispatchToImpl(listener, impl => impl.ProcessingRequests.Count, impl => impl.ProcessingRequests.Count);
+
+		private static Span GetSpanForRequest(IDiagnosticListener listener, object request) =>
+			DispatchToImpl(
+				listener,
+				impl => impl.ProcessingRequests[(HttpRequestMessage)request],
+				impl => impl.ProcessingRequests[(HttpWebRequest)request]
+			);
+
+
 		/// <summary>
 		/// Calls the OnError method on the HttpDiagnosticListener and makes sure that the correct error message is logged.
 		/// </summary>
@@ -27,7 +62,7 @@ namespace Elastic.Apm.Tests
 		{
 			var logger = new TestLogger();
 			var agent = new ApmAgent(new TestAgentComponents(logger));
-			var listener = new HttpDiagnosticListener(agent);
+			var listener = HttpDiagnosticListener.New(agent);
 
 			var exceptionMessage = "Ooops, this went wrong";
 			var fakeException = new Exception(exceptionMessage);
@@ -37,7 +72,7 @@ namespace Elastic.Apm.Tests
 			logger.Lines[0]
 				.Should()
 				.ContainAll(
-					$"{{{nameof(HttpDiagnosticListener)}}}",
+					"HttpDiagnosticListener",
 					"in OnError",
 					".cs:",
 					exceptionMessage
@@ -54,15 +89,15 @@ namespace Elastic.Apm.Tests
 			var logger = new TestLogger();
 			var agent = new ApmAgent(new TestAgentComponents(logger));
 			StartTransaction(agent);
-			var listener = new HttpDiagnosticListener(agent);
+			var listener = HttpDiagnosticListener.New(agent);
 
 			var request = new HttpRequestMessage(HttpMethod.Get, "https://elastic.co");
 
 			//Simulate Start
 			listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Start", new { Request = request }));
-			listener.ProcessingRequests.Should().NotBeEmpty().And.HaveCount(1);
-			listener.ProcessingRequests[request].Context.Http.Url.Should().Be(request.RequestUri.ToString());
-			listener.ProcessingRequests[request].Context.Http.Method.Should().Be(HttpMethod.Get.ToString());
+			ProcessingRequestsCount(listener).Should().Be(1);
+			GetSpanForRequest(listener, request).Context.Http.Url.Should().Be(request.RequestUri.ToString());
+			GetSpanForRequest(listener, request).Context.Http.Method.Should().Be(HttpMethod.Get.ToString());
 		}
 
 		/// <summary>
@@ -78,16 +113,16 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(logger, payloadSender: payloadSender));
 			StartTransaction(agent);
-			var listener = new HttpDiagnosticListener(agent);
+			var listener = HttpDiagnosticListener.New(agent);
 
 			var request = new HttpRequestMessage(HttpMethod.Get, "https://elastic.co");
 			var response = new HttpResponseMessage(HttpStatusCode.OK);
 
 			//Simulate Start
-			listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Start", new { Request = request }));
+			listener.OnNext(new KeyValuePair<string, object>(StartEventKey(listener), new { Request = request }));
 			//Simulate Stop
-			listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Stop", new { Request = request, Response = response }));
-			listener.ProcessingRequests.Should().BeEmpty();
+			listener.OnNext(new KeyValuePair<string, object>(StopEventKey(listener), new { Request = request, Response = response }));
+			ProcessingRequestsCount(listener).Should().Be(0);
 
 			var firstSpan = payloadSender.FirstSpan;
 			firstSpan.Should().NotBeNull();
@@ -107,23 +142,23 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(logger, payloadSender: payloadSender));
 			StartTransaction(agent);
-			var listener = new HttpDiagnosticListener(agent);
+			var listener = HttpDiagnosticListener.New(agent);
 
 			var request = new HttpRequestMessage(HttpMethod.Get, "https://elastic.co");
 			var response = new HttpResponseMessage(HttpStatusCode.OK);
 
 			//Simulate Start
-			listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Start", new { Request = request }));
+			listener.OnNext(new KeyValuePair<string, object>(StartEventKey(listener), new { Request = request }));
 			//Simulate Stop
-			listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Stop", new { Request = request, Response = response }));
+			listener.OnNext(new KeyValuePair<string, object>(StopEventKey(listener), new { Request = request, Response = response }));
 			//Simulate Stop again. This should not happen, still we test for this.
-			listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Stop", new { Request = request, Response = response }));
+			listener.OnNext(new KeyValuePair<string, object>(StopEventKey(listener), new { Request = request, Response = response }));
 
 			logger.Lines.Should().NotBeEmpty();
 			logger.Lines[0]
 				.Should()
 				.ContainAll(
-					$"{{{nameof(HttpDiagnosticListener)}}}",
+					"HttpDiagnosticListener",
 					"Failed capturing request",
 					HttpMethod.Get.Method,
 					request.RequestUri.AbsoluteUri
@@ -141,7 +176,7 @@ namespace Elastic.Apm.Tests
 		{
 			var logger = new TestLogger();
 			var agent = new ApmAgent(new TestAgentComponents(logger));
-			var listener = new HttpDiagnosticListener(agent);
+			var listener = HttpDiagnosticListener.New(agent);
 			var myFake = new StringBuilder(); //just a random type that is not planned to be passed into OnNext
 
 			var exception =
@@ -159,7 +194,7 @@ namespace Elastic.Apm.Tests
 		{
 			var logger = new TestLogger();
 			var agent = new ApmAgent(new TestAgentComponents(logger));
-			var listener = new HttpDiagnosticListener(agent);
+			var listener = HttpDiagnosticListener.New(agent);
 
 			var exception =
 				Record.Exception(() => { listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Start", null)); });
@@ -176,7 +211,7 @@ namespace Elastic.Apm.Tests
 		{
 			var logger = new TestLogger();
 			var agent = new ApmAgent(new TestAgentComponents(logger));
-			var listener = new HttpDiagnosticListener(agent);
+			var listener = HttpDiagnosticListener.New(agent);
 
 			var exception =
 				Record.Exception(() => { listener.OnNext(new KeyValuePair<string, object>(null, null)); });
@@ -265,7 +300,7 @@ namespace Elastic.Apm.Tests
 
 			using (disposableListener)
 			{
-				var listener = new HttpDiagnosticListener(agent);
+				var listener = HttpDiagnosticListener.New(agent);
 
 				var request = new HttpRequestMessage(HttpMethod.Get, "https://elastic.co");
 
@@ -540,7 +575,7 @@ namespace Elastic.Apm.Tests
 			}
 		}
 
-		internal static (IDisposable, MockPayloadSender, ApmAgent) RegisterListenerAndStartTransaction()
+		internal static (IDisposable, MockPayloadSender, ApmAgent) RegisterListenerAndStartTransaction(IApmLogger customLogger = null)
 		{
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));

@@ -1,14 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.DiagnosticSource
 {
 	internal class DiagnosticInitializer : IObserver<DiagnosticListener>, IDisposable
 	{
 		private readonly IEnumerable<IDiagnosticListener> _listeners;
+		private readonly ScopedLogger _logger;
 
-		internal DiagnosticInitializer(IEnumerable<IDiagnosticListener> listeners) => _listeners = listeners;
+		internal DiagnosticInitializer(IApmLogger baseLogger, IEnumerable<IDiagnosticListener> listeners)
+		{
+			_logger = baseLogger.Scoped(nameof(DiagnosticInitializer));
+			_listeners = listeners;
+		}
 
 		private IDisposable _sourceSubscription;
 
@@ -18,10 +25,26 @@ namespace Elastic.Apm.DiagnosticSource
 
 		public void OnNext(DiagnosticListener value)
 		{
+			var subscribedAny = false;
 			foreach (var listener in _listeners)
 			{
 				if (value.Name == listener.Name)
+				{
 					_sourceSubscription = value.Subscribe(listener);
+					_logger.Debug()
+						?.Log("Subscribed {DiagnosticListenerType} to `{DiagnosticListenerName}' events source",
+							listener.GetType().FullName, value.Name);
+					subscribedAny = true;
+				}
+			}
+
+			if (!subscribedAny)
+			{
+				_logger.Trace()
+					?.Log(
+						"There are no listeners in the current batch ({DiagnosticListeners}) that would like to subscribe to `{DiagnosticListenerName}' events source",
+						string.Join(", ", _listeners.Select(listener => listener.GetType().FullName)),
+						value.Name);
 			}
 		}
 

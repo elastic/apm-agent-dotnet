@@ -65,7 +65,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			await httpClient.GetAsync("/");
 
 			_payloadSender.FirstTransaction.Name.Should().Be("GET Home/Index");
-			_payloadSender.FirstTransaction.Context.Request.Url.Full.Should().Be("/");
+			_payloadSender.FirstTransaction.Context.Request.Url.Full.Should().Be("http://localhost/");
 		}
 
 		public void Dispose()

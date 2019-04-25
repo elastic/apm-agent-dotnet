@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
-using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
@@ -112,40 +111,58 @@ namespace Elastic.Apm.Config
 			}
 		}
 
+		protected virtual string DiscoverServiceName()
+		{
+			var entryAssemblyName = Assembly.GetEntryAssembly()?.GetName();
+			if (entryAssemblyName != null && !IsMsOrElastic(entryAssemblyName.GetPublicKeyToken()))
+				return entryAssemblyName.Name;
+
+			var stackFrames = new StackTrace().GetFrames();
+			if (stackFrames == null) return null;
+
+			foreach (var frame in stackFrames)
+			{
+				var currentAssemblyName = frame?.GetMethod()?.DeclaringType?.Assembly?.GetName();
+				if (currentAssemblyName != null && !IsMsOrElastic(currentAssemblyName.GetPublicKeyToken())) return currentAssemblyName.Name;
+			}
+
+			return null;
+		}
+
+		private string AdaptServiceName(string originalName) => originalName?.Replace('.', '_');
+
 		protected string ParseServiceName(ConfigurationKeyValue kv)
 		{
-			var retVal = kv.Value;
-			if (string.IsNullOrEmpty(retVal))
+			var nameInConfig = kv.Value;
+			if (!string.IsNullOrEmpty(nameInConfig))
 			{
-				Logger?.Info()?.Log("The agent was started without a service name. The service name will be automatically calculated.");
-				retVal = Assembly.GetEntryAssembly()?.GetName().Name;
-				Logger?.Info()?.Log("The agent was started without a service name. The Service name is {ServiceName}", retVal);
-			}
-
-			if (string.IsNullOrEmpty(retVal))
-			{
-				var stackFrames = new StackTrace().GetFrames();
-				if (stackFrames != null)
+				var adaptedServiceName = AdaptServiceName(nameInConfig);
+				if (nameInConfig == adaptedServiceName)
+					Logger?.Warning()?.Log("Service name provided in configuration is {ServiceName}", nameInConfig);
+				else
 				{
-					foreach (var frame in stackFrames)
-					{
-						var currentAssembly = frame?.GetMethod()?.DeclaringType?.Assembly;
-						if (currentAssembly == null || IsMsOrElastic(currentAssembly.GetName().GetPublicKeyToken())) continue;
-
-						retVal = currentAssembly.GetName().Name;
-						break;
-					}
+					Logger?.Warning()
+						?.Log("Service name provided in configuration ({ServiceNameInConfiguration}) was adapted to {ServiceName}", nameInConfig,
+							adaptedServiceName);
 				}
+				return adaptedServiceName;
 			}
 
-			if (!string.IsNullOrEmpty(retVal)) return retVal.Replace('.', '_');
+			Logger?.Info()?.Log("The agent was started without a service name. The service name will be automatically discovered.");
+
+			var discoveredName = AdaptServiceName(DiscoverServiceName());
+			if (discoveredName != null)
+			{
+				Logger?.Info()
+					?.Log("The agent was started without a service name. The automatically discovered service name is {ServiceName}", discoveredName);
+				return discoveredName;
+			}
 
 			Logger?.Error()
-				?.Log("Failed calculating service name, the service name will be 'unknown'." +
+				?.Log("Failed to discover service name, the service name will be '{DefaultServiceName}'." +
 					" You can fix this by setting the service name to a specific value (e.g. by using the environment variable {ServiceNameVariable})",
-					ConfigConsts.EnvVarNames.ServiceName);
-
-			return "unknown";
+					ConfigConsts.DefaultValues.UnknownServiceName, ConfigConsts.EnvVarNames.ServiceName);
+			return ConfigConsts.DefaultValues.UnknownServiceName;
 		}
 
 		private static bool TryParseFloatingPoint(string valueAsString, out double result) =>
@@ -193,20 +210,33 @@ namespace Elastic.Apm.Config
 		{
 			var elasticToken = new byte[] { 174, 116, 0, 210, 193, 137, 207, 34 };
 			var mscorlibToken = new byte[] { 183, 122, 92, 86, 25, 52, 224, 137 };
+			var systemWebToken = new byte[] { 176, 63, 95, 127, 17, 213, 10, 58 };
+			var systemPrivateCoreLibToken = new byte[] { 124, 236, 133, 215, 190, 167, 121, 142 };
+			var msAspNetCoreHostingToken = new byte[] { 173, 185, 121, 56, 41, 221, 174, 96 };
 
 			if (array.Length != 8)
 				return false;
 
 			var isMsCorLib = true;
 			var isElasticApm = true;
+			var isSystemWeb = true;
+			var isSystemPrivateCoreLib = true;
+			var isMsAspNetCoreHosting = true;
+
 			for (var i = 0; i < 8; i++)
 			{
 				if (array[i] != elasticToken[i])
 					isElasticApm = false;
 				if (array[i] != mscorlibToken[i])
 					isMsCorLib = false;
+				if (array[i] != systemWebToken[i])
+					isSystemWeb = false;
+				if (array[i] != systemPrivateCoreLibToken[i])
+					isSystemPrivateCoreLib = false;
+				if (array[i] != msAspNetCoreHostingToken[i])
+					isMsAspNetCoreHosting = false;
 
-				if (!isMsCorLib && !isElasticApm)
+				if (!isMsCorLib && !isElasticApm && !isSystemWeb && !isSystemPrivateCoreLib && !isMsAspNetCoreHosting)
 					return false;
 			}
 

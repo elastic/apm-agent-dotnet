@@ -17,6 +17,7 @@ namespace Elastic.Apm.Config
 		public static class DefaultValues
 		{
 			public const double TransactionSampleRate = 1.0;
+			public const string UnknownServiceName = "unknown";
 		}
 
 		public static Uri DefaultServerUri => new Uri("http://localhost:8200");
