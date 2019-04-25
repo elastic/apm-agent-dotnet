@@ -5,7 +5,6 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.DiagnosticListeners
 {
-	/// <inheritdoc />
 	/// <summary>
 	/// Captures web requests initiated by <see cref="T:System.Net.Http.HttpClient" />
 	/// </summary>

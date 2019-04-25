@@ -13,8 +13,8 @@ namespace Elastic.Apm.AspNetFullFramework
 {
 	public class ElasticApmModule : IHttpModule
 	{
-		private static readonly bool _isCaptureHeadersEnabled;
-		private static readonly IApmLogger _logger;
+		private static readonly bool IsCaptureHeadersEnabled;
+		private static readonly IApmLogger Logger;
 
 		static ElasticApmModule()
 		{
@@ -22,12 +22,12 @@ namespace Elastic.Apm.AspNetFullFramework
 			var agentComponents = new AgentComponents(configurationReader: configReader);
 			SetServiceInformation(agentComponents.Service);
 			Agent.Setup(agentComponents);
-			_logger = Agent.Instance.Logger.Scoped(nameof(ElasticApmModule));
+			Logger = Agent.Instance.Logger.Scoped(nameof(ElasticApmModule));
 
-			_logger.Debug()
+			Logger.Debug()
 				?.Log($"Entered {nameof(ElasticApmModule)} static ctor: ASP.NET: {AspNetVersion}, CLR: {ClrDescription}, IIS: {IisVersion}");
 
-			_isCaptureHeadersEnabled = Agent.Instance.ConfigurationReader.CaptureHeaders;
+			IsCaptureHeadersEnabled = Agent.Instance.ConfigurationReader.CaptureHeaders;
 
 			Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
 		}
@@ -71,33 +71,33 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		private void OnBeginRequest(object eventSender, EventArgs eventArgs)
 		{
-			_logger.Debug()?.Log("Incoming request processing started - starting trace");
+			Logger.Debug()?.Log("Incoming request processing started - starting trace");
 
 			try
 			{
-				ProcessBeginRequest(eventSender, eventArgs);
+				ProcessBeginRequest(eventSender);
 			}
 			catch (Exception ex)
 			{
-				_logger.Error()?.Log("Processing BeginRequest event failed. Exception: {Exception}", ex);
+				Logger.Error()?.Log("Processing BeginRequest event failed. Exception: {Exception}", ex);
 			}
 		}
 
 		private void OnEndRequest(object eventSender, EventArgs eventArgs)
 		{
-			_logger.Debug()?.Log("Incoming request processing finished - ending trace");
+			Logger.Debug()?.Log("Incoming request processing finished - ending trace");
 
 			try
 			{
-				ProcessEndRequest(eventSender, eventArgs);
+				ProcessEndRequest(eventSender);
 			}
 			catch (Exception ex)
 			{
-				_logger.Error()?.Log("Processing EndRequest event failed. Exception: {Exception}", ex);
+				Logger.Error()?.Log("Processing EndRequest event failed. Exception: {Exception}", ex);
 			}
 		}
 
-		private void ProcessBeginRequest(object eventSender, EventArgs eventArgs)
+		private void ProcessBeginRequest(object eventSender)
 		{
 			var httpApp = (HttpApplication)eventSender;
 			var httpRequest = httpApp.Context.Request;
@@ -105,7 +105,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			var distributedTracingData = ExtractIncomingDistributedTracingData(httpRequest);
 			if (distributedTracingData != null)
 			{
-				_logger.Debug()
+				Logger.Debug()
 					?.Log(
 						"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData} - continuing trace",
 						TraceParent.TraceParentHeaderName, distributedTracingData);
@@ -117,7 +117,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			else
 			{
-				_logger.Debug()?.Log("Incoming request doesn't have valid incoming distributed tracing data - starting trace with new trace id.");
+				Logger.Debug()?.Log("Incoming request doesn't have valid incoming distributed tracing data - starting trace with new trace id.");
 				_currentTransaction = Agent.Instance.TracerInternal.StartTransactionInternal(
 					$"{httpRequest.HttpMethod} {httpRequest.Path}",
 					ApiConstants.TypeRequest);
@@ -131,7 +131,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			var headerValue = httpRequest.Headers.Get(TraceParent.TraceParentHeaderName);
 			if (headerValue == null)
 			{
-				_logger.Debug()?.Log("Incoming request doesn't {TraceParentHeaderName} header - "+
+				Logger.Debug()?.Log("Incoming request doesn't {TraceParentHeaderName} header - "+
 					"it means request doesn't have incoming distributed tracing data", TraceParent.TraceParentHeaderName);
 				return null;
 			}
@@ -157,7 +157,7 @@ namespace Elastic.Apm.AspNetFullFramework
 					RemoteAddress = httpRequest.UserHostAddress
 				},
 				HttpVersion = GetHttpVersion(httpRequest.ServerVariables["SERVER_PROTOCOL"]),
-				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(httpRequest.Headers) : null
+				Headers = IsCaptureHeadersEnabled ? ConvertHeaders(httpRequest.Headers) : null
 			};
 		}
 
@@ -180,11 +180,14 @@ namespace Elastic.Apm.AspNetFullFramework
 		{
 			var convertedHeaders = new Dictionary<string, string>();
 			foreach (var headerName in httpHeaders.AllKeys)
-				convertedHeaders.Add(headerName, string.Join(",", httpHeaders.GetValues(headerName)));
+			{
+				var headerValue = httpHeaders.Get(headerName);
+				if (headerValue != null) convertedHeaders.Add(headerName, headerValue);
+			}
 			return convertedHeaders;
 		}
 
-		private void ProcessEndRequest(object eventSender, EventArgs eventArgs)
+		private void ProcessEndRequest(object eventSender)
 		{
 			var httpApp = (HttpApplication)eventSender;
 			var httpCtx = httpApp.Context;
@@ -207,7 +210,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				Finished = true,
 				StatusCode = httpResponse.StatusCode,
-				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(httpResponse.Headers) : null
+				Headers = IsCaptureHeadersEnabled ? ConvertHeaders(httpResponse.Headers) : null
 			};
 
 		private void FillSampledTransactionContextUser(HttpContext httpCtx, Transaction transaction)
@@ -220,7 +223,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				UserName = userIdentity.Name
 			};
 
-			_logger.Debug()?.Log("Captured user - {CapturedUser}", transaction.Context.User);
+			Logger.Debug()?.Log("Captured user - {CapturedUser}", transaction.Context.User);
 		}
 	}
 }

@@ -24,8 +24,6 @@ namespace Elastic.Apm.DiagnosticSource
 
 		public void OnNext(DiagnosticListener value)
 		{
-			_logger.Trace()?.Log(nameof(OnNext) + " called with value.Name: {DiagnosticListenerName}", value.Name);
-
 			var subscribedAny = false;
 			foreach (var listener in _listeners)
 			{
