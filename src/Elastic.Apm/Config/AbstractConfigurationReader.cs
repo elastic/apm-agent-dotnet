@@ -161,8 +161,8 @@ namespace Elastic.Apm.Config
 			Logger?.Error()
 				?.Log("Failed to discover service name, the service name will be '{DefaultServiceName}'." +
 					" You can fix this by setting the service name to a specific value (e.g. by using the environment variable {ServiceNameVariable})",
-					ConfigConsts.DefaultValues.ServiceName, ConfigConsts.EnvVarNames.ServiceName);
-			return ConfigConsts.DefaultValues.ServiceName;
+					ConfigConsts.DefaultValues.UnknownServiceName, ConfigConsts.EnvVarNames.ServiceName);
+			return ConfigConsts.DefaultValues.UnknownServiceName;
 		}
 
 		private static bool TryParseFloatingPoint(string valueAsString, out double result) =>

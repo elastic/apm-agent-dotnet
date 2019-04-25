@@ -55,7 +55,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.Transactions.Should().ContainSingle();
 
 			_agent.Service.Name.Should().NotBeNullOrWhiteSpace()
-				.And.NotBe(ConfigConsts.DefaultValues.ServiceName);
+				.And.NotBe(ConfigConsts.DefaultValues.UnknownServiceName);
 
 			_agent.Service.Agent.Name.Should().Be(Elastic.Apm.Consts.AgentName);
 			var apmVersion = Assembly.Load("Elastic.Apm").GetName().Version.ToString();
