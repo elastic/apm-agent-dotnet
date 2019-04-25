@@ -42,6 +42,7 @@ namespace Elastic.Apm.Model
 			var idBytes = new byte[8];
 			Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 
+			bool isSamplingFromDistributedTracingData = false;
 			if (distributedTracingData == null)
 			{
 				var traceIdBytes = new byte[16];
@@ -53,9 +54,19 @@ namespace Elastic.Apm.Model
 				TraceId = distributedTracingData.TraceId;
 				ParentId = distributedTracingData.ParentId;
 				IsSampled = distributedTracingData.FlagRecorded;
+				isSamplingFromDistributedTracingData = true;
 			}
 
 			SpanCount = new SpanCount();
+
+			if (isSamplingFromDistributedTracingData)
+				_logger.Trace()?.Log("New Transaction instance created: {Transaction}. " +
+					"IsSampled ({IsSampled}) is based on incoming distributed tracing data ({DistributedTracingData})",
+					this, IsSampled, distributedTracingData);
+			else
+				_logger.Trace()?.Log("New Transaction instance created: {Transaction}. " +
+					"IsSampled ({IsSampled}) is based on the given sampler ({Sampler})",
+					this, IsSampled, sampler);
 		}
 
 		/// <summary>

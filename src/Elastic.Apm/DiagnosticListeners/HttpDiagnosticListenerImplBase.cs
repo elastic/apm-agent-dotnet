@@ -173,22 +173,26 @@ namespace Elastic.Apm.DiagnosticListeners
 				return;
 			}
 
-			//TODO: response can be null if for example the request Task is Faulted.
-			//E.g. writing this from an airplane without internet, and requestTaskStatus is "Faulted" and response is null
-			//How do we report this? There is no response code in that case.
-			var responseObject = eventValue.GetType().GetTypeInfo().GetDeclaredProperty(EventResponsePropertyName)?.GetValue(eventValue);
-			if (responseObject != null)
+			// if span.Context.Http == null that means the transaction is not sampled (see ProcessStartEvent)
+			if (span.Context.Http != null)
 			{
-				var response = responseObject as TResponse;
-				if (response == null)
+				//TODO: response can be null if for example the request Task is Faulted.
+				//E.g. writing this from an airplane without internet, and requestTaskStatus is "Faulted" and response is null
+				//How do we report this? There is no response code in that case.
+				var responseObject = eventValue.GetType().GetTypeInfo().GetDeclaredProperty(EventResponsePropertyName)?.GetValue(eventValue);
+				if (responseObject != null)
 				{
-					_logger.Trace()
-						?.Log("Actual type of object ({EventResponsePropertyActualType}) in event's {EventResponsePropertyName} property " +
-							"doesn't match the expected type ({EventResponsePropertyExpectedType})",
-							responseObject.GetType().FullName, EventResponsePropertyName, typeof(TResponse).FullName);
+					var response = responseObject as TResponse;
+					if (response == null)
+					{
+						_logger.Trace()
+							?.Log("Actual type of object ({EventResponsePropertyActualType}) in event's {EventResponsePropertyName} property " +
+								"doesn't match the expected type ({EventResponsePropertyExpectedType})",
+								responseObject.GetType().FullName, EventResponsePropertyName, typeof(TResponse).FullName);
+					}
+					else
+						span.Context.Http.StatusCode = ResponseGetStatusCode(response);
 				}
-				else
-					span.Context.Http.StatusCode = ResponseGetStatusCode(response);
 			}
 
 			span.End();

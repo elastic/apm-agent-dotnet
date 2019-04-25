@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Web;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 
@@ -23,18 +24,23 @@ namespace Elastic.Apm.AspNetFullFramework
 			Agent.Setup(agentComponents);
 			_logger = Agent.Instance.Logger.Scoped(nameof(ElasticApmModule));
 
-			_logger.Debug()?.Log($"Entered {nameof(ElasticApmModule)} static ctor: ASP.NET: {AspNetVersion}, CLR: {ClrDescription}, IIS: {IisVersion}");
+			_logger.Debug()
+				?.Log($"Entered {nameof(ElasticApmModule)} static ctor: ASP.NET: {AspNetVersion}, CLR: {ClrDescription}, IIS: {IisVersion}");
 
 			_isCaptureHeadersEnabled = Agent.Instance.ConfigurationReader.CaptureHeaders;
 
 			Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
 		}
 
-		private HttpApplication _httpApp;
-
 		// We can store current transaction because each IHttpModule is used for at most one request at a time
 		// For example see https://bytes.com/topic/asp-net/answers/324305-httpmodule-multithreading-request-response-corelation
 		private Transaction _currentTransaction;
+
+		private HttpApplication _httpApp;
+
+		private static Version AspNetVersion => typeof(HttpRuntime).Assembly.GetName().Version;
+		private static string ClrDescription => RuntimeInformation.FrameworkDescription;
+		private static Version IisVersion => HttpRuntime.IISVersion;
 
 		private static void SetServiceInformation(Service service)
 		{
@@ -45,10 +51,6 @@ namespace Elastic.Apm.AspNetFullFramework
 			};
 			service.Language = new Language { Name = "C#" }; //TODO
 		}
-
-		private static Version AspNetVersion => typeof(HttpRuntime).Assembly.GetName().Version;
-		private static string ClrDescription => RuntimeInformation.FrameworkDescription;
-		private static Version IisVersion => HttpRuntime.IISVersion;
 
 		public void Init(HttpApplication httpApp)
 		{
@@ -100,11 +102,40 @@ namespace Elastic.Apm.AspNetFullFramework
 			var httpApp = (HttpApplication)eventSender;
 			var httpRequest = httpApp.Context.Request;
 
-			_currentTransaction = Agent.Instance.TracerInternal.StartTransactionInternal(
-				$"{httpRequest.HttpMethod} {httpRequest.Path}",
-				ApiConstants.TypeRequest);
+			var distributedTracingData = ExtractIncomingDistributedTracingData(httpRequest);
+			if (distributedTracingData != null)
+			{
+				_logger.Debug()
+					?.Log(
+						"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData} - continuing trace",
+						TraceParent.TraceParentHeaderName, distributedTracingData);
+
+				_currentTransaction = Agent.Instance.TracerInternal.StartTransactionInternal(
+					$"{httpRequest.HttpMethod} {httpRequest.Path}",
+					ApiConstants.TypeRequest,
+					distributedTracingData);
+			}
+			else
+			{
+				_logger.Debug()?.Log("Incoming request doesn't have valid incoming distributed tracing data - starting trace with new trace id.");
+				_currentTransaction = Agent.Instance.TracerInternal.StartTransactionInternal(
+					$"{httpRequest.HttpMethod} {httpRequest.Path}",
+					ApiConstants.TypeRequest);
+			}
 
 			if (_currentTransaction.IsSampled) FillSampledTransactionContextRequest(httpRequest, _currentTransaction);
+		}
+
+		private static DistributedTracingData ExtractIncomingDistributedTracingData(HttpRequest httpRequest)
+		{
+			var headerValue = httpRequest.Headers.Get(TraceParent.TraceParentHeaderName);
+			if (headerValue == null)
+			{
+				_logger.Debug()?.Log("Incoming request doesn't {TraceParentHeaderName} header - "+
+					"it means request doesn't have incoming distributed tracing data", TraceParent.TraceParentHeaderName);
+				return null;
+			}
+			return TraceParent.TryExtractTraceparent(headerValue);
 		}
 
 		private static void FillSampledTransactionContextRequest(HttpRequest httpRequest, ITransaction transaction)

@@ -7,10 +7,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 {
 	public class HomeController : Controller
 	{
-		public ActionResult Index()
-		{
-			return View();
-		}
+		public ActionResult Index() => View();
 
 		public ActionResult About()
 		{
@@ -22,12 +19,26 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		public async Task<ActionResult> Contact()
 		{
 			var httpClient = new HttpClient();
-			Console.WriteLine("Getting `https://elastic.co'...");
-			var httpCallResponse = await httpClient.GetAsync("https://elastic.co");
-			Console.WriteLine($"Response status code from `https://elastic.co' - {httpCallResponse.StatusCode}");
-			ViewBag.Message = $"Your contact page. Response code from https://elastic.co is {httpCallResponse.StatusCode}.";
+
+			var localHostUrl = new Uri(HttpContext.ApplicationInstance.Request.Url, "/Home/About");
+			var responseFromLocalHost = await GetContentFromUrl(localHostUrl);
+			var elasticCoUrl = new Uri("https://elastic.co");
+			var responseFromElasticCo = await GetContentFromUrl(elasticCoUrl);
+
+			ViewBag.Message =
+				$"Your contact page. " +
+				$" Response code from `{localHostUrl}' is {responseFromLocalHost.StatusCode}. " +
+				$" Response code from `{elasticCoUrl}' is {responseFromElasticCo.StatusCode}.";
 
 			return View();
+
+			async Task<HttpResponseMessage> GetContentFromUrl(Uri urlToGet)
+			{
+				Console.WriteLine($"Getting `{urlToGet}'...");
+				var response = await httpClient.GetAsync(urlToGet);
+				Console.WriteLine($"Response status code from `{urlToGet}' - {response.StatusCode}");
+				return response;
+			}
 		}
 	}
 }
