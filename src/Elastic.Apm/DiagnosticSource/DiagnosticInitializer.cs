@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.DiagnosticSource
@@ -38,8 +39,13 @@ namespace Elastic.Apm.DiagnosticSource
 			}
 
 			if (!subscribedAny)
+			{
 				_logger.Trace()
-					?.Log("There are no listeners that would like to subscribe to `{DiagnosticListenerName}' events source", value.Name);
+					?.Log(
+						"There are no listeners in the current batch ({DiagnosticListeners}) that would like to subscribe to `{DiagnosticListenerName}' events source",
+						string.Join(", ", _listeners.Select(listener => listener.GetType().FullName)),
+						value.Name);
+			}
 		}
 
 		public void Dispose() => _sourceSubscription?.Dispose();
