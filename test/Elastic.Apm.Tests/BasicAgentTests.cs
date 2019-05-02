@@ -64,6 +64,7 @@ namespace Elastic.Apm.Tests
 
 			using (var agent = new ApmAgent(new TestAgentComponents(secretToken: secretToken, payloadSender: payloadSender)))
 			{
+				Thread.Sleep(100); //temporary solution. See https://github.com/elastic/apm-agent-dotnet/issues/174
 				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
 				await payloadSender.FlushAndFinishAsync();
 			}
