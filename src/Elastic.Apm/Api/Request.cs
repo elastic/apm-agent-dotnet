@@ -36,5 +36,8 @@ namespace Elastic.Apm.Api
 		public string HostName { get; set; }
 		public string Protocol { get; set; }
 		public string Raw { get; set; }
+
+		[JsonProperty("pathname")]
+		public string PathName { get; set; }
 	}
 }

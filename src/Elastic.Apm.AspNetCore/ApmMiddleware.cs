@@ -125,7 +125,8 @@ namespace Elastic.Apm.AspNetCore
 				Full = context.Request.GetEncodedUrl(),
 				HostName = context.Request.Host.Host,
 				Protocol = GetProtocolName(context.Request.Protocol),
-				Raw = GetRawUrl(context.Request) ?? context.Request.GetEncodedUrl()
+				Raw = GetRawUrl(context.Request) ?? context.Request.GetEncodedUrl(),
+				PathName = context.Request.Path
 			};
 
 			Dictionary<string, string> requestHeaders = null;
