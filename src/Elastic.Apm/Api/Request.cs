@@ -41,7 +41,7 @@ namespace Elastic.Apm.Api
 		public string HostName { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
-		[JsonProperty("path")]
+		[JsonProperty("pathname")]
 		public string PathName { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
