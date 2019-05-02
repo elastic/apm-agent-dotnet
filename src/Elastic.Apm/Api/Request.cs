@@ -49,5 +49,13 @@ namespace Elastic.Apm.Api
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Raw { get; set; }
+
+		/// <summary>
+		/// The search describes the query string of the request.
+		/// It is expected to have values delimited by ampersands.
+		/// </summary>
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonProperty("search")]
+		public string Search { get; set; }
 	}
 }
