@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Api
@@ -33,13 +34,20 @@ namespace Elastic.Apm.Api
 
 	public class Url
 	{
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Full { get; set; }
+
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string HostName { get; set; }
 
-		[JsonProperty("pathname")]
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonProperty("path")]
 		public string PathName { get; set; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Protocol { get; set; }
+
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Raw { get; set; }
 	}
 }
