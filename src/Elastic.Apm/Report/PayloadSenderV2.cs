@@ -14,8 +14,6 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Report
 {
@@ -30,8 +28,7 @@ namespace Elastic.Apm.Report
 		private readonly Task _creation;
 
 		private readonly BatchBlock<object> _eventQueue =
-			new BatchBlock<object>(20, new GroupingDataflowBlockOptions
-				{ BoundedCapacity = 1_000_000 });
+			new BatchBlock<object>(20);
 
 		private readonly HttpClient _httpClient;
 		private readonly IApmLogger _logger;
@@ -55,10 +52,7 @@ namespace Elastic.Apm.Report
 			servicePoint.ConnectionLeaseTimeout = DnsTimeout;
 			servicePoint.ConnectionLimit = 20;
 
-			_httpClient = new HttpClient(handler ?? new HttpClientHandler())
-			{
-				BaseAddress = serverUrlBase
-			};
+			_httpClient = new HttpClient(handler ?? new HttpClientHandler()) { BaseAddress = serverUrlBase };
 
 			if (configurationReader.SecretToken != null)
 			{
@@ -83,7 +77,12 @@ namespace Elastic.Apm.Report
 
 		public void QueueTransaction(ITransaction transaction)
 		{
-			_eventQueue.Post(transaction);
+			_logger.Debug()
+				?.Log(
+					!_eventQueue.Post(transaction)
+						? "Failed adding Transaction to the queue, {Transaction}"
+						: "Transaction added to the queue, {Transaction}", transaction);
+
 			_eventQueue.TriggerBatch();
 		}
 
