@@ -127,7 +127,7 @@ namespace Elastic.Apm.AspNetCore
 				Protocol = GetProtocolName(context.Request.Protocol),
 				Raw = GetRawUrl(context.Request) ?? context.Request.GetEncodedUrl(),
 				PathName = context.Request.Path,
-				Search = context.Request.QueryString.Value?.Skip(1)?.ToString()
+				Search = context.Request.QueryString.Value?.Substring(1)
 			};
 
 			Dictionary<string, string> requestHeaders = null;
