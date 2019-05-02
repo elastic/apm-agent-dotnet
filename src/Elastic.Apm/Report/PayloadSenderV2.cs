@@ -14,8 +14,6 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Report
 {
@@ -79,8 +77,11 @@ namespace Elastic.Apm.Report
 
 		public void QueueTransaction(ITransaction transaction)
 		{
-			if (!_eventQueue.Post(transaction))
-				_logger.Debug()?.Log("Failed adding Transaction to the queue, {Transaction}", transaction);
+			_logger.Debug()
+				?.Log(
+					!_eventQueue.Post(transaction)
+						? "Failed adding Transaction to the queue, {Transaction}"
+						: "Transaction added to the queue, {Transaction}", transaction);
 
 			_eventQueue.TriggerBatch();
 		}
