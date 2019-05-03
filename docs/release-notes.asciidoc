@@ -1,4 +1,4 @@
 [[release-notes]]
 == Release notes
 
-Release notes are published on the https://github.com/elastic/apm-agent-dotnet/releases[ GitHub releases page].
+Release notes are published on the https://github.com/elastic/apm-agent-dotnet/releases[GitHub releases page].
