@@ -8,12 +8,16 @@
 ##### JOB DEFAULTS
 
 - job:
+    view: APM-CI
     project-type: multibranch
     logrotate:
       daysToKeep: 30
       numToKeep: 100
+    number-to-keep: '5'
+    days-to-keep: '1'
     concurrent: true
     node: linux
+    script-path: Jenkinsfile
     scm:
     - github:
         branch-discovery: all
@@ -48,6 +52,7 @@
         timeout: '15'
         use-author: true
         wipe-workspace: 'True'
+    periodic-folder-trigger: 1d
     prune-dead-branches: true
     publishers:
     - email:
