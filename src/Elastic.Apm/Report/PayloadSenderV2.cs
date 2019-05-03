@@ -25,8 +25,6 @@ namespace Elastic.Apm.Report
 	{
 		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
 
-		private readonly Task _creation;
-
 		private readonly BatchBlock<object> _eventQueue =
 			new BatchBlock<object>(20);
 
@@ -59,12 +57,14 @@ namespace Elastic.Apm.Report
 				_httpClient.DefaultRequestHeaders.Authorization =
 					new AuthenticationHeaderValue("Bearer", configurationReader.SecretToken);
 			}
-			_creation = Task.Factory.StartNew(
+			Task.Factory.StartNew(
 				() =>
 				{
 					try
 					{
-						_worker = DoWork();
+#pragma warning disable 4014
+						DoWork();
+#pragma warning restore 4014
 					}
 					catch (TaskCanceledException ex)
 					{
@@ -73,15 +73,13 @@ namespace Elastic.Apm.Report
 				}, CancellationToken.None, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
 		}
 
-		private Task _worker;
-
 		public void QueueTransaction(ITransaction transaction)
 		{
+			var res = _eventQueue.Post(transaction);
 			_logger.Debug()
-				?.Log(
-					!_eventQueue.Post(transaction)
-						? "Failed adding Transaction to the queue, {Transaction}"
-						: "Transaction added to the queue, {Transaction}", transaction);
+				?.Log(!res
+					? "Failed adding Transaction to the queue, {Transaction}"
+					: "Transaction added to the queue, {Transaction}", transaction);
 
 			_eventQueue.TriggerBatch();
 		}
@@ -89,37 +87,6 @@ namespace Elastic.Apm.Report
 		public void QueueSpan(ISpan span) => _eventQueue.Post(span);
 
 		public void QueueError(IError error) => _eventQueue.Post(error);
-
-		/// <summary>
-		/// Flushes all the events and ends the loop that processes and sends the events.
-		/// This can be called only once and after that the instance won't process anything.
-		/// </summary>
-		internal async Task FlushAndFinishAsync()
-		{
-			_logger.Debug()?.Log("FlushAndFinish called - PayloadSenderV2 will become invalid");
-			await _creation;
-			_eventQueue.TriggerBatch();
-
-			_batchBlockReceiveAsyncCts.Cancel();
-
-			try
-			{
-				await _worker;
-			}
-			catch (TaskCanceledException)
-			{
-				_logger.Debug()?.Log("worker task cancelled");
-			}
-			finally
-			{
-				_batchBlockReceiveAsyncCts.Dispose();
-			}
-
-			if (_eventQueue.TryReceiveAll(out var queueItems))
-				await ProcessQueueItems(queueItems.SelectMany(n => n).ToArray());
-
-			_eventQueue.Complete();
-		}
 
 		private async Task DoWork()
 		{
