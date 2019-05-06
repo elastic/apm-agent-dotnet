@@ -42,7 +42,7 @@ namespace Elastic.Apm.Model
 			var idBytes = new byte[8];
 			Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 
-			bool isSamplingFromDistributedTracingData = false;
+			var isSamplingFromDistributedTracingData = false;
 			if (distributedTracingData == null)
 			{
 				var traceIdBytes = new byte[16];
