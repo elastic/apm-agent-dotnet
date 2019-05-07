@@ -12,6 +12,7 @@ using System.Threading.Tasks.Dataflow;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
 
@@ -27,6 +28,9 @@ namespace Elastic.Apm.Report
 
 		private readonly BatchBlock<object> _eventQueue =
 			new BatchBlock<object>(20);
+
+		private readonly BatchBlock<MetricSet> _metricsQueue =
+			new BatchBlock<MetricSet>(20);
 
 		private readonly HttpClient _httpClient;
 		private readonly IApmLogger _logger;
@@ -86,6 +90,8 @@ namespace Elastic.Apm.Report
 
 		public void QueueSpan(ISpan span) => _eventQueue.Post(span);
 
+		public void QueueMetrics(MetricSet metricSet) => _eventQueue.Post(metricSet);
+
 		public void QueueError(IError error) => _eventQueue.Post(error);
 
 		private async Task DoWork()
@@ -121,6 +127,9 @@ namespace Elastic.Apm.Report
 							break;
 						case Error _:
 							ndjson.AppendLine("{\"error\": " + serialized + "}");
+							break;
+						case MetricSet _:
+							ndjson.AppendLine("{\"metricset\": " + serialized + "}");
 							break;
 					}
 					_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItemToSend}", item, serialized);

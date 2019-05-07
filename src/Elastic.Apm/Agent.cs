@@ -4,6 +4,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 
@@ -52,7 +53,11 @@ namespace Elastic.Apm
 	{
 		internal readonly CompositeDisposable Disposables = new CompositeDisposable();
 
-		public ApmAgent(AgentComponents agentComponents) => Components = agentComponents ?? new AgentComponents();
+		public ApmAgent(AgentComponents agentComponents)
+		{
+			Components = agentComponents ?? new AgentComponents();
+			var metricsCollector = new MetricsCollector(Components.Logger, Components.PayloadSender); //TODO: maybe move it
+		}
 
 		private AgentComponents Components { get; }
 		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
@@ -106,7 +111,6 @@ namespace Elastic.Apm
 		public static void Setup(AgentComponents agentComponents)
 		{
 			if (Lazy.IsValueCreated) throw new Exception("The singleton APM agent has already been instantiated and can no longer be configured");
-
 			_components = agentComponents;
 		}
 	}

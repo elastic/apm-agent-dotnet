@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Elastic.Apm.Api;
+using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 
@@ -28,6 +29,8 @@ namespace Elastic.Apm.Tests.Mocks
 		public void QueueTransaction(ITransaction transaction) =>  Transactions.Add(transaction);
 
 		public void QueueSpan(ISpan span) => Spans.Add(span);
+
+		public void QueueMetrics(MetricSet metricSet) => throw new System.NotImplementedException();
 
 		public void Clear()
 		{
