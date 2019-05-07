@@ -114,7 +114,7 @@ namespace Elastic.Apm.DiagnosticListeners
 			else if (kv.Key.Equals(ExceptionEventKey))
 				ProcessExceptionEvent(kv.Value, request, requestUrl);
 			else
-				_logger.Error()?.Log("Unrecognized key `{DiagnosticEventKey}'", kv.Key);
+				_logger.Trace()?.Log("Unrecognized key `{DiagnosticEventKey}'", kv.Key);
 		}
 
 		private void ProcessStartEvent(object eventValue, TRequest request, Uri requestUrl)
