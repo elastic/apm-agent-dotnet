@@ -12,6 +12,6 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public void QueueSpan(ISpan span) {}
 
-		public void QueueMetrics(MetricSet metricSet) => throw new System.NotImplementedException();
+		public void QueueMetrics(Metrics.Metrics metrics) => throw new System.NotImplementedException();
 	}
 }

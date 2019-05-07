@@ -5,12 +5,13 @@ using Newtonsoft.Json;
 
 namespace Elastic.Apm.Metrics
 {
-	public class MetricSet
+	[JsonConverter(typeof(MetricSetConverter))]
+	public class Metrics
 	{
-		public MetricSet(long timeStamp, Sample samples)
+		public Metrics(long timeStamp, List<Sample> samples)
 			=> (TimeStamp, Samples) = (timeStamp, samples);
 
-		public Sample Samples { get; set; }
+		public List<Sample> Samples { get; set; }
 
 		[JsonProperty("timestamp")]
 		public long TimeStamp { get; set; }

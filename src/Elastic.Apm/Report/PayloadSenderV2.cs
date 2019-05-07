@@ -29,8 +29,8 @@ namespace Elastic.Apm.Report
 		private readonly BatchBlock<object> _eventQueue =
 			new BatchBlock<object>(20);
 
-		private readonly BatchBlock<MetricSet> _metricsQueue =
-			new BatchBlock<MetricSet>(20);
+		private readonly BatchBlock<Metrics.Metrics> _metricsQueue =
+			new BatchBlock<Metrics.Metrics>(20);
 
 		private readonly HttpClient _httpClient;
 		private readonly IApmLogger _logger;
@@ -90,7 +90,7 @@ namespace Elastic.Apm.Report
 
 		public void QueueSpan(ISpan span) => _eventQueue.Post(span);
 
-		public void QueueMetrics(MetricSet metricSet) => _eventQueue.Post(metricSet);
+		public void QueueMetrics(Metrics.Metrics metrics) => _eventQueue.Post(metrics);
 
 		public void QueueError(IError error) => _eventQueue.Post(error);
 
@@ -128,7 +128,7 @@ namespace Elastic.Apm.Report
 						case Error _:
 							ndjson.AppendLine("{\"error\": " + serialized + "}");
 							break;
-						case MetricSet _:
+						case Metrics.Metrics _:
 							ndjson.AppendLine("{\"metricset\": " + serialized + "}");
 							break;
 					}

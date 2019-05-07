@@ -5,7 +5,6 @@ using Newtonsoft.Json;
 
 namespace Elastic.Apm.Metrics
 {
-	[JsonConverter(typeof(MetricsConverter))]
 	public class Sample
 	{
 		public Sample(string key, double value)
