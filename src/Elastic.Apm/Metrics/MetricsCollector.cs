@@ -1,36 +1,30 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
+using System.Management;
+using System.Runtime.InteropServices;
+using System.Timers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
-using Timer = System.Timers.Timer;
 
 namespace Elastic.Apm.Metrics
 {
-	public class MetricsCollector
+	public class MetricsCollector : IDisposable
 	{
+		private static readonly string _processCpuTotalPct = "system.process.cpu.total.norm.pct";
+		private static readonly string _processVirtualMemory = "system.process.memory.size";
+
+		private static readonly string _processWorkingSetMemory = "system.process.memory.rss.bytes";
 		private static string _systemCpuTotalPct = "system.cpu.total.norm.pct";
-		private static string _processCpuTotalPct = "system.process.cpu.total.norm.pct";
 
-		private static string _processWorkingSetMemory = "system.process.memory.rss.bytes";
-		private static string _processVirtualMemory = "system.process.memory.size";
+		private static readonly string _totalMemory = "system.memory.total";
 
-		private readonly IPayloadSender _payloadSender;
-		private readonly IApmLogger _logger;
-
-		Timer _timer = new Timer(100);
-
-		private DateTimeOffset _lastTick;
-		private TimeSpan _lastCurrentProcessCpuTime;
-		private bool _first = true;
+		private readonly Timer _timer = new Timer(100);
 
 		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender)
 		{
-			_payloadSender = payloadSender;
-			_logger = logger.Scoped(nameof(MetricsCollector));
-
-			_logger.Debug()?.Log("starting metricscollector");
+			IApmLogger logger1 = logger.Scoped(nameof(MetricsCollector));
+			logger1.Debug()?.Log("starting metricscollector");
 
 			_timer.Elapsed += (sender, args) =>
 			{
@@ -49,17 +43,20 @@ namespace Elastic.Apm.Metrics
 						var cpuUsedMs = (cpuUsage - _lastCurrentProcessCpuTime).TotalMilliseconds;
 						var totalMsPassed = (timespan - _lastTick).TotalMilliseconds;
 
-						var cpuUsageTotal = (cpuUsedMs / (Environment.ProcessorCount * totalMsPassed)) / 100;
-						_logger.Error()?.Log("New CPU metrics: {metricvalue}, pid: {pid}", cpuUsageTotal, Process.GetCurrentProcess().Id);
+						var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed) / 100;
 
-						var processCpuSample = new Sample(_processCpuTotalPct, cpuUsageTotal);
-						var workingSetSample = new Sample(_processWorkingSetMemory, workingSet);
-						var virtualMemorySample = new Sample(_processVirtualMemory, virtualMemory);
+						var samples = new List<Sample>();
 
-						var metricSet = new Metrics((timespan.ToUnixTimeMilliseconds() * 1000),
-							new List<Sample> { processCpuSample, workingSetSample, virtualMemorySample });
+						var (isTotalMemoryAvailable, totalMemoryValue) = GetTotalMemory();
+						if (isTotalMemoryAvailable) samples.Add(new Sample(_totalMemory, totalMemoryValue));
 
-						_payloadSender.QueueMetrics(metricSet);
+						samples.Add(new Sample(_processCpuTotalPct, cpuUsageTotal));
+						samples.Add(new Sample(_processWorkingSetMemory, workingSet));
+						samples.Add(new Sample(_processVirtualMemory, virtualMemory));
+
+						var metricSet = new Metrics(timespan.ToUnixTimeMilliseconds() * 1000, samples);
+						payloadSender.QueueMetrics(metricSet);
+						logger1.Debug()?.Log("Metrics collected");
 					}
 
 					_first = false;
@@ -68,11 +65,38 @@ namespace Elastic.Apm.Metrics
 				}
 				catch (Exception e)
 				{
-					_logger?.Error()?.LogExceptionWithCaller(e);
+					logger1?.Error()?.LogExceptionWithCaller(e);
 				}
 			};
 
 			_timer.Start();
+		}
+
+		private bool _first = true;
+		private TimeSpan _lastCurrentProcessCpuTime;
+
+		private DateTimeOffset _lastTick;
+
+		private ManagementObjectSearcher _managementObjectSearcher;
+
+		private (bool, ulong) GetTotalMemory()
+		{
+			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return (false, 0);
+
+			if (_managementObjectSearcher == null)
+				_managementObjectSearcher = new ManagementObjectSearcher("Select * From Win32_PhysicalMemory");
+
+			ulong totalMemory = 0;
+			foreach (var ram in _managementObjectSearcher.Get()) totalMemory += (ulong)ram.GetPropertyValue("Capacity");
+
+			return (true, totalMemory);
+		}
+
+		public void Dispose()
+		{
+			_timer?.Stop();
+			_timer?.Dispose();
+			_managementObjectSearcher?.Dispose();
 		}
 	}
 }
