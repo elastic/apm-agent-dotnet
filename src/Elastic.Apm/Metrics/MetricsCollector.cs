@@ -15,11 +15,12 @@ namespace Elastic.Apm.Metrics
 		private static readonly string _processVirtualMemory = "system.process.memory.size";
 
 		private static readonly string _processWorkingSetMemory = "system.process.memory.rss.bytes";
-		private static string _systemCpuTotalPct = "system.cpu.total.norm.pct";
+		private static readonly string _systemCpuTotalPct = "system.cpu.total.norm.pct";
 
 		private static readonly string _totalMemory = "system.memory.total";
+		private static readonly string _freeMemory = "system.memory.actual.free";
 
-		private readonly Timer _timer = new Timer(100);
+		private readonly Timer _timer = new Timer(1000);
 
 		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender)
 		{
@@ -45,10 +46,19 @@ namespace Elastic.Apm.Metrics
 
 						var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed) / 100;
 
+						Console.WriteLine($"cpuUsage: {cpuUsage}, cpuUsedMs: {cpuUsedMs}, cpuUsageTotal: {cpuUsedMs / (Environment.ProcessorCount * totalMsPassed)},  Pid: {Process.GetCurrentProcess().Id}");
+
 						var samples = new List<Sample>();
 
 						var (isTotalMemoryAvailable, totalMemoryValue) = GetTotalMemory();
 						if (isTotalMemoryAvailable) samples.Add(new Sample(_totalMemory, totalMemoryValue));
+
+						var (isFreeMemoryAvailable, freeMemoryValue) = GetFreeMemory();
+						if (isFreeMemoryAvailable) samples.Add(new Sample(_freeMemory, freeMemoryValue));
+
+						var (isprocessorTimeAvailable, processorTimeValue) = GetTotalCpuTime();
+						if (isprocessorTimeAvailable) samples.Add(new Sample(_systemCpuTotalPct, processorTimeValue));
+						
 
 						samples.Add(new Sample(_processCpuTotalPct, cpuUsageTotal));
 						samples.Add(new Sample(_processWorkingSetMemory, workingSet));
@@ -77,17 +87,52 @@ namespace Elastic.Apm.Metrics
 
 		private DateTimeOffset _lastTick;
 
-		private ManagementObjectSearcher _managementObjectSearcher;
+		private readonly ManagementObjectSearcher _managementObjectSearcher;
+		private  PerformanceCounter _processorTimePerfCounter;
+
+		private (bool, double) GetTotalCpuTime()
+		{
+			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return (false, 0);
+
+			if(_processorTimePerfCounter == null)
+				_processorTimePerfCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+
+			var val = _processorTimePerfCounter.NextValue();
+
+			return (true, (double)val/100);
+		}
+
+
+		private PerformanceCounter _memoryPerfCounter;
+
+		private (bool, ulong) GetFreeMemory()
+		{
+			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return (false, 0);
+
+			if(_memoryPerfCounter == null)
+				_memoryPerfCounter = new PerformanceCounter("Memory", "Available Bytes");
+
+			var val = _memoryPerfCounter.NextValue();
+
+			return (true, (ulong)val);
+		}
 
 		private (bool, ulong) GetTotalMemory()
 		{
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return (false, 0);
 
-			if (_managementObjectSearcher == null)
-				_managementObjectSearcher = new ManagementObjectSearcher("Select * From Win32_PhysicalMemory");
-
+			var mc = new ManagementClass("Win32_ComputerSystem");
+			var moc = mc.GetInstances();
 			ulong totalMemory = 0;
-			foreach (var ram in _managementObjectSearcher.Get()) totalMemory += (ulong)ram.GetPropertyValue("Capacity");
+
+			foreach (var item in moc)
+			{
+				if (item.Properties["TotalPhysicalMemory"] != null)
+				{
+					totalMemory = Convert.ToUInt64(item.Properties["TotalPhysicalMemory"].Value);
+					break;
+				}
+			}
 
 			return (true, totalMemory);
 		}
