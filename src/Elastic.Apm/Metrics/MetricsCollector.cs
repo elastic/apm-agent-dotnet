@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Management;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Timers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
@@ -27,27 +28,22 @@ namespace Elastic.Apm.Metrics
 			IApmLogger logger1 = logger.Scoped(nameof(MetricsCollector));
 			logger1.Debug()?.Log("starting metricscollector");
 
-			_timer.Elapsed += (sender, args) =>
+			_timer.Elapsed += async (sender, args) =>
 			{
 				try
 				{
-					var cpuUsage = Process.GetCurrentProcess().TotalProcessorTime; // .Milliseconds % 100 / 100;
+					var timespan = DateTimeOffset.UtcNow;
+					var cpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
 
 					var virtualMemory = Process.GetCurrentProcess().VirtualMemorySize64;
-					var workingSet = Process.GetCurrentProcess().WorkingSet64;
-
-
-					var timespan = DateTimeOffset.UtcNow;
+					var workingSet = Process.GetCurrentProcess().WorkingSet64;		
 
 					if (!_first)
 					{
-						var cpuUsedMs = (cpuUsage - _lastCurrentProcessCpuTime).TotalMilliseconds;
-						var totalMsPassed = (timespan - _lastTick).TotalMilliseconds;
-
-						var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed) / 100;
-
-						Console.WriteLine($"cpuUsage: {cpuUsage}, cpuUsedMs: {cpuUsedMs}, cpuUsageTotal: {cpuUsedMs / (Environment.ProcessorCount * totalMsPassed)},  Pid: {Process.GetCurrentProcess().Id}");
-
+						var cpuUsedMs = (cpuUsage - _lastCurrentProcessCpuTime).TotalMilliseconds;						
+						var totalMsPassed = (timespan - _lastTick).TotalMilliseconds;					
+						var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
+					
 						var samples = new List<Sample>();
 
 						var (isTotalMemoryAvailable, totalMemoryValue) = GetTotalMemory();
