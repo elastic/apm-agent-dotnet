@@ -21,10 +21,10 @@
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, entiryframeworkcore, efcore</PackageTags>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.5.1"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="2.0.0"/>
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.5.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="2.2.4" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj"/>
+    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
   </ItemGroup>
 </Project>

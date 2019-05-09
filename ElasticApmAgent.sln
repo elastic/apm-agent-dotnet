@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2050
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.352
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3734A52F-2222-454B-BF58-1BA5C1F29D77}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{3C791D9C-6F19-4F46-B367-2EC0F818762D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleAspNetCoreApp", "sample\SampleAspNetCoreApp\SampleAspNetCoreApp.csproj", "{0ADF687D-4DB7-417E-80B4-27B3FD86875E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCoreSampleApp", "sample\AspNetCoreSampleApp\AspNetCoreSampleApp.csproj", "{0ADF687D-4DB7-417E-80B4-27B3FD86875E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{267A241E-571F-458F-B04C-B6C4DE79E735}"
 EndProject
@@ -44,7 +44,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspNetFullFrameworkSampleAp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApiSample", "sample\WebApiSample\WebApiSample.csproj", "{319E2094-D2E1-46C5-8985-9693CD8DDCBD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.AspNetFullFramework", "src\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj", "{D6FFDDAB-9D76-442F-8F1D-BD6F553F92FA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.AspNetFullFramework", "src\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj", "{D6FFDDAB-9D76-442F-8F1D-BD6F553F92FA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
