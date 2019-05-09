@@ -10,7 +10,7 @@ using Elastic.Apm.Report;
 
 namespace Elastic.Apm.Metrics
 {
-	public class MetricsCollector : IDisposable
+	internal class MetricsCollector : IDisposable
 	{
 		private static readonly string _processCpuTotalPct = "system.process.cpu.total.norm.pct";
 		private static readonly string _processVirtualMemory = "system.process.memory.size";
@@ -25,57 +25,18 @@ namespace Elastic.Apm.Metrics
 
 		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender)
 		{
-			IApmLogger logger1 = logger.Scoped(nameof(MetricsCollector));
-			logger1.Debug()?.Log("starting metricscollector");
+			this.logger = logger.Scoped(nameof(MetricsCollector)); ;
+			this.payloadSender = payloadSender;
 
-			_timer.Elapsed += async (sender, args) =>
+			logger.Debug()?.Log("starting metricscollector");
+
+			_timer.Elapsed += (sender, args) =>
 			{
-				try
-				{
-					var timespan = DateTimeOffset.UtcNow;
-					var cpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
-
-					var virtualMemory = Process.GetCurrentProcess().VirtualMemorySize64;
-					var workingSet = Process.GetCurrentProcess().WorkingSet64;		
-
-					if (!_first)
-					{
-						var cpuUsedMs = (cpuUsage - _lastCurrentProcessCpuTime).TotalMilliseconds;						
-						var totalMsPassed = (timespan - _lastTick).TotalMilliseconds;					
-						var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
-					
-						var samples = new List<Sample>();
-
-						var (isTotalMemoryAvailable, totalMemoryValue) = GetTotalMemory();
-						if (isTotalMemoryAvailable) samples.Add(new Sample(_totalMemory, totalMemoryValue));
-
-						var (isFreeMemoryAvailable, freeMemoryValue) = GetFreeMemory();
-						if (isFreeMemoryAvailable) samples.Add(new Sample(_freeMemory, freeMemoryValue));
-
-						var (isprocessorTimeAvailable, processorTimeValue) = GetTotalCpuTime();
-						if (isprocessorTimeAvailable) samples.Add(new Sample(_systemCpuTotalPct, processorTimeValue));
-						
-
-						samples.Add(new Sample(_processCpuTotalPct, cpuUsageTotal));
-						samples.Add(new Sample(_processWorkingSetMemory, workingSet));
-						samples.Add(new Sample(_processVirtualMemory, virtualMemory));
-
-						var metricSet = new Metrics(timespan.ToUnixTimeMilliseconds() * 1000, samples);
-						payloadSender.QueueMetrics(metricSet);
-						logger1.Debug()?.Log("Metrics collected");
-					}
-
-					_first = false;
-					_lastTick = timespan;
-					_lastCurrentProcessCpuTime = cpuUsage;
-				}
-				catch (Exception e)
-				{
-					logger1?.Error()?.LogExceptionWithCaller(e);
-				}
+				CollectAllMetrics();
 			};
 
 			_timer.Start();
+
 		}
 
 		private bool _first = true;
@@ -84,28 +45,86 @@ namespace Elastic.Apm.Metrics
 		private DateTimeOffset _lastTick;
 
 		private readonly ManagementObjectSearcher _managementObjectSearcher;
-		private  PerformanceCounter _processorTimePerfCounter;
+		private readonly IApmLogger logger;
+		private readonly IPayloadSender payloadSender;
+		private PerformanceCounter _processorTimePerfCounter;
 
-		private (bool, double) GetTotalCpuTime()
+
+		internal void CollectAllMetrics()
+		{
+			try
+			{
+				var virtualMemory = Process.GetCurrentProcess().VirtualMemorySize64;
+				var workingSet = Process.GetCurrentProcess().WorkingSet64;
+
+				var samples = new List<Sample>();
+
+				var (isTotalMemoryAvailable, totalMemoryValue) = GetTotalMemory();
+				if (isTotalMemoryAvailable) samples.Add(new Sample(_totalMemory, totalMemoryValue));
+
+				var (isFreeMemoryAvailable, freeMemoryValue) = GetFreeMemory();
+				if (isFreeMemoryAvailable) samples.Add(new Sample(_freeMemory, freeMemoryValue));
+
+				var (isprocessorTimeAvailable, processorTimeValue) = GetTotalCpuTime();
+				if (isprocessorTimeAvailable) samples.Add(new Sample(_systemCpuTotalPct, processorTimeValue));
+
+				var (isProcessCpuAvailable, processCpuValue) = GetProcessTotalCpuTime();
+				if (isProcessCpuAvailable) samples.Add(new Sample(_processCpuTotalPct, processCpuValue));
+
+				samples.Add(new Sample(_processWorkingSetMemory, workingSet));
+				samples.Add(new Sample(_processVirtualMemory, virtualMemory));
+
+				var metricSet = new Metrics(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() * 1000, samples);
+				payloadSender.QueueMetrics(metricSet);
+				logger.Debug()?.Log("Metrics collected");
+			}
+			catch (Exception e)
+			{
+				logger.Error()?.LogExceptionWithCaller(e);
+			}
+		}
+
+		internal (bool, double) GetProcessTotalCpuTime()
+		{
+			var timespan = DateTimeOffset.UtcNow;
+			var cpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
+
+			if (_first)
+			{
+				var cpuUsedMs = (cpuUsage - _lastCurrentProcessCpuTime).TotalMilliseconds;
+				var totalMsPassed = (timespan - _lastTick).TotalMilliseconds;
+				var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
+
+				return (true, cpuUsageTotal);
+			}
+
+			_first = false;
+			_lastTick = timespan;
+			_lastCurrentProcessCpuTime = cpuUsage;
+
+			return (false, 0);
+		}
+
+		internal (bool, double) GetTotalCpuTime()
 		{
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return (false, 0);
 
-			if(_processorTimePerfCounter == null)
+			if (_processorTimePerfCounter == null)
 				_processorTimePerfCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
 
 			var val = _processorTimePerfCounter.NextValue();
 
-			return (true, (double)val/100);
+			return (true, (double)val / 100);
 		}
 
 
 		private PerformanceCounter _memoryPerfCounter;
 
-		private (bool, ulong) GetFreeMemory()
+		internal (bool, ulong) GetFreeMemory()
 		{
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return (false, 0);
 
-			if(_memoryPerfCounter == null)
+			if (_memoryPerfCounter == null)
 				_memoryPerfCounter = new PerformanceCounter("Memory", "Available Bytes");
 
 			var val = _memoryPerfCounter.NextValue();
@@ -113,7 +132,7 @@ namespace Elastic.Apm.Metrics
 			return (true, (ulong)val);
 		}
 
-		private (bool, ulong) GetTotalMemory()
+		internal (bool, ulong) GetTotalMemory()
 		{
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return (false, 0);
 

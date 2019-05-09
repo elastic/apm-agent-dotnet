@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Elastic.Apm.Api;
-using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 
@@ -12,6 +11,7 @@ namespace Elastic.Apm.Tests.Mocks
 		public readonly List<IError> Errors = new List<IError>();
 		public readonly List<ITransaction> Transactions = new List<ITransaction>();
 		public readonly List<ISpan> Spans = new List<ISpan>();
+		public readonly List<Metrics.Metrics> Metrics = new List<Metrics.Metrics>();
 
 		public Error FirstError => Errors.First() as Error;
 
@@ -30,7 +30,7 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public void QueueSpan(ISpan span) => Spans.Add(span);
 
-		public void QueueMetrics(Metrics.Metrics metrics) => throw new System.NotImplementedException();
+		public void QueueMetrics(Metrics.Metrics metrics) => Metrics.Add(metrics);
 
 		public void Clear()
 		{

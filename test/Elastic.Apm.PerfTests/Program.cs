@@ -3,6 +3,7 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Metrics;
 using Elastic.Apm.Tests.Mocks;
 
 namespace Elastic.Apm.PerfTests
@@ -10,12 +11,9 @@ namespace Elastic.Apm.PerfTests
 	[MemoryDiagnoser]
 	public class Program
 	{
-		public static void Main()
-		{
-			BenchmarkRunner.Run<Program>();
-		}
+		public static void Main(string[] args) => BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
 
-		[Benchmark]
+		//[Benchmark]
 		public void SimpleTransactions10Spans()
 		{
 			var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender()));
@@ -29,6 +27,66 @@ namespace Elastic.Apm.PerfTests
 						transaction.CaptureSpan("span", "perfSpan", () => { });
 					}
 				});
+			}
+		}
+
+		[Benchmark]
+		public void CollectAllMetrics2X()
+		{
+			var noopLogger = new NoopLogger();
+			var mockPayloadSender = new MockPayloadSender();
+			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender))
+			{
+				collector.CollectAllMetrics();
+				collector.CollectAllMetrics();
+			}
+		}
+
+		[Benchmark]
+		public void CollectFreeMemory2X()
+		{
+			var noopLogger = new NoopLogger();
+			var mockPayloadSender = new MockPayloadSender();
+			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender))
+			{
+				collector.GetFreeMemory();
+				collector.GetFreeMemory();
+			}
+		}
+
+		[Benchmark]
+		public void CollectProcessTotalCpuTime2X()
+		{
+			var noopLogger = new NoopLogger();
+			var mockPayloadSender = new MockPayloadSender();
+			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender))
+			{
+				collector.GetProcessTotalCpuTime();
+				collector.GetProcessTotalCpuTime();
+			}
+		}
+
+		[Benchmark]
+		public void CollectTotalCpuTime2X()
+		{
+			var noopLogger = new NoopLogger();
+			var mockPayloadSender = new MockPayloadSender();
+			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender))
+			{
+				collector.GetTotalCpuTime();
+				collector.GetTotalCpuTime();
+			}
+		}
+
+		[Benchmark]
+		public void CollectTotalMemory2X()
+		{
+			var noopLogger = new NoopLogger();
+			var mockPayloadSender = new MockPayloadSender();
+			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender))
+			{
+				collector.GetTotalMemory();
+				collector.GetTotalMemory();
 			}
 		}
 

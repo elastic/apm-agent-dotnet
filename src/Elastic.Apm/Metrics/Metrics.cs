@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 namespace Elastic.Apm.Metrics
 {
 	[JsonConverter(typeof(MetricSetConverter))]
-	public class Metrics
+	public class Metrics //TODO: probably rename
 	{
 		public Metrics(long timeStamp, List<Sample> samples)
 			=> (TimeStamp, Samples) = (timeStamp, samples);
