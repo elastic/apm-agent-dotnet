@@ -12,7 +12,6 @@ using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Xunit;
 
 namespace Elastic.Apm.AspNetCore.Tests
