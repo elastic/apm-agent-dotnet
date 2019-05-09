@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Management;
 using System.Runtime.InteropServices;
@@ -43,6 +44,10 @@ namespace Elastic.Apm.Metrics
 		private TimeSpan _lastCurrentProcessCpuTime;
 
 		private DateTimeOffset _lastTick;
+
+		private TimeSpan _lastCurrentTotalProcessCpuTime;
+
+		private DateTimeOffset _lastTotalTick;
 
 		private readonly ManagementObjectSearcher _managementObjectSearcher;
 		private readonly IApmLogger logger;
@@ -89,12 +94,16 @@ namespace Elastic.Apm.Metrics
 			var timespan = DateTimeOffset.UtcNow;
 			var cpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
 
-			if (_first)
+			if (!_first)
 			{
 				var cpuUsedMs = (cpuUsage - _lastCurrentProcessCpuTime).TotalMilliseconds;
 				var totalMsPassed = (timespan - _lastTick).TotalMilliseconds;
 				var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
 
+
+				_first = false;
+				_lastTick = timespan;
+				_lastCurrentProcessCpuTime = cpuUsage;
 				return (true, cpuUsageTotal);
 			}
 
@@ -105,16 +114,56 @@ namespace Elastic.Apm.Metrics
 			return (false, 0);
 		}
 
+		private bool _firstTotal = true;
+
 		internal (bool, double) GetTotalCpuTime()
 		{
-			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return (false, 0);
+			//Perf data:    CollectTotalCpuTime2X |    504.067 us | 143.7222 us |
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				if (_processorTimePerfCounter == null)
+					_processorTimePerfCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
 
-			if (_processorTimePerfCounter == null)
-				_processorTimePerfCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+				var val = _processorTimePerfCounter.NextValue();
 
-			var val = _processorTimePerfCounter.NextValue();
+				return (true, (double)val / 100);
+			}
 
-			return (true, (double)val / 100);
+			//The x-plat impelmentation is ~18x slower, than perf. counters on Windows
+			//Therefore this is only a fallback for in case of non-Windows OSs
+			var timespan = DateTimeOffset.UtcNow;
+			TimeSpan cpuUsage;
+
+			foreach (var proc in Process.GetProcesses())
+			{
+				try
+				{
+					cpuUsage += proc.TotalProcessorTime;
+				}
+				catch(Exception)
+				{
+					//Log warning 1 for inaccuracy
+				}
+			}
+
+			if (!_firstTotal)
+			{
+				var cpuUsedMs = (cpuUsage - _lastCurrentTotalProcessCpuTime).TotalMilliseconds;
+				var totalMsPassed = (timespan - _lastTotalTick).TotalMilliseconds;
+				var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
+
+				_firstTotal = false;
+				_lastTick = timespan;
+				_lastCurrentProcessCpuTime = cpuUsage;
+
+				return (true, cpuUsageTotal);
+			}
+
+			_firstTotal = false;
+			_lastTotalTick = timespan;
+			_lastCurrentTotalProcessCpuTime = cpuUsage;
+
+			return (false, 0);
 		}
 
 
@@ -132,8 +181,12 @@ namespace Elastic.Apm.Metrics
 			return (true, (ulong)val);
 		}
 
+		private ulong _totalMemoryVal;
+
 		internal (bool, ulong) GetTotalMemory()
 		{
+			if (_totalMemoryVal != 0) return (true, _totalMemoryVal);
+
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return (false, 0);
 
 			var mc = new ManagementClass("Win32_ComputerSystem");
@@ -145,6 +198,7 @@ namespace Elastic.Apm.Metrics
 				if (item.Properties["TotalPhysicalMemory"] != null)
 				{
 					totalMemory = Convert.ToUInt64(item.Properties["TotalPhysicalMemory"].Value);
+					_totalMemoryVal = totalMemory;
 					break;
 				}
 			}
