@@ -64,11 +64,15 @@ namespace Elastic.Apm.Metrics
 
 				var samples = new List<Sample>();
 
-				var (isTotalMemoryAvailable, totalMemoryValue) = GetTotalMemory();
-				if (isTotalMemoryAvailable) samples.Add(new Sample(_totalMemory, totalMemoryValue));
+				//var (isTotalMemoryAvailable, totalMemoryValue) = GetTotalMemory();
+				//if (isTotalMemoryAvailable) samples.Add(new Sample(_totalMemory, totalMemoryValue));
 
-				var (isFreeMemoryAvailable, freeMemoryValue) = GetFreeMemory();
-				if (isFreeMemoryAvailable) samples.Add(new Sample(_freeMemory, freeMemoryValue));
+				//var (isFreeMemoryAvailable, freeMemoryValue) = GetFreeMemory();
+				//if (isFreeMemoryAvailable) samples.Add(new Sample(_freeMemory, freeMemoryValue));
+
+				var totalAndFreeMemory = GetTotalAndFreeMemoryMemory();
+				if (totalAndFreeMemory != null)
+					samples.AddRange(totalAndFreeMemory);
 
 				var (isprocessorTimeAvailable, processorTimeValue) = GetTotalCpuTime();
 				if (isprocessorTimeAvailable) samples.Add(new Sample(_systemCpuTotalPct, processorTimeValue));
@@ -167,43 +171,34 @@ namespace Elastic.Apm.Metrics
 		}
 
 
-		private PerformanceCounter _memoryPerfCounter;
+		//private PerformanceCounter _memoryPerfCounter;
 
-		internal (bool, ulong) GetFreeMemory()
+		//internal (bool, ulong) GetFreeMemory()
+		//{
+		//	if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return (false, 0);
+
+		//	if (_memoryPerfCounter == null)
+		//		_memoryPerfCounter = new PerformanceCounter("Memory", "Available Bytes");
+
+		//	var val = _memoryPerfCounter.NextValue();
+
+		//	return (true, (ulong)val);
+		//}
+
+		internal IEnumerable<Sample> GetTotalAndFreeMemoryMemory()
 		{
-			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return (false, 0);
+			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return null;
 
-			if (_memoryPerfCounter == null)
-				_memoryPerfCounter = new PerformanceCounter("Memory", "Available Bytes");
+			var (totalMemory, freeMemory) = Windows.GlobalMemoryStatus.GetTotalPhysAndAvailPhys();
 
-			var val = _memoryPerfCounter.NextValue();
+			if (totalMemory == 0 || freeMemory == 0)
+				return null;
 
-			return (true, (ulong)val);
-		}
-
-		private ulong _totalMemoryVal;
-
-		internal (bool, ulong) GetTotalMemory()
-		{
-			if (_totalMemoryVal != 0) return (true, _totalMemoryVal);
-
-			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return (false, 0);
-
-			var mc = new ManagementClass("Win32_ComputerSystem");
-			var moc = mc.GetInstances();
-			ulong totalMemory = 0;
-
-			foreach (var item in moc)
+			return new List<Sample>(2)
 			{
-				if (item.Properties["TotalPhysicalMemory"] != null)
-				{
-					totalMemory = Convert.ToUInt64(item.Properties["TotalPhysicalMemory"].Value);
-					_totalMemoryVal = totalMemory;
-					break;
-				}
-			}
-
-			return (true, totalMemory);
+				 new Sample(_freeMemory, freeMemory),
+				 new Sample(_totalMemory, totalMemory)
+			};
 		}
 
 		public void Dispose()

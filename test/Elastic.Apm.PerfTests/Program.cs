@@ -42,17 +42,17 @@ namespace Elastic.Apm.PerfTests
 			}
 		}
 
-		[Benchmark]
-		public void CollectFreeMemory2X()
-		{
-			var noopLogger = new NoopLogger();
-			var mockPayloadSender = new MockPayloadSender();
-			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender))
-			{
-				collector.GetFreeMemory();
-				collector.GetFreeMemory();
-			}
-		}
+		//[Benchmark]
+		//public void CollectFreeMemory2X()
+		//{
+		//	var noopLogger = new NoopLogger();
+		//	var mockPayloadSender = new MockPayloadSender();
+		//	using (var collector = new MetricsCollector(noopLogger, mockPayloadSender))
+		//	{
+		//		collector.GetFreeMemory();
+		//		collector.GetFreeMemory();
+		//	}
+		//}
 
 		[Benchmark]
 		public void CollectProcessTotalCpuTime2X()
@@ -79,14 +79,14 @@ namespace Elastic.Apm.PerfTests
 		}
 
 		[Benchmark]
-		public void CollectTotalMemory2X()
+		public void CollectTotalAndFreeMemory2X()
 		{
 			var noopLogger = new NoopLogger();
 			var mockPayloadSender = new MockPayloadSender();
 			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender))
 			{
-				collector.GetTotalMemory();
-				collector.GetTotalMemory();
+				collector.GetTotalAndFreeMemoryMemory();
+				collector.GetTotalAndFreeMemoryMemory();
 			}
 		}
 
