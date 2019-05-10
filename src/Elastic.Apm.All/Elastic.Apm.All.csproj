@@ -1,17 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <AssemblyName>Elastic.Apm.All</AssemblyName>
     <RootNamespace>Elastic.Apm.All</RootNamespace>
-    <AssemblyVersion>0.0.2.0</AssemblyVersion>
-    <InformationalVersion>0.0.2.0</InformationalVersion>
-    <FileVersion>0.0.2.0</FileVersion>
+    <VersionPrefix>0.0.3.0</VersionPrefix>
+    <VersionSuffix>alpha</VersionSuffix>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
-    <PackageVersion>0.0.2.0-alpha</PackageVersion>
     <Authors>Elastic and contributors</Authors>    
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <PackageId>Elastic.Apm.All</PackageId>
     <Copyright>2019 Elasticsearch BV</Copyright>
     <PackageLicenseUrl>https://github.com/elastic/apm-agent-dotnet/blob/master/LICENSE</PackageLicenseUrl>
@@ -21,8 +18,8 @@
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, aspnetcore, entiryframeworkcore, efcore</PackageTags>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj"/>
-    <ProjectReference Include="..\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj"/>
-    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj"/>
+    <ProjectReference Include="..\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
+    <ProjectReference Include="..\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
   </ItemGroup>
 </Project>

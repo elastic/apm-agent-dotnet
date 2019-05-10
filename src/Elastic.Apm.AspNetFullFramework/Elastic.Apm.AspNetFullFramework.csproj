@@ -1,13 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net461</TargetFramework>
+    <VersionPrefix>0.0.3.0</VersionPrefix>
+    <VersionSuffix>alpha</VersionSuffix>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
     <Copyright>2019 Elasticsearch BV</Copyright>
     <Company>Elastic and contributors</Company>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.0.2-alpha</Version>
     <Description>Elastic APM for ASP.NET. This package contains auto instrumentation for ASP.NET. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
     <Authors>Elastic and contributors</Authors>
     <PackageLicenseUrl>https://github.com/elastic/apm-agent-dotnet/blob/master/LICENSE</PackageLicenseUrl>
@@ -24,9 +25,4 @@
   <ItemGroup>
     <Reference Include="System.Web" />
   </ItemGroup>
-  <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
-    <ItemGroup>
-      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths-&gt;WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" />
-    </ItemGroup>
-  </Target>
 </Project>
