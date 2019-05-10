@@ -35,10 +35,9 @@ namespace Elastic.Apm.Metrics
 			{
 				CollectAllMetrics();
 			};
-
-			_timer.Start();
-
 		}
+
+		internal void StartCollecting() => _timer.Start();
 
 		private bool _first = true;
 		private TimeSpan _lastCurrentProcessCpuTime;
@@ -59,16 +58,11 @@ namespace Elastic.Apm.Metrics
 		{
 			try
 			{
-				var virtualMemory = Process.GetCurrentProcess().VirtualMemorySize64;
-				var workingSet = Process.GetCurrentProcess().WorkingSet64;
-
 				var samples = new List<Sample>();
 
-				//var (isTotalMemoryAvailable, totalMemoryValue) = GetTotalMemory();
-				//if (isTotalMemoryAvailable) samples.Add(new Sample(_totalMemory, totalMemoryValue));
-
-				//var (isFreeMemoryAvailable, freeMemoryValue) = GetFreeMemory();
-				//if (isFreeMemoryAvailable) samples.Add(new Sample(_freeMemory, freeMemoryValue));
+				var workingSetAndVirtualMem = GetProcessWorkingSetAndVirtualMemory();
+				if (workingSetAndVirtualMem != null)
+					samples.AddRange(workingSetAndVirtualMem);
 
 				var totalAndFreeMemory = GetTotalAndFreeMemoryMemory();
 				if (totalAndFreeMemory != null)
@@ -80,9 +74,6 @@ namespace Elastic.Apm.Metrics
 				var (isProcessCpuAvailable, processCpuValue) = GetProcessTotalCpuTime();
 				if (isProcessCpuAvailable) samples.Add(new Sample(_processCpuTotalPct, processCpuValue));
 
-				samples.Add(new Sample(_processWorkingSetMemory, workingSet));
-				samples.Add(new Sample(_processVirtualMemory, virtualMemory));
-
 				var metricSet = new Metrics(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() * 1000, samples);
 				payloadSender.QueueMetrics(metricSet);
 				logger.Debug()?.Log("Metrics collected");
@@ -91,6 +82,23 @@ namespace Elastic.Apm.Metrics
 			{
 				logger.Error()?.LogExceptionWithCaller(e);
 			}
+		}
+
+		internal IEnumerable<Sample> GetProcessWorkingSetAndVirtualMemory()
+		{
+			var process = Process.GetCurrentProcess();
+			var virtualMemory = process.VirtualMemorySize64;
+			var workingSet = process.WorkingSet64;
+
+			var retVal = new List<Sample>();
+
+			if(virtualMemory != 0)
+				 retVal.Add(new Sample(_processVirtualMemory, virtualMemory));
+
+			if(workingSet != 0)
+				retVal.Add(new Sample(_processWorkingSetMemory, workingSet));
+
+			return retVal;
 		}
 
 		internal (bool, double) GetProcessTotalCpuTime()

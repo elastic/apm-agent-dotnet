@@ -91,6 +91,18 @@ namespace Elastic.Apm.PerfTests
 		}
 
 		[Benchmark]
+		public void CollectWorkingSetAndVirMem2X()
+		{
+			var noopLogger = new NoopLogger();
+			var mockPayloadSender = new MockPayloadSender();
+			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender))
+			{
+				collector.GetProcessWorkingSetAndVirtualMemory();
+				collector.GetProcessWorkingSetAndVirtualMemory();
+			}
+		}
+
+		[Benchmark]
 		public void DebugLogSimple100Transaction10Spans()
 		{
 			var testLogger = new PerfTestLogger(LogLevel.Debug);
