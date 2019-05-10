@@ -47,13 +47,15 @@ namespace Elastic.Apm.AspNetCore.Tests
 						((Error)capturedPayload.Errors.First()).Exception.Type.Should().Be(typeof(Exception).FullName);
 					} // Here we unsubscribe, so no errors should be captured after this line.
 
+					//TODO: Unsubscribing seems to fail when this unit test is run after other unit tests in the same session. It works when run independently. This should be investigated.
+
 					capturedPayload.Clear();
 
 					await client.GetAsync("/Home/TriggerError");
 				}
 
 				capturedPayload.Transactions.Should().ContainSingle();
-				//capturedPayload.Errors.Should().BeEmpty(); //TODO: This currently fails, but will succeed with currently available later versions of referenced packages (not sure which).
+				//capturedPayload.Errors.Should().BeEmpty(); //TODO: Uncomment this once the issue described above is resolved.
 			}
 		}
 

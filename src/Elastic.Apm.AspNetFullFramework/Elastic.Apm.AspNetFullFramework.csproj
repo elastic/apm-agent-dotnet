@@ -1,21 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net461</TargetFramework>
-    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
     <Copyright>2019 Elasticsearch BV</Copyright>
     <Company>Elastic and contributors</Company>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.0.5-alpha</Version>
+    <Version>0.0.2-alpha</Version>
     <Description>Elastic APM for ASP.NET. This package contains auto instrumentation for ASP.NET. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
     <Authors>Elastic and contributors</Authors>
     <PackageLicenseUrl>https://github.com/elastic/apm-agent-dotnet/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/elastic/apm-agent-dotnet</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/elastic/apm-agent-dotnet/master/build/nuget-icon.png</PackageIconUrl>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, aspnet</PackageTags>
-    <IncludeSymbols>true</IncludeSymbols>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj">
