@@ -26,10 +26,10 @@ namespace Elastic.Apm.Metrics
 
 		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender)
 		{
-			this.logger = logger.Scoped(nameof(MetricsCollector)); ;
-			this.payloadSender = payloadSender;
+			this._logger = logger.Scoped(nameof(MetricsCollector)); ;
+			this._payloadSender = payloadSender;
 
-			logger.Debug()?.Log("starting metricscollector");
+			logger.Debug()?.Log("starting MetricsCollector");
 
 			_timer.Elapsed += (sender, args) =>
 			{
@@ -48,9 +48,8 @@ namespace Elastic.Apm.Metrics
 
 		private DateTimeOffset _lastTotalTick;
 
-		private readonly ManagementObjectSearcher _managementObjectSearcher;
-		private readonly IApmLogger logger;
-		private readonly IPayloadSender payloadSender;
+		private readonly IApmLogger _logger;
+		private readonly IPayloadSender _payloadSender;
 		private PerformanceCounter _processorTimePerfCounter;
 
 
@@ -68,19 +67,19 @@ namespace Elastic.Apm.Metrics
 				if (totalAndFreeMemory != null)
 					samples.AddRange(totalAndFreeMemory);
 
-				var (isprocessorTimeAvailable, processorTimeValue) = GetTotalCpuTime();
-				if (isprocessorTimeAvailable) samples.Add(new Sample(_systemCpuTotalPct, processorTimeValue));
+				var (isProcessorTimeAvailable, processorTimeValue) = GetTotalCpuTime();
+				if (isProcessorTimeAvailable) samples.Add(new Sample(_systemCpuTotalPct, processorTimeValue));
 
 				var (isProcessCpuAvailable, processCpuValue) = GetProcessTotalCpuTime();
 				if (isProcessCpuAvailable) samples.Add(new Sample(_processCpuTotalPct, processCpuValue));
 
 				var metricSet = new Metrics(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() * 1000, samples);
-				payloadSender.QueueMetrics(metricSet);
-				logger.Debug()?.Log("Metrics collected");
+				_payloadSender.QueueMetrics(metricSet);
+				_logger.Debug()?.Log("Metrics collected");
 			}
 			catch (Exception e)
 			{
-				logger.Error()?.LogExceptionWithCaller(e);
+				_logger.Error()?.LogExceptionWithCaller(e);
 			}
 		}
 
@@ -213,7 +212,6 @@ namespace Elastic.Apm.Metrics
 		{
 			_timer?.Stop();
 			_timer?.Dispose();
-			_managementObjectSearcher?.Dispose();
 		}
 	}
 }
