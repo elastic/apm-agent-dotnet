@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Management;
+using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Timers;
@@ -13,21 +13,21 @@ namespace Elastic.Apm.Metrics
 {
 	internal class MetricsCollector : IDisposable
 	{
-		private static readonly string _processCpuTotalPct = "system.process.cpu.total.norm.pct";
-		private static readonly string _processVirtualMemory = "system.process.memory.size";
+		private const string ProcessCpuTotalPct = "system.process.cpu.total.norm.pct";
+		private const string ProcessVirtualMemory = "system.process.memory.size";
 
-		private static readonly string _processWorkingSetMemory = "system.process.memory.rss.bytes";
-		private static readonly string _systemCpuTotalPct = "system.cpu.total.norm.pct";
+		private const string ProcessWorkingSetMemory = "system.process.memory.rss.bytes";
+		private const string SystemCpuTotalPct = "system.cpu.total.norm.pct";
 
-		private static readonly string _totalMemory = "system.memory.total";
-		private static readonly string _freeMemory = "system.memory.actual.free";
+		private const string TotalMemory = "system.memory.total";
+		private const string FreeMemory = "system.memory.actual.free";
 
 		private readonly Timer _timer = new Timer(1000);
 
 		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender)
 		{
-			this._logger = logger.Scoped(nameof(MetricsCollector)); ;
-			this._payloadSender = payloadSender;
+			_logger = logger.Scoped(nameof(MetricsCollector));
+			_payloadSender = payloadSender;
 
 			logger.Debug()?.Log("starting MetricsCollector");
 
@@ -40,21 +40,25 @@ namespace Elastic.Apm.Metrics
 		internal void StartCollecting() => _timer.Start();
 
 		private bool _first = true;
-		private TimeSpan _lastCurrentProcessCpuTime;
+		private  TimeSpan _lastCurrentProcessCpuTime;
 
-		private DateTimeOffset _lastTick;
+		private DateTime _lastTick;
 
 		private TimeSpan _lastCurrentTotalProcessCpuTime;
 
-		private DateTimeOffset _lastTotalTick;
+		private DateTime _lastTotalTick;
 
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _payloadSender;
 		private PerformanceCounter _processorTimePerfCounter;
 
+		private int i = 0;
 
 		internal void CollectAllMetrics()
 		{
+
+			//_timer.Stop();
+			i++;
 			try
 			{
 				var samples = new List<Sample>();
@@ -67,19 +71,24 @@ namespace Elastic.Apm.Metrics
 				if (totalAndFreeMemory != null)
 					samples.AddRange(totalAndFreeMemory);
 
-				var (isProcessorTimeAvailable, processorTimeValue) = GetTotalCpuTime();
-				if (isProcessorTimeAvailable) samples.Add(new Sample(_systemCpuTotalPct, processorTimeValue));
+				var (isSystemTotalCpuAvailable, systemTotalCpuTime) = GetSystemTotalCpuTime();
+				if (isSystemTotalCpuAvailable) samples.Add(new Sample(SystemCpuTotalPct, systemTotalCpuTime));
 
 				var (isProcessCpuAvailable, processCpuValue) = GetProcessTotalCpuTime();
-				if (isProcessCpuAvailable) samples.Add(new Sample(_processCpuTotalPct, processCpuValue));
+				if (isProcessCpuAvailable) samples.Add(new Sample(ProcessCpuTotalPct, processCpuValue));
 
 				var metricSet = new Metrics(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() * 1000, samples);
 				_payloadSender.QueueMetrics(metricSet);
-				_logger.Debug()?.Log("Metrics collected");
+				_logger.Debug()?.Log("Metrics collected: {data}", samples.Aggregate("" ,(i, j) => i.ToString() + ", " + j.ToString() ));
 			}
 			catch (Exception e)
 			{
 				_logger.Error()?.LogExceptionWithCaller(e);
+			}
+
+			if (i != 2)
+			{
+				//_timer.Start();
 			}
 		}
 
@@ -92,21 +101,40 @@ namespace Elastic.Apm.Metrics
 			var retVal = new List<Sample>();
 
 			if(virtualMemory != 0)
-				 retVal.Add(new Sample(_processVirtualMemory, virtualMemory));
+				 retVal.Add(new Sample(ProcessVirtualMemory, virtualMemory));
 
 			if(workingSet != 0)
-				retVal.Add(new Sample(_processWorkingSetMemory, workingSet));
+				retVal.Add(new Sample(ProcessWorkingSetMemory, workingSet));
 
 			return retVal;
 		}
 
+		private object _lock = new object();
+
 		internal (bool, double) GetProcessTotalCpuTime()
 		{
-			var timespan = DateTimeOffset.UtcNow;
+			//Console.WriteLine("Start measure");
+			var timespan = DateTime.UtcNow;
+			//Console.WriteLine($"Current time: {timespan.Minute}.{timespan.Second} {timespan.Millisecond}");
 			var cpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
+
+			Console.WriteLine($"CpuTIme: {cpuUsage.TotalSeconds}");
+			//Console.WriteLine("End measure");
+			//Console.WriteLine($"Current cpuUsage: {cpuUsage.TotalMilliseconds}");
 
 			if (!_first)
 			{
+//				var startTime = DateTime.UtcNow;
+//				var startCpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
+//				await Task.Delay(500);
+//
+//				var endTime = DateTime.UtcNow;
+//				var endCpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
+//				var cpuUsedMs1 = (endCpuUsage - startCpuUsage).TotalMilliseconds;
+//				var totalMsPassed1 = (endTime - startTime).TotalMilliseconds;
+//				var cpuUsageTotal1 = cpuUsedMs1 / (Environment.ProcessorCount * totalMsPassed1);
+//
+
 				var cpuUsedMs = (cpuUsage - _lastCurrentProcessCpuTime).TotalMilliseconds;
 				var totalMsPassed = (timespan - _lastTick).TotalMilliseconds;
 				var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
@@ -118,16 +146,19 @@ namespace Elastic.Apm.Metrics
 				return (true, cpuUsageTotal);
 			}
 
-			_first = false;
-			_lastTick = timespan;
-			_lastCurrentProcessCpuTime = cpuUsage;
+			lock (_lock)
+			{
+				_first = false;
+				_lastTick = timespan;
+				_lastCurrentProcessCpuTime = cpuUsage;
+			}
 
 			return (false, 0);
 		}
 
 		private bool _firstTotal = true;
 
-		internal (bool, double) GetTotalCpuTime()
+		internal (bool, double) GetSystemTotalCpuTime()
 		{
 			//Perf data:    CollectTotalCpuTime2X |    504.067 us | 143.7222 us |
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -140,9 +171,9 @@ namespace Elastic.Apm.Metrics
 				return (true, (double)val / 100);
 			}
 
-			//The x-plat impelmentation is ~18x slower, than perf. counters on Windows
+			//The x-plat implementation is ~18x slower, than perf. counters on Windows
 			//Therefore this is only a fallback for in case of non-Windows OSs
-			var timespan = DateTimeOffset.UtcNow;
+			var timespan = DateTime.UtcNow;
 			TimeSpan cpuUsage;
 
 			foreach (var proc in Process.GetProcesses())
@@ -164,8 +195,8 @@ namespace Elastic.Apm.Metrics
 				var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
 
 				_firstTotal = false;
-				_lastTick = timespan;
-				_lastCurrentProcessCpuTime = cpuUsage;
+				_lastTotalTick = timespan;
+				_lastCurrentTotalProcessCpuTime = cpuUsage;
 
 				return (true, cpuUsageTotal);
 			}
@@ -177,35 +208,91 @@ namespace Elastic.Apm.Metrics
 			return (false, 0);
 		}
 
-
-		//private PerformanceCounter _memoryPerfCounter;
-
-		//internal (bool, ulong) GetFreeMemory()
-		//{
-		//	if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return (false, 0);
-
-		//	if (_memoryPerfCounter == null)
-		//		_memoryPerfCounter = new PerformanceCounter("Memory", "Available Bytes");
-
-		//	var val = _memoryPerfCounter.NextValue();
-
-		//	return (true, (ulong)val);
-		//}
-
 		internal IEnumerable<Sample> GetTotalAndFreeMemoryMemory()
 		{
-			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return null;
-
-			var (totalMemory, freeMemory) = Windows.GlobalMemoryStatus.GetTotalPhysAndAvailPhys();
-
-			if (totalMemory == 0 || freeMemory == 0)
-				return null;
-
-			return new List<Sample>(2)
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
-				 new Sample(_freeMemory, freeMemory),
-				 new Sample(_totalMemory, totalMemory)
-			};
+
+				var (totalMemory, freeMemory) = Windows.GlobalMemoryStatus.GetTotalPhysAndAvailPhys();
+
+				if (totalMemory == 0 || freeMemory == 0)
+					return null;
+
+				return new List<Sample>(2) { new Sample(FreeMemory, freeMemory), new Sample(TotalMemory, totalMemory) };
+			}
+
+			if (RuntimeInformation.IsOSPlatform((OSPlatform.Linux)))
+			{
+				var retVal = new List<Sample>();
+
+				try
+				{
+					using (var sr = new StreamReader("/proc/meminfo"))
+					{
+						var line = sr.ReadLine();
+
+						while (line != null || retVal.Count != 2) //TODO: break early if possible
+						{
+							if (line.Contains("MemFree:"))
+							{
+								var (suc, res) = GetEntry(line, "MemFree:");
+								if (suc)
+								{
+									retVal.Add(new Sample(FreeMemory, res));
+								}
+							}
+							if (line.Contains("MemTotal:"))
+							{
+								var (suc, res) = GetEntry(line, "MemTotal:");
+								if (suc)
+								{
+									retVal.Add(new Sample(TotalMemory, res));
+								}
+							}
+
+							line = sr.ReadLine();
+						}
+					}
+				}
+				catch(Exception e)
+				{
+					Console.WriteLine($"Exception: {e.GetType()} - {e.Message}"); //TODO!!
+
+				}
+
+				return retVal;
+			}
+
+			(bool, ulong) GetEntry(string line, string name)
+			{
+				var nameIndex = line.IndexOf(name, StringComparison.Ordinal);
+				if (nameIndex < 0)
+					return (false, 0);
+
+				var values = line.Substring(line.IndexOf(name, StringComparison.Ordinal) + name.Length);
+
+				if (!string.IsNullOrWhiteSpace(values))
+				{
+					var items = values.Trim().Split(' ');
+
+
+					if (items.Length == 1)
+					{
+						if (ulong.TryParse(items[0], out ulong res))
+							return (true, res);
+					}
+					if (items.Length == 2 && items[1].ToLower() == "kb")
+					{
+						if (ulong.TryParse(items[0], out ulong res))
+							return (true, res * 1024);
+					}
+
+
+				}
+				return (false,0);
+			}
+
+			return null;
 		}
 
 		public void Dispose()

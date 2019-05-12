@@ -73,8 +73,8 @@ namespace Elastic.Apm.PerfTests
 			var mockPayloadSender = new MockPayloadSender();
 			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender))
 			{
-				collector.GetTotalCpuTime();
-				collector.GetTotalCpuTime();
+				collector.GetSystemTotalCpuTime();
+				collector.GetSystemTotalCpuTime();
 			}
 		}
 
