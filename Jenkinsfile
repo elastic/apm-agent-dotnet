@@ -76,7 +76,6 @@ pipeline {
                     dir("${BASE_DIR}"){
                       sh './.ci/linux/build.sh'
                     }
-                    stash allowEmpty: false, name: 'build', useDefaultExcludes: false
                   }
                 }
                 /**
@@ -87,8 +86,9 @@ pipeline {
                     dir("${BASE_DIR}"){
                       deleteDir()
                     }
-                    unstash 'build'
+                    unstash 'source'
                     dir("${BASE_DIR}"){
+                      sh label: 'Build', script: 'dotnet build'
                       sh label: 'Test & coverage', script: './.ci/linux/test.sh'
                       sh label: 'Convert Test Results to junit format', script: './.ci/linux/convert.sh'
                     }
