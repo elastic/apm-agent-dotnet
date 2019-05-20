@@ -96,7 +96,7 @@ pipeline {
                   }
                   post {
                     always {
-                      junit(allowEmptyResults: true,
+                      junit(allowEmptyResults: false,
                         keepLongStdio: true,
                         testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       codecov(repo: 'apm-agent-dotnet', basedir: "${BASE_DIR}", secret: "${CODECOV_SECRET}")
@@ -170,7 +170,7 @@ pipeline {
                     }
                     post {
                       always {
-                        junit(allowEmptyResults: true,
+                        junit(allowEmptyResults: false,
                           keepLongStdio: true,
                           testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       }
@@ -234,7 +234,7 @@ pipeline {
                     }
                     post {
                       always {
-                        junit(allowEmptyResults: true,
+                        junit(allowEmptyResults: false,
                           keepLongStdio: true,
                           testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       }
