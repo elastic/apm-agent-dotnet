@@ -59,8 +59,6 @@ pipeline {
                     }
                     unstash 'source'
                     dir("${BASE_DIR}"){
-                      sh 'ls -ltra'
-                      sh 'find . -name tools.sh'
                       sh label: 'Install tools', script: './ci/tools.sh'
                       stash allowEmpty: true, name: 'dotnet-linux', includes: "dotnet/**", useDefaultExcludes: false
                     }
