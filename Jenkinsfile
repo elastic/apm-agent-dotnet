@@ -298,11 +298,7 @@ pipeline {
 }
 
 def release(secret){
-  sh(label: 'Release', script: '''
-    dotnet sln remove test/Elastic.Apm.PerfTests/Elastic.Apm.PerfTests.csproj
-    dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFramework.csproj
-    dotnet pack -c Release
-    ''')
+  sh(label: 'Release', script: './.ci/linux/release.sh')
   def repo = getVaultSecret(secret: secret)
   wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [
     [var: 'REPO_API_KEY', password: repo.apiKey],
