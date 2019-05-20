@@ -304,12 +304,6 @@ def release(secret){
     [var: 'REPO_API_KEY', password: repo.apiKey],
     [var: 'REPO_API_URL', password: repo.url],
     ]]) {
-      sh(label: 'Deploy',
-        script: """
-        for nupkg in \$(find . -name '*.nupkg')
-        do
-          dotnet nuget push \${nupkg} -k ${repo.data.apiKey} -s ${repo.data.url}
-        done
-        """)
+      sh(label: 'Deploy', script: "./.ci/linux/deploy.sh ${repo.data.apiKey} ${repo.data.url}")
     }
 }
