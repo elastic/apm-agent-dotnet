@@ -138,7 +138,7 @@ pipeline {
                       }
                       unstash 'source'
                       dir("${BASE_DIR}"){
-                        bat script: "${readFile('.ci/windows/msbuild.bat')}"
+                        bat '.ci/windows/msbuild.bat'
                       }
                     }
                   }
@@ -154,7 +154,7 @@ pipeline {
                       dir("${BASE_DIR}"){
                         powershell label: 'Install test tools', script: "${readFile('./.ci/windows/test-tools.ps1')}"
                         bat label: 'Build', script:'dotnet build'
-                        bat label: 'Test & coverage', script: "${readFile('.ci/windows/test.bat')}"
+                        bat label: 'Test & coverage', script: '.ci/windows/test.bat'
                         powershell label: 'Convert Test Results to junit format', script: "${readFile('.ci/windows/convert.ps1')}"
                         script {
                           def codecovId = getVaultSecret('apm-agent-dotnet-codecov')?.data?.value
@@ -212,7 +212,7 @@ pipeline {
                       }
                       unstash 'source'
                       dir("${BASE_DIR}"){
-                        bat script: "${readFile('.ci/windows/dotnet.bat')}"
+                        bat '.ci/windows/dotnet.bat'
                       }
                     }
                   }
@@ -228,7 +228,7 @@ pipeline {
                       dir("${BASE_DIR}"){
                         powershell label: 'Install test tools', script: "${readFile('./.ci/windows/test-tools.ps1')}"
                         bat label: 'Build', script:'dotnet build'
-                        bat label: 'Test & coverage', script: "${readFile('.ci/windows/test.bat')}"
+                        bat label: 'Test & coverage', script: '.ci/windows/test.bat'
                         powershell label: 'Convert Test Results to junit format', script: "${readFile('.ci/windows/convert.ps1')}"
                         script {
                           def codecovId = getVaultSecret('apm-agent-dotnet-codecov')?.data?.value
