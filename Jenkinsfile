@@ -143,6 +143,66 @@ pipeline {
                     }
                   }
                   /**
+                  Execute unit tests.
+                  */
+                  stage('Test') {
+                    steps {
+                      dir("${BASE_DIR}"){
+                        deleteDir()
+                      }
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        powershell label: 'Install test tools', script: "${readFile('./.ci/windows/test-tools.ps1')}"
+                        bat label: 'Build', script:'dotnet build'
+                        bat label: 'Test & coverage', script: "${readFile('.ci/windows/test.bat')}"
+                        powershell label: 'Convert Test Results to junit format', script: "${readFile('.ci/windows/convert.ps1')}"
+                        script {
+                          def codecovId = getVaultSecret('apm-agent-dotnet-codecov')?.data?.value
+                          powershell label: 'Send covertura report to Codecov', script:"""
+                          [System.Environment]::SetEnvironmentVariable("PATH", \$Env:Path + ";" + \$Env:USERPROFILE + "\\.dotnet\\tools")
+                          Get-ChildItem -Path . -Recurse -Filter coverage.cobertura.xml |
+                          Foreach-Object {
+                            & codecov -t ${codecovId} -f \$_.FullName
+                          }
+                          """
+                        }
+                      }
+                    }
+                    post {
+                      always {
+                        junit(allowEmptyResults: true,
+                          keepLongStdio: true,
+                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
+                      }
+                    }
+                  }
+                }
+              }
+              stage('WindowsDotNet'){
+                agent { label 'windows-2016' }
+                options { skipDefaultCheckout() }
+                environment {
+                  HOME = "${env.WORKSPACE}"
+                  DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
+                  VS_HOME = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise"
+                  MSBuildSDKsPath = "${env.DOTNET_ROOT}\\sdk\\2.1.505\\Sdks"
+                  PATH = "${env.PATH};${env.HOME}\\bin;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
+                }
+                stages{
+                  /**
+                  Checkout the code and stash it, to use it on other stages.
+                  */
+                  stage('Install tools') {
+                    steps {
+                      deleteDir()
+                      unstash 'source'
+                      dir("${HOME}"){
+                        powershell label: 'Install tools', script: """${readFile("${BASE_DIR}/.ci/windows/tools.ps1")}"""
+                      }
+                    }
+
+                  }
+                  /**
                   Build the project from code..
                   */
                   stage('Build - dotnet') {
@@ -187,9 +247,9 @@ pipeline {
                         junit(allowEmptyResults: true,
                           keepLongStdio: true,
                           testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
-                        }
                       }
                     }
+                  }
                 }
               }
             }
