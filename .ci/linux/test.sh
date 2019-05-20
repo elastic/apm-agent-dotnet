@@ -1,8 +1,11 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash#
+#
+# This script runs the tests and stored them in an xml file
+#
 set -euxo pipefail
 
-# run tests
-dotnet test -v n -r target -d target/diag.log --logger:"xunit;LogFileName=TestResults.xml" --no-build \
+# Run tests
+dotnet test -v n -r target -d target/diag.log --logger:"xunit" --no-build \
 /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura \
 /p:CoverletOutput=target/Coverage/ \
 /p:Exclude='"[Elastic.Apm.Tests]*,[SampleAspNetCoreApp*]*,[xunit*]*"' \

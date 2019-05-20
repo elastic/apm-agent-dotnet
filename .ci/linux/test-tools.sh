@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
+#
+# This script installs the required test tools to be used during the tests execution
+#
 set -euxo pipefail
 
+# Remove sample projects
 dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
 dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFramework.csproj
 
-# install tools
+# Install tools
 dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
 for i in $(find . -name '*.csproj')
 do
