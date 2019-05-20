@@ -155,7 +155,10 @@ pipeline {
                       }
                       unstash 'source'
                       dir("${BASE_DIR}"){
-                        bat script: "${readFile('.ci/windows/msbuild.bat')}"
+                        bat """
+                        nuget restore ElasticApmAgent.sln
+                        msbuild
+                        """
                       }
                     }
                   }
