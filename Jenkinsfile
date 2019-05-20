@@ -118,7 +118,7 @@ pipeline {
                   /**
                   Checkout the code and stash it, to use it on other stages.
                   */
-                  stage('Install .Net SDK') {
+                  stage('Install tools') {
                     steps {
                       deleteDir()
                       dir("${HOME}"){
@@ -135,7 +135,15 @@ pipeline {
                         Invoke-WebRequest "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile dotnet\\nuget.exe -UseBasicParsing ;
                         """
                       }
+                      /*dir("${BASE_DIR}"){
+                        deleteDir()
+                      }
+                      unstash 'source'
+                      dir("${HOME}"){
+                        powershell label: 'Install tools', script: """${readFile("${BASE_DIR}/.ci/windows/tools.ps1")}"""
+                      }*/
                     }
+
                   }
                   /**
                   Build the project from code..
@@ -164,11 +172,7 @@ pipeline {
                       }
                       unstash 'source'
                       dir("${BASE_DIR}"){
-                        bat """
-                        dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
-                        dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFramework.csproj
-                        dotnet build
-                        """
+                        bat script: "${readFile('.ci/windows/dotnet.bat')}"
                       }
                     }
                   }
@@ -182,30 +186,10 @@ pipeline {
                       }
                       unstash 'source'
                       dir("${BASE_DIR}"){
-                        powershell label: 'Install tools', script: '''
-                        & dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
-                        & dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFramework.csproj
-                        & dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
-                        & dotnet tool install -g Codecov.Tool --version 1.2.0
-                        Get-ChildItem -Path . -Recurse -Filter *.csproj |
-                        Foreach-Object {
-                          & dotnet add $_.FullName package XunitXml.TestLogger --version 2.0.0
-                          & dotnet add $_.FullName package coverlet.msbuild --version 2.5.1
-                        }
-                        '''
-
+                        powershell label: 'Install test tools', script: "${readFile('./.ci/windows/test-tools.ps1')}"
                         bat label: 'Build', script:'dotnet build'
-
-                        bat label: 'Test & Coverage', script: 'dotnet test -v n -r target -d target\\diag.log --logger:xunit --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=target\\Coverage\\ /p:Exclude=\\"[Elastic.Apm.Tests]*,[SampleAspNetCoreApp*]*,[xunit*]*\\" /p:Threshold=0 /p:ThresholdType=branch /p:ThresholdStat=total'
-
-                        powershell label: 'Convert Test Results to junit format', script: '''
-                        [System.Environment]::SetEnvironmentVariable("PATH", $Env:Path + ";" + $Env:USERPROFILE + "\\.dotnet\\tools")
-                        Get-ChildItem -Path . -Recurse -Filter TestResults.xml |
-                        Foreach-Object {
-                          & dotnet xunit-to-junit $_.FullName $_.parent.FullName + '\\junit-testTesults.xml'
-                        }
-                        '''
-
+                        bat label: 'Test & coverage', script: "${readFile('.ci/windows/test.bat')}"
+                        powershell label: 'Convert Test Results to junit format', script: "${readFile('.ci/windows/convert.ps1')}"
                         script {
                           def codecovId = getVaultSecret('apm-agent-dotnet-codecov')?.data?.value
                           powershell label: 'Send covertura report to Codecov', script:"""
