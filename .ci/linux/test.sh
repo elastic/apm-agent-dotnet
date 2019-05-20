@@ -1,4 +1,4 @@
-#!/usr/bin/env bash#
+#!/usr/bin/env bash
 #
 # This script runs the tests and stored them in an xml file
 #
