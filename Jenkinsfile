@@ -229,16 +229,6 @@ pipeline {
                         bat label: 'Build', script:'dotnet build'
                         bat label: 'Test & coverage', script: '.ci/windows/test.bat'
                         powershell label: 'Convert Test Results to junit format', script: "${readFile('.ci/windows/convert.ps1')}"
-                        script {
-                          def codecovId = getVaultSecret('apm-agent-dotnet-codecov')?.data?.value
-                          powershell label: 'Send covertura report to Codecov', script:"""
-                          [System.Environment]::SetEnvironmentVariable("PATH", \$Env:Path + ";" + \$Env:USERPROFILE + "\\.dotnet\\tools")
-                          Get-ChildItem -Path . -Recurse -Filter coverage.cobertura.xml |
-                          Foreach-Object {
-                            & codecov -t ${codecovId} -f \$_.FullName
-                          }
-                          """
-                        }
                       }
                     }
                     post {
