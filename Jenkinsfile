@@ -200,8 +200,9 @@ pipeline {
                         powershell label: 'Install tools', script: """${readFile("${BASE_DIR}/.ci/windows/tools.ps1")}"""
                         bat '''
                         dir /b /s *.* > list1.txt
-                        for /f "tokens=*" %%A in (list1.txt) do echo %%~nxA
-                        del list1.txt
+                        for /f "tokens=*" %%A in (list1.txt) do echo %%~fD >> list.txt
+                        type list.txt
+                        forfiles /s /m *.* /c "cmd /c echo @relpath"
                         '''
                       }
                     }
