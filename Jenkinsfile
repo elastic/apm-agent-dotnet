@@ -52,11 +52,16 @@ pipeline {
                 /**
                 Checkout the code and stash it, to use it on other stages.
                 */
-                stage('Install .Net SDK') {
+                stage('Install tools') {
                   steps {
-                    deleteDir()
-                    sh label: 'Install tools', script: './ci/tools.sh'
-                    stash allowEmpty: true, name: 'dotnet-linux', includes: "dotnet/**", useDefaultExcludes: false
+                    dir("${BASE_DIR}"){
+                      deleteDir()
+                    }
+                    unstash 'source'
+                    dir("${BASE_DIR}"){
+                      sh label: 'Install tools', script: './ci/tools.sh'
+                      stash allowEmpty: true, name: 'dotnet-linux', includes: "dotnet/**", useDefaultExcludes: false
+                    }
                   }
                 }
                 /**
