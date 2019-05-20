@@ -98,8 +98,7 @@ pipeline {
                       junit(allowEmptyResults: true,
                         keepLongStdio: true,
                         testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
-                      codecov(repo: 'apm-agent-dotnet', basedir: "${BASE_DIR}", secret: "${CODECOV_SECRET}")
-                      }
+                        codecov(repo: 'apm-agent-dotnet', basedir: "${BASE_DIR}", secret: "${CODECOV_SECRET}")
                     }
                   }
                 }
@@ -124,7 +123,7 @@ pipeline {
                         deleteDir()
                       }
                       unstash 'source'
-                      dir("${HOME}"){
+                      dir("${BASE_DIR}"){
                         powershell label: 'Install tools', script: "${readFile('.ci/windows/tools.ps1')}"
                       }
                     }
