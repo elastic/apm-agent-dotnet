@@ -59,7 +59,7 @@ pipeline {
                     }
                     unstash 'source'
                     dir("${BASE_DIR}"){
-                      sh label: 'Install tools', script: './.ci/tools.sh'
+                      sh label: 'Install tools', script: './.ci/linux/tools.sh'
                       stash allowEmpty: true, name: 'dotnet-linux', includes: "dotnet/**", useDefaultExcludes: false
                     }
                   }
@@ -74,7 +74,7 @@ pipeline {
                     }
                     unstash 'source'
                     dir("${BASE_DIR}"){
-                      sh './.ci/build.sh'
+                      sh './.ci/linux/build.sh'
                     }
                   }
                 }
@@ -89,8 +89,8 @@ pipeline {
                     unstash 'source'
                     dir("${BASE_DIR}"){
                       sh label: 'Build', script: 'dotnet build'
-                      sh label: 'Test & coverage', script: './.ci/test.sh'
-                      sh label: 'Convert Test Results to junit format', script: './.ci/convert.sh'
+                      sh label: 'Test & coverage', script: './.ci/linux/test.sh'
+                      sh label: 'Convert Test Results to junit format', script: './.ci/linux/convert.sh'
                     }
                   }
                   post {
