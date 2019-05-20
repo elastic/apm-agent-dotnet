@@ -3,7 +3,7 @@
 Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-install.ps1 -UseBasicParsing ;
 
 # Install .Net SDK'
-& ./dotnet-install.ps1 -Channel LTS -InstallDir ./dotnet
+& ./dotnet-install.ps1 -Channel LTS -InstallDir ./dotnet -Version 2.1.505
 
 # Install NuGet Tool
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
