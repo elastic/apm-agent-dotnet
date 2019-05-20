@@ -104,7 +104,7 @@ pipeline {
                   }
                 }
               }
-              stage('Windows'){
+              stage('Windows .NET Framework'){
                 agent { label 'windows-2016' }
                 options { skipDefaultCheckout() }
                 environment {
@@ -178,7 +178,7 @@ pipeline {
                   }
                 }
               }
-              stage('WindowsDotNet'){
+              stage('Windows .NET Core'){
                 agent { label 'windows-2016' }
                 options { skipDefaultCheckout() }
                 environment {
