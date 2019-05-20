@@ -121,27 +121,10 @@ pipeline {
                   stage('Install tools') {
                     steps {
                       deleteDir()
-                      dir("${HOME}"){
-                        powershell label: 'Download .Net SDK installer script', script: """
-                        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-                        Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-install.ps1 -UseBasicParsing ;
-                        """
-                        powershell label: 'Install .Net SDK', script: """
-                        & ./dotnet-install.ps1 -Channel LTS -InstallDir ./dotnet
-                        """
-
-                        powershell label: 'Install NuGet Tool', script: """
-                        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-                        Invoke-WebRequest "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile dotnet\\nuget.exe -UseBasicParsing ;
-                        """
-                      }
-                      /*dir("${BASE_DIR}"){
-                        deleteDir()
-                      }
                       unstash 'source'
                       dir("${HOME}"){
                         powershell label: 'Install tools', script: """${readFile("${BASE_DIR}/.ci/windows/tools.ps1")}"""
-                      }*/
+                      }
                     }
 
                   }
@@ -155,10 +138,7 @@ pipeline {
                       }
                       unstash 'source'
                       dir("${BASE_DIR}"){
-                        bat """
-                        nuget restore ElasticApmAgent.sln
-                        msbuild
-                        """
+                        bat script: "${readFile('.ci/windows/msbuild.bat')}"
                       }
                     }
                   }
