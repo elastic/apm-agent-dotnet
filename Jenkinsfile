@@ -55,10 +55,7 @@ pipeline {
                 stage('Install .Net SDK') {
                   steps {
                     deleteDir()
-                    sh label: 'Install .Net SDK', script: """#!/bin/bash
-                    curl -O https://dot.net/v1/dotnet-install.sh
-                    /bin/bash ./dotnet-install.sh --install-dir ${HOME}/dotnet -Channel LTS
-                    """
+                    sh label: 'Install tools', script: './ci/tools.sh'
                     stash allowEmpty: true, name: 'dotnet-linux', includes: "dotnet/**", useDefaultExcludes: false
                   }
                 }
@@ -72,11 +69,7 @@ pipeline {
                     }
                     unstash 'source'
                     dir("${BASE_DIR}"){
-                      sh '''
-                      dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
-                      dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFramework.csproj
-                      dotnet build
-                      '''
+                      sh './ci/build.sh'
                     }
                   }
                 }
@@ -90,48 +83,9 @@ pipeline {
                     }
                     unstash 'source'
                     dir("${BASE_DIR}"){
-                      sh label: 'Install tools', script: '''#!/bin/bash
-                      set -euxo pipefail
-                      dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
-                      dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFramework.csproj
-
-                      # install tools
-                      dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
-                      for i in $(find . -name '*.csproj')
-                      do
-                        if [[ $i == *"AspNetFullFrameworkSampleApp.csproj"* ]]; then
-                            continue
-                        fi
-                        if [[ $i == *"Elastic.Apm.AspNetFullFramework.csproj"* ]]; then
-                            continue
-                        fi
-                        dotnet add "$i" package XunitXml.TestLogger --version 2.0.0
-                        dotnet add "$i" package coverlet.msbuild --version 2.5.1
-                      done
-                      '''
-
                       sh label: 'Build', script: 'dotnet build'
-
-                      sh label: 'Test & coverage', script: '''#!/bin/bash
-                      set -euxo pipefail
-                      # run tests
-                      dotnet test -v n -r target -d target/diag.log --logger:"xunit" --no-build \
-                        /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura \
-                        /p:CoverletOutput=target/Coverage/ \
-                        /p:Exclude='"[Elastic.Apm.Tests]*,[SampleAspNetCoreApp*]*,[xunit*]*"' \
-                        /p:Threshold=0 /p:ThresholdType=branch /p:ThresholdStat=total \
-                        || echo -e "\033[31;49mTests FAILED\033[0m"
-                      '''
-
-                      sh label: 'Convert Test Results to junit format', script: '''#!/bin/bash
-                      set -euxo pipefail
-                      #convert xunit files to junit files
-                      for i in $(find . -name TestResults.xml)
-                      do
-                        DIR=$(dirname "$i")
-                        dotnet xunit-to-junit "$i" "${DIR}/junit-testTesults.xml"
-                      done
-                      '''
+                      sh label: 'Test & coverage', script: './ci/test.sh'
+                      sh label: 'Convert Test Results to junit format', script: './ci/convert.sh'
                     }
                   }
                   post {
