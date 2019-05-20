@@ -111,7 +111,7 @@ pipeline {
                   HOME = "${env.WORKSPACE}"
                   DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
                   VS_HOME = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise"
-                  MSBuildSDKsPath = "${env.DOTNET_ROOT}\\sdk\\2.1.505\\Sdks"
+                  MSBuildSDKsPath = "${env.DOTNET_ROOT}\\sdk\\2.1.604\\Sdks"
                   PATH = "${env.PATH};${env.HOME}\\bin;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
                 }
                 stages{
@@ -126,7 +126,6 @@ pipeline {
                         powershell label: 'Install tools', script: """${readFile("${BASE_DIR}/.ci/windows/tools.ps1")}"""
                       }
                     }
-
                   }
                   /**
                   Build the project from code..
@@ -185,7 +184,7 @@ pipeline {
                   HOME = "${env.WORKSPACE}"
                   DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
                   VS_HOME = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise"
-                  MSBuildSDKsPath = "${env.DOTNET_ROOT}\\sdk\\2.1.505\\Sdks"
+                  MSBuildSDKsPath = "${env.DOTNET_ROOT}\\sdk\\2.1.604\\Sdks"
                   PATH = "${env.PATH};${env.HOME}\\bin;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
                 }
                 stages{
@@ -199,9 +198,6 @@ pipeline {
                       dir("${HOME}"){
                         powershell label: 'Install tools', script: """${readFile("${BASE_DIR}/.ci/windows/tools.ps1")}"""
                         bat '''
-                        dir /b /s *.* > list1.txt
-                        for /f "tokens=*" %%A in (list1.txt) do echo %%~fD >> list.txt
-                        type list.txt
                         forfiles /s /m *.* /c "cmd /c echo @relpath"
                         '''
                       }
