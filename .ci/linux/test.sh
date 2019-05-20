@@ -2,7 +2,7 @@
 set -euxo pipefail
 
 # run tests
-dotnet test -v n -r target -d target/diag.log --logger:"xunit;LogFileName=TestResult.xml" --no-build \
+dotnet test -v n -r target -d target/diag.log --logger:"xunit;LogFileName=TestResults.xml" --no-build \
 /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura \
 /p:CoverletOutput=target/Coverage/ \
 /p:Exclude='"[Elastic.Apm.Tests]*,[SampleAspNetCoreApp*]*,[xunit*]*"' \
