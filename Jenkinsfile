@@ -197,9 +197,6 @@ pipeline {
                       unstash 'source'
                       dir("${HOME}"){
                         powershell label: 'Install tools', script: """${readFile("${BASE_DIR}/.ci/windows/tools.ps1")}"""
-                        bat '''
-                        forfiles /s /m *.* /c "cmd /c echo @relpath"
-                        '''
                       }
                     }
 
