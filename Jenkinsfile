@@ -125,7 +125,7 @@ pipeline {
                       }
                       unstash 'source'
                       dir("${HOME}"){
-                        powershell label: 'Install tools', script: "${readFile('.ci/windows/tools.ps1')}"
+                        powershell label: 'Install tools', script: "${readFile(\"${BASE_DIR}/.ci/windows/tools.ps1\")}"
                       }
                     }
                   }
@@ -167,6 +167,7 @@ pipeline {
                       }
                       unstash 'source'
                       dir("${BASE_DIR}"){
+                        powershell label: 'Install test tools', script: "${readFile('./.ci/windows/test-tools.ps1')}"
                         bat label: 'Build', script:'dotnet build'
                         bat label: 'Test & coverage', script: "${readFile('.ci/windows/test.bat')}"
                         powershell label: 'Convert Test Results to junit format', script: "${readFile('.ci/windows/convert.ps1')}"
