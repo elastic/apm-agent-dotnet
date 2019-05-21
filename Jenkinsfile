@@ -45,8 +45,8 @@ pipeline {
               options { skipDefaultCheckout() }
               environment {
                 HOME = "${env.WORKSPACE}"
-                PATH = "${env.PATH}:${env.HOME}/bin:${env.HOME}/dotnet:${env.HOME}/.dotnet/tools"
                 DOTNET_ROOT = "${env.HOME}/dotnet"
+                PATH = "${env.PATH}:${env.HOME}/bin:${env.DOTNET_ROOT}:${env.HOME}/.dotnet/tools"
               }
               stages{
                 /**
@@ -276,8 +276,8 @@ pipeline {
             options { skipDefaultCheckout() }
             environment {
               HOME = "${env.WORKSPACE}"
-              PATH = "${env.PATH}:${env.HOME}/bin:${env.HOME}/dotnet:${env.HOME}/.dotnet/tools"
               DOTNET_ROOT = "${env.HOME}/dotnet"
+              PATH = "${env.PATH}:${env.HOME}/bin:${env.DOTNET_ROOT}:${env.HOME}/.dotnet/tools"
             }
             when {
               beforeAgent true
@@ -307,8 +307,8 @@ pipeline {
             options { skipDefaultCheckout() }
             environment {
               HOME = "${env.WORKSPACE}"
-              PATH = "${env.PATH}:${env.HOME}/bin:${env.HOME}/dotnet:${env.HOME}/.dotnet/tools"
               DOTNET_ROOT = "${env.HOME}/dotnet"
+              PATH = "${env.PATH}:${env.HOME}/bin:${env.DOTNET_ROOT}:${env.HOME}/.dotnet/tools"
             }
             when {
               beforeAgent true
