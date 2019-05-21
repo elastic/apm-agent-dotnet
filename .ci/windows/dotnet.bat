@@ -1,5 +1,5 @@
 ::
-:: This script runs the dotnet build without the sample projects
+:: This script runs the dotnet build without the Full Framework projects
 ::
 dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
 dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFramework.csproj
