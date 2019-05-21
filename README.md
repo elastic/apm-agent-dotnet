@@ -24,7 +24,7 @@ Please note that we reserve GitHub tickets for confirmed bugs and enhancement re
 
 See the [contributing documentation](CONTRIBUTING.md)
 
-## Repository structure 
+## Repository structure
 
 These are the main folders within the repository:
 * src: The source code of the agent. Each project within this folder targets a specific library, and there is one core project, which is referenced by all other projects.
@@ -37,3 +37,4 @@ These are the main folders within the repository:
     * `Elastic.Apm.AspNetCore.Tests`: Tests the `Elastic.Apm.AspNetCore` project.
 * docs: This folder contains the official documentation.
 * sample: Sample applications that are monitored by the APM .NET Agent. These are also very useful for development: you can start one of these applications and debug the agent through them.
+* .ci: This folder contains all the scripts used to build, test and release the agent within the CI.

@@ -5,7 +5,7 @@
 pipeline {
   agent any
   environment {
-    BASE_DIR="src/github.com/elastic/apm-agent-dotnet"
+    BASE_DIR = 'src/github.com/elastic/apm-agent-dotnet'
     NOTIFY_TO = credentials('notify-to')
     JOB_GCS_BUCKET = credentials('gcs-bucket')
     CODECOV_SECRET = 'secret/apm-team/ci/apm-agent-dotnet-codecov'
@@ -45,20 +45,18 @@ pipeline {
               options { skipDefaultCheckout() }
               environment {
                 HOME = "${env.WORKSPACE}"
-                PATH = "${env.PATH}:${env.HOME}/bin:${env.HOME}/dotnet:${env.HOME}/.dotnet/tools"
                 DOTNET_ROOT = "${env.HOME}/dotnet"
+                PATH = "${env.PATH}:${env.HOME}/bin:${env.DOTNET_ROOT}:${env.HOME}/.dotnet/tools"
               }
               stages{
                 /**
                 Checkout the code and stash it, to use it on other stages.
                 */
-                stage('Install .Net SDK') {
+                stage('Install tools') {
                   steps {
                     deleteDir()
-                    sh label: 'Install .Net SDK', script: """#!/bin/bash
-                    curl -O https://dot.net/v1/dotnet-install.sh
-                    /bin/bash ./dotnet-install.sh --install-dir ${HOME}/dotnet -Channel LTS
-                    """
+                    unstash 'source'
+                    sh label: 'Install tools', script: "./${BASE_DIR}/.ci/linux/tools.sh"
                     stash allowEmpty: true, name: 'dotnet-linux', includes: "dotnet/**", useDefaultExcludes: false
                   }
                 }
@@ -72,11 +70,7 @@ pipeline {
                     }
                     unstash 'source'
                     dir("${BASE_DIR}"){
-                      sh '''
-                      dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
-                      dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFramework.csproj
-                      dotnet build
-                      '''
+                      sh './.ci/linux/build.sh'
                     }
                   }
                 }
@@ -90,53 +84,15 @@ pipeline {
                     }
                     unstash 'source'
                     dir("${BASE_DIR}"){
-                      sh label: 'Install tools', script: '''#!/bin/bash
-                      set -euxo pipefail
-                      dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
-                      dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFramework.csproj
-
-                      # install tools
-                      dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
-                      for i in $(find . -name '*.csproj')
-                      do
-                        if [[ $i == *"AspNetFullFrameworkSampleApp.csproj"* ]]; then
-                            continue
-                        fi
-                        if [[ $i == *"Elastic.Apm.AspNetFullFramework.csproj"* ]]; then
-                            continue
-                        fi
-                        dotnet add "$i" package XunitXml.TestLogger --version 2.0.0
-                        dotnet add "$i" package coverlet.msbuild --version 2.5.1
-                      done
-                      '''
-
-                      sh label: 'Build', script: 'dotnet build'
-
-                      sh label: 'Test & coverage', script: '''#!/bin/bash
-                      set -euxo pipefail
-                      # run tests
-                      dotnet test -v n -r target -d target/diag.log --logger:"xunit" --no-build \
-                        /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura \
-                        /p:CoverletOutput=target/Coverage/ \
-                        /p:Exclude='"[Elastic.Apm.Tests]*,[SampleAspNetCoreApp*]*,[xunit*]*"' \
-                        /p:Threshold=0 /p:ThresholdType=branch /p:ThresholdStat=total \
-                        || echo -e "\033[31;49mTests FAILED\033[0m"
-                      '''
-
-                      sh label: 'Convert Test Results to junit format', script: '''#!/bin/bash
-                      set -euxo pipefail
-                      #convert xunit files to junit files
-                      for i in $(find . -name TestResults.xml)
-                      do
-                        DIR=$(dirname "$i")
-                        dotnet xunit-to-junit "$i" "${DIR}/junit-testTesults.xml"
-                      done
-                      '''
+                      sh label: 'Install test tools', script: './.ci/linux/test-tools.sh'
+                      sh label: 'Build', script: './.ci/linux/build.sh'
+                      sh label: 'Test & coverage', script: './.ci/linux/test.sh'
+                      sh label: 'Convert Test Results to junit format', script: './.ci/linux/convert.sh'
                     }
                   }
                   post {
                     always {
-                      junit(allowEmptyResults: true,
+                      junit(allowEmptyResults: false,
                         keepLongStdio: true,
                         testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       codecov(repo: 'apm-agent-dotnet', basedir: "${BASE_DIR}", secret: "${CODECOV_SECRET}")
@@ -145,7 +101,7 @@ pipeline {
                   }
                 }
               }
-              stage('Windows'){
+              stage('Windows .NET Framework'){
                 agent { label 'windows-2016' }
                 options { skipDefaultCheckout() }
                 environment {
@@ -159,22 +115,12 @@ pipeline {
                   /**
                   Checkout the code and stash it, to use it on other stages.
                   */
-                  stage('Install .Net SDK') {
+                  stage('Install tools') {
                     steps {
                       deleteDir()
+                      unstash 'source'
                       dir("${HOME}"){
-                        powershell label: 'Download .Net SDK installer script', script: """
-                        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-                        Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-install.ps1 -UseBasicParsing ;
-                        """
-                        powershell label: 'Install .Net SDK', script: """
-                        & ./dotnet-install.ps1 -Channel LTS -InstallDir ./dotnet
-                        """
-
-                        powershell label: 'Install NuGet Tool', script: """
-                        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-                        Invoke-WebRequest "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile dotnet\\nuget.exe -UseBasicParsing ;
-                        """
+                        powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
                       }
                     }
                   }
@@ -188,28 +134,7 @@ pipeline {
                       }
                       unstash 'source'
                       dir("${BASE_DIR}"){
-                        bat """
-                        nuget restore ElasticApmAgent.sln
-                        msbuild
-                        """
-                      }
-                    }
-                  }
-                  /**
-                  Build the project from code..
-                  */
-                  stage('Build - dotnet') {
-                    steps {
-                      dir("${BASE_DIR}"){
-                        deleteDir()
-                      }
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        bat """
-                        dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
-                        dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFramework.csproj
-                        dotnet build
-                        """
+                        bat '.ci/windows/msbuild.bat'
                       }
                     }
                   }
@@ -223,52 +148,85 @@ pipeline {
                       }
                       unstash 'source'
                       dir("${BASE_DIR}"){
-                        powershell label: 'Install tools', script: '''
-                        & dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
-                        & dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFramework.csproj
+                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                        bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                        bat label: 'Test & coverage', script: '.ci/windows/test.bat'
+                        powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
 
-                        & dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
-                        & dotnet tool install -g Codecov.Tool --version 1.2.0
-
-                        Get-ChildItem -Path . -Recurse -Filter *.csproj |
-                        Foreach-Object {
-                          & dotnet add $_.FullName package XunitXml.TestLogger --version 2.0.0
-                          & dotnet add $_.FullName package coverlet.msbuild --version 2.5.1
-                        }
-                        '''
-
-                        bat label: 'Build', script:'dotnet build'
-
-                        bat label: 'Test & Coverage', script: 'dotnet test -v n -r target -d target\\diag.log --logger:xunit --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=target\\Coverage\\ /p:Exclude=\\"[Elastic.Apm.Tests]*,[SampleAspNetCoreApp*]*,[xunit*]*\\" /p:Threshold=0 /p:ThresholdType=branch /p:ThresholdStat=total'
-
-                        powershell label: 'Convert Test Results to junit format', script: '''
-                        [System.Environment]::SetEnvironmentVariable("PATH", $Env:Path + ";" + $Env:USERPROFILE + "\\.dotnet\\tools")
-                        Get-ChildItem -Path . -Recurse -Filter TestResults.xml |
-                        Foreach-Object {
-                          & dotnet xunit-to-junit $_.FullName $_.parent.FullName + '\\junit-testTesults.xml'
-                        }
-                        '''
-
-                        script {
-                          def codecovId = getVaultSecret('apm-agent-dotnet-codecov')?.data?.value
-                          powershell label: 'Send covertura report to Codecov', script:"""
-                          [System.Environment]::SetEnvironmentVariable("PATH", \$Env:Path + ";" + \$Env:USERPROFILE + "\\.dotnet\\tools")
-                          Get-ChildItem -Path . -Recurse -Filter coverage.cobertura.xml |
-                          Foreach-Object {
-                            & codecov -t ${codecovId} -f \$_.FullName
-                          }
-                          """
-                        }
                       }
                     }
                     post {
                       always {
-                        junit(allowEmptyResults: true,
+                        junit(allowEmptyResults: false,
                           keepLongStdio: true,
                           testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
-                        }
                       }
                     }
+                  }
+                }
+              }
+              stage('Windows .NET Core'){
+                agent { label 'windows-2016' }
+                options { skipDefaultCheckout() }
+                environment {
+                  HOME = "${env.WORKSPACE}"
+                  DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
+                  VS_HOME = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise"
+                  MSBuildSDKsPath = "${env.DOTNET_ROOT}\\sdk\\2.1.505\\Sdks"
+                  PATH = "${env.PATH};${env.HOME}\\bin;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
+                }
+                stages{
+                  /**
+                  Checkout the code and stash it, to use it on other stages.
+                  */
+                  stage('Install tools') {
+                    steps {
+                      deleteDir()
+                      unstash 'source'
+                      dir("${HOME}"){
+                        powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
+                      }
+                    }
+
+                  }
+                  /**
+                  Build the project from code..
+                  */
+                  stage('Build - dotnet') {
+                    steps {
+                      dir("${BASE_DIR}"){
+                        deleteDir()
+                      }
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        bat '.ci/windows/dotnet.bat'
+                      }
+                    }
+                  }
+                  /**
+                  Execute unit tests.
+                  */
+                  stage('Test') {
+                    steps {
+                      dir("${BASE_DIR}"){
+                        deleteDir()
+                      }
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                        bat label: 'Build', script: '.ci/windows/dotnet.bat'
+                        bat label: 'Test & coverage', script: '.ci/windows/test.bat'
+                        powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                      }
+                    }
+                    post {
+                      always {
+                        junit(allowEmptyResults: false,
+                          keepLongStdio: true,
+                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -305,8 +263,8 @@ pipeline {
             options { skipDefaultCheckout() }
             environment {
               HOME = "${env.WORKSPACE}"
-              PATH = "${env.PATH}:${env.HOME}/bin:${env.HOME}/dotnet:${env.HOME}/.dotnet/tools"
               DOTNET_ROOT = "${env.HOME}/dotnet"
+              PATH = "${env.PATH}:${env.HOME}/bin:${env.DOTNET_ROOT}:${env.HOME}/.dotnet/tools"
             }
             when {
               beforeAgent true
@@ -336,8 +294,8 @@ pipeline {
             options { skipDefaultCheckout() }
             environment {
               HOME = "${env.WORKSPACE}"
-              PATH = "${env.PATH}:${env.HOME}/bin:${env.HOME}/dotnet:${env.HOME}/.dotnet/tools"
               DOTNET_ROOT = "${env.HOME}/dotnet"
+              PATH = "${env.PATH}:${env.HOME}/bin:${env.DOTNET_ROOT}:${env.HOME}/.dotnet/tools"
             }
             when {
               beforeAgent true
@@ -377,22 +335,12 @@ pipeline {
 }
 
 def release(secret){
-  sh(label: 'Release', script: '''
-    dotnet sln remove test/Elastic.Apm.PerfTests/Elastic.Apm.PerfTests.csproj
-    dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFramework.csproj
-    dotnet pack -c Release
-    ''')
+  sh(label: 'Release', script: './.ci/linux/release.sh')
   def repo = getVaultSecret(secret: secret)
   wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [
     [var: 'REPO_API_KEY', password: repo.apiKey],
     [var: 'REPO_API_URL', password: repo.url],
     ]]) {
-      sh(label: 'Deploy',
-        script: """
-        for nupkg in \$(find . -name '*.nupkg')
-        do
-          dotnet nuget push \${nupkg} -k ${repo.data.apiKey} -s ${repo.data.url}
-        done
-        """)
+      sh(label: 'Deploy', script: "./.ci/linux/deploy.sh ${repo.data.apiKey} ${repo.data.url}")
     }
 }
