@@ -54,14 +54,10 @@ pipeline {
                 */
                 stage('Install tools') {
                   steps {
-                    dir("${BASE_DIR}"){
-                      deleteDir()
-                    }
+                    deleteDir()
                     unstash 'source'
-                    dir("${BASE_DIR}"){
-                      sh label: 'Install tools', script: './.ci/linux/tools.sh'
-                      stash allowEmpty: true, name: 'dotnet-linux', includes: "dotnet/**", useDefaultExcludes: false
-                    }
+                    sh label: 'Install tools', script: "./${BASE_DIR}/.ci/linux/tools.sh"
+                    stash allowEmpty: true, name: 'dotnet-linux', includes: "dotnet/**", useDefaultExcludes: false
                   }
                 }
                 /**
