@@ -120,7 +120,7 @@ pipeline {
                       deleteDir()
                       unstash 'source'
                       dir("${HOME}"){
-                        powershell label: 'Install tools', script: """${readFile("${BASE_DIR}/.ci/windows/tools.ps1")}"""
+                        powershell label: 'Install tools', script: '.\\.ci\\windows\\tools.ps1'
                       }
                     }
                   }
