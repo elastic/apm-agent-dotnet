@@ -85,7 +85,7 @@ namespace Elastic.Apm.Helpers
 				return DefaultAsyncMethodName;
 
 			if (declaredType.GetInterfaces().All(i => i != typeof(IAsyncStateMachine)))
-				return inputMethod.Name;
+				return DefaultAsyncMethodName;
 
 			var generatedType = inputMethod.DeclaringType;
 			var originalType = generatedType?.DeclaringType;
@@ -96,9 +96,9 @@ namespace Elastic.Apm.Helpers
 			var foundMethod = originalType.GetMethods(BindingFlags.Instance | BindingFlags.Static |
 			                                          BindingFlags.Public | BindingFlags.NonPublic |
 			                                          BindingFlags.DeclaredOnly)
-				.Single(m => m.GetCustomAttribute<AsyncStateMachineAttribute>()?.StateMachineType == generatedType);
+				.FirstOrDefault(m => m.GetCustomAttribute<AsyncStateMachineAttribute>()?.StateMachineType == generatedType);
 
-			return foundMethod.Name;
+			return foundMethod?.Name ?? DefaultAsyncMethodName;
 		}
 	}
 }
