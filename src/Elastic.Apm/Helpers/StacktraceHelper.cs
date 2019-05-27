@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 
@@ -9,6 +11,8 @@ namespace Elastic.Apm.Helpers
 {
 	internal static class StacktraceHelper
 	{
+		private const string DefaultAsyncMethodName = "MoveNext";
+
 		/// <summary>
 		/// Turns a System.Diagnostic.StackFrame[] into a <see cref="CapturedStackFrame" /> list which can be reported to the APM Server
 		/// </summary>
@@ -23,11 +27,11 @@ namespace Elastic.Apm.Helpers
 			try
 			{
 				retVal.AddRange(from item in frames
-					let fileName = item?.GetMethod()?.DeclaringType?.Assembly?.GetName()?.Name
+					let fileName = item?.GetFileName()
 					where !string.IsNullOrEmpty(fileName)
 					select new CapturedStackFrame
 					{
-						Function = item?.GetMethod()?.Name,
+						Function = GetRealMethodName(item?.GetMethod()),
 						FileName = fileName,
 						Module = item?.GetMethod()?.ReflectedType?.Name,
 						LineNo = item?.GetFileLineNumber() ?? 0
@@ -60,6 +64,41 @@ namespace Elastic.Apm.Helpers
 			}
 
 			return null;
+		}
+
+		/// <summary>
+		///  Finds real method name even for Async methods, full description of the issue is available here https://stackoverflow.com/a/28633192
+		/// </summary>
+		/// <param name="inputMethod">Method to discover</param>
+		/// <returns>A real method name (even for async methods)</returns>
+		private static string GetRealMethodName(MethodBase inputMethod)
+		{
+			if (inputMethod == null)
+				return "";
+
+			if (inputMethod.Name != DefaultAsyncMethodName)
+				return inputMethod.Name;
+
+			var declaredType = inputMethod.DeclaringType;
+
+			if (declaredType == null)
+				return DefaultAsyncMethodName;
+
+			if (declaredType.GetInterfaces().All(i => i != typeof(IAsyncStateMachine)))
+				return inputMethod.Name;
+
+			var generatedType = inputMethod.DeclaringType;
+			var originalType = generatedType?.DeclaringType;
+
+			if (originalType == null)
+				return DefaultAsyncMethodName;
+
+			var foundMethod = originalType.GetMethods(BindingFlags.Instance | BindingFlags.Static |
+			                                          BindingFlags.Public | BindingFlags.NonPublic |
+			                                          BindingFlags.DeclaredOnly)
+				.Single(m => m.GetCustomAttribute<AsyncStateMachineAttribute>()?.StateMachineType == generatedType);
+
+			return foundMethod.Name;
 		}
 	}
 }
