@@ -5,7 +5,6 @@ using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
-using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 
 //TODO: It'd be nice to move this into the .csproj

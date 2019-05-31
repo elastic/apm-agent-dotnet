@@ -18,6 +18,7 @@ namespace Elastic.Apm.Tests
 			public string SecretToken { get; }
 			public bool CaptureHeaders { get; }
 			public double TransactionSampleRate { get; }
+			public double MetricsIntervalInMillisecond { get; }
 		}
 
 		///<summary>

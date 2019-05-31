@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using Elastic.Apm.Logging;
 
@@ -109,6 +110,42 @@ namespace Elastic.Apm.Config
 
 				return uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps;
 			}
+		}
+
+		protected double ParseMetricsInterval(ConfigurationKeyValue kv)
+		{
+			string value;
+			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
+			{
+				value = ConfigConsts.DefaultValues.MetricsInterval;
+			}
+			else
+			{
+				value = kv.Value;
+			}
+
+			double doubleVal;
+
+			switch (value)
+			{
+				case string str when str.Length >= 2 && str.Substring(str.Length-2).ToLower() == "ms":
+					if (double.TryParse(str.Substring(0, str.Length - 2), out doubleVal) && doubleVal >= 0)
+						return doubleVal;
+					break;
+				case string str when char.ToLower(str.Last())== 's':
+					if (double.TryParse(str.Substring(0, str.Length - 1), out doubleVal) && doubleVal >= 0)
+						return doubleVal * 1000;
+					break;
+				case string str when char.ToLower(str.Last()) == 'm':
+					if (double.TryParse(str.Substring(0, str.Length - 1), out doubleVal) && doubleVal >= 0)
+						return doubleVal * 1000 * 60;
+					break;
+			}
+
+			if (double.TryParse(value, out doubleVal) && doubleVal >= 0)
+				return doubleVal * 1000;
+
+			return 30 * 1000;
 		}
 
 		protected virtual string DiscoverServiceName()

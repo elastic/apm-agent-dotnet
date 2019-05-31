@@ -237,7 +237,7 @@ namespace Elastic.Apm.Metrics
 				if (string.IsNullOrWhiteSpace(values)) return (false, 0);
 
 				var items = values.Trim().Split(' ');
-				
+
 				switch (items.Length)
 				{
 					case 1 when ulong.TryParse(items[0], out var res): return (true, res);

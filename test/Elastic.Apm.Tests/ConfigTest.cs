@@ -299,6 +299,54 @@ namespace Elastic.Apm.Tests
 			testLogger.Lines.Should().NotBeEmpty();
 		}
 
-		public void Dispose() => Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServerUrls, null);
+		[Fact]
+		public void SetMetricsIntervalTo10S()
+		 => MetricsInterValTestCommon("10s").Should().Be(10 * 1000);
+
+		[Fact]
+		public void SetMetricsInterValTo500Ms()
+			=> MetricsInterValTestCommon("500ms").Should().Be(500);
+
+		[Fact]
+		public void SetMetricsInterValTo1M()
+			=> MetricsInterValTestCommon("1m").Should().Be(60 * 1000);
+
+		/// <summary>
+		/// Sets the metrics interval to '10'.
+		/// Makes sure that '10' defaults to '10s'
+		/// </summary>
+		[Fact]
+		public void SetMetricsInterValTo10()
+			=> MetricsInterValTestCommon("10").Should().Be(10 * 1000);
+
+		[Fact]
+		public void SetMetricsInterValToNegative5()
+			=> MetricsInterValTestCommon("-5").Should().Be(30 * 1000);
+
+		[Fact]
+		public void SetMetricsInterValToNegative5S()
+			=> MetricsInterValTestCommon("-5s").Should().Be(30 * 1000);
+
+		[Fact]
+		public void SetMetricsInterValToNegative5M()
+			=> MetricsInterValTestCommon("-5m").Should().Be(30 * 1000);
+
+		[Fact]
+		public void SetMetricsInterValToNegative5Ms()
+			=> MetricsInterValTestCommon("-5ms").Should().Be(30 * 1000);
+
+		private static double MetricsInterValTestCommon(string configValue)
+		{
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.MetricsInterval, configValue);
+			var testLogger = new TestLogger();
+			var config = new EnvironmentConfigurationReader(testLogger);
+			return config.MetricsIntervalInMillisecond;
+		}
+
+		public void Dispose()
+		{
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServerUrls, null);
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.MetricsInterval, null);
+		}
 	}
 }
