@@ -13,7 +13,7 @@ namespace Elastic.Apm.Tests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var testLogger = new TestLogger();
-			var mc = new MetricsCollector(testLogger, mockPayloadSender);
+			var mc = new MetricsCollector(testLogger, mockPayloadSender, new TestAgentConfigurationReader(testLogger));
 
 			mc.CollectAllMetrics();
 

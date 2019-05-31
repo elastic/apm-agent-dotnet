@@ -303,9 +303,17 @@ namespace Elastic.Apm.Tests
 		public void SetMetricsIntervalTo10S()
 		 => MetricsInterValTestCommon("10s").Should().Be(10 * 1000);
 
+		/// <summary>
+		/// Sets the metrics interval to '500ms'
+		/// Makes sure that 500ms defaults to 0, since the minimum is 1s
+		/// </summary>
 		[Fact]
 		public void SetMetricsInterValTo500Ms()
-			=> MetricsInterValTestCommon("500ms").Should().Be(500);
+			=> MetricsInterValTestCommon("500ms").Should().Be(0);
+
+		[Fact]
+		public void SetMetricsInterValTo1500Ms()
+			=> MetricsInterValTestCommon("1500ms").Should().Be(1500);
 
 		[Fact]
 		public void SetMetricsInterValTo1M()

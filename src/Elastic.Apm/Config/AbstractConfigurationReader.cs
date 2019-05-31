@@ -130,15 +130,18 @@ namespace Elastic.Apm.Config
 			{
 				case string str when str.Length >= 2 && str.Substring(str.Length-2).ToLower() == "ms":
 					if (double.TryParse(str.Substring(0, str.Length - 2), out doubleVal) && doubleVal >= 0)
-						return doubleVal;
+						// ReSharper disable once CompareOfFloatsByEqualityOperator - we compare to exactly zero here
+						return  doubleVal < 1000 && doubleVal != 0 ? 0 : doubleVal;
 					break;
 				case string str when char.ToLower(str.Last())== 's':
 					if (double.TryParse(str.Substring(0, str.Length - 1), out doubleVal) && doubleVal >= 0)
-						return doubleVal * 1000;
+						// ReSharper disable once CompareOfFloatsByEqualityOperator - we compare to exactly zero here
+						return  doubleVal < 1 && doubleVal != 0 ? 0 : doubleVal * 1000;
 					break;
 				case string str when char.ToLower(str.Last()) == 'm':
 					if (double.TryParse(str.Substring(0, str.Length - 1), out doubleVal) && doubleVal >= 0)
-						return doubleVal * 1000 * 60;
+						// ReSharper disable once CompareOfFloatsByEqualityOperator - we compare to exactly zero here
+						return  doubleVal < 0.016666666666667 && doubleVal != 0 ? 0 : doubleVal * 1000 * 60;
 					break;
 			}
 

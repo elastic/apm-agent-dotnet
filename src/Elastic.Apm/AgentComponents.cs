@@ -2,6 +2,7 @@
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 
@@ -12,16 +13,18 @@ namespace Elastic.Apm
 		public AgentComponents(
 			IApmLogger logger = null,
 			IConfigurationReader configurationReader = null,
-			IPayloadSender payloadSender = null
+			IPayloadSender payloadSender = null,
+			IMetricsCollector metricsCollector = null
 		)
 		{
-
 			Logger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 			ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(Logger);
-
 			Service =  Service.GetDefaultService(ConfigurationReader);
-
 			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigurationReader, Service);
+
+			MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigurationReader );
+			MetricsCollector.StartCollecting();
+
 			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationReader);
 			TransactionContainer = new TransactionContainer();
 		}
@@ -31,6 +34,8 @@ namespace Elastic.Apm
 		public IApmLogger Logger { get; }
 
 		public IPayloadSender PayloadSender { get; }
+
+		public IMetricsCollector MetricsCollector { get; }
 
 		/// <summary>
 		/// Identifies the monitored service. If this remains unset the agent

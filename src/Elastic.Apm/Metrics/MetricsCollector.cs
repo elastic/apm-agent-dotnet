@@ -6,13 +6,14 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Timers;
 using Elastic.Apm.Api;
+using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics.Windows;
 using Elastic.Apm.Report;
 
 namespace Elastic.Apm.Metrics
 {
-	internal class MetricsCollector : IDisposable
+	internal class MetricsCollector : IDisposable, IMetricsCollector
 	{
 		private const string FreeMemory = "system.memory.actual.free";
 		private const string ProcessCpuTotalPct = "system.process.cpu.total.norm.pct";
@@ -25,17 +26,22 @@ namespace Elastic.Apm.Metrics
 
 		private readonly object _lock = new object();
 
+		private readonly IConfigurationReader _configurationReader;
+
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _payloadSender;
 
-		private readonly Timer _timer = new Timer(1000);
+		private readonly Timer _timer;
 
-		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender)
+		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender, IConfigurationReader configurationReader)
 		{
 			_logger = logger.Scoped(nameof(MetricsCollector));
 			_payloadSender = payloadSender;
 
 			logger.Debug()?.Log("starting MetricsCollector");
+
+			_configurationReader = configurationReader;
+			_timer = new Timer(configurationReader.MetricsIntervalInMillisecond);
 
 			_timer.Elapsed += (sender, args) => { CollectAllMetrics(); };
 		}
@@ -52,7 +58,7 @@ namespace Elastic.Apm.Metrics
 		private DateTime _lastTotalTick;
 		private PerformanceCounter _processorTimePerfCounter;
 
-		internal void StartCollecting() => _timer.Start();
+		public void StartCollecting() => _timer.Start();
 
 		internal void CollectAllMetrics()
 		{
@@ -66,7 +72,11 @@ namespace Elastic.Apm.Metrics
 
 				var totalAndFreeMemory = GetTotalAndFreeMemoryMemory();
 				if (totalAndFreeMemory != null)
-					samples.AddRange(totalAndFreeMemory);
+				{
+					var andFreeMemory = totalAndFreeMemory as Sample[] ?? totalAndFreeMemory.ToArray();
+					if (andFreeMemory.Any())
+						samples.AddRange(andFreeMemory);
+				}
 
 				var (isSystemTotalCpuAvailable, systemTotalCpuTime) = GetSystemTotalCpuTime();
 				if (isSystemTotalCpuAvailable) samples.Add(new Sample(SystemCpuTotalPct, systemTotalCpuTime));
@@ -76,7 +86,7 @@ namespace Elastic.Apm.Metrics
 
 				var metricSet = new MetricSet(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() * 1000, samples);
 				_payloadSender.QueueMetrics(metricSet);
-				_logger.Debug()?.Log("Metrics collected: {data}", samples.Aggregate("", (i, j) => i.ToString() + ", " + j.ToString()));
+				_logger.Debug()?.Log("Metrics collected: {data}", samples.Select(n => n.ToString()).Aggregate((i, j) => i + ", " + j));
 			}
 			catch (Exception e)
 			{
@@ -101,6 +111,8 @@ namespace Elastic.Apm.Metrics
 			return retVal;
 		}
 
+		private Version _processAssemblyVersion;
+
 		internal (bool, double) GetProcessTotalCpuTime()
 		{
 			//TODO: this can be wrong, see: https://github.com/dotnet/corefx/pull/37637#discussion_r283784218
@@ -109,7 +121,17 @@ namespace Elastic.Apm.Metrics
 
 			if (!_first)
 			{
-				var cpuUsedMs = (cpuUsage - _lastCurrentProcessCpuTime).TotalMilliseconds;
+				if (_processAssemblyVersion == null)
+					_processAssemblyVersion = typeof(Process).Assembly.GetName().Version;
+
+				double cpuUsedMs;
+
+				//workaround for a CoreFx bug. See: https://github.com/dotnet/corefx/issues/37614#issuecomment-492489373
+				if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && _processAssemblyVersion < new Version(4, 3, 0))
+					cpuUsedMs = (cpuUsage - _lastCurrentProcessCpuTime).TotalMilliseconds / 100;
+				else
+					cpuUsedMs = (cpuUsage - _lastCurrentProcessCpuTime).TotalMilliseconds;
+
 				var totalMsPassed = (timespan - _lastTick).TotalMilliseconds;
 				var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
 
@@ -161,7 +183,17 @@ namespace Elastic.Apm.Metrics
 
 			if (!_firstTotal)
 			{
-				var cpuUsedMs = (cpuUsage - _lastCurrentTotalProcessCpuTime).TotalMilliseconds;
+				if (_processAssemblyVersion == null)
+					_processAssemblyVersion = typeof(Process).Assembly.GetName().Version;
+
+				double cpuUsedMs;
+
+				//workaround for a CoreFx bug. See: https://github.com/dotnet/corefx/issues/37614#issuecomment-492489373
+				if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && _processAssemblyVersion < new Version(4, 3, 0))
+					cpuUsedMs = (cpuUsage - _lastCurrentTotalProcessCpuTime).TotalMilliseconds / 100;
+				else
+					cpuUsedMs = (cpuUsage - _lastCurrentTotalProcessCpuTime).TotalMilliseconds;
+
 				var totalMsPassed = (timespan - _lastTotalTick).TotalMilliseconds;
 				var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
 

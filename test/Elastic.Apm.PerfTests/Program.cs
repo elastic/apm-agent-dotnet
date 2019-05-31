@@ -13,7 +13,7 @@ namespace Elastic.Apm.PerfTests
 	{
 		public static void Main(string[] args) => BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
 
-		//[Benchmark]
+		[Benchmark]
 		public void SimpleTransactions10Spans()
 		{
 			var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender()));
@@ -35,31 +35,19 @@ namespace Elastic.Apm.PerfTests
 		{
 			var noopLogger = new NoopLogger();
 			var mockPayloadSender = new MockPayloadSender();
-			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender))
+			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender, new TestAgentConfigurationReader(noopLogger)))
 			{
 				collector.CollectAllMetrics();
 				collector.CollectAllMetrics();
 			}
 		}
 
-		//[Benchmark]
-		//public void CollectFreeMemory2X()
-		//{
-		//	var noopLogger = new NoopLogger();
-		//	var mockPayloadSender = new MockPayloadSender();
-		//	using (var collector = new MetricsCollector(noopLogger, mockPayloadSender))
-		//	{
-		//		collector.GetFreeMemory();
-		//		collector.GetFreeMemory();
-		//	}
-		//}
-
 		[Benchmark]
 		public void CollectProcessTotalCpuTime2X()
 		{
 			var noopLogger = new NoopLogger();
 			var mockPayloadSender = new MockPayloadSender();
-			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender))
+			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender, new TestAgentConfigurationReader(noopLogger)))
 			{
 				collector.GetProcessTotalCpuTime();
 				collector.GetProcessTotalCpuTime();
@@ -71,7 +59,7 @@ namespace Elastic.Apm.PerfTests
 		{
 			var noopLogger = new NoopLogger();
 			var mockPayloadSender = new MockPayloadSender();
-			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender))
+			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender, new TestAgentConfigurationReader(noopLogger)))
 			{
 				collector.GetSystemTotalCpuTime();
 				collector.GetSystemTotalCpuTime();
@@ -83,7 +71,7 @@ namespace Elastic.Apm.PerfTests
 		{
 			var noopLogger = new NoopLogger();
 			var mockPayloadSender = new MockPayloadSender();
-			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender))
+			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender, new TestAgentConfigurationReader(noopLogger)))
 			{
 				collector.GetTotalAndFreeMemoryMemory();
 				collector.GetTotalAndFreeMemoryMemory();
@@ -95,7 +83,7 @@ namespace Elastic.Apm.PerfTests
 		{
 			var noopLogger = new NoopLogger();
 			var mockPayloadSender = new MockPayloadSender();
-			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender))
+			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender, new TestAgentConfigurationReader(noopLogger)))
 			{
 				collector.GetProcessWorkingSetAndVirtualMemory();
 				collector.GetProcessWorkingSetAndVirtualMemory();

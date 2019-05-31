@@ -55,8 +55,6 @@ namespace Elastic.Apm
 		public ApmAgent(AgentComponents agentComponents)
 		{
 			Components = agentComponents ?? new AgentComponents();
-			var metricsCollector = new MetricsCollector(Components.Logger, Components.PayloadSender); //TODO: maybe move it
-			metricsCollector.StartCollecting();
 		}
 
 		private AgentComponents Components { get; }
