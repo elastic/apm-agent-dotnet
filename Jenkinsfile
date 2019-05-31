@@ -86,7 +86,7 @@ pipeline {
                     }
                     unstash 'source'
                     dir("${BASE_DIR}"){
-                      withGithubNotify(context: 'Test - Linux', type: 'test') {
+                      withGithubNotify(context: 'Test - Linux', tab: 'tests') {
                         sh label: 'Install test tools', script: './.ci/linux/test-tools.sh'
                         sh label: 'Build', script: './.ci/linux/build.sh'
                         sh label: 'Test & coverage', script: './.ci/linux/test.sh'
@@ -154,7 +154,7 @@ pipeline {
                       }
                       unstash 'source'
                       dir("${BASE_DIR}"){
-                        withGithubNotify(context: 'Test MSBuild - Windows', type: 'test') {
+                        withGithubNotify(context: 'Test MSBuild - Windows', tab: 'tests') {
                           powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
                           bat label: 'Build', script: '.ci/windows/msbuild.bat'
                           bat label: 'Test & coverage', script: '.ci/windows/test.bat'
@@ -222,7 +222,7 @@ pipeline {
                       }
                       unstash 'source'
                       dir("${BASE_DIR}"){
-                        withGithubNotify(context: 'Test dotnet - Windows', type: 'test') {
+                        withGithubNotify(context: 'Test dotnet - Windows', tab: 'tests') {
                           powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
                           bat label: 'Build', script: '.ci/windows/dotnet.bat'
                           bat label: 'Test & coverage', script: '.ci/windows/test.bat'
@@ -265,7 +265,7 @@ pipeline {
               deleteDir()
               unstash 'source'
               dir("${BASE_DIR}"){
-                withGithubNotify(context: 'Documentation', type: 'artifact') {
+                withGithubNotify(context: 'Documentation', tab: 'artifacts') {
                   buildDocs(docsDir: "docs", archive: true)
                 }
               }
@@ -291,7 +291,7 @@ pipeline {
               unstash 'source'
               unstash('dotnet-linux')
               dir("${BASE_DIR}"){
-                withGithubNotify(context: 'Release AppVeyor', type: 'artifact') {
+                withGithubNotify(context: 'Release AppVeyor', tab: 'artifacts') {
                   release('secret/apm-team/ci/elastic-observability-appveyor')
                 }
               }
@@ -325,7 +325,7 @@ pipeline {
               unstash 'source'
               unstash('dotnet-linux')
               dir("${BASE_DIR}"){
-                withGithubNotify(context: 'Release NuGet', type: 'artifact') {
+                withGithubNotify(context: 'Release NuGet', tab: 'artifacts') {
                   release('secret/apm-team/ci/elastic-observability-nuget')
                 }
               }
