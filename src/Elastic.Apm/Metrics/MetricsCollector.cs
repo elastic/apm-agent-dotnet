@@ -4,15 +4,17 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using System.Timers;
+using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Metrics.Windows;
 using Elastic.Apm.Report;
 
 namespace Elastic.Apm.Metrics
 {
 	internal class MetricsCollector : IDisposable
 	{
+		private const string FreeMemory = "system.memory.actual.free";
 		private const string ProcessCpuTotalPct = "system.process.cpu.total.norm.pct";
 		private const string ProcessVirtualMemory = "system.process.memory.size";
 
@@ -20,7 +22,11 @@ namespace Elastic.Apm.Metrics
 		private const string SystemCpuTotalPct = "system.cpu.total.norm.pct";
 
 		private const string TotalMemory = "system.memory.total";
-		private const string FreeMemory = "system.memory.actual.free";
+
+		private readonly object _lock = new object();
+
+		private readonly IApmLogger _logger;
+		private readonly IPayloadSender _payloadSender;
 
 		private readonly Timer _timer = new Timer(1000);
 
@@ -31,34 +37,25 @@ namespace Elastic.Apm.Metrics
 
 			logger.Debug()?.Log("starting MetricsCollector");
 
-			_timer.Elapsed += (sender, args) =>
-			{
-				CollectAllMetrics();
-			};
+			_timer.Elapsed += (sender, args) => { CollectAllMetrics(); };
 		}
 
-		internal void StartCollecting() => _timer.Start();
-
 		private bool _first = true;
-		private  TimeSpan _lastCurrentProcessCpuTime;
 
-		private DateTime _lastTick;
+		private bool _firstTotal = true;
+		private TimeSpan _lastCurrentProcessCpuTime;
 
 		private TimeSpan _lastCurrentTotalProcessCpuTime;
 
-		private DateTime _lastTotalTick;
+		private DateTime _lastTick;
 
-		private readonly IApmLogger _logger;
-		private readonly IPayloadSender _payloadSender;
+		private DateTime _lastTotalTick;
 		private PerformanceCounter _processorTimePerfCounter;
 
-		private int i = 0;
+		internal void StartCollecting() => _timer.Start();
 
 		internal void CollectAllMetrics()
 		{
-
-			//_timer.Stop();
-			i++;
 			try
 			{
 				var samples = new List<Sample>();
@@ -77,18 +74,13 @@ namespace Elastic.Apm.Metrics
 				var (isProcessCpuAvailable, processCpuValue) = GetProcessTotalCpuTime();
 				if (isProcessCpuAvailable) samples.Add(new Sample(ProcessCpuTotalPct, processCpuValue));
 
-				var metricSet = new Metrics(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() * 1000, samples);
+				var metricSet = new MetricSet(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() * 1000, samples);
 				_payloadSender.QueueMetrics(metricSet);
-				_logger.Debug()?.Log("Metrics collected: {data}", samples.Aggregate("" ,(i, j) => i.ToString() + ", " + j.ToString() ));
+				_logger.Debug()?.Log("Metrics collected: {data}", samples.Aggregate("", (i, j) => i.ToString() + ", " + j.ToString()));
 			}
 			catch (Exception e)
 			{
 				_logger.Error()?.LogExceptionWithCaller(e);
-			}
-
-			if (i != 2)
-			{
-				//_timer.Start();
 			}
 		}
 
@@ -100,41 +92,23 @@ namespace Elastic.Apm.Metrics
 
 			var retVal = new List<Sample>();
 
-			if(virtualMemory != 0)
-				 retVal.Add(new Sample(ProcessVirtualMemory, virtualMemory));
+			if (virtualMemory != 0)
+				retVal.Add(new Sample(ProcessVirtualMemory, virtualMemory));
 
-			if(workingSet != 0)
+			if (workingSet != 0)
 				retVal.Add(new Sample(ProcessWorkingSetMemory, workingSet));
 
 			return retVal;
 		}
 
-		private object _lock = new object();
-
 		internal (bool, double) GetProcessTotalCpuTime()
 		{
-			//Console.WriteLine("Start measure");
+			//TODO: this can be wrong, see: https://github.com/dotnet/corefx/pull/37637#discussion_r283784218
 			var timespan = DateTime.UtcNow;
-			//Console.WriteLine($"Current time: {timespan.Minute}.{timespan.Second} {timespan.Millisecond}");
 			var cpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
-
-			Console.WriteLine($"CpuTIme: {cpuUsage.TotalSeconds}");
-			//Console.WriteLine("End measure");
-			//Console.WriteLine($"Current cpuUsage: {cpuUsage.TotalMilliseconds}");
 
 			if (!_first)
 			{
-//				var startTime = DateTime.UtcNow;
-//				var startCpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
-//				await Task.Delay(500);
-//
-//				var endTime = DateTime.UtcNow;
-//				var endCpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
-//				var cpuUsedMs1 = (endCpuUsage - startCpuUsage).TotalMilliseconds;
-//				var totalMsPassed1 = (endTime - startTime).TotalMilliseconds;
-//				var cpuUsageTotal1 = cpuUsedMs1 / (Environment.ProcessorCount * totalMsPassed1);
-//
-
 				var cpuUsedMs = (cpuUsage - _lastCurrentProcessCpuTime).TotalMilliseconds;
 				var totalMsPassed = (timespan - _lastTick).TotalMilliseconds;
 				var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
@@ -156,11 +130,8 @@ namespace Elastic.Apm.Metrics
 			return (false, 0);
 		}
 
-		private bool _firstTotal = true;
-
 		internal (bool, double) GetSystemTotalCpuTime()
 		{
-			//Perf data:    CollectTotalCpuTime2X |    504.067 us | 143.7222 us |
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
 				if (_processorTimePerfCounter == null)
@@ -182,7 +153,7 @@ namespace Elastic.Apm.Metrics
 				{
 					cpuUsage += proc.TotalProcessorTime;
 				}
-				catch(Exception)
+				catch (Exception)
 				{
 					//Log warning 1 for inaccuracy
 				}
@@ -212,16 +183,15 @@ namespace Elastic.Apm.Metrics
 		{
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
+				var (success, totalMemory, freeMemory) = GlobalMemoryStatus.GetTotalPhysAndAvailPhys();
 
-				var (totalMemory, freeMemory) = Windows.GlobalMemoryStatus.GetTotalPhysAndAvailPhys();
-
-				if (totalMemory == 0 || freeMemory == 0)
+				if (!success || totalMemory == 0 || freeMemory == 0)
 					return null;
 
 				return new List<Sample>(2) { new Sample(FreeMemory, freeMemory), new Sample(TotalMemory, totalMemory) };
 			}
 
-			if (RuntimeInformation.IsOSPlatform((OSPlatform.Linux)))
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 			{
 				var retVal = new List<Sample>();
 
@@ -233,31 +203,24 @@ namespace Elastic.Apm.Metrics
 
 						while (line != null || retVal.Count != 2) //TODO: break early if possible
 						{
-							if (line.Contains("MemFree:"))
+							if (line != null && line.Contains("MemFree:"))
 							{
 								var (suc, res) = GetEntry(line, "MemFree:");
-								if (suc)
-								{
-									retVal.Add(new Sample(FreeMemory, res));
-								}
+								if (suc) retVal.Add(new Sample(FreeMemory, res));
 							}
-							if (line.Contains("MemTotal:"))
+							if (line != null && line.Contains("MemTotal:"))
 							{
 								var (suc, res) = GetEntry(line, "MemTotal:");
-								if (suc)
-								{
-									retVal.Add(new Sample(TotalMemory, res));
-								}
+								if (suc) retVal.Add(new Sample(TotalMemory, res));
 							}
 
 							line = sr.ReadLine();
 						}
 					}
 				}
-				catch(Exception e)
+				catch (Exception e)
 				{
 					Console.WriteLine($"Exception: {e.GetType()} - {e.Message}"); //TODO!!
-
 				}
 
 				return retVal;
@@ -271,25 +234,16 @@ namespace Elastic.Apm.Metrics
 
 				var values = line.Substring(line.IndexOf(name, StringComparison.Ordinal) + name.Length);
 
-				if (!string.IsNullOrWhiteSpace(values))
+				if (string.IsNullOrWhiteSpace(values)) return (false, 0);
+
+				var items = values.Trim().Split(' ');
+				
+				switch (items.Length)
 				{
-					var items = values.Trim().Split(' ');
-
-
-					if (items.Length == 1)
-					{
-						if (ulong.TryParse(items[0], out ulong res))
-							return (true, res);
-					}
-					if (items.Length == 2 && items[1].ToLower() == "kb")
-					{
-						if (ulong.TryParse(items[0], out ulong res))
-							return (true, res * 1024);
-					}
-
-
+					case 1 when ulong.TryParse(items[0], out var res): return (true, res);
+					case 2 when items[1].ToLower() == "kb" && ulong.TryParse(items[0], out var res): return (true, res * 1024);
+					default: return (false, 0);
 				}
-				return (false,0);
 			}
 
 			return null;

@@ -11,7 +11,7 @@ namespace Elastic.Apm.Tests.Mocks
 		public readonly List<IError> Errors = new List<IError>();
 		public readonly List<ITransaction> Transactions = new List<ITransaction>();
 		public readonly List<ISpan> Spans = new List<ISpan>();
-		public readonly List<Metrics.Metrics> Metrics = new List<Metrics.Metrics>();
+		public readonly List<IMetricSet> Metrics = new List<IMetricSet>();
 
 		public Error FirstError => Errors.First() as Error;
 
@@ -30,7 +30,7 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public void QueueSpan(ISpan span) => Spans.Add(span);
 
-		public void QueueMetrics(Metrics.Metrics metrics) => Metrics.Add(metrics);
+		public void QueueMetrics(IMetricSet metricSet) => Metrics.Add(metricSet);
 
 		public void Clear()
 		{

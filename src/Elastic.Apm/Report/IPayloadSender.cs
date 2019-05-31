@@ -12,6 +12,6 @@ namespace Elastic.Apm.Report
 
 		void QueueSpan(ISpan span);
 
-		void QueueMetrics(Metrics.Metrics metrics);
+		void QueueMetrics(IMetricSet metrics);
 	}
 }

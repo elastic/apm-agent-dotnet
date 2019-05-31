@@ -5,9 +5,9 @@ using Newtonsoft.Json.Linq;
 
 namespace Elastic.Apm.Report.Serialization
 {
-	public class MetricSetConverter: JsonConverter<Metrics.Metrics>
+	public class MetricSetConverter: JsonConverter<Metrics.MetricSet>
 	{
-		public override void WriteJson(JsonWriter writer, Metrics.Metrics value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, Metrics.MetricSet value, JsonSerializer serializer)
 		{
 			var metrics = new JObject();
 			var samples = new JObject();
@@ -25,6 +25,6 @@ namespace Elastic.Apm.Report.Serialization
 			metrics.WriteTo(writer);
 		}
 
-		public override Metrics.Metrics ReadJson(JsonReader reader, Type objectType, Metrics.Metrics existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
+		public override Metrics.MetricSet ReadJson(JsonReader reader, Type objectType, Metrics.MetricSet existingValue, bool hasExistingValue, JsonSerializer serializer) => throw new NotImplementedException();
 	}
 }

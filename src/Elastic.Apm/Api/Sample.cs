@@ -1,12 +1,11 @@
 using System.Collections.Generic;
-using System.Linq;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Model;
-using Elastic.Apm.Report.Serialization;
-using Newtonsoft.Json;
 
-namespace Elastic.Apm.Metrics
+namespace Elastic.Apm.Api
 {
+	/// <summary>
+	/// A single metric sample.
+	/// </summary>
 	public class Sample
 	{
 		public Sample(string key, double value)
