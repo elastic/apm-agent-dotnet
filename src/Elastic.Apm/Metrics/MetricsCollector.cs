@@ -41,8 +41,12 @@ namespace Elastic.Apm.Metrics
 			logger.Debug()?.Log("starting MetricsCollector");
 
 			_configurationReader = configurationReader;
-			_timer = new Timer(configurationReader.MetricsIntervalInMillisecond);
 
+			var interval = configurationReader.MetricsIntervalInMillisecond;
+			// ReSharper disable once CompareOfFloatsByEqualityOperator
+			if (interval == 0) return;
+
+			_timer = new Timer();
 			_timer.Elapsed += (sender, args) => { CollectAllMetrics(); };
 		}
 
@@ -58,7 +62,7 @@ namespace Elastic.Apm.Metrics
 		private DateTime _lastTotalTick;
 		private PerformanceCounter _processorTimePerfCounter;
 
-		public void StartCollecting() => _timer.Start();
+		public void StartCollecting() => _timer?.Start();
 
 		internal void CollectAllMetrics()
 		{
