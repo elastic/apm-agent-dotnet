@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-@Library('apm@feature/overrideStage') _
+@Library('apm@current') _
 
 pipeline {
   agent any
