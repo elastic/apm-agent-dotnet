@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
@@ -62,7 +63,6 @@ namespace Elastic.Apm.Tests
 			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should().Contain(m => m.Function == nameof(ClassWithAsync.TestMethodAsync));
 		}
 
-
 		/// <summary>
 		/// Makes sure that if a non-async method is named 'MoveNext', it does not cause any trouble
 		/// </summary>
@@ -87,6 +87,39 @@ namespace Elastic.Apm.Tests
 			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should().Contain(m => m.Function == nameof(ClassWithSyncMethods.M2));
 		}
 
+		/// <summary>
+		/// Makes sure that the typename and the method name are captured correctly
+		/// </summary>
+		[Fact]
+		public void TypeAndMethodNameTest()
+		{
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			Assert.Throws<Exception>(() =>
+			{
+				agent.Tracer.CaptureTransaction("TestTransaction", "Test", () =>
+				{
+					BaseTestClass testClass = new DerivedTestClass();
+					testClass.Method1();
+				});
+			});
+
+			payloadSender.Errors.Should().NotBeEmpty();
+			(payloadSender.Errors.First() as Error).Should().NotBeNull();
+
+			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should()
+				.Contain(m => m.FileName == typeof(BaseTestClass).FullName
+					&& m.Function == nameof(BaseTestClass.Method1)
+					&& m.Module == typeof(BaseTestClass).Assembly.FullName
+				);
+
+			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should()
+				.Contain(m => m.FileName == typeof(DerivedTestClass).FullName
+					&& m.Function == nameof(DerivedTestClass.TestMethod)
+					&& m.Module == typeof(DerivedTestClass).Assembly.FullName);
+		}
+
 		private class ClassWithSyncMethods
 		{
 			[MethodImpl(MethodImplOptions.NoInlining)]
@@ -104,5 +137,18 @@ namespace Elastic.Apm.Tests
 				throw new Exception("bamm");
 			}
 		}
+	}
+
+	internal class BaseTestClass
+	{
+		internal void Method1() => TestMethod();
+
+		internal virtual void TestMethod()
+			=> Debug.WriteLine("test");
+	}
+
+	internal class DerivedTestClass : BaseTestClass
+	{
+		internal override void TestMethod() => throw new Exception("TestException");
 	}
 }

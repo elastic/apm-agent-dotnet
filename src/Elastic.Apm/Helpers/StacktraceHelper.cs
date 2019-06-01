@@ -27,13 +27,11 @@ namespace Elastic.Apm.Helpers
 			try
 			{
 				retVal.AddRange(from item in frames
-					let fileName = item?.GetFileName()
-					where !string.IsNullOrEmpty(fileName)
 					select new CapturedStackFrame
 					{
 						Function = GetRealMethodName(item?.GetMethod()),
-						FileName = fileName,
-						Module = item?.GetMethod()?.ReflectedType?.Name,
+						FileName = item?.GetMethod()?.ReflectedType?.FullName,
+						Module = item?.GetMethod()?.ReflectedType?.Assembly?.FullName,
 						LineNo = item?.GetFileLineNumber() ?? 0
 					});
 			}
