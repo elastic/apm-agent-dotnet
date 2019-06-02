@@ -31,7 +31,9 @@ namespace Elastic.Apm.Helpers
 					select new CapturedStackFrame
 					{
 						Function = GetRealMethodName(item?.GetMethod()),
-						FileName = item?.GetMethod()?.ReflectedType?.FullName,
+						FileName =
+							item?.GetMethod()
+								?.ReflectedType?.FullName, //see: https://github.com/elastic/apm-agent-dotnet/pull/240#discussion_r289619196
 						Module = item?.GetMethod()?.ReflectedType?.Assembly.FullName,
 						LineNo = item?.GetFileLineNumber() ?? 0
 					});
