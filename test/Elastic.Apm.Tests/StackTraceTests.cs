@@ -1,5 +1,8 @@
+using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Net.Http;
-using System.Runtime.InteropServices.ComTypes;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
@@ -36,5 +39,116 @@ namespace Elastic.Apm.Tests
 
 			stackFrames.Should().NotBeEmpty().And.Contain(frame => frame.LineNo != 0);
 		}
+
+		/// <summary>
+		/// Makes sure that the name of the async method is captured correctly
+		/// </summary>
+		[Fact]
+		public async Task AsyncCallStackTest()
+		{
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			await Assert.ThrowsAsync<Exception>(async () =>
+			{
+				await agent.Tracer.CaptureTransaction("TestTransaction", "Test", async () =>
+				{
+					var classWithAsync = new ClassWithAsync();
+					await classWithAsync.TestMethodAsync();
+				});
+			});
+
+			payloadSender.Errors.Should().NotBeEmpty();
+			(payloadSender.Errors.First() as Error).Should().NotBeNull();
+			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should().Contain(m => m.Function == nameof(ClassWithAsync.TestMethodAsync));
+		}
+
+		/// <summary>
+		/// Makes sure that if a non-async method is named 'MoveNext', it does not cause any trouble
+		/// </summary>
+		[Fact]
+		public void CallStackWithMoveNextWithoutAsync()
+		{
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			Assert.Throws<Exception>(() =>
+			{
+				agent.Tracer.CaptureTransaction("TestTransaction", "Test", () =>
+				{
+					var classWithSyncMethods = new ClassWithSyncMethods();
+					classWithSyncMethods.MoveNext();
+				});
+			});
+
+			payloadSender.Errors.Should().NotBeEmpty();
+			(payloadSender.Errors.First() as Error).Should().NotBeNull();
+			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should().Contain(m => m.Function == nameof(ClassWithSyncMethods.MoveNext));
+			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should().Contain(m => m.Function == nameof(ClassWithSyncMethods.M2));
+		}
+
+		/// <summary>
+		/// Makes sure that the typename and the method name are captured correctly
+		/// </summary>
+		[Fact]
+		public void TypeAndMethodNameTest()
+		{
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			Assert.Throws<Exception>(() =>
+			{
+				agent.Tracer.CaptureTransaction("TestTransaction", "Test", () =>
+				{
+					BaseTestClass testClass = new DerivedTestClass();
+					testClass.Method1();
+				});
+			});
+
+			payloadSender.Errors.Should().NotBeEmpty();
+			(payloadSender.Errors.First() as Error).Should().NotBeNull();
+
+			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should()
+				.Contain(m => m.FileName == typeof(BaseTestClass).FullName
+					&& m.Function == nameof(BaseTestClass.Method1)
+					&& m.Module == typeof(BaseTestClass).Assembly.FullName
+				);
+
+			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should()
+				.Contain(m => m.FileName == typeof(DerivedTestClass).FullName
+					&& m.Function == nameof(DerivedTestClass.TestMethod)
+					&& m.Module == typeof(DerivedTestClass).Assembly.FullName);
+		}
+
+		private class ClassWithSyncMethods
+		{
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			internal void MoveNext() => M2();
+
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			internal void M2() => throw new Exception("bamm");
+		}
+
+		private class ClassWithAsync
+		{
+			internal async Task TestMethodAsync()
+			{
+				await Task.Delay(5);
+				throw new Exception("bamm");
+			}
+		}
+	}
+
+	internal class BaseTestClass
+	{
+		internal void Method1() => TestMethod();
+
+		internal virtual void TestMethod()
+			=> Debug.WriteLine("test");
+	}
+
+	internal class DerivedTestClass : BaseTestClass
+	{
+		internal override void TestMethod() => throw new Exception("TestException");
 	}
 }
