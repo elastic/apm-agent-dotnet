@@ -14,7 +14,8 @@ namespace Elastic.Apm.Helpers
 		private const string DefaultAsyncMethodName = "MoveNext";
 
 		/// <summary>
-		/// Turns a System.Diagnostic.StackFrame[] into a <see cref="CapturedStackFrame" /> list which can be reported to the APM Server
+		/// Turns a System.Diagnostic.StackFrame[] into a <see cref="CapturedStackFrame" /> list which can be reported to the APM
+		/// Server
 		/// </summary>
 		/// <param name="frames">The stack frames to rewrite into APM stack traces</param>
 		/// <param name="logger">The logger to emit exceptions on should one occur</param>
@@ -31,7 +32,7 @@ namespace Elastic.Apm.Helpers
 					{
 						Function = GetRealMethodName(item?.GetMethod()),
 						FileName = item?.GetMethod()?.ReflectedType?.FullName,
-						Module = item?.GetMethod()?.ReflectedType?.Assembly?.FullName,
+						Module = item?.GetMethod()?.ReflectedType?.Assembly.FullName,
 						LineNo = item?.GetFileLineNumber() ?? 0
 					});
 			}
@@ -44,7 +45,8 @@ namespace Elastic.Apm.Helpers
 		}
 
 		/// <summary>
-		///  Turns an <see cref="Exception"/> into a <see cref="CapturedStackFrame" /> list which can be reported to the APM Server
+		///  Turns an <see cref="Exception" /> into a <see cref="CapturedStackFrame" /> list which can be reported to the APM
+		/// Server
 		/// </summary>
 		/// <param name="exception">The exception to rewrite into APM stack traces</param>
 		/// <param name="logger">The logger to emit exceptions on should one occur</param>
@@ -65,7 +67,8 @@ namespace Elastic.Apm.Helpers
 		}
 
 		/// <summary>
-		///  Finds real method name even for Async methods, full description of the issue is available here https://stackoverflow.com/a/28633192
+		///  Finds real method name even for Async methods, full description of the issue is available here
+		/// https://stackoverflow.com/a/28633192
 		/// </summary>
 		/// <param name="inputMethod">Method to discover</param>
 		/// <returns>A real method name (even for async methods)</returns>
@@ -92,8 +95,8 @@ namespace Elastic.Apm.Helpers
 				return DefaultAsyncMethodName;
 
 			var foundMethod = originalType.GetMethods(BindingFlags.Instance | BindingFlags.Static |
-			                                          BindingFlags.Public | BindingFlags.NonPublic |
-			                                          BindingFlags.DeclaredOnly)
+					BindingFlags.Public | BindingFlags.NonPublic |
+					BindingFlags.DeclaredOnly)
 				.FirstOrDefault(m => m.GetCustomAttribute<AsyncStateMachineAttribute>()?.StateMachineType == generatedType);
 
 			return foundMethod?.Name ?? DefaultAsyncMethodName;
