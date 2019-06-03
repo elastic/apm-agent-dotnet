@@ -4,6 +4,7 @@ using BenchmarkDotNet.Running;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
+using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Mocks;
 
 namespace Elastic.Apm.PerfTests
@@ -45,49 +46,38 @@ namespace Elastic.Apm.PerfTests
 		[Benchmark]
 		public void CollectProcessTotalCpuTime2X()
 		{
-			var noopLogger = new NoopLogger();
-			var mockPayloadSender = new MockPayloadSender();
-			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender, new TestAgentConfigurationReader(noopLogger)))
-			{
-				collector.GetProcessTotalCpuTime();
-				collector.GetProcessTotalCpuTime();
-			}
+			var mockPayloadSender = new ProcessTotalCpuTimeProvider();
+
+			mockPayloadSender.GetValue();
+			mockPayloadSender.GetValue();
 		}
 
 		[Benchmark]
 		public void CollectTotalCpuTime2X()
 		{
 			var noopLogger = new NoopLogger();
-			var mockPayloadSender = new MockPayloadSender();
-			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender, new TestAgentConfigurationReader(noopLogger)))
-			{
-				collector.GetSystemTotalCpuTime();
-				collector.GetSystemTotalCpuTime();
-			}
+			var systemTotalCpuProvider = new SystemTotalCpuProvider(noopLogger);
+
+			systemTotalCpuProvider.GetValue();
+			systemTotalCpuProvider.GetValue();
 		}
 
 		[Benchmark]
 		public void CollectTotalAndFreeMemory2X()
 		{
-			var noopLogger = new NoopLogger();
-			var mockPayloadSender = new MockPayloadSender();
-			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender, new TestAgentConfigurationReader(noopLogger)))
-			{
-				collector.GetTotalAndFreeMemoryMemory();
-				collector.GetTotalAndFreeMemoryMemory();
-			}
+			var mockPayloadSender = new FreeAndTotalMemoryProvider();
+
+			mockPayloadSender.GetValue();
+			mockPayloadSender.GetValue();
 		}
 
 		[Benchmark]
 		public void CollectWorkingSetAndVirMem2X()
 		{
-			var noopLogger = new NoopLogger();
-			var mockPayloadSender = new MockPayloadSender();
-			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender, new TestAgentConfigurationReader(noopLogger)))
-			{
-				collector.GetProcessWorkingSetAndVirtualMemory();
-				collector.GetProcessWorkingSetAndVirtualMemory();
-			}
+			var mockPayloadSender = new ProcessWorkingSetAndVirtualMemoryProvider();
+
+			mockPayloadSender.GetValue();
+			mockPayloadSender.GetValue();
 		}
 
 		[Benchmark]
