@@ -52,9 +52,14 @@ namespace Elastic.Apm
 
 		public void Dispose()
 		{
-			if (PayloadSender is IDisposable disposable)
+			if (PayloadSender is IDisposable disposablePayloadSender)
 			{
-				disposable?.Dispose();
+				disposablePayloadSender?.Dispose();
+			}
+
+			if(MetricsCollector is IDisposable disposableMetricsCollector)
+			{
+				disposableMetricsCollector?.Dispose();
 			}
 		}
 	}

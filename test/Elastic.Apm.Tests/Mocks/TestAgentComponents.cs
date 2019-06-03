@@ -1,3 +1,4 @@
+using System;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
@@ -23,7 +24,9 @@ namespace Elastic.Apm.Tests.Mocks
 				secretToken: secretToken,
 				captureHeaders: captureHeaders,
 				logLevel: logLevel
-			), payloadSender) { }
+			), payloadSender)
+		{
+		}
 
 		public TestAgentComponents(TestLogger logger, string serverUrls = null, IPayloadSender payloadSender = null)
 			: this(new TestAgentConfigurationReader(logger, serverUrls: serverUrls), payloadSender) { }
@@ -31,7 +34,7 @@ namespace Elastic.Apm.Tests.Mocks
 		public TestAgentComponents(
 			TestAgentConfigurationReader reader,
 			IPayloadSender payloadSender = null
-		) : base(reader.Logger, reader, payloadSender ?? new MockPayloadSender()) { }
+		) : base(reader.Logger, reader, payloadSender ?? new MockPayloadSender(), new FakeMetricsCollector()) { }
 
 		protected internal static LogLevel ParseWithoutLogging(string value)
 		{
