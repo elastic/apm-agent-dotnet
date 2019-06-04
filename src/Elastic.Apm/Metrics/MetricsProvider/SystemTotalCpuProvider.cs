@@ -60,6 +60,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				}
 			}
 
+			var currentTimeSpan = DateTime.UtcNow;
+
 			if (!_firstTotal)
 			{
 				if (_processAssemblyVersion == null)
@@ -73,7 +75,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				else
 					cpuUsedMs = (cpuUsage - _lastCurrentTotalProcessCpuTime).TotalMilliseconds;
 
-				var totalMsPassed = (timespan - _lastTotalTick).TotalMilliseconds;
+				var totalMsPassed = (currentTimeSpan - _lastTotalTick).TotalMilliseconds;
 				var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
 
 				_firstTotal = false;
