@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
+﻿using System.Runtime.InteropServices;
 
 namespace Elastic.Apm.Metrics.Windows
 {
@@ -23,26 +20,16 @@ namespace Elastic.Apm.Metrics.Windows
 	{
 		[return: MarshalAs(UnmanagedType.Bool)]
 		[DllImport("Kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-		private static extern bool GlobalMemoryStatusEx(ref MemoryStatusEx lpBuffer); //ref. vs. [In, Out], see: https://www.pinvoke.net/default.aspx/kernel32.globalmemorystatusex
-
-		[return: MarshalAs(UnmanagedType.U8)]
-		[DllImport("Kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-		internal static extern ulong GetLastError();
+		private static extern bool GlobalMemoryStatusEx(ref MemoryStatusEx lpBuffer
+		); //ref. vs. [In, Out], see: https://www.pinvoke.net/default.aspx/kernel32.globalmemorystatusex
 
 		internal static (bool success, ulong total, ulong avail) GetTotalPhysAndAvailPhys()
 		{
-			if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-			{
-				var statEx = new MemoryStatusEx { dwLength = (uint)Marshal.SizeOf(typeof(MemoryStatusEx)) };
+			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return (false, 0, 0);
 
-				if (GlobalMemoryStatusEx(ref statEx))
-				{
-					return (true, statEx.ullTotalPhys, statEx.ullAvailPhys);
-				}
-			}
+			var statEx = new MemoryStatusEx { dwLength = (uint)Marshal.SizeOf(typeof(MemoryStatusEx)) };
 
-			return (false, 0, 0);
+			return GlobalMemoryStatusEx(ref statEx) ? (true, statEx.ullTotalPhys, statEx.ullAvailPhys) : ((bool success, ulong total, ulong avail))(false, 0, 0);
 		}
-
 	}
 }

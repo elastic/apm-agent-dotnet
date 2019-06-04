@@ -38,7 +38,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			}
 
 			//The x-plat implementation is ~18x slower than perf. counters on Windows
-			//Therefore this is only a fallback for in case of non-Windows OSs
+			//Therefore this is only a fallback in case of non-Windows OSs
 			var timespan = DateTime.UtcNow;
 			TimeSpan cpuUsage;
 

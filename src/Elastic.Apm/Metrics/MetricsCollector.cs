@@ -53,8 +53,13 @@ namespace Elastic.Apm.Metrics
 			var interval = configurationReader.MetricsIntervalInMillisecond;
 
 			// ReSharper disable once CompareOfFloatsByEqualityOperator
-			if (interval == 0) return;
+			if (interval == 0)
+			{
+				_logger.Info()?.Log("Collecting metrics is disabled - the agent won't collect metrics");
+				return;
+			}
 
+			_logger.Info()?.Log("Collecting metrics in {interval} milliseconds interval", interval);
 			_timer = new Timer(interval);
 			_timer.Elapsed += (sender, args) => { CollectAllMetrics(); };
 		}

@@ -22,7 +22,7 @@ namespace Elastic.Apm
 			Service =  Service.GetDefaultService(ConfigurationReader);
 			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigurationReader, Service);
 
-			MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigurationReader );
+			MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigurationReader);
 			MetricsCollector.StartCollecting();
 
 			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationReader);

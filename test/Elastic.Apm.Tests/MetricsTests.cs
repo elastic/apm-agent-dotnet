@@ -33,7 +33,7 @@ namespace Elastic.Apm.Tests
 
 			var systemTotalCpuProvider = new SystemTotalCpuProvider(testLogger);
 
-			//Needs to be called at least 2. times to deliver value - this is by design
+			//Needs to be called at least 2 times to deliver value - this is by design
 			systemTotalCpuProvider.GetValue();
 			var retVal = systemTotalCpuProvider.GetValue();
 			retVal.First().KeyValue.Value.Should().BeInRange(0, 1);
@@ -44,7 +44,7 @@ namespace Elastic.Apm.Tests
 		{
 			var processTotalCpuProvider = new ProcessTotalCpuTimeProvider();
 
-			//Needs to be called at least 2. times to deliver value - this is by design
+			//Needs to be called at least 2 times to deliver value - this is by design
 			processTotalCpuProvider.GetValue();
 			var retVal = processTotalCpuProvider.GetValue();
 			retVal.First().KeyValue.Value.Should().BeInRange(0, 1);
@@ -75,9 +75,12 @@ namespace Elastic.Apm.Tests
 			for (var i = 0; i <= MetricsCollector.MaxTryWithoutSuccess; i++) mc.CollectAllMetrics();
 
 			providerWithException.NumberOfGetValueCalls.Should().Be(MetricsCollector.MaxTryWithoutSuccess);
-			testLogger.Lines.Count.Should().Be(MetricsCollector.MaxTryWithoutSuccess * 2 + 1); // *2 because exceptions are logged in a new line
 
-			testLogger.Lines.First().Should().Contain($"Failed reading {providerWithException.NameInLogs} 1 times");
+			// *2 because exceptions are logged in a new line, + 2 because 1) printing the metricsinterval and 2) printing that the given metrics
+			// wont be collected anymore:
+			testLogger.Lines.Count.Should().Be(MetricsCollector.MaxTryWithoutSuccess * 2 + 2);
+
+			testLogger.Lines[1].Should().Contain($"Failed reading {providerWithException.NameInLogs} 1 times");
 			testLogger.Lines.Last()
 				.Should()
 				.Contain(
@@ -88,7 +91,7 @@ namespace Elastic.Apm.Tests
 
 			//no more logs, no more call to GetValue():
 			providerWithException.NumberOfGetValueCalls.Should().Be(MetricsCollector.MaxTryWithoutSuccess);
-			testLogger.Lines.Count.Should().Be(MetricsCollector.MaxTryWithoutSuccess * 2 + 1);
+			testLogger.Lines.Count.Should().Be(MetricsCollector.MaxTryWithoutSuccess * 2 + 2);
 		}
 
 		[Fact]

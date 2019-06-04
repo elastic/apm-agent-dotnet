@@ -7,6 +7,10 @@ using Elastic.Apm.Metrics.Windows;
 
 namespace Elastic.Apm.Metrics.MetricsProvider
 {
+	/// <summary>
+	/// Returns total and free system memory.
+	/// Currently Windows & Linux -only, no macOS support at the moment.
+	/// </summary>
 	internal class FreeAndTotalMemoryProvider : IMetricsProvider
 	{
 		private const string FreeMemory = "system.memory.actual.free";

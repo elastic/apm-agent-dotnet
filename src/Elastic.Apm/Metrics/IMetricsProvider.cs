@@ -7,12 +7,12 @@ namespace Elastic.Apm.Metrics
 	/// Defines an interface that every class implements that provides some metric value.
 	/// This interface is known to the <see cref="MetricsCollector" /> type and you
 	/// can implement new providers for other metrics by implementing this interface
-	/// and adding it to <see cref="MetricsCollector" />
+	/// and adding it to <see cref="MetricsCollector" />.
 	/// </summary>
 	internal interface IMetricsProvider
 	{
 		/// <summary>
-		/// Stores the number of calls to the <see cref="GetValue"/> method when it either returned null or an empty string.
+		/// Stores the number of calls to the <see cref="GetValue"/> method when it either returned null or an empty list.
 		/// This is used by <see cref="MetricsCollector"/>
 		/// </summary>
 		int ConsecutiveNumberOfFailedReads { get; set; }
@@ -24,9 +24,9 @@ namespace Elastic.Apm.Metrics
 		string NameInLogs { get; }
 
 		/// <summary>
-		/// The main part of the provider, the implementor should do the work to read the value(s) of the given metric in this method
+		/// The main part of the provider, the implementor should do the work to read the value(s) of the given metric(s) in this method.
 		/// </summary>
-		/// <returns>The key and the value of the metric</returns>
+		/// <returns>The key and the value of the metric(s)</returns>
 		IEnumerable<Sample> GetValue();
 	}
 }
