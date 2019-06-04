@@ -30,7 +30,6 @@ namespace Elastic.Apm.Tests
 		public void SystemCpu()
 		{
 			var testLogger = new TestLogger();
-
 			var systemTotalCpuProvider = new SystemTotalCpuProvider(testLogger);
 
 			//Needs to be called at least 2 times to deliver value - this is by design
@@ -102,7 +101,7 @@ namespace Elastic.Apm.Tests
 			var configReader = new TestAgentConfigurationReader(logger, metricsInterval: "1s");
 			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender, logger: logger, configurationReader: configReader)))
 			{
-				await Task.Delay(1200); //make sure we wait enough to collect 1 set of metrics
+				await Task.Delay(2200); //make sure we wait enough to collect 1 set of metrics
 				agent.ConfigurationReader.MetricsIntervalInMillisecond.Should().Be(1000);
 			}
 
