@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
@@ -21,7 +23,30 @@ namespace Elastic.Apm
 
 			Service =  Service.GetDefaultService(ConfigurationReader);
 
-			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigurationReader, Service);
+			var system = new Api.System();
+
+			try
+			{
+				if (File.Exists("/proc/self/cgroup"))
+				{
+					using (var sr = new StreamReader("/proc/self/cgroup"))
+					{
+						var line = sr.ReadLine();
+						var parts = line?.Split('/');
+						if (parts != null)
+						{
+							var lastPart = parts.Last();
+							system.Container = new Container { Id = lastPart};
+						}
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				Logger.Error()?.LogException(e, "Failed reading container id");
+			}
+
+			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigurationReader, Service, system);
 			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationReader);
 			TransactionContainer = new TransactionContainer();
 		}

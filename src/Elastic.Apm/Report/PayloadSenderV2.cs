@@ -32,16 +32,20 @@ namespace Elastic.Apm.Report
 		private readonly IApmLogger _logger;
 
 		private readonly Service _service;
+		internal readonly Api.System _system;
 
 		private CancellationTokenSource _batchBlockReceiveAsyncCts;
 
 		private readonly PayloadItemSerializer _payloadItemSerializer = new PayloadItemSerializer();
 
 		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler = new SingleThreadTaskScheduler(CancellationToken.None);
+		private readonly Metadata _metadata;
 
-		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, HttpMessageHandler handler = null)
+		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, Api.System system, HttpMessageHandler handler = null)
 		{
 			_service = service;
+			_system = system;
+			_metadata = new Metadata { Service = _service, System = _system};
 			_logger = logger?.Scoped(nameof(PayloadSenderV2));
 
 			var serverUrlBase = configurationReader.ServerUrls.First();
@@ -103,8 +107,7 @@ namespace Elastic.Apm.Report
 		{
 			try
 			{
-				var metadata = new Metadata { Service = _service };
-				var metadataJson = _payloadItemSerializer.SerializeObject(metadata);
+				var metadataJson = _payloadItemSerializer.SerializeObject(_metadata);
 				var ndjson = new StringBuilder();
 				ndjson.Append("{\"metadata\": " + metadataJson + "}" + "\n");
 
@@ -159,6 +162,8 @@ namespace Elastic.Apm.Report
 	{
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global - used by Json.Net
 		public Service Service { get; set; }
+
+		public Api.System System { get; set; }
 	}
 
 	//Credit: https://stackoverflow.com/a/30726903/1783306
