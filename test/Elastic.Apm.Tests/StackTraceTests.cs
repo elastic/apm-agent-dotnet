@@ -42,6 +42,8 @@ namespace Elastic.Apm.Tests
 
 		/// <summary>
 		/// Makes sure that the name of the async method is captured correctly
+		/// Also asserts that the line number is 0 in this case - that is because the fixed method name
+		/// does not match the line number in the state machine, so the agent sends LineNo 0.
 		/// </summary>
 		[Fact]
 		public async Task AsyncCallStackTest()
@@ -60,7 +62,8 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.Errors.Should().NotBeEmpty();
 			(payloadSender.Errors.First() as Error).Should().NotBeNull();
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should().Contain(m => m.Function == nameof(ClassWithAsync.TestMethodAsync));
+			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should()
+				.Contain(m => m.Function == nameof(ClassWithAsync.TestMethodAsync) && m.LineNo == 0);
 		}
 
 		/// <summary>
@@ -118,6 +121,39 @@ namespace Elastic.Apm.Tests
 				.Contain(m => m.FileName == typeof(DerivedTestClass).FullName
 					&& m.Function == nameof(DerivedTestClass.TestMethod)
 					&& m.Module == typeof(DerivedTestClass).Assembly.FullName);
+		}
+
+		/// <summary>
+		/// Makes sure that the filename is never null or empty in the call stack, since it's a required field.
+		/// </summary>
+		[Fact]
+		public void StackTraceWithLambda()
+		{
+			Action action = () => { TestMethod(); };
+
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			Assert.Throws<Exception>(() => { agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => { action(); }); });
+
+			payloadSender.Errors.Should().NotBeEmpty();
+			(payloadSender.Errors.First() as Error).Should().NotBeNull();
+			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should().NotContain(frame => string.IsNullOrWhiteSpace(frame.FileName));
+		}
+
+		private void TestMethod() => InnerTestMethod(() => throw new Exception("TestException"));
+
+		private void InnerTestMethod(Action actionToRun)
+		{
+			try
+			{
+				actionToRun();
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e);
+				throw;
+			}
 		}
 
 		private class ClassWithSyncMethods
