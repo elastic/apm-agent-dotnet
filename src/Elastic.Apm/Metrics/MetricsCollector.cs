@@ -10,24 +10,42 @@ using Elastic.Apm.Report;
 
 namespace Elastic.Apm.Metrics
 {
+	/// <summary>
+	/// Iterates through a list of <see cref="IMetricsProvider"/> and
+	/// sends the values through an <see cref="IPayloadSender"/> instance.
+	///
+	/// It collects the metrics on an interval read from the <see cref="IConfigurationReader"/> which is
+	/// passed to the constructor.
+	///
+	/// In case reading a value from an <see cref="IMetricsProvider"/> fails it retries <see cref="MaxTryWithoutSuccess"/> times,
+	/// after that it prints a log and won't retry anymore. This is to avoid endlessly trying to read values without success.
+	/// </summary>
 	internal class MetricsCollector : IDisposable, IMetricsCollector
 	{
-		private const int MaxTryWithoutSuccess = 5;
+		internal const int MaxTryWithoutSuccess = 5;
 		private readonly IApmLogger _logger;
 
-		private readonly List<IMetricsProvider> _metricsProviders;
+		/// <summary>
+		/// List of all providers that can provide metrics values.
+		/// Add new providers to this list in case you want the agent to collect more metrics
+		/// </summary>
+		internal readonly List<IMetricsProvider> MetricsProviders;
 		private readonly IPayloadSender _payloadSender;
 
 		private readonly Timer _timer;
 
 		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender, IConfigurationReader configurationReader)
 		{
-			_metricsProviders = new List<IMetricsProvider>
+			_logger = logger.Scoped(nameof(MetricsCollector));
+
+			MetricsProviders = new List<IMetricsProvider>
 			{
-				new FreeAndTotalMemoryProvider(), new FreeAndTotalMemoryProvider(), new SystemTotalCpuProvider(_logger)
+				new FreeAndTotalMemoryProvider(),
+				new ProcessWorkingSetAndVirtualMemoryProvider(),
+				new SystemTotalCpuProvider(_logger),
+				new ProcessTotalCpuTimeProvider()
 			};
 
-			_logger = logger.Scoped(nameof(MetricsCollector));
 			_payloadSender = payloadSender;
 
 			logger.Debug()?.Log("starting MetricsCollector");
@@ -37,7 +55,7 @@ namespace Elastic.Apm.Metrics
 			// ReSharper disable once CompareOfFloatsByEqualityOperator
 			if (interval == 0) return;
 
-			_timer = new Timer();
+			_timer = new Timer(interval);
 			_timer.Elapsed += (sender, args) => { CollectAllMetrics(); };
 		}
 
@@ -47,10 +65,9 @@ namespace Elastic.Apm.Metrics
 		{
 			var samples = new List<Sample>();
 
-
-			foreach (var metricsProvider in _metricsProviders)
+			foreach (var metricsProvider in MetricsProviders)
 			{
-				if (metricsProvider.ConsecutiveNumberOfFailedReads == MaxTryWithoutSuccess)
+				if (metricsProvider.ConsecutiveNumberOfFailedReads < MaxTryWithoutSuccess)
 				{
 					try
 					{
@@ -70,21 +87,27 @@ namespace Elastic.Apm.Metrics
 					{
 						metricsProvider.ConsecutiveNumberOfFailedReads++;
 						_logger.Error()
-							?.LogException(e, "Failed reading {metricsProvider.NameInLogs} {numberOfFail} times", metricsProvider.NameInLogs,
+							?.LogException(e, "Failed reading {ProviderName} {NumberOfFail} times", metricsProvider.NameInLogs,
 								metricsProvider.ConsecutiveNumberOfFailedReads);
 					}
 				}
-				if (metricsProvider.ConsecutiveNumberOfFailedReads == MaxTryWithoutSuccess)
-				{
-					_logger.Info()
-						?.Log("Reached maximum number of fails - the agent won't try reading {operationName} anymore", metricsProvider.NameInLogs);
-				}
+				if (metricsProvider.ConsecutiveNumberOfFailedReads != MaxTryWithoutSuccess) continue;
+
+				_logger.Info()
+					?.Log("Failed reading {operationName} {numberOfTimes} consecutively - the agent won't try reading {operationName} anymore",
+						metricsProvider.NameInLogs, metricsProvider.ConsecutiveNumberOfFailedReads, metricsProvider.NameInLogs);
+
+				metricsProvider.ConsecutiveNumberOfFailedReads++;
 			}
 
 			var metricSet = new MetricSet(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() * 1000, samples);
 
 			_payloadSender.QueueMetrics(metricSet);
-			_logger.Debug()?.Log("Metrics collected: {data}", samples.Select(n => n.ToString()).Aggregate((i, j) => i + ", " + j));
+			_logger.Debug()
+				?.Log("Metrics collected: {data}",
+					samples != null && samples.Count() > 0
+						? samples.Select(n => n.ToString()).Aggregate((i, j) => i + ", " + j)
+						: "no metrics collected");
 		}
 
 		public void Dispose()

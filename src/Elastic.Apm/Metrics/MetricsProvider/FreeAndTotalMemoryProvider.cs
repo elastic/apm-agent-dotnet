@@ -33,20 +33,28 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 				using (var sr = new StreamReader("/proc/meminfo"))
 				{
+					var hasMemFree = false;
+					var hasMemTotal = false;
+
 					var line = sr.ReadLine();
 
-					while (line != null || retVal.Count != 2) //TODO: break early if possible
+					while (line != null || retVal.Count != 2)
 					{
 						if (line != null && line.Contains("MemFree:"))
 						{
 							var (suc, res) = GetEntry(line, "MemFree:");
 							if (suc) retVal.Add(new Sample(FreeMemory, res));
+							hasMemFree = true;
 						}
 						if (line != null && line.Contains("MemTotal:"))
 						{
 							var (suc, res) = GetEntry(line, "MemTotal:");
 							if (suc) retVal.Add(new Sample(TotalMemory, res));
+							hasMemTotal = true;
 						}
+
+						if (hasMemFree && hasMemTotal)
+							break;
 
 						line = sr.ReadLine();
 					}

@@ -12,7 +12,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private const string SystemCpuTotalPct = "system.cpu.total.norm.pct";
 		private readonly IApmLogger _logger;
 
-		public SystemTotalCpuProvider(IApmLogger logger) => _logger = logger;
+		public SystemTotalCpuProvider(IApmLogger logger) => _logger = logger.Scoped(nameof(SystemTotalCpuProvider));
 
 		private bool _firstTotal = true;
 

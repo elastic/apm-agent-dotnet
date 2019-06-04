@@ -21,7 +21,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		public IEnumerable<Sample> GetValue()
 		{
-			//TODO: this can be wrong, see: https://github.com/dotnet/corefx/pull/37637#discussion_r283784218
 			var timespan = DateTime.UtcNow;
 			var cpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
 
