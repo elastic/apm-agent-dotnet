@@ -337,19 +337,19 @@ namespace Elastic.Apm.Tests
 
 		[Fact]
 		public void SetMetricsInterValToNegative5()
-			=> MetricsInterValTestCommon("-5").Should().Be(30 * 1000);
+			=> MetricsInterValTestCommon("-5").Should().Be(ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds);
 
 		[Fact]
 		public void SetMetricsInterValToNegative5S()
-			=> MetricsInterValTestCommon("-5s").Should().Be(30 * 1000);
+			=> MetricsInterValTestCommon("-5s").Should().Be(ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds);
 
 		[Fact]
 		public void SetMetricsInterValToNegative5M()
-			=> MetricsInterValTestCommon("-5m").Should().Be(30 * 1000);
+			=> MetricsInterValTestCommon("-5m").Should().Be(ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds);
 
 		[Fact]
 		public void SetMetricsInterValToNegative5Ms()
-			=> MetricsInterValTestCommon("-5ms").Should().Be(30 * 1000);
+			=> MetricsInterValTestCommon("-5ms").Should().Be(ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds);
 
 		private static double MetricsInterValTestCommon(string configValue)
 		{
