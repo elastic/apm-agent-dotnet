@@ -1,10 +1,8 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 
 namespace Elastic.Apm
@@ -17,11 +15,10 @@ namespace Elastic.Apm
 			IPayloadSender payloadSender = null
 		)
 		{
-
 			Logger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 			ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(Logger);
 
-			Service =  Service.GetDefaultService(ConfigurationReader);
+			Service = Service.GetDefaultService(ConfigurationReader);
 
 			var system = new Api.System();
 
@@ -32,11 +29,21 @@ namespace Elastic.Apm
 					using (var sr = new StreamReader("/proc/self/cgroup"))
 					{
 						var line = sr.ReadLine();
-						var parts = line?.Split('/');
-						if (parts != null)
+
+						while (line != null)
 						{
-							var lastPart = parts.Last();
-							system.Container = new Container { Id = lastPart};
+							var fields = line.Split(':');
+							if (fields.Length == 3)
+							{
+								var dirAndId = fields[2].Split('/');
+
+								if (dirAndId.Length == 2)
+								{
+									var id = dirAndId[1].ToLower().EndsWith(".scope") ? dirAndId[1].Substring(".scope".Length) : dirAndId[1];
+									system.Container = new Container { Id = id };
+								}
+							}
+							line = sr.ReadLine();
 						}
 					}
 				}
@@ -72,10 +79,7 @@ namespace Elastic.Apm
 
 		public void Dispose()
 		{
-			if (PayloadSender is IDisposable disposable)
-			{
-				disposable?.Dispose();
-			}
+			if (PayloadSender is IDisposable disposable) disposable.Dispose();
 		}
 	}
 }
