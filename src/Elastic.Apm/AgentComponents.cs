@@ -3,7 +3,6 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
-using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 
 namespace Elastic.Apm
@@ -35,7 +34,7 @@ namespace Elastic.Apm
 
 		public IPayloadSender PayloadSender { get; }
 
-		public IMetricsCollector MetricsCollector { get; }
+		private IMetricsCollector MetricsCollector { get; }
 
 		/// <summary>
 		/// Identifies the monitored service. If this remains unset the agent
@@ -52,14 +51,14 @@ namespace Elastic.Apm
 
 		public void Dispose()
 		{
-			if (PayloadSender is IDisposable disposablePayloadSender)
-			{
-				disposablePayloadSender?.Dispose();
-			}
-
 			if(MetricsCollector is IDisposable disposableMetricsCollector)
 			{
-				disposableMetricsCollector?.Dispose();
+				disposableMetricsCollector.Dispose();
+			}
+
+			if (PayloadSender is IDisposable disposablePayloadSender)
+			{
+				disposablePayloadSender.Dispose();
 			}
 		}
 	}
