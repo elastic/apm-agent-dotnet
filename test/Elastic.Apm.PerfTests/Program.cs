@@ -48,8 +48,8 @@ namespace Elastic.Apm.PerfTests
 		{
 			var mockPayloadSender = new ProcessTotalCpuTimeProvider();
 
-			mockPayloadSender.GetValue();
-			mockPayloadSender.GetValue();
+			mockPayloadSender.GetSamples();
+			mockPayloadSender.GetSamples();
 		}
 
 		[Benchmark]
@@ -58,8 +58,8 @@ namespace Elastic.Apm.PerfTests
 			var noopLogger = new NoopLogger();
 			var systemTotalCpuProvider = new SystemTotalCpuProvider(noopLogger);
 
-			systemTotalCpuProvider.GetValue();
-			systemTotalCpuProvider.GetValue();
+			systemTotalCpuProvider.GetSamples();
+			systemTotalCpuProvider.GetSamples();
 		}
 
 		[Benchmark]
@@ -67,8 +67,8 @@ namespace Elastic.Apm.PerfTests
 		{
 			var mockPayloadSender = new FreeAndTotalMemoryProvider();
 
-			mockPayloadSender.GetValue();
-			mockPayloadSender.GetValue();
+			mockPayloadSender.GetSamples();
+			mockPayloadSender.GetSamples();
 		}
 
 		[Benchmark]
@@ -76,8 +76,8 @@ namespace Elastic.Apm.PerfTests
 		{
 			var mockPayloadSender = new ProcessWorkingSetAndVirtualMemoryProvider();
 
-			mockPayloadSender.GetValue();
-			mockPayloadSender.GetValue();
+			mockPayloadSender.GetSamples();
+			mockPayloadSender.GetSamples();
 		}
 
 		[Benchmark]

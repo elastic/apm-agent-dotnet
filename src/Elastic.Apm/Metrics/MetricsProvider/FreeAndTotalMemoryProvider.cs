@@ -17,9 +17,9 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private const string TotalMemory = "system.memory.total";
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
-		public string NameInLogs => "total and free memory";
+		public string DbgName => "total and free memory";
 
-		public IEnumerable<Sample> GetValue()
+		public IEnumerable<MetricSample> GetSamples()
 		{
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
@@ -28,12 +28,12 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				if (!success || totalMemory == 0 || freeMemory == 0)
 					return null;
 
-				return new List<Sample>(2) { new Sample(FreeMemory, freeMemory), new Sample(TotalMemory, totalMemory) };
+				return new List<MetricSample>(2) { new MetricSample(FreeMemory, freeMemory), new MetricSample(TotalMemory, totalMemory) };
 			}
 
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 			{
-				var retVal = new List<Sample>();
+				var retVal = new List<MetricSample>();
 
 				using (var sr = new StreamReader("/proc/meminfo"))
 				{
@@ -47,13 +47,13 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 						if (line != null && line.Contains("MemFree:"))
 						{
 							var (suc, res) = GetEntry(line, "MemFree:");
-							if (suc) retVal.Add(new Sample(FreeMemory, res));
+							if (suc) retVal.Add(new MetricSample(FreeMemory, res));
 							hasMemFree = true;
 						}
 						if (line != null && line.Contains("MemTotal:"))
 						{
 							var (suc, res) = GetEntry(line, "MemTotal:");
-							if (suc) retVal.Add(new Sample(TotalMemory, res));
+							if (suc) retVal.Add(new MetricSample(TotalMemory, res));
 							hasMemTotal = true;
 						}
 

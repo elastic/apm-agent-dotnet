@@ -33,8 +33,8 @@ namespace Elastic.Apm.Tests
 			var systemTotalCpuProvider = new SystemTotalCpuProvider(testLogger);
 
 			//Needs to be called at least 2 times to deliver value - this is by design
-			systemTotalCpuProvider.GetValue();
-			var retVal = systemTotalCpuProvider.GetValue();
+			systemTotalCpuProvider.GetSamples();
+			var retVal = systemTotalCpuProvider.GetSamples();
 			retVal.First().KeyValue.Value.Should().BeInRange(0, 1);
 		}
 
@@ -44,8 +44,8 @@ namespace Elastic.Apm.Tests
 			var processTotalCpuProvider = new ProcessTotalCpuTimeProvider();
 
 			//Needs to be called at least 2 times to deliver value - this is by design
-			processTotalCpuProvider.GetValue();
-			var retVal = processTotalCpuProvider.GetValue();
+			processTotalCpuProvider.GetSamples();
+			var retVal = processTotalCpuProvider.GetSamples();
 			retVal.First().KeyValue.Value.Should().BeInRange(0, 1);
 		}
 
@@ -53,9 +53,9 @@ namespace Elastic.Apm.Tests
 		public void GetWorkingSetAndVirtualMemory()
 		{
 			var processWorkingSetAndVirtualMemoryProvider = new ProcessWorkingSetAndVirtualMemoryProvider();
-			var retVal = processWorkingSetAndVirtualMemoryProvider.GetValue();
+			var retVal = processWorkingSetAndVirtualMemoryProvider.GetSamples();
 
-			var enumerable = retVal as Sample[] ?? retVal.ToArray();
+			var enumerable = retVal as MetricSample[] ?? retVal.ToArray();
 			enumerable.Should().NotBeEmpty();
 			enumerable.First().KeyValue.Value.Should().BeGreaterThan(0);
 		}
@@ -71,7 +71,7 @@ namespace Elastic.Apm.Tests
 			var providerWithException = new MetricsProviderWithException();
 			mc.MetricsProviders.Add(providerWithException);
 
-			for (var i = 0; i <= MetricsCollector.MaxTryWithoutSuccess; i++) mc.CollectAllMetrics();
+			for (var i = 0; i < MetricsCollector.MaxTryWithoutSuccess; i++) mc.CollectAllMetrics();
 
 			providerWithException.NumberOfGetValueCalls.Should().Be(MetricsCollector.MaxTryWithoutSuccess);
 
@@ -79,11 +79,11 @@ namespace Elastic.Apm.Tests
 			// wont be collected anymore:
 			testLogger.Lines.Count.Should().Be(MetricsCollector.MaxTryWithoutSuccess * 2 + 2);
 
-			testLogger.Lines[1].Should().Contain($"Failed reading {providerWithException.NameInLogs} 1 times");
+			testLogger.Lines[1].Should().Contain($"Failed reading {providerWithException.DbgName} 1 times");
 			testLogger.Lines.Last()
 				.Should()
 				.Contain(
-					$"Failed reading {providerWithException.NameInLogs} {MetricsCollector.MaxTryWithoutSuccess} consecutively - the agent won't try reading {providerWithException.NameInLogs} anymore");
+					$"Failed reading {providerWithException.DbgName} {MetricsCollector.MaxTryWithoutSuccess} consecutively - the agent won't try reading {providerWithException.DbgName} anymore");
 
 			//make sure GetValue() in MetricsProviderWithException is not called anymore:
 			for (var i = 0; i < 10; i++) mc.CollectAllMetrics();
@@ -112,11 +112,11 @@ namespace Elastic.Apm.Tests
 		private class MetricsProviderWithException : IMetricsProvider
 		{
 			public int ConsecutiveNumberOfFailedReads { get; set; }
-			public string NameInLogs => "test metric";
+			public string DbgName => "test metric";
 
 			public int NumberOfGetValueCalls { get; private set; }
 
-			public IEnumerable<Sample> GetValue()
+			public IEnumerable<MetricSample> GetSamples()
 			{
 				NumberOfGetValueCalls++;
 				throw new Exception("testException");

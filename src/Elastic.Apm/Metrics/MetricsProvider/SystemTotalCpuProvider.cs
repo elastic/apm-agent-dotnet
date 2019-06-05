@@ -23,9 +23,9 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private PerformanceCounter _processorTimePerfCounter;
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
-		public string NameInLogs => "total system CPU time";
+		public string DbgName => "total system CPU time";
 
-		public IEnumerable<Sample> GetValue()
+		public IEnumerable<MetricSample> GetSamples()
 		{
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
@@ -34,7 +34,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 				var val = _processorTimePerfCounter.NextValue();
 
-				return new List<Sample> { new Sample(SystemCpuTotalPct, (double)val / 100) };
+				return new List<MetricSample> { new MetricSample(SystemCpuTotalPct, (double)val / 100) };
 			}
 
 			//The x-plat implementation is ~18x slower than perf. counters on Windows
@@ -82,7 +82,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				_lastTotalTick = timespan;
 				_lastCurrentTotalProcessCpuTime = cpuUsage;
 
-				return new List<Sample> { new Sample(SystemCpuTotalPct, cpuUsageTotal) };
+				return new List<MetricSample> { new MetricSample(SystemCpuTotalPct, cpuUsageTotal) };
 			}
 
 			_firstTotal = false;

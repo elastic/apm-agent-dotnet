@@ -30,6 +30,7 @@ namespace Elastic.Apm.Metrics
 		/// Add new providers to this list in case you want the agent to collect more metrics
 		/// </summary>
 		internal readonly List<IMetricsProvider> MetricsProviders;
+
 		private readonly IPayloadSender _payloadSender;
 
 		private readonly Timer _timer;
@@ -47,8 +48,6 @@ namespace Elastic.Apm.Metrics
 			};
 
 			_payloadSender = payloadSender;
-
-			logger.Debug()?.Log("starting MetricsCollector");
 
 			var interval = configurationReader.MetricsIntervalInMillisecond;
 
@@ -68,50 +67,48 @@ namespace Elastic.Apm.Metrics
 
 		internal void CollectAllMetrics()
 		{
-			var samples = new List<Sample>();
+			var samplesFromAllProviders = new List<MetricSample>();
 
 			foreach (var metricsProvider in MetricsProviders)
 			{
-				if (metricsProvider.ConsecutiveNumberOfFailedReads < MaxTryWithoutSuccess)
+				if (metricsProvider.ConsecutiveNumberOfFailedReads == MaxTryWithoutSuccess)
+					continue;
+				try
 				{
-					try
+					var samplesFromCurrentProvider = metricsProvider.GetSamples();
+					if (samplesFromCurrentProvider != null)
 					{
-						var sample = metricsProvider.GetValue();
-						if (sample != null)
-						{
-							var sampleArray = sample as Sample[] ?? sample.ToArray();
-							if (sampleArray.Any())
-								samples.AddRange(sampleArray);
+						var sampleArray = samplesFromCurrentProvider as MetricSample[] ?? samplesFromCurrentProvider.ToArray();
+						if (sampleArray.Any())
+							samplesFromAllProviders.AddRange(sampleArray);
 
-							metricsProvider.ConsecutiveNumberOfFailedReads = 0;
-						}
-						else
-							metricsProvider.ConsecutiveNumberOfFailedReads++;
+						metricsProvider.ConsecutiveNumberOfFailedReads = 0;
 					}
-					catch (Exception e)
-					{
+					else
 						metricsProvider.ConsecutiveNumberOfFailedReads++;
-						_logger.Error()
-							?.LogException(e, "Failed reading {ProviderName} {NumberOfFail} times", metricsProvider.NameInLogs,
-								metricsProvider.ConsecutiveNumberOfFailedReads);
-					}
 				}
+				catch (Exception e)
+				{
+					metricsProvider.ConsecutiveNumberOfFailedReads++;
+					_logger.Error()
+						?.LogException(e, "Failed reading {ProviderName} {NumberOfFail} times", metricsProvider.DbgName,
+							metricsProvider.ConsecutiveNumberOfFailedReads);
+				}
+
 				if (metricsProvider.ConsecutiveNumberOfFailedReads != MaxTryWithoutSuccess) continue;
 
 				_logger.Info()
 					?.Log("Failed reading {operationName} {numberOfTimes} consecutively - the agent won't try reading {operationName} anymore",
-						metricsProvider.NameInLogs, metricsProvider.ConsecutiveNumberOfFailedReads, metricsProvider.NameInLogs);
-
-				metricsProvider.ConsecutiveNumberOfFailedReads++;
+						metricsProvider.DbgName, metricsProvider.ConsecutiveNumberOfFailedReads, metricsProvider.DbgName);
 			}
 
-			var metricSet = new MetricSet(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() * 1000, samples);
+			var metricSet = new MetricSet(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() * 1000, samplesFromAllProviders);
 
 			_payloadSender.QueueMetrics(metricSet);
 			_logger.Debug()
 				?.Log("Metrics collected: {data}",
-					samples != null && samples.Count() > 0
-						? samples.Select(n => n.ToString()).Aggregate((i, j) => i + ", " + j)
+					samplesFromAllProviders.Any()
+						? samplesFromAllProviders.Select(n => n.ToString()).Aggregate((i, j) => i + ", " + j)
 						: "no metrics collected");
 		}
 

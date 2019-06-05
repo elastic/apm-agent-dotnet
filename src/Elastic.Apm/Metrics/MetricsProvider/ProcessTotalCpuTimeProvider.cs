@@ -9,7 +9,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 	public class ProcessTotalCpuTimeProvider : IMetricsProvider
 	{
 		private const string ProcessCpuTotalPct = "system.process.cpu.total.norm.pct";
-		private readonly object _lock = new object();
 		private bool _first = true;
 		private TimeSpan _lastCurrentProcessCpuTime;
 		private DateTime _lastTick;
@@ -17,11 +16,11 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private Version _processAssemblyVersion;
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
-		public string NameInLogs => "total process CPU time";
+		public string DbgName => "process total CPU time";
 
-		public IEnumerable<Sample> GetValue()
+		public IEnumerable<MetricSample> GetSamples()
 		{
-			var timespan = DateTime.UtcNow;
+			var timeStamp = DateTime.UtcNow;
 			var cpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
 			var currentTimeSpan = DateTime.UtcNow;
 
@@ -43,17 +42,14 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 
 				_first = false;
-				_lastTick = timespan;
+				_lastTick = timeStamp;
 				_lastCurrentProcessCpuTime = cpuUsage;
-				return new List<Sample> { new Sample(ProcessCpuTotalPct, cpuUsageTotal) };
+				return new List<MetricSample> { new MetricSample(ProcessCpuTotalPct, cpuUsageTotal) };
 			}
 
-			lock (_lock)
-			{
-				_first = false;
-				_lastTick = timespan;
-				_lastCurrentProcessCpuTime = cpuUsage;
-			}
+			_first = false;
+			_lastTick = timeStamp;
+			_lastCurrentProcessCpuTime = cpuUsage;
 
 			return null;
 		}

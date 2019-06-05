@@ -10,7 +10,7 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// List of captured metrics as key - value pairs
 		/// </summary>
-		List<Sample> Samples { get; set; }
+		IEnumerable<MetricSample> Samples { get; set; }
 
 		/// <summary>
 		/// Number of milliseconds in unix time

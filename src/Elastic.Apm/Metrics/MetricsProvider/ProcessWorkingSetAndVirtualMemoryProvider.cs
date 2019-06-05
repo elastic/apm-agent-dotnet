@@ -11,21 +11,21 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
-		public string NameInLogs => "process's working set and virtual memory size";
+		public string DbgName => "process's working set and virtual memory size";
 
-		public IEnumerable<Sample> GetValue()
+		public IEnumerable<MetricSample> GetSamples()
 		{
 			var process = Process.GetCurrentProcess();
 			var virtualMemory = process.VirtualMemorySize64;
 			var workingSet = process.WorkingSet64;
 
-			var retVal = new List<Sample>();
+			var retVal = new List<MetricSample>();
 
 			if (virtualMemory != 0)
-				retVal.Add(new Sample(ProcessVirtualMemory, virtualMemory));
+				retVal.Add(new MetricSample(ProcessVirtualMemory, virtualMemory));
 
 			if (workingSet != 0)
-				retVal.Add(new Sample(ProcessWorkingSetMemory, workingSet));
+				retVal.Add(new MetricSample(ProcessWorkingSetMemory, workingSet));
 
 			return retVal;
 		}
