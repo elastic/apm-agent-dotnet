@@ -6,6 +6,7 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
+using static Elastic.Apm.Config.ConfigConsts;
 
 namespace Elastic.Apm.Tests
 {
@@ -29,7 +30,7 @@ namespace Elastic.Apm.Tests
 		{
 			var serverUrl = "InvalidUrl";
 			var agent = new ApmAgent(new TestAgentComponents(serverUrls: serverUrl));
-			agent.ConfigurationReader.ServerUrls[0].Should().Be(ConfigConsts.DefaultServerUri);
+			agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultServerUri);
 		}
 
 		[Fact]
@@ -38,7 +39,7 @@ namespace Elastic.Apm.Tests
 			var serverUrl = "InvalidUrl";
 			var logger = new TestLogger();
 			var agent = new ApmAgent(new TestAgentComponents(logger, serverUrl));
-			agent.ConfigurationReader.ServerUrls[0].Should().Be(ConfigConsts.DefaultServerUri);
+			agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultServerUri);
 
 			logger.Lines.Should().NotBeEmpty();
 			logger.Lines[0]
@@ -47,7 +48,7 @@ namespace Elastic.Apm.Tests
 					$"{{{nameof(TestAgentConfigurationReader)}}}",
 					"Failed parsing server URL from",
 					TestAgentConfigurationReader.Origin,
-					ConfigConsts.EnvVarNames.ServerUrls,
+					EnvVarNames.ServerUrls,
 					serverUrl
 				);
 		}
@@ -102,7 +103,7 @@ namespace Elastic.Apm.Tests
 					$"{{{nameof(TestAgentConfigurationReader)}}}",
 					"Failed parsing server URL from",
 					TestAgentConfigurationReader.Origin,
-					ConfigConsts.EnvVarNames.ServerUrls,
+					EnvVarNames.ServerUrls,
 					serverUrl2
 				);
 		}
@@ -121,19 +122,19 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void SetCaptureHeadersTest()
 		{
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.CaptureHeaders, "false");
+			Environment.SetEnvironmentVariable(EnvVarNames.CaptureHeaders, "false");
 			var config = new EnvironmentConfigurationReader();
 			config.CaptureHeaders.Should().Be(false);
 		}
 
 		[Fact]
 		public void DefaultTransactionSampleRateTest() =>
-			Agent.Config.TransactionSampleRate.Should().Be(ConfigConsts.DefaultValues.TransactionSampleRate);
+			Agent.Config.TransactionSampleRate.Should().Be(DefaultValues.TransactionSampleRate);
 
 		[Fact]
 		public void SetTransactionSampleRateTest()
 		{
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate, "0.789");
+			Environment.SetEnvironmentVariable(EnvVarNames.TransactionSampleRate, "0.789");
 			var config = new EnvironmentConfigurationReader();
 			config.TransactionSampleRate.Should().Be(0.789);
 		}
@@ -141,10 +142,10 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void TransactionSampleRateExpectsDotForFloatingPoint()
 		{
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate, "0,789");
+			Environment.SetEnvironmentVariable(EnvVarNames.TransactionSampleRate, "0,789");
 			var config = new EnvironmentConfigurationReader();
 			// Since comma was used instead of dot then default value will be used
-			config.TransactionSampleRate.Should().Be(ConfigConsts.DefaultValues.TransactionSampleRate);
+			config.TransactionSampleRate.Should().Be(DefaultValues.TransactionSampleRate);
 		}
 
 		[Fact]
@@ -197,7 +198,7 @@ namespace Elastic.Apm.Tests
 					$"{{{nameof(TestAgentConfigurationReader)}}}",
 					"Failed parsing log level from",
 					TestAgentConfigurationReader.Origin,
-					ConfigConsts.EnvVarNames.LogLevel,
+					EnvVarNames.LogLevel,
 					"Defaulting to "
 				);
 		}
@@ -229,7 +230,7 @@ namespace Elastic.Apm.Tests
 		public void ReadServiceNameViaEnvironmentVariable()
 		{
 			var serviceName = "MyService123";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceName, serviceName);
+			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
 			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
@@ -247,7 +248,7 @@ namespace Elastic.Apm.Tests
 		public void ReadServiceNameWithDotViaEnvironmentVariable()
 		{
 			var serviceName = "My.Service.Test";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceName, serviceName);
+			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
 			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
@@ -290,7 +291,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void LoggerNotNull()
 		{
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServerUrls, "localhost"); //invalid, it should be "http://localhost"
+			Environment.SetEnvironmentVariable(EnvVarNames.ServerUrls, "localhost"); //invalid, it should be "http://localhost"
 			var testLogger = new TestLogger();
 			var config = new EnvironmentConfigurationReader(testLogger);
 			var serverUrl = config.ServerUrls.FirstOrDefault();
@@ -301,62 +302,69 @@ namespace Elastic.Apm.Tests
 
 		[Fact]
 		public void SetMetricsIntervalTo10S()
-		 => MetricsInterValTestCommon("10s").Should().Be(10 * 1000);
+		 => MetricsIntervalTestCommon("10s").Should().Be(10 * 1000);
 
 		/// <summary>
 		/// Sets the metrics interval to '500ms'
 		/// Makes sure that 500ms defaults to 0, since the minimum is 1s
 		/// </summary>
 		[Fact]
-		public void SetMetricsInterValTo500Ms()
-			=> MetricsInterValTestCommon("500ms").Should().Be(0);
+		public void SetMetricsIntervalTo500Ms()
+			=> MetricsIntervalTestCommon("500ms").Should().Be(0);
 
 		[Fact]
-		public void SetMetricsInterValTo1500Ms()
-			=> MetricsInterValTestCommon("1500ms").Should().Be(1500);
+		public void SetMetricsIntervalTo1500Ms()
+			=> MetricsIntervalTestCommon("1500ms").Should().Be(1500);
 
 		[Fact]
-		public void SetMetricsInterValTo1HourAs60minutes()
-			=> MetricsInterValTestCommon("60m").Should().Be(60*60*1000);
+		public void SetMetricsIntervalTo1HourAs60minutes()
+			=> MetricsIntervalTestCommon("60m").Should().Be(60*60*1000);
 
 		[Fact]
-		public void SetMetricsInterValTo1HourUsingUnsupportedUnits()
-			=> MetricsInterValTestCommon("1h").Should().Be(ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds);
+		public void SetMetricsIntervalTo1HourUsingUnsupportedUnits()
+			=> MetricsIntervalTestCommon("1h").Should().Be(DefaultValues.MetricsIntervalInMilliseconds);
 
 		[Fact]
-		public void SetMetricsInterValTo1M()
-			=> MetricsInterValTestCommon("1m").Should().Be(60 * 1000);
+		public void SetMetricsIntervalTo1M()
+			=> MetricsIntervalTestCommon("1m").Should().Be(60 * 1000);
 
 		/// <summary>
 		/// Sets the metrics interval to '10'.
 		/// Makes sure that '10' defaults to '10s'
 		/// </summary>
 		[Fact]
-		public void SetMetricsInterValTo10()
-			=> MetricsInterValTestCommon("10").Should().Be(10 * 1000);
+		public void SetMetricsIntervalTo10()
+			=> MetricsIntervalTestCommon("10").Should().Be(10 * 1000);
 
 		/// <summary>
 		/// Any negative value should be treated as 0
 		/// </summary>
 		[Fact]
-		public void SetMetricsInterValToNegative5()
-			=> MetricsInterValTestCommon("-1").Should().Be(0);
+		public void SetMetricsIntervalToNegativeNoUnits()
+			=> MetricsIntervalTestCommon("-1").Should().Be(0);
 
 		[Fact]
-		public void SetMetricsInterValToNegative5S()
-			=> MetricsInterValTestCommon("-0.3s").Should().Be(0);
+		public void SetMetricsIntervalToNegativeSeconds()
+			=> MetricsIntervalTestCommon("-0.3s").Should().Be(0);
 
 		[Fact]
-		public void SetMetricsInterValToNegative5M()
-			=> MetricsInterValTestCommon("-5m").Should().Be(0);
+		public void SetMetricsIntervalToNegativeMinutes()
+			=> MetricsIntervalTestCommon("-5m").Should().Be(0);
 
 		[Fact]
-		public void SetMetricsInterValToNegative5Ms()
-			=> MetricsInterValTestCommon("-5ms").Should().Be(0);
+		public void SetMetricsIntervalToNegativeMilliseconds()
+			=> MetricsIntervalTestCommon("-5ms").Should().Be(0);
 
-		private static double MetricsInterValTestCommon(string configValue)
+		/// <summary>
+		/// Make sure <see cref="DefaultValues.MetricsInterval" /> and <see cref="DefaultValues.MetricsIntervalInMilliseconds" /> are in sync
+		/// </summary>
+		[Fact]
+		public void MetricsIntervalDefaultValuesInSync()
+			=> MetricsIntervalTestCommon(DefaultValues.MetricsInterval).Should().Be(DefaultValues.MetricsIntervalInMilliseconds);
+
+		private static double MetricsIntervalTestCommon(string configValue)
 		{
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.MetricsInterval, configValue);
+			Environment.SetEnvironmentVariable(EnvVarNames.MetricsInterval, configValue);
 			var testLogger = new TestLogger();
 			var config = new EnvironmentConfigurationReader(testLogger);
 			return config.MetricsIntervalInMillisecond;
@@ -364,8 +372,8 @@ namespace Elastic.Apm.Tests
 
 		public void Dispose()
 		{
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServerUrls, null);
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.MetricsInterval, null);
+			Environment.SetEnvironmentVariable(EnvVarNames.ServerUrls, null);
+			Environment.SetEnvironmentVariable(EnvVarNames.MetricsInterval, null);
 		}
 	}
 }
