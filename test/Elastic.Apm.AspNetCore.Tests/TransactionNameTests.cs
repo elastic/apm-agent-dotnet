@@ -42,6 +42,19 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		/// <summary>
+		/// Calls a URL and sets custom transaction name.
+		/// Makes sure the Transaction.Name can be set to custom name.
+		/// </summary>
+		[Fact]
+		public async Task CustomTransactionName()
+		{
+			var httpClient = Helper.GetClient(_agent, _factory);
+			await httpClient.GetAsync($"home/sampleWithCustomName");
+
+			_payloadSender.Transactions.Should().OnlyContain(n => n.Name == "custom");
+		}
+
+		/// <summary>
 		/// Calls a URL that would map to a route with optional parameter (id), but does not pass the id value.
 		/// Makes sure no template value is captured in Transaction.Name.
 		/// </summary>
