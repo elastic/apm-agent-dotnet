@@ -124,31 +124,70 @@ namespace Elastic.Apm.Config
 				value = kv.Value;
 			}
 
-			double doubleVal;
-
-			switch (value)
+			if (! TryParseTimeInterval(value, out var valueInMilliseconds))
 			{
-				case string str when str.Length >= 2 && str.Substring(str.Length-2).ToLower() == "ms":
-					if (double.TryParse(str.Substring(0, str.Length - 2), out doubleVal) && doubleVal >= 0)
-						// ReSharper disable once CompareOfFloatsByEqualityOperator - we compare to exactly zero here
-						return  doubleVal < 1000 && doubleVal != 0 ? 0 : doubleVal;
-					break;
-				case string str when char.ToLower(str.Last())== 's':
-					if (double.TryParse(str.Substring(0, str.Length - 1), out doubleVal) && doubleVal >= 0)
-						// ReSharper disable once CompareOfFloatsByEqualityOperator - we compare to exactly zero here
-						return  doubleVal < 1 && doubleVal != 0 ? 0 : doubleVal * 1000;
-					break;
-				case string str when char.ToLower(str.Last()) == 'm':
-					if (double.TryParse(str.Substring(0, str.Length - 1), out doubleVal) && doubleVal >= 0)
-						// ReSharper disable once CompareOfFloatsByEqualityOperator - we compare to exactly zero here
-						return  doubleVal < 0.016666666666667 && doubleVal != 0 ? 0 : doubleVal * 1000 * 60;
-					break;
+				Logger?.Error()
+					?.Log("Failed to parse provided metrics interval `{ProvidedMetricsInterval}' - " +
+						"using default: {DefaultMetricsInterval}",
+						value,
+						ConfigConsts.DefaultValues.MetricsInterval);
+				return ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds;
 			}
 
-			if (double.TryParse(value, out doubleVal) && doubleVal >= 0)
-				return doubleVal * 1000;
+			// ReSharper disable once CompareOfFloatsByEqualityOperator - we compare to exactly zero here
+			if (valueInMilliseconds == 0)
+				return valueInMilliseconds;
 
-			return 30 * 1000;
+			if (valueInMilliseconds < 0)
+			{
+				Logger?.Error()
+					?.Log("Provided metrics interval `{ProvidedMetricsInterval}' is negative - " +
+						"using default: {DefaultMetricsInterval}",
+						value,
+						ConfigConsts.DefaultValues.MetricsInterval);
+				return ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds;
+			}
+
+			if (valueInMilliseconds < ConfigConsts.Constraints.MinMetricsIntervalInMillisecond)
+			{
+				Logger?.Error()
+					?.Log("Provided metrics interval `{ProvidedMetricsInterval}' is smaller than allowed minimum: {MinProvidedMetricsInterval}ms - " +
+						"metrics collection will be disabled",
+						value,
+						ConfigConsts.Constraints.MinMetricsIntervalInMillisecond);
+				return 0;
+			}
+
+			return valueInMilliseconds;
+		}
+
+		private bool TryParseTimeInterval(String valueAsString, out double valueInMilliseconds)
+		{
+			valueInMilliseconds = 0;
+
+			if (valueAsString.Length >= 2 && valueAsString.Substring(valueAsString.Length-2).ToLower() == "ms")
+				return TryParseFloatingPoint(valueAsString.Substring(0, valueAsString.Length - 2), out valueInMilliseconds);
+
+			if (char.ToLower(valueAsString.Last()) == 's')
+			{
+				if (!TryParseFloatingPoint(valueAsString.Substring(0, valueAsString.Length - 1), out var valueInSeconds))
+					return false;
+				valueInMilliseconds = TimeSpan.FromSeconds(valueInSeconds).TotalMilliseconds;
+				return true;
+			}
+
+			if (char.ToLower(valueAsString.Last()) == 'm')
+			{
+				if (!TryParseFloatingPoint(valueAsString.Substring(0, valueAsString.Length - 1), out var valueInMinutes))
+					return false;
+				valueInMilliseconds = TimeSpan.FromMinutes(valueInMinutes).TotalMilliseconds;
+				return true;
+			}
+
+			if (!TryParseFloatingPoint(valueAsString, out var valueInSecondsNoUnits))
+				return false;
+			valueInMilliseconds = TimeSpan.FromSeconds(valueInSecondsNoUnits).TotalMilliseconds;
+			return true;
 		}
 
 		protected virtual string DiscoverServiceName()

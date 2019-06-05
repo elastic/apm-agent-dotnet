@@ -316,6 +316,14 @@ namespace Elastic.Apm.Tests
 			=> MetricsInterValTestCommon("1500ms").Should().Be(1500);
 
 		[Fact]
+		public void SetMetricsInterValTo1HourAs60minutes()
+			=> MetricsInterValTestCommon("60m").Should().Be(60*60*1000);
+
+		[Fact]
+		public void SetMetricsInterValTo1HourUsingUnsupportedUnits()
+			=> MetricsInterValTestCommon("1h").Should().Be(ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds);
+
+		[Fact]
 		public void SetMetricsInterValTo1M()
 			=> MetricsInterValTestCommon("1m").Should().Be(60 * 1000);
 
