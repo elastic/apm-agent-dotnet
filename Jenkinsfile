@@ -102,7 +102,7 @@ pipeline {
                 }
               }
               stage('Windows .NET Framework'){
-                agent { label 'windows-2016' }
+                agent { label 'windows' }
                 options { skipDefaultCheckout() }
                 environment {
                   HOME = "${env.WORKSPACE}"
@@ -166,7 +166,7 @@ pipeline {
                 }
               }
               stage('Windows .NET Core'){
-                agent { label 'windows-2016' }
+                agent { label 'windows' }
                 options { skipDefaultCheckout() }
                 environment {
                   HOME = "${env.WORKSPACE}"
