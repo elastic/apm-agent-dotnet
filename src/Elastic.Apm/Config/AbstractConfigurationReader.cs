@@ -116,15 +116,11 @@ namespace Elastic.Apm.Config
 		{
 			string value;
 			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
-			{
 				value = ConfigConsts.DefaultValues.MetricsInterval;
-			}
 			else
-			{
 				value = kv.Value;
-			}
 
-			if (! TryParseTimeInterval(value, out var valueInMilliseconds))
+			if (!TryParseTimeInterval(value, out var valueInMilliseconds))
 			{
 				Logger?.Error()
 					?.Log("Failed to parse provided metrics interval `{ProvidedMetricsInterval}' - " +
@@ -163,31 +159,37 @@ namespace Elastic.Apm.Config
 
 		private bool TryParseTimeInterval(String valueAsString, out double valueInMilliseconds)
 		{
-			valueInMilliseconds = 0;
-
-			if (valueAsString.Length >= 2 && valueAsString.Substring(valueAsString.Length-2).ToLower() == "ms")
-				return TryParseFloatingPoint(valueAsString.Substring(0, valueAsString.Length - 2), out valueInMilliseconds);
-
-			if (char.ToLower(valueAsString.Last()) == 's')
+			switch (valueAsString)
 			{
-				if (!TryParseFloatingPoint(valueAsString.Substring(0, valueAsString.Length - 1), out var valueInSeconds))
-					return false;
-				valueInMilliseconds = TimeSpan.FromSeconds(valueInSeconds).TotalMilliseconds;
-				return true;
-			}
+				case string _ when valueAsString.Length >= 2 && valueAsString.Substring(valueAsString.Length - 2).ToLower() == "ms":
+					return TryParseFloatingPoint(valueAsString.Substring(0, valueAsString.Length - 2), out valueInMilliseconds);
 
-			if (char.ToLower(valueAsString.Last()) == 'm')
-			{
-				if (!TryParseFloatingPoint(valueAsString.Substring(0, valueAsString.Length - 1), out var valueInMinutes))
-					return false;
-				valueInMilliseconds = TimeSpan.FromMinutes(valueInMinutes).TotalMilliseconds;
-				return true;
-			}
+				case string _ when char.ToLower(valueAsString.Last()) == 's':
+					if (!TryParseFloatingPoint(valueAsString.Substring(0, valueAsString.Length - 1), out var valueInSeconds))
+					{
+						valueInMilliseconds = 0;
+						return false;
+					}
+					valueInMilliseconds = TimeSpan.FromSeconds(valueInSeconds).TotalMilliseconds;
+					return true;
 
-			if (!TryParseFloatingPoint(valueAsString, out var valueInSecondsNoUnits))
-				return false;
-			valueInMilliseconds = TimeSpan.FromSeconds(valueInSecondsNoUnits).TotalMilliseconds;
-			return true;
+				case string _ when char.ToLower(valueAsString.Last()) == 'm':
+					if (!TryParseFloatingPoint(valueAsString.Substring(0, valueAsString.Length - 1), out var valueInMinutes))
+					{
+						valueInMilliseconds = 0;
+						return false;
+					}
+					valueInMilliseconds = TimeSpan.FromMinutes(valueInMinutes).TotalMilliseconds;
+					return true;
+				default:
+					if (!TryParseFloatingPoint(valueAsString, out var valueInSecondsNoUnits))
+					{
+						valueInMilliseconds = 0;
+						return false;
+					}
+					valueInMilliseconds = TimeSpan.FromSeconds(valueInSecondsNoUnits).TotalMilliseconds;
+					return true;
+			}
 		}
 
 		protected virtual string DiscoverServiceName()
