@@ -138,10 +138,9 @@ namespace Elastic.Apm.Config
 			{
 				Logger?.Error()
 					?.Log("Provided metrics interval `{ProvidedMetricsInterval}' is negative - " +
-						"using default: {DefaultMetricsInterval}",
-						value,
-						ConfigConsts.DefaultValues.MetricsInterval);
-				return ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds;
+						"metrics collection will be disabled",
+						value);
+				return 0;
 			}
 
 			if (valueInMilliseconds < ConfigConsts.Constraints.MinMetricsIntervalInMillisecond)
