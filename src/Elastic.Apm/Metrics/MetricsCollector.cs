@@ -53,6 +53,14 @@ namespace Elastic.Apm.Metrics
 				return;
 			}
 
+			MetricsProviders = new List<IMetricsProvider>
+			{
+				new FreeAndTotalMemoryProvider(),
+				new ProcessWorkingSetAndVirtualMemoryProvider(),
+				new SystemTotalCpuProvider(_logger),
+				new ProcessTotalCpuTimeProvider()
+			};
+
 			_logger.Info()?.Log("Collecting metrics in {interval} milliseconds interval", interval);
 			_timer = new Timer(interval);
 			_timer.Elapsed += (sender, args) => { CollectAllMetrics(); };
