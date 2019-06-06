@@ -91,7 +91,7 @@ namespace Elastic.Apm.AspNetCore
 			catch (Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
 			finally
 			{
-				if (transactionName == transaction.Name)
+				if (!transaction.HasCustomName)
 				{
 					//fixup Transaction.Name - e.g. /user/profile/1 -> /user/profile/{id}
 					var routeData = (context.Features[typeof(IRoutingFeature)] as IRoutingFeature)?.RouteData;
