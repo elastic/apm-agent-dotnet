@@ -22,7 +22,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		{
 			var timeStamp = DateTime.UtcNow;
 			var cpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
-			var currentTimeSpan = DateTime.UtcNow;
+			var currentTimeStamp = DateTime.UtcNow;
 
 			if (!_first)
 			{
@@ -37,7 +37,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				else
 					cpuUsedMs = (cpuUsage - _lastCurrentProcessCpuTime).TotalMilliseconds;
 
-				var totalMsPassed = (currentTimeSpan - _lastTick).TotalMilliseconds;
+				var totalMsPassed = (currentTimeStamp - _lastTick).TotalMilliseconds;
 				var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
 
 

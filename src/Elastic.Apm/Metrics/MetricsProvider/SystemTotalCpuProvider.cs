@@ -39,7 +39,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			//The x-plat implementation is ~18x slower than perf. counters on Windows
 			//Therefore this is only a fallback in case of non-Windows OSs
-			var timespan = DateTime.UtcNow;
+			var timeSpan = DateTime.UtcNow;
 			TimeSpan cpuUsage;
 
 			foreach (var proc in Process.GetProcesses())
@@ -60,7 +60,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				}
 			}
 
-			var currentTimeSpan = DateTime.UtcNow;
+			var currentTimeStamp = DateTime.UtcNow;
 
 			if (!_firstTotal)
 			{
@@ -75,18 +75,18 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				else
 					cpuUsedMs = (cpuUsage - _lastCurrentTotalProcessCpuTime).TotalMilliseconds;
 
-				var totalMsPassed = (currentTimeSpan - _lastTotalTick).TotalMilliseconds;
+				var totalMsPassed = (currentTimeStamp - _lastTotalTick).TotalMilliseconds;
 				var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
 
 				_firstTotal = false;
-				_lastTotalTick = timespan;
+				_lastTotalTick = timeSpan;
 				_lastCurrentTotalProcessCpuTime = cpuUsage;
 
 				return new List<MetricSample> { new MetricSample(SystemCpuTotalPct, cpuUsageTotal) };
 			}
 
 			_firstTotal = false;
-			_lastTotalTick = timespan;
+			_lastTotalTick = timeSpan;
 			_lastCurrentTotalProcessCpuTime = cpuUsage;
 
 			return null;
