@@ -38,8 +38,14 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					cpuUsedMs = (cpuUsage - _lastCurrentProcessCpuTime).TotalMilliseconds;
 
 				var totalMsPassed = (currentTimeStamp - _lastTick).TotalMilliseconds;
-				var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
 
+				double cpuUsageTotal;
+
+				// ReSharper disable once CompareOfFloatsByEqualityOperator
+				if (totalMsPassed != 0)
+					cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
+				else
+					cpuUsageTotal = 0;
 
 				_first = false;
 				_lastTick = timeStamp;
