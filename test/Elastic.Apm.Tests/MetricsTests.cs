@@ -42,9 +42,6 @@ namespace Elastic.Apm.Tests
 		public void ProcessCpu()
 		{
 			var processTotalCpuProvider = new ProcessTotalCpuTimeProvider();
-
-			//Needs to be called at least 2 times to deliver value - this is by design
-			processTotalCpuProvider.GetSamples();
 			var retVal = processTotalCpuProvider.GetSamples();
 			retVal.First().KeyValue.Value.Should().BeInRange(0, 1);
 		}
