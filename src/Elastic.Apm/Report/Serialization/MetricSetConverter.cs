@@ -16,7 +16,9 @@ namespace Elastic.Apm.Report.Serialization
 			{
 				var valueObj = new JObject();
 				valueObj.Add("value", item.KeyValue.Value);
-				samples.Add(item.KeyValue.Key, valueObj);
+
+				if(!samples.ContainsKey(item.KeyValue.Key))
+					samples.Add(item.KeyValue.Key, valueObj);
 			}
 
 			metrics.Add("samples", samples);
