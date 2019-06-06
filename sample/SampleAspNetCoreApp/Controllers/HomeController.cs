@@ -119,7 +119,7 @@ namespace SampleAspNetCoreApp.Controllers
 			return Ok(id);
 		}
 
-		public IActionResult SampleWithCustomName()
+		public IActionResult TransactionWithCustomName()
 		{
 			Agent.Tracer.CurrentTransaction.Name = "custom";
 
