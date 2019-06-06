@@ -42,14 +42,6 @@ namespace Elastic.Apm.Metrics
 		{
 			_logger = logger.Scoped(nameof(MetricsCollector));
 
-			MetricsProviders = new List<IMetricsProvider>
-			{
-				new FreeAndTotalMemoryProvider(),
-				new ProcessWorkingSetAndVirtualMemoryProvider(),
-				new SystemTotalCpuProvider(_logger),
-				new ProcessTotalCpuTimeProvider()
-			};
-
 			_payloadSender = payloadSender;
 
 			var interval = configurationReader.MetricsIntervalInMillisecond;

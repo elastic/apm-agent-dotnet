@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Elastic.Apm.Logging
 {
-	internal class ConsoleLogger : IApmLogger
+	public class ConsoleLogger : IApmLogger
 	{
 		private readonly TextWriter _errorOut;
 		private readonly TextWriter _standardOut;

@@ -9,11 +9,19 @@ using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
 	public class MetricsTests
 	{
+		private readonly ITestOutputHelper _outputHelper;
+
+		public MetricsTests(ITestOutputHelper outputHelper)
+		{
+			_outputHelper = outputHelper;
+		}
+
 		[Fact]
 		public void CollectAllMetrics()
 		{
@@ -29,20 +37,23 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void SystemCpu()
 		{
-			var testLogger = new TestLogger();
+			var testLogger = new XUnitLogger(_outputHelper);
 			var systemTotalCpuProvider = new SystemTotalCpuProvider(testLogger);
 
 			//Needs to be called at least 2 times to deliver value - this is by design
 			systemTotalCpuProvider.GetSamples();
 			var retVal = systemTotalCpuProvider.GetSamples();
+
+
 			retVal.First().KeyValue.Value.Should().BeInRange(0, 1);
 		}
 
 		[Fact]
 		public void ProcessCpu()
 		{
+			var testLogger = new XUnitLogger(_outputHelper);
 			var processTotalCpuProvider = new ProcessTotalCpuTimeProvider();
-			var retVal = processTotalCpuProvider.GetSamples();
+			var retVal = processTotalCpuProvider.GetSamples2(testLogger);
 			retVal.First().KeyValue.Value.Should().BeInRange(0, 1);
 		}
 
