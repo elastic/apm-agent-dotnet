@@ -4,7 +4,7 @@ using Elastic.Apm.Api;
 
 namespace Elastic.Apm.Metrics.MetricsProvider
 {
-	public class ProcessWorkingSetAndVirtualMemoryProvider : IMetricsProvider
+	internal class ProcessWorkingSetAndVirtualMemoryProvider : IMetricsProvider
 	{
 		private const string ProcessVirtualMemory = "system.process.memory.size";
 		private const string ProcessWorkingSetMemory = "system.process.memory.rss.bytes";

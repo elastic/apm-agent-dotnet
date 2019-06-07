@@ -10,7 +10,7 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Metrics.MetricsProvider
 {
-	public class SystemTotalCpuProvider : IMetricsProvider
+	internal class SystemTotalCpuProvider : IMetricsProvider
 	{
 		private const string SystemCpuTotalPct = "system.cpu.total.norm.pct";
 		private readonly IApmLogger _logger;

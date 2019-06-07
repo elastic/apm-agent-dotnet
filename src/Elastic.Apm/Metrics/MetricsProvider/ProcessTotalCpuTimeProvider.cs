@@ -6,7 +6,7 @@ using Elastic.Apm.Api;
 
 namespace Elastic.Apm.Metrics.MetricsProvider
 {
-	public class ProcessTotalCpuTimeProvider : IMetricsProvider
+	internal class ProcessTotalCpuTimeProvider : IMetricsProvider
 	{
 		private const string ProcessCpuTotalPct = "system.process.cpu.total.norm.pct";
 		private TimeSpan _lastCurrentProcessCpuTime;

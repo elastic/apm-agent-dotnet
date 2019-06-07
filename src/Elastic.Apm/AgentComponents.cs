@@ -12,21 +12,28 @@ namespace Elastic.Apm
 		public AgentComponents(
 			IApmLogger logger = null,
 			IConfigurationReader configurationReader = null,
-			IPayloadSender payloadSender = null,
-			IMetricsCollector metricsCollector = null
+			IPayloadSender payloadSender = null
 		)
 		{
 			Logger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 			ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(Logger);
-			Service =  Service.GetDefaultService(ConfigurationReader);
+			Service = Service.GetDefaultService(ConfigurationReader);
 			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigurationReader, Service);
 
-			MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigurationReader);
+			MetricsCollector = new MetricsCollector(Logger, PayloadSender, ConfigurationReader);
 			MetricsCollector.StartCollecting();
 
 			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationReader);
 			TransactionContainer = new TransactionContainer();
 		}
+
+		internal AgentComponents(
+			IMetricsCollector metricsCollector,
+			IApmLogger logger = null,
+			IConfigurationReader configurationReader = null,
+			IPayloadSender payloadSender = null
+		) : this(logger, configurationReader, payloadSender)
+			=> (MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigurationReader)).StartCollecting();
 
 		public IConfigurationReader ConfigurationReader { get; }
 
@@ -51,7 +58,7 @@ namespace Elastic.Apm
 
 		public void Dispose()
 		{
-			if(MetricsCollector is IDisposable disposableMetricsCollector)
+			if (MetricsCollector is IDisposable disposableMetricsCollector)
 			{
 				disposableMetricsCollector.Dispose();
 			}

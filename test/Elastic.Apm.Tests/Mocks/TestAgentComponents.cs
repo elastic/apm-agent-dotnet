@@ -34,7 +34,7 @@ namespace Elastic.Apm.Tests.Mocks
 		public TestAgentComponents(
 			TestAgentConfigurationReader reader,
 			IPayloadSender payloadSender = null
-		) : base(reader.Logger, reader, payloadSender ?? new MockPayloadSender(), new FakeMetricsCollector()) { }
+		) : base(new FakeMetricsCollector(), reader.Logger, reader, payloadSender ?? new MockPayloadSender()) { }
 
 		protected internal static LogLevel ParseWithoutLogging(string value)
 		{
