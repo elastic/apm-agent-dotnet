@@ -30,7 +30,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "total system CPU time";
 
-		private (bool success, double idle, int total) ReadProcStat()
+		private static (bool success, double idle, int total) ReadProcStat()
 		{
 			if (!File.Exists("/proc/stat")) return (false, 0, 0);
 
@@ -51,7 +51,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				var total = numbers.Sum();
 				var idle = numbers[3];
 
-				return (true, total, idle);
+				return (true, idle, total);
 			}
 		}
 
