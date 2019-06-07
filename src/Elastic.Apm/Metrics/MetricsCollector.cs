@@ -41,15 +41,6 @@ namespace Elastic.Apm.Metrics
 		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender, IConfigurationReader configurationReader)
 		{
 			_logger = logger.Scoped(nameof(MetricsCollector));
-
-			MetricsProviders = new List<IMetricsProvider>
-			{
-				new FreeAndTotalMemoryProvider(),
-				new ProcessWorkingSetAndVirtualMemoryProvider(),
-				new SystemTotalCpuProvider(_logger),
-				new ProcessTotalCpuTimeProvider()
-			};
-
 			_payloadSender = payloadSender;
 
 			var interval = configurationReader.MetricsIntervalInMillisecond;
@@ -60,6 +51,14 @@ namespace Elastic.Apm.Metrics
 				_logger.Info()?.Log("Collecting metrics is disabled - the agent won't collect metrics");
 				return;
 			}
+
+			MetricsProviders = new List<IMetricsProvider>
+			{
+				new FreeAndTotalMemoryProvider(),
+				new ProcessWorkingSetAndVirtualMemoryProvider(),
+				new SystemTotalCpuProvider(_logger),
+				new ProcessTotalCpuTimeProvider()
+			};
 
 			_logger.Info()?.Log("Collecting metrics in {interval} milliseconds interval", interval);
 			_timer = new Timer(interval);

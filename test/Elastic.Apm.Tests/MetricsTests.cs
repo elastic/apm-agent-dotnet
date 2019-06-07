@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
@@ -32,8 +33,9 @@ namespace Elastic.Apm.Tests
 			var testLogger = new TestLogger();
 			var systemTotalCpuProvider = new SystemTotalCpuProvider(testLogger);
 
-			//Needs to be called at least 2 times to deliver value - this is by design
+			//Some implementation may need to be called at least 2 times to deliver value - this is by design
 			systemTotalCpuProvider.GetSamples();
+			Thread.Sleep(1000); //See https://github.com/elastic/apm-agent-dotnet/pull/264#issuecomment-499778288
 			var retVal = systemTotalCpuProvider.GetSamples();
 			retVal.First().KeyValue.Value.Should().BeInRange(0, 1);
 		}
@@ -42,6 +44,7 @@ namespace Elastic.Apm.Tests
 		public void ProcessCpu()
 		{
 			var processTotalCpuProvider = new ProcessTotalCpuTimeProvider();
+			Thread.Sleep(1000); //See https://github.com/elastic/apm-agent-dotnet/pull/264#issuecomment-499778288
 			var retVal = processTotalCpuProvider.GetSamples();
 			retVal.First().KeyValue.Value.Should().BeInRange(0, 1);
 		}
