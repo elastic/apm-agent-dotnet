@@ -56,7 +56,7 @@ namespace Elastic.Apm.Metrics
 			{
 				new FreeAndTotalMemoryProvider(),
 				new ProcessWorkingSetAndVirtualMemoryProvider(),
-				new SystemTotalCpuProvider(_logger),
+				new SystemTotalCpuProvider(),
 				new ProcessTotalCpuTimeProvider()
 			};
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
@@ -30,8 +31,9 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void SystemCpu()
 		{
-			var testLogger = new TestLogger();
-			var systemTotalCpuProvider = new SystemTotalCpuProvider(testLogger);
+			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
+
+			var systemTotalCpuProvider = new SystemTotalCpuProvider();
 
 			//Some implementation may need to be called at least 2 times to deliver value - this is by design
 			systemTotalCpuProvider.GetSamples();

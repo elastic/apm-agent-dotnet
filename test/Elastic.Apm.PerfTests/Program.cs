@@ -55,8 +55,7 @@ namespace Elastic.Apm.PerfTests
 		[Benchmark]
 		public void CollectTotalCpuTime2X()
 		{
-			var noopLogger = new NoopLogger();
-			var systemTotalCpuProvider = new SystemTotalCpuProvider(noopLogger);
+			var systemTotalCpuProvider = new SystemTotalCpuProvider();
 
 			systemTotalCpuProvider.GetSamples();
 			systemTotalCpuProvider.GetSamples();
