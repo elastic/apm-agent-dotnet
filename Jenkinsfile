@@ -247,7 +247,6 @@ pipeline {
             steps {
               deleteDir()
               unstash 'source'
-              unstash('dotnet-linux')
               dir("${BASE_DIR}"){
                 release('secret/apm-team/ci/elastic-observability-appveyor')
               }
@@ -274,7 +273,6 @@ pipeline {
               input(message: 'Should we release a new version on NuGet?', ok: 'Yes, we should.')
               deleteDir()
               unstash 'source'
-              unstash('dotnet-linux')
               dir("${BASE_DIR}"){
                 release('secret/apm-team/ci/elastic-observability-nuget')
               }
