@@ -16,28 +16,11 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		{
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return;
 
-			if (!File.Exists("/proc/stat")) return;
+			var procStatValues = ReadProcStat();
+			if (!procStatValues.success) return;
 
-			using (var sr = new StreamReader("/proc/stat"))
-			{
-				var firstLine = sr.ReadLine();
-				if (firstLine == null || !firstLine.ToLower().StartsWith("cpu")) return;
-
-				var values = firstLine.Substring(5, firstLine.Length - 5).Split(' ');
-				if (values.Length < 4)
-					return;
-
-				var numbers = new int[values.Length];
-
-				if (values.Where((t, i) => !int.TryParse(t, NumberStyles.Integer, CultureInfo.InvariantCulture, out numbers[i])).Any())
-					return;
-
-				var total = numbers.Sum();
-				var idle = numbers[3];
-
-				_prevIdleTime = idle;
-				_prevTotalTime = total;
-			}
+			_prevIdleTime = procStatValues.idle;
+			_prevTotalTime = procStatValues.total;
 		}
 
 		private double _prevIdleTime;
@@ -46,6 +29,31 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "total system CPU time";
+
+		private (bool success, double idle, int total) ReadProcStat()
+		{
+			if (!File.Exists("/proc/stat")) return (false, 0, 0);
+
+			using (var sr = new StreamReader("/proc/stat"))
+			{
+				var firstLine = sr.ReadLine();
+				if (firstLine == null || !firstLine.ToLower().StartsWith("cpu")) return (false, 0 ,0);
+
+				var values = firstLine.Substring(5, firstLine.Length - 5).Split(' ');
+				if (values.Length < 4)
+					return (false, 0 ,0);
+
+				var numbers = new int[values.Length];
+
+				if (values.Where((t, i) => !int.TryParse(t, NumberStyles.Integer, CultureInfo.InvariantCulture, out numbers[i])).Any())
+					return (false, 0 ,0);
+
+				var total = numbers.Sum();
+				var idle = numbers[3];
+
+				return (true, total, idle);
+			}
+		}
 
 		public IEnumerable<MetricSample> GetSamples()
 		{
@@ -61,36 +69,19 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 			{
-				if (File.Exists("/proc/stat"))
-				{
-					using (var sr = new StreamReader("/proc/stat"))
-					{
-						var firstLine = sr.ReadLine();
-						if (firstLine == null || !firstLine.ToLower().StartsWith("cpu")) return null;
+				if (!File.Exists("/proc/stat")) return null;
 
-						var values = firstLine.Substring(5, firstLine.Length - 5).Split(' ');
-						if (values.Length < 4)
-							return null;
+				var procStatValues = ReadProcStat();
+				if (!procStatValues.success) return null;
 
-						var numbers = new int[values.Length];
+				var idleTimeDelta = procStatValues.idle - _prevIdleTime;
+				var totalTimeDelta = procStatValues.total - _prevTotalTime;
+				var notIdle = 1.0 - idleTimeDelta / totalTimeDelta;
 
-						if (values.Where((t, i) => !int.TryParse(t, NumberStyles.Integer, CultureInfo.InvariantCulture, out numbers[i])).Any())
-							return null;
+				_prevIdleTime = procStatValues.idle;
+				_prevTotalTime = procStatValues.total;
 
-						var total = numbers.Sum();
-						var idle = (double)numbers[3];
-
-						var idleTimeDelta = idle - _prevIdleTime;
-						var totalTimeDelta = total - _prevTotalTime;
-
-						var notIdle = 1.0 - idleTimeDelta / totalTimeDelta;
-
-						_prevIdleTime = idle;
-						_prevTotalTime = total;
-
-						return new List<MetricSample> { new MetricSample(SystemCpuTotalPct, notIdle) };
-					}
-				}
+				return new List<MetricSample> { new MetricSample(SystemCpuTotalPct, notIdle) };
 			}
 
 			return null;
