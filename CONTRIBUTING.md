@@ -33,7 +33,7 @@ Please make sure that your PR addresses a single issue and its size is reasonabl
 
 Therefore it's preferred to have multiple smaller PRs over a single big PR.
 
-This makes sure that obvious changes get merged quickly and don't get blocked by unrelated changes. Additionally, the repository will also have a useful and searchable history by doing so.
+This makes sure that changes that have consensus get merged quickly and don't get blocked by unrelated changes. Additionally, the repository will also have a useful and searchable history by doing so.
 
 Please do:
 - Try to get feedback as early as possible and prefer to ask questions in issues before you start submitting code.
@@ -48,7 +48,7 @@ Please do:
 Please don't:
 - Create a PR where you address multiple issues at once.
 - Create a giant PR with a huge change set. There is no hard rule, but if your change grows over 1000 lines, it's maybe worth thinking about making it self contained and submit it as a PR and address follow-up issues in a subsequent PR. (of course there can be exceptions)
-- Actively push code to a PR until you haven't received any feedback. Of course if you spot some minor things after you opened a PR, it's perfectly fine to push a small fix. But please don't do active work on a PR that haven't received any feedback. It's very possible that someone already looked at it and is about to write a detailed review. If you actively add new changes to a PR then the reviewer will have a hard time to provide up to date feedback. If you just want to show work-in-progress code, feel free to use the draft feature of github, or indicate in the title, that the work is not 100% done yet. Of course, once you have feedback on a PR, it's perfectly fine, or rather encouraged to start working collaboratively on the PR and push new changes and address issues and suggestions from the reviewer.
+- Actively push code to a PR until you have received feedback. Of course if you spot some minor things after you opened a PR, it's perfectly fine to push a small fix. But please don't do active work on a PR that haven't received any feedback. It's very possible that someone already looked at it and is about to write a detailed review. If you actively add new changes to a PR then the reviewer will have a hard time to provide up to date feedback. If you just want to show work-in-progress code, feel free to use the draft feature of github, or indicate in the title, that the work is not 100% done yet. Of course, once you have feedback on a PR, it's perfectly fine, or rather encouraged to start working collaboratively on the PR and push new changes and address issues and suggestions from the reviewer.
 - Change or add dependencies, unless you are really sure about it (it's best to ask about this in an issue first) - see [compatibility](####compatibility).
 
 
@@ -122,7 +122,7 @@ should "Squash and merge".
 
 #### Performance
 
-The agent is designed to monitor production applications. Therefore it's very important to keep the overhead of the agent as low as possible.
+The agent is designed to monitor production applications. Therefore it's very important to keep the performance overhead of the agent as low as possible.
 
 It's not uncommon that you write or change code that can potentially change the performance characteristics of the agent and therefore also of the application's of our users.
 
@@ -134,11 +134,12 @@ We care both about memory and CPU overhead and both should be measured. The `tes
 
 We aim to support the broadest set of .NET flavors and versions possible. This includes different OSs, typically Windows, Linux, and macOS.
 
-This is especially true for versions currently officially supported by Microsoft. In case of specific libraries and frameworks (e.g. ASP.NET Core) we aim to support every version which is supported by Microsoft or the library/framework author.
+This is especially true for versions officially supported by Microsoft at the moment. In case of specific libraries and frameworks (e.g. ASP.NET Core) we aim to support every version which is supported by Microsoft or the library/framework author.
 
 This means that the .NET APM Agent can end up in very different environments.
 
-There are 2 categories of projects in the `src` folder:
+To allow the agent to be used in all these different environments there are 2 categories of projects in the `src` folder:
+
  - The `Elastic.Apm` project is the core of the agent. This package is referenced by every other agent package, and it contains the Public Agent API. Therefore this package must target a very broad set of .NET flavors, versions, and environments. Currently this package targets .NET Standard 2.0. This means .NET Framework 3.5 is not supported currently, but the code-base would be very easy to port to .NET Framework 3.5. We should aim for a code-base in this project that is very easy to port to different environments. Porting it to older environments can be triggered by user feedback - e.g. someone needs the agent in an older environment.
 
  - Framework and Library specific projects (e.g. `Elastic.Apm.AspNetCore`). In case of these packages the goal is to target every possible supported (by Microsoft or the Library/Framework author) version of the corresponding library.
