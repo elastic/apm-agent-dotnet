@@ -29,12 +29,12 @@ namespace Elastic.Apm.Helpers
 			{
 				retVal.AddRange(from item in frames
 					let fileName = item?.GetMethod()
-						?.ReflectedType?.FullName //see: https://github.com/elastic/apm-agent-dotnet/pull/240#discussion_r289619196
+						?.DeclaringType?.FullName //see: https://github.com/elastic/apm-agent-dotnet/pull/240#discussion_r289619196
 					let functionName = GetRealMethodName(item?.GetMethod())
 					select new CapturedStackFrame
 					{
 						Function = functionName,
-						FileName = string.IsNullOrWhiteSpace(fileName)? "unknown" : fileName,
+						FileName = string.IsNullOrWhiteSpace(fileName)? "N/A" : fileName,
 						Module = item?.GetMethod()?.ReflectedType?.Assembly.FullName,
 						LineNo = item?.GetMethod().Name == functionName ? item?.GetFileLineNumber() ?? 0 : 0
 					});
