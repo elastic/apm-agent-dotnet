@@ -34,10 +34,8 @@ namespace Elastic.Apm.Tests
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
 
 			var systemTotalCpuProvider = new SystemTotalCpuProvider();
-
-			//Some implementation may need to be called at least 2 times to deliver value - this is by design
-			systemTotalCpuProvider.GetSamples();
 			Thread.Sleep(1000); //See https://github.com/elastic/apm-agent-dotnet/pull/264#issuecomment-499778288
+
 			var retVal = systemTotalCpuProvider.GetSamples();
 			retVal.First().KeyValue.Value.Should().BeInRange(0, 1);
 		}
