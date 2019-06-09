@@ -36,7 +36,7 @@ namespace Elastic.Apm.Helpers
 						Function = functionName,
 						FileName = string.IsNullOrWhiteSpace(fileName)? "N/A" : fileName,
 						Module = item?.GetMethod()?.ReflectedType?.Assembly.FullName,
-						LineNo = item?.GetMethod().Name == functionName ? item?.GetFileLineNumber() ?? 0 : 0
+						LineNo = item?.GetFileLineNumber() ?? 0
 					});
 			}
 			catch (Exception e)

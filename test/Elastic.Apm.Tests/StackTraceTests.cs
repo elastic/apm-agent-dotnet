@@ -42,8 +42,8 @@ namespace Elastic.Apm.Tests
 
 		/// <summary>
 		/// Makes sure that the name of the async method is captured correctly
-		/// Also asserts that the line number is 0 in this case - that is because the fixed method name
-		/// does not match the line number in the state machine, so the agent sends LineNo 0.
+		/// Also asserts that the line number is not 0 in this case.
+		/// See: https://github.com/elastic/apm-agent-dotnet/pull/253#discussion_r291835766
 		/// </summary>
 		[Fact]
 		public async Task AsyncCallStackTest()
@@ -64,7 +64,7 @@ namespace Elastic.Apm.Tests
 			payloadSender.Errors.Should().NotBeEmpty();
 			(payloadSender.Errors.First() as Error).Should().NotBeNull();
 			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should()
-				.Contain(m => m.Function == nameof(ClassWithAsync.TestMethodAsync) && m.LineNo == 0);
+				.Contain(m => m.Function == nameof(ClassWithAsync.TestMethodAsync) && m.LineNo != 0);
 		}
 
 		/// <summary>
