@@ -9,25 +9,40 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 	internal class ProcessTotalCpuTimeProvider : IMetricsProvider
 	{
 		private const string ProcessCpuTotalPct = "system.process.cpu.total.norm.pct";
-		private TimeSpan _lastCurrentProcessCpuTime;
-		private DateTime _lastTick;
-
-		private Version _processAssemblyVersion;
 
 		public ProcessTotalCpuTimeProvider()
 		{
-			_lastTick = DateTime.UtcNow;
+			_lastTimeWindowStart = DateTime.UtcNow;
 			_lastCurrentProcessCpuTime = Process.GetCurrentProcess().TotalProcessorTime;
 		}
+
+		private TimeSpan _lastCurrentProcessCpuTime;
+		private DateTime _lastTimeWindowStart;
+		private Version _processAssemblyVersion;
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "process total CPU time";
 
 		public IEnumerable<MetricSample> GetSamples()
 		{
-			var timeStamp = DateTime.UtcNow;
+			// We have to make sure that the timespan of the wall clock time is the same or longer than the potential max possible CPU time -
+			// we do this by the order in which we capture those.
+			//
+			// So:
+			//
+			//	Take timestamp
+			//	Get CPU usage
+			//
+			//	do the work (in this case next call)
+			//
+			//	Get CPU usage
+			//	Take timestamp
+			//
+			// Same as in https://github.com/dotnet/corefx/pull/37637#discussion_r283784218
+
+			var timeWindowStart = DateTime.UtcNow;
 			var cpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
-			var currentTimeStamp = DateTime.UtcNow;
+			var timeWindowEnd = DateTime.UtcNow;
 
 			if (_processAssemblyVersion == null)
 				_processAssemblyVersion = typeof(Process).Assembly.GetName().Version;
@@ -40,7 +55,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			else
 				cpuUsedMs = (cpuUsage - _lastCurrentProcessCpuTime).TotalMilliseconds;
 
-			var totalMsPassed = (currentTimeStamp - _lastTick).TotalMilliseconds;
+			var totalMsPassed = (timeWindowEnd - _lastTimeWindowStart).TotalMilliseconds;
 
 			double cpuUsageTotal;
 
@@ -50,7 +65,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			else
 				cpuUsageTotal = 0;
 
-			_lastTick = timeStamp;
+			_lastTimeWindowStart = timeWindowStart;
 			_lastCurrentProcessCpuTime = cpuUsage;
 			return new List<MetricSample> { new MetricSample(ProcessCpuTotalPct, cpuUsageTotal) };
 		}
