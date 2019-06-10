@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -8,9 +9,10 @@ using Elastic.Apm.Api;
 
 namespace Elastic.Apm.Metrics.MetricsProvider
 {
-	internal class SystemTotalCpuProvider : IMetricsProvider
+	internal class SystemTotalCpuProvider : IMetricsProvider, IDisposable
 	{
 		private const string SystemCpuTotalPct = "system.cpu.total.norm.pct";
+		private readonly StreamReader _procStatStreamReader;
 
 		public SystemTotalCpuProvider()
 		{
@@ -22,6 +24,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			_prevIdleTime = procStatValues.idle;
 			_prevTotalTime = procStatValues.total;
 		}
+
+		internal SystemTotalCpuProvider(StreamReader procStatStreamReader) => _procStatStreamReader = procStatStreamReader;
 
 		private long _prevIdleTime;
 		private long _prevTotalTime;
@@ -38,7 +42,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					return (false, 0, 0);
 
 				var firstLine = sr.ReadLine();
-				if (firstLine == null || !firstLine.ToLower().StartsWith("cpu")) return (false, 0 ,0);
+				if (firstLine == null || !firstLine.ToLower().StartsWith("cpu")) return (false, 0, 0);
 
 				var values = firstLine.Substring(3, firstLine.Length - 3).Trim().Split(' ').ToArray();
 				if (values.Length < 4)
@@ -56,8 +60,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			}
 		}
 
-		protected virtual StreamReader GetProcStatAsStream()
-			=> File.Exists("/proc/stat") ? new StreamReader("/proc/stat") : null;
+		private StreamReader GetProcStatAsStream()
+			=> _procStatStreamReader ?? (File.Exists("/proc/stat") ? new StreamReader("/proc/stat") : null);
 
 		public IEnumerable<MetricSample> GetSamples()
 		{
@@ -87,6 +91,12 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			}
 
 			return null;
+		}
+
+		public void Dispose()
+		{
+			_procStatStreamReader?.Dispose();
+			_processorTimePerfCounter?.Dispose();
 		}
 	}
 }

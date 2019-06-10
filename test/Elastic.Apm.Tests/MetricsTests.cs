@@ -39,7 +39,10 @@ namespace Elastic.Apm.Tests
 			Thread.Sleep(1000); //See https://github.com/elastic/apm-agent-dotnet/pull/264#issuecomment-499778288
 
 			var retVal = systemTotalCpuProvider.GetSamples();
-			retVal.First().KeyValue.Value.Should().BeInRange(0, 1);
+			var metricSamples = retVal as MetricSample[] ?? retVal.ToArray();
+
+			metricSamples.First().KeyValue.Value.Should().BeGreaterThan(0);
+			metricSamples.First().KeyValue.Value.Should().BeLessThan(1);
 		}
 
 		[Fact]
@@ -141,13 +144,8 @@ namespace Elastic.Apm.Tests
 
 		private class TestSystemTotalCpuProvider : SystemTotalCpuProvider
 		{
-			private readonly string _procStatContent;
-
-			public TestSystemTotalCpuProvider(string procStatContent)
-				=> _procStatContent = procStatContent;
-
-			protected override StreamReader GetProcStatAsStream()
-				=> new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(_procStatContent)));
+			public TestSystemTotalCpuProvider(string procStatContent) : base(
+				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent)))) { }
 		}
 	}
 }
