@@ -23,30 +23,31 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			_prevTotalTime = procStatValues.total;
 		}
 
-		private double _prevIdleTime;
-		private double _prevTotalTime;
+		private long _prevIdleTime;
+		private long _prevTotalTime;
 		private PerformanceCounter _processorTimePerfCounter;
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "total system CPU time";
 
-		private static (bool success, double idle, int total) ReadProcStat()
+		internal (bool success, long idle, long total) ReadProcStat()
 		{
-			if (!File.Exists("/proc/stat")) return (false, 0, 0);
-
-			using (var sr = new StreamReader("/proc/stat"))
+			using (var sr = GetProcStatAsStream())
 			{
+				if (sr == null)
+					return (false, 0, 0);
+
 				var firstLine = sr.ReadLine();
 				if (firstLine == null || !firstLine.ToLower().StartsWith("cpu")) return (false, 0 ,0);
 
-				var values = firstLine.Substring(5, firstLine.Length - 5).Split(' ');
+				var values = firstLine.Substring(3, firstLine.Length - 3).Trim().Split(' ').ToArray();
 				if (values.Length < 4)
-					return (false, 0 ,0);
+					return (false, 0, 0);
 
-				var numbers = new int[values.Length];
+				var numbers = new long[values.Length];
 
-				if (values.Where((t, i) => !int.TryParse(t, NumberStyles.Integer, CultureInfo.InvariantCulture, out numbers[i])).Any())
-					return (false, 0 ,0);
+				if (values.Where((t, i) => !long.TryParse(t, NumberStyles.Integer, CultureInfo.InvariantCulture, out numbers[i])).Any())
+					return (false, 0, 0);
 
 				var total = numbers.Sum();
 				var idle = numbers[3];
@@ -54,6 +55,9 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				return (true, idle, total);
 			}
 		}
+
+		protected virtual StreamReader GetProcStatAsStream()
+			=> File.Exists("/proc/stat") ? new StreamReader("/proc/stat") : null;
 
 		public IEnumerable<MetricSample> GetSamples()
 		{
@@ -69,14 +73,12 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 			{
-				if (!File.Exists("/proc/stat")) return null;
-
 				var procStatValues = ReadProcStat();
 				if (!procStatValues.success) return null;
 
 				var idleTimeDelta = procStatValues.idle - _prevIdleTime;
 				var totalTimeDelta = procStatValues.total - _prevTotalTime;
-				var notIdle = 1.0 - idleTimeDelta / totalTimeDelta;
+				var notIdle = 1.0 - idleTimeDelta / (double)totalTimeDelta;
 
 				_prevIdleTime = procStatValues.idle;
 				_prevTotalTime = procStatValues.total;

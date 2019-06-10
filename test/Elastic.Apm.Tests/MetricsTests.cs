@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
@@ -109,6 +111,20 @@ namespace Elastic.Apm.Tests
 			payloadSender.Metrics.First().Samples.Should().NotBeEmpty();
 		}
 
+		[Theory]
+		[InlineData("cpu 74608 2520 24433 1117073 6176 4054 0 0 0 0", 1117073, 1228864)]
+		[InlineData("cpu  1192 0 2285 40280 626 0 376 0 0 0", 40280, 44759)]
+		[InlineData("cpu    1192 0 2285 40280 626 0 376 0 0 0", 40280, 44759)]
+		public void ProcStatParser(string procStatContent, long expectedIdle, long expectedTotal)
+		{
+			var systemTotalCpuProvider = new TestSystemTotalCpuProvider(procStatContent);
+			var res = systemTotalCpuProvider.ReadProcStat();
+
+			res.success.Should().BeTrue();
+			res.idle.Should().Be(expectedIdle);
+			res.total.Should().Be(expectedTotal);
+		}
+
 		private class MetricsProviderWithException : IMetricsProvider
 		{
 			public int ConsecutiveNumberOfFailedReads { get; set; }
@@ -121,6 +137,17 @@ namespace Elastic.Apm.Tests
 				NumberOfGetValueCalls++;
 				throw new Exception("testException");
 			}
+		}
+
+		private class TestSystemTotalCpuProvider : SystemTotalCpuProvider
+		{
+			private readonly string _procStatContent;
+
+			public TestSystemTotalCpuProvider(string procStatContent)
+				=> _procStatContent = procStatContent;
+
+			protected override StreamReader GetProcStatAsStream()
+				=> new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(_procStatContent)));
 		}
 	}
 }
