@@ -10,10 +10,15 @@ namespace Elastic.Apm.Helpers
 	{
 		private const string ContainerUidRegex = "^[0-9a-fA-F]{64}$";
 
-		private const string PodRegex = "(?:^/kubepods/[^/]+/pod([^/]+)$)|"
-			+ "(?:^/kubepods\\.slice/kubepods-[^/]+\\.slice/kubepods-[^/]+-pod([^/]+)\\.slice$)";
+		private const string PodRegex = @"(?:^/kubepods/[^/]+/pod([^/]+)$)|"
+			+ @"(?:^/kubepods\.slice/kubepods-[^/]+\.slice/kubepods-[^/]+-pod([^/]+)\.slice$)";
 
-		private static Api.System ParseContainerId(string line)
+		private readonly IApmLogger _logger;
+
+		public SystemInfoHelper(IApmLogger logger)
+			=> _logger = logger.Scoped(nameof(SystemInfoHelper));
+
+		private Api.System ParseContainerId(string line)
 		{
 			//Copied from the Java agent, and C#-ified
 
@@ -23,8 +28,6 @@ namespace Elastic.Apm.Helpers
 			if (fields.Length != 3) return null;
 
 			var cGroupPath = fields[2];
-
-
 			var idPart = Path.GetFileName(cGroupPath);
 
 			if (string.IsNullOrWhiteSpace(idPart)) return null;
@@ -34,10 +37,10 @@ namespace Elastic.Apm.Helpers
 				idPart = idPart.Substring(0, idPart.Length - ".scope".Length).Substring(idPart.IndexOf("-", StringComparison.Ordinal) + 1);
 
 			// Looking for kubernetes info
-			var dirPathPart = Directory.GetParent(cGroupPath); // Path.get (cGroupPath);  cGroupPath Path.GetPathRoot(cGroupPath);
+			var dirPathPart = Path.GetDirectoryName(cGroupPath);
 			if (dirPathPart != null)
 			{
-				var dir = dirPathPart.ToString();
+				var dir = dirPathPart;
 
 				var pattern = new Regex(PodRegex);
 				var matcher = pattern.Match(dir);
@@ -49,7 +52,7 @@ namespace Elastic.Apm.Helpers
 						var podUid = matcher.Groups[i].Value;
 						if (string.IsNullOrWhiteSpace(podUid)) continue;
 
-						//logger.debug("Found Kubernetes pod UID: {}", podUid);
+						_logger.Debug()?.Log("Found Kubernetes pod UID: {podUid}", podUid);
 						// By default, Kubernetes will set the hostname of the pod containers to the pod name. Users that override
 						// the name should use the Downward API to override the pod name.
 						kubernetesPodUid = podUid;
@@ -61,8 +64,9 @@ namespace Elastic.Apm.Helpers
 			// If the line matched the one of the kubernetes patterns, we assume that the last part is always the container ID.
 			// Otherwise we validate that it is a 64-length hex string
 			if (!string.IsNullOrWhiteSpace(kubernetesPodUid) || new Regex(ContainerUidRegex).Match(idPart).Success)
-				return new Api.System { Container = new Container { Id = idPart } }; // container = new Container(idPart);}
+				return new Api.System { Container = new Container { Id = idPart } };
 
+			_logger.Debug()?.Log("Could not parse container ID from '/proc/self/cgroup' line: {line}", line);
 			return null;
 		}
 

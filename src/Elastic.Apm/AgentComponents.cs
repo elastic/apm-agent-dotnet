@@ -21,7 +21,7 @@ namespace Elastic.Apm
 
 			Service = Service.GetDefaultService(ConfigurationReader);
 
-			var systemInfoHelper = new SystemInfoHelper();
+			var systemInfoHelper = new SystemInfoHelper(Logger);
 			var system = systemInfoHelper.ReadContainerId(Logger);
 
 			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigurationReader, Service, system);
