@@ -13,11 +13,18 @@ using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
 	public class MetricsTests
 	{
+		private readonly ITestOutputHelper _testOutputHelper;
+
+		public MetricsTests(ITestOutputHelper testOutputHelper)
+		{
+			_testOutputHelper = testOutputHelper;
+		}
 		[Fact]
 		public void CollectAllMetrics()
 		{
@@ -117,6 +124,7 @@ namespace Elastic.Apm.Tests
 		[InlineData("cpu    1192 0 2285 40280 626 0 376 0 0 0", 40280, 44759)]
 		public void ProcStatParser(string procStatContent, long expectedIdle, long expectedTotal)
 		{
+			_testOutputHelper.WriteLine("procStatContent: " + procStatContent);
 			var systemTotalCpuProvider = new TestSystemTotalCpuProvider(procStatContent);
 			var res = systemTotalCpuProvider.ReadProcStat();
 
