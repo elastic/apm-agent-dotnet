@@ -8,12 +8,14 @@ namespace Elastic.Apm.Helpers
 {
 	internal class SystemInfoHelper
 	{
-		private const string ContainerUidRegex = "^[0-9a-fA-F]{64}$";
+		private const string ContainerUidRegexString = "^[0-9a-fA-F]{64}$";
 
-		private const string PodRegex = @"(?:^/kubepods/[^/]+/pod([^/]+)$)|"
+		private const string PodRegexString = @"(?:^/kubepods/[^/]+/pod([^/]+)$)|"
 			+ @"(?:^/kubepods\.slice/kubepods-[^/]+\.slice/kubepods-[^/]+-pod([^/]+)\.slice$)";
 
+		private readonly Regex _containerUidRegex = new Regex(ContainerUidRegexString);
 		private readonly IApmLogger _logger;
+		private readonly Regex _podRegex = new Regex(PodRegexString);
 
 		public SystemInfoHelper(IApmLogger logger)
 			=> _logger = logger.Scoped(nameof(SystemInfoHelper));
@@ -42,8 +44,7 @@ namespace Elastic.Apm.Helpers
 			{
 				var dir = dirPathPart;
 
-				var pattern = new Regex(PodRegex);
-				var matcher = pattern.Match(dir);
+				var matcher = _podRegex.Match(dir);
 
 				if (matcher.Success)
 				{
@@ -63,7 +64,7 @@ namespace Elastic.Apm.Helpers
 
 			// If the line matched the one of the kubernetes patterns, we assume that the last part is always the container ID.
 			// Otherwise we validate that it is a 64-length hex string
-			if (!string.IsNullOrWhiteSpace(kubernetesPodUid) || new Regex(ContainerUidRegex).Match(idPart).Success)
+			if (!string.IsNullOrWhiteSpace(kubernetesPodUid) || _containerUidRegex.Match(idPart).Success)
 				return new Api.System { Container = new Container { Id = idPart } };
 
 			_logger.Debug()?.Log("Could not parse container ID from '/proc/self/cgroup' line: {line}", line);
