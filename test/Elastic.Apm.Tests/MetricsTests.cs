@@ -36,9 +36,7 @@ namespace Elastic.Apm.Tests
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
 
 			var systemTotalCpuProvider = new SystemTotalCpuProvider();
-			systemTotalCpuProvider.GetSamples(); //on Windows the perf. counters sometimes return 0 the first time -> we call it 2 times
 			Thread.Sleep(1000); //See https://github.com/elastic/apm-agent-dotnet/pull/264#issuecomment-499778288
-
 			var retVal = systemTotalCpuProvider.GetSamples();
 			var metricSamples = retVal as MetricSample[] ?? retVal.ToArray();
 

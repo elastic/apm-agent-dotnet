@@ -12,10 +12,18 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 	internal class SystemTotalCpuProvider : IMetricsProvider, IDisposable
 	{
 		private const string SystemCpuTotalPct = "system.cpu.total.norm.pct";
+		private readonly PerformanceCounter _processorTimePerfCounter;
 		private readonly StreamReader _procStatStreamReader;
 
 		public SystemTotalCpuProvider()
 		{
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				_processorTimePerfCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+				//The perf. counter API returns 0 the for the 1. call (probably because there is no delta in the 1. call) - so we just call it here first
+				_processorTimePerfCounter.NextValue();
+			}
+
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return;
 
 			var procStatValues = ReadProcStat();
@@ -29,7 +37,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		private long _prevIdleTime;
 		private long _prevTotalTime;
-		private PerformanceCounter _processorTimePerfCounter;
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "total system CPU time";
@@ -67,11 +74,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		{
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
-				if (_processorTimePerfCounter == null)
-					_processorTimePerfCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
-
 				var val = _processorTimePerfCounter.NextValue();
-
 				return new List<MetricSample> { new MetricSample(SystemCpuTotalPct, (double)val / 100) };
 			}
 
