@@ -143,6 +143,26 @@ pipeline {
                       }
                     }
                   }
+                  /**
+                  Execute IIS tests.
+                  */
+                  stage('IIS Test') {
+                    steps {
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
+                        powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                      }
+                    }
+                    post {
+                      always {
+                        junit(allowEmptyResults: false,
+                          keepLongStdio: true,
+                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
+                      }
+                    }
+                  }
                 }
               }
               stage('Windows .NET Core'){
