@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Web;
 using Elastic.Apm.Api;
@@ -8,6 +9,13 @@ using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
+
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.AspNetFullFramework.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
 
 namespace Elastic.Apm.AspNetFullFramework
 {
@@ -44,11 +52,7 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		private static void SetServiceInformation(Service service)
 		{
-			service.Framework = new Framework
-			{
-				Name = "ASP.NET",
-				Version = AspNetVersion.ToString()
-			};
+			service.Framework = new Framework { Name = "ASP.NET", Version = AspNetVersion.ToString() };
 			service.Language = new Language { Name = "C#" }; //TODO
 		}
 
@@ -131,8 +135,9 @@ namespace Elastic.Apm.AspNetFullFramework
 			var headerValue = httpRequest.Headers.Get(TraceParent.TraceParentHeaderName);
 			if (headerValue == null)
 			{
-				Logger.Debug()?.Log("Incoming request doesn't {TraceParentHeaderName} header - "+
-					"it means request doesn't have incoming distributed tracing data", TraceParent.TraceParentHeaderName);
+				Logger.Debug()
+					?.Log("Incoming request doesn't {TraceParentHeaderName} header - " +
+						"it means request doesn't have incoming distributed tracing data", TraceParent.TraceParentHeaderName);
 				return null;
 			}
 			return TraceParent.TryExtractTraceparent(headerValue);
@@ -143,19 +148,12 @@ namespace Elastic.Apm.AspNetFullFramework
 			var httpRequestUrl = httpRequest.Url;
 			var url = new Url
 			{
-				Full = httpRequestUrl.AbsoluteUri,
-				HostName = httpRequestUrl.Host,
-				Protocol = "HTTP",
-				Raw = httpRequestUrl.OriginalString
+				Full = httpRequestUrl.AbsoluteUri, HostName = httpRequestUrl.Host, Protocol = "HTTP", Raw = httpRequestUrl.OriginalString
 			};
 
 			transaction.Context.Request = new Request(httpRequest.HttpMethod, url)
 			{
-				Socket = new Socket
-				{
-					Encrypted = httpRequest.IsSecureConnection,
-					RemoteAddress = httpRequest.UserHostAddress
-				},
+				Socket = new Socket { Encrypted = httpRequest.IsSecureConnection, RemoteAddress = httpRequest.UserHostAddress },
 				HttpVersion = GetHttpVersion(httpRequest.ServerVariables["SERVER_PROTOCOL"]),
 				Headers = IsCaptureHeadersEnabled ? ConvertHeaders(httpRequest.Headers) : null
 			};
@@ -218,10 +216,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			var userIdentity = httpCtx.User?.Identity;
 			if (userIdentity == null || !userIdentity.IsAuthenticated) return;
 
-			transaction.Context.User = new User
-			{
-				UserName = userIdentity.Name
-			};
+			transaction.Context.User = new User { UserName = userIdentity.Name };
 
 			Logger.Debug()?.Log("Captured user - {CapturedUser}", transaction.Context.User);
 		}

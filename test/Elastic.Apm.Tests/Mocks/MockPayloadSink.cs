@@ -2,17 +2,14 @@
 using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.Model;
-using Elastic.Apm.Report;
 
 namespace Elastic.Apm.Tests.Mocks
 {
-	internal class MockPayloadSender : MockPayloadSink, IPayloadSender
+	internal class MockPayloadSink
 	{
-<<<<<<< Updated upstream
 		public readonly List<IError> Errors = new List<IError>();
-		public readonly List<ITransaction> Transactions = new List<ITransaction>();
 		public readonly List<ISpan> Spans = new List<ISpan>();
-		public readonly List<IMetricSet> Metrics = new List<IMetricSet>();
+		public readonly List<ITransaction> Transactions = new List<ITransaction>();
 
 		public Error FirstError => Errors.First() as Error;
 
@@ -25,24 +22,11 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public Span[] SpansOnFirstTransaction => Spans.Where(n => n.TransactionId == Transactions.First().Id).Select(n => n as Span).ToArray();
 
-=======
->>>>>>> Stashed changes
-		public void QueueError(IError error) => Errors.Add(error);
-
-		public void QueueTransaction(ITransaction transaction) =>  Transactions.Add(transaction);
-
-		public void QueueSpan(ISpan span) => Spans.Add(span);
-<<<<<<< Updated upstream
-
-		public void QueueMetrics(IMetricSet metricSet) => Metrics.Add(metricSet);
-
 		public void Clear()
 		{
 			Spans.Clear();
 			Errors.Clear();
 			Transactions.Clear();
 		}
-=======
->>>>>>> Stashed changes
 	}
 }

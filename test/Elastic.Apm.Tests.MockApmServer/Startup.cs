@@ -1,11 +1,10 @@
-﻿using Elastic.Apm.All;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace WebApiSample
+namespace Elastic.Apm.Tests.MockApmServer
 {
 	public class Startup
 	{
@@ -18,12 +17,6 @@ namespace WebApiSample
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
-		{
-			app.UseElasticApm(_configuration);
-			ConfigureAllExceptAgent(app);
-		}
-
-		public static void ConfigureAllExceptAgent(IApplicationBuilder app)
 		{
 			app.UseDeveloperExceptionPage();
 
