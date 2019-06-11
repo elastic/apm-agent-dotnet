@@ -1,31 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <RootNamespace>Elastic.Apm</RootNamespace>
-    <AssemblyName>Elastic.Apm</AssemblyName>
-    <AssemblyVersion>0.0.2.0</AssemblyVersion>
-    <InformationalVersion>0.0.2.0</InformationalVersion>
-    <FileVersion>0.0.2.0</FileVersion>
+    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
+ 
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
-    <PackageVersion>0.0.2.0-alpha</PackageVersion>
-    <Authors>Elastic and contributors</Authors>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <PackageId>Elastic.Apm</PackageId>
-    <copyright>2019 Elasticsearch BV</copyright>
-    <PackageLicenseUrl>https://github.com/elastic/apm-agent-dotnet/blob/master/LICENSE</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/elastic/apm-agent-dotnet</PackageProjectUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/elastic/apm-agent-dotnet/master/build/nuget-icon.png</PackageIconUrl>
-    <Description>Elastic APM .NET Agent base package. This package provides core functionality for transmitting of all Elastic APM types and is a dependent package for all other Elastic APM package. Additionally this package contains the public Agent API that allows you to manually capture transactions and spans. Please install the platform specific package for the best experience. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
-    <PackageTags>apm, monitoring, elastic, elasticapm, analytics, sdk</PackageTags>
-    <LangVersion>latest</LangVersion>
+    
+    <OutputType>Library</OutputType>
+    <StartupObject />
   </PropertyGroup>
+
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.6.0-preview5.19224.8" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <!-- TODO: Are we ok with this reference/version? -->
+
+
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.0.0" />
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.5.0" />
     <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
   </ItemGroup>
 </Project>

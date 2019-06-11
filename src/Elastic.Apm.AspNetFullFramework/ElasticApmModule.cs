@@ -39,7 +39,7 @@ namespace Elastic.Apm.AspNetFullFramework
 		private HttpApplication _httpApp;
 
 		private static Version AspNetVersion => typeof(HttpRuntime).Assembly.GetName().Version;
-		private static string ClrDescription => RuntimeInformation.FrameworkDescription;
+		private static string ClrDescription => "aaa";  // RuntimeInformation.FrameworkDescription;
 		private static Version IisVersion => HttpRuntime.IISVersion;
 
 		private static void SetServiceInformation(Service service)
