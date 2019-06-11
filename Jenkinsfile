@@ -43,6 +43,9 @@ pipeline {
             stage('Linux'){
               agent { label 'linux && immutable' }
               options { skipDefaultCheckout() }
+              environment {
+                MSBUILDDEBUGPATH = "${env.WORKSPACE}"
+              }
               stages{
                 /**
                 Build the project from code..
@@ -55,6 +58,12 @@ pipeline {
                       dotnet(){
                         sh '.ci/linux/build.sh'
                       }
+                    }
+                  }
+                  post {
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true,
+                        artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
                     }
                   }
                 }
@@ -80,7 +89,11 @@ pipeline {
                         keepLongStdio: true,
                         testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       codecov(repo: 'apm-agent-dotnet', basedir: "${BASE_DIR}", secret: "${CODECOV_SECRET}")
-                      }
+                    }
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true,
+                        artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                    }
                     }
                   }
                 }
@@ -94,6 +107,7 @@ pipeline {
                   VS_HOME = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise"
                   MSBuildSDKsPath = "${env.DOTNET_ROOT}\\sdk\\2.1.505\\Sdks"
                   PATH = "${env.PATH};${env.HOME}\\bin;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
+                  MSBUILDDEBUGPATH = "${env.WORKSPACE}"
                 }
                 stages{
                   /**
@@ -119,6 +133,12 @@ pipeline {
                         bat '.ci/windows/msbuild.bat'
                       }
                     }
+                    post {
+                      unsuccessful {
+                        archiveArtifacts(allowEmptyArchive: true,
+                          artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                      }
+                    }
                   }
                   /**
                   Execute unit tests.
@@ -132,7 +152,6 @@ pipeline {
                         bat label: 'Build', script: '.ci/windows/msbuild.bat'
                         bat label: 'Test & coverage', script: '.ci/windows/test.bat'
                         powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
-
                       }
                     }
                     post {
@@ -141,7 +160,16 @@ pipeline {
                           keepLongStdio: true,
                           testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       }
+                      unsuccessful {
+                        archiveArtifacts(allowEmptyArchive: true,
+                          artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                      }
                     }
+                  }
+                }
+                post {
+                  always {
+                    cleanWs(disableDeferredWipeout: true, notFailBuild: true)
                   }
                 }
               }
@@ -154,6 +182,7 @@ pipeline {
                   VS_HOME = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise"
                   MSBuildSDKsPath = "${env.DOTNET_ROOT}\\sdk\\2.1.505\\Sdks"
                   PATH = "${env.PATH};${env.HOME}\\bin;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
+                  MSBUILDDEBUGPATH = "${env.WORKSPACE}"
                 }
                 stages{
                   /**
@@ -180,6 +209,12 @@ pipeline {
                         bat '.ci/windows/dotnet.bat'
                       }
                     }
+                    post {
+                      unsuccessful {
+                        archiveArtifacts(allowEmptyArchive: true,
+                          artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                      }
+                    }
                   }
                   /**
                   Execute unit tests.
@@ -201,7 +236,16 @@ pipeline {
                           keepLongStdio: true,
                           testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       }
+                      unsuccessful {
+                        archiveArtifacts(allowEmptyArchive: true,
+                          artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                      }
                     }
+                  }
+                }
+                post {
+                  always {
+                    cleanWs(disableDeferredWipeout: true, notFailBuild: true)
                   }
                 }
               }
@@ -254,8 +298,7 @@ pipeline {
             post{
               success {
                 archiveArtifacts(allowEmptyArchive: true,
-                  artifacts: "${BASE_DIR}/**/bin/Release/**/*.nupkg",
-                  onlyIfSuccessful: true)
+                  artifacts: "${BASE_DIR}/**/bin/Release/**/*.nupkg")
               }
             }
           }
