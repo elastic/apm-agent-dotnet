@@ -15,6 +15,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _secretToken;
 		private readonly string _captureHeaders;
 		private readonly string _transactionSampleRate;
+		private readonly string _metricsInterval;
 
 		public TestAgentConfigurationReader(
 			IApmLogger logger,
@@ -23,7 +24,8 @@ namespace Elastic.Apm.Tests.Mocks
 			string serviceName = null,
 			string secretToken = null,
 			string captureHeaders = null,
-			string transactionSampleRate = null
+			string transactionSampleRate = null,
+			string metricsInterval = null
 		) : base(logger)
 		{
 			Logger = logger ?? new TestLogger();
@@ -33,6 +35,7 @@ namespace Elastic.Apm.Tests.Mocks
 			_secretToken = secretToken;
 			_captureHeaders = captureHeaders;
 			_transactionSampleRate = transactionSampleRate;
+			_metricsInterval = metricsInterval;
 		}
 
 		public new IApmLogger Logger { get; }
@@ -43,5 +46,7 @@ namespace Elastic.Apm.Tests.Mocks
 		public string SecretToken => ParseSecretToken(Kv(ConfigConsts.EnvVarNames.SecretToken, _secretToken, Origin));
 		public bool CaptureHeaders => ParseCaptureHeaders(Kv(ConfigConsts.EnvVarNames.CaptureHeaders, _captureHeaders, Origin));
 		public double TransactionSampleRate => ParseTransactionSampleRate(Kv(ConfigConsts.EnvVarNames.TransactionSampleRate, _transactionSampleRate, Origin));
+
+		public double MetricsIntervalInMillisecond => ParseMetricsInterval(Kv(ConfigConsts.EnvVarNames.MetricsInterval,_metricsInterval, Origin));
 	}
 }
