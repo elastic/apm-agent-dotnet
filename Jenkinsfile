@@ -21,7 +21,7 @@ pipeline {
     quietPeriod(10)
   }
   triggers {
-    issueCommentTrigger('.*(?:jenkins\\W+)?run\\W+(?:the\\W+)?tests(?:\\W+please)?.*')
+    issueCommentTrigger('(?i).*(?:jenkins\\W+)?run\\W+(?:the\\W+)?tests(?:\\W+please)?.*')
   }
   parameters {
     booleanParam(name: 'Run_As_Master_Branch', defaultValue: false, description: 'Allow to run any steps on a PR, some steps normally only run on master branch.')
@@ -43,35 +43,19 @@ pipeline {
             stage('Linux'){
               agent { label 'linux && immutable' }
               options { skipDefaultCheckout() }
-              environment {
-                HOME = "${env.WORKSPACE}"
-                DOTNET_ROOT = "${env.HOME}/dotnet"
-                PATH = "${env.PATH}:${env.HOME}/bin:${env.DOTNET_ROOT}:${env.HOME}/.dotnet/tools"
-              }
               stages{
-                /**
-                Checkout the code and stash it, to use it on other stages.
-                */
-                stage('Install tools') {
-                  steps {
-                    deleteDir()
-                    unstash 'source'
-                    sh label: 'Install tools', script: "./${BASE_DIR}/.ci/linux/tools.sh"
-                    stash allowEmpty: true, name: 'dotnet-linux', includes: "dotnet/**", useDefaultExcludes: false
-                  }
-                }
                 /**
                 Build the project from code..
                 */
                 stage('Build') {
                   steps {
-                    dir("${BASE_DIR}"){
-                      deleteDir()
-                    }
+                    deleteDir()
                     unstash 'source'
                     dir("${BASE_DIR}"){
                       withGithubNotify(context: 'Build - Linux') {
-                        sh './.ci/linux/build.sh'
+                        dotnet(){
+                          sh '.ci/linux/build.sh'
+                        }
                       }
                     }
                   }
@@ -81,16 +65,16 @@ pipeline {
                 */
                 stage('Test') {
                   steps {
-                    dir("${BASE_DIR}"){
-                      deleteDir()
-                    }
+                    deleteDir()
                     unstash 'source'
                     dir("${BASE_DIR}"){
                       withGithubNotify(context: 'Test - Linux', tab: 'tests') {
-                        sh label: 'Install test tools', script: './.ci/linux/test-tools.sh'
-                        sh label: 'Build', script: './.ci/linux/build.sh'
-                        sh label: 'Test & coverage', script: './.ci/linux/test.sh'
-                        sh label: 'Convert Test Results to junit format', script: './.ci/linux/convert.sh'
+                        dotnet(){
+                          sh label: 'Install test tools', script: '.ci/linux/test-tools.sh'
+                          sh label: 'Build', script: '.ci/linux/build.sh'
+                          sh label: 'Test & coverage', script: '.ci/linux/test.sh'
+                          sh label: 'Convert Test Results to junit format', script: '.ci/linux/convert.sh'
+                        }
                       }
                     }
                   }
@@ -106,7 +90,7 @@ pipeline {
                 }
               }
               stage('Windows .NET Framework'){
-                agent { label 'windows-2016' }
+                agent { label 'windows' }
                 options { skipDefaultCheckout() }
                 environment {
                   HOME = "${env.WORKSPACE}"
@@ -121,7 +105,7 @@ pipeline {
                   */
                   stage('Install tools') {
                     steps {
-                      deleteDir()
+                      cleanDir("${WORKSPACE}/*")
                       unstash 'source'
                       dir("${HOME}"){
                         powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
@@ -133,9 +117,7 @@ pipeline {
                   */
                   stage('Build - MSBuild') {
                     steps {
-                      dir("${BASE_DIR}"){
-                        deleteDir()
-                      }
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         withGithubNotify(context: 'Build MSBuild - Windows') {
@@ -149,9 +131,7 @@ pipeline {
                   */
                   stage('Test') {
                     steps {
-                      dir("${BASE_DIR}"){
-                        deleteDir()
-                      }
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         withGithubNotify(context: 'Test MSBuild - Windows', tab: 'tests') {
@@ -173,7 +153,7 @@ pipeline {
                 }
               }
               stage('Windows .NET Core'){
-                agent { label 'windows-2016' }
+                agent { label 'windows' }
                 options { skipDefaultCheckout() }
                 environment {
                   HOME = "${env.WORKSPACE}"
@@ -188,7 +168,7 @@ pipeline {
                   */
                   stage('Install tools') {
                     steps {
-                      deleteDir()
+                      cleanDir("${WORKSPACE}/*")
                       unstash 'source'
                       dir("${HOME}"){
                         powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
@@ -201,9 +181,7 @@ pipeline {
                   */
                   stage('Build - dotnet') {
                     steps {
-                      dir("${BASE_DIR}"){
-                        deleteDir()
-                      }
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         withGithubNotify(context: 'Build dotnet - Windows') {
@@ -217,9 +195,7 @@ pipeline {
                   */
                   stage('Test') {
                     steps {
-                      dir("${BASE_DIR}"){
-                        deleteDir()
-                      }
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         withGithubNotify(context: 'Test dotnet - Windows', tab: 'tests') {
@@ -274,11 +250,6 @@ pipeline {
           stage('Release to AppVeyor') {
             agent { label 'linux && immutable' }
             options { skipDefaultCheckout() }
-            environment {
-              HOME = "${env.WORKSPACE}"
-              DOTNET_ROOT = "${env.HOME}/dotnet"
-              PATH = "${env.PATH}:${env.HOME}/bin:${env.DOTNET_ROOT}:${env.HOME}/.dotnet/tools"
-            }
             when {
               beforeAgent true
               anyOf {
@@ -289,7 +260,6 @@ pipeline {
             steps {
               deleteDir()
               unstash 'source'
-              unstash('dotnet-linux')
               dir("${BASE_DIR}"){
                 withGithubNotify(context: 'Release AppVeyor', tab: 'artifacts') {
                   release('secret/apm-team/ci/elastic-observability-appveyor')
@@ -307,11 +277,6 @@ pipeline {
           stage('Release to NuGet') {
             agent { label 'linux && immutable' }
             options { skipDefaultCheckout() }
-            environment {
-              HOME = "${env.WORKSPACE}"
-              DOTNET_ROOT = "${env.HOME}/dotnet"
-              PATH = "${env.PATH}:${env.HOME}/bin:${env.DOTNET_ROOT}:${env.HOME}/.dotnet/tools"
-            }
             when {
               beforeAgent true
               anyOf {
@@ -323,7 +288,6 @@ pipeline {
               input(message: 'Should we release a new version on NuGet?', ok: 'Yes, we should.')
               deleteDir()
               unstash 'source'
-              unstash('dotnet-linux')
               dir("${BASE_DIR}"){
                 withGithubNotify(context: 'Release NuGet', tab: 'artifacts') {
                   release('secret/apm-team/ci/elastic-observability-nuget')
@@ -335,29 +299,34 @@ pipeline {
     }
   }
   post {
-    success {
-      echoColor(text: '[SUCCESS]', colorfg: 'green', colorbg: 'default')
-    }
-    aborted {
-      echoColor(text: '[ABORTED]', colorfg: 'magenta', colorbg: 'default')
-    }
-    failure {
-      echoColor(text: '[FAILURE]', colorfg: 'red', colorbg: 'default')
-      step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: "${NOTIFY_TO}", sendToIndividuals: false])
-    }
-    unstable {
-      echoColor(text: '[UNSTABLE]', colorfg: 'yellow', colorbg: 'default')
+    always {
+      notifyBuildResult()
     }
   }
 }
 
+def cleanDir(path){
+  powershell label: "Clean ${path}", script: "Remove-Item -Recurse -Force ${path}"
+}
+
+def dotnet(Closure body){
+  def home = "/tmp"
+  def dotnetRoot = "/${home}/.dotnet"
+  def path = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/${home}/bin:${dotnetRoot}:${dotnetRoot}/bin:${dotnetRoot}/tools"
+  docker.image('mcr.microsoft.com/dotnet/core/sdk:2.2').inside("-e HOME='${home}' -e PATH='${path}'"){
+    body()
+  }
+}
+
 def release(secret){
-  sh(label: 'Release', script: './.ci/linux/release.sh')
-  def repo = getVaultSecret(secret: secret)
-  wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [
-    [var: 'REPO_API_KEY', password: repo.apiKey],
-    [var: 'REPO_API_URL', password: repo.url],
-    ]]) {
-      sh(label: 'Deploy', script: "./.ci/linux/deploy.sh ${repo.data.apiKey} ${repo.data.url}")
+  dotnet(){
+    sh(label: 'Release', script: '.ci/linux/release.sh')
+    def repo = getVaultSecret(secret: secret)
+    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [
+      [var: 'REPO_API_KEY', password: repo.apiKey],
+      [var: 'REPO_API_URL', password: repo.url],
+      ]]) {
+        sh(label: 'Deploy', script: ".ci/linux/deploy.sh ${repo.data.apiKey} ${repo.data.url}")
     }
+  }
 }

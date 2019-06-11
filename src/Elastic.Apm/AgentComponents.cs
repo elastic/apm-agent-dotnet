@@ -1,8 +1,9 @@
 ﻿using System;
+using System.IO;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 
 namespace Elastic.Apm
@@ -15,13 +16,15 @@ namespace Elastic.Apm
 			IPayloadSender payloadSender = null
 		)
 		{
-
 			Logger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 			ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(Logger);
 
-			Service =  Service.GetDefaultService(ConfigurationReader);
+			Service = Service.GetDefaultService(ConfigurationReader);
 
-			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigurationReader, Service);
+			var systemInfoHelper = new SystemInfoHelper(Logger);
+			var system = systemInfoHelper.ReadContainerId(Logger);
+
+			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigurationReader, Service, system);
 			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationReader);
 			TransactionContainer = new TransactionContainer();
 		}
@@ -47,10 +50,7 @@ namespace Elastic.Apm
 
 		public void Dispose()
 		{
-			if (PayloadSender is IDisposable disposable)
-			{
-				disposable?.Dispose();
-			}
+			if (PayloadSender is IDisposable disposable) disposable.Dispose();
 		}
 	}
 }
