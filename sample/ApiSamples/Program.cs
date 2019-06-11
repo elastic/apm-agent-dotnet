@@ -7,7 +7,7 @@ using Elastic.Apm.Api;
 namespace ApiSamples
 {
 	/// <summary>
-	/// This class exercices the Public Agent API.
+	/// This class exercises the Public Agent API.
 	/// </summary>
 	internal class Program
 	{
@@ -44,8 +44,7 @@ namespace ApiSamples
 			}
 		}
 
-		public static void SampleSpanWithCustomContext()
-		{
+		public static void SampleSpanWithCustomContext() =>
 			Agent.Tracer.CaptureTransaction("SampleTransaction", "SampleTransactionType", transaction =>
 			{
 				transaction.CaptureSpan("SampleSpan", "SampleSpanType", span =>
@@ -57,10 +56,8 @@ namespace ApiSamples
 					};
 				});
 			});
-		}
 
-		public static void SampleSpanWithCustomContextFillAll()
-		{
+		public static void SampleSpanWithCustomContextFillAll() =>
 			Agent.Tracer.CaptureTransaction("SampleTransaction", "SampleTransactionType", transaction =>
 			{
 				transaction.CaptureSpan("SampleSpan1", "SampleSpanType", span =>
@@ -83,7 +80,6 @@ namespace ApiSamples
 					};
 				});
 			});
-		}
 
 		public static void SampleCustomTransaction()
 		{
@@ -136,22 +132,21 @@ namespace ApiSamples
 			WriteLineToConsole($"{nameof(SampleError)} finished");
 		}
 
-		public static void SampleCustomTransactionWithConvenientApi() => Agent.Tracer.CaptureTransaction("TestTransaction", "TestType",
-			t =>
+		public static void SampleCustomTransactionWithConvenientApi() => Agent.Tracer.CaptureTransaction("TestTransaction", "TestType", t =>
+		{
+			t.Context.Response = new Response() { Finished = true, StatusCode = 200 };
+			t.Context.Request = new Request("GET", new Url { Protocol = "HTTP" });
+
+			t.Tags["fooTransaction1"] = "barTransaction1";
+			t.Tags["fooTransaction2"] = "barTransaction2";
+
+			Thread.Sleep(10);
+			t.CaptureSpan("TestSpan", "TestSpanType", s =>
 			{
-				t.Context.Response = new Response() { Finished = true, StatusCode = 200 };
-				t.Context.Request = new Request("GET", new Url { Protocol = "HTTP" });
-
-				t.Tags["fooTransaction1"] = "barTransaction1";
-				t.Tags["fooTransaction2"] = "barTransaction2";
-
-				Thread.Sleep(10);
-				t.CaptureSpan("TestSpan", "TestSpanType", s =>
-				{
-					Thread.Sleep(20);
-					s.Tags["fooSpan"] = "barSpan";
-				});
+				Thread.Sleep(20);
+				s.Tags["fooSpan"] = "barSpan";
 			});
+		});
 
 
 		//1 transaction with 2 spans
@@ -214,9 +209,6 @@ namespace ApiSamples
 			}
 		}
 
-		private static void WriteLineToConsole(string line)
-		{
-			Console.WriteLine($"[{Process.GetCurrentProcess().Id}] {line}");
-		}
+		private static void WriteLineToConsole(string line) => Console.WriteLine($"[{Process.GetCurrentProcess().Id}] {line}");
 	}
 }

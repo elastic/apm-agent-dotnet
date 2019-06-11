@@ -44,12 +44,14 @@ namespace Elastic.Apm.AspNetCore
 		public async Task InvokeAsync(HttpContext context)
 		{
 			Transaction transaction;
+			var transactionName = $"{context.Request.Method} {context.Request.Path}";
 
 			if (context.Request.Headers.ContainsKey(TraceParent.TraceParentHeaderName))
 			{
 				var headerValue = context.Request.Headers[TraceParent.TraceParentHeaderName].ToString();
 
 				var distributedTracingData = TraceParent.TryExtractTraceparent(headerValue);
+
 				if (distributedTracingData != null)
 				{
 					_logger.Debug()
@@ -58,7 +60,7 @@ namespace Elastic.Apm.AspNetCore
 							TraceParent.TraceParentHeaderName, distributedTracingData);
 
 					transaction = _tracer.StartTransactionInternal(
-						$"{context.Request.Method} {context.Request.Path}",
+						transactionName,
 						ApiConstants.TypeRequest,
 						distributedTracingData);
 				}
@@ -69,14 +71,14 @@ namespace Elastic.Apm.AspNetCore
 							"Incoming request with invalid {TraceParentHeaderName} header (received value: {TraceParentHeaderValue}). Starting trace with new trace id.",
 							TraceParent.TraceParentHeaderName, headerValue);
 
-					transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
+					transaction = _tracer.StartTransactionInternal(transactionName,
 						ApiConstants.TypeRequest);
 				}
 			}
 			else
 			{
 				_logger.Debug()?.Log("Incoming request. Starting Trace.");
-				transaction = _tracer.StartTransactionInternal($"{context.Request.Method} {context.Request.Path}",
+				transaction = _tracer.StartTransactionInternal(transactionName,
 					ApiConstants.TypeRequest);
 			}
 
@@ -89,13 +91,16 @@ namespace Elastic.Apm.AspNetCore
 			catch (Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
 			finally
 			{
-				//fixup Transaction.Name - e.g. /user/profile/1 -> /user/profile/{id}
-				var routeData = (context.Features[typeof(IRoutingFeature)] as IRoutingFeature)?.RouteData;
-				if (routeData != null)
+				if (!transaction.HasCustomName)
 				{
-					var name = GetNameFromRouteContext(routeData.Values);
+					//fixup Transaction.Name - e.g. /user/profile/1 -> /user/profile/{id}
+					var routeData = (context.Features[typeof(IRoutingFeature)] as IRoutingFeature)?.RouteData;
+					if (routeData != null)
+					{
+						var name = GetNameFromRouteContext(routeData.Values);
 
-					if (!string.IsNullOrWhiteSpace(name)) transaction.Name = $"{context.Request.Method} {name}";
+						if (!string.IsNullOrWhiteSpace(name)) transaction.Name = $"{context.Request.Method} {name}";
+					}
 				}
 
 				transaction.Result = Transaction.StatusCodeToResult(GetProtocolName(context.Request.Protocol), context.Response.StatusCode);

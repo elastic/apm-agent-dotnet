@@ -36,8 +36,6 @@ namespace Elastic.Apm.Api
 		{
 			var retVal = new Transaction(_logger, name, type, Sampler, distributedTracingData, _sender)
 			{
-				Name = name,
-				Type = type,
 				Service = _service
 			};
 

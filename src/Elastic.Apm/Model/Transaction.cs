@@ -38,6 +38,7 @@ namespace Elastic.Apm.Model
 			_start = DateTimeOffset.UtcNow;
 
 			Name = name;
+			HasCustomName = false;
 			Type = type;
 			var idBytes = new byte[8];
 			Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
@@ -91,7 +92,24 @@ namespace Elastic.Apm.Model
 		public bool IsSampled { get; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
-		public string Name { get; set; }
+		public string Name
+		{
+			get => _name;
+			set
+			{
+				HasCustomName = true;
+				_name = value;
+			}
+		}
+
+		private string _name;
+
+		/// <summary>
+		/// If true, then the transaction name was modified by external code, and transaction name should not be changed
+		/// or "fixed" automatically ref https://github.com/elastic/apm-agent-dotnet/pull/258.
+		/// </summary>
+		[JsonIgnore]
+		internal bool HasCustomName { get; private set; }
 
 		[JsonIgnore]
 		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(TraceId, Id, IsSampled);

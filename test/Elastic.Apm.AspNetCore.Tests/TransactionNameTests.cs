@@ -12,7 +12,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// <summary>
 	/// Tests the transaction name in ASP.NET Core.
 	/// Specifically: optional parameters in the route should be templated in the Transaction.Name.
-	/// E.g. URL localhost/user/info/1 should get have Transaction.Name GET user/info {id}
+	/// E.g., URL localhost/user/info/1 should get have Transaction.Name GET user/info {id}
 	/// </summary>
 	[Collection("DiagnosticListenerTest")]
 	public class TransactionNameTests : IClassFixture<CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup>>, IDisposable
@@ -37,6 +37,44 @@ namespace Elastic.Apm.AspNetCore.Tests
 				}
 
 				((MockPayloadSender)agent.PayloadSender).Transactions.Should().OnlyContain(n => n.Name == "GET Home/Sample {id}");
+			}
+		}
+
+		/// <summary>
+		/// Calls a URL and sets custom transaction name.
+		/// Makes sure the Transaction.Name can be set to custom name.
+		/// </summary>
+		[Fact]
+		public async Task CustomTransactionName()
+		{
+			using (var agent = GetAgent())
+			{
+				using (var client = TestHelper.GetClient(_factory, agent))
+				{
+					await client.GetAsync($"home/TransactionWithCustomName");
+				}
+
+				((MockPayloadSender)agent.PayloadSender).Transactions.Should().OnlyContain(n => n.Name == "custom");
+			}
+		}
+
+		/// <summary>
+		/// Calls a URL that sets custom transaction name by using $"{HttpContext.Request.Method} {HttpContext.Request.Path}"
+		/// Makes sure the Transaction.Name is $"{HttpContext.Request.Method} {HttpContext.Request.Path}" and the agent does not
+		/// change that.
+		/// See: https://github.com/elastic/apm-agent-dotnet/pull/258#discussion_r291025014
+		/// </summary>
+		[Fact]
+		public async Task CustomTransactionNameWithNameUsingRequestInfo()
+		{
+			using (var agent = GetAgent())
+			{
+				using (var client = TestHelper.GetClient(_factory, agent))
+				{
+					await client.GetAsync($"home/TransactionWithCustomNameUsingRequestInfo");
+				}
+
+				((MockPayloadSender)agent.PayloadSender).Transactions.Should().OnlyContain(n => n.Name == "GET /home/TransactionWithCustomNameUsingRequestInfo");
 			}
 		}
 

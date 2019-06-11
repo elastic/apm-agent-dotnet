@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -48,10 +49,7 @@ namespace AspNetCoreSampleApp.Controllers
 				throw new ArgumentNullException(nameof(enteredName));
 
 			_sampleDataContext.SampleTable.Add(
-				new SampleData
-				{
-					Name = enteredName
-				});
+				new SampleData { Name = enteredName });
 
 			await _sampleDataContext.SaveChangesAsync();
 
@@ -86,7 +84,7 @@ namespace AspNetCoreSampleApp.Controllers
 
 		public async Task<IActionResult> ChartPage()
 		{
-			var csvDataReader = new CsvDataReader($"Data{System.IO.Path.DirectorySeparatorChar}HistoricalData");
+			var csvDataReader = new CsvDataReader($"Data{Path.DirectorySeparatorChar}HistoricalData");
 
 			var historicalData =
 				await Agent.Tracer.CurrentTransaction.CaptureSpan("ReadData", "csvRead", async () => await csvDataReader.GetHistoricalQuotes("ESTC"));
@@ -115,6 +113,18 @@ namespace AspNetCoreSampleApp.Controllers
 
 		//Used as test for optional route parameters
 		public IActionResult Sample(int id) => Ok(id);
+
+		public IActionResult TransactionWithCustomName()
+		{
+			Agent.Tracer.CurrentTransaction.Name = "custom";
+			return Ok();
+		}
+
+		public IActionResult TransactionWithCustomNameUsingRequestInfo()
+		{
+			Agent.Tracer.CurrentTransaction.Name = $"{HttpContext.Request.Method} {HttpContext.Request.Path}";
+			return Ok();
+		}
 
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 		public IActionResult Error() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
