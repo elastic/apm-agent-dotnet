@@ -90,6 +90,8 @@ namespace Elastic.Apm.Report
 
 		public void QueueSpan(ISpan span) => _eventQueue.Post(span);
 
+		public void QueueMetrics(IMetricSet metricSet) => _eventQueue.Post(metricSet);
+
 		public void QueueError(IError error) => _eventQueue.Post(error);
 
 		private async Task DoWork()
@@ -124,6 +126,9 @@ namespace Elastic.Apm.Report
 							break;
 						case Error _:
 							ndjson.AppendLine("{\"error\": " + serialized + "}");
+							break;
+						case Metrics.MetricSet _:
+							ndjson.AppendLine("{\"metricset\": " + serialized + "}");
 							break;
 					}
 					_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItemToSend}", item, serialized);

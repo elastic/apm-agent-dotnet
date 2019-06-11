@@ -1,4 +1,5 @@
 ﻿using Elastic.Apm.Api;
+using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Report
@@ -10,5 +11,7 @@ namespace Elastic.Apm.Report
 		void QueueTransaction(ITransaction transaction);
 
 		void QueueSpan(ISpan span);
+
+		void QueueMetrics(IMetricSet metrics);
 	}
 }

@@ -91,7 +91,7 @@ namespace Elastic.Apm.Logging
 			public void Log(string message, params object[] args) => _logger.DoLog(_level, message, null, args);
 
 			public void LogException(Exception exception, string message, params object[] args) =>
-				_logger.DoLog(_level, message, exception, args, exception.GetType().FullName, exception.Message);
+				_logger.DoLog(_level, message, exception, args);
 
 			public void LogExceptionWithCaller(Exception exception,
 				[CallerMemberName] string method = "",
