@@ -167,6 +167,11 @@ pipeline {
                     }
                   }
                 }
+                post {
+                  always {
+                    cleanWs(disableDeferredWipeout: true, notFailBuild: true)
+                  }
+                }
               }
               stage('Windows .NET Core'){
                 agent { label 'windows' }
@@ -236,6 +241,11 @@ pipeline {
                           artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
                       }
                     }
+                  }
+                }
+                post {
+                  always {
+                    cleanWs(disableDeferredWipeout: true, notFailBuild: true)
                   }
                 }
               }
