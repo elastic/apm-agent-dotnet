@@ -4,7 +4,6 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 
 //TODO: It'd be nice to move this into the .csproj
@@ -110,7 +109,6 @@ namespace Elastic.Apm
 		public static void Setup(AgentComponents agentComponents)
 		{
 			if (Lazy.IsValueCreated) throw new Exception("The singleton APM agent has already been instantiated and can no longer be configured");
-
 			_components = agentComponents;
 		}
 	}

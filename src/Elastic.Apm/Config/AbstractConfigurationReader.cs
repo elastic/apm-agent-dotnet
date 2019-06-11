@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using Elastic.Apm.Logging;
 
@@ -108,6 +109,85 @@ namespace Elastic.Apm.Config
 				if (!Uri.TryCreate(u, UriKind.Absolute, out uri)) return false;
 
 				return uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps;
+			}
+		}
+
+		protected double ParseMetricsInterval(ConfigurationKeyValue kv)
+		{
+			string value;
+			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
+				value = ConfigConsts.DefaultValues.MetricsInterval;
+			else
+				value = kv.Value;
+
+			if (!TryParseTimeInterval(value, out var valueInMilliseconds))
+			{
+				Logger?.Error()
+					?.Log("Failed to parse provided metrics interval `{ProvidedMetricsInterval}' - " +
+						"using default: {DefaultMetricsInterval}",
+						value,
+						ConfigConsts.DefaultValues.MetricsInterval);
+				return ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds;
+			}
+
+			// ReSharper disable once CompareOfFloatsByEqualityOperator - we compare to exactly zero here
+			if (valueInMilliseconds == 0)
+				return valueInMilliseconds;
+
+			if (valueInMilliseconds < 0)
+			{
+				Logger?.Error()
+					?.Log("Provided metrics interval `{ProvidedMetricsInterval}' is negative - " +
+						"metrics collection will be disabled",
+						value);
+				return 0;
+			}
+
+			if (valueInMilliseconds < ConfigConsts.Constraints.MinMetricsIntervalInMillisecond)
+			{
+				Logger?.Error()
+					?.Log("Provided metrics interval `{ProvidedMetricsInterval}' is smaller than allowed minimum: {MinProvidedMetricsInterval}ms - " +
+						"metrics collection will be disabled",
+						value,
+						ConfigConsts.Constraints.MinMetricsIntervalInMillisecond);
+				return 0;
+			}
+
+			return valueInMilliseconds;
+		}
+
+		private bool TryParseTimeInterval(String valueAsString, out double valueInMilliseconds)
+		{
+			switch (valueAsString)
+			{
+				case string _ when valueAsString.Length >= 2 && valueAsString.Substring(valueAsString.Length - 2).ToLower() == "ms":
+					return TryParseFloatingPoint(valueAsString.Substring(0, valueAsString.Length - 2), out valueInMilliseconds);
+
+				case string _ when char.ToLower(valueAsString.Last()) == 's':
+					if (!TryParseFloatingPoint(valueAsString.Substring(0, valueAsString.Length - 1), out var valueInSeconds))
+					{
+						valueInMilliseconds = 0;
+						return false;
+					}
+					valueInMilliseconds = TimeSpan.FromSeconds(valueInSeconds).TotalMilliseconds;
+					return true;
+
+				case string _ when char.ToLower(valueAsString.Last()) == 'm':
+					if (!TryParseFloatingPoint(valueAsString.Substring(0, valueAsString.Length - 1), out var valueInMinutes))
+					{
+						valueInMilliseconds = 0;
+						return false;
+					}
+					valueInMilliseconds = TimeSpan.FromMinutes(valueInMinutes).TotalMilliseconds;
+					return true;
+				default:
+					if (!TryParseFloatingPoint(valueAsString, out var valueInSecondsNoUnits))
+					{
+						valueInMilliseconds = 0;
+						return false;
+					}
+					valueInMilliseconds = TimeSpan.FromSeconds(valueInSecondsNoUnits).TotalMilliseconds;
+					return true;
 			}
 		}
 
