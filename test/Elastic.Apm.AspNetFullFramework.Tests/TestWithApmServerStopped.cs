@@ -1,24 +1,22 @@
-using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Elastic.Apm.Tests.MockApmServer;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
+	[Collection("AspNetFullFrameworkTests")]
 	public class TestWithApmServerStopped : TestsBase
 	{
-		public TestWithApmServerStopped() => _mockApmServerSingleton.StopServer();
+		public TestWithApmServerStopped(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper, startMockApmServer: false) { }
 
-		[Theory]
-		[InlineData("", 200)]
-		[InlineData(Consts.SampleApp.contactPageRelativePath, 200)]
-		[InlineData("Dummy_nonexistent_path", 404)]
-		public async Task SampleAppShouldBeAvailableEvenWhenApmServerStopped(string urlPathToTest, int expectedResponseStatusCode)
+		[AspNetFullFrameworkTheory]
+		[MemberData(nameof(GenerateSampleAppUrlPathsData))]
+		public async Task SampleAppShouldBeAvailableEvenWhenApmServerStopped(SampleAppUrlPathData sampleAppUrlPathData)
 		{
-			var httpClient = new HttpClient();
-			var response = await httpClient.GetAsync(Consts.SampleApp.rootUri + "/" + urlPathToTest);
-			response.StatusCode.Should().Be(expectedResponseStatusCode);
+			(await SendGetRequestToSampleApp(sampleAppUrlPathData.UrlPath)).StatusCode.Should().Be(sampleAppUrlPathData.Status);
 		}
 	}
 }

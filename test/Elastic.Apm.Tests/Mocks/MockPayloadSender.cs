@@ -6,9 +6,8 @@ using Elastic.Apm.Report;
 
 namespace Elastic.Apm.Tests.Mocks
 {
-	internal class MockPayloadSender : MockPayloadSink, IPayloadSender
+	internal class MockPayloadSender : IPayloadSender
 	{
-<<<<<<< Updated upstream
 		public readonly List<IError> Errors = new List<IError>();
 		public readonly List<ITransaction> Transactions = new List<ITransaction>();
 		public readonly List<ISpan> Spans = new List<ISpan>();
@@ -25,14 +24,11 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public Span[] SpansOnFirstTransaction => Spans.Where(n => n.TransactionId == Transactions.First().Id).Select(n => n as Span).ToArray();
 
-=======
->>>>>>> Stashed changes
 		public void QueueError(IError error) => Errors.Add(error);
 
 		public void QueueTransaction(ITransaction transaction) =>  Transactions.Add(transaction);
 
 		public void QueueSpan(ISpan span) => Spans.Add(span);
-<<<<<<< Updated upstream
 
 		public void QueueMetrics(IMetricSet metricSet) => Metrics.Add(metricSet);
 
@@ -41,8 +37,7 @@ namespace Elastic.Apm.Tests.Mocks
 			Spans.Clear();
 			Errors.Clear();
 			Transactions.Clear();
+			Metrics.Clear();
 		}
-=======
->>>>>>> Stashed changes
 	}
 }

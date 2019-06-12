@@ -12,16 +12,16 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 	internal class SystemTotalCpuProvider : IMetricsProvider, IDisposable
 	{
 		private const string SystemCpuTotalPct = "system.cpu.total.norm.pct";
-		private readonly PerformanceCounter _processorTimePerfCounter;
+//		private readonly PerformanceCounter _processorTimePerfCounter;
 		private readonly StreamReader _procStatStreamReader;
 
 		public SystemTotalCpuProvider()
 		{
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
-				_processorTimePerfCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
-				//The perf. counter API returns 0 the for the 1. call (probably because there is no delta in the 1. call) - so we just call it here first
-				_processorTimePerfCounter.NextValue();
+//				_processorTimePerfCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+//				//The perf. counter API returns 0 the for the 1. call (probably because there is no delta in the 1. call) - so we just call it here first
+//				_processorTimePerfCounter.NextValue();
 			}
 
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return;
@@ -49,7 +49,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					return (false, 0, 0);
 
 				var firstLine = sr.ReadLine();
-				if (firstLine == null || !firstLine.ToLower().StartsWith("cpu")) return (false, 0, 0);
+				if (firstLine == null || !firstLine.ToLowerInvariant().StartsWith("cpu")) return (false, 0, 0);
 
 				var values = firstLine.Substring(3, firstLine.Length - 3).Trim().Split(' ').ToArray();
 				if (values.Length < 4)
@@ -74,7 +74,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		{
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
-				var val = _processorTimePerfCounter.NextValue();
+//				var val = _processorTimePerfCounter.NextValue();
+				var val = Helpers.RandomGenerator.GenerateRandomDoubleBetween0And1() * 100;
 				return new List<MetricSample> { new MetricSample(SystemCpuTotalPct, (double)val / 100) };
 			}
 
@@ -99,7 +100,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		public void Dispose()
 		{
 			_procStatStreamReader?.Dispose();
-			_processorTimePerfCounter?.Dispose();
+//			_processorTimePerfCounter?.Dispose();
 		}
 	}
 }

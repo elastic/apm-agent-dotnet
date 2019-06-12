@@ -20,7 +20,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		{
 			var httpClient = new HttpClient();
 
-			var localHostUrl = new Uri(HttpContext.ApplicationInstance.Request.Url, "/Home/About");
+			var localHostUrl = new Uri(HttpContext.ApplicationInstance.Request.Url.ToString().Replace("/Home/Contact", "/Home/About"));
 			var responseFromLocalHost = await GetContentFromUrl(localHostUrl);
 			var elasticCoUrl = new Uri("https://elastic.co");
 			var responseFromElasticCo = await GetContentFromUrl(elasticCoUrl);

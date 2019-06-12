@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 
 namespace Elastic.Apm.Logging
 {
-	internal class ScopedLogger : IApmLogger
+	public class ScopedLogger : IApmLogger
 	{
 		public ScopedLogger(IApmLogger logger, string scope) => (Logger, Scope) = (logger, scope);
 
@@ -15,7 +15,7 @@ namespace Elastic.Apm.Logging
 
 		public LogLevel Level => Logger.Level;
 
-		public LogValuesFormatter GetOrAddFormatter(string message, int expectedCount)
+		internal LogValuesFormatter GetOrAddFormatter(string message, int expectedCount)
 		{
 			var formatter = Formatters.GetOrAdd(message, s => new LogValuesFormatter($"{{{{{{Scope}}}}}} {s}", Scope));
 			if (formatter.ValueNames.Count != expectedCount)

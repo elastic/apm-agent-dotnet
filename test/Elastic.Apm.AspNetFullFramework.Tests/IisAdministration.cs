@@ -1,10 +1,11 @@
 using System;
 using System.IO;
+using Elastic.Apm.Logging;
 using Microsoft.Web.Administration;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
-	internal static class IisAdministration
+	internal class IisAdministration
 	{
 		private static bool triedToAddSampleApp = false;
 		private static bool sampleAppAdded = false;
@@ -15,7 +16,20 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal const string srcDirPathRelativeToSolutionRoot = @"sample\AspNetFullFrameworkSampleApp";
 		}
 
-		internal static void AddSampleAppToIis()
+		private IApmLogger _logger;
+
+		private IisAdministration(IApmLogger logger)
+		{
+			_logger = logger?.Scoped(nameof(IisAdministration));
+		}
+
+		internal static void EnsureSampleAppIsRunning(IApmLogger logger)
+		{
+			var iisAdministration = new IisAdministration(logger);
+			iisAdministration.AddSampleAppToIis();
+		}
+
+		private void AddSampleAppToIis()
 		{
 			if (triedToAddSampleApp)
 			{
@@ -41,7 +55,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			sampleAppAdded = true;
 		}
 
-		private static DirectoryInfo FindSolutionRoot()
+		private DirectoryInfo FindSolutionRoot()
 		{
 			var solutionFileName = "ElasticApmAgent.sln";
 

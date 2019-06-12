@@ -10,6 +10,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			internal const string rootUrlPath = "/Elastic.Apm.AspNetFullFramework.Tests.SampleApp";
 			internal const string rootUri = "http://localhost" + rootUrlPath;
+			internal const string homePageRelativePath = "Home";
 			internal const string contactPageRelativePath = "Home/Contact";
 		}
 	}

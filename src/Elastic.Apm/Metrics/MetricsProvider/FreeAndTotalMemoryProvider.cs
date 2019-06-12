@@ -84,7 +84,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				switch (items.Length)
 				{
 					case 1 when ulong.TryParse(items[0], out var res): return (true, res);
-					case 2 when items[1].ToLower() == "kb" && ulong.TryParse(items[0], out var res): return (true, res * 1024);
+					case 2 when items[1].ToLowerInvariant() == "kb" && ulong.TryParse(items[0], out var res): return (true, res * 1024);
 					default: return (false, 0);
 				}
 			}
