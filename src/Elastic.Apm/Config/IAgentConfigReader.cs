@@ -12,5 +12,6 @@ namespace Elastic.Apm.Config
 		string SecretToken { get; }
 		bool CaptureHeaders { get; }
 		double TransactionSampleRate { get; }
+		double MetricsIntervalInMillisecond { get; }
 	}
 }

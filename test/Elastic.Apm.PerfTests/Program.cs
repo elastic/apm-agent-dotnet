@@ -3,6 +3,8 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Metrics;
+using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Mocks;
 
 namespace Elastic.Apm.PerfTests
@@ -10,10 +12,7 @@ namespace Elastic.Apm.PerfTests
 	[MemoryDiagnoser]
 	public class Program
 	{
-		public static void Main()
-		{
-			BenchmarkRunner.Run<Program>();
-		}
+		public static void Main(string[] args) => BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
 
 		[Benchmark]
 		public void SimpleTransactions10Spans()
@@ -30,6 +29,54 @@ namespace Elastic.Apm.PerfTests
 					}
 				});
 			}
+		}
+
+		[Benchmark]
+		public void CollectAllMetrics2X()
+		{
+			var noopLogger = new NoopLogger();
+			var mockPayloadSender = new MockPayloadSender();
+			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender, new TestAgentConfigurationReader(noopLogger)))
+			{
+				collector.CollectAllMetrics();
+				collector.CollectAllMetrics();
+			}
+		}
+
+		[Benchmark]
+		public void CollectProcessTotalCpuTime2X()
+		{
+			var mockPayloadSender = new ProcessTotalCpuTimeProvider();
+
+			mockPayloadSender.GetSamples();
+			mockPayloadSender.GetSamples();
+		}
+
+		[Benchmark]
+		public void CollectTotalCpuTime2X()
+		{
+			var systemTotalCpuProvider = new SystemTotalCpuProvider();
+
+			systemTotalCpuProvider.GetSamples();
+			systemTotalCpuProvider.GetSamples();
+		}
+
+		[Benchmark]
+		public void CollectTotalAndFreeMemory2X()
+		{
+			var mockPayloadSender = new FreeAndTotalMemoryProvider();
+
+			mockPayloadSender.GetSamples();
+			mockPayloadSender.GetSamples();
+		}
+
+		[Benchmark]
+		public void CollectWorkingSetAndVirMem2X()
+		{
+			var mockPayloadSender = new ProcessWorkingSetAndVirtualMemoryProvider();
+
+			mockPayloadSender.GetSamples();
+			mockPayloadSender.GetSamples();
 		}
 
 		[Benchmark]
