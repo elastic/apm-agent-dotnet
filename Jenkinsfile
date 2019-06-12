@@ -52,10 +52,10 @@ pipeline {
                 */
                 stage('Build') {
                   steps {
-                    deleteDir()
-                    unstash 'source'
-                    dir("${BASE_DIR}"){
-                      withGithubNotify(context: 'Build - Linux') {
+                    withGithubNotify(context: 'Build - Linux') {
+                      deleteDir()
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
                         dotnet(){
                           sh '.ci/linux/build.sh'
                         }
@@ -74,10 +74,10 @@ pipeline {
                 */
                 stage('Test') {
                   steps {
-                    deleteDir()
-                    unstash 'source'
-                    dir("${BASE_DIR}"){
-                      withGithubNotify(context: 'Test - Linux', tab: 'tests') {
+                    withGithubNotify(context: 'Test - Linux', tab: 'tests') {
+                      deleteDir()
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
                         dotnet(){
                           sh label: 'Install test tools', script: '.ci/linux/test-tools.sh'
                           sh label: 'Build', script: '.ci/linux/build.sh'
@@ -131,10 +131,10 @@ pipeline {
                   */
                   stage('Build - MSBuild') {
                     steps {
-                      cleanDir("${WORKSPACE}/${BASE_DIR}")
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        withGithubNotify(context: 'Build MSBuild - Windows') {
+                      withGithubNotify(context: 'Build MSBuild - Windows') {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
                           bat '.ci/windows/msbuild.bat'
                         }
                       }
@@ -151,10 +151,10 @@ pipeline {
                   */
                   stage('Test') {
                     steps {
-                      cleanDir("${WORKSPACE}/${BASE_DIR}")
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        withGithubNotify(context: 'Test MSBuild - Windows', tab: 'tests') {
+                      withGithubNotify(context: 'Test MSBuild - Windows', tab: 'tests') {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
                           powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
                           bat label: 'Build', script: '.ci/windows/msbuild.bat'
                           bat label: 'Test & coverage', script: '.ci/windows/test.bat'
@@ -211,10 +211,10 @@ pipeline {
                   */
                   stage('Build - dotnet') {
                     steps {
-                      cleanDir("${WORKSPACE}/${BASE_DIR}")
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        withGithubNotify(context: 'Build dotnet - Windows') {
+                      withGithubNotify(context: 'Build dotnet - Windows') {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
                           bat '.ci/windows/dotnet.bat'
                         }
                       }
@@ -231,10 +231,10 @@ pipeline {
                   */
                   stage('Test') {
                     steps {
-                      cleanDir("${WORKSPACE}/${BASE_DIR}")
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        withGithubNotify(context: 'Test dotnet - Windows', tab: 'tests') {
+                      withGithubNotify(context: 'Test dotnet - Windows', tab: 'tests') {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
                           powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
                           bat label: 'Build', script: '.ci/windows/dotnet.bat'
                           bat label: 'Test & coverage', script: '.ci/windows/test.bat'
@@ -283,10 +283,10 @@ pipeline {
               }
             }
             steps {
-              deleteDir()
-              unstash 'source'
-              dir("${BASE_DIR}"){
-                withGithubNotify(context: 'Documentation', tab: 'artifacts') {
+              withGithubNotify(context: 'Documentation', tab: 'artifacts') {
+                deleteDir()
+                unstash 'source'
+                dir("${BASE_DIR}"){
                   buildDocs(docsDir: "docs", archive: true)
                 }
               }
@@ -303,10 +303,10 @@ pipeline {
               }
             }
             steps {
-              deleteDir()
-              unstash 'source'
-              dir("${BASE_DIR}"){
-                withGithubNotify(context: 'Release AppVeyor', tab: 'artifacts') {
+              withGithubNotify(context: 'Release AppVeyor', tab: 'artifacts') {
+                deleteDir()
+                unstash 'source'
+                dir("${BASE_DIR}"){
                   release('secret/apm-team/ci/elastic-observability-appveyor')
                 }
               }
@@ -330,10 +330,10 @@ pipeline {
             }
             steps {
               input(message: 'Should we release a new version on NuGet?', ok: 'Yes, we should.')
-              deleteDir()
-              unstash 'source'
-              dir("${BASE_DIR}"){
-                withGithubNotify(context: 'Release NuGet', tab: 'artifacts') {
+              withGithubNotify(context: 'Release NuGet', tab: 'artifacts') {
+                deleteDir()
+                unstash 'source'
+                dir("${BASE_DIR}"){
                   release('secret/apm-team/ci/elastic-observability-nuget')
                 }
               }
