@@ -1,7 +1,5 @@
-using System.Collections.Generic;
-using Elastic.Apm.Api;
-using Elastic.Apm.Model;
-using Newtonsoft.Json;
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable ClassNeverInstantiated.Global
 
 namespace Elastic.Apm.Tests.MockApmServer
 {

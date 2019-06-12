@@ -14,7 +14,7 @@ using Xunit.Sdk;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
-	public class TestsBase : IAsyncLifetime
+	public class AspNetFullFrameworkTestsBase : IAsyncLifetime
 	{
 		private const int MaxNumberOfAttemptsToVerify = 10;
 		private const int WaitBetweenVerifyAttemptsMs = 1000;
@@ -22,10 +22,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		private readonly IApmLogger _logger;
 		private readonly MockApmServer _mockApmServer;
 		private readonly bool _startMockApmServer;
+		private readonly DateTimeOffset _testStartTime = DateTimeOffset.UtcNow + TimeSpan.FromHours(1);
 
-		protected TestsBase(ITestOutputHelper xUnitOutputHelper, bool startMockApmServer = true)
+		protected AspNetFullFrameworkTestsBase(ITestOutputHelper xUnitOutputHelper, bool startMockApmServer = true)
 		{
-			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(TestsBase));
+			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(AspNetFullFrameworkTestsBase));
 			_mockApmServer = new MockApmServer(_logger, GetCurrentTestName(xUnitOutputHelper));
 			_startMockApmServer = startMockApmServer;
 		}
@@ -34,20 +35,22 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			if (_startMockApmServer) _mockApmServer.RunAsync();
 
-			IisAdministration.EnsureSampleAppIsRunning(_logger);
+			IisAdministration.EnsureSampleAppIsRunningInCleanState(_logger);
 
 			return Task.CompletedTask;
 		}
 
 		public async Task DisposeAsync()
 		{
+			IisAdministration.RemoveSampleAppFromIis(_logger);
+
 			if (_startMockApmServer) await _mockApmServer.StopAsync();
 		}
 
 		protected async Task<HttpResponseMessage> SendGetRequestToSampleApp(string urlPath)
 		{
 			var httpClient = new HttpClient();
-			return await httpClient.GetAsync(Consts.SampleApp.rootUri + "/" + urlPath);
+			return await httpClient.GetAsync(Consts.SampleApp.RootUri + "/" + urlPath);
 		}
 
 		protected void VerifyPayloadFromAgent(Action<ReceivedData> verifier)
@@ -75,6 +78,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					if (attemptNumber == MaxNumberOfAttemptsToVerify)
 					{
 						_logger.Error()?.LogException(ex, "Reached max number of attempts to verify payload - Rethrowing the last exception...");
+						AnalyzePotentialIssues();
 						throw;
 					}
 
@@ -93,10 +97,10 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public static IEnumerable<object[]> GenerateSampleAppUrlPathsData()
 		{
 			yield return new object[] { new SampleAppUrlPathData("", 200) };
-			yield return new object[] { new SampleAppUrlPathData(Consts.SampleApp.homePageRelativePath, 200) };
+			yield return new object[] { new SampleAppUrlPathData(Consts.SampleApp.HomePageRelativePath, 200) };
 
 			// Contact page processing does HTTP Get for About page (additional transaction) and https://elastic.co/ - so 2 spans
-			yield return new object[] { new SampleAppUrlPathData(Consts.SampleApp.contactPageRelativePath, 200, 2, 2) };
+			yield return new object[] { new SampleAppUrlPathData(Consts.SampleApp.ContactPageRelativePath, 200, 2, 2) };
 
 			yield return new object[] { new SampleAppUrlPathData("Dummy_nonexistent_path", 404) };
 		}
@@ -112,12 +116,45 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			return test.TestCase.TestMethod.Method.Name;
 		}
 
+		private void AnalyzePotentialIssues()
+		{
+			_logger.Debug()
+				?.Log("Analyzing potential issues... _mockApmServer.ReceivedData: " +
+					"#transactions: {NumberOfTransactions}, #spans: {NumberOfSpans}, #errors: {NumberOfErrors}, #metric sets: {NumberOfMetricSets}",
+					_mockApmServer.ReceivedData.Transactions.Count,
+					_mockApmServer.ReceivedData.Spans.Count,
+					_mockApmServer.ReceivedData.Errors.Count,
+					_mockApmServer.ReceivedData.Metrics.Count);
+
+			FindReceivedDataWithTimestampEarlierThanTestStart();
+		}
+
+		private void FindReceivedDataWithTimestampEarlierThanTestStart()
+		{
+			foreach (var error in _mockApmServer.ReceivedData.Errors) AnalyzeDtoTimestamp(error.Timestamp, error);
+			foreach (var metricSet in _mockApmServer.ReceivedData.Metrics) AnalyzeDtoTimestamp(metricSet.Timestamp, metricSet);
+			foreach (var span in _mockApmServer.ReceivedData.Spans) AnalyzeDtoTimestamp(span.Timestamp, span);
+			foreach (var transaction in _mockApmServer.ReceivedData.Transactions) AnalyzeDtoTimestamp(transaction.Timestamp, transaction);
+
+			void AnalyzeDtoTimestamp(long dtoTimestamp, object dto)
+			{
+				var dtoStartTime = DateTimeOffset.FromUnixTimeMilliseconds(dtoTimestamp / 1000);
+
+				if (_testStartTime <= dtoStartTime) return;
+
+				_logger.Warning()
+					?.Log("The following DTO received from the agent has timestamp that is earlier than the current test start time. " +
+						"DTO timestamp: {DtoTimestamp}, test start time: {TestStartTime}, DTO: {DtoFromAgent}",
+						dtoStartTime.LocalDateTime, _testStartTime.LocalDateTime, dto);
+			}
+		}
+
 		public class SampleAppUrlPathData
 		{
+			public readonly int SpansCount;
 			public readonly int Status;
 			public readonly int TransactionsCount;
 			public readonly string UrlPath;
-			public readonly int SpansCount;
 
 			public SampleAppUrlPathData(string urlPath, int status, int transactionsCount = 1, int spansCount = 0)
 			{

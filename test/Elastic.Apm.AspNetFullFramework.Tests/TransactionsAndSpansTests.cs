@@ -1,7 +1,4 @@
-using System;
-using System.Net.Http;
 using System.Threading.Tasks;
-using Elastic.Apm.Logging;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -9,7 +6,7 @@ using Xunit.Abstractions;
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	[Collection("AspNetFullFrameworkTests")]
-	public class TransactionsAndSpansTests : TestsBase
+	public class TransactionsAndSpansTests : AspNetFullFrameworkTestsBase
 	{
 		public TransactionsAndSpansTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
 

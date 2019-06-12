@@ -1,7 +1,10 @@
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
 using Newtonsoft.Json;
+
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+
 
 namespace Elastic.Apm.Tests.MockApmServer
 {

@@ -1,14 +1,15 @@
 using System.Collections.Generic;
-using Elastic.Apm.Api;
-using Newtonsoft.Json;
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
 	internal class MetricSetDto
 	{
-		public Dictionary<string, MetricSample> Samples { get; set; }
+		public Dictionary<string, MetricSampleDto> Samples { get; set; }
 
-		[JsonProperty("timestamp")]
-		public long TimeStamp { get; set; }
+		public long Timestamp { get; set; }
 	}
 }

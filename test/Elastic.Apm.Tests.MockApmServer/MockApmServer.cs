@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 
+
 namespace Elastic.Apm.Tests.MockApmServer
 {
 	public class MockApmServer

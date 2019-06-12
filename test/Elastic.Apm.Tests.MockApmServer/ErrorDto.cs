@@ -2,6 +2,7 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
 using Newtonsoft.Json;
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
@@ -12,13 +13,15 @@ namespace Elastic.Apm.Tests.MockApmServer
 		public CapturedException Exception { get; set; }
 		public string Id { get; set; }
 
-		[JsonProperty("parent_id")] public string ParentId { get; set; }
+		[JsonProperty("parent_id")]
+		public string ParentId { get; set; }
+
 		public long Timestamp { get; set; }
 
 		[JsonProperty("trace_id")]
 		public string TraceId { get; set; }
 
-		public TransactionDataDto Transaction { get; }
+		public TransactionDataDto Transaction { get; set; }
 
 		[JsonProperty("transaction_id")]
 		public string TransactionId { get; set; }
