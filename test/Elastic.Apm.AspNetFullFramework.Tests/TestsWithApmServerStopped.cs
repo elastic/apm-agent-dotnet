@@ -6,9 +6,9 @@ using Xunit.Abstractions;
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	[Collection("AspNetFullFrameworkTests")]
-	public class TestWithApmServerStopped : AspNetFullFrameworkTestsBase
+	public class TestsWithApmServerStopped : AspNetFullFrameworkTestsBase
 	{
-		public TestWithApmServerStopped(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper, false) { }
+		public TestsWithApmServerStopped(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper, false) { }
 
 		[AspNetFullFrameworkTheory]
 		[MemberData(nameof(GenerateSampleAppUrlPathsData))]

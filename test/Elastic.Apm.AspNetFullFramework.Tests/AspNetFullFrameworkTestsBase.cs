@@ -22,7 +22,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		private readonly IApmLogger _logger;
 		private readonly MockApmServer _mockApmServer;
 		private readonly bool _startMockApmServer;
-		private readonly DateTimeOffset _testStartTime = DateTimeOffset.UtcNow + TimeSpan.FromHours(1);
+		private readonly DateTimeOffset _testStartTime = DateTimeOffset.UtcNow;
 
 		protected AspNetFullFrameworkTestsBase(ITestOutputHelper xUnitOutputHelper, bool startMockApmServer = true)
 		{
