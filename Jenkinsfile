@@ -52,11 +52,13 @@ pipeline {
                 */
                 stage('Build') {
                   steps {
-                    deleteDir()
-                    unstash 'source'
-                    dir("${BASE_DIR}"){
-                      dotnet(){
-                        sh '.ci/linux/build.sh'
+                    withGithubNotify(context: 'Build - Linux') {
+                      deleteDir()
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        dotnet(){
+                          sh '.ci/linux/build.sh'
+                        }
                       }
                     }
                   }
@@ -72,14 +74,16 @@ pipeline {
                 */
                 stage('Test') {
                   steps {
-                    deleteDir()
-                    unstash 'source'
-                    dir("${BASE_DIR}"){
-                      dotnet(){
-                        sh label: 'Install test tools', script: '.ci/linux/test-tools.sh'
-                        sh label: 'Build', script: '.ci/linux/build.sh'
-                        sh label: 'Test & coverage', script: '.ci/linux/test.sh'
-                        sh label: 'Convert Test Results to junit format', script: '.ci/linux/convert.sh'
+                    withGithubNotify(context: 'Test - Linux', tab: 'tests') {
+                      deleteDir()
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        dotnet(){
+                          sh label: 'Install test tools', script: '.ci/linux/test-tools.sh'
+                          sh label: 'Build', script: '.ci/linux/build.sh'
+                          sh label: 'Test & coverage', script: '.ci/linux/test.sh'
+                          sh label: 'Convert Test Results to junit format', script: '.ci/linux/convert.sh'
+                        }
                       }
                     }
                   }
@@ -127,10 +131,12 @@ pipeline {
                   */
                   stage('Build - MSBuild') {
                     steps {
-                      cleanDir("${WORKSPACE}/${BASE_DIR}")
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        bat '.ci/windows/msbuild.bat'
+                      withGithubNotify(context: 'Build MSBuild - Windows') {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          bat '.ci/windows/msbuild.bat'
+                        }
                       }
                     }
                     post {
@@ -145,13 +151,15 @@ pipeline {
                   */
                   stage('Test') {
                     steps {
-                      cleanDir("${WORKSPACE}/${BASE_DIR}")
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                        bat label: 'Build', script: '.ci/windows/msbuild.bat'
-                        bat label: 'Test & coverage', script: '.ci/windows/test.bat'
-                        powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                      withGithubNotify(context: 'Test MSBuild - Windows', tab: 'tests') {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                          bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                          bat label: 'Test & coverage', script: '.ci/windows/test.bat'
+                          powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                        }
                       }
                     }
                     post {
@@ -203,10 +211,12 @@ pipeline {
                   */
                   stage('Build - dotnet') {
                     steps {
-                      cleanDir("${WORKSPACE}/${BASE_DIR}")
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        bat '.ci/windows/dotnet.bat'
+                      withGithubNotify(context: 'Build dotnet - Windows') {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          bat '.ci/windows/dotnet.bat'
+                        }
                       }
                     }
                     post {
@@ -221,13 +231,15 @@ pipeline {
                   */
                   stage('Test') {
                     steps {
-                      cleanDir("${WORKSPACE}/${BASE_DIR}")
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                        bat label: 'Build', script: '.ci/windows/dotnet.bat'
-                        bat label: 'Test & coverage', script: '.ci/windows/test.bat'
-                        powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                      withGithubNotify(context: 'Test dotnet - Windows', tab: 'tests') {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                          bat label: 'Build', script: '.ci/windows/dotnet.bat'
+                          bat label: 'Test & coverage', script: '.ci/windows/test.bat'
+                          powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                        }
                       }
                     }
                     post {
@@ -271,10 +283,12 @@ pipeline {
               }
             }
             steps {
-              deleteDir()
-              unstash 'source'
-              dir("${BASE_DIR}"){
-                buildDocs(docsDir: "docs", archive: true)
+              withGithubNotify(context: 'Documentation', tab: 'artifacts') {
+                deleteDir()
+                unstash 'source'
+                dir("${BASE_DIR}"){
+                  buildDocs(docsDir: "docs", archive: true)
+                }
               }
             }
           }
@@ -289,10 +303,12 @@ pipeline {
               }
             }
             steps {
-              deleteDir()
-              unstash 'source'
-              dir("${BASE_DIR}"){
-                release('secret/apm-team/ci/elastic-observability-appveyor')
+              withGithubNotify(context: 'Release AppVeyor', tab: 'artifacts') {
+                deleteDir()
+                unstash 'source'
+                dir("${BASE_DIR}"){
+                  release('secret/apm-team/ci/elastic-observability-appveyor')
+                }
               }
             }
             post{
@@ -314,10 +330,12 @@ pipeline {
             }
             steps {
               input(message: 'Should we release a new version on NuGet?', ok: 'Yes, we should.')
-              deleteDir()
-              unstash 'source'
-              dir("${BASE_DIR}"){
-                release('secret/apm-team/ci/elastic-observability-nuget')
+              withGithubNotify(context: 'Release NuGet', tab: 'artifacts') {
+                deleteDir()
+                unstash 'source'
+                dir("${BASE_DIR}"){
+                  release('secret/apm-team/ci/elastic-observability-nuget')
+                }
               }
             }
           }
