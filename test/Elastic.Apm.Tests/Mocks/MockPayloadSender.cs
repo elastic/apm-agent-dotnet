@@ -37,6 +37,7 @@ namespace Elastic.Apm.Tests.Mocks
 			Spans.Clear();
 			Errors.Clear();
 			Transactions.Clear();
+			Metrics.Clear();
 		}
 	}
 }
