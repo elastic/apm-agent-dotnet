@@ -9,7 +9,7 @@ namespace Elastic.Apm.Helpers
 		[ThreadStatic]
 		private static Random _local;
 
-		private static Random GetInstance()
+		internal static Random GetInstance()
 		{
 			var inst = _local;
 			if (inst == null)

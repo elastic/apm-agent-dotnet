@@ -16,11 +16,17 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	public class TestsBase : IAsyncLifetime
 	{
-		private const int MaxNumberOfAttemptsToVerify = 10;
-		private const int WaitBetweenVerifyAttemptsMs = 1000;
+		private static readonly bool KeepIisItems = EnvVarUtils.GetBoolValue("ELASTIC_APM_TESTS_FULL_FRAMEWORK_KEEP_IIS_ITEMS", /* defaultValue: */ false);
+
+		private static class DataSentByAgentVerificationConsts
+		{
+			internal const int MaxNumberOfAttemptsToVerify = 10;
+			internal const int WaitBetweenVerifyAttemptsMs = 1000;
+		}
 
 		private readonly IApmLogger _logger;
 		private readonly MockApmServer _mockApmServer;
+		private readonly IisAdministration _iisAdministration;
 		private readonly bool _startMockApmServer;
 		private readonly DateTimeOffset _testStartTime = DateTimeOffset.UtcNow;
 
@@ -28,21 +34,25 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(TestsBase));
 			_mockApmServer = new MockApmServer(_logger, GetCurrentTestName(xUnitOutputHelper));
+			_iisAdministration = new IisAdministration(_logger);
 			_startMockApmServer = startMockApmServer;
 		}
 
 		public Task InitializeAsync()
 		{
-			if (_startMockApmServer) _mockApmServer.RunAsync();
-
-			IisAdministration.EnsureSampleAppIsRunningInCleanState(_logger);
+			int mockApmServerPort = _mockApmServer.FindAvailablePortToListen();
+			// Mock APM server should be started only after sample application is started in clean state.
+			// The order is important to prevent agent's queued data from the previous test to be sent
+			// to this test instance of mock APM server.
+			_iisAdministration.SetupSampleAppInCleanState(mockApmServerPort);
+			if (_startMockApmServer) _mockApmServer.RunAsync(mockApmServerPort);
 
 			return Task.CompletedTask;
 		}
 
 		public async Task DisposeAsync()
 		{
-			IisAdministration.RemoveSampleAppFromIis(_logger);
+			if (!KeepIisItems) _iisAdministration.DisposeSampleApp();
 
 			if (_startMockApmServer) await _mockApmServer.StopAsync();
 		}
@@ -76,24 +86,24 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					verifier(_mockApmServer.ReceivedData);
 					_logger.Debug()
 						?.Log("Payload verification succeeded. Attempt #{AttemptNumber} out of {MaxNumberOfAttempts}",
-							attemptNumber, MaxNumberOfAttemptsToVerify);
+							attemptNumber, DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify);
 					return;
 				}
 				catch (XunitException ex)
 				{
 					_logger.Debug()
 						?.LogException(ex, "Payload verification failed. Attempt #{AttemptNumber} out of {MaxNumberOfAttempts}",
-							attemptNumber, MaxNumberOfAttemptsToVerify);
+							attemptNumber, DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify);
 
-					if (attemptNumber == MaxNumberOfAttemptsToVerify)
+					if (attemptNumber == DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify)
 					{
 						_logger.Error()?.LogException(ex, "Reached max number of attempts to verify payload - Rethrowing the last exception...");
 						AnalyzePotentialIssues();
 						throw;
 					}
 
-					_logger.Debug()?.Log("Waiting {WaitTimeMs}ms before the next attempt...", WaitBetweenVerifyAttemptsMs);
-					Thread.Sleep(WaitBetweenVerifyAttemptsMs);
+					_logger.Debug()?.Log("Waiting {WaitTimeMs}ms before the next attempt...", DataSentByAgentVerificationConsts.WaitBetweenVerifyAttemptsMs);
+					Thread.Sleep(DataSentByAgentVerificationConsts.WaitBetweenVerifyAttemptsMs);
 				}
 				catch (Exception ex)
 				{

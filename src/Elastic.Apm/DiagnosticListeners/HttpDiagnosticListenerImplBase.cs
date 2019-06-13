@@ -135,7 +135,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 			if (!ProcessingRequests.TryAdd(request, span))
 			{
-				// Sergey_Kleyman_TODO: Implement error handling
+				// Consider improving error reporting - see https://github.com/elastic/apm-agent-dotnet/issues/280
 				_logger.Error()?.Log("Failed to add to ProcessingRequests - ???");
 				return;
 			}

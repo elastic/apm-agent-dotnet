@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using Elastic.Apm.Tests.TestHelpers;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
@@ -30,7 +31,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			if (!CheckIisVersion(out var reason))
 				return $"{ReasonPrefix} {reason}. {ReasonSuffix}";
 
-			if (!GetEnabledEnvVarValue(out reason))
+			if (!EnvVarUtils.GetBoolValue(EnabledEnvVarName, /* defaultValue: */ false, out reason))
 				return $"{ReasonPrefix} {reason}. {ReasonSuffix}";
 
 			return null;
@@ -55,25 +56,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			reason = null;
 			return true;
-		}
-
-		private static bool GetEnabledEnvVarValue(out string reason)
-		{
-			var envVarValue = Environment.GetEnvironmentVariable(EnabledEnvVarName);
-			if (envVarValue == null)
-			{
-				reason = $"environment variable {EnabledEnvVarName} is not set";
-				return false;
-			}
-
-			reason = $"environment variable {EnabledEnvVarName} is set to `{envVarValue}'";
-			if (!bool.TryParse(envVarValue, out var envVarBoolValue))
-			{
-				reason += " which is not a valid boolean value";
-				return false;
-			}
-
-			return envVarBoolValue;
 		}
 	}
 }
