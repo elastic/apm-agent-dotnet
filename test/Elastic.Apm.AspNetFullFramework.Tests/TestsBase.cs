@@ -14,7 +14,7 @@ using Xunit.Sdk;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
-	public class AspNetFullFrameworkTestsBase : IAsyncLifetime
+	public class TestsBase : IAsyncLifetime
 	{
 		private const int MaxNumberOfAttemptsToVerify = 10;
 		private const int WaitBetweenVerifyAttemptsMs = 1000;
@@ -24,9 +24,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		private readonly bool _startMockApmServer;
 		private readonly DateTimeOffset _testStartTime = DateTimeOffset.UtcNow;
 
-		protected AspNetFullFrameworkTestsBase(ITestOutputHelper xUnitOutputHelper, bool startMockApmServer = true)
+		protected TestsBase(ITestOutputHelper xUnitOutputHelper, bool startMockApmServer = true)
 		{
-			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(AspNetFullFrameworkTestsBase));
+			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(TestsBase));
 			_mockApmServer = new MockApmServer(_logger, GetCurrentTestName(xUnitOutputHelper));
 			_startMockApmServer = startMockApmServer;
 		}
@@ -47,10 +47,20 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			if (_startMockApmServer) await _mockApmServer.StopAsync();
 		}
 
-		protected async Task<HttpResponseMessage> SendGetRequestToSampleApp(string urlPath)
+		protected async Task SendGetRequestToSampleAppAndVerifyResponseStatusCode(string urlPath, int expectedStatusCode)
 		{
 			var httpClient = new HttpClient();
-			return await httpClient.GetAsync(Consts.SampleApp.RootUri + "/" + urlPath);
+			var response = await httpClient.GetAsync(Consts.SampleApp.RootUri + "/" + urlPath);
+			try
+			{
+				response.StatusCode.Should().Be(expectedStatusCode);
+			}
+			catch (XunitException ex)
+			{
+				var responseContent = await response.Content.ReadAsStringAsync();
+				_logger.Error()?.Log("{ExceptionMessage}. Response content:\n{ResponseContent}", ex.Message, responseContent);
+				throw;
+			}
 		}
 
 		protected void VerifyPayloadFromAgent(Action<ReceivedData> verifier)

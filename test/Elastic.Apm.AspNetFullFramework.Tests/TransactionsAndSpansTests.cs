@@ -6,7 +6,7 @@ using Xunit.Abstractions;
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	[Collection("AspNetFullFrameworkTests")]
-	public class TransactionsAndSpansTests : AspNetFullFrameworkTestsBase
+	public class TransactionsAndSpansTests : TestsBase
 	{
 		public TransactionsAndSpansTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
 
@@ -14,7 +14,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		[MemberData(nameof(GenerateSampleAppUrlPathsData))]
 		public async Task VerifyExpectedNumberOfTransactionsAndSpansForEachPage(SampleAppUrlPathData sampleAppUrlPathData)
 		{
-			(await SendGetRequestToSampleApp(sampleAppUrlPathData.UrlPath)).StatusCode.Should().Be(sampleAppUrlPathData.Status);
+			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(sampleAppUrlPathData.UrlPath, sampleAppUrlPathData.Status);
 
 			VerifyPayloadFromAgent(receivedData =>
 			{
