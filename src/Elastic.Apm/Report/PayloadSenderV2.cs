@@ -14,8 +14,6 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Report
 {
@@ -27,26 +25,27 @@ namespace Elastic.Apm.Report
 	{
 		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
 
-		private readonly Task _creation;
-
 		private readonly BatchBlock<object> _eventQueue =
-			new BatchBlock<object>(20, new GroupingDataflowBlockOptions
-				{ BoundedCapacity = 1_000_000 });
+			new BatchBlock<object>(20);
 
 		private readonly HttpClient _httpClient;
 		private readonly IApmLogger _logger;
 
 		private readonly Service _service;
+		internal readonly Api.System _system;
 
 		private CancellationTokenSource _batchBlockReceiveAsyncCts;
 
 		private readonly PayloadItemSerializer _payloadItemSerializer = new PayloadItemSerializer();
 
 		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler = new SingleThreadTaskScheduler(CancellationToken.None);
+		private readonly Metadata _metadata;
 
-		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, HttpMessageHandler handler = null)
+		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, Api.System system, HttpMessageHandler handler = null)
 		{
 			_service = service;
+			_system = system;
+			_metadata = new Metadata { Service = _service, System = _system};
 			_logger = logger?.Scoped(nameof(PayloadSenderV2));
 
 			var serverUrlBase = configurationReader.ServerUrls.First();
@@ -55,22 +54,21 @@ namespace Elastic.Apm.Report
 			servicePoint.ConnectionLeaseTimeout = DnsTimeout;
 			servicePoint.ConnectionLimit = 20;
 
-			_httpClient = new HttpClient(handler ?? new HttpClientHandler())
-			{
-				BaseAddress = serverUrlBase
-			};
+			_httpClient = new HttpClient(handler ?? new HttpClientHandler()) { BaseAddress = serverUrlBase };
 
 			if (configurationReader.SecretToken != null)
 			{
 				_httpClient.DefaultRequestHeaders.Authorization =
 					new AuthenticationHeaderValue("Bearer", configurationReader.SecretToken);
 			}
-			_creation = Task.Factory.StartNew(
+			Task.Factory.StartNew(
 				() =>
 				{
 					try
 					{
-						_worker = DoWork();
+#pragma warning disable 4014
+						DoWork();
+#pragma warning restore 4014
 					}
 					catch (TaskCanceledException ex)
 					{
@@ -79,48 +77,22 @@ namespace Elastic.Apm.Report
 				}, CancellationToken.None, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
 		}
 
-		private Task _worker;
-
 		public void QueueTransaction(ITransaction transaction)
 		{
-			_eventQueue.Post(transaction);
+			var res = _eventQueue.Post(transaction);
+			_logger.Debug()
+				?.Log(!res
+					? "Failed adding Transaction to the queue, {Transaction}"
+					: "Transaction added to the queue, {Transaction}", transaction);
+
 			_eventQueue.TriggerBatch();
 		}
 
 		public void QueueSpan(ISpan span) => _eventQueue.Post(span);
 
+		public void QueueMetrics(IMetricSet metricSet) => _eventQueue.Post(metricSet);
+
 		public void QueueError(IError error) => _eventQueue.Post(error);
-
-		/// <summary>
-		/// Flushes all the events and ends the loop that processes and sends the events.
-		/// This can be called only once and after that the instance won't process anything.
-		/// </summary>
-		internal async Task FlushAndFinishAsync()
-		{
-			_logger.Debug()?.Log("FlushAndFinish called - PayloadSenderV2 will become invalid");
-			await _creation;
-			_eventQueue.TriggerBatch();
-
-			_batchBlockReceiveAsyncCts.Cancel();
-
-			try
-			{
-				await _worker;
-			}
-			catch (TaskCanceledException)
-			{
-				_logger.Debug()?.Log("worker task cancelled");
-			}
-			finally
-			{
-				_batchBlockReceiveAsyncCts.Dispose();
-			}
-
-			if (_eventQueue.TryReceiveAll(out var queueItems))
-				await ProcessQueueItems(queueItems.SelectMany(n => n).ToArray());
-
-			_eventQueue.Complete();
-		}
 
 		private async Task DoWork()
 		{
@@ -137,8 +109,7 @@ namespace Elastic.Apm.Report
 		{
 			try
 			{
-				var metadata = new Metadata { Service = _service };
-				var metadataJson = _payloadItemSerializer.SerializeObject(metadata);
+				var metadataJson = _payloadItemSerializer.SerializeObject(_metadata);
 				var ndjson = new StringBuilder();
 				ndjson.Append("{\"metadata\": " + metadataJson + "}" + "\n");
 
@@ -155,6 +126,9 @@ namespace Elastic.Apm.Report
 							break;
 						case Error _:
 							ndjson.AppendLine("{\"error\": " + serialized + "}");
+							break;
+						case Metrics.MetricSet _:
+							ndjson.AppendLine("{\"metricset\": " + serialized + "}");
 							break;
 					}
 					_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItemToSend}", item, serialized);
@@ -193,6 +167,8 @@ namespace Elastic.Apm.Report
 	{
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global - used by Json.Net
 		public Service Service { get; set; }
+
+		public Api.System System { get; set; }
 	}
 
 	//Credit: https://stackoverflow.com/a/30726903/1783306

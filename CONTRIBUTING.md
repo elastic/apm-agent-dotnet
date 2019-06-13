@@ -17,13 +17,40 @@ In order to build the source code of the .NET APM Agent you need
 
 You can use any IDE that supports .NET Core development and you can use any OS that is supported by .NET Core.
 
-## Code contributions
+## Code contributions (please read this before your first PR)
 
 If you have a bugfix or new feature that you would like to contribute,
 please find or open an issue about it first.
 Talk about what you would like to do.
 It may be that somebody is already working on it,
 or that there are particular issues that you should know about before implementing the change.
+
+We aim to maintain high code quality, therefore every PR goes through the same review process, no matter who opened the PR.
+
+### General advice
+
+Please make sure that your PR addresses a single issue and its size is reasonable to review. There are no hard rules, but please keep in mind that every line of your PR will be reviewed and it's not uncommon that a longer discussion evolves in case of a sensitive change.
+
+Therefore it's preferred to have multiple smaller PRs over a single big PR.
+
+This makes sure that changes that have consensus get merged quickly and don't get blocked by unrelated changes. Additionally, the repository will also have a useful and searchable history by doing so.
+
+Please do:
+- Try to get feedback as early as possible and prefer to ask questions in issues before you start submitting code.
+- Add a description to your PR which describes your intention and gives a high level summary about your changes.
+- Run all the tests from the `test` folder and make sure that all of them are green. See [Testing](###Testing).
+- In case of new code, make sure it's covered by at least 1 test.
+- make sure your IDE uses the `.editorconfig` from the repo and you follow our coding guidelines. See [Coding-guidelines](###Coding-guidelines).
+- Feel free to close a PR and create a new one in case you changed your mind, or found a better solution.
+- Feel free to fix typos.
+- Feel free to use the draft PR feature of GitHub, in case you would like to show some work in progress code and get feedback on it.
+
+Please don't:
+- Create a PR where you address multiple issues at once.
+- Create a giant PR with a huge change set. There is no hard rule, but if your change grows over 1000 lines, it's maybe worth thinking about making it self contained and submit it as a PR and address follow-up issues in a subsequent PR. (of course there can be exceptions)
+- Actively push code to a PR until you have received feedback. Of course if you spot some minor things after you opened a PR, it's perfectly fine to push a small fix. But please don't do active work on a PR that haven't received any feedback. It's very possible that someone already looked at it and is about to write a detailed review. If you actively add new changes to a PR then the reviewer will have a hard time to provide up to date feedback. If you just want to show work-in-progress code, feel free to use the draft feature of github, or indicate in the title, that the work is not 100% done yet. Of course, once you have feedback on a PR, it's perfectly fine, or rather encouraged to start working collaboratively on the PR and push new changes and address issues and suggestions from the reviewer.
+- Change or add dependencies, unless you are really sure about it (it's best to ask about this in an issue first) - see [compatibility](####compatibility).
+
 
 ### Submitting your changes
 
@@ -90,6 +117,39 @@ Pull requests should be reviewed by someone with commit access.
 Once approved, the author of the pull request,
 or reviewer if the author does not have commit access,
 should "Squash and merge".
+
+### Design considerations
+
+#### Performance
+
+The agent is designed to monitor production applications. Therefore it's very important to keep the performance overhead of the agent as low as possible.
+
+It's not uncommon that you write or change code that can potentially change the performance characteristics of the agent and therefore also of the application's of our users.
+
+If this is the case then a perf. test should be added to the `test\Elastic.Apm.PerfTests` project which proves that the new code does not make the performance of the agent worse than it was before your PR.
+
+We care both about memory and CPU overhead and both should be measured. The `test\Elastic.Apm.PerfTests` is configured to measure both.
+
+#### Compatibility
+
+We aim to support the broadest set of .NET flavors and versions possible. This includes different OSs, typically Windows, Linux, and macOS.
+
+This is especially true for versions officially supported by Microsoft at the moment. In case of specific libraries and frameworks (e.g. ASP.NET Core) we aim to support every version which is supported by Microsoft or the library/framework author.
+
+This means that the .NET APM Agent can end up in very different environments.
+
+To allow the agent to be used in all these different environments there are 2 categories of projects in the `src` folder:
+
+ - The `Elastic.Apm` project is the core of the agent. This package is referenced by every other agent package, and it contains the Public Agent API. Therefore this package must target a very broad set of .NET flavors, versions, and environments. Currently this package targets .NET Standard 2.0. This means .NET Framework 3.5 is not supported currently, but the code-base would be very easy to port to .NET Framework 3.5. We should aim for a code-base in this project that is very easy to port to different environments. Porting it to older environments can be triggered by user feedback - e.g. someone needs the agent in an older environment.
+
+ - Framework and Library specific projects (e.g. `Elastic.Apm.AspNetCore`). In case of these packages the goal is to target every possible supported (by Microsoft or the Library/Framework author) version of the corresponding library.
+
+Therefore, in case of:
+- `Elastic.Apm`: If you want to add a dependency, make sure that this dependency does not make the agent unusable in some specific environments. Furthermore, make sure that the new dependency does not make the agent impossible to port to a different environment (e.g. making it a shared library, or creating a classic .NET Framework library from that package should still be feasible after you introduce a dependency). One typical example is "logging libraries": Logging is spread across the whole project, and depending on a specific logging library would mean that the target frameworks and environments of the `Elastic.Apm` package are dictated by the dependency. If the target framework of the dependency is "everything in the current and every future release" (very rare), then it's ok to take on this dependency. Otherwise there should be a thoughtful discussion in an issue and a broad agreement on introducing this new dependency.
+In case of existing dependencies we need to depend on the oldest possible version. With this the application that uses the agent library can also depend on the same or any newer version. This would not be true the other way around.
+
+- Framework and Library specific projects: It's ok to have dependencies that are typical dependencies of applications depending on the specific framework/library package. E.g. in case of  `Elastic.Apm.AspNetCore` it's safe to assume that a "typical" ASP.NET Core application has everything that is part of the [Microsoft.AspNetCore.All](https://www.nuget.org/packages/Microsoft.AspNetCore.All) package as its dependency. Similarly to `Elastic.Apm` every dependency has to have the lowest possible version. E.g. depending on `"Microsoft.AspNetCore.Http.Abstractions" Version="2.0.0" ` makes the  `Elastic.Apm.AspNetCore` project usable with every ASP.NET Core version that is at least 2.0.0 or newer. Targeting e.g. version 2.2.0 would mean that versions older than 2.2.0 are not supported.
+
 
 ### Coding guidelines
 
