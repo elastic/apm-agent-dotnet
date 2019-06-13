@@ -112,6 +112,7 @@ pipeline {
                   MSBuildSDKsPath = "${env.DOTNET_ROOT}\\sdk\\2.1.505\\Sdks"
                   PATH = "${env.PATH};${env.HOME}\\bin;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
                   MSBUILDDEBUGPATH = "${env.WORKSPACE}"
+                  RUN_DISPLAY_URL  = "${env.RUN_DISPLAY_URL}"
                 }
                 stages{
                   /**
@@ -124,6 +125,10 @@ pipeline {
                       dir("${HOME}"){
                         powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
                       }
+                      // Debugging purposes
+                      echo "DEBUG -> ${RUN_DISPLAY_URL}"
+                      powershell label: 'Debug', script: "Get-ChildItem Env"
+                      powershell label: 'DebugURL', script: "[System.Net.HttpWebRequest]::Create('${RUN_DISPLAY_URL}').GetResponse().ResponseUri.AbsoluteUri"
                     }
                   }
                   /**
