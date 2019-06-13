@@ -127,7 +127,8 @@ pipeline {
                       }
                       // Debugging purposes
                       echo "DEBUG -> ${RUN_DISPLAY_URL}"
-                      powershell label: 'Debug', script: "Get-ChildItem Env"
+                      bat label: 'Debug Variables', script: 'SET'
+                      powershell label: 'Version', script: '$PSVersionTable.PSVersion'
                       powershell label: 'DebugURL', script: "[System.Net.HttpWebRequest]::Create('${RUN_DISPLAY_URL}').GetResponse().ResponseUri.AbsoluteUri"
                     }
                   }
