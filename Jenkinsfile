@@ -130,6 +130,7 @@ pipeline {
                       bat label: 'Debug Variables', script: 'SET'
                       powershell label: 'Version', script: '$PSVersionTable.PSVersion'
                       powershell label: 'DebugURL', script: "[System.Net.HttpWebRequest]::Create('${RUN_DISPLAY_URL}').GetResponse().ResponseUri.AbsoluteUri"
+                      powershell label: 'DebugURL harcoded', script: '''[System.Net.HttpWebRequest]::Create('https://apm-ci.elastic.co/job/apm-agent-dotnet/job/apm-agent-dotnet-mbp/job/PR-279/1/display/redirect').GetResponse().ResponseUri.AbsoluteUri'''
                     }
                   }
                   /**
