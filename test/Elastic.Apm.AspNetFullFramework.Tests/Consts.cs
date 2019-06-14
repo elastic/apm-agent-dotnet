@@ -8,6 +8,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal const string HomePageRelativePath = "Home";
 			internal const string RootUri = "http://localhost" + RootUrlPath;
 			internal const string RootUrlPath = "/Elastic.Apm.AspNetFullFramework.Tests.SampleApp";
+			internal const string AppPoolName = "Elastic.Apm.AspNetFullFramework.Tests.SampleAppPool";
+			internal const string SiteName = "Default Web Site";
+			internal const string SrcDirPathRelativeToSolutionRoot = @"sample\AspNetFullFrameworkSampleApp";
 		}
 	}
 }

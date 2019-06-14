@@ -96,8 +96,8 @@ namespace Elastic.Apm.Config
 
 			List<Uri> LogAndReturnDefault()
 			{
-				list.Add(ConfigConsts.DefaultServerUri);
-				Logger?.Debug()?.Log("Using default ServerUrl: {ServerUrl}", ConfigConsts.DefaultServerUri);
+				list.Add(ConfigConsts.DefaultValues.ServerUri);
+				Logger?.Debug()?.Log("Using default ServerUrl: {ServerUrl}", ConfigConsts.DefaultValues.ServerUri);
 				return list;
 			}
 
@@ -209,7 +209,7 @@ namespace Elastic.Apm.Config
 			return null;
 		}
 
-		private string AdaptServiceName(string originalName) => originalName?.Replace('.', '_');
+		public static string AdaptServiceName(string originalName) => originalName?.Replace('.', '_');
 
 		protected string ParseServiceName(ConfigurationKeyValue kv)
 		{

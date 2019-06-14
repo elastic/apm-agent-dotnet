@@ -10,7 +10,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public TestsWithApmServerStopped(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper, false) { }
 
 		[AspNetFullFrameworkTheory]
-		[MemberData(nameof(GenerateSampleAppUrlPathsData))]
+		[MemberData(nameof(AllSampleAppUrlPaths))]
 		public async Task SampleAppShouldBeAvailableEvenWhenApmServerStopped(SampleAppUrlPathData sampleAppUrlPathData) =>
 			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(sampleAppUrlPathData.UrlPath, sampleAppUrlPathData.Status);
 	}

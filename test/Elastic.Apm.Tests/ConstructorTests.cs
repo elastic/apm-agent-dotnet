@@ -13,7 +13,7 @@ namespace Elastic.Apm.Tests
 		{
 			public LogConfig(LogLevel level) => LogLevel = level;
 			public LogLevel LogLevel { get; }
-			public IReadOnlyList<Uri> ServerUrls => new List<Uri> { ConfigConsts.DefaultServerUri };
+			public IReadOnlyList<Uri> ServerUrls => new List<Uri> { ConfigConsts.DefaultValues.ServerUri };
 			public string ServiceName { get; }
 			public string SecretToken { get; }
 			public bool CaptureHeaders { get; }

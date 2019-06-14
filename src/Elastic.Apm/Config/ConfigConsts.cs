@@ -21,13 +21,13 @@ namespace Elastic.Apm.Config
 			public const string UnknownServiceName = "unknown";
 			public const double MetricsIntervalInMilliseconds = 30 * 1000;
 			public const string MetricsInterval = "30s";
+			public const int ApmServerPort = 8200;
+			public static Uri ServerUri => new Uri($"http://localhost:{ApmServerPort}");
 		}
 
 		public static class Constraints
 		{
 			public const double MinMetricsIntervalInMillisecond = 1000;
 		}
-
-		public static Uri DefaultServerUri => new Uri("http://localhost:8200");
 	}
 }

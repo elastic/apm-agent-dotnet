@@ -9,7 +9,12 @@ namespace Elastic.Apm.Report.Serialization
 
 		internal PayloadItemSerializer()
 		{
-			_settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver(), Formatting = Formatting.None };
+			_settings = new JsonSerializerSettings
+			{
+				ContractResolver = new CamelCasePropertyNamesContractResolver(),
+				NullValueHandling = NullValueHandling.Ignore,
+				Formatting = Formatting.None
+			};
 		}
 
 		internal string SerializeObject(object item)

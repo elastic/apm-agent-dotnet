@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.TestHelpers;
@@ -16,33 +17,72 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	public class TestsBase : IAsyncLifetime
 	{
-		private const int MaxNumberOfAttemptsToVerify = 10;
-		private const int WaitBetweenVerifyAttemptsMs = 1000;
+		private static readonly bool KeepIisItems =
+			EnvVarUtils.GetBoolValue("ELASTIC_APM_TESTS_FULL_FRAMEWORK_KEEP_IIS_ITEMS", /* defaultValue: */ false);
 
 		private readonly IApmLogger _logger;
-		private readonly MockApmServer _mockApmServer;
 		private readonly bool _startMockApmServer;
+		private readonly Dictionary<string, string> _envVarsToSetForSampleAppPool;
+		private readonly IisAdministration _iisAdministration;
+		private readonly MockApmServer _mockApmServer;
+		private readonly int _mockApmServerPort;
 		private readonly DateTimeOffset _testStartTime = DateTimeOffset.UtcNow;
 
-		protected TestsBase(ITestOutputHelper xUnitOutputHelper, bool startMockApmServer = true)
+		protected TestsBase(ITestOutputHelper xUnitOutputHelper,
+			bool startMockApmServer = true,
+			Dictionary<string, string> envVarsToSetForSampleAppPool = null
+		)
 		{
 			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(TestsBase));
 			_mockApmServer = new MockApmServer(_logger, GetCurrentTestName(xUnitOutputHelper));
+			_iisAdministration = new IisAdministration(_logger);
 			_startMockApmServer = startMockApmServer;
+
+			_mockApmServerPort = _startMockApmServer ? _mockApmServer.FindAvailablePortToListen() : ConfigConsts.DefaultValues.ApmServerPort;
+
+			_envVarsToSetForSampleAppPool = envVarsToSetForSampleAppPool == null
+				? new Dictionary<string, string>()
+				: new Dictionary<string, string>(envVarsToSetForSampleAppPool);
+			_envVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.ServerUrls, $"http://localhost:{_mockApmServerPort}");
 		}
+
+		private static class DataSentByAgentVerificationConsts
+		{
+			internal const int MaxNumberOfAttemptsToVerify = 10;
+			internal const int WaitBetweenVerifyAttemptsMs = 1000;
+		}
+
+		internal static class SampleAppUrlPaths
+		{
+			/// Contact page processing does HTTP Get for About page (additional transaction) and https://elastic.co/ - so 2 spans
+			internal static readonly SampleAppUrlPathData PageCallingAnotherPage =
+				new SampleAppUrlPathData(Consts.SampleApp.ContactPageRelativePath, 200, 2, 2);
+
+			internal static readonly List<SampleAppUrlPathData> AllPaths = new List<SampleAppUrlPathData>()
+			{
+				new SampleAppUrlPathData("", 200),
+				new SampleAppUrlPathData(Consts.SampleApp.HomePageRelativePath, 200),
+				PageCallingAnotherPage,
+				new SampleAppUrlPathData("Dummy_nonexistent_path", 404),
+			};
+		}
+
+		protected ExpectedNonDefaultsS ExpectedNonDefaults = new ExpectedNonDefaultsS();
 
 		public Task InitializeAsync()
 		{
-			if (_startMockApmServer) _mockApmServer.RunAsync();
-
-			IisAdministration.EnsureSampleAppIsRunningInCleanState(_logger);
+			// Mock APM server should be started only after sample application is started in clean state.
+			// The order is important to prevent agent's queued data from the previous test to be sent
+			// to this test instance of mock APM server.
+			_iisAdministration.SetupSampleAppInCleanState(_envVarsToSetForSampleAppPool);
+			if (_startMockApmServer) _mockApmServer.RunAsync(_mockApmServerPort);
 
 			return Task.CompletedTask;
 		}
 
 		public async Task DisposeAsync()
 		{
-			IisAdministration.RemoveSampleAppFromIis(_logger);
+			if (!KeepIisItems) _iisAdministration.DisposeSampleApp();
 
 			if (_startMockApmServer) await _mockApmServer.StopAsync();
 		}
@@ -76,24 +116,25 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					verifier(_mockApmServer.ReceivedData);
 					_logger.Debug()
 						?.Log("Payload verification succeeded. Attempt #{AttemptNumber} out of {MaxNumberOfAttempts}",
-							attemptNumber, MaxNumberOfAttemptsToVerify);
+							attemptNumber, DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify);
 					return;
 				}
 				catch (XunitException ex)
 				{
 					_logger.Debug()
 						?.LogException(ex, "Payload verification failed. Attempt #{AttemptNumber} out of {MaxNumberOfAttempts}",
-							attemptNumber, MaxNumberOfAttemptsToVerify);
+							attemptNumber, DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify);
 
-					if (attemptNumber == MaxNumberOfAttemptsToVerify)
+					if (attemptNumber == DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify)
 					{
 						_logger.Error()?.LogException(ex, "Reached max number of attempts to verify payload - Rethrowing the last exception...");
 						AnalyzePotentialIssues();
 						throw;
 					}
 
-					_logger.Debug()?.Log("Waiting {WaitTimeMs}ms before the next attempt...", WaitBetweenVerifyAttemptsMs);
-					Thread.Sleep(WaitBetweenVerifyAttemptsMs);
+					_logger.Debug()
+						?.Log("Waiting {WaitTimeMs}ms before the next attempt...", DataSentByAgentVerificationConsts.WaitBetweenVerifyAttemptsMs);
+					Thread.Sleep(DataSentByAgentVerificationConsts.WaitBetweenVerifyAttemptsMs);
 				}
 				catch (Exception ex)
 				{
@@ -104,15 +145,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		}
 
 		// ReSharper disable once MemberCanBeProtected.Global
-		public static IEnumerable<object[]> GenerateSampleAppUrlPathsData()
+		public static IEnumerable<object[]> AllSampleAppUrlPaths()
 		{
-			yield return new object[] { new SampleAppUrlPathData("", 200) };
-			yield return new object[] { new SampleAppUrlPathData(Consts.SampleApp.HomePageRelativePath, 200) };
-
-			// Contact page processing does HTTP Get for About page (additional transaction) and https://elastic.co/ - so 2 spans
-			yield return new object[] { new SampleAppUrlPathData(Consts.SampleApp.ContactPageRelativePath, 200, 2, 2) };
-
-			yield return new object[] { new SampleAppUrlPathData("Dummy_nonexistent_path", 404) };
+			foreach (var data in SampleAppUrlPaths.AllPaths) yield return new object[] { data };
 		}
 
 		private static string GetCurrentTestName(ITestOutputHelper xUnitOutputHelper)
@@ -157,6 +192,43 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 						"DTO timestamp: {DtoTimestamp}, test start time: {TestStartTime}, DTO: {DtoFromAgent}",
 						dtoStartTime.LocalDateTime, _testStartTime.LocalDateTime, dto);
 			}
+		}
+
+		protected void VerifyDataReceivedFromAgent(SampleAppUrlPathData sampleAppUrlPathData) =>
+			VerifyPayloadFromAgent(receivedData =>
+			{
+				receivedData.Transactions.Count.Should().Be(sampleAppUrlPathData.TransactionsCount);
+				receivedData.Spans.Count.Should().Be(sampleAppUrlPathData.SpansCount);
+
+				VerifyMetadata(receivedData);
+			});
+
+		private void VerifyMetadata(ReceivedData receivedData)
+		{
+			foreach (var metadata in receivedData.Metadata)
+			{
+				metadata.Service.Agent.Name.Should().Be(Apm.Consts.AgentName);
+				metadata.Service.Agent.Version.Should().Be(Assembly.Load("Elastic.Apm").GetName().Version.ToString());
+				metadata.Service.Framework.Name.Should().Be("ASP.NET");
+				metadata.Service.Framework.Version.Should().StartWith("4.");
+				metadata.Service.Language.Name.Should().Be("C#");
+
+				string expectedServiceName;
+				if (ExpectedNonDefaults.ServiceName == null)
+					expectedServiceName = AbstractConfigurationReader.AdaptServiceName($"{Consts.SampleApp.SiteName}_{Consts.SampleApp.AppPoolName}");
+				else
+					expectedServiceName = ExpectedNonDefaults.ServiceName;
+				metadata.Service.Name.Should().Be(expectedServiceName);
+
+				// Capturing information about Docker container is not implemented for Windows yet
+//				Assert.True(metadata.System.Container.Id == null);
+				metadata.System?.Container.Should().BeNull();
+			}
+		}
+
+		protected struct ExpectedNonDefaultsS
+		{
+			internal string ServiceName;
 		}
 
 		public class SampleAppUrlPathData
