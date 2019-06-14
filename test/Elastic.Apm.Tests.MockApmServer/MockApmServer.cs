@@ -50,6 +50,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 					listener.Prefixes.Add($"http://localhost:{currentPort}/");
 					listener.Start();
 					listener.Stop();
+					Logger.Debug()?.Log("Port {PortNumber} is available - returning it", currentPort);
 					return currentPort;
 				}
 				catch (HttpListenerException ex)

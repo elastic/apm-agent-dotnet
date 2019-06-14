@@ -17,15 +17,19 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	public class TestsBase : IAsyncLifetime
 	{
-		private static readonly bool KeepIisItems =
-			EnvVarUtils.GetBoolValue("ELASTIC_APM_TESTS_FULL_FRAMEWORK_KEEP_IIS_ITEMS", /* defaultValue: */ false);
+		private static readonly string _tearDownExternalItemsReason;
 
-		private readonly IApmLogger _logger;
-		private readonly bool _startMockApmServer;
+		private static readonly bool TearDownExternalItems =
+			EnvVarUtils.GetBoolValue("ELASTIC_APM_TESTS_FULL_FRAMEWORK_TEARDOWN_EXTERNAL_ITEMS", /* defaultValue: */ true,
+				out _tearDownExternalItemsReason);
+
 		private readonly Dictionary<string, string> _envVarsToSetForSampleAppPool;
 		private readonly IisAdministration _iisAdministration;
+
+		private readonly IApmLogger _logger;
 		private readonly MockApmServer _mockApmServer;
 		private readonly int _mockApmServerPort;
+		private readonly bool _startMockApmServer;
 		private readonly DateTimeOffset _testStartTime = DateTimeOffset.UtcNow;
 
 		protected TestsBase(ITestOutputHelper xUnitOutputHelper,
@@ -75,14 +79,24 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			// The order is important to prevent agent's queued data from the previous test to be sent
 			// to this test instance of mock APM server.
 			_iisAdministration.SetupSampleAppInCleanState(_envVarsToSetForSampleAppPool);
-			if (_startMockApmServer) _mockApmServer.RunAsync(_mockApmServerPort);
+			if (_startMockApmServer)
+				_mockApmServer.RunAsync(_mockApmServerPort);
+			else
+			{
+				_logger.Info()
+					?.Log("Not starting mock APM server because startMockApmServer argument to ctor is {startMockApmServer}", _startMockApmServer);
+			}
 
 			return Task.CompletedTask;
 		}
 
 		public async Task DisposeAsync()
 		{
-			if (!KeepIisItems) _iisAdministration.DisposeSampleApp();
+			if (TearDownExternalItems)
+				_iisAdministration.DisposeSampleApp();
+			else
+				_logger.Warning()
+					?.Log("Not tearing down external items because {tearDownExternalItemsReason}", _tearDownExternalItemsReason);
 
 			if (_startMockApmServer) await _mockApmServer.StopAsync();
 		}
