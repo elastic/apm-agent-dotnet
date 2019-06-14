@@ -37,6 +37,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				finally
 				{
 					_processorTimePerfCounter?.Dispose();
+					_processorTimePerfCounter = null;
 				}
 			}
 
