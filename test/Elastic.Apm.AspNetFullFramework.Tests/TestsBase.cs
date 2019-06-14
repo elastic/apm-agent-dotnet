@@ -18,11 +18,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	public class TestsBase : IAsyncLifetime
 	{
-		private static readonly string TearDownExternalItemsReason;
+		private static readonly string TearDownPersistentDataReason;
 
-		private static readonly bool TearDownExternalItems =
-			EnvVarUtils.GetBoolValue("ELASTIC_APM_TESTS_FULL_FRAMEWORK_TEARDOWN_EXTERNAL_ITEMS", /* defaultValue: */ true,
-				out TearDownExternalItemsReason);
+		private static readonly bool TearDownPersistentData =
+			EnvVarUtils.GetBoolValue("ELASTIC_APM_TESTS_FULL_FRAMEWORK_TEAR_DOWN_PERSISTENT_DATA", /* defaultValue: */ true,
+				out TearDownPersistentDataReason);
 
 		private readonly Dictionary<string, string> _envVarsToSetForSampleAppPool;
 		private readonly IisAdministration _iisAdministration;
@@ -95,11 +95,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		public async Task DisposeAsync()
 		{
-			if (TearDownExternalItems)
+			if (TearDownPersistentData)
 				_iisAdministration.DisposeSampleApp();
 			else
 				_logger.Warning()
-					?.Log("Not tearing down external items because {tearDownExternalItemsReason}", TearDownExternalItemsReason);
+					?.Log("Not tearing down IIS sample application and pool because {Reason}", TearDownPersistentData);
 
 			if (_startMockApmServer) await _mockApmServer.StopAsync();
 		}

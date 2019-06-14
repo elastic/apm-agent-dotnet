@@ -27,7 +27,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				envVarsToSetForSampleAppPool: BuildEnvVarsToSetForSampleAppPool(),
 				sampleAppShouldHaveAccessToPerfCounters: sampleAppShouldHaveAccessToPerfCounters) { }
 
-		protected async Task VerifyPeriodicallySentMetricsImpl()
+		protected async Task VerifyMetricsBasicConstraintsImpl()
 		{
 			// Send any request to the sample application to make sure it's running
 			var sampleAppUrlPathData = RandomSampleAppUrlPath();

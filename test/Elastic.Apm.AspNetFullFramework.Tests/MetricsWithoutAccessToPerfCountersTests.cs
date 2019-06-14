@@ -11,6 +11,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			: base(xUnitOutputHelper, /* sampleAppShouldHaveAccessToPerfCounters: */ false) { }
 
 		[AspNetFullFrameworkFact]
-		public async Task VerifyPeriodicallySentMetrics() => await VerifyPeriodicallySentMetricsImpl();
+		public async Task VerifyMetricsBasicConstraints() => await VerifyMetricsBasicConstraintsImpl();
 	}
 }
