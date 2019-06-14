@@ -46,7 +46,7 @@ namespace Elastic.Apm.PerfTests
 		[Benchmark]
 		public void CollectProcessTotalCpuTime2X()
 		{
-			var mockPayloadSender = new ProcessTotalCpuTimeProvider();
+			var mockPayloadSender = new ProcessTotalCpuTimeProvider(new NoopLogger());
 
 			mockPayloadSender.GetSamples();
 			mockPayloadSender.GetSamples();
@@ -55,7 +55,7 @@ namespace Elastic.Apm.PerfTests
 		[Benchmark]
 		public void CollectTotalCpuTime2X()
 		{
-			var systemTotalCpuProvider = new SystemTotalCpuProvider();
+			var systemTotalCpuProvider = new SystemTotalCpuProvider( new NoopLogger());
 
 			systemTotalCpuProvider.GetSamples();
 			systemTotalCpuProvider.GetSamples();

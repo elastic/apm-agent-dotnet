@@ -35,7 +35,7 @@ namespace Elastic.Apm.Tests
 		{
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
 
-			var systemTotalCpuProvider = new SystemTotalCpuProvider();
+			var systemTotalCpuProvider = new SystemTotalCpuProvider(new NoopLogger());
 			Thread.Sleep(1000); //See https://github.com/elastic/apm-agent-dotnet/pull/264#issuecomment-499778288
 			var retVal = systemTotalCpuProvider.GetSamples();
 			var metricSamples = retVal as MetricSample[] ?? retVal.ToArray();
@@ -47,7 +47,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void ProcessCpu()
 		{
-			var processTotalCpuProvider = new ProcessTotalCpuTimeProvider();
+			var processTotalCpuProvider = new ProcessTotalCpuTimeProvider(new NoopLogger());
 			Thread.Sleep(1000); //See https://github.com/elastic/apm-agent-dotnet/pull/264#issuecomment-499778288
 			var retVal = processTotalCpuProvider.GetSamples();
 			retVal.First().KeyValue.Value.Should().BeInRange(0, 1);
@@ -143,7 +143,7 @@ namespace Elastic.Apm.Tests
 
 		private class TestSystemTotalCpuProvider : SystemTotalCpuProvider
 		{
-			public TestSystemTotalCpuProvider(string procStatContent) : base(
+			public TestSystemTotalCpuProvider(string procStatContent) : base( new NoopLogger(),
 				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent)))) { }
 		}
 	}
