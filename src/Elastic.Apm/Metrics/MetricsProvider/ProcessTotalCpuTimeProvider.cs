@@ -3,17 +3,28 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Elastic.Apm.Api;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Metrics.MetricsProvider
 {
 	internal class ProcessTotalCpuTimeProvider : IMetricsProvider
 	{
+		private readonly IApmLogger _logger;
 		private const string ProcessCpuTotalPct = "system.process.cpu.total.norm.pct";
 
-		public ProcessTotalCpuTimeProvider()
+		public ProcessTotalCpuTimeProvider(IApmLogger logger)
 		{
-			_lastTimeWindowStart = DateTime.UtcNow;
-			_lastCurrentProcessCpuTime = Process.GetCurrentProcess().TotalProcessorTime;
+			_logger = logger.Scoped(nameof(ProcessTotalCpuTimeProvider));
+
+			try
+			{
+				_lastTimeWindowStart = DateTime.UtcNow;
+				_lastCurrentProcessCpuTime = Process.GetCurrentProcess().TotalProcessorTime;
+			}
+			catch (Exception e)
+			{
+				_logger.Error()?.LogException(e, "Failed reading Process Total CPU Time");
+			}
 		}
 
 		private TimeSpan _lastCurrentProcessCpuTime;
