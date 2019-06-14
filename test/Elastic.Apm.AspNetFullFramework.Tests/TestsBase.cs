@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.TestHelpers;
@@ -17,11 +18,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	public class TestsBase : IAsyncLifetime
 	{
-		private static readonly string _tearDownExternalItemsReason;
+		private static readonly string TearDownExternalItemsReason;
 
 		private static readonly bool TearDownExternalItems =
 			EnvVarUtils.GetBoolValue("ELASTIC_APM_TESTS_FULL_FRAMEWORK_TEARDOWN_EXTERNAL_ITEMS", /* defaultValue: */ true,
-				out _tearDownExternalItemsReason);
+				out TearDownExternalItemsReason);
 
 		private readonly Dictionary<string, string> _envVarsToSetForSampleAppPool;
 		private readonly IisAdministration _iisAdministration;
@@ -30,17 +31,19 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		private readonly MockApmServer _mockApmServer;
 		private readonly int _mockApmServerPort;
 		private readonly bool _startMockApmServer;
+		protected readonly bool SampleAppShouldHaveAccessToPerfCounters;
 		private readonly DateTimeOffset _testStartTime = DateTimeOffset.UtcNow;
 
 		protected TestsBase(ITestOutputHelper xUnitOutputHelper,
 			bool startMockApmServer = true,
-			Dictionary<string, string> envVarsToSetForSampleAppPool = null
-		)
+			Dictionary<string, string> envVarsToSetForSampleAppPool = null,
+			bool sampleAppShouldHaveAccessToPerfCounters = false)
 		{
 			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(TestsBase));
 			_mockApmServer = new MockApmServer(_logger, GetCurrentTestName(xUnitOutputHelper));
 			_iisAdministration = new IisAdministration(_logger);
 			_startMockApmServer = startMockApmServer;
+			SampleAppShouldHaveAccessToPerfCounters = sampleAppShouldHaveAccessToPerfCounters;
 
 			_mockApmServerPort = _startMockApmServer ? _mockApmServer.FindAvailablePortToListen() : ConfigConsts.DefaultValues.ApmServerPort;
 
@@ -52,8 +55,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		private static class DataSentByAgentVerificationConsts
 		{
-			internal const int MaxNumberOfAttemptsToVerify = 10;
-			internal const int WaitBetweenVerifyAttemptsMs = 1000;
+			internal const int MaxNumberOfAttemptsToVerify = 100;
+			internal const int WaitBetweenVerifyAttemptsMs = 100;
 		}
 
 		internal static class SampleAppUrlPaths
@@ -78,7 +81,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			// Mock APM server should be started only after sample application is started in clean state.
 			// The order is important to prevent agent's queued data from the previous test to be sent
 			// to this test instance of mock APM server.
-			_iisAdministration.SetupSampleAppInCleanState(_envVarsToSetForSampleAppPool);
+			_iisAdministration.SetupSampleAppInCleanState(_envVarsToSetForSampleAppPool, SampleAppShouldHaveAccessToPerfCounters);
 			if (_startMockApmServer)
 				_mockApmServer.RunAsync(_mockApmServerPort);
 			else
@@ -96,7 +99,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				_iisAdministration.DisposeSampleApp();
 			else
 				_logger.Warning()
-					?.Log("Not tearing down external items because {tearDownExternalItemsReason}", _tearDownExternalItemsReason);
+					?.Log("Not tearing down external items because {tearDownExternalItemsReason}", TearDownExternalItemsReason);
 
 			if (_startMockApmServer) await _mockApmServer.StopAsync();
 		}
@@ -104,7 +107,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		protected async Task SendGetRequestToSampleAppAndVerifyResponseStatusCode(string urlPath, int expectedStatusCode)
 		{
 			var httpClient = new HttpClient();
-			var response = await httpClient.GetAsync(Consts.SampleApp.RootUri + "/" + urlPath);
+			var url = Consts.SampleApp.RootUrl + "/" + urlPath;
+			_logger.Debug()?.Log("Sending request with URL: {url} and expected status code: {HttpStatusCode}...", url, expectedStatusCode);
+			var response = await httpClient.GetAsync(url);
 			try
 			{
 				response.StatusCode.Should().Be(expectedStatusCode);
@@ -117,7 +122,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			}
 		}
 
-		protected void VerifyPayloadFromAgent(Action<ReceivedData> verifier)
+		protected void VerifyPayloadFromAgent(Action<ReceivedData> verifyAction)
 		{
 			_mockApmServer.ReceivedData.InvalidPayloadErrors.Should().BeEmpty();
 
@@ -127,7 +132,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				++attemptNumber;
 				try
 				{
-					verifier(_mockApmServer.ReceivedData);
+					verifyAction(_mockApmServer.ReceivedData);
 					_logger.Debug()
 						?.Log("Payload verification succeeded. Attempt #{AttemptNumber} out of {MaxNumberOfAttempts}",
 							attemptNumber, DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify);
@@ -163,6 +168,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			foreach (var data in SampleAppUrlPaths.AllPaths) yield return new object[] { data };
 		}
+
+		public static SampleAppUrlPathData RandomSampleAppUrlPath() =>
+			SampleAppUrlPaths.AllPaths[RandomGenerator.GetInstance().Next(0, SampleAppUrlPaths.AllPaths.Count)];
 
 		private static string GetCurrentTestName(ITestOutputHelper xUnitOutputHelper)
 		{

@@ -18,11 +18,12 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		private static class StateChangeConsts
 		{
-			internal const int MaxNumberOfAttemptsToVerify = 10;
-			internal const int WaitBetweenVerifyAttemptsMs = 1000;
+			internal const int MaxNumberOfAttemptsToVerify = 100;
+			internal const int WaitBetweenVerifyAttemptsMs = 100;
 		}
 
-		internal void SetupSampleAppInCleanState(Dictionary<string, string> envVarsToSetForSampleAppPool)
+		internal void SetupSampleAppInCleanState(Dictionary<string, string> envVarsToSetForSampleAppPool,
+			bool sampleAppShouldUseHighPrivilegedAccount)
 		{
 			using (var serverManager = new ServerManager())
 			{
@@ -30,7 +31,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				// doesn't have any remains from the previous tests still queued by the payload sender part of the agent.
 				serverManager.ApplicationPools[Consts.SampleApp.AppPoolName]?.Let(appPool => ChangeAppPoolStateTo(appPool, ObjectState.Stopped));
 
-				AddSampleAppPool(serverManager, envVarsToSetForSampleAppPool);
+				AddSampleAppPool(serverManager, envVarsToSetForSampleAppPool, sampleAppShouldUseHighPrivilegedAccount);
 				AddSampleApp(serverManager);
 
 				serverManager.CommitChanges();
@@ -73,15 +74,20 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			}
 		}
 
-		private void AddSampleAppPool(ServerManager serverManager, Dictionary<string, string> envVarsToSetForSampleAppPool)
+		private void AddSampleAppPool(ServerManager serverManager,
+			Dictionary<string, string> envVarsToSetForSampleAppPool,
+			bool sampleAppShouldUseHighPrivilegedAccount)
 		{
-			_logger.Debug()?.Log("Adding application pool {IisAppPool}...", Consts.SampleApp.AppPoolName);
+			_logger.Debug()?.Log("Adding application pool {IisAppPool}, useHighPrivilegedAccount: {useHighPrivilegedAccount}...",
+				Consts.SampleApp.AppPoolName, sampleAppShouldUseHighPrivilegedAccount);
 			var existingAppPool = serverManager.ApplicationPools[Consts.SampleApp.AppPoolName];
 			if (existingAppPool != null) serverManager.ApplicationPools.Remove(existingAppPool);
 			var addedPool = serverManager.ApplicationPools.Add(Consts.SampleApp.AppPoolName);
 			addedPool.ManagedPipelineMode = ManagedPipelineMode.Integrated;
 			addedPool.StartMode = StartMode.OnDemand;
-			_logger.Debug()?.Log("Added application pool {IisAppPool}", addedPool.Name);
+			if (sampleAppShouldUseHighPrivilegedAccount) addedPool.ProcessModel.IdentityType = ProcessModelIdentityType.LocalSystem;
+			_logger.Debug()?.Log("Added application pool {IisAppPool}, useHighPrivilegedAccount: {useHighPrivilegedAccount}",
+				addedPool.Name, sampleAppShouldUseHighPrivilegedAccount);
 
 			AddEnvVarsForSampleAppPool(serverManager, envVarsToSetForSampleAppPool);
 		}
@@ -146,7 +152,10 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 					if (currentState == ingState)
 					{
-						_logger.Debug()?.Log("IIS application pool `{IisAppPool}' is already in {IisAppPoolState} state...", appPool.Name, currentState);
+						_logger.Debug()?.Log("IIS application pool `{IisAppPool}' is already in {IisAppPoolState} state - " +
+							"so there is no need to run the change state action, " +
+							"we just need to wait until application pool changes the state {IisAppPoolState}...",
+							appPool.Name, currentState, targetState);
 					}
 					else
 					{
@@ -167,7 +176,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 				_logger.Debug()
 					?.Log("IIS application pool `{IisAppPool}' still didn't change to target state {IisAppPoolState}. " +
-						"Last seen state: {IisAppPoolState}" +
+						"Last seen state: {IisAppPoolState}. " +
 						"Attempt to verify #{AttemptNumber} out of {MaxNumberOfAttempts}. " +
 						"Waiting {WaitTimeMs}ms before the next attempt...",
 						appPool.Name, targetState,
@@ -209,7 +218,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				envVarAddElement["name"] = envVarNameValue.Key;
 				envVarAddElement["value"] = envVarNameValue.Value;
 				envVarsCollection.Add(envVarAddElement);
-				_logger.Debug()?.Log("Added environment variable {EnvVarName}={EnvVarValue} to application pool {IisAppPool}",
+				_logger.Debug()?.Log("Added environment variable `{EnvVarName}'=`{EnvVarValue}' to application pool {IisAppPool}",
 					envVarNameValue.Key, envVarNameValue.Value, Consts.SampleApp.AppPoolName);
 			}
 		}

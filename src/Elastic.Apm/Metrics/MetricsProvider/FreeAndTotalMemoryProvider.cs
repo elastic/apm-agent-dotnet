@@ -13,8 +13,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 	/// </summary>
 	internal class FreeAndTotalMemoryProvider : IMetricsProvider
 	{
-		private const string FreeMemory = "system.memory.actual.free";
-		private const string TotalMemory = "system.memory.total";
+		internal const string FreeMemory = "system.memory.actual.free";
+		internal const string TotalMemory = "system.memory.total";
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "total and free memory";
