@@ -45,7 +45,6 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Web" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ElasticApmModule.cs" />
