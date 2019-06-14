@@ -30,12 +30,11 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				}
 				catch (Exception e)
 				{
-					_logger.Error()?.LogException(e, "Failed instantiating PerformanceCounter "
-						+ "- please make sure the current user has permissions to read performance counters. E.g. make sure the current user is member of "
-						+ "the 'Performance Monitor Users' group");
-				}
-				finally
-				{
+					_logger.Error()
+						?.LogException(e, "Failed instantiating PerformanceCounter "
+							+ "- please make sure the current user has permissions to read performance counters. E.g. make sure the current user is member of "
+							+ "the 'Performance Monitor Users' group");
+
 					_processorTimePerfCounter?.Dispose();
 					_processorTimePerfCounter = null;
 				}
