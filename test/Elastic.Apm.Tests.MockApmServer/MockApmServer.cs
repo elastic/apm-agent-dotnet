@@ -39,7 +39,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 		{
 			int numberOfPortsTried = 0;
 			int numberOfPortsInScanRange = PortScanRange.End - PortScanRange.Begin;
-			int currentPort = RandomGenerator.GetInstance().Next(PortScanRange.Begin, PortScanRange.End);;
+			int currentPort = RandomGenerator.GetInstance().Next(PortScanRange.Begin, PortScanRange.End);
 			while (true)
 			{
 				++numberOfPortsTried;

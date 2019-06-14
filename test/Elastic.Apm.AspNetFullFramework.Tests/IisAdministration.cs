@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using Elastic.Apm.Config;
@@ -14,42 +15,28 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		internal IisAdministration(IApmLogger logger) => _logger = logger?.Scoped(nameof(IisAdministration));
 
-		private static class SampleAppIisConsts
-		{
-			internal const string AppPoolName = "Elastic.Apm.AspNetFullFramework.Tests.SampleAppPool";
-			internal const string SiteName = "Default Web Site";
-			internal const string SrcDirPathRelativeToSolutionRoot = @"sample\AspNetFullFrameworkSampleApp";
-		}
-
 		private static class StateChangeConsts
 		{
 			internal const int MaxNumberOfAttemptsToVerify = 10;
 			internal const int WaitBetweenVerifyAttemptsMs = 1000;
 		}
 
-		internal void SetupSampleAppInCleanState(int apmServerPort)
+		internal void SetupSampleAppInCleanState(Dictionary<string, string> envVarsToSetForSampleAppPool)
 		{
 			using (var serverManager = new ServerManager())
 			{
 				// We need to stop/start the sample application to make sure our agent starts in a clean state and
 				// doesn't have any remains from the previous tests still queued by the payload sender part of the agent.
-				serverManager.ApplicationPools[SampleAppIisConsts.AppPoolName]?.Let(appPool => ChangeAppPoolStateTo(appPool, ObjectState.Stopped));
+				serverManager.ApplicationPools[Consts.SampleApp.AppPoolName]?.Let(appPool => ChangeAppPoolStateTo(appPool, ObjectState.Stopped));
 
-				AddSampleAppPool(serverManager, apmServerPort);
+				AddSampleAppPool(serverManager, envVarsToSetForSampleAppPool);
 				AddSampleApp(serverManager);
 
 				serverManager.CommitChanges();
 
 				// Since we just removed and then re-added application pool we need commit changes first
 				// and only then we can start the application pool.
-				ChangeAppPoolStateTo(serverManager.ApplicationPools[SampleAppIisConsts.AppPoolName], ObjectState.Started);
-			}
-		}
-
-		internal void StartSampleAppPool(int apmServerPort)
-		{
-			using (var serverManager = new ServerManager())
-			{
+				ChangeAppPoolStateTo(serverManager.ApplicationPools[Consts.SampleApp.AppPoolName], ObjectState.Started);
 			}
 		}
 
@@ -57,10 +44,10 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			using (var serverManager = new ServerManager())
 			{
-				var existingAppPool = serverManager.ApplicationPools[SampleAppIisConsts.AppPoolName];
+				var existingAppPool = serverManager.ApplicationPools[Consts.SampleApp.AppPoolName];
 				if (existingAppPool != null) ChangeAppPoolStateTo(existingAppPool, ObjectState.Stopped);
 
-				var site = serverManager.Sites[SampleAppIisConsts.SiteName];
+				var site = serverManager.Sites[Consts.SampleApp.SiteName];
 				var existingApp = site.Applications[Consts.SampleApp.RootUrlPath];
 				if (existingApp != null) site.Applications.Remove(existingApp);
 
@@ -70,28 +57,29 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			}
 		}
 
-		private void AddSampleAppPool(ServerManager serverManager, int apmServerPort)
+		private void AddSampleAppPool(ServerManager serverManager, Dictionary<string, string> envVarsToSetForSampleAppPool)
 		{
-			var existingAppPool = serverManager.ApplicationPools[SampleAppIisConsts.AppPoolName];
+			var existingAppPool = serverManager.ApplicationPools[Consts.SampleApp.AppPoolName];
 			if (existingAppPool != null) serverManager.ApplicationPools.Remove(existingAppPool);
-			var addedPool = serverManager.ApplicationPools.Add(SampleAppIisConsts.AppPoolName);
+			var addedPool = serverManager.ApplicationPools.Add(Consts.SampleApp.AppPoolName);
 			addedPool.ManagedPipelineMode = ManagedPipelineMode.Integrated;
 			addedPool.StartMode = StartMode.OnDemand;
+			_logger.Debug()?.Log("Added application pool {IisAppPool}", addedPool.Name);
 
-			AddEnvVarsForSampleAppPool(serverManager, apmServerPort);
+			AddEnvVarsForSampleAppPool(serverManager, envVarsToSetForSampleAppPool);
 		}
 
 		private void AddSampleApp(ServerManager serverManager)
 		{
-			var site = serverManager.Sites[SampleAppIisConsts.SiteName];
+			var site = serverManager.Sites[Consts.SampleApp.SiteName];
 
 			var existingApp = site.Applications[Consts.SampleApp.RootUrlPath];
 			if (existingApp != null) site.Applications.Remove(existingApp);
 
 			var addedApp = site.Applications.Add(Consts.SampleApp.RootUrlPath,
-				Path.Combine(FindSolutionRoot().FullName, SampleAppIisConsts.SrcDirPathRelativeToSolutionRoot));
+				Path.Combine(FindSolutionRoot().FullName, Consts.SampleApp.SrcDirPathRelativeToSolutionRoot));
 
-			addedApp.ApplicationPoolName = SampleAppIisConsts.AppPoolName;
+			addedApp.ApplicationPoolName = Consts.SampleApp.AppPoolName;
 		}
 
 		private void ChangeAppPoolStateTo(ApplicationPool appPool, ObjectState targetState)
@@ -170,19 +158,24 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			throw new InvalidOperationException($"Could not find solution root directory from the current directory `{currentDirectory}'");
 		}
 
-		private void AddEnvVarsForSampleAppPool(ServerManager serverManager, int apmServerPort)
+		private void AddEnvVarsForSampleAppPool(ServerManager serverManager, Dictionary<string, string> envVarsToSetForSampleAppPool)
 		{
 			Configuration config = serverManager.GetApplicationHostConfiguration();
 			ConfigurationSection appPoolsSection = config.GetSection("system.applicationHost/applicationPools");
 			ConfigurationElementCollection appPoolsCollection = appPoolsSection.GetCollection();
-			ConfigurationElement sampleAppPoolAddElement = FindConfigurationElement(appPoolsCollection, "add", "name", SampleAppIisConsts.AppPoolName);
+			ConfigurationElement sampleAppPoolAddElement = FindConfigurationElement(appPoolsCollection, "add", "name", Consts.SampleApp.AppPoolName);
 			if (sampleAppPoolAddElement == null)
-				throw new InvalidOperationException($"Element <add> for application pool {SampleAppIisConsts.AppPoolName} not found");
+				throw new InvalidOperationException($"Element <add> for application pool {Consts.SampleApp.AppPoolName} not found");
 			ConfigurationElementCollection envVarsCollection = sampleAppPoolAddElement.GetCollection("environmentVariables");
-			ConfigurationElement envVarAddElement = envVarsCollection.CreateElement("add");
-			envVarAddElement["name"] = ConfigConsts.EnvVarNames.ServerUrls;
-			envVarAddElement["value"] = $"http://localhost:{apmServerPort}";
-			envVarsCollection.Add(envVarAddElement);
+			foreach (var envVarNameValue in envVarsToSetForSampleAppPool)
+			{
+				ConfigurationElement envVarAddElement = envVarsCollection.CreateElement("add");
+				envVarAddElement["name"] = envVarNameValue.Key;
+				envVarAddElement["value"] = envVarNameValue.Value;
+				envVarsCollection.Add(envVarAddElement);
+				_logger.Debug()?.Log("Added environment variable {EnvVarName}={EnvVarValue} to application pool {IisAppPool}",
+					envVarNameValue.Key, envVarNameValue.Value, Consts.SampleApp.AppPoolName);
+			}
 		}
 
 		private static ConfigurationElement FindConfigurationElement(ConfigurationElementCollection collection, string elementTagName, params string[] keyValues)
