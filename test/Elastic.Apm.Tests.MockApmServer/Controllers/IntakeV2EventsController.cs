@@ -1,14 +1,18 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.IO;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Tests.TestHelpers;
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Xunit.Sdk;
+// ReSharper disable UnusedAutoPropertyAccessor.Local
 
-namespace Elastic.Apm.Tests.MockApmServer
+namespace Elastic.Apm.Tests.MockApmServer.Controllers
 {
 	[Route("intake/v2/events")]
 	[ApiController]
@@ -66,7 +70,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 				string line;
 				while ((line = sr.ReadLine()) != null)
 				{
-					ParsePayloadLine(line);
+					ParsePayloadLineAndAddToReceivedData(line);
 					++numberOfParsedLines;
 				}
 			}
@@ -74,8 +78,10 @@ namespace Elastic.Apm.Tests.MockApmServer
 			return numberOfParsedLines;
 		}
 
-		private void ParsePayloadLine(string line)
+		private void ParsePayloadLineAndAddToReceivedData(string line)
 		{
+			var foundDto = false;
+
 			var lineDto = JsonConvert.DeserializeObject<PayloadLineDto>(
 				line,
 				new JsonSerializerSettings
@@ -90,50 +96,48 @@ namespace Elastic.Apm.Tests.MockApmServer
 					}
 				});
 
-//			Thread.Sleep(5000);
+			_mockApmServer.ReceivedData.Errors = HandleParsed("Error", lineDto.Error, _mockApmServer.ReceivedData.Errors);
+			_mockApmServer.ReceivedData.Metadata = HandleParsed("Metadata", lineDto.Metadata, _mockApmServer.ReceivedData.Metadata);
+			_mockApmServer.ReceivedData.Metrics = HandleParsed("MetricSet", lineDto.MetricSet, _mockApmServer.ReceivedData.Metrics);
+			_mockApmServer.ReceivedData.Spans = HandleParsed("Span", lineDto.Span, _mockApmServer.ReceivedData.Spans);
+			_mockApmServer.ReceivedData.Transactions = HandleParsed("Transaction", lineDto.Transaction, _mockApmServer.ReceivedData.Transactions);
 
-			var numberOfObjects = 0;
+			foundDto.Should().BeTrue($"There should be exactly one object per line: `{line}'");
 
-			if (lineDto.Error != null)
+			ImmutableList<TDto> HandleParsed<TDto>(string dtoType, TDto dto, ImmutableList<TDto> accumulatingList) where TDto : IDto
 			{
-				_logger.Debug()?.Log("Successfully parsed Error object: {ErrorDto}, input line: `{PayloadLine}'", lineDto.Error, line);
-				++numberOfObjects;
-				_mockApmServer.ReceivedData.Errors.Add(lineDto.Error);
+				if (dto == null) return accumulatingList;
+
+				foundDto.Should().BeFalse($"There should be exactly one object per line: `{line}'");
+				foundDto = true;
+
+				try
+				{
+					dto.AssertValid();
+				}
+				catch (XunitException ex)
+				{
+					_logger.Error()
+						?.LogException(ex, "{DtoType} #{DtoSeqNum} was parsed successfully but it didn't pass semantic verification. " +
+							"\n" + TextUtils.Indentation + "Input line (pretty formatted):\n{FormattedPayloadLine}" +
+							"\n" + TextUtils.Indentation + "Parsed object:\n{Dto}",
+							dtoType, accumulatingList.Count,
+							TextUtils.AddIndentation(JsonUtils.PrettyFormat(line), 2),
+							TextUtils.AddIndentation(dto.ToString(), 2));
+					_mockApmServer.ReceivedData.InvalidPayloadErrors = _mockApmServer.ReceivedData.InvalidPayloadErrors.Add(ex.Message);
+					return accumulatingList;
+				}
+
+				_logger.Debug()
+					?.Log("Successfully parsed and verified {DtoType} #{DtoSeqNum}." +
+						"\n" + TextUtils.Indentation + "Input line (pretty formatted):\n{FormattedPayloadLine}" +
+						"\n" + TextUtils.Indentation + "Parsed object:\n{Dto}",
+						dtoType, accumulatingList.Count + 1,
+						TextUtils.AddIndentation(JsonUtils.PrettyFormat(line), 2),
+						TextUtils.AddIndentation(dto.ToString(), 2));
+
+				return accumulatingList.Add(dto);
 			}
-
-			if (lineDto.Metadata != null)
-			{
-				_logger.Debug()?.Log("Successfully parsed Metadata object: {MetadataDto}, input line: `{PayloadLine}'", lineDto.Metadata, line);
-				++numberOfObjects;
-				_mockApmServer.ReceivedData.Metadata.Add(lineDto.Metadata);
-			}
-
-			if (lineDto.MetricSet != null)
-			{
-				_logger.Debug()?.Log("Successfully parsed MetricSet object: {MetricSetDto}, input line: `{PayloadLine}'", lineDto.MetricSet, line);
-				++numberOfObjects;
-				_mockApmServer.ReceivedData.Metrics.Add(lineDto.MetricSet);
-			}
-
-			if (lineDto.Span != null)
-			{
-				_logger.Debug()?.Log("Successfully parsed Span object: {SpanDto}, input line: `{PayloadLine}'", lineDto.Span, line);
-				++numberOfObjects;
-				_mockApmServer.ReceivedData.Spans.Add(lineDto.Span);
-			}
-
-			if (lineDto.Transaction != null)
-			{
-				_logger.Debug()?.Log("Successfully parsed Transaction object: {TransactionDto}, input line: `{PayloadLine}'", lineDto.Transaction, line);
-				++numberOfObjects;
-				_mockApmServer.ReceivedData.Transactions.Add(lineDto.Transaction);
-			}
-
-			if (numberOfObjects == 0)
-				throw new ArgumentException($"Payload line does not contain any object: `{line}'");
-
-			if (numberOfObjects > 1)
-				throw new ArgumentException($"Payload line contains more than one object ({numberOfObjects} objects): `{line}'");
 		}
 
 		private class PayloadLineDto
@@ -146,6 +150,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			public MetricSetDto MetricSet { get; set; }
 
 			public SpanDto Span { get; set; }
+
 			public TransactionDto Transaction { get; set; }
 
 			public override string ToString() => new ToStringBuilder(nameof(PayloadLineDto))

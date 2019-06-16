@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
@@ -14,14 +15,22 @@ namespace Elastic.Apm.Api
 		public Request(string method, Url url) => (Method, Url) = (method, url);
 
 		public object Body { get; set; }
+
 		public Dictionary<string, string> Headers { get; set; }
 
 		[JsonProperty("http_version")]
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string HttpVersion { get; set; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Method { get; set; }
+
 		public Socket Socket { get; set; }
+
 		public Url Url { get; set; }
+
+		public override string ToString() =>
+			new ToStringBuilder(nameof(Request)) { { "Method", Method }, { "Url", Url }, { "Socket", Socket }, }.ToString();
 	}
 
 	public class Socket
@@ -30,6 +39,9 @@ namespace Elastic.Apm.Api
 
 		[JsonProperty("remote_address")]
 		public string RemoteAddress { get; set; }
+
+		public override string ToString() =>
+			new ToStringBuilder(nameof(Socket)) { { "Encrypted", Encrypted }, { "RemoteAddress", RemoteAddress }, }.ToString();
 	}
 
 	public class Url
@@ -38,6 +50,7 @@ namespace Elastic.Apm.Api
 		public string Full { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonProperty("hostname")]
 		public string HostName { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
@@ -57,5 +70,7 @@ namespace Elastic.Apm.Api
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("search")]
 		public string Search { get; set; }
+
+		public override string ToString() => new ToStringBuilder(nameof(Url)) { { "Full", Full }, }.ToString();
 	}
 }

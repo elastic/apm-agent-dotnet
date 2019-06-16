@@ -117,7 +117,7 @@ namespace Elastic.Apm.Tests
 				agent.Tracer.CaptureTransaction("TestTransaction", "TestTransactionType",
 					(t) => { t.CaptureException(new Exception("TestMst")); });
 
-			StringToByteArray(payloadSender.FirstError.Id).Should().HaveCount(8);
+			StringToByteArray(payloadSender.FirstError.Id).Should().HaveCount(16);
 			StringToByteArray(payloadSender.FirstError.TraceId).Should().HaveCount(16);
 			StringToByteArray(payloadSender.FirstError.ParentId).Should().HaveCount(8);
 			StringToByteArray(payloadSender.FirstError.TransactionId).Should().HaveCount(8);

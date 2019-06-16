@@ -133,7 +133,7 @@ namespace Elastic.Apm.Report
 			{
 				var metadataJson = _payloadItemSerializer.SerializeObject(_metadata);
 				var ndjson = new StringBuilder();
-				ndjson.Append("{\"metadata\": " + metadataJson + "}" + "\n");
+				ndjson.AppendLine("{\"metadata\": " + metadataJson + "}");
 
 				foreach (var item in queueItems)
 				{

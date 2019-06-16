@@ -8,7 +8,7 @@ using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
-	internal class SpanContextDto
+	internal class SpanContextDto: IDto
 	{
 		public Database Db { get; set; }
 		public Http Http { get; set; }
@@ -20,5 +20,12 @@ namespace Elastic.Apm.Tests.MockApmServer
 			{ "Http", Http },
 			{ "Tags", Tags },
 		}.ToString();
+
+		public void AssertValid()
+		{
+			Db?.AssertValid();
+			Http?.AssertValid();
+			Tags?.TagsAssertValid();
+		}
 	}
 }

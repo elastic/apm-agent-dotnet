@@ -22,10 +22,7 @@ namespace Elastic.Apm.Model
 		private Error(CapturedException capturedException)
 		{
 			_start = DateTimeOffset.UtcNow;
-			var idBytes = new byte[8];
-			RandomGenerator.GenerateRandomBytes(idBytes);
-			Id = BitConverter.ToString(idBytes).Replace("-", "");
-
+			Id = RandomGenerator.GenerateRandomBytesAsString( new byte[16]);
 			Exception = capturedException;
 		}
 
@@ -36,19 +33,23 @@ namespace Elastic.Apm.Model
 
 		public CapturedException Exception { get; set; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Id { get; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
 
 		// ReSharper disable once UnusedMember.Global, ImpureMethodCallOnReadonlyValueField
 		public long Timestamp => _start.ToUnixTimeMilliseconds() * 1000;
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("trace_id")]
 		public string TraceId { get; set; }
 
 		public TransactionData Transaction { get; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("transaction_id")]
 		public string TransactionId { get; set; }
 

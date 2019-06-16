@@ -7,15 +7,14 @@ namespace Elastic.Apm.Report.Serialization
 {
 	internal class TagsJsonConverter : JsonConverter<Dictionary<string, string>>
 	{
-		public override void WriteJson(JsonWriter writer, Dictionary<string, string> value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, Dictionary<string, string> tags, JsonSerializer serializer)
 		{
 			writer.WriteStartObject();
-			foreach (var key in value.Keys)
+			foreach (var keyValue in tags)
 			{
-				writer.WritePropertyName(key);
-				writer.WriteValue(value[key].TrimToMaxLength());
+				writer.WritePropertyName(keyValue.Key.TrimToMaxLength());
+				writer.WriteValue(keyValue.Value.TrimToMaxLength());
 			}
-
 			writer.WriteEndObject();
 		}
 

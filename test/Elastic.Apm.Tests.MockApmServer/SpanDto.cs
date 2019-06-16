@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
-	internal class SpanDto
+	internal class SpanDto : ITimedDto
 	{
 		public string Action { get; set; }
 		public SpanContextDto Context { get; set; }
@@ -49,5 +49,21 @@ namespace Elastic.Apm.Tests.MockApmServer
 			{ "Duration", Duration },
 			{ "Context", Context }
 		}.ToString();
+
+		public void AssertValid()
+		{
+			Timestamp.TimestampAssertValid();
+			Id.SpanIdAssertValid();
+			TransactionId.TransactionIdAssertValid();
+			TraceId.TraceIdAssertValid();
+			ParentId.ParentIdAssertValid();
+			Subtype?.AssertValid();
+			Action?.AssertValid();
+			Context?.AssertValid();
+			Duration.DurationAssertValid();
+			Name?.NameAssertValid();
+			StackTrace?.AssertValid();
+			Type?.AssertValid();
+		}
 	}
 }

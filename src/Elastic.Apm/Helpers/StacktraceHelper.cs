@@ -33,7 +33,7 @@ namespace Elastic.Apm.Helpers
 					let functionName = GetRealMethodName(item?.GetMethod())
 					select new CapturedStackFrame
 					{
-						Function = functionName,
+						Function = functionName ?? "N/A",
 						FileName = string.IsNullOrWhiteSpace(fileName)? "N/A" : fileName,
 						Module = item?.GetMethod()?.ReflectedType?.Assembly.FullName,
 						LineNo = item?.GetFileLineNumber() ?? 0
@@ -78,7 +78,7 @@ namespace Elastic.Apm.Helpers
 		private static string GetRealMethodName(MethodBase inputMethod)
 		{
 			if (inputMethod == null)
-				return "";
+				return null;
 
 			if (inputMethod.Name != DefaultAsyncMethodName)
 				return inputMethod.Name;

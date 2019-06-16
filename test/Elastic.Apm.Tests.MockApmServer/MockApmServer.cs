@@ -16,7 +16,6 @@ namespace Elastic.Apm.Tests.MockApmServer
 	{
 		internal readonly ReceivedData ReceivedData = new ReceivedData();
 		private readonly string _dbgCurrentTestName;
-		private int _port;
 
 		internal MockApmServer(IApmLogger logger, string dbgCurrentTestName)
 		{
@@ -31,15 +30,16 @@ namespace Elastic.Apm.Tests.MockApmServer
 		}
 
 		private CancellationTokenSource _cancellationTokenSource;
+		private int _port;
 		private Task _runningTask;
 
 		internal IApmLogger Logger { get; }
 
 		internal int FindAvailablePortToListen()
 		{
-			int numberOfPortsTried = 0;
-			int numberOfPortsInScanRange = PortScanRange.End - PortScanRange.Begin;
-			int currentPort = RandomGenerator.GetInstance().Next(PortScanRange.Begin, PortScanRange.End);
+			var numberOfPortsTried = 0;
+			var numberOfPortsInScanRange = PortScanRange.End - PortScanRange.Begin;
+			var currentPort = RandomGenerator.GetInstance().Next(PortScanRange.Begin, PortScanRange.End);
 			while (true)
 			{
 				++numberOfPortsTried;
@@ -55,9 +55,10 @@ namespace Elastic.Apm.Tests.MockApmServer
 				}
 				catch (HttpListenerException ex)
 				{
-					Logger.Debug()?.LogException(ex, "Failed to listen on port {PortNumber}. " +
-						"Number of ports tried so far: {NumberOfPorts} out of {NumberOfPorts}",
-						currentPort, numberOfPortsTried, numberOfPortsInScanRange);
+					Logger.Debug()
+						?.LogException(ex, "Failed to listen on port {PortNumber}. " +
+							"Number of ports tried so far: {NumberOfPorts} out of {NumberOfPorts}",
+							currentPort, numberOfPortsTried, numberOfPortsInScanRange);
 					if (numberOfPortsTried == numberOfPortsInScanRange)
 					{
 						throw new InvalidOperationException("Could not find an available port for Mock APM Server to listen. " +
