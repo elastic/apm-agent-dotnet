@@ -260,6 +260,10 @@
       <Project>{d6ffddab-9d76-442f-8f1d-bd6f553f92fa}</Project>
       <Name>Elastic.Apm.AspNetFullFramework</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj">
+      <Project>{90bc9629-c8d2-4fd5-863e-ea2d5fb37341}</Project>
+      <Name>Elastic.Apm</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

@@ -9,12 +9,12 @@ namespace Elastic.Apm.Model
 
 		public string Function { get; set; }
 
-		/// <summary>
-		/// Method to conditionally serialize <see cref="LineNo" /> because line number is valid only when it is positive.
-		/// See
-		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
-		/// </summary>
-		public bool ShouldSerializeLineNo() => LineNo > 0;
+//		/// <summary>
+//		/// Method to conditionally serialize <see cref="LineNo" /> because line number is valid only when it is positive.
+//		/// See
+//		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
+//		/// </summary>
+//		public bool ShouldSerializeLineNo() => LineNo > 0;
 
 		/// <summary>
 		/// The line number of code part of the stack frame.

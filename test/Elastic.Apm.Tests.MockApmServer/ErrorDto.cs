@@ -11,8 +11,11 @@ namespace Elastic.Apm.Tests.MockApmServer
 	internal class ErrorDto : IDto
 	{
 		public ContextDto Context { get; set; }
+
 		public string Culprit { get; set; }
+
 		public CapturedException Exception { get; set; }
+
 		public string Id { get; set; }
 
 		[JsonProperty("parent_id")]

@@ -256,6 +256,8 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 			thisObj.FileName.Should().NotBeNullOrEmpty();
 			thisObj.LineNo.Should().BeGreaterOrEqualTo(0);
+			thisObj.Module?.Should().NotBeEmpty();
+			thisObj.Function?.Should().NotBeEmpty();
 		}
 	}
 }

@@ -43,7 +43,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		protected TestsBase(ITestOutputHelper xUnitOutputHelper,
 			bool startMockApmServer = true,
 			Dictionary<string, string> envVarsToSetForSampleAppPool = null,
-			bool sampleAppShouldHaveAccessToPerfCounters = false)
+			bool sampleAppShouldHaveAccessToPerfCounters = false
+		)
 		{
 			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(TestsBase));
 			_mockApmServer = new MockApmServer(_logger, GetCurrentTestName(xUnitOutputHelper));
@@ -71,11 +72,15 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData ContactPage =
 				new SampleAppUrlPathData(HomeController.ContactPageRelativePath, 200, 2, 2);
 
+			internal static readonly SampleAppUrlPathData CustomSpanThrowsExceptionPage =
+				new SampleAppUrlPathData(HomeController.CustomSpanThrowsPageRelativePath, 500, spansCount: 1);
+
 			internal static readonly List<SampleAppUrlPathData> AllPaths = new List<SampleAppUrlPathData>()
 			{
 				new SampleAppUrlPathData("", 200),
 				new SampleAppUrlPathData(HomeController.HomePageRelativePath, 200),
 				ContactPage,
+				CustomSpanThrowsExceptionPage,
 				new SampleAppUrlPathData("Dummy_nonexistent_path", 404),
 			};
 		}
@@ -118,6 +123,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var url = Consts.SampleApp.RootUrl + "/" + relativeUrlPath;
 			_logger.Debug()?.Log("Sending request with URL: {url} and expected status code: {HttpStatusCode}...", url, expectedStatusCode);
 			var response = await httpClient.GetAsync(url);
+			_logger.Debug()?.Log("Request sent. Actual status code: {HttpStatusCode} ({HttpStatusCodeEnum})",
+				(int)response.StatusCode, response.StatusCode);
 			try
 			{
 				response.StatusCode.Should().Be(expectedStatusCode);
@@ -226,10 +233,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		}
 
 		protected void VerifyDataReceivedFromAgent(SampleAppUrlPathData sampleAppUrlPathData) =>
-			VerifyDataReceivedFromAgent(receivedData =>
-			{
-				TryVerifyDataReceivedFromAgent(sampleAppUrlPathData, receivedData);
-			});
+			VerifyDataReceivedFromAgent(receivedData => { TryVerifyDataReceivedFromAgent(sampleAppUrlPathData, receivedData); });
 
 		protected void TryVerifyDataReceivedFromAgent(SampleAppUrlPathData sampleAppUrlPathData, ReceivedData receivedData)
 		{
@@ -238,23 +242,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			receivedData.Transactions.Count.Should().Be(sampleAppUrlPathData.TransactionsCount);
 			receivedData.Spans.Count.Should().Be(sampleAppUrlPathData.SpansCount);
 
-			foreach (var transaction in receivedData.Transactions)
-			{
-				transaction.Context.Request.Socket.Encrypted.Should().BeFalse();
-				transaction.Context.Request.Socket.RemoteAddress.Should().BeOneOf("::1", "127.0.0.1");
-				transaction.Context.Request.Url.Protocol.Should().Be("HTTP");
-				transaction.Context.Request.Url.HostName.Should().Be(Consts.SampleApp.Host);
-				var caseInsensitiveRequestHeaders =
-					new Dictionary<string, string>(transaction.Context.Request.Headers, StringComparer.OrdinalIgnoreCase);
-				caseInsensitiveRequestHeaders["Host"].Should().Be(Consts.SampleApp.Host);
-				transaction.Type.Should().Be(ApiConstants.TypeRequest);
-			}
-
 			if (receivedData.Transactions.Count == 1)
 			{
 				var transaction = receivedData.Transactions.First();
 
 				transaction.Context.Request.Url.Full.Should().Be(Consts.SampleApp.RootUrl + "/" + sampleAppUrlPathData.RelativeUrlPath);
+				transaction.Context.Request.Url.Raw.Should()
+					.Be("http://" + Consts.SampleApp.Host + ":80" + Consts.SampleApp.RootUrlPath + "/" + sampleAppUrlPathData.RelativeUrlPath);
 				transaction.Context.Request.Url.PathName.Should().Be(Consts.SampleApp.RootUrlPath + "/" + sampleAppUrlPathData.RelativeUrlPath);
 
 				var httpStatusFirstDigit = sampleAppUrlPathData.Status / 100;
@@ -307,7 +301,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		private void FullFwAssertValid(ErrorDto error)
 		{
 			error.Transaction.AssertValid();
-			if (error.Context != null) FullFwAssertValid(error.Context);
+			if (error.Context != null) FullFwAssertValid(error.Context, error);
 			error.Culprit.NonEmptyAssertValid();
 			error.Exception.AssertValid();
 		}
@@ -316,10 +310,10 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			transaction.Should().NotBeNull();
 
-			if (transaction.Context != null) FullFwAssertValid(transaction.Context);
+			if (transaction.Context != null) FullFwAssertValid(transaction.Context, transaction);
 			transaction.Name.Should().NotBeNull();
 			TransactionResultFullFwAssertValid(transaction.Result);
-			transaction.Type.Should().NotBeNull();
+			transaction.Type.Should().Be(ApiConstants.TypeRequest);
 		}
 
 		private void FullFwAssertValid(Url url)
@@ -327,19 +321,28 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			url.Should().NotBeNull();
 
 			url.Raw.Should().NotBeNull();
-			url.Protocol.Should().NotBeNull();
+			url.Protocol.Should().Be("HTTP");
 			url.Full.Should().NotBeNull();
-			url.HostName.Should().NotBeNull();
+			url.HostName.Should().Be(Consts.SampleApp.Host);
 			url.PathName.Should().NotBeNull();
 		}
 
 		private void TransactionResultFullFwAssertValid(string result) => result.Should().MatchRegex("HTTP [1-9]xx");
 
-		private void FullFwAssertValid(ContextDto context)
+		// ReSharper disable once UnusedParameter.Local
+		private void FullFwAssertValid(ContextDto context, TransactionDto transaction)
 		{
 			context.Should().NotBeNull();
 
+			FullFwAssertValid(context.Request);
 			FullFwAssertValid(context.Response);
+		}
+
+		// ReSharper disable once UnusedParameter.Local
+		private void FullFwAssertValid(ContextDto context, ErrorDto error)
+		{
+			context.Should().NotBeNull();
+
 			FullFwAssertValid(context.Request);
 		}
 
@@ -362,7 +365,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			capturedStackFrame.Should().NotBeNull();
 
 			capturedStackFrame.Function.NonEmptyAssertValid();
-			capturedStackFrame.Module.NonEmptyAssertValid();
 		}
 
 		private void FullFwAssertValid(MetricSetDto metricSet)
@@ -383,8 +385,19 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			request.Should().NotBeNull();
 
-			request.Headers.Should().NotBeEmpty();
+			FullFwAssertValid(request.Socket);
 			FullFwAssertValid(request.Url);
+
+			var caseInsensitiveRequestHeaders = new Dictionary<string, string>(request.Headers, StringComparer.OrdinalIgnoreCase);
+			caseInsensitiveRequestHeaders["Host"].Should().Be(Consts.SampleApp.Host);
+		}
+
+		private void FullFwAssertValid(Socket socket)
+		{
+			socket.Should().NotBeNull();
+
+			socket.Encrypted.Should().BeFalse();
+			socket.RemoteAddress.Should().BeOneOf("::1", "127.0.0.1");
 		}
 
 		private void FullFwAssertValid(Response response)
