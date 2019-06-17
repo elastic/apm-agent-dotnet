@@ -75,10 +75,12 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData CustomSpanThrowsExceptionPage =
 				new SampleAppUrlPathData(HomeController.CustomSpanThrowsPageRelativePath, 500, spansCount: 1);
 
+			internal static readonly SampleAppUrlPathData HomePage = new SampleAppUrlPathData(HomeController.HomePageRelativePath, 200);
+
 			internal static readonly List<SampleAppUrlPathData> AllPaths = new List<SampleAppUrlPathData>()
 			{
 				new SampleAppUrlPathData("", 200),
-				new SampleAppUrlPathData(HomeController.HomePageRelativePath, 200),
+				HomePage,
 				ContactPage,
 				CustomSpanThrowsExceptionPage,
 				new SampleAppUrlPathData("Dummy_nonexistent_path", 404),
@@ -123,8 +125,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var url = Consts.SampleApp.RootUrl + "/" + relativeUrlPath;
 			_logger.Debug()?.Log("Sending request with URL: {url} and expected status code: {HttpStatusCode}...", url, expectedStatusCode);
 			var response = await httpClient.GetAsync(url);
-			_logger.Debug()?.Log("Request sent. Actual status code: {HttpStatusCode} ({HttpStatusCodeEnum})",
-				(int)response.StatusCode, response.StatusCode);
+			_logger.Debug()
+				?.Log("Request sent. Actual status code: {HttpStatusCode} ({HttpStatusCodeEnum})",
+					(int)response.StatusCode, response.StatusCode);
 			try
 			{
 				response.StatusCode.Should().Be(expectedStatusCode);
@@ -247,9 +250,26 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				var transaction = receivedData.Transactions.First();
 
 				transaction.Context.Request.Url.Full.Should().Be(Consts.SampleApp.RootUrl + "/" + sampleAppUrlPathData.RelativeUrlPath);
-				transaction.Context.Request.Url.Raw.Should()
-					.Be("http://" + Consts.SampleApp.Host + ":80" + Consts.SampleApp.RootUrlPath + "/" + sampleAppUrlPathData.RelativeUrlPath);
-				transaction.Context.Request.Url.PathName.Should().Be(Consts.SampleApp.RootUrlPath + "/" + sampleAppUrlPathData.RelativeUrlPath);
+
+				var questionMarkIndex = sampleAppUrlPathData.RelativeUrlPath.IndexOf('?');
+				string pathPart;
+				string queryStringPart;
+				if (questionMarkIndex == -1)
+				{
+					pathPart = sampleAppUrlPathData.RelativeUrlPath;
+					queryStringPart = null;
+				}
+				else
+				{
+					pathPart = sampleAppUrlPathData.RelativeUrlPath.Substring(0, questionMarkIndex);
+					queryStringPart = sampleAppUrlPathData.RelativeUrlPath.Substring(questionMarkIndex + 1);
+				}
+
+				transaction.Context.Request.Url.PathName.Should().Be(Consts.SampleApp.RootUrlPath + "/" + pathPart);
+				if (queryStringPart == null)
+					transaction.Context.Request.Url.Search.Should().BeNull();
+				else
+					transaction.Context.Request.Url.Search.Should().Be(queryStringPart);
 
 				var httpStatusFirstDigit = sampleAppUrlPathData.Status / 100;
 				transaction.Result.Should().Be($"HTTP {httpStatusFirstDigit}xx");
@@ -320,9 +340,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			url.Should().NotBeNull();
 
-			url.Raw.Should().NotBeNull();
-			url.Protocol.Should().Be("HTTP");
 			url.Full.Should().NotBeNull();
+			url.Raw.Should().Be(url.Full);
+			url.Protocol.Should().Be("HTTP");
 			url.HostName.Should().Be(Consts.SampleApp.Host);
 			url.PathName.Should().NotBeNull();
 		}
@@ -330,7 +350,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		private void TransactionResultFullFwAssertValid(string result) => result.Should().MatchRegex("HTTP [1-9]xx");
 
 		// ReSharper disable once UnusedParameter.Local
-		private void FullFwAssertValid(ContextDto context, TransactionDto transaction)
+		private void FullFwAssertValid(ContextDto context, TransactionDto _)
 		{
 			context.Should().NotBeNull();
 
@@ -339,7 +359,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		}
 
 		// ReSharper disable once UnusedParameter.Local
-		private void FullFwAssertValid(ContextDto context, ErrorDto error)
+		private void FullFwAssertValid(ContextDto context, ErrorDto _)
 		{
 			context.Should().NotBeNull();
 

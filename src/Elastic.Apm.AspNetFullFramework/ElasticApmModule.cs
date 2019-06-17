@@ -73,7 +73,7 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		private void OnBeginRequest(object eventSender, EventArgs eventArgs)
 		{
-			Logger.Debug()?.Log("Incoming request processing started - starting trace");
+			Logger.Debug()?.Log("Incoming request processing started - starting trace...");
 
 			try
 			{
@@ -87,7 +87,7 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		private void OnEndRequest(object eventSender, EventArgs eventArgs)
 		{
-			Logger.Debug()?.Log("Incoming request processing finished - ending trace");
+			Logger.Debug()?.Log("Incoming request processing finished - ending trace...");
 
 			try
 			{
@@ -134,7 +134,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			if (headerValue == null)
 			{
 				Logger.Debug()
-					?.Log("Incoming request doesn't {TraceParentHeaderName} header - " +
+					?.Log("Incoming request doesn't have {TraceParentHeaderName} header - " +
 						"it means request doesn't have incoming distributed tracing data", TraceParent.TraceParentHeaderName);
 				return null;
 			}
@@ -145,16 +145,25 @@ namespace Elastic.Apm.AspNetFullFramework
 		{
 			var httpRequestUrl = httpRequest.Url;
 			var queryString = httpRequestUrl.Query;
+			var rawUrlPathAndQuery = httpRequest.RawUrl;
+			var fullUrl = httpRequestUrl.AbsoluteUri;
 			if (queryString.IsEmpty())
-				queryString = null;
+			{
+				// Uri.Query returns empty string both when query string is empty ("http://host/path?") and
+				// when there's no query string at all ("http://host/path") so we need a way to distinguish between these cases
+				if (rawUrlPathAndQuery.IndexOf('?') == -1)
+					queryString = null;
+				else if (!fullUrl.IsEmpty() && fullUrl[fullUrl.Length - 1] != '?')
+					fullUrl += "?";
+			}
 			else if (queryString[0] == '?')
 				queryString = queryString.Substring(1, queryString.Length - 1);
 			var url = new Url
 			{
-				Full = httpRequestUrl.AbsoluteUri,
+				Full = fullUrl,
 				HostName = httpRequestUrl.Host,
 				Protocol = "HTTP",
-				Raw = httpRequestUrl.OriginalString,
+				Raw = fullUrl,
 				PathName = httpRequestUrl.AbsolutePath,
 				Search = queryString
 			};

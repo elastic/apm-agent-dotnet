@@ -68,5 +68,14 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 				TestSpanAction);
 			return null;
 		}
+
+		public async Task<ActionResult> FailingOutGoingHttpCall()
+		{
+			var client = new HttpClient();
+			var result = await client.GetAsync("http://dsfklgjdfgkdfg.mmmm");
+			Console.WriteLine(result.IsSuccessStatusCode);
+
+			return null;
+		}
 	}
 }
