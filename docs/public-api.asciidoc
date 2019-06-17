@@ -135,7 +135,7 @@ Example:
 [source,csharp]
 ----
 ISpan span = transaction.StartSpan("Select FROM customer",
-     Span.TypeDb, Span.SubtypeMssql, Span.ActionQuery);
+     ApiConstants.TypeDb, ApiConstants.SubtypeMssql, ApiConstants.ActionQuery);
 try
 {
     //execute db query
@@ -235,10 +235,10 @@ The following code is the equivalent of the previous example from the <<api-tran
 ----
 ITransaction transaction = Elastic.Apm.Agent.Tracer.CurrentTransaction;
 
-transaction.CaptureSpan("SampleSpan", Span.TypeDb, (s) =>
+transaction.CaptureSpan("SampleSpan", ApiConstants.TypeDb, (s) =>
 {
     //execute db query
-},Span.SubtypeMssql, Span.ActionQuery);
+}, ApiConstants.SubtypeMssql, ApiConstants.ActionQuery);
 ----
 
 Similar to the <<convenient-capture-transaction>> API, this method also supports `async` methods with the `Func<Task>` overloads.
@@ -249,7 +249,7 @@ This example shows you how to track an `async` code block that returns a result 
 [source,csharp]
 ----
 ITransaction transaction = Elastic.Apm.Agent.Tracer.CurrentTransaction;
-var asyncResult = await transaction.CaptureSpan("Select FROM customer", Span.TypeDb, async(s) =>
+var asyncResult = await transaction.CaptureSpan("Select FROM customer", ApiConstants.TypeDb, async(s) =>
 {
     //application code that is captured as a span
     await Task.Delay(500); //sample async code
