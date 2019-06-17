@@ -1,16 +1,21 @@
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
+using FluentAssertions;
 using Newtonsoft.Json;
+
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
-	internal class ErrorDto
+	internal class ErrorDto : IDto
 	{
 		public ContextDto Context { get; set; }
+
 		public string Culprit { get; set; }
+
 		public CapturedException Exception { get; set; }
+
 		public string Id { get; set; }
 
 		[JsonProperty("parent_id")]
@@ -39,19 +44,33 @@ namespace Elastic.Apm.Tests.MockApmServer
 			{ "Context", Context },
 		}.ToString();
 
+		public void AssertValid()
+		{
+			Id.ErrorIdAssertValid();
+			TraceId.TraceIdAssertValid();
+			TransactionId.TransactionIdAssertValid();
+			ParentId.ParentIdAssertValid();
+			Transaction.AssertValid();
+			Context?.AssertValid();
+			Culprit.NonEmptyAssertValid();
+			Exception.AssertValid();
 
-		public class TransactionDataDto
+			if (Transaction.IsSampled)
+				Context.Should().NotBeNull();
+			else
+				Context.Should().BeNull();
+		}
+
+		public class TransactionDataDto : IDto
 		{
 			[JsonProperty("sampled")]
 			public bool IsSampled { get; set; }
 
 			public string Type { get; set; }
 
-			public override string ToString() => new ToStringBuilder(nameof(ErrorDto))
-			{
-				{ "Type", Type },
-				{ "IsSampled", IsSampled },
-			}.ToString();
+			public override string ToString() => new ToStringBuilder(nameof(ErrorDto)) { { "Type", Type }, { "IsSampled", IsSampled }, }.ToString();
+
+			public void AssertValid() => Type?.AssertValid();
 		}
 	}
 }

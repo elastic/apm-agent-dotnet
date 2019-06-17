@@ -116,7 +116,7 @@ namespace Elastic.Apm.DistributedTracing
 			return new DistributedTracingData(traceId, parentId, (traceFlags & FlagRecorded) == FlagRecorded);
 		}
 
-		private static bool IsHex(IEnumerable<char> chars)
+		internal static bool IsHex(IEnumerable<char> chars)
 		{
 			// ReSharper disable once LoopCanBeConvertedToQuery - I benchmarked, that'd make parsing ~2x slower, don't do it!
 			foreach (var c in chars)

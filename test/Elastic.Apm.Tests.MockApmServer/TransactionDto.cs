@@ -1,5 +1,6 @@
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
+using FluentAssertions;
 using Newtonsoft.Json;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -8,7 +9,7 @@ using Newtonsoft.Json;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
-	internal class TransactionDto
+	internal class TransactionDto : ITimedDto
 	{
 		public ContextDto Context { get; set; }
 		public double Duration { get; set; }
@@ -48,5 +49,24 @@ namespace Elastic.Apm.Tests.MockApmServer
 			{ "Result", Result },
 			{ "Context", Context }
 		}.ToString();
+
+		public void AssertValid()
+		{
+			Timestamp.TimestampAssertValid();
+			Id.TransactionIdAssertValid();
+			TraceId.TraceIdAssertValid();
+			ParentId?.ParentIdAssertValid();
+			SpanCount.AssertValid();
+			Context?.AssertValid();
+			Duration.DurationAssertValid();
+			Name?.NameAssertValid();
+			Result?.AssertValid();
+			Type?.AssertValid();
+
+			if (IsSampled)
+				Context.Should().NotBeNull();
+			else
+				Context.Should().BeNull();
+		}
 	}
 }

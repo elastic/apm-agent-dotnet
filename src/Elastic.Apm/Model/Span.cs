@@ -43,8 +43,14 @@ namespace Elastic.Apm.Model
 			ParentId = parentId;
 			TraceId = traceId;
 
-			// Started spans should be counted only for sampled transactions
-			if (IsSampled) enclosingTransaction.SpanCount.Started++;
+			if (IsSampled)
+			{
+				// Started spans should be counted only for sampled transactions
+				enclosingTransaction.SpanCount.Started++;
+
+				// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
+				StackTrace = StacktraceHelper.GenerateApmStackTrace(new StackTrace(true).GetFrames(), _logger, $"Span `{Name}'");
+			}
 		}
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]

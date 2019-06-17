@@ -6,22 +6,38 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Elastic.Apm.Api;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Metrics.MetricsProvider
 {
 	internal class SystemTotalCpuProvider : IMetricsProvider, IDisposable
 	{
-		private const string SystemCpuTotalPct = "system.cpu.total.norm.pct";
+		private readonly IApmLogger _logger;
+		internal const string SystemCpuTotalPct = "system.cpu.total.norm.pct";
 		private readonly PerformanceCounter _processorTimePerfCounter;
 		private readonly StreamReader _procStatStreamReader;
 
-		public SystemTotalCpuProvider()
+		public SystemTotalCpuProvider(IApmLogger logger)
 		{
+			_logger = logger.Scoped(nameof(SystemTotalCpuProvider));
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
-				_processorTimePerfCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
-				//The perf. counter API returns 0 the for the 1. call (probably because there is no delta in the 1. call) - so we just call it here first
-				_processorTimePerfCounter.NextValue();
+				try
+				{
+					_processorTimePerfCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+					//The perf. counter API returns 0 the for the 1. call (probably because there is no delta in the 1. call) - so we just call it here first
+					_processorTimePerfCounter.NextValue();
+				}
+				catch (Exception e)
+				{
+					_logger.Error()
+						?.LogException(e, "Failed instantiating PerformanceCounter "
+							+ "- please make sure the current user has permissions to read performance counters. E.g. make sure the current user is member of "
+							+ "the 'Performance Monitor Users' group");
+
+					_processorTimePerfCounter?.Dispose();
+					_processorTimePerfCounter = null;
+				}
 			}
 
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return;
@@ -33,7 +49,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			_prevTotalTime = procStatValues.total;
 		}
 
-		internal SystemTotalCpuProvider(StreamReader procStatStreamReader) => _procStatStreamReader = procStatStreamReader;
+		internal SystemTotalCpuProvider(IApmLogger logger, StreamReader procStatStreamReader)
+			=> (_logger, _procStatStreamReader) = (logger.Scoped(nameof(SystemTotalCpuProvider)), procStatStreamReader);
 
 		private long _prevIdleTime;
 		private long _prevTotalTime;
@@ -48,22 +65,29 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				if (sr == null)
 					return (false, 0, 0);
 
-				var firstLine = sr.ReadLine();
-				if (firstLine == null || !firstLine.ToLowerInvariant().StartsWith("cpu")) return (false, 0, 0);
+				try
+				{
+					var firstLine = sr.ReadLine();
+					if (firstLine == null || !firstLine.ToLower().StartsWith("cpu")) return (false, 0, 0);
 
-				var values = firstLine.Substring(3, firstLine.Length - 3).Trim().Split(' ').ToArray();
-				if (values.Length < 4)
+					var values = firstLine.Substring(3, firstLine.Length - 3).Trim().Split(' ').ToArray();
+					if (values.Length < 4)
+						return (false, 0, 0);
+
+					var numbers = new long[values.Length];
+
+					if (values.Where((t, i) => !long.TryParse(t, NumberStyles.Integer, CultureInfo.InvariantCulture, out numbers[i])).Any())
+						return (false, 0, 0);
+
+					var total = numbers.Sum();
+					var idle = numbers[3];
+
+					return (true, idle, total);
+				}
+				catch
+				{
 					return (false, 0, 0);
-
-				var numbers = new long[values.Length];
-
-				if (values.Where((t, i) => !long.TryParse(t, NumberStyles.Integer, CultureInfo.InvariantCulture, out numbers[i])).Any())
-					return (false, 0, 0);
-
-				var total = numbers.Sum();
-				var idle = numbers[3];
-
-				return (true, idle, total);
+				}
 			}
 		}
 
@@ -74,6 +98,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		{
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
+				if (_processorTimePerfCounter == null) return null;
+
 				var val = _processorTimePerfCounter.NextValue();
 				return new List<MetricSample> { new MetricSample(SystemCpuTotalPct, (double)val / 100) };
 			}

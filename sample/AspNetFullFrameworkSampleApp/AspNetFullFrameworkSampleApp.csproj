@@ -46,6 +46,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>..\..\build\elasticapmsample.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.AI.DependencyCollector, Version=2.9.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Microsoft.ApplicationInsights.DependencyCollector.2.9.1\lib\net45\Microsoft.AI.DependencyCollector.dll</HintPath>
@@ -253,6 +259,10 @@
     <ProjectReference Include="..\..\src\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj">
       <Project>{d6ffddab-9d76-442f-8f1d-bd6f553f92fa}</Project>
       <Name>Elastic.Apm.AspNetFullFramework</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj">
+      <Project>{90bc9629-c8d2-4fd5-863e-ea2d5fb37341}</Project>
+      <Name>Elastic.Apm</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>

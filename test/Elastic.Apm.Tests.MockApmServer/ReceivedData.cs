@@ -1,14 +1,14 @@
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
 	public class ReceivedData
 	{
-		internal readonly List<ErrorDto> Errors = new List<ErrorDto>();
-		internal readonly List<string> InvalidPayloadErrors = new List<string>();
-		internal readonly List<MetadataDto> Metadata = new List<MetadataDto>();
-		internal readonly List<MetricSetDto> Metrics = new List<MetricSetDto>();
-		internal readonly List<SpanDto> Spans = new List<SpanDto>();
-		internal readonly List<TransactionDto> Transactions = new List<TransactionDto>();
+		internal ImmutableList<ErrorDto> Errors = ImmutableList<ErrorDto>.Empty;
+		internal ImmutableList<string> InvalidPayloadErrors = ImmutableList<string>.Empty;
+		internal ImmutableList<MetadataDto> Metadata = ImmutableList<MetadataDto>.Empty;
+		internal ImmutableList<MetricSetDto> Metrics = ImmutableList<MetricSetDto>.Empty;
+		internal ImmutableList<SpanDto> Spans = ImmutableList<SpanDto>.Empty;
+		internal ImmutableList<TransactionDto> Transactions = ImmutableList<TransactionDto>.Empty;
 	}
 }

@@ -14,13 +14,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public CustomServiceNameSetViaSettings(ITestOutputHelper xUnitOutputHelper)
 			: base(xUnitOutputHelper,
 				envVarsToSetForSampleAppPool: new Dictionary<string, string>() { { ConfigConsts.EnvVarNames.ServiceName, CustomServiceName } }) =>
-			ExpectedNonDefaults.ServiceName = AbstractConfigurationReader.AdaptServiceName(CustomServiceName);
+			AgentConfig.ServiceName = AbstractConfigurationReader.AdaptServiceName(CustomServiceName);
 
 		[AspNetFullFrameworkTheory]
 		[MemberData(nameof(AllSampleAppUrlPaths))]
 		public async Task ServiceNameSetViaSettings(SampleAppUrlPathData sampleAppUrlPathData)
 		{
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(sampleAppUrlPathData.UrlPath, sampleAppUrlPathData.Status);
+			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.Status);
 			VerifyDataReceivedFromAgent(sampleAppUrlPathData);
 		}
 	}
