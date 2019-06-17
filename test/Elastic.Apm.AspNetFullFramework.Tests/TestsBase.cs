@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using AspNetFullFrameworkSampleApp.Controllers;
@@ -70,12 +71,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			/// Contact page processing does HTTP Get for About page (additional transaction) and https://elastic.co/ - so 2 spans
 			internal static readonly SampleAppUrlPathData ContactPage =
-				new SampleAppUrlPathData(HomeController.ContactPageRelativePath, 200, 2, 2);
+				new SampleAppUrlPathData(HomeController.ContactPageRelativePath, 200, /* transactionsCount: */ 2, /* spansCount: */ 2);
 
 			internal static readonly SampleAppUrlPathData CustomSpanThrowsExceptionPage =
-				new SampleAppUrlPathData(HomeController.CustomSpanThrowsPageRelativePath, 500, spansCount: 1);
+				new SampleAppUrlPathData(HomeController.CustomSpanThrowsPageRelativePath, 500, spansCount: 1, errorsCount: 1);
 
-			internal static readonly SampleAppUrlPathData HomePage = new SampleAppUrlPathData(HomeController.HomePageRelativePath, 200);
+			internal static readonly SampleAppUrlPathData HomePage =
+				new SampleAppUrlPathData(HomeController.HomePageRelativePath, 200);
 
 			internal static readonly List<SampleAppUrlPathData> AllPaths = new List<SampleAppUrlPathData>()
 			{
@@ -142,12 +144,21 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		protected void VerifyDataReceivedFromAgent(Action<ReceivedData> verifyAction)
 		{
-			_mockApmServer.ReceivedData.InvalidPayloadErrors.Should().BeEmpty();
-
 			var attemptNumber = 0;
 			while (true)
 			{
 				++attemptNumber;
+
+				if (! _mockApmServer.ReceivedData.InvalidPayloadErrors.IsEmpty)
+				{
+					var messageBuilder = new StringBuilder();
+					messageBuilder.AppendLine("There is at least one invalid payload error - the test is considered as failed.");
+					messageBuilder.AppendLine(TextUtils.AddIndentation("Invalid payload error(s):", 1));
+					foreach (var invalidPayloadError in _mockApmServer.ReceivedData.InvalidPayloadErrors)
+						messageBuilder.AppendLine(TextUtils.AddIndentation(invalidPayloadError, 2));
+					throw new XunitException(messageBuilder.ToString());
+				}
+
 				try
 				{
 					verifyAction(_mockApmServer.ReceivedData);
@@ -244,36 +255,36 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			receivedData.Transactions.Count.Should().Be(sampleAppUrlPathData.TransactionsCount);
 			receivedData.Spans.Count.Should().Be(sampleAppUrlPathData.SpansCount);
+			receivedData.Errors.Count.Should().Be(sampleAppUrlPathData.ErrorsCount);
 
 			if (receivedData.Transactions.Count == 1)
 			{
 				var transaction = receivedData.Transactions.First();
 
-				transaction.Context.Request.Url.Full.Should().Be(Consts.SampleApp.RootUrl + "/" + sampleAppUrlPathData.RelativeUrlPath);
-
-				var questionMarkIndex = sampleAppUrlPathData.RelativeUrlPath.IndexOf('?');
-				string pathPart;
-				string queryStringPart;
-				if (questionMarkIndex == -1)
+				if (transaction.Context != null)
 				{
-					pathPart = sampleAppUrlPathData.RelativeUrlPath;
-					queryStringPart = null;
-				}
-				else
-				{
-					pathPart = sampleAppUrlPathData.RelativeUrlPath.Substring(0, questionMarkIndex);
-					queryStringPart = sampleAppUrlPathData.RelativeUrlPath.Substring(questionMarkIndex + 1);
-				}
+					transaction.Context.Request.Url.Full.Should().Be(Consts.SampleApp.RootUrl + "/" + sampleAppUrlPathData.RelativeUrlPath);
 
-				transaction.Context.Request.Url.PathName.Should().Be(Consts.SampleApp.RootUrlPath + "/" + pathPart);
-				if (queryStringPart == null)
-					transaction.Context.Request.Url.Search.Should().BeNull();
-				else
-					transaction.Context.Request.Url.Search.Should().Be(queryStringPart);
+					var questionMarkIndex = sampleAppUrlPathData.RelativeUrlPath.IndexOf('?');
+					if (questionMarkIndex == -1)
+					{
+						transaction.Context.Request.Url.PathName.Should().
+							Be(Consts.SampleApp.RootUrlPath + "/" + sampleAppUrlPathData.RelativeUrlPath);
+						transaction.Context.Request.Url.Search.Should().BeNull();
+					}
+					else
+					{
+						transaction.Context.Request.Url.PathName.Should().
+							Be(Consts.SampleApp.RootUrlPath + "/" + sampleAppUrlPathData.RelativeUrlPath.Substring(0, questionMarkIndex));
+						transaction.Context.Request.Url.Search.Should().Be(sampleAppUrlPathData.RelativeUrlPath.Substring(questionMarkIndex + 1));
+					}
+
+					transaction.Context.Response.StatusCode.Should().Be(sampleAppUrlPathData.Status);
+				}
 
 				var httpStatusFirstDigit = sampleAppUrlPathData.Status / 100;
 				transaction.Result.Should().Be($"HTTP {httpStatusFirstDigit}xx");
-				transaction.Context.Response.StatusCode.Should().Be(sampleAppUrlPathData.Status);
+				transaction.SpanCount.Started.Should().Be(sampleAppUrlPathData.SpansCount);
 			}
 		}
 
@@ -334,6 +345,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			transaction.Name.Should().NotBeNull();
 			TransactionResultFullFwAssertValid(transaction.Result);
 			transaction.Type.Should().Be(ApiConstants.TypeRequest);
+			FullFwAssertValid(transaction.SpanCount);
+		}
+
+		private void FullFwAssertValid(SpanCount spanCount)
+		{
+			spanCount.Should().NotBeNull();
+
+			spanCount.Dropped.Should().Be(0);
 		}
 
 		private void FullFwAssertValid(Url url)
@@ -435,18 +454,33 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		public class SampleAppUrlPathData
 		{
+			public readonly int ErrorsCount;
 			public readonly string RelativeUrlPath;
 			public readonly int SpansCount;
 			public readonly int Status;
 			public readonly int TransactionsCount;
 
-			public SampleAppUrlPathData(string relativeUrlPath, int status, int transactionsCount = 1, int spansCount = 0)
+			public SampleAppUrlPathData(string relativeUrlPath, int status, int transactionsCount = 1, int spansCount = 0, int errorsCount = 0)
 			{
 				RelativeUrlPath = relativeUrlPath;
 				Status = status;
 				TransactionsCount = transactionsCount;
 				SpansCount = spansCount;
+				ErrorsCount = errorsCount;
 			}
+
+			public SampleAppUrlPathData Clone(
+				string relativeUrlPath = null,
+				int? status = null,
+				int? transactionsCount = null,
+				int? spansCount = null,
+				int? errorsCount = null
+			) => new SampleAppUrlPathData(
+				relativeUrlPath ?? RelativeUrlPath,
+				status ?? Status,
+				transactionsCount ?? TransactionsCount,
+				spansCount ?? SpansCount,
+				errorsCount ?? ErrorsCount);
 		}
 	}
 }

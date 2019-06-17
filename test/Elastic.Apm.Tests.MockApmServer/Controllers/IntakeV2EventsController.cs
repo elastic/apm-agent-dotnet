@@ -44,8 +44,8 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 			}
 			catch (ArgumentException ex)
 			{
-				_mockApmServer.ReceivedData.InvalidPayloadErrors.Add(ex.Message);
-				return BadRequest(ex.Message);
+				_mockApmServer.ReceivedData.InvalidPayloadErrors = _mockApmServer.ReceivedData.InvalidPayloadErrors.Add(ex.ToString());
+				return BadRequest(ex.ToString());
 			}
 
 			_logger.Debug()?.Log("Successfully parsed {numberOfObjects} objects", numberOfObjects);
@@ -124,7 +124,7 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 							dtoType, accumulatingList.Count,
 							TextUtils.AddIndentation(JsonUtils.PrettyFormat(line), 2),
 							TextUtils.AddIndentation(dto.ToString(), 2));
-					_mockApmServer.ReceivedData.InvalidPayloadErrors = _mockApmServer.ReceivedData.InvalidPayloadErrors.Add(ex.Message);
+					_mockApmServer.ReceivedData.InvalidPayloadErrors = _mockApmServer.ReceivedData.InvalidPayloadErrors.Add(ex.ToString());
 					return accumulatingList;
 				}
 

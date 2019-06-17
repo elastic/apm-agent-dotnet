@@ -30,8 +30,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		[InlineData("?")] // key "?" without value
 		public async Task QueryStringTests(string queryString)
 		{
-			var homePageAndQueryString = new SampleAppUrlPathData(SampleAppUrlPaths.HomePage.RelativeUrlPath + $"?{queryString}",
-				SampleAppUrlPaths.HomePage.Status);
+			var homePageAndQueryString = SampleAppUrlPaths.HomePage.Clone(SampleAppUrlPaths.HomePage.RelativeUrlPath + $"?{queryString}");
 			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(homePageAndQueryString.RelativeUrlPath, homePageAndQueryString.Status);
 
 			VerifyDataReceivedFromAgent(receivedData =>
