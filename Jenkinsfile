@@ -11,7 +11,7 @@ pipeline {
     JOB_GCS_BUCKET = credentials('gcs-bucket')
     CODECOV_SECRET = 'secret/apm-team/ci/apm-agent-dotnet-codecov'
     GITHUB_CHECK_ITS_NAME = 'Integration Tests'
-    ITS_PIPELINE = 'apm-integration-tests-mbp/PR-470'
+    ITS_PIPELINE = 'apm-integration-tests-mbp/master'
   }
   options {
     timeout(time: 1, unit: 'HOURS')
