@@ -357,7 +357,7 @@ pipeline {
               log(level: 'INFO', text: 'Launching Async ITs')
               // TODO: use commit rather than branch to be reproducible.
               build(job: env.ITS_PIPELINE, propagate: false, wait: false,
-                    parameters: [string(name: 'BUILD_OPTS', value: "--dotnet-agent-repo ${env.CHANGE_FORK}/${env.REPO} --dotnet-agent-version ${env.CHANGE_BRANCH}"),
+                    parameters: [string(name: 'BUILD_OPTS', value: "--with-agent-dotnet --dotnet-agent-repo ${env.CHANGE_FORK}/${env.REPO} --dotnet-agent-version ${env.CHANGE_BRANCH}"),
                                  string(name: 'GITHUB_CHECK_NAME', value: env.GITHUB_CHECK_ITS_NAME),
                                  string(name: 'GITHUB_CHECK_REPO', value: env.REPO),
                                  string(name: 'GITHUB_CHECK_SHA1', value: env.GIT_BASE_COMMIT)])
