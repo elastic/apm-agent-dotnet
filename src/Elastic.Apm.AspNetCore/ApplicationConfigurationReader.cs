@@ -4,15 +4,16 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Microsoft.Extensions.Configuration;
 
-namespace Elastic.Apm.AspNetCore.Config
+namespace Elastic.Apm.AspNetCore
 {
 	/// <summary>
 	/// An agent-config provider based on Microsoft.Extensions.Configuration.IConfiguration.
-	/// It uses environment variables as fallback
+	/// It uses environment variables as fallback.
 	/// </summary>
-	internal class MicrosoftExtensionsConfig : AbstractConfigurationReader, IConfigurationReader
+	internal class ApplicationConfigurationReader : AbstractConfigurationReader, IConfigurationReader
 	{
 		internal const string Origin = "Configuration Provider";
+		private LogLevel? _logLevel;
 
 		internal static class Keys
 		{
@@ -28,16 +29,11 @@ namespace Elastic.Apm.AspNetCore.Config
 
 		private readonly IConfiguration _configuration;
 
-		public MicrosoftExtensionsConfig(IConfiguration configuration, IApmLogger logger = null) : base(logger)
+		public ApplicationConfigurationReader(IConfiguration configuration, IApmLogger logger = null) : base(logger)
 		{
 			_configuration = configuration;
-			_configuration.GetSection("ElasticApm")
-				?
-				.GetReloadToken()
-				.RegisterChangeCallback(ChangeCallback, configuration.GetSection("ElasticApm"));
+			_configuration.GetSection("ElasticApm")?.GetReloadToken().RegisterChangeCallback(ChangeCallback, configuration.GetSection("ElasticApm"));
 		}
-
-		private LogLevel? _logLevel;
 
 		public LogLevel LogLevel
 		{
@@ -45,9 +41,8 @@ namespace Elastic.Apm.AspNetCore.Config
 			{
 				if (_logLevel.HasValue) return _logLevel.Value;
 
-				var l = ParseLogLevel(ReadFallBack(Keys.LogLevel, ConfigConsts.EnvVarNames.LogLevel));
-				_logLevel = l;
-				return l;
+				_logLevel = ParseLogLevel(ReadFallBack(Keys.LogLevel, ConfigConsts.EnvVarNames.LogLevel));
+				return _logLevel.Value;
 			}
 		}
 
@@ -68,10 +63,7 @@ namespace Elastic.Apm.AspNetCore.Config
 		private ConfigurationKeyValue ReadFallBack(string key, string fallBackEnvVarName)
 		{
 			var primary = Read(key);
-			if (!string.IsNullOrWhiteSpace(primary.Value)) return primary;
-
-			var secondary = Kv(key, _configuration[fallBackEnvVarName], EnvironmentConfigurationReader.Origin);
-			return secondary;
+			return !string.IsNullOrWhiteSpace(primary.Value) ? primary : Kv(key, _configuration[fallBackEnvVarName], EnvironmentConfigurationReader.Origin);
 		}
 
 		private void ChangeCallback(object obj)

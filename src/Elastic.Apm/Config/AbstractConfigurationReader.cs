@@ -16,8 +16,7 @@ namespace Elastic.Apm.Config
 
 		private ScopedLogger ScopedLogger { get; }
 
-		protected static ConfigurationKeyValue Kv(string key, string value, string origin) =>
-			new ConfigurationKeyValue(key, value, origin);
+		protected static ConfigurationKeyValue Kv(string key, string value, string origin) => new ConfigurationKeyValue(key, value, origin);
 
 		protected internal static bool TryParseLogLevel(string value, out LogLevel? level)
 		{
@@ -44,27 +43,18 @@ namespace Elastic.Apm.Config
 			}
 		}
 
-		protected string ParseSecretToken(ConfigurationKeyValue kv)
-		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return null;
+		protected string ParseSecretToken(ConfigurationKeyValue kv) => kv == null || string.IsNullOrEmpty(kv.Value) ? null : kv.Value;
 
-			return kv.Value;
-		}
-
-		protected bool ParseCaptureHeaders(ConfigurationKeyValue kv)
-		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return true;
-			if (bool.TryParse(kv.Value, out var value)) return value;
-
-			return true;
-		}
+		protected bool ParseCaptureHeaders(ConfigurationKeyValue kv) => kv == null || string.IsNullOrEmpty(kv.Value) || !bool.TryParse(kv.Value, out var value) || value;
 
 		protected LogLevel ParseLogLevel(ConfigurationKeyValue kv)
 		{
 			if (TryParseLogLevel(kv?.Value, out var level)) return level.Value;
 
 			if (kv?.Value == null)
+			{
 				Logger?.Debug()?.Log("No log level provided. Defaulting to log level '{DefaultLogLevel}'", ConsoleLogger.DefaultLogLevel);
+			}
 			else
 			{
 				Logger?.Error()
@@ -114,11 +104,7 @@ namespace Elastic.Apm.Config
 
 		protected double ParseMetricsInterval(ConfigurationKeyValue kv)
 		{
-			string value;
-			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
-				value = ConfigConsts.DefaultValues.MetricsInterval;
-			else
-				value = kv.Value;
+			var value = kv == null || string.IsNullOrWhiteSpace(kv.Value) ? ConfigConsts.DefaultValues.MetricsInterval : kv.Value;
 
 			if (!TryParseTimeInterval(value, out var valueInMilliseconds))
 			{
@@ -131,8 +117,7 @@ namespace Elastic.Apm.Config
 			}
 
 			// ReSharper disable once CompareOfFloatsByEqualityOperator - we compare to exactly zero here
-			if (valueInMilliseconds == 0)
-				return valueInMilliseconds;
+			if (valueInMilliseconds == 0) return valueInMilliseconds;
 
 			if (valueInMilliseconds < 0)
 			{
@@ -156,7 +141,7 @@ namespace Elastic.Apm.Config
 			return valueInMilliseconds;
 		}
 
-		private bool TryParseTimeInterval(String valueAsString, out double valueInMilliseconds)
+		private static bool TryParseTimeInterval(string valueAsString, out double valueInMilliseconds)
 		{
 			switch (valueAsString)
 			{
@@ -200,16 +185,14 @@ namespace Elastic.Apm.Config
 			var stackFrames = new StackTrace().GetFrames();
 			if (stackFrames == null) return null;
 
-			foreach (var frame in stackFrames)
-			{
-				var currentAssemblyName = frame?.GetMethod()?.DeclaringType?.Assembly?.GetName();
-				if (currentAssemblyName != null && !IsMsOrElastic(currentAssemblyName.GetPublicKeyToken())) return currentAssemblyName.Name;
-			}
-
-			return null;
+			return (from frame in stackFrames
+				select frame?.GetMethod()?.DeclaringType?.Assembly.GetName()
+				into currentAssemblyName
+				where currentAssemblyName != null && !IsMsOrElastic(currentAssemblyName.GetPublicKeyToken())
+				select currentAssemblyName.Name).FirstOrDefault();
 		}
 
-		private string AdaptServiceName(string originalName) => originalName?.Replace('.', '_');
+		private static string AdaptServiceName(string originalName) => originalName?.Replace('.', '_');
 
 		protected string ParseServiceName(ConfigurationKeyValue kv)
 		{
@@ -294,8 +277,7 @@ namespace Elastic.Apm.Config
 			var systemPrivateCoreLibToken = new byte[] { 124, 236, 133, 215, 190, 167, 121, 142 };
 			var msAspNetCoreHostingToken = new byte[] { 173, 185, 121, 56, 41, 221, 174, 96 };
 
-			if (array.Length != 8)
-				return false;
+			if (array.Length != 8) return false;
 
 			var isMsCorLib = true;
 			var isElasticApm = true;

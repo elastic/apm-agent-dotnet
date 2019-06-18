@@ -24,7 +24,6 @@ namespace Elastic.Apm.Config
 
 		public double MetricsIntervalInMillisecond => ParseMetricsInterval(Read(ConfigConsts.EnvVarNames.MetricsInterval));
 
-		private static ConfigurationKeyValue Read(string key) =>
-			new ConfigurationKeyValue(key, Environment.GetEnvironmentVariable(key), Origin);
+		protected virtual ConfigurationKeyValue Read(string key) => new ConfigurationKeyValue(key, Environment.GetEnvironmentVariable(key), Origin);
 	}
 }
