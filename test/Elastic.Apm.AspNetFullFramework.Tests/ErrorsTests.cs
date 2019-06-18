@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AspNetFullFrameworkSampleApp.Controllers;
 using Elastic.Apm.Api;
+using Elastic.Apm.Tests.MockApmServer;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -36,6 +37,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				span.TraceId.Should().Be(transaction.TraceId);
 				span.TransactionId.Should().Be(transaction.Id);
 				span.ParentId.Should().Be(transaction.Id);
+				span.ShouldOccurBetween(transaction);
 
 				var stackTraceFrame = span.StackTrace.Single(f => f.Function == HomeController.CustomSpanThrowsMethodName);
 				stackTraceFrame.Module.Should().StartWith("AspNetFullFrameworkSampleApp, Version=");
@@ -50,6 +52,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				error.Transaction.Type.Should().Be(ApiConstants.TypeRequest);
 				error.Transaction.IsSampled.Should().BeTrue();
 				error.ParentId.Should().Be(span.Id);
+				error.ShouldOccurBetween(span);
 			});
 		}
 	}

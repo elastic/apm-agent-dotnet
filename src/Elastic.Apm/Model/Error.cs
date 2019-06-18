@@ -26,7 +26,18 @@ namespace Elastic.Apm.Model
 			Exception = capturedException;
 		}
 
+		/// <summary>
+		/// <seealso cref="ShouldSerializeContext" />
+		/// </summary>
 		public Context Context { get; set; }
+
+		/// <summary>
+		/// Method to conditionally serialize <see cref="Context" /> because context should be serialized only when the transaction
+		/// is sampled.
+		/// See
+		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
+		/// </summary>
+		public bool ShouldSerializeContext() => Transaction.IsSampled;
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Culprit { get; set; }

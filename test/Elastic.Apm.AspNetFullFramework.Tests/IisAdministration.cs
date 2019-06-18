@@ -192,10 +192,15 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var solutionFileName = "ElasticApmAgent.sln";
 
 			var currentDirectory = Directory.GetCurrentDirectory();
+			_logger.Debug()?.Log("Looking for solution root... Current directory: `{Directory}'", currentDirectory);
 			var candidateDirectory = new DirectoryInfo(currentDirectory);
 			do
 			{
-				if (File.Exists(Path.Combine(candidateDirectory.FullName, solutionFileName))) return candidateDirectory;
+				if (File.Exists(Path.Combine(candidateDirectory.FullName, solutionFileName)))
+				{
+					_logger.Debug()?.Log("Found solution root: `{Directory}'", candidateDirectory);
+					return candidateDirectory;
+				}
 
 				candidateDirectory = candidateDirectory.Parent;
 			} while (candidateDirectory != null);

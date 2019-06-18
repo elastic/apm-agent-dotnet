@@ -25,6 +25,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			VerifyDataReceivedFromAgent(receivedData =>
 			{
 				TryVerifyDataReceivedFromAgent(SampleAppUrlPaths.ContactPage, receivedData);
+
 				SampleAppUrlPaths.ContactPage.TransactionsCount.Should().Be(2);
 				SampleAppUrlPaths.ContactPage.SpansCount.Should().Be(2);
 
@@ -63,7 +64,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			{
 				transaction.Context.Request.Method.ToUpperInvariant().Should().Be("GET");
 				transaction.Context.Request.Url.Full.Should().Be("http://" + Consts.SampleApp.Host + urlPath);
-				transaction.Context.Request.Url.Raw.Should().Be("http://" + Consts.SampleApp.Host + ":80" + urlPath);
 				transaction.Context.Request.Url.PathName.Should().Be(urlPath);
 				transaction.Context.Request.Url.Search.Should().BeNull();
 

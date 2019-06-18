@@ -8,7 +8,7 @@ using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
-	internal class MetricSetDto : IDto
+	internal class MetricSetDto : ITimestampedDto
 	{
 		public Dictionary<string, MetricSampleDto> Samples { get; set; }
 
