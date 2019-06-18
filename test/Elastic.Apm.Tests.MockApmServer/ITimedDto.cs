@@ -1,8 +1,7 @@
 namespace Elastic.Apm.Tests.MockApmServer
 {
-	public interface ITimedDto: IDto
+	public interface ITimedDto: ITimestampedDto
 	{
-		long Timestamp { get; }
 		double Duration { get; }
 	}
 }

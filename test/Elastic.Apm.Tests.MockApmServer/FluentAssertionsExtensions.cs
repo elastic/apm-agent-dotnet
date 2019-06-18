@@ -15,5 +15,14 @@ namespace Elastic.Apm.Tests.MockApmServer
 				.Should()
 				.BeOnOrBefore(TimeUtils.TimestampDurationToEndDateTimeOffset(containingAncestor.Timestamp, containingAncestor.Duration));
 		}
+
+		internal static void ShouldOccurBetween(this ITimestampedDto child, ITimedDto containingAncestor)
+		{
+			TimeUtils.TimestampToDateTimeOffset(child.Timestamp)
+				.Should()
+				.BeOnOrAfter(TimeUtils.TimestampToDateTimeOffset(containingAncestor.Timestamp))
+				.And
+				.BeOnOrBefore(TimeUtils.TimestampDurationToEndDateTimeOffset(containingAncestor.Timestamp, containingAncestor.Duration));
+		}
 	}
 }
