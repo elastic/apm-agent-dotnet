@@ -5,10 +5,13 @@
 pipeline {
   agent any
   environment {
-    BASE_DIR = 'src/github.com/elastic/apm-agent-dotnet'
+    REPO = 'apm-agent-dotnet'
+    BASE_DIR = "src/github.com/elastic/${env.REPO}"
     NOTIFY_TO = credentials('notify-to')
     JOB_GCS_BUCKET = credentials('gcs-bucket')
     CODECOV_SECRET = 'secret/apm-team/ci/apm-agent-dotnet-codecov'
+    GITHUB_CHECK_ITS_NAME = 'Integration Tests'
+    ITS_PIPELINE = 'apm-integration-tests-mbp/PR-470'
   }
   options {
     timeout(time: 1, unit: 'HOURS')
@@ -92,7 +95,7 @@ pipeline {
                       junit(allowEmptyResults: false,
                         keepLongStdio: true,
                         testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
-                      codecov(repo: 'apm-agent-dotnet', basedir: "${BASE_DIR}", secret: "${CODECOV_SECRET}")
+                      codecov(repo: env.REPO, basedir: "${BASE_DIR}", secret: "${CODECOV_SECRET}")
                     }
                     unsuccessful {
                       archiveArtifacts(allowEmptyArchive: true,
@@ -337,6 +340,28 @@ pipeline {
                   release('secret/apm-team/ci/elastic-observability-nuget')
                 }
               }
+            }
+          }
+          stage('Integration Tests') {
+            agent none
+            when {
+              beforeAgent true
+              allOf {
+                anyOf {
+                  environment name: 'GIT_BUILD_CAUSE', value: 'pr'
+                  expression { return !params.Run_As_Master_Branch }
+                }
+              }
+            }
+            steps {
+              log(level: 'INFO', text: 'Launching Async ITs')
+              // TODO: use commit rather than branch to be reproducible.
+              build(job: env.ITS_PIPELINE, propagate: false, wait: false,
+                    parameters: [string(name: 'BUILD_OPTS', value: "--dotnet-agent_repo ${env.CHANGE_FORK}/${env.REPO} --dotnet_agent_version ${env.CHANGE_BRANCH}"),
+                                 string(name: 'GITHUB_CHECK_NAME', value: env.GITHUB_CHECK_ITS_NAME),
+                                 string(name: 'GITHUB_CHECK_REPO', value: env.REPO),
+                                 string(name: 'GITHUB_CHECK_SHA1', value: env.GIT_BASE_COMMIT)])
+              githubNotify(context: "${env.GITHUB_CHECK_ITS_NAME}", description: "${env.GITHUB_CHECK_ITS_NAME} ...", status: 'PENDING', targetUrl: "${env.JENKINS_URL}search/?q=${env.ITS_PIPELINE.replaceAll('/','+')}")
             }
           }
       }
