@@ -8,13 +8,13 @@
   <PropertyGroup>
     <RootNamespace>Elastic.Apm</RootNamespace>
     <AssemblyName>Elastic.Apm</AssemblyName>
-    <AssemblyVersion>0.0.2.0</AssemblyVersion>
-    <InformationalVersion>0.0.2.0</InformationalVersion>
-    <FileVersion>0.0.2.0</FileVersion>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <InformationalVersion>1.0.0</InformationalVersion>
+    <FileVersion>1.0.0</FileVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
-    <PackageVersion>0.0.2.0-alpha</PackageVersion>
+    <PackageVersion>1.0.0-beta1</PackageVersion>
     <Authors>Elastic and contributors</Authors>
     <PackageId>Elastic.Apm</PackageId>
     <copyright>2019 Elasticsearch BV</copyright>
