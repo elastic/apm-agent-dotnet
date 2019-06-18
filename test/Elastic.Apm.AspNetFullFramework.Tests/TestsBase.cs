@@ -30,6 +30,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				out TearDownPersistentDataReason);
 
 
+		protected readonly AgentConfiguration AgentConfig = new AgentConfiguration();
+
+
 		protected readonly bool SampleAppShouldHaveAccessToPerfCounters;
 
 		private readonly Dictionary<string, string> _envVarsToSetForSampleAppPool;
@@ -89,8 +92,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			};
 		}
 
-		protected AgentConfiguration AgentConfig = new AgentConfiguration();
-
 		public Task InitializeAsync()
 		{
 			// Mock APM server should be started only after sample application is started in clean state.
@@ -149,7 +150,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			{
 				++attemptNumber;
 
-				if (! _mockApmServer.ReceivedData.InvalidPayloadErrors.IsEmpty)
+				if (!_mockApmServer.ReceivedData.InvalidPayloadErrors.IsEmpty)
 				{
 					var messageBuilder = new StringBuilder();
 					messageBuilder.AppendLine("There is at least one invalid payload error - the test is considered as failed.");
@@ -268,14 +269,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					var questionMarkIndex = sampleAppUrlPathData.RelativeUrlPath.IndexOf('?');
 					if (questionMarkIndex == -1)
 					{
-						transaction.Context.Request.Url.PathName.Should().
-							Be(Consts.SampleApp.RootUrlPath + "/" + sampleAppUrlPathData.RelativeUrlPath);
+						transaction.Context.Request.Url.PathName.Should()
+							.Be(Consts.SampleApp.RootUrlPath + "/" + sampleAppUrlPathData.RelativeUrlPath);
 						transaction.Context.Request.Url.Search.Should().BeNull();
 					}
 					else
 					{
-						transaction.Context.Request.Url.PathName.Should().
-							Be(Consts.SampleApp.RootUrlPath + "/" + sampleAppUrlPathData.RelativeUrlPath.Substring(0, questionMarkIndex));
+						transaction.Context.Request.Url.PathName.Should()
+							.Be(Consts.SampleApp.RootUrlPath + "/" + sampleAppUrlPathData.RelativeUrlPath.Substring(0, questionMarkIndex));
 						transaction.Context.Request.Url.Search.Should().Be(sampleAppUrlPathData.RelativeUrlPath.Substring(questionMarkIndex + 1));
 					}
 
@@ -427,8 +428,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			FullFwAssertValid(request.Socket);
 			FullFwAssertValid(request.Url);
 
-			var caseInsensitiveRequestHeaders = new Dictionary<string, string>(request.Headers, StringComparer.OrdinalIgnoreCase);
-			caseInsensitiveRequestHeaders["Host"].Should().Be(Consts.SampleApp.Host);
+			if (AgentConfig.CaptureHeaders)
+			{
+				var caseInsensitiveRequestHeaders = new Dictionary<string, string>(request.Headers, StringComparer.OrdinalIgnoreCase);
+				caseInsensitiveRequestHeaders["Host"].Should().Be(Consts.SampleApp.Host);
+			}
+			else
+				request.Headers.Should().BeNull();
 		}
 
 		private void FullFwAssertValid(Socket socket)
@@ -443,12 +449,17 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			response.Should().NotBeNull();
 
-			response.Headers.Should().NotBeNull();
+			if (AgentConfig.CaptureHeaders)
+				response.Headers.Should().NotBeNull();
+			else
+				response.Headers.Should().BeNull();
+
 			response.Finished.Should().BeTrue();
 		}
 
-		protected struct AgentConfiguration
+		protected class AgentConfiguration
 		{
+			internal bool CaptureHeaders = true;
 			internal string ServiceName;
 		}
 
