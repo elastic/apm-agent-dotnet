@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Runtime.InteropServices;
 using System.Web;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.DistributedTracing;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 
@@ -39,7 +39,7 @@ namespace Elastic.Apm.AspNetFullFramework
 		private HttpApplication _httpApp;
 
 		private static Version AspNetVersion => typeof(HttpRuntime).Assembly.GetName().Version;
-		private static string ClrDescription => RuntimeInformation.FrameworkDescription;
+		private static string ClrDescription => PlatformDetection.FrameworkDescription;
 		private static Version IisVersion => HttpRuntime.IISVersion;
 
 		private static void SetServiceInformation(Service service)
