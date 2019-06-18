@@ -4,7 +4,7 @@
     <RootNamespace>Elastic.Apm.EntityFrameworkCore</RootNamespace>
     <AssemblyName>Elastic.Apm.EntityFrameworkCore</AssemblyName>
     <AssemblyVersion>1.0.0</AssemblyVersion>
-    <InformationalVersion>1.0.0</InformationalVersion>
+    <InformationalVersion>1.0.0-beta1</InformationalVersion>
     <FileVersion>1.0.0</FileVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>

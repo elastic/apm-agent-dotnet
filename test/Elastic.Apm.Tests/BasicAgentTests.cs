@@ -47,7 +47,7 @@ namespace Elastic.Apm.Tests
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("TestName", "TestType", () => { Thread.Sleep(5); });
-				agent.Service.Agent.Version.Should().Be(Assembly.Load("Elastic.Apm").GetName().Version.ToString());
+				agent.Service.Agent.Version.Should().Be(typeof(Agent).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
 			}
 		}
 

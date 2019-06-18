@@ -1,4 +1,6 @@
-﻿using Elastic.Apm.Config;
+﻿using System.Diagnostics;
+using System.Reflection;
+using Elastic.Apm.Config;
 
 namespace Elastic.Apm.Api
 {
@@ -18,7 +20,7 @@ namespace Elastic.Apm.Api
 				Agent = new AgentC
 				{
 					Name = Consts.AgentName,
-					Version = typeof(Agent).Assembly.GetName().Version?.ToString() ?? "n/a"
+					Version = typeof(Agent).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion
 				}
 			};
 

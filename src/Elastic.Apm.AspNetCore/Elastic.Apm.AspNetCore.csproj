@@ -3,7 +3,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>Elastic.Apm.AspNetCore</AssemblyName>
     <AssemblyVersion>1.0.0</AssemblyVersion>
-    <InformationalVersion>1.0.0</InformationalVersion>
+    <InformationalVersion>1.0.0-beta1</InformationalVersion>
     <FileVersion>1.0.0</FileVersion>
     <RootNamespace>Elastic.Apm.AspNetCore</RootNamespace>
     <SignAssembly>true</SignAssembly>
