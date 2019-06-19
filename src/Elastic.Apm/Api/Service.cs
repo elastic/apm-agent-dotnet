@@ -1,7 +1,6 @@
-﻿using Elastic.Apm.Config;
-using Elastic.Apm.Helpers;
-using Elastic.Apm.Report.Serialization;
-using Newtonsoft.Json;
+﻿using System.Diagnostics;
+using System.Reflection;
+using Elastic.Apm.Config;
 
 namespace Elastic.Apm.Api
 {
@@ -23,7 +22,11 @@ namespace Elastic.Apm.Api
 			=> new Service
 			{
 				Name = configurationReader.ServiceName,
-				Agent = new AgentC { Name = Consts.AgentName, Version = typeof(Agent).Assembly.GetName().Version?.ToString() ?? "n/a" }
+				Agent = new AgentC
+				{
+					Name = Consts.AgentName,
+					Version = typeof(Agent).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion
+				}
 			};
 
 		public class AgentC

@@ -6,9 +6,6 @@ endif::[]
 [[intro]]
 == Introduction
 
-WARNING: **This project is currently a prototype.
-Use it at your own risk.**
-
 Welcome to the APM .NET Agent documentation.
 
 Elastic APM automatically measures the performance of your application and tracks errors.

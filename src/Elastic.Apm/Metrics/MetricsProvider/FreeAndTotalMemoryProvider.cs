@@ -44,9 +44,10 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 					while (line != null || retVal.Count != 2)
 					{
-						if (line != null && line.Contains("MemFree:"))
+						//See: https://github.com/elastic/beats/issues/4202
+						if (line != null && line.Contains("MemAvailable:"))
 						{
-							var (suc, res) = GetEntry(line, "MemFree:");
+							var (suc, res) = GetEntry(line, "MemAvailable:");
 							if (suc) retVal.Add(new MetricSample(FreeMemory, res));
 							hasMemFree = true;
 						}
