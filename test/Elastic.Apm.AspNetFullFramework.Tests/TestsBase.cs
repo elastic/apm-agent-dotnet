@@ -77,8 +77,10 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData ContactPage =
 				new SampleAppUrlPathData(HomeController.ContactPageRelativePath, 200, /* transactionsCount: */ 2, /* spansCount: */ 2);
 
-			internal static readonly SampleAppUrlPathData AboutPage =
-				new SampleAppUrlPathData(HomeController.AboutPageRelativePath, 200);
+			/// errorsCount for ThrowsNameCouldNotBeResolvedPage is 0 because we don't automatically capture exceptions
+			/// that escaped from transaction as errors (yet)
+			internal static readonly SampleAppUrlPathData ThrowsInvalidOperationPage =
+				new SampleAppUrlPathData(HomeController.ThrowsInvalidOperationPageRelativePath, 500);
 
 			internal static readonly SampleAppUrlPathData CustomSpanThrowsExceptionPage =
 				new SampleAppUrlPathData(HomeController.CustomSpanThrowsPageRelativePath, 500, spansCount: 1, errorsCount: 1);
@@ -102,6 +104,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			internal static readonly SampleAppUrlPathData ReturnBadRequestPage =
 				new SampleAppUrlPathData(HomeController.ReturnBadRequestPageRelativePath, (int)HttpStatusCode.BadRequest);
+
+			internal static readonly SampleAppUrlPathData AboutPage =
+				new SampleAppUrlPathData(HomeController.AboutPageRelativePath, 200);
 		}
 
 		public Task InitializeAsync()
@@ -134,7 +139,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			if (_startMockApmServer) await _mockApmServer.StopAsync();
 		}
 
-		protected async Task SendGetRequestToSampleAppAndVerifyResponseStatusCode(string relativeUrlPath, int expectedStatusCode)
+		protected async Task<HttpResponseMessage> SendGetRequestToSampleAppAndVerifyResponseStatusCode(string relativeUrlPath, int expectedStatusCode)
 		{
 			var httpClient = new HttpClient();
 			var url = Consts.SampleApp.RootUrl + "/" + relativeUrlPath;
@@ -153,6 +158,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				_logger.Error()?.Log("{ExceptionMessage}. Response content:\n{ResponseContent}", ex.Message, responseContent);
 				throw;
 			}
+
+			return response;
 		}
 
 		protected void VerifyDataReceivedFromAgent(Action<ReceivedData> verifyAction)
