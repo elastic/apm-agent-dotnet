@@ -51,7 +51,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				agent.Service.Name.Should().NotBeNullOrWhiteSpace().And.NotBe(ConfigConsts.DefaultValues.UnknownServiceName);
 
 				agent.Service.Agent.Name.Should().Be(Apm.Consts.AgentName);
-				agent.Service.Agent.Version.Should().Be(Assembly.Load("Elastic.Apm").GetName().Version.ToString());
+				agent.Service.Agent.Version.Should().Be(typeof(Agent).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
 
 				agent.Service.Framework.Name.Should().Be("ASP.NET Core");
 
