@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using AspNetFullFrameworkSampleApp.Controllers;
 using Elastic.Apm.Api;
@@ -19,85 +20,117 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		[AspNetFullFrameworkFact]
 		public async Task ContactPageCallsAboutPageAndExternalUrl()
 		{
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(SampleAppUrlPaths.ContactPage.RelativeUrlPath,
-				SampleAppUrlPaths.ContactPage.Status);
+			var rootTxData = SampleAppUrlPaths.ContactPage;
+			var childTxData = SampleAppUrlPaths.AboutPage;
+
+			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(rootTxData.RelativeUrlPath, rootTxData.StatusCode);
 
 			VerifyDataReceivedFromAgent(receivedData =>
 			{
-				TryVerifyDataReceivedFromAgent(SampleAppUrlPaths.ContactPage, receivedData);
+				TryVerifyDataReceivedFromAgent(rootTxData, receivedData);
 
-				SampleAppUrlPaths.ContactPage.TransactionsCount.Should().Be(2);
-				SampleAppUrlPaths.ContactPage.SpansCount.Should().Be(2);
+				VerifyRootChildTransactions(receivedData, rootTxData, childTxData, out var rootTx, out _);
 
-				var rootTxUrlPath = Consts.SampleApp.RootUrlPath + "/" + HomeController.ContactPageRelativePath;
-				var rootTx = receivedData.Transactions.Single(tx => tx.Name == $"GET {rootTxUrlPath}");
-				VerifyTransaction(rootTx, rootTxUrlPath, 2);
-
-				var childTxUrlPath = Consts.SampleApp.RootUrlPath + "/" + HomeController.AboutPageRelativePath;
-				var childTx = receivedData.Transactions.Single(tx => tx.Name == $"GET {childTxUrlPath}");
-				VerifyTransaction(childTx, childTxUrlPath, 0);
-
-				var spanCallToChildTx = receivedData.Spans.Single(sp => sp.Context.Http.Url == childTx.Context.Request.Url.Full);
-				VerifySpan(spanCallToChildTx, childTx.Context.Request.Url.Full);
 				var spanExternalCall =
 					receivedData.Spans.Single(sp => sp.Context.Http.Url == HomeController.ChildHttpCallToExternalServiceUrl.ToString());
-				VerifySpan(spanExternalCall, HomeController.ChildHttpCallToExternalServiceUrl.ToString());
+				VerifySpan(spanExternalCall, HomeController.ChildHttpCallToExternalServiceUrl.ToString(), 200);
 
-				childTx.TraceId.Should().Be(rootTx.TraceId);
-				spanCallToChildTx.TraceId.Should().Be(rootTx.TraceId);
 				spanExternalCall.TraceId.Should().Be(rootTx.TraceId);
-
-				spanCallToChildTx.ParentId.Should().Be(rootTx.Id);
-				childTx.ParentId.Should().Be(spanCallToChildTx.Id);
-
 				spanExternalCall.ParentId.Should().Be(rootTx.Id);
-
-				spanCallToChildTx.TransactionId.Should().Be(rootTx.Id);
 				spanExternalCall.TransactionId.Should().Be(rootTx.Id);
 
-				spanCallToChildTx.ShouldOccurBetween(rootTx);
-				childTx.ShouldOccurBetween(spanCallToChildTx);
 				spanExternalCall.ShouldOccurBetween(rootTx);
 			});
+		}
 
-			void VerifyTransaction(TransactionDto transaction, string urlPath, int spanCount)
+		[AspNetFullFrameworkFact]
+		public async Task CallReturnBadRequestTest()
+		{
+			var rootTxData = SampleAppUrlPaths.CallReturnBadRequestPage;
+			var childTxData = SampleAppUrlPaths.ReturnBadRequestPage;
+
+			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(rootTxData.RelativeUrlPath, rootTxData.StatusCode);
+
+			VerifyDataReceivedFromAgent(receivedData =>
 			{
-				transaction.Context.Request.Method.ToUpperInvariant().Should().Be("GET");
-				transaction.Context.Request.Url.Full.Should().Be("http://" + Consts.SampleApp.Host + urlPath);
-				transaction.Context.Request.Url.PathName.Should().Be(urlPath);
-				transaction.Context.Request.Url.Search.Should().BeNull();
+				TryVerifyDataReceivedFromAgent(rootTxData, receivedData);
 
-				transaction.Context.Response.Finished.Should().BeTrue();
+				VerifyRootChildTransactions(receivedData, rootTxData, childTxData, out _, out _);
+			});
+		}
+
+		private void VerifyRootChildTransactions(
+			ReceivedData receivedData,
+			SampleAppUrlPathData rootTxData,
+			SampleAppUrlPathData childTxData,
+			out TransactionDto rootTxOut,
+			out TransactionDto childTxOut
+		)
+		{
+			var rootTx = FindAndVerifyTransaction(receivedData, rootTxData);
+			var childTx = FindAndVerifyTransaction(receivedData, childTxData);
+
+			var spanCallToChildTx = receivedData.Spans.Single(sp => sp.Context.Http.Url == childTx.Context.Request.Url.Full);
+			VerifySpan(spanCallToChildTx, childTx.Context.Request.Url.Full, childTxData.StatusCode);
+
+			childTx.TraceId.Should().Be(rootTx.TraceId);
+			spanCallToChildTx.TraceId.Should().Be(rootTx.TraceId);
+
+			spanCallToChildTx.ParentId.Should().Be(rootTx.Id);
+			childTx.ParentId.Should().Be(spanCallToChildTx.Id);
+
+			spanCallToChildTx.TransactionId.Should().Be(rootTx.Id);
+
+			spanCallToChildTx.ShouldOccurBetween(rootTx);
+			childTx.ShouldOccurBetween(spanCallToChildTx);
+
+			rootTxOut = rootTx;
+			childTxOut = childTx;
+		}
+
+		private TransactionDto FindAndVerifyTransaction(ReceivedData receivedData, SampleAppUrlPathData txData)
+		{
+			var txUrlPath = Consts.SampleApp.RootUrlPath + "/" + txData.RelativeUrlPath;
+			var transaction = receivedData.Transactions.Single(tx => tx.Name == $"GET {txUrlPath}");
+			transaction.Context.Request.Method.ToUpperInvariant().Should().Be("GET");
+			transaction.Context.Request.Url.Full.Should().Be("http://" + Consts.SampleApp.Host + txUrlPath);
+			transaction.Context.Request.Url.PathName.Should().Be(txUrlPath);
+			transaction.Context.Request.Url.Search.Should().BeNull();
+
+			transaction.Context.Response.Finished.Should().BeTrue();
+			transaction.Context.Response.StatusCode.Should().Be(txData.StatusCode);
+			if (txData.StatusCode == (int)HttpStatusCode.OK)
+			{
 				var caseInsensitiveResponseHeaders =
 					new Dictionary<string, string>(transaction.Context.Response.Headers, StringComparer.OrdinalIgnoreCase);
 				caseInsensitiveResponseHeaders["Content-Type"].Should().Be("text/html; charset=utf-8");
-				transaction.Context.Response.StatusCode.Should().Be(200);
-
-				transaction.Context.Tags.Should().BeNull();
-				transaction.Context.User.Should().BeNull();
-
-				transaction.IsSampled.Should().BeTrue();
-				transaction.Name.Should().Be($"GET {urlPath}");
-				transaction.Result.Should().Be($"HTTP 2xx");
-				transaction.SpanCount.Started.Should().Be(spanCount);
-				transaction.SpanCount.Dropped.Should().Be(0);
 			}
 
-			void VerifySpan(SpanDto span, string url)
-			{
-				span.Context.Db.Should().BeNull();
-				span.Context.Tags.Should().BeNull();
+			transaction.Context.Tags.Should().BeNull();
+			transaction.Context.User.Should().BeNull();
 
-				span.Context.Http.Method.Should().Be("GET");
-				span.Context.Http.StatusCode.Should().Be(200);
-				span.Context.Http.Url.Should().Be(url);
+			transaction.IsSampled.Should().BeTrue();
+			transaction.Name.Should().Be($"GET {txUrlPath}");
+			transaction.SpanCount.Started.Should().Be(txData.SpansCount);
+			transaction.SpanCount.Dropped.Should().Be(0);
 
-				span.Type.Should().Be(ApiConstants.TypeExternal);
-				span.Subtype.Should().Be(ApiConstants.SubtypeHttp);
-				span.Action.Should().BeNull();
+			return transaction;
+		}
 
-				span.Name.Should().Be($"GET {new Uri(url).Host}");
-			}
+		private void VerifySpan(SpanDto span, string url, int statusCode)
+		{
+			span.Context.Db.Should().BeNull();
+			span.Context.Tags.Should().BeNull();
+
+			span.Context.Http.Method.Should().Be("GET");
+			span.Context.Http.StatusCode.Should().Be(statusCode);
+			span.Context.Http.Url.Should().Be(url);
+
+			span.Type.Should().Be(ApiConstants.TypeExternal);
+			span.Subtype.Should().Be(ApiConstants.SubtypeHttp);
+			span.Action.Should().BeNull();
+
+			span.Name.Should().Be($"GET {new Uri(url).Host}");
 		}
 	}
 }

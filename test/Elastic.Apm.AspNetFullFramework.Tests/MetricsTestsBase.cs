@@ -20,7 +20,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			// Send any request to the sample application to make sure it's running
 			var sampleAppUrlPathData = RandomSampleAppUrlPath();
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.Status);
+			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.StatusCode);
 
 			VerifyDataReceivedFromAgent(receivedData =>
 			{

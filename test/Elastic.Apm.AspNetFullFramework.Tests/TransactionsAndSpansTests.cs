@@ -15,7 +15,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		[MemberData(nameof(AllSampleAppUrlPaths))]
 		public async Task WithDefaultSettings(SampleAppUrlPathData sampleAppUrlPathData)
 		{
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.Status);
+			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.StatusCode);
 
 			VerifyDataReceivedFromAgent(sampleAppUrlPathData);
 		}
@@ -31,7 +31,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task QueryStringTests(string queryString)
 		{
 			var homePageAndQueryString = SampleAppUrlPaths.HomePage.Clone(SampleAppUrlPaths.HomePage.RelativeUrlPath + $"?{queryString}");
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(homePageAndQueryString.RelativeUrlPath, homePageAndQueryString.Status);
+			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(homePageAndQueryString.RelativeUrlPath, homePageAndQueryString.StatusCode);
 
 			VerifyDataReceivedFromAgent(receivedData =>
 			{

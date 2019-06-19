@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
@@ -76,6 +77,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData ContactPage =
 				new SampleAppUrlPathData(HomeController.ContactPageRelativePath, 200, /* transactionsCount: */ 2, /* spansCount: */ 2);
 
+			internal static readonly SampleAppUrlPathData AboutPage =
+				new SampleAppUrlPathData(HomeController.AboutPageRelativePath, 200);
+
 			internal static readonly SampleAppUrlPathData CustomSpanThrowsExceptionPage =
 				new SampleAppUrlPathData(HomeController.CustomSpanThrowsPageRelativePath, 500, spansCount: 1, errorsCount: 1);
 
@@ -90,6 +94,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				CustomSpanThrowsExceptionPage,
 				new SampleAppUrlPathData("Dummy_nonexistent_path", 404),
 			};
+
+			/// `CallReturnBadRequest' page processing does HTTP Get for `ReturnBadRequest' page (additional transaction) - so 1 span
+			internal static readonly SampleAppUrlPathData CallReturnBadRequestPage =
+				new SampleAppUrlPathData(HomeController.CallReturnBadRequestPageRelativePath,
+					HomeController.DummyHttpStatusCode, /* transactionsCount: */ 2, /* spansCount: */ 1);
+
+			internal static readonly SampleAppUrlPathData ReturnBadRequestPage =
+				new SampleAppUrlPathData(HomeController.ReturnBadRequestPageRelativePath, (int)HttpStatusCode.BadRequest);
 		}
 
 		public Task InitializeAsync()
@@ -280,10 +292,10 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 						transaction.Context.Request.Url.Search.Should().Be(sampleAppUrlPathData.RelativeUrlPath.Substring(questionMarkIndex + 1));
 					}
 
-					transaction.Context.Response.StatusCode.Should().Be(sampleAppUrlPathData.Status);
+					transaction.Context.Response.StatusCode.Should().Be(sampleAppUrlPathData.StatusCode);
 				}
 
-				var httpStatusFirstDigit = sampleAppUrlPathData.Status / 100;
+				var httpStatusFirstDigit = sampleAppUrlPathData.StatusCode / 100;
 				transaction.Result.Should().Be($"HTTP {httpStatusFirstDigit}xx");
 				transaction.SpanCount.Started.Should().Be(sampleAppUrlPathData.SpansCount);
 			}
@@ -468,13 +480,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			public readonly int ErrorsCount;
 			public readonly string RelativeUrlPath;
 			public readonly int SpansCount;
-			public readonly int Status;
+			public readonly int StatusCode;
 			public readonly int TransactionsCount;
 
-			public SampleAppUrlPathData(string relativeUrlPath, int status, int transactionsCount = 1, int spansCount = 0, int errorsCount = 0)
+			public SampleAppUrlPathData(string relativeUrlPath, int statusCode, int transactionsCount = 1, int spansCount = 0, int errorsCount = 0)
 			{
 				RelativeUrlPath = relativeUrlPath;
-				Status = status;
+				StatusCode = statusCode;
 				TransactionsCount = transactionsCount;
 				SpansCount = spansCount;
 				ErrorsCount = errorsCount;
@@ -488,7 +500,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				int? errorsCount = null
 			) => new SampleAppUrlPathData(
 				relativeUrlPath ?? RelativeUrlPath,
-				status ?? Status,
+				status ?? StatusCode,
 				transactionsCount ?? TransactionsCount,
 				spansCount ?? SpansCount,
 				errorsCount ?? ErrorsCount);
