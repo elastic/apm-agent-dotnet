@@ -8,9 +8,8 @@
   <PropertyGroup>
     <RootNamespace>Elastic.Apm</RootNamespace>
     <AssemblyName>Elastic.Apm</AssemblyName>
-    <RootNamespace>Elastic.Apm</RootNamespace>
-    <VersionPrefix>0.0.3.0</VersionPrefix>
-    <VersionSuffix>alpha</VersionSuffix>
+    <VersionPrefix>1.0.1</VersionPrefix>
+    <VersionSuffix>beta1</VersionSuffix>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
