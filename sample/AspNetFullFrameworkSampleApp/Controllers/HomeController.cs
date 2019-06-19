@@ -70,7 +70,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 			return null;
 		}
 
-		public async Task<ActionResult> FailingOutgoingHttpCall()
+		public async Task<ActionResult> ThrowsNameCouldNotBeResolved()
 		{
 			var result = await new HttpClient().GetAsync("http://dsfklgjdfgkdfg.mmmm");
 			Console.WriteLine(result.IsSuccessStatusCode);
