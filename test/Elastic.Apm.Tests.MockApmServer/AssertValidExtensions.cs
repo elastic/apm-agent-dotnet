@@ -4,6 +4,7 @@ using System.Reflection;
 using Elastic.Apm.Api;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Model;
+using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 
 namespace Elastic.Apm.Tests.MockApmServer
@@ -24,7 +25,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			thisObj.Should().NotBeNull();
 
 			thisObj.Name.Should().Be(Consts.AgentName);
-			thisObj.Version.Should().Be(Assembly.Load("Elastic.Apm").GetName().Version.ToString());
+			thisObj.Version.Should().Be(Service.GetDefaultService(new TestAgentConfigurationReader(new NoopLogger())).Agent.Version);
 		}
 
 		private static void AssertValid(this Framework thisObj)

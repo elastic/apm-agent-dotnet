@@ -1,6 +1,8 @@
-﻿using System.Diagnostics;
-using System.Reflection;
+﻿using System.Reflection;
 using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
+using Elastic.Apm.Report.Serialization;
+using Newtonsoft.Json;
 
 namespace Elastic.Apm.Api
 {
