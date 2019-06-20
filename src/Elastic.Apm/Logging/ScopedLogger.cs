@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 
 namespace Elastic.Apm.Logging
 {
-	public class ScopedLogger : IApmLogger
+	internal class ScopedLogger : IApmLogger
 	{
 		public ScopedLogger(IApmLogger logger, string scope) => (Logger, Scope) = (logger, scope);
 

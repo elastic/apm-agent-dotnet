@@ -111,7 +111,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			// to this test instance of mock APM server.
 			_iisAdministration.SetupSampleAppInCleanState(_envVarsToSetForSampleAppPool, SampleAppShouldHaveAccessToPerfCounters);
 			if (_startMockApmServer)
-				_mockApmServer.RunAsync(_mockApmServerPort);
+				_mockApmServer.RunInBackground(_mockApmServerPort);
 			else
 			{
 				_logger.Info()

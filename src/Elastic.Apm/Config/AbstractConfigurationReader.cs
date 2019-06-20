@@ -209,7 +209,7 @@ namespace Elastic.Apm.Config
 			return null;
 		}
 
-		public static string AdaptServiceName(string originalName) => originalName?.Replace('.', '_');
+		internal static string AdaptServiceName(string originalName) => originalName?.Replace('.', '_');
 
 		protected string ParseServiceName(ConfigurationKeyValue kv)
 		{

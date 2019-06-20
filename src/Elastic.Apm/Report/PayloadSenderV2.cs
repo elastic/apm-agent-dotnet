@@ -104,7 +104,6 @@ namespace Elastic.Apm.Report
 				?.Log(!res
 					? "Failed adding MetricSet to the queue, {MetricSet}"
 					: "MetricSet added to the queue, {MetricSet}", metricSet);
-			_eventQueue.TriggerBatch();
 		}
 
 		public void QueueError(IError error)

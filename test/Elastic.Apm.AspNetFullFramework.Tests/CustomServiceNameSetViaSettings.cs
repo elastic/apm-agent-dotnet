@@ -18,7 +18,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		[AspNetFullFrameworkTheory]
 		[MemberData(nameof(AllSampleAppUrlPaths))]
-		public async Task ServiceNameSetViaSettings(SampleAppUrlPathData sampleAppUrlPathData)
+		public async Task Test(SampleAppUrlPathData sampleAppUrlPathData)
 		{
 			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.StatusCode);
 			VerifyDataReceivedFromAgent(sampleAppUrlPathData);

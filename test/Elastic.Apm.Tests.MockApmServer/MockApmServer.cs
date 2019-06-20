@@ -71,7 +71,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			}
 		}
 
-		internal void RunAsync(int port)
+		internal void RunInBackground(int port)
 		{
 			Contract.Requires(_cancellationTokenSource == null);
 			Contract.Requires(_runningTask == null);
