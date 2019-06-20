@@ -40,7 +40,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		private static bool CheckIisVersion(out string reason)
 		{
-			string w3WpExePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System),@"inetsrv\w3wp.exe");
+			var w3WpExePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System),@"inetsrv\w3wp.exe");
 			if (!File.Exists(w3WpExePath))
 			{
 				reason = $"IIS is not installed (`{w3WpExePath}' not found)";
