@@ -192,7 +192,7 @@ namespace Elastic.Apm.Config
 				select currentAssemblyName.Name).FirstOrDefault();
 		}
 
-		private static string AdaptServiceName(string originalName) => originalName?.Replace('.', '_');
+		internal static string AdaptServiceName(string originalName) => originalName?.Replace('.', '_');
 
 		protected string ParseServiceName(ConfigurationKeyValue kv)
 		{
