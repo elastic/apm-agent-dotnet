@@ -3,6 +3,7 @@ using System.IO;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
+using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
@@ -73,7 +74,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var aspNetCoreVersion = Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString();
 			_agent.Service.Framework.Version.Should().Be(aspNetCoreVersion);
 
-			_agent.Service.Runtime.Name.Should().Be(".NET Core");
+			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
 			_agent.Service.Runtime.Version.Should().Be(Directory.GetParent(typeof(object).Assembly.Location).Name);
 
 			_capturedPayload.Transactions.Should().ContainSingle();

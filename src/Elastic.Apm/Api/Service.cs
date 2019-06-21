@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.SymbolStore;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -44,9 +45,9 @@ namespace Elastic.Apm.Api
 		{
 			string name;
 			if (PlatformDetection.IsDotNetFullFramework)
-				name = ".NET Framework";
+				name = Runtime.DotNetFullFrameworkName;
 			else if (PlatformDetection.IsDotNetCore)
-				name = ".NET Core";
+				name = Runtime.DotNetCoreName;
 			else
 			{
 				name = "N/A";
@@ -95,10 +96,10 @@ namespace Elastic.Apm.Api
 
 			var environmentVersion = Environment.Version.ToString();
 			var frameworkDescription = RuntimeInformation.FrameworkDescription;
-			var expectedFrameworkDescriptionPrefix = ".NET Core";
-			if (frameworkDescription.StartsWith(expectedFrameworkDescriptionPrefix))
+			var frameworkDescriptionVersion =
+				PlatformDetection.GetDotNetRuntimeVersionFromDescription(frameworkDescription, logger, PlatformDetection.DotNetCoreDescriptionPrefix);
+			if (frameworkDescriptionVersion != null)
 			{
-				var frameworkDescriptionVersion = frameworkDescription.Substring(expectedFrameworkDescriptionPrefix.Length).Trim();
 				if (frameworkDescriptionVersion.StartsWith(environmentVersion))
 				{
 					// We have https://github.com/dotnet/corefx/issues/35573 fix
@@ -112,13 +113,6 @@ namespace Elastic.Apm.Api
 					?.Log($"Environment.Version (`{environmentVersion}') and RuntimeInformation.FrameworkDescription (`{frameworkDescription}')" +
 						" don't refer to the same version");
 			}
-			else
-			{
-				logger.Debug()
-					?.Log($"RuntimeInformation.FrameworkDescription (`{frameworkDescription}') doesn't start" +
-						$" with the expected prefix (`{expectedFrameworkDescriptionPrefix}')");
-			}
-
 
 			// We don't have https://github.com/dotnet/corefx/issues/35573 fix so we need to fallback on BenchmarkDotNet's approach.
 			// We use RichHack approach from https://gist.github.com/richlander/f5849c6967c66d699301f75101906f99/8f73418f7260e207b415ff1a48233cd26094be05
@@ -179,5 +173,8 @@ namespace Elastic.Apm.Api
 		public string Version { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(Framework)) { { "Name", Name }, { "Version", Version } }.ToString();
+
+		internal const string DotNetFullFrameworkName = ".NET Framework";
+		internal const string DotNetCoreName = ".NET Core";
 	}
 }
