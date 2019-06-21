@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Microsoft.Web.Administration;
@@ -23,7 +22,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		}
 
 		internal void SetupSampleAppInCleanState(Dictionary<string, string> envVarsToSetForSampleAppPool,
-			bool sampleAppShouldUseHighPrivilegedAccount)
+			bool sampleAppShouldUseHighPrivilegedAccount
+		)
 		{
 			using (var serverManager = new ServerManager())
 			{
@@ -38,11 +38,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			}
 
 			using (var serverManager = new ServerManager())
-			{
 				// Since we just removed and then re-added application pool we need commit changes first
 				// and only then we can start the application pool.
 				ChangeAppPoolStateTo(serverManager.ApplicationPools[Consts.SampleApp.AppPoolName], ObjectState.Started);
-			}
 		}
 
 		internal void DisposeSampleApp()
@@ -76,18 +74,21 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		private void AddSampleAppPool(ServerManager serverManager,
 			Dictionary<string, string> envVarsToSetForSampleAppPool,
-			bool sampleAppShouldUseHighPrivilegedAccount)
+			bool sampleAppShouldUseHighPrivilegedAccount
+		)
 		{
-			_logger.Debug()?.Log("Adding application pool {IisAppPool}, useHighPrivilegedAccount: {useHighPrivilegedAccount}...",
-				Consts.SampleApp.AppPoolName, sampleAppShouldUseHighPrivilegedAccount);
+			_logger.Debug()
+				?.Log("Adding application pool {IisAppPool}, useHighPrivilegedAccount: {useHighPrivilegedAccount}...",
+					Consts.SampleApp.AppPoolName, sampleAppShouldUseHighPrivilegedAccount);
 			var existingAppPool = serverManager.ApplicationPools[Consts.SampleApp.AppPoolName];
 			if (existingAppPool != null) serverManager.ApplicationPools.Remove(existingAppPool);
 			var addedPool = serverManager.ApplicationPools.Add(Consts.SampleApp.AppPoolName);
 			addedPool.ManagedPipelineMode = ManagedPipelineMode.Integrated;
 			addedPool.StartMode = StartMode.OnDemand;
 			if (sampleAppShouldUseHighPrivilegedAccount) addedPool.ProcessModel.IdentityType = ProcessModelIdentityType.LocalSystem;
-			_logger.Debug()?.Log("Added application pool {IisAppPool}, useHighPrivilegedAccount: {useHighPrivilegedAccount}",
-				addedPool.Name, sampleAppShouldUseHighPrivilegedAccount);
+			_logger.Debug()
+				?.Log("Added application pool {IisAppPool}, useHighPrivilegedAccount: {useHighPrivilegedAccount}",
+					addedPool.Name, sampleAppShouldUseHighPrivilegedAccount);
 
 			AddEnvVarsForSampleAppPool(serverManager, envVarsToSetForSampleAppPool);
 		}
@@ -152,10 +153,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 					if (currentState == ingState)
 					{
-						_logger.Debug()?.Log("IIS application pool `{IisAppPool}' is already in {IisAppPoolState} state - " +
-							"so there is no need to run the change state action, " +
-							"we just need to wait until application pool changes the state {IisAppPoolState}...",
-							appPool.Name, currentState, targetState);
+						_logger.Debug()
+							?.Log("IIS application pool `{IisAppPool}' is already in {IisAppPoolState} state - " +
+								"so there is no need to run the change state action, " +
+								"we just need to wait until application pool changes the state {IisAppPoolState}...",
+								appPool.Name, currentState, targetState);
 					}
 					else
 					{
@@ -210,49 +212,47 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		private void AddEnvVarsForSampleAppPool(ServerManager serverManager, Dictionary<string, string> envVarsToSetForSampleAppPool)
 		{
-			Configuration config = serverManager.GetApplicationHostConfiguration();
-			ConfigurationSection appPoolsSection = config.GetSection("system.applicationHost/applicationPools");
-			ConfigurationElementCollection appPoolsCollection = appPoolsSection.GetCollection();
-			ConfigurationElement sampleAppPoolAddElement = FindConfigurationElement(appPoolsCollection, "add", "name", Consts.SampleApp.AppPoolName);
+			var config = serverManager.GetApplicationHostConfiguration();
+			var appPoolsSection = config.GetSection("system.applicationHost/applicationPools");
+			var appPoolsCollection = appPoolsSection.GetCollection();
+			var sampleAppPoolAddElement = FindConfigurationElement(appPoolsCollection, "add", "name", Consts.SampleApp.AppPoolName);
 			if (sampleAppPoolAddElement == null)
 				throw new InvalidOperationException($"Element <add> for application pool {Consts.SampleApp.AppPoolName} not found");
-			ConfigurationElementCollection envVarsCollection = sampleAppPoolAddElement.GetCollection("environmentVariables");
+
+			var envVarsCollection = sampleAppPoolAddElement.GetCollection("environmentVariables");
 			foreach (var envVarNameValue in envVarsToSetForSampleAppPool)
 			{
-				ConfigurationElement envVarAddElement = envVarsCollection.CreateElement("add");
+				var envVarAddElement = envVarsCollection.CreateElement("add");
 				envVarAddElement["name"] = envVarNameValue.Key;
 				envVarAddElement["value"] = envVarNameValue.Value;
 				envVarsCollection.Add(envVarAddElement);
-				_logger.Debug()?.Log("Added environment variable `{EnvVarName}'=`{EnvVarValue}' to application pool {IisAppPool}",
-					envVarNameValue.Key, envVarNameValue.Value, Consts.SampleApp.AppPoolName);
+				_logger.Debug()
+					?.Log("Added environment variable `{EnvVarName}'=`{EnvVarValue}' to application pool {IisAppPool}",
+						envVarNameValue.Key, envVarNameValue.Value, Consts.SampleApp.AppPoolName);
 			}
 		}
 
-		private static ConfigurationElement FindConfigurationElement(ConfigurationElementCollection collection, string elementTagName, params string[] keyValues)
+		private static ConfigurationElement FindConfigurationElement(ConfigurationElementCollection collection, string elementTagName,
+			params string[] keyValues
+		)
 		{
-			foreach (ConfigurationElement element in collection)
+			foreach (var element in collection)
 			{
-				if (String.Equals(element.ElementTagName, elementTagName, StringComparison.OrdinalIgnoreCase))
+				if (string.Equals(element.ElementTagName, elementTagName, StringComparison.OrdinalIgnoreCase))
 				{
-					bool matches = true;
-					for (int i = 0; i < keyValues.Length; i += 2)
+					var matches = true;
+					for (var i = 0; i < keyValues.Length; i += 2)
 					{
-						object o = element.GetAttributeValue(keyValues[i]);
+						var o = element.GetAttributeValue(keyValues[i]);
 						string value = null;
-						if (o != null)
-						{
-							value = o.ToString();
-						}
-						if (!String.Equals(value, keyValues[i + 1], StringComparison.OrdinalIgnoreCase))
+						if (o != null) value = o.ToString();
+						if (!string.Equals(value, keyValues[i + 1], StringComparison.OrdinalIgnoreCase))
 						{
 							matches = false;
 							break;
 						}
 					}
-					if (matches)
-					{
-						return element;
-					}
+					if (matches) return element;
 				}
 			}
 			return null;

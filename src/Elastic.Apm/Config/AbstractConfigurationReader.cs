@@ -156,7 +156,7 @@ namespace Elastic.Apm.Config
 			return valueInMilliseconds;
 		}
 
-		private bool TryParseTimeInterval(String valueAsString, out double valueInMilliseconds)
+		private bool TryParseTimeInterval(string valueAsString, out double valueInMilliseconds)
 		{
 			switch (valueAsString)
 			{

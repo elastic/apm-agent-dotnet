@@ -39,7 +39,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 		[Fact]
 		public void ThrowIfArgumentNegativeTest()
 		{
-			int intArg = -1;
+			var intArg = -1;
 			((Action)(() => intArg.ThrowIfArgumentNegative(nameof(intArg)))).
 				Should().ThrowExactly<ArgumentException>().WithMessage($"*{nameof(intArg)}*-1*");
 
