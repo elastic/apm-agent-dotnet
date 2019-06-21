@@ -14,7 +14,7 @@ namespace Elastic.Apm.DiagnosticListeners
 		{
 			var logger = components.Logger.Scoped(nameof(HttpDiagnosticListener));
 
-			if (PlatformDetection.IsFullFramework)
+			if (PlatformDetection.IsDotNetFullFramework)
 			{
 				logger.Debug()
 					?.Log("Current runtime is detected as Full Framework. " +
