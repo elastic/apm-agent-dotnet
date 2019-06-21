@@ -21,7 +21,7 @@ Prerequisites to execute tests are:
 
 1. Operating system - Windows
 2. IIS (10 or later) and ASP.NET installed and IIS started.
-3. Process running the tests has environment variable `ELASTIC_APM_TESTS_FULL_FRAMEWORK_ENABLED` set to `true`. There is no need to set this environment variable globally - for example, IIS worker process, running sample application used by the tests, doesn't depend on this environment variable.
+3. Process running the tests has environment variable `ELASTIC_APM_TESTS_FULL_FRAMEWORK_ENABLED` set to `true`. There is no need to set this environment variable globally - for example, IIS worker process, running sample application used by the tests, does not depend on this environment variable.
 4. Run tests as a user with local administrator permissions (a member in local `Administrators` group).
 
 Requirement to set environment variable `ELASTIC_APM_TESTS_FULL_FRAMEWORK_ENABLED` set to `true` is to have user opt-in.
@@ -95,7 +95,15 @@ In your case it might be a different HTTP status, for example 200 and not 404.
 
 #### Resolution
 
-Make sure you don't have IIS Manager console or [Process Monitor (AKA procmon)](https://docs.microsoft.com/en-us/sysinternals/downloads/procmon) open.    
+Make sure you do not have IIS Manager console or [Process Monitor (AKA procmon)](https://docs.microsoft.com/en-us/sysinternals/downloads/procmon) open.    
 
 You can find more detailed explanation [here](https://github.com/elastic/apm-agent-dotnet/pull/273#issuecomment-503685801).
 
+# Tips and Tricks
+
+## Preventing IIS items (app, pool, etc.) from being torn down after each test
+
+By default after each test all the items added to IIS (that is sample application and its application pool) are automatically removed as part of testing _Tear-Down_ stage.
+If you would like to inspect those items you can prevent them from being torn down by setting `ELASTIC_APM_TESTS_FULL_FRAMEWORK_TEAR_DOWN_PERSISTENT_DATA` environment variable to `false`.
+**Please note that in this case it's up to you to remove those items from IIS.**
+The tests remove/add sample application and its application pool at the start of each test so it does not matter to the tests if the previous test run cleaned up after itself or if it did not.    
