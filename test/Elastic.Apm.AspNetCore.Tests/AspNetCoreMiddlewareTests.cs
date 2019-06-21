@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -31,7 +30,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			//The agent is instantiated with ApmMiddlewareExtension.GetService, so we can also test the calculation of the service instance.
 			//(e.g. ASP.NET Core version)
-			_agent = new ApmAgent(new TestAgentComponents(reader: new TestAgentConfigurationReader(new TestLogger())));
+			_agent = new ApmAgent(new TestAgentComponents(new TestAgentConfigurationReader(new TestLogger())));
 			ApmMiddlewareExtension.UpdateServiceInformation(_agent.Service);
 
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
@@ -54,7 +53,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			//test service
 			_capturedPayload.Transactions.Should().ContainSingle();
 
-			_agent.Service.Name.Should().NotBeNullOrWhiteSpace()
+			_agent.Service.Name.Should()
+				.NotBeNullOrWhiteSpace()
 				.And.NotBe(ConfigConsts.DefaultValues.UnknownServiceName);
 
 			_agent.Service.Agent.Name.Should().Be(Elastic.Apm.Consts.AgentName);

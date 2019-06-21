@@ -8,7 +8,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 	public class StringBuilderExtensionsTests
 	{
 		[Fact]
-		public void TestIsEmpty()
+		public void IsEmptyTest()
 		{
 			new StringBuilder().IsEmpty().Should().BeTrue();
 			new StringBuilder().Append("").IsEmpty().Should().BeTrue();
@@ -16,7 +16,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 			new StringBuilder().Append("abc").Clear().IsEmpty().Should().BeTrue();
 		}
 		[Fact]
-		public void TestAppendSeparatedIfNotEmpty()
+		public void AppendSeparatedIfNotEmptyTest()
 		{
 			new StringBuilder().AppendSeparatedIfNotEmpty("_", "abc").ToString().Should().Be("abc");
 			new StringBuilder().Append("abc").AppendSeparatedIfNotEmpty("_", "def").ToString().Should().Be("abc_def");

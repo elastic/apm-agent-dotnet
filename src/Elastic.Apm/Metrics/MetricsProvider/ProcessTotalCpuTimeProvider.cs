@@ -10,7 +10,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 	internal class ProcessTotalCpuTimeProvider : IMetricsProvider
 	{
 		private readonly IApmLogger _logger;
-		private const string ProcessCpuTotalPct = "system.process.cpu.total.norm.pct";
+		internal const string ProcessCpuTotalPct = "system.process.cpu.total.norm.pct";
 
 		public ProcessTotalCpuTimeProvider(IApmLogger logger)
 		{

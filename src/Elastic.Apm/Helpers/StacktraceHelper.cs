@@ -19,9 +19,9 @@ namespace Elastic.Apm.Helpers
 		/// </summary>
 		/// <param name="frames">The stack frames to rewrite into APM stack traces</param>
 		/// <param name="logger">The logger to emit exceptions on should one occur</param>
-		/// <param name="capturingFor">Just for logging.</param>
+		/// <param name="dbgCapturingFor">Just for logging.</param>
 		/// <returns>A prepared List that can be passed to the APM server</returns>
-		internal static List<CapturedStackFrame> GenerateApmStackTrace(StackFrame[] frames, IApmLogger logger, string capturingFor)
+		internal static List<CapturedStackFrame> GenerateApmStackTrace(StackFrame[] frames, IApmLogger logger, string dbgCapturingFor)
 		{
 			var retVal = new List<CapturedStackFrame>(frames.Length);
 
@@ -33,15 +33,16 @@ namespace Elastic.Apm.Helpers
 					let functionName = GetRealMethodName(item?.GetMethod())
 					select new CapturedStackFrame
 					{
-						Function = functionName,
+						Function = functionName ?? "N/A",
 						FileName = string.IsNullOrWhiteSpace(fileName)? "N/A" : fileName,
 						Module = item?.GetMethod()?.ReflectedType?.Assembly.FullName,
-						LineNo = item?.GetFileLineNumber() ?? 0
+						LineNo = item?.GetFileLineNumber() ?? 0,
+						AbsPath = item?.GetFileName() // optional property
 					});
 			}
 			catch (Exception e)
 			{
-				logger?.Warning()?.LogException(e, "Failed capturing stacktrace for {ApmContext}", capturingFor);
+				logger?.Warning()?.LogException(e, "Failed capturing stacktrace for {ApmContext}", dbgCapturingFor);
 			}
 
 			return retVal;
@@ -53,17 +54,17 @@ namespace Elastic.Apm.Helpers
 		/// </summary>
 		/// <param name="exception">The exception to rewrite into APM stack traces</param>
 		/// <param name="logger">The logger to emit exceptions on should one occur</param>
-		/// <param name="capturingFor">Just for logging.</param>
+		/// <param name="dbgCapturingFor">Just for logging.</param>
 		/// <returns>A prepared List that can be passed to the APM server</returns>
-		internal static List<CapturedStackFrame> GenerateApmStackTrace(Exception exception, IApmLogger logger, string capturingFor)
+		internal static List<CapturedStackFrame> GenerateApmStackTrace(Exception exception, IApmLogger logger, string dbgCapturingFor)
 		{
 			try
 			{
-				return GenerateApmStackTrace(new StackTrace(exception, true).GetFrames(), logger, capturingFor);
+				return GenerateApmStackTrace(new StackTrace(exception, true).GetFrames(), logger, dbgCapturingFor);
 			}
 			catch (Exception e)
 			{
-				logger?.Warning()?.LogException(e, "Failed extracting exception from stackTrace for {ApmContext}", capturingFor);
+				logger?.Warning()?.LogException(e, "Failed extracting exception from stackTrace for {ApmContext}", dbgCapturingFor);
 			}
 
 			return null;
@@ -78,7 +79,7 @@ namespace Elastic.Apm.Helpers
 		private static string GetRealMethodName(MethodBase inputMethod)
 		{
 			if (inputMethod == null)
-				return "";
+				return null;
 
 			if (inputMethod.Name != DefaultAsyncMethodName)
 				return inputMethod.Name;

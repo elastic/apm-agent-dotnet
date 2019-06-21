@@ -96,8 +96,8 @@ namespace Elastic.Apm.Config
 
 			List<Uri> LogAndReturnDefault()
 			{
-				list.Add(ConfigConsts.DefaultServerUri);
-				Logger?.Debug()?.Log("Using default ServerUrl: {ServerUrl}", ConfigConsts.DefaultServerUri);
+				list.Add(ConfigConsts.DefaultValues.ServerUri);
+				Logger?.Debug()?.Log("Using default ServerUrl: {ServerUrl}", ConfigConsts.DefaultValues.ServerUri);
 				return list;
 			}
 
@@ -156,11 +156,11 @@ namespace Elastic.Apm.Config
 			return valueInMilliseconds;
 		}
 
-		private bool TryParseTimeInterval(String valueAsString, out double valueInMilliseconds)
+		private bool TryParseTimeInterval(string valueAsString, out double valueInMilliseconds)
 		{
 			switch (valueAsString)
 			{
-				case string _ when valueAsString.Length >= 2 && valueAsString.Substring(valueAsString.Length - 2).ToLower() == "ms":
+				case string _ when valueAsString.Length >= 2 && valueAsString.Substring(valueAsString.Length - 2).ToLowerInvariant() == "ms":
 					return TryParseFloatingPoint(valueAsString.Substring(0, valueAsString.Length - 2), out valueInMilliseconds);
 
 				case string _ when char.ToLower(valueAsString.Last()) == 's':
@@ -209,7 +209,7 @@ namespace Elastic.Apm.Config
 			return null;
 		}
 
-		private string AdaptServiceName(string originalName) => originalName?.Replace('.', '_');
+		internal static string AdaptServiceName(string originalName) => originalName?.Replace('.', '_');
 
 		protected string ParseServiceName(ConfigurationKeyValue kv)
 		{

@@ -13,7 +13,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 	internal class SystemTotalCpuProvider : IMetricsProvider, IDisposable
 	{
 		private readonly IApmLogger _logger;
-		private const string SystemCpuTotalPct = "system.cpu.total.norm.pct";
+		internal const string SystemCpuTotalPct = "system.cpu.total.norm.pct";
 		private readonly PerformanceCounter _processorTimePerfCounter;
 		private readonly StreamReader _procStatStreamReader;
 

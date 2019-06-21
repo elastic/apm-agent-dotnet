@@ -9,7 +9,7 @@ namespace Elastic.Apm.Helpers
 		[ThreadStatic]
 		private static Random _local;
 
-		private static Random GetInstance()
+		internal static Random GetInstance()
 		{
 			var inst = _local;
 			if (inst == null)
@@ -31,9 +31,9 @@ namespace Elastic.Apm.Helpers
 		public static string GenerateRandomBytesAsString(byte[] bytes)
 		{
 			GenerateRandomBytes(bytes);
-			return BitConverter.ToString(bytes).Replace("-", "").ToLower();
+			return BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
 		}
 
-		public static Double GenerateRandomDoubleBetween0And1() => GetInstance().NextDouble();
+		public static double GenerateRandomDoubleBetween0And1() => GetInstance().NextDouble();
 	}
 }

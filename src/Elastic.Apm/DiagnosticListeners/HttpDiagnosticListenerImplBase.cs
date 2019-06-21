@@ -135,7 +135,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 			if (!ProcessingRequests.TryAdd(request, span))
 			{
-				// Sergey_Kleyman_TODO: Implement error handling
+				// Consider improving error reporting - see https://github.com/elastic/apm-agent-dotnet/issues/280
 				_logger.Error()?.Log("Failed to add to ProcessingRequests - ???");
 				return;
 			}
@@ -153,10 +153,6 @@ namespace Elastic.Apm.DiagnosticListeners
 					Url = requestUrl.ToString(),
 					Method = RequestGetMethod(request)
 				};
-
-				var frames = new StackTrace(true).GetFrames();
-				var stackFrames = StacktraceHelper.GenerateApmStackTrace(frames, _logger, span.Name);
-				span.StackTrace = stackFrames;
 			}
 		}
 
