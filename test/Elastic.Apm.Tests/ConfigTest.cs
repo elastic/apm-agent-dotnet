@@ -30,7 +30,7 @@ namespace Elastic.Apm.Tests
 		{
 			var serverUrl = "InvalidUrl";
 			var agent = new ApmAgent(new TestAgentComponents(serverUrls: serverUrl));
-			agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultServerUri);
+			agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultValues.ServerUri);
 		}
 
 		[Fact]
@@ -39,7 +39,7 @@ namespace Elastic.Apm.Tests
 			var serverUrl = "InvalidUrl";
 			var logger = new TestLogger();
 			var agent = new ApmAgent(new TestAgentComponents(logger, serverUrl));
-			agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultServerUri);
+			agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultValues.ServerUri);
 
 			logger.Lines.Should().NotBeEmpty();
 			logger.Lines[0]

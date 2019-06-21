@@ -15,7 +15,7 @@ namespace Elastic.Apm.Logging
 
 		public LogLevel Level => Logger.Level;
 
-		public LogValuesFormatter GetOrAddFormatter(string message, int expectedCount)
+		internal LogValuesFormatter GetOrAddFormatter(string message, int expectedCount)
 		{
 			var formatter = Formatters.GetOrAdd(message, s => new LogValuesFormatter($"{{{{{{Scope}}}}}} {s}", Scope));
 			if (formatter.ValueNames.Count != expectedCount)

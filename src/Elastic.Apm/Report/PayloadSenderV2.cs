@@ -88,11 +88,32 @@ namespace Elastic.Apm.Report
 			_eventQueue.TriggerBatch();
 		}
 
-		public void QueueSpan(ISpan span) => _eventQueue.Post(span);
+		public void QueueSpan(ISpan span)
+		{
+			var res = _eventQueue.Post(span);
+			_logger.Debug()
+				?.Log(!res
+					? "Failed adding Span to the queue, {Span}"
+					: "Span added to the queue, {Span}", span);
+		}
 
-		public void QueueMetrics(IMetricSet metricSet) => _eventQueue.Post(metricSet);
+		public void QueueMetrics(IMetricSet metricSet)
+		{
+			var res = _eventQueue.Post(metricSet);
+			_logger.Debug()
+				?.Log(!res
+					? "Failed adding MetricSet to the queue, {MetricSet}"
+					: "MetricSet added to the queue, {MetricSet}", metricSet);
+		}
 
-		public void QueueError(IError error) => _eventQueue.Post(error);
+		public void QueueError(IError error)
+		{
+			var res = _eventQueue.Post(error);
+			_logger.Debug()
+				?.Log(!res
+					? "Failed adding Error to the queue, {Error}"
+					: "Error added to the queue, {Error}", error);
+		}
 
 		private async Task DoWork()
 		{
@@ -111,7 +132,7 @@ namespace Elastic.Apm.Report
 			{
 				var metadataJson = _payloadItemSerializer.SerializeObject(_metadata);
 				var ndjson = new StringBuilder();
-				ndjson.Append("{\"metadata\": " + metadataJson + "}" + "\n");
+				ndjson.AppendLine("{\"metadata\": " + metadataJson + "}");
 
 				foreach (var item in queueItems)
 				{

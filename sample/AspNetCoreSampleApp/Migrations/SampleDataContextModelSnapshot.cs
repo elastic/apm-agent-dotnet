@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 namespace AspNetCoreSampleApp.Migrations
 {
     [DbContext(typeof(SampleDataContext))]
-    partial class SampleDataContextModelSnapshot : ModelSnapshot
+	internal partial class SampleDataContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {

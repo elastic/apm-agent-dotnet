@@ -9,7 +9,7 @@ namespace Elastic.Apm.Logging
 	{
 		private static ConcurrentDictionary<string, LogValuesFormatter> Formatters { get; } = new ConcurrentDictionary<string, LogValuesFormatter>();
 
-		public static ScopedLogger Scoped(this IApmLogger logger, string scope) =>
+		internal static ScopedLogger Scoped(this IApmLogger logger, string scope) =>
 			new ScopedLogger(logger is ScopedLogger s ? s.Logger : logger, scope);
 
 		private static void DoLog(this IApmLogger logger, LogLevel level, string message, Exception e, params object[] args)
