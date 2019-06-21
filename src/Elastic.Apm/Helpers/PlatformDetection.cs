@@ -7,6 +7,6 @@ namespace Elastic.Apm.Helpers
 	{
 		// Taken from https://github.com/dotnet/corefx/blob/master/src/CoreFx.Private.TestUtilities/src/System/PlatformDetection.cs
 		internal static readonly bool IsFullFramework = RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase);
-		internal static readonly string FrameworkDescription = RuntimeInformation.FrameworkDescription;
+		internal static readonly string DotNetRuntimeDescription = RuntimeInformation.FrameworkDescription;
 	}
 }

@@ -11,19 +11,20 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 	public class HomeController : Controller
 	{
 		internal const string AboutPageRelativePath = HomePageRelativePath + "/" + nameof(About);
-		internal const string ContactPageRelativePath = HomePageRelativePath + "/" + nameof(Contact);
-		internal const string ReturnBadRequestPageRelativePath = HomePageRelativePath + "/" + nameof(ReturnBadRequest);
 		internal const string CallReturnBadRequestPageRelativePath = HomePageRelativePath + "/" + nameof(CallReturnBadRequest);
+		internal const string ContactPageRelativePath = HomePageRelativePath + "/" + nameof(Contact);
 		internal const string CustomSpanThrowsInternalMethodName = nameof(CustomSpanThrowsInternal);
 		internal const string CustomSpanThrowsMethodName = nameof(CustomSpanThrows);
 		internal const string CustomSpanThrowsPageRelativePath = HomePageRelativePath + "/" + nameof(CustomSpanThrows);
 		internal const int DummyHttpStatusCode = 599;
 		internal const string ExceptionMessage = "For testing purposes";
 		internal const string HomePageRelativePath = "Home";
+		internal const string ReturnBadRequestPageRelativePath = HomePageRelativePath + "/" + nameof(ReturnBadRequest);
 		internal const string TestSpanAction = "test_span_action";
 		internal const string TestSpanName = "test_span_name";
 		internal const string TestSpanSubtype = "test_span_subtype";
 		internal const string TestSpanType = "test_span_type";
+		internal const string ThrowsInvalidOperationPageRelativePath = HomePageRelativePath + "/" + nameof(ThrowsInvalidOperation);
 		internal static readonly Uri ChildHttpCallToExternalServiceUrl = new Uri("https://elastic.co");
 
 		public ActionResult Index() => View();
@@ -77,9 +78,13 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 			return null;
 		}
 
+		public ActionResult ThrowsInvalidOperation()
+			=> throw new InvalidOperationException($"/{nameof(ThrowsInvalidOperation)} always returns " +
+				$"{(int)HttpStatusCode.InternalServerError} ({HttpStatusCode.InternalServerError}) - for testing purposes");
+
 		public ActionResult ReturnBadRequest() =>
 			new HttpStatusCodeResult(HttpStatusCode.BadRequest,
-				$"/{nameof(ReturnBadRequest)} always returns 400 (Bad Request) - for testing purposes");
+				$"/{nameof(ReturnBadRequest)} always returns {(int)HttpStatusCode.BadRequest} ({HttpStatusCode.BadRequest}) - for testing purposes");
 
 		public async Task<ActionResult> CallReturnBadRequest()
 		{
@@ -92,7 +97,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		private Uri GetUrlForMethod(string methodName)
 		{
 			var currentUrl = HttpContext.ApplicationInstance.Request.Url.ToString();
-			var homeIndex = currentUrl.LastIndexOf(HomePageRelativePath);
+			var homeIndex = currentUrl.LastIndexOf(HomePageRelativePath, StringComparison.OrdinalIgnoreCase);
 			return new Uri($"{currentUrl.Substring(0, homeIndex + HomePageRelativePath.Length)}/{methodName}");
 		}
 	}
