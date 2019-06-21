@@ -37,7 +37,7 @@ namespace Elastic.Apm.Helpers
 						FileName = string.IsNullOrWhiteSpace(fileName)? "N/A" : fileName,
 						Module = item?.GetMethod()?.ReflectedType?.Assembly.FullName,
 						LineNo = item?.GetFileLineNumber() ?? 0,
-						AbsPath = item?.GetFileName() ?? "N/A"
+						AbsPath = item?.GetFileName() // optional property
 					});
 			}
 			catch (Exception e)
