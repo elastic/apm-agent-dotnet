@@ -58,7 +58,7 @@ namespace Elastic.Apm.AspNetFullFramework
 		private static void SetServiceInformation(Service service, string aspNetVersion)
 		{
 			service.Framework = new Framework { Name = "ASP.NET", Version = aspNetVersion };
-			service.Language = new Language { Name = "C#" };
+			service.Language = new Language { Name = "C#" }; //TODO
 		}
 
 		public void Init(HttpApplication httpApp)
@@ -254,7 +254,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				// (see https://github.com/microsoft/referencesource/blob/master/System.Web/ErrorFormatter.cs#L431)
 				// It is stored in VersionInfo.EngineVersion
 				// (see https://github.com/microsoft/referencesource/blob/3b1eaf5203992df69de44c783a3eda37d3d4cd10/System.Web/Util/versioninfo.cs#L91)
-				// which is unfortunately is an internal property of an internal class in System.Web assembly so we use reflection to get it
+				// which is unfortunately an internal property of an internal class in System.Web assembly so we use reflection to get it
 				var versionInfoType = typeof(HttpRuntime).Assembly.GetType("System.Web.Util.VersionInfo");
 				var engineVersionProperty = versionInfoType.GetProperty("EngineVersion",
 					BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
