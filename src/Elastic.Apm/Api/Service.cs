@@ -52,8 +52,8 @@ namespace Elastic.Apm.Api
 			{
 				name = "N/A";
 				logger.Error()
-					?.Log($"Failed to detect whether the current .NET runtime is .NET Full Framework or .NET Core - " +
-						$"`{name}' will be used as the current .NET runtime name");
+					?.Log("Failed to detect whether the current .NET runtime is .NET Full Framework or .NET Core - " +
+						"`{DotNetFrameworkRuntimeName}' will be used as the current .NET runtime name", name);
 			}
 
 			string version;
@@ -67,14 +67,15 @@ namespace Elastic.Apm.Api
 				{
 					version = "N/A";
 					logger.Error()
-						?.Log($"Failed to detect whether the current .NET runtime is .NET Full Framework or .NET Core - " +
-							$"`{version}' will be used as the current .NET runtime version");
+						?.Log("Failed to detect whether the current .NET runtime is .NET Full Framework or .NET Core - " +
+							"`{DotNetFrameworkRuntimeVersion}' will be used as the current .NET runtime version", version);
 				}
 			}
 			catch (Exception ex)
 			{
 				version = "N/A";
-				logger.Error()?.LogException(ex, $"Failed to obtain .NET runtime version - `{version}' will be used");
+				logger.Error()?.LogException(ex, "Exception was thrown while trying to obtain .NET runtime version" +
+					" - `{DotNetFrameworkRuntimeVersion}' will be used", version);
 			}
 
 			return new Runtime { Name = name, Version = version };
@@ -104,14 +105,18 @@ namespace Elastic.Apm.Api
 				{
 					// We have https://github.com/dotnet/corefx/issues/35573 fix
 					logger.Debug()
-						?.Log($"Environment.Version (`{environmentVersion}') and RuntimeInformation.FrameworkDescription (`{frameworkDescription}')" +
-							$" refer to the same version (`{frameworkDescriptionVersion}') - returning it");
+						?.Log("Environment.Version (`{DotNetFrameworkRuntimeVersion}')" +
+							" and RuntimeInformation.FrameworkDescription (`{DotNetFrameworkRuntimeDescription}')" +
+							" refer to the same version (`{DotNetFrameworkRuntimeVersion}') - returning it",
+							environmentVersion, frameworkDescription, frameworkDescriptionVersion);
 					return frameworkDescriptionVersion;
 				}
 
 				logger.Debug()
-					?.Log($"Environment.Version (`{environmentVersion}') and RuntimeInformation.FrameworkDescription (`{frameworkDescription}')" +
-						" don't refer to the same version");
+					?.Log("Environment.Version (`{DotNetFrameworkRuntimeVersion}')" +
+						" and version (`{DotNetFrameworkRuntimeVersion}')" +
+						" from RuntimeInformation.FrameworkDescription (`{DotNetFrameworkRuntimeDescription}')" +
+						" don't refer to the same version", environmentVersion, frameworkDescriptionVersion, frameworkDescription);
 			}
 
 			// We don't have https://github.com/dotnet/corefx/issues/35573 fix so we need to fallback on BenchmarkDotNet's approach.
@@ -126,7 +131,8 @@ namespace Elastic.Apm.Api
 
 			var systemAssemblyFileLocation = typeof(object).Assembly.Location;
 			var result = Directory.GetParent(systemAssemblyFileLocation).Name;
-			logger.Debug()?.Log($"Falling back on using System assembly file location (`{systemAssemblyFileLocation}') - returning (`{result}')");
+			logger.Debug()?.Log("Falling back on using System assembly file location (`{SystemAssemblyFileLocation}')" +
+				" - returning (`{DotNetFrameworkRuntimeVersion}')", systemAssemblyFileLocation, result);
 			return result;
 		}
 

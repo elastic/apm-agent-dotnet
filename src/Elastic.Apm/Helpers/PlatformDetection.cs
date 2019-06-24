@@ -24,13 +24,14 @@ namespace Elastic.Apm.Helpers
 			if (!frameworkDescription.StartsWith(expectedPrefix))
 			{
 				logger.Trace()
-					?.Log($"RuntimeInformation.FrameworkDescription (`{frameworkDescription}') doesn't start" +
-						$" with the expected prefix (`{expectedPrefix}')");
+					?.Log("RuntimeInformation.FrameworkDescription (`{DotNetFrameworkRuntimeDescription}') doesn't start" +
+						  " with the expected prefix (`{DotNetFrameworkRuntimeDescriptionPrefix}')", frameworkDescription, expectedPrefix);
 				return null;
 			}
 
 			var result = frameworkDescription.Substring(expectedPrefix.Length).Trim();
-			logger.Trace()?.Log($"Version based on RuntimeInformation.FrameworkDescription (`{frameworkDescription}') is `{result}'");
+			logger.Trace()?.Log("Version based on RuntimeInformation.FrameworkDescription (`{DotNetFrameworkRuntimeDescription}')" +
+				" is `{DotNetFrameworkRuntimeVersion}'", frameworkDescription, result);
 			return result;
 		}
 
