@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Web;
 using Elastic.Apm.Api;
@@ -32,11 +33,21 @@ namespace Elastic.Apm.AspNetFullFramework
 		{
 			var configReader = new ApplicationConfigurationReader(ConsoleLogger.Instance);
 			var agentComponents = new AgentComponents(configurationReader: configReader);
-			SetServiceInformation(agentComponents.Service);
-			Agent.Setup(agentComponents);
-			Logger = Agent.Instance.Logger.Scoped(nameof(ElasticApmModule));
+			// Logger should be set ASAP because other initialization steps depend on it
+			Logger = agentComponents.Logger.Scoped(nameof(ElasticApmModule));
 
-			Logger.Debug()?.Log($"Entered {nameof(ElasticApmModule)} static ctor: ASP.NET: {AspNetVersion}, CLR: {ClrDescription}, IIS: {IisVersion}");
+			Logger.Debug()
+				?.Log($"Entered {nameof(ElasticApmModule)} static ctor" +
+					$"; .NET Runtime description: {PlatformDetection.DotNetRuntimeDescription}" +
+					$"; IIS: {IisVersion}");
+
+			// FindAspNetVersion uses Logger
+			var aspNetVersion = FindAspNetVersion();
+			Logger.Debug()?.Log($"ASP.NET version: {aspNetVersion}");
+
+			SetServiceInformation(agentComponents.Service, aspNetVersion);
+
+			Agent.Setup(agentComponents);
 
 			IsCaptureHeadersEnabled = Agent.Instance.ConfigurationReader.CaptureHeaders;
 
@@ -49,9 +60,9 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		private static Version IisVersion => HttpRuntime.IISVersion;
 
-		private static void SetServiceInformation(Service service)
+		private static void SetServiceInformation(Service service, string aspNetVersion)
 		{
-			service.Framework = new Framework { Name = "ASP.NET", Version = AspNetVersion.ToString() };
+			service.Framework = new Framework { Name = "ASP.NET", Version = aspNetVersion };
 			service.Language = new Language { Name = "C#" }; //TODO
 		}
 
@@ -228,6 +239,30 @@ namespace Elastic.Apm.AspNetFullFramework
 			transaction.Context.User = new User { UserName = userIdentity.Name };
 
 			Logger.Debug()?.Log("Captured user - {CapturedUser}", transaction.Context.User);
+		}
+
+		private static string FindAspNetVersion()
+		{
+			string result;
+			try
+			{
+				// We would like to report the same ASP.NET version as the one printed at the bottom of the error page
+				// (see https://github.com/microsoft/referencesource/blob/master/System.Web/ErrorFormatter.cs#L431)
+				// It is stored in VersionInfo.EngineVersion
+				// (see https://github.com/microsoft/referencesource/blob/3b1eaf5203992df69de44c783a3eda37d3d4cd10/System.Web/Util/versioninfo.cs#L91)
+				// which is unfortunately an internal property of an internal class in System.Web assembly so we use reflection to get it
+				var versionInfoType = typeof(HttpRuntime).Assembly.GetType("System.Web.Util.VersionInfo");
+				var engineVersionProperty = versionInfoType.GetProperty("EngineVersion",
+					BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+				result = (string)engineVersionProperty.GetValue(null);
+			}
+			catch (Exception ex)
+			{
+				result = "N/A";
+				Logger.Error()?.LogException(ex, $"Failed to obtain ASP.NET version - {result} will be used");
+			}
+
+			return result;
 		}
 	}
 }
