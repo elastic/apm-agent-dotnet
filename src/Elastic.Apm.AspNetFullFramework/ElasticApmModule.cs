@@ -54,10 +54,6 @@ namespace Elastic.Apm.AspNetFullFramework
 			Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
 		}
 
-		private static Version AspNetVersion => typeof(HttpRuntime).Assembly.GetName().Version;
-
-		private static string ClrDescription => PlatformDetection.FrameworkDescription;
-
 		private static Version IisVersion => HttpRuntime.IISVersion;
 
 		private static void SetServiceInformation(Service service, string aspNetVersion)
