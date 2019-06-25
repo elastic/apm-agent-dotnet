@@ -1,0 +1,89 @@
+﻿@using System.Diagnostics
+@model AspNetFullFrameworkSampleApp.Models.DiagnosticsModel
+
+<title>Diagnostics</title>
+
+<h1>Current process ID</h1>
+
+<pre>
+@Process.GetCurrentProcess().Id
+</pre>
+
+
+<h1>Environment variables</h1>
+
+<pre>
+@Model.EnvironmentVariables
+</pre>
+
+
+<h1>Log</h1>
+
+@if (Model.LogFilePath == null)
+{
+	<p>Log file path is not set</p>
+}
+else
+{
+	<p>Log file path: @Model.LogFilePath</p>
+}
+
+
+@if (Model.LoggingSubsystemInternalLogContent == null)
+{
+	<h2>Model.LoggingSubsystemInternalLogContent is null</h2>
+}
+else if (Model.LoggingSubsystemInternalLogContent.IsEmpty())
+{
+	<h2>Logging system internal log is empty</h2>
+}
+else
+{
+	<h2>Logging system internal log</h2>
+	<pre>
+@Model.LoggingSubsystemInternalLogContent
+</pre>
+		
+}
+
+
+<h2>Content</h2>
+
+<h3>In memory log</h3>
+
+<pre>
+@Model.InMemoryLogContent
+</pre>
+
+@if (Model.LogFilePath != null)
+{
+	if (Model.LogFileReadException == null)
+	{
+		<h3>There was no exception when reading log file</h3>
+	}
+	else
+	{
+		<h3>Exception when reading log file</h3>
+
+<pre>
+@Model.LogFileReadException
+</pre>
+	}
+	
+	if (Model.LogFileContent == null)
+	{
+		<h3>Model.LogFileContent is null</h3>
+	}
+	else if (Model.LogFileContent.IsEmpty())
+	{
+		<h3>Log file is empty</h3>
+	}
+	else
+	{
+		<h3>Log file</h3>
+
+<pre>
+@Model.LogFileContent
+</pre>
+	}
+}

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -7,6 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using AspNetFullFrameworkSampleApp;
 using AspNetFullFrameworkSampleApp.Controllers;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
@@ -112,12 +115,21 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				new SampleAppUrlPathData(HomeController.CallReturnBadRequestPageRelativePath,
 					HomeController.DummyHttpStatusCode, /* transactionsCount: */ 2, /* spansCount: */ 1);
 
+
+			internal static readonly SampleAppUrlPathData GetDotNetRuntimeDescriptionPage =
+				new SampleAppUrlPathData(HomeController.GetDotNetRuntimeDescriptionPageRelativePath, 200);
+
+
 			internal static readonly SampleAppUrlPathData ReturnBadRequestPage =
 				new SampleAppUrlPathData(HomeController.ReturnBadRequestPageRelativePath, (int)HttpStatusCode.BadRequest);
 
-			internal static readonly SampleAppUrlPathData AboutPage =
-				new SampleAppUrlPathData(HomeController.AboutPageRelativePath, 200);
+			/// errorsCount for ThrowsNameCouldNotBeResolvedPage is 0 because we don't automatically capture exceptions
+			/// that escaped from Full Framework ASP.NET transactions as errors (yet)
+			internal static readonly SampleAppUrlPathData ThrowsInvalidOperationPage =
+				new SampleAppUrlPathData(HomeController.ThrowsInvalidOperationPageRelativePath, 500);
 		}
+
+		protected IApmLogger ScopeBaseLogger(string scope) => _logger.Scoped(scope);
 
 		public Task InitializeAsync()
 		{
@@ -227,36 +239,61 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				{
 					var messageBuilder = new StringBuilder();
 					messageBuilder.AppendLine("There is at least one invalid payload error - the test is considered as failed.");
-					messageBuilder.AppendLine(TextUtils.AddIndentation("Invalid payload error(s):", 1));
+					messageBuilder.AppendLine(TextUtils.Indent("Invalid payload error(s):", 1));
 					foreach (var invalidPayloadError in _mockApmServer.ReceivedData.InvalidPayloadErrors)
-						messageBuilder.AppendLine(TextUtils.AddIndentation(invalidPayloadError, 2));
+						messageBuilder.AppendLine(TextUtils.Indent(invalidPayloadError, 2));
 					throw new XunitException(messageBuilder.ToString());
 				}
 
 				try
 				{
 					verifyAction(_mockApmServer.ReceivedData);
+					timerSinceStart.Stop();
 					_logger.Debug()
-						?.Log("Data received from agent passed verification. Attempt #{AttemptNumber} out of {MaxNumberOfAttempts}",
+						?.Log("Data received from agent passed verification." +
+							" Time elapsed: {VerificationTimeSeconds}s." +
+							" Attempt #{AttemptNumber} out of {MaxNumberOfAttempts}",
+							timerSinceStart.Elapsed.TotalSeconds,
 							attemptNumber, DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify);
+					LogSampleAppLogFileContent();
+					await LogSampleAppDiagnosticsPage();
 					return;
 				}
 				catch (XunitException ex)
 				{
-					_logger.Debug()
-						?.LogException(ex,
-							"Data received from agent did NOT pass verification. Attempt #{AttemptNumber} out of {MaxNumberOfAttempts}",
-							attemptNumber, DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify);
+					var logOnThisAttempt =
+						attemptNumber >= DataSentByAgentVerificationConsts.LogMessageAfterNInitialAttempts &&
+						attemptNumber % DataSentByAgentVerificationConsts.LogMessageEveryNAttempts == 0;
+
+					if (logOnThisAttempt)
+					{
+						_logger.Warning()
+							?.LogException(ex,
+								"Data received from agent did NOT pass verification." +
+								" Time elapsed: {VerificationTimeSeconds}s." +
+								" Attempt #{AttemptNumber} out of {MaxNumberOfAttempts}" +
+								" This message is printed only every {LogMessageEveryNAttempts} attempts",
+								timerSinceStart.Elapsed.TotalSeconds,
+								attemptNumber, DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify,
+								DataSentByAgentVerificationConsts.LogMessageEveryNAttempts);
+					}
 
 					if (attemptNumber == DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify)
 					{
 						_logger.Error()?.LogException(ex, "Reached max number of attempts to verify payload - Rethrowing the last exception...");
-						AnalyzePotentialIssues();
+						await PostTestFailureDiagnostics();
 						throw;
 					}
 
-					_logger.Debug()
-						?.Log("Waiting {WaitTimeMs}ms before the next attempt...", DataSentByAgentVerificationConsts.WaitBetweenVerifyAttemptsMs);
+					if (logOnThisAttempt)
+					{
+						_logger.Debug()
+							?.Log("Waiting {WaitBetweenVerifyAttemptsMs}ms before the next attempt..." +
+								" This message is printed only every {LogMessageEveryNAttempts} attempts",
+								DataSentByAgentVerificationConsts.WaitBetweenVerifyAttemptsMs,
+								DataSentByAgentVerificationConsts.LogMessageEveryNAttempts);
+					}
+
 					Thread.Sleep(DataSentByAgentVerificationConsts.WaitBetweenVerifyAttemptsMs);
 				}
 				catch (Exception ex)
@@ -276,19 +313,58 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public static SampleAppUrlPathData RandomSampleAppUrlPath() =>
 			SampleAppUrlPaths.AllPaths[RandomGenerator.GetInstance().Next(0, SampleAppUrlPaths.AllPaths.Count)];
 
-		private static string GetCurrentTestName(ITestOutputHelper xUnitOutputHelper)
+		private static string GetCurrentTestDisplayName(ITestOutputHelper xUnitOutputHelper)
 		{
 			var helper = (TestOutputHelper)xUnitOutputHelper;
 
 			var test = (ITest)helper.GetType()
 				.GetField("test", BindingFlags.NonPublic | BindingFlags.Instance)
 				.GetValue(helper);
-
-			return test.TestCase.TestMethod.Method.Name;
+			return test.DisplayName;
 		}
 
-		private void AnalyzePotentialIssues()
+		private void LogSampleAppLogFileContent()
 		{
+			if (!_sampleAppLogEnabled)
+			{
+				_logger.Info()?.Log("Sample application log is disabled");
+				return;
+			}
+
+			string sampleAppLogFileContent;
+			try
+			{
+				sampleAppLogFileContent = File.ReadAllText(_sampleAppLogFilePath);
+			}
+			catch (Exception ex)
+			{
+				_logger.Info()?.LogException(ex, "Exception thrown while trying to read sample application log file (`{SampleAppLogFilePath}')",
+					_sampleAppLogFilePath);
+				return;
+			}
+
+			_logger.Info()?.Log("Sample application log:\n{SampleAppLogFileContent}", TextUtils.Indent(sampleAppLogFileContent));
+		}
+
+		private async Task LogSampleAppDiagnosticsPage()
+		{
+			var httpClient = new HttpClient();
+			const string url = Consts.SampleApp.RootUrl + "/" + DiagnosticsController.DiagnosticsPageRelativePath;
+			_logger.Debug()?.Log("Getting content of sample application diagnostics page ({url})...", url);
+			var response = await httpClient.GetAsync(url);
+			_logger.Debug()?.Log("Received sample application's diagnostics page. Status code: {HttpStatusCode} ({HttpStatusCodeEnum})",
+					(int)response.StatusCode, response.StatusCode);
+
+			_logger.Info()?.Log("Sample application's diagnostics page content:\n{DiagnosticsPageContent}",
+				TextUtils.Indent(await response.Content.ReadAsStringAsync()));
+		}
+
+		private async Task PostTestFailureDiagnostics()
+		{
+			_iisAdministration.LogIisApplicationHostConfig();
+			LogSampleAppLogFileContent();
+			await LogSampleAppDiagnosticsPage();
+
 			_logger.Debug()
 				?.Log("Analyzing potential issues... _mockApmServer.ReceivedData: " +
 					"#transactions: {NumberOfTransactions}, #spans: {NumberOfSpans}, #errors: {NumberOfErrors}, #metric sets: {NumberOfMetricSets}",
@@ -320,8 +396,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			}
 		}
 
-		protected void VerifyDataReceivedFromAgent(SampleAppUrlPathData sampleAppUrlPathData) =>
-			VerifyDataReceivedFromAgent(receivedData => { TryVerifyDataReceivedFromAgent(sampleAppUrlPathData, receivedData); });
+		protected async Task VerifyDataReceivedFromAgent(SampleAppUrlPathData sampleAppUrlPathData) =>
+			await VerifyDataReceivedFromAgent(receivedData => { TryVerifyDataReceivedFromAgent(sampleAppUrlPathData, receivedData); });
 
 		protected void TryVerifyDataReceivedFromAgent(SampleAppUrlPathData sampleAppUrlPathData, ReceivedData receivedData)
 		{
