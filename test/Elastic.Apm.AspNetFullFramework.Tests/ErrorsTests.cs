@@ -19,9 +19,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task CustomSpanThrowsTest()
 		{
 			var errorPageData = SampleAppUrlPaths.CustomSpanThrowsExceptionPage;
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(errorPageData.RelativeUrlPath, errorPageData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(errorPageData.RelativeUrlPath, errorPageData.StatusCode);
 
-			VerifyDataReceivedFromAgent(receivedData =>
+			await VerifyDataReceivedFromAgent(receivedData =>
 			{
 				TryVerifyDataReceivedFromAgent(errorPageData, receivedData);
 

@@ -32,64 +32,71 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 
 		protected readonly AgentConfiguration AgentConfig = new AgentConfiguration();
-
-
 		protected readonly bool SampleAppShouldHaveAccessToPerfCounters;
-
 		private readonly Dictionary<string, string> _envVarsToSetForSampleAppPool;
 		private readonly IisAdministration _iisAdministration;
 
+		private readonly ITestOutputHelper _xUnitOutputHelper;
 		private readonly IApmLogger _logger;
 		private readonly MockApmServer _mockApmServer;
 		private readonly int _mockApmServerPort;
+		private readonly bool _sampleAppLogEnabled;
+		private readonly string _sampleAppLogFilePath;
 		private readonly bool _startMockApmServer;
 		private readonly DateTimeOffset _testStartTime = DateTimeOffset.UtcNow;
 
 		protected TestsBase(ITestOutputHelper xUnitOutputHelper,
 			bool startMockApmServer = true,
 			Dictionary<string, string> envVarsToSetForSampleAppPool = null,
-			bool sampleAppShouldHaveAccessToPerfCounters = false
+			bool sampleAppShouldHaveAccessToPerfCounters = false,
+			bool sampleAppLogEnabled = true
 		)
 		{
-			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(TestsBase));
-			_mockApmServer = new MockApmServer(_logger, GetCurrentTestName(xUnitOutputHelper));
+			_xUnitOutputHelper = xUnitOutputHelper;
+			_logger = new ToAllSinksLogger(_xUnitOutputHelper).Scoped(nameof(TestsBase));
+
+			_logger.Info()?.Log("Starting test: {FullUnitTestName}", GetCurrentTestDisplayName(_xUnitOutputHelper));
+
+			_mockApmServer = new MockApmServer(_logger, GetCurrentTestDisplayName(_xUnitOutputHelper));
 			_iisAdministration = new IisAdministration(_logger);
 			_startMockApmServer = startMockApmServer;
 			SampleAppShouldHaveAccessToPerfCounters = sampleAppShouldHaveAccessToPerfCounters;
 
 			_mockApmServerPort = _startMockApmServer ? _mockApmServer.FindAvailablePortToListen() : ConfigConsts.DefaultValues.ApmServerPort;
 
+			_sampleAppLogEnabled = sampleAppLogEnabled;
+			_sampleAppLogFilePath = GetSampleAppLogFilePath();
+
 			_envVarsToSetForSampleAppPool = envVarsToSetForSampleAppPool == null
 				? new Dictionary<string, string>()
 				: new Dictionary<string, string>(envVarsToSetForSampleAppPool);
-			_envVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.ServerUrls, $"http://localhost:{_mockApmServerPort}");
+			_envVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.ServerUrls, BuildApmServerUrl(_mockApmServerPort));
+
+			if (_sampleAppLogEnabled) _envVarsToSetForSampleAppPool.TryAdd(LoggingConfig.LogFileEnvVarName, _sampleAppLogFilePath);
 		}
 
 		private static class DataSentByAgentVerificationConsts
 		{
+			internal const int LogMessageAfterNInitialAttempts = 30; // i.e., log the first message after 3 seconds (if it's still failing)
+			internal const int LogMessageEveryNAttempts = 10; // i.e., log message every second (if it's still failing)
 			internal const int MaxNumberOfAttemptsToVerify = 100;
 			internal const int WaitBetweenVerifyAttemptsMs = 100;
 		}
 
 		internal static class SampleAppUrlPaths
 		{
+			internal static readonly SampleAppUrlPathData AboutPage =
+				new SampleAppUrlPathData(HomeController.AboutPageRelativePath, 200);
+
 			/// Contact page processing does HTTP Get for About page (additional transaction) and https://elastic.co/ - so 2 spans
 			internal static readonly SampleAppUrlPathData ContactPage =
 				new SampleAppUrlPathData(HomeController.ContactPageRelativePath, 200, /* transactionsCount: */ 2, /* spansCount: */ 2);
-
-			/// errorsCount for ThrowsNameCouldNotBeResolvedPage is 0 because we don't automatically capture exceptions
-			/// that escaped from transaction as errors (yet)
-			internal static readonly SampleAppUrlPathData ThrowsInvalidOperationPage =
-				new SampleAppUrlPathData(HomeController.ThrowsInvalidOperationPageRelativePath, 500);
 
 			internal static readonly SampleAppUrlPathData CustomSpanThrowsExceptionPage =
 				new SampleAppUrlPathData(HomeController.CustomSpanThrowsPageRelativePath, 500, spansCount: 1, errorsCount: 1);
 
 			internal static readonly SampleAppUrlPathData HomePage =
 				new SampleAppUrlPathData(HomeController.HomePageRelativePath, 200);
-
-			internal static readonly SampleAppUrlPathData GetDotNetRuntimeDescriptionPage =
-				new SampleAppUrlPathData(HomeController.GetDotNetRuntimeDescriptionPageRelativePath, 200);
 
 			internal static readonly List<SampleAppUrlPathData> AllPaths = new List<SampleAppUrlPathData>()
 			{
@@ -140,9 +147,30 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			}
 
 			if (_startMockApmServer) await _mockApmServer.StopAsync();
+
+			_logger.Info()?.Log("Finished test: {FullUnitTestName}", GetCurrentTestDisplayName(_xUnitOutputHelper));
 		}
 
-		protected async Task<HttpResponseMessage> SendGetRequestToSampleAppAndVerifyResponseStatusCode(string relativeUrlPath, int expectedStatusCode)
+		private string GetSampleAppLogFilePath()
+		{
+			var sampleAppLogFilePath = Environment.GetEnvironmentVariable(LoggingConfig.LogFileEnvVarName);
+			if (sampleAppLogFilePath != null)
+			{
+				_logger.Info()?.Log("Environment variable `{SampleAppLogFileEnvVarName}' is set to `{SampleAppLogFilePath}'"
+					+ " - using it to write/read sample application's and agent's log", LoggingConfig.LogFileEnvVarName, sampleAppLogFilePath);
+				return sampleAppLogFilePath;
+			}
+
+			sampleAppLogFilePath = Path.Combine(Path.GetTempPath(), $"{Consts.SampleApp.AppName}.log");
+			_logger.Info()?.Log("Environment variable `{SampleAppLogFileEnvVarName}' is not set"
+				+ " - using `{SampleAppLogFilePath}' to write/read sample application's and agent's log",
+				LoggingConfig.LogFileEnvVarName, sampleAppLogFilePath);
+			return sampleAppLogFilePath;
+		}
+
+		private static string BuildApmServerUrl(int apmServerPort) => $"http://localhost:{apmServerPort}/";
+
+		protected async Task<HttpResponseMessage> SendGetRequestToSampleAppAndVerifyResponse(string relativeUrlPath, int expectedStatusCode)
 		{
 			var httpClient = new HttpClient();
 			var url = Consts.SampleApp.RootUrl + "/" + relativeUrlPath;
@@ -162,12 +190,35 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				throw;
 			}
 
+			var processIdInResponse = response.Headers.GetValues(AspNetFullFrameworkSampleApp.Consts.ProcessIdResponseHeaderName);
+			_logger.Debug()?.Log("{ProcessIdHeaderName} in response is {ProcessIdHeaderValue}",
+				AspNetFullFrameworkSampleApp.Consts.ProcessIdResponseHeaderName, processIdInResponse);
+
+			var apmServerUrlsInResponse =
+				response.Headers?.GetValues(AspNetFullFrameworkSampleApp.Consts.ElasticApmServerUrlsResponseHeaderName).ToList();
+			try
+			{
+				apmServerUrlsInResponse.Should().HaveCount(1);
+				apmServerUrlsInResponse.First().Should().Be(BuildApmServerUrl(_mockApmServerPort));
+			}
+			catch (XunitException ex)
+			{
+				_logger.Error()?.LogException(ex, "Sample application's APM-server-URLs configuration setting ({ActualApmServerUrl})" +
+					" is different from expected ({ExpectedApmServerUrl})",
+					string.Join(", ", apmServerUrlsInResponse), BuildApmServerUrl(_mockApmServerPort));
+
+				await PostTestFailureDiagnostics();
+
+				throw;
+			}
+
 			return response;
 		}
 
-		protected void VerifyDataReceivedFromAgent(Action<ReceivedData> verifyAction)
+		protected async Task VerifyDataReceivedFromAgent(Action<ReceivedData> verifyAction)
 		{
 			var attemptNumber = 0;
+			var timerSinceStart = Stopwatch.StartNew();
 			while (true)
 			{
 				++attemptNumber;
