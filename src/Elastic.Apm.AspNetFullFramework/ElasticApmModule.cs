@@ -223,7 +223,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				// (see https://github.com/microsoft/referencesource/blob/master/System.Web/ErrorFormatter.cs#L431)
 				// It is stored in VersionInfo.EngineVersion
 				// (see https://github.com/microsoft/referencesource/blob/3b1eaf5203992df69de44c783a3eda37d3d4cd10/System.Web/Util/versioninfo.cs#L91)
-				// which is unfortunately is an internal property of an internal class in System.Web assembly so we use reflection to get it
+				// which is unfortunately an internal property of an internal class in System.Web assembly so we use reflection to get it
 				const string versionInfoTypeName = "System.Web.Util.VersionInfo";
 				var versionInfoType = typeof(HttpRuntime).Assembly.GetType(versionInfoTypeName);
 				if (versionInfoType == null)
@@ -240,7 +240,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				if (engineVersionProperty == null)
 				{
 					logger.Error()
-						?.Log("Property {PropertyName} was not found in type {ClassName} - {AspNetVersion} will be used as ASP.NET version",
+						?.Log("Property {PropertyName} was not found in type {TypeName} - {AspNetVersion} will be used as ASP.NET version",
 							engineVersionPropertyName, versionInfoType.FullName, aspNetVersion);
 					return aspNetVersion;
 				}
@@ -249,8 +249,9 @@ namespace Elastic.Apm.AspNetFullFramework
 				if (engineVersionPropertyValue == null)
 				{
 					logger.Error()
-						?.Log("Did not find property {PropertyName} in type {ClassName} - {AspNetVersion} will be used as ASP.NET version",
-							engineVersionPropertyName, versionInfoType.FullName, aspNetVersion);
+						?.Log("Property {PropertyName} (in type {TypeName}) is of type {TypeName} and not a string as expected" +
+							" - {AspNetVersion} will be used as ASP.NET version",
+							engineVersionPropertyName, versionInfoType.FullName, engineVersionPropertyName.GetType().FullName, aspNetVersion);
 					return aspNetVersion;
 				}
 
@@ -311,7 +312,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				var aspNetVersion = FindAspNetVersion(logger);
 
 				agentComponents.Service.Framework = new Framework { Name = "ASP.NET", Version = aspNetVersion };
-				agentComponents.Service.Language = new Language { Name = "C#" };
+				agentComponents.Service.Language = new Language { Name = "C#" }; //TODO
 
 				return agentComponents;
 			}
