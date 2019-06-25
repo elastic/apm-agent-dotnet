@@ -19,6 +19,7 @@ namespace Elastic.Apm.Model
 		private readonly IPayloadSender _sender;
 
 		private readonly DateTimeOffset _start;
+		private readonly Stopwatch _startStopwatch;
 
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(IApmAgent agent, string name, string type)
@@ -36,6 +37,7 @@ namespace Elastic.Apm.Model
 			_logger = logger?.Scoped(nameof(Transaction));
 			_sender = sender;
 			_start = DateTimeOffset.UtcNow;
+			_startStopwatch = Stopwatch.StartNew();
 
 			Name = name;
 			HasCustomName = false;
@@ -165,7 +167,11 @@ namespace Elastic.Apm.Model
 
 		public void End()
 		{
-			if (!Duration.HasValue) Duration = (DateTimeOffset.UtcNow - _start).TotalMilliseconds;
+			if (!Duration.HasValue)
+			{
+				_startStopwatch.Stop();
+				Duration = _startStopwatch.ElapsedMilliseconds;
+			}
 
 			_sender.QueueTransaction(this);
 

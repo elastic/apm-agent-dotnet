@@ -19,6 +19,7 @@ namespace Elastic.Apm.Model
 		private readonly IPayloadSender _payloadSender;
 
 		private readonly DateTimeOffset _start;
+		private readonly Stopwatch _startStopwatch;
 
 		public Span(
 			string name,
@@ -32,6 +33,7 @@ namespace Elastic.Apm.Model
 		)
 		{
 			_start = DateTimeOffset.UtcNow;
+			_startStopwatch = Stopwatch.StartNew();
 			_payloadSender = payloadSender;
 			_enclosingTransaction = enclosingTransaction;
 			_logger = logger?.Scoped(nameof(Span));
@@ -142,7 +144,11 @@ namespace Elastic.Apm.Model
 		public void End()
 		{
 			_logger.Debug()?.Log("Ending {SpanDetails}", ToString());
-			if (!Duration.HasValue) Duration = (DateTimeOffset.UtcNow - _start).TotalMilliseconds;
+			if (!Duration.HasValue)
+			{
+				_startStopwatch.Stop();
+				Duration = _startStopwatch.ElapsedMilliseconds;
+			}
 			if (IsSampled) _payloadSender.QueueSpan(this);
 		}
 
