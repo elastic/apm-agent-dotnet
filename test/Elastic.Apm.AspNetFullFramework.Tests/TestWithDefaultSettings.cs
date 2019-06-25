@@ -7,13 +7,13 @@ using Xunit.Abstractions;
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	[Collection("AspNetFullFrameworkTests")]
-	public class TransactionsAndSpansTests : TestsBase
+	public class TestWithDefaultSettings : TestsBase
 	{
-		public TransactionsAndSpansTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
+		public TestWithDefaultSettings(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
 
 		[AspNetFullFrameworkTheory]
 		[MemberData(nameof(AllSampleAppUrlPaths))]
-		public async Task WithDefaultSettings(SampleAppUrlPathData sampleAppUrlPathData)
+		public async Task TestVariousPages(SampleAppUrlPathData sampleAppUrlPathData)
 		{
 			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.StatusCode);
 
