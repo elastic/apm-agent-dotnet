@@ -1,5 +1,11 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+using AspNetFullFrameworkSampleApp.Controllers;
+using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -9,7 +15,10 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 	[Collection("AspNetFullFrameworkTests")]
 	public class MetadataTests : TestsBase
 	{
-		public MetadataTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
+		private readonly IApmLogger _logger;
+
+		public MetadataTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) =>
+			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(MetadataTests));
 
 		[AspNetFullFrameworkFact]
 		public async Task AspNetVersionTest()
@@ -55,6 +64,33 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			char[] eolChars = { '\n', '\r' };
 			var aspNetVersionEol = errorPageFromAspNetVersion.IndexOfAny(eolChars);
 			return errorPageFromAspNetVersion.Substring(0, aspNetVersionEol).Trim();
+		}
+
+
+		[AspNetFullFrameworkFact]
+		public async Task ServiceRuntimeTest()
+		{
+			var page = SampleAppUrlPaths.GetDotNetRuntimeDescriptionPage;
+			var response = await SendGetRequestToSampleAppAndVerifyResponseStatusCode(page.RelativeUrlPath, page.StatusCode);
+
+			VerifyDataReceivedFromAgent(receivedData =>
+			{
+				TryVerifyDataReceivedFromAgent(page, receivedData);
+
+				receivedData.Metadata.Should().NotBeEmpty();
+				foreach (var metadata in receivedData.Metadata)
+				{
+					metadata.Service.Runtime.Name.Should().Be(Runtime.DotNetFullFrameworkName);
+					var sampleAppDotNetRuntimeDescription =
+						response.Headers.GetValues(HomeController.DotNetRuntimeDescriptionHttpHeaderName).Single();
+					sampleAppDotNetRuntimeDescription.Should().StartWith(PlatformDetection.DotNetFullFrameworkDescriptionPrefix);
+					metadata.Service.Runtime.Version.Should()
+						.Be(PlatformDetection.GetDotNetRuntimeVersionFromDescription(
+							sampleAppDotNetRuntimeDescription,
+							_logger,
+							PlatformDetection.DotNetFullFrameworkDescriptionPrefix));
+				}
+			});
 		}
 	}
 }

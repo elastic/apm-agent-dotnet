@@ -25,7 +25,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			thisObj.Should().NotBeNull();
 
 			thisObj.Name.Should().Be(Consts.AgentName);
-			thisObj.Version.Should().Be(Service.GetDefaultService(new TestAgentConfigurationReader(new NoopLogger())).Agent.Version);
+			thisObj.Version.Should().Be(Service.GetDefaultService(new TestAgentConfigurationReader(new NoopLogger()), new NoopLogger()).Agent.Version);
 		}
 
 		private static void AssertValid(this Framework thisObj)

@@ -19,7 +19,7 @@ namespace Elastic.Apm
 		{
 			Logger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 			ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(Logger);
-			Service = Service.GetDefaultService(ConfigurationReader);
+			Service = Service.GetDefaultService(ConfigurationReader, Logger);
 
 			var systemInfoHelper = new SystemInfoHelper(Logger);
 			var system = systemInfoHelper.ReadContainerId(Logger);
