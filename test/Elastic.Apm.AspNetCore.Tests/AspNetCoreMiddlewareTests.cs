@@ -1,16 +1,21 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
+using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.Tests.Factories;
 using Elastic.Apm.AspNetCore.Tests.Fakes;
 using Elastic.Apm.AspNetCore.Tests.Helpers;
 using Elastic.Apm.Config;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
@@ -22,8 +27,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 	public class AspNetCoreMiddlewareTests : IClassFixture<CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup>>, IDisposable
 	{
 		private readonly CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup> _factory;
+		private readonly IApmLogger _logger;
 
-		public AspNetCoreMiddlewareTests(CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup> factory) => _factory = factory;
+		public AspNetCoreMiddlewareTests(CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup> factory, ITestOutputHelper testOutputHelper)
+		{
+	        _factory = factory;
+			_logger = new XunitOutputLogger(testOutputHelper).Scoped(nameof(AspNetCoreMiddlewareTests));
+        }
 
 		/// <summary>
 		/// Simulates an HTTP GET call to /home/simplePage and asserts on what the agent should send to the server
@@ -58,7 +68,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 				var aspNetCoreVersion = Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString();
 				agent.Service.Framework.Version.Should().Be(aspNetCoreVersion);
 
-				capturedPayload.Transactions.Should().ContainSingle();
+				agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
+				agent.Service.Runtime.Version.Should().Be(Directory.GetParent(typeof(object).Assembly.Location).Name);
+
+                capturedPayload.Transactions.Should().ContainSingle();
 				var transaction = capturedPayload.FirstTransaction;
 				transaction.Name.Should().Be($"{response.RequestMessage.Method} Home/SimplePage");
 				transaction.Result.Should().Be("HTTP 2xx");
@@ -130,7 +143,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			{
 				using (var client = TestHelper.GetClientWithoutDeveloperExceptionPage(_factory, agent))
 				{
-					Func<Task> act = async () => await client.GetAsync("Home/TriggerError");
+					var localClient = client;
+					Func<Task> act = async () => await localClient.GetAsync("Home/TriggerError");
 					await act.Should().ThrowAsync<Exception>();
 				}
 
@@ -144,14 +158,15 @@ namespace Elastic.Apm.AspNetCore.Tests
 				var error = capturedPayload.Errors.Single() as Error;
 				error.Should().NotBeNull();
 
+				// ReSharper disable once PossibleNullReferenceException
 				error.Exception.Should().NotBeNull();
 				error.Context.Tags.Should().NotBeEmpty().And.ContainKey("foo").And.Contain("foo", "bar");
 			}
 		}
 
-		private static ApmAgent GetAgent()
+		private ApmAgent GetAgent()
 		{
-			var agent = new ApmAgent(new TestAgentComponents(new TestAgentConfigurationReader(new TestLogger())));
+			var agent = new ApmAgent(new TestAgentComponents(new TestAgentConfigurationReader(_logger)));
 			ApmMiddlewareExtension.UpdateServiceInformation(agent.Service);
 			return agent;
 		}

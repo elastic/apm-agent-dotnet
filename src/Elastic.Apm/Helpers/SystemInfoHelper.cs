@@ -71,8 +71,9 @@ namespace Elastic.Apm.Helpers
 			return null;
 		}
 
-		internal Api.System ReadContainerId(IApmLogger logger)
+		internal Api.System ReadContainerId(IApmLogger loggerArg)
 		{
+			var logger = loggerArg.Scoped(nameof(SystemInfoHelper));
 			try
 			{
 				using (var sr = GetCGroupAsStream())

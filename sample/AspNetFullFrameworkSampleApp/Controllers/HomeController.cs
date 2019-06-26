@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using Elastic.Apm;
@@ -26,6 +27,8 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		internal const string TestSpanType = "test_span_type";
 		internal const string ThrowsInvalidOperationPageRelativePath = HomePageRelativePath + "/" + nameof(ThrowsInvalidOperation);
 		internal static readonly Uri ChildHttpCallToExternalServiceUrl = new Uri("https://elastic.co");
+		internal const string DotNetRuntimeDescriptionHttpHeaderName = "DotNetRuntimeDescription";
+		internal const string GetDotNetRuntimeDescriptionPageRelativePath = HomePageRelativePath + "/" + nameof(GetDotNetRuntimeDescription);
 
 		public ActionResult Index() => View();
 
@@ -92,6 +95,12 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 			return new HttpStatusCodeResult(DummyHttpStatusCode,
 				$"/{nameof(CallReturnBadRequest)} called /{nameof(ReturnBadRequest)} and " +
 				$"received HTTP status code {(int)response.StatusCode} ({response.StatusCode})");
+		}
+
+		public ActionResult GetDotNetRuntimeDescription()
+		{
+			HttpContext.Response.Headers.Add(DotNetRuntimeDescriptionHttpHeaderName, RuntimeInformation.FrameworkDescription);
+			return new HttpStatusCodeResult(HttpStatusCode.OK);
 		}
 
 		private Uri GetUrlForMethod(string methodName)
