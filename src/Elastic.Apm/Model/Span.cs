@@ -18,8 +18,6 @@ namespace Elastic.Apm.Model
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _payloadSender;
 
-		private readonly DateTimeOffset _start;
-
 		public Span(
 			string name,
 			string type,
@@ -31,15 +29,16 @@ namespace Elastic.Apm.Model
 			IApmLogger logger
 		)
 		{
-			_start = DateTimeOffset.UtcNow;
+			Timestamp = TimeUtils.NowAsTimestamp();
+			Id = RandomGenerator.GenerateRandomBytesAsString(new byte[8]);
+			_logger = logger?.Scoped($"{nameof(Span)}.{Id}");
+
 			_payloadSender = payloadSender;
 			_enclosingTransaction = enclosingTransaction;
-			_logger = logger?.Scoped(nameof(Span));
 			Name = name;
 			Type = type;
 			IsSampled = isSampled;
 
-			Id = RandomGenerator.GenerateRandomBytesAsString(new byte[8]);
 			ParentId = parentId;
 			TraceId = traceId;
 
@@ -51,6 +50,9 @@ namespace Elastic.Apm.Model
 				// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
 				StackTrace = StacktraceHelper.GenerateApmStackTrace(new StackTrace(true).GetFrames(), _logger, $"Span `{Name}'");
 			}
+
+			_logger.Trace()?.Log("New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp})",
+				this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 		}
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
@@ -101,7 +103,11 @@ namespace Elastic.Apm.Model
 		public Dictionary<string, string> Tags => Context.Tags;
 
 		//public decimal Start { get; set; }
-		public long Timestamp => _start.ToUnixTimeMilliseconds() * 1000;
+
+		/// <summary>
+		/// Recorded time of the event, UTC based and formatted as microseconds since Unix epoch
+		/// </summary>
+		public long Timestamp { get; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("trace_id")]
@@ -135,14 +141,25 @@ namespace Elastic.Apm.Model
 
 			if (!string.IsNullOrEmpty(action)) retVal.Action = action;
 
-			_logger.Debug()?.Log("Starting {SpanDetails}", retVal.ToString());
+			_logger.Trace()?.Log("Starting {SpanDetails}", retVal.ToString());
 			return retVal;
 		}
 
 		public void End()
 		{
-			_logger.Debug()?.Log("Ending {SpanDetails}", ToString());
-			if (!Duration.HasValue) Duration = (DateTimeOffset.UtcNow - _start).TotalMilliseconds;
+			if (Duration.HasValue)
+			{
+				_logger.Debug()?.Log("End() called on already ended {Span}. Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
+					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
+			}
+			else
+			{
+				var endTimestamp = TimeUtils.NowAsTimestamp();
+				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
+				_logger.Trace()?.Log("Ended {Span}. Start time: {Time} (as timestamp: {Timestamp}), End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
+					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
+			}
+
 			if (IsSampled) _payloadSender.QueueSpan(this);
 		}
 

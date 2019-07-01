@@ -1,4 +1,4 @@
-using Elastic.Apm.Tests.TestHelpers;
+using Elastic.Apm.Helpers;
 using FluentAssertions;
 
 namespace Elastic.Apm.Tests.MockApmServer
