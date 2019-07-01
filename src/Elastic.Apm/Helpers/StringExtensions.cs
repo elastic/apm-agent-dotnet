@@ -9,12 +9,12 @@ namespace Elastic.Apm.Helpers
 			input.ThrowIfArgumentNull(nameof(input));
 
 			if (input.Length > maxLength)
-				input = $"{input.Substring(0, Consts.PropertyMaxLength - 3)}...";
+				input = $"{input.Substring(0, maxLength - 3)}...";
 
 			return input;
 		}
 
-		internal static string TrimToMaxLength(this string input) => input.TrimToLength(Consts.PropertyMaxLength);
+		internal static string TrimToPropertyMaxLength(this string input) => input.TrimToLength(Consts.PropertyMaxLength);
 
 		public static bool IsEmpty(this string input)
 		{

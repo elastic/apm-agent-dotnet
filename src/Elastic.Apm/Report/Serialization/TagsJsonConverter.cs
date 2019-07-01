@@ -12,8 +12,8 @@ namespace Elastic.Apm.Report.Serialization
 			writer.WriteStartObject();
 			foreach (var keyValue in tags)
 			{
-				writer.WritePropertyName(keyValue.Key.TrimToMaxLength());
-				writer.WriteValue(keyValue.Value.TrimToMaxLength());
+				writer.WritePropertyName(keyValue.Key.TrimToPropertyMaxLength());
+				writer.WriteValue(keyValue.Value.TrimToPropertyMaxLength());
 			}
 			writer.WriteEndObject();
 		}
