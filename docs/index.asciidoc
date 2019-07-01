@@ -11,6 +11,7 @@ endif::[]
 
 include::./intro.asciidoc[Introduction]
 include::./setup.asciidoc[Set Up]
+include::./metrics.asciidoc[Metrics]
 include::./configuration.asciidoc[Configuration]
 include::./public-api.asciidoc[API documentation]
 include::./release-notes.asciidoc[Release notes]
