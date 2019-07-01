@@ -10,7 +10,7 @@ namespace Elastic.Apm.Helpers
 		public const int IndentationLength = 4; // spaces
 
 		// The order in endOfLines is important because we need to check longer sequences first
-		private static readonly string[] EndOfLineCharSequences = new string[] { "\r\n", "\n", "\r" };
+		private static readonly string[] EndOfLineCharSequences = { "\r\n", "\n", "\r" };
 
 		internal static string PrefixEveryLine(string input, string prefix = Indentation)
 		{
