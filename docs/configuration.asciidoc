@@ -182,14 +182,14 @@ The default unit for this option is `s`.
 
 [options="header"]
 |============
-| Default                          | Type
-| `30s` | TimeDuration
+| Default                 | Type
+| `30s`                   | TimeDuration
 |============
 
 
 [options="header"]
 |============
-| Environment variable name    | IConfiguration key 
+| Environment variable name      | IConfiguration key 
 | `ELASTIC_APM_METRICS_INTERVAL` | `ElasticApm:MetricsInterval`
 |============
 
