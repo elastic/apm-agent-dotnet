@@ -1,0 +1,102 @@
+ifdef::env-github[]
+NOTE: For the best reading experience,
+please view this documentation at https://www.elastic.co/guide/en/apm/agent/java[elastic.co]
+endif::[]
+
+[[metrics]]
+== Metrics
+
+The .NET agent tracks certain system and application metrics.
+Some of them have built-in visualizations and some can only be visualized with custom Kibana dashboards.
+
+These metrics will be sent regularly to the APM Server and from there to Elasticsearch.
+You can adjust the interval with the setting <<config-metrics-interval>>.
+
+The metrics will be stored in the `apm-*` index and have the `processor.event` property set to `metric`.
+
+"Platform: all" means that the metric is available on every platform where .NET Core is supported.
+
+[float]
+[[metrics-system]]
+=== System metrics
+
+As of APM version 6.6, these metrics will be visualized in the APM UI.
+
+For more system metrics, consider installing {metricbeat-ref}/index.html[metricbeat] on your hosts.
+
+*`system.cpu.total.norm.pct`*::
++
+--
+type: scaled_float
+
+format: percent
+
+platform: Windows and Linux only
+
+The percentage of CPU time in states other than Idle and IOWait, normalized by the number of cores.
+--
+
+
+*`system.process.cpu.total.norm.pct`*::
++
+--
+type: scaled_float
+
+format: percent
+
+platform: all
+
+The percentage of CPU time spent by the process since the last event.
+This value is normalized by the number of CPU cores and it ranges from 0 to 100%.
+--
+
+
+*`system.memory.total`*::
++
+--
+type: long
+
+format: bytes
+
+Platform: Windows and Linux only.
+
+Total memory.
+--
+
+
+*`system.memory.actual.free`*::
++
+--
+type: long
+
+format: bytes
+
+Platform: Windows and Linux only.
+
+Actual free memory in bytes.
+--
+
+
+*`system.process.memory.size`*::
++
+--
+type: long
+
+format: bytes
+
+platform: all
+
+The total virtual memory the process has.
+--
+
+*`system.process.memory.rss.bytes`*::
++
+--
+type: long
+
+format: bytes
+
+platform: all
+
+The total physical memory the process has.
+--
