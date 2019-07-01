@@ -260,6 +260,6 @@ namespace Elastic.Apm.Model
 		public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 
-		internal static string StatusCodeToResult(string protocolName, int StatusCode) => $"{protocolName} {StatusCode.ToString()[0]}xx";
+		internal static string StatusCodeToResult(string protocolName, int statusCode) => $"{protocolName} {statusCode.ToString()[0]}xx";
 	}
 }

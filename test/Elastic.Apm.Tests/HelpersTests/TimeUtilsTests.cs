@@ -77,10 +77,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 		[Theory]
 		[MemberData(nameof(TimestampAndDateTimeVariantsToTest))]
-		public void DateTimeToTimestampTests(long timestamp, DateTime dateTime)
-		{
+		public void DateTimeToTimestampTests(long timestamp, DateTime dateTime) =>
 			TimeUtils.ToTimestamp(dateTime).Should().Be(timestamp);
-		}
 
 		[Fact]
 		public void DateTimeToTimestampThrowsIfNotUtc()
@@ -96,9 +94,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 		[InlineData(1561954166195000, 1561954166179000, -16)]
 		[InlineData(1561954166179856, 1561954166195481, 15.625)]
 		[InlineData(1561954166195481, 1561954166179856, -15.625)]
-		public void DurationBetweenTimestampsTests(long startTimestamp, long endTimestamp, double expectedDuration)
-		{
+		public void DurationBetweenTimestampsTests(long startTimestamp, long endTimestamp, double expectedDuration) =>
 			TimeUtils.DurationBetweenTimestamps(startTimestamp, endTimestamp).Should().Be(expectedDuration);
-		}
 	}
 }
