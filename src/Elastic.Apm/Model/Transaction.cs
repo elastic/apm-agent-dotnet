@@ -18,9 +18,6 @@ namespace Elastic.Apm.Model
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
 
-		private readonly DateTimeOffset _start;
-		private readonly Stopwatch _startStopwatch;
-
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(IApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender) { }
@@ -34,16 +31,16 @@ namespace Elastic.Apm.Model
 			IPayloadSender sender
 		)
 		{
-			_logger = logger?.Scoped(nameof(Transaction));
+			Timestamp = TimeUtils.TimestampNow();
+			var idBytes = new byte[8];
+			Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
+			_logger = logger?.Scoped($"{nameof(Transaction)}.{Id}");
+
 			_sender = sender;
-			_start = DateTimeOffset.UtcNow;
-			_startStopwatch = Stopwatch.StartNew();
 
 			Name = name;
 			HasCustomName = false;
 			Type = type;
-			var idBytes = new byte[8];
-			Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 
 			var isSamplingFromDistributedTracingData = false;
 			if (distributedTracingData == null)
@@ -64,12 +61,14 @@ namespace Elastic.Apm.Model
 
 			if (isSamplingFromDistributedTracingData)
 				_logger.Trace()?.Log("New Transaction instance created: {Transaction}. " +
-					"IsSampled ({IsSampled}) is based on incoming distributed tracing data ({DistributedTracingData})",
-					this, IsSampled, distributedTracingData);
+					"IsSampled ({IsSampled}) is based on incoming distributed tracing data ({DistributedTracingData})." +
+					" Start time: {Time} (as timestamp: {Timestamp})",
+					this, IsSampled, distributedTracingData, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 			else
 				_logger.Trace()?.Log("New Transaction instance created: {Transaction}. " +
-					"IsSampled ({IsSampled}) is based on the given sampler ({Sampler})",
-					this, IsSampled, sampler);
+					"IsSampled ({IsSampled}) is based on the given sampler ({Sampler})." +
+					" Start time: {Time} (as timestamp: {Timestamp})",
+					this, IsSampled, sampler, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 		}
 
 		/// <summary>
@@ -137,8 +136,10 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		public Dictionary<string, string> Tags => Context.Tags;
 
-		// ReSharper disable once ImpureMethodCallOnReadonlyValueField
-		public long Timestamp => _start.ToUnixTimeMilliseconds() * 1000;
+		/// <summary>
+		/// Recorded time of the event, UTC based and formatted as microseconds since Unix epoch
+		/// </summary>
+		public long Timestamp { get; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("trace_id")]
@@ -167,15 +168,21 @@ namespace Elastic.Apm.Model
 
 		public void End()
 		{
-			if (!Duration.HasValue)
+			if (Duration.HasValue)
 			{
-				_startStopwatch.Stop();
-				Duration = _startStopwatch.ElapsedMilliseconds;
+				_logger.Debug()?.Log("End() called on already ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}",
+					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
+			}
+			else
+			{
+				var endTimestamp = TimeUtils.TimestampNow();
+				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
+				_logger.Trace()?.Log("Ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp}), End time: {Time}, Duration: {Duration}ms",
+					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
 			}
 
 			_sender.QueueTransaction(this);
 
-			_logger.Debug()?.Log("Ending {TransactionDetails}", ToString());
 			Agent.TransactionContainer.Transactions.Value = null;
 		}
 
@@ -190,7 +197,7 @@ namespace Elastic.Apm.Model
 
 			if (!string.IsNullOrEmpty(action)) retVal.Action = action;
 
-			_logger.Debug()?.Log("Starting {SpanDetails}", retVal.ToString());
+			_logger.Trace()?.Log("Starting {SpanDetails}", retVal.ToString());
 			return retVal;
 		}
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Report;
@@ -110,7 +111,7 @@ namespace Elastic.Apm.Metrics
 							metricsProvider.DbgName, metricsProvider.ConsecutiveNumberOfFailedReads, metricsProvider.DbgName);
 				}
 
-				var metricSet = new MetricSet(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() * 1000, samplesFromAllProviders);
+				var metricSet = new MetricSet(TimeUtils.TimestampNow(), samplesFromAllProviders);
 
 				try
 				{
