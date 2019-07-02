@@ -70,7 +70,9 @@ namespace Elastic.Apm.Elasticsearch
 			var culprit = "Elasticsearch Error";
 
 			var message = $"{f.GetStringValue()} {exception?.Message}";
-			var stackFrames = exception == null ? new StackTrace(true).GetFrames() : new StackTrace(exception, true).GetFrames();
+			var stackFrames = exception == null ?  null : new StackTrace(exception, fNeedFileInfo: true).GetFrames();
+			if (stackFrames == null || stackFrames.Length == 0)
+				stackFrames = new StackTrace(fNeedFileInfo: true).GetFrames();
 
 			var causeOnServer = false;
 			if (response.ResponseBodyInBytes != null)
