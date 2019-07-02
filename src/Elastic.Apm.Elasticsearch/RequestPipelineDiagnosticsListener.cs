@@ -1,7 +1,12 @@
 using System;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elasticsearch.Net;
 using Elasticsearch.Net.Diagnostics;
@@ -18,49 +23,95 @@ namespace Elastic.Apm.Elasticsearch
 
 		private void OnResult(string @event, IApiCallDetails response)
 		{
-			if (!@event.EndsWith(".Stop")) return;
+			if (!TryGetCurrentElasticsearchSpan(out var span)) return;
 
-			var id = Activity.Current.Id;
-			if (!Spans.TryRemove(id, out var span)) return;
+			span.Name += $" ({response.HttpStatusCode})";
 
-			span.Context.Db = new Database
-			{
-				Instance = response.Uri.ToString(),
-				Type = Database.TypeElasticsearch
-			};
-			span.Action = span.Name;
+			RegisterStatement(span, response);
+			RegisterError(span, response);
+
+			Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
 			span.End();
 		}
 
+		private static void RegisterStatement(ISpan span, IApiCallDetails response)
+		{
+			//we can only register the statement if the client disables direct streaming
+			if (response.RequestBodyInBytes == null) return;
+
+			//make sure db exists
+			var db = span.Context.Db ?? (span.Context.Db = new Database
+			{
+				Instance = response.Uri?.GetLeftPart(UriPartial.Authority), Type = Database.TypeElasticsearch,
+			});
+
+			db.Statement = Encoding.UTF8.GetString(response.RequestBodyInBytes);
+
+		}
+
+		private static void RegisterError(ISpan span, IApiCallDetails response)
+		{
+			if (response.Success) return;
+
+			var exception = response.OriginalException ?? response.AuditTrail.FirstOrDefault(a => a.Exception != null)?.Exception;
+			var f = PipelineFailure.Unexpected;
+			// report inner exception stack traces for these directly if possible
+			if (exception is ElasticsearchClientException es)
+			{
+				f = es.FailureReason ?? f;
+				exception = es.InnerException ?? es;
+			}
+			if (exception is UnexpectedElasticsearchClientException un)
+			{
+				f = un.FailureReason ?? f;
+				exception = un.InnerException ?? un;
+			}
+
+			var culprit = "Elasticsearch Error";
+
+			var message = $"{f.GetStringValue()} {exception?.Message}";
+			var stackFrames = exception == null ? new StackTrace(true).GetFrames() : new StackTrace(exception, true).GetFrames();
+
+			var causeOnServer = false;
+			if (response.ResponseBodyInBytes != null)
+			{
+				using (var memoryStream = new MemoryStream(response.ResponseBodyInBytes))
+				{
+					if (ServerError.TryCreate(memoryStream, out var serverError))
+					{
+						causeOnServer = true;
+						culprit = "Elasticsearch Server Error";
+						message = serverError.Error.RootCause.FirstOrDefault()?.Reason
+							?? serverError.Error.CausedBy?.Reason
+							?? serverError.Error.Reason;
+					}
+				}
+			}
+
+			if (exception == null && !causeOnServer) return;
+			if (causeOnServer && string.IsNullOrEmpty(message)) return;
+
+			span.CaptureError(message, culprit, stackFrames);
+		}
 
 		private void OnRequestData(string @event, RequestData requestData)
 		{
-			var transaction = Agent.TransactionContainer.Transactions.Value;
-			if (Agent.TransactionContainer.Transactions == null || Agent.TransactionContainer.Transactions.Value == null)
-			{
-				Logger.Debug()?.Log("No active transaction, skip creating span for outgoing HTTP request");
-				return;
-			}
 			var name = ToName(@event);
-			if (!@event.EndsWith(".Start")) return;
+			if (TryStartElasticsearchSpan(name, out var span, requestData?.Node?.Uri.ToString()))
+			{
+				if (@event == CallStart && requestData != null)
+					span.Name = $"Elasticsearch: {requestData.Method.GetStringValue()} {requestData.Uri?.AbsolutePath}";
 
-			var span = transaction.StartSpanInternal(name,
-				//TODO types
-				ApiConstants.TypeDb,
-				ApiConstants.SubtypeHttp);
-
-			var id = Activity.Current.Id;
-			if (Spans.TryAdd(id, span)) return;
-
-			Logger.Error()?.Log("Failed to add to ProcessingRequests - ???");
+				Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
+			}
 		}
 
-		private const string PingStart = nameof(DiagnosticSources.RequestPipeline.Ping) + ".Start";
-		private const string PingStop = nameof(DiagnosticSources.RequestPipeline.Ping) + ".Stop";
-		private const string SniffStart = nameof(DiagnosticSources.RequestPipeline.Sniff) + ".Start";
-		private const string SniffStop = nameof(DiagnosticSources.RequestPipeline.Sniff) + ".Stop";
-		private const string CallStart = nameof(DiagnosticSources.RequestPipeline.CallElasticsearch) + ".Start";
-		private const string CallStop = nameof(DiagnosticSources.RequestPipeline.CallElasticsearch) + ".Stop";
+		private const string PingStart = nameof(DiagnosticSources.RequestPipeline.Ping) + StartSuffix;
+		private const string PingStop = nameof(DiagnosticSources.RequestPipeline.Ping) + StopSuffix;
+		private const string SniffStart = nameof(DiagnosticSources.RequestPipeline.Sniff) + StartSuffix;
+		private const string SniffStop = nameof(DiagnosticSources.RequestPipeline.Sniff) + StopSuffix;
+		private const string CallStart = nameof(DiagnosticSources.RequestPipeline.CallElasticsearch) + StartSuffix;
+		private const string CallStop = nameof(DiagnosticSources.RequestPipeline.CallElasticsearch) + StopSuffix;
 
 		private static string ToName(string @event)
 		{
@@ -76,11 +127,8 @@ namespace Elastic.Apm.Elasticsearch
 				case CallStop:
 					return DiagnosticSources.RequestPipeline.CallElasticsearch;
 				default:
-					return @event.Replace(".Start", string.Empty).Replace(".Stop", string.Empty);
-
+					return @event.Replace(StartSuffix, string.Empty).Replace(StopSuffix, string.Empty);
 			}
 		}
-
-
 	}
 }

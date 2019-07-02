@@ -14,40 +14,28 @@ namespace Elastic.Apm.Elasticsearch
 
 		private void OnSerializer(string @event, SerializerRegistrationInformation serializerInfo)
 		{
-			var transaction = Agent.TransactionContainer.Transactions.Value;
-			if (Agent.TransactionContainer.Transactions == null || Agent.TransactionContainer.Transactions.Value == null)
-			{
-				Logger.Debug()?.Log("No active transaction, skip creating span for outgoing HTTP request");
-				return;
-			}
+			// the high level .NET client NEST also emits events when (de)serializing user defined types e.g:
+			// 		- _source
+			//		- script parameters
+			//		- script values
+			// This is to granular of information for tracing and is more there to aid profiling.
+			if (serializerInfo.Purpose != "request/response") return;
+
 			var name = ToName(@event);
 
-			var id = Activity.Current.Id;
-			if (@event.EndsWith(".Start"))
+			if (@event.EndsWith(StartSuffix) && TryStartElasticsearchSpan(name, out _))
+				Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
+			else if (@event.EndsWith(StopSuffix) && TryGetCurrentElasticsearchSpan(out var span))
 			{
-				var span = transaction.StartSpanInternal(name,
-					//TODO types
-					ApiConstants.TypeDb,
-					ApiConstants.SubtypeHttp);
-
-				if (Spans.TryAdd(id, span)) return;
-
-				Logger.Error()?.Log("Failed to add to ProcessingRequests - ???");
-			}
-			else if (@event.EndsWith(".Stop"))
-			{
-				if (!Spans.TryRemove(id, out var span)) return;
-
-				span.Action = name;
-				span.Tags.Add(nameof(serializerInfo.Purpose), serializerInfo.Purpose);
+				Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
 				span.End();
 			}
 		}
 
-		private const string SerializeStart = nameof(DiagnosticSources.Serializer.Serialize) + ".Start";
-		private const string SerializeStop = nameof(DiagnosticSources.Serializer.Serialize) + ".Stop";
-		private const string DeserializeStart = nameof(DiagnosticSources.Serializer.Deserialize) + ".Start";
-		private const string DeserializeStop = nameof(DiagnosticSources.Serializer.Deserialize) + ".Stop";
+		private const string SerializeStart = nameof(DiagnosticSources.Serializer.Serialize) + StartSuffix;
+		private const string SerializeStop = nameof(DiagnosticSources.Serializer.Serialize) + StopSuffix;
+		private const string DeserializeStart = nameof(DiagnosticSources.Serializer.Deserialize) + StartSuffix;
+		private const string DeserializeStop = nameof(DiagnosticSources.Serializer.Deserialize) + StopSuffix;
 
 		private static string ToName(string @event)
 		{
@@ -60,7 +48,7 @@ namespace Elastic.Apm.Elasticsearch
 				case DeserializeStop:
 					return DiagnosticSources.Serializer.Deserialize;
 				default:
-					return @event.Replace(".Start", string.Empty).Replace(".Stop", string.Empty);
+					return @event.Replace(StartSuffix, string.Empty).Replace(StopSuffix, string.Empty);
 
 			}
 		}

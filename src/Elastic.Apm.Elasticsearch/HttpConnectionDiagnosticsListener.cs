@@ -17,47 +17,24 @@ namespace Elastic.Apm.Elasticsearch
 
 		private void OnResult(string @event, int? statusCode)
 		{
-			if (!@event.EndsWith(".Stop")) return;
+			if (!TryGetCurrentElasticsearchSpan(out var span)) return;
 
-			var id = Activity.Current.Id;
-			if (!Spans.TryRemove(id, out var span)) return;
-
-			span.Action = span.Name;
+			span.Name += $" ({statusCode})";
+			Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
 			span.End();
 		}
 
-
 		private void OnRequestData(string @event, RequestData requestData)
 		{
-			var transaction = Agent.TransactionContainer.Transactions.Value;
-			if (Agent.TransactionContainer.Transactions == null || Agent.TransactionContainer.Transactions.Value == null)
-			{
-				Logger.Debug()?.Log("No active transaction, skip creating span for outgoing HTTP request");
-				return;
-			}
 			var name = ToName(@event);
-			if (!@event.EndsWith(".Start")) return;
-
-			var span = transaction.StartSpanInternal(name,
-				//TODO types
-				ApiConstants.TypeDb,
-				ApiConstants.SubtypeHttp);
-			span.Context.Db = new Database
-			{
-				Instance = requestData.Node?.Uri.ToString(),
-				Type = Database.TypeElasticsearch
-			};
-
-			var id = Activity.Current.Id;
-			if (Spans.TryAdd(id, span)) return;
-
-			Logger.Error()?.Log("Failed to add to ProcessingRequests - ???");
+			if (TryStartElasticsearchSpan(name, out _, requestData?.Node?.Uri.ToString()))
+				Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
 		}
 
-		private const string ReceiveStart = nameof(DiagnosticSources.HttpConnection.ReceiveBody) + ".Start";
-		private const string ReceiveStop = nameof(DiagnosticSources.HttpConnection.ReceiveBody) + ".Stop";
-		private const string SendStart = nameof(DiagnosticSources.HttpConnection.SendAndReceiveHeaders) + ".Start";
-		private const string SendStop = nameof(DiagnosticSources.HttpConnection.SendAndReceiveHeaders) + ".Stop";
+		private const string ReceiveStart = nameof(DiagnosticSources.HttpConnection.ReceiveBody) + StartSuffix;
+		private const string ReceiveStop = nameof(DiagnosticSources.HttpConnection.ReceiveBody) + StopSuffix;
+		private const string SendStart = nameof(DiagnosticSources.HttpConnection.SendAndReceiveHeaders) + StartSuffix;
+		private const string SendStop = nameof(DiagnosticSources.HttpConnection.SendAndReceiveHeaders) + StopSuffix;
 
 		private static string ToName(string @event)
 		{

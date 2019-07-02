@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.Tracing;
+using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.DiagnosticSource;
 
 namespace Elastic.Apm.Elasticsearch

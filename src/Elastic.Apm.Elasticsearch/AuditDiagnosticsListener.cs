@@ -14,36 +14,13 @@ namespace Elastic.Apm.Elasticsearch
 
 		private void OnAudit(string @event, Audit audit)
 		{
-			var transaction = Agent.TransactionContainer.Transactions.Value;
-			if (Agent.TransactionContainer.Transactions == null || Agent.TransactionContainer.Transactions.Value == null)
-			{
-				Logger.Debug()?.Log("No active transaction, skip creating span for outgoing HTTP request");
-				return;
-			}
 			var name = @audit.Event.GetStringValue();
 
-			var id = Activity.Current.Id;
-			if (@event.EndsWith(".Start"))
+			if (@event.EndsWith(StartSuffix) && TryStartElasticsearchSpan(name, out _, audit.Node?.Uri.ToString()))
+				Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
+			else if (@event.EndsWith(StopSuffix) && TryGetCurrentElasticsearchSpan(out var span, audit.Node?.Uri.ToString()))
 			{
-				var span = transaction.StartSpanInternal(name,
-					//TODO types
-					ApiConstants.TypeDb,
-					ApiConstants.SubtypeHttp);
-
-				if (Spans.TryAdd(id, span)) return;
-
-				Logger.Error()?.Log("Failed to add to ProcessingRequests - ???");
-			}
-			else if (@event.EndsWith(".Stop"))
-			{
-				if (!Spans.TryRemove(id, out var span)) return;
-
-				span.Context.Db = new Database
-				{
-					Instance = audit.Node?.Uri.ToString(),
-					Type = Database.TypeElasticsearch
-				};
-				span.Action = name;
+				Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
 				span.End();
 			}
 		}
