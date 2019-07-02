@@ -4,18 +4,6 @@ namespace Elastic.Apm.Helpers
 {
 	internal static class StringExtensions
 	{
-		private static string TrimToLength(this string input, int maxLength)
-		{
-			input.ThrowIfArgumentNull(nameof(input));
-
-			if (input.Length > maxLength)
-				input = $"{input.Substring(0, maxLength - 3)}...";
-
-			return input;
-		}
-
-		internal static string TrimToPropertyMaxLength(this string input) => input.TrimToLength(Consts.PropertyMaxLength);
-
 		public static bool IsEmpty(this string input)
 		{
 			input.ThrowIfArgumentNull(nameof(input));

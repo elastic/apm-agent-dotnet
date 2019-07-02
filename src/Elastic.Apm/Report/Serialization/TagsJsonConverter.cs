@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Elastic.Apm.Helpers;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Report.Serialization
@@ -12,8 +11,8 @@ namespace Elastic.Apm.Report.Serialization
 			writer.WriteStartObject();
 			foreach (var keyValue in tags)
 			{
-				writer.WritePropertyName(keyValue.Key.TrimToPropertyMaxLength());
-				writer.WriteValue(keyValue.Value.TrimToPropertyMaxLength());
+				writer.WritePropertyName(SerializationUtils.TrimToPropertyMaxLength(keyValue.Key));
+				writer.WriteValue(SerializationUtils.TrimToPropertyMaxLength(keyValue.Value));
 			}
 			writer.WriteEndObject();
 		}
