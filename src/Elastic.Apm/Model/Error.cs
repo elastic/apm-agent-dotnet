@@ -10,7 +10,7 @@ namespace Elastic.Apm.Model
 	{
 		public Error(CapturedException capturedException, Transaction transaction, string parentId, IApmLogger loggerArg)
 		{
-			Timestamp = TimeUtils.NowAsTimestamp();
+			Timestamp = TimeUtils.TimestampNow();
 			Id = RandomGenerator.GenerateRandomBytesAsString(new byte[16]);
 
 			Exception = capturedException;

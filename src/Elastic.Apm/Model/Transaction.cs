@@ -31,7 +31,7 @@ namespace Elastic.Apm.Model
 			IPayloadSender sender
 		)
 		{
-			Timestamp = TimeUtils.NowAsTimestamp();
+			Timestamp = TimeUtils.TimestampNow();
 			var idBytes = new byte[8];
 			Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 			_logger = logger?.Scoped($"{nameof(Transaction)}.{Id}");
@@ -175,7 +175,7 @@ namespace Elastic.Apm.Model
 			}
 			else
 			{
-				var endTimestamp = TimeUtils.NowAsTimestamp();
+				var endTimestamp = TimeUtils.TimestampNow();
 				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
 				_logger.Trace()?.Log("Ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp}), End time: {Time}, Duration: {Duration}ms",
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);

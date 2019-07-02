@@ -29,7 +29,7 @@ namespace Elastic.Apm.Model
 			IApmLogger logger
 		)
 		{
-			Timestamp = TimeUtils.NowAsTimestamp();
+			Timestamp = TimeUtils.TimestampNow();
 			Id = RandomGenerator.GenerateRandomBytesAsString(new byte[8]);
 			_logger = logger?.Scoped($"{nameof(Span)}.{Id}");
 
@@ -154,7 +154,7 @@ namespace Elastic.Apm.Model
 			}
 			else
 			{
-				var endTimestamp = TimeUtils.NowAsTimestamp();
+				var endTimestamp = TimeUtils.TimestampNow();
 				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
 				_logger.Trace()?.Log("Ended {Span}. Start time: {Time} (as timestamp: {Timestamp}), End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);

@@ -111,7 +111,7 @@ namespace Elastic.Apm.Metrics
 							metricsProvider.DbgName, metricsProvider.ConsecutiveNumberOfFailedReads, metricsProvider.DbgName);
 				}
 
-				var metricSet = new MetricSet(TimeUtils.NowAsTimestamp(), samplesFromAllProviders);
+				var metricSet = new MetricSet(TimeUtils.TimestampNow(), samplesFromAllProviders);
 
 				try
 				{

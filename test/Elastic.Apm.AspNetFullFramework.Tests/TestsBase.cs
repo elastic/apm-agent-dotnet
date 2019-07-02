@@ -43,7 +43,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		private readonly MockApmServer _mockApmServer;
 		private readonly int _mockApmServerPort;
 		private readonly bool _startMockApmServer;
-		private readonly DateTimeOffset _testStartTime = DateTimeOffset.UtcNow;
+		private readonly DateTime _testStartTime = DateTime.UtcNow;
 
 		protected TestsBase(ITestOutputHelper xUnitOutputHelper,
 			bool startMockApmServer = true,
@@ -258,14 +258,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			void AnalyzeDtoTimestamp(long dtoTimestamp, object dto)
 			{
-				var dtoStartTime = TimeUtils.TimestampToDateTimeOffset(dtoTimestamp);
+				var dtoStartTime = TimeUtils.ToDateTime(dtoTimestamp);
 
 				if (_testStartTime <= dtoStartTime) return;
 
 				_logger.Warning()
 					?.Log("The following DTO received from the agent has timestamp that is earlier than the current test start time. " +
 						"DTO timestamp: {DtoTimestamp}, test start time: {TestStartTime}, DTO: {DtoFromAgent}",
-						dtoStartTime.LocalDateTime, _testStartTime.LocalDateTime, dto);
+						dtoStartTime.ToLocalTime().FormatForLog(), _testStartTime.ToLocalTime().FormatForLog(), dto);
 			}
 		}
 
