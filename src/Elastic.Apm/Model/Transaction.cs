@@ -84,7 +84,7 @@ namespace Elastic.Apm.Model
 		/// is automatically calculated when <see cref="End" /> is called.
 		/// </summary>
 		/// <value>The duration.</value>
-		public double? Duration { get; set; }
+		public double? Duration { get; private set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Id { get; }
