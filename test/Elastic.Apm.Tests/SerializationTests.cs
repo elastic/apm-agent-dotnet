@@ -25,7 +25,8 @@ namespace Elastic.Apm.Tests
 		{
 			var str = new string('a', 1200);
 
-			var transaction = new Transaction(new TestAgentComponents(), str, "test") { Duration = 1, Result = "fail" };
+			var transaction = new Transaction(new TestAgentComponents(), str, "test") { Result = "fail" };
+			transaction.End(/* duration: */ 1);
 
 			var json = SerializePayloadItem(transaction);
 			var deserializedTransaction = JsonConvert.DeserializeObject(json) as JObject;

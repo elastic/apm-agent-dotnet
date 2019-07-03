@@ -3,12 +3,12 @@ using System.Globalization;
 
 namespace Elastic.Apm.Helpers
 {
-	public static class TimeExtensions
+	internal static class TimeExtensions
 	{
-		public static string FormatForLog(this DateTime dateTime, bool includeKind = true) =>
+		internal static string FormatForLog(this DateTime dateTime, bool includeKind = true) =>
 			dateTime.ToString("yyyy-MM-dd HH:mm:ss.fffffff", CultureInfo.InvariantCulture) + (includeKind ? $" {dateTime.Kind.FormatForLog()}" : "");
 
-		public static string FormatForLog(this DateTimeKind dateTimeKind)
+		internal static string FormatForLog(this DateTimeKind dateTimeKind)
 		{
 			switch (dateTimeKind)
 			{
@@ -19,7 +19,7 @@ namespace Elastic.Apm.Helpers
 			}
 		}
 
-		public static string FormatForLog(this DateTimeOffset dateTimeOffset) =>
+		internal static string FormatForLog(this DateTimeOffset dateTimeOffset) =>
 			dateTimeOffset.ToString("yyyy-MM-dd HH:mm:ss.fffffff zzz", CultureInfo.InvariantCulture);
 	}
 }

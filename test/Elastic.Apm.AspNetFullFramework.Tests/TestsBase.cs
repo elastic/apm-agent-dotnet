@@ -392,7 +392,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				_logger.Warning()
 					?.Log("The following DTO received from the agent has timestamp that is earlier than the current test start time. " +
 						"DTO timestamp: {DtoTimestamp}, test start time: {TestStartTime}, DTO: {DtoFromAgent}",
-						dtoStartTime.FormatForLog(), _testStartTime.FormatForLog(), dto);
+						dtoStartTime.ToLocalTime().FormatForLog(), _testStartTime.ToLocalTime().FormatForLog(), dto);
 			}
 		}
 

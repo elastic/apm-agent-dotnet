@@ -84,7 +84,7 @@ namespace Elastic.Apm.Model
 		/// is automatically calculated when <see cref="End" /> is called.
 		/// </summary>
 		/// <value>The duration.</value>
-		public double? Duration { get; set; }
+		public double? Duration { get; private set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Id { get; }
@@ -166,7 +166,7 @@ namespace Elastic.Apm.Model
 			{ "IsSampled", IsSampled }
 		}.ToString();
 
-		public void End()
+		public void End(double? duration = null)
 		{
 			if (Duration.HasValue)
 			{
@@ -175,10 +175,21 @@ namespace Elastic.Apm.Model
 			}
 			else
 			{
-				var endTimestamp = TimeUtils.TimestampNow();
-				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
-				_logger.Trace()?.Log("Ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp}), End time: {Time}, Duration: {Duration}ms",
-					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
+				if (duration.HasValue)
+				{
+					Duration = duration.Value;
+					_logger.Trace()?.Log("Ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
+						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
+				}
+				else
+				{
+					var endTimestamp = TimeUtils.TimestampNow();
+					Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
+					_logger.Trace()?.Log("Ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp})," +
+						" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
+						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp,
+						TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
+				}
 			}
 
 			_sender.QueueTransaction(this);
