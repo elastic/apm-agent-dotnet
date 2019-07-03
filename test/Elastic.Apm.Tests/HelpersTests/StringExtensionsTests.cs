@@ -1,8 +1,8 @@
 using System;
-using System.Text;
 using Elastic.Apm.Helpers;
 using FluentAssertions;
 using Xunit;
+using static Elastic.Apm.Tests.TestHelpers.FluentAssertionsUtils;
 
 namespace Elastic.Apm.Tests.HelpersTests
 {
@@ -17,7 +17,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 			"abc".IsEmpty().Should().BeFalse();
 			" ".IsEmpty().Should().BeFalse();
 
-			((Action)(() => ((string) null).IsEmpty())).Should().ThrowExactly<ArgumentNullException>();
+			AsAction(() => ((string)null).IsEmpty()).Should().ThrowExactly<ArgumentNullException>();
 		}
 
 		[Fact]
@@ -31,10 +31,10 @@ namespace Elastic.Apm.Tests.HelpersTests
 			"xyz".Repeat(0).Should().BeEmpty();
 			string.Empty.Repeat(10).Should().BeEmpty();
 
-			((Action)(() => ((string) null).Repeat(1))).Should().ThrowExactly<ArgumentNullException>();
-			((Action)(() => ((string) null).Repeat(0))).Should().ThrowExactly<ArgumentNullException>();
-			((Action)(() => ((string) null).Repeat(-1))).Should().ThrowExactly<ArgumentNullException>();
-			((Action)(() => "abc".Repeat(-321))).Should().ThrowExactly<ArgumentException>().WithMessage("*-321*");
+			AsAction(() => ((string)null).Repeat(1)).Should().ThrowExactly<ArgumentNullException>();
+			AsAction(() => ((string)null).Repeat(0)).Should().ThrowExactly<ArgumentNullException>();
+			AsAction(() => ((string)null).Repeat(-1)).Should().ThrowExactly<ArgumentNullException>();
+			AsAction(() => "abc".Repeat(-321)).Should().ThrowExactly<ArgumentException>().WithMessage("*-321*");
 		}
 	}
 }
