@@ -56,7 +56,7 @@ Returns the currently active transaction.
 See the <<api-transaction>> to customize the current transaction.
 
 If there is no current transaction,
-this method will return null.
+this method will return `null`.
 
 [source,csharp]
 ----
@@ -259,6 +259,7 @@ var asyncResult = await transaction.CaptureSpan("Select FROM customer", ApiConst
 
 NOTE: The <<convenient-capture-span>> method does not start any `Task` for you, so you have to call it with the `await` keyword if you use one of the overloads that accept `Task` or `Task<T>`.
 
+NOTE: Code samples above use `Elastic.Apm.Agent.Tracer.CurrentTransaction`. In production code you should make sure the `CurrentTransaction` is not `null`.
 
 //----------------------------
 [float]
