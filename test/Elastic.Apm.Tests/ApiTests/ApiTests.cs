@@ -469,6 +469,39 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstSpan.Context.Tags["foo"].Should().Be("bar");
 		}
 
+		/// <summary>
+		/// Creates a transaction, then a span then calls <see cref="ITransaction.End()"/> and <see cref="ISpan.End()"/> twice.
+		/// Makes sure that transaction and span sent on the first respective call to End() and the second call is no-op.
+		/// </summary>
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void CallingEndMoreThanOnceIsNoop(bool isSampled)
+		{
+			var payloadSender = new MockPayloadSender();
+			var expectedSpansCount = isSampled ? 1 : 0;
+
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, transactionSampleRate: isSampled ? "1" : "0")))
+			{
+				var transaction = agent.Tracer.StartTransaction(TestTransaction, UnitTest);
+				var span = transaction.StartSpan(TestSpan1, ApiConstants.TypeExternal);
+
+				payloadSender.Spans.Should().HaveCount(0);
+				span.End();
+				payloadSender.Spans.Should().HaveCount(expectedSpansCount);
+				if (isSampled) payloadSender.FirstSpan.Name.Should().Be(TestSpan1);
+				span.End();
+				payloadSender.Spans.Should().HaveCount(expectedSpansCount);
+
+				payloadSender.Transactions.Should().HaveCount(0);
+				transaction.End();
+				payloadSender.Transactions.Should().HaveCount(1);
+				payloadSender.FirstTransaction.Name.Should().Be(TestTransaction);
+				transaction.End();
+				payloadSender.Transactions.Should().HaveCount(1);
+			}
+		}
+
 		// ReSharper disable once MemberCanBePrivate.Global
 		public static IEnumerable<object[]> ErrorShouldContainTransactionDataParamVariants()
 		{

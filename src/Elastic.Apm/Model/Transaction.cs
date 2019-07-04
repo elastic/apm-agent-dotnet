@@ -17,7 +17,7 @@ namespace Elastic.Apm.Model
 
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
-		private bool _dbgIsEnded;
+		private bool _isEnded;
 
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(IApmAgent agent, string name, string type)
@@ -177,8 +177,8 @@ namespace Elastic.Apm.Model
 			}
 			else
 			{
-				Assertion.IfEnabled?.That(! _dbgIsEnded, $"If a transaction doesn't have Duration set it means that the transaction did not end yet." +
-					$" this: {this}; {nameof(Duration)}: {Duration}, {nameof(_dbgIsEnded)}: {_dbgIsEnded}");
+				Assertion.IfEnabled?.That(! _isEnded, $"If a transaction doesn't have Duration set it means that the transaction did not end yet." +
+					$" this: {this}; {nameof(Duration)}: {Duration}, {nameof(_isEnded)}: {_isEnded}");
 
 				var endTimestamp = TimeUtils.TimestampNow();
 				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
@@ -188,8 +188,10 @@ namespace Elastic.Apm.Model
 					TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
 			}
 
-			_dbgIsEnded = true;
-			_sender.QueueTransaction(this);
+
+			var isFirstEndCall = ! _isEnded;
+			_isEnded = true;
+			if (isFirstEndCall) _sender.QueueTransaction(this);
 
 			Agent.TransactionContainer.Transactions.Value = null;
 		}

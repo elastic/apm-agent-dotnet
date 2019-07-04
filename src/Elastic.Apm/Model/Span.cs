@@ -17,7 +17,6 @@ namespace Elastic.Apm.Model
 		private readonly Transaction _enclosingTransaction;
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _payloadSender;
-		private bool _dbgIsEnded;
 
 		public Span(
 			string name,
@@ -52,9 +51,12 @@ namespace Elastic.Apm.Model
 				StackTrace = StacktraceHelper.GenerateApmStackTrace(new StackTrace(true).GetFrames(), _logger, $"Span `{Name}'");
 			}
 
-			_logger.Trace()?.Log("New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp})",
-				this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+			_logger.Trace()
+				?.Log("New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp})",
+					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 		}
+
+		private bool _isEnded;
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Action { get; set; }
@@ -150,29 +152,28 @@ namespace Elastic.Apm.Model
 		{
 			if (Duration.HasValue)
 			{
-				_logger.Trace()?.Log("Ended {Span} (with Duration already set)." +
-					" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
+				_logger.Trace()
+					?.Log("Ended {Span} (with Duration already set)." +
+						" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
+						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
 			}
 			else
 			{
-				Assertion.IfEnabled?.That(! _dbgIsEnded, $"If a span doesn't have Duration set it means that the span did not end yet." +
-					$" this: {this}; {nameof(Duration)}: {Duration}, {nameof(_dbgIsEnded)}: {_dbgIsEnded}");
+				Assertion.IfEnabled?.That(!_isEnded, $"If a span doesn't have Duration set it means that the span did not end yet." +
+					$" this: {this}; {nameof(Duration)}: {Duration}, {nameof(_isEnded)}: {_isEnded}");
 
 				var endTimestamp = TimeUtils.TimestampNow();
 				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
-				_logger.Trace()?.Log("Ended {Span}. Start time: {Time} (as timestamp: {Timestamp})," +
-					" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp,
-					TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
+				_logger.Trace()
+					?.Log("Ended {Span}. Start time: {Time} (as timestamp: {Timestamp})," +
+						" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
+						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp,
+						TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
 			}
 
-			var isFirstEndCall = ! _dbgIsEnded;
-			if (IsSampled && isFirstEndCall)
-			{
-				_dbgIsEnded = true;
-				_payloadSender.QueueSpan(this);
-			}
+			var isFirstEndCall = !_isEnded;
+			_isEnded = true;
+			if (IsSampled && isFirstEndCall) _payloadSender.QueueSpan(this);
 		}
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
