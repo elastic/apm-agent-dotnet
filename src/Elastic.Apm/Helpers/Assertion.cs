@@ -1,10 +1,12 @@
 namespace Elastic.Apm.Helpers
 {
-	internal class Assertion
+	internal static class Assertion
 	{
-		private static readonly AssertIfEnabled _singletonAssertIfEnabled = new AssertIfEnabled();
+		private static readonly AssertIfEnabled SingletonAssertIfEnabled = new AssertIfEnabled();
 
-		internal static AssertIfEnabled? IfEnabled => IsEnabled ? _singletonAssertIfEnabled : (AssertIfEnabled?)null;
+		internal static AssertIfEnabled? IfEnabled => IsEnabled ? SingletonAssertIfEnabled : (AssertIfEnabled?)null;
+
+		internal static bool IsEnabled { get; set; } = true;
 
 		internal struct AssertIfEnabled
 		{
@@ -13,7 +15,5 @@ namespace Elastic.Apm.Helpers
 				if (!condition) throw new AssertionFailedException(message);
 			}
 		}
-
-		internal static bool IsEnabled { get; set; } = true;
 	}
 }
