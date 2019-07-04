@@ -17,7 +17,6 @@ namespace Elastic.Apm.Model
 
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
-		private bool _isEnded;
 
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(IApmAgent agent, string name, string type)
@@ -61,16 +60,26 @@ namespace Elastic.Apm.Model
 			SpanCount = new SpanCount();
 
 			if (isSamplingFromDistributedTracingData)
-				_logger.Trace()?.Log("New Transaction instance created: {Transaction}. " +
-					"IsSampled ({IsSampled}) is based on incoming distributed tracing data ({DistributedTracingData})." +
-					" Start time: {Time} (as timestamp: {Timestamp})",
-					this, IsSampled, distributedTracingData, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+			{
+				_logger.Trace()
+					?.Log("New Transaction instance created: {Transaction}. " +
+						"IsSampled ({IsSampled}) is based on incoming distributed tracing data ({DistributedTracingData})." +
+						" Start time: {Time} (as timestamp: {Timestamp})",
+						this, IsSampled, distributedTracingData, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+			}
 			else
-				_logger.Trace()?.Log("New Transaction instance created: {Transaction}. " +
-					"IsSampled ({IsSampled}) is based on the given sampler ({Sampler})." +
-					" Start time: {Time} (as timestamp: {Timestamp})",
-					this, IsSampled, sampler, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+			{
+				_logger.Trace()
+					?.Log("New Transaction instance created: {Transaction}. " +
+						"IsSampled ({IsSampled}) is based on the given sampler ({Sampler})." +
+						" Start time: {Time} (as timestamp: {Timestamp})",
+						this, IsSampled, sampler, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+			}
 		}
+
+		private bool _isEnded;
+
+		private string _name;
 
 		/// <summary>
 		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
@@ -86,6 +95,13 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		/// <value>The duration.</value>
 		public double? Duration { get; set; }
+
+		/// <summary>
+		/// If true, then the transaction name was modified by external code, and transaction name should not be changed
+		/// or "fixed" automatically ref https://github.com/elastic/apm-agent-dotnet/pull/258.
+		/// </summary>
+		[JsonIgnore]
+		internal bool HasCustomName { get; private set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Id { get; }
@@ -103,15 +119,6 @@ namespace Elastic.Apm.Model
 				_name = value;
 			}
 		}
-
-		private string _name;
-
-		/// <summary>
-		/// If true, then the transaction name was modified by external code, and transaction name should not be changed
-		/// or "fixed" automatically ref https://github.com/elastic/apm-agent-dotnet/pull/258.
-		/// </summary>
-		[JsonIgnore]
-		internal bool HasCustomName { get; private set; }
 
 		[JsonIgnore]
 		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(TraceId, Id, IsSampled);
@@ -171,25 +178,27 @@ namespace Elastic.Apm.Model
 		{
 			if (Duration.HasValue)
 			{
-				_logger.Trace()?.Log("Ended {Transaction} (with Duration already set)." +
-					" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
+				_logger.Trace()
+					?.Log("Ended {Transaction} (with Duration already set)." +
+						" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
+						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
 			}
 			else
 			{
-				Assertion.IfEnabled?.That(! _isEnded, $"If a transaction doesn't have Duration set it means that the transaction did not end yet." +
+				Assertion.IfEnabled?.That(!_isEnded, $"If a transaction doesn't have Duration set it means that the transaction did not end yet." +
 					$" this: {this}; {nameof(Duration)}: {Duration}, {nameof(_isEnded)}: {_isEnded}");
 
 				var endTimestamp = TimeUtils.TimestampNow();
 				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
-				_logger.Trace()?.Log("Ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp})," +
-					" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp,
-					TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
+				_logger.Trace()
+					?.Log("Ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp})," +
+						" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
+						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp,
+						TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
 			}
 
 
-			var isFirstEndCall = ! _isEnded;
+			var isFirstEndCall = !_isEnded;
 			_isEnded = true;
 			if (isFirstEndCall) _sender.QueueTransaction(this);
 
