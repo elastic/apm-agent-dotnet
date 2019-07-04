@@ -502,6 +502,40 @@ namespace Elastic.Apm.Tests.ApiTests
 			}
 		}
 
+		/// <summary>
+		/// Creates a transaction, then a span then set duration for both, then  calls End() for both.
+		/// Makes sure that call to End() does not change already set duration.
+		/// </summary>
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void CallToEndDoesNotChangeAlreadySetDuration(bool isSampled)
+		{
+			var payloadSender = new MockPayloadSender();
+			var expectedSpansCount = isSampled ? 1 : 0;
+
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, transactionSampleRate: isSampled ? "1" : "0")))
+			{
+				var transaction = agent.Tracer.StartTransaction(TestTransaction, UnitTest);
+				var span = transaction.StartSpan(TestSpan1, ApiConstants.TypeExternal);
+
+				payloadSender.Spans.Should().HaveCount(0);
+				span.Duration = 123456.789;
+				span.End();
+				payloadSender.Spans.Should().HaveCount(expectedSpansCount);
+				if (isSampled)
+				{
+					payloadSender.FirstSpan.Duration.Should().Be(123456.789);
+				}
+
+				payloadSender.Transactions.Should().HaveCount(0);
+				transaction.Duration = 987654.321;
+				transaction.End();
+				payloadSender.Transactions.Should().HaveCount(1);
+				payloadSender.FirstTransaction.Duration.Should().Be(987654.321);
+			}
+		}
+
 		// ReSharper disable once MemberCanBePrivate.Global
 		public static IEnumerable<object[]> ErrorShouldContainTransactionDataParamVariants()
 		{
