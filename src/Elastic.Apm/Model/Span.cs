@@ -17,6 +17,7 @@ namespace Elastic.Apm.Model
 		private readonly Transaction _enclosingTransaction;
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _payloadSender;
+		private bool _dbgIsEnded;
 
 		public Span(
 			string name,
@@ -70,7 +71,7 @@ namespace Elastic.Apm.Model
 		/// is automatically calculated when <see cref="End" /> is called.
 		/// </summary>
 		/// <value>The duration.</value>
-		public double? Duration { get; private set; }
+		public double? Duration { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Id { get; set; }
@@ -145,33 +146,33 @@ namespace Elastic.Apm.Model
 			return retVal;
 		}
 
-		public void End(double? duration = null)
+		public void End()
 		{
 			if (Duration.HasValue)
 			{
-				_logger.Debug()?.Log("End() called on already ended {Span}. Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
+				_logger.Trace()?.Log("Ended {Span} (with Duration already set)." +
+					" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
 			}
 			else
 			{
-				if (duration.HasValue)
-				{
-					Duration = duration.Value;
-					_logger.Trace()?.Log("Ended {Span}. Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
-				}
-				else
-				{
-					var endTimestamp = TimeUtils.TimestampNow();
-					Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
-					_logger.Trace()?.Log("Ended {Span}. Start time: {Time} (as timestamp: {Timestamp})," +
-						" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp,
-						TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
-				}
+				Assertion.IfEnabled?.That(! _dbgIsEnded, $"If a span doesn't have Duration set it means that the span did not end yet." +
+					$" this: {this}; {nameof(Duration)}: {Duration}, {nameof(_dbgIsEnded)}: {_dbgIsEnded}");
+
+				var endTimestamp = TimeUtils.TimestampNow();
+				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
+				_logger.Trace()?.Log("Ended {Span}. Start time: {Time} (as timestamp: {Timestamp})," +
+					" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
+					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp,
+					TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
 			}
 
-			if (IsSampled) _payloadSender.QueueSpan(this);
+			var isFirstEndCall = ! _dbgIsEnded;
+			if (IsSampled && isFirstEndCall)
+			{
+				_dbgIsEnded = true;
+				_payloadSender.QueueSpan(this);
+			}
 		}
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)

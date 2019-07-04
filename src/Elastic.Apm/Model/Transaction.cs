@@ -17,6 +17,7 @@ namespace Elastic.Apm.Model
 
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
+		private bool _dbgIsEnded;
 
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(IApmAgent agent, string name, string type)
@@ -84,7 +85,7 @@ namespace Elastic.Apm.Model
 		/// is automatically calculated when <see cref="End" /> is called.
 		/// </summary>
 		/// <value>The duration.</value>
-		public double? Duration { get; private set; }
+		public double? Duration { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Id { get; }
@@ -166,32 +167,28 @@ namespace Elastic.Apm.Model
 			{ "IsSampled", IsSampled }
 		}.ToString();
 
-		public void End(double? duration = null)
+		public void End()
 		{
 			if (Duration.HasValue)
 			{
-				_logger.Debug()?.Log("End() called on already ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}",
+				_logger.Trace()?.Log("Ended {Transaction} (with Duration already set)." +
+					" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
 			}
 			else
 			{
-				if (duration.HasValue)
-				{
-					Duration = duration.Value;
-					_logger.Trace()?.Log("Ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
-				}
-				else
-				{
-					var endTimestamp = TimeUtils.TimestampNow();
-					Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
-					_logger.Trace()?.Log("Ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp})," +
-						" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp,
-						TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
-				}
+				Assertion.IfEnabled?.That(! _dbgIsEnded, $"If a transaction doesn't have Duration set it means that the transaction did not end yet." +
+					$" this: {this}; {nameof(Duration)}: {Duration}, {nameof(_dbgIsEnded)}: {_dbgIsEnded}");
+
+				var endTimestamp = TimeUtils.TimestampNow();
+				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
+				_logger.Trace()?.Log("Ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp})," +
+					" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
+					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp,
+					TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
 			}
 
+			_dbgIsEnded = true;
 			_sender.QueueTransaction(this);
 
 			Agent.TransactionContainer.Transactions.Value = null;
