@@ -197,7 +197,6 @@ namespace Elastic.Apm.Model
 						TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
 			}
 
-
 			var isFirstEndCall = !_isEnded;
 			_isEnded = true;
 			if (isFirstEndCall) _sender.QueueTransaction(this);
