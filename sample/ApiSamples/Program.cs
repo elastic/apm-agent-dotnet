@@ -44,6 +44,7 @@ namespace ApiSamples
 			}
 		}
 
+		// ReSharper disable ArrangeMethodOrOperatorBody
 		public static void SampleSpanWithCustomContext()
 		{
 			Agent.Tracer.CaptureTransaction("SampleTransaction", "SampleTransactionType", transaction =>
@@ -84,6 +85,7 @@ namespace ApiSamples
 				});
 			});
 		}
+		// ReSharper restore ArrangeMethodOrOperatorBody
 
 		public static void SampleCustomTransaction()
 		{
@@ -214,9 +216,7 @@ namespace ApiSamples
 			}
 		}
 
-		private static void WriteLineToConsole(string line)
-		{
+		private static void WriteLineToConsole(string line) =>
 			Console.WriteLine($"[{Process.GetCurrentProcess().Id}] {line}");
-		}
 	}
 }

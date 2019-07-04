@@ -18,18 +18,14 @@ namespace Elastic.Apm.Tests.HelpersTests
 		[Theory]
 		[InlineData(null)]
 		[InlineData("some test string")]
-		public void TestLetWithNullOrString(string possiblyNull)
-		{
+		public void TestLetWithNullOrString(string possiblyNull) =>
 			possiblyNull?.Let(x => x.Should().NotBeNull());
-		}
 
 		[Theory]
 		[InlineData(null)]
 		[InlineData(false)]
 		[InlineData(true)]
-		public void TestLetWithNullableBool(bool? possiblyNull)
-		{
+		public void TestLetWithNullableBool(bool? possiblyNull) =>
 			possiblyNull?.Let(x => x.Should().Be(possiblyNull.Value));
-		}
 	}
 }

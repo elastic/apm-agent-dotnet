@@ -77,10 +77,8 @@ namespace Elastic.Apm.Tests.MockApmServer
 			thisObj.StatusCode.HttpStatusCodeAssertValid();
 		}
 
-		internal static void HttpStatusCodeAssertValid(this int thisObj)
-		{
+		internal static void HttpStatusCodeAssertValid(this int thisObj) =>
 			thisObj.Should().BeInRange(100, 599);
-		}
 
 		internal static void AssertValid(this User thisObj)
 		{
@@ -170,10 +168,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			thisObj.RemoteAddress?.NonEmptyAssertValid();
 		}
 
-		internal static void AssertValid(this SpanCount thisObj)
-		{
-			thisObj.Should().NotBeNull();
-		}
+		internal static void AssertValid(this SpanCount thisObj) => thisObj.Should().NotBeNull();
 
 		internal static void TimestampAssertValid(this long thisObj) => thisObj.Should().BeGreaterOrEqualTo(0);
 
