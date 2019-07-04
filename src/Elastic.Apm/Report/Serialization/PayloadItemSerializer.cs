@@ -7,19 +7,15 @@ namespace Elastic.Apm.Report.Serialization
 	{
 		private readonly JsonSerializerSettings _settings;
 
-		internal PayloadItemSerializer()
-		{
+		internal PayloadItemSerializer() =>
 			_settings = new JsonSerializerSettings
 			{
 				ContractResolver = new CamelCasePropertyNamesContractResolver(),
 				NullValueHandling = NullValueHandling.Ignore,
 				Formatting = Formatting.None
 			};
-		}
 
-		internal string SerializeObject(object item)
-		{
-			return JsonConvert.SerializeObject(item, _settings);
-		}
+		internal string SerializeObject(object item) =>
+			JsonConvert.SerializeObject(item, _settings);
 	}
 }

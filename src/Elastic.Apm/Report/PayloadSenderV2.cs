@@ -182,10 +182,7 @@ namespace Elastic.Apm.Report
 			}
 		}
 
-		public void Dispose()
-		{
-			_batchBlockReceiveAsyncCts?.Dispose();
-		}
+		public void Dispose() => _batchBlockReceiveAsyncCts?.Dispose();
 	}
 
 	internal class Metadata

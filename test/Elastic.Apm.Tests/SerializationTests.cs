@@ -180,10 +180,8 @@ namespace Elastic.Apm.Tests
 		[InlineData("ABCDEFG", 6, "ABC...")]
 		[InlineData("ABCDEFGH", 6, "ABC...")]
 		[InlineData("ABCDEFGH", 7, "ABCD...")]
-		public void SerializationUtilsTrimToLengthTests(string original, int maxLength, string expectedTrimmed)
-		{
+		public void SerializationUtilsTrimToLengthTests(string original, int maxLength, string expectedTrimmed) =>
 			SerializationUtils.TrimToLength(original, maxLength).Should().Be(expectedTrimmed);
-		}
 
 		public static IEnumerable<object[]> SerializationUtilsTrimToPropertyMaxLengthVariantsToTest()
 		{

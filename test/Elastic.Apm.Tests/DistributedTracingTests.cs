@@ -70,12 +70,12 @@ namespace Elastic.Apm.Tests
 			res.Should().BeNull();
 		}
 
+		/// <summary>
+		/// Currently we use a non-standard header name - awaiting trace context to became a standard.
+		/// this will be renamed in the future.
+		/// </summary>
 		[Fact]
-		public void TraceParentHeaderName()
-		{
-			//currently we use a non-standard header name - awaiting trace context to became a standard.
-			//this will be renamed in the future.
+		public void TraceParentHeaderName() =>
 			TraceParent.TraceParentHeaderName.Should().Be("elastic-apm-traceparent");
-		}
 	}
 }
