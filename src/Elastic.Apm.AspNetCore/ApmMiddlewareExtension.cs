@@ -26,7 +26,7 @@ namespace Elastic.Apm.AspNetCore
 		/// </param>
 		/// <param name="subscribers">
 		/// Specify which diagnostic source subscribers you want to connect. The <see cref="AspNetCoreDiagnosticsSubscriber" />
-		/// is by default enabled.
+		/// is enabled by default.
 		/// </param>
 		public static IApplicationBuilder UseElasticApm(
 			this IApplicationBuilder builder,
