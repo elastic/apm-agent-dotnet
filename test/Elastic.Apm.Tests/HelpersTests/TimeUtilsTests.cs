@@ -9,11 +9,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 {
 	public class TimeUtilsTests
 	{
-		private static void ShouldBeWithTolerance(double actual, double expected)
-		{
-			const double tolerance = 0.000001;
-			actual.Should().BeInRange(expected - tolerance, expected + tolerance);
-		}
+		[Fact]
+		public void TimeUtilsUnixEpochDateTimeEqualsDateTimeUnixEpoch() => TimeUtils.UnixEpochDateTime.Should().Be(DateTime.UnixEpoch);
 
 		[Theory]
 		[InlineData(0)]
@@ -96,5 +93,11 @@ namespace Elastic.Apm.Tests.HelpersTests
 		[InlineData(1561954166195481, 1561954166179856, -15.625)]
 		public void DurationBetweenTimestampsTests(long startTimestamp, long endTimestamp, double expectedDuration) =>
 			TimeUtils.DurationBetweenTimestamps(startTimestamp, endTimestamp).Should().Be(expectedDuration);
+
+		private static void ShouldBeWithTolerance(double actual, double expected)
+		{
+			const double tolerance = 0.000001;
+			actual.Should().BeInRange(expected - tolerance, expected + tolerance);
+		}
 	}
 }

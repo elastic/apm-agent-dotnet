@@ -8,7 +8,7 @@ namespace Elastic.Apm.Helpers
 		/// DateTime.UnixEpoch Field does not exist in .NET Standard 2.0
 		/// https://docs.microsoft.com/en-us/dotnet/api/system.datetime.unixepoch
 		/// </summary>
-		private static readonly DateTime UnixEpochDateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+		internal static readonly DateTime UnixEpochDateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
 		internal static long TimestampNow() => ToTimestamp(DateTime.UtcNow);
 
@@ -23,7 +23,7 @@ namespace Elastic.Apm.Helpers
 				throw new ArgumentException($"{nameof(dateTimeToConvert)}'s Kind should be UTC but instead its Kind is {dateTimeToConvert.Kind}" +
 					$". {nameof(dateTimeToConvert)}'s value: {dateTimeToConvert.FormatForLog()}", nameof(dateTimeToConvert));
 
-			return (long)((dateTimeToConvert - UnixEpochDateTime).TotalMilliseconds * 1000);
+			return RoundTimeValue((dateTimeToConvert - UnixEpochDateTime).TotalMilliseconds * 1000);
 		}
 
 		internal static DateTime ToDateTime(long timestamp) => UnixEpochDateTime + TimeSpan.FromTicks(timestamp * 10);

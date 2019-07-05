@@ -184,6 +184,8 @@ namespace Elastic.Apm.AspNetFullFramework
 			var httpCtx = httpApp.Context;
 			var httpResponse = httpCtx.Response;
 
+			if (_currentTransaction == null) return;
+
 			_currentTransaction.Result = Transaction.StatusCodeToResult("HTTP", httpResponse.StatusCode);
 
 			if (_currentTransaction.IsSampled)
@@ -192,7 +194,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				FillSampledTransactionContextUser(httpCtx, _currentTransaction);
 			}
 
-			_currentTransaction?.End();
+			_currentTransaction.End();
 			_currentTransaction = null;
 		}
 

@@ -24,8 +24,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task AspNetVersionTest()
 		{
 			var pageThatThrows = SampleAppUrlPaths.ThrowsInvalidOperationPage;
-			var response = await SendGetRequestToSampleAppAndVerifyResponse(pageThatThrows.RelativeUrlPath, pageThatThrows.StatusCode);
-			var aspNetVersionFromErrorPage = GetAspNetVersionFromErrorPage(await response.Content.ReadAsStringAsync());
+			var sampleAppResponse = await SendGetRequestToSampleAppAndVerifyResponse(pageThatThrows.RelativeUrlPath, pageThatThrows.StatusCode);
+			var aspNetVersionFromErrorPage = GetAspNetVersionFromErrorPage(sampleAppResponse.Content);
 
 			await VerifyDataReceivedFromAgent(receivedData =>
 			{
@@ -71,7 +71,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task ServiceRuntimeTest()
 		{
 			var page = SampleAppUrlPaths.GetDotNetRuntimeDescriptionPage;
-			var response = await SendGetRequestToSampleAppAndVerifyResponse(page.RelativeUrlPath, page.StatusCode);
+			var sampleAppResponse = await SendGetRequestToSampleAppAndVerifyResponse(page.RelativeUrlPath, page.StatusCode);
 
 			await VerifyDataReceivedFromAgent(receivedData =>
 			{
@@ -82,7 +82,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				{
 					metadata.Service.Runtime.Name.Should().Be(Runtime.DotNetFullFrameworkName);
 					var sampleAppDotNetRuntimeDescription =
-						response.Headers.GetValues(HomeController.DotNetRuntimeDescriptionHttpHeaderName).Single();
+						sampleAppResponse.Headers.GetValues(HomeController.DotNetRuntimeDescriptionHttpHeaderName).Single();
 					sampleAppDotNetRuntimeDescription.Should().StartWith(PlatformDetection.DotNetFullFrameworkDescriptionPrefix);
 					metadata.Service.Runtime.Version.Should()
 						.Be(PlatformDetection.GetDotNetRuntimeVersionFromDescription(
