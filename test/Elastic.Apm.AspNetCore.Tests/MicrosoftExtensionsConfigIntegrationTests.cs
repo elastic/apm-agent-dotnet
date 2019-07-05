@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using Elastic.Apm.AspNetCore.Config;
 using Elastic.Apm.AspNetCore.Tests.Factories;
 using Elastic.Apm.AspNetCore.Tests.Fakes;
 using Elastic.Apm.AspNetCore.Tests.Helpers;
@@ -30,7 +29,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var logger = new TestLogger();
 
 			// The agent is instantiated with ApmMiddlewareExtension.GetService, so we can also test the calculation of the service instance (e.g. ASP.NET Core version).
-			var config = new MicrosoftExtensionsConfig(MicrosoftExtensionsConfigTests.GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger);
+			var config = new ApplicationConfigurationReader(ApplicationConfigurationReaderTests.GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger);
 
 			using (var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(), configurationReader: config, logger: logger)))
 			using (var client = TestHelper.GetClient(_factory, agent))

@@ -1,7 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using Elastic.Apm.AspNetCore.Config;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
@@ -12,9 +13,10 @@ using Xunit;
 namespace Elastic.Apm.AspNetCore.Tests
 {
 	/// <summary>
-	/// Tests the <see cref="MicrosoftExtensionsConfig" /> class. It loads the JSON config files from the TestConfig folder.
+	/// Tests the <see cref="ApplicationConfigurationReader" /> class.
+	/// It loads the JSON config files from the TestConfig folder.
 	/// </summary>
-	public class MicrosoftExtensionsConfigTests
+	public class ApplicationConfigurationReaderTests
 	{
 		/// <summary>
 		/// Builds an IConfiguration instance with the TestConfigs/appsettings_valid.json config file and passes it to the agent.
@@ -23,7 +25,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public void ReadValidConfigsFromAppSettingsJson()
 		{
-			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"), new TestLogger());
+			var config = new ApplicationConfigurationReader(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
+				new TestLogger());
 			config.LogLevel.Should().Be(LogLevel.Debug);
 			config.ServerUrls.Single().Should().Be(new Uri("http://myServerFromTheConfigFile:8080"));
 			config.ServiceName.Should().Be("My_Test_Application");
@@ -39,15 +42,15 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public void ReadInvalidLogLevelConfigFromAppsettingsJson()
 		{
 			var logger = new TestLogger();
-			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger);
+			var config = new ApplicationConfigurationReader(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger);
 			config.LogLevel.Should().Be(LogLevel.Error);
 			logger.Lines.Should().NotBeEmpty();
 			logger.Lines.Single().Should()
 				.ContainAll(
-					$"{{{nameof(MicrosoftExtensionsConfig)}}}",
+					$"{{{nameof(ApplicationConfigurationReader)}}}",
 					"Failed parsing log level from",
-					MicrosoftExtensionsConfig.Origin,
-					MicrosoftExtensionsConfig.Keys.LogLevel,
+					ApplicationConfigurationReader.Origin,
+					ApplicationConfigurationReader.Keys.LogLevel,
 					"Defaulting to "
 				);
 
@@ -63,16 +66,16 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public void ReadInvalidServerUrlsConfigFromAppsettingsJson()
 		{
 			var logger = new TestLogger();
-			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger);
+			var config = new ApplicationConfigurationReader(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger);
 			config.LogLevel.Should().Be(LogLevel.Error);
 
 			logger.Lines.Should().NotBeEmpty();
 			logger.Lines.Single().Should()
 				.ContainAll(
-					$"{{{nameof(MicrosoftExtensionsConfig)}}}",
+					$"{{{nameof(ApplicationConfigurationReader)}}}",
 					"Failed parsing log level from",
-					MicrosoftExtensionsConfig.Origin,
-					MicrosoftExtensionsConfig.Keys.LogLevel,
+					ApplicationConfigurationReader.Origin,
+					ApplicationConfigurationReader.Keys.LogLevel,
 					"Defaulting to ",
 					"DbeugMisspelled"
 				);
@@ -96,7 +99,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate, "0.123");
 			var configBuilder = new ConfigurationBuilder().AddEnvironmentVariables().Build();
 
-			var config = new MicrosoftExtensionsConfig(configBuilder, new TestLogger());
+			var config = new ApplicationConfigurationReader(configBuilder, new TestLogger());
 			config.LogLevel.Should().Be(LogLevel.Debug);
 			config.ServerUrls.Single().Should().Be(new Uri(serverUrl));
 			config.ServiceName.Should().Be(serviceName);
@@ -106,16 +109,15 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		/// <summary>
-		/// Makes sure that <see cref="MicrosoftExtensionsConfig" /> logs in case it reads an invalid URL.
+		/// Makes sure that <see cref="ApplicationConfigurationReader" /> logs in case it reads an invalid URL.
 		/// </summary>
 		[Fact]
 		public void LoggerNotNull()
 		{
-			var logger = new TestLogger();
-			var serverUrl = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger).ServerUrls.FirstOrDefault();
-
+			var testLogger = new TestLogger();
+			var serverUrl = new ApplicationConfigurationReader(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), testLogger).ServerUrls.FirstOrDefault();
 			serverUrl.Should().NotBeNull();
-			logger.Lines.Should().NotBeEmpty();
+			testLogger.Lines.Should().NotBeEmpty();
 		}
 
 		internal static IConfiguration GetConfig(string path) => new ConfigurationBuilder().AddJsonFile(path).Build();
