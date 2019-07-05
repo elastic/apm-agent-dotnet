@@ -58,9 +58,7 @@ namespace Elastic.Apm.AspNetCore
 			var assemblies = versionQuery as Assembly[] ?? versionQuery.ToArray();
 
 			if (assemblies.Any())
-			{
 				version = assemblies.First().GetName().Version.ToString();
-			}
 			else
 			{
 				versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name.Contains("Microsoft.AspNetCore"));
