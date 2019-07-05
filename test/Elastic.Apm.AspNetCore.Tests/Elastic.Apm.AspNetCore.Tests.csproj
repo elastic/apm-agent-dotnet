@@ -10,19 +10,23 @@
     <DebugSymbols>True</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="FluentAssertions" Version="5.6.0" />
+    <PackageReference Include="FluentAssertions" Version="5.7.0" />
     <PackageReference Include="FluentAssertions.Analyzers" Version="0.11.4" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" />
-    <PackageReference Include="xunit" Version="2.3.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="2.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="2.1.1" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\sample\AspNetCoreSampleApp\AspNetCoreSampleApp.csproj" />
     <ProjectReference Include="..\..\sample\WebApiSample\WebApiSample.csproj" />
     <ProjectReference Include="..\..\src\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
     <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
-    <ProjectReference Include="..\..\sample\SampleAspNetCoreApp\SampleAspNetCoreApp.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
   </ItemGroup>
   <ItemGroup>

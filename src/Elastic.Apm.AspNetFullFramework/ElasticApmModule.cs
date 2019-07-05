@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Web;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
@@ -18,6 +17,12 @@ namespace Elastic.Apm.AspNetFullFramework
 	{
 		private static readonly bool IsCaptureHeadersEnabled;
 		private static readonly IApmLogger Logger;
+
+		// We can store current transaction because each IHttpModule is used for at most one request at a time
+		// For example see https://bytes.com/topic/asp-net/answers/324305-httpmodule-multithreading-request-response-corelation
+		private Transaction _currentTransaction;
+
+		private HttpApplication _httpApp;
 
 		static ElasticApmModule()
 		{
@@ -44,11 +49,6 @@ namespace Elastic.Apm.AspNetFullFramework
 			Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
 		}
 
-		// We can store current transaction because each IHttpModule is used for at most one request at a time
-		// For example see https://bytes.com/topic/asp-net/answers/324305-httpmodule-multithreading-request-response-corelation
-		private Transaction _currentTransaction;
-
-		private HttpApplication _httpApp;
 		private static Version IisVersion => HttpRuntime.IISVersion;
 
 		private static void SetServiceInformation(Service service, string aspNetVersion)
@@ -136,9 +136,8 @@ namespace Elastic.Apm.AspNetFullFramework
 			var headerValue = httpRequest.Headers.Get(TraceParent.TraceParentHeaderName);
 			if (headerValue == null)
 			{
-				Logger.Debug()
-					?.Log("Incoming request doesn't have {TraceParentHeaderName} header - " +
-						"it means request doesn't have incoming distributed tracing data", TraceParent.TraceParentHeaderName);
+				Logger.Debug()?.Log("Incoming request doesn't {TraceParentHeaderName} header - "+
+					"it means request doesn't have incoming distributed tracing data", TraceParent.TraceParentHeaderName);
 				return null;
 			}
 			return TraceParent.TryExtractTraceparent(headerValue);

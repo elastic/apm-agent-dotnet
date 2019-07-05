@@ -1,0 +1,53 @@
+@model IEnumerable<AspNetCoreSampleApp.Models.HistoricalValue>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+
+
+<br/>
+<div class="alert alert-info" role="alert">
+	The chart below is showing data from a csv file. The agent captures reading from the csv file as a span with the Public Agent API. <br/> If the APM .NET Agent is activated then the request and the action of reading the csv file are captured and you can see those in Kibana.
+</div>
+
+<h2>Data from csv file:</h2>
+
+<p/>
+<canvas id="myChart"></canvas>
+<script type="text/javascript">
+
+
+	var ctx = document.getElementById('myChart').getContext('2d');
+	var time = [];
+	@{
+		foreach (var item in Model.Select(n => n.Date))
+		{
+			@:time.push("@item.ToShortDateString()");
+		}
+	}
+	var chart = new Chart(ctx,
+		{
+			// The type of chart we want to create
+			type: 'line',
+
+
+			// The data for our dataset
+			data: {
+				labels: time,
+				datasets: [
+					{
+						label: "Historical Data",
+						backgroundColor: 'rgb(255, 99, 132)',
+						borderColor: 'rgb(255, 99, 132)',
+						data: [ @{
+									foreach (var item in Model.Select(n => n.Close))
+									{
+										@String.Concat(item.ToString("0.00").Replace(',', '.'), ",")
+										;
+									}
+								}
+						]
+					}
+				]
+			},
+			options: {}
+		});
+</script>

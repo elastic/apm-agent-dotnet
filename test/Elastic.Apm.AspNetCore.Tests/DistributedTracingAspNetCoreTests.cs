@@ -1,77 +1,42 @@
-using System;
 using System.Linq;
-using System.Net.Http;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Elastic.Apm.Api;
-using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.EntityFrameworkCore;
+using Elastic.Apm.AspNetCore.Tests.Factories;
+using Elastic.Apm.AspNetCore.Tests.Fakes;
+using Elastic.Apm.AspNetCore.Tests.Helpers;
+using Elastic.Apm.AspNetCore.Tests.Services;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
-using SampleAspNetCoreApp;
 using Xunit;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
 	[Collection("DiagnosticListenerTest")]
-	public class DistributedTracingAspNetCoreTests : IAsyncLifetime
+	public class DistributedTracingAspNetCoreTests : IAsyncLifetime, IClassFixture<CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup>>
 	{
-		private ApmAgent _agent1;
-		private ApmAgent _agent2;
+		private readonly CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup> _factory;
+		private readonly ApmAgent _webApiAgent = GetAgent();
 
 		private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
-		private readonly MockPayloadSender _payloadSender1 = new MockPayloadSender();
-		private readonly MockPayloadSender _payloadSender2 = new MockPayloadSender();
+		private Task _webApiTask;
 
-		private Task _taskForApp1;
-		private Task _taskForApp2;
+		public DistributedTracingAspNetCoreTests(CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup> factory) => _factory = factory;
 
 		public Task InitializeAsync()
 		{
-			_agent1 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender1));
-			_agent2 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender2));
-
-			_taskForApp1 = Program.CreateWebHostBuilder(null)
-				.ConfigureServices(services =>
-					{
-						Startup.ConfigureServicesExceptMvc(services);
-
-						services.AddMvc()
-							.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))))
-							.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-					}
-				)
-				.Configure(app =>
+			_webApiTask = WebHost.CreateDefaultBuilder()
+				.ConfigureTestServices(services =>
 				{
-					app.UseElasticApm(_agent1, new TestLogger(),
-						new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
-					Startup.ConfigureAllExceptAgent(app);
-				})
-				.UseUrls("http://localhost:5901")
-				.Build()
-				.RunAsync(_cancellationTokenSource.Token);
-
-			_taskForApp2 = WebApiSample.Program.CreateWebHostBuilder(null)
-				.ConfigureServices(services =>
-				{
-					services.AddMvc()
-						.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(WebApiSample))))
-						.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-				})
-				.Configure(app =>
-				{
-					//normally we would also subscribe to HttpDiagnosticsSubscriber and EfCoreDiagnosticsSubscriber,
-					//but in this test 2 web apps run in a single process, so subscribing once is enough, and we
-					//already do it above when we configure the SampleAspNetCoreApp.
-					app.UseElasticApm(_agent2, new TestLogger());
-					WebApiSample.Startup.ConfigureAllExceptAgent(app);
+					services.AddSingleton(new StartupConfigService(_webApiAgent));
+					services.AddMvc().AddApplicationPart(typeof(WebApiSample.Startup).Assembly);
 				})
 				.UseUrls("http://localhost:5050")
+				.UseStartup<FakeWebApiSampleStartup>()
 				.Build()
 				.RunAsync(_cancellationTokenSource.Token);
 
@@ -80,76 +45,92 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		/// <summary>
 		/// Distributed tracing integration test.
-		/// It starts <see cref="SampleAspNetCoreApp" /> with 1 agent and <see cref="WebApiSample" /> with another agent.
-		/// It calls the 'DistributedTracingMiniSample' in <see cref="SampleAspNetCoreApp" />, which generates a simple HTTP
-		/// response
-		/// by calling <see cref="WebApiSample" /> via HTTP.
-		/// Makes sure that all spans and transactions across the 2 services have the same trace id.
+		/// It starts <see cref="AspNetCoreSampleApp" /> with one agent and <see cref="WebApiSample" /> with another agent.
+		/// It calls the 'DistributedTracingMiniSample' in <see cref="AspNetCoreSampleApp" />, which generates a simple HTTP
+		/// response by calling <see cref="WebApiSample" /> via HTTP.
+		/// Makes sure that all spans and transactions across the two services have the same trace ID.
 		/// </summary>
 		[Fact]
-		public async Task DistributedTraceAcross2Service()
+		public async Task DistributedTraceAcrossTwoServices()
 		{
-			await ExecuteAndCheckDistributedCall();
+			using (var primaryAgent = GetAgent())
+			{
+				await ExecuteAndCheckDistributedCall(primaryAgent);
 
-			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
-			_payloadSender2.FirstTransaction.IsSampled.Should().BeTrue();
+				var capturedPayload1 = (MockPayloadSender)primaryAgent.PayloadSender;
+				var capturedPayload2 = (MockPayloadSender)_webApiAgent.PayloadSender;
 
-			//make sure all spans have the same traceid:
-			_payloadSender1.Spans.Should().NotContain(n => n.TraceId != _payloadSender1.FirstTransaction.TraceId);
-			_payloadSender2.Spans.Should().NotContain(n => n.TraceId != _payloadSender1.FirstTransaction.TraceId);
+				capturedPayload1.FirstTransaction.IsSampled.Should().BeTrue();
+				capturedPayload2.FirstTransaction.IsSampled.Should().BeTrue();
 
-			//make sure the parent of the 2. transaction is the spanid of the outgoing HTTP request from the 1. transaction:
-			_payloadSender2.FirstTransaction.ParentId.Should()
-				.Be(_payloadSender1.Spans.First(n => n.Context.Http.Url.Contains("api/values")).Id);
+				// Make sure all spans have the same trace ID.
+				capturedPayload1.Spans.Should().NotContain(n => n.TraceId != capturedPayload1.FirstTransaction.TraceId);
+				capturedPayload2.Spans.Should().NotContain(n => n.TraceId != capturedPayload1.FirstTransaction.TraceId);
+
+				// Make sure the parent of the second transaction is the span ID of the outgoing HTTP request from the first transaction.
+				capturedPayload2.FirstTransaction.ParentId.Should().Be(capturedPayload1.Spans.First(n => n.Context.Http.Url.Contains("api/values")).Id);
+			}
 		}
 
 		/// <summary>
-		/// The same as <see cref="DistributedTraceAcross2Service" /> except that the 1st agent configured with sampling rate 0
-		/// (to non-sample all the transaction) causing both transactions to be non-sampled (since is-sampled decision is passed
+		/// The same as <see cref="DistributedTraceAcrossTwoServices" /> except that the first agent is configured with sampling rate 0
+		/// (to non-sample all the transactions) causing both transactions to be non-sampled (since is-sampled decision is passed
 		/// via distributed tracing to downstream agents).
 		/// Makes sure that both transactions are non-sampled so there should be no spans and parent ID passed to the downstream
-		/// agent
-		/// is transaction ID (not span ID as it was in sampled case).
+		/// agent (is transaction ID, not span ID as it was in sampled case).
 		/// </summary>
 		[Fact]
-		public async Task NonSampledDistributedTraceAcross2Service()
+		public async Task NonSampledDistributedTraceAcrossTwoServices()
 		{
-			_agent1.TracerInternal.Sampler = new Sampler(0);
+			using (var primaryAgent = GetAgent())
+			{
+				primaryAgent.TracerInternal.Sampler = new Sampler(0);
 
-			await ExecuteAndCheckDistributedCall();
+				await ExecuteAndCheckDistributedCall(primaryAgent);
 
-			// Since the trace is non-sampled both transactions should me marked as not sampled
-			_payloadSender1.FirstTransaction.IsSampled.Should().BeFalse();
-			_payloadSender2.FirstTransaction.IsSampled.Should().BeFalse();
+				var capturedPayload1 = (MockPayloadSender)primaryAgent.PayloadSender;
+				var capturedPayload2 = (MockPayloadSender)_webApiAgent.PayloadSender;
 
-			// Since the trace is not sampled there should NOT be any spans
-			_payloadSender1.Spans.Should().BeEmpty();
-			_payloadSender2.Spans.Should().BeEmpty();
+				// Since the trace is non-sampled both transactions should me marked as not sampled.
+				capturedPayload1.FirstTransaction.IsSampled.Should().BeFalse();
+				capturedPayload2.FirstTransaction.IsSampled.Should().BeFalse();
 
-			// Since the trace is non-sampled the parent ID of the 2nd transaction is the 1st transaction ID (not span ID as it was in sampled case)
-			_payloadSender2.FirstTransaction.ParentId.Should().Be(_payloadSender1.FirstTransaction.Id);
+				// Since the trace is not sampled there should NOT be any spans.
+				capturedPayload1.Spans.Should().BeEmpty();
+				capturedPayload2.Spans.Should().BeEmpty();
+
+				// Since the trace is non-sampled the parent ID of the second transaction is the first transaction ID (not span ID as it was in sampled case).
+				capturedPayload2.FirstTransaction.ParentId.Should().Be(capturedPayload1.FirstTransaction.Id);
+			}
 		}
 
 		public async Task DisposeAsync()
 		{
 			_cancellationTokenSource.Cancel();
-			await Task.WhenAll(_taskForApp1, _taskForApp2);
+			await Task.WhenAll(_webApiTask);
 
-			_agent1?.Dispose();
-			_agent2?.Dispose();
+			_webApiAgent.Dispose();
+			_factory.Dispose();
 		}
 
-		private async Task ExecuteAndCheckDistributedCall()
+		private async Task ExecuteAndCheckDistributedCall(ApmAgent primaryAgent)
 		{
-			var client = new HttpClient();
-			var res = await client.GetAsync("http://localhost:5901/Home/DistributedTracingMiniSample");
-			res.IsSuccessStatusCode.Should().BeTrue();
+			using (var client = TestHelper.GetClient(_factory, primaryAgent))
+			{
+				var result = await client.GetAsync("/Home/DistributedTracingMiniSample");
+				result.IsSuccessStatusCode.Should().BeTrue();
+			}
 
-			_payloadSender1.Transactions.Count.Should().Be(1);
-			_payloadSender2.Transactions.Count.Should().Be(1);
+			var capturedPayload1 = (MockPayloadSender)primaryAgent.PayloadSender;
+			var capturedPayload2 = (MockPayloadSender)_webApiAgent.PayloadSender;
 
-			//make sure the 2 transactions have the same traceid:
-			_payloadSender2.FirstTransaction.TraceId.Should().Be(_payloadSender1.FirstTransaction.TraceId);
+			capturedPayload1.Transactions.Should().ContainSingle();
+			capturedPayload2.Transactions.Should().ContainSingle();
+
+			// Make sure the two transactions have the same trace ID.
+			capturedPayload2.FirstTransaction.TraceId.Should().Be(capturedPayload1.FirstTransaction.TraceId);
 		}
+
+		private static ApmAgent GetAgent() => new ApmAgent(new TestAgentComponents(payloadSender: new MockPayloadSender()));
 	}
 }

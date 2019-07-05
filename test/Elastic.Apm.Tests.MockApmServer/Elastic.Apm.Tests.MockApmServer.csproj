@@ -13,11 +13,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.4" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj"/>
+    <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
   </ItemGroup>
 
 </Project>

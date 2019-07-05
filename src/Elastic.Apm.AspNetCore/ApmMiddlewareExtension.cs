@@ -16,7 +16,7 @@ namespace Elastic.Apm.AspNetCore
 	public static class ApmMiddlewareExtension
 	{
 		/// <summary>
-		/// Adds the Elastic APM Middleware to the ASP.NET Core pipeline
+		/// Adds the Elastic APM Middleware to the ASP.NET Core pipeline.
 		/// </summary>
 		/// <returns>The elastic apm.</returns>
 		/// <param name="builder">Builder.</param>
@@ -26,14 +26,13 @@ namespace Elastic.Apm.AspNetCore
 		/// If no <see cref="IConfiguration" /> is passed to the agent then it will read configs from environment variables.
 		/// </param>
 		/// <param name="subscribers">
-		/// Specify which diagnostic source subscribers you want to connect. The
-		/// <see cref="AspNetCoreDiagnosticsSubscriber" /> is by default enabled.
+		/// Specify which diagnostic source subscribers you want to connect. The  <see cref="AspNetCoreDiagnosticsSubscriber" />
+		/// is enabled by default.
 		/// </param>
 		public static IApplicationBuilder UseElasticApm(
 			this IApplicationBuilder builder,
 			IConfiguration configuration = null,
-			params IDiagnosticsSubscriber[] subscribers
-		)
+			params IDiagnosticsSubscriber[] subscribers)
 		{
 			var logger = ConsoleLogger.Instance;
 			var configReader = configuration == null
@@ -44,15 +43,13 @@ namespace Elastic.Apm.AspNetCore
 			UpdateServiceInformation(config.Service);
 
 			Agent.Setup(config);
-			return UseElasticApm(builder, Agent.Instance, logger, subscribers);
+			return UseElasticApm(builder, Agent.Instance, subscribers);
 		}
 
 		internal static IApplicationBuilder UseElasticApm(
 			this IApplicationBuilder builder,
 			ApmAgent agent,
-			IApmLogger logger,
-			params IDiagnosticsSubscriber[] subscribers
-		)
+			params IDiagnosticsSubscriber[] subscribers)
 		{
 			var subs = new List<IDiagnosticsSubscriber>(subscribers ?? Array.Empty<IDiagnosticsSubscriber>())
 			{
@@ -67,6 +64,7 @@ namespace Elastic.Apm.AspNetCore
 			string version;
 			var versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name == "Microsoft.AspNetCore");
 			var assemblies = versionQuery as Assembly[] ?? versionQuery.ToArray();
+
 			if (assemblies.Any())
 				version = assemblies.First().GetName().Version.ToString();
 			else

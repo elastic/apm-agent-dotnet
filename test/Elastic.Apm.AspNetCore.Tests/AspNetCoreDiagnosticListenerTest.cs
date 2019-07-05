@@ -1,45 +1,41 @@
 ﻿using System;
 using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Elastic.Apm.Model;
+using Elastic.Apm.AspNetCore.Tests.Factories;
+using Elastic.Apm.AspNetCore.Tests.Fakes;
+using Elastic.Apm.AspNetCore.Tests.Helpers;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
-using Microsoft.AspNetCore.Mvc.Testing;
-using SampleAspNetCoreApp;
 using Xunit;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
 	/// <summary>
-	/// Tests the <see cref="Elastic.Apm.AspNetCore.DiagnosticListener.AspNetCoreDiagnosticListener" /> type.
+	/// Tests the <see cref="DiagnosticListener.AspNetCoreDiagnosticListener" /> type.
 	/// </summary>
-	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
-	public class AspNetCoreDiagnosticListenerTest : IClassFixture<WebApplicationFactory<Startup>>
+	[Collection("DiagnosticListenerTest")] // To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
+	public class AspNetCoreDiagnosticListenerTest : IClassFixture<CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup>>
 	{
-		private readonly WebApplicationFactory<Startup> _factory;
+		private readonly CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup> _factory;
 
-		public AspNetCoreDiagnosticListenerTest(WebApplicationFactory<Startup> factory) => _factory = factory;
+		public AspNetCoreDiagnosticListenerTest(CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup> factory) => _factory = factory;
 
 		/// <summary>
-		/// Triggers /Home/TriggerError from the sample app
-		/// and makes sure that the error is captured.
+		/// Triggers /Home/TriggerError from the sample app and makes sure that the error is captured.
 		/// </summary>
-		/// <returns>The error in ASP net core.</returns>
+		/// <returns>The error in ASP.NET Core.</returns>
 		[Fact]
 		public async Task TestErrorInAspNetCore()
 		{
 			using (var agent = new ApmAgent(new TestAgentComponents()))
 			{
 				var capturedPayload = agent.PayloadSender as MockPayloadSender;
-				var client = Helper.GetClient(agent, _factory);
+				var client = TestHelper.GetClient(_factory, agent);
 
 				await client.GetAsync("/Home/TriggerError");
 
 				capturedPayload.Should().NotBeNull();
-
 				capturedPayload.Transactions.Should().ContainSingle();
-
 				capturedPayload.Errors.Should().ContainSingle();
 
 				var errorException = capturedPayload.FirstError.Exception;

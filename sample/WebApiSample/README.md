@@ -8,4 +8,4 @@ When you start the application it starts listening on `http://localhost:5050`, a
 - it creates an HTTP GET request to `https://elastic.co`
 - the last string is the result of the http request.
 
-The `SampleAspNetCoreApp` sample under `/Home/DistributedTracingMiniSample` creates an HTTP call to `http://localhost:5050/api/values`. As the result the Elastic APM will capture a trace including the 2 ASP.NET Core applications. You can look at this trace in Kibana, where you will see that the 2 services were correlated into a single trace.
+The `AspNetCoreSampleApp` sample under `/Home/DistributedTracingMiniSample` creates an HTTP call to `http://localhost:5050/api/values`. As the result the Elastic APM will capture a trace including the 2 ASP.NET Core applications. You can look at this trace in Kibana, where you will see that the 2 services were correlated into a single trace.
