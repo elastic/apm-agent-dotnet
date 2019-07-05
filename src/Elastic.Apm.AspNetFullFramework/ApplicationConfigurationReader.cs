@@ -1,4 +1,6 @@
 using System;
+using System.Configuration;
+using System.Security;
 using System.Text;
 using System.Web.Hosting;
 using Elastic.Apm.Config;
@@ -7,9 +9,11 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
-	internal class FullFrameworkConfigReader : EnvironmentConfigurationReader
+	internal class ApplicationConfigurationReader : EnvironmentConfigurationReader
 	{
-		public FullFrameworkConfigReader(IApmLogger logger = null) : base(logger) { }
+		internal new const string Origin = "Configuration Provider";
+
+		public ApplicationConfigurationReader(IApmLogger logger = null) : base(logger) { }
 
 		protected override string DiscoverServiceName() => DiscoverFullFrameworkServiceName() ?? base.DiscoverServiceName();
 
@@ -22,8 +26,10 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			void AppendIfNotNull(string nameToAppend)
 			{
-				const string separator = "_";
-				if (nameToAppend != null) retVal.AppendSeparatedIfNotEmpty(separator, nameToAppend);
+				if (nameToAppend != null)
+				{
+					retVal.AppendSeparatedIfNotEmpty("_", nameToAppend);
+				}
 			}
 		}
 
@@ -33,7 +39,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				return Environment.GetEnvironmentVariable("APP_POOL_ID");
 			}
-			catch (Exception ex)
+			catch (SecurityException ex)
 			{
 				Logger.Error()?.Log("Failed to get app pool name: {Exception}", ex);
 				return null;
@@ -46,11 +52,17 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				return HostingEnvironment.SiteName;
 			}
-			catch (Exception ex)
+			catch (SecurityException ex)
 			{
 				Logger.Error()?.Log("Failed to get site name: {Exception}", ex);
 				return null;
 			}
+		}
+
+		protected override ConfigurationKeyValue Read(string key)
+		{
+			var value = ConfigurationManager.AppSettings[key];
+			return value != null ? new ConfigurationKeyValue(key, value, Origin) : base.Read(key);
 		}
 	}
 }

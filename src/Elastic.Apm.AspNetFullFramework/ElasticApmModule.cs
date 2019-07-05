@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Web;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
@@ -11,7 +10,6 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 
-
 namespace Elastic.Apm.AspNetFullFramework
 {
 	public class ElasticApmModule : IHttpModule
@@ -19,9 +17,15 @@ namespace Elastic.Apm.AspNetFullFramework
 		private static readonly bool IsCaptureHeadersEnabled;
 		private static readonly IApmLogger Logger;
 
+		// We can store current transaction because each IHttpModule is used for at most one request at a time.
+		// For example see https://bytes.com/topic/asp-net/answers/324305-httpmodule-multithreading-request-response-corelation
+		private Transaction _currentTransaction;
+
+		private HttpApplication _context;
+
 		static ElasticApmModule()
 		{
-			var configReader = new FullFrameworkConfigReader(ConsoleLogger.Instance);
+			var configReader = new ApplicationConfigurationReader(ConsoleLogger.Instance);
 			var agentComponents = new AgentComponents(configurationReader: configReader);
 			// Logger should be set ASAP because other initialization steps depend on it
 			Logger = agentComponents.Logger.Scoped(nameof(ElasticApmModule));
@@ -44,11 +48,6 @@ namespace Elastic.Apm.AspNetFullFramework
 			Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
 		}
 
-		// We can store current transaction because each IHttpModule is used for at most one request at a time
-		// For example see https://bytes.com/topic/asp-net/answers/324305-httpmodule-multithreading-request-response-corelation
-		private Transaction _currentTransaction;
-
-		private HttpApplication _httpApp;
 		private static Version IisVersion => HttpRuntime.IISVersion;
 
 		private static void SetServiceInformation(Service service, string aspNetVersion)
@@ -57,22 +56,14 @@ namespace Elastic.Apm.AspNetFullFramework
 			service.Language = new Language { Name = "C#" }; //TODO
 		}
 
-		public void Init(HttpApplication httpApp)
+		public void Init(HttpApplication context)
 		{
-			_httpApp = httpApp;
-			_httpApp.BeginRequest += OnBeginRequest;
-			_httpApp.EndRequest += OnEndRequest;
+			_context = context;
+			_context.BeginRequest += OnBeginRequest;
+			_context.EndRequest += OnEndRequest;
 		}
 
-		public void Dispose()
-		{
-			if (_httpApp != null)
-			{
-				_httpApp.BeginRequest -= OnBeginRequest;
-				_httpApp.EndRequest -= OnEndRequest;
-				_httpApp = null;
-			}
-		}
+		public void Dispose() => _context = null;
 
 		private void OnBeginRequest(object eventSender, EventArgs eventArgs)
 		{
@@ -138,7 +129,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				Logger.Debug()
 					?.Log("Incoming request doesn't have {TraceParentHeaderName} header - " +
-						"it means request doesn't have incoming distributed tracing data", TraceParent.TraceParentHeaderName);
+						"it means the request doesn't have incoming distributed tracing data", TraceParent.TraceParentHeaderName);
 				return null;
 			}
 			return TraceParent.TryExtractTraceparent(headerValue);
@@ -161,6 +152,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			else if (queryString[0] == '?')
 				queryString = queryString.Substring(1, queryString.Length - 1);
+
 			var url = new Url
 			{
 				Full = fullUrl,
@@ -223,7 +215,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			_currentTransaction = null;
 		}
 
-		private void FillSampledTransactionContextResponse(HttpResponse httpResponse, ITransaction transaction) =>
+		private static void FillSampledTransactionContextResponse(HttpResponse httpResponse, ITransaction transaction) =>
 			transaction.Context.Response = new Response
 			{
 				Finished = true,
@@ -231,9 +223,9 @@ namespace Elastic.Apm.AspNetFullFramework
 				Headers = IsCaptureHeadersEnabled ? ConvertHeaders(httpResponse.Headers) : null
 			};
 
-		private void FillSampledTransactionContextUser(HttpContext httpCtx, Transaction transaction)
+		private static void FillSampledTransactionContextUser(HttpContext context, ITransaction transaction)
 		{
-			var userIdentity = httpCtx.User?.Identity;
+			var userIdentity = context.User?.Identity;
 			if (userIdentity == null || !userIdentity.IsAuthenticated) return;
 
 			transaction.Context.User = new User { UserName = userIdentity.Name };
