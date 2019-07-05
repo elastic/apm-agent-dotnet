@@ -160,7 +160,7 @@ namespace Elastic.Apm.Model
 					$"{nameof(Transaction)}.{nameof(CaptureException)}")
 			};
 
-			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id)
+			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger)
 			{
 				Culprit = capturedCulprit,
 				Context = transaction.Context
@@ -191,7 +191,7 @@ namespace Elastic.Apm.Model
 					= StacktraceHelper.GenerateApmStackTrace(frames, logger, "failed capturing stacktrace");
 			}
 
-			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id)
+			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger)
 			{
 				Culprit = capturedCulprit,
 				Context = transaction.Context

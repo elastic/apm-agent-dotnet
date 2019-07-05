@@ -168,6 +168,31 @@ Sets the logging level for the agent.
 
 Valid options: `Error`, `Warning`, `Info`, `Debug`.
 
+[float]
+[[config-metrics-interval]]
+==== `MetricsInterval` (added[1.0.0-beta])
+
+The interval at which the agent sends metrics to the APM Server.
+Must be at least `1s`.
+Set to `0s` to deactivate.
+
+Supports the duration suffixes `ms`, `s` and `m`.
+Example: `30s`.
+The default unit for this option is `s`.
+
+[options="header"]
+|============
+| Default                 | Type
+| `30s`                   | TimeDuration
+|============
+
+
+[options="header"]
+|============
+| Environment variable name      | IConfiguration key 
+| `ELASTIC_APM_METRICS_INTERVAL` | `ElasticApm:MetricsInterval`
+|============
+
 [[config-http]]
 === HTTP configuration options
 
