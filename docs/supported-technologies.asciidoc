@@ -31,8 +31,6 @@ the agent will not capture transactions.
 The agent works on every .NET flavor and version that supports .NET Standard 2.0.
 This means .NET Core 2.0 (or newer) and .NET Framework 4.6.1 (or newer).
 
-|===
-
 [float]
 [[supported-web-frameworks]]
 === Web Frameworks
