@@ -8,7 +8,7 @@
   <PropertyGroup>
     <RootNamespace>Elastic.Apm</RootNamespace>
     <AssemblyName>Elastic.Apm</AssemblyName>
-    <VersionPrefix>1.0.1</VersionPrefix>
+    <VersionPrefix>1.0.0</VersionPrefix>
     <VersionSuffix>beta1</VersionSuffix>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
@@ -22,7 +22,6 @@
     <Description>Elastic APM .NET Agent base package. This package provides core functionality for transmitting of all Elastic APM types and is a dependent package for all other Elastic APM package. Additionally this package contains the public Agent API that allows you to manually capture transactions and spans. Please install the platform specific package for the best experience. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, sdk</PackageTags>
     <LangVersion>latest</LangVersion>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.5.0" />
