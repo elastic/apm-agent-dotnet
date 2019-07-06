@@ -41,7 +41,7 @@ a transaction is automatically created for each incoming request and it is named
 We support automatic instrumentation for the following web frameworks.
 
 |===
-|Framework |Supported versions |Since agent's version
+|Framework |Supported versions |Supported since agent's version
 
 |ASP.NET Core
 |2.x
@@ -57,7 +57,7 @@ We support automatic instrumentation for the following web frameworks.
 We support automatic instrumentation for the following data access technologies.
 
 |===
-|Data access technology |Supported versions |Notes |Since agent's version
+|Data access technology |Supported versions |Notes |Supported since agent's version
 
 |Entity Framework (EF) Core
 |2.x
@@ -75,7 +75,7 @@ an HTTP span is automatically created for each outgoing HTTP request and tracing
 The spans are named after the schema `<method> <host>`, for example `GET elastic.co`.
 
 |===
-|Framework |Supported versions |Since agent's version
+|Framework |Supported versions |Supported since agent's version
 
 |System.Net.Http.HttpClient on .NET Core
 |
