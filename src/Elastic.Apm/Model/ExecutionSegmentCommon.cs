@@ -147,22 +147,9 @@ namespace Elastic.Apm.Model
 			string parentId = null
 		)
 		{
-			CapturedException BuildCapturedException(Exception nextException)
-			{
-				if (nextException is null) return null;
+			var capturedException = new CapturedException(exception, isHandled, logger);
 
-				return new CapturedException
-				{
-					Message = nextException.Message,
-					Type = nextException.GetType().FullName,
-					Handled = isHandled,
-					Stacktrace = StacktraceHelper.GenerateApmStackTrace(nextException, logger,
-						$"{nameof(Transaction)}.{nameof(CaptureException)}"),
-					InnerException = BuildCapturedException(nextException.InnerException)
-				};
-			}
-
-			payloadSender.QueueError(new Error(BuildCapturedException(exception), transaction, parentId ?? executionSegment.Id, logger)
+			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger)
 			{
 				Culprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit,
 				Context = transaction.Context
@@ -180,16 +167,8 @@ namespace Elastic.Apm.Model
 			string parentId = null
 		)
 		{
-			var capturedException = new CapturedException
-			{
-				Message = message
-			};
-
-			if (frames != null)
-			{
-				capturedException.Stacktrace
-					= StacktraceHelper.GenerateApmStackTrace(frames, logger, "failed capturing stacktrace");
-			}
+			var capturedException = new CapturedException(message, frames != null ?
+				StacktraceHelper.GenerateApmStackTrace(frames, logger, "failed capturing stacktrace") : null);
 
 			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger)
 			{
