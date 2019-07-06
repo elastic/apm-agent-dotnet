@@ -26,10 +26,7 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			void AppendIfNotNull(string nameToAppend)
 			{
-				if (nameToAppend != null)
-				{
-					retVal.AppendSeparatedIfNotEmpty("_", nameToAppend);
-				}
+				if (nameToAppend != null) retVal.AppendSeparatedIfNotEmpty("_", nameToAppend);
 			}
 		}
 
