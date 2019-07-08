@@ -10,7 +10,7 @@ The .NET agent tracks certain system and application metrics.
 Some of them have built-in visualizations and some can only be visualized with custom Kibana dashboards.
 
 These metrics will be sent regularly to the APM Server and from there to Elasticsearch.
-You can adjust the interval with the setting <<configuration.asciidoc#config-metrics-interval,`MetricsInterval`>>.
+You can adjust the interval with the setting <<config-metrics-interval>>.
 
 The metrics will be stored in the `apm-*` index and have the `processor.event` property set to `metric`.
 
