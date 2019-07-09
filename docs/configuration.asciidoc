@@ -170,7 +170,7 @@ Valid options: `Error`, `Warning`, `Info`, `Debug`.
 
 [float]
 [[config-metrics-interval]]
-==== `MetricsInterval` (added[1.0.0-beta])
+==== `MetricsInterval` (added[1.0.0-beta1])
 
 The interval at which the agent sends metrics to the APM Server.
 Must be at least `1s`.
