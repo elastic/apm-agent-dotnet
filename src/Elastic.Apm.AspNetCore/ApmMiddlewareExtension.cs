@@ -16,7 +16,14 @@ namespace Elastic.Apm.AspNetCore
 	public static class ApmMiddlewareExtension
 	{
 		/// <summary>
-		/// Adds the Elastic APM Middleware to the ASP.NET Core pipeline
+		/// Adds the Elastic APM Middleware to the ASP.NET Core pipeline.
+		/// You can customize the agent by passing additional IDiagnosticsSubscriber components to this method.
+		/// Use this method if you want to control what tracing capability of the agent you would like to use
+		/// or in case you want to minimize the number of dependencies added to your application.
+		/// Please note that by default without additional parameters this method only enables ASP.NET Core
+		/// monitoring - e.g. database statements or outgoing HTTP calls won't be traced.
+		/// If you want to simply enable every tracing component without configuration please use the
+		/// UseAllElasticApm extension method from the Elastic.Apm.NetCoreAll package.
 		/// </summary>
 		/// <returns>The elastic apm.</returns>
 		/// <param name="builder">Builder.</param>
