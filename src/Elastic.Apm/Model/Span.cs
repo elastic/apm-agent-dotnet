@@ -51,9 +51,12 @@ namespace Elastic.Apm.Model
 				StackTrace = StacktraceHelper.GenerateApmStackTrace(new StackTrace(true).GetFrames(), _logger, $"Span `{Name}'");
 			}
 
-			_logger.Trace()?.Log("New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp})",
-				this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+			_logger.Trace()
+				?.Log("New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp})",
+					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 		}
+
+		private bool _isEnded;
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Action { get; set; }
@@ -70,7 +73,7 @@ namespace Elastic.Apm.Model
 		/// is automatically calculated when <see cref="End" /> is called.
 		/// </summary>
 		/// <value>The duration.</value>
-		public double? Duration { get; private set; }
+		public double? Duration { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Id { get; set; }
@@ -145,33 +148,35 @@ namespace Elastic.Apm.Model
 			return retVal;
 		}
 
-		public void End(double? duration = null)
+		public void End()
 		{
 			if (Duration.HasValue)
 			{
-				_logger.Debug()?.Log("End() called on already ended {Span}. Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
+				_logger.Trace()
+					?.Log("Ended {Span} (with Duration already set)." +
+						" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
+						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
 			}
 			else
 			{
-				if (duration.HasValue)
-				{
-					Duration = duration.Value;
-					_logger.Trace()?.Log("Ended {Span}. Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
-				}
-				else
-				{
-					var endTimestamp = TimeUtils.TimestampNow();
-					Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
-					_logger.Trace()?.Log("Ended {Span}. Start time: {Time} (as timestamp: {Timestamp})," +
+				Assertion.IfEnabled?.That(!_isEnded,
+					$"Span's Duration doesn't have value even though {nameof(End)} method was already called." +
+					$" It contradicts the invariant enforced by {nameof(End)} method - Duration should have value when {nameof(End)} method exits" +
+					$" and {nameof(_isEnded)} field is set to true only when {nameof(End)} method exits." +
+					$" Context: this: {this}; {nameof(_isEnded)}: {_isEnded}");
+
+				var endTimestamp = TimeUtils.TimestampNow();
+				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
+				_logger.Trace()
+					?.Log("Ended {Span}. Start time: {Time} (as timestamp: {Timestamp})," +
 						" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
 						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp,
 						TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
-				}
 			}
 
-			if (IsSampled) _payloadSender.QueueSpan(this);
+			var isFirstEndCall = !_isEnded;
+			_isEnded = true;
+			if (IsSampled && isFirstEndCall) _payloadSender.QueueSpan(this);
 		}
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)

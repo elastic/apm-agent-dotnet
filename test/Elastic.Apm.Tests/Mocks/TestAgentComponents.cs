@@ -16,6 +16,7 @@ namespace Elastic.Apm.Tests.Mocks
 			string serverUrls = null,
 			string secretToken = null,
 			string captureHeaders = null,
+			string transactionSampleRate = null,
 			IPayloadSender payloadSender = null
 		)
 			: this(new TestAgentConfigurationReader(
@@ -23,7 +24,8 @@ namespace Elastic.Apm.Tests.Mocks
 				serverUrls: serverUrls,
 				secretToken: secretToken,
 				captureHeaders: captureHeaders,
-				logLevel: logLevel
+				logLevel: logLevel,
+				transactionSampleRate: transactionSampleRate
 			), payloadSender)
 		{
 		}
