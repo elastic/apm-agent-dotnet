@@ -159,8 +159,11 @@ namespace Elastic.Apm.Model
 			}
 			else
 			{
-				Assertion.IfEnabled?.That(!_isEnded, $"If a span doesn't have Duration set it means that the span did not end yet." +
-					$" this: {this}; {nameof(Duration)}: {Duration}, {nameof(_isEnded)}: {_isEnded}");
+				Assertion.IfEnabled?.That(!_isEnded,
+					$"Span's Duration doesn't have value even though {nameof(End)} method was already called." +
+					$" It contradicts the invariant enforced by {nameof(End)} method - Duration should have value when {nameof(End)} method exits" +
+					$" and {nameof(_isEnded)} field is set to true only when {nameof(End)} method exits." +
+					$" Context: this: {this}; {nameof(_isEnded)}: {_isEnded}");
 
 				var endTimestamp = TimeUtils.TimestampNow();
 				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
