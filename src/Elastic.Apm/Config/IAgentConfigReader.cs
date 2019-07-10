@@ -13,5 +13,7 @@ namespace Elastic.Apm.Config
 		bool CaptureHeaders { get; }
 		double TransactionSampleRate { get; }
 		double MetricsIntervalInMillisecond { get; }
+		int StackTraceLimit { get; }
+		double SpanFramesMinDurationInMilliseconds { get; }
 	}
 }

@@ -80,6 +80,25 @@ namespace Elastic.Apm.PerfTests
 		}
 
 		[Benchmark]
+		public void Simple100Transaction10Spans()
+		{
+			var noopLogger = new NoopLogger();
+			var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(), logger: noopLogger,
+				configurationReader: new TestAgentConfigurationReader(noopLogger)));
+
+			for (var i = 0; i < 100; i++)
+			{
+				agent.Tracer.CaptureTransaction("transaction", "perfTransaction", (transaction) =>
+				{
+					for (var j = 0; j < 10; j++)
+					{
+						transaction.CaptureSpan("span", "perfSpan", () => { });
+					}
+				});
+			}
+		}
+
+		[Benchmark]
 		public void DebugLogSimple100Transaction10Spans()
 		{
 			var testLogger = new PerfTestLogger(LogLevel.Debug);
