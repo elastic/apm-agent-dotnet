@@ -54,14 +54,14 @@ namespace Elastic.Apm.Config
 		protected bool ParseCaptureHeaders(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return true;
-			if (bool.TryParse(kv.Value, out var value)) return value;
-
-			return true;
+			return !bool.TryParse(kv.Value, out var value) || value;
 		}
 
 		protected LogLevel ParseLogLevel(ConfigurationKeyValue kv)
 		{
-			if (TryParseLogLevel(kv?.Value, out var level)) return level.Value;
+			if (TryParseLogLevel(kv?.Value, out var level))
+				if (level != null)
+					return level.Value;
 
 			if (kv?.Value == null)
 				Logger?.Debug()?.Log("No log level provided. Defaulting to log level '{DefaultLogLevel}'", ConsoleLogger.DefaultLogLevel);
@@ -120,7 +120,7 @@ namespace Elastic.Apm.Config
 			else
 				value = kv.Value;
 
-			if (!TryParseTimeInterval(value, out var valueInMilliseconds))
+			if (!TryParseTimeInterval(value, out var valueInMilliseconds, TimeSuffix.S))
 			{
 				Logger?.Error()
 					?.Log("Failed to parse provided metrics interval `{ProvidedMetricsInterval}' - " +
@@ -158,7 +158,17 @@ namespace Elastic.Apm.Config
 
 		protected int ParseStackTraceLimit(ConfigurationKeyValue kv)
 		{
-			return 0;
+			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
+				return ConfigConsts.DefaultValues.StackTraceLimit;
+
+
+			if (int.TryParse(kv.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result))
+				return result;
+
+			Logger?.Error()?.Log("Failed to parse provided stack trace limit `{ProvidedStackTraceLimit}` - using default: {DefaultStackTraceLimit}",
+				kv.Value, ConfigConsts.DefaultValues.StackTraceLimit);
+
+			return ConfigConsts.DefaultValues.StackTraceLimit;
 		}
 
 		protected double ParseSpanFramesMinDurationInMilliseconds(ConfigurationKeyValue kv)
@@ -169,7 +179,7 @@ namespace Elastic.Apm.Config
 			else
 				value = kv.Value;
 
-			if (!TryParseTimeInterval(value, out var valueInMilliseconds))
+			if (!TryParseTimeInterval(value, out var valueInMilliseconds, TimeSuffix.Ms))
 			{
 				Logger?.Error()
 					?.Log("Failed to parse provided span frames minimum duration `{ProvidedSpanFramesMinDuration}' - " +
@@ -182,7 +192,7 @@ namespace Elastic.Apm.Config
 			return valueInMilliseconds;
 		}
 
-		private bool TryParseTimeInterval(string valueAsString, out double valueInMilliseconds)
+		private bool TryParseTimeInterval(string valueAsString, out double valueInMilliseconds, TimeSuffix defaultSuffix)
 		{
 			switch (valueAsString)
 			{
@@ -212,7 +222,21 @@ namespace Elastic.Apm.Config
 						valueInMilliseconds = 0;
 						return false;
 					}
-					valueInMilliseconds = TimeSpan.FromSeconds(valueInSecondsNoUnits).TotalMilliseconds;
+
+					switch (defaultSuffix)
+					{
+						case TimeSuffix.M:
+							valueInMilliseconds = TimeSpan.FromMinutes(valueInSecondsNoUnits).TotalMilliseconds;
+							break;
+						case TimeSuffix.Ms:
+							valueInMilliseconds = TimeSpan.FromMilliseconds(valueInSecondsNoUnits).TotalMilliseconds;
+							break;
+						case TimeSuffix.S:
+							valueInMilliseconds = TimeSpan.FromSeconds(valueInSecondsNoUnits).TotalMilliseconds;
+							break;
+						default: throw new ArgumentOutOfRangeException(nameof(defaultSuffix), defaultSuffix, null);
+					}
+
 					return true;
 			}
 		}
@@ -228,7 +252,7 @@ namespace Elastic.Apm.Config
 
 			foreach (var frame in stackFrames)
 			{
-				var currentAssemblyName = frame?.GetMethod()?.DeclaringType?.Assembly?.GetName();
+				var currentAssemblyName = frame?.GetMethod()?.DeclaringType?.Assembly.GetName();
 				if (currentAssemblyName != null && !IsMsOrElastic(currentAssemblyName.GetPublicKeyToken())) return currentAssemblyName.Name;
 			}
 
@@ -347,6 +371,11 @@ namespace Elastic.Apm.Config
 			}
 
 			return true;
+		}
+
+		enum TimeSuffix
+		{
+			M, Ms, S
 		}
 	}
 }

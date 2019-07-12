@@ -13,7 +13,7 @@ namespace Elastic.Apm.Tests
 	/// <summary>
 	/// Tests the configuration through environment variables
 	/// </summary>
-	public class EnvVarConfigTest : IDisposable
+	public class ConfigTest : IDisposable
 	{
 		[Fact]
 		public void ServerUrlsSimpleTest()
@@ -361,6 +361,39 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void MetricsIntervalDefaultValuesInSync()
 			=> MetricsIntervalTestCommon(DefaultValues.MetricsInterval).Should().Be(DefaultValues.MetricsIntervalInMilliseconds);
+
+		[InlineData("2", 2)]
+		[InlineData("0", 0)]
+		[InlineData("-2", -2)]
+		[InlineData("2147483647", int.MaxValue)]
+		[InlineData("-2147483648", int.MinValue)]
+		[InlineData("2.32", DefaultValues.StackTraceLimit)]
+		[InlineData("2,32", DefaultValues.StackTraceLimit)]
+		[InlineData("asdf", DefaultValues.StackTraceLimit)]
+		[Theory]
+		public void StackTraceLimit(string configValue, int expectedValue)
+		{
+			using (var agent = new ApmAgent(new TestAgentComponents(stackTraceLimit: configValue)))
+			{
+				agent.ConfigurationReader.StackTraceLimit.Should().Be(expectedValue);
+			}
+		}
+
+		[InlineData("2ms", 2)]
+		[InlineData("2s", 2*1000)]
+		[InlineData("2m", 2*60*1000)]
+		[InlineData("2", 2)]
+		[InlineData("-2ms", -2)]
+		[InlineData("dsfkldfs", DefaultValues.SpanFramesMinDurationInMilliseconds)]
+		[InlineData("2,32", DefaultValues.SpanFramesMinDurationInMilliseconds)]
+		[Theory]
+		public void SpanFramesMinDurationInMilliseconds(string configValue, int expectedValue)
+		{
+			using (var agent = new ApmAgent(new TestAgentComponents(spanFramesMinDurationInMilliseconds: configValue)))
+			{
+				agent.ConfigurationReader.SpanFramesMinDurationInMilliseconds.Should().Be(expectedValue);
+			}
+		}
 
 		private static double MetricsIntervalTestCommon(string configValue)
 		{
