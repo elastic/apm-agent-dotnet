@@ -41,6 +41,7 @@ NOTE: By simply calling `app.UseElasticApm()` without the overload, the agent wi
 ==== Sample configuration file
 
 Below is a sample `appsettings.json` configuration file for a typical ASP.NET Core application. There are two important takeaways:
+
 1. The part below `ElasticApm` is fetched by the agent if the corresponding `IConfiguration` is passed to the agent.
 2. With ASP.NET Core, you must set `LogLevel for the internal APM logger in the standard `Logging` section with the `ElasticApm` category name.
 
