@@ -187,6 +187,39 @@ namespace Elastic.Apm.Tests
 			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace[0].Function.Should().Be(nameof(Base.JustThrow));
 		}
 
+		[Fact]
+		public void StackTraceLimit0()
+		{
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: "0"), payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t) => { t.CaptureSpan("span", "span", () => { }); });
+			}
+
+			payloadSender.FirstSpan.Should().NotBeNull();
+			payloadSender.FirstSpan.StackTrace.Should().BeNull();
+		}
+		
+		[Fact]
+		public void StackTraceLimitNegative()
+		{
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: "-1"), payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t) => { t.CaptureSpan("span", "span", () => { }); });
+			}
+
+			payloadSender.FirstSpan.Should().NotBeNull();
+			payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
+		}
+
+		[Fact]
+		public void StakTraceLimit2() { }
+
 		private void TestMethod() => InnerTestMethod(() => throw new Exception("TestException"));
 
 		private void InnerTestMethod(Action actionToRun)

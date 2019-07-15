@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 
@@ -20,8 +21,11 @@ namespace Elastic.Apm.Helpers
 		/// <param name="frames">The stack frames to rewrite into APM stack traces</param>
 		/// <param name="logger">The logger to emit exceptions on should one occur</param>
 		/// <param name="dbgCapturingFor">Just for logging.</param>
+		/// <param name="configurationReader">Config reader - this controls the collection of stack traces (e.g. limit on frames, etc)</param>
 		/// <returns>A prepared List that can be passed to the APM server</returns>
-		internal static List<CapturedStackFrame> GenerateApmStackTrace(StackFrame[] frames, IApmLogger logger, string dbgCapturingFor)
+		internal static List<CapturedStackFrame> GenerateApmStackTrace(StackFrame[] frames, IApmLogger logger,
+			IConfigurationReader configurationReader, string dbgCapturingFor
+		)
 		{
 			var retVal = new List<CapturedStackFrame>(frames.Length);
 
@@ -34,7 +38,7 @@ namespace Elastic.Apm.Helpers
 					select new CapturedStackFrame
 					{
 						Function = functionName ?? "N/A",
-						FileName = string.IsNullOrWhiteSpace(fileName)? "N/A" : fileName,
+						FileName = string.IsNullOrWhiteSpace(fileName) ? "N/A" : fileName,
 						Module = item?.GetMethod()?.ReflectedType?.Assembly.FullName,
 						LineNo = item?.GetFileLineNumber() ?? 0,
 						AbsPath = item?.GetFileName() // optional property
@@ -55,12 +59,15 @@ namespace Elastic.Apm.Helpers
 		/// <param name="exception">The exception to rewrite into APM stack traces</param>
 		/// <param name="logger">The logger to emit exceptions on should one occur</param>
 		/// <param name="dbgCapturingFor">Just for logging.</param>
+		/// <param name="configurationReader">Config reader - this controls the collection of stack traces (e.g. limit on frames, etc)</param>
 		/// <returns>A prepared List that can be passed to the APM server</returns>
-		internal static List<CapturedStackFrame> GenerateApmStackTrace(Exception exception, IApmLogger logger, string dbgCapturingFor)
+		internal static List<CapturedStackFrame> GenerateApmStackTrace(Exception exception, IApmLogger logger, string dbgCapturingFor,
+			IConfigurationReader configurationReader
+		)
 		{
 			try
 			{
-				return GenerateApmStackTrace(new StackTrace(exception, true).GetFrames(), logger, dbgCapturingFor);
+				return GenerateApmStackTrace(new StackTrace(exception, true).GetFrames(), logger, configurationReader, dbgCapturingFor);
 			}
 			catch (Exception e)
 			{

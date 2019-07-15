@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
@@ -66,8 +65,10 @@ namespace Elastic.Apm.Tests
 
 			total.Repeat(i =>
 			{
-				var transaction = new Transaction(noopLogger, "test transaction name", "test transaction type", sampler, null, noopPayloadSender);
+				var transaction = new Transaction(noopLogger, "test transaction name", "test transaction type", sampler, null, noopPayloadSender,
+					new TestAgentConfigurationReader(noopLogger));
 				if (transaction.IsSampled) ++sampledCount;
+
 				if (i + 1 >= startCheckingAfter)
 				{
 					var actualRate = (double)sampledCount / (i + 1);

@@ -25,7 +25,11 @@ namespace Elastic.Apm.Tests
 		{
 			var str = new string('a', 1200);
 
-			var transaction = new Transaction(new TestAgentComponents(), str, "test") { Duration = 1, Result = "fail" };
+			var transaction =
+				new Transaction(new TestAgentComponents(), str, "test", new TestAgentConfigurationReader(new NoopLogger()))
+				{
+					Duration = 1, Result = "fail"
+				};
 
 			var json = SerializePayloadItem(transaction);
 			var deserializedTransaction = JsonConvert.DeserializeObject(json) as JObject;
@@ -133,17 +137,14 @@ namespace Elastic.Apm.Tests
 		{
 			var agent = new TestAgentComponents();
 			// Create a transaction that is sampled (because the sampler is constant sampling-everything sampler
-			var sampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(1.0), null, agent.PayloadSender);
-			sampledTransaction.Context.Request = new Request("GET", new Url
-			{
-				Full = "https://elastic.co",
-				Raw = "https://elastic.co",
-				HostName = "elastic.co",
-				Protocol = "HTTP"
-			});
+			var sampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(1.0), null, agent.PayloadSender,
+				new TestAgentConfigurationReader(new NoopLogger()));
+			sampledTransaction.Context.Request = new Request("GET",
+				new Url { Full = "https://elastic.co", Raw = "https://elastic.co", HostName = "elastic.co", Protocol = "HTTP" });
 
 			// Create a transaction that is not sampled (because the sampler is constant not-sampling-anything sampler
-			var nonSampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(0.0), null, agent.PayloadSender);
+			var nonSampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(0.0), null, agent.PayloadSender,
+				new TestAgentConfigurationReader(new NoopLogger()));
 			nonSampledTransaction.Context.Request = sampledTransaction.Context.Request;
 
 			var serializedSampledTransaction = SerializePayloadItem(sampledTransaction);
@@ -187,8 +188,8 @@ namespace Elastic.Apm.Tests
 			yield return new object[] { "", "" };
 			yield return new object[] { "A", "A" };
 			yield return new object[] { "B".Repeat(Consts.PropertyMaxLength), "B".Repeat(Consts.PropertyMaxLength) };
-			yield return new object[] { "C".Repeat(Consts.PropertyMaxLength + 1), "C".Repeat(Consts.PropertyMaxLength-3) + "..." };
-			yield return new object[] { "D".Repeat(Consts.PropertyMaxLength * 2), "D".Repeat(Consts.PropertyMaxLength-3) + "..." };
+			yield return new object[] { "C".Repeat(Consts.PropertyMaxLength + 1), "C".Repeat(Consts.PropertyMaxLength - 3) + "..." };
+			yield return new object[] { "D".Repeat(Consts.PropertyMaxLength * 2), "D".Repeat(Consts.PropertyMaxLength - 3) + "..." };
 		}
 
 		[Theory]

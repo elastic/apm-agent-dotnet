@@ -53,7 +53,8 @@ namespace Elastic.Apm.Tests
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("TestName", "TestType", () => { Thread.Sleep(5); });
-				agent.Service.Agent.Version.Should().Be(typeof(Agent).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
+				agent.Service.Agent.Version.Should()
+					.Be(typeof(Agent).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
 			}
 		}
 
@@ -77,7 +78,7 @@ namespace Elastic.Apm.Tests
 
 			using (var agent = new ApmAgent(new TestAgentComponents(secretToken: secretToken, payloadSender: payloadSender)))
 			{
-				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
+				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType", new TestAgentConfigurationReader(logger)));
 			}
 
 			await isRequestFinished.Task;

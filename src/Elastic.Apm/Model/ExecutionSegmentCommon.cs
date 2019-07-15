@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
@@ -143,6 +144,7 @@ namespace Elastic.Apm.Model
 			IApmLogger logger,
 			IPayloadSender payloadSender,
 			IExecutionSegment executionSegment,
+			IConfigurationReader configurationReader,
 			Transaction transaction,
 			string culprit = null,
 			bool isHandled = false,
@@ -156,9 +158,11 @@ namespace Elastic.Apm.Model
 				Message = exception.Message,
 				Type = exception.GetType().FullName,
 				Handled = isHandled,
-				Stacktrace = StacktraceHelper.GenerateApmStackTrace(exception, logger,
-					$"{nameof(Transaction)}.{nameof(CaptureException)}")
 			};
+
+			if (configurationReader.StackTraceLimit != 0)
+				capturedException.Stacktrace = StacktraceHelper.GenerateApmStackTrace(exception, logger,
+					$"{nameof(Transaction)}.{nameof(CaptureException)}", configurationReader);
 
 			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger)
 			{
@@ -174,6 +178,7 @@ namespace Elastic.Apm.Model
 			IPayloadSender payloadSender,
 			IApmLogger logger,
 			IExecutionSegment executionSegment,
+			IConfigurationReader configurationReader,
 			Transaction transaction,
 			string parentId = null
 		)
@@ -188,7 +193,7 @@ namespace Elastic.Apm.Model
 			if (frames != null)
 			{
 				capturedException.Stacktrace
-					= StacktraceHelper.GenerateApmStackTrace(frames, logger, "failed capturing stacktrace");
+					= StacktraceHelper.GenerateApmStackTrace(frames, logger, configurationReader, "failed capturing stacktrace");
 			}
 
 			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger)
