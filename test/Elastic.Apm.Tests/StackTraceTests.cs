@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -66,7 +67,7 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.Errors.Should().NotBeEmpty();
 			(payloadSender.Errors.First() as Error).Should().NotBeNull();
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should()
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should()
 				.Contain(m => m.Function == nameof(ClassWithAsync.TestMethodAsync) && m.LineNo != 0);
 		}
 
@@ -91,8 +92,8 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.Errors.Should().NotBeEmpty();
 			(payloadSender.Errors.First() as Error).Should().NotBeNull();
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should().Contain(m => m.Function == nameof(ClassWithSyncMethods.MoveNext));
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should().Contain(m => m.Function == nameof(ClassWithSyncMethods.M2));
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should().Contain(m => m.Function == nameof(ClassWithSyncMethods.MoveNext));
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should().Contain(m => m.Function == nameof(ClassWithSyncMethods.M2));
 		}
 
 		/// <summary>
@@ -117,13 +118,13 @@ namespace Elastic.Apm.Tests
 			payloadSender.Errors.Should().NotBeEmpty();
 			(payloadSender.Errors.First() as Error).Should().NotBeNull();
 
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should()
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should()
 				.Contain(m => m.FileName == typeof(Base).FullName
 					&& m.Function == nameof(Base.Method1)
 					&& m.Module == typeof(Base).Assembly.FullName
 				);
 
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should()
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should()
 				.Contain(m => m.FileName == typeof(Derived).FullName
 					&& m.Function == nameof(Derived.TestMethod)
 					&& m.Module == typeof(Derived).Assembly.FullName);
@@ -144,7 +145,7 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.Errors.Should().NotBeEmpty();
 			(payloadSender.Errors.First() as Error).Should().NotBeNull();
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should().NotContain(frame => string.IsNullOrWhiteSpace(frame.FileName));
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should().NotContain(frame => string.IsNullOrWhiteSpace(frame.FileName));
 		}
 
 		[Fact]
@@ -163,11 +164,11 @@ namespace Elastic.Apm.Tests
 			payloadSender.Errors.First().Should().BeOfType(typeof(Error));
 
 			//note: since filename is used on the UI (and there is no other way to show the classname, we misuse this field
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace[0].FileName.Should().Be(typeof(Derived).FullName);
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace[0].Function.Should().Be(nameof(Derived.MethodThrowingIDerived));
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].FileName.Should().Be(typeof(Derived).FullName);
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].Function.Should().Be(nameof(Derived.MethodThrowingIDerived));
 
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace[1].FileName.Should().Be(typeof(Derived).FullName);
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace[1].Function.Should().Be(nameof(Base.MyMethod));
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[1].FileName.Should().Be(typeof(Derived).FullName);
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[1].Function.Should().Be(nameof(Base.MyMethod));
 		}
 
 		[Fact]
@@ -186,8 +187,8 @@ namespace Elastic.Apm.Tests
 			payloadSender.Errors.First().Should().BeOfType(typeof(Error));
 
 			//note: since filename is used on the UI (and there is no other way to show the classname, we misuse this field
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace[0].FileName.Should().Be(typeof(Base).FullName);
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace[0].Function.Should().Be(nameof(Base.JustThrow));
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].FileName.Should().Be(typeof(Base).FullName);
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].Function.Should().Be(nameof(Base.JustThrow));
 		}
 
 		[Fact]
@@ -325,6 +326,97 @@ namespace Elastic.Apm.Tests
 			payloadSender.FirstSpan.StackTrace.Should().HaveCount(ConfigConsts.DefaultValues.StackTraceLimit);
 		}
 
+		[Fact]
+		public void ErrorWithDefaultStackTraceLimit()
+		{
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					new TestAgentConfigurationReader(new NoopLogger()), payloadSender)))
+			{
+				Assert.Throws<Exception>(() =>
+				{
+					agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t)
+						=>
+					{
+						t.CaptureSpan("span", "span", () => { RecursiveCall100XAndThrow(0); });
+					});
+				});
+			}
+
+			payloadSender.FirstError.Should().NotBeNull();
+			payloadSender.FirstError.Exception.StackTrace.Should().NotBeNullOrEmpty();
+			payloadSender.FirstError.Exception.StackTrace.Should().HaveCount(ConfigConsts.DefaultValues.StackTraceLimit);
+		}
+
+		private static void RecursiveCall100XAndThrow(int i)
+		{
+			if( i == 100)
+				throw new Exception("TestException");
+
+			// ReSharper disable once TailRecursiveCall - this method creates a stack with 100 frames on purpose.
+			RecursiveCall100XAndThrow(i+1);
+		}
+
+		[Fact]
+		public void ErrorWithDefaultStackTrace2()
+		{
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: "2"), payloadSender)))
+			{
+				Assert.Throws<Exception>(() =>
+				{
+					agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t)
+						=>
+					{
+						t.CaptureSpan("span", "span", () =>
+						{
+							throw new Exception("TestException");
+						});
+					});
+				});
+			}
+
+			payloadSender.FirstError.Should().NotBeNull();
+			payloadSender.FirstError.Exception.StackTrace.Should().NotBeNullOrEmpty();
+			payloadSender.FirstError.Exception.StackTrace.Should().HaveCount(2);
+		}
+
+		/// <summary>
+		/// Makes sure that even if SpanFramesMinDuration is 0 (meaning no stacktrace is captured for spans)
+		/// the agent still captures stacktraces for error.
+		/// </summary>
+		/// <exception cref="Exception"></exception>
+		[Fact]
+		public void ErrorWithDefaultStackTrace2WithSpanFramesMinDurationZero()
+		{
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: "2", spanFramesMinDurationInMilliseconds: "-2"), payloadSender)))
+			{
+				Assert.Throws<Exception>(() =>
+				{
+					agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t)
+						=>
+					{
+						t.CaptureSpan("span", "span", () =>
+						{
+							throw new Exception("TestException");
+						});
+					});
+				});
+			}
+
+			payloadSender.FirstError.Should().NotBeNull();
+			payloadSender.FirstError.Exception.StackTrace.Should().NotBeNullOrEmpty();
+			payloadSender.FirstError.Exception.StackTrace.Should().HaveCount(2);
+		}
 
 		private static void AssertWithAgent(string stackTraceLimit, string spanFramesMinDuration, Action<MockPayloadSender> assertAction,
 			int sleepLength = 0

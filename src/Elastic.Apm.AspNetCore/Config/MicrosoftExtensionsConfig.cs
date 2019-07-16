@@ -68,7 +68,7 @@ namespace Elastic.Apm.AspNetCore.Config
 		public int StackTraceLimit => ParseStackTraceLimit(ReadFallBack(Keys.StackTraceLimit, ConfigConsts.EnvVarNames.StackTraceLimit));
 
 		public double SpanFramesMinDurationInMilliseconds =>
-			ParseStackTraceLimit(ReadFallBack(Keys.SpanFramesMinDuration, ConfigConsts.EnvVarNames.SpanFramesMinDuration));
+			ParseSpanFramesMinDurationInMilliseconds(ReadFallBack(Keys.SpanFramesMinDuration, ConfigConsts.EnvVarNames.SpanFramesMinDuration));
 
 		private ConfigurationKeyValue Read(string key) => Kv(key, _configuration[key], Origin);
 

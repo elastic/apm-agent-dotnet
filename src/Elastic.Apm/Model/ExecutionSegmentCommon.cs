@@ -161,7 +161,7 @@ namespace Elastic.Apm.Model
 			};
 
 			if (configurationReader.StackTraceLimit != 0)
-				capturedException.Stacktrace = StacktraceHelper.GenerateApmStackTrace(exception, logger,
+				capturedException.StackTrace = StacktraceHelper.GenerateApmStackTrace(exception, logger,
 					$"{nameof(Transaction)}.{nameof(CaptureException)}", configurationReader);
 
 			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger)
@@ -192,7 +192,7 @@ namespace Elastic.Apm.Model
 
 			if (frames != null)
 			{
-				capturedException.Stacktrace
+				capturedException.StackTrace
 					= StacktraceHelper.GenerateApmStackTrace(frames, logger, configurationReader, "failed capturing stacktrace");
 			}
 
