@@ -27,6 +27,14 @@ namespace Elastic.Apm.Helpers
 			IConfigurationReader configurationReader, string dbgCapturingFor
 		)
 		{
+			var stackTraceLimit = configurationReader.StackTraceLimit;
+
+			if (stackTraceLimit == 0)
+				return null;
+
+			if(stackTraceLimit > 0)
+				frames = frames.Take(stackTraceLimit).ToArray();
+
 			var retVal = new List<CapturedStackFrame>(frames.Length);
 
 			try
@@ -65,9 +73,15 @@ namespace Elastic.Apm.Helpers
 			IConfigurationReader configurationReader
 		)
 		{
+			var stackTraceLimit = configurationReader.StackTraceLimit;
+
+			if (stackTraceLimit == 0)
+				return null;
+
 			try
 			{
-				return GenerateApmStackTrace(new StackTrace(exception, true).GetFrames(), logger, configurationReader, dbgCapturingFor);
+				return GenerateApmStackTrace(
+					new StackTrace(exception, true).GetFrames(), logger, configurationReader, dbgCapturingFor);
 			}
 			catch (Exception e)
 			{

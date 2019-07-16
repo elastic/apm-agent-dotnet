@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
@@ -188,37 +189,107 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
-		public void StackTraceLimit0()
+		public void StackTraceLimit0SpanFramesMinDurationNegative() =>
+			AssertWithAgent("0", "-1", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().BeNull();
+			});
+
+		[Fact]
+		public void StackTraceLimitNegativeSpanFramesMinDurationNegative() =>
+			AssertWithAgent("-1", "-1", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
+				// contains all frame which depends on the test runner
+				// therefore the exact StackTrace.Count depends on where you run the test
+				payloadSender.FirstSpan.StackTrace.Should().HaveCountGreaterThan(10);
+			});
+
+		[Fact]
+		public void StackTraceLimit2SpanFramesMinDurationNegative() =>
+			AssertWithAgent("2", "-1", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
+				payloadSender.FirstSpan.StackTrace.Count.Should().Be(2);
+
+			});
+
+		[Fact]
+		public void StackTraceLimit0SpanFramesMinDuration0() =>
+			AssertWithAgent("0", "0", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().BeNull();
+			});
+
+		[Fact]
+		public void StackTraceLimitNegativeSpanFramesMinDuration0() =>
+			AssertWithAgent("-1", "0", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().BeNull();
+			});
+
+		[Fact]
+		public void StackTraceLimit2SpanFramesMinDuration0() =>
+			AssertWithAgent("2", "0", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().BeNull();
+			});
+
+		[Fact]
+		public void StackTraceLimit0SpanFramesMinDuration100() =>
+			AssertWithAgent("0", "100", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().BeNullOrEmpty();
+			}, 150);
+
+		[Fact]
+		public void StackTraceLimitNegativeSpanFramesMinDuration100() =>
+			AssertWithAgent("-1", "100", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
+				payloadSender.FirstSpan.StackTrace.Should().HaveCountGreaterThan(10);
+			}, 150);
+
+		[Fact]
+		public void StackTraceLimit2SpanFramesMinDuration100() =>
+			AssertWithAgent("2", "100", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
+				payloadSender.FirstSpan.StackTrace.Should().HaveCount(2);
+				//TODO: assert on frames
+			}, 150);
+
+		private void AssertWithAgent(string stackTraceLimit, string spanFramesMinDuration, Action<MockPayloadSender> assertAction, int sleepLength = 0)
 		{
 			var payloadSender = new MockPayloadSender();
 
 			using (var agent =
-				new ApmAgent(new TestAgentComponents(new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: "0"), payloadSender)))
+				new ApmAgent(new TestAgentComponents(
+					new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: stackTraceLimit,
+						spanFramesMinDurationInMilliseconds: spanFramesMinDuration), payloadSender)))
 			{
-				agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t) => { t.CaptureSpan("span", "span", () => { }); });
+				agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t)
+					=>
+				{
+					t.CaptureSpan("span", "span", () =>
+					{
+						Thread.Sleep(sleepLength);
+					});
+				});
 			}
 
-			payloadSender.FirstSpan.Should().NotBeNull();
-			payloadSender.FirstSpan.StackTrace.Should().BeNull();
-		}
-		
-		[Fact]
-		public void StackTraceLimitNegative()
-		{
-			var payloadSender = new MockPayloadSender();
-
-			using (var agent =
-				new ApmAgent(new TestAgentComponents(new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: "-1"), payloadSender)))
-			{
-				agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t) => { t.CaptureSpan("span", "span", () => { }); });
-			}
-
-			payloadSender.FirstSpan.Should().NotBeNull();
-			payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
+			assertAction(payloadSender);
 		}
 
-		[Fact]
-		public void StakTraceLimit2() { }
 
 		private void TestMethod() => InnerTestMethod(() => throw new Exception("TestException"));
 

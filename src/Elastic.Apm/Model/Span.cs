@@ -184,8 +184,8 @@ namespace Elastic.Apm.Model
 			{
 				if (Duration >= _configurationReader.SpanFramesMinDurationInMilliseconds
 					|| _configurationReader.SpanFramesMinDurationInMilliseconds < 0)
-					StackTrace = StacktraceHelper.GenerateApmStackTrace(new StackTrace(true).GetFrames(), _logger, _configurationReader,
-						$"Span `{Name}'");
+					StackTrace = StacktraceHelper.GenerateApmStackTrace(new StackTrace(true).GetFrames(), _logger,
+						_configurationReader, $"Span `{Name}'");
 			}
 
 			_payloadSender.QueueSpan(this);
