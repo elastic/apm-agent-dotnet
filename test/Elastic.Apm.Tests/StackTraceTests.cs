@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
@@ -346,6 +345,7 @@ namespace Elastic.Apm.Tests
 		}
 
 		[MethodImpl(MethodImplOptions.NoInlining)]
+		// ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
 		private static void RecursiveCall100XAndThrow(int i)
 		{
 			if (i == 100)
