@@ -349,6 +349,7 @@ namespace Elastic.Apm.Tests
 			payloadSender.FirstError.Exception.StackTrace.Should().HaveCount(ConfigConsts.DefaultValues.StackTraceLimit);
 		}
 
+		[MethodImpl(MethodImplOptions.NoInlining)]
 		private static void RecursiveCall100XAndThrow(int i)
 		{
 			if (i == 100)
