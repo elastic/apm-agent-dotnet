@@ -13,7 +13,7 @@ namespace Elastic.Apm.Tests
 	/// <summary>
 	/// Tests the configuration through environment variables
 	/// </summary>
-	public class ConfigTest : IDisposable
+	public class ConfigTests : IDisposable
 	{
 		[Fact]
 		public void ServerUrlsSimpleTest()
@@ -119,10 +119,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void DefaultCaptureHeadersTest()
 		{
-			using (var agent = new ApmAgent(new TestAgentComponents()))
-			{
-				agent.ConfigurationReader.CaptureHeaders.Should().Be(true);
-			}
+			using (var agent = new ApmAgent(new TestAgentComponents())) agent.ConfigurationReader.CaptureHeaders.Should().Be(true);
 		}
 
 		[Fact]
@@ -137,11 +134,8 @@ namespace Elastic.Apm.Tests
 		public void DefaultTransactionSampleRateTest()
 		{
 			using (var agent = new ApmAgent(new TestAgentComponents()))
-			{
 				agent.ConfigurationReader.TransactionSampleRate.Should().Be(DefaultValues.TransactionSampleRate);
-			}
 		}
-
 
 		[Fact]
 		public void SetTransactionSampleRateTest()
@@ -289,8 +283,8 @@ namespace Elastic.Apm.Tests
 			AbstractConfigurationReader
 				.IsMsOrElastic(new[]
 				{
-					elasticToken[0], mscorlibToken[1], elasticToken[2],
-					mscorlibToken[3], elasticToken[4], mscorlibToken[5], elasticToken[6], mscorlibToken[7]
+					elasticToken[0], mscorlibToken[1], elasticToken[2], mscorlibToken[3], elasticToken[4], mscorlibToken[5], elasticToken[6],
+					mscorlibToken[7]
 				})
 				.Should()
 				.BeFalse();
@@ -314,7 +308,7 @@ namespace Elastic.Apm.Tests
 
 		[Fact]
 		public void SetMetricsIntervalTo10S()
-		 => MetricsIntervalTestCommon("10s").Should().Be(10 * 1000);
+			=> MetricsIntervalTestCommon("10s").Should().Be(10 * 1000);
 
 		/// <summary>
 		/// Sets the metrics interval to '500ms'
@@ -330,7 +324,7 @@ namespace Elastic.Apm.Tests
 
 		[Fact]
 		public void SetMetricsIntervalTo1HourAs60minutes()
-			=> MetricsIntervalTestCommon("60m").Should().Be(60*60*1000);
+			=> MetricsIntervalTestCommon("60m").Should().Be(60 * 60 * 1000);
 
 		[Fact]
 		public void SetMetricsIntervalTo1HourUsingUnsupportedUnits()
@@ -368,7 +362,8 @@ namespace Elastic.Apm.Tests
 			=> MetricsIntervalTestCommon("-5ms").Should().Be(0);
 
 		/// <summary>
-		/// Make sure <see cref="DefaultValues.MetricsInterval" /> and <see cref="DefaultValues.MetricsIntervalInMilliseconds" /> are in sync
+		/// Make sure <see cref="DefaultValues.MetricsInterval" /> and <see cref="DefaultValues.MetricsIntervalInMilliseconds" />
+		/// are in sync
 		/// </summary>
 		[Fact]
 		public void MetricsIntervalDefaultValuesInSync()
@@ -386,14 +381,12 @@ namespace Elastic.Apm.Tests
 		public void StackTraceLimit(string configValue, int expectedValue)
 		{
 			using (var agent = new ApmAgent(new TestAgentComponents(stackTraceLimit: configValue)))
-			{
 				agent.ConfigurationReader.StackTraceLimit.Should().Be(expectedValue);
-			}
 		}
 
 		[InlineData("2ms", 2)]
-		[InlineData("2s", 2*1000)]
-		[InlineData("2m", 2*60*1000)]
+		[InlineData("2s", 2 * 1000)]
+		[InlineData("2m", 2 * 60 * 1000)]
 		[InlineData("2", 2)]
 		[InlineData("-2ms", -2)]
 		[InlineData("dsfkldfs", DefaultValues.SpanFramesMinDurationInMilliseconds)]
@@ -402,9 +395,7 @@ namespace Elastic.Apm.Tests
 		public void SpanFramesMinDurationInMilliseconds(string configValue, int expectedValue)
 		{
 			using (var agent = new ApmAgent(new TestAgentComponents(spanFramesMinDurationInMilliseconds: configValue)))
-			{
 				agent.ConfigurationReader.SpanFramesMinDurationInMilliseconds.Should().Be(expectedValue);
-			}
 		}
 
 		private static double MetricsIntervalTestCommon(string configValue)
