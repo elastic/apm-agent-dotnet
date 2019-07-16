@@ -117,7 +117,13 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
-		public void DefaultCaptureHeadersTest() => Agent.Config.CaptureHeaders.Should().Be(true);
+		public void DefaultCaptureHeadersTest()
+		{
+			using (var agent = new ApmAgent(new TestAgentComponents()))
+			{
+				agent.ConfigurationReader.CaptureHeaders.Should().Be(true);
+			}
+		}
 
 		[Fact]
 		public void SetCaptureHeadersTest()
@@ -128,8 +134,14 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
-		public void DefaultTransactionSampleRateTest() =>
-			Agent.Config.TransactionSampleRate.Should().Be(DefaultValues.TransactionSampleRate);
+		public void DefaultTransactionSampleRateTest()
+		{
+			using (var agent = new ApmAgent(new TestAgentComponents()))
+			{
+				agent.ConfigurationReader.TransactionSampleRate.Should().Be(DefaultValues.TransactionSampleRate);
+			}
+		}
+
 
 		[Fact]
 		public void SetTransactionSampleRateTest()

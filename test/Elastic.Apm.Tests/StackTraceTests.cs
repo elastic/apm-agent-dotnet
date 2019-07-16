@@ -5,7 +5,9 @@ using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Elastic.Apm.Config;
 using Elastic.Apm.Model;
+using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
@@ -215,6 +217,9 @@ namespace Elastic.Apm.Tests
 				payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
 				payloadSender.FirstSpan.StackTrace.Count.Should().Be(2);
 
+				//We don't filter out frames from the agent, therefore the current implementation will contain 2 agent frames on top
+				payloadSender.FirstSpan.StackTrace[0].Function.Should().Be("End");
+				payloadSender.FirstSpan.StackTrace[1].Function.Should().Be("CaptureSpan");
 			});
 
 		[Fact]
@@ -256,6 +261,10 @@ namespace Elastic.Apm.Tests
 				payloadSender.FirstSpan.Should().NotBeNull();
 				payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
 				payloadSender.FirstSpan.StackTrace.Should().HaveCountGreaterThan(10);
+
+				//We don't filter out frames from the agent, therefore the current implementation will contain 2 agent frames on top
+				payloadSender.FirstSpan.StackTrace[0].Function.Should().Be("End");
+				payloadSender.FirstSpan.StackTrace[1].Function.Should().Be("CaptureSpan");
 			}, 150);
 
 		[Fact]
@@ -265,10 +274,61 @@ namespace Elastic.Apm.Tests
 				payloadSender.FirstSpan.Should().NotBeNull();
 				payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
 				payloadSender.FirstSpan.StackTrace.Should().HaveCount(2);
-				//TODO: assert on frames
+
+				//We don't filter out frames from the agent, therefore the current implementation will contain 2 agent frames on top
+				payloadSender.FirstSpan.StackTrace[0].Function.Should().Be("End");
+				payloadSender.FirstSpan.StackTrace[1].Function.Should().Be("CaptureSpan");
 			}, 150);
 
-		private void AssertWithAgent(string stackTraceLimit, string spanFramesMinDuration, Action<MockPayloadSender> assertAction, int sleepLength = 0)
+		[Fact]
+		public void DefaultStackTraceLimitAndSpanFramesMinDuration_ShortSpan()
+		{
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					new TestAgentConfigurationReader(new NoopLogger()), payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t)
+					=>
+				{
+					t.CaptureSpan("span", "span", () => { });
+				});
+			}
+
+			payloadSender.FirstSpan.Should().NotBeNull();
+			payloadSender.FirstSpan.StackTrace.Should().BeNullOrEmpty();
+		}
+
+		[Fact]
+		public void DefaultStackTraceLimitAndSpanFramesMinDuration_LongSpan()
+		{
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					new TestAgentConfigurationReader(new NoopLogger()), payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t)
+					=>
+				{
+					t.CaptureSpan("span", "span", () =>
+					{
+						WaitHelpers.SleepMinimum();
+						Thread.Sleep((int)ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds);
+					});
+				});
+			}
+
+			payloadSender.FirstSpan.Should().NotBeNull();
+			payloadSender.FirstSpan.StackTrace.Should().NotBeNullOrEmpty();
+			payloadSender.FirstSpan.StackTrace.Should().HaveCount(ConfigConsts.DefaultValues.StackTraceLimit);
+		}
+
+
+		private static void AssertWithAgent(string stackTraceLimit, string spanFramesMinDuration, Action<MockPayloadSender> assertAction,
+			int sleepLength = 0
+		)
 		{
 			var payloadSender = new MockPayloadSender();
 
@@ -280,10 +340,7 @@ namespace Elastic.Apm.Tests
 				agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t)
 					=>
 				{
-					t.CaptureSpan("span", "span", () =>
-					{
-						Thread.Sleep(sleepLength);
-					});
+					t.CaptureSpan("span", "span", () => { Thread.Sleep(sleepLength); });
 				});
 			}
 

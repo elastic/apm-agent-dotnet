@@ -33,6 +33,9 @@ namespace Elastic.Apm.Helpers
 				return null;
 
 			if(stackTraceLimit > 0)
+				// new StackTrace(skipFrames: n) unfortunately skips frames from the top of the stack (currently executing thread is top)
+				// the StackTraceLimit feature takes the top n frames, so unfortunately we currently capture the whole stack trace and just take
+				// the top `configurationReader.StackTraceLimit` frames. - This could be optimized.
 				frames = frames.Take(stackTraceLimit).ToArray();
 
 			var retVal = new List<CapturedStackFrame>(frames.Length);
