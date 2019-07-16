@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
@@ -27,6 +28,9 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task HttpClientStackTrace()
 		{
+			if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+				return; //in CI on Windows line numbers don't seem to be available.
+
 			var (listener, payloadSender, _) = HttpDiagnosticListenerTest.RegisterListenerAndStartTransaction();
 
 			using (listener)
