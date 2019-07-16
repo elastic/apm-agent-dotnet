@@ -17,6 +17,7 @@ namespace Elastic.Apm.PerfTests
 		[Benchmark]
 		public void SimpleTransactions10Spans()
 		{
+
 			var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender()));
 
 			for (var i = 0; i < 100; i++)
@@ -81,7 +82,7 @@ namespace Elastic.Apm.PerfTests
 		{
 			var noopLogger = new NoopLogger();
 			var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(), logger: noopLogger,
-				configurationReader: new TestAgentConfigurationReader(noopLogger)));
+				configurationReader: new TestAgentConfigurationReader(noopLogger, spanFramesMinDurationInMilliseconds: "-1ms", stackTraceLimit: "10")));
 
 			for (var i = 0; i < 100; i++)
 			{

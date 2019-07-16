@@ -146,13 +146,13 @@ namespace Elastic.Apm.Config
 				return 0;
 			}
 
-			if (valueInMilliseconds < ConfigConsts.Constraints.MinMetricsIntervalInMillisecond)
+			if (valueInMilliseconds < ConfigConsts.Constraints.MinMetricsIntervalInMilliseconds)
 			{
 				Logger?.Error()
 					?.Log("Provided metrics interval `{ProvidedMetricsInterval}' is smaller than allowed minimum: {MinProvidedMetricsInterval}ms - " +
 						"metrics collection will be disabled",
 						value,
-						ConfigConsts.Constraints.MinMetricsIntervalInMillisecond);
+						ConfigConsts.Constraints.MinMetricsIntervalInMilliseconds);
 				return 0;
 			}
 
@@ -221,7 +221,7 @@ namespace Elastic.Apm.Config
 					valueInMilliseconds = TimeSpan.FromMinutes(valueInMinutes).TotalMilliseconds;
 					return true;
 				default:
-					if (!TryParseFloatingPoint(valueAsString, out var valueInSecondsNoUnits))
+					if (!TryParseFloatingPoint(valueAsString, out var valueNoUnits))
 					{
 						valueInMilliseconds = 0;
 						return false;
@@ -230,15 +230,15 @@ namespace Elastic.Apm.Config
 					switch (defaultSuffix)
 					{
 						case TimeSuffix.M:
-							valueInMilliseconds = TimeSpan.FromMinutes(valueInSecondsNoUnits).TotalMilliseconds;
+							valueInMilliseconds = TimeSpan.FromMinutes(valueNoUnits).TotalMilliseconds;
 							break;
 						case TimeSuffix.Ms:
-							valueInMilliseconds = TimeSpan.FromMilliseconds(valueInSecondsNoUnits).TotalMilliseconds;
+							valueInMilliseconds = TimeSpan.FromMilliseconds(valueNoUnits).TotalMilliseconds;
 							break;
 						case TimeSuffix.S:
-							valueInMilliseconds = TimeSpan.FromSeconds(valueInSecondsNoUnits).TotalMilliseconds;
+							valueInMilliseconds = TimeSpan.FromSeconds(valueNoUnits).TotalMilliseconds;
 							break;
-						default: throw new ArgumentOutOfRangeException(nameof(defaultSuffix), defaultSuffix, null);
+						default: throw new ArgumentException( "Unexpected TimeSuffix value", nameof(defaultSuffix));
 					}
 
 					return true;

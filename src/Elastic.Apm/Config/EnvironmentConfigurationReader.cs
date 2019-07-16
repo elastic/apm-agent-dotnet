@@ -8,13 +8,24 @@ namespace Elastic.Apm.Config
 	{
 		internal const string Origin = "environment";
 
-		public EnvironmentConfigurationReader(IApmLogger logger = null) : base(logger) { }
+		private readonly Lazy<double> _spanFramesMinDurationInMilliseconds;
+
+		private readonly Lazy<int> _stackTraceLimit;
+
+		public EnvironmentConfigurationReader(IApmLogger logger = null) : base(logger)
+		{
+			_spanFramesMinDurationInMilliseconds
+				= new Lazy<double>(() =>
+					ParseSpanFramesMinDurationInMilliseconds(Read(ConfigConsts.EnvVarNames.StackTraceLimit)));
+
+			_stackTraceLimit = new Lazy<int>(() => ParseStackTraceLimit(Read(ConfigConsts.EnvVarNames.StackTraceLimit)));
+		}
 
 		public bool CaptureHeaders => ParseCaptureHeaders(Read(ConfigConsts.EnvVarNames.CaptureHeaders));
 
 		public LogLevel LogLevel => ParseLogLevel(Read(ConfigConsts.EnvVarNames.LogLevel));
 
-		public double MetricsIntervalInMillisecond => ParseMetricsInterval(Read(ConfigConsts.EnvVarNames.MetricsInterval));
+		public double MetricsIntervalInMilliseconds => ParseMetricsInterval(Read(ConfigConsts.EnvVarNames.MetricsInterval));
 
 		public string SecretToken => ParseSecretToken(Read(ConfigConsts.EnvVarNames.SecretToken));
 
@@ -22,9 +33,9 @@ namespace Elastic.Apm.Config
 
 		public string ServiceName => ParseServiceName(Read(ConfigConsts.EnvVarNames.ServiceName));
 
-		public double SpanFramesMinDurationInMilliseconds => ParseSpanFramesMinDurationInMilliseconds(Read(ConfigConsts.EnvVarNames.StackTraceLimit));
+		public double SpanFramesMinDurationInMilliseconds => _spanFramesMinDurationInMilliseconds.Value;
 
-		public int StackTraceLimit => ParseStackTraceLimit(Read(ConfigConsts.EnvVarNames.StackTraceLimit));
+		public int StackTraceLimit => _stackTraceLimit.Value;
 
 		public double TransactionSampleRate => ParseTransactionSampleRate(Read(ConfigConsts.EnvVarNames.TransactionSampleRate));
 

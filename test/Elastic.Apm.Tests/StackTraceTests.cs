@@ -322,7 +322,6 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.FirstSpan.Should().NotBeNull();
 			payloadSender.FirstSpan.StackTrace.Should().NotBeNullOrEmpty();
-			payloadSender.FirstSpan.StackTrace.Should().HaveCount(ConfigConsts.DefaultValues.StackTraceLimit);
 		}
 
 		[Fact]
@@ -360,7 +359,7 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
-		public void ErrorWithDefaultStackTrace2()
+		public void ErrorWithDefaultSpanFramesMinDurationInMillisecondsAndStackTraceLimit2()
 		{
 			var payloadSender = new MockPayloadSender();
 
@@ -389,7 +388,7 @@ namespace Elastic.Apm.Tests
 		/// </summary>
 		/// <exception cref="Exception"></exception>
 		[Fact]
-		public void ErrorWithDefaultStackTrace2WithSpanFramesMinDurationZero()
+		public void ErrorWithStackTraceLimit2WithSpanFramesMinDurationNegative()
 		{
 			var payloadSender = new MockPayloadSender();
 

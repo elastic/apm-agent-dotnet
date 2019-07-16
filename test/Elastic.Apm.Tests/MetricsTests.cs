@@ -106,7 +106,7 @@ namespace Elastic.Apm.Tests
 			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender, logger: logger, configurationReader: configReader)))
 			{
 				await Task.Delay(2200); //make sure we wait enough to collect 1 set of metrics
-				agent.ConfigurationReader.MetricsIntervalInMillisecond.Should().Be(1000);
+				agent.ConfigurationReader.MetricsIntervalInMilliseconds.Should().Be(1000);
 			}
 
 			payloadSender.Metrics.Should().NotBeEmpty();
