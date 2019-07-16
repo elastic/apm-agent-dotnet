@@ -21,7 +21,10 @@ namespace Elastic.Apm.Helpers
 		/// <param name="frames">The stack frames to rewrite into APM stack traces</param>
 		/// <param name="logger">The logger to emit exceptions on should one occur</param>
 		/// <param name="dbgCapturingFor">Just for logging.</param>
-		/// <param name="configurationReader">Config reader - this controls the collection of stack traces (e.g. limit on frames, etc)</param>
+		/// <param name="configurationReader">
+		/// Config reader - this controls the collection of stack traces (e.g. limit on frames,
+		/// etc)
+		/// </param>
 		/// <returns>A prepared List that can be passed to the APM server</returns>
 		internal static List<CapturedStackFrame> GenerateApmStackTrace(StackFrame[] frames, IApmLogger logger,
 			IConfigurationReader configurationReader, string dbgCapturingFor
@@ -32,8 +35,8 @@ namespace Elastic.Apm.Helpers
 			if (stackTraceLimit == 0)
 				return null;
 
-			if(stackTraceLimit > 0)
-				// new StackTrace(skipFrames: n) unfortunately skips frames from the top of the stack (currently executing thread is top)
+			if (stackTraceLimit > 0)
+				// new StackTrace(skipFrames: n) skips frames from the top of the stack (currently executing method is top)
 				// the StackTraceLimit feature takes the top n frames, so unfortunately we currently capture the whole stack trace and just take
 				// the top `configurationReader.StackTraceLimit` frames. - This could be optimized.
 				frames = frames.Take(stackTraceLimit).ToArray();
@@ -70,7 +73,10 @@ namespace Elastic.Apm.Helpers
 		/// <param name="exception">The exception to rewrite into APM stack traces</param>
 		/// <param name="logger">The logger to emit exceptions on should one occur</param>
 		/// <param name="dbgCapturingFor">Just for logging.</param>
-		/// <param name="configurationReader">Config reader - this controls the collection of stack traces (e.g. limit on frames, etc)</param>
+		/// <param name="configurationReader">
+		/// Config reader - this controls the collection of stack traces (e.g. limit on frames,
+		/// etc)
+		/// </param>
 		/// <returns>A prepared List that can be passed to the APM server</returns>
 		internal static List<CapturedStackFrame> GenerateApmStackTrace(Exception exception, IApmLogger logger, string dbgCapturingFor,
 			IConfigurationReader configurationReader

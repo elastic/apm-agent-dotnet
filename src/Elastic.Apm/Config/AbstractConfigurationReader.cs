@@ -54,14 +54,17 @@ namespace Elastic.Apm.Config
 		protected bool ParseCaptureHeaders(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return true;
+
 			return !bool.TryParse(kv.Value, out var value) || value;
 		}
 
 		protected LogLevel ParseLogLevel(ConfigurationKeyValue kv)
 		{
 			if (TryParseLogLevel(kv?.Value, out var level))
+			{
 				if (level != null)
 					return level.Value;
+			}
 
 			if (kv?.Value == null)
 				Logger?.Debug()?.Log("No log level provided. Defaulting to log level '{DefaultLogLevel}'", ConsoleLogger.DefaultLogLevel);
@@ -165,8 +168,9 @@ namespace Elastic.Apm.Config
 			if (int.TryParse(kv.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result))
 				return result;
 
-			Logger?.Error()?.Log("Failed to parse provided stack trace limit `{ProvidedStackTraceLimit}` - using default: {DefaultStackTraceLimit}",
-				kv.Value, ConfigConsts.DefaultValues.StackTraceLimit);
+			Logger?.Error()
+				?.Log("Failed to parse provided stack trace limit `{ProvidedStackTraceLimit}` - using default: {DefaultStackTraceLimit}",
+					kv.Value, ConfigConsts.DefaultValues.StackTraceLimit);
 
 			return ConfigConsts.DefaultValues.StackTraceLimit;
 		}
@@ -373,9 +377,11 @@ namespace Elastic.Apm.Config
 			return true;
 		}
 
-		enum TimeSuffix
+		private enum TimeSuffix
 		{
-			M, Ms, S
+			M,
+			Ms,
+			S
 		}
 	}
 }

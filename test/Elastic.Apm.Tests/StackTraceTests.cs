@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -156,9 +155,7 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new MockPayloadSender();
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
-			{
 				Assert.Throws<Exception>(() => { agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => { testClass.MyMethod(); }); });
-			}
 
 			payloadSender.Errors.First().Should().NotBeNull();
 			payloadSender.Errors.First().Should().BeOfType(typeof(Error));
@@ -179,9 +176,7 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new MockPayloadSender();
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
-			{
 				Assert.Throws<Exception>(() => { agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => { testClass.JustThrow(); }); });
-			}
 
 			payloadSender.Errors.First().Should().NotBeNull();
 			payloadSender.Errors.First().Should().BeOfType(typeof(Error));
@@ -290,7 +285,7 @@ namespace Elastic.Apm.Tests
 				new ApmAgent(new TestAgentComponents(
 					new TestAgentConfigurationReader(new NoopLogger()), payloadSender)))
 			{
-				agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t)
+				agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
 					=>
 				{
 					t.CaptureSpan("span", "span", () => { });
@@ -310,7 +305,7 @@ namespace Elastic.Apm.Tests
 				new ApmAgent(new TestAgentComponents(
 					new TestAgentConfigurationReader(new NoopLogger()), payloadSender)))
 			{
-				agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t)
+				agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
 					=>
 				{
 					t.CaptureSpan("span", "span", () =>
@@ -337,7 +332,7 @@ namespace Elastic.Apm.Tests
 			{
 				Assert.Throws<Exception>(() =>
 				{
-					agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t)
+					agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
 						=>
 					{
 						t.CaptureSpan("span", "span", () => { RecursiveCall100XAndThrow(0); });
@@ -352,11 +347,11 @@ namespace Elastic.Apm.Tests
 
 		private static void RecursiveCall100XAndThrow(int i)
 		{
-			if( i == 100)
+			if (i == 100)
 				throw new Exception("TestException");
 
 			// ReSharper disable once TailRecursiveCall - this method creates a stack with 100 frames on purpose.
-			RecursiveCall100XAndThrow(i+1);
+			RecursiveCall100XAndThrow(i + 1);
 		}
 
 		[Fact]
@@ -370,13 +365,10 @@ namespace Elastic.Apm.Tests
 			{
 				Assert.Throws<Exception>(() =>
 				{
-					agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t)
+					agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
 						=>
 					{
-						t.CaptureSpan("span", "span", () =>
-						{
-							throw new Exception("TestException");
-						});
+						t.CaptureSpan("span", "span", () => { throw new Exception("TestException"); });
 					});
 				});
 			}
@@ -398,17 +390,15 @@ namespace Elastic.Apm.Tests
 
 			using (var agent =
 				new ApmAgent(new TestAgentComponents(
-					new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: "2", spanFramesMinDurationInMilliseconds: "-2"), payloadSender)))
+					new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: "2", spanFramesMinDurationInMilliseconds: "-2"),
+					payloadSender)))
 			{
 				Assert.Throws<Exception>(() =>
 				{
-					agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t)
+					agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
 						=>
 					{
-						t.CaptureSpan("span", "span", () =>
-						{
-							throw new Exception("TestException");
-						});
+						t.CaptureSpan("span", "span", () => { throw new Exception("TestException"); });
 					});
 				});
 			}
@@ -429,7 +419,7 @@ namespace Elastic.Apm.Tests
 					new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: stackTraceLimit,
 						spanFramesMinDurationInMilliseconds: spanFramesMinDuration), payloadSender)))
 			{
-				agent.Tracer.CaptureTransaction("TestTransaction", "Test", (t)
+				agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
 					=>
 				{
 					t.CaptureSpan("span", "span", () => { Thread.Sleep(sleepLength); });

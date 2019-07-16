@@ -21,12 +21,9 @@ namespace Elastic.Apm.PerfTests
 
 			for (var i = 0; i < 100; i++)
 			{
-				agent.Tracer.CaptureTransaction("transaction", "perfTransaction", (transaction) =>
+				agent.Tracer.CaptureTransaction("transaction", "perfTransaction", transaction =>
 				{
-					for (var j = 0; j < 10; j++)
-					{
-						transaction.CaptureSpan("span", "perfSpan", () => { });
-					}
+					for (var j = 0; j < 10; j++) transaction.CaptureSpan("span", "perfSpan", () => { });
 				});
 			}
 		}
@@ -55,7 +52,7 @@ namespace Elastic.Apm.PerfTests
 		[Benchmark]
 		public void CollectTotalCpuTime2X()
 		{
-			var systemTotalCpuProvider = new SystemTotalCpuProvider( new NoopLogger());
+			var systemTotalCpuProvider = new SystemTotalCpuProvider(new NoopLogger());
 
 			systemTotalCpuProvider.GetSamples();
 			systemTotalCpuProvider.GetSamples();
@@ -88,12 +85,9 @@ namespace Elastic.Apm.PerfTests
 
 			for (var i = 0; i < 100; i++)
 			{
-				agent.Tracer.CaptureTransaction("transaction", "perfTransaction", (transaction) =>
+				agent.Tracer.CaptureTransaction("transaction", "perfTransaction", transaction =>
 				{
-					for (var j = 0; j < 10; j++)
-					{
-						transaction.CaptureSpan("span", "perfSpan", () => { });
-					}
+					for (var j = 0; j < 10; j++) transaction.CaptureSpan("span", "perfSpan", () => { });
 				});
 			}
 		}
@@ -103,17 +97,14 @@ namespace Elastic.Apm.PerfTests
 		{
 			var testLogger = new PerfTestLogger(LogLevel.Debug);
 			var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(), logger: testLogger,
-				configurationReader: new TestAgentConfigurationReader(testLogger, logLevel: "Debug")));
+				configurationReader: new TestAgentConfigurationReader(testLogger, "Debug")));
 
 
 			for (var i = 0; i < 100; i++)
 			{
-				agent.Tracer.CaptureTransaction("transaction", "perfTransaction", (transaction) =>
+				agent.Tracer.CaptureTransaction("transaction", "perfTransaction", transaction =>
 				{
-					for (var j = 0; j < 10; j++)
-					{
-						transaction.CaptureSpan("span", "perfSpan", () => { });
-					}
+					for (var j = 0; j < 10; j++) transaction.CaptureSpan("span", "perfSpan", () => { });
 				});
 			}
 		}
