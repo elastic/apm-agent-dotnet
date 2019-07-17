@@ -12,13 +12,12 @@
     <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.4" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Elastic.Apm.All\Elastic.Apm.All.csproj" />
-  </ItemGroup>
   <ItemGroup>
     <Folder Include="Data\" />
     <Folder Include="Data\HistoricalData" />
     <Folder Include="Migrations" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Elastic.Apm.NetCoreAll\Elastic.Apm.NetCoreAll.csproj" />
   </ItemGroup>
 </Project>

@@ -17,7 +17,7 @@ namespace Elastic.Apm.Api
 		/// is automatically calculated when <see cref="End" /> is called.
 		/// </summary>
 		/// <value>The duration.</value>
-		double? Duration { get; }
+		double? Duration { get; set; }
 
 		/// <summary>
 		/// The id of the item.
@@ -215,7 +215,7 @@ namespace Elastic.Apm.Api
 		/// Ends the item and schedules it to be reported to the APM Server.
 		/// It is illegal to call any methods on a span instance which has already ended.
 		/// </summary>
-		void End(double? duration = null);
+		void End();
 
 		/// <summary>
 		/// Start and return a new custom span as a child of this execution segment.
