@@ -9,13 +9,21 @@ using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Elastic.Apm.AspNetCore
 {
 	public static class ApmMiddlewareExtension
 	{
 		/// <summary>
-		/// Adds the Elastic APM Middleware to the ASP.NET Core pipeline
+		/// Adds the Elastic APM Middleware to the ASP.NET Core pipeline.
+		/// You can customize the agent by passing additional IDiagnosticsSubscriber components to this method.
+		/// Use this method if you want to control what tracing capability of the agent you would like to use
+		/// or in case you want to minimize the number of dependencies added to your application.
+		/// Please note that by default without additional parameters this method only enables ASP.NET Core
+		/// monitoring - e.g. database statements or outgoing HTTP calls won't be traced.
+		/// If you want to simply enable every tracing component without configuration please use the
+		/// UseAllElasticApm extension method from the Elastic.Apm.NetCoreAll package.
 		/// </summary>
 		/// <returns>The Elastic APM.</returns>
 		/// <param name="builder">Builder.</param>
@@ -33,12 +41,13 @@ namespace Elastic.Apm.AspNetCore
 			IConfiguration configuration = null,
 			params IDiagnosticsSubscriber[] subscribers)
 		{
-			var logger = ConsoleLogger.Instance;
+			var logger = builder.ApplicationServices.GetApmLogger();
+
 			var configReader = configuration == null
 				? new EnvironmentConfigurationReader(logger)
 				: new ApplicationConfigurationReader(configuration, logger) as IConfigurationReader;
 
-			var config = new AgentComponents(configurationReader: configReader);
+			var config = new AgentComponents(configurationReader: configReader, logger: logger);
 			UpdateServiceInformation(config.Service);
 
 			Agent.Setup(config);
@@ -57,6 +66,11 @@ namespace Elastic.Apm.AspNetCore
 			}.ToArray());
 			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer, agent);
 		}
+
+		internal static IApmLogger GetApmLogger(this IServiceProvider serviceProvider) =>
+			serviceProvider.GetService(typeof(ILoggerFactory)) is ILoggerFactory loggerFactory
+				? (IApmLogger)new AspNetCoreLogger(loggerFactory)
+				: ConsoleLogger.Instance;
 
 		internal static void UpdateServiceInformation(Service service)
 		{
