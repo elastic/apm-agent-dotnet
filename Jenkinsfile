@@ -92,6 +92,7 @@ pipeline {
                   }
                   post {
                     always {
+                      sh label: 'debugging', script: 'find . -name *.pdb'
                       junit(allowEmptyResults: false,
                         keepLongStdio: true,
                         testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
