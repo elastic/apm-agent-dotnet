@@ -8,6 +8,7 @@ using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
@@ -16,6 +17,10 @@ namespace Elastic.Apm.Tests
 	/// </summary>
 	public class StackTraceTests
 	{
+		private readonly ITestOutputHelper _testOutputHelper;
+
+		public StackTraceTests(ITestOutputHelper testOutputHelper) => _testOutputHelper = testOutputHelper;
+
 		/// <summary>
 		/// Captures an HTTP request
 		/// and makes sure that we have at least 1 stack frame with LineNo != 0
@@ -24,7 +29,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task HttpClientStackTrace()
 		{
-			var (listener, payloadSender, _) = HttpDiagnosticListenerTest.RegisterListenerAndStartTransaction();
+			var (listener, payloadSender, agent) = HttpDiagnosticListenerTest.RegisterListenerAndStartTransaction();
 
 			using (listener)
 			using (var localServer = new LocalServer(uri: "http://localhost:8083/"))
@@ -36,6 +41,13 @@ namespace Elastic.Apm.Tests
 			}
 
 			var stackFrames = payloadSender.FirstSpan?.StackTrace;
+
+			var lines = (agent.Logger as TestLogger).Lines;
+
+			foreach (var line in lines)
+			{
+				_testOutputHelper.WriteLine(line);
+			}
 
 			stackFrames.Should().NotBeEmpty().And.Contain(frame => frame.LineNo != 0);
 		}
