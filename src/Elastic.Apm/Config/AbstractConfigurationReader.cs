@@ -19,15 +19,15 @@ namespace Elastic.Apm.Config
 		protected static ConfigurationKeyValue Kv(string key, string value, string origin) =>
 			new ConfigurationKeyValue(key, value, origin);
 
-		protected internal static bool TryParseLogLevel(string value, out LogLevel? level)
+		protected internal static bool TryParseLogLevel(string value, out LogLevel level)
 		{
-			level = null;
+			level = default;
 			if (string.IsNullOrEmpty(value)) return false;
 
 			level = DefaultLogLevel();
-			return level != null;
+			return true;
 
-			LogLevel? DefaultLogLevel()
+			LogLevel DefaultLogLevel()
 			{
 				switch (value.ToLowerInvariant())
 				{
@@ -39,7 +39,7 @@ namespace Elastic.Apm.Config
 					case "error": return LogLevel.Error;
 					case "critical": return LogLevel.Critical;
 					case "none": return LogLevel.None;
-					default: return null;
+					default: throw new ArgumentException("Unexpected LogLevel value");
 				}
 			}
 		}
@@ -60,11 +60,7 @@ namespace Elastic.Apm.Config
 
 		protected LogLevel ParseLogLevel(ConfigurationKeyValue kv)
 		{
-			if (TryParseLogLevel(kv?.Value, out var level))
-			{
-				if (level != null)
-					return level.Value;
-			}
+			if (TryParseLogLevel(kv?.Value, out var level)) return level;
 
 			if (kv?.Value == null)
 				Logger?.Debug()?.Log("No log level provided. Defaulting to log level '{DefaultLogLevel}'", ConsoleLogger.DefaultLogLevel);
