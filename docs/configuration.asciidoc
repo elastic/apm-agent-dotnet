@@ -169,10 +169,10 @@ Use this setting in case the APM Server requires a token (e.g. APM Server in Ela
 [options="header"]
 |============
 | Default                 | Type
-| `http://localhost:8200` | List
+| `http://localhost:8200` | String
 |============
 
-The URLs for your APM Servers. The URLs must be fully qualified, including protocol (`http` or `https`) and port.
+The URL for your APM Server. The URL must be fully qualified, including protocol (`http` or `https`) and port.
 
 NOTE: Providing multiple URLs is not supported by the agent yet. If multiple URLs are provided only the first one will be used.
 
