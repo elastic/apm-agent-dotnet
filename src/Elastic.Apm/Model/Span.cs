@@ -47,8 +47,12 @@ namespace Elastic.Apm.Model
 			TraceId = traceId;
 
 			if (IsSampled)
+			{
 				// Started spans should be counted only for sampled transactions
 				enclosingTransaction.SpanCount.Started++;
+				StackTrace = StacktraceHelper.GenerateApmStackTrace(new StackTrace(true).GetFrames(), _logger,
+						_configurationReader, $"Span `{Name}'");
+			}
 
 			_logger.Trace()
 				?.Log("New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp})",
@@ -182,10 +186,10 @@ namespace Elastic.Apm.Model
 			// ReSharper disable once CompareOfFloatsByEqualityOperator
 			if (_configurationReader.StackTraceLimit != 0 && _configurationReader.SpanFramesMinDurationInMilliseconds != 0)
 			{
-				if (Duration >= _configurationReader.SpanFramesMinDurationInMilliseconds
-					|| _configurationReader.SpanFramesMinDurationInMilliseconds < 0)
-					StackTrace = StacktraceHelper.GenerateApmStackTrace(new StackTrace(true).GetFrames(), _logger,
-						_configurationReader, $"Span `{Name}'");
+//				if (Duration >= _configurationReader.SpanFramesMinDurationInMilliseconds
+//					|| _configurationReader.SpanFramesMinDurationInMilliseconds < 0)
+//					StackTrace = StacktraceHelper.GenerateApmStackTrace(new StackTrace(true).GetFrames(), _logger,
+//						_configurationReader, $"Span `{Name}'");
 			}
 
 			_payloadSender.QueueSpan(this);
