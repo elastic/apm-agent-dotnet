@@ -109,6 +109,32 @@ await Elastic.Apm.Agent.Tracer
 
 NOTE: The <<convenient-capture-transaction>> method does not start any `Task` for you, so you have to call it with the `await` keyword if you use one of the overloads that accept `Task` or `Task<T>`.
 
+//----------------------------
+[float]
+[[manually-propagating-distributed-tracing-context]]
+==== Manually propagating distributed tracing context
+//----------------------------
+Agent automatically propagates distributed tracing context for the supported technologies (see <<supported-networking-client-side-technologies>>).
+If your application communicates over a protocol that is not supported by the agent
+you can manually propagate distributed tracing context from the caller to the callee side using Public Agent API.
+
+First you serialize distributed tracing context on the caller side:
+[source,csharp]
+----
+string outgoingDistributedTracingData = Agent.Tracer.CurrentTransaction
+                     .OutgoingDistributedTracingData.SerializeToString();
+----
+Then you transfer the resulted string to the callee side
+and you continue the trace by passing deserialized distributed tracing context to any of
+<<api-start-transaction>> or <<convenient-capture-transaction>> APIs
+- all of these APIs have an optional `DistributedTracingData` parameter.
+For example:
+[source,csharp]
+----
+var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransaction",
+     DistributedTracingData.TryDeserializeFromString(serializedDistributedTracingData));
+----
+
 
 //----------------------------
 [float]
