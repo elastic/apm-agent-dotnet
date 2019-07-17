@@ -138,11 +138,7 @@ namespace Elastic.Apm.Config
 			}
 			catch (ArgumentException e)
 			{
-				Logger?.Error()
-					?.LogException(e, "Failed to parse provided metrics interval `{ProvidedMetricsInterval}' - " +
-						"using default: {DefaultMetricsInterval}",
-						value,
-						ConfigConsts.DefaultValues.MetricsInterval);
+				Logger?.Critical()?.LogException(e, "Failed to parse metrics interval");
 
 				return ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds;
 			}
@@ -213,14 +209,9 @@ namespace Elastic.Apm.Config
 			}
 			catch (ArgumentException e)
 			{
-				Logger?.Error()
-					?.LogException(e, "Failed to parse provided span frames minimum duration `{ProvidedSpanFramesMinDuration}' - " +
-						"using default: {DefaultSpanFramesMinDuration}",
-						value,
-						ConfigConsts.DefaultValues.SpanFramesMinDuration);
+				Logger?.Critical()?.LogException(e, "Failed to parse span frames minimum duration");
 				return ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;
 			}
-
 
 			return valueInMilliseconds;
 		}
