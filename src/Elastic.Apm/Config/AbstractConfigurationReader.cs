@@ -24,10 +24,13 @@ namespace Elastic.Apm.Config
 			level = default;
 			if (string.IsNullOrEmpty(value)) return false;
 
-			level = DefaultLogLevel();
+			var retLevel = DefaultLogLevel();
+			if (!retLevel.HasValue) return false;
+
+			level = retLevel.Value;
 			return true;
 
-			LogLevel DefaultLogLevel()
+			LogLevel? DefaultLogLevel()
 			{
 				switch (value.ToLowerInvariant())
 				{
@@ -39,7 +42,7 @@ namespace Elastic.Apm.Config
 					case "error": return LogLevel.Error;
 					case "critical": return LogLevel.Critical;
 					case "none": return LogLevel.None;
-					default: throw new ArgumentException("Unexpected LogLevel value");
+					default: return null;
 				}
 			}
 		}
@@ -234,7 +237,9 @@ namespace Elastic.Apm.Config
 						case TimeSuffix.S:
 							valueInMilliseconds = TimeSpan.FromSeconds(valueNoUnits).TotalMilliseconds;
 							break;
-						default: throw new ArgumentException( "Unexpected TimeSuffix value", nameof(defaultSuffix));
+						default:
+							valueInMilliseconds = -1;
+							return false;
 					}
 
 					return true;
