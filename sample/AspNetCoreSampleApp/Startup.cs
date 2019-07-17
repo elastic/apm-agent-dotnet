@@ -1,5 +1,5 @@
 ﻿using AspNetCoreSampleApp.Data;
-using Elastic.Apm.All;
+using Elastic.Apm.NetCoreAll;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -58,7 +58,7 @@ namespace AspNetCoreSampleApp
 
 		public virtual void ConfigureAgent(IApplicationBuilder app)
 		{
-			app.UseElasticApm(Configuration);
+			app.UseAllElasticApm(Configuration);
 			app.UseDeveloperExceptionPage();
 		}
 	}

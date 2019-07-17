@@ -49,6 +49,8 @@ namespace Elastic.Apm.EntityFrameworkCore
 								Type = Database.TypeSql
 							};
 
+							span.Duration = commandExecutedEventData.Duration.TotalMilliseconds;
+
 							var providerType = commandExecutedEventData.Command.Connection.GetType().FullName;
 
 							switch (providerType)
@@ -80,7 +82,7 @@ namespace Elastic.Apm.EntityFrameworkCore
 									break;
 							}
 
-							span.End(commandExecutedEventData.Duration.TotalMilliseconds);
+							span.End();
 						}
 					}
 					break;

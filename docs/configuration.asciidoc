@@ -36,7 +36,35 @@ With this you can use any configuration source that you configured on the `IConf
 
 NOTE: By simply calling `app.UseElasticApm()` without the overload, the agent will read configurations only from environment variables.
 
-This is a typical `appsettings.json` file that contains some sample configuration. The part below `ElasticApm` is fetched by the agent if the corresponding `IConfiguration` is passed to the agent.
+[float]
+[[sample-config]]
+==== Sample configuration file
+
+Below is a sample `appsettings.json` configuration file for a typical ASP.NET Core application. There are two important takeaways:
+
+1. The part below `ElasticApm` is fetched by the agent if the corresponding `IConfiguration` is passed to the agent.
+2. With ASP.NET Core, you must set `LogLevel for the internal APM logger in the standard `Logging` section with the `ElasticApm` category name.
+
+[source,js]
+----
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning",
+      "Elastic.Apm": "Debug"
+    }
+  },
+  "AllowedHosts": "*",
+  "ElasticApm":
+    {
+      "ServerUrls":  "http://myapmserver:8200",
+      "TransactionSampleRate": 1.0
+    }
+}
+----
+
+In certain scenarios -- like when you're not using ASP.NET Core -- you wont activate the agent with the `UseElasticApm()` method.
+In this case, you can set the log level of the agent with `ElasticApm:LogLevel`, as shown in the following `appsettings.json` file:
 
 [source,js]
 ----
@@ -170,7 +198,7 @@ Valid options: `Error`, `Warning`, `Info`, `Debug`.
 
 [float]
 [[config-metrics-interval]]
-==== `MetricsInterval` (added[1.0.0-beta])
+==== `MetricsInterval` (added[1.0.0-beta1])
 
 The interval at which the agent sends metrics to the APM Server.
 Must be at least `1s`.

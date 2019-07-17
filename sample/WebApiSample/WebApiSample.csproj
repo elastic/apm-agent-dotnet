@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Elastic.Apm.All\Elastic.Apm.All.csproj" />
+    <ProjectReference Include="..\..\src\Elastic.Apm.NetCoreAll\Elastic.Apm.NetCoreAll.csproj" />
   </ItemGroup>
 
 </Project>
