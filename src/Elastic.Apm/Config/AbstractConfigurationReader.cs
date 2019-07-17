@@ -122,13 +122,28 @@ namespace Elastic.Apm.Config
 			else
 				value = kv.Value;
 
-			if (!TryParseTimeInterval(value, out var valueInMilliseconds, TimeSuffix.S))
+			double valueInMilliseconds;
+
+			try
+			{
+				if (!TryParseTimeInterval(value, out valueInMilliseconds, TimeSuffix.S))
+				{
+					Logger?.Error()
+						?.Log("Failed to parse provided metrics interval `{ProvidedMetricsInterval}' - " +
+							"using default: {DefaultMetricsInterval}",
+							value,
+							ConfigConsts.DefaultValues.MetricsInterval);
+					return ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds;
+				}
+			}
+			catch (ArgumentException e)
 			{
 				Logger?.Error()
-					?.Log("Failed to parse provided metrics interval `{ProvidedMetricsInterval}' - " +
+					?.LogException(e, "Failed to parse provided metrics interval `{ProvidedMetricsInterval}' - " +
 						"using default: {DefaultMetricsInterval}",
 						value,
 						ConfigConsts.DefaultValues.MetricsInterval);
+
 				return ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds;
 			}
 
@@ -182,15 +197,30 @@ namespace Elastic.Apm.Config
 			else
 				value = kv.Value;
 
-			if (!TryParseTimeInterval(value, out var valueInMilliseconds, TimeSuffix.Ms))
+			double valueInMilliseconds;
+
+			try
+			{
+				if (!TryParseTimeInterval(value, out  valueInMilliseconds, TimeSuffix.Ms))
+				{
+					Logger?.Error()
+						?.Log("Failed to parse provided span frames minimum duration `{ProvidedSpanFramesMinDuration}' - " +
+							"using default: {DefaultSpanFramesMinDuration}",
+							value,
+							ConfigConsts.DefaultValues.SpanFramesMinDuration);
+					return ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;
+				}
+			}
+			catch (ArgumentException e)
 			{
 				Logger?.Error()
-					?.Log("Failed to parse provided span frames minimum duration `{ProvidedSpanFramesMinDuration}' - " +
+					?.LogException(e, "Failed to parse provided span frames minimum duration `{ProvidedSpanFramesMinDuration}' - " +
 						"using default: {DefaultSpanFramesMinDuration}",
 						value,
 						ConfigConsts.DefaultValues.SpanFramesMinDuration);
 				return ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;
 			}
+
 
 			return valueInMilliseconds;
 		}
@@ -238,8 +268,7 @@ namespace Elastic.Apm.Config
 							valueInMilliseconds = TimeSpan.FromSeconds(valueNoUnits).TotalMilliseconds;
 							break;
 						default:
-							valueInMilliseconds = -1;
-							return false;
+							throw new ArgumentException( "Unexpected TimeSuffix value", nameof(defaultSuffix));
 					}
 
 					return true;
