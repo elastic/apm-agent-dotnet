@@ -65,7 +65,7 @@ var transaction = Elastic.Apm.Agent.Tracer.CurrentTransaction;
 
 [float]
 [[convenient-capture-transaction]]
-==== `Transaction CaptureTransaction`
+==== `CaptureTransaction`
 
 This is a convenient method which starts and ends a transaction and captures unhandled exceptions.
 It has 3 parameters:
@@ -107,7 +107,7 @@ await Elastic.Apm.Agent.Tracer
 });
 ----
 
-NOTE: The <<convenient-capture-transaction>> method does not start any `Task` for you, so you have to call it with the `await` keyword if you use one of the overloads that accept `Task` or `Task<T>`.
+NOTE: Return value of <<convenient-capture-transaction>> method overloads that accept Task (or Task<T>) is the same Task (or Task<T>) instance as the one passed as the argument so if your application should continue only after the task completes you have to call <<convenient-capture-transaction>> with `await` keyword.
 
 //----------------------------
 [float]
@@ -236,7 +236,7 @@ This method is typically used when you want to report an error, but you don't ha
 
 [float]
 [[convenient-capture-span]]
-==== `Transaction CaptureSpan`
+==== `CaptureSpan`
 
 This is a convenient method which starts and ends a span on the given transaction and captures unhandled exceptions. It has the same overloads as the <<convenient-capture-transaction>> method.
 It has 5 parameters:
@@ -283,7 +283,7 @@ var asyncResult = await transaction.CaptureSpan("Select FROM customer", ApiConst
 });
 ----
 
-NOTE: The <<convenient-capture-span>> method does not start any `Task` for you, so you have to call it with the `await` keyword if you use one of the overloads that accept `Task` or `Task<T>`.
+NOTE: Return value of <<convenient-capture-span>> method overloads that accept Task (or Task<T>) is the same Task (or Task<T>) instance as the one passed as the argument so if your application should continue only after the task completes you have to call <<convenient-capture-span>> with `await` keyword.
 
 NOTE: Code samples above use `Elastic.Apm.Agent.Tracer.CurrentTransaction`. In production code you should make sure the `CurrentTransaction` is not `null`.
 
