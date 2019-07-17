@@ -172,9 +172,9 @@ Use this setting in case the APM Server requires a token (e.g. APM Server in Ela
 | `http://localhost:8200` | List
 |============
 
-The URLs for your APM Servers. The URLs must be fully qualified, including protocol (`http` or `https`) and port. To add multiple servers, separate them with a comma (`,`).
+The URLs for your APM Servers. The URLs must be fully qualified, including protocol (`http` or `https`) and port.
 
-NOTE: Providing multiple URLs only works with APM Server v6.5+.
+NOTE: Providing multiple URLs is not supported by the agent yet. If multiple URLs are provided only the first one will be used.
 
 [float]
 [[config-log-level]]
