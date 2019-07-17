@@ -96,6 +96,8 @@ pipeline {
                         keepLongStdio: true,
                         testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       codecov(repo: env.REPO, basedir: "${BASE_DIR}", secret: "${CODECOV_SECRET}")
+                      // NOTE: only for debugging purposes.
+                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/**/*.pdb")
                     }
                     unsuccessful {
                       archiveArtifacts(allowEmptyArchive: true,
@@ -170,6 +172,8 @@ pipeline {
                         junit(allowEmptyResults: false,
                           keepLongStdio: true,
                           testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
+                        // NOTE: only for debugging purposes.
+                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/**/*.pdb")
                       }
                       unsuccessful {
                         archiveArtifacts(allowEmptyArchive: true,
@@ -250,6 +254,8 @@ pipeline {
                         junit(allowEmptyResults: false,
                           keepLongStdio: true,
                           testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
+                        // NOTE: only for debugging purposes.
+                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/**/*.pdb")
                       }
                       unsuccessful {
                         archiveArtifacts(allowEmptyArchive: true,
