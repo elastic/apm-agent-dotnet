@@ -4,7 +4,7 @@ namespace Elastic.Apm.Logging
 {
 	public interface IApmLogger
 	{
-		LogLevel Level { get; }
+		bool IsEnabled(LogLevel level);
 
 		void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter);
 	}

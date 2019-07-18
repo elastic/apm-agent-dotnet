@@ -1,5 +1,4 @@
 using System;
-using Elastic.Apm.AspNetCore.Extensions;
 using Elastic.Apm.Logging;
 using Microsoft.Extensions.Logging;
 using LogLevel = Elastic.Apm.Logging.LogLevel;
@@ -13,10 +12,9 @@ namespace Elastic.Apm.AspNetCore
 		public AspNetCoreLogger(ILoggerFactory loggerFactory)
 		{
 			_logger = loggerFactory?.CreateLogger("Elastic.Apm") ?? throw new ArgumentNullException(nameof(loggerFactory));
-			Level = _logger.GetMinLogLevel();
 		}
 
-		public LogLevel Level { get; }
+		public bool IsEnabled(LogLevel level) => _logger.IsEnabled(Convert(level));
 
 		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter) =>
 			_logger.Log(Convert(level), new EventId(), state, e, formatter);
