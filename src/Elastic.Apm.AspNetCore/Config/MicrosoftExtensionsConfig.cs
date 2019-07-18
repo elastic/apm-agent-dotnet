@@ -12,7 +12,7 @@ namespace Elastic.Apm.AspNetCore.Config
 	/// </summary>
 	internal class MicrosoftExtensionsConfig : AbstractConfigurationReader, IConfigurationReader
 	{
-		internal const string Origin = "Configuration Provider";
+		internal const string Origin = "Microsoft.Extensions.Configuration";
 
 		private readonly IConfiguration _configuration;
 
@@ -88,7 +88,7 @@ namespace Elastic.Apm.AspNetCore.Config
 			var primary = Read(key);
 			if (!string.IsNullOrWhiteSpace(primary.Value)) return primary;
 
-			var secondary = Kv(key, _configuration[fallBackEnvVarName], EnvironmentConfigurationReader.Origin);
+			var secondary = Kv(fallBackEnvVarName, _configuration[fallBackEnvVarName], EnvironmentConfigurationReader.Origin);
 			return secondary;
 		}
 

@@ -73,6 +73,8 @@ namespace Elastic.Apm.Metrics
 			var sync = Interlocked.CompareExchange(ref _syncPoint, 1, 0);
 			if (sync != 0) return;
 
+			_logger.Trace()?.Log("CollectAllMetrics started");
+
 			try
 			{
 				var samplesFromAllProviders = new List<MetricSample>();
@@ -84,12 +86,16 @@ namespace Elastic.Apm.Metrics
 
 					try
 					{
+						_logger.Trace()?.Log("Start collecting {MetricsProviderName}", metricsProvider.DbgName);
 						var samplesFromCurrentProvider = metricsProvider.GetSamples();
 						if (samplesFromCurrentProvider != null)
 						{
 							var sampleArray = samplesFromCurrentProvider as MetricSample[] ?? samplesFromCurrentProvider.ToArray();
 							if (sampleArray.Any())
+							{
+								_logger.Trace()?.Log("Collected {MetricsProviderName} - adding it to MetricSet", metricsProvider.DbgName);
 								samplesFromAllProviders.AddRange(sampleArray);
+							}
 
 							metricsProvider.ConsecutiveNumberOfFailedReads = 0;
 						}

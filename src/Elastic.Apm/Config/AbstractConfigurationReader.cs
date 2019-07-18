@@ -4,12 +4,15 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
 {
 	public abstract class AbstractConfigurationReader
 	{
+		private readonly LazyContextualInit<IReadOnlyList<Uri>> _cachedServerUrls = new LazyContextualInit<IReadOnlyList<Uri>>();
+
 		protected AbstractConfigurationReader(IApmLogger logger) => ScopedLogger = logger?.Scoped(GetType().Name);
 
 		protected IApmLogger Logger => ScopedLogger;
@@ -79,6 +82,11 @@ namespace Elastic.Apm.Config
 
 		protected IReadOnlyList<Uri> ParseServerUrls(ConfigurationKeyValue kv)
 		{
+			return _cachedServerUrls.IfNotInited?.InitOrGet(() => ParseServerUrlsImpl(kv)) ?? _cachedServerUrls.Value;
+		}
+
+		private IReadOnlyList<Uri> ParseServerUrlsImpl(ConfigurationKeyValue kv)
+		{
 			var list = new List<Uri>();
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return LogAndReturnDefault().AsReadOnly();
 
@@ -93,6 +101,14 @@ namespace Elastic.Apm.Config
 
 				Logger?.Error()?.Log("Failed parsing server URL from {Origin}: {Key}, value: {Value}", kv.ReadFrom, kv.Key, u);
 			}
+
+			if (list.Count > 1)
+				Logger?.Warning()?.Log(nameof(ConfigConsts.EnvVarNames.ServerUrls)
+					+ " configuration option contains more than one URL which is not supported by the agent yet"
+					+ " - only the first URL will be used."
+					+ " Configuration option's source: {Origin}, key: `{Key}', value: `{Value}'."
+					+ " The first URL: `{ApmServerUrl}'",
+					kv.ReadFrom, kv.Key, kv.Value, list.First());
 
 			return list.Count == 0 ? LogAndReturnDefault().AsReadOnly() : list.AsReadOnly();
 
