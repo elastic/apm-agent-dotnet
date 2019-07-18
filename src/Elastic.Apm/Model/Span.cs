@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
@@ -17,6 +18,7 @@ namespace Elastic.Apm.Model
 		private readonly Transaction _enclosingTransaction;
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _payloadSender;
+		private readonly IConfigurationReader _configurationReader;
 
 		public Span(
 			string name,
@@ -26,7 +28,8 @@ namespace Elastic.Apm.Model
 			Transaction enclosingTransaction,
 			bool isSampled,
 			IPayloadSender payloadSender,
-			IApmLogger logger
+			IApmLogger logger,
+			IConfigurationReader configurationReader
 		)
 		{
 			Timestamp = TimeUtils.TimestampNow();
@@ -34,6 +37,7 @@ namespace Elastic.Apm.Model
 			_logger = logger?.Scoped($"{nameof(Span)}.{Id}");
 
 			_payloadSender = payloadSender;
+			_configurationReader = configurationReader;
 			_enclosingTransaction = enclosingTransaction;
 			Name = name;
 			Type = type;
@@ -43,13 +47,8 @@ namespace Elastic.Apm.Model
 			TraceId = traceId;
 
 			if (IsSampled)
-			{
 				// Started spans should be counted only for sampled transactions
 				enclosingTransaction.SpanCount.Started++;
-
-				// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
-				StackTrace = StacktraceHelper.GenerateApmStackTrace(new StackTrace(true).GetFrames(), _logger, $"Span `{Name}'");
-			}
 
 			_logger.Trace()
 				?.Log("New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp})",
@@ -139,7 +138,7 @@ namespace Elastic.Apm.Model
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
-			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, IsSampled, _payloadSender, _logger);
+			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, IsSampled, _payloadSender, _logger, _configurationReader);
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 
 			if (!string.IsNullOrEmpty(action)) retVal.Action = action;
@@ -176,7 +175,20 @@ namespace Elastic.Apm.Model
 
 			var isFirstEndCall = !_isEnded;
 			_isEnded = true;
-			if (IsSampled && isFirstEndCall) _payloadSender.QueueSpan(this);
+
+			if (!IsSampled || !isFirstEndCall) return;
+
+			// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
+			// ReSharper disable once CompareOfFloatsByEqualityOperator
+			if (_configurationReader.StackTraceLimit != 0 && _configurationReader.SpanFramesMinDurationInMilliseconds != 0)
+			{
+				if (Duration >= _configurationReader.SpanFramesMinDurationInMilliseconds
+					|| _configurationReader.SpanFramesMinDurationInMilliseconds < 0)
+					StackTrace = StacktraceHelper.GenerateApmStackTrace(new StackTrace(true).GetFrames(), _logger,
+						_configurationReader, $"Span `{Name}'");
+			}
+
+			_payloadSender.QueueSpan(this);
 		}
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
@@ -185,6 +197,7 @@ namespace Elastic.Apm.Model
 				_logger,
 				_payloadSender,
 				this,
+				_configurationReader,
 				_enclosingTransaction,
 				culprit,
 				isHandled,
@@ -223,6 +236,7 @@ namespace Elastic.Apm.Model
 				_payloadSender,
 				_logger,
 				this,
+				_configurationReader,
 				_enclosingTransaction,
 				parentId
 			);

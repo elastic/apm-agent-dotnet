@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
-using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
@@ -15,6 +14,7 @@ namespace Elastic.Apm.Api
 	{
 		private readonly ScopedLogger _logger;
 		private readonly IPayloadSender _sender;
+		private readonly IConfigurationReader _configurationReader;
 		private readonly Service _service;
 
 		public Tracer(IApmLogger logger, Service service, IPayloadSender payloadSender, IConfigurationReader configurationReader)
@@ -22,6 +22,7 @@ namespace Elastic.Apm.Api
 			_logger = logger?.Scoped(nameof(Tracer));
 			_service = service;
 			_sender = payloadSender;
+			_configurationReader = configurationReader;
 			Sampler = new Sampler(configurationReader.TransactionSampleRate);
 		}
 
@@ -34,7 +35,7 @@ namespace Elastic.Apm.Api
 
 		internal Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null)
 		{
-			var retVal = new Transaction(_logger, name, type, Sampler, distributedTracingData, _sender)
+			var retVal = new Transaction(_logger, name, type, Sampler, distributedTracingData, _sender, _configurationReader)
 			{
 				Service = _service
 			};

@@ -44,7 +44,7 @@ namespace Elastic.Apm.Metrics
 			_logger = logger.Scoped(nameof(MetricsCollector));
 			_payloadSender = payloadSender;
 
-			var interval = configurationReader.MetricsIntervalInMillisecond;
+			var interval = configurationReader.MetricsIntervalInMilliseconds;
 
 			// ReSharper disable once CompareOfFloatsByEqualityOperator
 			if (interval == 0)

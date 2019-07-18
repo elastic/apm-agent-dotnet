@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 
@@ -20,25 +21,50 @@ namespace Elastic.Apm.Helpers
 		/// <param name="frames">The stack frames to rewrite into APM stack traces</param>
 		/// <param name="logger">The logger to emit exceptions on should one occur</param>
 		/// <param name="dbgCapturingFor">Just for logging.</param>
+		/// <param name="configurationReader">
+		/// Config reader - this controls the collection of stack traces (e.g. limit on frames,
+		/// etc)
+		/// </param>
 		/// <returns>A prepared List that can be passed to the APM server</returns>
-		internal static List<CapturedStackFrame> GenerateApmStackTrace(StackFrame[] frames, IApmLogger logger, string dbgCapturingFor)
+		internal static List<CapturedStackFrame> GenerateApmStackTrace(StackFrame[] frames, IApmLogger logger,
+			IConfigurationReader configurationReader, string dbgCapturingFor
+		)
 		{
+			var stackTraceLimit = configurationReader.StackTraceLimit;
+
+			if (stackTraceLimit == 0)
+				return null;
+
+			if (stackTraceLimit > 0)
+				// new StackTrace(skipFrames: n) skips frames from the top of the stack (currently executing method is top)
+				// the StackTraceLimit feature takes the top n frames, so unfortunately we currently capture the whole stack trace and just take
+				// the top `configurationReader.StackTraceLimit` frames. - This could be optimized.
+				frames = frames.Take(stackTraceLimit).ToArray();
+
 			var retVal = new List<CapturedStackFrame>(frames.Length);
+
+			logger.Trace()?.Log("transform stack frames");
 
 			try
 			{
-				retVal.AddRange(from item in frames
-					let fileName = item?.GetMethod()
-						?.DeclaringType?.FullName //see: https://github.com/elastic/apm-agent-dotnet/pull/240#discussion_r289619196
-					let functionName = GetRealMethodName(item?.GetMethod())
-					select new CapturedStackFrame
+				foreach (var frame in frames)
+				{
+					var fileName = frame?.GetMethod()
+						?.DeclaringType?.FullName; //see: https://github.com/elastic/apm-agent-dotnet/pull/240#discussion_r289619196
+
+					var functionName = GetRealMethodName(frame?.GetMethod());
+
+					logger.Trace()?.Log("{MethodName}, {lineNo}", functionName, frame?.GetFileLineNumber());
+
+					retVal.Add(new CapturedStackFrame
 					{
 						Function = functionName ?? "N/A",
-						FileName = string.IsNullOrWhiteSpace(fileName)? "N/A" : fileName,
-						Module = item?.GetMethod()?.ReflectedType?.Assembly.FullName,
-						LineNo = item?.GetFileLineNumber() ?? 0,
-						AbsPath = item?.GetFileName() // optional property
+						FileName = string.IsNullOrWhiteSpace(fileName) ? "N/A" : fileName,
+						Module = frame?.GetMethod()?.ReflectedType?.Assembly.FullName,
+						LineNo = frame?.GetFileLineNumber() ?? 0,
+						AbsPath = frame?.GetFileName() // optional property
 					});
+				}
 			}
 			catch (Exception e)
 			{
@@ -55,12 +81,24 @@ namespace Elastic.Apm.Helpers
 		/// <param name="exception">The exception to rewrite into APM stack traces</param>
 		/// <param name="logger">The logger to emit exceptions on should one occur</param>
 		/// <param name="dbgCapturingFor">Just for logging.</param>
+		/// <param name="configurationReader">
+		/// Config reader - this controls the collection of stack traces (e.g. limit on frames,
+		/// etc)
+		/// </param>
 		/// <returns>A prepared List that can be passed to the APM server</returns>
-		internal static List<CapturedStackFrame> GenerateApmStackTrace(Exception exception, IApmLogger logger, string dbgCapturingFor)
+		internal static List<CapturedStackFrame> GenerateApmStackTrace(Exception exception, IApmLogger logger, string dbgCapturingFor,
+			IConfigurationReader configurationReader
+		)
 		{
+			var stackTraceLimit = configurationReader.StackTraceLimit;
+
+			if (stackTraceLimit == 0)
+				return null;
+
 			try
 			{
-				return GenerateApmStackTrace(new StackTrace(exception, true).GetFrames(), logger, dbgCapturingFor);
+				return GenerateApmStackTrace(
+					new StackTrace(exception, true).GetFrames(), logger, configurationReader, dbgCapturingFor);
 			}
 			catch (Exception e)
 			{

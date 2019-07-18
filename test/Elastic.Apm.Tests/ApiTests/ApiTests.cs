@@ -133,7 +133,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			void StartTransaction(ApmAgent agent)
 			{
 				Agent.TransactionContainer.Transactions.Value =
-					new Transaction(agent, transactionName, ApiConstants.TypeRequest);
+					new Transaction(agent, transactionName, ApiConstants.TypeRequest, new TestAgentConfigurationReader(new NoopLogger()));
 			}
 
 			async Task DoAsyncWork(ApmAgent agent)

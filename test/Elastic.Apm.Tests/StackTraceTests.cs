@@ -1,10 +1,12 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.Http;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
+using Elastic.Apm.Config;
 using Elastic.Apm.Model;
+using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
@@ -17,28 +19,19 @@ namespace Elastic.Apm.Tests
 	public class StackTraceTests
 	{
 		/// <summary>
-		/// Captures an HTTP request
+		/// Captures a Span
 		/// and makes sure that we have at least 1 stack frame with LineNo != 0
-		/// This test assumes that LineNo capturing is enabled.
+		/// This test assumes that LineNo capturing is enabled and pdb files are also present
 		/// </summary>
 		[Fact]
-		public async Task HttpClientStackTrace()
-		{
-			var (listener, payloadSender, _) = HttpDiagnosticListenerTest.RegisterListenerAndStartTransaction();
-
-			using (listener)
-			using (var localServer = new LocalServer(uri: "http://localhost:8083/"))
+		public void StackTraceContainsLineNumber()
+			=> AssertWithAgent("-1", "-1", payloadSender =>
 			{
-				var httpClient = new HttpClient();
-				var res = await httpClient.GetAsync(localServer.Uri);
-
-				res.IsSuccessStatusCode.Should().BeTrue();
-			}
-
-			var stackFrames = payloadSender.FirstSpan?.StackTrace;
-
-			stackFrames.Should().NotBeEmpty().And.Contain(frame => frame.LineNo != 0);
-		}
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
+				var stackFrames = payloadSender.FirstSpan?.StackTrace;
+				stackFrames.Should().NotBeEmpty().And.Contain(frame => frame.LineNo != 0);
+			});
 
 		/// <summary>
 		/// Makes sure that the name of the async method is captured correctly
@@ -63,7 +56,7 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.Errors.Should().NotBeEmpty();
 			(payloadSender.Errors.First() as Error).Should().NotBeNull();
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should()
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should()
 				.Contain(m => m.Function == nameof(ClassWithAsync.TestMethodAsync) && m.LineNo != 0);
 		}
 
@@ -88,8 +81,8 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.Errors.Should().NotBeEmpty();
 			(payloadSender.Errors.First() as Error).Should().NotBeNull();
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should().Contain(m => m.Function == nameof(ClassWithSyncMethods.MoveNext));
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should().Contain(m => m.Function == nameof(ClassWithSyncMethods.M2));
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should().Contain(m => m.Function == nameof(ClassWithSyncMethods.MoveNext));
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should().Contain(m => m.Function == nameof(ClassWithSyncMethods.M2));
 		}
 
 		/// <summary>
@@ -114,13 +107,13 @@ namespace Elastic.Apm.Tests
 			payloadSender.Errors.Should().NotBeEmpty();
 			(payloadSender.Errors.First() as Error).Should().NotBeNull();
 
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should()
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should()
 				.Contain(m => m.FileName == typeof(Base).FullName
 					&& m.Function == nameof(Base.Method1)
 					&& m.Module == typeof(Base).Assembly.FullName
 				);
 
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should()
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should()
 				.Contain(m => m.FileName == typeof(Derived).FullName
 					&& m.Function == nameof(Derived.TestMethod)
 					&& m.Module == typeof(Derived).Assembly.FullName);
@@ -141,7 +134,7 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.Errors.Should().NotBeEmpty();
 			(payloadSender.Errors.First() as Error).Should().NotBeNull();
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace.Should().NotContain(frame => string.IsNullOrWhiteSpace(frame.FileName));
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should().NotContain(frame => string.IsNullOrWhiteSpace(frame.FileName));
 		}
 
 		[Fact]
@@ -152,19 +145,17 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new MockPayloadSender();
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
-			{
 				Assert.Throws<Exception>(() => { agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => { testClass.MyMethod(); }); });
-			}
 
 			payloadSender.Errors.First().Should().NotBeNull();
 			payloadSender.Errors.First().Should().BeOfType(typeof(Error));
 
 			//note: since filename is used on the UI (and there is no other way to show the classname, we misuse this field
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace[0].FileName.Should().Be(typeof(Derived).FullName);
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace[0].Function.Should().Be(nameof(Derived.MethodThrowingIDerived));
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].FileName.Should().Be(typeof(Derived).FullName);
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].Function.Should().Be(nameof(Derived.MethodThrowingIDerived));
 
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace[1].FileName.Should().Be(typeof(Derived).FullName);
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace[1].Function.Should().Be(nameof(Base.MyMethod));
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[1].FileName.Should().Be(typeof(Derived).FullName);
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[1].Function.Should().Be(nameof(Base.MyMethod));
 		}
 
 		[Fact]
@@ -175,17 +166,260 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new MockPayloadSender();
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
-			{
 				Assert.Throws<Exception>(() => { agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => { testClass.JustThrow(); }); });
-			}
 
 			payloadSender.Errors.First().Should().NotBeNull();
 			payloadSender.Errors.First().Should().BeOfType(typeof(Error));
 
 			//note: since filename is used on the UI (and there is no other way to show the classname, we misuse this field
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace[0].FileName.Should().Be(typeof(Base).FullName);
-			(payloadSender.Errors.First() as Error)?.Exception.Stacktrace[0].Function.Should().Be(nameof(Base.JustThrow));
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].FileName.Should().Be(typeof(Base).FullName);
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].Function.Should().Be(nameof(Base.JustThrow));
 		}
+
+		[Fact]
+		public void StackTraceLimit0SpanFramesMinDurationNegative() =>
+			AssertWithAgent("0", "-1", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().BeNull();
+			});
+
+		[Fact]
+		public void StackTraceLimitNegativeSpanFramesMinDurationNegative() =>
+			AssertWithAgent("-1", "-1", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
+				// contains all frame which depends on the test runner
+				// therefore the exact StackTrace.Count depends on where you run the test
+				payloadSender.FirstSpan.StackTrace.Should().HaveCountGreaterThan(10);
+			});
+
+		[Fact]
+		public void StackTraceLimit2SpanFramesMinDurationNegative() =>
+			AssertWithAgent("2", "-1", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
+				payloadSender.FirstSpan.StackTrace.Count.Should().Be(2);
+
+				//We don't filter out frames from the agent, therefore the current implementation will contain 2 agent frames on top
+				payloadSender.FirstSpan.StackTrace[0].Function.Should().Be("End");
+				payloadSender.FirstSpan.StackTrace[1].Function.Should().Be("CaptureSpan");
+			});
+
+		[Fact]
+		public void StackTraceLimit0SpanFramesMinDuration0() =>
+			AssertWithAgent("0", "0", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().BeNull();
+			});
+
+		[Fact]
+		public void StackTraceLimitNegativeSpanFramesMinDuration0() =>
+			AssertWithAgent("-1", "0", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().BeNull();
+			});
+
+		[Fact]
+		public void StackTraceLimit2SpanFramesMinDuration0() =>
+			AssertWithAgent("2", "0", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().BeNull();
+			});
+
+		[Fact]
+		public void StackTraceLimit0SpanFramesMinDuration100() =>
+			AssertWithAgent("0", "100", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().BeNullOrEmpty();
+			}, 150);
+
+		[Fact]
+		public void StackTraceLimitNegativeSpanFramesMinDuration100() =>
+			AssertWithAgent("-1", "100", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
+				payloadSender.FirstSpan.StackTrace.Should().HaveCountGreaterThan(10);
+
+				//We don't filter out frames from the agent, therefore the current implementation will contain 2 agent frames on top
+				payloadSender.FirstSpan.StackTrace[0].Function.Should().Be("End");
+				payloadSender.FirstSpan.StackTrace[1].Function.Should().Be("CaptureSpan");
+			}, 150);
+
+		[Fact]
+		public void StackTraceLimit2SpanFramesMinDuration100() =>
+			AssertWithAgent("2", "100", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
+				payloadSender.FirstSpan.StackTrace.Should().HaveCount(2);
+
+				//We don't filter out frames from the agent, therefore the current implementation will contain 2 agent frames on top
+				payloadSender.FirstSpan.StackTrace[0].Function.Should().Be("End");
+				payloadSender.FirstSpan.StackTrace[1].Function.Should().Be("CaptureSpan");
+			}, 150);
+
+		[Fact]
+		public void DefaultStackTraceLimitAndSpanFramesMinDuration_ShortSpan()
+		{
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					new TestAgentConfigurationReader(new NoopLogger()), payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
+					=>
+				{
+					t.CaptureSpan("span", "span", () => { });
+				});
+			}
+
+			payloadSender.FirstSpan.Should().NotBeNull();
+			payloadSender.FirstSpan.StackTrace.Should().BeNullOrEmpty();
+		}
+
+		[Fact]
+		public void DefaultStackTraceLimitAndSpanFramesMinDuration_LongSpan()
+		{
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					new TestAgentConfigurationReader(new NoopLogger()), payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
+					=>
+				{
+					t.CaptureSpan("span", "span", () =>
+					{
+						WaitHelpers.SleepMinimum();
+						Thread.Sleep((int)ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds);
+					});
+				});
+			}
+
+			payloadSender.FirstSpan.Should().NotBeNull();
+			payloadSender.FirstSpan.StackTrace.Should().NotBeNullOrEmpty();
+		}
+
+		[Fact]
+		public void ErrorWithDefaultStackTraceLimit()
+		{
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					new TestAgentConfigurationReader(new NoopLogger()), payloadSender)))
+			{
+				Assert.Throws<Exception>(() =>
+				{
+					agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
+						=>
+					{
+						t.CaptureSpan("span", "span", () => { RecursiveCall100XAndThrow(0); });
+					});
+				});
+			}
+
+			payloadSender.FirstError.Should().NotBeNull();
+			payloadSender.FirstError.Exception.StackTrace.Should().NotBeNullOrEmpty();
+			payloadSender.FirstError.Exception.StackTrace.Should().HaveCount(ConfigConsts.DefaultValues.StackTraceLimit);
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		// ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
+		private static void RecursiveCall100XAndThrow(int i)
+		{
+			if (i == 100)
+				throw new Exception("TestException");
+
+			// ReSharper disable once TailRecursiveCall - this method creates a stack with 100 frames on purpose.
+			RecursiveCall100XAndThrow(i + 1);
+		}
+
+		[Fact]
+		public void ErrorWithDefaultSpanFramesMinDurationInMillisecondsAndStackTraceLimit2()
+		{
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: "2"), payloadSender)))
+			{
+				Assert.Throws<Exception>(() =>
+				{
+					agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
+						=>
+					{
+						t.CaptureSpan("span", "span", () => { throw new Exception("TestException"); });
+					});
+				});
+			}
+
+			payloadSender.FirstError.Should().NotBeNull();
+			payloadSender.FirstError.Exception.StackTrace.Should().NotBeNullOrEmpty();
+			payloadSender.FirstError.Exception.StackTrace.Should().HaveCount(2);
+		}
+
+		/// <summary>
+		/// Makes sure that even if SpanFramesMinDuration is 0 (meaning no stacktrace is captured for spans)
+		/// the agent still captures stacktraces for error.
+		/// </summary>
+		/// <exception cref="Exception"></exception>
+		[Fact]
+		public void ErrorWithStackTraceLimit2WithSpanFramesMinDurationNegative()
+		{
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: "2", spanFramesMinDurationInMilliseconds: "-2"),
+					payloadSender)))
+			{
+				Assert.Throws<Exception>(() =>
+				{
+					agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
+						=>
+					{
+						t.CaptureSpan("span", "span", () => { throw new Exception("TestException"); });
+					});
+				});
+			}
+
+			payloadSender.FirstError.Should().NotBeNull();
+			payloadSender.FirstError.Exception.StackTrace.Should().NotBeNullOrEmpty();
+			payloadSender.FirstError.Exception.StackTrace.Should().HaveCount(2);
+		}
+
+		private static void AssertWithAgent(string stackTraceLimit, string spanFramesMinDuration, Action<MockPayloadSender> assertAction,
+			int sleepLength = 0
+		)
+		{
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: stackTraceLimit,
+						spanFramesMinDurationInMilliseconds: spanFramesMinDuration), payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
+					=>
+				{
+					t.CaptureSpan("span", "span", () => { Thread.Sleep(sleepLength); });
+				});
+			}
+
+			assertAction(payloadSender);
+		}
+
 
 		private void TestMethod() => InnerTestMethod(() => throw new Exception("TestException"));
 
