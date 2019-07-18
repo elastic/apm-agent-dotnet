@@ -30,7 +30,7 @@ namespace Elastic.Apm.Tests
 		/// This test assumes that LineNo capturing is enabled.
 		/// </summary>
 		[Fact]
-		public async Task HttpClientStackTrace()
+		public void HttpClientStackTrace()
 		{
 			var (listener, payloadSender, agent) = HttpDiagnosticListenerTest.RegisterListenerAndStartTransaction();
 
@@ -49,10 +49,34 @@ namespace Elastic.Apm.Tests
 
 			foreach (var line in lines)
 			{
-				_testOutputHelper.WriteLine(line);
-			}
-
-			stackFrames.Should().NotBeEmpty().And.Contain(frame => frame.LineNo != 0);
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
+				// contains all frame which depends on the test runner
+				// therefore the exact StackTrace.Count depends on where you run the test
+				var stackFrames = payloadSender.FirstSpan?.StackTrace;
+				stackFrames.Should().NotBeEmpty().And.Contain(frame => frame.LineNo != 0);
+			});
+//			var (listener, payloadSender, agent) = HttpDiagnosticListenerTest.RegisterListenerAndStartTransaction();
+//
+//			using (listener)
+//			using (var localServer = new LocalServer(uri: "http://localhost:8083/"))
+//			{
+//				var httpClient = new HttpClient();
+//				var res = await httpClient.GetAsync(localServer.Uri);
+//
+//				res.IsSuccessStatusCode.Should().BeTrue();
+//			}
+//
+//			var stackFrames = payloadSender.FirstSpan?.StackTrace;
+//
+//			var lines = (agent.Logger as TestLogger).Lines;
+//
+//			foreach (var line in lines)
+//			{
+//				_testOutputHelper.WriteLine(line);
+//			}
+//
+//			stackFrames.Should().NotBeEmpty().And.Contain(frame => frame.LineNo != 0);
 		}
 
 		/// <summary>
