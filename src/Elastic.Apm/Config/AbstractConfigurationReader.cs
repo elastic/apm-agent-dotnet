@@ -138,8 +138,9 @@ namespace Elastic.Apm.Config
 			}
 			catch (ArgumentException e)
 			{
-				Logger?.Critical()?.LogException(e, "Failed to parse metrics interval");
-
+				Logger?.Critical()
+					?.LogException(e, "Failed to parse metrics interval, using default: {DefaultMetricsInterval}",
+						ConfigConsts.DefaultValues.MetricsInterval);
 				return ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds;
 			}
 
@@ -197,7 +198,7 @@ namespace Elastic.Apm.Config
 
 			try
 			{
-				if (!TryParseTimeInterval(value, out  valueInMilliseconds, TimeSuffix.Ms))
+				if (!TryParseTimeInterval(value, out valueInMilliseconds, TimeSuffix.Ms))
 				{
 					Logger?.Error()
 						?.Log("Failed to parse provided span frames minimum duration `{ProvidedSpanFramesMinDuration}' - " +
@@ -209,7 +210,9 @@ namespace Elastic.Apm.Config
 			}
 			catch (ArgumentException e)
 			{
-				Logger?.Critical()?.LogException(e, "Failed to parse span frames minimum duration");
+				Logger?.Critical()
+					?.LogException(e, "Failed to parse span frames minimum duration, using default: {DefaultSpanFramesMinDuration}",
+						ConfigConsts.DefaultValues.SpanFramesMinDuration);
 				return ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;
 			}
 
@@ -259,7 +262,7 @@ namespace Elastic.Apm.Config
 							valueInMilliseconds = TimeSpan.FromSeconds(valueNoUnits).TotalMilliseconds;
 							break;
 						default:
-							throw new ArgumentException( "Unexpected TimeSuffix value", nameof(defaultSuffix));
+							throw new ArgumentException("Unexpected TimeSuffix value", nameof(defaultSuffix));
 					}
 
 					return true;
