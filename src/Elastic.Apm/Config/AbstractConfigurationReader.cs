@@ -82,10 +82,8 @@ namespace Elastic.Apm.Config
 			return ConsoleLogger.DefaultLogLevel;
 		}
 
-		protected IReadOnlyList<Uri> ParseServerUrls(ConfigurationKeyValue kv)
-		{
-			return _cachedServerUrls.IfNotInited?.InitOrGet(() => ParseServerUrlsImpl(kv)) ?? _cachedServerUrls.Value;
-		}
+		protected IReadOnlyList<Uri> ParseServerUrls(ConfigurationKeyValue kv) =>
+			_cachedServerUrls.IfNotInited?.InitOrGet(() => ParseServerUrlsImpl(kv)) ?? _cachedServerUrls.Value;
 
 		private IReadOnlyList<Uri> ParseServerUrlsImpl(ConfigurationKeyValue kv)
 		{
@@ -343,6 +341,11 @@ namespace Elastic.Apm.Config
 					" You can fix this by setting the service name to a specific value (e.g. by using the environment variable {ServiceNameVariable})",
 					ConfigConsts.DefaultValues.UnknownServiceName, ConfigConsts.EnvVarNames.ServiceName);
 			return ConfigConsts.DefaultValues.UnknownServiceName;
+		}
+
+		protected Version ParseServiceVersion(ConfigurationKeyValue kv)
+		{
+
 		}
 
 		private static bool TryParseFloatingPoint(string valueAsString, out double result) =>

@@ -33,6 +33,7 @@ namespace Elastic.Apm.Config
 			public const string SecretToken = "ELASTIC_APM_SECRET_TOKEN";
 			public const string ServerUrls = "ELASTIC_APM_SERVER_URLS";
 			public const string ServiceName = "ELASTIC_APM_SERVICE_NAME";
+			public const string ServiceVersion = "ELASTIC_APM_SERVICE_VERSION";
 			public const string SpanFramesMinDuration = "ELASTIC_APM_SPAN_FRAMES_MIN_DURATION";
 			public const string StackTraceLimit = "ELASTIC_APM_STACK_TRACE_LIMIT";
 			public const string TransactionSampleRate = "ELASTIC_APM_TRANSACTION_SAMPLE_RATE";

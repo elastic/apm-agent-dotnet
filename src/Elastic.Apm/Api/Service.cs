@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -18,11 +19,13 @@ namespace Elastic.Apm.Api
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
 
+		public Version Version { get; set; }
+
 		public Runtime Runtime { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(Service))
 		{
-			{ "Name", Name }, { "Agent", Agent }, { "Framework", Framework }, { "Language", Language },
+			{ "Name", Name }, {"Version", Version}, { "Agent", Agent }, { "Framework", Framework }, { "Language", Language },
 		}.ToString();
 
 		internal static Service GetDefaultService(IConfigurationReader configurationReader, IApmLogger loggerArg)
@@ -31,6 +34,7 @@ namespace Elastic.Apm.Api
 			return new Service
 			{
 				Name = configurationReader.ServiceName,
+				Version = configurationReader.ServiceVersion,
 				Agent = new AgentC
 				{
 					Name = Consts.AgentName,
