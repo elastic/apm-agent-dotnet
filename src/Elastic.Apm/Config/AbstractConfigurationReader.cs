@@ -4,13 +4,14 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
 {
 	public abstract class AbstractConfigurationReader
 	{
-		private IReadOnlyList<Uri> _cachedServerUrls;
+		private readonly LazyContextualInit<IReadOnlyList<Uri>> _cachedServerUrls = new LazyContextualInit<IReadOnlyList<Uri>>();
 
 		protected AbstractConfigurationReader(IApmLogger logger) => ScopedLogger = logger?.Scoped(GetType().Name);
 
@@ -79,8 +80,7 @@ namespace Elastic.Apm.Config
 
 		protected IReadOnlyList<Uri> ParseServerUrls(ConfigurationKeyValue kv)
 		{
-			if (_cachedServerUrls == null) _cachedServerUrls = ParseServerUrlsImpl(kv);
-			return _cachedServerUrls;
+			return _cachedServerUrls.IfNotInited?.InitOrGet(() => ParseServerUrlsImpl(kv)) ?? _cachedServerUrls.Value;
 		}
 
 		private IReadOnlyList<Uri> ParseServerUrlsImpl(ConfigurationKeyValue kv)
