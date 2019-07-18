@@ -175,7 +175,6 @@ namespace Elastic.Apm.Config
 			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
 				return ConfigConsts.DefaultValues.StackTraceLimit;
 
-
 			if (int.TryParse(kv.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result))
 				return result;
 
