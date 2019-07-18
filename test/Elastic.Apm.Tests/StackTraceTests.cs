@@ -32,22 +32,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void HttpClientStackTrace()
 		{
-			var (listener, payloadSender, agent) = HttpDiagnosticListenerTest.RegisterListenerAndStartTransaction();
-
-			using (listener)
-			using (var localServer = new LocalServer(uri: "http://localhost:8083/"))
-			{
-				var httpClient = new HttpClient();
-				var res = await httpClient.GetAsync(localServer.Uri);
-
-				res.IsSuccessStatusCode.Should().BeTrue();
-			}
-
-			var stackFrames = payloadSender.FirstSpan?.StackTrace;
-
-			var lines = (agent.Logger as TestLogger).Lines;
-
-			foreach (var line in lines)
+			AssertWithAgent("-1", "-1", payloadSender =>
 			{
 				payloadSender.FirstSpan.Should().NotBeNull();
 				payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
