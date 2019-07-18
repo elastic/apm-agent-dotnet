@@ -24,14 +24,28 @@ namespace Elastic.Apm.Tests
 		/// This test assumes that LineNo capturing is enabled and pdb files are also present
 		/// </summary>
 		[Fact]
-		public void StackTraceContainsLineNumber()
-			=> AssertWithAgent("-1", "-1", payloadSender =>
+		public async Task StackTraceContainsLineNumber()
+		{
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					new TestAgentConfigurationReader(new NoopLogger()), payloadSender)))
 			{
-				payloadSender.FirstSpan.Should().NotBeNull();
-				payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
-				var stackFrames = payloadSender.FirstSpan?.StackTrace;
-				stackFrames.Should().NotBeEmpty().And.Contain(frame => frame.LineNo != 0);
-			});
+				await agent.Tracer.CaptureTransaction("TestTransaction", "Test",
+					async t
+					=>
+				{
+					await t.CaptureSpan("span", "span", async () => { await Task.Delay(800); });
+				});
+			}
+
+			payloadSender.FirstSpan.Should().NotBeNull();
+			payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
+			var stackFrames = payloadSender.FirstSpan?.StackTrace;
+			stackFrames.Should().NotBeEmpty().And.Contain(frame => frame.LineNo != 0);
+
+		}
 
 		/// <summary>
 		/// Makes sure that the name of the async method is captured correctly
