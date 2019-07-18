@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,7 +10,6 @@ using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
@@ -20,40 +18,20 @@ namespace Elastic.Apm.Tests
 	/// </summary>
 	public class StackTraceTests
 	{
-		private readonly ITestOutputHelper _testOutputHelper;
-
-		public StackTraceTests(ITestOutputHelper testOutputHelper) => _testOutputHelper = testOutputHelper;
-
 		/// <summary>
-		/// Captures an HTTP request
+		/// Captures a Span
 		/// and makes sure that we have at least 1 stack frame with LineNo != 0
-		/// This test assumes that LineNo capturing is enabled.
+		/// This test assumes that LineNo capturing is enabled and pdb files are also present
 		/// </summary>
 		[Fact]
-		public async Task HttpClientStackTrace()
-		{
-			var (listener, payloadSender, agent) = HttpDiagnosticListenerTest.RegisterListenerAndStartTransaction();
-
-			using (listener)
-			using (var localServer = new LocalServer(uri: "http://localhost:8083/"))
+		public void StackTraceContainsLineNumber()
+			=> AssertWithAgent("-1", "-1", payloadSender =>
 			{
-				var httpClient = new HttpClient();
-				var res = await httpClient.GetAsync(localServer.Uri);
-
-				res.IsSuccessStatusCode.Should().BeTrue();
-			}
-
-			var stackFrames = payloadSender.FirstSpan?.StackTrace;
-
-			var lines = (agent.Logger as TestLogger).Lines;
-
-			foreach (var line in lines)
-			{
-				_testOutputHelper.WriteLine(line);
-			}
-
-			stackFrames.Should().NotBeEmpty().And.Contain(frame => frame.LineNo != 0);
-		}
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().NotBeEmpty();
+				var stackFrames = payloadSender.FirstSpan?.StackTrace;
+				stackFrames.Should().NotBeEmpty().And.Contain(frame => frame.LineNo != 0);
+			});
 
 		/// <summary>
 		/// Makes sure that the name of the async method is captured correctly

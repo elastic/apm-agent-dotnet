@@ -43,7 +43,7 @@ namespace Elastic.Apm.Helpers
 
 			var retVal = new List<CapturedStackFrame>(frames.Length);
 
-			logger.Debug()?.Log("transform stackframes");
+			logger.Trace()?.Log("transform stack frames");
 
 			try
 			{
@@ -54,7 +54,7 @@ namespace Elastic.Apm.Helpers
 
 					var functionName = GetRealMethodName(frame?.GetMethod());
 
-					logger.Debug()?.Log("{MethodName}, {lineNo}", functionName, frame?.GetFileLineNumber());
+					logger.Trace()?.Log("{MethodName}, {lineNo}", functionName, frame?.GetFileLineNumber());
 
 					retVal.Add(new CapturedStackFrame
 					{
