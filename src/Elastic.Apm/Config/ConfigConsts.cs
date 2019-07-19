@@ -20,6 +20,7 @@ namespace Elastic.Apm.Config
 			public const int StackTraceLimit = 50;
 			public const double TransactionSampleRate = 1.0;
 			public const string UnknownServiceName = "unknown";
+			public static Version DefaultServiceVersion = new Version(1, 0);
 			public static Uri ServerUri => new Uri($"http://localhost:{ApmServerPort}");
 			public const string CaptureBody = SupportedValues.CaptureBodyOff;
 			public const string CaptureBodyContentTypes = "application/x-www-form-urlencoded*, text/*, application/json*, application/xml*";
