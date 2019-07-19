@@ -113,9 +113,9 @@ NOTE: The service name must conform to this regular expression: ^[a-zA-Z0-9 _-]+
 [[config-service-version]]
 ==== `ServiceVersion`
 
-This is used to know exact version of your service.
-
-NOTE: The service version must conform to this regular expression: ^[0-9]+\.[0-9]+(?:\.[0-9]+)?(?:\.[0-9]+)?$. In less regexy terms: Your service version must contain only numbers (from 2 to 4), which are separated by `.` (dot).
+A version string for the currently deployed version of the service. If you don’t
+version your deployments, the recommended value for this field is the commit identifier
+of the deployed revision, e.g. the output of git rev-parse HEAD.
 
 [options="header"]
 |============
@@ -126,7 +126,7 @@ NOTE: The service version must conform to this regular expression: ^[0-9]+\.[0-9
 [options="header"]
 |============
 | Default                          | Type
-| Version of the entry assembly    | Version 
+| Version of the entry assembly    | string 
 |============
 
 [float]
