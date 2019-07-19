@@ -285,11 +285,19 @@ namespace Elastic.Apm.Config
 			}
 		}
 
-		protected virtual AssemblyName DiscoverAssemblyName()
+		private AssemblyName DiscoverEntryAssemblyName()
 		{
 			var entryAssemblyName = Assembly.GetEntryAssembly()?.GetName();
 			if (entryAssemblyName != null && !IsMsOrElastic(entryAssemblyName.GetPublicKeyToken()))
 				return entryAssemblyName;
+
+			return null;
+		}
+
+		protected virtual string DiscoverServiceName()
+		{
+			var entryAssemblyName = DiscoverEntryAssemblyName();
+			if (entryAssemblyName != null) return entryAssemblyName.Name;
 
 			var stackFrames = new StackTrace().GetFrames();
 			if (stackFrames == null) return null;
@@ -297,7 +305,7 @@ namespace Elastic.Apm.Config
 			foreach (var frame in stackFrames)
 			{
 				var currentAssemblyName = frame?.GetMethod()?.DeclaringType?.Assembly.GetName();
-				if (currentAssemblyName != null && !IsMsOrElastic(currentAssemblyName.GetPublicKeyToken())) return currentAssemblyName;
+				if (currentAssemblyName != null && !IsMsOrElastic(currentAssemblyName.GetPublicKeyToken())) return currentAssemblyName.Name;
 			}
 
 			return null;
@@ -307,7 +315,6 @@ namespace Elastic.Apm.Config
 			originalName != null
 				? Regex.Replace(originalName, "[^a-zA-Z0-9 _-]", "_")
 				: null;
-		protected virtual string DiscoverServiceName() => DiscoverAssemblyName()?.Name;
 
 		protected string ParseServiceName(ConfigurationKeyValue kv)
 		{
@@ -344,7 +351,7 @@ namespace Elastic.Apm.Config
 			return ConfigConsts.DefaultValues.UnknownServiceName;
 		}
 
-		private Version DiscoverServiceVersion() => DiscoverAssemblyName()?.Version;
+		private Version DiscoverServiceVersion() => DiscoverEntryAssemblyName()?.Version;
 
 		protected string ParseServiceVersion(ConfigurationKeyValue kv)
 		{
