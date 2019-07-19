@@ -21,13 +21,12 @@ namespace Elastic.Apm.Api
 			Service service,
 			IPayloadSender payloadSender,
 			IConfigurationReader configurationReader,
-			Sampler sampler,
 			ICurrentExecutionSegmentHolder currentExecutionSegmentHolder)
 		{
 			_logger = logger?.Scoped(nameof(Tracer));
 			_service = service;
 			_sender = payloadSender.ThrowIfArgumentNull(nameof(payloadSender));
-			Sampler = sampler.ThrowIfArgumentNull(nameof(sampler));
+			Sampler = new Sampler(configurationReader.TransactionSampleRate);
 			CurrentExecutionSegmentHolder = currentExecutionSegmentHolder.ThrowIfArgumentNull(nameof(currentExecutionSegmentHolder));
 		}
 

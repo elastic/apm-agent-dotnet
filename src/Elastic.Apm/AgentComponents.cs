@@ -14,14 +14,13 @@ namespace Elastic.Apm
 			IApmLogger logger = null,
 			IConfigurationReader configurationReader = null,
 			IPayloadSender payloadSender = null
-		) : this(logger, configurationReader, payloadSender, null, null, null) { }
+		) : this(logger, configurationReader, payloadSender, null, null) { }
 
 		internal AgentComponents(
 			IApmLogger logger,
 			IConfigurationReader configurationReader,
 			IPayloadSender payloadSender,
 			IMetricsCollector metricsCollector,
-			Sampler sampler,
 			ICurrentExecutionSegmentHolder currentExecutionSegmentHolder
 		)
 		{
@@ -39,7 +38,6 @@ namespace Elastic.Apm
 			MetricsCollector.StartCollecting();
 
 			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationReader,
-				sampler ?? new Sampler(ConfigurationReader.TransactionSampleRate),
 				currentExecutionSegmentHolder ?? new CurrentExecutionSegmentHolder(Logger));
 		}
 

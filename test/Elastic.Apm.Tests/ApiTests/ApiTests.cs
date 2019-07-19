@@ -561,8 +561,9 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			ITransaction capturedTransaction = null;
 			IExecutionSegment errorCapturingExecutionSegment = null;
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, sampler: new Sampler(isSampled ? 1 : 0))))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
+				agent.TracerInternal.Sampler = new Sampler(isSampled ? 1 : 0);
 				agent.Tracer.CaptureTransaction(TestTransaction, CustomTransactionTypeForTests, transaction =>
 				{
 					capturedTransaction = transaction;
