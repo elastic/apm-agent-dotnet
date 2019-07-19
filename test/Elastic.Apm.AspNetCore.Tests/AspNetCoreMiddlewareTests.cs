@@ -74,6 +74,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.NotBeNullOrWhiteSpace()
 				.And.NotBe(ConfigConsts.DefaultValues.UnknownServiceName);
 
+			_agent.Service.Version.Should()
+				.NotBeNull()
+				.And.NotBe(ConfigConsts.DefaultValues.ServiceVersion);
+
 			_agent.Service.Agent.Name.Should().Be(Apm.Consts.AgentName);
 			var apmVersion = typeof(Agent).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 			_agent.Service.Agent.Version.Should().Be(apmVersion);

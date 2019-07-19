@@ -371,9 +371,9 @@ namespace Elastic.Apm.Config
 			Logger?.Error()
 				?.Log("Failed to discover service version, the service version will be '{DefaultServiceVersion}'." +
 					" You can fix this by setting the service version to a specific value (e.g. by using the environment variable {ServiceVersionVariable})",
-					ConfigConsts.DefaultValues.DefaultServiceVersion, ConfigConsts.EnvVarNames.ServiceVersion);
+					ConfigConsts.DefaultValues.ServiceVersion, ConfigConsts.EnvVarNames.ServiceVersion);
 
-			return ConfigConsts.DefaultValues.DefaultServiceVersion;
+			return ConfigConsts.DefaultValues.ServiceVersion;
 		}
 
 		private static bool TryParseFloatingPoint(string valueAsString, out double result) =>
@@ -436,15 +436,15 @@ namespace Elastic.Apm.Config
 
 			for (var i = 0; i < 8; i++)
 			{
-				if (array[i] != elasticToken[i])
+				if (isElasticApm && array[i] != elasticToken[i])
 					isElasticApm = false;
-				if (array[i] != mscorlibToken[i])
+				if (isMsCorLib && array[i] != mscorlibToken[i])
 					isMsCorLib = false;
-				if (array[i] != systemWebToken[i])
+				if (isSystemWeb && array[i] != systemWebToken[i])
 					isSystemWeb = false;
-				if (array[i] != systemPrivateCoreLibToken[i])
+				if (isSystemPrivateCoreLib && array[i] != systemPrivateCoreLibToken[i])
 					isSystemPrivateCoreLib = false;
-				if (array[i] != msAspNetCoreHostingToken[i])
+				if (isMsAspNetCoreHosting && array[i] != msAspNetCoreHostingToken[i])
 					isMsAspNetCoreHosting = false;
 
 				if (!isMsCorLib && !isElasticApm && !isSystemWeb && !isSystemPrivateCoreLib && !isMsAspNetCoreHosting)
