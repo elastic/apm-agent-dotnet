@@ -14,7 +14,8 @@ namespace Elastic.Apm.Model
 
 		public string Message { get; set; }
 
-		public List<CapturedStackFrame> Stacktrace { get; set; }
+		[JsonProperty("stacktrace")]
+		public List<CapturedStackFrame> StackTrace { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }

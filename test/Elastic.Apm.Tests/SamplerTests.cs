@@ -62,13 +62,15 @@ namespace Elastic.Apm.Tests
 			var noopLogger = new NoopLogger();
 			var currentExecutionSegmentHolder = new CurrentExecutionSegmentHolder(noopLogger);
 			var noopPayloadSender = new NoopPayloadSender();
+			var configurationReader = new TestAgentConfigurationReader(noopLogger);
 			var sampler = new Sampler(rate);
 
 			total.Repeat(i =>
 			{
-				var transaction = new Transaction(noopLogger, currentExecutionSegmentHolder, "test transaction name", "test transaction type",
-					sampler, /* distributedTracingData: */ null, noopPayloadSender);
+				var transaction = new Transaction(noopLogger, "test transaction name", "test transaction type", sampler,
+					/* distributedTracingData: */ null, noopPayloadSender, configurationReader, currentExecutionSegmentHolder);
 				if (transaction.IsSampled) ++sampledCount;
+
 				if (i + 1 >= startCheckingAfter)
 				{
 					var actualRate = (double)sampledCount / (i + 1);

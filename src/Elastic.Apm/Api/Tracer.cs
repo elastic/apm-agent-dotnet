@@ -14,6 +14,7 @@ namespace Elastic.Apm.Api
 	{
 		private readonly ScopedLogger _logger;
 		private readonly IPayloadSender _sender;
+		private readonly IConfigurationReader _configurationReader;
 		private readonly Service _service;
 
 		public Tracer(
@@ -26,6 +27,7 @@ namespace Elastic.Apm.Api
 			_logger = logger?.Scoped(nameof(Tracer));
 			_service = service;
 			_sender = payloadSender.ThrowIfArgumentNull(nameof(payloadSender));
+			_configurationReader = configurationReader.ThrowIfArgumentNull(nameof(configurationReader));
 			Sampler = new Sampler(configurationReader.TransactionSampleRate);
 			CurrentExecutionSegmentHolder = currentExecutionSegmentHolder.ThrowIfArgumentNull(nameof(currentExecutionSegmentHolder));
 		}
@@ -42,7 +44,10 @@ namespace Elastic.Apm.Api
 
 		internal Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null)
 		{
-			var retVal = new Transaction(_logger, CurrentExecutionSegmentHolder, name, type, Sampler, distributedTracingData, _sender) { Service = _service };
+			var retVal = new Transaction(_logger, name, type, Sampler, distributedTracingData, _sender, _configurationReader, CurrentExecutionSegmentHolder)
+			{
+				Service = _service
+			};
 
 			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);
 			return retVal;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
@@ -13,24 +14,27 @@ namespace Elastic.Apm.Model
 {
 	internal class Transaction : ITransaction
 	{
+		private readonly IConfigurationReader _configurationReader;
 		private readonly Lazy<Context> _context = new Lazy<Context>();
+		private readonly ICurrentExecutionSegmentHolder _currentExecutionSegmentHolder;
 
 		private readonly IApmLogger _logger;
-		private readonly ICurrentExecutionSegmentHolder _currentExecutionSegmentHolder;
 		private readonly IPayloadSender _sender;
 
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type)
-			: this(agent.Logger, agent.TracerInternal.CurrentExecutionSegmentHolder, name, type, new Sampler(1.0), null, agent.PayloadSender) { }
+			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigurationReader,
+				agent.TracerInternal.CurrentExecutionSegmentHolder) { }
 
 		internal Transaction(
 			IApmLogger logger,
-			ICurrentExecutionSegmentHolder currentExecutionSegmentHolder,
 			string name,
 			string type,
 			Sampler sampler,
 			DistributedTracingData distributedTracingData,
-			IPayloadSender sender
+			IPayloadSender sender,
+			IConfigurationReader configurationReader,
+			ICurrentExecutionSegmentHolder currentExecutionSegmentHolder
 		)
 		{
 			Timestamp = TimeUtils.TimestampNow();
@@ -38,8 +42,9 @@ namespace Elastic.Apm.Model
 			Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 			_logger = logger?.Scoped($"{nameof(Transaction)}.{Id}");
 
-			_currentExecutionSegmentHolder = currentExecutionSegmentHolder;
 			_sender = sender;
+			_configurationReader = configurationReader;
+			_currentExecutionSegmentHolder = currentExecutionSegmentHolder;
 
 			Name = name;
 			HasCustomName = false;
@@ -217,7 +222,7 @@ namespace Elastic.Apm.Model
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
-			var retVal = new Span(name, type, Id, TraceId, this, IsSampled, _sender, _logger);
+			var retVal = new Span(name, type, Id, TraceId, this, IsSampled, _sender, _logger, _configurationReader);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 
@@ -233,6 +238,7 @@ namespace Elastic.Apm.Model
 				_logger,
 				_sender,
 				this,
+				_configurationReader,
 				this,
 				culprit,
 				isHandled,
@@ -247,6 +253,7 @@ namespace Elastic.Apm.Model
 				_sender,
 				_logger,
 				this,
+				_configurationReader,
 				this,
 				parentId
 			);

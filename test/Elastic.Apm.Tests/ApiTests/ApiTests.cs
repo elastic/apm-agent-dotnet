@@ -475,7 +475,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			var payloadSender = new MockPayloadSender();
 			var expectedSpansCount = isSampled ? 1 : 0;
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, transactionSampleRate: isSampled ? "1" : "0")))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+				configurationReader: new TestAgentConfigurationReader(transactionSampleRate: isSampled ? "1" : "0"))))
 			{
 				var transaction = agent.Tracer.StartTransaction(TestTransaction, UnitTest);
 				var span = transaction.StartSpan(TestSpan1, ApiConstants.TypeExternal);
@@ -508,7 +509,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			var payloadSender = new MockPayloadSender();
 			var expectedSpansCount = isSampled ? 1 : 0;
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, transactionSampleRate: isSampled ? "1" : "0")))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+				configurationReader: new TestAgentConfigurationReader(transactionSampleRate: isSampled ? "1" : "0"))))
 			{
 				var transaction = agent.Tracer.StartTransaction(TestTransaction, UnitTest);
 				var span = transaction.StartSpan(TestSpan1, ApiConstants.TypeExternal);
