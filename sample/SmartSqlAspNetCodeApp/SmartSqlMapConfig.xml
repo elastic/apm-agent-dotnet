@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<SmartSqlMapConfig xmlns="http://SmartSql.net/schemas/SmartSqlMapConfig.xsd">
+  <Settings
+    IsWatchConfigFile="true" IgnoreParameterCase="true"
+  />
+  <Database>
+    <!--ParameterPrefix:[SqlServer:@ | MySQL:? |Oracle::] -->
+    <DbProvider Name="SqlClientFactory" ParameterPrefix="@" Type="System.Data.SqlClient.SqlClientFactory,System.Data.SqlClient"/>
+    <Write Name="WriteDB" ConnectionString="Data Source=192.168.0.22;database=RocherKong;uid=sa;pwd=RocherKong"/>
+  </Database>
+<!--  <TypeHandlers>-->
+<!--    <TypeHandler Name="Json" Type="SmartSql.TypeHandler.PostgreSql.JsonTypeHandler,SmartSql.TypeHandler.PostgreSql"/>-->
+<!--  </TypeHandlers>-->
+  <SmartSqlMaps>
+    <SmartSqlMap Path="Maps" Type="Directory"></SmartSqlMap>
+  </SmartSqlMaps>
+</SmartSqlMapConfig>
