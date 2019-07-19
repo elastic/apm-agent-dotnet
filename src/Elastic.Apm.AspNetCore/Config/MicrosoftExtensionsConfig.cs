@@ -78,7 +78,7 @@ namespace Elastic.Apm.AspNetCore.Config
 
 		public string ServiceName => ParseServiceName(ReadFallBack(Keys.ServiceName, ConfigConsts.EnvVarNames.ServiceName));
 
-		public Version ServiceVersion => ParseServiceVersion(ReadFallBack(Keys.ServiceVersion, ConfigConsts.EnvVarNames.ServiceVersion));
+		public string ServiceVersion => ParseServiceVersion(ReadFallBack(Keys.ServiceVersion, ConfigConsts.EnvVarNames.ServiceVersion));
 
 		public double SpanFramesMinDurationInMilliseconds => _spanFramesMinDurationInMilliseconds.Value;
 

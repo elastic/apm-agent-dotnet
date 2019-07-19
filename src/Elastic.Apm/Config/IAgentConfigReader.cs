@@ -12,7 +12,7 @@ namespace Elastic.Apm.Config
 		string SecretToken { get; }
 		IReadOnlyList<Uri> ServerUrls { get; }
 		string ServiceName { get; }
-		Version ServiceVersion { get; }
+		string ServiceVersion { get; }
 
 		/// <summary>
 		/// The agent limits stack trace collection to spans with durations equal or longer than the given value

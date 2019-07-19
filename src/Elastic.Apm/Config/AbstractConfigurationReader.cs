@@ -346,15 +346,13 @@ namespace Elastic.Apm.Config
 
 		private Version DiscoverServiceVersion() => DiscoverAssemblyName()?.Version;
 
-		protected Version ParseServiceVersion(ConfigurationKeyValue kv)
+		protected string ParseServiceVersion(ConfigurationKeyValue kv)
 		{
 			var versionInConfig = kv.Value;
 
 			if (!string.IsNullOrEmpty(versionInConfig))
 			{
-				if (Version.TryParse(versionInConfig, out var serviceVersion)) return serviceVersion;
-
-				Logger?.Warning()?.Log("Cannot parse a service version from '{ServiceVersionInConfig}' string", versionInConfig);
+				return versionInConfig;
 			}
 
 			Logger?.Info()?.Log("The agent was started without a service version. The service version will be automatically discovered.");
@@ -365,15 +363,10 @@ namespace Elastic.Apm.Config
 				Logger?.Info()
 					?.Log("The agent was started without a service version. The automatically discovered service version is {ServiceVersion}",
 						discoveredVersion);
-				return discoveredVersion;
+				return discoveredVersion.ToString();
 			}
 
-			Logger?.Error()
-				?.Log("Failed to discover service version, the service version will be '{DefaultServiceVersion}'." +
-					" You can fix this by setting the service version to a specific value (e.g. by using the environment variable {ServiceVersionVariable})",
-					ConfigConsts.DefaultValues.ServiceVersion, ConfigConsts.EnvVarNames.ServiceVersion);
-
-			return ConfigConsts.DefaultValues.ServiceVersion;
+			return string.Empty;
 		}
 
 		private static bool TryParseFloatingPoint(string valueAsString, out double result) =>

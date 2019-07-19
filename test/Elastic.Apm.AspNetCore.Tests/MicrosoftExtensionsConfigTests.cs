@@ -34,7 +34,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.LogLevel.Should().Be(LogLevel.Debug);
 			config.ServerUrls[0].Should().Be(new Uri("http://myServerFromTheConfigFile:8080"));
 			config.ServiceName.Should().Be("My_Test_Application");
-			config.ServiceVersion.Should().Be(new Version(2, 1, 0, 5));
+			config.ServiceVersion.Should().Be("2.1.0.5");
 			config.CaptureHeaders.Should().Be(false);
 			config.TransactionSampleRate.Should().Be(0.456);
 			config.CaptureBody.Should().Be(ConfigConsts.SupportedValues.CaptureBodyAll);
@@ -116,7 +116,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.LogLevel.Should().Be(LogLevel.Debug);
 			config.ServerUrls[0].Should().Be(new Uri(serverUrl));
 			config.ServiceName.Should().Be(serviceName);
-			config.ServiceVersion.Should().Be(new Version(serviceVersion));
+			config.ServiceVersion.Should().Be(serviceVersion);
 			config.SecretToken.Should().Be(secretToken);
 			config.CaptureHeaders.Should().Be(false);
 			config.TransactionSampleRate.Should().Be(0.123);

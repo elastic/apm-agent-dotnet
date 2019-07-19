@@ -379,7 +379,7 @@ namespace Elastic.Apm.Tests
 			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
 			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
-			agent.Service.Version.Should().Be(new Version(serviceVersion));
+			agent.Service.Version.Should().Be(serviceVersion);
 		}
 
 		/// <summary>
