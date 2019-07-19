@@ -151,44 +151,28 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void DefaultLogLevelTest() => Agent.Config.LogLevel.Should().Be(LogLevel.Error);
 
-		[Fact]
-		public void SetDebugLogLevelTest()
+		[Theory]
+		[InlineData("Trace", LogLevel.Trace)]
+		[InlineData("Debug", LogLevel.Debug)]
+		[InlineData("Information", LogLevel.Information)]
+		[InlineData("Warning", LogLevel.Warning)]
+		[InlineData("Error", LogLevel.Error)]
+		[InlineData("Critical", LogLevel.Critical)]
+		public void SetLogLevelTest(string logLevelAsString, LogLevel logLevel)
 		{
-			var agent = new ApmAgent(new TestAgentComponents("Debug"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Debug);
-			agent.Logger.Level.Should().Be(LogLevel.Debug);
-		}
-
-		[Fact]
-		public void SetErrorLogLevelTest()
-		{
-			var agent = new ApmAgent(new TestAgentComponents("Error"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Error);
-			agent.Logger.Level.Should().Be(LogLevel.Error);
-		}
-
-		[Fact]
-		public void SetInfoLogLevelTest()
-		{
-			var agent = new ApmAgent(new TestAgentComponents("Information"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Information);
-			agent.Logger.Level.Should().Be(LogLevel.Information);
-		}
-
-		[Fact]
-		public void SetWarningLogLevelTest()
-		{
-			var agent = new ApmAgent(new TestAgentComponents("Warning"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Warning);
-			agent.Logger.Level.Should().Be(LogLevel.Warning);
+			var logger = new TestLogger(logLevel);
+			var agent = new ApmAgent(new TestAgentComponents(logLevelAsString, logger: logger));
+			agent.ConfigurationReader.LogLevel.Should().Be(logLevel);
+			agent.Logger.Should().Be(logger);
+			agent.Logger.Level.Should().Be(logLevel);
 		}
 
 		[Fact]
 		public void SetInvalidLogLevelTest()
 		{
-			var logLevelValue = "InvalidLogLevel";
-			var agent = new ApmAgent(new TestAgentComponents(logLevelValue));
-			var logger = agent.Logger as TestLogger;
+			var logger = new TestLogger(LogLevel.Error);
+			var logLevelAsString = "InvalidLogLevel";
+			var agent = new ApmAgent(new TestAgentComponents(logLevelAsString, logger: logger));
 
 			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Error);
 			logger.Lines.Should().NotBeEmpty();
