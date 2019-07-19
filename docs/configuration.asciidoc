@@ -110,6 +110,26 @@ NOTE: The service name must conform to this regular expression: ^[a-zA-Z0-9 _-]+
 |============
 
 [float]
+[[config-service-version]]
+==== `ServiceVersion`
+
+This is used to know exact version of your service.
+
+NOTE: The service version must conform to this regular expression: ^[0-9]+\.[0-9]+(?:\.[0-9]+)?(?:\.[0-9]+)?$. In less regexy terms: Your service version must contain only numbers (from 2 to 4), which are separated by `.` (dot).
+
+[options="header"]
+|============
+| Environment variable name      | IConfiguration key 
+| `ELASTIC_APM_SERVICE_VERSION` | `ElasticApm:ServiceVersion`
+|============
+
+[options="header"]
+|============
+| Default                          | Type
+| Version of the entry assembly    | Version 
+|============
+
+[float]
 [[config-transaction-sample-rate]]
 ==== `TransactionSampleRate`
 
