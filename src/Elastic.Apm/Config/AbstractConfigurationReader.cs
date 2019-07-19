@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
@@ -302,7 +303,18 @@ namespace Elastic.Apm.Config
 			return null;
 		}
 
-		internal static string AdaptServiceName(string originalName) => originalName?.Replace('.', '_');
+		internal static string AdaptServiceName(string originalName)
+		{
+			var serviceNameRegex = new Regex("^[a-zA-Z0-9 _-]+$");
+			var adaptedName = originalName?.Replace('.', '_');
+
+			if (adaptedName != null && serviceNameRegex.IsMatch(adaptedName))
+			{
+				return adaptedName;
+			}
+
+			return null;
+		}
 
 		protected string ParseServiceName(ConfigurationKeyValue kv)
 		{
@@ -310,15 +322,21 @@ namespace Elastic.Apm.Config
 			if (!string.IsNullOrEmpty(nameInConfig))
 			{
 				var adaptedServiceName = AdaptServiceName(nameInConfig);
-				if (nameInConfig == adaptedServiceName)
-					Logger?.Warning()?.Log("Service name provided in configuration is {ServiceName}", nameInConfig);
-				else
+
+				if (adaptedServiceName != null)
 				{
-					Logger?.Warning()
-						?.Log("Service name provided in configuration ({ServiceNameInConfiguration}) was adapted to {ServiceName}", nameInConfig,
-							adaptedServiceName);
+					if (nameInConfig == adaptedServiceName)
+						Logger?.Warning()?.Log("Service name provided in configuration is {ServiceName}", nameInConfig);
+					else
+					{
+						Logger?.Warning()
+							?.Log("Service name provided in configuration ({ServiceNameInConfiguration}) was adapted to {ServiceName}", nameInConfig,
+								adaptedServiceName);
+					}
+					return adaptedServiceName;
 				}
-				return adaptedServiceName;
+
+				Logger?.Error()?.Log("Service name provided in configuration doesn't fit constraints. Please, check documentation to find out all constraints for service name.");
 			}
 
 			Logger?.Info()?.Log("The agent was started without a service name. The service name will be automatically discovered.");

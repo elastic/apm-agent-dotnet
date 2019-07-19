@@ -270,6 +270,37 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
+		/// The test makes sure we validate service name.
+		/// </summary>
+		[Fact]
+		public void ReadInvalidServiceNameViaEnvironmentVariable()
+		{
+			var serviceName = "MyService123!";
+			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+
+			agent.Service.Name.Should().NotBe(serviceName);
+			agent.Service.Name.Should().MatchRegex("^[a-zA-Z0-9 _-]+$");
+		}
+
+		/// <summary>
+		/// The test makes sure that unknown service name value fits to all constraints.
+		/// </summary>
+		[Fact]
+		public void UnknownServiceNameValueTest()
+		{
+			var serviceName = DefaultValues.UnknownServiceName;
+			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+
+			agent.Service.Name.Should().Be(serviceName);
+		}
+
+		/// <summary>
 		/// In case the user does not provide us a service name we try to calculate it based on the callstack.
 		/// This test makes sure we recognize mscorlib and our own assemblies correctly in the
 		/// <see cref="AbstractConfigurationReader.IsMsOrElastic(byte[])" /> method.
