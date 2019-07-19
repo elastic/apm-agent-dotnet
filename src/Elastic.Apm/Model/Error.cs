@@ -68,7 +68,7 @@ namespace Elastic.Apm.Model
 
 		public override string ToString() => new ToStringBuilder(nameof(Error))
 		{
-			{ "Id", Id }, { "TraceId", TraceId }, { "ParentId", ParentId }, { "TransactionId", TransactionId },
+			{ nameof(Id), Id }, { nameof(TraceId), TraceId }, { nameof(ParentId), ParentId }, { nameof(TransactionId), TransactionId },
 		}.ToString();
 
 		public class TransactionData

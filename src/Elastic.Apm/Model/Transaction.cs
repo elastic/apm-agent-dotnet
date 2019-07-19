@@ -16,14 +16,16 @@ namespace Elastic.Apm.Model
 		private readonly Lazy<Context> _context = new Lazy<Context>();
 
 		private readonly IApmLogger _logger;
+		private readonly ICurrentExecutionSegmentHolder _currentExecutionSegmentHolder;
 		private readonly IPayloadSender _sender;
 
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
-		internal Transaction(IApmAgent agent, string name, string type)
-			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender) { }
+		internal Transaction(ApmAgent agent, string name, string type)
+			: this(agent.Logger, agent.TracerInternal.CurrentExecutionSegmentHolder, name, type, new Sampler(1.0), null, agent.PayloadSender) { }
 
 		internal Transaction(
 			IApmLogger logger,
+			ICurrentExecutionSegmentHolder currentExecutionSegmentHolder,
 			string name,
 			string type,
 			Sampler sampler,
@@ -36,6 +38,7 @@ namespace Elastic.Apm.Model
 			Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 			_logger = logger?.Scoped($"{nameof(Transaction)}.{Id}");
 
+			_currentExecutionSegmentHolder = currentExecutionSegmentHolder;
 			_sender = sender;
 
 			Name = name;
@@ -75,6 +78,8 @@ namespace Elastic.Apm.Model
 						" Start time: {Time} (as timestamp: {Timestamp})",
 						this, IsSampled, sampler, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 			}
+
+			_currentExecutionSegmentHolder.CurrentTransactionInternal = this;
 		}
 
 		private bool _isEnded;
@@ -166,12 +171,12 @@ namespace Elastic.Apm.Model
 
 		public override string ToString() => new ToStringBuilder(nameof(Transaction))
 		{
-			{ "Id", Id },
-			{ "TraceId", TraceId },
-			{ "ParentId", ParentId },
-			{ "Name", Name },
-			{ "Type", Type },
-			{ "IsSampled", IsSampled }
+			{ nameof(Id), Id },
+			{ nameof(TraceId), TraceId },
+			{ nameof(ParentId), ParentId },
+			{ nameof(Name), Name },
+			{ nameof(Type), Type },
+			{ nameof(IsSampled), IsSampled }
 		}.ToString();
 
 		public void End()
@@ -204,7 +209,7 @@ namespace Elastic.Apm.Model
 			_isEnded = true;
 			if (isFirstEndCall) _sender.QueueTransaction(this);
 
-			Agent.TransactionContainer.Transactions.Value = null;
+			_currentExecutionSegmentHolder.CurrentTransactionInternal = null;
 		}
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)

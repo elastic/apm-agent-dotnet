@@ -1,16 +1,12 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Elastic.Apm.Api;
-using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.DistributedTracing;
-using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model;
 
 namespace Elastic.Apm.DiagnosticListeners
 {
@@ -26,19 +22,18 @@ namespace Elastic.Apm.DiagnosticListeners
 		private const string EventRequestPropertyName = "Request";
 		private const string EventResponsePropertyName = "Response";
 
-		private readonly IConfigurationReader _configurationReader;
-
-		private readonly ScopedLogger _logger;
-
 		/// <summary>
 		/// Keeps track of ongoing requests
 		/// </summary>
-		internal readonly ConcurrentDictionary<TRequest, Span> ProcessingRequests = new ConcurrentDictionary<TRequest, Span>();
+		internal readonly ConcurrentDictionary<TRequest, ISpan> ProcessingRequests = new ConcurrentDictionary<TRequest, ISpan>();
 
-		protected HttpDiagnosticListenerImplBase(IApmAgent components)
+		private readonly IApmAgent _agent;
+		private readonly ScopedLogger _logger;
+
+		protected HttpDiagnosticListenerImplBase(IApmAgent agent)
 		{
-			_logger = components.Logger?.Scoped("HttpDiagnosticListenerImplBase");
-			_configurationReader = components.ConfigurationReader;
+			_agent = agent;
+			_logger = _agent.Logger?.Scoped("HttpDiagnosticListenerImplBase");
 		}
 
 		protected abstract string RequestGetMethod(TRequest request);
@@ -51,9 +46,9 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		protected abstract int ResponseGetStatusCode(TResponse response);
 
-		public abstract string Name { get; }
-
 		internal abstract string ExceptionEventKey { get; }
+
+		public abstract string Name { get; }
 		internal abstract string StartEventKey { get; }
 		internal abstract string StopEventKey { get; }
 
@@ -84,8 +79,7 @@ namespace Elastic.Apm.DiagnosticListeners
 				return;
 			}
 
-			var request = requestObject as TRequest;
-			if (request == null)
+			if (!(requestObject is TRequest request))
 			{
 				_logger.Trace()
 					?.Log("Actual type of object ({EventRequestPropertyActualType}) in event's {EventRequestPropertyName} property " +
@@ -108,27 +102,27 @@ namespace Elastic.Apm.DiagnosticListeners
 			}
 
 			if (kv.Key.Equals(StartEventKey))
-				ProcessStartEvent(kv.Value, request, requestUrl);
+				ProcessStartEvent(request, requestUrl);
 			else if (kv.Key.Equals(StopEventKey))
 				ProcessStopEvent(kv.Value, request, requestUrl);
 			else if (kv.Key.Equals(ExceptionEventKey))
-				ProcessExceptionEvent(kv.Value, request, requestUrl);
+				ProcessExceptionEvent(kv.Value, requestUrl);
 			else
 				_logger.Trace()?.Log("Unrecognized key `{DiagnosticEventKey}'", kv.Key);
 		}
 
-		private void ProcessStartEvent(object eventValue, TRequest request, Uri requestUrl)
+		private void ProcessStartEvent(TRequest request, Uri requestUrl)
 		{
 			_logger.Trace()?.Log("Processing start event... Request URL: {RequestUrl}", requestUrl);
-			if (Agent.TransactionContainer.Transactions == null || Agent.TransactionContainer.Transactions.Value == null)
+
+			var transaction = _agent.Tracer.CurrentTransaction;
+			if (transaction == null)
 			{
-				_logger.Debug()?.Log("No active transaction, skip creating span for outgoing HTTP request");
+				_logger.Debug()?.Log("No current transaction, skip creating span for outgoing HTTP request");
 				return;
 			}
 
-			var transaction = Agent.TransactionContainer.Transactions.Value;
-
-			var span = transaction.StartSpanInternal(
+			var span = transaction.StartSpan(
 				$"{RequestGetMethod(request)} {requestUrl.Host}",
 				ApiConstants.TypeExternal,
 				ApiConstants.SubtypeHttp);
@@ -146,14 +140,7 @@ namespace Elastic.Apm.DiagnosticListeners
 				// but here we want the string to be in W3C 'traceparent' header format.
 				RequestHeadersAdd(request, TraceParent.TraceParentHeaderName, TraceParent.BuildTraceparent(span.OutgoingDistributedTracingData));
 
-			if (transaction.IsSampled)
-			{
-				span.Context.Http = new Http
-				{
-					Url = requestUrl.ToString(),
-					Method = RequestGetMethod(request)
-				};
-			}
+			if (transaction.IsSampled) span.Context.Http = new Http { Url = requestUrl.ToString(), Method = RequestGetMethod(request) };
 		}
 
 		private void ProcessStopEvent(object eventValue, TRequest request, Uri requestUrl)
@@ -178,27 +165,26 @@ namespace Elastic.Apm.DiagnosticListeners
 				var responseObject = eventValue.GetType().GetTypeInfo().GetDeclaredProperty(EventResponsePropertyName)?.GetValue(eventValue);
 				if (responseObject != null)
 				{
-					var response = responseObject as TResponse;
-					if (response == null)
+					if (responseObject is TResponse response)
+						span.Context.Http.StatusCode = ResponseGetStatusCode(response);
+					else
 					{
 						_logger.Trace()
 							?.Log("Actual type of object ({EventResponsePropertyActualType}) in event's {EventResponsePropertyName} property " +
 								"doesn't match the expected type ({EventResponsePropertyExpectedType})",
 								responseObject.GetType().FullName, EventResponsePropertyName, typeof(TResponse).FullName);
 					}
-					else
-						span.Context.Http.StatusCode = ResponseGetStatusCode(response);
 				}
 			}
 
 			span.End();
 		}
 
-		private void ProcessExceptionEvent(object eventValue, TRequest request, Uri requestUrl)
+		private void ProcessExceptionEvent(object eventValue, Uri requestUrl)
 		{
 			_logger.Trace()?.Log("Processing exception event... Request URL: {RequestUrl}", requestUrl);
 			var exception = eventValue.GetType().GetTypeInfo().GetDeclaredProperty(EventExceptionPropertyName).GetValue(eventValue) as Exception;
-			var transaction = Agent.TransactionContainer.Transactions?.Value;
+			var transaction = _agent.Tracer.CurrentTransaction;
 
 			transaction?.CaptureException(exception, "Failed outgoing HTTP request");
 			//TODO: we don't know if exception is handled, currently reports handled = false
@@ -209,6 +195,6 @@ namespace Elastic.Apm.DiagnosticListeners
 		/// </summary>
 		/// <returns><c>true</c>, if request should not be captured, <c>false</c> otherwise.</returns>
 		/// <param name="requestUri">Request URI. It cannot be null</param>
-		private bool IsRequestFilteredOut(Uri requestUri) => _configurationReader.ServerUrls.Any(n => n.IsBaseOf(requestUri));
+		private bool IsRequestFilteredOut(Uri requestUri) => _agent.ConfigurationReader.ServerUrls.Any(n => n.IsBaseOf(requestUri));
 	}
 }

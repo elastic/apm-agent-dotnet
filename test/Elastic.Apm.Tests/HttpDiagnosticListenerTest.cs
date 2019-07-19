@@ -46,7 +46,7 @@ namespace Elastic.Apm.Tests
 		private static int ProcessingRequestsCount(IDiagnosticListener listener) =>
 			DispatchToImpl(listener, impl => impl.ProcessingRequests.Count, impl => impl.ProcessingRequests.Count);
 
-		private static Span GetSpanForRequest(IDiagnosticListener listener, object request) =>
+		private static ISpan GetSpanForRequest(IDiagnosticListener listener, object request) =>
 			DispatchToImpl(
 				listener,
 				impl => impl.ProcessingRequests[(HttpRequestMessage)request],
@@ -61,7 +61,7 @@ namespace Elastic.Apm.Tests
 		public void OnErrorLog()
 		{
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger));
+			var agent = new ApmAgent(new TestAgentComponents(logger: logger));
 			var listener = HttpDiagnosticListener.New(agent);
 
 			var exceptionMessage = "Ooops, this went wrong";
@@ -87,7 +87,7 @@ namespace Elastic.Apm.Tests
 		public void OnNextWithStart()
 		{
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger));
+			var agent = new ApmAgent(new TestAgentComponents(logger: logger));
 			StartTransaction(agent);
 			var listener = HttpDiagnosticListener.New(agent);
 
@@ -111,7 +111,7 @@ namespace Elastic.Apm.Tests
 		{
 			var logger = new TestLogger();
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(logger, payloadSender: payloadSender));
+			var agent = new ApmAgent(new TestAgentComponents(logger: logger, payloadSender: payloadSender));
 			StartTransaction(agent);
 			var listener = HttpDiagnosticListener.New(agent);
 
@@ -140,7 +140,7 @@ namespace Elastic.Apm.Tests
 		{
 			var logger = new TestLogger(LogLevel.Warning);
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(logger, payloadSender: payloadSender));
+			var agent = new ApmAgent(new TestAgentComponents(logger: logger, payloadSender: payloadSender));
 			StartTransaction(agent);
 			var listener = HttpDiagnosticListener.New(agent);
 
@@ -175,7 +175,7 @@ namespace Elastic.Apm.Tests
 		public void UnknownObjectToOnNext()
 		{
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger));
+			var agent = new ApmAgent(new TestAgentComponents(logger: logger));
 			var listener = HttpDiagnosticListener.New(agent);
 			var myFake = new StringBuilder(); //just a random type that is not planned to be passed into OnNext
 
@@ -193,7 +193,7 @@ namespace Elastic.Apm.Tests
 		public void NullValueToOnNext()
 		{
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger));
+			var agent = new ApmAgent(new TestAgentComponents(logger: logger));
 			var listener = HttpDiagnosticListener.New(agent);
 
 			var exception =
@@ -210,7 +210,7 @@ namespace Elastic.Apm.Tests
 		public void NullKeyValueToOnNext()
 		{
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger));
+			var agent = new ApmAgent(new TestAgentComponents(logger: logger));
 			var listener = HttpDiagnosticListener.New(agent);
 
 			var exception =

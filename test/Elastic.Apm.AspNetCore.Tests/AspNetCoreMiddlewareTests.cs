@@ -36,9 +36,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(AspNetCoreMiddlewareTests));
 			_factory = factory;
 
-			//The agent is instantiated with ApmMiddlewareExtension.GetService, so we can also test the calculation of the service instance.
-			//(e.g. ASP.NET Core version)
-			_agent = new ApmAgent(new TestAgentComponents(new TestAgentConfigurationReader(_logger)));
+			AgentSingletonUtils.EnsureInstanceCreated();
+			_agent = new ApmAgent(new TestAgentComponents(logger: _logger, configurationReader: new TestAgentConfigurationReader(_logger),
+				currentExecutionSegmentHolder: Agent.Instance.TracerInternal.CurrentExecutionSegmentHolder));
 			ApmMiddlewareExtension.UpdateServiceInformation(_agent.Service);
 
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;

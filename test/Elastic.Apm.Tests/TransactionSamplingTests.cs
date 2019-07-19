@@ -1,4 +1,3 @@
-using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
@@ -13,9 +12,8 @@ namespace Elastic.Apm.Tests
 		public void SpansSentOnlyForSampledTransaction(bool isSampled)
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, sampler: new Sampler(isSampled ? 1.0 : 0.0))))
 			{
-				agent.TracerInternal.Sampler = new Sampler(isSampled ? 1.0 : 0.0);
 				agent.Tracer.CaptureTransaction("test transaction name", "test transaction type",
 					transaction =>
 						transaction.CaptureSpan("test span name", "test span type", span => { })

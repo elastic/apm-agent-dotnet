@@ -125,13 +125,13 @@ namespace Elastic.Apm.Model
 
 		public override string ToString() => new ToStringBuilder(nameof(Span))
 		{
-			{ "Id", Id },
-			{ "TransactionId", TransactionId },
-			{ "ParentId", ParentId },
-			{ "TraceId", TraceId },
-			{ "Name", Name },
-			{ "Type", Type },
-			{ "IsSampled", IsSampled }
+			{ nameof(Id), Id },
+			{ nameof(TransactionId), TransactionId },
+			{ nameof(ParentId), ParentId },
+			{ nameof(TraceId), TraceId },
+			{ nameof(Name), Name },
+			{ nameof(Type), Type },
+			{ nameof(IsSampled), IsSampled }
 		}.ToString();
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Web;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
@@ -11,11 +10,11 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 
-
 namespace Elastic.Apm.AspNetFullFramework
 {
 	public class ElasticApmModule : IHttpModule
 	{
+		private static readonly IApmAgent AgentSingleton;
 		private static readonly bool IsCaptureHeadersEnabled;
 		private static readonly IApmLogger Logger;
 
@@ -38,15 +37,16 @@ namespace Elastic.Apm.AspNetFullFramework
 			SetServiceInformation(agentComponents.Service, aspNetVersion);
 
 			Agent.Setup(agentComponents);
+			AgentSingleton = Agent.Instance;
 
-			IsCaptureHeadersEnabled = Agent.Instance.ConfigurationReader.CaptureHeaders;
+			IsCaptureHeadersEnabled = AgentSingleton.ConfigurationReader.CaptureHeaders;
 
-			Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
+			AgentSingleton.Subscribe(new HttpDiagnosticsSubscriber());
 		}
 
 		// We can store current transaction because each IHttpModule is used for at most one request at a time
 		// For example see https://bytes.com/topic/asp-net/answers/324305-httpmodule-multithreading-request-response-corelation
-		private Transaction _currentTransaction;
+		private ITransaction _currentTransaction;
 
 		private HttpApplication _httpApp;
 		private static Version IisVersion => HttpRuntime.IISVersion;
@@ -115,17 +115,14 @@ namespace Elastic.Apm.AspNetFullFramework
 						"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData} - continuing trace",
 						TraceParent.TraceParentHeaderName, distributedTracingData);
 
-				_currentTransaction = Agent.Instance.TracerInternal.StartTransactionInternal(
-					$"{httpRequest.HttpMethod} {httpRequest.Path}",
-					ApiConstants.TypeRequest,
+				_currentTransaction = AgentSingleton.Tracer.StartTransaction($"{httpRequest.HttpMethod} {httpRequest.Path}", ApiConstants.TypeRequest,
 					distributedTracingData);
 			}
 			else
 			{
 				Logger.Debug()?.Log("Incoming request doesn't have valid incoming distributed tracing data - starting trace with new trace id.");
-				_currentTransaction = Agent.Instance.TracerInternal.StartTransactionInternal(
-					$"{httpRequest.HttpMethod} {httpRequest.Path}",
-					ApiConstants.TypeRequest);
+				_currentTransaction =
+					AgentSingleton.Tracer.StartTransaction($"{httpRequest.HttpMethod} {httpRequest.Path}", ApiConstants.TypeRequest);
 			}
 
 			if (_currentTransaction.IsSampled) FillSampledTransactionContextRequest(httpRequest, _currentTransaction);
@@ -231,7 +228,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				Headers = IsCaptureHeadersEnabled ? ConvertHeaders(httpResponse.Headers) : null
 			};
 
-		private void FillSampledTransactionContextUser(HttpContext httpCtx, Transaction transaction)
+		private void FillSampledTransactionContextUser(HttpContext httpCtx, ITransaction transaction)
 		{
 			var userIdentity = httpCtx.User?.Identity;
 			if (userIdentity == null || !userIdentity.IsAuthenticated) return;
@@ -254,6 +251,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				var versionInfoType = typeof(HttpRuntime).Assembly.GetType("System.Web.Util.VersionInfo");
 				var engineVersionProperty = versionInfoType.GetProperty("EngineVersion",
 					BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+				// ReSharper disable once PossibleNullReferenceException
 				result = (string)engineVersionProperty.GetValue(null);
 			}
 			catch (Exception ex)

@@ -38,7 +38,7 @@ namespace Elastic.Apm.Tests
 		{
 			var serverUrl = "InvalidUrl";
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger, serverUrl));
+			var agent = new ApmAgent(new TestAgentComponents(logger: logger, serverUrls: serverUrl));
 			agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultValues.ServerUri);
 
 			logger.Lines.Should().NotBeEmpty();
@@ -64,7 +64,7 @@ namespace Elastic.Apm.Tests
 			var serverUrls = $"{serverUrl1},{serverUrl2}";
 
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger, serverUrls));
+			var agent = new ApmAgent(new TestAgentComponents(logger: logger, serverUrls: serverUrls));
 
 			var parsedUrls = agent.ConfigurationReader.ServerUrls;
 			parsedUrls[0].OriginalString.Should().Be(serverUrl1);
@@ -86,7 +86,7 @@ namespace Elastic.Apm.Tests
 			var serverUrl3 = "http://myServer2.com:1234";
 			var serverUrls = $"{serverUrl1},{serverUrl2},{serverUrl3}";
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger, serverUrls));
+			var agent = new ApmAgent(new TestAgentComponents(logger: logger, serverUrls: serverUrls));
 
 			var parsedUrls = agent.ConfigurationReader.ServerUrls;
 			parsedUrls.Should().NotBeEmpty().And.HaveCount(2, "seeded 3 but one was invalid");

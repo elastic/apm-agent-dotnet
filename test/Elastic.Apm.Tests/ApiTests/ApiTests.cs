@@ -120,7 +120,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			const string transactionName = TestTransaction;
 			using (var agent = new ApmAgent(new TestAgentComponents()))
 			{
-				StartTransaction(agent); //Start transaction on the current task
+				agent.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest); //Start transaction on the current task
 				await DoAsyncWork(agent); //Do work in subtask
 
 				var currentTransaction = agent.Tracer.CurrentTransaction; //Get transaction in the current task
@@ -128,12 +128,6 @@ namespace Elastic.Apm.Tests.ApiTests
 				currentTransaction.Should().NotBeNull();
 				currentTransaction.Name.Should().Be(transactionName);
 				currentTransaction.Type.Should().Be(ApiConstants.TypeRequest);
-			}
-
-			void StartTransaction(ApmAgent agent)
-			{
-				Agent.TransactionContainer.Transactions.Value =
-					new Transaction(agent, transactionName, ApiConstants.TypeRequest);
 			}
 
 			async Task DoAsyncWork(ApmAgent agent)
@@ -567,9 +561,8 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			ITransaction capturedTransaction = null;
 			IExecutionSegment errorCapturingExecutionSegment = null;
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, sampler: new Sampler(isSampled ? 1 : 0))))
 			{
-				agent.TracerInternal.Sampler = new Sampler(isSampled ? 1 : 0);
 				agent.Tracer.CaptureTransaction(TestTransaction, CustomTransactionTypeForTests, transaction =>
 				{
 					capturedTransaction = transaction;

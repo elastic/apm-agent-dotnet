@@ -107,7 +107,7 @@ namespace SampleAspNetCoreApp.Controllers
 
 		public IActionResult TriggerError()
 		{
-			Agent.Tracer.CurrentTransaction.Tags["foo"] = "bar";
+			if (Agent.Tracer.CurrentTransaction != null) Agent.Tracer.CurrentTransaction.Tags["foo"] = "bar";
 			throw new Exception("This is a test exception!");
 		}
 
@@ -116,13 +116,14 @@ namespace SampleAspNetCoreApp.Controllers
 
 		public IActionResult TransactionWithCustomName()
 		{
-			Agent.Tracer.CurrentTransaction.Name = "custom";
+			if (Agent.Tracer.CurrentTransaction != null) Agent.Tracer.CurrentTransaction.Name = "custom";
 			return Ok();
 		}
 
 		public IActionResult TransactionWithCustomNameUsingRequestInfo()
 		{
-			Agent.Tracer.CurrentTransaction.Name = $"{HttpContext.Request.Method} {HttpContext.Request.Path}";
+			if (Agent.Tracer.CurrentTransaction != null)
+				Agent.Tracer.CurrentTransaction.Name = $"{HttpContext.Request.Method} {HttpContext.Request.Path}";
 			return Ok();
 		}
 

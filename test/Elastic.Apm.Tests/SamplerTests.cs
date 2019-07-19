@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
@@ -61,12 +60,14 @@ namespace Elastic.Apm.Tests
 
 			var sampledCount = 0;
 			var noopLogger = new NoopLogger();
+			var currentExecutionSegmentHolder = new CurrentExecutionSegmentHolder(noopLogger);
 			var noopPayloadSender = new NoopPayloadSender();
 			var sampler = new Sampler(rate);
 
 			total.Repeat(i =>
 			{
-				var transaction = new Transaction(noopLogger, "test transaction name", "test transaction type", sampler, null, noopPayloadSender);
+				var transaction = new Transaction(noopLogger, currentExecutionSegmentHolder, "test transaction name", "test transaction type",
+					sampler, /* distributedTracingData: */ null, noopPayloadSender);
 				if (transaction.IsSampled) ++sampledCount;
 				if (i + 1 >= startCheckingAfter)
 				{

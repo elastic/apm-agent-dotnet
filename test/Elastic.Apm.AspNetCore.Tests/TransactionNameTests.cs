@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
@@ -23,7 +24,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public TransactionNameTests(WebApplicationFactory<Startup> factory)
 		{
 			_factory = factory;
-			_agent = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender));
+
+			AgentSingletonUtils.EnsureInstanceCreated();
+			_agent = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender,
+				currentExecutionSegmentHolder: Agent.Instance.TracerInternal.CurrentExecutionSegmentHolder));
 			ApmMiddlewareExtension.UpdateServiceInformation(_agent.Service);
 		}
 
@@ -49,7 +53,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task CustomTransactionName()
 		{
 			var httpClient = Helper.GetClient(_agent, _factory);
-			await httpClient.GetAsync($"home/TransactionWithCustomName");
+			await httpClient.GetAsync("home/TransactionWithCustomName");
 
 			_payloadSender.Transactions.Should().OnlyContain(n => n.Name == "custom");
 		}
@@ -64,7 +68,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task CustomTransactionNameWithNameUsingRequestInfo()
 		{
 			var httpClient = Helper.GetClient(_agent, _factory);
-			await httpClient.GetAsync($"home/TransactionWithCustomNameUsingRequestInfo");
+			await httpClient.GetAsync("home/TransactionWithCustomNameUsingRequestInfo");
 
 			_payloadSender.Transactions.Should().OnlyContain(n => n.Name == "GET /home/TransactionWithCustomNameUsingRequestInfo");
 		}
