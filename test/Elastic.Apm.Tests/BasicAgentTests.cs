@@ -87,6 +87,33 @@ namespace Elastic.Apm.Tests
 			authHeader.Parameter.Should().Be(secretToken);
 		}
 
+		[Fact]
+		public async Task PayloadSentWithProperUserAgent()
+		{
+			var isRequestFinished = new TaskCompletionSource<object>();
+
+			HttpHeaderValueCollection<ProductInfoHeaderValue> userAgentHeader = null;
+			var handler = new MockHttpMessageHandler((r, c) =>
+			{
+				userAgentHeader = r.Headers.UserAgent;
+				isRequestFinished.SetResult(null);
+				return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+			});
+
+			var logger = ConsoleLogger.Instance;
+			var service = Service.GetDefaultService(new TestAgentConfigurationReader(logger), logger);
+			var payloadSender = new PayloadSenderV2(logger, new TestAgentConfigurationReader(logger),
+				service, new Api.System(), handler);
+
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType", new TestAgentConfigurationReader(logger)));
+			}
+
+			await isRequestFinished.Task;
+			userAgentHeader.Should().ContainSingle(x => x.Product.Name == "elasticapm-dotnet" && x.Product.Version == service.Agent.Version);
+		}
+
 		/// <summary>
 		/// Creates 1 span and 1 transaction.
 		/// Makes sure that the ids have the correct lengths.
