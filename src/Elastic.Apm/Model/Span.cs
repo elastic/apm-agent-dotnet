@@ -48,7 +48,7 @@ namespace Elastic.Apm.Model
 
 			if (IsSampled)
 				// Started spans should be counted only for sampled transactions
-				enclosingTransaction.SpanCount.Started++;
+				enclosingTransaction.SpanCount.IncrementStarted();
 
 			_logger.Trace()
 				?.Log("New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp})",
