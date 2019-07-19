@@ -157,40 +157,24 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void DefaultLogLevelTest() => Agent.Config.LogLevel.Should().Be(LogLevel.Error);
 
-		[Fact]
-		public void SetDebugLogLevelTest()
+		[Theory]
+		[InlineData("Debug", LogLevel.Debug)]
+		[InlineData("Information", LogLevel.Information)]
+		[InlineData("Warning", LogLevel.Warning)]
+		[InlineData("Error", LogLevel.Error)]
+		public void SetLogLevelTest(string logLevel, LogLevel level)
 		{
-			var agent = new ApmAgent(new TestAgentComponents("Debug"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Debug);
-			agent.Logger.IsEnabled(LogLevel.Debug).Should().BeTrue();
-			agent.Logger.IsEnabled(LogLevel.Trace).Should().BeFalse();
-		}
+			var agent = new ApmAgent(new TestAgentComponents(logLevel));
 
-		[Fact]
-		public void SetErrorLogLevelTest()
-		{
-			var agent = new ApmAgent(new TestAgentComponents("Error"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Error);
-			agent.Logger.IsEnabled(LogLevel.Error).Should().BeTrue();
-			agent.Logger.IsEnabled(LogLevel.Warning).Should().BeFalse();
-		}
+			agent.ConfigurationReader.LogLevel.Should().Be(level);
 
-		[Fact]
-		public void SetInfoLogLevelTest()
-		{
-			var agent = new ApmAgent(new TestAgentComponents("Information"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Information);
-			agent.Logger.IsEnabled(LogLevel.Information).Should().BeTrue();
-			agent.Logger.IsEnabled(LogLevel.Debug).Should().BeFalse();
-		}
-
-		[Fact]
-		public void SetWarningLogLevelTest()
-		{
-			var agent = new ApmAgent(new TestAgentComponents("Warning"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Warning);
-			agent.Logger.IsEnabled(LogLevel.Warning).Should().BeTrue();
-			agent.Logger.IsEnabled(LogLevel.Information).Should().BeFalse();
+			foreach (LogLevel enumValue in Enum.GetValues(typeof(LogLevel)))
+			{
+				if (level <= enumValue)
+					agent.Logger.IsEnabled(enumValue).Should().BeTrue();
+				else
+					agent.Logger.IsEnabled(enumValue).Should().BeFalse();
+			}
 		}
 
 		[Fact]
