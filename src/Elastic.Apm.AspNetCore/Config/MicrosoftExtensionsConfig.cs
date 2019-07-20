@@ -24,6 +24,7 @@ namespace Elastic.Apm.AspNetCore.Config
 			internal const string CaptureHeaders = "ElasticApm:CaptureHeaders";
 			internal const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
 			internal const string MetricsInterval = "ElasticApm:MetricsInterval";
+			internal const string CaptureBody = "ElasticApm:CaptureBody";
 		}
 
 		private readonly IConfiguration _configuration;
@@ -62,6 +63,8 @@ namespace Elastic.Apm.AspNetCore.Config
 		public double TransactionSampleRate => ParseTransactionSampleRate(ReadFallBack(Keys.TransactionSampleRate, ConfigConsts.EnvVarNames.TransactionSampleRate));
 
 		public double MetricsIntervalInMillisecond  => ParseMetricsInterval(ReadFallBack(Keys.MetricsInterval , ConfigConsts.EnvVarNames.MetricsInterval));
+
+		public string CaptureBody => ParseCaptureBody(ReadFallBack(Keys.CaptureBody, ConfigConsts.EnvVarNames.CaptureBody));
 
 		private ConfigurationKeyValue Read(string key) => Kv(key, _configuration[key], Origin);
 

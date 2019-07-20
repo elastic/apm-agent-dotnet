@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Elastic.Apm.Logging;
+using static Elastic.Apm.Config.ConfigConsts;
 
 namespace Elastic.Apm.Config
 {
@@ -321,6 +322,26 @@ namespace Elastic.Apm.Config
 			}
 
 			return true;
+		}
+
+		protected string ParseCaptureBody(ConfigurationKeyValue kv)
+		{
+			var captureBodyInConfig = kv.Value;
+			if (string.IsNullOrEmpty(captureBodyInConfig))
+			{
+				return ConfigConsts.SupportedValues.CaptureBodyOff;
+			}
+
+			if (!SupportedValues.CaptureBodySupportedValues.Contains(captureBodyInConfig.ToLowerInvariant()))
+			{
+				Logger?.Error()
+				?.Log("The CaptureBody value that was provided ('{DefaultServiceName}') in the configuration is not allowed. request body will not be captured." +
+					"The supported values are : ",
+					captureBodyInConfig.ToLowerInvariant(), string.Join(", ", SupportedValues.CaptureBodySupportedValues));
+				return DefaultValues.captureBody;
+			}
+
+			return captureBodyInConfig.ToLowerInvariant();
 		}
 	}
 }

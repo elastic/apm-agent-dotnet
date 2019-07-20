@@ -13,5 +13,6 @@ namespace Elastic.Apm.Config
 		bool CaptureHeaders { get; }
 		double TransactionSampleRate { get; }
 		double MetricsIntervalInMillisecond { get; }
+		string CaptureBody { get; }
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
@@ -44,6 +45,7 @@ namespace Elastic.Apm.AspNetCore
 		public async Task InvokeAsync(HttpContext context)
 		{
 			Transaction transaction;
+			
 			var transactionName = $"{context.Request.Method} {context.Request.Path}";
 
 			if (context.Request.Headers.ContainsKey(TraceParent.TraceParentHeaderName))
@@ -144,6 +146,19 @@ namespace Elastic.Apm.AspNetCore
 					requestHeaders.Add(header.Key, header.Value.ToString());
 			}
 
+			string body = null;
+			//If 'CaptureBody' is not 'off' and 
+			if (hasBody(context.Request) &&
+				(_configurationReader.CaptureBody == ConfigConsts.SupportedValues.CAPTURE_BODY_ALL ||
+				_configurationReader.CaptureBody == ConfigConsts.SupportedValues.CAPTURE_BODY_TRANSACTIONS) 
+				)
+			{
+				using (var reader = new StreamReader(context.Request.Body))
+				{
+					body = reader.ReadToEnd().Substring(0, Consts.RequestBodyMaxLength);
+				}
+			}
+
 			transaction.Context.Request = new Request(context.Request.Method, url)
 			{
 				Socket = new Socket
@@ -152,7 +167,8 @@ namespace Elastic.Apm.AspNetCore
 					RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
 				},
 				HttpVersion = GetHttpVersion(context.Request.Protocol),
-				Headers = requestHeaders
+				Headers = requestHeaders,
+				Body = body
 			};
 		}
 
@@ -265,5 +281,7 @@ namespace Elastic.Apm.AspNetCore
 					return protocolString.Replace("HTTP/", string.Empty);
 			}
 		}
+
+		private bool hasBody(HttpRequest request) => request.Body != null;
 	}
 }

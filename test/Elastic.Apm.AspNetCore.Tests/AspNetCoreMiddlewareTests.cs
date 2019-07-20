@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
@@ -101,6 +104,86 @@ namespace Elastic.Apm.AspNetCore.Tests
 			//test transaction.context.request
 			transaction.Context.Request.HttpVersion.Should().Be("2.0");
 			transaction.Context.Request.Method.Should().Be("GET");
+
+			//test transaction.context.request.url
+			transaction.Context.Request.Url.Full.Should().Be(response.RequestMessage.RequestUri.AbsoluteUri);
+			transaction.Context.Request.Url.HostName.Should().Be("localhost");
+			transaction.Context.Request.Url.Protocol.Should().Be("HTTP");
+
+			if (_agent.ConfigurationReader.CaptureHeaders)
+			{
+				transaction.Context.Request.Headers.Should().NotBeNull();
+				transaction.Context.Request.Headers.Should().NotBeEmpty();
+
+				transaction.Context.Request.Headers.Should().ContainKeys(headerKey);
+				transaction.Context.Request.Headers[headerKey].Should().Be(headerValue);
+			}
+
+			//test transaction.context.request.encrypted
+			transaction.Context.Request.Socket.Encrypted.Should().BeFalse();
+		}
+
+		/// <summary>
+		/// Simulates an HTTP POST call to /home/simplePage and asserts on what the agent should send to the server
+		/// to test the 'CaptureBody' config option
+		/// </summary>
+		[Fact]
+		public async Task HomeSimplePagePostTransactionTest()
+		{
+			var headerKey = "X-Additional-Header";
+			var headerValue = "For-Elastic-Apm-Agent";
+			_client.DefaultRequestHeaders.Add(headerKey, headerValue);
+			_client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+			var jsonString = "{\"id\" : \"1\"}";
+			var response = await _client.PostAsync("/api/Values/1", new StringContent(jsonString, Encoding.UTF8, "application/json"));
+
+			//test service
+			//The POST action should add a new item and the redirect
+			//to Home/Index so we should have 2 trxs.
+			_capturedPayload.Transactions.Should().ContainSingle();
+
+			_agent.Service.Name.Should()
+				.NotBeNullOrWhiteSpace()
+				.And.NotBe(ConfigConsts.DefaultValues.UnknownServiceName);
+
+			_agent.Service.Agent.Name.Should().Be(Apm.Consts.AgentName);
+			var apmVersion = typeof(Agent).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+			_agent.Service.Agent.Version.Should().Be(apmVersion);
+
+			_agent.Service.Framework.Name.Should().Be("ASP.NET Core");
+
+			var aspNetCoreVersion = Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString();
+			_agent.Service.Framework.Version.Should().Be(aspNetCoreVersion);
+
+			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
+			_agent.Service.Runtime.Version.Should().Be(Directory.GetParent(typeof(object).Assembly.Location).Name);
+
+			//_capturedPayload.Transactions.Should().ContainSingle();
+			var transaction = _capturedPayload.FirstTransaction;
+			var transactionName = "POST Values/Post {id}";
+			transaction.Name.Should().Be(transactionName);
+			transaction.Result.Should().Be("HTTP 2xx"); 
+			transaction.Duration.Should().BeGreaterThan(0);
+
+			transaction.Type.Should().Be("request");
+			transaction.Id.Should().NotBeEmpty();
+
+			//test transaction.context.response
+			transaction.Context.Response.StatusCode.Should().Be(200);
+			if (_agent.ConfigurationReader.CaptureHeaders)
+			{
+				transaction.Context.Response.Headers.Should().NotBeNull();
+				transaction.Context.Response.Headers.Should().NotBeEmpty();
+			}
+
+			if (_agent.ConfigurationReader.CaptureBody != "off")
+			{
+				transaction.Context.Request.Body.Should().NotBeNull();
+			}
+
+			//test transaction.context.request
+			transaction.Context.Request.HttpVersion.Should().Be("2.0");
+			transaction.Context.Request.Method.Should().Be("POST");
 
 			//test transaction.context.request.url
 			transaction.Context.Request.Url.Full.Should().Be(response.RequestMessage.RequestUri.AbsoluteUri);

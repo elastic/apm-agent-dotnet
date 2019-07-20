@@ -19,6 +19,7 @@ namespace Elastic.Apm.Tests
 			public bool CaptureHeaders { get; }
 			public double TransactionSampleRate { get; }
 			public double MetricsIntervalInMillisecond { get; }
+			public string CaptureBody { get; }
 		}
 
 		///<summary>

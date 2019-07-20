@@ -120,11 +120,25 @@ namespace Elastic.Apm.Tests
 		public void DefaultCaptureHeadersTest() => Agent.Config.CaptureHeaders.Should().Be(true);
 
 		[Fact]
+		public void DefaultCaptureBodyTest() => Agent.Config.CaptureBody.Should().Be(ConfigConsts.DefaultValues.captureBody);
+
+		[Fact]
 		public void SetCaptureHeadersTest()
 		{
 			Environment.SetEnvironmentVariable(EnvVarNames.CaptureHeaders, "false");
 			var config = new EnvironmentConfigurationReader();
 			config.CaptureHeaders.Should().Be(false);
+		}
+
+		[Fact]
+		public void SetCaptureBodyTest()
+		{
+			//Possible values : "off", "all", "errors", "transactions"
+			foreach (var value in SupportedValues.CaptureBodySupportedValues){
+				Environment.SetEnvironmentVariable(EnvVarNames.CaptureBody, value);
+				var config = new EnvironmentConfigurationReader();
+				config.CaptureBody.Should().Be(value);
+			}
 		}
 
 		[Fact]
