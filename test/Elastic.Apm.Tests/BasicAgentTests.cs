@@ -113,8 +113,10 @@ namespace Elastic.Apm.Tests
 			await isRequestFinished.Task;
 			userAgentHeader.Should()
 				.NotBeEmpty()
-				.And.HaveCount(1)
-				.And.ContainInOrder(new ProductInfoHeaderValue($"elasticapm-{Consts.AgentName}", service.Agent.Version));
+				.And.HaveCount(2)
+				.And.ContainInOrder(
+					new ProductInfoHeaderValue($"elasticapm-{Consts.AgentName}", service.Agent.Version),
+					new ProductInfoHeaderValue("http-lib", typeof(HttpClient).Assembly.GetName().Version.ToString()));
 		}
 
 		/// <summary>
