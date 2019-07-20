@@ -104,12 +104,13 @@ namespace Elastic.Apm.Config
 			}
 
 			if (list.Count > 1)
-				Logger?.Warning()?.Log(nameof(ConfigConsts.EnvVarNames.ServerUrls)
-					+ " configuration option contains more than one URL which is not supported by the agent yet"
-					+ " - only the first URL will be used."
-					+ " Configuration option's source: {Origin}, key: `{Key}', value: `{Value}'."
-					+ " The first URL: `{ApmServerUrl}'",
-					kv.ReadFrom, kv.Key, kv.Value, list.First());
+				Logger?.Warning()
+					?.Log(nameof(ConfigConsts.EnvVarNames.ServerUrls)
+						+ " configuration option contains more than one URL which is not supported by the agent yet"
+						+ " - only the first URL will be used."
+						+ " Configuration option's source: {Origin}, key: `{Key}', value: `{Value}'."
+						+ " The first URL: `{ApmServerUrl}'",
+						kv.ReadFrom, kv.Key, kv.Value, list.First());
 
 			return list.Count == 0 ? LogAndReturnDefault().AsReadOnly() : list.AsReadOnly();
 
@@ -303,18 +304,10 @@ namespace Elastic.Apm.Config
 			return null;
 		}
 
-		internal static string AdaptServiceName(string originalName)
-		{
-			var serviceNameRegex = new Regex("^[a-zA-Z0-9 _-]+$");
-			var adaptedName = originalName?.Replace('.', '_');
-
-			if (adaptedName != null && serviceNameRegex.IsMatch(adaptedName))
-			{
-				return adaptedName;
-			}
-
-			return null;
-		}
+		internal static string AdaptServiceName(string originalName) =>
+			originalName != null
+				? Regex.Replace(originalName, "[^a-zA-Z0-9 _-]", "_")
+				: null;
 
 		protected string ParseServiceName(ConfigurationKeyValue kv)
 		{
@@ -323,20 +316,15 @@ namespace Elastic.Apm.Config
 			{
 				var adaptedServiceName = AdaptServiceName(nameInConfig);
 
-				if (adaptedServiceName != null)
+				if (nameInConfig == adaptedServiceName)
+					Logger?.Warning()?.Log("Service name provided in configuration is {ServiceName}", nameInConfig);
+				else
 				{
-					if (nameInConfig == adaptedServiceName)
-						Logger?.Warning()?.Log("Service name provided in configuration is {ServiceName}", nameInConfig);
-					else
-					{
-						Logger?.Warning()
-							?.Log("Service name provided in configuration ({ServiceNameInConfiguration}) was adapted to {ServiceName}", nameInConfig,
-								adaptedServiceName);
-					}
-					return adaptedServiceName;
+					Logger?.Warning()
+						?.Log("Service name provided in configuration ({ServiceNameInConfiguration}) was adapted to {ServiceName}", nameInConfig,
+							adaptedServiceName);
 				}
-
-				Logger?.Error()?.Log("Service name provided in configuration doesn't fit constraints. Please, check documentation to find out all constraints for service name.");
+				return adaptedServiceName;
 			}
 
 			Logger?.Info()?.Log("The agent was started without a service name. The service name will be automatically discovered.");
