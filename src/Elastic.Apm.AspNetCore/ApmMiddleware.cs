@@ -146,11 +146,11 @@ namespace Elastic.Apm.AspNetCore
 					requestHeaders.Add(header.Key, header.Value.ToString());
 			}
 
-			string body = Consts.BodyRedacted; // According to the documentation - the default value of 'body' is '[Redacted]'
+			var body = Consts.BodyRedacted; // According to the documentation - the default value of 'body' is '[Redacted]'
 			//If 'CaptureBody' is not 'off' and 
 			if (hasBody(context.Request) &&
-				(_configurationReader.CaptureBody == ConfigConsts.SupportedValues.CAPTURE_BODY_ALL ||
-				_configurationReader.CaptureBody == ConfigConsts.SupportedValues.CAPTURE_BODY_TRANSACTIONS) 
+				(_configurationReader.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyAll) ||
+				_configurationReader.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyTransactions))
 				)
 			{
 				using (var reader = new StreamReader(context.Request.Body))

@@ -25,7 +25,7 @@ namespace Elastic.Apm.Config
 			public const string MetricsInterval = "30s";
 			public const int ApmServerPort = 8200;
 			public static Uri ServerUri => new Uri($"http://localhost:{ApmServerPort}");
-			public const string captureBody = "off";
+			public const string captureBody = SupportedValues.CaptureBodyOff;
 		}
 
 		public static class Constraints
