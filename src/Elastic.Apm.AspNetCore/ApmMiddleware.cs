@@ -155,7 +155,12 @@ namespace Elastic.Apm.AspNetCore
 			{
 				using (var reader = new StreamReader(context.Request.Body))
 				{
-					body = reader.ReadToEnd().Substring(0, Consts.RequestBodyMaxLength);
+					body = reader.ReadToEnd();
+					// Truncate the body to the first 2kb if it's longer
+					if (body.Length>Consts.RequestBodyMaxLength)
+					{
+						body = body.Substring(0, Consts.RequestBodyMaxLength);
+					}
 				}
 			}
 
