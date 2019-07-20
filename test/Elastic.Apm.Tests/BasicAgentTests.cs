@@ -111,7 +111,10 @@ namespace Elastic.Apm.Tests
 			}
 
 			await isRequestFinished.Task;
-			userAgentHeader.Should().ContainSingle(x => x.Product.Name == "elasticapm-dotnet" && x.Product.Version == service.Agent.Version);
+			userAgentHeader.Should()
+				.NotBeEmpty()
+				.And.HaveCount(1)
+				.And.ContainInOrder(new ProductInfoHeaderValue($"elasticapm-{Consts.AgentName}", service.Agent.Version));
 		}
 
 		/// <summary>

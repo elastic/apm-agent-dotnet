@@ -55,7 +55,7 @@ namespace Elastic.Apm.Report
 			servicePoint.ConnectionLimit = 20;
 
 			_httpClient = new HttpClient(handler ?? new HttpClientHandler()) { BaseAddress = serverUrlBase };
-			_httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(new ProductHeaderValue("elasticapm-dotnet", _service.Agent.Version)));
+			_httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(new ProductHeaderValue($"elasticapm-{Consts.AgentName}", _service.Agent.Version)));
 
 			if (configurationReader.SecretToken != null)
 			{
