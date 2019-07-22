@@ -28,20 +28,21 @@ namespace Elastic.Apm.SmartSql
 		{
 			switch (kv.Key)
 			{
-				case string k when k == SmartSqlDiagnosticListenerExtensions.SMART_SQL_BEFORE_COMMAND_EXECUTER_EXECUTE:
+				case string k when k == SmartSqlDiagnosticListenerExtensions.SMART_SQL_BEFORE_COMMAND_EXECUTER_EXECUTE
+					&& Agent.TransactionContainer.Transactions.Value != null:
 					if (kv.Value is CommandExecuterExecuteBeforeEventData executerExecuteBeforeEventData)
 					{
 						var newsSpan = Agent.TransactionContainer.Transactions.Value.StartSpanInternal(executerExecuteBeforeEventData.Operation,
 							ApiConstants.TypeDb);
-						newsSpan.Tags.Add("statement",executerExecuteBeforeEventData.ExecutionContext.Request.RealSql);
 						_spans.TryAdd(executerExecuteBeforeEventData.OperationId, newsSpan);
 					}
 					break;
 
-				case string k when k==SmartSqlDiagnosticListenerExtensions.SMART_SQL_AFTER_COMMAND_EXECUTER_EXECUTE:
+				case string k when k == SmartSqlDiagnosticListenerExtensions.SMART_SQL_AFTER_COMMAND_EXECUTER_EXECUTE
+					&& Agent.TransactionContainer.Transactions.Value != null:
 					if (kv.Value is CommandExecuterExecuteAfterEventData commandExecutedEventData)
 					{
-						if (_spans.TryRemove(commandExecutedEventData.OperationId,out var span))
+						if (_spans.TryRemove(commandExecutedEventData.OperationId, out var span))
 						{
 							span.Context.Db = new Database
 							{
@@ -49,21 +50,8 @@ namespace Elastic.Apm.SmartSql
 								Instance = commandExecutedEventData.ExecutionContext.Request.DataSourceChoice.ToString(),
 								Type = Database.TypeSql
 							};
-							span.Tags.Add("fromcache", commandExecutedEventData.ExecutionContext.Result.FromCache.ToString());
-							var dbConnection = commandExecutedEventData.ExecutionContext.DbSession.Connection;
-							if (dbConnection == null)
-							{
-								return;
-							}
-							if (dbConnection.DataSource != null)
-							{
-								span.Tags.Add("Peer",dbConnection.DataSource);
-							}
-							if (dbConnection.Database != null)
-							{
-								span.Tags.Add("instance", dbConnection.Database);
-							}
-
+							//indicate the result is from cache or db
+							span.Tags.Add("ResultFromCache", commandExecutedEventData.ExecutionContext.Result.FromCache.ToString());
 							span.Subtype = commandExecutedEventData.ExecutionContext.DbSession.Connection.GetType().FullName;
 							switch (commandExecutedEventData.ExecutionContext.Request.CommandType)
 							{
@@ -85,7 +73,6 @@ namespace Elastic.Apm.SmartSql
 					}
 
 					break;
-
 			}
 		}
 	}
