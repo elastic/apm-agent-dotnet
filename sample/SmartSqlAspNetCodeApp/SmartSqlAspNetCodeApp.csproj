@@ -1,20 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>netcoreapp2.2</TargetFramework>
+        <TargetFramework>netcoreapp2.1</TargetFramework>
         <DebugType>full</DebugType>
     </PropertyGroup>
 
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
-        <PackageReference Include="Microsoft.AspNetCore.CookiePolicy" Version="2.2.0" />
-        <PackageReference Include="Microsoft.AspNetCore.HttpsPolicy" Version="2.2.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="2.2.0" />
-        <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
-        <PackageReference Include="SmartSql.DIExtension" Version="4.0.76" />
-        <PackageReference Include="SmartSql.DyRepository" Version="4.0.76" />
+        <PackageReference Include="Microsoft.AspNetCore" Version="2.1.0" />
+        <PackageReference Include="Microsoft.AspNetCore.CookiePolicy" Version="2.1.0" />
+        <PackageReference Include="Microsoft.AspNetCore.HttpsPolicy" Version="2.1.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.1.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="2.1.0" />
+        <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.1.0" />
+        <PackageReference Include="SmartSql.DIExtension" Version="4.0.86" />
+        <PackageReference Include="SmartSql.DyRepository" Version="4.0.86" />
         <PackageReference Include="SmartSql.TypeHandler.PostgreSql" Version="4.0.76" />
         <PackageReference Include="System.Data.SqlClient" Version="4.6.1" />
     </ItemGroup>
@@ -32,6 +32,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
+      <ProjectReference Include="..\..\src\Elastic.Apm.NetCoreAll\Elastic.Apm.NetCoreAll.csproj" />
       <ProjectReference Include="..\..\src\Elastic.Apm.SmartSql\Elastic.Apm.SmartSql.csproj" />
     </ItemGroup>
 

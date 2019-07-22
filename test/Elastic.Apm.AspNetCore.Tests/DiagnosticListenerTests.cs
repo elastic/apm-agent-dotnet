@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.EntityFrameworkCore;
+using Elastic.Apm.SmartSql;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -26,7 +27,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
 
 			//This registers the middleware without activating any listeners,
-			//so no error capturing and no EFCore listener.
+			//so no error capturing and no SmartSql listener.
 			_client = Helper.GetClientWithoutDiagnosticListeners(_agent, factory);
 		}
 
@@ -94,6 +95,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			_capturedPayload.SpansOnFirstTransaction.Should().BeEmpty();
 		}
+
 
 		public void Dispose()
 		{

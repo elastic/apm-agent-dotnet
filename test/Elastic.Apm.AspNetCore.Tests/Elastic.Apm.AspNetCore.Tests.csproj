@@ -20,8 +20,10 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="2.1.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\sample\SmartSqlAspNetCodeApp\SmartSqlAspNetCodeApp.csproj" />
     <ProjectReference Include="..\..\sample\WebApiSample\WebApiSample.csproj" />
     <ProjectReference Include="..\..\src\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\src\Elastic.Apm.SmartSql\Elastic.Apm.SmartSql.csproj" />
     <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
     <ProjectReference Include="..\..\sample\SampleAspNetCoreApp\SampleAspNetCoreApp.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />

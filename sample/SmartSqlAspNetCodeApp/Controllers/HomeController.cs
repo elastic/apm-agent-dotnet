@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Elastic.Apm;
 using Microsoft.AspNetCore.Mvc;
 using SmartSql;
+using SmartSqlAspNetCodeApp.Entity;
 using SmartSqlAspNetCodeApp.Models;
 
 namespace SmartSqlAspNetCodeApp.Controllers
@@ -24,7 +26,18 @@ namespace SmartSqlAspNetCodeApp.Controllers
 				Scope = "Member",
 				SqlId = "GetEntity"
 			});
+
+			_sqlMapper.Query<Member>(new RequestContext
+			{
+
+			});
 			return View();
+		}
+
+		public IActionResult TriggerError()
+		{
+			Agent.Tracer.CurrentTransaction.Tags["foo"] = "bar";
+			throw new Exception("This is a test exception!");
 		}
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.EntityFrameworkCore;
+using Elastic.Apm.SmartSql;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 
@@ -24,6 +25,6 @@ namespace Elastic.Apm.NetCoreAll
 			this IApplicationBuilder builder,
 			IConfiguration configuration = null
 		) => AspNetCore.ApmMiddlewareExtension
-			.UseElasticApm(builder, configuration, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
+			.UseElasticApm(builder, configuration, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber(),new SmartSqlDiagnosticsSubscriber());
 	}
 }

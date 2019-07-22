@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Elastic.Apm.AspNetCore;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.NetCoreAll;
 using Elastic.Apm.SmartSql;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -33,7 +34,12 @@ namespace SmartSqlAspNetCodeApp
 				options.CheckConsentNeeded = context => true;
 				options.MinimumSameSitePolicy = SameSiteMode.None;
 			});
+			ConfigureServicesExceptMvc(services);
+			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);;
+		}
 
+		public static void ConfigureServicesExceptMvc(IServiceCollection services)
+		{
 			services.AddSmartSql(builder =>
 			{
 				builder.UseAlias("Test");
@@ -41,13 +47,13 @@ namespace SmartSqlAspNetCodeApp
 			});
 
 
-			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 		{
 			app.UseElasticApm(Configuration,new IDiagnosticsSubscriber[] {new SmartSqlDiagnosticsSubscriber()});
+			//app.UseAllElasticApm(Configuration);
 			if (env.IsDevelopment())
 			{
 				app.UseDeveloperExceptionPage();
