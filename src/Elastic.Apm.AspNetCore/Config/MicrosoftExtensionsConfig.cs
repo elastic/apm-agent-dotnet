@@ -44,7 +44,7 @@ namespace Elastic.Apm.AspNetCore.Config
 			internal const string SecretToken = "ElasticApm:SecretToken";
 			internal const string ServerUrls = "ElasticApm:ServerUrls";
 			internal const string ServiceName = "ElasticApm:ServiceName";
-			internal const string SpanFramesMinDuration = "ElasticApm:SpanFrameMinDuration";
+			internal const string SpanFramesMinDuration = "ElasticApm:SpanFramesMinDuration";
 			internal const string StackTraceLimit = "ElasticApm:StackTraceLimit";
 			internal const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
 		}

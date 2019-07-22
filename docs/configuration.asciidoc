@@ -244,3 +244,49 @@ If set to `true`,
 the agent will capture request and response headers, including cookies.
 
 NOTE: Setting this to `false` reduces network bandwidth, disk space and object allocations.
+
+[[config-stacktrace]]
+=== Stacktrace configuration options
+[float]
+[[config-stack-trace-limit]]
+==== `StackTraceLimit` (performance)
+
+Setting it to 0 will disable stack trace collection. Any positive integer value will be used as the maximum number of frames to collect. Setting it to -1 means that all frames will be collected.
+
+[options="header"]
+|============
+| Default                          | Type
+| `50` | Integer
+|============
+
+[options="header"]
+|============
+| Environment variable name     | IConfiguration key
+| `ELASTIC_APM_STACK_TRACE_LIMIT` | `ElasticApm:StackTraceLimit`
+|============
+
+[float]
+[[config-span-frames-min-duration]]
+==== `SpanFramesMinDuration` (performance)
+
+In its default settings, the APM agent will collect a stack trace with every recorded span.
+While this is very helpful to find the exact place in your code that causes the span, collecting this stack trace does have some overhead. 
+When setting this option to a negative value, like `-1ms`, stack traces will be collected for all spans. Setting it to a positive value, e.g. `5ms`, will limit stack trace collection to spans with durations equal or longer than the given value, e.g. 5 milliseconds.
+
+To disable stack trace collection for spans completely, set the value to `0ms`.
+
+Supports the duration suffixes `ms`, `s` and `m`.
+Example: `5ms`.
+The default unit for this option is `ms`
+
+[options="header"]
+|============
+| Default                          | Type
+| `5ms` | TimeDuration
+|============
+
+[options="header"]
+|============
+| Environment variable name     | IConfiguration key
+| `ELASTIC_APM_SPAN_FRAMES_MIN_DURATION` | `ElasticApm:SpanFramesMinDuration`
+|============
