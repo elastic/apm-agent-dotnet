@@ -245,6 +245,45 @@ namespace Elastic.Apm.AspNetCore.Tests
 			tags.Should().NotBeEmpty().And.ContainKey("foo").And.Contain("foo", "bar");
 		}
 
+		/// <summary>
+		/// Configures an ASP.NET Core application without an error page.
+		/// With other words: there is no error page with an exception handler configured in the ASP.NET Core pipeline.
+		/// Makes sure that we still capture the failed request along with the request body
+		/// </summary>
+		[Fact]
+		public async Task FailingPostRequestWithoutConfiguredExceptionPage()
+		{
+			_client = Helper.GetClientWithoutExceptionPage(_agent, _factory);
+
+			_client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+			
+			var body = "{\"id\" : \"1\"}";
+			Func<Task> act = async () => await _client.PostAsync("api/Home/PostError", new StringContent(body, Encoding.UTF8, "application/json"));
+
+			//await _client.GetAsync("Home/TriggerError");
+			await act.Should().ThrowAsync<Exception>();
+
+			_capturedPayload.Transactions.Should().ContainSingle();
+			_capturedPayload.Errors.Should().NotBeEmpty();
+			_capturedPayload.Errors.Should().ContainSingle();
+
+			var error = _capturedPayload.Errors[0] as Error;
+			error.Should().NotBeNull();
+
+			var errorDetail = error?.Exception;
+			errorDetail.Should().NotBeNull();
+			errorDetail.Message.Should().Be("This is a post method test exception!");
+			errorDetail.Type.Should().Be(typeof(Exception).FullName);
+			errorDetail.Handled.Should().BeFalse();
+
+			//Verify the url, method and also that the body is correctly captured
+			var context = error.Context;
+			context.Request.Url.Full.Should().Be("http://localhost/api/Home/PostError");
+			context.Request.Method.Should().Be(HttpMethod.Post.Method);
+			context.Request.Body.Should().Be(body);
+		}
+
+
 		public void Dispose()
 		{
 			_agent?.Dispose();

@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Routing;
 using Elastic.Apm.AspNetCore.Extensions;
+using Elastic.Apm.AspNetCore.Helpers;
 
 [assembly:
 	InternalsVisibleTo(
@@ -91,7 +92,12 @@ namespace Elastic.Apm.AspNetCore
 			{
 				await _next(context);
 			}
-			catch (Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
+			catch (Exception e) when(ExceptionFilter.Capture(e, transaction)) {
+				if (AgentConfigHelper.ShouldExtractRequestBodyOnError()) 
+				{
+					transaction.CollectRequestInfo(context, _logger);
+				}
+			}
 			finally
 			{
 				if (!transaction.HasCustomName)
@@ -148,9 +154,9 @@ namespace Elastic.Apm.AspNetCore
 			}
 
 			var body = Consts.BodyRedacted; // According to the documentation - the default value of 'body' is '[Redacted]'
-			if (ShouldExtractRequestBody())
+			if (AgentConfigHelper.ShouldExtractRequestBodyOnTransactios())
 			{
-				body = context.Request.extractRequestBody(_logger);
+				body = context.Request.ExtractRequestBody(_logger);
 			}
 
 			transaction.Context.Request = new Request(context.Request.Method, url)
@@ -275,11 +281,5 @@ namespace Elastic.Apm.AspNetCore
 					return protocolString.Replace("HTTP/", string.Empty);
 			}
 		}
-
-		// Checks if according to the configuration and existance of request body - the Apm agent should
-		// extract the request body for logging.
-		private bool ShouldExtractRequestBody() => (_configurationReader.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyAll) ||
-				_configurationReader.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyTransactions));
-
 	}
 }

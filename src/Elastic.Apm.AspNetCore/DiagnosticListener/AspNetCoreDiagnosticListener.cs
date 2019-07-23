@@ -6,6 +6,7 @@ using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
 using Microsoft.AspNetCore.Http;
 using Elastic.Apm.AspNetCore.Extensions;
+using Elastic.Apm.AspNetCore.Helpers;
 
 namespace Elastic.Apm.AspNetCore.DiagnosticListener
 {
@@ -36,23 +37,12 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 			var httpContext = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("httpContext").GetValue(kv.Value) as HttpContext;
 
-			CollectRequestInfo(httpContext, transaction);
-		}
-
-		// Collect necessary fields based on config & request state
-		// Checks if according to the configuration and existance of request body - the Apm agent should
-		// extract the request body for logging.
-		private bool ShouldExtractRequestBody() => (Agent.Config.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyAll) ||
-				Agent.Config.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyErrors));
-
-		private void CollectRequestInfo(HttpContext httpContext, Model.Transaction transaction)
-		{
-			var body = Consts.BodyRedacted; // According to the documentation - the default value of 'body' is '[Redacted]'
-			if (httpContext?.Request != null && ShouldExtractRequestBody())
+			if (AgentConfigHelper.ShouldExtractRequestBodyOnError())
 			{
-				body = httpContext.Request.extractRequestBody(_logger);
+				transaction.CollectRequestInfo(httpContext, _logger);
 			}
-			transaction.Context.Request.Body = string.IsNullOrEmpty(body) ? Consts.BodyRedacted : body;
 		}
+
+		
 	}
 }
