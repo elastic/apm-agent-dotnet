@@ -17,7 +17,8 @@ namespace Elastic.Apm.Tests.Mocks
 			string secretToken = null,
 			string captureHeaders = null,
 			string transactionSampleRate = null,
-			IPayloadSender payloadSender = null
+			IPayloadSender payloadSender = null,
+			string captureBody = ConfigConsts.SupportedValues.CaptureBodyOff
 		)
 			: this(new TestAgentConfigurationReader(
 				new TestLogger(ParseWithoutLogging(logLevel)),
@@ -25,7 +26,8 @@ namespace Elastic.Apm.Tests.Mocks
 				secretToken: secretToken,
 				captureHeaders: captureHeaders,
 				logLevel: logLevel,
-				transactionSampleRate: transactionSampleRate
+				transactionSampleRate: transactionSampleRate,
+				captureBody :  captureBody
 			), payloadSender)
 		{
 		}

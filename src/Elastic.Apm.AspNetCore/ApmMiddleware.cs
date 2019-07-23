@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Routing;
+using Elastic.Apm.AspNetCore.Extensions;
 
 [assembly:
 	InternalsVisibleTo(
@@ -147,21 +148,9 @@ namespace Elastic.Apm.AspNetCore
 			}
 
 			var body = Consts.BodyRedacted; // According to the documentation - the default value of 'body' is '[Redacted]'
-			//If 'CaptureBody' is not 'off' and 
-			if (hasBody(context.Request) &&
-				(_configurationReader.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyAll) ||
-				_configurationReader.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyTransactions))
-				)
+			if (ShouldExtractRequestBody())
 			{
-				using (var reader = new StreamReader(context.Request.Body))
-				{
-					body = reader.ReadToEnd();
-					// Truncate the body to the first 2kb if it's longer
-					if (body.Length>Consts.RequestBodyMaxLength)
-					{
-						body = body.Substring(0, Consts.RequestBodyMaxLength);
-					}
-				}
+				body = context.Request.extractRequestBody(_logger);
 			}
 
 			transaction.Context.Request = new Request(context.Request.Method, url)
@@ -173,7 +162,7 @@ namespace Elastic.Apm.AspNetCore
 				},
 				HttpVersion = GetHttpVersion(context.Request.Protocol),
 				Headers = requestHeaders,
-				Body = body
+				Body = (string.IsNullOrEmpty(body) ? Consts.BodyRedacted : body)
 			};
 		}
 
@@ -287,6 +276,10 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		private bool hasBody(HttpRequest request) => request.Body != null;
+		// Checks if according to the configuration and existance of request body - the Apm agent should
+		// extract the request body for logging.
+		private bool ShouldExtractRequestBody() => (_configurationReader.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyAll) ||
+				_configurationReader.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyTransactions));
+
 	}
 }

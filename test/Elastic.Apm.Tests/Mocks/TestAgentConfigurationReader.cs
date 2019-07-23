@@ -27,7 +27,7 @@ namespace Elastic.Apm.Tests.Mocks
 			string captureHeaders = null,
 			string transactionSampleRate = null,
 			string metricsInterval = null,
-			string captureBody = "all"
+			string captureBody = ConfigConsts.SupportedValues.CaptureBodyOff
 		) : base(logger)
 		{
 			Logger = logger ?? new TestLogger();

@@ -134,12 +134,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var headerValue = "For-Elastic-Apm-Agent";
 			_client.DefaultRequestHeaders.Add(headerKey, headerValue);
 			_client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-			var jsonString = "{\"id\" : \"1\"}";
-			var response = await _client.PostAsync("/api/Values/1", new StringContent(jsonString, Encoding.UTF8, "application/json"));
 
-			//test service
-			//The POST action should add a new item and the redirect
-			//to Home/Index so we should have 2 trxs.
+			var body = "{\"id\" : \"1\"}";
+			var response = await _client.PostAsync("api/Home/Post", new StringContent(body, Encoding.UTF8, "application/json"));
+
 			_capturedPayload.Transactions.Should().ContainSingle();
 
 			_agent.Service.Name.Should()
@@ -158,9 +156,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
 			_agent.Service.Runtime.Version.Should().Be(Directory.GetParent(typeof(object).Assembly.Location).Name);
 
-			//_capturedPayload.Transactions.Should().ContainSingle();
+			_capturedPayload.Transactions.Should().ContainSingle();
 			var transaction = _capturedPayload.FirstTransaction;
-			var transactionName = "POST Values/Post {id}";
+			var transactionName = "POST Home/Post";
 			transaction.Name.Should().Be(transactionName);
 			transaction.Result.Should().Be("HTTP 2xx"); 
 			transaction.Duration.Should().BeGreaterThan(0);
@@ -179,6 +177,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			if (_agent.ConfigurationReader.CaptureBody != "off")
 			{
 				transaction.Context.Request.Body.Should().NotBeNull();
+				transaction.Context.Request.Body.Should().Be(body);
 			}
 
 			//test transaction.context.request

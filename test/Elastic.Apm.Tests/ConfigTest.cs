@@ -120,7 +120,20 @@ namespace Elastic.Apm.Tests
 		public void DefaultCaptureHeadersTest() => Agent.Config.CaptureHeaders.Should().Be(true);
 
 		[Fact]
-		public void DefaultCaptureBodyTest() => Agent.Config.CaptureBody.Should().Be(ConfigConsts.DefaultValues.captureBody);
+		public void CaptureBodyConfigTest()
+		{
+			var agent = new ApmAgent(new TestAgentComponents(captureBody: ConfigConsts.SupportedValues.CaptureBodyOff));
+			agent.ConfigurationReader.CaptureBody.Should().Be(ConfigConsts.SupportedValues.CaptureBodyOff);
+
+			agent = new ApmAgent(new TestAgentComponents(captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			agent.ConfigurationReader.CaptureBody.Should().Be(ConfigConsts.SupportedValues.CaptureBodyAll);
+
+			agent = new ApmAgent(new TestAgentComponents(captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors));
+			agent.ConfigurationReader.CaptureBody.Should().Be(ConfigConsts.SupportedValues.CaptureBodyErrors);
+
+			agent = new ApmAgent(new TestAgentComponents(captureBody: ConfigConsts.SupportedValues.CaptureBodyTransactions));
+			agent.ConfigurationReader.CaptureBody.Should().Be(ConfigConsts.SupportedValues.CaptureBodyTransactions);
+		}
 
 		[Fact]
 		public void SetCaptureHeadersTest()
