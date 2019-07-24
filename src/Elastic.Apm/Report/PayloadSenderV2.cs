@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,7 +46,7 @@ namespace Elastic.Apm.Report
 		{
 			_service = service;
 			_system = system;
-			_metadata = new Metadata { Service = _service, System = _system};
+			_metadata = new Metadata { Service = _service, System = _system };
 			_logger = logger?.Scoped(nameof(PayloadSenderV2));
 
 			var serverUrlBase = configurationReader.ServerUrls.First();
@@ -57,7 +58,7 @@ namespace Elastic.Apm.Report
 			_httpClient = new HttpClient(handler ?? new HttpClientHandler()) { BaseAddress = serverUrlBase };
 			_httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue($"elasticapm-{Consts.AgentName}", _service.Agent.Version));
 			_httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("system.net.http",
-				typeof(HttpClient).Assembly.GetName().Version.ToString()));
+				typeof(HttpClient).Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version));
 
 			if (configurationReader.SecretToken != null)
 			{
