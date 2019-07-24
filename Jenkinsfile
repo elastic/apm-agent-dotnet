@@ -267,35 +267,6 @@ pipeline {
               }
             }
           }
-          /**
-          Build the documentation.
-          */
-          stage('Documentation') {
-            agent { label 'linux && immutable' }
-            options { skipDefaultCheckout() }
-            environment {
-              HOME = "${env.WORKSPACE}"
-            }
-            when {
-              beforeAgent true
-              anyOf {
-                branch 'master'
-                branch "\\d+\\.\\d+"
-                branch "v\\d?"
-                tag "\\d+\\.\\d+\\.\\d+*"
-                expression { return params.Run_As_Master_Branch }
-              }
-            }
-            steps {
-              withGithubNotify(context: 'Documentation', tab: 'artifacts') {
-                deleteDir()
-                unstash 'source'
-                dir("${BASE_DIR}"){
-                  buildDocs(docsDir: "docs", archive: true)
-                }
-              }
-            }
-          }
           stage('Release to AppVeyor') {
             agent { label 'linux && immutable' }
             options { skipDefaultCheckout() }
