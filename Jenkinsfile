@@ -92,6 +92,7 @@ pipeline {
                   }
                   post {
                     always {
+                      sh label: 'debugging', script: 'find . -name *.pdb'
                       junit(allowEmptyResults: false,
                         keepLongStdio: true,
                         testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
@@ -262,35 +263,6 @@ pipeline {
                   always {
                     cleanWs(disableDeferredWipeout: true, notFailBuild: true)
                   }
-                }
-              }
-            }
-          }
-          /**
-          Build the documentation.
-          */
-          stage('Documentation') {
-            agent { label 'linux && immutable' }
-            options { skipDefaultCheckout() }
-            environment {
-              HOME = "${env.WORKSPACE}"
-            }
-            when {
-              beforeAgent true
-              anyOf {
-                branch 'master'
-                branch "\\d+\\.\\d+"
-                branch "v\\d?"
-                tag "\\d+\\.\\d+\\.\\d+*"
-                expression { return params.Run_As_Master_Branch }
-              }
-            }
-            steps {
-              withGithubNotify(context: 'Documentation', tab: 'artifacts') {
-                deleteDir()
-                unstash 'source'
-                dir("${BASE_DIR}"){
-                  buildDocs(docsDir: "docs", archive: true)
                 }
               }
             }

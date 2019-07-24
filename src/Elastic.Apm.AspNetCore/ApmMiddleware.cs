@@ -92,7 +92,8 @@ namespace Elastic.Apm.AspNetCore
 			{
 				await _next(context);
 			}
-			catch (Exception e) when(ExceptionFilter.Capture(e, transaction)) {
+			catch (Exception e) {
+				ExceptionFilter.Capture(e, transaction);
 				if (AgentConfigHelper.ShouldExtractRequestBodyOnError()) 
 				{
 					transaction.CollectRequestInfo(context, _logger);
