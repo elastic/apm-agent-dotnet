@@ -72,7 +72,7 @@ namespace Elastic.Apm.Tests
 			});
 
 			const string secretToken = "SecretToken";
-			var logger = ConsoleLogger.Instance;
+			var logger = new NoopLogger();
 			var payloadSender = new PayloadSenderV2(logger, new TestAgentConfigurationReader(logger, secretToken: secretToken),
 				Service.GetDefaultService(new TestAgentConfigurationReader(logger), logger), new Api.System(), handler);
 
@@ -100,7 +100,7 @@ namespace Elastic.Apm.Tests
 				return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
 			});
 
-			var logger = ConsoleLogger.Instance;
+			var logger = new NoopLogger();
 			var service = Service.GetDefaultService(new TestAgentConfigurationReader(logger), logger);
 			var payloadSender = new PayloadSenderV2(logger, new TestAgentConfigurationReader(logger),
 				service, new Api.System(), handler);

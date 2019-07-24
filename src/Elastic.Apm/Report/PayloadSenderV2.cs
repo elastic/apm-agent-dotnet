@@ -56,7 +56,7 @@ namespace Elastic.Apm.Report
 
 			_httpClient = new HttpClient(handler ?? new HttpClientHandler()) { BaseAddress = serverUrlBase };
 			_httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue($"elasticapm-{Consts.AgentName}", _service.Agent.Version));
-			_httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("http-lib",
+			_httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("system.net.http",
 				typeof(HttpClient).Assembly.GetName().Version.ToString()));
 
 			if (configurationReader.SecretToken != null)
