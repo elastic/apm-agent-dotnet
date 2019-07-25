@@ -23,15 +23,15 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// </summary>
 	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
 	public class AspNetCoreMiddlewareTests
-		: IClassFixture<WebApplicationFactory<Startup>>, IDisposable
+		: IClassFixture<WebApplicationFactory<SampleAspNetCoreApp.Startup>>, IDisposable
 	{
 		private readonly ApmAgent _agent;
 		private readonly MockPayloadSender _capturedPayload;
-		private readonly WebApplicationFactory<Startup> _factory;
+		private readonly WebApplicationFactory<SampleAspNetCoreApp.Startup> _factory;
 		// ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
 		private readonly IApmLogger _logger;
 
-		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper)
+		public AspNetCoreMiddlewareTests(WebApplicationFactory<SampleAspNetCoreApp.Startup> factory, ITestOutputHelper xUnitOutputHelper)
 		{
 			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(AspNetCoreMiddlewareTests));
 			_factory = factory;

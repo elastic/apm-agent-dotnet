@@ -27,10 +27,12 @@ namespace SmartSqlAspNetCodeApp.Controllers
 				SqlId = "GetEntity"
 			});
 
-			_sqlMapper.Query<Member>(new RequestContext
-			{
-
-			});
+//			_sqlMapper.Query<Member>(new RequestContext
+//			{
+//				Request = new {Id=1},
+//				Scope = "Member",
+//				SqlId = "Query"
+//			});
 			return View();
 		}
 

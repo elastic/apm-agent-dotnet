@@ -15,11 +15,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// Tests the <see cref="Elastic.Apm.AspNetCore.DiagnosticListener.AspNetCoreDiagnosticListener" /> type.
 	/// </summary>
 	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
-	public class AspNetCoreDiagnosticListenerTest : IClassFixture<WebApplicationFactory<Startup>>
+	public class AspNetCoreDiagnosticListenerTest : IClassFixture<WebApplicationFactory<SampleAspNetCoreApp.Startup>>
 	{
-		private readonly WebApplicationFactory<Startup> _factory;
+		private readonly WebApplicationFactory<SampleAspNetCoreApp.Startup> _factory;
 
-		public AspNetCoreDiagnosticListenerTest(WebApplicationFactory<Startup> factory) => _factory = factory;
+		public AspNetCoreDiagnosticListenerTest(WebApplicationFactory<SampleAspNetCoreApp.Startup> factory) => _factory = factory;
 
 		/// <summary>
 		/// Triggers /Home/TriggerError from the sample app

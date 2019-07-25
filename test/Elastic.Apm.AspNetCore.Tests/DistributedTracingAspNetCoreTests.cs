@@ -39,7 +39,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_taskForApp1 = Program.CreateWebHostBuilder(null)
 				.ConfigureServices(services =>
 					{
-						Startup.ConfigureServicesExceptMvc(services);
+						SampleAspNetCoreApp.Startup.ConfigureServicesExceptMvc(services);
 
 						services.AddMvc()
 							.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))))
@@ -50,7 +50,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				{
 					app.UseElasticApm(_agent1, new TestLogger(),
 						new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
-					Startup.ConfigureAllExceptAgent(app);
+					SampleAspNetCoreApp.Startup.ConfigureAllExceptAgent(app);
 				})
 				.UseUrls("http://localhost:5901")
 				.Build()

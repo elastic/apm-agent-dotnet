@@ -17,6 +17,7 @@
         <PackageReference Include="SmartSql.DyRepository" Version="4.0.86" />
         <PackageReference Include="SmartSql.TypeHandler.PostgreSql" Version="4.0.76" />
         <PackageReference Include="System.Data.SqlClient" Version="4.6.1" />
+        <PackageReference Include="System.Data.SQLite" Version="1.0.111" />
     </ItemGroup>
 
 
@@ -27,6 +28,9 @@
       <None Update="Maps\T_Member.xml">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+      <None Update="DB\SmartSql.db">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 
@@ -34,6 +38,11 @@
       <ProjectReference Include="..\..\src\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
       <ProjectReference Include="..\..\src\Elastic.Apm.NetCoreAll\Elastic.Apm.NetCoreAll.csproj" />
       <ProjectReference Include="..\..\src\Elastic.Apm.SmartSql\Elastic.Apm.SmartSql.csproj" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <Folder Include="DB" />
     </ItemGroup>
 
 </Project>

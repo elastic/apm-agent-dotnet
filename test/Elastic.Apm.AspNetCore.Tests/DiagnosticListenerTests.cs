@@ -16,12 +16,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// Tests subscribing and unsubscribing from diagnostic source events.
 	/// </summary>
 	[Collection("DiagnosticListenerTest")]
-	public class DiagnosticListenerTests : IClassFixture<WebApplicationFactory<Startup>>, IDisposable
+	public class DiagnosticListenerTests : IClassFixture<WebApplicationFactory<SampleAspNetCoreApp.Startup>>, IDisposable
 	{
 		private readonly ApmAgent _agent;
 		private readonly MockPayloadSender _capturedPayload;
 
-		public DiagnosticListenerTests(WebApplicationFactory<Startup> factory)
+		public DiagnosticListenerTests(WebApplicationFactory<SampleAspNetCoreApp.Startup> factory)
 		{
 			_agent = new ApmAgent(new TestAgentComponents());
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;

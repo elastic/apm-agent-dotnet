@@ -139,9 +139,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// </summary>
 	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
 	public class MicrosoftExtensionsConfigIntegrationTests
-		: IClassFixture<WebApplicationFactory<Startup>>, IDisposable
+		: IClassFixture<WebApplicationFactory<SampleAspNetCoreApp.Startup>>, IDisposable
 	{
-		public MicrosoftExtensionsConfigIntegrationTests(WebApplicationFactory<Startup> factory)
+		public MicrosoftExtensionsConfigIntegrationTests(WebApplicationFactory<SampleAspNetCoreApp.Startup> factory)
 		{
 			_factory = factory;
 			_logger = new TestLogger();
@@ -160,7 +160,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		private readonly ApmAgent _agent;
 		private readonly HttpClient _client;
-		private readonly WebApplicationFactory<Startup> _factory;
+		private readonly WebApplicationFactory<SampleAspNetCoreApp.Startup> _factory;
 		private readonly TestLogger _logger;
 
 		/// <summary>

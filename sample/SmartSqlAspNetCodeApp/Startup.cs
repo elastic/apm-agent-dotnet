@@ -53,17 +53,12 @@ namespace SmartSqlAspNetCodeApp
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 		{
 			app.UseElasticApm(Configuration,new IDiagnosticsSubscriber[] {new SmartSqlDiagnosticsSubscriber()});
-			//app.UseAllElasticApm(Configuration);
-			if (env.IsDevelopment())
-			{
-				app.UseDeveloperExceptionPage();
-			}
-			else
-			{
-				app.UseExceptionHandler("/Home/Error");
-				// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-				app.UseHsts();
-			}
+			ConfigureAllExceptAgent(app);
+		}
+
+		public static void ConfigureAllExceptAgent(IApplicationBuilder app)
+		{
+			app.UseDeveloperExceptionPage();
 
 			app.UseHttpsRedirection();
 			app.UseStaticFiles();
@@ -72,8 +67,8 @@ namespace SmartSqlAspNetCodeApp
 			app.UseMvc(routes =>
 			{
 				routes.MapRoute(
-					name: "default",
-					template: "{controller=Home}/{action=Index}/{id?}");
+					"default",
+					"{controller=Home}/{action=Index}/{id?}");
 			});
 		}
 	}

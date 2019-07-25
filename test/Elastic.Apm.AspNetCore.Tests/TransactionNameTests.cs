@@ -14,7 +14,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// E.g. url localhost/user/info/1 should get have Transaction.Name GET user/info {id}
 	/// </summary>
 	[Collection("DiagnosticListenerTest")]
-	public class TransactionNameTests : IClassFixture<WebApplicationFactory<Startup>>, IDisposable
+	public class TransactionNameTests : IClassFixture<WebApplicationFactory<SampleAspNetCoreApp.Startup>>, IDisposable
 	{
 		private readonly ApmAgent _agent;
 		private readonly WebApplicationFactory<Startup> _factory;

@@ -4,10 +4,13 @@
     IsWatchConfigFile="true" IgnoreParameterCase="true"
   />
   <Database>
-    <!--ParameterPrefix:[SqlServer:@ | MySQL:? |Oracle::| SQLite:@] -->
+    <!--ParameterPrefix:[SqlServer:@ | MySQL:? |Oracle::] -->
     <DbProvider Name="SQLite" ParameterPrefix="@"/>
     <Write Name="WriteDB" ConnectionString="Data Source=DB/SmartSql.db"/>
   </Database>
+<!--  <TypeHandlers>-->
+<!--    <TypeHandler Name="Json" Type="SmartSql.TypeHandler.PostgreSql.JsonTypeHandler,SmartSql.TypeHandler.PostgreSql"/>-->
+<!--  </TypeHandlers>-->
   <SmartSqlMaps>
 	  <SmartSqlMap Path="Maps" Type="Directory"/>
   </SmartSqlMaps>

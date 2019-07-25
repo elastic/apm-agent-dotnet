@@ -9,22 +9,22 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using SmartSqlAspNetCodeApp;
 using Xunit;
 
-namespace Elastic.Apm.AspNetCore.Tests
+namespace Elastic.Apm.SmartSql.Tests
 {
 	/// <summary>
 	/// Tests subscribing and unsubscribing from diagnostic source events.
 	/// </summary>
 	[Collection("DiagnosticListenerTest")]
-	public class DiagnosticListenerSmartSqlTests : IClassFixture<WebApplicationFactory<Startup>>, IDisposable
+	public class DiagnosticListenerTest : IClassFixture<WebApplicationFactory<Startup>>, IDisposable
 	{
 		private readonly ApmAgent _agent;
 		private readonly MockPayloadSender _capturedPayload;
 
-		public DiagnosticListenerSmartSqlTests(WebApplicationFactory<Startup> factory)
+		public DiagnosticListenerTest(WebApplicationFactory<Startup> factory)
 		{
 			_agent = new ApmAgent(new TestAgentComponents());
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
-			_client = SmartSqlClientHelper.GetClientWithoutDiagnosticListeners(_agent, factory);
+			_client = Helper.GetClientWithoutDiagnosticListeners(_agent, factory);
 		}
 
 		private readonly HttpClient _client;
