@@ -11,7 +11,7 @@ Invoke-RestMethod "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-instal
 
 # Install NuGet Tool
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-Invoke-RestMethod "https://dist.nuget.org/win-x86-commandline/v5.1.0/nuget.exe" -OutFile dotnet\\nuget.exe ;
+Invoke-RestMethod "https://dist.nuget.org/win-x86-commandline/v4.9.4/nuget.exe" -OutFile dotnet\\nuget.exe ;
 
 & ./dotnet/nuget help
 
