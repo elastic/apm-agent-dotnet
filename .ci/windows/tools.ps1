@@ -9,7 +9,7 @@ Invoke-RestMethod "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-instal
 # Install .Net SDK'
 & ./dotnet-install.ps1 -Channel LTS -InstallDir ./dotnet -Version 2.1.505
 
-./dotnet/dotnet add package Microsoft.Build.NuGetSdkResolver --version 4.9.4-rtm.5839 --source https://dotnet.myget.org/F/nuget-build/api/v3/index.json
+./dotnet/dotnet add package Microsoft.Build.NuGetSdkResolver --version 4.9.4 --source https://dotnet.myget.org/F/nuget-build/api/v3/index.json
 
 # Install NuGet Tool
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -29,4 +29,4 @@ Install-WindowsFeature -Name Web-Server, Web-Mgmt-Tools ;
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 Invoke-RestMethod "https://github.com/microsoft/vswhere/releases/download/2.6.13%2Ba6d40ba5f4/vswhere.exe" -OutFile dotnet\\vswhere.exe ;
 
-choco install Microsoft.Build.NuGetSdkResolver --version 4.9.4-rtm.5839 --source https://dotnet.myget.org/F/nuget-build/api/v2
+choco install Microsoft.Build.NuGetSdkResolver --version 4.9.4 --source https://dotnet.myget.org/F/nuget-build/api/v2
