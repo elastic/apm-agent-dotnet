@@ -15,6 +15,10 @@ Invoke-RestMethod "https://dist.nuget.org/win-x86-commandline/v4.9.4/nuget.exe" 
 
 & ./dotnet/nuget help
 
+Import-Module PowerShellGet
+Register-PSRepository -Name "nuget-build" -SourceLocation "https://dotnet.myget.org/F/nuget-build/api/v2"
+Install-Module -Name "Microsoft.Build.NuGetSdkResolver" -RequiredVersion "4.9.4-rtm.5839" -Repository "nuget-build" -AllowPreRelease
+
 # Install IIS
 Install-WindowsFeature -Name Web-Server, Web-Mgmt-Tools ;
 
