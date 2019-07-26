@@ -22,8 +22,8 @@ Install-WindowsFeature -Name Web-Server, Web-Mgmt-Tools ;
 #[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 #Invoke-RestMethod "https://github.com/microsoft/vswhere/releases/download/2.6.13%2Ba6d40ba5f4/vswhere.exe" -OutFile dotnet\\vswhere.exe ;
 
-#& choco install microsoft-build-tools
-& choco install nugetpackageexplorer
-& choco install dotnetcore-sdk
-& choco install nuget.commandline
-& choco install vswhere
+#& choco install microsoft-build-tools -y --no-progress
+& choco install nugetpackageexplorer -y --no-progress
+& choco install dotnetcore-sdk -y --no-progress
+& choco install nuget.commandline -y --no-progress
+& choco install vswhere -y --no-progress
