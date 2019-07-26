@@ -25,5 +25,5 @@ Install-WindowsFeature -Name Web-Server, Web-Mgmt-Tools ;
 #& choco install microsoft-build-tools -y --no-progress -r 
 & choco install nugetpackageexplorer -y --no-progress -r
 & choco install dotnetcore-sdk -y --no-progress -r --version 2.1.801
-& choco install nuget.commandline -y --no-progress -r --version 4.9.4
+& choco install nuget.commandline -y --no-progress -r --version 4.6.2
 & choco install vswhere -y --no-progress -r 
