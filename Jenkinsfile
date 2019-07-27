@@ -6,6 +6,7 @@ pipeline {
   agent any
   environment {
     REPO = 'apm-agent-dotnet'
+    // keep it short to avoid the 248 characters PATH limit in Windows
     BASE_DIR = "apm-agent-dotnet"
     NOTIFY_TO = credentials('notify-to')
     JOB_GCS_BUCKET = credentials('gcs-bucket')
@@ -112,7 +113,6 @@ pipeline {
                   HOME = "${env.WORKSPACE}"
                   DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
                   VS_HOME = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise"
-//                  MSBuildSDKsPath = "${env.DOTNET_ROOT}\\sdk\\2.1.505\\Sdks"
                   PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
                   MSBUILDDEBUGPATH = "${env.WORKSPACE}"
                 }
@@ -191,7 +191,6 @@ pipeline {
                   HOME = "${env.WORKSPACE}"
                   DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
                   VS_HOME = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise"
-//                  MSBuildSDKsPath = "${env.DOTNET_ROOT}\\sdk\\2.1.505\\Sdks"
                   PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
                   MSBUILDDEBUGPATH = "${env.WORKSPACE}"
                 }
