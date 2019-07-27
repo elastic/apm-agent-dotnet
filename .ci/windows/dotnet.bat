@@ -6,4 +6,4 @@ dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFram
 dotnet sln remove test/Elastic.Apm.AspNetFullFramework.Tests/Elastic.Apm.AspNetFullFramework.Tests.csproj 
 
 dotnet restore --verbosity detailed 
-dotnet build --verbosity detailed -toolsversion:2.0
+dotnet build --verbosity detailed
