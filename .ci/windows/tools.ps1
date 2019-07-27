@@ -12,7 +12,6 @@
 # Install NuGet Tool
 #[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 #Invoke-RestMethod "https://dist.nuget.org/win-x86-commandline/v5.1.0/nuget.exe" -OutFile dotnet\\nuget.exe ;
-
 #& ./dotnet/nuget help
 
 # Install IIS
@@ -22,6 +21,6 @@ Install-WindowsFeature -Name Web-Server, Web-Mgmt-Tools ;
 #[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 #Invoke-RestMethod "https://github.com/microsoft/vswhere/releases/download/2.6.13%2Ba6d40ba5f4/vswhere.exe" -OutFile dotnet\\vswhere.exe ;
 
-#& choco install dotnetcore-sdk -y --no-progress -r --version 2.1.505
+& choco install dotnetcore-sdk -y --no-progress -r
 & choco install nuget.commandline -y --no-progress -r --version 5.1.0
 & choco install vswhere -y --no-progress -r 
