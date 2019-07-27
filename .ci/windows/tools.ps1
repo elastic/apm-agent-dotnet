@@ -3,15 +3,15 @@
 #
 
 # Download .Net SDK installer script
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-Invoke-RestMethod "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-install.ps1 ;
+#[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+#Invoke-RestMethod "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-install.ps1 ;
 
 ## Install .Net SDK' - 2.1.801 2.2.401
-& ./dotnet-install.ps1 -Channel LTS -InstallDir ./dotnet -Version 2.1.505
+#& ./dotnet-install.ps1 -Channel LTS -InstallDir ./dotnet -Version 2.1.505
 
 # Install NuGet Tool
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-Invoke-RestMethod "https://dist.nuget.org/win-x86-commandline/v5.1.0/nuget.exe" -OutFile dotnet\\nuget.exe ;
+#[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+#Invoke-RestMethod "https://dist.nuget.org/win-x86-commandline/v5.1.0/nuget.exe" -OutFile dotnet\\nuget.exe ;
 
 #& ./dotnet/nuget help
 
@@ -19,9 +19,9 @@ Invoke-RestMethod "https://dist.nuget.org/win-x86-commandline/v5.1.0/nuget.exe" 
 Install-WindowsFeature -Name Web-Server, Web-Mgmt-Tools ;
 
 # Install vswhere
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-Invoke-RestMethod "https://github.com/microsoft/vswhere/releases/download/2.6.13%2Ba6d40ba5f4/vswhere.exe" -OutFile dotnet\\vswhere.exe ;
+#[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+#Invoke-RestMethod "https://github.com/microsoft/vswhere/releases/download/2.6.13%2Ba6d40ba5f4/vswhere.exe" -OutFile dotnet\\vswhere.exe ;
 
 #& choco install dotnetcore-sdk -y --no-progress -r --version 2.1.505
-#& choco install nuget.commandline -y --no-progress -r --version 4.9.4
-#& choco install vswhere -y --no-progress -r 
+& choco install nuget.commandline -y --no-progress -r --version 5.1.0
+& choco install vswhere -y --no-progress -r 
