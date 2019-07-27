@@ -5,4 +5,5 @@ dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleA
 dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFramework.csproj
 dotnet sln remove test/Elastic.Apm.AspNetFullFramework.Tests/Elastic.Apm.AspNetFullFramework.Tests.csproj 
 
-dotnet build --verbosity detailed --force -c Release -r win-x64
+dotnet restore --verbosity detailed 
+dotnet build --verbosity detailed -toolsversion:2.0
