@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -42,7 +43,9 @@ namespace Elastic.Apm.Report
 		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler = new SingleThreadTaskScheduler(CancellationToken.None);
 		private readonly Metadata _metadata;
 
-		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, Api.System system, HttpMessageHandler handler = null)
+		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, Api.System system,
+			HttpMessageHandler handler = null
+		)
 		{
 			_service = service;
 			_system = system;
@@ -56,9 +59,12 @@ namespace Elastic.Apm.Report
 			servicePoint.ConnectionLimit = 20;
 
 			_httpClient = new HttpClient(handler ?? new HttpClientHandler()) { BaseAddress = serverUrlBase };
-			_httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue($"elasticapm-{Consts.AgentName}", _service.Agent.Version));
-			_httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("system.net.http",
-				typeof(HttpClient).Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version));
+			_httpClient.DefaultRequestHeaders.UserAgent.Add(
+				new ProductInfoHeaderValue($"elasticapm-{Consts.AgentName}", AdaptUserAgentValue(_service.Agent.Version)));
+			_httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("System.Net.Http",
+				AdaptUserAgentValue(typeof(HttpClient).Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version)));
+			_httpClient.DefaultRequestHeaders.UserAgent.Add(
+				new ProductInfoHeaderValue(AdaptUserAgentValue(_service.Runtime.Name), AdaptUserAgentValue(_service.Runtime.Version)));
 
 			if (configurationReader.SecretToken != null)
 			{
@@ -79,6 +85,10 @@ namespace Elastic.Apm.Report
 						_logger?.Debug()?.LogExceptionWithCaller(ex);
 					}
 				}, CancellationToken.None, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
+
+			// Replace invalid characters by underscore. All invalid characters can be found at
+			// https://github.com/dotnet/corefx/blob/e64cac6dcacf996f98f0b3f75fb7ad0c12f588f7/src/System.Net.Http/src/System/Net/Http/HttpRuleParser.cs#L41
+			string AdaptUserAgentValue(string value) => Regex.Replace(value, "[ /()<>@,:;={}?\\[\\]\"\\\\]", "_");
 		}
 
 		public void QueueTransaction(ITransaction transaction)

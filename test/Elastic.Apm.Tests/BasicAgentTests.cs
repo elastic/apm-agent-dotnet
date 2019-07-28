@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -111,12 +112,19 @@ namespace Elastic.Apm.Tests
 			}
 
 			await isRequestFinished.Task;
-			userAgentHeader.Should()
+			userAgentHeader
+				.Should()
 				.NotBeEmpty()
-				.And.HaveCount(2)
-				.And.ContainInOrder(
-					new ProductInfoHeaderValue($"elasticapm-{Consts.AgentName}", service.Agent.Version),
-					new ProductInfoHeaderValue("http-lib", typeof(HttpClient).Assembly.GetName().Version.ToString()));
+				.And.HaveCount(3);
+
+			userAgentHeader.First().Product.Name.Should().Be($"elasticapm-{Consts.AgentName}");
+			userAgentHeader.First().Product.Version.Should().NotBeEmpty();
+
+			userAgentHeader.Skip(1).First().Product.Name.Should().Be("System.Net.Http");
+			userAgentHeader.Skip(1).First().Product.Version.Should().NotBeEmpty();
+
+			userAgentHeader.Skip(2).First().Product.Name.Should().NotBeEmpty();
+			userAgentHeader.Skip(2).First().Product.Version.Should().NotBeEmpty();
 		}
 
 		/// <summary>
@@ -128,8 +136,10 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
 				agent.Tracer.CaptureTransaction("TestTransaction", "TestTransactionType",
 					(t) => { t.CaptureSpan("TestSpan", "TestSpanType", () => { }); });
+			}
 
 			StringToByteArray(payloadSender.FirstTransaction.Id).Should().HaveCount(8);
 			StringToByteArray(payloadSender.FirstTransaction.TraceId).Should().HaveCount(16);
