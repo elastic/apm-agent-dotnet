@@ -173,36 +173,24 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void DefaultLogLevelTest() => Agent.Config.LogLevel.Should().Be(LogLevel.Error);
 
-		[Fact]
-		public void SetDebugLogLevelTest()
+		[Theory]
+		[InlineData("Debug", LogLevel.Debug)]
+		[InlineData("Information", LogLevel.Information)]
+		[InlineData("Warning", LogLevel.Warning)]
+		[InlineData("Error", LogLevel.Error)]
+		public void SetLogLevelTest(string logLevel, LogLevel level)
 		{
-			var agent = new ApmAgent(new TestAgentComponents("Debug"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Debug);
-			agent.Logger.Level.Should().Be(LogLevel.Debug);
-		}
+			var agent = new ApmAgent(new TestAgentComponents(logLevel));
 
-		[Fact]
-		public void SetErrorLogLevelTest()
-		{
-			var agent = new ApmAgent(new TestAgentComponents("Error"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Error);
-			agent.Logger.Level.Should().Be(LogLevel.Error);
-		}
+			agent.ConfigurationReader.LogLevel.Should().Be(level);
 
-		[Fact]
-		public void SetInfoLogLevelTest()
-		{
-			var agent = new ApmAgent(new TestAgentComponents("Information"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Information);
-			agent.Logger.Level.Should().Be(LogLevel.Information);
-		}
-
-		[Fact]
-		public void SetWarningLogLevelTest()
-		{
-			var agent = new ApmAgent(new TestAgentComponents("Warning"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Warning);
-			agent.Logger.Level.Should().Be(LogLevel.Warning);
+			foreach (LogLevel enumValue in Enum.GetValues(typeof(LogLevel)))
+			{
+				if (level <= enumValue)
+					agent.Logger.IsEnabled(enumValue).Should().BeTrue();
+				else
+					agent.Logger.IsEnabled(enumValue).Should().BeFalse();
+			}
 		}
 
 		[Fact]
