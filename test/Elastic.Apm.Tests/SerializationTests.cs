@@ -111,8 +111,8 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Creates a db instance with a statement that is longer than <see cref="Consts.PropertyMaxLength" />.
-		/// Makes sure the statement is not truncated.
+		/// Creates a db instance with a statement that is longer than 10 000 characters.
+		/// Makes sure the statement is truncated.
 		/// </summary>
 		[Fact]
 		public void DbStatementLengthTest()
