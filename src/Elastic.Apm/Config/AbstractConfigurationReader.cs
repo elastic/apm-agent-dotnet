@@ -382,6 +382,13 @@ namespace Elastic.Apm.Config
 			return null;
 		}
 
+		protected string ParseEnvironment(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return null;
+
+			return kv.Value;
+		}
+
 		private static bool TryParseFloatingPoint(string valueAsString, out double result) =>
 			double.TryParse(valueAsString, NumberStyles.Float, CultureInfo.InvariantCulture, out result);
 

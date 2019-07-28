@@ -30,7 +30,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public void ReadValidConfigsFromAppSettingsJson()
 		{
 			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
-				new TestLogger());
+				new NoopLogger(), "test");
 			config.LogLevel.Should().Be(LogLevel.Debug);
 			config.ServerUrls[0].Should().Be(new Uri("http://myServerFromTheConfigFile:8080"));
 			config.ServiceName.Should().Be("My_Test_Application");
@@ -50,10 +50,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public void ReadInvalidLogLevelConfigFromAppsettingsJson()
 		{
 			var logger = new TestLogger();
-			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger);
+			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger,
+				"test");
 			config.LogLevel.Should().Be(LogLevel.Error);
 			logger.Lines.Should().NotBeEmpty();
-			logger.Lines[0].Should()
+			logger.Lines[0]
+				.Should()
 				.ContainAll(
 					$"{{{nameof(MicrosoftExtensionsConfig)}}}",
 					"Failed parsing log level from",
@@ -75,11 +77,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public void ReadInvalidServerUrlsConfigFromAppsettingsJson()
 		{
 			var logger = new TestLogger();
-			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger);
+			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger,
+				"test");
 			config.LogLevel.Should().Be(LogLevel.Error);
 
 			logger.Lines.Should().NotBeEmpty();
-			logger.Lines[0].Should()
+			logger.Lines[0]
+				.Should()
 				.ContainAll(
 					$"{{{nameof(MicrosoftExtensionsConfig)}}}",
 					"Failed parsing log level from",
@@ -112,7 +116,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.AddEnvironmentVariables()
 				.Build();
 
-			var config = new MicrosoftExtensionsConfig(configBuilder, new TestLogger());
+			var config = new MicrosoftExtensionsConfig(configBuilder, new NoopLogger(), "test");
 			config.LogLevel.Should().Be(LogLevel.Debug);
 			config.ServerUrls[0].Should().Be(new Uri(serverUrl));
 			config.ServiceName.Should().Be(serviceName);
@@ -130,7 +134,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public void LoggerNotNull()
 		{
 			var testLogger = new TestLogger();
-			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), testLogger);
+			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), testLogger,
+				"test");
 			var serverUrl = config.ServerUrls.FirstOrDefault();
 			serverUrl.Should().NotBeNull();
 			testLogger.Lines.Should().NotBeEmpty();
@@ -156,7 +161,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var capturedPayload = new MockPayloadSender();
 
 			var config = new MicrosoftExtensionsConfig(
-				MicrosoftExtensionsConfigTests.GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), _logger);
+				MicrosoftExtensionsConfigTests.GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), _logger, "test");
 
 			_agent = new ApmAgent(
 				new AgentComponents(payloadSender: capturedPayload, configurationReader: config, logger: _logger));
@@ -178,7 +183,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var response = await _client.GetAsync("/Home/Index");
 			response.IsSuccessStatusCode.Should().BeTrue();
 
-			_logger.Lines.Should().NotBeEmpty()
+			_logger.Lines.Should()
+				.NotBeEmpty()
 				.And.Contain(n => n.Contains("Failed parsing server URL from"));
 		}
 
