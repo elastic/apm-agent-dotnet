@@ -19,6 +19,7 @@ namespace Elastic.Apm.Api
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Version { get; set; }
 
 		public Runtime Runtime { get; set; }
