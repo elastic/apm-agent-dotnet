@@ -108,6 +108,22 @@ namespace Elastic.Apm.Tests
 				);
 		}
 
+		/// <summary>
+		/// Makes sure empty spaces are trimmed at the end of the config
+		/// </summary>
+		[Fact]
+		public void ReadServerUrlsWithSpaceAtTheEndViaEnvironmentVariable()
+		{
+			var serverUrlsWithSpace = "http://myServer:1234 \r\n";
+			Environment.SetEnvironmentVariable(EnvVarNames.ServerUrls, serverUrlsWithSpace);
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender)))
+			{
+				agent.ConfigurationReader.ServerUrls.First().Should().NotBe(serverUrlsWithSpace);
+				agent.ConfigurationReader.ServerUrls.First().Should().Be("http://myServer:1234");
+			}
+		}
+
 		[Fact]
 		public void SecretTokenSimpleTest()
 		{
