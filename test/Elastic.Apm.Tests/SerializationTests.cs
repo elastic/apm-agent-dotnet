@@ -117,7 +117,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void DbStatementLengthTest()
 		{
-			var str = new string('a', 1200);
+			var str = new string('a', 12000);
 			var db = new Database { Statement = str };
 
 			var json = SerializePayloadItem(db);
@@ -125,8 +125,8 @@ namespace Elastic.Apm.Tests
 
 			Assert.NotNull(deserializedDb);
 
-			Assert.Equal(str.Length, deserializedDb.Statement.Length);
-			Assert.Equal(str, deserializedDb.Statement);
+			Assert.Equal(10_000, deserializedDb.Statement.Length);
+			Assert.Equal("...", deserializedDb.Statement.Substring(10_000 - 3, 3));
 		}
 
 		/// <summary>
