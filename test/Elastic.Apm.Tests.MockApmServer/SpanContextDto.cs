@@ -12,20 +12,20 @@ namespace Elastic.Apm.Tests.MockApmServer
 	{
 		public Database Db { get; set; }
 		public Http Http { get; set; }
-		public Dictionary<string, string> Tags { get; set; }
+		public Dictionary<string, string> Labels { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(SpanContextDto))
 		{
 			{ "Db", Db },
 			{ "Http", Http },
-			{ "Tags", Tags },
+			{ "Labels", Labels },
 		}.ToString();
 
 		public void AssertValid()
 		{
 			Db?.AssertValid();
 			Http?.AssertValid();
-			Tags?.TagsAssertValid();
+			Labels?.LabelsAssertValid();
 		}
 	}
 }

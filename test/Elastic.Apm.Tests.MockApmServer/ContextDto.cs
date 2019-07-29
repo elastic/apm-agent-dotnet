@@ -10,7 +10,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 	{
 		public Request Request { get; set; }
 		public Response Response { get; set; }
-		public Dictionary<string, string> Tags { get; set; }
+		public Dictionary<string, string> Labels { get; set; }
 		public User User { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(ContextDto))
@@ -18,14 +18,14 @@ namespace Elastic.Apm.Tests.MockApmServer
 			{ "Request", Request },
 			{ "Response", Response },
 			{ "User", User },
-			{ "Tags", Tags },
+			{ "Labels", Labels },
 		}.ToString();
 
 		public void AssertValid()
 		{
 			Response?.AssertValid();
 			Request?.AssertValid();
-			Tags?.TagsAssertValid();
+			Labels?.LabelsAssertValid();
 			User?.AssertValid();
 		}
 	}
