@@ -36,7 +36,35 @@ With this you can use any configuration source that you configured on the `IConf
 
 NOTE: By simply calling `app.UseElasticApm()` without the overload, the agent will read configurations only from environment variables.
 
-This is a typical `appsettings.json` file that contains some sample configuration. The part below `ElasticApm` is fetched by the agent if the corresponding `IConfiguration` is passed to the agent.
+[float]
+[[sample-config]]
+==== Sample configuration file
+
+Below is a sample `appsettings.json` configuration file for a typical ASP.NET Core application. There are two important takeaways:
+
+1. The part below `ElasticApm` is fetched by the agent if the corresponding `IConfiguration` is passed to the agent.
+2. With ASP.NET Core, you must set `LogLevel for the internal APM logger in the standard `Logging` section with the `ElasticApm` category name.
+
+[source,js]
+----
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning",
+      "Elastic.Apm": "Debug"
+    }
+  },
+  "AllowedHosts": "*",
+  "ElasticApm":
+    {
+      "ServerUrls":  "http://myapmserver:8200",
+      "TransactionSampleRate": 1.0
+    }
+}
+----
+
+In certain scenarios -- like when you're not using ASP.NET Core -- you wont activate the agent with the `UseElasticApm()` method.
+In this case, you can set the log level of the agent with `ElasticApm:LogLevel`, as shown in the following `appsettings.json` file:
 
 [source,js]
 ----
@@ -66,7 +94,7 @@ This is a typical `appsettings.json` file that contains some sample configuratio
 This is used to keep all the errors and transactions of your service together
 and is the primary filter in the Elastic APM user interface.
 
-NOTE: The service name must conform to this regular expression: ^[a-zA-Z0-9 _-]+$. In less regexy terms: Your service name must only contain characters from the ASCII alphabet, numbers, dashes, underscores and spaces.
+NOTE: The service name must conform to this regular expression: ^[a-zA-Z0-9 _-]+$. In less regexy terms: Your service name must only contain characters from the ASCII alphabet, numbers, dashes, underscores and spaces. Characters in service name which don't match regular expression will be replaced by `__` symbol.
 
 [options="header"]
 |============
@@ -141,12 +169,12 @@ Use this setting in case the APM Server requires a token (e.g. APM Server in Ela
 [options="header"]
 |============
 | Default                 | Type
-| `http://localhost:8200` | List
+| `http://localhost:8200` | String
 |============
 
-The URLs for your APM Servers. The URLs must be fully qualified, including protocol (`http` or `https`) and port. To add multiple servers, separate them with a comma (`,`).
+The URL for your APM Server. The URL must be fully qualified, including protocol (`http` or `https`) and port.
 
-NOTE: Providing multiple URLs only works with APM Server v6.5+.
+NOTE: Providing multiple URLs is not supported by the agent yet. If multiple URLs are provided only the first one will be used.
 
 [float]
 [[config-log-level]]
@@ -216,3 +244,49 @@ If set to `true`,
 the agent will capture request and response headers, including cookies.
 
 NOTE: Setting this to `false` reduces network bandwidth, disk space and object allocations.
+
+[[config-stacktrace]]
+=== Stacktrace configuration options
+[float]
+[[config-stack-trace-limit]]
+==== `StackTraceLimit` (performance)
+
+Setting it to 0 will disable stack trace collection. Any positive integer value will be used as the maximum number of frames to collect. Setting it to -1 means that all frames will be collected.
+
+[options="header"]
+|============
+| Default                          | Type
+| `50` | Integer
+|============
+
+[options="header"]
+|============
+| Environment variable name     | IConfiguration key
+| `ELASTIC_APM_STACK_TRACE_LIMIT` | `ElasticApm:StackTraceLimit`
+|============
+
+[float]
+[[config-span-frames-min-duration]]
+==== `SpanFramesMinDuration` (performance)
+
+In its default settings, the APM agent will collect a stack trace with every recorded span.
+While this is very helpful to find the exact place in your code that causes the span, collecting this stack trace does have some overhead. 
+When setting this option to a negative value, like `-1ms`, stack traces will be collected for all spans. Setting it to a positive value, e.g. `5ms`, will limit stack trace collection to spans with durations equal to or longer than the given value, e.g. 5 milliseconds.
+
+To disable stack trace collection for spans completely, set the value to `0ms`.
+
+Supports the duration suffixes `ms`, `s` and `m`.
+Example: `5ms`.
+The default unit for this option is `ms`
+
+[options="header"]
+|============
+| Default                          | Type
+| `5ms` | TimeDuration
+|============
+
+[options="header"]
+|============
+| Environment variable name     | IConfiguration key
+| `ELASTIC_APM_SPAN_FRAMES_MIN_DURATION` | `ElasticApm:SpanFramesMinDuration`
+|============

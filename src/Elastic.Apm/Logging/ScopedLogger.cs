@@ -13,7 +13,7 @@ namespace Elastic.Apm.Logging
 
 		public string Scope { get; }
 
-		public LogLevel Level => Logger.Level;
+		public bool IsEnabled(LogLevel level) => Logger.IsEnabled(level);
 
 		internal LogValuesFormatter GetOrAddFormatter(string message, int expectedCount)
 		{

@@ -46,7 +46,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				var error = receivedData.Errors.First();
 				error.Exception.Message.Should().Be(HomeController.ExceptionMessage);
 				error.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
-				error.Exception.Stacktrace.Should().Contain(f => f.Function == HomeController.CustomSpanThrowsInternalMethodName);
+				error.Exception.StackTrace.Should().Contain(f => f.Function == HomeController.CustomSpanThrowsInternalMethodName);
 				error.TraceId.Should().Be(transaction.TraceId);
 				error.TransactionId.Should().Be(transaction.Id);
 				error.Transaction.Type.Should().Be(ApiConstants.TypeRequest);

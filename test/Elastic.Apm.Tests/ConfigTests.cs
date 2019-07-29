@@ -13,7 +13,7 @@ namespace Elastic.Apm.Tests
 	/// <summary>
 	/// Tests the configuration through environment variables
 	/// </summary>
-	public class EnvVarConfigTest : IDisposable
+	public class ConfigTests : IDisposable
 	{
 		[Fact]
 		public void ServerUrlsSimpleTest()
@@ -108,6 +108,22 @@ namespace Elastic.Apm.Tests
 				);
 		}
 
+		/// <summary>
+		/// Makes sure empty spaces are trimmed at the end of the config
+		/// </summary>
+		[Fact]
+		public void ReadServerUrlsWithSpaceAtTheEndViaEnvironmentVariable()
+		{
+			var serverUrlsWithSpace = "http://myServer:1234 \r\n";
+			Environment.SetEnvironmentVariable(EnvVarNames.ServerUrls, serverUrlsWithSpace);
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender)))
+			{
+				agent.ConfigurationReader.ServerUrls.First().Should().NotBe(serverUrlsWithSpace);
+				agent.ConfigurationReader.ServerUrls.First().Should().Be("http://myServer:1234");
+			}
+		}
+
 		[Fact]
 		public void SecretTokenSimpleTest()
 		{
@@ -117,7 +133,10 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
-		public void DefaultCaptureHeadersTest() => Agent.Config.CaptureHeaders.Should().Be(true);
+		public void DefaultCaptureHeadersTest()
+		{
+			using (var agent = new ApmAgent(new TestAgentComponents())) agent.ConfigurationReader.CaptureHeaders.Should().Be(true);
+		}
 
 		[Fact]
 		public void SetCaptureHeadersTest()
@@ -128,8 +147,11 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
-		public void DefaultTransactionSampleRateTest() =>
-			Agent.Config.TransactionSampleRate.Should().Be(DefaultValues.TransactionSampleRate);
+		public void DefaultTransactionSampleRateTest()
+		{
+			using (var agent = new ApmAgent(new TestAgentComponents()))
+				agent.ConfigurationReader.TransactionSampleRate.Should().Be(DefaultValues.TransactionSampleRate);
+		}
 
 		[Fact]
 		public void SetTransactionSampleRateTest()
@@ -151,36 +173,24 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void DefaultLogLevelTest() => Agent.Config.LogLevel.Should().Be(LogLevel.Error);
 
-		[Fact]
-		public void SetDebugLogLevelTest()
+		[Theory]
+		[InlineData("Debug", LogLevel.Debug)]
+		[InlineData("Information", LogLevel.Information)]
+		[InlineData("Warning", LogLevel.Warning)]
+		[InlineData("Error", LogLevel.Error)]
+		public void SetLogLevelTest(string logLevel, LogLevel level)
 		{
-			var agent = new ApmAgent(new TestAgentComponents("Debug"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Debug);
-			agent.Logger.Level.Should().Be(LogLevel.Debug);
-		}
+			var agent = new ApmAgent(new TestAgentComponents(logLevel));
 
-		[Fact]
-		public void SetErrorLogLevelTest()
-		{
-			var agent = new ApmAgent(new TestAgentComponents("Error"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Error);
-			agent.Logger.Level.Should().Be(LogLevel.Error);
-		}
+			agent.ConfigurationReader.LogLevel.Should().Be(level);
 
-		[Fact]
-		public void SetInfoLogLevelTest()
-		{
-			var agent = new ApmAgent(new TestAgentComponents("Information"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Information);
-			agent.Logger.Level.Should().Be(LogLevel.Information);
-		}
-
-		[Fact]
-		public void SetWarningLogLevelTest()
-		{
-			var agent = new ApmAgent(new TestAgentComponents("Warning"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Warning);
-			agent.Logger.Level.Should().Be(LogLevel.Warning);
+			foreach (LogLevel enumValue in Enum.GetValues(typeof(LogLevel)))
+			{
+				if (level <= enumValue)
+					agent.Logger.IsEnabled(enumValue).Should().BeTrue();
+				else
+					agent.Logger.IsEnabled(enumValue).Should().BeFalse();
+			}
 		}
 
 		[Fact]
@@ -189,10 +199,11 @@ namespace Elastic.Apm.Tests
 			var logLevelValue = "InvalidLogLevel";
 			var agent = new ApmAgent(new TestAgentComponents(logLevelValue));
 			var logger = agent.Logger as TestLogger;
+			logger.Should().NotBeNull();
 
 			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Error);
-			logger.Lines.Should().NotBeEmpty();
-			logger.Lines[0]
+			logger?.Lines.Should().NotBeEmpty();
+			logger?.Lines[0]
 				.Should()
 				.ContainAll(
 					$"{{{nameof(TestAgentConfigurationReader)}}}",
@@ -259,6 +270,39 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
+		/// The test makes sure we validate service name.
+		/// </summary>
+		[Fact]
+		public void ReadInvalidServiceNameViaEnvironmentVariable()
+		{
+			var serviceName = "MyService123!";
+			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+
+			agent.Service.Name.Should().NotBe(serviceName);
+			agent.Service.Name.Should().MatchRegex("^[a-zA-Z0-9 _-]+$")
+				.And.Be("MyService123_");
+		}
+
+		/// <summary>
+		/// The test makes sure that unknown service name value fits to all constraints.
+		/// </summary>
+		[Fact]
+		public void UnknownServiceNameValueTest()
+		{
+			var serviceName = DefaultValues.UnknownServiceName;
+			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+
+			agent.Service.Name.Should().Be(serviceName);
+			agent.Service.Name.Should().MatchRegex("^[a-zA-Z0-9 _-]+$");
+		}
+
+		/// <summary>
 		/// In case the user does not provide us a service name we try to calculate it based on the callstack.
 		/// This test makes sure we recognize mscorlib and our own assemblies correctly in the
 		/// <see cref="AbstractConfigurationReader.IsMsOrElastic(byte[])" /> method.
@@ -277,8 +321,8 @@ namespace Elastic.Apm.Tests
 			AbstractConfigurationReader
 				.IsMsOrElastic(new[]
 				{
-					elasticToken[0], mscorlibToken[1], elasticToken[2],
-					mscorlibToken[3], elasticToken[4], mscorlibToken[5], elasticToken[6], mscorlibToken[7]
+					elasticToken[0], mscorlibToken[1], elasticToken[2], mscorlibToken[3], elasticToken[4], mscorlibToken[5], elasticToken[6],
+					mscorlibToken[7]
 				})
 				.Should()
 				.BeFalse();
@@ -302,7 +346,7 @@ namespace Elastic.Apm.Tests
 
 		[Fact]
 		public void SetMetricsIntervalTo10S()
-		 => MetricsIntervalTestCommon("10s").Should().Be(10 * 1000);
+			=> MetricsIntervalTestCommon("10s").Should().Be(10 * 1000);
 
 		/// <summary>
 		/// Sets the metrics interval to '500ms'
@@ -317,8 +361,8 @@ namespace Elastic.Apm.Tests
 			=> MetricsIntervalTestCommon("1500ms").Should().Be(1500);
 
 		[Fact]
-		public void SetMetricsIntervalTo1HourAs60minutes()
-			=> MetricsIntervalTestCommon("60m").Should().Be(60*60*1000);
+		public void SetMetricsIntervalTo1HourAs60Minutes()
+			=> MetricsIntervalTestCommon("60m").Should().Be(60 * 60 * 1000);
 
 		[Fact]
 		public void SetMetricsIntervalTo1HourUsingUnsupportedUnits()
@@ -356,18 +400,57 @@ namespace Elastic.Apm.Tests
 			=> MetricsIntervalTestCommon("-5ms").Should().Be(0);
 
 		/// <summary>
-		/// Make sure <see cref="DefaultValues.MetricsInterval" /> and <see cref="DefaultValues.MetricsIntervalInMilliseconds" /> are in sync
+		/// Make sure <see cref="DefaultValues.MetricsInterval" /> and <see cref="DefaultValues.MetricsIntervalInMilliseconds" />
+		/// are in sync
 		/// </summary>
 		[Fact]
 		public void MetricsIntervalDefaultValuesInSync()
 			=> MetricsIntervalTestCommon(DefaultValues.MetricsInterval).Should().Be(DefaultValues.MetricsIntervalInMilliseconds);
+
+		[Fact]
+		public void SpanFramesMinDurationDefaultValuesInSync()
+		{
+			Environment.SetEnvironmentVariable(EnvVarNames.MetricsInterval, DefaultValues.SpanFramesMinDuration);
+			var testLogger = new TestLogger();
+			var config = new EnvironmentConfigurationReader(testLogger);
+			config.SpanFramesMinDurationInMilliseconds.Should().Be(DefaultValues.SpanFramesMinDurationInMilliseconds);
+		}
+
+		[InlineData("2", 2)]
+		[InlineData("0", 0)]
+		[InlineData("-2", -2)]
+		[InlineData("2147483647", int.MaxValue)]
+		[InlineData("-2147483648", int.MinValue)]
+		[InlineData("2.32", DefaultValues.StackTraceLimit)]
+		[InlineData("2,32", DefaultValues.StackTraceLimit)]
+		[InlineData("asdf", DefaultValues.StackTraceLimit)]
+		[Theory]
+		public void StackTraceLimit(string configValue, int expectedValue)
+		{
+			using (var agent = new ApmAgent(new TestAgentComponents(stackTraceLimit: configValue)))
+				agent.ConfigurationReader.StackTraceLimit.Should().Be(expectedValue);
+		}
+
+		[InlineData("2ms", 2)]
+		[InlineData("2s", 2 * 1000)]
+		[InlineData("2m", 2 * 60 * 1000)]
+		[InlineData("2", 2)]
+		[InlineData("-2ms", -2)]
+		[InlineData("dsfkldfs", DefaultValues.SpanFramesMinDurationInMilliseconds)]
+		[InlineData("2,32", DefaultValues.SpanFramesMinDurationInMilliseconds)]
+		[Theory]
+		public void SpanFramesMinDurationInMilliseconds(string configValue, int expectedValue)
+		{
+			using (var agent = new ApmAgent(new TestAgentComponents(spanFramesMinDurationInMilliseconds: configValue)))
+				agent.ConfigurationReader.SpanFramesMinDurationInMilliseconds.Should().Be(expectedValue);
+		}
 
 		private static double MetricsIntervalTestCommon(string configValue)
 		{
 			Environment.SetEnvironmentVariable(EnvVarNames.MetricsInterval, configValue);
 			var testLogger = new TestLogger();
 			var config = new EnvironmentConfigurationReader(testLogger);
-			return config.MetricsIntervalInMillisecond;
+			return config.MetricsIntervalInMilliseconds;
 		}
 
 		public void Dispose()

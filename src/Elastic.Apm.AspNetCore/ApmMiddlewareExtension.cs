@@ -10,6 +10,7 @@ using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Elastic.Apm.AspNetCore
 {
@@ -42,12 +43,13 @@ namespace Elastic.Apm.AspNetCore
 			params IDiagnosticsSubscriber[] subscribers
 		)
 		{
-			var logger = ConsoleLogger.Instance;
+			var logger = builder.ApplicationServices.GetApmLogger();
+
 			var configReader = configuration == null
 				? new EnvironmentConfigurationReader(logger)
 				: new MicrosoftExtensionsConfig(configuration, logger) as IConfigurationReader;
 
-			var config = new AgentComponents(configurationReader: configReader);
+			var config = new AgentComponents(configurationReader: configReader, logger: logger);
 			UpdateServiceInformation(config.Service);
 
 			Agent.Setup(config);
@@ -68,6 +70,11 @@ namespace Elastic.Apm.AspNetCore
 			agent.Subscribe(subs.ToArray());
 			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer, agent);
 		}
+
+		internal static IApmLogger GetApmLogger(this IServiceProvider serviceProvider) =>
+			serviceProvider.GetService(typeof(ILoggerFactory)) is ILoggerFactory loggerFactory
+				? (IApmLogger)new AspNetCoreLogger(loggerFactory)
+				: ConsoleLogger.Instance;
 
 		internal static void UpdateServiceInformation(Service service)
 		{

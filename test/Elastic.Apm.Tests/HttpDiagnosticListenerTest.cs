@@ -15,6 +15,7 @@ using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
@@ -575,10 +576,13 @@ namespace Elastic.Apm.Tests
 			}
 		}
 
-		internal static (IDisposable, MockPayloadSender, ApmAgent) RegisterListenerAndStartTransaction(IApmLogger customLogger = null)
+		internal static (IDisposable, MockPayloadSender, ApmAgent) RegisterListenerAndStartTransaction()
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			var agentComponents = new TestAgentComponents(payloadSender: payloadSender, stackTraceLimit: "-1",
+				spanFramesMinDurationInMilliseconds: "-1ms", logLevel: "Debug");
+
+			var agent = new ApmAgent(agentComponents);
 			var sub = agent.Subscribe(new HttpDiagnosticsSubscriber());
 			StartTransaction(agent);
 
