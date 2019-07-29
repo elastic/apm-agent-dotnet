@@ -38,7 +38,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			AgentSingletonUtils.EnsureInstanceCreated();
 			_agent = new ApmAgent(new TestAgentComponents(logger: _logger, configurationReader: new TestAgentConfigurationReader(_logger),
-				currentExecutionSegmentHolder: Agent.Instance.TracerInternal.CurrentExecutionSegmentHolder));
+				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer));
 			ApmMiddlewareExtension.UpdateServiceInformation(_agent.Service);
 
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;

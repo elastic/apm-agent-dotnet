@@ -29,7 +29,8 @@ namespace Elastic.Apm.EntityFrameworkCore
 				case string k when k == RelationalEventId.CommandExecuting.Name && _agent.Tracer.CurrentTransaction != null:
 					if (kv.Value is CommandEventData commandEventData)
 					{
-						var newSpan = _agent.Tracer.CurrentTransaction.StartSpan(commandEventData.Command.CommandText, ApiConstants.TypeDb);
+						var currentExecutionSegment = _agent.Tracer.CurrentSpan ?? (IExecutionSegment)_agent.Tracer.CurrentTransaction;
+						var newSpan = currentExecutionSegment.StartSpan(commandEventData.Command.CommandText, ApiConstants.TypeDb);
 						_spans.TryAdd(commandEventData.CommandId, newSpan);
 					}
 					break;

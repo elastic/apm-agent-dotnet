@@ -21,7 +21,7 @@ namespace Elastic.Apm
 			IConfigurationReader configurationReader,
 			IPayloadSender payloadSender,
 			IMetricsCollector metricsCollector,
-			ICurrentExecutionSegmentHolder currentExecutionSegmentHolder
+			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer
 		)
 		{
 			var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
@@ -38,7 +38,7 @@ namespace Elastic.Apm
 			MetricsCollector.StartCollecting();
 
 			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationReader,
-				currentExecutionSegmentHolder ?? new CurrentExecutionSegmentHolder(Logger));
+				currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(Logger));
 		}
 
 		public IConfigurationReader ConfigurationReader { get; }

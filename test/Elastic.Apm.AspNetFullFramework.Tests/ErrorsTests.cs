@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AspNetFullFrameworkSampleApp.Controllers;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Tests.MockApmServer;
 using FluentAssertions;
 using Xunit;
@@ -39,9 +40,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				span.ParentId.Should().Be(transaction.Id);
 				span.ShouldOccurBetween(transaction);
 
-				var stackTraceFrame = span.StackTrace.Single(f => f.Function == HomeController.CustomSpanThrowsMethodName);
-				stackTraceFrame.Module.Should().StartWith("AspNetFullFrameworkSampleApp, Version=");
-
 				receivedData.Errors.Count.Should().Be(1);
 				var error = receivedData.Errors.First();
 				error.Exception.Message.Should().Be(HomeController.ExceptionMessage);
@@ -53,6 +51,64 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				error.Transaction.IsSampled.Should().BeTrue();
 				error.ParentId.Should().Be(span.Id);
 				error.ShouldOccurBetween(span);
+			});
+		}
+
+		[AspNetFullFrameworkFact]
+		public async Task CustomChildSpanThrowsTest()
+		{
+			var errorPageData = SampleAppUrlPaths.CustomChildSpanThrowsExceptionPage;
+			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(errorPageData.RelativeUrlPath, errorPageData.StatusCode);
+
+			VerifyDataReceivedFromAgent(receivedData =>
+			{
+				TryVerifyDataReceivedFromAgent(errorPageData, receivedData);
+
+				var transaction = receivedData.Transactions.First();
+				transaction.Context.Request.Url.Search.Should().BeNull();
+				transaction.IsSampled.Should().BeTrue();
+
+				receivedData.Spans.Should().HaveCount(errorPageData.SpansCount);
+
+				errorPageData.SpansCount.Repeat(i =>
+				{
+					var span = receivedData.Spans[i];
+					span.TraceId.Should().Be(transaction.TraceId);
+					span.TransactionId.Should().Be(transaction.Id);
+				});
+
+				var childSpan = receivedData.Spans[0];
+				var parentSpan = receivedData.Spans[1];
+
+				childSpan.Name.Should().Be(HomeController.TestChildSpanName);
+				childSpan.Type.Should().Be(HomeController.TestChildSpanType);
+				childSpan.Subtype.Should().Be(HomeController.TestChildSpanSubtype);
+				childSpan.Action.Should().Be(HomeController.TestChildSpanAction);
+				childSpan.ParentId.Should().Be(parentSpan.Id);
+				childSpan.ShouldOccurBetween(parentSpan);
+
+				parentSpan.Name.Should().Be(HomeController.TestSpanName);
+				parentSpan.Type.Should().Be(HomeController.TestSpanType);
+				parentSpan.Subtype.Should().Be(HomeController.TestSpanSubtype);
+				parentSpan.Action.Should().Be(HomeController.TestSpanAction);
+				parentSpan.ParentId.Should().Be(transaction.Id);
+				parentSpan.ShouldOccurBetween(transaction);
+
+				receivedData.Errors.Should().HaveCount(errorPageData.ErrorsCount);
+				errorPageData.ErrorsCount.Repeat(i =>
+				{
+					var error = receivedData.Errors[i];
+					var span = receivedData.Spans[i];
+					error.Exception.Message.Should().Be(HomeController.ExceptionMessage);
+					error.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
+					error.Exception.StackTrace.Should().Contain(f => f.Function == HomeController.CustomSpanThrowsInternalMethodName);
+					error.TraceId.Should().Be(transaction.TraceId);
+					error.TransactionId.Should().Be(transaction.Id);
+					error.Transaction.Type.Should().Be(ApiConstants.TypeRequest);
+					error.Transaction.IsSampled.Should().BeTrue();
+					error.ParentId.Should().Be(span.Id);
+					error.ShouldOccurBetween(span);
+				});
 			});
 		}
 	}

@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using Elastic.Apm;
+using Elastic.Apm.Api;
 
 namespace AspNetFullFrameworkSampleApp.Controllers
 {
@@ -14,21 +15,29 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		internal const string AboutPageRelativePath = HomePageRelativePath + "/" + nameof(About);
 		internal const string CallReturnBadRequestPageRelativePath = HomePageRelativePath + "/" + nameof(CallReturnBadRequest);
 		internal const string ContactPageRelativePath = HomePageRelativePath + "/" + nameof(Contact);
+
+		internal const string CustomChildSpanThrowsPageRelativePath = HomePageRelativePath + "/" + nameof(CustomChildSpanThrows);
+
 		internal const string CustomSpanThrowsInternalMethodName = nameof(CustomSpanThrowsInternal);
 		internal const string CustomSpanThrowsMethodName = nameof(CustomSpanThrows);
 		internal const string CustomSpanThrowsPageRelativePath = HomePageRelativePath + "/" + nameof(CustomSpanThrows);
+
+		internal const string DotNetRuntimeDescriptionHttpHeaderName = "DotNetRuntimeDescription";
 		internal const int DummyHttpStatusCode = 599;
 		internal const string ExceptionMessage = "For testing purposes";
+		internal const string GetDotNetRuntimeDescriptionPageRelativePath = HomePageRelativePath + "/" + nameof(GetDotNetRuntimeDescription);
 		internal const string HomePageRelativePath = "Home";
 		internal const string ReturnBadRequestPageRelativePath = HomePageRelativePath + "/" + nameof(ReturnBadRequest);
+		internal const string TestChildSpanAction = "test_child_span_action";
+		internal const string TestChildSpanName = "test_child_span_name";
+		internal const string TestChildSpanSubtype = "test_child_span_subtype";
+		internal const string TestChildSpanType = "test_child_span_type";
 		internal const string TestSpanAction = "test_span_action";
 		internal const string TestSpanName = "test_span_name";
 		internal const string TestSpanSubtype = "test_span_subtype";
 		internal const string TestSpanType = "test_span_type";
 		internal const string ThrowsInvalidOperationPageRelativePath = HomePageRelativePath + "/" + nameof(ThrowsInvalidOperation);
 		internal static readonly Uri ChildHttpCallToExternalServiceUrl = new Uri("https://elastic.co");
-		internal const string DotNetRuntimeDescriptionHttpHeaderName = "DotNetRuntimeDescription";
-		internal const string GetDotNetRuntimeDescriptionPageRelativePath = HomePageRelativePath + "/" + nameof(GetDotNetRuntimeDescription);
 
 		public ActionResult Index() => View();
 
@@ -65,14 +74,26 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 			}
 		}
 
-		internal static void CustomSpanThrowsInternal() => throw new InvalidOperationException(ExceptionMessage);
-
-		public ActionResult CustomSpanThrows()
+		internal static async Task<ActionResult> CustomSpanThrowsInternal()
 		{
-			Agent.Tracer.CurrentTransaction.CaptureSpan(TestSpanName, TestSpanType, (Action)CustomSpanThrowsInternal, TestSpanSubtype,
-				TestSpanAction);
-			return null;
+			await Task.Delay(1);
+			throw new InvalidOperationException(ExceptionMessage);
 		}
+
+		private static Task<T> SafeCaptureSpan<T>(string spanName, string spanType, Func<Task<T>> func, string subType = null, string action = null)
+		{
+			if (Agent.Tracer.CurrentTransaction == null) return func();
+			var currentExecutionSegment = (Agent.Tracer.CurrentSpan ?? (IExecutionSegment)Agent.Tracer.CurrentTransaction);
+			return currentExecutionSegment.CaptureSpan(spanName, spanType, func, subType, action);
+		}
+
+		public Task<ActionResult> CustomSpanThrows() =>
+			SafeCaptureSpan(TestSpanName, TestSpanType, CustomSpanThrowsInternal, TestSpanSubtype, TestSpanAction);
+
+		public Task<ActionResult> CustomChildSpanThrows() =>
+			SafeCaptureSpan(TestSpanName, TestSpanType,
+				() => SafeCaptureSpan(TestChildSpanName, TestChildSpanType, CustomSpanThrowsInternal, TestChildSpanSubtype, TestChildSpanAction),
+				TestSpanSubtype, TestSpanAction);
 
 		public async Task<ActionResult> ThrowsNameCouldNotBeResolved()
 		{

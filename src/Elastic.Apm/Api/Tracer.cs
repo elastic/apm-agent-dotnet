@@ -12,9 +12,9 @@ namespace Elastic.Apm.Api
 {
 	internal class Tracer : ITracer
 	{
+		private readonly IConfigurationReader _configurationReader;
 		private readonly ScopedLogger _logger;
 		private readonly IPayloadSender _sender;
-		private readonly IConfigurationReader _configurationReader;
 		private readonly Service _service;
 
 		public Tracer(
@@ -22,32 +22,32 @@ namespace Elastic.Apm.Api
 			Service service,
 			IPayloadSender payloadSender,
 			IConfigurationReader configurationReader,
-			ICurrentExecutionSegmentHolder currentExecutionSegmentHolder)
+			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer
+		)
 		{
 			_logger = logger?.Scoped(nameof(Tracer));
 			_service = service;
 			_sender = payloadSender.ThrowIfArgumentNull(nameof(payloadSender));
 			_configurationReader = configurationReader.ThrowIfArgumentNull(nameof(configurationReader));
 			Sampler = new Sampler(configurationReader.TransactionSampleRate);
-			CurrentExecutionSegmentHolder = currentExecutionSegmentHolder.ThrowIfArgumentNull(nameof(currentExecutionSegmentHolder));
+			CurrentExecutionSegmentsContainer = currentExecutionSegmentsContainer.ThrowIfArgumentNull(nameof(currentExecutionSegmentsContainer));
 		}
 
-		public ITransaction CurrentTransaction => CurrentExecutionSegmentHolder.CurrentTransactionInternal;
-//		public ISpan CurrentSpan => _currentExecutionSegmentHolder.CurrentSpanInternal;
+		internal ICurrentExecutionSegmentsContainer CurrentExecutionSegmentsContainer { get; }
+
+		public ISpan CurrentSpan => CurrentExecutionSegmentsContainer.CurrentSpan;
+
+		public ITransaction CurrentTransaction => CurrentExecutionSegmentsContainer.CurrentTransaction;
 
 		internal Sampler Sampler { get; set; }
-
-		internal ICurrentExecutionSegmentHolder CurrentExecutionSegmentHolder { get; }
 
 		public ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null) =>
 			StartTransactionInternal(name, type, distributedTracingData);
 
 		internal Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null)
 		{
-			var retVal = new Transaction(_logger, name, type, Sampler, distributedTracingData, _sender, _configurationReader, CurrentExecutionSegmentHolder)
-			{
-				Service = _service
-			};
+			var retVal = new Transaction(_logger, name, type, Sampler, distributedTracingData, _sender, _configurationReader,
+				CurrentExecutionSegmentsContainer) { Service = _service };
 
 			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);
 			return retVal;

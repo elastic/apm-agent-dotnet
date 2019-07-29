@@ -10,12 +10,12 @@ namespace Elastic.Apm.Tests.Mocks
 			IApmLogger logger = null,
 			TestAgentConfigurationReader configurationReader = null,
 			IPayloadSender payloadSender = null,
-			ICurrentExecutionSegmentHolder currentExecutionSegmentHolder = null
+			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer = null
 		) : base(
 			logger ?? new NoopLogger(),
 			configurationReader ?? new TestAgentConfigurationReader(logger ?? new NoopLogger()),
 			payloadSender ?? new MockPayloadSender(),
 			new FakeMetricsCollector(),
-			currentExecutionSegmentHolder) { }
+			currentExecutionSegmentsContainer) { }
 	}
 }

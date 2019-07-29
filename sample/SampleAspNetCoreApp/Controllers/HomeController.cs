@@ -6,6 +6,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm;
+using Elastic.Apm.Api;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -43,17 +45,33 @@ namespace SampleAspNetCoreApp.Controllers
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> AddSampleData([FromForm] string enteredName)
+		public Task<IActionResult> AddSampleData(IFormCollection formFields)
 		{
-			if (string.IsNullOrEmpty(enteredName))
-				throw new ArgumentNullException(nameof(enteredName));
+			var captureControllerActionAsSpanAsString = formFields["captureControllerActionAsSpan"];
+			// ReSharper disable once SimplifyConditionalTernaryExpression
+			var captureControllerActionAsSpan = string.IsNullOrEmpty(captureControllerActionAsSpanAsString)
+				? false
+				: bool.Parse(captureControllerActionAsSpanAsString);
+			var enteredName = formFields["enteredName"];
+			return SafeCaptureSpan<IActionResult>(captureControllerActionAsSpan, "AddSampleData_span_name", "AddSampleData_span_type", async () =>
+			{
+				if (string.IsNullOrEmpty(enteredName))
+					throw new ArgumentNullException(nameof(enteredName));
 
-			_sampleDataContext.SampleTable.Add(
-				new SampleData { Name = enteredName });
+				_sampleDataContext.SampleTable.Add(
+					new SampleData { Name = enteredName });
 
-			await _sampleDataContext.SaveChangesAsync();
+				await _sampleDataContext.SaveChangesAsync();
 
-			return Redirect("/Home/Index");
+				return Redirect("/Home/Index");
+			});
+		}
+
+		private static Task<T> SafeCaptureSpan<T>(bool captureControllerActionAsSpan, string spanName, string spanType, Func<Task<T>> spanBody)
+		{
+			if (!captureControllerActionAsSpan || Agent.Tracer.CurrentTransaction == null) return spanBody();
+
+			return (Agent.Tracer.CurrentSpan ?? (IExecutionSegment)Agent.Tracer.CurrentTransaction).CaptureSpan(spanName, spanType, spanBody);
 		}
 
 		public IActionResult SimplePage()
