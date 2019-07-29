@@ -12,4 +12,4 @@ Install-WindowsFeature -Name Web-Server, Web-Mgmt-Tools ;
 & choco install nuget.commandline -y --no-progress -r --version 5.1.0
 
 # Install vswhere
-& choco install vswhere -y --no-progress -r 
+& choco install vswhere -y --no-progress -r --version 2.7.1
