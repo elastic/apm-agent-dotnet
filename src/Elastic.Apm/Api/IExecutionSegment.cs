@@ -35,9 +35,9 @@ namespace Elastic.Apm.Api
 		string ParentId { get; }
 
 		/// <summary>
-		/// A flat mapping of user-defined tags with string values.
+		/// A flat mapping of user-defined labels with string values.
 		/// </summary>
-		Dictionary<string, string> Tags { get; }
+		Dictionary<string, string> Labels { get; }
 
 		/// <summary>
 		/// Hex encoded 128 random bits ID of the correlated trace.

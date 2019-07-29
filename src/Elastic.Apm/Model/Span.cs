@@ -102,7 +102,7 @@ namespace Elastic.Apm.Model
 		public string Subtype { get; set; }
 
 		[JsonIgnore]
-		public Dictionary<string, string> Tags => Context.Tags;
+		public Dictionary<string, string> Labels => Context.Labels;
 
 		//public decimal Start { get; set; }
 

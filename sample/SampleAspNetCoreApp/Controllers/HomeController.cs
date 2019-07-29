@@ -107,7 +107,7 @@ namespace SampleAspNetCoreApp.Controllers
 
 		public IActionResult TriggerError()
 		{
-			Agent.Tracer.CurrentTransaction.Tags["foo"] = "bar";
+			Agent.Tracer.CurrentTransaction.Labels["foo"] = "bar";
 			throw new Exception("This is a test exception!");
 		}
 

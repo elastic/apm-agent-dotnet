@@ -66,25 +66,25 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Creates a <see cref="Context" /> that has <see cref="Context.Tags" />
+		/// Creates a <see cref="Context" /> that has <see cref="Context.Labels" />
 		/// with strings longer than <see cref="Consts.PropertyMaxLength" />.
 		/// Makes sure that the long string is trimmed.
 		/// </summary>
 		[Fact]
-		public void TagsTruncation()
+		public void LabelsTruncation()
 		{
 			var str = new string('a', 1200);
 
 			var context = new Context();
-			context.Tags["foo"] = str;
+			context.Labels["foo"] = str;
 
 			var json = SerializePayloadItem(context);
 			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
 
 			Assert.NotNull(deserializedContext);
 
-			Assert.Equal(Consts.PropertyMaxLength, deserializedContext["tags"].Value<JObject>()["foo"]?.Value<string>()?.Length);
-			Assert.Equal("...", deserializedContext["tags"].Value<JObject>()["foo"].Value<string>().Substring(1021, 3));
+			Assert.Equal(Consts.PropertyMaxLength, deserializedContext["labels"].Value<JObject>()["foo"]?.Value<string>()?.Length);
+			Assert.Equal("...", deserializedContext["labels"].Value<JObject>()["foo"].Value<string>().Substring(1021, 3));
 		}
 
 		/// <summary>
