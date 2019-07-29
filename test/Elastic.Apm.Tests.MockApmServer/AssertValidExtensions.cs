@@ -168,7 +168,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			thisObj.RemoteAddress?.NonEmptyAssertValid();
 		}
 
-		internal static void AssertValid(this SpanCount thisObj) => thisObj.Should().NotBeNull();
+		internal static void AssertValid(this SpanCountDto thisObj) => thisObj.Should().NotBeNull();
 
 		internal static void TimestampAssertValid(this long thisObj) => thisObj.Should().BeGreaterOrEqualTo(0);
 

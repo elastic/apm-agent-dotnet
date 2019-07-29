@@ -14,6 +14,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 		public void TestRepeat(int repeatCount)
 		{
 			var counter = 0;
+			// ReSharper disable once AccessToModifiedClosure
 			repeatCount.Repeat(() => { ++counter; });
 			counter.Should().Be(repeatCount);
 
@@ -35,7 +36,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var counter = 0;
 			await repeatCount.Repeat(async _ =>
 			{
-				Task.Delay(1);
+				await Task.Delay(1);
 				++counter;
 			});
 			counter.Should().Be(repeatCount);
@@ -43,6 +44,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 			counter = 0;
 			await repeatCount.Repeat(async i =>
 			{
+				await Task.Delay(1);
 				i.Should().Be(counter);
 				++counter;
 			});

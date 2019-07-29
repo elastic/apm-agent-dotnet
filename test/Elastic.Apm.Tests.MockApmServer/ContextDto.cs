@@ -15,10 +15,10 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		public override string ToString() => new ToStringBuilder(nameof(ContextDto))
 		{
-			{ "Request", Request },
-			{ "Response", Response },
-			{ "User", User },
-			{ "Tags", Tags },
+			{ nameof(Request), Request },
+			{ nameof(Response), Response },
+			{ nameof(User), User },
+			{ nameof(Tags), Tags },
 		}.ToString();
 
 		public void AssertValid()

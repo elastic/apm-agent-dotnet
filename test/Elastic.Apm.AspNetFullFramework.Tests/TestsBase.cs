@@ -374,7 +374,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			FullFwAssertValid(transaction.SpanCount);
 		}
 
-		private void FullFwAssertValid(SpanCount spanCount)
+		private void FullFwAssertValid(SpanCountDto spanCount)
 		{
 			spanCount.Should().NotBeNull();
 

@@ -111,6 +111,22 @@ namespace Elastic.Apm.Tests
 				);
 		}
 
+		/// <summary>
+		/// Makes sure empty spaces are trimmed at the end of the config
+		/// </summary>
+		[Fact]
+		public void ReadServerUrlsWithSpaceAtTheEndViaEnvironmentVariable()
+		{
+			var serverUrlsWithSpace = "http://myServer:1234 \r\n";
+			Environment.SetEnvironmentVariable(EnvVarNames.ServerUrls, serverUrlsWithSpace);
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender)))
+			{
+				agent.ConfigurationReader.ServerUrls.First().Should().NotBe(serverUrlsWithSpace);
+				agent.ConfigurationReader.ServerUrls.First().Should().Be("http://myServer:1234");
+			}
+		}
+
 		[Fact]
 		public void SecretTokenSimpleTest()
 		{
@@ -173,7 +189,13 @@ namespace Elastic.Apm.Tests
 			var agent = new ApmAgent(new TestAgentComponents(logger, new TestAgentConfigurationReader(logger, logLevelAsString)));
 			agent.ConfigurationReader.LogLevel.Should().Be(logLevel);
 			agent.Logger.Should().Be(logger);
-			agent.Logger.Level.Should().Be(logLevel);
+			foreach (LogLevel enumValue in Enum.GetValues(typeof(LogLevel)))
+			{
+				if (logLevel <= enumValue)
+					agent.Logger.IsEnabled(enumValue).Should().BeTrue();
+				else
+					agent.Logger.IsEnabled(enumValue).Should().BeFalse();
+			}
 		}
 
 		[Fact]
@@ -249,6 +271,39 @@ namespace Elastic.Apm.Tests
 
 			agent.Service.Name.Should().Be(serviceName.Replace('.', '_'));
 			agent.Service.Name.Should().NotContain(".");
+		}
+
+		/// <summary>
+		/// The test makes sure we validate service name.
+		/// </summary>
+		[Fact]
+		public void ReadInvalidServiceNameViaEnvironmentVariable()
+		{
+			var serviceName = "MyService123!";
+			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+
+			agent.Service.Name.Should().NotBe(serviceName);
+			agent.Service.Name.Should().MatchRegex("^[a-zA-Z0-9 _-]+$")
+				.And.Be("MyService123_");
+		}
+
+		/// <summary>
+		/// The test makes sure that unknown service name value fits to all constraints.
+		/// </summary>
+		[Fact]
+		public void UnknownServiceNameValueTest()
+		{
+			var serviceName = DefaultValues.UnknownServiceName;
+			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+
+			agent.Service.Name.Should().Be(serviceName);
+			agent.Service.Name.Should().MatchRegex("^[a-zA-Z0-9 _-]+$");
 		}
 
 		/// <summary>

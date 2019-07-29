@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
@@ -103,12 +104,13 @@ namespace Elastic.Apm.Config
 			}
 
 			if (list.Count > 1)
-				Logger?.Warning()?.Log(nameof(ConfigConsts.EnvVarNames.ServerUrls)
-					+ " configuration option contains more than one URL which is not supported by the agent yet"
-					+ " - only the first URL will be used."
-					+ " Configuration option's source: {Origin}, key: `{Key}', value: `{Value}'."
-					+ " The first URL: `{ApmServerUrl}'",
-					kv.ReadFrom, kv.Key, kv.Value, list.First());
+				Logger?.Warning()
+					?.Log(nameof(ConfigConsts.EnvVarNames.ServerUrls)
+						+ " configuration option contains more than one URL which is not supported by the agent yet"
+						+ " - only the first URL will be used."
+						+ " Configuration option's source: {Origin}, key: `{Key}', value: `{Value}'."
+						+ " The first URL: `{ApmServerUrl}'",
+						kv.ReadFrom, kv.Key, kv.Value, list.First());
 
 			return list.Count == 0 ? LogAndReturnDefault().AsReadOnly() : list.AsReadOnly();
 
@@ -302,7 +304,10 @@ namespace Elastic.Apm.Config
 			return null;
 		}
 
-		internal static string AdaptServiceName(string originalName) => originalName?.Replace('.', '_');
+		internal static string AdaptServiceName(string originalName) =>
+			originalName != null
+				? Regex.Replace(originalName, "[^a-zA-Z0-9 _-]", "_")
+				: null;
 
 		protected string ParseServiceName(ConfigurationKeyValue kv)
 		{
@@ -310,6 +315,7 @@ namespace Elastic.Apm.Config
 			if (!string.IsNullOrEmpty(nameInConfig))
 			{
 				var adaptedServiceName = AdaptServiceName(nameInConfig);
+
 				if (nameInConfig == adaptedServiceName)
 					Logger?.Warning()?.Log("Service name provided in configuration is {ServiceName}", nameInConfig);
 				else
