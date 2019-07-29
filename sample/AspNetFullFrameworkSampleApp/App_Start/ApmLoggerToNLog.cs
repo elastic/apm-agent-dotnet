@@ -13,6 +13,10 @@ namespace AspNetFullFrameworkSampleApp
 	{
 		public ApmLogLevel Level => ApmLogLevel.Trace;
 
+		bool IsEnabled(LogLevel level){
+			return true;
+		}
+
 		public void Log<TState>(ApmLogLevel apmLogLevel, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{
 //			var stateAsKeyValuePairs = state as ReadOnlyCollection<KeyValuePair<string, object>> ??
