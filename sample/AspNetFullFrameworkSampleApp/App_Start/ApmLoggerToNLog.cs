@@ -13,7 +13,7 @@ namespace AspNetFullFrameworkSampleApp
 	{
 		public ApmLogLevel Level => ApmLogLevel.Trace;
 
-		bool IsEnabled(ApmLogLevel level){
+		public bool IsEnabled(ApmLogLevel level){
 			return true;
 		}
 
