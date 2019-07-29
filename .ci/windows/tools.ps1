@@ -5,6 +5,9 @@
 
 # Install IIS
 Install-WindowsFeature -Name Web-Server, Web-Mgmt-Tools ;
+Add-WindowsFeature NET-Framework-45-ASPNET ;
+Add-WindowsFeature Web-Asp-Net45 ;
+
 
 # Install .Net SDK' 
 & choco install dotnetcore-sdk -y --no-progress -r --version 2.2.401
