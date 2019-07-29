@@ -8,20 +8,20 @@ using Xunit.Abstractions;
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	[Collection("AspNetFullFrameworkTests")]
-	public class CaptureHeadersConfigTests : TestsBase
+	public class CaptureHeadersConfigDisabledTest : TestsBase
 	{
-		public CaptureHeadersConfigTests(ITestOutputHelper xUnitOutputHelper)
+		public CaptureHeadersConfigDisabledTest(ITestOutputHelper xUnitOutputHelper)
 			: base(xUnitOutputHelper,
 				envVarsToSetForSampleAppPool: new Dictionary<string, string>() { { ConfigConsts.EnvVarNames.CaptureHeaders, "false" } }) =>
 			AgentConfig.CaptureHeaders = false;
 
 		[AspNetFullFrameworkTheory]
 		[MemberData(nameof(AllSampleAppUrlPaths))]
-		public async Task SampleRate0(SampleAppUrlPathData sampleAppUrlPathData)
+		public async Task Test(SampleAppUrlPathData sampleAppUrlPathData)
 		{
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.Status);
+			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.StatusCode);
 
-			VerifyDataReceivedFromAgent(sampleAppUrlPathData);
+			await VerifyDataReceivedFromAgent(sampleAppUrlPathData);
 		}
 	}
 }

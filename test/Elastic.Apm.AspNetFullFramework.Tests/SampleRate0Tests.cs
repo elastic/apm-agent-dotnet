@@ -8,19 +8,19 @@ using Xunit.Abstractions;
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	[Collection("AspNetFullFrameworkTests")]
-	public class NonsampledTests : TestsBase
+	public class SampleRate0Tests : TestsBase
 	{
-		public NonsampledTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper,
+		public SampleRate0Tests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper,
 			envVarsToSetForSampleAppPool: new Dictionary<string, string>() { { ConfigConsts.EnvVarNames.TransactionSampleRate, "0" } }) { }
 
 		[AspNetFullFrameworkTheory]
 		[MemberData(nameof(AllSampleAppUrlPaths))]
-		public async Task SampleRate0(SampleAppUrlPathData sampleAppUrlPathDataForSampled)
+		public async Task Test(SampleAppUrlPathData sampleAppUrlPathDataForSampled)
 		{
 			var sampleAppUrlPathData = sampleAppUrlPathDataForSampled.Clone(spansCount: 0);
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.Status);
+			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.StatusCode);
 
-			VerifyDataReceivedFromAgent(receivedData =>
+			await VerifyDataReceivedFromAgent(receivedData =>
 			{
 				TryVerifyDataReceivedFromAgent(sampleAppUrlPathData, receivedData);
 

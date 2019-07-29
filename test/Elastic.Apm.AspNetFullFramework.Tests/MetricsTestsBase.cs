@@ -9,7 +9,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	public class MetricsTestsBase : TestsBase
 	{
-		private const string MetricsInterval = "1s"; // configure agent to send metrics every second
+		private const int MetricsIntervalSeconds = 1; // configure agent to send metrics every second
+		private static readonly string MetricsInterval = $"{MetricsIntervalSeconds}s";
 
 		protected MetricsTestsBase(ITestOutputHelper xUnitOutputHelper, bool sampleAppShouldHaveAccessToPerfCounters)
 			: base(xUnitOutputHelper,
@@ -20,9 +21,17 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			// Send any request to the sample application to make sure it's running
 			var sampleAppUrlPathData = RandomSampleAppUrlPath();
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.Status);
+			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.RelativeUrlPath,
+				sampleAppUrlPathData.StatusCode, /* timeHttpCall: */ false);
 
-			VerifyDataReceivedFromAgent(receivedData =>
+			// Wait enough time to give agent a chance to gather all the metrics
+			await Task.Delay(2 * MetricsIntervalSeconds * 1000);
+
+			// Send another request - transaction-end event forces agent to send any queued events (in particular metrics) to APM server
+			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.RelativeUrlPath,
+				sampleAppUrlPathData.StatusCode, /* timeHttpCall: */ false);
+
+			await VerifyDataReceivedFromAgent(receivedData =>
 			{
 				receivedData.Metrics.Should().NotBeEmpty();
 				var samplesCountPerType = new Dictionary<string, int>();

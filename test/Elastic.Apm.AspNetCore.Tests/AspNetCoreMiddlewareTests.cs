@@ -1,14 +1,19 @@
 using System;
+using System.IO;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
+using Elastic.Apm.Api;
 using Elastic.Apm.Config;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
@@ -23,14 +28,17 @@ namespace Elastic.Apm.AspNetCore.Tests
 		private readonly ApmAgent _agent;
 		private readonly MockPayloadSender _capturedPayload;
 		private readonly WebApplicationFactory<Startup> _factory;
+		// ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+		private readonly IApmLogger _logger;
 
-		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory)
+		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper)
 		{
+			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(AspNetCoreMiddlewareTests));
 			_factory = factory;
 
 			//The agent is instantiated with ApmMiddlewareExtension.GetService, so we can also test the calculation of the service instance.
 			//(e.g. ASP.NET Core version)
-			_agent = new ApmAgent(new TestAgentComponents(new TestAgentConfigurationReader(new TestLogger())));
+			_agent = new ApmAgent(new TestAgentComponents(new TestAgentConfigurationReader(_logger)));
 			ApmMiddlewareExtension.UpdateServiceInformation(_agent.Service);
 
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
@@ -58,13 +66,16 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.And.NotBe(ConfigConsts.DefaultValues.UnknownServiceName);
 
 			_agent.Service.Agent.Name.Should().Be(Apm.Consts.AgentName);
-			var apmVersion = Assembly.Load("Elastic.Apm").GetName().Version.ToString();
+			var apmVersion = typeof(Agent).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 			_agent.Service.Agent.Version.Should().Be(apmVersion);
 
 			_agent.Service.Framework.Name.Should().Be("ASP.NET Core");
 
 			var aspNetCoreVersion = Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString();
 			_agent.Service.Framework.Version.Should().Be(aspNetCoreVersion);
+
+			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
+			_agent.Service.Runtime.Version.Should().Be(Directory.GetParent(typeof(object).Assembly.Location).Name);
 
 			_capturedPayload.Transactions.Should().ContainSingle();
 			var transaction = _capturedPayload.FirstTransaction;
@@ -145,10 +156,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var error = _capturedPayload.Errors[0] as Error;
 			error.Should().NotBeNull();
 
-			var errorDetail = error.Exception;
+			var errorDetail = error?.Exception;
 			errorDetail.Should().NotBeNull();
 
-			var tags = error.Context.Tags;
+			var tags = error?.Context.Tags;
 			tags.Should().NotBeEmpty().And.ContainKey("foo").And.Contain("foo", "bar");
 		}
 

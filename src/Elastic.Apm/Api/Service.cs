@@ -1,5 +1,7 @@
-﻿using Elastic.Apm.Config;
+﻿using System.Reflection;
+using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
@@ -13,18 +15,27 @@ namespace Elastic.Apm.Api
 		public Framework Framework { get; set; }
 		public Language Language { get; set; }
 		public string Name { get; set; }
+		public Runtime Runtime { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(Service))
 		{
 			{ "Name", Name }, { "Agent", Agent }, { "Framework", Framework }, { "Language", Language },
 		}.ToString();
 
-		internal static Service GetDefaultService(IConfigurationReader configurationReader)
-			=> new Service
+		internal static Service GetDefaultService(IConfigurationReader configurationReader, IApmLogger loggerArg)
+		{
+			IApmLogger logger = loggerArg.Scoped(nameof(Service));
+			return new Service
 			{
 				Name = configurationReader.ServiceName,
-				Agent = new AgentC { Name = Consts.AgentName, Version = typeof(Agent).Assembly.GetName().Version?.ToString() ?? "n/a" }
+				Agent = new AgentC
+				{
+					Name = Consts.AgentName,
+					Version = typeof(Agent).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion
+				},
+				Runtime = PlatformDetection.GetServiceRuntime(logger)
 			};
+		}
 
 		public class AgentC
 		{
@@ -55,5 +66,23 @@ namespace Elastic.Apm.Api
 		public string Name { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(Language)) { { "Name", Name } }.ToString();
+	}
+
+	/// <summary>
+	/// Name and version of the language runtime running this service
+	/// </summary>
+	public class Runtime
+	{
+		internal const string DotNetCoreName = ".NET Core";
+
+		internal const string DotNetFullFrameworkName = ".NET Framework";
+
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		public string Name { get; set; }
+
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		public string Version { get; set; }
+
+		public override string ToString() => new ToStringBuilder(nameof(Framework)) { { "Name", Name }, { "Version", Version } }.ToString();
 	}
 }

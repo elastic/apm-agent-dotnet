@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -11,6 +12,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
@@ -31,8 +33,7 @@ namespace Elastic.Apm.Report
 		private readonly HttpClient _httpClient;
 		private readonly IApmLogger _logger;
 
-		private readonly Service _service;
-		internal readonly Api.System _system;
+		internal readonly Api.System System;
 
 		private CancellationTokenSource _batchBlockReceiveAsyncCts;
 
@@ -43,9 +44,8 @@ namespace Elastic.Apm.Report
 
 		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, Api.System system, HttpMessageHandler handler = null)
 		{
-			_service = service;
-			_system = system;
-			_metadata = new Metadata { Service = _service, System = _system};
+			System = system;
+			_metadata = new Metadata { Service = service, System = System};
 			_logger = logger?.Scoped(nameof(PayloadSenderV2));
 
 			var serverUrlBase = configurationReader.ServerUrls.First();
@@ -54,6 +54,7 @@ namespace Elastic.Apm.Report
 			servicePoint.ConnectionLeaseTimeout = DnsTimeout;
 			servicePoint.ConnectionLimit = 20;
 
+			_logger?.Debug()?.Log("Setting HTTP client BaseAddress to {ApmServerUrl}...", serverUrlBase, Process.GetCurrentProcess().Id);
 			_httpClient = new HttpClient(handler ?? new HttpClientHandler()) { BaseAddress = serverUrlBase };
 
 			if (configurationReader.SecretToken != null)
@@ -104,7 +105,6 @@ namespace Elastic.Apm.Report
 				?.Log(!res
 					? "Failed adding MetricSet to the queue, {MetricSet}"
 					: "MetricSet added to the queue, {MetricSet}", metricSet);
-			_eventQueue.TriggerBatch();
 		}
 
 		public void QueueError(IError error)
@@ -153,7 +153,7 @@ namespace Elastic.Apm.Report
 							ndjson.AppendLine("{\"metricset\": " + serialized + "}");
 							break;
 					}
-					_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItemToSend}", item, serialized);
+					_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItem}", item, serialized);
 				}
 
 				var content = new StringContent(ndjson.ToString(), Encoding.UTF8, "application/x-ndjson");
@@ -162,27 +162,27 @@ namespace Elastic.Apm.Report
 
 				if (result != null && !result.IsSuccessStatusCode)
 				{
-					_logger?.Error()?.Log("Failed sending event. {ApmServerResponse}", await result.Content.ReadAsStringAsync());
+					_logger?.Error()?.Log("Failed sending event. " +
+						"APM Server response: status code: {ApmServerResponseStatusCode}, content: \n{ApmServerResponseContent}",
+						result.StatusCode, TextUtils.Indent(await result.Content.ReadAsStringAsync()));
 				}
 				else
 				{
 					_logger?.Debug()
-						?.Log($"Sent items to server: {Environment.NewLine}{{items}}", string.Join($",{Environment.NewLine}", queueItems.ToArray()));
+						?.Log("Sent items to server:\n{SerializedItems}",
+							TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray())));
 				}
 			}
 			catch (Exception e)
 			{
 				_logger?.Warning()
 					?.LogException(
-						e, "Failed sending events. Following events were not transferred successfully to the server:\n{items}",
-						string.Join($",{Environment.NewLine}", queueItems.ToArray()));
+						e, "Failed sending events. Following events were not transferred successfully to the server:\n{SerializedItems}",
+						TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray())));
 			}
 		}
 
-		public void Dispose()
-		{
-			_batchBlockReceiveAsyncCts?.Dispose();
-		}
+		public void Dispose() => _batchBlockReceiveAsyncCts?.Dispose();
 	}
 
 	internal class Metadata

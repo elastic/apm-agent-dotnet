@@ -1,6 +1,6 @@
-﻿using System;
-using Elastic.Apm.Api;
+﻿using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
@@ -8,36 +8,28 @@ namespace Elastic.Apm.Model
 {
 	internal class Error : IError
 	{
-		private readonly DateTimeOffset _start;
-
-		public Error(CapturedException capturedException, Transaction transaction, string parentId)
-			: this(capturedException)
+		public Error(CapturedException capturedException, Transaction transaction, string parentId, IApmLogger loggerArg)
 		{
+			Timestamp = TimeUtils.TimestampNow();
+			Id = RandomGenerator.GenerateRandomBytesAsString(new byte[16]);
+
+			Exception = capturedException;
+
 			TraceId = transaction.TraceId;
 			TransactionId = transaction.Id;
 			ParentId = parentId;
 			Transaction = new TransactionData(transaction.IsSampled, transaction.Type);
-		}
 
-		private Error(CapturedException capturedException)
-		{
-			_start = DateTimeOffset.UtcNow;
-			Id = RandomGenerator.GenerateRandomBytesAsString( new byte[16]);
-			Exception = capturedException;
+			IApmLogger logger = loggerArg?.Scoped($"{nameof(Error)}.{Id}");
+			logger.Trace()
+				?.Log("New Error instance created: {Error}. Time: {Time} (as timestamp: {Timestamp})",
+					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 		}
 
 		/// <summary>
 		/// <seealso cref="ShouldSerializeContext" />
 		/// </summary>
 		public Context Context { get; set; }
-
-		/// <summary>
-		/// Method to conditionally serialize <see cref="Context" /> because context should be serialized only when the transaction
-		/// is sampled.
-		/// See
-		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
-		/// </summary>
-		public bool ShouldSerializeContext() => Transaction.IsSampled;
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Culprit { get; set; }
@@ -51,8 +43,10 @@ namespace Elastic.Apm.Model
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
 
-		// ReSharper disable once UnusedMember.Global, ImpureMethodCallOnReadonlyValueField
-		public long Timestamp => _start.ToUnixTimeMilliseconds() * 1000;
+		/// <summary>
+		/// Recorded time of the event, UTC based and formatted as microseconds since Unix epoch
+		/// </summary>
+		public long Timestamp { get; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("trace_id")]
@@ -64,12 +58,17 @@ namespace Elastic.Apm.Model
 		[JsonProperty("transaction_id")]
 		public string TransactionId { get; set; }
 
+		/// <summary>
+		/// Method to conditionally serialize <see cref="Context" /> because context should be serialized only when the transaction
+		/// is sampled.
+		/// See
+		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
+		/// </summary>
+		public bool ShouldSerializeContext() => Transaction.IsSampled;
+
 		public override string ToString() => new ToStringBuilder(nameof(Error))
 		{
-			{ "Id", Id },
-			{ "TraceId", TraceId },
-			{ "ParentId", ParentId },
-			{ "TransactionId", TransactionId },
+			{ "Id", Id }, { "TraceId", TraceId }, { "ParentId", ParentId }, { "TransactionId", TransactionId },
 		}.ToString();
 
 		public class TransactionData
@@ -86,11 +85,8 @@ namespace Elastic.Apm.Model
 			[JsonConverter(typeof(TrimmedStringJsonConverter))]
 			public string Type { get; }
 
-			public override string ToString() => new ToStringBuilder(nameof(TransactionData))
-			{
-				{ "IsSampled", IsSampled },
-				{ "Type", Type },
-			}.ToString();
+			public override string ToString() =>
+				new ToStringBuilder(nameof(TransactionData)) { { "IsSampled", IsSampled }, { "Type", Type }, }.ToString();
 		}
 	}
 }

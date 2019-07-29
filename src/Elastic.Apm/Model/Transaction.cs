@@ -18,8 +18,6 @@ namespace Elastic.Apm.Model
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
 
-		private readonly DateTimeOffset _start;
-
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(IApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender) { }
@@ -33,17 +31,18 @@ namespace Elastic.Apm.Model
 			IPayloadSender sender
 		)
 		{
-			_logger = logger?.Scoped(nameof(Transaction));
+			Timestamp = TimeUtils.TimestampNow();
+			var idBytes = new byte[8];
+			Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
+			_logger = logger?.Scoped($"{nameof(Transaction)}.{Id}");
+
 			_sender = sender;
-			_start = DateTimeOffset.UtcNow;
 
 			Name = name;
 			HasCustomName = false;
 			Type = type;
-			var idBytes = new byte[8];
-			Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 
-			bool isSamplingFromDistributedTracingData = false;
+			var isSamplingFromDistributedTracingData = false;
 			if (distributedTracingData == null)
 			{
 				var traceIdBytes = new byte[16];
@@ -61,14 +60,26 @@ namespace Elastic.Apm.Model
 			SpanCount = new SpanCount();
 
 			if (isSamplingFromDistributedTracingData)
-				_logger.Trace()?.Log("New Transaction instance created: {Transaction}. " +
-					"IsSampled ({IsSampled}) is based on incoming distributed tracing data ({DistributedTracingData})",
-					this, IsSampled, distributedTracingData);
+			{
+				_logger.Trace()
+					?.Log("New Transaction instance created: {Transaction}. " +
+						"IsSampled ({IsSampled}) is based on incoming distributed tracing data ({DistributedTracingData})." +
+						" Start time: {Time} (as timestamp: {Timestamp})",
+						this, IsSampled, distributedTracingData, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+			}
 			else
-				_logger.Trace()?.Log("New Transaction instance created: {Transaction}. " +
-					"IsSampled ({IsSampled}) is based on the given sampler ({Sampler})",
-					this, IsSampled, sampler);
+			{
+				_logger.Trace()
+					?.Log("New Transaction instance created: {Transaction}. " +
+						"IsSampled ({IsSampled}) is based on the given sampler ({Sampler})." +
+						" Start time: {Time} (as timestamp: {Timestamp})",
+						this, IsSampled, sampler, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+			}
 		}
+
+		private bool _isEnded;
+
+		private string _name;
 
 		/// <summary>
 		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
@@ -84,6 +95,13 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		/// <value>The duration.</value>
 		public double? Duration { get; set; }
+
+		/// <summary>
+		/// If true, then the transaction name was modified by external code, and transaction name should not be changed
+		/// or "fixed" automatically ref https://github.com/elastic/apm-agent-dotnet/pull/258.
+		/// </summary>
+		[JsonIgnore]
+		internal bool HasCustomName { get; private set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Id { get; }
@@ -101,15 +119,6 @@ namespace Elastic.Apm.Model
 				_name = value;
 			}
 		}
-
-		private string _name;
-
-		/// <summary>
-		/// If true, then the transaction name was modified by external code, and transaction name should not be changed
-		/// or "fixed" automatically ref https://github.com/elastic/apm-agent-dotnet/pull/258.
-		/// </summary>
-		[JsonIgnore]
-		internal bool HasCustomName { get; private set; }
 
 		[JsonIgnore]
 		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(TraceId, Id, IsSampled);
@@ -135,8 +144,10 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		public Dictionary<string, string> Tags => Context.Tags;
 
-		// ReSharper disable once ImpureMethodCallOnReadonlyValueField
-		public long Timestamp => _start.ToUnixTimeMilliseconds() * 1000;
+		/// <summary>
+		/// Recorded time of the event, UTC based and formatted as microseconds since Unix epoch
+		/// </summary>
+		public long Timestamp { get; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("trace_id")]
@@ -165,11 +176,34 @@ namespace Elastic.Apm.Model
 
 		public void End()
 		{
-			if (!Duration.HasValue) Duration = (DateTimeOffset.UtcNow - _start).TotalMilliseconds;
+			if (Duration.HasValue)
+			{
+				_logger.Trace()
+					?.Log("Ended {Transaction} (with Duration already set)." +
+						" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
+						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
+			}
+			else
+			{
+				Assertion.IfEnabled?.That(!_isEnded,
+					$"Transaction's Duration doesn't have value even though {nameof(End)} method was already called." +
+					$" It contradicts the invariant enforced by {nameof(End)} method - Duration should have value when {nameof(End)} method exits" +
+					$" and {nameof(_isEnded)} field is set to true only when {nameof(End)} method exits." +
+					$" Context: this: {this}; {nameof(_isEnded)}: {_isEnded}");
 
-			_sender.QueueTransaction(this);
+				var endTimestamp = TimeUtils.TimestampNow();
+				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
+				_logger.Trace()
+					?.Log("Ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp})," +
+						" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
+						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp,
+						TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
+			}
 
-			_logger.Debug()?.Log("Ending {TransactionDetails}", ToString());
+			var isFirstEndCall = !_isEnded;
+			_isEnded = true;
+			if (isFirstEndCall) _sender.QueueTransaction(this);
+
 			Agent.TransactionContainer.Transactions.Value = null;
 		}
 
@@ -184,7 +218,7 @@ namespace Elastic.Apm.Model
 
 			if (!string.IsNullOrEmpty(action)) retVal.Action = action;
 
-			_logger.Debug()?.Log("Starting {SpanDetails}", retVal.ToString());
+			_logger.Trace()?.Log("Starting {SpanDetails}", retVal.ToString());
 			return retVal;
 		}
 
@@ -236,6 +270,6 @@ namespace Elastic.Apm.Model
 		public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 
-		internal static string StatusCodeToResult(string protocolName, int StatusCode) => $"{protocolName} {StatusCode.ToString()[0]}xx";
+		internal static string StatusCodeToResult(string protocolName, int statusCode) => $"{protocolName} {statusCode.ToString()[0]}xx";
 	}
 }

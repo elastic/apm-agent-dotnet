@@ -1,4 +1,4 @@
-﻿using Elastic.Apm.All;
+﻿using Elastic.Apm.NetCoreAll;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +19,7 @@ namespace WebApiSample
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 		{
-			app.UseElasticApm(_configuration);
+			app.UseAllElasticApm(_configuration);
 			ConfigureAllExceptAgent(app);
 		}
 

@@ -48,6 +48,7 @@ namespace Elastic.Apm.EntityFrameworkCore
 								Instance = commandExecutedEventData.Command.Connection.Database,
 								Type = Database.TypeSql
 							};
+
 							span.Duration = commandExecutedEventData.Duration.TotalMilliseconds;
 
 							var providerType = commandExecutedEventData.Command.Connection.GetType().FullName;

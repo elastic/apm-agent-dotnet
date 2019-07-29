@@ -21,10 +21,10 @@ using Elastic.Apm.Report;
 		"Elastic.Apm.AspNetCore.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
 [assembly:
 	InternalsVisibleTo(
-		"Elastic.Apm.All, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
+		"Elastic.Apm.NetCoreAll, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
 [assembly:
 	InternalsVisibleTo(
-		"Elastic.Apm.All.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
+		"Elastic.Apm.NetCoreAll.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
 [assembly:
 	InternalsVisibleTo(
 		"Elastic.Apm.PerfTests, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
@@ -67,8 +67,8 @@ namespace Elastic.Apm
 		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
 		public IApmLogger Logger => Components.Logger;
 		public IPayloadSender PayloadSender => Components.PayloadSender;
-		public ITracer Tracer => Components.Tracer;
 		public Service Service => Components.Service;
+		public ITracer Tracer => Components.Tracer;
 
 		internal Tracer TracerInternal => Tracer as Tracer;
 
@@ -83,12 +83,30 @@ namespace Elastic.Apm
 
 	public static class Agent
 	{
-		private static readonly Lazy<ApmAgent> Lazy = new Lazy<ApmAgent>(() => new ApmAgent(_components));
-		private static AgentComponents _components;
+		private static readonly Lazy<ApmAgent> Lazy = new Lazy<ApmAgent>(() => new ApmAgent(BuildComponents()));
+		private static IApmLogger _logger;
 
 		public static IConfigurationReader Config => Lazy.Value.ConfigurationReader;
 
 		internal static ApmAgent Instance => Lazy.Value;
+
+		public static IApmLogger Logger
+		{
+			get => _logger;
+			set
+			{
+				if (Lazy.IsValueCreated) throw new Exception("The singleton APM agent has already been instantiated and can no longer be configured");
+
+				_logger = value;
+			}
+		}
+
+		public static AgentComponents LastSetupComponents { get; private set; }
+
+		private static AgentComponents BuildComponents()
+		{
+			return LastSetupComponents ?? (Logger != null ? new AgentComponents(Logger) : null);
+		}
 
 		/// <summary>
 		/// The entry point for manual instrumentation. The <see cref="Tracer" /> property returns the tracer,
@@ -115,7 +133,8 @@ namespace Elastic.Apm
 		public static void Setup(AgentComponents agentComponents)
 		{
 			if (Lazy.IsValueCreated) throw new Exception("The singleton APM agent has already been instantiated and can no longer be configured");
-			_components = agentComponents;
+
+			LastSetupComponents = agentComponents;
 		}
 	}
 }

@@ -1,28 +1,24 @@
-using Elastic.Apm.Tests.TestHelpers;
+using Elastic.Apm.Helpers;
 using FluentAssertions;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
 	internal static class FluentAssertionsExtensions
 	{
+		internal static void ShouldOccurBetween(this ITimestampedDto child, ITimedDto containingAncestor) =>
+			TimeUtils.ToDateTime(child.Timestamp)
+				.Should()
+				.BeOnOrAfter(TimeUtils.ToDateTime(containingAncestor.Timestamp))
+				.And
+				.BeOnOrBefore(TimeUtils.ToEndDateTime(containingAncestor.Timestamp, containingAncestor.Duration));
+
 		internal static void ShouldOccurBetween(this ITimedDto child, ITimedDto containingAncestor)
 		{
-			TimeUtils.TimestampToDateTimeOffset(child.Timestamp)
-				.Should()
-				.BeOnOrAfter(TimeUtils.TimestampToDateTimeOffset(containingAncestor.Timestamp));
+			((ITimestampedDto)child).ShouldOccurBetween(containingAncestor);
 
-			TimeUtils.TimestampDurationToEndDateTimeOffset(child.Timestamp, child.Duration)
+			TimeUtils.ToEndDateTime(child.Timestamp, child.Duration)
 				.Should()
-				.BeOnOrBefore(TimeUtils.TimestampDurationToEndDateTimeOffset(containingAncestor.Timestamp, containingAncestor.Duration));
-		}
-
-		internal static void ShouldOccurBetween(this ITimestampedDto child, ITimedDto containingAncestor)
-		{
-			TimeUtils.TimestampToDateTimeOffset(child.Timestamp)
-				.Should()
-				.BeOnOrAfter(TimeUtils.TimestampToDateTimeOffset(containingAncestor.Timestamp))
-				.And
-				.BeOnOrBefore(TimeUtils.TimestampDurationToEndDateTimeOffset(containingAncestor.Timestamp, containingAncestor.Duration));
+				.BeOnOrBefore(TimeUtils.ToEndDateTime(containingAncestor.Timestamp, containingAncestor.Duration));
 		}
 	}
 }

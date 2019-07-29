@@ -6,13 +6,11 @@ endif::[]
 [[intro]]
 == Introduction
 
-WARNING: **This project is currently a prototype.
-Use it at your own risk.**
-
 Welcome to the APM .NET Agent documentation.
 
 Elastic APM automatically measures the performance of your application and tracks errors.
 For example, it records spans for database queries and transactions for incoming HTTP requests.
+See <<supported-technologies>> to learn about which frameworks and technologies are supported by Elastic APM .NET agent.
 
 Spans are grouped in transactions - by default one for each incoming HTTP request.
 But it's possible to create custom transactions not associated with an HTTP request.

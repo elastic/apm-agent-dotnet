@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
 using Elastic.Apm.Tests.Mocks;
@@ -157,6 +158,45 @@ namespace Elastic.Apm.Tests
 
 			deserializedNonSampledTransaction["sampled"].Value<bool>().Should().BeFalse();
 			deserializedNonSampledTransaction.Should().NotContainKey("context");
+		}
+
+		[Theory]
+		[InlineData("", 0, "")]
+		[InlineData("A", 0, "")]
+		[InlineData("ABC", 0, "")]
+		[InlineData("B", 1, "B")]
+		[InlineData("", 1, "")]
+		[InlineData("ABC", 1, "A")]
+		[InlineData("ABC", 2, "AB")]
+		[InlineData("ABC", 3, "ABC")]
+		[InlineData("", 3, "")]
+		[InlineData("ABCE", 3, "ABC")]
+		[InlineData("ABCD", 4, "ABCD")]
+		[InlineData("ABCDE", 4, "ABCD")]
+		[InlineData("ABCDE", 5, "ABCDE")]
+		[InlineData("ABCDEF", 5, "ABCDE")]
+		[InlineData("ABCDEF", 6, "ABCDEF")]
+		[InlineData("ABCDEFG", 6, "ABC...")]
+		[InlineData("ABCDEFGH", 6, "ABC...")]
+		[InlineData("ABCDEFGH", 7, "ABCD...")]
+		public void SerializationUtilsTrimToLengthTests(string original, int maxLength, string expectedTrimmed) =>
+			SerializationUtils.TrimToLength(original, maxLength).Should().Be(expectedTrimmed);
+
+		public static IEnumerable<object[]> SerializationUtilsTrimToPropertyMaxLengthVariantsToTest()
+		{
+			yield return new object[] { "", "" };
+			yield return new object[] { "A", "A" };
+			yield return new object[] { "B".Repeat(Consts.PropertyMaxLength), "B".Repeat(Consts.PropertyMaxLength) };
+			yield return new object[] { "C".Repeat(Consts.PropertyMaxLength + 1), "C".Repeat(Consts.PropertyMaxLength-3) + "..." };
+			yield return new object[] { "D".Repeat(Consts.PropertyMaxLength * 2), "D".Repeat(Consts.PropertyMaxLength-3) + "..." };
+		}
+
+		[Theory]
+		[MemberData(nameof(SerializationUtilsTrimToPropertyMaxLengthVariantsToTest))]
+		public void SerializationUtilsTrimToPropertyMaxLengthTests(string original, string expectedTrimmed)
+		{
+			Consts.PropertyMaxLength.Should().BeGreaterThan(3);
+			SerializationUtils.TrimToPropertyMaxLength(original).Should().Be(expectedTrimmed);
 		}
 
 		private static string SerializePayloadItem(object item) =>

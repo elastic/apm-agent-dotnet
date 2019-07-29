@@ -1,0 +1,84 @@
+ifdef::env-github[]
+NOTE: For the best reading experience,
+please view this documentation at https://www.elastic.co/guide/en/apm/agent/dotnet[elastic.co]
+endif::[]
+
+[[supported-technologies]]
+== Supported Technologies
+This page describes the technologies supported by the Elastic APM .NET agent.
+
+If your favorite technology is not supported yet,
+you can vote for it by participating in our
+https://docs.google.com/forms/d/18SgsVo9asGNFMjRqwdrk3wTHNwPhtHv4jE35hZRCL6A/[survey].
+We will use the results to add support for the most requested technologies.
+
+Another option is to add a dependency to the agent's <<public-api, public API>>
+in order to programmatically create custom transactions and spans.
+
+If you want to extend the auto-instrumentation capabilities of the agent,
+the https://github.com/elastic/apm-agent-dotnet/blob/master/CONTRIBUTING.md[contributing guide] should get you started.
+
+NOTE: If, for example,
+the HTTP client library of your choice is not listed,
+it means that there won't be spans for those outgoing HTTP requests.
+If the web framework you are using is not supported,
+the agent will not capture transactions.
+
+[float]
+[[supported-dotnet-flavors]]
+=== .NET versions
+
+The agent works on every .NET flavor and version that supports .NET Standard 2.0.
+This means .NET Core 2.0 (or newer) and .NET Framework 4.6.1 (or newer).
+
+[float]
+[[supported-web-frameworks]]
+=== Web Frameworks
+
+Automatic instrumentation for a web framework means
+a transaction is automatically created for each incoming request and it is named after the registered route.
+
+We support automatic instrumentation for the following web frameworks.
+
+|===
+|Framework |Supported versions |Supported since agent's version
+
+|ASP.NET Core
+|2.x
+|1.0
+
+|===
+
+
+[float]
+[[supported-data-access-technologies]]
+=== Data Access Technologies
+
+We support automatic instrumentation for the following data access technologies.
+
+|===
+|Data access technology |Supported versions |Notes |Supported since agent's version
+
+|Entity Framework (EF) Core
+|2.x
+|A DB span is automatically created for each access to underlying database performed by Entity Framework Core.
+|1.0
+
+|===
+
+[float]
+[[supported-networking-client-side-technologies]]
+=== Networking client-side technologies
+
+Automatic instrumentation for networking client-side technology means
+an HTTP span is automatically created for each outgoing HTTP request and tracing headers are propagated. 
+The spans are named after the schema `<method> <host>`, for example `GET elastic.co`.
+
+|===
+|Framework |Supported versions |Supported since agent's version
+
+|System.Net.Http.HttpClient on .NET Core
+|
+|1.0
+
+|===

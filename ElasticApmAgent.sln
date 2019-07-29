@@ -22,7 +22,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.AspNetCore.Test
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApiSamples", "sample\ApiSamples\ApiSamples.csproj", "{19C9C1BA-4BCC-4708-92C3-8F5AE18B44F8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.All", "src\Elastic.Apm.All\Elastic.Apm.All.csproj", "{C0F1E546-4388-4EA5-8C7C-ACA8CFA4CE2F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.NetCoreAll", "src\Elastic.Apm.NetCoreAll\Elastic.Apm.NetCoreAll.csproj", "{C0F1E546-4388-4EA5-8C7C-ACA8CFA4CE2F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpListenerSample", "sample\HttpListenerSample\HttpListenerSample.csproj", "{1AAB1A30-42C0-4C76-AE2E-9D7293945D80}"
 EndProject
