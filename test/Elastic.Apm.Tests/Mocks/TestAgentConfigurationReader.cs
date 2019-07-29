@@ -19,6 +19,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _captureBody;
 		private readonly string _stackTraceLimit;
 		private readonly string _spanFramesMinDurationInMilliseconds;
+		private readonly string _captureBodyContentTypes;
 
 		public TestAgentConfigurationReader(
 			IApmLogger logger,
@@ -31,7 +32,8 @@ namespace Elastic.Apm.Tests.Mocks
 			string metricsInterval = null,
 			string captureBody = ConfigConsts.SupportedValues.CaptureBodyOff,
 			string stackTraceLimit = null,
-			string spanFramesMinDurationInMilliseconds = null
+			string spanFramesMinDurationInMilliseconds = null,
+			string captureBodyContentTypes = ConfigConsts.DefaultValues.CaptureBodyContentTypes
 		) : base(logger)
 		{
 			Logger = logger ?? new TestLogger();
@@ -45,19 +47,17 @@ namespace Elastic.Apm.Tests.Mocks
 			_captureBody = captureBody;
 			_stackTraceLimit = stackTraceLimit;
 			_spanFramesMinDurationInMilliseconds = spanFramesMinDurationInMilliseconds;
+			_captureBodyContentTypes = captureBodyContentTypes;
 		}
 
 		public new IApmLogger Logger { get; }
-
 		public LogLevel LogLevel => ParseLogLevel(Kv(ConfigConsts.EnvVarNames.LogLevel, _logLevel, Origin));
 		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Kv(ConfigConsts.EnvVarNames.ServerUrls, _serverUrls, Origin));
 		public string ServiceName => ParseServiceName(Kv(ConfigConsts.EnvVarNames.ServiceName, _serviceName, Origin));
 		public string SecretToken => ParseSecretToken(Kv(ConfigConsts.EnvVarNames.SecretToken, _secretToken, Origin));
 		public bool CaptureHeaders => ParseCaptureHeaders(Kv(ConfigConsts.EnvVarNames.CaptureHeaders, _captureHeaders, Origin));
-
 		public double TransactionSampleRate => ParseTransactionSampleRate(Kv(ConfigConsts.EnvVarNames.TransactionSampleRate, _transactionSampleRate, Origin));
 		public string CaptureBody => ParseCaptureBody(Kv(ConfigConsts.EnvVarNames.CaptureBody, _captureBody, Origin));
-
 		public double MetricsIntervalInMilliseconds => ParseMetricsInterval(Kv(ConfigConsts.EnvVarNames.MetricsInterval, _metricsInterval, Origin));
 		public int StackTraceLimit => ParseStackTraceLimit(Kv(ConfigConsts.EnvVarNames.StackTraceLimit, _stackTraceLimit, Origin));
 
@@ -65,5 +65,6 @@ namespace Elastic.Apm.Tests.Mocks
 			ConfigConsts.EnvVarNames.SpanFramesMinDuration,
 			_spanFramesMinDurationInMilliseconds, Origin));
 
+		public List<string> CaptureBodyContentTypes => ParseCaptureBodyContentTypes(Kv(ConfigConsts.EnvVarNames.CaptureBodyContentTypes, _captureBodyContentTypes, Origin), CaptureBody);
 	}
 }

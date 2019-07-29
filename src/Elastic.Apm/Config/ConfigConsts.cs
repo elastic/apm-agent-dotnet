@@ -16,6 +16,7 @@ namespace Elastic.Apm.Config
 			public const string MetricsInterval = "ELASTIC_APM_METRICS_INTERVAL";
 			public const string CaptureBody = "ELASTIC_APM_CAPTURE_BODY";
 			public const double MinMetricsIntervalInMilliseconds = 1000;
+			public const string CaptureBodyContentTypes = "ELASTIC_APM_CAPTURE_BODY_CONTENT_TYPES";
 		}
 
 		public static class DefaultValues
@@ -29,7 +30,8 @@ namespace Elastic.Apm.Config
 			public const double TransactionSampleRate = 1.0;
 			public const string UnknownServiceName = "unknown";
 			public static Uri ServerUri => new Uri($"http://localhost:{ApmServerPort}");
-			public const string captureBody = SupportedValues.CaptureBodyOff;
+			public const string CaptureBody = SupportedValues.CaptureBodyOff;
+			public const string CaptureBodyContentTypes = "application/x-www-form-urlencoded*, text/*, application/json*, application/xml*";
 		}
 
 		public static class EnvVarNames
@@ -44,6 +46,7 @@ namespace Elastic.Apm.Config
 			public const string StackTraceLimit = "ELASTIC_APM_STACK_TRACE_LIMIT";
 			public const string TransactionSampleRate = "ELASTIC_APM_TRANSACTION_SAMPLE_RATE";
 			public const string CaptureBody = "CAPTURE_BODY";
+			public const string CaptureBodyContentTypes = "CAPTURE_BODY_CONTENT_TYPES";
 		}
 
 		public static class SupportedValues
@@ -54,7 +57,5 @@ namespace Elastic.Apm.Config
 			public const string CaptureBodyTransactions = "transactions";
 			public static List<string> CaptureBodySupportedValues = new List<string>() { CaptureBodyOff, CaptureBodyAll, CaptureBodyErrors, CaptureBodyTransactions };
 		}
-
-
 	}
 }

@@ -2,14 +2,18 @@ using System;
 using System.IO;
 using System.Text;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Internal;
 
 namespace Elastic.Apm.AspNetCore.Extensions
 {
-    public static class HttpRequestExtensions
-    {
+	public static class HttpRequestExtensions
+	{
+		/// <summary>
+		/// Extracts the request body using measure to prevent the 'read once' problem (cannot read after the body ha been already read).
+		/// </summary>
+		/// <param name="request"></param>
+		/// <param name="logger"></param>
+		/// <returns></returns>
 		public static string ExtractRequestBody(this HttpRequest request, IApmLogger logger)
 		{
 			var injectedRequestStream = new MemoryStream();
@@ -22,12 +26,8 @@ namespace Elastic.Apm.AspNetCore.Extensions
 				detectEncodingFromByteOrderMarks: false,
 				bufferSize: 1024 * 2))
 				{
-					//reset reader in case the body was read before
-					request.Body.Position = 0;
-
 					body = reader.ReadToEnd();
-					// Reset the request body stream position so the next middleware can read it
-					request.Body.Position = 0;
+
 					// Truncate the body to the first 2kb if it's longer
 					if (body.Length > Consts.RequestBodyMaxLength)
 					{
@@ -40,17 +40,17 @@ namespace Elastic.Apm.AspNetCore.Extensions
 					injectedRequestStream.Write(bytesToWrite, 0, bytesToWrite.Length);
 					injectedRequestStream.Seek(0, SeekOrigin.Begin);
 					request.Body = injectedRequestStream;
-
 				}
-			} catch (IOException ioException){
-				logger.Error()?.Log("IO Error reading request body , Error msg : {exception} , stack trace : {stacktrace} " , ioException.Message , ioException.StackTrace);
-			} catch (Exception e) {
-				//TODO : remove this after havning finalized all cases and testing all scenarios
-				logger.Error()?.Log("General Error reading request body , Error msg : {exception} , stack trace : {stacktrace} ", e.Message, e.StackTrace);
+			}
+			catch (IOException ioException)
+			{
+				logger.Error()?.LogException(ioException, "IO Error reading request body");
+			}
+			catch (Exception e)
+			{
+				logger.Error()?.LogException(e, "Error reading request body");
 			}
 			return body;
-        }
-
-		
+		}
 	}
 }

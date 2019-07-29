@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -41,7 +40,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			//The agent is instantiated with ApmMiddlewareExtension.GetService, so we can also test the calculation of the service instance.
 			//(e.g. ASP.NET Core version)
-			_agent = new ApmAgent(new TestAgentComponents(new TestAgentConfigurationReader(_logger)));
+			_agent = new ApmAgent(new TestAgentComponents(new TestAgentConfigurationReader(logger: _logger, captureBody: ConfigConsts.SupportedValues.CaptureBodyAll)));
+
 			ApmMiddlewareExtension.UpdateServiceInformation(_agent.Service);
 
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
@@ -125,11 +125,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		/// <summary>
 		/// Simulates an HTTP POST call to /home/simplePage and asserts on what the agent should send to the server
-		/// to test the 'CaptureBody' config option
+		/// to test the 'CaptureBody' configuration option
 		/// </summary>
 		[Fact]
 		public async Task HomeSimplePagePostTransactionTest()
 		{
+
 			var headerKey = "X-Additional-Header";
 			var headerValue = "For-Elastic-Apm-Agent";
 			_client.DefaultRequestHeaders.Add(headerKey, headerValue);
@@ -160,7 +161,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var transaction = _capturedPayload.FirstTransaction;
 			var transactionName = "POST Home/Post";
 			transaction.Name.Should().Be(transactionName);
-			transaction.Result.Should().Be("HTTP 2xx"); 
+			transaction.Result.Should().Be("HTTP 2xx");
 			transaction.Duration.Should().BeGreaterThan(0);
 
 			transaction.Type.Should().Be("request");
@@ -253,10 +254,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task FailingPostRequestWithoutConfiguredExceptionPage()
 		{
+
 			_client = Helper.GetClientWithoutExceptionPage(_agent, _factory);
 
 			_client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-			
+
 			var body = "{\"id\" : \"1\"}";
 			Func<Task> act = async () => await _client.PostAsync("api/Home/PostError", new StringContent(body, Encoding.UTF8, "application/json"));
 
@@ -276,7 +278,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			errorDetail.Type.Should().Be(typeof(Exception).FullName);
 			errorDetail.Handled.Should().BeFalse();
 
-			//Verify the url, method and also that the body is correctly captured
+			//Verify the URL, method and also that the body is correctly captured
 			var context = error.Context;
 			context.Request.Url.Full.Should().Be("http://localhost/api/Home/PostError");
 			context.Request.Method.Should().Be(HttpMethod.Post.Method);

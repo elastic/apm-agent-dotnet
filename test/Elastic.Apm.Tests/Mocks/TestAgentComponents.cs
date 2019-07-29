@@ -18,7 +18,8 @@ namespace Elastic.Apm.Tests.Mocks
 			IPayloadSender payloadSender = null,
 			string captureBody = ConfigConsts.SupportedValues.CaptureBodyOff,
 			string stackTraceLimit = null,
-			string spanFramesMinDurationInMilliseconds = null
+			string spanFramesMinDurationInMilliseconds = null,
+			string captureBodyContentTypes = ConfigConsts.DefaultValues.CaptureBodyContentTypes
 			)
 			: this(new TestAgentConfigurationReader(
 				new TestLogger(ParseWithoutLogging(logLevel)),
@@ -29,7 +30,8 @@ namespace Elastic.Apm.Tests.Mocks
 				transactionSampleRate: transactionSampleRate,
 				captureBody :  captureBody,
 				stackTraceLimit: stackTraceLimit,
-				spanFramesMinDurationInMilliseconds: spanFramesMinDurationInMilliseconds
+				spanFramesMinDurationInMilliseconds: spanFramesMinDurationInMilliseconds,
+				captureBodyContentTypes: captureBodyContentTypes
 			), payloadSender)
 		{
 		}

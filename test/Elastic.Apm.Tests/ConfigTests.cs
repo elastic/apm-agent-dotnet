@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Elastic.Apm.Config;
@@ -139,6 +140,15 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
+		public void CaptureBodyContentTypesConfigTest()
+		{
+			var agent = new ApmAgent(new TestAgentComponents(captureBodyContentTypes: DefaultValues.CaptureBodyContentTypes));
+			var expected = new List<string>() { "application/x-www-form-urlencoded*", "text/*", "application/json*", "application/xml*"};
+			agent.ConfigurationReader.CaptureBodyContentTypes.Should().HaveCount(4);
+			agent.ConfigurationReader.CaptureBodyContentTypes.Should().BeEquivalentTo(expected);
+		}
+
+		[Fact]
 		public void SetCaptureHeadersTest()
 		{
 			Environment.SetEnvironmentVariable(EnvVarNames.CaptureHeaders, "false");
@@ -156,6 +166,26 @@ namespace Elastic.Apm.Tests
 				var config = new EnvironmentConfigurationReader();
 				config.CaptureBody.Should().Be(value);
 			}
+		}
+
+		[Fact]
+		public void SetCaptureBodyContentTypesTest()
+		{
+			//
+
+			var contentType = "application/x-www-form-urlencoded*";
+			Environment.SetEnvironmentVariable(EnvVarNames.CaptureBodyContentTypes, contentType);
+			var config = new EnvironmentConfigurationReader();
+			config.CaptureBodyContentTypes.Should().HaveCount(1);
+			config.CaptureBodyContentTypes[0].Should().Be(contentType);
+
+			Environment.SetEnvironmentVariable(EnvVarNames.CaptureBodyContentTypes, "application/x-www-form-urlencoded*, text/*, application/json*, application/xml*");
+			config = new EnvironmentConfigurationReader();
+			config.CaptureBodyContentTypes.Should().HaveCount(4);
+			config.CaptureBodyContentTypes[0].Should().Be("application/x-www-form-urlencoded*");
+			config.CaptureBodyContentTypes[1].Should().Be("text/*");
+			config.CaptureBodyContentTypes[2].Should().Be("application/json*");
+			config.CaptureBodyContentTypes[3].Should().Be("application/xml*");
 		}
 
 		[Fact]

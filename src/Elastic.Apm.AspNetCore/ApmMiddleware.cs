@@ -1,22 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.Net.Mime;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.AspNetCore.Extensions;
 using Elastic.Apm.Config;
 using Elastic.Apm.DistributedTracing;
-using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Routing;
-using Elastic.Apm.AspNetCore.Extensions;
-using Elastic.Apm.AspNetCore.Helpers;
 
 [assembly:
 	InternalsVisibleTo(
@@ -47,7 +45,7 @@ namespace Elastic.Apm.AspNetCore
 		public async Task InvokeAsync(HttpContext context)
 		{
 			Transaction transaction;
-			
+
 			var transactionName = $"{context.Request.Method} {context.Request.Path}";
 
 			if (context.Request.Headers.ContainsKey(TraceParent.TraceParentHeaderName))
@@ -92,13 +90,7 @@ namespace Elastic.Apm.AspNetCore
 			{
 				await _next(context);
 			}
-			catch (Exception e) {
-				ExceptionFilter.Capture(e, transaction);
-				if (AgentConfigHelper.ShouldExtractRequestBodyOnError()) 
-				{
-					transaction.CollectRequestInfo(context, _logger);
-				}
-			}
+			catch (Exception e) when ((Helpers.ExceptionFilter.Capture(e, transaction, context, _configurationReader, _logger))) { }
 			finally
 			{
 				if (!transaction.HasCustomName)
@@ -142,7 +134,7 @@ namespace Elastic.Apm.AspNetCore
 				Protocol = GetProtocolName(context.Request.Protocol),
 				Raw = GetRawUrl(context.Request) ?? context.Request.GetEncodedUrl(),
 				PathName = context.Request.Path,
-				Search = context.Request.QueryString.Value.Length > 0  ? context.Request.QueryString.Value.Substring(1) : string.Empty
+				Search = context.Request.QueryString.Value.Length > 0 ? context.Request.QueryString.Value.Substring(1) : string.Empty
 			};
 
 			Dictionary<string, string> requestHeaders = null;
@@ -155,9 +147,13 @@ namespace Elastic.Apm.AspNetCore
 			}
 
 			var body = Consts.BodyRedacted; // According to the documentation - the default value of 'body' is '[Redacted]'
-			if (AgentConfigHelper.ShouldExtractRequestBodyOnTransactios())
+			if (!string.IsNullOrEmpty(context?.Request?.ContentType))
 			{
-				body = context.Request.ExtractRequestBody(_logger);
+				var contentType = new ContentType(context.Request.ContentType);
+				if (_configurationReader.ShouldExtractRequestBodyOnTransactions() && _configurationReader.CaptureBodyContentTypes.ContainsLike(contentType.MediaType))
+				{
+					body = context.Request.ExtractRequestBody(_logger);
+				}
 			}
 
 			transaction.Context.Request = new Request(context.Request.Method, url)

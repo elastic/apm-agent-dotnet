@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -35,6 +36,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.ServiceName.Should().Be("My_Test_Application");
 			config.CaptureHeaders.Should().Be(false);
 			config.TransactionSampleRate.Should().Be(0.456);
+			config.CaptureBody.Should().Be(ConfigConsts.SupportedValues.CaptureBodyAll);
+			var supportedContentTypes = new List<string>() { "application/x-www-form-urlencoded*", "text/*", "application/json*", "application/xml*" };
+			config.CaptureBodyContentTypes.Should().BeEquivalentTo(supportedContentTypes);
 		}
 
 		/// <summary>

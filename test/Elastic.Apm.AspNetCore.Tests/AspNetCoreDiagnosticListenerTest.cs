@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
-using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -65,7 +63,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task TestJsonBodyRetrievalOnRequestFailureInAspNetCore()
 		{
-			using (var agent = new ApmAgent(new TestAgentComponents(captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors)))
+			using (var agent = new ApmAgent(new TestAgentComponents(captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors,
+				captureBodyContentTypes: ConfigConsts.DefaultValues.CaptureBodyContentTypes)))
 			{
 				var capturedPayload = agent.PayloadSender as MockPayloadSender;
 				var client = Helper.GetClient(agent, _factory);

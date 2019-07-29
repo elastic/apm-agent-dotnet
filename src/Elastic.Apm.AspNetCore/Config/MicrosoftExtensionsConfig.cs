@@ -27,6 +27,7 @@ namespace Elastic.Apm.AspNetCore.Config
 			internal const string CaptureBody = "ElasticApm:CaptureBody";
 			internal const string SpanFramesMinDuration = "ElasticApm:SpanFramesMinDuration";
 			internal const string StackTraceLimit = "ElasticApm:StackTraceLimit";
+			internal const string CaptureBodyContentTypes = "ElasticApm:CaptureBodyContentTypes";
 		}
 
 		private readonly IConfiguration _configuration;
@@ -50,7 +51,7 @@ namespace Elastic.Apm.AspNetCore.Config
 				ParseSpanFramesMinDurationInMilliseconds(ReadFallBack(Keys.SpanFramesMinDuration, ConfigConsts.EnvVarNames.SpanFramesMinDuration)));
 		}
 
-		
+
 		private LogLevel? _logLevel;
 
 		public bool CaptureHeaders => ParseCaptureHeaders(ReadFallBack(Keys.CaptureHeaders, ConfigConsts.EnvVarNames.CaptureHeaders));
@@ -84,6 +85,8 @@ namespace Elastic.Apm.AspNetCore.Config
 			ParseTransactionSampleRate(ReadFallBack(Keys.TransactionSampleRate, ConfigConsts.EnvVarNames.TransactionSampleRate));
 
 		public string CaptureBody => ParseCaptureBody(ReadFallBack(Keys.CaptureBody, ConfigConsts.EnvVarNames.CaptureBody));
+
+		public List<string> CaptureBodyContentTypes => ParseCaptureBodyContentTypes(ReadFallBack(Keys.CaptureBodyContentTypes, ConfigConsts.EnvVarNames.CaptureBodyContentTypes), CaptureBody);
 
 		private ConfigurationKeyValue Read(string key) => Kv(key, _configuration[key], Origin);
 

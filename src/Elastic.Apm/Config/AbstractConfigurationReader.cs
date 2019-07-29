@@ -430,7 +430,7 @@ namespace Elastic.Apm.Config
 			var captureBodyInConfig = kv.Value;
 			if (string.IsNullOrEmpty(captureBodyInConfig))
 			{
-				return ConfigConsts.SupportedValues.CaptureBodyOff;
+				return DefaultValues.CaptureBody;
 			}
 
 			if (!SupportedValues.CaptureBodySupportedValues.Contains(captureBodyInConfig.ToLowerInvariant()))
@@ -439,12 +439,29 @@ namespace Elastic.Apm.Config
 				?.Log("The CaptureBody value that was provided ('{DefaultServiceName}') in the configuration is not allowed. request body will not be captured." +
 					"The supported values are : ",
 					captureBodyInConfig.ToLowerInvariant(), string.Join(", ", SupportedValues.CaptureBodySupportedValues));
-				return DefaultValues.captureBody;
+				return DefaultValues.CaptureBody;
+			}
+			return captureBodyInConfig.ToLowerInvariant();
+		}
+
+		protected List<string> ParseCaptureBodyContentTypes(ConfigurationKeyValue kv, string captureBody)
+		{
+			var captureBodyContentTypesInConfig = kv.Value;
+
+			//CaptureBodyContentTypes and CaptureBody are linked. Verify that in case CaptureBody is ON - then CaptureBodyContentTypes is not empty
+			if (string.IsNullOrEmpty(captureBodyContentTypesInConfig) && captureBody != SupportedValues.CaptureBodyOff)
+			{
+				Logger?.Error()?.Log("Capture_Body is on but no content types are configured. Request bodies will not be captured.");
+				return new List<string>();
 			}
 
-			return captureBodyInConfig.ToLowerInvariant();
+			var captureBodyContentTypes = new List<string>();
+			if (captureBodyContentTypesInConfig != null)
+			{
+				captureBodyContentTypes = captureBodyContentTypesInConfig.Split(',').Select(p => p.Trim()).ToList();
+			}
 
-
+			return captureBodyContentTypes;
 		}
 
 	}

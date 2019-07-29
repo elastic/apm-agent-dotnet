@@ -32,5 +32,7 @@ namespace Elastic.Apm.Config
 		double TransactionSampleRate { get; }
 
 		string CaptureBody { get; }
+
+		List<string> CaptureBodyContentTypes { get; }
 	}
 }

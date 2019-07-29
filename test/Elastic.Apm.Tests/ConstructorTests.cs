@@ -22,7 +22,7 @@ namespace Elastic.Apm.Tests
 			public double MetricsIntervalInMilliseconds { get; }
 			public int StackTraceLimit { get; }
 			public double SpanFramesMinDurationInMilliseconds { get; }
-
+			public List<string> CaptureBodyContentTypes { get; }
 		}
 
 		///<summary>
