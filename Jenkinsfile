@@ -93,7 +93,7 @@ pipeline {
                   post {
                     always {
                       sh label: 'debugging', script: 'find . -name *.pdb'
-                      junit(allowEmptyResults: false,
+                      junit(allowEmptyResults: true,
                         keepLongStdio: true,
                         testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       codecov(repo: env.REPO, basedir: "${BASE_DIR}", secret: "${CODECOV_SECRET}")
@@ -133,6 +133,9 @@ pipeline {
                   Build the project from code..
                   */
                   stage('Build - MSBuild') {
+                    when {
+                      expression { return false }
+                    }
                     steps {
                       withGithubNotify(context: 'Build MSBuild - Windows') {
                         cleanDir("${WORKSPACE}/${BASE_DIR}")
@@ -153,6 +156,9 @@ pipeline {
                   Execute unit tests.
                   */
                   stage('Test') {
+                    when {
+                      expression { return false }
+                    }
                     steps {
                       withGithubNotify(context: 'Test MSBuild - Windows', tab: 'tests') {
                         cleanDir("${WORKSPACE}/${BASE_DIR}")
@@ -167,7 +173,7 @@ pipeline {
                     }
                     post {
                       always {
-                        junit(allowEmptyResults: false,
+                        junit(allowEmptyResults: true,
                           keepLongStdio: true,
                           testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       }
@@ -191,7 +197,7 @@ pipeline {
                     }
                     post {
                       always {
-                        junit(allowEmptyResults: false,
+                        junit(allowEmptyResults: true,
                           keepLongStdio: true,
                           testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       }
@@ -266,7 +272,7 @@ pipeline {
                     }
                     post {
                       always {
-                        junit(allowEmptyResults: false,
+                        junit(allowEmptyResults: true,
                           keepLongStdio: true,
                           testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       }
