@@ -6,7 +6,8 @@ pipeline {
   agent any
   environment {
     REPO = 'apm-agent-dotnet'
-    BASE_DIR = "src/github.com/elastic/${env.REPO}"
+    // keep it short to avoid the 248 characters PATH limit in Windows
+    BASE_DIR = "apm-agent-dotnet"
     NOTIFY_TO = credentials('notify-to')
     JOB_GCS_BUCKET = credentials('gcs-bucket')
     CODECOV_SECRET = 'secret/apm-team/ci/apm-agent-dotnet-codecov'
