@@ -13,13 +13,17 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 	public class HomeController : Controller
 	{
 		internal const string AboutPageRelativePath = HomePageRelativePath + "/" + nameof(About);
+
 		internal const string CallReturnBadRequestPageRelativePath = HomePageRelativePath + "/" + nameof(CallReturnBadRequest);
+
+		internal const string CaptureControllerActionAsSpanQueryStringKey = "captureControllerActionAsSpan";
+
 		internal const string ContactPageRelativePath = HomePageRelativePath + "/" + nameof(Contact);
+		internal const string ContactSpanPrefix = nameof(Contact);
 
 		internal const string CustomChildSpanThrowsPageRelativePath = HomePageRelativePath + "/" + nameof(CustomChildSpanThrows);
 
 		internal const string CustomSpanThrowsInternalMethodName = nameof(CustomSpanThrowsInternal);
-		internal const string CustomSpanThrowsMethodName = nameof(CustomSpanThrows);
 		internal const string CustomSpanThrowsPageRelativePath = HomePageRelativePath + "/" + nameof(CustomSpanThrows);
 
 		internal const string DotNetRuntimeDescriptionHttpHeaderName = "DotNetRuntimeDescription";
@@ -28,14 +32,14 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		internal const string GetDotNetRuntimeDescriptionPageRelativePath = HomePageRelativePath + "/" + nameof(GetDotNetRuntimeDescription);
 		internal const string HomePageRelativePath = "Home";
 		internal const string ReturnBadRequestPageRelativePath = HomePageRelativePath + "/" + nameof(ReturnBadRequest);
-		internal const string TestChildSpanAction = "test_child_span_action";
-		internal const string TestChildSpanName = "test_child_span_name";
-		internal const string TestChildSpanSubtype = "test_child_span_subtype";
-		internal const string TestChildSpanType = "test_child_span_type";
-		internal const string TestSpanAction = "test_span_action";
-		internal const string TestSpanName = "test_span_name";
-		internal const string TestSpanSubtype = "test_span_subtype";
-		internal const string TestSpanType = "test_span_type";
+		internal const string SpanActionSuffix = "_span_action";
+		internal const string SpanNameSuffix = "_span_name";
+		internal const string SpanSubtypeSuffix = "_span_subtype";
+		internal const string SpanTypeSuffix = "_span_type";
+
+		internal const string TestChildSpanPrefix = "test_child";
+		internal const string TestSpanPrefix = "test";
+
 		internal const string ThrowsInvalidOperationPageRelativePath = HomePageRelativePath + "/" + nameof(ThrowsInvalidOperation);
 		internal static readonly Uri ChildHttpCallToExternalServiceUrl = new Uri("https://elastic.co");
 
@@ -48,22 +52,38 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 			return View();
 		}
 
-		public async Task<ActionResult> Contact()
+		private bool GetCaptureControllerActionAsSpan()
+		{
+			var captureControllerActionAsSpanValues = HttpContext.Request.QueryString.GetValues(CaptureControllerActionAsSpanQueryStringKey);
+			if (captureControllerActionAsSpanValues == null || captureControllerActionAsSpanValues.Length == 0) return false;
+
+			if (captureControllerActionAsSpanValues.Length > 1)
+			{
+				throw new ArgumentException($"{CaptureControllerActionAsSpanQueryStringKey} should appear in query string at most once",
+					CaptureControllerActionAsSpanQueryStringKey);
+			}
+			return bool.Parse(captureControllerActionAsSpanValues[0]);
+		}
+
+		public Task<ActionResult> Contact()
 		{
 			var httpClient = new HttpClient();
 
-			var callToThisAppUrl =
-				new Uri(HttpContext.ApplicationInstance.Request.Url.ToString().Replace(ContactPageRelativePath, AboutPageRelativePath));
-			var responseFromLocalHost = await GetContentFromUrl(callToThisAppUrl);
-			var callToExternalServiceUrl = ChildHttpCallToExternalServiceUrl;
-			var responseFromElasticCo = await GetContentFromUrl(callToExternalServiceUrl);
+			return SafeCaptureSpan<ActionResult>($"{ContactSpanPrefix}{SpanNameSuffix}", $"{ContactSpanPrefix}{SpanTypeSuffix}", async () =>
+			{
+				var callToThisAppUrl =
+					new Uri(HttpContext.ApplicationInstance.Request.Url.ToString().Replace(ContactPageRelativePath, AboutPageRelativePath));
+				var responseFromLocalHost = await GetContentFromUrl(callToThisAppUrl);
+				var callToExternalServiceUrl = ChildHttpCallToExternalServiceUrl;
+				var responseFromElasticCo = await GetContentFromUrl(callToExternalServiceUrl);
 
-			ViewBag.Message =
-				$"Your contact page. " +
-				$" Response code from `{callToThisAppUrl}' is {responseFromLocalHost.StatusCode}. " +
-				$" Response code from `{callToExternalServiceUrl}' is {responseFromElasticCo.StatusCode}.";
+				ViewBag.Message =
+					$"Your contact page. " +
+					$" Response code from `{callToThisAppUrl}' is {responseFromLocalHost.StatusCode}. " +
+					$" Response code from `{callToExternalServiceUrl}' is {responseFromElasticCo.StatusCode}.";
 
-			return View();
+				return View();
+			}, $"{ContactSpanPrefix}{SpanSubtypeSuffix}", $"{ContactSpanPrefix}{SpanActionSuffix}", GetCaptureControllerActionAsSpan());
 
 			async Task<HttpResponseMessage> GetContentFromUrl(Uri urlToGet)
 			{
@@ -80,20 +100,25 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 			throw new InvalidOperationException(ExceptionMessage);
 		}
 
-		private static Task<T> SafeCaptureSpan<T>(string spanName, string spanType, Func<Task<T>> func, string subType = null, string action = null)
+		private static Task<T> SafeCaptureSpan<T>(string spanName, string spanType, Func<Task<T>> func, string subType = null, string action = null,
+			bool doCaptureSpan = true
+		)
 		{
-			if (Agent.Tracer.CurrentTransaction == null) return func();
-			var currentExecutionSegment = (Agent.Tracer.CurrentSpan ?? (IExecutionSegment)Agent.Tracer.CurrentTransaction);
+			if (!doCaptureSpan || Agent.Tracer.CurrentTransaction == null) return func();
+
+			var currentExecutionSegment = Agent.Tracer.CurrentSpan ?? (IExecutionSegment)Agent.Tracer.CurrentTransaction;
 			return currentExecutionSegment.CaptureSpan(spanName, spanType, func, subType, action);
 		}
 
 		public Task<ActionResult> CustomSpanThrows() =>
-			SafeCaptureSpan(TestSpanName, TestSpanType, CustomSpanThrowsInternal, TestSpanSubtype, TestSpanAction);
+			SafeCaptureSpan($"{TestSpanPrefix}{SpanNameSuffix}", $"{TestSpanPrefix}{SpanTypeSuffix}", CustomSpanThrowsInternal,
+				$"{TestSpanPrefix}{SpanSubtypeSuffix}", $"{TestSpanPrefix}{SpanActionSuffix}");
 
 		public Task<ActionResult> CustomChildSpanThrows() =>
-			SafeCaptureSpan(TestSpanName, TestSpanType,
-				() => SafeCaptureSpan(TestChildSpanName, TestChildSpanType, CustomSpanThrowsInternal, TestChildSpanSubtype, TestChildSpanAction),
-				TestSpanSubtype, TestSpanAction);
+			SafeCaptureSpan($"{TestSpanPrefix}{SpanNameSuffix}", $"{TestSpanPrefix}{SpanTypeSuffix}",
+				() => SafeCaptureSpan($"{TestChildSpanPrefix}{SpanNameSuffix}", $"{TestChildSpanPrefix}{SpanTypeSuffix}",
+					CustomSpanThrowsInternal, $"{TestChildSpanPrefix}{SpanSubtypeSuffix}", $"{TestChildSpanPrefix}{SpanActionSuffix}"),
+				$"{TestSpanPrefix}{SpanSubtypeSuffix}", $"{TestSpanPrefix}{SpanActionSuffix}");
 
 		public async Task<ActionResult> ThrowsNameCouldNotBeResolved()
 		{

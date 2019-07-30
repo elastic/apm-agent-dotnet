@@ -31,10 +31,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				transaction.IsSampled.Should().BeTrue();
 
 				var span = receivedData.Spans.First();
-				span.Type.Should().Be(HomeController.TestSpanType);
-				span.Subtype.Should().Be(HomeController.TestSpanSubtype);
-				span.Action.Should().Be(HomeController.TestSpanAction);
-				span.Name.Should().Be(HomeController.TestSpanName);
+				VerifySpanNameTypeSubtypeAction(span, HomeController.TestSpanPrefix);
 				span.TraceId.Should().Be(transaction.TraceId);
 				span.TransactionId.Should().Be(transaction.Id);
 				span.ParentId.Should().Be(transaction.Id);
@@ -80,17 +77,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				var childSpan = receivedData.Spans[0];
 				var parentSpan = receivedData.Spans[1];
 
-				childSpan.Name.Should().Be(HomeController.TestChildSpanName);
-				childSpan.Type.Should().Be(HomeController.TestChildSpanType);
-				childSpan.Subtype.Should().Be(HomeController.TestChildSpanSubtype);
-				childSpan.Action.Should().Be(HomeController.TestChildSpanAction);
+				VerifySpanNameTypeSubtypeAction(childSpan, HomeController.TestChildSpanPrefix);
 				childSpan.ParentId.Should().Be(parentSpan.Id);
 				childSpan.ShouldOccurBetween(parentSpan);
 
-				parentSpan.Name.Should().Be(HomeController.TestSpanName);
-				parentSpan.Type.Should().Be(HomeController.TestSpanType);
-				parentSpan.Subtype.Should().Be(HomeController.TestSpanSubtype);
-				parentSpan.Action.Should().Be(HomeController.TestSpanAction);
+				VerifySpanNameTypeSubtypeAction(parentSpan, HomeController.TestSpanPrefix);
 				parentSpan.ParentId.Should().Be(transaction.Id);
 				parentSpan.ShouldOccurBetween(transaction);
 

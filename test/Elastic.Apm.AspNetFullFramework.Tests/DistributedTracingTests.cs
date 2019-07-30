@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using AspNetFullFrameworkSampleApp.Controllers;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Tests.MockApmServer;
 using FluentAssertions;
 using Xunit;
@@ -33,13 +35,62 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 				var spanExternalCall =
 					receivedData.Spans.Single(sp => sp.Context.Http.Url == HomeController.ChildHttpCallToExternalServiceUrl.ToString());
-				VerifySpan(spanExternalCall, HomeController.ChildHttpCallToExternalServiceUrl.ToString(), 200);
+				VerifyHttpCallSpan(spanExternalCall, HomeController.ChildHttpCallToExternalServiceUrl.ToString(), 200);
 
 				spanExternalCall.TraceId.Should().Be(rootTx.TraceId);
 				spanExternalCall.ParentId.Should().Be(rootTx.Id);
 				spanExternalCall.TransactionId.Should().Be(rootTx.Id);
 
 				spanExternalCall.ShouldOccurBetween(rootTx);
+			});
+		}
+
+		[AspNetFullFrameworkFact]
+		[SuppressMessage("ReSharper", "NullConditionalAssertion")]
+		public async Task ContactPageCallsAboutPageAndExternalUrlWithWrappingControllerActionSpan()
+		{
+			const string queryString = "?" + HomeController.CaptureControllerActionAsSpanQueryStringKey + "=true";
+			var rootTxData = SampleAppUrlPaths.ContactPage.Clone(
+				$"{SampleAppUrlPaths.ContactPage.RelativeUrlPath}{queryString}",
+				spansCount: SampleAppUrlPaths.ContactPage.SpansCount + 1);
+			var childTxData = SampleAppUrlPaths.AboutPage.Clone($"{SampleAppUrlPaths.AboutPage.RelativeUrlPath}{queryString}");
+
+			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(rootTxData.RelativeUrlPath, rootTxData.StatusCode);
+
+			VerifyDataReceivedFromAgent(receivedData =>
+			{
+				TryVerifyDataReceivedFromAgent(rootTxData, receivedData);
+
+				var rootTx = FindAndVerifyTransaction(receivedData, rootTxData);
+				var childTx = FindAndVerifyTransaction(receivedData, childTxData);
+
+				var rootTxControllerActionSpan = receivedData.Spans.Last();
+				var spanCallToChildTx = receivedData.Spans.Single(sp => sp.Context?.Http?.Url == childTx.Context.Request.Url.Full);
+				var spanExternalCall =
+					receivedData.Spans.Single(sp => sp.Context?.Http?.Url == HomeController.ChildHttpCallToExternalServiceUrl.ToString());
+
+				VerifySpanNameTypeSubtypeAction(rootTxControllerActionSpan, HomeController.ContactSpanPrefix);
+				VerifyHttpCallSpan(spanCallToChildTx, childTx.Context.Request.Url.Full, childTxData.StatusCode);
+				VerifyHttpCallSpan(spanExternalCall, HomeController.ChildHttpCallToExternalServiceUrl.ToString(), 200);
+
+				rootTxControllerActionSpan.TraceId.Should().Be(rootTx.TraceId);
+				childTx.TraceId.Should().Be(rootTx.TraceId);
+				spanCallToChildTx.TraceId.Should().Be(rootTx.TraceId);
+				spanExternalCall.TraceId.Should().Be(rootTx.TraceId);
+
+				rootTxControllerActionSpan.ParentId.Should().Be(rootTx.Id);
+				spanCallToChildTx.ParentId.Should().Be(rootTxControllerActionSpan.Id);
+				childTx.ParentId.Should().Be(spanCallToChildTx.Id);
+				spanExternalCall.ParentId.Should().Be(rootTxControllerActionSpan.Id);
+
+				rootTxControllerActionSpan.TransactionId.Should().Be(rootTx.Id);
+				spanCallToChildTx.TransactionId.Should().Be(rootTx.Id);
+				spanExternalCall.TransactionId.Should().Be(rootTx.Id);
+
+				rootTxControllerActionSpan.ShouldOccurBetween(rootTx);
+				spanCallToChildTx.ShouldOccurBetween(rootTxControllerActionSpan);
+				childTx.ShouldOccurBetween(spanCallToChildTx);
+				spanExternalCall.ShouldOccurBetween(rootTxControllerActionSpan);
 			});
 		}
 
@@ -59,7 +110,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			});
 		}
 
-		private void VerifyRootChildTransactions(
+		private static void VerifyRootChildTransactions(
 			ReceivedData receivedData,
 			SampleAppUrlPathData rootTxData,
 			SampleAppUrlPathData childTxData,
@@ -71,7 +122,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var childTx = FindAndVerifyTransaction(receivedData, childTxData);
 
 			var spanCallToChildTx = receivedData.Spans.Single(sp => sp.Context.Http.Url == childTx.Context.Request.Url.Full);
-			VerifySpan(spanCallToChildTx, childTx.Context.Request.Url.Full, childTxData.StatusCode);
+			VerifyHttpCallSpan(spanCallToChildTx, childTx.Context.Request.Url.Full, childTxData.StatusCode);
 
 			childTx.TraceId.Should().Be(rootTx.TraceId);
 			spanCallToChildTx.TraceId.Should().Be(rootTx.TraceId);
@@ -88,14 +139,27 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			childTxOut = childTx;
 		}
 
-		private TransactionDto FindAndVerifyTransaction(ReceivedData receivedData, SampleAppUrlPathData txData)
+		private static TransactionDto FindAndVerifyTransaction(ReceivedData receivedData, SampleAppUrlPathData txData)
 		{
 			var txUrlPath = Consts.SampleApp.RootUrlPath + "/" + txData.RelativeUrlPath;
-			var transaction = receivedData.Transactions.Single(tx => tx.Name == $"GET {txUrlPath}");
+			var expectedFullUrlAsString = "http://" + Consts.SampleApp.Host + txUrlPath;
+			var expectedFullUrl = new Uri(expectedFullUrlAsString);
+			var queryString = expectedFullUrl.Query;
+			if (queryString.IsEmpty())
+			{
+				// Uri.Query returns empty string both when query string is empty ("http://host/path?") and
+				// when there's no query string at all ("http://host/path") so we need a way to distinguish between these cases
+				if (expectedFullUrlAsString.IndexOf('?') == -1)
+					queryString = null;
+			}
+			else if (queryString[0] == '?')
+				queryString = queryString.Substring(1, queryString.Length - 1);
+
+			var transaction = receivedData.Transactions.Single(tx => tx.Context.Request.Url.PathName == expectedFullUrl.AbsolutePath);
 			transaction.Context.Request.Method.ToUpperInvariant().Should().Be("GET");
-			transaction.Context.Request.Url.Full.Should().Be("http://" + Consts.SampleApp.Host + txUrlPath);
-			transaction.Context.Request.Url.PathName.Should().Be(txUrlPath);
-			transaction.Context.Request.Url.Search.Should().BeNull();
+			transaction.Context.Request.Url.Full.Should().Be(expectedFullUrlAsString);
+			transaction.Context.Request.Url.PathName.Should().Be(expectedFullUrl.AbsolutePath);
+			transaction.Context.Request.Url.Search.Should().Be(queryString);
 
 			transaction.Context.Response.Finished.Should().BeTrue();
 			transaction.Context.Response.StatusCode.Should().Be(txData.StatusCode);
@@ -110,14 +174,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			transaction.Context.User.Should().BeNull();
 
 			transaction.IsSampled.Should().BeTrue();
-			transaction.Name.Should().Be($"GET {txUrlPath}");
+			transaction.Name.Should().Be($"GET {expectedFullUrl.AbsolutePath}");
 			transaction.SpanCount.Started.Should().Be(txData.SpansCount);
 			transaction.SpanCount.Dropped.Should().Be(0);
 
 			return transaction;
 		}
 
-		private void VerifySpan(SpanDto span, string url, int statusCode)
+		private static void VerifyHttpCallSpan(SpanDto span, string url, int statusCode)
 		{
 			span.Context.Db.Should().BeNull();
 			span.Context.Tags.Should().BeNull();

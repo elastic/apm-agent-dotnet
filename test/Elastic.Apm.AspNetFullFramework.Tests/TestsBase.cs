@@ -314,6 +314,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			}
 		}
 
+		internal void VerifySpanNameTypeSubtypeAction(SpanDto span, string spanPrefix)
+		{
+			span.Name.Should().Be($"{spanPrefix}{HomeController.SpanNameSuffix}");
+			span.Type.Should().Be($"{spanPrefix}{HomeController.SpanTypeSuffix}");
+			span.Subtype.Should().Be($"{spanPrefix}{HomeController.SpanSubtypeSuffix}");
+			span.Action.Should().Be($"{spanPrefix}{HomeController.SpanActionSuffix}");
+		}
+
 		private void FullFwAssertValid(ReceivedData receivedData)
 		{
 			foreach (var error in receivedData.Errors) FullFwAssertValid(error);

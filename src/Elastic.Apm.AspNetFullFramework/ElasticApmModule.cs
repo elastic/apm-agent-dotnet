@@ -145,13 +145,13 @@ namespace Elastic.Apm.AspNetFullFramework
 		{
 			var httpRequestUrl = httpRequest.Url;
 			var queryString = httpRequestUrl.Query;
-			var rawUrlPathAndQuery = httpRequest.RawUrl;
 			var fullUrl = httpRequestUrl.AbsoluteUri;
 			if (queryString.IsEmpty())
 			{
 				// Uri.Query returns empty string both when query string is empty ("http://host/path?") and
 				// when there's no query string at all ("http://host/path") so we need a way to distinguish between these cases
-				if (rawUrlPathAndQuery.IndexOf('?') == -1)
+				// HttpRequest.RawUrl contains only raw URL's path and query (not a full raw URL with protocol, host, etc.)
+				if (httpRequest.RawUrl.IndexOf('?') == -1)
 					queryString = null;
 				else if (!fullUrl.IsEmpty() && fullUrl[fullUrl.Length - 1] != '?')
 					fullUrl += "?";
