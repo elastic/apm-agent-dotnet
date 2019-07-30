@@ -244,7 +244,7 @@ The default unit for this option is `s`.
 If set to `true`,
 the agent will capture request and response headers, including cookies.
 
-NOTE: Setting this to `false` reduces memory allocations, network bandwidth and Elasticsearch disk space.
+NOTE: Setting this to `false` reduces memory allocations, network bandwidth and disk space used by Elasticsearch.
 
 [[config-stacktrace]]
 === Stacktrace configuration options
