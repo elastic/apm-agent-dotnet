@@ -14,6 +14,7 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// <seealso cref="ShouldSerializeLabels" />
 		/// </summary>
+		[JsonProperty("tags")]
 		[JsonConverter(typeof(LabelsJsonConverter))]
 		public Dictionary<string, string> Labels => _labels.Value;
 
