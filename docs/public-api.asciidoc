@@ -179,7 +179,7 @@ finally
 
 
 [float]
-[[api-transaction-labels]]
+[[api-transaction-tags]]
 ==== `Dictionary<string,string> Labels`
 A flat mapping of user-defined labels with string values. 
 
@@ -321,9 +321,9 @@ In such a case, the name of the span will contain information about the query it
 and the type will hold information about the database type.
 
 [float]
-[[api-span-labels]]
+[[api-span-tags]]
 ==== `Dictionary<string,string> Labels`
-Similar to <<api-transaction-labels>> on the <<api-transaction>>: A flat mapping of user-defined labels with string values.
+Similar to <<api-transaction-tags>> on the <<api-transaction>>: A flat mapping of user-defined labels with string values.
 
 TIP: Before using custom labels, ensure you understand the different types of
 {apm-overview-ref-v}/metadata.html[metadata] that are available.
