@@ -65,7 +65,7 @@ The <<config-stack-trace-limit,`StackTraceLimit`>> controls how many stack frame
 when a capturing stack trace.
 
 [float]
-[[performance-tuning-metrics]]
+[[performance-tuning-disable-capture-headers]]
 === Disable capturing HTTP request and response headers
 
 Capturing HTTP request and response headers increases memory allocations,
@@ -73,8 +73,8 @@ network bandwidth and Elasticsearch disk space. To disable capturing capturing H
 set <<config-capture-headers,`CaptureHeaders`>> to `false`.
 
 [float]
-[[performance-tuning-metrics]]
-=== Metrics
+[[performance-tuning-increase-metrics-collection-interval]]
+=== Increase metrics collection interval
 
 The .NET agent tracks certain system and application metrics.
 These metrics are regularly collected and sent to the APM Server and from there to Elasticsearch.
