@@ -69,7 +69,7 @@ when a capturing stack trace.
 === Disable capturing HTTP request and response headers
 
 Capturing HTTP request and response headers increases memory allocations,
-network bandwidth and Elasticsearch disk space. To disable capturing capturing HTTP request and response headers,
+network bandwidth and Elasticsearch disk space. To disable capturing HTTP request and response headers,
 set <<config-capture-headers,`CaptureHeaders`>> to `false`.
 
 [float]
