@@ -170,7 +170,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				caseInsensitiveResponseHeaders["Content-Type"].Should().Be("text/html; charset=utf-8");
 			}
 
-			transaction.Context.Tags.Should().BeNull();
+			transaction.Context.Labels.Should().BeNull();
 			transaction.Context.User.Should().BeNull();
 
 			transaction.IsSampled.Should().BeTrue();
@@ -184,7 +184,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		private static void VerifyHttpCallSpan(SpanDto span, string url, int statusCode)
 		{
 			span.Context.Db.Should().BeNull();
-			span.Context.Tags.Should().BeNull();
+			span.Context.Labels.Should().BeNull();
 
 			span.Context.Http.Method.Should().Be("GET");
 			span.Context.Http.StatusCode.Should().Be(statusCode);

@@ -440,11 +440,11 @@ namespace Elastic.Apm.Tests.ApiTests
 		}
 
 		/// <summary>
-		/// Creates 1 transaction and 1 span with 2 tags on both of them.
-		/// Makes sure that the tags are captured.
+		/// Creates 1 transaction and 1 span with 2 labels on both of them.
+		/// Makes sure that the labels are captured.
 		/// </summary>
 		[Fact]
-		public void TagsOnTransactionAndSpan()
+		public void LabelsOnTransactionAndSpan()
 		{
 			const string transactionName = TestTransaction;
 			const string transactionType = UnitTest;
@@ -454,12 +454,12 @@ namespace Elastic.Apm.Tests.ApiTests
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
 				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
-				transaction.Tags["fooTransaction1"] = "barTransaction1";
-				transaction.Tags["fooTransaction2"] = "barTransaction2";
+				transaction.Labels["fooTransaction1"] = "barTransaction1";
+				transaction.Labels["fooTransaction2"] = "barTransaction2";
 
 				var span = transaction.StartSpan(spanName, ApiConstants.TypeExternal);
-				span.Tags["fooSpan1"] = "barSpan1";
-				span.Tags["fooSpan2"] = "barSpan2";
+				span.Labels["fooSpan1"] = "barSpan1";
+				span.Labels["fooSpan2"] = "barSpan2";
 
 				Thread.Sleep(5); //Make sure we have duration > 0
 
@@ -480,17 +480,17 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.Errors.Should().ContainSingle();
 			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 
-			payloadSender.FirstTransaction.Tags.Should().Contain("fooTransaction1", "barTransaction1");
-			payloadSender.FirstTransaction.Context.Tags.Should().Contain("fooTransaction1", "barTransaction1");
+			payloadSender.FirstTransaction.Labels.Should().Contain("fooTransaction1", "barTransaction1");
+			payloadSender.FirstTransaction.Context.Labels.Should().Contain("fooTransaction1", "barTransaction1");
 
-			payloadSender.FirstTransaction.Tags.Should().Contain("fooTransaction2", "barTransaction2");
-			payloadSender.FirstTransaction.Context.Tags.Should().Contain("fooTransaction2", "barTransaction2");
+			payloadSender.FirstTransaction.Labels.Should().Contain("fooTransaction2", "barTransaction2");
+			payloadSender.FirstTransaction.Context.Labels.Should().Contain("fooTransaction2", "barTransaction2");
 
-			payloadSender.SpansOnFirstTransaction[0].Tags.Should().Contain("fooSpan1", "barSpan1");
-			payloadSender.SpansOnFirstTransaction[0].Context.Tags.Should().Contain("fooSpan1", "barSpan1");
+			payloadSender.SpansOnFirstTransaction[0].Labels.Should().Contain("fooSpan1", "barSpan1");
+			payloadSender.SpansOnFirstTransaction[0].Context.Labels.Should().Contain("fooSpan1", "barSpan1");
 
-			payloadSender.SpansOnFirstTransaction[0].Tags.Should().Contain("fooSpan2", "barSpan2");
-			payloadSender.SpansOnFirstTransaction[0].Context.Tags.Should().Contain("fooSpan2", "barSpan2");
+			payloadSender.SpansOnFirstTransaction[0].Labels.Should().Contain("fooSpan2", "barSpan2");
+			payloadSender.SpansOnFirstTransaction[0].Context.Labels.Should().Contain("fooSpan2", "barSpan2");
 		}
 
 		/// <summary>
@@ -566,18 +566,18 @@ namespace Elastic.Apm.Tests.ApiTests
 		}
 
 		/// <summary>
-		/// Creates a transaction, then a span and then a sub span, which captures a tag.
-		/// Makes sure that the tag is captured by the agent.
+		/// Creates a transaction, then a span and then a sub span, which captures a label.
+		/// Makes sure that the label is captured by the agent.
 		/// </summary>
 		[Fact]
-		public void SubSpanWithTags()
+		public void SubSpanWithLabels()
 		{
 			var payloadSender = new MockPayloadSender();
-			StartTransactionAndSpanWithSubSpan(payloadSender, span2 => { span2.Tags["foo"] = "bar"; });
+			StartTransactionAndSpanWithSubSpan(payloadSender, span2 => { span2.Labels["foo"] = "bar"; });
 
-			payloadSender.FirstSpan.Context.Tags.Should().NotBeEmpty();
-			payloadSender.FirstSpan.Context.Tags.Should().ContainKey("foo");
-			payloadSender.FirstSpan.Context.Tags["foo"].Should().Be("bar");
+			payloadSender.FirstSpan.Context.Labels.Should().NotBeEmpty();
+			payloadSender.FirstSpan.Context.Labels.Should().ContainKey("foo");
+			payloadSender.FirstSpan.Context.Labels["foo"].Should().Be("bar");
 		}
 
 		/// <summary>
@@ -675,8 +675,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		{
 			var payloadSender = new MockPayloadSender();
 			var expectedErrorContext = new Context();
-			expectedErrorContext.Tags["one"] = "1";
-			expectedErrorContext.Tags["twenty two"] = "22";
+			expectedErrorContext.Labels["one"] = "1";
+			expectedErrorContext.Labels["twenty two"] = "22";
 
 			ITransaction capturedTransaction = null;
 			IExecutionSegment errorCapturingExecutionSegment = null;
@@ -686,8 +686,8 @@ namespace Elastic.Apm.Tests.ApiTests
 				agent.Tracer.CaptureTransaction(TestTransaction, CustomTransactionTypeForTests, transaction =>
 				{
 					capturedTransaction = transaction;
-					foreach (var keyValue in expectedErrorContext.Tags)
-						transaction.Context.Tags[keyValue.Key] = keyValue.Value;
+					foreach (var keyValue in expectedErrorContext.Labels)
+						transaction.Context.Labels[keyValue.Key] = keyValue.Value;
 					ISpan span = null;
 					if (captureOnSpan)
 					{
@@ -703,7 +703,7 @@ namespace Elastic.Apm.Tests.ApiTests
 						errorCapturingExecutionSegment.CaptureException(new TestException("test exception"));
 
 					// Immutable snapshot of the context should be captured instead of reference to a mutable object
-					// transaction.Context.Tags["three hundred thirty three"] = "333";
+					// transaction.Context.Labels["three hundred thirty three"] = "333";
 
 					span?.End();
 				});

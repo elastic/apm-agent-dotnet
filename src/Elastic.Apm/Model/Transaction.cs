@@ -152,7 +152,7 @@ namespace Elastic.Apm.Model
 		public SpanCount SpanCount { get; set; }
 
 		[JsonIgnore]
-		public Dictionary<string, string> Tags => Context.Tags;
+		public Dictionary<string, string> Labels => Context.Labels;
 
 		/// <summary>
 		/// Recorded time of the event, UTC based and formatted as microseconds since Unix epoch
