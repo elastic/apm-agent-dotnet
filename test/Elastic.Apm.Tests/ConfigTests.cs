@@ -19,7 +19,7 @@ namespace Elastic.Apm.Tests
 		public void ServerUrlsSimpleTest()
 		{
 			var serverUrl = "http://myServer.com:1234";
-			var agent = new ApmAgent(new TestAgentComponents(serverUrls: serverUrl));
+			var agent = new ApmAgent(new TestAgentComponents(configurationReader: new TestAgentConfigurationReader(serverUrls: serverUrl)));
 			agent.ConfigurationReader.ServerUrls[0].OriginalString.Should().Be(serverUrl);
 			var rootedUrl = serverUrl + "/";
 			rootedUrl.Should().BeEquivalentTo(agent.ConfigurationReader.ServerUrls[0].AbsoluteUri);
@@ -29,7 +29,7 @@ namespace Elastic.Apm.Tests
 		public void ServerUrlsInvalidUrlTest()
 		{
 			var serverUrl = "InvalidUrl";
-			var agent = new ApmAgent(new TestAgentComponents(serverUrls: serverUrl));
+			var agent = new ApmAgent(new TestAgentComponents(configurationReader: new TestAgentConfigurationReader(serverUrls: serverUrl)));
 			agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultValues.ServerUri);
 		}
 
@@ -38,7 +38,8 @@ namespace Elastic.Apm.Tests
 		{
 			var serverUrl = "InvalidUrl";
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger, serverUrl));
+			var agent = new ApmAgent(new TestAgentComponents(logger,
+				new TestAgentConfigurationReader(logger, serverUrls: serverUrl)));
 			agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultValues.ServerUri);
 
 			logger.Lines.Should().NotBeEmpty();
@@ -64,7 +65,8 @@ namespace Elastic.Apm.Tests
 			var serverUrls = $"{serverUrl1},{serverUrl2}";
 
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger, serverUrls));
+			var agent = new ApmAgent(new TestAgentComponents(logger,
+				new TestAgentConfigurationReader(logger, serverUrls: serverUrls)));
 
 			var parsedUrls = agent.ConfigurationReader.ServerUrls;
 			parsedUrls[0].OriginalString.Should().Be(serverUrl1);
@@ -86,7 +88,8 @@ namespace Elastic.Apm.Tests
 			var serverUrl3 = "http://myServer2.com:1234";
 			var serverUrls = $"{serverUrl1},{serverUrl2},{serverUrl3}";
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger, serverUrls));
+			var agent = new ApmAgent(new TestAgentComponents(logger,
+				new TestAgentConfigurationReader(logger, serverUrls: serverUrls)));
 
 			var parsedUrls = agent.ConfigurationReader.ServerUrls;
 			parsedUrls.Should().NotBeEmpty().And.HaveCount(2, "seeded 3 but one was invalid");
@@ -128,7 +131,7 @@ namespace Elastic.Apm.Tests
 		public void SecretTokenSimpleTest()
 		{
 			var secretToken = "secretToken";
-			var agent = new ApmAgent(new TestAgentComponents(secretToken: secretToken));
+			var agent = new ApmAgent(new TestAgentComponents(configurationReader: new TestAgentConfigurationReader(secretToken: secretToken)));
 			agent.ConfigurationReader.SecretToken.Should().Be(secretToken);
 		}
 
@@ -174,19 +177,21 @@ namespace Elastic.Apm.Tests
 		public void DefaultLogLevelTest() => Agent.Config.LogLevel.Should().Be(LogLevel.Error);
 
 		[Theory]
+		[InlineData("Trace", LogLevel.Trace)]
 		[InlineData("Debug", LogLevel.Debug)]
 		[InlineData("Information", LogLevel.Information)]
 		[InlineData("Warning", LogLevel.Warning)]
 		[InlineData("Error", LogLevel.Error)]
-		public void SetLogLevelTest(string logLevel, LogLevel level)
+		[InlineData("Critical", LogLevel.Critical)]
+		public void SetLogLevelTest(string logLevelAsString, LogLevel logLevel)
 		{
-			var agent = new ApmAgent(new TestAgentComponents(logLevel));
-
-			agent.ConfigurationReader.LogLevel.Should().Be(level);
-
+			var logger = new TestLogger(logLevel);
+			var agent = new ApmAgent(new TestAgentComponents(logger, new TestAgentConfigurationReader(logger, logLevelAsString)));
+			agent.ConfigurationReader.LogLevel.Should().Be(logLevel);
+			agent.Logger.Should().Be(logger);
 			foreach (LogLevel enumValue in Enum.GetValues(typeof(LogLevel)))
 			{
-				if (level <= enumValue)
+				if (logLevel <= enumValue)
 					agent.Logger.IsEnabled(enumValue).Should().BeTrue();
 				else
 					agent.Logger.IsEnabled(enumValue).Should().BeFalse();
@@ -196,14 +201,13 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void SetInvalidLogLevelTest()
 		{
-			var logLevelValue = "InvalidLogLevel";
-			var agent = new ApmAgent(new TestAgentComponents(logLevelValue));
-			var logger = agent.Logger as TestLogger;
-			logger.Should().NotBeNull();
+			var logger = new TestLogger(LogLevel.Error);
+			var logLevelAsString = "InvalidLogLevel";
+			var agent = new ApmAgent(new TestAgentComponents(logger, new TestAgentConfigurationReader(logger, logLevelAsString)));
 
 			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Error);
-			logger?.Lines.Should().NotBeEmpty();
-			logger?.Lines[0]
+			logger.Lines.Should().NotBeEmpty();
+			logger.Lines[0]
 				.Should()
 				.ContainAll(
 					$"{{{nameof(TestAgentConfigurationReader)}}}",
@@ -427,7 +431,8 @@ namespace Elastic.Apm.Tests
 		[Theory]
 		public void StackTraceLimit(string configValue, int expectedValue)
 		{
-			using (var agent = new ApmAgent(new TestAgentComponents(stackTraceLimit: configValue)))
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(configurationReader: new TestAgentConfigurationReader(stackTraceLimit: configValue))))
 				agent.ConfigurationReader.StackTraceLimit.Should().Be(expectedValue);
 		}
 
@@ -441,7 +446,9 @@ namespace Elastic.Apm.Tests
 		[Theory]
 		public void SpanFramesMinDurationInMilliseconds(string configValue, int expectedValue)
 		{
-			using (var agent = new ApmAgent(new TestAgentComponents(spanFramesMinDurationInMilliseconds: configValue)))
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					configurationReader: new TestAgentConfigurationReader(spanFramesMinDurationInMilliseconds: configValue))))
 				agent.ConfigurationReader.SpanFramesMinDurationInMilliseconds.Should().Be(expectedValue);
 		}
 

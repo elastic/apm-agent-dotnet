@@ -122,7 +122,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 					}, "someAuthTypeName"))
 				};
 
-				var middleware = new ApmMiddleware(async (innerHttpContext) => { await Task.Delay(1); }, agent.Tracer as Tracer, agent);
+				var middleware = new ApmMiddleware(async (innerHttpContext) => { await Task.Delay(1); }, agent.TracerInternal, agent);
 
 				await middleware.InvokeAsync(context);
 			}

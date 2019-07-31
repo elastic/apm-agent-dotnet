@@ -1,6 +1,7 @@
 using System;
+using System.Threading.Tasks;
 
-namespace Elastic.Apm.Helpers
+namespace Elastic.Apm.Tests.TestHelpers
 {
 	public static class IntExtensions
 	{
@@ -14,6 +15,12 @@ namespace Elastic.Apm.Helpers
 		{
 			for (var i = 0; i < repeatCount; ++i)
 				action(i);
+		}
+
+		public static async Task Repeat(this int repeatCount, Func<int, Task> action)
+		{
+			for (var i = 0; i < repeatCount; ++i)
+				await action(i);
 		}
 	}
 }

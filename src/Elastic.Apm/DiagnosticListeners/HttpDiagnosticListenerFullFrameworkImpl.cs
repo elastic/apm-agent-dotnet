@@ -5,8 +5,8 @@ namespace Elastic.Apm.DiagnosticListeners
 {
 	internal class HttpDiagnosticListenerFullFrameworkImpl : HttpDiagnosticListenerImplBase<HttpWebRequest, HttpWebResponse>
 	{
-		public HttpDiagnosticListenerFullFrameworkImpl(IApmAgent components)
-			: base(components) { }
+		public HttpDiagnosticListenerFullFrameworkImpl(IApmAgent agent)
+			: base(agent) { }
 
 		internal override string ExceptionEventKey => "System.Net.Http.Desktop.HttpRequestOut.Ex.Stop";
 

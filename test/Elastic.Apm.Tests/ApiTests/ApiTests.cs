@@ -96,17 +96,94 @@ namespace Elastic.Apm.Tests.ApiTests
 			}
 		}
 
-		/// <summary>
-		/// Calls ElasticApm.CurrentTransaction without starting any transaction.
-		/// Makes sure the returned CurrentTransaction is null and nothing else happens.
-		/// </summary>
 		[Fact]
-		public void GetCurrentTransactionWithNoTransaction()
+		public void GetCurrentTransaction()
 		{
 			using (var agent = new ApmAgent(new TestAgentComponents()))
 			{
-				var currentTransaction = agent.Tracer.CurrentTransaction;
-				currentTransaction.Should().BeNull();
+				agent.Tracer.CurrentTransaction.Should().BeNull();
+
+				agent.Tracer.CaptureTransaction("dummy_transaction_name", "dummy_transaction_type", transaction1 =>
+				{
+					transaction1.Should().NotBeNull();
+					agent.Tracer.CurrentTransaction.Should().Be(transaction1);
+				});
+
+				agent.Tracer.CurrentTransaction.Should().BeNull();
+
+				var transaction2 = agent.Tracer.StartTransaction("dummy_transaction_name", "dummy_transaction_type");
+				agent.Tracer.CurrentTransaction.Should().NotBeNull();
+				agent.Tracer.CurrentTransaction.Should().Be(transaction2);
+				transaction2.End();
+
+				agent.Tracer.CurrentTransaction.Should().BeNull();
+			}
+		}
+
+		[Fact]
+		public void GetCurrentSpan()
+		{
+			using (var agent = new ApmAgent(new TestAgentComponents()))
+			{
+				agent.Tracer.CaptureTransaction("dummy_transaction_name", "dummy_transaction_type", transaction =>
+				{
+					agent.Tracer.CurrentSpan.Should().BeNull();
+
+					transaction.CaptureSpan("dummy_span_name", "dummy_span_type", span1 =>
+					{
+						span1.Should().NotBeNull();
+						agent.Tracer.CurrentSpan.Should().Be(span1);
+					});
+
+					var span2 = transaction.StartSpan("dummy_span_name", "dummy_span_type");
+					agent.Tracer.CurrentSpan.Should().NotBeNull();
+					agent.Tracer.CurrentSpan.Should().Be(span2);
+					span2.End();
+
+					agent.Tracer.CurrentSpan.Should().BeNull();
+				});
+
+			}
+		}
+
+		[Fact]
+		public void GetCurrentSpanNested()
+		{
+			using (var agent = new ApmAgent(new TestAgentComponents()))
+			{
+				agent.Tracer.CaptureTransaction("dummy_transaction_name", "dummy_transaction_type", transaction =>
+				{
+					agent.Tracer.CurrentSpan.Should().BeNull();
+
+					transaction.CaptureSpan("dummy_span_name", "dummy_span_type", span1 =>
+					{
+						span1.Should().NotBeNull();
+						agent.Tracer.CurrentSpan.Should().Be(span1);
+
+						span1.CaptureSpan("dummy_nested_span_name", "dummy_nested_span_type", span11 =>
+						{
+							span11.Should().NotBeNull();
+							agent.Tracer.CurrentSpan.Should().Be(span11);
+						});
+
+						agent.Tracer.CurrentSpan.Should().Be(span1);
+					});
+
+					var span2 = transaction.StartSpan("dummy_span_name", "dummy_span_type");
+					agent.Tracer.CurrentSpan.Should().NotBeNull();
+					agent.Tracer.CurrentSpan.Should().Be(span2);
+
+					var span21 = span2.StartSpan("dummy_span_name", "dummy_span_type");
+					agent.Tracer.CurrentSpan.Should().NotBeNull();
+					agent.Tracer.CurrentSpan.Should().Be(span21);
+					span21.End();
+
+					agent.Tracer.CurrentSpan.Should().Be(span2);
+					span2.End();
+
+					agent.Tracer.CurrentSpan.Should().BeNull();
+				});
+
 			}
 		}
 
@@ -115,25 +192,22 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// Makes sure the current transaction is not null - we assert on multiple points
 		/// </summary>
 		[Fact]
-		public async Task GetCurrentTransactionWithNotNull()
+		public async Task GetCurrentTransactionAsyncContext()
 		{
 			const string transactionName = TestTransaction;
 			using (var agent = new ApmAgent(new TestAgentComponents()))
 			{
-				StartTransaction(agent); //Start transaction on the current task
+				var transaction = agent.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest); //Start transaction on the current task
+				transaction.Should().NotBeNull();
 				await DoAsyncWork(agent); //Do work in subtask
 
 				var currentTransaction = agent.Tracer.CurrentTransaction; //Get transaction in the current task
 
-				currentTransaction.Should().NotBeNull();
+				currentTransaction.Should().Be(transaction);
 				currentTransaction.Name.Should().Be(transactionName);
 				currentTransaction.Type.Should().Be(ApiConstants.TypeRequest);
-			}
 
-			void StartTransaction(ApmAgent agent)
-			{
-				Agent.TransactionContainer.Transactions.Value =
-					new Transaction(agent, transactionName, ApiConstants.TypeRequest, new TestAgentConfigurationReader(new NoopLogger()));
+				transaction.End();
 			}
 
 			async Task DoAsyncWork(ApmAgent agent)
@@ -149,6 +223,43 @@ namespace Elastic.Apm.Tests.ApiTests
 				agent.Tracer.CurrentTransaction.Should().NotBeNull();
 				agent.Tracer.CurrentTransaction.Name.Should().Be(transactionName);
 				agent.Tracer.CurrentTransaction.Type.Should().Be(ApiConstants.TypeRequest);
+			}
+		}
+
+		[Fact]
+		public async Task GetCurrentSpanAsyncContext()
+		{
+			const string transactionName = TestTransaction;
+			const string spanName = "test_span_name";
+			using (var agent = new ApmAgent(new TestAgentComponents()))
+			{
+				var transaction = agent.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest); //Start transaction on the current task
+				var span = transaction.StartSpan(spanName, ApiConstants.TypeExternal); //Start span on the current task
+				await DoAsyncWork(agent); //Do work in subtask
+
+				var currentSpan = agent.Tracer.CurrentSpan; //Get span for the current task
+
+				currentSpan.Should().Be(span);
+				currentSpan.Name.Should().Be(spanName);
+				currentSpan.Type.Should().Be(ApiConstants.TypeExternal);
+
+				span.End();
+				transaction.End();
+			}
+
+			async Task DoAsyncWork(ApmAgent agent)
+			{
+				//Make sure we have a span in the subtask before the async work
+				agent.Tracer.CurrentSpan.Should().NotBeNull();
+				agent.Tracer.CurrentSpan.Name.Should().Be(spanName);
+				agent.Tracer.CurrentSpan.Type.Should().Be(ApiConstants.TypeExternal);
+
+				await Task.Delay(50);
+
+				//and after the async work
+				agent.Tracer.CurrentSpan.Should().NotBeNull();
+				agent.Tracer.CurrentSpan.Name.Should().Be(spanName);
+				agent.Tracer.CurrentSpan.Type.Should().Be(ApiConstants.TypeExternal);
 			}
 		}
 
@@ -481,7 +592,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			var payloadSender = new MockPayloadSender();
 			var expectedSpansCount = isSampled ? 1 : 0;
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, transactionSampleRate: isSampled ? "1" : "0")))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+				configurationReader: new TestAgentConfigurationReader(transactionSampleRate: isSampled ? "1" : "0"))))
 			{
 				var transaction = agent.Tracer.StartTransaction(TestTransaction, UnitTest);
 				var span = transaction.StartSpan(TestSpan1, ApiConstants.TypeExternal);
@@ -514,7 +626,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			var payloadSender = new MockPayloadSender();
 			var expectedSpansCount = isSampled ? 1 : 0;
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, transactionSampleRate: isSampled ? "1" : "0")))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+				configurationReader: new TestAgentConfigurationReader(transactionSampleRate: isSampled ? "1" : "0"))))
 			{
 				var transaction = agent.Tracer.StartTransaction(TestTransaction, UnitTest);
 				var span = transaction.StartSpan(TestSpan1, ApiConstants.TypeExternal);

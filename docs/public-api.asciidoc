@@ -19,7 +19,7 @@ You can access the API by using the static property on the Agent: `Elastic.Apm.A
 
 [float]
 [[api-start-transaction]]
-==== `Transaction StartTransaction(string name, string type)`
+==== `ITransaction StartTransaction(string name, string type)`
 Use this method to create a custom transaction.
 
 
@@ -51,7 +51,7 @@ finally
 
 [float]
 [[api-current-transaction]]
-==== `Transaction CurrentTransaction`
+==== `ITransaction CurrentTransaction`
 Returns the currently active transaction.
 See the <<api-transaction>> to customize the current transaction.
 
@@ -61,6 +61,20 @@ this method will return `null`.
 [source,csharp]
 ----
 var transaction = Elastic.Apm.Agent.Tracer.CurrentTransaction;
+----
+
+[float]
+[[api-current-span]]
+==== `ISpan CurrentSpan`
+Returns the currently active span.
+See the <<api-span>> to customize the current span.
+
+If there is no current span,
+this method will return `null`.
+
+[source,csharp]
+----
+var span = Elastic.Apm.Agent.Tracer.CurrentSpan;
 ----
 
 [float]
@@ -150,7 +164,7 @@ You may only interact with a transaction when you have control over its lifecycl
 
 [float]
 [[api-transaction-create-span]]
-==== `Span StartSpan(string name, string type, string subType = null, string action = null)`
+==== `ISpan StartSpan(string name, string type, string subType = null, string action = null)`
 Start and return a new custom span as a child of the given transaction.
 
 It is important to call <<api-span-end>> when the span has ended or to use the <<convenient-capture-span>> method.
