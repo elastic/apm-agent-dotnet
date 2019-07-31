@@ -6,7 +6,8 @@ pipeline {
   agent any
   environment {
     REPO = 'apm-agent-dotnet'
-    BASE_DIR = "src/github.com/elastic/${env.REPO}"
+    // keep it short to avoid the 248 characters PATH limit in Windows
+    BASE_DIR = "apm-agent-dotnet"
     NOTIFY_TO = credentials('notify-to')
     JOB_GCS_BUCKET = credentials('gcs-bucket')
     CODECOV_SECRET = 'secret/apm-team/ci/apm-agent-dotnet-codecov'
@@ -107,14 +108,13 @@ pipeline {
                 }
               }
               stage('Windows .NET Framework'){
-                agent { label 'windows' }
+                agent { label 'windows-2019-immutable' }
                 options { skipDefaultCheckout() }
                 environment {
                   HOME = "${env.WORKSPACE}"
                   DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
                   VS_HOME = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise"
-                  MSBuildSDKsPath = "${env.DOTNET_ROOT}\\sdk\\2.1.505\\Sdks"
-                  PATH = "${env.PATH};${env.HOME}\\bin;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
+                  PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
                   MSBUILDDEBUGPATH = "${env.WORKSPACE}"
                 }
                 stages{
@@ -186,14 +186,13 @@ pipeline {
                 }
               }
               stage('Windows .NET Core'){
-                agent { label 'windows' }
+                agent { label 'windows-2019-immutable' }
                 options { skipDefaultCheckout() }
                 environment {
                   HOME = "${env.WORKSPACE}"
                   DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
                   VS_HOME = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise"
-                  MSBuildSDKsPath = "${env.DOTNET_ROOT}\\sdk\\2.1.505\\Sdks"
-                  PATH = "${env.PATH};${env.HOME}\\bin;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
+                  PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
                   MSBUILDDEBUGPATH = "${env.WORKSPACE}"
                 }
                 stages{
