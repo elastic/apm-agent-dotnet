@@ -158,6 +158,26 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
+		///	Creates a service instance with a name that is longer than <see cref="Consts.PropertyMaxLength"/>.
+		/// Makes sure the name is truncated.
+		/// </summary>
+		[Fact]
+		public void ServiceNameLengthTest()
+		{
+			var logger = new NoopLogger();
+			var service = Service.GetDefaultService(new TestAgentConfigurationReader(logger), logger);
+			service.Name = new string('a', 1200);
+
+			var json = SerializePayloadItem(service);
+			var deserializedService = JsonConvert.DeserializeObject<Service>(json);
+
+			Assert.NotNull(deserializedService);
+
+			Assert.Equal(Consts.PropertyMaxLength, deserializedService.Name.Length);
+			Assert.Equal("...", deserializedService.Name.Substring(Consts.PropertyMaxLength - 3, 3));
+		}
+
+		/// <summary>
 		/// Verifies that <see cref="Transaction.Context" /> is serialized only when the transaction is sampled.
 		/// </summary>
 		[Fact]
