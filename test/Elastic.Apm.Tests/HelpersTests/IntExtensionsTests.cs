@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using Elastic.Apm.Helpers;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
 

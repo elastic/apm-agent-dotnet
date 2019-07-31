@@ -2,6 +2,7 @@ using System;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
 
@@ -10,7 +11,7 @@ namespace Elastic.Apm.Tests
 	public class SamplerTests
 	{
 		// ReSharper disable once MemberCanBePrivate.Global
-		public static TheoryData RateVariantsToTest => new TheoryData<double>
+		public static DataForTheory RateVariantsToTest => new DataForTheory<double>
 		{
 			{ 0 },
 			{ 0.000000001 },

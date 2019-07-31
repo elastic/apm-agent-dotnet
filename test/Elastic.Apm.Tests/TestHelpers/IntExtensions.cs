@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Elastic.Apm.Helpers
+namespace Elastic.Apm.Tests.TestHelpers
 {
 	public static class IntExtensions
 	{

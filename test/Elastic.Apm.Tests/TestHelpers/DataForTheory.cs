@@ -8,7 +8,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 	/// <summary>
 	/// Taken from https://andrewlock.net/creating-strongly-typed-xunit-theory-test-data-with-theorydata/
 	/// </summary>
-	public abstract class TheoryData : IEnumerable<object[]>
+	public abstract class DataForTheory : IEnumerable<object[]>
 	{
 		readonly List<object[]> data = new List<object[]>();
 
@@ -28,7 +28,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 		}
 	}
 
-	public class TheoryData<T> : TheoryData
+	public class DataForTheory<T> : DataForTheory
 	{
 		internal void Add(T p)
 		{
@@ -36,7 +36,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 		}
 	}
 
-	public class TheoryData<T1, T2> : TheoryData
+	public class DataForTheory<T1, T2> : DataForTheory
 	{
 		internal void Add(T1 p1, T2 p2)
 		{
@@ -44,7 +44,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 		}
 	}
 
-	public class TheoryData<T1, T2, T3> : TheoryData
+	public class DataForTheory<T1, T2, T3> : DataForTheory
 	{
 		internal void Add(T1 p1, T2 p2, T3 p3)
 		{
@@ -53,7 +53,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 	}
 
 
-	public class TheoryData<T1, T2, T3, T4> : TheoryData
+	public class DataForTheory<T1, T2, T3, T4> : DataForTheory
 	{
 		internal void Add(T1 p1, T2 p2, T3 p3, T4 p4)
 		{
@@ -61,7 +61,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 		}
 	}
 
-	public class TheoryData<T1, T2, T3, T4, T5> : TheoryData
+	public class DataForTheory<T1, T2, T3, T4, T5> : DataForTheory
 	{
 		internal void Add(T1 p1, T2 p2, T3 p3, T4 p4, T5 p5)
 		{
@@ -69,10 +69,10 @@ namespace Elastic.Apm.Tests.TestHelpers
 		}
 	}
 
-	public class TheoryDataTests
+	public class DataForTheoryTests
 	{
 		// ReSharper disable once MemberCanBePrivate.Global
-		public static TheoryData<int> TheoryData1 => new TheoryData<int>
+		public static DataForTheory<int> Test1ArgDataForTheorySampleData => new DataForTheory<int>
 		{
 			{ 137 * 2},
 			{ 137 * 3 },
@@ -80,14 +80,14 @@ namespace Elastic.Apm.Tests.TestHelpers
 		};
 
 		[Theory]
-		[MemberData(nameof(TheoryData1))]
-		public void TestTheoryData1(int p)
+		[MemberData(nameof(Test1ArgDataForTheorySampleData))]
+		public void Test1ArgDataForTheory(int p)
 		{
 			(p % 137).Should().Be(0);
 		}
 
 		// ReSharper disable once MemberCanBePrivate.Global
-		public static TheoryData<int, string> TheoryData2 => new TheoryData<int, string>
+		public static DataForTheory<int, string> Test2ArgsDataForTheorySampleData => new DataForTheory<int, string>
 		{
 			{ 123, "7B" },
 			{ 987654, "F1206" },
@@ -95,8 +95,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 		};
 
 		[Theory]
-		[MemberData(nameof(TheoryData2))]
-		public void TestTheoryData2(int i, string iHex)
+		[MemberData(nameof(Test2ArgsDataForTheorySampleData))]
+		public void Test2ArgsDataForTheory(int i, string iHex)
 		{
 			i.ToString("X").Should().Be(iHex);
 		}
@@ -118,7 +118,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 		private struct TE { };
 
 		// ReSharper disable once MemberCanBePrivate.Global
-		public static TheoryData TheoryData3 => new TheoryData<TypedInt<TA>, TypedInt<TB>, TypedInt<TC>>
+		public static DataForTheory Test3ArgsDataForTheorySampleData => new DataForTheory<TypedInt<TA>, TypedInt<TB>, TypedInt<TC>>
 		{
 			{ new TypedInt<TA>(1), new TypedInt<TB>(2), new TypedInt<TC>(3) },
 			{ new TypedInt<TA>(123), new TypedInt<TB>(456), new TypedInt<TC>(579) },
@@ -126,36 +126,36 @@ namespace Elastic.Apm.Tests.TestHelpers
 		};
 
 		[Theory]
-		[MemberData(nameof(TheoryData3))]
-		private void TestTheoryData3(TypedInt<TA> p1, TypedInt<TB> p2, TypedInt<TC> p3)
+		[MemberData(nameof(Test3ArgsDataForTheorySampleData))]
+		private void Test3ArgsDataForTheory(TypedInt<TA> p1, TypedInt<TB> p2, TypedInt<TC> p3)
 		{
 			(p1.Value + p2.Value).Should().Be(p3.Value);
 		}
 
 		// ReSharper disable once MemberCanBePrivate.Global
-		public static TheoryData TheoryData4 => new TheoryData<TypedInt<TA>, TypedInt<TB>, TypedInt<TC>, TypedInt<TD>>
+		public static DataForTheory Test4ArgsDataForTheorySampleData => new DataForTheory<TypedInt<TA>, TypedInt<TB>, TypedInt<TC>, TypedInt<TD>>
 		{
 			{ new TypedInt<TA>(1), new TypedInt<TB>(2), new TypedInt<TC>(3), new TypedInt<TD>(6) },
 			{ new TypedInt<TA>(4), new TypedInt<TB>(5), new TypedInt<TC>(6), new TypedInt<TD>(120) },
 		};
 
 		[Theory]
-		[MemberData(nameof(TheoryData4))]
-		private void TestTheoryData4(TypedInt<TA> p1, TypedInt<TB> p2, TypedInt<TC> p3, TypedInt<TD> p4)
+		[MemberData(nameof(Test4ArgsDataForTheorySampleData))]
+		private void Test4ArgsDataForTheory(TypedInt<TA> p1, TypedInt<TB> p2, TypedInt<TC> p3, TypedInt<TD> p4)
 		{
 			(p1.Value * p2.Value * p3.Value).Should().Be(p4.Value);
 		}
 
 		// ReSharper disable once MemberCanBePrivate.Global
-		public static TheoryData TheoryData5 => new TheoryData<TypedInt<TA>, TypedInt<TB>, TypedInt<TC>, TypedInt<TD>, TypedInt<TE>>
+		public static DataForTheory Test5ArgsDataForTheorySampleData => new DataForTheory<TypedInt<TA>, TypedInt<TB>, TypedInt<TC>, TypedInt<TD>, TypedInt<TE>>
 		{
 			{ new TypedInt<TA>(1), new TypedInt<TB>(2), new TypedInt<TC>(3), new TypedInt<TD>(4), new TypedInt<TE>(10) },
 			{ new TypedInt<TA>(5), new TypedInt<TB>(6), new TypedInt<TC>(7), new TypedInt<TD>(8), new TypedInt<TE>(26) },
 		};
 
 		[Theory]
-		[MemberData(nameof(TheoryData5))]
-		private void TestTheoryData5(TypedInt<TA> p1, TypedInt<TB> p2, TypedInt<TC> p3, TypedInt<TD> p4, TypedInt<TE> p5)
+		[MemberData(nameof(Test5ArgsDataForTheorySampleData))]
+		private void Test5ArgsDataForTheory(TypedInt<TA> p1, TypedInt<TB> p2, TypedInt<TC> p3, TypedInt<TD> p4, TypedInt<TE> p5)
 		{
 			(p1.Value + p2.Value + p3.Value + p4.Value).Should().Be(p5.Value);
 		}

@@ -10,16 +10,16 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Xunit;
-using AssertionFailedException = FluentAssertions.Execution.AssertionFailedException;
 
 namespace Elastic.Apm.Tests
 {
-	public class HttpDiagnosticListenerTest
+	public class HttpDiagnosticListenerTests
 	{
 		private static TResult DispatchToImpl<TResult>(
 			IDiagnosticListener listener,
