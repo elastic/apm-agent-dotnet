@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -134,6 +135,29 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			response.IsSuccessStatusCode.Should().BeTrue();
 			_capturedPayload.SpansOnFirstTransaction.Should().NotBeEmpty().And.Contain(n => n.Context.Db != null);
+		}
+
+		/// <summary>
+		/// Simulates an HTTP GET call to /Home/Index?captureControllerActionAsSpan=true
+		/// and asserts that all automatically captured spans are children of the span for controller's action.
+		/// </summary>
+		[Fact]
+		public async Task HomeIndexAutoCapturedSpansAreChildrenOfControllerActionAsSpan()
+		{
+			var response = await _client.GetAsync("/Home/Index?captureControllerActionAsSpan=true");
+
+			response.IsSuccessStatusCode.Should().BeTrue();
+			var spans = _capturedPayload.SpansOnFirstTransaction;
+			spans.Should().NotBeEmpty();
+			var controllerActionSpan = spans.Last();
+			controllerActionSpan.Name.Should().Be("Index_span_name");
+			controllerActionSpan.Type.Should().Be("Index_span_type");
+			var httpSpans = spans.Where(span => span.Context.Db != null);
+			httpSpans.Should().NotBeEmpty();
+			foreach (var httpSpan in httpSpans) httpSpan.ParentId.Should().Be(controllerActionSpan.Id);
+			var dbSpans = spans.Where(span => span.Context.Http != null);
+			dbSpans.Should().NotBeEmpty();
+			foreach (var dbSpan in dbSpans) dbSpan.ParentId.Should().Be(controllerActionSpan.Id);
 		}
 
 		/// <summary>

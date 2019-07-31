@@ -23,25 +23,41 @@ namespace SampleAspNetCoreApp.Controllers
 
 		public HomeController(SampleDataContext sampleDataContext) => _sampleDataContext = sampleDataContext;
 
-		public async Task<IActionResult> Index()
+		private bool GetCaptureControllerActionAsSpanFromQueryString()
 		{
-			_sampleDataContext.Database.Migrate();
-			var model = _sampleDataContext.SampleTable.Select(item => item.Name).ToList();
+			const string captureControllerActionAsSpanQueryStringKey = "captureControllerActionAsSpan";
+			var captureControllerActionAsSpanQueryStringValues = HttpContext.Request.Query[captureControllerActionAsSpanQueryStringKey];
+			if (captureControllerActionAsSpanQueryStringValues.Count > 1)
+				throw new ArgumentException($"{captureControllerActionAsSpanQueryStringKey} query string key should have at most one value" +
+					$", instead it's values: {captureControllerActionAsSpanQueryStringValues}",
+					captureControllerActionAsSpanQueryStringKey);
+			// ReSharper disable once SimplifyConditionalTernaryExpression
+			return captureControllerActionAsSpanQueryStringValues.Count == 0 ? false : bool.Parse(captureControllerActionAsSpanQueryStringValues[0]);
+		}
 
-			try
+		public Task<IActionResult> Index()
+		{
+			return SafeCaptureSpan<IActionResult>(GetCaptureControllerActionAsSpanFromQueryString(),
+				"Index_span_name", "Index_span_type", async () =>
 			{
-				var httpClient = new HttpClient();
-				httpClient.DefaultRequestHeaders.Add("User-Agent", "APM-Sample-App");
-				var responseMsg = await httpClient.GetAsync("https://api.github.com/repos/elastic/apm-agent-dotnet");
-				var responseStr = await responseMsg.Content.ReadAsStringAsync();
-				ViewData["stargazers_count"] = JObject.Parse(responseStr)["stargazers_count"];
-			}
-			catch
-			{
-				Console.WriteLine("Failed HTTP GET elastic.co");
-			}
+				_sampleDataContext.Database.Migrate();
+				var model = _sampleDataContext.SampleTable.Select(item => item.Name).ToList();
 
-			return View(model);
+				try
+				{
+					var httpClient = new HttpClient();
+					httpClient.DefaultRequestHeaders.Add("User-Agent", "APM-Sample-App");
+					var responseMsg = await httpClient.GetAsync("https://api.github.com/repos/elastic/apm-agent-dotnet");
+					var responseStr = await responseMsg.Content.ReadAsStringAsync();
+					ViewData["stargazers_count"] = JObject.Parse(responseStr)["stargazers_count"];
+				}
+				catch
+				{
+					Console.WriteLine("Failed HTTP GET elastic.co");
+				}
+
+				return View(model);
+			});
 		}
 
 		/// <summary>
@@ -111,6 +127,7 @@ namespace SampleAspNetCoreApp.Controllers
 			var csvDataReader = new CsvDataReader($"Data{Path.DirectorySeparatorChar}HistoricalData");
 
 			var historicalData =
+				// ReSharper disable once StringLiteralTypo
 				await Agent.Tracer.CurrentTransaction.CaptureSpan("ReadData", "csvRead", async () => await csvDataReader.GetHistoricalQuotes("ESTC"));
 
 			return View(historicalData);
