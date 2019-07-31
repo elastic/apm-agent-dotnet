@@ -94,7 +94,7 @@ pipeline {
                   post {
                     always {
                       sh label: 'debugging', script: 'find . -name *.pdb'
-                      junit(allowEmptyResults: false,
+                      junit(allowEmptyResults: true,
                         keepLongStdio: true,
                         testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       codecov(repo: env.REPO, basedir: "${BASE_DIR}", secret: "${CODECOV_SECRET}")
@@ -168,13 +168,40 @@ pipeline {
                     }
                     post {
                       always {
-                        junit(allowEmptyResults: false,
+                        junit(allowEmptyResults: true,
                           keepLongStdio: true,
                           testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       }
                       unsuccessful {
                         archiveArtifacts(allowEmptyArchive: true,
                           artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                      }
+                    }
+                  }
+                  /**
+                  Execute IIS tests.
+                  */
+                  stage('IIS Tests') {
+                    when {
+                      //disabled until the tests are merged
+                      expression { return false }
+                    }
+                    steps {
+                      withGithubNotify(context: 'IIS Tests', tab: 'tests') {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                          bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
+                          powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                        }
+                      }
+                    }
+                    post {
+                      always {
+                        junit(allowEmptyResults: true,
+                          keepLongStdio: true,
+                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       }
                     }
                   }
@@ -247,7 +274,7 @@ pipeline {
                     }
                     post {
                       always {
-                        junit(allowEmptyResults: false,
+                        junit(allowEmptyResults: true,
                           keepLongStdio: true,
                           testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       }
