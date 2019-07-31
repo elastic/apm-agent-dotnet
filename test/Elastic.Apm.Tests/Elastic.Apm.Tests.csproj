@@ -24,9 +24,4 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="HelpersTests" />
-    <Folder Include="Mocks\" />
-    <Folder Include="ApiTests\" />
-  </ItemGroup>
 </Project>
