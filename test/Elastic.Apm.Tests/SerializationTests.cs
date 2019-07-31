@@ -134,7 +134,7 @@ namespace Elastic.Apm.Tests
 		/// Makes sure the name is truncated.
 		/// </summary>
 		[Fact]
-		public void ServiceVersionLengthTest()
+		public void ServiceNameLengthTest()
 		{
 			var logger = new NoopLogger();
 			var service = Service.GetDefaultService(new TestAgentConfigurationReader(logger), logger);
