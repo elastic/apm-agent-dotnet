@@ -29,7 +29,4 @@ RUN Invoke-WebRequest -UseBasicParsing "https://download.microsoft.com/download/
 
 ENV PATH="C:\\Windows\\system32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Windows\\System32\\WindowsPowerShell\\v1.0;C:\\Windows\\System32\\OpenSSH;C:\\Users\ContainerAdministrator\\AppData\\Local\\Microsoft\\WindowsApps;c:\\tools;c:\\tools\\dotnet;;C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\MSBuild\\15.0\\Bin"
 
-#docker run --name iis -w C:\inetpub\wwwroot\ iis
-#docker cp . iis:C:\inetpub\wwwroot
-#docker exec iis .ci\windows\test-iis.bat
 

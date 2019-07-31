@@ -1,14 +1,18 @@
+
 #
 # This script installs the required tools to be used during the build
 #
 
-# Download .Net SDK installer script
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-install.ps1 -UseBasicParsing ;
+# Install IIS
+Install-WindowsFeature -Name Web-Server, Web-Mgmt-Tools ;
+Add-WindowsFeature NET-Framework-45-ASPNET ;
+Add-WindowsFeature Web-Asp-Net45 ;
 
-# Install .Net SDK'
-& ./dotnet-install.ps1 -Channel LTS -InstallDir ./dotnet -Version 2.1.505
+# Install .Net SDK'
+#& choco install dotnetcore-sdk -y --no-progress -r --version 2.1.801
 
 # Install NuGet Tool
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-Invoke-WebRequest "https://dist.nuget.org/win-x86-commandline/v4.9.4/nuget.exe" -OutFile dotnet\\nuget.exe -UseBasicParsing ;
+& choco install nuget.commandline -y --no-progress -r --version 5.1.0
+
+# Install vswhere
+& choco install vswhere -y --no-progress -r --version 2.7.1
