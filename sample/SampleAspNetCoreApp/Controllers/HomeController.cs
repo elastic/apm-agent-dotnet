@@ -44,6 +44,12 @@ namespace SampleAspNetCoreApp.Controllers
 			return View(model);
 		}
 
+		/// <summary>
+		/// In order to test if relationship between spans is maintained correctly by the agent,
+		/// this method has the ability to start a span by passing `captureControllerActionAsSpan` = `true` to it.
+		/// In that case spans created by EF Core auto instrumentation in the method body should be sub spans
+		/// of the manually created span.
+		/// </summary>
 		[HttpPost]
 		public Task<IActionResult> AddSampleData(IFormCollection formFields)
 		{
