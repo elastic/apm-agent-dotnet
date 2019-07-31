@@ -48,7 +48,7 @@ namespace Elastic.Apm.Model
 
 			if (IsSampled)
 				// Started spans should be counted only for sampled transactions
-				enclosingTransaction.SpanCount.Started++;
+				enclosingTransaction.SpanCount.IncrementStarted();
 
 			_logger.Trace()
 				?.Log("New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp})",
@@ -102,7 +102,7 @@ namespace Elastic.Apm.Model
 		public string Subtype { get; set; }
 
 		[JsonIgnore]
-		public Dictionary<string, string> Tags => Context.Tags;
+		public Dictionary<string, string> Labels => Context.Labels;
 
 		//public decimal Start { get; set; }
 

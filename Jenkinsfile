@@ -6,7 +6,8 @@ pipeline {
   agent any
   environment {
     REPO = 'apm-agent-dotnet'
-    BASE_DIR = "src/github.com/elastic/${env.REPO}"
+    // keep it short to avoid the 248 characters PATH limit in Windows
+    BASE_DIR = "apm-agent-dotnet"
     NOTIFY_TO = credentials('notify-to')
     JOB_GCS_BUCKET = credentials('gcs-bucket')
     CODECOV_SECRET = 'secret/apm-team/ci/apm-agent-dotnet-codecov'
@@ -93,7 +94,7 @@ pipeline {
                   post {
                     always {
                       sh label: 'debugging', script: 'find . -name *.pdb'
-                      junit(allowEmptyResults: false,
+                      junit(allowEmptyResults: true,
                         keepLongStdio: true,
                         testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       codecov(repo: env.REPO, basedir: "${BASE_DIR}", secret: "${CODECOV_SECRET}")
@@ -107,14 +108,13 @@ pipeline {
                 }
               }
               stage('Windows .NET Framework'){
-                agent { label 'windows' }
+                agent { label 'windows-2019-immutable' }
                 options { skipDefaultCheckout() }
                 environment {
                   HOME = "${env.WORKSPACE}"
                   DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
                   VS_HOME = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise"
-                  MSBuildSDKsPath = "${env.DOTNET_ROOT}\\sdk\\2.1.505\\Sdks"
-                  PATH = "${env.PATH};${env.HOME}\\bin;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
+                  PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
                   MSBUILDDEBUGPATH = "${env.WORKSPACE}"
                 }
                 stages{
@@ -168,13 +168,40 @@ pipeline {
                     }
                     post {
                       always {
-                        junit(allowEmptyResults: false,
+                        junit(allowEmptyResults: true,
                           keepLongStdio: true,
                           testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       }
                       unsuccessful {
                         archiveArtifacts(allowEmptyArchive: true,
                           artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                      }
+                    }
+                  }
+                  /**
+                  Execute IIS tests.
+                  */
+                  stage('IIS Tests') {
+                    when {
+                      //disabled until the tests are merged
+                      expression { return false }
+                    }
+                    steps {
+                      withGithubNotify(context: 'IIS Tests', tab: 'tests') {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                          bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
+                          powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                        }
+                      }
+                    }
+                    post {
+                      always {
+                        junit(allowEmptyResults: true,
+                          keepLongStdio: true,
+                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       }
                     }
                   }
@@ -186,14 +213,13 @@ pipeline {
                 }
               }
               stage('Windows .NET Core'){
-                agent { label 'windows' }
+                agent { label 'windows-2019-immutable' }
                 options { skipDefaultCheckout() }
                 environment {
                   HOME = "${env.WORKSPACE}"
                   DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
                   VS_HOME = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise"
-                  MSBuildSDKsPath = "${env.DOTNET_ROOT}\\sdk\\2.1.505\\Sdks"
-                  PATH = "${env.PATH};${env.HOME}\\bin;${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
+                  PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
                   MSBUILDDEBUGPATH = "${env.WORKSPACE}"
                 }
                 stages{
@@ -248,7 +274,7 @@ pipeline {
                     }
                     post {
                       always {
-                        junit(allowEmptyResults: false,
+                        junit(allowEmptyResults: true,
                           keepLongStdio: true,
                           testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       }
@@ -263,35 +289,6 @@ pipeline {
                   always {
                     cleanWs(disableDeferredWipeout: true, notFailBuild: true)
                   }
-                }
-              }
-            }
-          }
-          /**
-          Build the documentation.
-          */
-          stage('Documentation') {
-            agent { label 'linux && immutable' }
-            options { skipDefaultCheckout() }
-            environment {
-              HOME = "${env.WORKSPACE}"
-            }
-            when {
-              beforeAgent true
-              anyOf {
-                branch 'master'
-                branch "\\d+\\.\\d+"
-                branch "v\\d?"
-                tag "\\d+\\.\\d+\\.\\d+*"
-                expression { return params.Run_As_Master_Branch }
-              }
-            }
-            steps {
-              withGithubNotify(context: 'Documentation', tab: 'artifacts') {
-                deleteDir()
-                unstash 'source'
-                dir("${BASE_DIR}"){
-                  buildDocs(docsDir: "docs", archive: true)
                 }
               }
             }

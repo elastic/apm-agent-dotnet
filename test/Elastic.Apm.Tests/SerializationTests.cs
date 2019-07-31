@@ -66,25 +66,53 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Creates a <see cref="Context" /> that has <see cref="Context.Tags" />
+		/// Creates a <see cref="Context" /> that has <see cref="Context.Labels" />
 		/// with strings longer than <see cref="Consts.PropertyMaxLength" />.
 		/// Makes sure that the long string is trimmed.
 		/// </summary>
 		[Fact]
-		public void TagsTruncation()
+		public void LabelsTruncation()
 		{
 			var str = new string('a', 1200);
 
 			var context = new Context();
-			context.Tags["foo"] = str;
+			context.Labels["foo"] = str;
 
 			var json = SerializePayloadItem(context);
 			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
 
 			Assert.NotNull(deserializedContext);
 
-			Assert.Equal(Consts.PropertyMaxLength, deserializedContext["tags"].Value<JObject>()["foo"]?.Value<string>()?.Length);
-			Assert.Equal("...", deserializedContext["tags"].Value<JObject>()["foo"].Value<string>().Substring(1021, 3));
+			// In Intake API the property is still named `tags'
+			// See https://github.com/elastic/apm-server/blob/6.5/docs/spec/context.json#L43
+			const string intakeApiLabelsPropertyName = "tags";
+			Assert.Equal(Consts.PropertyMaxLength, deserializedContext[intakeApiLabelsPropertyName].Value<JObject>()["foo"]?.Value<string>()?.Length);
+			Assert.Equal("...", deserializedContext[intakeApiLabelsPropertyName].Value<JObject>()["foo"].Value<string>().Substring(1021, 3));
+		}
+
+		/// <summary>
+		/// Creates a <see cref="SpanContext" /> that has <see cref="SpanContext.Labels" />
+		/// with strings longer than <see cref="Consts.PropertyMaxLength" />.
+		/// Makes sure that the long string is trimmed.
+		/// </summary>
+		[Fact]
+		public void LabelsTruncationSpanContext()
+		{
+			var str = new string('a', 1200);
+
+			var context = new SpanContext();
+			context.Labels["foo"] = str;
+
+			var json = SerializePayloadItem(context);
+			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
+
+			Assert.NotNull(deserializedContext);
+
+			// In Intake API the property is still named `tags'
+			// See https://github.com/elastic/apm-server/blob/6.5/docs/spec/spans/common_span.json#L50
+			const string intakeApiLabelsPropertyName = "tags";
+			Assert.Equal(Consts.PropertyMaxLength, deserializedContext[intakeApiLabelsPropertyName].Value<JObject>()["foo"]?.Value<string>()?.Length);
+			Assert.Equal("...", deserializedContext[intakeApiLabelsPropertyName].Value<JObject>()["foo"].Value<string>().Substring(1021, 3));
 		}
 
 		/// <summary>

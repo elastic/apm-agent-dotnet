@@ -27,22 +27,5 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			loggerFactoryMock.Verify(x => x.CreateLogger(It.Is<string>(s => s.Equals("Elastic.Apm"))), Times.Once);
 		}
-
-		[Fact]
-		public void AspNetCoreLoggerShouldCalculateMinLogLevelOnCreation()
-		{
-			var loggerFactoryMock = new Mock<ILoggerFactory>();
-			var loggerMock = new Mock<ILogger>();
-			loggerFactoryMock.Setup(x => x.CreateLogger(It.IsAny<string>()))
-				.Returns(() => loggerMock.Object);
-
-			var logger = new AspNetCoreLogger(loggerFactoryMock.Object);
-
-			loggerMock.Verify(x => x.IsEnabled(It.Is<LogLevel>(l => l == LogLevel.Trace)), Times.Once);
-			// ReSharper disable UnusedVariable
-			var level = logger.Level;
-			// ReSharper restore UnusedVariable
-			loggerMock.Verify(x => x.IsEnabled(It.Is<LogLevel>(l => l == LogLevel.Trace)), Times.Once);
-		}
 	}
 }

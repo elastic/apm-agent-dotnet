@@ -23,15 +23,15 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// </summary>
 	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
 	public class AspNetCoreMiddlewareTests
-		: IClassFixture<WebApplicationFactory<SampleAspNetCoreApp.Startup>>, IDisposable
+		: IClassFixture<WebApplicationFactory<Startup>>, IDisposable
 	{
 		private readonly ApmAgent _agent;
 		private readonly MockPayloadSender _capturedPayload;
-		private readonly WebApplicationFactory<SampleAspNetCoreApp.Startup> _factory;
+		private readonly WebApplicationFactory<Startup> _factory;
 		// ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
 		private readonly IApmLogger _logger;
 
-		public AspNetCoreMiddlewareTests(WebApplicationFactory<SampleAspNetCoreApp.Startup> factory, ITestOutputHelper xUnitOutputHelper)
+		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper)
 		{
 			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(AspNetCoreMiddlewareTests));
 			_factory = factory;
@@ -152,15 +152,15 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			_capturedPayload.Errors.Should().ContainSingle();
 
-			//also make sure the tag is captured
+			//also make sure the label is captured
 			var error = _capturedPayload.Errors[0] as Error;
 			error.Should().NotBeNull();
 
 			var errorDetail = error?.Exception;
 			errorDetail.Should().NotBeNull();
 
-			var tags = error?.Context.Tags;
-			tags.Should().NotBeEmpty().And.ContainKey("foo").And.Contain("foo", "bar");
+			var labels = error?.Context.Labels;
+			labels.Should().NotBeEmpty().And.ContainKey("foo").And.Contain("foo", "bar");
 		}
 
 		public void Dispose()

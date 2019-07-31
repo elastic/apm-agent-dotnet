@@ -41,3 +41,7 @@ These are the main folders within the repository:
 * docs: This folder contains the official documentation.
 * sample: Sample applications that are monitored by the APM .NET Agent. These are also very useful for development: you can start one of these applications and debug the agent through them.
 * .ci: This folder contains all the scripts used to build, test and release the agent within the CI.
+
+
+## License
+Elastic APM .Net Agent is licensed under Apache License, Version 2.0.

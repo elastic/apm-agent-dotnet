@@ -108,6 +108,22 @@ namespace Elastic.Apm.Tests
 				);
 		}
 
+		/// <summary>
+		/// Makes sure empty spaces are trimmed at the end of the config
+		/// </summary>
+		[Fact]
+		public void ReadServerUrlsWithSpaceAtTheEndViaEnvironmentVariable()
+		{
+			var serverUrlsWithSpace = "http://myServer:1234 \r\n";
+			Environment.SetEnvironmentVariable(EnvVarNames.ServerUrls, serverUrlsWithSpace);
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender)))
+			{
+				agent.ConfigurationReader.ServerUrls.First().Should().NotBe(serverUrlsWithSpace);
+				agent.ConfigurationReader.ServerUrls.First().Should().Be("http://myServer:1234");
+			}
+		}
+
 		[Fact]
 		public void SecretTokenSimpleTest()
 		{
@@ -157,36 +173,24 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void DefaultLogLevelTest() => Agent.Config.LogLevel.Should().Be(LogLevel.Error);
 
-		[Fact]
-		public void SetDebugLogLevelTest()
+		[Theory]
+		[InlineData("Debug", LogLevel.Debug)]
+		[InlineData("Information", LogLevel.Information)]
+		[InlineData("Warning", LogLevel.Warning)]
+		[InlineData("Error", LogLevel.Error)]
+		public void SetLogLevelTest(string logLevel, LogLevel level)
 		{
-			var agent = new ApmAgent(new TestAgentComponents("Debug"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Debug);
-			agent.Logger.Level.Should().Be(LogLevel.Debug);
-		}
+			var agent = new ApmAgent(new TestAgentComponents(logLevel));
 
-		[Fact]
-		public void SetErrorLogLevelTest()
-		{
-			var agent = new ApmAgent(new TestAgentComponents("Error"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Error);
-			agent.Logger.Level.Should().Be(LogLevel.Error);
-		}
+			agent.ConfigurationReader.LogLevel.Should().Be(level);
 
-		[Fact]
-		public void SetInfoLogLevelTest()
-		{
-			var agent = new ApmAgent(new TestAgentComponents("Information"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Information);
-			agent.Logger.Level.Should().Be(LogLevel.Information);
-		}
-
-		[Fact]
-		public void SetWarningLogLevelTest()
-		{
-			var agent = new ApmAgent(new TestAgentComponents("Warning"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Warning);
-			agent.Logger.Level.Should().Be(LogLevel.Warning);
+			foreach (LogLevel enumValue in Enum.GetValues(typeof(LogLevel)))
+			{
+				if (level <= enumValue)
+					agent.Logger.IsEnabled(enumValue).Should().BeTrue();
+				else
+					agent.Logger.IsEnabled(enumValue).Should().BeFalse();
+			}
 		}
 
 		[Fact]
@@ -263,6 +267,39 @@ namespace Elastic.Apm.Tests
 
 			agent.Service.Name.Should().Be(serviceName.Replace('.', '_'));
 			agent.Service.Name.Should().NotContain(".");
+		}
+
+		/// <summary>
+		/// The test makes sure we validate service name.
+		/// </summary>
+		[Fact]
+		public void ReadInvalidServiceNameViaEnvironmentVariable()
+		{
+			var serviceName = "MyService123!";
+			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+
+			agent.Service.Name.Should().NotBe(serviceName);
+			agent.Service.Name.Should().MatchRegex("^[a-zA-Z0-9 _-]+$")
+				.And.Be("MyService123_");
+		}
+
+		/// <summary>
+		/// The test makes sure that unknown service name value fits to all constraints.
+		/// </summary>
+		[Fact]
+		public void UnknownServiceNameValueTest()
+		{
+			var serviceName = DefaultValues.UnknownServiceName;
+			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+
+			agent.Service.Name.Should().Be(serviceName);
+			agent.Service.Name.Should().MatchRegex("^[a-zA-Z0-9 _-]+$");
 		}
 
 		/// <summary>
