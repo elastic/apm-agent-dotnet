@@ -11,7 +11,7 @@ namespace AspNetFullFrameworkSampleApp
 {
 	internal class ApmLoggerToNLog : IApmLogger
 	{
-		public ApmLogLevel Level => ApmLogLevel.Trace;
+		public bool IsEnabled(ApmLogLevel level) => true;
 
 		public void Log<TState>(ApmLogLevel apmLogLevel, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{

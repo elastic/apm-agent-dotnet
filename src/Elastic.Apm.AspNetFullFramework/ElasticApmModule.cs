@@ -14,10 +14,6 @@ namespace Elastic.Apm.AspNetFullFramework
 {
 	public class ElasticApmModule : IHttpModule
 	{
-
-		private static readonly IApmAgent AgentSingleton;
-		private static readonly bool IsCaptureHeadersEnabled;
-		private static readonly IApmLogger Logger;
 		private static bool _isCaptureHeadersEnabled;
 		private static readonly DbgInstanceNameGenerator DbgInstanceNameGenerator = new DbgInstanceNameGenerator();
 
@@ -92,14 +88,14 @@ namespace Elastic.Apm.AspNetFullFramework
 						"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData} - continuing trace",
 						TraceParent.TraceParentHeaderName, distributedTracingData);
 
-				_currentTransaction = AgentSingleton.Tracer.StartTransaction($"{httpRequest.HttpMethod} {httpRequest.Path}", ApiConstants.TypeRequest,
+				_currentTransaction = Agent.Instance.Tracer.StartTransaction($"{httpRequest.HttpMethod} {httpRequest.Path}", ApiConstants.TypeRequest,
 					distributedTracingData);
 			}
 			else
 			{
-				Logger.Debug()?.Log("Incoming request doesn't have valid incoming distributed tracing data - starting trace with new trace ID");
+				_logger.Debug()?.Log("Incoming request doesn't have valid incoming distributed tracing data - starting trace with new trace ID");
 				_currentTransaction =
-					AgentSingleton.Tracer.StartTransaction($"{httpRequest.HttpMethod} {httpRequest.Path}", ApiConstants.TypeRequest);
+					Agent.Instance.Tracer.StartTransaction($"{httpRequest.HttpMethod} {httpRequest.Path}", ApiConstants.TypeRequest);
 			}
 
 			if (_currentTransaction.IsSampled) FillSampledTransactionContextRequest(httpRequest, _currentTransaction);

@@ -55,9 +55,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task CustomChildSpanThrowsTest()
 		{
 			var errorPageData = SampleAppUrlPaths.CustomChildSpanThrowsExceptionPage;
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(errorPageData.RelativeUrlPath, errorPageData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(errorPageData.RelativeUrlPath, errorPageData.StatusCode);
 
-			VerifyDataReceivedFromAgent(receivedData =>
+			await VerifyDataReceivedFromAgent(receivedData =>
 			{
 				TryVerifyDataReceivedFromAgent(errorPageData, receivedData);
 

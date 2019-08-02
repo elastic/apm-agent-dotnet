@@ -52,14 +52,14 @@ namespace Elastic.Apm.Logging
 		internal static MaybeLogger? Debug(this IApmLogger logger) => IfLevel(logger, LogLevel.Debug);
 
 		/// <summary>
-		/// If the logger has a loglevel, which is higher than or equal to Error then it returns a MaybeLogger instance,
+		/// If the logger has a loglevel, which is higher than Info then it returns a MaybeLogger instance,
 		/// otherwise it returns null.
 		/// By using the return value with `?.` you can avoid executing code that is not necessary to execute
 		/// in case the log won't be printed because the loglevel would not allow it.
 		/// </summary>
 		/// <param name="logger">The logger instance you want to log with</param>
 		/// <returns>Either a MaybeLogger or null</returns>
-		internal static MaybeLogger? Error(this IApmLogger logger) => IfLevel(logger, LogLevel.Error);
+		internal static MaybeLogger? Info(this IApmLogger logger) => IfLevel(logger, LogLevel.Information);
 
 		/// <summary>
 		/// If the logger has a loglevel, which is higher than or equal to Warning then it returns a MaybeLogger instance,
@@ -72,27 +72,17 @@ namespace Elastic.Apm.Logging
 		internal static MaybeLogger? Warning(this IApmLogger logger) => IfLevel(logger, LogLevel.Warning);
 
 		/// <summary>
+		/// If the logger has a loglevel, which is higher than or equal to Error then it returns a MaybeLogger instance,
+		/// otherwise it returns null.
+		/// By using the return value with `?.` you can avoid executing code that is not necessary to execute
+		/// in case the log won't be printed because the loglevel would not allow it.
+		/// </summary>
+		/// <param name="logger">The logger instance you want to log with</param>
+		/// <returns>Either a MaybeLogger or null</returns>
+		internal static MaybeLogger? Error(this IApmLogger logger) => IfLevel(logger, LogLevel.Error);
+
+		/// <summary>
 		/// If the logger has a loglevel, which is higher than or equal to Critical then it returns a MaybeLogger instance,
-		/// otherwise it returns null.
-		/// By using the return value with `?.` you can avoid executing code that is not necessary to execute
-		/// in case the log won't be printed because the loglevel would not allow it.
-		/// </summary>
-		/// <param name="logger">The logger instance you want to log with</param>
-		/// <returns>Either a MaybeLogger or null</returns>
-		internal static MaybeLogger? Critical(this IApmLogger logger) => IfLevel(logger, LogLevel.Critical);
-
-		/// <summary>
-		/// If the logger has a loglevel, which is higher than Info then it returns a MaybeLogger instance,
-		/// otherwise it returns null.
-		/// By using the return value with `?.` you can avoid executing code that is not necessary to execute
-		/// in case the log won't be printed because the loglevel would not allow it.
-		/// </summary>
-		/// <param name="logger">The logger instance you want to log with</param>
-		/// <returns>Either a MaybeLogger or null</returns>
-		internal static MaybeLogger? Info(this IApmLogger logger) => IfLevel(logger, LogLevel.Information);
-
-		/// <summary>
-		/// If the logger has a loglevel, which is higher than Critical then it returns a MaybeLogger instance,
 		/// otherwise it returns null.
 		/// By using the return value with `?.` you can avoid executing code that is not necessary to execute
 		/// in case the log won't be printed because the loglevel would not allow it.
