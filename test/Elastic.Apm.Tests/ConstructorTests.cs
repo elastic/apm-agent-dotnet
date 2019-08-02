@@ -18,7 +18,9 @@ namespace Elastic.Apm.Tests
 			public string SecretToken { get; }
 			public bool CaptureHeaders { get; }
 			public double TransactionSampleRate { get; }
-			public double MetricsIntervalInMillisecond { get; }
+			public double MetricsIntervalInMilliseconds { get; }
+			public int StackTraceLimit { get; }
+			public double SpanFramesMinDurationInMilliseconds { get; }
 		}
 
 		///<summary>
@@ -32,7 +34,8 @@ namespace Elastic.Apm.Tests
 			var logger = agent.Logger as ConsoleLogger;
 
 			logger.Should().NotBeNull();
-			logger?.Level.Should().Be(LogLevel.Warning);
+			logger?.IsEnabled(LogLevel.Warning).Should().BeTrue();
+			logger?.IsEnabled(LogLevel.Information).Should().BeFalse();
 		}
 	}
 }

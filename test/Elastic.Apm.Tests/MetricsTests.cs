@@ -11,13 +11,19 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
 	public class MetricsTests
 	{
+		private readonly ITestOutputHelper _testOutputHelper;
+
+		public MetricsTests(ITestOutputHelper testOutputHelper) => _testOutputHelper = testOutputHelper;
+
 		[Fact]
 		public void CollectAllMetrics()
 		{
@@ -100,13 +106,13 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task MetricsWithRealAgent()
 		{
-			var logger = new TestLogger();
+			var logger = new XunitOutputLogger(_testOutputHelper);
 			var payloadSender = new MockPayloadSender();
-			var configReader = new TestAgentConfigurationReader(logger, metricsInterval: "1s");
+			var configReader = new TestAgentConfigurationReader(logger, metricsInterval: "1s", logLevel: "Debug");
 			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender, logger: logger, configurationReader: configReader)))
 			{
-				await Task.Delay(2200); //make sure we wait enough to collect 1 set of metrics
-				agent.ConfigurationReader.MetricsIntervalInMillisecond.Should().Be(1000);
+				await Task.Delay(10000); //make sure we wait enough to collect 1 set of metrics
+				agent.ConfigurationReader.MetricsIntervalInMilliseconds.Should().Be(1000);
 			}
 
 			payloadSender.Metrics.Should().NotBeEmpty();
@@ -143,7 +149,7 @@ namespace Elastic.Apm.Tests
 
 		private class TestSystemTotalCpuProvider : SystemTotalCpuProvider
 		{
-			public TestSystemTotalCpuProvider(string procStatContent) : base( new NoopLogger(),
+			public TestSystemTotalCpuProvider(string procStatContent) : base(new NoopLogger(),
 				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent)))) { }
 		}
 	}

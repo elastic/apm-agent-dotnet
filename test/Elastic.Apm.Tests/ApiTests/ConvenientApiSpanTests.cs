@@ -618,11 +618,11 @@ namespace Elastic.Apm.Tests.ApiTests
 		}
 
 		/// <summary>
-		/// Creates a custom span and adds a tag to it.
-		/// Makes sure that the tag is stored on Span.Context.
+		/// Creates a custom span and adds a label to it.
+		/// Makes sure that the label is stored on Span.Context.
 		/// </summary>
 		[Fact]
-		public void TagsOnSpan()
+		public void LabelsOnSpan()
 		{
 			var payloadSender = AssertWith1TransactionAnd1Span(
 				t =>
@@ -630,23 +630,23 @@ namespace Elastic.Apm.Tests.ApiTests
 					t.CaptureSpan(SpanName, SpanType, span =>
 					{
 						WaitHelpers.Sleep2XMinimum();
-						span.Tags["foo"] = "bar";
+						span.Labels["foo"] = "bar";
 					});
 				});
 
-			//According to the Intake API tags are stored on the Context (and not on Spans.Tags directly).
-			payloadSender.SpansOnFirstTransaction[0].Context.Tags.Should().Contain("foo", "bar");
+			//According to the Intake API labels are stored on the Context (and not on Spans.Labels directly).
+			payloadSender.SpansOnFirstTransaction[0].Context.Labels.Should().Contain("foo", "bar");
 
-			//Also make sure the tag is visible directly on Span.Tags.
-			payloadSender.SpansOnFirstTransaction[0].Tags.Should().Contain("foo", "bar");
+			//Also make sure the label is visible directly on Span.Labels.
+			payloadSender.SpansOnFirstTransaction[0].Labels.Should().Contain("foo", "bar");
 		}
 
 		/// <summary>
-		/// Creates a custom async span and adds a tag to it.
-		/// Makes sure that the tag is stored on Span.Context.
+		/// Creates a custom async span and adds a label to it.
+		/// Makes sure that the label is stored on Span.Context.
 		/// </summary>
 		[Fact]
-		public async Task TagsOnSpanAsync()
+		public async Task LabelsOnSpanAsync()
 		{
 			var payloadSender = await AssertWith1TransactionAnd1SpanAsync(
 				async t =>
@@ -654,23 +654,23 @@ namespace Elastic.Apm.Tests.ApiTests
 					await t.CaptureSpan(SpanName, SpanType, async span =>
 					{
 						await WaitHelpers.Delay2XMinimum();
-						span.Tags["foo"] = "bar";
+						span.Labels["foo"] = "bar";
 					});
 				});
 
-			//According to the Intake API tags are stored on the Context (and not on Spans.Tags directly).
-			payloadSender.SpansOnFirstTransaction[0].Context.Tags.Should().Contain("foo", "bar");
+			//According to the Intake API labels are stored on the Context (and not on Spans.Labels directly).
+			payloadSender.SpansOnFirstTransaction[0].Context.Labels.Should().Contain("foo", "bar");
 
-			//Also make sure the tag is visible directly on Span.Tags.
-			payloadSender.SpansOnFirstTransaction[0].Tags.Should().Contain("foo", "bar");
+			//Also make sure the label is visible directly on Span.Labels.
+			payloadSender.SpansOnFirstTransaction[0].Labels.Should().Contain("foo", "bar");
 		}
 
 		/// <summary>
-		/// Creates a custom async span that ends with an error and adds a tag to it.
-		/// Makes sure that the tag is stored on Span.Context.
+		/// Creates a custom async span that ends with an error and adds a label to it.
+		/// Makes sure that the label is stored on Span.Context.
 		/// </summary>
 		[Fact]
-		public async Task TagsOnSpanAsyncError()
+		public async Task LabelsOnSpanAsyncError()
 		{
 			var payloadSender = await AssertWith1TransactionAnd1ErrorAnd1SpanAsync(async t =>
 			{
@@ -679,7 +679,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					await t.CaptureSpan(SpanName, SpanType, async span =>
 					{
 						await WaitHelpers.Delay2XMinimum();
-						span.Tags["foo"] = "bar";
+						span.Labels["foo"] = "bar";
 
 						if (new Random().Next(1) == 0) //avoid unreachable code warning.
 							throw new InvalidOperationException(ExceptionMessage);
@@ -688,11 +688,11 @@ namespace Elastic.Apm.Tests.ApiTests
 				await act.Should().ThrowAsync<InvalidOperationException>();
 			});
 
-			//According to the Intake API tags are stored on the Context (and not on Spans.Tags directly).
-			payloadSender.SpansOnFirstTransaction[0].Context.Tags.Should().Contain("foo", "bar");
+			//According to the Intake API labels are stored on the Context (and not on Spans.Labels directly).
+			payloadSender.SpansOnFirstTransaction[0].Context.Labels.Should().Contain("foo", "bar");
 
-			//Also make sure the tag is visible directly on Span.Tags.
-			payloadSender.SpansOnFirstTransaction[0].Tags.Should().Contain("foo", "bar");
+			//Also make sure the label is visible directly on Span.Labels.
+			payloadSender.SpansOnFirstTransaction[0].Labels.Should().Contain("foo", "bar");
 		}
 
 		/// <summary>

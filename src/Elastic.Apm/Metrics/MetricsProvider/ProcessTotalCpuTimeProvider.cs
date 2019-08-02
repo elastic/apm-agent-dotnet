@@ -9,12 +9,11 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 {
 	internal class ProcessTotalCpuTimeProvider : IMetricsProvider
 	{
-		private readonly IApmLogger _logger;
 		internal const string ProcessCpuTotalPct = "system.process.cpu.total.norm.pct";
 
 		public ProcessTotalCpuTimeProvider(IApmLogger logger)
 		{
-			_logger = logger.Scoped(nameof(ProcessTotalCpuTimeProvider));
+			IApmLogger loggerInCtor = logger.Scoped(nameof(ProcessTotalCpuTimeProvider));
 
 			try
 			{
@@ -23,7 +22,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			}
 			catch (Exception e)
 			{
-				_logger.Error()?.LogException(e, "Failed reading Process Total CPU Time");
+				loggerInCtor.Error()?.LogException(e, "Failed reading Process Total CPU Time");
 			}
 		}
 

@@ -99,6 +99,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData CustomSpanThrowsExceptionPage =
 				new SampleAppUrlPathData(HomeController.CustomSpanThrowsPageRelativePath, 500, spansCount: 1, errorsCount: 1);
 
+			internal static readonly SampleAppUrlPathData CustomChildSpanThrowsExceptionPage =
+				new SampleAppUrlPathData(HomeController.CustomChildSpanThrowsPageRelativePath, 500, spansCount: 2, errorsCount: 2);
+
 			internal static readonly SampleAppUrlPathData HomePage =
 				new SampleAppUrlPathData(HomeController.HomePageRelativePath, 200);
 
@@ -485,6 +488,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			}
 		}
 
+		internal void VerifySpanNameTypeSubtypeAction(SpanDto span, string spanPrefix)
+		{
+			span.Name.Should().Be($"{spanPrefix}{HomeController.SpanNameSuffix}");
+			span.Type.Should().Be($"{spanPrefix}{HomeController.SpanTypeSuffix}");
+			span.Subtype.Should().Be($"{spanPrefix}{HomeController.SpanSubtypeSuffix}");
+			span.Action.Should().Be($"{spanPrefix}{HomeController.SpanActionSuffix}");
+		}
+
 		private void FullFwAssertValid(ReceivedData receivedData)
 		{
 			foreach (var error in receivedData.Errors) FullFwAssertValid(error);
@@ -561,7 +572,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			if (_sampleAppClientCallTiming != null) timedDto.ShouldOccurBetween(_sampleAppClientCallTiming);
 		}
 
-		private void FullFwAssertValid(SpanCount spanCount)
+		private void FullFwAssertValid(SpanCountDto spanCount)
 		{
 			spanCount.Should().NotBeNull();
 

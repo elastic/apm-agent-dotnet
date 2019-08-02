@@ -19,7 +19,7 @@ You can access the API by using the static property on the Agent: `Elastic.Apm.A
 
 [float]
 [[api-start-transaction]]
-==== `Transaction StartTransaction(string name, string type)`
+==== `ITransaction StartTransaction(string name, string type)`
 Use this method to create a custom transaction.
 
 
@@ -51,7 +51,7 @@ finally
 
 [float]
 [[api-current-transaction]]
-==== `Transaction CurrentTransaction`
+==== `ITransaction CurrentTransaction`
 Returns the currently active transaction.
 See the <<api-transaction>> to customize the current transaction.
 
@@ -64,8 +64,22 @@ var transaction = Elastic.Apm.Agent.Tracer.CurrentTransaction;
 ----
 
 [float]
+[[api-current-span]]
+==== `ISpan CurrentSpan`
+Returns the currently active span.
+See the <<api-span>> to customize the current span.
+
+If there is no current span,
+this method will return `null`.
+
+[source,csharp]
+----
+var span = Elastic.Apm.Agent.Tracer.CurrentSpan;
+----
+
+[float]
 [[convenient-capture-transaction]]
-==== `Transaction CaptureTransaction`
+==== `CaptureTransaction`
 
 This is a convenient method which starts and ends a transaction and captures unhandled exceptions.
 It has 3 parameters:
@@ -107,7 +121,33 @@ await Elastic.Apm.Agent.Tracer
 });
 ----
 
-NOTE: The <<convenient-capture-transaction>> method does not start any `Task` for you, so you have to call it with the `await` keyword if you use one of the overloads that accept `Task` or `Task<T>`.
+NOTE: Return value of <<convenient-capture-transaction>> method overloads that accept Task (or Task<T>) is the same Task (or Task<T>) instance as the one passed as the argument so if your application should continue only after the task completes you have to call <<convenient-capture-transaction>> with `await` keyword.
+
+//----------------------------
+[float]
+[[manually-propagating-distributed-tracing-context]]
+==== Manually propagating distributed tracing context
+//----------------------------
+Agent automatically propagates distributed tracing context for the supported technologies (see <<supported-networking-client-side-technologies>>).
+If your application communicates over a protocol that is not supported by the agent
+you can manually propagate distributed tracing context from the caller to the callee side using Public Agent API.
+
+First you serialize distributed tracing context on the caller side:
+[source,csharp]
+----
+string outgoingDistributedTracingData = Agent.Tracer.CurrentTransaction
+                     .OutgoingDistributedTracingData.SerializeToString();
+----
+Then you transfer the resulted string to the callee side
+and you continue the trace by passing deserialized distributed tracing context to any of
+<<api-start-transaction>> or <<convenient-capture-transaction>> APIs
+- all of these APIs have an optional `DistributedTracingData` parameter.
+For example:
+[source,csharp]
+----
+var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransaction",
+     DistributedTracingData.TryDeserializeFromString(serializedDistributedTracingData));
+----
 
 
 //----------------------------
@@ -124,7 +164,7 @@ You may only interact with a transaction when you have control over its lifecycl
 
 [float]
 [[api-transaction-create-span]]
-==== `Span StartSpan(string name, string type, string subType = null, string action = null)`
+==== `ISpan StartSpan(string name, string type, string subType = null, string action = null)`
 Start and return a new custom span as a child of the given transaction.
 
 It is important to call <<api-span-end>> when the span has ended or to use the <<convenient-capture-span>> method.
@@ -154,13 +194,13 @@ finally
 
 [float]
 [[api-transaction-tags]]
-==== `Dictionary<string,string> Tags`
-A flat mapping of user-defined tags with string values. 
+==== `Dictionary<string,string> Labels`
+A flat mapping of user-defined labels with string values. 
 
-TIP: Before using custom tags, ensure you understand the different types of
+TIP: Before using custom labels, ensure you understand the different types of
 {apm-overview-ref-v}/metadata.html[metadata] that are available.
 
-WARNING: Avoid defining too many user-specified tags.
+WARNING: Avoid defining too many user-specified labels.
 Defining too many unique fields in an index is a condition that can lead to a
 {ref}/mapping.html#mapping-limit-settings[mapping explosion].
 
@@ -170,13 +210,13 @@ Ageny.Tracer
  .CaptureTransaction(TransactionName, TransactionType, 
     transaction =>
     {
-        transaction.Tags["foo"] = "bar";
+        transaction.Labels["foo"] = "bar";
         //application code that is captured as a transaction
     });
 ----
 
-* `key`:   The tag key
-* `value`: The tag value
+* `key`:   The label key
+* `value`: The label value
 
 [float]
 [[api-transaction-end]]
@@ -210,7 +250,7 @@ This method is typically used when you want to report an error, but you don't ha
 
 [float]
 [[convenient-capture-span]]
-==== `Transaction CaptureSpan`
+==== `CaptureSpan`
 
 This is a convenient method which starts and ends a span on the given transaction and captures unhandled exceptions. It has the same overloads as the <<convenient-capture-transaction>> method.
 It has 5 parameters:
@@ -257,9 +297,30 @@ var asyncResult = await transaction.CaptureSpan("Select FROM customer", ApiConst
 });
 ----
 
-NOTE: The <<convenient-capture-span>> method does not start any `Task` for you, so you have to call it with the `await` keyword if you use one of the overloads that accept `Task` or `Task<T>`.
+NOTE: Return value of <<convenient-capture-span>> method overloads that accept Task (or Task<T>) is the same Task (or Task<T>) instance as the one passed as the argument so if your application should continue only after the task completes you have to call <<convenient-capture-span>> with `await` keyword.
 
 NOTE: Code samples above use `Elastic.Apm.Agent.Tracer.CurrentTransaction`. In production code you should make sure the `CurrentTransaction` is not `null`.
+
+[float]
+[[api-transaction-context]]
+==== `Context`
+You can attach additional context to manually captured transactions.
+
+If you use a web framework for which agent doesn't capture transactions automatically (see <<supported-web-frameworks>>),
+you can add context related to the captured transaction by setting various properties of transaction's `Context` property.
+For example:
+[source,csharp]
+----
+Agent.Tracer.CaptureTransaction("MyCustomTransaction",ApiConstants.TypeRequest, (transaction) =>
+{
+  transaction.Context.Request = new Request(myRequestMethod, myRequestUri);
+  
+  // ... code executing the request
+  
+  transaction.Context.Response =
+     new Response { StatusCode = myStatusCode, Finished = wasFinished };
+});
+----
 
 //----------------------------
 [float]
@@ -275,13 +336,13 @@ and the type will hold information about the database type.
 
 [float]
 [[api-span-tags]]
-==== `Dictionary<string,string> Tags`
-Similar to <<api-transaction-tags>> on the <<api-transaction>>: A flat mapping of user-defined tags with string values.
+==== `Dictionary<string,string> Labels`
+Similar to <<api-transaction-tags>> on the <<api-transaction>>: A flat mapping of user-defined labels with string values.
 
-TIP: Before using custom tags, ensure you understand the different types of
+TIP: Before using custom labels, ensure you understand the different types of
 {apm-overview-ref-v}/metadata.html[metadata] that are available.
 
-WARNING: Avoid defining too many user-specified tags.
+WARNING: Avoid defining too many user-specified labels.
 Defining too many unique fields in an index is a condition that can lead to a
 {ref}/mapping.html#mapping-limit-settings[mapping explosion].
 
@@ -290,7 +351,7 @@ Defining too many unique fields in an index is a condition that can lead to a
 transaction.CaptureSpan(SpanName, SpanType, 
 span =>
     {
-        span.Tags["foo"] = "bar";
+        span.Labels["foo"] = "bar";
         //application code that is captured as a span
     });
 ----
@@ -313,3 +374,38 @@ This method is typically used when you want to report an error, but you don't ha
 Ends the span and schedules it to be reported to the APM Server.
 
 It is illegal to call any methods on a span instance which has already ended.
+
+[float]
+[[api-span-context]]
+==== `Context`
+You can attach additional context to manually captured spans.
+
+If you use a database library for which agent doesn't capture spans automatically (see <<supported-data-access-technologies>>),
+you can add context related to the captured database operation by setting span's `Context.Db` property.
+For example:
+[source,csharp]
+----
+Agent.Tracer.CurrentTransaction.CaptureSpan("MyDbWrite", ApiConstants.TypeDb, (span) =>
+{
+    span.Context.Db = new Database 
+        { Statement = myDbStatement, Type = myDbType, Instance = myDbInstance };
+    
+    // ... code executing the database operation
+});
+----
+
+If you use an HTTP library for which agent doesn't capture spans automatically (see <<supported-networking-client-side-technologies>>),
+you can add context related to the captured HTTP operation by setting span's `Context.Http` property.
+For example:
+[source,csharp]
+----
+Agent.Tracer.CurrentTransaction.CaptureSpan("MyHttpOperation", ApiConstants.TypeExternal, (span) =>
+{
+    span.Context.Http = new Http
+        { Url = myUrl, Method = myMethod };
+
+    // ... code executing the HTTP operation
+
+    span.Context.Http.StatusCode = myStatusCode;
+});
+----

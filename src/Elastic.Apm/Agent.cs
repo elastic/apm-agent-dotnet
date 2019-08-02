@@ -70,9 +70,7 @@ namespace Elastic.Apm
 		public Service Service => Components.Service;
 		public ITracer Tracer => Components.Tracer;
 
-		internal Tracer TracerInternal => Tracer as Tracer;
-
-		internal TransactionContainer TransactionContainer => Components.TransactionContainer;
+		internal Tracer TracerInternal => Components.TracerInternal;
 
 		public void Dispose()
 		{
@@ -90,6 +88,8 @@ namespace Elastic.Apm
 
 		internal static ApmAgent Instance => Lazy.Value;
 
+		internal static bool IsInstanceCreated => Lazy.IsValueCreated;
+		
 		public static IApmLogger Logger
 		{
 			get => _logger;
@@ -114,8 +114,6 @@ namespace Elastic.Apm
 		/// a transaction.
 		/// </summary>
 		public static ITracer Tracer => Instance.Tracer;
-
-		internal static TransactionContainer TransactionContainer => Instance.TransactionContainer;
 
 		/// <summary>
 		/// Sets up multiple <see cref="IDiagnosticsSubscriber" />'s to start listening to one or more

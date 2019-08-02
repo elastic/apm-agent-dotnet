@@ -177,7 +177,8 @@ namespace Elastic.Apm.Report
 			{
 				_logger?.Warning()
 					?.LogException(
-						e, "Failed sending events. Following events were not transferred successfully to the server:\n{SerializedItems}",
+						e, "Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):\n{SerializedItems}",
+						_httpClient.BaseAddress,
 						TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray())));
 			}
 		}
