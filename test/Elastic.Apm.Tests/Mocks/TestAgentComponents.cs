@@ -1,6 +1,5 @@
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
-using FluentAssertions;
 
 namespace Elastic.Apm.Tests.Mocks
 {

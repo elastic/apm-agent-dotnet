@@ -8,23 +8,20 @@ namespace Elastic.Apm.Tests.HelpersTests
 	public class AssertionTests
 	{
 		[Fact]
-		public void PassedAssertion()
-		{
-			Assertion.IfEnabled?.That(true, "Dummy message");
-		}
+		public void PassedAssertion() => Assertion.IfEnabled?.That(true, "Dummy message");
 
 		[Fact]
-		public void FailedAssertion()
-		{
-			AsAction(() => Assertion.IfEnabled?.That(false, "Dummy message")).Should()
+		public void FailedAssertion() =>
+			AsAction(() => Assertion.IfEnabled?.That(false, "Dummy message"))
+				.Should()
 				.ThrowExactly<AssertionFailedException>()
 				.WithMessage("Dummy message");
-		}
 
 		[Fact]
 		public void WhenDisabledConditionAndMessageAreNotEvaluated()
 		{
-			int expensiveCallsCount = 0;
+			var expensiveCallsCount = 0;
+
 			bool ExpensiveCall(bool result)
 			{
 				++expensiveCallsCount;
@@ -45,6 +42,5 @@ namespace Elastic.Apm.Tests.HelpersTests
 				Assertion.IsEnabled = isEnabledValueToRestore;
 			}
 		}
-
 	}
 }

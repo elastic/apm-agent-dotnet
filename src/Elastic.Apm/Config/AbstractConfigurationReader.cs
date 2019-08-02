@@ -81,10 +81,8 @@ namespace Elastic.Apm.Config
 			return ConsoleLogger.DefaultLogLevel;
 		}
 
-		protected IReadOnlyList<Uri> ParseServerUrls(ConfigurationKeyValue kv)
-		{
-			return _cachedServerUrls.IfNotInited?.InitOrGet(() => ParseServerUrlsImpl(kv)) ?? _cachedServerUrls.Value;
-		}
+		protected IReadOnlyList<Uri> ParseServerUrls(ConfigurationKeyValue kv) =>
+			_cachedServerUrls.IfNotInited?.InitOrGet(() => ParseServerUrlsImpl(kv)) ?? _cachedServerUrls.Value;
 
 		private IReadOnlyList<Uri> ParseServerUrlsImpl(ConfigurationKeyValue kv)
 		{
@@ -104,6 +102,7 @@ namespace Elastic.Apm.Config
 			}
 
 			if (list.Count > 1)
+			{
 				Logger?.Warning()
 					?.Log(nameof(ConfigConsts.EnvVarNames.ServerUrls)
 						+ " configuration option contains more than one URL which is not supported by the agent yet"
@@ -111,6 +110,7 @@ namespace Elastic.Apm.Config
 						+ " Configuration option's source: {Origin}, key: `{Key}', value: `{Value}'."
 						+ " The first URL: `{ApmServerUrl}'",
 						kv.ReadFrom, kv.Key, kv.Value, list.First());
+			}
 
 			return list.Count == 0 ? LogAndReturnDefault().AsReadOnly() : list.AsReadOnly();
 

@@ -154,7 +154,7 @@ namespace Elastic.Apm.Metrics
 
 			foreach (var provider in MetricsProviders)
 			{
-				if(provider is IDisposable disposable)
+				if (provider is IDisposable disposable)
 					disposable.Dispose();
 			}
 		}

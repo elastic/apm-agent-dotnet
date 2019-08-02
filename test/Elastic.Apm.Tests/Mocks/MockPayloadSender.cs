@@ -9,9 +9,9 @@ namespace Elastic.Apm.Tests.Mocks
 	internal class MockPayloadSender : IPayloadSender
 	{
 		public readonly List<IError> Errors = new List<IError>();
-		public readonly List<ITransaction> Transactions = new List<ITransaction>();
-		public readonly List<ISpan> Spans = new List<ISpan>();
 		public readonly List<IMetricSet> Metrics = new List<IMetricSet>();
+		public readonly List<ISpan> Spans = new List<ISpan>();
+		public readonly List<ITransaction> Transactions = new List<ITransaction>();
 
 		public Error FirstError => Errors.First() as Error;
 
@@ -26,7 +26,7 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public void QueueError(IError error) => Errors.Add(error);
 
-		public void QueueTransaction(ITransaction transaction) =>  Transactions.Add(transaction);
+		public void QueueTransaction(ITransaction transaction) => Transactions.Add(transaction);
 
 		public void QueueSpan(ISpan span) => Spans.Add(span);
 

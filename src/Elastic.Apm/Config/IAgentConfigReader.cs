@@ -23,7 +23,8 @@ namespace Elastic.Apm.Config
 
 		/// <summary>
 		/// The number of stack frames the agent collects.
-		/// 0: no stacktrace is collected - This also applies to spans no matter what is the value of SpanFramesMinDurationInMilliseconds.
+		/// 0: no stacktrace is collected - This also applies to spans no matter what is the value of
+		/// SpanFramesMinDurationInMilliseconds.
 		/// negative: all frames must be collected
 		/// positive number n: top n frames must be collected
 		/// </summary>

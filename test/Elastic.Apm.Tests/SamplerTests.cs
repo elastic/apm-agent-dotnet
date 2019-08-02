@@ -13,15 +13,15 @@ namespace Elastic.Apm.Tests
 		// ReSharper disable once MemberCanBePrivate.Global
 		public static DataForTheory RateVariantsToTest => new DataForTheory<double>
 		{
-			{ 0 },
-			{ 0.000000001 },
-			{ 0.00123 },
-			{ 0.3 },
-			{ 0.5 },
-			{ 0.75 },
-			{ 0.789 },
-			{ 0.999999999 },
-			{ 1 },
+			0,
+			0.000000001,
+			0.00123,
+			0.3,
+			0.5,
+			0.75,
+			0.789,
+			0.999999999,
+			1
 		};
 
 		[Theory]

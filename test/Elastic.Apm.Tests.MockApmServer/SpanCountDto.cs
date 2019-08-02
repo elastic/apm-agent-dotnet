@@ -5,10 +5,10 @@ namespace Elastic.Apm.Tests.MockApmServer
 {
 	public class SpanCountDto
 	{
-		public int Started { get; set; }
 		public int Dropped { get; set; }
+		public int Started { get; set; }
 
 		public override string ToString() =>
-			new ToStringBuilder(nameof(SpanCount)) { { nameof(Started), Started }, { nameof(Dropped), Dropped }, }.ToString();
+			new ToStringBuilder(nameof(SpanCount)) { { nameof(Started), Started }, { nameof(Dropped), Dropped } }.ToString();
 	}
 }

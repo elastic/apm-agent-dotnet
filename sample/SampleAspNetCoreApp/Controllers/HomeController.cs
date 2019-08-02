@@ -28,37 +28,37 @@ namespace SampleAspNetCoreApp.Controllers
 			const string captureControllerActionAsSpanQueryStringKey = "captureControllerActionAsSpan";
 			var captureControllerActionAsSpanQueryStringValues = HttpContext.Request.Query[captureControllerActionAsSpanQueryStringKey];
 			if (captureControllerActionAsSpanQueryStringValues.Count > 1)
+			{
 				throw new ArgumentException($"{captureControllerActionAsSpanQueryStringKey} query string key should have at most one value" +
 					$", instead it's values: {captureControllerActionAsSpanQueryStringValues}",
 					captureControllerActionAsSpanQueryStringKey);
+			}
 			// ReSharper disable once SimplifyConditionalTernaryExpression
 			return captureControllerActionAsSpanQueryStringValues.Count == 0 ? false : bool.Parse(captureControllerActionAsSpanQueryStringValues[0]);
 		}
 
-		public Task<IActionResult> Index()
-		{
-			return SafeCaptureSpan<IActionResult>(GetCaptureControllerActionAsSpanFromQueryString(),
+		public Task<IActionResult> Index() =>
+			SafeCaptureSpan<IActionResult>(GetCaptureControllerActionAsSpanFromQueryString(),
 				"Index_span_name", "Index_span_type", async () =>
-			{
-				_sampleDataContext.Database.Migrate();
-				var model = _sampleDataContext.SampleTable.Select(item => item.Name).ToList();
-
-				try
 				{
-					var httpClient = new HttpClient();
-					httpClient.DefaultRequestHeaders.Add("User-Agent", "APM-Sample-App");
-					var responseMsg = await httpClient.GetAsync("https://api.github.com/repos/elastic/apm-agent-dotnet");
-					var responseStr = await responseMsg.Content.ReadAsStringAsync();
-					ViewData["stargazers_count"] = JObject.Parse(responseStr)["stargazers_count"];
-				}
-				catch
-				{
-					Console.WriteLine("Failed HTTP GET elastic.co");
-				}
+					_sampleDataContext.Database.Migrate();
+					var model = _sampleDataContext.SampleTable.Select(item => item.Name).ToList();
 
-				return View(model);
-			});
-		}
+					try
+					{
+						var httpClient = new HttpClient();
+						httpClient.DefaultRequestHeaders.Add("User-Agent", "APM-Sample-App");
+						var responseMsg = await httpClient.GetAsync("https://api.github.com/repos/elastic/apm-agent-dotnet");
+						var responseStr = await responseMsg.Content.ReadAsStringAsync();
+						ViewData["stargazers_count"] = JObject.Parse(responseStr)["stargazers_count"];
+					}
+					catch
+					{
+						Console.WriteLine("Failed HTTP GET elastic.co");
+					}
+
+					return View(model);
+				});
 
 		/// <summary>
 		/// In order to test if relationship between spans is maintained correctly by the agent,

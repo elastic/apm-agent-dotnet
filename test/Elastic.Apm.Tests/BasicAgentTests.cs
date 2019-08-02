@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
@@ -15,7 +14,6 @@ using Elastic.Apm.Report;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
-using System = Elastic.Apm.Api.System;
 
 [assembly:
 	InternalsVisibleTo(
@@ -79,9 +77,7 @@ namespace Elastic.Apm.Tests
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
 				configurationReader: new TestAgentConfigurationReader(secretToken: secretToken))))
-			{
 				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
-			}
 
 			await isRequestFinished.Task;
 			authHeader.Should().NotBeNull();
@@ -98,8 +94,10 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
 				agent.Tracer.CaptureTransaction("TestTransaction", "TestTransactionType",
-					(t) => { t.CaptureSpan("TestSpan", "TestSpanType", () => { }); });
+					t => { t.CaptureSpan("TestSpan", "TestSpanType", () => { }); });
+			}
 
 			StringToByteArray(payloadSender.FirstTransaction.Id).Should().HaveCount(8);
 			StringToByteArray(payloadSender.FirstTransaction.TraceId).Should().HaveCount(16);
@@ -117,8 +115,10 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
 				agent.Tracer.CaptureTransaction("TestTransaction", "TestTransactionType",
-					(t) => { t.CaptureException(new Exception("TestMst")); });
+					t => { t.CaptureException(new Exception("TestMst")); });
+			}
 
 			StringToByteArray(payloadSender.FirstError.Id).Should().HaveCount(16);
 			StringToByteArray(payloadSender.FirstError.TraceId).Should().HaveCount(16);

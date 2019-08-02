@@ -6,7 +6,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 	{
 		internal static void EnsureInstanceCreated()
 		{
-			if (! Agent.IsInstanceCreated) Agent.Setup(new TestAgentComponents());
+			if (!Agent.IsInstanceCreated) Agent.Setup(new TestAgentComponents());
 		}
 	}
 }

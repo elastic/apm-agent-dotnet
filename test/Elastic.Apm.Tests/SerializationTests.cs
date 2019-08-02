@@ -16,6 +16,16 @@ namespace Elastic.Apm.Tests
 	/// </summary>
 	public class SerializationTests
 	{
+		// ReSharper disable once MemberCanBePrivate.Global
+		public static TheoryData SerializationUtilsTrimToPropertyMaxLengthVariantsToTest => new TheoryData<string, string>
+		{
+			{ "", "" },
+			{ "A", "A" },
+			{ "B".Repeat(Consts.PropertyMaxLength), "B".Repeat(Consts.PropertyMaxLength) },
+			{ "C".Repeat(Consts.PropertyMaxLength + 1), "C".Repeat(Consts.PropertyMaxLength - 3) + "..." },
+			{ "D".Repeat(Consts.PropertyMaxLength * 2), "D".Repeat(Consts.PropertyMaxLength - 3) + "..." }
+		};
+
 		/// <summary>
 		/// Tests the <see cref="TrimmedStringJsonConverter" />. It serializes a transaction with Transaction.Name.Length > 1024.
 		/// Makes sure that the Transaction.Name is truncated correctly.
@@ -158,8 +168,8 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		///	Creates a service instance with a name that is longer than <see cref="Consts.PropertyMaxLength"/>.
-		/// Makes sure the name is truncated.
+		/// 	Creates a service instance with a name that is longer than <see cref="Consts.PropertyMaxLength" />.
+		///  Makes sure the name is truncated.
 		/// </summary>
 		[Fact]
 		public void ServiceNameLengthTest()
@@ -186,13 +196,13 @@ namespace Elastic.Apm.Tests
 			var agent = new TestAgentComponents();
 			// Create a transaction that is sampled (because the sampler is constant sampling-everything sampler
 			var sampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(1.0), /* distributedTracingData: */ null,
-			    agent.PayloadSender, new TestAgentConfigurationReader(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer);
+				agent.PayloadSender, new TestAgentConfigurationReader(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer);
 			sampledTransaction.Context.Request = new Request("GET",
 				new Url { Full = "https://elastic.co", Raw = "https://elastic.co", HostName = "elastic.co", Protocol = "HTTP" });
 
 			// Create a transaction that is not sampled (because the sampler is constant not-sampling-anything sampler
 			var nonSampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(0.0), /* distributedTracingData: */ null,
-			    agent.PayloadSender, new TestAgentConfigurationReader(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer);
+				agent.PayloadSender, new TestAgentConfigurationReader(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer);
 			nonSampledTransaction.Context.Request = sampledTransaction.Context.Request;
 
 			var serializedSampledTransaction = SerializePayloadItem(sampledTransaction);
@@ -233,16 +243,6 @@ namespace Elastic.Apm.Tests
 		[InlineData("ABCDEFGH", 7, "ABCD...")]
 		public void SerializationUtilsTrimToLengthTests(string original, int maxLength, string expectedTrimmed) =>
 			SerializationUtils.TrimToLength(original, maxLength).Should().Be(expectedTrimmed);
-
-		// ReSharper disable once MemberCanBePrivate.Global
-		public static TheoryData SerializationUtilsTrimToPropertyMaxLengthVariantsToTest => new TheoryData<string, string>
-		{
-			{ "", "" },
-			{ "A", "A" },
-			{ "B".Repeat(Consts.PropertyMaxLength), "B".Repeat(Consts.PropertyMaxLength) },
-			{ "C".Repeat(Consts.PropertyMaxLength + 1), "C".Repeat(Consts.PropertyMaxLength - 3) + "..." },
-			{ "D".Repeat(Consts.PropertyMaxLength * 2), "D".Repeat(Consts.PropertyMaxLength - 3) + "..." },
-		};
 
 		[Theory]
 		[MemberData(nameof(SerializationUtilsTrimToPropertyMaxLengthVariantsToTest))]

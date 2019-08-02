@@ -286,7 +286,8 @@ namespace Elastic.Apm.Tests
 			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
 			agent.Service.Name.Should().NotBe(serviceName);
-			agent.Service.Name.Should().MatchRegex("^[a-zA-Z0-9 _-]+$")
+			agent.Service.Name.Should()
+				.MatchRegex("^[a-zA-Z0-9 _-]+$")
 				.And.Be("MyService123_");
 		}
 

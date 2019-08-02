@@ -33,7 +33,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 		[Theory]
 		[MemberData(nameof(WaysToCallInitOrGetString))]
-		internal void InitializedOnlyOnceFromMultipleThreads(string dbgWayToCallDesc, Func<LazyContextualInit<string>, Func<string>, string> wayToCall)
+		internal void InitializedOnlyOnceFromMultipleThreads(string dbgWayToCallDesc, Func<LazyContextualInit<string>, Func<string>, string> wayToCall
+		)
 		{
 			var counter = new ThreadSafeCounter();
 			var ctxLazy = new LazyContextualInit<string>();
@@ -65,6 +66,21 @@ namespace Elastic.Apm.Tests.HelpersTests
 			}
 		}
 
+		// ReSharper disable once MemberCanBeProtected.Global
+		public static IEnumerable<object[]> WaysToCallInitOrGet<T>() where T : class
+		{
+			ValueTuple<string, Func<LazyContextualInit<T>, Func<T>, T>>[] waysToCall =
+			{
+				("IfNotInited?.InitOrGet ?? Value",
+					(lazyValue, valueProducer) => lazyValue.IfNotInited?.InitOrGet(valueProducer) ?? lazyValue.Value),
+				("InitOrGet", (lazyValue, valueProducer) => lazyValue.InitOrGet(valueProducer))
+			};
+
+			foreach (var (dbgWayToCallDesc, wayToCall) in waysToCall) yield return new object[] { dbgWayToCallDesc, wayToCall };
+		}
+
+		public static IEnumerable<object[]> WaysToCallInitOrGetString() => WaysToCallInitOrGet<string>();
+
 		private class ThreadSafeCounter
 		{
 			internal ThreadSafeCounter(int initialValue = 0) => _value = initialValue;
@@ -75,19 +91,5 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 			internal int Increment() => Interlocked.Increment(ref _value);
 		}
-
-		// ReSharper disable once MemberCanBeProtected.Global
-		public static IEnumerable<object[]> WaysToCallInitOrGet<T>() where T: class
-		{
-			ValueTuple<string, Func<LazyContextualInit<T>, Func<T>, T>>[] waysToCall =
-			{
-				("IfNotInited?.InitOrGet ?? Value", (lazyValue, valueProducer) => lazyValue.IfNotInited?.InitOrGet(valueProducer) ?? lazyValue.Value),
-				("InitOrGet", (lazyValue, valueProducer) => lazyValue.InitOrGet(valueProducer))
-			};
-
-			foreach (var (dbgWayToCallDesc, wayToCall) in waysToCall) yield return new object[] { dbgWayToCallDesc, wayToCall };
-		}
-
-		public static IEnumerable<object[]> WaysToCallInitOrGetString() => WaysToCallInitOrGet<string>();
 	}
 }

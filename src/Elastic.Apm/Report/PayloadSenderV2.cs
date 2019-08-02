@@ -12,6 +12,7 @@ using System.Threading.Tasks.Dataflow;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
 
@@ -24,28 +25,28 @@ namespace Elastic.Apm.Report
 	internal class PayloadSenderV2 : IPayloadSender, IDisposable
 	{
 		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
+		internal readonly Api.System _system;
 
 		private readonly BatchBlock<object> _eventQueue =
 			new BatchBlock<object>(20);
 
 		private readonly HttpClient _httpClient;
 		private readonly IApmLogger _logger;
-
-		private readonly Service _service;
-		internal readonly Api.System _system;
-
-		private CancellationTokenSource _batchBlockReceiveAsyncCts;
+		private readonly Metadata _metadata;
 
 		private readonly PayloadItemSerializer _payloadItemSerializer = new PayloadItemSerializer();
 
-		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler = new SingleThreadTaskScheduler(CancellationToken.None);
-		private readonly Metadata _metadata;
+		private readonly Service _service;
 
-		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, Api.System system, HttpMessageHandler handler = null)
+		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler = new SingleThreadTaskScheduler(CancellationToken.None);
+
+		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, Api.System system,
+			HttpMessageHandler handler = null
+		)
 		{
 			_service = service;
 			_system = system;
-			_metadata = new Metadata { Service = _service, System = _system};
+			_metadata = new Metadata { Service = _service, System = _system };
 			_logger = logger?.Scoped(nameof(PayloadSenderV2));
 
 			var serverUrlBase = configurationReader.ServerUrls.First();
@@ -76,6 +77,8 @@ namespace Elastic.Apm.Report
 					}
 				}, CancellationToken.None, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
 		}
+
+		private CancellationTokenSource _batchBlockReceiveAsyncCts;
 
 		public void QueueTransaction(ITransaction transaction)
 		{
@@ -148,7 +151,7 @@ namespace Elastic.Apm.Report
 						case Error _:
 							ndjson.AppendLine("{\"error\": " + serialized + "}");
 							break;
-						case Metrics.MetricSet _:
+						case MetricSet _:
 							ndjson.AppendLine("{\"metricset\": " + serialized + "}");
 							break;
 					}
@@ -160,9 +163,7 @@ namespace Elastic.Apm.Report
 				var result = await _httpClient.PostAsync(Consts.IntakeV2Events, content);
 
 				if (result != null && !result.IsSuccessStatusCode)
-				{
 					_logger?.Error()?.Log("Failed sending event. {ApmServerResponse}", await result.Content.ReadAsStringAsync());
-				}
 				else
 				{
 					_logger?.Debug()

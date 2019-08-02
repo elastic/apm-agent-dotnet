@@ -7,14 +7,14 @@ namespace Elastic.Apm.Tests.MockApmServer
 {
 	internal static class MetricsAssertValid
 	{
-		internal static readonly Dictionary<string, MetricTypeMetadata> MetricMetadataPerType = new Dictionary<string, MetricTypeMetadata>()
+		internal static readonly Dictionary<string, MetricTypeMetadata> MetricMetadataPerType = new Dictionary<string, MetricTypeMetadata>
 		{
 			{ FreeAndTotalMemoryProvider.FreeMemory, new MetricTypeMetadata(VerifyFreeMemory) },
 			{ FreeAndTotalMemoryProvider.TotalMemory, new MetricTypeMetadata(VerifyTotalMemory) },
 			{ ProcessTotalCpuTimeProvider.ProcessCpuTotalPct, new MetricTypeMetadata(VerifyProcessTotalCpu) },
 			{ ProcessWorkingSetAndVirtualMemoryProvider.ProcessVirtualMemory, new MetricTypeMetadata(VerifyProcessVirtualMemory) },
 			{ ProcessWorkingSetAndVirtualMemoryProvider.ProcessWorkingSetMemory, new MetricTypeMetadata(VerifyProcessWorkingSetMemory) },
-			{ SystemTotalCpuProvider.SystemCpuTotalPct, new MetricTypeMetadata(VerifySystemTotalCpu, true) },
+			{ SystemTotalCpuProvider.SystemCpuTotalPct, new MetricTypeMetadata(VerifySystemTotalCpu, true) }
 		};
 
 		internal static void AssertValid(MetricSetDto metricSet)

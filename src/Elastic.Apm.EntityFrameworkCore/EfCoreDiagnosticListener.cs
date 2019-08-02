@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Data;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.Model;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Elastic.Apm.EntityFrameworkCore

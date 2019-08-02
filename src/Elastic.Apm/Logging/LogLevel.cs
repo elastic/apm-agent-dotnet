@@ -41,7 +41,6 @@
 		/// <summary>
 		/// Not used for writing log messages. Specifies that a logging category should not write any messages.
 		/// </summary>
-		None = 6,
-
+		None = 6
 	}
 }

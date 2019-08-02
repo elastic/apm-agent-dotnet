@@ -18,6 +18,8 @@ namespace Elastic.Apm.Logging
 		protected internal static LogLevel DefaultLogLevel { get; } = LogLevel.Error;
 		public static ConsoleLogger Instance { get; } = new ConsoleLogger(DefaultLogLevel);
 
+		private LogLevel Level { get; }
+
 		public static ConsoleLogger LoggerOrDefault(LogLevel? level)
 		{
 			if (level.HasValue && level.Value != DefaultLogLevel)
@@ -25,8 +27,6 @@ namespace Elastic.Apm.Logging
 
 			return Instance;
 		}
-
-		private LogLevel Level { get; }
 
 		public bool IsEnabled(LogLevel level) => Level <= level;
 

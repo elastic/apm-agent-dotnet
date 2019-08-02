@@ -78,7 +78,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 				var responseFromElasticCo = await GetContentFromUrl(callToExternalServiceUrl);
 
 				ViewBag.Message =
-					$"Your contact page. " +
+					"Your contact page. " +
 					$" Response code from `{callToThisAppUrl}' is {responseFromLocalHost.StatusCode}. " +
 					$" Response code from `{callToExternalServiceUrl}' is {responseFromElasticCo.StatusCode}.";
 

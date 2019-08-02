@@ -10,6 +10,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Xunit.Sdk;
+
 // ReSharper disable UnusedAutoPropertyAccessor.Local
 
 namespace Elastic.Apm.Tests.MockApmServer.Controllers
@@ -159,7 +160,7 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 				{ "Metadata", Metadata },
 				{ "MetricSet", MetricSet },
 				{ "Span", Span },
-				{ "Transaction", Transaction },
+				{ "Transaction", Transaction }
 			}.ToString();
 		}
 	}

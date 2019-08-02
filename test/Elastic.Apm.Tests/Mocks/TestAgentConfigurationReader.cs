@@ -8,16 +8,16 @@ namespace Elastic.Apm.Tests.Mocks
 	public class TestAgentConfigurationReader : AbstractConfigurationReader, IConfigurationReader
 	{
 		public const string Origin = "unit test configuration";
+		private readonly string _captureHeaders;
 
 		private readonly string _logLevel;
+		private readonly string _metricsInterval;
+		private readonly string _secretToken;
 		private readonly string _serverUrls;
 		private readonly string _serviceName;
-		private readonly string _secretToken;
-		private readonly string _captureHeaders;
-		private readonly string _transactionSampleRate;
-		private readonly string _metricsInterval;
-		private readonly string _stackTraceLimit;
 		private readonly string _spanFramesMinDurationInMilliseconds;
+		private readonly string _stackTraceLimit;
+		private readonly string _transactionSampleRate;
 
 		public TestAgentConfigurationReader(
 			IApmLogger logger = null,
@@ -44,22 +44,24 @@ namespace Elastic.Apm.Tests.Mocks
 			_spanFramesMinDurationInMilliseconds = spanFramesMinDurationInMilliseconds;
 		}
 
+		public bool CaptureHeaders => ParseCaptureHeaders(Kv(ConfigConsts.EnvVarNames.CaptureHeaders, _captureHeaders, Origin));
+
 		public new IApmLogger Logger { get; }
 
 		public LogLevel LogLevel => ParseLogLevel(Kv(ConfigConsts.EnvVarNames.LogLevel, _logLevel, Origin));
-		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Kv(ConfigConsts.EnvVarNames.ServerUrls, _serverUrls, Origin));
-		public string ServiceName => ParseServiceName(Kv(ConfigConsts.EnvVarNames.ServiceName, _serviceName, Origin));
-		public string SecretToken => ParseSecretToken(Kv(ConfigConsts.EnvVarNames.SecretToken, _secretToken, Origin));
-		public bool CaptureHeaders => ParseCaptureHeaders(Kv(ConfigConsts.EnvVarNames.CaptureHeaders, _captureHeaders, Origin));
-
-		public double TransactionSampleRate =>
-			ParseTransactionSampleRate(Kv(ConfigConsts.EnvVarNames.TransactionSampleRate, _transactionSampleRate, Origin));
 
 		public double MetricsIntervalInMilliseconds => ParseMetricsInterval(Kv(ConfigConsts.EnvVarNames.MetricsInterval, _metricsInterval, Origin));
-		public int StackTraceLimit => ParseStackTraceLimit(Kv(ConfigConsts.EnvVarNames.StackTraceLimit, _stackTraceLimit, Origin));
+		public string SecretToken => ParseSecretToken(Kv(ConfigConsts.EnvVarNames.SecretToken, _secretToken, Origin));
+		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Kv(ConfigConsts.EnvVarNames.ServerUrls, _serverUrls, Origin));
+		public string ServiceName => ParseServiceName(Kv(ConfigConsts.EnvVarNames.ServiceName, _serviceName, Origin));
 
 		public double SpanFramesMinDurationInMilliseconds => ParseSpanFramesMinDurationInMilliseconds(Kv(
 			ConfigConsts.EnvVarNames.SpanFramesMinDuration,
 			_spanFramesMinDurationInMilliseconds, Origin));
+
+		public int StackTraceLimit => ParseStackTraceLimit(Kv(ConfigConsts.EnvVarNames.StackTraceLimit, _stackTraceLimit, Origin));
+
+		public double TransactionSampleRate =>
+			ParseTransactionSampleRate(Kv(ConfigConsts.EnvVarNames.TransactionSampleRate, _transactionSampleRate, Origin));
 	}
 }

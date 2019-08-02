@@ -29,6 +29,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		private readonly ApmAgent _agent;
 		private readonly MockPayloadSender _capturedPayload;
 		private readonly WebApplicationFactory<Startup> _factory;
+
 		// ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
 		private readonly IApmLogger _logger;
 
@@ -39,7 +40,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			// We need to ensure Agent.Instance is created because we need _agent to use Agent.Instance CurrentExecutionSegmentsContainer
 			AgentSingletonUtils.EnsureInstanceCreated();
-			_agent = new ApmAgent(new TestAgentComponents(logger: _logger, configurationReader: new TestAgentConfigurationReader(_logger),
+			_agent = new ApmAgent(new TestAgentComponents(_logger, new TestAgentConfigurationReader(_logger),
 				// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
 				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer));

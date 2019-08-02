@@ -13,7 +13,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 		public Api.System System { get; set; }
 
 		public override string ToString() =>
-			new ToStringBuilder(nameof(MetadataDto)) { { nameof(Service), Service }, { nameof(System), System }, }.ToString();
+			new ToStringBuilder(nameof(MetadataDto)) { { nameof(Service), Service }, { nameof(System), System } }.ToString();
 
 		public void AssertValid()
 		{

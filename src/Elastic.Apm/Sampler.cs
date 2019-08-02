@@ -75,13 +75,9 @@ namespace Elastic.Apm
 			retVal.Append(nameof(Sampler));
 			retVal.Append("{ ");
 			if (_isConstant)
-			{
 				retVal.Append($"constant: {_constantValue}");
-			}
 			else
-			{
 				retVal.Append($"rate: {_rate}");
-			}
 			retVal.Append(" }");
 			return retVal.ToString();
 		}

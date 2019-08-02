@@ -46,7 +46,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 		{
 			yield return new object[]
 			{
-				new DateTimeOffset(new DateTime(1234, 5, 16, 17, 28, 39, DateTimeKind.Utc) + TimeUtils.TimeSpanFromFractionalMilliseconds(987.654)),
+				new DateTimeOffset(
+					new DateTime(1234, 5, 16, 17, 28, 39, DateTimeKind.Utc) + TimeUtils.TimeSpanFromFractionalMilliseconds(987.654)),
 				"1234-05-16 17:28:39.9876540 +00:00"
 			};
 

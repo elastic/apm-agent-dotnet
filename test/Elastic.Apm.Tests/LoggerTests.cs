@@ -53,7 +53,7 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Logs a message with exception by using <see cref="LoggingExtensions.MaybeLogger.LogException"/>.
+		/// Logs a message with exception by using <see cref="LoggingExtensions.MaybeLogger.LogException" />.
 		/// Makes sure that both the message and the exception is printed.
 		/// First the Message is printed and the exception is in the last line.
 		/// </summary>
@@ -64,8 +64,9 @@ namespace Elastic.Apm.Tests
 
 			logger.Warning()
 				?.LogException(
-					new Exception("Something went wrong"), $"Failed sending events. Following events were not transferred successfully to the server:{Environment.NewLine}{{items}}",
-					string.Join($",{Environment.NewLine}", new List<string>{"Item1", "Item2", "Item3"} ));
+					new Exception("Something went wrong"),
+					$"Failed sending events. Following events were not transferred successfully to the server:{Environment.NewLine}{{items}}",
+					string.Join($",{Environment.NewLine}", new List<string> { "Item1", "Item2", "Item3" }));
 
 			logger.Lines[0]
 				.Should()
@@ -77,11 +78,7 @@ namespace Elastic.Apm.Tests
 
 			logger.Lines.Last()
 				.Should()
-				.ContainAll(new List<string>
-				{
-					"System.Exception",
-					"Something went wrong"
-				});
+				.ContainAll(new List<string> { "System.Exception", "Something went wrong" });
 		}
 
 		private TestLogger LogWithLevel(LogLevel logLevel)

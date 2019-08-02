@@ -73,34 +73,26 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		internal static class SampleAppUrlPaths
 		{
+			internal static readonly SampleAppUrlPathData AboutPage =
+				new SampleAppUrlPathData(HomeController.AboutPageRelativePath, 200);
+
 			/// Contact page processing does HTTP Get for About page (additional transaction) and https://elastic.co/ - so 2 spans
 			internal static readonly SampleAppUrlPathData ContactPage =
 				new SampleAppUrlPathData(HomeController.ContactPageRelativePath, 200, /* transactionsCount: */ 2, /* spansCount: */ 2);
 
-			/// errorsCount for ThrowsNameCouldNotBeResolvedPage is 0 because we don't automatically capture exceptions
-			/// that escaped from transaction as errors (yet)
-			internal static readonly SampleAppUrlPathData ThrowsInvalidOperationPage =
-				new SampleAppUrlPathData(HomeController.ThrowsInvalidOperationPageRelativePath, 500);
-
 			internal static readonly SampleAppUrlPathData CustomSpanThrowsExceptionPage =
 				new SampleAppUrlPathData(HomeController.CustomSpanThrowsPageRelativePath, 500, spansCount: 1, errorsCount: 1);
-
-			internal static readonly SampleAppUrlPathData CustomChildSpanThrowsExceptionPage =
-				new SampleAppUrlPathData(HomeController.CustomChildSpanThrowsPageRelativePath, 500, spansCount: 2, errorsCount: 2);
 
 			internal static readonly SampleAppUrlPathData HomePage =
 				new SampleAppUrlPathData(HomeController.HomePageRelativePath, 200);
 
-			internal static readonly SampleAppUrlPathData GetDotNetRuntimeDescriptionPage =
-				new SampleAppUrlPathData(HomeController.GetDotNetRuntimeDescriptionPageRelativePath, 200);
-
-			internal static readonly List<SampleAppUrlPathData> AllPaths = new List<SampleAppUrlPathData>()
+			internal static readonly List<SampleAppUrlPathData> AllPaths = new List<SampleAppUrlPathData>
 			{
 				new SampleAppUrlPathData("", 200),
 				HomePage,
 				ContactPage,
 				CustomSpanThrowsExceptionPage,
-				new SampleAppUrlPathData("Dummy_nonexistent_path", 404),
+				new SampleAppUrlPathData("Dummy_nonexistent_path", 404)
 			};
 
 			/// `CallReturnBadRequest' page processing does HTTP Get for `ReturnBadRequest' page (additional transaction) - so 1 span
@@ -108,11 +100,22 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				new SampleAppUrlPathData(HomeController.CallReturnBadRequestPageRelativePath,
 					HomeController.DummyHttpStatusCode, /* transactionsCount: */ 2, /* spansCount: */ 1);
 
+
+			internal static readonly SampleAppUrlPathData CustomChildSpanThrowsExceptionPage =
+				new SampleAppUrlPathData(HomeController.CustomChildSpanThrowsPageRelativePath, 500, spansCount: 2, errorsCount: 2);
+
+
+			internal static readonly SampleAppUrlPathData GetDotNetRuntimeDescriptionPage =
+				new SampleAppUrlPathData(HomeController.GetDotNetRuntimeDescriptionPageRelativePath, 200);
+
+
 			internal static readonly SampleAppUrlPathData ReturnBadRequestPage =
 				new SampleAppUrlPathData(HomeController.ReturnBadRequestPageRelativePath, (int)HttpStatusCode.BadRequest);
 
-			internal static readonly SampleAppUrlPathData AboutPage =
-				new SampleAppUrlPathData(HomeController.AboutPageRelativePath, 200);
+			/// errorsCount for ThrowsNameCouldNotBeResolvedPage is 0 because we don't automatically capture exceptions
+			/// that escaped from transaction as errors (yet)
+			internal static readonly SampleAppUrlPathData ThrowsInvalidOperationPage =
+				new SampleAppUrlPathData(HomeController.ThrowsInvalidOperationPageRelativePath, 500);
 		}
 
 		public Task InitializeAsync()

@@ -1,4 +1,3 @@
-using System;
 using Elastic.Apm.Helpers;
 using FluentAssertions;
 using Xunit;

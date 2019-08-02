@@ -14,7 +14,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		protected MetricsTestsBase(ITestOutputHelper xUnitOutputHelper, bool sampleAppShouldHaveAccessToPerfCounters)
 			: base(xUnitOutputHelper,
-				envVarsToSetForSampleAppPool: new Dictionary<string, string>() { { ConfigConsts.EnvVarNames.MetricsInterval, MetricsInterval } },
+				envVarsToSetForSampleAppPool: new Dictionary<string, string> { { ConfigConsts.EnvVarNames.MetricsInterval, MetricsInterval } },
 				sampleAppShouldHaveAccessToPerfCounters: sampleAppShouldHaveAccessToPerfCounters) { }
 
 		protected async Task VerifyMetricsBasicConstraintsImpl()

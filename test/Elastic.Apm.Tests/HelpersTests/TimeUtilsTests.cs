@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Elastic.Apm.Helpers;
 using FluentAssertions;
 using Xunit;
@@ -9,6 +8,21 @@ namespace Elastic.Apm.Tests.HelpersTests
 {
 	public class TimeUtilsTests
 	{
+		private static readonly DateTime UnixEpochDateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+		public static TheoryData TimestampAndDateTimeVariantsToTest => new TheoryData<long, DateTime>
+		{
+			{ 0, UnixEpochDateTime },
+			{ 1, UnixEpochDateTime + TimeUtils.TimeSpanFromFractionalMilliseconds(0.001) },
+			{ 10, UnixEpochDateTime + TimeUtils.TimeSpanFromFractionalMilliseconds(0.01) },
+			{ 100, UnixEpochDateTime + TimeUtils.TimeSpanFromFractionalMilliseconds(0.1) },
+			{ 1_000, new DateTime(1970, 1, 1, 0, 0, 0, 1, DateTimeKind.Utc) },
+			{ 2_000_000 + 1_000, new DateTime(1970, 1, 1, 0, 0, 2, 1, DateTimeKind.Utc) },
+			{ 3 * 60 * 1_000_000 + 2_000_000 + 1_000, new DateTime(1970, 1, 1, 0, 3, 2, 1, DateTimeKind.Utc) },
+			{ 4 * 60 * 60 * 1_000_000L, new DateTime(1970, 1, 1, 4, 0, 0, DateTimeKind.Utc) },
+			{ 5 * 24 * 60 * 60 * 1_000_000L, new DateTime(1970, 1, 6, 0, 0, 0, DateTimeKind.Utc) }
+		};
+
 		private static void ShouldBeWithTolerance(double actual, double expected)
 		{
 			const double tolerance = 0.000001;
@@ -51,21 +65,6 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var afterNowAsTimestamp = TimeUtils.ToTimestamp(DateTime.UtcNow);
 			nowAsTimestamp.Should().BeInRange(beforeNowAsTimestamp, afterNowAsTimestamp);
 		}
-
-		private static readonly DateTime UnixEpochDateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
-		public static TheoryData TimestampAndDateTimeVariantsToTest => new TheoryData<long, DateTime>
-		{
-			{ 0, UnixEpochDateTime },
-			{ 1, UnixEpochDateTime + TimeUtils.TimeSpanFromFractionalMilliseconds(0.001) },
-			{ 10, UnixEpochDateTime + TimeUtils.TimeSpanFromFractionalMilliseconds(0.01) },
-			{ 100, UnixEpochDateTime + TimeUtils.TimeSpanFromFractionalMilliseconds(0.1) },
-			{ 1_000, new DateTime(1970, 1, 1, 0, 0, 0, 1, DateTimeKind.Utc) },
-			{ 2_000_000 + 1_000, new DateTime(1970, 1, 1, 0, 0, 2, 1, DateTimeKind.Utc) },
-			{ 3 * 60 * 1_000_000 + 2_000_000 + 1_000, new DateTime(1970, 1, 1, 0, 3, 2, 1, DateTimeKind.Utc) },
-			{ 4 * 60 * 60 * 1_000_000L, new DateTime(1970, 1, 1, 4, 0, 0, DateTimeKind.Utc) },
-			{ 5 * 24 * 60 * 60 * 1_000_000L, new DateTime(1970, 1, 6, 0, 0, 0, DateTimeKind.Utc) },
-		};
 
 		[Theory]
 		[MemberData(nameof(TimestampAndDateTimeVariantsToTest))]

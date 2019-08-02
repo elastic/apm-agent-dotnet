@@ -48,7 +48,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger);
 			config.LogLevel.Should().Be(LogLevel.Error);
 			logger.Lines.Should().NotBeEmpty();
-			logger.Lines[0].Should()
+			logger.Lines[0]
+				.Should()
 				.ContainAll(
 					$"{{{nameof(MicrosoftExtensionsConfig)}}}",
 					"Failed parsing log level from",
@@ -74,7 +75,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.LogLevel.Should().Be(LogLevel.Error);
 
 			logger.Lines.Should().NotBeEmpty();
-			logger.Lines[0].Should()
+			logger.Lines[0]
+				.Should()
 				.ContainAll(
 					$"{{{nameof(MicrosoftExtensionsConfig)}}}",
 					"Failed parsing log level from",
@@ -141,6 +143,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 	public class MicrosoftExtensionsConfigIntegrationTests
 		: IClassFixture<WebApplicationFactory<Startup>>, IDisposable
 	{
+		private readonly ApmAgent _agent;
+		private readonly HttpClient _client;
+		private readonly WebApplicationFactory<Startup> _factory;
+		private readonly TestLogger _logger;
+
 		public MicrosoftExtensionsConfigIntegrationTests(WebApplicationFactory<Startup> factory)
 		{
 			_factory = factory;
@@ -155,11 +162,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_client = Helper.GetClient(_agent, _factory);
 		}
 
-		private readonly ApmAgent _agent;
-		private readonly HttpClient _client;
-		private readonly WebApplicationFactory<Startup> _factory;
-		private readonly TestLogger _logger;
-
 		/// <summary>
 		/// Starts the app with an invalid config and
 		/// makes sure the agent logs that the url was invalid.
@@ -170,7 +172,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var response = await _client.GetAsync("/Home/Index");
 			response.IsSuccessStatusCode.Should().BeTrue();
 
-			_logger.Lines.Should().NotBeEmpty()
+			_logger.Lines.Should()
+				.NotBeEmpty()
 				.And.Contain(n => n.Contains("Failed parsing server URL from"));
 		}
 

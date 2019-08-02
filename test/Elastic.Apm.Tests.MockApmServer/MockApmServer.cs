@@ -118,6 +118,6 @@ namespace Elastic.Apm.Tests.MockApmServer
 				.UseUrls($"http://localhost:{_port}");
 
 		public override string ToString() =>
-			new ToStringBuilder(nameof(MockApmServer)) { { "port", _port }, { "current test", _dbgCurrentTestName }, }.ToString();
+			new ToStringBuilder(nameof(MockApmServer)) { { "port", _port }, { "current test", _dbgCurrentTestName } }.ToString();
 	}
 }

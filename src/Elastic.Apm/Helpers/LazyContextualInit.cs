@@ -5,7 +5,6 @@ namespace Elastic.Apm.Helpers
 {
 	internal class LazyContextualInit<T>
 	{
-		private T _value;
 		private bool _isInited;
 
 		/// <summary>
@@ -14,16 +13,19 @@ namespace Elastic.Apm.Helpers
 		/// </summary>
 		private object _lock;
 
-		internal bool IsInited => Volatile.Read(ref _isInited);
-
-		internal T Value => _value;
+		private T _value;
 
 		/// <summary>
 		/// This method allows to optimize creating <c>producer</c>
 		/// To use in the following manner: <c>ctxLazy.IfNotInited?.InitOrGet( ... ) ?? ctxLazy.Value</c>
-		/// <returns><c>null</c> if value is already initialized and some non-<c>null</c> object otherwise</returns>>
+		/// <returns><c>null</c> if value is already initialized and some non-<c>null</c> object otherwise</returns>
+		/// >
 		/// </summary>
 		internal IfNotInitedHelper? IfNotInited => IsInited ? (IfNotInitedHelper?)null : new IfNotInitedHelper(this);
+
+		internal bool IsInited => Volatile.Read(ref _isInited);
+
+		internal T Value => _value;
 
 		internal T InitOrGet(Func<T> producer)
 		{
@@ -36,10 +38,7 @@ namespace Elastic.Apm.Helpers
 		{
 			private readonly LazyContextualInit<T> _owner;
 
-			internal IfNotInitedHelper(LazyContextualInit<T> owner)
-			{
-				_owner = owner;
-			}
+			internal IfNotInitedHelper(LazyContextualInit<T> owner) => _owner = owner;
 
 			internal T InitOrGet(Func<T> producer) => _owner.InitOrGet(producer);
 		}

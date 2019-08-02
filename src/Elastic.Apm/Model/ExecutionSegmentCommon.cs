@@ -153,7 +153,7 @@ namespace Elastic.Apm.Model
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
-			var capturedException = new CapturedException { Message = exception.Message, Type = exception.GetType().FullName, Handled = isHandled, };
+			var capturedException = new CapturedException { Message = exception.Message, Type = exception.GetType().FullName, Handled = isHandled };
 
 			capturedException.StackTrace = StacktraceHelper.GenerateApmStackTrace(exception, logger,
 				$"{nameof(Transaction)}.{nameof(CaptureException)}", configurationReader);

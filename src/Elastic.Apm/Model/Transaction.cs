@@ -119,6 +119,9 @@ namespace Elastic.Apm.Model
 		[JsonProperty("sampled")]
 		public bool IsSampled { get; }
 
+		[JsonIgnore]
+		public Dictionary<string, string> Labels => Context.Labels;
+
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name
 		{
@@ -150,9 +153,6 @@ namespace Elastic.Apm.Model
 
 		[JsonProperty("span_count")]
 		public SpanCount SpanCount { get; set; }
-
-		[JsonIgnore]
-		public Dictionary<string, string> Labels => Context.Labels;
 
 		/// <summary>
 		/// Recorded time of the event, UTC based and formatted as microseconds since Unix epoch
@@ -224,7 +224,8 @@ namespace Elastic.Apm.Model
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
-			var retVal = new Span(name, type, Id, TraceId, this, IsSampled, _sender, _logger, _configurationReader, _currentExecutionSegmentsContainer);
+			var retVal = new Span(name, type, Id, TraceId, this, IsSampled, _sender, _logger, _configurationReader,
+				_currentExecutionSegmentsContainer);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 

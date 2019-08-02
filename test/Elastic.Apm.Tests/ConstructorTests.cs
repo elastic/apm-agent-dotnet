@@ -9,20 +9,6 @@ namespace Elastic.Apm.Tests
 {
 	public class ConstructorTests
 	{
-		private class LogConfig : IConfigurationReader
-		{
-			public LogConfig(LogLevel level) => LogLevel = level;
-			public LogLevel LogLevel { get; }
-			public IReadOnlyList<Uri> ServerUrls => new List<Uri> { ConfigConsts.DefaultValues.ServerUri };
-			public string ServiceName { get; }
-			public string SecretToken { get; }
-			public bool CaptureHeaders { get; }
-			public double TransactionSampleRate { get; }
-			public double MetricsIntervalInMilliseconds { get; }
-			public int StackTraceLimit { get; }
-			public double SpanFramesMinDurationInMilliseconds { get; }
-		}
-
 		///<summary>
 		/// Assert that console logger is the default logger implementation during normal composition and that
 		/// it adheres to the loglevel reported by the configuration injected into the agent
@@ -36,6 +22,21 @@ namespace Elastic.Apm.Tests
 			logger.Should().NotBeNull();
 			logger?.IsEnabled(LogLevel.Warning).Should().BeTrue();
 			logger?.IsEnabled(LogLevel.Information).Should().BeFalse();
+		}
+
+		private class LogConfig : IConfigurationReader
+		{
+			public LogConfig(LogLevel level) => LogLevel = level;
+
+			public bool CaptureHeaders { get; }
+			public LogLevel LogLevel { get; }
+			public double MetricsIntervalInMilliseconds { get; }
+			public string SecretToken { get; }
+			public IReadOnlyList<Uri> ServerUrls => new List<Uri> { ConfigConsts.DefaultValues.ServerUri };
+			public string ServiceName { get; }
+			public double SpanFramesMinDurationInMilliseconds { get; }
+			public int StackTraceLimit { get; }
+			public double TransactionSampleRate { get; }
 		}
 	}
 }

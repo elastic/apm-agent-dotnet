@@ -1,7 +1,3 @@
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0.
-
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -16,11 +12,11 @@ namespace Elastic.Apm.Logging
 	/// </summary>
 	internal class LogValuesFormatter
 	{
-		private readonly string _scope;
 		private const string NullValue = "(null)";
 		private static readonly object[] EmptyArray = new object[0];
 		private static readonly char[] FormatDelimiters = { ',', ':' };
 		private readonly string _format;
+		private readonly string _scope;
 
 		public LogValuesFormatter(string format, string scope = null)
 		{
@@ -47,7 +43,7 @@ namespace Elastic.Apm.Logging
 					var formatDelimiterIndex = FindIndexOfAny(format, FormatDelimiters, openBraceIndex, closeBraceIndex);
 
 					sb.Append(format, scanIndex, openBraceIndex - scanIndex + 1);
-					sb.Append((ValueNames.Count).ToString(CultureInfo.InvariantCulture));
+					sb.Append(ValueNames.Count.ToString(CultureInfo.InvariantCulture));
 					ValueNames.Add(format.Substring(openBraceIndex + 1, formatDelimiterIndex - openBraceIndex - 1));
 					sb.Append(format, formatDelimiterIndex, closeBraceIndex - formatDelimiterIndex + 1);
 
@@ -58,7 +54,7 @@ namespace Elastic.Apm.Logging
 			_format = sb.ToString();
 		}
 
-		public string OriginalFormat { get; private set; }
+		public string OriginalFormat { get; }
 		public List<string> ValueNames { get; } = new List<string>();
 
 		private static int FindBraceIndex(string format, char brace, int startIndex, int endIndex)
@@ -126,6 +122,7 @@ namespace Elastic.Apm.Logging
 
 			return string.Format(CultureInfo.InvariantCulture, _format, values);
 		}
+
 		private string Format(string scope, object[] values)
 		{
 			values = values ?? EmptyArray;
@@ -133,7 +130,7 @@ namespace Elastic.Apm.Logging
 			args[0] = scope;
 
 			for (var i = 0; i < values.Length; i++)
-				args[i+1] = FormatArgument(values[i]);
+				args[i + 1] = FormatArgument(values[i]);
 
 			return string.Format(CultureInfo.InvariantCulture, _format, args);
 		}
@@ -155,13 +152,13 @@ namespace Elastic.Apm.Logging
 		public LogValues GetState(object[] values)
 		{
 			values = values ?? EmptyArray;
-			var offset = (_scope == null ? 1 : 2);
+			var offset = _scope == null ? 1 : 2;
 			var args = new KeyValuePair<string, object>[values.Length + offset];
 			args[0] = new KeyValuePair<string, object>("{OriginalFormat}", OriginalFormat);
 			if (_scope != null)
 				args[1] = new KeyValuePair<string, object>("{Scope}", _scope);
 
-			for (int i = 0, j = (_scope != null ? 1 : 0); j < ValueNames.Count; i++, j++)
+			for (int i = 0, j = _scope != null ? 1 : 0; j < ValueNames.Count; i++, j++)
 				args[offset + i] = new KeyValuePair<string, object>(ValueNames[j], values[i]);
 
 			return new LogValues(args);
@@ -171,6 +168,5 @@ namespace Elastic.Apm.Logging
 		{
 			public LogValues(IList<KeyValuePair<string, object>> list) : base(list) { }
 		}
-
 	}
 }

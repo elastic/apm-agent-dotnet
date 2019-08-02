@@ -22,7 +22,7 @@ namespace Elastic.Apm.Api
 
 		public override string ToString() => new ToStringBuilder(nameof(Service))
 		{
-			{ "Name", Name }, { "Agent", Agent }, { "Framework", Framework }, { "Language", Language },
+			{ "Name", Name }, { "Agent", Agent }, { "Framework", Framework }, { "Language", Language }
 		}.ToString();
 
 		internal static Service GetDefaultService(IConfigurationReader configurationReader, IApmLogger loggerArg)

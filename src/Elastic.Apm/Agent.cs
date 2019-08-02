@@ -84,6 +84,7 @@ namespace Elastic.Apm
 		private static readonly Lazy<ApmAgent> Lazy = new Lazy<ApmAgent>(() => new ApmAgent(_components));
 		private static AgentComponents _components;
 
+
 		public static IConfigurationReader Config => Lazy.Value.ConfigurationReader;
 
 		internal static ApmAgent Instance => Lazy.Value;

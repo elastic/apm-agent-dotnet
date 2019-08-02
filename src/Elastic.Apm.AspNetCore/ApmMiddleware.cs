@@ -132,7 +132,7 @@ namespace Elastic.Apm.AspNetCore
 				Protocol = GetProtocolName(context.Request.Protocol),
 				Raw = GetRawUrl(context.Request) ?? context.Request.GetEncodedUrl(),
 				PathName = context.Request.Path,
-				Search = context.Request.QueryString.Value.Length > 0  ? context.Request.QueryString.Value.Substring(1) : string.Empty
+				Search = context.Request.QueryString.Value.Length > 0 ? context.Request.QueryString.Value.Substring(1) : string.Empty
 			};
 
 			Dictionary<string, string> requestHeaders = null;
@@ -146,11 +146,7 @@ namespace Elastic.Apm.AspNetCore
 
 			transaction.Context.Request = new Request(context.Request.Method, url)
 			{
-				Socket = new Socket
-				{
-					Encrypted = context.Request.IsHttps,
-					RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
-				},
+				Socket = new Socket { Encrypted = context.Request.IsHttps, RemoteAddress = context.Connection?.RemoteIpAddress?.ToString() },
 				HttpVersion = GetHttpVersion(context.Request.Protocol),
 				Headers = requestHeaders
 			};
