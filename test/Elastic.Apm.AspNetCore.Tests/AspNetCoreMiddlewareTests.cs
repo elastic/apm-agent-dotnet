@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -36,9 +37,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(AspNetCoreMiddlewareTests));
 			_factory = factory;
 
-			//The agent is instantiated with ApmMiddlewareExtension.GetService, so we can also test the calculation of the service instance.
-			//(e.g. ASP.NET Core version)
-			_agent = new ApmAgent(new TestAgentComponents(new TestAgentConfigurationReader(_logger)));
+			// We need to ensure Agent.Instance is created because we need _agent to use Agent.Instance CurrentExecutionSegmentsContainer
+			AgentSingletonUtils.EnsureInstanceCreated();
+			_agent = new ApmAgent(new TestAgentComponents(logger: _logger, configurationReader: new TestAgentConfigurationReader(_logger),
+				// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
+				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
+				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer));
 			ApmMiddlewareExtension.UpdateServiceInformation(_agent.Service);
 
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
@@ -131,6 +135,29 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			response.IsSuccessStatusCode.Should().BeTrue();
 			_capturedPayload.SpansOnFirstTransaction.Should().NotBeEmpty().And.Contain(n => n.Context.Db != null);
+		}
+
+		/// <summary>
+		/// Simulates an HTTP GET call to /Home/Index?captureControllerActionAsSpan=true
+		/// and asserts that all automatically captured spans are children of the span for controller's action.
+		/// </summary>
+		[Fact]
+		public async Task HomeIndexAutoCapturedSpansAreChildrenOfControllerActionAsSpan()
+		{
+			var response = await _client.GetAsync("/Home/Index?captureControllerActionAsSpan=true");
+
+			response.IsSuccessStatusCode.Should().BeTrue();
+			var spans = _capturedPayload.SpansOnFirstTransaction;
+			spans.Should().NotBeEmpty();
+			var controllerActionSpan = spans.Last();
+			controllerActionSpan.Name.Should().Be("Index_span_name");
+			controllerActionSpan.Type.Should().Be("Index_span_type");
+			var httpSpans = spans.Where(span => span.Context.Db != null);
+			httpSpans.Should().NotBeEmpty();
+			foreach (var httpSpan in httpSpans) httpSpan.ParentId.Should().Be(controllerActionSpan.Id);
+			var dbSpans = spans.Where(span => span.Context.Http != null);
+			dbSpans.Should().NotBeEmpty();
+			foreach (var dbSpan in dbSpans) dbSpan.ParentId.Should().Be(controllerActionSpan.Id);
 		}
 
 		/// <summary>

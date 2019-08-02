@@ -14,15 +14,17 @@ namespace Elastic.Apm.Model
 {
 	internal class Transaction : ITransaction
 	{
+		private readonly IConfigurationReader _configurationReader;
 		private readonly Lazy<Context> _context = new Lazy<Context>();
+		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
-		private readonly IConfigurationReader _configurationReader;
 
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
-		internal Transaction(IApmAgent agent, string name, string type, IConfigurationReader configurationReader)
-			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, configurationReader) { }
+		internal Transaction(ApmAgent agent, string name, string type)
+			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigurationReader,
+				agent.TracerInternal.CurrentExecutionSegmentsContainer) { }
 
 		internal Transaction(
 			IApmLogger logger,
@@ -31,7 +33,8 @@ namespace Elastic.Apm.Model
 			Sampler sampler,
 			DistributedTracingData distributedTracingData,
 			IPayloadSender sender,
-			IConfigurationReader configurationReader
+			IConfigurationReader configurationReader,
+			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer
 		)
 		{
 			Timestamp = TimeUtils.TimestampNow();
@@ -41,6 +44,7 @@ namespace Elastic.Apm.Model
 
 			_sender = sender;
 			_configurationReader = configurationReader;
+			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
 
 			Name = name;
 			HasCustomName = false;
@@ -62,6 +66,8 @@ namespace Elastic.Apm.Model
 			}
 
 			SpanCount = new SpanCount();
+
+			_currentExecutionSegmentsContainer.CurrentTransaction = this;
 
 			if (isSamplingFromDistributedTracingData)
 			{
@@ -170,12 +176,12 @@ namespace Elastic.Apm.Model
 
 		public override string ToString() => new ToStringBuilder(nameof(Transaction))
 		{
-			{ "Id", Id },
-			{ "TraceId", TraceId },
-			{ "ParentId", ParentId },
-			{ "Name", Name },
-			{ "Type", Type },
-			{ "IsSampled", IsSampled }
+			{ nameof(Id), Id },
+			{ nameof(TraceId), TraceId },
+			{ nameof(ParentId), ParentId },
+			{ nameof(Name), Name },
+			{ nameof(Type), Type },
+			{ nameof(IsSampled), IsSampled }
 		}.ToString();
 
 		public void End()
@@ -206,9 +212,11 @@ namespace Elastic.Apm.Model
 
 			var isFirstEndCall = !_isEnded;
 			_isEnded = true;
-			if (isFirstEndCall) _sender.QueueTransaction(this);
-
-			Agent.TransactionContainer.Transactions.Value = null;
+			if (isFirstEndCall)
+			{
+				_sender.QueueTransaction(this);
+				_currentExecutionSegmentsContainer.CurrentTransaction = null;
+			}
 		}
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
@@ -216,7 +224,7 @@ namespace Elastic.Apm.Model
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
-			var retVal = new Span(name, type, Id, TraceId, this, IsSampled, _sender, _logger, _configurationReader);
+			var retVal = new Span(name, type, Id, TraceId, this, IsSampled, _sender, _logger, _configurationReader, _currentExecutionSegmentsContainer);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 

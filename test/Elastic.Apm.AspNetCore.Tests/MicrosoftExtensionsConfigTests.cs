@@ -147,9 +147,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_logger = new TestLogger();
 			var capturedPayload = new MockPayloadSender();
 
-			//The agent is instantiated with ApmMiddlewareExtension.GetService, so we can also test the calculation of the service instance.
-			//(e.g. ASP.NET Core version)
-
 			var config = new MicrosoftExtensionsConfig(
 				MicrosoftExtensionsConfigTests.GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), _logger);
 

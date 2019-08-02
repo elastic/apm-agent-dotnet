@@ -14,11 +14,13 @@ namespace Elastic.Apm.Model
 {
 	internal class Span : ISpan
 	{
+		private readonly IConfigurationReader _configurationReader;
 		private readonly Lazy<SpanContext> _context = new Lazy<SpanContext>();
+		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly Transaction _enclosingTransaction;
 		private readonly IApmLogger _logger;
+		private readonly Span _parentSpan;
 		private readonly IPayloadSender _payloadSender;
-		private readonly IConfigurationReader _configurationReader;
 
 		public Span(
 			string name,
@@ -29,7 +31,9 @@ namespace Elastic.Apm.Model
 			bool isSampled,
 			IPayloadSender payloadSender,
 			IApmLogger logger,
-			IConfigurationReader configurationReader
+			IConfigurationReader configurationReader,
+			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
+			Span parentSpan = null
 		)
 		{
 			Timestamp = TimeUtils.TimestampNow();
@@ -38,6 +42,8 @@ namespace Elastic.Apm.Model
 
 			_payloadSender = payloadSender;
 			_configurationReader = configurationReader;
+			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
+			_parentSpan = parentSpan;
 			_enclosingTransaction = enclosingTransaction;
 			Name = name;
 			Type = type;
@@ -50,9 +56,11 @@ namespace Elastic.Apm.Model
 				// Started spans should be counted only for sampled transactions
 				enclosingTransaction.SpanCount.IncrementStarted();
 
+			_currentExecutionSegmentsContainer.CurrentSpan = this;
+
 			_logger.Trace()
-				?.Log("New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp})",
-					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+				?.Log("New Span instance created: {Span}. Start time: {Time} (as timestamp: {Timestamp}). Parent span: {Span}",
+					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, _parentSpan);
 		}
 
 		private bool _isEnded;
@@ -124,13 +132,13 @@ namespace Elastic.Apm.Model
 
 		public override string ToString() => new ToStringBuilder(nameof(Span))
 		{
-			{ "Id", Id },
-			{ "TransactionId", TransactionId },
-			{ "ParentId", ParentId },
-			{ "TraceId", TraceId },
-			{ "Name", Name },
-			{ "Type", Type },
-			{ "IsSampled", IsSampled }
+			{ nameof(Id), Id },
+			{ nameof(TransactionId), TransactionId },
+			{ nameof(ParentId), ParentId },
+			{ nameof(TraceId), TraceId },
+			{ nameof(Name), Name },
+			{ nameof(Type), Type },
+			{ nameof(IsSampled), IsSampled }
 		}.ToString();
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
@@ -138,7 +146,8 @@ namespace Elastic.Apm.Model
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
-			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, IsSampled, _payloadSender, _logger, _configurationReader);
+			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, IsSampled, _payloadSender, _logger, _configurationReader,
+				_currentExecutionSegmentsContainer, this);
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 
 			if (!string.IsNullOrEmpty(action)) retVal.Action = action;
@@ -184,11 +193,15 @@ namespace Elastic.Apm.Model
 			{
 				if (Duration >= _configurationReader.SpanFramesMinDurationInMilliseconds
 					|| _configurationReader.SpanFramesMinDurationInMilliseconds < 0)
+				{
 					StackTrace = StacktraceHelper.GenerateApmStackTrace(new StackTrace(true).GetFrames(), _logger,
 						_configurationReader, $"Span `{Name}'");
+				}
 			}
 
 			_payloadSender.QueueSpan(this);
+
+			_currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
 		}
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)

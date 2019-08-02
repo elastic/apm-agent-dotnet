@@ -33,15 +33,15 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		public override string ToString() => new ToStringBuilder(nameof(ErrorDto))
 		{
-			{ "Id", Id },
-			{ "TraceId", TraceId },
-			{ "ParentId", ParentId },
-			{ "TransactionId", TransactionId },
-			{ "Exception", Exception },
-			{ "Culprit", Culprit },
-			{ "Timestamp", Timestamp },
-			{ "Transaction", Transaction },
-			{ "Context", Context },
+			{ nameof(Id), Id },
+			{ nameof(TraceId), TraceId },
+			{ nameof(ParentId), ParentId },
+			{ nameof(TransactionId), TransactionId },
+			{ nameof(Exception), Exception },
+			{ nameof(Culprit), Culprit },
+			{ nameof(Timestamp), Timestamp },
+			{ nameof(Transaction), Transaction },
+			{ nameof(Context), Context },
 		}.ToString();
 
 		public void AssertValid()

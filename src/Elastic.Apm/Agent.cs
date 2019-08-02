@@ -72,12 +72,10 @@ namespace Elastic.Apm
 		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
 		public IApmLogger Logger => Components.Logger;
 		public IPayloadSender PayloadSender => Components.PayloadSender;
-		public ITracer Tracer => Components.Tracer;
 		public Service Service => Components.Service;
+		public ITracer Tracer => Components.Tracer;
 
-		internal Tracer TracerInternal => Tracer as Tracer;
-
-		internal TransactionContainer TransactionContainer => Components.TransactionContainer;
+		internal Tracer TracerInternal => Components.TracerInternal;
 
 		public void Dispose()
 		{
@@ -95,14 +93,14 @@ namespace Elastic.Apm
 
 		internal static ApmAgent Instance => Lazy.Value;
 
+		internal static bool IsInstanceCreated => Lazy.IsValueCreated;
+
 		/// <summary>
 		/// The entry point for manual instrumentation. The <see cref="Tracer" /> property returns the tracer,
 		/// which you access to the currently active transaction and span and it also enables you to manually start
 		/// a transaction.
 		/// </summary>
 		public static ITracer Tracer => Instance.Tracer;
-
-		internal static TransactionContainer TransactionContainer => Instance.TransactionContainer;
 
 		/// <summary>
 		/// Sets up multiple <see cref="IDiagnosticsSubscriber" />'s to start listening to one or more
@@ -119,7 +117,8 @@ namespace Elastic.Apm
 
 		public static void Setup(AgentComponents agentComponents)
 		{
-			if (Lazy.IsValueCreated) throw new Exception("The singleton APM agent has already been instantiated and can no longer be configured");
+			if (IsInstanceCreated) throw new Exception("The singleton APM agent has already been instantiated and can no longer be configured");
+
 			_components = agentComponents;
 		}
 	}

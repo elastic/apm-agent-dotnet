@@ -3,7 +3,7 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Tests.Mocks
 {
-	public class NoopLogger : IApmLogger
+	internal class NoopLogger : IApmLogger
 	{
 		public bool IsEnabled(LogLevel level) => false;
 

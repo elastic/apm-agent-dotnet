@@ -20,7 +20,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _spanFramesMinDurationInMilliseconds;
 
 		public TestAgentConfigurationReader(
-			IApmLogger logger,
+			IApmLogger logger = null,
 			string logLevel = null,
 			string serverUrls = null,
 			string serviceName = null,

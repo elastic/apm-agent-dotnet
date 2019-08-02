@@ -21,9 +21,9 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		public override string ToString() => new ToStringBuilder(nameof(SpanContextDto))
 		{
-			{ "Db", Db },
-			{ "Http", Http },
-			{ "Labels", Labels },
+			{ nameof(Db), Db },
+			{ nameof(Http), Http },
+			{ nameof(Labels), Labels },
 		}.ToString();
 
 		public void AssertValid()

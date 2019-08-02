@@ -8,7 +8,7 @@ using Xunit;
 
 namespace Elastic.Apm.Tests
 {
-	public class LoggerTest
+	public class LoggerTests
 	{
 		[Fact]
 		public void TestLogError()

@@ -29,6 +29,7 @@ namespace Elastic.Apm.AspNetCore
 				case LogLevel.Warning: return Microsoft.Extensions.Logging.LogLevel.Warning;
 				case LogLevel.Error: return Microsoft.Extensions.Logging.LogLevel.Error;
 				case LogLevel.Critical: return Microsoft.Extensions.Logging.LogLevel.Critical;
+				// ReSharper disable once RedundantCaseLabel
 				case LogLevel.None:
 				default: return Microsoft.Extensions.Logging.LogLevel.None;
 			}

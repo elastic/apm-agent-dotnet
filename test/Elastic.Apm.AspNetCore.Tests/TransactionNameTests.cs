@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
@@ -23,7 +24,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public TransactionNameTests(WebApplicationFactory<Startup> factory)
 		{
 			_factory = factory;
-			_agent = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender));
+
+			// We need to ensure Agent.Instance is created because we need _agent to use Agent.Instance CurrentExecutionSegmentsContainer
+			AgentSingletonUtils.EnsureInstanceCreated();
+			_agent = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender,
+				// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
+				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
+				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer));
 			ApmMiddlewareExtension.UpdateServiceInformation(_agent.Service);
 		}
 
@@ -49,7 +56,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task CustomTransactionName()
 		{
 			var httpClient = Helper.GetClient(_agent, _factory);
-			await httpClient.GetAsync($"home/TransactionWithCustomName");
+			await httpClient.GetAsync("home/TransactionWithCustomName");
 
 			_payloadSender.Transactions.Should().OnlyContain(n => n.Name == "custom");
 		}
@@ -64,7 +71,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task CustomTransactionNameWithNameUsingRequestInfo()
 		{
 			var httpClient = Helper.GetClient(_agent, _factory);
-			await httpClient.GetAsync($"home/TransactionWithCustomNameUsingRequestInfo");
+			await httpClient.GetAsync("home/TransactionWithCustomNameUsingRequestInfo");
 
 			_payloadSender.Transactions.Should().OnlyContain(n => n.Name == "GET /home/TransactionWithCustomNameUsingRequestInfo");
 		}

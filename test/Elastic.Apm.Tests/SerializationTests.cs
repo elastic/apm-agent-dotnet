@@ -25,13 +25,13 @@ namespace Elastic.Apm.Tests
 		{
 			var str = new string('a', 1200);
 
-			var transaction =
-				new Transaction(new TestAgentComponents(), str, "test", new TestAgentConfigurationReader(new NoopLogger()))
-				{
-					Duration = 1, Result = "fail"
-				};
+			string json;
+			using (var agent = new ApmAgent(new TestAgentComponents()))
+			{
+				var transaction = new Transaction(agent, str, "test") { Duration = 1, Result = "fail" };
+				json = SerializePayloadItem(transaction);
+			}
 
-			var json = SerializePayloadItem(transaction);
 			var deserializedTransaction = JsonConvert.DeserializeObject(json) as JObject;
 
 			Assert.NotNull(deserializedTransaction);
@@ -158,6 +158,26 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
+		///	Creates a service instance with a name that is longer than <see cref="Consts.PropertyMaxLength"/>.
+		/// Makes sure the name is truncated.
+		/// </summary>
+		[Fact]
+		public void ServiceNameLengthTest()
+		{
+			var logger = new NoopLogger();
+			var service = Service.GetDefaultService(new TestAgentConfigurationReader(logger), logger);
+			service.Name = new string('a', 1200);
+
+			var json = SerializePayloadItem(service);
+			var deserializedService = JsonConvert.DeserializeObject<Service>(json);
+
+			Assert.NotNull(deserializedService);
+
+			Assert.Equal(Consts.PropertyMaxLength, deserializedService.Name.Length);
+			Assert.Equal("...", deserializedService.Name.Substring(Consts.PropertyMaxLength - 3, 3));
+		}
+
+		/// <summary>
 		/// Verifies that <see cref="Transaction.Context" /> is serialized only when the transaction is sampled.
 		/// </summary>
 		[Fact]
@@ -165,14 +185,14 @@ namespace Elastic.Apm.Tests
 		{
 			var agent = new TestAgentComponents();
 			// Create a transaction that is sampled (because the sampler is constant sampling-everything sampler
-			var sampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(1.0), null, agent.PayloadSender,
-				new TestAgentConfigurationReader(new NoopLogger()));
+			var sampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(1.0), /* distributedTracingData: */ null,
+			    agent.PayloadSender, new TestAgentConfigurationReader(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer);
 			sampledTransaction.Context.Request = new Request("GET",
 				new Url { Full = "https://elastic.co", Raw = "https://elastic.co", HostName = "elastic.co", Protocol = "HTTP" });
 
 			// Create a transaction that is not sampled (because the sampler is constant not-sampling-anything sampler
-			var nonSampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(0.0), null, agent.PayloadSender,
-				new TestAgentConfigurationReader(new NoopLogger()));
+			var nonSampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(0.0), /* distributedTracingData: */ null,
+			    agent.PayloadSender, new TestAgentConfigurationReader(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer);
 			nonSampledTransaction.Context.Request = sampledTransaction.Context.Request;
 
 			var serializedSampledTransaction = SerializePayloadItem(sampledTransaction);
@@ -180,11 +200,14 @@ namespace Elastic.Apm.Tests
 			var serializedNonSampledTransaction = SerializePayloadItem(nonSampledTransaction);
 			var deserializedNonSampledTransaction = JsonConvert.DeserializeObject(serializedNonSampledTransaction) as JObject;
 
+			// ReSharper disable once PossibleNullReferenceException
 			deserializedSampledTransaction["sampled"].Value<bool>().Should().BeTrue();
 			deserializedSampledTransaction["context"].Value<JObject>()["request"].Value<JObject>()["url"].Value<JObject>()["full"]
+				.Value<string>()
 				.Should()
-				.Equals("https://elastic.co");
+				.Be("https://elastic.co");
 
+			// ReSharper disable once PossibleNullReferenceException
 			deserializedNonSampledTransaction["sampled"].Value<bool>().Should().BeFalse();
 			deserializedNonSampledTransaction.Should().NotContainKey("context");
 		}
@@ -211,14 +234,15 @@ namespace Elastic.Apm.Tests
 		public void SerializationUtilsTrimToLengthTests(string original, int maxLength, string expectedTrimmed) =>
 			SerializationUtils.TrimToLength(original, maxLength).Should().Be(expectedTrimmed);
 
-		public static IEnumerable<object[]> SerializationUtilsTrimToPropertyMaxLengthVariantsToTest()
+		// ReSharper disable once MemberCanBePrivate.Global
+		public static TheoryData SerializationUtilsTrimToPropertyMaxLengthVariantsToTest => new TheoryData<string, string>
 		{
-			yield return new object[] { "", "" };
-			yield return new object[] { "A", "A" };
-			yield return new object[] { "B".Repeat(Consts.PropertyMaxLength), "B".Repeat(Consts.PropertyMaxLength) };
-			yield return new object[] { "C".Repeat(Consts.PropertyMaxLength + 1), "C".Repeat(Consts.PropertyMaxLength - 3) + "..." };
-			yield return new object[] { "D".Repeat(Consts.PropertyMaxLength * 2), "D".Repeat(Consts.PropertyMaxLength - 3) + "..." };
-		}
+			{ "", "" },
+			{ "A", "A" },
+			{ "B".Repeat(Consts.PropertyMaxLength), "B".Repeat(Consts.PropertyMaxLength) },
+			{ "C".Repeat(Consts.PropertyMaxLength + 1), "C".Repeat(Consts.PropertyMaxLength - 3) + "..." },
+			{ "D".Repeat(Consts.PropertyMaxLength * 2), "D".Repeat(Consts.PropertyMaxLength - 3) + "..." },
+		};
 
 		[Theory]
 		[MemberData(nameof(SerializationUtilsTrimToPropertyMaxLengthVariantsToTest))]
