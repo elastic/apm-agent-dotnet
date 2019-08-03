@@ -133,7 +133,7 @@ namespace Elastic.Apm.Tests
 		{
 			var context = new SpanContext();
 			context.Labels["foo"] = null;
-			
+
 			var json = SerializePayloadItem(context);
 			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
 
@@ -184,8 +184,8 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// 	Creates a service instance with a name that is longer than <see cref="Consts.PropertyMaxLength" />.
-		///  Makes sure the name is truncated.
+		/// Creates a service instance with a name that is longer than <see cref="Consts.PropertyMaxLength" />.
+		/// Makes sure the name is truncated.
 		/// </summary>
 		[Fact]
 		public void ServiceNameLengthTest()
