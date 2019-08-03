@@ -12,7 +12,7 @@ namespace Elastic.Apm.Report.Serialization
 			foreach (var keyValue in labels)
 			{
 				writer.WritePropertyName(SerializationUtils.TrimToPropertyMaxLength(keyValue.Key));
-				writer.WriteValue(SerializationUtils.TrimToPropertyMaxLength(keyValue.Value));
+				writer.WriteValue(string.IsNullOrEmpty(keyValue.Value) ? "null" : SerializationUtils.TrimToPropertyMaxLength(keyValue.Value));
 			}
 			writer.WriteEndObject();
 		}
