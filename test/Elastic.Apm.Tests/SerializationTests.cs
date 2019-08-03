@@ -138,7 +138,23 @@ namespace Elastic.Apm.Tests
 			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
 
 			Assert.NotNull(deserializedContext);
-			deserializedContext["foo"].Should().BeNull();
+			deserializedContext["tags"]["foo"].Value<string>().Should().BeNull();
+		}
+
+		/// <summary>
+		/// Makes sure that labels with an empty string are captured and not causing any trouble
+		/// </summary>
+		[Fact]
+		public void LabelWithEmptyStringShouldBeCaptured()
+		{
+			var context = new SpanContext();
+			context.Labels["foo"] = string.Empty;
+
+			var json = SerializePayloadItem(context);
+			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
+
+			Assert.NotNull(deserializedContext);
+			deserializedContext["tags"]["foo"].Value<string>().Should().BeEmpty();
 		}
 
 		/// <summary>
