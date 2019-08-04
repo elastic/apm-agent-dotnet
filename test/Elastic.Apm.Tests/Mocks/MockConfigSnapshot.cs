@@ -28,6 +28,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _spanFramesMinDurationInMilliseconds;
 		private readonly string _stackTraceLimit;
 		private readonly string _transactionSampleRate;
+        private readonly string _transactionMaxSpans;
 
 		public MockConfigSnapshot(
 			IApmLogger logger = null,
@@ -41,6 +42,7 @@ namespace Elastic.Apm.Tests.Mocks
 			string centralConfig = null,
 			string dbgDescription = null,
 			string transactionSampleRate = null,
+			string transactionMaxSpans = null,
 			string metricsInterval = null,
 			string captureBody = ConfigConsts.SupportedValues.CaptureBodyOff,
 			string stackTraceLimit = null,
@@ -61,6 +63,7 @@ namespace Elastic.Apm.Tests.Mocks
 			_centralConfig = centralConfig;
 			_dbgDescription = dbgDescription;
 			_transactionSampleRate = transactionSampleRate;
+			_transactionMaxSpans = transactionMaxSpans;
 			_metricsInterval = metricsInterval;
 			_captureBody = captureBody;
 			_stackTraceLimit = stackTraceLimit;
@@ -101,5 +104,7 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public double TransactionSampleRate =>
 			ParseTransactionSampleRate(Kv(ConfigConsts.EnvVarNames.TransactionSampleRate, _transactionSampleRate, Origin));
+
+        public int TransactionMaxSpans => ParseTransactionMaxSpans(Kv(ConfigConsts.EnvVarNames.TransactionMaxSpans), _transactionMaxSpans, Origin);    
 	}
 }
