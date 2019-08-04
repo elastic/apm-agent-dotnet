@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
@@ -51,6 +52,12 @@ namespace Elastic.Apm.Model
 
 			ParentId = parentId;
 			TraceId = traceId;
+
+			if (enclosingTransaction.SpanCount.Started >= _configurationReader.TransactionMaxSpans)
+			{
+				IsSampled = false;
+				enclosingTransaction.SpanCount.IncrementDropped();
+			}
 
 			if (IsSampled)
 				// Started spans should be counted only for sampled transactions

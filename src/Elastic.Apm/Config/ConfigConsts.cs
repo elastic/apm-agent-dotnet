@@ -26,6 +26,7 @@ namespace Elastic.Apm.Config
 			public const double SpanFramesMinDurationInMilliseconds = 5;
 			public const int StackTraceLimit = 50;
 			public const double TransactionSampleRate = 1.0;
+			public const int TransactionMaxSpans = 500;
 			public const string UnknownServiceName = "unknown";
 			public static Uri ServerUri => new Uri($"http://localhost:{ApmServerPort}");
 		}
@@ -50,6 +51,7 @@ namespace Elastic.Apm.Config
 			public const string SpanFramesMinDuration = Prefix + "SPAN_FRAMES_MIN_DURATION";
 			public const string StackTraceLimit = Prefix + "STACK_TRACE_LIMIT";
 			public const string TransactionSampleRate = Prefix + "TRANSACTION_SAMPLE_RATE";
+            public const string TransactionMaxSpans = Prefix + "TRANSACTION_MAX_SPANS";
 		}
 
 		public static class KeyNames

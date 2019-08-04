@@ -532,6 +532,32 @@ namespace Elastic.Apm.Config
 			return parsedValue;
 		}
 
+		protected int ParseTransactionMaxSpans(ConfigurationKeyValue kv)
+		{
+			if (kv?.Value == null)
+			{
+				Logger?.Debug()
+					?.Log("No transaction max spans provided. Defaulting to '{DefaultTransactionMaxSpans}'",
+						ConfigConsts.DefaultValues.TransactionMaxSpans);
+				return ConfigConsts.DefaultValues.TransactionMaxSpans;
+			}
+
+			if (int.TryParse(kv.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result))
+			{
+				Logger?.Debug()
+					?.Log("Using provided transaction max spans `{ProvidedTransactionMaxSpans}' parsed as {ParsedTransactionMaxSpans}",
+						kv.Value, result);
+				return result;
+			}
+
+
+			Logger?.Error()
+				?.Log("Failed to parse provided transaction max spans `{ProvidedTransactionMaxSpans}` - using default: {DefaultTransactionMaxSpans}",
+					kv.Value, ConfigConsts.DefaultValues.TransactionMaxSpans);
+
+			return ConfigConsts.DefaultValues.TransactionMaxSpans;
+		}
+
 		internal static bool IsMsOrElastic(byte[] array)
 		{
 			var elasticToken = new byte[] { 174, 116, 0, 210, 193, 137, 207, 34 };
