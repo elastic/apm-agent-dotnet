@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Report.Serialization
@@ -8,9 +7,13 @@ namespace Elastic.Apm.Report.Serialization
 	{
 		private readonly int _maxLength;
 
+		// ReSharper disable UnusedMember.Global
 		public TrimmedStringJsonConverter() : this(Consts.PropertyMaxLength) { }
+		// ReSharper restore UnusedMember.Global
 
+		// ReSharper disable MemberCanBePrivate.Global
 		public TrimmedStringJsonConverter(int maxLength) => _maxLength = maxLength;
+		// ReSharper restore MemberCanBePrivate.Global
 
 		public override void WriteJson(JsonWriter writer, string value, JsonSerializer serializer) =>
 			writer.WriteValue(SerializationUtils.TrimToLength(value, _maxLength));
