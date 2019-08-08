@@ -36,7 +36,8 @@ namespace Elastic.Apm.Tests
 			var logger = agent.Logger as ConsoleLogger;
 
 			logger.Should().NotBeNull();
-			logger?.Level.Should().Be(LogLevel.Warning);
+			logger?.IsEnabled(LogLevel.Warning).Should().BeTrue();
+			logger?.IsEnabled(LogLevel.Information).Should().BeFalse();
 		}
 	}
 }

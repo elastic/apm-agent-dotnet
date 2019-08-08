@@ -17,22 +17,28 @@ namespace Elastic.Apm.Logging
 
 		protected internal static LogLevel DefaultLogLevel { get; } = LogLevel.Error;
 		public static ConsoleLogger Instance { get; } = new ConsoleLogger(DefaultLogLevel);
+
 		public static ConsoleLogger LoggerOrDefault(LogLevel? level)
 		{
 			if (level.HasValue && level.Value != DefaultLogLevel)
 				return new ConsoleLogger(level.Value);
+
 			return Instance;
 		}
 
-		public LogLevel Level { get; }
+		private LogLevel Level { get; }
+
+		public bool IsEnabled(LogLevel level) => Level <= level;
 
 		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{
-			var dateTime = DateTime.UtcNow;
+			if (!IsEnabled(level)) return;
 
+			var dateTime = DateTime.UtcNow;
 			var message = formatter(state, e);
 
-			var fullMessage = e == null ? $"[{dateTime.ToString("yyyy-MM-dd hh:mm:ss")}][{LevelToString(level)}] - {message}"
+			var fullMessage = e == null
+				? $"[{dateTime.ToString("yyyy-MM-dd hh:mm:ss")}][{LevelToString(level)}] - {message}"
 				: $"[{dateTime.ToString("yyyy-MM-dd hh:mm:ss")}][{LevelToString(level)}] - {message}{Environment.NewLine}Exception: {e.GetType().FullName}, Message: {e.Message}";
 
 			switch (level)

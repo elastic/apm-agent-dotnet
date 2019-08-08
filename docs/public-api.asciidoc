@@ -19,7 +19,7 @@ You can access the API by using the static property on the Agent: `Elastic.Apm.A
 
 [float]
 [[api-start-transaction]]
-==== `Transaction StartTransaction(string name, string type)`
+==== `ITransaction StartTransaction(string name, string type)`
 Use this method to create a custom transaction.
 
 
@@ -51,7 +51,7 @@ finally
 
 [float]
 [[api-current-transaction]]
-==== `Transaction CurrentTransaction`
+==== `ITransaction CurrentTransaction`
 Returns the currently active transaction.
 See the <<api-transaction>> to customize the current transaction.
 
@@ -61,6 +61,20 @@ this method will return `null`.
 [source,csharp]
 ----
 var transaction = Elastic.Apm.Agent.Tracer.CurrentTransaction;
+----
+
+[float]
+[[api-current-span]]
+==== `ISpan CurrentSpan`
+Returns the currently active span.
+See the <<api-span>> to customize the current span.
+
+If there is no current span,
+this method will return `null`.
+
+[source,csharp]
+----
+var span = Elastic.Apm.Agent.Tracer.CurrentSpan;
 ----
 
 [float]
@@ -150,7 +164,7 @@ You may only interact with a transaction when you have control over its lifecycl
 
 [float]
 [[api-transaction-create-span]]
-==== `Span StartSpan(string name, string type, string subType = null, string action = null)`
+==== `ISpan StartSpan(string name, string type, string subType = null, string action = null)`
 Start and return a new custom span as a child of the given transaction.
 
 It is important to call <<api-span-end>> when the span has ended or to use the <<convenient-capture-span>> method.
@@ -180,13 +194,13 @@ finally
 
 [float]
 [[api-transaction-tags]]
-==== `Dictionary<string,string> Tags`
-A flat mapping of user-defined tags with string values. 
+==== `Dictionary<string,string> Labels`
+A flat mapping of user-defined labels with string values. 
 
-TIP: Before using custom tags, ensure you understand the different types of
+TIP: Before using custom labels, ensure you understand the different types of
 {apm-overview-ref-v}/metadata.html[metadata] that are available.
 
-WARNING: Avoid defining too many user-specified tags.
+WARNING: Avoid defining too many user-specified labels.
 Defining too many unique fields in an index is a condition that can lead to a
 {ref}/mapping.html#mapping-limit-settings[mapping explosion].
 
@@ -196,13 +210,13 @@ Ageny.Tracer
  .CaptureTransaction(TransactionName, TransactionType, 
     transaction =>
     {
-        transaction.Tags["foo"] = "bar";
+        transaction.Labels["foo"] = "bar";
         //application code that is captured as a transaction
     });
 ----
 
-* `key`:   The tag key
-* `value`: The tag value
+* `key`:   The label key
+* `value`: The label value
 
 [float]
 [[api-transaction-end]]
@@ -322,13 +336,13 @@ and the type will hold information about the database type.
 
 [float]
 [[api-span-tags]]
-==== `Dictionary<string,string> Tags`
-Similar to <<api-transaction-tags>> on the <<api-transaction>>: A flat mapping of user-defined tags with string values.
+==== `Dictionary<string,string> Labels`
+Similar to <<api-transaction-tags>> on the <<api-transaction>>: A flat mapping of user-defined labels with string values.
 
-TIP: Before using custom tags, ensure you understand the different types of
+TIP: Before using custom labels, ensure you understand the different types of
 {apm-overview-ref-v}/metadata.html[metadata] that are available.
 
-WARNING: Avoid defining too many user-specified tags.
+WARNING: Avoid defining too many user-specified labels.
 Defining too many unique fields in an index is a condition that can lead to a
 {ref}/mapping.html#mapping-limit-settings[mapping explosion].
 
@@ -337,7 +351,7 @@ Defining too many unique fields in an index is a condition that can lead to a
 transaction.CaptureSpan(SpanName, SpanType, 
 span =>
     {
-        span.Tags["foo"] = "bar";
+        span.Labels["foo"] = "bar";
         //application code that is captured as a span
     });
 ----

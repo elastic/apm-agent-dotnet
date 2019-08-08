@@ -10,6 +10,7 @@ You can utilize configuration options to adapt the Elastic APM agent to your nee
 
 By default, the agent uses environment variables. Additionally, on ASP.NET Core, the agent can plug into the https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-2.2[Microsoft.Extensions.Configuration] infrastructure.
 
+[[configuration-on-asp-net-core]]
 === Configuration on ASP.NET Core
 The `UseElasticApm()` extension method offers an overload to pass an `IConfiguration` instance to the APM Agent. By using this overload in a typical ASP.NET Core application, the `Startup.cs` file would contain code similar to the following:
 
@@ -94,7 +95,7 @@ In this case, you can set the log level of the agent with `ElasticApm:LogLevel`,
 This is used to keep all the errors and transactions of your service together
 and is the primary filter in the Elastic APM user interface.
 
-NOTE: The service name must conform to this regular expression: ^[a-zA-Z0-9 _-]+$. In less regexy terms: Your service name must only contain characters from the ASCII alphabet, numbers, dashes, underscores and spaces.
+NOTE: The service name must conform to this regular expression: ^[a-zA-Z0-9 _-]+$. In less regexy terms: Your service name must only contain characters from the ASCII alphabet, numbers, dashes, underscores and spaces. Characters in service name which don't match regular expression will be replaced by `__` symbol.
 
 [options="header"]
 |============
@@ -243,7 +244,7 @@ The default unit for this option is `s`.
 If set to `true`,
 the agent will capture request and response headers, including cookies.
 
-NOTE: Setting this to `false` reduces network bandwidth, disk space and object allocations.
+NOTE: Setting this to `false` reduces memory allocations, network bandwidth and disk space used by Elasticsearch.
 
 [[config-stacktrace]]
 === Stacktrace configuration options
@@ -269,9 +270,14 @@ Setting it to 0 will disable stack trace collection. Any positive integer value 
 [[config-span-frames-min-duration]]
 ==== `SpanFramesMinDuration` (performance)
 
-In its default settings, the APM agent will collect a stack trace with every recorded span.
-While this is very helpful to find the exact place in your code that causes the span, collecting this stack trace does have some overhead. 
-When setting this option to a negative value, like `-1ms`, stack traces will be collected for all spans. Setting it to a positive value, e.g. `5ms`, will limit stack trace collection to spans with durations equal to or longer than the given value, e.g. 5 milliseconds.
+In its default settings,
+the APM agent collects a stack trace for every recorded span with duration longer than 5ms.
+While this is very helpful to find the exact place in your code that causes the span,
+collecting this stack trace does have some overhead. 
+When setting this option to a negative value, like `-1ms`, stack traces will be collected for all spans.
+Setting it to a positive value, e.g. `5ms`,
+will limit stack trace collection to spans with durations equal to or longer than the given value,
+e.g. 5 milliseconds.
 
 To disable stack trace collection for spans completely, set the value to `0ms`.
 

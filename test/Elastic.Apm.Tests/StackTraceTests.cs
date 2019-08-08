@@ -271,9 +271,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					new TestAgentConfigurationReader(new NoopLogger()), payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
 					=>
@@ -291,9 +289,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					new TestAgentConfigurationReader(new NoopLogger()), payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
 					=>
@@ -315,9 +311,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					new TestAgentConfigurationReader(new NoopLogger()), payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
 				Assert.Throws<Exception>(() =>
 				{
@@ -350,9 +344,8 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: "2"), payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(configurationReader: new TestAgentConfigurationReader(stackTraceLimit: "2"),
+				payloadSender: payloadSender)))
 			{
 				Assert.Throws<Exception>(() =>
 				{
@@ -379,10 +372,9 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: "2", spanFramesMinDurationInMilliseconds: "-2"),
-					payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(
+				configurationReader: new TestAgentConfigurationReader(stackTraceLimit: "2", spanFramesMinDurationInMilliseconds: "-2"),
+				payloadSender: payloadSender)))
 			{
 				Assert.Throws<Exception>(() =>
 				{
@@ -406,9 +398,9 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new MockPayloadSender();
 
 			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: stackTraceLimit,
-						spanFramesMinDurationInMilliseconds: spanFramesMinDuration), payloadSender)))
+				new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+					configurationReader: new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: stackTraceLimit,
+						spanFramesMinDurationInMilliseconds: spanFramesMinDuration))))
 			{
 				agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
 					=>

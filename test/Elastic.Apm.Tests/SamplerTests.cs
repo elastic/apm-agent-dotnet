@@ -1,8 +1,8 @@
 using System;
-using System.Collections.Generic;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
 
@@ -11,18 +11,18 @@ namespace Elastic.Apm.Tests
 	public class SamplerTests
 	{
 		// ReSharper disable once MemberCanBePrivate.Global
-		public static IEnumerable<object[]> RateVariantsToTest()
+		public static DataForTheory RateVariantsToTest => new DataForTheory<double>
 		{
-			yield return new object[] { 0 };
-			yield return new object[] { 0.000000001 };
-			yield return new object[] { 0.00123 };
-			yield return new object[] { 0.3 };
-			yield return new object[] { 0.5 };
-			yield return new object[] { 0.75 };
-			yield return new object[] { 0.789 };
-			yield return new object[] { 0.999999999 };
-			yield return new object[] { 1 };
-		}
+			{ 0 },
+			{ 0.000000001 },
+			{ 0.00123 },
+			{ 0.3 },
+			{ 0.5 },
+			{ 0.75 },
+			{ 0.789 },
+			{ 0.999999999 },
+			{ 1 },
+		};
 
 		[Theory]
 		[MemberData(nameof(RateVariantsToTest))]
@@ -60,13 +60,15 @@ namespace Elastic.Apm.Tests
 
 			var sampledCount = 0;
 			var noopLogger = new NoopLogger();
+			var currentExecutionSegmentsContainer = new NoopCurrentExecutionSegmentsContainer();
 			var noopPayloadSender = new NoopPayloadSender();
+			var configurationReader = new TestAgentConfigurationReader(noopLogger);
 			var sampler = new Sampler(rate);
 
 			total.Repeat(i =>
 			{
-				var transaction = new Transaction(noopLogger, "test transaction name", "test transaction type", sampler, null, noopPayloadSender,
-					new TestAgentConfigurationReader(noopLogger));
+				var transaction = new Transaction(noopLogger, "test transaction name", "test transaction type", sampler,
+					/* distributedTracingData: */ null, noopPayloadSender, configurationReader, currentExecutionSegmentsContainer);
 				if (transaction.IsSampled) ++sampledCount;
 
 				if (i + 1 >= startCheckingAfter)

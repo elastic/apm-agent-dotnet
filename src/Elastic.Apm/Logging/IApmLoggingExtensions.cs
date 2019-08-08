@@ -29,7 +29,7 @@ namespace Elastic.Apm.Logging
 		/// <param name="level">The level to compare with</param>
 		/// <returns>If the return value is not null you can call <see cref="MaybeLogger.Log" /> to log</returns>
 		private static MaybeLogger? IfLevel(this IApmLogger logger, LogLevel level) =>
-			logger.Level <= level ? new MaybeLogger(logger, level) : (MaybeLogger?)null;
+			logger.IsEnabled(level) ? new MaybeLogger(logger, level) : (MaybeLogger?)null;
 
 		/// <summary>
 		/// If the logger has a loglevel, which is higher than or equal to Trace then it returns a MaybeLogger instance,

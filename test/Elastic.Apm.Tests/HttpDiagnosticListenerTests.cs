@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -10,16 +11,15 @@ using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
-	public class HttpDiagnosticListenerTest
+	public class HttpDiagnosticListenerTests
 	{
 		private static TResult DispatchToImpl<TResult>(
 			IDiagnosticListener listener,
@@ -47,7 +47,7 @@ namespace Elastic.Apm.Tests
 		private static int ProcessingRequestsCount(IDiagnosticListener listener) =>
 			DispatchToImpl(listener, impl => impl.ProcessingRequests.Count, impl => impl.ProcessingRequests.Count);
 
-		private static Span GetSpanForRequest(IDiagnosticListener listener, object request) =>
+		private static ISpan GetSpanForRequest(IDiagnosticListener listener, object request) =>
 			DispatchToImpl(
 				listener,
 				impl => impl.ProcessingRequests[(HttpRequestMessage)request],
@@ -65,7 +65,7 @@ namespace Elastic.Apm.Tests
 			var agent = new ApmAgent(new TestAgentComponents(logger));
 			var listener = HttpDiagnosticListener.New(agent);
 
-			var exceptionMessage = "Ooops, this went wrong";
+			const string exceptionMessage = "Oops, this went wrong";
 			var fakeException = new Exception(exceptionMessage);
 			listener.OnError(fakeException);
 
@@ -308,7 +308,7 @@ namespace Elastic.Apm.Tests
 				//Simulate Start
 				listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Start", new { Request = request }));
 
-				var exceptionMsg = "Sample exception msg";
+				const string exceptionMsg = "Sample exception msg";
 				var exception = new Exception(exceptionMsg);
 				//Simulate Exception
 				listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Exception", new { Request = request, Exception = exception }));
@@ -411,6 +411,50 @@ namespace Elastic.Apm.Tests
 				firstSpan.Context.Http.StatusCode.Should().Be(200);
 				firstSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
 				firstSpan.Duration.Should().BeGreaterThan(0);
+			}
+		}
+
+		[Fact]
+		[SuppressMessage("ReSharper", "PossibleInvalidOperationException")]
+		public async Task HttpCallAsNestedSpan()
+		{
+			const string topSpanName = "test_top_span";
+			const string topSpanType = "test_top_span_type";
+			const int numberOfHttpCalls = 3;
+			var (listener, payloadSender, agent) = RegisterListenerAndStartTransaction();
+
+			using (listener)
+			using (var localServer = new LocalServer())
+			{
+				{
+					var httpClient = new HttpClient();
+
+					var topSpan = agent.Tracer.CurrentTransaction.StartSpan(topSpanName, topSpanType);
+
+					await numberOfHttpCalls.Repeat(async i =>
+					{
+						var res = await httpClient.GetAsync($"{localServer.Uri}?i={i}");
+						res.IsSuccessStatusCode.Should().BeTrue();
+					});
+					topSpan.End();
+				}
+
+				payloadSender.Spans.Should().HaveCount(numberOfHttpCalls + 1);
+				var topSpanSent = payloadSender.Spans.Last();
+				topSpanSent.Name.Should().Be(topSpanName);
+				topSpanSent.Type.Should().Be(topSpanType);
+				numberOfHttpCalls.Repeat(i =>
+				{
+					var httpCallSpan = payloadSender.Spans[i];
+					httpCallSpan.Should().NotBeNull();
+					// ReSharper disable once AccessToDisposedClosure
+					httpCallSpan.Context.Http.Url.Should().Be($"{localServer.Uri}?i={i}");
+					httpCallSpan.Context.Http.StatusCode.Should().Be(200);
+					httpCallSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
+					httpCallSpan.Duration.Should().BeGreaterThan(0);
+					topSpanSent.Duration.Value.Should().BeGreaterOrEqualTo(httpCallSpan.Duration.Value);
+					httpCallSpan.ParentId.Should().Be(topSpanSent.Id);
+				});
 			}
 		}
 
@@ -579,8 +623,9 @@ namespace Elastic.Apm.Tests
 		internal static (IDisposable, MockPayloadSender, ApmAgent) RegisterListenerAndStartTransaction()
 		{
 			var payloadSender = new MockPayloadSender();
-			var agentComponents = new TestAgentComponents(payloadSender: payloadSender, stackTraceLimit: "-1",
-				spanFramesMinDurationInMilliseconds: "-1ms", logLevel: "Debug");
+			var agentComponents = new TestAgentComponents(payloadSender: payloadSender,
+				configurationReader: new TestAgentConfigurationReader(logLevel: "Debug", stackTraceLimit: "-1",
+					spanFramesMinDurationInMilliseconds: "-1ms"));
 
 			var agent = new ApmAgent(agentComponents);
 			var sub = agent.Subscribe(new HttpDiagnosticsSubscriber());
@@ -589,6 +634,7 @@ namespace Elastic.Apm.Tests
 			return (sub, payloadSender, agent);
 		}
 
+		// ReSharper disable once SuggestBaseTypeForParameter
 		private static void StartTransaction(ApmAgent agent)
 			//	=> agent.TransactionContainer.Transactions.Value =
 			//		new Transaction(agent, $"{nameof(TestSimpleOutgoingHttpRequest)}", ApiConstants.TypeRequest);

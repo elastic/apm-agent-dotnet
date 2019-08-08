@@ -44,6 +44,6 @@ namespace Elastic.Apm.Config
 		public List<string> CaptureBodyContentTypes => ParseCaptureBodyContentTypes(Read(ConfigConsts.EnvVarNames.CaptureBodyContentTypes), CaptureBody);
 
 		private static ConfigurationKeyValue Read(string key) =>
-			new ConfigurationKeyValue(key, Environment.GetEnvironmentVariable(key), Origin);
+			new ConfigurationKeyValue(key, Environment.GetEnvironmentVariable(key)?.Trim(), Origin);
 	}
 }

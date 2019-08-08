@@ -16,6 +16,7 @@ namespace Elastic.Apm.Model
 
 		public void IncrementDropped() => Interlocked.Increment(ref _dropped);
 
-		public override string ToString() => new ToStringBuilder(nameof(SpanCount)) { { "Started", Started }, { "Dropped", Dropped }, }.ToString();
+		public override string ToString() =>
+			new ToStringBuilder(nameof(SpanCount)) { { nameof(Started), Started }, { nameof(Dropped), Dropped }, }.ToString();
 	}
 }
