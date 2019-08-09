@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using Elastic.Apm.Logging;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Internal;
 
 namespace Elastic.Apm.AspNetCore.Extensions
 {
@@ -16,31 +17,33 @@ namespace Elastic.Apm.AspNetCore.Extensions
 		/// <returns></returns>
 		public static string ExtractRequestBody(this HttpRequest request, IApmLogger logger)
 		{
-			var injectedRequestStream = new MemoryStream();
 			string body = null;
 
 			try
 			{
+				// Keep a reference to the body to reset it later
+				var initialBody = request.Body;
+
+				request.EnableRewind();
+				request.Body.Position = 0;
+
 				using (var reader = new StreamReader(request.Body,
 				encoding: Encoding.UTF8,
 				detectEncodingFromByteOrderMarks: false,
-				bufferSize: 1024 * 2))
+				bufferSize: 1024 * 2,
+				leaveOpen: true))
 				{
 					body = reader.ReadToEnd();
-
 					// Truncate the body to the first 2kb if it's longer
 					if (body.Length > Consts.RequestBodyMaxLength)
 					{
 						body = body.Substring(0, Consts.RequestBodyMaxLength);
 					}
-
-					//Write the body into the body in case it will be read by other components
-					//after this one
-					var bytesToWrite = Encoding.UTF8.GetBytes(body);
-					injectedRequestStream.Write(bytesToWrite, 0, bytesToWrite.Length);
-					injectedRequestStream.Seek(0, SeekOrigin.Begin);
-					request.Body = injectedRequestStream;
+					request.Body.Position = 0;
 				}
+
+				// Reset the body stream for any read operations that might be carried on at a later stage
+				request.Body = initialBody; 
 			}
 			catch (IOException ioException)
 			{

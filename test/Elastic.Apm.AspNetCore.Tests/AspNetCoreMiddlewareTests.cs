@@ -291,7 +291,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var body = "{\"id\" : \"1\"}";
 			Func<Task> act = async () => await _client.PostAsync("api/Home/PostError", new StringContent(body, Encoding.UTF8, "application/json"));
 
-			//await _client.GetAsync("Home/TriggerError");
 			await act.Should().ThrowAsync<Exception>();
 
 			_capturedPayload.Transactions.Should().ContainSingle();
