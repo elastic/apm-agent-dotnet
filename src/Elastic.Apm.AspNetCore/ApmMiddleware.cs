@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
@@ -14,6 +17,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Http.Internal;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 [assembly:
 	InternalsVisibleTo(
@@ -43,75 +49,83 @@ namespace Elastic.Apm.AspNetCore
 
 		public async Task InvokeAsync(HttpContext context)
 		{
-			Transaction transaction;
-			var transactionName = $"{context.Request.Method} {context.Request.Path}";
+			var originalBodyStream = context.Response.Body;
 
-			if (context.Request.Headers.ContainsKey(TraceParent.TraceParentHeaderName))
+			using (var responseBody = new MemoryStream())
 			{
-				var headerValue = context.Request.Headers[TraceParent.TraceParentHeaderName].ToString();
+				context.Response.Body = responseBody;
 
-				var distributedTracingData = TraceParent.TryExtractTraceparent(headerValue);
+				Transaction transaction;
+				var transactionName = $"{context.Request.Method} {context.Request.Path}";
 
-				if (distributedTracingData != null)
+				if (context.Request.Headers.ContainsKey(TraceParent.TraceParentHeaderName))
 				{
-					_logger.Debug()
-						?.Log(
-							"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData}. Continuing trace.",
-							TraceParent.TraceParentHeaderName, distributedTracingData);
+					var headerValue = context.Request.Headers[TraceParent.TraceParentHeaderName].ToString();
 
-					transaction = _tracer.StartTransactionInternal(
-						transactionName,
-						ApiConstants.TypeRequest,
-						distributedTracingData);
+					var distributedTracingData = TraceParent.TryExtractTraceparent(headerValue);
+
+					if (distributedTracingData != null)
+					{
+						_logger.Debug()
+							?.Log(
+								"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData}. Continuing trace.",
+								TraceParent.TraceParentHeaderName, distributedTracingData);
+
+						transaction = _tracer.StartTransactionInternal(
+							transactionName,
+							ApiConstants.TypeRequest,
+							distributedTracingData);
+					}
+					else
+					{
+						_logger.Debug()
+							?.Log(
+								"Incoming request with invalid {TraceParentHeaderName} header (received value: {TraceParentHeaderValue}). Starting trace with new trace id.",
+								TraceParent.TraceParentHeaderName, headerValue);
+
+						transaction = _tracer.StartTransactionInternal(transactionName,
+							ApiConstants.TypeRequest);
+					}
 				}
 				else
 				{
-					_logger.Debug()
-						?.Log(
-							"Incoming request with invalid {TraceParentHeaderName} header (received value: {TraceParentHeaderValue}). Starting trace with new trace id.",
-							TraceParent.TraceParentHeaderName, headerValue);
-
+					_logger.Debug()?.Log("Incoming request. Starting Trace.");
 					transaction = _tracer.StartTransactionInternal(transactionName,
 						ApiConstants.TypeRequest);
 				}
-			}
-			else
-			{
-				_logger.Debug()?.Log("Incoming request. Starting Trace.");
-				transaction = _tracer.StartTransactionInternal(transactionName,
-					ApiConstants.TypeRequest);
-			}
 
-			if (transaction.IsSampled) FillSampledTransactionContextRequest(context, transaction);
+				if (transaction.IsSampled) FillSampledTransactionContextRequest(context, transaction);
 
-			try
-			{
-				await _next(context);
-			}
-			catch (Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
-			finally
-			{
-				if (!transaction.HasCustomName)
+				try
 				{
-					//fixup Transaction.Name - e.g. /user/profile/1 -> /user/profile/{id}
-					var routeData = (context.Features[typeof(IRoutingFeature)] as IRoutingFeature)?.RouteData;
-					if (routeData != null)
+					await _next(context);
+				}
+				catch (Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
+				finally
+				{
+					if (!transaction.HasCustomName)
 					{
-						var name = GetNameFromRouteContext(routeData.Values);
+						//fixup Transaction.Name - e.g. /user/profile/1 -> /user/profile/{id}
+						var routeData = (context.Features[typeof(IRoutingFeature)] as IRoutingFeature)?.RouteData;
+						if (routeData != null)
+						{
+							var name = GetNameFromRouteContext(routeData.Values);
 
-						if (!string.IsNullOrWhiteSpace(name)) transaction.Name = $"{context.Request.Method} {name}";
+							if (!string.IsNullOrWhiteSpace(name)) transaction.Name = $"{context.Request.Method} {name}";
+						}
 					}
+
+					transaction.Result = Transaction.StatusCodeToResult(GetProtocolName(context.Request.Protocol), context.Response.StatusCode);
+
+					if (transaction.IsSampled)
+					{
+						FillSampledTransactionContextResponse(context, transaction, originalBodyStream, responseBody);
+						FillSampledTransactionContextUser(context, transaction);
+					}
+
+					transaction.End();
 				}
 
-				transaction.Result = Transaction.StatusCodeToResult(GetProtocolName(context.Request.Protocol), context.Response.StatusCode);
-
-				if (transaction.IsSampled)
-				{
-					FillSampledTransactionContextResponse(context, transaction);
-					FillSampledTransactionContextUser(context, transaction);
-				}
-
-				transaction.End();
 			}
 		}
 
@@ -125,6 +139,7 @@ namespace Elastic.Apm.AspNetCore
 		{
 			if (context.Request == null) return;
 
+
 			var url = new Url
 			{
 				Full = context.Request.GetEncodedUrl(),
@@ -132,10 +147,11 @@ namespace Elastic.Apm.AspNetCore
 				Protocol = GetProtocolName(context.Request.Protocol),
 				Raw = GetRawUrl(context.Request) ?? context.Request.GetEncodedUrl(),
 				PathName = context.Request.Path,
-				Search = context.Request.QueryString.Value.Length > 0  ? context.Request.QueryString.Value.Substring(1) : string.Empty
+				Search = context.Request.QueryString.Value.Length > 0 ? context.Request.QueryString.Value.Substring(1) : string.Empty,
 			};
 
 			Dictionary<string, string> requestHeaders = null;
+
 			if (_configurationReader.CaptureHeaders)
 			{
 				requestHeaders = new Dictionary<string, string>();
@@ -152,11 +168,20 @@ namespace Elastic.Apm.AspNetCore
 					RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
 				},
 				HttpVersion = GetHttpVersion(context.Request.Protocol),
-				Headers = requestHeaders
+				Headers = requestHeaders,
 			};
+
+			if (_configurationReader.CaptureBody)
+			{
+				context.Request.EnableRewind();
+
+				var bodyStr = new StreamReader(context.Request.Body, Encoding.UTF8, true, 1024, true).ReadToEnd();
+				transaction.Context.Request.Body = bodyStr;
+				context.Request.Body.Position = 0;
+			}
 		}
 
-		private void FillSampledTransactionContextResponse(HttpContext context, Transaction transaction)
+		private void FillSampledTransactionContextResponse(HttpContext context, Transaction transaction, Stream originalBodyStream, Stream responseBody)
 		{
 			Dictionary<string, string> responseHeaders = null;
 
@@ -167,8 +192,18 @@ namespace Elastic.Apm.AspNetCore
 			{
 				Finished = context.Response.HasStarted, //TODO ?
 				StatusCode = context.Response.StatusCode,
-				Headers = responseHeaders
+				Headers = responseHeaders,
 			};
+
+			if (_configurationReader.CaptureBody)
+			{
+				context.Response.Body.Seek(0, SeekOrigin.Begin);
+				var bodyStr = new StreamReader(context.Response.Body).ReadToEnd();
+				transaction.Context.Response.Body = bodyStr;
+
+				context.Response.Body.Seek(0, SeekOrigin.Begin);
+				responseBody.CopyTo(originalBodyStream);
+			}
 		}
 
 		private void FillSampledTransactionContextUser(HttpContext context, Transaction transaction)

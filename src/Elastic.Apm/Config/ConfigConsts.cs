@@ -25,6 +25,7 @@ namespace Elastic.Apm.Config
 		public static class EnvVarNames
 		{
 			public const string CaptureHeaders = "ELASTIC_APM_CAPTURE_HEADERS";
+			public const string CaptureBody = "ELASTIC_APM_CAPTURE_BODY";
 			public const string LogLevel = "ELASTIC_APM_LOG_LEVEL";
 			public const string MetricsInterval = "ELASTIC_APM_METRICS_INTERVAL";
 			public const string SecretToken = "ELASTIC_APM_SECRET_TOKEN";

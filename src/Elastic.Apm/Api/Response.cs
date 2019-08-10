@@ -11,7 +11,7 @@ namespace Elastic.Apm.Api
 	public class Response
 	{
 		public bool Finished { get; set; }
-
+		public object Body { get; set; }
 		public Dictionary<string, string> Headers { get; set; }
 
 		/// <summary>

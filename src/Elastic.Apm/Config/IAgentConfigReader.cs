@@ -7,6 +7,7 @@ namespace Elastic.Apm.Config
 	public interface IConfigurationReader
 	{
 		bool CaptureHeaders { get; }
+		bool CaptureBody { get; }
 		LogLevel LogLevel { get; }
 		double MetricsIntervalInMilliseconds { get; }
 		string SecretToken { get; }

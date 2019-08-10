@@ -22,6 +22,7 @@ namespace Elastic.Apm.Config
 		}
 
 		public bool CaptureHeaders => ParseCaptureHeaders(Read(ConfigConsts.EnvVarNames.CaptureHeaders));
+		public bool CaptureBody => ParseCaptureHeaders(Read(ConfigConsts.EnvVarNames.CaptureBody));
 
 		public LogLevel LogLevel => ParseLogLevel(Read(ConfigConsts.EnvVarNames.LogLevel));
 

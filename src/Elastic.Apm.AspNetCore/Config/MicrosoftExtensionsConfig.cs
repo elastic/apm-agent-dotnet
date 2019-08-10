@@ -38,6 +38,7 @@ namespace Elastic.Apm.AspNetCore.Config
 		internal static class Keys
 		{
 			internal const string CaptureHeaders = "ElasticApm:CaptureHeaders";
+			internal const string CaptureBody = "ElasticApm:CaptureBody";
 			internal const string LogLevel = "ElasticApm:LogLevel";
 			internal const string LogLevelSubKey = "LogLevel";
 			internal const string MetricsInterval = "ElasticApm:MetricsInterval";
@@ -52,6 +53,7 @@ namespace Elastic.Apm.AspNetCore.Config
 		private LogLevel? _logLevel;
 
 		public bool CaptureHeaders => ParseCaptureHeaders(ReadFallBack(Keys.CaptureHeaders, ConfigConsts.EnvVarNames.CaptureHeaders));
+		public bool CaptureBody => ParseCaptureBody(ReadFallBack(Keys.CaptureBody, ConfigConsts.EnvVarNames.CaptureBody));
 
 		public LogLevel LogLevel
 		{

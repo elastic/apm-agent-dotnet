@@ -65,6 +65,13 @@ namespace Elastic.Apm.Config
 			return !bool.TryParse(kv.Value, out var value) || value;
 		}
 
+		protected bool ParseCaptureBody(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return true;
+
+			return !bool.TryParse(kv.Value, out var value) || value;
+		}
+
 		protected LogLevel ParseLogLevel(ConfigurationKeyValue kv)
 		{
 			if (TryParseLogLevel(kv?.Value, out var level)) return level;
