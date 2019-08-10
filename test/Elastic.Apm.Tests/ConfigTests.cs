@@ -150,6 +150,14 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
+		public void SetCaptureBodyTest()
+		{
+			Environment.SetEnvironmentVariable(EnvVarNames.CaptureBody, "false");
+			var config = new EnvironmentConfigurationReader();
+			config.CaptureBody.Should().Be(false);
+		}
+
+		[Fact]
 		public void DefaultTransactionSampleRateTest()
 		{
 			using (var agent = new ApmAgent(new TestAgentComponents()))

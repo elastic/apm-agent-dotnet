@@ -12,6 +12,7 @@ namespace Elastic.Apm.Tests
 		private class LogConfig : IConfigurationReader
 		{
 			public LogConfig(LogLevel level) => LogLevel = level;
+			public bool CaptureBody { get; }
 			public LogLevel LogLevel { get; }
 			public IReadOnlyList<Uri> ServerUrls => new List<Uri> { ConfigConsts.DefaultValues.ServerUri };
 			public string ServiceName { get; }

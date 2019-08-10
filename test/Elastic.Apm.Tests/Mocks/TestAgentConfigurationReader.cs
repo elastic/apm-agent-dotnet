@@ -14,6 +14,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _serviceName;
 		private readonly string _secretToken;
 		private readonly string _captureHeaders;
+		private readonly string _captureBody;
 		private readonly string _transactionSampleRate;
 		private readonly string _metricsInterval;
 		private readonly string _stackTraceLimit;
@@ -26,6 +27,7 @@ namespace Elastic.Apm.Tests.Mocks
 			string serviceName = null,
 			string secretToken = null,
 			string captureHeaders = null,
+			string captureBody = null,
 			string transactionSampleRate = null,
 			string metricsInterval = null,
 			string stackTraceLimit = null,
@@ -38,6 +40,7 @@ namespace Elastic.Apm.Tests.Mocks
 			_serviceName = serviceName;
 			_secretToken = secretToken;
 			_captureHeaders = captureHeaders;
+			_captureBody = captureBody;
 			_transactionSampleRate = transactionSampleRate;
 			_metricsInterval = metricsInterval;
 			_stackTraceLimit = stackTraceLimit;
@@ -46,6 +49,7 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public new IApmLogger Logger { get; }
 
+		public bool CaptureBody => ParseCaptureBody(Kv(ConfigConsts.EnvVarNames.CaptureBody, _captureBody, Origin));
 		public LogLevel LogLevel => ParseLogLevel(Kv(ConfigConsts.EnvVarNames.LogLevel, _logLevel, Origin));
 		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Kv(ConfigConsts.EnvVarNames.ServerUrls, _serverUrls, Origin));
 		public string ServiceName => ParseServiceName(Kv(ConfigConsts.EnvVarNames.ServiceName, _serviceName, Origin));
