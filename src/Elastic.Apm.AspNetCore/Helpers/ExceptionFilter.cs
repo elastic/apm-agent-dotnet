@@ -19,9 +19,8 @@ namespace Elastic.Apm.AspNetCore.Helpers
 			transaction.CaptureException(e);
 
 			if (httpContext != null && configurationReader.ShouldExtractRequestBodyOnError())
-			{
 				transaction.CollectRequestInfo(httpContext, configurationReader, logger);
-			}
+			
 			return false;
 		}
 	}

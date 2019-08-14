@@ -151,9 +151,7 @@ namespace Elastic.Apm.AspNetCore
 			{
 				var contentType = new ContentType(context.Request.ContentType);
 				if (_configurationReader.ShouldExtractRequestBodyOnTransactions() && _configurationReader.CaptureBodyContentTypes.ContainsLike(contentType.MediaType))
-				{
 					body = context.Request.ExtractRequestBody(_logger);
-				}
 			}
 
 			transaction.Context.Request = new Request(context.Request.Method, url)

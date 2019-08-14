@@ -7,7 +7,6 @@ namespace Elastic.Apm.Config
 	{
 		public static class Constraints
 		{
-			public const string LogLevel = "ELASTIC_APM_LOG_LEVEL";
 			public const string ServerUrls = "ELASTIC_APM_SERVER_URLS";
 			public const string ServiceName = "ELASTIC_APM_SERVICE_NAME";
 			public const string SecretToken = "ELASTIC_APM_SECRET_TOKEN";

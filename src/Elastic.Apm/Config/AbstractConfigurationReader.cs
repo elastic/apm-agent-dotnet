@@ -430,14 +430,11 @@ namespace Elastic.Apm.Config
 			S
 		}
 
-
 		protected string ParseCaptureBody(ConfigurationKeyValue kv)
 		{
 			var captureBodyInConfig = kv.Value;
 			if (string.IsNullOrEmpty(captureBodyInConfig))
-			{
 				return DefaultValues.CaptureBody;
-			}
 
 			if (!SupportedValues.CaptureBodySupportedValues.Contains(captureBodyInConfig.ToLowerInvariant()))
 			{
@@ -469,6 +466,5 @@ namespace Elastic.Apm.Config
 
 			return captureBodyContentTypes;
 		}
-
 	}
 }
