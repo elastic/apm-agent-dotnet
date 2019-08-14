@@ -460,9 +460,7 @@ namespace Elastic.Apm.Config
 
 			var captureBodyContentTypes = new List<string>();
 			if (captureBodyContentTypesInConfig != null)
-			{
 				captureBodyContentTypes = captureBodyContentTypesInConfig.Split(',').Select(p => p.Trim()).ToList();
-			}
 
 			return captureBodyContentTypes;
 		}
