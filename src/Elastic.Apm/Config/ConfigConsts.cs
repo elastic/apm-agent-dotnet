@@ -7,15 +7,7 @@ namespace Elastic.Apm.Config
 	{
 		public static class Constraints
 		{
-			public const string ServerUrls = "ELASTIC_APM_SERVER_URLS";
-			public const string ServiceName = "ELASTIC_APM_SERVICE_NAME";
-			public const string SecretToken = "ELASTIC_APM_SECRET_TOKEN";
-			public const string CaptureHeaders = "ELASTIC_APM_CAPTURE_HEADERS";
-			public const string TransactionSampleRate = "ELASTIC_APM_TRANSACTION_SAMPLE_RATE";
-			public const string MetricsInterval = "ELASTIC_APM_METRICS_INTERVAL";
-			public const string CaptureBody = "ELASTIC_APM_CAPTURE_BODY";
 			public const double MinMetricsIntervalInMilliseconds = 1000;
-			public const string CaptureBodyContentTypes = "ELASTIC_APM_CAPTURE_BODY_CONTENT_TYPES";
 		}
 
 		public static class DefaultValues
