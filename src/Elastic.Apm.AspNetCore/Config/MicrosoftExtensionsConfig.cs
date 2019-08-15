@@ -14,6 +14,22 @@ namespace Elastic.Apm.AspNetCore.Config
 	{
 		internal const string Origin = "Microsoft.Extensions.Configuration";
 
+		internal static class Keys
+		{
+			internal const string LogLevelSubKey = "LogLevel";
+			internal const string LogLevel = "ElasticApm:LogLevel";
+			internal const string ServerUrls = "ElasticApm:ServerUrls";
+			internal const string ServiceName = "ElasticApm:ServiceName";
+			internal const string SecretToken = "ElasticApm:SecretToken";
+			internal const string CaptureHeaders = "ElasticApm:CaptureHeaders";
+			internal const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
+			internal const string MetricsInterval = "ElasticApm:MetricsInterval";
+			internal const string CaptureBody = "ElasticApm:CaptureBody";
+			internal const string SpanFramesMinDuration = "ElasticApm:SpanFramesMinDuration";
+			internal const string StackTraceLimit = "ElasticApm:StackTraceLimit";
+			internal const string CaptureBodyContentTypes = "ElasticApm:CaptureBodyContentTypes";
+		}
+
 		private readonly IConfiguration _configuration;
 
 		private readonly Lazy<double> _spanFramesMinDurationInMilliseconds;
@@ -35,19 +51,6 @@ namespace Elastic.Apm.AspNetCore.Config
 				ParseSpanFramesMinDurationInMilliseconds(ReadFallBack(Keys.SpanFramesMinDuration, ConfigConsts.EnvVarNames.SpanFramesMinDuration)));
 		}
 
-		internal static class Keys
-		{
-			internal const string CaptureHeaders = "ElasticApm:CaptureHeaders";
-			internal const string LogLevel = "ElasticApm:LogLevel";
-			internal const string LogLevelSubKey = "LogLevel";
-			internal const string MetricsInterval = "ElasticApm:MetricsInterval";
-			internal const string SecretToken = "ElasticApm:SecretToken";
-			internal const string ServerUrls = "ElasticApm:ServerUrls";
-			internal const string ServiceName = "ElasticApm:ServiceName";
-			internal const string SpanFramesMinDuration = "ElasticApm:SpanFramesMinDuration";
-			internal const string StackTraceLimit = "ElasticApm:StackTraceLimit";
-			internal const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
-		}
 
 		private LogLevel? _logLevel;
 
@@ -80,6 +83,10 @@ namespace Elastic.Apm.AspNetCore.Config
 
 		public double TransactionSampleRate =>
 			ParseTransactionSampleRate(ReadFallBack(Keys.TransactionSampleRate, ConfigConsts.EnvVarNames.TransactionSampleRate));
+
+		public string CaptureBody => ParseCaptureBody(ReadFallBack(Keys.CaptureBody, ConfigConsts.EnvVarNames.CaptureBody));
+
+		public List<string> CaptureBodyContentTypes => ParseCaptureBodyContentTypes(ReadFallBack(Keys.CaptureBodyContentTypes, ConfigConsts.EnvVarNames.CaptureBodyContentTypes), CaptureBody);
 
 		private ConfigurationKeyValue Read(string key) => Kv(key, _configuration[key], Origin);
 

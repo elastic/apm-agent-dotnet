@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Elastic.Apm.Config
 {
@@ -20,6 +21,8 @@ namespace Elastic.Apm.Config
 			public const double TransactionSampleRate = 1.0;
 			public const string UnknownServiceName = "unknown";
 			public static Uri ServerUri => new Uri($"http://localhost:{ApmServerPort}");
+			public const string CaptureBody = SupportedValues.CaptureBodyOff;
+			public const string CaptureBodyContentTypes = "application/x-www-form-urlencoded*, text/*, application/json*, application/xml*";
 		}
 
 		public static class EnvVarNames
@@ -33,6 +36,17 @@ namespace Elastic.Apm.Config
 			public const string SpanFramesMinDuration = "ELASTIC_APM_SPAN_FRAMES_MIN_DURATION";
 			public const string StackTraceLimit = "ELASTIC_APM_STACK_TRACE_LIMIT";
 			public const string TransactionSampleRate = "ELASTIC_APM_TRANSACTION_SAMPLE_RATE";
+			public const string CaptureBody = "CAPTURE_BODY";
+			public const string CaptureBodyContentTypes = "CAPTURE_BODY_CONTENT_TYPES";
+		}
+
+		public static class SupportedValues
+		{
+			public const string CaptureBodyOff = "off";
+			public const string CaptureBodyAll = "all";
+			public const string CaptureBodyErrors = "errors";
+			public const string CaptureBodyTransactions = "transactions";
+			public static List<string> CaptureBodySupportedValues = new List<string>() { CaptureBodyOff, CaptureBodyAll, CaptureBodyErrors, CaptureBodyTransactions };
 		}
 	}
 }

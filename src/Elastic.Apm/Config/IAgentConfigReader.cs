@@ -30,5 +30,9 @@ namespace Elastic.Apm.Config
 		int StackTraceLimit { get; }
 
 		double TransactionSampleRate { get; }
+
+		string CaptureBody { get; }
+
+		List<string> CaptureBodyContentTypes { get; }
 	}
 }

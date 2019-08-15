@@ -39,6 +39,10 @@ namespace Elastic.Apm.Config
 
 		public double TransactionSampleRate => ParseTransactionSampleRate(Read(ConfigConsts.EnvVarNames.TransactionSampleRate));
 
+		public string CaptureBody => ParseCaptureBody(Read(ConfigConsts.EnvVarNames.CaptureBody));
+
+		public List<string> CaptureBodyContentTypes => ParseCaptureBodyContentTypes(Read(ConfigConsts.EnvVarNames.CaptureBodyContentTypes), CaptureBody);
+
 		private static ConfigurationKeyValue Read(string key) =>
 			new ConfigurationKeyValue(key, Environment.GetEnvironmentVariable(key)?.Trim(), Origin);
 	}
