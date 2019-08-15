@@ -110,7 +110,7 @@ namespace Elastic.Apm.Tests
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType", new TestAgentConfigurationReader(logger)));
+				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
 			}
 
 			await isRequestFinished.Task;
