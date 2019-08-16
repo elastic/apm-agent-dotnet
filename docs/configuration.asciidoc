@@ -125,8 +125,8 @@ of the deployed revision, e.g. the output of git rev-parse HEAD.
 
 [options="header"]
 |============
-| Default                          | Type
-| Version of the entry assembly    | string 
+| Default                                        | Type
+| Informational version of the entry assembly    | string 
 |============
 
 [float]
