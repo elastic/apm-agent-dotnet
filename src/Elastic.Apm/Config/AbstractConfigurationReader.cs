@@ -351,7 +351,14 @@ namespace Elastic.Apm.Config
 			return ConfigConsts.DefaultValues.UnknownServiceName;
 		}
 
-		private Version DiscoverServiceVersion() => DiscoverEntryAssemblyName()?.Version;
+		private string DiscoverServiceVersion()
+		{
+			var entryAssembly = Assembly.GetEntryAssembly();
+			if (entryAssembly != null && !IsMsOrElastic(entryAssembly.GetName().GetPublicKeyToken()))
+				return entryAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+
+			return null;
+		}
 
 		protected string ParseServiceVersion(ConfigurationKeyValue kv)
 		{
@@ -370,7 +377,7 @@ namespace Elastic.Apm.Config
 				Logger?.Info()
 					?.Log("The agent was started without a service version. The automatically discovered service version is {ServiceVersion}",
 						discoveredVersion);
-				return discoveredVersion.ToString();
+				return discoveredVersion;
 			}
 
 			return string.Empty;
