@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using AspNetCoreSampleApp.Data;
 using AspNetCoreSampleApp.Models;
 using Elastic.Apm;
+using Elastic.Apm.Api;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -21,39 +23,77 @@ namespace AspNetCoreSampleApp.Controllers
 
 		public HomeController(SampleDataContext sampleDataContext) => _sampleDataContext = sampleDataContext;
 
-		public async Task<IActionResult> Index()
+		private bool GetCaptureControllerActionAsSpanFromQueryString()
 		{
-			_sampleDataContext.Database.Migrate();
-			var model = _sampleDataContext.SampleTable.Select(item => item.Name).ToList();
-
-			try
-			{
-				var httpClient = new HttpClient();
-				httpClient.DefaultRequestHeaders.Add("User-Agent", "APM-Sample-App");
-				var responseMsg = await httpClient.GetAsync("https://api.github.com/repos/elastic/apm-agent-dotnet");
-				var responseStr = await responseMsg.Content.ReadAsStringAsync();
-				ViewData["stargazers_count"] = JObject.Parse(responseStr)["stargazers_count"];
-			}
-			catch
-			{
-				Console.WriteLine("Failed HTTP GET elastic.co");
-			}
-
-			return View(model);
+			const string captureControllerActionAsSpanQueryStringKey = "captureControllerActionAsSpan";
+			var captureControllerActionAsSpanQueryStringValues = HttpContext.Request.Query[captureControllerActionAsSpanQueryStringKey];
+			if (captureControllerActionAsSpanQueryStringValues.Count > 1)
+				throw new ArgumentException($"{captureControllerActionAsSpanQueryStringKey} query string key should have at most one value" +
+					$", instead it's values: {captureControllerActionAsSpanQueryStringValues}",
+					captureControllerActionAsSpanQueryStringKey);
+			// ReSharper disable once SimplifyConditionalTernaryExpression
+			return captureControllerActionAsSpanQueryStringValues.Count == 0 ? false : bool.Parse(captureControllerActionAsSpanQueryStringValues[0]);
 		}
 
-		[HttpPost]
-		public async Task<IActionResult> AddSampleData([FromForm] string enteredName)
+		public Task<IActionResult> Index()
 		{
-			if (string.IsNullOrEmpty(enteredName))
-				throw new ArgumentNullException(nameof(enteredName));
+			return SafeCaptureSpan<IActionResult>(GetCaptureControllerActionAsSpanFromQueryString(),
+				"Index_span_name", "Index_span_type", async () =>
+			{
+				_sampleDataContext.Database.Migrate();
+				var model = _sampleDataContext.SampleTable.Select(item => item.Name).ToList();
 
-			_sampleDataContext.SampleTable.Add(
-				new SampleData { Name = enteredName });
+				try
+				{
+					var httpClient = new HttpClient();
+					httpClient.DefaultRequestHeaders.Add("User-Agent", "APM-Sample-App");
+					var responseMsg = await httpClient.GetAsync("https://api.github.com/repos/elastic/apm-agent-dotnet");
+					var responseStr = await responseMsg.Content.ReadAsStringAsync();
+					ViewData["stargazers_count"] = JObject.Parse(responseStr)["stargazers_count"];
+				}
+				catch
+				{
+					Console.WriteLine("Failed HTTP GET elastic.co");
+				}
 
-			await _sampleDataContext.SaveChangesAsync();
+				return View(model);
+			});
+		}
 
-			return Redirect("/Home/Index");
+		/// <summary>
+		/// In order to test if relationship between spans is maintained correctly by the agent,
+		/// this method has the ability to start a span by passing `captureControllerActionAsSpan` = `true` to it.
+		/// In that case spans created by EF Core auto instrumentation in the method body should be sub spans
+		/// of the manually created span.
+		/// </summary>
+		[HttpPost]
+		public Task<IActionResult> AddSampleData(IFormCollection formFields)
+		{
+			var captureControllerActionAsSpanAsString = formFields["captureControllerActionAsSpan"];
+			// ReSharper disable once SimplifyConditionalTernaryExpression
+			var captureControllerActionAsSpan = string.IsNullOrEmpty(captureControllerActionAsSpanAsString)
+				? false
+				: bool.Parse(captureControllerActionAsSpanAsString);
+			var enteredName = formFields["enteredName"];
+			return SafeCaptureSpan<IActionResult>(captureControllerActionAsSpan, "AddSampleData_span_name", "AddSampleData_span_type", async () =>
+			{
+				if (string.IsNullOrEmpty(enteredName))
+					throw new ArgumentNullException(nameof(enteredName));
+
+				_sampleDataContext.SampleTable.Add(
+					new SampleData { Name = enteredName });
+
+				await _sampleDataContext.SaveChangesAsync();
+
+				return Redirect("/Home/Index");
+			});
+		}
+
+		private static Task<T> SafeCaptureSpan<T>(bool captureControllerActionAsSpan, string spanName, string spanType, Func<Task<T>> spanBody)
+		{
+			if (!captureControllerActionAsSpan || Agent.Tracer.CurrentTransaction == null) return spanBody();
+
+			return (Agent.Tracer.CurrentSpan ?? (IExecutionSegment)Agent.Tracer.CurrentTransaction).CaptureSpan(spanName, spanType, spanBody);
 		}
 
 		public IActionResult SimplePage()
@@ -87,6 +127,7 @@ namespace AspNetCoreSampleApp.Controllers
 			var csvDataReader = new CsvDataReader($"Data{Path.DirectorySeparatorChar}HistoricalData");
 
 			var historicalData =
+				// ReSharper disable once StringLiteralTypo
 				await Agent.Tracer.CurrentTransaction.CaptureSpan("ReadData", "csvRead", async () => await csvDataReader.GetHistoricalQuotes("ESTC"));
 
 			return View(historicalData);
@@ -107,7 +148,7 @@ namespace AspNetCoreSampleApp.Controllers
 
 		public IActionResult TriggerError()
 		{
-			Agent.Tracer.CurrentTransaction.Tags["foo"] = "bar";
+			if (Agent.Tracer.CurrentTransaction != null) Agent.Tracer.CurrentTransaction.Labels["foo"] = "bar";
 			throw new Exception("This is a test exception!");
 		}
 
@@ -116,17 +157,25 @@ namespace AspNetCoreSampleApp.Controllers
 
 		public IActionResult TransactionWithCustomName()
 		{
-			Agent.Tracer.CurrentTransaction.Name = "custom";
+			if (Agent.Tracer.CurrentTransaction != null) Agent.Tracer.CurrentTransaction.Name = "custom";
 			return Ok();
 		}
 
 		public IActionResult TransactionWithCustomNameUsingRequestInfo()
 		{
-			Agent.Tracer.CurrentTransaction.Name = $"{HttpContext.Request.Method} {HttpContext.Request.Path}";
+			if (Agent.Tracer.CurrentTransaction != null)
+				Agent.Tracer.CurrentTransaction.Name = $"{HttpContext.Request.Method} {HttpContext.Request.Path}";
 			return Ok();
 		}
 
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+
 		public IActionResult Error() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+		
+		[HttpPost, Route("api/Home/Post")]
+		public ActionResult<string> Post() => "somevalue";
+
+		[HttpPost, Route("api/Home/PostError")]
+		public ActionResult<string> PostError() => throw new Exception("This is a post method test exception!");
 	}
 }

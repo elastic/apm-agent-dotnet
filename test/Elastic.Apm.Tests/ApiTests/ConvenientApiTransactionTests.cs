@@ -389,11 +389,11 @@ namespace Elastic.Apm.Tests.ApiTests
 		}
 
 		/// <summary>
-		/// Creates a custom transaction and adds a tag to it.
-		/// Makes sure that the tag is stored on Transaction.Context.
+		/// Creates a custom transaction and adds a label to it.
+		/// Makes sure that the label is stored on Transaction.Context.
 		/// </summary>
 		[Fact]
-		public void TagsOnTransaction()
+		public void LabelsOnTransaction()
 		{
 			var payloadSender = AssertWith1Transaction(
 				t =>
@@ -401,23 +401,23 @@ namespace Elastic.Apm.Tests.ApiTests
 					t.Tracer.CaptureTransaction(TransactionName, TransactionType, transaction =>
 					{
 						WaitHelpers.SleepMinimum();
-						transaction.Tags["foo"] = "bar";
+						transaction.Labels["foo"] = "bar";
 					});
 				});
 
-			//According to the Intake API tags are stored on the Context (and not on Transaction.Tags directly).
-			payloadSender.FirstTransaction.Context.Tags.Should().Contain("foo", "bar");
+			//According to the Intake API labels are stored on the Context (and not on Transaction.Labels directly).
+			payloadSender.FirstTransaction.Context.Labels.Should().Contain("foo", "bar");
 
-			//Also make sure the tag is visible directly on Transaction.Tags.
-			payloadSender.FirstTransaction.Tags.Should().Contain("foo", "bar");
+			//Also make sure the label is visible directly on Transaction.Labels.
+			payloadSender.FirstTransaction.Labels.Should().Contain("foo", "bar");
 		}
 
 		/// <summary>
-		/// Creates a custom async transaction and adds a tag to it.
-		/// Makes sure that the tag is stored on Transaction.Context.
+		/// Creates a custom async transaction and adds a label to it.
+		/// Makes sure that the label is stored on Transaction.Context.
 		/// </summary>
 		[Fact]
-		public async Task TagsOnTransactionAsync()
+		public async Task LabelsOnTransactionAsync()
 		{
 			var payloadSender = await AssertWith1TransactionAsync(
 				async t =>
@@ -425,23 +425,23 @@ namespace Elastic.Apm.Tests.ApiTests
 					await t.Tracer.CaptureTransaction(TransactionName, TransactionType, async transaction =>
 					{
 						await WaitHelpers.DelayMinimum();
-						transaction.Tags["foo"] = "bar";
+						transaction.Labels["foo"] = "bar";
 					});
 				});
 
-			//According to the Intake API tags are stored on the Context (and not on Transaction.Tags directly).
-			payloadSender.FirstTransaction.Context.Tags.Should().Contain("foo", "bar");
+			//According to the Intake API labels are stored on the Context (and not on Transaction.Labels directly).
+			payloadSender.FirstTransaction.Context.Labels.Should().Contain("foo", "bar");
 
-			//Also make sure the tag is visible directly on Transaction.Tags.
-			payloadSender.FirstTransaction.Tags.Should().Contain("foo", "bar");
+			//Also make sure the label is visible directly on Transaction.Labels.
+			payloadSender.FirstTransaction.Labels.Should().Contain("foo", "bar");
 		}
 
 		/// <summary>
-		/// Creates a custom async Transaction that ends with an error and adds a tag to it.
-		/// Makes sure that the tag is stored on Transaction.Context.
+		/// Creates a custom async Transaction that ends with an error and adds a label to it.
+		/// Makes sure that the label is stored on Transaction.Context.
 		/// </summary>
 		[Fact]
-		public async Task TagsOnTransactionAsyncError()
+		public async Task LabelsOnTransactionAsyncError()
 		{
 			var payloadSender = await AssertWith1TransactionAnd1ErrorAsync(
 				async t =>
@@ -451,7 +451,7 @@ namespace Elastic.Apm.Tests.ApiTests
 						await t.Tracer.CaptureTransaction(TransactionName, TransactionType, async transaction =>
 						{
 							await WaitHelpers.DelayMinimum();
-							transaction.Tags["foo"] = "bar";
+							transaction.Labels["foo"] = "bar";
 
 							if (new Random().Next(1) == 0) //avoid unreachable code warning.
 								throw new InvalidOperationException(ExceptionMessage);
@@ -460,11 +460,11 @@ namespace Elastic.Apm.Tests.ApiTests
 					await act.Should().ThrowAsync<InvalidOperationException>();
 				});
 
-			//According to the Intake API tags are stored on the Context (and not on Transaction.Tags directly).
-			payloadSender.FirstTransaction.Context.Tags.Should().Contain("foo", "bar");
+			//According to the Intake API labels are stored on the Context (and not on Transaction.Labels directly).
+			payloadSender.FirstTransaction.Context.Labels.Should().Contain("foo", "bar");
 
-			//Also make sure the tag is visible directly on Transaction.Tags.
-			payloadSender.FirstTransaction.Tags.Should().Contain("foo", "bar");
+			//Also make sure the label is visible directly on Transaction.Labels.
+			payloadSender.FirstTransaction.Labels.Should().Contain("foo", "bar");
 		}
 
 		/// <summary>

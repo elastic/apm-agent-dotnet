@@ -3,9 +3,9 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Tests.Mocks
 {
-	public class NoopLogger : IApmLogger
+	internal class NoopLogger : IApmLogger
 	{
-		public LogLevel Level { get; set;  }
+		public bool IsEnabled(LogLevel level) => false;
 
 		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter) { }
 	}

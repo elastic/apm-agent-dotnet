@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.AspNetCore.Tests.Factories;
 using Elastic.Apm.AspNetCore.Tests.Fakes;
 using Elastic.Apm.AspNetCore.Tests.Helpers;
+using Elastic.Apm.Config;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
@@ -28,12 +29,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task TestErrorInAspNetCore()
 		{
 			using (var agent = new ApmAgent(new TestAgentComponents()))
+			using (var client = TestHelper.GetClient(_factory, agent))
 			{
-				var capturedPayload = agent.PayloadSender as MockPayloadSender;
-				var client = TestHelper.GetClient(_factory, agent);
-
 				await client.GetAsync("/Home/TriggerError");
 
+				var capturedPayload = (MockPayloadSender)agent.PayloadSender;
 				capturedPayload.Should().NotBeNull();
 				capturedPayload.Transactions.Should().ContainSingle();
 				capturedPayload.Errors.Should().ContainSingle();
@@ -46,6 +46,39 @@ namespace Elastic.Apm.AspNetCore.Tests
 				context.Request.Url.Full.Should().Be("http://localhost/Home/TriggerError");
 				context.Request.Method.Should().Be(HttpMethod.Get.Method);
 
+				errorException.Should().NotBeNull();
+				errorException.Handled.Should().BeFalse();
+			}
+		}
+
+		/// <summary>
+		/// Triggers a post method which raises an exception (/api/Home/PostError)
+		/// and makes sure that the error is captured and that the json body is successfully
+		/// retrieved from the HttpRequest
+		/// </summary>
+		/// <returns>The error in ASP net core.</returns>
+		[Fact]
+		public async Task TestJsonBodyRetrievalOnRequestFailureInAspNetCore()
+		{
+			using (var agent = new ApmAgent(new TestAgentComponents(captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors, captureBodyContentTypes: ConfigConsts.DefaultValues.CaptureBodyContentTypes)))
+			using (var client = TestHelper.GetClient(_factory, agent))
+			{
+				var body = "{\"id\" : \"1\"}";
+				var response = await client.PostAsync("api/Home/PostError", new StringContent(body, System.Text.Encoding.UTF8, "application/json"));
+
+				var capturedPayload = (MockPayloadSender)agent.PayloadSender;
+				capturedPayload.Should().NotBeNull();
+				capturedPayload.Transactions.Should().ContainSingle();
+				capturedPayload.Errors.Should().ContainSingle();
+
+				var errorException = capturedPayload.FirstError.Exception;
+				errorException.Message.Should().Be("This is a post method test exception!");
+				errorException.Type.Should().Be(typeof(Exception).FullName);
+
+				var context = capturedPayload.FirstError.Context;
+				context.Request.Url.Full.Should().Be("http://localhost/api/Home/PostError");
+				context.Request.Method.Should().Be(HttpMethod.Post.Method);
+				context.Request.Body.Should().Be(body);
 				errorException.Should().NotBeNull();
 				errorException.Handled.Should().BeFalse();
 			}

@@ -31,9 +31,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			using (var agent = GetAgent())
 			{
 				using (var client = TestHelper.GetClient(_factory, agent))
+				using (await client.GetAsync("Home/Sample/3"))
+				using (await client.GetAsync("Home/Sample/2"))
 				{
-					await client.GetAsync("Home/Sample/3");
-					await client.GetAsync("Home/Sample/2");
 				}
 
 				((MockPayloadSender)agent.PayloadSender).Transactions.Should().OnlyContain(n => n.Name == "GET Home/Sample {id}");
@@ -48,12 +48,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task CustomTransactionName()
 		{
 			using (var agent = GetAgent())
+			using (var client = TestHelper.GetClient(_factory, agent))
+			using (await client.GetAsync("home/TransactionWithCustomName"))
 			{
-				using (var client = TestHelper.GetClient(_factory, agent))
-				{
-					await client.GetAsync($"home/TransactionWithCustomName");
-				}
-
 				((MockPayloadSender)agent.PayloadSender).Transactions.Should().OnlyContain(n => n.Name == "custom");
 			}
 		}
@@ -68,12 +65,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task CustomTransactionNameWithNameUsingRequestInfo()
 		{
 			using (var agent = GetAgent())
+			using (var client = TestHelper.GetClient(_factory, agent))
+			using (await client.GetAsync("home/TransactionWithCustomNameUsingRequestInfo"))
 			{
-				using (var client = TestHelper.GetClient(_factory, agent))
-				{
-					await client.GetAsync($"home/TransactionWithCustomNameUsingRequestInfo");
-				}
-
 				((MockPayloadSender)agent.PayloadSender).Transactions.Should().OnlyContain(n => n.Name == "GET /home/TransactionWithCustomNameUsingRequestInfo");
 			}
 		}
@@ -86,12 +80,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task OptionalRouteParameterWithNull()
 		{
 			using (var agent = GetAgent())
+			using (var client = TestHelper.GetClient(_factory, agent))
+			using (await client.GetAsync("Home/Sample"))
 			{
-				using (var client = TestHelper.GetClient(_factory, agent))
-				{
-					await client.GetAsync("Home/Sample");
-				}
-
 				((MockPayloadSender)agent.PayloadSender).Transactions.Should().OnlyContain(n => n.Name == "GET Home/Sample");
 			}
 		}
@@ -104,12 +95,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task DefaultRouteParameterValues()
 		{
 			using (var agent = GetAgent())
+			using (var client = TestHelper.GetClient(_factory, agent))
+			using (await client.GetAsync("/"))
 			{
-				using (var client = TestHelper.GetClient(_factory, agent))
-				{
-					await client.GetAsync("/");
-				}
-
 				var capturedPayload = (MockPayloadSender)agent.PayloadSender;
 				capturedPayload.FirstTransaction.Name.Should().Be("GET Home/Index");
 				capturedPayload.FirstTransaction.Context.Request.Url.Full.Should().Be("http://localhost/");
@@ -118,7 +106,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		private static ApmAgent GetAgent()
 		{
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: new MockPayloadSender()));
+			// We need to ensure Agent.Instance is created because we need agent to use Tracer.CurrentExecutionSegmentsContainer.
+			var agent = new ApmAgent(new TestAgentComponents(
+				payloadSender: new MockPayloadSender(),
+				// The ApmAgent needs to share CurrentExecutionSegmentsContainer with Agent.Instance because the sample application
+				// used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan.
+				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer));
+
 			ApmMiddlewareExtension.UpdateServiceInformation(agent.Service);
 			return agent;
 		}

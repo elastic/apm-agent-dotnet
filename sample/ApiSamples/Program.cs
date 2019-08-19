@@ -16,7 +16,8 @@ namespace ApiSamples
 			if (args.Length == 1) //in case it's started with an argument we try to parse the argument as a DistributedTracingData
 			{
 				WriteLineToConsole($"Callee process started - continuing trace with distributed tracing data: {args[0]}");
-				var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransaction", DistributedTracingData.TryDeserializeFromString(args[0]));
+				var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransaction",
+					DistributedTracingData.TryDeserializeFromString(args[0]));
 
 				try
 				{
@@ -43,43 +44,6 @@ namespace ApiSamples
 				Console.ReadKey();
 			}
 		}
-
-		public static void SampleSpanWithCustomContext() =>
-			Agent.Tracer.CaptureTransaction("SampleTransaction", "SampleTransactionType", transaction =>
-			{
-				transaction.CaptureSpan("SampleSpan", "SampleSpanType", span =>
-				{
-					span.Context.Db = new Database
-					{
-						Statement = "GET /_all/_search?q=tag:wow",
-						Type = Database.TypeElasticsearch,
-					};
-				});
-			});
-
-		public static void SampleSpanWithCustomContextFillAll() =>
-			Agent.Tracer.CaptureTransaction("SampleTransaction", "SampleTransactionType", transaction =>
-			{
-				transaction.CaptureSpan("SampleSpan1", "SampleSpanType", span =>
-				{
-					span.Context.Http = new Http
-					{
-						Url = "http://mysite.com",
-						Method = "GET",
-						StatusCode = 200,
-					};
-				});
-
-				transaction.CaptureSpan("SampleSpan2", "SampleSpanType", span =>
-				{
-					span.Context.Db = new Database
-					{
-						Statement = "GET /_all/_search?q=tag:wow",
-						Type = Database.TypeElasticsearch,
-						Instance = "MyInstance"
-					};
-				});
-			});
 
 		public static void SampleCustomTransaction()
 		{
@@ -137,14 +101,14 @@ namespace ApiSamples
 			t.Context.Response = new Response() { Finished = true, StatusCode = 200 };
 			t.Context.Request = new Request("GET", new Url { Protocol = "HTTP" });
 
-			t.Tags["fooTransaction1"] = "barTransaction1";
-			t.Tags["fooTransaction2"] = "barTransaction2";
+			t.Labels["fooTransaction1"] = "barTransaction1";
+			t.Labels["fooTransaction2"] = "barTransaction2";
 
 			Thread.Sleep(10);
 			t.CaptureSpan("TestSpan", "TestSpanType", s =>
 			{
 				Thread.Sleep(20);
-				s.Tags["fooSpan"] = "barSpan";
+				s.Labels["fooSpan"] = "barSpan";
 			});
 		});
 
@@ -193,7 +157,8 @@ namespace ApiSamples
 				var outgoingDistributedTracingData = transaction.OutgoingDistributedTracingData.SerializeToString();
 				startInfo.FileName = "dotnet";
 				startInfo.Arguments = $"run {outgoingDistributedTracingData}";
-				WriteLineToConsole($"Spawning callee process and passing outgoing distributed tracing data: {outgoingDistributedTracingData} to it...");
+				WriteLineToConsole(
+					$"Spawning callee process and passing outgoing distributed tracing data: {outgoingDistributedTracingData} to it...");
 				var calleeProcess = Process.Start(startInfo);
 				WriteLineToConsole($"Spawned callee process");
 
@@ -210,5 +175,43 @@ namespace ApiSamples
 		}
 
 		private static void WriteLineToConsole(string line) => Console.WriteLine($"[{Process.GetCurrentProcess().Id}] {line}");
+
+		// ReSharper disable ArrangeMethodOrOperatorBody
+		public static void SampleSpanWithCustomContext()
+		{
+			Agent.Tracer.CaptureTransaction("SampleTransaction", "SampleTransactionType",
+				transaction =>
+				{
+					transaction.CaptureSpan("SampleSpan", "SampleSpanType",
+						span =>
+						{
+							span.Context.Db = new Database { Statement = "GET /_all/_search?q=tag:wow", Type = Database.TypeElasticsearch, };
+						});
+				});
+		}
+
+		public static void SampleSpanWithCustomContextFillAll()
+		{
+			Agent.Tracer.CaptureTransaction("SampleTransaction", "SampleTransactionType", transaction =>
+			{
+				transaction.CaptureSpan("SampleSpan1", "SampleSpanType", span =>
+				{
+					// ReSharper disable once UseObjectOrCollectionInitializer
+					span.Context.Http = new Http { Url = "http://mysite.com", Method = "GET" };
+					// send request, get response with status code
+					span.Context.Http.StatusCode = 200;
+				});
+
+				transaction.CaptureSpan("SampleSpan2", "SampleSpanType",
+					span =>
+					{
+						span.Context.Db = new Database
+						{
+							Statement = "GET /_all/_search?q=tag:wow", Type = Database.TypeElasticsearch, Instance = "MyInstance"
+						};
+					});
+			});
+		}
+		// ReSharper restore ArrangeMethodOrOperatorBody
 	}
 }

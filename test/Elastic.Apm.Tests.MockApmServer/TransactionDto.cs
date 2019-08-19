@@ -1,11 +1,9 @@
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Model;
 using FluentAssertions;
 using Newtonsoft.Json;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
-
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
@@ -26,7 +24,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 		public string Result { get; set; }
 
 		[JsonProperty("span_count")]
-		public SpanCount SpanCount { get; set; }
+		public SpanCountDto SpanCount { get; set; }
 
 		public long Timestamp { get; set; }
 
@@ -37,17 +35,17 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		public override string ToString() => new ToStringBuilder(nameof(TransactionDto))
 		{
-			{ "Id", Id },
-			{ "TraceId", TraceId },
-			{ "ParentId", ParentId },
-			{ "Name", Name },
-			{ "Type", Type },
-			{ "IsSampled", IsSampled },
-			{ "Timestamp", Timestamp },
-			{ "Duration", Duration },
-			{ "SpanCount", SpanCount },
-			{ "Result", Result },
-			{ "Context", Context }
+			{ nameof(Id), Id },
+			{ nameof(TraceId), TraceId },
+			{ nameof(ParentId), ParentId },
+			{ nameof(Name), Name },
+			{ nameof(Type), Type },
+			{ nameof(IsSampled), IsSampled },
+			{ nameof(Timestamp), Timestamp },
+			{ nameof(Duration), Duration },
+			{ nameof(SpanCountDto), SpanCount },
+			{ nameof(Result), Result },
+			{ nameof(Context), Context }
 		}.ToString();
 
 		public void AssertValid()

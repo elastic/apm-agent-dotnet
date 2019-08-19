@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -53,7 +54,8 @@ namespace Elastic.Apm.Tests
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("TestName", "TestType", () => { Thread.Sleep(5); });
-				agent.Service.Agent.Version.Should().Be(typeof(Agent).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
+				agent.Service.Agent.Version.Should()
+					.Be(typeof(Agent).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
 			}
 		}
 
@@ -71,11 +73,13 @@ namespace Elastic.Apm.Tests
 			});
 
 			const string secretToken = "SecretToken";
-			var logger = ConsoleLogger.Instance;
+			var logger = new NoopLogger();
 			var payloadSender = new PayloadSenderV2(logger, new TestAgentConfigurationReader(logger, secretToken: secretToken),
 				Service.GetDefaultService(new TestAgentConfigurationReader(logger), logger), new Api.System(), handler);
 
-			using (var agent = new ApmAgent(new TestAgentComponents(secretToken: secretToken, payloadSender: payloadSender)))
+
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+				configurationReader: new TestAgentConfigurationReader(secretToken: secretToken))))
 			{
 				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
 			}
@@ -84,6 +88,45 @@ namespace Elastic.Apm.Tests
 			authHeader.Should().NotBeNull();
 			authHeader.Scheme.Should().Be("Bearer");
 			authHeader.Parameter.Should().Be(secretToken);
+		}
+
+		[Fact]
+		public async Task PayloadSentWithProperUserAgent()
+		{
+			var isRequestFinished = new TaskCompletionSource<object>();
+
+			HttpHeaderValueCollection<ProductInfoHeaderValue> userAgentHeader = null;
+			var handler = new MockHttpMessageHandler((r, c) =>
+			{
+				userAgentHeader = r.Headers.UserAgent;
+				isRequestFinished.SetResult(null);
+				return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+			});
+
+			var logger = new NoopLogger();
+			var service = Service.GetDefaultService(new TestAgentConfigurationReader(logger), logger);
+			var payloadSender = new PayloadSenderV2(logger, new TestAgentConfigurationReader(logger),
+				service, new Api.System(), handler);
+
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
+			}
+
+			await isRequestFinished.Task;
+			userAgentHeader
+				.Should()
+				.NotBeEmpty()
+				.And.HaveCount(3);
+
+			userAgentHeader.First().Product.Name.Should().Be($"elasticapm-{Consts.AgentName}");
+			userAgentHeader.First().Product.Version.Should().NotBeEmpty();
+
+			userAgentHeader.Skip(1).First().Product.Name.Should().Be("System.Net.Http");
+			userAgentHeader.Skip(1).First().Product.Version.Should().NotBeEmpty();
+
+			userAgentHeader.Skip(2).First().Product.Name.Should().NotBeEmpty();
+			userAgentHeader.Skip(2).First().Product.Version.Should().NotBeEmpty();
 		}
 
 		/// <summary>
@@ -95,8 +138,10 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
 				agent.Tracer.CaptureTransaction("TestTransaction", "TestTransactionType",
 					(t) => { t.CaptureSpan("TestSpan", "TestSpanType", () => { }); });
+			}
 
 			StringToByteArray(payloadSender.FirstTransaction.Id).Should().HaveCount(8);
 			StringToByteArray(payloadSender.FirstTransaction.TraceId).Should().HaveCount(16);

@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
@@ -16,17 +14,15 @@ namespace Elastic.Apm.Model
 
 		public string Message { get; set; }
 
-		public List<CapturedStackFrame> Stacktrace { get; set; }
+		[JsonProperty("stacktrace")]
+		public List<CapturedStackFrame> StackTrace { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(CapturedException))
 		{
-			{ "Type", Type },
-			{ "Message", Message },
-			{ "Handled", Handled },
-			{ "Code", Code },
+			{ nameof(Type), Type }, { nameof(Message), Message }, { nameof(Handled), Handled }, { nameof(Code), Code },
 		}.ToString();
 	}
 }

@@ -10,17 +10,17 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 
-
 namespace Elastic.Apm.AspNetFullFramework
 {
 	public class ElasticApmModule : IHttpModule
 	{
+		private static readonly IApmAgent AgentSingleton;
 		private static readonly bool IsCaptureHeadersEnabled;
 		private static readonly IApmLogger Logger;
 
 		// We can store current transaction because each IHttpModule is used for at most one request at a time
 		// For example see https://bytes.com/topic/asp-net/answers/324305-httpmodule-multithreading-request-response-corelation
-		private Transaction _currentTransaction;
+		private ITransaction _currentTransaction;
 
 		private HttpApplication _httpApp;
 
@@ -43,10 +43,11 @@ namespace Elastic.Apm.AspNetFullFramework
 			SetServiceInformation(agentComponents.Service, aspNetVersion);
 
 			Agent.Setup(agentComponents);
+			AgentSingleton = Agent.Instance;
 
-			IsCaptureHeadersEnabled = Agent.Instance.ConfigurationReader.CaptureHeaders;
+			IsCaptureHeadersEnabled = AgentSingleton.ConfigurationReader.CaptureHeaders;
 
-			Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
+			AgentSingleton.Subscribe(new HttpDiagnosticsSubscriber());
 		}
 
 		private static Version IisVersion => HttpRuntime.IISVersion;
@@ -110,22 +111,16 @@ namespace Elastic.Apm.AspNetFullFramework
 			var distributedTracingData = ExtractIncomingDistributedTracingData(httpRequest);
 			if (distributedTracingData != null)
 			{
-				Logger.Debug()
-					?.Log(
-						"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData} - continuing trace",
-						TraceParent.TraceParentHeaderName, distributedTracingData);
+				Logger.Debug()?.Log(
+					"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData} - continuing trace",
+					TraceParent.TraceParentHeaderName, distributedTracingData);
 
-				_currentTransaction = Agent.Instance.TracerInternal.StartTransactionInternal(
-					$"{httpRequest.HttpMethod} {httpRequest.Path}",
-					ApiConstants.TypeRequest,
-					distributedTracingData);
+				_currentTransaction = AgentSingleton.Tracer.StartTransaction($"{httpRequest.HttpMethod} {httpRequest.Path}", ApiConstants.TypeRequest, distributedTracingData);
 			}
 			else
 			{
 				Logger.Debug()?.Log("Incoming request doesn't have valid incoming distributed tracing data - starting trace with new trace id.");
-				_currentTransaction = Agent.Instance.TracerInternal.StartTransactionInternal(
-					$"{httpRequest.HttpMethod} {httpRequest.Path}",
-					ApiConstants.TypeRequest);
+				_currentTransaction = AgentSingleton.Tracer.StartTransaction($"{httpRequest.HttpMethod} {httpRequest.Path}", ApiConstants.TypeRequest);
 			}
 
 			if (_currentTransaction.IsSampled) FillSampledTransactionContextRequest(httpRequest, _currentTransaction);
@@ -134,9 +129,9 @@ namespace Elastic.Apm.AspNetFullFramework
 		private static DistributedTracingData ExtractIncomingDistributedTracingData(HttpRequest httpRequest)
 		{
 			var headerValue = httpRequest.Headers.Get(TraceParent.TraceParentHeaderName);
-			if (headerValue == null)
+			if (headerValue is null)
 			{
-				Logger.Debug()?.Log("Incoming request doesn't {TraceParentHeaderName} header - "+
+				Logger.Debug()?.Log("Incoming request doesn't {TraceParentHeaderName} header - " +
 					"it means request doesn't have incoming distributed tracing data", TraceParent.TraceParentHeaderName);
 				return null;
 			}
@@ -147,13 +142,13 @@ namespace Elastic.Apm.AspNetFullFramework
 		{
 			var httpRequestUrl = httpRequest.Url;
 			var queryString = httpRequestUrl.Query;
-			var rawUrlPathAndQuery = httpRequest.RawUrl;
 			var fullUrl = httpRequestUrl.AbsoluteUri;
 			if (queryString.IsEmpty())
 			{
 				// Uri.Query returns empty string both when query string is empty ("http://host/path?") and
 				// when there's no query string at all ("http://host/path") so we need a way to distinguish between these cases
-				if (rawUrlPathAndQuery.IndexOf('?') == -1)
+				// HttpRequest.RawUrl contains only raw URL's path and query (not a full raw URL with protocol, host, etc.)
+				if (httpRequest.RawUrl.IndexOf('?') == -1)
 					queryString = null;
 				else if (!fullUrl.IsEmpty() && fullUrl[fullUrl.Length - 1] != '?')
 					fullUrl += "?";
@@ -230,7 +225,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				Headers = IsCaptureHeadersEnabled ? ConvertHeaders(httpResponse.Headers) : null
 			};
 
-		private void FillSampledTransactionContextUser(HttpContext httpCtx, Transaction transaction)
+		private void FillSampledTransactionContextUser(HttpContext httpCtx, ITransaction transaction)
 		{
 			var userIdentity = httpCtx.User?.Identity;
 			if (userIdentity == null || !userIdentity.IsAuthenticated) return;
@@ -253,6 +248,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				var versionInfoType = typeof(HttpRuntime).Assembly.GetType("System.Web.Util.VersionInfo");
 				var engineVersionProperty = versionInfoType.GetProperty("EngineVersion",
 					BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+				// ReSharper disable once PossibleNullReferenceException
 				result = (string)engineVersionProperty.GetValue(null);
 			}
 			catch (Exception ex)
