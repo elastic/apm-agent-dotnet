@@ -364,10 +364,7 @@ namespace Elastic.Apm.Config
 		{
 			var versionInConfig = kv.Value;
 
-			if (!string.IsNullOrEmpty(versionInConfig))
-			{
-				return versionInConfig;
-			}
+			if (!string.IsNullOrEmpty(versionInConfig)) return versionInConfig;
 
 			Logger?.Info()?.Log("The agent was started without a service version. The service version will be automatically discovered.");
 
@@ -380,7 +377,9 @@ namespace Elastic.Apm.Config
 				return discoveredVersion;
 			}
 
-			return string.Empty;
+			Logger?.Warning()?.Log("Failed to discover service version, the service version will be omitted.");
+
+			return null;
 		}
 
 		private static bool TryParseFloatingPoint(string valueAsString, out double result) =>
@@ -443,15 +442,15 @@ namespace Elastic.Apm.Config
 
 			for (var i = 0; i < 8; i++)
 			{
-				if (isElasticApm && array[i] != elasticToken[i])
+				if (array[i] != elasticToken[i])
 					isElasticApm = false;
-				if (isMsCorLib && array[i] != mscorlibToken[i])
+				if (array[i] != mscorlibToken[i])
 					isMsCorLib = false;
-				if (isSystemWeb && array[i] != systemWebToken[i])
+				if (array[i] != systemWebToken[i])
 					isSystemWeb = false;
-				if (isSystemPrivateCoreLib && array[i] != systemPrivateCoreLibToken[i])
+				if (array[i] != systemPrivateCoreLibToken[i])
 					isSystemPrivateCoreLib = false;
-				if (isMsAspNetCoreHosting && array[i] != msAspNetCoreHostingToken[i])
+				if (array[i] != msAspNetCoreHostingToken[i])
 					isMsAspNetCoreHosting = false;
 
 				if (!isMsCorLib && !isElasticApm && !isSystemWeb && !isSystemPrivateCoreLib && !isMsAspNetCoreHosting)
