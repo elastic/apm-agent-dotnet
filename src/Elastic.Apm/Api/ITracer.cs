@@ -7,8 +7,15 @@ namespace Elastic.Apm.Api
 	{
 		/// <summary>
 		/// Returns the currently active transaction.
+		/// Returns <c>null</c> if there's no currently active transaction.
 		/// </summary>
 		ITransaction CurrentTransaction { get; }
+
+		/// <summary>
+		/// Returns the currently active span.
+		/// Returns <c>null</c> if there's no currently active span.
+		/// </summary>
+		ISpan CurrentSpan { get; }
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a transaction and captures unhandled exceptions

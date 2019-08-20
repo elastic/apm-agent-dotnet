@@ -1,0 +1,82 @@
+ifdef::env-github[]
+NOTE: For the best reading experience,
+please view this documentation at https://www.elastic.co/guide/en/apm/agent/dotnet/current/performance-tuning.html[elastic.co]
+endif::[]
+
+[[performance-tuning]]
+== Performance Tuning
+
+There are many options available to tune agent performance.
+Which option to adjust depends on whether you are optimizing for speed, memory usage, bandwidth or storage.
+
+[float]
+[[performance-tuning-sampling]]
+=== Sampling
+
+The first knob to reach for when tuning the performance of the agent is <<config-transaction-sample-rate>>.
+Adjusting the sample rate controls what percent of requests are traced.
+By default, the sample rate is set at `1.0`, meaning _all_ requests are traced.
+
+The sample rate will impact all four performance categories,
+so simply turning down the sample rate is an easy way to improve performance.
+
+Here's an example of setting the sample rate to 20% using <<configuration-on-asp-net-core>>:
+
+[source,js]
+----
+{
+    "ElasticApm": {
+        "TransactionSampleRate": 0.2
+    }
+}
+----
+
+[float]
+[[performance-tuning-stack-traces]]
+=== Stack Traces
+
+In a complex application,
+a request may produce many spans.
+Capturing a stack trace for every span can result in significant memory usage.
+Stack traces are also captured for every error.
+There are several settings to adjust how stack traces are captured.
+
+[float]
+[[performance-tuning-disable-capturing-stack-traces]]
+==== Disable capturing stack traces
+
+To disable capturing stack traces (for both spans and errors),
+set <<config-stack-trace-limit,`StackTraceLimit`>> to `0`.
+
+[float]
+[[performance-tuning-stack-traces-for-long-running-spans]]
+==== Capture stack traces only for long running spans
+
+In its default settings,
+the APM agent collects a stack trace for every recorded span with duration longer than 5ms.
+To increase the duration threshold,
+set <<config-span-frames-min-duration,`SpanFramesMinDuration`>>.
+
+[float]
+[[performance-tuning-stack-frame-limit]]
+==== Reduce number of captured stack trace frames 
+
+The <<config-stack-trace-limit,`StackTraceLimit`>> controls how many stack frames should be collected
+when a capturing stack trace.
+
+[float]
+[[performance-tuning-disable-capture-headers]]
+=== Disable capturing HTTP request and response headers
+
+Capturing HTTP request and response headers increases memory allocations,
+network bandwidth and disk space used by Elasticsearch.
+To disable capturing HTTP request and response headers,
+set <<config-capture-headers,`CaptureHeaders`>> to `false`.
+
+[float]
+[[performance-tuning-increase-metrics-collection-interval]]
+=== Increase metrics collection interval
+
+The .NET agent tracks certain system and application metrics.
+These metrics are regularly collected and sent to the APM Server and from there to Elasticsearch.
+You can adjust the interval for metrics collection with the setting <<config-metrics-interval,`MetricsInterval`>>.

@@ -15,6 +15,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 
 		public LogLevel Level { get; }
 
+		public bool IsEnabled(LogLevel level) => Level <= level;
+
 		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{
 			var dateTime = DateTime.UtcNow;
@@ -25,18 +27,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 				? $"[{dateTime.ToString("yyyy-MM-dd hh:mm:ss")}][{ConsoleLogger.LevelToString(level)}] - {message}"
 				: $"[{dateTime.ToString("yyyy-MM-dd hh:mm:ss")}][{ConsoleLogger.LevelToString(level)}] - {message}{Environment.NewLine}Exception: {e.GetType().FullName}, Message: {e.Message}";
 
-			switch (level)
-			{
-				case LogLevel.Critical when Level <= LogLevel.Critical:
-				case LogLevel.Error when Level <= LogLevel.Error:
-				case LogLevel.Warning when Level <= LogLevel.Warning:
-				case LogLevel.Debug when Level <= LogLevel.Debug:
-				case LogLevel.Information when Level <= LogLevel.Information:
-				case LogLevel.Trace when Level <= LogLevel.Trace:
-					_lineWriter.WriteLine(fullMessage);
-					break;
-				case LogLevel.None: break;
-			}
+			if (IsEnabled(level))
+				_lineWriter.WriteLine(fullMessage);
 		}
 	}
 }

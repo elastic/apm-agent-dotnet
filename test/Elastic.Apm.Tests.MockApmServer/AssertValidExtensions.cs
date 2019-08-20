@@ -89,14 +89,14 @@ namespace Elastic.Apm.Tests.MockApmServer
 			thisObj?.Email.AssertValid();
 		}
 
-		internal static void TagsAssertValid(this Dictionary<string, string> thisObj)
+		internal static void LabelsAssertValid(this Dictionary<string, string> thisObj)
 		{
 			thisObj.Should().NotBeNull();
 
-			foreach (var tagNameValue in thisObj)
+			foreach (var (key, value) in thisObj)
 			{
-				tagNameValue.Key.AssertValid();
-				tagNameValue.Value?.AssertValid();
+				key.AssertValid();
+				value?.AssertValid();
 			}
 		}
 
@@ -168,7 +168,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			thisObj.RemoteAddress?.NonEmptyAssertValid();
 		}
 
-		internal static void AssertValid(this SpanCount thisObj) => thisObj.Should().NotBeNull();
+		internal static void AssertValid(this SpanCountDto thisObj) => thisObj.Should().NotBeNull();
 
 		internal static void TimestampAssertValid(this long thisObj) => thisObj.Should().BeGreaterOrEqualTo(0);
 
@@ -216,7 +216,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			thisObj.Should().NotBeNull();
 
 			thisObj.Code?.AssertValid();
-			thisObj.Stacktrace?.AssertValid();
+			thisObj.StackTrace?.AssertValid();
 			thisObj.Type.AssertValid();
 		}
 

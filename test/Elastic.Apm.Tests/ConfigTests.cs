@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Elastic.Apm.Config;
@@ -13,13 +14,13 @@ namespace Elastic.Apm.Tests
 	/// <summary>
 	/// Tests the configuration through environment variables
 	/// </summary>
-	public class EnvVarConfigTest : IDisposable
+	public class ConfigTests : IDisposable
 	{
 		[Fact]
 		public void ServerUrlsSimpleTest()
 		{
 			var serverUrl = "http://myServer.com:1234";
-			var agent = new ApmAgent(new TestAgentComponents(serverUrls: serverUrl));
+			var agent = new ApmAgent(new TestAgentComponents(configurationReader: new TestAgentConfigurationReader(serverUrls: serverUrl)));
 			agent.ConfigurationReader.ServerUrls[0].OriginalString.Should().Be(serverUrl);
 			var rootedUrl = serverUrl + "/";
 			rootedUrl.Should().BeEquivalentTo(agent.ConfigurationReader.ServerUrls[0].AbsoluteUri);
@@ -29,7 +30,7 @@ namespace Elastic.Apm.Tests
 		public void ServerUrlsInvalidUrlTest()
 		{
 			var serverUrl = "InvalidUrl";
-			var agent = new ApmAgent(new TestAgentComponents(serverUrls: serverUrl));
+			var agent = new ApmAgent(new TestAgentComponents(configurationReader: new TestAgentConfigurationReader(serverUrls: serverUrl)));
 			agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultValues.ServerUri);
 		}
 
@@ -38,7 +39,8 @@ namespace Elastic.Apm.Tests
 		{
 			var serverUrl = "InvalidUrl";
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger, serverUrl));
+			var agent = new ApmAgent(new TestAgentComponents(logger,
+				new TestAgentConfigurationReader(logger, serverUrls: serverUrl)));
 			agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultValues.ServerUri);
 
 			logger.Lines.Should().NotBeEmpty();
@@ -64,7 +66,8 @@ namespace Elastic.Apm.Tests
 			var serverUrls = $"{serverUrl1},{serverUrl2}";
 
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger, serverUrls));
+			var agent = new ApmAgent(new TestAgentComponents(logger,
+				new TestAgentConfigurationReader(logger, serverUrls: serverUrls)));
 
 			var parsedUrls = agent.ConfigurationReader.ServerUrls;
 			parsedUrls[0].OriginalString.Should().Be(serverUrl1);
@@ -86,7 +89,8 @@ namespace Elastic.Apm.Tests
 			var serverUrl3 = "http://myServer2.com:1234";
 			var serverUrls = $"{serverUrl1},{serverUrl2},{serverUrl3}";
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger, serverUrls));
+			var agent = new ApmAgent(new TestAgentComponents(logger,
+				new TestAgentConfigurationReader(logger, serverUrls: serverUrls)));
 
 			var parsedUrls = agent.ConfigurationReader.ServerUrls;
 			parsedUrls.Should().NotBeEmpty().And.HaveCount(2, "seeded 3 but one was invalid");
@@ -108,16 +112,60 @@ namespace Elastic.Apm.Tests
 				);
 		}
 
+		/// <summary>
+		/// Makes sure empty spaces are trimmed at the end of the config
+		/// </summary>
+		[Fact]
+		public void ReadServerUrlsWithSpaceAtTheEndViaEnvironmentVariable()
+		{
+			var serverUrlsWithSpace = "http://myServer:1234 \r\n";
+			Environment.SetEnvironmentVariable(EnvVarNames.ServerUrls, serverUrlsWithSpace);
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender)))
+			{
+				agent.ConfigurationReader.ServerUrls.First().Should().NotBe(serverUrlsWithSpace);
+				agent.ConfigurationReader.ServerUrls.First().Should().Be("http://myServer:1234");
+			}
+		}
+
 		[Fact]
 		public void SecretTokenSimpleTest()
 		{
 			var secretToken = "secretToken";
-			var agent = new ApmAgent(new TestAgentComponents(secretToken: secretToken));
+			var agent = new ApmAgent(new TestAgentComponents(configurationReader: new TestAgentConfigurationReader(secretToken: secretToken)));
 			agent.ConfigurationReader.SecretToken.Should().Be(secretToken);
 		}
 
 		[Fact]
-		public void DefaultCaptureHeadersTest() => Agent.Config.CaptureHeaders.Should().Be(true);
+		public void DefaultCaptureHeadersTest()
+		{
+			using (var agent = new ApmAgent(new TestAgentComponents())) agent.ConfigurationReader.CaptureHeaders.Should().Be(true);
+		}
+
+		[Fact]
+		public void CaptureBodyConfigTest()
+		{
+			var agent = new ApmAgent(new TestAgentComponents(captureBody: ConfigConsts.SupportedValues.CaptureBodyOff));
+			agent.ConfigurationReader.CaptureBody.Should().Be(ConfigConsts.SupportedValues.CaptureBodyOff);
+
+			agent = new ApmAgent(new TestAgentComponents(captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			agent.ConfigurationReader.CaptureBody.Should().Be(ConfigConsts.SupportedValues.CaptureBodyAll);
+
+			agent = new ApmAgent(new TestAgentComponents(captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors));
+			agent.ConfigurationReader.CaptureBody.Should().Be(ConfigConsts.SupportedValues.CaptureBodyErrors);
+
+			agent = new ApmAgent(new TestAgentComponents(captureBody: ConfigConsts.SupportedValues.CaptureBodyTransactions));
+			agent.ConfigurationReader.CaptureBody.Should().Be(ConfigConsts.SupportedValues.CaptureBodyTransactions);
+		}
+
+		[Fact]
+		public void CaptureBodyContentTypesConfigTest()
+		{
+			var agent = new ApmAgent(new TestAgentComponents(captureBodyContentTypes: DefaultValues.CaptureBodyContentTypes));
+			var expected = new List<string>() { "application/x-www-form-urlencoded*", "text/*", "application/json*", "application/xml*"};
+			agent.ConfigurationReader.CaptureBodyContentTypes.Should().HaveCount(4);
+			agent.ConfigurationReader.CaptureBodyContentTypes.Should().BeEquivalentTo(expected);
+		}
 
 		[Fact]
 		public void SetCaptureHeadersTest()
@@ -128,8 +176,44 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
-		public void DefaultTransactionSampleRateTest() =>
-			Agent.Config.TransactionSampleRate.Should().Be(DefaultValues.TransactionSampleRate);
+
+		public void SetCaptureBodyTest()
+		{
+			//Possible values : "off", "all", "errors", "transactions"
+			foreach (var value in SupportedValues.CaptureBodySupportedValues){
+				Environment.SetEnvironmentVariable(EnvVarNames.CaptureBody, value);
+				var config = new EnvironmentConfigurationReader();
+				config.CaptureBody.Should().Be(value);
+			}
+		}
+
+		[Fact]
+		public void SetCaptureBodyContentTypesTest()
+		{
+			//
+
+			var contentType = "application/x-www-form-urlencoded*";
+			Environment.SetEnvironmentVariable(EnvVarNames.CaptureBodyContentTypes, contentType);
+			var config = new EnvironmentConfigurationReader();
+			config.CaptureBodyContentTypes.Should().HaveCount(1);
+			config.CaptureBodyContentTypes[0].Should().Be(contentType);
+
+			Environment.SetEnvironmentVariable(EnvVarNames.CaptureBodyContentTypes, "application/x-www-form-urlencoded*, text/*, application/json*, application/xml*");
+			config = new EnvironmentConfigurationReader();
+			config.CaptureBodyContentTypes.Should().HaveCount(4);
+			config.CaptureBodyContentTypes[0].Should().Be("application/x-www-form-urlencoded*");
+			config.CaptureBodyContentTypes[1].Should().Be("text/*");
+			config.CaptureBodyContentTypes[2].Should().Be("application/json*");
+			config.CaptureBodyContentTypes[3].Should().Be("application/xml*");
+		}
+
+		[Fact]
+		public void DefaultTransactionSampleRateTest()
+		{
+			using (var agent = new ApmAgent(new TestAgentComponents()))
+				agent.ConfigurationReader.TransactionSampleRate.Should().Be(DefaultValues.TransactionSampleRate);
+		}
+
 
 		[Fact]
 		public void SetTransactionSampleRateTest()
@@ -151,44 +235,34 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void DefaultLogLevelTest() => Agent.Config.LogLevel.Should().Be(LogLevel.Error);
 
-		[Fact]
-		public void SetDebugLogLevelTest()
+		[Theory]
+		[InlineData("Trace", LogLevel.Trace)]
+		[InlineData("Debug", LogLevel.Debug)]
+		[InlineData("Information", LogLevel.Information)]
+		[InlineData("Warning", LogLevel.Warning)]
+		[InlineData("Error", LogLevel.Error)]
+		[InlineData("Critical", LogLevel.Critical)]
+		public void SetLogLevelTest(string logLevelAsString, LogLevel logLevel)
 		{
-			var agent = new ApmAgent(new TestAgentComponents("Debug"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Debug);
-			agent.Logger.Level.Should().Be(LogLevel.Debug);
-		}
-
-		[Fact]
-		public void SetErrorLogLevelTest()
-		{
-			var agent = new ApmAgent(new TestAgentComponents("Error"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Error);
-			agent.Logger.Level.Should().Be(LogLevel.Error);
-		}
-
-		[Fact]
-		public void SetInfoLogLevelTest()
-		{
-			var agent = new ApmAgent(new TestAgentComponents("Information"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Information);
-			agent.Logger.Level.Should().Be(LogLevel.Information);
-		}
-
-		[Fact]
-		public void SetWarningLogLevelTest()
-		{
-			var agent = new ApmAgent(new TestAgentComponents("Warning"));
-			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Warning);
-			agent.Logger.Level.Should().Be(LogLevel.Warning);
+			var logger = new TestLogger(logLevel);
+			var agent = new ApmAgent(new TestAgentComponents(logger, new TestAgentConfigurationReader(logger, logLevelAsString)));
+			agent.ConfigurationReader.LogLevel.Should().Be(logLevel);
+			agent.Logger.Should().Be(logger);
+			foreach (LogLevel enumValue in Enum.GetValues(typeof(LogLevel)))
+			{
+				if (logLevel <= enumValue)
+					agent.Logger.IsEnabled(enumValue).Should().BeTrue();
+				else
+					agent.Logger.IsEnabled(enumValue).Should().BeFalse();
+			}
 		}
 
 		[Fact]
 		public void SetInvalidLogLevelTest()
 		{
-			var logLevelValue = "InvalidLogLevel";
-			var agent = new ApmAgent(new TestAgentComponents(logLevelValue));
-			var logger = agent.Logger as TestLogger;
+			var logger = new TestLogger(LogLevel.Error);
+			var logLevelAsString = "InvalidLogLevel";
+			var agent = new ApmAgent(new TestAgentComponents(logger, new TestAgentConfigurationReader(logger, logLevelAsString)));
 
 			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Error);
 			logger.Lines.Should().NotBeEmpty();
@@ -259,6 +333,39 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
+		/// The test makes sure we validate service name.
+		/// </summary>
+		[Fact]
+		public void ReadInvalidServiceNameViaEnvironmentVariable()
+		{
+			var serviceName = "MyService123!";
+			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+
+			agent.Service.Name.Should().NotBe(serviceName);
+			agent.Service.Name.Should().MatchRegex("^[a-zA-Z0-9 _-]+$")
+				.And.Be("MyService123_");
+		}
+
+		/// <summary>
+		/// The test makes sure that unknown service name value fits to all constraints.
+		/// </summary>
+		[Fact]
+		public void UnknownServiceNameValueTest()
+		{
+			var serviceName = DefaultValues.UnknownServiceName;
+			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+
+			agent.Service.Name.Should().Be(serviceName);
+			agent.Service.Name.Should().MatchRegex("^[a-zA-Z0-9 _-]+$");
+		}
+
+		/// <summary>
 		/// In case the user does not provide us a service name we try to calculate it based on the callstack.
 		/// This test makes sure we recognize mscorlib and our own assemblies correctly in the
 		/// <see cref="AbstractConfigurationReader.IsMsOrElastic(byte[])" /> method.
@@ -277,8 +384,8 @@ namespace Elastic.Apm.Tests
 			AbstractConfigurationReader
 				.IsMsOrElastic(new[]
 				{
-					elasticToken[0], mscorlibToken[1], elasticToken[2],
-					mscorlibToken[3], elasticToken[4], mscorlibToken[5], elasticToken[6], mscorlibToken[7]
+					elasticToken[0], mscorlibToken[1], elasticToken[2], mscorlibToken[3], elasticToken[4], mscorlibToken[5], elasticToken[6],
+					mscorlibToken[7]
 				})
 				.Should()
 				.BeFalse();
@@ -302,7 +409,7 @@ namespace Elastic.Apm.Tests
 
 		[Fact]
 		public void SetMetricsIntervalTo10S()
-		 => MetricsIntervalTestCommon("10s").Should().Be(10 * 1000);
+			=> MetricsIntervalTestCommon("10s").Should().Be(10 * 1000);
 
 		/// <summary>
 		/// Sets the metrics interval to '500ms'
@@ -317,8 +424,8 @@ namespace Elastic.Apm.Tests
 			=> MetricsIntervalTestCommon("1500ms").Should().Be(1500);
 
 		[Fact]
-		public void SetMetricsIntervalTo1HourAs60minutes()
-			=> MetricsIntervalTestCommon("60m").Should().Be(60*60*1000);
+		public void SetMetricsIntervalTo1HourAs60Minutes()
+			=> MetricsIntervalTestCommon("60m").Should().Be(60 * 60 * 1000);
 
 		[Fact]
 		public void SetMetricsIntervalTo1HourUsingUnsupportedUnits()
@@ -356,18 +463,60 @@ namespace Elastic.Apm.Tests
 			=> MetricsIntervalTestCommon("-5ms").Should().Be(0);
 
 		/// <summary>
-		/// Make sure <see cref="DefaultValues.MetricsInterval" /> and <see cref="DefaultValues.MetricsIntervalInMilliseconds" /> are in sync
+		/// Make sure <see cref="DefaultValues.MetricsInterval" /> and <see cref="DefaultValues.MetricsIntervalInMilliseconds" />
+		/// are in sync
 		/// </summary>
 		[Fact]
 		public void MetricsIntervalDefaultValuesInSync()
 			=> MetricsIntervalTestCommon(DefaultValues.MetricsInterval).Should().Be(DefaultValues.MetricsIntervalInMilliseconds);
+
+		[Fact]
+		public void SpanFramesMinDurationDefaultValuesInSync()
+		{
+			Environment.SetEnvironmentVariable(EnvVarNames.MetricsInterval, DefaultValues.SpanFramesMinDuration);
+			var testLogger = new TestLogger();
+			var config = new EnvironmentConfigurationReader(testLogger);
+			config.SpanFramesMinDurationInMilliseconds.Should().Be(DefaultValues.SpanFramesMinDurationInMilliseconds);
+		}
+
+		[InlineData("2", 2)]
+		[InlineData("0", 0)]
+		[InlineData("-2", -2)]
+		[InlineData("2147483647", int.MaxValue)]
+		[InlineData("-2147483648", int.MinValue)]
+		[InlineData("2.32", DefaultValues.StackTraceLimit)]
+		[InlineData("2,32", DefaultValues.StackTraceLimit)]
+		[InlineData("asdf", DefaultValues.StackTraceLimit)]
+		[Theory]
+		public void StackTraceLimit(string configValue, int expectedValue)
+		{
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(configurationReader: new TestAgentConfigurationReader(stackTraceLimit: configValue))))
+				agent.ConfigurationReader.StackTraceLimit.Should().Be(expectedValue);
+		}
+
+		[InlineData("2ms", 2)]
+		[InlineData("2s", 2 * 1000)]
+		[InlineData("2m", 2 * 60 * 1000)]
+		[InlineData("2", 2)]
+		[InlineData("-2ms", -2)]
+		[InlineData("dsfkldfs", DefaultValues.SpanFramesMinDurationInMilliseconds)]
+		[InlineData("2,32", DefaultValues.SpanFramesMinDurationInMilliseconds)]
+		[Theory]
+		public void SpanFramesMinDurationInMilliseconds(string configValue, int expectedValue)
+		{
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					configurationReader: new TestAgentConfigurationReader(spanFramesMinDurationInMilliseconds: configValue))))
+				agent.ConfigurationReader.SpanFramesMinDurationInMilliseconds.Should().Be(expectedValue);
+		}
 
 		private static double MetricsIntervalTestCommon(string configValue)
 		{
 			Environment.SetEnvironmentVariable(EnvVarNames.MetricsInterval, configValue);
 			var testLogger = new TestLogger();
 			var config = new EnvironmentConfigurationReader(testLogger);
-			return config.MetricsIntervalInMillisecond;
+			return config.MetricsIntervalInMilliseconds;
 		}
 
 		public void Dispose()

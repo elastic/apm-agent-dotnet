@@ -4,15 +4,19 @@ using Newtonsoft.Json;
 
 namespace Elastic.Apm.Report.Serialization
 {
-	internal class TagsJsonConverter : JsonConverter<Dictionary<string, string>>
+	internal class LabelsJsonConverter : JsonConverter<Dictionary<string, string>>
 	{
-		public override void WriteJson(JsonWriter writer, Dictionary<string, string> tags, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, Dictionary<string, string> labels, JsonSerializer serializer)
 		{
 			writer.WriteStartObject();
-			foreach (var keyValue in tags)
+			foreach (var keyValue in labels)
 			{
 				writer.WritePropertyName(SerializationUtils.TrimToPropertyMaxLength(keyValue.Key));
-				writer.WriteValue(SerializationUtils.TrimToPropertyMaxLength(keyValue.Value));
+
+				if (keyValue.Value != null)
+					writer.WriteValue(SerializationUtils.TrimToPropertyMaxLength(keyValue.Value));
+				else
+					writer.WriteNull();
 			}
 			writer.WriteEndObject();
 		}

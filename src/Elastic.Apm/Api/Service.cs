@@ -14,7 +14,10 @@ namespace Elastic.Apm.Api
 		public AgentC Agent { get; set; }
 		public Framework Framework { get; set; }
 		public Language Language { get; set; }
+
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
+
 		public Runtime Runtime { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(Service))
