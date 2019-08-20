@@ -95,7 +95,7 @@ namespace Elastic.Apm.Config
 
 			if (list.Count > 1)
 				Logger?.Warning()
-					?.Log(nameof(ConfigConsts.EnvVarNames.ServerUrls)
+					?.Log(nameof(EnvVarNames.ServerUrls)
 						+ " configuration option contains more than one URL which is not supported by the agent yet"
 						+ " - only the first URL will be used."
 						+ " Configuration option's source: {Origin}, key: `{Key}', value: `{Value}'."
@@ -106,8 +106,8 @@ namespace Elastic.Apm.Config
 
 			List<Uri> LogAndReturnDefault()
 			{
-				list.Add(ConfigConsts.DefaultValues.ServerUri);
-				Logger?.Debug()?.Log("Using default ServerUrl: {ServerUrl}", ConfigConsts.DefaultValues.ServerUri);
+				list.Add(DefaultValues.ServerUri);
+				Logger?.Debug()?.Log("Using default ServerUrl: {ServerUrl}", DefaultValues.ServerUri);
 				return list;
 			}
 
@@ -124,7 +124,7 @@ namespace Elastic.Apm.Config
 
 		protected double ParseMetricsInterval(ConfigurationKeyValue kv)
 		{
-			var value = kv == null || string.IsNullOrWhiteSpace(kv.Value) ? ConfigConsts.DefaultValues.MetricsInterval : kv.Value;
+			var value = kv == null || string.IsNullOrWhiteSpace(kv.Value) ? DefaultValues.MetricsInterval : kv.Value;
 
 			double valueInMilliseconds;
 
@@ -136,16 +136,16 @@ namespace Elastic.Apm.Config
 						?.Log("Failed to parse provided metrics interval `{ProvidedMetricsInterval}' - " +
 							"using default: {DefaultMetricsInterval}",
 							value,
-							ConfigConsts.DefaultValues.MetricsInterval);
-					return ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds;
+							DefaultValues.MetricsInterval);
+					return DefaultValues.MetricsIntervalInMilliseconds;
 				}
 			}
 			catch (ArgumentException e)
 			{
 				Logger?.Critical()
 					?.LogException(e, "Failed to parse metrics interval, using default: {DefaultMetricsInterval}",
-						ConfigConsts.DefaultValues.MetricsInterval);
-				return ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds;
+						DefaultValues.MetricsInterval);
+				return DefaultValues.MetricsIntervalInMilliseconds;
 			}
 
 			// ReSharper disable once CompareOfFloatsByEqualityOperator - we compare to exactly zero here
@@ -160,13 +160,13 @@ namespace Elastic.Apm.Config
 				return 0;
 			}
 
-			if (valueInMilliseconds < ConfigConsts.Constraints.MinMetricsIntervalInMilliseconds)
+			if (valueInMilliseconds < Constraints.MinMetricsIntervalInMilliseconds)
 			{
 				Logger?.Error()
 					?.Log("Provided metrics interval `{ProvidedMetricsInterval}' is smaller than allowed minimum: {MinProvidedMetricsInterval}ms - " +
 						"metrics collection will be disabled",
 						value,
-						ConfigConsts.Constraints.MinMetricsIntervalInMilliseconds);
+						Constraints.MinMetricsIntervalInMilliseconds);
 				return 0;
 			}
 
@@ -176,23 +176,23 @@ namespace Elastic.Apm.Config
 		protected int ParseStackTraceLimit(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
-				return ConfigConsts.DefaultValues.StackTraceLimit;
+				return DefaultValues.StackTraceLimit;
 
 			if (int.TryParse(kv.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result))
 				return result;
 
 			Logger?.Error()
 				?.Log("Failed to parse provided stack trace limit `{ProvidedStackTraceLimit}` - using default: {DefaultStackTraceLimit}",
-					kv.Value, ConfigConsts.DefaultValues.StackTraceLimit);
+					kv.Value, DefaultValues.StackTraceLimit);
 
-			return ConfigConsts.DefaultValues.StackTraceLimit;
+			return DefaultValues.StackTraceLimit;
 		}
 
 		protected double ParseSpanFramesMinDurationInMilliseconds(ConfigurationKeyValue kv)
 		{
 			string value;
 			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
-				value = ConfigConsts.DefaultValues.SpanFramesMinDuration;
+				value = DefaultValues.SpanFramesMinDuration;
 			else
 				value = kv.Value;
 
@@ -206,16 +206,16 @@ namespace Elastic.Apm.Config
 						?.Log("Failed to parse provided span frames minimum duration `{ProvidedSpanFramesMinDuration}' - " +
 							"using default: {DefaultSpanFramesMinDuration}",
 							value,
-							ConfigConsts.DefaultValues.SpanFramesMinDuration);
-					return ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;
+							DefaultValues.SpanFramesMinDuration);
+					return DefaultValues.SpanFramesMinDurationInMilliseconds;
 				}
 			}
 			catch (ArgumentException e)
 			{
 				Logger?.Critical()
 					?.LogException(e, "Failed to parse span frames minimum duration, using default: {DefaultSpanFramesMinDuration}",
-						ConfigConsts.DefaultValues.SpanFramesMinDuration);
-				return ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;
+						DefaultValues.SpanFramesMinDuration);
+				return DefaultValues.SpanFramesMinDurationInMilliseconds;
 			}
 
 			return valueInMilliseconds;
@@ -281,7 +281,7 @@ namespace Elastic.Apm.Config
 			if (stackFrames == null) return null;
 
 			return (from frame in stackFrames
-				select frame?.GetMethod()?.DeclaringType?.Assembly?.GetName()
+				select frame?.GetMethod()?.DeclaringType?.Assembly.GetName()
 				into currentAssemblyName
 				where currentAssemblyName != null && !IsMsOrElastic(currentAssemblyName.GetPublicKeyToken())
 				select currentAssemblyName.Name).FirstOrDefault();
@@ -323,8 +323,8 @@ namespace Elastic.Apm.Config
 			Logger?.Error()
 				?.Log("Failed to discover service name, the service name will be '{DefaultServiceName}'." +
 					" You can fix this by setting the service name to a specific value (e.g. by using the environment variable {ServiceNameVariable})",
-					ConfigConsts.DefaultValues.UnknownServiceName, ConfigConsts.EnvVarNames.ServiceName);
-			return ConfigConsts.DefaultValues.UnknownServiceName;
+					DefaultValues.UnknownServiceName, EnvVarNames.ServiceName);
+			return DefaultValues.UnknownServiceName;
 		}
 
 		private static bool TryParseFloatingPoint(string valueAsString, out double result) =>
@@ -336,8 +336,8 @@ namespace Elastic.Apm.Config
 			{
 				Logger?.Debug()
 					?.Log("No transaction sample rate provided. Defaulting to '{DefaultTransactionSampleRate}'",
-						ConfigConsts.DefaultValues.TransactionSampleRate);
-				return ConfigConsts.DefaultValues.TransactionSampleRate;
+						DefaultValues.TransactionSampleRate);
+				return DefaultValues.TransactionSampleRate;
 			}
 
 			if (!TryParseFloatingPoint(kv.Value, out var parsedValue))
@@ -346,8 +346,8 @@ namespace Elastic.Apm.Config
 					?.Log("Failed to parse provided transaction sample rate `{ProvidedTransactionSampleRate}' - " +
 						"using default: {DefaultTransactionSampleRate}",
 						kv.Value,
-						ConfigConsts.DefaultValues.TransactionSampleRate);
-				return ConfigConsts.DefaultValues.TransactionSampleRate;
+						DefaultValues.TransactionSampleRate);
+				return DefaultValues.TransactionSampleRate;
 			}
 
 			if (!Sampler.IsValidRate(parsedValue))
@@ -357,8 +357,8 @@ namespace Elastic.Apm.Config
 						"Provided transaction sample rate is invalid {ProvidedTransactionSampleRate} - " +
 						"using default: {DefaultTransactionSampleRate}",
 						parsedValue,
-						ConfigConsts.DefaultValues.TransactionSampleRate);
-				return ConfigConsts.DefaultValues.TransactionSampleRate;
+						DefaultValues.TransactionSampleRate);
+				return DefaultValues.TransactionSampleRate;
 			}
 
 			Logger?.Debug()
