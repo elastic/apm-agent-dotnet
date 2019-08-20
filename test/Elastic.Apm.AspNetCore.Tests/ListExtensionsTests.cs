@@ -1,10 +1,4 @@
-﻿using System;
-using System.IO;
-using Elastic.Apm.AspNetCore.Config;
-using Elastic.Apm.Logging;
-using Elastic.Apm.Tests.Mocks;
-using FluentAssertions;
-using Microsoft.AspNetCore.Mvc.Testing;
+﻿using FluentAssertions;
 using Elastic.Apm.AspNetCore.Extensions;
 using Xunit;
 using System.Collections.Generic;
