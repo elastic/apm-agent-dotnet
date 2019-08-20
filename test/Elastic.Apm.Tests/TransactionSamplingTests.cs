@@ -1,4 +1,3 @@
-using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;

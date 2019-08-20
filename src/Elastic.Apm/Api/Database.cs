@@ -1,3 +1,6 @@
+using Elastic.Apm.Report.Serialization;
+using Newtonsoft.Json;
+
 namespace Elastic.Apm.Api
 {
 	/// <summary>
@@ -7,7 +10,10 @@ namespace Elastic.Apm.Api
 	public class Database
 	{
 		public string Instance { get; set; }
+
+		[JsonConverter(typeof(TrimmedStringJsonConverter), 10_000)]
 		public string Statement { get; set; }
+
 		public string Type { get; set; }
 
 		public const string TypeSql = "sql";

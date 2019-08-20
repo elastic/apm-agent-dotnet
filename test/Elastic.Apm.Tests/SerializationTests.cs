@@ -16,6 +16,16 @@ namespace Elastic.Apm.Tests
 	/// </summary>
 	public class SerializationTests
 	{
+		// ReSharper disable once MemberCanBePrivate.Global
+		public static TheoryData SerializationUtilsTrimToPropertyMaxLengthVariantsToTest => new TheoryData<string, string>
+		{
+			{ "", "" },
+			{ "A", "A" },
+			{ "B".Repeat(Consts.PropertyMaxLength), "B".Repeat(Consts.PropertyMaxLength) },
+			{ "C".Repeat(Consts.PropertyMaxLength + 1), "C".Repeat(Consts.PropertyMaxLength - 3) + "..." },
+			{ "D".Repeat(Consts.PropertyMaxLength * 2), "D".Repeat(Consts.PropertyMaxLength - 3) + "..." }
+		};
+
 		/// <summary>
 		/// Tests the <see cref="TrimmedStringJsonConverter" />. It serializes a transaction with Transaction.Name.Length > 1024.
 		/// Makes sure that the Transaction.Name is truncated correctly.
@@ -25,9 +35,13 @@ namespace Elastic.Apm.Tests
 		{
 			var str = new string('a', 1200);
 
-			var transaction = new Transaction(new TestAgentComponents(), str, "test") { Duration = 1, Result = "fail" };
+			string json;
+			using (var agent = new ApmAgent(new TestAgentComponents()))
+			{
+				var transaction = new Transaction(agent, str, "test") { Duration = 1, Result = "fail" };
+				json = SerializePayloadItem(transaction);
+			}
 
-			var json = SerializePayloadItem(transaction);
 			var deserializedTransaction = JsonConvert.DeserializeObject(json) as JObject;
 
 			Assert.NotNull(deserializedTransaction);
@@ -62,25 +76,85 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Creates a <see cref="Context" /> that has <see cref="Context.Tags" />
+		/// Creates a <see cref="Context" /> that has <see cref="Context.Labels" />
 		/// with strings longer than <see cref="Consts.PropertyMaxLength" />.
 		/// Makes sure that the long string is trimmed.
 		/// </summary>
 		[Fact]
-		public void TagsTruncation()
+		public void LabelsTruncation()
 		{
 			var str = new string('a', 1200);
 
 			var context = new Context();
-			context.Tags["foo"] = str;
+			context.Labels["foo"] = str;
 
 			var json = SerializePayloadItem(context);
 			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
 
 			Assert.NotNull(deserializedContext);
 
-			Assert.Equal(Consts.PropertyMaxLength, deserializedContext["tags"].Value<JObject>()["foo"]?.Value<string>()?.Length);
-			Assert.Equal("...", deserializedContext["tags"].Value<JObject>()["foo"].Value<string>().Substring(1021, 3));
+			// In Intake API the property is still named `tags'
+			// See https://github.com/elastic/apm-server/blob/6.5/docs/spec/context.json#L43
+			const string intakeApiLabelsPropertyName = "tags";
+			Assert.Equal(Consts.PropertyMaxLength, deserializedContext[intakeApiLabelsPropertyName].Value<JObject>()["foo"]?.Value<string>()?.Length);
+			Assert.Equal("...", deserializedContext[intakeApiLabelsPropertyName].Value<JObject>()["foo"].Value<string>().Substring(1021, 3));
+		}
+
+		/// <summary>
+		/// Creates a <see cref="SpanContext" /> that has <see cref="SpanContext.Labels" />
+		/// with strings longer than <see cref="Consts.PropertyMaxLength" />.
+		/// Makes sure that the long string is trimmed.
+		/// </summary>
+		[Fact]
+		public void LabelsTruncationSpanContext()
+		{
+			var str = new string('a', 1200);
+
+			var context = new SpanContext();
+			context.Labels["foo"] = str;
+
+			var json = SerializePayloadItem(context);
+			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
+
+			Assert.NotNull(deserializedContext);
+
+			// In Intake API the property is still named `tags'
+			// See https://github.com/elastic/apm-server/blob/6.5/docs/spec/spans/common_span.json#L50
+			const string intakeApiLabelsPropertyName = "tags";
+			Assert.Equal(Consts.PropertyMaxLength, deserializedContext[intakeApiLabelsPropertyName].Value<JObject>()["foo"]?.Value<string>()?.Length);
+			Assert.Equal("...", deserializedContext[intakeApiLabelsPropertyName].Value<JObject>()["foo"].Value<string>().Substring(1021, 3));
+		}
+
+		/// <summary>
+		/// Makes sure that labels with `null` don't cause exception during serialization
+		/// </summary>
+		[Fact]
+		public void LabelWithNullValueShouldBeCaptured()
+		{
+			var context = new SpanContext();
+			context.Labels["foo"] = null;
+
+			var json = SerializePayloadItem(context);
+			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
+
+			Assert.NotNull(deserializedContext);
+			deserializedContext["tags"]["foo"].Value<string>().Should().BeNull();
+		}
+
+		/// <summary>
+		/// Makes sure that labels with an empty string are captured and not causing any trouble
+		/// </summary>
+		[Fact]
+		public void LabelWithEmptyStringShouldBeCaptured()
+		{
+			var context = new SpanContext();
+			context.Labels["foo"] = string.Empty;
+
+			var json = SerializePayloadItem(context);
+			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
+
+			Assert.NotNull(deserializedContext);
+			deserializedContext["tags"]["foo"].Value<string>().Should().BeEmpty();
 		}
 
 		/// <summary>
@@ -107,13 +181,13 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Creates a db instance with a statement that is longer than <see cref="Consts.PropertyMaxLength" />.
-		/// Makes sure the statement is not truncated.
+		/// Creates a db instance with a statement that is longer than 10 000 characters.
+		/// Makes sure the statement is truncated.
 		/// </summary>
 		[Fact]
 		public void DbStatementLengthTest()
 		{
-			var str = new string('a', 1200);
+			var str = new string('a', 12000);
 			var db = new Database { Statement = str };
 
 			var json = SerializePayloadItem(db);
@@ -121,8 +195,28 @@ namespace Elastic.Apm.Tests
 
 			Assert.NotNull(deserializedDb);
 
-			Assert.Equal(str.Length, deserializedDb.Statement.Length);
-			Assert.Equal(str, deserializedDb.Statement);
+			Assert.Equal(10_000, deserializedDb.Statement.Length);
+			Assert.Equal("...", deserializedDb.Statement.Substring(10_000 - 3, 3));
+		}
+
+		/// <summary>
+		/// Creates a service instance with a name that is longer than <see cref="Consts.PropertyMaxLength" />.
+		/// Makes sure the name is truncated.
+		/// </summary>
+		[Fact]
+		public void ServiceNameLengthTest()
+		{
+			var logger = new NoopLogger();
+			var service = Service.GetDefaultService(new TestAgentConfigurationReader(logger), logger);
+			service.Name = new string('a', 1200);
+
+			var json = SerializePayloadItem(service);
+			var deserializedService = JsonConvert.DeserializeObject<Service>(json);
+
+			Assert.NotNull(deserializedService);
+
+			Assert.Equal(Consts.PropertyMaxLength, deserializedService.Name.Length);
+			Assert.Equal("...", deserializedService.Name.Substring(Consts.PropertyMaxLength - 3, 3));
 		}
 
 		/// <summary>
@@ -133,17 +227,14 @@ namespace Elastic.Apm.Tests
 		{
 			var agent = new TestAgentComponents();
 			// Create a transaction that is sampled (because the sampler is constant sampling-everything sampler
-			var sampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(1.0), null, agent.PayloadSender);
-			sampledTransaction.Context.Request = new Request("GET", new Url
-			{
-				Full = "https://elastic.co",
-				Raw = "https://elastic.co",
-				HostName = "elastic.co",
-				Protocol = "HTTP"
-			});
+			var sampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(1.0), /* distributedTracingData: */ null,
+				agent.PayloadSender, new TestAgentConfigurationReader(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer);
+			sampledTransaction.Context.Request = new Request("GET",
+				new Url { Full = "https://elastic.co", Raw = "https://elastic.co", HostName = "elastic.co", Protocol = "HTTP" });
 
 			// Create a transaction that is not sampled (because the sampler is constant not-sampling-anything sampler
-			var nonSampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(0.0), null, agent.PayloadSender);
+			var nonSampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(0.0), /* distributedTracingData: */ null,
+				agent.PayloadSender, new TestAgentConfigurationReader(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer);
 			nonSampledTransaction.Context.Request = sampledTransaction.Context.Request;
 
 			var serializedSampledTransaction = SerializePayloadItem(sampledTransaction);
@@ -151,11 +242,14 @@ namespace Elastic.Apm.Tests
 			var serializedNonSampledTransaction = SerializePayloadItem(nonSampledTransaction);
 			var deserializedNonSampledTransaction = JsonConvert.DeserializeObject(serializedNonSampledTransaction) as JObject;
 
+			// ReSharper disable once PossibleNullReferenceException
 			deserializedSampledTransaction["sampled"].Value<bool>().Should().BeTrue();
 			deserializedSampledTransaction["context"].Value<JObject>()["request"].Value<JObject>()["url"].Value<JObject>()["full"]
+				.Value<string>()
 				.Should()
-				.Equals("https://elastic.co");
+				.Be("https://elastic.co");
 
+			// ReSharper disable once PossibleNullReferenceException
 			deserializedNonSampledTransaction["sampled"].Value<bool>().Should().BeFalse();
 			deserializedNonSampledTransaction.Should().NotContainKey("context");
 		}
@@ -181,15 +275,6 @@ namespace Elastic.Apm.Tests
 		[InlineData("ABCDEFGH", 7, "ABCD...")]
 		public void SerializationUtilsTrimToLengthTests(string original, int maxLength, string expectedTrimmed) =>
 			SerializationUtils.TrimToLength(original, maxLength).Should().Be(expectedTrimmed);
-
-		public static IEnumerable<object[]> SerializationUtilsTrimToPropertyMaxLengthVariantsToTest()
-		{
-			yield return new object[] { "", "" };
-			yield return new object[] { "A", "A" };
-			yield return new object[] { "B".Repeat(Consts.PropertyMaxLength), "B".Repeat(Consts.PropertyMaxLength) };
-			yield return new object[] { "C".Repeat(Consts.PropertyMaxLength + 1), "C".Repeat(Consts.PropertyMaxLength-3) + "..." };
-			yield return new object[] { "D".Repeat(Consts.PropertyMaxLength * 2), "D".Repeat(Consts.PropertyMaxLength-3) + "..." };
-		}
 
 		[Theory]
 		[MemberData(nameof(SerializationUtilsTrimToPropertyMaxLengthVariantsToTest))]
