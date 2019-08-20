@@ -156,14 +156,12 @@ namespace Elastic.Apm.Tests
 			listener.OnNext(new KeyValuePair<string, object>(StopEventKey(listener), new { Request = request, Response = response }));
 
 			logger.Lines.Should().NotBeEmpty();
-			logger.Lines[0]
+			logger.Lines
 				.Should()
-				.ContainAll(
-					"HttpDiagnosticListener",
-					"Failed capturing request",
-					HttpMethod.Get.Method,
-					request.RequestUri.AbsoluteUri
-				);
+				.Contain(
+					line => line.Contains("HttpDiagnosticListener") && line.Contains("Failed capturing request")
+						&& line.Contains(HttpMethod.Get.Method)
+						&& line.Contains(request.RequestUri.AbsoluteUri));
 			payloadSender.Transactions.Should().NotBeNull();
 			payloadSender.Spans.Should().ContainSingle();
 		}
