@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
-using SampleAspNetCoreApp;
 using Xunit;
 
 namespace Elastic.Apm.AspNetCore.Tests
@@ -28,15 +23,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public void ReadValidConfigsFromAppSettingsJson()
 		{
-			var config = new ApplicationConfigurationReader(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
-				new TestLogger());
+			var config = new ApplicationConfigurationReader(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"), new TestLogger());
 			config.LogLevel.Should().Be(LogLevel.Debug);
 			config.ServerUrls[0].Should().Be(new Uri("http://myServerFromTheConfigFile:8080"));
 			config.ServiceName.Should().Be("My_Test_Application");
 			config.CaptureHeaders.Should().Be(false);
 			config.TransactionSampleRate.Should().Be(0.456);
 			config.CaptureBody.Should().Be(ConfigConsts.SupportedValues.CaptureBodyAll);
-			var supportedContentTypes = new List<string>() { "application/x-www-form-urlencoded*", "text/*", "application/json*", "application/xml*" };
+			var supportedContentTypes = new[] { "application/x-www-form-urlencoded*", "text/*", "application/json*", "application/xml*" };
 			config.CaptureBodyContentTypes.Should().BeEquivalentTo(supportedContentTypes);
 		}
 
@@ -51,18 +45,15 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var config = new ApplicationConfigurationReader(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger);
 			config.LogLevel.Should().Be(LogLevel.Error);
 			logger.Lines.Should().NotBeEmpty();
-			logger.Lines[0].Should()
-				.ContainAll(
-					$"{{{nameof(ApplicationConfigurationReader)}}}",
-					"Failed parsing log level from",
-					ApplicationConfigurationReader.Origin,
-					ApplicationConfigurationReader.Keys.LogLevel,
-					"Defaulting to "
-				);
+			logger.Lines.Single().Should().ContainAll(
+				$"{{{nameof(ApplicationConfigurationReader)}}}",
+				"Failed parsing log level from",
+				ApplicationConfigurationReader.Origin,
+				ApplicationConfigurationReader.Keys.LogLevel,
+				"Defaulting to ");
 
-			config.CaptureHeaders.Should().Be(true);
-
-			config.TransactionSampleRate.Should().Be(1.0);
+			config.CaptureHeaders.Should().BeTrue();
+			config.TransactionSampleRate.Should().Be(1d);
 		}
 
 		/// <summary>
@@ -77,7 +68,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.LogLevel.Should().Be(LogLevel.Error);
 
 			logger.Lines.Should().NotBeEmpty();
-			logger.Lines[0].Should()
+			logger.Lines.Single().Should()
 				.ContainAll(
 					$"{{{nameof(ApplicationConfigurationReader)}}}",
 					"Failed parsing log level from",
@@ -93,24 +84,22 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// This test makes sure that configs are applied to the agent when those are stored in env vars.
 		/// </summary>
 		[Fact]
-		public void ReadConfingsFromEnvVarsViaIConfig()
+		public void ReadConfigsFromEnvVarsViaIConfig()
 		{
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.LogLevel, "Debug");
-			var serverUrl = "http://myServerFromEnvVar.com:1234";
+			const string serverUrl = "http://myServerFromEnvVar.com:1234";
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServerUrls, serverUrl);
-			var serviceName = "MyServiceName123";
+			const string serviceName = "MyServiceName123";
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceName, serviceName);
-			var secretToken = "SecretToken";
+			const string secretToken = "SecretToken";
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.SecretToken, secretToken);
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.CaptureHeaders, false.ToString());
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate, "0.123");
-			var configBuilder = new ConfigurationBuilder()
-				.AddEnvironmentVariables()
-				.Build();
+			var configBuilder = new ConfigurationBuilder().AddEnvironmentVariables().Build();
 
 			var config = new ApplicationConfigurationReader(configBuilder, new TestLogger());
 			config.LogLevel.Should().Be(LogLevel.Debug);
-			config.ServerUrls[0].Should().Be(new Uri(serverUrl));
+			config.ServerUrls.Single().Should().Be(new Uri(serverUrl));
 			config.ServiceName.Should().Be(serviceName);
 			config.SecretToken.Should().Be(secretToken);
 			config.CaptureHeaders.Should().Be(false);
@@ -118,70 +107,17 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		/// <summary>
-		/// Makes sure that <see cref="ApplicationConfigurationReader" />  logs
-		/// in case it reads an invalid URL.
+		/// Makes sure that <see cref="ApplicationConfigurationReader" /> logs in case it reads an invalid URL.
 		/// </summary>
 		[Fact]
 		public void LoggerNotNull()
 		{
 			var testLogger = new TestLogger();
 			var config = new ApplicationConfigurationReader(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), testLogger);
-			var serverUrl = config.ServerUrls.FirstOrDefault();
-			serverUrl.Should().NotBeNull();
+			config.ServerUrls.FirstOrDefault().Should().NotBeNull();
 			testLogger.Lines.Should().NotBeEmpty();
 		}
 
-		internal static IConfiguration GetConfig(string path)
-			=> new ConfigurationBuilder()
-				.AddJsonFile(path)
-				.Build();
-	}
-
-	/// <summary>
-	/// Tests that use a real ASP.NET Core application.
-	/// </summary>
-	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
-	public class ApplicationConfigurationReaderIntegrationTests
-		: IClassFixture<WebApplicationFactory<Startup>>, IDisposable
-	{
-		public ApplicationConfigurationReaderIntegrationTests(WebApplicationFactory<Startup> factory)
-		{
-			_factory = factory;
-			_logger = new TestLogger();
-			var capturedPayload = new MockPayloadSender();
-
-			var config = new ApplicationConfigurationReader(
-				ApplicationConfigurationReaderTests.GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), _logger);
-
-			_agent = new ApmAgent(
-				new AgentComponents(payloadSender: capturedPayload, configurationReader: config, logger: _logger));
-			_client = Helper.GetClient(_agent, _factory);
-		}
-
-		private readonly ApmAgent _agent;
-		private readonly HttpClient _client;
-		private readonly WebApplicationFactory<Startup> _factory;
-		private readonly TestLogger _logger;
-
-		/// <summary>
-		/// Starts the app with an invalid config and
-		/// makes sure the agent logs that the url was invalid.
-		/// </summary>
-		[Fact]
-		public async Task InvalidUrlTest()
-		{
-			var response = await _client.GetAsync("/Home/Index");
-			response.IsSuccessStatusCode.Should().BeTrue();
-
-			_logger.Lines.Should().NotBeEmpty()
-				.And.Contain(n => n.Contains("Failed parsing server URL from"));
-		}
-
-		public void Dispose()
-		{
-			_factory?.Dispose();
-			_agent?.Dispose();
-			_client?.Dispose();
-		}
+		internal static IConfiguration GetConfig(string path) => new ConfigurationBuilder().AddJsonFile(path).Build();
 	}
 }
