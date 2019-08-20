@@ -25,7 +25,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			var config = new ApplicationConfigurationReader(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"), new TestLogger());
 			config.LogLevel.Should().Be(LogLevel.Debug);
-			config.ServerUrls[0].Should().Be(new Uri("http://myServerFromTheConfigFile:8080"));
+			config.ServerUrls.Single().Should().Be(new Uri("http://myServerFromTheConfigFile:8080"));
 			config.ServiceName.Should().Be("My_Test_Application");
 			config.CaptureHeaders.Should().Be(false);
 			config.TransactionSampleRate.Should().Be(0.456);
