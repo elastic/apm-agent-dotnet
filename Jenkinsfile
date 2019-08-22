@@ -368,9 +368,7 @@ pipeline {
   }
   post {
     cleanup {
-      node('linux && immutable') {
-        notifyBuildResult()
-      }
+      notifyBuildResult()
     }
   }
 }
