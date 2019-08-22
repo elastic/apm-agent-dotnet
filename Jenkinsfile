@@ -3,7 +3,7 @@
 @Library('apm@current') _
 
 pipeline {
-  agent { label 'immutable' }
+  agent none
   environment {
     REPO = 'apm-agent-dotnet'
     // keep it short to avoid the 248 characters PATH limit in Windows
@@ -368,7 +368,9 @@ pipeline {
   }
   post {
     cleanup {
-      notifyBuildResult()
+      node('linux && immutable') {
+        notifyBuildResult()
+      }
     }
   }
 }
