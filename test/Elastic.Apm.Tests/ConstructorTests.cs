@@ -15,6 +15,7 @@ namespace Elastic.Apm.Tests
 			public LogLevel LogLevel { get; }
 			public IReadOnlyList<Uri> ServerUrls => new List<Uri> { ConfigConsts.DefaultValues.ServerUri };
 			public string ServiceName { get; }
+			public string ServiceVersion { get; }
 			public string SecretToken { get; }
 			public bool CaptureHeaders { get; }
 			public double TransactionSampleRate { get; }
