@@ -355,7 +355,7 @@ namespace Elastic.Apm.Config
 		{
 			var entryAssembly = Assembly.GetEntryAssembly();
 			if (entryAssembly != null && !IsMsOrElastic(entryAssembly.GetName().GetPublicKeyToken()))
-				return entryAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+				return entryAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
 			return null;
 		}
