@@ -50,6 +50,7 @@ pipeline {
             script {
               gitBaseCommit = env.GIT_BASE_COMMIT
             }
+            sh 'env | sort'
           }
         }
         stage('Parallel'){
