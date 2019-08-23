@@ -19,7 +19,7 @@ namespace Elastic.Apm.DiagnosticListeners
 		where TResponse : class
 	{
 		private const string EventExceptionPropertyName = "Exception";
-		private const string EventRequestPropertyName = "Request";
+		protected const string EventRequestPropertyName = "Request";
 		private const string EventResponsePropertyName = "Response";
 
 		/// <summary>
@@ -28,7 +28,7 @@ namespace Elastic.Apm.DiagnosticListeners
 		internal readonly ConcurrentDictionary<TRequest, ISpan> ProcessingRequests = new ConcurrentDictionary<TRequest, ISpan>();
 
 		private readonly IApmAgent _agent;
-		private readonly ScopedLogger _logger;
+		protected readonly ScopedLogger _logger;
 
 		protected HttpDiagnosticListenerImplBase(IApmAgent agent)
 		{
@@ -181,10 +181,16 @@ namespace Elastic.Apm.DiagnosticListeners
 			span.End();
 		}
 
-		private void ProcessExceptionEvent(object eventValue, Uri requestUrl)
+		protected virtual void ProcessExceptionEvent(object eventValue, Uri requestUrl)
 		{
 			_logger.Trace()?.Log("Processing exception event... Request URL: {RequestUrl}", requestUrl);
-			var exception = eventValue.GetType().GetTypeInfo().GetDeclaredProperty(EventExceptionPropertyName).GetValue(eventValue) as Exception;
+
+			if (!(eventValue.GetType().GetTypeInfo().GetDeclaredProperty(EventExceptionPropertyName)?.GetValue(eventValue) is Exception exception))
+			{
+				_logger.Trace()?.Log("Failed reading exception property");
+				return;
+			}
+
 			var transaction = _agent.Tracer.CurrentTransaction;
 
 			transaction?.CaptureException(exception, "Failed outgoing HTTP request");
