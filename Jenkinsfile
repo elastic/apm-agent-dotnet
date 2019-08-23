@@ -3,7 +3,7 @@
 @Library('apm@current') _
 
 pipeline {
-  agent any
+  agent none
   environment {
     REPO = 'apm-agent-dotnet'
     // keep it short to avoid the 248 characters PATH limit in Windows
