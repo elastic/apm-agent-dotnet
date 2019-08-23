@@ -1,6 +1,13 @@
 #!/usr/bin/env groovy
-
 @Library('apm@current') _
+
+import groovy.transform.Field
+
+/**
+This is the git commit sha which it's required to be used in different stages.
+It does store the env GIT_BASE_COMMIT
+*/
+@Field def gitBaseCommit
 
 pipeline {
   agent none
@@ -40,6 +47,9 @@ pipeline {
             deleteDir()
             gitCheckout(basedir: "${BASE_DIR}", githubNotifyFirstTimeContributor: true)
             stash allowEmpty: true, name: 'source', useDefaultExcludes: false
+            script {
+              gitBaseCommit = env.GIT_BASE_COMMIT
+            }
           }
         }
         stage('Parallel'){
@@ -356,10 +366,10 @@ pipeline {
               // TODO: use commit rather than branch to be reproducible.
               build(job: env.ITS_PIPELINE, propagate: false, wait: false,
                     parameters: [string(name: 'AGENT_INTEGRATION_TEST', value: '.NET'),
-                                 string(name: 'BUILD_OPTS', value: "--dotnet-agent-version ${env.GIT_BASE_COMMIT}"),
+                                 string(name: 'BUILD_OPTS', value: "--dotnet-agent-version ${gitBaseCommit}"),
                                  string(name: 'GITHUB_CHECK_NAME', value: env.GITHUB_CHECK_ITS_NAME),
                                  string(name: 'GITHUB_CHECK_REPO', value: env.REPO),
-                                 string(name: 'GITHUB_CHECK_SHA1', value: env.GIT_BASE_COMMIT)])
+                                 string(name: 'GITHUB_CHECK_SHA1', value: gitBaseCommit)])
               githubNotify(context: "${env.GITHUB_CHECK_ITS_NAME}", description: "${env.GITHUB_CHECK_ITS_NAME} ...", status: 'PENDING', targetUrl: "${env.JENKINS_URL}search/?q=${env.ITS_PIPELINE.replaceAll('/','+')}")
             }
           }
