@@ -82,6 +82,22 @@ namespace Elastic.Apm.Tests
 				);
 		}
 
+		[Fact]
+		public void LogOnInitializationFailedEvent()
+		{
+			var logger = new TestLogger();
+			var agent = new ApmAgent(new TestAgentComponents(logger));
+			var listener = new HttpDiagnosticListenerFullFrameworkImpl(agent);
+
+			const string exceptionMessage = "Oops, this went wrong";
+			listener.OnNext(new KeyValuePair<string, object>(HttpDiagnosticListenerFullFrameworkImpl.InitializationFailedEventKey,
+				new { Exception = new Exception(exceptionMessage) }));
+
+			logger.Lines.Should().Contain(line => line.Contains("HttpDiagnosticListener"));
+			logger.Lines.Should().Contain(line => line.Contains(HttpDiagnosticListenerFullFrameworkImpl.InitializationFailedEventKey));
+			logger.Lines.Should().Contain(line => line.Contains(exceptionMessage));
+		}
+
 		/// <summary>
 		/// Builds an HttpRequestMessage and calls HttpDiagnosticListener.OnNext directly with it.
 		/// Makes sure that the processingRequests dictionary captures the ongoing transaction.
