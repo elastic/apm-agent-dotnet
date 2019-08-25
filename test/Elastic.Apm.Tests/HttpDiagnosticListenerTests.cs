@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -645,6 +647,47 @@ namespace Elastic.Apm.Tests
 				mockPayloadSender.FirstTransaction.Should().NotBeNull();
 				mockPayloadSender.SpansOnFirstTransaction.Should().BeEmpty();
 			}
+		}
+
+		private const string DummyExceptionMessage = "Dummy exception message";
+
+		private class ThrowingFullFrameworkImpl : HttpDiagnosticListenerFullFrameworkImpl
+		{
+			internal ThrowingFullFrameworkImpl(IApmAgent agent): base(agent) {}
+
+			protected override bool DispatchEventProcessing(KeyValuePair<string, object> _)
+			{
+				throw new Exception(DummyExceptionMessage);
+			}
+		}
+
+		private class ThrowingCoreImpl : HttpDiagnosticListenerCoreImpl
+		{
+			internal ThrowingCoreImpl(IApmAgent agent): base(agent) {}
+
+			protected override bool DispatchEventProcessing(KeyValuePair<string, object> _)
+			{
+				throw new Exception(DummyExceptionMessage);
+			}
+		}
+
+		[Theory]
+		[InlineData(typeof(ThrowingFullFrameworkImpl))]
+		[InlineData(typeof(ThrowingCoreImpl))]
+		public void NoExceptionEscapesFromOnNext(Type throwingImplType)
+		{
+			var logger = new TestLogger();
+			var agent = new ApmAgent(new TestAgentComponents(logger));
+			var args = new object[] { agent };
+			var listener = (HttpDiagnosticListenerImplBase)Activator.CreateInstance(throwingImplType,
+				BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.CreateInstance, (Binder)null, args,
+				(CultureInfo)null );
+
+			listener.OnNext(new KeyValuePair<string, object>("dummy event key", new { Value = "dummy event value"}));
+
+			logger.Lines.Should().Contain(line => line.Contains("HttpDiagnosticListener"));
+			logger.Lines.Should().Contain(line => line.Contains("OnNext"));
+			logger.Lines.Should().Contain(line => line.Contains(DummyExceptionMessage));
 		}
 
 		internal static (IDisposable, MockPayloadSender, ApmAgent) RegisterListenerAndStartTransaction()
