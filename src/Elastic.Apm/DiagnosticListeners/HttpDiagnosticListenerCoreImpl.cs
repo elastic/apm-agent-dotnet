@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.DiagnosticListeners
@@ -101,6 +102,11 @@ namespace Elastic.Apm.DiagnosticListeners
 
 			public void AddRequestHeader(string headerName, string headerValue) =>
 				_request.Headers.Add(headerName, headerValue);
+
+			public override string ToString() => new ToStringBuilder($"{nameof(HttpDiagnosticListenerCoreImpl)}.{nameof(EventData)}")
+			{
+				{ "Event key/value", EventKeyValue }
+			}.ToString();
 		}
 	}
 }

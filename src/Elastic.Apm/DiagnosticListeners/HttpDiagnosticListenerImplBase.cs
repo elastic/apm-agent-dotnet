@@ -63,13 +63,13 @@ namespace Elastic.Apm.DiagnosticListeners
 			}
 			catch (Exception ex)
 			{
-				_logger.Error()?.LogException(ex, "Processing of event passed to OnNext failed. Event: {DiagnosticEvent}", kv.Key);
+				_logger.Error()?.LogException(ex, "Processing of event passed to OnNext failed. Event: {DiagnosticEvent}", kv);
 			}
 		}
 
 		private void OnNextImpl(KeyValuePair<string, object> kv)
 		{
-			_logger.Trace()?.Log("Called with key: `{DiagnosticEventKey}', value: {DiagnosticEventValue}", kv.Key, kv.Value);
+			_logger.Trace()?.Log(nameof(OnNext) + " called with event: {DiagnosticEvent}", kv);
 
 			if (string.IsNullOrEmpty(kv.Key))
 			{
@@ -95,22 +95,29 @@ namespace Elastic.Apm.DiagnosticListeners
 				if (propertyInfo == null)
 				{
 					throw new FailedToExtractPropertyException("Event's value type doesn't have expected property." +
-						$" Expected property name: `{propertyName}' Event: {kv}");
+						$" Expected property name: `{propertyName}'. " +
+						$" Event key: `{kv.Key}'. " +
+						$" Event value: {kv.Value}." +
+						$" Event value type: {kv.Value.GetType()}.");
 				}
 
 				var propertyObject = propertyInfo.GetValue(kv.Value);
 
-				if (!typeof(TProperty).IsAssignableFrom(propertyInfo.PropertyType))
+				try
 				{
-					throw new FailedToExtractPropertyException("Actual type of property value in doesn't match the expected type." +
-						$" Expected type: {typeof(TProperty).FullName}." +
-						$" Actual type: {propertyObject?.GetType().FullName}." +
+					return (TProperty)propertyObject;
+				}
+				catch (Exception ex)
+				{
+					throw new FailedToExtractPropertyException("Failed to cast property value to expected type." +
+						$" Expected property type: {typeof(TProperty)}." +
+						$" Declared property type: {propertyInfo.PropertyType}." +
+						$" Property value type: {propertyObject?.GetType()}." +
 						$" Property name: {propertyName}." +
 						$" Property value: {propertyObject}." +
-						$" Event: {kv}.");
+						$" Event: {kv}.",
+						ex);
 				}
-
-				return (TProperty)propertyObject;
 			}
 			catch (FailedToExtractPropertyException)
 			{
@@ -160,7 +167,7 @@ namespace Elastic.Apm.DiagnosticListeners
 			if (!ProcessingRequests.TryAdd(eventData.Request, span))
 			{
 				// Consider improving error reporting - see https://github.com/elastic/apm-agent-dotnet/issues/280
-				_logger.Error()?.Log("Failed to add to ProcessingRequests - ???");
+				_logger.Error()?.Log("Failed to add to ProcessingRequests. Event data: {DiagnosticEventData}", eventData);
 				return;
 			}
 
@@ -188,7 +195,20 @@ namespace Elastic.Apm.DiagnosticListeners
 
 			// if span.Context.Http == null that means the transaction is not sampled (see ProcessStartEvent)
 			// and thus we don't need to capture spans' context
-			if (span.Context.Http != null) span.Context.Http.StatusCode = eventData.StatusCode;
+			if (span.Context.Http != null)
+			{
+				try
+				{
+					span.Context.Http.StatusCode = eventData.StatusCode;
+				}
+				catch (Exception ex)
+				{
+					_logger.Warning()
+						?.LogException(ex, "Failed to extract HTTP status code from event payload - " +
+							" setting span's HTTP status code to null." +
+							" Event data: {DiagnosticEventData}", eventData);
+				}
+			}
 
 			span.End();
 		}
@@ -200,7 +220,7 @@ namespace Elastic.Apm.DiagnosticListeners
 		/// <param name="requestUri">Request URI. It cannot be null</param>
 		protected bool IsRequestFilteredOut(Uri requestUri) => Agent.ConfigurationReader.ServerUrls.Any(n => n.IsBaseOf(requestUri));
 
-		protected class FailedToExtractPropertyException : Exception
+		internal class FailedToExtractPropertyException : Exception
 		{
 			internal FailedToExtractPropertyException(string message) : base(message) { }
 

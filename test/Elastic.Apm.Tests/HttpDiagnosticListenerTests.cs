@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,58 +17,74 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
-using FluentAssertions.Execution;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
 	public class HttpDiagnosticListenerTests
 	{
-		private static TResult DispatchToImpl<TResult>(
-			IDiagnosticListener listener,
-			Func<HttpDiagnosticListenerCoreImpl, TResult> coreImplFunc,
-			Func<HttpDiagnosticListenerFullFrameworkImpl, TResult> fullFrameworkImplFunc
-		)
+		private const string DummyExceptionMessage = "Dummy exception message";
+		private readonly IApmLogger _logger;
+
+		public HttpDiagnosticListenerTests(ITestOutputHelper xUnitOutputHelper) =>
+			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(HttpDiagnosticListenerTests));
+
+		internal abstract class SimulationHelper
 		{
-			switch (listener)
-			{
-				case HttpDiagnosticListenerCoreImpl impl:
-					return coreImplFunc(impl);
-				case HttpDiagnosticListenerFullFrameworkImpl impl:
-					return fullFrameworkImplFunc(impl);
-				default:
-					throw new AssertionFailedException($"Unrecognized {nameof(HttpDiagnosticListener)} implementation - {listener.GetType()}");
-			}
-		}
+			internal abstract IDiagnosticListener CreateListener(IApmAgent agent);
 
-		private static string StartEventKey(IDiagnosticListener listener) =>
-			DispatchToImpl(listener, impl => HttpDiagnosticListenerCoreImpl.StartEventKey,
-				impl => HttpDiagnosticListenerFullFrameworkImpl.StartEventKey);
-
-		private static string StopEventKey(IDiagnosticListener listener) =>
-			DispatchToImpl(listener, impl => HttpDiagnosticListenerCoreImpl.StopEventKey,
-				impl => HttpDiagnosticListenerFullFrameworkImpl.StopEventKey);
-
-		private static int ProcessingRequestsCount(IDiagnosticListener listener) =>
-			DispatchToImpl(listener, impl => impl.ProcessingRequests.Count, impl => impl.ProcessingRequests.Count);
-
-		private static ISpan GetSpanForRequest(IDiagnosticListener listener, object request) =>
-			DispatchToImpl(
-				listener,
-				impl => impl.ProcessingRequests[(HttpRequestMessage)request],
-				impl => impl.ProcessingRequests[(HttpWebRequest)request]
+			internal abstract KeyValuePair<string, object> CreateStartEvent(HttpMethod method, Uri url, out object request,
+				bool castPropertiesToObject = false
 			);
 
+			internal abstract KeyValuePair<string, object> CreateStartEventWithPayload(object payload);
+
+			internal abstract KeyValuePair<string, object> CreateStopEvent(object request, HttpStatusCode statusCode,
+				bool castPropertiesToObject = false
+			);
+
+			internal abstract KeyValuePair<string, object> CreateStopEventWithNullResponse<TRequest>(TRequest request,
+				bool castPropertiesToObject = false
+			);
+
+			internal abstract KeyValuePair<string, object> CreateStopEventWithPayload(object payload);
+
+			internal int ProcessingRequestsCount(IDiagnosticListener listener) =>
+				((HttpDiagnosticListenerImplBase)listener).ProcessingRequests.Count;
+
+			internal ISpan GetSpanForRequest(IDiagnosticListener listener, object request) =>
+				((HttpDiagnosticListenerImplBase)listener).ProcessingRequests[request];
+
+			internal KeyValuePair<string, object> CreateStartEventWithRequest<TRequest>(TRequest request, bool castPropertiesToObject = false) =>
+				castPropertiesToObject
+					? CreateStartEventWithPayload(new { Request = (object)request })
+					: CreateStartEventWithPayload(new { Request = request });
+
+			internal KeyValuePair<string, object> CreateStopEventWithResponse<TRequest, TResponse>(TRequest request, TResponse response,
+				bool castPropertiesToObject = false
+			) =>
+				castPropertiesToObject
+					? CreateStopEventWithPayload(new { Request = (object)request, Response = (object)response })
+					: CreateStopEventWithPayload(new { Request = request, Response = response });
+		}
+
+		// ReSharper disable once MemberCanBePrivate.Global
+		public static TheoryData SimulationHelpersToTestImpls => new TheoryData<SimulationHelper>
+		{
+			new SimulationHelperCoreImpl(), new SimulationHelperFullFrameworkImpl()
+		};
 
 		/// <summary>
 		/// Calls the OnError method on the HttpDiagnosticListener and makes sure that the correct error message is logged.
 		/// </summary>
-		[Fact]
-		public void OnErrorLog()
+		[Theory]
+		[MemberData(nameof(SimulationHelpersToTestImpls))]
+		internal void OnErrorLog(SimulationHelper simulationHelper)
 		{
 			var logger = new TestLogger();
 			var agent = new ApmAgent(new TestAgentComponents(logger));
-			var listener = HttpDiagnosticListener.New(agent);
+			var listener = simulationHelper.CreateListener(agent);
 
 			const string exceptionMessage = "Oops, this went wrong";
 			var fakeException = new Exception(exceptionMessage);
@@ -104,21 +121,21 @@ namespace Elastic.Apm.Tests
 		/// Builds an HttpRequestMessage and calls HttpDiagnosticListener.OnNext directly with it.
 		/// Makes sure that the processingRequests dictionary captures the ongoing transaction.
 		/// </summary>
-		[Fact]
-		public void OnNextWithStart()
+		[Theory]
+		[MemberData(nameof(SimulationHelpersToTestImpls))]
+		internal void OnNextWithStart(SimulationHelper simulationHelper)
 		{
-			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger));
+			var agent = new ApmAgent(new TestAgentComponents(_logger));
 			StartTransaction(agent);
-			var listener = HttpDiagnosticListener.New(agent);
+			var listener = simulationHelper.CreateListener(agent);
 
-			var request = new HttpRequestMessage(HttpMethod.Get, "https://elastic.co");
+			var url = new Uri("https://elastic.co");
 
 			//Simulate Start
-			listener.OnNext(new KeyValuePair<string, object>(StartEventKey(listener), new { Request = request }));
-			ProcessingRequestsCount(listener).Should().Be(1);
-			GetSpanForRequest(listener, request).Context.Http.Url.Should().Be(request.RequestUri.ToString());
-			GetSpanForRequest(listener, request).Context.Http.Method.Should().Be(HttpMethod.Get.ToString());
+			listener.OnNext(simulationHelper.CreateStartEvent(HttpMethod.Get, url, out var request));
+			simulationHelper.ProcessingRequestsCount(listener).Should().Be(1);
+			simulationHelper.GetSpanForRequest(listener, request).Context.Http.Url.Should().Be(url.ToString());
+			simulationHelper.GetSpanForRequest(listener, request).Context.Http.Method.Should().Be(HttpMethod.Get.ToString());
 		}
 
 		/// <summary>
@@ -127,27 +144,49 @@ namespace Elastic.Apm.Tests
 		/// and passes them to the OnNext method.
 		/// Makes sure that a Span with an Http context is captured.
 		/// </summary>
-		[Fact]
-		public void OnNextWithStartAndStop()
+		[Theory]
+		[MemberData(nameof(SimulationHelpersToTestImpls))]
+		internal void OnNextWithStartAndStop(SimulationHelper simulationHelper)
 		{
-			var logger = new TestLogger();
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(logger, payloadSender: payloadSender));
+			var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender));
 			StartTransaction(agent);
-			var listener = HttpDiagnosticListener.New(agent);
+			var listener = simulationHelper.CreateListener(agent);
 
-			var request = new HttpRequestMessage(HttpMethod.Get, "https://elastic.co");
-			var response = new HttpResponseMessage(HttpStatusCode.OK);
+			var url = new Uri("https://some-random-site.com/some/path?query=1#fragment_B");
 
 			//Simulate Start
-			listener.OnNext(new KeyValuePair<string, object>(StartEventKey(listener), new { Request = request }));
+			listener.OnNext(simulationHelper.CreateStartEvent(HttpMethod.Get, url, out var request));
 			//Simulate Stop
-			listener.OnNext(new KeyValuePair<string, object>(StopEventKey(listener), new { Request = request, Response = response }));
-			ProcessingRequestsCount(listener).Should().Be(0);
+			listener.OnNext(simulationHelper.CreateStopEvent(request, HttpStatusCode.OK));
+			simulationHelper.ProcessingRequestsCount(listener).Should().Be(0);
 
 			var firstSpan = payloadSender.FirstSpan;
 			firstSpan.Should().NotBeNull();
-			firstSpan.Context.Http.Url.Should().BeEquivalentTo(request.RequestUri.AbsoluteUri);
+			firstSpan.Context.Http.Url.Should().BeEquivalentTo(url.AbsoluteUri);
+			firstSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
+		}
+
+		[Theory]
+		[MemberData(nameof(SimulationHelpersToTestImpls))]
+		internal void PayloadStaticPropertyTypeDoesntMatter(SimulationHelper simulationHelper)
+		{
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender));
+			StartTransaction(agent);
+			var listener = simulationHelper.CreateListener(agent);
+
+			var url = new Uri("https://some-random-site.com/some/path?query=1#fragment_B");
+
+			//Simulate Start
+			listener.OnNext(simulationHelper.CreateStartEvent(HttpMethod.Get, url, out var request, /* castPropertiesToObject: */ true));
+			//Simulate Stop
+			listener.OnNext(simulationHelper.CreateStopEvent(request, HttpStatusCode.OK, /* castPropertiesToObject: */ true));
+			simulationHelper.ProcessingRequestsCount(listener).Should().Be(0);
+
+			var firstSpan = payloadSender.FirstSpan;
+			firstSpan.Should().NotBeNull();
+			firstSpan.Context.Http.Url.Should().BeEquivalentTo(url.AbsoluteUri);
 			firstSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
 		}
 
@@ -156,32 +195,32 @@ namespace Elastic.Apm.Tests
 		/// Makes sure that the transaction is only captured once and the span is also only captured once.
 		/// Also make sure that there is an error log.
 		/// </summary>
-		[Fact]
-		public void OnNextWithStartAndStopTwice()
+		[Theory]
+		[MemberData(nameof(SimulationHelpersToTestImpls))]
+		internal void OnNextWithStartAndStopTwice(SimulationHelper simulationHelper)
 		{
-			var logger = new TestLogger(LogLevel.Warning);
+			var testLogger = new TestLogger(LogLevel.Warning);
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(logger, payloadSender: payloadSender));
+			var agent = new ApmAgent(new TestAgentComponents(new SplittingLogger(testLogger, _logger), payloadSender: payloadSender));
 			StartTransaction(agent);
-			var listener = HttpDiagnosticListener.New(agent);
+			var listener = simulationHelper.CreateListener(agent);
 
-			var request = new HttpRequestMessage(HttpMethod.Get, "https://elastic.co");
-			var response = new HttpResponseMessage(HttpStatusCode.OK);
+			var url = new Uri("https://elastic.co");
 
 			//Simulate Start
-			listener.OnNext(new KeyValuePair<string, object>(StartEventKey(listener), new { Request = request }));
+			listener.OnNext(simulationHelper.CreateStartEvent(HttpMethod.Get, url, out var request));
 			//Simulate Stop
-			listener.OnNext(new KeyValuePair<string, object>(StopEventKey(listener), new { Request = request, Response = response }));
+			listener.OnNext(simulationHelper.CreateStopEvent(request, HttpStatusCode.OK));
 			//Simulate Stop again. This should not happen, still we test for this.
-			listener.OnNext(new KeyValuePair<string, object>(StopEventKey(listener), new { Request = request, Response = response }));
+			listener.OnNext(simulationHelper.CreateStopEvent(request, HttpStatusCode.OK));
 
-			logger.Lines.Should().NotBeEmpty();
-			logger.Lines
+			testLogger.Lines.Should().NotBeEmpty();
+			testLogger.Lines
 				.Should()
 				.Contain(
 					line => line.Contains("HttpDiagnosticListener") && line.Contains("Failed to remove from ProcessingRequests")
 						&& line.Contains(HttpMethod.Get.Method)
-						&& line.Contains(request.RequestUri.AbsoluteUri));
+						&& line.Contains(url.AbsoluteUri));
 			payloadSender.Transactions.Should().NotBeNull();
 			payloadSender.Spans.Should().ContainSingle();
 		}
@@ -190,16 +229,30 @@ namespace Elastic.Apm.Tests
 		/// Calls HttpDiagnosticListener.OnNext with types that are unknown.
 		/// The test makes sure that in this case still no exception is thrown from the OnNext method.
 		/// </summary>
-		[Fact]
-		public void UnknownObjectToOnNext()
+		[Theory]
+		[MemberData(nameof(SimulationHelpersToTestImpls))]
+		internal void UnexpectedPayloadInStartEvent(SimulationHelper simulationHelper)
 		{
-			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger));
-			var listener = HttpDiagnosticListener.New(agent);
+			var agent = new ApmAgent(new TestAgentComponents(_logger));
+			var listener = simulationHelper.CreateListener(agent);
 			var myFake = new StringBuilder(); //just a random type that is not planned to be passed into OnNext
 
 			var exception =
-				Record.Exception(() => { listener.OnNext(new KeyValuePair<string, object>(StartEventKey(listener), myFake)); });
+				Record.Exception(() => { listener.OnNext(simulationHelper.CreateStartEventWithPayload(myFake)); });
+
+			exception.Should().BeNull();
+		}
+
+		[Theory]
+		[MemberData(nameof(SimulationHelpersToTestImpls))]
+		internal void UnexpectedRequestValueInStartEvent(SimulationHelper simulationHelper)
+		{
+			var agent = new ApmAgent(new TestAgentComponents(_logger));
+			var listener = simulationHelper.CreateListener(agent);
+			var myFake = new StringBuilder(); //just a random type that is not planned to be passed into OnNext
+
+			var exception =
+				Record.Exception(() => { listener.OnNext(simulationHelper.CreateStartEventWithRequest(myFake)); });
 
 			exception.Should().BeNull();
 		}
@@ -208,29 +261,54 @@ namespace Elastic.Apm.Tests
 		/// Passes null instead of a valid HttpRequestMessage into HttpDiagnosticListener.OnNext
 		/// and makes sure that still no exception is thrown.
 		/// </summary>
-		[Fact]
-		public void NullValueToOnNext()
+		[Theory]
+		[MemberData(nameof(SimulationHelpersToTestImpls))]
+		internal void NullPayloadInStartEvent(SimulationHelper simulationHelper)
 		{
-			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger));
-			var listener = HttpDiagnosticListener.New(agent);
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(_logger));
+			StartTransaction(agent);
+			var listener = simulationHelper.CreateListener(agent);
 
-			var exception =
-				Record.Exception(() => { listener.OnNext(new KeyValuePair<string, object>(StartEventKey(listener), null)); });
+			listener.OnNext(simulationHelper.CreateStartEventWithPayload(null));
 
-			exception.Should().BeNull();
+			simulationHelper.ProcessingRequestsCount(listener).Should().Be(0);
+			payloadSender.Spans.Should().BeEmpty();
+			payloadSender.Errors.Should().BeEmpty();
+		}
+
+		[Theory]
+		[MemberData(nameof(SimulationHelpersToTestImpls))]
+		internal void NullPayloadInStopEvent(SimulationHelper simulationHelper)
+		{
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(_logger));
+			StartTransaction(agent);
+			var listener = simulationHelper.CreateListener(agent);
+
+			var url = new Uri($"https://some-random-site.com/some/path/?query=1#{GetCurrentMethodName()}");
+
+			//Simulate Start
+			listener.OnNext(simulationHelper.CreateStartEvent(HttpMethod.Get, url, out var request));
+
+			listener.OnNext(simulationHelper.CreateStopEventWithPayload(null));
+
+			simulationHelper.ProcessingRequestsCount(listener).Should().Be(1);
+			simulationHelper.GetSpanForRequest(listener, request).Context.Http.Url.Should().Be(url.ToString());
+			payloadSender.Spans.Should().BeEmpty();
+			payloadSender.Errors.Should().BeEmpty();
 		}
 
 		/// <summary>
 		/// Passes a null key with null value instead of a valid HttpRequestMessage into HttpDiagnosticListener.OnNext
 		/// and makes sure that still no exception is thrown.
 		/// </summary>
-		[Fact]
-		public void NullKeyValueToOnNext()
+		[Theory]
+		[MemberData(nameof(SimulationHelpersToTestImpls))]
+		internal void NullKeyValueToOnNext(SimulationHelper simulationHelper)
 		{
-			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger));
-			var listener = HttpDiagnosticListener.New(agent);
+			var agent = new ApmAgent(new TestAgentComponents(_logger));
+			var listener = simulationHelper.CreateListener(agent);
 
 			var exception =
 				Record.Exception(() => { listener.OnNext(new KeyValuePair<string, object>(null, null)); });
@@ -319,25 +397,28 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void CaptureErrorOnFailingHttpCall_DirectCall()
 		{
+			var simulationHelper = new SimulationHelperCoreImpl();
+
 			var (disposableListener, payloadSender, agent) = RegisterListenerAndStartTransaction();
 
 			using (disposableListener)
 			{
-				var listener = HttpDiagnosticListener.New(agent);
+				var listener = simulationHelper.CreateListener(agent);
 
-				var request = new HttpRequestMessage(HttpMethod.Get, "https://elastic.co");
+				var url = new Uri("https://elastic.co");
 
 				// Simulate Start - this test case is .NET Core specific (because Full Framework doesn't have _Exception_ event)
 				// so we use key string from HttpDiagnosticListenerCoreImpl
-				listener.OnNext(new KeyValuePair<string, object>(HttpDiagnosticListenerCoreImpl.StartEventKey, new { Request = request }));
+				listener.OnNext(simulationHelper.CreateStartEvent(HttpMethod.Get, url, out var request));
 
 				const string exceptionMsg = "Sample exception msg";
 				var exception = new Exception(exceptionMsg);
 				//Simulate Exception
 				listener.OnNext(new KeyValuePair<string, object>(HttpDiagnosticListenerCoreImpl.ExceptionEventKey,
 					new { Request = request, Exception = exception }));
-				listener.OnNext(new KeyValuePair<string, object>(HttpDiagnosticListenerCoreImpl.StopEventKey,
-					new { Request = request, Response = (HttpResponseMessage)null }));
+
+				//Simulate Stop
+				listener.OnNext(simulationHelper.CreateStopEventWithResponse(request, (HttpResponseMessage)null));
 
 				payloadSender.Spans.Should().HaveCount(1);
 				payloadSender.FirstSpan.Context.Http.StatusCode.Should().BeNull();
@@ -649,28 +730,6 @@ namespace Elastic.Apm.Tests
 			}
 		}
 
-		private const string DummyExceptionMessage = "Dummy exception message";
-
-		private class ThrowingFullFrameworkImpl : HttpDiagnosticListenerFullFrameworkImpl
-		{
-			internal ThrowingFullFrameworkImpl(IApmAgent agent): base(agent) {}
-
-			protected override bool DispatchEventProcessing(KeyValuePair<string, object> _)
-			{
-				throw new Exception(DummyExceptionMessage);
-			}
-		}
-
-		private class ThrowingCoreImpl : HttpDiagnosticListenerCoreImpl
-		{
-			internal ThrowingCoreImpl(IApmAgent agent): base(agent) {}
-
-			protected override bool DispatchEventProcessing(KeyValuePair<string, object> _)
-			{
-				throw new Exception(DummyExceptionMessage);
-			}
-		}
-
 		[Theory]
 		[InlineData(typeof(ThrowingFullFrameworkImpl))]
 		[InlineData(typeof(ThrowingCoreImpl))]
@@ -680,14 +739,97 @@ namespace Elastic.Apm.Tests
 			var agent = new ApmAgent(new TestAgentComponents(logger));
 			var args = new object[] { agent };
 			var listener = (HttpDiagnosticListenerImplBase)Activator.CreateInstance(throwingImplType,
+				// ReSharper disable RedundantCast
 				BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.CreateInstance, (Binder)null, args,
-				(CultureInfo)null );
+				(CultureInfo)null
+				// ReSharper restore RedundantCast
+			);
 
-			listener.OnNext(new KeyValuePair<string, object>("dummy event key", new { Value = "dummy event value"}));
+			listener.OnNext(new KeyValuePair<string, object>("dummy event key", new { Value = "dummy event value" }));
 
 			logger.Lines.Should().Contain(line => line.Contains("HttpDiagnosticListener"));
 			logger.Lines.Should().Contain(line => line.Contains("OnNext"));
 			logger.Lines.Should().Contain(line => line.Contains(DummyExceptionMessage));
+		}
+
+		private static string GetCurrentMethodName([CallerMemberName] string callerMemberName = "") => callerMemberName;
+
+		[Theory]
+		[InlineData(HttpStatusCode.Accepted, false)]
+		[InlineData(HttpStatusCode.Accepted, true)]
+		[InlineData(HttpStatusCode.Redirect, false)]
+		[InlineData(HttpStatusCode.BadRequest, true)]
+		[InlineData(HttpStatusCode.Forbidden, false)]
+		[InlineData(HttpStatusCode.InternalServerError, true)]
+		[InlineData(HttpStatusCode.ServiceUnavailable, true)]
+		internal void Full_Framework_StopEx_Event(HttpStatusCode statusCode, bool castPropertiesToObject)
+		{
+			var simulationHelper = new SimulationHelperFullFrameworkImpl();
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender));
+			var listener = simulationHelper.CreateListener(agent);
+			StartTransaction(agent);
+
+			var url = new Uri($"https://some-random-site.com/some/path/{GetCurrentMethodName()}?query=1#fragment_B");
+
+			// Simulate Start
+			listener.OnNext(simulationHelper.CreateStartEvent(HttpMethod.Post, url, out var request));
+
+			// Simulate StopEx - this test case is Full Framework specific (because .NET Core doesn't have _StopEx_ event)
+			listener.OnNext(SimulationHelperFullFrameworkImpl.CreateStopExEvent(request, statusCode, castPropertiesToObject));
+
+			payloadSender.Spans.Should().HaveCount(1);
+			payloadSender.FirstSpan.Context.Http.StatusCode.Should().Be((int)statusCode);
+			payloadSender.Errors.Should().BeEmpty();
+		}
+
+		[Fact]
+		internal void null_payload_in_StopEx_event()
+		{
+			var simulationHelper = new SimulationHelperFullFrameworkImpl();
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(_logger));
+			StartTransaction(agent);
+			var listener = simulationHelper.CreateListener(agent);
+
+			var url = new Uri($"https://some-random-site.com/some/path/?query=1#{GetCurrentMethodName()}");
+
+			//Simulate Start
+			listener.OnNext(simulationHelper.CreateStartEvent(HttpMethod.Get, url, out var request));
+
+			listener.OnNext(SimulationHelperFullFrameworkImpl.CreateStopExEventWithPayload(null));
+
+			simulationHelper.ProcessingRequestsCount(listener).Should().Be(1);
+			simulationHelper.GetSpanForRequest(listener, request).Context.Http.Url.Should().Be(url.ToString());
+			payloadSender.Spans.Should().BeEmpty();
+			payloadSender.Errors.Should().BeEmpty();
+		}
+
+		[Theory]
+		[MemberData(nameof(SimulationHelpersToTestImpls))]
+		internal void Stop_event_with_null_Response(SimulationHelper simulationHelper)
+		{
+			var testLogger = new TestLogger(LogLevel.Trace);
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(new SplittingLogger(testLogger, _logger), payloadSender: payloadSender));
+			var listener = simulationHelper.CreateListener(agent);
+			StartTransaction(agent);
+
+			var url = new Uri($"https://some-random-site.com/some/path/{GetCurrentMethodName()}?query=1#fragment_B");
+
+			// Simulate Start
+			listener.OnNext(simulationHelper.CreateStartEvent(HttpMethod.Post, url, out var request));
+
+			// Simulate Stop
+			listener.OnNext(simulationHelper.CreateStopEventWithNullResponse(request));
+
+			payloadSender.Spans.Should().ContainSingle();
+			payloadSender.FirstSpan.Context.Http.StatusCode.Should().BeNull();
+			payloadSender.Errors.Should().BeEmpty();
+
+			testLogger.Lines.Should().Contain(line => line.Contains(nameof(HttpDiagnosticListenerImplBase)));
+			testLogger.Lines.Should().Contain(line => line.Contains(url.ToString()));
+			testLogger.Lines.Should().NotContain(line => line.Contains(nameof(HttpDiagnosticListenerImplBase.FailedToExtractPropertyException)));
 		}
 
 		internal static (IDisposable, MockPayloadSender, ApmAgent) RegisterListenerAndStartTransaction()
@@ -709,5 +851,97 @@ namespace Elastic.Apm.Tests
 			//	=> agent.TransactionContainer.Transactions.Value =
 			//		new Transaction(agent, $"{nameof(TestSimpleOutgoingHttpRequest)}", ApiConstants.TypeRequest);
 			=> agent.Tracer.StartTransaction($"{nameof(TestSimpleOutgoingHttpRequest)}", ApiConstants.TypeRequest);
+
+		private class SimulationHelperCoreImpl : SimulationHelper
+		{
+			internal override IDiagnosticListener CreateListener(IApmAgent agent) => new HttpDiagnosticListenerCoreImpl(agent);
+
+			internal override KeyValuePair<string, object> CreateStartEventWithPayload(object payload) =>
+				new KeyValuePair<string, object>(HttpDiagnosticListenerCoreImpl.StartEventKey, payload);
+
+			internal override KeyValuePair<string, object> CreateStartEvent(HttpMethod method, Uri url, out object request,
+				bool castPropertiesToObject = false
+			)
+			{
+				var httpRequestMessage = new HttpRequestMessage(method, url);
+				request = httpRequestMessage;
+				return CreateStartEventWithRequest(httpRequestMessage, castPropertiesToObject);
+			}
+
+			internal override KeyValuePair<string, object> CreateStopEventWithPayload(object payload) =>
+				new KeyValuePair<string, object>(HttpDiagnosticListenerCoreImpl.StopEventKey, payload);
+
+			internal override KeyValuePair<string, object> CreateStopEvent(object request, HttpStatusCode statusCode,
+				bool castPropertiesToObject = false
+			) =>
+				castPropertiesToObject
+					? CreateStopEventWithResponse(request, (object)new HttpResponseMessage(statusCode))
+					: CreateStopEventWithResponse((HttpRequestMessage)request, new HttpResponseMessage(statusCode));
+
+			internal override KeyValuePair<string, object> CreateStopEventWithNullResponse<TRequest>(TRequest request,
+				bool castPropertiesToObject = false
+			) => CreateStopEventWithResponse(request, (HttpResponseMessage)null, castPropertiesToObject);
+		}
+
+		private class SimulationHelperFullFrameworkImpl : SimulationHelper
+		{
+			internal override IDiagnosticListener CreateListener(IApmAgent agent) => new HttpDiagnosticListenerFullFrameworkImpl(agent);
+
+			internal override KeyValuePair<string, object> CreateStartEventWithPayload(object payload) =>
+				new KeyValuePair<string, object>(HttpDiagnosticListenerFullFrameworkImpl.StartEventKey, payload);
+
+			internal override KeyValuePair<string, object> CreateStartEvent(HttpMethod method, Uri url, out object request,
+				bool castPropertiesToObject = false
+			)
+			{
+				var httpWebRequest = WebRequest.CreateHttp(url);
+				httpWebRequest.Method = method.Method;
+				request = httpWebRequest;
+				return CreateStartEventWithRequest(httpWebRequest, castPropertiesToObject);
+			}
+
+			internal override KeyValuePair<string, object> CreateStopEventWithPayload(object payload) =>
+				new KeyValuePair<string, object>(HttpDiagnosticListenerFullFrameworkImpl.StopEventKey, payload);
+
+			internal override KeyValuePair<string, object> CreateStopEvent(object request, HttpStatusCode statusCode,
+				bool castPropertiesToObject = false
+			) =>
+				castPropertiesToObject
+					? CreateStopEventWithResponse(request, (object)new MockHttpWebResponse { MockStatusCode = statusCode })
+					: CreateStopEventWithResponse((HttpWebRequest)request, new MockHttpWebResponse { MockStatusCode = statusCode });
+
+			internal static KeyValuePair<string, object> CreateStopExEventWithPayload(object payload) =>
+				new KeyValuePair<string, object>(HttpDiagnosticListenerFullFrameworkImpl.StopExEventKey, payload);
+
+			internal static KeyValuePair<string, object> CreateStopExEvent(object request, HttpStatusCode statusCode, bool castPropertiesToObject = false) =>
+				castPropertiesToObject
+					? CreateStopExEventWithPayload(new { Request = request, StatusCode = statusCode })
+					: CreateStopExEventWithPayload(new { Request = (HttpWebRequest)request, StatusCode = statusCode });
+
+			internal override KeyValuePair<string, object> CreateStopEventWithNullResponse<TRequest>(TRequest request,
+				bool castPropertiesToObject = false
+			) => CreateStopEventWithResponse(request, (HttpWebResponse)null, castPropertiesToObject);
+		}
+
+		private class MockHttpWebResponse : HttpWebResponse
+		{
+			// ReSharper disable once MemberCanBePrivate.Local
+			internal HttpStatusCode MockStatusCode { get; set; }
+			public override HttpStatusCode StatusCode => MockStatusCode;
+		}
+
+		private class ThrowingFullFrameworkImpl : HttpDiagnosticListenerFullFrameworkImpl
+		{
+			internal ThrowingFullFrameworkImpl(IApmAgent agent) : base(agent) { }
+
+			protected override bool DispatchEventProcessing(KeyValuePair<string, object> _) => throw new Exception(DummyExceptionMessage);
+		}
+
+		private class ThrowingCoreImpl : HttpDiagnosticListenerCoreImpl
+		{
+			internal ThrowingCoreImpl(IApmAgent agent) : base(agent) { }
+
+			protected override bool DispatchEventProcessing(KeyValuePair<string, object> _) => throw new Exception(DummyExceptionMessage);
+		}
 	}
 }

@@ -11,7 +11,7 @@ namespace Elastic.Apm.Tests
 	public class SamplerTests
 	{
 		// ReSharper disable once MemberCanBePrivate.Global
-		public static DataForTheory RateVariantsToTest => new DataForTheory<double>
+		public static TheoryData RateVariantsToTest => new TheoryData<double>
 		{
 			{ 0 },
 			{ 0.000000001 },
