@@ -281,7 +281,11 @@ namespace Elastic.Apm.Tests
 			}
 
 			payloadSender.FirstSpan.Should().NotBeNull();
-			payloadSender.FirstSpan.StackTrace.Should().BeNullOrEmpty();
+
+			if(payloadSender.FirstSpan.Duration < ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds)
+				payloadSender.FirstSpan.StackTrace.Should().BeNullOrEmpty();
+			else
+				payloadSender.FirstSpan.StackTrace.Should().NotBeNullOrEmpty();
 		}
 
 		[Fact]
