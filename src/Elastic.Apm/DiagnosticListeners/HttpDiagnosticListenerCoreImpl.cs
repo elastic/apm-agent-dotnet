@@ -1,28 +1,106 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.DiagnosticListeners
 {
-	internal class HttpDiagnosticListenerCoreImpl : HttpDiagnosticListenerImplBase<HttpRequestMessage, HttpResponseMessage>
+	internal class HttpDiagnosticListenerCoreImpl : HttpDiagnosticListenerImplBase
 	{
-		public HttpDiagnosticListenerCoreImpl(IApmAgent agent)
-			: base(agent) { }
+		internal const string ExceptionEventKey = "System.Net.Http.Exception";
+		internal const string StartEventKey = "System.Net.Http.HttpRequestOut.Start";
+		internal const string StopEventKey = "System.Net.Http.HttpRequestOut.Stop";
 
-		internal override string ExceptionEventKey => "System.Net.Http.Exception";
+		private readonly ScopedLogger _logger;
+
+		public HttpDiagnosticListenerCoreImpl(IApmAgent agent)
+			: base(agent) =>
+			_logger = agent.Logger?.Scoped(nameof(HttpDiagnosticListenerCoreImpl));
 
 		public override string Name => "HttpHandlerDiagnosticListener";
-		internal override string StartEventKey => "System.Net.Http.HttpRequestOut.Start";
-		internal override string StopEventKey => "System.Net.Http.HttpRequestOut.Stop";
 
-		protected override Uri RequestGetUri(HttpRequestMessage request) => request.RequestUri;
+		protected override bool DispatchEventProcessing(KeyValuePair<string, object> kv)
+		{
+			if (kv.Key.Equals(StartEventKey, StringComparison.Ordinal))
+			{
+				ProcessStartStopEvent(new EventData(kv), /* isStart */ true);
+				return true;
+			}
 
-		protected override string RequestGetMethod(HttpRequestMessage request) => request.Method.Method;
+			if (kv.Key.Equals(StopEventKey, StringComparison.Ordinal))
+			{
+				ProcessStartStopEvent(new EventData(kv), /* isStart */ false);
+				return true;
+			}
 
-		protected override bool RequestHeadersContain(HttpRequestMessage request, string headerName) => request.Headers.Contains(headerName);
+			// ReSharper disable once InvertIf
+			if (kv.Key.Equals(ExceptionEventKey, StringComparison.Ordinal))
+			{
+				ProcessExceptionEvent(new EventData(kv));
+				return true;
+			}
 
-		protected override void RequestHeadersAdd(HttpRequestMessage request, string headerName, string headerValue) =>
-			request.Headers.Add(headerName, headerValue);
+			return false;
+		}
 
-		protected override int ResponseGetStatusCode(HttpResponseMessage response) => (int)response.StatusCode;
+		private void ProcessExceptionEvent(EventData eventData)
+		{
+			_logger.Trace()?.Log("Processing exception event... Request URL: {RequestUrl}", eventData.Url);
+
+			if (IsRequestFilteredOut(eventData.Url))
+			{
+				_logger.Trace()?.Log("Request URL ({RequestUrl}) is filtered out - exiting", eventData.Url);
+				return;
+			}
+
+			var exception = ExtractProperty<Exception>(EventExceptionPropertyName, eventData.EventKeyValue);
+
+			if (!ProcessingRequests.TryGetValue(eventData.Request, out var span))
+			{
+				_logger.Warning()
+					?.Log("Failed to get from ProcessingRequests - " +
+						"it might be because Start event was not captured successfully." +
+						" Request: method: {HttpMethod}; URL: {RequestUrl}; exception in event: {Exception}",
+						eventData.Method, eventData.Url, exception);
+				return;
+			}
+
+			//TODO: we don't know if exception is handled, currently reports handled = false
+			span?.CaptureException(exception, "Failed outgoing HTTP request");
+		}
+
+		private class EventData : IEventData
+		{
+			private readonly HttpRequestMessage _request;
+
+			internal EventData(KeyValuePair<string, object> kv)
+			{
+				EventKeyValue = kv;
+				_request = ExtractProperty<HttpRequestMessage>(EventRequestPropertyName, EventKeyValue);
+			}
+
+			internal KeyValuePair<string, object> EventKeyValue { get; }
+
+			public string Method => _request.Method.Method;
+
+			public object Request => _request;
+
+			public int? StatusCode
+			{
+				get
+				{
+					var responsePropertyValue = ExtractProperty<HttpResponseMessage>(EventResponsePropertyName, EventKeyValue);
+					return (int?)responsePropertyValue?.StatusCode;
+				}
+			}
+
+			public Uri Url => _request.RequestUri;
+
+			public bool ContainsRequestHeader(string headerName)
+				=> _request.Headers.Contains(headerName);
+
+			public void AddRequestHeader(string headerName, string headerValue) =>
+				_request.Headers.Add(headerName, headerValue);
+		}
 	}
 }

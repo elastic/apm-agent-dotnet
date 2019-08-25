@@ -42,5 +42,21 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				receivedData.Transactions.First().Context.Request.Url.Search.Should().Be(queryString);
 			});
 		}
+
+		[AspNetFullFrameworkFact]
+		public async Task HttpCallWithResponseForbidden()
+		{
+			var forbidResponsePageData = SampleAppUrlPaths.ForbidHttpResponsePage;
+			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(forbidResponsePageData.RelativeUrlPath, forbidResponsePageData.StatusCode);
+
+			VerifyDataReceivedFromAgent(receivedData =>
+			{
+				TryVerifyDataReceivedFromAgent(forbidResponsePageData, receivedData);
+
+				receivedData.Spans.First().Should().NotBeNull();
+				receivedData.Spans.First().Context.Http.Should().NotBeNull();
+				receivedData.Spans.First().Context.Http.StatusCode.Should().Be(403);
+			});
+		}
 	}
 }

@@ -1,88 +1,122 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
-using System.Reflection;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.DiagnosticListeners
 {
-	internal class HttpDiagnosticListenerFullFrameworkImpl : HttpDiagnosticListenerImplBase<HttpWebRequest, HttpWebResponse>
+	internal class HttpDiagnosticListenerFullFrameworkImpl : HttpDiagnosticListenerImplBase
 	{
-		public HttpDiagnosticListenerFullFrameworkImpl(IApmAgent agent)
-			: base(agent) { }
+		internal const string InitializationFailedEventKey = "System.Net.Http.InitializationFailed";
+		internal const string InitializationFailedExceptionPropertyName = "Exception";
+		internal const string StartEventKey = "System.Net.Http.Desktop.HttpRequestOut.Start";
+		internal const string StopEventKey = "System.Net.Http.Desktop.HttpRequestOut.Stop";
+		internal const string StopExEventKey = "System.Net.Http.Desktop.HttpRequestOut.Ex.Stop";
+		internal const string StopExStatusCodePropertyName = "StatusCode";
 
-		internal override string ExceptionEventKey => "System.Net.Http.Desktop.HttpRequestOut.Ex.Stop";
+		private readonly ScopedLogger _logger;
+
+		public HttpDiagnosticListenerFullFrameworkImpl(IApmAgent agent)
+			: base(agent) =>
+			_logger = agent.Logger?.Scoped(nameof(HttpDiagnosticListenerFullFrameworkImpl));
 
 		public override string Name => "System.Net.Http.Desktop";
-		internal override string StartEventKey => "System.Net.Http.Desktop.HttpRequestOut.Start";
-		internal override string StopEventKey => "System.Net.Http.Desktop.HttpRequestOut.Stop";
 
-		protected override Uri RequestGetUri(HttpWebRequest request) => request.RequestUri;
-
-		protected override string RequestGetMethod(HttpWebRequest request) => request.Method;
-
-		protected override bool RequestHeadersContain(HttpWebRequest request, string headerName)
+		protected override bool DispatchEventProcessing(KeyValuePair<string, object> kv)
 		{
-			var values = request.Headers.GetValues(headerName);
-			return values != null && values.Length > 0;
+			if (kv.Key.Equals(StartEventKey, StringComparison.Ordinal))
+			{
+				ProcessStartStopEvent(new EventData(kv), /* isStart */ true);
+				return true;
+			}
+
+			var isStop = kv.Key.Equals(StopEventKey, StringComparison.Ordinal);
+			var isStopEx = false;
+			if (!isStop) isStopEx = kv.Key.Equals(StopExEventKey, StringComparison.Ordinal);
+			if (isStop || isStopEx)
+			{
+				ProcessStartStopEvent(new EventData(kv, isStopEx), /* isStart */ false);
+				return true;
+			}
+
+			// ReSharper disable once InvertIf
+			if (kv.Key.Equals(InitializationFailedEventKey, StringComparison.Ordinal))
+			{
+				ProcessInitializationFailedEvent(kv);
+				return true;
+			}
+
+			return false;
 		}
 
-		protected override void RequestHeadersAdd(HttpWebRequest request, string headerName, string headerValue) =>
-			request.Headers.Add(headerName, headerValue);
-
-		protected override int ResponseGetStatusCode(HttpWebResponse response) => (int)response.StatusCode;
-
-		/// <summary>
-		/// In Full Framework "System.Net.Http.Desktop.HttpRequestOut.Ex.Stop" does not send the exception property.
-		/// Therefore we have a specialized ProcessExceptionEvent for Full Framework. 
-		/// </summary>
-		protected override void ProcessExceptionEvent(object eventValue, Uri requestUrl)
+		private void ProcessInitializationFailedEvent(KeyValuePair<string, object> kv)
 		{
-			_logger.Trace()?.Log("Processing stop.ex event... Request URL: {RequestUrl}", requestUrl);
+			// https://github.com/dotnet/corefx/blob/master/src/System.Diagnostics.DiagnosticSource/src/System/Diagnostics/HttpHandlerDiagnosticListener.cs#L84
+			//
+			//	catch (Exception ex)
+			//	{
+			//		// If anything went wrong, just no-op. Write an event so at least we can find out.
+			//		this.Write(InitializationFailed, new { Exception = ex });
+			//	}
 
-			var requestObject = eventValue.GetType().GetTypeInfo().GetDeclaredProperty(EventRequestPropertyName)?.GetValue(eventValue);
+			var causeException = ExtractProperty<Exception>(InitializationFailedExceptionPropertyName, kv);
+			_logger.Error()?.LogException(causeException, "Received {DiagnosticEventKey} event", InitializationFailedEventKey);
+		}
 
-			if (!(requestObject is HttpWebRequest request))
+		internal class EventData : IEventData
+		{
+			private readonly KeyValuePair<string, object> _eventKeyValue;
+			private readonly bool _isStopEx;
+			private readonly HttpWebRequest _request;
+
+			internal EventData(KeyValuePair<string, object> kv, bool isStopEx = false)
 			{
-				_logger.Trace()
-					?.Log("Actual type of object ({EventRequestPropertyActualType}) in event's {EventRequestPropertyName} property " +
-						"doesn't match the expected type ({EventRequestPropertyExpectedType}) - exiting",
-						requestObject.GetType().FullName, EventRequestPropertyName, typeof(HttpWebRequest).FullName);
-				return;
+				_eventKeyValue = kv;
+				_request = ExtractProperty<HttpWebRequest>(EventRequestPropertyName, _eventKeyValue);
+				_isStopEx = isStopEx;
 			}
-			if (!ProcessingRequests.TryRemove(request, out var span))
-			{
-				_logger.Warning()
-					?.Log("Failed capturing request (failed to remove from ProcessingRequests) - " +
-						"This Span will be skipped in case it wasn't captured before. " +
-						"Request: method: {HttpMethod}, URL: {RequestUrl}", RequestGetMethod(request), requestUrl);
-				return;
-			}
 
-			// if span.Context.Http == null that means the transaction is not sampled (see ProcessStartEvent)
-			if (span.Context.Http != null)
+			public string Method => _request.Method;
+
+			public object Request => _request;
+
+			public int? StatusCode
 			{
-				var statusCodeObject = eventValue.GetType().GetTypeInfo().GetDeclaredProperty("StatusCode")?.GetValue(eventValue);
-				if (statusCodeObject != null)
+				get
 				{
-					if (statusCodeObject is HttpStatusCode statusCode)
+					if (_isStopEx)
 					{
-						span.Context.Http.StatusCode = (int)statusCode;
+						// https://github.com/dotnet/corefx/blob/master/src/System.Diagnostics.DiagnosticSource/src/System/Diagnostics/HttpHandlerDiagnosticListener.cs#L675
+						//
+						//	private void RaiseResponseEvent(HttpWebRequest request, HttpStatusCode statusCode, WebHeaderCollection headers)
+						//	{
+						//		// Response event could be received several times for the same request in case it was redirected
+						//		// IsLastResponse checks if response is the last one (no more redirects will happen)
+						//		// based on response StatusCode and number or redirects done so far
+						//		if (request.Headers.Get(RequestIdHeaderName) != null && IsLastResponse(request, statusCode))
+						//		{
+						//			this.Write(RequestStopExName, new { Request = request, StatusCode = statusCode, Headers = headers });
+						//		}
+						//	}
 
-						if (span.Context.Http.StatusCode >= 300)
-							span.CaptureError($"Failed outgoing HTTP call with HttpClient - StatusCode: {statusCode.ToString()}",
-								$"HTTP {statusCode}", null);
+						return (int)ExtractProperty<HttpStatusCode>(StopExStatusCodePropertyName, _eventKeyValue);
 					}
-					else
-					{
-						_logger.Trace()
-							?.Log("Actual type of object ({EventStatusCodePropertyActualType}) in event's {EventStatusCodePropertyName} property " +
-								"doesn't match the expected type ({EventStatusCodeePropertyExpectedType})",
-								statusCodeObject.GetType().FullName, "StatusCode", typeof(HttpStatusCode).FullName);
-					}
+
+					var responsePropertyValue = ExtractProperty<HttpWebResponse>(EventResponsePropertyName, _eventKeyValue);
+					return (int?)responsePropertyValue?.StatusCode;
 				}
 			}
 
-			span.End();
+			public Uri Url => _request.RequestUri;
+
+			public bool ContainsRequestHeader(string headerName)
+			{
+				var values = _request.Headers.GetValues(headerName);
+				return values != null && values.Length > 0;
+			}
+
+			public void AddRequestHeader(string headerName, string headerValue) =>
+				_request.Headers.Add(headerName, headerValue);
 		}
 	}
 }

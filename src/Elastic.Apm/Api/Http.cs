@@ -13,7 +13,7 @@ namespace Elastic.Apm.Api
 		public string Method { get; set; }
 
 		[JsonProperty("status_code")]
-		public int StatusCode { get; set; }
+		public int? StatusCode { get; set; }
 
 		public string Url { get; set; }
 	}

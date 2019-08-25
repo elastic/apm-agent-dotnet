@@ -14,43 +14,42 @@ namespace Elastic.Apm.DiagnosticListeners
 	/// <summary>
 	/// Captures web requests initiated by <see cref="T:System.Net.Http.HttpClient" />
 	/// </summary>
-	internal abstract class HttpDiagnosticListenerImplBase<TRequest, TResponse> : IDiagnosticListener
-		where TRequest : class
-		where TResponse : class
+	internal abstract class HttpDiagnosticListenerImplBase : IDiagnosticListener
 	{
-		private const string EventExceptionPropertyName = "Exception";
+		protected const string EventExceptionPropertyName = "Exception";
 		protected const string EventRequestPropertyName = "Request";
-		private const string EventResponsePropertyName = "Response";
+		protected const string EventResponsePropertyName = "Response";
+
+		protected readonly IApmAgent Agent;
 
 		/// <summary>
 		/// Keeps track of ongoing requests
 		/// </summary>
-		internal readonly ConcurrentDictionary<TRequest, ISpan> ProcessingRequests = new ConcurrentDictionary<TRequest, ISpan>();
+		internal readonly ConcurrentDictionary<object, ISpan> ProcessingRequests = new ConcurrentDictionary<object, ISpan>();
 
-		private readonly IApmAgent _agent;
-		protected readonly ScopedLogger _logger;
+		private readonly ScopedLogger _logger;
 
 		protected HttpDiagnosticListenerImplBase(IApmAgent agent)
 		{
-			_agent = agent;
-			_logger = _agent.Logger?.Scoped("HttpDiagnosticListenerImplBase");
+			Agent = agent;
+			_logger = Agent.Logger?.Scoped("HttpDiagnosticListenerImplBase");
 		}
 
-		protected abstract string RequestGetMethod(TRequest request);
+		internal interface IEventData
+		{
+			string Method { get; }
+			object Request { get; }
+			int? StatusCode { get; }
+			Uri Url { get; }
 
-		protected abstract Uri RequestGetUri(TRequest request);
+			void AddRequestHeader(string headerName, string headerValue);
 
-		protected abstract void RequestHeadersAdd(TRequest request, string headerName, string headerValue);
+			bool ContainsRequestHeader(string headerName);
+		}
 
-		protected abstract bool RequestHeadersContain(TRequest request, string headerName);
-
-		protected abstract int ResponseGetStatusCode(TResponse response);
-
-		internal abstract string ExceptionEventKey { get; }
+		protected abstract bool DispatchEventProcessing(KeyValuePair<string, object> kv);
 
 		public abstract string Name { get; }
-		internal abstract string StartEventKey { get; }
-		internal abstract string StopEventKey { get; }
 
 		public void OnCompleted() { }
 
@@ -58,7 +57,19 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		public void OnNext(KeyValuePair<string, object> kv)
 		{
-			_logger.Trace()?.Log("Called with key: `{DiagnosticEventKey}', value: `{DiagnosticEventValue}'", kv.Key, kv.Value);
+			try
+			{
+				OnNextImpl(kv);
+			}
+			catch (Exception ex)
+			{
+				_logger.Error()?.LogException(ex, "Processing of event passed to OnNext failed. Event: {DiagnosticEvent}", kv.Key);
+			}
+		}
+
+		private void OnNextImpl(KeyValuePair<string, object> kv)
+		{
+			_logger.Trace()?.Log("Called with key: `{DiagnosticEventKey}', value: {DiagnosticEventValue}", kv.Key, kv.Value);
 
 			if (string.IsNullOrEmpty(kv.Key))
 			{
@@ -72,129 +83,114 @@ namespace Elastic.Apm.DiagnosticListeners
 				return;
 			}
 
-			var requestObject = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty(EventRequestPropertyName)?.GetValue(kv.Value);
-			if (requestObject == null)
-			{
-				_logger.Trace()?.Log("Event's {EventRequestPropertyName} property is null - exiting", EventRequestPropertyName);
-				return;
-			}
-
-			if (!(requestObject is TRequest request))
-			{
-				_logger.Trace()
-					?.Log("Actual type of object ({EventRequestPropertyActualType}) in event's {EventRequestPropertyName} property " +
-						"doesn't match the expected type ({EventRequestPropertyExpectedType}) - exiting",
-						requestObject.GetType().FullName, EventRequestPropertyName, typeof(TRequest).FullName);
-				return;
-			}
-
-			var requestUrl = RequestGetUri(request);
-			if (requestUrl == null)
-			{
-				_logger.Trace()?.Log("Request URL is null - exiting", EventRequestPropertyName);
-				return;
-			}
-
-			if (IsRequestFilteredOut(requestUrl))
-			{
-				_logger.Trace()?.Log("Request URL ({RequestUrl}) is filtered out - exiting", requestUrl);
-				return;
-			}
-
-			if (kv.Key.Equals(StartEventKey))
-				ProcessStartEvent(request, requestUrl);
-			else if (kv.Key.Equals(StopEventKey))
-				ProcessStopEvent(kv.Value, request, requestUrl);
-			else if (kv.Key.Equals(ExceptionEventKey))
-				ProcessExceptionEvent(kv.Value, requestUrl);
-			else
-				_logger.Trace()?.Log("Unrecognized key `{DiagnosticEventKey}'", kv.Key);
+			if (!DispatchEventProcessing(kv))
+				_logger.Trace()?.Log("Unrecognized key `{DiagnosticEventKey}'. Event value: {DiagnosticEventValue}", kv.Key, kv.Value);
 		}
 
-		private void ProcessStartEvent(TRequest request, Uri requestUrl)
+		protected static TProperty ExtractProperty<TProperty>(string propertyName, KeyValuePair<string, object> kv)
 		{
-			_logger.Trace()?.Log("Processing start event... Request URL: {RequestUrl}", requestUrl);
+			try
+			{
+				var propertyInfo = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty(propertyName);
+				if (propertyInfo == null)
+				{
+					throw new FailedToExtractPropertyException("Event's value type doesn't have expected property." +
+						$" Expected property name: `{propertyName}' Event: {kv}");
+				}
 
-			var transaction = _agent.Tracer.CurrentTransaction;
+				var propertyObject = propertyInfo.GetValue(kv.Value);
+
+				if (!typeof(TProperty).IsAssignableFrom(propertyInfo.PropertyType))
+				{
+					throw new FailedToExtractPropertyException("Actual type of property value in doesn't match the expected type." +
+						$" Expected type: {typeof(TProperty).FullName}." +
+						$" Actual type: {propertyObject?.GetType().FullName}." +
+						$" Property name: {propertyName}." +
+						$" Property value: {propertyObject}." +
+						$" Event: {kv}.");
+				}
+
+				return (TProperty)propertyObject;
+			}
+			catch (FailedToExtractPropertyException)
+			{
+				throw;
+			}
+			catch (Exception ex)
+			{
+				throw new FailedToExtractPropertyException("Failed to extract property from event." +
+					$" Property name: {propertyName}." +
+					$" Expected property type: {typeof(TProperty).FullName}." +
+					$" Event: {kv}.",
+					ex);
+			}
+		}
+
+		protected void ProcessStartStopEvent(IEventData eventData, bool isStart)
+		{
+			if (IsRequestFilteredOut(eventData.Url))
+			{
+				_logger.Trace()?.Log("Request URL ({RequestUrl}) is filtered out - exiting", eventData.Url);
+				return;
+			}
+
+			if (isStart)
+				ProcessStartEvent(eventData);
+			else
+				ProcessStopEvent(eventData);
+		}
+
+		protected void ProcessStartEvent(IEventData eventData)
+		{
+			_logger.Trace()?.Log("Processing start event... Request URL: {RequestUrl}", eventData.Url);
+
+			var transaction = Agent.Tracer.CurrentTransaction;
 			if (transaction == null)
 			{
 				_logger.Debug()?.Log("No current transaction, skip creating span for outgoing HTTP request");
 				return;
 			}
 
-			var currentExecutionSegment = _agent.Tracer.CurrentSpan ?? (IExecutionSegment)transaction;
+			var currentExecutionSegment = Agent.Tracer.CurrentSpan ?? (IExecutionSegment)transaction;
 			var span = currentExecutionSegment.StartSpan(
-				$"{RequestGetMethod(request)} {requestUrl.Host}",
+				$"{eventData.Method} {eventData.Url.Host}",
 				ApiConstants.TypeExternal,
 				ApiConstants.SubtypeHttp);
 
-			if (!ProcessingRequests.TryAdd(request, span))
+			if (!ProcessingRequests.TryAdd(eventData.Request, span))
 			{
 				// Consider improving error reporting - see https://github.com/elastic/apm-agent-dotnet/issues/280
 				_logger.Error()?.Log("Failed to add to ProcessingRequests - ???");
 				return;
 			}
 
-			if (!RequestHeadersContain(request, TraceParent.TraceParentHeaderName))
+			if (!eventData.ContainsRequestHeader(TraceParent.TraceParentHeaderName))
 				// We call TraceParent.BuildTraceparent explicitly instead of DistributedTracingData.SerializeToString because
 				// in the future we might change DistributedTracingData.SerializeToString to use some other internal format
 				// but here we want the string to be in W3C 'traceparent' header format.
-				RequestHeadersAdd(request, TraceParent.TraceParentHeaderName, TraceParent.BuildTraceparent(span.OutgoingDistributedTracingData));
+				eventData.AddRequestHeader(TraceParent.TraceParentHeaderName, TraceParent.BuildTraceparent(span.OutgoingDistributedTracingData));
 
-			if (transaction.IsSampled) span.Context.Http = new Http { Url = requestUrl.ToString(), Method = RequestGetMethod(request) };
+			if (transaction.IsSampled) span.Context.Http = new Http { Url = eventData.Url.ToString(), Method = eventData.Method };
 		}
 
-		private void ProcessStopEvent(object eventValue, TRequest request, Uri requestUrl)
+		protected void ProcessStopEvent(IEventData eventData)
 		{
-			_logger.Trace()?.Log("Processing stop event... Request URL: {RequestUrl}", requestUrl);
+			_logger.Trace()?.Log("Processing stop event... Request URL: {RequestUrl}", eventData.Url);
 
-			if (!ProcessingRequests.TryRemove(request, out var span))
+			if (!ProcessingRequests.TryRemove(eventData.Request, out var span))
 			{
 				_logger.Warning()
-					?.Log("Failed capturing request (failed to remove from ProcessingRequests) - " +
-						"This Span will be skipped in case it wasn't captured before. " +
-						"Request: method: {HttpMethod}, URL: {RequestUrl}", RequestGetMethod(request), requestUrl);
+					?.Log("Failed to remove from ProcessingRequests - " +
+						"it might be because Start event was not captured successfully. " +
+						"Request: method: {HttpMethod}, URL: {RequestUrl}", eventData.Method, eventData.Url);
 				return;
 			}
 
 			// if span.Context.Http == null that means the transaction is not sampled (see ProcessStartEvent)
-			if (span.Context.Http != null)
-			{
-				//TODO: response can be null if for example the request Task is Faulted.
-				//E.g. writing this from an airplane without internet, and requestTaskStatus is "Faulted" and response is null
-				//How do we report this? There is no response code in that case.
-				var responseObject = eventValue.GetType().GetTypeInfo().GetDeclaredProperty(EventResponsePropertyName)?.GetValue(eventValue);
-				if (responseObject != null)
-				{
-					if (responseObject is TResponse response)
-						span.Context.Http.StatusCode = ResponseGetStatusCode(response);
-					else
-					{
-						_logger.Trace()
-							?.Log("Actual type of object ({EventResponsePropertyActualType}) in event's {EventResponsePropertyName} property " +
-								"doesn't match the expected type ({EventResponsePropertyExpectedType})",
-								responseObject.GetType().FullName, EventResponsePropertyName, typeof(TResponse).FullName);
-					}
-				}
-			}
+			// and thus we don't need to capture spans' context
+			if (span.Context.Http != null) span.Context.Http.StatusCode = eventData.StatusCode;
 
 			span.End();
-		}
-
-		protected virtual void ProcessExceptionEvent(object eventValue, Uri requestUrl)
-		{
-			_logger.Trace()?.Log("Processing exception event... Request URL: {RequestUrl}", requestUrl);
-
-			if (!(eventValue.GetType().GetTypeInfo().GetDeclaredProperty(EventExceptionPropertyName)?.GetValue(eventValue) is Exception exception))
-			{
-				_logger.Trace()?.Log("Failed reading exception property");
-				return;
-			}
-
-			var transaction = _agent.Tracer.CurrentTransaction;
-
-			transaction?.CaptureException(exception, "Failed outgoing HTTP request");
-			//TODO: we don't know if exception is handled, currently reports handled = false
 		}
 
 		/// <summary>
@@ -202,6 +198,13 @@ namespace Elastic.Apm.DiagnosticListeners
 		/// </summary>
 		/// <returns><c>true</c>, if request should not be captured, <c>false</c> otherwise.</returns>
 		/// <param name="requestUri">Request URI. It cannot be null</param>
-		private bool IsRequestFilteredOut(Uri requestUri) => _agent.ConfigurationReader.ServerUrls.Any(n => n.IsBaseOf(requestUri));
+		protected bool IsRequestFilteredOut(Uri requestUri) => Agent.ConfigurationReader.ServerUrls.Any(n => n.IsBaseOf(requestUri));
+
+		protected class FailedToExtractPropertyException : Exception
+		{
+			internal FailedToExtractPropertyException(string message) : base(message) { }
+
+			internal FailedToExtractPropertyException(string message, Exception cause) : base(message, cause) { }
+		}
 	}
 }

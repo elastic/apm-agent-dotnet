@@ -39,10 +39,12 @@ namespace Elastic.Apm.Tests
 		}
 
 		private static string StartEventKey(IDiagnosticListener listener) =>
-			DispatchToImpl(listener, impl => impl.StartEventKey, impl => impl.StartEventKey);
+			DispatchToImpl(listener, impl => HttpDiagnosticListenerCoreImpl.StartEventKey,
+				impl => HttpDiagnosticListenerFullFrameworkImpl.StartEventKey);
 
 		private static string StopEventKey(IDiagnosticListener listener) =>
-			DispatchToImpl(listener, impl => impl.StopEventKey, impl => impl.StopEventKey);
+			DispatchToImpl(listener, impl => HttpDiagnosticListenerCoreImpl.StopEventKey,
+				impl => HttpDiagnosticListenerFullFrameworkImpl.StopEventKey);
 
 		private static int ProcessingRequestsCount(IDiagnosticListener listener) =>
 			DispatchToImpl(listener, impl => impl.ProcessingRequests.Count, impl => impl.ProcessingRequests.Count);
@@ -95,7 +97,7 @@ namespace Elastic.Apm.Tests
 			var request = new HttpRequestMessage(HttpMethod.Get, "https://elastic.co");
 
 			//Simulate Start
-			listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Start", new { Request = request }));
+			listener.OnNext(new KeyValuePair<string, object>(StartEventKey(listener), new { Request = request }));
 			ProcessingRequestsCount(listener).Should().Be(1);
 			GetSpanForRequest(listener, request).Context.Http.Url.Should().Be(request.RequestUri.ToString());
 			GetSpanForRequest(listener, request).Context.Http.Method.Should().Be(HttpMethod.Get.ToString());
@@ -159,7 +161,7 @@ namespace Elastic.Apm.Tests
 			logger.Lines
 				.Should()
 				.Contain(
-					line => line.Contains("HttpDiagnosticListener") && line.Contains("Failed capturing request")
+					line => line.Contains("HttpDiagnosticListener") && line.Contains("Failed to remove from ProcessingRequests")
 						&& line.Contains(HttpMethod.Get.Method)
 						&& line.Contains(request.RequestUri.AbsoluteUri));
 			payloadSender.Transactions.Should().NotBeNull();
@@ -179,7 +181,7 @@ namespace Elastic.Apm.Tests
 			var myFake = new StringBuilder(); //just a random type that is not planned to be passed into OnNext
 
 			var exception =
-				Record.Exception(() => { listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Start", myFake)); });
+				Record.Exception(() => { listener.OnNext(new KeyValuePair<string, object>(StartEventKey(listener), myFake)); });
 
 			exception.Should().BeNull();
 		}
@@ -196,7 +198,7 @@ namespace Elastic.Apm.Tests
 			var listener = HttpDiagnosticListener.New(agent);
 
 			var exception =
-				Record.Exception(() => { listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Start", null)); });
+				Record.Exception(() => { listener.OnNext(new KeyValuePair<string, object>(StartEventKey(listener), null)); });
 
 			exception.Should().BeNull();
 		}
@@ -281,10 +283,14 @@ namespace Elastic.Apm.Tests
 				var httpClient = new HttpClient();
 
 				Func<Task> act = async () => await httpClient.GetAsync("http://nonexistenturl_dsfdsf.ghkdehfn");
-				await act.Should().ThrowAsync<Exception>();
+				await act.Should().ThrowAsync<HttpRequestException>();
 			}
 
-			payloadSender.Errors.Should().NotBeEmpty();
+			payloadSender.Spans.Should().HaveCount(1);
+			payloadSender.FirstSpan.Context.Http.StatusCode.Should().BeNull();
+			payloadSender.Errors.Should().HaveCount(1);
+			payloadSender.FirstError.Exception.Message.Should().Contain("No such host is known");
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstSpan.Id);
 		}
 
 		/// <summary>
@@ -303,17 +309,24 @@ namespace Elastic.Apm.Tests
 
 				var request = new HttpRequestMessage(HttpMethod.Get, "https://elastic.co");
 
-				//Simulate Start
-				listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Start", new { Request = request }));
+				// Simulate Start - this test case is .NET Core specific (because Full Framework doesn't have _Exception_ event)
+				// so we use key string from HttpDiagnosticListenerCoreImpl
+				listener.OnNext(new KeyValuePair<string, object>(HttpDiagnosticListenerCoreImpl.StartEventKey, new { Request = request }));
 
 				const string exceptionMsg = "Sample exception msg";
 				var exception = new Exception(exceptionMsg);
 				//Simulate Exception
-				listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Exception", new { Request = request, Exception = exception }));
+				listener.OnNext(new KeyValuePair<string, object>(HttpDiagnosticListenerCoreImpl.ExceptionEventKey,
+					new { Request = request, Exception = exception }));
+				listener.OnNext(new KeyValuePair<string, object>(HttpDiagnosticListenerCoreImpl.StopEventKey,
+					new { Request = request, Response = (HttpResponseMessage)null }));
 
-				payloadSender.Errors.Should().NotBeEmpty();
+				payloadSender.Spans.Should().HaveCount(1);
+				payloadSender.FirstSpan.Context.Http.StatusCode.Should().BeNull();
+				payloadSender.Errors.Should().HaveCount(1);
 				payloadSender.FirstError.Exception.Message.Should().Be(exceptionMsg);
 				payloadSender.FirstError.Exception.Type.Should().Be(typeof(Exception).FullName);
+				payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstSpan.Id);
 			}
 		}
 
