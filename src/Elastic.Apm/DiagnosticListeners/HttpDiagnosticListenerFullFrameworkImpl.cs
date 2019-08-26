@@ -33,7 +33,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		/// <summary>
 		/// In Full Framework "System.Net.Http.Desktop.HttpRequestOut.Ex.Stop" does not send the exception property.
-		/// Therefore we have a specialized ProcessExceptionEvent for Full Framework. 
+		/// Therefore we have a specialized ProcessExceptionEvent for Full Framework.
 		/// </summary>
 		protected override void ProcessExceptionEvent(object eventValue, Uri requestUrl)
 		{
@@ -46,7 +46,7 @@ namespace Elastic.Apm.DiagnosticListeners
 				Logger.Trace()
 					?.Log("Actual type of object ({EventRequestPropertyActualType}) in event's {EventRequestPropertyName} property " +
 						"doesn't match the expected type ({EventRequestPropertyExpectedType}) - exiting",
-						requestObject.GetType().FullName, EventRequestPropertyName, typeof(HttpWebRequest).FullName);
+						requestObject?.GetType().FullName, EventRequestPropertyName, typeof(HttpWebRequest).FullName);
 				return;
 			}
 			if (!ProcessingRequests.TryRemove(request, out var span))
@@ -69,8 +69,10 @@ namespace Elastic.Apm.DiagnosticListeners
 						span.Context.Http.StatusCode = (int)statusCode;
 
 						if (span.Context.Http.StatusCode >= 300)
+						{
 							span.CaptureError($"Failed outgoing HTTP call with HttpClient - StatusCode: {statusCode.ToString()}",
 								$"HTTP {statusCode}", null);
+						}
 					}
 					else
 					{
