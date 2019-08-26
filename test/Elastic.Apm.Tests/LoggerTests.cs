@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
 
@@ -53,7 +54,7 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Logs a message with exception by using <see cref="LoggingExtensions.MaybeLogger.LogException"/>.
+		/// Logs a message with exception by using <see cref="LoggingExtensions.MaybeLogger.LogException" />.
 		/// Makes sure that both the message and the exception is printed.
 		/// First the Message is printed and the exception is in the last line.
 		/// </summary>
@@ -64,8 +65,9 @@ namespace Elastic.Apm.Tests
 
 			logger.Warning()
 				?.LogException(
-					new Exception("Something went wrong"), $"Failed sending events. Following events were not transferred successfully to the server:{Environment.NewLine}{{items}}",
-					string.Join($",{Environment.NewLine}", new List<string>{"Item1", "Item2", "Item3"} ));
+					new Exception("Something went wrong"),
+					$"Failed sending events. Following events were not transferred successfully to the server:{Environment.NewLine}{{items}}",
+					string.Join($",{Environment.NewLine}", new List<string> { "Item1", "Item2", "Item3" }));
 
 			logger.Lines[0]
 				.Should()
@@ -77,14 +79,78 @@ namespace Elastic.Apm.Tests
 
 			logger.Lines.Last()
 				.Should()
-				.ContainAll(new List<string>
-				{
-					"System.Exception",
-					"Something went wrong"
-				});
+				.ContainAll(new List<string> { "System.Exception", "Something went wrong" });
 		}
 
-		private TestLogger LogWithLevel(LogLevel logLevel)
+		[Fact]
+		public void LogException_should_print_stack_trace_including_for_inner_exceptions()
+		{
+			const string msg5 = "Message for exception thrown from func #5";
+			const string msg3 = "Message for exception rethrown from func #3";
+			const string msg1 = "Message for exception rethrown from func #1";
+			const string capturingLogMsgArg = "Capturing log message arg";
+
+			void LogExceptionShouldIncludeStackTraceFunc1()
+			{
+				try
+				{
+					LogExceptionShouldIncludeStackTraceFunc2();
+				}
+				catch (Exception ex)
+				{
+					throw new Exception(msg1, ex);
+				}
+			}
+
+			void LogExceptionShouldIncludeStackTraceFunc2()
+			{
+				LogExceptionShouldIncludeStackTraceFunc3();
+			}
+
+			void LogExceptionShouldIncludeStackTraceFunc3()
+			{
+				try
+				{
+					LogExceptionShouldIncludeStackTraceFunc4();
+				}
+				catch (Exception ex)
+				{
+					throw new Exception(msg3, ex);
+				}
+			}
+
+			void LogExceptionShouldIncludeStackTraceFunc4()
+			{
+				LogExceptionShouldIncludeStackTraceFunc5();
+			}
+
+			void LogExceptionShouldIncludeStackTraceFunc5()
+			{
+				throw new Exception(msg5);
+			}
+
+			var logger = new TestLogger(LogLevel.Warning);
+
+			try
+			{
+				LogExceptionShouldIncludeStackTraceFunc1();
+			}
+			catch (Exception ex)
+			{
+				logger.Warning()?.LogException(ex, "Exception has been thrown. Arg: {Arg}", capturingLogMsgArg);
+			}
+
+			logger.Lines.Should().Contain(line => line.Contains(capturingLogMsgArg));
+
+			logger.Lines.Should().Contain(line => line.Contains(msg1));
+			logger.Lines.Should().Contain(line => line.Contains(msg3));
+			logger.Lines.Should().Contain(line => line.Contains(msg5));
+
+			5.Repeat(i => { logger.Lines.Should().Contain(line => line.Contains($"LogExceptionShouldIncludeStackTraceFunc{i + 1}")); });
+			logger.Lines.Should().NotContain(line => line.Contains("LogExceptionShouldIncludeStackTraceFunc6"));
+		}
+
+		private static TestLogger LogWithLevel(LogLevel logLevel)
 		{
 			var logger = new TestLogger(logLevel);
 
