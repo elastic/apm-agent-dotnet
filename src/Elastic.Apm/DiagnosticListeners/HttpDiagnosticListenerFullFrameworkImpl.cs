@@ -37,13 +37,13 @@ namespace Elastic.Apm.DiagnosticListeners
 		/// </summary>
 		protected override void ProcessExceptionEvent(object eventValue, Uri requestUrl)
 		{
-			_logger.Trace()?.Log("Processing stop.ex event... Request URL: {RequestUrl}", requestUrl);
+			Logger.Trace()?.Log("Processing stop.ex event... Request URL: {RequestUrl}", requestUrl);
 
 			var requestObject = eventValue.GetType().GetTypeInfo().GetDeclaredProperty(EventRequestPropertyName)?.GetValue(eventValue);
 
 			if (!(requestObject is HttpWebRequest request))
 			{
-				_logger.Trace()
+				Logger.Trace()
 					?.Log("Actual type of object ({EventRequestPropertyActualType}) in event's {EventRequestPropertyName} property " +
 						"doesn't match the expected type ({EventRequestPropertyExpectedType}) - exiting",
 						requestObject.GetType().FullName, EventRequestPropertyName, typeof(HttpWebRequest).FullName);
@@ -51,7 +51,7 @@ namespace Elastic.Apm.DiagnosticListeners
 			}
 			if (!ProcessingRequests.TryRemove(request, out var span))
 			{
-				_logger.Warning()
+				Logger.Warning()
 					?.Log("Failed capturing request (failed to remove from ProcessingRequests) - " +
 						"This Span will be skipped in case it wasn't captured before. " +
 						"Request: method: {HttpMethod}, URL: {RequestUrl}", RequestGetMethod(request), requestUrl);
@@ -74,7 +74,7 @@ namespace Elastic.Apm.DiagnosticListeners
 					}
 					else
 					{
-						_logger.Trace()
+						Logger.Trace()
 							?.Log("Actual type of object ({EventStatusCodePropertyActualType}) in event's {EventStatusCodePropertyName} property " +
 								"doesn't match the expected type ({EventStatusCodeePropertyExpectedType})",
 								statusCodeObject.GetType().FullName, "StatusCode", typeof(HttpStatusCode).FullName);
