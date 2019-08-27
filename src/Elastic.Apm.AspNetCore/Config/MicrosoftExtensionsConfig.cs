@@ -20,6 +20,7 @@ namespace Elastic.Apm.AspNetCore.Config
 			internal const string LogLevel = "ElasticApm:LogLevel";
 			internal const string ServerUrls = "ElasticApm:ServerUrls";
 			internal const string ServiceName = "ElasticApm:ServiceName";
+			internal const string ServiceVersion = "ElasticApm:ServiceVersion";
 			internal const string SecretToken = "ElasticApm:SecretToken";
 			internal const string CaptureHeaders = "ElasticApm:CaptureHeaders";
 			internal const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
@@ -76,6 +77,8 @@ namespace Elastic.Apm.AspNetCore.Config
 		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(ReadFallBack(Keys.ServerUrls, ConfigConsts.EnvVarNames.ServerUrls));
 
 		public string ServiceName => ParseServiceName(ReadFallBack(Keys.ServiceName, ConfigConsts.EnvVarNames.ServiceName));
+
+		public string ServiceVersion => ParseServiceVersion(ReadFallBack(Keys.ServiceVersion, ConfigConsts.EnvVarNames.ServiceVersion));
 
 		public double SpanFramesMinDurationInMilliseconds => _spanFramesMinDurationInMilliseconds.Value;
 

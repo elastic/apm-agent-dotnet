@@ -110,6 +110,26 @@ NOTE: The service name must conform to this regular expression: ^[a-zA-Z0-9 _-]+
 |============
 
 [float]
+[[config-service-version]]
+==== `ServiceVersion`
+
+A version string for the currently deployed version of the service. If you don’t
+version your deployments, the recommended value for this field is the commit identifier
+of the deployed revision, e.g. the output of git rev-parse HEAD.
+
+[options="header"]
+|============
+| Environment variable name      | IConfiguration key 
+| `ELASTIC_APM_SERVICE_VERSION` | `ElasticApm:ServiceVersion`
+|============
+
+[options="header"]
+|============
+| Default                                        | Type
+| Informational version of the entry assembly    | String 
+|============
+
+[float]
 [[config-transaction-sample-rate]]
 ==== `TransactionSampleRate`
 
