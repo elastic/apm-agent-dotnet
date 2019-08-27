@@ -71,10 +71,8 @@ namespace Elastic.Apm.Config
 			return ConsoleLogger.DefaultLogLevel;
 		}
 
-		protected IReadOnlyList<Uri> ParseServerUrls(ConfigurationKeyValue kv)
-		{
-			return _cachedServerUrls.IfNotInited?.InitOrGet(() => ParseServerUrlsImpl(kv)) ?? _cachedServerUrls.Value;
-		}
+		protected IReadOnlyList<Uri> ParseServerUrls(ConfigurationKeyValue kv) =>
+			_cachedServerUrls.IfNotInited?.InitOrGet(() => ParseServerUrlsImpl(kv)) ?? _cachedServerUrls.Value;
 
 		private IReadOnlyList<Uri> ParseServerUrlsImpl(ConfigurationKeyValue kv)
 		{
@@ -271,11 +269,19 @@ namespace Elastic.Apm.Config
 			}
 		}
 
-		protected virtual string DiscoverServiceName()
+		private AssemblyName DiscoverEntryAssemblyName()
 		{
 			var entryAssemblyName = Assembly.GetEntryAssembly()?.GetName();
 			if (entryAssemblyName != null && !IsMsOrElastic(entryAssemblyName.GetPublicKeyToken()))
-				return entryAssemblyName.Name;
+				return entryAssemblyName;
+
+			return null;
+		}
+
+		protected virtual string DiscoverServiceName()
+		{
+			var entryAssemblyName = DiscoverEntryAssemblyName();
+			if (entryAssemblyName != null) return entryAssemblyName.Name;
 
 			var stackFrames = new StackTrace().GetFrames();
 			if (stackFrames == null) return null;
@@ -325,6 +331,37 @@ namespace Elastic.Apm.Config
 					" You can fix this by setting the service name to a specific value (e.g. by using the environment variable {ServiceNameVariable})",
 					DefaultValues.UnknownServiceName, EnvVarNames.ServiceName);
 			return DefaultValues.UnknownServiceName;
+		}
+
+		private string DiscoverServiceVersion()
+		{
+			var entryAssembly = Assembly.GetEntryAssembly();
+			if (entryAssembly != null && !IsMsOrElastic(entryAssembly.GetName().GetPublicKeyToken()))
+				return entryAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+
+			return null;
+		}
+
+		protected string ParseServiceVersion(ConfigurationKeyValue kv)
+		{
+			var versionInConfig = kv.Value;
+
+			if (!string.IsNullOrEmpty(versionInConfig)) return versionInConfig;
+
+			Logger?.Info()?.Log("The agent was started without a service version. The service version will be automatically discovered.");
+
+			var discoveredVersion = DiscoverServiceVersion();
+			if (discoveredVersion != null)
+			{
+				Logger?.Info()
+					?.Log("The agent was started without a service version. The automatically discovered service version is {ServiceVersion}",
+						discoveredVersion);
+				return discoveredVersion;
+			}
+
+			Logger?.Warning()?.Log("Failed to discover service version, the service version will be omitted.");
+
+			return null;
 		}
 
 		private static bool TryParseFloatingPoint(string valueAsString, out double result) =>

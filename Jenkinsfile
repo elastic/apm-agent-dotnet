@@ -34,7 +34,7 @@ pipeline {
     stage('Initializing'){
       stages{
         stage('Checkout') {
-          agent { label 'master || immutable' }
+          agent { label 'immutable' }
           options { skipDefaultCheckout() }
           steps {
             deleteDir()
