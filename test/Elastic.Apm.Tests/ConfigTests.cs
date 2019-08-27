@@ -366,6 +366,23 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
+		/// Sets the ELASTIC_APM_SERVICE_VERSION environment variable and makes sure that
+		/// when the agent sends data to the server it has the value from the
+		/// ELASTIC_APM_SERVICE_VERSION environment variable as service version.
+		/// </summary>
+		[Fact]
+		public void ReadServiceVersionViaEnvironmentVariable()
+		{
+			var serviceVersion = "2.1.0.5";
+			Environment.SetEnvironmentVariable(EnvVarNames.ServiceVersion, serviceVersion);
+			var payloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+
+			agent.Service.Version.Should().Be(serviceVersion);
+		}
+
+		/// <summary>
 		/// In case the user does not provide us a service name we try to calculate it based on the callstack.
 		/// This test makes sure we recognize mscorlib and our own assemblies correctly in the
 		/// <see cref="AbstractConfigurationReader.IsMsOrElastic(byte[])" /> method.

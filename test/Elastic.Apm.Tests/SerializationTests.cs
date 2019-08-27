@@ -199,6 +199,22 @@ namespace Elastic.Apm.Tests
 			Assert.Equal("...", deserializedDb.Statement.Substring(10_000 - 3, 3));
 		}
 
+		[Fact]
+		public void ServiceVersionLengthTest()
+		{
+			var logger = new NoopLogger();
+			var service = Service.GetDefaultService(new TestAgentConfigurationReader(logger), logger);
+			service.Version = new string('a', 1200);
+
+			var json = SerializePayloadItem(service);
+			var deserializedService = JsonConvert.DeserializeObject<Service>(json);
+
+			Assert.NotNull(deserializedService);
+
+			Assert.Equal(Consts.PropertyMaxLength, deserializedService.Version.Length);
+			Assert.Equal("...", deserializedService.Version.Substring(Consts.PropertyMaxLength - 3, 3));
+		}
+
 		/// <summary>
 		/// Creates a service instance with a name that is longer than <see cref="Consts.PropertyMaxLength" />.
 		/// Makes sure the name is truncated.

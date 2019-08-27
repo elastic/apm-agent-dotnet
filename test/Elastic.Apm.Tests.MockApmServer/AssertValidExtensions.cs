@@ -217,7 +217,16 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 			thisObj.Code?.AssertValid();
 			thisObj.StackTrace?.AssertValid();
-			thisObj.Type.AssertValid();
+
+			if (string.IsNullOrEmpty(thisObj.Type))
+				thisObj.Message.AssertValid();
+			else
+				thisObj.Message?.AssertValid();
+
+			if (string.IsNullOrEmpty(thisObj.Message))
+				thisObj.Type.AssertValid();
+			else
+				thisObj.Type?.AssertValid();
 		}
 
 		internal static void AssertValid(this Database thisObj)
