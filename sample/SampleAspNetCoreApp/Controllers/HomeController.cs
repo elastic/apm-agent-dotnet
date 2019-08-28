@@ -169,6 +169,13 @@ namespace SampleAspNetCoreApp.Controllers
 		}
 
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+
 		public IActionResult Error() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+		
+		[HttpPost, Route("api/Home/Post")]
+		public ActionResult<string> Post() => "somevalue";
+
+		[HttpPost, Route("api/Home/PostError")]
+		public ActionResult<string> PostError() => throw new Exception("This is a post method test exception!");
 	}
 }

@@ -23,6 +23,8 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 
 		internal const string CustomChildSpanThrowsPageRelativePath = HomePageRelativePath + "/" + nameof(CustomChildSpanThrows);
 
+		internal const string ForbidHttpResponsePageRelativePath = HomePageRelativePath + "/" + nameof(ForbidHttpResponse);
+
 		internal const string CustomSpanThrowsInternalMethodName = nameof(CustomSpanThrowsInternal);
 		internal const string CustomSpanThrowsPageRelativePath = HomePageRelativePath + "/" + nameof(CustomSpanThrows);
 
@@ -63,6 +65,15 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 					CaptureControllerActionAsSpanQueryStringKey);
 			}
 			return bool.Parse(captureControllerActionAsSpanValues[0]);
+		}
+
+		public async Task<ActionResult> ForbidHttpResponse()
+		{
+			//see https://github.com/elastic/apm-agent-dotnet/issues/443
+			var httpClient = new HttpClient();
+			var res = await httpClient.GetAsync("https://httpstat.us/403");
+			var retVal = new ContentResult { Content = res.IsSuccessStatusCode.ToString() };
+			return retVal;
 		}
 
 		public Task<ActionResult> Contact()

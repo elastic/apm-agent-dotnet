@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
+using static Elastic.Apm.Config.ConfigConsts;
 
 namespace Elastic.Apm.Config
 {
@@ -81,10 +82,8 @@ namespace Elastic.Apm.Config
 			return ConsoleLogger.DefaultLogLevel;
 		}
 
-		protected IReadOnlyList<Uri> ParseServerUrls(ConfigurationKeyValue kv)
-		{
-			return _cachedServerUrls.IfNotInited?.InitOrGet(() => ParseServerUrlsImpl(kv)) ?? _cachedServerUrls.Value;
-		}
+		protected IReadOnlyList<Uri> ParseServerUrls(ConfigurationKeyValue kv) =>
+			_cachedServerUrls.IfNotInited?.InitOrGet(() => ParseServerUrlsImpl(kv)) ?? _cachedServerUrls.Value;
 
 		private IReadOnlyList<Uri> ParseServerUrlsImpl(ConfigurationKeyValue kv)
 		{
@@ -286,11 +285,19 @@ namespace Elastic.Apm.Config
 			}
 		}
 
-		protected virtual string DiscoverServiceName()
+		private AssemblyName DiscoverEntryAssemblyName()
 		{
 			var entryAssemblyName = Assembly.GetEntryAssembly()?.GetName();
 			if (entryAssemblyName != null && !IsMsOrElastic(entryAssemblyName.GetPublicKeyToken()))
-				return entryAssemblyName.Name;
+				return entryAssemblyName;
+
+			return null;
+		}
+
+		protected virtual string DiscoverServiceName()
+		{
+			var entryAssemblyName = DiscoverEntryAssemblyName();
+			if (entryAssemblyName != null) return entryAssemblyName.Name;
 
 			var stackFrames = new StackTrace().GetFrames();
 			if (stackFrames == null) return null;
@@ -342,6 +349,37 @@ namespace Elastic.Apm.Config
 					" You can fix this by setting the service name to a specific value (e.g. by using the environment variable {ServiceNameVariable})",
 					ConfigConsts.DefaultValues.UnknownServiceName, ConfigConsts.EnvVarNames.ServiceName);
 			return ConfigConsts.DefaultValues.UnknownServiceName;
+		}
+
+		private string DiscoverServiceVersion()
+		{
+			var entryAssembly = Assembly.GetEntryAssembly();
+			if (entryAssembly != null && !IsMsOrElastic(entryAssembly.GetName().GetPublicKeyToken()))
+				return entryAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+
+			return null;
+		}
+
+		protected string ParseServiceVersion(ConfigurationKeyValue kv)
+		{
+			var versionInConfig = kv.Value;
+
+			if (!string.IsNullOrEmpty(versionInConfig)) return versionInConfig;
+
+			Logger?.Info()?.Log("The agent was started without a service version. The service version will be automatically discovered.");
+
+			var discoveredVersion = DiscoverServiceVersion();
+			if (discoveredVersion != null)
+			{
+				Logger?.Info()
+					?.Log("The agent was started without a service version. The automatically discovered service version is {ServiceVersion}",
+						discoveredVersion);
+				return discoveredVersion;
+			}
+
+			Logger?.Warning()?.Log("Failed to discover service version, the service version will be omitted.");
+
+			return null;
 		}
 
 		private static bool TryParseFloatingPoint(string valueAsString, out double result) =>
@@ -427,6 +465,41 @@ namespace Elastic.Apm.Config
 			M,
 			Ms,
 			S
+		}
+
+		protected string ParseCaptureBody(ConfigurationKeyValue kv)
+		{
+			var captureBodyInConfig = kv.Value;
+			if (string.IsNullOrEmpty(captureBodyInConfig))
+				return DefaultValues.CaptureBody;
+
+			if (!SupportedValues.CaptureBodySupportedValues.Contains(captureBodyInConfig.ToLowerInvariant()))
+			{
+				Logger?.Error()
+				?.Log("The CaptureBody value that was provided ('{DefaultServiceName}') in the configuration is not allowed. request body will not be captured." +
+					"The supported values are : ",
+					captureBodyInConfig.ToLowerInvariant(), string.Join(", ", SupportedValues.CaptureBodySupportedValues));
+				return DefaultValues.CaptureBody;
+			}
+			return captureBodyInConfig.ToLowerInvariant();
+		}
+
+		protected List<string> ParseCaptureBodyContentTypes(ConfigurationKeyValue kv, string captureBody)
+		{
+			var captureBodyContentTypesInConfig = kv.Value;
+
+			//CaptureBodyContentTypes and CaptureBody are linked. Verify that in case CaptureBody is ON - then CaptureBodyContentTypes is not empty
+			if (string.IsNullOrEmpty(captureBodyContentTypesInConfig) && captureBody != SupportedValues.CaptureBodyOff)
+			{
+				Logger?.Error()?.Log("Capture_Body is on but no content types are configured. Request bodies will not be captured.");
+				return new List<string>();
+			}
+
+			var captureBodyContentTypes = new List<string>();
+			if (captureBodyContentTypesInConfig != null)
+				captureBodyContentTypes = captureBodyContentTypesInConfig.Split(',').Select(p => p.Trim()).ToList();
+
+			return captureBodyContentTypes;
 		}
 	}
 }

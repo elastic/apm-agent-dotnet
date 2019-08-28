@@ -12,6 +12,7 @@ namespace Elastic.Apm.Config
 		string SecretToken { get; }
 		IReadOnlyList<Uri> ServerUrls { get; }
 		string ServiceName { get; }
+		string ServiceVersion { get; }
 
 		/// <summary>
 		/// The agent limits stack trace collection to spans with durations equal or longer than the given value
@@ -30,5 +31,9 @@ namespace Elastic.Apm.Config
 		int StackTraceLimit { get; }
 
 		double TransactionSampleRate { get; }
+
+		string CaptureBody { get; }
+
+		List<string> CaptureBodyContentTypes { get; }
 	}
 }

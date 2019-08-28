@@ -16,6 +16,16 @@ namespace Elastic.Apm.Tests
 	/// </summary>
 	public class SerializationTests
 	{
+		// ReSharper disable once MemberCanBePrivate.Global
+		public static TheoryData SerializationUtilsTrimToPropertyMaxLengthVariantsToTest => new TheoryData<string, string>
+		{
+			{ "", "" },
+			{ "A", "A" },
+			{ "B".Repeat(Consts.PropertyMaxLength), "B".Repeat(Consts.PropertyMaxLength) },
+			{ "C".Repeat(Consts.PropertyMaxLength + 1), "C".Repeat(Consts.PropertyMaxLength - 3) + "..." },
+			{ "D".Repeat(Consts.PropertyMaxLength * 2), "D".Repeat(Consts.PropertyMaxLength - 3) + "..." }
+		};
+
 		/// <summary>
 		/// Tests the <see cref="TrimmedStringJsonConverter" />. It serializes a transaction with Transaction.Name.Length > 1024.
 		/// Makes sure that the Transaction.Name is truncated correctly.
@@ -116,6 +126,38 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
+		/// Makes sure that labels with `null` don't cause exception during serialization
+		/// </summary>
+		[Fact]
+		public void LabelWithNullValueShouldBeCaptured()
+		{
+			var context = new SpanContext();
+			context.Labels["foo"] = null;
+
+			var json = SerializePayloadItem(context);
+			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
+
+			Assert.NotNull(deserializedContext);
+			deserializedContext["tags"]["foo"].Value<string>().Should().BeNull();
+		}
+
+		/// <summary>
+		/// Makes sure that labels with an empty string are captured and not causing any trouble
+		/// </summary>
+		[Fact]
+		public void LabelWithEmptyStringShouldBeCaptured()
+		{
+			var context = new SpanContext();
+			context.Labels["foo"] = string.Empty;
+
+			var json = SerializePayloadItem(context);
+			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
+
+			Assert.NotNull(deserializedContext);
+			deserializedContext["tags"]["foo"].Value<string>().Should().BeEmpty();
+		}
+
+		/// <summary>
 		/// It creates an instance of <see cref="DummyType" /> with a <see cref="DummyType.DictionaryProp" /> that has a value
 		/// which is longer than <see cref="Consts.PropertyMaxLength" />.
 		/// Makes sure that the serialized instance still contains the whole value (aka it was not trimmed), since
@@ -139,13 +181,13 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Creates a db instance with a statement that is longer than <see cref="Consts.PropertyMaxLength" />.
-		/// Makes sure the statement is not truncated.
+		/// Creates a db instance with a statement that is longer than 10 000 characters.
+		/// Makes sure the statement is truncated.
 		/// </summary>
 		[Fact]
 		public void DbStatementLengthTest()
 		{
-			var str = new string('a', 1200);
+			var str = new string('a', 12000);
 			var db = new Database { Statement = str };
 
 			var json = SerializePayloadItem(db);
@@ -153,12 +195,28 @@ namespace Elastic.Apm.Tests
 
 			Assert.NotNull(deserializedDb);
 
-			Assert.Equal(str.Length, deserializedDb.Statement.Length);
-			Assert.Equal(str, deserializedDb.Statement);
+			Assert.Equal(10_000, deserializedDb.Statement.Length);
+			Assert.Equal("...", deserializedDb.Statement.Substring(10_000 - 3, 3));
+		}
+
+		[Fact]
+		public void ServiceVersionLengthTest()
+		{
+			var logger = new NoopLogger();
+			var service = Service.GetDefaultService(new TestAgentConfigurationReader(logger), logger);
+			service.Version = new string('a', 1200);
+
+			var json = SerializePayloadItem(service);
+			var deserializedService = JsonConvert.DeserializeObject<Service>(json);
+
+			Assert.NotNull(deserializedService);
+
+			Assert.Equal(Consts.PropertyMaxLength, deserializedService.Version.Length);
+			Assert.Equal("...", deserializedService.Version.Substring(Consts.PropertyMaxLength - 3, 3));
 		}
 
 		/// <summary>
-		///	Creates a service instance with a name that is longer than <see cref="Consts.PropertyMaxLength"/>.
+		/// Creates a service instance with a name that is longer than <see cref="Consts.PropertyMaxLength" />.
 		/// Makes sure the name is truncated.
 		/// </summary>
 		[Fact]
@@ -186,13 +244,13 @@ namespace Elastic.Apm.Tests
 			var agent = new TestAgentComponents();
 			// Create a transaction that is sampled (because the sampler is constant sampling-everything sampler
 			var sampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(1.0), /* distributedTracingData: */ null,
-			    agent.PayloadSender, new TestAgentConfigurationReader(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer);
+				agent.PayloadSender, new TestAgentConfigurationReader(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer);
 			sampledTransaction.Context.Request = new Request("GET",
 				new Url { Full = "https://elastic.co", Raw = "https://elastic.co", HostName = "elastic.co", Protocol = "HTTP" });
 
 			// Create a transaction that is not sampled (because the sampler is constant not-sampling-anything sampler
 			var nonSampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(0.0), /* distributedTracingData: */ null,
-			    agent.PayloadSender, new TestAgentConfigurationReader(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer);
+				agent.PayloadSender, new TestAgentConfigurationReader(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer);
 			nonSampledTransaction.Context.Request = sampledTransaction.Context.Request;
 
 			var serializedSampledTransaction = SerializePayloadItem(sampledTransaction);
@@ -233,16 +291,6 @@ namespace Elastic.Apm.Tests
 		[InlineData("ABCDEFGH", 7, "ABCD...")]
 		public void SerializationUtilsTrimToLengthTests(string original, int maxLength, string expectedTrimmed) =>
 			SerializationUtils.TrimToLength(original, maxLength).Should().Be(expectedTrimmed);
-
-		// ReSharper disable once MemberCanBePrivate.Global
-		public static TheoryData SerializationUtilsTrimToPropertyMaxLengthVariantsToTest => new TheoryData<string, string>
-		{
-			{ "", "" },
-			{ "A", "A" },
-			{ "B".Repeat(Consts.PropertyMaxLength), "B".Repeat(Consts.PropertyMaxLength) },
-			{ "C".Repeat(Consts.PropertyMaxLength + 1), "C".Repeat(Consts.PropertyMaxLength - 3) + "..." },
-			{ "D".Repeat(Consts.PropertyMaxLength * 2), "D".Repeat(Consts.PropertyMaxLength - 3) + "..." },
-		};
 
 		[Theory]
 		[MemberData(nameof(SerializationUtilsTrimToPropertyMaxLengthVariantsToTest))]

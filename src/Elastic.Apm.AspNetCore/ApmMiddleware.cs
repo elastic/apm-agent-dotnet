@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mime;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.AspNetCore.Extensions;
 using Elastic.Apm.Config;
 using Elastic.Apm.DistributedTracing;
-using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Microsoft.AspNetCore.Http;
@@ -24,6 +25,7 @@ using Microsoft.AspNetCore.Routing;
 [assembly:
 	InternalsVisibleTo(
 		"Elastic.Apm.SmartSql.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
+
 
 namespace Elastic.Apm.AspNetCore
 {
@@ -47,6 +49,7 @@ namespace Elastic.Apm.AspNetCore
 		public async Task InvokeAsync(HttpContext context)
 		{
 			Transaction transaction;
+
 			var transactionName = $"{context.Request.Method} {context.Request.Path}";
 
 			if (context.Request.Headers.ContainsKey(TraceParent.TraceParentHeaderName))
@@ -91,7 +94,7 @@ namespace Elastic.Apm.AspNetCore
 			{
 				await _next(context);
 			}
-			catch (Exception e) when (ExceptionFilter.Capture(e, transaction)) { }
+			catch (Exception e) when ((Helpers.ExceptionFilter.Capture(e, transaction, context, _configurationReader, _logger))) { }
 			finally
 			{
 				if (!transaction.HasCustomName)
@@ -135,7 +138,7 @@ namespace Elastic.Apm.AspNetCore
 				Protocol = GetProtocolName(context.Request.Protocol),
 				Raw = GetRawUrl(context.Request) ?? context.Request.GetEncodedUrl(),
 				PathName = context.Request.Path,
-				Search = context.Request.QueryString.Value.Length > 0  ? context.Request.QueryString.Value.Substring(1) : string.Empty
+				Search = context.Request.QueryString.Value.Length > 0 ? context.Request.QueryString.Value.Substring(1) : string.Empty
 			};
 
 			Dictionary<string, string> requestHeaders = null;
@@ -147,6 +150,14 @@ namespace Elastic.Apm.AspNetCore
 					requestHeaders.Add(header.Key, header.Value.ToString());
 			}
 
+			var body = Consts.BodyRedacted; // According to the documentation - the default value of 'body' is '[Redacted]'
+			if (!string.IsNullOrEmpty(context?.Request?.ContentType))
+			{
+				var contentType = new ContentType(context.Request.ContentType);
+				if (_configurationReader.ShouldExtractRequestBodyOnTransactions() && _configurationReader.CaptureBodyContentTypes.ContainsLike(contentType.MediaType))
+					body = context.Request.ExtractRequestBody(_logger);
+			}
+
 			transaction.Context.Request = new Request(context.Request.Method, url)
 			{
 				Socket = new Socket
@@ -155,7 +166,8 @@ namespace Elastic.Apm.AspNetCore
 					RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
 				},
 				HttpVersion = GetHttpVersion(context.Request.Protocol),
-				Headers = requestHeaders
+				Headers = requestHeaders,
+				Body = (string.IsNullOrEmpty(body) ? Consts.BodyRedacted : body)
 			};
 		}
 
