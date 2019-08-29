@@ -39,5 +39,11 @@ namespace Elastic.Apm.Tests.Mocks
 			Transactions.Clear();
 			Metrics.Clear();
 		}
+
+		public bool IsEmpty =>
+			Errors.Count == 0 &&
+			Transactions.Count == 0 &&
+			Spans.Count == 0 &&
+			Metrics.Count == 0;
 	}
 }

@@ -80,41 +80,37 @@ namespace Elastic.Apm.Tests
 		/// </summary>
 		[Theory]
 		[MemberData(nameof(SimulationHelpersToTestImpls))]
-		internal void OnErrorLog(SimulationHelper simulationHelper)
+		internal void OnError_call_should_be_logged(SimulationHelper simulationHelper)
 		{
-			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger));
-			var listener = simulationHelper.CreateListener(agent);
+			var (listener, mockPayloadSender, mockLogger) = PrepareSimulationEnvironmentWithLogger(simulationHelper);
 
 			const string exceptionMessage = "Oops, this went wrong";
 			var fakeException = new Exception(exceptionMessage);
 			listener.OnError(fakeException);
 
-			logger.Lines.Should().NotBeEmpty();
-			logger.Lines[0]
-				.Should()
-				.ContainAll(
-					"HttpDiagnosticListener",
-					"in OnError",
-					".cs:",
-					exceptionMessage
-				);
+			mockLogger.Lines.Should().NotBeEmpty();
+			mockLogger.Lines.Should()
+				.Contain(line => line.Contains("HttpDiagnosticListener") && line.Contains("in OnError") && line.Contains(".cs:"));
+			mockLogger.Lines.Should().Contain(line => line.Contains(exceptionMessage));
+
+			mockPayloadSender.IsEmpty.Should().BeTrue();
 		}
 
 		[Fact]
-		public void LogOnInitializationFailedEvent()
+		public void InitializationFailed_event_should_be_logged()
 		{
-			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger));
-			var listener = new HttpDiagnosticListenerFullFrameworkImpl(agent);
+			var simulationHelper = new SimulationHelperFullFrameworkImpl();
+			var (listener, mockPayloadSender, mockLogger) = PrepareSimulationEnvironmentWithLogger(simulationHelper);
 
 			const string exceptionMessage = "Oops, this went wrong";
 			listener.OnNext(new KeyValuePair<string, object>(HttpDiagnosticListenerFullFrameworkImpl.InitializationFailedEventKey,
 				new { Exception = new Exception(exceptionMessage) }));
 
-			logger.Lines.Should().Contain(line => line.Contains("HttpDiagnosticListener"));
-			logger.Lines.Should().Contain(line => line.Contains(HttpDiagnosticListenerFullFrameworkImpl.InitializationFailedEventKey));
-			logger.Lines.Should().Contain(line => line.Contains(exceptionMessage));
+			mockLogger.Lines.Should().Contain(line => line.Contains("HttpDiagnosticListener"));
+			mockLogger.Lines.Should().Contain(line => line.Contains(HttpDiagnosticListenerFullFrameworkImpl.InitializationFailedEventKey));
+			mockLogger.Lines.Should().Contain(line => line.Contains(exceptionMessage));
+
+			mockPayloadSender.IsEmpty.Should().BeTrue();
 		}
 
 		/// <summary>
@@ -125,9 +121,7 @@ namespace Elastic.Apm.Tests
 		[MemberData(nameof(SimulationHelpersToTestImpls))]
 		internal void OnNextWithStart(SimulationHelper simulationHelper)
 		{
-			var agent = new ApmAgent(new TestAgentComponents(_logger));
-			StartTransaction(agent);
-			var listener = simulationHelper.CreateListener(agent);
+			var (listener, mockPayloadSender) = PrepareSimulationEnvironment(simulationHelper);
 
 			var url = new Uri("https://elastic.co");
 
@@ -136,6 +130,8 @@ namespace Elastic.Apm.Tests
 			simulationHelper.ProcessingRequestsCount(listener).Should().Be(1);
 			simulationHelper.GetSpanForRequest(listener, request).Context.Http.Url.Should().Be(url.ToString());
 			simulationHelper.GetSpanForRequest(listener, request).Context.Http.Method.Should().Be(HttpMethod.Get.ToString());
+
+			mockPayloadSender.IsEmpty.Should().BeTrue();
 		}
 
 		/// <summary>
@@ -148,10 +144,7 @@ namespace Elastic.Apm.Tests
 		[MemberData(nameof(SimulationHelpersToTestImpls))]
 		internal void OnNextWithStartAndStop(SimulationHelper simulationHelper)
 		{
-			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender));
-			StartTransaction(agent);
-			var listener = simulationHelper.CreateListener(agent);
+			var (listener, mockPayloadSender) = PrepareSimulationEnvironment(simulationHelper);
 
 			var url = new Uri("https://some-random-site.com/some/path?query=1#fragment_B");
 
@@ -161,7 +154,7 @@ namespace Elastic.Apm.Tests
 			listener.OnNext(simulationHelper.CreateStopEvent(request, HttpStatusCode.OK));
 			simulationHelper.ProcessingRequestsCount(listener).Should().Be(0);
 
-			var firstSpan = payloadSender.FirstSpan;
+			var firstSpan = mockPayloadSender.FirstSpan;
 			firstSpan.Should().NotBeNull();
 			firstSpan.Context.Http.Url.Should().BeEquivalentTo(url.AbsoluteUri);
 			firstSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
@@ -171,10 +164,7 @@ namespace Elastic.Apm.Tests
 		[MemberData(nameof(SimulationHelpersToTestImpls))]
 		internal void PayloadStaticPropertyTypeDoesntMatter(SimulationHelper simulationHelper)
 		{
-			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender));
-			StartTransaction(agent);
-			var listener = simulationHelper.CreateListener(agent);
+			var (listener, mockPayloadSender) = PrepareSimulationEnvironment(simulationHelper);
 
 			var url = new Uri("https://some-random-site.com/some/path?query=1#fragment_B");
 
@@ -184,9 +174,9 @@ namespace Elastic.Apm.Tests
 			listener.OnNext(simulationHelper.CreateStopEvent(request, HttpStatusCode.OK, /* castPropertiesToObject: */ true));
 			simulationHelper.ProcessingRequestsCount(listener).Should().Be(0);
 
-			var firstSpan = payloadSender.FirstSpan;
+			var firstSpan = mockPayloadSender.FirstSpan;
 			firstSpan.Should().NotBeNull();
-			firstSpan.Context.Http.Url.Should().BeEquivalentTo(url.AbsoluteUri);
+			firstSpan.Context.Http.Url.Should().BeEquivalentTo(url.ToString());
 			firstSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
 		}
 
@@ -199,11 +189,7 @@ namespace Elastic.Apm.Tests
 		[MemberData(nameof(SimulationHelpersToTestImpls))]
 		internal void OnNextWithStartAndStopTwice(SimulationHelper simulationHelper)
 		{
-			var testLogger = new TestLogger(LogLevel.Warning);
-			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(new SplittingLogger(testLogger, _logger), payloadSender: payloadSender));
-			StartTransaction(agent);
-			var listener = simulationHelper.CreateListener(agent);
+			var (listener, mockPayloadSender, mockLogger) = PrepareSimulationEnvironmentWithLogger(simulationHelper);
 
 			var url = new Uri("https://elastic.co");
 
@@ -214,15 +200,18 @@ namespace Elastic.Apm.Tests
 			//Simulate Stop again. This should not happen, still we test for this.
 			listener.OnNext(simulationHelper.CreateStopEvent(request, HttpStatusCode.OK));
 
-			testLogger.Lines.Should().NotBeEmpty();
-			testLogger.Lines
+			mockLogger.Lines.Should().NotBeEmpty();
+			mockLogger.Lines
 				.Should()
 				.Contain(
-					line => line.Contains("HttpDiagnosticListener") && line.Contains("Failed to remove from ProcessingRequests")
+					line => line.Contains("HttpDiagnosticListener")
+						&& line.Contains("Warning")
+						&& line.Contains("Failed to remove from ProcessingRequests")
 						&& line.Contains(HttpMethod.Get.Method)
 						&& line.Contains(url.AbsoluteUri));
-			payloadSender.Transactions.Should().NotBeNull();
-			payloadSender.Spans.Should().ContainSingle();
+
+			mockPayloadSender.Spans.Should().ContainSingle();
+			mockPayloadSender.FirstSpan.Context.Http.Url.Should().BeEquivalentTo(url.ToString());
 		}
 
 		/// <summary>
@@ -233,28 +222,31 @@ namespace Elastic.Apm.Tests
 		[MemberData(nameof(SimulationHelpersToTestImpls))]
 		internal void UnexpectedPayloadInStartEvent(SimulationHelper simulationHelper)
 		{
-			var agent = new ApmAgent(new TestAgentComponents(_logger));
-			var listener = simulationHelper.CreateListener(agent);
+			var (listener, mockPayloadSender) = PrepareSimulationEnvironment(simulationHelper);
+
 			var myFake = new StringBuilder(); //just a random type that is not planned to be passed into OnNext
 
 			var exception =
 				Record.Exception(() => { listener.OnNext(simulationHelper.CreateStartEventWithPayload(myFake)); });
 
 			exception.Should().BeNull();
+
+			mockPayloadSender.IsEmpty.Should().BeTrue();
 		}
 
 		[Theory]
 		[MemberData(nameof(SimulationHelpersToTestImpls))]
 		internal void UnexpectedRequestValueInStartEvent(SimulationHelper simulationHelper)
 		{
-			var agent = new ApmAgent(new TestAgentComponents(_logger));
-			var listener = simulationHelper.CreateListener(agent);
+			var (listener, mockPayloadSender) = PrepareSimulationEnvironment(simulationHelper);
 			var myFake = new StringBuilder(); //just a random type that is not planned to be passed into OnNext
 
 			var exception =
 				Record.Exception(() => { listener.OnNext(simulationHelper.CreateStartEventWithRequest(myFake)); });
 
 			exception.Should().BeNull();
+
+			mockPayloadSender.IsEmpty.Should().BeTrue();
 		}
 
 		/// <summary>
@@ -265,38 +257,34 @@ namespace Elastic.Apm.Tests
 		[MemberData(nameof(SimulationHelpersToTestImpls))]
 		internal void NullPayloadInStartEvent(SimulationHelper simulationHelper)
 		{
-			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(_logger));
-			StartTransaction(agent);
-			var listener = simulationHelper.CreateListener(agent);
+			var (listener, mockPayloadSender, mockLogger) = PrepareSimulationEnvironmentWithLogger(simulationHelper);
 
 			listener.OnNext(simulationHelper.CreateStartEventWithPayload(null));
 
 			simulationHelper.ProcessingRequestsCount(listener).Should().Be(0);
-			payloadSender.Spans.Should().BeEmpty();
-			payloadSender.Errors.Should().BeEmpty();
+
+			mockPayloadSender.IsEmpty.Should().BeTrue();
+
+			mockLogger.Lines.Should().Contain(line => line.Contains("HttpDiagnosticListener") && line.Contains("null"));
 		}
 
 		[Theory]
 		[MemberData(nameof(SimulationHelpersToTestImpls))]
 		internal void NullPayloadInStopEvent(SimulationHelper simulationHelper)
 		{
-			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(_logger));
-			StartTransaction(agent);
-			var listener = simulationHelper.CreateListener(agent);
+			var (listener, mockPayloadSender, mockLogger) = PrepareSimulationEnvironmentWithLogger(simulationHelper);
 
 			var url = new Uri($"https://some-random-site.com/some/path/?query=1#{GetCurrentMethodName()}");
 
-			//Simulate Start
 			listener.OnNext(simulationHelper.CreateStartEvent(HttpMethod.Get, url, out var request));
-
 			listener.OnNext(simulationHelper.CreateStopEventWithPayload(null));
 
 			simulationHelper.ProcessingRequestsCount(listener).Should().Be(1);
 			simulationHelper.GetSpanForRequest(listener, request).Context.Http.Url.Should().Be(url.ToString());
-			payloadSender.Spans.Should().BeEmpty();
-			payloadSender.Errors.Should().BeEmpty();
+
+			mockPayloadSender.IsEmpty.Should().BeTrue();
+
+			mockLogger.Lines.Should().Contain(line => line.Contains("HttpDiagnosticListener") && line.Contains("null"));
 		}
 
 		/// <summary>
@@ -307,13 +295,16 @@ namespace Elastic.Apm.Tests
 		[MemberData(nameof(SimulationHelpersToTestImpls))]
 		internal void NullKeyValueToOnNext(SimulationHelper simulationHelper)
 		{
-			var agent = new ApmAgent(new TestAgentComponents(_logger));
-			var listener = simulationHelper.CreateListener(agent);
+			var (listener, mockPayloadSender, mockLogger) = PrepareSimulationEnvironmentWithLogger(simulationHelper);
 
 			var exception =
 				Record.Exception(() => { listener.OnNext(new KeyValuePair<string, object>(null, null)); });
 
 			exception.Should().BeNull();
+
+			mockPayloadSender.IsEmpty.Should().BeTrue();
+
+			mockLogger.Lines.Should().Contain(line => line.Contains("HttpDiagnosticListener") && line.Contains("null"));
 		}
 
 		/// <summary>
@@ -323,7 +314,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task TestSimpleOutgoingHttpRequest()
 		{
-			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
+			var (listener, mockPayloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
 			using (var localServer = new LocalServer())
@@ -332,7 +323,7 @@ namespace Elastic.Apm.Tests
 				var res = await httpClient.GetAsync(localServer.Uri);
 
 				res.IsSuccessStatusCode.Should().BeTrue();
-				var firstSpan = payloadSender.FirstSpan;
+				var firstSpan = mockPayloadSender.FirstSpan;
 				firstSpan.Should().NotBeNull();
 				firstSpan.Context.Http.Url.Should().Be(localServer.Uri);
 				firstSpan.Context.Http.StatusCode.Should().Be(200);
@@ -348,7 +339,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task TestNotSuccessfulOutgoingHttpPostRequest()
 		{
-			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
+			var (listener, mockPayloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
 			using (var localServer = new LocalServer(ctx => { ctx.Response.StatusCode = 500; }))
@@ -357,7 +348,7 @@ namespace Elastic.Apm.Tests
 				var res = await httpClient.PostAsync(localServer.Uri, new StringContent("foo"));
 
 				res.IsSuccessStatusCode.Should().BeFalse();
-				var firstSpan = payloadSender.FirstSpan;
+				var firstSpan = mockPayloadSender.FirstSpan;
 				firstSpan.Should().NotBeNull();
 				firstSpan.Context.Http.Url.Should().Be(localServer.Uri);
 				firstSpan.Context.Http.StatusCode.Should().Be(500);
@@ -372,7 +363,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task CaptureErrorOnFailingHttpCall_HttpClient()
 		{
-			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
+			var (listener, mockPayloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
 			{
@@ -382,11 +373,11 @@ namespace Elastic.Apm.Tests
 				await act.Should().ThrowAsync<HttpRequestException>();
 			}
 
-			payloadSender.Spans.Should().HaveCount(1);
-			payloadSender.FirstSpan.Context.Http.StatusCode.Should().BeNull();
-			payloadSender.Errors.Should().HaveCount(1);
-			payloadSender.FirstError.Exception.Message.Should().Contain("No such host is known");
-			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstSpan.Id);
+			mockPayloadSender.Spans.Should().HaveCount(1);
+			mockPayloadSender.FirstSpan.Context.Http.StatusCode.Should().BeNull();
+			mockPayloadSender.Errors.Should().HaveCount(1);
+			mockPayloadSender.FirstError.Exception.Message.Should().Contain("No such host is known");
+			mockPayloadSender.FirstError.ParentId.Should().Be(mockPayloadSender.FirstSpan.Id);
 		}
 
 		/// <summary>
@@ -399,7 +390,7 @@ namespace Elastic.Apm.Tests
 		{
 			var simulationHelper = new SimulationHelperCoreImpl();
 
-			var (disposableListener, payloadSender, agent) = RegisterListenerAndStartTransaction();
+			var (disposableListener, mockPayloadSender, agent) = RegisterListenerAndStartTransaction();
 
 			using (disposableListener)
 			{
@@ -420,12 +411,12 @@ namespace Elastic.Apm.Tests
 				//Simulate Stop
 				listener.OnNext(simulationHelper.CreateStopEventWithResponse(request, (HttpResponseMessage)null));
 
-				payloadSender.Spans.Should().HaveCount(1);
-				payloadSender.FirstSpan.Context.Http.StatusCode.Should().BeNull();
-				payloadSender.Errors.Should().HaveCount(1);
-				payloadSender.FirstError.Exception.Message.Should().Be(exceptionMsg);
-				payloadSender.FirstError.Exception.Type.Should().Be(typeof(Exception).FullName);
-				payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstSpan.Id);
+				mockPayloadSender.Spans.Should().HaveCount(1);
+				mockPayloadSender.FirstSpan.Context.Http.StatusCode.Should().BeNull();
+				mockPayloadSender.Errors.Should().HaveCount(1);
+				mockPayloadSender.FirstError.Exception.Message.Should().Be(exceptionMsg);
+				mockPayloadSender.FirstError.Exception.Type.Should().Be(typeof(Exception).FullName);
+				mockPayloadSender.FirstError.ParentId.Should().Be(mockPayloadSender.FirstSpan.Id);
 			}
 		}
 
@@ -435,7 +426,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task SpanTypeAndSubtype()
 		{
-			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
+			var (listener, mockPayloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
 			using (var localServer = new LocalServer())
@@ -446,9 +437,9 @@ namespace Elastic.Apm.Tests
 				res.IsSuccessStatusCode.Should().BeTrue();
 			}
 
-			payloadSender.FirstSpan.Type.Should().Be(ApiConstants.TypeExternal);
-			payloadSender.FirstSpan.Subtype.Should().Be(ApiConstants.SubtypeHttp);
-			payloadSender.FirstSpan.Action.Should().BeNull(); //we don't set Action for HTTP calls
+			mockPayloadSender.FirstSpan.Type.Should().Be(ApiConstants.TypeExternal);
+			mockPayloadSender.FirstSpan.Subtype.Should().Be(ApiConstants.SubtypeHttp);
+			mockPayloadSender.FirstSpan.Action.Should().BeNull(); //we don't set Action for HTTP calls
 		}
 
 		/// <summary>
@@ -457,7 +448,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task SpanName()
 		{
-			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
+			var (listener, mockPayloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
 			using (var localServer = new LocalServer())
@@ -468,7 +459,7 @@ namespace Elastic.Apm.Tests
 				res.IsSuccessStatusCode.Should().BeTrue();
 			}
 
-			payloadSender.FirstSpan.Name.Should().Be("GET localhost");
+			mockPayloadSender.FirstSpan.Name.Should().Be("GET localhost");
 		}
 
 		/// <summary>
@@ -478,7 +469,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task HttpRequestDuration()
 		{
-			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
+			var (listener, mockPayloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
 			using (var localServer = new LocalServer(ctx =>
@@ -491,7 +482,7 @@ namespace Elastic.Apm.Tests
 				var res = await httpClient.GetAsync(localServer.Uri);
 
 				res.IsSuccessStatusCode.Should().BeTrue();
-				var firstSpan = payloadSender.FirstSpan;
+				var firstSpan = mockPayloadSender.FirstSpan;
 				firstSpan.Should().NotBeNull();
 				firstSpan.Context.Http.Url.Should().Be(localServer.Uri);
 				firstSpan.Context.Http.StatusCode.Should().Be(200);
@@ -506,7 +497,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task HttpRequestSpanGuid()
 		{
-			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
+			var (listener, mockPayloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
 			using (var localServer = new LocalServer())
@@ -515,7 +506,7 @@ namespace Elastic.Apm.Tests
 				var res = await httpClient.GetAsync(localServer.Uri);
 
 				res.IsSuccessStatusCode.Should().BeTrue();
-				var firstSpan = payloadSender.FirstSpan;
+				var firstSpan = mockPayloadSender.FirstSpan;
 				firstSpan.Should().NotBeNull();
 				firstSpan.Context.Http.Url.Should().Be(localServer.Uri);
 				firstSpan.Context.Http.StatusCode.Should().Be(200);
@@ -531,7 +522,7 @@ namespace Elastic.Apm.Tests
 			const string topSpanName = "test_top_span";
 			const string topSpanType = "test_top_span_type";
 			const int numberOfHttpCalls = 3;
-			var (listener, payloadSender, agent) = RegisterListenerAndStartTransaction();
+			var (listener, mockPayloadSender, agent) = RegisterListenerAndStartTransaction();
 
 			using (listener)
 			using (var localServer = new LocalServer())
@@ -549,13 +540,13 @@ namespace Elastic.Apm.Tests
 					topSpan.End();
 				}
 
-				payloadSender.Spans.Should().HaveCount(numberOfHttpCalls + 1);
-				var topSpanSent = payloadSender.Spans.Last();
+				mockPayloadSender.Spans.Should().HaveCount(numberOfHttpCalls + 1);
+				var topSpanSent = mockPayloadSender.Spans.Last();
 				topSpanSent.Name.Should().Be(topSpanName);
 				topSpanSent.Type.Should().Be(topSpanType);
 				numberOfHttpCalls.Repeat(i =>
 				{
-					var httpCallSpan = payloadSender.Spans[i];
+					var httpCallSpan = mockPayloadSender.Spans[i];
 					httpCallSpan.Should().NotBeNull();
 					// ReSharper disable once AccessToDisposedClosure
 					httpCallSpan.Context.Http.Url.Should().Be($"{localServer.Uri}?i={i}");
@@ -608,11 +599,11 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task SubscriptionOnlyRegistersSpansDuringItsLifeTime()
 		{
-			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			var mockPayloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 			StartTransaction(agent);
 
-			var spans = payloadSender.Spans;
+			var spans = mockPayloadSender.Spans;
 
 			using (var localServer = new LocalServer())
 			using (var httpClient = new HttpClient())
@@ -625,7 +616,7 @@ namespace Elastic.Apm.Tests
 					res = await httpClient.GetAsync(localServer.Uri);
 					res.IsSuccessStatusCode.Should().BeTrue();
 				}
-				spans = payloadSender.Spans;
+				spans = mockPayloadSender.Spans;
 				spans.Should().NotBeEmpty().And.HaveCount(2);
 				foreach (var _ in Enumerable.Range(0, 10))
 					await httpClient.GetAsync(localServer.Uri);
@@ -735,8 +726,9 @@ namespace Elastic.Apm.Tests
 		[InlineData(typeof(ThrowingCoreImpl))]
 		public void NoExceptionEscapesFromOnNext(Type throwingImplType)
 		{
-			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger));
+			var mockLogger = new TestLogger();
+			var mockPayloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(new SplittingLogger(mockLogger, _logger), payloadSender: mockPayloadSender));
 			var args = new object[] { agent };
 			var listener = (HttpDiagnosticListenerImplBase)Activator.CreateInstance(throwingImplType,
 				// ReSharper disable RedundantCast
@@ -747,9 +739,10 @@ namespace Elastic.Apm.Tests
 
 			listener.OnNext(new KeyValuePair<string, object>("dummy event key", new { Value = "dummy event value" }));
 
-			logger.Lines.Should().Contain(line => line.Contains("HttpDiagnosticListener"));
-			logger.Lines.Should().Contain(line => line.Contains("OnNext"));
-			logger.Lines.Should().Contain(line => line.Contains(DummyExceptionMessage));
+			mockPayloadSender.IsEmpty.Should().BeTrue();
+
+			mockLogger.Lines.Should().Contain(line => line.Contains("HttpDiagnosticListener") && line.Contains("OnNext"));
+			mockLogger.Lines.Should().Contain(line => line.Contains(DummyExceptionMessage));
 		}
 
 		private static string GetCurrentMethodName([CallerMemberName] string callerMemberName = "") => callerMemberName;
@@ -762,13 +755,10 @@ namespace Elastic.Apm.Tests
 		[InlineData(HttpStatusCode.Forbidden, false)]
 		[InlineData(HttpStatusCode.InternalServerError, true)]
 		[InlineData(HttpStatusCode.ServiceUnavailable, true)]
-		internal void Full_Framework_StopEx_Event(HttpStatusCode statusCode, bool castPropertiesToObject)
+		internal void StopEx_event(HttpStatusCode statusCode, bool castPropertiesToObject)
 		{
 			var simulationHelper = new SimulationHelperFullFrameworkImpl();
-			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender));
-			var listener = simulationHelper.CreateListener(agent);
-			StartTransaction(agent);
+			var (listener, mockPayloadSender) = PrepareSimulationEnvironment(simulationHelper);
 
 			var url = new Uri($"https://some-random-site.com/some/path/{GetCurrentMethodName()}?query=1#fragment_B");
 
@@ -778,19 +768,17 @@ namespace Elastic.Apm.Tests
 			// Simulate StopEx - this test case is Full Framework specific (because .NET Core doesn't have _StopEx_ event)
 			listener.OnNext(SimulationHelperFullFrameworkImpl.CreateStopExEvent(request, statusCode, castPropertiesToObject));
 
-			payloadSender.Spans.Should().HaveCount(1);
-			payloadSender.FirstSpan.Context.Http.StatusCode.Should().Be((int)statusCode);
-			payloadSender.Errors.Should().BeEmpty();
+			mockPayloadSender.Spans.Should().HaveCount(1);
+			mockPayloadSender.FirstSpan.Context.Http.Url.Should().Be(url.ToString());
+			mockPayloadSender.FirstSpan.Context.Http.StatusCode.Should().Be((int)statusCode);
+			mockPayloadSender.Errors.Should().BeEmpty();
 		}
 
 		[Fact]
-		internal void null_payload_in_StopEx_event()
+		internal void StopEx_event_null_payload()
 		{
 			var simulationHelper = new SimulationHelperFullFrameworkImpl();
-			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(_logger));
-			StartTransaction(agent);
-			var listener = simulationHelper.CreateListener(agent);
+			var (listener, mockPayloadSender) = PrepareSimulationEnvironment(simulationHelper);
 
 			var url = new Uri($"https://some-random-site.com/some/path/?query=1#{GetCurrentMethodName()}");
 
@@ -801,19 +789,39 @@ namespace Elastic.Apm.Tests
 
 			simulationHelper.ProcessingRequestsCount(listener).Should().Be(1);
 			simulationHelper.GetSpanForRequest(listener, request).Context.Http.Url.Should().Be(url.ToString());
-			payloadSender.Spans.Should().BeEmpty();
-			payloadSender.Errors.Should().BeEmpty();
+
+			mockPayloadSender.IsEmpty.Should().BeTrue();
+		}
+
+		[Theory]
+		[InlineData((object)null)]
+		[InlineData("")]
+		internal void StopEx_event_unexpected_StatusCode_property_type<TStatusCode>(TStatusCode statusCode)
+		{
+			var simulationHelper = new SimulationHelperFullFrameworkImpl();
+			var (listener, mockPayloadSender, mockLogger) = PrepareSimulationEnvironmentWithLogger(simulationHelper);
+
+			var url = new Uri($"https://some-random-site.com/some/path/?query=1#{GetCurrentMethodName()}");
+
+			listener.OnNext(simulationHelper.CreateStartEvent(HttpMethod.Get, url, out var request));
+			listener.OnNext(SimulationHelperFullFrameworkImpl.CreateStopExEventWithPayload(new { Request = request, StatusCode = statusCode }));
+
+			simulationHelper.ProcessingRequestsCount(listener).Should().Be(0);
+
+			mockPayloadSender.Spans.Should().HaveCount(1);
+			mockPayloadSender.FirstSpan.Context.Http.Url.Should().Be(url.ToString());
+			mockPayloadSender.FirstSpan.Context.Http.StatusCode.Should().Be(null);
+			mockPayloadSender.Errors.Should().BeEmpty();
+
+			mockLogger.Lines.Should().Contain(line => line.Contains("HttpDiagnosticListener") && line.Contains("StatusCode"));
+			mockLogger.Lines.Should().Contain(line => line.Contains("HTTP status code") && line.Contains("null"));
 		}
 
 		[Theory]
 		[MemberData(nameof(SimulationHelpersToTestImpls))]
-		internal void Stop_event_with_null_Response(SimulationHelper simulationHelper)
+		internal void Stop_event_null_Response(SimulationHelper simulationHelper)
 		{
-			var testLogger = new TestLogger(LogLevel.Trace);
-			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(new SplittingLogger(testLogger, _logger), payloadSender: payloadSender));
-			var listener = simulationHelper.CreateListener(agent);
-			StartTransaction(agent);
+			var (listener, mockPayloadSender, mockLogger) = PrepareSimulationEnvironmentWithLogger(simulationHelper);
 
 			var url = new Uri($"https://some-random-site.com/some/path/{GetCurrentMethodName()}?query=1#fragment_B");
 
@@ -823,19 +831,36 @@ namespace Elastic.Apm.Tests
 			// Simulate Stop
 			listener.OnNext(simulationHelper.CreateStopEventWithNullResponse(request));
 
-			payloadSender.Spans.Should().ContainSingle();
-			payloadSender.FirstSpan.Context.Http.StatusCode.Should().BeNull();
-			payloadSender.Errors.Should().BeEmpty();
+			mockPayloadSender.Spans.Should().ContainSingle();
+			mockPayloadSender.FirstSpan.Context.Http.StatusCode.Should().BeNull();
+			mockPayloadSender.Errors.Should().BeEmpty();
 
-			testLogger.Lines.Should().Contain(line => line.Contains(nameof(HttpDiagnosticListenerImplBase)));
-			testLogger.Lines.Should().Contain(line => line.Contains(url.ToString()));
-			testLogger.Lines.Should().NotContain(line => line.Contains(nameof(HttpDiagnosticListenerImplBase.FailedToExtractPropertyException)));
+			mockLogger.Lines.Should().Contain(line => line.Contains(nameof(HttpDiagnosticListenerImplBase)));
+			mockLogger.Lines.Should().Contain(line => line.Contains(url.ToString()));
+			mockLogger.Lines.Should().NotContain(line => line.Contains(nameof(HttpDiagnosticListenerImplBase.FailedToExtractPropertyException)));
 		}
 
-		internal static (IDisposable, MockPayloadSender, ApmAgent) RegisterListenerAndStartTransaction()
+		private (IDiagnosticListener, MockPayloadSender, TestLogger) PrepareSimulationEnvironmentWithLogger(SimulationHelper simulationHelper)
 		{
-			var payloadSender = new MockPayloadSender();
-			var agentComponents = new TestAgentComponents(payloadSender: payloadSender,
+			var mockLogger = new TestLogger(LogLevel.Trace);
+			var (listener, mockPayloadSender) = PrepareSimulationEnvironment(simulationHelper, new SplittingLogger(mockLogger, _logger));
+			return (listener, mockPayloadSender, mockLogger);
+		}
+
+		private (IDiagnosticListener, MockPayloadSender) PrepareSimulationEnvironment(SimulationHelper simulationHelper, IApmLogger logger = null)
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			var agent = new ApmAgent(new TestAgentComponents(logger ?? _logger, payloadSender: mockPayloadSender));
+			var listener = simulationHelper.CreateListener(agent);
+			StartTransaction(agent);
+
+			return (listener, mockPayloadSender);
+		}
+
+		private static (IDisposable, MockPayloadSender, ApmAgent) RegisterListenerAndStartTransaction()
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			var agentComponents = new TestAgentComponents(payloadSender: mockPayloadSender,
 				configurationReader: new TestAgentConfigurationReader(logLevel: "Debug", stackTraceLimit: "-1",
 					spanFramesMinDurationInMilliseconds: "-1ms"));
 
@@ -843,7 +868,7 @@ namespace Elastic.Apm.Tests
 			var sub = agent.Subscribe(new HttpDiagnosticsSubscriber());
 			StartTransaction(agent);
 
-			return (sub, payloadSender, agent);
+			return (sub, mockPayloadSender, agent);
 		}
 
 		// ReSharper disable once SuggestBaseTypeForParameter
@@ -913,7 +938,9 @@ namespace Elastic.Apm.Tests
 			internal static KeyValuePair<string, object> CreateStopExEventWithPayload(object payload) =>
 				new KeyValuePair<string, object>(HttpDiagnosticListenerFullFrameworkImpl.StopExEventKey, payload);
 
-			internal static KeyValuePair<string, object> CreateStopExEvent(object request, HttpStatusCode statusCode, bool castPropertiesToObject = false) =>
+			internal static KeyValuePair<string, object> CreateStopExEvent(object request, HttpStatusCode statusCode,
+				bool castPropertiesToObject = false
+			) =>
 				castPropertiesToObject
 					? CreateStopExEventWithPayload(new { Request = request, StatusCode = statusCode })
 					: CreateStopExEventWithPayload(new { Request = (HttpWebRequest)request, StatusCode = statusCode });

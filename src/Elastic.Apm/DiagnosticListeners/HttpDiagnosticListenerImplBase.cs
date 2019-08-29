@@ -112,9 +112,9 @@ namespace Elastic.Apm.DiagnosticListeners
 					throw new FailedToExtractPropertyException("Failed to cast property value to expected type." +
 						$" Expected property type: {typeof(TProperty)}." +
 						$" Declared property type: {propertyInfo.PropertyType}." +
-						$" Property value type: {propertyObject?.GetType()}." +
+						$" Property value type: {propertyObject?.GetType() ?? propertyInfo.PropertyType}." +
 						$" Property name: {propertyName}." +
-						$" Property value: {propertyObject}." +
+						$" Property value: {propertyObject ?? "null"}." +
 						$" Event: {kv}.",
 						ex);
 				}
