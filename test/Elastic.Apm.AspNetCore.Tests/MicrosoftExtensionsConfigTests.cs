@@ -35,6 +35,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.ServerUrls[0].Should().Be(new Uri("http://myServerFromTheConfigFile:8080"));
 			config.ServiceName.Should().Be("My_Test_Application");
 			config.ServiceVersion.Should().Be("2.1.0.5");
+			config.Environment.Should().Be("staging");
 			config.CaptureHeaders.Should().Be(false);
 			config.TransactionSampleRate.Should().Be(0.456);
 			config.CaptureBody.Should().Be(ConfigConsts.SupportedValues.CaptureBodyAll);
@@ -64,8 +65,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 					"Defaulting to "
 				);
 
+			config.Environment.Should().Be("test");
 			config.CaptureHeaders.Should().Be(true);
-
 			config.TransactionSampleRate.Should().Be(1.0);
 		}
 
@@ -108,6 +109,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceName, serviceName);
 			var serviceVersion = "2.1.0.5";
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceVersion, serviceVersion);
+			var environment = "staging";
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.Environment, environment);
 			var secretToken = "SecretToken";
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.SecretToken, secretToken);
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.CaptureHeaders, false.ToString());
@@ -121,6 +124,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.ServerUrls[0].Should().Be(new Uri(serverUrl));
 			config.ServiceName.Should().Be(serviceName);
 			config.ServiceVersion.Should().Be(serviceVersion);
+			config.Environment.Should().Be(environment);
 			config.SecretToken.Should().Be(secretToken);
 			config.CaptureHeaders.Should().Be(false);
 			config.TransactionSampleRate.Should().Be(0.123);
