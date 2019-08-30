@@ -55,8 +55,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				"test");
 			config.LogLevel.Should().Be(LogLevel.Error);
 			logger.Lines.Should().NotBeEmpty();
-			logger.Lines[0]
-				.Should()
+			logger.Lines[0].Should()
 				.ContainAll(
 					$"{{{nameof(MicrosoftExtensionsConfig)}}}",
 					"Failed parsing log level from",
@@ -83,8 +82,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.LogLevel.Should().Be(LogLevel.Error);
 
 			logger.Lines.Should().NotBeEmpty();
-			logger.Lines[0]
-				.Should()
+			logger.Lines[0].Should()
 				.ContainAll(
 					$"{{{nameof(MicrosoftExtensionsConfig)}}}",
 					"Failed parsing log level from",
@@ -187,8 +185,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var response = await _client.GetAsync("/Home/Index");
 			response.IsSuccessStatusCode.Should().BeTrue();
 
-			_logger.Lines.Should()
-				.NotBeEmpty()
+			_logger.Lines.Should().NotBeEmpty()
 				.And.Contain(n => n.Contains("Failed parsing server URL from"));
 		}
 
