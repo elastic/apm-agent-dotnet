@@ -23,6 +23,7 @@ namespace Elastic.Apm.Api
 
 		public Runtime Runtime { get; set; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Environment { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(Service))
