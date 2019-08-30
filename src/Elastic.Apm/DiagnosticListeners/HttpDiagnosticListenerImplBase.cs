@@ -124,7 +124,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 			var currentExecutionSegment = _agent.Tracer.CurrentSpan ?? (IExecutionSegment)transaction;
 			var span = currentExecutionSegment.StartSpan(
-				$"{RequestGetMethod(request)} {requestUrl.Host}",
+				$"{RequestGetMethod(request)} {requestUrl.AbsolutePath}",
 				ApiConstants.TypeExternal,
 				ApiConstants.SubtypeHttp);
 
