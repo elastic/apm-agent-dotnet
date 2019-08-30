@@ -151,7 +151,7 @@ You must use the query bar to filter for a specific environment in versions prio
 [options="header"]
 |============
 | Default                                        | Type
-| EnvironmentName from IHostingEnvironment    | String 
+| https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.hosting.ihostingenvironment.environmentname?view=aspnetcore-2.2#Microsoft_AspNetCore_Hosting_IHostingEnvironment_EnvironmentName[EnvironmentName from IHostingEnvironment] | String 
 |============
 
 [float]
