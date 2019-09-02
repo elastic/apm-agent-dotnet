@@ -15,15 +15,6 @@ namespace AspNetFullFrameworkSampleApp
 
 		public void Log<TState>(ApmLogLevel apmLogLevel, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{
-//			var stateAsKeyValuePairs = state as ReadOnlyCollection<KeyValuePair<string, object>> ??
-//				throw new ArgumentException($"{nameof(state)} should be ReadOnlyCollection<KeyValuePair<string, object>>" +
-//					$", instead {nameof(state)}.GetType(): {state.GetType()}");
-//
-//			const string scopeKey = "{Scope}";
-//			var scopeValue = stateAsKeyValuePairs.FirstOrDefault(kv => kv.Key == scopeKey).Value ?? "";
-//			var scope = scopeValue as string ??
-//				throw new ArgumentException($"Value mapped to {scopeKey} should be a string, instead GetType(): {scopeValue.GetType()}");
-//			var nlogger = LogManager.GetLogger(scope);
 			var nlogger = LogManager.GetLogger("");
 
 			var message = formatter(state, e);

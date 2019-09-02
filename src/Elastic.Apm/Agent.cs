@@ -89,7 +89,7 @@ namespace Elastic.Apm
 		internal static ApmAgent Instance => Lazy.Value;
 
 		internal static bool IsInstanceCreated => Lazy.IsValueCreated;
-		
+
 		public static IApmLogger Logger
 		{
 			get => _logger;
@@ -103,10 +103,7 @@ namespace Elastic.Apm
 
 		public static AgentComponents LastSetupComponents { get; private set; }
 
-		private static AgentComponents BuildComponents()
-		{
-			return LastSetupComponents ?? (Logger != null ? new AgentComponents(Logger) : null);
-		}
+		private static AgentComponents BuildComponents() => LastSetupComponents ?? (Logger != null ? new AgentComponents(Logger) : null);
 
 		/// <summary>
 		/// The entry point for manual instrumentation. The <see cref="Tracer" /> property returns the tracer,

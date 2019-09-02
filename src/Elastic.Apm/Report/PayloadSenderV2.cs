@@ -60,7 +60,7 @@ namespace Elastic.Apm.Report
 			servicePoint.ConnectionLeaseTimeout = DnsTimeout;
 			servicePoint.ConnectionLimit = 20;
 
-			_logger?.Debug()?.Log("Setting HTTP client BaseAddress to {ApmServerUrl}...", serverUrlBase, Process.GetCurrentProcess().Id);
+			_logger?.Debug()?.Log("Setting HTTP client BaseAddress to {ApmServerUrl}...", serverUrlBase);
 			_httpClient = new HttpClient(handler ?? new HttpClientHandler()) { BaseAddress = serverUrlBase };
 			_httpClient.DefaultRequestHeaders.UserAgent.Add(
 				new ProductInfoHeaderValue($"elasticapm-{Consts.AgentName}", AdaptUserAgentValue(_service.Agent.Version)));

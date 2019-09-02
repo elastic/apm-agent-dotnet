@@ -16,8 +16,8 @@ namespace AspNetFullFrameworkSampleApp
 		{
 			LoggingConfig.SetupLogging();
 
-			var Logger = LogManager.GetCurrentClassLogger();
-			Logger.Info("Current process ID: {ProcessID}, ELASTIC_APM_SERVER_URLS: {ELASTIC_APM_SERVER_URLS}",
+			var logger = LogManager.GetCurrentClassLogger();
+			logger.Info("Current process ID: {ProcessID}, ELASTIC_APM_SERVER_URLS: {ELASTIC_APM_SERVER_URLS}",
 				Process.GetCurrentProcess().Id, Environment.GetEnvironmentVariable("ELASTIC_APM_SERVER_URLS"));
 
 			AreaRegistration.RegisterAllAreas();
@@ -30,8 +30,9 @@ namespace AspNetFullFrameworkSampleApp
 		{
 			if (Response.HeadersWritten) return;
 
-			Response.AddOnSendingHeaders((httpContext) =>
+			Response.AddOnSendingHeaders(httpContext =>
 			{
+				// ReSharper disable once ConstantConditionalAccessQualifier
 				var responseHeaders = httpContext?.Response?.Headers;
 				if (responseHeaders == null) return;
 
