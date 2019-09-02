@@ -68,22 +68,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		}
 
 		[AspNetFullFrameworkFact]
-		public async Task DummyFailingTestToVerifyCi()
-		{
-			var forbidResponsePageData = SampleAppUrlPaths.ForbidHttpResponsePageDescriptionPage;
-			await SendGetRequestToSampleAppAndVerifyResponse(forbidResponsePageData.RelativeUrlPath, forbidResponsePageData.StatusCode);
-
-			await VerifyDataReceivedFromAgent(receivedData =>
-			{
-				TryVerifyDataReceivedFromAgent(forbidResponsePageData, receivedData);
-
-				receivedData.Spans.First().Should().NotBeNull();
-				receivedData.Spans.First().Context.Http.Should().NotBeNull();
-				receivedData.Spans.First().Context.Http.StatusCode.Should().Be(404);
-			});
-		}
-
-		[AspNetFullFrameworkFact]
 		public async Task CustomChildSpanThrowsTest()
 		{
 			var errorPageData = SampleAppUrlPaths.CustomChildSpanThrowsExceptionPage;
