@@ -19,7 +19,7 @@ Official NuGet packages can be referenced from [NuGet.org](https://www.nuget.org
 
 ## Documentation
 
-Docs are located [here](https://www.elastic.co/guide/en/apm/agent/dotnet/current/index.html). That page is generated from the content of the [docs](docs) folder.
+Docs are located [here](https://www.elastic.co/guide/en/apm/agent/dotnet/). That page is generated from the content of the [docs](docs) folder.
 
 ## Getting Help
 
@@ -40,7 +40,7 @@ These are the main folders within the repository:
     * `Elastic.Apm`: The core project targeting .NET Standard 2.0. It contains the [Agent API](/docs/public-api.asciidoc), the infrastructure to report data to the APM Server, the logging infrastructure, and auto-instrumentation for things that are part of .NET Standard 2.0.
     * `Elastic.Apm.AspNetCore`: Auto-instrumentation for ASP.NET Core.
     * `Elastic.Apm.EntityFrameworkCore`: Auto-instrumentation for EntityFramework Core.
-    * `Elastic.Apm.NetCoreAll`: A convenient project that references all other .NET Core related projects from the `src` folder. It contains an ASP.NET Core middleware extension that enables the agent and every other component with a single line of code. In a typical ASP.NET Core application (e.g. apps referencing [Microsoft.AspNetCore.All](https://www.nuget.org/packages/Microsoft.AspNetCore.All)) that uses EF Core the `Elastic.Apm.NetCoreAll` can be referenced.
+    * `Elastic.Apm.NetCoreAll`: A convenience project that references all other .NET Core related projects from the `src` folder. It contains an ASP.NET Core middleware extension that enables the agent and every other component with a single line of code. In a typical ASP.NET Core application (e.g. apps referencing [Microsoft.AspNetCore.All](https://www.nuget.org/packages/Microsoft.AspNetCore.All)) that uses EF Core the `Elastic.Apm.NetCoreAll` can be referenced.
     * `Elastic.Apm.AspNetFullFramework`: Auto-instrumentation for ASP.NET (classic).
 * test: This folder contains test projects. Typically each project from the `src` folder has a corresponding test project.
     * `Elastic.Apm.Tests`: Tests the `Elastic.Apm` project.
