@@ -125,11 +125,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				new SampleAppUrlPathData(HomeController.CallReturnBadRequestPageRelativePath,
 					HomeController.DummyHttpStatusCode, /* transactionsCount: */ 2, /* spansCount: */ 1);
 
-
-			internal static readonly SampleAppUrlPathData GetDotNetRuntimeDescriptionPage =
-				new SampleAppUrlPathData(HomeController.GetDotNetRuntimeDescriptionPageRelativePath, 200);
-
-
 			internal static readonly SampleAppUrlPathData ReturnBadRequestPage =
 				new SampleAppUrlPathData(HomeController.ReturnBadRequestPageRelativePath, (int)HttpStatusCode.BadRequest);
 

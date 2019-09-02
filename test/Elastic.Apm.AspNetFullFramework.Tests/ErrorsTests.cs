@@ -55,9 +55,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task HttpCallWithResponseForbidden()
 		{
 			var forbidResponsePageData = SampleAppUrlPaths.ForbidHttpResponsePageDescriptionPage;
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(forbidResponsePageData.RelativeUrlPath, forbidResponsePageData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(forbidResponsePageData.RelativeUrlPath, forbidResponsePageData.StatusCode);
 
-			VerifyDataReceivedFromAgent(receivedData =>
+			await VerifyDataReceivedFromAgent(receivedData =>
 			{
 				TryVerifyDataReceivedFromAgent(forbidResponsePageData, receivedData);
 

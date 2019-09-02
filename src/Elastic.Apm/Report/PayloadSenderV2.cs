@@ -35,7 +35,8 @@ namespace Elastic.Apm.Report
 		private readonly HttpClient _httpClient;
 		private readonly IApmLogger _logger;
 
-		internal readonly Api.System System;
+		private readonly Service _service;
+		internal readonly Api.System _system;
 
 		private CancellationTokenSource _batchBlockReceiveAsyncCts;
 
