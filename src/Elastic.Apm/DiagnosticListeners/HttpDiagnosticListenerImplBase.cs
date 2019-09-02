@@ -19,7 +19,7 @@ namespace Elastic.Apm.DiagnosticListeners
 		where TResponse : class
 	{
 		private const string EventExceptionPropertyName = "Exception";
-		private const string EventRequestPropertyName = "Request";
+		protected const string EventRequestPropertyName = "Request";
 		private const string EventResponsePropertyName = "Response";
 
 		/// <summary>
@@ -28,12 +28,12 @@ namespace Elastic.Apm.DiagnosticListeners
 		internal readonly ConcurrentDictionary<TRequest, ISpan> ProcessingRequests = new ConcurrentDictionary<TRequest, ISpan>();
 
 		private readonly IApmAgent _agent;
-		private readonly ScopedLogger _logger;
+		protected readonly ScopedLogger Logger;
 
 		protected HttpDiagnosticListenerImplBase(IApmAgent agent)
 		{
 			_agent = agent;
-			_logger = _agent.Logger?.Scoped("HttpDiagnosticListenerImplBase");
+			Logger = _agent.Logger?.Scoped("HttpDiagnosticListenerImplBase");
 		}
 
 		protected abstract string RequestGetMethod(TRequest request);
@@ -54,34 +54,34 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		public void OnCompleted() { }
 
-		public void OnError(Exception error) => _logger.Error()?.LogExceptionWithCaller(error, nameof(OnError));
+		public void OnError(Exception error) => Logger.Error()?.LogExceptionWithCaller(error, nameof(OnError));
 
 		public void OnNext(KeyValuePair<string, object> kv)
 		{
-			_logger.Trace()?.Log("Called with key: `{DiagnosticEventKey}', value: `{DiagnosticEventValue}'", kv.Key, kv.Value);
+			Logger.Trace()?.Log("Called with key: `{DiagnosticEventKey}', value: `{DiagnosticEventValue}'", kv.Key, kv.Value);
 
 			if (string.IsNullOrEmpty(kv.Key))
 			{
-				_logger.Trace()?.Log($"Key is {(kv.Key == null ? "null" : "an empty string")} - exiting");
+				Logger.Trace()?.Log($"Key is {(kv.Key == null ? "null" : "an empty string")} - exiting");
 				return;
 			}
 
 			if (kv.Value == null)
 			{
-				_logger.Trace()?.Log("Value is null - exiting");
+				Logger.Trace()?.Log("Value is null - exiting");
 				return;
 			}
 
 			var requestObject = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty(EventRequestPropertyName)?.GetValue(kv.Value);
 			if (requestObject == null)
 			{
-				_logger.Trace()?.Log("Event's {EventRequestPropertyName} property is null - exiting", EventRequestPropertyName);
+				Logger.Trace()?.Log("Event's {EventRequestPropertyName} property is null - exiting", EventRequestPropertyName);
 				return;
 			}
 
 			if (!(requestObject is TRequest request))
 			{
-				_logger.Trace()
+				Logger.Trace()
 					?.Log("Actual type of object ({EventRequestPropertyActualType}) in event's {EventRequestPropertyName} property " +
 						"doesn't match the expected type ({EventRequestPropertyExpectedType}) - exiting",
 						requestObject.GetType().FullName, EventRequestPropertyName, typeof(TRequest).FullName);
@@ -91,13 +91,13 @@ namespace Elastic.Apm.DiagnosticListeners
 			var requestUrl = RequestGetUri(request);
 			if (requestUrl == null)
 			{
-				_logger.Trace()?.Log("Request URL is null - exiting", EventRequestPropertyName);
+				Logger.Trace()?.Log("Request URL is null - exiting", EventRequestPropertyName);
 				return;
 			}
 
 			if (IsRequestFilteredOut(requestUrl))
 			{
-				_logger.Trace()?.Log("Request URL ({RequestUrl}) is filtered out - exiting", requestUrl);
+				Logger.Trace()?.Log("Request URL ({RequestUrl}) is filtered out - exiting", requestUrl);
 				return;
 			}
 
@@ -108,17 +108,17 @@ namespace Elastic.Apm.DiagnosticListeners
 			else if (kv.Key.Equals(ExceptionEventKey))
 				ProcessExceptionEvent(kv.Value, requestUrl);
 			else
-				_logger.Trace()?.Log("Unrecognized key `{DiagnosticEventKey}'", kv.Key);
+				Logger.Trace()?.Log("Unrecognized key `{DiagnosticEventKey}'", kv.Key);
 		}
 
 		private void ProcessStartEvent(TRequest request, Uri requestUrl)
 		{
-			_logger.Trace()?.Log("Processing start event... Request URL: {RequestUrl}", requestUrl);
+			Logger.Trace()?.Log("Processing start event... Request URL: {RequestUrl}", requestUrl);
 
 			var transaction = _agent.Tracer.CurrentTransaction;
 			if (transaction == null)
 			{
-				_logger.Debug()?.Log("No current transaction, skip creating span for outgoing HTTP request");
+				Logger.Debug()?.Log("No current transaction, skip creating span for outgoing HTTP request");
 				return;
 			}
 
@@ -131,7 +131,7 @@ namespace Elastic.Apm.DiagnosticListeners
 			if (!ProcessingRequests.TryAdd(request, span))
 			{
 				// Consider improving error reporting - see https://github.com/elastic/apm-agent-dotnet/issues/280
-				_logger.Error()?.Log("Failed to add to ProcessingRequests - ???");
+				Logger.Error()?.Log("Failed to add to ProcessingRequests - ???");
 				return;
 			}
 
@@ -146,11 +146,11 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		private void ProcessStopEvent(object eventValue, TRequest request, Uri requestUrl)
 		{
-			_logger.Trace()?.Log("Processing stop event... Request URL: {RequestUrl}", requestUrl);
+			Logger.Trace()?.Log("Processing stop event... Request URL: {RequestUrl}", requestUrl);
 
 			if (!ProcessingRequests.TryRemove(request, out var span))
 			{
-				_logger.Warning()
+				Logger.Warning()
 					?.Log("Failed capturing request (failed to remove from ProcessingRequests) - " +
 						"This Span will be skipped in case it wasn't captured before. " +
 						"Request: method: {HttpMethod}, URL: {RequestUrl}", RequestGetMethod(request), requestUrl);
@@ -170,7 +170,7 @@ namespace Elastic.Apm.DiagnosticListeners
 						span.Context.Http.StatusCode = ResponseGetStatusCode(response);
 					else
 					{
-						_logger.Trace()
+						Logger.Trace()
 							?.Log("Actual type of object ({EventResponsePropertyActualType}) in event's {EventResponsePropertyName} property " +
 								"doesn't match the expected type ({EventResponsePropertyExpectedType})",
 								responseObject.GetType().FullName, EventResponsePropertyName, typeof(TResponse).FullName);
@@ -181,10 +181,16 @@ namespace Elastic.Apm.DiagnosticListeners
 			span.End();
 		}
 
-		private void ProcessExceptionEvent(object eventValue, Uri requestUrl)
+		protected virtual void ProcessExceptionEvent(object eventValue, Uri requestUrl)
 		{
-			_logger.Trace()?.Log("Processing exception event... Request URL: {RequestUrl}", requestUrl);
-			var exception = eventValue.GetType().GetTypeInfo().GetDeclaredProperty(EventExceptionPropertyName).GetValue(eventValue) as Exception;
+			Logger.Trace()?.Log("Processing exception event... Request URL: {RequestUrl}", requestUrl);
+
+			if (!(eventValue.GetType().GetTypeInfo().GetDeclaredProperty(EventExceptionPropertyName)?.GetValue(eventValue) is Exception exception))
+			{
+				Logger.Trace()?.Log("Failed reading exception property");
+				return;
+			}
+
 			var transaction = _agent.Tracer.CurrentTransaction;
 
 			transaction?.CaptureException(exception, "Failed outgoing HTTP request");

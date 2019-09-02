@@ -281,8 +281,27 @@ namespace Elastic.Apm.Tests
 			}
 
 			payloadSender.FirstSpan.Should().NotBeNull();
-			payloadSender.FirstSpan.StackTrace.Should().BeNullOrEmpty();
+
+			if (payloadSender.FirstSpan.Duration < ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds)
+				payloadSender.FirstSpan.StackTrace.Should().BeNullOrEmpty();
+			else
+				payloadSender.FirstSpan.StackTrace.Should().NotBeNullOrEmpty();
 		}
+
+		/// <summary>
+		/// Makes sure the stacktrace is not captured when the span is shorter than spanFramesMinDuration.
+		/// In https://github.com/elastic/apm-agent-dotnet/pull/451 we found that with the
+		/// default spanFramesMinDuration (currently 5)
+		/// the test became in CI flaky - sometimes the spans in CI are shorter than 5 ms, sometimes not.
+		/// To avoid this in this test we set spanFramesMinDuration to 10000 and execute a span with empty method body.
+		/// </summary>
+		[Fact]
+		public void StackTraceLimit2SpanFramesMinDuration1000NoSleepInSpan() =>
+			AssertWithAgent("2", "1000", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().BeNullOrEmpty();
+			});
 
 		[Fact]
 		public void DefaultStackTraceLimitAndSpanFramesMinDuration_LongSpan()

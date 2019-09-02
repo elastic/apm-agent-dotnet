@@ -25,9 +25,25 @@ namespace Elastic.Apm.Api
 		string Id { get; }
 
 		/// <summary>
+		/// It's true if and only of this segment is sampled.
+		/// </summary>
+		bool IsSampled { get; }
+
+		/// <summary>
+		/// A flat mapping of user-defined labels with string values.
+		/// </summary>
+		/// <exception cref="ArgumentException"><c>null</c> as key is not allowed.</exception>
+		Dictionary<string, string> Labels { get; }
+
+		/// <summary>
 		/// The name of the item.
 		/// </summary>
 		string Name { get; set; }
+
+		/// <summary>
+		/// Distributed tracing data for this segment as the distributed tracing caller.
+		/// </summary>
+		DistributedTracingData OutgoingDistributedTracingData { get; }
 
 		/// <summary>
 		/// Hex encoded 64 random bits ID of the parent transaction or span.
@@ -35,24 +51,9 @@ namespace Elastic.Apm.Api
 		string ParentId { get; }
 
 		/// <summary>
-		/// A flat mapping of user-defined labels with string values.
-		/// </summary>
-		Dictionary<string, string> Labels { get; }
-
-		/// <summary>
 		/// Hex encoded 128 random bits ID of the correlated trace.
 		/// </summary>
 		string TraceId { get; }
-
-		/// <summary>
-		/// It's true if and only of this segment is sampled.
-		/// </summary>
-		bool IsSampled { get; }
-
-		/// <summary>
-		/// Distributed tracing data for this segment as the distributed tracing caller.
-		/// </summary>
-		DistributedTracingData OutgoingDistributedTracingData { get; }
 
 		/// <summary>
 		/// Captures a custom error and reports it to the APM server.
@@ -79,7 +80,8 @@ namespace Elastic.Apm.Api
 		void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null);
 
 		/// <summary>
-		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled exceptions
+		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
+		/// exceptions
 		/// and schedules it to be reported to the APM Server.
 		/// The created span will be a child span of this execution segment.
 		/// </summary>
@@ -94,7 +96,8 @@ namespace Elastic.Apm.Api
 		void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null);
 
 		/// <summary>
-		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled exceptions
+		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
+		/// exceptions
 		/// and schedules it to be reported to the APM Server.
 		/// The created span will be a child span of this execution segment.
 		/// </summary>
@@ -106,7 +109,8 @@ namespace Elastic.Apm.Api
 		void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null);
 
 		/// <summary>
-		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled exceptions
+		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
+		/// exceptions
 		/// and schedules it to be reported to the APM Server.
 		/// The created span will be a child span of this execution segment.
 		/// </summary>
@@ -127,7 +131,8 @@ namespace Elastic.Apm.Api
 		T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null);
 
 		/// <summary>
-		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled exceptions
+		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
+		/// exceptions
 		/// and schedules it to be reported to the APM Server.
 		/// The created span will be a child span of this execution segment.
 		/// </summary>
@@ -148,7 +153,8 @@ namespace Elastic.Apm.Api
 		T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null);
 
 		/// <summary>
-		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled exceptions
+		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
+		/// exceptions
 		/// and schedules it to be reported to the APM Server.
 		/// The created span will be a child span of this execution segment.
 		/// </summary>
@@ -161,7 +167,8 @@ namespace Elastic.Apm.Api
 		Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null);
 
 		/// <summary>
-		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled exceptions
+		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
+		/// exceptions
 		/// and schedules it to be reported to the APM Server.
 		/// The created span will be a child span of this execution segment.
 		/// </summary>
@@ -177,7 +184,8 @@ namespace Elastic.Apm.Api
 		Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null);
 
 		/// <summary>
-		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled exceptions
+		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
+		/// exceptions
 		/// and schedules it to be reported to the APM Server.
 		/// The created span will be a child span of this execution segment.
 		/// </summary>
@@ -194,7 +202,8 @@ namespace Elastic.Apm.Api
 		Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null);
 
 		/// <summary>
-		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled exceptions
+		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
+		/// exceptions
 		/// and schedules it to be reported to the APM Server.
 		/// The created span will be a child span of this execution segment.
 		/// </summary>

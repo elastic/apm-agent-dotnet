@@ -105,6 +105,12 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData HomePage =
 				new SampleAppUrlPathData(HomeController.HomePageRelativePath, 200);
 
+			internal static readonly SampleAppUrlPathData GetDotNetRuntimeDescriptionPage =
+				new SampleAppUrlPathData(HomeController.GetDotNetRuntimeDescriptionPageRelativePath, 200);
+
+			internal static readonly SampleAppUrlPathData ForbidHttpResponsePageDescriptionPage =
+			    new SampleAppUrlPathData(HomeController.ForbidHttpResponsePageRelativePath, 200, spansCount: 1, errorsCount: 1);
+
 			internal static readonly List<SampleAppUrlPathData> AllPaths = new List<SampleAppUrlPathData>()
 			{
 				new SampleAppUrlPathData("", 200),
