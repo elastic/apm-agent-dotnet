@@ -13,6 +13,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _serverUrls;
 		private readonly string _serviceName;
 		private readonly string _serviceVersion;
+		private readonly string _environment;
 		private readonly string _secretToken;
 		private readonly string _captureHeaders;
 		private readonly string _transactionSampleRate;
@@ -28,6 +29,7 @@ namespace Elastic.Apm.Tests.Mocks
 			string serverUrls = null,
 			string serviceName = null,
 			string serviceVersion = null,
+			string environment = null,
 			string secretToken = null,
 			string captureHeaders = null,
 			string transactionSampleRate = null,
@@ -43,6 +45,7 @@ namespace Elastic.Apm.Tests.Mocks
 			_logLevel = logLevel;
 			_serviceName = serviceName;
 			_serviceVersion = serviceVersion;
+			_environment = environment;
 			_secretToken = secretToken;
 			_captureHeaders = captureHeaders;
 			_transactionSampleRate = transactionSampleRate;
@@ -58,6 +61,7 @@ namespace Elastic.Apm.Tests.Mocks
 		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Kv(ConfigConsts.EnvVarNames.ServerUrls, _serverUrls, Origin));
 		public string ServiceName => ParseServiceName(Kv(ConfigConsts.EnvVarNames.ServiceName, _serviceName, Origin));
 		public string ServiceVersion => ParseServiceVersion(Kv(ConfigConsts.EnvVarNames.ServiceVersion, _serviceVersion,  Origin));
+		public string Environment => ParseEnvironment(Kv(ConfigConsts.EnvVarNames.Environment, _environment, Origin));
 		public string SecretToken => ParseSecretToken(Kv(ConfigConsts.EnvVarNames.SecretToken, _secretToken, Origin));
 		public bool CaptureHeaders => ParseCaptureHeaders(Kv(ConfigConsts.EnvVarNames.CaptureHeaders, _captureHeaders, Origin));
 		public double TransactionSampleRate => ParseTransactionSampleRate(Kv(ConfigConsts.EnvVarNames.TransactionSampleRate, _transactionSampleRate, Origin));

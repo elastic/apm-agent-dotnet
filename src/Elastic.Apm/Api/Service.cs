@@ -23,9 +23,12 @@ namespace Elastic.Apm.Api
 
 		public Runtime Runtime { get; set; }
 
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		public string Environment { get; set; }
+
 		public override string ToString() => new ToStringBuilder(nameof(Service))
 		{
-			{ "Name", Name }, {"Version", Version}, { "Agent", Agent }, { "Framework", Framework }, { "Language", Language },
+			{ "Name", Name }, {"Version", Version}, { "Agent", Agent }, { "Framework", Framework }, { "Language", Language }, {"Environment", Environment}
 		}.ToString();
 
 		internal static Service GetDefaultService(IConfigurationReader configurationReader, IApmLogger loggerArg)
@@ -40,7 +43,8 @@ namespace Elastic.Apm.Api
 					Name = Consts.AgentName,
 					Version = typeof(Agent).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion
 				},
-				Runtime = PlatformDetection.GetServiceRuntime(logger)
+				Runtime = PlatformDetection.GetServiceRuntime(logger),
+				Environment = configurationReader.Environment
 			};
 		}
 

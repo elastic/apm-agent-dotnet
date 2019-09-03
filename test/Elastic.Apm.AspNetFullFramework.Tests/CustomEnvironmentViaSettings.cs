@@ -7,14 +7,14 @@ using Xunit.Abstractions;
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	[Collection("AspNetFullFrameworkTests")]
-	public class CustomServiceNameSetViaSettings : TestsBase
+	public class CustomEnvironmentViaSettings : TestsBase
 	{
-		private const string CustomServiceName = "AspNetFullFramework.Tests.CustomServiceName";
+		private const string CustomEnvironment = "Staging";
 
-		public CustomServiceNameSetViaSettings(ITestOutputHelper xUnitOutputHelper)
+		public CustomEnvironmentViaSettings(ITestOutputHelper xUnitOutputHelper)
 			: base(xUnitOutputHelper,
-				envVarsToSetForSampleAppPool: new Dictionary<string, string> { { ConfigConsts.EnvVarNames.ServiceName, CustomServiceName } }) =>
-			AgentConfig.ServiceName = AbstractConfigurationReader.AdaptServiceName(CustomServiceName);
+				envVarsToSetForSampleAppPool: new Dictionary<string, string> { { ConfigConsts.EnvVarNames.Environment, CustomEnvironment } }) =>
+			AgentConfig.Environment = CustomEnvironment;
 
 		[AspNetFullFrameworkTheory]
 		[MemberData(nameof(AllSampleAppUrlPaths))]

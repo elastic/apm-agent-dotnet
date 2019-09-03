@@ -130,6 +130,33 @@ of the deployed revision, e.g. the output of git rev-parse HEAD.
 |============
 
 [float]
+[[config-environment]]
+==== `Environment`
+
+The name of the environment this service is deployed in, e.g. "production" or "staging".
+
+Environments allow you to easily filter data on a global level in the APM UI.
+It's important to be consistent when naming environments across agents.
+See {kibana-ref}/filters.html#environment-selector[environment selector] in the Kibana UI for more information.
+
+NOTE: This feature is fully supported in the APM UI in Kibana versions >= 7.2.
+You must use the query bar to filter for a specific environment in versions prior to 7.2.
+
+[options="header"]
+|============
+| Environment variable name      | IConfiguration key 
+| `ELASTIC_APM_ENVIRONMENT`      | `ElasticApm:Environment`
+|============
+
+[options="header"]
+|============
+| Default        | Type
+| See note below | String 
+|============
+
+NOTE: On ASP.NET Core application the agent uses https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.hosting.ihostingenvironment.environmentname?view=aspnetcore-2.2#Microsoft_AspNetCore_Hosting_IHostingEnvironment_EnvironmentName[EnvironmentName from IHostingEnvironment] as default environment name.
+
+[float]
 [[config-transaction-sample-rate]]
 ==== `TransactionSampleRate`
 

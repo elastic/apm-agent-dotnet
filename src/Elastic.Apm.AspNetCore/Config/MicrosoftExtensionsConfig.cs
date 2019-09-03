@@ -21,6 +21,7 @@ namespace Elastic.Apm.AspNetCore.Config
 			internal const string ServerUrls = "ElasticApm:ServerUrls";
 			internal const string ServiceName = "ElasticApm:ServiceName";
 			internal const string ServiceVersion = "ElasticApm:ServiceVersion";
+			internal const string Environment = "ElasticApm:Environment";
 			internal const string SecretToken = "ElasticApm:SecretToken";
 			internal const string CaptureHeaders = "ElasticApm:CaptureHeaders";
 			internal const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
@@ -32,14 +33,16 @@ namespace Elastic.Apm.AspNetCore.Config
 		}
 
 		private readonly IConfiguration _configuration;
+		private readonly string _environmentName;
 
 		private readonly Lazy<double> _spanFramesMinDurationInMilliseconds;
 
 		private readonly Lazy<int> _stackTraceLimit;
 
-		public MicrosoftExtensionsConfig(IConfiguration configuration, IApmLogger logger = null) : base(logger)
+		public MicrosoftExtensionsConfig(IConfiguration configuration, IApmLogger logger, string environmentName) : base(logger)
 		{
 			_configuration = configuration;
+			_environmentName = environmentName;
 			_configuration.GetSection("ElasticApm")
 				?
 				.GetReloadToken()
@@ -79,6 +82,8 @@ namespace Elastic.Apm.AspNetCore.Config
 		public string ServiceName => ParseServiceName(ReadFallBack(Keys.ServiceName, ConfigConsts.EnvVarNames.ServiceName));
 
 		public string ServiceVersion => ParseServiceVersion(ReadFallBack(Keys.ServiceVersion, ConfigConsts.EnvVarNames.ServiceVersion));
+
+		public string Environment => ParseEnvironment(ReadFallBack(Keys.Environment, ConfigConsts.EnvVarNames.Environment)) ?? _environmentName;
 
 		public double SpanFramesMinDurationInMilliseconds => _spanFramesMinDurationInMilliseconds.Value;
 

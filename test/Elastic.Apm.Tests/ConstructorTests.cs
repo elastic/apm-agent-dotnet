@@ -16,6 +16,7 @@ namespace Elastic.Apm.Tests
 			public IReadOnlyList<Uri> ServerUrls => new List<Uri> { ConfigConsts.DefaultValues.ServerUri };
 			public string ServiceName { get; }
 			public string ServiceVersion { get; }
+			public string Environment { get; }
 			public string SecretToken { get; }
 			public bool CaptureHeaders { get; }
 			public double TransactionSampleRate { get; }
