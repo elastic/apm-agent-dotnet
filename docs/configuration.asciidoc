@@ -150,9 +150,11 @@ You must use the query bar to filter for a specific environment in versions prio
 
 [options="header"]
 |============
-| Default                                        | Type
-| https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.hosting.ihostingenvironment.environmentname?view=aspnetcore-2.2#Microsoft_AspNetCore_Hosting_IHostingEnvironment_EnvironmentName[EnvironmentName from IHostingEnvironment] | String 
+| Default        | Type
+| See note below | String 
 |============
+
+NOTE: On ASP.NET Core application the agent uses https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.hosting.ihostingenvironment.environmentname?view=aspnetcore-2.2#Microsoft_AspNetCore_Hosting_IHostingEnvironment_EnvironmentName[EnvironmentName from IHostingEnvironment] as default environment name.
 
 [float]
 [[config-transaction-sample-rate]]
