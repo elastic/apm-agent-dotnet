@@ -3,7 +3,7 @@
 
 # apm-agent-dotnet
 
-Please fill out this survey to help us prioritizing framework support:
+Please fill out this survey to help us prioritize framework support:
 [https://goo.gl/forms/FHHbhptcDx8eDNx92](https://goo.gl/forms/FHHbhptcDx8eDNx92)
 
 # Installation
