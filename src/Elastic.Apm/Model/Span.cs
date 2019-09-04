@@ -53,15 +53,19 @@ namespace Elastic.Apm.Model
 			ParentId = parentId;
 			TraceId = traceId;
 
-			if (enclosingTransaction.SpanCount.Started >= _configurationReader.TransactionMaxSpans)
-			{
-				IsSampled = false;
-				enclosingTransaction.SpanCount.IncrementDropped();
-			}
-
 			if (IsSampled)
-				// Started spans should be counted only for sampled transactions
-				enclosingTransaction.SpanCount.IncrementStarted();
+			{
+				// Started and dropped spans should be counted only for sampled transactions
+				if (enclosingTransaction.SpanCount.Started >= _configurationReader.TransactionMaxSpans)
+				{
+					IsSampled = false;
+					enclosingTransaction.SpanCount.IncrementDropped();
+				}
+				else
+				{
+					enclosingTransaction.SpanCount.IncrementStarted();
+				}
+			}
 
 			_currentExecutionSegmentsContainer.CurrentSpan = this;
 
