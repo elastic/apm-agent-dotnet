@@ -1,8 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
-    <TargetFramework>netstandard2.0</TargetFramework>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
+  <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
@@ -29,6 +26,7 @@
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Condition=" '$(TargetFramework)' == 'net461' " Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-preview.2" PrivateAssets="All"/>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <!-- TODO: Are we ok with this reference/version? -->
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.0.0" />
