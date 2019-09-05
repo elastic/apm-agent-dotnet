@@ -56,7 +56,7 @@ namespace Elastic.Apm.Model
 			if (IsSampled)
 			{
 				// Started and dropped spans should be counted only for sampled transactions
-				if (enclosingTransaction.SpanCount.Started >= _configurationReader.TransactionMaxSpans)
+				if (enclosingTransaction.SpanCount.IncrementTotal() >= _configurationReader.TransactionMaxSpans)
 				{
 					IsSampled = false;
 					enclosingTransaction.SpanCount.IncrementDropped();
