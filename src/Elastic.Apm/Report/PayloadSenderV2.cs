@@ -33,8 +33,7 @@ namespace Elastic.Apm.Report
 		private readonly HttpClient _httpClient;
 		private readonly IApmLogger _logger;
 
-		private readonly Service _service;
-		internal readonly Api.System _system;
+		internal readonly Api.System System;
 
 		private CancellationTokenSource _batchBlockReceiveAsyncCts;
 
@@ -47,24 +46,34 @@ namespace Elastic.Apm.Report
 			HttpMessageHandler handler = null
 		)
 		{
-			_service = service;
-			_system = system;
-			_metadata = new Metadata { Service = _service, System = _system };
+			var service1 = service;
+			System = system;
+			_metadata = new Metadata { Service = service1, System = System };
 			_logger = logger?.Scoped(nameof(PayloadSenderV2));
 
 			var serverUrlBase = configurationReader.ServerUrls.First();
 			var servicePoint = ServicePointManager.FindServicePoint(serverUrlBase);
 
-			servicePoint.ConnectionLeaseTimeout = DnsTimeout;
+			try
+			{
+				servicePoint.ConnectionLeaseTimeout = DnsTimeout;
+			}
+			catch (Exception e)
+			{
+				_logger.Error()
+					?.LogException(e,
+						"Failed setting servicePoint.ConnectionLeaseTimeout - default ConnectionLeaseTimeout from HttpClient will be used");
+			}
+
 			servicePoint.ConnectionLimit = 20;
 
 			_httpClient = new HttpClient(handler ?? new HttpClientHandler()) { BaseAddress = serverUrlBase };
 			_httpClient.DefaultRequestHeaders.UserAgent.Add(
-				new ProductInfoHeaderValue($"elasticapm-{Consts.AgentName}", AdaptUserAgentValue(_service.Agent.Version)));
+				new ProductInfoHeaderValue($"elasticapm-{Consts.AgentName}", AdaptUserAgentValue(service1.Agent.Version)));
 			_httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("System.Net.Http",
 				AdaptUserAgentValue(typeof(HttpClient).Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version)));
 			_httpClient.DefaultRequestHeaders.UserAgent.Add(
-				new ProductInfoHeaderValue(AdaptUserAgentValue(_service.Runtime.Name), AdaptUserAgentValue(_service.Runtime.Version)));
+				new ProductInfoHeaderValue(AdaptUserAgentValue(service1.Runtime.Name), AdaptUserAgentValue(service1.Runtime.Version)));
 
 			if (configurationReader.SecretToken != null)
 			{
@@ -174,9 +183,7 @@ namespace Elastic.Apm.Report
 				var result = await _httpClient.PostAsync(Consts.IntakeV2Events, content);
 
 				if (result != null && !result.IsSuccessStatusCode)
-				{
 					_logger?.Error()?.Log("Failed sending event. {ApmServerResponse}", await result.Content.ReadAsStringAsync());
-				}
 				else
 				{
 					_logger?.Debug()
