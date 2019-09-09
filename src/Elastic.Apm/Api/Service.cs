@@ -100,6 +100,8 @@ namespace Elastic.Apm.Api
 
 		internal const string DotNetFullFrameworkName = ".NET Framework";
 
+		internal const string MonoName = "Mono";
+
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
 
