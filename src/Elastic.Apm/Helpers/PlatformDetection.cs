@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Elastic.Apm.Api;
@@ -11,6 +12,7 @@ namespace Elastic.Apm.Helpers
 	{
 		internal const string DotNetCoreDescriptionPrefix = ".NET Core";
 		internal const string DotNetFullFrameworkDescriptionPrefix = ".NET Framework";
+		internal const string MonoDescriptionPrefix = "Mono";
 
 		internal static readonly bool IsDotNetFullFramework =
 			// Taken from https://github.com/dotnet/corefx/blob/master/src/CoreFx.Private.TestUtilities/src/System/PlatformDetection.cs#L24
@@ -19,6 +21,9 @@ namespace Elastic.Apm.Helpers
 		internal static readonly bool IsDotNetCore =
 			// https://github.com/dotnet/corefx/blob/master/src/CoreFx.Private.TestUtilities/src/System/PlatformDetection.cs#L25
 			RuntimeInformation.FrameworkDescription.StartsWith(DotNetCoreDescriptionPrefix, StringComparison.OrdinalIgnoreCase);
+
+		internal static readonly bool IsMono =
+			RuntimeInformation.FrameworkDescription.StartsWith(MonoDescriptionPrefix, StringComparison.OrdinalIgnoreCase);
 
 		internal static readonly string DotNetRuntimeDescription = RuntimeInformation.FrameworkDescription;
 
@@ -41,7 +46,6 @@ namespace Elastic.Apm.Helpers
 			return result;
 		}
 
-
 		internal static Runtime GetServiceRuntime(IApmLogger logger)
 		{
 			string name;
@@ -49,11 +53,13 @@ namespace Elastic.Apm.Helpers
 				name = Runtime.DotNetFullFrameworkName;
 			else if (IsDotNetCore)
 				name = Runtime.DotNetCoreName;
+			else if (IsMono)
+				name = Runtime.MonoName;
 			else
 			{
 				name = "N/A";
 				logger.Error()
-					?.Log("Failed to detect whether the current .NET runtime is .NET Full Framework or .NET Core - " +
+					?.Log("Failed to detect whether the current .NET runtime is .NET Full Framework, Mono or .NET Core - " +
 						"`{DotNetFrameworkRuntimeName}' will be used as the current .NET runtime name", name);
 			}
 
@@ -64,6 +70,8 @@ namespace Elastic.Apm.Helpers
 					version = typeof(object).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 				else if (IsDotNetCore)
 					version = GetDotNetCoreRuntimeVersion(logger);
+				else if (IsMono)
+					version = GetMonoVersion(logger);
 				else
 				{
 					version = "N/A";
@@ -82,6 +90,9 @@ namespace Elastic.Apm.Helpers
 
 			return new Runtime { Name = name, Version = version };
 		}
+
+		private static string GetMonoVersion(IApmLogger logger)
+			=> RuntimeInformation.FrameworkDescription.Substring(5);
 
 		private static string GetDotNetCoreRuntimeVersion(IApmLogger logger)
 		{
