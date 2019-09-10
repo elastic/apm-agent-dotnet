@@ -177,7 +177,7 @@ namespace Elastic.Apm.Tests
 			testLogger.Lines[1]
 				.Should()
 				.Contain(
-					"Invalid structured log line: number of placeholders in the log message does not match the number of parameters, message until the 1. parameter: This is a test log from the test StructuredLogTemplateWithAdditionalArguments_LogError, args: ");
+					"Above line is from an invalid structured log and may not be complete: number of placeholders in the log message does not match the number of parameters.");
 			testLogger.Lines[0]
 				.Should()
 				.Contain("This is a test log from the test StructuredLogTemplateWithAdditionalArguments_LogError, args: testArgumentValue1 testArgumentValue2");
@@ -197,7 +197,7 @@ namespace Elastic.Apm.Tests
 			testLogger.Lines[1]
 				.Should()
 				.Contain(
-					"Invalid structured log line: number of arguments is not matching the number of placeholders, placeholders with missing values: arg2");
+					"Above line is from an invalid structured log and may not be complete: number of arguments is not matching the number of placeholders, placeholders with missing values: arg2");
 
 			testLogger.Lines[0]
 				.Should()
