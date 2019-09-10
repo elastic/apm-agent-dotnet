@@ -1,11 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
-    <TargetFramework>netstandard2.0</TargetFramework>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
-  </PropertyGroup>
   <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
+
     <RootNamespace>Elastic.Apm</RootNamespace>
     <AssemblyName>Elastic.Apm</AssemblyName>
     <AssemblyVersion>1.0.1</AssemblyVersion>
@@ -29,6 +25,7 @@
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-*" PrivateAssets="All" Condition="'$(OS)' != 'Windows_NT'" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <!-- TODO: Are we ok with this reference/version? -->
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.0.0" />
