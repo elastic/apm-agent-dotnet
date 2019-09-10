@@ -14,12 +14,20 @@ namespace Elastic.Apm.Logging
 
 		private static void DoLog(this IApmLogger logger, LogLevel level, string message, Exception e, params object[] args)
 		{
-			var formatter = logger is ScopedLogger sl
-				? sl.GetOrAddFormatter(message, args.Length)
-				: Formatters.GetOrAdd(message, s => new LogValuesFormatter(s));
+			try
+			{
+				var formatter = logger is ScopedLogger sl
+					? sl.GetOrAddFormatter(message, args.Length)
+					: Formatters.GetOrAdd(message, s => new LogValuesFormatter(s, args.Length));
 
-			var logValues = formatter.GetState(args);
-			logger?.Log(level, logValues, e, (s, _) => formatter.Format(args));
+				var logValues = formatter.GetState(args);
+
+				logger?.Log(level, logValues, e, (s, _) => formatter.Format(args));
+			}
+			catch (Exception exception)
+			{
+				logger?.Error()?.LogException(exception, "Exception during logging - some log lines can be missing");
+			}
 		}
 
 		/// <summary>
