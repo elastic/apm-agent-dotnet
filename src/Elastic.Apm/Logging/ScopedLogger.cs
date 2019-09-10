@@ -16,7 +16,7 @@ namespace Elastic.Apm.Logging
 		public bool IsEnabled(LogLevel level) => Logger.IsEnabled(level);
 
 		internal LogValuesFormatter GetOrAddFormatter(string message, int expectedCount)
-			=> Formatters.GetOrAdd(message, s => new LogValuesFormatter($"{{{{{{Scope}}}}}} {s}", expectedCount, Scope));
+			=> Formatters.GetOrAdd(message, s => new LogValuesFormatter($"{{{{{{Scope}}}}}} {s}", expectedCount + 1, Scope));
 
 		void IApmLogger.Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter) =>
 			Logger.Log(level, state, e, formatter);
