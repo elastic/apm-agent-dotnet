@@ -18,11 +18,9 @@ namespace Elastic.Apm.Tests.HelpersTests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender)))
-			{
 				agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => { });
-			}
 
-			switch (RuntimeInformation.FrameworkDescription )
+			switch (RuntimeInformation.FrameworkDescription)
 			{
 				case string str when str.StartsWith(PlatformDetection.MonoDescriptionPrefix, StringComparison.OrdinalIgnoreCase):
 					mockPayloadSender.FirstTransaction.Service.Runtime.Name.Should().Be(Runtime.MonoName);

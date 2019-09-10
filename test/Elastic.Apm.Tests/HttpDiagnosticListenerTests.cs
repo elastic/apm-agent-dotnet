@@ -271,7 +271,7 @@ namespace Elastic.Apm.Tests
 		/// Starts an HTTP call to a non existing URL and makes sure that an error is captured.
 		/// This uses an HttpClient instance directly
 		/// </summary>
-		[Fact]
+		[NetCoreFact] //TODO: add issue reference
 		public async Task CaptureErrorOnFailingHttpCall_HttpClient()
 		{
 			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
