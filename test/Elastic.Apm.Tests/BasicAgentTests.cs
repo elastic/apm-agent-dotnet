@@ -17,6 +17,7 @@ using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
+using static Elastic.Apm.Config.ConfigConsts.DefaultValues;
 
 [assembly:
 	InternalsVisibleTo(
@@ -134,6 +135,81 @@ namespace Elastic.Apm.Tests
 			userAgentHeader.Skip(2).First().Product.Version.Should().NotBeEmpty();
 		}
 
+		[Fact]
+		public void PayloadSender_enforces_MaxQueueEventCount()
+		{
+			var sendTcs = new TaskCompletionSource<object>();
+
+			var handler = new MockHttpMessageHandler(async (r, c) =>
+			{
+				await sendTcs.Task;
+				return new HttpResponseMessage(HttpStatusCode.OK);
+			});
+
+			var logger = new NoopLogger();
+			var service = Service.GetDefaultService(new TestAgentConfigurationReader(logger), logger);
+			var payloadSender = new PayloadSenderV2(logger, new TestAgentConfigurationReader(logger), service, new Api.System(), handler);
+
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				for (var i = 1; i <= MaxQueueEventCount + MaxBatchEventCount + 10; ++i)
+				{
+					var enqueuedSuccessfully = payloadSender.EnqueueEvent(new Transaction(agent, "TestName", "TestType"), "Transaction");
+
+					// It's possible that the events for the first batch have already been dequeued
+					// so we can be sure that queue doesn't have any free space left only after MaxQueueEventCount + MaxBatchEventCount events
+					if (i <= MaxQueueEventCount)
+					{
+						enqueuedSuccessfully.Should()
+							.BeTrue($"i: {i}, MaxQueueEventCount: {MaxQueueEventCount}, MaxBatchEventCount: {MaxBatchEventCount}");
+					}
+					else if (i > MaxQueueEventCount + MaxBatchEventCount)
+					{
+						enqueuedSuccessfully.Should()
+							.BeFalse($"i: {i}, MaxQueueEventCount: {MaxQueueEventCount}, MaxBatchEventCount: {MaxBatchEventCount}");
+					}
+				}
+
+				sendTcs.SetResult(null);
+			}
+		}
+
+		[Fact]
+		public async Task PayloadSender_enforces_MaxQueueEventCount_after_first_send()
+		{
+			var sendTcs = new TaskCompletionSource<object>();
+			var firstBatchDequeuedTcs = new TaskCompletionSource<object>();
+
+			var handler = new MockHttpMessageHandler(async (r, c) =>
+			{
+				firstBatchDequeuedTcs.SetResult(null);
+				await sendTcs.Task;
+				return new HttpResponseMessage(HttpStatusCode.OK);
+			});
+
+			var logger = new NoopLogger();
+			var configReader = new TestAgentConfigurationReader(logger, flushInterval: $"{24 * 60}m");
+			var service = Service.GetDefaultService(configReader, logger);
+			var payloadSender = new PayloadSenderV2(logger, configReader, service, new Api.System(), handler);
+
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				for (var i = 1; i <= MaxQueueEventCount; ++i)
+					payloadSender.EnqueueEvent(new Transaction(agent, "TestName", "TestType"), "Transaction");
+
+				await firstBatchDequeuedTcs.Task;
+
+				for (var i = 1; i < MaxBatchEventCount + 10; ++i)
+				{
+					var enqueuedSuccessfully = payloadSender.EnqueueEvent(new Transaction(agent, "TestName", "TestType"), "Transaction");
+					enqueuedSuccessfully.Should()
+						.Be(i <= MaxBatchEventCount, $"i: {i}, MaxQueueEventCount: {MaxQueueEventCount}, MaxBatchEventCount: {MaxBatchEventCount}");
+				}
+
+				sendTcs.SetResult(null);
+			}
+		}
+
 		/// <summary>
 		/// Creates 1 span and 1 transaction.
 		/// Makes sure that the ids have the correct lengths.
@@ -145,7 +221,7 @@ namespace Elastic.Apm.Tests
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("TestTransaction", "TestTransactionType",
-					(t) => { t.CaptureSpan("TestSpan", "TestSpanType", () => { }); });
+					t => { t.CaptureSpan("TestSpan", "TestSpanType", () => { }); });
 			}
 
 			StringToByteArray(payloadSender.FirstTransaction.Id).Should().HaveCount(8);
@@ -166,7 +242,7 @@ namespace Elastic.Apm.Tests
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("TestTransaction", "TestTransactionType",
-					(t) => { t.CaptureException(new Exception("TestMst")); });
+					t => { t.CaptureException(new Exception("TestMst")); });
 			}
 
 			StringToByteArray(payloadSender.FirstError.Id).Should().HaveCount(16);
