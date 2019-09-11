@@ -57,7 +57,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (Exception ex)
 			{
-				Logger.Error()?.LogException(ex, "Processing BeginRequest event failed");
+				_logger.Error()?.LogException(ex, "Processing BeginRequest event failed");
 			}
 		}
 
@@ -71,7 +71,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (Exception ex)
 			{
-				Logger.Error()?.LogException(ex, "Processing EndRequest event failed");
+				_logger.Error()?.LogException(ex, "Processing EndRequest event failed");
 			}
 		}
 
