@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using Elastic.Apm.Logging;
 using NLog;
 using NLogLevel = NLog.LogLevel;

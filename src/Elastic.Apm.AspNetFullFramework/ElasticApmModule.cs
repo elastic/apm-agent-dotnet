@@ -17,10 +17,10 @@ namespace Elastic.Apm.AspNetFullFramework
 		private static bool _isCaptureHeadersEnabled;
 		private static readonly DbgInstanceNameGenerator DbgInstanceNameGenerator = new DbgInstanceNameGenerator();
 
-		private static readonly InitOnceHelperC InitOnceHelper = new InitOnceHelperC();
+		private static readonly LazyContextualInit InitOnceHelper = new LazyContextualInit();
 
 		// ReSharper disable once ImpureMethodCallOnReadonlyValueField
-		public ElasticApmModule() => DbgInstanceName = DbgInstanceNameGenerator.Generate($"{nameof(ElasticApmModule)}.#");
+		public ElasticApmModule() => _dbgInstanceName = DbgInstanceNameGenerator.Generate($"{nameof(ElasticApmModule)}.#");
 
 		// We can store current transaction because each IHttpModule is used for at most one request at a time
 		// For example see https://bytes.com/topic/asp-net/answers/324305-httpmodule-multithreading-request-response-corelation
@@ -30,15 +30,21 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		private IApmLogger _logger;
 
-		private string DbgInstanceName { get; set; }
+		private readonly string _dbgInstanceName;
 		private static Version IisVersion => HttpRuntime.IISVersion;
 
 		public void Init(HttpApplication httpApp)
 		{
-			InitOnceHelper.InitOnce(this);
+			var isInitedByThisCall = InitOnceForAllInstancesUnderLock(_dbgInstanceName);
 
-			// Logger should be set ASAP because other initialization steps might be using it
-			_logger = Agent.Instance.Logger.Scoped(DbgInstanceName);
+			_logger = Agent.Instance.Logger.Scoped(_dbgInstanceName);
+
+			if (isInitedByThisCall)
+			{
+				_logger.Debug()
+					?.Log("Initialized Agent singleton. .NET runtime: {DotNetRuntimeDescription}; IIS: {IisVersion}",
+						PlatformDetection.DotNetRuntimeDescription, IisVersion);
+			}
 
 			_httpApp = httpApp;
 			_httpApp.BeginRequest += OnBeginRequest;
@@ -265,56 +271,34 @@ namespace Elastic.Apm.AspNetFullFramework
 			return aspNetVersion;
 		}
 
-		private class InitOnceHelperC
+		private static bool InitOnceForAllInstancesUnderLock(string dbgInstanceName)
 		{
-			private static volatile bool _isInitialized;
-			private static readonly object Lock = new object();
+			var agentComponents = BuildAgentComponents(dbgInstanceName);
 
-			internal void InitOnce(ElasticApmModule elasticApmModule)
+			return InitOnceHelper.IfNotInited?.Init(() =>
 			{
-				// Here we check for performance optimization - we don't need to take a lock after _isInitialized is set to true
-				// that is why _isInitialized has to be volatile - to prevent threads from seeing its value out of order
-				// (before other writes under lock)
-				if (_isInitialized) return;
-
-				lock (Lock)
-				{
-					// Here we check again for correctness because it's possible that the current thread saw _isInitialized as false
-					// before waiting and then acquiring the lock but in the meantime other thread already called InitOnce()
-					if (_isInitialized) return;
-
-					InitUnderLock();
-
-					_isInitialized = true;
-				}
-
-				var logger = Agent.Instance.Logger.Scoped($"{elasticApmModule.DbgInstanceName}.{nameof(InitOnceHelper)}");
-				logger.Debug()
-					?.Log("InitOnce completed. .NET runtime: {DotNetRuntimeDescription}; IIS: {IisVersion}",
-						PlatformDetection.DotNetRuntimeDescription, IisVersion);
-			}
-
-			private static void InitUnderLock()
-			{
-				Agent.Setup(Agent.LastSetupComponents ?? BuildAgentComponents(Agent.Logger));
+				Agent.Setup(agentComponents);
 
 				_isCaptureHeadersEnabled = Agent.Instance.ConfigurationReader.CaptureHeaders;
+
 				Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
-			}
-
-			private static AgentComponents BuildAgentComponents(IApmLogger loggerArg)
-			{
-				var logger = (loggerArg ?? ConsoleLogger.Instance).Scoped(nameof(ElasticApmModule));
-
-				var agentComponents = new AgentComponents(logger, new FullFrameworkConfigReader(logger));
-
-				var aspNetVersion = FindAspNetVersion(logger);
-
-				agentComponents.Service.Framework = new Framework { Name = "ASP.NET", Version = aspNetVersion };
-				agentComponents.Service.Language = new Language { Name = "C#" }; //TODO
-
-				return agentComponents;
-			}
+			}) ?? false;
 		}
+
+		private static AgentComponents BuildAgentComponents(string dbgInstanceName)
+		{
+			var rootLogger = AgentDependencies.Logger ?? ConsoleLogger.Instance;
+			var scopedLogger = rootLogger.Scoped(dbgInstanceName);
+
+			var agentComponents = new AgentComponents(rootLogger, new FullFrameworkConfigReader(scopedLogger));
+
+			var aspNetVersion = FindAspNetVersion(scopedLogger);
+
+			agentComponents.Service.Framework = new Framework { Name = "ASP.NET", Version = aspNetVersion };
+			agentComponents.Service.Language = new Language { Name = "C#" }; //TODO
+
+			return agentComponents;
+		}
+
 	}
 }

@@ -1,9 +1,9 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Tests.Extensions;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
 
@@ -13,80 +13,93 @@ namespace Elastic.Apm.Tests.HelpersTests
 	{
 		[Theory]
 		[MemberData(nameof(WaysToCallInitOrGetString))]
-		internal void InitializedOnlyOnceOnFirstAccess(string dbgWayToCallDesc, Func<LazyContextualInit<string>, Func<string>, string> wayToCall)
+		internal void with_result_initialized_only_once_on_first_call(string dbgWayToCallDesc
+			, Func<LazyContextualInit<string>, Func<string>, string> wayToCall)
 		{
-			var counter = new ThreadSafeCounter();
-			var ctxLazy = new LazyContextualInit<string>();
-			ctxLazy.IsInited.Should().BeFalse();
-			ctxLazy.IfNotInited.Should().NotBeNull();
-			var val1 = wayToCall(ctxLazy, () => counter.Increment().ToString());
-			ctxLazy.IsInited.Should().BeTrue($"{nameof(dbgWayToCallDesc)}: {dbgWayToCallDesc}");
-			ctxLazy.IfNotInited.Should().BeNull();
+			var counter = new ThreadSafeIntCounter();
+			var lazyCtxInit = new LazyContextualInit<string>();
+			lazyCtxInit.IsInited.Should().BeFalse();
+			lazyCtxInit.IfNotInited.Should().NotBeNull();
+			var val1 = wayToCall(lazyCtxInit, () => counter.Increment().ToString());
+			lazyCtxInit.IsInited.Should().BeTrue($"{nameof(dbgWayToCallDesc)}: {dbgWayToCallDesc}");
+			lazyCtxInit.IfNotInited.Should().BeNull();
 			val1.Should().Be("1");
 			counter.Value.Should().Be(1);
 
-			var val2 = wayToCall(ctxLazy, () => counter.Increment().ToString());
-			ctxLazy.IsInited.Should().BeTrue();
+			var val2 = wayToCall(lazyCtxInit, () => counter.Increment().ToString());
+			lazyCtxInit.IsInited.Should().BeTrue();
 			val2.Should().Be("1");
 			counter.Value.Should().Be(1);
 		}
 
 		[Theory]
 		[MemberData(nameof(WaysToCallInitOrGetString))]
-		internal void InitializedOnlyOnceFromMultipleThreads(string dbgWayToCallDesc, Func<LazyContextualInit<string>, Func<string>, string> wayToCall)
+		internal void with_result_multiple_threads(string dbgWayToCallDesc, Func<LazyContextualInit<string>, Func<string>, string> wayToCall)
 		{
-			var counter = new ThreadSafeCounter();
-			var ctxLazy = new LazyContextualInit<string>();
-			var numberOfThreads = Math.Max(Environment.ProcessorCount, 2);
-			var threadIndexesAndValues = new ConcurrentBag<ValueTuple<int, string>>();
-			var barrier = new Barrier(numberOfThreads);
-			var expectedThreadIndexes = Enumerable.Range(1, numberOfThreads);
-			var threads = expectedThreadIndexes.Select(i => new Thread(() => EachThreadDo(i))).ToList();
-			foreach (var thread in threads) thread.Start();
-			foreach (var thread in threads) thread.Join();
+			var counter = new ThreadSafeIntCounter();
+			var lazyCtxInit = new LazyContextualInit<string>();
 
-			ctxLazy.IsInited.Should().BeTrue($"{nameof(dbgWayToCallDesc)}: {dbgWayToCallDesc}");
+			var threadResults = MultiThreadsTestUtils.TestOnThreads(threadIndex => wayToCall(lazyCtxInit, () => counter.Increment().ToString()));
+
+			lazyCtxInit.IsInited.Should().BeTrue($"{nameof(dbgWayToCallDesc)}: {dbgWayToCallDesc}");
 			counter.Value.Should().Be(1);
-			threadIndexesAndValues.Should().HaveCount(numberOfThreads);
-			var actualThreadIndexes = new HashSet<int>();
-			foreach (var (threadIndex, value) in threadIndexesAndValues)
-			{
-				value.Should().Be("1");
-				actualThreadIndexes.Add(threadIndex);
-			}
-			actualThreadIndexes.Should().HaveCount(numberOfThreads);
-			foreach (var expectedThreadIndex in expectedThreadIndexes) actualThreadIndexes.Should().Contain(expectedThreadIndex);
 
-			void EachThreadDo(int threadIndex)
-			{
-				barrier.SignalAndWait();
-				var value = wayToCall(ctxLazy, () => counter.Increment().ToString());
-				threadIndexesAndValues.Add((threadIndex, value));
-			}
+			threadResults.ForEach(x => x.Should().Be("1"));
 		}
 
-		private class ThreadSafeCounter
+		[Theory]
+		[MemberData(nameof(WaysToCallInit))]
+		internal void no_result_initialized_only_once_on_first_call(string dbgWayToCallDesc, Func<LazyContextualInit, Action, bool> wayToCall)
 		{
-			internal ThreadSafeCounter(int initialValue = 0) => _value = initialValue;
+			var counter = new ThreadSafeIntCounter();
+			var lazyCtxInit = new LazyContextualInit();
+			lazyCtxInit.IsInited.Should().BeFalse();
+			lazyCtxInit.IfNotInited.Should().NotBeNull();
 
-			private int _value;
+			var isInitedByThisCall = wayToCall(lazyCtxInit, () => counter.Increment());
 
-			internal int Value => Interlocked.CompareExchange(ref _value, 0, 0);
+			isInitedByThisCall.Should().BeTrue($"{nameof(dbgWayToCallDesc)}: {dbgWayToCallDesc}");
+			lazyCtxInit.IsInited.Should().BeTrue();
+			lazyCtxInit.IfNotInited.Should().BeNull();
+			counter.Value.Should().Be(1);
 
-			internal int Increment() => Interlocked.Increment(ref _value);
+			isInitedByThisCall = wayToCall(lazyCtxInit, () => counter.Increment());
+
+			isInitedByThisCall.Should().BeFalse($"{nameof(dbgWayToCallDesc)}: {dbgWayToCallDesc}");
+			lazyCtxInit.IsInited.Should().BeTrue();
+			counter.Value.Should().Be(1);
 		}
 
-		// ReSharper disable once MemberCanBeProtected.Global
-		public static IEnumerable<object[]> WaysToCallInitOrGet<T>() where T: class
+		[Theory]
+		[MemberData(nameof(WaysToCallInit))]
+		internal void no_result_multiple_threads(string dbgWayToCallDesc, Func<LazyContextualInit, Action, bool> wayToCall)
 		{
-			ValueTuple<string, Func<LazyContextualInit<T>, Func<T>, T>>[] waysToCall =
+			var counter = new ThreadSafeIntCounter();
+			var lazyCtxInit = new LazyContextualInit();
+
+			var threadResults = MultiThreadsTestUtils.TestOnThreads(threadIndex => wayToCall(lazyCtxInit, () => counter.Increment()));
+
+			lazyCtxInit.IsInited.Should().BeTrue($"{nameof(dbgWayToCallDesc)}: {dbgWayToCallDesc}");
+			counter.Value.Should().Be(1);
+
+			threadResults.Where(isInitedByThisCall => isInitedByThisCall).Should().ContainSingle();
+			threadResults.Where(isInitedByThisCall => ! isInitedByThisCall).Should().HaveCount(threadResults.Count - 1);
+		}
+
+		public static TheoryData WaysToCallInitOrGet<T>() where T : class =>
+			new TheoryData<string, Func<LazyContextualInit<T>, Func<T>, T>>
 			{
-				("IfNotInited?.InitOrGet ?? Value", (lazyValue, valueProducer) => lazyValue.IfNotInited?.InitOrGet(valueProducer) ?? lazyValue.Value),
-				("InitOrGet", (lazyValue, valueProducer) => lazyValue.InitOrGet(valueProducer))
+				{ "IfNotInited?.InitOrGet ?? Value",
+					(lazyCtxInit, valueProducer) => lazyCtxInit.IfNotInited?.InitOrGet(valueProducer) ?? lazyCtxInit.Value },
+
+				{ "InitOrGet", (lazyCtxInit, valueProducer) => lazyCtxInit.InitOrGet(valueProducer) }
 			};
 
-			foreach (var (dbgWayToCallDesc, wayToCall) in waysToCall) yield return new object[] { dbgWayToCallDesc, wayToCall };
-		}
+		public static TheoryData WaysToCallInit = new TheoryData<string, Func<LazyContextualInit, Action, bool>>
+		{
+			{ "IfNotInited?.Init ?? false", (lazyCtxInit, initAction) => lazyCtxInit.IfNotInited?.Init(initAction) ?? false },
+			{ "Init", (lazyCtxInit, initAction) => lazyCtxInit.Init(initAction) }
+		};
 
 		public static IEnumerable<object[]> WaysToCallInitOrGetString() => WaysToCallInitOrGet<string>();
 	}

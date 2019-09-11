@@ -81,29 +81,14 @@ namespace Elastic.Apm
 
 	public static class Agent
 	{
-		private static readonly Lazy<ApmAgent> Lazy = new Lazy<ApmAgent>(() => new ApmAgent(BuildComponents()));
-		private static IApmLogger _logger;
+		private static readonly Lazy<ApmAgent> Lazy = new Lazy<ApmAgent>(() => new ApmAgent(_components));
+		private static AgentComponents _components;
 
 		public static IConfigurationReader Config => Lazy.Value.ConfigurationReader;
 
 		internal static ApmAgent Instance => Lazy.Value;
 
 		internal static bool IsInstanceCreated => Lazy.IsValueCreated;
-
-		public static IApmLogger Logger
-		{
-			get => _logger;
-			set
-			{
-				if (Lazy.IsValueCreated) throw new Exception("The singleton APM agent has already been instantiated and can no longer be configured");
-
-				_logger = value;
-			}
-		}
-
-		public static AgentComponents LastSetupComponents { get; private set; }
-
-		private static AgentComponents BuildComponents() => LastSetupComponents ?? (Logger != null ? new AgentComponents(Logger) : null);
 
 		/// <summary>
 		/// The entry point for manual instrumentation. The <see cref="Tracer" /> property returns the tracer,
@@ -127,9 +112,9 @@ namespace Elastic.Apm
 
 		public static void Setup(AgentComponents agentComponents)
 		{
-			if (Lazy.IsValueCreated) throw new Exception("The singleton APM agent has already been instantiated and can no longer be configured");
+			if (IsInstanceCreated) throw new Exception("The singleton APM agent has already been instantiated and can no longer be configured");
 
-			LastSetupComponents = agentComponents;
+			_components = agentComponents;
 		}
 	}
 }

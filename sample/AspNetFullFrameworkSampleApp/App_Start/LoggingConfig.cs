@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using Elastic.Apm;
+using Elastic.Apm.AspNetFullFramework;
 using NLog;
 using NLog.Common;
 using NLog.Config;
@@ -13,9 +13,9 @@ namespace AspNetFullFrameworkSampleApp
 	{
 		public const string LogFileEnvVarName = "ELASTIC_APM_ASP_NET_FULL_FRAMEWORK_SAMPLE_APP_LOG_FILE";
 
-		public static readonly MemoryTarget LogMemoryTarget = new MemoryTarget();
-
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+		public static readonly MemoryTarget LogMemoryTarget = new MemoryTarget();
 
 		public static void SetupLogging()
 		{
@@ -23,8 +23,7 @@ namespace AspNetFullFrameworkSampleApp
 			if (logFileEnvVarValue == null) return;
 
 			var config = new LoggingConfiguration();
-			var layout =
-				"${date:format=yyyy-MM-dd HH\\:mm\\:ss.fff}" +
+			const string layout = "${date:format=yyyy-MM-dd HH\\:mm\\:ss.fff}" +
 				" | ${level:uppercase=true:padding=-5}" + // negative values cause right padding
 				" | ${threadname:padding=-30:whenEmpty=${threadid:padding=-30}}" +
 				"${when:when=length('${logger}') > 0:inner= | ${logger}}" +
@@ -33,9 +32,7 @@ namespace AspNetFullFrameworkSampleApp
 
 			var logTargets = new TargetWithLayout[]
 			{
-				LogMemoryTarget,
-				new FileTarget { FileName = logFileEnvVarValue, DeleteOldFileOnStartup = true },
-				new ConsoleTarget()
+				LogMemoryTarget, new FileTarget { FileName = logFileEnvVarValue, DeleteOldFileOnStartup = true }, new ConsoleTarget()
 			};
 			foreach (var logTarget in logTargets) logTarget.Layout = layout;
 
@@ -51,7 +48,7 @@ namespace AspNetFullFrameworkSampleApp
 			LogManager.Configuration = config;
 
 			// Set up Elastic APM .NET Agent to use NLog for its logging
-			Agent.Logger = new ApmLoggerToNLog();
+			AgentDependencies.Logger = new ApmLoggerToNLog();
 
 			Logger.Debug(nameof(SetupLogging) + " completed. Path to log file: {SampleAppLogFilePath}", logFileEnvVarValue);
 		}
