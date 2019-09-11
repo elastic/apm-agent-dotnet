@@ -33,7 +33,7 @@ namespace Elastic.Apm.Logging
 			var scanIndex = 0;
 			var endIndex = format.Length;
 
-			var expectedNumberOfArgs = scope != null ? args.Count+1 : args.Count;
+			var expectedNumberOfArgs = scope != null ? args.Count + 1 : args.Count;
 
 			while (scanIndex < endIndex)
 			{

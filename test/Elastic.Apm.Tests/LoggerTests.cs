@@ -134,6 +134,54 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
+		/// Makes sure than unbalanced braces don't make the logger throw
+		/// </summary>
+		[Fact]
+		public void StructuredLogWithUnbalancedBraces()
+		{
+			var consoleLogger = new TestLogger(LogLevel.Trace);
+
+			const string arg1Value = "testArgumentValue1";
+			const string arg2Value = "testArgumentValue2";
+
+			consoleLogger.Warning()
+				?.Log("This is a test log from the test StructuredLogTemplateWith1MissingArgument, args: {{arg1} {arg2}", arg1Value, arg2Value);
+
+			consoleLogger.Warning()
+				?.Log("This is a test log from the test StructuredLogTemplateWith1MissingArgument, args: {arg1}} {arg2}", arg1Value, arg2Value);
+
+			consoleLogger.Warning()
+				?.Log("This is a test log from the test StructuredLogTemplateWith1MissingArgument, args: {arg1}} {arg2}", arg1Value, arg2Value);
+
+			consoleLogger.Warning()
+				?.Log("This is a test log from the test StructuredLogTemplateWith1MissingArgument, args: {arg1 {arg2}}", arg1Value, arg2Value);
+
+			consoleLogger.Warning()
+				?.Log("This is a test log from the test StructuredLogTemplateWith1MissingArgument, args: {arg1 {arg2}}}", arg1Value, arg2Value);
+
+			consoleLogger.Warning()
+				?.Log("This is a test log from the test StructuredLogTemplateWith1MissingArgument, args: {arg1 {arg2}", arg1Value, arg2Value);
+
+			consoleLogger.Warning()
+				?.Log("This is a test log from the test StructuredLogTemplateWith1MissingArgument, args: {arg1", arg1Value);
+
+			consoleLogger.Warning()
+				?.Log("This is a test log from the test StructuredLogTemplateWith1MissingArgument, args: arg1}", arg1Value);
+
+			consoleLogger.Warning()
+				?.Log("This is a test log from the test StructuredLogTemplateWith1MissingArgument, args: arg1}}", arg1Value);
+
+			consoleLogger.Warning()
+				?.Log("This is a test log from the test StructuredLogTemplateWith1MissingArgument, args: {{arg1", arg1Value);
+
+			consoleLogger.Warning()
+				?.Log("This is a test log from the test StructuredLogTemplateWith1MissingArgument, args: {{arg1}", arg1Value);
+
+			consoleLogger.Warning()
+				?.Log("This is a test log from the test StructuredLogTemplateWith1MissingArgument, args: {arg1}}", arg1Value);
+		}
+
+		/// <summary>
 		/// Makes sure the logger does not throw in case of templates for structured logs with too much arguments - in other words
 		/// with argument(s) that do not have
 		/// corresponding placeholders in the template
