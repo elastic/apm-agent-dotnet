@@ -85,12 +85,12 @@ namespace Elastic.Apm.Tests
 
 			providerWithException.NumberOfGetValueCalls.Should().Be(MetricsCollector.MaxTryWithoutSuccess);
 
-			// *2 because exceptions are logged in a new line, + 2 because 1) printing the metricsinterval and 2) printing that the given metrics
-			// wont be collected anymore:
-			testLogger.Lines.Count.Should().Be(MetricsCollector.MaxTryWithoutSuccess * 2 + 2);
+			testLogger.Lines.Count(line => line.Contains(MetricsProviderWithException.ExceptionMessage))
+				.Should()
+				.Be(MetricsCollector.MaxTryWithoutSuccess);
 
 			testLogger.Lines[1].Should().Contain($"Failed reading {providerWithException.DbgName} 1 times");
-			testLogger.Lines.Last()
+			testLogger.Lines.Last(line => line.Contains("Failed reading"))
 				.Should()
 				.Contain(
 					$"Failed reading {providerWithException.DbgName} {MetricsCollector.MaxTryWithoutSuccess} consecutively - the agent won't try reading {providerWithException.DbgName} anymore");
@@ -98,9 +98,10 @@ namespace Elastic.Apm.Tests
 			//make sure GetValue() in MetricsProviderWithException is not called anymore:
 			for (var i = 0; i < 10; i++) mc.CollectAllMetrics();
 
-			//no more logs, no more call to GetValue():
+			var logLineBeforeStage2 = testLogger.Lines.Count;
+			//no more logs, no more calls to GetValue():
 			providerWithException.NumberOfGetValueCalls.Should().Be(MetricsCollector.MaxTryWithoutSuccess);
-			testLogger.Lines.Count.Should().Be(MetricsCollector.MaxTryWithoutSuccess * 2 + 2);
+			testLogger.Lines.Count.Should().Be(logLineBeforeStage2);
 		}
 
 		[Fact]
@@ -135,6 +136,7 @@ namespace Elastic.Apm.Tests
 
 		private class MetricsProviderWithException : IMetricsProvider
 		{
+			public const string ExceptionMessage = "testException";
 			public int ConsecutiveNumberOfFailedReads { get; set; }
 			public string DbgName => "test metric";
 
@@ -143,7 +145,7 @@ namespace Elastic.Apm.Tests
 			public IEnumerable<MetricSample> GetSamples()
 			{
 				NumberOfGetValueCalls++;
-				throw new Exception("testException");
+				throw new Exception(ExceptionMessage);
 			}
 		}
 

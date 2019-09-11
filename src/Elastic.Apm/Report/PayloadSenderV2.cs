@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
@@ -27,11 +28,12 @@ namespace Elastic.Apm.Report
 	internal class PayloadSenderV2 : IPayloadSender, IDisposable
 	{
 		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
-
+		
 		internal readonly Api.System System;
 
-		private readonly BatchBlock<object> _eventQueue =
-			new BatchBlock<object>(20);
+		private readonly BatchBlock<object> _eventQueue;
+
+		private readonly TimeSpan _flushInterval;
 
 		private readonly HttpClient _httpClient;
 		private readonly IApmLogger _logger;
@@ -45,10 +47,14 @@ namespace Elastic.Apm.Report
 			HttpMessageHandler handler = null
 		)
 		{
-			var service1 = service;
-			System = system;
-			_metadata = new Metadata { Service = service1, System = System };
 			_logger = logger?.Scoped(nameof(PayloadSenderV2));
+
+			System = system;
+			_metadata = new Metadata { Service = service, System = System };
+
+			_flushInterval = configurationReader.FlushInterval;
+			_eventQueue = new BatchBlock<object>(configurationReader.MaxQueueEventCount,
+				new GroupingDataflowBlockOptions { BoundedCapacity = configurationReader.MaxQueueEventCount });
 
 			var serverUrlBase = configurationReader.ServerUrls.First();
 			var servicePoint = ServicePointManager.FindServicePoint(serverUrlBase);
@@ -69,17 +75,18 @@ namespace Elastic.Apm.Report
 
 			_httpClient = new HttpClient(handler ?? new HttpClientHandler()) { BaseAddress = serverUrlBase };
 			_httpClient.DefaultRequestHeaders.UserAgent.Add(
-				new ProductInfoHeaderValue($"elasticapm-{Consts.AgentName}", AdaptUserAgentValue(service1.Agent.Version)));
+				new ProductInfoHeaderValue($"elasticapm-{Consts.AgentName}", AdaptUserAgentValue(service.Agent.Version)));
 			_httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("System.Net.Http",
 				AdaptUserAgentValue(typeof(HttpClient).Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version)));
 			_httpClient.DefaultRequestHeaders.UserAgent.Add(
-				new ProductInfoHeaderValue(AdaptUserAgentValue(service1.Runtime.Name), AdaptUserAgentValue(service1.Runtime.Version)));
+				new ProductInfoHeaderValue(AdaptUserAgentValue(service.Runtime.Name), AdaptUserAgentValue(service.Runtime.Version)));
 
 			if (configurationReader.SecretToken != null)
 			{
 				_httpClient.DefaultRequestHeaders.Authorization =
 					new AuthenticationHeaderValue("Bearer", configurationReader.SecretToken);
 			}
+
 			Task.Factory.StartNew(
 				() =>
 				{
@@ -97,56 +104,85 @@ namespace Elastic.Apm.Report
 
 			// Replace invalid characters by underscore. All invalid characters can be found at
 			// https://github.com/dotnet/corefx/blob/e64cac6dcacf996f98f0b3f75fb7ad0c12f588f7/src/System.Net.Http/src/System/Net/Http/HttpRuleParser.cs#L41
-			string AdaptUserAgentValue(string value) => Regex.Replace(value, "[ /()<>@,:;={}?\\[\\]\"\\\\]", "_");
+			string AdaptUserAgentValue(string value)
+			{
+				return Regex.Replace(value, "[ /()<>@,:;={}?\\[\\]\"\\\\]", "_");
+			}
 		}
 
 		private CancellationTokenSource _batchBlockReceiveAsyncCts;
 
-		public void QueueTransaction(ITransaction transaction)
-		{
-			var res = _eventQueue.Post(transaction);
-			_logger.Debug()
-				?.Log(!res
-					? "Failed adding Transaction to the queue, {Transaction}"
-					: "Transaction added to the queue, {Transaction}", transaction);
+		public void QueueTransaction(ITransaction transaction) => QueueEvent(transaction, "Transaction");
 
-			_eventQueue.TriggerBatch();
-		}
+		public void QueueSpan(ISpan span) => QueueEvent(span, "Span");
 
-		public void QueueSpan(ISpan span)
-		{
-			var res = _eventQueue.Post(span);
-			_logger.Debug()
-				?.Log(!res
-					? "Failed adding Span to the queue, {Span}"
-					: "Span added to the queue, {Span}", span);
-		}
+		public void QueueMetrics(IMetricSet metricSet) => QueueEvent(metricSet, "MetricSet");
 
-		public void QueueMetrics(IMetricSet metricSet)
-		{
-			var res = _eventQueue.Post(metricSet);
-			_logger.Debug()
-				?.Log(!res
-					? "Failed adding MetricSet to the queue, {MetricSet}"
-					: "MetricSet added to the queue, {MetricSet}", metricSet);
-		}
+		public void QueueError(IError error) => QueueEvent(error, "Error");
 
-		public void QueueError(IError error)
+		public void QueueEvent(object eventObj, string dbgEventKind)
 		{
-			var res = _eventQueue.Post(error);
-			_logger.Debug()
-				?.Log(!res
-					? "Failed adding Error to the queue, {Error}"
-					: "Error added to the queue, {Error}", error);
+			var addedSuccessfully = _eventQueue.Post(eventObj);
+
+			if (addedSuccessfully)
+			{
+				_logger.Debug()?.Log(dbgEventKind + " added to the queue. " + dbgEventKind + ": {" + dbgEventKind + "}", eventObj);
+
+				if (_flushInterval == TimeSpan.Zero)
+					_eventQueue.TriggerBatch();
+			}
+			else
+				_logger.Debug()?.Log("Failed adding " + dbgEventKind + " to the queue. " + dbgEventKind + ": {" + dbgEventKind + "}", eventObj);
 		}
 
 		private async Task DoWork()
 		{
 			_batchBlockReceiveAsyncCts = new CancellationTokenSource();
+			Task<object[]> receiveAsyncTask = null;
 			while (true)
 			{
-				var queueItems = await _eventQueue.ReceiveAsync(_batchBlockReceiveAsyncCts.Token);
-				await ProcessQueueItems(queueItems);
+				if (receiveAsyncTask == null) receiveAsyncTask = _eventQueue.ReceiveAsync(_batchBlockReceiveAsyncCts.Token);
+
+				object[] eventBatchToSend = null;
+				if (_flushInterval == TimeSpan.Zero)
+				{
+					_logger.Trace()?.Log("Waiting for data to send... (not using FlushInterval timer because FlushInterval is 0)");
+					eventBatchToSend = await receiveAsyncTask;
+					receiveAsyncTask = null;
+				}
+				else
+				{
+					_logger.Trace()?.Log("Waiting for data to send or FlushInterval timer to be triggered (whichever is earlier)..."
+						+ " _flushInterval: {FlushInterval}", _flushInterval);
+
+					var flushIntervalDelayTask = Task.Delay((int)_flushInterval.TotalMilliseconds, _batchBlockReceiveAsyncCts.Token);
+					var completedTask = await Task.WhenAny(receiveAsyncTask, flushIntervalDelayTask);
+					if (completedTask == receiveAsyncTask)
+					{
+						eventBatchToSend = await receiveAsyncTask;
+						receiveAsyncTask = null;
+					}
+					else
+					{
+						Assertion.IfEnabled?.That(completedTask == flushIntervalDelayTask,
+							$"{nameof(completedTask)} should be either {nameof(receiveAsyncTask)} or {nameof(flushIntervalDelayTask)}."
+							+ $" {nameof(completedTask)}: {completedTask}."
+							+ $" {nameof(receiveAsyncTask)}: {receiveAsyncTask}."
+							+ $" {nameof(flushIntervalDelayTask)}: {flushIntervalDelayTask}."
+							);
+						_logger.Trace()?.Log("FlushInterval timer was triggered - forcing all events in the queue (if any) to be sent...");
+						_eventQueue.TriggerBatch();
+					}
+				}
+
+				// ReSharper disable once InvertIf
+				if (eventBatchToSend != null)
+				{
+					_logger.Trace()?.Log("There's data to be sent. Batch size: {BatchSize}. First event: {Event}",
+						eventBatchToSend.Length, eventBatchToSend.Length > 0 ? eventBatchToSend[0].ToString() : "<N/A>");
+
+					await ProcessQueueItems(eventBatchToSend);
+				}
 			}
 			// ReSharper disable once FunctionNeverReturns
 		}
