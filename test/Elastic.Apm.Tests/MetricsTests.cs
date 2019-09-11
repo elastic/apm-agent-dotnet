@@ -46,8 +46,8 @@ namespace Elastic.Apm.Tests
 			var retVal = systemTotalCpuProvider.GetSamples();
 			var metricSamples = retVal as MetricSample[] ?? retVal.ToArray();
 
-			metricSamples.First().KeyValue.Value.Should().BeGreaterThan(0);
-			metricSamples.First().KeyValue.Value.Should().BeLessThan(1);
+			metricSamples.First().KeyValue.Value.Should().BeGreaterOrEqualTo(0);
+			metricSamples.First().KeyValue.Value.Should().BeLessOrEqualTo(1);
 		}
 
 		[Fact]
