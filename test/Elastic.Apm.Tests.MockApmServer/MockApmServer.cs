@@ -90,6 +90,11 @@ namespace Elastic.Apm.Tests.MockApmServer
 			webHost.Run();
 		}
 
+		internal Task<TResult> DoUnderLock<TResult>(Func<Task<TResult>> asyncFunc)
+		{
+			lock (_lock) return asyncFunc();
+		}
+
 		internal async Task StopAsync()
 		{
 			Contract.Requires(_cancellationTokenSource != null);
