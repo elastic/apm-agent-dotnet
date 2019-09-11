@@ -51,7 +51,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		protected TestsBase(ITestOutputHelper xUnitOutputHelper,
 			bool startMockApmServer = true,
-			Dictionary<string, string> envVarsToSetForSampleAppPool = null,
+			IDictionary<string, string> envVarsToSetForSampleAppPool = null,
 			bool sampleAppShouldHaveAccessToPerfCounters = false,
 			bool sampleAppLogEnabled = true
 		)
@@ -77,6 +77,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			_envVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.ServerUrls, BuildApmServerUrl(_mockApmServerPort));
 
 			if (_sampleAppLogEnabled) _envVarsToSetForSampleAppPool.TryAdd(LoggingConfig.LogFileEnvVarName, _sampleAppLogFilePath);
+			
+			_envVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.FlushInterval, "10ms");
 		}
 
 		private static class DataSentByAgentVerificationConsts
@@ -109,15 +111,15 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				new SampleAppUrlPathData(HomeController.GetDotNetRuntimeDescriptionPageRelativePath, 200);
 
 			internal static readonly SampleAppUrlPathData ForbidHttpResponsePageDescriptionPage =
-			    new SampleAppUrlPathData(HomeController.ForbidHttpResponsePageRelativePath, 200, spansCount: 1, errorsCount: 1);
+				new SampleAppUrlPathData(HomeController.ForbidHttpResponsePageRelativePath, 200, spansCount: 1, errorsCount: 1);
 
-			internal static readonly List<SampleAppUrlPathData> AllPaths = new List<SampleAppUrlPathData>()
+			internal static readonly List<SampleAppUrlPathData> AllPaths = new List<SampleAppUrlPathData>
 			{
 				new SampleAppUrlPathData("", 200),
 				HomePage,
 				ContactPage,
 				CustomSpanThrowsExceptionPage,
-				new SampleAppUrlPathData("Dummy_nonexistent_path", 404),
+				new SampleAppUrlPathData("Dummy_nonexistent_path", 404)
 			};
 
 			/// `CallReturnBadRequest' page processing does HTTP Get for `ReturnBadRequest' page (additional transaction) - so 1 span
@@ -353,10 +355,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		}
 
 		// ReSharper disable once MemberCanBeProtected.Global
-		public static IEnumerable<object[]> AllSampleAppUrlPaths()
-		{
-			foreach (var data in SampleAppUrlPaths.AllPaths) yield return new object[] { data };
-		}
+		public static IEnumerable<object[]> AllSampleAppUrlPaths() => SampleAppUrlPaths.AllPaths.Select(data => new object[] { data });
 
 		public static SampleAppUrlPathData RandomSampleAppUrlPath() =>
 			SampleAppUrlPaths.AllPaths[RandomGenerator.GetInstance().Next(0, SampleAppUrlPaths.AllPaths.Count)];
@@ -365,6 +364,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			var helper = (TestOutputHelper)xUnitOutputHelper;
 
+			// ReSharper disable once PossibleNullReferenceException
 			var test = (ITest)helper.GetType()
 				.GetField("test", BindingFlags.NonPublic | BindingFlags.Instance)
 				.GetValue(helper);
@@ -458,6 +458,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			receivedData.Spans.Count.Should().Be(sampleAppUrlPathData.SpansCount);
 			receivedData.Errors.Count.Should().Be(sampleAppUrlPathData.ErrorsCount);
 
+			// ReSharper disable once InvertIf
 			if (receivedData.Transactions.Count == 1)
 			{
 				var transaction = receivedData.Transactions.First();
@@ -520,12 +521,12 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			FullFwAssertValid(service.Framework);
 
-			string expectedServiceName;
-			if (AgentConfig.ServiceName == null)
-				expectedServiceName = AbstractConfigurationReader.AdaptServiceName($"{Consts.SampleApp.SiteName}_{Consts.SampleApp.AppPoolName}");
-			else
-				expectedServiceName = AgentConfig.ServiceName;
+			var expectedServiceName = AgentConfig.ServiceName
+				?? AbstractConfigurationReader.AdaptServiceName($"{Consts.SampleApp.SiteName}_{Consts.SampleApp.AppPoolName}");
+			var expectedEnvironment = AgentConfig.Environment;
+
 			service.Name.Should().Be(expectedServiceName);
+			service.Environment.Should().Be(expectedEnvironment);
 		}
 
 		private void FullFwAssertValid(Framework framework)
@@ -636,6 +637,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			metricSet.Should().NotBeNull();
 
+			// ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
 			foreach (var (metricTypeName, _) in metricSet.Samples)
 			{
 				if (MetricsAssertValid.MetricMetadataPerType[metricTypeName].ImplRequiresAccessToPerfCounters)
@@ -698,6 +700,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			internal bool CaptureHeaders = true;
 			internal string ServiceName;
+			internal string Environment;
 		}
 
 		public class SampleAppUrlPathData

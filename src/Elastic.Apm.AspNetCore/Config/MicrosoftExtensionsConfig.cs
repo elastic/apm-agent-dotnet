@@ -14,32 +14,17 @@ namespace Elastic.Apm.AspNetCore.Config
 	{
 		internal const string Origin = "Microsoft.Extensions.Configuration";
 
-		internal static class Keys
-		{
-			internal const string LogLevelSubKey = "LogLevel";
-			internal const string LogLevel = "ElasticApm:LogLevel";
-			internal const string ServerUrls = "ElasticApm:ServerUrls";
-			internal const string ServiceName = "ElasticApm:ServiceName";
-			internal const string ServiceVersion = "ElasticApm:ServiceVersion";
-			internal const string SecretToken = "ElasticApm:SecretToken";
-			internal const string CaptureHeaders = "ElasticApm:CaptureHeaders";
-			internal const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
-			internal const string MetricsInterval = "ElasticApm:MetricsInterval";
-			internal const string CaptureBody = "ElasticApm:CaptureBody";
-			internal const string SpanFramesMinDuration = "ElasticApm:SpanFramesMinDuration";
-			internal const string StackTraceLimit = "ElasticApm:StackTraceLimit";
-			internal const string CaptureBodyContentTypes = "ElasticApm:CaptureBodyContentTypes";
-		}
-
 		private readonly IConfiguration _configuration;
+		private readonly string _environmentName;
 
 		private readonly Lazy<double> _spanFramesMinDurationInMilliseconds;
 
 		private readonly Lazy<int> _stackTraceLimit;
 
-		public MicrosoftExtensionsConfig(IConfiguration configuration, IApmLogger logger = null) : base(logger)
+		public MicrosoftExtensionsConfig(IConfiguration configuration, IApmLogger logger, string environmentName) : base(logger)
 		{
 			_configuration = configuration;
+			_environmentName = environmentName;
 			_configuration.GetSection("ElasticApm")
 				?
 				.GetReloadToken()
@@ -52,10 +37,40 @@ namespace Elastic.Apm.AspNetCore.Config
 				ParseSpanFramesMinDurationInMilliseconds(ReadFallBack(Keys.SpanFramesMinDuration, ConfigConsts.EnvVarNames.SpanFramesMinDuration)));
 		}
 
+		internal static class Keys
+		{
+			internal const string CaptureBody = "ElasticApm:CaptureBody";
+			internal const string CaptureBodyContentTypes = "ElasticApm:CaptureBodyContentTypes";
+			internal const string CaptureHeaders = "ElasticApm:CaptureHeaders";
+			internal const string Environment = "ElasticApm:Environment";
+			internal const string FlushInterval = "ElasticApm:FlushInterval";
+			internal const string LogLevel = "ElasticApm:LogLevel";
+			internal const string LogLevelSubKey = "LogLevel";
+			internal const string MaxBatchEventCount = "ElasticApm:MaxBatchEventCount";
+			internal const string MaxQueueEventCount = "ElasticApm:MaxQueueEventCount";
+			internal const string MetricsInterval = "ElasticApm:MetricsInterval";
+			internal const string SecretToken = "ElasticApm:SecretToken";
+			internal const string ServerUrls = "ElasticApm:ServerUrls";
+			internal const string ServiceName = "ElasticApm:ServiceName";
+			internal const string ServiceVersion = "ElasticApm:ServiceVersion";
+			internal const string SpanFramesMinDuration = "ElasticApm:SpanFramesMinDuration";
+			internal const string StackTraceLimit = "ElasticApm:StackTraceLimit";
+			internal const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
+		}
+
 
 		private LogLevel? _logLevel;
 
+		public string CaptureBody => ParseCaptureBody(ReadFallBack(Keys.CaptureBody, ConfigConsts.EnvVarNames.CaptureBody));
+
+		public List<string> CaptureBodyContentTypes =>
+			ParseCaptureBodyContentTypes(ReadFallBack(Keys.CaptureBodyContentTypes, ConfigConsts.EnvVarNames.CaptureBodyContentTypes), CaptureBody);
+
 		public bool CaptureHeaders => ParseCaptureHeaders(ReadFallBack(Keys.CaptureHeaders, ConfigConsts.EnvVarNames.CaptureHeaders));
+
+		public string Environment => ParseEnvironment(ReadFallBack(Keys.Environment, ConfigConsts.EnvVarNames.Environment)) ?? _environmentName;
+
+		public TimeSpan FlushInterval => ParseFlushInterval(ReadFallBack(Keys.FlushInterval, ConfigConsts.EnvVarNames.FlushInterval));
 
 		public LogLevel LogLevel
 		{
@@ -68,6 +83,10 @@ namespace Elastic.Apm.AspNetCore.Config
 				return l;
 			}
 		}
+
+		public int MaxBatchEventCount => ParseMaxBatchEventCount(ReadFallBack(Keys.MaxBatchEventCount, ConfigConsts.EnvVarNames.MaxBatchEventCount));
+
+		public int MaxQueueEventCount => ParseMaxQueueEventCount(ReadFallBack(Keys.MaxQueueEventCount, ConfigConsts.EnvVarNames.MaxQueueEventCount));
 
 		public double MetricsIntervalInMilliseconds =>
 			ParseMetricsInterval(ReadFallBack(Keys.MetricsInterval, ConfigConsts.EnvVarNames.MetricsInterval));
@@ -86,10 +105,6 @@ namespace Elastic.Apm.AspNetCore.Config
 
 		public double TransactionSampleRate =>
 			ParseTransactionSampleRate(ReadFallBack(Keys.TransactionSampleRate, ConfigConsts.EnvVarNames.TransactionSampleRate));
-
-		public string CaptureBody => ParseCaptureBody(ReadFallBack(Keys.CaptureBody, ConfigConsts.EnvVarNames.CaptureBody));
-
-		public List<string> CaptureBodyContentTypes => ParseCaptureBodyContentTypes(ReadFallBack(Keys.CaptureBodyContentTypes, ConfigConsts.EnvVarNames.CaptureBodyContentTypes), CaptureBody);
 
 		private ConfigurationKeyValue Read(string key) => Kv(key, _configuration[key], Origin);
 

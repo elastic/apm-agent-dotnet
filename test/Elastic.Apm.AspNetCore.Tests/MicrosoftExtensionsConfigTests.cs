@@ -30,11 +30,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public void ReadValidConfigsFromAppSettingsJson()
 		{
 			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
-				new TestLogger());
+				new NoopLogger(), "test");
 			config.LogLevel.Should().Be(LogLevel.Debug);
 			config.ServerUrls[0].Should().Be(new Uri("http://myServerFromTheConfigFile:8080"));
 			config.ServiceName.Should().Be("My_Test_Application");
 			config.ServiceVersion.Should().Be("2.1.0.5");
+			config.Environment.Should().Be("staging");
 			config.CaptureHeaders.Should().Be(false);
 			config.TransactionSampleRate.Should().Be(0.456);
 			config.CaptureBody.Should().Be(ConfigConsts.SupportedValues.CaptureBodyAll);
@@ -50,7 +51,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public void ReadInvalidLogLevelConfigFromAppsettingsJson()
 		{
 			var logger = new TestLogger();
-			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger);
+			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger,
+				"test");
 			config.LogLevel.Should().Be(LogLevel.Error);
 			logger.Lines.Should().NotBeEmpty();
 			logger.Lines[0].Should()
@@ -62,8 +64,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 					"Defaulting to "
 				);
 
+			config.Environment.Should().Be("test");
 			config.CaptureHeaders.Should().Be(true);
-
 			config.TransactionSampleRate.Should().Be(1.0);
 		}
 
@@ -75,7 +77,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public void ReadInvalidServerUrlsConfigFromAppsettingsJson()
 		{
 			var logger = new TestLogger();
-			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger);
+			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger,
+				"test");
 			config.LogLevel.Should().Be(LogLevel.Error);
 
 			logger.Lines.Should().NotBeEmpty();
@@ -104,6 +107,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceName, serviceName);
 			var serviceVersion = "2.1.0.5";
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceVersion, serviceVersion);
+			var environment = "staging";
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.Environment, environment);
 			var secretToken = "SecretToken";
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.SecretToken, secretToken);
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.CaptureHeaders, false.ToString());
@@ -112,11 +117,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.AddEnvironmentVariables()
 				.Build();
 
-			var config = new MicrosoftExtensionsConfig(configBuilder, new TestLogger());
+			var config = new MicrosoftExtensionsConfig(configBuilder, new NoopLogger(), "test");
 			config.LogLevel.Should().Be(LogLevel.Debug);
 			config.ServerUrls[0].Should().Be(new Uri(serverUrl));
 			config.ServiceName.Should().Be(serviceName);
 			config.ServiceVersion.Should().Be(serviceVersion);
+			config.Environment.Should().Be(environment);
 			config.SecretToken.Should().Be(secretToken);
 			config.CaptureHeaders.Should().Be(false);
 			config.TransactionSampleRate.Should().Be(0.123);
@@ -130,7 +136,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public void LoggerNotNull()
 		{
 			var testLogger = new TestLogger();
-			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), testLogger);
+			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), testLogger,
+				"test");
 			var serverUrl = config.ServerUrls.FirstOrDefault();
 			serverUrl.Should().NotBeNull();
 			testLogger.Lines.Should().NotBeEmpty();
@@ -156,7 +163,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var capturedPayload = new MockPayloadSender();
 
 			var config = new MicrosoftExtensionsConfig(
-				MicrosoftExtensionsConfigTests.GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), _logger);
+				MicrosoftExtensionsConfigTests.GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), _logger, "test");
 
 			_agent = new ApmAgent(
 				new AgentComponents(payloadSender: capturedPayload, configurationReader: config, logger: _logger));

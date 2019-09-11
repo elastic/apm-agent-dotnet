@@ -13,7 +13,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		public CustomServiceNameSetViaSettings(ITestOutputHelper xUnitOutputHelper)
 			: base(xUnitOutputHelper,
-				envVarsToSetForSampleAppPool: new Dictionary<string, string>() { { ConfigConsts.EnvVarNames.ServiceName, CustomServiceName } }) =>
+				envVarsToSetForSampleAppPool: new Dictionary<string, string> { { ConfigConsts.EnvVarNames.ServiceName, CustomServiceName } }) =>
 			AgentConfig.ServiceName = AbstractConfigurationReader.AdaptServiceName(CustomServiceName);
 
 		[AspNetFullFrameworkTheory]

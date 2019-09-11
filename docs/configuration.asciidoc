@@ -130,6 +130,33 @@ of the deployed revision, e.g. the output of git rev-parse HEAD.
 |============
 
 [float]
+[[config-environment]]
+==== `Environment`
+
+The name of the environment this service is deployed in, e.g. "production" or "staging".
+
+Environments allow you to easily filter data on a global level in the APM UI.
+It's important to be consistent when naming environments across agents.
+See {kibana-ref}/filters.html#environment-selector[environment selector] in the Kibana UI for more information.
+
+NOTE: This feature is fully supported in the APM UI in Kibana versions >= 7.2.
+You must use the query bar to filter for a specific environment in versions prior to 7.2.
+
+[options="header"]
+|============
+| Environment variable name      | IConfiguration key 
+| `ELASTIC_APM_ENVIRONMENT`      | `ElasticApm:Environment`
+|============
+
+[options="header"]
+|============
+| Default        | Type
+| See note below | String 
+|============
+
+NOTE: On ASP.NET Core application the agent uses https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.hosting.ihostingenvironment.environmentname?view=aspnetcore-2.2#Microsoft_AspNetCore_Hosting_IHostingEnvironment_EnvironmentName[EnvironmentName from IHostingEnvironment] as default environment name.
+
+[float]
 [[config-transaction-sample-rate]]
 ==== `TransactionSampleRate`
 
@@ -157,6 +184,26 @@ It also expects that a period (`.`) is used to separate the integer and the frac
 === Reporter configuration options
 
 [float]
+[[config-server-urls]]
+==== `ServerUrls`
+
+[options="header"]
+|============
+| Environment variable name | IConfiguration key
+| `ELASTIC_APM_SERVER_URLS` | `ElasticApm:ServerUrls`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `http://localhost:8200` | String
+|============
+
+The URL for your APM Server. The URL must be fully qualified, including protocol (`http` or `https`) and port.
+
+NOTE: Providing multiple URLs is not supported by the agent yet. If multiple URLs are provided only the first one will be used.
+
+[float]
 [[config-secret-token]]
 ==== `SecretToken`
 
@@ -178,44 +225,85 @@ Both the agents and the APM server have to be configured with the same secret to
 Use this setting in case the APM Server requires a token (e.g. APM Server in Elastic Cloud).
 
 [float]
-[[config-server-urls]]
-==== `ServerUrls`
+[[config-flush-interval]]
+==== `FlushInterval` (added[1.0.2])
 
 [options="header"]
 |============
 | Environment variable name | IConfiguration key
-| `ELASTIC_APM_SERVER_URLS` | `ElasticApm:ServerUrls`
+| `ELASTIC_APM_FLUSH_INTERVAL` | `ElasticApm:FlushInterval`
 |============
 
 [options="header"]
 |============
 | Default                 | Type
-| `http://localhost:8200` | String
+| `10s`                   | Time interval
 |============
 
-The URL for your APM Server. The URL must be fully qualified, including protocol (`http` or `https`) and port.
+The maximal amount of time (in seconds) events are held in the queue until there is enough to send a batch.
+It's possible for a batch to contain less then <<config-max-batch-event-count,`MaxBatchEventCount`>> events
+if there are events that need to be sent out because they were held for too long.
+A lower value will increase the load on your APM server,
+while a higher value can increase the memory pressure on your app.
+A higher value also impacts the time until transactions are indexed and searchable in Elasticsearch.
 
-NOTE: Providing multiple URLs is not supported by the agent yet. If multiple URLs are provided only the first one will be used.
+Supports the duration suffixes `ms`, `s` and `m`.
+Example: `30s`.
+The default unit for this option is `s`.
+
+If `FlushInterval` is set to `0` (or `0s`, `0ms`, etc.) and
+there's no event sending operation still in progress 
+then agent doesn't hold events in the queue but sends them immediately.  
+
+Setting `FlushInterval` to a negative value (for example `-1`, `-54s`, `-89ms`, etc.) is invalid and
+in that case agent uses the default value instead.    
 
 [float]
-[[config-log-level]]
-==== `LogLevel`
+[[config-max-batch-event-count]]
+==== `MaxBatchEventCount` (added[1.0.2])
 
 [options="header"]
 |============
 | Environment variable name | IConfiguration key
-| `ELASTIC_APM_LOG_LEVEL`   | `ElasticApm:LogLevel`
+| `ELASTIC_APM_MAX_BATCH_EVENT_COUNT` | `ElasticApm:MaxBatchEventCount`
 |============
 
 [options="header"]
 |============
 | Default                 | Type
-| `Error`                 | String
+| 10                      | Integer
 |============
 
-Sets the logging level for the agent.
+The maximal number of events to send in a batch.
+It's possible for a batch contain less then the maximum events
+if there are events that need to be sent out because they were held for too long
+ (see <<config-flush-interval,`FlushInterval`>>).
 
-Valid options: `Error`, `Warning`, `Info`, `Debug`.
+Setting `MaxBatchEventCount` to 0 or a negative value is invalid and
+in that case agent uses the default value instead.  
+
+[float]
+[[config-max-queue-event-count]]
+==== `MaxQueueEventCount` (added[1.0.2])
+
+[options="header"]
+|============
+| Environment variable name | IConfiguration key
+| `ELASTIC_APM_MAX_QUEUE_EVENT_COUNT` | `ElasticApm:MaxQueueEventCount`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| 1000                    | Integer
+|============
+
+The maximal number of events to hold in the queue as candidates to be sent.
+If the queue is at its maximum capacity then the agent discards the new events
+until the queue has free space.
+
+Setting `MaxQueueEventCount` to 0 or a negative value is invalid and
+in that case agent uses the default value instead.  
 
 [float]
 [[config-metrics-interval]]
@@ -316,3 +404,27 @@ The default unit for this option is `ms`
 | Environment variable name     | IConfiguration key
 | `ELASTIC_APM_SPAN_FRAMES_MIN_DURATION` | `ElasticApm:SpanFramesMinDuration`
 |============
+
+
+[[config-supportability]]
+=== Supportability configuration options
+
+[float]
+[[config-log-level]]
+==== `LogLevel`
+
+[options="header"]
+|============
+| Environment variable name | IConfiguration key
+| `ELASTIC_APM_LOG_LEVEL`   | `ElasticApm:LogLevel`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `Error`                 | String
+|============
+
+Sets the logging level for the agent.
+
+Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `None` (`None` disables the logging).
