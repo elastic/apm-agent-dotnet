@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -28,15 +29,15 @@ namespace Elastic.Apm.Report
 	internal class PayloadSenderV2 : IPayloadSender, IDisposable
 	{
 		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
-		
-		internal readonly Api.System System;
 
+		internal readonly Api.System System;
 		private readonly BatchBlock<object> _eventQueue;
 
 		private readonly TimeSpan _flushInterval;
 
 		private readonly HttpClient _httpClient;
 		private readonly IApmLogger _logger;
+		private readonly int _maxQueueEventCount;
 		private readonly Metadata _metadata;
 
 		private readonly PayloadItemSerializer _payloadItemSerializer = new PayloadItemSerializer();
@@ -52,9 +53,22 @@ namespace Elastic.Apm.Report
 			System = system;
 			_metadata = new Metadata { Service = service, System = System };
 
+			if (configurationReader.MaxQueueEventCount < configurationReader.MaxBatchEventCount)
+			{
+				_logger?.Error()
+					?.Log(
+						"MaxQueueEventCount is less than MaxBatchEventCount - using MaxBatchEventCount as MaxQueueEventCount."
+						+ " MaxQueueEventCount: {MaxQueueEventCount}."
+						+ " MaxBatchEventCount: {MaxBatchEventCount}.",
+						configurationReader.MaxQueueEventCount, configurationReader.MaxBatchEventCount);
+
+				_maxQueueEventCount = configurationReader.MaxBatchEventCount;
+			}
+			else
+				_maxQueueEventCount = configurationReader.MaxQueueEventCount;
+
 			_flushInterval = configurationReader.FlushInterval;
-			_eventQueue = new BatchBlock<object>(configurationReader.MaxQueueEventCount,
-				new GroupingDataflowBlockOptions { BoundedCapacity = configurationReader.MaxQueueEventCount });
+			_eventQueue = new BatchBlock<object>(configurationReader.MaxBatchEventCount);
 
 			var serverUrlBase = configurationReader.ServerUrls.First();
 			var servicePoint = ServicePointManager.FindServicePoint(serverUrlBase);
@@ -111,36 +125,67 @@ namespace Elastic.Apm.Report
 		}
 
 		private CancellationTokenSource _batchBlockReceiveAsyncCts;
+		private long _eventQueueCount;
 
-		public void QueueTransaction(ITransaction transaction) => QueueEvent(transaction, "Transaction");
+		public void QueueTransaction(ITransaction transaction) => EnqueueEvent(transaction, "Transaction");
 
-		public void QueueSpan(ISpan span) => QueueEvent(span, "Span");
+		public void QueueSpan(ISpan span) => EnqueueEvent(span, "Span");
 
-		public void QueueMetrics(IMetricSet metricSet) => QueueEvent(metricSet, "MetricSet");
+		public void QueueMetrics(IMetricSet metricSet) => EnqueueEvent(metricSet, "MetricSet");
 
-		public void QueueError(IError error) => QueueEvent(error, "Error");
+		public void QueueError(IError error) => EnqueueEvent(error, "Error");
 
-		public void QueueEvent(object eventObj, string dbgEventKind)
+		internal bool EnqueueEvent(object eventObj, string dbgEventKind)
 		{
-			var addedSuccessfully = _eventQueue.Post(eventObj);
-
-			if (addedSuccessfully)
+			// Enforce _maxQueueEventCount manually instead of using BatchBlock's BoundedCapacity
+			// because of the issue of Post returning false when TriggerBatch is in progress. For more details see
+			// https://stackoverflow.com/questions/35626955/unexpected-behaviour-tpl-dataflow-batchblock-rejects-items-while-triggerbatch
+			var newEventQueueCount = Interlocked.Increment(ref _eventQueueCount);
+			if (newEventQueueCount > _maxQueueEventCount)
 			{
-				_logger.Debug()?.Log(dbgEventKind + " added to the queue. " + dbgEventKind + ": {" + dbgEventKind + "}", eventObj);
-
-				if (_flushInterval == TimeSpan.Zero)
-					_eventQueue.TriggerBatch();
+				_logger.Debug()
+					?.Log("Queue reached max capacity - " + dbgEventKind + " will be discarded. "
+						+ " newEventQueueCount: {EventQueueCount}."
+						+ " " + dbgEventKind + ": {" + dbgEventKind + "}."
+						, newEventQueueCount, eventObj);
+				Interlocked.Decrement(ref _eventQueueCount);
+				return false;
 			}
-			else
-				_logger.Debug()?.Log("Failed adding " + dbgEventKind + " to the queue. " + dbgEventKind + ": {" + dbgEventKind + "}", eventObj);
+
+			var enqueuedSuccessfully = _eventQueue.Post(eventObj);
+			if (!enqueuedSuccessfully)
+			{
+				_logger.Debug()
+					?.Log("Failed to enqueue " + dbgEventKind + "."
+						+ " newEventQueueCount: {EventQueueCount}."
+						+ " " + dbgEventKind + ": {" + dbgEventKind + "}."
+						, newEventQueueCount, eventObj);
+				Interlocked.Decrement(ref _eventQueueCount);
+				return false;
+			}
+
+			_logger.Debug()
+				?.Log("Enqueued " + dbgEventKind + "."
+					+ " newEventQueueCount: {EventQueueCount}."
+					+ " " + dbgEventKind + ": {" + dbgEventKind + "}."
+					, newEventQueueCount, eventObj);
+
+			if (_flushInterval == TimeSpan.Zero) _eventQueue.TriggerBatch();
+
+			return true;
 		}
 
 		private async Task DoWork()
 		{
+			var minTimeBetweenWaitingOnTimerLogs = TimeSpan.FromSeconds(10);
+			var stopwatch = Stopwatch.StartNew();
+			TimeSpan? elapsedOnLastWaitingOnTimerLog = null;
+
 			_batchBlockReceiveAsyncCts = new CancellationTokenSource();
 			Task<object[]> receiveAsyncTask = null;
 			while (true)
 			{
+				// ReSharper disable once InconsistentlySynchronizedField
 				if (receiveAsyncTask == null) receiveAsyncTask = _eventQueue.ReceiveAsync(_batchBlockReceiveAsyncCts.Token);
 
 				object[] eventBatchToSend = null;
@@ -152,8 +197,17 @@ namespace Elastic.Apm.Report
 				}
 				else
 				{
-					_logger.Trace()?.Log("Waiting for data to send or FlushInterval timer to be triggered (whichever is earlier)..."
-						+ " _flushInterval: {FlushInterval}", _flushInterval);
+					var logTimerRelatedInfo = false;
+					var elapsedTime = stopwatch.Elapsed;
+					if (!elapsedOnLastWaitingOnTimerLog.HasValue ||
+						elapsedOnLastWaitingOnTimerLog.Value + minTimeBetweenWaitingOnTimerLogs <= elapsedTime)
+					{
+						logTimerRelatedInfo = true;
+						_logger.Trace()
+							?.Log("Waiting for data to send or FlushInterval timer to be triggered (whichever is earlier)..."
+								+ " _flushInterval: {FlushInterval}", _flushInterval);
+						elapsedOnLastWaitingOnTimerLog = elapsedTime;
+					}
 
 					var flushIntervalDelayTask = Task.Delay((int)_flushInterval.TotalMilliseconds, _batchBlockReceiveAsyncCts.Token);
 					var completedTask = await Task.WhenAny(receiveAsyncTask, flushIntervalDelayTask);
@@ -169,8 +223,11 @@ namespace Elastic.Apm.Report
 							+ $" {nameof(completedTask)}: {completedTask}."
 							+ $" {nameof(receiveAsyncTask)}: {receiveAsyncTask}."
 							+ $" {nameof(flushIntervalDelayTask)}: {flushIntervalDelayTask}."
-							);
-						_logger.Trace()?.Log("FlushInterval timer was triggered - forcing all events in the queue (if any) to be sent...");
+						);
+
+						if (logTimerRelatedInfo)
+							_logger.Trace()?.Log("FlushInterval timer was triggered - forcing all events in the queue (if any) to be sent...");
+
 						_eventQueue.TriggerBatch();
 					}
 				}
@@ -178,8 +235,10 @@ namespace Elastic.Apm.Report
 				// ReSharper disable once InvertIf
 				if (eventBatchToSend != null)
 				{
-					_logger.Trace()?.Log("There's data to be sent. Batch size: {BatchSize}. First event: {Event}",
-						eventBatchToSend.Length, eventBatchToSend.Length > 0 ? eventBatchToSend[0].ToString() : "<N/A>");
+					var newEventQueueCount = Interlocked.Add(ref _eventQueueCount, -eventBatchToSend.Length);
+					_logger.Trace()
+						?.Log("There's data to be sent. Batch size: {BatchSize}. newEventQueueCount: {newEventQueueCount}.. First event: {Event}"
+							, eventBatchToSend.Length, newEventQueueCount, eventBatchToSend.Length > 0 ? eventBatchToSend[0].ToString() : "<N/A>");
 
 					await ProcessQueueItems(eventBatchToSend);
 				}
@@ -221,7 +280,12 @@ namespace Elastic.Apm.Report
 				var result = await _httpClient.PostAsync(Consts.IntakeV2Events, content);
 
 				if (result != null && !result.IsSuccessStatusCode)
-					_logger?.Error()?.Log("Failed sending event. {ApmServerResponse}", await result.Content.ReadAsStringAsync());
+				{
+					_logger?.Error()
+						?.Log("Failed sending event. " +
+							"APM Server response: status code: {ApmServerResponseStatusCode}, content: \n{ApmServerResponseContent}",
+							result.StatusCode, await result.Content.ReadAsStringAsync());
+				}
 				else
 				{
 					_logger?.Debug()
@@ -232,7 +296,8 @@ namespace Elastic.Apm.Report
 			{
 				_logger?.Warning()
 					?.LogException(
-						e, "Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):\n{items}",
+						e,
+						"Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):\n{SerializedItems}",
 						_httpClient.BaseAddress,
 						string.Join($",{Environment.NewLine}", queueItems.ToArray()));
 			}
