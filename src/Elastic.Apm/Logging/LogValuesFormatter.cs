@@ -1,3 +1,6 @@
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the Apache License, Version 2.0.
+
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -16,23 +19,21 @@ namespace Elastic.Apm.Logging
 		private static readonly object[] EmptyArray = new object[0];
 		private static readonly char[] FormatDelimiters = { ',', ':' };
 		private readonly string _format;
-		private readonly bool _isArgumentNumberMismatch;
-
-		/// <summary>
-		/// Holds the list of placeholders that do not have corresponding values in the structured log.
-		/// </summary>
-		private readonly List<string> _mismatchedValueNames = new List<string>();
-
 		private readonly string _scope;
 
-		public LogValuesFormatter(string format, int expectedArgs, string scope = null)
+		public LogValuesFormatter(string format, IReadOnlyCollection<object> args, string scope = null)
 		{
+			// Holds the list of placeholders that do not have corresponding values in the structured log.
+			var placeholdersMismatchedArgs = new List<string>();
+
 			_scope = scope;
 			OriginalFormat = format;
 
 			var sb = new StringBuilder();
 			var scanIndex = 0;
 			var endIndex = format.Length;
+
+			var expectedNumberOfArgs = scope != null ? args.Count+1 : args.Count;
 
 			while (scanIndex < endIndex)
 			{
@@ -49,7 +50,7 @@ namespace Elastic.Apm.Logging
 					// Format item syntax : { index[,alignment][ :formatString] }.
 					var formatDelimiterIndex = FindIndexOfAny(format, FormatDelimiters, openBraceIndex, closeBraceIndex);
 
-					if (ValueNames.Count < expectedArgs)
+					if (ValueNames.Count < expectedNumberOfArgs)
 					{
 						sb.Append(format, scanIndex, openBraceIndex - scanIndex + 1);
 						sb.Append(ValueNames.Count.ToString(CultureInfo.InvariantCulture));
@@ -57,27 +58,24 @@ namespace Elastic.Apm.Logging
 						sb.Append(format, formatDelimiterIndex, closeBraceIndex - formatDelimiterIndex + 1);
 					}
 					else
-					{
-						_isArgumentNumberMismatch = true;
-						_mismatchedValueNames.Add(format.Substring(openBraceIndex + 1, formatDelimiterIndex - openBraceIndex - 1));
-					}
+						placeholdersMismatchedArgs.Add(format.Substring(openBraceIndex + 1, formatDelimiterIndex - openBraceIndex - 1));
 
 					scanIndex = closeBraceIndex + 1;
 				}
 			}
 
-			if (_isArgumentNumberMismatch)
+			if (placeholdersMismatchedArgs.Count > 0)
 			{
-				sb.AppendLine();
-				sb.AppendLine(
-					$"Above line is from an invalid structured log and may not be complete: number of arguments is not matching the number of placeholders, placeholders with missing values: {string.Join(", ", _mismatchedValueNames.ToArray())}");
+				sb.Append(
+					$" Warning: This line is from an invalid structured log which should be fixed and may not be complete: "
+					+ $"number of arguments is not matching the number of placeholders, placeholders with missing values: {string.Join(", ", placeholdersMismatchedArgs)}");
 			}
 
-			if (ValueNames.Count != expectedArgs)
+			if (ValueNames.Count != expectedNumberOfArgs)
 			{
-				sb.AppendLine();
-				sb.AppendLine(
-					$"Above line is from an invalid structured log and may not be complete: number of placeholders in the log message does not match the number of parameters.");
+				sb.Append(
+					$" Warning: This line is from an invalid structured log which should be fixed and may not be complete: "
+					+ $"number of placeholders in the log message does not match the number of parameters. Argument values without placeholders: {string.Join(", ", args.Skip(ValueNames.Count))}");
 			}
 
 			_format = sb.ToString();

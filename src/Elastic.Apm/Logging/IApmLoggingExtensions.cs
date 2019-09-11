@@ -17,8 +17,8 @@ namespace Elastic.Apm.Logging
 			try
 			{
 				var formatter = logger is ScopedLogger sl
-					? sl.GetOrAddFormatter(message, args.Length)
-					: Formatters.GetOrAdd(message, s => new LogValuesFormatter(s, args.Length));
+					? sl.GetOrAddFormatter(message, args)
+					: Formatters.GetOrAdd(message, s => new LogValuesFormatter(s, args));
 
 				var logValues = formatter.GetState(args);
 

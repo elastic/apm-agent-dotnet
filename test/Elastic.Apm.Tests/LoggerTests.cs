@@ -148,12 +148,14 @@ namespace Elastic.Apm.Tests
 			const string arg2Value = "testArgumentValue2";
 			const string arg3Value = "testArgumentValue3";
 			scopedLogger.Warning()
-				?.Log("This is a test log from the test StructuredLogTemplateWithAdditionalArguments_ScopedLogger, args: {arg1} {arg2}", arg1Value, arg2Value,
+				?.Log("This is a test log from the test StructuredLogTemplateWithAdditionalArguments_ScopedLogger, args: {arg1} {arg2}", arg1Value,
+					arg2Value,
 					arg3Value);
 
 			const string arg4Value = "testArgumentValue4";
 			scopedLogger.Warning()
-				?.Log("This is a test log from the test StructuredLogTemplateWithAdditionalArguments_ScopedLogger, args: {arg1} {arg2}", arg1Value, arg2Value,
+				?.Log("This is a test log from the test StructuredLogTemplateWithAdditionalArguments_ScopedLogger, args: {arg1} {arg2}", arg1Value,
+					arg2Value,
 					arg3Value, arg4Value);
 		}
 
@@ -171,16 +173,20 @@ namespace Elastic.Apm.Tests
 			const string arg4Value = "testArgumentValue4";
 			testLogger.Error()
 				?.Log("This is a test log from the test StructuredLogTemplateWithAdditionalArguments_LogError, args: {arg1} {arg2}", arg1Value,
-					arg2Value,
-					arg3Value, arg4Value);
+					arg2Value, arg3Value, arg4Value);
 
-			testLogger.Lines[1]
-				.Should()
-				.Contain(
-					"Above line is from an invalid structured log and may not be complete: number of placeholders in the log message does not match the number of parameters.");
 			testLogger.Lines[0]
 				.Should()
-				.Contain("This is a test log from the test StructuredLogTemplateWithAdditionalArguments_LogError, args: testArgumentValue1 testArgumentValue2");
+				.Contain(
+					"Warning: This line is from an invalid structured log which should be fixed and may not be complete: number of placeholders in the log message does not match the number of parameters.");
+			testLogger.Lines[0]
+				.Should()
+				.Contain(
+					"This is a test log from the test StructuredLogTemplateWithAdditionalArguments_LogError, args: testArgumentValue1 testArgumentValue2");
+
+			testLogger.Lines[0]
+				.Should()
+				.Contain("Argument values without placeholders: testArgumentValue3, testArgumentValue4");
 		}
 
 		/// <summary>
@@ -192,12 +198,13 @@ namespace Elastic.Apm.Tests
 			var testLogger = new TestLogger(LogLevel.Trace);
 
 			const string arg1Value = "testArgumentValue";
-			testLogger.Warning()?.Log("This is a test log from the test StructuredLogTemplateWith1MissingArgument_LogError, args: {arg1} {arg2}", arg1Value);
+			testLogger.Warning()
+				?.Log("This is a test log from the test StructuredLogTemplateWith1MissingArgument_LogError, args: {arg1} {arg2}", arg1Value);
 
-			testLogger.Lines[1]
+			testLogger.Lines[0]
 				.Should()
 				.Contain(
-					"Above line is from an invalid structured log and may not be complete: number of arguments is not matching the number of placeholders, placeholders with missing values: arg2");
+					"Warning: This line is from an invalid structured log which should be fixed and may not be complete: number of arguments is not matching the number of placeholders, placeholders with missing values: arg2");
 
 			testLogger.Lines[0]
 				.Should()
@@ -205,7 +212,40 @@ namespace Elastic.Apm.Tests
 					"This is a test log from the test StructuredLogTemplateWith1MissingArgument_LogError, args: testArgumentValue");
 		}
 
-		private TestLogger LogWithLevel(LogLevel logLevel)
+		/// <summary>
+		/// Makes sure that a structured log with the proper number of arguments does not contain any warning about being invalid.
+		/// </summary>
+		[Fact]
+		public void StructuredLogWithCorrectNumberOfArgs()
+		{
+			var testLogger = new TestLogger(LogLevel.Trace);
+			const string arg1Value = "testArgumentValue1";
+			const string arg2Value = "testArgumentValue2";
+			testLogger.Warning()
+				?.Log("This is a test log from the test StructuredLogWithCorrectNumberOfArgs, args: {arg1} {arg2}", arg1Value, arg2Value);
+
+			testLogger.Lines[0]
+				.Should()
+				.Contain(
+					"This is a test log from the test StructuredLogWithCorrectNumberOfArgs, args: testArgumentValue1 testArgumentValue2");
+
+			testLogger.Lines[0]
+				.Should()
+				.NotContain(
+					"Warning: This line is from an invalid structured log");
+
+			testLogger.Lines[0]
+				.Should()
+				.NotContain(
+					"Argument values without placeholders:");
+
+			testLogger.Lines[0]
+				.Should()
+				.NotContain(
+					"placeholders with missing values:");
+		}
+
+		private static TestLogger LogWithLevel(LogLevel logLevel)
 		{
 			var logger = new TestLogger(logLevel);
 
