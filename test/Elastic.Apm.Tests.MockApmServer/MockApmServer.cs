@@ -16,6 +16,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 	{
 		internal readonly ReceivedData ReceivedData = new ReceivedData();
 		private readonly string _dbgCurrentTestName;
+		private readonly object _lock = new object();
 
 		internal MockApmServer(IApmLogger logger, string dbgCurrentTestName)
 		{
