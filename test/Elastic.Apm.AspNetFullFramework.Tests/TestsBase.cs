@@ -47,7 +47,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		protected TestsBase(ITestOutputHelper xUnitOutputHelper,
 			bool startMockApmServer = true,
-			Dictionary<string, string> envVarsToSetForSampleAppPool = null,
+			IDictionary<string, string> envVarsToSetForSampleAppPool = null,
 			bool sampleAppShouldHaveAccessToPerfCounters = false
 		)
 		{
@@ -63,6 +63,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				? new Dictionary<string, string>()
 				: new Dictionary<string, string>(envVarsToSetForSampleAppPool);
 			_envVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.ServerUrls, $"http://localhost:{_mockApmServerPort}");
+			_envVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.FlushInterval, "10ms");
 		}
 
 		private static class DataSentByAgentVerificationConsts
@@ -97,13 +98,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData ForbidHttpResponsePageDescriptionPage =
 				new SampleAppUrlPathData(HomeController.ForbidHttpResponsePageRelativePath, 200, spansCount: 1, errorsCount: 1);
 
-			internal static readonly List<SampleAppUrlPathData> AllPaths = new List<SampleAppUrlPathData>()
+			internal static readonly List<SampleAppUrlPathData> AllPaths = new List<SampleAppUrlPathData>
 			{
 				new SampleAppUrlPathData("", 200),
 				HomePage,
 				ContactPage,
 				CustomSpanThrowsExceptionPage,
-				new SampleAppUrlPathData("Dummy_nonexistent_path", 404),
+				new SampleAppUrlPathData("Dummy_nonexistent_path", 404)
 			};
 
 			/// `CallReturnBadRequest' page processing does HTTP Get for `ReturnBadRequest' page (additional transaction) - so 1 span
@@ -223,10 +224,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		}
 
 		// ReSharper disable once MemberCanBeProtected.Global
-		public static IEnumerable<object[]> AllSampleAppUrlPaths()
-		{
-			foreach (var data in SampleAppUrlPaths.AllPaths) yield return new object[] { data };
-		}
+		public static IEnumerable<object[]> AllSampleAppUrlPaths() => SampleAppUrlPaths.AllPaths.Select(data => new object[] { data });
 
 		public static SampleAppUrlPathData RandomSampleAppUrlPath() =>
 			SampleAppUrlPaths.AllPaths[RandomGenerator.GetInstance().Next(0, SampleAppUrlPaths.AllPaths.Count)];
@@ -235,6 +233,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			var helper = (TestOutputHelper)xUnitOutputHelper;
 
+			// ReSharper disable once PossibleNullReferenceException
 			var test = (ITest)helper.GetType()
 				.GetField("test", BindingFlags.NonPublic | BindingFlags.Instance)
 				.GetValue(helper);
@@ -286,6 +285,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			receivedData.Spans.Count.Should().Be(sampleAppUrlPathData.SpansCount);
 			receivedData.Errors.Count.Should().Be(sampleAppUrlPathData.ErrorsCount);
 
+			// ReSharper disable once InvertIf
 			if (receivedData.Transactions.Count == 1)
 			{
 				var transaction = receivedData.Transactions.First();
@@ -447,6 +447,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			metricSet.Should().NotBeNull();
 
+			// ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
 			foreach (var (metricTypeName, _) in metricSet.Samples)
 			{
 				if (MetricsAssertValid.MetricMetadataPerType[metricTypeName].ImplRequiresAccessToPerfCounters)

@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
@@ -14,9 +13,10 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
-using System = Elastic.Apm.Api.System;
+using Xunit.Abstractions;
 
 [assembly:
 	InternalsVisibleTo(
@@ -42,6 +42,11 @@ namespace Elastic.Apm.Tests
 	/// </summary>
 	public class BasicAgentTests
 	{
+		private readonly IApmLogger _logger;
+
+		public BasicAgentTests(ITestOutputHelper xUnitOutputHelper) =>
+			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(BasicAgentTests));
+
 		/// <summary>
 		/// Creates a simple transaction.
 		/// Makes sure that the agent reports the transaction with the correct agent version,
@@ -73,18 +78,18 @@ namespace Elastic.Apm.Tests
 			});
 
 			const string secretToken = "SecretToken";
-			var logger = new NoopLogger();
-			var payloadSender = new PayloadSenderV2(logger, new TestAgentConfigurationReader(logger, secretToken: secretToken),
-				Service.GetDefaultService(new TestAgentConfigurationReader(logger), logger), new Api.System(), handler);
+			var noopLogger = new NoopLogger();
+			var configReader = new TestAgentConfigurationReader(_logger, secretToken: secretToken, flushInterval: "1s");
+			var payloadSender = new PayloadSenderV2(_logger, configReader,
+				Service.GetDefaultService(configReader, noopLogger), new Api.System(), handler);
 
-
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
-				configurationReader: new TestAgentConfigurationReader(secretToken: secretToken))))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configurationReader: configReader)))
 			{
 				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
+				var completedTask = await Task.WhenAny(isRequestFinished.Task, Task.Delay(10_000)); // 10 seconds time out
+				completedTask.Should().Be(isRequestFinished.Task);
 			}
 
-			await isRequestFinished.Task;
 			authHeader.Should().NotBeNull();
 			authHeader.Scheme.Should().Be("Bearer");
 			authHeader.Parameter.Should().Be(secretToken);
@@ -105,15 +110,15 @@ namespace Elastic.Apm.Tests
 
 			var logger = new NoopLogger();
 			var service = Service.GetDefaultService(new TestAgentConfigurationReader(logger), logger);
-			var payloadSender = new PayloadSenderV2(logger, new TestAgentConfigurationReader(logger),
+			var payloadSender = new PayloadSenderV2(logger, new TestAgentConfigurationReader(logger, flushInterval: "1s"),
 				service, new Api.System(), handler);
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
 				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
+				await isRequestFinished.Task;
 			}
 
-			await isRequestFinished.Task;
 			userAgentHeader
 				.Should()
 				.NotBeEmpty()
@@ -159,8 +164,10 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
 				agent.Tracer.CaptureTransaction("TestTransaction", "TestTransactionType",
 					(t) => { t.CaptureException(new Exception("TestMst")); });
+			}
 
 			StringToByteArray(payloadSender.FirstError.Id).Should().HaveCount(16);
 			StringToByteArray(payloadSender.FirstError.TraceId).Should().HaveCount(16);
