@@ -303,7 +303,7 @@ If the queue is at its maximum capacity then the agent discards the new events
 until the queue has free space.
 
 Setting `MaxQueueEventCount` to 0 or a negative value is invalid and
-in that case agent uses the default value instead.  
+in that case the Agent will use the default value instead.
 
 [float]
 [[config-metrics-interval]]
