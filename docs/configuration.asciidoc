@@ -280,7 +280,7 @@ if there are events that need to be sent out because they were held for too long
  (see <<config-flush-interval,`FlushInterval`>>).
 
 Setting `MaxBatchEventCount` to 0 or a negative value is invalid and
-in that case agent uses the default value instead.  
+in that case the Agent will use the default value instead.  
 
 [float]
 [[config-max-queue-event-count]]
