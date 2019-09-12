@@ -275,7 +275,7 @@ in that case agent uses the default value instead.
 |============
 
 The maximal number of events to send in a batch.
-It's possible for a batch contain less then the maximum events
+It's possible for a batch to contain less then the maximum events
 if there are events that need to be sent out because they were held for too long
  (see <<config-flush-interval,`FlushInterval`>>).
 
