@@ -1,7 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
@@ -19,6 +18,8 @@ namespace Elastic.Apm.Model
 		private readonly Lazy<SpanContext> _context = new Lazy<SpanContext>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly Transaction _enclosingTransaction;
+
+		private readonly bool _isDropped;
 		private readonly IApmLogger _logger;
 		private readonly Span _parentSpan;
 		private readonly IPayloadSender _payloadSender;
@@ -29,7 +30,6 @@ namespace Elastic.Apm.Model
 			string parentId,
 			string traceId,
 			Transaction enclosingTransaction,
-			bool isSampled,
 			IPayloadSender payloadSender,
 			IApmLogger logger,
 			IConfigurationReader configurationReader,
@@ -48,7 +48,6 @@ namespace Elastic.Apm.Model
 			_enclosingTransaction = enclosingTransaction;
 			Name = name;
 			Type = type;
-			IsSampled = isSampled;
 
 			ParentId = parentId;
 			TraceId = traceId;
@@ -58,13 +57,11 @@ namespace Elastic.Apm.Model
 				// Started and dropped spans should be counted only for sampled transactions
 				if (enclosingTransaction.SpanCount.IncrementTotal() >= _configurationReader.TransactionMaxSpans)
 				{
-					IsSampled = false;
+					_isDropped = true;
 					enclosingTransaction.SpanCount.IncrementDropped();
 				}
 				else
-				{
 					enclosingTransaction.SpanCount.IncrementStarted();
-				}
 			}
 
 			_currentExecutionSegmentsContainer.CurrentSpan = this;
@@ -97,7 +94,7 @@ namespace Elastic.Apm.Model
 		public string Id { get; set; }
 
 		[JsonIgnore]
-		public bool IsSampled { get; }
+		public bool IsSampled => _enclosingTransaction.IsSampled;
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
@@ -107,12 +104,15 @@ namespace Elastic.Apm.Model
 			TraceId,
 			// When transaction is not sampled then outgoing distributed tracing data should have transaction ID for parent-id part
 			// and not span ID as it does for sampled case.
-			IsSampled ? Id : TransactionId,
+			ShouldBeSentToApmServer ? Id : TransactionId,
 			IsSampled);
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
+
+		[JsonIgnore]
+		private bool ShouldBeSentToApmServer => IsSampled && !_isDropped;
 
 		[JsonProperty("stacktrace")]
 		public List<CapturedStackFrame> StackTrace { get; set; }
@@ -157,7 +157,7 @@ namespace Elastic.Apm.Model
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
-			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, IsSampled, _payloadSender, _logger, _configurationReader,
+			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _configurationReader,
 				_currentExecutionSegmentsContainer, this);
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 
@@ -196,7 +196,7 @@ namespace Elastic.Apm.Model
 			var isFirstEndCall = !_isEnded;
 			_isEnded = true;
 
-			if (!IsSampled || !isFirstEndCall) return;
+			if (!ShouldBeSentToApmServer || !isFirstEndCall) return;
 
 			// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
 			// ReSharper disable once CompareOfFloatsByEqualityOperator
