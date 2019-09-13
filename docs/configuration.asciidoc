@@ -218,6 +218,24 @@ It also expects that a period (`.`) is used to separate the integer and the frac
 |============
 
 [float]
+[[config-transaction-max-spans]]
+==== `TransactionMaxSpans` (performance)
+
+Limits the amount of spans that are recorded per transaction. This is helpful in cases where a transaction creates a very high amount of spans (e.g. thousands of SQL queries). Setting an upper limit will prevent overloading the agent and the APM server with too much work for such edge cases.
+
+[options="header"]
+|============
+| Environment variable name           | IConfiguration key 
+| `ELASTIC_APM_TRANSACTION_MAX_SPANS` | `ElasticApm:TransactionMaxSpans`
+|============
+
+[options="header"]
+|============
+| Default | Type
+| `500`     | Integer 
+|============
+
+[float]
 [[config-central-config]]
 ==== `CentralConfig` (added[1.1])
 
