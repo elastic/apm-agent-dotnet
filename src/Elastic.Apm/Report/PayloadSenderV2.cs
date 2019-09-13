@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -31,6 +30,9 @@ namespace Elastic.Apm.Report
 		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
 
 		internal readonly Api.System System;
+
+		private readonly CancellationTokenSource _cancellationTokenSource;
+		private readonly DisposableHelper _disposableHelper = new DisposableHelper();
 		private readonly BatchBlock<object> _eventQueue;
 
 		private readonly TimeSpan _flushInterval;
@@ -41,8 +43,7 @@ namespace Elastic.Apm.Report
 		private readonly Metadata _metadata;
 
 		private readonly PayloadItemSerializer _payloadItemSerializer = new PayloadItemSerializer();
-
-		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler = new SingleThreadTaskScheduler(CancellationToken.None);
+		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler;
 
 		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, Api.System system,
 			HttpMessageHandler handler = null
@@ -69,6 +70,9 @@ namespace Elastic.Apm.Report
 
 			_flushInterval = configurationReader.FlushInterval;
 			_eventQueue = new BatchBlock<object>(configurationReader.MaxBatchEventCount);
+
+			_cancellationTokenSource = new CancellationTokenSource();
+			_singleThreadTaskScheduler = new SingleThreadTaskScheduler(logger, _cancellationTokenSource.Token);
 
 			var serverUrlBase = configurationReader.ServerUrls.First();
 			var servicePoint = ServicePointManager.FindServicePoint(serverUrlBase);
@@ -101,20 +105,24 @@ namespace Elastic.Apm.Report
 					new AuthenticationHeaderValue("Bearer", configurationReader.SecretToken);
 			}
 
-			Task.Factory.StartNew(
-				() =>
-				{
-					try
+			try
+			{
+				Task.Factory.StartNew(
+					() =>
 					{
 #pragma warning disable 4014
 						DoWork();
 #pragma warning restore 4014
-					}
-					catch (TaskCanceledException ex)
-					{
-						_logger?.Debug()?.LogExceptionWithCaller(ex);
-					}
-				}, CancellationToken.None, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
+					}, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
+
+				_logger.Debug()?.Log("Enqueued " + nameof(PayloadSenderV2) + "." + nameof(DoWork));
+			}
+			catch (OperationCanceledException ex)
+			{
+				_logger.Debug()
+					?.LogException(ex, "Enqueueing of " + nameof(PayloadSenderV2) + "." + nameof(DoWork)
+						+ " was cancelled, which is expected on shutdown");
+			}
 
 			// Replace invalid characters by underscore. All invalid characters can be found at
 			// https://github.com/dotnet/corefx/blob/e64cac6dcacf996f98f0b3f75fb7ad0c12f588f7/src/System.Net.Http/src/System/Net/Http/HttpRuleParser.cs#L41
@@ -124,8 +132,9 @@ namespace Elastic.Apm.Report
 			}
 		}
 
-		private CancellationTokenSource _batchBlockReceiveAsyncCts;
 		private long _eventQueueCount;
+
+		internal Thread Thread => _singleThreadTaskScheduler.Thread;
 
 		public void QueueTransaction(ITransaction transaction) => EnqueueEvent(transaction, "Transaction");
 
@@ -137,6 +146,8 @@ namespace Elastic.Apm.Report
 
 		internal bool EnqueueEvent(object eventObj, string dbgEventKind)
 		{
+			ThrowIfDisposed();
+
 			// Enforce _maxQueueEventCount manually instead of using BatchBlock's BoundedCapacity
 			// because of the issue of Post returning false when TriggerBatch is in progress. For more details see
 			// https://stackoverflow.com/questions/35626955/unexpected-behaviour-tpl-dataflow-batchblock-rejects-items-while-triggerbatch
@@ -175,18 +186,32 @@ namespace Elastic.Apm.Report
 			return true;
 		}
 
+		public void Dispose() =>
+			_disposableHelper.DoOnce(_logger, nameof(PayloadSenderV2), () =>
+			{
+				_logger.Debug()?.Log("Signalling _cancellationTokenSource");
+				_cancellationTokenSource.Cancel();
+
+				_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit", _singleThreadTaskScheduler.Thread.Name);
+				_singleThreadTaskScheduler.Thread.Join();
+
+				_logger.Debug()?.Log("_singleThreadTaskScheduler thread exited - disposing of _cancellationTokenSource and exiting");
+				_cancellationTokenSource.Dispose();
+			});
+
+		private void ThrowIfDisposed()
+		{
+			if (_disposableHelper.HasStarted) throw new ObjectDisposedException( /* objectName: */ nameof(PayloadSenderV2));
+		}
+
 		private async Task DoWork()
 		{
-			var minTimeBetweenWaitingOnTimerLogs = TimeSpan.FromSeconds(10);
-			var stopwatch = Stopwatch.StartNew();
-			TimeSpan? elapsedOnLastWaitingOnTimerLog = null;
-
-			_batchBlockReceiveAsyncCts = new CancellationTokenSource();
+			var isPrevIterationTriggeredFlushIntervalTimer = false;
 			Task<object[]> receiveAsyncTask = null;
 			while (true)
 			{
 				// ReSharper disable once InconsistentlySynchronizedField
-				if (receiveAsyncTask == null) receiveAsyncTask = _eventQueue.ReceiveAsync(_batchBlockReceiveAsyncCts.Token);
+				if (receiveAsyncTask == null) receiveAsyncTask = _eventQueue.ReceiveAsync(_cancellationTokenSource.Token);
 
 				object[] eventBatchToSend = null;
 				if (_flushInterval == TimeSpan.Zero)
@@ -197,24 +222,20 @@ namespace Elastic.Apm.Report
 				}
 				else
 				{
-					var logTimerRelatedInfo = false;
-					var elapsedTime = stopwatch.Elapsed;
-					if (!elapsedOnLastWaitingOnTimerLog.HasValue ||
-						elapsedOnLastWaitingOnTimerLog.Value + minTimeBetweenWaitingOnTimerLogs <= elapsedTime)
+					if (!isPrevIterationTriggeredFlushIntervalTimer)
 					{
-						logTimerRelatedInfo = true;
 						_logger.Trace()
 							?.Log("Waiting for data to send or FlushInterval timer to be triggered (whichever is earlier)..."
 								+ " _flushInterval: {FlushInterval}", _flushInterval);
-						elapsedOnLastWaitingOnTimerLog = elapsedTime;
 					}
 
-					var flushIntervalDelayTask = Task.Delay((int)_flushInterval.TotalMilliseconds, _batchBlockReceiveAsyncCts.Token);
+					var flushIntervalDelayTask = Task.Delay((int)_flushInterval.TotalMilliseconds, _cancellationTokenSource.Token);
 					var completedTask = await Task.WhenAny(receiveAsyncTask, flushIntervalDelayTask);
 					if (completedTask == receiveAsyncTask)
 					{
 						eventBatchToSend = await receiveAsyncTask;
 						receiveAsyncTask = null;
+						isPrevIterationTriggeredFlushIntervalTimer = false;
 					}
 					else
 					{
@@ -225,10 +246,11 @@ namespace Elastic.Apm.Report
 							+ $" {nameof(flushIntervalDelayTask)}: {flushIntervalDelayTask}."
 						);
 
-						if (logTimerRelatedInfo)
+						if (!isPrevIterationTriggeredFlushIntervalTimer)
 							_logger.Trace()?.Log("FlushInterval timer was triggered - forcing all events in the queue (if any) to be sent...");
 
 						_eventQueue.TriggerBatch();
+						isPrevIterationTriggeredFlushIntervalTimer = true;
 					}
 				}
 
@@ -277,7 +299,7 @@ namespace Elastic.Apm.Report
 
 				var content = new StringContent(ndjson.ToString(), Encoding.UTF8, "application/x-ndjson");
 
-				var result = await _httpClient.PostAsync(Consts.IntakeV2Events, content);
+				var result = await _httpClient.PostAsync(Consts.IntakeV2Events, content, _cancellationTokenSource.Token);
 
 				if (result != null && !result.IsSuccessStatusCode)
 				{
@@ -302,8 +324,6 @@ namespace Elastic.Apm.Report
 						string.Join($",{Environment.NewLine}", queueItems.ToArray()));
 			}
 		}
-
-		public void Dispose() => _batchBlockReceiveAsyncCts?.Dispose();
 	}
 
 	internal class Metadata
@@ -322,22 +342,42 @@ namespace Elastic.Apm.Report
 
 		private readonly CancellationToken _cancellationToken;
 
+		private readonly IApmLogger _logger;
+
 		private readonly BlockingCollection<Task> _taskQueue;
 
-		public SingleThreadTaskScheduler(CancellationToken cancellationToken)
+		public SingleThreadTaskScheduler(IApmLogger logger, CancellationToken cancellationToken)
 		{
+			_logger = logger?.Scoped(nameof(SingleThreadTaskScheduler));
 			_cancellationToken = cancellationToken;
 			_taskQueue = new BlockingCollection<Task>();
-			new Thread(RunOnCurrentThread) { Name = "ElasticApmPayloadSender", IsBackground = true }.Start();
+			Thread = new Thread(RunOnCurrentThread) { Name = "ElasticApmPayloadSender", IsBackground = true };
+			Thread.Start();
 		}
+
+		internal Thread Thread { get; }
 
 		private void RunOnCurrentThread()
 		{
+			_logger.Debug()?.Log("`{ThreadName}' thread started", Thread.CurrentThread.Name);
+
 			_isExecuting = true;
 
 			try
 			{
 				foreach (var task in _taskQueue.GetConsumingEnumerable(_cancellationToken)) TryExecuteTask(task);
+
+				_logger.Debug()?.Log("`{ThreadName}' thread is about to exit normally", Thread.CurrentThread.Name);
+			}
+			catch (OperationCanceledException ex)
+			{
+				_logger.Debug()
+					?.LogException(ex, "`{ThreadName}' thread is about to exit because it was cancelled, which is expected on shutdown",
+						Thread.CurrentThread.Name);
+			}
+			catch (Exception ex)
+			{
+				_logger.Error()?.LogException(ex, "`{ThreadName}' thread is about to exit because of exception", Thread.CurrentThread.Name);
 			}
 			finally
 			{

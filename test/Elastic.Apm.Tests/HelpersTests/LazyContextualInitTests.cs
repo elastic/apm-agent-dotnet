@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Tests.Extensions;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
 
@@ -15,7 +17,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 		[MemberData(nameof(WaysToCallInitOrGetString))]
 		internal void InitializedOnlyOnceOnFirstAccess(string dbgWayToCallDesc, Func<LazyContextualInit<string>, Func<string>, string> wayToCall)
 		{
-			var counter = new ThreadSafeCounter();
+			var counter = new ThreadSafeIntCounter();
 			var ctxLazy = new LazyContextualInit<string>();
 			ctxLazy.IsInited.Should().BeFalse();
 			ctxLazy.IfNotInited.Should().NotBeNull();
@@ -33,47 +35,20 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 		[Theory]
 		[MemberData(nameof(WaysToCallInitOrGetString))]
-		internal void InitializedOnlyOnceFromMultipleThreads(string dbgWayToCallDesc, Func<LazyContextualInit<string>, Func<string>, string> wayToCall)
+		internal void multiple_threads(string dbgWayToCallDesc, Func<LazyContextualInit<string>, Func<string>, string> wayToCall)
 		{
-			var counter = new ThreadSafeCounter();
+			var counter = new ThreadSafeIntCounter();
 			var ctxLazy = new LazyContextualInit<string>();
-			var numberOfThreads = Math.Max(Environment.ProcessorCount, 2);
-			var threadIndexesAndValues = new ConcurrentBag<ValueTuple<int, string>>();
-			var barrier = new Barrier(numberOfThreads);
-			var expectedThreadIndexes = Enumerable.Range(1, numberOfThreads);
-			var threads = expectedThreadIndexes.Select(i => new Thread(() => EachThreadDo(i))).ToList();
-			foreach (var thread in threads) thread.Start();
-			foreach (var thread in threads) thread.Join();
+
+			var threadResults = MultiThreadsTestUtils.TestOnThreads(threadIndex =>
+			{
+				return wayToCall(ctxLazy, () => counter.Increment().ToString());
+			});
 
 			ctxLazy.IsInited.Should().BeTrue($"{nameof(dbgWayToCallDesc)}: {dbgWayToCallDesc}");
 			counter.Value.Should().Be(1);
-			threadIndexesAndValues.Should().HaveCount(numberOfThreads);
-			var actualThreadIndexes = new HashSet<int>();
-			foreach (var (threadIndex, value) in threadIndexesAndValues)
-			{
-				value.Should().Be("1");
-				actualThreadIndexes.Add(threadIndex);
-			}
-			actualThreadIndexes.Should().HaveCount(numberOfThreads);
-			foreach (var expectedThreadIndex in expectedThreadIndexes) actualThreadIndexes.Should().Contain(expectedThreadIndex);
 
-			void EachThreadDo(int threadIndex)
-			{
-				barrier.SignalAndWait();
-				var value = wayToCall(ctxLazy, () => counter.Increment().ToString());
-				threadIndexesAndValues.Add((threadIndex, value));
-			}
-		}
-
-		private class ThreadSafeCounter
-		{
-			internal ThreadSafeCounter(int initialValue = 0) => _value = initialValue;
-
-			private int _value;
-
-			internal int Value => Interlocked.CompareExchange(ref _value, 0, 0);
-
-			internal int Increment() => Interlocked.Increment(ref _value);
+			threadResults.ForEach(x => x.Should().Be("1"));
 		}
 
 		// ReSharper disable once MemberCanBeProtected.Global
