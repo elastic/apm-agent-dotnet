@@ -23,9 +23,9 @@ namespace Elastic.Apm.Tests.TestHelpers
 
 			var message = formatter(state, e);
 
-			var fullMessage = e == null
-				? $"[{dateTime.ToString("yyyy-MM-dd hh:mm:ss")}][{ConsoleLogger.LevelToString(level)}] - {message}"
-				: $"[{dateTime.ToString("yyyy-MM-dd hh:mm:ss")}][{ConsoleLogger.LevelToString(level)}] - {message}{Environment.NewLine}+-> Exception: {e}";
+			var fullMessage = $"[{dateTime.ToString("yyyy-MM-dd hh:mm:ss")}][{ConsoleLogger.LevelToString(level)}] - {message}";
+			if (e != null)
+				fullMessage += $"{Environment.NewLine}+-> Exception: {e.GetType().FullName}: {e.Message}{Environment.NewLine}{e.StackTrace}";
 
 			if (IsEnabled(level))
 				_lineWriter.WriteLine(fullMessage);
