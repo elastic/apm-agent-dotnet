@@ -237,10 +237,10 @@ Use this setting in case the APM Server requires a token (e.g. APM Server in Ela
 [options="header"]
 |============
 | Default                 | Type
-| `10s`                   | Time interval
+| `10s`                   | TimeDuration
 |============
 
-The maximal amount of time (in seconds) events are held in the queue until there is enough to send a batch.
+The maximal amount of time events are held in the queue until there is enough to send a batch.
 It's possible for a batch to contain less then <<config-max-batch-event-count,`MaxBatchEventCount`>> events
 if there are events that need to be sent out because they were held for too long.
 A lower value will increase the load on your APM server,
@@ -253,7 +253,7 @@ The default unit for this option is `s`.
 
 If `FlushInterval` is set to `0` (or `0s`, `0ms`, etc.) and
 there's no event sending operation still in progress 
-then agent doesn't hold events in the queue but sends them immediately.  
+then the Agent won't hold events in the queue and instead will send them immediately.
 
 Setting `FlushInterval` to a negative value (for example `-1`, `-54s`, `-89ms`, etc.) is invalid and
 in that case agent uses the default value instead.    
