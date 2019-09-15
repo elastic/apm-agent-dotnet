@@ -129,8 +129,8 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 							"\n" + TextUtils.Indentation + "Input line (pretty formatted):\n{FormattedPayloadLine}" +
 							"\n" + TextUtils.Indentation + "Parsed object:\n{Dto}",
 							dtoType, accumulatingList.Count,
-							TextUtils.AddIndentation(JsonUtils.PrettyFormat(line), 2),
-							TextUtils.AddIndentation(dto.ToString(), 2));
+							TextUtils.Indent(JsonUtils.PrettyFormat(line), 2),
+							TextUtils.Indent(dto.ToString(), 2));
 					_mockApmServer.ReceivedData.InvalidPayloadErrors = _mockApmServer.ReceivedData.InvalidPayloadErrors.Add(ex.ToString());
 					return accumulatingList;
 				}
@@ -140,8 +140,8 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 						"\n" + TextUtils.Indentation + "Input line (pretty formatted):\n{FormattedPayloadLine}" +
 						"\n" + TextUtils.Indentation + "Parsed object:\n{Dto}",
 						dtoType, accumulatingList.Count + 1,
-						TextUtils.AddIndentation(JsonUtils.PrettyFormat(line), 2),
-						TextUtils.AddIndentation(dto.ToString(), 2));
+						TextUtils.Indent(JsonUtils.PrettyFormat(line), 2),
+						TextUtils.Indent(dto.ToString(), 2));
 
 				return accumulatingList.Add(dto);
 			}
