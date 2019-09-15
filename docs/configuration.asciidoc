@@ -241,7 +241,7 @@ Use this setting in case the APM Server requires a token (e.g. APM Server in Ela
 |============
 
 The maximal amount of time events are held in the queue until there is enough to send a batch.
-It's possible for a batch to contain less then <<config-max-batch-event-count,`MaxBatchEventCount`>> events
+It's possible for a batch to contain less than <<config-max-batch-event-count,`MaxBatchEventCount`>> events
 if there are events that need to be sent out because they were held for too long.
 A lower value will increase the load on your APM server,
 while a higher value can increase the memory pressure on your app.
