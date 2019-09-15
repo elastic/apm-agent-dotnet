@@ -27,6 +27,7 @@ namespace Elastic.Apm.Report
 	/// </summary>
 	internal class PayloadSenderV2 : IPayloadSender, IDisposable
 	{
+		private const string ThisClassName = nameof(PayloadSenderV2);
 		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
 
 		internal readonly Api.System System;
@@ -49,7 +50,7 @@ namespace Elastic.Apm.Report
 			HttpMessageHandler handler = null
 		)
 		{
-			_logger = logger?.Scoped(nameof(PayloadSenderV2));
+			_logger = logger?.Scoped(ThisClassName);
 
 			System = system;
 			_metadata = new Metadata { Service = service, System = System };
@@ -105,24 +106,11 @@ namespace Elastic.Apm.Report
 					new AuthenticationHeaderValue("Bearer", configurationReader.SecretToken);
 			}
 
-			try
-			{
-				Task.Factory.StartNew(
-					() =>
-					{
 #pragma warning disable 4014
-						DoWork();
+			Task.Factory.StartNew(DoWork, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
 #pragma warning restore 4014
-					}, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
 
-				_logger.Debug()?.Log("Enqueued " + nameof(PayloadSenderV2) + "." + nameof(DoWork));
-			}
-			catch (OperationCanceledException ex)
-			{
-				_logger.Debug()
-					?.LogException(ex, "Enqueueing of " + nameof(PayloadSenderV2) + "." + nameof(DoWork)
-						+ " was cancelled, which is expected on shutdown");
-			}
+			_logger.Debug()?.Log("Enqueued " + ThisClassName + "." + nameof(DoWork));
 
 			// Replace invalid characters by underscore. All invalid characters can be found at
 			// https://github.com/dotnet/corefx/blob/e64cac6dcacf996f98f0b3f75fb7ad0c12f588f7/src/System.Net.Http/src/System/Net/Http/HttpRuleParser.cs#L41
@@ -155,10 +143,11 @@ namespace Elastic.Apm.Report
 			if (newEventQueueCount > _maxQueueEventCount)
 			{
 				_logger.Debug()
-					?.Log("Queue reached max capacity - " + dbgEventKind + " will be discarded. "
+					?.Log("Queue reached max capacity - " + dbgEventKind + " will be discarded."
 						+ " newEventQueueCount: {EventQueueCount}."
+						+ " MaxQueueEventCount: {MaxQueueEventCount}."
 						+ " " + dbgEventKind + ": {" + dbgEventKind + "}."
-						, newEventQueueCount, eventObj);
+						, newEventQueueCount, _maxQueueEventCount, eventObj);
 				Interlocked.Decrement(ref _eventQueueCount);
 				return false;
 			}
@@ -169,8 +158,9 @@ namespace Elastic.Apm.Report
 				_logger.Debug()
 					?.Log("Failed to enqueue " + dbgEventKind + "."
 						+ " newEventQueueCount: {EventQueueCount}."
+						+ " MaxQueueEventCount: {MaxQueueEventCount}."
 						+ " " + dbgEventKind + ": {" + dbgEventKind + "}."
-						, newEventQueueCount, eventObj);
+						, newEventQueueCount, _maxQueueEventCount, eventObj);
 				Interlocked.Decrement(ref _eventQueueCount);
 				return false;
 			}
@@ -178,8 +168,9 @@ namespace Elastic.Apm.Report
 			_logger.Debug()
 				?.Log("Enqueued " + dbgEventKind + "."
 					+ " newEventQueueCount: {EventQueueCount}."
+					+ " MaxQueueEventCount: {MaxQueueEventCount}."
 					+ " " + dbgEventKind + ": {" + dbgEventKind + "}."
-					, newEventQueueCount, eventObj);
+					, newEventQueueCount, _maxQueueEventCount, eventObj);
 
 			if (_flushInterval == TimeSpan.Zero) _eventQueue.TriggerBatch();
 
@@ -187,7 +178,7 @@ namespace Elastic.Apm.Report
 		}
 
 		public void Dispose() =>
-			_disposableHelper.DoOnce(_logger, nameof(PayloadSenderV2), () =>
+			_disposableHelper.DoOnce(_logger, ThisClassName, () =>
 			{
 				_logger.Debug()?.Log("Signalling _cancellationTokenSource");
 				_cancellationTokenSource.Cancel();
@@ -201,71 +192,75 @@ namespace Elastic.Apm.Report
 
 		private void ThrowIfDisposed()
 		{
-			if (_disposableHelper.HasStarted) throw new ObjectDisposedException( /* objectName: */ nameof(PayloadSenderV2));
+			if (_disposableHelper.HasStarted) throw new ObjectDisposedException( /* objectName: */ ThisClassName);
 		}
 
-		private async Task DoWork()
+		private Task DoWork() =>
+			ExceptionUtils.DoSwallowingExceptions(_logger, async () =>
+				{
+					while (true) await ProcessQueueItems(await ReceiveBatchAsync());
+					// ReSharper disable once FunctionNeverReturns
+				}
+				, dbgCallerMethodName: ThisClassName + "." + DbgUtils.GetCurrentMethodName());
+
+		private async Task<object[]> ReceiveBatchAsync()
 		{
-			var isPrevIterationTriggeredFlushIntervalTimer = false;
-			Task<object[]> receiveAsyncTask = null;
-			while (true)
+			var receiveAsyncTask = _eventQueue.ReceiveAsync(_cancellationTokenSource.Token);
+
+			if (_flushInterval == TimeSpan.Zero)
+				_logger.Trace()?.Log("Waiting for data to send... (not using FlushInterval timer because FlushInterval is 0)");
+			else
 			{
-				// ReSharper disable once InconsistentlySynchronizedField
-				if (receiveAsyncTask == null) receiveAsyncTask = _eventQueue.ReceiveAsync(_cancellationTokenSource.Token);
-
-				object[] eventBatchToSend = null;
-				if (_flushInterval == TimeSpan.Zero)
+				_logger.Trace()?.Log("Waiting for data to send... FlushInterval: {FlushInterval}", _flushInterval);
+				while (true)
 				{
-					_logger.Trace()?.Log("Waiting for data to send... (not using FlushInterval timer because FlushInterval is 0)");
-					eventBatchToSend = await receiveAsyncTask;
-					receiveAsyncTask = null;
-				}
-				else
-				{
-					if (!isPrevIterationTriggeredFlushIntervalTimer)
-					{
-						_logger.Trace()
-							?.Log("Waiting for data to send or FlushInterval timer to be triggered (whichever is earlier)..."
-								+ " _flushInterval: {FlushInterval}", _flushInterval);
-					}
+					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, _cancellationTokenSource.Token)) break;
 
-					var flushIntervalDelayTask = Task.Delay((int)_flushInterval.TotalMilliseconds, _cancellationTokenSource.Token);
-					var completedTask = await Task.WhenAny(receiveAsyncTask, flushIntervalDelayTask);
-					if (completedTask == receiveAsyncTask)
-					{
-						eventBatchToSend = await receiveAsyncTask;
-						receiveAsyncTask = null;
-						isPrevIterationTriggeredFlushIntervalTimer = false;
-					}
-					else
-					{
-						Assertion.IfEnabled?.That(completedTask == flushIntervalDelayTask,
-							$"{nameof(completedTask)} should be either {nameof(receiveAsyncTask)} or {nameof(flushIntervalDelayTask)}."
-							+ $" {nameof(completedTask)}: {completedTask}."
-							+ $" {nameof(receiveAsyncTask)}: {receiveAsyncTask}."
-							+ $" {nameof(flushIntervalDelayTask)}: {flushIntervalDelayTask}."
-						);
-
-						if (!isPrevIterationTriggeredFlushIntervalTimer)
-							_logger.Trace()?.Log("FlushInterval timer was triggered - forcing all events in the queue (if any) to be sent...");
-
-						_eventQueue.TriggerBatch();
-						isPrevIterationTriggeredFlushIntervalTimer = true;
-					}
-				}
-
-				// ReSharper disable once InvertIf
-				if (eventBatchToSend != null)
-				{
-					var newEventQueueCount = Interlocked.Add(ref _eventQueueCount, -eventBatchToSend.Length);
-					_logger.Trace()
-						?.Log("There's data to be sent. Batch size: {BatchSize}. newEventQueueCount: {newEventQueueCount}.. First event: {Event}"
-							, eventBatchToSend.Length, newEventQueueCount, eventBatchToSend.Length > 0 ? eventBatchToSend[0].ToString() : "<N/A>");
-
-					await ProcessQueueItems(eventBatchToSend);
+					_eventQueue.TriggerBatch();
 				}
 			}
-			// ReSharper disable once FunctionNeverReturns
+
+			var eventBatchToSend = await receiveAsyncTask;
+			var newEventQueueCount = Interlocked.Add(ref _eventQueueCount, -eventBatchToSend.Length);
+			_logger.Trace()
+				?.Log("There's data to be sent. Batch size: {BatchSize}. newEventQueueCount: {newEventQueueCount}. First event: {Event}."
+					, eventBatchToSend.Length, newEventQueueCount, eventBatchToSend.Length > 0 ? eventBatchToSend[0].ToString() : "<N/A>");
+			return eventBatchToSend;
+		}
+
+		/// <summary>
+		/// It's recommended to use this method (or another TryAwaitOrTimeout or AwaitOrTimeout method)
+		/// instead of just Task.WhenAny(taskToAwait, Task.Delay(timeout))
+		/// because this method cancels the timer for timeout while <c>Task.Delay(timeout)</c>.
+		/// If the number of “zombie” timer jobs starts becoming significant, performance could suffer.
+		///
+		/// For more detailed explanation see https://devblogs.microsoft.com/pfxteam/crafting-a-task-timeoutafter-method/
+		/// </summary>
+		/// <returns><c>true</c> if <c>taskToAwait</c> completed before the timeout, <c>false</c> otherwise</returns>
+		private static async Task<bool> TryAwaitOrTimeout(Task taskToAwait, TimeSpan timeout, CancellationToken cancellationToken = default)
+		{
+			var timeoutDelayCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+			var timeoutDelayTask = Task.Delay(timeout, timeoutDelayCts.Token);
+			try
+			{
+				var completedTask = await Task.WhenAny(taskToAwait, timeoutDelayTask);
+				if (completedTask == taskToAwait)
+				{
+					await taskToAwait;
+					return true;
+				}
+
+				Assertion.IfEnabled?.That(completedTask == timeoutDelayTask
+					, $"{nameof(completedTask)}: {completedTask}, {nameof(timeoutDelayTask)}: timeOutTask, {nameof(taskToAwait)}: taskToAwait");
+				// no need to cancel timeout timer if it has been triggered
+				timeoutDelayTask = null;
+				return false;
+			}
+			finally
+			{
+				if (timeoutDelayTask != null) timeoutDelayCts.Cancel();
+				timeoutDelayCts.Dispose();
+			}
 		}
 
 		private async Task ProcessQueueItems(object[] queueItems)
@@ -337,6 +332,8 @@ namespace Elastic.Apm.Report
 	//Credit: https://stackoverflow.com/a/30726903/1783306
 	internal sealed class SingleThreadTaskScheduler : TaskScheduler
 	{
+		private const string ThisClassName = nameof(PayloadSenderV2) + "." + nameof(SingleThreadTaskScheduler);
+
 		[ThreadStatic]
 		private static bool _isExecuting;
 
@@ -348,7 +345,7 @@ namespace Elastic.Apm.Report
 
 		public SingleThreadTaskScheduler(IApmLogger logger, CancellationToken cancellationToken)
 		{
-			_logger = logger?.Scoped(nameof(SingleThreadTaskScheduler));
+			_logger = logger?.Scoped(ThisClassName);
 			_cancellationToken = cancellationToken;
 			_taskQueue = new BlockingCollection<Task>();
 			Thread = new Thread(RunOnCurrentThread) { Name = "ElasticApmPayloadSender", IsBackground = true };
@@ -363,26 +360,13 @@ namespace Elastic.Apm.Report
 
 			_isExecuting = true;
 
-			try
-			{
-				foreach (var task in _taskQueue.GetConsumingEnumerable(_cancellationToken)) TryExecuteTask(task);
+			ExceptionUtils.DoSwallowingExceptions(_logger, () =>
+				{
+					foreach (var task in _taskQueue.GetConsumingEnumerable(_cancellationToken)) TryExecuteTask(task);
+				}
+				, dbgCallerMethodName: $"`{Thread.CurrentThread.Name}' (ManagedThreadId: {Thread.CurrentThread.ManagedThreadId}) thread");
 
-				_logger.Debug()?.Log("`{ThreadName}' thread is about to exit normally", Thread.CurrentThread.Name);
-			}
-			catch (OperationCanceledException ex)
-			{
-				_logger.Debug()
-					?.LogException(ex, "`{ThreadName}' thread is about to exit because it was cancelled, which is expected on shutdown",
-						Thread.CurrentThread.Name);
-			}
-			catch (Exception ex)
-			{
-				_logger.Error()?.LogException(ex, "`{ThreadName}' thread is about to exit because of exception", Thread.CurrentThread.Name);
-			}
-			finally
-			{
-				_isExecuting = false;
-			}
+			_isExecuting = false;
 		}
 
 		protected override IEnumerable<Task> GetScheduledTasks() => null;
