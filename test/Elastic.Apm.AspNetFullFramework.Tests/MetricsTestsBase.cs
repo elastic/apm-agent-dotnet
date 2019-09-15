@@ -26,9 +26,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			// Wait enough time to give agent a chance to gather all the metrics
 			await Task.Delay(2 * MetricsIntervalSeconds * 1000);
 
-			// Send another request - transaction-end event forces agent to send any queued events (in particular metrics) to APM server
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.StatusCode);
-
 			VerifyDataReceivedFromAgent(receivedData =>
 			{
 				receivedData.Metrics.Should().NotBeEmpty();
