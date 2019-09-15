@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -28,9 +27,13 @@ namespace Elastic.Apm.Report
 	/// </summary>
 	internal class PayloadSenderV2 : IPayloadSender, IDisposable
 	{
+		private const string ThisClassName = nameof(PayloadSenderV2);
 		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
 
 		internal readonly Api.System System;
+
+		private readonly CancellationTokenSource _cancellationTokenSource;
+		private readonly DisposableHelper _disposableHelper = new DisposableHelper();
 		private readonly BatchBlock<object> _eventQueue;
 
 		private readonly TimeSpan _flushInterval;
@@ -41,14 +44,13 @@ namespace Elastic.Apm.Report
 		private readonly Metadata _metadata;
 
 		private readonly PayloadItemSerializer _payloadItemSerializer = new PayloadItemSerializer();
-
-		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler = new SingleThreadTaskScheduler(CancellationToken.None);
+		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler;
 
 		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, Api.System system,
 			HttpMessageHandler handler = null
 		)
 		{
-			_logger = logger?.Scoped(nameof(PayloadSenderV2));
+			_logger = logger?.Scoped(ThisClassName);
 
 			System = system;
 			_metadata = new Metadata { Service = service, System = System };
@@ -69,6 +71,9 @@ namespace Elastic.Apm.Report
 
 			_flushInterval = configurationReader.FlushInterval;
 			_eventQueue = new BatchBlock<object>(configurationReader.MaxBatchEventCount);
+
+			_cancellationTokenSource = new CancellationTokenSource();
+			_singleThreadTaskScheduler = new SingleThreadTaskScheduler(logger, _cancellationTokenSource.Token);
 
 			var serverUrlBase = configurationReader.ServerUrls.First();
 			var servicePoint = ServicePointManager.FindServicePoint(serverUrlBase);
@@ -102,20 +107,11 @@ namespace Elastic.Apm.Report
 					new AuthenticationHeaderValue("Bearer", configurationReader.SecretToken);
 			}
 
-			Task.Factory.StartNew(
-				() =>
-				{
-					try
-					{
 #pragma warning disable 4014
-						DoWork();
+			Task.Factory.StartNew(DoWork, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
 #pragma warning restore 4014
-					}
-					catch (TaskCanceledException ex)
-					{
-						_logger?.Debug()?.LogExceptionWithCaller(ex);
-					}
-				}, CancellationToken.None, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
+
+			_logger.Debug()?.Log("Enqueued " + ThisClassName + "." + nameof(DoWork));
 
 			// Replace invalid characters by underscore. All invalid characters can be found at
 			// https://github.com/dotnet/corefx/blob/e64cac6dcacf996f98f0b3f75fb7ad0c12f588f7/src/System.Net.Http/src/System/Net/Http/HttpRuleParser.cs#L41
@@ -125,8 +121,9 @@ namespace Elastic.Apm.Report
 			}
 		}
 
-		private CancellationTokenSource _batchBlockReceiveAsyncCts;
 		private long _eventQueueCount;
+
+		internal Thread Thread => _singleThreadTaskScheduler.Thread;
 
 		public void QueueTransaction(ITransaction transaction) => EnqueueEvent(transaction, "Transaction");
 
@@ -138,6 +135,8 @@ namespace Elastic.Apm.Report
 
 		internal bool EnqueueEvent(object eventObj, string dbgEventKind)
 		{
+			ThrowIfDisposed();
+
 			// Enforce _maxQueueEventCount manually instead of using BatchBlock's BoundedCapacity
 			// because of the issue of Post returning false when TriggerBatch is in progress. For more details see
 			// https://stackoverflow.com/questions/35626955/unexpected-behaviour-tpl-dataflow-batchblock-rejects-items-while-triggerbatch
@@ -145,10 +144,11 @@ namespace Elastic.Apm.Report
 			if (newEventQueueCount > _maxQueueEventCount)
 			{
 				_logger.Debug()
-					?.Log("Queue reached max capacity - " + dbgEventKind + " will be discarded. "
+					?.Log("Queue reached max capacity - " + dbgEventKind + " will be discarded."
 						+ " newEventQueueCount: {EventQueueCount}."
+						+ " MaxQueueEventCount: {MaxQueueEventCount}."
 						+ " " + dbgEventKind + ": {" + dbgEventKind + "}."
-						, newEventQueueCount, eventObj);
+						, newEventQueueCount, _maxQueueEventCount, eventObj);
 				Interlocked.Decrement(ref _eventQueueCount);
 				return false;
 			}
@@ -159,8 +159,9 @@ namespace Elastic.Apm.Report
 				_logger.Debug()
 					?.Log("Failed to enqueue " + dbgEventKind + "."
 						+ " newEventQueueCount: {EventQueueCount}."
+						+ " MaxQueueEventCount: {MaxQueueEventCount}."
 						+ " " + dbgEventKind + ": {" + dbgEventKind + "}."
-						, newEventQueueCount, eventObj);
+						, newEventQueueCount, _maxQueueEventCount, eventObj);
 				Interlocked.Decrement(ref _eventQueueCount);
 				return false;
 			}
@@ -168,83 +169,98 @@ namespace Elastic.Apm.Report
 			_logger.Debug()
 				?.Log("Enqueued " + dbgEventKind + "."
 					+ " newEventQueueCount: {EventQueueCount}."
+					+ " MaxQueueEventCount: {MaxQueueEventCount}."
 					+ " " + dbgEventKind + ": {" + dbgEventKind + "}."
-					, newEventQueueCount, eventObj);
+					, newEventQueueCount, _maxQueueEventCount, eventObj);
 
 			if (_flushInterval == TimeSpan.Zero) _eventQueue.TriggerBatch();
 
 			return true;
 		}
 
-		private async Task DoWork()
-		{
-			var minTimeBetweenWaitingOnTimerLogs = TimeSpan.FromSeconds(10);
-			var stopwatch = Stopwatch.StartNew();
-			TimeSpan? elapsedOnLastWaitingOnTimerLog = null;
-
-			_batchBlockReceiveAsyncCts = new CancellationTokenSource();
-			Task<object[]> receiveAsyncTask = null;
-			while (true)
+		public void Dispose() =>
+			_disposableHelper.DoOnce(_logger, ThisClassName, () =>
 			{
-				// ReSharper disable once InconsistentlySynchronizedField
-				if (receiveAsyncTask == null) receiveAsyncTask = _eventQueue.ReceiveAsync(_batchBlockReceiveAsyncCts.Token);
+				_logger.Debug()?.Log("Signalling _cancellationTokenSource");
+				_cancellationTokenSource.Cancel();
 
-				object[] eventBatchToSend = null;
-				if (_flushInterval == TimeSpan.Zero)
+				_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit", _singleThreadTaskScheduler.Thread.Name);
+				_singleThreadTaskScheduler.Thread.Join();
+
+				_logger.Debug()?.Log("_singleThreadTaskScheduler thread exited - disposing of _cancellationTokenSource and exiting");
+				_cancellationTokenSource.Dispose();
+			});
+
+		private void ThrowIfDisposed()
+		{
+			if (_disposableHelper.HasStarted) throw new ObjectDisposedException( /* objectName: */ ThisClassName);
+		}
+
+		private Task DoWork() =>
+			ExceptionUtils.DoSwallowingExceptions(_logger, async () =>
 				{
-					_logger.Trace()?.Log("Waiting for data to send... (not using FlushInterval timer because FlushInterval is 0)");
-					eventBatchToSend = await receiveAsyncTask;
-					receiveAsyncTask = null;
+					while (true) await ProcessQueueItems(await ReceiveBatchAsync());
+					// ReSharper disable once FunctionNeverReturns
 				}
-				else
+				, dbgCallerMethodName: ThisClassName + "." + DbgUtils.GetCurrentMethodName());
+
+		private async Task<object[]> ReceiveBatchAsync()
+		{
+			var receiveAsyncTask = _eventQueue.ReceiveAsync(_cancellationTokenSource.Token);
+
+			if (_flushInterval == TimeSpan.Zero)
+				_logger.Trace()?.Log("Waiting for data to send... (not using FlushInterval timer because FlushInterval is 0)");
+			else
+			{
+				_logger.Trace()?.Log("Waiting for data to send... FlushInterval: {FlushInterval}", _flushInterval);
+				while (true)
 				{
-					var logTimerRelatedInfo = false;
-					var elapsedTime = stopwatch.Elapsed;
-					if (!elapsedOnLastWaitingOnTimerLog.HasValue ||
-						elapsedOnLastWaitingOnTimerLog.Value + minTimeBetweenWaitingOnTimerLogs <= elapsedTime)
-					{
-						logTimerRelatedInfo = true;
-						_logger.Trace()
-							?.Log("Waiting for data to send or FlushInterval timer to be triggered (whichever is earlier)..."
-								+ " _flushInterval: {FlushInterval}", _flushInterval);
-						elapsedOnLastWaitingOnTimerLog = elapsedTime;
-					}
+					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, _cancellationTokenSource.Token)) break;
 
-					var flushIntervalDelayTask = Task.Delay((int)_flushInterval.TotalMilliseconds, _batchBlockReceiveAsyncCts.Token);
-					var completedTask = await Task.WhenAny(receiveAsyncTask, flushIntervalDelayTask);
-					if (completedTask == receiveAsyncTask)
-					{
-						eventBatchToSend = await receiveAsyncTask;
-						receiveAsyncTask = null;
-					}
-					else
-					{
-						Assertion.IfEnabled?.That(completedTask == flushIntervalDelayTask,
-							$"{nameof(completedTask)} should be either {nameof(receiveAsyncTask)} or {nameof(flushIntervalDelayTask)}."
-							+ $" {nameof(completedTask)}: {completedTask}."
-							+ $" {nameof(receiveAsyncTask)}: {receiveAsyncTask}."
-							+ $" {nameof(flushIntervalDelayTask)}: {flushIntervalDelayTask}."
-						);
-
-						if (logTimerRelatedInfo)
-							_logger.Trace()?.Log("FlushInterval timer was triggered - forcing all events in the queue (if any) to be sent...");
-
-						_eventQueue.TriggerBatch();
-					}
-				}
-
-				// ReSharper disable once InvertIf
-				if (eventBatchToSend != null)
-				{
-					var newEventQueueCount = Interlocked.Add(ref _eventQueueCount, -eventBatchToSend.Length);
-					_logger.Trace()
-						?.Log("There's data to be sent. Batch size: {BatchSize}. newEventQueueCount: {newEventQueueCount}.. First event: {Event}"
-							, eventBatchToSend.Length, newEventQueueCount, eventBatchToSend.Length > 0 ? eventBatchToSend[0].ToString() : "<N/A>");
-
-					await ProcessQueueItems(eventBatchToSend);
+					_eventQueue.TriggerBatch();
 				}
 			}
-			// ReSharper disable once FunctionNeverReturns
+
+			var eventBatchToSend = await receiveAsyncTask;
+			var newEventQueueCount = Interlocked.Add(ref _eventQueueCount, -eventBatchToSend.Length);
+			_logger.Trace()
+				?.Log("There's data to be sent. Batch size: {BatchSize}. newEventQueueCount: {newEventQueueCount}. First event: {Event}."
+					, eventBatchToSend.Length, newEventQueueCount, eventBatchToSend.Length > 0 ? eventBatchToSend[0].ToString() : "<N/A>");
+			return eventBatchToSend;
+		}
+
+		/// <summary>
+		/// It's recommended to use this method (or another TryAwaitOrTimeout or AwaitOrTimeout method)
+		/// instead of just Task.WhenAny(taskToAwait, Task.Delay(timeout))
+		/// because this method cancels the timer for timeout while <c>Task.Delay(timeout)</c>.
+		/// If the number of “zombie” timer jobs starts becoming significant, performance could suffer.
+		/// For more detailed explanation see https://devblogs.microsoft.com/pfxteam/crafting-a-task-timeoutafter-method/
+		/// </summary>
+		/// <returns><c>true</c> if <c>taskToAwait</c> completed before the timeout, <c>false</c> otherwise</returns>
+		private static async Task<bool> TryAwaitOrTimeout(Task taskToAwait, TimeSpan timeout, CancellationToken cancellationToken = default)
+		{
+			var timeoutDelayCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+			var timeoutDelayTask = Task.Delay(timeout, timeoutDelayCts.Token);
+			try
+			{
+				var completedTask = await Task.WhenAny(taskToAwait, timeoutDelayTask);
+				if (completedTask == taskToAwait)
+				{
+					await taskToAwait;
+					return true;
+				}
+
+				Assertion.IfEnabled?.That(completedTask == timeoutDelayTask
+					, $"{nameof(completedTask)}: {completedTask}, {nameof(timeoutDelayTask)}: timeOutTask, {nameof(taskToAwait)}: taskToAwait");
+				// no need to cancel timeout timer if it has been triggered
+				timeoutDelayTask = null;
+				return false;
+			}
+			finally
+			{
+				if (timeoutDelayTask != null) timeoutDelayCts.Cancel();
+				timeoutDelayCts.Dispose();
+			}
 		}
 
 		private async Task ProcessQueueItems(object[] queueItems)
@@ -278,14 +294,14 @@ namespace Elastic.Apm.Report
 
 				var content = new StringContent(ndjson.ToString(), Encoding.UTF8, "application/x-ndjson");
 
-				var result = await _httpClient.PostAsync(Consts.IntakeV2Events, content);
+				var result = await _httpClient.PostAsync(Consts.IntakeV2Events, content, _cancellationTokenSource.Token);
 
 				if (result != null && !result.IsSuccessStatusCode)
 				{
 					_logger?.Error()
 						?.Log("Failed sending event. " +
 							"APM Server response: status code: {ApmServerResponseStatusCode}, content: \n{ApmServerResponseContent}",
-							result.StatusCode, TextUtils.Indent(await result.Content.ReadAsStringAsync()));
+							result.StatusCode, await result.Content.ReadAsStringAsync());
 				}
 				else
 				{
@@ -304,8 +320,6 @@ namespace Elastic.Apm.Report
 						TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray())));
 			}
 		}
-
-		public void Dispose() => _batchBlockReceiveAsyncCts?.Dispose();
 	}
 
 	internal class Metadata
@@ -319,32 +333,41 @@ namespace Elastic.Apm.Report
 	//Credit: https://stackoverflow.com/a/30726903/1783306
 	internal sealed class SingleThreadTaskScheduler : TaskScheduler
 	{
+		private const string ThisClassName = nameof(PayloadSenderV2) + "." + nameof(SingleThreadTaskScheduler);
+
 		[ThreadStatic]
 		private static bool _isExecuting;
 
 		private readonly CancellationToken _cancellationToken;
 
+		private readonly IApmLogger _logger;
+
 		private readonly BlockingCollection<Task> _taskQueue;
 
-		public SingleThreadTaskScheduler(CancellationToken cancellationToken)
+		public SingleThreadTaskScheduler(IApmLogger logger, CancellationToken cancellationToken)
 		{
+			_logger = logger?.Scoped(ThisClassName);
 			_cancellationToken = cancellationToken;
 			_taskQueue = new BlockingCollection<Task>();
-			new Thread(RunOnCurrentThread) { Name = "ElasticApmPayloadSender", IsBackground = true }.Start();
+			Thread = new Thread(RunOnCurrentThread) { Name = "ElasticApmPayloadSender", IsBackground = true };
+			Thread.Start();
 		}
+
+		internal Thread Thread { get; }
 
 		private void RunOnCurrentThread()
 		{
+			_logger.Debug()?.Log("`{ThreadName}' thread started", Thread.CurrentThread.Name);
+
 			_isExecuting = true;
 
-			try
-			{
-				foreach (var task in _taskQueue.GetConsumingEnumerable(_cancellationToken)) TryExecuteTask(task);
-			}
-			finally
-			{
-				_isExecuting = false;
-			}
+			ExceptionUtils.DoSwallowingExceptions(_logger, () =>
+				{
+					foreach (var task in _taskQueue.GetConsumingEnumerable(_cancellationToken)) TryExecuteTask(task);
+				}
+				, dbgCallerMethodName: $"`{Thread.CurrentThread.Name}' (ManagedThreadId: {Thread.CurrentThread.ManagedThreadId}) thread");
+
+			_isExecuting = false;
 		}
 
 		protected override IEnumerable<Task> GetScheduledTasks() => null;

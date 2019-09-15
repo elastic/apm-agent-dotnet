@@ -15,13 +15,13 @@ namespace Elastic.Apm.Tests.MockApmServer
 	public class MockApmServer
 	{
 		internal readonly ReceivedData ReceivedData = new ReceivedData();
-		private readonly string _dbgName;
+		private readonly string _dbgCurrentTestName;
 		private readonly object _lock = new object();
 
-		internal MockApmServer(IApmLogger logger, string dbgName)
+		internal MockApmServer(IApmLogger logger, string dbgCurrentTestName)
 		{
 			Logger = logger.Scoped(nameof(MockApmServer));
-			_dbgName = dbgName;
+			_dbgCurrentTestName = dbgCurrentTestName;
 		}
 
 		private static class PortScanRange
@@ -124,6 +124,6 @@ namespace Elastic.Apm.Tests.MockApmServer
 				.UseUrls($"http://localhost:{_port}");
 
 		public override string ToString() =>
-			new ToStringBuilder(nameof(MockApmServer)) { { "port", _port }, { "dbg name", _dbgName }, }.ToString();
+			new ToStringBuilder(nameof(MockApmServer)) { { "port", _port }, { "current test", _dbgCurrentTestName }, }.ToString();
 	}
 }
