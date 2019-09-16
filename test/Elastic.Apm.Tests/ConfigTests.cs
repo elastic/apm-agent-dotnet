@@ -145,24 +145,26 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void CaptureBodyConfigTest()
 		{
-			var agent = new ApmAgent(new TestAgentComponents(captureBody: ConfigConsts.SupportedValues.CaptureBodyOff));
-			agent.ConfigurationReader.CaptureBody.Should().Be(ConfigConsts.SupportedValues.CaptureBodyOff);
+			// ReSharper disable once RedundantArgumentDefaultValue
+			var agent = new ApmAgent(new TestAgentComponents(captureBody: SupportedValues.CaptureBodyOff));
+			agent.ConfigurationReader.CaptureBody.Should().Be(SupportedValues.CaptureBodyOff);
 
-			agent = new ApmAgent(new TestAgentComponents(captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
-			agent.ConfigurationReader.CaptureBody.Should().Be(ConfigConsts.SupportedValues.CaptureBodyAll);
+			agent = new ApmAgent(new TestAgentComponents(captureBody: SupportedValues.CaptureBodyAll));
+			agent.ConfigurationReader.CaptureBody.Should().Be(SupportedValues.CaptureBodyAll);
 
-			agent = new ApmAgent(new TestAgentComponents(captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors));
-			agent.ConfigurationReader.CaptureBody.Should().Be(ConfigConsts.SupportedValues.CaptureBodyErrors);
+			agent = new ApmAgent(new TestAgentComponents(captureBody: SupportedValues.CaptureBodyErrors));
+			agent.ConfigurationReader.CaptureBody.Should().Be(SupportedValues.CaptureBodyErrors);
 
-			agent = new ApmAgent(new TestAgentComponents(captureBody: ConfigConsts.SupportedValues.CaptureBodyTransactions));
-			agent.ConfigurationReader.CaptureBody.Should().Be(ConfigConsts.SupportedValues.CaptureBodyTransactions);
+			agent = new ApmAgent(new TestAgentComponents(captureBody: SupportedValues.CaptureBodyTransactions));
+			agent.ConfigurationReader.CaptureBody.Should().Be(SupportedValues.CaptureBodyTransactions);
 		}
 
 		[Fact]
 		public void CaptureBodyContentTypesConfigTest()
 		{
+			// ReSharper disable once RedundantArgumentDefaultValue
 			var agent = new ApmAgent(new TestAgentComponents(captureBodyContentTypes: DefaultValues.CaptureBodyContentTypes));
-			var expected = new List<string>() { "application/x-www-form-urlencoded*", "text/*", "application/json*", "application/xml*"};
+			var expected = new List<string>() { "application/x-www-form-urlencoded*", "text/*", "application/json*", "application/xml*" };
 			agent.ConfigurationReader.CaptureBodyContentTypes.Should().HaveCount(4);
 			agent.ConfigurationReader.CaptureBodyContentTypes.Should().BeEquivalentTo(expected);
 		}
@@ -176,11 +178,11 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
-
 		public void SetCaptureBodyTest()
 		{
 			//Possible values : "off", "all", "errors", "transactions"
-			foreach (var value in SupportedValues.CaptureBodySupportedValues){
+			foreach (var value in SupportedValues.CaptureBodySupportedValues)
+			{
 				Environment.SetEnvironmentVariable(EnvVarNames.CaptureBody, value);
 				var config = new EnvironmentConfigurationReader();
 				config.CaptureBody.Should().Be(value);
@@ -198,7 +200,8 @@ namespace Elastic.Apm.Tests
 			config.CaptureBodyContentTypes.Should().HaveCount(1);
 			config.CaptureBodyContentTypes[0].Should().Be(contentType);
 
-			Environment.SetEnvironmentVariable(EnvVarNames.CaptureBodyContentTypes, "application/x-www-form-urlencoded*, text/*, application/json*, application/xml*");
+			Environment.SetEnvironmentVariable(EnvVarNames.CaptureBodyContentTypes,
+				"application/x-www-form-urlencoded*, text/*, application/json*, application/xml*");
 			config = new EnvironmentConfigurationReader();
 			config.CaptureBodyContentTypes.Should().HaveCount(4);
 			config.CaptureBodyContentTypes[0].Should().Be("application/x-www-form-urlencoded*");
@@ -345,7 +348,8 @@ namespace Elastic.Apm.Tests
 			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
 			agent.Service.Name.Should().NotBe(serviceName);
-			agent.Service.Name.Should().MatchRegex("^[a-zA-Z0-9 _-]+$")
+			agent.Service.Name.Should()
+				.MatchRegex("^[a-zA-Z0-9 _-]+$")
 				.And.Be("MyService123_");
 		}
 
@@ -490,9 +494,8 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void SpanFramesMinDurationDefaultValuesInSync()
 		{
-			Environment.SetEnvironmentVariable(EnvVarNames.MetricsInterval, DefaultValues.SpanFramesMinDuration);
-			var testLogger = new TestLogger();
-			var config = new EnvironmentConfigurationReader(testLogger);
+			Environment.SetEnvironmentVariable(EnvVarNames.SpanFramesMinDuration, DefaultValues.SpanFramesMinDuration);
+			var config = new EnvironmentConfigurationReader(new NoopLogger());
 			config.SpanFramesMinDurationInMilliseconds.Should().Be(DefaultValues.SpanFramesMinDurationInMilliseconds);
 		}
 
@@ -526,6 +529,67 @@ namespace Elastic.Apm.Tests
 				new ApmAgent(new TestAgentComponents(
 					configurationReader: new TestAgentConfigurationReader(spanFramesMinDurationInMilliseconds: configValue))))
 				agent.ConfigurationReader.SpanFramesMinDurationInMilliseconds.Should().Be(expectedValue);
+		}
+
+		[InlineData("123ms", 123)]
+		[InlineData("976s", 976 * 1000)]
+		[InlineData("2m", 2 * 60 * 1000)]
+		[InlineData("567", 567 * 1000)]
+		[InlineData("0", 0)]
+		[InlineData("0s", 0)]
+		[InlineData("0ms", 0)]
+		[InlineData("-3ms", DefaultValues.FlushIntervalInMilliseconds)]
+		[InlineData("-1", DefaultValues.FlushIntervalInMilliseconds)]
+		[InlineData("dsfkldfs", DefaultValues.FlushIntervalInMilliseconds)]
+		[InlineData("2,32", DefaultValues.FlushIntervalInMilliseconds)]
+		[InlineData("785zz", DefaultValues.FlushIntervalInMilliseconds)]
+		[Theory]
+		public void FlushInterval_tests(string configValue, int expectedValueInMilliseconds)
+		{
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					configurationReader: new TestAgentConfigurationReader(flushInterval: configValue))))
+				agent.ConfigurationReader.FlushInterval.Should().Be(TimeSpan.FromMilliseconds(expectedValueInMilliseconds));
+		}
+
+		[InlineData("1", 1)]
+		[InlineData("23", 23)]
+		[InlineData("654", 654)]
+		[InlineData("0", DefaultValues.MaxQueueEventCount)]
+		[InlineData("-1", DefaultValues.MaxQueueEventCount)]
+		[InlineData("-23", DefaultValues.MaxQueueEventCount)]
+		[InlineData("-654", DefaultValues.MaxQueueEventCount)]
+		[InlineData("0aefjw", DefaultValues.MaxQueueEventCount)]
+		[InlineData("aefjw9", DefaultValues.MaxQueueEventCount)]
+		[InlineData("2,32", DefaultValues.MaxQueueEventCount)]
+		[InlineData("2.32", DefaultValues.MaxQueueEventCount)]
+		[Theory]
+		public void MaxQueueEventCount_tests(string configValue, int expectedValue)
+		{
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					configurationReader: new TestAgentConfigurationReader(maxQueueEventCount: configValue))))
+				agent.ConfigurationReader.MaxQueueEventCount.Should().Be(expectedValue);
+		}
+
+		[InlineData("1", 1)]
+		[InlineData("23", 23)]
+		[InlineData("654", 654)]
+		[InlineData("0", DefaultValues.MaxBatchEventCount)]
+		[InlineData("-1", DefaultValues.MaxBatchEventCount)]
+		[InlineData("-23", DefaultValues.MaxBatchEventCount)]
+		[InlineData("-654", DefaultValues.MaxBatchEventCount)]
+		[InlineData("0aefjw", DefaultValues.MaxBatchEventCount)]
+		[InlineData("aefjw9", DefaultValues.MaxBatchEventCount)]
+		[InlineData("2,32", DefaultValues.MaxBatchEventCount)]
+		[InlineData("2.32", DefaultValues.MaxBatchEventCount)]
+		[Theory]
+		public void MaxBatchEventCount_tests(string configValue, int expectedValue)
+		{
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					configurationReader: new TestAgentConfigurationReader(maxBatchEventCount: configValue))))
+				agent.ConfigurationReader.MaxBatchEventCount.Should().Be(expectedValue);
 		}
 
 		private static double MetricsIntervalTestCommon(string configValue)

@@ -16,6 +16,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 	{
 		internal readonly ReceivedData ReceivedData = new ReceivedData();
 		private readonly string _dbgCurrentTestName;
+		private readonly object _lock = new object();
 
 		internal MockApmServer(IApmLogger logger, string dbgCurrentTestName)
 		{
@@ -88,6 +89,11 @@ namespace Elastic.Apm.Tests.MockApmServer
 			var webHost = CreateWebHostBuilder().Build();
 			Logger.Info()?.Log("About to start: {MockApmServer}", this);
 			webHost.Run();
+		}
+
+		internal Task<TResult> DoUnderLock<TResult>(Func<Task<TResult>> asyncFunc)
+		{
+			lock (_lock) return asyncFunc();
 		}
 
 		internal async Task StopAsync()

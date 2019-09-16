@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -26,15 +28,20 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 		public IntakeV2EventsController(MockApmServer mockApmServer)
 		{
 			_mockApmServer = mockApmServer;
-			_logger = mockApmServer.Logger.Scoped(nameof(IntakeV2EventsController));
+			_logger = mockApmServer.Logger.Scoped(nameof(IntakeV2EventsController) + "#" + RuntimeHelpers.GetHashCode(this).ToString("X"));
 
 			_logger.Debug()?.Log("Constructed with mock APM Server: {MockApmServer}", _mockApmServer);
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> Post()
+		public Task<IActionResult> Post() => _mockApmServer.DoUnderLock(PostImpl);
+
+		private async Task<IActionResult> PostImpl()
 		{
-			_logger.Debug()?.Log("Received request with content length: {ContentLength}", Request.ContentLength);
+			_logger.Debug()?.Log("Received request with content length: {ContentLength}."
+				+ " Current thread: name `{ThreadName}', managed ID: {ThreadManagedId}."
+				, Request.ContentLength
+				, Thread.CurrentThread.Name, Thread.CurrentThread.ManagedThreadId);
 
 			int numberOfObjects;
 
@@ -122,8 +129,8 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 							"\n" + TextUtils.Indentation + "Input line (pretty formatted):\n{FormattedPayloadLine}" +
 							"\n" + TextUtils.Indentation + "Parsed object:\n{Dto}",
 							dtoType, accumulatingList.Count,
-							TextUtils.AddIndentation(JsonUtils.PrettyFormat(line), 2),
-							TextUtils.AddIndentation(dto.ToString(), 2));
+							TextUtils.Indent(JsonUtils.PrettyFormat(line), 2),
+							TextUtils.Indent(dto.ToString(), 2));
 					_mockApmServer.ReceivedData.InvalidPayloadErrors = _mockApmServer.ReceivedData.InvalidPayloadErrors.Add(ex.ToString());
 					return accumulatingList;
 				}
@@ -133,8 +140,8 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 						"\n" + TextUtils.Indentation + "Input line (pretty formatted):\n{FormattedPayloadLine}" +
 						"\n" + TextUtils.Indentation + "Parsed object:\n{Dto}",
 						dtoType, accumulatingList.Count + 1,
-						TextUtils.AddIndentation(JsonUtils.PrettyFormat(line), 2),
-						TextUtils.AddIndentation(dto.ToString(), 2));
+						TextUtils.Indent(JsonUtils.PrettyFormat(line), 2),
+						TextUtils.Indent(dto.ToString(), 2));
 
 				return accumulatingList.Add(dto);
 			}
