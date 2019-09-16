@@ -14,69 +14,48 @@ namespace Elastic.Apm.AspNetFullFramework
 {
 	public class ElasticApmModule : IHttpModule
 	{
-		private static readonly IApmAgent AgentSingleton;
-		private static readonly bool IsCaptureHeadersEnabled;
-		private static readonly IApmLogger Logger;
+		private static bool _isCaptureHeadersEnabled;
+		private static readonly DbgInstanceNameGenerator DbgInstanceNameGenerator = new DbgInstanceNameGenerator();
 
-		static ElasticApmModule()
-		{
-			var configReader = new FullFrameworkConfigReader(ConsoleLogger.Instance);
-			var agentComponents = new AgentComponents(configurationReader: configReader);
-			// Logger should be set ASAP because other initialization steps depend on it
-			Logger = agentComponents.Logger.Scoped(nameof(ElasticApmModule));
+		private static readonly LazyContextualInit InitOnceHelper = new LazyContextualInit();
 
-			Logger.Debug()
-				?.Log($"Entered {nameof(ElasticApmModule)} static ctor" +
-					$"; .NET Runtime description: {PlatformDetection.DotNetRuntimeDescription}" +
-					$"; IIS: {IisVersion}");
-
-			// FindAspNetVersion uses Logger
-			var aspNetVersion = FindAspNetVersion();
-			Logger.Debug()?.Log($"ASP.NET version: {aspNetVersion}");
-
-			SetServiceInformation(agentComponents.Service, aspNetVersion);
-
-			Agent.Setup(agentComponents);
-			AgentSingleton = Agent.Instance;
-
-			IsCaptureHeadersEnabled = AgentSingleton.ConfigurationReader.CaptureHeaders;
-
-			AgentSingleton.Subscribe(new HttpDiagnosticsSubscriber());
-		}
+		// ReSharper disable once ImpureMethodCallOnReadonlyValueField
+		public ElasticApmModule() => _dbgInstanceName = DbgInstanceNameGenerator.Generate($"{nameof(ElasticApmModule)}.#");
 
 		// We can store current transaction because each IHttpModule is used for at most one request at a time
 		// For example see https://bytes.com/topic/asp-net/answers/324305-httpmodule-multithreading-request-response-corelation
 		private ITransaction _currentTransaction;
 
 		private HttpApplication _httpApp;
-		private static Version IisVersion => HttpRuntime.IISVersion;
 
-		private static void SetServiceInformation(Service service, string aspNetVersion)
-		{
-			service.Framework = new Framework { Name = "ASP.NET", Version = aspNetVersion };
-			service.Language = new Language { Name = "C#" }; //TODO
-		}
+		private IApmLogger _logger;
+
+		private readonly string _dbgInstanceName;
+		private static Version IisVersion => HttpRuntime.IISVersion;
 
 		public void Init(HttpApplication httpApp)
 		{
+			var isInitedByThisCall = InitOnceForAllInstancesUnderLock(_dbgInstanceName);
+
+			_logger = Agent.Instance.Logger.Scoped(_dbgInstanceName);
+
+			if (isInitedByThisCall)
+			{
+				_logger.Debug()
+					?.Log("Initialized Agent singleton. .NET runtime: {DotNetRuntimeDescription}; IIS: {IisVersion}",
+						PlatformDetection.DotNetRuntimeDescription, IisVersion);
+			}
+
 			_httpApp = httpApp;
 			_httpApp.BeginRequest += OnBeginRequest;
 			_httpApp.EndRequest += OnEndRequest;
 		}
 
-		public void Dispose()
-		{
-			if (_httpApp != null)
-			{
-				_httpApp.BeginRequest -= OnBeginRequest;
-				_httpApp.EndRequest -= OnEndRequest;
-				_httpApp = null;
-			}
-		}
+		public void Dispose() => _httpApp = null;
 
 		private void OnBeginRequest(object eventSender, EventArgs eventArgs)
 		{
-			Logger.Debug()?.Log("Incoming request processing started - starting trace...");
+			_logger.Debug()?.Log("Incoming request processing started - starting trace...");
 
 			try
 			{
@@ -84,13 +63,13 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (Exception ex)
 			{
-				Logger.Error()?.LogException(ex, "Processing BeginRequest event failed");
+				_logger.Error()?.LogException(ex, "Processing BeginRequest event failed");
 			}
 		}
 
 		private void OnEndRequest(object eventSender, EventArgs eventArgs)
 		{
-			Logger.Debug()?.Log("Incoming request processing finished - ending trace...");
+			_logger.Debug()?.Log("Incoming request processing finished - ending trace...");
 
 			try
 			{
@@ -98,7 +77,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (Exception ex)
 			{
-				Logger.Error()?.LogException(ex, "Processing EndRequest event failed");
+				_logger.Error()?.LogException(ex, "Processing EndRequest event failed");
 			}
 		}
 
@@ -110,30 +89,30 @@ namespace Elastic.Apm.AspNetFullFramework
 			var distributedTracingData = ExtractIncomingDistributedTracingData(httpRequest);
 			if (distributedTracingData != null)
 			{
-				Logger.Debug()
+				_logger.Debug()
 					?.Log(
 						"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData} - continuing trace",
 						TraceParent.TraceParentHeaderName, distributedTracingData);
 
-				_currentTransaction = AgentSingleton.Tracer.StartTransaction($"{httpRequest.HttpMethod} {httpRequest.Path}", ApiConstants.TypeRequest,
+				_currentTransaction = Agent.Instance.Tracer.StartTransaction($"{httpRequest.HttpMethod} {httpRequest.Path}", ApiConstants.TypeRequest,
 					distributedTracingData);
 			}
 			else
 			{
-				Logger.Debug()?.Log("Incoming request doesn't have valid incoming distributed tracing data - starting trace with new trace id.");
+				_logger.Debug()?.Log("Incoming request doesn't have valid incoming distributed tracing data - starting trace with new trace ID");
 				_currentTransaction =
-					AgentSingleton.Tracer.StartTransaction($"{httpRequest.HttpMethod} {httpRequest.Path}", ApiConstants.TypeRequest);
+					Agent.Instance.Tracer.StartTransaction($"{httpRequest.HttpMethod} {httpRequest.Path}", ApiConstants.TypeRequest);
 			}
 
 			if (_currentTransaction.IsSampled) FillSampledTransactionContextRequest(httpRequest, _currentTransaction);
 		}
 
-		private static DistributedTracingData ExtractIncomingDistributedTracingData(HttpRequest httpRequest)
+		private DistributedTracingData ExtractIncomingDistributedTracingData(HttpRequest httpRequest)
 		{
 			var headerValue = httpRequest.Headers.Get(TraceParent.TraceParentHeaderName);
 			if (headerValue == null)
 			{
-				Logger.Debug()
+				_logger.Debug()
 					?.Log("Incoming request doesn't have {TraceParentHeaderName} header - " +
 						"it means request doesn't have incoming distributed tracing data", TraceParent.TraceParentHeaderName);
 				return null;
@@ -172,7 +151,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				Socket = new Socket { Encrypted = httpRequest.IsSecureConnection, RemoteAddress = httpRequest.UserHostAddress },
 				HttpVersion = GetHttpVersion(httpRequest.ServerVariables["SERVER_PROTOCOL"]),
-				Headers = IsCaptureHeadersEnabled ? ConvertHeaders(httpRequest.Headers) : null
+				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(httpRequest.Headers) : null
 			};
 		}
 
@@ -208,6 +187,8 @@ namespace Elastic.Apm.AspNetFullFramework
 			var httpCtx = httpApp.Context;
 			var httpResponse = httpCtx.Response;
 
+			if (_currentTransaction == null) return;
+
 			_currentTransaction.Result = Transaction.StatusCodeToResult("HTTP", httpResponse.StatusCode);
 
 			if (_currentTransaction.IsSampled)
@@ -216,7 +197,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				FillSampledTransactionContextUser(httpCtx, _currentTransaction);
 			}
 
-			_currentTransaction?.End();
+			_currentTransaction.End();
 			_currentTransaction = null;
 		}
 
@@ -225,7 +206,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				Finished = true,
 				StatusCode = httpResponse.StatusCode,
-				Headers = IsCaptureHeadersEnabled ? ConvertHeaders(httpResponse.Headers) : null
+				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(httpResponse.Headers) : null
 			};
 
 		private void FillSampledTransactionContextUser(HttpContext httpCtx, ITransaction transaction)
@@ -235,12 +216,12 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			transaction.Context.User = new User { UserName = userIdentity.Name };
 
-			Logger.Debug()?.Log("Captured user - {CapturedUser}", transaction.Context.User);
+			_logger.Debug()?.Log("Captured user - {CapturedUser}", transaction.Context.User);
 		}
 
-		private static string FindAspNetVersion()
+		private static string FindAspNetVersion(IApmLogger logger)
 		{
-			string result;
+			var aspNetVersion = "N/A";
 			try
 			{
 				// We would like to report the same ASP.NET version as the one printed at the bottom of the error page
@@ -248,19 +229,76 @@ namespace Elastic.Apm.AspNetFullFramework
 				// It is stored in VersionInfo.EngineVersion
 				// (see https://github.com/microsoft/referencesource/blob/3b1eaf5203992df69de44c783a3eda37d3d4cd10/System.Web/Util/versioninfo.cs#L91)
 				// which is unfortunately an internal property of an internal class in System.Web assembly so we use reflection to get it
-				var versionInfoType = typeof(HttpRuntime).Assembly.GetType("System.Web.Util.VersionInfo");
-				var engineVersionProperty = versionInfoType.GetProperty("EngineVersion",
+				const string versionInfoTypeName = "System.Web.Util.VersionInfo";
+				var versionInfoType = typeof(HttpRuntime).Assembly.GetType(versionInfoTypeName);
+				if (versionInfoType == null)
+				{
+					logger.Error()
+						?.Log("Type {TypeName} was not found in assembly {AssemblyFullName} - {AspNetVersion} will be used as ASP.NET version",
+							versionInfoTypeName, typeof(HttpRuntime).Assembly.FullName, aspNetVersion);
+					return aspNetVersion;
+				}
+
+				const string engineVersionPropertyName = "EngineVersion";
+				var engineVersionProperty = versionInfoType.GetProperty(engineVersionPropertyName,
 					BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-				// ReSharper disable once PossibleNullReferenceException
-				result = (string)engineVersionProperty.GetValue(null);
+				if (engineVersionProperty == null)
+				{
+					logger.Error()
+						?.Log("Property {PropertyName} was not found in type {TypeName} - {AspNetVersion} will be used as ASP.NET version",
+							engineVersionPropertyName, versionInfoType.FullName, aspNetVersion);
+					return aspNetVersion;
+				}
+
+				var engineVersionPropertyValue = (string)engineVersionProperty.GetValue(null);
+				if (engineVersionPropertyValue == null)
+				{
+					logger.Error()
+						?.Log("Property {PropertyName} (in type {TypeName}) is of type {TypeName} and not a string as expected" +
+							" - {AspNetVersion} will be used as ASP.NET version",
+							engineVersionPropertyName, versionInfoType.FullName, engineVersionPropertyName.GetType().FullName, aspNetVersion);
+					return aspNetVersion;
+				}
+
+				aspNetVersion = engineVersionPropertyValue;
 			}
 			catch (Exception ex)
 			{
-				result = "N/A";
-				Logger.Error()?.LogException(ex, $"Failed to obtain ASP.NET version - {result} will be used");
+				logger.Error()?.LogException(ex, "Failed to obtain ASP.NET version - {AspNetVersion} will be used as ASP.NET version", aspNetVersion);
 			}
 
-			return result;
+			logger.Debug()?.Log("Found ASP.NET version: {AspNetVersion}", aspNetVersion);
+			return aspNetVersion;
 		}
+
+		private static bool InitOnceForAllInstancesUnderLock(string dbgInstanceName)
+		{
+			var agentComponents = BuildAgentComponents(dbgInstanceName);
+
+			return InitOnceHelper.IfNotInited?.Init(() =>
+			{
+				Agent.Setup(agentComponents);
+
+				_isCaptureHeadersEnabled = Agent.Instance.ConfigurationReader.CaptureHeaders;
+
+				Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
+			}) ?? false;
+		}
+
+		private static AgentComponents BuildAgentComponents(string dbgInstanceName)
+		{
+			var rootLogger = AgentDependencies.Logger ?? ConsoleLogger.Instance;
+			var scopedLogger = rootLogger.Scoped(dbgInstanceName);
+
+			var agentComponents = new AgentComponents(rootLogger, new FullFrameworkConfigReader(scopedLogger));
+
+			var aspNetVersion = FindAspNetVersion(scopedLogger);
+
+			agentComponents.Service.Framework = new Framework { Name = "ASP.NET", Version = aspNetVersion };
+			agentComponents.Service.Language = new Language { Name = "C#" }; //TODO
+
+			return agentComponents;
+		}
+
 	}
 }

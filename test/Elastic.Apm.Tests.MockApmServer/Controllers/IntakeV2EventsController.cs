@@ -12,6 +12,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Xunit.Sdk;
+
 // ReSharper disable UnusedAutoPropertyAccessor.Local
 
 namespace Elastic.Apm.Tests.MockApmServer.Controllers
@@ -125,23 +126,22 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 				catch (XunitException ex)
 				{
 					_logger.Error()
-						?.LogException(ex, "{DtoType} #{DtoSeqNum} was parsed successfully but it didn't pass semantic verification. " +
-							"\n" + TextUtils.Indentation + "Input line (pretty formatted):\n{FormattedPayloadLine}" +
-							"\n" + TextUtils.Indentation + "Parsed object:\n{Dto}",
-							dtoType, accumulatingList.Count,
-							TextUtils.Indent(JsonUtils.PrettyFormat(line), 2),
-							TextUtils.Indent(dto.ToString(), 2));
+						?.LogException(ex,
+							"{EventDtoType} #{EventDtoSeqNumber} was parsed successfully but it didn't pass semantic verification.\n" +
+							TextUtils.Indent("Input line (pretty formatted):\n") + "{EventDtoJson}\n" +
+							TextUtils.Indent("Parsed object:\n") + "{EventDtoParsed}",
+							dtoType, accumulatingList.Count + 1,
+							TextUtils.Indent(JsonUtils.PrettyFormat(line), 2), TextUtils.Indent(dto.ToString(), 2));
 					_mockApmServer.ReceivedData.InvalidPayloadErrors = _mockApmServer.ReceivedData.InvalidPayloadErrors.Add(ex.ToString());
 					return accumulatingList;
 				}
 
 				_logger.Debug()
-					?.Log("Successfully parsed and verified {DtoType} #{DtoSeqNum}." +
-						"\n" + TextUtils.Indentation + "Input line (pretty formatted):\n{FormattedPayloadLine}" +
-						"\n" + TextUtils.Indentation + "Parsed object:\n{Dto}",
+					?.Log("Successfully parsed and verified {EventDtoType} #{EventDtoSeqNumber}.\n" +
+						TextUtils.Indent("Input line (pretty formatted):\n") + "{EventDtoJson}\n" +
+						TextUtils.Indent("Parsed object:\n") + "{EventDtoParsed}",
 						dtoType, accumulatingList.Count + 1,
-						TextUtils.Indent(JsonUtils.PrettyFormat(line), 2),
-						TextUtils.Indent(dto.ToString(), 2));
+						TextUtils.Indent(JsonUtils.PrettyFormat(line), 2), TextUtils.Indent(dto.ToString(), 2));
 
 				return accumulatingList.Add(dto);
 			}

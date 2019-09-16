@@ -7,17 +7,17 @@ using Xunit.Abstractions;
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	[Collection("AspNetFullFrameworkTests")]
-	public class TransactionsAndSpansTests : TestsBase
+	public class TestWithDefaultSettings : TestsBase
 	{
-		public TransactionsAndSpansTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
+		public TestWithDefaultSettings(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
 
 		[AspNetFullFrameworkTheory]
 		[MemberData(nameof(AllSampleAppUrlPaths))]
-		public async Task WithDefaultSettings(SampleAppUrlPathData sampleAppUrlPathData)
+		public async Task TestVariousPages(SampleAppUrlPathData sampleAppUrlPathData)
 		{
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.StatusCode);
 
-			VerifyDataReceivedFromAgent(sampleAppUrlPathData);
+			await VerifyDataReceivedFromAgent(sampleAppUrlPathData);
 		}
 
 		[AspNetFullFrameworkTheory]
@@ -27,13 +27,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		[InlineData("")] // empty
 		[InlineData("key_1=&key_2=value_2")] // key without value
 		[InlineData("=value_1")] // value without key
-		[InlineData("?")] // key "?" without value
+		[InlineData("?")]
+		// key "?" without value
 		public async Task QueryStringTests(string queryString)
 		{
 			var homePageAndQueryString = SampleAppUrlPaths.HomePage.Clone(SampleAppUrlPaths.HomePage.RelativeUrlPath + $"?{queryString}");
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(homePageAndQueryString.RelativeUrlPath, homePageAndQueryString.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(homePageAndQueryString.RelativeUrlPath, homePageAndQueryString.StatusCode);
 
-			VerifyDataReceivedFromAgent(receivedData =>
+			await VerifyDataReceivedFromAgent(receivedData =>
 			{
 				TryVerifyDataReceivedFromAgent(homePageAndQueryString, receivedData);
 

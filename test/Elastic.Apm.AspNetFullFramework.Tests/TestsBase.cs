@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using AspNetFullFrameworkSampleApp;
 using AspNetFullFrameworkSampleApp.Controllers;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
@@ -32,56 +36,67 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 
 		protected readonly AgentConfiguration AgentConfig = new AgentConfiguration();
-
-
 		protected readonly bool SampleAppShouldHaveAccessToPerfCounters;
-
 		private readonly Dictionary<string, string> _envVarsToSetForSampleAppPool;
 		private readonly IisAdministration _iisAdministration;
-
 		private readonly IApmLogger _logger;
 		private readonly MockApmServer _mockApmServer;
 		private readonly int _mockApmServerPort;
+		private readonly bool _sampleAppLogEnabled;
+		private readonly string _sampleAppLogFilePath;
 		private readonly bool _startMockApmServer;
 		private readonly DateTime _testStartTime = DateTime.UtcNow;
+
+		private readonly ITestOutputHelper _xUnitOutputHelper;
 
 		protected TestsBase(ITestOutputHelper xUnitOutputHelper,
 			bool startMockApmServer = true,
 			IDictionary<string, string> envVarsToSetForSampleAppPool = null,
-			bool sampleAppShouldHaveAccessToPerfCounters = false
+			bool sampleAppShouldHaveAccessToPerfCounters = false,
+			bool sampleAppLogEnabled = true
 		)
 		{
-			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(TestsBase));
-			_mockApmServer = new MockApmServer(_logger, GetCurrentTestName(xUnitOutputHelper));
+			_xUnitOutputHelper = xUnitOutputHelper;
+			_logger = new ToAllSinksLogger(_xUnitOutputHelper).Scoped(nameof(TestsBase));
+
+			_logger.Info()?.Log("Starting test: {FullUnitTestName}", GetCurrentTestDisplayName(_xUnitOutputHelper));
+
+			_mockApmServer = new MockApmServer(_logger, GetCurrentTestDisplayName(_xUnitOutputHelper));
 			_iisAdministration = new IisAdministration(_logger);
 			_startMockApmServer = startMockApmServer;
 			SampleAppShouldHaveAccessToPerfCounters = sampleAppShouldHaveAccessToPerfCounters;
 
 			_mockApmServerPort = _startMockApmServer ? _mockApmServer.FindAvailablePortToListen() : ConfigConsts.DefaultValues.ApmServerPort;
 
+			_sampleAppLogEnabled = sampleAppLogEnabled;
+			_sampleAppLogFilePath = GetSampleAppLogFilePath();
+
 			_envVarsToSetForSampleAppPool = envVarsToSetForSampleAppPool == null
 				? new Dictionary<string, string>()
 				: new Dictionary<string, string>(envVarsToSetForSampleAppPool);
-			_envVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.ServerUrls, $"http://localhost:{_mockApmServerPort}");
+			_envVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.ServerUrls, BuildApmServerUrl(_mockApmServerPort));
+
+			if (_sampleAppLogEnabled) _envVarsToSetForSampleAppPool.TryAdd(LoggingConfig.LogFileEnvVarName, _sampleAppLogFilePath);
+			
 			_envVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.FlushInterval, "10ms");
 		}
 
 		private static class DataSentByAgentVerificationConsts
 		{
+			internal const int LogMessageAfterNInitialAttempts = 30; // i.e., log the first message after 3 seconds (if it's still failing)
+			internal const int LogMessageEveryNAttempts = 10; // i.e., log message every second (if it's still failing)
 			internal const int MaxNumberOfAttemptsToVerify = 100;
 			internal const int WaitBetweenVerifyAttemptsMs = 100;
 		}
 
 		internal static class SampleAppUrlPaths
 		{
+			internal static readonly SampleAppUrlPathData AboutPage =
+				new SampleAppUrlPathData(HomeController.AboutPageRelativePath, 200);
+
 			/// Contact page processing does HTTP Get for About page (additional transaction) and https://elastic.co/ - so 2 spans
 			internal static readonly SampleAppUrlPathData ContactPage =
 				new SampleAppUrlPathData(HomeController.ContactPageRelativePath, 200, /* transactionsCount: */ 2, /* spansCount: */ 2);
-
-			/// errorsCount for ThrowsNameCouldNotBeResolvedPage is 0 because we don't automatically capture exceptions
-			/// that escaped from transaction as errors (yet)
-			internal static readonly SampleAppUrlPathData ThrowsInvalidOperationPage =
-				new SampleAppUrlPathData(HomeController.ThrowsInvalidOperationPageRelativePath, 500);
 
 			internal static readonly SampleAppUrlPathData CustomSpanThrowsExceptionPage =
 				new SampleAppUrlPathData(HomeController.CustomSpanThrowsPageRelativePath, 500, spansCount: 1, errorsCount: 1);
@@ -115,9 +130,15 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData ReturnBadRequestPage =
 				new SampleAppUrlPathData(HomeController.ReturnBadRequestPageRelativePath, (int)HttpStatusCode.BadRequest);
 
-			internal static readonly SampleAppUrlPathData AboutPage =
-				new SampleAppUrlPathData(HomeController.AboutPageRelativePath, 200);
+			/// errorsCount for ThrowsNameCouldNotBeResolvedPage is 0 because we don't automatically capture exceptions
+			/// that escaped from Full Framework ASP.NET transactions as errors (yet)
+			internal static readonly SampleAppUrlPathData ThrowsInvalidOperationPage =
+				new SampleAppUrlPathData(HomeController.ThrowsInvalidOperationPageRelativePath, 500);
 		}
+
+		private TimedEvent? _sampleAppClientCallTiming;
+
+		protected IApmLogger ScopeBaseLogger(string scope) => _logger.Scoped(scope);
 
 		public Task InitializeAsync()
 		{
@@ -147,11 +168,71 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			}
 
 			if (_startMockApmServer) await _mockApmServer.StopAsync();
+
+			_logger.Info()?.Log("Finished test: {FullUnitTestName}", GetCurrentTestDisplayName(_xUnitOutputHelper));
 		}
 
-		protected async Task<HttpResponseMessage> SendGetRequestToSampleAppAndVerifyResponseStatusCode(string relativeUrlPath, int expectedStatusCode)
+		private string GetSampleAppLogFilePath()
 		{
-			var httpClient = new HttpClient();
+			var sampleAppLogFilePath = Environment.GetEnvironmentVariable(LoggingConfig.LogFileEnvVarName);
+			if (sampleAppLogFilePath != null)
+			{
+				_logger.Info()
+					?.Log("Environment variable `{SampleAppLogFileEnvVarName}' is set to `{SampleAppLogFilePath}'"
+						+ " - using it to write/read sample application's and agent's log", LoggingConfig.LogFileEnvVarName, sampleAppLogFilePath);
+				return sampleAppLogFilePath;
+			}
+
+			sampleAppLogFilePath = Path.Combine(Path.GetTempPath(), $"{Consts.SampleApp.AppName}.log");
+			_logger.Info()
+				?.Log("Environment variable `{SampleAppLogFileEnvVarName}' is not set"
+					+ " - using `{SampleAppLogFilePath}' to write/read sample application's and agent's log",
+					LoggingConfig.LogFileEnvVarName, sampleAppLogFilePath);
+			return sampleAppLogFilePath;
+		}
+
+		private static string BuildApmServerUrl(int apmServerPort) => $"http://localhost:{apmServerPort}/";
+
+		protected async Task<SampleAppResponse> SendGetRequestToSampleAppAndVerifyResponse(string relativeUrlPath, int expectedStatusCode,
+			bool timeHttpCall = true
+		)
+		{
+			var startTime = DateTime.UtcNow;
+			if (timeHttpCall)
+			{
+				_logger.Debug()
+					?.Log("HTTP call to sample application started at {Time} (as timestamp: {Timestamp})",
+						startTime, TimeUtils.ToTimestamp(startTime));
+			}
+			try
+			{
+				using (var httpClient = new HttpClient())
+				{
+					var response = await SendGetRequestToSampleAppAndVerifyResponseImpl(httpClient, relativeUrlPath, expectedStatusCode);
+					return new SampleAppResponse(response.Headers, await response.Content.ReadAsStringAsync());
+				}
+			}
+			finally
+			{
+				if (timeHttpCall)
+				{
+					_sampleAppClientCallTiming.Should().BeNull();
+					var endTime = DateTime.UtcNow;
+					_logger.Debug()
+						?.Log("HTTP call to sample application ended at {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
+							endTime, TimeUtils.ToTimestamp(endTime),
+							TimeUtils.DurationBetweenTimestamps(TimeUtils.ToTimestamp(startTime), TimeUtils.ToTimestamp(endTime)));
+					_sampleAppClientCallTiming = new TimedEvent(startTime, endTime);
+				}
+			}
+		}
+
+		private async Task<HttpResponseMessage> SendGetRequestToSampleAppAndVerifyResponseImpl(
+			HttpClient httpClient,
+			string relativeUrlPath,
+			int expectedStatusCode
+		)
+		{
 			var url = Consts.SampleApp.RootUrl + "/" + relativeUrlPath;
 			_logger.Debug()?.Log("Sending request with URL: {url} and expected status code: {HttpStatusCode}...", url, expectedStatusCode);
 			var response = await httpClient.GetAsync(url);
@@ -169,12 +250,37 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				throw;
 			}
 
+			var processIdInResponse = response.Headers.GetValues(AspNetFullFrameworkSampleApp.Consts.ProcessIdResponseHeaderName);
+			_logger.Debug()
+				?.Log("{ProcessIdHeaderName} in response is {ProcessIdHeaderValue}",
+					AspNetFullFrameworkSampleApp.Consts.ProcessIdResponseHeaderName, processIdInResponse);
+
+			var apmServerUrlsInResponse =
+				response.Headers?.GetValues(AspNetFullFrameworkSampleApp.Consts.ElasticApmServerUrlsResponseHeaderName).ToList();
+			try
+			{
+				apmServerUrlsInResponse.Should().HaveCount(1);
+				apmServerUrlsInResponse.First().Should().Be(BuildApmServerUrl(_mockApmServerPort));
+			}
+			catch (XunitException ex)
+			{
+				_logger.Error()
+					?.LogException(ex, "Sample application's APM-server-URLs configuration setting ({ActualApmServerUrl})" +
+						" is different from expected ({ExpectedApmServerUrl})",
+						string.Join(", ", apmServerUrlsInResponse), BuildApmServerUrl(_mockApmServerPort));
+
+				await PostTestFailureDiagnostics();
+
+				throw;
+			}
+
 			return response;
 		}
 
-		protected void VerifyDataReceivedFromAgent(Action<ReceivedData> verifyAction)
+		protected async Task VerifyDataReceivedFromAgent(Action<ReceivedData> verifyAction)
 		{
 			var attemptNumber = 0;
+			var timerSinceStart = Stopwatch.StartNew();
 			while (true)
 			{
 				++attemptNumber;
@@ -192,27 +298,52 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				try
 				{
 					verifyAction(_mockApmServer.ReceivedData);
+					timerSinceStart.Stop();
 					_logger.Debug()
-						?.Log("Data received from agent passed verification. Attempt #{AttemptNumber} out of {MaxNumberOfAttempts}",
+						?.Log("Data received from agent passed verification." +
+							" Time elapsed: {VerificationTimeSeconds}s." +
+							" Attempt #{AttemptNumber} out of {MaxNumberOfAttempts}",
+							timerSinceStart.Elapsed.TotalSeconds,
 							attemptNumber, DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify);
+					LogSampleAppLogFileContent();
+					await LogSampleAppDiagnosticsPage();
 					return;
 				}
 				catch (XunitException ex)
 				{
-					_logger.Debug()
-						?.LogException(ex,
-							"Data received from agent did NOT pass verification. Attempt #{AttemptNumber} out of {MaxNumberOfAttempts}",
-							attemptNumber, DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify);
+					var logOnThisAttempt =
+						attemptNumber >= DataSentByAgentVerificationConsts.LogMessageAfterNInitialAttempts &&
+						attemptNumber % DataSentByAgentVerificationConsts.LogMessageEveryNAttempts == 0;
+
+					if (logOnThisAttempt)
+					{
+						_logger.Warning()
+							?.LogException(ex,
+								"Data received from agent did NOT pass verification." +
+								" Time elapsed: {VerificationTimeSeconds}s." +
+								" Attempt #{AttemptNumber} out of {MaxNumberOfAttempts}" +
+								" This message is printed only every {LogMessageEveryNAttempts} attempts",
+								timerSinceStart.Elapsed.TotalSeconds,
+								attemptNumber, DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify,
+								DataSentByAgentVerificationConsts.LogMessageEveryNAttempts);
+					}
 
 					if (attemptNumber == DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify)
 					{
 						_logger.Error()?.LogException(ex, "Reached max number of attempts to verify payload - Rethrowing the last exception...");
-						AnalyzePotentialIssues();
+						await PostTestFailureDiagnostics();
 						throw;
 					}
 
-					_logger.Debug()
-						?.Log("Waiting {WaitTimeMs}ms before the next attempt...", DataSentByAgentVerificationConsts.WaitBetweenVerifyAttemptsMs);
+					if (logOnThisAttempt)
+					{
+						_logger.Debug()
+							?.Log("Waiting {WaitBetweenVerifyAttemptsMs}ms before the next attempt..." +
+								" This message is printed only every {LogMessageEveryNAttempts} attempts",
+								DataSentByAgentVerificationConsts.WaitBetweenVerifyAttemptsMs,
+								DataSentByAgentVerificationConsts.LogMessageEveryNAttempts);
+					}
+
 					Thread.Sleep(DataSentByAgentVerificationConsts.WaitBetweenVerifyAttemptsMs);
 				}
 				catch (Exception ex)
@@ -229,7 +360,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public static SampleAppUrlPathData RandomSampleAppUrlPath() =>
 			SampleAppUrlPaths.AllPaths[RandomGenerator.GetInstance().Next(0, SampleAppUrlPaths.AllPaths.Count)];
 
-		private static string GetCurrentTestName(ITestOutputHelper xUnitOutputHelper)
+		private static string GetCurrentTestDisplayName(ITestOutputHelper xUnitOutputHelper)
 		{
 			var helper = (TestOutputHelper)xUnitOutputHelper;
 
@@ -237,12 +368,54 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var test = (ITest)helper.GetType()
 				.GetField("test", BindingFlags.NonPublic | BindingFlags.Instance)
 				.GetValue(helper);
-
-			return test.TestCase.TestMethod.Method.Name;
+			return test.DisplayName;
 		}
 
-		private void AnalyzePotentialIssues()
+		private void LogSampleAppLogFileContent()
 		{
+			if (!_sampleAppLogEnabled)
+			{
+				_logger.Info()?.Log("Sample application log is disabled");
+				return;
+			}
+
+			string sampleAppLogFileContent;
+			try
+			{
+				sampleAppLogFileContent = File.ReadAllText(_sampleAppLogFilePath);
+			}
+			catch (Exception ex)
+			{
+				_logger.Info()
+					?.LogException(ex, "Exception thrown while trying to read sample application log file (`{SampleAppLogFilePath}')",
+						_sampleAppLogFilePath);
+				return;
+			}
+
+			_logger.Info()?.Log("Sample application log:\n{SampleAppLogFileContent}", TextUtils.Indent(sampleAppLogFileContent));
+		}
+
+		private async Task LogSampleAppDiagnosticsPage()
+		{
+			var httpClient = new HttpClient();
+			const string url = Consts.SampleApp.RootUrl + "/" + DiagnosticsController.DiagnosticsPageRelativePath;
+			_logger.Debug()?.Log("Getting content of sample application diagnostics page ({url})...", url);
+			var response = await httpClient.GetAsync(url);
+			_logger.Debug()
+				?.Log("Received sample application's diagnostics page. Status code: {HttpStatusCode} ({HttpStatusCodeEnum})",
+					(int)response.StatusCode, response.StatusCode);
+
+			_logger.Info()
+				?.Log("Sample application's diagnostics page content:\n{DiagnosticsPageContent}",
+					TextUtils.Indent(await response.Content.ReadAsStringAsync()));
+		}
+
+		private async Task PostTestFailureDiagnostics()
+		{
+			_iisAdministration.LogIisApplicationHostConfig();
+			LogSampleAppLogFileContent();
+			await LogSampleAppDiagnosticsPage();
+
 			_logger.Debug()
 				?.Log("Analyzing potential issues... _mockApmServer.ReceivedData: " +
 					"#transactions: {NumberOfTransactions}, #spans: {NumberOfSpans}, #errors: {NumberOfErrors}, #metric sets: {NumberOfMetricSets}",
@@ -274,8 +447,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			}
 		}
 
-		protected void VerifyDataReceivedFromAgent(SampleAppUrlPathData sampleAppUrlPathData) =>
-			VerifyDataReceivedFromAgent(receivedData => { TryVerifyDataReceivedFromAgent(sampleAppUrlPathData, receivedData); });
+		protected async Task VerifyDataReceivedFromAgent(SampleAppUrlPathData sampleAppUrlPathData) =>
+			await VerifyDataReceivedFromAgent(receivedData => { TryVerifyDataReceivedFromAgent(sampleAppUrlPathData, receivedData); });
 
 		protected void TryVerifyDataReceivedFromAgent(SampleAppUrlPathData sampleAppUrlPathData, ReceivedData receivedData)
 		{
@@ -368,6 +541,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		private void FullFwAssertValid(ErrorDto error)
 		{
+			FullFwAssertValid((ITimestampedDto)error);
 			error.Transaction.AssertValid();
 			if (error.Context != null) FullFwAssertValid(error.Context, error);
 			error.Culprit.NonEmptyAssertValid();
@@ -383,6 +557,21 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			TransactionResultFullFwAssertValid(transaction.Result);
 			transaction.Type.Should().Be(ApiConstants.TypeRequest);
 			FullFwAssertValid(transaction.SpanCount);
+			FullFwAssertValid((ITimedDto)transaction);
+		}
+
+		private void FullFwAssertValid(ITimestampedDto timestampedDto)
+		{
+			timestampedDto.Should().NotBeNull();
+
+			if (_sampleAppClientCallTiming != null) timestampedDto.ShouldOccurBetween(_sampleAppClientCallTiming);
+		}
+
+		private void FullFwAssertValid(ITimedDto timedDto)
+		{
+			FullFwAssertValid((ITimestampedDto)timedDto);
+
+			if (_sampleAppClientCallTiming != null) timedDto.ShouldOccurBetween(_sampleAppClientCallTiming);
 		}
 
 		private void FullFwAssertValid(SpanCountDto spanCount)
@@ -426,6 +615,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			span.Should().NotBeNull();
 
+			FullFwAssertValid((ITimedDto)span);
 			FullFwAssertValid(span.StackTrace);
 		}
 
@@ -492,6 +682,18 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				response.Headers.Should().BeNull();
 
 			response.Finished.Should().BeTrue();
+		}
+
+		protected struct SampleAppResponse
+		{
+			internal SampleAppResponse(HttpResponseHeaders headers, string content)
+			{
+				Headers = headers;
+				Content = content;
+			}
+
+			internal readonly HttpResponseHeaders Headers;
+			internal string Content;
 		}
 
 		protected class AgentConfiguration

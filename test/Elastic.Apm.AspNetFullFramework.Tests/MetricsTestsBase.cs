@@ -21,12 +21,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			// Send any request to the sample application to make sure it's running
 			var sampleAppUrlPathData = RandomSampleAppUrlPath();
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.RelativeUrlPath,
+				sampleAppUrlPathData.StatusCode, /* timeHttpCall: */ false);
 
 			// Wait enough time to give agent a chance to gather all the metrics
 			await Task.Delay(2 * MetricsIntervalSeconds * 1000);
 
-			VerifyDataReceivedFromAgent(receivedData =>
+			await VerifyDataReceivedFromAgent(receivedData =>
 			{
 				receivedData.Metrics.Should().NotBeEmpty();
 				var samplesCountPerType = new Dictionary<string, int>();

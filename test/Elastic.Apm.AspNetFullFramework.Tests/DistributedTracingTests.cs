@@ -25,9 +25,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var rootTxData = SampleAppUrlPaths.ContactPage;
 			var childTxData = SampleAppUrlPaths.AboutPage;
 
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(rootTxData.RelativeUrlPath, rootTxData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(rootTxData.RelativeUrlPath, rootTxData.StatusCode);
 
-			VerifyDataReceivedFromAgent(receivedData =>
+			await VerifyDataReceivedFromAgent(receivedData =>
 			{
 				TryVerifyDataReceivedFromAgent(rootTxData, receivedData);
 
@@ -55,9 +55,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				spansCount: SampleAppUrlPaths.ContactPage.SpansCount + 1);
 			var childTxData = SampleAppUrlPaths.AboutPage.Clone($"{SampleAppUrlPaths.AboutPage.RelativeUrlPath}{queryString}");
 
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(rootTxData.RelativeUrlPath, rootTxData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(rootTxData.RelativeUrlPath, rootTxData.StatusCode);
 
-			VerifyDataReceivedFromAgent(receivedData =>
+			await VerifyDataReceivedFromAgent(receivedData =>
 			{
 				TryVerifyDataReceivedFromAgent(rootTxData, receivedData);
 
@@ -100,9 +100,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var rootTxData = SampleAppUrlPaths.CallReturnBadRequestPage;
 			var childTxData = SampleAppUrlPaths.ReturnBadRequestPage;
 
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(rootTxData.RelativeUrlPath, rootTxData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(rootTxData.RelativeUrlPath, rootTxData.StatusCode);
 
-			VerifyDataReceivedFromAgent(receivedData =>
+			await VerifyDataReceivedFromAgent(receivedData =>
 			{
 				TryVerifyDataReceivedFromAgent(rootTxData, receivedData);
 

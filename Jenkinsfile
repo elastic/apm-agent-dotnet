@@ -182,10 +182,6 @@ pipeline {
                   Execute IIS tests.
                   */
                   stage('IIS Tests') {
-                    when {
-                      //disabled until the tests are merged
-                      expression { return false }
-                    }
                     steps {
                       withGithubNotify(context: 'IIS Tests', tab: 'tests') {
                         cleanDir("${WORKSPACE}/${BASE_DIR}")

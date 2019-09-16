@@ -1,8 +1,7 @@
 ﻿using System.IO;
 using System.Text;
-using Elastic.Apm.Helpers;
 
-namespace Elastic.Apm.Tests.TestHelpers
+namespace Elastic.Apm.Helpers
 {
 	internal static class TextUtils
 	{

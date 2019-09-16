@@ -92,6 +92,7 @@ namespace Elastic.Apm.Report
 
 			servicePoint.ConnectionLimit = 20;
 
+			_logger?.Debug()?.Log("Setting HTTP client BaseAddress to {ApmServerUrl}...", serverUrlBase);
 			_httpClient = new HttpClient(handler ?? new HttpClientHandler()) { BaseAddress = serverUrlBase };
 			_httpClient.DefaultRequestHeaders.UserAgent.Add(
 				new ProductInfoHeaderValue($"elasticapm-{Consts.AgentName}", AdaptUserAgentValue(service.Agent.Version)));
@@ -289,7 +290,7 @@ namespace Elastic.Apm.Report
 							ndjson.AppendLine("{\"metricset\": " + serialized + "}");
 							break;
 					}
-					_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItemToSend}", item, serialized);
+					_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItem}", item, serialized);
 				}
 
 				var content = new StringContent(ndjson.ToString(), Encoding.UTF8, "application/x-ndjson");
@@ -306,7 +307,8 @@ namespace Elastic.Apm.Report
 				else
 				{
 					_logger?.Debug()
-						?.Log($"Sent items to server: {Environment.NewLine}{{items}}", string.Join($",{Environment.NewLine}", queueItems.ToArray()));
+						?.Log("Sent items to server:\n{SerializedItems}",
+							TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray())));
 				}
 			}
 			catch (Exception e)
@@ -316,7 +318,7 @@ namespace Elastic.Apm.Report
 						e,
 						"Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):\n{SerializedItems}",
 						_httpClient.BaseAddress,
-						string.Join($",{Environment.NewLine}", queueItems.ToArray()));
+						TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray())));
 			}
 		}
 	}

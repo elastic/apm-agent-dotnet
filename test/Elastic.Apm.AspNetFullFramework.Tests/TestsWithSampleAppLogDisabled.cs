@@ -5,13 +5,17 @@ using Xunit.Abstractions;
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	[Collection("AspNetFullFrameworkTests")]
-	public class TestsWithApmServerStopped : TestsBase
+	public class TestsWithSampleAppLogDisabled : TestsBase
 	{
-		public TestsWithApmServerStopped(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper, false) { }
+		public TestsWithSampleAppLogDisabled(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper, sampleAppLogEnabled: false) { }
 
 		[AspNetFullFrameworkTheory]
 		[MemberData(nameof(AllSampleAppUrlPaths))]
-		public async Task SampleAppShouldBeAvailableEvenWhenApmServerStopped(SampleAppUrlPathData sampleAppUrlPathData) =>
+		public async Task TestVariousPages(SampleAppUrlPathData sampleAppUrlPathData)
+		{
 			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.StatusCode);
+
+			await VerifyDataReceivedFromAgent(sampleAppUrlPathData);
+		}
 	}
 }

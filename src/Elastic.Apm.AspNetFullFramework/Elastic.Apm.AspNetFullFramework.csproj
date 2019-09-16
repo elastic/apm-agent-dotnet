@@ -47,6 +47,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AgentDependencies.cs" />
     <Compile Include="ElasticApmModule.cs" />
     <Compile Include="FullFrameworkConfigReader.cs" />
     <Compile Include="InternalsVisibleTo.cs" />
