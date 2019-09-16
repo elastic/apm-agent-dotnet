@@ -226,7 +226,7 @@ Use this setting in case the APM Server requires a token (e.g. APM Server in Ela
 
 [float]
 [[config-flush-interval]]
-==== `FlushInterval` (added[1.0.2])
+==== `FlushInterval` (added[1.1])
 
 [options="header"]
 |============
@@ -260,7 +260,7 @@ in that case agent uses the default value instead.
 
 [float]
 [[config-max-batch-event-count]]
-==== `MaxBatchEventCount` (added[1.0.2])
+==== `MaxBatchEventCount` (added[1.1])
 
 [options="header"]
 |============
@@ -284,7 +284,7 @@ in that case the Agent will use the default value instead.
 
 [float]
 [[config-max-queue-event-count]]
-==== `MaxQueueEventCount` (added[1.0.2])
+==== `MaxQueueEventCount` (added[1.1])
 
 [options="header"]
 |============
