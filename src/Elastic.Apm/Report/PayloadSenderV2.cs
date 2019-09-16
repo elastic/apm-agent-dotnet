@@ -234,6 +234,7 @@ namespace Elastic.Apm.Report
 		/// instead of just Task.WhenAny(taskToAwait, Task.Delay(timeout))
 		/// because this method cancels the timer for timeout while <c>Task.Delay(timeout)</c>.
 		/// If the number of “zombie” timer jobs starts becoming significant, performance could suffer.
+		///
 		/// For more detailed explanation see https://devblogs.microsoft.com/pfxteam/crafting-a-task-timeoutafter-method/
 		/// </summary>
 		/// <returns><c>true</c> if <c>taskToAwait</c> completed before the timeout, <c>false</c> otherwise</returns>
