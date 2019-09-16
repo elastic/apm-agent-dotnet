@@ -113,6 +113,8 @@ namespace Elastic.Apm.Tests
 			// This bug in turn causes MetricsCollector to possibly use XunitOutputLogger even after the current test has exited
 			// and ITestOutputHelper on which XunitOutputLogger is based became invalid.
 			//
+			// After https://github.com/elastic/apm-agent-dotnet/issues/494 is fixed the line below can be uncommented.
+			//
 			// var logger = new XunitOutputLogger(_testOutputHelper);
 			//
 			var logger = new NoopLogger();
