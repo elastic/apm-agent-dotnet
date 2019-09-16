@@ -107,7 +107,17 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task MetricsWithRealAgent()
 		{
-			var logger = new XunitOutputLogger(_testOutputHelper);
+			// Note: If XunitOutputLogger is used with MetricsCollector it might cause issues because
+			// MetricsCollector's Dispose is currently broken - it doesn't guarantee that MetricsCollector's behaves correctly (i.e., ignores)
+			// timer callbacks after Dispose completed.
+			// This bug in turn causes MetricsCollector to possibly use XunitOutputLogger even after the current test has exited
+			// and ITestOutputHelper on which XunitOutputLogger is based became invalid.
+			//
+			// var logger = new XunitOutputLogger(_testOutputHelper);
+			//
+			var logger = new NoopLogger();
+			//
+
 			var payloadSender = new MockPayloadSender();
 			var configReader = new TestAgentConfigurationReader(logger, metricsInterval: "1s", logLevel: "Debug");
 			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender, logger: logger, configurationReader: configReader)))

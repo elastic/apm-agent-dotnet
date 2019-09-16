@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Concurrent;
+using System.Data;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Logging
 {
@@ -26,7 +30,33 @@ namespace Elastic.Apm.Logging
 			}
 			catch (Exception exception)
 			{
-				logger?.Error()?.LogException(exception, "Exception during logging - some log lines can be missing");
+				// For now we will just print it to System.Diagnostics.Trace
+				// In the future we should consider error counters to increment and log periodically on a worker thread
+				try
+				{
+					var currentStackTraceFrames = new System.Diagnostics.StackTrace(true).GetFrames();
+					var currentStackTrace = currentStackTraceFrames == null
+						? " N/A"
+						: Environment.NewLine + string.Join("", currentStackTraceFrames.Select(f => "    " + f));
+
+					System.Diagnostics.Trace.WriteLine("Elastic APM .NET Agent: [CRITICAL] Exception thrown by logging implementation."
+						+ $" Log message: `{message.AsNullableToString()}'."
+						+ $" args.Length: {args.Length}."
+						+ $" Current thread: name: `{Thread.CurrentThread.Name.AsNullableToString()}',"
+						+ $" managed ID: {Thread.CurrentThread.ManagedThreadId}."
+						+ Environment.NewLine
+						+ $"+-> Exception (exception): {exception.GetType().FullName}: {exception.Message}{Environment.NewLine}{exception.StackTrace}"
+						+ (e != null
+							? Environment.NewLine + $"+-> Exception (e): {e.GetType().FullName}: {e.Message}{Environment.NewLine}{e.StackTrace}"
+							: $"e: {ObjectExtensions.NullAsString}")
+						+ Environment.NewLine
+						+ "+-> Current stack trace:" + currentStackTrace
+					);
+				}
+				catch (Exception)
+				{
+					// ignored
+				}
 			}
 		}
 
