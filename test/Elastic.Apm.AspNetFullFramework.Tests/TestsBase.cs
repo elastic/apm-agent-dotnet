@@ -95,7 +95,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				new SampleAppUrlPathData(HomeController.GetDotNetRuntimeDescriptionPageRelativePath, 200);
 
 			internal static readonly SampleAppUrlPathData ForbidHttpResponsePageDescriptionPage =
-			new SampleAppUrlPathData(HomeController.ForbidHttpResponsePageRelativePath, 200, spansCount: 1, errorsCount: 1);
+				new SampleAppUrlPathData(HomeController.ForbidHttpResponsePageRelativePath, 200, spansCount: 1, errorsCount: 1);
 
 			internal static readonly List<SampleAppUrlPathData> AllPaths = new List<SampleAppUrlPathData>()
 			{
@@ -348,12 +348,12 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			FullFwAssertValid(service.Framework);
 
-			string expectedServiceName;
-			if (AgentConfig.ServiceName == null)
-				expectedServiceName = AbstractConfigurationReader.AdaptServiceName($"{Consts.SampleApp.SiteName}_{Consts.SampleApp.AppPoolName}");
-			else
-				expectedServiceName = AgentConfig.ServiceName;
+			var expectedServiceName = AgentConfig.ServiceName
+				?? AbstractConfigurationReader.AdaptServiceName($"{Consts.SampleApp.SiteName}_{Consts.SampleApp.AppPoolName}");
+			var expectedEnvironment = AgentConfig.Environment;
+
 			service.Name.Should().Be(expectedServiceName);
+			service.Environment.Should().Be(expectedEnvironment);
 		}
 
 		private void FullFwAssertValid(Framework framework)
@@ -497,6 +497,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			internal bool CaptureHeaders = true;
 			internal string ServiceName;
+			internal string Environment;
 		}
 
 		public class SampleAppUrlPathData

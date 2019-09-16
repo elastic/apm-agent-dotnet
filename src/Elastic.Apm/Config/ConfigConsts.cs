@@ -36,6 +36,7 @@ namespace Elastic.Apm.Config
 			public const string ServerUrls = Prefix + "SERVER_URLS";
 			public const string ServiceName = Prefix + "SERVICE_NAME";
 			public const string ServiceVersion = Prefix + "SERVICE_VERSION";
+			public const string Environment = Prefix + "ENVIRONMENT";
 			public const string SpanFramesMinDuration = Prefix + "SPAN_FRAMES_MIN_DURATION";
 			public const string StackTraceLimit = Prefix + "STACK_TRACE_LIMIT";
 			public const string TransactionSampleRate = Prefix + "TRANSACTION_SAMPLE_RATE";

@@ -35,6 +35,8 @@ namespace Elastic.Apm.Config
 
 		public string ServiceVersion => ParseServiceVersion(Read(ConfigConsts.EnvVarNames.ServiceVersion));
 
+		public string Environment => ParseEnvironment(Read(ConfigConsts.EnvVarNames.Environment));
+
 		public double SpanFramesMinDurationInMilliseconds => _spanFramesMinDurationInMilliseconds.Value;
 
 		public int StackTraceLimit => _stackTraceLimit.Value;
@@ -46,6 +48,6 @@ namespace Elastic.Apm.Config
 		public List<string> CaptureBodyContentTypes => ParseCaptureBodyContentTypes(Read(ConfigConsts.EnvVarNames.CaptureBodyContentTypes), CaptureBody);
 
 		private static ConfigurationKeyValue Read(string key) =>
-			new ConfigurationKeyValue(key, Environment.GetEnvironmentVariable(key)?.Trim(), Origin);
+			new ConfigurationKeyValue(key, System.Environment.GetEnvironmentVariable(key)?.Trim(), Origin);
 	}
 }
