@@ -46,7 +46,7 @@ namespace Elastic.Apm.Tests
 			logger.Lines[0]
 				.Should()
 				.ContainAll(
-					$"{{{nameof(MockConfigSnapshot)}}}",
+					nameof(MockConfigSnapshot),
 					"Failed parsing server URL from",
 					MockConfigSnapshot.Origin,
 					EnvVarNames.ServerUrls,
@@ -103,7 +103,7 @@ namespace Elastic.Apm.Tests
 			logger.Lines[0]
 				.Should()
 				.ContainAll(
-					$"{{{nameof(MockConfigSnapshot)}}}",
+					nameof(MockConfigSnapshot),
 					"Failed parsing server URL from",
 					MockConfigSnapshot.Origin,
 					EnvVarNames.ServerUrls,
@@ -271,7 +271,7 @@ namespace Elastic.Apm.Tests
 			logger.Lines[0]
 				.Should()
 				.ContainAll(
-					$"{{{nameof(MockConfigSnapshot)}}}",
+					nameof(MockConfigSnapshot),
 					"Failed parsing log level from",
 					MockConfigSnapshot.Origin,
 					EnvVarNames.LogLevel,
