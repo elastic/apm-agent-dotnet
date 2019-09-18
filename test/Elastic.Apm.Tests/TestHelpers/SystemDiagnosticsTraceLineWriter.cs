@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Tests.TestHelpers
 {
