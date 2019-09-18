@@ -40,8 +40,10 @@ namespace Elastic.Apm.BackendComm
 			_configStore = configStore;
 			_initialSnapshot = configStore.CurrentSnapshot;
 
-			if (_initialSnapshot.CentralConfig != ConfigConsts.DefaultValues.CentralConfig)
-				_logger.Info()?.Log("CentralConfig is {CentralConfigStatus}", _initialSnapshot.CentralConfig ? "enabled" : "disabled");
+			_logger.IfLevel(_initialSnapshot.CentralConfig == ConfigConsts.DefaultValues.CentralConfig ? LogLevel.Debug : LogLevel.Information)
+				?.Log("Central configuration feature is {CentralConfigStatus} because central_config option's value is {CentralConfigOption}"
+				, _initialSnapshot.CentralConfig ? "enabled" : "disabled", _initialSnapshot.CentralConfig);
+
 			if (!_initialSnapshot.CentralConfig) return;
 
 			_agentTimer = agentTimer ?? new AgentTimer();
