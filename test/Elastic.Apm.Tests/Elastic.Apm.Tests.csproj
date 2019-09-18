@@ -10,6 +10,7 @@
     <DelaySign>false</DelaySign>
     <!-- Always generate debug symbols this allows fluent symbols exception messages to include variable names -->
     <DebugSymbols>True</DebugSymbols>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

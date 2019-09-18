@@ -43,17 +43,21 @@ namespace Elastic.Apm.Tests.HelpersTests
 		{
 			var mockLogger = new TestLogger(LogLevel.Trace);
 			var sideEffect = 0;
-			await ExceptionUtils.DoSwallowingExceptions(mockLogger, async () =>
-			{
-				await Task.Yield();
-				++sideEffect;
-				action();
-			});
+			await ExceptionUtils.DoSwallowingExceptions(mockLogger, PublicMethod);
 			sideEffect.Should().Be(1);
 			var startMsg = ExceptionUtils.MethodStartingMsgFmt.Replace("{MethodName}", DbgUtils.GetCurrentMethodName());
 			mockLogger.Lines.Should().Contain(line => line.Contains(startMsg));
 			var exitMsg = exitMsgFmt.Replace("{MethodName}", DbgUtils.GetCurrentMethodName());
 			mockLogger.Lines.Should().Contain(line => line.Contains(exitMsg));
+
+			async Task MethodImpl()
+			{
+				await Task.Yield();
+				++sideEffect;
+				action();
+			}
+
+			Task PublicMethod() => MethodImpl();
 		}
 
 		[Theory]

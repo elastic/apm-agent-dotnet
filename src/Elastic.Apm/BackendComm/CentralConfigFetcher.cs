@@ -1,0 +1,413 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading;
+using System.Threading.Tasks;
+using Elastic.Apm.Api;
+using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+namespace Elastic.Apm.BackendComm
+{
+	internal class CentralConfigFetcher : IDisposable
+	{
+		private const string ThisClassName = nameof(CentralConfigFetcher);
+
+		internal static readonly TimeSpan WaitTimeIfAnyError = TimeSpan.FromMinutes(5);
+		internal static readonly TimeSpan WaitTimeIfNoCacheControlMaxAge = TimeSpan.FromMinutes(5);
+
+		private readonly IAgentTimer _agentTimer;
+		private readonly CancellationTokenSource _cancellationTokenSource;
+		private readonly IConfigStore _configStore;
+		private readonly DisposableHelper _disposableHelper = new DisposableHelper();
+		private readonly string _getConfigUrlPath;
+		private readonly HttpClient _httpClient;
+		private readonly IConfigSnapshot _initialSnapshot;
+		private readonly IApmLogger _logger;
+		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler;
+
+		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, Service service, HttpMessageHandler httpMessageHandler = null
+			, IAgentTimer agentTimer = null
+		)
+		{
+			_logger = logger.Scoped(ThisClassName);
+			_configStore = configStore;
+			_initialSnapshot = configStore.CurrentSnapshot;
+
+			if (_initialSnapshot.CentralConfig != ConfigConsts.DefaultValues.CentralConfig)
+				_logger.Info()?.Log("CentralConfig is {CentralConfigStatus}", _initialSnapshot.CentralConfig ? "enabled" : "disabled");
+			if (!_initialSnapshot.CentralConfig) return;
+
+			_agentTimer = agentTimer ?? new AgentTimer();
+
+			_cancellationTokenSource = new CancellationTokenSource();
+			_singleThreadTaskScheduler = new SingleThreadTaskScheduler($"ElasticApm{ThisClassName}", logger, _cancellationTokenSource.Token);
+
+			_getConfigUrlPath = BackendCommUtils.ApmServerEndpoints.Config(service);
+			_logger.Debug()?.Log("Combined URL path for APM Server get central configuration endpoint: {UrlPath}. Service: {Service}."
+				, _getConfigUrlPath, service);
+
+			_httpClient = BackendCommUtils.BuildHttpClient(logger, _initialSnapshot, service, ThisClassName, httpMessageHandler);
+
+#pragma warning disable 4014
+			Task.Factory.StartNew(RunFetchingLoop, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning,
+				_singleThreadTaskScheduler);
+#pragma warning restore 4014
+			_logger.Debug()?.Log("Enqueued {MethodName} with internal task scheduler", nameof(RunFetchingLoop));
+		}
+
+		public void Dispose()
+		{
+			if (_cancellationTokenSource == null)
+			{
+				_logger.Debug()?.Log("CentralConfig is disabled - nothing to dispose");
+				return;
+			}
+
+			_disposableHelper.DoOnce(_logger, ThisClassName, () =>
+			{
+				_logger.Debug()?.Log("Signalling _cancellationTokenSource");
+				_cancellationTokenSource.Cancel();
+
+				_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit", _singleThreadTaskScheduler.Thread.Name);
+				_singleThreadTaskScheduler.Thread.Join();
+
+				_logger.Debug()?.Log("_singleThreadTaskScheduler thread exited - disposing of _cancellationTokenSource and exiting");
+				_cancellationTokenSource.Dispose();
+			});
+		}
+
+		private Task RunFetchingLoop() => ExceptionUtils.DoSwallowingExceptions(_logger, RunFetchingLoopImpl,
+			dbgCallerMethodName: ThisClassName + "." + DbgUtils.GetCurrentMethodName());
+
+		private async Task RunFetchingLoopImpl()
+		{
+			EntityTagHeaderValue eTag = null;
+
+			while (true)
+			{
+				WaitInfoS waitInfo;
+				HttpRequestMessage httpRequest = null;
+				HttpResponseMessage httpResponse = null;
+				string httpResponseBody = null;
+				try
+				{
+					httpRequest = new HttpRequestMessage(HttpMethod.Get, _getConfigUrlPath);
+					if (eTag != null) httpRequest.Headers.IfNoneMatch.Add(eTag);
+
+					httpResponse = await FetchConfigHttpResponseAsync(httpRequest);
+					httpResponseBody = await httpResponse.Content.ReadAsStringAsync();
+
+					ConfigDelta configDelta;
+					(configDelta, waitInfo) = ProcessHttpResponse(httpResponse, httpResponseBody);
+					if (configDelta != null)
+					{
+						UpdateConfigStore(configDelta);
+						eTag = httpResponse.Headers.ETag;
+					}
+				}
+				catch (OperationCanceledException)
+				{
+					throw;
+				}
+				catch (Exception ex)
+				{
+					var severity = LogLevel.Error;
+					const string msg = "Exception was thrown while fetching configuration from APM Server and parsing it";
+					waitInfo = new WaitInfoS(WaitTimeIfAnyError, msg + " so default wait time is used");
+
+					if (ex is FailedToFetchConfigException fEx)
+					{
+						severity = fEx.Severity;
+						fEx.WaitInfo?.Let(it => { waitInfo = it; });
+					}
+
+					_logger.IfLevel(severity)
+						?.LogException(ex, msg + "."
+							+ " ETag: {ETag}. URL path: {UrlPath}. Apm Server base URL: {ApmServerUrl}."
+							+ Environment.NewLine + "+-> Request:" + Environment.NewLine + "{HttpRequest}"
+							+ Environment.NewLine + "+-> Response:" + Environment.NewLine + "{HttpResponse}"
+							+ Environment.NewLine + "+-> Response body:" + Environment.NewLine + "{HttpResponseBody}"
+							, eTag.AsNullableToString(), _getConfigUrlPath, _httpClient.BaseAddress
+							, TextUtils.Indent(httpRequest.AsNullableToString())
+							, TextUtils.Indent(httpResponse.AsNullableToString())
+							, TextUtils.Indent(httpResponseBody.AsNullableToString()));
+				}
+				finally
+				{
+					httpRequest?.Dispose();
+					httpResponse?.Dispose();
+				}
+
+				_logger.Trace()?.Log("Waiting {WaitInterval}... ({WaitReason})", waitInfo.Interval, waitInfo.Reason);
+				await _agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, _cancellationTokenSource.Token);
+			}
+			// ReSharper disable once FunctionNeverReturns
+		}
+
+		private async Task<HttpResponseMessage> FetchConfigHttpResponseAsync(HttpRequestMessage requestMessage)
+		{
+			_logger.Trace()?.Log("Making HTTP request to APM Server... Request message: {RequestMessage}.", requestMessage);
+			var httpResponse = await _httpClient.SendAsync(requestMessage, _cancellationTokenSource.Token);
+
+			// ReSharper disable once InvertIf
+			if (httpResponse == null)
+			{
+				throw new FailedToFetchConfigException("HTTP client API call for request to APM Server returned null."
+					+ $" Request:{Environment.NewLine}{TextUtils.Indent(requestMessage.ToString())}");
+			}
+
+			return httpResponse;
+		}
+
+		private (ConfigDelta, WaitInfoS) ProcessHttpResponse(HttpResponseMessage httpResponse, string httpResponseBody)
+		{
+			_logger.Trace()
+				?.Log("Processing HTTP response..."
+					+ Environment.NewLine + "+-> Response:" + Environment.NewLine + "{HttpResponse}"
+					+ Environment.NewLine + "+-> Response body:" + Environment.NewLine + "{HttpResponseBody}"
+					, TextUtils.Indent(httpResponse.ToString())
+					, TextUtils.Indent(httpResponseBody));
+
+			var waitInfo = ExtractWaitInfo(httpResponse);
+			try
+			{
+				if (!InterpretResponseStatusCode(httpResponse)) return (null, waitInfo);
+
+				var configPayload = JsonConvert.DeserializeObject<ConfigPayload>(httpResponseBody);
+				var configDelta = ParseConfigPayload(httpResponse, configPayload);
+
+				return (configDelta, waitInfo);
+			}
+			catch (FailedToFetchConfigException ex)
+			{
+				ex.WaitInfo = waitInfo;
+				throw;
+			}
+			catch (Exception ex)
+			{
+				throw new FailedToFetchConfigException("Exception was thrown while parsing response from APM Server", cause: ex)
+				{
+					WaitInfo = waitInfo
+				};
+			}
+		}
+
+		private bool InterpretResponseStatusCode(HttpResponseMessage httpResponse)
+		{
+			if (httpResponse.IsSuccessStatusCode) return true;
+
+			var statusCode = (int)httpResponse.StatusCode;
+			var severity = 400 <= statusCode && statusCode < 500 ? LogLevel.Debug : LogLevel.Error;
+
+			string message;
+			var msgPrefix = $"HTTP status code is {httpResponse.ReasonPhrase} which most likely means that ";
+			// ReSharper disable once SwitchStatementMissingSomeCases
+			switch (httpResponse.StatusCode)
+			{
+				case HttpStatusCode.NotModified: // 304
+					_logger.Trace()
+						?.Log("HTTP status code is {HttpResponseReasonPhrase}"
+							+ " which means the configuration has not changed since the previous fetch."
+							+ " Response:{NewLine}{HttpResponse}"
+							, httpResponse.ReasonPhrase, Environment.NewLine, TextUtils.Indent(httpResponse.ToString()));
+					return false;
+
+				case HttpStatusCode.BadRequest: // 400
+					severity = LogLevel.Error;
+					message = $"HTTP status code is {httpResponse.ReasonPhrase} which is unexpected";
+					break;
+
+				case HttpStatusCode.Forbidden: // 403
+					message = msgPrefix + "APM Server supports the central configuration endpoint but Kibana connection is not enabled";
+					break;
+
+				case HttpStatusCode.NotFound: // 404
+					message = msgPrefix + "APM Server is an old (pre 7.3) version which doesn't support the central configuration endpoint";
+					break;
+
+				case HttpStatusCode.ServiceUnavailable: // 503
+					message = msgPrefix + "APM Server supports the central configuration endpoint and Kibana connection is enabled"
+						+ ", but Kibana connection is unavailable";
+					break;
+
+				default:
+					message = $"HTTP status code ({httpResponse.ReasonPhrase}) signifies a failure";
+					break;
+			}
+
+			throw new FailedToFetchConfigException(message, severity);
+		}
+
+		private ConfigDelta ParseConfigPayload(HttpResponseMessage httpResponse, ConfigPayload configPayload)
+		{
+			var eTag = httpResponse.Headers.ETag.ToString();
+			var configParser = new ConfigParser(_logger, configPayload, eTag);
+
+			if (configPayload.UnknownKeys != null && !configPayload.UnknownKeys.IsEmpty())
+			{
+				_logger.Debug()
+					?.Log("Central configuration response contains keys that are not in the list of options"
+						+ " that can be changed after Agent start: {UnknownKeys}. Supported options: {ReloadableOptions}."
+						, string.Join(", ", configPayload.UnknownKeys.Select(kv => $"`{kv.Key}'"))
+						, string.Join(", ", ConfigPayload.SupportedOptions.Select(k => $"`{k}'")));
+			}
+
+			return new ConfigDelta(transactionSampleRate: configParser.TransactionSampleRate, eTag: eTag);
+		}
+
+		private static WaitInfoS ExtractWaitInfo(HttpResponseMessage httpResponse)
+		{
+			if (httpResponse.Headers.CacheControl.MaxAge.HasValue)
+			{
+				return new WaitInfoS(httpResponse.Headers.CacheControl.MaxAge.Value,
+					"Wait time is taken from max-age directive in Cache-Control header in APM Server's response");
+			}
+
+			return new WaitInfoS(WaitTimeIfNoCacheControlMaxAge,
+				"Default wait time is used because there's no valid Cache-Control header with max-age directive in APM Server's response."
+				+ Environment.NewLine + "+-> Response:" + Environment.NewLine + TextUtils.Indent(httpResponse.ToString()));
+		}
+
+		private void UpdateConfigStore(ConfigDelta configDelta)
+		{
+			_logger.Debug()?.Log("Updating " + nameof(ConfigStore) + ". " + nameof(configDelta) + ": {ConfigDelta}", configDelta);
+
+			_configStore.CurrentSnapshot = new WrappingConfigSnapshot(_initialSnapshot, configDelta
+				, _initialSnapshot.DbgDescription + " + " + $"central (ETag: `{configDelta.ETag}')");
+		}
+
+		private class FailedToFetchConfigException : Exception
+		{
+			internal FailedToFetchConfigException(string message, LogLevel severity = LogLevel.Error, Exception cause = null)
+				: base(message, cause) => Severity = severity;
+
+			internal LogLevel Severity { get; }
+			internal WaitInfoS? WaitInfo { get; set; }
+		}
+
+		private readonly struct WaitInfoS
+		{
+			internal readonly TimeSpan Interval;
+			internal readonly string Reason;
+
+			internal WaitInfoS(TimeSpan interval, string reason)
+			{
+				Interval = interval;
+				Reason = reason;
+			}
+		}
+
+		private class ConfigPayload
+		{
+			internal const string TransactionSampleRateKey = "transaction_sample_rate";
+
+			internal static readonly string[] SupportedOptions = { TransactionSampleRateKey };
+
+			[JsonProperty(TransactionSampleRateKey)]
+			public string TransactionSampleRate { get; set; }
+
+			[JsonExtensionData]
+			// ReSharper disable once UnusedAutoPropertyAccessor.Local
+			// ReSharper disable once CollectionNeverUpdated.Local
+			public IDictionary<string, JToken> UnknownKeys { get; set; }
+		}
+
+		private class ConfigDelta
+		{
+			internal ConfigDelta(string eTag, double? transactionSampleRate)
+			{
+				ETag = eTag;
+				TransactionSampleRate = transactionSampleRate;
+			}
+
+			internal string ETag { get; }
+
+			internal double? TransactionSampleRate { get; }
+
+			public override string ToString()
+			{
+				var builder = new ToStringBuilder("");
+
+				if (TransactionSampleRate.HasValue) builder.Add(nameof(TransactionSampleRate), TransactionSampleRate.Value);
+
+				return builder.ToString();
+			}
+		}
+
+		private class ConfigParser : AbstractConfigurationReader
+		{
+			// ReSharper disable once MemberHidesStaticFromOuterClass
+			private const string ThisClassName = nameof(CentralConfigFetcher) + "." + nameof(ConfigParser);
+
+			private readonly ConfigPayload _configPayload;
+			private readonly string _eTag;
+
+			public ConfigParser(IApmLogger logger, ConfigPayload configPayload, string eTag) : base(logger, ThisClassName)
+			{
+				_configPayload = configPayload;
+				_eTag = eTag;
+			}
+
+			internal double? TransactionSampleRate => _configPayload.TransactionSampleRate?.Let(
+				value => ParseTransactionSampleRate(BuildKv(ConfigPayload.TransactionSampleRateKey, value)));
+
+			private ConfigurationKeyValue BuildKv(string key, string value) =>
+				new ConfigurationKeyValue(key, value, /* readFrom */ $"Central configuration (ETag: `{_eTag}')");
+		}
+
+		private class WrappingConfigSnapshot : IConfigSnapshot
+		{
+			private readonly ConfigDelta _configDelta;
+			private readonly IConfigSnapshot _wrapped;
+
+			internal WrappingConfigSnapshot(IConfigSnapshot wrapped, ConfigDelta configDelta, string dbgDescription)
+			{
+				_wrapped = wrapped;
+				_configDelta = configDelta;
+				DbgDescription = dbgDescription;
+			}
+
+			public string CaptureBody => _wrapped.CaptureBody;
+
+			public List<string> CaptureBodyContentTypes => _wrapped.CaptureBodyContentTypes;
+
+			public bool CaptureHeaders => _wrapped.CaptureHeaders;
+			public bool CentralConfig => _wrapped.CentralConfig;
+
+			public string DbgDescription { get; }
+
+			public string Environment => _wrapped.Environment;
+
+			public TimeSpan FlushInterval => _wrapped.FlushInterval;
+
+			public LogLevel LogLevel => _wrapped.LogLevel;
+
+			public int MaxBatchEventCount => _wrapped.MaxBatchEventCount;
+
+			public int MaxQueueEventCount => _wrapped.MaxQueueEventCount;
+
+			public double MetricsIntervalInMilliseconds => _wrapped.MetricsIntervalInMilliseconds;
+
+			public string SecretToken => _wrapped.SecretToken;
+
+			public IReadOnlyList<Uri> ServerUrls => _wrapped.ServerUrls;
+
+			public string ServiceName => _wrapped.ServiceName;
+
+			public string ServiceVersion => _wrapped.ServiceVersion;
+
+			public double SpanFramesMinDurationInMilliseconds => _wrapped.SpanFramesMinDurationInMilliseconds;
+
+			public int StackTraceLimit => _wrapped.StackTraceLimit;
+
+			public double TransactionSampleRate => _configDelta.TransactionSampleRate ?? _wrapped.TransactionSampleRate;
+		}
+	}
+}

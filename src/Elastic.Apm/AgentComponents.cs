@@ -1,5 +1,6 @@
 ﻿using System;
 using Elastic.Apm.Api;
+using Elastic.Apm.BackendComm;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -32,12 +33,16 @@ namespace Elastic.Apm
 			var systemInfoHelper = new SystemInfoHelper(Logger);
 			var system = systemInfoHelper.ReadContainerId(Logger);
 
-			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigurationReader, Service, system);
+			ConfigStore = new ConfigStore(new ConfigSnapshotFromReader(ConfigurationReader, "local"), Logger);
+
+			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigStore.CurrentSnapshot, Service, system);
 
 			MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigurationReader);
 			MetricsCollector.StartCollecting();
 
-			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationReader,
+			CentralConfigFetcher = new CentralConfigFetcher(Logger, ConfigStore, Service);
+
+			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigStore,
 				currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(Logger));
 		}
 
@@ -60,11 +65,17 @@ namespace Elastic.Apm
 
 		internal Tracer TracerInternal { get; }
 
+		private CentralConfigFetcher CentralConfigFetcher { get; }
+
+		internal IConfigStore ConfigStore { get; }
+
 		public void Dispose()
 		{
 			if (MetricsCollector is IDisposable disposableMetricsCollector) disposableMetricsCollector.Dispose();
 
 			if (PayloadSender is IDisposable disposablePayloadSender) disposablePayloadSender.Dispose();
+
+			CentralConfigFetcher.Dispose();
 		}
 	}
 }

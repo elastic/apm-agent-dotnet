@@ -180,6 +180,24 @@ It also expects that a period (`.`) is used to separate the integer and the frac
 | 1.0     | Double 
 |============
 
+[float]
+[[config-central-config]]
+==== `CentralConfig` (added[1.1])
+
+If set to `true`, the agent makes periodic requests to the APM Server to fetch the latest configuration.
+
+[options="header"]
+|============
+| Environment variable name    | IConfiguration key 
+| `ELASTIC_APM_CENTRAL_CONFIG` | `ElasticApm:CentralConfig`
+|============
+
+[options="header"]
+|============
+| Default | Type
+| true    | Boolean 
+|============
+
 [[config-reporter]]
 === Reporter configuration options
 

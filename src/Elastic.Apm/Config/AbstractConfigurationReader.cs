@@ -13,16 +13,15 @@ namespace Elastic.Apm.Config
 {
 	public abstract class AbstractConfigurationReader
 	{
-		private readonly LazyContextualInit<IReadOnlyList<Uri>> _cachedServerUrls = new LazyContextualInit<IReadOnlyList<Uri>>();
+		private const string ThisClassName = nameof(AbstractConfigurationReader);
 
+		protected readonly IApmLogger _logger;
 		private readonly LazyContextualInit<int> _cachedMaxBatchEventCount = new LazyContextualInit<int>();
 		private readonly LazyContextualInit<int> _cachedMaxQueueEventCount = new LazyContextualInit<int>();
+		private readonly LazyContextualInit<IReadOnlyList<Uri>> _cachedServerUrls = new LazyContextualInit<IReadOnlyList<Uri>>();
 
-		protected AbstractConfigurationReader(IApmLogger logger) => ScopedLogger = logger?.Scoped(GetType().Name);
-
-		protected IApmLogger Logger => ScopedLogger;
-
-		private ScopedLogger ScopedLogger { get; }
+		protected AbstractConfigurationReader(IApmLogger logger, string dbgDerivedClassName) =>
+			_logger = logger?.Scoped($"{ThisClassName} ({dbgDerivedClassName})");
 
 		protected static ConfigurationKeyValue Kv(string key, string value, string origin) =>
 			new ConfigurationKeyValue(key, value, origin);
@@ -62,22 +61,17 @@ namespace Elastic.Apm.Config
 			return kv.Value;
 		}
 
-		protected bool ParseCaptureHeaders(ConfigurationKeyValue kv)
-		{
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return true;
-
-			return !bool.TryParse(kv.Value, out var value) || value;
-		}
+		protected bool ParseCaptureHeaders(ConfigurationKeyValue kv) => ParseBoolEventCount(kv, DefaultValues.CaptureHeaders, "CaptureHeaders");
 
 		protected LogLevel ParseLogLevel(ConfigurationKeyValue kv)
 		{
 			if (TryParseLogLevel(kv?.Value, out var level)) return level;
 
 			if (kv?.Value == null)
-				Logger?.Debug()?.Log("No log level provided. Defaulting to log level '{DefaultLogLevel}'", ConsoleLogger.DefaultLogLevel);
+				_logger?.Debug()?.Log("No log level provided. Defaulting to log level '{DefaultLogLevel}'", ConsoleLogger.DefaultLogLevel);
 			else
 			{
-				Logger?.Error()
+				_logger?.Error()
 					?.Log("Failed parsing log level from {Origin}: {Key}, value: {Value}. Defaulting to log level '{DefaultLogLevel}'",
 						kv.ReadFrom, kv.Key, kv.Value, ConsoleLogger.DefaultLogLevel);
 			}
@@ -102,12 +96,12 @@ namespace Elastic.Apm.Config
 					continue;
 				}
 
-				Logger?.Error()?.Log("Failed parsing server URL from {Origin}: {Key}, value: {Value}", kv.ReadFrom, kv.Key, u);
+				_logger?.Error()?.Log("Failed parsing server URL from {Origin}: {Key}, value: {Value}", kv.ReadFrom, kv.Key, u);
 			}
 
 			if (list.Count > 1)
 			{
-				Logger?.Warning()
+				_logger?.Warning()
 					?.Log(nameof(EnvVarNames.ServerUrls)
 						+ " configuration option contains more than one URL which is not supported by the agent yet"
 						+ " - only the first URL will be used."
@@ -121,7 +115,7 @@ namespace Elastic.Apm.Config
 			List<Uri> LogAndReturnDefault()
 			{
 				list.Add(DefaultValues.ServerUri);
-				Logger?.Debug()?.Log("Using default ServerUrl: {ServerUrl}", DefaultValues.ServerUri);
+				_logger?.Debug()?.Log("Using default ServerUrl: {ServerUrl}", DefaultValues.ServerUri);
 				return list;
 			}
 
@@ -150,7 +144,7 @@ namespace Elastic.Apm.Config
 			{
 				if (!TryParseTimeInterval(value, out valueInMilliseconds, TimeSuffix.S))
 				{
-					Logger?.Error()
+					_logger?.Error()
 						?.Log("Failed to parse provided metrics interval `{ProvidedMetricsInterval}' - " +
 							"using default: {DefaultMetricsInterval}",
 							value,
@@ -160,7 +154,7 @@ namespace Elastic.Apm.Config
 			}
 			catch (ArgumentException e)
 			{
-				Logger?.Critical()
+				_logger?.Critical()
 					?.LogException(e, "Failed to parse metrics interval, using default: {DefaultMetricsInterval}",
 						DefaultValues.MetricsInterval);
 				return DefaultValues.MetricsIntervalInMilliseconds;
@@ -172,16 +166,17 @@ namespace Elastic.Apm.Config
 
 			if (valueInMilliseconds < 0)
 			{
-				Logger?.Error()
+				_logger?.Error()
 					?.Log("Provided metrics interval `{ProvidedMetricsInterval}' is negative - " +
 						"metrics collection will be disabled",
 						value);
 				return 0;
 			}
 
+			// ReSharper disable once InvertIf
 			if (valueInMilliseconds < Constraints.MinMetricsIntervalInMilliseconds)
 			{
-				Logger?.Error()
+				_logger?.Error()
 					?.Log("Provided metrics interval `{ProvidedMetricsInterval}' is smaller than allowed minimum: {MinProvidedMetricsInterval}ms - " +
 						"metrics collection will be disabled",
 						value,
@@ -200,7 +195,7 @@ namespace Elastic.Apm.Config
 			if (int.TryParse(kv.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result))
 				return result;
 
-			Logger?.Error()
+			_logger?.Error()
 				?.Log("Failed to parse provided stack trace limit `{ProvidedStackTraceLimit}` - using default: {DefaultStackTraceLimit}",
 					kv.Value, DefaultValues.StackTraceLimit);
 
@@ -221,7 +216,7 @@ namespace Elastic.Apm.Config
 			{
 				if (!TryParseTimeInterval(value, out valueInMilliseconds, TimeSuffix.Ms))
 				{
-					Logger?.Error()
+					_logger?.Error()
 						?.Log("Failed to parse provided span frames minimum duration `{ProvidedSpanFramesMinDuration}' - " +
 							"using default: {DefaultSpanFramesMinDuration}",
 							value,
@@ -231,8 +226,9 @@ namespace Elastic.Apm.Config
 			}
 			catch (ArgumentException e)
 			{
-				Logger?.Critical()
-					?.LogException(e, "Failed to parse span frames minimum duration, using default: {DefaultSpanFramesMinDuration}",
+				_logger?.Critical()
+					?.LogException(e, nameof(ArgumentException) + " thrown from TryParseTimeInterval which means a programming bug - " +
+						"using default: {DefaultSpanFramesMinDuration}",
 						DefaultValues.SpanFramesMinDuration);
 				return DefaultValues.SpanFramesMinDurationInMilliseconds;
 			}
@@ -244,7 +240,7 @@ namespace Elastic.Apm.Config
 		{
 			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
 			{
-				Logger?.Debug()
+				_logger?.Debug()
 					?.Log(dbgOptionName + " configuration option doesn't have a valid value - using default: {Default" + dbgOptionName + "}",
 						defaultValue);
 				return defaultValue;
@@ -252,7 +248,7 @@ namespace Elastic.Apm.Config
 
 			if (!int.TryParse(kv.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedValue))
 			{
-				Logger?.Error()
+				_logger?.Error()
 					?.Log(
 						"Failed to parse provided " + dbgOptionName + ": `{Provided" + dbgOptionName + "}` - using default: {Default" + dbgOptionName
 						+ "}",
@@ -264,7 +260,7 @@ namespace Elastic.Apm.Config
 			// ReSharper disable once InvertIf
 			if (parsedValue <= 0)
 			{
-				Logger?.Error()
+				_logger?.Error()
 					?.Log("Provided " + dbgOptionName + ": `{Provided" + dbgOptionName + "}` is invalid (it should be positive) - " +
 						"using default: {Default" + dbgOptionName + "}",
 						kv.Value, defaultValue);
@@ -295,7 +291,7 @@ namespace Elastic.Apm.Config
 			// ReSharper disable once InvertIf
 			if (value < TimeSpan.Zero)
 			{
-				Logger?.Error()
+				_logger?.Error()
 					?.Log("Provided " + dbgOptionName + ": `{Provided" + dbgOptionName + "}` is invalid (it should be positive or zero) - " +
 						"using default: {Default" + dbgOptionName + "}",
 						kv.Value, defaultValue);
@@ -309,7 +305,7 @@ namespace Elastic.Apm.Config
 		{
 			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
 			{
-				Logger?.Debug()
+				_logger?.Debug()
 					?.Log(dbgOptionName + " configuration option doesn't have a valid value - using default: {Default" + dbgOptionName + "}",
 						defaultValue);
 				return defaultValue;
@@ -321,7 +317,7 @@ namespace Elastic.Apm.Config
 			{
 				if (!TryParseTimeInterval(kv.Value, out valueInMilliseconds, defaultSuffix))
 				{
-					Logger?.Error()
+					_logger?.Error()
 						?.Log("Failed to parse provided " + dbgOptionName + ": `{Provided" + dbgOptionName + "}' - " +
 							"using default: {Default" + dbgOptionName + "}",
 							kv.Value,
@@ -331,7 +327,7 @@ namespace Elastic.Apm.Config
 			}
 			catch (ArgumentException ex)
 			{
-				Logger?.Critical()
+				_logger?.Critical()
 					?.LogException(ex, "Exception thrown from TryParseTimeInterval which means a programming bug - " +
 						"using default: {Default" + dbgOptionName + "}",
 						defaultValue);
@@ -384,7 +380,7 @@ namespace Elastic.Apm.Config
 							valueInMilliseconds = TimeSpan.FromSeconds(valueNoUnits).TotalMilliseconds;
 							break;
 						default:
-							throw new ArgumentException("Unexpected TimeSuffix value", nameof(defaultSuffix));
+							throw new ArgumentException($"Unexpected TimeSuffix value: {defaultSuffix}", /* paramName: */ nameof(defaultSuffix));
 					}
 
 					return true;
@@ -430,27 +426,27 @@ namespace Elastic.Apm.Config
 				var adaptedServiceName = AdaptServiceName(nameInConfig);
 
 				if (nameInConfig == adaptedServiceName)
-					Logger?.Warning()?.Log("Service name provided in configuration is {ServiceName}", nameInConfig);
+					_logger?.Warning()?.Log("Service name provided in configuration is {ServiceName}", nameInConfig);
 				else
 				{
-					Logger?.Warning()
+					_logger?.Warning()
 						?.Log("Service name provided in configuration ({ServiceNameInConfiguration}) was adapted to {ServiceName}", nameInConfig,
 							adaptedServiceName);
 				}
 				return adaptedServiceName;
 			}
 
-			Logger?.Info()?.Log("The agent was started without a service name. The service name will be automatically discovered.");
+			_logger?.Info()?.Log("The agent was started without a service name. The service name will be automatically discovered.");
 
 			var discoveredName = AdaptServiceName(DiscoverServiceName());
 			if (discoveredName != null)
 			{
-				Logger?.Info()
+				_logger?.Info()
 					?.Log("The agent was started without a service name. The automatically discovered service name is {ServiceName}", discoveredName);
 				return discoveredName;
 			}
 
-			Logger?.Error()
+			_logger?.Error()
 				?.Log("Failed to discover service name, the service name will be '{DefaultServiceName}'." +
 					" You can fix this by setting the service name to a specific value (e.g. by using the environment variable {ServiceNameVariable})",
 					DefaultValues.UnknownServiceName, EnvVarNames.ServiceName);
@@ -472,18 +468,18 @@ namespace Elastic.Apm.Config
 
 			if (!string.IsNullOrEmpty(versionInConfig)) return versionInConfig;
 
-			Logger?.Info()?.Log("The agent was started without a service version. The service version will be automatically discovered.");
+			_logger?.Info()?.Log("The agent was started without a service version. The service version will be automatically discovered.");
 
 			var discoveredVersion = DiscoverServiceVersion();
 			if (discoveredVersion != null)
 			{
-				Logger?.Info()
+				_logger?.Info()
 					?.Log("The agent was started without a service version. The automatically discovered service version is {ServiceVersion}",
 						discoveredVersion);
 				return discoveredVersion;
 			}
 
-			Logger?.Warning()?.Log("Failed to discover service version, the service version will be omitted.");
+			_logger?.Warning()?.Log("Failed to discover service version, the service version will be omitted.");
 
 			return null;
 		}
@@ -502,7 +498,7 @@ namespace Elastic.Apm.Config
 		{
 			if (kv?.Value == null)
 			{
-				Logger?.Debug()
+				_logger?.Debug()
 					?.Log("No transaction sample rate provided. Defaulting to '{DefaultTransactionSampleRate}'",
 						DefaultValues.TransactionSampleRate);
 				return DefaultValues.TransactionSampleRate;
@@ -510,7 +506,7 @@ namespace Elastic.Apm.Config
 
 			if (!TryParseFloatingPoint(kv.Value, out var parsedValue))
 			{
-				Logger?.Error()
+				_logger?.Error()
 					?.Log("Failed to parse provided transaction sample rate `{ProvidedTransactionSampleRate}' - " +
 						"using default: {DefaultTransactionSampleRate}",
 						kv.Value,
@@ -520,7 +516,7 @@ namespace Elastic.Apm.Config
 
 			if (!Sampler.IsValidRate(parsedValue))
 			{
-				Logger?.Error()
+				_logger?.Error()
 					?.Log(
 						"Provided transaction sample rate is invalid {ProvidedTransactionSampleRate} - " +
 						"using default: {DefaultTransactionSampleRate}",
@@ -529,7 +525,7 @@ namespace Elastic.Apm.Config
 				return DefaultValues.TransactionSampleRate;
 			}
 
-			Logger?.Debug()
+			_logger?.Debug()
 				?.Log("Using provided transaction sample rate `{ProvidedTransactionSampleRate}' parsed as {ProvidedTransactionSampleRate}",
 					kv.Value,
 					parsedValue);
@@ -579,9 +575,10 @@ namespace Elastic.Apm.Config
 			if (string.IsNullOrEmpty(captureBodyInConfig))
 				return DefaultValues.CaptureBody;
 
+			// ReSharper disable once InvertIf
 			if (!SupportedValues.CaptureBodySupportedValues.Contains(captureBodyInConfig.ToLowerInvariant()))
 			{
-				Logger?.Error()
+				_logger?.Error()
 					?.Log(
 						"The CaptureBody value that was provided ('{DefaultServiceName}') in the configuration is not allowed. request body will not be captured."
 						+
@@ -599,7 +596,7 @@ namespace Elastic.Apm.Config
 			//CaptureBodyContentTypes and CaptureBody are linked. Verify that in case CaptureBody is ON - then CaptureBodyContentTypes is not empty
 			if (string.IsNullOrEmpty(captureBodyContentTypesInConfig) && captureBody != SupportedValues.CaptureBodyOff)
 			{
-				Logger?.Error()?.Log("Capture_Body is on but no content types are configured. Request bodies will not be captured.");
+				_logger?.Error()?.Log("Capture_Body is on but no content types are configured. Request bodies will not be captured.");
 				return new List<string>();
 			}
 
@@ -608,6 +605,33 @@ namespace Elastic.Apm.Config
 				captureBodyContentTypes = captureBodyContentTypesInConfig.Split(',').Select(p => p.Trim()).ToList();
 
 			return captureBodyContentTypes;
+		}
+
+		protected bool ParseCentralConfig(ConfigurationKeyValue kv) => ParseBoolEventCount(kv, DefaultValues.CentralConfig, "CentralConfig");
+
+		private bool ParseBoolEventCount(ConfigurationKeyValue kv, bool defaultValue, string dbgOptionName)
+		{
+			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
+			{
+				_logger?.Debug()
+					?.Log(dbgOptionName + " configuration option doesn't have a valid value - using default: {Default" + dbgOptionName + "}",
+						defaultValue);
+				return defaultValue;
+			}
+
+			// ReSharper disable once InvertIf
+			if (!bool.TryParse(kv.Value, out var parsedValue))
+			{
+				_logger?.Error()
+					?.Log(
+						"Failed to parse provided " + dbgOptionName + ": `{Provided" + dbgOptionName + "}` - using default: {Default" + dbgOptionName
+						+ "}",
+						kv.Value, defaultValue);
+
+				return defaultValue;
+			}
+
+			return parsedValue;
 		}
 
 		private enum TimeSuffix

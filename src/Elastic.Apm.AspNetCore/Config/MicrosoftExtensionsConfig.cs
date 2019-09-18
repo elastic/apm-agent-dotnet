@@ -13,16 +13,22 @@ namespace Elastic.Apm.AspNetCore.Config
 	internal class MicrosoftExtensionsConfig : AbstractConfigurationReader, IConfigurationReader
 	{
 		internal const string Origin = "Microsoft.Extensions.Configuration";
+		private const string ThisClassName = nameof(MicrosoftExtensionsConfig);
 
 		private readonly IConfiguration _configuration;
 		private readonly string _environmentName;
+
+		private new readonly IApmLogger _logger;
 
 		private readonly Lazy<double> _spanFramesMinDurationInMilliseconds;
 
 		private readonly Lazy<int> _stackTraceLimit;
 
-		public MicrosoftExtensionsConfig(IConfiguration configuration, IApmLogger logger, string environmentName) : base(logger)
+		public MicrosoftExtensionsConfig(IConfiguration configuration, IApmLogger logger, string environmentName)
+			: base(logger, ThisClassName)
 		{
+			_logger = logger?.Scoped(ThisClassName);
+
 			_configuration = configuration;
 			_environmentName = environmentName;
 			_configuration.GetSection("ElasticApm")
@@ -42,6 +48,7 @@ namespace Elastic.Apm.AspNetCore.Config
 			internal const string CaptureBody = "ElasticApm:CaptureBody";
 			internal const string CaptureBodyContentTypes = "ElasticApm:CaptureBodyContentTypes";
 			internal const string CaptureHeaders = "ElasticApm:CaptureHeaders";
+			internal const string CentralConfig = "ElasticApm:CentralConfig";
 			internal const string Environment = "ElasticApm:Environment";
 			internal const string FlushInterval = "ElasticApm:FlushInterval";
 			internal const string LogLevel = "ElasticApm:LogLevel";
@@ -67,6 +74,8 @@ namespace Elastic.Apm.AspNetCore.Config
 			ParseCaptureBodyContentTypes(ReadFallBack(Keys.CaptureBodyContentTypes, ConfigConsts.EnvVarNames.CaptureBodyContentTypes), CaptureBody);
 
 		public bool CaptureHeaders => ParseCaptureHeaders(ReadFallBack(Keys.CaptureHeaders, ConfigConsts.EnvVarNames.CaptureHeaders));
+
+		public bool CentralConfig => ParseCaptureHeaders(ReadFallBack(Keys.CentralConfig, ConfigConsts.EnvVarNames.CentralConfig));
 
 		public string Environment => ParseEnvironment(ReadFallBack(Keys.Environment, ConfigConsts.EnvVarNames.Environment)) ?? _environmentName;
 
@@ -125,7 +134,7 @@ namespace Elastic.Apm.AspNetCore.Config
 			if (_logLevel.HasValue && newLogLevel == _logLevel.Value) return;
 
 			_logLevel = newLogLevel;
-			Logger.Info()?.Log("Updated log level to {LogLevel}", newLogLevel);
+			_logger.Info()?.Log("Updated log level to {LogLevel}", newLogLevel);
 		}
 	}
 }

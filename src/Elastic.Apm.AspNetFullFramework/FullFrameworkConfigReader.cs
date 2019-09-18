@@ -9,7 +9,11 @@ namespace Elastic.Apm.AspNetFullFramework
 {
 	internal class FullFrameworkConfigReader : EnvironmentConfigurationReader
 	{
-		public FullFrameworkConfigReader(IApmLogger logger = null) : base(logger) { }
+		private const string ThisClassName = nameof(FullFrameworkConfigReader);
+
+		private new readonly IApmLogger _logger;
+
+		public FullFrameworkConfigReader(IApmLogger logger = null) : base(logger) => _logger = logger?.Scoped(ThisClassName);
 
 		protected override string DiscoverServiceName() => DiscoverFullFrameworkServiceName() ?? base.DiscoverServiceName();
 
@@ -35,7 +39,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (Exception ex)
 			{
-				Logger.Error()?.Log("Failed to get app pool name: {Exception}", ex);
+				_logger.Error()?.Log("Failed to get app pool name: {Exception}", ex);
 				return null;
 			}
 		}
@@ -48,7 +52,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (Exception ex)
 			{
-				Logger.Error()?.Log("Failed to get site name: {Exception}", ex);
+				_logger.Error()?.Log("Failed to get site name: {Exception}", ex);
 				return null;
 			}
 		}

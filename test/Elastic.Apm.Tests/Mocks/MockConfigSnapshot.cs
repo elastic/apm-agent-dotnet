@@ -5,12 +5,16 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Tests.Mocks
 {
-	public class TestAgentConfigurationReader : AbstractConfigurationReader, IConfigurationReader
+	public class MockConfigSnapshot : AbstractConfigurationReader, IConfigSnapshot
 	{
+		private const string ThisClassName = nameof(MockConfigSnapshot);
 		public const string Origin = "unit test configuration";
+
 		private readonly string _captureBody;
 		private readonly string _captureBodyContentTypes;
 		private readonly string _captureHeaders;
+		private readonly string _centralConfig;
+		private readonly string _dbgDescription;
 		private readonly string _environment;
 		private readonly string _flushInterval;
 		private readonly string _logLevel;
@@ -25,7 +29,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _stackTraceLimit;
 		private readonly string _transactionSampleRate;
 
-		public TestAgentConfigurationReader(
+		public MockConfigSnapshot(
 			IApmLogger logger = null,
 			string logLevel = null,
 			string serverUrls = null,
@@ -34,6 +38,8 @@ namespace Elastic.Apm.Tests.Mocks
 			string environment = null,
 			string secretToken = null,
 			string captureHeaders = null,
+			string centralConfig = null,
+			string dbgDescription = null,
 			string transactionSampleRate = null,
 			string metricsInterval = null,
 			string captureBody = ConfigConsts.SupportedValues.CaptureBodyOff,
@@ -43,9 +49,8 @@ namespace Elastic.Apm.Tests.Mocks
 			string flushInterval = null,
 			string maxBatchEventCount = null,
 			string maxQueueEventCount = null
-		) : base(logger)
+		) : base(logger, ThisClassName)
 		{
-			Logger = logger ?? new TestLogger();
 			_serverUrls = serverUrls;
 			_logLevel = logLevel;
 			_serviceName = serviceName;
@@ -53,6 +58,8 @@ namespace Elastic.Apm.Tests.Mocks
 			_environment = environment;
 			_secretToken = secretToken;
 			_captureHeaders = captureHeaders;
+			_centralConfig = centralConfig;
+			_dbgDescription = dbgDescription;
 			_transactionSampleRate = transactionSampleRate;
 			_metricsInterval = metricsInterval;
 			_captureBody = captureBody;
@@ -64,17 +71,19 @@ namespace Elastic.Apm.Tests.Mocks
 			_maxQueueEventCount = maxQueueEventCount;
 		}
 
+		public string DbgDescription => _dbgDescription ?? nameof(MockConfigSnapshot);
+
 		public string CaptureBody => ParseCaptureBody(Kv(ConfigConsts.EnvVarNames.CaptureBody, _captureBody, Origin));
 
 		public List<string> CaptureBodyContentTypes =>
 			ParseCaptureBodyContentTypes(Kv(ConfigConsts.EnvVarNames.CaptureBodyContentTypes, _captureBodyContentTypes, Origin), CaptureBody);
 
 		public bool CaptureHeaders => ParseCaptureHeaders(Kv(ConfigConsts.EnvVarNames.CaptureHeaders, _captureHeaders, Origin));
+		public bool CentralConfig => ParseCaptureHeaders(Kv(ConfigConsts.EnvVarNames.CentralConfig, _centralConfig, Origin));
 		public string Environment => ParseEnvironment(Kv(ConfigConsts.EnvVarNames.Environment, _environment, Origin));
 
 		public TimeSpan FlushInterval => ParseFlushInterval(Kv(ConfigConsts.EnvVarNames.FlushInterval, _flushInterval, Origin));
 
-		public new IApmLogger Logger { get; }
 		public LogLevel LogLevel => ParseLogLevel(Kv(ConfigConsts.EnvVarNames.LogLevel, _logLevel, Origin));
 		public int MaxBatchEventCount => ParseMaxBatchEventCount(Kv(ConfigConsts.EnvVarNames.MaxBatchEventCount, _maxBatchEventCount, Origin));
 		public int MaxQueueEventCount => ParseMaxQueueEventCount(Kv(ConfigConsts.EnvVarNames.MaxQueueEventCount, _maxQueueEventCount, Origin));

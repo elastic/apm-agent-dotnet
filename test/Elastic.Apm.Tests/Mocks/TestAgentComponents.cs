@@ -8,14 +8,14 @@ namespace Elastic.Apm.Tests.Mocks
 	{
 		public TestAgentComponents(
 			IApmLogger logger = null,
-			TestAgentConfigurationReader configurationReader = null,
+			MockConfigSnapshot config = null,
 			IPayloadSender payloadSender = null,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer = null,
 			string captureBody = ConfigConsts.SupportedValues.CaptureBodyOff,
 			string captureBodyContentTypes = ConfigConsts.DefaultValues.CaptureBodyContentTypes
 		) : base(
 			logger ?? new NoopLogger(),
-			configurationReader ?? new TestAgentConfigurationReader(
+			config ?? new MockConfigSnapshot(
 				logger ?? new NoopLogger(),
 				captureBody: captureBody,
 				captureBodyContentTypes: captureBodyContentTypes),

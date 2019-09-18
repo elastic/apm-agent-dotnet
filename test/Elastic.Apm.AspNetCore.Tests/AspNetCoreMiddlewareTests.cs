@@ -43,7 +43,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			AgentSingletonUtils.EnsureInstanceCreated();
 			_agent = new ApmAgent(new TestAgentComponents(
 				logger: _logger,
-				configurationReader: new TestAgentConfigurationReader(_logger, captureBody: ConfigConsts.SupportedValues.CaptureBodyAll),
+				config: new MockConfigSnapshot(_logger, captureBody: ConfigConsts.SupportedValues.CaptureBodyAll),
 				// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
 				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer)

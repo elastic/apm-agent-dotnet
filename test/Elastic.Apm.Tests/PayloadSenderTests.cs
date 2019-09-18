@@ -57,11 +57,11 @@ namespace Elastic.Apm.Tests
 
 			const string secretToken = "SecretToken";
 			var noopLogger = new NoopLogger();
-			var configReader = new TestAgentConfigurationReader(_logger, secretToken: secretToken, maxBatchEventCount: "1");
-			var payloadSender = new PayloadSenderV2(_logger, configReader,
-				Service.GetDefaultService(configReader, noopLogger), new Api.System(), handler);
+			var mockConfig = new MockConfigSnapshot(_logger, secretToken: secretToken, maxBatchEventCount: "1");
+			var payloadSender = new PayloadSenderV2(_logger, mockConfig,
+				Service.GetDefaultService(mockConfig, noopLogger), new Api.System(), handler);
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, configurationReader: configReader)))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, config: mockConfig)))
 			{
 				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
 				await isRequestFinished.Task;
@@ -86,8 +86,8 @@ namespace Elastic.Apm.Tests
 			});
 
 			var logger = new NoopLogger();
-			var service = Service.GetDefaultService(new TestAgentConfigurationReader(logger), logger);
-			var payloadSender = new PayloadSenderV2(logger, new TestAgentConfigurationReader(logger, flushInterval: "1s"),
+			var service = Service.GetDefaultService(new MockConfigSnapshot(logger), logger);
+			var payloadSender = new PayloadSenderV2(logger, new MockConfigSnapshot(logger, flushInterval: "1s"),
 				service, new Api.System(), handler);
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
@@ -370,7 +370,7 @@ namespace Elastic.Apm.Tests
 
 		private void CreateSutEnvAndTest(Action<ApmAgent, PayloadSenderV2> doAction)
 		{
-			var configReader = new TestAgentConfigurationReader(_logger);
+			var configReader = new MockConfigSnapshot(_logger);
 			var mockHttpMessageHandler = new MockHttpMessageHandler((r, c) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)));
 			var service = Service.GetDefaultService(configReader, _logger);
 			var payloadSender = new PayloadSenderV2(_logger, configReader, service, new Api.System(), mockHttpMessageHandler);
@@ -389,8 +389,8 @@ namespace Elastic.Apm.Tests
 			internal int? MaxBatchEventCount { get; set; }
 			internal int? MaxQueueEventCount { get; set; }
 
-			internal TestAgentConfigurationReader BuildConfigurationReader(IApmLogger logger) =>
-				new TestAgentConfigurationReader(logger
+			internal MockConfigSnapshot BuildConfigurationReader(IApmLogger logger) =>
+				new MockConfigSnapshot(logger
 					, flushInterval: FlushInterval.HasValue ? $"{FlushInterval.Value.TotalMilliseconds}ms" : null
 					, maxBatchEventCount: MaxBatchEventCount?.ToString()
 					, maxQueueEventCount: MaxQueueEventCount?.ToString());

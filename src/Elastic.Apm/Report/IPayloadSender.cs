@@ -1,6 +1,4 @@
 ﻿using Elastic.Apm.Api;
-using Elastic.Apm.Metrics;
-using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Report
 {
@@ -8,10 +6,10 @@ namespace Elastic.Apm.Report
 	{
 		void QueueError(IError error);
 
-		void QueueTransaction(ITransaction transaction);
+		void QueueMetrics(IMetricSet metrics);
 
 		void QueueSpan(ISpan span);
 
-		void QueueMetrics(IMetricSet metrics);
+		void QueueTransaction(ITransaction transaction);
 	}
 }

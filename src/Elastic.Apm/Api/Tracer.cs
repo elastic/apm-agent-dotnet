@@ -12,7 +12,7 @@ namespace Elastic.Apm.Api
 {
 	internal class Tracer : ITracer
 	{
-		private readonly IConfigurationReader _configurationReader;
+		private readonly IConfigSnapshotProvider _configProvider;
 		private readonly ScopedLogger _logger;
 		private readonly IPayloadSender _sender;
 		private readonly Service _service;
@@ -21,15 +21,14 @@ namespace Elastic.Apm.Api
 			IApmLogger logger,
 			Service service,
 			IPayloadSender payloadSender,
-			IConfigurationReader configurationReader,
+			IConfigSnapshotProvider configProvider,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer
 		)
 		{
 			_logger = logger?.Scoped(nameof(Tracer));
 			_service = service;
 			_sender = payloadSender.ThrowIfArgumentNull(nameof(payloadSender));
-			_configurationReader = configurationReader.ThrowIfArgumentNull(nameof(configurationReader));
-			Sampler = new Sampler(configurationReader.TransactionSampleRate);
+			_configProvider = configProvider.ThrowIfArgumentNull(nameof(configProvider));
 			CurrentExecutionSegmentsContainer = currentExecutionSegmentsContainer.ThrowIfArgumentNull(nameof(currentExecutionSegmentsContainer));
 		}
 
@@ -39,15 +38,14 @@ namespace Elastic.Apm.Api
 
 		public ITransaction CurrentTransaction => CurrentExecutionSegmentsContainer.CurrentTransaction;
 
-		internal Sampler Sampler { get; set; }
-
 		public ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null) =>
 			StartTransactionInternal(name, type, distributedTracingData);
 
 		internal Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null)
 		{
-			var retVal = new Transaction(_logger, name, type, Sampler, distributedTracingData, _sender, _configurationReader,
-				CurrentExecutionSegmentsContainer) { Service = _service };
+			var currentConfig = _configProvider.CurrentSnapshot;
+			var retVal = new Transaction(_logger, name, type, new Sampler(currentConfig.TransactionSampleRate), distributedTracingData
+				, _sender, currentConfig,CurrentExecutionSegmentsContainer) { Service = _service };
 
 			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);
 			return retVal;

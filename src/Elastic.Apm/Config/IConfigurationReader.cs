@@ -7,10 +7,11 @@ namespace Elastic.Apm.Config
 	public interface IConfigurationReader
 	{
 		string CaptureBody { get; }
-
 		List<string> CaptureBodyContentTypes { get; }
 		bool CaptureHeaders { get; }
+		bool CentralConfig { get; }
 		string Environment { get; }
+
 		/// <summary>
 		/// The maximal amount of time (in seconds) events are held in queue until there is enough to send a batch.
 		/// It's possible for a batch to contain less then <seealso cref="MaxBatchEventCount" /> events
@@ -58,7 +59,7 @@ namespace Elastic.Apm.Config
 		/// 	</item>
 		/// </list>
 		/// Default value: <seealso cref="ConfigConsts.DefaultValues.MaxBatchEventCount" />
-		/// Also see: <seealso cref="FlushIntervalInMilliseconds" /> and <seealso cref="MaxQueueEventCount" />
+		/// Also see: <seealso cref="FlushInterval" /> and <seealso cref="MaxQueueEventCount" />
 		/// </summary>
 		int MaxBatchEventCount { get; }
 

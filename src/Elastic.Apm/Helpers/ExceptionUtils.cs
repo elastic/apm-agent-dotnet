@@ -7,6 +7,8 @@ namespace Elastic.Apm.Helpers
 {
 	internal static class ExceptionUtils
 	{
+		private const string ThisClassName = nameof(ExceptionUtils);
+
 		internal const string MethodStartingMsgFmt = "{MethodName} starting...";
 		internal const string MethodExitingNormallyMsgFmt = "{MethodName} is about to exit normally";
 		internal const string MethodExitingCancelledMsgFmt = "{MethodName} is about to exit because it was cancelled, which is expected on shutdown";
@@ -33,9 +35,10 @@ namespace Elastic.Apm.Helpers
 			}
 		}
 
-		internal static async Task DoSwallowingExceptions(IApmLogger logger, Func<Task> asyncAction, bool shouldSwallowCancellation = true
+		internal static async Task DoSwallowingExceptions(IApmLogger loggerArg, Func<Task> asyncAction, bool shouldSwallowCancellation = true
 			, [CallerMemberName] string dbgCallerMethodName = null)
 		{
+			var logger = loggerArg.Scoped($"{ThisClassName}.{nameof(DoSwallowingExceptions)}");
 			try
 			{
 				logger.Debug()?.Log(MethodStartingMsgFmt, dbgCallerMethodName);

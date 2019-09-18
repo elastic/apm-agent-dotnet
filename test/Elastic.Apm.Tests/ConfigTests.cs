@@ -20,7 +20,7 @@ namespace Elastic.Apm.Tests
 		public void ServerUrlsSimpleTest()
 		{
 			var serverUrl = "http://myServer.com:1234";
-			var agent = new ApmAgent(new TestAgentComponents(configurationReader: new TestAgentConfigurationReader(serverUrls: serverUrl)));
+			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(serverUrls: serverUrl)));
 			agent.ConfigurationReader.ServerUrls[0].OriginalString.Should().Be(serverUrl);
 			var rootedUrl = serverUrl + "/";
 			rootedUrl.Should().BeEquivalentTo(agent.ConfigurationReader.ServerUrls[0].AbsoluteUri);
@@ -30,7 +30,7 @@ namespace Elastic.Apm.Tests
 		public void ServerUrlsInvalidUrlTest()
 		{
 			var serverUrl = "InvalidUrl";
-			var agent = new ApmAgent(new TestAgentComponents(configurationReader: new TestAgentConfigurationReader(serverUrls: serverUrl)));
+			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(serverUrls: serverUrl)));
 			agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultValues.ServerUri);
 		}
 
@@ -39,17 +39,16 @@ namespace Elastic.Apm.Tests
 		{
 			var serverUrl = "InvalidUrl";
 			var logger = new TestLogger();
-			var agent = new ApmAgent(new TestAgentComponents(logger,
-				new TestAgentConfigurationReader(logger, serverUrls: serverUrl)));
+			var agent = new ApmAgent(new TestAgentComponents(logger, new MockConfigSnapshot(logger, serverUrls: serverUrl)));
 			agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultValues.ServerUri);
 
 			logger.Lines.Should().NotBeEmpty();
 			logger.Lines[0]
 				.Should()
 				.ContainAll(
-					$"{{{nameof(TestAgentConfigurationReader)}}}",
+					$"{{{nameof(MockConfigSnapshot)}}}",
 					"Failed parsing server URL from",
-					TestAgentConfigurationReader.Origin,
+					MockConfigSnapshot.Origin,
 					EnvVarNames.ServerUrls,
 					serverUrl
 				);
@@ -67,7 +66,7 @@ namespace Elastic.Apm.Tests
 
 			var logger = new TestLogger();
 			var agent = new ApmAgent(new TestAgentComponents(logger,
-				new TestAgentConfigurationReader(logger, serverUrls: serverUrls)));
+				new MockConfigSnapshot(logger, serverUrls: serverUrls)));
 
 			var parsedUrls = agent.ConfigurationReader.ServerUrls;
 			parsedUrls[0].OriginalString.Should().Be(serverUrl1);
@@ -90,7 +89,7 @@ namespace Elastic.Apm.Tests
 			var serverUrls = $"{serverUrl1},{serverUrl2},{serverUrl3}";
 			var logger = new TestLogger();
 			var agent = new ApmAgent(new TestAgentComponents(logger,
-				new TestAgentConfigurationReader(logger, serverUrls: serverUrls)));
+				new MockConfigSnapshot(logger, serverUrls: serverUrls)));
 
 			var parsedUrls = agent.ConfigurationReader.ServerUrls;
 			parsedUrls.Should().NotBeEmpty().And.HaveCount(2, "seeded 3 but one was invalid");
@@ -104,9 +103,9 @@ namespace Elastic.Apm.Tests
 			logger.Lines[0]
 				.Should()
 				.ContainAll(
-					$"{{{nameof(TestAgentConfigurationReader)}}}",
+					$"{{{nameof(MockConfigSnapshot)}}}",
 					"Failed parsing server URL from",
-					TestAgentConfigurationReader.Origin,
+					MockConfigSnapshot.Origin,
 					EnvVarNames.ServerUrls,
 					serverUrl2
 				);
@@ -132,7 +131,7 @@ namespace Elastic.Apm.Tests
 		public void SecretTokenSimpleTest()
 		{
 			var secretToken = "secretToken";
-			var agent = new ApmAgent(new TestAgentComponents(configurationReader: new TestAgentConfigurationReader(secretToken: secretToken)));
+			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(secretToken: secretToken)));
 			agent.ConfigurationReader.SecretToken.Should().Be(secretToken);
 		}
 
@@ -248,7 +247,7 @@ namespace Elastic.Apm.Tests
 		public void SetLogLevelTest(string logLevelAsString, LogLevel logLevel)
 		{
 			var logger = new TestLogger(logLevel);
-			var agent = new ApmAgent(new TestAgentComponents(logger, new TestAgentConfigurationReader(logger, logLevelAsString)));
+			var agent = new ApmAgent(new TestAgentComponents(logger, new MockConfigSnapshot(logger, logLevelAsString)));
 			agent.ConfigurationReader.LogLevel.Should().Be(logLevel);
 			agent.Logger.Should().Be(logger);
 			foreach (LogLevel enumValue in Enum.GetValues(typeof(LogLevel)))
@@ -265,16 +264,16 @@ namespace Elastic.Apm.Tests
 		{
 			var logger = new TestLogger(LogLevel.Error);
 			var logLevelAsString = "InvalidLogLevel";
-			var agent = new ApmAgent(new TestAgentComponents(logger, new TestAgentConfigurationReader(logger, logLevelAsString)));
+			var agent = new ApmAgent(new TestAgentComponents(logger, new MockConfigSnapshot(logger, logLevelAsString)));
 
 			agent.ConfigurationReader.LogLevel.Should().Be(LogLevel.Error);
 			logger.Lines.Should().NotBeEmpty();
 			logger.Lines[0]
 				.Should()
 				.ContainAll(
-					$"{{{nameof(TestAgentConfigurationReader)}}}",
+					$"{{{nameof(MockConfigSnapshot)}}}",
 					"Failed parsing log level from",
-					TestAgentConfigurationReader.Origin,
+					MockConfigSnapshot.Origin,
 					EnvVarNames.LogLevel,
 					"Defaulting to "
 				);
@@ -511,7 +510,7 @@ namespace Elastic.Apm.Tests
 		public void StackTraceLimit(string configValue, int expectedValue)
 		{
 			using (var agent =
-				new ApmAgent(new TestAgentComponents(configurationReader: new TestAgentConfigurationReader(stackTraceLimit: configValue))))
+				new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(stackTraceLimit: configValue))))
 				agent.ConfigurationReader.StackTraceLimit.Should().Be(expectedValue);
 		}
 
@@ -527,7 +526,7 @@ namespace Elastic.Apm.Tests
 		{
 			using (var agent =
 				new ApmAgent(new TestAgentComponents(
-					configurationReader: new TestAgentConfigurationReader(spanFramesMinDurationInMilliseconds: configValue))))
+					config: new MockConfigSnapshot(spanFramesMinDurationInMilliseconds: configValue))))
 				agent.ConfigurationReader.SpanFramesMinDurationInMilliseconds.Should().Be(expectedValue);
 		}
 
@@ -548,7 +547,7 @@ namespace Elastic.Apm.Tests
 		{
 			using (var agent =
 				new ApmAgent(new TestAgentComponents(
-					configurationReader: new TestAgentConfigurationReader(flushInterval: configValue))))
+					config: new MockConfigSnapshot(flushInterval: configValue))))
 				agent.ConfigurationReader.FlushInterval.Should().Be(TimeSpan.FromMilliseconds(expectedValueInMilliseconds));
 		}
 
@@ -568,7 +567,7 @@ namespace Elastic.Apm.Tests
 		{
 			using (var agent =
 				new ApmAgent(new TestAgentComponents(
-					configurationReader: new TestAgentConfigurationReader(maxQueueEventCount: configValue))))
+					config: new MockConfigSnapshot(maxQueueEventCount: configValue))))
 				agent.ConfigurationReader.MaxQueueEventCount.Should().Be(expectedValue);
 		}
 
@@ -588,8 +587,24 @@ namespace Elastic.Apm.Tests
 		{
 			using (var agent =
 				new ApmAgent(new TestAgentComponents(
-					configurationReader: new TestAgentConfigurationReader(maxBatchEventCount: configValue))))
+					config: new MockConfigSnapshot(maxBatchEventCount: configValue))))
 				agent.ConfigurationReader.MaxBatchEventCount.Should().Be(expectedValue);
+		}
+
+		[InlineData("false", false)]
+		[InlineData("true", true)]
+		[InlineData("fALSe", false)]
+		[InlineData("TRUE", true)]
+		[InlineData("", DefaultValues.CentralConfig)]
+		[InlineData(null, DefaultValues.CentralConfig)]
+		[InlineData("aefjw9", DefaultValues.CentralConfig)]
+		[Theory]
+		public void CentralConfig_tests(string configValue, bool expectedValue)
+		{
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					config: new MockConfigSnapshot(centralConfig: configValue))))
+				agent.ConfigurationReader.CentralConfig.Should().Be(expectedValue);
 		}
 
 		private static double MetricsIntervalTestCommon(string configValue)

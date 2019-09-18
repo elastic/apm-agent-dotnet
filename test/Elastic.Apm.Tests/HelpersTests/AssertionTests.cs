@@ -2,49 +2,150 @@ using Elastic.Apm.Helpers;
 using FluentAssertions;
 using Xunit;
 using static Elastic.Apm.Tests.TestHelpers.FluentAssertionsUtils;
+// ReSharper disable ImplicitlyCapturedClosure
 
 namespace Elastic.Apm.Tests.HelpersTests
 {
 	public class AssertionTests
 	{
 		[Fact]
-		public void PassedAssertion()
+		internal void level_Disabled()
 		{
-			Assertion.IfEnabled?.That(true, "Dummy message");
+			var assertion = new Assertion.Impl(AssertionLevel.Disabled);
+
+			assertion.IsEnabled.Should().BeFalse();
+			assertion.Is_O_n_LevelEnabled.Should().BeFalse();
+
+			var counter = 0;
+
+			assertion.IfEnabled?.That(++counter == 1, $"Dummy message {++counter}");
+			counter.Should().Be(0);
+
+			assertion.IfEnabled?.That(++counter != 1, $"Dummy message {++counter}");
+			counter.Should().Be(0);
+
+			assertion.If_O_n_LevelEnabled?.That(++counter == 1, $"Dummy message {++counter}");
+			counter.Should().Be(0);
+
+			assertion.If_O_n_LevelEnabled?.That(++counter != 1, $"Dummy message {++counter}");
+			counter.Should().Be(0);
+
+			assertion.DoIfEnabled(assert =>
+			{
+				assert.That(++counter == 1, $"Dummy message {++counter}");
+				counter.Should().Be(0);
+
+				assert.That(++counter != 1, $"Dummy message {++counter}");
+				counter.Should().Be(0);
+			});
+
+			assertion.DoIfEnabled(assert =>
+			{
+				assert.That(++counter == 1, $"Dummy message {++counter}");
+				counter.Should().Be(0);
+
+				assert.That(++counter != 1, $"Dummy message {++counter}");
+				counter.Should().Be(0);
+			});
 		}
 
 		[Fact]
-		public void FailedAssertion()
+		internal void level_O_1()
 		{
-			AsAction(() => Assertion.IfEnabled?.That(false, "Dummy message")).Should()
+			var assertion = new Assertion.Impl(AssertionLevel.O_1);
+
+			assertion.IsEnabled.Should().BeTrue();
+			assertion.Is_O_n_LevelEnabled.Should().BeFalse();
+
+			var counter = 0;
+			assertion.IfEnabled?.That(++counter == 1, $"Dummy message {++counter}");
+			counter.Should().Be(2);
+			counter = 0;
+
+			AsAction(() => assertion.IfEnabled?.That(++counter != 1, $"Dummy message {++counter}")).Should()
 				.ThrowExactly<AssertionFailedException>()
-				.WithMessage("Dummy message");
+				.WithMessage("Dummy message 2");
+			counter.Should().Be(2);
+			counter = 0;
+
+			assertion.If_O_n_LevelEnabled?.That(++counter == 1, $"Dummy message {++counter}");
+			counter.Should().Be(0);
+
+			assertion.If_O_n_LevelEnabled?.That(++counter != 1, $"Dummy message {++counter}");
+			counter.Should().Be(0);
+
+
+			assertion.DoIfEnabled(assert =>
+			{
+				assert.That(++counter == 1, $"Dummy message {++counter}");
+				counter.Should().Be(2);
+				counter = 0;
+
+				AsAction(() => assertion.IfEnabled?.That(++counter != 1, $"Dummy message {++counter}")).Should()
+					.ThrowExactly<AssertionFailedException>()
+					.WithMessage("Dummy message 2");
+			});
+			counter.Should().Be(2);
+			counter = 0;
+
+			assertion.DoIf_O_n_LevelEnabled(_ => { ++counter; });
+			counter.Should().Be(0);
 		}
 
 		[Fact]
-		public void WhenDisabledConditionAndMessageAreNotEvaluated()
+		internal void level_O_n()
 		{
-			int expensiveCallsCount = 0;
-			bool ExpensiveCall(bool result)
-			{
-				++expensiveCallsCount;
-				return result;
-			}
+			var assertion = new Assertion.Impl(AssertionLevel.O_n);
 
-			var isEnabledValueToRestore = Assertion.IsEnabled;
-			Assertion.IsEnabled = false;
-			try
+			assertion.IsEnabled.Should().BeTrue();
+			assertion.Is_O_n_LevelEnabled.Should().BeTrue();
+
+			var counter = 0;
+			assertion.IfEnabled?.That(++counter == 1, $"Dummy message {++counter}");
+			counter.Should().Be(2);
+			counter = 0;
+
+			AsAction(() => assertion.IfEnabled?.That(++counter != 1, $"Dummy message {++counter}")).Should()
+				.ThrowExactly<AssertionFailedException>()
+				.WithMessage("Dummy message 2");
+			counter.Should().Be(2);
+			counter = 0;
+
+			assertion.If_O_n_LevelEnabled?.That(++counter == 1, $"Dummy message {++counter}");
+			counter.Should().Be(2);
+			counter = 0;
+
+			AsAction(() => assertion.If_O_n_LevelEnabled?.That(++counter != 1, $"Dummy message {++counter}")).Should()
+				.ThrowExactly<AssertionFailedException>()
+				.WithMessage("Dummy message 2");
+			counter.Should().Be(2);
+			counter = 0;
+
+			assertion.DoIfEnabled(assert =>
 			{
-				Assertion.IfEnabled?.That(ExpensiveCall(true), $"ExpensiveCall(true): {ExpensiveCall(true)}");
-				expensiveCallsCount.Should().Be(0);
-				Assertion.IfEnabled?.That(ExpensiveCall(false), $"ExpensiveCall(true): {ExpensiveCall(false)}");
-				expensiveCallsCount.Should().Be(0);
-			}
-			finally
+				assert.That(++counter == 1, $"Dummy message {++counter}");
+				counter.Should().Be(2);
+				counter = 0;
+
+				AsAction(() => assertion.IfEnabled?.That(++counter != 1, $"Dummy message {++counter}")).Should()
+					.ThrowExactly<AssertionFailedException>()
+					.WithMessage("Dummy message 2");
+			});
+			counter.Should().Be(2);
+			counter = 0;
+
+			assertion.DoIf_O_n_LevelEnabled(assert =>
 			{
-				Assertion.IsEnabled = isEnabledValueToRestore;
-			}
+				assert.That(++counter == 1, $"Dummy message {++counter}");
+				counter.Should().Be(2);
+				counter = 0;
+
+				AsAction(() => assertion.IfEnabled?.That(++counter != 1, $"Dummy message {++counter}")).Should()
+					.ThrowExactly<AssertionFailedException>()
+					.WithMessage("Dummy message 2");
+			});
+			counter.Should().Be(2);
+			counter = 0;
 		}
-
 	}
 }

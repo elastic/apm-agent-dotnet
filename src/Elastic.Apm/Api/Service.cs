@@ -28,7 +28,13 @@ namespace Elastic.Apm.Api
 
 		public override string ToString() => new ToStringBuilder(nameof(Service))
 		{
-			{ "Name", Name }, {"Version", Version}, { "Agent", Agent }, { "Framework", Framework }, { "Language", Language }, {"Environment", Environment}
+			{ nameof(Name), Name },
+			{ nameof(Version), Version},
+			{ nameof(Environment), Environment},
+			{ nameof(Runtime), Runtime },
+			{ nameof(Framework), Framework },
+			{ nameof(Agent), Agent },
+			{ nameof(Language), Language }
 		}.ToString();
 
 		internal static Service GetDefaultService(IConfigurationReader configurationReader, IApmLogger loggerArg)
@@ -56,7 +62,10 @@ namespace Elastic.Apm.Api
 			[JsonConverter(typeof(TrimmedStringJsonConverter))]
 			public string Version { get; set; }
 
-			public override string ToString() => new ToStringBuilder(nameof(AgentC)) { { "Name", Name }, { "Version", Version } }.ToString();
+			public override string ToString() => new ToStringBuilder(nameof(AgentC))
+			{
+				{ nameof(Name), Name }, { nameof(Version), Version }
+			}.ToString();
 		}
 	}
 
@@ -68,7 +77,10 @@ namespace Elastic.Apm.Api
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Version { get; set; }
 
-		public override string ToString() => new ToStringBuilder(nameof(Framework)) { { "Name", Name }, { "Version", Version } }.ToString();
+		public override string ToString() => new ToStringBuilder(nameof(Framework))
+		{
+			{ nameof(Name), Name }, { nameof(Version), Version }
+		}.ToString();
 	}
 
 	public class Language
@@ -76,7 +88,7 @@ namespace Elastic.Apm.Api
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
 
-		public override string ToString() => new ToStringBuilder(nameof(Language)) { { "Name", Name } }.ToString();
+		public override string ToString() => new ToStringBuilder(nameof(Language)) { { nameof(Name), Name } }.ToString();
 	}
 
 	/// <summary>
@@ -94,6 +106,9 @@ namespace Elastic.Apm.Api
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Version { get; set; }
 
-		public override string ToString() => new ToStringBuilder(nameof(Framework)) { { "Name", Name }, { "Version", Version } }.ToString();
+		public override string ToString() => new ToStringBuilder(nameof(Runtime))
+		{
+			{ nameof(Name), Name }, { nameof(Version), Version }
+		}.ToString();
 	}
 }

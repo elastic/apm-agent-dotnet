@@ -6,13 +6,15 @@ namespace Elastic.Apm.Config
 {
 	internal class EnvironmentConfigurationReader : AbstractConfigurationReader, IConfigurationReader
 	{
+		private const string ThisClassName = nameof(EnvironmentConfigurationReader);
+
 		internal const string Origin = "environment";
 
 		private readonly Lazy<double> _spanFramesMinDurationInMilliseconds;
 
 		private readonly Lazy<int> _stackTraceLimit;
 
-		public EnvironmentConfigurationReader(IApmLogger logger = null) : base(logger)
+		public EnvironmentConfigurationReader(IApmLogger logger = null) : base(logger, ThisClassName)
 		{
 			_spanFramesMinDurationInMilliseconds
 				= new Lazy<double>(() =>
@@ -27,6 +29,8 @@ namespace Elastic.Apm.Config
 			ParseCaptureBodyContentTypes(Read(ConfigConsts.EnvVarNames.CaptureBodyContentTypes), CaptureBody);
 
 		public bool CaptureHeaders => ParseCaptureHeaders(Read(ConfigConsts.EnvVarNames.CaptureHeaders));
+
+		public bool CentralConfig => ParseCentralConfig(Read(ConfigConsts.EnvVarNames.CentralConfig));
 
 		public string Environment => ParseEnvironment(Read(ConfigConsts.EnvVarNames.Environment));
 

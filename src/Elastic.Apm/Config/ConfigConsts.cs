@@ -15,6 +15,8 @@ namespace Elastic.Apm.Config
 			public const int ApmServerPort = 8200;
 			public const string CaptureBody = SupportedValues.CaptureBodyOff;
 			public const string CaptureBodyContentTypes = "application/x-www-form-urlencoded*, text/*, application/json*, application/xml*";
+			public const bool CaptureHeaders = true;
+			public const bool CentralConfig = true;
 			public const int FlushIntervalInMilliseconds = 10_000; // 10 seconds
 			public const int MaxBatchEventCount = 10;
 			public const int MaxQueueEventCount = 1000;
@@ -32,8 +34,9 @@ namespace Elastic.Apm.Config
 		{
 			public const string CaptureBody = Prefix + "CAPTURE_BODY";
 			public const string CaptureBodyContentTypes = Prefix + "CAPTURE_BODY_CONTENT_TYPES";
-
 			public const string CaptureHeaders = Prefix + "CAPTURE_HEADERS";
+
+			public const string CentralConfig = Prefix + "CENTRAL_CONFIG";
 			public const string Environment = Prefix + "ENVIRONMENT";
 			public const string FlushInterval = Prefix + "FLUSH_INTERVAL";
 			public const string LogLevel = Prefix + "LOG_LEVEL";
