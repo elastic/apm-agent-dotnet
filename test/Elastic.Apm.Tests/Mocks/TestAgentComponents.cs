@@ -15,7 +15,7 @@ namespace Elastic.Apm.Tests.Mocks
 			string captureBody = ConfigConsts.SupportedValues.CaptureBodyOff,
 			string captureBodyContentTypes = ConfigConsts.DefaultValues.CaptureBodyContentTypes,
 			ICentralConfigFetcher centralConfigFetcher = null,
-			bool useRealCentralConfigFetcher = false
+			bool useRealCentralConfigFetcher = true
 		) : base(
 			logger ?? new NoopLogger(),
 			config ?? new MockConfigSnapshot(
