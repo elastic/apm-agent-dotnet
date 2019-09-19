@@ -26,23 +26,21 @@ namespace Elastic.Apm.Helpers
 			_logger = logger?.Scoped(ThisClassName);
 			_cancellationToken = cancellationToken;
 			_taskQueue = new BlockingCollection<Task>();
-			Thread = new Thread(RunOnCurrentThread) { Name = threadName, IsBackground = true };
+			Thread = new Thread(ThreadMain) { Name = threadName, IsBackground = true };
 			Thread.Start();
 		}
 
 		internal Thread Thread { get; }
 
-		private void RunOnCurrentThread()
+		private void ThreadMain()
 		{
-			_logger.Debug()?.Log("`{ThreadName}' thread started", Thread.CurrentThread.Name);
-
 			_isExecuting = true;
 
 			ExceptionUtils.DoSwallowingExceptions(_logger, () =>
 				{
 					foreach (var task in _taskQueue.GetConsumingEnumerable(_cancellationToken)) TryExecuteTask(task);
 				}
-				, dbgCallerMethodName: $"`{Thread.CurrentThread.Name}' (ManagedThreadId: {Thread.CurrentThread.ManagedThreadId}) thread");
+				, dbgCallerMethodName: $"`{Thread.CurrentThread.Name}' (ManagedThreadId: {Thread.CurrentThread.ManagedThreadId}) thread entry method");
 
 			_isExecuting = false;
 		}
