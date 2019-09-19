@@ -14,7 +14,8 @@ namespace Elastic.Apm.Tests.Mocks
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer = null,
 			string captureBody = ConfigConsts.SupportedValues.CaptureBodyOff,
 			string captureBodyContentTypes = ConfigConsts.DefaultValues.CaptureBodyContentTypes,
-			ICentralConfigFetcher centralConfigFetcher = null
+			ICentralConfigFetcher centralConfigFetcher = null,
+			bool useRealCentralConfigFetcher = false
 		) : base(
 			logger ?? new NoopLogger(),
 			config ?? new MockConfigSnapshot(
@@ -24,7 +25,7 @@ namespace Elastic.Apm.Tests.Mocks
 			payloadSender ?? new MockPayloadSender(),
 			new FakeMetricsCollector(),
 			currentExecutionSegmentsContainer,
-			centralConfigFetcher ?? new NoopCentralConfigFetcher()
+			useRealCentralConfigFetcher ? null : centralConfigFetcher ?? new NoopCentralConfigFetcher()
 		) { }
 	}
 }
