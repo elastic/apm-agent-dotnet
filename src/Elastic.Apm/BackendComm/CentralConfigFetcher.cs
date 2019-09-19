@@ -15,7 +15,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Elastic.Apm.BackendComm
 {
-	internal class CentralConfigFetcher : IDisposable
+	internal class CentralConfigFetcher : ICentralConfigFetcher
 	{
 		private const string ThisClassName = nameof(CentralConfigFetcher);
 
@@ -42,7 +42,7 @@ namespace Elastic.Apm.BackendComm
 
 			var isCentralConfigOptEqDefault = _initialSnapshot.CentralConfig == ConfigConsts.DefaultValues.CentralConfig;
 			var centralConfigStatus = _initialSnapshot.CentralConfig ? "enabled" : "disabled";
-			if (! isCentralConfigOptEqDefault) centralConfigStatus = centralConfigStatus.ToUpper();
+			if (!isCentralConfigOptEqDefault) centralConfigStatus = centralConfigStatus.ToUpper();
 			_logger.IfLevel(isCentralConfigOptEqDefault ? LogLevel.Debug : LogLevel.Information)
 				?.Log("Central configuration feature is {CentralConfigStatus} because CentralConfig option's value is {CentralConfigOptionValue}"
 					+ " (default value is {CentralConfigOptionDefaultValue})"
