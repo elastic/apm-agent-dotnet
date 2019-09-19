@@ -20,8 +20,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 			private const string NotInIdeDefaultXunitLogLinePrefix = SharedPrefix + "Xunit> ";
 
 			internal static LogLevelOptionMetadata LogLevel = new LogLevelOptionMetadata(
-//				"ELASTIC_APM_TESTS_LOG_LEVEL", ConsoleLogger.DefaultLogLevel, x => x.LogLevel);
-				"ELASTIC_APM_TESTS_LOG_LEVEL", Logging.LogLevel.Debug, x => x.LogLevel);
+				"ELASTIC_APM_TESTS_LOG_LEVEL", ConsoleLogger.DefaultLogLevel, x => x.LogLevel);
 
 			internal static LogLevelOptionMetadata LogLevelForTestingConfigParsing = new LogLevelOptionMetadata(
 				"ELASTIC_APM_TESTS_LOG_LEVEL_FOR_TESTING_CONFIG_PARSING", ConsoleLogger.DefaultLogLevel, x => x.LogLevelForTestingConfigParsing);
