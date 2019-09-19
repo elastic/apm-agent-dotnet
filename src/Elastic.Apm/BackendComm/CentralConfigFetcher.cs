@@ -40,9 +40,13 @@ namespace Elastic.Apm.BackendComm
 			_configStore = configStore;
 			_initialSnapshot = configStore.CurrentSnapshot;
 
-			_logger.IfLevel(_initialSnapshot.CentralConfig == ConfigConsts.DefaultValues.CentralConfig ? LogLevel.Debug : LogLevel.Information)
-				?.Log("Central configuration feature is {CentralConfigStatus} because central_config option's value is {CentralConfigOption}"
-				, _initialSnapshot.CentralConfig ? "enabled" : "disabled", _initialSnapshot.CentralConfig);
+			var isCentralConfigOptEqDefault = _initialSnapshot.CentralConfig == ConfigConsts.DefaultValues.CentralConfig;
+			var centralConfigStatus = _initialSnapshot.CentralConfig ? "enabled" : "disabled";
+			if (! isCentralConfigOptEqDefault) centralConfigStatus = centralConfigStatus.ToUpper();
+			_logger.IfLevel(isCentralConfigOptEqDefault ? LogLevel.Debug : LogLevel.Information)
+				?.Log("Central configuration feature is {CentralConfigStatus} because CentralConfig option's value is {CentralConfigOptionValue}"
+					+ " (default value is {CentralConfigOptionDefaultValue})"
+					, centralConfigStatus, _initialSnapshot.CentralConfig, ConfigConsts.DefaultValues.CentralConfig);
 
 			if (!_initialSnapshot.CentralConfig) return;
 
@@ -52,8 +56,9 @@ namespace Elastic.Apm.BackendComm
 			_singleThreadTaskScheduler = new SingleThreadTaskScheduler($"ElasticApm{ThisClassName}", logger, _cancellationTokenSource.Token);
 
 			_getConfigUrlPath = BackendCommUtils.ApmServerEndpoints.Config(service);
-			_logger.Debug()?.Log("Combined URL path for APM Server get central configuration endpoint: {UrlPath}. Service: {Service}."
-				, _getConfigUrlPath, service);
+			_logger.Debug()
+				?.Log("Combined URL path for APM Server get central configuration endpoint: {UrlPath}. Service: {Service}."
+					, _getConfigUrlPath, service);
 
 			_httpClient = BackendCommUtils.BuildHttpClient(logger, _initialSnapshot, service, ThisClassName, httpMessageHandler);
 
@@ -258,6 +263,7 @@ namespace Elastic.Apm.BackendComm
 		{
 			if (httpResponse.Headers?.ETag == null)
 				throw new FailedToFetchConfigException("Response from APM Server doesn't have ETag header");
+
 			var eTag = httpResponse.Headers.ETag.ToString();
 
 			var configParser = new ConfigParser(_logger, configPayload, eTag);

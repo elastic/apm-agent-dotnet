@@ -75,7 +75,7 @@ namespace Elastic.Apm.AspNetCore.Config
 
 		public bool CaptureHeaders => ParseCaptureHeaders(ReadFallBack(Keys.CaptureHeaders, ConfigConsts.EnvVarNames.CaptureHeaders));
 
-		public bool CentralConfig => ParseCaptureHeaders(ReadFallBack(Keys.CentralConfig, ConfigConsts.EnvVarNames.CentralConfig));
+		public bool CentralConfig => ParseCentralConfig(ReadFallBack(Keys.CentralConfig, ConfigConsts.EnvVarNames.CentralConfig));
 
 		public string Environment => ParseEnvironment(ReadFallBack(Keys.Environment, ConfigConsts.EnvVarNames.Environment)) ?? _environmentName;
 
