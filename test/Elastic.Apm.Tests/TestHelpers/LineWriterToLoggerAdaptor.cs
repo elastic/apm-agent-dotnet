@@ -13,7 +13,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 			_lineWriter = lineWriter;
 		}
 
-		public LogLevel Level { get; }
+		public LogLevel Level { get; set; }
 
 		public bool IsEnabled(LogLevel level) => Level <= level;
 

@@ -16,7 +16,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 		protected readonly IApmLogger LoggerBase;
 
 		private readonly ITest _currentXunitTest;
-		private readonly IApmLogger _loggerForStartFinish;
+		private readonly LineWriterToLoggerAdaptor _loggerForStartFinish;
 
 		protected LoggingTestBase(ITestOutputHelper xUnitOutputHelper)
 		{
@@ -41,17 +41,25 @@ namespace Elastic.Apm.Tests.TestHelpers
 				if (!TestingConfig.IsRunningInIde) writerForStartFinish = lineWriters.ToArray();
 			}
 
-			_loggerForStartFinish = new LineWriterToLoggerAdaptor(new SplittingLineWriter(writerForStartFinish), config.LogLevel)
-				.Scoped(ThisClassName);
+			_loggerForStartFinish = new LineWriterToLoggerAdaptor(new SplittingLineWriter(writerForStartFinish), config.LogLevel);
 
-			_loggerForStartFinish.Info()?.Log("Starting test: {UnitTestDisplayName}...", TestDisplayName);
+			LogTestStartFinish( /* isStart: */ true);
 
 			LoggerBase = new LineWriterToLoggerAdaptor(new SplittingLineWriter(lineWriters.ToArray()), config.LogLevel);
 		}
 
 		protected string TestDisplayName => _currentXunitTest?.DisplayName;
 
-		public virtual void Dispose() => _loggerForStartFinish.Info()?.Log("Finished test: {UnitTestDisplayName}", TestDisplayName);
+		public virtual void Dispose() => LogTestStartFinish( /* isStart: */ false);
+
+		private void LogTestStartFinish(bool isStart)
+		{
+			var originalLogLevel = _loggerForStartFinish.Level;
+			_loggerForStartFinish.Level = LogLevel.Information;
+			_loggerForStartFinish.Scoped(ThisClassName).Info()?.Log(
+				isStart ? "Starting test: {UnitTestDisplayName}..." : "Finished test: {UnitTestDisplayName}", TestDisplayName);
+			_loggerForStartFinish.Level = originalLogLevel;
+		}
 
 		internal static ITest GetCurrentXunitTest(ITestOutputHelper xUnitOutputHelper)
 		{
