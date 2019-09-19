@@ -204,7 +204,7 @@ namespace Elastic.Apm.Tests
 		{
 			foreach (var args in TestArgsVariantsWithVeryLongFlushInterval)
 			{
-				_logger.Debug()?.Log("Starting sub-test... args: {args}", args);
+				_logger.Info()?.Log("Starting sub-test... args: {args}", args);
 
 				var sendTcs = new TaskCompletionSource<object>();
 				var firstBatchDequeuedTcs = new TaskCompletionSource<object>();
