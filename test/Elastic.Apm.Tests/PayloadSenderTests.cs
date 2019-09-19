@@ -36,7 +36,8 @@ namespace Elastic.Apm.Tests
 		private static readonly TimeSpan VeryShortFlushInterval = 1.Seconds();
 		private readonly IApmLogger _logger;
 
-		public PayloadSenderTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = LoggerBase.Scoped(ThisClassName);
+		public PayloadSenderTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper, LogLevel.Debug) =>
+			_logger = LoggerBase.Scoped(ThisClassName);
 
 		private static IEnumerable<TestArgs> TestArgsVariantsWithVeryLongFlushInterval =>
 			TestArgsVariants(args => args.FlushInterval.HasValue && args.FlushInterval >= VeryLongFlushInterval);
