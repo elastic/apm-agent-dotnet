@@ -19,11 +19,11 @@ namespace Elastic.Apm.Tests.TestHelpers
 
 		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{
-			var dateTime = DateTime.UtcNow;
+			var dateTime = DateTime.Now;
 
 			var message = formatter(state, e);
 
-			var fullMessage = $"[{dateTime.ToString("yyyy-MM-dd hh:mm:ss")}][{ConsoleLogger.LevelToString(level)}] - {message}";
+			var fullMessage = $"[{dateTime:yyyy-MM-dd HH:mm:ss.fff zzz}][{ConsoleLogger.LevelToString(level)}] - {message}";
 			if (e != null)
 				fullMessage += $"{Environment.NewLine}+-> Exception: {e.GetType().FullName}: {e.Message}{Environment.NewLine}{e.StackTrace}";
 

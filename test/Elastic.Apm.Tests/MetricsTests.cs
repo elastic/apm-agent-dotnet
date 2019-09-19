@@ -18,11 +18,13 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
-	public class MetricsTests
+	public class MetricsTests: LoggingTestBase
 	{
-		private readonly ITestOutputHelper _testOutputHelper;
+		private const string ThisClassName = nameof(MetricsTests);
 
-		public MetricsTests(ITestOutputHelper testOutputHelper) => _testOutputHelper = testOutputHelper;
+		private readonly IApmLogger _logger;
+
+		public MetricsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = LoggerBase.Scoped(ThisClassName);
 
 		[Fact]
 		public void CollectAllMetrics()
@@ -115,7 +117,7 @@ namespace Elastic.Apm.Tests
 			//
 			// After https://github.com/elastic/apm-agent-dotnet/issues/494 is fixed the line below can be uncommented.
 			//
-			// var logger = new XunitOutputLogger(_testOutputHelper);
+			// var logger = _logger;
 			//
 			var logger = new NoopLogger();
 			//

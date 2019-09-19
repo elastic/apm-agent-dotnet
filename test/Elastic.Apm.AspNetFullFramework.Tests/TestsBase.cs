@@ -28,13 +28,15 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	public class TestsBase : LoggingTestBase, IAsyncLifetime
 	{
+		private const string ThisClassName = nameof(AspNetFullFramework) + "." + nameof(Tests) + "." + nameof(TestsBase);
+
 		private static readonly string TearDownPersistentDataReason;
 
 		private static readonly bool TearDownPersistentData =
 			EnvVarUtils.GetBoolValue("ELASTIC_APM_TESTS_FULL_FRAMEWORK_TEAR_DOWN_PERSISTENT_DATA", /* defaultValue: */ true,
 				out TearDownPersistentDataReason);
 
-
+		private readonly IApmLogger _logger;
 		protected readonly AgentConfiguration AgentConfig = new AgentConfiguration();
 		protected readonly bool SampleAppShouldHaveAccessToPerfCounters;
 		private readonly Dictionary<string, string> _envVarsToSetForSampleAppPool;
@@ -53,10 +55,10 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			bool sampleAppLogEnabled = true
 		) : base(xUnitOutputHelper)
 		{
-			Logger.Info()?.Log("Starting test: {FullUnitTestName}", TestDisplayName);
+			_logger = LoggerBase.Scoped(ThisClassName);
 
-			_mockApmServer = new MockApmServer(Logger, TestDisplayName);
-			_iisAdministration = new IisAdministration(Logger);
+			_mockApmServer = new MockApmServer(_logger, TestDisplayName);
+			_iisAdministration = new IisAdministration(_logger);
 			_startMockApmServer = startMockApmServer;
 			SampleAppShouldHaveAccessToPerfCounters = sampleAppShouldHaveAccessToPerfCounters;
 
@@ -145,7 +147,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				_mockApmServer.RunInBackground(_mockApmServerPort);
 			else
 			{
-				Logger.Info()
+				_logger.Info()
 					?.Log("Not starting mock APM server because startMockApmServer argument to ctor is {startMockApmServer}", _startMockApmServer);
 			}
 
@@ -158,13 +160,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				_iisAdministration.DisposeSampleApp();
 			else
 			{
-				Logger.Warning()
+				_logger.Warning()
 					?.Log("Not tearing down IIS sample application and pool because {Reason}", TearDownPersistentDataReason);
 			}
 
 			if (_startMockApmServer) await _mockApmServer.StopAsync();
 
-			Logger.Info()?.Log("Finished test: {FullUnitTestName}", TestDisplayName);
+			_logger.Info()?.Log("Finished test: {FullUnitTestName}", TestDisplayName);
 		}
 
 		private string GetSampleAppLogFilePath()
@@ -172,14 +174,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var sampleAppLogFilePath = Environment.GetEnvironmentVariable(LoggingConfig.LogFileEnvVarName);
 			if (sampleAppLogFilePath != null)
 			{
-				Logger.Info()
+				_logger.Info()
 					?.Log("Environment variable `{SampleAppLogFileEnvVarName}' is set to `{SampleAppLogFilePath}'"
 						+ " - using it to write/read sample application's and agent's log", LoggingConfig.LogFileEnvVarName, sampleAppLogFilePath);
 				return sampleAppLogFilePath;
 			}
 
 			sampleAppLogFilePath = Path.Combine(Path.GetTempPath(), $"{Consts.SampleApp.AppName}.log");
-			Logger.Info()
+			_logger.Info()
 				?.Log("Environment variable `{SampleAppLogFileEnvVarName}' is not set"
 					+ " - using `{SampleAppLogFilePath}' to write/read sample application's and agent's log",
 					LoggingConfig.LogFileEnvVarName, sampleAppLogFilePath);
@@ -195,7 +197,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var startTime = DateTime.UtcNow;
 			if (timeHttpCall)
 			{
-				Logger.Debug()
+				_logger.Debug()
 					?.Log("HTTP call to sample application started at {Time} (as timestamp: {Timestamp})",
 						startTime, TimeUtils.ToTimestamp(startTime));
 			}
@@ -213,7 +215,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				{
 					_sampleAppClientCallTiming.Should().BeNull();
 					var endTime = DateTime.UtcNow;
-					Logger.Debug()
+					_logger.Debug()
 						?.Log("HTTP call to sample application ended at {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
 							endTime, TimeUtils.ToTimestamp(endTime),
 							TimeUtils.DurationBetweenTimestamps(TimeUtils.ToTimestamp(startTime), TimeUtils.ToTimestamp(endTime)));
@@ -229,9 +231,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		)
 		{
 			var url = Consts.SampleApp.RootUrl + "/" + relativeUrlPath;
-			Logger.Debug()?.Log("Sending request with URL: {url} and expected status code: {HttpStatusCode}...", url, expectedStatusCode);
+			_logger.Debug()?.Log("Sending request with URL: {url} and expected status code: {HttpStatusCode}...", url, expectedStatusCode);
 			var response = await httpClient.GetAsync(url);
-			Logger.Debug()
+			_logger.Debug()
 				?.Log("Request sent. Actual status code: {HttpStatusCode} ({HttpStatusCodeEnum})",
 					(int)response.StatusCode, response.StatusCode);
 			try
@@ -241,12 +243,12 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			catch (XunitException ex)
 			{
 				var responseContent = await response.Content.ReadAsStringAsync();
-				Logger.Error()?.Log("{ExceptionMessage}. Response content:\n{ResponseContent}", ex.Message, responseContent);
+				_logger.Error()?.Log("{ExceptionMessage}. Response content:\n{ResponseContent}", ex.Message, responseContent);
 				throw;
 			}
 
 			var processIdInResponse = response.Headers.GetValues(AspNetFullFrameworkSampleApp.Consts.ProcessIdResponseHeaderName);
-			Logger.Debug()
+			_logger.Debug()
 				?.Log("{ProcessIdHeaderName} in response is {ProcessIdHeaderValue}",
 					AspNetFullFrameworkSampleApp.Consts.ProcessIdResponseHeaderName, processIdInResponse);
 
@@ -259,7 +261,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			}
 			catch (XunitException ex)
 			{
-				Logger.Error()
+				_logger.Error()
 					?.LogException(ex, "Sample application's APM-server-URLs configuration setting ({ActualApmServerUrl})" +
 						" is different from expected ({ExpectedApmServerUrl})",
 						string.Join(", ", apmServerUrlsInResponse), BuildApmServerUrl(_mockApmServerPort));
@@ -294,7 +296,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				{
 					verifyAction(_mockApmServer.ReceivedData);
 					timerSinceStart.Stop();
-					Logger.Debug()
+					_logger.Debug()
 						?.Log("Data received from agent passed verification." +
 							" Time elapsed: {VerificationTimeSeconds}s." +
 							" Attempt #{AttemptNumber} out of {MaxNumberOfAttempts}",
@@ -312,7 +314,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 					if (logOnThisAttempt)
 					{
-						Logger.Warning()
+						_logger.Warning()
 							?.LogException(ex,
 								"Data received from agent did NOT pass verification." +
 								" Time elapsed: {VerificationTimeSeconds}s." +
@@ -325,14 +327,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 					if (attemptNumber == DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify)
 					{
-						Logger.Error()?.LogException(ex, "Reached max number of attempts to verify payload - Rethrowing the last exception...");
+						_logger.Error()?.LogException(ex, "Reached max number of attempts to verify payload - Rethrowing the last exception...");
 						await PostTestFailureDiagnostics();
 						throw;
 					}
 
 					if (logOnThisAttempt)
 					{
-						Logger.Debug()
+						_logger.Debug()
 							?.Log("Waiting {WaitBetweenVerifyAttemptsMs}ms before the next attempt..." +
 								" This message is printed only every {LogMessageEveryNAttempts} attempts",
 								DataSentByAgentVerificationConsts.WaitBetweenVerifyAttemptsMs,
@@ -343,7 +345,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				}
 				catch (Exception ex)
 				{
-					Logger.Error()?.LogException(ex, "Exception escaped from verifier");
+					_logger.Error()?.LogException(ex, "Exception escaped from verifier");
 					throw;
 				}
 			}
@@ -359,7 +361,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			if (!_sampleAppLogEnabled)
 			{
-				Logger.Info()?.Log("Sample application log is disabled");
+				_logger.Info()?.Log("Sample application log is disabled");
 				return;
 			}
 
@@ -370,26 +372,26 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			}
 			catch (Exception ex)
 			{
-				Logger.Info()
+				_logger.Info()
 					?.LogException(ex, "Exception thrown while trying to read sample application log file (`{SampleAppLogFilePath}')",
 						_sampleAppLogFilePath);
 				return;
 			}
 
-			Logger.Info()?.Log("Sample application log:\n{SampleAppLogFileContent}", TextUtils.Indent(sampleAppLogFileContent));
+			_logger.Info()?.Log("Sample application log:\n{SampleAppLogFileContent}", TextUtils.Indent(sampleAppLogFileContent));
 		}
 
 		private async Task LogSampleAppDiagnosticsPage()
 		{
 			var httpClient = new HttpClient();
 			const string url = Consts.SampleApp.RootUrl + "/" + DiagnosticsController.DiagnosticsPageRelativePath;
-			Logger.Debug()?.Log("Getting content of sample application diagnostics page ({url})...", url);
+			_logger.Debug()?.Log("Getting content of sample application diagnostics page ({url})...", url);
 			var response = await httpClient.GetAsync(url);
-			Logger.Debug()
+			_logger.Debug()
 				?.Log("Received sample application's diagnostics page. Status code: {HttpStatusCode} ({HttpStatusCodeEnum})",
 					(int)response.StatusCode, response.StatusCode);
 
-			Logger.Info()
+			_logger.Info()
 				?.Log("Sample application's diagnostics page content:\n{DiagnosticsPageContent}",
 					TextUtils.Indent(await response.Content.ReadAsStringAsync()));
 		}
@@ -400,7 +402,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			LogSampleAppLogFileContent();
 			await LogSampleAppDiagnosticsPage();
 
-			Logger.Debug()
+			_logger.Debug()
 				?.Log("Analyzing potential issues... _mockApmServer.ReceivedData: " +
 					"#transactions: {NumberOfTransactions}, #spans: {NumberOfSpans}, #errors: {NumberOfErrors}, #metric sets: {NumberOfMetricSets}",
 					_mockApmServer.ReceivedData.Transactions.Count,
@@ -424,7 +426,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 				if (_testStartTime <= dtoStartTime) return;
 
-				Logger.Warning()
+				_logger.Warning()
 					?.Log("The following DTO received from the agent has timestamp that is earlier than the current test start time. " +
 						"DTO timestamp: {DtoTimestamp}, test start time: {TestStartTime}, DTO: {DtoFromAgent}",
 						dtoStartTime.ToLocalTime().FormatForLog(), _testStartTime.ToLocalTime().FormatForLog(), dto);

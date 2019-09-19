@@ -11,11 +11,13 @@ using static Elastic.Apm.Tests.TestHelpers.FluentAssertionsUtils;
 
 namespace Elastic.Apm.Tests.HelpersTests
 {
-	public class AgentTimeInstantTests
+	public class AgentTimeInstantTests : LoggingTestBase
 	{
+		private const string ThisClassName = nameof(AgentTimeInstantTests);
+
 		private readonly IApmLogger _logger;
 
-		public AgentTimeInstantTests(ITestOutputHelper testOutputHelper) => _logger = new XunitOutputLogger(testOutputHelper);
+		public AgentTimeInstantTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = LoggerBase.Scoped(ThisClassName);
 
 		public static IEnumerable<object[]> AgentTimeInstantSourceVariantsToTest()
 		{

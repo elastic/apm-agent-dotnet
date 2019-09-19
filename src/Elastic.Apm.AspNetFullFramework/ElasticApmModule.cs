@@ -110,6 +110,7 @@ namespace Elastic.Apm.AspNetFullFramework
 		private DistributedTracingData ExtractIncomingDistributedTracingData(HttpRequest httpRequest)
 		{
 			var headerValue = httpRequest.Headers.Get(TraceParent.TraceParentHeaderName);
+			// ReSharper disable once InvertIf
 			if (headerValue == null)
 			{
 				_logger.Debug()
@@ -129,7 +130,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				// Uri.Query returns empty string both when query string is empty ("http://host/path?") and
 				// when there's no query string at all ("http://host/path") so we need a way to distinguish between these cases
-				// HttpRequest.RawUrl contains only raw URL's path and query (not a full raw URL with protocol, host, etc.)
+				// HttpRequest.RawUrl contains only raw URL path and query (not a full raw URL with protocol, host, etc.)
 				if (httpRequest.RawUrl.IndexOf('?') == -1)
 					queryString = null;
 				else if (!fullUrl.IsEmpty() && fullUrl[fullUrl.Length - 1] != '?')
@@ -201,7 +202,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			_currentTransaction = null;
 		}
 
-		private void FillSampledTransactionContextResponse(HttpResponse httpResponse, ITransaction transaction) =>
+		private static void FillSampledTransactionContextResponse(HttpResponse httpResponse, ITransaction transaction) =>
 			transaction.Context.Response = new Response
 			{
 				Finished = true,
@@ -271,19 +272,16 @@ namespace Elastic.Apm.AspNetFullFramework
 			return aspNetVersion;
 		}
 
-		private static bool InitOnceForAllInstancesUnderLock(string dbgInstanceName)
-		{
-			var agentComponents = BuildAgentComponents(dbgInstanceName);
-
-			return InitOnceHelper.IfNotInited?.Init(() =>
+		private static bool InitOnceForAllInstancesUnderLock(string dbgInstanceName) =>
+			InitOnceHelper.IfNotInited?.Init(() =>
 			{
+				var agentComponents = BuildAgentComponents(dbgInstanceName);
 				Agent.Setup(agentComponents);
 
 				_isCaptureHeadersEnabled = Agent.Instance.ConfigurationReader.CaptureHeaders;
 
 				Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
 			}) ?? false;
-		}
 
 		private static AgentComponents BuildAgentComponents(string dbgInstanceName)
 		{
@@ -299,6 +297,5 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			return agentComponents;
 		}
-
 	}
 }

@@ -22,8 +22,10 @@ using static Elastic.Apm.Tests.TestHelpers.FluentAssertionsUtils;
 
 namespace Elastic.Apm.Tests
 {
-	public class PayloadSenderTests: LoggingTestBase
+	public class PayloadSenderTests : LoggingTestBase
 	{
+		private const string ThisClassName = nameof(PayloadSenderTests);
+
 		private static readonly IEnumerable<TimeSpan?> FlushIntervalVariants = new TimeSpan?[]
 		{
 			null, ConfigConsts.DefaultValues.FlushIntervalInMilliseconds.Milliseconds(), TimeSpan.Zero, 10.Milliseconds(), 100.Milliseconds(),
@@ -34,13 +36,10 @@ namespace Elastic.Apm.Tests
 		private static readonly TimeSpan VeryShortFlushInterval = 1.Seconds();
 		private readonly IApmLogger _logger;
 
-		public PayloadSenderTests(ITestOutputHelper xUnitOutputHelper): base(xUnitOutputHelper) => _logger = Logger;
+		public PayloadSenderTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = LoggerBase.Scoped(ThisClassName);
 
 		private static IEnumerable<TestArgs> TestArgsVariantsWithVeryLongFlushInterval =>
 			TestArgsVariants(args => args.FlushInterval.HasValue && args.FlushInterval >= VeryLongFlushInterval);
-
-		private static IEnumerable<TestArgs> TestArgsVariantsWithVeryShortFlushInterval =>
-			TestArgsVariants(args => args.FlushInterval.HasValue && args.FlushInterval <= VeryShortFlushInterval);
 
 		[Fact]
 		public async Task SecretToken_test()
@@ -313,7 +312,7 @@ namespace Elastic.Apm.Tests
 						return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
 					});
 
-					var configurationReader = new TestArgs{ FlushInterval = flushInterval }.BuildConfigurationReader(_logger);
+					var configurationReader = new TestArgs { FlushInterval = flushInterval }.BuildConfigurationReader(_logger);
 					var service = Service.GetDefaultService(configurationReader, _logger);
 					var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler);
 

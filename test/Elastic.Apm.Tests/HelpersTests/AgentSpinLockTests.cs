@@ -18,11 +18,13 @@ namespace Elastic.Apm.Tests.HelpersTests
 			new AgentSpinLockTests.AcquisitionForTest(spinLockForTest, spinLockForTest.TryAcquire());
 	}
 
-	public class AgentSpinLockTests
+	public class AgentSpinLockTests : LoggingTestBase
 	{
+		private const string ThisClassName = nameof(AgentSpinLockTests);
+
 		private readonly IApmLogger _logger;
 
-		public AgentSpinLockTests(ITestOutputHelper testOutputHelper) => _logger = new XunitOutputLogger(testOutputHelper);
+		public AgentSpinLockTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = LoggerBase.Scoped(ThisClassName);
 
 		internal interface ISpinLockForTest
 		{
@@ -161,9 +163,10 @@ namespace Elastic.Apm.Tests.HelpersTests
 		internal class ThreadUnsafeSpinLockForTest : ISpinLockForTest
 		{
 			private readonly bool _releaseOnNotAcquiredThrows;
-			private bool _isLockHeld;
 
 			internal ThreadUnsafeSpinLockForTest(bool releaseOnNotAcquiredThrows) => _releaseOnNotAcquiredThrows = releaseOnNotAcquiredThrows;
+
+			private bool _isLockHeld;
 
 			public bool TryAcquire()
 			{

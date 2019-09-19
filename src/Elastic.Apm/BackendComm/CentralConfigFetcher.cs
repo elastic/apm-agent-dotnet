@@ -100,9 +100,7 @@ namespace Elastic.Apm.BackendComm
 				string httpResponseBody = null;
 				try
 				{
-					httpRequest = new HttpRequestMessage(HttpMethod.Get, _getConfigUrlPath);
-					if (eTag != null) httpRequest.Headers.IfNoneMatch.Add(eTag);
-
+					httpRequest = BuildHttpRequest(eTag);
 					httpResponse = await FetchConfigHttpResponseAsync(httpRequest);
 					httpResponseBody = await httpResponse.Content.ReadAsStringAsync();
 
@@ -121,8 +119,8 @@ namespace Elastic.Apm.BackendComm
 				catch (Exception ex)
 				{
 					var severity = LogLevel.Error;
-					const string msg = "Exception was thrown while fetching configuration from APM Server and parsing it";
-					waitInfo = new WaitInfoS(WaitTimeIfAnyError, msg + " so default wait time is used");
+					waitInfo = new WaitInfoS(WaitTimeIfAnyError, "Default wait time is used because exception was thrown"
+						+ " while fetching configuration from APM Server and parsing it.");
 
 					if (ex is FailedToFetchConfigException fEx)
 					{
@@ -131,15 +129,16 @@ namespace Elastic.Apm.BackendComm
 					}
 
 					_logger.IfLevel(severity)
-						?.LogException(ex, msg + "."
+						?.LogException(ex, "Exception was thrown while fetching configuration from APM Server and parsing it."
 							+ " ETag: {ETag}. URL path: {UrlPath}. Apm Server base URL: {ApmServerUrl}."
-							+ Environment.NewLine + "+-> Request:" + Environment.NewLine + "{HttpRequest}"
-							+ Environment.NewLine + "+-> Response:" + Environment.NewLine + "{HttpResponse}"
-							+ Environment.NewLine + "+-> Response body:" + Environment.NewLine + "{HttpResponseBody}"
+							+ Environment.NewLine + "+-> Request:{HttpRequest}"
+							+ Environment.NewLine + "+-> Response:{HttpResponse}"
+							+ Environment.NewLine + "+-> Response body [length: {HttpResponseBodyLength}]:{HttpResponseBody}"
 							, eTag.AsNullableToString(), _getConfigUrlPath, _httpClient.BaseAddress
-							, TextUtils.Indent(httpRequest.AsNullableToString())
-							, TextUtils.Indent(httpResponse.AsNullableToString())
-							, TextUtils.Indent(httpResponseBody.AsNullableToString()));
+							, httpRequest == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpRequest.ToString())
+							, httpResponse == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpResponse.ToString())
+							, httpResponseBody == null ? "N/A" : httpResponseBody.Length.ToString()
+							, httpResponseBody == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpResponseBody));
 				}
 				finally
 				{
@@ -147,15 +146,22 @@ namespace Elastic.Apm.BackendComm
 					httpResponse?.Dispose();
 				}
 
-				_logger.Trace()?.Log("Waiting {WaitInterval}... ({WaitReason})", waitInfo.Interval, waitInfo.Reason);
+				_logger.Trace()?.Log("Waiting {WaitInterval}... {WaitReason}", waitInfo.Interval, waitInfo.Reason);
 				await _agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, _cancellationTokenSource.Token);
 			}
 			// ReSharper disable once FunctionNeverReturns
 		}
 
+		private HttpRequestMessage BuildHttpRequest(EntityTagHeaderValue eTag)
+		{
+			var httpRequest = new HttpRequestMessage(HttpMethod.Get, _getConfigUrlPath);
+			if (eTag != null) httpRequest.Headers.IfNoneMatch.Add(eTag);
+			return httpRequest;
+		}
+
 		private async Task<HttpResponseMessage> FetchConfigHttpResponseAsync(HttpRequestMessage requestMessage)
 		{
-			_logger.Trace()?.Log("Making HTTP request to APM Server... Request message: {RequestMessage}.", requestMessage);
+			_logger.Trace()?.Log("Making HTTP request to APM Server... Request: {RequestMessage}.", requestMessage);
 			var httpResponse = await _httpClient.SendAsync(requestMessage, _cancellationTokenSource.Token);
 
 			// ReSharper disable once InvertIf
@@ -172,10 +178,11 @@ namespace Elastic.Apm.BackendComm
 		{
 			_logger.Trace()
 				?.Log("Processing HTTP response..."
-					+ Environment.NewLine + "+-> Response:" + Environment.NewLine + "{HttpResponse}"
-					+ Environment.NewLine + "+-> Response body:" + Environment.NewLine + "{HttpResponseBody}"
-					, TextUtils.Indent(httpResponse.ToString())
-					, TextUtils.Indent(httpResponseBody));
+					+ Environment.NewLine + "+-> Response:{HttpResponse}"
+					+ Environment.NewLine + "+-> Response body [length: {HttpResponseBodyLength}]:{HttpResponseBody}"
+					, httpResponse == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpResponse.ToString())
+					, httpResponseBody == null ? "N/A" : httpResponseBody.Length.ToString()
+					, httpResponseBody == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpResponseBody));
 
 			var waitInfo = ExtractWaitInfo(httpResponse);
 			try
@@ -249,7 +256,10 @@ namespace Elastic.Apm.BackendComm
 
 		private ConfigDelta ParseConfigPayload(HttpResponseMessage httpResponse, ConfigPayload configPayload)
 		{
+			if (httpResponse.Headers?.ETag == null)
+				throw new FailedToFetchConfigException("Response from APM Server doesn't have ETag header");
 			var eTag = httpResponse.Headers.ETag.ToString();
+
 			var configParser = new ConfigParser(_logger, configPayload, eTag);
 
 			if (configPayload.UnknownKeys != null && !configPayload.UnknownKeys.IsEmpty())
@@ -266,7 +276,7 @@ namespace Elastic.Apm.BackendComm
 
 		private static WaitInfoS ExtractWaitInfo(HttpResponseMessage httpResponse)
 		{
-			if (httpResponse.Headers.CacheControl.MaxAge.HasValue)
+			if (httpResponse.Headers?.CacheControl?.MaxAge != null)
 			{
 				return new WaitInfoS(httpResponse.Headers.CacheControl.MaxAge.Value,
 					"Wait time is taken from max-age directive in Cache-Control header in APM Server's response");

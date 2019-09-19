@@ -15,10 +15,12 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 	[Collection("AspNetFullFrameworkTests")]
 	public class MetadataTests : TestsBase
 	{
+		private const string ThisClassName = nameof(AspNetFullFramework) + "." + nameof(Tests) + "." + nameof(MetadataTests);
+
 		private readonly IApmLogger _logger;
 
 		public MetadataTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) =>
-			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(MetadataTests));
+			_logger = LoggerBase.Scoped(ThisClassName);
 
 		[AspNetFullFrameworkFact]
 		public async Task AspNetVersionTest()

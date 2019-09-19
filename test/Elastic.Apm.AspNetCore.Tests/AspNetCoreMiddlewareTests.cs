@@ -25,18 +25,19 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// It's basically an integration test.
 	/// </summary>
 	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
-	public class AspNetCoreMiddlewareTests
-		: IClassFixture<WebApplicationFactory<Startup>>, IDisposable
+	public class AspNetCoreMiddlewareTests: LoggingTestBase, IClassFixture<WebApplicationFactory<Startup>>
 	{
+		private const string ThisClassName = nameof(AspNetCoreMiddlewareTests);
+
+		private readonly IApmLogger _logger;
 		private readonly ApmAgent _agent;
 		private readonly MockPayloadSender _capturedPayload;
 		private readonly WebApplicationFactory<Startup> _factory;
 		// ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
-		private readonly IApmLogger _logger;
 
-		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper)
+		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper)
 		{
-			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(AspNetCoreMiddlewareTests));
+			_logger = LoggerBase.Scoped(ThisClassName);
 			_factory = factory;
 
 			// We need to ensure Agent.Instance is created because we need _agent to use Agent.Instance CurrentExecutionSegmentsContainer
@@ -313,12 +314,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 			context.Request.Body.Should().Be(body);
 		}
 
-
-		public void Dispose()
+		public override void Dispose()
 		{
 			_agent?.Dispose();
 			_factory?.Dispose();
 			_client?.Dispose();
+
+			base.Dispose();
 		}
 	}
 }

@@ -14,7 +14,10 @@ namespace Elastic.Apm.Tests.TestHelpers
 	{
 		internal static class Options
 		{
-			private const string DefaultLogLinePrefix = "Elastic APM .NET Tests> {0}> ";
+			private const string SharedPrefix = "Elastic APM .NET Tests> {0}> ";
+			private const string DefaultConsoleLogLinePrefix = SharedPrefix + "Console> ";
+			private const string DefaultSysDiagLogLinePrefix = SharedPrefix;
+			private const string NotInIdeDefaultXunitLogLinePrefix = SharedPrefix + "Xunit> ";
 
 			internal static LogLevelOptionMetadata LogLevel = new LogLevelOptionMetadata(
 				"ELASTIC_APM_TESTS_LOG_LEVEL", ConsoleLogger.DefaultLogLevel, x => x.LogLevel);
@@ -23,34 +26,40 @@ namespace Elastic.Apm.Tests.TestHelpers
 				"ELASTIC_APM_TESTS_LOG_LEVEL_FOR_TESTING_CONFIG_PARSING", ConsoleLogger.DefaultLogLevel, x => x.LogLevelForTestingConfigParsing);
 
 			internal static BoolOptionMetadata LogToConsoleEnabled = new BoolOptionMetadata(
-				"ELASTIC_APM_TESTS_LOG_CONSOLE_ENABLED", false, x => x.LogToConsoleEnabled);
+				"ELASTIC_APM_TESTS_LOG_CONSOLE_ENABLED", !IsRunningInIde, x => x.LogToConsoleEnabled);
+
+			internal static StringOptionMetadata LogToConsoleLinePrefix = new StringOptionMetadata(
+				"ELASTIC_APM_TESTS_LOG_CONSOLE_PREFIX", DefaultConsoleLogLinePrefix, x => x.LogToConsoleLinePrefix);
 
 			internal static BoolOptionMetadata LogToSysDiagTraceEnabled = new BoolOptionMetadata(
 				"ELASTIC_APM_TESTS_LOG_SYS_DIAG_TRACE_ENABLED", false, x => x.LogToSysDiagTraceEnabled);
 
 			internal static StringOptionMetadata LogToSysDiagTraceLinePrefix = new StringOptionMetadata(
-				"ELASTIC_APM_TESTS_LOG_SYS_DIAG_TRACE_PREFIX", DefaultLogLinePrefix, x => x.LogToSysDiagTraceLinePrefix);
+				"ELASTIC_APM_TESTS_LOG_SYS_DIAG_TRACE_PREFIX", DefaultSysDiagLogLinePrefix, x => x.LogToSysDiagTraceLinePrefix);
 
-			internal static StringOptionMetadata LogToConsoleLinePrefix = new StringOptionMetadata(
-				"ELASTIC_APM_TESTS_LOG_CONSOLE_PREFIX", DefaultLogLinePrefix, x => x.LogToConsoleLinePrefix);
+			internal static BoolOptionMetadata LogToXunitEnabled = new BoolOptionMetadata(
+				"ELASTIC_APM_TESTS_LOG_XUNIT_ENABLED", true, x => x.LogToXunitEnabled);
+
+			internal static StringOptionMetadata LogToXunitLinePrefix = new StringOptionMetadata(
+				"ELASTIC_APM_TESTS_LOG_XUNIT_PREFIX", IsRunningInIde ? "" : NotInIdeDefaultXunitLogLinePrefix, x => x.LogToXunitLinePrefix);
 
 			internal static OptionMetadata<int?> RandomSeed = new NullableIntOptionMetadata(
 				"ELASTIC_APM_TESTS_RANDOM_SEED", null, x => x.RandomSeed);
 
-			internal static OptionMetadata[] All =
+			internal static IOptionMetadata[] All =
 			{
-				LogLevelForTestingConfigParsing, LogLevel, LogToConsoleEnabled, LogToSysDiagTraceEnabled, LogToSysDiagTraceLinePrefix,
-				LogToConsoleLinePrefix, RandomSeed
+				LogLevel, LogLevelForTestingConfigParsing, LogToConsoleEnabled, LogToConsoleLinePrefix, LogToSysDiagTraceEnabled,
+				LogToSysDiagTraceLinePrefix, LogToXunitEnabled, LogToXunitLinePrefix, RandomSeed
 			};
 
 
-			internal interface OptionMetadata
+			internal interface IOptionMetadata
 			{
 				object DefaultValueAsObject { get; }
 				PropertyInfo MutableSnapshotPropertyInfo { get; }
 				string Name { get; }
 
-				void ParseAndSetProperty(RawConfigSnapshot rawConfigSnapshot, MutableSnapshot configSnapshot, IApmLogger logger);
+				void ParseAndSetProperty(IRawConfigSnapshot rawConfigSnapshot, MutableSnapshot configSnapshot, IApmLogger logger);
 			}
 
 			private static LogLevel ParseLogLevel(string valueAsString)
@@ -65,7 +74,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 			private static Func<string, T?> CreateNullableParser<T>(Func<string, T> nonNullValueParser) where T : struct =>
 				valueAsString => valueAsString == null ? (T?)null : nonNullValueParser(valueAsString);
 
-			internal class OptionMetadata<T> : OptionMetadata
+			internal class OptionMetadata<T> : IOptionMetadata
 			{
 				private readonly Func<string, T> _parser;
 
@@ -86,16 +95,16 @@ namespace Elastic.Apm.Tests.TestHelpers
 
 				public string Name { get; }
 
-				public void ParseAndSetProperty(RawConfigSnapshot rawConfigSnapshot, MutableSnapshot configSnapshot,
+				public void ParseAndSetProperty(IRawConfigSnapshot rawConfigSnapshot, MutableSnapshot configSnapshot,
 					IApmLogger loggerArg
 				)
 				{
-					IApmLogger logger = loggerArg.Scoped(nameof(OptionMetadata));
+					IApmLogger logger = loggerArg.Scoped(nameof(IOptionMetadata));
 					var parsedValue = ParseValue(logger, rawConfigSnapshot);
 					MutableSnapshotPropertyInfo.SetValue(configSnapshot, parsedValue);
 				}
 
-				private T ParseValue(IApmLogger logger, RawConfigSnapshot rawConfigSnapshot)
+				private T ParseValue(IApmLogger logger, IRawConfigSnapshot rawConfigSnapshot)
 				{
 					var optionValue = rawConfigSnapshot.GetValue(Name);
 					if (optionValue == null)
@@ -133,7 +142,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 					return parsedValue;
 				}
 
-				public override string ToString() => new ToStringBuilder(nameof(OptionMetadata))
+				public override string ToString() => new ToStringBuilder(nameof(IOptionMetadata))
 				{
 					{ nameof(Name), Name }, { "Property name", MutableSnapshotPropertyInfo.Name }, { nameof(DefaultValue), DefaultValue }
 				}.ToString();
@@ -164,44 +173,71 @@ namespace Elastic.Apm.Tests.TestHelpers
 			}
 		}
 
-		internal interface RawConfigSnapshot
+		internal interface IRawConfigSnapshot
 		{
 			string DbgDescription { get; }
 
 			/// <summary>Gets a configuration value.</summary>
-			/// <param name="key">The option name.</param>
+			/// <param name="optionName">The option name.</param>
 			/// <returns>The option value or <c>null</c> if the given option name doesn't have a value.</returns>
 			string GetValue(string optionName);
 		}
 
-		internal interface Snapshot
+		internal interface ISnapshot
 		{
 			LogLevel LogLevel { get; }
+
+			// ReSharper disable once UnusedMemberInSuper.Global
 			LogLevel LogLevelForTestingConfigParsing { get; }
+
 			bool LogToConsoleEnabled { get; }
 			string LogToConsoleLinePrefix { get; }
+
 			bool LogToSysDiagTraceEnabled { get; }
 			string LogToSysDiagTraceLinePrefix { get; }
+
+			bool LogToXunitEnabled { get; }
+			string LogToXunitLinePrefix { get; }
+
 			int? RandomSeed { get; }
 		}
 
-		internal static Snapshot ReadFromFromEnvVars(ITestOutputHelper xUnitOutputHelper) =>
+		internal static bool IsRunningInIde { get; } = DetectIfRunningInIde();
+
+		internal static ISnapshot ReadFromFromEnvVars(ITestOutputHelper xUnitOutputHelper) =>
 			new MutableSnapshot(new EnvVarsRawConfigSnapshot(), xUnitOutputHelper);
 
-		internal class EnvVarsRawConfigSnapshot : RawConfigSnapshot
+		private static bool DetectIfRunningInIde()
+		{
+			if (Environment.GetEnvironmentVariable("VisualStudioVersion") != null) return true;
+
+			// ReSharper disable once LoopCanBeConvertedToQuery
+			foreach (string envVarName in Environment.GetEnvironmentVariables().Keys)
+			{
+				// ReSharper disable once StringLiteralTypo
+				if (envVarName.StartsWith("RESHARPER_"))
+					return true;
+			}
+
+			return false;
+		}
+
+		internal class EnvVarsRawConfigSnapshot : IRawConfigSnapshot
 		{
 			public string DbgDescription => "Environment variables";
 
 			public string GetValue(string optionName) => Environment.GetEnvironmentVariable(optionName);
 		}
 
-		internal class MutableSnapshot : Snapshot
+		internal class MutableSnapshot : ISnapshot
 		{
-			internal MutableSnapshot(RawConfigSnapshot rawConfigSnapshot, ITestOutputHelper xUnitOutputHelper)
+			private const string ThisClassName = nameof(TestingConfig) + "." + nameof(MutableSnapshot);
+
+			internal MutableSnapshot(IRawConfigSnapshot rawConfigSnapshot, ITestOutputHelper xUnitOutputHelper)
 			{
-				var tempLogger = new XunitOutputLogger(xUnitOutputHelper, ConsoleLogger.DefaultLogLevel).Scoped(nameof(MutableSnapshot));
+				var tempLogger = BuildXunitOutputLogger(ConsoleLogger.DefaultLogLevel);
 				Options.LogLevelForTestingConfigParsing.ParseAndSetProperty(rawConfigSnapshot, this, tempLogger);
-				var parsingLogger = new XunitOutputLogger(xUnitOutputHelper, LogLevelForTestingConfigParsing).Scoped(nameof(MutableSnapshot));
+				var parsingLogger = BuildXunitOutputLogger(LogLevelForTestingConfigParsing);
 
 				foreach (var optionMetadata in Options.All)
 				{
@@ -209,10 +245,15 @@ namespace Elastic.Apm.Tests.TestHelpers
 
 					optionMetadata.ParseAndSetProperty(rawConfigSnapshot, this, parsingLogger);
 				}
+
+				IApmLogger BuildXunitOutputLogger(LogLevel logLevel)
+				{
+					return new LineWriterToLoggerAdaptor(new XunitOutputToLineWriterAdaptor(xUnitOutputHelper), logLevel).Scoped(ThisClassName);
+				}
 			}
 
 			// Used by tests
-			internal MutableSnapshot(RawConfigSnapshot rawConfigSnapshot, IEnumerable<Options.OptionMetadata> allOptionsMetadata)
+			internal MutableSnapshot(IRawConfigSnapshot rawConfigSnapshot, IEnumerable<Options.IOptionMetadata> allOptionsMetadata)
 			{
 				foreach (var optionMetadata in allOptionsMetadata)
 					optionMetadata.ParseAndSetProperty(rawConfigSnapshot, this, new NoopLogger());
@@ -224,6 +265,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 			public string LogToConsoleLinePrefix { get; set; }
 			public bool LogToSysDiagTraceEnabled { get; set; }
 			public string LogToSysDiagTraceLinePrefix { get; set; }
+			public bool LogToXunitEnabled { get; set; }
+			public string LogToXunitLinePrefix { get; set; }
 			public int? RandomSeed { get; set; }
 		}
 	}

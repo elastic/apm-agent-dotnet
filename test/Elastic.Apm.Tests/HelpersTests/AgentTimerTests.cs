@@ -14,15 +14,17 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests.HelpersTests
 {
-	public class AgentTimerTests
+	public class AgentTimerTests : LoggingTestBase
 	{
+		private const string ThisClassName = nameof(AgentTimerTests);
+
 		private static readonly TimeSpan ShortTimeAfterTaskStarted = 10.Milliseconds();
 		private static readonly TimeSpan VeryLongTimeout = 1.Day();
 
 		private static readonly TimeSpan VeryShortTimeout = 20.Milliseconds();
 		private readonly IApmLogger _logger;
 
-		public AgentTimerTests(ITestOutputHelper testOutputHelper) => _logger = new XunitOutputLogger(testOutputHelper);
+		public AgentTimerTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = LoggerBase.Scoped(ThisClassName);
 
 		internal interface ISutEnv
 		{

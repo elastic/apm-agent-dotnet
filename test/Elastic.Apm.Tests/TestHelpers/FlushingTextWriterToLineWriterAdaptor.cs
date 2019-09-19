@@ -14,9 +14,9 @@ namespace Elastic.Apm.Tests.TestHelpers
 			_prefix = prefix;
 		}
 
-		public void WriteLine(string line)
+		public void WriteLine(string text)
 		{
-			_textWriter.WriteLine(TextUtils.PrefixEveryLine(line, _prefix));
+			_textWriter.WriteLine(TextUtils.PrefixEveryLine(text, _prefix));
 			_textWriter.Flush();
 		}
 	}

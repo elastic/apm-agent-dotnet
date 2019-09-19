@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Extensions;
@@ -14,26 +15,33 @@ namespace Elastic.Apm.Tests.TestHelpers
 {
 	public class TestingConfigTests
 	{
-		private readonly ITestOutputHelper _xunitOutputHelper;
-
 		private static readonly IEnumerable<bool> PossibleBoolDefaultValues = new[] { false, true };
 
-		private static readonly IEnumerable<ValueTuple<string, object>> PossibleStringToBoolVariants = new[]
-		{
-			("false", (object)false), ("true", true), ("FALSE", false), ("tRUe", true), ("", null), ("qwerty", null)
-		};
+		private static readonly IEnumerable<LogLevel> PossibleLogLevelDefaultValues = (LogLevel[])Enum.GetValues(typeof(LogLevel));
 
 		private static readonly IEnumerable<string> PossibleStringDefaultValues = new[]
 		{
 			null, "", "1", "22", "123", "some default value", "with various \t white \n\t space"
 		};
 
-		private static IEnumerable<ValueTuple<string, object>> PossibleStringToStringVariants =>
-			PossibleStringDefaultValues.Select(defaultValue => (defaultValue, (object)defaultValue));
-
-		private static readonly IEnumerable<LogLevel> PossibleLogLevelDefaultValues = (LogLevel[]) Enum.GetValues(typeof(LogLevel));
+		private static readonly IEnumerable<ValueTuple<string, object>> PossibleStringToBoolVariants = new[]
+		{
+			("false", (object)false), ("true", true), ("FALSE", false), ("tRUe", true), ("", null), ("qwerty", null)
+		};
 
 		private static readonly IEnumerable<ValueTuple<string, object>> PossibleStringToLogLevelVariants = GetPossibleStringToLogLevelVariants();
+		private static readonly IEnumerable<int?> PossibleNullableIntDefaultValues = new[] { 0, 1, 22, 123, (int?)null };
+
+
+		private static readonly IEnumerable<ValueTuple<string, object>>
+			PossibleStringToNullableIntVariants = GetPossibleStringToNullableIntVariants();
+
+		private readonly ITestOutputHelper _xunitOutputHelper;
+
+		public TestingConfigTests(ITestOutputHelper xunitOutputHelper) => _xunitOutputHelper = xunitOutputHelper;
+
+		private static IEnumerable<ValueTuple<string, object>> PossibleStringToStringVariants =>
+			PossibleStringDefaultValues.Select(defaultValue => (defaultValue, (object)defaultValue));
 
 		private static IEnumerable<ValueTuple<string, object>> GetPossibleStringToLogLevelVariants()
 		{
@@ -52,24 +60,23 @@ namespace Elastic.Apm.Tests.TestHelpers
 				++counter;
 			}
 
-			var invalidLogLevelStrings = new []{ "", "x", "some text", "with various \t white \n\t space" };
+			var invalidLogLevelStrings = new[] { "", "x", "some text", "with various \t white \n\t space" };
 			foreach (var invalidLogLevelString in invalidLogLevelStrings) yield return (invalidLogLevelString, (object)null);
 
-			string UppercaseLetterAt(string str, int index) =>
-				(index > 0 ? str.Substring(0, index) : "")
-				+ char.ToUpper(str[index], CultureInfo.InvariantCulture)
-				+ (index < (str.Length - 1) ? str.Substring(index + 1) : "");
+			string UppercaseLetterAt(string str, int index)
+			{
+				return (index > 0 ? str.Substring(0, index) : "")
+					+ char.ToUpper(str[index], CultureInfo.InvariantCulture)
+					+ (index < str.Length - 1 ? str.Substring(index + 1) : "");
+			}
 		}
-
-		private static readonly IEnumerable<int?> PossibleNullableIntDefaultValues = new[] { 0, 1, 22, 123, (int?)null };
-
-		private static readonly IEnumerable<ValueTuple<string, object>> PossibleStringToNullableIntVariants = GetPossibleStringToNullableIntVariants();
 
 		private static IEnumerable<ValueTuple<string, object>> GetPossibleStringToNullableIntVariants()
 		{
 			foreach (var defaultValue in PossibleNullableIntDefaultValues)
 			{
 				if (defaultValue == null) continue;
+
 				yield return (defaultValue.ToString(), (object)defaultValue);
 			}
 
@@ -81,12 +88,9 @@ namespace Elastic.Apm.Tests.TestHelpers
 			yield return ("qwerty", (object)null);
 		}
 
-		public TestingConfigTests(ITestOutputHelper xunitOutputHelper) => _xunitOutputHelper = xunitOutputHelper;
-
 		[Fact]
 		public void Options_All_should_match_Snapshot_properties()
 		{
-			Options.All.Length.Should().Be(typeof(Snapshot).GetProperties().Length);
 			var p1 = typeof(MutableSnapshot).GetProperty(nameof(MutableSnapshot.LogLevelForTestingConfigParsing));
 			var p2 = Options.LogLevelForTestingConfigParsing.MutableSnapshotPropertyInfo;
 			(p1 == p2).Should().BeTrue();
@@ -98,6 +102,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 				.ForEach(propInfo => Options.All.Should()
 					.Contain(optMeta => optMeta.MutableSnapshotPropertyInfo == propInfo
 						, $"because propInfo.Name: {propInfo.Name}"));
+
+			Options.All.Length.Should().Be(typeof(ISnapshot).GetProperties().Length);
 		}
 
 		[Fact]
@@ -106,6 +112,36 @@ namespace Elastic.Apm.Tests.TestHelpers
 			const string expectedPrefix = "ELASTIC_APM_TESTS_";
 			Options.All.ForEach(optMeta => optMeta.Name.Should().StartWith(expectedPrefix));
 		}
+
+		[Fact]
+		public void All_should_contain_all_static_XyzMetadata()
+		{
+			var allTestingConfigOptionsXyzMetadataStaticFields = typeof(Options)
+				.GetFields(BindingFlags.Static | BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Public)
+				.Where(p => typeof(Options.IOptionMetadata).IsAssignableFrom(p.FieldType))
+				.ToArray();
+
+			foreach (var fieldInfo in allTestingConfigOptionsXyzMetadataStaticFields)
+			{
+				Options.All.Should()
+					.Contain(
+						(Options.IOptionMetadata)fieldInfo.GetValue(null));
+			}
+
+			Options.All.Should().HaveCount(allTestingConfigOptionsXyzMetadataStaticFields.Length);
+		}
+
+		[Fact]
+		public void All_options_should_have_different_names() => Options.All.ForEach(
+			optMeta => Options.All.Where(x => optMeta.Name.Equals(x.Name, StringComparison.InvariantCultureIgnoreCase))
+				.Should()
+				.HaveCount(1, $"because {nameof(optMeta)}: {optMeta}"));
+
+		[Fact]
+		public void All_options_should_refer_to_different_snapshot_properties() => Options.All.ForEach(
+			optMeta => Options.All.Where(x => optMeta.MutableSnapshotPropertyInfo.Equals(x.MutableSnapshotPropertyInfo))
+				.Should()
+				.HaveCount(1, $"because {nameof(optMeta)}: {optMeta}"));
 
 		[Fact]
 		public void Option_without_value_should_be_set_to_default()
@@ -146,7 +182,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 				(optionName, defaultValue) =>
 					new Options.NullableIntOptionMetadata(optionName, defaultValue, x => x.RandomSeed));
 
-		private void TestOptionMetadata<T>(
+		private static void TestOptionMetadata<T>(
 			IEnumerable<T> possibleDefaultValues,
 			IEnumerable<ValueTuple<string, object>> possibleStringToTVariants,
 			Func<string, T, Options.OptionMetadata<T>> creator
@@ -156,20 +192,23 @@ namespace Elastic.Apm.Tests.TestHelpers
 			foreach (var defaultValue in possibleDefaultValues)
 			{
 				var optionMetadata = creator(optionName, defaultValue);
-				foreach (var (stringValue, expectedTValue) in possibleStringToTVariants.Concat(new []{ ((string)null, (object)null) }))
+				// ReSharper disable once PossibleMultipleEnumeration
+				foreach (var (stringValue, expectedTValue) in possibleStringToTVariants.Concat(new[] { ((string)null, (object)null) }))
 				{
 					var configSnapshot =
 						new MutableSnapshot(new MockRawConfigSnapshot(new Dictionary<string, string> { { optionName, stringValue } }),
-							new [] { optionMetadata });
+							new[] { optionMetadata });
 
-					optionMetadata.MutableSnapshotPropertyInfo.GetValue(configSnapshot).Should().Be(expectedTValue ?? defaultValue
-						, $"because stringValue: {stringValue.AsNullableToString()}, expectedTValue: {expectedTValue.AsNullableToString()}"
-						+ $", defaultValue: {defaultValue.AsNullableToString()}");
+					optionMetadata.MutableSnapshotPropertyInfo.GetValue(configSnapshot)
+						.Should()
+						.Be(expectedTValue ?? defaultValue
+							, $"because stringValue: {stringValue.AsNullableToString()}, expectedTValue: {expectedTValue.AsNullableToString()}"
+							+ $", defaultValue: {defaultValue.AsNullableToString()}");
 				}
 			}
 		}
 
-		private class MockRawConfigSnapshot : RawConfigSnapshot
+		private class MockRawConfigSnapshot : IRawConfigSnapshot
 		{
 			private readonly IReadOnlyDictionary<string, string> _dictionary;
 

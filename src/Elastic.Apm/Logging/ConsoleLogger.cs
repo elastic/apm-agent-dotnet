@@ -18,6 +18,8 @@ namespace Elastic.Apm.Logging
 		protected internal static LogLevel DefaultLogLevel { get; } = LogLevel.Error;
 		public static ConsoleLogger Instance { get; } = new ConsoleLogger(DefaultLogLevel);
 
+		private LogLevel Level { get; }
+
 		public static ConsoleLogger LoggerOrDefault(LogLevel? level)
 		{
 			if (level.HasValue && level.Value != DefaultLogLevel)
@@ -26,18 +28,16 @@ namespace Elastic.Apm.Logging
 			return Instance;
 		}
 
-		private LogLevel Level { get; }
-
 		public bool IsEnabled(LogLevel level) => Level <= level;
 
 		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{
 			if (!IsEnabled(level)) return;
 
-			var dateTime = DateTime.UtcNow;
+			var dateTime = DateTime.Now;
 			var message = formatter(state, e);
 
-			var fullMessage = $"[{dateTime.ToString("yyyy-MM-dd hh:mm:ss")}][{ConsoleLogger.LevelToString(level)}] - {message}";
+			var fullMessage = $"[{dateTime:yyyy-MM-dd HH:mm:ss.fff zzz}][{LevelToString(level)}] - {message}";
 			if (e != null)
 				fullMessage += $"{Environment.NewLine}+-> Exception: {e.GetType().FullName}: {e.Message}{Environment.NewLine}{e.StackTrace}";
 
@@ -53,7 +53,9 @@ namespace Elastic.Apm.Logging
 				case LogLevel.Trace when Level <= LogLevel.Trace:
 					_standardOut.WriteLineAsync(fullMessage);
 					break;
-				case LogLevel.None: break;
+				// ReSharper disable once RedundantCaseLabel
+				case LogLevel.None:
+				default: break;
 			}
 		}
 
@@ -67,6 +69,7 @@ namespace Elastic.Apm.Logging
 				case LogLevel.Debug: return "Debug";
 				case LogLevel.Trace: return "Trace";
 				case LogLevel.Critical: return "Critical";
+				// ReSharper disable once RedundantCaseLabel
 				case LogLevel.None:
 				default: return "None";
 			}

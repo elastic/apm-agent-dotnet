@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Xunit.Abstractions;
 using Xunit.Sdk;
@@ -10,52 +9,56 @@ namespace Elastic.Apm.Tests.TestHelpers
 {
 	public class LoggingTestBase : IDisposable
 	{
-		internal static readonly LogLevel DefaultLogLevel = ConsoleLogger.DefaultLogLevel;
+		private const string ThisClassName = nameof(LoggingTestBase);
 
 		private static readonly ThreadSafeLongCounter TestIdCounter = new ThreadSafeLongCounter();
 
-		protected readonly IApmLogger Logger;
-		protected readonly IApmLogger LoggerForNonXunitSinks;
-		protected readonly string TestDisplayName;
-		protected readonly ITestOutputHelper XunitOutputHelper;
+		protected readonly IApmLogger LoggerBase;
 
-		protected LoggingTestBase(ITestOutputHelper xUnitOutputHelper, string derivedClassName = null)
+		private readonly ITest _currentXunitTest;
+		private readonly IApmLogger _loggerForStartFinish;
+
+		protected LoggingTestBase(ITestOutputHelper xUnitOutputHelper)
 		{
-			XunitOutputHelper = xUnitOutputHelper;
+			_currentXunitTest = GetCurrentXunitTest(xUnitOutputHelper);
 
-			var sinkWriters = new List<ILineWriter>();
+			var lineWriters = new List<ILineWriter>();
 
 			var testId = TestIdCounter.Increment();
 
 			var config = TestingConfig.ReadFromFromEnvVars(xUnitOutputHelper);
 
 			if (config.LogToSysDiagTraceEnabled)
-				sinkWriters.Add(new SystemDiagnosticsTraceLineWriter(string.Format(config.LogToSysDiagTraceLinePrefix, testId)));
+				lineWriters.Add(new SystemDiagnosticsTraceLineWriter(string.Format(config.LogToSysDiagTraceLinePrefix, testId)));
 
 			if (config.LogToConsoleEnabled)
-				sinkWriters.Add(new SystemDiagnosticsTraceLineWriter(string.Format(config.LogToConsoleLinePrefix, testId)));
+				lineWriters.Add(new FlushingTextWriterToLineWriterAdaptor(Console.Out, string.Format(config.LogToConsoleLinePrefix, testId)));
 
-			LoggerForNonXunitSinks = new LineWriterToLoggerAdaptor(new SplittingLineWriter(sinkWriters.ToArray()), config.LogLevel);
-			if (derivedClassName != null) LoggerForNonXunitSinks = LoggerForNonXunitSinks.Scoped(derivedClassName);
-			TestDisplayName = GetTestDisplayName(xUnitOutputHelper);
-			LoggerForNonXunitSinks.Info()?.Log("Starting test: {UnitTestDisplayName}", TestDisplayName);
+			var writerForStartFinish = lineWriters.ToArray();
+			if (config.LogToXunitEnabled)
+			{
+				lineWriters.Add(new XunitOutputToLineWriterAdaptor(xUnitOutputHelper, string.Format(config.LogToXunitLinePrefix, testId)));
+				if (!TestingConfig.IsRunningInIde) writerForStartFinish = lineWriters.ToArray();
+			}
 
-			sinkWriters.Add(new XunitOutputToLineWriterAdaptor(xUnitOutputHelper));
-			Logger = new LineWriterToLoggerAdaptor(new SplittingLineWriter(sinkWriters.ToArray()), config.LogLevel);
-			if (derivedClassName != null) Logger = Logger.Scoped(derivedClassName);
+			_loggerForStartFinish = new LineWriterToLoggerAdaptor(new SplittingLineWriter(writerForStartFinish), config.LogLevel)
+				.Scoped(ThisClassName);
+
+			_loggerForStartFinish.Info()?.Log("Starting test: {UnitTestDisplayName}...", TestDisplayName);
+
+			LoggerBase = new LineWriterToLoggerAdaptor(new SplittingLineWriter(lineWriters.ToArray()), config.LogLevel);
 		}
 
-		public void Dispose() => LoggerForNonXunitSinks.Info()?.Log("Finished test: {UnitTestDisplayName}", TestDisplayName);
+		protected string TestDisplayName => _currentXunitTest?.DisplayName;
 
-		private static string GetTestDisplayName(ITestOutputHelper xUnitOutputHelper)
+		public virtual void Dispose() => _loggerForStartFinish.Info()?.Log("Finished test: {UnitTestDisplayName}", TestDisplayName);
+
+		internal static ITest GetCurrentXunitTest(ITestOutputHelper xUnitOutputHelper)
 		{
 			var helper = (TestOutputHelper)xUnitOutputHelper;
-
-			var test = (ITest)helper.GetType()
-				.GetField("test", BindingFlags.NonPublic | BindingFlags.Instance)
-				?.GetValue(helper);
-			return test?.DisplayName;
+			var helperTestFieldInfo = helper.GetType().GetField("test", BindingFlags.NonPublic | BindingFlags.Instance);
+			var helperTestFieldValue = helperTestFieldInfo?.GetValue(helper);
+			return (ITest)helperTestFieldValue;
 		}
-
 	}
 }
