@@ -15,14 +15,15 @@ namespace Elastic.Apm
 			IApmLogger logger = null,
 			IConfigurationReader configurationReader = null,
 			IPayloadSender payloadSender = null
-		) : this(logger, configurationReader, payloadSender, null, null) { }
+		) : this(logger, configurationReader, payloadSender, null, null, null) { }
 
 		internal AgentComponents(
 			IApmLogger logger,
 			IConfigurationReader configurationReader,
 			IPayloadSender payloadSender,
 			IMetricsCollector metricsCollector,
-			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer
+			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
+			ICentralConfigFetcher centralConfigFetcher
 		)
 		{
 			var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
@@ -40,11 +41,15 @@ namespace Elastic.Apm
 			MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigurationReader);
 			MetricsCollector.StartCollecting();
 
-			CentralConfigFetcher = new CentralConfigFetcher(Logger, ConfigStore, Service);
+			CentralConfigFetcher = centralConfigFetcher ?? new CentralConfigFetcher(Logger, ConfigStore, Service);
 
 			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigStore,
 				currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(Logger));
 		}
+
+		private ICentralConfigFetcher CentralConfigFetcher { get; }
+
+		internal IConfigStore ConfigStore { get; }
 
 		public IConfigurationReader ConfigurationReader { get; }
 
@@ -64,10 +69,6 @@ namespace Elastic.Apm
 		public ITracer Tracer => TracerInternal;
 
 		internal Tracer TracerInternal { get; }
-
-		private CentralConfigFetcher CentralConfigFetcher { get; }
-
-		internal IConfigStore ConfigStore { get; }
 
 		public void Dispose()
 		{
