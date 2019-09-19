@@ -295,10 +295,10 @@ namespace Elastic.Apm.BackendComm
 
 		private void UpdateConfigStore(ConfigDelta configDelta)
 		{
-			_logger.Debug()?.Log("Updating " + nameof(ConfigStore) + ". " + nameof(configDelta) + ": {ConfigDelta}", configDelta);
+			_logger.Info()?.Log("Updating " + nameof(ConfigStore) + ". New central configuration: {ConfigDelta}", configDelta);
 
 			_configStore.CurrentSnapshot = new WrappingConfigSnapshot(_initialSnapshot, configDelta
-				, _initialSnapshot.DbgDescription + " + " + $"central (ETag: `{configDelta.ETag}')");
+				, $"{_initialSnapshot.DbgDescription} + central (ETag: `{configDelta.ETag}')");
 		}
 
 		private class FailedToFetchConfigException : Exception
@@ -351,7 +351,7 @@ namespace Elastic.Apm.BackendComm
 
 			public override string ToString()
 			{
-				var builder = new ToStringBuilder("");
+				var builder = new ToStringBuilder($"[ETag: `{ETag}']");
 
 				if (TransactionSampleRate.HasValue) builder.Add(nameof(TransactionSampleRate), TransactionSampleRate.Value);
 
