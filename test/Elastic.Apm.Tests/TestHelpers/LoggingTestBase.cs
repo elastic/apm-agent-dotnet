@@ -18,7 +18,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 		private readonly ITest _currentXunitTest;
 		private readonly LineWriterToLoggerAdaptor _loggerForStartFinish;
 
-		protected LoggingTestBase(ITestOutputHelper xUnitOutputHelper)
+		protected LoggingTestBase(ITestOutputHelper xUnitOutputHelper, LogLevel? overridingLogLevel = null)
 		{
 			_currentXunitTest = GetCurrentXunitTest(xUnitOutputHelper);
 
@@ -27,6 +27,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 			var testId = TestIdCounter.Increment();
 
 			var config = TestingConfig.ReadFromFromEnvVars(xUnitOutputHelper);
+
+			var logLevel = overridingLogLevel ?? config.LogLevel;
 
 			if (config.LogToSysDiagTraceEnabled)
 				lineWriters.Add(new SystemDiagnosticsTraceLineWriter(string.Format(config.LogToSysDiagTraceLinePrefix, testId)));
@@ -41,11 +43,11 @@ namespace Elastic.Apm.Tests.TestHelpers
 				if (!TestingConfig.IsRunningInIde) writerForStartFinish = lineWriters.ToArray();
 			}
 
-			_loggerForStartFinish = new LineWriterToLoggerAdaptor(new SplittingLineWriter(writerForStartFinish), config.LogLevel);
+			_loggerForStartFinish = new LineWriterToLoggerAdaptor(new SplittingLineWriter(writerForStartFinish), logLevel);
 
 			LogTestStartFinish( /* isStart: */ true);
 
-			LoggerBase = new LineWriterToLoggerAdaptor(new SplittingLineWriter(lineWriters.ToArray()), config.LogLevel);
+			LoggerBase = new LineWriterToLoggerAdaptor(new SplittingLineWriter(lineWriters.ToArray()), logLevel);
 		}
 
 		protected string TestDisplayName => _currentXunitTest?.DisplayName;
