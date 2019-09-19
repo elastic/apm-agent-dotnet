@@ -9,14 +9,15 @@ namespace Elastic.Apm.Helpers
 	{
 		private const string ThisClassName = nameof(ExceptionUtils);
 
-		internal const string MethodStartingMsgFmt = "{MethodName} starting...";
+		internal const string MethodStartingMsgFmt = "{MethodName} entered";
 		internal const string MethodExitingNormallyMsgFmt = "{MethodName} is about to exit normally";
 		internal const string MethodExitingCancelledMsgFmt = "{MethodName} is about to exit because it was cancelled, which is expected on shutdown";
 		internal const string MethodExitingExceptionMsgFmt = "{MethodName} is about to exit because of exception";
 
-		internal static void DoSwallowingExceptions(IApmLogger logger, Action action, bool shouldSwallowCancellation = true
+		internal static void DoSwallowingExceptions(IApmLogger loggerArg, Action action, bool shouldSwallowCancellation = true
 			, [CallerMemberName] string dbgCallerMethodName = null)
 		{
+			var logger = loggerArg.Scoped($"{ThisClassName}.{nameof(DoSwallowingExceptions)}");
 			try
 			{
 				logger.Debug()?.Log(MethodStartingMsgFmt, dbgCallerMethodName);
