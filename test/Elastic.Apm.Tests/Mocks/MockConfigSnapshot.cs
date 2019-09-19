@@ -79,7 +79,7 @@ namespace Elastic.Apm.Tests.Mocks
 			ParseCaptureBodyContentTypes(Kv(ConfigConsts.EnvVarNames.CaptureBodyContentTypes, _captureBodyContentTypes, Origin), CaptureBody);
 
 		public bool CaptureHeaders => ParseCaptureHeaders(Kv(ConfigConsts.EnvVarNames.CaptureHeaders, _captureHeaders, Origin));
-		public bool CentralConfig => ParseCaptureHeaders(Kv(ConfigConsts.EnvVarNames.CentralConfig, _centralConfig, Origin));
+		public bool CentralConfig => ParseCentralConfig(Kv(ConfigConsts.EnvVarNames.CentralConfig, _centralConfig, Origin));
 		public string Environment => ParseEnvironment(Kv(ConfigConsts.EnvVarNames.Environment, _environment, Origin));
 
 		public TimeSpan FlushInterval => ParseFlushInterval(Kv(ConfigConsts.EnvVarNames.FlushInterval, _flushInterval, Origin));
