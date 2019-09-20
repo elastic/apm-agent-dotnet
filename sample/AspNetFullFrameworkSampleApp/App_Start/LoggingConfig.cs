@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using Elastic.Apm.AspNetFullFramework;
 using NLog;
 using NLog.Common;
@@ -9,7 +10,7 @@ using NLog.Targets.Wrappers;
 
 namespace AspNetFullFrameworkSampleApp
 {
-	public class LoggingConfig
+	public sealed class LoggingConfig
 	{
 		public const string LogFileEnvVarName = "ELASTIC_APM_ASP_NET_FULL_FRAMEWORK_SAMPLE_APP_LOG_FILE";
 
@@ -32,7 +33,9 @@ namespace AspNetFullFrameworkSampleApp
 
 			var logTargets = new TargetWithLayout[]
 			{
-				new TraceTarget(), LogMemoryTarget, new FileTarget { FileName = logFileEnvVarValue, DeleteOldFileOnStartup = true },
+				new PrefixingTraceTarget($"Elastic APM .NET {nameof(AspNetFullFrameworkSampleApp)}> "),
+				LogMemoryTarget,
+				new FileTarget { FileName = logFileEnvVarValue, DeleteOldFileOnStartup = true },
 				new ConsoleTarget()
 			};
 			foreach (var logTarget in logTargets) logTarget.Layout = layout;
@@ -52,6 +55,61 @@ namespace AspNetFullFrameworkSampleApp
 			AgentDependencies.Logger = new ApmLoggerToNLog();
 
 			Logger.Debug(nameof(SetupLogging) + " completed. Path to log file: {SampleAppLogFilePath}", logFileEnvVarValue);
+		}
+
+		private sealed class PrefixingTraceTarget: TargetWithLayout
+		{
+			private readonly string _prefix;
+
+			internal PrefixingTraceTarget(string prefix = "")
+			{
+				_prefix = prefix;
+				OptimizeBufferReuse = true;
+			}
+
+			protected override void Write(LogEventInfo logEvent)
+			{
+				var message = this.RenderLogEvent(this.Layout, logEvent);
+				System.Diagnostics.Trace.WriteLine(PrefixEveryLine(message, _prefix));
+			}
+
+			// The order in endOfLines is important because we need to check longer sequences first
+			private static readonly string[] EndOfLineCharSequences = { "\r\n", "\n", "\r" };
+
+			private static string PrefixEveryLine(string input, string prefix = "")
+			{
+				// We treat empty input as a special case because StringReader doesn't return it as an empty line
+				if (input.Length == 0) return prefix;
+
+				var resultBuilder = new StringBuilder(input.Length);
+				using (var stringReader = new StringReader(input))
+				{
+					var isFirstLine = true;
+					string line;
+					while ((line = stringReader.ReadLine()) != null)
+					{
+						if (isFirstLine)
+							isFirstLine = false;
+						else
+							resultBuilder.AppendLine();
+						resultBuilder.Append(prefix);
+						resultBuilder.Append(line);
+					}
+				}
+
+				// Since lines returned by StringReader exclude newline characters it's possible that the last line had newline at the end
+				// but we didn't append it
+
+				foreach (var endOfLineSeq in EndOfLineCharSequences)
+				{
+					if (!input.EndsWith(endOfLineSeq)) continue;
+
+					resultBuilder.Append(endOfLineSeq);
+					break;
+				}
+
+				return resultBuilder.ToString();
+			}
 		}
 	}
 }
