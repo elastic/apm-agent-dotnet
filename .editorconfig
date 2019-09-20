@@ -66,12 +66,12 @@ csharp_style_var_for_built_in_types = true:warning
 csharp_style_var_when_type_is_apparent = true:warning
 csharp_style_var_elsewhere = true:warning
 
-csharp_style_expression_bodied_methods = true:warning
-csharp_style_expression_bodied_constructors = true:warning
-csharp_style_expression_bodied_operators = true:warning
-csharp_style_expression_bodied_properties = true:warning
-csharp_style_expression_bodied_indexers = true:warning
-csharp_style_expression_bodied_accessors = true:warning
+csharp_style_expression_bodied_methods = true:none
+csharp_style_expression_bodied_constructors = true:none
+csharp_style_expression_bodied_operators = true:hint
+csharp_style_expression_bodied_properties = true:hint
+csharp_style_expression_bodied_indexers = true:hint
+csharp_style_expression_bodied_accessors = true:hint
 
 # Suggest more modern language features when available
 csharp_style_pattern_matching_over_is_with_cast_check = true:warning
@@ -121,6 +121,9 @@ resharper_csharp_braces_for_fixed=required_for_multiline
 resharper_csharp_braces_for_ifelse=required_for_multiline
 
 resharper_csharp_accessor_owner_body=expression_body
+
+resharper_local_function_body=expression_body
+resharper_arrange_local_function_body_highlighting=hint
 
 [Jenkinsfile]
 indent_style = space

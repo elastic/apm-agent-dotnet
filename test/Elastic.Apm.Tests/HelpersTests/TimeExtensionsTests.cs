@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
@@ -181,8 +180,10 @@ namespace Elastic.Apm.Tests.HelpersTests
 		[Theory]
 		[MemberData(nameof(GenTruncateToSecondsVariants))]
 		public void TruncateToSeconds_tests(int variantIndex, TimeSpan timeSpan, TimeSpan expectedTruncatedTimeSpan) =>
-			timeSpan.TruncateToSeconds().Should().Be(expectedTruncatedTimeSpan, $"variantIndex: {variantIndex}, timeSpan: {timeSpan.ToHms()}"
-				+ $", expectedRoundedTimeSpan: {expectedTruncatedTimeSpan.ToHms()}");
+			timeSpan.TruncateToSeconds()
+				.Should()
+				.Be(expectedTruncatedTimeSpan, $"variantIndex: {variantIndex}, timeSpan: {timeSpan.ToHms()}"
+					+ $", expectedRoundedTimeSpan: {expectedTruncatedTimeSpan.ToHms()}");
 
 		public static IEnumerable<object[]> GenToHmsInSecondsVariants()
 		{
@@ -203,14 +204,14 @@ namespace Elastic.Apm.Tests.HelpersTests
 			ValueTuple<TimeSpan, string>[] baseVariants =
 			{
 				(TimeSpan.Zero, "0s"),
-				(1.Second(),"1s"),
-				(59.Second(),"59s"),
-				(1.Minute() + 7.Second(),"1m 7s"),
-				(29.Minutes() + 23.Second(),"29m 23s"),
-				(53.Minutes(),"53m"),
-				(1.Hour() + 29.Minutes() + 23.Second(),"1h 29m 23s"),
-				(13.Hours() + 59.Second(),"13h 59s"),
-				(22.Hours() + 1.Minute() + 7.Second(),"22h 1m 7s")
+				(1.Second(), "1s"),
+				(59.Second(), "59s"),
+				(1.Minute() + 7.Second(), "1m 7s"),
+				(29.Minutes() + 23.Second(), "29m 23s"),
+				(53.Minutes(), "53m"),
+				(1.Hour() + 29.Minutes() + 23.Second(), "1h 29m 23s"),
+				(13.Hours() + 59.Second(), "13h 59s"),
+				(22.Hours() + 1.Minute() + 7.Second(), "22h 1m 7s")
 			};
 
 			IEnumerable<ValueTuple<TimeSpan, string>> GenBasePlusDeltas()

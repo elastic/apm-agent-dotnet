@@ -41,10 +41,10 @@ namespace Elastic.Apm.Report
 		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler;
 
 		public PayloadSenderV2(IApmLogger logger, IConfigSnapshot config, Service service, Api.System system,
-			HttpMessageHandler httpMessageHandler = null
+			HttpMessageHandler httpMessageHandler = null, string dbgName = null
 		)
 		{
-			_logger = logger?.Scoped(ThisClassName);
+			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
 
 			System = system;
 			_metadata = new Metadata { Service = service, System = System };
@@ -168,7 +168,7 @@ namespace Elastic.Apm.Report
 				_logger.Trace()?.Log("Waiting for data to send... (not using FlushInterval timer because FlushInterval is 0)");
 			else
 			{
-				_logger.Trace()?.Log("Waiting for data to send... FlushInterval: {FlushInterval}", _flushInterval);
+				_logger.Trace()?.Log("Waiting for data to send... FlushInterval: {FlushInterval}", _flushInterval.ToHms());
 				while (true)
 				{
 					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, _cancellationTokenSource.Token)) break;

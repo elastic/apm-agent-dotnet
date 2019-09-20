@@ -45,7 +45,7 @@ namespace Elastic.Apm.Tests
 		public PayloadSenderTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper /*, LogLevel.Debug */)
 		{
 			_logger = LoggerBase.Scoped(ThisClassName);
-			LoggerBase.Level = LogLevel.Debug;
+//			LoggerBase.Level = LogLevel.Debug;
 		}
 
 		public static IEnumerable<object[]> TestArgsVariantsWithVeryLongFlushInterval =>
@@ -68,7 +68,7 @@ namespace Elastic.Apm.Tests
 			var noopLogger = new NoopLogger();
 			var mockConfig = new MockConfigSnapshot(_logger, secretToken: secretToken, maxBatchEventCount: "1");
 			var payloadSender = new PayloadSenderV2(_logger, mockConfig,
-				Service.GetDefaultService(mockConfig, noopLogger), new Api.System(), handler);
+				Service.GetDefaultService(mockConfig, noopLogger), new Api.System(), handler, /* dbgName: */ TestDisplayName);
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, config: mockConfig)))
 			{
@@ -97,7 +97,7 @@ namespace Elastic.Apm.Tests
 			var logger = new NoopLogger();
 			var service = Service.GetDefaultService(new MockConfigSnapshot(logger), logger);
 			var payloadSender = new PayloadSenderV2(logger, new MockConfigSnapshot(logger, flushInterval: "1s"),
-				service, new Api.System(), handler);
+				service, new Api.System(), handler, /* dbgName: */ TestDisplayName);
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
@@ -176,7 +176,7 @@ namespace Elastic.Apm.Tests
 
 			var configurationReader = args.BuildConfig(_logger);
 			var service = Service.GetDefaultService(configurationReader, _logger);
-			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler);
+			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler, /* dbgName: */ TestDisplayName);
 
 			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
 			{
@@ -221,7 +221,7 @@ namespace Elastic.Apm.Tests
 
 			var configurationReader = args.BuildConfig(_logger);
 			var service = Service.GetDefaultService(configurationReader, _logger);
-			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler);
+			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler, /* dbgName: */ TestDisplayName);
 
 			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender /* , useRealCentralConfigFetcher: true */)))
 			{
@@ -263,7 +263,8 @@ namespace Elastic.Apm.Tests
 
 				var configurationReader = args.BuildConfig(_logger);
 				var service = Service.GetDefaultService(configurationReader, _logger);
-				var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler);
+				var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler
+					, /* dbgName: */ TestDisplayName);
 
 				using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
 				{
@@ -317,7 +318,7 @@ namespace Elastic.Apm.Tests
 
 			var configurationReader = args.BuildConfig(_logger);
 			var service = Service.GetDefaultService(configurationReader, _logger);
-			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler);
+			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler, /* dbgName: */ TestDisplayName);
 
 			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
 			{
@@ -373,7 +374,8 @@ namespace Elastic.Apm.Tests
 			var configReader = new MockConfigSnapshot(_logger);
 			var mockHttpMessageHandler = new MockHttpMessageHandler((r, c) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)));
 			var service = Service.GetDefaultService(configReader, _logger);
-			var payloadSender = new PayloadSenderV2(_logger, configReader, service, new Api.System(), mockHttpMessageHandler);
+			var payloadSender = new PayloadSenderV2(_logger, configReader, service, new Api.System(), mockHttpMessageHandler
+				, /* dbgName: */ TestDisplayName);
 
 			payloadSender.Thread.IsAlive.Should().BeTrue();
 
