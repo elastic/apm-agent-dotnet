@@ -270,7 +270,7 @@ namespace Elastic.Apm.BackendComm
 
 			if (configPayload.UnknownKeys != null && !configPayload.UnknownKeys.IsEmpty())
 			{
-				_logger.Debug()
+				_logger.Info()
 					?.Log("Central configuration response contains keys that are not in the list of options"
 						+ " that can be changed after Agent start: {UnknownKeys}. Supported options: {ReloadableOptions}."
 						, string.Join(", ", configPayload.UnknownKeys.Select(kv => $"`{kv.Key}'"))
