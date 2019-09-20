@@ -4,18 +4,22 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
 	/// <summary>
 	/// Contains tests related to json serialization.
 	/// </summary>
-	public class SerializationTests
+	public class SerializationTests : LoggingTestBase
 	{
+		public SerializationTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
+
 		// ReSharper disable once MemberCanBePrivate.Global
 		public static TheoryData SerializationUtilsTrimToPropertyMaxLengthVariantsToTest => new TheoryData<string, string>
 		{

@@ -1,32 +1,32 @@
-using System;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using SampleAspNetCoreApp;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
 	[Collection("DiagnosticListenerTest")]
 	public class DistributedTracingAspNetCoreTests : IAsyncLifetime
 	{
-		private ApmAgent _agent1;
-		private ApmAgent _agent2;
-
 		private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
 		private readonly MockPayloadSender _payloadSender1 = new MockPayloadSender();
 		private readonly MockPayloadSender _payloadSender2 = new MockPayloadSender();
+
+		private ApmAgent _agent1;
+		private ApmAgent _agent2;
 
 		private Task _taskForApp1;
 		private Task _taskForApp2;
@@ -98,7 +98,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_payloadSender1.Spans.Should().NotContain(n => n.TraceId != _payloadSender1.FirstTransaction.TraceId);
 			_payloadSender2.Spans.Should().NotContain(n => n.TraceId != _payloadSender1.FirstTransaction.TraceId);
 
-			//make sure the parent of the 2. transaction is the spanid of the outgoing HTTP request from the 1. transaction:
+			//make sure the parent of the 2. transaction is the span ID of the outgoing HTTP request from the 1. transaction:
 			_payloadSender2.FirstTransaction.ParentId.Should()
 				.Be(_payloadSender1.Spans.First(n => n.Context.Http.Url.Contains("api/values")).Id);
 		}
@@ -148,7 +148,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_payloadSender1.Transactions.Count.Should().Be(1);
 			_payloadSender2.Transactions.Count.Should().Be(1);
 
-			//make sure the 2 transactions have the same traceid:
+			//make sure the 2 transactions have the same trace ID:
 			_payloadSender2.FirstTransaction.TraceId.Should().Be(_payloadSender1.FirstTransaction.TraceId);
 		}
 	}

@@ -17,15 +17,15 @@ namespace Elastic.Apm.PerfTests
 		[Benchmark]
 		public void SimpleTransactions10Spans()
 		{
-
-			var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender()));
-
-			for (var i = 0; i < 100; i++)
+			using (var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender())))
 			{
-				agent.Tracer.CaptureTransaction("transaction", "perfTransaction", transaction =>
+				for (var i = 0; i < 100; i++)
 				{
-					for (var j = 0; j < 10; j++) transaction.CaptureSpan("span", "perfSpan", () => { });
-				});
+					agent.Tracer.CaptureTransaction("transaction", "perfTransaction", transaction =>
+					{
+						for (var j = 0; j < 10; j++) transaction.CaptureSpan("span", "perfSpan", () => { });
+					});
+				}
 			}
 		}
 
@@ -81,15 +81,16 @@ namespace Elastic.Apm.PerfTests
 		public void Simple100Transaction10Spans()
 		{
 			var noopLogger = new NoopLogger();
-			var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(), logger: noopLogger,
-				configurationReader: new MockConfigSnapshot(noopLogger, spanFramesMinDurationInMilliseconds: "-1ms", stackTraceLimit: "10")));
-
-			for (var i = 0; i < 100; i++)
+			using (var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(), logger: noopLogger,
+				configurationReader: new MockConfigSnapshot(noopLogger, spanFramesMinDurationInMilliseconds: "-1ms", stackTraceLimit: "10"))))
 			{
-				agent.Tracer.CaptureTransaction("transaction", "perfTransaction", transaction =>
+				for (var i = 0; i < 100; i++)
 				{
-					for (var j = 0; j < 10; j++) transaction.CaptureSpan("span", "perfSpan", () => { });
-				});
+					agent.Tracer.CaptureTransaction("transaction", "perfTransaction", transaction =>
+					{
+						for (var j = 0; j < 10; j++) transaction.CaptureSpan("span", "perfSpan", () => { });
+					});
+				}
 			}
 		}
 
@@ -97,16 +98,16 @@ namespace Elastic.Apm.PerfTests
 		public void DebugLogSimple100Transaction10Spans()
 		{
 			var testLogger = new PerfTestLogger(LogLevel.Debug);
-			var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(), logger: testLogger,
-				configurationReader: new MockConfigSnapshot(testLogger, "Debug")));
-
-
-			for (var i = 0; i < 100; i++)
+			using (var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(), logger: testLogger,
+				configurationReader: new MockConfigSnapshot(testLogger, "Debug"))))
 			{
-				agent.Tracer.CaptureTransaction("transaction", "perfTransaction", transaction =>
+				for (var i = 0; i < 100; i++)
 				{
-					for (var j = 0; j < 10; j++) transaction.CaptureSpan("span", "perfSpan", () => { });
-				});
+					agent.Tracer.CaptureTransaction("transaction", "perfTransaction", transaction =>
+					{
+						for (var j = 0; j < 10; j++) transaction.CaptureSpan("span", "perfSpan", () => { });
+					});
+				}
 			}
 		}
 

@@ -4,8 +4,10 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 [assembly:
 	InternalsVisibleTo(
@@ -29,8 +31,10 @@ namespace Elastic.Apm.Tests
 	/// <summary>
 	/// Very basic agent related tests
 	/// </summary>
-	public class BasicAgentTests
+	public class BasicAgentTests : LoggingTestBase
 	{
+		public BasicAgentTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
+
 		/// <summary>
 		/// Creates a simple transaction.
 		/// Makes sure that the agent reports the transaction with the correct agent version,

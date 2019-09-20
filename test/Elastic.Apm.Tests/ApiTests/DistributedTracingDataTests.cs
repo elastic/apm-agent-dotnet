@@ -6,21 +6,25 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests.ApiTests
 {
 	/// <summary>
 	/// Tests the DistributedTracingData parameter on the Public Agent API
 	/// </summary>
-	public class DistributedTracingDataTests
+	public class DistributedTracingDataTests : LoggingTestBase
 	{
 		private const string TestTransaction = "TestTransaction";
 		private const string UnitTest = "UnitTest";
 		private const string ValidParentId = "5ec5de4fdae36f4c";
 		private const string ValidTraceFlags = "01";
 		private const string ValidTraceId = "005a6663c2fb9591a0e53d322df6c3e2";
+
+		public DistributedTracingDataTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
 
 		/// <summary>
 		/// Passes a valid trace context to <see cref="Tracer.StartTransaction" />.
@@ -80,7 +84,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		}
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action, DistributedTracingData)" /> method with a
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,Action, DistributedTracingData)" /> method with a
 		/// valid
 		/// DistributedTracingData parameter
 		/// </summary>
@@ -98,7 +102,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		/// <summary>
 		/// Tests the
-		/// <see cref="Tracer.CaptureTransaction(string,string,System.Action{ITransaction}, DistributedTracingData)" /> method
+		/// <see cref="Tracer.CaptureTransaction(string,string,Action, DistributedTracingData)" /> method
 		/// with valid DistributedTracingData parameter.
 		/// </summary>
 		[Fact]
@@ -118,7 +122,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		/// <summary>
 		/// Tests the
-		/// <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,T}, DistributedTracingData)" />
+		/// <see cref="Tracer.CaptureTransaction{T}(string,string,Func{TResult}, DistributedTracingData)" />
 		/// method
 		/// with valid DistributedTracingData parameter.
 		/// </summary>
@@ -144,7 +148,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				}, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{T}, DistributedTracingData)" /> method
+		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,Func{TResult}, DistributedTracingData)" /> method
 		/// with valid DistributedTracingData parameter.
 		/// </summary>
 		[Fact]
@@ -165,7 +169,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			}, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Func{Task}, DistributedTracingData)" /> method
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,Func{TResult}, DistributedTracingData)" /> method
 		/// with valid DistributedTracingData parameter.
 		/// </summary>
 		[Fact]
@@ -181,7 +185,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		/// <summary>
 		/// Tests the
-		/// <see cref="Tracer.CaptureTransaction(string,string,System.Func{ITransaction,Task}, DistributedTracingData)" />
+		/// <see cref="Tracer.CaptureTransaction(string,string,Func{TResult}, DistributedTracingData)" />
 		/// method
 		/// with valid DistributedTracingData parameter.
 		/// </summary>
@@ -206,7 +210,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		/// <summary>
 		/// Tests the
-		/// <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,Task{T}}, DistributedTracingData)" />
+		/// <see cref="Tracer.CaptureTransaction{T}(string,string,Func{TResult}, DistributedTracingData)" />
 		/// method
 		/// with valid DistributedTracingData parameter.
 		/// </summary>
@@ -232,7 +236,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				}, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{Task{T}}, DistributedTracingData)" />
+		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,Func{TResult}, DistributedTracingData)" />
 		/// method
 		/// with valid DistributedTracingData parameter.
 		/// </summary>

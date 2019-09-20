@@ -8,11 +8,13 @@ using Elastic.Apm.AspNetCore.Config;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using SampleAspNetCoreApp;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
@@ -89,6 +91,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 					MicrosoftExtensionsConfig.Origin,
 					MicrosoftExtensionsConfig.Keys.LogLevel,
 					"Defaulting to ",
+					// ReSharper disable once StringLiteralTypo
 					"DbeugMisspelled"
 				);
 		}
@@ -98,7 +101,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// This test makes sure that configs are applied to the agent when those are stored in env vars.
 		/// </summary>
 		[Fact]
-		public void ReadConfingsFromEnvVarsViaIConfig()
+		public void ReadConfigFromEnvVarsViaIConfig()
 		{
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.LogLevel, "Debug");
 			var serverUrl = "http://myServerFromEnvVar.com:1234";
@@ -154,9 +157,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// </summary>
 	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
 	public class MicrosoftExtensionsConfigIntegrationTests
-		: IClassFixture<WebApplicationFactory<Startup>>, IDisposable
+		: LoggingTestBase, IClassFixture<WebApplicationFactory<Startup>>
 	{
-		public MicrosoftExtensionsConfigIntegrationTests(WebApplicationFactory<Startup> factory)
+		public MicrosoftExtensionsConfigIntegrationTests(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper)
+			: base(xUnitOutputHelper)
 		{
 			_factory = factory;
 			_logger = new TestLogger();
@@ -189,11 +193,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.And.Contain(n => n.Contains("Failed parsing server URL from"));
 		}
 
-		public void Dispose()
+		public override void Dispose()
 		{
 			_factory?.Dispose();
 			_agent?.Dispose();
 			_client?.Dispose();
+
+			base.Dispose();
 		}
 	}
 }

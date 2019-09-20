@@ -3,10 +3,12 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
@@ -14,11 +16,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// Tests the <see cref="Elastic.Apm.AspNetCore.DiagnosticListener.AspNetCoreDiagnosticListener" /> type.
 	/// </summary>
 	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
-	public class AspNetCoreDiagnosticListenerTest : IClassFixture<WebApplicationFactory<Startup>>
+	public class AspNetCoreDiagnosticListenerTest : LoggingTestBase, IClassFixture<WebApplicationFactory<Startup>>
 	{
 		private readonly WebApplicationFactory<Startup> _factory;
 
-		public AspNetCoreDiagnosticListenerTest(WebApplicationFactory<Startup> factory) => _factory = factory;
+		public AspNetCoreDiagnosticListenerTest(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper)
+			=> _factory = factory;
 
 		/// <summary>
 		/// Triggers /Home/TriggerError from the sample app

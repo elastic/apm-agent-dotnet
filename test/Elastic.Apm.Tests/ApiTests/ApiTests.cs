@@ -5,10 +5,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests.ApiTests
 {
@@ -17,13 +18,15 @@ namespace Elastic.Apm.Tests.ApiTests
 	/// Only tests scenarios with manually calling StartTransaction, StartSpan, and End.
 	/// The convenient API is covered by <see cref="ConvenientApiSpanTests" /> and <see cref="ConvenientApiTransactionTests" />
 	/// </summary>
-	public class ApiTests
+	public class ApiTests: LoggingTestBase
 	{
 		private const string CustomTransactionTypeForTests = "custom transaction type for tests";
 		private const string TestSpan1 = "TestSpan1";
 		private const string TestSpan2 = "TestSpan1";
 		private const string TestTransaction = "TestTransaction";
 		private const string UnitTest = "UnitTest";
+
+		public ApiTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
 
 		/// <summary>
 		/// Starts and ends a transaction with the public API

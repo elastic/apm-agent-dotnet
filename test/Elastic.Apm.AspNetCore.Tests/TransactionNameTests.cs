@@ -6,6 +6,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
@@ -15,13 +16,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// E.g. url localhost/user/info/1 should get have Transaction.Name GET user/info {id}
 	/// </summary>
 	[Collection("DiagnosticListenerTest")]
-	public class TransactionNameTests : IClassFixture<WebApplicationFactory<Startup>>, IDisposable
+	public class TransactionNameTests : LoggingTestBase, IClassFixture<WebApplicationFactory<Startup>>
 	{
 		private readonly ApmAgent _agent;
 		private readonly WebApplicationFactory<Startup> _factory;
 		private readonly MockPayloadSender _payloadSender = new MockPayloadSender();
 
-		public TransactionNameTests(WebApplicationFactory<Startup> factory)
+		public TransactionNameTests(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper)
 		{
 			_factory = factory;
 
@@ -103,10 +104,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_payloadSender.FirstTransaction.Context.Request.Url.Full.Should().Be("http://localhost/");
 		}
 
-		public void Dispose()
+		public override void Dispose()
 		{
 			_agent?.Dispose();
 			_factory?.Dispose();
+
+			base.Dispose();
 		}
 	}
 }

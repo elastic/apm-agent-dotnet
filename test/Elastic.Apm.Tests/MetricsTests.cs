@@ -20,11 +20,7 @@ namespace Elastic.Apm.Tests
 {
 	public class MetricsTests: LoggingTestBase
 	{
-		private const string ThisClassName = nameof(MetricsTests);
-
-		private readonly IApmLogger _logger;
-
-		public MetricsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = LoggerBase.Scoped(ThisClassName);
+		public MetricsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
 
 		[Fact]
 		public void CollectAllMetrics()

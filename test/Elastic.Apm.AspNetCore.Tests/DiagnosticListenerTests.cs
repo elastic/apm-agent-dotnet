@@ -1,13 +1,14 @@
-using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
@@ -15,12 +16,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// Tests subscribing and unsubscribing from diagnostic source events.
 	/// </summary>
 	[Collection("DiagnosticListenerTest")]
-	public class DiagnosticListenerTests : IClassFixture<WebApplicationFactory<Startup>>, IDisposable
+	public class DiagnosticListenerTests : LoggingTestBase, IClassFixture<WebApplicationFactory<Startup>>
 	{
 		private readonly ApmAgent _agent;
 		private readonly MockPayloadSender _capturedPayload;
 
-		public DiagnosticListenerTests(WebApplicationFactory<Startup> factory)
+		private readonly HttpClient _client;
+
+		public DiagnosticListenerTests(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper)
 		{
 			_agent = new ApmAgent(new TestAgentComponents());
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
@@ -30,12 +33,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_client = Helper.GetClientWithoutDiagnosticListeners(_agent, factory);
 		}
 
-		private readonly HttpClient _client;
-
 		/// <summary>
 		/// Manually starts <see cref="AspNetCoreDiagnosticsSubscriber" /> and does 1 HTTP call
 		/// that throws an exception,
-		/// then it disposes the <see cref="AspNetCoreDiagnosticsSubscriber" /> (aka unsubsribes)
+		/// then it disposes the <see cref="AspNetCoreDiagnosticsSubscriber" /> (aka unsubscribes)
 		/// and does another HTTP call that throws an exception.
 		/// It makes sure that for the 1. HTTP call the errors is captured and for the 2. it isn't.
 		/// </summary>
@@ -53,7 +54,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 //				_capturedPayload.Errors.Should().NotBeEmpty();
 //				_capturedPayload.Errors.Should().ContainSingle();
 //				 _capturedPayload.Errors[0].CapturedException.Type.Should().Be(typeof(Exception).FullName);
-//			} //here we unsubsribe, so no errors should be captured after this line.
+//			} //here we unsubscribe, so no errors should be captured after this line.
 
 			_agent.Dispose();
 
@@ -68,7 +69,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// <summary>
 		/// Manually starts <see cref="EfCoreDiagnosticsSubscriber" /> and does 1 HTTP call
 		/// that triggers db calls,
-		/// then it disposes the <see cref="EfCoreDiagnosticsSubscriber" /> (aka unsubsribes)
+		/// then it disposes the <see cref="EfCoreDiagnosticsSubscriber" /> (aka unsubscribes)
 		/// and does another HTTP call that triggers db calls.
 		/// It makes sure that for the 1. HTTP call the db calls are captured and for the 2. they aren't.
 		/// </summary>
@@ -95,10 +96,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.SpansOnFirstTransaction.Should().BeEmpty();
 		}
 
-		public void Dispose()
+		public override void Dispose()
 		{
 			_client?.Dispose();
 			_agent?.Dispose();
+			base.Dispose();
 		}
 	}
 }

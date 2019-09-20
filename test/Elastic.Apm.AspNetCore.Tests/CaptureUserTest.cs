@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -16,6 +17,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using SampleAspNetCoreApp;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
@@ -24,10 +26,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// This class tests that feature.
 	/// </summary>
 	[Collection("DiagnosticListenerTest")]
-	public class CaptureUserTest : IDisposable
+	public class CaptureUserTest : LoggingTestBase
 	{
 		private readonly MockPayloadSender _payloadSender = new MockPayloadSender();
 		private ApmAgent _agent;
+
+		public CaptureUserTest(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
 
 		private void SetUpSut()
 		{
@@ -131,6 +135,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 			payloadSender.FirstTransaction.Context.User.Id.Should().Be(sub);
 		}
 
-		public void Dispose() => _agent?.Dispose();
+		public override void Dispose()
+		{
+			_agent?.Dispose();
+			base.Dispose();
+		}
 	}
 }

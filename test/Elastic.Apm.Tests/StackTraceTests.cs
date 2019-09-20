@@ -8,16 +8,20 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
 	/// <summary>
 	/// Contains tests related to stack traces
 	/// </summary>
-	public class StackTraceTests
+	public class StackTraceTests : LoggingTestBase
 	{
+		public StackTraceTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
+
 		/// <summary>
 		/// Captures a Span
 		/// and makes sure that we have at least 1 stack frame with LineNo != 0
@@ -125,12 +129,12 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void StackTraceWithLambda()
 		{
-			Action action = () => { TestMethod(); };
+			// ReSharper disable once ConvertToLocalFunction
+			Action action = TestMethod;
 
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
-
-			Assert.Throws<Exception>(() => { agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => { action(); }); });
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+				Assert.Throws<Exception>(() => { agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => { action(); }); });
 
 			payloadSender.Errors.Should().NotBeEmpty();
 			(payloadSender.Errors.First() as Error).Should().NotBeNull();
@@ -430,7 +434,6 @@ namespace Elastic.Apm.Tests
 
 			assertAction(payloadSender);
 		}
-
 
 		private void TestMethod() => InnerTestMethod(() => throw new Exception("TestException"));
 

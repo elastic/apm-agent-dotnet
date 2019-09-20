@@ -1,11 +1,15 @@
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
-	public class TransactionSamplingTests
+	public class TransactionSamplingTests : LoggingTestBase
 	{
+		public TransactionSamplingTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
+
 		[Theory]
 		[InlineData(true)]
 		[InlineData(false)]

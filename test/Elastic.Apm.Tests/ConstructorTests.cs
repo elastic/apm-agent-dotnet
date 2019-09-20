@@ -1,14 +1,21 @@
 using System;
 using System.Collections.Generic;
 using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
-	public class ConstructorTests
+	public class ConstructorTests : LoggingTestBase
 	{
+		private const string ThisClassName = nameof(ConstructorTests);
+
+		public ConstructorTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
+
 		/// <summary>
 		///  Assert that console logger is the default logger implementation during normal composition and that
 		///  it adheres to the loglevel reported by the configuration injected into the agent
@@ -16,12 +23,15 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void Compose()
 		{
-			var agent = new ApmAgent(new AgentComponents(configurationReader: new LogConfig(LogLevel.Warning)));
-			var logger = agent.Logger as ConsoleLogger;
+			using (var agent = new ApmAgent(new AgentComponents(configurationReader: new LogConfig(LogLevel.Warning)
+				, dbgName: $"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}")))
+			{
+				var logger = agent.Logger as ConsoleLogger;
 
-			logger.Should().NotBeNull();
-			logger?.IsEnabled(LogLevel.Warning).Should().BeTrue();
-			logger?.IsEnabled(LogLevel.Information).Should().BeFalse();
+				logger.Should().NotBeNull();
+				logger?.IsEnabled(LogLevel.Warning).Should().BeTrue();
+				logger?.IsEnabled(LogLevel.Information).Should().BeFalse();
+			}
 		}
 
 		private class LogConfig : IConfigurationReader
@@ -45,6 +55,7 @@ namespace Elastic.Apm.Tests
 			public string ServiceVersion { get; }
 			public double SpanFramesMinDurationInMilliseconds => ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;
 			public int StackTraceLimit => ConfigConsts.DefaultValues.StackTraceLimit;
+
 			public double TransactionSampleRate => ConfigConsts.DefaultValues.TransactionSampleRate;
 			// ReSharper restore UnassignedGetOnlyAutoProperty
 		}

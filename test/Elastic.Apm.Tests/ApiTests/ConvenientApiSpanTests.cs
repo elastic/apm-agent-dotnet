@@ -6,8 +6,10 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests.ApiTests
 {
@@ -24,7 +26,7 @@ namespace Elastic.Apm.Tests.ApiTests
 	/// that those create a span on another span (aka sub span) and test things on a sub span. Tests without the
 	/// `_OnSubSpan` postfix typically start the span on a transaction and not on a span.
 	/// </summary>
-	public class ConvenientApiSpanTests
+	public class ConvenientApiSpanTests : LoggingTestBase
 	{
 		private const string ExceptionMessage = "Foo";
 		private const string SpanName = "TestSpan";
@@ -34,8 +36,10 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		private const string TransactionType = "Test";
 
+		public ConvenientApiSpanTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
+
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Action,string,string)" /> method.
+		/// Tests the <see cref="Transaction.CaptureSpan(string,string,Action,string,string)" /> method.
 		/// It wraps a fake span (Thread.Sleep) into the CaptureSpan method
 		/// and it makes sure that the span is captured by the agent.
 		/// </summary>
@@ -44,7 +48,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			=> AssertWith1TransactionAnd1Span(t => { t.CaptureSpan(SpanName, SpanType, () => { WaitHelpers.Sleep2XMinimum(); }); });
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Action,string,string)" /> method with an exception.
+		/// Tests the <see cref="Transaction.CaptureSpan(string,string,Action,string,string)" /> method with an exception.
 		/// It wraps a fake span (Thread.Sleep) that throws an exception into the CaptureSpan method
 		/// and it makes sure that the span and the exception are captured by the agent.
 		/// </summary>
@@ -79,7 +83,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Action{ISpan},string,string)" /> method.
+		/// Tests the <see cref="Transaction.CaptureSpan(string,string,Action,string,string)" /> method.
 		/// It wraps a fake span (Thread.Sleep) into the CaptureSpan method with an <see cref="Action{T}" /> parameter
 		/// and it makes sure that the span is captured by the agent and the <see cref="Action{ISpan}" /> parameter is not null
 		/// </summary>
@@ -108,7 +112,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Action{ISpan},string,string)" /> method with an
+		/// Tests the <see cref="Transaction.CaptureSpan(string,string,Action,string,string)" /> method with an
 		/// exception.
 		/// It wraps a fake span (Thread.Sleep) that throws an exception into the CaptureSpan method with an
 		/// <see cref="Action{ISpan}" /> parameter
@@ -148,7 +152,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,System.Func{T},string,string)" /> method.
+		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,Func{TResult},string,string)" /> method.
 		/// It wraps a fake span (Thread.Sleep) with a return value into the CaptureSpan method
 		/// and it makes sure that the span is captured by the agent and the return value is correct.
 		/// </summary>
@@ -179,7 +183,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,System.Func{ISpan,T},string,string)" /> method.
+		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,Func{TResult},string,string)" /> method.
 		/// It wraps a fake span (Thread.Sleep) with a return value into the CaptureSpan method with an
 		/// <see cref="Action{ISpan}" /> parameter
 		/// and it makes sure that the span is captured by the agent and the return value is correct and the
@@ -214,7 +218,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,System.Func{ISpan,T},string,string)" /> method with an
+		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,Func{TResult},string,string)" /> method with an
 		/// exception.
 		/// It wraps a fake span (Thread.Sleep) with a return value that throws an exception into the CaptureSpan method with an
 		/// <see cref="Action{ISpan}" /> parameter
@@ -264,7 +268,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,System.Func{ISpan,T},string,string)" /> method with an
+		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,Func{TResult},string,string)" /> method with an
 		/// exception.
 		/// It wraps a fake span (Thread.Sleep) with a return value that throws an exception into the CaptureSpan method with an
 		/// <see cref="Action{ISpan}" /> parameter
@@ -306,7 +310,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Func{Task},string,string)" /> method.
+		/// Tests the <see cref="Transaction.CaptureSpan(string,string,Func{TResult},string,string)" /> method.
 		/// It wraps a fake async span (Task.Delay) into the CaptureSpan method
 		/// and it makes sure that the span is captured.
 		/// </summary>
@@ -325,7 +329,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Func{Task},string,string)" /> method with an
+		/// Tests the <see cref="Transaction.CaptureSpan(string,string,Func{TResult},string,string)" /> method with an
 		/// exception
 		/// It wraps a fake async span (Task.Delay) that throws an exception into the CaptureSpan method
 		/// and it makes sure that the span and the error are captured.
@@ -363,7 +367,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Func{ISpan, Task},string,string)" /> method.
+		/// Tests the <see cref="Transaction.CaptureSpan(string,string,Func{TResult},string,string)" /> method.
 		/// It wraps a fake async span (Task.Delay) into the CaptureSpan method with an <see cref="Action{ISpan}" /> parameter
 		/// and it makes sure that the span is captured and the <see cref="Action{ISpan}" /> parameter is not null.
 		/// </summary>
@@ -392,7 +396,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Func{ISpan, Task},string,string)" /> method with an
+		/// Tests the <see cref="Transaction.CaptureSpan(string,string,Func{TResult},string,string)" /> method with an
 		/// exception.
 		/// It wraps a fake async span (Task.Delay) that throws an exception into the CaptureSpan method with an
 		/// <see cref="Action{ISpan}" /> parameter
@@ -432,7 +436,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,System.Func{Task{T}},string,string)" /> method.
+		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,Func{TResult},string,string)" /> method.
 		/// It wraps a fake async span (Task.Delay) with a return value into the CaptureSpan method
 		/// and it makes sure that the span is captured by the agent and the return value is correct.
 		/// </summary>
@@ -461,7 +465,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,System.Func{ISpan,Task{T}},string,string)" /> method.
+		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,Func{TResult},string,string)" /> method.
 		/// It wraps a fake async span (Task.Delay) with a return value into the CaptureSpan method with an
 		/// <see cref="Action{ISpan}" /> parameter
 		/// and it makes sure that the span is captured by the agent and the return value is correct and the <see cref="ISpan" />
@@ -498,7 +502,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,System.Func{ISpan,Task{T}},string,string)" /> method with
+		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,Func{TResult},string,string)" /> method with
 		/// an exception.
 		/// It wraps a fake async span (Task.Delay) with a return value that throws an exception into the CaptureSpan method with
 		/// an <see cref="Action{ISpan}" /> parameter
@@ -546,7 +550,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,System.Func{Task{T}},string,string)" /> method with an
+		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,Func{TResult},string,string)" /> method with an
 		/// exception.
 		/// It wraps a fake async span (Task.Delay) with a return value that throws an exception into the CaptureSpan method
 		/// and it makes sure that the span and the error are captured by the agent.
@@ -596,25 +600,26 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public async Task CancelledAsyncTask()
 		{
-			var agent = new ApmAgent(new TestAgentComponents());
-
 			var cancellationTokenSource = new CancellationTokenSource();
 			var token = cancellationTokenSource.Token;
 			cancellationTokenSource.Cancel();
 
-			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
+			using (var agent = new ApmAgent(new TestAgentComponents()))
 			{
-				Func<Task> act = async () =>
+				await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 				{
-					await t.CaptureSpan(SpanName, SpanType, async () =>
+					Func<Task> act = async () =>
 					{
-						// ReSharper disable once MethodSupportsCancellation, we want to delay before we throw the exception
-						await WaitHelpers.Delay2XMinimum();
-						token.ThrowIfCancellationRequested();
-					});
-				};
-				await act.Should().ThrowAsync<OperationCanceledException>();
-			});
+						await t.CaptureSpan(SpanName, SpanType, async () =>
+						{
+							// ReSharper disable once MethodSupportsCancellation, we want to delay before we throw the exception
+							await WaitHelpers.Delay2XMinimum();
+							token.ThrowIfCancellationRequested();
+						});
+					};
+					await act.Should().ThrowAsync<OperationCanceledException>();
+				});
+			}
 		}
 
 		/// <summary>
@@ -703,31 +708,32 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void FillSpanContext()
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
-
-			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-				WaitHelpers.SleepMinimum();
-				t.CaptureSpan("SampleSpan1", "SampleSpanType", span =>
+				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 				{
-					span.Context.Http = new Http
+					WaitHelpers.SleepMinimum();
+					t.CaptureSpan("SampleSpan1", "SampleSpanType", span =>
 					{
-						Url = "http://mysite.com",
-						Method = "GET",
-						StatusCode = 200
-					};
-				});
+						span.Context.Http = new Http
+						{
+							Url = "http://mysite.com",
+							Method = "GET",
+							StatusCode = 200
+						};
+					});
 
-				t.CaptureSpan("SampleSpan2", "SampleSpanType", span =>
-				{
-					span.Context.Db = new Database
+					t.CaptureSpan("SampleSpan2", "SampleSpanType", span =>
 					{
-						Statement = "Select * from MyTable",
-						Type = Database.TypeSql,
-						Instance = "MyInstance"
-					};
+						span.Context.Db = new Database
+						{
+							Statement = "Select * from MyTable",
+							Type = Database.TypeSql,
+							Instance = "MyInstance"
+						};
+					});
 				});
-			});
+			}
 
 			payloadSender.Spans[0].Name.Should().Be("SampleSpan1");
 			payloadSender.Spans[0].Context.Http.Url.Should().Be("http://mysite.com");
@@ -746,13 +752,14 @@ namespace Elastic.Apm.Tests.ApiTests
 		private async Task<MockPayloadSender> AssertWith1TransactionAnd1ErrorAnd1SpanAsync(Func<ITransaction, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
-
-			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-				await WaitHelpers.DelayMinimum();
-				await func(t);
-			});
+				await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
+				{
+					await WaitHelpers.DelayMinimum();
+					await func(t);
+				});
+			}
 
 			payloadSender.Transactions.Should().NotBeEmpty();
 
@@ -779,18 +786,19 @@ namespace Elastic.Apm.Tests.ApiTests
 		private async Task<MockPayloadSender> AssertWith1TransactionAnd1ErrorAnd1SpanAsyncOnSubSpan(Func<ISpan, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
-
-			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-				await WaitHelpers.DelayMinimum();
-
-				await t.CaptureSpan("TestSpan", "TestSpanType", async s =>
+				await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 				{
 					await WaitHelpers.DelayMinimum();
-					await func(s);
+
+					await t.CaptureSpan("TestSpan", "TestSpanType", async s =>
+					{
+						await WaitHelpers.DelayMinimum();
+						await func(s);
+					});
 				});
-			});
+			}
 
 			payloadSender.Transactions.Should().NotBeEmpty();
 
@@ -832,13 +840,14 @@ namespace Elastic.Apm.Tests.ApiTests
 		private async Task<MockPayloadSender> AssertWith1TransactionAnd1SpanAsync(Func<ITransaction, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
-
-			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-				await WaitHelpers.DelayMinimum();
-				await func(t);
-			});
+				await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
+				{
+					await WaitHelpers.DelayMinimum();
+					await func(t);
+				});
+			}
 
 			payloadSender.Transactions.Should().NotBeEmpty();
 
@@ -859,18 +868,19 @@ namespace Elastic.Apm.Tests.ApiTests
 		private async Task<MockPayloadSender> AssertWith1TransactionAnd1SpanAsyncOnSubSpan(Func<ISpan, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
-
-			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-				await WaitHelpers.DelayMinimum();
-
-				await t.CaptureSpan("SubSpan", "SubSpanType", async s =>
+				await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 				{
 					await WaitHelpers.DelayMinimum();
-					await func(s);
+
+					await t.CaptureSpan("SubSpan", "SubSpanType", async s =>
+					{
+						await WaitHelpers.DelayMinimum();
+						await func(s);
+					});
 				});
-			});
+			}
 
 			payloadSender.Transactions.Should().NotBeEmpty();
 
@@ -905,13 +915,14 @@ namespace Elastic.Apm.Tests.ApiTests
 		private MockPayloadSender AssertWith1TransactionAnd1Span(Action<ITransaction> action)
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
-
-			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-				WaitHelpers.SleepMinimum();
-				action(t);
-			});
+				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
+				{
+					WaitHelpers.SleepMinimum();
+					action(t);
+				});
+			}
 
 			payloadSender.Transactions.Should().NotBeEmpty();
 
@@ -932,18 +943,18 @@ namespace Elastic.Apm.Tests.ApiTests
 		private void AssertWith1TransactionAnd1SpanOnSubSpan(Action<ISpan> action)
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
-
-			WaitHelpers.SleepMinimum();
-			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
-			{
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) {
 				WaitHelpers.SleepMinimum();
-				t.CaptureSpan("aa", "bb", s => //TODO Name
+				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 				{
 					WaitHelpers.SleepMinimum();
-					action(s);
+					t.CaptureSpan("aa", "bb", s => //TODO Name
+					{
+						WaitHelpers.SleepMinimum();
+						action(s);
+					});
 				});
-			});
+			}
 
 			payloadSender.Transactions.Should().NotBeEmpty();
 
