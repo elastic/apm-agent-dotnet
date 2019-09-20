@@ -28,8 +28,14 @@ namespace Elastic.Apm.Tests
 
 		private static readonly IEnumerable<TimeSpan?> FlushIntervalVariants = new TimeSpan?[]
 		{
-			null, ConfigConsts.DefaultValues.FlushIntervalInMilliseconds.Milliseconds(), TimeSpan.Zero, 10.Milliseconds(), 100.Milliseconds(),
-			1.Seconds(), 1.Hours(), 1.Days()
+			null,
+			ConfigConsts.DefaultValues.FlushIntervalInMilliseconds.Milliseconds(),
+			TimeSpan.Zero,
+			10.Milliseconds(),
+			100.Milliseconds(),
+			1.Seconds(),
+			1.Hours(),
+			1.Days()
 		};
 
 		private static readonly TimeSpan VeryLongFlushInterval = 1.Hours();
@@ -39,8 +45,8 @@ namespace Elastic.Apm.Tests
 		public PayloadSenderTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper /*, LogLevel.Debug */) =>
 			_logger = LoggerBase.Scoped(ThisClassName);
 
-		private static IEnumerable<TestArgs> TestArgsVariantsWithVeryLongFlushInterval =>
-			TestArgsVariants(args => args.FlushInterval.HasValue && args.FlushInterval >= VeryLongFlushInterval);
+		public static IEnumerable<object[]> TestArgsVariantsWithVeryLongFlushInterval =>
+			TestArgsVariants(args => args.FlushInterval.HasValue && args.FlushInterval >= VeryLongFlushInterval).Select(t => new object[] { t });
 
 		[Fact]
 		public async Task SecretToken_test()
@@ -145,7 +151,7 @@ namespace Elastic.Apm.Tests
 			{
 				if (predicate != null && !predicate(argsVariant)) continue;
 
-				argsVariant.ArgsIndex = ++counter;
+				argsVariant.ArgsIndex = counter++;
 				yield return argsVariant;
 			}
 		}
@@ -153,19 +159,105 @@ namespace Elastic.Apm.Tests
 		private static bool EnqueueDummyEvent(PayloadSenderV2 payloadSender, ApmAgent agent, int txIndex) =>
 			payloadSender.EnqueueEvent(new Transaction(agent, $"Tx #{txIndex}", "TestType"), "Transaction");
 
-		[Fact]
-		internal void MaxQueueEventCount_should_be_enforced_before_send()
+		[Theory]
+		[MemberData(nameof(TestArgsVariantsWithVeryLongFlushInterval))]
+		internal void MaxQueueEventCount_should_be_enforced_before_send(TestArgs args)
 		{
-			foreach (var args in TestArgsVariantsWithVeryLongFlushInterval)
+			var sendTcs = new TaskCompletionSource<object>();
+
+			var handler = new MockHttpMessageHandler(async (r, c) =>
+			{
+				await sendTcs.Task;
+				return new HttpResponseMessage(HttpStatusCode.OK);
+			});
+
+			var configurationReader = args.BuildConfigurationReader(_logger);
+			var service = Service.GetDefaultService(configurationReader, _logger);
+			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler);
+
+			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
+			{
+				int? txIndexResumedEnqueuing = null;
+				for (var txIndex = 1; txIndex <= args.MaxQueueEventCount + args.MaxBatchEventCount + 10; ++txIndex)
+				{
+					var enqueuedSuccessfully = EnqueueDummyEvent(payloadSender, agent, txIndex);
+
+					if (txIndex <= args.MaxQueueEventCount)
+					{
+						enqueuedSuccessfully.Should().BeTrue($"txIndex: {txIndex}, args: {args}");
+						continue;
+					}
+
+					// It's possible that the events for the first batch have already been dequeued
+					// so we can be sure that queue doesn't have any free space left only after MaxQueueEventCount + MaxBatchEventCount events
+
+					if (enqueuedSuccessfully && !txIndexResumedEnqueuing.HasValue) txIndexResumedEnqueuing = txIndex;
+
+					enqueuedSuccessfully.Should()
+						.Be(txIndex - txIndexResumedEnqueuing < args.MaxBatchEventCount
+							, $"txIndex: {txIndex}, txIndexResumedEnqueuing: {txIndexResumedEnqueuing}, args: {args}");
+				}
+
+				sendTcs.SetResult(null);
+			}
+		}
+
+		[Theory]
+		[MemberData(nameof(TestArgsVariantsWithVeryLongFlushInterval))]
+		internal async Task MaxQueueEventCount_should_be_enforced_after_send(TestArgs args)
+		{
+			LoggerBase.Level = LogLevel.Debug;
+
+			var sendTcs = new TaskCompletionSource<object>();
+			var firstBatchDequeuedTcs = new TaskCompletionSource<object>();
+
+			var handler = new MockHttpMessageHandler(async (r, c) =>
+			{
+				firstBatchDequeuedTcs.SetResult(null);
+				await sendTcs.Task;
+				return new HttpResponseMessage(HttpStatusCode.OK);
+			});
+
+			var configurationReader = args.BuildConfigurationReader(_logger);
+			var service = Service.GetDefaultService(configurationReader, _logger);
+			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler);
+
+			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender /* , useRealCentralConfigFetcher: true */)))
+			{
+				var txIndex = 1;
+				for (; txIndex <= args.MaxQueueEventCount; ++txIndex)
+					EnqueueDummyEvent(payloadSender, agent, txIndex).Should().BeTrue($"txIndex: {txIndex}, args: {args}");
+
+				await firstBatchDequeuedTcs.Task;
+
+				for (; txIndex <= args.MaxQueueEventCount + args.MaxBatchEventCount + 10; ++txIndex)
+				{
+					EnqueueDummyEvent(payloadSender, agent, txIndex)
+						.Should()
+						.Be(txIndex <= args.MaxQueueEventCount + args.MaxBatchEventCount
+							, $"txIndex: {txIndex}, args: {args}");
+				}
+
+				sendTcs.SetResult(null);
+			}
+		}
+
+		[Theory]
+		[MemberData(nameof(TestArgsVariantsWithVeryLongFlushInterval))]
+		internal async Task MaxBatchEventCount_test(TestArgs args)
+		{
+			foreach (var expectedNumberOfBatches in new[] { 1, 2, 3, 10 })
 			{
 				_logger.Debug()?.Log("Starting sub-test... args: {args}", args);
 
-				var sendTcs = new TaskCompletionSource<object>();
+				var expectedNumberOfBatchesSentTcs = new TaskCompletionSource<object>();
 
-				var handler = new MockHttpMessageHandler(async (r, c) =>
+				var actualNumberOfBatches = 0;
+				var handler = new MockHttpMessageHandler((r, c) =>
 				{
-					await sendTcs.Task;
-					return new HttpResponseMessage(HttpStatusCode.OK);
+					if (Interlocked.Increment(ref actualNumberOfBatches) == expectedNumberOfBatches)
+						expectedNumberOfBatchesSentTcs.SetResult(null);
+					return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
 				});
 
 				var configurationReader = args.BuildConfigurationReader(_logger);
@@ -174,125 +266,27 @@ namespace Elastic.Apm.Tests
 
 				using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
 				{
-					int? txIndexResumedEnqueuing = null;
-					for (var txIndex = 1; txIndex <= args.MaxQueueEventCount + args.MaxBatchEventCount + 10; ++txIndex)
+					var numberOfEventsEnqueuedSuccessfully = 0;
+					for (var txIndex = 1;; ++txIndex)
 					{
-						var enqueuedSuccessfully = EnqueueDummyEvent(payloadSender, agent, txIndex);
+						if (EnqueueDummyEvent(payloadSender, agent, txIndex))
+							++numberOfEventsEnqueuedSuccessfully;
+						else
+							Thread.Yield();
 
-						if (txIndex <= args.MaxQueueEventCount)
-						{
-							enqueuedSuccessfully.Should().BeTrue($"txIndex: {txIndex}, args: {args}");
-							continue;
-						}
-
-						// It's possible that the events for the first batch have already been dequeued
-						// so we can be sure that queue doesn't have any free space left only after MaxQueueEventCount + MaxBatchEventCount events
-
-						if (enqueuedSuccessfully && !txIndexResumedEnqueuing.HasValue) txIndexResumedEnqueuing = txIndex;
-
-						enqueuedSuccessfully.Should()
-							.Be(txIndex - txIndexResumedEnqueuing < args.MaxBatchEventCount
-								, $"txIndex: {txIndex}, txIndexResumedEnqueuing: {txIndexResumedEnqueuing}, args: {args}");
+						if (numberOfEventsEnqueuedSuccessfully == expectedNumberOfBatches * args.MaxBatchEventCount)
+							break;
 					}
 
-					sendTcs.SetResult(null);
+					(await Task.WhenAny(expectedNumberOfBatchesSentTcs.Task, Task.Delay(30.Seconds())))
+						.Should()
+						.Be(expectedNumberOfBatchesSentTcs.Task
+							, $"because numberOfEventsEnqueuedSuccessfully: {numberOfEventsEnqueuedSuccessfully}");
 				}
 			}
 		}
 
-		[Fact]
-		public async Task MaxQueueEventCount_should_be_enforced_after_send()
-		{
-			foreach (var args in TestArgsVariantsWithVeryLongFlushInterval)
-			{
-				_logger.Info()?.Log("Starting sub-test... args: {args}", args);
-
-				var sendTcs = new TaskCompletionSource<object>();
-				var firstBatchDequeuedTcs = new TaskCompletionSource<object>();
-
-				var handler = new MockHttpMessageHandler(async (r, c) =>
-				{
-					firstBatchDequeuedTcs.SetResult(null);
-					await sendTcs.Task;
-					return new HttpResponseMessage(HttpStatusCode.OK);
-				});
-
-				var configurationReader = args.BuildConfigurationReader(_logger);
-				var service = Service.GetDefaultService(configurationReader, _logger);
-				var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler);
-
-				using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender /* , useRealCentralConfigFetcher: true */)))
-				{
-					var txIndex = 1;
-					for (; txIndex <= args.MaxQueueEventCount; ++txIndex)
-						EnqueueDummyEvent(payloadSender, agent, txIndex).Should().BeTrue($"txIndex: {txIndex}, args: {args}");
-
-					await firstBatchDequeuedTcs.Task;
-
-					for (; txIndex <= args.MaxQueueEventCount + args.MaxBatchEventCount + 10; ++txIndex)
-					{
-						EnqueueDummyEvent(payloadSender, agent, txIndex)
-							.Should()
-							.Be(txIndex <= args.MaxQueueEventCount + args.MaxBatchEventCount
-								, $"txIndex: {txIndex}, args: {args}");
-					}
-
-					sendTcs.SetResult(null);
-				}
-			}
-		}
-
-		[Fact]
-		public async Task MaxBatchEventCount_test()
-		{
-			var numberOfBatchesVariants = new[] { 1, 2, 3, 10 };
-
-			foreach (var args in TestArgsVariantsWithVeryLongFlushInterval)
-			{
-				foreach (var expectedNumberOfBatches in numberOfBatchesVariants)
-				{
-					_logger.Debug()?.Log("Starting sub-test... args: {args}", args);
-
-					var expectedNumberOfBatchesSentTcs = new TaskCompletionSource<object>();
-
-					var actualNumberOfBatches = 0;
-					var handler = new MockHttpMessageHandler((r, c) =>
-					{
-						if (Interlocked.Increment(ref actualNumberOfBatches) == expectedNumberOfBatches)
-							expectedNumberOfBatchesSentTcs.SetResult(null);
-						return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
-					});
-
-					var configurationReader = args.BuildConfigurationReader(_logger);
-					var service = Service.GetDefaultService(configurationReader, _logger);
-					var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler);
-
-					using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
-					{
-						var numberOfEventsEnqueuedSuccessfully = 0;
-						for (var txIndex = 1;; ++txIndex)
-						{
-							if (EnqueueDummyEvent(payloadSender, agent, txIndex))
-								++numberOfEventsEnqueuedSuccessfully;
-							else
-								Thread.Yield();
-
-							if (numberOfEventsEnqueuedSuccessfully == expectedNumberOfBatches * args.MaxBatchEventCount)
-								break;
-						}
-
-						(await Task.WhenAny(expectedNumberOfBatchesSentTcs.Task, Task.Delay(30.Seconds())))
-							.Should()
-							.Be(expectedNumberOfBatchesSentTcs.Task
-								, $"because numberOfEventsEnqueuedSuccessfully: {numberOfEventsEnqueuedSuccessfully}");
-					}
-				}
-			}
-		}
-
-
-		[Fact]
-		public void FlushInterval_test()
+		public static IEnumerable<object[]> FlushInterval_test_variants()
 		{
 			var argsVariantsCounter = 0;
 			var numberOfEventsToSendVariants = new[] { 1, 2, 3, 10 };
@@ -301,30 +295,35 @@ namespace Elastic.Apm.Tests
 			{
 				foreach (var numberOfEventsToSend in numberOfEventsToSendVariants)
 				{
-					var args = new TestArgs { ArgsIndex = ++argsVariantsCounter, FlushInterval = flushInterval };
-					_logger.Debug()?.Log("Starting sub-test... args: {args}", args);
+					yield return new object[]
+						{ new TestArgs { ArgsIndex = argsVariantsCounter++, FlushInterval = flushInterval }, numberOfEventsToSend };
+				}
+			}
+		}
 
-					var batchSentBarrier = new Barrier(2);
-					var barrierTimeout = 30.Seconds();
+		[Theory]
+		[MemberData(nameof(FlushInterval_test_variants))]
+		internal void FlushInterval_test(TestArgs args, int numberOfEventsToSend)
+		{
+			var batchSentBarrier = new Barrier(2);
+			var barrierTimeout = 30.Seconds();
 
-					var handler = new MockHttpMessageHandler((r, c) =>
-					{
-						batchSentBarrier.SignalAndWait(barrierTimeout).Should().BeTrue();
-						return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
-					});
+			var handler = new MockHttpMessageHandler((r, c) =>
+			{
+				batchSentBarrier.SignalAndWait(barrierTimeout).Should().BeTrue();
+				return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+			});
 
-					var configurationReader = new TestArgs { FlushInterval = flushInterval }.BuildConfigurationReader(_logger);
-					var service = Service.GetDefaultService(configurationReader, _logger);
-					var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler);
+			var configurationReader = args.BuildConfigurationReader(_logger);
+			var service = Service.GetDefaultService(configurationReader, _logger);
+			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler);
 
-					using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
-					{
-						for (var txIndex = 1; txIndex <= numberOfEventsToSend; ++txIndex)
-						{
-							EnqueueDummyEvent(payloadSender, agent, txIndex).Should().BeTrue($"txIndex: {txIndex}, args: {args}");
-							batchSentBarrier.SignalAndWait(barrierTimeout).Should().BeTrue($"txIndex: {txIndex}, args: {args}");
-						}
-					}
+			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
+			{
+				for (var txIndex = 1; txIndex <= numberOfEventsToSend; ++txIndex)
+				{
+					EnqueueDummyEvent(payloadSender, agent, txIndex).Should().BeTrue($"txIndex: {txIndex}, args: {args}");
+					batchSentBarrier.SignalAndWait(barrierTimeout).Should().BeTrue($"txIndex: {txIndex}, args: {args}");
 				}
 			}
 		}

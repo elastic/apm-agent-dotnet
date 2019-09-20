@@ -18,7 +18,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 		private static readonly LazyContextualInit<TestingConfig.ISnapshot> CachedConfigSingleton = new LazyContextualInit<TestingConfig.ISnapshot>();
 
 		private static readonly ThreadSafeLongCounter TestIdCounter = new ThreadSafeLongCounter();
-		protected readonly IApmLogger LoggerBase;
+		protected readonly LineWriterToLoggerAdaptor LoggerBase;
 		protected readonly ITestOutputHelper XunitOutputHelper;
 
 		private readonly TestingConfig.ISnapshot _config;

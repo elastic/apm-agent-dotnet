@@ -298,8 +298,6 @@ namespace Elastic.Apm.Tests.TestHelpers
 				// ReSharper disable once PossibleMultipleEnumeration
 				foreach (var (stringValue, expectedTValue) in possibleStringToTVariants.Concat(new[] { ((string)null, (object)null) }))
 				{
-					logger.Error()?.Log("{stringValue} -> {expectedTValue}", stringValue.AsNullableToString(), expectedTValue.AsNullableToString());
-
 					var configSnapshot =
 						new MutableSnapshot(new MockRawConfigSnapshot(new Dictionary<string, string> { { optionName, stringValue } }),
 							new[] { optionMetadata });
