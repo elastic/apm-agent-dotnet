@@ -122,7 +122,7 @@ namespace Elastic.Apm.Report
 				return false;
 			}
 
-			_logger.Debug()
+			_logger.Trace()
 				?.Log("Enqueued " + dbgEventKind + "."
 					+ " newEventQueueCount: {EventQueueCount}."
 					+ " MaxQueueEventCount: {MaxQueueEventCount}."
