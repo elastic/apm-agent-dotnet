@@ -42,8 +42,11 @@ namespace Elastic.Apm.Tests
 		private static readonly TimeSpan VeryShortFlushInterval = 1.Seconds();
 		private readonly IApmLogger _logger;
 
-		public PayloadSenderTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper /*, LogLevel.Debug */) =>
+		public PayloadSenderTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper /*, LogLevel.Debug */)
+		{
 			_logger = LoggerBase.Scoped(ThisClassName);
+			LoggerBase.Level = LogLevel.Debug;
+		}
 
 		public static IEnumerable<object[]> TestArgsVariantsWithVeryLongFlushInterval =>
 			TestArgsVariants(args => args.FlushInterval.HasValue && args.FlushInterval >= VeryLongFlushInterval).Select(t => new object[] { t });
@@ -171,7 +174,7 @@ namespace Elastic.Apm.Tests
 				return new HttpResponseMessage(HttpStatusCode.OK);
 			});
 
-			var configurationReader = args.BuildConfigurationReader(_logger);
+			var configurationReader = args.BuildConfig(_logger);
 			var service = Service.GetDefaultService(configurationReader, _logger);
 			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler);
 
@@ -206,8 +209,6 @@ namespace Elastic.Apm.Tests
 		[MemberData(nameof(TestArgsVariantsWithVeryLongFlushInterval))]
 		internal async Task MaxQueueEventCount_should_be_enforced_after_send(TestArgs args)
 		{
-			LoggerBase.Level = LogLevel.Debug;
-
 			var sendTcs = new TaskCompletionSource<object>();
 			var firstBatchDequeuedTcs = new TaskCompletionSource<object>();
 
@@ -218,7 +219,7 @@ namespace Elastic.Apm.Tests
 				return new HttpResponseMessage(HttpStatusCode.OK);
 			});
 
-			var configurationReader = args.BuildConfigurationReader(_logger);
+			var configurationReader = args.BuildConfig(_logger);
 			var service = Service.GetDefaultService(configurationReader, _logger);
 			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler);
 
@@ -260,7 +261,7 @@ namespace Elastic.Apm.Tests
 					return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
 				});
 
-				var configurationReader = args.BuildConfigurationReader(_logger);
+				var configurationReader = args.BuildConfig(_logger);
 				var service = Service.GetDefaultService(configurationReader, _logger);
 				var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler);
 
@@ -314,7 +315,7 @@ namespace Elastic.Apm.Tests
 				return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
 			});
 
-			var configurationReader = args.BuildConfigurationReader(_logger);
+			var configurationReader = args.BuildConfig(_logger);
 			var service = Service.GetDefaultService(configurationReader, _logger);
 			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler);
 
@@ -388,7 +389,7 @@ namespace Elastic.Apm.Tests
 			internal int? MaxBatchEventCount { get; set; }
 			internal int? MaxQueueEventCount { get; set; }
 
-			internal MockConfigSnapshot BuildConfigurationReader(IApmLogger logger) =>
+			internal MockConfigSnapshot BuildConfig(IApmLogger logger) =>
 				new MockConfigSnapshot(logger
 					, flushInterval: FlushInterval.HasValue ? $"{FlushInterval.Value.TotalMilliseconds}ms" : null
 					, maxBatchEventCount: MaxBatchEventCount?.ToString()
@@ -399,7 +400,7 @@ namespace Elastic.Apm.Tests
 				{ nameof(ArgsIndex), ArgsIndex },
 				{ nameof(MaxQueueEventCount), MaxQueueEventCount },
 				{ nameof(MaxBatchEventCount), MaxBatchEventCount },
-				{ nameof(FlushInterval), FlushInterval }
+				{ nameof(FlushInterval), (FlushInterval?.ToHms()).AsNullableToString() }
 			}.ToString();
 		}
 	}
