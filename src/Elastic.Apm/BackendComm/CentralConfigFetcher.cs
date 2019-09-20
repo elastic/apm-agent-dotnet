@@ -151,7 +151,7 @@ namespace Elastic.Apm.BackendComm
 					httpResponse?.Dispose();
 				}
 
-				_logger.Trace()?.Log("Waiting {WaitInterval}... {WaitReason}", waitInfo.Interval, waitInfo.Reason);
+				_logger.Trace()?.Log("Waiting {WaitInterval}... {WaitReason}", waitInfo.Interval.ToHms(), waitInfo.Reason);
 				await _agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, _cancellationTokenSource.Token);
 			}
 			// ReSharper disable once FunctionNeverReturns

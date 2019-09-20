@@ -93,7 +93,7 @@ csharp_new_line_before_open_brace = all
 csharp_new_line_before_else = true:warning
 csharp_new_line_before_catch = true:warning
 csharp_new_line_before_finally = true:warning
-csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_before_members_in_object_initializers = false
 # just a suggestion do to our JSON tests that use anonymous types to 
 # represent json quite a bit (makes copy paste easier).
 csharp_new_line_before_members_in_anonymous_types = true:suggestion

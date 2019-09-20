@@ -59,7 +59,9 @@ namespace Elastic.Apm.Tests.HelpersTests
 			string str = null;
 			// ReSharper disable once ExpressionIsAlwaysNull
 			str.AsNullableToString().Should().Be(ObjectExtensions.NullAsString);
+			str.AsNullableToString().Should().NotBe(str);
 			str = "";
+			str.AsNullableToString().Should().Be(str);
 			str.AsNullableToString().Should().NotBe(ObjectExtensions.NullAsString);
 
 			int? nullableInt = null;

@@ -1,7 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Tests.Mocks;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
@@ -10,36 +15,42 @@ namespace Elastic.Apm.Tests.TestHelpers
 	public class LoggingTestBase : IDisposable
 	{
 		private const string ThisClassName = nameof(LoggingTestBase);
+		private static readonly LazyContextualInit<TestingConfig.ISnapshot> CachedConfigSingleton = new LazyContextualInit<TestingConfig.ISnapshot>();
 
 		private static readonly ThreadSafeLongCounter TestIdCounter = new ThreadSafeLongCounter();
-
 		protected readonly IApmLogger LoggerBase;
+		protected readonly ITestOutputHelper XunitOutputHelper;
+
+		private readonly TestingConfig.ISnapshot _config;
 
 		private readonly ITest _currentXunitTest;
 		private readonly LineWriterToLoggerAdaptor _loggerForStartFinish;
+		private readonly LongRunningReporter _longRunningReporter;
 
 		protected LoggingTestBase(ITestOutputHelper xUnitOutputHelper, LogLevel? overridingLogLevel = null)
 		{
+			XunitOutputHelper = xUnitOutputHelper;
 			_currentXunitTest = GetCurrentXunitTest(xUnitOutputHelper);
 
 			var lineWriters = new List<ILineWriter>();
 
 			var testId = TestIdCounter.Increment();
 
-			var config = TestingConfig.ReadFromFromEnvVars(xUnitOutputHelper);
+			_config = CachedConfigSingleton.IfNotInited?.InitOrGet(() => TestingConfig.ReadFromFromEnvVars(xUnitOutputHelper))
+				?? CachedConfigSingleton.Value;
 
-			var logLevel = overridingLogLevel ?? config.LogLevel;
+			var logLevel = overridingLogLevel ?? _config.LogLevel;
 
-			if (config.LogToSysDiagTraceEnabled)
-				lineWriters.Add(new SystemDiagnosticsTraceLineWriter(string.Format(config.LogToSysDiagTraceLinePrefix, testId)));
+			if (_config.LogToSysDiagTraceEnabled)
+				lineWriters.Add(new SystemDiagnosticsTraceLineWriter(string.Format(_config.LogToSysDiagTraceLinePrefix, testId)));
 
-			if (config.LogToConsoleEnabled)
-				lineWriters.Add(new FlushingTextWriterToLineWriterAdaptor(Console.Out, string.Format(config.LogToConsoleLinePrefix, testId)));
+			if (_config.LogToConsoleEnabled)
+				lineWriters.Add(new FlushingTextWriterToLineWriterAdaptor(Console.Out, string.Format(_config.LogToConsoleLinePrefix, testId)));
 
 			var writerForStartFinish = lineWriters.ToArray();
-			if (config.LogToXunitEnabled)
+			if (_config.LogToXunitEnabled)
 			{
-				lineWriters.Add(new XunitOutputToLineWriterAdaptor(xUnitOutputHelper, string.Format(config.LogToXunitLinePrefix, testId)));
+				lineWriters.Add(new XunitOutputToLineWriterAdaptor(xUnitOutputHelper, string.Format(_config.LogToXunitLinePrefix, testId)));
 				if (!TestingConfig.IsRunningInIde) writerForStartFinish = lineWriters.ToArray();
 			}
 
@@ -48,18 +59,34 @@ namespace Elastic.Apm.Tests.TestHelpers
 			LogTestStartFinish( /* isStart: */ true);
 
 			LoggerBase = new LineWriterToLoggerAdaptor(new SplittingLineWriter(lineWriters.ToArray()), logLevel);
+
+			_longRunningReporter = _config.ReportLongRunningEnabled ? new LongRunningReporter(this) : null;
 		}
 
 		protected string TestDisplayName => _currentXunitTest?.DisplayName;
 
-		public virtual void Dispose() => LogTestStartFinish( /* isStart: */ false);
+		public virtual void Dispose()
+		{
+			_longRunningReporter?.Dispose();
 
-		private void LogTestStartFinish(bool isStart)
+			LogTestStartFinish( /* isStart: */ false);
+		}
+
+		private void LogTestStartFinish(bool isStart) =>
+			LogStatusInfo(logger =>
+			{
+				logger.Scoped(ThisClassName)
+					.Info()
+					?.Log("Test " + (isStart ? "started" : "finished")
+						+ ". Test display name: `{UnitTestDisplayName}'. Testing configuration: {TestingConfig}"
+						, TestDisplayName, _config);
+			});
+
+		private void LogStatusInfo(Action<IApmLogger> loggingAction)
 		{
 			var originalLogLevel = _loggerForStartFinish.Level;
 			_loggerForStartFinish.Level = LogLevel.Information;
-			_loggerForStartFinish.Scoped(ThisClassName).Info()?.Log(
-				isStart ? "Starting test: {UnitTestDisplayName}..." : "Finished test: {UnitTestDisplayName}", TestDisplayName);
+			loggingAction(_loggerForStartFinish);
 			_loggerForStartFinish.Level = originalLogLevel;
 		}
 
@@ -69,6 +96,69 @@ namespace Elastic.Apm.Tests.TestHelpers
 			var helperTestFieldInfo = helper.GetType().GetField("test", BindingFlags.NonPublic | BindingFlags.Instance);
 			var helperTestFieldValue = helperTestFieldInfo?.GetValue(helper);
 			return (ITest)helperTestFieldValue;
+		}
+
+		private class LongRunningReporter : IDisposable
+		{
+			// ReSharper disable once MemberHidesStaticFromOuterClass
+			private const string ThisClassName = LoggingTestBase.ThisClassName + "." + nameof(LongRunningReporter);
+			private readonly CancellationTokenSource _cts = new CancellationTokenSource();
+			private readonly object _lock = new object();
+
+			private readonly LoggingTestBase _owner;
+			private readonly Stopwatch _stopwatch;
+
+			public LongRunningReporter(LoggingTestBase owner)
+			{
+				_owner = owner;
+				_stopwatch = Stopwatch.StartNew();
+
+				Task.Run(async () => { await ExceptionUtils.DoSwallowingExceptions(NoopLogger.Instance, ReportingLoop); });
+			}
+
+			private bool _isDisposed;
+
+			public void Dispose()
+			{
+				lock (_lock)
+				{
+					if (_isDisposed) return;
+
+					_cts.Cancel();
+
+					_isDisposed = true;
+				}
+			}
+
+			private async Task ReportingLoop()
+			{
+				lock (_lock)
+				{
+					if (_isDisposed)
+						return;
+				}
+
+				await Task.Delay(_owner._config.ReportLongRunningAfter, _cts.Token);
+
+				while (true)
+				{
+					lock (_lock)
+					{
+						if (_isDisposed) return;
+
+						_owner.LogStatusInfo(logger =>
+						{
+							logger.Scoped(ThisClassName)
+								.Info()
+								?.Log("Long running test detected. Time elapsed since test started: {TestDuration}."
+									+ " Test display name: `{UnitTestDisplayName}'."
+									, _stopwatch.Elapsed.ToHmsInSeconds(), _owner.TestDisplayName);
+						});
+					}
+
+					await Task.Delay(_owner._config.ReportLongRunningEvery, _cts.Token);
+				}
+			}
 		}
 	}
 }

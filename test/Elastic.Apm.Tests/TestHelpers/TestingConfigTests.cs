@@ -3,42 +3,56 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Extensions;
+using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
+using FluentAssertions.Extensions;
 using Xunit;
 using Xunit.Abstractions;
 using static Elastic.Apm.Tests.TestHelpers.TestingConfig;
 
 namespace Elastic.Apm.Tests.TestHelpers
 {
-	public class TestingConfigTests
+	public class TestingConfigTests : LoggingTestBase
 	{
-		private static readonly IEnumerable<bool> PossibleBoolDefaultValues = new[] { false, true };
+		private const string ThisClassName = nameof(TestingConfigTests);
 
-		private static readonly IEnumerable<LogLevel> PossibleLogLevelDefaultValues = (LogLevel[])Enum.GetValues(typeof(LogLevel));
+		private static readonly bool[] PossibleBoolDefaultValues = { false, true };
 
-		private static readonly IEnumerable<string> PossibleStringDefaultValues = new[]
+		private static readonly LogLevel[] PossibleLogLevelDefaultValues = (LogLevel[])Enum.GetValues(typeof(LogLevel));
+
+		private static readonly string[] PossibleStringDefaultValues =
 		{
 			null, "", "1", "22", "123", "some default value", "with various \t white \n\t space"
 		};
 
-		private static readonly IEnumerable<ValueTuple<string, object>> PossibleStringToBoolVariants = new[]
+		private static readonly ValueTuple<string, object>[] PossibleStringToBoolVariants =
 		{
 			("false", (object)false), ("true", true), ("FALSE", false), ("tRUe", true), ("", null), ("qwerty", null)
 		};
 
 		private static readonly IEnumerable<ValueTuple<string, object>> PossibleStringToLogLevelVariants = GetPossibleStringToLogLevelVariants();
-		private static readonly IEnumerable<int?> PossibleNullableIntDefaultValues = new[] { 0, 1, 22, 123, (int?)null };
+		private static readonly int?[] PossibleNullableIntDefaultValues = { 0, 1, 22, 123, null };
 
+
+		private static readonly TimeSpan[] PossibleTimeSpanDefaultValues =
+		{
+			TimeSpan.Zero, 100.Milliseconds(), 1.Second(), 30.Seconds(), 1.Minute(), 5.Minutes(), 2.Hours()
+		};
+
+		private static readonly AbstractConfigurationReader.TimeSuffix[] PossibleTimeSuffixValues =
+			(AbstractConfigurationReader.TimeSuffix[])Enum.GetValues(typeof(AbstractConfigurationReader.TimeSuffix));
 
 		private static readonly IEnumerable<ValueTuple<string, object>>
 			PossibleStringToNullableIntVariants = GetPossibleStringToNullableIntVariants();
 
-		private readonly ITestOutputHelper _xunitOutputHelper;
 
-		public TestingConfigTests(ITestOutputHelper xunitOutputHelper) => _xunitOutputHelper = xunitOutputHelper;
+		private readonly IApmLogger _logger;
+
+		public TestingConfigTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = LoggerBase.Scoped(ThisClassName);
 
 		private static IEnumerable<ValueTuple<string, object>> PossibleStringToStringVariants =>
 			PossibleStringDefaultValues.Select(defaultValue => (defaultValue, (object)defaultValue));
@@ -46,14 +60,14 @@ namespace Elastic.Apm.Tests.TestHelpers
 		private static IEnumerable<ValueTuple<string, object>> GetPossibleStringToLogLevelVariants()
 		{
 			var counter = 0;
-			foreach (var defaultValue in PossibleLogLevelDefaultValues)
+			foreach (var logLevel in PossibleLogLevelDefaultValues)
 			{
-				var defaultValueAsString = defaultValue.ToString();
+				var defaultValueAsString = logLevel.ToString();
 
-				yield return (defaultValueAsString, (object)defaultValue);
-				yield return (defaultValueAsString.ToLower(), (object)defaultValue);
-				yield return (defaultValueAsString.ToUpper(), (object)defaultValue);
-				yield return (UppercaseLetterAt(defaultValueAsString, counter % defaultValueAsString.Length), (object)defaultValue);
+				yield return (defaultValueAsString, (object)logLevel);
+				yield return (defaultValueAsString.ToLower(), (object)logLevel);
+				yield return (defaultValueAsString.ToUpper(), (object)logLevel);
+				yield return (UppercaseLetterAt(defaultValueAsString, counter % defaultValueAsString.Length), (object)logLevel);
 
 				yield return (defaultValueAsString.Remove(counter % defaultValueAsString.Length), (object)null);
 
@@ -86,6 +100,76 @@ namespace Elastic.Apm.Tests.TestHelpers
 			yield return ("1a", (object)null);
 			yield return ("z9", (object)null);
 			yield return ("qwerty", (object)null);
+		}
+
+		private static IEnumerable<ValueTuple<string, TimeSpan?>> GetPossibleStringToTimeSpanVariants(
+			AbstractConfigurationReader.TimeSuffix defaultTimeSuffix
+		)
+		{
+			var counter = 0L;
+			foreach (var (timeSpanAsString, timeSpan) in UpperLowerVariations(SuffixVariations(ValidValues().Concat(InvalidValues()))))
+			{
+				++counter;
+				yield return (timeSpanAsString, timeSpan);
+			}
+
+			counter.Should().BeGreaterThan(PossibleTimeSpanDefaultValues.Length);
+
+			IEnumerable<ValueTuple<string, TimeSpan?>> UpperLowerVariations(IEnumerable<ValueTuple<string, TimeSpan?>> source)
+			{
+				foreach (var (timeSpanAsString, timeSpan) in source)
+				{
+					yield return (timeSpanAsString, timeSpan);
+
+					if (!timeSpanAsString.ToUpper().Equals(timeSpanAsString, StringComparison.Ordinal))
+						yield return (timeSpanAsString.ToUpper(), timeSpan);
+
+					if (!timeSpanAsString.ToLower().Equals(timeSpanAsString, StringComparison.Ordinal))
+						yield return (timeSpanAsString.ToLower(), timeSpan);
+				}
+			}
+
+			IEnumerable<ValueTuple<string, TimeSpan?>> SuffixVariations(IEnumerable<ValueTuple<string, TimeSpan?>> source)
+			{
+				foreach (var (timeSpanAsString, timeSpan) in source)
+				{
+					yield return (timeSpanAsString, timeSpan);
+					yield return (timeSpanAsString + "" + defaultTimeSuffix, timeSpan);
+					yield return (timeSpanAsString + " " + defaultTimeSuffix, timeSpan);
+					yield return (timeSpanAsString + " \t " + defaultTimeSuffix, timeSpan);
+					yield return (timeSpanAsString + "-" + defaultTimeSuffix, null);
+					yield return (timeSpanAsString + "_" + defaultTimeSuffix, null);
+				}
+			}
+
+			IEnumerable<ValueTuple<string, TimeSpan?>> ValidValues()
+			{
+				foreach (var timeSpan in PossibleTimeSpanDefaultValues)
+					yield return (GetValueForSuffix(timeSpan, defaultTimeSuffix).ToString(CultureInfo.InvariantCulture), timeSpan);
+			}
+
+			double GetValueForSuffix(TimeSpan timeSpan, AbstractConfigurationReader.TimeSuffix timeSuffix)
+			{
+				switch (timeSuffix)
+				{
+					case AbstractConfigurationReader.TimeSuffix.M: return timeSpan.TotalMinutes;
+					case AbstractConfigurationReader.TimeSuffix.Ms: return timeSpan.TotalMilliseconds;
+					case AbstractConfigurationReader.TimeSuffix.S: return timeSpan.TotalSeconds;
+					default:
+						throw new AssertionFailedException($"Unexpected TimeSuffix value: {timeSuffix} (as int: {(int)timeSuffix})"
+							+ $", {nameof(timeSpan)}: {timeSpan}");
+				}
+			}
+
+			IEnumerable<ValueTuple<string, TimeSpan?>> InvalidValues()
+			{
+				yield return ("", null);
+				yield return ("a", null);
+				yield return ("xyz", null);
+				yield return ("1a", null);
+				yield return ("z9", null);
+				yield return ("qwerty", null);
+			}
 		}
 
 		[Fact]
@@ -146,7 +230,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 		[Fact]
 		public void Option_without_value_should_be_set_to_default()
 		{
-			var allDefaultsConfigSnapshot = new MutableSnapshot(new MockRawConfigSnapshot(new Dictionary<string, string>()), _xunitOutputHelper);
+			var allDefaultsConfigSnapshot = new MutableSnapshot(new MockRawConfigSnapshot(new Dictionary<string, string>()), XunitOutputHelper);
 			Options.All.ForEach(optMeta =>
 			{
 				optMeta.MutableSnapshotPropertyInfo.GetValue(allDefaultsConfigSnapshot).Should().Be(optMeta.DefaultValueAsObject);
@@ -168,26 +252,45 @@ namespace Elastic.Apm.Tests.TestHelpers
 				(optionName, defaultValue) => new Options.StringOptionMetadata(optionName, defaultValue, x => x.LogToConsoleLinePrefix));
 
 		[Fact]
-		public void log_level_option() =>
+		public void LogLevel_option() =>
 			TestOptionMetadata(
 				PossibleLogLevelDefaultValues,
 				PossibleStringToLogLevelVariants,
 				(optionName, defaultValue) => new Options.LogLevelOptionMetadata(optionName, defaultValue, x => x.LogLevel));
 
 		[Fact]
-		public void nullable_int_option() =>
+		public void Nullable_int_option() =>
 			TestOptionMetadata(
 				PossibleNullableIntDefaultValues,
 				PossibleStringToNullableIntVariants,
 				(optionName, defaultValue) =>
 					new Options.NullableIntOptionMetadata(optionName, defaultValue, x => x.RandomSeed));
 
+		[Fact]
+		public void TimeSpan_option()
+		{
+			foreach (var defaultTimeSuffix in PossibleTimeSuffixValues)
+			{
+				TestOptionMetadata(
+					PossibleTimeSpanDefaultValues
+					, GetPossibleStringToTimeSpanVariants(defaultTimeSuffix)
+						.Select(((string timeSpanAsString, TimeSpan? timeSpan) t) =>
+							(t.timeSpanAsString, t.timeSpan == null ? null : (object)t.timeSpan.Value))
+					, (optionName, defaultValue) =>
+						new Options.TimeSpanOptionMetadata(optionName, defaultValue, x => x.ReportLongRunningEvery, defaultTimeSuffix)
+					, _logger
+				);
+			}
+		}
+
 		private static void TestOptionMetadata<T>(
 			IEnumerable<T> possibleDefaultValues,
 			IEnumerable<ValueTuple<string, object>> possibleStringToTVariants,
-			Func<string, T, Options.OptionMetadata<T>> creator
+			Func<string, T, Options.OptionMetadata<T>> creator,
+			IApmLogger loggerArg = null
 		)
 		{
+			var logger = loggerArg ?? NoopLogger.Instance;
 			const string optionName = "dummy_option_name";
 			foreach (var defaultValue in possibleDefaultValues)
 			{
@@ -195,6 +298,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 				// ReSharper disable once PossibleMultipleEnumeration
 				foreach (var (stringValue, expectedTValue) in possibleStringToTVariants.Concat(new[] { ((string)null, (object)null) }))
 				{
+					logger.Error()?.Log("{stringValue} -> {expectedTValue}", stringValue.AsNullableToString(), expectedTValue.AsNullableToString());
+
 					var configSnapshot =
 						new MutableSnapshot(new MockRawConfigSnapshot(new Dictionary<string, string> { { optionName, stringValue } }),
 							new[] { optionMetadata });

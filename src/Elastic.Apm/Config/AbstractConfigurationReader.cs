@@ -15,7 +15,7 @@ namespace Elastic.Apm.Config
 	{
 		private const string ThisClassName = nameof(AbstractConfigurationReader);
 
-		protected readonly IApmLogger _logger;
+		private readonly IApmLogger _logger;
 		private readonly LazyContextualInit<int> _cachedMaxBatchEventCount = new LazyContextualInit<int>();
 		private readonly LazyContextualInit<int> _cachedMaxQueueEventCount = new LazyContextualInit<int>();
 		private readonly LazyContextualInit<IReadOnlyList<Uri>> _cachedServerUrls = new LazyContextualInit<IReadOnlyList<Uri>>();
@@ -337,7 +337,7 @@ namespace Elastic.Apm.Config
 			return TimeSpan.FromMilliseconds(valueInMilliseconds);
 		}
 
-		private bool TryParseTimeInterval(string valueAsString, out double valueInMilliseconds, TimeSuffix defaultSuffix)
+		internal static bool TryParseTimeInterval(string valueAsString, out double valueInMilliseconds, TimeSuffix defaultSuffix)
 		{
 			switch (valueAsString)
 			{
@@ -380,14 +380,15 @@ namespace Elastic.Apm.Config
 							valueInMilliseconds = TimeSpan.FromSeconds(valueNoUnits).TotalMilliseconds;
 							break;
 						default:
-							throw new ArgumentException($"Unexpected TimeSuffix value: {defaultSuffix}", /* paramName: */ nameof(defaultSuffix));
+							throw new ArgumentException($"Unexpected TimeSuffix value: {defaultSuffix} (as int: {(int)defaultSuffix})"
+								, /* paramName: */ nameof(defaultSuffix));
 					}
 
 					return true;
 			}
 		}
 
-		private AssemblyName DiscoverEntryAssemblyName()
+		private static AssemblyName DiscoverEntryAssemblyName()
 		{
 			var entryAssemblyName = Assembly.GetEntryAssembly()?.GetName();
 			if (entryAssemblyName != null && !IsMsOrElastic(entryAssemblyName.GetPublicKeyToken()))
@@ -404,6 +405,7 @@ namespace Elastic.Apm.Config
 			var stackFrames = new StackTrace().GetFrames();
 			if (stackFrames == null) return null;
 
+			// ReSharper disable once LoopCanBeConvertedToQuery
 			foreach (var frame in stackFrames)
 			{
 				var currentAssemblyName = frame?.GetMethod()?.DeclaringType?.Assembly.GetName();
@@ -453,7 +455,7 @@ namespace Elastic.Apm.Config
 			return DefaultValues.UnknownServiceName;
 		}
 
-		private string DiscoverServiceVersion()
+		private static string DiscoverServiceVersion()
 		{
 			var entryAssembly = Assembly.GetEntryAssembly();
 			if (entryAssembly != null && !IsMsOrElastic(entryAssembly.GetName().GetPublicKeyToken()))
@@ -634,7 +636,7 @@ namespace Elastic.Apm.Config
 			return parsedValue;
 		}
 
-		private enum TimeSuffix
+		internal enum TimeSuffix
 		{
 			M,
 			Ms,

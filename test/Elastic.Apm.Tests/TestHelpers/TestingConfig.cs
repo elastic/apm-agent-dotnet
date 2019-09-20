@@ -6,6 +6,7 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
+using FluentAssertions.Extensions;
 using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests.TestHelpers
@@ -14,10 +15,10 @@ namespace Elastic.Apm.Tests.TestHelpers
 	{
 		internal static class Options
 		{
-			private const string SharedPrefix = "Elastic APM .NET Tests> {0}> ";
 			private const string DefaultConsoleLogLinePrefix = SharedPrefix + "Console> ";
 			private const string DefaultSysDiagLogLinePrefix = SharedPrefix;
 			private const string NotInIdeDefaultXunitLogLinePrefix = SharedPrefix + "Xunit> ";
+			private const string SharedPrefix = "Elastic APM .NET Tests> {0}> ";
 
 			internal static LogLevelOptionMetadata LogLevel = new LogLevelOptionMetadata(
 				"ELASTIC_APM_TESTS_LOG_LEVEL", ConsoleLogger.DefaultLogLevel, x => x.LogLevel);
@@ -27,6 +28,15 @@ namespace Elastic.Apm.Tests.TestHelpers
 
 			internal static BoolOptionMetadata LogToConsoleEnabled = new BoolOptionMetadata(
 				"ELASTIC_APM_TESTS_LOG_CONSOLE_ENABLED", !IsRunningInIde, x => x.LogToConsoleEnabled);
+
+			internal static TimeSpanOptionMetadata ReportLongRunningAfter = new TimeSpanOptionMetadata(
+				"ELASTIC_APM_TESTS_REPORT_LONG_RUNNING_AFTER", 30.Seconds(), x => x.ReportLongRunningAfter);
+
+			internal static BoolOptionMetadata ReportLongRunningEnabled = new BoolOptionMetadata(
+				"ELASTIC_APM_TESTS_REPORT_LONG_RUNNING_ENABLED", true, x => x.ReportLongRunningEnabled);
+
+			internal static TimeSpanOptionMetadata ReportLongRunningEvery = new TimeSpanOptionMetadata(
+				"ELASTIC_APM_TESTS_REPORT_LONG_RUNNING_EVERY", 10.Seconds(), x => x.ReportLongRunningEvery);
 
 			internal static StringOptionMetadata LogToConsoleLinePrefix = new StringOptionMetadata(
 				"ELASTIC_APM_TESTS_LOG_CONSOLE_PREFIX", DefaultConsoleLogLinePrefix, x => x.LogToConsoleLinePrefix);
@@ -48,8 +58,23 @@ namespace Elastic.Apm.Tests.TestHelpers
 
 			internal static IOptionMetadata[] All =
 			{
-				LogLevel, LogLevelForTestingConfigParsing, LogToConsoleEnabled, LogToConsoleLinePrefix, LogToSysDiagTraceEnabled,
-				LogToSysDiagTraceLinePrefix, LogToXunitEnabled, LogToXunitLinePrefix, RandomSeed
+				LogLevel,
+				LogLevelForTestingConfigParsing,
+
+				LogToConsoleEnabled,
+				LogToConsoleLinePrefix,
+
+				LogToSysDiagTraceEnabled,
+				LogToSysDiagTraceLinePrefix,
+
+				LogToXunitEnabled,
+				LogToXunitLinePrefix,
+
+				ReportLongRunningAfter,
+				ReportLongRunningEnabled,
+				ReportLongRunningEvery,
+
+				RandomSeed
 			};
 
 
@@ -68,6 +93,17 @@ namespace Elastic.Apm.Tests.TestHelpers
 
 				throw new FormatException($"`{valueAsString}' is not a valid log level");
 			}
+
+			private static TimeSpan ParseTimeSpan(string valueAsString, AbstractConfigurationReader.TimeSuffix defaultSuffix)
+			{
+				if (AbstractConfigurationReader.TryParseTimeInterval(valueAsString, out var valueInMilliseconds, defaultSuffix))
+					return TimeSpan.FromMilliseconds(valueInMilliseconds);
+
+				throw new FormatException($"`{valueAsString}' is not a valid log level");
+			}
+
+			private static Func<string, TimeSpan> CreateTimeSpanParser(AbstractConfigurationReader.TimeSuffix defaultSuffix) =>
+				valueAsString => ParseTimeSpan(valueAsString, defaultSuffix);
 
 			private static string ParseString(string valueAsString) => valueAsString;
 
@@ -171,6 +207,14 @@ namespace Elastic.Apm.Tests.TestHelpers
 				internal NullableIntOptionMetadata(string optionName, int? defaultValue, Expression<Func<MutableSnapshot, int?>> propExpr)
 					: base(optionName, defaultValue, CreateNullableParser(int.Parse), propExpr) { }
 			}
+
+			internal class TimeSpanOptionMetadata : OptionMetadata<TimeSpan>
+			{
+				internal TimeSpanOptionMetadata(string optionName, TimeSpan defaultValue, Expression<Func<MutableSnapshot, TimeSpan>> propExpr
+					, AbstractConfigurationReader.TimeSuffix defaultSuffix = AbstractConfigurationReader.TimeSuffix.S
+				)
+					: base(optionName, defaultValue, CreateTimeSpanParser(defaultSuffix), propExpr) { }
+			}
 		}
 
 		internal interface IRawConfigSnapshot
@@ -200,6 +244,10 @@ namespace Elastic.Apm.Tests.TestHelpers
 			string LogToXunitLinePrefix { get; }
 
 			int? RandomSeed { get; }
+
+			TimeSpan ReportLongRunningAfter { get; }
+			bool ReportLongRunningEnabled { get; }
+			TimeSpan ReportLongRunningEvery { get; }
 		}
 
 		internal static bool IsRunningInIde { get; } = DetectIfRunningInIde();
@@ -261,13 +309,52 @@ namespace Elastic.Apm.Tests.TestHelpers
 
 			public LogLevel LogLevel { get; set; }
 			public LogLevel LogLevelForTestingConfigParsing { get; set; }
+
 			public bool LogToConsoleEnabled { get; set; }
 			public string LogToConsoleLinePrefix { get; set; }
+
 			public bool LogToSysDiagTraceEnabled { get; set; }
 			public string LogToSysDiagTraceLinePrefix { get; set; }
+
 			public bool LogToXunitEnabled { get; set; }
 			public string LogToXunitLinePrefix { get; set; }
+
 			public int? RandomSeed { get; set; }
+
+			public TimeSpan ReportLongRunningAfter { get; set; }
+			public bool ReportLongRunningEnabled { get; set; }
+			public TimeSpan ReportLongRunningEvery { get; set; }
+
+			public override string ToString() => new ToStringBuilder("")
+			{
+				{ nameof(LogLevel), LogLevel },
+
+				{
+					"LogToConsole", new ToStringBuilder("")
+						{ { "Enabled", LogToConsoleEnabled }, { "Prefix", $"`{LogToConsoleLinePrefix}'" } }
+				},
+				{
+					"LogToSysDiagTrace", new ToStringBuilder("")
+						{ { "Enabled", LogToSysDiagTraceEnabled }, { "Prefix", $"`{LogToSysDiagTraceLinePrefix}'" } }
+				},
+				{
+					"LogToXunit", new ToStringBuilder("")
+						{ { "Enabled", LogToXunitEnabled }, { "Prefix", $"`{LogToXunitLinePrefix}'" } }
+				},
+
+				{
+					"ReportLongRunning", new ToStringBuilder("")
+					{
+						{ "Enabled", ReportLongRunningEnabled },
+						{ "After", ReportLongRunningAfter.ToHms() },
+						{ "Every", ReportLongRunningEvery.ToHms() }
+					}
+				},
+
+				{ nameof(RandomSeed), RandomSeed },
+
+				{ nameof(LogLevelForTestingConfigParsing), LogLevelForTestingConfigParsing }
+			}.ToString();
 		}
 	}
 }
