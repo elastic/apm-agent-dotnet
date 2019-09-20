@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm;
 using Elastic.Apm.Config;
@@ -14,10 +15,12 @@ namespace Elastic.Apm
 		public AgentComponents(
 			IApmLogger logger = null,
 			IConfigurationReader configurationReader = null,
-			IPayloadSender payloadSender = null
-		) : this(logger, configurationReader, payloadSender, null, null, null) { }
+			IPayloadSender payloadSender = null,
+			[CallerMemberName] string dbgName = null
+		) : this(dbgName, logger, configurationReader, payloadSender, null, null, null) { }
 
 		internal AgentComponents(
+			string dbgName,
 			IApmLogger logger,
 			IConfigurationReader configurationReader,
 			IPayloadSender payloadSender,
@@ -36,7 +39,7 @@ namespace Elastic.Apm
 
 			ConfigStore = new ConfigStore(new ConfigSnapshotFromReader(ConfigurationReader, "local"), Logger);
 
-			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigStore.CurrentSnapshot, Service, system);
+			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigStore.CurrentSnapshot, Service, system, dbgName: dbgName);
 
 			MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigurationReader);
 			MetricsCollector.StartCollecting();

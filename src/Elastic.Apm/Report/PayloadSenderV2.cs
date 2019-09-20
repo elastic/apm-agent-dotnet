@@ -1,6 +1,8 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,6 +29,8 @@ namespace Elastic.Apm.Report
 		internal readonly Api.System System;
 
 		private readonly CancellationTokenSource _cancellationTokenSource;
+
+		private readonly string _ctorStackTrace;
 		private readonly DisposableHelper _disposableHelper = new DisposableHelper();
 		private readonly BatchBlock<object> _eventQueue;
 
@@ -44,7 +48,10 @@ namespace Elastic.Apm.Report
 			HttpMessageHandler httpMessageHandler = null, string dbgName = null
 		)
 		{
-			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
+			_ctorStackTrace = new StackTrace(true).GetFrames()?.Let(frames => string.Join("", frames.Select(f => f.ToString())));
+
+			_logger = logger?.Scoped(ThisClassName
+				+ (dbgName == null ? "#" + RuntimeHelpers.GetHashCode(this).ToString("X") : $" (dbgName: `{dbgName}')"));
 
 			System = system;
 			_metadata = new Metadata { Service = service, System = System };
@@ -72,7 +79,8 @@ namespace Elastic.Apm.Report
 			_httpClient = BackendCommUtils.BuildHttpClient(logger, config, service, ThisClassName, httpMessageHandler);
 
 #pragma warning disable 4014
-			Task.Factory.StartNew(RunWaitForDataSendItToServerLoop, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
+			Task.Factory.StartNew(RunWaitForDataSendItToServerLoop, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning,
+				_singleThreadTaskScheduler);
 #pragma warning restore 4014
 			_logger.Debug()?.Log("Enqueued {MethodName} with internal task scheduler", nameof(RunWaitForDataSendItToServerLoop));
 		}
@@ -190,7 +198,6 @@ namespace Elastic.Apm.Report
 		/// instead of just Task.WhenAny(taskToAwait, Task.Delay(timeout))
 		/// because this method cancels the timer for timeout while <c>Task.Delay(timeout)</c>.
 		/// If the number of “zombie” timer jobs starts becoming significant, performance could suffer.
-		///
 		/// For more detailed explanation see https://devblogs.microsoft.com/pfxteam/crafting-a-task-timeoutafter-method/
 		/// </summary>
 		/// <returns><c>true</c> if <c>taskToAwait</c> completed before the timeout, <c>false</c> otherwise</returns>
@@ -272,9 +279,12 @@ namespace Elastic.Apm.Report
 				_logger?.Warning()
 					?.LogException(
 						e,
-						"Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):\n{SerializedItems}",
-						_httpClient.BaseAddress,
-						TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray())));
+						"Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):\n{SerializedItems}"
+						+ Environment.NewLine + "+-> Stack trace for this instance ctor call:{StackTrace}"
+						, _httpClient.BaseAddress
+						, TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray()))
+						, _ctorStackTrace == null ? " N/A" : Environment.NewLine + TextUtils.Indent(_ctorStackTrace)
+					);
 			}
 		}
 	}

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Elastic.Apm.BackendComm;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
@@ -15,8 +16,10 @@ namespace Elastic.Apm.Tests.Mocks
 			string captureBody = ConfigConsts.SupportedValues.CaptureBodyOff,
 			string captureBodyContentTypes = ConfigConsts.DefaultValues.CaptureBodyContentTypes,
 			ICentralConfigFetcher centralConfigFetcher = null,
-			bool useRealCentralConfigFetcher = true
+			bool useRealCentralConfigFetcher = true,
+			[CallerMemberName] string dbgName = null
 		) : base(
+			dbgName,
 			logger ?? new NoopLogger(),
 			config ?? new MockConfigSnapshot(
 				logger ?? new NoopLogger(),

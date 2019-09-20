@@ -1,12 +1,17 @@
 ﻿using System.IO;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.DockerTests
 {
-	public class BasicDockerTests
+	public class BasicDockerTests: LoggingTestBase
 	{
+		public BasicDockerTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
+
 		[Fact]
 		public void ContainerIdExistsTest()
 		{

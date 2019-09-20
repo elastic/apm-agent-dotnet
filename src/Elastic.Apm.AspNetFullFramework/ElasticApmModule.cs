@@ -14,6 +14,8 @@ namespace Elastic.Apm.AspNetFullFramework
 {
 	public class ElasticApmModule : IHttpModule
 	{
+		private const string ThisClassName = nameof(AspNetFullFramework) + "." + nameof(ElasticApmModule);
+
 		private static bool _isCaptureHeadersEnabled;
 		private static readonly DbgInstanceNameGenerator DbgInstanceNameGenerator = new DbgInstanceNameGenerator();
 
@@ -288,7 +290,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			var rootLogger = AgentDependencies.Logger ?? ConsoleLogger.Instance;
 			var scopedLogger = rootLogger.Scoped(dbgInstanceName);
 
-			var agentComponents = new AgentComponents(rootLogger, new FullFrameworkConfigReader(scopedLogger));
+			var agentComponents = new AgentComponents(rootLogger, new FullFrameworkConfigReader(scopedLogger), dbgName: ThisClassName);
 
 			var aspNetVersion = FindAspNetVersion(scopedLogger);
 
