@@ -34,7 +34,7 @@ namespace Elastic.Apm.BackendComm
 		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler;
 
 		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, Service service, HttpMessageHandler httpMessageHandler = null
-			, IAgentTimer agentTimer = null, string dbgName = null
+			, IAgentTimer agentTimer = null, [CallerMemberName] string dbgName = null
 		)
 		{
 			_logger = logger?.Scoped(ThisClassName

@@ -223,7 +223,8 @@ namespace Elastic.Apm.Tests
 			var service = Service.GetDefaultService(configurationReader, _logger);
 			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler, /* dbgName: */ TestDisplayName);
 
-			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender, useRealCentralConfigFetcher: true)))
+			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender, useRealCentralConfigFetcher: true
+				, dbgName: TestDisplayName)))
 			{
 				var txIndex = 1;
 				for (; txIndex <= args.MaxQueueEventCount; ++txIndex)

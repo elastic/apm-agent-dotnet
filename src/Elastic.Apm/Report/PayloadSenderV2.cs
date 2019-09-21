@@ -44,7 +44,7 @@ namespace Elastic.Apm.Report
 		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler;
 
 		public PayloadSenderV2(IApmLogger logger, IConfigSnapshot config, Service service, Api.System system,
-			HttpMessageHandler httpMessageHandler = null, string dbgName = null
+			HttpMessageHandler httpMessageHandler = null, [CallerMemberName] string dbgName = null
 		)
 		{
 			_logger = logger?.Scoped(ThisClassName
