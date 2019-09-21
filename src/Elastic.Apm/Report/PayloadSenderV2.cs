@@ -30,7 +30,6 @@ namespace Elastic.Apm.Report
 
 		private readonly CancellationTokenSource _cancellationTokenSource;
 
-		private readonly string _ctorStackTrace;
 		private readonly DisposableHelper _disposableHelper = new DisposableHelper();
 		private readonly BatchBlock<object> _eventQueue;
 
@@ -48,8 +47,6 @@ namespace Elastic.Apm.Report
 			HttpMessageHandler httpMessageHandler = null, string dbgName = null
 		)
 		{
-			_ctorStackTrace = new StackTrace(true).GetFrames()?.Let(frames => string.Join("", frames.Select(f => f.ToString())));
-
 			_logger = logger?.Scoped(ThisClassName
 				+ (dbgName == null ? "#" + RuntimeHelpers.GetHashCode(this).ToString("X") : $" (dbgName: `{dbgName}')"));
 
@@ -283,10 +280,8 @@ namespace Elastic.Apm.Report
 					?.LogException(
 						e,
 						"Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):\n{SerializedItems}"
-						+ Environment.NewLine + "+-> Stack trace for this instance ctor call:{StackTrace}"
 						, _httpClient.BaseAddress
 						, TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray()))
-						, _ctorStackTrace == null ? " N/A" : Environment.NewLine + TextUtils.Indent(_ctorStackTrace)
 					);
 			}
 		}
