@@ -40,7 +40,7 @@ namespace Elastic.Apm.Tests
 			var str = new string('a', 1200);
 
 			string json;
-			using (var agent = new ApmAgent(new TestAgentComponents()))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase)))
 			{
 				var transaction = new Transaction(agent, str, "test") { Duration = 1, Result = "fail" };
 				json = SerializePayloadItem(transaction);
@@ -245,7 +245,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void TransactionContextShouldBeSerializedOnlyWhenSampled()
 		{
-			var agent = new TestAgentComponents();
+			var agent = new TestAgentComponents(LoggerBase);
 			// Create a transaction that is sampled (because the sampler is constant sampling-everything sampler
 			var sampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(1.0), /* distributedTracingData: */ null,
 				agent.PayloadSender, new MockConfigSnapshot(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer);

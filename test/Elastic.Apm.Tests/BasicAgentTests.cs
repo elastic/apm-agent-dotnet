@@ -44,7 +44,7 @@ namespace Elastic.Apm.Tests
 		public void AgentVersion()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("TestName", "TestType", () => { Thread.Sleep(5); });
 				agent.Service.Agent.Version.Should()
@@ -60,7 +60,7 @@ namespace Elastic.Apm.Tests
 		public void SpanAndTransactionIdsLength()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("TestTransaction", "TestTransactionType",
 					t => { t.CaptureSpan("TestSpan", "TestSpanType", () => { }); });
@@ -81,7 +81,7 @@ namespace Elastic.Apm.Tests
 		public void ErrorIdsLength()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("TestTransaction", "TestTransactionType",
 					t => { t.CaptureException(new Exception("TestMst")); });

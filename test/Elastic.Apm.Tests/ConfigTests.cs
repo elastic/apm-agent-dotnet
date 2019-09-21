@@ -25,7 +25,7 @@ namespace Elastic.Apm.Tests
 		public void ServerUrlsSimpleTest()
 		{
 			var serverUrl = "http://myServer.com:1234";
-			using (var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(serverUrls: serverUrl))))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, new MockConfigSnapshot(serverUrls: serverUrl))))
 			{
 				agent.ConfigurationReader.ServerUrls[0].OriginalString.Should().Be(serverUrl);
 				var rootedUrl = serverUrl + "/";
@@ -37,7 +37,7 @@ namespace Elastic.Apm.Tests
 		public void ServerUrlsInvalidUrlTest()
 		{
 			var serverUrl = "InvalidUrl";
-			using (var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(serverUrls: serverUrl))))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, new MockConfigSnapshot(serverUrls: serverUrl))))
 				agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultValues.ServerUri);
 		}
 
@@ -138,40 +138,37 @@ namespace Elastic.Apm.Tests
 		public void SecretTokenSimpleTest()
 		{
 			var secretToken = "secretToken";
-			using (var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(secretToken: secretToken))))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, new MockConfigSnapshot(secretToken: secretToken))))
 				agent.ConfigurationReader.SecretToken.Should().Be(secretToken);
 		}
 
 		[Fact]
 		public void DefaultCaptureHeadersTest()
 		{
-			using (var agent = new ApmAgent(new TestAgentComponents())) agent.ConfigurationReader.CaptureHeaders.Should().Be(true);
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase))) agent.ConfigurationReader.CaptureHeaders.Should().Be(true);
 		}
 
 		[Fact]
 		public void CaptureBodyConfigTest()
 		{
-			ApmAgent agent;
+			BuildAgentAndVerify(SupportedValues.CaptureBodyOff);
+			BuildAgentAndVerify(SupportedValues.CaptureBodyAll);
+			BuildAgentAndVerify(SupportedValues.CaptureBodyErrors);
+			BuildAgentAndVerify(SupportedValues.CaptureBodyTransactions);
 
-			// ReSharper disable once RedundantArgumentDefaultValue
-			using (agent = new ApmAgent(new TestAgentComponents(captureBody: SupportedValues.CaptureBodyOff)))
-				agent.ConfigurationReader.CaptureBody.Should().Be(SupportedValues.CaptureBodyOff);
-
-			using (agent = new ApmAgent(new TestAgentComponents(captureBody: SupportedValues.CaptureBodyAll)))
-				agent.ConfigurationReader.CaptureBody.Should().Be(SupportedValues.CaptureBodyAll);
-
-			using (agent = new ApmAgent(new TestAgentComponents(captureBody: SupportedValues.CaptureBodyErrors)))
-				agent.ConfigurationReader.CaptureBody.Should().Be(SupportedValues.CaptureBodyErrors);
-
-			using (agent = new ApmAgent(new TestAgentComponents(captureBody: SupportedValues.CaptureBodyTransactions)))
-				agent.ConfigurationReader.CaptureBody.Should().Be(SupportedValues.CaptureBodyTransactions);
+			void BuildAgentAndVerify(string captureBody)
+			{
+				using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, new MockConfigSnapshot(LoggerBase, captureBody: captureBody))))
+					agent.ConfigurationReader.CaptureBody.Should().Be(captureBody);
+			}
 		}
 
 		[Fact]
 		public void CaptureBodyContentTypesConfigTest()
 		{
 			// ReSharper disable once RedundantArgumentDefaultValue
-			using (var agent = new ApmAgent(new TestAgentComponents(captureBodyContentTypes: DefaultValues.CaptureBodyContentTypes)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase
+				, new MockConfigSnapshot(LoggerBase, captureBodyContentTypes: DefaultValues.CaptureBodyContentTypes))))
 			{
 				var expected = new List<string>() { "application/x-www-form-urlencoded*", "text/*", "application/json*", "application/xml*" };
 				agent.ConfigurationReader.CaptureBodyContentTypes.Should().HaveCount(4);
@@ -223,7 +220,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void DefaultTransactionSampleRateTest()
 		{
-			using (var agent = new ApmAgent(new TestAgentComponents()))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase)))
 				agent.ConfigurationReader.TransactionSampleRate.Should().Be(DefaultValues.TransactionSampleRate);
 		}
 
@@ -301,7 +298,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			string serviceName;
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
@@ -391,8 +388,8 @@ namespace Elastic.Apm.Tests
 			}
 		}
 
-		private static ApmAgent BuildAgentWithEnvVarsConfig(IPayloadSender payloadSender) =>
-			new ApmAgent(new TestAgentComponents(config: new EnvironmentConfigurationReader(new NoopLogger()), payloadSender: payloadSender));
+		private ApmAgent BuildAgentWithEnvVarsConfig(IPayloadSender payloadSender) =>
+			new ApmAgent(new TestAgentComponents(LoggerBase, new EnvironmentConfigurationReader(new NoopLogger()), payloadSender));
 
 		/// <summary>
 		/// Sets the ELASTIC_APM_SERVICE_VERSION environment variable and makes sure that
@@ -538,7 +535,7 @@ namespace Elastic.Apm.Tests
 		public void StackTraceLimit(string configValue, int expectedValue)
 		{
 			using (var agent =
-				new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(stackTraceLimit: configValue))))
+				new ApmAgent(new TestAgentComponents(LoggerBase, new MockConfigSnapshot(stackTraceLimit: configValue))))
 				agent.ConfigurationReader.StackTraceLimit.Should().Be(expectedValue);
 		}
 
@@ -552,9 +549,8 @@ namespace Elastic.Apm.Tests
 		[Theory]
 		public void SpanFramesMinDurationInMilliseconds(string configValue, int expectedValue)
 		{
-			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					config: new MockConfigSnapshot(spanFramesMinDurationInMilliseconds: configValue))))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase
+				, new MockConfigSnapshot(spanFramesMinDurationInMilliseconds: configValue))))
 				agent.ConfigurationReader.SpanFramesMinDurationInMilliseconds.Should().Be(expectedValue);
 		}
 
@@ -574,9 +570,7 @@ namespace Elastic.Apm.Tests
 		[Theory]
 		public void FlushInterval_tests(string configValue, int expectedValueInMilliseconds)
 		{
-			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					config: new MockConfigSnapshot(flushInterval: configValue))))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, new MockConfigSnapshot(flushInterval: configValue))))
 				agent.ConfigurationReader.FlushInterval.Should().Be(TimeSpan.FromMilliseconds(expectedValueInMilliseconds));
 		}
 
@@ -594,9 +588,7 @@ namespace Elastic.Apm.Tests
 		[Theory]
 		public void MaxQueueEventCount_tests(string configValue, int expectedValue)
 		{
-			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					config: new MockConfigSnapshot(maxQueueEventCount: configValue))))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, new MockConfigSnapshot(maxQueueEventCount: configValue))))
 				agent.ConfigurationReader.MaxQueueEventCount.Should().Be(expectedValue);
 		}
 
@@ -616,9 +608,7 @@ namespace Elastic.Apm.Tests
 		[Theory]
 		public void MaxBatchEventCount_tests(string configValue, int expectedValue)
 		{
-			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					config: new MockConfigSnapshot(maxBatchEventCount: configValue))))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, new MockConfigSnapshot(maxBatchEventCount: configValue))))
 				agent.ConfigurationReader.MaxBatchEventCount.Should().Be(expectedValue);
 		}
 
@@ -633,9 +623,7 @@ namespace Elastic.Apm.Tests
 		[Theory]
 		public void CentralConfig_tests(string configValue, bool expectedValue)
 		{
-			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					config: new MockConfigSnapshot(centralConfig: configValue))))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, new MockConfigSnapshot(centralConfig: configValue))))
 				agent.ConfigurationReader.CentralConfig.Should().Be(expectedValue);
 		}
 

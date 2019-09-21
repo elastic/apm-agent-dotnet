@@ -33,8 +33,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		public Task InitializeAsync()
 		{
-			_agent1 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender1));
-			_agent2 = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender2));
+			_agent1 = new ApmAgent(new TestAgentComponents(new NoopLogger(), payloadSender: _payloadSender1));
+			_agent2 = new ApmAgent(new TestAgentComponents(new NoopLogger(), payloadSender: _payloadSender2));
 
 			_taskForApp1 = Program.CreateWebHostBuilder(null)
 				.ConfigureServices(services =>

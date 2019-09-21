@@ -41,7 +41,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_factory = factory;
 
 			// We need to ensure Agent.Instance is created because we need _agent to use Agent.Instance CurrentExecutionSegmentsContainer
-			AgentSingletonUtils.EnsureInstanceCreated();
+			AgentSingletonUtils.EnsureInstanceCreated(LoggerBase);
 			_agent = new ApmAgent(new TestAgentComponents(
 				logger: _logger,
 				config: new MockConfigSnapshot(_logger, captureBody: ConfigConsts.SupportedValues.CaptureBodyAll),

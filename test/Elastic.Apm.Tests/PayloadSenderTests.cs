@@ -71,7 +71,7 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new PayloadSenderV2(_logger, mockConfig,
 				Service.GetDefaultService(mockConfig, noopLogger), new Api.System(), handler, /* dbgName: */ TestDisplayName);
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, config: mockConfig)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, mockConfig, payloadSender)))
 			{
 				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
 				await isRequestFinished.Task;
@@ -100,7 +100,7 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new PayloadSenderV2(logger, new MockConfigSnapshot(logger, flushInterval: "1s"),
 				service, new Api.System(), handler, /* dbgName: */ TestDisplayName);
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
 				await isRequestFinished.Task;
@@ -326,13 +326,13 @@ namespace Elastic.Apm.Tests
 
 			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender, dbgName: TestDisplayName)))
 			{
-				_logger.Context[DbgUtils.GetCurrentMethodName()] = $"Before loop. numberOfEventsToSend: {numberOfEventsToSend}";
-				for (var txIndex = 1; txIndex <= numberOfEventsToSend; ++txIndex)
+				for (var eventIndex = 1; eventIndex <= numberOfEventsToSend; ++eventIndex)
 				{
-					EnqueueDummyEvent(payloadSender, agent, txIndex).Should().BeTrue($"txIndex: {txIndex}, args: {args}");
-					batchSentBarrier.SignalAndWait(barrierTimeout).Should().BeTrue($"txIndex: {txIndex}, args: {args}");
+					LoggerBase.Context[$"{ThisClassName}.{nameof(DbgUtils.GetCurrentMethodName)}"] =
+						$"Starting loop iteration... txIndex: {eventIndex}, numberOfEventsToSend: {numberOfEventsToSend}, args: {args}";
+					EnqueueDummyEvent(payloadSender, agent, eventIndex).Should().BeTrue($"txIndex: {eventIndex}, args: {args}");
+					batchSentBarrier.SignalAndWait(barrierTimeout).Should().BeTrue($"txIndex: {eventIndex}, args: {args}");
 				}
-				_logger.Context[DbgUtils.GetCurrentMethodName()] = $"After loop. numberOfEventsToSend: {numberOfEventsToSend}";
 			}
 		}
 
@@ -385,7 +385,7 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.Thread.IsAlive.Should().BeTrue();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) doAction(agent, payloadSender);
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender))) doAction(agent, payloadSender);
 
 			payloadSender.Thread.IsAlive.Should().BeFalse();
 		}

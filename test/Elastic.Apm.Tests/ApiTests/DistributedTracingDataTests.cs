@@ -37,7 +37,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var payloadSender2 = new MockPayloadSender();
 
 			string traceId, parentId;
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender1)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender1)))
 			{
 				var transaction = agent.Tracer.StartTransaction(TestTransaction, UnitTest);
 				Thread.Sleep(50);
@@ -46,7 +46,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				transaction.End();
 			}
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender2)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender2)))
 			{
 				var transaction =
 					agent.Tracer.StartTransaction(TestTransaction, UnitTest, BuildDistributedTracingData(traceId, parentId, ValidTraceFlags));
@@ -72,7 +72,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		{
 			var payloadSender1 = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender1)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender1)))
 			{
 				var transaction =
 					agent.Tracer.StartTransaction(TestTransaction, UnitTest, BuildDistributedTracingData(traceId, parentId, traceFlags));
@@ -259,41 +259,41 @@ namespace Elastic.Apm.Tests.ApiTests
 					return 42;
 				}, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
-		private static void AssertValidDistributedTracingData(Action<IApmAgent> transactionCreator)
+		private void AssertValidDistributedTracingData(Action<IApmAgent> transactionCreator)
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) transactionCreator(agent);
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender))) transactionCreator(agent);
 
 			payloadSender.FirstTransaction.TraceId.Should().Be(ValidTraceId);
 			payloadSender.FirstTransaction.ParentId.Should().Be(ValidParentId);
 		}
 
-		private static void AssertInvalidDistributedTracingData(Action<IApmAgent> transactionCreator, string traceId)
+		private void AssertInvalidDistributedTracingData(Action<IApmAgent> transactionCreator, string traceId)
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) transactionCreator(agent);
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender))) transactionCreator(agent);
 
 			payloadSender.FirstTransaction.TraceId.Should().NotBe(traceId);
 			payloadSender.FirstTransaction.ParentId.Should().BeNullOrWhiteSpace();
 		}
 
-		private static async Task AssertValidDistributedTracingData(Func<IApmAgent, Task> transactionCreator)
+		private async Task AssertValidDistributedTracingData(Func<IApmAgent, Task> transactionCreator)
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) await transactionCreator(agent);
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender))) await transactionCreator(agent);
 
 			payloadSender.FirstTransaction.TraceId.Should().Be(ValidTraceId);
 			payloadSender.FirstTransaction.ParentId.Should().Be(ValidParentId);
 		}
 
-		private static async Task AssertInvalidDistributedTracingData(Func<IApmAgent, Task> transactionCreator, string traceId)
+		private async Task AssertInvalidDistributedTracingData(Func<IApmAgent, Task> transactionCreator, string traceId)
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) await transactionCreator(agent);
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender))) await transactionCreator(agent);
 
 			payloadSender.FirstTransaction.TraceId.Should().NotBe(traceId);
 			payloadSender.FirstTransaction.ParentId.Should().BeNullOrWhiteSpace();

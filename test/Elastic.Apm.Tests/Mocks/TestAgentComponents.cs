@@ -9,22 +9,17 @@ namespace Elastic.Apm.Tests.Mocks
 	internal class TestAgentComponents : AgentComponents
 	{
 		public TestAgentComponents(
-			IApmLogger logger = null,
+			IApmLogger logger,
 			IConfigSnapshot config = null,
 			IPayloadSender payloadSender = null,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer = null,
-			string captureBody = ConfigConsts.SupportedValues.CaptureBodyOff,
-			string captureBodyContentTypes = ConfigConsts.DefaultValues.CaptureBodyContentTypes,
 			ICentralConfigFetcher centralConfigFetcher = null,
 			bool useRealCentralConfigFetcher = true,
 			[CallerMemberName] string dbgName = null
 		) : base(
 			dbgName,
 			logger ?? new NoopLogger(),
-			config ?? new MockConfigSnapshot(
-				logger ?? new NoopLogger(),
-				captureBody: captureBody,
-				captureBodyContentTypes: captureBodyContentTypes),
+			config ?? new MockConfigSnapshot(logger ?? new NoopLogger()),
 			payloadSender ?? new MockPayloadSender(),
 			new FakeMetricsCollector(),
 			currentExecutionSegmentsContainer,

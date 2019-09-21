@@ -361,7 +361,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		{
 			var payloadSender = new MockPayloadSender();
 			Func<Task> act;
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) {
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender))) {
 				var cancellationTokenSource = new CancellationTokenSource();
 				var token = cancellationTokenSource.Token;
 				cancellationTokenSource.Cancel();
@@ -619,7 +619,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private async Task<MockPayloadSender> AssertWith1TransactionAsync(Func<ApmAgent, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 				await func(agent);
 
 			payloadSender.Transactions.Should().NotBeEmpty();
@@ -640,7 +640,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private async Task<MockPayloadSender> AssertWith1TransactionAnd1ErrorAsync(Func<ApmAgent, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 				await func(agent);
 
 			payloadSender.Transactions.Should().NotBeEmpty();
@@ -666,7 +666,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private MockPayloadSender AssertWith1Transaction(Action<ApmAgent> action)
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 				action(agent);
 
 			payloadSender.Transactions.Should().NotBeEmpty();
@@ -687,7 +687,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private void AssertWith1TransactionAnd1Error(Action<ApmAgent> action)
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 				action(agent);
 
 			payloadSender.Transactions.Should().NotBeEmpty();

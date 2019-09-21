@@ -27,8 +27,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_factory = factory;
 
 			// We need to ensure Agent.Instance is created because we need _agent to use Agent.Instance CurrentExecutionSegmentsContainer
-			AgentSingletonUtils.EnsureInstanceCreated();
-			_agent = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender,
+			AgentSingletonUtils.EnsureInstanceCreated(LoggerBase);
+			_agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: _payloadSender,
 				// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
 				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer));

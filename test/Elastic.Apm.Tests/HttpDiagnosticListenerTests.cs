@@ -469,7 +469,7 @@ namespace Elastic.Apm.Tests
 		public async Task HttpCallWithoutRegisteredListener()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: mockPayloadSender)))
 			{
 				using (var localServer = new LocalServer())
 				{
@@ -502,7 +502,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			List<ISpan> spans;
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				StartTransaction(agent);
 
@@ -541,7 +541,7 @@ namespace Elastic.Apm.Tests
 		public async Task HttpCallWithRegisteredListener()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: mockPayloadSender)))
 			{
 				var subscriber = new HttpDiagnosticsSubscriber();
 
@@ -581,7 +581,7 @@ namespace Elastic.Apm.Tests
 		public async Task SubscribeUnsubscribe()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: mockPayloadSender)))
 			{
 				var subscriber = new HttpDiagnosticsSubscriber();
 
@@ -629,10 +629,10 @@ namespace Elastic.Apm.Tests
 			}
 		}
 
-		internal static void RegisterListenerStartTransactionAndTest(Action<ApmAgent, MockPayloadSender> test)
+		internal void RegisterListenerStartTransactionAndTest(Action<ApmAgent, MockPayloadSender> test)
 		{
 			var payloadSender = new MockPayloadSender();
-			var agentComponents = new TestAgentComponents(payloadSender: payloadSender,
+			var agentComponents = new TestAgentComponents(LoggerBase, payloadSender: payloadSender,
 				config: new MockConfigSnapshot(logLevel: "Debug", stackTraceLimit: "-1",
 					spanFramesMinDurationInMilliseconds: "-1ms"));
 
@@ -647,10 +647,10 @@ namespace Elastic.Apm.Tests
 			}
 		}
 
-		internal static async Task RegisterListenerStartTransactionAndTest(Func<ApmAgent, MockPayloadSender, Task> test)
+		internal async Task RegisterListenerStartTransactionAndTest(Func<ApmAgent, MockPayloadSender, Task> test)
 		{
 			var payloadSender = new MockPayloadSender();
-			var agentComponents = new TestAgentComponents(payloadSender: payloadSender,
+			var agentComponents = new TestAgentComponents(LoggerBase, payloadSender: payloadSender,
 				config: new MockConfigSnapshot(logLevel: "Debug", stackTraceLimit: "-1",
 					spanFramesMinDurationInMilliseconds: "-1ms"));
 

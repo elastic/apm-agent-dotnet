@@ -38,7 +38,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			const string transactionName = TestTransaction;
 			const string transactionType = UnitTest;
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
@@ -70,7 +70,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			const string transactionName = TestTransaction;
 			const string transactionType = UnitTest;
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				var unused = agent.Tracer.StartTransaction(transactionName, transactionType);
 			}
@@ -87,7 +87,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			const string transactionName = TestTransaction;
 			const string transactionType = UnitTest;
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
@@ -102,7 +102,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void GetCurrentTransaction()
 		{
-			using (var agent = new ApmAgent(new TestAgentComponents()))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase)))
 			{
 				agent.Tracer.CurrentTransaction.Should().BeNull();
 
@@ -126,7 +126,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void GetCurrentSpan()
 		{
-			using (var agent = new ApmAgent(new TestAgentComponents()))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase)))
 			{
 				agent.Tracer.CaptureTransaction("dummy_transaction_name", "dummy_transaction_type", transaction =>
 				{
@@ -152,7 +152,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public void GetCurrentSpanNested()
 		{
-			using (var agent = new ApmAgent(new TestAgentComponents()))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase)))
 			{
 				agent.Tracer.CaptureTransaction("dummy_transaction_name", "dummy_transaction_type", transaction =>
 				{
@@ -198,7 +198,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		public async Task GetCurrentTransactionAsyncContext()
 		{
 			const string transactionName = TestTransaction;
-			using (var agent = new ApmAgent(new TestAgentComponents()))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase)))
 			{
 				var transaction = agent.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest); //Start transaction on the current task
 				transaction.Should().NotBeNull();
@@ -234,7 +234,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		{
 			const string transactionName = TestTransaction;
 			const string spanName = "test_span_name";
-			using (var agent = new ApmAgent(new TestAgentComponents()))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase)))
 			{
 				var transaction = agent.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest); //Start transaction on the current task
 				var span = transaction.StartSpan(spanName, ApiConstants.TypeExternal); //Start span on the current task
@@ -277,7 +277,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			const string transactionType = UnitTest;
 			const string spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
@@ -308,7 +308,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			const string transactionType = UnitTest;
 			const string spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
@@ -335,7 +335,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			const string transactionType = UnitTest;
 			const string spanName = "TestSpan";
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 				var span = transaction.StartSpan(spanName, ApiConstants.TypeDb, ApiConstants.SubtypeMssql, ApiConstants.ActionQuery);
@@ -370,13 +370,13 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// Shared between ErrorOnTransaction and ErrorOnTransactionWithCulprit
 		/// </summary>
 		/// <param name="culprit">Culprit.</param>
-		private static void ErrorOnTransactionCommon(string culprit = null)
+		private void ErrorOnTransactionCommon(string culprit = null)
 		{
 			const string transactionName = TestTransaction;
 			const string transactionType = UnitTest;
 			const string exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
@@ -416,7 +416,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			const string spanName = "TestSpan";
 			const string exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 
@@ -454,7 +454,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			const string spanName = "TestSpan";
 			const string exceptionMessage = "Foo!";
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
 				transaction.Labels["fooTransaction1"] = "barTransaction1";
@@ -515,7 +515,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		/// <param name="action"></param>
 		private void StartTransactionAndSpanWithSubSpan(MockPayloadSender payloadSender, Action<ISpan> action)
 		{
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				var transaction = agent.Tracer.StartTransaction(TestTransaction, UnitTest);
 				Thread.Sleep(5);
@@ -595,7 +595,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var payloadSender = new MockPayloadSender();
 			var expectedSpansCount = isSampled ? 1 : 0;
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender,
 				config: new MockConfigSnapshot(transactionSampleRate: isSampled ? "1" : "0"))))
 			{
 				var transaction = agent.Tracer.StartTransaction(TestTransaction, UnitTest);
@@ -629,7 +629,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var payloadSender = new MockPayloadSender();
 			var expectedSpansCount = isSampled ? 1 : 0;
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender,
 				config: new MockConfigSnapshot(transactionSampleRate: isSampled ? "1" : "0"))))
 			{
 				var transaction = agent.Tracer.StartTransaction(TestTransaction, UnitTest);
@@ -684,7 +684,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			ITransaction capturedTransaction = null;
 			IExecutionSegment errorCapturingExecutionSegment = null;
 			var mockConfig = new MockConfigSnapshot(transactionSampleRate: isSampled ? "1" : "0");
-			using (var agent = new ApmAgent(new TestAgentComponents(config: mockConfig, payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, mockConfig, payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction(TestTransaction, CustomTransactionTypeForTests, transaction =>
 				{

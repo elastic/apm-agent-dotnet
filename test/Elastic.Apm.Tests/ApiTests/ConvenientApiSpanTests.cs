@@ -604,7 +604,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var token = cancellationTokenSource.Token;
 			cancellationTokenSource.Cancel();
 
-			using (var agent = new ApmAgent(new TestAgentComponents()))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase)))
 			{
 				await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 				{

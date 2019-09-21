@@ -38,7 +38,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var unused = Program.CreateWebHostBuilder(null)
 				.Configure(app =>
 				{
-					_agent = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender));
+					_agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: _payloadSender));
 					app.UseElasticApm(_agent, _agent.Logger);
 					Startup.ConfigureAllExceptAgent(app);
 				})
@@ -115,7 +115,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			const string sub = "123-456";
 
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				var context = new DefaultHttpContext
 				{

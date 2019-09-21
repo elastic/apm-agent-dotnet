@@ -17,7 +17,7 @@ namespace Elastic.Apm.Tests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var mockConfig = new MockConfigSnapshot(transactionSampleRate: isSampled ? "1" : "0");
-			using (var agent = new ApmAgent(new TestAgentComponents(config: mockConfig, payloadSender: mockPayloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, mockConfig, mockPayloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("test transaction name", "test transaction type",
 					transaction =>

@@ -31,7 +31,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task TestErrorInAspNetCore()
 		{
-			using (var agent = new ApmAgent(new TestAgentComponents()))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase)))
 			{
 				var capturedPayload = agent.PayloadSender as MockPayloadSender;
 				var client = Helper.GetClient(agent, _factory);
@@ -66,8 +66,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task TestJsonBodyRetrievalOnRequestFailureInAspNetCore()
 		{
-			using (var agent = new ApmAgent(new TestAgentComponents(captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors,
-				captureBodyContentTypes: ConfigConsts.DefaultValues.CaptureBodyContentTypes)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, new MockConfigSnapshot(
+				captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors,
+				// ReSharper disable once RedundantArgumentDefaultValue
+				captureBodyContentTypes: ConfigConsts.DefaultValues.CaptureBodyContentTypes))))
 			{
 				var capturedPayload = agent.PayloadSender as MockPayloadSender;
 				var client = Helper.GetClient(agent, _factory);
