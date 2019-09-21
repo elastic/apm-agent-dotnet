@@ -8,6 +8,8 @@ namespace Elastic.Apm.Logging
 	{
 		public ScopedLogger(IApmLogger logger, string scope) => (Logger, Scope) = (logger, scope);
 
+		public IApmLoggerContext Context => Logger.Context;
+
 		private ConcurrentDictionary<string, LogValuesFormatter> Formatters { get; } = new ConcurrentDictionary<string, LogValuesFormatter>();
 
 		public IApmLogger Logger { get; }

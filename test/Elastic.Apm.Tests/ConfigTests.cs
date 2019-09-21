@@ -392,7 +392,7 @@ namespace Elastic.Apm.Tests
 		}
 
 		private static ApmAgent BuildAgentWithEnvVarsConfig(IPayloadSender payloadSender) =>
-			new ApmAgent(new TestAgentComponents(config: new EnvironmentConfigurationReader(NoopLogger.Instance), payloadSender: payloadSender));
+			new ApmAgent(new TestAgentComponents(config: new EnvironmentConfigurationReader(new NoopLogger()), payloadSender: payloadSender));
 
 		/// <summary>
 		/// Sets the ELASTIC_APM_SERVICE_VERSION environment variable and makes sure that

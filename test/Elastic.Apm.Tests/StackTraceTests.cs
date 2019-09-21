@@ -46,7 +46,7 @@ namespace Elastic.Apm.Tests
 		public async Task AsyncCallStackTest()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				await Assert.ThrowsAsync<Exception>(async () =>
 				{
@@ -71,7 +71,7 @@ namespace Elastic.Apm.Tests
 		public void CallStackWithMoveNextWithoutAsync()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				Assert.Throws<Exception>(() =>
 				{
@@ -96,7 +96,7 @@ namespace Elastic.Apm.Tests
 		public void TypeAndMethodNameTest()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				Assert.Throws<Exception>(() =>
 				{
@@ -133,7 +133,7 @@ namespace Elastic.Apm.Tests
 			Action action = TestMethod;
 
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 				Assert.Throws<Exception>(() => { agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => { action(); }); });
 
 			payloadSender.Errors.Should().NotBeEmpty();
@@ -148,7 +148,7 @@ namespace Elastic.Apm.Tests
 
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 				Assert.Throws<Exception>(() => { agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => { testClass.MyMethod(); }); });
 
 			payloadSender.Errors.First().Should().NotBeNull();
@@ -169,7 +169,7 @@ namespace Elastic.Apm.Tests
 
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 				Assert.Throws<Exception>(() => { agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => { testClass.JustThrow(); }); });
 
 			payloadSender.Errors.First().Should().NotBeNull();
@@ -275,7 +275,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
 					=>
@@ -312,7 +312,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
 					=>
@@ -334,7 +334,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				Assert.Throws<Exception>(() =>
 				{
@@ -367,7 +367,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(stackTraceLimit: "2"),
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, config: new MockConfigSnapshot(stackTraceLimit: "2"),
 				payloadSender: payloadSender)))
 			{
 				Assert.Throws<Exception>(() =>
@@ -395,7 +395,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase,
 				config: new MockConfigSnapshot(stackTraceLimit: "2", spanFramesMinDurationInMilliseconds: "-2"),
 				payloadSender: payloadSender)))
 			{
@@ -414,14 +414,14 @@ namespace Elastic.Apm.Tests
 			payloadSender.FirstError.Exception.StackTrace.Should().HaveCount(2);
 		}
 
-		private static void AssertWithAgent(string stackTraceLimit, string spanFramesMinDuration, Action<MockPayloadSender> assertAction,
+		private void AssertWithAgent(string stackTraceLimit, string spanFramesMinDuration, Action<MockPayloadSender> assertAction,
 			int sleepLength = 0
 		)
 		{
 			var payloadSender = new MockPayloadSender();
 
 			using (var agent =
-				new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+				new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender,
 					config: new MockConfigSnapshot(new NoopLogger(), stackTraceLimit: stackTraceLimit,
 						spanFramesMinDurationInMilliseconds: spanFramesMinDuration))))
 			{

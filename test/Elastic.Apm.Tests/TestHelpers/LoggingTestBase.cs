@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -113,7 +114,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 				_owner = owner;
 				_stopwatch = Stopwatch.StartNew();
 
-				Task.Run(async () => { await ExceptionUtils.DoSwallowingExceptions(NoopLogger.Instance, ReportingLoop); });
+				Task.Run(async () => { await ExceptionUtils.DoSwallowingExceptions(new NoopLogger(), ReportingLoop); });
 			}
 
 			private bool _isDisposed;
@@ -149,14 +150,24 @@ namespace Elastic.Apm.Tests.TestHelpers
 						_owner.LogStatusInfo(logger =>
 						{
 							logger.Scoped(ThisClassName)
-								.Info()
+								.Warning()
 								?.Log("Long running test detected. Time elapsed since test started: {TestDuration}."
 									+ " Test display name: `{UnitTestDisplayName}'."
-									, _stopwatch.Elapsed.ToHmsInSeconds(), _owner.TestDisplayName);
+									+ Environment.NewLine + "+-> Logger context:{LoggerContext}"
+									, _stopwatch.Elapsed.ToHmsInSeconds(), _owner.TestDisplayName
+									, FormatLoggerContext(_owner.LoggerBase.Context.Copy()));
 						});
 					}
 
 					await Task.Delay(_owner._config.ReportLongRunningEvery, _cts.Token);
+				}
+
+				string FormatLoggerContext(IReadOnlyDictionary<string, string> loggerCtx)
+				{
+					if (loggerCtx.IsEmpty()) return " <EMPTY>";
+
+					return $" {loggerCtx.Count} items:" + Environment.NewLine
+						+ TextUtils.Indent(string.Join("", loggerCtx.Select(kv => $"`{kv.Key}': `{kv.Value}'")));
 				}
 			}
 		}

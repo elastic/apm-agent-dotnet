@@ -10,6 +10,8 @@ namespace AspNetFullFrameworkSampleApp
 	{
 		public bool IsEnabled(ApmLogLevel level) => true;
 
+		public IApmLoggerContext Context { get; } = new ApmLoggerContext();
+
 		public void Log<TState>(ApmLogLevel apmLogLevel, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{
 			var nlogger = LogManager.GetLogger("");

@@ -278,7 +278,6 @@ namespace Elastic.Apm.Tests.TestHelpers
 							(t.timeSpanAsString, t.timeSpan == null ? null : (object)t.timeSpan.Value))
 					, (optionName, defaultValue) =>
 						new Options.TimeSpanOptionMetadata(optionName, defaultValue, x => x.ReportLongRunningEvery, defaultTimeSuffix)
-					, _logger
 				);
 			}
 		}
@@ -286,11 +285,9 @@ namespace Elastic.Apm.Tests.TestHelpers
 		private static void TestOptionMetadata<T>(
 			IEnumerable<T> possibleDefaultValues,
 			IEnumerable<ValueTuple<string, object>> possibleStringToTVariants,
-			Func<string, T, Options.OptionMetadata<T>> creator,
-			IApmLogger loggerArg = null
+			Func<string, T, Options.OptionMetadata<T>> creator
 		)
 		{
-			var logger = loggerArg ?? NoopLogger.Instance;
 			const string optionName = "dummy_option_name";
 			foreach (var defaultValue in possibleDefaultValues)
 			{

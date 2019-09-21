@@ -59,6 +59,8 @@ namespace Elastic.Apm
 
 	internal class ApmAgent : IApmAgent, IDisposable
 	{
+		private const string ThisClassName = nameof(ApmAgent);
+
 		internal readonly CompositeDisposable Disposables = new CompositeDisposable();
 
 		internal ApmAgent(AgentComponents agentComponents) => Components = agentComponents ?? new AgentComponents();
@@ -75,8 +77,11 @@ namespace Elastic.Apm
 
 		public void Dispose()
 		{
+			Components.Logger.Context[$"{ThisClassName}.{nameof(Dispose)}"] = "Before calling Disposables?.Dispose()";
 			Disposables?.Dispose();
+			Components.Logger.Context[$"{ThisClassName}.{nameof(Dispose)}"] = "Before calling Components?.Dispose()";
 			Components?.Dispose();
+			Components.Logger.Context[$"{ThisClassName}.{nameof(Dispose)}"] = "Done";
 		}
 	}
 

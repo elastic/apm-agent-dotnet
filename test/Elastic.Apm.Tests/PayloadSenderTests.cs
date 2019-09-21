@@ -12,6 +12,7 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
+using Elastic.Apm.Tests.HelpersTests;
 using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
@@ -209,6 +210,8 @@ namespace Elastic.Apm.Tests
 		[MemberData(nameof(TestArgsVariantsWithVeryLongFlushInterval))]
 		internal async Task MaxQueueEventCount_should_be_enforced_after_send(TestArgs args)
 		{
+//			LoggerBase.Level = LogLevel.Debug;
+
 			var sendTcs = new TaskCompletionSource<object>();
 			var firstBatchDequeuedTcs = new TaskCompletionSource<object>();
 
@@ -321,13 +324,15 @@ namespace Elastic.Apm.Tests
 			var service = Service.GetDefaultService(configurationReader, _logger);
 			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler, /* dbgName: */ TestDisplayName);
 
-			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender, dbgName: TestDisplayName)))
 			{
+				_logger.Context[DbgUtils.GetCurrentMethodName()] = $"Before loop. numberOfEventsToSend: {numberOfEventsToSend}";
 				for (var txIndex = 1; txIndex <= numberOfEventsToSend; ++txIndex)
 				{
 					EnqueueDummyEvent(payloadSender, agent, txIndex).Should().BeTrue($"txIndex: {txIndex}, args: {args}");
 					batchSentBarrier.SignalAndWait(barrierTimeout).Should().BeTrue($"txIndex: {txIndex}, args: {args}");
 				}
+				_logger.Context[DbgUtils.GetCurrentMethodName()] = $"After loop. numberOfEventsToSend: {numberOfEventsToSend}";
 			}
 		}
 

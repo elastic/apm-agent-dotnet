@@ -15,6 +15,8 @@ namespace Elastic.Apm.Logging
 			_errorOut = errorOut ?? Console.Error;
 		}
 
+		public IApmLoggerContext Context { get; } = new ApmLoggerContext();
+
 		protected internal static LogLevel DefaultLogLevel { get; } = LogLevel.Error;
 		public static ConsoleLogger Instance { get; } = new ConsoleLogger(DefaultLogLevel);
 

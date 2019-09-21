@@ -14,6 +14,8 @@ namespace Elastic.Apm.AspNetCore
 			_logger = loggerFactory?.CreateLogger("Elastic.Apm") ?? throw new ArgumentNullException(nameof(loggerFactory));
 		}
 
+		public IApmLoggerContext Context { get; } = new ApmLoggerContext();
+
 		public bool IsEnabled(LogLevel level) => _logger.IsEnabled(Convert(level));
 
 		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter) =>

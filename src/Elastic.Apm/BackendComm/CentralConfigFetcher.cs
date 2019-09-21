@@ -89,6 +89,8 @@ namespace Elastic.Apm.BackendComm
 				_logger.Debug()?.Log("Disposing of HttpClient which should abort any ongoing, but not cancelable, operation");
 				_httpClient.Dispose();
 
+				_logger.Context[$"{ThisClassName}.{nameof(Dispose)}"] =
+					$"Waiting for _singleThreadTaskScheduler thread `{_singleThreadTaskScheduler.Thread.Name}' to exit";
 				_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit", _singleThreadTaskScheduler.Thread.Name);
 				_singleThreadTaskScheduler.Thread.Join();
 

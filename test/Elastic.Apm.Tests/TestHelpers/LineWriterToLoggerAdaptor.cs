@@ -13,6 +13,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 			_lineWriter = lineWriter;
 		}
 
+		public IApmLoggerContext Context { get; } = new ApmLoggerContext();
+
 		public LogLevel Level { get; set; }
 
 		public bool IsEnabled(LogLevel level) => Level <= level;

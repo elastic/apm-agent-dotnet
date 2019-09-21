@@ -708,7 +708,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void FillSpanContext()
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 				{
@@ -752,7 +752,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private async Task<MockPayloadSender> AssertWith1TransactionAnd1ErrorAnd1SpanAsync(Func<ITransaction, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 				{
@@ -786,7 +786,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private async Task<MockPayloadSender> AssertWith1TransactionAnd1ErrorAnd1SpanAsyncOnSubSpan(Func<ISpan, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 				{
@@ -840,7 +840,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private async Task<MockPayloadSender> AssertWith1TransactionAnd1SpanAsync(Func<ITransaction, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 				{
@@ -868,7 +868,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private async Task<MockPayloadSender> AssertWith1TransactionAnd1SpanAsyncOnSubSpan(Func<ISpan, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 				{
@@ -915,7 +915,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private MockPayloadSender AssertWith1TransactionAnd1Span(Action<ITransaction> action)
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 				{
@@ -943,7 +943,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private void AssertWith1TransactionAnd1SpanOnSubSpan(Action<ISpan> action)
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) {
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender))) {
 				WaitHelpers.SleepMinimum();
 				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 				{
@@ -987,7 +987,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private void AssertWith1TransactionAnd1SpanAnd1Error(Action<ITransaction> action)
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 				{
@@ -1021,7 +1021,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private void AssertWith1TransactionAnd1SpanAnd1ErrorOnSubSpan(Action<ISpan> action)
 		{
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				WaitHelpers.SleepMinimum();
 				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
