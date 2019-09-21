@@ -145,8 +145,11 @@ namespace Elastic.Apm.Report
 		public void Dispose() =>
 			_disposableHelper.DoOnce(_logger, ThisClassName, () =>
 			{
-				_logger.Debug()?.Log("Signalling _cancellationTokenSource");
+				_logger.Debug()?.Log("Signaling _cancellationTokenSource");
 				_cancellationTokenSource.Cancel();
+
+				_logger.Debug()?.Log("Disposing of HttpClient which should abort any ongoing, but not cancelable, operation");
+				_httpClient.Dispose();
 
 				_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit", _singleThreadTaskScheduler.Thread.Name);
 				_singleThreadTaskScheduler.Thread.Join();

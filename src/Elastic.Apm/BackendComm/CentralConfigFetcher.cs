@@ -40,7 +40,6 @@ namespace Elastic.Apm.BackendComm
 			_logger = logger?.Scoped(ThisClassName
 				+ (dbgName == null ? "#" + RuntimeHelpers.GetHashCode(this).ToString("X") : $" (dbgName: `{dbgName}')"));
 
-			_configStore = configStore;
 			_initialSnapshot = configStore.CurrentSnapshot;
 
 			var isCentralConfigOptEqDefault = _initialSnapshot.CentralConfig == ConfigConsts.DefaultValues.CentralConfig;
@@ -52,6 +51,8 @@ namespace Elastic.Apm.BackendComm
 					, centralConfigStatus, _initialSnapshot.CentralConfig, ConfigConsts.DefaultValues.CentralConfig);
 
 			if (!_initialSnapshot.CentralConfig) return;
+
+			_configStore = configStore;
 
 			_agentTimer = agentTimer ?? new AgentTimer();
 
@@ -76,14 +77,17 @@ namespace Elastic.Apm.BackendComm
 		{
 			if (_cancellationTokenSource == null)
 			{
-				_logger.Debug()?.Log("CentralConfig is disabled - nothing to dispose");
+				_logger.Debug()?.Log("Central configuration feature is disabled - nothing to dispose");
 				return;
 			}
 
 			_disposableHelper.DoOnce(_logger, ThisClassName, () =>
 			{
-				_logger.Debug()?.Log("Signalling _cancellationTokenSource");
+				_logger.Debug()?.Log("Signaling _cancellationTokenSource");
 				_cancellationTokenSource.Cancel();
+
+				_logger.Debug()?.Log("Disposing of HttpClient which should abort any ongoing, but not cancelable, operation");
+				_httpClient.Dispose();
 
 				_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit", _singleThreadTaskScheduler.Thread.Name);
 				_singleThreadTaskScheduler.Thread.Join();
