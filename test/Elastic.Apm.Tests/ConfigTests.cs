@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Report;
 using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
@@ -126,7 +127,7 @@ namespace Elastic.Apm.Tests
 			var serverUrlsWithSpace = "http://myServer:1234 \r\n";
 			Environment.SetEnvironmentVariable(EnvVarNames.ServerUrls, serverUrlsWithSpace);
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender)))
+			using (var agent = BuildAgentWithEnvVarsConfig(payloadSender))
 			{
 				agent.ConfigurationReader.ServerUrls.First().Should().NotBe(serverUrlsWithSpace);
 				agent.ConfigurationReader.ServerUrls.First().Should().Be("http://myServer:1234");
@@ -300,7 +301,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			string serviceName;
-			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
@@ -323,7 +324,7 @@ namespace Elastic.Apm.Tests
 			var serviceName = "MyService123";
 			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender)))
+			using (var agent = BuildAgentWithEnvVarsConfig(payloadSender))
 			{
 				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
@@ -343,7 +344,7 @@ namespace Elastic.Apm.Tests
 			var serviceName = "My.Service.Test";
 			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender)))
+			using (var agent = BuildAgentWithEnvVarsConfig(payloadSender))
 			{
 				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
@@ -361,7 +362,7 @@ namespace Elastic.Apm.Tests
 			var serviceName = "MyService123!";
 			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender)))
+			using (var agent = BuildAgentWithEnvVarsConfig(payloadSender))
 			{
 				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
@@ -381,7 +382,7 @@ namespace Elastic.Apm.Tests
 			var serviceName = DefaultValues.UnknownServiceName;
 			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender)))
+			using (var agent = BuildAgentWithEnvVarsConfig(payloadSender))
 			{
 				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
@@ -389,6 +390,9 @@ namespace Elastic.Apm.Tests
 				agent.Service.Name.Should().MatchRegex("^[a-zA-Z0-9 _-]+$");
 			}
 		}
+
+		private static ApmAgent BuildAgentWithEnvVarsConfig(IPayloadSender payloadSender) =>
+			new ApmAgent(new TestAgentComponents(config: new EnvironmentConfigurationReader(NoopLogger.Instance), payloadSender: payloadSender);
 
 		/// <summary>
 		/// Sets the ELASTIC_APM_SERVICE_VERSION environment variable and makes sure that
@@ -401,7 +405,7 @@ namespace Elastic.Apm.Tests
 			var serviceVersion = "2.1.0.5";
 			Environment.SetEnvironmentVariable(EnvVarNames.ServiceVersion, serviceVersion);
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender)))
+			using (var agent = BuildAgentWithEnvVarsConfig(payloadSender))
 			{
 				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 

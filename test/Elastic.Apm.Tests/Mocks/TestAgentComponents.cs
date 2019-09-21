@@ -10,7 +10,7 @@ namespace Elastic.Apm.Tests.Mocks
 	{
 		public TestAgentComponents(
 			IApmLogger logger = null,
-			MockConfigSnapshot config = null,
+			IConfigSnapshot config = null,
 			IPayloadSender payloadSender = null,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer = null,
 			string captureBody = ConfigConsts.SupportedValues.CaptureBodyOff,
