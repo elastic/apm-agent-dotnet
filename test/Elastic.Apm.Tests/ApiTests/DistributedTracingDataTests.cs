@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
@@ -117,6 +118,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				UnitTest, t =>
 				{
 					t.Should().NotBeNull();
+					LoggerBase.Context[DbgUtils.GetCurrentMethodName()] = "Calling WaitHelpers.SleepMinimum() ...";
 					WaitHelpers.SleepMinimum();
 				}, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 

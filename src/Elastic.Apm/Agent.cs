@@ -77,9 +77,9 @@ namespace Elastic.Apm
 
 		public void Dispose()
 		{
-			Components.Logger.Context[$"{ThisClassName}.{nameof(Dispose)}"] = "Before calling Disposables?.Dispose()";
+			Components.Logger.Context[$"{ThisClassName}.{nameof(Dispose)}"] = "Calling Disposables?.Dispose() ...";
 			Disposables?.Dispose();
-			Components.Logger.Context[$"{ThisClassName}.{nameof(Dispose)}"] = "Before calling Components?.Dispose()";
+			Components.Logger.Context[$"{ThisClassName}.{nameof(Dispose)}"] = "Calling Components?.Dispose() ...";
 			Components?.Dispose();
 			Components.Logger.Context[$"{ThisClassName}.{nameof(Dispose)}"] = "Done";
 		}

@@ -181,6 +181,9 @@ namespace Elastic.Apm.Report
 				_logger.Trace()?.Log("Waiting for data to send... FlushInterval: {FlushInterval}", _flushInterval.ToHms());
 				while (true)
 				{
+					_logger.Context[ThisClassName + "." + DbgUtils.GetCurrentMethodName()] =
+						$"Calling TryAwaitOrTimeout ... _flushInterval: {_flushInterval.ToHms()}";
+
 					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, _cancellationTokenSource.Token)) break;
 
 					_eventQueue.TriggerBatch();

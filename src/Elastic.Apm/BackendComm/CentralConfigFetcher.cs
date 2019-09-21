@@ -160,6 +160,8 @@ namespace Elastic.Apm.BackendComm
 					httpResponse?.Dispose();
 				}
 
+				_logger.Context[ThisClassName + "." + DbgUtils.GetCurrentMethodName()] =
+					$"Waiting {waitInfo.Interval.ToHms()}... {waitInfo.Reason}";
 				_logger.Trace()?.Log("Waiting {WaitInterval}... {WaitReason}", waitInfo.Interval.ToHms(), waitInfo.Reason);
 				await _agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, _cancellationTokenSource.Token);
 			}

@@ -253,6 +253,8 @@ namespace Elastic.Apm.Tests
 		{
 			foreach (var expectedNumberOfBatches in new[] { 1, 2, 3, 10 })
 			{
+				LoggerBase.Context[ThisClassName + "." + DbgUtils.GetCurrentMethodName()] =
+					$"Starting sub-test... args: {args}, expectedNumberOfBatches: {expectedNumberOfBatches}";
 				_logger.Debug()?.Log("Starting sub-test... args: {args}", args);
 
 				var expectedNumberOfBatchesSentTcs = new TaskCompletionSource<object>();
@@ -288,6 +290,9 @@ namespace Elastic.Apm.Tests
 						.Should()
 						.Be(expectedNumberOfBatchesSentTcs.Task
 							, $"because numberOfEventsEnqueuedSuccessfully: {numberOfEventsEnqueuedSuccessfully}");
+
+					LoggerBase.Context[ThisClassName + "." + DbgUtils.GetCurrentMethodName()] =
+						$"Finished sub-test - exiting using block (calling Dispose)... args: {args}, expectedNumberOfBatches: {expectedNumberOfBatches}";
 				}
 			}
 		}
@@ -328,11 +333,13 @@ namespace Elastic.Apm.Tests
 			{
 				for (var eventIndex = 1; eventIndex <= numberOfEventsToSend; ++eventIndex)
 				{
-					LoggerBase.Context[$"{ThisClassName}.{nameof(DbgUtils.GetCurrentMethodName)}"] =
-						$"Starting loop iteration... txIndex: {eventIndex}, numberOfEventsToSend: {numberOfEventsToSend}, args: {args}";
+					LoggerBase.Context[$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
+						$"Starting loop iteration... eventIndex: {eventIndex}, numberOfEventsToSend: {numberOfEventsToSend}, args: {args}";
 					EnqueueDummyEvent(payloadSender, agent, eventIndex).Should().BeTrue($"txIndex: {eventIndex}, args: {args}");
 					batchSentBarrier.SignalAndWait(barrierTimeout).Should().BeTrue($"txIndex: {eventIndex}, args: {args}");
 				}
+				LoggerBase.Context[$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
+					$"Loop finished - exiting using block (calling Dispose)... numberOfEventsToSend: {numberOfEventsToSend}, args: {args}";
 			}
 		}
 

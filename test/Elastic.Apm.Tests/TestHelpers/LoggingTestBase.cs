@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Mocks;
 using Xunit.Abstractions;
 using Xunit.Sdk;
@@ -166,8 +167,15 @@ namespace Elastic.Apm.Tests.TestHelpers
 				{
 					if (loggerCtx.IsEmpty()) return " <EMPTY>";
 
-					return $" {loggerCtx.Count} items:" + Environment.NewLine
-						+ TextUtils.Indent(string.Join("", loggerCtx.Select(kv => $"`{kv.Key}': `{kv.Value}'")));
+					var itemsListStrBuilder = new StringBuilder();
+					// ReSharper disable once UseDeconstructionOnParameter
+					loggerCtx.ForEachIndexed((kv, index) =>
+					{
+						if (index != 0) itemsListStrBuilder.Append(Environment.NewLine);
+						itemsListStrBuilder.Append($"[{index + 1}]: `{kv.Key}': `{kv.Value}'");
+					});
+
+					return $" {loggerCtx.Count} items:" + Environment.NewLine + TextUtils.Indent(itemsListStrBuilder.ToString());
 				}
 			}
 		}
