@@ -16,7 +16,7 @@ namespace Elastic.Apm.Tests.Mocks
 			string captureBody = ConfigConsts.SupportedValues.CaptureBodyOff,
 			string captureBodyContentTypes = ConfigConsts.DefaultValues.CaptureBodyContentTypes,
 			ICentralConfigFetcher centralConfigFetcher = null,
-			bool useRealCentralConfigFetcher = true,
+			bool useRealCentralConfigFetcher = false,
 			[CallerMemberName] string dbgName = null
 		) : base(
 			dbgName,

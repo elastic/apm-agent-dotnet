@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
@@ -33,10 +34,12 @@ namespace Elastic.Apm.BackendComm
 		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler;
 
 		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, Service service, HttpMessageHandler httpMessageHandler = null
-			, IAgentTimer agentTimer = null
+			, IAgentTimer agentTimer = null, string dbgName = null
 		)
 		{
-			_logger = logger.Scoped(ThisClassName);
+			_logger = logger?.Scoped(ThisClassName
+				+ (dbgName == null ? "#" + RuntimeHelpers.GetHashCode(this).ToString("X") : $" (dbgName: `{dbgName}')"));
+
 			_configStore = configStore;
 			_initialSnapshot = configStore.CurrentSnapshot;
 
