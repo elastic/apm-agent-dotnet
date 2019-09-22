@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Tests.Data;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
@@ -234,6 +235,22 @@ namespace Elastic.Apm.Tests
 			var config = new EnvironmentConfigurationReader();
 			// Since comma was used instead of dot then default value will be used
 			config.TransactionSampleRate.Should().Be(DefaultValues.TransactionSampleRate);
+		}
+
+		[Fact]
+		public void DefaultTransactionMaxSpansTest()
+		{
+			var reader = new EnvironmentConfigurationReader();
+			reader.TransactionMaxSpans.Should().Be(ConfigConsts.DefaultValues.TransactionMaxSpans);
+		}
+
+		[Theory]
+		[ClassData(typeof(TransactionMaxSpansTestData))]
+		public void TransactionMaxSpansTest(string configurationValue, int expectedValue)
+		{
+			Environment.SetEnvironmentVariable(EnvVarNames.TransactionMaxSpans, configurationValue);
+			var reader = new EnvironmentConfigurationReader();
+			reader.TransactionMaxSpans.Should().Be(expectedValue);
 		}
 
 		[Fact]

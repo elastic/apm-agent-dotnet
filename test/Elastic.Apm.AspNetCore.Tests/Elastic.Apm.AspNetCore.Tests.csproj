@@ -24,6 +24,7 @@
     <ProjectReference Include="..\..\src\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
     <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
     <ProjectReference Include="..\..\sample\SampleAspNetCoreApp\SampleAspNetCoreApp.csproj" />
+    <ProjectReference Include="..\Elastic.Apm.Tests.Data\Elastic.Apm.Tests.Data.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
   </ItemGroup>
   <ItemGroup>

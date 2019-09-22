@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.AspNetCore.Config;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Tests.Data;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using FluentAssertions.Extensions;
@@ -40,8 +41,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.Environment.Should().Be("staging");
 			config.CaptureHeaders.Should().Be(false);
 			config.TransactionSampleRate.Should().Be(0.456);
+			config.TransactionMaxSpans.Should().Be(375);
 			config.CaptureBody.Should().Be(ConfigConsts.SupportedValues.CaptureBodyAll);
-			var supportedContentTypes = new List<string>() { "application/x-www-form-urlencoded*", "text/*", "application/json*", "application/xml*" };
+			var supportedContentTypes =
+				new List<string>() { "application/x-www-form-urlencoded*", "text/*", "application/json*", "application/xml*" };
 			config.CaptureBodyContentTypes.Should().BeEquivalentTo(supportedContentTypes);
 		}
 
@@ -58,7 +61,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 				"test");
 			config.LogLevel.Should().Be(LogLevel.Error);
 			logger.Lines.Should().NotBeEmpty();
-			logger.Lines[0].Should()
+			logger.Lines[0]
+				.Should()
 				.ContainAll(
 					nameof(MicrosoftExtensionsConfig),
 					"Failed parsing log level from",
@@ -85,7 +89,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.LogLevel.Should().Be(LogLevel.Error);
 
 			logger.Lines.Should().NotBeEmpty();
-			logger.Lines[0].Should()
+			logger.Lines[0]
+				.Should()
 				.ContainAll(
 					nameof(MicrosoftExtensionsConfig),
 					"Failed parsing log level from",
@@ -221,8 +226,28 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var response = await _client.GetAsync("/Home/Index");
 			response.IsSuccessStatusCode.Should().BeTrue();
 
-			_logger.Lines.Should().NotBeEmpty()
+			_logger.Lines.Should()
+				.NotBeEmpty()
 				.And.Contain(n => n.Contains("Failed parsing server URL from"));
+		}
+
+		[Theory]
+		[ClassData(typeof(TransactionMaxSpansTestData))]
+		public void TransactionMaxSpansTest(string configurationValue, int expectedValue)
+		{
+			// Arrange
+			var logger = new TestLogger();
+
+			var configurationBuilder = new ConfigurationBuilder()
+				.AddInMemoryCollection(new Dictionary<string, string> { { MicrosoftExtensionsConfig.Keys.TransactionMaxSpans, configurationValue } });
+
+			var reader = new MicrosoftExtensionsConfig(configurationBuilder.Build(), logger, "test");
+
+			// Act
+			var transactionMaxSpans = reader.TransactionMaxSpans;
+
+			// Assert
+			transactionMaxSpans.Should().Be(expectedValue);
 		}
 
 		public void Dispose()
