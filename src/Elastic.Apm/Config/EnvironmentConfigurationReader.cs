@@ -60,7 +60,7 @@ namespace Elastic.Apm.Config
 
 		public double TransactionSampleRate => ParseTransactionSampleRate(Read(ConfigConsts.EnvVarNames.TransactionSampleRate));
 
-        public int TransactionMaxSpans => ParseTransactionMaxSpans(Read(ConfigConsts.EnvVarNames.TransactionMaxSpans));
+		public int TransactionMaxSpans => ParseTransactionMaxSpans(Read(ConfigConsts.EnvVarNames.TransactionMaxSpans));
 
 		private ConfigurationKeyValue Read(string key) =>
 			new ConfigurationKeyValue(key, ReadEnvVarValue(key), Origin);

@@ -538,24 +538,33 @@ namespace Elastic.Apm.Config
 			{
 				Logger?.Debug()
 					?.Log("No transaction max spans provided. Defaulting to '{DefaultTransactionMaxSpans}'",
-						ConfigConsts.DefaultValues.TransactionMaxSpans);
-				return ConfigConsts.DefaultValues.TransactionMaxSpans;
+						DefaultValues.TransactionMaxSpans);
+				return DefaultValues.TransactionMaxSpans;
 			}
 
 			if (int.TryParse(kv.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result))
 			{
+				if (result < -1)
+				{
+					Logger?.Error()
+						?.Log(
+							"Provided transaction max spans '{ProvidedTransactionMaxSpans}' is invalid (only positive, '0' and '-1' numbers are allowed) - using default: '{DefaultTransactionMaxSpans}'",
+							result, DefaultValues.TransactionMaxSpans);
+					return DefaultValues.TransactionMaxSpans;
+				}
+
 				Logger?.Debug()
-					?.Log("Using provided transaction max spans `{ProvidedTransactionMaxSpans}' parsed as {ParsedTransactionMaxSpans}",
+					?.Log("Using provided transaction max spans '{ProvidedTransactionMaxSpans}' parsed as '{ParsedTransactionMaxSpans}'",
 						kv.Value, result);
 				return result;
 			}
 
 
 			Logger?.Error()
-				?.Log("Failed to parse provided transaction max spans `{ProvidedTransactionMaxSpans}` - using default: {DefaultTransactionMaxSpans}",
-					kv.Value, ConfigConsts.DefaultValues.TransactionMaxSpans);
+				?.Log("Failed to parse provided transaction max spans '{ProvidedTransactionMaxSpans}' - using default: {DefaultTransactionMaxSpans}",
+					kv.Value, DefaultValues.TransactionMaxSpans);
 
-			return ConfigConsts.DefaultValues.TransactionMaxSpans;
+			return DefaultValues.TransactionMaxSpans;
 		}
 
 		internal static bool IsMsOrElastic(byte[] array)
