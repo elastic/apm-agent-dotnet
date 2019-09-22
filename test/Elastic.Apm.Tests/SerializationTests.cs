@@ -245,33 +245,35 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void TransactionContextShouldBeSerializedOnlyWhenSampled()
 		{
-			var agent = new TestAgentComponents(LoggerBase);
-			// Create a transaction that is sampled (because the sampler is constant sampling-everything sampler
-			var sampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(1.0), /* distributedTracingData: */ null,
-				agent.PayloadSender, new MockConfigSnapshot(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer);
-			sampledTransaction.Context.Request = new Request("GET",
-				new Url { Full = "https://elastic.co", Raw = "https://elastic.co", HostName = "elastic.co", Protocol = "HTTP" });
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase)))
+			{
+				// Create a transaction that is sampled (because the sampler is constant sampling-everything sampler
+				var sampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(1.0), /* distributedTracingData: */ null,
+					agent.PayloadSender, new MockConfigSnapshot(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer);
+				sampledTransaction.Context.Request = new Request("GET",
+					new Url { Full = "https://elastic.co", Raw = "https://elastic.co", HostName = "elastic.co", Protocol = "HTTP" });
 
-			// Create a transaction that is not sampled (because the sampler is constant not-sampling-anything sampler
-			var nonSampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(0.0), /* distributedTracingData: */ null,
-				agent.PayloadSender, new MockConfigSnapshot(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer);
-			nonSampledTransaction.Context.Request = sampledTransaction.Context.Request;
+				// Create a transaction that is not sampled (because the sampler is constant not-sampling-anything sampler
+				var nonSampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(0.0), /* distributedTracingData: */ null,
+					agent.PayloadSender, new MockConfigSnapshot(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer);
+				nonSampledTransaction.Context.Request = sampledTransaction.Context.Request;
 
-			var serializedSampledTransaction = SerializePayloadItem(sampledTransaction);
-			var deserializedSampledTransaction = JsonConvert.DeserializeObject(serializedSampledTransaction) as JObject;
-			var serializedNonSampledTransaction = SerializePayloadItem(nonSampledTransaction);
-			var deserializedNonSampledTransaction = JsonConvert.DeserializeObject(serializedNonSampledTransaction) as JObject;
+				var serializedSampledTransaction = SerializePayloadItem(sampledTransaction);
+				var deserializedSampledTransaction = JsonConvert.DeserializeObject(serializedSampledTransaction) as JObject;
+				var serializedNonSampledTransaction = SerializePayloadItem(nonSampledTransaction);
+				var deserializedNonSampledTransaction = JsonConvert.DeserializeObject(serializedNonSampledTransaction) as JObject;
 
-			// ReSharper disable once PossibleNullReferenceException
-			deserializedSampledTransaction["sampled"].Value<bool>().Should().BeTrue();
-			deserializedSampledTransaction["context"].Value<JObject>()["request"].Value<JObject>()["url"].Value<JObject>()["full"]
-				.Value<string>()
-				.Should()
-				.Be("https://elastic.co");
+				// ReSharper disable once PossibleNullReferenceException
+				deserializedSampledTransaction["sampled"].Value<bool>().Should().BeTrue();
+				deserializedSampledTransaction["context"].Value<JObject>()["request"].Value<JObject>()["url"].Value<JObject>()["full"]
+					.Value<string>()
+					.Should()
+					.Be("https://elastic.co");
 
-			// ReSharper disable once PossibleNullReferenceException
-			deserializedNonSampledTransaction["sampled"].Value<bool>().Should().BeFalse();
-			deserializedNonSampledTransaction.Should().NotContainKey("context");
+				// ReSharper disable once PossibleNullReferenceException
+				deserializedNonSampledTransaction["sampled"].Value<bool>().Should().BeFalse();
+				deserializedNonSampledTransaction.Should().NotContainKey("context");
+			}
 		}
 
 		[Theory]

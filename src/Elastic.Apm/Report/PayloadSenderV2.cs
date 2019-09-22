@@ -145,13 +145,38 @@ namespace Elastic.Apm.Report
 				_logger.Debug()?.Log("Signaling _cancellationTokenSource");
 				_cancellationTokenSource.Cancel();
 
-				_logger.Debug()?.Log("Disposing of HttpClient which should abort any ongoing, but not cancelable, operation");
-				_httpClient.Dispose();
+				var isHttpClientDisposed = false;
 
+				void DisposeHttpClient()
+				{
+					if (isHttpClientDisposed) return;
+
+					_logger.Debug()?.Log("Disposing of HttpClient which should abort any ongoing, but not cancelable, operation(s)");
+					_httpClient.Dispose();
+					isHttpClientDisposed = true;
+				}
+
+				var timeToWaitFirstBeforeHttpClientDispose = TimeSpan.FromSeconds(30);
 				_logger.Context[$"{ThisClassName}.{nameof(Dispose)}"] =
-					$"Waiting for _singleThreadTaskScheduler thread `{_singleThreadTaskScheduler.Thread.Name}' to exit";
-				_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit", _singleThreadTaskScheduler.Thread.Name);
-				_singleThreadTaskScheduler.Thread.Join();
+					"Calling _singleThreadTaskScheduler.Thread.Join(timeToWaitFirstBeforeHttpClientDispose)."
+					+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'."
+					+ $" timeToWaitFirstBeforeHttpClientDispose: {timeToWaitFirstBeforeHttpClientDispose.ToHms()}";
+				_logger.Debug()?.Log("Waiting {WaitTime} for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
+					,timeToWaitFirstBeforeHttpClientDispose.ToHms() , _singleThreadTaskScheduler.Thread.Name);
+				var threadExited = _singleThreadTaskScheduler.Thread.Join(TimeSpan.FromSeconds(30));
+				if (!threadExited)
+				{
+					DisposeHttpClient();
+
+					_logger.Context[$"{ThisClassName}.{nameof(Dispose)}"] =
+						"Calling _singleThreadTaskScheduler.Thread.Join()."
+						+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'.";
+					_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
+						, _singleThreadTaskScheduler.Thread.Name);
+					_singleThreadTaskScheduler.Thread.Join();
+				}
+
+				DisposeHttpClient();
 
 				_logger.Debug()?.Log("_singleThreadTaskScheduler thread exited - disposing of _cancellationTokenSource and exiting");
 				_cancellationTokenSource.Dispose();
@@ -162,13 +187,17 @@ namespace Elastic.Apm.Report
 			if (_disposableHelper.HasStarted) throw new ObjectDisposedException( /* objectName: */ ThisClassName);
 		}
 
-		private Task RunWaitForDataSendItToServerLoop() =>
-			ExceptionUtils.DoSwallowingExceptions(_logger, async () =>
+		private async Task RunWaitForDataSendItToServerLoop()
+		{
+			await ExceptionUtils.DoSwallowingExceptions(_logger, async () =>
 				{
 					while (true) await ProcessQueueItems(await ReceiveBatchAsync());
 					// ReSharper disable once FunctionNeverReturns
 				}
 				, dbgCallerMethodName: ThisClassName + "." + DbgUtils.GetCurrentMethodName());
+
+			_logger.Context["Thread: " + Thread.CurrentThread.Name] = $"{DbgUtils.GetCurrentMethodName()}: Exiting...";
+		}
 
 		private async Task<object[]> ReceiveBatchAsync()
 		{
@@ -181,15 +210,15 @@ namespace Elastic.Apm.Report
 				_logger.Trace()?.Log("Waiting for data to send... FlushInterval: {FlushInterval}", _flushInterval.ToHms());
 				while (true)
 				{
-					_logger.Context[ThisClassName + "." + DbgUtils.GetCurrentMethodName()] =
-						$"Calling TryAwaitOrTimeout ... _flushInterval: {_flushInterval.ToHms()}";
-
+					_logger.Context["Thread: " + Thread.CurrentThread.Name] =
+						$"{DbgUtils.GetCurrentMethodName()}: Calling TryAwaitOrTimeout ... _flushInterval: {_flushInterval.ToHms()}";
 					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, _cancellationTokenSource.Token)) break;
 
 					_eventQueue.TriggerBatch();
 				}
 			}
 
+			_logger.Context["Thread: " + Thread.CurrentThread.Name] = $"{DbgUtils.GetCurrentMethodName()}: Calling await receiveAsyncTask ...";
 			var eventBatchToSend = await receiveAsyncTask;
 			var newEventQueueCount = Interlocked.Add(ref _eventQueueCount, -eventBatchToSend.Length);
 			_logger.Trace()

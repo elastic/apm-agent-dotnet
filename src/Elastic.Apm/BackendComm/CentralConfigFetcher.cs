@@ -67,8 +67,7 @@ namespace Elastic.Apm.BackendComm
 			_httpClient = BackendCommUtils.BuildHttpClient(logger, _initialSnapshot, service, ThisClassName, httpMessageHandler);
 
 #pragma warning disable 4014
-			Task.Factory.StartNew(RunFetchingLoop, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning,
-				_singleThreadTaskScheduler);
+			Task.Factory.StartNew(RunFetchingLoop, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
 #pragma warning restore 4014
 			_logger.Debug()?.Log("Enqueued {MethodName} with internal task scheduler", nameof(RunFetchingLoop));
 		}
@@ -86,21 +85,51 @@ namespace Elastic.Apm.BackendComm
 				_logger.Debug()?.Log("Signaling _cancellationTokenSource");
 				_cancellationTokenSource.Cancel();
 
-				_logger.Debug()?.Log("Disposing of HttpClient which should abort any ongoing, but not cancelable, operation");
-				_httpClient.Dispose();
+				var isHttpClientDisposed = false;
 
+				void DisposeHttpClient()
+				{
+					if (isHttpClientDisposed) return;
+
+					_logger.Debug()?.Log("Disposing of HttpClient which should abort any ongoing, but not cancelable, operation(s)");
+					_httpClient.Dispose();
+					isHttpClientDisposed = true;
+				}
+
+				var timeToWaitFirstBeforeHttpClientDispose = TimeSpan.FromSeconds(30);
 				_logger.Context[$"{ThisClassName}.{nameof(Dispose)}"] =
-					$"Waiting for _singleThreadTaskScheduler thread `{_singleThreadTaskScheduler.Thread.Name}' to exit";
-				_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit", _singleThreadTaskScheduler.Thread.Name);
-				_singleThreadTaskScheduler.Thread.Join();
+					"Calling _singleThreadTaskScheduler.Thread.Join(timeToWaitFirstBeforeHttpClientDispose)."
+					+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'."
+					+ $" timeToWaitFirstBeforeHttpClientDispose: {timeToWaitFirstBeforeHttpClientDispose.ToHms()}";
+				_logger.Debug()?.Log("Waiting {WaitTime} for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
+					,timeToWaitFirstBeforeHttpClientDispose.ToHms() , _singleThreadTaskScheduler.Thread.Name);
+				var threadExited = _singleThreadTaskScheduler.Thread.Join(TimeSpan.FromSeconds(30));
+				if (!threadExited)
+				{
+					DisposeHttpClient();
+
+					_logger.Context[$"{ThisClassName}.{nameof(Dispose)}"] =
+						"Calling _singleThreadTaskScheduler.Thread.Join()."
+						+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'.";
+					_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
+						, _singleThreadTaskScheduler.Thread.Name);
+					_singleThreadTaskScheduler.Thread.Join();
+				}
+
+				DisposeHttpClient();
 
 				_logger.Debug()?.Log("_singleThreadTaskScheduler thread exited - disposing of _cancellationTokenSource and exiting");
 				_cancellationTokenSource.Dispose();
 			});
 		}
 
-		private Task RunFetchingLoop() => ExceptionUtils.DoSwallowingExceptions(_logger, RunFetchingLoopImpl,
-			dbgCallerMethodName: ThisClassName + "." + DbgUtils.GetCurrentMethodName());
+		private async Task RunFetchingLoop()
+		{
+			await ExceptionUtils.DoSwallowingExceptions(_logger, RunFetchingLoopImpl,
+				dbgCallerMethodName: ThisClassName + "." + DbgUtils.GetCurrentMethodName());
+
+			_logger.Context["Thread: " + Thread.CurrentThread.Name] = $"{DbgUtils.GetCurrentMethodName()}: Exiting...";
+		}
 
 		private async Task RunFetchingLoopImpl()
 		{
@@ -160,8 +189,8 @@ namespace Elastic.Apm.BackendComm
 					httpResponse?.Dispose();
 				}
 
-				_logger.Context[ThisClassName + "." + DbgUtils.GetCurrentMethodName()] =
-					$"Waiting {waitInfo.Interval.ToHms()}... {waitInfo.Reason}";
+				_logger.Context["Thread: " + Thread.CurrentThread.Name] =
+					$"{DbgUtils.GetCurrentMethodName()}: Waiting {waitInfo.Interval.ToHms()}... {waitInfo.Reason}";
 				_logger.Trace()?.Log("Waiting {WaitInterval}... {WaitReason}", waitInfo.Interval.ToHms(), waitInfo.Reason);
 				await _agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, _cancellationTokenSource.Token);
 			}
