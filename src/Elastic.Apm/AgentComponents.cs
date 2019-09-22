@@ -104,8 +104,8 @@ namespace Elastic.Apm
 
 			CentralConfigFetcher.Dispose();
 
-			Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-				$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Exiting ...";
+			Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+				+ $"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Exiting ...";
 		}
 	}
 }

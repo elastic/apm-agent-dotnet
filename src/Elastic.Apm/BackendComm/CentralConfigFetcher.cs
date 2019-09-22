@@ -88,11 +88,12 @@ namespace Elastic.Apm.BackendComm
 			_disposableHelper.DoOnce(_logger, ThisClassName, () =>
 			{
 				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Before signaling _cancellationTokenSource";
+					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Before Task.Run(() => { _cancellationTokenSource.Cancel(); });";
 				_logger.Debug()?.Log("Signaling _cancellationTokenSource");
-				_cancellationTokenSource.Cancel();
+				// ReSharper disable once AccessToDisposedClosure
+				Task.Run(() => { _cancellationTokenSource.Cancel(); });
 				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "After signaling _cancellationTokenSource";
+					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "After Task.Run(() => { _cancellationTokenSource.Cancel(); });";
 
 				var isHttpClientDisposed = false;
 
