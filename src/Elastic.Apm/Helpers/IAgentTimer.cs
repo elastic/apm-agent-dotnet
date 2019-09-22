@@ -32,14 +32,14 @@ namespace Elastic.Apm.Helpers
 				var completedTask = await Task.WhenAny(taskToAwait, timeoutDelayTask);
 				if (completedTask == taskToAwait)
 				{
-					// await taskToAwait to make it throw if taskToAwait is faulted or cancelled
+					// await taskToAwait to make it throw if taskToAwait is faulted or cancelled so it will throw as it should
 					await taskToAwait;
 					return true;
 				}
 
 				Assertion.IfEnabled?.That(completedTask == timeoutDelayTask
 					, $"{nameof(completedTask)}: {completedTask}, {nameof(timeoutDelayTask)}: timeOutTask, {nameof(taskToAwait)}: taskToAwait");
-				// await timeout task in case it is cancelled and did not timed out
+				// await timeout task in case it is cancelled and did not timed out so it will throw as it should
 				await timeoutDelayTask;
 				return false;
 			}

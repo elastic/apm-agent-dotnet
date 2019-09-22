@@ -110,7 +110,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 				{
 					throw new XunitException("Wait-until-condition is still false even after max allotted time to wait."
 						+ $" dbgDesc: {(dbgDesc?.Invoke()).AsNullableToString()}."
-						+ $" elapsedTime: {elapsedTime.ToHms()}."
+						+ $" elapsedTime: {elapsedTime.ToHmsInSeconds()}."
 						+ $" attemptCount: {attemptCount}.");
 				}
 
