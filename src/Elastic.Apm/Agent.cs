@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Elastic.Apm.Api;
+using Elastic.Apm.BackendComm;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Helpers;
@@ -76,6 +77,7 @@ namespace Elastic.Apm
 
 		internal Tracer TracerInternal => Components.TracerInternal;
 		internal IConfigStore ConfigStore => Components.ConfigStore;
+		internal ICentralConfigFetcher CentralConfigFetcher => Components.CentralConfigFetcher;
 
 		public void Dispose()
 		{

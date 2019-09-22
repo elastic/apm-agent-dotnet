@@ -14,7 +14,7 @@ namespace Elastic.Apm.Tests.Mocks
 			IPayloadSender payloadSender = null,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer = null,
 			ICentralConfigFetcher centralConfigFetcher = null,
-			bool useRealCentralConfigFetcher = true,
+			bool useRealCentralConfigFetcher = false,
 			[CallerMemberName] string dbgName = null
 		) : base(
 			dbgName,

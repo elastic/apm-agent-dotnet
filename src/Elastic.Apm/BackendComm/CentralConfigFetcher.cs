@@ -34,7 +34,6 @@ namespace Elastic.Apm.BackendComm
 		private readonly IConfigSnapshot _initialSnapshot;
 		private readonly IApmLogger _logger;
 		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler;
-//		private readonly Task _fetchingLoopTask;
 
 		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, Service service, HttpMessageHandler httpMessageHandler = null
 			, IAgentTimer agentTimer = null, [CallerMemberName] string dbgName = null
@@ -75,6 +74,8 @@ namespace Elastic.Apm.BackendComm
 #pragma warning restore 4014
 			_logger.Debug()?.Log("Enqueued {MethodName} with internal task scheduler", nameof(RunFetchingLoop));
 		}
+
+		internal bool IsRunning => _singleThreadTaskScheduler.IsRunning;
 
 		public void Dispose()
 		{
