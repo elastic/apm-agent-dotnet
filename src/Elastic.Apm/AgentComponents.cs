@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm;
 using Elastic.Apm.Config;
@@ -75,11 +76,29 @@ namespace Elastic.Apm
 
 		public void Dispose()
 		{
-			if (MetricsCollector is IDisposable disposableMetricsCollector) disposableMetricsCollector.Dispose();
+			if (MetricsCollector is IDisposable disposableMetricsCollector)
+			{
+				Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
+					$"{DbgUtils.GetCurrentMethodName()}: Calling disposableMetricsCollector.Dispose() ...";
 
-			if (PayloadSender is IDisposable disposablePayloadSender) disposablePayloadSender.Dispose();
+				disposableMetricsCollector.Dispose();
+			}
+
+			if (PayloadSender is IDisposable disposablePayloadSender)
+			{
+				Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
+					$"{DbgUtils.GetCurrentMethodName()}: Calling disposablePayloadSender.Dispose() ...";
+
+				disposablePayloadSender.Dispose();
+			}
+
+			Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
+				$"{DbgUtils.GetCurrentMethodName()}: Calling CentralConfigFetcher.Dispose() ...";
 
 			CentralConfigFetcher.Dispose();
+
+			Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
+				$"{DbgUtils.GetCurrentMethodName()}: Exiting ...";
 		}
 	}
 }

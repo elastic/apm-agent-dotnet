@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 
@@ -77,11 +79,18 @@ namespace Elastic.Apm
 
 		public void Dispose()
 		{
-			Components.Logger.Context[$"{ThisClassName}.{nameof(Dispose)}"] = "Calling Disposables?.Dispose() ...";
+			Components.Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
+				$"{DbgUtils.GetCurrentMethodName()}: Calling Disposables?.Dispose() ...";
+
 			Disposables?.Dispose();
-			Components.Logger.Context[$"{ThisClassName}.{nameof(Dispose)}"] = "Calling Components?.Dispose() ...";
+
+			Components.Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
+				$"{DbgUtils.GetCurrentMethodName()}: Calling Components?.Dispose() ...";
+
 			Components?.Dispose();
-			Components.Logger.Context[$"{ThisClassName}.{nameof(Dispose)}"] = "Done";
+
+			Components.Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
+				$"{DbgUtils.GetCurrentMethodName()}: Exiting ...";
 		}
 	}
 

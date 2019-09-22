@@ -97,8 +97,9 @@ namespace Elastic.Apm.BackendComm
 				}
 
 				var timeToWaitFirstBeforeHttpClientDispose = TimeSpan.FromSeconds(30);
-				_logger.Context[$"{ThisClassName}.{nameof(Dispose)}"] =
-					"Calling _singleThreadTaskScheduler.Thread.Join(timeToWaitFirstBeforeHttpClientDispose)."
+				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
+					$"{DbgUtils.GetCurrentMethodName()}: "
+					+ "Calling _singleThreadTaskScheduler.Thread.Join(timeToWaitFirstBeforeHttpClientDispose)."
 					+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'."
 					+ $" timeToWaitFirstBeforeHttpClientDispose: {timeToWaitFirstBeforeHttpClientDispose.ToHms()}";
 				_logger.Debug()?.Log("Waiting {WaitTime} for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
@@ -108,8 +109,9 @@ namespace Elastic.Apm.BackendComm
 				{
 					DisposeHttpClient();
 
-					_logger.Context[$"{ThisClassName}.{nameof(Dispose)}"] =
-						"Calling _singleThreadTaskScheduler.Thread.Join()."
+					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
+						$"{DbgUtils.GetCurrentMethodName()}: "
+						+ "Calling _singleThreadTaskScheduler.Thread.Join()."
 						+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'.";
 					_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
 						, _singleThreadTaskScheduler.Thread.Name);
@@ -120,6 +122,9 @@ namespace Elastic.Apm.BackendComm
 
 				_logger.Debug()?.Log("_singleThreadTaskScheduler thread exited - disposing of _cancellationTokenSource and exiting");
 				_cancellationTokenSource.Dispose();
+
+				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
+					$"{DbgUtils.GetCurrentMethodName()}: Exiting...";
 			});
 		}
 
@@ -128,7 +133,8 @@ namespace Elastic.Apm.BackendComm
 			await ExceptionUtils.DoSwallowingExceptions(_logger, RunFetchingLoopImpl,
 				dbgCallerMethodName: ThisClassName + "." + DbgUtils.GetCurrentMethodName());
 
-			_logger.Context["Thread: " + Thread.CurrentThread.Name] = $"{DbgUtils.GetCurrentMethodName()}: Exiting...";
+			_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
+				$"{DbgUtils.GetCurrentMethodName()}: Exiting ...";
 		}
 
 		private async Task RunFetchingLoopImpl()
@@ -189,7 +195,7 @@ namespace Elastic.Apm.BackendComm
 					httpResponse?.Dispose();
 				}
 
-				_logger.Context["Thread: " + Thread.CurrentThread.Name] =
+				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
 					$"{DbgUtils.GetCurrentMethodName()}: Waiting {waitInfo.Interval.ToHms()}... {waitInfo.Reason}";
 				_logger.Trace()?.Log("Waiting {WaitInterval}... {WaitReason}", waitInfo.Interval.ToHms(), waitInfo.Reason);
 				await _agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, _cancellationTokenSource.Token);
