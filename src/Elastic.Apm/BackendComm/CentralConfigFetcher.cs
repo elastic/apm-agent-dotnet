@@ -70,21 +70,25 @@ namespace Elastic.Apm.BackendComm
 			Task.Factory.StartNew(RunFetchingLoop, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
 #pragma warning restore 4014
 			_logger.Debug()?.Log("Enqueued {MethodName} with internal task scheduler", nameof(RunFetchingLoop));
-			_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId}) - {ThisClassName}"] =
-				$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: "
-				+ $"Enqueued {nameof(RunFetchingLoop)} with internal task scheduler";
 		}
 
 		public void Dispose()
 		{
+			_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Entered";
+
 			if (_cancellationTokenSource == null)
 			{
 				_logger.Debug()?.Log("Central configuration feature is disabled - nothing to dispose");
+				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Exiting (Central configuration feature is disabled) ...";
 				return;
 			}
 
 			_disposableHelper.DoOnce(_logger, ThisClassName, () =>
 			{
+				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Signaling _cancellationTokenSource ...";
 				_logger.Debug()?.Log("Signaling _cancellationTokenSource");
 				_cancellationTokenSource.Cancel();
 
@@ -100,9 +104,9 @@ namespace Elastic.Apm.BackendComm
 				}
 
 				var timeToWaitFirstBeforeHttpClientDispose = TimeSpan.FromSeconds(30);
-				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-					$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: "
-					+ "Calling _singleThreadTaskScheduler.Thread.Join(timeToWaitFirstBeforeHttpClientDispose)."
+				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
+					"Calling _singleThreadTaskScheduler.Thread.Join(timeToWaitFirstBeforeHttpClientDispose)."
 					+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'."
 					+ $" timeToWaitFirstBeforeHttpClientDispose: {timeToWaitFirstBeforeHttpClientDispose.ToHms()}";
 				_logger.Debug()?.Log("Waiting {WaitTime} for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
@@ -112,9 +116,9 @@ namespace Elastic.Apm.BackendComm
 				{
 					DisposeHttpClient();
 
-					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-						$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: "
-						+ "Calling _singleThreadTaskScheduler.Thread.Join()."
+					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
+						"Calling _singleThreadTaskScheduler.Thread.Join()."
 						+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'.";
 					_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
 						, _singleThreadTaskScheduler.Thread.Name);
@@ -126,8 +130,8 @@ namespace Elastic.Apm.BackendComm
 				_logger.Debug()?.Log("_singleThreadTaskScheduler thread exited - disposing of _cancellationTokenSource and exiting");
 				_cancellationTokenSource.Dispose();
 
-				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-					$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Exiting...";
+				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+					+ $"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Exiting...";
 			});
 		}
 
@@ -149,6 +153,7 @@ namespace Elastic.Apm.BackendComm
 
 			while (true)
 			{
+				var waitingLogSeverity = LogLevel.Trace;
 				WaitInfoS waitInfo;
 				HttpRequestMessage httpRequest = null;
 				HttpResponseMessage httpResponse = null;
@@ -174,6 +179,7 @@ namespace Elastic.Apm.BackendComm
 				catch (Exception ex)
 				{
 					var severity = LogLevel.Error;
+					waitingLogSeverity = LogLevel.Information;
 					waitInfo = new WaitInfoS(WaitTimeIfAnyError, "Default wait time is used because exception was thrown"
 						+ " while fetching configuration from APM Server and parsing it.");
 
@@ -185,11 +191,11 @@ namespace Elastic.Apm.BackendComm
 
 					_logger.IfLevel(severity)
 						?.LogException(ex, "Exception was thrown while fetching configuration from APM Server and parsing it."
-							+ " ETag: {ETag}. URL path: {UrlPath}. Apm Server base URL: {ApmServerUrl}."
+							+ " ETag: {ETag}. URL path: {UrlPath}. Apm Server base URL: {ApmServerUrl}. WaitInterval: {WaitInterval}."
 							+ Environment.NewLine + "+-> Request:{HttpRequest}"
 							+ Environment.NewLine + "+-> Response:{HttpResponse}"
 							+ Environment.NewLine + "+-> Response body [length: {HttpResponseBodyLength}]:{HttpResponseBody}"
-							, eTag.AsNullableToString(), _getConfigUrlPath, _httpClient.BaseAddress
+							, eTag.AsNullableToString(), _getConfigUrlPath, _httpClient.BaseAddress, waitInfo.Interval.ToHms()
 							, httpRequest == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpRequest.ToString())
 							, httpResponse == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpResponse.ToString())
 							, httpResponseBody == null ? "N/A" : httpResponseBody.Length.ToString()
@@ -203,7 +209,7 @@ namespace Elastic.Apm.BackendComm
 
 				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
 					$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Waiting {waitInfo.Interval.ToHms()}... {waitInfo.Reason}";
-				_logger.Trace()?.Log("Waiting {WaitInterval}... {WaitReason}", waitInfo.Interval.ToHms(), waitInfo.Reason);
+				_logger.IfLevel(waitingLogSeverity)?.Log("Waiting {WaitInterval}... {WaitReason}", waitInfo.Interval.ToHms(), waitInfo.Reason);
 				await _agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, _cancellationTokenSource.Token);
 			}
 			// ReSharper disable once FunctionNeverReturns

@@ -17,7 +17,7 @@ namespace Elastic.Apm.Logging
 
 		public IApmLoggerContext Context { get; } = new ApmLoggerContext();
 
-		protected internal static LogLevel DefaultLogLevel { get; } = LogLevel.Error;
+		internal static readonly LogLevel DefaultLogLevel = LogLevel.Error;
 		public static ConsoleLogger Instance { get; } = new ConsoleLogger(DefaultLogLevel);
 
 		private LogLevel Level { get; }

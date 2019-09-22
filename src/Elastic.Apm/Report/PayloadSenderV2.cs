@@ -80,9 +80,6 @@ namespace Elastic.Apm.Report
 				_singleThreadTaskScheduler);
 #pragma warning restore 4014
 			_logger.Debug()?.Log("Enqueued {MethodName} with internal task scheduler", nameof(RunWaitForDataSendItToServerLoop));
-			_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId}) - {ThisClassName}"] =
-				$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: "
-				+ $"Enqueued {nameof(RunWaitForDataSendItToServerLoop)} with internal task scheduler";
 		}
 
 		private long _eventQueueCount;
@@ -145,6 +142,8 @@ namespace Elastic.Apm.Report
 		public void Dispose() =>
 			_disposableHelper.DoOnce(_logger, ThisClassName, () =>
 			{
+				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Signaling _cancellationTokenSource ...";
 				_logger.Debug()?.Log("Signaling _cancellationTokenSource");
 				_cancellationTokenSource.Cancel();
 
@@ -160,9 +159,9 @@ namespace Elastic.Apm.Report
 				}
 
 				var timeToWaitFirstBeforeHttpClientDispose = TimeSpan.FromSeconds(30);
-				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-					$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: "
-					+ "Calling _singleThreadTaskScheduler.Thread.Join(timeToWaitFirstBeforeHttpClientDispose)."
+				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
+					"Calling _singleThreadTaskScheduler.Thread.Join(timeToWaitFirstBeforeHttpClientDispose)."
 					+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'."
 					+ $" timeToWaitFirstBeforeHttpClientDispose: {timeToWaitFirstBeforeHttpClientDispose.ToHms()}";
 				_logger.Debug()?.Log("Waiting {WaitTime} for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
@@ -172,9 +171,9 @@ namespace Elastic.Apm.Report
 				{
 					DisposeHttpClient();
 
-					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-						$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: "
-						+ "Calling _singleThreadTaskScheduler.Thread.Join()."
+					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
+						"Calling _singleThreadTaskScheduler.Thread.Join()."
 						+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'.";
 					_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
 						, _singleThreadTaskScheduler.Thread.Name);
@@ -186,8 +185,8 @@ namespace Elastic.Apm.Report
 				_logger.Debug()?.Log("_singleThreadTaskScheduler thread exited - disposing of _cancellationTokenSource and exiting");
 				_cancellationTokenSource.Dispose();
 
-				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-					$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Exiting...";
+				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+					+ $"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Exiting...";
 			});
 
 		private void ThrowIfDisposed()

@@ -80,18 +80,23 @@ namespace Elastic.Apm
 		{
 			if (MetricsCollector is IDisposable disposableMetricsCollector)
 			{
-				Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-					$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Calling disposableMetricsCollector.Dispose() ...";
+				Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Calling disposableMetricsCollector.Dispose() ...";
 
 				disposableMetricsCollector.Dispose();
 			}
 
 			if (PayloadSender is IDisposable disposablePayloadSender)
 			{
-				Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-					$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Calling disposablePayloadSender.Dispose() ...";
+				Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Calling disposablePayloadSender.Dispose() ...";
 
 				disposablePayloadSender.Dispose();
+			}
+			else
+			{
+				Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()} - PayloadSender is not IDisposable"] = "";
 			}
 
 			Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =

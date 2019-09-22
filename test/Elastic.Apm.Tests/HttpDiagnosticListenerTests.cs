@@ -15,6 +15,7 @@ using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using FluentAssertions.Execution;
+using FluentAssertions.Extensions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -64,7 +65,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void OnErrorLog()
 		{
-			var logger = new TestLogger();
+			var logger = new TestLogger(LoggerBase);
 			using (var agent = new ApmAgent(new TestAgentComponents(logger)))
 			{
 				var listener = HttpDiagnosticListener.New(agent);
@@ -92,8 +93,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void OnNextWithStart()
 		{
-			var logger = new TestLogger();
-			using (var agent = new ApmAgent(new TestAgentComponents(logger)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase)))
 			{
 				StartTransaction(agent);
 				var listener = HttpDiagnosticListener.New(agent);
@@ -117,9 +117,8 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void OnNextWithStartAndStop()
 		{
-			var logger = new TestLogger();
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(logger, payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender)))
 			{
 				StartTransaction(agent);
 				var listener = HttpDiagnosticListener.New(agent);
@@ -184,11 +183,9 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void UnknownObjectToOnNext()
 		{
-			var logger = new TestLogger();
-			IDiagnosticListener listener;
-			using (var agent = new ApmAgent(new TestAgentComponents(logger)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase)))
 			{
-				listener = HttpDiagnosticListener.New(agent);
+				var listener = HttpDiagnosticListener.New(agent);
 				var myFake = new StringBuilder(); //just a random type that is not planned to be passed into OnNext
 
 				var exception =
@@ -205,11 +202,9 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void NullValueToOnNext()
 		{
-			var logger = new TestLogger();
-			IDiagnosticListener listener;
-			using (var agent = new ApmAgent(new TestAgentComponents(logger)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase)))
 			{
-				listener = HttpDiagnosticListener.New(agent);
+				var listener = HttpDiagnosticListener.New(agent);
 
 				var exception =
 					Record.Exception(() => { listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Start", null)); });
@@ -225,11 +220,9 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void NullKeyValueToOnNext()
 		{
-			var logger = new TestLogger();
-			IDiagnosticListener listener;
-			using (var agent = new ApmAgent(new TestAgentComponents(logger)))
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase)))
 			{
-				listener = HttpDiagnosticListener.New(agent);
+				var listener = HttpDiagnosticListener.New(agent);
 
 				var exception =
 					Record.Exception(() => { listener.OnNext(new KeyValuePair<string, object>(null, null)); });
