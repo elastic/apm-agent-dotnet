@@ -51,7 +51,7 @@ namespace Elastic.Apm.Config
 			public const string SpanFramesMinDuration = Prefix + "SPAN_FRAMES_MIN_DURATION";
 			public const string StackTraceLimit = Prefix + "STACK_TRACE_LIMIT";
 			public const string TransactionSampleRate = Prefix + "TRANSACTION_SAMPLE_RATE";
-            public const string TransactionMaxSpans = Prefix + "TRANSACTION_MAX_SPANS";
+			public const string TransactionMaxSpans = Prefix + "TRANSACTION_MAX_SPANS";
 		}
 
 		public static class KeyNames
