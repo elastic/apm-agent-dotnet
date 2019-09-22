@@ -12,7 +12,6 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
-using Elastic.Apm.Tests.HelpersTests;
 using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
@@ -352,18 +351,18 @@ namespace Elastic.Apm.Tests
 			CreateSutEnvAndTest((agent, payloadSender) =>
 			{
 				lastPayloadSender = payloadSender;
-				lastPayloadSender.Thread.IsAlive.Should().BeTrue();
+				lastPayloadSender.IsRunning.Should().BeTrue();
 			});
-			lastPayloadSender.Thread.IsAlive.Should().BeFalse();
+			lastPayloadSender.IsRunning.Should().BeFalse();
 
 			CreateSutEnvAndTest((agent, payloadSender) =>
 			{
 				lastPayloadSender = payloadSender;
-				lastPayloadSender.Thread.IsAlive.Should().BeTrue();
+				lastPayloadSender.IsRunning.Should().BeTrue();
 
 				payloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
 			});
-			lastPayloadSender.Thread.IsAlive.Should().BeFalse();
+			lastPayloadSender.IsRunning.Should().BeFalse();
 		}
 
 		[Fact]
@@ -392,11 +391,11 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new PayloadSenderV2(_logger, configReader, service, new Api.System(), mockHttpMessageHandler
 				, /* dbgName: */ TestDisplayName);
 
-			payloadSender.Thread.IsAlive.Should().BeTrue();
+			payloadSender.IsRunning.Should().BeTrue();
 
 			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, payloadSender: payloadSender))) doAction(agent, payloadSender);
 
-			payloadSender.Thread.IsAlive.Should().BeFalse();
+			payloadSender.IsRunning.Should().BeFalse();
 		}
 
 		internal class TestArgs

@@ -84,7 +84,7 @@ namespace Elastic.Apm.Report
 
 		private long _eventQueueCount;
 
-		internal Thread Thread => _singleThreadTaskScheduler.Thread;
+		internal bool IsRunning => _singleThreadTaskScheduler.IsRunning;
 
 		public void QueueTransaction(ITransaction transaction) => EnqueueEvent(transaction, "Transaction");
 
@@ -157,47 +157,15 @@ namespace Elastic.Apm.Report
 				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
 					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "After Task.Run(() => { _cancellationTokenSource.Cancel(); });";
 
-				var isHttpClientDisposed = false;
+				_singleThreadTaskScheduler.Dispose();
 
-				void DisposeHttpClient()
-				{
-					if (isHttpClientDisposed) return;
+				_logger.Debug()?.Log("Disposing HttpClient...");
+				_httpClient.Dispose();
 
-					_logger.Debug()?.Log("Disposing of HttpClient which should abort any ongoing, but not cancelable, operation(s)");
-					_httpClient.Dispose();
-					isHttpClientDisposed = true;
-				}
-
-				var timeToWaitFirstBeforeHttpClientDispose = TimeSpan.FromSeconds(30);
-				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
-					"Calling _singleThreadTaskScheduler.Thread.Join(timeToWaitFirstBeforeHttpClientDispose)..."
-					+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'."
-					+ $" timeToWaitFirstBeforeHttpClientDispose: {timeToWaitFirstBeforeHttpClientDispose.ToHms()}";
-				_logger.Debug()?.Log("Waiting {WaitTime} for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
-					,timeToWaitFirstBeforeHttpClientDispose.ToHms() , _singleThreadTaskScheduler.Thread.Name);
-				var threadExited = _singleThreadTaskScheduler.Thread.Join(TimeSpan.FromSeconds(30));
-				if (!threadExited)
-				{
-					DisposeHttpClient();
-
-					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
-						"Before _singleThreadTaskScheduler.Thread.Join()..."
-						+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'.";
-					_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
-						, _singleThreadTaskScheduler.Thread.Name);
-					_singleThreadTaskScheduler.Thread.Join();
-					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-							+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
-						"After _singleThreadTaskScheduler.Thread.Join()..."
-						+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'.";
-				}
-
-				DisposeHttpClient();
-
-				_logger.Debug()?.Log("_singleThreadTaskScheduler thread exited - disposing of _cancellationTokenSource and exiting");
+				_logger.Debug()?.Log("Disposing _cancellationTokenSource...");
 				_cancellationTokenSource.Dispose();
+
+				_logger.Debug()?.Log("Done");
 
 				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
 					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Exiting...";

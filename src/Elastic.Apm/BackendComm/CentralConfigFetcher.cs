@@ -23,6 +23,8 @@ namespace Elastic.Apm.BackendComm
 		internal static readonly TimeSpan WaitTimeIfAnyError = TimeSpan.FromMinutes(5);
 		internal static readonly TimeSpan WaitTimeIfNoCacheControlMaxAge = TimeSpan.FromMinutes(5);
 
+		internal static readonly TimeSpan ReadResponseBodyTimeout = TimeSpan.FromMinutes(5);
+
 		private readonly IAgentTimer _agentTimer;
 		private readonly CancellationTokenSource _cancellationTokenSource;
 		private readonly IConfigStore _configStore;
@@ -104,70 +106,15 @@ namespace Elastic.Apm.BackendComm
 				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
 					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "After Task.Run(() => { _cancellationTokenSource.Cancel(); });";
 
-				var isHttpClientDisposed = false;
+				_singleThreadTaskScheduler.Dispose();
 
-				void DisposeHttpClient()
-				{
-					if (isHttpClientDisposed) return;
+				_logger.Debug()?.Log("Disposing HttpClient...");
+				_httpClient.Dispose();
 
-					_logger.Debug()?.Log("Disposing of HttpClient which should abort any ongoing, but not cancelable, operation(s)");
-					_httpClient.Dispose();
-					isHttpClientDisposed = true;
-				}
-
-				var timeToWaitFirstBeforeHttpClientDispose = TimeSpan.FromSeconds(30);
-
-				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
-					"Calling _singleThreadTaskScheduler.Thread.Join(timeToWaitFirstBeforeHttpClientDispose)..."
-					+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'."
-					+ $" timeToWaitFirstBeforeHttpClientDispose: {timeToWaitFirstBeforeHttpClientDispose.ToHms()}";
-				_logger.Debug()?.Log("Waiting {WaitTime} for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
-					,timeToWaitFirstBeforeHttpClientDispose.ToHms() , _singleThreadTaskScheduler.Thread.Name);
-				var threadExited = _singleThreadTaskScheduler.Thread.Join(timeToWaitFirstBeforeHttpClientDispose);
-				if (!threadExited)
-				{
-					DisposeHttpClient();
-
-					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
-						"Before _singleThreadTaskScheduler.Thread.Join()..."
-						+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'.";
-					_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
-						, _singleThreadTaskScheduler.Thread.Name);
-					_singleThreadTaskScheduler.Thread.Join();
-					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-							+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
-						"After _singleThreadTaskScheduler.Thread.Join()..."
-						+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'.";
-				}
-
-//				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-//					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
-//					"Before _agentTimer.TryAwaitOrTimeout(_fetchingLoopTask, _agentTimer.Now + timeToWaitFirstBeforeHttpClientDispose).Result ..."
-//					+ $" timeToWaitFirstBeforeHttpClientDispose: {timeToWaitFirstBeforeHttpClientDispose.ToHms()}";
-//				_logger.Debug()?.Log("Waiting {WaitTime} for _fetchingLoopTask to complete...", timeToWaitFirstBeforeHttpClientDispose.ToHms());
-//
-//				var isFetchingLoopTaskCompleted =
-//					_agentTimer.TryAwaitOrTimeout(_fetchingLoopTask, _agentTimer.Now + timeToWaitFirstBeforeHttpClientDispose).Result;
-//				if (!isFetchingLoopTaskCompleted)
-//				{
-//					DisposeHttpClient();
-//
-//					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-//						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Before _fetchingLoopTask.Wait()...";
-//					_logger.Debug()?.Log("Waiting for _fetchingLoopTask to complete...");
-//
-//					_fetchingLoopTask.Wait();
-//
-//					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-//						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "After _fetchingLoopTask.Wait()...";
-//				}
-
-				DisposeHttpClient();
-
-				_logger.Debug()?.Log("_singleThreadTaskScheduler thread exited - disposing of _cancellationTokenSource and exiting");
+				_logger.Debug()?.Log("Disposing _cancellationTokenSource...");
 				_cancellationTokenSource.Dispose();
+
+				_logger.Debug()?.Log("Done");
 
 				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
 					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Exiting...";
@@ -213,7 +160,8 @@ namespace Elastic.Apm.BackendComm
 						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Reading HTTP response body..."
 						+ $" dbgIterationsCount: {dbgIterationsCount}. httpResponse: {httpResponse}";
 
-					httpResponseBody = await httpResponse.Content.ReadAsStringAsync();
+					httpResponseBody = await _agentTimer.AwaitOrTimeout(httpResponse.Content.ReadAsStringAsync()
+						, _agentTimer.Now + ReadResponseBodyTimeout, _cancellationTokenSource.Token);
 
 					ConfigDelta configDelta;
 					(configDelta, waitInfo) = ProcessHttpResponse(httpResponse, httpResponseBody);
