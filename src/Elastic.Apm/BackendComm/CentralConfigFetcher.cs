@@ -91,7 +91,14 @@ namespace Elastic.Apm.BackendComm
 					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Before Task.Run(() => { _cancellationTokenSource.Cancel(); });";
 				_logger.Debug()?.Log("Signaling _cancellationTokenSource");
 				// ReSharper disable once AccessToDisposedClosure
-				Task.Run(() => { _cancellationTokenSource.Cancel(); });
+				Task.Run(() =>
+				{
+					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Before _cancellationTokenSource.Cancel();";
+					_cancellationTokenSource.Cancel();
+					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "After _cancellationTokenSource.Cancel();";
+				});
 				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
 					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "After Task.Run(() => { _cancellationTokenSource.Cancel(); });";
 
@@ -109,7 +116,7 @@ namespace Elastic.Apm.BackendComm
 				var timeToWaitFirstBeforeHttpClientDispose = TimeSpan.FromSeconds(30);
 				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
 					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
-					"Calling _singleThreadTaskScheduler.Thread.Join(timeToWaitFirstBeforeHttpClientDispose)."
+					"Calling _singleThreadTaskScheduler.Thread.Join(timeToWaitFirstBeforeHttpClientDispose)..."
 					+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'."
 					+ $" timeToWaitFirstBeforeHttpClientDispose: {timeToWaitFirstBeforeHttpClientDispose.ToHms()}";
 				_logger.Debug()?.Log("Waiting {WaitTime} for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
@@ -121,11 +128,15 @@ namespace Elastic.Apm.BackendComm
 
 					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
 						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
-						"Calling _singleThreadTaskScheduler.Thread.Join()."
+						"Before _singleThreadTaskScheduler.Thread.Join()..."
 						+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'.";
 					_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
 						, _singleThreadTaskScheduler.Thread.Name);
 					_singleThreadTaskScheduler.Thread.Join();
+					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+							+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
+						"After _singleThreadTaskScheduler.Thread.Join()..."
+						+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'.";
 				}
 
 				DisposeHttpClient();
@@ -153,9 +164,11 @@ namespace Elastic.Apm.BackendComm
 		private async Task RunFetchingLoopImpl()
 		{
 			EntityTagHeaderValue eTag = null;
+			var dbgIterationsCount = 0L;
 
 			while (true)
 			{
+				++dbgIterationsCount;
 				var waitingLogSeverity = LogLevel.Trace;
 				WaitInfoS waitInfo;
 				HttpRequestMessage httpRequest = null;
@@ -164,9 +177,17 @@ namespace Elastic.Apm.BackendComm
 				try
 				{
 					httpRequest = BuildHttpRequest(eTag);
-					httpResponse = await FetchConfigHttpResponseAsync(httpRequest);
+
 					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-						$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Reading HTTP response body... httpResponse: {httpResponse}";
+						$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Making HTTP request to APM Server..."
+						+ $" dbgIterationsCount: {dbgIterationsCount}. Request: {httpRequest}";
+
+					httpResponse = await FetchConfigHttpResponseAsync(httpRequest);
+
+					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
+						$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Reading HTTP response body..."
+						+ $" dbgIterationsCount: {dbgIterationsCount}. httpResponse: {httpResponse}";
+
 					httpResponseBody = await httpResponse.Content.ReadAsStringAsync();
 
 					ConfigDelta configDelta;
@@ -184,7 +205,6 @@ namespace Elastic.Apm.BackendComm
 				catch (Exception ex)
 				{
 					var severity = LogLevel.Error;
-					waitingLogSeverity = LogLevel.Information;
 					waitInfo = new WaitInfoS(WaitTimeIfAnyError, "Default wait time is used because exception was thrown"
 						+ " while fetching configuration from APM Server and parsing it.");
 
@@ -194,13 +214,16 @@ namespace Elastic.Apm.BackendComm
 						fEx.WaitInfo?.Let(it => { waitInfo = it; });
 					}
 
+					if (severity == LogLevel.Error) waitingLogSeverity = LogLevel.Information;
+
 					_logger.IfLevel(severity)
 						?.LogException(ex, "Exception was thrown while fetching configuration from APM Server and parsing it."
 							+ " ETag: {ETag}. URL path: {UrlPath}. Apm Server base URL: {ApmServerUrl}. WaitInterval: {WaitInterval}."
+							+ " dbgIterationsCount: {dbgIterationsCount}."
 							+ Environment.NewLine + "+-> Request:{HttpRequest}"
 							+ Environment.NewLine + "+-> Response:{HttpResponse}"
 							+ Environment.NewLine + "+-> Response body [length: {HttpResponseBodyLength}]:{HttpResponseBody}"
-							, eTag.AsNullableToString(), _getConfigUrlPath, _httpClient.BaseAddress, waitInfo.Interval.ToHms()
+							, eTag.AsNullableToString(), _getConfigUrlPath, _httpClient.BaseAddress, waitInfo.Interval.ToHms(), dbgIterationsCount
 							, httpRequest == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpRequest.ToString())
 							, httpResponse == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpResponse.ToString())
 							, httpResponseBody == null ? "N/A" : httpResponseBody.Length.ToString()
@@ -213,8 +236,10 @@ namespace Elastic.Apm.BackendComm
 				}
 
 				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-					$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Waiting {waitInfo.Interval.ToHms()}... {waitInfo.Reason}";
-				_logger.IfLevel(waitingLogSeverity)?.Log("Waiting {WaitInterval}... {WaitReason}", waitInfo.Interval.ToHms(), waitInfo.Reason);
+					$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Waiting {waitInfo.Interval.ToHms()}..."
+					+ $" {waitInfo.Reason}. dbgIterationsCount: {dbgIterationsCount}";
+				_logger.IfLevel(waitingLogSeverity)?.Log("Waiting {WaitInterval}... {WaitReason}. dbgIterationsCount: {dbgIterationsCount}."
+					, waitInfo.Interval.ToHms(), waitInfo.Reason, dbgIterationsCount);
 				await _agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, _cancellationTokenSource.Token);
 			}
 			// ReSharper disable once FunctionNeverReturns
@@ -229,10 +254,11 @@ namespace Elastic.Apm.BackendComm
 
 		private async Task<HttpResponseMessage> FetchConfigHttpResponseAsync(HttpRequestMessage requestMessage)
 		{
-			_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-				$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Making HTTP request to APM Server... Request: {requestMessage}";
 			_logger.Trace()?.Log("Making HTTP request to APM Server... Request: {RequestMessage}.", requestMessage);
-			var httpResponse = await _httpClient.SendAsync(requestMessage, _cancellationTokenSource.Token);
+
+//			var httpResponse = await _httpClient.SendAsync(requestMessage, _cancellationTokenSource.Token);
+			var httpResponse = await _agentTimer.AwaitOrTimeout(_httpClient.SendAsync(requestMessage, _cancellationTokenSource.Token)
+				, _agentTimer.Now + TimeSpan.FromSeconds(30), _cancellationTokenSource.Token);
 
 			// ReSharper disable once InvertIf
 			if (httpResponse == null)

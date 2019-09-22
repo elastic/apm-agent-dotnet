@@ -146,7 +146,14 @@ namespace Elastic.Apm.Report
 					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Before Task.Run(() => { _cancellationTokenSource.Cancel(); });";
 				_logger.Debug()?.Log("Signaling _cancellationTokenSource");
 				// ReSharper disable once AccessToDisposedClosure
-				Task.Run(() => { _cancellationTokenSource.Cancel(); });
+				Task.Run(() =>
+				{
+					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Before _cancellationTokenSource.Cancel();";
+					_cancellationTokenSource.Cancel();
+					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "After _cancellationTokenSource.Cancel();";
+				});
 				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
 					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "After Task.Run(() => { _cancellationTokenSource.Cancel(); });";
 
@@ -164,7 +171,7 @@ namespace Elastic.Apm.Report
 				var timeToWaitFirstBeforeHttpClientDispose = TimeSpan.FromSeconds(30);
 				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
 					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
-					"Calling _singleThreadTaskScheduler.Thread.Join(timeToWaitFirstBeforeHttpClientDispose)."
+					"Calling _singleThreadTaskScheduler.Thread.Join(timeToWaitFirstBeforeHttpClientDispose)..."
 					+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'."
 					+ $" timeToWaitFirstBeforeHttpClientDispose: {timeToWaitFirstBeforeHttpClientDispose.ToHms()}";
 				_logger.Debug()?.Log("Waiting {WaitTime} for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
@@ -176,11 +183,15 @@ namespace Elastic.Apm.Report
 
 					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
 						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
-						"Calling _singleThreadTaskScheduler.Thread.Join()."
+						"Before _singleThreadTaskScheduler.Thread.Join()..."
 						+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'.";
 					_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
 						, _singleThreadTaskScheduler.Thread.Name);
 					_singleThreadTaskScheduler.Thread.Join();
+					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+							+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
+						"After _singleThreadTaskScheduler.Thread.Join()..."
+						+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'.";
 				}
 
 				DisposeHttpClient();

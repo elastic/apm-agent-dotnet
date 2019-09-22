@@ -403,7 +403,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 			public void VerifyDelayCancelled(Task xyzAwaitOrTimeoutTask, Task delayTask)
 			{
-				xyzAwaitOrTimeoutTask.IsCanceled.Should().BeFalse();
+				xyzAwaitOrTimeoutTask.IsCanceled.Should().BeTrue();
 
 				_taskToAwaitTcs.Task.IsCompleted.Should().BeFalse();
 

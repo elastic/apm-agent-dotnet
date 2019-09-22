@@ -118,9 +118,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				UnitTest, t =>
 				{
 					t.Should().NotBeNull();
-					LoggerBase.Context[DbgUtils.GetCurrentMethodName()] = "Calling WaitHelpers.SleepMinimum() ...";
 					WaitHelpers.SleepMinimum();
-					LoggerBase.Context[DbgUtils.GetCurrentMethodName()] = "Called WaitHelpers.SleepMinimum()";
 				}, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
 		/// <summary>

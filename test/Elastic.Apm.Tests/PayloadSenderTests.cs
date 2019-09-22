@@ -336,8 +336,8 @@ namespace Elastic.Apm.Tests
 					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
 						$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: "
 						+ $"Starting loop iteration... eventIndex: {eventIndex}, numberOfEventsToSend: {numberOfEventsToSend}, args: {args}";
-					EnqueueDummyEvent(payloadSender, agent, eventIndex).Should().BeTrue($"txIndex: {eventIndex}, args: {args}");
-					batchSentBarrier.SignalAndWait(barrierTimeout).Should().BeTrue($"txIndex: {eventIndex}, args: {args}");
+					EnqueueDummyEvent(payloadSender, agent, eventIndex).Should().BeTrue($"eventIndex: {eventIndex}, args: {args}");
+					batchSentBarrier.SignalAndWait(barrierTimeout).Should().BeTrue($"eventIndex: {eventIndex}, args: {args}");
 				}
 				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
 					$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: "

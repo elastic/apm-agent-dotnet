@@ -32,12 +32,15 @@ namespace Elastic.Apm.Helpers
 				var completedTask = await Task.WhenAny(taskToAwait, timeoutDelayTask);
 				if (completedTask == taskToAwait)
 				{
+					// await taskToAwait to make it throw if taskToAwait is faulted or cancelled
 					await taskToAwait;
 					return true;
 				}
 
 				Assertion.IfEnabled?.That(completedTask == timeoutDelayTask
 					, $"{nameof(completedTask)}: {completedTask}, {nameof(timeoutDelayTask)}: timeOutTask, {nameof(taskToAwait)}: taskToAwait");
+				// await timeout task in case it is cancelled and did not timed out
+				await timeoutDelayTask;
 				// no need to cancel timeout timer if it has been triggered
 				timeoutDelayTask = null;
 				return false;
@@ -78,8 +81,9 @@ namespace Elastic.Apm.Helpers
 		internal static async Task AwaitOrTimeout(this IAgentTimer agentTimer, Task taskToAwait, AgentTimeInstant until
 			, CancellationToken cancellationToken = default)
 		{
+			var timeStarted = agentTimer.Now;
 			if (await TryAwaitOrTimeout(agentTimer, taskToAwait, until, cancellationToken)) return;
-			throw new TimeoutException();
+			throw new TimeoutException($"Elapsed time: {(agentTimer.Now - timeStarted).ToHms()}");
 		}
 
 		/// <summary>
@@ -95,10 +99,11 @@ namespace Elastic.Apm.Helpers
 		internal static async Task<TResult> AwaitOrTimeout<TResult>(this IAgentTimer agentTimer, Task<TResult> taskToAwait
 			, AgentTimeInstant until, CancellationToken cancellationToken = default)
 		{
+			var timeStarted = agentTimer.Now;
 			var (hasTaskToAwaitCompletedBeforeTimeout, result) =
 				await TryAwaitOrTimeout(agentTimer, taskToAwait, until, cancellationToken);
 			if (hasTaskToAwaitCompletedBeforeTimeout) return result;
-			throw new TimeoutException();
+			throw new TimeoutException($"Elapsed time: {(agentTimer.Now - timeStarted).ToHms()}");
 		}
 	}
 }
