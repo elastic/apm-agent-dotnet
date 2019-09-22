@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
+    <ProjectReference Include="..\Elastic.Apm.Tests.Data\Elastic.Apm.Tests.Data.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="HelpersTests" />
