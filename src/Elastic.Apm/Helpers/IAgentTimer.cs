@@ -41,13 +41,11 @@ namespace Elastic.Apm.Helpers
 					, $"{nameof(completedTask)}: {completedTask}, {nameof(timeoutDelayTask)}: timeOutTask, {nameof(taskToAwait)}: taskToAwait");
 				// await timeout task in case it is cancelled and did not timed out
 				await timeoutDelayTask;
-				// no need to cancel timeout timer if it has been triggered
-				timeoutDelayTask = null;
 				return false;
 			}
 			finally
 			{
-				if (timeoutDelayTask != null) timeoutDelayCts.Cancel();
+				if (!timeoutDelayTask.IsCompleted) timeoutDelayCts.Cancel();
 				timeoutDelayCts.Dispose();
 			}
 		}

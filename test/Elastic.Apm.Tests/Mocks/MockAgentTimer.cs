@@ -101,10 +101,10 @@ namespace Elastic.Apm.Tests.Mocks
 			}
 		}
 
-		public void WaitForTimeToPassAndUntil(TimeSpan timeSpan, Func<bool> untilCondition = null, string dbgGoalDescription = null)
+		public void WaitForTimeToPassAndUntil(TimeSpan timeSpan, Func<bool> untilCondition = null, Func<string> dbgDesc = null)
 		{
-			FastForward(timeSpan, dbgGoalDescription);
-			untilCondition?.Invoke().Should().BeTrue();
+			FastForward(timeSpan, dbgDesc?.Invoke());
+			untilCondition?.Invoke().Should().BeTrue($"because dbgDesc: {(dbgDesc?.Invoke()).AsNullableToString()}");
 		}
 
 		private void DelayCancelled(long delayItemId)

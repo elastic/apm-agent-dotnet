@@ -90,7 +90,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var sutEnv = sutEnvCreator(_logger);
 			var tryAwaitOrTimeoutTask = sutEnv.TryAwaitOrTimeoutCall(VeryLongTimeout, out var delayTask);
 
-			sutEnv.AgentTimer.WaitForTimeToPass(ShortTimeAfterTaskStarted, dbgVariantDesc);
+			sutEnv.AgentTimer.WaitForTimeToPass(ShortTimeAfterTaskStarted, () => $"dbgVariantDesc: {dbgVariantDesc}. delayTask: {delayTask.Status}");
 			tryAwaitOrTimeoutTask.IsCompleted.Should().BeFalse();
 
 			sutEnv.CompleteTaskSuccessfully();
@@ -105,7 +105,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var sutEnv = sutEnvCreator(_logger);
 			var tryAwaitOrTimeoutTask = sutEnv.TryAwaitOrTimeoutCall(VeryShortTimeout, out var delayTask);
 
-			sutEnv.AgentTimer.WaitForTimeToPassAndUntil(VeryShortTimeout, () => tryAwaitOrTimeoutTask.IsCompleted, dbgVariantDesc);
+			sutEnv.AgentTimer.WaitForTimeToPassAndUntil(VeryShortTimeout, () => tryAwaitOrTimeoutTask.IsCompleted
+				, () => $"dbgVariantDesc: {dbgVariantDesc}. tryAwaitOrTimeoutTask: {tryAwaitOrTimeoutTask}. delayTask: {delayTask.Status}");
 
 			sutEnv.VerifyTryAwaitTimeout(tryAwaitOrTimeoutTask, delayTask);
 		}
@@ -117,7 +118,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var sutEnv = sutEnvCreator(_logger);
 			var tryAwaitOrTimeoutTask = sutEnv.TryAwaitOrTimeoutCall(VeryLongTimeout, out var delayTask);
 
-			sutEnv.AgentTimer.WaitForTimeToPass(ShortTimeAfterTaskStarted, dbgVariantDesc);
+			sutEnv.AgentTimer.WaitForTimeToPass(ShortTimeAfterTaskStarted
+				, () => $"dbgVariantDesc: {dbgVariantDesc}. tryAwaitOrTimeoutTask: {tryAwaitOrTimeoutTask}. delayTask: {delayTask.Status}");
 			tryAwaitOrTimeoutTask.IsCompleted.Should().BeFalse();
 
 			sutEnv.CancelTask();
@@ -132,7 +134,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var sutEnv = sutEnvCreator(_logger);
 			var tryAwaitOrTimeoutTask = sutEnv.TryAwaitOrTimeoutCall(VeryLongTimeout, out var delayTask);
 
-			sutEnv.AgentTimer.WaitForTimeToPass(ShortTimeAfterTaskStarted, dbgVariantDesc);
+			sutEnv.AgentTimer.WaitForTimeToPass(ShortTimeAfterTaskStarted
+				, () => $"dbgVariantDesc: {dbgVariantDesc}. tryAwaitOrTimeoutTask: {tryAwaitOrTimeoutTask}. delayTask: {delayTask.Status}");
 			tryAwaitOrTimeoutTask.IsCompleted.Should().BeFalse();
 
 			sutEnv.FaultTask();
@@ -148,7 +151,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var cts = new CancellationTokenSource();
 			var tryAwaitOrTimeoutTask = sutEnv.TryAwaitOrTimeoutCall(VeryLongTimeout, out var delayTask, cts.Token);
 
-			sutEnv.AgentTimer.WaitForTimeToPass(ShortTimeAfterTaskStarted, dbgVariantDesc);
+			sutEnv.AgentTimer.WaitForTimeToPass(ShortTimeAfterTaskStarted
+				, () => $"dbgVariantDesc: {dbgVariantDesc}. tryAwaitOrTimeoutTask: {tryAwaitOrTimeoutTask}. delayTask: {delayTask.Status}");
 			tryAwaitOrTimeoutTask.IsCompleted.Should().BeFalse();
 
 			cts.Cancel();
@@ -163,7 +167,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var sutEnv = sutEnvCreator(_logger);
 			var awaitOrTimeoutTask = sutEnv.AwaitOrTimeoutCall(VeryLongTimeout, out var delayTask);
 
-			sutEnv.AgentTimer.WaitForTimeToPass(ShortTimeAfterTaskStarted, dbgVariantDesc);
+			sutEnv.AgentTimer.WaitForTimeToPass(ShortTimeAfterTaskStarted
+				, () => $"dbgVariantDesc: {dbgVariantDesc}. awaitOrTimeoutTask: {awaitOrTimeoutTask.Status}. delayTask: {delayTask.Status}");
 			awaitOrTimeoutTask.IsCompleted.Should().BeFalse();
 
 			sutEnv.CompleteTaskSuccessfully();
@@ -178,7 +183,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var sutEnv = sutEnvCreator(_logger);
 			var awaitOrTimeoutTask = sutEnv.AwaitOrTimeoutCall(VeryShortTimeout, out var delayTask);
 
-			sutEnv.AgentTimer.WaitForTimeToPassAndUntil(VeryShortTimeout, () => awaitOrTimeoutTask.IsCompleted, dbgVariantDesc);
+			sutEnv.AgentTimer.WaitForTimeToPassAndUntil(VeryShortTimeout, () => awaitOrTimeoutTask.IsCompleted
+				, () => $"dbgVariantDesc: {dbgVariantDesc}. awaitOrTimeoutTask: {awaitOrTimeoutTask.Status}. delayTask: {delayTask.Status}");
 
 			sutEnv.VerifyAwaitTimeout(awaitOrTimeoutTask, delayTask);
 		}
@@ -190,7 +196,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var sutEnv = sutEnvCreator(_logger);
 			var awaitOrTimeoutTask = sutEnv.AwaitOrTimeoutCall(5.Seconds(), out var delayTask);
 
-			sutEnv.AgentTimer.WaitForTimeToPass(ShortTimeAfterTaskStarted, dbgVariantDesc);
+			sutEnv.AgentTimer.WaitForTimeToPass(ShortTimeAfterTaskStarted
+				, () => $"dbgVariantDesc: {dbgVariantDesc}. awaitOrTimeoutTask: {awaitOrTimeoutTask.Status}. delayTask: {delayTask.Status}");
 			awaitOrTimeoutTask.IsCompleted.Should().BeFalse();
 
 			sutEnv.CancelTask();
@@ -205,7 +212,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var sutEnv = sutEnvCreator(_logger);
 			var awaitOrTimeoutTask = sutEnv.AwaitOrTimeoutCall(VeryLongTimeout, out var delayTask);
 
-			sutEnv.AgentTimer.WaitForTimeToPass(ShortTimeAfterTaskStarted, dbgVariantDesc);
+			sutEnv.AgentTimer.WaitForTimeToPass(ShortTimeAfterTaskStarted
+				, () => $"dbgVariantDesc: {dbgVariantDesc}. awaitOrTimeoutTask: {awaitOrTimeoutTask.Status}. delayTask: {delayTask.Status}");
 			awaitOrTimeoutTask.IsCompleted.Should().BeFalse();
 
 			sutEnv.FaultTask();
@@ -221,7 +229,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var cts = new CancellationTokenSource();
 			var awaitOrTimeoutTask = sutEnv.AwaitOrTimeoutCall(VeryLongTimeout, out var delayTask, cts.Token);
 
-			sutEnv.AgentTimer.WaitForTimeToPass(ShortTimeAfterTaskStarted, dbgVariantDesc);
+			sutEnv.AgentTimer.WaitForTimeToPass(ShortTimeAfterTaskStarted
+				, () => $"dbgVariantDesc: {dbgVariantDesc}. awaitOrTimeoutTask: {awaitOrTimeoutTask.Status}. delayTask: {delayTask.Status}");
 			awaitOrTimeoutTask.IsCompleted.Should().BeFalse();
 
 			cts.Cancel();

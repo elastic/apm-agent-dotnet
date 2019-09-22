@@ -31,7 +31,8 @@ namespace Elastic.Apm.BackendComm
 		private readonly HttpClient _httpClient;
 		private readonly IConfigSnapshot _initialSnapshot;
 		private readonly IApmLogger _logger;
-		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler;
+//		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler;
+		private readonly Task _fetchingLoopTask;
 
 		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, Service service, HttpMessageHandler httpMessageHandler = null
 			, IAgentTimer agentTimer = null, [CallerMemberName] string dbgName = null
@@ -57,7 +58,7 @@ namespace Elastic.Apm.BackendComm
 			_agentTimer = agentTimer ?? new AgentTimer();
 
 			_cancellationTokenSource = new CancellationTokenSource();
-			_singleThreadTaskScheduler = new SingleThreadTaskScheduler($"ElasticApm{ThisClassName}", logger, _cancellationTokenSource.Token);
+//			_singleThreadTaskScheduler = new SingleThreadTaskScheduler($"ElasticApm{ThisClassName}", logger, _cancellationTokenSource.Token);
 
 			_getConfigUrlPath = BackendCommUtils.ApmServerEndpoints.Config(service);
 			_logger.Debug()
@@ -67,7 +68,8 @@ namespace Elastic.Apm.BackendComm
 			_httpClient = BackendCommUtils.BuildHttpClient(logger, _initialSnapshot, service, ThisClassName, httpMessageHandler);
 
 #pragma warning disable 4014
-			Task.Factory.StartNew(RunFetchingLoop, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
+//			Task.Factory.StartNew(RunFetchingLoop, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
+			_fetchingLoopTask = Task.Run(RunFetchingLoop, _cancellationTokenSource.Token);
 #pragma warning restore 4014
 			_logger.Debug()?.Log("Enqueued {MethodName} with internal task scheduler", nameof(RunFetchingLoop));
 		}
@@ -114,29 +116,52 @@ namespace Elastic.Apm.BackendComm
 				}
 
 				var timeToWaitFirstBeforeHttpClientDispose = TimeSpan.FromSeconds(30);
+
+//				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+//					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
+//					"Calling _singleThreadTaskScheduler.Thread.Join(timeToWaitFirstBeforeHttpClientDispose)..."
+//					+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'."
+//					+ $" timeToWaitFirstBeforeHttpClientDispose: {timeToWaitFirstBeforeHttpClientDispose.ToHms()}";
+//				_logger.Debug()?.Log("Waiting {WaitTime} for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
+//					,timeToWaitFirstBeforeHttpClientDispose.ToHms() , _singleThreadTaskScheduler.Thread.Name);
+//				var threadExited = _singleThreadTaskScheduler.Thread.Join(timeToWaitFirstBeforeHttpClientDispose);
+//				if (!threadExited)
+//				{
+//					DisposeHttpClient();
+//
+//					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+//						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
+//						"Before _singleThreadTaskScheduler.Thread.Join()..."
+//						+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'.";
+//					_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
+//						, _singleThreadTaskScheduler.Thread.Name);
+//					_singleThreadTaskScheduler.Thread.Join();
+//					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+//							+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
+//						"After _singleThreadTaskScheduler.Thread.Join()..."
+//						+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'.";
+//				}
+
 				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
 					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
-					"Calling _singleThreadTaskScheduler.Thread.Join(timeToWaitFirstBeforeHttpClientDispose)..."
-					+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'."
+					"Before _agentTimer.TryAwaitOrTimeout(_fetchingLoopTask, _agentTimer.Now + timeToWaitFirstBeforeHttpClientDispose).Result ..."
 					+ $" timeToWaitFirstBeforeHttpClientDispose: {timeToWaitFirstBeforeHttpClientDispose.ToHms()}";
-				_logger.Debug()?.Log("Waiting {WaitTime} for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
-					,timeToWaitFirstBeforeHttpClientDispose.ToHms() , _singleThreadTaskScheduler.Thread.Name);
-				var threadExited = _singleThreadTaskScheduler.Thread.Join(TimeSpan.FromSeconds(30));
-				if (!threadExited)
+				_logger.Debug()?.Log("Waiting {WaitTime} for _fetchingLoopTask to complete...", timeToWaitFirstBeforeHttpClientDispose.ToHms());
+
+				var isFetchingLoopTaskCompleted =
+					_agentTimer.TryAwaitOrTimeout(_fetchingLoopTask, _agentTimer.Now + timeToWaitFirstBeforeHttpClientDispose).Result;
+				if (!isFetchingLoopTaskCompleted)
 				{
 					DisposeHttpClient();
 
 					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
-						"Before _singleThreadTaskScheduler.Thread.Join()..."
-						+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'.";
-					_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
-						, _singleThreadTaskScheduler.Thread.Name);
-					_singleThreadTaskScheduler.Thread.Join();
+						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Before _fetchingLoopTask.Wait()...";
+					_logger.Debug()?.Log("Waiting for _fetchingLoopTask to complete...");
+
+					_fetchingLoopTask.Wait();
+
 					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-							+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] =
-						"After _singleThreadTaskScheduler.Thread.Join()..."
-						+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'.";
+						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "After _fetchingLoopTask.Wait()...";
 				}
 
 				DisposeHttpClient();
@@ -180,7 +205,7 @@ namespace Elastic.Apm.BackendComm
 
 					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
 						$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Making HTTP request to APM Server..."
-						+ $" dbgIterationsCount: {dbgIterationsCount}. Request: {httpRequest}";
+						+ $" dbgIterationsCount: {dbgIterationsCount}";
 
 					httpResponse = await FetchConfigHttpResponseAsync(httpRequest);
 
