@@ -96,11 +96,11 @@ namespace Elastic.Apm
 			else
 			{
 				Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()} - PayloadSender is not IDisposable"] = "";
+					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()} - PayloadSender is"] = PayloadSender.GetType().FullName;
 			}
 
-			Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-				$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Calling CentralConfigFetcher.Dispose() ...";
+			Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+				+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Calling CentralConfigFetcher.Dispose() ...";
 
 			CentralConfigFetcher.Dispose();
 

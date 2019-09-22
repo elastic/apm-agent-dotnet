@@ -186,7 +186,7 @@ namespace Elastic.Apm.Report
 				_cancellationTokenSource.Dispose();
 
 				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Exiting...";
+					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Exiting...";
 			});
 
 		private void ThrowIfDisposed()

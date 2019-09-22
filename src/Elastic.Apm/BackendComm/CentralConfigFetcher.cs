@@ -88,9 +88,11 @@ namespace Elastic.Apm.BackendComm
 			_disposableHelper.DoOnce(_logger, ThisClassName, () =>
 			{
 				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Signaling _cancellationTokenSource ...";
+					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Before signaling _cancellationTokenSource";
 				_logger.Debug()?.Log("Signaling _cancellationTokenSource");
 				_cancellationTokenSource.Cancel();
+				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "After signaling _cancellationTokenSource";
 
 				var isHttpClientDisposed = false;
 
@@ -131,7 +133,7 @@ namespace Elastic.Apm.BackendComm
 				_cancellationTokenSource.Dispose();
 
 				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Exiting...";
+					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Exiting...";
 			});
 		}
 
@@ -162,6 +164,8 @@ namespace Elastic.Apm.BackendComm
 				{
 					httpRequest = BuildHttpRequest(eTag);
 					httpResponse = await FetchConfigHttpResponseAsync(httpRequest);
+					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
+						$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Reading HTTP response body... httpResponse: {httpResponse}";
 					httpResponseBody = await httpResponse.Content.ReadAsStringAsync();
 
 					ConfigDelta configDelta;
@@ -224,6 +228,8 @@ namespace Elastic.Apm.BackendComm
 
 		private async Task<HttpResponseMessage> FetchConfigHttpResponseAsync(HttpRequestMessage requestMessage)
 		{
+			_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
+				$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Making HTTP request to APM Server... Request: {requestMessage}";
 			_logger.Trace()?.Log("Making HTTP request to APM Server... Request: {RequestMessage}.", requestMessage);
 			var httpResponse = await _httpClient.SendAsync(requestMessage, _cancellationTokenSource.Token);
 
