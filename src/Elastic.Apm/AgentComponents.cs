@@ -13,6 +13,8 @@ namespace Elastic.Apm
 {
 	public class AgentComponents : IApmAgent, IDisposable
 	{
+		private const string ThisClassName = nameof(AgentComponents);
+
 		public AgentComponents(
 			IApmLogger logger = null,
 			IConfigurationReader configurationReader = null,
@@ -79,7 +81,7 @@ namespace Elastic.Apm
 			if (MetricsCollector is IDisposable disposableMetricsCollector)
 			{
 				Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-					$"{DbgUtils.GetCurrentMethodName()}: Calling disposableMetricsCollector.Dispose() ...";
+					$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Calling disposableMetricsCollector.Dispose() ...";
 
 				disposableMetricsCollector.Dispose();
 			}
@@ -87,18 +89,18 @@ namespace Elastic.Apm
 			if (PayloadSender is IDisposable disposablePayloadSender)
 			{
 				Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-					$"{DbgUtils.GetCurrentMethodName()}: Calling disposablePayloadSender.Dispose() ...";
+					$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Calling disposablePayloadSender.Dispose() ...";
 
 				disposablePayloadSender.Dispose();
 			}
 
 			Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-				$"{DbgUtils.GetCurrentMethodName()}: Calling CentralConfigFetcher.Dispose() ...";
+				$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Calling CentralConfigFetcher.Dispose() ...";
 
 			CentralConfigFetcher.Dispose();
 
 			Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-				$"{DbgUtils.GetCurrentMethodName()}: Exiting ...";
+				$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Exiting ...";
 		}
 	}
 }

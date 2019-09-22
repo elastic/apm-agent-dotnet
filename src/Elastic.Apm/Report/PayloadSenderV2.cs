@@ -80,6 +80,9 @@ namespace Elastic.Apm.Report
 				_singleThreadTaskScheduler);
 #pragma warning restore 4014
 			_logger.Debug()?.Log("Enqueued {MethodName} with internal task scheduler", nameof(RunWaitForDataSendItToServerLoop));
+			_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId}) - {ThisClassName}"] =
+				$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: "
+				+ $"Enqueued {nameof(RunWaitForDataSendItToServerLoop)} with internal task scheduler";
 		}
 
 		private long _eventQueueCount;
@@ -158,7 +161,7 @@ namespace Elastic.Apm.Report
 
 				var timeToWaitFirstBeforeHttpClientDispose = TimeSpan.FromSeconds(30);
 				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-					$"{DbgUtils.GetCurrentMethodName()}: "
+					$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: "
 					+ "Calling _singleThreadTaskScheduler.Thread.Join(timeToWaitFirstBeforeHttpClientDispose)."
 					+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'."
 					+ $" timeToWaitFirstBeforeHttpClientDispose: {timeToWaitFirstBeforeHttpClientDispose.ToHms()}";
@@ -170,7 +173,7 @@ namespace Elastic.Apm.Report
 					DisposeHttpClient();
 
 					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-						$"{DbgUtils.GetCurrentMethodName()}: "
+						$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: "
 						+ "Calling _singleThreadTaskScheduler.Thread.Join()."
 						+ $" _singleThreadTaskScheduler.Thread.Name: `{_singleThreadTaskScheduler.Thread.Name}'.";
 					_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit"
@@ -184,7 +187,7 @@ namespace Elastic.Apm.Report
 				_cancellationTokenSource.Dispose();
 
 				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-					$"{DbgUtils.GetCurrentMethodName()}: Exiting...";
+					$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Exiting...";
 			});
 
 		private void ThrowIfDisposed()
@@ -194,6 +197,9 @@ namespace Elastic.Apm.Report
 
 		private async Task RunWaitForDataSendItToServerLoop()
 		{
+			_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
+				$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Entering...";
+
 			await ExceptionUtils.DoSwallowingExceptions(_logger, async () =>
 				{
 					while (true) await ProcessQueueItems(await ReceiveBatchAsync());
@@ -202,7 +208,7 @@ namespace Elastic.Apm.Report
 				, dbgCallerMethodName: ThisClassName + "." + DbgUtils.GetCurrentMethodName());
 
 			_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-				$"{DbgUtils.GetCurrentMethodName()}: Exiting ...";
+				$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Exiting...";
 		}
 
 		private async Task<object[]> ReceiveBatchAsync()
@@ -217,7 +223,7 @@ namespace Elastic.Apm.Report
 				while (true)
 				{
 					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-						$"{DbgUtils.GetCurrentMethodName()}: Calling TryAwaitOrTimeout ... _flushInterval: {_flushInterval.ToHms()}";
+						$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Calling TryAwaitOrTimeout ... _flushInterval: {_flushInterval.ToHms()}";
 					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, _cancellationTokenSource.Token)) break;
 
 					_eventQueue.TriggerBatch();
@@ -225,7 +231,7 @@ namespace Elastic.Apm.Report
 			}
 
 			_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-				$"{DbgUtils.GetCurrentMethodName()}: Calling await receiveAsyncTask ...";
+				$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Calling await receiveAsyncTask ...";
 			var eventBatchToSend = await receiveAsyncTask;
 			var newEventQueueCount = Interlocked.Add(ref _eventQueueCount, -eventBatchToSend.Length);
 			_logger.Trace()
