@@ -255,8 +255,22 @@ namespace Elastic.Apm.BackendComm
 			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before httpResponse = await _agentTimer.AwaitOrTimeout(httpRequestTask ..."
 				+ $" IsCancellationRequested: {_cancellationTokenSource.Token.IsCancellationRequested}";
 
-			var httpResponse =
-				await _agentTimer.AwaitOrTimeout(httpRequestTask, _agentTimer.Now + ReadResponseBodyTimeout, _cancellationTokenSource.Token);
+			HttpResponseMessage httpResponse;
+			try
+			{
+				httpResponse =
+					await _agentTimer.AwaitOrTimeout(httpRequestTask, _agentTimer.Now + ReadResponseBodyTimeout, _cancellationTokenSource.Token);
+			}
+			catch (OperationCanceledException)
+			{
+				_logger.Error()?.Log("HTTP request to APM Server is canceled."
+					+ " IsCancellationRequested: {IsCancellationRequested}. httpRequestTask.Status: {TaskStatus}"
+					, _cancellationTokenSource.Token.IsCancellationRequested, httpRequestTask.Status);
+				throw;
+			}
+
+//			var httpResponse =
+//				await _agentTimer.AwaitOrTimeout(httpRequestTask, _agentTimer.Now + ReadResponseBodyTimeout, _cancellationTokenSource.Token);
 
 			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After httpResponse = await _agentTimer.AwaitOrTimeout(httpRequestTask ...";
 
