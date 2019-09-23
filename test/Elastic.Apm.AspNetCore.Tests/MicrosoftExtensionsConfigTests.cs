@@ -159,6 +159,24 @@ namespace Elastic.Apm.AspNetCore.Tests
 			configAfterEnvVarSet.FlushInterval.Should().Be(flushIntervalVal);
 		}
 
+		[Fact]
+		public void MicrosoftExtensionsConfig_has_precedence_over_on_env_vars()
+		{
+			const double transactionSampleRateEnvVarValue = 0.851;
+			const double transactionSampleRateValueInAppSettings = 0.456;
+
+			var configBeforeEnvVarSet = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
+				new NoopLogger(), "test");
+			configBeforeEnvVarSet.TransactionSampleRate.Should().Be(transactionSampleRateValueInAppSettings);
+
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate, transactionSampleRateEnvVarValue.ToString());
+			new EnvironmentConfigurationReader(new NoopLogger()).TransactionSampleRate.Should().Be(transactionSampleRateEnvVarValue);
+
+			var configAfterEnvVarSet = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
+				new NoopLogger(), "test");
+			configAfterEnvVarSet.TransactionSampleRate.Should().Be(transactionSampleRateValueInAppSettings);
+		}
+
 		internal static IConfiguration GetConfig(string path)
 			=> new ConfigurationBuilder()
 				.AddJsonFile(path)
