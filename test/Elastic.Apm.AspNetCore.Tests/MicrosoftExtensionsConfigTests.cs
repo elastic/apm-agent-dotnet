@@ -60,7 +60,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 					$"{{{nameof(MicrosoftExtensionsConfig)}}}",
 					"Failed parsing log level from",
 					MicrosoftExtensionsConfig.Origin,
-					MicrosoftExtensionsConfig.Keys.LogLevel,
+					ConfigConsts.KeyNames.LogLevel,
 					"Defaulting to "
 				);
 
@@ -87,7 +87,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 					$"{{{nameof(MicrosoftExtensionsConfig)}}}",
 					"Failed parsing log level from",
 					MicrosoftExtensionsConfig.Origin,
-					MicrosoftExtensionsConfig.Keys.LogLevel,
+					ConfigConsts.KeyNames.LogLevel,
 					"Defaulting to ",
 					"DbeugMisspelled"
 				);
