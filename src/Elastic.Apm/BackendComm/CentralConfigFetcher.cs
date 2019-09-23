@@ -238,8 +238,11 @@ namespace Elastic.Apm.BackendComm
 
 		private async Task<HttpResponseMessage> FetchConfigHttpResponseAsync(HttpRequestMessage requestMessage)
 		{
-			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before await Task.Delay(TimeSpan.FromSeconds(5), _cancellationTokenSource.Token) ...";
-			await Task.Delay(TimeSpan.FromSeconds(5), _cancellationTokenSource.Token);
+//			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before await Task.Delay(TimeSpan.FromSeconds(5), _cancellationTokenSource.Token) ...";
+//			await Task.Delay(TimeSpan.FromSeconds(5), _cancellationTokenSource.Token);
+			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before await await Task.Yield() ...";
+			await Task.Yield();
+			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After await await Task.Yield() ...";
 
 			_logger.Trace()?.Log("Making HTTP request to APM Server... Request: {RequestMessage}.", requestMessage);
 
