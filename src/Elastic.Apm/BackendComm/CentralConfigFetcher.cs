@@ -110,9 +110,10 @@ namespace Elastic.Apm.BackendComm
 				});
 				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After Task.Run(() => { _cancellationTokenSource.Cancel(); });";
 
-
-				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before _loopCompleted.Wait()";
-				_logger.Debug()?.Log("Waiting for loop to exit...");
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before _loopCompleted.Wait()."
+					+ $" IsCancellationRequested: {_cancellationTokenSource.Token.IsCancellationRequested}";
+				_logger.Debug()?.Log("Waiting for loop to exit... Is cancellation token signaled: {IsCancellationRequested}"
+					, _cancellationTokenSource.Token.IsCancellationRequested);
 				_loopCompleted.Wait();
 				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After _fetchingLoopCompleted.Wait()";
 
@@ -160,9 +161,6 @@ namespace Elastic.Apm.BackendComm
 				try
 				{
 					httpRequest = BuildHttpRequest(eTag);
-
-					_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Making HTTP request to APM Server..."
-						+ $" dbgIterationsCount: {dbgIterationsCount}";
 
 					httpResponse = await FetchConfigHttpResponseAsync(httpRequest);
 
@@ -240,9 +238,20 @@ namespace Elastic.Apm.BackendComm
 
 		private async Task<HttpResponseMessage> FetchConfigHttpResponseAsync(HttpRequestMessage requestMessage)
 		{
+			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before await Task.Delay(TimeSpan.FromSeconds(5), _cancellationTokenSource.Token) ...";
+			await Task.Delay(TimeSpan.FromSeconds(5), _cancellationTokenSource.Token);
+
 			_logger.Trace()?.Log("Making HTTP request to APM Server... Request: {RequestMessage}.", requestMessage);
 
-			var httpResponse = await _httpClient.SendAsync(requestMessage, _cancellationTokenSource.Token);
+//			var httpResponse = await _httpClient.SendAsync(requestMessage, _cancellationTokenSource.Token);
+
+			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before httpRequestTask = _httpClient.SendAsync ..."
+				+ $" IsCancellationRequested: {_cancellationTokenSource.Token.IsCancellationRequested}";
+			var httpRequestTask = _httpClient.SendAsync(requestMessage, _cancellationTokenSource.Token);
+			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before httpResponse = await httpRequestTask ..."
+				+ $" IsCancellationRequested: {_cancellationTokenSource.Token.IsCancellationRequested}";
+			var httpResponse = await httpRequestTask;
+			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After httpResponse = await httpRequestTask ...";
 
 			// ReSharper disable once InvertIf
 			if (httpResponse == null)

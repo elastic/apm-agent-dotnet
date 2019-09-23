@@ -246,53 +246,53 @@ namespace Elastic.Apm.Tests
 			}
 		}
 
-		[Theory]
-		[MemberData(nameof(TestArgsVariantsWithVeryLongFlushInterval))]
-		internal async Task MaxBatchEventCount_test(TestArgs args)
+		public static IEnumerable<object[]> MaxBatchEventCount_test_variants()
 		{
-			foreach (var expectedNumberOfBatches in new[] { 1, 2, 3, 10 })
+			var numberOfBatchesVariants = new[] { 1, 2, 3, 10 };
+			foreach (var args in TestArgsVariantsWithVeryLongFlushInterval)
 			{
-				LoggerBase.Context[DbgUtils.CurrentDbgContext(ThisClassName)] =
-					$"Starting sub-test... args: {args}, expectedNumberOfBatches: {expectedNumberOfBatches}";
-				_logger.Debug()?.Log("Starting sub-test... args: {args}", args);
+				foreach (var numberOfBatches in numberOfBatchesVariants)
+					yield return new [] { args[0], numberOfBatches };
+			}
+		}
 
-				var expectedNumberOfBatchesSentTcs = new TaskCompletionSource<object>();
+		[Theory]
+		[MemberData(nameof(MaxBatchEventCount_test_variants))]
+		internal async Task MaxBatchEventCount_test(TestArgs args, int expectedNumberOfBatches)
+		{
+			var expectedNumberOfBatchesSentTcs = new TaskCompletionSource<object>();
 
-				var actualNumberOfBatches = 0;
-				var handler = new MockHttpMessageHandler((r, c) =>
+			var actualNumberOfBatches = 0;
+			var handler = new MockHttpMessageHandler((r, c) =>
+			{
+				if (Interlocked.Increment(ref actualNumberOfBatches) == expectedNumberOfBatches)
+					expectedNumberOfBatchesSentTcs.SetResult(null);
+				return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+			});
+
+			var configurationReader = args.BuildConfig(_logger);
+			var service = Service.GetDefaultService(configurationReader, _logger);
+			var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler
+				, /* dbgName: */ TestDisplayName);
+
+			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
+			{
+				var numberOfEventsEnqueuedSuccessfully = 0;
+				for (var txIndex = 1;; ++txIndex)
 				{
-					if (Interlocked.Increment(ref actualNumberOfBatches) == expectedNumberOfBatches)
-						expectedNumberOfBatchesSentTcs.SetResult(null);
-					return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
-				});
+					if (EnqueueDummyEvent(payloadSender, agent, txIndex))
+						++numberOfEventsEnqueuedSuccessfully;
+					else
+						Thread.Yield();
 
-				var configurationReader = args.BuildConfig(_logger);
-				var service = Service.GetDefaultService(configurationReader, _logger);
-				var payloadSender = new PayloadSenderV2(_logger, configurationReader, service, new Api.System(), handler
-					, /* dbgName: */ TestDisplayName);
-
-				using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
-				{
-					var numberOfEventsEnqueuedSuccessfully = 0;
-					for (var txIndex = 1;; ++txIndex)
-					{
-						if (EnqueueDummyEvent(payloadSender, agent, txIndex))
-							++numberOfEventsEnqueuedSuccessfully;
-						else
-							Thread.Yield();
-
-						if (numberOfEventsEnqueuedSuccessfully == expectedNumberOfBatches * args.MaxBatchEventCount)
-							break;
-					}
-
-					(await Task.WhenAny(expectedNumberOfBatchesSentTcs.Task, Task.Delay(30.Seconds())))
-						.Should()
-						.Be(expectedNumberOfBatchesSentTcs.Task
-							, $"because numberOfEventsEnqueuedSuccessfully: {numberOfEventsEnqueuedSuccessfully}");
-
-					LoggerBase.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Finished sub-test - exiting using block (calling Dispose)..."
-						+ $" args: {args}, expectedNumberOfBatches: {expectedNumberOfBatches}";
+					if (numberOfEventsEnqueuedSuccessfully == expectedNumberOfBatches * args.MaxBatchEventCount)
+						break;
 				}
+
+				(await Task.WhenAny(expectedNumberOfBatchesSentTcs.Task, Task.Delay(30.Seconds())))
+					.Should()
+					.Be(expectedNumberOfBatchesSentTcs.Task
+						, $"because numberOfEventsEnqueuedSuccessfully: {numberOfEventsEnqueuedSuccessfully}");
 			}
 		}
 

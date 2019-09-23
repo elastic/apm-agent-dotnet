@@ -154,9 +154,9 @@ namespace Elastic.Apm.Tests.TestHelpers
 							logger.Scoped(ThisClassName)
 								.Warning()
 								?.Log("Long running test detected. Time elapsed since test started: {TestDuration}."
-									+ " Test display name: `{UnitTestDisplayName}'. Current thread: {ThreadDesc}."
+									+ " Test display name: `{UnitTestDisplayName}'."
 									+ Environment.NewLine + "+-> Logger context:{LoggerContext}"
-									, _stopwatch.Elapsed.ToHmsInSeconds(), _owner.TestDisplayName, DbgUtils.CurrentThreadDesc
+									, _stopwatch.Elapsed.ToHmsInSeconds(), _owner.TestDisplayName
 									, FormatLoggerContext(_owner.LoggerBase.Context.Copy()));
 						});
 					}

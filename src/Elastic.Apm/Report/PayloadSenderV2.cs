@@ -163,9 +163,10 @@ namespace Elastic.Apm.Report
 				});
 				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After Task.Run(() => { _cancellationTokenSource.Cancel(); });";
 
-
-				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before _loopCompleted.Wait()";
-				_logger.Debug()?.Log("Waiting for loop to exit...");
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before _loopCompleted.Wait()."
+					+ $" IsCancellationRequested: {_cancellationTokenSource.Token.IsCancellationRequested}";
+				_logger.Debug()?.Log("Waiting for loop to exit... Is cancellation token signaled: {IsCancellationRequested}"
+					, _cancellationTokenSource.Token.IsCancellationRequested);
 				_loopCompleted.Wait();
 				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After _fetchingLoopCompleted.Wait()";
 
