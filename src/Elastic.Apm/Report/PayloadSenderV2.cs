@@ -70,6 +70,15 @@ namespace Elastic.Apm.Report
 				_maxQueueEventCount = config.MaxQueueEventCount;
 
 			_flushInterval = config.FlushInterval;
+
+			_logger?.Debug()
+				?.Log(
+					"Using the following configuration options:"
+					+ " FlushInterval: {FlushInterval}"
+					+ ", MaxBatchEventCount: {MaxBatchEventCount}"
+					+ ", MaxQueueEventCount: {MaxQueueEventCount}"
+					, _flushInterval.ToHms(), config.MaxBatchEventCount, _maxQueueEventCount);
+
 			_eventQueue = new BatchBlock<object>(config.MaxBatchEventCount);
 
 			_cancellationTokenSource = new CancellationTokenSource();
@@ -150,18 +159,10 @@ namespace Elastic.Apm.Report
 		public void Dispose() =>
 			_disposableHelper.DoOnce(_logger, ThisClassName, () =>
 			{
-				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before Task.Run(() => { _cancellationTokenSource.Cancel(); });";
 				_logger.Debug()?.Log("Signaling _cancellationTokenSource");
-				// ReSharper disable once AccessToDisposedClosure
-				Task.Run(() =>
-				{
-					_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before _cancellationTokenSource.Cancel();";
-
-					_cancellationTokenSource.Cancel();
-
-					_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After _cancellationTokenSource.Cancel();";
-				});
-				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After Task.Run(() => { _cancellationTokenSource.Cancel(); });";
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before _cancellationTokenSource.Cancel()";
+				_cancellationTokenSource.Cancel();
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After _cancellationTokenSource.Cancel()";
 
 				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before _loopCompleted.Wait()."
 					+ $" IsCancellationRequested: {_cancellationTokenSource.Token.IsCancellationRequested}";

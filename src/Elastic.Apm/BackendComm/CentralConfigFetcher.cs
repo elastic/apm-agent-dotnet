@@ -97,18 +97,10 @@ namespace Elastic.Apm.BackendComm
 
 			_disposableHelper.DoOnce(_logger, ThisClassName, () =>
 			{
-				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before Task.Run(() => { _cancellationTokenSource.Cancel(); });";
 				_logger.Debug()?.Log("Signaling _cancellationTokenSource");
-				// ReSharper disable once AccessToDisposedClosure
-				Task.Run(() =>
-				{
-					_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before _cancellationTokenSource.Cancel();";
-
-					_cancellationTokenSource.Cancel();
-
-					_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After _cancellationTokenSource.Cancel();";
-				});
-				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After Task.Run(() => { _cancellationTokenSource.Cancel(); });";
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before _cancellationTokenSource.Cancel()";
+				_cancellationTokenSource.Cancel();
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After _cancellationTokenSource.Cancel()";
 
 				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before _loopCompleted.Wait()."
 					+ $" IsCancellationRequested: {_cancellationTokenSource.Token.IsCancellationRequested}";
