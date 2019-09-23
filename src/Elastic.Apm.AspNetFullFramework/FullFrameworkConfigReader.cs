@@ -1,4 +1,5 @@
 using System;
+using System.Configuration;
 using System.Text;
 using System.Web.Hosting;
 using Elastic.Apm.Config;
@@ -7,11 +8,21 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
-	internal class FullFrameworkConfigReader : EnvironmentConfigurationReader
+	internal class FullFrameworkConfigReader : AbstractConfigurationWithEnvFallbackReader, IConfigurationReader
 	{
-		public FullFrameworkConfigReader(IApmLogger logger = null) : base(logger) { }
+		internal const string Origin = "System.Configuration.ConfigurationManager.AppSettings";
+
+		public FullFrameworkConfigReader(IApmLogger logger = null) : base(logger, null) { }
 
 		protected override string DiscoverServiceName() => DiscoverFullFrameworkServiceName() ?? base.DiscoverServiceName();
+
+		protected override ConfigurationKeyValue Read(string key, string fallBackEnvVarName)
+		{
+			var value = ConfigurationManager.AppSettings[key];
+			if (!string.IsNullOrWhiteSpace(value)) return Kv(key, value, Origin);
+
+			return Kv(fallBackEnvVarName, System.Environment.GetEnvironmentVariable(fallBackEnvVarName)?.Trim(), EnvironmentConfigurationReader.Origin);
+		}
 
 		private string DiscoverFullFrameworkServiceName()
 		{

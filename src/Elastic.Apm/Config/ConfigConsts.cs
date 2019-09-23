@@ -50,6 +50,27 @@ namespace Elastic.Apm.Config
 			public const string TransactionSampleRate = Prefix + "TRANSACTION_SAMPLE_RATE";
 		}
 
+		public static class KeyNames
+		{
+			public const string CaptureBody = "ElasticApm:CaptureBody";
+			public const string CaptureBodyContentTypes = "ElasticApm:CaptureBodyContentTypes";
+			public const string CaptureHeaders = "ElasticApm:CaptureHeaders";
+			public const string Environment = "ElasticApm:Environment";
+			public const string FlushInterval = "ElasticApm:FlushInterval";
+			public const string LogLevel = "ElasticApm:LogLevel";
+			public const string LogLevelSubKey = "LogLevel";
+			public const string MaxBatchEventCount = "ElasticApm:MaxBatchEventCount";
+			public const string MaxQueueEventCount = "ElasticApm:MaxQueueEventCount";
+			public const string MetricsInterval = "ElasticApm:MetricsInterval";
+			public const string SecretToken = "ElasticApm:SecretToken";
+			public const string ServerUrls = "ElasticApm:ServerUrls";
+			public const string ServiceName = "ElasticApm:ServiceName";
+			public const string ServiceVersion = "ElasticApm:ServiceVersion";
+			public const string SpanFramesMinDuration = "ElasticApm:SpanFramesMinDuration";
+			public const string StackTraceLimit = "ElasticApm:StackTraceLimit";
+			public const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
+		}
+
 		public static class SupportedValues
 		{
 			public const string CaptureBodyAll = "all";
