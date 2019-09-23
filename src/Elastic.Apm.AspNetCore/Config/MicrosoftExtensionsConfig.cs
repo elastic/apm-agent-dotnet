@@ -42,7 +42,7 @@ namespace Elastic.Apm.AspNetCore.Config
 			var value = _configuration[key];
 			if (!string.IsNullOrWhiteSpace(value)) return Kv(key, value, Origin);
 
-			var secondary = Kv(fallBackEnvVarName, _configuration[fallBackEnvVarName], EnvironmentConfigurationReader.Origin);
+			var secondary = Kv(fallBackEnvVarName, ReadEnvVarValue(fallBackEnvVarName), EnvironmentConfigurationReader.Origin);
 			return secondary;
 		}
 

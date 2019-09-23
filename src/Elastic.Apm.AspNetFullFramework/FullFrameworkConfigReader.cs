@@ -21,7 +21,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			var value = ConfigurationManager.AppSettings[key];
 			if (!string.IsNullOrWhiteSpace(value)) return Kv(key, value, Origin);
 
-			return Kv(fallBackEnvVarName, System.Environment.GetEnvironmentVariable(fallBackEnvVarName)?.Trim(), EnvironmentConfigurationReader.Origin);
+			return Kv(fallBackEnvVarName, ReadEnvVarValue(fallBackEnvVarName), EnvironmentConfigurationReader.Origin);
 		}
 
 		private string DiscoverFullFrameworkServiceName()

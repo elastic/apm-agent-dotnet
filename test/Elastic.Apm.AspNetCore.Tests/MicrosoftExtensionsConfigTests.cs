@@ -9,6 +9,7 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
+using FluentAssertions.Extensions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using SampleAspNetCoreApp;
@@ -141,6 +142,21 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var serverUrl = config.ServerUrls.FirstOrDefault();
 			serverUrl.Should().NotBeNull();
 			testLogger.Lines.Should().NotBeEmpty();
+		}
+
+		[Fact]
+		public void MicrosoftExtensionsConfig_falls_back_on_env_vars()
+		{
+			var configBeforeEnvVarSet = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
+				new NoopLogger(), "test");
+			configBeforeEnvVarSet.FlushInterval.Should().Be(ConfigConsts.DefaultValues.FlushIntervalInMilliseconds.Milliseconds());
+
+			var flushIntervalVal = 98.Seconds();
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.FlushInterval, (int)flushIntervalVal.TotalSeconds + "s");
+
+			var configAfterEnvVarSet = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
+				new NoopLogger(), "test");
+			configAfterEnvVarSet.FlushInterval.Should().Be(flushIntervalVal);
 		}
 
 		internal static IConfiguration GetConfig(string path)
