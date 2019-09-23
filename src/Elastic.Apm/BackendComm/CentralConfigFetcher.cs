@@ -240,9 +240,10 @@ namespace Elastic.Apm.BackendComm
 		{
 //			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before await Task.Delay(TimeSpan.FromSeconds(5), _cancellationTokenSource.Token) ...";
 //			await Task.Delay(TimeSpan.FromSeconds(5), _cancellationTokenSource.Token);
-			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before await await Task.Yield() ...";
-			await Task.Yield();
-			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After await await Task.Yield() ...";
+
+//			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before await await Task.Yield() ...";
+//			await Task.Yield();
+//			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After await await Task.Yield() ...";
 
 			_logger.Trace()?.Log("Making HTTP request to APM Server... Request: {RequestMessage}.", requestMessage);
 
@@ -251,10 +252,13 @@ namespace Elastic.Apm.BackendComm
 			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before httpRequestTask = _httpClient.SendAsync ..."
 				+ $" IsCancellationRequested: {_cancellationTokenSource.Token.IsCancellationRequested}";
 			var httpRequestTask = _httpClient.SendAsync(requestMessage, _cancellationTokenSource.Token);
-			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before httpResponse = await httpRequestTask ..."
+			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before httpResponse = await _agentTimer.AwaitOrTimeout(httpRequestTask ..."
 				+ $" IsCancellationRequested: {_cancellationTokenSource.Token.IsCancellationRequested}";
-			var httpResponse = await httpRequestTask;
-			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After httpResponse = await httpRequestTask ...";
+
+			var httpResponse =
+				await _agentTimer.AwaitOrTimeout(httpRequestTask, _agentTimer.Now + ReadResponseBodyTimeout, _cancellationTokenSource.Token);
+
+			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After httpResponse = await _agentTimer.AwaitOrTimeout(httpRequestTask ...";
 
 			// ReSharper disable once InvertIf
 			if (httpResponse == null)
