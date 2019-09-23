@@ -16,7 +16,7 @@ namespace Elastic.Apm.Tests.Mocks
 		[Fact]
 		internal void Now_without_FastForward_returns_the_same_instant()
 		{
-			var agentTimer = new MockAgentTimer(DbgUtils.GetCurrentMethodName());
+			var agentTimer = new MockAgentTimer(DbgUtils.CurrentMethodName());
 			var i1 = agentTimer.Now;
 			var i1B = agentTimer.Now;
 			i1.Equals(i1B).Should().BeTrue();
@@ -44,7 +44,7 @@ namespace Elastic.Apm.Tests.Mocks
 		[Fact]
 		public void Delay_simple_test()
 		{
-			var agentTimer = new MockAgentTimer(DbgUtils.GetCurrentMethodName());
+			var agentTimer = new MockAgentTimer(DbgUtils.CurrentMethodName());
 
 			var delayTask = agentTimer.Delay(agentTimer.Now + 2.Days());
 			delayTask.IsCompleted.Should().BeFalse();
@@ -57,7 +57,7 @@ namespace Elastic.Apm.Tests.Mocks
 		[Fact]
 		public void Delay_fast_forward_past_trigger_time()
 		{
-			var agentTimer = new MockAgentTimer(DbgUtils.GetCurrentMethodName());
+			var agentTimer = new MockAgentTimer(DbgUtils.CurrentMethodName());
 
 			var delayTask = agentTimer.Delay(agentTimer.Now + 2.Minutes());
 			delayTask.IsCompleted.Should().BeFalse();
@@ -68,7 +68,7 @@ namespace Elastic.Apm.Tests.Mocks
 		[Fact]
 		public void calling_FastForward_while_one_already_in_progress_throws()
 		{
-			var agentTimer = new MockAgentTimer(DbgUtils.GetCurrentMethodName());
+			var agentTimer = new MockAgentTimer(DbgUtils.CurrentMethodName());
 
 			var reachedBeforeInnerFastForward = false;
 			var reachedAfterInnerFastForward = false;
@@ -95,7 +95,7 @@ namespace Elastic.Apm.Tests.Mocks
 		[Fact]
 		public void Cancel_Delay()
 		{
-			var agentTimer = new MockAgentTimer(DbgUtils.GetCurrentMethodName());
+			var agentTimer = new MockAgentTimer(DbgUtils.CurrentMethodName());
 			using (var cancellationTokenSource = new CancellationTokenSource())
 			{
 				var continuationCalled = false;
@@ -120,7 +120,7 @@ namespace Elastic.Apm.Tests.Mocks
 		[Fact]
 		public void Cancel_already_triggered_Delay()
 		{
-			var agentTimer = new MockAgentTimer(DbgUtils.GetCurrentMethodName());
+			var agentTimer = new MockAgentTimer(DbgUtils.CurrentMethodName());
 			using (var cancellationTokenSource = new CancellationTokenSource())
 			{
 				var continuationCalled = false;
@@ -143,7 +143,7 @@ namespace Elastic.Apm.Tests.Mocks
 		[Fact]
 		public void Two_Delays_longer_first()
 		{
-			var agentTimer = new MockAgentTimer(DbgUtils.GetCurrentMethodName());
+			var agentTimer = new MockAgentTimer(DbgUtils.CurrentMethodName());
 
 			var t1 = 7.Seconds();
 			var t2 = 6.Seconds();
@@ -164,7 +164,7 @@ namespace Elastic.Apm.Tests.Mocks
 		[Fact]
 		public void Add_Delay_in_continuation()
 		{
-			var agentTimer = new MockAgentTimer(DbgUtils.GetCurrentMethodName());
+			var agentTimer = new MockAgentTimer(DbgUtils.CurrentMethodName());
 
 			var t1 = 7.Minutes();
 			var t2 = 7.Seconds();
@@ -198,7 +198,7 @@ namespace Elastic.Apm.Tests.Mocks
 		[Fact]
 		public void Delay_with_relativeToInstant_in_the_past()
 		{
-			var agentTimer = new MockAgentTimer(DbgUtils.GetCurrentMethodName());
+			var agentTimer = new MockAgentTimer(DbgUtils.CurrentMethodName());
 
 			var t1 = 7.Seconds();
 			var t2 = 11.Seconds();
@@ -221,7 +221,7 @@ namespace Elastic.Apm.Tests.Mocks
 		[Fact]
 		public void Delay_with_target_time_is_already_in_the_past()
 		{
-			var agentTimer = new MockAgentTimer(DbgUtils.GetCurrentMethodName());
+			var agentTimer = new MockAgentTimer(DbgUtils.CurrentMethodName());
 
 			var timeToWait = 3.Seconds();
 

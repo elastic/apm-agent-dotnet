@@ -43,8 +43,7 @@ namespace Elastic.Apm.Logging
 					System.Diagnostics.Trace.WriteLine("Elastic APM .NET Agent: [CRITICAL] Exception thrown by logging implementation."
 						+ $" Log message: `{message.AsNullableToString()}'."
 						+ $" args.Length: {args.Length}."
-						+ $" Current thread: name: `{Thread.CurrentThread.Name.AsNullableToString()}',"
-						+ $" managed ID: {Thread.CurrentThread.ManagedThreadId}."
+						+ $" Current thread: {DbgUtils.CurrentThreadDesc}"
 						+ newLine
 						+ $"+-> Exception (exception): {exception.GetType().FullName}: {exception.Message}{newLine}{exception.StackTrace}"
 						+ (e != null

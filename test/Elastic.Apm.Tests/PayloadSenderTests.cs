@@ -252,7 +252,7 @@ namespace Elastic.Apm.Tests
 		{
 			foreach (var expectedNumberOfBatches in new[] { 1, 2, 3, 10 })
 			{
-				LoggerBase.Context[ThisClassName + "." + DbgUtils.GetCurrentMethodName()] =
+				LoggerBase.Context[DbgUtils.CurrentDbgContext(ThisClassName)] =
 					$"Starting sub-test... args: {args}, expectedNumberOfBatches: {expectedNumberOfBatches}";
 				_logger.Debug()?.Log("Starting sub-test... args: {args}", args);
 
@@ -290,8 +290,8 @@ namespace Elastic.Apm.Tests
 						.Be(expectedNumberOfBatchesSentTcs.Task
 							, $"because numberOfEventsEnqueuedSuccessfully: {numberOfEventsEnqueuedSuccessfully}");
 
-					LoggerBase.Context[ThisClassName + "." + DbgUtils.GetCurrentMethodName()] =
-						$"Finished sub-test - exiting using block (calling Dispose)... args: {args}, expectedNumberOfBatches: {expectedNumberOfBatches}";
+					LoggerBase.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Finished sub-test - exiting using block (calling Dispose)..."
+						+ $" args: {args}, expectedNumberOfBatches: {expectedNumberOfBatches}";
 				}
 			}
 		}
@@ -332,15 +332,13 @@ namespace Elastic.Apm.Tests
 			{
 				for (var eventIndex = 1; eventIndex <= numberOfEventsToSend; ++eventIndex)
 				{
-					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-						$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: "
-						+ $"Starting loop iteration... eventIndex: {eventIndex}, numberOfEventsToSend: {numberOfEventsToSend}, args: {args}";
+					_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] =
+						$"Starting loop iteration... eventIndex: {eventIndex}, numberOfEventsToSend: {numberOfEventsToSend}, args: {args}";
 					EnqueueDummyEvent(payloadSender, agent, eventIndex).Should().BeTrue($"eventIndex: {eventIndex}, args: {args}");
 					batchSentBarrier.SignalAndWait(barrierTimeout).Should().BeTrue($"eventIndex: {eventIndex}, args: {args}");
 				}
-				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-					$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: "
-					+ $"Loop finished - exiting using block (calling Dispose)... numberOfEventsToSend: {numberOfEventsToSend}, args: {args}";
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] =
+					$"Loop finished - exiting using block (calling Dispose)... numberOfEventsToSend: {numberOfEventsToSend}, args: {args}";
 			}
 		}
 

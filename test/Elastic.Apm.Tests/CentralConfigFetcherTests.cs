@@ -5,10 +5,12 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
+using FluentAssertions.Extensions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -26,15 +28,18 @@ namespace Elastic.Apm.Tests
 		public void Dispose_stops_the_thread()
 		{
 			CentralConfigFetcher lastCentralConfigFetcher;
-			using (var agent = new ApmAgent(new AgentComponents()))
+			using (var agent = new ApmAgent(new AgentComponents(LoggerBase)))
 			{
 				lastCentralConfigFetcher = (CentralConfigFetcher)agent.CentralConfigFetcher;
 				lastCentralConfigFetcher.IsRunning.Should().BeTrue();
+
+				Thread.Sleep(1.Minute());
 			}
 			lastCentralConfigFetcher.IsRunning.Should().BeFalse();
 		}
 
 		[Theory]
+		[InlineData(1)]
 		[InlineData(5)]
 		[InlineData(9)]
 		[InlineData(10)]
@@ -43,26 +48,27 @@ namespace Elastic.Apm.Tests
 		[InlineData(40)]
 		public void Create_many_concurrent_instances(int numberOfAgentInstances)
 		{
+//			LoggerBase.Level = LogLevel.Trace;
+
 			var agents = new ApmAgent[numberOfAgentInstances];
 			numberOfAgentInstances.Repeat(i =>
 			{
-				agents[i] = new ApmAgent(new AgentComponents());
+				agents[i] = new ApmAgent(new AgentComponents(dbgName: TestDisplayName, logger: LoggerBase));
 				((CentralConfigFetcher)agents[i].CentralConfigFetcher).IsRunning.Should().BeTrue();
 				((PayloadSenderV2)agents[i].PayloadSender).IsRunning.Should().BeTrue();
 			});
 
+			Thread.Sleep(10.Seconds());
+
 			numberOfAgentInstances.Repeat(i =>
 			{
-				LoggerBase.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Before agents[i].Dispose()."
-					+ $" numberOfAgentInstances: {numberOfAgentInstances}. i: {i}.";
+				LoggerBase.Context[$"Thread: {DbgUtils.CurrentThreadDesc}: {TestDisplayName}"] = $"Before agents[i].Dispose(). i: {i}.";
 				agents[i].Dispose();
 				((CentralConfigFetcher)agents[i].CentralConfigFetcher).IsRunning.Should().BeFalse();
 				((PayloadSenderV2)agents[i].PayloadSender).IsRunning.Should().BeFalse();
 			});
 
-			LoggerBase.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-				+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Done";
+			LoggerBase.Context[$"Thread: {DbgUtils.CurrentThreadDesc}: {TestDisplayName}"] = "Done";
 		}
 
 		[Theory]
@@ -83,42 +89,38 @@ namespace Elastic.Apm.Tests
 
 			numberOfInstances.Repeat(i =>
 			{
-				LoggerBase.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $": {TestDisplayName}"] = $"Before httpClients[i].GetAsync. i: {i}.";
+				LoggerBase.Context[$"Thread: {DbgUtils.CurrentThreadDesc}: {TestDisplayName}"] = $"Before httpClients[i].GetAsync. i: {i}.";
 				try
 				{
 					getRequests[i] = httpClients[i].GetAsync("/");
-					LoggerBase.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
+					LoggerBase.Context[$"Thread: {DbgUtils.CurrentThreadDesc}"
 						+ $": {TestDisplayName}"] = $"httpClients[i].GetAsync: {getRequests[i].Status}. i: {i}.";
 				}
 				catch (Exception ex)
 				{
-					LoggerBase.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-						+ $": {TestDisplayName}"] = $"httpClients[i].GetAsync: {ex.GetType().FullName}: {ex.Message}. i: {i}.";
+					LoggerBase.Context[$"Thread: {DbgUtils.CurrentThreadDesc}: {TestDisplayName}"] =
+						$"httpClients[i].GetAsync: {ex.GetType().FullName}: {ex.Message}. i: {i}.";
 				}
 			});
 
-			LoggerBase.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-				+ $": {TestDisplayName}"] = $"Before await Task.WhenAll(getRequests)";
+			LoggerBase.Context[$"Thread: {DbgUtils.CurrentThreadDesc}: {TestDisplayName}"] = "Before await Task.WhenAll(getRequests)";
 			try
 			{
 				await Task.WhenAll(getRequests);
 			}
 			catch (Exception ex)
 			{
-				LoggerBase.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $": {TestDisplayName}"] = $"await Task.WhenAll(getRequests): {ex.GetType().FullName}: {ex.Message}";
+				LoggerBase.Context[$"Thread: {DbgUtils.CurrentThreadDesc}: {TestDisplayName}"] =
+					$"await Task.WhenAll(getRequests): {ex.GetType().FullName}: {ex.Message}";
 			}
 
 			numberOfInstances.Repeat(i =>
 			{
-				LoggerBase.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $": {TestDisplayName}"] = "Before httpClients[i].Dispose(). i: {i}.";
+				LoggerBase.Context[$"Thread: {DbgUtils.CurrentThreadDesc}: {TestDisplayName}"] = $"Before httpClients[i].Dispose(). i: {i}.";
 				httpClients[i].Dispose();
 			});
 
-			LoggerBase.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-				+ $": {TestDisplayName}"] = "Done";
+			LoggerBase.Context[$"Thread: {DbgUtils.CurrentThreadDesc}: {TestDisplayName}"] = "Done";
 		}
 	}
 }

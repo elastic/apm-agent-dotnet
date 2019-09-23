@@ -156,6 +156,8 @@ namespace Elastic.Apm.Metrics
 
 		public void Dispose()
 		{
+			if (MetricsProviders == null) return;
+
 			_timer?.Stop();
 			_timer?.Dispose();
 

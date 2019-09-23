@@ -42,6 +42,8 @@ namespace Elastic.Apm.Report
 
 		private readonly PayloadItemSerializer _payloadItemSerializer = new PayloadItemSerializer();
 		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler;
+		private readonly ManualResetEventSlim _loopStarted = new ManualResetEventSlim();
+		private readonly ManualResetEventSlim _loopCompleted = new ManualResetEventSlim();
 
 		public PayloadSenderV2(IApmLogger logger, IConfigSnapshot config, Service service, Api.System system,
 			HttpMessageHandler httpMessageHandler = null, [CallerMemberName] string dbgName = null
@@ -71,15 +73,21 @@ namespace Elastic.Apm.Report
 			_eventQueue = new BatchBlock<object>(config.MaxBatchEventCount);
 
 			_cancellationTokenSource = new CancellationTokenSource();
-			_singleThreadTaskScheduler = new SingleThreadTaskScheduler("ElasticApmPayloadSender", logger, _cancellationTokenSource.Token);
+			_singleThreadTaskScheduler = new SingleThreadTaskScheduler("ElasticApmPayloadSender", logger);
 
 			_httpClient = BackendCommUtils.BuildHttpClient(logger, config, service, ThisClassName, httpMessageHandler);
 
 #pragma warning disable 4014
-			Task.Factory.StartNew(RunWaitForDataSendItToServerLoop, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning,
-				_singleThreadTaskScheduler);
+			// We don't pass any CancellationToken on purpose because a few lines later we wait for loop to start
+			// so we should never cancel it before it starts
+			Task.Factory.StartNew(RunWaitForDataSendItToServerLoop, CancellationToken.None, TaskCreationOptions.LongRunning
+				, _singleThreadTaskScheduler);
 #pragma warning restore 4014
 			_logger.Debug()?.Log("Enqueued {MethodName} with internal task scheduler", nameof(RunWaitForDataSendItToServerLoop));
+
+			_logger.Debug()?.Log("Waiting for loop to start...");
+			_loopStarted.Wait();
+			_logger.Debug()?.Log("Loop started");
 		}
 
 		private long _eventQueueCount;
@@ -142,20 +150,24 @@ namespace Elastic.Apm.Report
 		public void Dispose() =>
 			_disposableHelper.DoOnce(_logger, ThisClassName, () =>
 			{
-				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Before Task.Run(() => { _cancellationTokenSource.Cancel(); });";
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before Task.Run(() => { _cancellationTokenSource.Cancel(); });";
 				_logger.Debug()?.Log("Signaling _cancellationTokenSource");
 				// ReSharper disable once AccessToDisposedClosure
 				Task.Run(() =>
 				{
-					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Before _cancellationTokenSource.Cancel();";
+					_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before _cancellationTokenSource.Cancel();";
+
 					_cancellationTokenSource.Cancel();
-					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "After _cancellationTokenSource.Cancel();";
+
+					_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After _cancellationTokenSource.Cancel();";
 				});
-				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "After Task.Run(() => { _cancellationTokenSource.Cancel(); });";
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After Task.Run(() => { _cancellationTokenSource.Cancel(); });";
+
+
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before _loopCompleted.Wait()";
+				_logger.Debug()?.Log("Waiting for loop to exit...");
+				_loopCompleted.Wait();
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After _fetchingLoopCompleted.Wait()";
 
 				_singleThreadTaskScheduler.Dispose();
 
@@ -167,8 +179,7 @@ namespace Elastic.Apm.Report
 
 				_logger.Debug()?.Log("Done");
 
-				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Exiting...";
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Exiting...";
 			});
 
 		private void ThrowIfDisposed()
@@ -178,18 +189,20 @@ namespace Elastic.Apm.Report
 
 		private async Task RunWaitForDataSendItToServerLoop()
 		{
-			_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-				$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Entering...";
+			_loopStarted.Set();
+
+			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Entering...";
 
 			await ExceptionUtils.DoSwallowingExceptions(_logger, async () =>
 				{
 					while (true) await ProcessQueueItems(await ReceiveBatchAsync());
 					// ReSharper disable once FunctionNeverReturns
 				}
-				, dbgCallerMethodName: ThisClassName + "." + DbgUtils.GetCurrentMethodName());
+				, dbgCallerMethodName: ThisClassName + "." + DbgUtils.CurrentMethodName());
 
-			_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-				$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Exiting...";
+			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Exiting...";
+
+			_loopCompleted.Set();
 		}
 
 		private async Task<object[]> ReceiveBatchAsync()
@@ -203,16 +216,15 @@ namespace Elastic.Apm.Report
 				_logger.Trace()?.Log("Waiting for data to send... FlushInterval: {FlushInterval}", _flushInterval.ToHms());
 				while (true)
 				{
-					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-						$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Calling TryAwaitOrTimeout ... _flushInterval: {_flushInterval.ToHms()}";
+					_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] =
+						$"Calling TryAwaitOrTimeout ... _flushInterval: {_flushInterval.ToHms()}";
 					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, _cancellationTokenSource.Token)) break;
 
 					_eventQueue.TriggerBatch();
 				}
 			}
 
-			_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-				$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Calling await receiveAsyncTask ...";
+			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Calling await receiveAsyncTask ...";
 			var eventBatchToSend = await receiveAsyncTask;
 			var newEventQueueCount = Interlocked.Add(ref _eventQueueCount, -eventBatchToSend.Length);
 			_logger.Trace()

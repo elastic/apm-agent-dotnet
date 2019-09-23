@@ -81,18 +81,15 @@ namespace Elastic.Apm
 
 		public void Dispose()
 		{
-			Components.Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-				+$": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Calling Disposables?.Dispose() ...";
+			Logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Calling Disposables?.Dispose() ...";
 
 			Disposables?.Dispose();
 
-			Components.Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-				+$": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Calling Components?.Dispose() ...";
+			Logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Calling Components?.Dispose() ...";
 
 			Components?.Dispose();
 
-			Components.Logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-				+$": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Exiting ...";
+			Logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Exiting ...";
 		}
 	}
 

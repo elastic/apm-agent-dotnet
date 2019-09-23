@@ -80,8 +80,9 @@ namespace Elastic.Apm.Tests.TestHelpers
 				logger.Scoped(ThisClassName)
 					.Info()
 					?.Log("Test " + (isStart ? "started" : "finished")
-						+ ". Test display name: `{UnitTestDisplayName}'. Testing configuration: {TestingConfig}"
-						, TestDisplayName, _config);
+						+ ". Test display name: `{UnitTestDisplayName}'. Current thread: {ThreadDesc}."
+						+ " Testing configuration: {TestingConfig}"
+						, TestDisplayName, DbgUtils.CurrentThreadDesc, _config);
 			});
 
 		private void LogStatusInfo(Action<IApmLogger> loggingAction)
@@ -153,9 +154,9 @@ namespace Elastic.Apm.Tests.TestHelpers
 							logger.Scoped(ThisClassName)
 								.Warning()
 								?.Log("Long running test detected. Time elapsed since test started: {TestDuration}."
-									+ " Test display name: `{UnitTestDisplayName}'."
+									+ " Test display name: `{UnitTestDisplayName}'. Current thread: {ThreadDesc}."
 									+ Environment.NewLine + "+-> Logger context:{LoggerContext}"
-									, _stopwatch.Elapsed.ToHmsInSeconds(), _owner.TestDisplayName
+									, _stopwatch.Elapsed.ToHmsInSeconds(), _owner.TestDisplayName, DbgUtils.CurrentThreadDesc
 									, FormatLoggerContext(_owner.LoggerBase.Context.Copy()));
 						});
 					}

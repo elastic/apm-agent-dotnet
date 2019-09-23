@@ -34,6 +34,8 @@ namespace Elastic.Apm.BackendComm
 		private readonly IConfigSnapshot _initialSnapshot;
 		private readonly IApmLogger _logger;
 		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler;
+		private readonly ManualResetEventSlim _loopStarted = new ManualResetEventSlim();
+		private readonly ManualResetEventSlim _loopCompleted = new ManualResetEventSlim();
 
 		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, Service service, HttpMessageHandler httpMessageHandler = null
 			, IAgentTimer agentTimer = null, [CallerMemberName] string dbgName = null
@@ -59,7 +61,7 @@ namespace Elastic.Apm.BackendComm
 			_agentTimer = agentTimer ?? new AgentTimer();
 
 			_cancellationTokenSource = new CancellationTokenSource();
-			_singleThreadTaskScheduler = new SingleThreadTaskScheduler($"ElasticApm{ThisClassName}", logger, _cancellationTokenSource.Token);
+			_singleThreadTaskScheduler = new SingleThreadTaskScheduler($"ElasticApm{ThisClassName}", logger);
 
 			_getConfigUrlPath = BackendCommUtils.ApmServerEndpoints.Config(service);
 			_logger.Debug()
@@ -69,43 +71,50 @@ namespace Elastic.Apm.BackendComm
 			_httpClient = BackendCommUtils.BuildHttpClient(logger, _initialSnapshot, service, ThisClassName, httpMessageHandler);
 
 #pragma warning disable 4014
-			Task.Factory.StartNew(RunFetchingLoop, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
-//			_fetchingLoopTask = Task.Run(RunFetchingLoop, _cancellationTokenSource.Token);
+			// We don't pass any CancellationToken on purpose because a few lines later we wait for loop to start
+			// so we should never cancel it before it starts
+			Task.Factory.StartNew(RunFetchingLoop, CancellationToken.None, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
 #pragma warning restore 4014
 			_logger.Debug()?.Log("Enqueued {MethodName} with internal task scheduler", nameof(RunFetchingLoop));
+
+			_logger.Debug()?.Log("Waiting for loop to start...");
+			_loopStarted.Wait();
+			_logger.Debug()?.Log("Loop started");
 		}
 
 		internal bool IsRunning => _singleThreadTaskScheduler.IsRunning;
 
 		public void Dispose()
 		{
-			_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Entered";
+			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Entered";
 
 			if (_cancellationTokenSource == null)
 			{
 				_logger.Debug()?.Log("Central configuration feature is disabled - nothing to dispose");
-				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Exiting (Central configuration feature is disabled) ...";
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Exiting (Central configuration feature is disabled) ...";
 				return;
 			}
 
 			_disposableHelper.DoOnce(_logger, ThisClassName, () =>
 			{
-				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Before Task.Run(() => { _cancellationTokenSource.Cancel(); });";
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before Task.Run(() => { _cancellationTokenSource.Cancel(); });";
 				_logger.Debug()?.Log("Signaling _cancellationTokenSource");
 				// ReSharper disable once AccessToDisposedClosure
 				Task.Run(() =>
 				{
-					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Before _cancellationTokenSource.Cancel();";
+					_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before _cancellationTokenSource.Cancel();";
+
 					_cancellationTokenSource.Cancel();
-					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "After _cancellationTokenSource.Cancel();";
+
+					_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After _cancellationTokenSource.Cancel();";
 				});
-				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "After Task.Run(() => { _cancellationTokenSource.Cancel(); });";
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After Task.Run(() => { _cancellationTokenSource.Cancel(); });";
+
+
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before _loopCompleted.Wait()";
+				_logger.Debug()?.Log("Waiting for loop to exit...");
+				_loopCompleted.Wait();
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After _fetchingLoopCompleted.Wait()";
 
 				_singleThreadTaskScheduler.Dispose();
 
@@ -117,21 +126,22 @@ namespace Elastic.Apm.BackendComm
 
 				_logger.Debug()?.Log("Done");
 
-				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Exiting...";
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Exiting...";
 			});
 		}
 
 		private async Task RunFetchingLoop()
 		{
-			_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-				$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Entering...";
+			_loopStarted.Set();
 
-			await ExceptionUtils.DoSwallowingExceptions(_logger, RunFetchingLoopImpl,
-				dbgCallerMethodName: ThisClassName + "." + DbgUtils.GetCurrentMethodName());
+			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Entering...";
 
-			_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"] =
-				$"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}: Exiting...";
+			await ExceptionUtils.DoSwallowingExceptions(_logger, RunFetchingLoopImpl
+				, dbgCallerMethodName: ThisClassName + "." + DbgUtils.CurrentMethodName());
+
+			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Calling _fetchingLoopCompleted.Set() ...";
+
+			_loopCompleted.Set();
 		}
 
 		private async Task RunFetchingLoopImpl()
@@ -151,14 +161,12 @@ namespace Elastic.Apm.BackendComm
 				{
 					httpRequest = BuildHttpRequest(eTag);
 
-					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Making HTTP request to APM Server..."
+					_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Making HTTP request to APM Server..."
 						+ $" dbgIterationsCount: {dbgIterationsCount}";
 
 					httpResponse = await FetchConfigHttpResponseAsync(httpRequest);
 
-					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Reading HTTP response body..."
+					_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Reading HTTP response body..."
 						+ $" dbgIterationsCount: {dbgIterationsCount}. httpResponse: {httpResponse}";
 
 					// System.Net.Http.HttpContent.ReadAsStringAsync doesn't have an overload accepting CancellationToken
@@ -180,8 +188,7 @@ namespace Elastic.Apm.BackendComm
 				}
 				catch (Exception ex)
 				{
-					_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = $"catch (Exception ex): {ex.GetType().FullName}: {ex.Message}"
+					_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = $"catch (Exception ex): {ex.GetType().FullName}: {ex.Message}"
 						+ $" dbgIterationsCount: {dbgIterationsCount}";
 
 					var severity = LogLevel.Error;
@@ -215,9 +222,8 @@ namespace Elastic.Apm.BackendComm
 					httpResponse?.Dispose();
 				}
 
-				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Waiting {waitInfo.Interval.ToHms()}..."
-					+ $" {waitInfo.Reason}. dbgIterationsCount: {dbgIterationsCount}";
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = $"Waiting {waitInfo.Interval.ToHms()}..."
+					+ $" {waitInfo.Reason}. dbgIterationsCount: {dbgIterationsCount}. Current thread: {DbgUtils.CurrentThreadDesc}";
 				_logger.IfLevel(waitingLogSeverity)?.Log("Waiting {WaitInterval}... {WaitReason}. dbgIterationsCount: {dbgIterationsCount}."
 					, waitInfo.Interval.ToHms(), waitInfo.Reason, dbgIterationsCount);
 				await _agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, _cancellationTokenSource.Token);

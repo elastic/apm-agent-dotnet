@@ -14,8 +14,6 @@ namespace Elastic.Apm.Helpers
 
 		private readonly ThreadLocal<bool> _isExecuting = new ThreadLocal<bool>();
 
-		private readonly CancellationToken _cancellationToken;
-
 		private readonly IApmLogger _logger;
 
 		private readonly string _threadName;
@@ -24,11 +22,10 @@ namespace Elastic.Apm.Helpers
 
 		private readonly DisposableHelper _disposableHelper = new DisposableHelper();
 
-		public SingleThreadTaskScheduler(string threadName, IApmLogger logger, CancellationToken cancellationToken)
+		public SingleThreadTaskScheduler(string threadName, IApmLogger logger)
 		{
 			_threadName = threadName;
 			_logger = logger?.Scoped(DbgName);
-			_cancellationToken = cancellationToken;
 			_taskQueue = new BlockingCollection<Task>();
 			_thread = new Thread(ThreadMain) { Name = threadName, IsBackground = true };
 			_thread.Start();
@@ -44,9 +41,9 @@ namespace Elastic.Apm.Helpers
 
 			ExceptionUtils.DoSwallowingExceptions(_logger, () =>
 				{
-					foreach (var task in _taskQueue.GetConsumingEnumerable(_cancellationToken)) TryExecuteTask(task);
+					foreach (var task in _taskQueue.GetConsumingEnumerable()) TryExecuteTask(task);
 				}
-				, dbgCallerMethodName: $"`{Thread.CurrentThread.Name}' (ManagedThreadId: {Thread.CurrentThread.ManagedThreadId}) thread entry method");
+				, dbgCallerMethodName: $"{DbgUtils.CurrentThreadDesc} thread entry method");
 
 			_isExecuting.Value = false;
 		}
@@ -61,7 +58,7 @@ namespace Elastic.Apm.Helpers
 
 		/// <summary>Queues a Task to be executed by this scheduler.</summary>
 		/// <param name="task">The task to be executed.</param>
-		protected override void QueueTask(Task task) => _taskQueue.Add(task, _cancellationToken);
+		protected override void QueueTask(Task task) => _taskQueue.Add(task);
 
 		/// <summary>Determines whether a Task may be inlined.</summary>
 		/// <param name="task">The task to be executed.</param>
@@ -86,15 +83,15 @@ namespace Elastic.Apm.Helpers
 				// Indicate that no new tasks will be coming in
 				_taskQueue.CompleteAdding();
 
-				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Before _thread.Join()... _thread.Name: `{_thread.Name}'.";
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before _thread.Join()... _thread.Name: `{_thread.Name}'."
+					+ $"DbgCurrentState: {DbgCurrentState()}";
 
-				_logger.Debug()?.Log("Waiting for thread `{ThreadName}' to exit...", _thread.Name);
+				_logger.Debug()?.Log("Waiting for thread `{ThreadName}' to exit... DbgCurrentState: {DbgCurrentState}", _thread.Name
+					, DbgCurrentState());
 
 				_thread.Join();
 
-				_logger.Context[$"Thread: `{Thread.CurrentThread.Name}' (Managed ID: {Thread.CurrentThread.ManagedThreadId})"
-					+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Before _taskQueue.Dispose()... _thread.Name: `{_thread.Name}'.";
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before _taskQueue.Dispose()... _thread.Name: `{_thread.Name}'.";
 
 				_logger.Debug()?.Log("Disposing _taskQueue...");
 
@@ -102,5 +99,16 @@ namespace Elastic.Apm.Helpers
 
 				_logger.Debug()?.Log("Done");
 			});
+
+		private string DbgCurrentState() => new ToStringBuilder("")
+		{
+			{ "_thread.IsAlive", _thread.IsAlive },
+			{ "_taskQueue", new ToStringBuilder("")
+			{
+				{ "IsCompleted", _taskQueue.IsCompleted },
+				{ "IsAddingCompleted", _taskQueue.IsAddingCompleted },
+				{ "Count", _taskQueue.Count }
+			}.ToString() }
+		}.ToString();
 	}
 }

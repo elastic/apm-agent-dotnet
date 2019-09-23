@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Logging;
 
@@ -42,19 +43,22 @@ namespace Elastic.Apm.Helpers
 			var logger = loggerArg.Scoped($"{ThisClassName}.{nameof(DoSwallowingExceptions)}");
 			try
 			{
-				logger.Debug()?.Log(MethodStartingMsgFmt, dbgCallerMethodName);
+				logger.Debug()?.Log(MethodStartingMsgFmt + ". Current thread: {ThreadDesc}", dbgCallerMethodName, DbgUtils.CurrentThreadDesc);
 				await asyncAction();
-				logger.Debug()?.Log(MethodExitingNormallyMsgFmt, dbgCallerMethodName);
+				logger.Debug()?.Log(MethodExitingNormallyMsgFmt + ". Current thread: {ThreadDesc}", dbgCallerMethodName
+					, DbgUtils.CurrentThreadDesc);
 			}
 			catch (OperationCanceledException ex)
 			{
-				logger.Debug()?.LogException(ex, MethodExitingCancelledMsgFmt, dbgCallerMethodName);
+				logger.Debug()?.LogException(ex, MethodExitingCancelledMsgFmt + ". Current thread: {ThreadDesc}", dbgCallerMethodName
+					, DbgUtils.CurrentThreadDesc);
 
 				if (! shouldSwallowCancellation) throw;
 			}
 			catch (Exception ex)
 			{
-				logger.Error()?.LogException(ex, MethodExitingExceptionMsgFmt, dbgCallerMethodName);
+				logger.Error()?.LogException(ex, MethodExitingExceptionMsgFmt + ". Current thread: {ThreadDesc}", dbgCallerMethodName
+					, DbgUtils.CurrentThreadDesc);
 			}
 		}
 

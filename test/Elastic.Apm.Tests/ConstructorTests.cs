@@ -12,8 +12,6 @@ namespace Elastic.Apm.Tests
 {
 	public class ConstructorTests : LoggingTestBase
 	{
-		private const string ThisClassName = nameof(ConstructorTests);
-
 		public ConstructorTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
 
 		/// <summary>
@@ -24,7 +22,7 @@ namespace Elastic.Apm.Tests
 		public void Compose()
 		{
 			using (var agent = new ApmAgent(new AgentComponents(configurationReader: new LogConfig(LogLevel.Warning)
-				, dbgName: $"{ThisClassName}.{DbgUtils.GetCurrentMethodName()}")))
+				, dbgName: TestDisplayName)))
 			{
 				var logger = agent.Logger as ConsoleLogger;
 
