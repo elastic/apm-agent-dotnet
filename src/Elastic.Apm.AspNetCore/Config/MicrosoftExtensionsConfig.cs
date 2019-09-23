@@ -8,7 +8,7 @@ namespace Elastic.Apm.AspNetCore.Config
 	/// An agent-config provider based on Microsoft.Extensions.Configuration.IConfiguration.
 	/// It uses environment variables as fallback
 	/// </summary>
-	internal class MicrosoftExtensionsConfig : AbstractConfigurationWithEnvFallbackReader, IConfigurationReader
+	internal class MicrosoftExtensionsConfig : AbstractConfigurationWithEnvFallbackReader
 	{
 		internal const string Origin = "Microsoft.Extensions.Configuration";
 
