@@ -8,7 +8,7 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
-	internal class FullFrameworkConfigReader : AbstractConfigurationWithEnvFallbackReader, IConfigurationReader
+	internal class FullFrameworkConfigReader : AbstractConfigurationWithEnvFallbackReader
 	{
 		internal const string Origin = "System.Configuration.ConfigurationManager.AppSettings";
 

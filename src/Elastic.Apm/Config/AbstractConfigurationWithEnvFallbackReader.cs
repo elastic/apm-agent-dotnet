@@ -4,7 +4,7 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
 {
-	public abstract class AbstractConfigurationWithEnvFallbackReader : AbstractConfigurationReader
+	public abstract class AbstractConfigurationWithEnvFallbackReader : AbstractConfigurationReader, IConfigurationReader
 	{
 		private readonly string _environmentName;
 
