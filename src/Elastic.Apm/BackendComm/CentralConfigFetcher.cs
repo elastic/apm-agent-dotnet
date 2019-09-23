@@ -161,6 +161,8 @@ namespace Elastic.Apm.BackendComm
 						+ $": {ThisClassName}.{DbgUtils.GetCurrentMethodName()}"] = "Reading HTTP response body..."
 						+ $" dbgIterationsCount: {dbgIterationsCount}. httpResponse: {httpResponse}";
 
+					// System.Net.Http.HttpContent.ReadAsStringAsync doesn't have an overload accepting CancellationToken
+					// so in order to be able to cancel it we combine ReadAsStringAsync with cancelable timeout
 					httpResponseBody = await _agentTimer.AwaitOrTimeout(httpResponse.Content.ReadAsStringAsync()
 						, _agentTimer.Now + ReadResponseBodyTimeout, _cancellationTokenSource.Token);
 
@@ -234,9 +236,7 @@ namespace Elastic.Apm.BackendComm
 		{
 			_logger.Trace()?.Log("Making HTTP request to APM Server... Request: {RequestMessage}.", requestMessage);
 
-//			var httpResponse = await _httpClient.SendAsync(requestMessage, _cancellationTokenSource.Token);
-			var httpResponse = await _agentTimer.AwaitOrTimeout(_httpClient.SendAsync(requestMessage, _cancellationTokenSource.Token)
-				, _agentTimer.Now + TimeSpan.FromSeconds(30), _cancellationTokenSource.Token);
+			var httpResponse = await _httpClient.SendAsync(requestMessage, _cancellationTokenSource.Token);
 
 			// ReSharper disable once InvertIf
 			if (httpResponse == null)
