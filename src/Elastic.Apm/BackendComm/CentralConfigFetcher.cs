@@ -23,7 +23,7 @@ namespace Elastic.Apm.BackendComm
 		internal static readonly TimeSpan WaitTimeIfAnyError = TimeSpan.FromMinutes(5);
 		internal static readonly TimeSpan WaitTimeIfNoCacheControlMaxAge = TimeSpan.FromMinutes(5);
 
-		internal static readonly TimeSpan ReadResponseBodyTimeout = TimeSpan.FromMinutes(5);
+		internal static readonly TimeSpan GetConfigHttpRequestTimeout = TimeSpan.FromMinutes(5);
 
 		private readonly IAgentTimer _agentTimer;
 		private readonly CancellationTokenSource _cancellationTokenSource;
@@ -162,15 +162,7 @@ namespace Elastic.Apm.BackendComm
 				{
 					httpRequest = BuildHttpRequest(eTag);
 
-					httpResponse = await FetchConfigHttpResponseAsync(httpRequest);
-
-					_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Reading HTTP response body..."
-						+ $" dbgIterationsCount: {dbgIterationsCount}. httpResponse: {httpResponse}";
-
-					// System.Net.Http.HttpContent.ReadAsStringAsync doesn't have an overload accepting CancellationToken
-					// so in order to be able to cancel it we combine ReadAsStringAsync with cancelable timeout
-					httpResponseBody = await _agentTimer.AwaitOrTimeout(httpResponse.Content.ReadAsStringAsync()
-						, _agentTimer.Now + ReadResponseBodyTimeout, _cancellationTokenSource.Token);
+					(httpResponse, httpResponseBody) = await FetchConfigHttpResponseAsync(httpRequest);
 
 					ConfigDelta configDelta;
 					(configDelta, waitInfo) = ProcessHttpResponse(httpResponse, httpResponseBody);
@@ -236,52 +228,47 @@ namespace Elastic.Apm.BackendComm
 			return httpRequest;
 		}
 
-		private async Task<HttpResponseMessage> FetchConfigHttpResponseAsync(HttpRequestMessage requestMessage)
+		private async Task<ValueTuple<HttpResponseMessage, string>> FetchConfigHttpResponseImplAsync(HttpRequestMessage httpRequest
+			, Task<HttpResponseMessage> httpRequestTask)
 		{
-//			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before await Task.Delay(TimeSpan.FromSeconds(5), _cancellationTokenSource.Token) ...";
-//			await Task.Delay(TimeSpan.FromSeconds(5), _cancellationTokenSource.Token);
+			_logger.Trace()?.Log("Making HTTP request to APM Server... Request: {HttpRequest}.", httpRequest);
 
-//			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before await await Task.Yield() ...";
-//			await Task.Yield();
-//			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After await await Task.Yield() ...";
-
-			_logger.Trace()?.Log("Making HTTP request to APM Server... Request: {RequestMessage}.", requestMessage);
-
-//			var httpResponse = await _httpClient.SendAsync(requestMessage, _cancellationTokenSource.Token);
-
-			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before httpRequestTask = _httpClient.SendAsync ..."
-				+ $" IsCancellationRequested: {_cancellationTokenSource.Token.IsCancellationRequested}";
-			var httpRequestTask = _httpClient.SendAsync(requestMessage, _cancellationTokenSource.Token);
-			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Before httpResponse = await _agentTimer.AwaitOrTimeout(httpRequestTask ..."
-				+ $" IsCancellationRequested: {_cancellationTokenSource.Token.IsCancellationRequested}";
-
-			HttpResponseMessage httpResponse;
-			try
-			{
-				httpResponse =
-					await _agentTimer.AwaitOrTimeout(httpRequestTask, _agentTimer.Now + ReadResponseBodyTimeout, _cancellationTokenSource.Token);
-			}
-			catch (OperationCanceledException)
-			{
-				_logger.Error()?.Log("HTTP request to APM Server is canceled."
-					+ " IsCancellationRequested: {IsCancellationRequested}. httpRequestTask.Status: {TaskStatus}"
-					, _cancellationTokenSource.Token.IsCancellationRequested, httpRequestTask.Status);
-				throw;
-			}
-
-//			var httpResponse =
-//				await _agentTimer.AwaitOrTimeout(httpRequestTask, _agentTimer.Now + ReadResponseBodyTimeout, _cancellationTokenSource.Token);
-
-			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "After httpResponse = await _agentTimer.AwaitOrTimeout(httpRequestTask ...";
-
+			var httpResponse = await httpRequestTask;
 			// ReSharper disable once InvertIf
 			if (httpResponse == null)
 			{
 				throw new FailedToFetchConfigException("HTTP client API call for request to APM Server returned null."
-					+ $" Request:{Environment.NewLine}{TextUtils.Indent(requestMessage.ToString())}");
+					+ $" Request:{Environment.NewLine}{TextUtils.Indent(httpRequest.ToString())}");
 			}
 
-			return httpResponse;
+			_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] = "Reading HTTP response body... Response: {HttpResponse}";
+
+			_logger.Trace()?.Log("Reading HTTP response body... Response: {HttpResponse}.", httpResponse);
+			var httpResponseBody = await httpResponse.Content.ReadAsStringAsync();
+
+			return (httpResponse, httpResponseBody);
+		}
+
+		private async Task<ValueTuple<HttpResponseMessage, string>> FetchConfigHttpResponseAsync(HttpRequestMessage requestMessage)
+		{
+			var httpRequestTask = _httpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseContentRead, _cancellationTokenSource.Token);
+			try
+			{
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] =
+					"Before await _agentTimer.AwaitOrTimeout(FetchConfigHttpResponseImplAsync";
+
+				return await _agentTimer.AwaitOrTimeout(FetchConfigHttpResponseImplAsync(requestMessage, httpRequestTask)
+					, _agentTimer.Now + GetConfigHttpRequestTimeout, _cancellationTokenSource.Token);
+			}
+			finally
+			{
+				_logger.Context[DbgUtils.CurrentDbgContext(ThisClassName)] =
+					"After await _agentTimer.AwaitOrTimeout(FetchConfigHttpResponseImplAsync";
+
+				_logger.Error()?.Log("After await _agentTimer.AwaitOrTimeout(FetchConfigHttpResponseImplAsync."
+					+ " IsCancellationRequested: {IsCancellationRequested}. httpRequestTask.Status: {TaskStatus}. Current thread: {ThreadDesc}."
+					, _cancellationTokenSource.Token.IsCancellationRequested, httpRequestTask.Status, DbgUtils.CurrentThreadDesc);
+			}
 		}
 
 		private (ConfigDelta, WaitInfoS) ProcessHttpResponse(HttpResponseMessage httpResponse, string httpResponseBody)

@@ -66,7 +66,8 @@ namespace Elastic.Apm
 
 		internal readonly CompositeDisposable Disposables = new CompositeDisposable();
 
-		internal ApmAgent(AgentComponents agentComponents) => Components = agentComponents ?? new AgentComponents();
+		internal ApmAgent(AgentComponents agentComponents) =>
+			Components = agentComponents ?? new AgentComponents(dbgName: $"{ThisClassName}.{DbgUtils.CurrentMethodName()}");
 
 		private AgentComponents Components { get; }
 		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
