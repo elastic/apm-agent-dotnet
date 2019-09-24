@@ -31,6 +31,8 @@ namespace Elastic.Apm.Helpers
 			_thread.Start();
 		}
 
+		public override int MaximumConcurrencyLevel => 1;
+
 		private string DbgName => $"{ThisClassName} (thread: {_threadName})";
 
 		internal bool IsRunning => _thread.IsAlive;
