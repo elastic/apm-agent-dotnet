@@ -1,3 +1,5 @@
+using System;
+
 namespace Elastic.Apm.Helpers
 {
 	/// <summary>
@@ -10,9 +12,44 @@ namespace Elastic.Apm.Helpers
 	{
 		private static readonly AssertIfEnabled SingletonAssertIfEnabled = new AssertIfEnabled();
 
-		internal static AssertIfEnabled? IfEnabled => IsEnabled ? SingletonAssertIfEnabled : (AssertIfEnabled?)null;
+		private const AssertionLevel DefaultLevel = AssertionLevel.O_1;
 
-		internal static bool IsEnabled { get; set; } = true;
+		private static readonly Impl ImplSingleton = new Impl(DefaultLevel);
+
+		internal class Impl
+		{
+			internal Impl(AssertionLevel initialLevel) => Level = initialLevel;
+
+			internal AssertIfEnabled? IfEnabled => IsEnabled ? SingletonAssertIfEnabled : (AssertIfEnabled?)null;
+
+			// ReSharper disable once InconsistentNaming
+			internal AssertIfEnabled? If_O_n_LevelEnabled => Is_O_n_LevelEnabled ? SingletonAssertIfEnabled : (AssertIfEnabled?)null;
+
+			internal AssertionLevel Level { get; set; }
+
+			internal bool IsEnabled => Level >= AssertionLevel.O_1;
+
+			// ReSharper disable once InconsistentNaming
+			internal bool Is_O_n_LevelEnabled => Level >= AssertionLevel.O_n;
+
+			internal void DoIfEnabled(Action<AssertIfEnabled> doAction)
+			{
+				if (IsEnabled) doAction(SingletonAssertIfEnabled);
+			}
+
+			internal void DoIf_O_n_LevelEnabled(Action<AssertIfEnabled> doAction)
+			{
+				if (Is_O_n_LevelEnabled) doAction(SingletonAssertIfEnabled);
+			}
+		}
+
+		internal static AssertIfEnabled? IfEnabled => ImplSingleton.IfEnabled;
+
+		internal static AssertIfEnabled? If_O_n_LevelEnabled => ImplSingleton.If_O_n_LevelEnabled;
+
+		internal static bool IsEnabled => ImplSingleton.IsEnabled;
+
+		internal static bool Is_O_n_LevelEnabled => ImplSingleton.Is_O_n_LevelEnabled;
 
 		internal struct AssertIfEnabled
 		{
@@ -21,5 +58,9 @@ namespace Elastic.Apm.Helpers
 				if (!condition) throw new AssertionFailedException(message);
 			}
 		}
+
+		internal static void DoIfEnabled(Action<AssertIfEnabled> doAction) => ImplSingleton.DoIfEnabled(doAction);
+
+		internal static void DoIf_O_n_LevelEnabled(Action<AssertIfEnabled> doAction) => ImplSingleton.DoIf_O_n_LevelEnabled(doAction);
 	}
 }

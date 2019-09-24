@@ -31,9 +31,9 @@ namespace Elastic.Apm.Tests.HelpersTests
 				action();
 			});
 			sideEffect.Should().Be(1);
-			var startMsg = string.Format(ExceptionUtils.MethodStartingMsgFmt.Replace("{MethodName}", "{0}"), DbgUtils.GetCurrentMethodName());
+			var startMsg = string.Format(ExceptionUtils.MethodStartingMsgFmt.Replace("{MethodName}", "{0}"), DbgUtils.CurrentMethodName());
 			mockLogger.Lines.Should().Contain(line => line.Contains(startMsg));
-			var exitMsg = string.Format(exitMsgFmt.Replace("{MethodName}", "{0}"), DbgUtils.GetCurrentMethodName());
+			var exitMsg = string.Format(exitMsgFmt.Replace("{MethodName}", "{0}"), DbgUtils.CurrentMethodName());
 			mockLogger.Lines.Should().Contain(line => line.Contains(exitMsg));
 		}
 
@@ -43,17 +43,21 @@ namespace Elastic.Apm.Tests.HelpersTests
 		{
 			var mockLogger = new TestLogger(LogLevel.Trace);
 			var sideEffect = 0;
-			await ExceptionUtils.DoSwallowingExceptions(mockLogger, async () =>
+			await ExceptionUtils.DoSwallowingExceptions(mockLogger, PublicMethod);
+			sideEffect.Should().Be(1);
+			var startMsg = ExceptionUtils.MethodStartingMsgFmt.Replace("{MethodName}", DbgUtils.CurrentMethodName());
+			mockLogger.Lines.Should().Contain(line => line.Contains(startMsg));
+			var exitMsg = exitMsgFmt.Replace("{MethodName}", DbgUtils.CurrentMethodName());
+			mockLogger.Lines.Should().Contain(line => line.Contains(exitMsg));
+
+			async Task MethodImpl()
 			{
 				await Task.Yield();
 				++sideEffect;
 				action();
-			});
-			sideEffect.Should().Be(1);
-			var startMsg = ExceptionUtils.MethodStartingMsgFmt.Replace("{MethodName}", DbgUtils.GetCurrentMethodName());
-			mockLogger.Lines.Should().Contain(line => line.Contains(startMsg));
-			var exitMsg = exitMsgFmt.Replace("{MethodName}", DbgUtils.GetCurrentMethodName());
-			mockLogger.Lines.Should().Contain(line => line.Contains(exitMsg));
+			}
+
+			Task PublicMethod() => MethodImpl();
 		}
 
 		[Theory]
@@ -75,9 +79,9 @@ namespace Elastic.Apm.Tests.HelpersTests
 				actionToTest();
 
 			sideEffect.Should().Be(1);
-			var startMsg = string.Format(ExceptionUtils.MethodStartingMsgFmt.Replace("{MethodName}", "{0}"), DbgUtils.GetCurrentMethodName());
+			var startMsg = string.Format(ExceptionUtils.MethodStartingMsgFmt.Replace("{MethodName}", "{0}"), DbgUtils.CurrentMethodName());
 			mockLogger.Lines.Should().Contain(line => line.Contains(startMsg));
-			var exitMsg = string.Format(exitMsgFmt.Replace("{MethodName}", "{0}"), DbgUtils.GetCurrentMethodName());
+			var exitMsg = string.Format(exitMsgFmt.Replace("{MethodName}", "{0}"), DbgUtils.CurrentMethodName());
 			mockLogger.Lines.Should().Contain(line => line.Contains(exitMsg));
 		}
 
@@ -101,9 +105,9 @@ namespace Elastic.Apm.Tests.HelpersTests
 				await asyncActionToTest();
 
 			sideEffect.Should().Be(1);
-			var startMsg = string.Format(ExceptionUtils.MethodStartingMsgFmt.Replace("{MethodName}", "{0}"), DbgUtils.GetCurrentMethodName());
+			var startMsg = string.Format(ExceptionUtils.MethodStartingMsgFmt.Replace("{MethodName}", "{0}"), DbgUtils.CurrentMethodName());
 			mockLogger.Lines.Should().Contain(line => line.Contains(startMsg));
-			var exitMsg = string.Format(exitMsgFmt.Replace("{MethodName}", "{0}"), DbgUtils.GetCurrentMethodName());
+			var exitMsg = string.Format(exitMsgFmt.Replace("{MethodName}", "{0}"), DbgUtils.CurrentMethodName());
 			mockLogger.Lines.Should().Contain(line => line.Contains(exitMsg));
 		}
 	}

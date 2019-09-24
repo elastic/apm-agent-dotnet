@@ -21,6 +21,8 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 	[ApiController]
 	public class IntakeV2EventsController : ControllerBase
 	{
+		private const string ThisClassName = nameof(IntakeV2EventsController);
+
 		private const string ExpectedContentType = "application/x-ndjson; charset=utf-8";
 		private readonly IApmLogger _logger;
 
@@ -29,7 +31,7 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 		public IntakeV2EventsController(MockApmServer mockApmServer)
 		{
 			_mockApmServer = mockApmServer;
-			_logger = mockApmServer.Logger.Scoped(nameof(IntakeV2EventsController) + "#" + RuntimeHelpers.GetHashCode(this).ToString("X"));
+			_logger = mockApmServer.InternalLogger.Scoped(ThisClassName + "#" + RuntimeHelpers.GetHashCode(this).ToString("X"));
 
 			_logger.Debug()?.Log("Constructed with mock APM Server: {MockApmServer}", _mockApmServer);
 		}
@@ -40,9 +42,8 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 		private async Task<IActionResult> PostImpl()
 		{
 			_logger.Debug()?.Log("Received request with content length: {ContentLength}."
-				+ " Current thread: name `{ThreadName}', managed ID: {ThreadManagedId}."
-				, Request.ContentLength
-				, Thread.CurrentThread.Name, Thread.CurrentThread.ManagedThreadId);
+				+ " Current thread: {ThreadDesc}."
+				, Request.ContentLength, DbgUtils.CurrentThreadDesc);
 
 			int numberOfObjects;
 

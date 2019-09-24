@@ -6,7 +6,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,6 +16,7 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
+using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
@@ -26,20 +26,21 @@ using Xunit.Sdk;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
-	public class TestsBase : IAsyncLifetime
+	public class TestsBase : LoggingTestBase, IAsyncLifetime
 	{
+		private const string ThisClassName = nameof(AspNetFullFramework) + "." + nameof(Tests) + "." + nameof(TestsBase);
+
 		private static readonly string TearDownPersistentDataReason;
 
 		private static readonly bool TearDownPersistentData =
 			EnvVarUtils.GetBoolValue("ELASTIC_APM_TESTS_FULL_FRAMEWORK_TEAR_DOWN_PERSISTENT_DATA", /* defaultValue: */ true,
 				out TearDownPersistentDataReason);
 
-
+		private readonly IApmLogger _logger;
 		protected readonly AgentConfiguration AgentConfig = new AgentConfiguration();
 		protected readonly bool SampleAppShouldHaveAccessToPerfCounters;
 		private readonly Dictionary<string, string> _envVarsToSetForSampleAppPool;
 		private readonly IisAdministration _iisAdministration;
-		private readonly IApmLogger _logger;
 		private readonly MockApmServer _mockApmServer;
 		private readonly int _mockApmServerPort;
 		private readonly bool _sampleAppLogEnabled;
@@ -47,21 +48,16 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		private readonly bool _startMockApmServer;
 		private readonly DateTime _testStartTime = DateTime.UtcNow;
 
-		private readonly ITestOutputHelper _xUnitOutputHelper;
-
 		protected TestsBase(ITestOutputHelper xUnitOutputHelper,
 			bool startMockApmServer = true,
 			IDictionary<string, string> envVarsToSetForSampleAppPool = null,
 			bool sampleAppShouldHaveAccessToPerfCounters = false,
 			bool sampleAppLogEnabled = true
-		)
+		) : base(xUnitOutputHelper)
 		{
-			_xUnitOutputHelper = xUnitOutputHelper;
-			_logger = new ToAllSinksLogger(_xUnitOutputHelper).Scoped(nameof(TestsBase));
+			_logger = LoggerBase.Scoped(ThisClassName);
 
-			_logger.Info()?.Log("Starting test: {FullUnitTestName}", GetCurrentTestDisplayName(_xUnitOutputHelper));
-
-			_mockApmServer = new MockApmServer(_logger, GetCurrentTestDisplayName(_xUnitOutputHelper));
+			_mockApmServer = new MockApmServer(_logger, TestDisplayName);
 			_iisAdministration = new IisAdministration(_logger);
 			_startMockApmServer = startMockApmServer;
 			SampleAppShouldHaveAccessToPerfCounters = sampleAppShouldHaveAccessToPerfCounters;
@@ -77,7 +73,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			_envVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.ServerUrls, BuildApmServerUrl(_mockApmServerPort));
 
 			if (_sampleAppLogEnabled) _envVarsToSetForSampleAppPool.TryAdd(LoggingConfig.LogFileEnvVarName, _sampleAppLogFilePath);
-			
+
 			_envVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.FlushInterval, "10ms");
 		}
 
@@ -101,17 +97,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData CustomSpanThrowsExceptionPage =
 				new SampleAppUrlPathData(HomeController.CustomSpanThrowsPageRelativePath, 500, spansCount: 1, errorsCount: 1);
 
-			internal static readonly SampleAppUrlPathData CustomChildSpanThrowsExceptionPage =
-				new SampleAppUrlPathData(HomeController.CustomChildSpanThrowsPageRelativePath, 500, spansCount: 2, errorsCount: 2);
-
 			internal static readonly SampleAppUrlPathData HomePage =
 				new SampleAppUrlPathData(HomeController.HomePageRelativePath, 200);
-
-			internal static readonly SampleAppUrlPathData GetDotNetRuntimeDescriptionPage =
-				new SampleAppUrlPathData(HomeController.GetDotNetRuntimeDescriptionPageRelativePath, 200);
-
-			internal static readonly SampleAppUrlPathData ForbidHttpResponsePageDescriptionPage =
-				new SampleAppUrlPathData(HomeController.ForbidHttpResponsePageRelativePath, 200, spansCount: 1, errorsCount: 1);
 
 			internal static readonly List<SampleAppUrlPathData> AllPaths = new List<SampleAppUrlPathData>
 			{
@@ -127,6 +114,18 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				new SampleAppUrlPathData(HomeController.CallReturnBadRequestPageRelativePath,
 					HomeController.DummyHttpStatusCode, /* transactionsCount: */ 2, /* spansCount: */ 1);
 
+
+			internal static readonly SampleAppUrlPathData CustomChildSpanThrowsExceptionPage =
+				new SampleAppUrlPathData(HomeController.CustomChildSpanThrowsPageRelativePath, 500, spansCount: 2, errorsCount: 2);
+
+
+			internal static readonly SampleAppUrlPathData ForbidHttpResponsePageDescriptionPage =
+				new SampleAppUrlPathData(HomeController.ForbidHttpResponsePageRelativePath, 200, spansCount: 1, errorsCount: 1);
+
+			internal static readonly SampleAppUrlPathData GetDotNetRuntimeDescriptionPage =
+				new SampleAppUrlPathData(HomeController.GetDotNetRuntimeDescriptionPageRelativePath, 200);
+
+
 			internal static readonly SampleAppUrlPathData ReturnBadRequestPage =
 				new SampleAppUrlPathData(HomeController.ReturnBadRequestPageRelativePath, (int)HttpStatusCode.BadRequest);
 
@@ -137,8 +136,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		}
 
 		private TimedEvent? _sampleAppClientCallTiming;
-
-		protected IApmLogger ScopeBaseLogger(string scope) => _logger.Scoped(scope);
 
 		public Task InitializeAsync()
 		{
@@ -169,7 +166,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			if (_startMockApmServer) await _mockApmServer.StopAsync();
 
-			_logger.Info()?.Log("Finished test: {FullUnitTestName}", GetCurrentTestDisplayName(_xUnitOutputHelper));
+			_logger.Info()?.Log("Finished test: {FullUnitTestName}", TestDisplayName);
 		}
 
 		private string GetSampleAppLogFilePath()
@@ -360,17 +357,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public static SampleAppUrlPathData RandomSampleAppUrlPath() =>
 			SampleAppUrlPaths.AllPaths[RandomGenerator.GetInstance().Next(0, SampleAppUrlPaths.AllPaths.Count)];
 
-		private static string GetCurrentTestDisplayName(ITestOutputHelper xUnitOutputHelper)
-		{
-			var helper = (TestOutputHelper)xUnitOutputHelper;
-
-			// ReSharper disable once PossibleNullReferenceException
-			var test = (ITest)helper.GetType()
-				.GetField("test", BindingFlags.NonPublic | BindingFlags.Instance)
-				.GetValue(helper);
-			return test.DisplayName;
-		}
-
 		private void LogSampleAppLogFileContent()
 		{
 			if (!_sampleAppLogEnabled)
@@ -529,7 +515,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			service.Environment.Should().Be(expectedEnvironment);
 		}
 
-		private void FullFwAssertValid(Framework framework)
+		private static void FullFwAssertValid(Framework framework)
 		{
 			framework.Should().NotBeNull();
 
@@ -537,7 +523,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			framework.Version.Should().StartWith("4.");
 		}
 
-		private void FullFwAssertValid(Api.System system) => system.Should().BeNull();
+		private static void FullFwAssertValid(Api.System system) => system.Should().BeNull();
 
 		private void FullFwAssertValid(ErrorDto error)
 		{
@@ -574,14 +560,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			if (_sampleAppClientCallTiming != null) timedDto.ShouldOccurBetween(_sampleAppClientCallTiming);
 		}
 
-		private void FullFwAssertValid(SpanCountDto spanCount)
+		private static void FullFwAssertValid(SpanCountDto spanCount)
 		{
 			spanCount.Should().NotBeNull();
 
 			spanCount.Dropped.Should().Be(0);
 		}
 
-		private void FullFwAssertValid(Url url)
+		private static void FullFwAssertValid(Url url)
 		{
 			url.Should().NotBeNull();
 
@@ -592,7 +578,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			url.PathName.Should().NotBeNull();
 		}
 
-		private void TransactionResultFullFwAssertValid(string result) => result.Should().MatchRegex("HTTP [1-9]xx");
+		private static void TransactionResultFullFwAssertValid(string result) => result.Should().MatchRegex("HTTP [1-9]xx");
 
 		// ReSharper disable once UnusedParameter.Local
 		private void FullFwAssertValid(ContextDto context, TransactionDto _)
@@ -619,14 +605,16 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			FullFwAssertValid(span.StackTrace);
 		}
 
-		private void FullFwAssertValid(List<CapturedStackFrame> stackTrace)
+		private static void FullFwAssertValid(IEnumerable<CapturedStackFrame> stackTrace)
 		{
+			// ReSharper disable PossibleMultipleEnumeration
 			stackTrace.Should().NotBeNull();
 
-			foreach (var stackFrame in stackTrace) FullFwAssertValid(stackFrame);
+			stackTrace.ForEach((Action<CapturedStackFrame>)FullFwAssertValid);
+			// ReSharper restore PossibleMultipleEnumeration
 		}
 
-		private void FullFwAssertValid(CapturedStackFrame capturedStackFrame)
+		private static void FullFwAssertValid(CapturedStackFrame capturedStackFrame)
 		{
 			capturedStackFrame.Should().NotBeNull();
 
@@ -664,7 +652,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				request.Headers.Should().BeNull();
 		}
 
-		private void FullFwAssertValid(Socket socket)
+		private static void FullFwAssertValid(Socket socket)
 		{
 			socket.Should().NotBeNull();
 
@@ -699,8 +687,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		protected class AgentConfiguration
 		{
 			internal bool CaptureHeaders = true;
-			internal string ServiceName;
 			internal string Environment;
+			internal string ServiceName;
 		}
 
 		public class SampleAppUrlPathData

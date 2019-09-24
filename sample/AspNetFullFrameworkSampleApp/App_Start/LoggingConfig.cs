@@ -23,16 +23,17 @@ namespace AspNetFullFrameworkSampleApp
 			if (logFileEnvVarValue == null) return;
 
 			var config = new LoggingConfiguration();
-			const string layout = "${date:format=yyyy-MM-dd HH\\:mm\\:ss.fff}" +
+			const string layout = "${date:format=yyyy-MM-dd HH\\:mm\\:ss.fff zzz}" +
 				" | ${level:uppercase=true:padding=-5}" + // negative values cause right padding
 				" | ${threadname:padding=-30:whenEmpty=${threadid:padding=-30}}" +
 				"${when:when=length('${logger}') > 0:inner= | ${logger}}" +
 				" | ${message}" +
-				"${onexception:${newline}${exception:format=ToString}";
+				"${onexception:${newline}+-> Exception\\: ${exception:format=ToString}";
 
 			var logTargets = new TargetWithLayout[]
 			{
-				LogMemoryTarget, new FileTarget { FileName = logFileEnvVarValue, DeleteOldFileOnStartup = true }, new ConsoleTarget()
+				new TraceTarget(), LogMemoryTarget, new FileTarget { FileName = logFileEnvVarValue, DeleteOldFileOnStartup = true },
+				new ConsoleTarget()
 			};
 			foreach (var logTarget in logTargets) logTarget.Layout = layout;
 

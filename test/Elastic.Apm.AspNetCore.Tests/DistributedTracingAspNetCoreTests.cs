@@ -114,7 +114,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task NonSampledDistributedTraceAcross2Service()
 		{
-			_agent1.TracerInternal.Sampler = new Sampler(0);
+			_agent1.ConfigStore.CurrentSnapshot = new MockConfigSnapshot(transactionSampleRate: "0");
 
 			await ExecuteAndCheckDistributedCall();
 

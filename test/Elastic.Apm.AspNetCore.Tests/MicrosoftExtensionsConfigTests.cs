@@ -60,7 +60,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			logger.Lines.Should().NotBeEmpty();
 			logger.Lines[0].Should()
 				.ContainAll(
-					$"{{{nameof(MicrosoftExtensionsConfig)}}}",
+					nameof(MicrosoftExtensionsConfig),
 					"Failed parsing log level from",
 					MicrosoftExtensionsConfig.Origin,
 					ConfigConsts.KeyNames.LogLevel,
@@ -87,7 +87,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			logger.Lines.Should().NotBeEmpty();
 			logger.Lines[0].Should()
 				.ContainAll(
-					$"{{{nameof(MicrosoftExtensionsConfig)}}}",
+					nameof(MicrosoftExtensionsConfig),
 					"Failed parsing log level from",
 					MicrosoftExtensionsConfig.Origin,
 					ConfigConsts.KeyNames.LogLevel,

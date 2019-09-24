@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Logging;
 
@@ -7,14 +8,17 @@ namespace Elastic.Apm.Helpers
 {
 	internal static class ExceptionUtils
 	{
-		internal const string MethodStartingMsgFmt = "{MethodName} starting...";
+		private const string ThisClassName = nameof(ExceptionUtils);
+
+		internal const string MethodStartingMsgFmt = "{MethodName} entered";
 		internal const string MethodExitingNormallyMsgFmt = "{MethodName} is about to exit normally";
 		internal const string MethodExitingCancelledMsgFmt = "{MethodName} is about to exit because it was cancelled, which is expected on shutdown";
 		internal const string MethodExitingExceptionMsgFmt = "{MethodName} is about to exit because of exception";
 
-		internal static void DoSwallowingExceptions(IApmLogger logger, Action action, bool shouldSwallowCancellation = true
+		internal static void DoSwallowingExceptions(IApmLogger loggerArg, Action action, bool shouldSwallowCancellation = true
 			, [CallerMemberName] string dbgCallerMethodName = null)
 		{
+			var logger = loggerArg.Scoped($"{ThisClassName}.{nameof(DoSwallowingExceptions)}");
 			try
 			{
 				logger.Debug()?.Log(MethodStartingMsgFmt, dbgCallerMethodName);
@@ -33,24 +37,28 @@ namespace Elastic.Apm.Helpers
 			}
 		}
 
-		internal static async Task DoSwallowingExceptions(IApmLogger logger, Func<Task> asyncAction, bool shouldSwallowCancellation = true
+		internal static async Task DoSwallowingExceptions(IApmLogger loggerArg, Func<Task> asyncAction, bool shouldSwallowCancellation = true
 			, [CallerMemberName] string dbgCallerMethodName = null)
 		{
+			var logger = loggerArg.Scoped($"{ThisClassName}.{nameof(DoSwallowingExceptions)}");
 			try
 			{
-				logger.Debug()?.Log(MethodStartingMsgFmt, dbgCallerMethodName);
+				logger.Debug()?.Log(MethodStartingMsgFmt + ". Current thread: {ThreadDesc}", dbgCallerMethodName, DbgUtils.CurrentThreadDesc);
 				await asyncAction();
-				logger.Debug()?.Log(MethodExitingNormallyMsgFmt, dbgCallerMethodName);
+				logger.Debug()?.Log(MethodExitingNormallyMsgFmt + ". Current thread: {ThreadDesc}", dbgCallerMethodName
+					, DbgUtils.CurrentThreadDesc);
 			}
 			catch (OperationCanceledException ex)
 			{
-				logger.Debug()?.LogException(ex, MethodExitingCancelledMsgFmt, dbgCallerMethodName);
+				logger.Debug()?.LogException(ex, MethodExitingCancelledMsgFmt + ". Current thread: {ThreadDesc}", dbgCallerMethodName
+					, DbgUtils.CurrentThreadDesc);
 
 				if (! shouldSwallowCancellation) throw;
 			}
 			catch (Exception ex)
 			{
-				logger.Error()?.LogException(ex, MethodExitingExceptionMsgFmt, dbgCallerMethodName);
+				logger.Error()?.LogException(ex, MethodExitingExceptionMsgFmt + ". Current thread: {ThreadDesc}", dbgCallerMethodName
+					, DbgUtils.CurrentThreadDesc);
 			}
 		}
 

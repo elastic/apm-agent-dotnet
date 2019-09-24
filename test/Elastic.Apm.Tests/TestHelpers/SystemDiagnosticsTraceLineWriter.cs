@@ -9,9 +9,9 @@ namespace Elastic.Apm.Tests.TestHelpers
 
 		public SystemDiagnosticsTraceLineWriter(string prefix = "") => _prefix = prefix;
 
-		public void WriteLine(string line)
+		public void WriteLine(string text)
 		{
-			Trace.WriteLine(TextUtils.PrefixEveryLine(line, _prefix));
+			Trace.WriteLine(TextUtils.PrefixEveryLine(text, _prefix));
 			Trace.Flush();
 		}
 	}

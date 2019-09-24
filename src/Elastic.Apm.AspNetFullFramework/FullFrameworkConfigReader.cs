@@ -10,15 +10,20 @@ namespace Elastic.Apm.AspNetFullFramework
 {
 	internal class FullFrameworkConfigReader : AbstractConfigurationWithEnvFallbackReader
 	{
-		internal const string Origin = "System.Configuration.ConfigurationManager.AppSettings";
+		private const string ThisClassName = nameof(FullFrameworkConfigReader);
+		private const string Origin = "System.Configuration.ConfigurationManager.AppSettings";
 
-		public FullFrameworkConfigReader(IApmLogger logger = null) : base(logger, null) { }
+		private readonly IApmLogger _logger;
+
+		public FullFrameworkConfigReader(IApmLogger logger = null)
+			: base(logger, /* defaultEnvironmentName: */ null, ThisClassName) => _logger = logger?.Scoped(ThisClassName);
 
 		protected override string DiscoverServiceName() => DiscoverFullFrameworkServiceName() ?? base.DiscoverServiceName();
 
 		protected override ConfigurationKeyValue Read(string key, string fallBackEnvVarName)
 		{
 			var value = ConfigurationManager.AppSettings[key];
+			// ReSharper disable once ConvertIfStatementToReturnStatement
 			if (!string.IsNullOrWhiteSpace(value)) return Kv(key, value, Origin);
 
 			return Kv(fallBackEnvVarName, ReadEnvVarValue(fallBackEnvVarName), EnvironmentConfigurationReader.Origin);
@@ -46,7 +51,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (Exception ex)
 			{
-				Logger.Error()?.Log("Failed to get app pool name: {Exception}", ex);
+				_logger.Error()?.Log("Failed to get app pool name: {Exception}", ex);
 				return null;
 			}
 		}
@@ -59,7 +64,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (Exception ex)
 			{
-				Logger.Error()?.Log("Failed to get site name: {Exception}", ex);
+				_logger.Error()?.Log("Failed to get site name: {Exception}", ex);
 				return null;
 			}
 		}

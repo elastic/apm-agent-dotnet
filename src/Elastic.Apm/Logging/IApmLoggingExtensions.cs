@@ -34,22 +34,22 @@ namespace Elastic.Apm.Logging
 				// In the future we should consider error counters to increment and log periodically on a worker thread
 				try
 				{
+					var newLine = Environment.NewLine + "Elastic APM .NET Agent: ";
 					var currentStackTraceFrames = new System.Diagnostics.StackTrace(true).GetFrames();
 					var currentStackTrace = currentStackTraceFrames == null
 						? " N/A"
-						: Environment.NewLine + string.Join("", currentStackTraceFrames.Select(f => "    " + f));
+						: newLine + string.Join("", currentStackTraceFrames.Select(f => "    " + f));
 
 					System.Diagnostics.Trace.WriteLine("Elastic APM .NET Agent: [CRITICAL] Exception thrown by logging implementation."
 						+ $" Log message: `{message.AsNullableToString()}'."
 						+ $" args.Length: {args.Length}."
-						+ $" Current thread: name: `{Thread.CurrentThread.Name.AsNullableToString()}',"
-						+ $" managed ID: {Thread.CurrentThread.ManagedThreadId}."
-						+ Environment.NewLine
-						+ $"+-> Exception (exception): {exception.GetType().FullName}: {exception.Message}{Environment.NewLine}{exception.StackTrace}"
+						+ $" Current thread: {DbgUtils.CurrentThreadDesc}"
+						+ newLine
+						+ $"+-> Exception (exception): {exception.GetType().FullName}: {exception.Message}{newLine}{exception.StackTrace}"
 						+ (e != null
-							? Environment.NewLine + $"+-> Exception (e): {e.GetType().FullName}: {e.Message}{Environment.NewLine}{e.StackTrace}"
+							? newLine + $"+-> Exception (e): {e.GetType().FullName}: {e.Message}{newLine}{e.StackTrace}"
 							: $"e: {ObjectExtensions.NullAsString}")
-						+ Environment.NewLine
+						+ newLine
 						+ "+-> Current stack trace:" + currentStackTrace
 					);
 				}
@@ -66,7 +66,7 @@ namespace Elastic.Apm.Logging
 		/// <param name="logger">The logger you want to log with</param>
 		/// <param name="level">The level to compare with</param>
 		/// <returns>If the return value is not null you can call <see cref="MaybeLogger.Log" /> to log</returns>
-		private static MaybeLogger? IfLevel(this IApmLogger logger, LogLevel level) =>
+		internal static MaybeLogger? IfLevel(this IApmLogger logger, LogLevel level) =>
 			logger.IsEnabled(level) ? new MaybeLogger(logger, level) : (MaybeLogger?)null;
 
 		/// <summary>

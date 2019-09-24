@@ -11,27 +11,27 @@ namespace Elastic.Apm.Tests
 		[InlineData(false)]
 		public void SpansSentOnlyForSampledTransaction(bool isSampled)
 		{
-			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			var mockPayloadSender = new MockPayloadSender();
+			var mockConfig = new MockConfigSnapshot(transactionSampleRate: isSampled ? "1" : "0");
+			using (var agent = new ApmAgent(new TestAgentComponents(config: mockConfig, payloadSender: mockPayloadSender)))
 			{
-				agent.TracerInternal.Sampler = new Sampler(isSampled ? 1.0 : 0.0);
 				agent.Tracer.CaptureTransaction("test transaction name", "test transaction type",
 					transaction =>
 						transaction.CaptureSpan("test span name", "test span type", span => { })
 				);
 			}
 
-			payloadSender.Transactions.Count.Should().Be(1);
-			payloadSender.FirstTransaction.SpanCount.Dropped.Should().Be(0);
+			mockPayloadSender.Transactions.Count.Should().Be(1);
+			mockPayloadSender.FirstTransaction.SpanCount.Dropped.Should().Be(0);
 			if (isSampled)
 			{
-				payloadSender.FirstTransaction.SpanCount.Started.Should().Be(1);
-				payloadSender.Spans.Count.Should().Be(1);
+				mockPayloadSender.FirstTransaction.SpanCount.Started.Should().Be(1);
+				mockPayloadSender.Spans.Count.Should().Be(1);
 			}
 			else
 			{
-				payloadSender.FirstTransaction.SpanCount.Started.Should().Be(0);
-				payloadSender.Spans.Should().BeEmpty();
+				mockPayloadSender.FirstTransaction.SpanCount.Started.Should().Be(0);
+				mockPayloadSender.Spans.Should().BeEmpty();
 			}
 		}
 	}

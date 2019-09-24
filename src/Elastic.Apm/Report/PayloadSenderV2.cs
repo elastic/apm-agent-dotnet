@@ -1,17 +1,13 @@
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Elastic.Apm.Api;
+using Elastic.Apm.BackendComm;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -25,105 +21,62 @@ namespace Elastic.Apm.Report
 	/// Responsible for sending the data to the server. Implements Intake V2.
 	/// Each instance creates its own thread to do the work. Therefore, instances should be reused if possible.
 	/// </summary>
-	internal class PayloadSenderV2 : IPayloadSender, IDisposable
+	internal class PayloadSenderV2 : BackendCommComponentBase, IPayloadSender
 	{
 		private const string ThisClassName = nameof(PayloadSenderV2);
-		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
 
 		internal readonly Api.System System;
 
-		private readonly CancellationTokenSource _cancellationTokenSource;
-		private readonly DisposableHelper _disposableHelper = new DisposableHelper();
 		private readonly BatchBlock<object> _eventQueue;
 
 		private readonly TimeSpan _flushInterval;
 
-		private readonly HttpClient _httpClient;
 		private readonly IApmLogger _logger;
 		private readonly int _maxQueueEventCount;
 		private readonly Metadata _metadata;
 
 		private readonly PayloadItemSerializer _payloadItemSerializer = new PayloadItemSerializer();
-		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler;
 
-		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, Api.System system,
-			HttpMessageHandler handler = null
+		public PayloadSenderV2(IApmLogger logger, IConfigSnapshot config, Service service, Api.System system,
+			HttpMessageHandler httpMessageHandler = null, string dbgName = null
 		)
+			: base( /* isEnabled: */ true, logger, ThisClassName, service, config, httpMessageHandler)
 		{
-			_logger = logger?.Scoped(ThisClassName);
+			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
 
 			System = system;
 			_metadata = new Metadata { Service = service, System = System };
 
-			if (configurationReader.MaxQueueEventCount < configurationReader.MaxBatchEventCount)
+			if (config.MaxQueueEventCount < config.MaxBatchEventCount)
 			{
 				_logger?.Error()
 					?.Log(
 						"MaxQueueEventCount is less than MaxBatchEventCount - using MaxBatchEventCount as MaxQueueEventCount."
 						+ " MaxQueueEventCount: {MaxQueueEventCount}."
 						+ " MaxBatchEventCount: {MaxBatchEventCount}.",
-						configurationReader.MaxQueueEventCount, configurationReader.MaxBatchEventCount);
+						config.MaxQueueEventCount, config.MaxBatchEventCount);
 
-				_maxQueueEventCount = configurationReader.MaxBatchEventCount;
+				_maxQueueEventCount = config.MaxBatchEventCount;
 			}
 			else
-				_maxQueueEventCount = configurationReader.MaxQueueEventCount;
+				_maxQueueEventCount = config.MaxQueueEventCount;
 
-			_flushInterval = configurationReader.FlushInterval;
-			_eventQueue = new BatchBlock<object>(configurationReader.MaxBatchEventCount);
+			_flushInterval = config.FlushInterval;
 
-			_cancellationTokenSource = new CancellationTokenSource();
-			_singleThreadTaskScheduler = new SingleThreadTaskScheduler(logger, _cancellationTokenSource.Token);
+			_logger?.Debug()
+				?.Log(
+					"Using the following configuration options:"
+					+ " FlushInterval: {FlushInterval}"
+					+ ", MaxBatchEventCount: {MaxBatchEventCount}"
+					+ ", MaxQueueEventCount: {MaxQueueEventCount}"
+					, _flushInterval.ToHms(), config.MaxBatchEventCount, _maxQueueEventCount);
 
-			var serverUrlBase = configurationReader.ServerUrls.First();
-			var servicePoint = ServicePointManager.FindServicePoint(serverUrlBase);
+			_eventQueue = new BatchBlock<object>(config.MaxBatchEventCount);
 
-			try
-			{
-				servicePoint.ConnectionLeaseTimeout = DnsTimeout;
-			}
-			catch (Exception e)
-			{
-				_logger.Warning()
-					?.LogException(e,
-						"Failed setting servicePoint.ConnectionLeaseTimeout - default ConnectionLeaseTimeout from HttpClient will be used. "
-						+ "Unless you notice connection issues between the APM Server and the agent, no action needed.");
-			}
-
-			servicePoint.ConnectionLimit = 20;
-
-			_logger?.Debug()?.Log("Setting HTTP client BaseAddress to {ApmServerUrl}...", serverUrlBase);
-			_httpClient = new HttpClient(handler ?? new HttpClientHandler()) { BaseAddress = serverUrlBase };
-			_httpClient.DefaultRequestHeaders.UserAgent.Add(
-				new ProductInfoHeaderValue($"elasticapm-{Consts.AgentName}", AdaptUserAgentValue(service.Agent.Version)));
-			_httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("System.Net.Http",
-				AdaptUserAgentValue(typeof(HttpClient).Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version)));
-			_httpClient.DefaultRequestHeaders.UserAgent.Add(
-				new ProductInfoHeaderValue(AdaptUserAgentValue(service.Runtime.Name), AdaptUserAgentValue(service.Runtime.Version)));
-
-			if (configurationReader.SecretToken != null)
-			{
-				_httpClient.DefaultRequestHeaders.Authorization =
-					new AuthenticationHeaderValue("Bearer", configurationReader.SecretToken);
-			}
-
-#pragma warning disable 4014
-			Task.Factory.StartNew(DoWork, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
-#pragma warning restore 4014
-
-			_logger.Debug()?.Log("Enqueued " + ThisClassName + "." + nameof(DoWork));
-
-			// Replace invalid characters by underscore. All invalid characters can be found at
-			// https://github.com/dotnet/corefx/blob/e64cac6dcacf996f98f0b3f75fb7ad0c12f588f7/src/System.Net.Http/src/System/Net/Http/HttpRuleParser.cs#L41
-			string AdaptUserAgentValue(string value)
-			{
-				return Regex.Replace(value, "[ /()<>@,:;={}?\\[\\]\"\\\\]", "_");
-			}
+			StartWorkLoop();
 		}
 
 		private long _eventQueueCount;
-
-		internal Thread Thread => _singleThreadTaskScheduler.Thread;
 
 		public void QueueTransaction(ITransaction transaction) => EnqueueEvent(transaction, "Transaction");
 
@@ -178,44 +131,20 @@ namespace Elastic.Apm.Report
 			return true;
 		}
 
-		public void Dispose() =>
-			_disposableHelper.DoOnce(_logger, ThisClassName, () =>
-			{
-				_logger.Debug()?.Log("Signalling _cancellationTokenSource");
-				_cancellationTokenSource.Cancel();
-
-				_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit", _singleThreadTaskScheduler.Thread.Name);
-				_singleThreadTaskScheduler.Thread.Join();
-
-				_logger.Debug()?.Log("_singleThreadTaskScheduler thread exited - disposing of _cancellationTokenSource and exiting");
-				_cancellationTokenSource.Dispose();
-			});
-
-		private void ThrowIfDisposed()
-		{
-			if (_disposableHelper.HasStarted) throw new ObjectDisposedException( /* objectName: */ ThisClassName);
-		}
-
-		private Task DoWork() =>
-			ExceptionUtils.DoSwallowingExceptions(_logger, async () =>
-				{
-					while (true) await ProcessQueueItems(await ReceiveBatchAsync());
-					// ReSharper disable once FunctionNeverReturns
-				}
-				, dbgCallerMethodName: ThisClassName + "." + DbgUtils.GetCurrentMethodName());
+		protected override async Task WorkLoopIteration() => await ProcessQueueItems(await ReceiveBatchAsync());
 
 		private async Task<object[]> ReceiveBatchAsync()
 		{
-			var receiveAsyncTask = _eventQueue.ReceiveAsync(_cancellationTokenSource.Token);
+			var receiveAsyncTask = _eventQueue.ReceiveAsync(CtsInstance.Token);
 
 			if (_flushInterval == TimeSpan.Zero)
 				_logger.Trace()?.Log("Waiting for data to send... (not using FlushInterval timer because FlushInterval is 0)");
 			else
 			{
-				_logger.Trace()?.Log("Waiting for data to send... FlushInterval: {FlushInterval}", _flushInterval);
+				_logger.Trace()?.Log("Waiting for data to send... FlushInterval: {FlushInterval}", _flushInterval.ToHms());
 				while (true)
 				{
-					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, _cancellationTokenSource.Token)) break;
+					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, CtsInstance.Token)) break;
 
 					_eventQueue.TriggerBatch();
 				}
@@ -295,7 +224,7 @@ namespace Elastic.Apm.Report
 
 				var content = new StringContent(ndjson.ToString(), Encoding.UTF8, "application/x-ndjson");
 
-				var result = await _httpClient.PostAsync(Consts.IntakeV2Events, content, _cancellationTokenSource.Token);
+				var result = await HttpClientInstance.PostAsync(BackendCommUtils.ApmServerEndpoints.IntakeV2EventsUrlPath, content, CtsInstance.Token);
 
 				if (result != null && !result.IsSuccessStatusCode)
 				{
@@ -316,9 +245,10 @@ namespace Elastic.Apm.Report
 				_logger?.Warning()
 					?.LogException(
 						e,
-						"Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):\n{SerializedItems}",
-						_httpClient.BaseAddress,
-						TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray())));
+						"Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):\n{SerializedItems}"
+						, HttpClientInstance.BaseAddress
+						, TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray()))
+					);
 			}
 		}
 	}
@@ -329,59 +259,5 @@ namespace Elastic.Apm.Report
 		public Service Service { get; set; }
 
 		public Api.System System { get; set; }
-	}
-
-	//Credit: https://stackoverflow.com/a/30726903/1783306
-	internal sealed class SingleThreadTaskScheduler : TaskScheduler
-	{
-		private const string ThisClassName = nameof(PayloadSenderV2) + "." + nameof(SingleThreadTaskScheduler);
-
-		[ThreadStatic]
-		private static bool _isExecuting;
-
-		private readonly CancellationToken _cancellationToken;
-
-		private readonly IApmLogger _logger;
-
-		private readonly BlockingCollection<Task> _taskQueue;
-
-		public SingleThreadTaskScheduler(IApmLogger logger, CancellationToken cancellationToken)
-		{
-			_logger = logger?.Scoped(ThisClassName);
-			_cancellationToken = cancellationToken;
-			_taskQueue = new BlockingCollection<Task>();
-			Thread = new Thread(RunOnCurrentThread) { Name = "ElasticApmPayloadSender", IsBackground = true };
-			Thread.Start();
-		}
-
-		internal Thread Thread { get; }
-
-		private void RunOnCurrentThread()
-		{
-			_logger.Debug()?.Log("`{ThreadName}' thread started", Thread.CurrentThread.Name);
-
-			_isExecuting = true;
-
-			ExceptionUtils.DoSwallowingExceptions(_logger, () =>
-				{
-					foreach (var task in _taskQueue.GetConsumingEnumerable(_cancellationToken)) TryExecuteTask(task);
-				}
-				, dbgCallerMethodName: $"`{Thread.CurrentThread.Name}' (ManagedThreadId: {Thread.CurrentThread.ManagedThreadId}) thread");
-
-			_isExecuting = false;
-		}
-
-		protected override IEnumerable<Task> GetScheduledTasks() => null;
-
-		protected override void QueueTask(Task task) => _taskQueue.Add(task, _cancellationToken);
-
-		protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued)
-		{
-			// We'd need to remove the task from queue if it was already queued.
-			// That would be too hard.
-			if (taskWasPreviouslyQueued) return false;
-
-			return _isExecuting && TryExecuteTask(task);
-		}
 	}
 }

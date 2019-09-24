@@ -4,17 +4,18 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
 {
-	public abstract class AbstractConfigurationWithEnvFallbackReader : AbstractConfigurationReader, IConfigurationReader
+	internal abstract class AbstractConfigurationWithEnvFallbackReader : AbstractConfigurationReader, IConfigurationReader
 	{
-		private readonly string _environmentName;
+		private readonly string _defaultEnvironmentName;
 
 		private readonly Lazy<double> _spanFramesMinDurationInMilliseconds;
 
 		private readonly Lazy<int> _stackTraceLimit;
 
-		public AbstractConfigurationWithEnvFallbackReader(IApmLogger logger, string environmentName) : base(logger)
+		internal AbstractConfigurationWithEnvFallbackReader(IApmLogger logger, string defaultEnvironmentName, string dbgDerivedClassName)
+			: base(logger, dbgDerivedClassName)
 		{
-			_environmentName = environmentName;
+			_defaultEnvironmentName = defaultEnvironmentName;
 
 			_stackTraceLimit =
 				new Lazy<int>(() => ParseStackTraceLimit(Read(ConfigConsts.KeyNames.StackTraceLimit, ConfigConsts.EnvVarNames.StackTraceLimit)));
@@ -30,7 +31,9 @@ namespace Elastic.Apm.Config
 
 		public virtual bool CaptureHeaders => ParseCaptureHeaders(Read(ConfigConsts.KeyNames.CaptureHeaders, ConfigConsts.EnvVarNames.CaptureHeaders));
 
-		public virtual string Environment => ParseEnvironment(Read(ConfigConsts.KeyNames.Environment, ConfigConsts.EnvVarNames.Environment)) ?? _environmentName;
+		public bool CentralConfig => ParseCentralConfig(Read(ConfigConsts.KeyNames.CentralConfig, ConfigConsts.EnvVarNames.CentralConfig));
+
+		public virtual string Environment => ParseEnvironment(Read(ConfigConsts.KeyNames.Environment, ConfigConsts.EnvVarNames.Environment)) ?? _defaultEnvironmentName;
 
 		public virtual TimeSpan FlushInterval => ParseFlushInterval(Read(ConfigConsts.KeyNames.FlushInterval, ConfigConsts.EnvVarNames.FlushInterval));
 

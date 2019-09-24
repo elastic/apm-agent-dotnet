@@ -34,7 +34,7 @@ namespace Elastic.Apm.PerfTests
 		{
 			var noopLogger = new NoopLogger();
 			var mockPayloadSender = new MockPayloadSender();
-			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender, new TestAgentConfigurationReader(noopLogger)))
+			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender, new MockConfigSnapshot(noopLogger)))
 			{
 				collector.CollectAllMetrics();
 				collector.CollectAllMetrics();
@@ -82,7 +82,7 @@ namespace Elastic.Apm.PerfTests
 		{
 			var noopLogger = new NoopLogger();
 			var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(), logger: noopLogger,
-				configurationReader: new TestAgentConfigurationReader(noopLogger, spanFramesMinDurationInMilliseconds: "-1ms", stackTraceLimit: "10")));
+				configurationReader: new MockConfigSnapshot(noopLogger, spanFramesMinDurationInMilliseconds: "-1ms", stackTraceLimit: "10")));
 
 			for (var i = 0; i < 100; i++)
 			{
@@ -98,7 +98,7 @@ namespace Elastic.Apm.PerfTests
 		{
 			var testLogger = new PerfTestLogger(LogLevel.Debug);
 			var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(), logger: testLogger,
-				configurationReader: new TestAgentConfigurationReader(testLogger, "Debug")));
+				configurationReader: new MockConfigSnapshot(testLogger, "Debug")));
 
 
 			for (var i = 0; i < 100; i++)

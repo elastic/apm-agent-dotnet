@@ -14,13 +14,16 @@ namespace Elastic.Apm.Tests.MockApmServer
 {
 	public class MockApmServer
 	{
+		private const string ThisClassName = nameof(MockApmServer);
+
+		private readonly IApmLogger _logger;
 		internal readonly ReceivedData ReceivedData = new ReceivedData();
 		private readonly string _dbgCurrentTestName;
 		private readonly object _lock = new object();
 
 		internal MockApmServer(IApmLogger logger, string dbgCurrentTestName)
 		{
-			Logger = logger.Scoped(nameof(MockApmServer));
+			_logger = logger.Scoped(ThisClassName);
 			_dbgCurrentTestName = dbgCurrentTestName;
 		}
 
@@ -34,7 +37,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 		private int _port;
 		private Task _runningTask;
 
-		internal IApmLogger Logger { get; }
+		internal IApmLogger InternalLogger => _logger;
 
 		internal int FindAvailablePortToListen()
 		{
@@ -46,17 +49,17 @@ namespace Elastic.Apm.Tests.MockApmServer
 				++numberOfPortsTried;
 				try
 				{
-					Logger.Debug()?.Log("Trying to listen on port {PortNumber}...", currentPort);
+					_logger.Debug()?.Log("Trying to listen on port {PortNumber}...", currentPort);
 					var listener = new HttpListener();
 					listener.Prefixes.Add($"http://localhost:{currentPort}/");
 					listener.Start();
 					listener.Stop();
-					Logger.Debug()?.Log("Port {PortNumber} is available - it will be used to accept connections from the agent", currentPort);
+					_logger.Debug()?.Log("Port {PortNumber} is available - it will be used to accept connections from the agent", currentPort);
 					return currentPort;
 				}
 				catch (HttpListenerException ex)
 				{
-					Logger.Debug()
+					_logger.Debug()
 						?.LogException(ex, "Failed to listen on port {PortNumber}. " +
 							"Number of ports tried so far: {NumberOfPorts} out of {NumberOfPorts}",
 							currentPort, numberOfPortsTried, numberOfPortsInScanRange);
@@ -80,14 +83,14 @@ namespace Elastic.Apm.Tests.MockApmServer
 			_cancellationTokenSource = new CancellationTokenSource();
 			_port = port;
 			_runningTask = CreateWebHostBuilder().Build().RunAsync(_cancellationTokenSource.Token);
-			Logger.Info()?.Log("Started: {MockApmServer}", this);
+			_logger.Info()?.Log("Started: {MockApmServer}", this);
 		}
 
 		internal void Run(int port)
 		{
 			_port = port;
 			var webHost = CreateWebHostBuilder().Build();
-			Logger.Info()?.Log("About to start: {MockApmServer}", this);
+			_logger.Info()?.Log("About to start: {MockApmServer}", this);
 			webHost.Run();
 		}
 
@@ -106,7 +109,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			_cancellationTokenSource = null;
 			_runningTask = null;
 
-			Logger.Info()?.Log("Stopped");
+			_logger.Info()?.Log("Stopped");
 		}
 
 		private IWebHostBuilder CreateWebHostBuilder() =>
@@ -124,6 +127,6 @@ namespace Elastic.Apm.Tests.MockApmServer
 				.UseUrls($"http://localhost:{_port}");
 
 		public override string ToString() =>
-			new ToStringBuilder(nameof(MockApmServer)) { { "port", _port }, { "current test", _dbgCurrentTestName }, }.ToString();
+			new ToStringBuilder(ThisClassName) { { "port", _port }, { "current test", _dbgCurrentTestName }, }.ToString();
 	}
 }

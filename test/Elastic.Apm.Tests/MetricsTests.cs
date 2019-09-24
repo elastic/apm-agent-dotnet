@@ -18,18 +18,20 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
-	public class MetricsTests
+	public class MetricsTests: LoggingTestBase
 	{
-		private readonly ITestOutputHelper _testOutputHelper;
+		private const string ThisClassName = nameof(MetricsTests);
 
-		public MetricsTests(ITestOutputHelper testOutputHelper) => _testOutputHelper = testOutputHelper;
+		private readonly IApmLogger _logger;
+
+		public MetricsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = LoggerBase.Scoped(ThisClassName);
 
 		[Fact]
 		public void CollectAllMetrics()
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var testLogger = new TestLogger();
-			var mc = new MetricsCollector(testLogger, mockPayloadSender, new TestAgentConfigurationReader(testLogger));
+			var mc = new MetricsCollector(testLogger, mockPayloadSender, new MockConfigSnapshot(testLogger));
 
 			mc.CollectAllMetrics();
 
@@ -75,7 +77,7 @@ namespace Elastic.Apm.Tests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var testLogger = new TestLogger(LogLevel.Information);
-			var mc = new MetricsCollector(testLogger, mockPayloadSender, new TestAgentConfigurationReader(testLogger, "Information"));
+			var mc = new MetricsCollector(testLogger, mockPayloadSender, new MockConfigSnapshot(testLogger, "Information"));
 
 			mc.MetricsProviders.Clear();
 			var providerWithException = new MetricsProviderWithException();
@@ -115,13 +117,13 @@ namespace Elastic.Apm.Tests
 			//
 			// After https://github.com/elastic/apm-agent-dotnet/issues/494 is fixed the line below can be uncommented.
 			//
-			// var logger = new XunitOutputLogger(_testOutputHelper);
+			// var logger = _logger;
 			//
 			var logger = new NoopLogger();
 			//
 
 			var payloadSender = new MockPayloadSender();
-			var configReader = new TestAgentConfigurationReader(logger, metricsInterval: "1s", logLevel: "Debug");
+			var configReader = new MockConfigSnapshot(logger, metricsInterval: "1s", logLevel: "Debug");
 			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender, logger: logger, configurationReader: configReader)))
 			{
 				await Task.Delay(10000); //make sure we wait enough to collect 1 set of metrics

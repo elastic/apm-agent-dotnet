@@ -13,15 +13,15 @@ namespace Elastic.Apm.Tests
 		// ReSharper disable once MemberCanBePrivate.Global
 		public static TheoryData RateVariantsToTest => new TheoryData<double>
 		{
-			{ 0 },
-			{ 0.000000001 },
-			{ 0.00123 },
-			{ 0.3 },
-			{ 0.5 },
-			{ 0.75 },
-			{ 0.789 },
-			{ 0.999999999 },
-			{ 1 },
+			0,
+			0.000000001,
+			0.00123,
+			0.3,
+			0.5,
+			0.75,
+			0.789,
+			0.999999999,
+			1
 		};
 
 		[Theory]
@@ -62,7 +62,7 @@ namespace Elastic.Apm.Tests
 			var noopLogger = new NoopLogger();
 			var currentExecutionSegmentsContainer = new NoopCurrentExecutionSegmentsContainer();
 			var noopPayloadSender = new NoopPayloadSender();
-			var configurationReader = new TestAgentConfigurationReader(noopLogger);
+			var configurationReader = new MockConfigSnapshot(noopLogger);
 			var sampler = new Sampler(rate);
 
 			total.Repeat(i =>
@@ -71,6 +71,7 @@ namespace Elastic.Apm.Tests
 					/* distributedTracingData: */ null, noopPayloadSender, configurationReader, currentExecutionSegmentsContainer);
 				if (transaction.IsSampled) ++sampledCount;
 
+				// ReSharper disable once InvertIf
 				if (i + 1 >= startCheckingAfter)
 				{
 					var actualRate = (double)sampledCount / (i + 1);

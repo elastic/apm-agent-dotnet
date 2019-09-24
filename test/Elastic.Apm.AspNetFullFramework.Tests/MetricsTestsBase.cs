@@ -19,7 +19,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		protected async Task VerifyMetricsBasicConstraintsImpl()
 		{
-			// Send any request to the sample application to make sure it's running
+			// Send any request to the sample application to make sure it's running since IIS might start worker process lazily
 			var sampleAppUrlPathData = RandomSampleAppUrlPath();
 			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.RelativeUrlPath,
 				sampleAppUrlPathData.StatusCode, /* timeHttpCall: */ false);
