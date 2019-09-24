@@ -73,6 +73,7 @@ namespace Elastic.Apm.Config
 			public const string SpanFramesMinDuration = "ElasticApm:SpanFramesMinDuration";
 			public const string StackTraceLimit = "ElasticApm:StackTraceLimit";
 			public const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
+			public const string TransactionMaxSpans = "ElasticApm:TransactionMaxSpans";
 		}
 
 		public static class SupportedValues

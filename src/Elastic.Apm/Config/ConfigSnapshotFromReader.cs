@@ -34,5 +34,6 @@ namespace Elastic.Apm.Config
 		public double SpanFramesMinDurationInMilliseconds => _content.SpanFramesMinDurationInMilliseconds;
 		public int StackTraceLimit => _content.StackTraceLimit;
 		public double TransactionSampleRate => _content.TransactionSampleRate;
+		public int TransactionMaxSpans => _content.TransactionMaxSpans;
 	}
 }
