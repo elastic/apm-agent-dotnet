@@ -7,9 +7,9 @@ namespace Elastic.Apm.Tests.HelpersTests
 	public class DbgUtilsTests
 	{
 		[Fact]
-		public void GetCurrentMethodName_test()
+		public void CurrentMethodName_test()
 		{
-			DbgUtils.GetCurrentMethodName().Should().Be(nameof(GetCurrentMethodName_test));
+			DbgUtils.CurrentMethodName().Should().Be(nameof(CurrentMethodName_test));
 		}
 	}
 }

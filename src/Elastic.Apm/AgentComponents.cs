@@ -47,7 +47,7 @@ namespace Elastic.Apm
 				currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(Logger));
 		}
 
-		private ICentralConfigFetcher CentralConfigFetcher { get; }
+		internal ICentralConfigFetcher CentralConfigFetcher { get; }
 
 		internal IConfigStore ConfigStore { get; }
 

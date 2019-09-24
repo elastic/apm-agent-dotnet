@@ -144,28 +144,29 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void CaptureBodyConfigTest()
 		{
-			// ReSharper disable once RedundantArgumentDefaultValue
-			var agent = new ApmAgent(new TestAgentComponents(captureBody: SupportedValues.CaptureBodyOff));
-			agent.ConfigurationReader.CaptureBody.Should().Be(SupportedValues.CaptureBodyOff);
+			BuildAgentAndVerify(SupportedValues.CaptureBodyOff);
+			BuildAgentAndVerify(SupportedValues.CaptureBodyAll);
+			BuildAgentAndVerify(SupportedValues.CaptureBodyErrors);
+			BuildAgentAndVerify(SupportedValues.CaptureBodyTransactions);
 
-			agent = new ApmAgent(new TestAgentComponents(captureBody: SupportedValues.CaptureBodyAll));
-			agent.ConfigurationReader.CaptureBody.Should().Be(SupportedValues.CaptureBodyAll);
-
-			agent = new ApmAgent(new TestAgentComponents(captureBody: SupportedValues.CaptureBodyErrors));
-			agent.ConfigurationReader.CaptureBody.Should().Be(SupportedValues.CaptureBodyErrors);
-
-			agent = new ApmAgent(new TestAgentComponents(captureBody: SupportedValues.CaptureBodyTransactions));
-			agent.ConfigurationReader.CaptureBody.Should().Be(SupportedValues.CaptureBodyTransactions);
+			void BuildAgentAndVerify(string captureBody)
+			{
+				using (var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(captureBody: captureBody))))
+					agent.ConfigurationReader.CaptureBody.Should().Be(captureBody);
+			}
 		}
 
 		[Fact]
 		public void CaptureBodyContentTypesConfigTest()
 		{
 			// ReSharper disable once RedundantArgumentDefaultValue
-			var agent = new ApmAgent(new TestAgentComponents(captureBodyContentTypes: DefaultValues.CaptureBodyContentTypes));
-			var expected = new List<string>() { "application/x-www-form-urlencoded*", "text/*", "application/json*", "application/xml*" };
-			agent.ConfigurationReader.CaptureBodyContentTypes.Should().HaveCount(4);
-			agent.ConfigurationReader.CaptureBodyContentTypes.Should().BeEquivalentTo(expected);
+			using (var agent = new ApmAgent(new TestAgentComponents(
+				config: new MockConfigSnapshot(captureBodyContentTypes: DefaultValues.CaptureBodyContentTypes))))
+			{
+				var expected = new List<string>() { "application/x-www-form-urlencoded*", "text/*", "application/json*", "application/xml*" };
+				agent.ConfigurationReader.CaptureBodyContentTypes.Should().HaveCount(4);
+				agent.ConfigurationReader.CaptureBodyContentTypes.Should().BeEquivalentTo(expected);
+			}
 		}
 
 		[Fact]

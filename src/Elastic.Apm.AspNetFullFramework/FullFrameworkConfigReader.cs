@@ -11,7 +11,7 @@ namespace Elastic.Apm.AspNetFullFramework
 	{
 		private const string ThisClassName = nameof(FullFrameworkConfigReader);
 
-		private new readonly IApmLogger _logger;
+		private readonly IApmLogger _logger;
 
 		public FullFrameworkConfigReader(IApmLogger logger = null) : base(logger) => _logger = logger?.Scoped(ThisClassName);
 

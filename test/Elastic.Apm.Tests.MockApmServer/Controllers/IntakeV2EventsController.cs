@@ -42,9 +42,8 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 		private async Task<IActionResult> PostImpl()
 		{
 			_logger.Debug()?.Log("Received request with content length: {ContentLength}."
-				+ " Current thread: name `{ThreadName}', managed ID: {ThreadManagedId}."
-				, Request.ContentLength
-				, Thread.CurrentThread.Name, Thread.CurrentThread.ManagedThreadId);
+				+ " Current thread: {ThreadDesc}."
+				, Request.ContentLength, DbgUtils.CurrentThreadDesc);
 
 			int numberOfObjects;
 

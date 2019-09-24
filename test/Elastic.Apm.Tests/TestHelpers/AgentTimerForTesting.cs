@@ -17,13 +17,13 @@ namespace Elastic.Apm.Tests.TestHelpers
 
 		int PendingDelayTasksCount { get; }
 
-		void WaitForTimeToPassAndUntil(TimeSpan timeSpan, Func<bool> untilCondition = null, string dbgGoalDescription = null);
+		void WaitForTimeToPassAndUntil(TimeSpan timeSpan, Func<bool> untilCondition = null, Func<string> dbgDesc = null);
 	}
 
 	internal static class AgentTimerForTestsExtensions
 	{
-		internal static void WaitForTimeToPass(this IAgentTimerForTesting thisObj, TimeSpan timeSpan, string dbgGoalDescription = null) =>
-			thisObj.WaitForTimeToPassAndUntil(timeSpan, /* untilCondition: */ null, dbgGoalDescription);
+		internal static void WaitForTimeToPass(this IAgentTimerForTesting thisObj, TimeSpan timeSpan, Func<string> dbgDesc = null) =>
+			thisObj.WaitForTimeToPassAndUntil(timeSpan, /* untilCondition: */ null, dbgDesc);
 	}
 
 	internal class AgentTimerForTesting : IAgentTimerForTesting
@@ -61,7 +61,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 			_mockAgentTimer.FastForward(realSpanSinceStarted - mockSpanSinceStarted);
 		}
 
-		public void WaitForTimeToPassAndUntil(TimeSpan timeSpan, Func<bool> untilCondition = null, string dbgGoalDescription = null)
+		public void WaitForTimeToPassAndUntil(TimeSpan timeSpan, Func<bool> untilCondition = null, Func<string> dbgDesc = null)
 		{
 			var realNow = _realAgentTimer.Now;
 			var targetInstant = realNow + timeSpan;
@@ -74,7 +74,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 
 				_logger.Debug()
 					?.Log("Waiting for time to pass..."
-						+ $" Goal: {dbgGoalDescription.AsNullableToString()}. leftToWait: {leftToWait}. realNow: {realNow}."
+						+ $" dbgDesc: {(dbgDesc?.Invoke()).AsNullableToString()}. leftToWait: {leftToWait}. realNow: {realNow}."
 						+ $" timeSpan: {timeSpan}. targetInstant: {targetInstant}");
 
 				Thread.Sleep(leftToWait);
@@ -82,12 +82,12 @@ namespace Elastic.Apm.Tests.TestHelpers
 				realNow = _realAgentTimer.Now;
 			}
 
-			if (untilCondition != null) WaitUntil(untilCondition, dbgGoalDescription);
+			if (untilCondition != null) WaitUntil(untilCondition, dbgDesc);
 		}
 
-		private void WaitUntil(Func<bool> untilCondition, string dbgGoalDescription)
+		private void WaitUntil(Func<bool> untilCondition, Func<string> dbgDesc)
 		{
-			_logger.Debug()?.Log($"Waiting until condition is true... Goal: {dbgGoalDescription.AsNullableToString()}.");
+			_logger.Debug()?.Log($"Waiting until condition is true... dbgDesc: {(dbgDesc?.Invoke()).AsNullableToString()}.");
 
 			var maxTotalTimeToWait = 30.Seconds();
 			var timeToWaitBetweenChecks = 10.Milliseconds();
@@ -109,8 +109,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 				if (elapsedTime > maxTotalTimeToWait)
 				{
 					throw new XunitException("Wait-until-condition is still false even after max allotted time to wait."
-						+ $" dbgGoalDescription: {dbgGoalDescription}."
-						+ $" elapsedTime: {elapsedTime}."
+						+ $" dbgDesc: {(dbgDesc?.Invoke()).AsNullableToString()}."
+						+ $" elapsedTime: {elapsedTime.ToHmsInSeconds()}."
 						+ $" attemptCount: {attemptCount}.");
 				}
 
@@ -118,8 +118,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 				{
 					_logger.Debug()
 						?.Log("Delaying until next check..."
-							+ $" dbgGoalDescription: {dbgGoalDescription}."
-							+ $" elapsedTime: {elapsedTime}."
+							+ $" dbgDesc: {(dbgDesc?.Invoke()).AsNullableToString()}."
+							+ $" elapsedTime: {elapsedTime.ToHms()}."
 							+ $" attemptCount: {attemptCount}."
 							+ $" maxTotalTimeToWait: {maxTotalTimeToWait}."
 							+ $" timeToWaitBetweenChecks: {timeToWaitBetweenChecks}.");

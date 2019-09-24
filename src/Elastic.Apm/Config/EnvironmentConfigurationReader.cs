@@ -4,11 +4,11 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
 {
-	internal class EnvironmentConfigurationReader : AbstractConfigurationReader, IConfigurationReader
+	internal class EnvironmentConfigurationReader : AbstractConfigurationReader, IConfigSnapshot
 	{
 		private const string ThisClassName = nameof(EnvironmentConfigurationReader);
 
-		internal const string Origin = "environment";
+		internal const string Origin = "environment variables";
 
 		private readonly Lazy<double> _spanFramesMinDurationInMilliseconds;
 
@@ -22,6 +22,8 @@ namespace Elastic.Apm.Config
 
 			_stackTraceLimit = new Lazy<int>(() => ParseStackTraceLimit(Read(ConfigConsts.EnvVarNames.StackTraceLimit)));
 		}
+
+		public string DbgDescription => Origin;
 
 		public string CaptureBody => ParseCaptureBody(Read(ConfigConsts.EnvVarNames.CaptureBody));
 

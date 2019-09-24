@@ -18,7 +18,7 @@ namespace Elastic.Apm.AspNetCore.Config
 		private readonly IConfiguration _configuration;
 		private readonly string _environmentName;
 
-		private new readonly IApmLogger _logger;
+		private readonly IApmLogger _logger;
 
 		private readonly Lazy<double> _spanFramesMinDurationInMilliseconds;
 

@@ -1,4 +1,5 @@
 using System.Threading;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 
@@ -35,16 +36,14 @@ namespace Elastic.Apm
 			internal ContextLocalHolder(IApmLogger logger, string loggerNameSuffix) =>
 				_logger = logger.Scoped($"{nameof(CurrentExecutionSegmentsContainer)}.{loggerNameSuffix}");
 
-			private static string DbgCurrentThreadNameOrId => Thread.CurrentThread.Name ?? Thread.CurrentThread.ManagedThreadId.ToString();
-
 			internal T Value
 			{
 				get
 				{
 					_logger.Trace()
 						?.Log("Getting value..." +
-							" Thread: {DbgThreadNameOrId}. Current value: {ExecutionSegment}.",
-							DbgCurrentThreadNameOrId, _value.Value);
+							" Current thread: {ThreadDesc}. Current value: {ExecutionSegment}."
+							, DbgUtils.CurrentThreadDesc, _value.Value);
 					return _value.Value;
 				}
 
@@ -52,8 +51,8 @@ namespace Elastic.Apm
 				{
 					_logger.Trace()
 						?.Log("Setting value..." +
-							" Thread: {DbgThreadNameOrId}. Current value: {ExecutionSegment}. New value: {ExecutionSegment}.",
-							DbgCurrentThreadNameOrId, _value.Value, value);
+							" Current thread: {ThreadDesc}. Current value: {ExecutionSegment}. New value: {ExecutionSegment}."
+							, DbgUtils.CurrentThreadDesc, _value.Value, value);
 					_value.Value = value;
 				}
 			}

@@ -1,3 +1,4 @@
+using System;
 using Elastic.Apm.Helpers;
 using FluentAssertions;
 using Xunit;
@@ -50,26 +51,52 @@ namespace Elastic.Apm.Tests.HelpersTests
 		[Fact]
 		public void AsNullableToString_test()
 		{
+			// ReSharper disable ExpressionIsAlwaysNull
 			object obj = null;
-			// ReSharper disable once ExpressionIsAlwaysNull
 			obj.AsNullableToString().Should().Be(ObjectExtensions.NullAsString);
 			obj = new object();
 			obj.AsNullableToString().Should().NotBe(ObjectExtensions.NullAsString);
 
 			string str = null;
-			// ReSharper disable once ExpressionIsAlwaysNull
 			str.AsNullableToString().Should().Be(ObjectExtensions.NullAsString);
+			str.AsNullableToString().Should().NotBe(str);
 			str = "";
+			str.AsNullableToString().Should().Be(str);
 			str.AsNullableToString().Should().NotBe(ObjectExtensions.NullAsString);
 
 			int? nullableInt = null;
-			// ReSharper disable once ExpressionIsAlwaysNull
 			nullableInt.AsNullableToString().Should().Be(ObjectExtensions.NullAsString);
 			nullableInt = 1;
 			nullableInt.AsNullableToString().Should().NotBe(ObjectExtensions.NullAsString);
 
 			const int i = 1;
 			i.AsNullableToString().Should().NotBe(ObjectExtensions.NullAsString);
+			// ReSharper restore ExpressionIsAlwaysNull
+		}
+
+		[Fact]
+		public void how_to_chain_AsNullableToString()
+		{
+			// ReSharper disable ExpressionIsAlwaysNull
+			string RightWayToChainAsNullableToString(TimeSpan? nullableTimeSpanArg)
+			{
+				return (nullableTimeSpanArg?.ToHms()).AsNullableToString();
+			}
+
+			string WrongWayToChainAsNullableToString(TimeSpan? nullableTimeSpanArg)
+			{
+				return nullableTimeSpanArg?.ToHms().AsNullableToString();
+			}
+
+			TimeSpan? nullableTimeSpan = TimeSpan.FromHours(1);
+			RightWayToChainAsNullableToString(nullableTimeSpan).Should().Be("1h");
+			// When nullableTimeSpan is not null the wrong way works
+			WrongWayToChainAsNullableToString(nullableTimeSpan).Should().Be("1h");
+			nullableTimeSpan = null;
+			RightWayToChainAsNullableToString(nullableTimeSpan).Should().Be(ObjectExtensions.NullAsString);
+			// But when nullableTimeSpan is null the wrong way does not work
+			WrongWayToChainAsNullableToString(nullableTimeSpan).Should().Be(null);
+			// ReSharper restore ExpressionIsAlwaysNull
 		}
 	}
 }

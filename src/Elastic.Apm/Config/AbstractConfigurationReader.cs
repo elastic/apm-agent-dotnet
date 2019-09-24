@@ -15,7 +15,7 @@ namespace Elastic.Apm.Config
 	{
 		private const string ThisClassName = nameof(AbstractConfigurationReader);
 
-		protected readonly IApmLogger _logger;
+		private readonly IApmLogger _logger;
 		private readonly LazyContextualInit<int> _cachedMaxBatchEventCount = new LazyContextualInit<int>();
 		private readonly LazyContextualInit<int> _cachedMaxQueueEventCount = new LazyContextualInit<int>();
 		private readonly LazyContextualInit<IReadOnlyList<Uri>> _cachedServerUrls = new LazyContextualInit<IReadOnlyList<Uri>>();

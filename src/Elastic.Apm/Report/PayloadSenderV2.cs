@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,31 +21,29 @@ namespace Elastic.Apm.Report
 	/// Responsible for sending the data to the server. Implements Intake V2.
 	/// Each instance creates its own thread to do the work. Therefore, instances should be reused if possible.
 	/// </summary>
-	internal class PayloadSenderV2 : IPayloadSender, IDisposable
+	internal class PayloadSenderV2 : BackendCommComponentBase, IPayloadSender
 	{
 		private const string ThisClassName = nameof(PayloadSenderV2);
 
 		internal readonly Api.System System;
 
-		private readonly CancellationTokenSource _cancellationTokenSource;
-		private readonly DisposableHelper _disposableHelper = new DisposableHelper();
 		private readonly BatchBlock<object> _eventQueue;
 
 		private readonly TimeSpan _flushInterval;
 
-		private readonly HttpClient _httpClient;
 		private readonly IApmLogger _logger;
 		private readonly int _maxQueueEventCount;
 		private readonly Metadata _metadata;
 
 		private readonly PayloadItemSerializer _payloadItemSerializer = new PayloadItemSerializer();
-		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler;
 
 		public PayloadSenderV2(IApmLogger logger, IConfigSnapshot config, Service service, Api.System system,
-			HttpMessageHandler httpMessageHandler = null
+			HttpMessageHandler httpMessageHandler = null, [CallerMemberName] string dbgName = null
 		)
+			: base( /* isEnabled: */ true, logger, ThisClassName, service, config, httpMessageHandler)
 		{
-			_logger = logger?.Scoped(ThisClassName);
+			_logger = logger?.Scoped(ThisClassName
+				+ (dbgName == null ? "#" + RuntimeHelpers.GetHashCode(this).ToString("X") : $" (dbgName: `{dbgName}')"));
 
 			System = system;
 			_metadata = new Metadata { Service = service, System = System };
@@ -64,22 +63,21 @@ namespace Elastic.Apm.Report
 				_maxQueueEventCount = config.MaxQueueEventCount;
 
 			_flushInterval = config.FlushInterval;
+
+			_logger?.Debug()
+				?.Log(
+					"Using the following configuration options:"
+					+ " FlushInterval: {FlushInterval}"
+					+ ", MaxBatchEventCount: {MaxBatchEventCount}"
+					+ ", MaxQueueEventCount: {MaxQueueEventCount}"
+					, _flushInterval.ToHms(), config.MaxBatchEventCount, _maxQueueEventCount);
+
 			_eventQueue = new BatchBlock<object>(config.MaxBatchEventCount);
 
-			_cancellationTokenSource = new CancellationTokenSource();
-			_singleThreadTaskScheduler = new SingleThreadTaskScheduler("ElasticApmPayloadSender", logger, _cancellationTokenSource.Token);
-
-			_httpClient = BackendCommUtils.BuildHttpClient(logger, config, service, ThisClassName, httpMessageHandler);
-
-#pragma warning disable 4014
-			Task.Factory.StartNew(RunWaitForDataSendItToServerLoop, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
-#pragma warning restore 4014
-			_logger.Debug()?.Log("Enqueued {MethodName} with internal task scheduler", nameof(RunWaitForDataSendItToServerLoop));
+			StartWorkLoop();
 		}
 
 		private long _eventQueueCount;
-
-		internal Thread Thread => _singleThreadTaskScheduler.Thread;
 
 		public void QueueTransaction(ITransaction transaction) => EnqueueEvent(transaction, "Transaction");
 
@@ -134,44 +132,20 @@ namespace Elastic.Apm.Report
 			return true;
 		}
 
-		public void Dispose() =>
-			_disposableHelper.DoOnce(_logger, ThisClassName, () =>
-			{
-				_logger.Debug()?.Log("Signalling _cancellationTokenSource");
-				_cancellationTokenSource.Cancel();
-
-				_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit", _singleThreadTaskScheduler.Thread.Name);
-				_singleThreadTaskScheduler.Thread.Join();
-
-				_logger.Debug()?.Log("_singleThreadTaskScheduler thread exited - disposing of _cancellationTokenSource and exiting");
-				_cancellationTokenSource.Dispose();
-			});
-
-		private void ThrowIfDisposed()
-		{
-			if (_disposableHelper.HasStarted) throw new ObjectDisposedException( /* objectName: */ ThisClassName);
-		}
-
-		private Task RunWaitForDataSendItToServerLoop() =>
-			ExceptionUtils.DoSwallowingExceptions(_logger, async () =>
-				{
-					while (true) await ProcessQueueItems(await ReceiveBatchAsync());
-					// ReSharper disable once FunctionNeverReturns
-				}
-				, dbgCallerMethodName: ThisClassName + "." + DbgUtils.GetCurrentMethodName());
+		protected override async Task WorkLoopIteration() => await ProcessQueueItems(await ReceiveBatchAsync());
 
 		private async Task<object[]> ReceiveBatchAsync()
 		{
-			var receiveAsyncTask = _eventQueue.ReceiveAsync(_cancellationTokenSource.Token);
+			var receiveAsyncTask = _eventQueue.ReceiveAsync(CtsInstance.Token);
 
 			if (_flushInterval == TimeSpan.Zero)
 				_logger.Trace()?.Log("Waiting for data to send... (not using FlushInterval timer because FlushInterval is 0)");
 			else
 			{
-				_logger.Trace()?.Log("Waiting for data to send... FlushInterval: {FlushInterval}", _flushInterval);
+				_logger.Trace()?.Log("Waiting for data to send... FlushInterval: {FlushInterval}", _flushInterval.ToHms());
 				while (true)
 				{
-					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, _cancellationTokenSource.Token)) break;
+					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, CtsInstance.Token)) break;
 
 					_eventQueue.TriggerBatch();
 				}
@@ -251,7 +225,7 @@ namespace Elastic.Apm.Report
 
 				var content = new StringContent(ndjson.ToString(), Encoding.UTF8, "application/x-ndjson");
 
-				var result = await _httpClient.PostAsync(BackendCommUtils.ApmServerEndpoints.IntakeV2Events, content, _cancellationTokenSource.Token);
+				var result = await HttpClientInstance.PostAsync(BackendCommUtils.ApmServerEndpoints.IntakeV2EventsUrlPath, content, CtsInstance.Token);
 
 				if (result != null && !result.IsSuccessStatusCode)
 				{
@@ -272,9 +246,10 @@ namespace Elastic.Apm.Report
 				_logger?.Warning()
 					?.LogException(
 						e,
-						"Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):\n{SerializedItems}",
-						_httpClient.BaseAddress,
-						TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray())));
+						"Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):\n{SerializedItems}"
+						, HttpClientInstance.BaseAddress
+						, TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray()))
+					);
 			}
 		}
 	}

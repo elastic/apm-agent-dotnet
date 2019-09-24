@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Threading;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
@@ -15,30 +15,40 @@ using Newtonsoft.Json.Linq;
 
 namespace Elastic.Apm.BackendComm
 {
-	internal class CentralConfigFetcher : ICentralConfigFetcher
+	internal class CentralConfigFetcher : BackendCommComponentBase, ICentralConfigFetcher
 	{
 		private const string ThisClassName = nameof(CentralConfigFetcher);
+
+		internal static readonly TimeSpan GetConfigHttpRequestTimeout = TimeSpan.FromMinutes(5);
 
 		internal static readonly TimeSpan WaitTimeIfAnyError = TimeSpan.FromMinutes(5);
 		internal static readonly TimeSpan WaitTimeIfNoCacheControlMaxAge = TimeSpan.FromMinutes(5);
 
 		private readonly IAgentTimer _agentTimer;
-		private readonly CancellationTokenSource _cancellationTokenSource;
 		private readonly IConfigStore _configStore;
-		private readonly DisposableHelper _disposableHelper = new DisposableHelper();
 		private readonly string _getConfigUrlPath;
-		private readonly HttpClient _httpClient;
 		private readonly IConfigSnapshot _initialSnapshot;
 		private readonly IApmLogger _logger;
-		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler;
 
-		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, Service service, HttpMessageHandler httpMessageHandler = null
-			, IAgentTimer agentTimer = null
+		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, Service service
+			, HttpMessageHandler httpMessageHandler = null, IAgentTimer agentTimer = null, [CallerMemberName] string dbgName = null
 		)
+			: this(logger, configStore, configStore.CurrentSnapshot, service, httpMessageHandler, agentTimer, dbgName)
+		{}
+
+		/// <summary>
+		/// We need this private ctor to avoid calling configStore.CurrentSnapshot twice (and thus possibly using different snapshots)
+		/// when passing isEnabled: initialConfigSnapshot.CentralConfig and config: initialConfigSnapshot to base
+		/// </summary>
+		private CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, IConfigSnapshot initialConfigSnapshot, Service service
+			, HttpMessageHandler httpMessageHandler, IAgentTimer agentTimer, string dbgName
+		)
+			: base(initialConfigSnapshot.CentralConfig, logger, ThisClassName, service, initialConfigSnapshot, httpMessageHandler)
 		{
-			_logger = logger.Scoped(ThisClassName);
-			_configStore = configStore;
-			_initialSnapshot = configStore.CurrentSnapshot;
+			_logger = logger?.Scoped(ThisClassName
+				+ (dbgName == null ? "#" + RuntimeHelpers.GetHashCode(this).ToString("X") : $" (dbgName: `{dbgName}')"));
+
+			_initialSnapshot = initialConfigSnapshot;
 
 			var isCentralConfigOptEqDefault = _initialSnapshot.CentralConfig == ConfigConsts.DefaultValues.CentralConfig;
 			var centralConfigStatus = _initialSnapshot.CentralConfig ? "enabled" : "disabled";
@@ -50,111 +60,86 @@ namespace Elastic.Apm.BackendComm
 
 			if (!_initialSnapshot.CentralConfig) return;
 
+			_configStore = configStore;
+
 			_agentTimer = agentTimer ?? new AgentTimer();
 
-			_cancellationTokenSource = new CancellationTokenSource();
-			_singleThreadTaskScheduler = new SingleThreadTaskScheduler($"ElasticApm{ThisClassName}", logger, _cancellationTokenSource.Token);
-
-			_getConfigUrlPath = BackendCommUtils.ApmServerEndpoints.Config(service);
+			_getConfigUrlPath = BackendCommUtils.ApmServerEndpoints.GetConfigUrlPath(service);
 			_logger.Debug()
 				?.Log("Combined URL path for APM Server get central configuration endpoint: {UrlPath}. Service: {Service}."
 					, _getConfigUrlPath, service);
 
-			_httpClient = BackendCommUtils.BuildHttpClient(logger, _initialSnapshot, service, ThisClassName, httpMessageHandler);
-
-#pragma warning disable 4014
-			Task.Factory.StartNew(RunFetchingLoop, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning,
-				_singleThreadTaskScheduler);
-#pragma warning restore 4014
-			_logger.Debug()?.Log("Enqueued {MethodName} with internal task scheduler", nameof(RunFetchingLoop));
+			StartWorkLoop();
 		}
 
-		public void Dispose()
+		private long _dbgIterationsCount;
+
+		private EntityTagHeaderValue _eTag;
+
+		protected override async Task WorkLoopIteration()
 		{
-			if (_cancellationTokenSource == null)
+			++_dbgIterationsCount;
+			var waitingLogSeverity = LogLevel.Trace;
+			WaitInfoS waitInfo;
+			HttpRequestMessage httpRequest = null;
+			HttpResponseMessage httpResponse = null;
+			string httpResponseBody = null;
+			try
 			{
-				_logger.Debug()?.Log("CentralConfig is disabled - nothing to dispose");
-				return;
+				httpRequest = BuildHttpRequest(_eTag);
+
+				(httpResponse, httpResponseBody) = await FetchConfigHttpResponseAsync(httpRequest);
+
+				ConfigDelta configDelta;
+				(configDelta, waitInfo) = ProcessHttpResponse(httpResponse, httpResponseBody);
+				if (configDelta != null)
+				{
+					UpdateConfigStore(configDelta);
+					_eTag = httpResponse.Headers.ETag;
+				}
+			}
+			catch (OperationCanceledException)
+			{
+				throw;
+			}
+			catch (Exception ex)
+			{
+				var severity = LogLevel.Error;
+				waitInfo = new WaitInfoS(WaitTimeIfAnyError, "Default wait time is used because exception was thrown"
+					+ " while fetching configuration from APM Server and parsing it.");
+
+				if (ex is FailedToFetchConfigException fEx)
+				{
+					severity = fEx.Severity;
+					fEx.WaitInfo?.Let(it => { waitInfo = it; });
+				}
+
+				if (severity == LogLevel.Error) waitingLogSeverity = LogLevel.Information;
+
+				_logger.IfLevel(severity)
+					?.LogException(ex, "Exception was thrown while fetching configuration from APM Server and parsing it."
+						+ " ETag: {ETag}. URL path: {UrlPath}. Apm Server base URL: {ApmServerUrl}. WaitInterval: {WaitInterval}."
+						+ " dbgIterationsCount: {dbgIterationsCount}."
+						+ Environment.NewLine + "+-> Request:{HttpRequest}"
+						+ Environment.NewLine + "+-> Response:{HttpResponse}"
+						+ Environment.NewLine + "+-> Response body [length: {HttpResponseBodyLength}]:{HttpResponseBody}"
+						, _eTag.AsNullableToString(), _getConfigUrlPath, HttpClientInstance.BaseAddress, waitInfo.Interval.ToHms(),
+						_dbgIterationsCount
+						, httpRequest == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpRequest.ToString())
+						, httpResponse == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpResponse.ToString())
+						, httpResponseBody == null ? "N/A" : httpResponseBody.Length.ToString()
+						, httpResponseBody == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpResponseBody));
+			}
+			finally
+			{
+				httpRequest?.Dispose();
+				httpResponse?.Dispose();
 			}
 
-			_disposableHelper.DoOnce(_logger, ThisClassName, () =>
-			{
-				_logger.Debug()?.Log("Signalling _cancellationTokenSource");
-				_cancellationTokenSource.Cancel();
-
-				_logger.Debug()?.Log("Waiting for _singleThreadTaskScheduler thread `{ThreadName}' to exit", _singleThreadTaskScheduler.Thread.Name);
-				_singleThreadTaskScheduler.Thread.Join();
-
-				_logger.Debug()?.Log("_singleThreadTaskScheduler thread exited - disposing of _cancellationTokenSource and exiting");
-				_cancellationTokenSource.Dispose();
-			});
-		}
-
-		private Task RunFetchingLoop() => ExceptionUtils.DoSwallowingExceptions(_logger, RunFetchingLoopImpl,
-			dbgCallerMethodName: ThisClassName + "." + DbgUtils.GetCurrentMethodName());
-
-		private async Task RunFetchingLoopImpl()
-		{
-			EntityTagHeaderValue eTag = null;
-
-			while (true)
-			{
-				WaitInfoS waitInfo;
-				HttpRequestMessage httpRequest = null;
-				HttpResponseMessage httpResponse = null;
-				string httpResponseBody = null;
-				try
-				{
-					httpRequest = BuildHttpRequest(eTag);
-					httpResponse = await FetchConfigHttpResponseAsync(httpRequest);
-					httpResponseBody = await httpResponse.Content.ReadAsStringAsync();
-
-					ConfigDelta configDelta;
-					(configDelta, waitInfo) = ProcessHttpResponse(httpResponse, httpResponseBody);
-					if (configDelta != null)
-					{
-						UpdateConfigStore(configDelta);
-						eTag = httpResponse.Headers.ETag;
-					}
-				}
-				catch (OperationCanceledException)
-				{
-					throw;
-				}
-				catch (Exception ex)
-				{
-					var severity = LogLevel.Error;
-					waitInfo = new WaitInfoS(WaitTimeIfAnyError, "Default wait time is used because exception was thrown"
-						+ " while fetching configuration from APM Server and parsing it.");
-
-					if (ex is FailedToFetchConfigException fEx)
-					{
-						severity = fEx.Severity;
-						fEx.WaitInfo?.Let(it => { waitInfo = it; });
-					}
-
-					_logger.IfLevel(severity)
-						?.LogException(ex, "Exception was thrown while fetching configuration from APM Server and parsing it."
-							+ " ETag: {ETag}. URL path: {UrlPath}. Apm Server base URL: {ApmServerUrl}."
-							+ Environment.NewLine + "+-> Request:{HttpRequest}"
-							+ Environment.NewLine + "+-> Response:{HttpResponse}"
-							+ Environment.NewLine + "+-> Response body [length: {HttpResponseBodyLength}]:{HttpResponseBody}"
-							, eTag.AsNullableToString(), _getConfigUrlPath, _httpClient.BaseAddress
-							, httpRequest == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpRequest.ToString())
-							, httpResponse == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpResponse.ToString())
-							, httpResponseBody == null ? "N/A" : httpResponseBody.Length.ToString()
-							, httpResponseBody == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpResponseBody));
-				}
-				finally
-				{
-					httpRequest?.Dispose();
-					httpResponse?.Dispose();
-				}
-
-				_logger.Trace()?.Log("Waiting {WaitInterval}... {WaitReason}", waitInfo.Interval, waitInfo.Reason);
-				await _agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, _cancellationTokenSource.Token);
-			}
-			// ReSharper disable once FunctionNeverReturns
+			_logger.IfLevel(waitingLogSeverity)
+				?.Log("Waiting {WaitInterval}... {WaitReason}. dbgIterationsCount: {dbgIterationsCount}."
+					, waitInfo.Interval.ToHms(), waitInfo.Reason, _dbgIterationsCount);
+			await _agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, CtsInstance.Token);
 		}
 
 		private HttpRequestMessage BuildHttpRequest(EntityTagHeaderValue eTag)
@@ -164,19 +149,28 @@ namespace Elastic.Apm.BackendComm
 			return httpRequest;
 		}
 
-		private async Task<HttpResponseMessage> FetchConfigHttpResponseAsync(HttpRequestMessage requestMessage)
+		private async Task<ValueTuple<HttpResponseMessage, string>> FetchConfigHttpResponseImplAsync(HttpRequestMessage httpRequest)
 		{
-			_logger.Trace()?.Log("Making HTTP request to APM Server... Request: {RequestMessage}.", requestMessage);
-			var httpResponse = await _httpClient.SendAsync(requestMessage, _cancellationTokenSource.Token);
+			_logger.Trace()?.Log("Making HTTP request to APM Server... Request: {HttpRequest}.", httpRequest);
 
+			var httpResponse = await HttpClientInstance.SendAsync(httpRequest, HttpCompletionOption.ResponseContentRead, CtsInstance.Token);
 			// ReSharper disable once InvertIf
 			if (httpResponse == null)
 			{
 				throw new FailedToFetchConfigException("HTTP client API call for request to APM Server returned null."
-					+ $" Request:{Environment.NewLine}{TextUtils.Indent(requestMessage.ToString())}");
+					+ $" Request:{Environment.NewLine}{TextUtils.Indent(httpRequest.ToString())}");
 			}
 
-			return httpResponse;
+			_logger.Trace()?.Log("Reading HTTP response body... Response: {HttpResponse}.", httpResponse);
+			var httpResponseBody = await httpResponse.Content.ReadAsStringAsync();
+
+			return (httpResponse, httpResponseBody);
+		}
+
+		private async Task<ValueTuple<HttpResponseMessage, string>> FetchConfigHttpResponseAsync(HttpRequestMessage httpRequest)
+		{
+			return await _agentTimer.AwaitOrTimeout(FetchConfigHttpResponseImplAsync(httpRequest)
+				, _agentTimer.Now + GetConfigHttpRequestTimeout, CtsInstance.Token);
 		}
 
 		private (ConfigDelta, WaitInfoS) ProcessHttpResponse(HttpResponseMessage httpResponse, string httpResponseBody)
