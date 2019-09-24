@@ -31,7 +31,7 @@ namespace Elastic.Apm.BackendComm
 		private readonly IApmLogger _logger;
 
 		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, Service service
-			, HttpMessageHandler httpMessageHandler = null, IAgentTimer agentTimer = null, [CallerMemberName] string dbgName = null
+			, HttpMessageHandler httpMessageHandler = null, IAgentTimer agentTimer = null, string dbgName = null
 		)
 			: this(logger, configStore, configStore.CurrentSnapshot, service, httpMessageHandler, agentTimer, dbgName)
 		{}
@@ -45,8 +45,7 @@ namespace Elastic.Apm.BackendComm
 		)
 			: base(initialConfigSnapshot.CentralConfig, logger, ThisClassName, service, initialConfigSnapshot, httpMessageHandler)
 		{
-			_logger = logger?.Scoped(ThisClassName
-				+ (dbgName == null ? "#" + RuntimeHelpers.GetHashCode(this).ToString("X") : $" (dbgName: `{dbgName}')"));
+			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
 
 			_initialSnapshot = initialConfigSnapshot;
 

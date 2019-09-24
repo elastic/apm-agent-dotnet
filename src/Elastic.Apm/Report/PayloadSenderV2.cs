@@ -38,12 +38,11 @@ namespace Elastic.Apm.Report
 		private readonly PayloadItemSerializer _payloadItemSerializer = new PayloadItemSerializer();
 
 		public PayloadSenderV2(IApmLogger logger, IConfigSnapshot config, Service service, Api.System system,
-			HttpMessageHandler httpMessageHandler = null, [CallerMemberName] string dbgName = null
+			HttpMessageHandler httpMessageHandler = null, string dbgName = null
 		)
 			: base( /* isEnabled: */ true, logger, ThisClassName, service, config, httpMessageHandler)
 		{
-			_logger = logger?.Scoped(ThisClassName
-				+ (dbgName == null ? "#" + RuntimeHelpers.GetHashCode(this).ToString("X") : $" (dbgName: `{dbgName}')"));
+			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
 
 			System = system;
 			_metadata = new Metadata { Service = service, System = System };
