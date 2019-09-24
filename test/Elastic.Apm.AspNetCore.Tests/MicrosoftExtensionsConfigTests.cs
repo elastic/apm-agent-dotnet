@@ -21,6 +21,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// Tests the <see cref="MicrosoftExtensionsConfig" /> class.
 	/// It loads the json config files from the TestConfig folder
 	/// </summary>
+	[Collection("UsesEnvironmentVariables")]
 	public class MicrosoftExtensionsConfigTests
 	{
 		/// <summary>
