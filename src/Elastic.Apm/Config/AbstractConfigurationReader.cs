@@ -61,7 +61,7 @@ namespace Elastic.Apm.Config
 			return kv.Value;
 		}
 
-		protected bool ParseCaptureHeaders(ConfigurationKeyValue kv) => ParseBoolEventCount(kv, DefaultValues.CaptureHeaders, "CaptureHeaders");
+		protected bool ParseCaptureHeaders(ConfigurationKeyValue kv) => ParseBoolOption(kv, DefaultValues.CaptureHeaders, "CaptureHeaders");
 
 		protected LogLevel ParseLogLevel(ConfigurationKeyValue kv)
 		{
@@ -607,9 +607,9 @@ namespace Elastic.Apm.Config
 			return captureBodyContentTypes;
 		}
 
-		protected bool ParseCentralConfig(ConfigurationKeyValue kv) => ParseBoolEventCount(kv, DefaultValues.CentralConfig, "CentralConfig");
+		protected bool ParseCentralConfig(ConfigurationKeyValue kv) => ParseBoolOption(kv, DefaultValues.CentralConfig, "CentralConfig");
 
-		private bool ParseBoolEventCount(ConfigurationKeyValue kv, bool defaultValue, string dbgOptionName)
+		private bool ParseBoolOption(ConfigurationKeyValue kv, bool defaultValue, string dbgOptionName)
 		{
 			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
 			{
@@ -633,6 +633,8 @@ namespace Elastic.Apm.Config
 
 			return parsedValue;
 		}
+
+		protected string ReadEnvVarValue(string envVarName) => Environment.GetEnvironmentVariable(envVarName)?.Trim();
 
 		private enum TimeSuffix
 		{

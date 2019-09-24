@@ -9,6 +9,7 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
+using FluentAssertions.Extensions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using SampleAspNetCoreApp;
@@ -20,6 +21,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// Tests the <see cref="MicrosoftExtensionsConfig" /> class.
 	/// It loads the json config files from the TestConfig folder
 	/// </summary>
+	[Collection("UsesEnvironmentVariables")]
 	public class MicrosoftExtensionsConfigTests
 	{
 		/// <summary>
@@ -50,6 +52,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public void ReadInvalidLogLevelConfigFromAppsettingsJson()
 		{
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.Environment, "");
 			var logger = new TestLogger();
 			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger,
 				"test");
@@ -60,7 +63,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 					nameof(MicrosoftExtensionsConfig),
 					"Failed parsing log level from",
 					MicrosoftExtensionsConfig.Origin,
-					MicrosoftExtensionsConfig.Keys.LogLevel,
+					ConfigConsts.KeyNames.LogLevel,
 					"Defaulting to "
 				);
 
@@ -87,7 +90,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 					nameof(MicrosoftExtensionsConfig),
 					"Failed parsing log level from",
 					MicrosoftExtensionsConfig.Origin,
-					MicrosoftExtensionsConfig.Keys.LogLevel,
+					ConfigConsts.KeyNames.LogLevel,
 					"Defaulting to ",
 					"DbeugMisspelled"
 				);
@@ -141,6 +144,39 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var serverUrl = config.ServerUrls.FirstOrDefault();
 			serverUrl.Should().NotBeNull();
 			testLogger.Lines.Should().NotBeEmpty();
+		}
+
+		[Fact]
+		public void MicrosoftExtensionsConfig_falls_back_on_env_vars()
+		{
+			var configBeforeEnvVarSet = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
+				new NoopLogger(), "test");
+			configBeforeEnvVarSet.FlushInterval.Should().Be(ConfigConsts.DefaultValues.FlushIntervalInMilliseconds.Milliseconds());
+
+			var flushIntervalVal = 98.Seconds();
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.FlushInterval, (int)flushIntervalVal.TotalSeconds + "s");
+
+			var configAfterEnvVarSet = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
+				new NoopLogger(), "test");
+			configAfterEnvVarSet.FlushInterval.Should().Be(flushIntervalVal);
+		}
+
+		[Fact]
+		public void MicrosoftExtensionsConfig_has_precedence_over_on_env_vars()
+		{
+			const double transactionSampleRateEnvVarValue = 0.851;
+			const double transactionSampleRateValueInAppSettings = 0.456;
+
+			var configBeforeEnvVarSet = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
+				new NoopLogger(), "test");
+			configBeforeEnvVarSet.TransactionSampleRate.Should().Be(transactionSampleRateValueInAppSettings);
+
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate, transactionSampleRateEnvVarValue.ToString(System.Globalization.CultureInfo.InvariantCulture));
+			new EnvironmentConfigurationReader(new NoopLogger()).TransactionSampleRate.Should().Be(transactionSampleRateEnvVarValue);
+
+			var configAfterEnvVarSet = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
+				new NoopLogger(), "test");
+			configAfterEnvVarSet.TransactionSampleRate.Should().Be(transactionSampleRateValueInAppSettings);
 		}
 
 		internal static IConfiguration GetConfig(string path)

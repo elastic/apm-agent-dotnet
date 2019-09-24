@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
@@ -33,11 +32,11 @@ namespace Elastic.Apm.BackendComm
 		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, Service service
 			, HttpMessageHandler httpMessageHandler = null, IAgentTimer agentTimer = null, string dbgName = null
 		)
-			: this(logger, configStore, configStore.CurrentSnapshot, service, httpMessageHandler, agentTimer, dbgName)
-		{}
+			: this(logger, configStore, configStore.CurrentSnapshot, service, httpMessageHandler, agentTimer, dbgName) { }
 
 		/// <summary>
-		/// We need this private ctor to avoid calling configStore.CurrentSnapshot twice (and thus possibly using different snapshots)
+		/// We need this private ctor to avoid calling configStore.CurrentSnapshot twice (and thus possibly using different
+		/// snapshots)
 		/// when passing isEnabled: initialConfigSnapshot.CentralConfig and config: initialConfigSnapshot to base
 		/// </summary>
 		private CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, IConfigSnapshot initialConfigSnapshot, Service service

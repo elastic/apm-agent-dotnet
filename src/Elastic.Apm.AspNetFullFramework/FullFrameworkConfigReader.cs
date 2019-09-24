@@ -1,4 +1,5 @@
 using System;
+using System.Configuration;
 using System.Text;
 using System.Web.Hosting;
 using Elastic.Apm.Config;
@@ -7,15 +8,26 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
-	internal class FullFrameworkConfigReader : EnvironmentConfigurationReader
+	internal class FullFrameworkConfigReader : AbstractConfigurationWithEnvFallbackReader
 	{
 		private const string ThisClassName = nameof(FullFrameworkConfigReader);
+		private const string Origin = "System.Configuration.ConfigurationManager.AppSettings";
 
 		private readonly IApmLogger _logger;
 
-		public FullFrameworkConfigReader(IApmLogger logger = null) : base(logger) => _logger = logger?.Scoped(ThisClassName);
+		public FullFrameworkConfigReader(IApmLogger logger = null)
+			: base(logger, /* defaultEnvironmentName: */ null, ThisClassName) => _logger = logger?.Scoped(ThisClassName);
 
 		protected override string DiscoverServiceName() => DiscoverFullFrameworkServiceName() ?? base.DiscoverServiceName();
+
+		protected override ConfigurationKeyValue Read(string key, string fallBackEnvVarName)
+		{
+			var value = ConfigurationManager.AppSettings[key];
+			// ReSharper disable once ConvertIfStatementToReturnStatement
+			if (!string.IsNullOrWhiteSpace(value)) return Kv(key, value, Origin);
+
+			return Kv(fallBackEnvVarName, ReadEnvVarValue(fallBackEnvVarName), EnvironmentConfigurationReader.Origin);
+		}
 
 		private string DiscoverFullFrameworkServiceName()
 		{
@@ -35,7 +47,7 @@ namespace Elastic.Apm.AspNetFullFramework
 		{
 			try
 			{
-				return System.Environment.GetEnvironmentVariable("APP_POOL_ID");
+				return ReadEnvVarValue("APP_POOL_ID");
 			}
 			catch (Exception ex)
 			{

@@ -33,18 +33,20 @@ public class Startup
 }
 ----
 
-With this you can use any configuration source that you configured on the `IConfiguration` instance that you passed to the APM Agent. You can find the key of each configuration below in the IConfiguration key column.
+With this you can use any configuration source that you configured on the `IConfiguration` instance that you passed to the APM Agent.
+You can find the key of each configuration option
+in the `IConfiguration or Web.config key` column of the corresponding option's description.
 
 NOTE: By simply calling `app.UseElasticApm()` without the overload, the agent will read configurations only from environment variables.
 
 [float]
-[[sample-config]]
+[[configuration-on-asp-net-core-sample-config]]
 ==== Sample configuration file
 
 Below is a sample `appsettings.json` configuration file for a typical ASP.NET Core application. There are two important takeaways:
 
 1. The part below `ElasticApm` is fetched by the agent if the corresponding `IConfiguration` is passed to the agent.
-2. With ASP.NET Core, you must set `LogLevel for the internal APM logger in the standard `Logging` section with the `ElasticApm` category name.
+2. With ASP.NET Core, you must set `LogLevel` for the internal APM logger in the standard `Logging` section with the `ElasticApm` category name.
 
 [source,js]
 ----
@@ -85,6 +87,41 @@ In this case, you can set the log level of the agent with `ElasticApm:LogLevel`,
 }
 ----
 
+[[configuration-on-asp-net]]
+=== Configuration on ASP.NET
+
+When monitoring ASP.NET applications the agent uses two source of configuration:
+Web.config and environment variables.
+Web.config has precedence over environment variables which means that
+the agent first tries to find a configuration option value by its key in Web.config.
+Only if it's not present then the agent tries to look for it among environment variables
+and if it's not present there as well the agent falls back on the option's default value.
+
+You can find the key of each configuration option
+in the `IConfiguration or Web.config key` column of the corresponding option's description.
+
+[float]
+[[configuration-on-asp-net-sample-config]]
+==== Sample configuration file
+
+Below is a sample `Web.config` configuration file for a ASP.NET application.
+
+[source,xml]
+----
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ... -->
+<configuration>
+    <!-- ... -->
+    <appSettings>
+        <!-- ... -->
+        <add key="ElasticApm:ServerUrls" value="https://my-apm-server:8200" />
+        <!-- ... -->
+    </appSettings>
+    <!-- ... -->
+</configuration>
+----
+
+
 [[config-core]]
 === Core configuration options
 
@@ -99,7 +136,7 @@ NOTE: The service name must conform to this regular expression: ^[a-zA-Z0-9 _-]+
 
 [options="header"]
 |============
-| Environment variable name      | IConfiguration key 
+| Environment variable name      | IConfiguration or Web.config key 
 | `ELASTIC_APM_SERVICE_NAME` | `ElasticApm:ServiceName`
 |============
 
@@ -119,7 +156,7 @@ of the deployed revision, e.g. the output of git rev-parse HEAD.
 
 [options="header"]
 |============
-| Environment variable name      | IConfiguration key 
+| Environment variable name      | IConfiguration or Web.config key 
 | `ELASTIC_APM_SERVICE_VERSION` | `ElasticApm:ServiceVersion`
 |============
 
@@ -144,7 +181,7 @@ You must use the query bar to filter for a specific environment in versions prio
 
 [options="header"]
 |============
-| Environment variable name      | IConfiguration key 
+| Environment variable name      | IConfiguration or Web.config key 
 | `ELASTIC_APM_ENVIRONMENT`      | `ElasticApm:Environment`
 |============
 
@@ -170,7 +207,7 @@ It also expects that a period (`.`) is used to separate the integer and the frac
 
 [options="header"]
 |============
-| Environment variable name             | IConfiguration key 
+| Environment variable name             | IConfiguration or Web.config key 
 | `ELASTIC_APM_TRANSACTION_SAMPLE_RATE` | `ElasticApm:TransactionSampleRate`
 |============
 
@@ -207,7 +244,7 @@ If set to `true`, the agent makes periodic requests to the APM Server to fetch t
 
 [options="header"]
 |============
-| Environment variable name | IConfiguration key
+| Environment variable name | IConfiguration or Web.config key
 | `ELASTIC_APM_SERVER_URLS` | `ElasticApm:ServerUrls`
 |============
 
@@ -227,7 +264,7 @@ NOTE: Providing multiple URLs is not supported by the agent yet. If multiple URL
 
 [options="header"]
 |============
-| Environment variable name | IConfiguration key
+| Environment variable name | IConfiguration or Web.config key
 | `ELASTIC_APM_SECRET_TOKEN` | `ElasticApm:SecretToken`
 |============
 
@@ -248,7 +285,7 @@ Use this setting in case the APM Server requires a token (e.g. APM Server in Ela
 
 [options="header"]
 |============
-| Environment variable name | IConfiguration key
+| Environment variable name | IConfiguration or Web.config key
 | `ELASTIC_APM_FLUSH_INTERVAL` | `ElasticApm:FlushInterval`
 |============
 
@@ -282,7 +319,7 @@ in that case agent uses the default value instead.
 
 [options="header"]
 |============
-| Environment variable name | IConfiguration key
+| Environment variable name | IConfiguration or Web.config key
 | `ELASTIC_APM_MAX_BATCH_EVENT_COUNT` | `ElasticApm:MaxBatchEventCount`
 |============
 
@@ -306,7 +343,7 @@ in that case the Agent will use the default value instead.
 
 [options="header"]
 |============
-| Environment variable name | IConfiguration key
+| Environment variable name | IConfiguration or Web.config key
 | `ELASTIC_APM_MAX_QUEUE_EVENT_COUNT` | `ElasticApm:MaxQueueEventCount`
 |============
 
@@ -344,7 +381,7 @@ The default unit for this option is `s`.
 
 [options="header"]
 |============
-| Environment variable name      | IConfiguration key 
+| Environment variable name      | IConfiguration or Web.config key 
 | `ELASTIC_APM_METRICS_INTERVAL` | `ElasticApm:MetricsInterval`
 |============
 
@@ -357,7 +394,7 @@ The default unit for this option is `s`.
 
 [options="header"]
 |============
-| Environment variable name     | IConfiguration key
+| Environment variable name     | IConfiguration or Web.config key
 | `ELASTIC_APM_CAPTURE_HEADERS` | `ElasticApm:CaptureHeaders`
 |============
 
@@ -388,7 +425,7 @@ Setting it to 0 will disable stack trace collection. Any positive integer value 
 
 [options="header"]
 |============
-| Environment variable name     | IConfiguration key
+| Environment variable name     | IConfiguration or Web.config key
 | `ELASTIC_APM_STACK_TRACE_LIMIT` | `ElasticApm:StackTraceLimit`
 |============
 
@@ -419,7 +456,7 @@ The default unit for this option is `ms`
 
 [options="header"]
 |============
-| Environment variable name     | IConfiguration key
+| Environment variable name     | IConfiguration or Web.config key
 | `ELASTIC_APM_SPAN_FRAMES_MIN_DURATION` | `ElasticApm:SpanFramesMinDuration`
 |============
 
@@ -433,7 +470,7 @@ The default unit for this option is `ms`
 
 [options="header"]
 |============
-| Environment variable name | IConfiguration key
+| Environment variable name | IConfiguration or Web.config key
 | `ELASTIC_APM_LOG_LEVEL`   | `ElasticApm:LogLevel`
 |============
 

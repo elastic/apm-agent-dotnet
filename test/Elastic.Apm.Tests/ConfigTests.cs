@@ -14,6 +14,7 @@ namespace Elastic.Apm.Tests
 	/// <summary>
 	/// Tests the configuration through environment variables
 	/// </summary>
+	[Collection("UsesEnvironmentVariables")]
 	public class ConfigTests : IDisposable
 	{
 		[Fact]

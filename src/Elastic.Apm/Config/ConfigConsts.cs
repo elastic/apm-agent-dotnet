@@ -35,7 +35,6 @@ namespace Elastic.Apm.Config
 			public const string CaptureBody = Prefix + "CAPTURE_BODY";
 			public const string CaptureBodyContentTypes = Prefix + "CAPTURE_BODY_CONTENT_TYPES";
 			public const string CaptureHeaders = Prefix + "CAPTURE_HEADERS";
-
 			public const string CentralConfig = Prefix + "CENTRAL_CONFIG";
 			public const string Environment = Prefix + "ENVIRONMENT";
 			public const string FlushInterval = Prefix + "FLUSH_INTERVAL";
@@ -43,7 +42,7 @@ namespace Elastic.Apm.Config
 			public const string MaxBatchEventCount = Prefix + "MAX_BATCH_EVENT_COUNT";
 			public const string MaxQueueEventCount = Prefix + "MAX_QUEUE_EVENT_COUNT";
 			public const string MetricsInterval = Prefix + "METRICS_INTERVAL";
-			public const string Prefix = "ELASTIC_APM_";
+			private const string Prefix = "ELASTIC_APM_";
 			public const string SecretToken = Prefix + "SECRET_TOKEN";
 			public const string ServerUrls = Prefix + "SERVER_URLS";
 			public const string ServiceName = Prefix + "SERVICE_NAME";
@@ -51,6 +50,27 @@ namespace Elastic.Apm.Config
 			public const string SpanFramesMinDuration = Prefix + "SPAN_FRAMES_MIN_DURATION";
 			public const string StackTraceLimit = Prefix + "STACK_TRACE_LIMIT";
 			public const string TransactionSampleRate = Prefix + "TRANSACTION_SAMPLE_RATE";
+		}
+
+		public static class KeyNames
+		{
+			public const string CaptureBody = "ElasticApm:CaptureBody";
+			public const string CaptureBodyContentTypes = "ElasticApm:CaptureBodyContentTypes";
+			public const string CaptureHeaders = "ElasticApm:CaptureHeaders";
+			public const string CentralConfig = "ElasticApm:CentralConfig";
+			public const string Environment = "ElasticApm:Environment";
+			public const string FlushInterval = "ElasticApm:FlushInterval";
+			public const string LogLevel = "ElasticApm:LogLevel";
+			public const string MaxBatchEventCount = "ElasticApm:MaxBatchEventCount";
+			public const string MaxQueueEventCount = "ElasticApm:MaxQueueEventCount";
+			public const string MetricsInterval = "ElasticApm:MetricsInterval";
+			public const string SecretToken = "ElasticApm:SecretToken";
+			public const string ServerUrls = "ElasticApm:ServerUrls";
+			public const string ServiceName = "ElasticApm:ServiceName";
+			public const string ServiceVersion = "ElasticApm:ServiceVersion";
+			public const string SpanFramesMinDuration = "ElasticApm:SpanFramesMinDuration";
+			public const string StackTraceLimit = "ElasticApm:StackTraceLimit";
+			public const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
 		}
 
 		public static class SupportedValues

@@ -288,7 +288,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			var rootLogger = AgentDependencies.Logger ?? ConsoleLogger.Instance;
 			var scopedLogger = rootLogger.Scoped(dbgInstanceName);
 
-			var agentComponents = new AgentComponents(rootLogger, new FullFrameworkConfigReader(scopedLogger));
+			var agentComponents = new AgentComponents(rootLogger, new FullFrameworkConfigReader(rootLogger));
 
 			var aspNetVersion = FindAspNetVersion(scopedLogger);
 
