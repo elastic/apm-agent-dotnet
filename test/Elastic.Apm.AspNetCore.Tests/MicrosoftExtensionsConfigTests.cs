@@ -51,6 +51,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public void ReadInvalidLogLevelConfigFromAppsettingsJson()
 		{
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.Environment, "");
 			var logger = new TestLogger();
 			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger,
 				"test");
