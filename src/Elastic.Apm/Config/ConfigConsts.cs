@@ -58,7 +58,6 @@ namespace Elastic.Apm.Config
 			public const string Environment = "ElasticApm:Environment";
 			public const string FlushInterval = "ElasticApm:FlushInterval";
 			public const string LogLevel = "ElasticApm:LogLevel";
-			public const string LogLevelSubKey = "LogLevel";
 			public const string MaxBatchEventCount = "ElasticApm:MaxBatchEventCount";
 			public const string MaxQueueEventCount = "ElasticApm:MaxQueueEventCount";
 			public const string MetricsInterval = "ElasticApm:MetricsInterval";

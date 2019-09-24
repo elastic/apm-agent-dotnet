@@ -12,6 +12,8 @@ namespace Elastic.Apm.AspNetCore.Config
 	{
 		internal const string Origin = "Microsoft.Extensions.Configuration";
 
+		internal const string LogLevelSubKey = "LogLevel";
+
 		private readonly IConfiguration _configuration;
 
 		public MicrosoftExtensionsConfig(IConfiguration configuration, IApmLogger logger, string environmentName) : base(logger, environmentName)
@@ -50,7 +52,7 @@ namespace Elastic.Apm.AspNetCore.Config
 		{
 			if (!(obj is IConfigurationSection section)) return;
 
-			var newLogLevel = ParseLogLevel(Kv(ConfigConsts.KeyNames.LogLevelSubKey, section[ConfigConsts.KeyNames.LogLevelSubKey], Origin));
+			var newLogLevel = ParseLogLevel(Kv(LogLevelSubKey, section[LogLevelSubKey], Origin));
 			if (_logLevel.HasValue && newLogLevel == _logLevel.Value) return;
 
 			_logLevel = newLogLevel;

@@ -610,6 +610,8 @@ namespace Elastic.Apm.Config
 			return captureBodyContentTypes;
 		}
 
+		protected string ReadEnvVarValue(string envVarName) => Environment.GetEnvironmentVariable(envVarName)?.Trim();
+
 		private enum TimeSuffix
 		{
 			M,
