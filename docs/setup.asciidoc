@@ -57,4 +57,21 @@ you can enable auto instrumentation by including `ElasticApmModule` IIS Module i
 </configuration>
 ----
 
+By default the agent creates transactions for all HTTP requests including for the ones for static content
+(.html pages, images, etc.). If you would like to create transactions only for HTTP requests only for dynamic content
+such as `.aspx` pages you can add `managedHandler` `preCondition`
+(https://docs.microsoft.com/en-us/iis/configuration/system.webserver/modules/add[official documentation])
+as in the following example:
+[source,xml]
+----
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+    <system.webServer>
+        <modules>
+            <add name="ElasticApmModule" type="Elastic.Apm.AspNetFullFramework.ElasticApmModule" preCondition="managedHandler" />
+        </modules>
+    </system.webServer>
+</configuration>
+----
+
 You can also configure the agent using `web.config` as described at <<configuration-on-asp-net>>.
