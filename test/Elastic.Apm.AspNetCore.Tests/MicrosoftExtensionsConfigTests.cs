@@ -170,7 +170,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				new NoopLogger(), "test");
 			configBeforeEnvVarSet.TransactionSampleRate.Should().Be(transactionSampleRateValueInAppSettings);
 
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate, transactionSampleRateEnvVarValue.ToString());
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate, transactionSampleRateEnvVarValue.ToString(System.Globalization.CultureInfo.InvariantCulture));
 			new EnvironmentConfigurationReader(new NoopLogger()).TransactionSampleRate.Should().Be(transactionSampleRateEnvVarValue);
 
 			var configAfterEnvVarSet = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
