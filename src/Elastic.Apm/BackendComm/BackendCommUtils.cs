@@ -79,7 +79,7 @@ namespace Elastic.Apm.BackendComm
 		{
 			internal static string IntakeV2Events = "intake/v2/events";
 
-			internal static string Config(Service service)
+			internal static string GetConfig(Service service)
 			{
 				var strBuilder = new StringBuilder("/config/v1/agents");
 				var prefix = '?';

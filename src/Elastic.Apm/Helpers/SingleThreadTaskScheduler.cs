@@ -41,7 +41,12 @@ namespace Elastic.Apm.Helpers
 
 			ExceptionUtils.DoSwallowingExceptions(_logger, () =>
 				{
-					foreach (var task in _taskQueue.GetConsumingEnumerable()) TryExecuteTask(task);
+					foreach (var task in _taskQueue.GetConsumingEnumerable())
+					{
+						_logger.Trace()?.Log("Starting to execute task... Task: {Task}", ToDbgString(task));
+						TryExecuteTask(task);
+						_logger.Trace()?.Log("Finished executing task. Task: {Task}", ToDbgString(task));
+					}
 				}
 				, dbgCallerMethodName: $"{DbgUtils.CurrentThreadDesc} thread entry method");
 
@@ -58,7 +63,12 @@ namespace Elastic.Apm.Helpers
 
 		/// <summary>Queues a Task to be executed by this scheduler.</summary>
 		/// <param name="task">The task to be executed.</param>
-		protected override void QueueTask(Task task) => _taskQueue.Add(task);
+		protected override void QueueTask(Task task)
+		{
+			_logger.Trace()?.Log("Adding task... Task: {Task}", ToDbgString(task));
+			_taskQueue.Add(task);
+			_logger.Trace()?.Log("Added task. Task: {Task}", ToDbgString(task));
+		}
 
 		/// <summary>Determines whether a Task may be inlined.</summary>
 		/// <param name="task">The task to be executed.</param>
@@ -66,12 +76,22 @@ namespace Elastic.Apm.Helpers
 		/// <returns>true if the task was successfully inlined; otherwise, false.</returns>
 		protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued)
 		{
+			_logger.Trace()?.Log("Trying to execute task inline... Task: {Task}, taskWasPreviouslyQueued: {TaskWasPreviouslyQueued}"
+				, ToDbgString(task), taskWasPreviouslyQueued);
+
 			// We'd need to remove the task from queue if it was already queued.
 			// That would be too hard.
 			if (taskWasPreviouslyQueued) return false;
 
 			return _isExecuting.Value && TryExecuteTask(task);
 		}
+
+		private static string ToDbgString(Task task) => new ToStringBuilder()
+		{
+			{ "ID", task.Id },
+			{ "Status", task.Status },
+			{ "AsyncState", task.AsyncState }
+		}.ToString();
 
 		/// <summary>
 		/// Cleans up the scheduler by indicating that no more tasks will be queued.

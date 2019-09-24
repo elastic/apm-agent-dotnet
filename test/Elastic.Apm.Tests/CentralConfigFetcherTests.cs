@@ -48,7 +48,7 @@ namespace Elastic.Apm.Tests
 		[InlineData(40)]
 		public void Create_many_concurrent_instances(int numberOfAgentInstances)
 		{
-//			LoggerBase.Level = LogLevel.Trace;
+			LoggerBase.Level = LogLevel.Trace;
 
 			var agents = new ApmAgent[numberOfAgentInstances];
 			numberOfAgentInstances.Repeat(i =>
@@ -58,7 +58,8 @@ namespace Elastic.Apm.Tests
 				((PayloadSenderV2)agents[i].PayloadSender).IsRunning.Should().BeTrue();
 			});
 
-			Thread.Sleep(10.Seconds());
+			// Sleep a few seconds to let backend component to get to the stage where they contact APM Server
+			Thread.Sleep(5.Seconds());
 
 			numberOfAgentInstances.Repeat(i =>
 			{
