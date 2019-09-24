@@ -54,7 +54,7 @@ namespace Elastic.Apm.Config
 
 		public double TransactionSampleRate => ParseTransactionSampleRate(Read(ConfigConsts.EnvVarNames.TransactionSampleRate));
 
-		private static ConfigurationKeyValue Read(string key) =>
-			new ConfigurationKeyValue(key, System.Environment.GetEnvironmentVariable(key)?.Trim(), Origin);
+		private ConfigurationKeyValue Read(string key) =>
+			new ConfigurationKeyValue(key, ReadEnvVarValue(key), Origin);
 	}
 }

@@ -42,7 +42,7 @@ namespace Elastic.Apm.AspNetFullFramework
 		{
 			try
 			{
-				return System.Environment.GetEnvironmentVariable("APP_POOL_ID");
+				return ReadEnvVarValue("APP_POOL_ID");
 			}
 			catch (Exception ex)
 			{
