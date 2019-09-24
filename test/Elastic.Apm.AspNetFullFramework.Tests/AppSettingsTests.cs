@@ -7,7 +7,7 @@ using Xunit;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
-	[Collection("AspNetFullFrameworkTests")]
+	[Collection("UsesEnvironmentVariables")]
 	public class AppSettingsTests
 	{
 		private static void UpdateAppSettings(Dictionary<string, string> values)
