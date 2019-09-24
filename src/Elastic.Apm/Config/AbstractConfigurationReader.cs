@@ -536,7 +536,7 @@ namespace Elastic.Apm.Config
 		{
 			if (kv?.Value == null)
 			{
-				Logger?.Debug()
+				_logger?.Debug()
 					?.Log("No transaction max spans provided. Defaulting to '{DefaultTransactionMaxSpans}'",
 						DefaultValues.TransactionMaxSpans);
 				return DefaultValues.TransactionMaxSpans;
@@ -546,21 +546,21 @@ namespace Elastic.Apm.Config
 			{
 				if (result < -1)
 				{
-					Logger?.Error()
+					_logger?.Error()
 						?.Log(
 							"Provided transaction max spans '{ProvidedTransactionMaxSpans}' is invalid (only positive, '0' and '-1' numbers are allowed) - using default: '{DefaultTransactionMaxSpans}'",
 							result, DefaultValues.TransactionMaxSpans);
 					return DefaultValues.TransactionMaxSpans;
 				}
 
-				Logger?.Debug()
+				_logger?.Debug()
 					?.Log("Using provided transaction max spans '{ProvidedTransactionMaxSpans}' parsed as '{ParsedTransactionMaxSpans}'",
 						kv.Value, result);
 				return result;
 			}
 
 
-			Logger?.Error()
+			_logger?.Error()
 				?.Log("Failed to parse provided transaction max spans '{ProvidedTransactionMaxSpans}' - using default: {DefaultTransactionMaxSpans}",
 					kv.Value, DefaultValues.TransactionMaxSpans);
 

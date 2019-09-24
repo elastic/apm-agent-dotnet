@@ -239,7 +239,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var logger = new TestLogger();
 
 			var configurationBuilder = new ConfigurationBuilder()
-				.AddInMemoryCollection(new Dictionary<string, string> { { MicrosoftExtensionsConfig.Keys.TransactionMaxSpans, configurationValue } });
+				.AddInMemoryCollection(new Dictionary<string, string> { { ConfigConsts.KeyNames.TransactionMaxSpans, configurationValue } });
 
 			var reader = new MicrosoftExtensionsConfig(configurationBuilder.Build(), logger, "test");
 
