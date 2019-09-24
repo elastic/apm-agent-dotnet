@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using Elastic.Apm.AspNetFullFramework;
 using NLog;
@@ -20,7 +21,6 @@ namespace AspNetFullFrameworkSampleApp
 		public static void SetupLogging()
 		{
 			var logFileEnvVarValue = Environment.GetEnvironmentVariable(LogFileEnvVarName);
-			if (logFileEnvVarValue == null) return;
 
 			var config = new LoggingConfiguration();
 			const string layout = "${date:format=yyyy-MM-dd HH\\:mm\\:ss.fff zzz}" +
@@ -30,18 +30,22 @@ namespace AspNetFullFrameworkSampleApp
 				" | ${message}" +
 				"${onexception:${newline}+-> Exception\\: ${exception:format=ToString}";
 
-			var logTargets = new TargetWithLayout[]
+			var logTargets = new List<TargetWithLayout>
 			{
-				new TraceTarget(), LogMemoryTarget, new FileTarget { FileName = logFileEnvVarValue, DeleteOldFileOnStartup = true },
+				new TraceTarget(),
+				LogMemoryTarget,
 				new ConsoleTarget()
 			};
+
+			if (logFileEnvVarValue != null) logTargets.Add(new FileTarget { FileName = logFileEnvVarValue, DeleteOldFileOnStartup = true });
+
 			foreach (var logTarget in logTargets) logTarget.Layout = layout;
 
 			// ReSharper disable once CoVariantArrayConversion
-			config.AddRule(LogLevel.Trace, LogLevel.Fatal, new SplitGroupTarget(logTargets));
+			config.AddRule(LogLevel.Trace, LogLevel.Fatal, new SplitGroupTarget(logTargets.ToArray()));
 
 			InternalLogger.LogToConsole = true;
-			InternalLogger.LogFile = logFileEnvVarValue;
+			if (logFileEnvVarValue != null) InternalLogger.LogFile = logFileEnvVarValue;
 			InternalLogger.LogLevel = LogLevel.Info;
 			InternalLogger.LogWriter = new StringWriter();
 
