@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using AspNetFullFrameworkSampleApp.Controllers;
-using Elastic.Apm.Api;
+using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
