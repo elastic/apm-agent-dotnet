@@ -22,9 +22,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var errorPageData = SampleAppUrlPaths.CustomSpanThrowsExceptionPage;
 			await SendGetRequestToSampleAppAndVerifyResponse(errorPageData.RelativeUrlPath, errorPageData.StatusCode);
 
-			await VerifyDataReceivedFromAgent(receivedData =>
+			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				TryVerifyDataReceivedFromAgent(errorPageData, receivedData);
+				VerifyReceivedDataSharedConstraints(errorPageData, receivedData);
 
 				var transaction = receivedData.Transactions.First();
 				transaction.Context.Request.Url.Search.Should().BeNull();
@@ -57,9 +57,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var forbidResponsePageData = SampleAppUrlPaths.ForbidHttpResponsePageDescriptionPage;
 			await SendGetRequestToSampleAppAndVerifyResponse(forbidResponsePageData.RelativeUrlPath, forbidResponsePageData.StatusCode);
 
-			await VerifyDataReceivedFromAgent(receivedData =>
+			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				TryVerifyDataReceivedFromAgent(forbidResponsePageData, receivedData);
+				VerifyReceivedDataSharedConstraints(forbidResponsePageData, receivedData);
 
 				receivedData.Spans.First().Should().NotBeNull();
 				receivedData.Spans.First().Context.Http.Should().NotBeNull();
@@ -73,9 +73,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var errorPageData = SampleAppUrlPaths.CustomChildSpanThrowsExceptionPage;
 			await SendGetRequestToSampleAppAndVerifyResponse(errorPageData.RelativeUrlPath, errorPageData.StatusCode);
 
-			await VerifyDataReceivedFromAgent(receivedData =>
+			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				TryVerifyDataReceivedFromAgent(errorPageData, receivedData);
+				VerifyReceivedDataSharedConstraints(errorPageData, receivedData);
 
 				var transaction = receivedData.Transactions.First();
 				transaction.Context.Request.Url.Search.Should().BeNull();

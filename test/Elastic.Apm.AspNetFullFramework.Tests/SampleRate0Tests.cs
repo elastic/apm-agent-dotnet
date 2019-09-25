@@ -20,9 +20,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var sampleAppUrlPathData = sampleAppUrlPathDataForSampled.Clone(spansCount: 0);
 			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.StatusCode);
 
-			await VerifyDataReceivedFromAgent(receivedData =>
+			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				TryVerifyDataReceivedFromAgent(sampleAppUrlPathData, receivedData);
+				VerifyReceivedDataSharedConstraints(sampleAppUrlPathData, receivedData);
 
 				foreach (var transaction in receivedData.Transactions)
 				{

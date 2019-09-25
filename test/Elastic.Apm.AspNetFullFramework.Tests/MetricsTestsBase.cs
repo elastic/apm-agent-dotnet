@@ -27,7 +27,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			// Wait enough time to give agent a chance to gather all the metrics
 			await Task.Delay(2 * MetricsIntervalSeconds * 1000);
 
-			await VerifyDataReceivedFromAgent(receivedData =>
+			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
 				receivedData.Metrics.Should().NotBeEmpty();
 				var samplesCountPerType = new Dictionary<string, int>();

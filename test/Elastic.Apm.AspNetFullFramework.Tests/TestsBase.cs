@@ -274,7 +274,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			return response;
 		}
 
-		protected async Task VerifyDataReceivedFromAgent(Action<ReceivedData> verifyAction)
+		protected async Task WaitAndCustomVerifyReceivedData(Action<ReceivedData> verifyAction)
 		{
 			var attemptNumber = 0;
 			var timerSinceStart = Stopwatch.StartNew();
@@ -433,10 +433,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			}
 		}
 
-		protected async Task VerifyDataReceivedFromAgent(SampleAppUrlPathData sampleAppUrlPathData) =>
-			await VerifyDataReceivedFromAgent(receivedData => { TryVerifyDataReceivedFromAgent(sampleAppUrlPathData, receivedData); });
+		protected async Task WaitAndVerifyReceivedDataSharedConstraints(SampleAppUrlPathData sampleAppUrlPathData) =>
+			await WaitAndCustomVerifyReceivedData(receivedData =>
+			{
+				VerifyReceivedDataSharedConstraints(sampleAppUrlPathData, receivedData);
+			});
 
-		protected void TryVerifyDataReceivedFromAgent(SampleAppUrlPathData sampleAppUrlPathData, ReceivedData receivedData)
+		protected void VerifyReceivedDataSharedConstraints(SampleAppUrlPathData sampleAppUrlPathData, ReceivedData receivedData)
 		{
 			FullFwAssertValid(receivedData);
 
