@@ -125,60 +125,64 @@ namespace Elastic.Apm.AspNetCore
 
 		private void FillSampledTransactionContextRequest(HttpContext context, Transaction transaction)
 		{
-			if (context.Request == null) return;
-
-			var url = new Url
+			try
 			{
-				Full = context.Request.GetEncodedUrl(),
-				HostName = context.Request.Host.Host,
-				Protocol = GetProtocolName(context.Request.Protocol),
-				Raw = GetRawUrl(context.Request) ?? context.Request.GetEncodedUrl(),
-				PathName = context.Request.Path,
-				Search = context.Request.QueryString.Value.Length > 0 ? context.Request.QueryString.Value.Substring(1) : string.Empty
-			};
+				if (context?.Request == null) return;
 
-			Dictionary<string, string> requestHeaders = null;
-			if (_configurationReader.CaptureHeaders)
-			{
-				requestHeaders = new Dictionary<string, string>();
-
-				foreach (var header in context.Request.Headers)
-					requestHeaders.Add(header.Key, header.Value.ToString());
-			}
-
-			var body = Consts.BodyRedacted; // According to the documentation - the default value of 'body' is '[Redacted]'
-			if (!string.IsNullOrEmpty(context?.Request?.ContentType))
-			{
-				var contentType = new ContentType(context.Request.ContentType);
-				if (_configurationReader.ShouldExtractRequestBodyOnTransactions() && _configurationReader.CaptureBodyContentTypes.ContainsLike(contentType.MediaType))
-					body = context.Request.ExtractRequestBody(_logger);
-			}
-
-			transaction.Context.Request = new Request(context.Request.Method, url)
-			{
-				Socket = new Socket
+				var url = new Url
 				{
-					Encrypted = context.Request.IsHttps,
-					RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
-				},
-				HttpVersion = GetHttpVersion(context.Request.Protocol),
-				Headers = requestHeaders,
-				Body = (string.IsNullOrEmpty(body) ? Consts.BodyRedacted : body)
-			};
+					Full = context.Request.GetEncodedUrl(),
+					HostName = context.Request.Host.Host,
+					Protocol = GetProtocolName(context.Request.Protocol),
+					Raw = GetRawUrl(context.Request) ?? context.Request.GetEncodedUrl(),
+					PathName = context.Request.Path,
+					Search = context.Request.QueryString.Value.Length > 0 ? context.Request.QueryString.Value.Substring(1) : string.Empty
+				};
+
+				transaction.Context.Request = new Request(context.Request.Method, url)
+				{
+					Socket = new Socket
+					{
+						Encrypted = context.Request.IsHttps,
+						RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
+					},
+					HttpVersion = GetHttpVersion(context.Request.Protocol),
+					Headers = GetHeaders(context.Request.Headers),
+					Body = GetRequestBody(context.Request)
+				};
+			}
+			catch (Exception ex)
+			{
+				_logger?.Error()?.LogException(ex, "Failed filling context request for sampled transaction {TransactionId}", transaction.Id);
+			}
 		}
+
+		private string GetRequestBody(HttpRequest request)
+		{
+			// ReSharper disable once InvertIf
+			if (_configurationReader.ShouldExtractRequestBodyOnTransactions() && !string.IsNullOrEmpty(request?.ContentType))
+			{
+				var contentType = new ContentType(request.ContentType);
+				if (_configurationReader.CaptureBodyContentTypes.ContainsLike(contentType.MediaType))
+					return request.ExtractRequestBody(_logger) ?? Consts.BodyRedacted;
+			}
+
+			// According to the documentation - the default value of 'body' is '[Redacted]'
+			return Consts.BodyRedacted;
+		}
+
+		private Dictionary<string, string> GetHeaders(IHeaderDictionary headers) =>
+			_configurationReader.CaptureHeaders && headers != null
+				? headers.ToDictionary(header => header.Key, header => header.Value.ToString())
+				: null;
 
 		private void FillSampledTransactionContextResponse(HttpContext context, Transaction transaction)
 		{
-			Dictionary<string, string> responseHeaders = null;
-
-			if (_configurationReader.CaptureHeaders)
-				responseHeaders = context.Response.Headers.ToDictionary(header => header.Key, header => header.Value.ToString());
-
 			transaction.Context.Response = new Response
 			{
 				Finished = context.Response.HasStarted, //TODO ?
 				StatusCode = context.Response.StatusCode,
-				Headers = responseHeaders
+				Headers = GetHeaders(context.Response.Headers)
 			};
 		}
 
@@ -272,6 +276,8 @@ namespace Elastic.Apm.AspNetCore
 					return "1.1";
 				case "HTTP/2.0":
 					return "2.0";
+				case null:
+					return "unknown";
 				default:
 					return protocolString.Replace("HTTP/", string.Empty);
 			}
