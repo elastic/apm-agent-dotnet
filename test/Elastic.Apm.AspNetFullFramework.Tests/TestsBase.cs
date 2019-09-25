@@ -94,8 +94,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData ContactPage =
 				new SampleAppUrlPathData(HomeController.ContactPageRelativePath, 200, /* transactionsCount: */ 2, /* spansCount: */ 2);
 
+			// errorsCount is 2 because the exception is thrown inside a span -
+			// AspNetFullFrameworkSampleApp.Controllers.HomeController.CustomSpanThrowsInternal
+			// and exception propagates out of transaction as well so both span and transaction send an error event
 			internal static readonly SampleAppUrlPathData CustomSpanThrowsExceptionPage =
-				new SampleAppUrlPathData(HomeController.CustomSpanThrowsPageRelativePath, 500, spansCount: 1, errorsCount: 1);
+				new SampleAppUrlPathData(HomeController.CustomSpanThrowsPageRelativePath, 500, spansCount: 1, errorsCount: 2);
+
+			internal static readonly SampleAppUrlPathData PageThatDoesNotExit =
+				new SampleAppUrlPathData("dummy_URL_path_to_page_that_does_not_exist", 404, errorsCount: 1);
 
 			internal static readonly SampleAppUrlPathData HomePage =
 				new SampleAppUrlPathData(HomeController.HomePageRelativePath, 200);
@@ -106,7 +112,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				HomePage,
 				ContactPage,
 				CustomSpanThrowsExceptionPage,
-				new SampleAppUrlPathData("Dummy_nonexistent_path", 404)
+				PageThatDoesNotExit
 			};
 
 			/// `CallReturnBadRequest' page processing does HTTP Get for `ReturnBadRequest' page (additional transaction) - so 1 span
@@ -115,8 +121,12 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					HomeController.DummyHttpStatusCode, /* transactionsCount: */ 2, /* spansCount: */ 1);
 
 
+			// errorsCount is 3 because the exception is thrown inside a child span of a another span -
+			// AspNetFullFrameworkSampleApp.Controllers.HomeController.CustomSpanThrowsInternal - child span
+			// AspNetFullFrameworkSampleApp.Controllers.HomeController.CustomChildSpanThrows - transaction and contains parent span
+			// and exception propagates out of transaction as well so both spans and the transaction send an error event
 			internal static readonly SampleAppUrlPathData CustomChildSpanThrowsExceptionPage =
-				new SampleAppUrlPathData(HomeController.CustomChildSpanThrowsPageRelativePath, 500, spansCount: 2, errorsCount: 2);
+				new SampleAppUrlPathData(HomeController.CustomChildSpanThrowsPageRelativePath, 500, spansCount: 2, errorsCount: 3);
 
 
 			internal static readonly SampleAppUrlPathData ForbidHttpResponsePageDescriptionPage =
@@ -129,10 +139,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData ReturnBadRequestPage =
 				new SampleAppUrlPathData(HomeController.ReturnBadRequestPageRelativePath, (int)HttpStatusCode.BadRequest);
 
-			/// errorsCount for ThrowsNameCouldNotBeResolvedPage is 0 because we don't automatically capture exceptions
-			/// that escaped from Full Framework ASP.NET transactions as errors (yet)
 			internal static readonly SampleAppUrlPathData ThrowsInvalidOperationPage =
-				new SampleAppUrlPathData(HomeController.ThrowsInvalidOperationPageRelativePath, 500);
+				new SampleAppUrlPathData(HomeController.ThrowsInvalidOperationPageRelativePath, 500, errorsCount: 1);
 		}
 
 		private TimedEvent? _sampleAppClientCallTiming;
