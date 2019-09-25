@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,6 +31,7 @@ namespace Elastic.Apm.Report
 		private readonly TimeSpan _flushInterval;
 
 		private readonly IApmLogger _logger;
+		private readonly Uri _intakeV2EventsAbsoluteUrl;
 		private readonly int _maxQueueEventCount;
 		private readonly Metadata _metadata;
 
@@ -43,6 +43,8 @@ namespace Elastic.Apm.Report
 			: base( /* isEnabled: */ true, logger, ThisClassName, service, config, httpMessageHandler)
 		{
 			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
+
+			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(config.ServerUrls.First());
 
 			System = system;
 			_metadata = new Metadata { Service = service, System = System };
@@ -66,10 +68,11 @@ namespace Elastic.Apm.Report
 			_logger?.Debug()
 				?.Log(
 					"Using the following configuration options:"
-					+ " FlushInterval: {FlushInterval}"
+					+ " Events intake API absolute URL: {EventsIntakeAbsoluteUrl}"
+					+ ", FlushInterval: {FlushInterval}"
 					+ ", MaxBatchEventCount: {MaxBatchEventCount}"
 					+ ", MaxQueueEventCount: {MaxQueueEventCount}"
-					, _flushInterval.ToHms(), config.MaxBatchEventCount, _maxQueueEventCount);
+					, _intakeV2EventsAbsoluteUrl, _flushInterval.ToHms(), config.MaxBatchEventCount, _maxQueueEventCount);
 
 			_eventQueue = new BatchBlock<object>(config.MaxBatchEventCount);
 
@@ -224,14 +227,16 @@ namespace Elastic.Apm.Report
 
 				var content = new StringContent(ndjson.ToString(), Encoding.UTF8, "application/x-ndjson");
 
-				var result = await HttpClientInstance.PostAsync(BackendCommUtils.ApmServerEndpoints.IntakeV2EventsUrlPath, content, CtsInstance.Token);
+				var result = await HttpClientInstance.PostAsync(_intakeV2EventsAbsoluteUrl, content, CtsInstance.Token);
 
 				if (result != null && !result.IsSuccessStatusCode)
 				{
 					_logger?.Error()
-						?.Log("Failed sending event. " +
-							"APM Server response: status code: {ApmServerResponseStatusCode}, content: \n{ApmServerResponseContent}",
-							result.StatusCode, await result.Content.ReadAsStringAsync());
+						?.Log("Failed sending event."
+							+ " Events intake API absolute URL: {EventsIntakeAbsoluteUrl}."
+							+ " APM Server response: status code: {ApmServerResponseStatusCode}"
+							+ ", content: \n{ApmServerResponseContent}"
+							, _intakeV2EventsAbsoluteUrl, result.StatusCode, await result.Content.ReadAsStringAsync());
 				}
 				else
 				{
