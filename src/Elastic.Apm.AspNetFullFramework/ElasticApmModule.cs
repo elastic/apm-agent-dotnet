@@ -190,6 +190,8 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			if (_currentTransaction == null) return;
 
+			SendErrorEventIfPresent(httpCtx);
+
 			_currentTransaction.Result = Transaction.StatusCodeToResult("HTTP", httpResponse.StatusCode);
 
 			if (_currentTransaction.IsSampled)
@@ -200,6 +202,12 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			_currentTransaction.End();
 			_currentTransaction = null;
+		}
+
+		private void SendErrorEventIfPresent(HttpContext httpCtx)
+		{
+			var lastError = httpCtx.Server.GetLastError();
+			if (lastError != null) _currentTransaction.CaptureException(lastError);
 		}
 
 		private static void FillSampledTransactionContextResponse(HttpResponse httpResponse, ITransaction transaction) =>

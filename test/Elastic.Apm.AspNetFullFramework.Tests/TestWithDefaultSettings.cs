@@ -17,7 +17,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.StatusCode);
 
-			await VerifyDataReceivedFromAgent(sampleAppUrlPathData);
+			await WaitAndVerifyReceivedDataSharedConstraints(sampleAppUrlPathData);
 		}
 
 		[AspNetFullFrameworkTheory]
@@ -34,9 +34,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var homePageAndQueryString = SampleAppUrlPaths.HomePage.Clone(SampleAppUrlPaths.HomePage.RelativeUrlPath + $"?{queryString}");
 			await SendGetRequestToSampleAppAndVerifyResponse(homePageAndQueryString.RelativeUrlPath, homePageAndQueryString.StatusCode);
 
-			await VerifyDataReceivedFromAgent(receivedData =>
+			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				TryVerifyDataReceivedFromAgent(homePageAndQueryString, receivedData);
+				VerifyReceivedDataSharedConstraints(homePageAndQueryString, receivedData);
 
 				receivedData.Transactions.Count.Should().Be(1);
 

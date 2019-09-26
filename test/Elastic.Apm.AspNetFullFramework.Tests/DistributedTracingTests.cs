@@ -27,9 +27,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			await SendGetRequestToSampleAppAndVerifyResponse(rootTxData.RelativeUrlPath, rootTxData.StatusCode);
 
-			await VerifyDataReceivedFromAgent(receivedData =>
+			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				TryVerifyDataReceivedFromAgent(rootTxData, receivedData);
+				VerifyReceivedDataSharedConstraints(rootTxData, receivedData);
 
 				VerifyRootChildTransactions(receivedData, rootTxData, childTxData, out var rootTx, out _);
 
@@ -57,9 +57,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			await SendGetRequestToSampleAppAndVerifyResponse(rootTxData.RelativeUrlPath, rootTxData.StatusCode);
 
-			await VerifyDataReceivedFromAgent(receivedData =>
+			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				TryVerifyDataReceivedFromAgent(rootTxData, receivedData);
+				VerifyReceivedDataSharedConstraints(rootTxData, receivedData);
 
 				var rootTx = FindAndVerifyTransaction(receivedData, rootTxData);
 				var childTx = FindAndVerifyTransaction(receivedData, childTxData);
@@ -102,9 +102,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			await SendGetRequestToSampleAppAndVerifyResponse(rootTxData.RelativeUrlPath, rootTxData.StatusCode);
 
-			await VerifyDataReceivedFromAgent(receivedData =>
+			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				TryVerifyDataReceivedFromAgent(rootTxData, receivedData);
+				VerifyReceivedDataSharedConstraints(rootTxData, receivedData);
 
 				VerifyRootChildTransactions(receivedData, rootTxData, childTxData, out _, out _);
 			});

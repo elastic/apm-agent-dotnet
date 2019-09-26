@@ -29,9 +29,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var sampleAppResponse = await SendGetRequestToSampleAppAndVerifyResponse(pageThatThrows.RelativeUrlPath, pageThatThrows.StatusCode);
 			var aspNetVersionFromErrorPage = GetAspNetVersionFromErrorPage(sampleAppResponse.Content);
 
-			await VerifyDataReceivedFromAgent(receivedData =>
+			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				TryVerifyDataReceivedFromAgent(pageThatThrows, receivedData);
+				VerifyReceivedDataSharedConstraints(pageThatThrows, receivedData);
 
 				receivedData.Metadata.Should().NotBeEmpty();
 				foreach (var metadata in receivedData.Metadata)
@@ -75,9 +75,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var page = SampleAppUrlPaths.GetDotNetRuntimeDescriptionPage;
 			var sampleAppResponse = await SendGetRequestToSampleAppAndVerifyResponse(page.RelativeUrlPath, page.StatusCode);
 
-			await VerifyDataReceivedFromAgent(receivedData =>
+			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				TryVerifyDataReceivedFromAgent(page, receivedData);
+				VerifyReceivedDataSharedConstraints(page, receivedData);
 
 				receivedData.Metadata.Should().NotBeEmpty();
 				foreach (var metadata in receivedData.Metadata)
