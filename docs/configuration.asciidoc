@@ -40,7 +40,7 @@ in the `IConfiguration or Web.config key` column of the corresponding option's d
 NOTE: By simply calling `app.UseElasticApm()` without the overload, the agent will read configurations only from environment variables.
 
 [float]
-[[configuration-on-asp-net-core-sample-config]]
+[[sample-config]]
 ==== Sample configuration file
 
 Below is a sample `appsettings.json` configuration file for a typical ASP.NET Core application. There are two important takeaways:
@@ -101,7 +101,7 @@ You can find the key of each configuration option
 in the `IConfiguration or Web.config key` column of the corresponding option's description.
 
 [float]
-[[configuration-on-asp-net-sample-config]]
+[[asp-net-sample-config]]
 ==== Sample configuration file
 
 Below is a sample `Web.config` configuration file for a ASP.NET application.

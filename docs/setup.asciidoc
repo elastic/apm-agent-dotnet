@@ -43,8 +43,8 @@ In case you only want to use the <<public-api>>, you don't need to do any initia
 [[setup-asp-net]]
 === ASP.NET
 
-For ASP.NET (Full .NET Framework), once you referenced the `Elastic.Apm.AspNetFullFramework` package,
-you can enable auto instrumentation by including `ElasticApmModule` IIS Module in application's `web.config`: 
+For ASP.NET (Full .NET Framework), once you've referenced the `Elastic.Apm.AspNetFullFramework` package,
+you can enable auto instrumentation by including the `ElasticApmModule` IIS Module in your application's `web.config`: 
 [source,xml]
 ----
 <?xml version="1.0" encoding="utf-8"?>
@@ -57,11 +57,11 @@ you can enable auto instrumentation by including `ElasticApmModule` IIS Module i
 </configuration>
 ----
 
-By default the agent creates transactions for all HTTP requests including for the ones for static content
-(.html pages, images, etc.). If you would like to create transactions only for HTTP requests only for dynamic content
-such as `.aspx` pages you can add `managedHandler` `preCondition`
+By default the agent creates transactions for all HTTP requests, including the ones for static content:
+.html pages, images, etc. If you would like to create transactions only for HTTP requests with dynamic content,
+such as `.aspx` pages, you can add `managedHandler` `preCondition`
 (https://docs.microsoft.com/en-us/iis/configuration/system.webserver/modules/add[official documentation])
-as in the following example:
+as shown in the following example:
 [source,xml]
 ----
 <?xml version="1.0" encoding="utf-8"?>

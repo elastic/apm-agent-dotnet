@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using Elastic.Apm.AspNetFullFramework;
@@ -59,8 +60,10 @@ namespace AspNetFullFrameworkSampleApp
 			Logger.Debug(nameof(SetupLogging) + " completed. Path to log file: {SampleAppLogFilePath}", logFileEnvVarValue);
 		}
 
-		private sealed class PrefixingTraceTarget: TargetWithLayout
+		private sealed class PrefixingTraceTarget : TargetWithLayout
 		{
+			// The order in endOfLines is important because we need to check longer sequences first
+			private static readonly string[] EndOfLineCharSequences = { "\r\n", "\n", "\r" };
 			private readonly string _prefix;
 
 			internal PrefixingTraceTarget(string prefix = "")
@@ -71,12 +74,9 @@ namespace AspNetFullFrameworkSampleApp
 
 			protected override void Write(LogEventInfo logEvent)
 			{
-				var message = this.RenderLogEvent(this.Layout, logEvent);
-				System.Diagnostics.Trace.WriteLine(PrefixEveryLine(message, _prefix));
+				var message = RenderLogEvent(Layout, logEvent);
+				Trace.WriteLine(PrefixEveryLine(message, _prefix));
 			}
-
-			// The order in endOfLines is important because we need to check longer sequences first
-			private static readonly string[] EndOfLineCharSequences = { "\r\n", "\n", "\r" };
 
 			private static string PrefixEveryLine(string input, string prefix = "")
 			{

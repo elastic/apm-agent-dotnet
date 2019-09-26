@@ -48,7 +48,7 @@ We support automatic instrumentation for the following web frameworks.
 |1.0
 
 |ASP.NET (.NET Framework) on IIS
-|3.5 and higher (IIS 7.0 and higher)
+|4.6.1 or newer (IIS 7.0 or newer)
 |1.1
 
 |===
