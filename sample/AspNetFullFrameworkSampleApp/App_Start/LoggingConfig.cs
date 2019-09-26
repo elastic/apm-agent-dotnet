@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Text;
 using Elastic.Apm.AspNetFullFramework;
 using NLog;
 using NLog.Common;
@@ -20,7 +23,6 @@ namespace AspNetFullFrameworkSampleApp
 		public static void SetupLogging()
 		{
 			var logFileEnvVarValue = Environment.GetEnvironmentVariable(LogFileEnvVarName);
-			if (logFileEnvVarValue == null) return;
 
 			var config = new LoggingConfiguration();
 			const string layout = "${date:format=yyyy-MM-dd HH\\:mm\\:ss.fff zzz}" +
@@ -30,18 +32,22 @@ namespace AspNetFullFrameworkSampleApp
 				" | ${message}" +
 				"${onexception:${newline}+-> Exception\\: ${exception:format=ToString}";
 
-			var logTargets = new TargetWithLayout[]
+			var logTargets = new List<TargetWithLayout>
 			{
-				new TraceTarget(), LogMemoryTarget, new FileTarget { FileName = logFileEnvVarValue, DeleteOldFileOnStartup = true },
+				new PrefixingTraceTarget($"Elastic APM .NET {nameof(AspNetFullFrameworkSampleApp)}> "),
+				LogMemoryTarget,
 				new ConsoleTarget()
 			};
+
+			if (logFileEnvVarValue != null) logTargets.Add(new FileTarget { FileName = logFileEnvVarValue, DeleteOldFileOnStartup = true });
+
 			foreach (var logTarget in logTargets) logTarget.Layout = layout;
 
 			// ReSharper disable once CoVariantArrayConversion
-			config.AddRule(LogLevel.Trace, LogLevel.Fatal, new SplitGroupTarget(logTargets));
+			config.AddRule(LogLevel.Trace, LogLevel.Fatal, new SplitGroupTarget(logTargets.ToArray()));
 
 			InternalLogger.LogToConsole = true;
-			InternalLogger.LogFile = logFileEnvVarValue;
+			if (logFileEnvVarValue != null) InternalLogger.LogFile = logFileEnvVarValue;
 			InternalLogger.LogLevel = LogLevel.Info;
 			InternalLogger.LogWriter = new StringWriter();
 
@@ -52,6 +58,60 @@ namespace AspNetFullFrameworkSampleApp
 			AgentDependencies.Logger = new ApmLoggerToNLog();
 
 			Logger.Debug(nameof(SetupLogging) + " completed. Path to log file: {SampleAppLogFilePath}", logFileEnvVarValue);
+		}
+
+		private sealed class PrefixingTraceTarget : TargetWithLayout
+		{
+			// The order in endOfLines is important because we need to check longer sequences first
+			private static readonly string[] EndOfLineCharSequences = { "\r\n", "\n", "\r" };
+			private readonly string _prefix;
+
+			internal PrefixingTraceTarget(string prefix = "")
+			{
+				_prefix = prefix;
+				OptimizeBufferReuse = true;
+			}
+
+			protected override void Write(LogEventInfo logEvent)
+			{
+				var message = RenderLogEvent(Layout, logEvent);
+				Trace.WriteLine(PrefixEveryLine(message, _prefix));
+			}
+
+			private static string PrefixEveryLine(string input, string prefix = "")
+			{
+				// We treat empty input as a special case because StringReader doesn't return it as an empty line
+				if (input.Length == 0) return prefix;
+
+				var resultBuilder = new StringBuilder(input.Length);
+				using (var stringReader = new StringReader(input))
+				{
+					var isFirstLine = true;
+					string line;
+					while ((line = stringReader.ReadLine()) != null)
+					{
+						if (isFirstLine)
+							isFirstLine = false;
+						else
+							resultBuilder.AppendLine();
+						resultBuilder.Append(prefix);
+						resultBuilder.Append(line);
+					}
+				}
+
+				// Since lines returned by StringReader exclude newline characters it's possible that the last line had newline at the end
+				// but we didn't append it
+
+				foreach (var endOfLineSeq in EndOfLineCharSequences)
+				{
+					if (!input.EndsWith(endOfLineSeq)) continue;
+
+					resultBuilder.Append(endOfLineSeq);
+					break;
+				}
+
+				return resultBuilder.ToString();
+			}
 		}
 	}
 }
