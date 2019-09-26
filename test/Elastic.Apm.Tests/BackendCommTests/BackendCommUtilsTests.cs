@@ -36,6 +36,8 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		[InlineData("http://1.2.3.4/base_relative_path/", null, null, "http://1.2.3.4/base_relative_path/config/v1/agents")]
 		[InlineData("http://1.2.3.4:8200", "My svc", "My env amp:(&) plus:(+) ang:(<>) eq:(=) qm:(?)"
 			, "http://1.2.3.4:8200/config/v1/agents?service.name=My+svc&service.environment=My+env+amp%3A%28%26%29+plus%3A%28%2B%29+ang%3A%28%3C%3E%29+eq%3A%28%3D%29+qm%3A%28%3F%29")]
+		[InlineData("https://5.6.7.8:9", "My svc", null, "https://5.6.7.8:9/config/v1/agents?service.name=My+svc")]
+		[InlineData("https://1.2.3.4/", null, "My env", "https://1.2.3.4/config/v1/agents?service.environment=My+env")]
 		public void BuildGetConfigAbsoluteUrl_tests(string serverBaseUrl, string serviceName, string envName, string expectedGetConfigApiAbsoluteUrl)
 		{
 			BuildGetConfigAbsoluteUrl(new Uri(serverBaseUrl, UriKind.Absolute), BuildService(serviceName, envName))
