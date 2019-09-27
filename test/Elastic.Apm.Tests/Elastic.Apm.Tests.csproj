@@ -4,6 +4,12 @@
     <IsPackable>false</IsPackable>
     <RootNamespace>Elastic.Apm.Tests</RootNamespace>
     <AssemblyName>Elastic.Apm.Tests</AssemblyName>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
+    <LangVersion>latest</LangVersion>
+    <!-- Always generate debug symbols this allows fluent symbols exception messages to include variable names -->
+    <DebugSymbols>True</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
