@@ -221,9 +221,14 @@ It also expects that a period (`.`) is used to separate the integer and the frac
 [[config-transaction-max-spans]]
 ==== `TransactionMaxSpans` (performance)
 
-Limits the amount of spans that are recorded per transaction. This is helpful in cases where a transaction creates a very high amount of spans (e.g. thousands of SQL queries). Setting an upper limit will prevent overloading the agent and the APM server with too much work for such edge cases.
+Limits the amount of spans that are recorded per transaction.
+This is helpful in cases where a transaction creates a very high amount of spans,
+for example, thousands of SQL queries.
+Setting an upper limit helps prevent overloading the Agent and APM server in these edge cases.
 
-NOTE: Setting it to `-1` means that spans will never be dropped. Setting it to `0` means that spans will never be collected.
+NOTE: A value of `0` means that spans will never be collected.
+Setting `-1` means that spans will never be dropped.
+The Agent will revert to the default value if the value is set below `-1`.
 
 [options="header"]
 |============
