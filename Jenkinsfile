@@ -161,7 +161,7 @@ pipeline {
                         dir("${BASE_DIR}"){
                           powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
                           bat label: 'Build', script: '.ci/windows/msbuild.bat'
-                          bat label: 'Test & coverage', script: '.ci/windows/test.bat'
+                          bat label: 'Test & coverage', script: '.ci/windows/testnet461.bat'
                           powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
                         }
                       }
