@@ -319,15 +319,13 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 			public void VerifyTryAwaitCompletedSuccessfully(Task tryAwaitOrTimeoutTask, Task delayTask)
 			{
-				tryAwaitOrTimeoutTask.IsCompleted.Should().BeTrue();
-				tryAwaitOrTimeoutTask.IsFaulted.Should().BeFalse();
+				tryAwaitOrTimeoutTask.IsCompletedSuccessfully().Should().BeTrue();
 
 				UnpackTryAwaitOrTimeoutTaskResult(tryAwaitOrTimeoutTask, out var hasTaskToAwaitCompleted, out var taskToAwaitResult);
 				hasTaskToAwaitCompleted.Should().BeTrue();
 				taskToAwaitResult.Should().Be(_resultValue);
 
-				_taskToAwaitTcs.Task.IsCompleted.Should().BeTrue();
-				_taskToAwaitTcs.Task.IsFaulted.Should().BeFalse();
+				_taskToAwaitTcs.Task.IsCompletedSuccessfully().Should().BeTrue();
 				_taskToAwaitTcs.Task.Result.Should().Be(_resultValue);
 
 				VerifyFinalAgentTimerState(delayTask);
@@ -335,13 +333,11 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 			public void VerifyAwaitCompletedSuccessfully(Task awaitOrTimeoutTask, Task delayTask)
 			{
-				awaitOrTimeoutTask.IsCompleted.Should().BeTrue();
-				awaitOrTimeoutTask.IsFaulted.Should().BeFalse();
+				awaitOrTimeoutTask.IsCompletedSuccessfully().Should().BeTrue();
 
 				if (!_isVoid) ((Task<TResult>)awaitOrTimeoutTask).Result.Should().Be(_resultValue);
 
-				_taskToAwaitTcs.Task.IsCompleted.Should().BeTrue();
-				_taskToAwaitTcs.Task.IsFaulted.Should().BeFalse();
+				_taskToAwaitTcs.Task.IsCompletedSuccessfully().Should().BeTrue();
 				_taskToAwaitTcs.Task.Result.Should().Be(_resultValue);
 
 				VerifyFinalAgentTimerState(delayTask);
@@ -349,8 +345,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 			public void VerifyTryAwaitTimeout(Task tryAwaitOrTimeoutTask, Task delayTask)
 			{
-				tryAwaitOrTimeoutTask.IsCompleted.Should().BeTrue();
-				tryAwaitOrTimeoutTask.IsFaulted.Should().BeFalse();
+				tryAwaitOrTimeoutTask.IsCompletedSuccessfully().Should().BeTrue();
 
 				UnpackTryAwaitOrTimeoutTaskResult(tryAwaitOrTimeoutTask, out var hasTaskToAwaitCompleted, out var taskToAwaitResult);
 				hasTaskToAwaitCompleted.Should().BeFalse();
@@ -434,10 +429,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 				if (wasDelayCancelled)
 					delayTask.IsCanceled.Should().BeTrue();
 				else
-				{
-					delayTask.IsCompleted.Should().BeTrue();
-					delayTask.IsFaulted.Should().BeFalse();
-				}
+					delayTask.IsCompletedSuccessfully().Should().BeTrue();
 			}
 		}
 	}
