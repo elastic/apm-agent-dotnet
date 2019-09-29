@@ -84,6 +84,7 @@ namespace Elastic.Apm.Tests
 		/// Builds an HttpRequestMessage and calls HttpDiagnosticListener.OnNext directly with it.
 		/// Makes sure that the processingRequests dictionary captures the ongoing transaction.
 		/// </summary>
+#if NETCOREAPP
 		[NetCoreFact] //see: https://github.com/elastic/apm-agent-dotnet/issues/516
 		public void OnNextWithStart()
 		{
@@ -100,6 +101,7 @@ namespace Elastic.Apm.Tests
 			GetSpanForRequest(listener, request).Context.Http.Url.Should().Be(request.RequestUri.ToString());
 			GetSpanForRequest(listener, request).Context.Http.Method.Should().Be(HttpMethod.Get.ToString());
 		}
+#endif
 
 		/// <summary>
 		/// Simulates the complete lifecycle of an HTTP request.
@@ -107,6 +109,7 @@ namespace Elastic.Apm.Tests
 		/// and passes them to the OnNext method.
 		/// Makes sure that a Span with an Http context is captured.
 		/// </summary>
+#if NETCOREAPP
 		[NetCoreFact] //see: https://github.com/elastic/apm-agent-dotnet/issues/516
 		public void OnNextWithStartAndStop()
 		{
@@ -130,12 +133,14 @@ namespace Elastic.Apm.Tests
 			firstSpan.Context.Http.Url.Should().BeEquivalentTo(request.RequestUri.AbsoluteUri);
 			firstSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
 		}
+#endif
 
 		/// <summary>
 		/// Calls OnNext with System.Net.Http.HttpRequestOut.Stop twice.
 		/// Makes sure that the transaction is only captured once and the span is also only captured once.
 		/// Also make sure that there is an error log.
 		/// </summary>
+#if NETCOREAPP
 		[NetCoreFact] //see: https://github.com/elastic/apm-agent-dotnet/issues/516
 		public void OnNextWithStartAndStopTwice()
 		{
@@ -165,6 +170,7 @@ namespace Elastic.Apm.Tests
 			payloadSender.Transactions.Should().NotBeNull();
 			payloadSender.Spans.Should().ContainSingle();
 		}
+#endif
 
 		/// <summary>
 		/// Calls HttpDiagnosticListener.OnNext with types that are unknown.
@@ -222,6 +228,7 @@ namespace Elastic.Apm.Tests
 		/// Sends a simple real HTTP GET message and makes sure that
 		/// HttpDiagnosticListener captures it.
 		/// </summary>
+#if NETCOREAPP
 		[NetCoreFact] //see: https://github.com/elastic/apm-agent-dotnet/issues/516
 		public async Task TestSimpleOutgoingHttpRequest()
 		{
@@ -241,12 +248,14 @@ namespace Elastic.Apm.Tests
 				firstSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
 			}
 		}
+#endif
 
 		/// <summary>
 		/// Sends a simple real HTTP POST message and the server responds with 500
 		/// The test makes sure HttpDiagnosticListener captures the POST method and
 		/// the response code correctly
 		/// </summary>
+#if NETCOREAPP
 		[NetCoreFact] //see: https://github.com/elastic/apm-agent-dotnet/issues/516
 		public async Task TestNotSuccessfulOutgoingHttpPostRequest()
 		{
@@ -266,11 +275,13 @@ namespace Elastic.Apm.Tests
 				firstSpan.Context.Http.Method.Should().Be(HttpMethod.Post.Method);
 			}
 		}
+#endif
 
 		/// <summary>
 		/// Starts an HTTP call to a non existing URL and makes sure that an error is captured.
 		/// This uses an HttpClient instance directly
 		/// </summary>
+#if NETCOREAPP
 		[NetCoreFact] //see: https://github.com/elastic/apm-agent-dotnet/issues/516
 		public async Task CaptureErrorOnFailingHttpCall_HttpClient()
 		{
@@ -286,12 +297,14 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.Errors.Should().NotBeEmpty();
 		}
+#endif
 
 		/// <summary>
 		/// Passes an exception to <see cref="HttpDiagnosticListener" /> and makes sure that the exception is captured
 		/// Unlike the <see cref="CaptureErrorOnFailingHttpCall_HttpClient" /> method this does not use HttpClient, instead here we
 		/// call the OnNext method directly.
 		/// </summary>
+#if NETCOREAPP
 		[NetCoreFact] //see: https://github.com/elastic/apm-agent-dotnet/issues/516
 		public void CaptureErrorOnFailingHttpCall_DirectCall()
 		{
@@ -316,10 +329,12 @@ namespace Elastic.Apm.Tests
 				payloadSender.FirstError.Exception.Type.Should().Be(typeof(Exception).FullName);
 			}
 		}
+#endif
 
 		/// <summary>
 		/// Makes sure we set the correct type and subtype for external, http spans
 		/// </summary>
+#if NETCOREAPP
 		[NetCoreFact] //see: https://github.com/elastic/apm-agent-dotnet/issues/516
 		public async Task SpanTypeAndSubtype()
 		{
@@ -338,10 +353,12 @@ namespace Elastic.Apm.Tests
 			payloadSender.FirstSpan.Subtype.Should().Be(ApiConstants.SubtypeHttp);
 			payloadSender.FirstSpan.Action.Should().BeNull(); //we don't set Action for HTTP calls
 		}
+#endif
 
 		/// <summary>
 		/// Makes sure we generate the correct span name
 		/// </summary>
+#if NETCOREAPP
 		[NetCoreFact] //see: https://github.com/elastic/apm-agent-dotnet/issues/516
 		public async Task SpanName()
 		{
@@ -358,11 +375,13 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.FirstSpan.Name.Should().Be("GET localhost");
 		}
+#endif
 
 		/// <summary>
 		/// Makes sure that the duration of an HTTP Request is captured by the agent
 		/// </summary>
 		/// <returns>The request duration.</returns>
+#if NETCOREAPP
 		[NetCoreFact] //see: https://github.com/elastic/apm-agent-dotnet/issues/516
 		public async Task HttpRequestDuration()
 		{
@@ -387,10 +406,12 @@ namespace Elastic.Apm.Tests
 				firstSpan.Duration.Should().BeGreaterThan(0);
 			}
 		}
+#endif
 
 		/// <summary>
 		/// Makes sure spans have an Id
 		/// </summary>
+#if NETCOREAPP
 		[NetCoreFact] //see: https://github.com/elastic/apm-agent-dotnet/issues/516
 		public async Task HttpRequestSpanGuid()
 		{
@@ -411,7 +432,9 @@ namespace Elastic.Apm.Tests
 				firstSpan.Duration.Should().BeGreaterThan(0);
 			}
 		}
+#endif
 
+#if NETCOREAPP
 		[NetCoreFact] //see: https://github.com/elastic/apm-agent-dotnet/issues/516
 		[SuppressMessage("ReSharper", "PossibleInvalidOperationException")]
 		public async Task HttpCallAsNestedSpan()
@@ -455,6 +478,7 @@ namespace Elastic.Apm.Tests
 				});
 			}
 		}
+#endif
 
 		/// <summary>
 		/// Creates an HTTP call without registering the <see cref="HttpDiagnosticsSubscriber" />.
@@ -493,6 +517,7 @@ namespace Elastic.Apm.Tests
 		/// <summary>
 		/// Make sure HttpDiagnosticSubscriber does not report spans after its disposed
 		/// </summary>
+#if NETCOREAPP
 		[NetCoreFact] //see: https://github.com/elastic/apm-agent-dotnet/issues/516
 		public async Task SubscriptionOnlyRegistersSpansDuringItsLifeTime()
 		{
@@ -524,12 +549,14 @@ namespace Elastic.Apm.Tests
 			}
 			spans.Should().HaveCount(2);
 		}
+#endif
 
 		/// <summary>
 		/// Same as <see cref="HttpCallWithoutRegisteredListener" /> but this one registers
 		/// <see cref="HttpDiagnosticsSubscriber" />.
 		/// Makes sure that the outgoing web request is captured.
 		/// </summary>
+#if NETCOREAPP
 		[NetCoreFact] //see: https://github.com/elastic/apm-agent-dotnet/issues/516
 		public async Task HttpCallWithRegisteredListener()
 		{
@@ -563,6 +590,7 @@ namespace Elastic.Apm.Tests
 				mockPayloadSender.SpansOnFirstTransaction[0].Context.Http.Url.Should().Be(url);
 			}
 		}
+#endif
 
 		/// <summary>
 		/// Subscribes to diagnostic events then unsubscribes.
@@ -636,6 +664,6 @@ namespace Elastic.Apm.Tests
 		private static void StartTransaction(ApmAgent agent)
 			//	=> agent.TransactionContainer.Transactions.Value =
 			//		new Transaction(agent, $"{nameof(TestSimpleOutgoingHttpRequest)}", ApiConstants.TypeRequest);
-			=> agent.Tracer.StartTransaction($"{nameof(TestSimpleOutgoingHttpRequest)}", ApiConstants.TypeRequest);
+			=> agent.Tracer.StartTransaction("Test transaction", ApiConstants.TypeRequest);
 	}
 }
