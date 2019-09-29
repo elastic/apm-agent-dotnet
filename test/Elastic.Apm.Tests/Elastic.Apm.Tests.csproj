@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <TargetFrameworks>netcoreapp2.1;net461</TargetFrameworks>
