@@ -1,13 +1,6 @@
-using System;
-using System.Net.Http;
 using System.Threading;
-using System.Threading.Tasks;
-using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm;
-using Elastic.Apm.Helpers;
-using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
-using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using FluentAssertions.Extensions;
@@ -16,12 +9,10 @@ using Xunit.Abstractions;
 
 // ReSharper disable ImplicitlyCapturedClosure
 
-namespace Elastic.Apm.Tests
+namespace Elastic.Apm.Tests.BackendCommTests
 {
 	public class CentralConfigFetcherTests : LoggingTestBase
 	{
-		private const string ThisClassName = nameof(CentralConfigFetcherTests);
-
 		public CentralConfigFetcherTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
 
 		[Fact]
@@ -33,7 +24,8 @@ namespace Elastic.Apm.Tests
 				lastCentralConfigFetcher = (CentralConfigFetcher)agent.CentralConfigFetcher;
 				lastCentralConfigFetcher.IsRunning.Should().BeTrue();
 
-				Thread.Sleep(1.Minute());
+				// Sleep a few seconds to let backend component to get to the stage where they contact APM Server
+				Thread.Sleep(5.Seconds());
 			}
 			lastCentralConfigFetcher.IsRunning.Should().BeFalse();
 		}

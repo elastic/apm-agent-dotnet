@@ -25,7 +25,7 @@ namespace Elastic.Apm.BackendComm
 
 		private readonly IAgentTimer _agentTimer;
 		private readonly IConfigStore _configStore;
-		private readonly string _getConfigUrlPath;
+		private readonly Uri _getConfigAbsoluteUrl;
 		private readonly IConfigSnapshot _initialSnapshot;
 		private readonly IApmLogger _logger;
 
@@ -42,7 +42,7 @@ namespace Elastic.Apm.BackendComm
 		private CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, IConfigSnapshot initialConfigSnapshot, Service service
 			, HttpMessageHandler httpMessageHandler, IAgentTimer agentTimer, string dbgName
 		)
-			: base(initialConfigSnapshot.CentralConfig, logger, ThisClassName, service, initialConfigSnapshot, httpMessageHandler)
+			: base( /* isEnabled: */ initialConfigSnapshot.CentralConfig, logger, ThisClassName, service, initialConfigSnapshot, httpMessageHandler)
 		{
 			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
 
@@ -62,10 +62,10 @@ namespace Elastic.Apm.BackendComm
 
 			_agentTimer = agentTimer ?? new AgentTimer();
 
-			_getConfigUrlPath = BackendCommUtils.ApmServerEndpoints.GetConfigUrlPath(service);
+			_getConfigAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildGetConfigAbsoluteUrl(initialConfigSnapshot.ServerUrls.First(), service);
 			_logger.Debug()
-				?.Log("Combined URL path for APM Server get central configuration endpoint: {UrlPath}. Service: {Service}."
-					, _getConfigUrlPath, service);
+				?.Log("Combined absolute URL for APM Server get central configuration endpoint: `{Url}'. Service: {Service}."
+					, _getConfigAbsoluteUrl, service);
 
 			StartWorkLoop();
 		}
@@ -116,12 +116,12 @@ namespace Elastic.Apm.BackendComm
 
 				_logger.IfLevel(severity)
 					?.LogException(ex, "Exception was thrown while fetching configuration from APM Server and parsing it."
-						+ " ETag: {ETag}. URL path: {UrlPath}. Apm Server base URL: {ApmServerUrl}. WaitInterval: {WaitInterval}."
+						+ " ETag: `{ETag}'. URL: `{Url}'. Apm Server base URL: `{ApmServerUrl}'. WaitInterval: {WaitInterval}."
 						+ " dbgIterationsCount: {dbgIterationsCount}."
 						+ Environment.NewLine + "+-> Request:{HttpRequest}"
 						+ Environment.NewLine + "+-> Response:{HttpResponse}"
 						+ Environment.NewLine + "+-> Response body [length: {HttpResponseBodyLength}]:{HttpResponseBody}"
-						, _eTag.AsNullableToString(), _getConfigUrlPath, HttpClientInstance.BaseAddress, waitInfo.Interval.ToHms(),
+						, _eTag.AsNullableToString(), _getConfigAbsoluteUrl, HttpClientInstance.BaseAddress, waitInfo.Interval.ToHms(),
 						_dbgIterationsCount
 						, httpRequest == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpRequest.ToString())
 						, httpResponse == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpResponse.ToString())
@@ -142,7 +142,7 @@ namespace Elastic.Apm.BackendComm
 
 		private HttpRequestMessage BuildHttpRequest(EntityTagHeaderValue eTag)
 		{
-			var httpRequest = new HttpRequestMessage(HttpMethod.Get, _getConfigUrlPath);
+			var httpRequest = new HttpRequestMessage(HttpMethod.Get, _getConfigAbsoluteUrl);
 			if (eTag != null) httpRequest.Headers.IfNoneMatch.Add(eTag);
 			return httpRequest;
 		}

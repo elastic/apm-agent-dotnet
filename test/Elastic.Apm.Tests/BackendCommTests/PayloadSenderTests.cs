@@ -20,7 +20,7 @@ using Xunit;
 using Xunit.Abstractions;
 using static Elastic.Apm.Tests.TestHelpers.FluentAssertionsUtils;
 
-namespace Elastic.Apm.Tests
+namespace Elastic.Apm.Tests.BackendCommTests
 {
 	public class PayloadSenderTests : LoggingTestBase
 	{

@@ -21,6 +21,58 @@ namespace Elastic.Apm.BackendComm
 
 		private static readonly TimeSpan DnsTimeout = TimeSpan.FromMinutes(1);
 
+		internal static class ApmServerEndpoints
+		{
+			internal static Uri BuildIntakeV2EventsAbsoluteUrl(Uri baseUrl) =>
+				CombineAbsoluteAndRelativeUrls(baseUrl, "intake/v2/events");
+
+			internal static Uri BuildGetConfigAbsoluteUrl(Uri baseUrl, Service service)
+			{
+				var strBuilder = new StringBuilder("config/v1/agents");
+				var prefix = '?';
+
+				if (service.Name != null)
+				{
+					strBuilder.Append(prefix).Append($"service.name={UrlEncode(service.Name)}");
+					prefix = '&';
+				}
+
+				if (service.Environment != null)
+					strBuilder.Append(prefix).Append($"service.environment={UrlEncode(service.Environment)}");
+
+				return CombineAbsoluteAndRelativeUrls(baseUrl, /* relativeUri: */ strBuilder.ToString());
+			}
+
+			/// <summary>
+			/// Credit: System.Net.Http.FormUrlEncodedContent.Encode (System.Net.Http, Version=4.2.0.0)
+			/// </summary>
+			private static string UrlEncode(string decodedStr)
+			{
+				decodedStr.ThrowIfArgumentNull(nameof(decodedStr));
+
+				return decodedStr.IsEmpty() ? string.Empty : Uri.EscapeDataString(decodedStr).Replace("%20", "+");
+			}
+
+			private static Uri CombineAbsoluteAndRelativeUrls(Uri baseAbsoluteUrl, string relativeUrl)
+			{
+				if (!baseAbsoluteUrl.IsAbsoluteUri)
+				{
+					throw new ArgumentException( /* message: */ $"{nameof(baseAbsoluteUrl)} should be an absolute URL."
+						+ $" {nameof(baseAbsoluteUrl)}: `{baseAbsoluteUrl}'."
+						, /* paramName: */ nameof(baseAbsoluteUrl));
+				}
+
+				// We need to make sure base URL ends with slash because according to
+				// https://docs.microsoft.com/en-us/dotnet/api/system.uri.-ctor?view=netstandard-2.0#System_Uri__ctor_System_Uri_System_String_
+				// If the baseUri has relative parts (like /api), then the relative part must be terminated with a slash, (like /api/),
+				//    if the relative part of baseUri is to be preserved in the constructed Uri.
+				var baseAbsoluteUrlAdapted = baseAbsoluteUrl;
+				var baseAbsoluteUrlAsStr = baseAbsoluteUrl.ToString();
+				if (!baseAbsoluteUrlAsStr.EndsWith("/")) baseAbsoluteUrlAdapted = new Uri(baseAbsoluteUrlAsStr + "/", UriKind.Absolute);
+				return new Uri(baseAbsoluteUrlAdapted, relativeUrl);
+			}
+		}
+
 		private static void ConfigServicePoint(Uri serverUrlBase, IApmLogger logger) =>
 			ConfigServicePointOnceHelper.IfNotInited?.Init(() =>
 			{
@@ -69,31 +121,7 @@ namespace Elastic.Apm.BackendComm
 
 			// Replace invalid characters by underscore. All invalid characters can be found at
 			// https://github.com/dotnet/corefx/blob/e64cac6dcacf996f98f0b3f75fb7ad0c12f588f7/src/System.Net.Http/src/System/Net/Http/HttpRuleParser.cs#L41
-			string AdaptUserAgentValue(string value)
-			{
-				return Regex.Replace(value, "[ /()<>@,:;={}?\\[\\]\"\\\\]", "_");
-			}
-		}
-
-		internal static class ApmServerEndpoints
-		{
-			internal static string IntakeV2EventsUrlPath = "intake/v2/events";
-
-			internal static string GetConfigUrlPath(Service service)
-			{
-				var strBuilder = new StringBuilder("/config/v1/agents");
-				var prefix = '?';
-
-				if (service.Name != null)
-				{
-					strBuilder.Append(prefix).Append($"service.name={service.Name}");
-					prefix = '&';
-				}
-
-				if (service.Environment != null) strBuilder.Append(prefix).Append($"service.environment={service.Environment}");
-
-				return strBuilder.ToString();
-			}
+			string AdaptUserAgentValue(string value) => Regex.Replace(value, "[ /()<>@,:;={}?\\[\\]\"\\\\]", "_");
 		}
 	}
 }
