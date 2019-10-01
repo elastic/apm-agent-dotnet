@@ -11,5 +11,8 @@
     <description>Elastic APM for ASP.NET. This package contains auto instrumentation for ASP.NET (classic). See: https://www.elastic.co/guide/en/apm/agent/dotnet/master/setup.html#setup-asp-net</description>
     <copyright>2019 Elasticsearch BV</copyright>
     <tags>apm, monitoring, elastic, elasticapm, analytics, asp.net, issmodule, iis</tags>
+	<dependencies>
+    <dependency id="Elastic.Apm" version="1.1.0" />
+</dependencies>
   </metadata>
 </package>
