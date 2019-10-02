@@ -44,54 +44,79 @@ namespace Elastic.Apm.AspNetCore
 
 		public async Task InvokeAsync(HttpContext context)
 		{
-			Transaction transaction;
-
-			var transactionName = $"{context.Request.Method} {context.Request.Path}";
-
-			if (context.Request.Headers.ContainsKey(TraceParent.TraceParentHeaderName))
-			{
-				var headerValue = context.Request.Headers[TraceParent.TraceParentHeaderName].ToString();
-
-				var distributedTracingData = TraceParent.TryExtractTraceparent(headerValue);
-
-				if (distributedTracingData != null)
-				{
-					_logger.Debug()
-						?.Log(
-							"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData}. Continuing trace.",
-							TraceParent.TraceParentHeaderName, distributedTracingData);
-
-					transaction = _tracer.StartTransactionInternal(
-						transactionName,
-						ApiConstants.TypeRequest,
-						distributedTracingData);
-				}
-				else
-				{
-					_logger.Debug()
-						?.Log(
-							"Incoming request with invalid {TraceParentHeaderName} header (received value: {TraceParentHeaderValue}). Starting trace with new trace id.",
-							TraceParent.TraceParentHeaderName, headerValue);
-
-					transaction = _tracer.StartTransactionInternal(transactionName,
-						ApiConstants.TypeRequest);
-				}
-			}
-			else
-			{
-				_logger.Debug()?.Log("Incoming request. Starting Trace.");
-				transaction = _tracer.StartTransactionInternal(transactionName,
-					ApiConstants.TypeRequest);
-			}
-
-			if (transaction.IsSampled) FillSampledTransactionContextRequest(context, transaction);
+			var transaction = StartTransaction(context);
 
 			try
 			{
 				await _next(context);
 			}
-			catch (Exception e) when ((Helpers.ExceptionFilter.Capture(e, transaction, context, _configurationReader, _logger))) { }
+			catch (Exception e) when (transaction != null
+				&& Helpers.ExceptionFilter.Capture(e, transaction, context, _configurationReader, _logger)) { }
 			finally
+			{
+				StopTransaction(transaction, context);
+			}
+		}
+
+		private Transaction StartTransaction(HttpContext context)
+		{
+			try
+			{
+				Transaction transaction;
+				var transactionName = $"{context.Request.Method} {context.Request.Path}";
+
+				if (context.Request.Headers.ContainsKey(TraceParent.TraceParentHeaderName))
+				{
+					var headerValue = context.Request.Headers[TraceParent.TraceParentHeaderName].ToString();
+
+					var distributedTracingData = TraceParent.TryExtractTraceparent(headerValue);
+
+					if (distributedTracingData != null)
+					{
+						_logger.Debug()
+							?.Log(
+								"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData}. Continuing trace.",
+								TraceParent.TraceParentHeaderName, distributedTracingData);
+
+						transaction = _tracer.StartTransactionInternal(
+							transactionName,
+							ApiConstants.TypeRequest,
+							distributedTracingData);
+					}
+					else
+					{
+						_logger.Debug()
+							?.Log(
+								"Incoming request with invalid {TraceParentHeaderName} header (received value: {TraceParentHeaderValue}). Starting trace with new trace id.",
+								TraceParent.TraceParentHeaderName, headerValue);
+
+						transaction = _tracer.StartTransactionInternal(transactionName,
+							ApiConstants.TypeRequest);
+					}
+				}
+				else
+				{
+					_logger.Debug()?.Log("Incoming request. Starting Trace.");
+					transaction = _tracer.StartTransactionInternal(transactionName,
+						ApiConstants.TypeRequest);
+				}
+
+				if (transaction.IsSampled) FillSampledTransactionContextRequest(context, transaction);
+
+				return transaction;
+			}
+			catch (Exception ex)
+			{
+				_logger?.Error()?.LogException(ex, "Exception thrown while trying to start transaction");
+				return null;
+			}
+		}
+
+		private void StopTransaction(Transaction transaction, HttpContext context)
+		{
+			if (transaction == null) return;
+
+			try
 			{
 				if (!transaction.HasCustomName)
 				{
@@ -112,7 +137,13 @@ namespace Elastic.Apm.AspNetCore
 					FillSampledTransactionContextResponse(context, transaction);
 					FillSampledTransactionContextUser(context, transaction);
 				}
-
+			}
+			catch (Exception ex)
+			{
+				_logger?.Error()?.LogException(ex, "Exception thrown while trying to stop transaction");
+			}
+			finally
+			{
 				transaction.End();
 			}
 		}
@@ -125,75 +156,102 @@ namespace Elastic.Apm.AspNetCore
 
 		private void FillSampledTransactionContextRequest(HttpContext context, Transaction transaction)
 		{
-			if (context.Request == null) return;
-
-			var url = new Url
+			try
 			{
-				Full = context.Request.GetEncodedUrl(),
-				HostName = context.Request.Host.Host,
-				Protocol = GetProtocolName(context.Request.Protocol),
-				Raw = GetRawUrl(context.Request) ?? context.Request.GetEncodedUrl(),
-				PathName = context.Request.Path,
-				Search = context.Request.QueryString.Value.Length > 0 ? context.Request.QueryString.Value.Substring(1) : string.Empty
-			};
+				if (context?.Request == null) return;
 
-			Dictionary<string, string> requestHeaders = null;
-			if (_configurationReader.CaptureHeaders)
-			{
-				requestHeaders = new Dictionary<string, string>();
-
-				foreach (var header in context.Request.Headers)
-					requestHeaders.Add(header.Key, header.Value.ToString());
-			}
-
-			var body = Consts.BodyRedacted; // According to the documentation - the default value of 'body' is '[Redacted]'
-			if (!string.IsNullOrEmpty(context?.Request?.ContentType))
-			{
-				var contentType = new ContentType(context.Request.ContentType);
-				if (_configurationReader.ShouldExtractRequestBodyOnTransactions() && _configurationReader.CaptureBodyContentTypes.ContainsLike(contentType.MediaType))
-					body = context.Request.ExtractRequestBody(_logger);
-			}
-
-			transaction.Context.Request = new Request(context.Request.Method, url)
-			{
-				Socket = new Socket
+				var url = new Url
 				{
-					Encrypted = context.Request.IsHttps,
-					RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
-				},
-				HttpVersion = GetHttpVersion(context.Request.Protocol),
-				Headers = requestHeaders,
-				Body = (string.IsNullOrEmpty(body) ? Consts.BodyRedacted : body)
-			};
+					Full = context.Request.GetEncodedUrl(),
+					HostName = context.Request.Host.Host,
+					Protocol = GetProtocolName(context.Request.Protocol),
+					Raw = GetRawUrl(context.Request) ?? context.Request.GetEncodedUrl(),
+					PathName = context.Request.Path,
+					Search = context.Request.QueryString.Value.Length > 0 ? context.Request.QueryString.Value.Substring(1) : string.Empty
+				};
+
+				transaction.Context.Request = new Request(context.Request.Method, url)
+				{
+					Socket = new Socket
+					{
+						Encrypted = context.Request.IsHttps,
+						RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
+					},
+					HttpVersion = GetHttpVersion(context.Request.Protocol),
+					Headers = GetHeaders(context.Request.Headers),
+					Body = GetRequestBody(context.Request)
+				};
+			}
+			catch (Exception ex)
+			{
+				// context.request is optional: https://github.com/elastic/apm-server/blob/64a4ab96ba138050fe496b17d31deb2cf8830deb/docs/spec/request.json#L5
+				_logger?.Error()
+					?.LogException(ex, "Exception thrown while trying to fill request context for sampled transaction {TransactionId}",
+						transaction.Id);
+			}
 		}
+
+		private string GetRequestBody(HttpRequest request)
+		{
+			// ReSharper disable once InvertIf
+			if (_configurationReader.ShouldExtractRequestBodyOnTransactions() && !string.IsNullOrEmpty(request?.ContentType))
+			{
+				var contentType = new ContentType(request.ContentType);
+				if (_configurationReader.CaptureBodyContentTypes.ContainsLike(contentType.MediaType))
+					return request.ExtractRequestBody(_logger) ?? Consts.BodyRedacted;
+			}
+
+			// According to the documentation - the default value of 'body' is '[Redacted]'
+			return Consts.BodyRedacted;
+		}
+
+		private Dictionary<string, string> GetHeaders(IHeaderDictionary headers) =>
+			_configurationReader.CaptureHeaders && headers != null
+				? headers.ToDictionary(header => header.Key, header => header.Value.ToString())
+				: null;
 
 		private void FillSampledTransactionContextResponse(HttpContext context, Transaction transaction)
 		{
-			Dictionary<string, string> responseHeaders = null;
-
-			if (_configurationReader.CaptureHeaders)
-				responseHeaders = context.Response.Headers.ToDictionary(header => header.Key, header => header.Value.ToString());
-
-			transaction.Context.Response = new Response
+			try
 			{
-				Finished = context.Response.HasStarted, //TODO ?
-				StatusCode = context.Response.StatusCode,
-				Headers = responseHeaders
-			};
+				transaction.Context.Response = new Response
+				{
+					Finished = context.Response.HasStarted, //TODO ?
+					StatusCode = context.Response.StatusCode,
+					Headers = GetHeaders(context.Response.Headers)
+				};
+			}
+			catch (Exception ex)
+			{
+				// context.response is optional: https://github.com/elastic/apm-server/blob/64a4ab96ba138050fe496b17d31deb2cf8830deb/docs/spec/context.json#L16
+				_logger?.Error()
+					?.LogException(ex, "Exception thrown while trying to fill response context for sampled transaction {TransactionId}",
+						transaction.Id);
+			}
 		}
 
 		private void FillSampledTransactionContextUser(HttpContext context, Transaction transaction)
 		{
-			if (context.User?.Identity != null && context.User.Identity.IsAuthenticated && transaction.Context.User == null)
+			try
 			{
-				transaction.Context.User = new User
+				if (context.User?.Identity != null && context.User.Identity.IsAuthenticated && transaction.Context.User == null)
 				{
-					UserName = context.User.Identity.Name,
-					Id = GetClaimWithFallbackValue(ClaimTypes.NameIdentifier, Consts.OpenIdClaimTypes.UserId),
-					Email = GetClaimWithFallbackValue(ClaimTypes.Email, Consts.OpenIdClaimTypes.Email)
-				};
+					transaction.Context.User = new User
+					{
+						UserName = context.User.Identity.Name,
+						Id = GetClaimWithFallbackValue(ClaimTypes.NameIdentifier, Consts.OpenIdClaimTypes.UserId),
+						Email = GetClaimWithFallbackValue(ClaimTypes.Email, Consts.OpenIdClaimTypes.Email)
+					};
 
-				_logger.Debug()?.Log("Captured user - {CapturedUser}", transaction.Context.User);
+					_logger.Debug()?.Log("Captured user - {CapturedUser}", transaction.Context.User);
+				}
+			}
+			catch (Exception ex)
+			{
+				// context.user is optional: https://github.com/elastic/apm-server/blob/64a4ab96ba138050fe496b17d31deb2cf8830deb/docs/spec/user.json#L5
+				_logger?.Error()
+					?.LogException(ex, "Exception thrown while trying to fill user context for sampled transaction {TransactionId}",
+						transaction.Id);
 			}
 
 			string GetClaimWithFallbackValue(string claimType, string fallbackClaimType)
@@ -272,6 +330,8 @@ namespace Elastic.Apm.AspNetCore
 					return "1.1";
 				case "HTTP/2.0":
 					return "2.0";
+				case null:
+					return "unknown";
 				default:
 					return protocolString.Replace("HTTP/", string.Empty);
 			}

@@ -622,7 +622,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			var agentComponents = new TestAgentComponents(payloadSender: payloadSender,
-				configurationReader: new TestAgentConfigurationReader(logLevel: "Debug", stackTraceLimit: "-1",
+				config: new MockConfigSnapshot(logLevel: "Debug", stackTraceLimit: "-1",
 					spanFramesMinDurationInMilliseconds: "-1ms"));
 
 			var agent = new ApmAgent(agentComponents);

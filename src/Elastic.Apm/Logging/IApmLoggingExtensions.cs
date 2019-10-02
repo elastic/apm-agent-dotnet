@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Concurrent;
+using System.Data;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Logging
 {
@@ -14,12 +18,46 @@ namespace Elastic.Apm.Logging
 
 		private static void DoLog(this IApmLogger logger, LogLevel level, string message, Exception e, params object[] args)
 		{
-			var formatter = logger is ScopedLogger sl
-				? sl.GetOrAddFormatter(message, args.Length)
-				: Formatters.GetOrAdd(message, s => new LogValuesFormatter(s));
+			try
+			{
+				var formatter = logger is ScopedLogger sl
+					? sl.GetOrAddFormatter(message, args)
+					: Formatters.GetOrAdd(message, s => new LogValuesFormatter(s, args));
 
-			var logValues = formatter.GetState(args);
-			logger?.Log(level, logValues, e, (s, _) => formatter.Format(args));
+				var logValues = formatter.GetState(args);
+
+				logger?.Log(level, logValues, e, (s, _) => formatter.Format(args));
+			}
+			catch (Exception exception)
+			{
+				// For now we will just print it to System.Diagnostics.Trace
+				// In the future we should consider error counters to increment and log periodically on a worker thread
+				try
+				{
+					var newLine = Environment.NewLine + "Elastic APM .NET Agent: ";
+					var currentStackTraceFrames = new System.Diagnostics.StackTrace(true).GetFrames();
+					var currentStackTrace = currentStackTraceFrames == null
+						? " N/A"
+						: newLine + string.Join("", currentStackTraceFrames.Select(f => "    " + f));
+
+					System.Diagnostics.Trace.WriteLine("Elastic APM .NET Agent: [CRITICAL] Exception thrown by logging implementation."
+						+ $" Log message: `{message.AsNullableToString()}'."
+						+ $" args.Length: {args.Length}."
+						+ $" Current thread: {DbgUtils.CurrentThreadDesc}"
+						+ newLine
+						+ $"+-> Exception (exception): {exception.GetType().FullName}: {exception.Message}{newLine}{exception.StackTrace}"
+						+ (e != null
+							? newLine + $"+-> Exception (e): {e.GetType().FullName}: {e.Message}{newLine}{e.StackTrace}"
+							: $"e: {ObjectExtensions.NullAsString}")
+						+ newLine
+						+ "+-> Current stack trace:" + currentStackTrace
+					);
+				}
+				catch (Exception)
+				{
+					// ignored
+				}
+			}
 		}
 
 		/// <summary>
@@ -28,7 +66,7 @@ namespace Elastic.Apm.Logging
 		/// <param name="logger">The logger you want to log with</param>
 		/// <param name="level">The level to compare with</param>
 		/// <returns>If the return value is not null you can call <see cref="MaybeLogger.Log" /> to log</returns>
-		private static MaybeLogger? IfLevel(this IApmLogger logger, LogLevel level) =>
+		internal static MaybeLogger? IfLevel(this IApmLogger logger, LogLevel level) =>
 			logger.IsEnabled(level) ? new MaybeLogger(logger, level) : (MaybeLogger?)null;
 
 		/// <summary>
@@ -52,14 +90,14 @@ namespace Elastic.Apm.Logging
 		internal static MaybeLogger? Debug(this IApmLogger logger) => IfLevel(logger, LogLevel.Debug);
 
 		/// <summary>
-		/// If the logger has a loglevel, which is higher than or equal to Error then it returns a MaybeLogger instance,
+		/// If the logger has a loglevel, which is higher than Info then it returns a MaybeLogger instance,
 		/// otherwise it returns null.
 		/// By using the return value with `?.` you can avoid executing code that is not necessary to execute
 		/// in case the log won't be printed because the loglevel would not allow it.
 		/// </summary>
 		/// <param name="logger">The logger instance you want to log with</param>
 		/// <returns>Either a MaybeLogger or null</returns>
-		internal static MaybeLogger? Error(this IApmLogger logger) => IfLevel(logger, LogLevel.Error);
+		internal static MaybeLogger? Info(this IApmLogger logger) => IfLevel(logger, LogLevel.Information);
 
 		/// <summary>
 		/// If the logger has a loglevel, which is higher than or equal to Warning then it returns a MaybeLogger instance,
@@ -72,6 +110,16 @@ namespace Elastic.Apm.Logging
 		internal static MaybeLogger? Warning(this IApmLogger logger) => IfLevel(logger, LogLevel.Warning);
 
 		/// <summary>
+		/// If the logger has a loglevel, which is higher than or equal to Error then it returns a MaybeLogger instance,
+		/// otherwise it returns null.
+		/// By using the return value with `?.` you can avoid executing code that is not necessary to execute
+		/// in case the log won't be printed because the loglevel would not allow it.
+		/// </summary>
+		/// <param name="logger">The logger instance you want to log with</param>
+		/// <returns>Either a MaybeLogger or null</returns>
+		internal static MaybeLogger? Error(this IApmLogger logger) => IfLevel(logger, LogLevel.Error);
+
+		/// <summary>
 		/// If the logger has a loglevel, which is higher than or equal to Critical then it returns a MaybeLogger instance,
 		/// otherwise it returns null.
 		/// By using the return value with `?.` you can avoid executing code that is not necessary to execute
@@ -80,16 +128,6 @@ namespace Elastic.Apm.Logging
 		/// <param name="logger">The logger instance you want to log with</param>
 		/// <returns>Either a MaybeLogger or null</returns>
 		internal static MaybeLogger? Critical(this IApmLogger logger) => IfLevel(logger, LogLevel.Critical);
-
-		/// <summary>
-		/// If the logger has a loglevel, which is higher than Info then it returns a MaybeLogger instance,
-		/// otherwise it returns null.
-		/// By using the return value with `?.` you can avoid executing code that is not necessary to execute
-		/// in case the log won't be printed because the loglevel would not allow it.
-		/// </summary>
-		/// <param name="logger">The logger instance you want to log with</param>
-		/// <returns>Either a MaybeLogger or null</returns>
-		internal static MaybeLogger? Info(this IApmLogger logger) => IfLevel(logger, LogLevel.Information);
 
 		internal readonly struct MaybeLogger
 		{

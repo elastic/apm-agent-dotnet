@@ -42,11 +42,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Web" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AgentDependencies.cs" />
     <Compile Include="ElasticApmModule.cs" />
     <Compile Include="FullFrameworkConfigReader.cs" />
     <Compile Include="InternalsVisibleTo.cs" />

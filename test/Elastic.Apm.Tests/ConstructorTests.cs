@@ -9,27 +9,10 @@ namespace Elastic.Apm.Tests
 {
 	public class ConstructorTests
 	{
-		private class LogConfig : IConfigurationReader
-		{
-			public LogConfig(LogLevel level) => LogLevel = level;
-			public LogLevel LogLevel { get; }
-			public IReadOnlyList<Uri> ServerUrls => new List<Uri> { ConfigConsts.DefaultValues.ServerUri };
-			public string ServiceName { get; }
-			public string ServiceVersion { get; }
-			public string SecretToken { get; }
-			public bool CaptureHeaders { get; }
-			public double TransactionSampleRate { get; }
-			public string CaptureBody { get; }
-			public double MetricsIntervalInMilliseconds { get; }
-			public int StackTraceLimit { get; }
-			public double SpanFramesMinDurationInMilliseconds { get; }
-			public List<string> CaptureBodyContentTypes { get; }
-		}
-
-		///<summary>
-		/// Assert that console logger is the default logger implementation during normal composition and that
-		/// it adheres to the loglevel reported by the configuration injected into the agent
-		///</summary>
+		/// <summary>
+		///  Assert that console logger is the default logger implementation during normal composition and that
+		///  it adheres to the loglevel reported by the configuration injected into the agent
+		/// </summary>
 		[Fact]
 		public void Compose()
 		{
@@ -39,6 +22,31 @@ namespace Elastic.Apm.Tests
 			logger.Should().NotBeNull();
 			logger?.IsEnabled(LogLevel.Warning).Should().BeTrue();
 			logger?.IsEnabled(LogLevel.Information).Should().BeFalse();
+		}
+
+		private class LogConfig : IConfigurationReader
+		{
+			public LogConfig(LogLevel level) => LogLevel = level;
+
+			// ReSharper disable UnassignedGetOnlyAutoProperty
+			public string CaptureBody => ConfigConsts.DefaultValues.CaptureBody;
+			public List<string> CaptureBodyContentTypes { get; }
+			public bool CaptureHeaders => ConfigConsts.DefaultValues.CaptureHeaders;
+			public bool CentralConfig => ConfigConsts.DefaultValues.CentralConfig;
+			public string Environment { get; }
+			public TimeSpan FlushInterval => TimeSpan.FromMilliseconds(ConfigConsts.DefaultValues.FlushIntervalInMilliseconds);
+			public LogLevel LogLevel { get; }
+			public int MaxBatchEventCount => ConfigConsts.DefaultValues.MaxBatchEventCount;
+			public int MaxQueueEventCount => ConfigConsts.DefaultValues.MaxQueueEventCount;
+			public double MetricsIntervalInMilliseconds => ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds;
+			public string SecretToken { get; }
+			public IReadOnlyList<Uri> ServerUrls => new List<Uri> { ConfigConsts.DefaultValues.ServerUri };
+			public string ServiceName { get; }
+			public string ServiceVersion { get; }
+			public double SpanFramesMinDurationInMilliseconds => ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;
+			public int StackTraceLimit => ConfigConsts.DefaultValues.StackTraceLimit;
+			public double TransactionSampleRate => ConfigConsts.DefaultValues.TransactionSampleRate;
+			// ReSharper restore UnassignedGetOnlyAutoProperty
 		}
 	}
 }

@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+using Elastic.Apm.BackendComm;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
@@ -8,22 +10,17 @@ namespace Elastic.Apm.Tests.Mocks
 	{
 		public TestAgentComponents(
 			IApmLogger logger = null,
-			TestAgentConfigurationReader configurationReader = null,
+			IConfigSnapshot config = null,
 			IPayloadSender payloadSender = null,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer = null,
-			string captureBody = ConfigConsts.SupportedValues.CaptureBodyOff,
-			string captureBodyContentTypes = ConfigConsts.DefaultValues.CaptureBodyContentTypes
+			ICentralConfigFetcher centralConfigFetcher = null
 		) : base(
 			logger ?? new NoopLogger(),
-			configurationReader ?? new TestAgentConfigurationReader(
-				logger ?? new NoopLogger(),
-				captureBody: captureBody,
-				captureBodyContentTypes: captureBodyContentTypes),
+			config ?? new MockConfigSnapshot(logger ?? new NoopLogger()),
 			payloadSender ?? new MockPayloadSender(),
 			new FakeMetricsCollector(),
-			currentExecutionSegmentsContainer
-			)
-		{ }
-
+			currentExecutionSegmentsContainer,
+			centralConfigFetcher ?? new NoopCentralConfigFetcher()
+		) { }
 	}
 }

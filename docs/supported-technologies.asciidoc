@@ -47,6 +47,10 @@ We support automatic instrumentation for the following web frameworks.
 |2.x
 |1.0
 
+|ASP.NET (.NET Framework) on IIS
+|4.6.1 or newer (IIS 7.0 or newer)
+|1.1
+
 |===
 
 
@@ -80,5 +84,9 @@ The spans are named after the schema `<method> <host>`, for example `GET elastic
 |System.Net.Http.HttpClient on .NET Core
 |
 |1.0
+
+|System.Net.Http.HttpClient on .NET Framework
+|
+|1.1
 
 |===

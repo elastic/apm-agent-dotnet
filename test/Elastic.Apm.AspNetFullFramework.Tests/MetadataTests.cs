@@ -15,21 +15,23 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 	[Collection("AspNetFullFrameworkTests")]
 	public class MetadataTests : TestsBase
 	{
+		private const string ThisClassName = nameof(AspNetFullFramework) + "." + nameof(Tests) + "." + nameof(MetadataTests);
+
 		private readonly IApmLogger _logger;
 
 		public MetadataTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) =>
-			_logger = new XunitOutputLogger(xUnitOutputHelper).Scoped(nameof(MetadataTests));
+			_logger = LoggerBase.Scoped(ThisClassName);
 
 		[AspNetFullFrameworkFact]
 		public async Task AspNetVersionTest()
 		{
 			var pageThatThrows = SampleAppUrlPaths.ThrowsInvalidOperationPage;
-			var response = await SendGetRequestToSampleAppAndVerifyResponseStatusCode(pageThatThrows.RelativeUrlPath, pageThatThrows.StatusCode);
-			var aspNetVersionFromErrorPage = GetAspNetVersionFromErrorPage(await response.Content.ReadAsStringAsync());
+			var sampleAppResponse = await SendGetRequestToSampleAppAndVerifyResponse(pageThatThrows.RelativeUrlPath, pageThatThrows.StatusCode);
+			var aspNetVersionFromErrorPage = GetAspNetVersionFromErrorPage(sampleAppResponse.Content);
 
-			VerifyDataReceivedFromAgent(receivedData =>
+			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				TryVerifyDataReceivedFromAgent(pageThatThrows, receivedData);
+				VerifyReceivedDataSharedConstraints(pageThatThrows, receivedData);
 
 				receivedData.Metadata.Should().NotBeEmpty();
 				foreach (var metadata in receivedData.Metadata)
@@ -59,11 +61,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var htmlClosingTagIndex = errorPage.LastIndexOf("</html>", StringComparison.OrdinalIgnoreCase);
 			var aspNetVersionKey = "ASP.NET Version:";
 			var aspNetVersionKeyIndex = errorPage.Substring(0, htmlClosingTagIndex).LastIndexOf(aspNetVersionKey, StringComparison.OrdinalIgnoreCase);
-			var errorPageFromAspNetVersion = errorPage.Substring(aspNetVersionKeyIndex + aspNetVersionKey.Length,
+			var textAfterAspNetVersionKey = errorPage.Substring(aspNetVersionKeyIndex + aspNetVersionKey.Length,
 				htmlClosingTagIndex - (aspNetVersionKeyIndex + aspNetVersionKey.Length));
 			char[] eolChars = { '\n', '\r' };
-			var aspNetVersionEol = errorPageFromAspNetVersion.IndexOfAny(eolChars);
-			return errorPageFromAspNetVersion.Substring(0, aspNetVersionEol).Trim();
+			var aspNetVersionEolIndex = textAfterAspNetVersionKey.IndexOfAny(eolChars);
+			return textAfterAspNetVersionKey.Substring(0, aspNetVersionEolIndex).Trim();
 		}
 
 
@@ -71,18 +73,18 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task ServiceRuntimeTest()
 		{
 			var page = SampleAppUrlPaths.GetDotNetRuntimeDescriptionPage;
-			var response = await SendGetRequestToSampleAppAndVerifyResponseStatusCode(page.RelativeUrlPath, page.StatusCode);
+			var sampleAppResponse = await SendGetRequestToSampleAppAndVerifyResponse(page.RelativeUrlPath, page.StatusCode);
 
-			VerifyDataReceivedFromAgent(receivedData =>
+			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				TryVerifyDataReceivedFromAgent(page, receivedData);
+				VerifyReceivedDataSharedConstraints(page, receivedData);
 
 				receivedData.Metadata.Should().NotBeEmpty();
 				foreach (var metadata in receivedData.Metadata)
 				{
 					metadata.Service.Runtime.Name.Should().Be(Runtime.DotNetFullFrameworkName);
 					var sampleAppDotNetRuntimeDescription =
-						response.Headers.GetValues(HomeController.DotNetRuntimeDescriptionHttpHeaderName).Single();
+						sampleAppResponse.Headers.GetValues(HomeController.DotNetRuntimeDescriptionHttpHeaderName).Single();
 					sampleAppDotNetRuntimeDescription.Should().StartWith(PlatformDetection.DotNetFullFrameworkDescriptionPrefix);
 					metadata.Service.Runtime.Version.Should()
 						.Be(PlatformDetection.GetDotNetRuntimeVersionFromDescription(

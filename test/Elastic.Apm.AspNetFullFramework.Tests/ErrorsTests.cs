@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using AspNetFullFrameworkSampleApp.Controllers;
-using Elastic.Apm.Api;
+using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
@@ -20,11 +20,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task CustomSpanThrowsTest()
 		{
 			var errorPageData = SampleAppUrlPaths.CustomSpanThrowsExceptionPage;
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(errorPageData.RelativeUrlPath, errorPageData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(errorPageData.RelativeUrlPath, errorPageData.StatusCode);
 
-			VerifyDataReceivedFromAgent(receivedData =>
+			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				TryVerifyDataReceivedFromAgent(errorPageData, receivedData);
+				VerifyReceivedDataSharedConstraints(errorPageData, receivedData);
 
 				var transaction = receivedData.Transactions.First();
 				transaction.Context.Request.Url.Search.Should().BeNull();
@@ -37,17 +37,18 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				span.ParentId.Should().Be(transaction.Id);
 				span.ShouldOccurBetween(transaction);
 
-				receivedData.Errors.Count.Should().Be(1);
-				var error = receivedData.Errors.First();
-				error.Exception.Message.Should().Be(HomeController.ExceptionMessage);
-				error.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
-				error.Exception.StackTrace.Should().Contain(f => f.Function == HomeController.CustomSpanThrowsInternalMethodName);
-				error.TraceId.Should().Be(transaction.TraceId);
-				error.TransactionId.Should().Be(transaction.Id);
-				error.Transaction.Type.Should().Be(ApiConstants.TypeRequest);
-				error.Transaction.IsSampled.Should().BeTrue();
-				error.ParentId.Should().Be(span.Id);
-				error.ShouldOccurBetween(span);
+				receivedData.Errors.Count.Should().Be(2);
+				receivedData.Errors.ForEach(error =>
+				{
+					error.Exception.Message.Should().Be(HomeController.ExceptionMessage);
+					error.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
+					error.Exception.StackTrace.Should().Contain(f => f.Function == HomeController.CustomSpanThrowsInternalMethodName);
+					VerifyErrorShared(error, transaction);
+				});
+
+				VerifySpanError(receivedData.Errors.First(), span, transaction);
+
+				VerifyTransactionError(receivedData.Errors.Skip(1).First(), transaction);
 			});
 		}
 
@@ -55,11 +56,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task HttpCallWithResponseForbidden()
 		{
 			var forbidResponsePageData = SampleAppUrlPaths.ForbidHttpResponsePageDescriptionPage;
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(forbidResponsePageData.RelativeUrlPath, forbidResponsePageData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(forbidResponsePageData.RelativeUrlPath, forbidResponsePageData.StatusCode);
 
-			VerifyDataReceivedFromAgent(receivedData =>
+			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				TryVerifyDataReceivedFromAgent(forbidResponsePageData, receivedData);
+				VerifyReceivedDataSharedConstraints(forbidResponsePageData, receivedData);
 
 				receivedData.Spans.First().Should().NotBeNull();
 				receivedData.Spans.First().Context.Http.Should().NotBeNull();
@@ -71,11 +72,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task CustomChildSpanThrowsTest()
 		{
 			var errorPageData = SampleAppUrlPaths.CustomChildSpanThrowsExceptionPage;
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(errorPageData.RelativeUrlPath, errorPageData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(errorPageData.RelativeUrlPath, errorPageData.StatusCode);
 
-			VerifyDataReceivedFromAgent(receivedData =>
+			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				TryVerifyDataReceivedFromAgent(errorPageData, receivedData);
+				VerifyReceivedDataSharedConstraints(errorPageData, receivedData);
 
 				var transaction = receivedData.Transactions.First();
 				transaction.Context.Request.Url.Search.Should().BeNull();
@@ -102,21 +103,66 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				parentSpan.ShouldOccurBetween(transaction);
 
 				receivedData.Errors.Should().HaveCount(errorPageData.ErrorsCount);
-				errorPageData.ErrorsCount.Repeat(i =>
+				receivedData.Errors.ForEach(error =>
 				{
-					var error = receivedData.Errors[i];
-					var span = receivedData.Spans[i];
 					error.Exception.Message.Should().Be(HomeController.ExceptionMessage);
 					error.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
 					error.Exception.StackTrace.Should().Contain(f => f.Function == HomeController.CustomSpanThrowsInternalMethodName);
-					error.TraceId.Should().Be(transaction.TraceId);
-					error.TransactionId.Should().Be(transaction.Id);
-					error.Transaction.Type.Should().Be(ApiConstants.TypeRequest);
-					error.Transaction.IsSampled.Should().BeTrue();
-					error.ParentId.Should().Be(span.Id);
-					error.ShouldOccurBetween(span);
+					VerifyErrorShared(error, transaction);
 				});
+
+				// all the errors except the last one are the exception that propagated out of spans
+				// the last error is the exception that propagated out of transaction
+				receivedData.Errors.Take(errorPageData.ErrorsCount - 1)
+					.ForEachIndexed((error, i) => { VerifySpanError(error, receivedData.Spans[i], transaction); });
+
+				var lastError = receivedData.Errors.Skip(errorPageData.ErrorsCount - 1).First();
+				VerifyTransactionError(lastError, transaction);
 			});
+		}
+
+		[AspNetFullFrameworkFact]
+		public async Task PageThatDoesNotExit_test()
+		{
+			var pageData = SampleAppUrlPaths.PageThatDoesNotExit;
+			await SendGetRequestToSampleAppAndVerifyResponse(pageData.RelativeUrlPath, pageData.StatusCode);
+
+			await WaitAndCustomVerifyReceivedData(receivedData =>
+			{
+				VerifyReceivedDataSharedConstraints(pageData, receivedData);
+
+				var transaction = receivedData.Transactions.First();
+				var error = receivedData.Errors.First();
+
+				VerifyTransactionError(error, transaction);
+
+				error.Exception.Type.Should().Be("System.Web.HttpException");
+				error.Exception.Message.Should().ContainAll(pageData.RelativeUrlPath, "not found");
+			});
+		}
+
+		private static void VerifyErrorShared(ErrorDto error, TransactionDto transaction)
+		{
+			error.TraceId.Should().Be(transaction.TraceId);
+			error.TransactionId.Should().Be(transaction.Id);
+			error.Transaction.Type.Should().Be(transaction.Type);
+			error.Transaction.IsSampled.Should().Be(transaction.IsSampled);
+		}
+
+		private static void VerifyTransactionError(ErrorDto error, TransactionDto transaction)
+		{
+			VerifyErrorShared(error, transaction);
+
+			error.ParentId.Should().Be(transaction.Id);
+			error.ShouldOccurBetween(transaction);
+		}
+
+		private static void VerifySpanError(ErrorDto error, SpanDto span, TransactionDto transaction)
+		{
+			VerifyErrorShared(error, transaction);
+
+			error.ParentId.Should().Be(span.Id);
+			error.ShouldOccurBetween(span);
 		}
 	}
 }

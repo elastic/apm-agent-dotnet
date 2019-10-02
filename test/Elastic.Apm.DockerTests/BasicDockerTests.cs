@@ -16,9 +16,9 @@ namespace Elastic.Apm.DockerTests
 			{
 				var payloadSender = (agent.PayloadSender as PayloadSenderV2);
 				payloadSender.Should().NotBeNull();
-				payloadSender?._system.Should().NotBeNull();
-				payloadSender?._system.Container.Should().NotBeNull();
-				payloadSender?._system.Container.Id.Should().NotBeNullOrWhiteSpace();
+				payloadSender?.System.Should().NotBeNull();
+				payloadSender?.System.Container.Should().NotBeNull();
+				payloadSender?.System.Container.Id.Should().NotBeNullOrWhiteSpace();
 			}
 		}
 	}
