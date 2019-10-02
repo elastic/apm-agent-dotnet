@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <LangVersion>8</LangVersion>
+    <RootNamespace>Elastic.Apm.SqlClient</RootNamespace>
+    <AssemblyName>Elastic.Apm.SqlClient</AssemblyName>
+    <AssemblyVersion>1.1.0</AssemblyVersion>
+    <InformationalVersion>1.1.0</InformationalVersion>
+    <FileVersion>1.1.0</FileVersion>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
+    <PackageVersion>1.1.0</PackageVersion>
+    <Authors>Elastic and contributors</Authors>
+    <PackageId>Elastic.Apm.SqlClient</PackageId>
+    <Copyright>2019 Elasticsearch BV</Copyright>
+    <PackageLicenseUrl>https://github.com/elastic/apm-agent-dotnet/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/elastic/apm-agent-dotnet</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/elastic/apm-agent-dotnet/master/build/nuget-icon.png</PackageIconUrl>
+    <Description>Elastic APM for System.Data.SqlClient and Microsoft.Data.SqlClient. This package contains auto instrumentation for SqlClient. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
+    <PackageTags>apm, monitoring, elastic, elasticapm, analytics, sqlclient</PackageTags>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+  </ItemGroup>
+
+</Project>
