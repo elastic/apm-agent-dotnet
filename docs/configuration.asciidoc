@@ -168,7 +168,7 @@ of the deployed revision, e.g. the output of git rev-parse HEAD.
 
 [float]
 [[config-environment]]
-==== `Environment`
+==== `Environment` (added[1.1])
 
 The name of the environment this service is deployed in, e.g. "production" or "staging".
 
