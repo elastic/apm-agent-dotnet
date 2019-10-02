@@ -40,9 +40,10 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		[InlineData("https://1.2.3.4/", null, "My env", "https://1.2.3.4/config/v1/agents?service.environment=My+env")]
 		public void BuildGetConfigAbsoluteUrl_tests(string serverBaseUrl, string serviceName, string envName, string expectedGetConfigApiAbsoluteUrl)
 		{
-			BuildGetConfigAbsoluteUrl(new Uri(serverBaseUrl, UriKind.Absolute), BuildService(serviceName, envName))
-				.Should()
-				.Be(expectedGetConfigApiAbsoluteUrl);
+			var actualGetConfigApiAbsoluteUrl =
+				BuildGetConfigAbsoluteUrl(new Uri(serverBaseUrl, UriKind.Absolute), BuildService(serviceName, envName));
+			actualGetConfigApiAbsoluteUrl.IsAbsoluteUri.Should().BeTrue($"{nameof(actualGetConfigApiAbsoluteUrl)}: {actualGetConfigApiAbsoluteUrl}");
+			actualGetConfigApiAbsoluteUrl.Should().Be(expectedGetConfigApiAbsoluteUrl);
 		}
 
 		private static Service BuildService(string serviceName, string envName)
@@ -71,9 +72,9 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		[InlineData("http://1.2.3.4/base/relative/path/", "http://1.2.3.4/base/relative/path/intake/v2/events")]
 		public void BuildIntakeV2EventsAbsoluteUrl_normal_cases(string serverBaseUrl, string expectedIntakeApiAbsoluteUrl)
 		{
-			BuildIntakeV2EventsAbsoluteUrl(new Uri(serverBaseUrl, UriKind.Absolute))
-				.Should()
-				.Be(expectedIntakeApiAbsoluteUrl);
+			var actualGetConfigApiAbsoluteUrl = BuildIntakeV2EventsAbsoluteUrl(new Uri(serverBaseUrl, UriKind.Absolute));
+			actualGetConfigApiAbsoluteUrl.IsAbsoluteUri.Should().BeTrue($"{nameof(actualGetConfigApiAbsoluteUrl)}: {actualGetConfigApiAbsoluteUrl}");
+			actualGetConfigApiAbsoluteUrl.Should().Be(expectedIntakeApiAbsoluteUrl);
 		}
 
 		[Fact]

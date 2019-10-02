@@ -23,9 +23,20 @@ namespace Elastic.Apm.BackendComm
 
 		internal static class ApmServerEndpoints
 		{
+			/// <summary>
+			/// Builds the absolute URL that points to APM server's intake API endpoint which is used by agents to send events.
+			/// </summary>
+			/// <param name="baseUrl">Absolute URL pointing to APM Server's base for API endpoints.</param>
 			internal static Uri BuildIntakeV2EventsAbsoluteUrl(Uri baseUrl) =>
 				CombineAbsoluteAndRelativeUrls(baseUrl, "intake/v2/events");
 
+			/// <summary>
+			/// Builds the absolute URL that points to APM server's central-config API endpoint which is used by agents to fetch configuration.
+			/// Configuration is selected by the backend based on the agent's service.name and service.environment.
+			/// </summary>
+			/// <param name="baseUrl">Absolute URL pointing to APM Server's base for API endpoints.</param>
+			/// <param name="service">Service info to pass to APM Server.
+			/// service.name and service.environment are URL encoded in the returned URL.</param>
 			internal static Uri BuildGetConfigAbsoluteUrl(Uri baseUrl, Service service)
 			{
 				var strBuilder = new StringBuilder("config/v1/agents");
@@ -44,7 +55,8 @@ namespace Elastic.Apm.BackendComm
 			}
 
 			/// <summary>
-			/// Credit: System.Net.Http.FormUrlEncodedContent.Encode (System.Net.Http, Version=4.2.0.0)
+			/// Credit: System.Net.Http.FormUrlEncodedContent.Encode
+			/// https://github.com/dotnet/corefx/blob/450f49a1a80663529b31d3defafbd5e59822a16a/src/System.Net.Http/src/System/Net/Http/FormUrlEncodedContent.cs#L53
 			/// </summary>
 			private static string UrlEncode(string decodedStr)
 			{
