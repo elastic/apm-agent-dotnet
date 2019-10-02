@@ -1,5 +1,6 @@
 using System.Linq;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
 
@@ -77,6 +78,35 @@ namespace Elastic.Apm.Tests
 						{
 							transaction.CaptureSpan($"test span name #{iteration}", "test span type", span => { });
 						}
+					});
+			}
+
+			// Assert
+			mockPayloadSender.Transactions.Count.Should().Be(1);
+			mockPayloadSender.Spans.Count.Should().Be(maxSpansCount);
+			mockPayloadSender.FirstTransaction.SpanCount.Dropped.Should().Be(spansCount - maxSpansCount);
+		}
+
+		[Fact]
+		public void LimitedAmountOfSpansShouldBeSent_WhenSpansAreCapturedConcurrently()
+		{
+			// Arrange
+			const int spansCount = 10;
+			const int maxSpansCount = 2;
+			var mockPayloadSender = new MockPayloadSender();
+			var mockConfig = new MockConfigSnapshot(transactionMaxSpans: maxSpansCount.ToString());
+
+			// Act
+			using (var agent = new ApmAgent(new TestAgentComponents(config: mockConfig, payloadSender: mockPayloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("test transaction name", "test transaction type",
+					transaction =>
+					{
+						MultiThreadsTestUtils.TestOnThreads(spansCount, threadIndex =>
+						{
+							transaction.CaptureSpan($"test span name #{threadIndex}", "test span type", span => { });
+							return 1;
+						});
 					});
 			}
 
