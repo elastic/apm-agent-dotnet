@@ -64,7 +64,10 @@ namespace Elastic.Apm
 
 		internal ApmAgent(AgentComponents agentComponents) => Components = agentComponents ?? new AgentComponents();
 
+		internal ICentralConfigFetcher CentralConfigFetcher => Components.CentralConfigFetcher;
+
 		private AgentComponents Components { get; }
+		internal IConfigStore ConfigStore => Components.ConfigStore;
 		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
 		public IApmLogger Logger => Components.Logger;
 		public IPayloadSender PayloadSender => Components.PayloadSender;
@@ -72,8 +75,6 @@ namespace Elastic.Apm
 		public ITracer Tracer => Components.Tracer;
 
 		internal Tracer TracerInternal => Components.TracerInternal;
-		internal IConfigStore ConfigStore => Components.ConfigStore;
-		internal ICentralConfigFetcher CentralConfigFetcher => Components.CentralConfigFetcher;
 
 		public void Dispose()
 		{

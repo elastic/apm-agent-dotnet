@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using SampleAspNetCoreApp;
 
 [assembly:
 	InternalsVisibleTo(
@@ -103,7 +104,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		internal static void ConfigureServices(IServiceCollection services)
 		{
-			SampleAspNetCoreApp.Startup.ConfigureServicesExceptMvc(services);
+			Startup.ConfigureServicesExceptMvc(services);
 			services.AddMvc()
 				//this is needed because of a (probably) bug:
 				//https://github.com/aspnet/Mvc/issues/5992

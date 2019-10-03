@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -44,7 +45,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.TransactionMaxSpans.Should().Be(375);
 			config.CaptureBody.Should().Be(ConfigConsts.SupportedValues.CaptureBodyAll);
 			var supportedContentTypes =
-				new List<string>() { "application/x-www-form-urlencoded*", "text/*", "application/json*", "application/xml*" };
+				new List<string> { "application/x-www-form-urlencoded*", "text/*", "application/json*", "application/xml*" };
 			config.CaptureBodyContentTypes.Should().BeEquivalentTo(supportedContentTypes);
 		}
 
@@ -176,7 +177,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 				new NoopLogger(), "test");
 			configBeforeEnvVarSet.TransactionSampleRate.Should().Be(transactionSampleRateValueInAppSettings);
 
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate, transactionSampleRateEnvVarValue.ToString(System.Globalization.CultureInfo.InvariantCulture));
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate,
+				transactionSampleRateEnvVarValue.ToString(CultureInfo.InvariantCulture));
 			new EnvironmentConfigurationReader(new NoopLogger()).TransactionSampleRate.Should().Be(transactionSampleRateEnvVarValue);
 
 			var configAfterEnvVarSet = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
@@ -197,6 +199,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 	public class MicrosoftExtensionsConfigIntegrationTests
 		: IClassFixture<WebApplicationFactory<Startup>>, IDisposable
 	{
+		private readonly ApmAgent _agent;
+		private readonly HttpClient _client;
+		private readonly WebApplicationFactory<Startup> _factory;
+		private readonly TestLogger _logger;
+
 		public MicrosoftExtensionsConfigIntegrationTests(WebApplicationFactory<Startup> factory)
 		{
 			_factory = factory;
@@ -210,11 +217,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 				new AgentComponents(payloadSender: capturedPayload, configurationReader: config, logger: _logger));
 			_client = Helper.GetClient(_agent, _factory);
 		}
-
-		private readonly ApmAgent _agent;
-		private readonly HttpClient _client;
-		private readonly WebApplicationFactory<Startup> _factory;
-		private readonly TestLogger _logger;
 
 		/// <summary>
 		/// Starts the app with an invalid config and

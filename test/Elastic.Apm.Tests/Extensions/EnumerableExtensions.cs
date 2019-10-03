@@ -55,7 +55,7 @@ namespace Elastic.Apm.Tests.Extensions
 			source.ThrowIfArgumentNull(nameof(source));
 			asyncAction.ThrowIfArgumentNull(nameof(asyncAction));
 
-			return ForEachImpl<T>(source, asyncAction);
+			return ForEachImpl(source, asyncAction);
 		}
 
 		private static async Task ForEachImpl<T>(this IEnumerable<T> source, Func<T, Task> asyncAction)
@@ -78,7 +78,7 @@ namespace Elastic.Apm.Tests.Extensions
 			source.ThrowIfArgumentNull(nameof(source));
 			asyncAction.ThrowIfArgumentNull(nameof(asyncAction));
 
-			return ForEachIndexedImpl<T>(source, asyncAction);
+			return ForEachIndexedImpl(source, asyncAction);
 		}
 
 		private static async Task ForEachIndexedImpl<T>(this IEnumerable<T> source, Func<T, int, Task> asyncAction)

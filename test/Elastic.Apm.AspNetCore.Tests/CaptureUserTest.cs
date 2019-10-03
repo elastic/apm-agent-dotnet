@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Elastic.Apm.Api;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
@@ -68,7 +67,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			const string userName = "TestUser";
 			const string password = "aaaaaa";
 
-			var client = new HttpClient() { BaseAddress = new Uri("http://localhost:5900") };
+			var client = new HttpClient { BaseAddress = new Uri("http://localhost:5900") };
 
 			//Home/Index runs the migrations, so this makes sure the DB exists
 			var homeResult = await client.GetAsync("/Home/Index");
@@ -115,14 +114,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 			{
 				var context = new DefaultHttpContext
 				{
-					User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+					User = new ClaimsPrincipal(new ClaimsIdentity(new[]
 					{
 						new Claim("email", mail),
-						new Claim("sub", sub),
+						new Claim("sub", sub)
 					}, "someAuthTypeName"))
 				};
 
-				var middleware = new ApmMiddleware(async (innerHttpContext) => { await Task.Delay(1); }, agent.TracerInternal, agent);
+				var middleware = new ApmMiddleware(async innerHttpContext => { await Task.Delay(1); }, agent.TracerInternal, agent);
 
 				await middleware.InvokeAsync(context);
 			}

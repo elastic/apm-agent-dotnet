@@ -17,7 +17,6 @@ namespace Elastic.Apm.PerfTests
 		[Benchmark]
 		public void SimpleTransactions10Spans()
 		{
-
 			var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender()));
 
 			for (var i = 0; i < 100; i++)

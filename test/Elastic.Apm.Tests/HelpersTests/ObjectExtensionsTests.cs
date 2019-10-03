@@ -78,15 +78,9 @@ namespace Elastic.Apm.Tests.HelpersTests
 		public void how_to_chain_AsNullableToString()
 		{
 			// ReSharper disable ExpressionIsAlwaysNull
-			string RightWayToChainAsNullableToString(TimeSpan? nullableTimeSpanArg)
-			{
-				return (nullableTimeSpanArg?.ToHms()).AsNullableToString();
-			}
+			string RightWayToChainAsNullableToString(TimeSpan? nullableTimeSpanArg) => (nullableTimeSpanArg?.ToHms()).AsNullableToString();
 
-			string WrongWayToChainAsNullableToString(TimeSpan? nullableTimeSpanArg)
-			{
-				return nullableTimeSpanArg?.ToHms().AsNullableToString();
-			}
+			string WrongWayToChainAsNullableToString(TimeSpan? nullableTimeSpanArg) => nullableTimeSpanArg?.ToHms().AsNullableToString();
 
 			TimeSpan? nullableTimeSpan = TimeSpan.FromHours(1);
 			RightWayToChainAsNullableToString(nullableTimeSpan).Should().Be("1h");

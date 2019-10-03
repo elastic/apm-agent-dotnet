@@ -8,14 +8,14 @@ using Newtonsoft.Json;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
-	internal class ContextDto: IDto
+	internal class ContextDto : IDto
 	{
+		[JsonProperty("tags")]
+		public Dictionary<string, string> Labels { get; set; }
+
 		public Request Request { get; set; }
 
 		public Response Response { get; set; }
-
-		[JsonProperty("tags")]
-		public Dictionary<string, string> Labels { get; set; }
 
 		public User User { get; set; }
 
@@ -24,7 +24,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			{ nameof(Request), Request },
 			{ nameof(Response), Response },
 			{ nameof(User), User },
-			{ nameof(Labels), Labels },
+			{ nameof(Labels), Labels }
 		}.ToString();
 
 		public void AssertValid()

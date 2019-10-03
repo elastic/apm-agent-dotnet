@@ -20,6 +20,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		private readonly ApmAgent _agent;
 		private readonly MockPayloadSender _capturedPayload;
 
+		private readonly HttpClient _client;
+
 		public DiagnosticListenerTests(WebApplicationFactory<Startup> factory)
 		{
 			_agent = new ApmAgent(new TestAgentComponents());
@@ -29,8 +31,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 			//so no error capturing and no EFCore listener.
 			_client = Helper.GetClientWithoutDiagnosticListeners(_agent, factory);
 		}
-
-		private readonly HttpClient _client;
 
 		/// <summary>
 		/// Manually starts <see cref="AspNetCoreDiagnosticsSubscriber" /> and does 1 HTTP call

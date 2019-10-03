@@ -14,10 +14,10 @@ namespace Elastic.Apm.Tests.TestHelpers
 	{
 		internal static class Options
 		{
-			private const string SharedPrefix = "Elastic APM .NET Tests> {0}> ";
 			private const string DefaultConsoleLogLinePrefix = SharedPrefix + "Console> ";
 			private const string DefaultSysDiagLogLinePrefix = SharedPrefix;
 			private const string NotInIdeDefaultXunitLogLinePrefix = SharedPrefix + "Xunit> ";
+			private const string SharedPrefix = "Elastic APM .NET Tests> {0}> ";
 
 			internal static LogLevelOptionMetadata LogLevel = new LogLevelOptionMetadata(
 				"ELASTIC_APM_TESTS_LOG_LEVEL", ConsoleLogger.DefaultLogLevel, x => x.LogLevel);
@@ -246,10 +246,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 					optionMetadata.ParseAndSetProperty(rawConfigSnapshot, this, parsingLogger);
 				}
 
-				IApmLogger BuildXunitOutputLogger(LogLevel logLevel)
-				{
-					return new LineWriterToLoggerAdaptor(new XunitOutputToLineWriterAdaptor(xUnitOutputHelper), logLevel).Scoped(ThisClassName);
-				}
+				IApmLogger BuildXunitOutputLogger(LogLevel logLevel) =>
+					new LineWriterToLoggerAdaptor(new XunitOutputToLineWriterAdaptor(xUnitOutputHelper), logLevel).Scoped(ThisClassName);
 			}
 
 			// Used by tests

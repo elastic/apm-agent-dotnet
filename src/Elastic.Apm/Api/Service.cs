@@ -12,25 +12,26 @@ namespace Elastic.Apm.Api
 		private Service() { }
 
 		public AgentC Agent { get; set; }
+
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		public string Environment { get; set; }
+
 		public Framework Framework { get; set; }
 		public Language Language { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
-		public string Version { get; set; }
-
 		public Runtime Runtime { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
-		public string Environment { get; set; }
+		public string Version { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(Service))
 		{
 			{ nameof(Name), Name },
-			{ nameof(Version), Version},
-			{ nameof(Environment), Environment},
+			{ nameof(Version), Version },
+			{ nameof(Environment), Environment },
 			{ nameof(Runtime), Runtime },
 			{ nameof(Framework), Framework },
 			{ nameof(Agent), Agent },

@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
-	internal class SpanContextDto: IDto
+	internal class SpanContextDto : IDto
 	{
 		public Database Db { get; set; }
 
@@ -23,7 +23,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 		{
 			{ nameof(Db), Db },
 			{ nameof(Http), Http },
-			{ nameof(Labels), Labels },
+			{ nameof(Labels), Labels }
 		}.ToString();
 
 		public void AssertValid()

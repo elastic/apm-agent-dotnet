@@ -108,13 +108,13 @@ namespace Elastic.Apm.Config
 		/// </summary>
 		int StackTraceLimit { get; }
 
-		double TransactionSampleRate { get; }
-
 		/// <summary>
-		///	The number of spans that are recorded per transaction.
-		/// 0: no spans will be collected.
-		/// -1: all spans will be collected.
+		/// 	The number of spans that are recorded per transaction.
+		///  0: no spans will be collected.
+		///  -1: all spans will be collected.
 		/// </summary>
 		int TransactionMaxSpans { get; }
+
+		double TransactionSampleRate { get; }
 	}
 }

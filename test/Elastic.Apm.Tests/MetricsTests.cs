@@ -18,7 +18,7 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
-	public class MetricsTests: LoggingTestBase
+	public class MetricsTests : LoggingTestBase
 	{
 		private const string ThisClassName = nameof(MetricsTests);
 

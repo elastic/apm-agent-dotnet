@@ -11,10 +11,17 @@ namespace Elastic.Apm.Tests.HelpersTests
 {
 	public class LazyContextualInitTests
 	{
+		public static TheoryData WaysToCallInit = new TheoryData<string, Func<LazyContextualInit, Action, bool>>
+		{
+			{ "IfNotInited?.Init ?? false", (lazyCtxInit, initAction) => lazyCtxInit.IfNotInited?.Init(initAction) ?? false },
+			{ "Init", (lazyCtxInit, initAction) => lazyCtxInit.Init(initAction) }
+		};
+
 		[Theory]
 		[MemberData(nameof(WaysToCallInitOrGetString))]
 		internal void with_result_initialized_only_once_on_first_call(string dbgWayToCallDesc
-			, Func<LazyContextualInit<string>, Func<string>, string> wayToCall)
+			, Func<LazyContextualInit<string>, Func<string>, string> wayToCall
+		)
 		{
 			var counter = new ThreadSafeIntCounter();
 			var lazyCtxInit = new LazyContextualInit<string>();
@@ -83,23 +90,19 @@ namespace Elastic.Apm.Tests.HelpersTests
 			counter.Value.Should().Be(1);
 
 			threadResults.Where(isInitedByThisCall => isInitedByThisCall).Should().ContainSingle();
-			threadResults.Where(isInitedByThisCall => ! isInitedByThisCall).Should().HaveCount(threadResults.Count - 1);
+			threadResults.Where(isInitedByThisCall => !isInitedByThisCall).Should().HaveCount(threadResults.Count - 1);
 		}
 
 		public static TheoryData WaysToCallInitOrGet<T>() where T : class =>
 			new TheoryData<string, Func<LazyContextualInit<T>, Func<T>, T>>
 			{
-				{ "IfNotInited?.InitOrGet ?? Value",
-					(lazyCtxInit, valueProducer) => lazyCtxInit.IfNotInited?.InitOrGet(valueProducer) ?? lazyCtxInit.Value },
+				{
+					"IfNotInited?.InitOrGet ?? Value",
+					(lazyCtxInit, valueProducer) => lazyCtxInit.IfNotInited?.InitOrGet(valueProducer) ?? lazyCtxInit.Value
+				},
 
 				{ "InitOrGet", (lazyCtxInit, valueProducer) => lazyCtxInit.InitOrGet(valueProducer) }
 			};
-
-		public static TheoryData WaysToCallInit = new TheoryData<string, Func<LazyContextualInit, Action, bool>>
-		{
-			{ "IfNotInited?.Init ?? false", (lazyCtxInit, initAction) => lazyCtxInit.IfNotInited?.Init(initAction) ?? false },
-			{ "Init", (lazyCtxInit, initAction) => lazyCtxInit.Init(initAction) }
-		};
 
 		public static IEnumerable<object[]> WaysToCallInitOrGetString() => WaysToCallInitOrGet<string>();
 	}

@@ -6,7 +6,7 @@ using Xunit;
 namespace Elastic.Apm.AspNetCore.Tests
 {
 	/// <summary>
-	/// Tests the <see cref="Elastic.Apm.AspNetCore.AspNetCoreLogger"/> type.
+	/// Tests the <see cref="Elastic.Apm.AspNetCore.AspNetCoreLogger" /> type.
 	/// </summary>
 	public class AspNetCoreLoggerTests
 	{

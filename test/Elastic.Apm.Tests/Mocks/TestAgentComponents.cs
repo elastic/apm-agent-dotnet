@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using Elastic.Apm.BackendComm;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;

@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-
 namespace Elastic.Apm.Api
 {
 	public interface ISpan : IExecutionSegment

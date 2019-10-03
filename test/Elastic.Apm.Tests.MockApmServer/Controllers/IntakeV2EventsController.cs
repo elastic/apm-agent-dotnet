@@ -3,7 +3,6 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -21,9 +20,8 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 	[ApiController]
 	public class IntakeV2EventsController : ControllerBase
 	{
-		private const string ThisClassName = nameof(IntakeV2EventsController);
-
 		private const string ExpectedContentType = "application/x-ndjson; charset=utf-8";
+		private const string ThisClassName = nameof(IntakeV2EventsController);
 		private readonly IApmLogger _logger;
 
 		private readonly MockApmServer _mockApmServer;
@@ -41,9 +39,10 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 
 		private async Task<IActionResult> PostImpl()
 		{
-			_logger.Debug()?.Log("Received request with content length: {ContentLength}."
-				+ " Current thread: {ThreadDesc}."
-				, Request.ContentLength, DbgUtils.CurrentThreadDesc);
+			_logger.Debug()
+				?.Log("Received request with content length: {ContentLength}."
+					+ " Current thread: {ThreadDesc}."
+					, Request.ContentLength, DbgUtils.CurrentThreadDesc);
 
 			int numberOfObjects;
 
@@ -167,7 +166,7 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 				{ "Metadata", Metadata },
 				{ "MetricSet", MetricSet },
 				{ "Span", Span },
-				{ "Transaction", Transaction },
+				{ "Transaction", Transaction }
 			}.ToString();
 		}
 	}

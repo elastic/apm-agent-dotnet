@@ -56,8 +56,10 @@ namespace Elastic.Apm.Tests.TestHelpers
 		{
 			var originalLogLevel = _loggerForStartFinish.Level;
 			_loggerForStartFinish.Level = LogLevel.Information;
-			_loggerForStartFinish.Scoped(ThisClassName).Info()?.Log(
-				isStart ? "Starting test: {UnitTestDisplayName}..." : "Finished test: {UnitTestDisplayName}", TestDisplayName);
+			_loggerForStartFinish.Scoped(ThisClassName)
+				.Info()
+				?.Log(
+					isStart ? "Starting test: {UnitTestDisplayName}..." : "Finished test: {UnitTestDisplayName}", TestDisplayName);
 			_loggerForStartFinish.Level = originalLogLevel;
 		}
 

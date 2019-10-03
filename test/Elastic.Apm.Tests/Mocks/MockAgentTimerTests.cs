@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Helpers;
@@ -179,18 +178,20 @@ namespace Elastic.Apm.Tests.Mocks
 					(++invocationCounter).Should().Be(1);
 					agentTimer.Now.Should().Be(startInstant + t1);
 
-					agentTimer.Delay(agentTimer.Now + t2).AttachSynchronousContinuation(() =>
-					{
-						(++invocationCounter).Should().Be(2);
-						agentTimer.Now.Should().Be(startInstant + t1 + t2);
-					});
+					agentTimer.Delay(agentTimer.Now + t2)
+						.AttachSynchronousContinuation(() =>
+						{
+							(++invocationCounter).Should().Be(2);
+							agentTimer.Now.Should().Be(startInstant + t1 + t2);
+						});
 				});
 
-			agentTimer.Delay(agentTimer.Now + t1 + t2 + t3).AttachSynchronousContinuation(() =>
-			{
-				(++invocationCounter).Should().Be(3);
-				agentTimer.Now.Should().Be(startInstant + t1 + t2 + t3);
-			});
+			agentTimer.Delay(agentTimer.Now + t1 + t2 + t3)
+				.AttachSynchronousContinuation(() =>
+				{
+					(++invocationCounter).Should().Be(3);
+					agentTimer.Now.Should().Be(startInstant + t1 + t2 + t3);
+				});
 
 			agentTimer.FastForward(t1 + t2 + t3);
 		}
@@ -234,7 +235,6 @@ namespace Elastic.Apm.Tests.Mocks
 			var delayTask = agentTimer.Delay(now + timeToWait);
 			delayTask.IsCompleted.Should().BeTrue();
 		}
-
 	}
 
 	internal static class MockAgentTimerTestsExtensions

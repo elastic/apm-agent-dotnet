@@ -6,6 +6,8 @@ namespace Elastic.Apm.Helpers
 {
 	internal static class TimeExtensions
 	{
+		private const int NumberOfTicksPerSecond = 10_000_000;
+
 		internal static string FormatForLog(this DateTime dateTime, bool includeKind = true) =>
 			dateTime.ToString("yyyy-MM-dd HH:mm:ss.fffffff", CultureInfo.InvariantCulture) + (includeKind ? $" {dateTime.Kind.FormatForLog()}" : "");
 
@@ -70,17 +72,17 @@ namespace Elastic.Apm.Helpers
 			}
 		}
 
-		private const int NumberOfTicksPerSecond = 10_000_000;
-
 		/// <summary>
 		/// Converts time duration to "9d 8h 7m 6s" (seconds resolution) string representation.
 		/// If time duration has non-integer number of seconds the fractional part is truncated.
-		/// If time duration is [0, 1s) range it is converted to "<1s".
+		/// If time duration is [0, 1s) range it is converted to "
+		/// <1s".
 		/// If time duration is (-1s, 0] range it is converted to ">-1s".
 		/// </summary>
 		internal static string ToHmsInSeconds(this TimeSpan timeSpan)
 		{
 			if (timeSpan == TimeSpan.Zero) return "0s";
+
 			var truncated = TruncateToSeconds(timeSpan);
 			if (truncated != TimeSpan.Zero) return truncated.ToHms();
 

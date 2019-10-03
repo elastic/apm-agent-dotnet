@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.Extensions;
+using Elastic.Apm.AspNetCore.Helpers;
 using Elastic.Apm.Config;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Logging;
@@ -51,7 +52,7 @@ namespace Elastic.Apm.AspNetCore
 				await _next(context);
 			}
 			catch (Exception e) when (transaction != null
-				&& Helpers.ExceptionFilter.Capture(e, transaction, context, _configurationReader, _logger)) { }
+				&& ExceptionFilter.Capture(e, transaction, context, _configurationReader, _logger)) { }
 			finally
 			{
 				StopTransaction(transaction, context);

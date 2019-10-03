@@ -50,6 +50,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 				"C: " + nameof(ClassWithoutAnyProperties) + "{}, " +
 				"D: " + nameof(ClassWithOneProperty) + "{prop: 789}" +
 				"}");
+
 		private class ClassWithoutAnyProperties
 		{
 			public override string ToString() => new ToStringBuilder(nameof(ClassWithoutAnyProperties)).ToString();

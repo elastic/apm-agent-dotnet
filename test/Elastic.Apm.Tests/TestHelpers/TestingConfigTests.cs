@@ -63,12 +63,10 @@ namespace Elastic.Apm.Tests.TestHelpers
 			var invalidLogLevelStrings = new[] { "", "x", "some text", "with various \t white \n\t space" };
 			foreach (var invalidLogLevelString in invalidLogLevelStrings) yield return (invalidLogLevelString, (object)null);
 
-			string UppercaseLetterAt(string str, int index)
-			{
-				return (index > 0 ? str.Substring(0, index) : "")
-					+ char.ToUpper(str[index], CultureInfo.InvariantCulture)
-					+ (index < str.Length - 1 ? str.Substring(index + 1) : "");
-			}
+			string UppercaseLetterAt(string str, int index) =>
+				(index > 0 ? str.Substring(0, index) : "")
+				+ char.ToUpper(str[index], CultureInfo.InvariantCulture)
+				+ (index < str.Length - 1 ? str.Substring(index + 1) : "");
 		}
 
 		private static IEnumerable<ValueTuple<string, object>> GetPossibleStringToNullableIntVariants()

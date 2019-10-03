@@ -12,15 +12,15 @@ namespace Elastic.Apm.Helpers
 	{
 		private const string ThisClassName = nameof(SingleThreadTaskScheduler);
 
+		private readonly DisposableHelper _disposableHelper = new DisposableHelper();
+
 		private readonly ThreadLocal<bool> _isExecuting = new ThreadLocal<bool>();
 
 		private readonly IApmLogger _logger;
+		private readonly BlockingCollection<Task> _taskQueue;
+		private readonly Thread _thread;
 
 		private readonly string _threadName;
-		private readonly Thread _thread;
-		private readonly BlockingCollection<Task> _taskQueue;
-
-		private readonly DisposableHelper _disposableHelper = new DisposableHelper();
 
 		public SingleThreadTaskScheduler(string threadName, IApmLogger logger)
 		{
@@ -31,11 +31,11 @@ namespace Elastic.Apm.Helpers
 			_thread.Start();
 		}
 
-		public override int MaximumConcurrencyLevel => 1;
-
 		private string DbgName => $"{ThisClassName} (thread: {_threadName})";
 
 		internal bool IsRunning => _thread.IsAlive;
+
+		public override int MaximumConcurrencyLevel => 1;
 
 		private void ThreadMain()
 		{
@@ -78,8 +78,9 @@ namespace Elastic.Apm.Helpers
 		/// <returns>true if the task was successfully inlined; otherwise, false.</returns>
 		protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued)
 		{
-			_logger.Trace()?.Log("Trying to execute task inline... Task: {Task}, taskWasPreviouslyQueued: {TaskWasPreviouslyQueued}"
-				, ToDbgString(task), taskWasPreviouslyQueued);
+			_logger.Trace()
+				?.Log("Trying to execute task inline... Task: {Task}, taskWasPreviouslyQueued: {TaskWasPreviouslyQueued}"
+					, ToDbgString(task), taskWasPreviouslyQueued);
 
 			// We'd need to remove the task from queue if it was already queued.
 			// That would be too hard.
@@ -88,7 +89,7 @@ namespace Elastic.Apm.Helpers
 			return _isExecuting.Value && TryExecuteTask(task);
 		}
 
-		private static string ToDbgString(Task task) => new ToStringBuilder()
+		private static string ToDbgString(Task task) => new ToStringBuilder
 		{
 			{ "ID", task.Id },
 			{ "Status", task.Status },
@@ -105,8 +106,9 @@ namespace Elastic.Apm.Helpers
 				// Indicate that no new tasks will be coming in
 				_taskQueue.CompleteAdding();
 
-				_logger.Debug()?.Log("Waiting for thread `{ThreadName}' to exit... DbgCurrentState: {DbgCurrentState}", _thread.Name
-					, DbgCurrentState());
+				_logger.Debug()
+					?.Log("Waiting for thread `{ThreadName}' to exit... DbgCurrentState: {DbgCurrentState}", _thread.Name
+						, DbgCurrentState());
 
 				_thread.Join();
 
@@ -120,12 +122,14 @@ namespace Elastic.Apm.Helpers
 		private string DbgCurrentState() => new ToStringBuilder("")
 		{
 			{ "_thread.IsAlive", _thread.IsAlive },
-			{ "_taskQueue", new ToStringBuilder("")
 			{
-				{ "IsCompleted", _taskQueue.IsCompleted },
-				{ "IsAddingCompleted", _taskQueue.IsAddingCompleted },
-				{ "Count", _taskQueue.Count }
-			}.ToString() }
+				"_taskQueue", new ToStringBuilder("")
+				{
+					{ "IsCompleted", _taskQueue.IsCompleted },
+					{ "IsAddingCompleted", _taskQueue.IsAddingCompleted },
+					{ "Count", _taskQueue.Count }
+				}.ToString()
+			}
 		}.ToString();
 	}
 }

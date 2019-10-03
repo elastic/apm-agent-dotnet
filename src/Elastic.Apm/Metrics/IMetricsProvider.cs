@@ -12,8 +12,8 @@ namespace Elastic.Apm.Metrics
 	internal interface IMetricsProvider
 	{
 		/// <summary>
-		/// Stores the number of calls to the <see cref="GetSamples"/> method when it either returned null or an empty list.
-		/// This is used by <see cref="MetricsCollector"/>
+		/// Stores the number of calls to the <see cref="GetSamples" /> method when it either returned null or an empty list.
+		/// This is used by <see cref="MetricsCollector" />
 		/// </summary>
 		int ConsecutiveNumberOfFailedReads { get; set; }
 
@@ -24,7 +24,8 @@ namespace Elastic.Apm.Metrics
 		string DbgName { get; }
 
 		/// <summary>
-		/// The main part of the provider, the implementor should do the work to read the value(s) of the given metric(s) in this method.
+		/// The main part of the provider, the implementor should do the work to read the value(s) of the given metric(s) in this
+		/// method.
 		/// </summary>
 		/// <returns>The key and the value of the metric(s)</returns>
 		IEnumerable<MetricSample> GetSamples();

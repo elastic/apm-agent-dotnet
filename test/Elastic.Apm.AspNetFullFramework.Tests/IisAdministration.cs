@@ -435,13 +435,16 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			}
 			catch (Exception ex)
 			{
-				_logger.Error()?.LogException(ex, "Exception thrown while trying to read IIS config file `{FilePath}'" +
-					" ({EnvVarName} is `{EnvVarValue}')", filePath, winDirEnvVarName, winDirEnvVarValue);
+				_logger.Error()
+					?.LogException(ex, "Exception thrown while trying to read IIS config file `{FilePath}'" +
+						" ({EnvVarName} is `{EnvVarValue}')", filePath, winDirEnvVarName, winDirEnvVarValue);
 				return;
 			}
 
 			var interestingLines = new List<string>(lines.Length);
-			foreach (var line in lines) if (line.Contains("elastic", StringComparison.OrdinalIgnoreCase)) interestingLines.Add(line);
+			foreach (var line in lines)
+				if (line.Contains("elastic", StringComparison.OrdinalIgnoreCase))
+					interestingLines.Add(line);
 			_logger.Debug()?.Log("Found {NumberOfLines} interesting lines in IIS config file `{FilePath}'", interestingLines.Count, filePath);
 			foreach (var line in interestingLines) _logger.Debug()?.Log("{Line}", TextUtils.Indent(line));
 		}

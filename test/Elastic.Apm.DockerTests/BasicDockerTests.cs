@@ -14,7 +14,7 @@ namespace Elastic.Apm.DockerTests
 
 			using (var agent = new ApmAgent(new AgentComponents()))
 			{
-				var payloadSender = (agent.PayloadSender as PayloadSenderV2);
+				var payloadSender = agent.PayloadSender as PayloadSenderV2;
 				payloadSender.Should().NotBeNull();
 				payloadSender?.System.Should().NotBeNull();
 				payloadSender?.System.Container.Should().NotBeNull();

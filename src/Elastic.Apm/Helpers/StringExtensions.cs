@@ -18,6 +18,7 @@ namespace Elastic.Apm.Helpers
 
 			if (input.IsEmpty() || count == 0) return string.Empty;
 			if (count == 1) return input;
+
 			return new StringBuilder(input.Length * count).Insert(0, input, count).ToString();
 		}
 	}

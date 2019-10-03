@@ -251,7 +251,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			foreach (var args in TestArgsVariantsWithVeryLongFlushInterval)
 			{
 				foreach (var numberOfBatches in numberOfBatchesVariants)
-					yield return new [] { args[0], numberOfBatches };
+					yield return new[] { args[0], numberOfBatches };
 			}
 		}
 

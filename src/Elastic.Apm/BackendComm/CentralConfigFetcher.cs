@@ -417,9 +417,9 @@ namespace Elastic.Apm.BackendComm
 
 			public int StackTraceLimit => _wrapped.StackTraceLimit;
 
-			public double TransactionSampleRate => _configDelta.TransactionSampleRate ?? _wrapped.TransactionSampleRate;
-
 			public int TransactionMaxSpans => _wrapped.TransactionMaxSpans;
+
+			public double TransactionSampleRate => _configDelta.TransactionSampleRate ?? _wrapped.TransactionSampleRate;
 		}
 	}
 }

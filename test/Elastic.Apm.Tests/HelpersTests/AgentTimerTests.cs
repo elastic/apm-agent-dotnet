@@ -108,7 +108,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 			sutEnv.AgentTimer.WaitForTimeToPassAndUntil(VeryShortTimeout, () => tryAwaitOrTimeoutTask.IsCompleted
 				, () => $"dbgVariantDesc: {dbgVariantDesc}. tryAwaitOrTimeoutTask: {tryAwaitOrTimeoutTask.Status}. delayTask: {delayTask.Status}."
-				+ $" directDelayTask = {directDelayTask.Status}");
+					+ $" directDelayTask = {directDelayTask.Status}");
 
 			sutEnv.VerifyTryAwaitTimeout(tryAwaitOrTimeoutTask, delayTask);
 		}
@@ -188,7 +188,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 			sutEnv.AgentTimer.WaitForTimeToPassAndUntil(VeryShortTimeout, () => awaitOrTimeoutTask.IsCompleted
 				, () => $"dbgVariantDesc: {dbgVariantDesc}. awaitOrTimeoutTask: {awaitOrTimeoutTask.Status}. delayTask: {delayTask.Status}."
-				+ $" directDelayTask: {directDelayTask.Status}");
+					+ $" directDelayTask: {directDelayTask.Status}");
 
 			sutEnv.VerifyAwaitTimeout(awaitOrTimeoutTask, delayTask);
 		}

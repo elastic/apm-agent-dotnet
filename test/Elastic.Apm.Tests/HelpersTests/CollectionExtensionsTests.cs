@@ -1,6 +1,6 @@
 using System.Collections;
-using Elastic.Apm.Helpers;
 using System.Collections.Generic;
+using Elastic.Apm.Helpers;
 using FluentAssertions;
 using Xunit;
 
