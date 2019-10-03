@@ -23,7 +23,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 		[Fact]
 		public void ctor_should_log_seed_with_default_level()
 		{
-			var mockXunitOutputHelper = new XunitOutputHelper();
+			var mockXunitOutputHelper = new MockXunitOutputHelper();
 			var mockLogger = new TestLogger(TestingConfig.Options.LogLevel.DefaultValue);
 			var randomTestHelper = new RandomTestHelper(mockXunitOutputHelper, mockLogger);
 
@@ -39,7 +39,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 			var logLevels = (LogLevel[])Enum.GetValues(typeof(LogLevel));
 			foreach (var logLevel in logLevels)
 			{
-				var mockXunitOutputHelper = new XunitOutputHelper();
+				var mockXunitOutputHelper = new MockXunitOutputHelper();
 				var mockLogger = new TestLogger(logLevel);
 				var randomTestHelper = new RandomTestHelper(mockXunitOutputHelper, mockLogger);
 
@@ -71,7 +71,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 			var generatedRandoms = new double[numberOfRandomsToCheck];
 			numberOfRandomsToCheck.Repeat(i => { generatedRandoms[i] = generatingRandomTestHelper.GetInstance().NextDouble(); });
 
-			var mockXunitOutputHelper = new XunitOutputHelper();
+			var mockXunitOutputHelper = new MockXunitOutputHelper();
 			var mockLogger = new TestLogger();
 			var reproducingRandomTestHelper = new RandomTestHelper(generatingRandomTestHelper.Seed, mockXunitOutputHelper, mockLogger);
 
@@ -89,14 +89,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 			// ReSharper restore ImplicitlyCapturedClosure
 		}
 
-		private class NoopXunitOutputHelper : ITestOutputHelper
-		{
-			public void WriteLine(string line) { }
-
-			public void WriteLine(string format, params object[] args) { }
-		}
-
-		private class XunitOutputHelper : ITestOutputHelper
+		internal class MockXunitOutputHelper : ITestOutputHelper
 		{
 			internal readonly List<string> Lines = new List<string>();
 

@@ -22,6 +22,9 @@ namespace Elastic.Apm.Tests.TestHelpers
 			internal static LogLevelOptionMetadata LogLevel = new LogLevelOptionMetadata(
 				"ELASTIC_APM_TESTS_LOG_LEVEL", ConsoleLogger.DefaultLogLevel, x => x.LogLevel);
 
+			internal static LogLevelOptionMetadata LogLevelForDiscovery = new LogLevelOptionMetadata(
+				"ELASTIC_APM_TESTS_LOG_LEVEL_FOR_DISCOVERY", Elastic.Apm.Logging.LogLevel.Trace, x => x.LogLevelForDiscovery);
+
 			internal static LogLevelOptionMetadata LogLevelForTestingConfigParsing = new LogLevelOptionMetadata(
 				"ELASTIC_APM_TESTS_LOG_LEVEL_FOR_TESTING_CONFIG_PARSING", ConsoleLogger.DefaultLogLevel, x => x.LogLevelForTestingConfigParsing);
 
@@ -43,13 +46,25 @@ namespace Elastic.Apm.Tests.TestHelpers
 			internal static StringOptionMetadata LogToXunitLinePrefix = new StringOptionMetadata(
 				"ELASTIC_APM_TESTS_LOG_XUNIT_PREFIX", IsRunningInIde ? "" : NotInIdeDefaultXunitLogLinePrefix, x => x.LogToXunitLinePrefix);
 
+			internal static BoolOptionMetadata NotSelectedIsSkipped = new BoolOptionMetadata(
+				"ELASTIC_APM_TESTS_NOT_SELECTED_IS_SKIPPED", false, x => x.NotSelectedIsSkipped);
+
 			internal static OptionMetadata<int?> RandomSeed = new NullableIntOptionMetadata(
 				"ELASTIC_APM_TESTS_RANDOM_SEED", null, x => x.RandomSeed);
 
 			internal static IOptionMetadata[] All =
 			{
-				LogLevel, LogLevelForTestingConfigParsing, LogToConsoleEnabled, LogToConsoleLinePrefix, LogToSysDiagTraceEnabled,
-				LogToSysDiagTraceLinePrefix, LogToXunitEnabled, LogToXunitLinePrefix, RandomSeed
+				LogLevel
+				, LogLevelForDiscovery
+				, LogLevelForTestingConfigParsing
+				, LogToConsoleEnabled
+				, LogToConsoleLinePrefix
+				, LogToSysDiagTraceEnabled
+				, LogToSysDiagTraceLinePrefix
+				, LogToXunitEnabled
+				, LogToXunitLinePrefix
+				, NotSelectedIsSkipped
+				, RandomSeed
 			};
 
 
@@ -187,6 +202,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 		{
 			LogLevel LogLevel { get; }
 
+			LogLevel LogLevelForDiscovery { get; }
+
 			// ReSharper disable once UnusedMemberInSuper.Global
 			LogLevel LogLevelForTestingConfigParsing { get; }
 
@@ -199,6 +216,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 			bool LogToXunitEnabled { get; }
 			string LogToXunitLinePrefix { get; }
 
+			bool NotSelectedIsSkipped { get; }
+
 			int? RandomSeed { get; }
 		}
 
@@ -206,6 +225,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 
 		internal static ISnapshot ReadFromFromEnvVars(ITestOutputHelper xUnitOutputHelper) =>
 			new MutableSnapshot(new EnvVarsRawConfigSnapshot(), xUnitOutputHelper);
+
+		internal static ISnapshot ReadFromFromEnvVars() => ReadFromFromEnvVars(new NoopXunitOutputHelper());
 
 		private static bool DetectIfRunningInIde()
 		{
@@ -260,6 +281,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 			}
 
 			public LogLevel LogLevel { get; set; }
+			public LogLevel LogLevelForDiscovery { get; set; }
 			public LogLevel LogLevelForTestingConfigParsing { get; set; }
 			public bool LogToConsoleEnabled { get; set; }
 			public string LogToConsoleLinePrefix { get; set; }
@@ -267,6 +289,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 			public string LogToSysDiagTraceLinePrefix { get; set; }
 			public bool LogToXunitEnabled { get; set; }
 			public string LogToXunitLinePrefix { get; set; }
+			public bool NotSelectedIsSkipped { get; set; }
 			public int? RandomSeed { get; set; }
 		}
 	}
