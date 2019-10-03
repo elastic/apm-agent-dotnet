@@ -52,6 +52,8 @@ pipeline {
                 stage('CodeStyleCheck') {
                   steps {
                     withGithubNotify(context: 'CodeStyle', tab: 'tests') {
+                      deleteDir()
+                      unstash 'source'
                       dir("${BASE_DIR}"){
                         dotnet(){
                           sh label: 'Install and run dotnet/format', script: '.ci/linux/codestyle.sh'
