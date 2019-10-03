@@ -44,16 +44,16 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			//For reference: unsubscribing from AspNetCoreDiagnosticListener does not seem to work.
 			//TODO: this should be investigated. This is more relevant for testing.
-//			using (_agent.Subscribe(new AspNetCoreDiagnosticsSubscriber()))
-//			{
-//				await _client.GetAsync("/Home/TriggerError");
-//
-//				_capturedPayload.Transactions.Should().ContainSingle();
-//
-//				_capturedPayload.Errors.Should().NotBeEmpty();
-//				_capturedPayload.Errors.Should().ContainSingle();
-//				 _capturedPayload.Errors[0].CapturedException.Type.Should().Be(typeof(Exception).FullName);
-//			} //here we unsubsribe, so no errors should be captured after this line.
+			//			using (_agent.Subscribe(new AspNetCoreDiagnosticsSubscriber()))
+			//			{
+			//				await _client.GetAsync("/Home/TriggerError");
+			//
+			//				_capturedPayload.Transactions.Should().ContainSingle();
+			//
+			//				_capturedPayload.Errors.Should().NotBeEmpty();
+			//				_capturedPayload.Errors.Should().ContainSingle();
+			//				 _capturedPayload.Errors[0].CapturedException.Type.Should().Be(typeof(Exception).FullName);
+			//			} //here we unsubsribe, so no errors should be captured after this line.
 
 			_agent.Dispose();
 

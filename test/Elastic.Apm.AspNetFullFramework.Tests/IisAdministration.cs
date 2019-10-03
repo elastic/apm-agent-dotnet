@@ -37,7 +37,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			using (var serverManager = new ServerManager())
 			{
-//				AddSampleAppPool(serverManager, envVarsToSetForSampleAppPool, sampleAppShouldUseHighPrivilegedAccount, StartMode.AlwaysRunning);
+				//				AddSampleAppPool(serverManager, envVarsToSetForSampleAppPool, sampleAppShouldUseHighPrivilegedAccount, StartMode.AlwaysRunning);
 				AddSampleAppPool(serverManager, envVarsToSetForSampleAppPool, sampleAppShouldUseHighPrivilegedAccount, StartMode.OnDemand);
 				AddSampleApp(serverManager);
 

@@ -563,7 +563,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					{
 						WaitHelpers.SleepMinimum();
 						transaction.Context.Response = new Response
-							{ Finished = true, StatusCode = 200 };
+						{ Finished = true, StatusCode = 200 };
 					});
 				});
 
@@ -585,7 +585,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					{
 						WaitHelpers.SleepMinimum();
 						transaction.Context.Response = new Response
-							{ Finished = true };
+						{ Finished = true };
 						transaction.Context.Request = new Request("GET", new Url());
 
 						transaction.Context.Response.StatusCode = 200;
@@ -616,7 +616,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					{
 						WaitHelpers.SleepMinimum();
 						transaction.Context.User = new User
-							{ Id = userId, UserName = userName, Email = emailAddress };
+						{ Id = userId, UserName = userName, Email = emailAddress };
 					});
 				});
 

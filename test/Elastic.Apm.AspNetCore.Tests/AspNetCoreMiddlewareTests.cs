@@ -25,7 +25,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// It's basically an integration test.
 	/// </summary>
 	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
-	public class AspNetCoreMiddlewareTests: LoggingTestBase, IClassFixture<WebApplicationFactory<Startup>>
+	public class AspNetCoreMiddlewareTests : LoggingTestBase, IClassFixture<WebApplicationFactory<Startup>>
 	{
 		private const string ThisClassName = nameof(AspNetCoreMiddlewareTests);
 

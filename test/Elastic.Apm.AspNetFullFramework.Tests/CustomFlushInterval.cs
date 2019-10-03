@@ -14,7 +14,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public CustomFlushInterval(ITestOutputHelper xUnitOutputHelper)
 			: base(xUnitOutputHelper,
 				envVarsToSetForSampleAppPool: new Dictionary<string, string>
-					{ { ConfigConsts.EnvVarNames.FlushInterval, CustomFlushIntervalValue } }) { }
+					{ { ConfigConsts.EnvVarNames.FlushInterval, CustomFlushIntervalValue } })
+		{ }
 
 		[AspNetFullFrameworkTheory]
 		[MemberData(nameof(AllSampleAppUrlPaths))]

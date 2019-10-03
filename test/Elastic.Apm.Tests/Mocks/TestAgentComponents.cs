@@ -20,6 +20,7 @@ namespace Elastic.Apm.Tests.Mocks
 			new FakeMetricsCollector(),
 			currentExecutionSegmentsContainer,
 			centralConfigFetcher ?? new NoopCentralConfigFetcher()
-		) { }
+		)
+		{ }
 	}
 }

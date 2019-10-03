@@ -45,7 +45,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		public PayloadSenderTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper /*, LogLevel.Debug */)
 		{
 			_logger = LoggerBase.Scoped(ThisClassName);
-//			LoggerBase.Level = LogLevel.Debug;
+			//			LoggerBase.Level = LogLevel.Debug;
 		}
 
 		public static IEnumerable<object[]> TestArgsVariantsWithVeryLongFlushInterval =>
@@ -209,7 +209,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		[MemberData(nameof(TestArgsVariantsWithVeryLongFlushInterval))]
 		internal async Task MaxQueueEventCount_should_be_enforced_after_send(TestArgs args)
 		{
-//			LoggerBase.Level = LogLevel.Debug;
+			//			LoggerBase.Level = LogLevel.Debug;
 
 			var sendTcs = new TaskCompletionSource<object>();
 			var firstBatchDequeuedTcs = new TaskCompletionSource<object>();
@@ -277,7 +277,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
 			{
 				var numberOfEventsEnqueuedSuccessfully = 0;
-				for (var txIndex = 1;; ++txIndex)
+				for (var txIndex = 1; ; ++txIndex)
 				{
 					if (EnqueueDummyEvent(payloadSender, agent, txIndex))
 						++numberOfEventsEnqueuedSuccessfully;
