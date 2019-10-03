@@ -49,6 +49,17 @@ pipeline {
                 MSBUILDDEBUGPATH = "${env.WORKSPACE}"
               }
               stages{
+                stage('CodeStyleCheck') {
+                  steps {
+                    withGithubNotify(context: 'CodeStyle', tab: 'tests') {
+                      dir("${BASE_DIR}"){
+                        dotnet(){
+                          sh label: 'Install and run dotnet/format', script: '.ci/linux/codestyle.sh'
+                        }
+                      }
+                    }
+                  }
+                }
                 /**
                 Build the project from code..
                 */
