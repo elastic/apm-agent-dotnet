@@ -226,7 +226,7 @@ namespace Elastic.Apm.Model
 				_enclosingTransaction,
 				culprit,
 				isHandled,
-				parentId
+				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id)
 			);
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)
@@ -263,7 +263,7 @@ namespace Elastic.Apm.Model
 				this,
 				_configurationReader,
 				_enclosingTransaction,
-				parentId
+				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id)
 			);
 	}
 }
