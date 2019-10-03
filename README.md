@@ -12,11 +12,11 @@ Official NuGet packages can be referenced from [NuGet.org](https://www.nuget.org
 
 | Package Name            | Purpose          | Download         |
 | ----------------------- | ---------------- | -----------------|
-| `Elastic.Apm`           |  The core of the Agent, Public Agent API, Auto instrumentation for libraries that are part of .NET Standard 2.0  | [![NuGet Release][ElasticApm-image]][ElasticApm-nuget-url]  |
-| `Elastic.Apm.AspNetCore` | ASP.NET Core auto instrumentation | [![NuGet Release][ElasticApmAspNetCore-image]][ElasticApmAspNetCore-nuget-url] |
-| `Elastic.Apm.EntityFrameworkCore` | Entity Framework Core auto instrumentation | [![NuGet Release][Elastic.Apm.EntityFrameworkCore-image]][Elastic.Apm.EntityFrameworkCore-nuget-url] |
-| `Elastic.Apm.NetCoreAll` | References every .NET Core related elastic APM package. It can be used to simply turn on the agent with a single line and activate all auto instrumentation | [![NuGet Release][Elastic.Apm.NetCoreAll-image]][Elastic.Apm.NetCoreAll-nuget-url] |
-| `Elastic.Apm.AspNetFullFramework` | ASP.NET (classic) auto instrumentation with an IIS Module | [![NuGet Release][Elastic.Apm.AspNetFullFramework-image]][Elastic.Apm.AspNetFullFramework-nuget-url] | 
+| `Elastic.Apm`           |  The core of the Agent, Public Agent API, Auto instrumentation for libraries that are part of .NET Standard 2.0.  | [![NuGet Release][ElasticApm-image]][ElasticApm-nuget-url]  |
+| `Elastic.Apm.AspNetCore` | ASP.NET Core auto instrumentation. | [![NuGet Release][ElasticApmAspNetCore-image]][ElasticApmAspNetCore-nuget-url] |
+| `Elastic.Apm.EntityFrameworkCore` | Entity Framework Core auto instrumentation. | [![NuGet Release][Elastic.Apm.EntityFrameworkCore-image]][Elastic.Apm.EntityFrameworkCore-nuget-url] |
+| `Elastic.Apm.NetCoreAll` | References every .NET Core related elastic APM package. It can be used to simply turn on the agent with a single line and activate all auto instrumentation. | [![NuGet Release][Elastic.Apm.NetCoreAll-image]][Elastic.Apm.NetCoreAll-nuget-url] |
+| `Elastic.Apm.AspNetFullFramework` | ASP.NET (classic) auto instrumentation with an IIS Module. | [![NuGet Release][Elastic.Apm.AspNetFullFramework-image]][Elastic.Apm.AspNetFullFramework-nuget-url] | 
 
 ## Documentation
 
