@@ -48,10 +48,13 @@ pipeline {
               environment {
                 MSBUILDDEBUGPATH = "${env.WORKSPACE}"
               }
+              /**
+              Make sure there are no code style violation in the repo.
+              */
               stages{
                 stage('CodeStyleCheck') {
                   steps {
-                    withGithubNotify(context: 'CodeStyle', tab: 'tests') {
+                    withGithubNotify(context: 'CodeStyle check', tab: 'tests') {
                       deleteDir()
                       unstash 'source'
                       dir("${BASE_DIR}"){
