@@ -289,13 +289,6 @@ pipeline {
           }
           stage('Release to AppVeyor') {
             options { skipDefaultCheckout() }
-            when {
-              beforeAgent true
-              anyOf {
-                branch 'master'
-                expression { return params.Run_As_Master_Branch }
-              }
-            }
             steps {
               withGithubNotify(context: 'Release AppVeyor', tab: 'artifacts') {
                 deleteDir()
@@ -305,24 +298,10 @@ pipeline {
                 }
               }
             }
-            post{
-              success {
-                archiveArtifacts(allowEmptyArchive: true,
-                  artifacts: "${BASE_DIR}/**/bin/Release/**/*.nupkg")
-              }
-            }
           }
           stage('Release to NuGet') {
             options { skipDefaultCheckout() }
-            when {
-              beforeAgent true
-              anyOf {
-                tag "\\d+\\.\\d+\\.\\d+*"
-                expression { return params.Run_As_Master_Branch }
-              }
-            }
             steps {
-              input(message: 'Should we release a new version on NuGet?', ok: 'Yes, we should.')
               withGithubNotify(context: 'Release NuGet', tab: 'artifacts') {
                 deleteDir()
                 unstash 'source'
@@ -330,29 +309,6 @@ pipeline {
                   release('secret/apm-team/ci/elastic-observability-nuget')
                 }
               }
-            }
-          }
-          stage('Integration Tests') {
-            agent none
-            when {
-              beforeAgent true
-              allOf {
-                anyOf {
-                  environment name: 'GIT_BUILD_CAUSE', value: 'pr'
-                  expression { return !params.Run_As_Master_Branch }
-                }
-              }
-            }
-            steps {
-              log(level: 'INFO', text: 'Launching Async ITs')
-              // TODO: use commit rather than branch to be reproducible.
-              build(job: env.ITS_PIPELINE, propagate: false, wait: false,
-                    parameters: [string(name: 'AGENT_INTEGRATION_TEST', value: '.NET'),
-                                 string(name: 'BUILD_OPTS', value: "--dotnet-agent-version ${env.GIT_BASE_COMMIT}"),
-                                 string(name: 'GITHUB_CHECK_NAME', value: env.GITHUB_CHECK_ITS_NAME),
-                                 string(name: 'GITHUB_CHECK_REPO', value: env.REPO),
-                                 string(name: 'GITHUB_CHECK_SHA1', value: env.GIT_BASE_COMMIT)])
-              githubNotify(context: "${env.GITHUB_CHECK_ITS_NAME}", description: "${env.GITHUB_CHECK_ITS_NAME} ...", status: 'PENDING', targetUrl: "${env.JENKINS_URL}search/?q=${env.ITS_PIPELINE.replaceAll('/','+')}")
             }
           }
       }
@@ -380,13 +336,15 @@ def dotnet(Closure body){
 
 def release(secret){
   dotnet(){
-    sh(label: 'Release', script: '.ci/linux/release.sh')
+    echo 'pre-release'
+    sh 'touch release'
     def repo = getVaultSecret(secret: secret)
     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [
       [var: 'REPO_API_KEY', password: repo.apiKey],
       [var: 'REPO_API_URL', password: repo.url],
       ]]) {
-        sh(label: 'Deploy', script: ".ci/linux/deploy.sh ${repo.data.apiKey} ${repo.data.url}")
+        echo 'release'
+        sh 'touch release'
     }
   }
 }
