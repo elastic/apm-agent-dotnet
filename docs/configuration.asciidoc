@@ -221,7 +221,7 @@ It also expects that a period (`.`) is used to separate the integer and the frac
 
 [float]
 [[config-transaction-max-spans]]
-==== `TransactionMaxSpans` (performance) (added[1.2])
+==== `TransactionMaxSpans` (performance) (added[1.1.1])
 
 Limits the amount of spans that are recorded per transaction.
 This is helpful in cases where a transaction creates a very high amount of spans,
