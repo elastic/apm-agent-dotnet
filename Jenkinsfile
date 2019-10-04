@@ -54,7 +54,7 @@ pipeline {
               stages{
                 stage('CodeStyleCheck') {
                   steps {
-                    withGithubNotify(context: 'CodeStyle check', tab: 'tests') {
+                    withGithubNotify(context: 'CodeStyle check') {
                       deleteDir()
                       unstash 'source'
                       dir("${BASE_DIR}"){
