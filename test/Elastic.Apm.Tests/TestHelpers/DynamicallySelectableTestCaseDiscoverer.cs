@@ -34,14 +34,17 @@ namespace Elastic.Apm.Tests.TestHelpers
 
 		public override IEnumerable<IXunitTestCase> Discover(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod
 			, IAttributeInfo factAttribute
+		) => ExceptionUtils.DoSwallowingExceptionsWithResult(_logger, () => DiscoverImpl(discoveryOptions, testMethod, factAttribute));
+
+		private  IEnumerable<IXunitTestCase> DiscoverImpl(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod
+			, IAttributeInfo factAttribute
 		)
 		{
 			_logger.Trace()?.Log("Test method: {TestClassName}.{TestMethodName}", testMethod.TestClass.Class.Name, testMethod.Method.Name);
 
-			// ReSharper disable PossibleMultipleEnumeration
-
 			var attributes = testMethod.Method.GetCustomAttributes(typeof(DynamicallySelectableFactAttribute).AssemblyQualifiedName);
 
+			// ReSharper disable PossibleMultipleEnumeration
 			_logger.Trace()?.Log("attributes [size: {size}]: {attributes}", attributes.Count(), string.Join(", ", attributes));
 
 			if (attributes.Count() != 1)
@@ -49,6 +52,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 
 			var reasonNotSelected = attributes.First().GetNamedArgument<string>(nameof(DynamicallySelectableFactAttribute.ReasonNotSelected));
 			_logger.Trace()?.Log("ReasonNotSelected: {ReasonNotSelected}", reasonNotSelected.AsNullableToString());
+			// ReSharper restore PossibleMultipleEnumeration
 
 			return reasonNotSelected == null || NotSelectedIsSkipped
 				? base.Discover(discoveryOptions, testMethod, factAttribute)
@@ -57,7 +61,6 @@ namespace Elastic.Apm.Tests.TestHelpers
 					new NotSelectedTestCase(DiagnosticMessageSink, discoveryOptions.MethodDisplayOrDefault(), testMethod, reasonNotSelected)
 				};
 
-			// ReSharper restore PossibleMultipleEnumeration
 		}
 
 		public class NotSelectedTestCase : XunitTestCase

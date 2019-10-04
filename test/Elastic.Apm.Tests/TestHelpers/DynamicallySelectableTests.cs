@@ -38,7 +38,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 
 		public class NeverSelectedFactAttribute : DynamicallySelectableFactAttribute
 		{
-			public override string ReasonNotSelected => "Dummy attribute that doesn't select any tests.";
+			public override string ReasonNotSelected => "[NeverSelectedFact] is a dummy attribute that doesn't select any tests.";
 		}
 	}
 }
