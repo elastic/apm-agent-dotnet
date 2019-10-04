@@ -33,6 +33,8 @@ public class Startup
 }
 ----
 
+NOTE: As explained in <<setup-asp-net-core>>, the `UseElasticApm` method only turns on ASP.NET Core monitoring. If you want to turn on everything (including HTTP and Database monitoring) you can use the `UseAllElasticApm` method from the `Elastic.Apm.NetCoreAll` package, which has the same overloads and behavior, except it turns on tracing for everything that is supported by the agent on .NET Core including database and HTTP tracing.
+
 With this you can use any configuration source that you configured on the `IConfiguration` instance that you passed to the APM Agent.
 You can find the key of each configuration option
 in the `IConfiguration or Web.config key` column of the corresponding option's description.
