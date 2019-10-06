@@ -60,7 +60,6 @@ namespace Elastic.Apm.Tests.TestHelpers
 				{
 					new NotSelectedTestCase(DiagnosticMessageSink, discoveryOptions.MethodDisplayOrDefault(), testMethod, reasonNotSelected)
 				};
-
 		}
 
 		public class NotSelectedTestCase : XunitTestCase
