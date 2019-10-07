@@ -3,7 +3,7 @@
 @Library('apm@current') _
 
 pipeline {
-  agent any
+  agent { label 'linux && immutable' }
   environment {
     REPO = 'apm-agent-dotnet'
     // keep it short to avoid the 248 characters PATH limit in Windows
@@ -34,7 +34,6 @@ pipeline {
     stage('Initializing'){
       stages{
         stage('Checkout') {
-          agent { label 'immutable' }
           options { skipDefaultCheckout() }
           steps {
             deleteDir()
@@ -45,7 +44,6 @@ pipeline {
         stage('Parallel'){
           parallel{
             stage('Linux'){
-              agent { label 'linux && immutable' }
               options { skipDefaultCheckout() }
               environment {
                 MSBUILDDEBUGPATH = "${env.WORKSPACE}"
@@ -290,7 +288,6 @@ pipeline {
             }
           }
           stage('Release to AppVeyor') {
-            agent { label 'linux && immutable' }
             options { skipDefaultCheckout() }
             when {
               beforeAgent true
@@ -316,7 +313,6 @@ pipeline {
             }
           }
           stage('Release to NuGet') {
-            agent { label 'linux && immutable' }
             options { skipDefaultCheckout() }
             when {
               beforeAgent true
