@@ -21,9 +21,6 @@ namespace Elastic.Apm.AspNetCore.Extensions
 
 			try
 			{
-				// Keep a reference to the body to reset it later
-				var initialBody = request.Body;
-
 				request.EnableRewind();
 				request.Body.Position = 0;
 
@@ -41,9 +38,6 @@ namespace Elastic.Apm.AspNetCore.Extensions
 					}
 					request.Body.Position = 0;
 				}
-
-				// Reset the body stream for any read operations that might be carried on at a later stage
-				request.Body = initialBody; 
 			}
 			catch (IOException ioException)
 			{
