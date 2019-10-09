@@ -27,6 +27,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// This test uses <see cref="Program.CreateWebHostBuilder"/> to host the sample application on purpose - that was the key
 	/// to reproduce the problem in an automated test.
 	/// </summary>
+	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
 	public class BodyCapturingTests : IAsyncLifetime
 	{
 		private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
