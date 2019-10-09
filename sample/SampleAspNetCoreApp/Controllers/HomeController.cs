@@ -31,6 +31,7 @@ namespace SampleAspNetCoreApp.Controllers
 				throw new ArgumentException($"{captureControllerActionAsSpanQueryStringKey} query string key should have at most one value" +
 					$", instead it's values: {captureControllerActionAsSpanQueryStringValues}",
 					captureControllerActionAsSpanQueryStringKey);
+
 			// ReSharper disable once SimplifyConditionalTernaryExpression
 			return captureControllerActionAsSpanQueryStringValues.Count == 0 ? false : bool.Parse(captureControllerActionAsSpanQueryStringValues[0]);
 		}
@@ -39,25 +40,25 @@ namespace SampleAspNetCoreApp.Controllers
 		{
 			return SafeCaptureSpan<IActionResult>(GetCaptureControllerActionAsSpanFromQueryString(),
 				"Index_span_name", "Index_span_type", async () =>
-			{
-				_sampleDataContext.Database.Migrate();
-				var model = _sampleDataContext.SampleTable.Select(item => item.Name).ToList();
-
-				try
 				{
-					var httpClient = new HttpClient();
-					httpClient.DefaultRequestHeaders.Add("User-Agent", "APM-Sample-App");
-					var responseMsg = await httpClient.GetAsync("https://api.github.com/repos/elastic/apm-agent-dotnet");
-					var responseStr = await responseMsg.Content.ReadAsStringAsync();
-					ViewData["stargazers_count"] = JObject.Parse(responseStr)["stargazers_count"];
-				}
-				catch
-				{
-					Console.WriteLine("Failed HTTP GET elastic.co");
-				}
+					_sampleDataContext.Database.Migrate();
+					var model = _sampleDataContext.SampleTable.Select(item => item.Name).ToList();
 
-				return View(model);
-			});
+					try
+					{
+						var httpClient = new HttpClient();
+						httpClient.DefaultRequestHeaders.Add("User-Agent", "APM-Sample-App");
+						var responseMsg = await httpClient.GetAsync("https://api.github.com/repos/elastic/apm-agent-dotnet");
+						var responseStr = await responseMsg.Content.ReadAsStringAsync();
+						ViewData["stargazers_count"] = JObject.Parse(responseStr)["stargazers_count"];
+					}
+					catch
+					{
+						Console.WriteLine("Failed HTTP GET elastic.co");
+					}
+
+					return View(model);
+				});
 		}
 
 		/// <summary>
@@ -169,13 +170,36 @@ namespace SampleAspNetCoreApp.Controllers
 		}
 
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-
 		public IActionResult Error() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-		
+
 		[HttpPost, Route("api/Home/Post")]
 		public ActionResult<string> Post() => "somevalue";
 
 		[HttpPost, Route("api/Home/PostError")]
 		public ActionResult<string> PostError() => throw new Exception("This is a post method test exception!");
+
+		/// <summary>
+		/// Test for: https://github.com/elastic/apm-agent-dotnet/issues/460
+		/// </summary>
+		/// <param name="filter">A parameter with a little bit more complex data type coming through the request body</param>
+		/// <returns>HTTP 200 if the parameter is available in the method (aka not <code>null</code>), HTTP500 otherwise </returns>
+		[HttpPost("api/Home/Send")]
+		public IActionResult Send([FromBody] BaseReportFilter<SendMessageFilter> filter)
+		{
+			return filter == null ? StatusCode(500) : Ok();
+		}
+	}
+
+	public class BaseReportFilter<T>
+	{
+		public T ReportFilter { get; set; }
+	}
+
+	public class SendMessageFilter
+	{
+		public string SenderApplicationCode { get; set; }
+		public string MediaType { get; set; }
+		public string Body { get; set; }
+		public List<string> Recipients { get; set; }
 	}
 }
