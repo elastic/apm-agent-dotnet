@@ -183,11 +183,11 @@ namespace Elastic.Apm.Logging
 			var args = new KeyValuePair<string, object>[values.Length + offset];
 			args[0] = new KeyValuePair<string, object>("{OriginalFormat}", OriginalFormat);
 			if (_scope != null)
-				args[1] = new KeyValuePair<string, object>("{Scope}", _scope);
+				args[1] = new KeyValuePair<string, object>("Scope", _scope);
 
 			for (int i = 0, j = _scope != null ? 1 : 0; j < ValueNames.Count; i++, j++)
 			{
-				if (values.Length < i)
+				if (values.Length > i)
 					args[offset + i] = new KeyValuePair<string, object>(ValueNames[j], values[i]);
 			}
 
