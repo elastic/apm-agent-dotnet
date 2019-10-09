@@ -182,7 +182,7 @@ namespace SampleAspNetCoreApp.Controllers
 		/// Test for: https://github.com/elastic/apm-agent-dotnet/issues/460
 		/// </summary>
 		/// <param name="filter">A parameter with a little bit more complex data type coming through the request body</param>
-		/// <returns>HTTP 200 if the parameter is available in the method (aka not <code>null</code>), HTTP500 otherwise </returns>
+		/// <returns>HTTP200 if the parameter is available in the method (aka not <code>null</code>), HTTP500 otherwise </returns>
 		[HttpPost("api/Home/Send")]
 		public IActionResult Send([FromBody] BaseReportFilter<SendMessageFilter> filter)
 		{
