@@ -27,8 +27,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 						app.UseDeveloperExceptionPage();
 
-						app.UseHsts();
-
 						app.UseHttpsRedirection();
 						app.UseStaticFiles();
 						app.UseCookiePolicy();
