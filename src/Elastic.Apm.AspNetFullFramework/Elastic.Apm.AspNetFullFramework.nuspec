@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Elastic.Apm.AspNetFullFramework</id>
-    <version>1.1.1</version>
+    <version>1.1.2</version>
     <authors>Elastic and contributors</authors>
     <licenseUrl>https://github.com/elastic/apm-agent-dotnet/blob/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/elastic/apm-agent-dotnet</projectUrl>
@@ -12,7 +12,7 @@
     <copyright>2019 Elasticsearch BV</copyright>
     <tags>apm, monitoring, elastic, elasticapm, analytics, asp.net, issmodule, iis</tags>
 	<dependencies>
-    <dependency id="Elastic.Apm" version="1.1.1" />
+    <dependency id="Elastic.Apm" version="1.1.2" />
 </dependencies>
   </metadata>
 </package>
