@@ -57,7 +57,10 @@ namespace Elastic.Apm.Tests.HelpersTests
 				action();
 			}
 
-			Task PublicMethod() => MethodImpl();
+			Task PublicMethod()
+			{
+				return MethodImpl();
+			}
 		}
 
 		[Theory]

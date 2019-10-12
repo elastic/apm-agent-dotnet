@@ -68,7 +68,7 @@ namespace Elastic.Apm.Model
 
 		public override string ToString() => new ToStringBuilder(nameof(Error))
 		{
-			{ nameof(Id), Id }, { nameof(TraceId), TraceId }, { nameof(ParentId), ParentId }, { nameof(TransactionId), TransactionId },
+			{ nameof(Id), Id }, { nameof(TraceId), TraceId }, { nameof(ParentId), ParentId }, { nameof(TransactionId), TransactionId }
 		}.ToString();
 
 		public class TransactionData
@@ -86,7 +86,7 @@ namespace Elastic.Apm.Model
 			public string Type { get; }
 
 			public override string ToString() =>
-				new ToStringBuilder(nameof(TransactionData)) { { "IsSampled", IsSampled }, { "Type", Type }, }.ToString();
+				new ToStringBuilder(nameof(TransactionData)) { { "IsSampled", IsSampled }, { "Type", Type } }.ToString();
 		}
 	}
 }

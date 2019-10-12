@@ -75,9 +75,7 @@ namespace Elastic.Apm.Tests
 					transaction =>
 					{
 						foreach (var iteration in Enumerable.Range(1, spansCount))
-						{
 							transaction.CaptureSpan($"test span name #{iteration}", "test span type", span => { });
-						}
 					});
 			}
 
@@ -131,9 +129,7 @@ namespace Elastic.Apm.Tests
 					transaction =>
 					{
 						foreach (var iteration in Enumerable.Range(1, spansCount))
-						{
 							transaction.CaptureSpan($"test span name #{iteration}", "test span type", span => { });
-						}
 					});
 			}
 

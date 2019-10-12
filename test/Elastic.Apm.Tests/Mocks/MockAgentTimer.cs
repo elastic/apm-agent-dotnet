@@ -31,8 +31,6 @@ namespace Elastic.Apm.Tests.Mocks
 			_logger = logger == null ? (IApmLogger)new NoopLogger() : logger.Scoped($"{ThisClassName}-{_dbgName}");
 		}
 
-		internal AgentTimeInstant WhenStarted { get; }
-
 		public AgentTimeInstant Now
 		{
 			get => _delayItems.Now;
@@ -44,9 +42,11 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public int PendingDelayTasksCount => _delayItems.Count;
 
+		internal AgentTimeInstant WhenStarted { get; }
+
 		public Task Delay(AgentTimeInstant until, CancellationToken cancellationToken = default)
 		{
-			if (! until.IsCompatibleWith(this))
+			if (!until.IsCompatibleWith(this))
 			{
 				throw new ArgumentOutOfRangeException(nameof(until)
 					, $"{nameof(until)} argument time instant should have this Agent timer as its source. {nameof(until)}: {until}");

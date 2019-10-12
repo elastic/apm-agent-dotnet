@@ -97,6 +97,9 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		public bool IsSampled => _enclosingTransaction.IsSampled;
 
+		[JsonIgnore]
+		public Dictionary<string, string> Labels => Context.Labels;
+
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
 
@@ -120,9 +123,6 @@ namespace Elastic.Apm.Model
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Subtype { get; set; }
-
-		[JsonIgnore]
-		public Dictionary<string, string> Labels => Context.Labels;
 
 		//public decimal Start { get; set; }
 

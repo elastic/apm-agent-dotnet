@@ -6,9 +6,8 @@ namespace Elastic.Apm.Config
 {
 	internal class EnvironmentConfigurationReader : AbstractConfigurationReader, IConfigSnapshot
 	{
-		private const string ThisClassName = nameof(EnvironmentConfigurationReader);
-
 		internal const string Origin = "environment variables";
+		private const string ThisClassName = nameof(EnvironmentConfigurationReader);
 
 		private readonly Lazy<double> _spanFramesMinDurationInMilliseconds;
 
@@ -23,8 +22,6 @@ namespace Elastic.Apm.Config
 			_stackTraceLimit = new Lazy<int>(() => ParseStackTraceLimit(Read(ConfigConsts.EnvVarNames.StackTraceLimit)));
 		}
 
-		public string DbgDescription => Origin;
-
 		public string CaptureBody => ParseCaptureBody(Read(ConfigConsts.EnvVarNames.CaptureBody));
 
 		public List<string> CaptureBodyContentTypes =>
@@ -33,6 +30,8 @@ namespace Elastic.Apm.Config
 		public bool CaptureHeaders => ParseCaptureHeaders(Read(ConfigConsts.EnvVarNames.CaptureHeaders));
 
 		public bool CentralConfig => ParseCentralConfig(Read(ConfigConsts.EnvVarNames.CentralConfig));
+
+		public string DbgDescription => Origin;
 
 		public string Environment => ParseEnvironment(Read(ConfigConsts.EnvVarNames.Environment));
 
@@ -58,9 +57,9 @@ namespace Elastic.Apm.Config
 
 		public int StackTraceLimit => _stackTraceLimit.Value;
 
-		public double TransactionSampleRate => ParseTransactionSampleRate(Read(ConfigConsts.EnvVarNames.TransactionSampleRate));
-
 		public int TransactionMaxSpans => ParseTransactionMaxSpans(Read(ConfigConsts.EnvVarNames.TransactionMaxSpans));
+
+		public double TransactionSampleRate => ParseTransactionSampleRate(Read(ConfigConsts.EnvVarNames.TransactionSampleRate));
 
 		private ConfigurationKeyValue Read(string key) =>
 			new ConfigurationKeyValue(key, ReadEnvVarValue(key), Origin);

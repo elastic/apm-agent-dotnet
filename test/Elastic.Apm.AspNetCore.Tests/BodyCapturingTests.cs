@@ -22,9 +22,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// <summary>
 	/// Tests the capture body feature of ASP.NET Core
 	/// During investigation of https://github.com/elastic/apm-agent-dotnet/issues/460
-	/// it turned out that tests that host the sample application with <see cref="IClassFixture{WebApplicationFactory}" />
+	/// it turned out that tests that host the sample application with <see cref="IClassFixture{TFixture}" />
 	/// don't reproduce the problem reported in #460.
-	/// This test uses <see cref="Program.CreateWebHostBuilder"/> to host the sample application on purpose - that was the key
+	/// This test uses <see cref="Program.CreateWebHostBuilder" /> to host the sample application on purpose - that was the key
 	/// to reproduce the problem in an automated test.
 	/// </summary>
 	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
@@ -86,7 +86,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.Configure(app =>
 				{
 					app.UseElasticApm(_agent, new TestLogger());
-						Startup.ConfigureAllExceptAgent(app);
+					Startup.ConfigureAllExceptAgent(app);
 				})
 				.UseUrls("http://localhost:5903")
 				.Build()

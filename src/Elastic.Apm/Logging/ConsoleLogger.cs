@@ -5,6 +5,7 @@ namespace Elastic.Apm.Logging
 {
 	internal class ConsoleLogger : IApmLogger
 	{
+		internal static readonly LogLevel DefaultLogLevel = LogLevel.Error;
 		private readonly TextWriter _errorOut;
 		private readonly TextWriter _standardOut;
 
@@ -15,7 +16,6 @@ namespace Elastic.Apm.Logging
 			_errorOut = errorOut ?? Console.Error;
 		}
 
-		internal static readonly LogLevel DefaultLogLevel = LogLevel.Error;
 		public static ConsoleLogger Instance { get; } = new ConsoleLogger(DefaultLogLevel);
 
 		private LogLevel Level { get; }

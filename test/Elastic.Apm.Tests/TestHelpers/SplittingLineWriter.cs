@@ -2,9 +2,9 @@
 {
 	public class SplittingLineWriter : ILineWriter
 	{
-		public SplittingLineWriter(params ILineWriter[] lineWriters) => _lineWriters = lineWriters;
-
 		private readonly ILineWriter[] _lineWriters;
+
+		public SplittingLineWriter(params ILineWriter[] lineWriters) => _lineWriters = lineWriters;
 
 		public void WriteLine(string line)
 		{

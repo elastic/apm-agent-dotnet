@@ -29,10 +29,10 @@ namespace Elastic.Apm.Tests.TestHelpers
 	internal class AgentTimerForTesting : IAgentTimerForTesting
 	{
 		private const string ThisClassName = nameof(AgentTimerForTesting);
-		private readonly AgentTimer _realAgentTimer = new AgentTimer();
 
 		private readonly IApmLogger _logger;
 		private readonly MockAgentTimer _mockAgentTimer = new MockAgentTimer("AgentTimerForTesting internal");
+		private readonly AgentTimer _realAgentTimer = new AgentTimer();
 
 		internal AgentTimerForTesting(IApmLogger logger = null) =>
 			_logger = logger == null ? (IApmLogger)new NoopLogger() : logger.Scoped(ThisClassName);

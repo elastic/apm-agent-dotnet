@@ -67,14 +67,14 @@ namespace Elastic.Apm.Logging
 			if (placeholdersMismatchedArgs.Count > 0)
 			{
 				sb.Append(
-					$" Warning: This line is from an invalid structured log which should be fixed and may not be complete: "
+					" Warning: This line is from an invalid structured log which should be fixed and may not be complete: "
 					+ $"number of arguments is not matching the number of placeholders, placeholders with missing values: {string.Join(", ", placeholdersMismatchedArgs)}");
 			}
 
 			if (ValueNames.Count != expectedNumberOfArgs)
 			{
 				sb.Append(
-					$" Warning: This line is from an invalid structured log which should be fixed and may not be complete: "
+					" Warning: This line is from an invalid structured log which should be fixed and may not be complete: "
 					+ $"number of placeholders in the log message does not match the number of parameters. Argument values without placeholders: {string.Join(", ", args.Skip(ValueNames.Count))}");
 			}
 

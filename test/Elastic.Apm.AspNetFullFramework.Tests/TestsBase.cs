@@ -36,11 +36,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			EnvVarUtils.GetBoolValue("ELASTIC_APM_TESTS_FULL_FRAMEWORK_TEAR_DOWN_PERSISTENT_DATA", /* defaultValue: */ true,
 				out TearDownPersistentDataReason);
 
-		private readonly IApmLogger _logger;
+
 		protected readonly AgentConfiguration AgentConfig = new AgentConfiguration();
 		protected readonly bool SampleAppShouldHaveAccessToPerfCounters;
 		private readonly Dictionary<string, string> _envVarsToSetForSampleAppPool;
 		private readonly IisAdministration _iisAdministration;
+
+		private readonly IApmLogger _logger;
 		private readonly MockApmServer _mockApmServer;
 		private readonly int _mockApmServerPort;
 		private readonly bool _sampleAppLogEnabled;
@@ -94,17 +96,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData ContactPage =
 				new SampleAppUrlPathData(HomeController.ContactPageRelativePath, 200, /* transactionsCount: */ 2, /* spansCount: */ 2);
 
-			// errorsCount is 2 because the exception is thrown inside a span -
-			// AspNetFullFrameworkSampleApp.Controllers.HomeController.CustomSpanThrowsInternal
-			// and exception propagates out of transaction as well so both span and transaction send an error event
 			internal static readonly SampleAppUrlPathData CustomSpanThrowsExceptionPage =
 				new SampleAppUrlPathData(HomeController.CustomSpanThrowsPageRelativePath, 500, spansCount: 1, errorsCount: 2);
 
-			internal static readonly SampleAppUrlPathData PageThatDoesNotExit =
-				new SampleAppUrlPathData("dummy_URL_path_to_page_that_does_not_exist", 404, errorsCount: 1);
-
 			internal static readonly SampleAppUrlPathData HomePage =
 				new SampleAppUrlPathData(HomeController.HomePageRelativePath, 200);
+
+			internal static readonly SampleAppUrlPathData PageThatDoesNotExit =
+				new SampleAppUrlPathData("dummy_URL_path_to_page_that_does_not_exist", 404, errorsCount: 1);
 
 			internal static readonly List<SampleAppUrlPathData> AllPaths = new List<SampleAppUrlPathData>
 			{
@@ -127,6 +126,10 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			// and exception propagates out of transaction as well so both spans and the transaction send an error event
 			internal static readonly SampleAppUrlPathData CustomChildSpanThrowsExceptionPage =
 				new SampleAppUrlPathData(HomeController.CustomChildSpanThrowsPageRelativePath, 500, spansCount: 2, errorsCount: 3);
+
+			// errorsCount is 2 because the exception is thrown inside a span -
+			// AspNetFullFrameworkSampleApp.Controllers.HomeController.CustomSpanThrowsInternal
+			// and exception propagates out of transaction as well so both span and transaction send an error event
 
 
 			internal static readonly SampleAppUrlPathData ForbidHttpResponsePageDescriptionPage =
@@ -442,10 +445,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		}
 
 		protected async Task WaitAndVerifyReceivedDataSharedConstraints(SampleAppUrlPathData sampleAppUrlPathData) =>
-			await WaitAndCustomVerifyReceivedData(receivedData =>
-			{
-				VerifyReceivedDataSharedConstraints(sampleAppUrlPathData, receivedData);
-			});
+			await WaitAndCustomVerifyReceivedData(receivedData => { VerifyReceivedDataSharedConstraints(sampleAppUrlPathData, receivedData); });
 
 		protected void VerifyReceivedDataSharedConstraints(SampleAppUrlPathData sampleAppUrlPathData, ReceivedData receivedData)
 		{

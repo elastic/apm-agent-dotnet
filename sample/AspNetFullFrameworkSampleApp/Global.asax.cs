@@ -44,6 +44,7 @@ namespace AspNetFullFrameworkSampleApp
 			{
 				var alreadyExistingValues = responseHeaders.GetValues(headerName);
 				if (alreadyExistingValues != null && alreadyExistingValues.Length > 0) return;
+
 				responseHeaders.Add(headerName, headerValue);
 			}
 		}

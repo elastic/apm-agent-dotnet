@@ -30,7 +30,7 @@ namespace Elastic.Apm.Api
 		public Url Url { get; set; }
 
 		public override string ToString() =>
-			new ToStringBuilder(nameof(Request)) { { "Method", Method }, { "Url", Url }, { "Socket", Socket }, }.ToString();
+			new ToStringBuilder(nameof(Request)) { { "Method", Method }, { "Url", Url }, { "Socket", Socket } }.ToString();
 	}
 
 	public class Socket
@@ -41,7 +41,7 @@ namespace Elastic.Apm.Api
 		public string RemoteAddress { get; set; }
 
 		public override string ToString() =>
-			new ToStringBuilder(nameof(Socket)) { { "Encrypted", Encrypted }, { "RemoteAddress", RemoteAddress }, }.ToString();
+			new ToStringBuilder(nameof(Socket)) { { "Encrypted", Encrypted }, { "RemoteAddress", RemoteAddress } }.ToString();
 	}
 
 	public class Url
@@ -71,6 +71,6 @@ namespace Elastic.Apm.Api
 		[JsonProperty("search")]
 		public string Search { get; set; }
 
-		public override string ToString() => new ToStringBuilder(nameof(Url)) { { "Full", Full }, }.ToString();
+		public override string ToString() => new ToStringBuilder(nameof(Url)) { { "Full", Full } }.ToString();
 	}
 }

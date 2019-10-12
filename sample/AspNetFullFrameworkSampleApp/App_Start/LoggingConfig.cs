@@ -34,9 +34,7 @@ namespace AspNetFullFrameworkSampleApp
 
 			var logTargets = new List<TargetWithLayout>
 			{
-				new PrefixingTraceTarget($"Elastic APM .NET {nameof(AspNetFullFrameworkSampleApp)}> "),
-				LogMemoryTarget,
-				new ConsoleTarget()
+				new PrefixingTraceTarget($"Elastic APM .NET {nameof(AspNetFullFrameworkSampleApp)}> "), LogMemoryTarget, new ConsoleTarget()
 			};
 
 			if (logFileEnvVarValue != null) logTargets.Add(new FileTarget { FileName = logFileEnvVarValue, DeleteOldFileOnStartup = true });

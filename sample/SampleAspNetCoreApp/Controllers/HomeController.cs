@@ -28,17 +28,18 @@ namespace SampleAspNetCoreApp.Controllers
 			const string captureControllerActionAsSpanQueryStringKey = "captureControllerActionAsSpan";
 			var captureControllerActionAsSpanQueryStringValues = HttpContext.Request.Query[captureControllerActionAsSpanQueryStringKey];
 			if (captureControllerActionAsSpanQueryStringValues.Count > 1)
+			{
 				throw new ArgumentException($"{captureControllerActionAsSpanQueryStringKey} query string key should have at most one value" +
 					$", instead it's values: {captureControllerActionAsSpanQueryStringValues}",
 					captureControllerActionAsSpanQueryStringKey);
+			}
 
 			// ReSharper disable once SimplifyConditionalTernaryExpression
 			return captureControllerActionAsSpanQueryStringValues.Count == 0 ? false : bool.Parse(captureControllerActionAsSpanQueryStringValues[0]);
 		}
 
-		public Task<IActionResult> Index()
-		{
-			return SafeCaptureSpan<IActionResult>(GetCaptureControllerActionAsSpanFromQueryString(),
+		public Task<IActionResult> Index() =>
+			SafeCaptureSpan<IActionResult>(GetCaptureControllerActionAsSpanFromQueryString(),
 				"Index_span_name", "Index_span_type", async () =>
 				{
 					_sampleDataContext.Database.Migrate();
@@ -59,7 +60,6 @@ namespace SampleAspNetCoreApp.Controllers
 
 					return View(model);
 				});
-		}
 
 		/// <summary>
 		/// In order to test if relationship between spans is maintained correctly by the agent,
@@ -172,10 +172,12 @@ namespace SampleAspNetCoreApp.Controllers
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 		public IActionResult Error() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
 
-		[HttpPost, Route("api/Home/Post")]
+		[HttpPost]
+		[Route("api/Home/Post")]
 		public ActionResult<string> Post() => "somevalue";
 
-		[HttpPost, Route("api/Home/PostError")]
+		[HttpPost]
+		[Route("api/Home/PostError")]
 		public ActionResult<string> PostError() => throw new Exception("This is a post method test exception!");
 
 		/// <summary>
@@ -184,10 +186,7 @@ namespace SampleAspNetCoreApp.Controllers
 		/// <param name="filter">A parameter with a little bit more complex data type coming through the request body</param>
 		/// <returns>HTTP200 if the parameter is available in the method (aka not <code>null</code>), HTTP500 otherwise </returns>
 		[HttpPost("api/Home/Send")]
-		public IActionResult Send([FromBody] BaseReportFilter<SendMessageFilter> filter)
-		{
-			return filter == null ? StatusCode(500) : Ok();
-		}
+		public IActionResult Send([FromBody] BaseReportFilter<SendMessageFilter> filter) => filter == null ? StatusCode(500) : Ok();
 	}
 
 	public class BaseReportFilter<T>
@@ -197,9 +196,9 @@ namespace SampleAspNetCoreApp.Controllers
 
 	public class SendMessageFilter
 	{
-		public string SenderApplicationCode { get; set; }
-		public string MediaType { get; set; }
 		public string Body { get; set; }
+		public string MediaType { get; set; }
 		public List<string> Recipients { get; set; }
+		public string SenderApplicationCode { get; set; }
 	}
 }

@@ -10,8 +10,8 @@ namespace Elastic.Apm.AspNetFullFramework
 {
 	internal class FullFrameworkConfigReader : AbstractConfigurationWithEnvFallbackReader
 	{
-		private const string ThisClassName = nameof(FullFrameworkConfigReader);
 		private const string Origin = "System.Configuration.ConfigurationManager.AppSettings";
+		private const string ThisClassName = nameof(FullFrameworkConfigReader);
 
 		private readonly IApmLogger _logger;
 

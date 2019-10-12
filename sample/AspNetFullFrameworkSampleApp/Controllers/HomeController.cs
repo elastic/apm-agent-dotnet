@@ -23,14 +23,14 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 
 		internal const string CustomChildSpanThrowsPageRelativePath = HomePageRelativePath + "/" + nameof(CustomChildSpanThrows);
 
-		internal const string ForbidHttpResponsePageRelativePath = HomePageRelativePath + "/" + nameof(ForbidHttpResponse);
-
 		internal const string CustomSpanThrowsInternalMethodName = nameof(CustomSpanThrowsInternal);
 		internal const string CustomSpanThrowsPageRelativePath = HomePageRelativePath + "/" + nameof(CustomSpanThrows);
 
 		internal const string DotNetRuntimeDescriptionHttpHeaderName = "DotNetRuntimeDescription";
 		internal const int DummyHttpStatusCode = 599;
 		internal const string ExceptionMessage = "For testing purposes";
+
+		internal const string ForbidHttpResponsePageRelativePath = HomePageRelativePath + "/" + nameof(ForbidHttpResponse);
 		internal const string GetDotNetRuntimeDescriptionPageRelativePath = HomePageRelativePath + "/" + nameof(GetDotNetRuntimeDescription);
 		internal const string HomePageRelativePath = "Home";
 		internal const string ReturnBadRequestPageRelativePath = HomePageRelativePath + "/" + nameof(ReturnBadRequest);
@@ -89,7 +89,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 				var responseFromElasticCo = await GetContentFromUrl(callToExternalServiceUrl);
 
 				ViewBag.Message =
-					$"Your contact page. " +
+					"Your contact page. " +
 					$" Response code from `{callToThisAppUrl}' is {responseFromLocalHost.StatusCode}. " +
 					$" Response code from `{callToExternalServiceUrl}' is {responseFromElasticCo.StatusCode}.";
 

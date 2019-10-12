@@ -10,7 +10,8 @@ namespace Elastic.Apm.AspNetCore.Extensions
 	public static class HttpRequestExtensions
 	{
 		/// <summary>
-		/// Extracts the request body using measure to prevent the 'read once' problem (cannot read after the body ha been already read).
+		/// Extracts the request body using measure to prevent the 'read once' problem (cannot read after the body ha been already
+		/// read).
 		/// </summary>
 		/// <param name="request"></param>
 		/// <param name="logger"></param>
@@ -25,17 +26,14 @@ namespace Elastic.Apm.AspNetCore.Extensions
 				request.Body.Position = 0;
 
 				using (var reader = new StreamReader(request.Body,
-				encoding: Encoding.UTF8,
-				detectEncodingFromByteOrderMarks: false,
-				bufferSize: 1024 * 2,
-				leaveOpen: true))
+					Encoding.UTF8,
+					false,
+					1024 * 2,
+					true))
 				{
 					body = reader.ReadToEnd();
 					// Truncate the body to the first 2kb if it's longer
-					if (body.Length > Consts.RequestBodyMaxLength)
-					{
-						body = body.Substring(0, Consts.RequestBodyMaxLength);
-					}
+					if (body.Length > Consts.RequestBodyMaxLength) body = body.Substring(0, Consts.RequestBodyMaxLength);
 					request.Body.Position = 0;
 				}
 			}

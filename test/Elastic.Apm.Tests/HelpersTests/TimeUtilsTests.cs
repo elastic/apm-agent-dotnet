@@ -20,7 +20,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 			{ 2_000_000 + 1_000, new DateTime(1970, 1, 1, 0, 0, 2, 1, DateTimeKind.Utc) },
 			{ 3 * 60 * 1_000_000 + 2_000_000 + 1_000, new DateTime(1970, 1, 1, 0, 3, 2, 1, DateTimeKind.Utc) },
 			{ 4 * 60 * 60 * 1_000_000L, new DateTime(1970, 1, 1, 4, 0, 0, DateTimeKind.Utc) },
-			{ 5 * 24 * 60 * 60 * 1_000_000L, new DateTime(1970, 1, 6, 0, 0, 0, DateTimeKind.Utc) },
+			{ 5 * 24 * 60 * 60 * 1_000_000L, new DateTime(1970, 1, 6, 0, 0, 0, DateTimeKind.Utc) }
 		};
 
 		[Fact]

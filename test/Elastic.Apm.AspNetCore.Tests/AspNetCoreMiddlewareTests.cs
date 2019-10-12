@@ -25,14 +25,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// It's basically an integration test.
 	/// </summary>
 	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
-	public class AspNetCoreMiddlewareTests: LoggingTestBase, IClassFixture<WebApplicationFactory<Startup>>
+	public class AspNetCoreMiddlewareTests : LoggingTestBase, IClassFixture<WebApplicationFactory<Startup>>
 	{
 		private const string ThisClassName = nameof(AspNetCoreMiddlewareTests);
-
-		private readonly IApmLogger _logger;
 		private readonly ApmAgent _agent;
 		private readonly MockPayloadSender _capturedPayload;
 		private readonly WebApplicationFactory<Startup> _factory;
+
+		private readonly IApmLogger _logger;
 		// ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
 
 		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper)
@@ -43,12 +43,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 			// We need to ensure Agent.Instance is created because we need _agent to use Agent.Instance CurrentExecutionSegmentsContainer
 			AgentSingletonUtils.EnsureInstanceCreated();
 			_agent = new ApmAgent(new TestAgentComponents(
-				logger: _logger,
-				config: new MockConfigSnapshot(_logger, captureBody: ConfigConsts.SupportedValues.CaptureBodyAll),
+				_logger,
+				new MockConfigSnapshot(_logger, captureBody: ConfigConsts.SupportedValues.CaptureBodyAll),
 				// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
 				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer)
-				);
+			);
 			ApmMiddlewareExtension.UpdateServiceInformation(_agent.Service);
 
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
@@ -137,7 +137,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task HomeSimplePagePostTransactionTest()
 		{
-
 			var headerKey = "X-Additional-Header";
 			var headerValue = "For-Elastic-Apm-Agent";
 			_client.DefaultRequestHeaders.Add(headerKey, headerValue);
@@ -284,7 +283,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task FailingPostRequestWithoutConfiguredExceptionPage()
 		{
-
 			_client = Helper.GetClientWithoutExceptionPage(_agent, _factory);
 
 			_client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));

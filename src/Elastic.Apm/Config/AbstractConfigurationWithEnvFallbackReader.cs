@@ -21,27 +21,36 @@ namespace Elastic.Apm.Config
 				new Lazy<int>(() => ParseStackTraceLimit(Read(ConfigConsts.KeyNames.StackTraceLimit, ConfigConsts.EnvVarNames.StackTraceLimit)));
 
 			_spanFramesMinDurationInMilliseconds = new Lazy<double>(() =>
-				ParseSpanFramesMinDurationInMilliseconds(Read(ConfigConsts.KeyNames.SpanFramesMinDuration, ConfigConsts.EnvVarNames.SpanFramesMinDuration)));
+				ParseSpanFramesMinDurationInMilliseconds(Read(ConfigConsts.KeyNames.SpanFramesMinDuration,
+					ConfigConsts.EnvVarNames.SpanFramesMinDuration)));
 		}
+
+		protected abstract ConfigurationKeyValue Read(string key, string fallBackEnvVarName);
 
 		public virtual string CaptureBody => ParseCaptureBody(Read(ConfigConsts.KeyNames.CaptureBody, ConfigConsts.EnvVarNames.CaptureBody));
 
 		public virtual List<string> CaptureBodyContentTypes =>
-			ParseCaptureBodyContentTypes(Read(ConfigConsts.KeyNames.CaptureBodyContentTypes, ConfigConsts.EnvVarNames.CaptureBodyContentTypes), CaptureBody);
+			ParseCaptureBodyContentTypes(Read(ConfigConsts.KeyNames.CaptureBodyContentTypes, ConfigConsts.EnvVarNames.CaptureBodyContentTypes),
+				CaptureBody);
 
-		public virtual bool CaptureHeaders => ParseCaptureHeaders(Read(ConfigConsts.KeyNames.CaptureHeaders, ConfigConsts.EnvVarNames.CaptureHeaders));
+		public virtual bool CaptureHeaders =>
+			ParseCaptureHeaders(Read(ConfigConsts.KeyNames.CaptureHeaders, ConfigConsts.EnvVarNames.CaptureHeaders));
 
 		public bool CentralConfig => ParseCentralConfig(Read(ConfigConsts.KeyNames.CentralConfig, ConfigConsts.EnvVarNames.CentralConfig));
 
-		public virtual string Environment => ParseEnvironment(Read(ConfigConsts.KeyNames.Environment, ConfigConsts.EnvVarNames.Environment)) ?? _defaultEnvironmentName;
+		public virtual string Environment => ParseEnvironment(Read(ConfigConsts.KeyNames.Environment, ConfigConsts.EnvVarNames.Environment))
+			?? _defaultEnvironmentName;
 
-		public virtual TimeSpan FlushInterval => ParseFlushInterval(Read(ConfigConsts.KeyNames.FlushInterval, ConfigConsts.EnvVarNames.FlushInterval));
+		public virtual TimeSpan FlushInterval =>
+			ParseFlushInterval(Read(ConfigConsts.KeyNames.FlushInterval, ConfigConsts.EnvVarNames.FlushInterval));
 
 		public virtual LogLevel LogLevel => ParseLogLevel(Read(ConfigConsts.KeyNames.LogLevel, ConfigConsts.EnvVarNames.LogLevel));
 
-		public virtual int MaxBatchEventCount => ParseMaxBatchEventCount(Read(ConfigConsts.KeyNames.MaxBatchEventCount, ConfigConsts.EnvVarNames.MaxBatchEventCount));
+		public virtual int MaxBatchEventCount =>
+			ParseMaxBatchEventCount(Read(ConfigConsts.KeyNames.MaxBatchEventCount, ConfigConsts.EnvVarNames.MaxBatchEventCount));
 
-		public virtual int MaxQueueEventCount => ParseMaxQueueEventCount(Read(ConfigConsts.KeyNames.MaxQueueEventCount, ConfigConsts.EnvVarNames.MaxQueueEventCount));
+		public virtual int MaxQueueEventCount =>
+			ParseMaxQueueEventCount(Read(ConfigConsts.KeyNames.MaxQueueEventCount, ConfigConsts.EnvVarNames.MaxQueueEventCount));
 
 		public virtual double MetricsIntervalInMilliseconds =>
 			ParseMetricsInterval(Read(ConfigConsts.KeyNames.MetricsInterval, ConfigConsts.EnvVarNames.MetricsInterval));
@@ -52,18 +61,17 @@ namespace Elastic.Apm.Config
 
 		public virtual string ServiceName => ParseServiceName(Read(ConfigConsts.KeyNames.ServiceName, ConfigConsts.EnvVarNames.ServiceName));
 
-		public virtual string ServiceVersion => ParseServiceVersion(Read(ConfigConsts.KeyNames.ServiceVersion, ConfigConsts.EnvVarNames.ServiceVersion));
+		public virtual string ServiceVersion =>
+			ParseServiceVersion(Read(ConfigConsts.KeyNames.ServiceVersion, ConfigConsts.EnvVarNames.ServiceVersion));
 
 		public virtual double SpanFramesMinDurationInMilliseconds => _spanFramesMinDurationInMilliseconds.Value;
 
 		public virtual int StackTraceLimit => _stackTraceLimit.Value;
 
-		public virtual double TransactionSampleRate =>
-			ParseTransactionSampleRate(Read(ConfigConsts.KeyNames.TransactionSampleRate, ConfigConsts.EnvVarNames.TransactionSampleRate));
-
 		public virtual int TransactionMaxSpans =>
 			ParseTransactionMaxSpans(Read(ConfigConsts.KeyNames.TransactionMaxSpans, ConfigConsts.EnvVarNames.TransactionMaxSpans));
 
-		protected abstract ConfigurationKeyValue Read(string key, string fallBackEnvVarName);
+		public virtual double TransactionSampleRate =>
+			ParseTransactionSampleRate(Read(ConfigConsts.KeyNames.TransactionSampleRate, ConfigConsts.EnvVarNames.TransactionSampleRate));
 	}
 }
