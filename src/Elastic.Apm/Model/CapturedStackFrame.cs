@@ -4,6 +4,12 @@ namespace Elastic.Apm.Model
 {
 	internal class CapturedStackFrame
 	{
+		/// <summary>
+		/// The absolute path of the file involved in the stack frame.
+		/// </summary>
+		[JsonProperty("abs_path")]
+		public string AbsPath { get; set; }
+
 		[JsonProperty("filename")]
 		public string FileName { get; set; }
 
@@ -17,11 +23,5 @@ namespace Elastic.Apm.Model
 		public int LineNo { get; set; }
 
 		public string Module { get; set; }
-
-		/// <summary>
-		/// The absolute path of the file involved in the stack frame.
-		/// </summary>
-		[JsonProperty("abs_path")]
-		public string AbsPath { get; set; }
 	}
 }

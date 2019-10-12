@@ -4,7 +4,7 @@ using Elastic.Apm.Tests.MockApmServer;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
-	public struct TimedEvent: ITimedDto
+	public struct TimedEvent : ITimedDto
 	{
 		public TimedEvent(DateTime start, DateTime end)
 		{

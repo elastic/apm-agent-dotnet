@@ -9,6 +9,12 @@ namespace SampleAspNetCoreApp.Models
 	{
 		private decimal _close;
 
+		private decimal _high;
+
+		private decimal _low;
+
+		private decimal _open;
+
 		public decimal Close
 		{
 			get => Math.Round(_close, 2);
@@ -17,23 +23,17 @@ namespace SampleAspNetCoreApp.Models
 
 		public DateTime Date { get; set; }
 
-		private decimal _high;
-
 		public decimal High
 		{
 			get => Math.Round(_high, 2);
 			set => _high = value;
 		}
 
-		private decimal _low;
-
 		public decimal Low
 		{
 			get => Math.Round(_low, 2);
 			set => _low = value;
 		}
-
-		private decimal _open;
 
 		public decimal Open
 		{

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Elastic.Apm.Helpers
 {
-	internal class AgentTimer: IAgentTimer
+	internal class AgentTimer : IAgentTimer
 	{
 		private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
 
@@ -13,9 +13,11 @@ namespace Elastic.Apm.Helpers
 
 		public AgentTimeInstant Now => new AgentTimeInstant(this, _stopwatch.Elapsed);
 
+		internal AgentTimeInstant WhenStarted { get; }
+
 		public Task Delay(AgentTimeInstant until, CancellationToken cancellationToken = default)
 		{
-			if (! until.IsCompatibleWith(this))
+			if (!until.IsCompatibleWith(this))
 			{
 				throw new ArgumentOutOfRangeException(nameof(until)
 					, $"{nameof(until)} argument time instant should have this Agent timer as its source. {nameof(until)}: {until}");
@@ -34,7 +36,5 @@ namespace Elastic.Apm.Helpers
 
 			await Task.Delay(delayRemainder, cancellationToken);
 		}
-
-		internal AgentTimeInstant WhenStarted { get; }
 	}
 }

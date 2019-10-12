@@ -15,7 +15,7 @@ namespace Elastic.Apm.Tests.Extensions
 			{ Enumerable.Range(0, 0).Select(i => (object)i), Array.Empty<object>() },
 			{ Enumerable.Range(1, 1).Select(i => (object)(i * i)), new object[] { 1 } },
 			{ Enumerable.Range(2, 2).Select(i => (object)(i * i)), new object[] { 4, 9 } },
-			{ Enumerable.Range(0, 5).Select(i => (object)(i * i)), new object[] { 0, 1, 4, 9, 16 } },
+			{ Enumerable.Range(0, 5).Select(i => (object)(i * i)), new object[] { 0, 1, 4, 9, 16 } }
 		};
 
 		[Theory]

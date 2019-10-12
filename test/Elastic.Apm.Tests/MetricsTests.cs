@@ -18,7 +18,7 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
-	public class MetricsTests: LoggingTestBase
+	public class MetricsTests : LoggingTestBase
 	{
 		private const string ThisClassName = nameof(MetricsTests);
 
@@ -166,7 +166,8 @@ namespace Elastic.Apm.Tests
 		private class TestSystemTotalCpuProvider : SystemTotalCpuProvider
 		{
 			public TestSystemTotalCpuProvider(string procStatContent) : base(new NoopLogger(),
-				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent)))) { }
+				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent))))
+			{ }
 		}
 	}
 }

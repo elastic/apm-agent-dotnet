@@ -10,12 +10,12 @@ namespace Elastic.Apm.AspNetCore.Config
 	/// </summary>
 	internal class MicrosoftExtensionsConfig : AbstractConfigurationWithEnvFallbackReader
 	{
-		private const string ThisClassName = nameof(MicrosoftExtensionsConfig);
-		internal const string Origin = "Microsoft.Extensions.Configuration";
 		private const string LogLevelSubKey = "LogLevel";
+		internal const string Origin = "Microsoft.Extensions.Configuration";
+		private const string ThisClassName = nameof(MicrosoftExtensionsConfig);
+		private readonly IConfiguration _configuration;
 
 		private readonly IApmLogger _logger;
-		private readonly IConfiguration _configuration;
 
 		public MicrosoftExtensionsConfig(IConfiguration configuration, IApmLogger logger, string defaultEnvironmentName)
 			: base(logger, defaultEnvironmentName, ThisClassName)

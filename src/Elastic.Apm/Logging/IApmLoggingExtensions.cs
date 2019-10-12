@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Concurrent;
-using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Logging
@@ -35,7 +34,7 @@ namespace Elastic.Apm.Logging
 				try
 				{
 					var newLine = Environment.NewLine + "Elastic APM .NET Agent: ";
-					var currentStackTraceFrames = new System.Diagnostics.StackTrace(true).GetFrames();
+					var currentStackTraceFrames = new StackTrace(true).GetFrames();
 					var currentStackTrace = currentStackTraceFrames == null
 						? " N/A"
 						: newLine + string.Join("", currentStackTraceFrames.Select(f => "    " + f));

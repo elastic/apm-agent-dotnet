@@ -28,9 +28,11 @@ namespace Elastic.Apm.Helpers
 
 		public override int GetHashCode() => _elapsedSinceTimerStarted.GetHashCode();
 
-		public static AgentTimeInstant operator +(AgentTimeInstant i, TimeSpan t) => new AgentTimeInstant(i._sourceAgentTimer, i._elapsedSinceTimerStarted + t);
+		public static AgentTimeInstant operator +(AgentTimeInstant i, TimeSpan t) =>
+			new AgentTimeInstant(i._sourceAgentTimer, i._elapsedSinceTimerStarted + t);
 
-		public static AgentTimeInstant operator -(AgentTimeInstant i, TimeSpan t) => new AgentTimeInstant(i._sourceAgentTimer, i._elapsedSinceTimerStarted - t);
+		public static AgentTimeInstant operator -(AgentTimeInstant i, TimeSpan t) =>
+			new AgentTimeInstant(i._sourceAgentTimer, i._elapsedSinceTimerStarted - t);
 
 		public static TimeSpan operator -(AgentTimeInstant i1, AgentTimeInstant i2)
 		{
@@ -83,7 +85,7 @@ namespace Elastic.Apm.Helpers
 
 		public string ToStringDetailed() => new ToStringBuilder(nameof(AgentTimeInstant))
 		{
-			{ nameof(_sourceAgentTimer), _sourceAgentTimer }, { nameof(_elapsedSinceTimerStarted), _elapsedSinceTimerStarted },
+			{ nameof(_sourceAgentTimer), _sourceAgentTimer }, { nameof(_elapsedSinceTimerStarted), _elapsedSinceTimerStarted }
 		}.ToString();
 	}
 }

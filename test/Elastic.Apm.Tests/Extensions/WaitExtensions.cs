@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Xunit;
 
 namespace Elastic.Apm.Tests.Extensions
 {
@@ -33,7 +32,6 @@ namespace Elastic.Apm.Tests.Extensions
 
 		public static void SleepMinimum() => Thread.Sleep(SleepLength);
 
-		public static void Assert3XMinimumSleepLength(double? duration) => duration.Should().BeGreaterOrEqualToMinimumSleepLength(numberOfSleeps: 3);
+		public static void Assert3XMinimumSleepLength(double? duration) => duration.Should().BeGreaterOrEqualToMinimumSleepLength(3);
 	}
-
 }

@@ -165,7 +165,7 @@ namespace Elastic.Apm.Tests
 			using (var agent = new ApmAgent(new TestAgentComponents(
 				config: new MockConfigSnapshot(captureBodyContentTypes: DefaultValues.CaptureBodyContentTypes))))
 			{
-				var expected = new List<string>() { "application/x-www-form-urlencoded*", "text/*", "application/json*", "application/xml*" };
+				var expected = new List<string> { "application/x-www-form-urlencoded*", "text/*", "application/json*", "application/xml*" };
 				agent.ConfigurationReader.CaptureBodyContentTypes.Should().HaveCount(4);
 				agent.ConfigurationReader.CaptureBodyContentTypes.Should().BeEquivalentTo(expected);
 			}
@@ -241,7 +241,7 @@ namespace Elastic.Apm.Tests
 		public void DefaultTransactionMaxSpansTest()
 		{
 			var reader = new EnvironmentConfigurationReader();
-			reader.TransactionMaxSpans.Should().Be(ConfigConsts.DefaultValues.TransactionMaxSpans);
+			reader.TransactionMaxSpans.Should().Be(DefaultValues.TransactionMaxSpans);
 		}
 
 		[Theory]

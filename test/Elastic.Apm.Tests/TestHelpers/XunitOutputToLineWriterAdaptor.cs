@@ -5,8 +5,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 {
 	public class XunitOutputToLineWriterAdaptor : ILineWriter
 	{
-		private readonly ITestOutputHelper _xUnitOutputHelper;
 		private readonly string _prefix;
+		private readonly ITestOutputHelper _xUnitOutputHelper;
 
 		public XunitOutputToLineWriterAdaptor(ITestOutputHelper xUnitOutputHelper, string prefix = "")
 		{

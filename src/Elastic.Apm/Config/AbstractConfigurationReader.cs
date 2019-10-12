@@ -14,11 +14,11 @@ namespace Elastic.Apm.Config
 	public abstract class AbstractConfigurationReader
 	{
 		private const string ThisClassName = nameof(AbstractConfigurationReader);
-
-		private readonly IApmLogger _logger;
 		private readonly LazyContextualInit<int> _cachedMaxBatchEventCount = new LazyContextualInit<int>();
 		private readonly LazyContextualInit<int> _cachedMaxQueueEventCount = new LazyContextualInit<int>();
 		private readonly LazyContextualInit<IReadOnlyList<Uri>> _cachedServerUrls = new LazyContextualInit<IReadOnlyList<Uri>>();
+
+		private readonly IApmLogger _logger;
 
 		protected AbstractConfigurationReader(IApmLogger logger, string dbgDerivedClassName) =>
 			_logger = logger?.Scoped($"{ThisClassName} ({dbgDerivedClassName})");

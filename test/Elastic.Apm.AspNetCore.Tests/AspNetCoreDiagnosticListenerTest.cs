@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.Tests.Mocks;
@@ -72,7 +73,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				var client = Helper.GetClient(agent, _factory);
 
 				var body = "{\"id\" : \"1\"}";
-				var response = await client.PostAsync("api/Home/PostError", new StringContent(body, System.Text.Encoding.UTF8, "application/json"));
+				var response = await client.PostAsync("api/Home/PostError", new StringContent(body, Encoding.UTF8, "application/json"));
 
 				capturedPayload.Should().NotBeNull();
 

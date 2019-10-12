@@ -5,7 +5,7 @@ using Xunit;
 namespace Elastic.Apm.Tests
 {
 	/// <summary>
-	/// Makes sure that <see cref="LogValuesFormatter"/> builds correct logstate
+	/// Makes sure that <see cref="LogValuesFormatter" /> builds correct logstate
 	/// </summary>
 	public class LogValuesFormatterTests
 	{

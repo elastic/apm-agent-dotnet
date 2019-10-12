@@ -21,6 +21,7 @@ namespace Elastic.Apm.DiagnosticListeners
 		private const string EventExceptionPropertyName = "Exception";
 		protected const string EventRequestPropertyName = "Request";
 		private const string EventResponsePropertyName = "Response";
+		protected readonly ScopedLogger Logger;
 
 		/// <summary>
 		/// Keeps track of ongoing requests
@@ -28,7 +29,6 @@ namespace Elastic.Apm.DiagnosticListeners
 		internal readonly ConcurrentDictionary<TRequest, ISpan> ProcessingRequests = new ConcurrentDictionary<TRequest, ISpan>();
 
 		private readonly IApmAgent _agent;
-		protected readonly ScopedLogger Logger;
 
 		protected HttpDiagnosticListenerImplBase(IApmAgent agent)
 		{

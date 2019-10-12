@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using Elastic.Apm.Api;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Model;
@@ -120,7 +119,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 		private static void HttpMethodAssertValid(this string thisObj)
 		{
 			thisObj.NonEmptyAssertValid();
-			var validValues = new List<string>()
+			var validValues = new List<string>
 			{
 				"GET",
 				"POST",

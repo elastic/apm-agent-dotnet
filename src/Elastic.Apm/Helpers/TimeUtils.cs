@@ -15,13 +15,18 @@ namespace Elastic.Apm.Helpers
 		/// <summary>
 		/// UTC based and formatted as microseconds since Unix epoch.
 		/// </summary>
-		/// <param name="dateTimeToConvert">DateTime instance to convert to timestamp - its <see cref="DateTime.Kind"/> should be <see cref="DateTimeKind.Utc"/></param>
+		/// <param name="dateTimeToConvert">
+		/// DateTime instance to convert to timestamp - its <see cref="DateTime.Kind" /> should be
+		/// <see cref="DateTimeKind.Utc" />
+		/// </param>
 		/// <returns>UTC based and formatted as microseconds since Unix epoch</returns>
 		internal static long ToTimestamp(DateTime dateTimeToConvert)
 		{
 			if (dateTimeToConvert.Kind != DateTimeKind.Utc)
+			{
 				throw new ArgumentException($"{nameof(dateTimeToConvert)}'s Kind should be UTC but instead its Kind is {dateTimeToConvert.Kind}" +
 					$". {nameof(dateTimeToConvert)}'s value: {dateTimeToConvert.FormatForLog()}", nameof(dateTimeToConvert));
+			}
 
 			return RoundTimeValue((dateTimeToConvert - UnixEpochDateTime).TotalMilliseconds * 1000);
 		}
@@ -34,7 +39,7 @@ namespace Elastic.Apm.Helpers
 		/// Duration between timestamps in ms with 3 decimal points
 		/// </summary>
 		/// <returns>Duration between timestamps in ms with 3 decimal points</returns>
-		internal static double DurationBetweenTimestamps(long startTimestamp, long endTimestamp) => (endTimestamp-startTimestamp)/1000.0;
+		internal static double DurationBetweenTimestamps(long startTimestamp, long endTimestamp) => (endTimestamp - startTimestamp) / 1000.0;
 
 		internal static DateTime ToEndDateTime(long startTimestamp, double duration) =>
 			ToDateTime(RoundTimeValue(startTimestamp + duration * 1000));

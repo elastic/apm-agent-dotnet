@@ -17,7 +17,7 @@ namespace Elastic.Apm.Report.Serialization
 				var valueObj = new JObject();
 				valueObj.Add("value", item.KeyValue.Value);
 
-				if(!samples.ContainsKey(item.KeyValue.Key))
+				if (!samples.ContainsKey(item.KeyValue.Key))
 					samples.Add(item.KeyValue.Key, valueObj);
 			}
 
@@ -28,6 +28,7 @@ namespace Elastic.Apm.Report.Serialization
 		}
 
 		public override MetricSet ReadJson(JsonReader reader, Type objectType, MetricSet existingValue, bool hasExistingValue,
-			JsonSerializer serializer) => null; //unused
+			JsonSerializer serializer
+		) => null; //unused
 	}
 }

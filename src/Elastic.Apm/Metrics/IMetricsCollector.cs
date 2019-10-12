@@ -6,7 +6,7 @@ namespace Elastic.Apm.Metrics
 	internal interface IMetricsCollector
 	{
 		/// <summary>
-		/// After calling this method, the <see cref="IMetricsCollector"/> starts collecting metrics
+		/// After calling this method, the <see cref="IMetricsCollector" /> starts collecting metrics
 		/// </summary>
 		void StartCollecting();
 	}

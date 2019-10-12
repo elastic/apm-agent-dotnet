@@ -25,8 +25,8 @@ namespace Elastic.Apm.Config
 			public const string SpanFramesMinDuration = "5ms";
 			public const double SpanFramesMinDurationInMilliseconds = 5;
 			public const int StackTraceLimit = 50;
-			public const double TransactionSampleRate = 1.0;
 			public const int TransactionMaxSpans = 500;
+			public const double TransactionSampleRate = 1.0;
 			public const string UnknownServiceName = "unknown";
 			public static Uri ServerUri => new Uri($"http://localhost:{ApmServerPort}");
 		}
@@ -50,8 +50,8 @@ namespace Elastic.Apm.Config
 			public const string ServiceVersion = Prefix + "SERVICE_VERSION";
 			public const string SpanFramesMinDuration = Prefix + "SPAN_FRAMES_MIN_DURATION";
 			public const string StackTraceLimit = Prefix + "STACK_TRACE_LIMIT";
-			public const string TransactionSampleRate = Prefix + "TRANSACTION_SAMPLE_RATE";
 			public const string TransactionMaxSpans = Prefix + "TRANSACTION_MAX_SPANS";
+			public const string TransactionSampleRate = Prefix + "TRANSACTION_SAMPLE_RATE";
 		}
 
 		public static class KeyNames
@@ -72,8 +72,8 @@ namespace Elastic.Apm.Config
 			public const string ServiceVersion = "ElasticApm:ServiceVersion";
 			public const string SpanFramesMinDuration = "ElasticApm:SpanFramesMinDuration";
 			public const string StackTraceLimit = "ElasticApm:StackTraceLimit";
-			public const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
 			public const string TransactionMaxSpans = "ElasticApm:TransactionMaxSpans";
+			public const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
 		}
 
 		public static class SupportedValues
@@ -84,7 +84,7 @@ namespace Elastic.Apm.Config
 			public const string CaptureBodyTransactions = "transactions";
 
 			public static List<string> CaptureBodySupportedValues =
-				new List<string>() { CaptureBodyOff, CaptureBodyAll, CaptureBodyErrors, CaptureBodyTransactions };
+				new List<string> { CaptureBodyOff, CaptureBodyAll, CaptureBodyErrors, CaptureBodyTransactions };
 		}
 	}
 }
