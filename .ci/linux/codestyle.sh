@@ -5,7 +5,7 @@
 set -euxo pipefail
 
 # Install
-dotnet tool install -g dotnet-format
+dotnet tool install -g dotnet-format --version 3.1.37601
 
 # Check
 dotnet format --dry-run --check
