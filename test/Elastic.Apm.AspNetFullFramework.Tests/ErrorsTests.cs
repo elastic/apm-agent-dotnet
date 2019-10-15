@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using AspNetFullFrameworkSampleApp.Controllers;
 using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.TestHelpers;
@@ -9,7 +8,7 @@ using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Elastic.Apm.AspNetFullFramework.Tests
+namespace Elastic.Apm.AspNetFullFramework.Tests.FullFramework
 {
 	[Collection("AspNetFullFrameworkTests")]
 	public class ErrorsTests : TestsBase

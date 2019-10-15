@@ -10,7 +10,6 @@ using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using SampleAspNetCoreApp;

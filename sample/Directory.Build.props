@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>8.0</LangVersion>
+    <!-- We'll work on a project by project approach to enable this -->
+    <!--    <Nullable>enable</Nullable>-->
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Condition=" '$(OS)' != 'Windows_NT'" Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-preview.2" PrivateAssets="All"/>
+  </ItemGroup>
+</Project>
