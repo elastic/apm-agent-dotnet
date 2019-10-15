@@ -1,9 +1,5 @@
 <Project>
-  <PropertyGroup>
-    <LangVersion>8.0</LangVersion>
-    <!-- We'll work on a project by project approach to enable this -->
-    <!--    <Nullable>enable</Nullable>-->
-  </PropertyGroup>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
   <ItemGroup>
     <PackageReference Condition=" '$(OS)' != 'Windows_NT' " Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-preview.2" PrivateAssets="All"/>
   </ItemGroup>
