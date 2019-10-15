@@ -62,7 +62,7 @@ namespace Elastic.Apm.Config
 
 		protected IReadOnlyList<WildcardMatcher> ParseSanitizeFieldNamesImpl(ConfigurationKeyValue kv)
 		{
-			if (kv == null) return DefaultValues.SanitizeFieldNames;
+			if (kv?.Value == null) return DefaultValues.SanitizeFieldNames;
 
 			try
 			{

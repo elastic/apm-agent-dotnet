@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 namespace Elastic.Apm.Report.Serialization
 {
 	/// <summary>
-	/// Sanitizes HTTP headers based on the config passed to the constructor
+	/// Sanitizes HTTP headers based on the config passed to the constructor.
 	/// </summary>
 	internal class HeaderDictionarySanitizerConverter : JsonConverter<Dictionary<string, string>>
 	{
@@ -26,7 +26,7 @@ namespace Elastic.Apm.Report.Serialization
 				if (keyValue.Value != null)
 				{
 					writer.WriteValue(WildcardMatcher.IsAnyMatch(_configurationReader.SanitizeFieldNames, keyValue.Key)
-						? "[REDACTED]"
+						? Consts.Redacted
 						: keyValue.Value);
 				}
 				else

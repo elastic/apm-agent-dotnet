@@ -7,11 +7,11 @@ using Newtonsoft.Json;
 namespace Elastic.Apm.Report.Serialization
 {
 	/// <summary>
-	/// Sanitizes request body, in case it's in  Key1=Value1& Key2=Value2 format.
-	/// Ideally this would inherit from <code> JsonConverter{string} </code>
-	/// until  https://github.com/elastic/apm-agent-dotnet/issues/555 is not done, we roll with a generic JsonConverter
+	/// Sanitizes request body based on the config passed to the constructor, in case it's in  `Key1=Value1& Key2=Value2` format.
+	/// Ideally this would inherit from <code> JsonConverter{string} </code>.
+	/// Until  https://github.com/elastic/apm-agent-dotnet/issues/555 is not done, we roll with a generic JsonConverter.
 	/// </summary>
-	public class BodyStringSanitizerConverter : JsonConverter
+	internal class BodyStringSanitizerConverter : JsonConverter
 	{
 		private readonly IConfigurationReader _configurationReader;
 
@@ -40,7 +40,7 @@ namespace Elastic.Apm.Report.Serialization
 						sb.Append(formsValueSplit[0]);
 						sb.Append("=");
 						sb.Append(WildcardMatcher.IsAnyMatch(_configurationReader.SanitizeFieldNames, formsValueSplit[0])
-							? "[REDACTED]"
+							? Consts.Redacted
 							: formsValueSplit[1]);
 					}
 

@@ -8,7 +8,7 @@ using Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Report.Serialization
 {
-	public class ElasticApmContractResolver : DefaultContractResolver
+	internal class ElasticApmContractResolver : DefaultContractResolver
 	{
 		private readonly HeaderDictionarySanitizerConverter _headerDictionarySanitizerConverter;
 		private readonly BodyStringSanitizerConverter _bodyStringSanitizerConverter;
@@ -29,7 +29,7 @@ namespace Elastic.Apm.Report.Serialization
 
 			if (propInfo.PropertyType == typeof(Dictionary<string, string>))
 				property.Converter = _headerDictionarySanitizerConverter;
-			// Currently Request.Body is an object, which makes asserting on the type harder.
+			// Currently Request.Body is an object, which makes having checks based on the type harder.
 			// Once https://github.com/elastic/apm-agent-dotnet/issues/555 is done this can be changed
 			if (propInfo.Name == nameof(Request.Body))
 				property.Converter = _bodyStringSanitizerConverter;
