@@ -31,7 +31,7 @@ namespace Elastic.Apm.PerfTests
 		[Benchmark]
 		public void MatcherVerbatimCaseSensitive()
 		{
-			var matcher = new WildcardMatcher.VerbatimWildcardMatcher(str, true);
+			var matcher = new WildcardMatcher.VerbatimMatcher(str, true);
 			var res = matcher.Matches(str);
 			Debug.WriteLine(res);
 		}
@@ -39,7 +39,7 @@ namespace Elastic.Apm.PerfTests
 		[Benchmark]
 		public void MatcherVerbatimCaseInsensitive()
 		{
-			var matcher = new WildcardMatcher.VerbatimWildcardMatcher(str, false);
+			var matcher = new WildcardMatcher.VerbatimMatcher(str, false);
 			var res = matcher.Matches(str);
 			Debug.WriteLine(res);
 		}
