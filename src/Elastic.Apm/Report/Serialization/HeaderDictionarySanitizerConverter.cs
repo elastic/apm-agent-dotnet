@@ -1,27 +1,34 @@
 using System;
 using System.Collections.Generic;
 using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Report.Serialization
 {
-	internal class HeaderDictionarySanitizerConverter  : JsonConverter<Dictionary<string, string>>
+	/// <summary>
+	/// Sanitizes HTTP headers based on the config passed to the constructor
+	/// </summary>
+	internal class HeaderDictionarySanitizerConverter : JsonConverter<Dictionary<string, string>>
 	{
 		private readonly IConfigurationReader _configurationReader;
 
 		public HeaderDictionarySanitizerConverter(IConfigurationReader configurationReader)
-		 => _configurationReader = configurationReader;
+			=> _configurationReader = configurationReader;
 
-		public override void WriteJson(JsonWriter writer, Dictionary<string, string> labels, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, Dictionary<string, string> headers, JsonSerializer serializer)
 		{
-			//TODO: sanitize here
 			writer.WriteStartObject();
-			foreach (var keyValue in labels)
+			foreach (var keyValue in headers)
 			{
-				writer.WritePropertyName(keyValue.Key);
+				writer.WritePropertyName(SerializationUtils.TrimToPropertyMaxLength(keyValue.Key));
 
 				if (keyValue.Value != null)
-					writer.WriteValue(keyValue.Value);
+				{
+					writer.WriteValue(WildcardMatcher.IsAnyMatch(_configurationReader.SanitizeFieldNames, keyValue.Key)
+						? "[REDACTED]"
+						: keyValue.Value);
+				}
 				else
 					writer.WriteNull();
 			}

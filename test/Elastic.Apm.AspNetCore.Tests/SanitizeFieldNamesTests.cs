@@ -3,12 +3,10 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
-using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
@@ -17,7 +15,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// sanitizeFieldNames setting.
 	/// </summary>
 	[Collection("DiagnosticListenerTest")]
-	public class SanitizeFieldNamesTests :  IClassFixture<WebApplicationFactory<Startup>>
+	public class SanitizeFieldNamesTests : IClassFixture<WebApplicationFactory<Startup>>
 	{
 		private SerializerMockPayloadSender _capturedPayload;
 		private HttpClient _client;
@@ -25,33 +23,23 @@ namespace Elastic.Apm.AspNetCore.Tests
 		private readonly WebApplicationFactory<Startup> _factory;
 		private ApmAgent _agent;
 
-		public SanitizeFieldNamesTests(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper)
+		public SanitizeFieldNamesTests(WebApplicationFactory<Startup> factory)
 		{
-			_logger = new TestLogger();// LoggerBase.Scoped(nameof(SanitizeFieldNamesTests));
+			_logger = new TestLogger();
 			_factory = factory;
-
-			// We need to ensure Agent.Instance is created because we need _agent to use Agent.Instance CurrentExecutionSegmentsContainer
-			//AgentSingletonUtils.EnsureInstanceCreated();
 		}
 
 		private void CreateAgent(string sanitizeFieldNames = null)
 		{
-			MockConfigSnapshot configSnapshot;
-
-			configSnapshot = sanitizeFieldNames == null ? new MockConfigSnapshot(_logger, captureBody: "all") : new MockConfigSnapshot(_logger, captureBody: "all", sanitizeFieldNames: sanitizeFieldNames);
+			var configSnapshot = sanitizeFieldNames == null ? new MockConfigSnapshot(_logger, captureBody: "all") : new MockConfigSnapshot(_logger, captureBody: "all", sanitizeFieldNames: sanitizeFieldNames);
 			_capturedPayload = new SerializerMockPayloadSender(configSnapshot);
 
 			var agentComponents = new TestAgentComponents(
 				_logger,
 				configSnapshot, _capturedPayload,
-				Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer);
-
+				new CurrentExecutionSegmentsContainer(_logger));
 
 			_agent = new ApmAgent(agentComponents);
-			ApmMiddlewareExtension.UpdateServiceInformation(_agent.Service);
-
-			if (!Agent.IsInstanceCreated) Agent.Setup(agentComponents);
-			//_capturedPayload = _agent.PayloadSender as MockPayloadSender;
 			_client = Helper.GetClient(_agent, _factory);
 		}
 
