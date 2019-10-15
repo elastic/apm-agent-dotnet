@@ -1,7 +1,9 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using Elastic.Apm.DistributedTracing;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
@@ -13,6 +15,50 @@ namespace Elastic.Apm.PerfTests
 	public class Program
 	{
 		public static void Main(string[] args) => BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
+
+
+		private string str;
+		public Program()
+		{
+			var random = new Random();
+			for (var i = 0; i < 1000; i++)
+			{
+				str += random.Next(10).ToString();
+			}
+
+		}
+
+		[Benchmark]
+		public void MatcherVerbatimCaseSensitive()
+		{
+			var matcher = new WildcardMatcher.VerbatimWildcardMatcher(str, true);
+			var res = matcher.Matches(str);
+			Debug.WriteLine(res);
+		}
+
+		[Benchmark]
+		public void MatcherVerbatimCaseInsensitive()
+		{
+			var matcher = new WildcardMatcher.VerbatimWildcardMatcher(str, false);
+			var res = matcher.Matches(str);
+			Debug.WriteLine(res);
+		}
+
+		[Benchmark]
+		public void MatcherSimpleCaseSensitive()
+		{
+			var matcher = new WildcardMatcher.SimpleWildcardMatcher(str, false, false, false);
+			var res = matcher.Matches(str);
+			Debug.WriteLine(res);
+		}
+
+		[Benchmark]
+		public void MatcherSimpleCaseInsensitive()
+		{
+			var matcher = new WildcardMatcher.SimpleWildcardMatcher(str, false, false, true);
+			var res = matcher.Matches(str);
+			Debug.WriteLine(res);
+		}
 
 		[Benchmark]
 		public void SimpleTransactions10Spans()

@@ -59,7 +59,13 @@ namespace Elastic.Apm.Helpers
 			else if (matcher.StartsWith(CaseInsensitivePrefix)) matcher = matcher.Substring(CaseInsensitivePrefix.Length);
 
 			var split = matcher.Split('*');
-			if (split.Length == 1) return new SimpleWildcardMatcher(split[0], matcher.StartsWith(Wildcard), matcher.EndsWith(Wildcard), ignoreCase);
+
+			if (split.Length == 1)
+			{
+				if (!matcher.StartsWith(Wildcard) && !matcher.EndsWith(Wildcard))
+					return new VerbatimWildcardMatcher(split[0], ignoreCase);
+				return new SimpleWildcardMatcher(split[0], matcher.StartsWith(Wildcard), matcher.EndsWith(Wildcard), ignoreCase);
+			}
 
 			var matchers = new List<SimpleWildcardMatcher>(split.Length);
 			for (var i = 0; i < split.Length; i++)
@@ -208,6 +214,26 @@ namespace Elastic.Apm.Helpers
 			}
 
 			public override string GetMatcher() => _matcher;
+		}
+
+		internal class VerbatimWildcardMatcher : WildcardMatcher
+		{
+			private readonly string _matcher;
+			private readonly bool _ignoreCase;
+
+			public VerbatimWildcardMatcher(string s, bool ignoreCase)
+			{
+				_matcher = s;
+				_ignoreCase = ignoreCase;
+			}
+
+			public override string GetMatcher() => _matcher;
+
+			public override bool Matches(string s) => string.Equals(_matcher, s,
+				_ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+
+			internal override bool Matches(string firstPart, string secondPart) => string.Equals(_matcher, firstPart + secondPart,
+				_ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
 
 		/// <summary>

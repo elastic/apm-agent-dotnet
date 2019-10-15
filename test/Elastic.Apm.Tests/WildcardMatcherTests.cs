@@ -9,6 +9,22 @@ namespace Elastic.Apm.Tests
 	public class WildcardMatcherTests
 	{
 		[Fact]
+		public void SimpleTestCaseInsensitive()
+		{
+			var matcher = WildcardMatcher.ValueOf("foo");
+			matcher.Matches("foo").Should().BeTrue();
+			matcher.Matches("Foo").Should().BeTrue();
+		}
+
+		[Fact]
+		public void SimpleTestCaseSensitive()
+		{
+			var matcher = WildcardMatcher.ValueOf("(?-i)Foo");
+			matcher.Matches("Foo").Should().BeTrue();
+			matcher.Matches("foo").Should().BeFalse();
+		}
+
+		[Fact]
 		public void TestMatchesStartsWith()
 		{
 			var matcher = WildcardMatcher.ValueOf("foo*");
