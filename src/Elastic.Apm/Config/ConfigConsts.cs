@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Config
 {
@@ -28,6 +29,29 @@ namespace Elastic.Apm.Config
 			public const int TransactionMaxSpans = 500;
 			public const double TransactionSampleRate = 1.0;
 			public const string UnknownServiceName = "unknown";
+
+			public static List<WildcardMatcher> SanitizeFieldNames;
+
+			static DefaultValues()
+			{
+				SanitizeFieldNames = new List<WildcardMatcher>();
+				foreach (var item in new List<string>
+				{
+					"password",
+					"passwd",
+					"pwd",
+					"secret",
+					"*key",
+					"*token*",
+					"*session*",
+					"*credit*",
+					"*card*",
+					"authorization",
+					"set-cookie"
+				})
+					SanitizeFieldNames.Add(WildcardMatcher.ValueOf(item));
+			}
+
 			public static Uri ServerUri => new Uri($"http://localhost:{ApmServerPort}");
 		}
 
@@ -44,6 +68,7 @@ namespace Elastic.Apm.Config
 			public const string MaxQueueEventCount = Prefix + "MAX_QUEUE_EVENT_COUNT";
 			public const string MetricsInterval = Prefix + "METRICS_INTERVAL";
 			private const string Prefix = "ELASTIC_APM_";
+			public const string SanitizeFieldNames = Prefix + "SANITIZE_FIELD_NAMES";
 			public const string SecretToken = Prefix + "SECRET_TOKEN";
 			public const string ServerUrls = Prefix + "SERVER_URLS";
 			public const string ServiceName = Prefix + "SERVICE_NAME";
@@ -66,6 +91,7 @@ namespace Elastic.Apm.Config
 			public const string MaxBatchEventCount = "ElasticApm:MaxBatchEventCount";
 			public const string MaxQueueEventCount = "ElasticApm:MaxQueueEventCount";
 			public const string MetricsInterval = "ElasticApm:MetricsInterval";
+			public const string SanitizeFieldNames = "ElasticApm:SanitizeFieldNames";
 			public const string SecretToken = "ElasticApm:SecretToken";
 			public const string ServerUrls = "ElasticApm:ServerUrls";
 			public const string ServiceName = "ElasticApm:ServiceName";
