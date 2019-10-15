@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
@@ -8,8 +7,8 @@ using Newtonsoft.Json;
 namespace Elastic.Apm.Report.Serialization
 {
 	/// <summary>
-	/// Sanitizes request body, in case it's in `Key1=Value1&Key2=Value2` format.
-	/// Ideally this would inherit from JsonConverter<string>,
+	/// Sanitizes request body, in case it's in  Key1=Value1& Key2=Value2 format.
+	/// Ideally this would inherit from <code> JsonConverter{string} </code>
 	/// until  https://github.com/elastic/apm-agent-dotnet/issues/555 is not done, we roll with a generic JsonConverter
 	/// </summary>
 	public class BodyStringSanitizerConverter : JsonConverter
@@ -25,24 +24,24 @@ namespace Elastic.Apm.Report.Serialization
 			{
 				var formValues = strValue.Split('&');
 
-				if(formValues.Length <= 1)
+				if (!FormatCheck(strValue))
 					writer.WriteValue(strValue);
 				else
 				{
 					var sb = new StringBuilder();
 					foreach (var formValue in formValues)
 					{
-						 var formsValueSplit = formValue.Split('=');
-						 if(formsValueSplit.Length != 2)
-							 continue;
+						var formsValueSplit = formValue.Split('=');
+						if (formsValueSplit.Length != 2)
+							continue;
 
-						 if(sb.Length != 0) sb.Append("&");
+						if (sb.Length != 0) sb.Append("&");
 
-						 sb.Append(formsValueSplit[0]);
-						 sb.Append("=");
-						 sb.Append(WildcardMatcher.IsAnyMatch(_configurationReader.SanitizeFieldNames, formsValueSplit[0])
-							 ? "[REDACTED]"
-							 : formsValueSplit[1]);
+						sb.Append(formsValueSplit[0]);
+						sb.Append("=");
+						sb.Append(WildcardMatcher.IsAnyMatch(_configurationReader.SanitizeFieldNames, formsValueSplit[0])
+							? "[REDACTED]"
+							: formsValueSplit[1]);
 					}
 
 					writer.WriteValue(sb.ToString());
@@ -51,6 +50,32 @@ namespace Elastic.Apm.Report.Serialization
 			else
 				//If the content of the request body is not a string, we serialize it as null
 				writer.WriteNull();
+		}
+
+		/// <summary>
+		/// Returns <code>true</code> if <paramref name="bodyValue"/> follows the Key1=Value1& Key2=Value2 format, <code>false</code> otherwise
+		/// </summary>
+		/// <param name="bodyValue"></param>
+		/// <returns></returns>
+		private static bool FormatCheck(string bodyValue)
+		{
+			var i = 0;
+			foreach (var c in bodyValue)
+			{
+				if (c == '=')
+				{
+					i++;
+					if (i > 1)
+						return false;
+				}
+				if (c == '&')
+				{
+					i--;
+					if (i < 0)
+						return false;
+				}
+			}
+			return true;
 		}
 
 		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) =>

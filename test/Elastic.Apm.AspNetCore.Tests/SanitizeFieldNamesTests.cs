@@ -202,6 +202,28 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.FirstTransaction.Context.Request.Body.Should().Be($"Input1=test1&{formName}=[REDACTED]");
 		}
 
+		[InlineData("password", true)]
+		[InlineData("pwd", true)]
+		[InlineData("Input", false)]
+		[Theory]
+		public async Task DefaultWithRequestBodySingleValueNoError(string formName, bool shouldBeSanitized)
+		{
+			CreateAgent();
+
+			var nvc = new List<KeyValuePair<string, string>>();
+			nvc.Add(new KeyValuePair<string, string>(formName, "test"));
+
+			var req = new HttpRequestMessage(HttpMethod.Post, "api/Home/Post") { Content = new FormUrlEncodedContent(nvc) };
+			var res = await _client.SendAsync(req);
+
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_capturedPayload.Errors.Should().BeNullOrEmpty();
+			_capturedPayload.Transactions.Should().ContainSingle();
+
+			_capturedPayload.FirstTransaction.Context.Request.Body.Should().Be(shouldBeSanitized ? $"{formName}=[REDACTED]" : $"{formName}=test");
+		}
+
 		/// <summary>
 		/// Same as <see cref="DefaultWithRequestBodyNoError"/> except this time the request ends up with an error
 		/// </summary>
