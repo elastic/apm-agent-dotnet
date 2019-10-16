@@ -23,6 +23,7 @@
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
   <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
+    <ProjectReference Include="..\..\src\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj" />
     <ProjectReference Include="..\..\sample\AspNetFullFrameworkSampleApp\AspNetFullFrameworkSampleApp.csproj" />
