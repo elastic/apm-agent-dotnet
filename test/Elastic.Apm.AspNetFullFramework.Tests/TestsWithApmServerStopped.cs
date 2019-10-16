@@ -4,7 +4,7 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
-	[Collection("AspNetFullFrameworkTests")]
+	[Collection(Consts.AspNetFullFrameworkTestsCollection)]
 	public class TestsWithApmServerStopped : TestsBase
 	{
 		public TestsWithApmServerStopped(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper, false) { }

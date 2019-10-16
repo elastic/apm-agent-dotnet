@@ -6,7 +6,7 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
-	[Collection("AspNetFullFrameworkTests")]
+	[Collection(Consts.AspNetFullFrameworkTestsCollection)]
 	public class CustomServiceNameSetViaSettings : TestsBase
 	{
 		private const string CustomServiceName = "AspNetFullFramework.Tests.CustomServiceName";

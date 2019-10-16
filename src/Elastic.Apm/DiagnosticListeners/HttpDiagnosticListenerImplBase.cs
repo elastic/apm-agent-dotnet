@@ -7,6 +7,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Model;
 
 namespace Elastic.Apm.DiagnosticListeners
 {
@@ -122,8 +123,7 @@ namespace Elastic.Apm.DiagnosticListeners
 				return;
 			}
 
-			var currentExecutionSegment = _agent.Tracer.CurrentSpan ?? (IExecutionSegment)transaction;
-			var span = currentExecutionSegment.StartSpan(
+			var span = (Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(_agent).StartSpan(
 				$"{RequestGetMethod(request)} {requestUrl.Host}",
 				ApiConstants.TypeExternal,
 				ApiConstants.SubtypeHttp);
@@ -141,7 +141,7 @@ namespace Elastic.Apm.DiagnosticListeners
 				// but here we want the string to be in W3C 'traceparent' header format.
 				RequestHeadersAdd(request, TraceParent.TraceParentHeaderName, TraceParent.BuildTraceparent(span.OutgoingDistributedTracingData));
 
-			if (transaction.IsSampled) span.Context.Http = new Http { Url = requestUrl.ToString(), Method = RequestGetMethod(request) };
+			if (span.ShouldBeSentToApmServer) span.Context.Http = new Http { Url = requestUrl.ToString(), Method = RequestGetMethod(request) };
 		}
 
 		private void ProcessStopEvent(object eventValue, TRequest request, Uri requestUrl)
