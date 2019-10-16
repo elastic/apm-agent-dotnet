@@ -419,7 +419,7 @@ The default unit for this option is `s`.
 [[config-capture-body]]
 ==== `CaptureBody` (performance) (added[1.0.1])
 
-For transactions that are HTTP requests, the agent can optionally capture the request body (e.g. POST variables).
+For transactions that are HTTP requests, the agent can optionally capture the request body, e.g., POST variables.
 If the request has a body and this setting is disabled, the body will be shown as [REDACTED].
 This option is case-insensitive.
 
