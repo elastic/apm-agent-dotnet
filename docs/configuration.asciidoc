@@ -425,7 +425,12 @@ This option is case-insensitive.
 
 WARNING: Request bodies often contain sensitive values like passwords, credit card numbers etc. If your service handles data like this, we advise to only enable this feature with care. Turning on body capturing can also significantly increase the overhead in terms of heap usage, network utilisation and Elasticsearch index size.
 
-Valid options: off, errors, transactions, all.
+Possible options are `off`, `errors`, `transactions` and `all`:
+
+* `off` - request bodies will never be reported
+* `errors` - request bodies will only be reported with errors
+* `transactions` - request bodies will only be reported with request transactions
+* `all` - request bodies will be reported with both errors and request transactions
 
 [options="header"]
 |============
