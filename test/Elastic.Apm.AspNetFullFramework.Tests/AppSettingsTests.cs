@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using Elastic.Apm.Config;
+using FluentAssertions;
 using Xunit;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests.FullFramework

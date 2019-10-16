@@ -340,4 +340,6 @@
   <Import Project="..\..\packages\Microsoft.ApplicationInsights.WindowsServer.2.9.1\build\Microsoft.ApplicationInsights.WindowsServer.targets" Condition="'$(OS)' == 'WINDOWS_NT' AND Exists('..\..\packages\Microsoft.ApplicationInsights.WindowsServer.2.9.1\build\Microsoft.ApplicationInsights.WindowsServer.targets')" />
   <Import Project="..\..\packages\Microsoft.ApplicationInsights.Web.2.9.1\build\Microsoft.ApplicationInsights.Web.targets" Condition="'$(OS)' == 'WINDOWS_NT' AND Exists('..\..\packages\Microsoft.ApplicationInsights.Web.2.9.1\build\Microsoft.ApplicationInsights.Web.targets')" />
   <Import Project="..\..\packages\Microsoft.NETFramework.ReferenceAssemblies.net461.1.0.0-preview.2\build\Microsoft.NETFramework.ReferenceAssemblies.net461.targets" Condition="'$(OS)' == 'WINDOWS_NT' AND Exists('..\..\packages\Microsoft.NETFramework.ReferenceAssemblies.net461.1.0.0-preview.2\build\Microsoft.NETFramework.ReferenceAssemblies.net461.targets')" />
+  <!--https://github.com/aspnet/RoslynCodeDomProvider/issues/51-->
+  <Target Name="CheckIfShouldKillVBCSCompiler" />
 </Project>
