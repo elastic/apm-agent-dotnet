@@ -3,8 +3,14 @@
 VisualStudioVersion = 15.0.28010.2050
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3734A52F-2222-454B-BF58-1BA5C1F29D77}"
+ProjectSection(SolutionItems) = preProject
+	src\Directory.Build.props = src\Directory.Build.props
+EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{3C791D9C-6F19-4F46-B367-2EC0F818762D}"
+ProjectSection(SolutionItems) = preProject
+	sample\Directory.Build.props = sample\Directory.Build.props
+EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleAspNetCoreApp", "sample\SampleAspNetCoreApp\SampleAspNetCoreApp.csproj", "{0ADF687D-4DB7-417E-80B4-27B3FD86875E}"
 EndProject
@@ -35,6 +41,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "files", "files", "{B406113B
 		Jenkinsfile = Jenkinsfile
 		LICENSE = LICENSE
 		README.md = README.md
+		global.json = global.json
+		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.PerfTests", "test\Elastic.Apm.PerfTests\Elastic.Apm.PerfTests.csproj", "{F069CE99-F418-4BC2-9E44-8F03497D8DA8}"
@@ -100,6 +108,7 @@ Global
 		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{319E2094-D2E1-46C5-8985-9693CD8DDCBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{319E2094-D2E1-46C5-8985-9693CD8DDCBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{319E2094-D2E1-46C5-8985-9693CD8DDCBD}.Release|Any CPU.ActiveCfg = Release|Any CPU

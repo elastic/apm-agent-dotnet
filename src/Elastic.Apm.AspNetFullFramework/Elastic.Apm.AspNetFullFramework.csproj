@@ -1,64 +1,31 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{D6FFDDAB-9D76-442F-8F1D-BD6F553F92FA}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>Elastic.Apm.AspNetFullFramework</RootNamespace>
+    <TargetFramework>net461</TargetFramework>
     <AssemblyName>Elastic.Apm.AspNetFullFramework</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
-  <PropertyGroup>
+    <RootNamespace>Elastic.Apm.AspNetFullFramework</RootNamespace>
+    <AssemblyVersion>1.1.2</AssemblyVersion>
+    <InformationalVersion>1.1.2</InformationalVersion>
+    <FileVersion>1.1.2</FileVersion>
     <SignAssembly>true</SignAssembly>
-  </PropertyGroup>
-  <PropertyGroup>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
+    <PackageVersion>1.1.2</PackageVersion>
+    
+    <PackageId>Elastic.Apm.AspNetFullFramework</PackageId>
+    <Copyright>2019 Elasticsearch BV</Copyright>
+    <PackageLicenseUrl>https://github.com/elastic/apm-agent-dotnet/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/elastic/apm-agent-dotnet</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/elastic/apm-agent-dotnet/master/build/nuget-icon.png</PackageIconUrl>
+    <Description>Elastic APM for ASP.NET Full Framework. This package contains auto instrumentation for ASP.NET Full Framework. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
+    <PackageTags>apm, monitoring, elastic, elasticapm, analytics, aspnet</PackageTags>
+    <Authors>Elastic and contributors</Authors>
+    
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Web" />
-    <Reference Include="Microsoft.CSharp" />
+    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AgentDependencies.cs" />
-    <Compile Include="ElasticApmModule.cs" />
-    <Compile Include="FullFrameworkConfigReader.cs" />
-    <Compile Include="InternalsVisibleTo.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj">
-      <Project>{90bc9629-c8d2-4fd5-863e-ea2d5fb37341}</Project>
-      <Name>Elastic.Apm</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
