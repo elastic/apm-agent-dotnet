@@ -373,7 +373,7 @@ def dotnet(Closure body){
   def home = "/tmp"
   def dotnetRoot = "/${home}/.dotnet"
   def path = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/${home}/bin:${dotnetRoot}:${dotnetRoot}/bin:${dotnetRoot}/tools"
-  docker.image('mcr.microsoft.com/dotnet/core/sdk:2.2').inside("-e HOME='${home}' -e PATH='${path}'"){
+  docker.image('mcr.microsoft.com/dotnet/core/sdk:2.1.505').inside("-e HOME='${home}' -e PATH='${path}'"){
     body()
   }
 }
