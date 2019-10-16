@@ -40,7 +40,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				VerifyReceivedDataSharedConstraints(pageData, receivedData);
 
 				// See comment for TestsBase.SampleAppUrlPaths.SimpleDbTestPage
-				var dbStatements = new [] { "CREATE TABLE", "INSERT", "SELECT", "SELECT" };
+				var dbStatements = new[] { "CREATE TABLE", "INSERT", "SELECT", "SELECT" };
 
 				var transaction = receivedData.Transactions.First();
 
@@ -60,7 +60,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					span.ParentId.Should().Be(transaction.Id);
 					span.ShouldOccurBetween(transaction);
 
-					if (i != 0) receivedData.Spans[i-1].ShouldOccurBefore(span);
+					if (i != 0) receivedData.Spans[i - 1].ShouldOccurBefore(span);
 				});
 
 				ShouldBeMonotonicInTime(receivedData.Spans);
@@ -86,7 +86,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			// 						var sampleDataList = dbCtx.Set<SampleData>().ToList();
 			//
 			var pageData = new SampleAppUrlPathData(HomeController.ConcurrentDbTestPageRelativePath, 200
-				, spansCount: numberOfConcurrentIterations*3 + 5);
+				, spansCount: numberOfConcurrentIterations * 3 + 5);
 			await SendGetRequestToSampleAppAndVerifyResponse(pageData.RelativeUrlPath, pageData.StatusCode);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
@@ -112,7 +112,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				foreach (var topLevelConcurrentSpan in topLevelConcurrentSpans)
 				{
 					var childDbSpans = receivedData.Spans.Where(span => span.ParentId == topLevelConcurrentSpan.Id);
-					childDbSpans.Should().HaveCount(numberOfConcurrentIterations*3/2);
+					childDbSpans.Should().HaveCount(numberOfConcurrentIterations * 3 / 2);
 					ShouldBeMonotonicInTime(childDbSpans);
 
 					childDbSpans.ForEachIndexed((childDbSpan, i) =>

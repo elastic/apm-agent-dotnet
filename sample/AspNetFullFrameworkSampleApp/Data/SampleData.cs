@@ -4,13 +4,13 @@ using SQLite.CodeFirst;
 
 namespace AspNetFullFrameworkSampleApp.Data
 {
-    [Table("SampleDataTable")]
-    public class SampleData
-    {
+	[Table("SampleDataTable")]
+	public class SampleData
+	{
 		[Autoincrement]
 		public int Id { get; set; }
 
 		[Required]
 		public string Name { get; set; }
-    }
+	}
 }

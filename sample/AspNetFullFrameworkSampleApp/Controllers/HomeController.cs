@@ -234,7 +234,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 						sampleDataList[3 * i + 1].Name,
 						sampleDataList[3 * i + 2].Name
 					};
-					if (! actualNames.SequenceEqual(expectedNames))
+					if (!actualNames.SequenceEqual(expectedNames))
 					{
 						throw new InvalidOperationException(
 							$"actualNames: {string.Join(", ", actualNames)}, expectedNames: {string.Join(", ", expectedNames)}");
@@ -257,7 +257,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 						if (isContainedSpan) syncBarrier.SignalAndWait();
 						using (var dbCtx = new SampleDataDbContext( /* attachedState: */ isContainedSpan))
 						{
-							var suffix = isContainedSpan ? (j  == 0 ? ".before" : ".after") : "";
+							var suffix = isContainedSpan ? (j == 0 ? ".before" : ".after") : "";
 							dbCtx.Set<SampleData>().Add(new SampleData { Name = $"{branchId}.{i}{suffix}" });
 							dbCtx.SaveChanges();
 						}

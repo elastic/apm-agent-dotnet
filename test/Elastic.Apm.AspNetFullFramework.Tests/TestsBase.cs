@@ -690,7 +690,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		protected static void ShouldBeMonotonicInTime(IEnumerable<ITimedDto> timedDtos)
 		{
-			ITimedDto prev= null;
+			ITimedDto prev = null;
 			foreach (var timedDto in timedDtos)
 			{
 				prev?.ShouldOccurBefore(timedDto);
