@@ -416,6 +416,59 @@ The default unit for this option is `s`.
 === HTTP configuration options
 
 [float]
+[[config-capture-body]]
+==== `CaptureBody` (performance) (added[1.0.1])
+
+For transactions that are HTTP requests, the agent can optionally capture the request body, e.g., POST variables.
+If the request has a body and this setting is disabled, the body will be shown as [REDACTED].
+This option is case-insensitive.
+
+WARNING: Request bodies often contain sensitive values like passwords, credit card numbers, etc.
+If your service handles data like this, we advise to only enable this feature with care.
+Turning on body capturing can also significantly increase the overhead in terms of heap usage, network utilization, and Elasticsearch index size.
+
+Possible options are `off`, `errors`, `transactions` and `all`:
+
+* `off` - request bodies will never be reported
+* `errors` - request bodies will only be reported with errors
+* `transactions` - request bodies will only be reported with request transactions
+* `all` - request bodies will be reported with both errors and request transactions
+
+[options="header"]
+|============
+| Environment variable name     | IConfiguration or Web.config key
+| `ELASTIC_APM_CAPTURE_BODY` | `ElasticApm:CaptureBody`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `off`                  | String
+|============
+
+[float]
+[[config-capture-body-content-types]]
+==== `CaptureBodyContentTypes` (performance) (added[1.0.1])
+
+Configures which content types should be captured.
+
+This option supports the wildcard `*`, which matches zero or more characters.
+Examples: `/foo/*/bar/*/baz*`, `*foo*`.
+Matching is case insensitive.
+
+[options="header"]
+|============
+| Environment variable name     | IConfiguration or Web.config key
+| `ELASTIC_APM_CAPTURE_BODY_CONTENT_TYPES` | `ElasticApm:CaptureBodyContentTypes`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `application/x-www-form-urlencoded*, text/*, application/json*, application/xml*`                  | List<string>
+|============
+
+[float]
 [[config-capture-headers]]
 ==== `CaptureHeaders` (performance)
 
