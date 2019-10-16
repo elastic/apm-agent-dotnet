@@ -278,7 +278,7 @@ Prepending an element with `(?-i)` makes the matching case sensitive.
 
 NOTE: Data in the query string is considered non-sensitive,
 as sensitive information should not be sent in the query string.
-See https://www.owasp.org/index.php/Information_exposure_through_query_strings_in_url for more information
+See https://www.owasp.org/index.php/Information_exposure_through_query_strings_in_url[owasp.org] for more information.
 
 NOTE: Review the data captured by Elastic APM carefully to make sure it does not capture sensitive information.
 If you do find sensitive data in the Elasticsearch index,
