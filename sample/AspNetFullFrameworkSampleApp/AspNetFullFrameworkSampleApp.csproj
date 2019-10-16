@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="Build" Condition="'$(OS)' != 'WINDOWS_NT'">
   </Target>
@@ -71,6 +71,14 @@
     <AssemblyOriginatorKeyFile>..\..\build\elasticapmsample.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+      <HintPath>..\..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+      <HintPath>..\..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.AI.DependencyCollector, Version=2.9.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Microsoft.ApplicationInsights.DependencyCollector.2.9.1\lib\net45\Microsoft.AI.DependencyCollector.dll</HintPath>
     </Reference>
@@ -355,6 +363,7 @@
     <Error Condition="!Exists('..\..\packages\Microsoft.ApplicationInsights.Web.2.9.1\build\Microsoft.ApplicationInsights.Web.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.ApplicationInsights.Web.2.9.1\build\Microsoft.ApplicationInsights.Web.targets'))" />
     <Error Condition="!Exists('..\..\packages\MSBuild.Microsoft.VisualStudio.Web.targets.14.0.0.3\build\MSBuild.Microsoft.VisualStudio.Web.targets.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\MSBuild.Microsoft.VisualStudio.Web.targets.14.0.0.3\build\MSBuild.Microsoft.VisualStudio.Web.targets.props'))" />
     <Error Condition="!Exists('..\..\packages\Microsoft.NETFramework.ReferenceAssemblies.net461.1.0.0-preview.2\build\Microsoft.NETFramework.ReferenceAssemblies.net461.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.NETFramework.ReferenceAssemblies.net461.1.0.0-preview.2\build\Microsoft.NETFramework.ReferenceAssemblies.net461.targets'))" />
+    <Error Condition="!Exists('..\..\packages\System.Data.SQLite.Core.1.0.111.0\build\net46\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\System.Data.SQLite.Core.1.0.111.0\build\net46\System.Data.SQLite.Core.targets'))" />
   </Target>
   <Import Project="..\..\packages\Microsoft.ApplicationInsights.DependencyCollector.2.9.1\build\Microsoft.ApplicationInsights.DependencyCollector.targets" Condition="'$(OS)' == 'WINDOWS_NT' AND Exists('..\..\packages\Microsoft.ApplicationInsights.DependencyCollector.2.9.1\build\Microsoft.ApplicationInsights.DependencyCollector.targets')" />
   <Import Project="..\..\packages\Microsoft.ApplicationInsights.PerfCounterCollector.2.9.1\build\Microsoft.ApplicationInsights.PerfCounterCollector.targets" Condition="'$(OS)' == 'WINDOWS_NT' AND Exists('..\..\packages\Microsoft.ApplicationInsights.PerfCounterCollector.2.9.1\build\Microsoft.ApplicationInsights.PerfCounterCollector.targets')" />
@@ -362,6 +371,7 @@
   <Import Project="..\..\packages\Microsoft.ApplicationInsights.WindowsServer.2.9.1\build\Microsoft.ApplicationInsights.WindowsServer.targets" Condition="'$(OS)' == 'WINDOWS_NT' AND Exists('..\..\packages\Microsoft.ApplicationInsights.WindowsServer.2.9.1\build\Microsoft.ApplicationInsights.WindowsServer.targets')" />
   <Import Project="..\..\packages\Microsoft.ApplicationInsights.Web.2.9.1\build\Microsoft.ApplicationInsights.Web.targets" Condition="'$(OS)' == 'WINDOWS_NT' AND Exists('..\..\packages\Microsoft.ApplicationInsights.Web.2.9.1\build\Microsoft.ApplicationInsights.Web.targets')" />
   <Import Project="..\..\packages\Microsoft.NETFramework.ReferenceAssemblies.net461.1.0.0-preview.2\build\Microsoft.NETFramework.ReferenceAssemblies.net461.targets" Condition="'$(OS)' == 'WINDOWS_NT' AND Exists('..\..\packages\Microsoft.NETFramework.ReferenceAssemblies.net461.1.0.0-preview.2\build\Microsoft.NETFramework.ReferenceAssemblies.net461.targets')" />
+  <Import Project="..\..\packages\System.Data.SQLite.Core.1.0.111.0\build\net46\System.Data.SQLite.Core.targets" Condition="'$(OS)' == 'WINDOWS_NT' AND Exists('..\..\packages\System.Data.SQLite.Core.1.0.111.0\build\net46\System.Data.SQLite.Core.targets')" />
   <!--https://github.com/aspnet/RoslynCodeDomProvider/issues/51-->
   <Target Name="CheckIfShouldKillVBCSCompiler" />
 </Project>
