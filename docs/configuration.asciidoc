@@ -445,7 +445,7 @@ Possible options are `off`, `errors`, `transactions` and `all`:
 |============
 
 [float]
-[[config-capture-body]]
+[[config-capture-body-content-types]]
 ==== `CaptureBodyContentTypes` (performance) (added[1.0.1])
 
 Configures which content types should be captured.
