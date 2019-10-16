@@ -12,5 +12,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal const string SiteName = "Default Web Site";
 			internal const string SrcDirPathRelativeToSolutionRoot = @"sample\AspNetFullFrameworkSampleApp";
 		}
+
+		internal const string AspNetFullFrameworkTestsCollection = "AspNetFullFrameworkTests";
 	}
 }

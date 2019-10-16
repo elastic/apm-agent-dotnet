@@ -116,7 +116,7 @@ namespace Elastic.Apm.Model
 		public string ParentId { get; set; }
 
 		[JsonIgnore]
-		private bool ShouldBeSentToApmServer => IsSampled && !_isDropped;
+		internal bool ShouldBeSentToApmServer => IsSampled && !_isDropped;
 
 		[JsonProperty("stacktrace")]
 		public List<CapturedStackFrame> StackTrace { get; set; }

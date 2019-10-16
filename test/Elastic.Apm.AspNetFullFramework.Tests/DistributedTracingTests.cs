@@ -14,7 +14,7 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
-	[Collection("AspNetFullFrameworkTests")]
+	[Collection(Consts.AspNetFullFrameworkTestsCollection)]
 	public class DistributedTracingTests : TestsBase
 	{
 		public DistributedTracingTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }

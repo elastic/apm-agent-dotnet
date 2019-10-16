@@ -36,7 +36,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			EnvVarUtils.GetBoolValue("ELASTIC_APM_TESTS_FULL_FRAMEWORK_TEAR_DOWN_PERSISTENT_DATA", /* defaultValue: */ true,
 				out TearDownPersistentDataReason);
 
-
 		protected readonly AgentConfiguration AgentConfig = new AgentConfiguration();
 		protected readonly bool SampleAppShouldHaveAccessToPerfCounters;
 		private readonly Dictionary<string, string> _envVarsToSetForSampleAppPool;
@@ -92,10 +91,17 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData AboutPage =
 				new SampleAppUrlPathData(HomeController.AboutPageRelativePath, 200);
 
+			/// <summary>
 			/// Contact page processing does HTTP Get for About page (additional transaction) and https://elastic.co/ - so 2 spans
+			/// </summary>
 			internal static readonly SampleAppUrlPathData ContactPage =
 				new SampleAppUrlPathData(HomeController.ContactPageRelativePath, 200, /* transactionsCount: */ 2, /* spansCount: */ 2);
 
+			/// <summary>
+			/// errorsCount is 2 because the exception is thrown inside a span -
+			/// AspNetFullFrameworkSampleApp.Controllers.HomeController.CustomSpanThrowsInternal
+			/// and exception propagates out of transaction as well so both span and transaction send an error event
+			/// </summary>
 			internal static readonly SampleAppUrlPathData CustomSpanThrowsExceptionPage =
 				new SampleAppUrlPathData(HomeController.CustomSpanThrowsPageRelativePath, 500, spansCount: 1, errorsCount: 2);
 
@@ -114,30 +120,27 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				PageThatDoesNotExit
 			};
 
+			/// <summary>
 			/// `CallReturnBadRequest' page processing does HTTP Get for `ReturnBadRequest' page (additional transaction) - so 1 span
+			/// </summary>
 			internal static readonly SampleAppUrlPathData CallReturnBadRequestPage =
 				new SampleAppUrlPathData(HomeController.CallReturnBadRequestPageRelativePath,
 					HomeController.DummyHttpStatusCode, /* transactionsCount: */ 2, /* spansCount: */ 1);
 
-
-			// errorsCount is 3 because the exception is thrown inside a child span of a another span -
-			// AspNetFullFrameworkSampleApp.Controllers.HomeController.CustomSpanThrowsInternal - child span
-			// AspNetFullFrameworkSampleApp.Controllers.HomeController.CustomChildSpanThrows - transaction and contains parent span
-			// and exception propagates out of transaction as well so both spans and the transaction send an error event
+			/// <summary>
+			/// errorsCount is 3 because the exception is thrown inside a child span of a another span -
+			/// AspNetFullFrameworkSampleApp.Controllers.HomeController.CustomSpanThrowsInternal - child span
+			/// AspNetFullFrameworkSampleApp.Controllers.HomeController.CustomChildSpanThrows - transaction and contains parent span
+			/// and exception propagates out of transaction as well so both spans and the transaction send an error event
+			/// </summary>
 			internal static readonly SampleAppUrlPathData CustomChildSpanThrowsExceptionPage =
 				new SampleAppUrlPathData(HomeController.CustomChildSpanThrowsPageRelativePath, 500, spansCount: 2, errorsCount: 3);
-
-			// errorsCount is 2 because the exception is thrown inside a span -
-			// AspNetFullFrameworkSampleApp.Controllers.HomeController.CustomSpanThrowsInternal
-			// and exception propagates out of transaction as well so both span and transaction send an error event
-
 
 			internal static readonly SampleAppUrlPathData ForbidHttpResponsePageDescriptionPage =
 				new SampleAppUrlPathData(HomeController.ForbidHttpResponsePageRelativePath, 200, spansCount: 1, errorsCount: 1);
 
 			internal static readonly SampleAppUrlPathData GetDotNetRuntimeDescriptionPage =
 				new SampleAppUrlPathData(HomeController.GetDotNetRuntimeDescriptionPageRelativePath, 200);
-
 
 			internal static readonly SampleAppUrlPathData ReturnBadRequestPage =
 				new SampleAppUrlPathData(HomeController.ReturnBadRequestPageRelativePath, (int)HttpStatusCode.BadRequest);
@@ -568,6 +571,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			FullFwAssertValid((ITimestampedDto)timedDto);
 
+			timedDto.Duration.Should().BeGreaterOrEqualTo(0);
+
 			if (_sampleAppClientCallTiming != null) timedDto.ShouldOccurBetween(_sampleAppClientCallTiming);
 		}
 
@@ -613,7 +618,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			span.Should().NotBeNull();
 
 			FullFwAssertValid((ITimedDto)span);
-			FullFwAssertValid(span.StackTrace);
+			if (span.StackTrace != null) FullFwAssertValid(span.StackTrace);
 		}
 
 		private static void FullFwAssertValid(IEnumerable<CapturedStackFrame> stackTrace)
@@ -682,6 +687,23 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			response.Finished.Should().BeTrue();
 		}
+
+		protected static void ShouldBeMonotonicInTime(IEnumerable<ITimedDto> timedDtos)
+		{
+			ITimedDto prev= null;
+			foreach (var timedDto in timedDtos)
+			{
+				prev?.ShouldOccurBefore(timedDto);
+				prev = timedDto;
+			}
+		}
+
+		protected static bool OccursBetween(ITimedDto containedDto, ITimedDto containingDto) =>
+			containingDto.Timestamp <= containedDto.Timestamp
+			&&
+			TimeUtils.ToEndDateTime(containedDto.Timestamp, containedDto.Duration)
+			<=
+			TimeUtils.ToEndDateTime(containingDto.Timestamp, containingDto.Duration);
 
 		protected struct SampleAppResponse
 		{

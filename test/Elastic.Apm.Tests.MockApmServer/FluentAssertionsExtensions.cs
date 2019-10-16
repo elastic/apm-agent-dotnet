@@ -20,5 +20,8 @@ namespace Elastic.Apm.Tests.MockApmServer
 				.Should()
 				.BeOnOrBefore(TimeUtils.ToEndDateTime(containingAncestor.Timestamp, containingAncestor.Duration));
 		}
+
+		internal static void ShouldOccurBefore(this ITimedDto first, ITimestampedDto second) =>
+			TimeUtils.ToEndDateTime(first.Timestamp, first.Duration).Should().BeOnOrBefore(TimeUtils.ToDateTime(second.Timestamp));
 	}
 }

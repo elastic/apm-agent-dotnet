@@ -32,8 +32,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		private readonly MockPayloadSender _capturedPayload;
 		private readonly WebApplicationFactory<Startup> _factory;
 
-		private readonly IApmLogger _logger;
 		// ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+		private readonly IApmLogger _logger;
 
 		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper)
 		{
@@ -237,12 +237,19 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var controllerActionSpan = spans.Last();
 			controllerActionSpan.Name.Should().Be("Index_span_name");
 			controllerActionSpan.Type.Should().Be("Index_span_type");
-			var httpSpans = spans.Where(span => span.Context.Db != null);
+			var dbSpans = spans.Where(span => span.Context.Db != null);
+			// ReSharper disable PossibleMultipleEnumeration
+			dbSpans.Should().NotBeEmpty();
+			foreach (var dbSpan in dbSpans)
+			{
+				dbSpan.Type.Should().Be(ApiConstants.TypeDb);
+				dbSpan.Subtype.Should().Be(ApiConstants.SubtypeSqLite);
+				dbSpan.ParentId.Should().Be(controllerActionSpan.Id);
+			}
+			var httpSpans = spans.Where(span => span.Context.Http != null);
 			httpSpans.Should().NotBeEmpty();
 			foreach (var httpSpan in httpSpans) httpSpan.ParentId.Should().Be(controllerActionSpan.Id);
-			var dbSpans = spans.Where(span => span.Context.Http != null);
-			dbSpans.Should().NotBeEmpty();
-			foreach (var dbSpan in dbSpans) dbSpan.ParentId.Should().Be(controllerActionSpan.Id);
+			// ReSharper restore PossibleMultipleEnumeration
 		}
 
 		/// <summary>
@@ -301,6 +308,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var errorDetail = error?.Exception;
 			errorDetail.Should().NotBeNull();
+			// ReSharper disable PossibleNullReferenceException
 			errorDetail.Message.Should().Be("This is a post method test exception!");
 			errorDetail.Type.Should().Be(typeof(Exception).FullName);
 			errorDetail.Handled.Should().BeFalse();
@@ -310,6 +318,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			context.Request.Url.Full.Should().Be("http://localhost/api/Home/PostError");
 			context.Request.Method.Should().Be(HttpMethod.Post.Method);
 			context.Request.Body.Should().Be(body);
+			// ReSharper restore PossibleNullReferenceException
 		}
 
 		public override void Dispose()

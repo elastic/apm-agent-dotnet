@@ -36,5 +36,20 @@ namespace Elastic.Apm.Tests.HelpersTests
 			AsAction(() => ((string)null).Repeat(-1)).Should().ThrowExactly<ArgumentNullException>();
 			AsAction(() => "abc".Repeat(-321)).Should().ThrowExactly<ArgumentException>().WithMessage("*-321*");
 		}
+
+		[Theory]
+		[InlineData("", "", true)]
+		[InlineData("a", "", true)]
+		[InlineData("abc", "A", true)]
+		[InlineData("abc", "B", true)]
+		[InlineData("abc", "C", true)]
+		[InlineData("abc", "AB", true)]
+		[InlineData("abc", "BC", true)]
+		[InlineData("abc", "CC", false)]
+		[InlineData("", "A", false)]
+		public void ContainsOrdinalIgnoreCase_test(string text, string subStr, bool expectedResult)
+		{
+			text.ContainsOrdinalIgnoreCase(subStr).Should().Be(expectedResult);
+		}
 	}
 }
