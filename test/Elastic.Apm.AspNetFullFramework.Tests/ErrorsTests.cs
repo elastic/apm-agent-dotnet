@@ -9,7 +9,7 @@ using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Elastic.Apm.AspNetFullFramework.Tests.FullFramework
+namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	[Collection("AspNetFullFrameworkTests")]
 	public class ErrorsTests : TestsBase

@@ -5,7 +5,7 @@ using Elastic.Apm.Config;
 using FluentAssertions;
 using Xunit;
 
-namespace Elastic.Apm.AspNetFullFramework.Tests.FullFramework
+namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	[Collection("UsesEnvironmentVariables")]
 	public class AppSettingsTests
