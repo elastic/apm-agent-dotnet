@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Text.RegularExpressions;
 using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
@@ -20,7 +21,7 @@ namespace Elastic.Apm.Helpers
 		public SystemInfoHelper(IApmLogger logger)
 			=> _logger = logger.Scoped(nameof(SystemInfoHelper));
 
-		private Api.System ParseContainerId(string line)
+		private Container ParseContainerId(string line)
 		{
 			//Copied from the Java agent, and C#-ified
 
@@ -65,15 +66,32 @@ namespace Elastic.Apm.Helpers
 			// If the line matched the one of the kubernetes patterns, we assume that the last part is always the container ID.
 			// Otherwise we validate that it is a 64-length hex string
 			if (!string.IsNullOrWhiteSpace(kubernetesPodUid) || _containerUidRegex.Match(idPart).Success)
-				return new Api.System { Container = new Container { Id = idPart } };
+				return new Api.Container { Id = idPart };
 
 			_logger.Debug()?.Log("Could not parse container ID from '/proc/self/cgroup' line: {line}", line);
 			return null;
 		}
 
-		internal Api.System ReadContainerId(IApmLogger loggerArg)
+		internal Api.System ParseSystemInfo() =>
+			new Api.System { Container = ParseContainerInfo(), Hostname = ParseHostname() };
+
+		private string ParseHostname()
 		{
-			var logger = loggerArg.Scoped(nameof(SystemInfoHelper));
+			try
+			{
+				// gets fully qualified domain name (FQDN)
+				return Dns.GetHostEntry(Environment.MachineName).HostName;
+			}
+			catch (Exception e)
+			{
+				_logger.Error()?.LogException(e, "Exception while parsing hostname");
+			}
+
+			return null;
+		}
+
+		private Container ParseContainerInfo()
+		{
 			try
 			{
 				using (var sr = GetCGroupAsStream())
@@ -81,7 +99,7 @@ namespace Elastic.Apm.Helpers
 					if (sr == null)
 					{
 						//just debug log, since this is normal on non-docker environments
-						logger.Debug()?.Log("No /proc/self/cgroup found - the agent will not report container id");
+						_logger.Debug()?.Log("No /proc/self/cgroup found - the agent will not report container id");
 						return null;
 					}
 
@@ -99,10 +117,10 @@ namespace Elastic.Apm.Helpers
 			}
 			catch (Exception e)
 			{
-				logger.Error()?.LogException(e, "Exception while parsing container id");
+				_logger.Error()?.LogException(e, "Exception while parsing container id");
 			}
 
-			logger.Error()?.Log("Failed parsing container id");
+			_logger.Error()?.Log("Failed parsing container id");
 			return null;
 		}
 
