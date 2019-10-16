@@ -266,7 +266,7 @@ If set to `true`, the agent makes periodic requests to the APM Server to fetch t
 [[config-sanitize-field-names]]
 ==== `SanitizeFieldNames` (added[1.2])
 
-Sometimes it is necessary to sanitize the data sent to Elastic APM, e.g. remove sensitive data.
+Sometimes it is necessary to sanitize, i.e., remove, sensitive data sent to Elastic APM.
 
 This config contains a list of wildcard patterns of field names which should be sanitized. These apply for example to HTTP headers and `application/x-www-form-urlencoded` data.
 
