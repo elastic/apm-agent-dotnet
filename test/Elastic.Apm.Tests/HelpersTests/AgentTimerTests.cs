@@ -178,20 +178,20 @@ namespace Elastic.Apm.Tests.HelpersTests
 			sutEnv.VerifyAwaitCompletedSuccessfully(awaitOrTimeoutTask, delayTask);
 		}
 
-		[Theory]
-		[MemberData(nameof(AwaitOrTimeoutVariantsToTest))]
-		internal void AwaitOrTimeout_task_timed_out_test(string dbgVariantDesc, Func<IApmLogger, ISutEnv> sutEnvCreator)
-		{
-			var sutEnv = sutEnvCreator(_logger);
-			var directDelayTask = Task.Delay(VeryShortTimeout);
-			var awaitOrTimeoutTask = sutEnv.AwaitOrTimeoutCall(VeryShortTimeout, out var delayTask);
-
-			sutEnv.AgentTimer.WaitForTimeToPassAndUntil(VeryShortTimeout, () => awaitOrTimeoutTask.IsCompleted
-				, () => $"dbgVariantDesc: {dbgVariantDesc}. awaitOrTimeoutTask: {awaitOrTimeoutTask.Status}. delayTask: {delayTask.Status}."
-					+ $" directDelayTask: {directDelayTask.Status}");
-
-			sutEnv.VerifyAwaitTimeout(awaitOrTimeoutTask, delayTask);
-		}
+//		[Theory]
+//		[MemberData(nameof(AwaitOrTimeoutVariantsToTest))]
+//		internal void AwaitOrTimeout_task_timed_out_test(string dbgVariantDesc, Func<IApmLogger, ISutEnv> sutEnvCreator)
+//		{
+//			var sutEnv = sutEnvCreator(_logger);
+//			var directDelayTask = Task.Delay(VeryShortTimeout);
+//			var awaitOrTimeoutTask = sutEnv.AwaitOrTimeoutCall(VeryShortTimeout, out var delayTask);
+//
+//			sutEnv.AgentTimer.WaitForTimeToPassAndUntil(VeryShortTimeout, () => awaitOrTimeoutTask.IsCompleted
+//				, () => $"dbgVariantDesc: {dbgVariantDesc}. awaitOrTimeoutTask: {awaitOrTimeoutTask.Status}. delayTask: {delayTask.Status}."
+//					+ $" directDelayTask: {directDelayTask.Status}");
+//
+//			sutEnv.VerifyAwaitTimeout(awaitOrTimeoutTask, delayTask);
+//		}
 
 		[Theory]
 		[MemberData(nameof(AwaitOrTimeoutVariantsToTest))]
