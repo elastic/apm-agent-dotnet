@@ -50,6 +50,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		private readonly bool _startMockApmServer;
 		private readonly DateTime _testStartTime = DateTime.UtcNow;
 
+		private readonly LazyContextualInit<string> _detectedHostName = new LazyContextualInit<string>();
+
 		protected TestsBase(ITestOutputHelper xUnitOutputHelper,
 			bool startMockApmServer = true,
 			IDictionary<string, string> envVarsToSetForSampleAppPool = null,
@@ -534,7 +536,31 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			framework.Version.Should().StartWith("4.");
 		}
 
-		private static void FullFwAssertValid(Api.System system) => system.Should().BeNull();
+		private void FullFwAssertValid(Api.System system)
+		{
+			var detectedHostname = _detectedHostName.IfNotInited?.InitOrGet(() =>
+				{
+					try
+					{
+						return Dns.GetHostName();
+					}
+					catch (Exception ex)
+					{
+						_logger.Error()?.LogException(ex, "Failed to get the local computer DNS host name");
+						return null;
+					}
+				})
+				?? _detectedHostName.Value;
+
+			if (detectedHostname == null)
+			{
+				system.Should().BeNull();
+				return;
+			}
+
+			system.Should().NotBeNull();
+			system.Hostname.Should().Be(detectedHostname);
+		}
 
 		private void FullFwAssertValid(ErrorDto error)
 		{
@@ -621,7 +647,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			// ReSharper disable PossibleMultipleEnumeration
 			stackTrace.Should().NotBeNull();
 
-			stackTrace.ForEach((Action<CapturedStackFrame>)FullFwAssertValid);
+			stackTrace.ForEach(FullFwAssertValid);
 			// ReSharper restore PossibleMultipleEnumeration
 		}
 
