@@ -308,6 +308,7 @@ pipeline {
             when {
               beforeAgent true
               anyOf {
+                branch 'master'
                 expression { return params.Run_As_Master_Branch }
               }
             }
