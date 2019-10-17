@@ -66,7 +66,7 @@ namespace Elastic.Apm.Helpers
 			// If the line matched the one of the kubernetes patterns, we assume that the last part is always the container ID.
 			// Otherwise we validate that it is a 64-length hex string
 			if (!string.IsNullOrWhiteSpace(kubernetesPodUid) || _containerUidRegex.Match(idPart).Success)
-				return new Api.Container { Id = idPart };
+				return new Container { Id = idPart };
 
 			_logger.Debug()?.Log("Could not parse container ID from '/proc/self/cgroup' line: {line}", line);
 			return null;
