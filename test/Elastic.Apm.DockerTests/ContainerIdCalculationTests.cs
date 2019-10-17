@@ -45,9 +45,7 @@ namespace Elastic.Apm.DockerTests
 
 			var systemInfo = systemInfoHelper.ParseSystemInfo();
 
-			//The current implementation returns null instead of an empty System instance.
-			//This may changes later, the point of the test is to make sure there is no container id
-			systemInfo.Should().BeNull();
+			systemInfo.Container.Should().BeNull();
 		}
 	}
 
