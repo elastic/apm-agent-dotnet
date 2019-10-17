@@ -79,8 +79,7 @@ namespace Elastic.Apm.Helpers
 		{
 			try
 			{
-				// gets fully qualified domain name (FQDN)
-				return Dns.GetHostEntry(Environment.MachineName).HostName;
+				return Dns.GetHostName();
 			}
 			catch (Exception e)
 			{
