@@ -58,7 +58,9 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		public void OnNext(KeyValuePair<string, object> kv)
 		{
-			Logger.Trace()?.Log("Called with key: `{DiagnosticEventKey}', value: `{DiagnosticEventValue}'", kv.Key, kv.Value);
+			// We only print the key, we don't print the value, because it can contain a http request object, and its ToString prints
+			// the URL, which can contain username and password. See: https://github.com/elastic/apm-agent-dotnet/issues/515
+			Logger.Trace()?.Log("Called with key: `{DiagnosticEventKey}'", kv.Key);
 
 			if (string.IsNullOrEmpty(kv.Key))
 			{
@@ -97,7 +99,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 			if (IsRequestFilteredOut(requestUrl))
 			{
-				Logger.Trace()?.Log("Request URL ({RequestUrl}) is filtered out - exiting", requestUrl);
+				Logger.Trace()?.Log("Request URL ({RequestUrl}) is filtered out - exiting", Http.Sanitize(requestUrl));
 				return;
 			}
 
@@ -113,7 +115,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		private void ProcessStartEvent(TRequest request, Uri requestUrl)
 		{
-			Logger.Trace()?.Log("Processing start event... Request URL: {RequestUrl}", requestUrl);
+			Logger.Trace()?.Log("Processing start event... Request URL: {RequestUrl}", Http.Sanitize(requestUrl));
 
 			var transaction = _agent.Tracer.CurrentTransaction;
 			if (transaction == null)
@@ -141,19 +143,22 @@ namespace Elastic.Apm.DiagnosticListeners
 				// but here we want the string to be in W3C 'traceparent' header format.
 				RequestHeadersAdd(request, TraceParent.TraceParentHeaderName, TraceParent.BuildTraceparent(span.OutgoingDistributedTracingData));
 
-			if (transaction.IsSampled) span.Context.Http = new Http { Url = requestUrl.ToString(), Method = RequestGetMethod(request) };
+			if (!transaction.IsSampled) return;
+
+			span.Context.Http = new Http { Method = RequestGetMethod(request) };
+			span.Context.Http.SetUrl(requestUrl);
 		}
 
 		private void ProcessStopEvent(object eventValue, TRequest request, Uri requestUrl)
 		{
-			Logger.Trace()?.Log("Processing stop event... Request URL: {RequestUrl}", requestUrl);
+			Logger.Trace()?.Log("Processing stop event... Request URL: {RequestUrl}", Http.Sanitize(requestUrl));
 
 			if (!ProcessingRequests.TryRemove(request, out var span))
 			{
 				Logger.Warning()
 					?.Log("Failed capturing request (failed to remove from ProcessingRequests) - " +
 						"This Span will be skipped in case it wasn't captured before. " +
-						"Request: method: {HttpMethod}, URL: {RequestUrl}", RequestGetMethod(request), requestUrl);
+						"Request: method: {HttpMethod}, URL: {RequestUrl}", RequestGetMethod(request), Http.Sanitize(requestUrl));
 				return;
 			}
 
@@ -183,7 +188,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		protected virtual void ProcessExceptionEvent(object eventValue, Uri requestUrl)
 		{
-			Logger.Trace()?.Log("Processing exception event... Request URL: {RequestUrl}", requestUrl);
+			Logger.Trace()?.Log("Processing exception event... Request URL: {RequestUrl}", Http.Sanitize(requestUrl));
 
 			if (!(eventValue.GetType().GetTypeInfo().GetDeclaredProperty(EventExceptionPropertyName)?.GetValue(eventValue) is Exception exception))
 			{

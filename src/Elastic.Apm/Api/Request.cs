@@ -46,8 +46,15 @@ namespace Elastic.Apm.Api
 
 	public class Url
 	{
+		private string _full;
+		private string _raw;
+
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
-		public string Full { get; set; }
+		public string Full
+		{
+			get => _full;
+			set => _full = Http.Sanitize(value, out var newValue) ? newValue : value;
+		}
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("hostname")]
@@ -61,7 +68,11 @@ namespace Elastic.Apm.Api
 		public string Protocol { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
-		public string Raw { get; set; }
+		public string Raw
+		{
+			get => _raw;
+			set => _raw = Http.Sanitize(value, out var newValue) ? newValue : value;
+		}
 
 		/// <summary>
 		/// The search describes the query string of the request.

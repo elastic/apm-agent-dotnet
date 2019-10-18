@@ -243,6 +243,39 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
+		/// Makes sure the outgoing request with URL that contains username and password is captured, but the
+		/// username and the password are redacted.
+		/// </summary>
+		[Fact]
+		public async Task TestUrlSanitization()
+		{
+			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
+
+			using (listener)
+			using (var localServer = new LocalServer())
+			{
+				var uri = new Uri(localServer.Uri);
+
+				var uriBuilder = new UriBuilder(uri);
+				uriBuilder.UserName = "TestUser";
+				uriBuilder.Password = "TestPassword";
+
+				var httpClient = new HttpClient();
+				var res = await httpClient.GetAsync(uriBuilder.Uri);
+
+				res.IsSuccessStatusCode.Should().BeTrue();
+				var firstSpan = payloadSender.FirstSpan;
+				firstSpan.Should().NotBeNull();
+				firstSpan.Context.Http.Url.Should()
+					.Be(uriBuilder.Uri.ToString()
+						.Replace("TestUser", "[REDACTED]")
+						.Replace("TestPassword", "[REDACTED]"));
+				firstSpan.Context.Http.StatusCode.Should().Be(200);
+				firstSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
+			}
+		}
+
+		/// <summary>
 		/// Sends a simple real HTTP POST message and the server responds with 500
 		/// The test makes sure HttpDiagnosticListener captures the POST method and
 		/// the response code correctly
@@ -487,6 +520,40 @@ namespace Elastic.Apm.Tests
 
 				mockPayloadSender.Transactions.Should().NotBeEmpty();
 				mockPayloadSender.SpansOnFirstTransaction.Should().BeEmpty();
+			}
+		}
+
+		/// <summary>
+		/// Makes sure that in case of outgoing HTTP requests with a URL containing username and password those
+		/// are not showing up in the agent logs.
+		/// </summary>
+		[Fact]
+		public async Task NoUserNameAndPasswordInLogsForHttp()
+		{
+			var payloadSender = new NoopPayloadSender();
+			var logger = new TestLogger(LogLevel.Trace);
+
+			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, logger: logger));
+			agent.Subscribe(new HttpDiagnosticsSubscriber());
+			StartTransaction(agent);
+
+			using (var localServer = new LocalServer())
+			using (var httpClient = new HttpClient())
+			{
+				var uriBuilder = new UriBuilder(localServer.Uri);
+				uriBuilder.UserName = "TestUser289421";
+				uriBuilder.Password = "Password973243";
+
+				var res = await httpClient.GetAsync(uriBuilder.Uri);
+				res.IsSuccessStatusCode.Should().BeTrue();
+				logger.Lines.Should().NotBeEmpty();
+
+				logger.Lines.Should().NotContain(n => n.Contains("TestUser289421"));
+				logger.Lines.Should().NotContain(n => n.Contains("Password973243"));
+
+				// looking for lines with "localhost:8082" and asserting that those contain [REDACTED].
+				foreach (var lineWithHttpLog in logger.Lines.Where(n => n.Contains($"{uriBuilder.Host}:{uriBuilder.Port}")))
+					lineWithHttpLog.Should().Contain("[REDACTED]");
 			}
 		}
 
