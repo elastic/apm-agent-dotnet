@@ -89,8 +89,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 		{
 			_logger.Debug()?.Log($"Waiting until condition is true... dbgDesc: {(dbgDesc?.Invoke()).AsNullableToString()}.");
 
-//			var maxTotalTimeToWait = 30.Seconds();
-			var maxTotalTimeToWait = 5.Minutes();
+			var maxTotalTimeToWait = 30.Seconds();
 			var timeToWaitBetweenChecks = 10.Milliseconds();
 			var minTimeBetweenLogs = 1.Second();
 
