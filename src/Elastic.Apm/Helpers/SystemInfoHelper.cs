@@ -14,6 +14,8 @@ namespace Elastic.Apm.Helpers
 		private const string PodRegexString = @"(?:^/kubepods/[^/]+/pod([^/]+)$)|"
 			+ @"(?:^/kubepods\.slice/kubepods-[^/]+\.slice/kubepods-[^/]+-pod([^/]+)\.slice$)";
 
+		private static readonly LazyContextualInit<string> LazyDetectedHostName = new LazyContextualInit<string>();
+
 		private readonly Regex _containerUidRegex = new Regex(ContainerUidRegexString);
 		private readonly IApmLogger _logger;
 		private readonly Regex _podRegex = new Regex(PodRegexString);
@@ -73,22 +75,25 @@ namespace Elastic.Apm.Helpers
 		}
 
 		internal Api.System ParseSystemInfo() =>
-			new Api.System { Container = ParseContainerInfo(), Hostname = ParseHostname() };
+			new Api.System { Container = ParseContainerInfo(), DetectedHostName = GetHostName() };
 
-		private string ParseHostname()
-		{
-			try
-			{
-				// gets fully qualified domain name (FQDN)
-				return Dns.GetHostEntry(Environment.MachineName).HostName;
-			}
-			catch (Exception e)
-			{
-				_logger.Error()?.LogException(e, "Exception while parsing hostname");
-			}
 
-			return null;
-		}
+		/// <summary>Gets the host name of the local computer.</summary>
+		/// <returns>If successful, a string that contains the DNS host name of the local computer; otherwise, <c>null</c></returns>
+		internal string GetHostName() =>
+			LazyDetectedHostName.IfNotInited?.InitOrGet(() =>
+			{
+				try
+				{
+					return Dns.GetHostName();
+				}
+				catch (Exception ex)
+				{
+					_logger.Error()?.LogException(ex, "Failed to get the local computer DNS host name");
+					return null;
+				}
+			})
+			?? LazyDetectedHostName.Value;
 
 		private Container ParseContainerInfo()
 		{

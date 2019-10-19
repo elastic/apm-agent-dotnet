@@ -10,9 +10,13 @@ namespace Elastic.Apm.Api
 
 		[JsonProperty("detected_hostname")]
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
-		public string Hostname { get; set; }
+		public string DetectedHostName { get; set; }
+
+		[JsonProperty("hostname")]
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		public string HostName => DetectedHostName;
 
 		public override string ToString() =>
-			new ToStringBuilder(nameof(System)) { { nameof(Container), Container }, { nameof(Hostname), Hostname } }.ToString();
+			new ToStringBuilder(nameof(System)) { { nameof(Container), Container }, { nameof(DetectedHostName), DetectedHostName } }.ToString();
 	}
 }
