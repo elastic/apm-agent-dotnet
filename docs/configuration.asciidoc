@@ -262,6 +262,27 @@ If set to `true`, the agent makes periodic requests to the APM Server to fetch t
 | true    | Boolean 
 |============
 
+[float]
+[[config-global-labels]]
+==== `GlobalLabels` (added[1.2])
+
+Labels added to all events, with the format `key=value[,key=value[,...]]`.
+Any labels set by application via the agent's public API will override global labels with the same keys.
+
+[options="header"]
+|============
+| Environment variable name    | IConfiguration key
+| `ELASTIC_APM_GLOBAL_LABELS` | `ElasticApm:GlobalLabels`
+|============
+
+[options="header"]
+|============
+| Default     | Type
+| <empty map> | Map of string to string
+|============
+
+NOTE: This option requires APM Server 7.2 or later, and it will have no effect if an older version is used.
+
 [[config-reporter]]
 === Reporter configuration options
 
