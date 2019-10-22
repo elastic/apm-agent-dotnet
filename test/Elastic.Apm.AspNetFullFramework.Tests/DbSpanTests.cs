@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Extensions;
@@ -161,6 +162,22 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				});
 
 				// ReSharper restore PossibleMultipleEnumeration
+			});
+		}
+
+		/// <summary>
+		/// <seealso cref="AspNetFullFrameworkSampleApp.Controllers.HomeController.DbOperationOutsideTransactionTest" />
+		/// </summary>
+		[AspNetFullFrameworkFact]
+		public async Task DbOperationOutsideTransactionTest()
+		{
+			var pageData = new SampleAppUrlPathData(HomeController.DbOperationOutsideTransactionTestPageRelativePath
+				, HomeController.DbOperationOutsideTransactionTestStatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(pageData.RelativeUrlPath, pageData.StatusCode);
+
+			await WaitAndCustomVerifyReceivedData(receivedData =>
+			{
+				VerifyReceivedDataSharedConstraints(pageData, receivedData);
 			});
 		}
 	}

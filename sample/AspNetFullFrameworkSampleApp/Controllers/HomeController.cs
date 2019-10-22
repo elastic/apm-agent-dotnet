@@ -24,9 +24,9 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 
 		internal const string CaptureControllerActionAsSpanQueryStringKey = "captureControllerActionAsSpan";
 
+		internal const int ConcurrentDbTestNumberOfIterations = 10;
 		internal const string ConcurrentDbTestPageRelativePath = HomePageRelativePath + "/" + nameof(ConcurrentDbTest);
 		internal const string ConcurrentDbTestSpanType = "concurrent";
-		internal const int ConcurrentDbTestNumberOfIterations = 10;
 
 		internal const string ContactPageRelativePath = HomePageRelativePath + "/" + nameof(Contact);
 		internal const string ContactSpanPrefix = nameof(Contact);
@@ -35,6 +35,11 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 
 		internal const string CustomSpanThrowsInternalMethodName = nameof(CustomSpanThrowsInternal);
 		internal const string CustomSpanThrowsPageRelativePath = HomePageRelativePath + "/" + nameof(CustomSpanThrows);
+
+		internal const string DbOperationOutsideTransactionTestPageRelativePath =
+			HomePageRelativePath + "/" + nameof(DbOperationOutsideTransactionTest);
+
+		internal const int DbOperationOutsideTransactionTestStatusCode = (int)HttpStatusCode.Accepted;
 
 		internal const string DotNetRuntimeDescriptionHttpHeaderName = "DotNetRuntimeDescription";
 		internal const int DummyHttpStatusCode = 599;
@@ -172,13 +177,13 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 			return new HttpStatusCodeResult(HttpStatusCode.OK);
 		}
 
-		public ActionResult SimpleDbTest()
+		public HttpStatusCodeResult SimpleDbTest()
 		{
-			const string simpleDbTestSampleDataName = "simple_DB_test_sample_data_name";
+			const string sampleDataName = "simple_DB_test_sample_data_name";
 
 			using (var dbCtx = new SampleDataDbContext())
 			{
-				dbCtx.Set<SampleData>().Add(new SampleData { Name = simpleDbTestSampleDataName });
+				dbCtx.Set<SampleData>().Add(new SampleData { Name = sampleDataName });
 				dbCtx.SaveChanges();
 			}
 
@@ -186,7 +191,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 			{
 				if (dbCtx.Set<SampleData>().Count() != 1)
 					throw new InvalidOperationException($"dbCtx.Set<SampleData>().Count(): {dbCtx.Set<SampleData>().Count()}");
-				if (dbCtx.Set<SampleData>().First().Name != simpleDbTestSampleDataName)
+				if (dbCtx.Set<SampleData>().First().Name != sampleDataName)
 					throw new InvalidOperationException($"dbCtx.Set<SampleData>().First().Name: {dbCtx.Set<SampleData>().First().Name}");
 			}
 
@@ -222,18 +227,11 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 				for (var i = 0; i < numberOfConcurrentIterations; ++i)
 				{
 					var (containingPrefix, containedPrefix) = i % 2 == 0 ? ("A", "B") : ("B", "A");
-					var expectedNames = new List<string>()
+					var expectedNames = new List<string>
 					{
-						$"{containedPrefix}.{i}.before",
-						$"{containingPrefix}.{i}",
-						$"{containedPrefix}.{i}.after"
+						$"{containedPrefix}.{i}.before", $"{containingPrefix}.{i}", $"{containedPrefix}.{i}.after"
 					};
-					var actualNames = new List<string>()
-					{
-						sampleDataList[3 * i].Name,
-						sampleDataList[3 * i + 1].Name,
-						sampleDataList[3 * i + 2].Name
-					};
+					var actualNames = new List<string> { sampleDataList[3 * i].Name, sampleDataList[3 * i + 1].Name, sampleDataList[3 * i + 2].Name };
 					if (!actualNames.SequenceEqual(expectedNames))
 					{
 						throw new InvalidOperationException(
@@ -244,33 +242,47 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 
 			return new HttpStatusCodeResult(HttpStatusCode.OK);
 
-			void ConcurrentSpan(string branchId, ITransaction tx) => tx.CaptureSpan(branchId, ConcurrentDbTestSpanType, () =>
+			void ConcurrentSpan(string branchId, ITransaction tx)
 			{
-				for (var i = 0; i < numberOfConcurrentIterations; ++i)
+				tx.CaptureSpan(branchId, ConcurrentDbTestSpanType, () =>
 				{
-					var isIndexEven = i % 2 == 0;
-					var isContainedSpan = branchId == "B" ? isIndexEven : !isIndexEven;
-
-					var numberOfInserts = isContainedSpan ? 2 : 1;
-					for (var j = 0; j < numberOfInserts; ++j)
+					for (var i = 0; i < numberOfConcurrentIterations; ++i)
 					{
-						if (isContainedSpan) syncBarrier.SignalAndWait();
-						using (var dbCtx = new SampleDataDbContext( /* attachedState: */ isContainedSpan))
+						var isIndexEven = i % 2 == 0;
+						var isContainedSpan = branchId == "B" ? isIndexEven : !isIndexEven;
+
+						var numberOfInserts = isContainedSpan ? 2 : 1;
+						for (var j = 0; j < numberOfInserts; ++j)
 						{
-							var suffix = isContainedSpan ? (j == 0 ? ".before" : ".after") : "";
-							dbCtx.Set<SampleData>().Add(new SampleData { Name = $"{branchId}.{i}{suffix}" });
-							dbCtx.SaveChanges();
+							if (isContainedSpan) syncBarrier.SignalAndWait();
+							using (var dbCtx = new SampleDataDbContext( /* attachedState: */ isContainedSpan))
+							{
+								var suffix = isContainedSpan ? j == 0 ? ".before" : ".after" : "";
+								dbCtx.Set<SampleData>().Add(new SampleData { Name = $"{branchId}.{i}{suffix}" });
+								dbCtx.SaveChanges();
+							}
+							if (isContainedSpan) syncBarrier.SignalAndWait();
 						}
-						if (isContainedSpan) syncBarrier.SignalAndWait();
 					}
-				}
-			});
+				});
+			}
 		}
 
-		public ActionResult InterlockedDbTest()
+		public async Task<ActionResult> DbOperationOutsideTransactionTest()
 		{
-			HttpContext.Response.Headers.Add(DotNetRuntimeDescriptionHttpHeaderName, RuntimeInformation.FrameworkDescription);
-			return new HttpStatusCodeResult(HttpStatusCode.OK);
+			const int simpleDbTestExpectedResult = (int)HttpStatusCode.OK;
+
+			// Suppress the flow of AsyncLocal so that SimpleDbTest called below doesn't current transaction
+			ExecutionContext.SuppressFlow();
+			var simpleDbTestResult = await Task.Run(SimpleDbTest);
+
+			if (simpleDbTestResult.StatusCode != simpleDbTestExpectedResult)
+			{
+				throw new InvalidOperationException($"{nameof(SimpleDbTest)}"
+					+ $" expected result: {simpleDbTestExpectedResult}"
+					+ $" actual result: {simpleDbTestResult.StatusCode}");
+			}
+			return new HttpStatusCodeResult(HttpStatusCode.Accepted);
 		}
 
 		private Uri GetUrlForMethod(string methodName)
@@ -284,10 +296,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		{
 			private readonly Barrier _syncBarrier;
 
-			internal ConcurrentDbTestDbCommandInterceptor(Barrier syncBarrier)
-			{
-				_syncBarrier = syncBarrier;
-			}
+			internal ConcurrentDbTestDbCommandInterceptor(Barrier syncBarrier) => _syncBarrier = syncBarrier;
 
 			public void NonQueryExecuting(DbCommand command, DbCommandInterceptionContext<int> interceptionContext) =>
 				CommandStarting(command, interceptionContext);

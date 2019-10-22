@@ -12,6 +12,7 @@ namespace AspNetFullFrameworkSampleApp.Data
 		private static readonly InitOnceHelper InitOnceHelperInstance = new InitOnceHelper();
 		private static readonly Lazy<DbConnection> Connection = new Lazy<DbConnection>(CreateDbConnection);
 
+		/// <param name="attachedState">Allows test code to pass an opaque context for DB operations</param>
 		public SampleDataDbContext(object attachedState = null)
 			: base(Connection.Value, /* contextOwnsConnection */ false)
 		{
