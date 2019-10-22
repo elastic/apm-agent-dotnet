@@ -83,7 +83,7 @@ You can also configure the agent using `web.config` as described at <<configurat
 === Entity Framework 6
 
 You can enable auto instrumentation for Entity Framework 6 by referencing the `Elastic.Apm.EntityFramework6` package
-and including `Ef6Interceptor` interceptor in your application's `web.config`:
+and including the `Ef6Interceptor` interceptor in your application's `web.config`:
 
 [source,xml]
 ----
