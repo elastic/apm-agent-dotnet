@@ -52,19 +52,20 @@ pipeline {
               Make sure there are no code style violation in the repo.
               */
               stages{
-                stage('CodeStyleCheck') {
-                  steps {
-                    withGithubNotify(context: 'CodeStyle check') {
-                      deleteDir()
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        dotnet(){
-                          sh label: 'Install and run dotnet/format', script: '.ci/linux/codestyle.sh'
-                        }
-                      }
-                    }
-                  }
-                }
+                // Disable until https://github.com/elastic/apm-agent-dotnet/issues/563
+                // stage('CodeStyleCheck') {
+                //   steps {
+                //     withGithubNotify(context: 'CodeStyle check') {
+                //       deleteDir()
+                //       unstash 'source'
+                //       dir("${BASE_DIR}"){
+                //         dotnet(){
+                //           sh label: 'Install and run dotnet/format', script: '.ci/linux/codestyle.sh'
+                //         }
+                //       }
+                //     }
+                //   }
+                // }
                 /**
                 Build the project from code..
                 */
