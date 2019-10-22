@@ -102,7 +102,7 @@ As an alternative to registering the interceptor via the configuration, you can 
 ----
 DbInterception.Add(new Elastic.Apm.EntityFramework6.Ef6Interceptor());
 ----
-For example, if it's ASP.NET MVC application you can place the above call in `Application_Start` method.
+For example, in an ASP.NET MVC application, you can place the above call in the `Application_Start` method.
 
 NOTE: Be careful not to execute `DbInterception.Add` for the same interceptor more than once,
 or you'll get additional interceptor instances.
