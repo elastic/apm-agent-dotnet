@@ -73,9 +73,9 @@ namespace Elastic.Apm.Helpers
 		}
 
 		internal Api.System ParseSystemInfo() =>
-			new Api.System { Container = ParseContainerInfo(), Hostname = ParseHostname() };
+			new Api.System { Container = ParseContainerInfo(), DetectedHostName = GetHostName() };
 
-		private string ParseHostname()
+		internal string GetHostName()
 		{
 			try
 			{
@@ -84,7 +84,7 @@ namespace Elastic.Apm.Helpers
 			}
 			catch (Exception e)
 			{
-				_logger.Error()?.LogException(e, "Exception while parsing hostname");
+				_logger.Error()?.LogException(e, "Failed to get hostname");
 			}
 
 			return null;
