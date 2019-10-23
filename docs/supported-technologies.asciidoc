@@ -68,6 +68,11 @@ We support automatic instrumentation for the following data access technologies.
 |A DB span is automatically created for each access to underlying database performed by Entity Framework Core.
 |1.0
 
+|Entity Framework (EF) 6
+|6.2 and later
+|A DB span is automatically created for each access to underlying database performed by Entity Framework 6.
+|1.2
+
 |===
 
 [float]

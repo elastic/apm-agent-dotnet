@@ -4,7 +4,7 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
-	[Collection("AspNetFullFrameworkTests")]
+	[Collection(Consts.AspNetFullFrameworkTestsCollection)]
 	public class TestsWithSampleAppLogDisabled : TestsBase
 	{
 		public TestsWithSampleAppLogDisabled(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper, sampleAppLogEnabled: false) { }

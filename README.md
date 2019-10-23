@@ -17,6 +17,7 @@ Official NuGet packages can be referenced from [NuGet.org](https://www.nuget.org
 | `Elastic.Apm.EntityFrameworkCore` | Entity Framework Core auto instrumentation. | [![NuGet Release][Elastic.Apm.EntityFrameworkCore-image]][Elastic.Apm.EntityFrameworkCore-nuget-url] |
 | `Elastic.Apm.NetCoreAll` | References every .NET Core related elastic APM package. It can be used to simply turn on the agent with a single line and activate all auto instrumentation. | [![NuGet Release][Elastic.Apm.NetCoreAll-image]][Elastic.Apm.NetCoreAll-nuget-url] |
 | `Elastic.Apm.AspNetFullFramework` | ASP.NET (classic) auto instrumentation with an IIS Module. | [![NuGet Release][Elastic.Apm.AspNetFullFramework-image]][Elastic.Apm.AspNetFullFramework-nuget-url] | 
+| `Elastic.Apm.EntityFramework6` | Entity Framework 6 auto instrumentation. | [![NuGet Release][Elastic.Apm.EntityFramework6-image]][Elastic.Apm.EntityFramework6-nuget-url] |
 
 ## Documentation
 
@@ -43,11 +44,12 @@ These are the main folders within the repository:
     * `Elastic.Apm.EntityFrameworkCore`: Auto-instrumentation for EntityFramework Core.
     * `Elastic.Apm.NetCoreAll`: A convenient project that references all other .NET Core related projects from the `src` folder. It contains an ASP.NET Core middleware extension that enables the agent and every other component with a single line of code. In a typical ASP.NET Core application (e.g. apps referencing [Microsoft.AspNetCore.All](https://www.nuget.org/packages/Microsoft.AspNetCore.All)) that uses EF Core the `Elastic.Apm.NetCoreAll` can be referenced.
     * `Elastic.Apm.AspNetFullFramework`: Auto-instrumentation for ASP.NET (classic).
+    * `Elastic.Apm.EntityFramework6`: Auto-instrumentation for Entity Framework 6.
 * test: This folder contains test projects. Typically each project from the `src` folder has a corresponding test project.
     * `Elastic.Apm.Tests`: Tests the `Elastic.Apm` project.
     * `Elastic.Apm.AspNetCore.Tests`: Tests the `Elastic.Apm.AspNetCore` project.
     * `Elastic.Apm.AspNetFullFramework.Tests`: Tests the `Elastic.Apm.AspNetFullFramework` project.
-    * `Elastic.Apm.Tests.MockApmServer`: Implementation of APM Server mock used for agent-as-component tests (for example in `Elastic.Apm.AspNetFullFramework`).
+    * `Elastic.Apm.Tests.MockApmServer`: Implementation of APM Server mock used for agent-as-component tests (for example in `Elastic.Apm.AspNetFullFramework.Tests`).
 * docs: This folder contains the official documentation.
 * sample: Sample applications that are monitored by the APM .NET Agent. These are also very useful for development: you can start one of these applications and debug the agent through them.
 * .ci: This folder contains all the scripts used to build, test and release the agent within the CI.
@@ -75,3 +77,7 @@ https://img.shields.io/nuget/v/Elastic.Apm.NetCoreAll.svg
 [Elastic.Apm.AspNetFullFramework-nuget-url]:https://www.nuget.org/packages/Elastic.Apm.AspNetFullFramework/
 [Elastic.Apm.AspNetFullFramework-image]:
 https://img.shields.io/nuget/v/Elastic.Apm.AspNetFullFramework.svg
+
+[Elastic.Apm.EntityFramework6-nuget-url]:https://www.nuget.org/packages/Elastic.Apm.EntityFramework6/
+[Elastic.Apm.EntityFramework6-image]:
+https://img.shields.io/nuget/v/Elastic.Apm.EntityFramework6.svg

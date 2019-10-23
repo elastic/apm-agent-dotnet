@@ -7,7 +7,7 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
-	[Collection("AspNetFullFrameworkTests")]
+	[Collection(Consts.AspNetFullFrameworkTestsCollection)]
 	public class SampleRate0Tests : TestsBase
 	{
 		public SampleRate0Tests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper,
