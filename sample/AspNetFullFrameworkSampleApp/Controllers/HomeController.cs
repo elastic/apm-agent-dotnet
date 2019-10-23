@@ -272,7 +272,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		{
 			const int simpleDbTestExpectedResult = (int)HttpStatusCode.OK;
 
-			// Suppress the flow of AsyncLocal so that SimpleDbTest called below doesn't current transaction
+			// Suppress the flow of AsyncLocal so that SimpleDbTest called below doesn't have current transaction
 			ExecutionContext.SuppressFlow();
 			var simpleDbTestResult = await Task.Run(SimpleDbTest);
 
