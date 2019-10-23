@@ -635,7 +635,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			// ReSharper disable PossibleMultipleEnumeration
 			stackTrace.Should().NotBeNull();
 
-			stackTrace.ForEach((Action<CapturedStackFrame>)FullFwAssertValid);
+			stackTrace.ForEach(FullFwAssertValid);
 			// ReSharper restore PossibleMultipleEnumeration
 		}
 

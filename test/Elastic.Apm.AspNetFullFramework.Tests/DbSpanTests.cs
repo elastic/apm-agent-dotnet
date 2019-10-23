@@ -47,6 +47,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 				receivedData.Spans.ForEachIndexed((span, i) =>
 				{
+					span.Name.Should().StartWith(dbStatements[i]);
 					span.Type.Should().Be(ApiConstants.TypeDb);
 					span.Subtype.Should().Be(ApiConstants.SubtypeSqLite);
 					span.Context.Db.Type.Should().Be(Database.TypeSql);
@@ -147,6 +148,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				dbStatements.AddRange(Enumerable.Repeat("INSERT", allChildDbSpansFlattened.Count()));
 				topLevelDbSpans.Concat(allChildDbSpansFlattened).ForEachIndexed((dbSpan, i) =>
 				{
+					dbSpan.Name.Should().StartWith(dbStatements[i]);
 					dbSpan.Type.Should().Be(ApiConstants.TypeDb);
 					dbSpan.Subtype.Should().Be(ApiConstants.SubtypeSqLite);
 					dbSpan.Context.Db.Type.Should().Be(Database.TypeSql);

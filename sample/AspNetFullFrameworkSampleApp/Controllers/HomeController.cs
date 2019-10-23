@@ -201,8 +201,8 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		public async Task<ActionResult> ConcurrentDbTest()
 		{
 			// Spans should overlap (actually alternatively strictly "contain" the corresponding span on the other concurrent branch)
-			// [---------------- INSERT A.0 ----------------] ...    [-- INSERT A.N.0 --] [-- INSERT A.N.1 --]
-			//   [-- INSERT B.0.0 --] [-- INSERT B.0.1 --]    ... [---------------- INSERT B.N ----------------]
+			// [---------------- INSERT A.0 ------------------------] ...    [-- INSERT A.N.before --] [-- INSERT A.N.after --]
+			//   [-- INSERT B.0.before --] [-- INSERT B.0.after --]    ... [---------------- INSERT B.N -----------------------]
 			const int numberOfConcurrentIterations = ConcurrentDbTestNumberOfIterations;
 
 			// Create table before concurrent inserts
