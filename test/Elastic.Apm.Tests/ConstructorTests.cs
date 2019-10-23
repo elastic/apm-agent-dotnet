@@ -35,6 +35,7 @@ namespace Elastic.Apm.Tests
 			public bool CentralConfig => ConfigConsts.DefaultValues.CentralConfig;
 			public string Environment { get; }
 			public TimeSpan FlushInterval => TimeSpan.FromMilliseconds(ConfigConsts.DefaultValues.FlushIntervalInMilliseconds);
+			public IReadOnlyDictionary<string, string> GlobalLabels => new Dictionary<string, string>();
 			public LogLevel LogLevel { get; }
 			public int MaxBatchEventCount => ConfigConsts.DefaultValues.MaxBatchEventCount;
 			public int MaxQueueEventCount => ConfigConsts.DefaultValues.MaxQueueEventCount;

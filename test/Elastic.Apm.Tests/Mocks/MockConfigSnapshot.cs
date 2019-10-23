@@ -17,6 +17,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _dbgDescription;
 		private readonly string _environment;
 		private readonly string _flushInterval;
+		private readonly string _globalLabels;
 		private readonly string _logLevel;
 		private readonly string _maxBatchEventCount;
 		private readonly string _maxQueueEventCount;
@@ -50,7 +51,8 @@ namespace Elastic.Apm.Tests.Mocks
 			string captureBodyContentTypes = ConfigConsts.DefaultValues.CaptureBodyContentTypes,
 			string flushInterval = null,
 			string maxBatchEventCount = null,
-			string maxQueueEventCount = null
+			string maxQueueEventCount = null,
+			string globalLabels = null
 		) : base(logger, ThisClassName)
 		{
 			_serverUrls = serverUrls;
@@ -72,6 +74,7 @@ namespace Elastic.Apm.Tests.Mocks
 			_flushInterval = flushInterval;
 			_maxBatchEventCount = maxBatchEventCount;
 			_maxQueueEventCount = maxQueueEventCount;
+			_globalLabels = globalLabels;
 		}
 
 		public string CaptureBody => ParseCaptureBody(Kv(ConfigConsts.EnvVarNames.CaptureBody, _captureBody, Origin));
@@ -86,6 +89,9 @@ namespace Elastic.Apm.Tests.Mocks
 		public string Environment => ParseEnvironment(Kv(ConfigConsts.EnvVarNames.Environment, _environment, Origin));
 
 		public TimeSpan FlushInterval => ParseFlushInterval(Kv(ConfigConsts.EnvVarNames.FlushInterval, _flushInterval, Origin));
+
+		public IReadOnlyDictionary<string, string> GlobalLabels =>
+			ParseGlobalLabels(Kv(ConfigConsts.EnvVarNames.GlobalLabels, _globalLabels, Origin));
 
 		public LogLevel LogLevel => ParseLogLevel(Kv(ConfigConsts.EnvVarNames.LogLevel, _logLevel, Origin));
 		public int MaxBatchEventCount => ParseMaxBatchEventCount(Kv(ConfigConsts.EnvVarNames.MaxBatchEventCount, _maxBatchEventCount, Origin));

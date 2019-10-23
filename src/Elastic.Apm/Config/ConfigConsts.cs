@@ -39,6 +39,7 @@ namespace Elastic.Apm.Config
 			public const string CentralConfig = Prefix + "CENTRAL_CONFIG";
 			public const string Environment = Prefix + "ENVIRONMENT";
 			public const string FlushInterval = Prefix + "FLUSH_INTERVAL";
+			public const string GlobalLabels = Prefix + "GLOBAL_LABELS";
 			public const string LogLevel = Prefix + "LOG_LEVEL";
 			public const string MaxBatchEventCount = Prefix + "MAX_BATCH_EVENT_COUNT";
 			public const string MaxQueueEventCount = Prefix + "MAX_QUEUE_EVENT_COUNT";
@@ -62,6 +63,7 @@ namespace Elastic.Apm.Config
 			public const string CentralConfig = "ElasticApm:CentralConfig";
 			public const string Environment = "ElasticApm:Environment";
 			public const string FlushInterval = "ElasticApm:FlushInterval";
+			public const string GlobalLabels = "ElasticApm:GlobalLabels";
 			public const string LogLevel = "ElasticApm:LogLevel";
 			public const string MaxBatchEventCount = "ElasticApm:MaxBatchEventCount";
 			public const string MaxQueueEventCount = "ElasticApm:MaxQueueEventCount";

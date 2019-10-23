@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -13,6 +14,7 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
+using Newtonsoft.Json;
 
 namespace Elastic.Apm.Report
 {
@@ -47,7 +49,9 @@ namespace Elastic.Apm.Report
 			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(config.ServerUrls.First());
 
 			System = system;
+
 			_metadata = new Metadata { Service = service, System = System };
+			foreach (var globalLabelKeyValue in config.GlobalLabels) _metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
 
 			if (config.MaxQueueEventCount < config.MaxBatchEventCount)
 			{
@@ -78,6 +82,8 @@ namespace Elastic.Apm.Report
 
 			StartWorkLoop();
 		}
+
+		private string _cachedMetadataJsonLine;
 
 		private long _eventQueueCount;
 
@@ -199,9 +205,10 @@ namespace Elastic.Apm.Report
 		{
 			try
 			{
-				var metadataJson = _payloadItemSerializer.SerializeObject(_metadata);
 				var ndjson = new StringBuilder();
-				ndjson.AppendLine("{\"metadata\": " + metadataJson + "}");
+				if (_cachedMetadataJsonLine == null)
+					_cachedMetadataJsonLine = "{\"metadata\": " + _payloadItemSerializer.SerializeObject(_metadata) + "}";
+				ndjson.AppendLine(_cachedMetadataJsonLine);
 
 				foreach (var item in queueItems)
 				{
@@ -259,9 +266,19 @@ namespace Elastic.Apm.Report
 
 	internal class Metadata
 	{
+		[JsonConverter(typeof(LabelsJsonConverter))]
+		public Dictionary<string, string> Labels { get; set; } = new Dictionary<string, string>();
+
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global - used by Json.Net
 		public Service Service { get; set; }
 
 		public Api.System System { get; set; }
+
+		/// <summary>
+		/// Method to conditionally serialize <see cref="Labels" /> - serialize only when there is at least one label.
+		/// See
+		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
+		/// </summary>
+		public bool ShouldSerializeLabels() => !Labels.IsEmpty();
 	}
 }

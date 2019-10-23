@@ -40,6 +40,8 @@ namespace Elastic.Apm.Config
 		/// </summary>
 		TimeSpan FlushInterval { get; }
 
+		IReadOnlyDictionary<string, string> GlobalLabels { get; }
+
 		LogLevel LogLevel { get; }
 
 		/// <summary>

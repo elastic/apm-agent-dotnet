@@ -173,12 +173,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			var pageData = new SampleAppUrlPathData(HomeController.DbOperationOutsideTransactionTestPageRelativePath
 				, HomeController.DbOperationOutsideTransactionTestStatusCode);
-			await SendGetRequestToSampleAppAndVerifyResponse(pageData.RelativeUrlPath, pageData.StatusCode);
 
-			await WaitAndCustomVerifyReceivedData(receivedData =>
-			{
-				VerifyReceivedDataSharedConstraints(pageData, receivedData);
-			});
+			await SendGetRequestToSampleAppAndVerifyResponse(pageData.RelativeUrlPath, pageData.StatusCode);
+			await WaitAndVerifyReceivedDataSharedConstraints(pageData);
 		}
 	}
 }

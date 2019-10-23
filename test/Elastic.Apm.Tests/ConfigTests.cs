@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Data;
 using Elastic.Apm.Tests.Mocks;
@@ -18,6 +19,30 @@ namespace Elastic.Apm.Tests
 	[Collection("UsesEnvironmentVariables")]
 	public class ConfigTests : IDisposable
 	{
+		public static TheoryData GlobalLabelsValidVariantsToTest => new TheoryData<string, IReadOnlyDictionary<string, string>>
+		{
+			// empty string - zero key value pairs
+			{ "", new Dictionary<string, string>() },
+
+			// one key and value pair where key and value are empty strings
+			{ "=", new Dictionary<string, string> { { "", "" } } },
+
+			// key is an empty string
+			{ "=v", new Dictionary<string, string> { { "", "v" } } },
+
+			// value is an empty string
+			{ "k=", new Dictionary<string, string> { { "k", "" } } },
+
+			// key and value are empty strings in the first pair
+			{ "=,k=v", new Dictionary<string, string> { { "", "" }, { "k", "v" } } },
+
+			// key and value are empty strings in the last pair
+			{ "k=,=", new Dictionary<string, string> { { "k", "" }, { "", "" } } },
+
+			// key and value are empty strings in the middle pair
+			{ "key1=value1,=,key3=value3", new Dictionary<string, string> { { "key1", "value1" }, { "", "" }, { "key3", "value3" } } },
+		};
+
 		[Fact]
 		public void ServerUrlsSimpleTest()
 		{
@@ -524,6 +549,7 @@ namespace Elastic.Apm.Tests
 		[InlineData("-2147483648", int.MinValue)]
 		[InlineData("2.32", DefaultValues.StackTraceLimit)]
 		[InlineData("2,32", DefaultValues.StackTraceLimit)]
+		// ReSharper disable once StringLiteralTypo
 		[InlineData("asdf", DefaultValues.StackTraceLimit)]
 		[Theory]
 		public void StackTraceLimit(string configValue, int expectedValue)
@@ -538,6 +564,7 @@ namespace Elastic.Apm.Tests
 		[InlineData("2m", 2 * 60 * 1000)]
 		[InlineData("2", 2)]
 		[InlineData("-2ms", -2)]
+		// ReSharper disable once StringLiteralTypo
 		[InlineData("dsfkldfs", DefaultValues.SpanFramesMinDurationInMilliseconds)]
 		[InlineData("2,32", DefaultValues.SpanFramesMinDurationInMilliseconds)]
 		[Theory]
@@ -558,6 +585,7 @@ namespace Elastic.Apm.Tests
 		[InlineData("0ms", 0)]
 		[InlineData("-3ms", DefaultValues.FlushIntervalInMilliseconds)]
 		[InlineData("-1", DefaultValues.FlushIntervalInMilliseconds)]
+		// ReSharper disable once StringLiteralTypo
 		[InlineData("dsfkldfs", DefaultValues.FlushIntervalInMilliseconds)]
 		[InlineData("2,32", DefaultValues.FlushIntervalInMilliseconds)]
 		[InlineData("785zz", DefaultValues.FlushIntervalInMilliseconds)]
@@ -577,7 +605,9 @@ namespace Elastic.Apm.Tests
 		[InlineData("-1", DefaultValues.MaxQueueEventCount)]
 		[InlineData("-23", DefaultValues.MaxQueueEventCount)]
 		[InlineData("-654", DefaultValues.MaxQueueEventCount)]
+		// ReSharper disable once StringLiteralTypo
 		[InlineData("0aefjw", DefaultValues.MaxQueueEventCount)]
+		// ReSharper disable once StringLiteralTypo
 		[InlineData("aefjw9", DefaultValues.MaxQueueEventCount)]
 		[InlineData("2,32", DefaultValues.MaxQueueEventCount)]
 		[InlineData("2.32", DefaultValues.MaxQueueEventCount)]
@@ -597,7 +627,9 @@ namespace Elastic.Apm.Tests
 		[InlineData("-1", DefaultValues.MaxBatchEventCount)]
 		[InlineData("-23", DefaultValues.MaxBatchEventCount)]
 		[InlineData("-654", DefaultValues.MaxBatchEventCount)]
+		// ReSharper disable once StringLiteralTypo
 		[InlineData("0aefjw", DefaultValues.MaxBatchEventCount)]
+		// ReSharper disable once StringLiteralTypo
 		[InlineData("aefjw9", DefaultValues.MaxBatchEventCount)]
 		[InlineData("2,32", DefaultValues.MaxBatchEventCount)]
 		[InlineData("2.32", DefaultValues.MaxBatchEventCount)]
@@ -616,6 +648,7 @@ namespace Elastic.Apm.Tests
 		[InlineData("TRUE", true)]
 		[InlineData("", DefaultValues.CentralConfig)]
 		[InlineData(null, DefaultValues.CentralConfig)]
+		// ReSharper disable once StringLiteralTypo
 		[InlineData("aefjw9", DefaultValues.CentralConfig)]
 		[Theory]
 		public void CentralConfig_tests(string configValue, bool expectedValue)
@@ -624,6 +657,35 @@ namespace Elastic.Apm.Tests
 				new ApmAgent(new TestAgentComponents(
 					config: new MockConfigSnapshot(centralConfig: configValue))))
 				agent.ConfigurationReader.CentralConfig.Should().Be(expectedValue);
+		}
+
+		[Theory]
+		[MemberData(nameof(GlobalLabelsValidVariantsToTest))]
+		public void GlobalLabels_valid_input_tests(string optionValue, IReadOnlyDictionary<string, string> expectedParseResult)
+		{
+			using (var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(globalLabels: optionValue))))
+				agent.ConfigurationReader.GlobalLabels.Should().Equal(expectedParseResult);
+		}
+
+		[Theory]
+		[InlineData("key")] // no key value separator
+		[InlineData(",k=v")] // no key value separator in the first pair
+		[InlineData("k=v,")] // no key value separator in the last pair
+		[InlineData("key1=value1,,key3=value3")] // no key value separator in the middle pair
+		[InlineData("key=value1,key2=value2,key=value3")] // more than one pair with the same key
+		[InlineData("=,=")] // two pairs with the same key (empty string)
+		public void GlobalLabels_invalid_input_tests(string optionValue)
+		{
+			var mockLogger = new TestLogger();
+			using (var agent = new ApmAgent(new TestAgentComponents(mockLogger
+				, new MockConfigSnapshot(mockLogger, globalLabels: optionValue))))
+				agent.ConfigurationReader.GlobalLabels.Should().BeEmpty();
+			mockLogger.Lines.Should()
+				.Contain(line =>
+					line.ContainsOrdinalIgnoreCase("Error")
+					&& line.ContainsOrdinalIgnoreCase(nameof(AbstractConfigurationReader))
+					&& line.ContainsOrdinalIgnoreCase("GlobalLabels")
+				);
 		}
 
 		private static double MetricsIntervalTestCommon(string configValue)
