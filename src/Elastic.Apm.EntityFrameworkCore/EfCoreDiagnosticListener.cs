@@ -40,6 +40,16 @@ namespace Elastic.Apm.EntityFrameworkCore
 							DbSpanCommon.EndSpan(span, commandExecutedEventData.Command, commandExecutedEventData.Duration);
 					}
 					break;
+				case string k when k == RelationalEventId.CommandError.Name:
+					if (kv.Value is CommandErrorEventData commandErrorEventData)
+					{
+						if (_spans.TryRemove(commandErrorEventData.CommandId, out var span))
+						{
+							span.CaptureException(commandErrorEventData.Exception);
+							DbSpanCommon.EndSpan(span, commandErrorEventData.Command, commandErrorEventData.Duration);
+						}
+					}
+					break;
 			}
 		}
 	}
