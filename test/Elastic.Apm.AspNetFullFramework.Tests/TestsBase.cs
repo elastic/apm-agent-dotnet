@@ -537,7 +537,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			framework.Version.Should().StartWith("4.");
 		}
 
-		private static void FullFwAssertValid(Api.System system) => system.Should().BeNull();
+		private void FullFwAssertValid(Api.System system)
+		{
+			system.Should().NotBeNull();
+
+			system.DetectedHostName.Should().Be(new SystemInfoHelper(LoggerBase).GetHostName());
+			system.HostName.Should().Be(system.DetectedHostName);
+		}
 
 		private void FullFwAssertValid(ErrorDto error)
 		{
@@ -626,7 +632,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			// ReSharper disable PossibleMultipleEnumeration
 			stackTrace.Should().NotBeNull();
 
-			stackTrace.ForEach((Action<CapturedStackFrame>)FullFwAssertValid);
+			stackTrace.ForEach(FullFwAssertValid);
 			// ReSharper restore PossibleMultipleEnumeration
 		}
 
