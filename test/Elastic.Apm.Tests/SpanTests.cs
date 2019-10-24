@@ -95,5 +95,26 @@ namespace Elastic.Apm.Tests
 			// Assert
 			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstTransaction.Id);
 		}
+
+		[Fact]
+		public void End_ShouldRestoreParentSpan_WhenTransactionIsNotSampled()
+		{
+			// Arrange
+			var payloadSender = new MockPayloadSender();
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(transactionSampleRate: "0"), payloadSender: payloadSender)))
+			{
+				var transaction = agent.Tracer.StartTransaction("transaction", "type");
+
+				var parentSpan = transaction.StartSpan("parent", "type");
+
+				// Act
+				parentSpan.CaptureSpan("span", "type", span => { });
+
+				// Assert
+				payloadSender.Spans.Count.Should().Be(0);
+				agent.Tracer.CurrentSpan.Should().Be(parentSpan);
+			}
+		}
 	}
 }
