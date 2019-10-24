@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
+using FluentAssertions;
 using Xunit;
 
 namespace Elastic.Apm.Tests
@@ -12,84 +13,92 @@ namespace Elastic.Apm.Tests
 		public void CaptureError_ShouldUseTransactionIdAsParent_WhenSpanDropped()
 		{
 			// Arrange
-			var currentExecutionSegmentsContainer = new NoopCurrentExecutionSegmentsContainer();
-			var logger = new NoopLogger();
 			var payloadSender = new MockPayloadSender();
-
-			var transaction = new Transaction(logger, "transaction", "type", new Sampler(1.0), null, payloadSender, null,
-				currentExecutionSegmentsContainer);
-
-			var span = new Span("parent", "type", transaction.Id, "traceId", transaction, payloadSender, logger,
-				new MockConfigSnapshot(transactionMaxSpans: "0"), currentExecutionSegmentsContainer);
-
-			// Act
-			span.CaptureError("Error message", "culprit", new StackFrame[0]);
+			using (var agent = new ApmAgent(new TestAgentComponents(
+				config: new MockConfigSnapshot(transactionMaxSpans: "0")
+				, payloadSender: payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("transaction", "type", transaction =>
+				{
+					transaction.CaptureSpan("parent", "type", span =>
+					{
+						// Act
+						span.CaptureError("Error message", "culprit", Array.Empty<StackFrame>());
+					});
+				});
+			}
 
 			// Assert
-			Assert.Equal(transaction.Id, payloadSender.FirstError.ParentId);
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstTransaction.Id);
 		}
 
 		[Fact]
 		public void CaptureException_ShouldUseTransactionIdAsParent_WhenSpanDropped()
 		{
 			// Arrange
-			var currentExecutionSegmentsContainer = new NoopCurrentExecutionSegmentsContainer();
-			var logger = new NoopLogger();
 			var payloadSender = new MockPayloadSender();
-
-			var transaction = new Transaction(logger, "transaction", "type", new Sampler(1.0), null, payloadSender, null,
-				currentExecutionSegmentsContainer);
-
-			var span = new Span("parent", "type", transaction.Id, "traceId", transaction, payloadSender, logger,
-				new MockConfigSnapshot(transactionMaxSpans: "0"), currentExecutionSegmentsContainer);
-
-			// Act
-			span.CaptureException(new Exception(), "culprit");
+			using (var agent = new ApmAgent(new TestAgentComponents(
+				config: new MockConfigSnapshot(transactionMaxSpans: "0")
+				, payloadSender: payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("transaction", "type", transaction =>
+				{
+					transaction.CaptureSpan("parent", "type", span =>
+					{
+						// Act
+						span.CaptureException(new Exception(), "culprit");
+					});
+				});
+			}
 
 			// Assert
-			Assert.Equal(transaction.Id, payloadSender.FirstError.ParentId);
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstTransaction.Id);
 		}
 
 		[Fact]
 		public void CaptureError_ShouldUseTransactionIdAsParent_WhenSpanNonSampled()
 		{
 			// Arrange
-			var currentExecutionSegmentsContainer = new NoopCurrentExecutionSegmentsContainer();
-			var logger = new NoopLogger();
 			var payloadSender = new MockPayloadSender();
-
-			var transaction = new Transaction(logger, "transaction", "type", new Sampler(0), null, payloadSender, null,
-				currentExecutionSegmentsContainer);
-
-			var span = new Span("parent", "type", transaction.Id, "traceId", transaction, payloadSender, logger,
-				new MockConfigSnapshot(transactionMaxSpans: "10"), currentExecutionSegmentsContainer);
-
-			// Act
-			span.CaptureError("Error message", "culprit", new StackFrame[0]);
+			using (var agent = new ApmAgent(new TestAgentComponents(
+				config: new MockConfigSnapshot(transactionSampleRate: "0")
+				, payloadSender: payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("transaction", "type", transaction =>
+				{
+					transaction.CaptureSpan("parent", "type", span =>
+					{
+						// Act
+						span.CaptureError("Error message", "culprit", Array.Empty<StackFrame>());
+					});
+				});
+			}
 
 			// Assert
-			Assert.Equal(transaction.Id, payloadSender.FirstError.ParentId);
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstTransaction.Id);
 		}
 
 		[Fact]
 		public void CaptureException_ShouldUseTransactionIdAsParent_WhenSpanNonSampled()
 		{
 			// Arrange
-			var currentExecutionSegmentsContainer = new NoopCurrentExecutionSegmentsContainer();
-			var logger = new NoopLogger();
 			var payloadSender = new MockPayloadSender();
-
-			var transaction = new Transaction(logger, "transaction", "type", new Sampler(0), null, payloadSender, null,
-				currentExecutionSegmentsContainer);
-
-			var span = new Span("parent", "type", transaction.Id, "traceId", transaction, payloadSender, logger,
-				new MockConfigSnapshot(transactionMaxSpans: "10"), currentExecutionSegmentsContainer);
-
-			// Act
-			span.CaptureException(new Exception(), "culprit");
+			using (var agent = new ApmAgent(new TestAgentComponents(
+				config: new MockConfigSnapshot(transactionSampleRate: "0")
+				, payloadSender: payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("transaction", "type", transaction =>
+				{
+					transaction.CaptureSpan("parent", "type", span =>
+					{
+						// Act
+						span.CaptureException(new Exception(), "culprit");
+					});
+				});
+			}
 
 			// Assert
-			Assert.Equal(transaction.Id, payloadSender.FirstError.ParentId);
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstTransaction.Id);
 		}
 	}
 }
