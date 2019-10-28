@@ -36,13 +36,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			EnvVarUtils.GetBoolValue("ELASTIC_APM_TESTS_FULL_FRAMEWORK_TEAR_DOWN_PERSISTENT_DATA", /* defaultValue: */ true,
 				out TearDownPersistentDataReason);
 
+
 		protected readonly AgentConfiguration AgentConfig = new AgentConfiguration();
+		protected readonly MockApmServer MockApmServer;
 		protected readonly bool SampleAppShouldHaveAccessToPerfCounters;
 		private readonly Dictionary<string, string> _envVarsToSetForSampleAppPool;
 		private readonly IisAdministration _iisAdministration;
 
 		private readonly IApmLogger _logger;
-		private readonly MockApmServer _mockApmServer;
 		private readonly int _mockApmServerPort;
 		private readonly bool _sampleAppLogEnabled;
 		private readonly string _sampleAppLogFilePath;
@@ -58,12 +59,12 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			_logger = LoggerBase.Scoped(ThisClassName);
 
-			_mockApmServer = new MockApmServer(_logger, TestDisplayName);
+			MockApmServer = new MockApmServer(_logger, TestDisplayName);
 			_iisAdministration = new IisAdministration(_logger);
 			_startMockApmServer = startMockApmServer;
 			SampleAppShouldHaveAccessToPerfCounters = sampleAppShouldHaveAccessToPerfCounters;
 
-			_mockApmServerPort = _startMockApmServer ? _mockApmServer.FindAvailablePortToListen() : ConfigConsts.DefaultValues.ApmServerPort;
+			_mockApmServerPort = _startMockApmServer ? MockApmServer.FindAvailablePortToListen() : ConfigConsts.DefaultValues.ApmServerPort;
 
 			_sampleAppLogEnabled = sampleAppLogEnabled;
 			_sampleAppLogFilePath = GetSampleAppLogFilePath();
@@ -127,6 +128,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				new SampleAppUrlPathData(HomeController.CallReturnBadRequestPageRelativePath,
 					HomeController.DummyHttpStatusCode, /* transactionsCount: */ 2, /* spansCount: */ 1);
 
+
 			/// <summary>
 			/// errorsCount is 3 because the exception is thrown inside a child span of a another span -
 			/// AspNetFullFrameworkSampleApp.Controllers.HomeController.CustomSpanThrowsInternal - child span
@@ -136,11 +138,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData CustomChildSpanThrowsExceptionPage =
 				new SampleAppUrlPathData(HomeController.CustomChildSpanThrowsPageRelativePath, 500, spansCount: 2, errorsCount: 3);
 
+
 			internal static readonly SampleAppUrlPathData ForbidHttpResponsePageDescriptionPage =
 				new SampleAppUrlPathData(HomeController.ForbidHttpResponsePageRelativePath, 200, spansCount: 1, errorsCount: 1);
 
 			internal static readonly SampleAppUrlPathData GetDotNetRuntimeDescriptionPage =
 				new SampleAppUrlPathData(HomeController.GetDotNetRuntimeDescriptionPageRelativePath, 200);
+
 
 			internal static readonly SampleAppUrlPathData ReturnBadRequestPage =
 				new SampleAppUrlPathData(HomeController.ReturnBadRequestPageRelativePath, (int)HttpStatusCode.BadRequest);
@@ -158,7 +162,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			// to this test instance of mock APM server.
 			_iisAdministration.SetupSampleAppInCleanState(_envVarsToSetForSampleAppPool, SampleAppShouldHaveAccessToPerfCounters);
 			if (_startMockApmServer)
-				_mockApmServer.RunInBackground(_mockApmServerPort);
+				MockApmServer.RunInBackground(_mockApmServerPort);
 			else
 			{
 				_logger.Info()
@@ -178,7 +182,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					?.Log("Not tearing down IIS sample application and pool because {Reason}", TearDownPersistentDataReason);
 			}
 
-			if (_startMockApmServer) await _mockApmServer.StopAsync();
+			if (_startMockApmServer) await MockApmServer.StopAsync();
 
 			_logger.Info()?.Log("Finished test: {FullUnitTestName}", TestDisplayName);
 		}
@@ -288,7 +292,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			return response;
 		}
 
-		protected async Task WaitAndCustomVerifyReceivedData(Action<ReceivedData> verifyAction)
+		protected async Task WaitAndCustomVerifyReceivedData(Action<ReceivedData> verifyAction, bool shouldGatherDiagnostics = true)
 		{
 			var attemptNumber = 0;
 			var timerSinceStart = Stopwatch.StartNew();
@@ -296,19 +300,19 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			{
 				++attemptNumber;
 
-				if (!_mockApmServer.ReceivedData.InvalidPayloadErrors.IsEmpty)
+				if (!MockApmServer.ReceivedData.InvalidPayloadErrors.IsEmpty)
 				{
 					var messageBuilder = new StringBuilder();
 					messageBuilder.AppendLine("There is at least one invalid payload error - the test is considered as failed.");
 					messageBuilder.AppendLine(TextUtils.Indent("Invalid payload error(s):", 1));
-					foreach (var invalidPayloadError in _mockApmServer.ReceivedData.InvalidPayloadErrors)
+					foreach (var invalidPayloadError in MockApmServer.ReceivedData.InvalidPayloadErrors)
 						messageBuilder.AppendLine(TextUtils.Indent(invalidPayloadError, 2));
 					throw new XunitException(messageBuilder.ToString());
 				}
 
 				try
 				{
-					verifyAction(_mockApmServer.ReceivedData);
+					verifyAction(MockApmServer.ReceivedData);
 					timerSinceStart.Stop();
 					_logger.Debug()
 						?.Log("Data received from agent passed verification." +
@@ -316,8 +320,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 							" Attempt #{AttemptNumber} out of {MaxNumberOfAttempts}",
 							timerSinceStart.Elapsed.TotalSeconds,
 							attemptNumber, DataSentByAgentVerificationConsts.MaxNumberOfAttemptsToVerify);
-					LogSampleAppLogFileContent();
-					await LogSampleAppDiagnosticsPage();
+					if (shouldGatherDiagnostics)
+					{
+						LogSampleAppLogFileContent();
+						await LogSampleAppDiagnosticsPage();
+					}
 					return;
 				}
 				catch (XunitException ex)
@@ -419,20 +426,20 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			_logger.Debug()
 				?.Log("Analyzing potential issues... _mockApmServer.ReceivedData: " +
 					"#transactions: {NumberOfTransactions}, #spans: {NumberOfSpans}, #errors: {NumberOfErrors}, #metric sets: {NumberOfMetricSets}",
-					_mockApmServer.ReceivedData.Transactions.Count,
-					_mockApmServer.ReceivedData.Spans.Count,
-					_mockApmServer.ReceivedData.Errors.Count,
-					_mockApmServer.ReceivedData.Metrics.Count);
+					MockApmServer.ReceivedData.Transactions.Count,
+					MockApmServer.ReceivedData.Spans.Count,
+					MockApmServer.ReceivedData.Errors.Count,
+					MockApmServer.ReceivedData.Metrics.Count);
 
 			FindReceivedDataWithTimestampEarlierThanTestStart();
 		}
 
 		private void FindReceivedDataWithTimestampEarlierThanTestStart()
 		{
-			foreach (var error in _mockApmServer.ReceivedData.Errors) AnalyzeDtoTimestamp(error.Timestamp, error);
-			foreach (var metricSet in _mockApmServer.ReceivedData.Metrics) AnalyzeDtoTimestamp(metricSet.Timestamp, metricSet);
-			foreach (var span in _mockApmServer.ReceivedData.Spans) AnalyzeDtoTimestamp(span.Timestamp, span);
-			foreach (var transaction in _mockApmServer.ReceivedData.Transactions) AnalyzeDtoTimestamp(transaction.Timestamp, transaction);
+			foreach (var error in MockApmServer.ReceivedData.Errors) AnalyzeDtoTimestamp(error.Timestamp, error);
+			foreach (var metricSet in MockApmServer.ReceivedData.Metrics) AnalyzeDtoTimestamp(metricSet.Timestamp, metricSet);
+			foreach (var span in MockApmServer.ReceivedData.Spans) AnalyzeDtoTimestamp(span.Timestamp, span);
+			foreach (var transaction in MockApmServer.ReceivedData.Transactions) AnalyzeDtoTimestamp(transaction.Timestamp, transaction);
 
 			void AnalyzeDtoTimestamp(long dtoTimestamp, object dto)
 			{
@@ -447,8 +454,12 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			}
 		}
 
-		protected async Task WaitAndVerifyReceivedDataSharedConstraints(SampleAppUrlPathData sampleAppUrlPathData) =>
-			await WaitAndCustomVerifyReceivedData(receivedData => { VerifyReceivedDataSharedConstraints(sampleAppUrlPathData, receivedData); });
+		protected async Task WaitAndVerifyReceivedDataSharedConstraints(
+			SampleAppUrlPathData sampleAppUrlPathData
+			, bool shouldGatherDiagnostics = true
+		) =>
+			await WaitAndCustomVerifyReceivedData(receivedData => { VerifyReceivedDataSharedConstraints(sampleAppUrlPathData, receivedData); },
+				shouldGatherDiagnostics);
 
 		protected void VerifyReceivedDataSharedConstraints(SampleAppUrlPathData sampleAppUrlPathData, ReceivedData receivedData)
 		{
@@ -710,6 +721,44 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			TimeUtils.ToEndDateTime(containedDto.Timestamp, containedDto.Duration)
 			<=
 			TimeUtils.ToEndDateTime(containingDto.Timestamp, containingDto.Duration);
+
+		protected void ClearState()
+		{
+			_sampleAppClientCallTiming = null;
+
+			MockApmServer.ClearState();
+		}
+
+		protected void AssertReceivedDataSampledStatus(ReceivedData receivedData, bool isSampled, int? expectedSpanCount = null)
+		{
+			foreach (var transaction in receivedData.Transactions)
+			{
+				transaction.IsSampled.Should().Be(isSampled);
+
+				if (isSampled)
+				{
+					transaction.Context.Should().NotBeNull();
+					if (expectedSpanCount.HasValue) transaction.SpanCount.Started.Should().Be(expectedSpanCount.Value);
+					transaction.SpanCount.Dropped.Should().Be(0);
+				}
+				else
+				{
+					transaction.Context.Should().BeNull();
+					transaction.SpanCount.Started.Should().Be(0);
+					transaction.SpanCount.Dropped.Should().Be(0);
+				}
+			}
+
+			foreach (var error in receivedData.Errors)
+			{
+				error.Transaction.IsSampled.Should().Be(isSampled);
+
+				if (isSampled)
+					error.Context.Should().NotBeNull();
+				else
+					error.Context.Should().BeNull();
+			}
+		}
 
 		protected struct SampleAppResponse
 		{

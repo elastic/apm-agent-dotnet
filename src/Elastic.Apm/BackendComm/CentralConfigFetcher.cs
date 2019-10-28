@@ -211,21 +211,25 @@ namespace Elastic.Apm.BackendComm
 			var severity = 400 <= statusCode && statusCode < 500 ? LogLevel.Debug : LogLevel.Error;
 
 			string message;
-			var msgPrefix = $"HTTP status code is {httpResponse.ReasonPhrase} which most likely means that ";
+			var statusAsString = $"HTTP status code is {httpResponse.ReasonPhrase} ({(int)httpResponse.StatusCode})";
+			var msgPrefix = $"{statusAsString} which most likely means that ";
 			// ReSharper disable once SwitchStatementMissingSomeCases
 			switch (httpResponse.StatusCode)
 			{
 				case HttpStatusCode.NotModified: // 304
 					_logger.Trace()
-						?.Log("HTTP status code is {HttpResponseReasonPhrase}"
+						?.Log("HTTP status code is {HttpResponseReasonPhrase} ({HttpStatusCode})"
 							+ " which means the configuration has not changed since the previous fetch."
 							+ " Response:{NewLine}{HttpResponse}"
-							, httpResponse.ReasonPhrase, Environment.NewLine, TextUtils.Indent(httpResponse.ToString()));
+							, httpResponse.ReasonPhrase
+							, (int)httpResponse.StatusCode
+							, Environment.NewLine
+							, TextUtils.Indent(httpResponse.ToString()));
 					return false;
 
 				case HttpStatusCode.BadRequest: // 400
 					severity = LogLevel.Error;
-					message = $"HTTP status code is {httpResponse.ReasonPhrase} which is unexpected";
+					message = $"{statusAsString} which is unexpected";
 					break;
 
 				case HttpStatusCode.Forbidden: // 403
@@ -242,7 +246,7 @@ namespace Elastic.Apm.BackendComm
 					break;
 
 				default:
-					message = $"HTTP status code ({httpResponse.ReasonPhrase}) signifies a failure";
+					message = $"{statusAsString} signifies a failure";
 					break;
 			}
 

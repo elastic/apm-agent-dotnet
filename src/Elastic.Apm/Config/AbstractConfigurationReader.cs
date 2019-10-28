@@ -452,7 +452,7 @@ namespace Elastic.Apm.Config
 				var adaptedServiceName = AdaptServiceName(nameInConfig);
 
 				if (nameInConfig == adaptedServiceName)
-					_logger?.Warning()?.Log("Service name provided in configuration is {ServiceName}", nameInConfig);
+					_logger?.Debug()?.Log("Service name provided in configuration is {ServiceName}", nameInConfig);
 				else
 				{
 					_logger?.Warning()
