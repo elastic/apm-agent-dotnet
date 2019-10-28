@@ -57,6 +57,30 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
+		/// Makes sure that empty string means sanitization is turned off
+		/// </summary>
+		[Fact]
+		public void SanitizeFieldNamesTestWithEmptyString()
+		{
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					config: new MockConfigSnapshot(sanitizeFieldNames: ""))))
+				agent.ConfigurationReader.SanitizeFieldNames.Should().BeEmpty();
+		}
+
+		/// <summary>
+		/// Makes sure that in case SanitizeFieldNames is not set, the agent uses the default SanitizeFieldNames
+		/// </summary>
+		[Fact]
+		public void SanitizeFieldNamesTestWithNoValue()
+		{
+			using (var agent =
+				new ApmAgent(new TestAgentComponents(
+					config: new MockConfigSnapshot())))
+				agent.ConfigurationReader.SanitizeFieldNames.Should().BeEquivalentTo(DefaultValues.SanitizeFieldNames);
+		}
+
+		/// <summary>
 		/// Sets 2 servers and makes sure that they are all parsed
 		/// </summary>
 		[Fact]

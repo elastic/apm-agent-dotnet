@@ -46,7 +46,7 @@ namespace Elastic.Apm.AspNetCore.Config
 		protected override ConfigurationKeyValue Read(string key, string fallBackEnvVarName)
 		{
 			var value = _configuration[key];
-			if (!string.IsNullOrWhiteSpace(value)) return Kv(key, value, Origin);
+			if (value != null) return Kv(key, value, Origin);
 
 			var secondary = Kv(fallBackEnvVarName, ReadEnvVarValue(fallBackEnvVarName), EnvironmentConfigurationReader.Origin);
 			return secondary;

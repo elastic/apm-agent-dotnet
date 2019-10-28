@@ -21,6 +21,25 @@ namespace Elastic.Apm.Model
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
 
+		// This constructor is meant for serialization
+		[JsonConstructor]
+		private Transaction(Context context, string name, string type, double duration, long timestamp, string id, string traceId, string parentId,
+			bool isSampled, string result, SpanCount spanCount
+		)
+		{
+			_context = new Lazy<Context>(() => context);
+			Name = name;
+			Duration = duration;
+			Timestamp = timestamp;
+			Type = type;
+			Id = id;
+			TraceId = traceId;
+			ParentId = parentId;
+			IsSampled = isSampled;
+			Result = result;
+			SpanCount = spanCount;
+		}
+
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigurationReader,

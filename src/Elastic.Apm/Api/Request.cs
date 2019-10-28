@@ -14,8 +14,10 @@ namespace Elastic.Apm.Api
 	{
 		public Request(string method, Url url) => (Method, Url) = (method, url);
 
+		[SanitizationAttribute]
 		public object Body { get; set; }
 
+		[SanitizationAttribute]
 		public Dictionary<string, string> Headers { get; set; }
 
 		[JsonProperty("http_version")]
