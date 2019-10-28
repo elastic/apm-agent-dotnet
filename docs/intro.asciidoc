@@ -22,7 +22,6 @@ https://docs.microsoft.com/en-us/dotnet/api/system.data.entity.infrastructure.in
 This means that for the supported technologies, there are no code changes required beyond enabling <<setup,auto-instrumentation>>.
 
 The Agent automatically registers callback methods for built-in Diagnostic Source events.
-The IIS HTTP module, as described in <<setup-asp-net, Set up ASP.net Core>>, will need to be registered.
 With this, the supported frameworks trigger Agent code for relevant events to measure their duration and collect metadata, like DB statements, as well as HTTP related information, like the URL, parameters, and headers.
 These events, called Transactions and Spans, are sent to the APM Server.
 The APM Server converts them to a format suitable for Elasticsearch, and sends them to an Elasticsearch cluster.
