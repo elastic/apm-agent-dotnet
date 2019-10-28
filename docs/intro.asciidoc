@@ -18,7 +18,7 @@ The agent auto-instruments <<supported-technologies,supported technologies>> and
 like HTTP requests and database queries. To do this, it uses built in capabilities of the instrumented frameworks like [Diagnostic Source](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.diagnosticsource?view=netcore-3.0), an HTTP module for IIS, or [IDbCommandInterceptor](https://docs.microsoft.com/en-us/dotnet/api/system.data.entity.infrastructure.interception.idbcommandinterceptor?view=entity-framework-6.2.0) for Entity Framework.
 This means that for the supported technologies, there are no code changes required.
 
-The Agent automatically {CONTENT_HERE}
+The Agent automatically registers callback methods for these built in Diagnostic Source events - or in case of the IIS HTTP module as described on the <<setup,Set up the Agent page>>, the user needs to register the module. With this, the supported frameworks trigger agent code for relevant events to measures their duration and collects metadata (like DB statements), as well as HTTP related information (like the URL, parameters, and headers).
 
 These events, called Transactions and Spans, are sent to the APM Server.
 The APM Server converts them to a format suitable for Elasticsearch, and sends them to an Elasticsearch cluster.
