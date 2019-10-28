@@ -267,22 +267,21 @@ If set to `true`, the agent makes periodic requests to the APM Server to fetch t
 ==== `SanitizeFieldNames` (added[1.2])
 
 Sometimes it is necessary to sanitize, i.e., remove, sensitive data sent to Elastic APM.
+This config accepts a list of wildcard patterns of field names which should be sanitized.
+These apply for example to HTTP headers and `application/x-www-form-urlencoded` data.
 
-This config contains a list of wildcard patterns of field names which should be sanitized. These apply for example to HTTP headers and `application/x-www-form-urlencoded` data.
-
-This option supports the wildcard `*`, which matches zero or more characters.
-Examples: `/foo/*/bar/*/baz*`, `*foo*`.
-Matching is case insensitive by default.
-
+The wildcard, `*`, matches zero or more characters, and matching is case insensitive by default.
 Prepending an element with `(?-i)` makes the matching case sensitive.
+Examples: `/foo/*/bar/*/baz*`, `*foo*`.
+
+You should review the data captured by Elastic APM carefully to make sure it does not contain sensitive information.
+If you do find sensitive data in your Elasticsearch index,
+you should add an additional entry to this list.
+Make sure to include the default entries as well, as setting a value here will overwrite the defaults. 
 
 NOTE: Data in the query string is considered non-sensitive,
 as sensitive information should not be sent in the query string.
 See https://www.owasp.org/index.php/Information_exposure_through_query_strings_in_url[owasp.org] for more information.
-
-NOTE: Review the data captured by Elastic APM carefully to make sure it does not capture sensitive information.
-If you do find sensitive data in the Elasticsearch index,
-you should add an additional entry to this list (make sure to also include the default entries).
 
 [options="header"]
 |============
