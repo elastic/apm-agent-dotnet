@@ -650,22 +650,13 @@ namespace Elastic.Apm.Config
 			return captureBodyInConfig.ToLowerInvariant();
 		}
 
-		protected List<string> ParseCaptureBodyContentTypes(ConfigurationKeyValue kv, string captureBody)
+		protected List<string> ParseCaptureBodyContentTypes(ConfigurationKeyValue kv)
 		{
-			var captureBodyContentTypesInConfig = kv.Value;
+			var valueToParse = kv.Value;
 
-			//CaptureBodyContentTypes and CaptureBody are linked. Verify that in case CaptureBody is ON - then CaptureBodyContentTypes is not empty
-			if (string.IsNullOrEmpty(captureBodyContentTypesInConfig) && captureBody != SupportedValues.CaptureBodyOff)
-			{
-				_logger?.Error()?.Log("Capture_Body is on but no content types are configured. Request bodies will not be captured.");
-				return new List<string>();
-			}
+			if (string.IsNullOrEmpty(valueToParse)) valueToParse = DefaultValues.CaptureBodyContentTypes;
 
-			var captureBodyContentTypes = new List<string>();
-			if (captureBodyContentTypesInConfig != null)
-				captureBodyContentTypes = captureBodyContentTypesInConfig.Split(',').Select(p => p.Trim()).ToList();
-
-			return captureBodyContentTypes;
+			return valueToParse.Split(',').Select(p => p.Trim()).ToList();
 		}
 
 		protected bool ParseCentralConfig(ConfigurationKeyValue kv) => ParseBoolOption(kv, DefaultValues.CentralConfig, "CentralConfig");

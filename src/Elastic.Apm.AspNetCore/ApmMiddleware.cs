@@ -29,7 +29,6 @@ namespace Elastic.Apm.AspNetCore
 	// ReSharper disable once ClassNeverInstantiated.Global
 	internal class ApmMiddleware
 	{
-		private readonly IConfigurationReader _configurationReader;
 		private readonly IApmLogger _logger;
 
 		private readonly RequestDelegate _next;
@@ -39,7 +38,6 @@ namespace Elastic.Apm.AspNetCore
 		{
 			_next = next;
 			_tracer = tracer;
-			_configurationReader = agent.ConfigurationReader;
 			_logger = agent.Logger.Scoped(nameof(ApmMiddleware));
 		}
 
@@ -51,8 +49,7 @@ namespace Elastic.Apm.AspNetCore
 			{
 				await _next(context);
 			}
-			catch (Exception e) when (transaction != null
-				&& ExceptionFilter.Capture(e, transaction, context, _configurationReader, _logger))
+			catch (Exception e) when (transaction != null && ExceptionFilter.Capture(e, transaction, context, _logger))
 			{ }
 			finally
 			{
@@ -176,8 +173,8 @@ namespace Elastic.Apm.AspNetCore
 				{
 					Socket = new Socket { Encrypted = context.Request.IsHttps, RemoteAddress = context.Connection?.RemoteIpAddress?.ToString() },
 					HttpVersion = GetHttpVersion(context.Request.Protocol),
-					Headers = GetHeaders(context.Request.Headers),
-					Body = GetRequestBody(context.Request)
+					Headers = GetHeaders(context.Request.Headers, transaction.ConfigSnapshot),
+					Body = GetRequestBody(context.Request, transaction.ConfigSnapshot)
 				};
 			}
 			catch (Exception ex)
@@ -189,13 +186,13 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		private string GetRequestBody(HttpRequest request)
+		private string GetRequestBody(HttpRequest request, IConfigSnapshot configSnapshot)
 		{
 			// ReSharper disable once InvertIf
-			if (_configurationReader.ShouldExtractRequestBodyOnTransactions() && !string.IsNullOrEmpty(request?.ContentType))
+			if (configSnapshot.ShouldExtractRequestBodyOnTransactions() && !string.IsNullOrEmpty(request?.ContentType))
 			{
 				var contentType = new ContentType(request.ContentType);
-				if (_configurationReader.CaptureBodyContentTypes.ContainsLike(contentType.MediaType))
+				if (configSnapshot.CaptureBodyContentTypes.ContainsLike(contentType.MediaType))
 					return request.ExtractRequestBody(_logger) ?? Consts.BodyRedacted;
 			}
 
@@ -203,8 +200,8 @@ namespace Elastic.Apm.AspNetCore
 			return Consts.BodyRedacted;
 		}
 
-		private Dictionary<string, string> GetHeaders(IHeaderDictionary headers) =>
-			_configurationReader.CaptureHeaders && headers != null
+		private Dictionary<string, string> GetHeaders(IHeaderDictionary headers, IConfigSnapshot configSnapshot) =>
+			configSnapshot.CaptureHeaders && headers != null
 				? headers.ToDictionary(header => header.Key, header => header.Value.ToString())
 				: null;
 
@@ -216,7 +213,7 @@ namespace Elastic.Apm.AspNetCore
 				{
 					Finished = context.Response.HasStarted, //TODO ?
 					StatusCode = context.Response.StatusCode,
-					Headers = GetHeaders(context.Response.Headers)
+					Headers = GetHeaders(context.Response.Headers, transaction.ConfigSnapshot)
 				};
 			}
 			catch (Exception ex)
