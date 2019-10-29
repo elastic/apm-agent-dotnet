@@ -134,7 +134,7 @@ Below is a sample `Web.config` configuration file for a ASP.NET application.
 This is used to keep all the errors and transactions of your service together
 and is the primary filter in the Elastic APM user interface.
 
-NOTE: The service name must conform to this regular expression: ^[a-zA-Z0-9 _-]+$. In less regexy terms: Your service name must only contain characters from the ASCII alphabet, numbers, dashes, underscores and spaces. Characters in service name which don't match regular expression will be replaced by `__` symbol.
+NOTE: The service name must conform to this regular expression: `^[a-zA-Z0-9 _-]+$`. In less regexy terms: Your service name must only contain characters from the ASCII alphabet, numbers, dashes, underscores and spaces. Characters in service name which don't match regular expression will be replaced by `_` symbol.
 
 [options="header"]
 |============
@@ -174,11 +174,11 @@ of the deployed revision, e.g. the output of git rev-parse HEAD.
 
 The name of the environment this service is deployed in, e.g. "production" or "staging".
 
-Environments allow you to easily filter data on a global level in the APM UI.
+Environments allow you to easily filter data on a global level in the APM app.
 It's important to be consistent when naming environments across agents.
-See {kibana-ref}/filters.html#environment-selector[environment selector] in the Kibana UI for more information.
+See {apm-app-ref}/filters.html#environment-selector[environment selector] in the Kibana UI for more information.
 
-NOTE: This feature is fully supported in the APM UI in Kibana versions >= 7.2.
+NOTE: This feature is fully supported in the APM app in Kibana versions >= 7.2.
 You must use the query bar to filter for a specific environment in versions prior to 7.2.
 
 [options="header"]
@@ -248,7 +248,7 @@ The Agent will revert to the default value if the value is set below `-1`.
 [[config-central-config]]
 ==== `CentralConfig` (added[1.1])
 
-If set to `true`, the agent makes periodic requests to the APM Server to fetch the latest {kibana-ref}/agent-configuration.html[APM Agent configuration].
+If set to `true`, the agent makes periodic requests to the APM Server to fetch the latest {apm-app-ref}/agent-configuration.html[APM Agent configuration].
 
 [options="header"]
 |============

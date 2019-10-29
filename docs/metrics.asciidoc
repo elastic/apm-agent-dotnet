@@ -20,7 +20,7 @@ The metrics will be stored in the `apm-*` index and have the `processor.event` p
 [[metrics-system]]
 === System metrics
 
-As of APM version 6.6, these metrics will be visualized in the APM UI.
+As of APM version 6.6, these metrics will be visualized in the APM app.
 
 For more system metrics, consider installing {metricbeat-ref}/index.html[metricbeat] on your hosts.
 
