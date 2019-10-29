@@ -8,6 +8,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
+// ReSharper disable AccessToDisposedClosure
 
 namespace Elastic.Apm.Tests.ApiTests
 {
@@ -710,7 +711,12 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstError.TraceId.Should().Be(capturedTransaction.TraceId);
 			payloadSender.FirstError.ParentId.Should()
 				.Be(errorCapturingExecutionSegment.IsSampled ? errorCapturingExecutionSegment.Id : capturedTransaction.Id);
-			payloadSender.FirstError.Context.Should().BeEquivalentTo(expectedErrorContext);
+
+			payloadSender.FirstError.Transaction.IsSampled.Should().Be(isSampled);
+			if (isSampled)
+				payloadSender.FirstError.Context.Should().NotBeNull().And.BeEquivalentTo(expectedErrorContext);
+			else
+				payloadSender.FirstError.Context.Should().BeNull();
 		}
 
 		private class TestException : Exception

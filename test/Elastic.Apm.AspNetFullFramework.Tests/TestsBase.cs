@@ -40,7 +40,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		protected readonly AgentConfiguration AgentConfig = new AgentConfiguration();
 		protected readonly MockApmServer MockApmServer;
 		protected readonly bool SampleAppShouldHaveAccessToPerfCounters;
-		private readonly Dictionary<string, string> _envVarsToSetForSampleAppPool;
+		protected readonly Dictionary<string, string> EnvVarsToSetForSampleAppPool;
 		private readonly IisAdministration _iisAdministration;
 
 		private readonly IApmLogger _logger;
@@ -50,7 +50,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		private readonly bool _startMockApmServer;
 		private readonly DateTime _testStartTime = DateTime.UtcNow;
 
-		protected TestsBase(ITestOutputHelper xUnitOutputHelper,
+		protected TestsBase(
+			ITestOutputHelper xUnitOutputHelper,
 			bool startMockApmServer = true,
 			IDictionary<string, string> envVarsToSetForSampleAppPool = null,
 			bool sampleAppShouldHaveAccessToPerfCounters = false,
@@ -69,14 +70,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			_sampleAppLogEnabled = sampleAppLogEnabled;
 			_sampleAppLogFilePath = GetSampleAppLogFilePath();
 
-			_envVarsToSetForSampleAppPool = envVarsToSetForSampleAppPool == null
+			EnvVarsToSetForSampleAppPool = envVarsToSetForSampleAppPool == null
 				? new Dictionary<string, string>()
 				: new Dictionary<string, string>(envVarsToSetForSampleAppPool);
-			_envVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.ServerUrls, BuildApmServerUrl(_mockApmServerPort));
+			EnvVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.ServerUrls, BuildApmServerUrl(_mockApmServerPort));
 
-			if (_sampleAppLogEnabled) _envVarsToSetForSampleAppPool.TryAdd(LoggingConfig.LogFileEnvVarName, _sampleAppLogFilePath);
+			if (_sampleAppLogEnabled) EnvVarsToSetForSampleAppPool.TryAdd(LoggingConfig.LogFileEnvVarName, _sampleAppLogFilePath);
 
-			_envVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.FlushInterval, "10ms");
+			EnvVarsToSetForSampleAppPool.TryAdd(ConfigConsts.EnvVarNames.FlushInterval, "10ms");
 		}
 
 		private static class DataSentByAgentVerificationConsts
@@ -151,6 +152,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			internal static readonly SampleAppUrlPathData ThrowsInvalidOperationPage =
 				new SampleAppUrlPathData(HomeController.ThrowsInvalidOperationPageRelativePath, 500, errorsCount: 1);
+
+			internal static readonly SampleAppUrlPathData GenNSpansPage =
+				new SampleAppUrlPathData(HomeController.GenNSpansPageRelativePath, (int)HttpStatusCode.Created);
 		}
 
 		private TimedEvent? _sampleAppClientCallTiming;
@@ -160,7 +164,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			// Mock APM server should be started only after sample application is started in clean state.
 			// The order is important to prevent agent's queued data from the previous test to be sent
 			// to this test instance of mock APM server.
-			_iisAdministration.SetupSampleAppInCleanState(_envVarsToSetForSampleAppPool, SampleAppShouldHaveAccessToPerfCounters);
+			_iisAdministration.SetupSampleAppInCleanState(EnvVarsToSetForSampleAppPool, SampleAppShouldHaveAccessToPerfCounters);
 			if (_startMockApmServer)
 				MockApmServer.RunInBackground(_mockApmServerPort);
 			else
@@ -573,7 +577,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			transaction.Name.Should().NotBeNull();
 			TransactionResultFullFwAssertValid(transaction.Result);
 			transaction.Type.Should().Be(ApiConstants.TypeRequest);
-			FullFwAssertValid(transaction.SpanCount);
+			transaction.SpanCount.Should().NotBeNull();
 			FullFwAssertValid((ITimedDto)transaction);
 		}
 
@@ -591,13 +595,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			timedDto.Duration.Should().BeGreaterOrEqualTo(0);
 
 			if (_sampleAppClientCallTiming != null) timedDto.ShouldOccurBetween(_sampleAppClientCallTiming);
-		}
-
-		private static void FullFwAssertValid(SpanCountDto spanCount)
-		{
-			spanCount.Should().NotBeNull();
-
-			spanCount.Dropped.Should().Be(0);
 		}
 
 		private static void FullFwAssertValid(Url url)
@@ -739,7 +736,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				{
 					transaction.Context.Should().NotBeNull();
 					if (expectedSpanCount.HasValue) transaction.SpanCount.Started.Should().Be(expectedSpanCount.Value);
-					transaction.SpanCount.Dropped.Should().Be(0);
 				}
 				else
 				{

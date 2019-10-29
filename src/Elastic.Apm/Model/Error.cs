@@ -20,6 +20,8 @@ namespace Elastic.Apm.Model
 			ParentId = parentId;
 			Transaction = new TransactionData(transaction.IsSampled, transaction.Type);
 
+			if (transaction.IsSampled) Context = transaction.Context;
+
 			IApmLogger logger = loggerArg?.Scoped($"{nameof(Error)}.{Id}");
 			logger.Trace()
 				?.Log("New Error instance created: {Error}. Time: {Time} (as timestamp: {Timestamp})",
