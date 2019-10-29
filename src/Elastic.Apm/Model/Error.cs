@@ -26,6 +26,22 @@ namespace Elastic.Apm.Model
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 		}
 
+		// This constructor is meant for serialization
+		[JsonConstructor]
+		private Error(string culprit, CapturedException capturedException, string id, string parentId, long timestamp, string traceId,
+			string transactionId, TransactionData transaction
+		)
+		{
+			Culprit = culprit;
+			Exception = capturedException;
+			Id = id;
+			ParentId = parentId;
+			Timestamp = timestamp;
+			TraceId = traceId;
+			TransactionId = transactionId;
+			Transaction = transaction;
+		}
+
 		/// <summary>
 		/// <seealso cref="ShouldSerializeContext" />
 		/// </summary>
@@ -73,6 +89,7 @@ namespace Elastic.Apm.Model
 
 		public class TransactionData
 		{
+			[JsonConstructor]
 			internal TransactionData(bool isSampled, string type)
 			{
 				IsSampled = isSampled;

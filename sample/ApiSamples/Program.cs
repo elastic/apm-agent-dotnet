@@ -155,7 +155,8 @@ namespace ApiSamples
 				//In the main method we check for this and continue the trace.
 				var startInfo = new ProcessStartInfo();
 				startInfo.Environment["ELASTIC_APM_SERVICE_NAME"] = "Service2";
-				var outgoingDistributedTracingData = transaction.OutgoingDistributedTracingData.SerializeToString();
+				var outgoingDistributedTracingData = (Agent.Tracer.CurrentSpan?.OutgoingDistributedTracingData
+					?? Agent.Tracer.CurrentTransaction?.OutgoingDistributedTracingData)?.SerializeToString();
 				startInfo.FileName = "dotnet";
 				startInfo.Arguments = $"run {outgoingDistributedTracingData}";
 				WriteLineToConsole(

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;

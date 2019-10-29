@@ -193,5 +193,8 @@ namespace Elastic.Apm.Model
 				Context = transaction.Context
 			});
 		}
+
+		internal static IExecutionSegment GetCurrentExecutionSegment(IApmAgent agent) =>
+			agent.Tracer.CurrentSpan ?? (IExecutionSegment)agent.Tracer.CurrentTransaction;
 	}
 }

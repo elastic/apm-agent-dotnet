@@ -11,7 +11,7 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
-	[Collection("AspNetFullFrameworkTests")]
+	[Collection(Consts.AspNetFullFrameworkTestsCollection)]
 	public class ErrorsTests : TestsBase
 	{
 		public ErrorsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
