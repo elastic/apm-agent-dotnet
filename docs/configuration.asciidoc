@@ -267,7 +267,7 @@ If set to `true`, the agent makes periodic requests to the APM Server to fetch t
 ==== `GlobalLabels` (added[1.2])
 
 Labels added to all events, with the format `key=value[,key=value[,...]]`.
-Any labels set by application via the agent's public API will override global labels with the same keys.
+Any labels set by the application via the agent's public API will override global labels with the same keys.
 
 [options="header"]
 |============
