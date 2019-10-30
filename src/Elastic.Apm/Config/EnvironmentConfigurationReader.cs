@@ -38,6 +38,8 @@ namespace Elastic.Apm.Config
 
 		public TimeSpan FlushInterval => ParseFlushInterval(Read(ConfigConsts.EnvVarNames.FlushInterval));
 
+		public IReadOnlyDictionary<string, string> GlobalLabels => ParseGlobalLabels(Read(ConfigConsts.EnvVarNames.GlobalLabels));
+
 		public LogLevel LogLevel => ParseLogLevel(Read(ConfigConsts.EnvVarNames.LogLevel));
 
 		public int MaxBatchEventCount => ParseMaxBatchEventCount(Read(ConfigConsts.EnvVarNames.MaxBatchEventCount));

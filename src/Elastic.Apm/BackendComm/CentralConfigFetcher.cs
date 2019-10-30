@@ -395,6 +395,8 @@ namespace Elastic.Apm.BackendComm
 
 			public TimeSpan FlushInterval => _wrapped.FlushInterval;
 
+			public IReadOnlyDictionary<string, string> GlobalLabels => _wrapped.GlobalLabels;
+
 			public LogLevel LogLevel => _wrapped.LogLevel;
 
 			public int MaxBatchEventCount => _wrapped.MaxBatchEventCount;

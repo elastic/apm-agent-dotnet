@@ -295,6 +295,27 @@ See https://www.owasp.org/index.php/Information_exposure_through_query_strings_i
 | `password, passwd, pwd, secret, *key, *token*, *session*, *credit*, *card*, authorization, set-cookie` | List<string> 
 |============
 
+[float]
+[[config-global-labels]]
+==== `GlobalLabels` (added[1.2])
+
+Labels added to all events, with the format `key=value[,key=value[,...]]`.
+Any labels set by the application via the agent's public API will override global labels with the same keys.
+
+[options="header"]
+|============
+| Environment variable name    | IConfiguration key
+| `ELASTIC_APM_GLOBAL_LABELS` | `ElasticApm:GlobalLabels`
+|============
+
+[options="header"]
+|============
+| Default     | Type
+| <empty map> | Map of string to string
+|============
+
+NOTE: This option requires APM Server 7.2 or later. It will have no effect on older versions.
+
 [[config-reporter]]
 === Reporter configuration options
 
