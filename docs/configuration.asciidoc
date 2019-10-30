@@ -300,7 +300,7 @@ See https://www.owasp.org/index.php/Information_exposure_through_query_strings_i
 ==== `GlobalLabels` (added[1.2])
 
 Labels added to all events, with the format `key=value[,key=value[,...]]`.
-Any labels set by application via the agent's public API will override global labels with the same keys.
+Any labels set by the application via the agent's public API will override global labels with the same keys.
 
 [options="header"]
 |============
@@ -314,7 +314,7 @@ Any labels set by application via the agent's public API will override global la
 | <empty map> | Map of string to string
 |============
 
-NOTE: This option requires APM Server 7.2 or later, and it will have no effect if an older version is used.
+NOTE: This option requires APM Server 7.2 or later. It will have no effect on older versions.
 
 [[config-reporter]]
 === Reporter configuration options
