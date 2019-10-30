@@ -25,7 +25,6 @@ namespace Elastic.Apm.AspNetFullFramework
 			try
 			{
 				var value = ConfigurationManager.AppSettings[key];
-				// ReSharper disable once ConvertIfStatementToReturnStatement
 				if (value != null) return Kv(key, value, Origin);
 			}
 			catch (ConfigurationErrorsException ex)

@@ -36,7 +36,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			EnvVarUtils.GetBoolValue("ELASTIC_APM_TESTS_FULL_FRAMEWORK_TEAR_DOWN_PERSISTENT_DATA", /* defaultValue: */ true,
 				out TearDownPersistentDataReason);
 
-
 		protected readonly AgentConfiguration AgentConfig = new AgentConfiguration();
 		protected readonly bool SampleAppShouldHaveAccessToPerfCounters;
 		private readonly Dictionary<string, string> _envVarsToSetForSampleAppPool;
@@ -128,7 +127,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				new SampleAppUrlPathData(HomeController.CallReturnBadRequestPageRelativePath,
 					HomeController.DummyHttpStatusCode, /* transactionsCount: */ 2, /* spansCount: */ 1);
 
-
 			/// <summary>
 			/// errorsCount is 3 because the exception is thrown inside a child span of a another span -
 			/// AspNetFullFrameworkSampleApp.Controllers.HomeController.CustomSpanThrowsInternal - child span
@@ -138,13 +136,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData CustomChildSpanThrowsExceptionPage =
 				new SampleAppUrlPathData(HomeController.CustomChildSpanThrowsPageRelativePath, 500, spansCount: 2, errorsCount: 3);
 
-
 			internal static readonly SampleAppUrlPathData ForbidHttpResponsePageDescriptionPage =
 				new SampleAppUrlPathData(HomeController.ForbidHttpResponsePageRelativePath, 200, spansCount: 1, errorsCount: 1);
 
 			internal static readonly SampleAppUrlPathData GetDotNetRuntimeDescriptionPage =
 				new SampleAppUrlPathData(HomeController.GetDotNetRuntimeDescriptionPageRelativePath, 200);
-
 
 			internal static readonly SampleAppUrlPathData ReturnBadRequestPage =
 				new SampleAppUrlPathData(HomeController.ReturnBadRequestPageRelativePath, (int)HttpStatusCode.BadRequest);
@@ -546,7 +542,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			framework.Version.Should().StartWith("4.");
 		}
 
-		private static void FullFwAssertValid(Api.System system) => system.Should().BeNull();
+		private void FullFwAssertValid(Api.System system)
+		{
+			system.Should().NotBeNull();
+
+			system.DetectedHostName.Should().Be(new SystemInfoHelper(LoggerBase).GetHostName());
+			system.HostName.Should().Be(system.DetectedHostName);
+		}
 
 		private void FullFwAssertValid(ErrorDto error)
 		{

@@ -197,23 +197,24 @@ namespace Elastic.Apm.Model
 			var isFirstEndCall = !_isEnded;
 			_isEnded = true;
 
-			if (!ShouldBeSentToApmServer || !isFirstEndCall) return;
-
-			// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
-			// ReSharper disable once CompareOfFloatsByEqualityOperator
-			if (_configurationReader.StackTraceLimit != 0 && _configurationReader.SpanFramesMinDurationInMilliseconds != 0)
+			if (ShouldBeSentToApmServer && isFirstEndCall)
 			{
-				if (Duration >= _configurationReader.SpanFramesMinDurationInMilliseconds
-					|| _configurationReader.SpanFramesMinDurationInMilliseconds < 0)
+				// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
+				// ReSharper disable once CompareOfFloatsByEqualityOperator
+				if (_configurationReader.StackTraceLimit != 0 && _configurationReader.SpanFramesMinDurationInMilliseconds != 0)
 				{
-					StackTrace = StacktraceHelper.GenerateApmStackTrace(new StackTrace(true).GetFrames(), _logger,
-						_configurationReader, $"Span `{Name}'");
+					if (Duration >= _configurationReader.SpanFramesMinDurationInMilliseconds
+						|| _configurationReader.SpanFramesMinDurationInMilliseconds < 0)
+					{
+						StackTrace = StacktraceHelper.GenerateApmStackTrace(new StackTrace(true).GetFrames(), _logger,
+							_configurationReader, $"Span `{Name}'");
+					}
 				}
+
+				_payloadSender.QueueSpan(this);
 			}
 
-			_payloadSender.QueueSpan(this);
-
-			_currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
+			if (isFirstEndCall) _currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
 		}
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
@@ -226,7 +227,7 @@ namespace Elastic.Apm.Model
 				_enclosingTransaction,
 				culprit,
 				isHandled,
-				parentId
+				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id)
 			);
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)
@@ -263,7 +264,7 @@ namespace Elastic.Apm.Model
 				this,
 				_configurationReader,
 				_enclosingTransaction,
-				parentId
+				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id)
 			);
 	}
 }

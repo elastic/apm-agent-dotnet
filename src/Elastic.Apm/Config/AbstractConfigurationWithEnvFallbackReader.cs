@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
@@ -57,6 +58,9 @@ namespace Elastic.Apm.Config
 
 		public virtual double MetricsIntervalInMilliseconds =>
 			ParseMetricsInterval(Read(ConfigConsts.KeyNames.MetricsInterval, ConfigConsts.EnvVarNames.MetricsInterval));
+
+		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames =>
+			ParseSanitizeFieldNames(Read(ConfigConsts.KeyNames.SanitizeFieldNames, ConfigConsts.EnvVarNames.SanitizeFieldNames));
 
 		public virtual string SecretToken => ParseSecretToken(Read(ConfigConsts.KeyNames.SecretToken, ConfigConsts.EnvVarNames.SecretToken));
 
