@@ -735,10 +735,8 @@ namespace Elastic.Apm.Config
 						?.Log(dbgOptionName + " configuration option's value is invalid: there's more 'more than one key-value pair with the same key"
 							+ " - using default (empty map)."
 							+ " Key that appears in more than one key-value pair: `{Key}'."
-							+ " Value from the first key-value pair: `{Value}'."
-							+ " The second key-value pair: `{KeyValue}'."
 							+ " Option's value: `{Provided" + dbgOptionName + "}'."
-							, key, result[key], pair, kv.Value);
+							, key, kv.Value);
 					return new Dictionary<string, string>();
 				}
 				result.Add(key, pair.Substring(keyValueSeparatorIndex+1,pair.Length-(keyValueSeparatorIndex+1)));
