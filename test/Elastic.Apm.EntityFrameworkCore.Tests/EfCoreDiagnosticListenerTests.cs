@@ -18,6 +18,8 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 
 		public EfCoreDiagnosticListenerTests()
 		{
+			// default EfCore in-memory isn't relational, this is why we're using sqlite in-memory
+			// https://docs.microsoft.com/en-us/ef/core/miscellaneous/testing/in-memory#inmemory-is-not-a-relational-database
 			_connection = new SqliteConnection("DataSource=:memory:");
 			_connection.Open();
 
