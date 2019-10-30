@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
@@ -18,9 +19,7 @@ namespace Elastic.Apm.Config
 		public List<string> CaptureBodyContentTypes => _content.CaptureBodyContentTypes;
 		public bool CaptureHeaders => _content.CaptureHeaders;
 		public bool CentralConfig => _content.CentralConfig;
-
 		public string DbgDescription { get; }
-
 		public string Environment => _content.Environment;
 		public TimeSpan FlushInterval => _content.FlushInterval;
 		public IReadOnlyDictionary<string, string> GlobalLabels => _content.GlobalLabels;
@@ -28,6 +27,8 @@ namespace Elastic.Apm.Config
 		public int MaxBatchEventCount => _content.MaxBatchEventCount;
 		public int MaxQueueEventCount => _content.MaxQueueEventCount;
 		public double MetricsIntervalInMilliseconds => _content.MetricsIntervalInMilliseconds;
+
+		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _content.SanitizeFieldNames;
 		public string SecretToken => _content.SecretToken;
 		public IReadOnlyList<Uri> ServerUrls => _content.ServerUrls;
 		public string ServiceName => _content.ServiceName;

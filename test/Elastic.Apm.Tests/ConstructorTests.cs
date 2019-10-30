@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using FluentAssertions;
 using Xunit;
@@ -30,6 +31,7 @@ namespace Elastic.Apm.Tests
 
 			// ReSharper disable UnassignedGetOnlyAutoProperty
 			public string CaptureBody => ConfigConsts.DefaultValues.CaptureBody;
+			public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => ConfigConsts.DefaultValues.SanitizeFieldNames;
 			public List<string> CaptureBodyContentTypes { get; }
 			public bool CaptureHeaders => ConfigConsts.DefaultValues.CaptureHeaders;
 			public bool CentralConfig => ConfigConsts.DefaultValues.CentralConfig;

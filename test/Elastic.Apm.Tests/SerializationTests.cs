@@ -301,7 +301,7 @@ namespace Elastic.Apm.Tests
 		}
 
 		private static string SerializePayloadItem(object item) =>
-			new PayloadItemSerializer().SerializeObject(item);
+			new PayloadItemSerializer(new MockConfigSnapshot()).SerializeObject(item);
 
 		/// <summary>
 		/// A dummy type for tests.

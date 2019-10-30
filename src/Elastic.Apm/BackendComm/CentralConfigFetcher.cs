@@ -405,6 +405,8 @@ namespace Elastic.Apm.BackendComm
 
 			public double MetricsIntervalInMilliseconds => _wrapped.MetricsIntervalInMilliseconds;
 
+			public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _wrapped.SanitizeFieldNames;
+
 			public string SecretToken => _wrapped.SecretToken;
 
 			public IReadOnlyList<Uri> ServerUrls => _wrapped.ServerUrls;

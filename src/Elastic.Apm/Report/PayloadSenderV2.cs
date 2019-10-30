@@ -37,7 +37,7 @@ namespace Elastic.Apm.Report
 		private readonly int _maxQueueEventCount;
 		private readonly Metadata _metadata;
 
-		private readonly PayloadItemSerializer _payloadItemSerializer = new PayloadItemSerializer();
+		private readonly PayloadItemSerializer _payloadItemSerializer;
 
 		public PayloadSenderV2(IApmLogger logger, IConfigSnapshot config, Service service, Api.System system,
 			HttpMessageHandler httpMessageHandler = null, string dbgName = null
@@ -45,6 +45,7 @@ namespace Elastic.Apm.Report
 			: base( /* isEnabled: */ true, logger, ThisClassName, service, config, httpMessageHandler)
 		{
 			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
+			_payloadItemSerializer = new PayloadItemSerializer(config);
 
 			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(config.ServerUrls.First());
 
