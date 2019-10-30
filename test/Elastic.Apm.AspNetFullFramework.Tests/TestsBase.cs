@@ -526,6 +526,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			metadata.Should().NotBeNull();
 
+			if (AgentConfig.GlobalLabels == null)
+				metadata.Labels.Should().BeNull();
+			else
+				metadata.Labels.Should().Equal(AgentConfig.GlobalLabels);
+
 			FullFwAssertValid(metadata.Service);
 			FullFwAssertValid(metadata.System);
 		}
@@ -772,6 +777,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			internal bool CaptureHeaders = true;
 			internal string Environment;
+			internal Dictionary<string, string> GlobalLabels;
 			internal string ServiceName;
 		}
 

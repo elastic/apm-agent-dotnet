@@ -22,6 +22,7 @@ namespace Elastic.Apm.Config
 		public string DbgDescription { get; }
 		public string Environment => _content.Environment;
 		public TimeSpan FlushInterval => _content.FlushInterval;
+		public IReadOnlyDictionary<string, string> GlobalLabels => _content.GlobalLabels;
 		public LogLevel LogLevel => _content.LogLevel;
 		public int MaxBatchEventCount => _content.MaxBatchEventCount;
 		public int MaxQueueEventCount => _content.MaxQueueEventCount;

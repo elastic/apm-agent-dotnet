@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -222,7 +223,7 @@ namespace Elastic.Apm.Config
 				return result;
 
 			_logger?.Error()
-				?.Log("Failed to parse provided stack trace limit `{ProvidedStackTraceLimit}` - using default: {DefaultStackTraceLimit}",
+				?.Log("Failed to parse provided stack trace limit `{ProvidedStackTraceLimit}' - using default: {DefaultStackTraceLimit}",
 					kv.Value, DefaultValues.StackTraceLimit);
 
 			return DefaultValues.StackTraceLimit;
@@ -276,7 +277,7 @@ namespace Elastic.Apm.Config
 			{
 				_logger?.Error()
 					?.Log(
-						"Failed to parse provided " + dbgOptionName + ": `{Provided" + dbgOptionName + "}` - using default: {Default" + dbgOptionName
+						"Failed to parse provided " + dbgOptionName + ": `{Provided" + dbgOptionName + "}' - using default: {Default" + dbgOptionName
 						+ "}",
 						kv.Value, defaultValue);
 
@@ -287,7 +288,7 @@ namespace Elastic.Apm.Config
 			if (parsedValue <= 0)
 			{
 				_logger?.Error()
-					?.Log("Provided " + dbgOptionName + ": `{Provided" + dbgOptionName + "}` is invalid (it should be positive) - " +
+					?.Log("Provided " + dbgOptionName + ": `{Provided" + dbgOptionName + "}' is invalid (it should be positive) - " +
 						"using default: {Default" + dbgOptionName + "}",
 						kv.Value, defaultValue);
 				return defaultValue;
@@ -318,7 +319,7 @@ namespace Elastic.Apm.Config
 			if (value < TimeSpan.Zero)
 			{
 				_logger?.Error()
-					?.Log("Provided " + dbgOptionName + ": `{Provided" + dbgOptionName + "}` is invalid (it should be positive or zero) - " +
+					?.Log("Provided " + dbgOptionName + ": `{Provided" + dbgOptionName + "}' is invalid (it should be positive or zero) - " +
 						"using default: {Default" + dbgOptionName + "}",
 						kv.Value, defaultValue);
 				return defaultValue;
@@ -676,7 +677,7 @@ namespace Elastic.Apm.Config
 			{
 				_logger?.Error()
 					?.Log(
-						"Failed to parse provided " + dbgOptionName + ": `{Provided" + dbgOptionName + "}` - using default: {Default" + dbgOptionName
+						"Failed to parse provided " + dbgOptionName + ": `{Provided" + dbgOptionName + "}' - using default: {Default" + dbgOptionName
 						+ "}",
 						kv.Value, defaultValue);
 
@@ -684,6 +685,77 @@ namespace Elastic.Apm.Config
 			}
 
 			return parsedValue;
+		}
+
+		protected IReadOnlyDictionary<string, string> ParseGlobalLabels(ConfigurationKeyValue kv) => ParseKeyValuePairs(kv, "GlobalLabels");
+
+		private IReadOnlyDictionary<string, string> ParseKeyValuePairs(ConfigurationKeyValue kv, string dbgOptionName)
+		{
+			//
+			// Value format:
+			// 					key=value[,key=value[,...]]
+			//
+
+			if (kv?.Value == null)
+			{
+				_logger?.Debug()?.Log(dbgOptionName + " configuration option doesn't have a valid value - using default (empty map)");
+				return new Dictionary<string, string>();
+			}
+
+			// Treat empty string as zero key-value pairs
+			var pairs = kv.Value.IsEmpty() ? Array.Empty<string>() : kv.Value.Split(',');
+			var result = new Dictionary<string, string>();
+			foreach (var pair in pairs)
+			{
+				var keyValueSeparatorIndex = pair.IndexOf('=');
+				if (keyValueSeparatorIndex == -1)
+				{
+					_logger?.Error()
+						?.Log(dbgOptionName + " configuration option's value is invalid: one of key-value pairs is missing key-value delimiter"
+							+ " - using default (empty map)."
+							+ " Key-value pair with missing delimiter: `{KeyValue}'."
+							+ " Option's value: `{Provided" + dbgOptionName + "}'."
+							, pair, kv.Value);
+					return new Dictionary<string, string>();
+				}
+
+				var key = pair.Substring(0, keyValueSeparatorIndex);
+				if (result.ContainsKey(key))
+				{
+					_logger?.Error()
+						?.Log(dbgOptionName + " configuration option's value is invalid: there's more 'more than one key-value pair with the same key"
+							+ " - using default (empty map)."
+							+ " Key that appears in more than one key-value pair: `{Key}'."
+							+ " Option's value: `{Provided" + dbgOptionName + "}'."
+							, key, kv.Value);
+					return new Dictionary<string, string>();
+				}
+				result.Add(key, pair.Substring(keyValueSeparatorIndex+1,pair.Length-(keyValueSeparatorIndex+1)));
+			}
+
+			_logger?.Debug()
+				?.Log(dbgOptionName + " configuration option's value: `{Provided" + dbgOptionName + "}'."
+					+ " Parsed to: {Parsed" + dbgOptionName + "}."
+					, kv.Value, ToLogString(result));
+
+			return result;
+		}
+
+		internal static string ToLogString(IReadOnlyDictionary<string, string> stringToStringMap)
+		{
+			// [count: 3]: [0]: `key0': `value0', [1]: `key1': `value1', [2]: `key2': `value2'
+			var result = new StringBuilder();
+
+			result.Append($"[count: {stringToStringMap.Count}]");
+			var index = 0;
+			foreach (var keyValuePair in stringToStringMap)
+			{
+				var prefix = index == 0 ? ':' : ',';
+				result.Append($"{prefix} [{index}]: `{keyValuePair.Key}': `{keyValuePair.Value}'");
+				++index;
+			}
+
+			return result.ToString();
 		}
 
 		protected string ReadEnvVarValue(string envVarName) => Environment.GetEnvironmentVariable(envVarName)?.Trim();
