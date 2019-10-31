@@ -41,8 +41,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 			var httpContext = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("httpContext").GetValue(kv.Value) as HttpContext;
 
-			if (transaction.IsSampled && transaction.ConfigSnapshot.ShouldExtractRequestBodyOnError())
-				transaction.CollectRequestInfo(httpContext, _logger);
+			transaction.CollectRequestBody(/* isForError: */ true, httpContext?.Request, _logger);
 		}
 	}
 }

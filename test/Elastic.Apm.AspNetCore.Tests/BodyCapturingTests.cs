@@ -83,8 +83,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		private static IEnumerable<OptionsTestVariant> BuildOptionsTestVariants()
 		{
-			yield return new OptionsTestVariant();
-
 			var captureBodyContentTypesVariants = new[]
 			{
 				ConfigConsts.DefaultValues.CaptureBodyContentTypes,
@@ -95,7 +93,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			{
 				foreach (var captureBodyContentTypes in captureBodyContentTypesVariants)
 				{
-					foreach (var isSampled in new[] { false, true })
+					foreach (var isSampled in new[] { false, true})
 					{
 						yield return new OptionsTestVariant
 						{
@@ -112,10 +110,23 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[MemberData(nameof(OptionsChangedAfterStartTestVariants))]
 		public async Task Options_changed_after_start(int startCfgVariantIndex, OptionsTestVariant startCfgVariant)
 		{
-			var sutEnv = StartSutEnv(new MockConfigSnapshot(new NoopLogger()
+			var startConfigSnapshot = new MockConfigSnapshot(new NoopLogger()
 				, captureBody: startCfgVariant.CaptureBody
 				, captureBodyContentTypes: startCfgVariant.CaptureBodyContentTypes
-				, transactionSampleRate: startCfgVariant.IsSampled ? "1" : "0"));
+				, transactionSampleRate: startCfgVariant.IsSampled ? "1" : "0");
+			var sutEnv = StartSutEnv(startConfigSnapshot);
+
+			foreach (var isError in new[] { false, true })
+			{
+				var body = new ToStringBuilder
+				{
+					{ nameof(startCfgVariantIndex), startCfgVariantIndex },
+					{ nameof(startCfgVariant), startCfgVariant },
+					{ nameof(isError), isError },
+				}.ToString();
+
+				await TestBodyCapture(body, isError, ShouldRequestBodyBeCaptured(startConfigSnapshot, isError), startCfgVariant.IsSampled);
+			}
 
 			await BuildOptionsTestVariants()
 				.ForEachIndexed(async (updateCfgVariant, updateCfgVariantIndex) =>
@@ -160,7 +171,15 @@ namespace Elastic.Apm.AspNetCore.Tests
 				sutEnv.MockPayloadSender.Clear();
 
 				var urlPath = isError ? "api/Home/PostError" : "api/Home/Post";
-				var response = await sutEnv.HttpClient.PostAsync(urlPath, new StringContent(body, Encoding.UTF8, MyCustomContentType));
+				HttpResponseMessage response = null;
+				try
+				{
+					response = await sutEnv.HttpClient.PostAsync(urlPath, new StringContent(body, Encoding.UTF8, MyCustomContentType));
+				}
+				catch (Exception)
+				{
+					isError.Should().BeTrue();
+				}
 
 				sutEnv.MockPayloadSender.Transactions.Should().HaveCount(1);
 				var transaction = sutEnv.MockPayloadSender.FirstTransaction;
@@ -170,7 +189,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				if (isSampled)
 				{
 					capturedRequestBody = transaction.Context.Request.Body;
-					capturedRequestBody.Should().Be(shouldRequestBodyBeCaptured ? body : Consts.BodyRedacted);
+					capturedRequestBody.Should().Be(shouldRequestBodyBeCaptured ? body : Elastic.Apm.Consts.Redacted);
 				}
 
 				if (isError)

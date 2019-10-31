@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Mime;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -171,11 +170,15 @@ namespace Elastic.Apm.AspNetCore
 
 				transaction.Context.Request = new Request(context.Request.Method, url)
 				{
-					Socket = new Socket { Encrypted = context.Request.IsHttps, RemoteAddress = context.Connection?.RemoteIpAddress?.ToString() },
+					Socket = new Socket
+					{
+						Encrypted = context.Request.IsHttps, RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
+					},
 					HttpVersion = GetHttpVersion(context.Request.Protocol),
 					Headers = GetHeaders(context.Request.Headers, transaction.ConfigSnapshot),
-					Body = GetRequestBody(context.Request, transaction.ConfigSnapshot)
 				};
+
+				transaction.CollectRequestBody( /* isForError: */ false, context.Request, _logger);
 			}
 			catch (Exception ex)
 			{
@@ -184,20 +187,6 @@ namespace Elastic.Apm.AspNetCore
 					?.LogException(ex, "Exception thrown while trying to fill request context for sampled transaction {TransactionId}",
 						transaction.Id);
 			}
-		}
-
-		private string GetRequestBody(HttpRequest request, IConfigSnapshot configSnapshot)
-		{
-			// ReSharper disable once InvertIf
-			if (configSnapshot.ShouldExtractRequestBodyOnTransactions() && !string.IsNullOrEmpty(request?.ContentType))
-			{
-				var contentType = new ContentType(request.ContentType);
-				if (configSnapshot.CaptureBodyContentTypes.ContainsLike(contentType.MediaType))
-					return request.ExtractRequestBody(_logger) ?? Consts.BodyRedacted;
-			}
-
-			// According to the documentation - the default value of 'body' is '[Redacted]'
-			return Consts.BodyRedacted;
 		}
 
 		private Dictionary<string, string> GetHeaders(IHeaderDictionary headers, IConfigSnapshot configSnapshot) =>
