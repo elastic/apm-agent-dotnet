@@ -743,6 +743,8 @@ namespace Elastic.Apm.Config
 
 		internal static string ToLogString(IReadOnlyDictionary<string, string> stringToStringMap)
 		{
+			if (stringToStringMap == null) return ObjectExtensions.NullAsString;
+
 			// [count: 3]: [0]: `key0': `value0', [1]: `key1': `value1', [2]: `key2': `value2'
 			var result = new StringBuilder();
 
