@@ -5,8 +5,8 @@ namespace Elastic.Apm.Tests.TestHelpers
 {
 	public class FlushingTextWriterToLineWriterAdaptor : ILineWriter
 	{
-		private readonly TextWriter _textWriter;
 		private readonly string _prefix;
+		private readonly TextWriter _textWriter;
 
 		public FlushingTextWriterToLineWriterAdaptor(TextWriter textWriter, string prefix = "")
 		{

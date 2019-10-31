@@ -55,13 +55,11 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		}
 
 		[Fact]
-		public void BuildGetConfigAbsoluteUrl_throws_on_not_absolute_base()
-		{
+		public void BuildGetConfigAbsoluteUrl_throws_on_not_absolute_base() =>
 			AsAction(() => BuildGetConfigAbsoluteUrl(new Uri("relative_URL", UriKind.Relative), BuildService("My svc", "My env")))
 				.Should()
 				.ThrowExactly<ArgumentException>()
 				.WithMessage("*should*be*absolute*");
-		}
 
 		[Theory]
 		[InlineData("http://1.2.3.4", "http://1.2.3.4/intake/v2/events")]
@@ -78,12 +76,10 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		}
 
 		[Fact]
-		public void BuildIntakeV2EventsAbsoluteUrl_throws_on_not_absolute_base()
-		{
+		public void BuildIntakeV2EventsAbsoluteUrl_throws_on_not_absolute_base() =>
 			AsAction(() => BuildIntakeV2EventsAbsoluteUrl(new Uri("relative_URL", UriKind.Relative)))
 				.Should()
 				.ThrowExactly<ArgumentException>()
 				.WithMessage("*should*be*absolute*");
-		}
 	}
 }

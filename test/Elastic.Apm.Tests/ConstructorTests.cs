@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using FluentAssertions;
 using Xunit;
@@ -30,11 +31,13 @@ namespace Elastic.Apm.Tests
 
 			// ReSharper disable UnassignedGetOnlyAutoProperty
 			public string CaptureBody => ConfigConsts.DefaultValues.CaptureBody;
+			public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => ConfigConsts.DefaultValues.SanitizeFieldNames;
 			public List<string> CaptureBodyContentTypes { get; }
 			public bool CaptureHeaders => ConfigConsts.DefaultValues.CaptureHeaders;
 			public bool CentralConfig => ConfigConsts.DefaultValues.CentralConfig;
 			public string Environment { get; }
 			public TimeSpan FlushInterval => TimeSpan.FromMilliseconds(ConfigConsts.DefaultValues.FlushIntervalInMilliseconds);
+			public IReadOnlyDictionary<string, string> GlobalLabels => new Dictionary<string, string>();
 			public LogLevel LogLevel { get; }
 			public int MaxBatchEventCount => ConfigConsts.DefaultValues.MaxBatchEventCount;
 			public int MaxQueueEventCount => ConfigConsts.DefaultValues.MaxQueueEventCount;
@@ -46,6 +49,7 @@ namespace Elastic.Apm.Tests
 			public double SpanFramesMinDurationInMilliseconds => ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;
 			public int StackTraceLimit => ConfigConsts.DefaultValues.StackTraceLimit;
 			public double TransactionSampleRate => ConfigConsts.DefaultValues.TransactionSampleRate;
+
 			public int TransactionMaxSpans => ConfigConsts.DefaultValues.TransactionMaxSpans;
 			// ReSharper restore UnassignedGetOnlyAutoProperty
 		}

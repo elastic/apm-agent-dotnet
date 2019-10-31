@@ -25,15 +25,15 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// It's basically an integration test.
 	/// </summary>
 	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
-	public class AspNetCoreMiddlewareTests: LoggingTestBase, IClassFixture<WebApplicationFactory<Startup>>
+	public class AspNetCoreMiddlewareTests : LoggingTestBase, IClassFixture<WebApplicationFactory<Startup>>
 	{
 		private const string ThisClassName = nameof(AspNetCoreMiddlewareTests);
-
-		private readonly IApmLogger _logger;
 		private readonly ApmAgent _agent;
 		private readonly MockPayloadSender _capturedPayload;
 		private readonly WebApplicationFactory<Startup> _factory;
+
 		// ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+		private readonly IApmLogger _logger;
 
 		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper)
 		{
@@ -43,12 +43,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 			// We need to ensure Agent.Instance is created because we need _agent to use Agent.Instance CurrentExecutionSegmentsContainer
 			AgentSingletonUtils.EnsureInstanceCreated();
 			_agent = new ApmAgent(new TestAgentComponents(
-				logger: _logger,
-				config: new MockConfigSnapshot(_logger, captureBody: ConfigConsts.SupportedValues.CaptureBodyAll),
+				_logger,
+				new MockConfigSnapshot(_logger, captureBody: ConfigConsts.SupportedValues.CaptureBodyAll),
 				// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
 				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer)
-				);
+			);
 			ApmMiddlewareExtension.UpdateServiceInformation(_agent.Service);
 
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
@@ -137,7 +137,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task HomeSimplePagePostTransactionTest()
 		{
-
 			var headerKey = "X-Additional-Header";
 			var headerValue = "For-Elastic-Apm-Agent";
 			_client.DefaultRequestHeaders.Add(headerKey, headerValue);
@@ -238,12 +237,19 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var controllerActionSpan = spans.Last();
 			controllerActionSpan.Name.Should().Be("Index_span_name");
 			controllerActionSpan.Type.Should().Be("Index_span_type");
-			var httpSpans = spans.Where(span => span.Context.Db != null);
+			var dbSpans = spans.Where(span => span.Context.Db != null);
+			// ReSharper disable PossibleMultipleEnumeration
+			dbSpans.Should().NotBeEmpty();
+			foreach (var dbSpan in dbSpans)
+			{
+				dbSpan.Type.Should().Be(ApiConstants.TypeDb);
+				dbSpan.Subtype.Should().Be(ApiConstants.SubtypeSqLite);
+				dbSpan.ParentId.Should().Be(controllerActionSpan.Id);
+			}
+			var httpSpans = spans.Where(span => span.Context.Http != null);
 			httpSpans.Should().NotBeEmpty();
 			foreach (var httpSpan in httpSpans) httpSpan.ParentId.Should().Be(controllerActionSpan.Id);
-			var dbSpans = spans.Where(span => span.Context.Http != null);
-			dbSpans.Should().NotBeEmpty();
-			foreach (var dbSpan in dbSpans) dbSpan.ParentId.Should().Be(controllerActionSpan.Id);
+			// ReSharper restore PossibleMultipleEnumeration
 		}
 
 		/// <summary>
@@ -284,7 +290,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task FailingPostRequestWithoutConfiguredExceptionPage()
 		{
-
 			_client = Helper.GetClientWithoutExceptionPage(_agent, _factory);
 
 			_client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -303,6 +308,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var errorDetail = error?.Exception;
 			errorDetail.Should().NotBeNull();
+			// ReSharper disable PossibleNullReferenceException
 			errorDetail.Message.Should().Be("This is a post method test exception!");
 			errorDetail.Type.Should().Be(typeof(Exception).FullName);
 			errorDetail.Handled.Should().BeFalse();
@@ -312,6 +318,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			context.Request.Url.Full.Should().Be("http://localhost/api/Home/PostError");
 			context.Request.Method.Should().Be(HttpMethod.Post.Method);
 			context.Request.Body.Should().Be(body);
+			// ReSharper restore PossibleNullReferenceException
 		}
 
 		public override void Dispose()

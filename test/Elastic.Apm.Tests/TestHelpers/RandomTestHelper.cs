@@ -14,10 +14,10 @@ namespace Elastic.Apm.Tests.TestHelpers
 		private readonly ThreadLocal<Random> _threadLocal;
 
 		internal RandomTestHelper(ITestOutputHelper xUnitOutputHelper, IApmLogger loggerForNonXunitSinks)
-			: this(null, xUnitOutputHelper, loggerForNonXunitSinks) {}
+			: this(null, xUnitOutputHelper, loggerForNonXunitSinks) { }
 
 		internal RandomTestHelper(int seed, ITestOutputHelper xUnitOutputHelper, IApmLogger loggerForNonXunitSinks)
-			: this((int?)seed, xUnitOutputHelper, loggerForNonXunitSinks) {}
+			: this((int?)seed, xUnitOutputHelper, loggerForNonXunitSinks) { }
 
 		private RandomTestHelper(int? seedArg, ITestOutputHelper xUnitOutputHelper, IApmLogger loggerForNonXunitSinks)
 		{

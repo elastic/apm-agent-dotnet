@@ -6,12 +6,12 @@ namespace Elastic.Apm.Helpers
 {
 	internal class DisposableHelper
 	{
+		internal const string AnotherCallStillInProgressMsg = "{0} Dispose call while a previous call is still in progress"
+			+ " which most likely means a bug in the code - just exiting";
+
 		private volatile int _state = (int)State.BeforeDispose;
 
 		internal bool HasStarted => _state != (int)State.BeforeDispose;
-
-		internal const string AnotherCallStillInProgressMsg = "{0} Dispose call while a previous call is still in progress"
-			+ " which most likely means a bug in the code - just exiting";
 
 		internal bool DoOnce(IApmLogger loggerArg, string dbgOwnerDesc, Action ownerDispose)
 		{
@@ -30,8 +30,9 @@ namespace Elastic.Apm.Helpers
 					logger.Debug()?.Log("{DisposableDesc} is already disposed - just exiting", dbgOwnerDesc);
 					return false;
 
-				default: throw new AssertionFailedException(
-					$"Unexpected {nameof(stateBeforeTry)} value: {stateBeforeTry} ({(int)stateBeforeTry} as int)");
+				default:
+					throw new AssertionFailedException(
+						$"Unexpected {nameof(stateBeforeTry)} value: {stateBeforeTry} ({(int)stateBeforeTry} as int)");
 			}
 
 			logger.Debug()?.Log("Starting to dispose {DisposableDesc}...", dbgOwnerDesc);

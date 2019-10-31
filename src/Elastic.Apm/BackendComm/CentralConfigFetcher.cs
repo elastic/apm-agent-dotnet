@@ -165,11 +165,9 @@ namespace Elastic.Apm.BackendComm
 			return (httpResponse, httpResponseBody);
 		}
 
-		private async Task<ValueTuple<HttpResponseMessage, string>> FetchConfigHttpResponseAsync(HttpRequestMessage httpRequest)
-		{
-			return await _agentTimer.AwaitOrTimeout(FetchConfigHttpResponseImplAsync(httpRequest)
+		private async Task<ValueTuple<HttpResponseMessage, string>> FetchConfigHttpResponseAsync(HttpRequestMessage httpRequest) =>
+			await _agentTimer.AwaitOrTimeout(FetchConfigHttpResponseImplAsync(httpRequest)
 				, _agentTimer.Now + GetConfigHttpRequestTimeout, CtsInstance.Token);
-		}
 
 		private (ConfigDelta, WaitInfoS) ProcessHttpResponse(HttpResponseMessage httpResponse, string httpResponseBody)
 		{
@@ -397,6 +395,8 @@ namespace Elastic.Apm.BackendComm
 
 			public TimeSpan FlushInterval => _wrapped.FlushInterval;
 
+			public IReadOnlyDictionary<string, string> GlobalLabels => _wrapped.GlobalLabels;
+
 			public LogLevel LogLevel => _wrapped.LogLevel;
 
 			public int MaxBatchEventCount => _wrapped.MaxBatchEventCount;
@@ -404,6 +404,8 @@ namespace Elastic.Apm.BackendComm
 			public int MaxQueueEventCount => _wrapped.MaxQueueEventCount;
 
 			public double MetricsIntervalInMilliseconds => _wrapped.MetricsIntervalInMilliseconds;
+
+			public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _wrapped.SanitizeFieldNames;
 
 			public string SecretToken => _wrapped.SecretToken;
 
@@ -417,9 +419,9 @@ namespace Elastic.Apm.BackendComm
 
 			public int StackTraceLimit => _wrapped.StackTraceLimit;
 
-			public double TransactionSampleRate => _configDelta.TransactionSampleRate ?? _wrapped.TransactionSampleRate;
-
 			public int TransactionMaxSpans => _wrapped.TransactionMaxSpans;
+
+			public double TransactionSampleRate => _configDelta.TransactionSampleRate ?? _wrapped.TransactionSampleRate;
 		}
 	}
 }

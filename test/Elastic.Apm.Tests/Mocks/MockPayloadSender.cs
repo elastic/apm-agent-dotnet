@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.Model;
@@ -10,17 +9,13 @@ namespace Elastic.Apm.Tests.Mocks
 {
 	internal class MockPayloadSender : IPayloadSender
 	{
-		private readonly object _lock = new object();
-
 		private readonly List<IError> _errors = new List<IError>();
-		private readonly List<ITransaction> _transactions = new List<ITransaction>();
-		private readonly List<ISpan> _spans = new List<ISpan>();
+		private readonly object _lock = new object();
 		private readonly List<IMetricSet> _metrics = new List<IMetricSet>();
+		private readonly List<ISpan> _spans = new List<ISpan>();
+		private readonly List<ITransaction> _transactions = new List<ITransaction>();
 
 		public IReadOnlyList<IError> Errors => DoUnderLock(() => CreateImmutableSnapshot(_errors));
-		public IReadOnlyList<ITransaction> Transactions => DoUnderLock(() => CreateImmutableSnapshot(_transactions));
-		public IReadOnlyList<ISpan> Spans => DoUnderLock(() => CreateImmutableSnapshot(_spans));
-		public IReadOnlyList<IMetricSet> Metrics => DoUnderLock(() => CreateImmutableSnapshot(_metrics));
 
 		public Error FirstError => DoUnderLock(() => _errors.First() as Error);
 
@@ -30,9 +25,13 @@ namespace Elastic.Apm.Tests.Mocks
 		public Span FirstSpan => DoUnderLock(() => _spans.First() as Span);
 
 		public Transaction FirstTransaction => DoUnderLock(() => _transactions.First() as Transaction);
+		public IReadOnlyList<IMetricSet> Metrics => DoUnderLock(() => CreateImmutableSnapshot(_metrics));
+		public IReadOnlyList<ISpan> Spans => DoUnderLock(() => CreateImmutableSnapshot(_spans));
 
 		public Span[] SpansOnFirstTransaction =>
 			DoUnderLock(() => _spans.Where(n => n.TransactionId == _transactions.First().Id).Select(n => n as Span).ToArray());
+
+		public IReadOnlyList<ITransaction> Transactions => DoUnderLock(() => CreateImmutableSnapshot(_transactions));
 
 		public void QueueError(IError error) => DoUnderLock(() => { _errors.Add(error); });
 

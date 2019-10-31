@@ -29,10 +29,10 @@ namespace Elastic.Apm.Tests.TestHelpers
 	internal class AgentTimerForTesting : IAgentTimerForTesting
 	{
 		private const string ThisClassName = nameof(AgentTimerForTesting);
-		private readonly AgentTimer _realAgentTimer = new AgentTimer();
 
 		private readonly IApmLogger _logger;
 		private readonly MockAgentTimer _mockAgentTimer = new MockAgentTimer("AgentTimerForTesting internal");
+		private readonly AgentTimer _realAgentTimer = new AgentTimer();
 
 		internal AgentTimerForTesting(IApmLogger logger = null) =>
 			_logger = logger == null ? (IApmLogger)new NoopLogger() : logger.Scoped(ThisClassName);
@@ -89,7 +89,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 		{
 			_logger.Debug()?.Log($"Waiting until condition is true... dbgDesc: {(dbgDesc?.Invoke()).AsNullableToString()}.");
 
-			var maxTotalTimeToWait = 30.Seconds();
+			var maxTotalTimeToWait = 5.Minutes();
 			var timeToWaitBetweenChecks = 10.Milliseconds();
 			var minTimeBetweenLogs = 1.Second();
 

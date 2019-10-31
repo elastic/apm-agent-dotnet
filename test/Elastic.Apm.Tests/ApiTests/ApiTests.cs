@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
@@ -142,7 +141,6 @@ namespace Elastic.Apm.Tests.ApiTests
 
 					agent.Tracer.CurrentSpan.Should().BeNull();
 				});
-
 			}
 		}
 
@@ -183,7 +181,6 @@ namespace Elastic.Apm.Tests.ApiTests
 
 					agent.Tracer.CurrentSpan.Should().BeNull();
 				});
-
 			}
 		}
 
@@ -581,7 +578,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		}
 
 		/// <summary>
-		/// Creates a transaction, then a span then calls <see cref="ITransaction.End()"/> and <see cref="ISpan.End()"/> twice.
+		/// Creates a transaction, then a span then calls <see cref="ITransaction.End()" /> and <see cref="ISpan.End()" /> twice.
 		/// Makes sure that transaction and span sent on the first respective call to End() and the second call is no-op.
 		/// </summary>
 		[Theory]
@@ -636,10 +633,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				span.Duration = 123456.789;
 				span.End();
 				payloadSender.Spans.Should().HaveCount(expectedSpansCount);
-				if (isSampled)
-				{
-					payloadSender.FirstSpan.Duration.Should().Be(123456.789);
-				}
+				if (isSampled) payloadSender.FirstSpan.Duration.Should().Be(123456.789);
 
 				payloadSender.Transactions.Should().HaveCount(0);
 				transaction.Duration = 987654.321;
@@ -686,8 +680,8 @@ namespace Elastic.Apm.Tests.ApiTests
 				agent.Tracer.CaptureTransaction(TestTransaction, CustomTransactionTypeForTests, transaction =>
 				{
 					capturedTransaction = transaction;
-					foreach (var keyValue in expectedErrorContext.Labels)
-						transaction.Context.Labels[keyValue.Key] = keyValue.Value;
+					foreach (var (key, value) in expectedErrorContext.Labels)
+						transaction.Context.Labels[key] = value;
 					ISpan span = null;
 					if (captureOnSpan)
 					{
@@ -714,7 +708,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstError.Transaction.Type.Should().Be(CustomTransactionTypeForTests);
 			payloadSender.FirstError.TransactionId.Should().Be(capturedTransaction.Id);
 			payloadSender.FirstError.TraceId.Should().Be(capturedTransaction.TraceId);
-			payloadSender.FirstError.ParentId.Should().Be(errorCapturingExecutionSegment.Id);
+			payloadSender.FirstError.ParentId.Should()
+				.Be(errorCapturingExecutionSegment.IsSampled ? errorCapturingExecutionSegment.Id : capturedTransaction.Id);
 			payloadSender.FirstError.Context.Should().BeEquivalentTo(expectedErrorContext);
 		}
 

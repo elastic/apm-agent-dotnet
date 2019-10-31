@@ -67,14 +67,14 @@ namespace Elastic.Apm.Logging
 			if (placeholdersMismatchedArgs.Count > 0)
 			{
 				sb.Append(
-					$" Warning: This line is from an invalid structured log which should be fixed and may not be complete: "
+					" Warning: This line is from an invalid structured log which should be fixed and may not be complete: "
 					+ $"number of arguments is not matching the number of placeholders, placeholders with missing values: {string.Join(", ", placeholdersMismatchedArgs)}");
 			}
 
 			if (ValueNames.Count != expectedNumberOfArgs)
 			{
 				sb.Append(
-					$" Warning: This line is from an invalid structured log which should be fixed and may not be complete: "
+					" Warning: This line is from an invalid structured log which should be fixed and may not be complete: "
 					+ $"number of placeholders in the log message does not match the number of parameters. Argument values without placeholders: {string.Join(", ", args.Skip(ValueNames.Count))}");
 			}
 
@@ -183,11 +183,11 @@ namespace Elastic.Apm.Logging
 			var args = new KeyValuePair<string, object>[values.Length + offset];
 			args[0] = new KeyValuePair<string, object>("{OriginalFormat}", OriginalFormat);
 			if (_scope != null)
-				args[1] = new KeyValuePair<string, object>("{Scope}", _scope);
+				args[1] = new KeyValuePair<string, object>("Scope", _scope);
 
 			for (int i = 0, j = _scope != null ? 1 : 0; j < ValueNames.Count; i++, j++)
 			{
-				if (values.Length < i)
+				if (values.Length > i)
 					args[offset + i] = new KeyValuePair<string, object>(ValueNames[j], values[i]);
 			}
 

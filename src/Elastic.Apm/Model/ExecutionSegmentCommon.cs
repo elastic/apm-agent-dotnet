@@ -153,14 +153,15 @@ namespace Elastic.Apm.Model
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
-			var capturedException = new CapturedException { Message = exception.Message, Type = exception.GetType().FullName, Handled = isHandled, };
+			var capturedException = new CapturedException { Message = exception.Message, Type = exception.GetType().FullName, Handled = isHandled };
 
 			capturedException.StackTrace = StacktraceHelper.GenerateApmStackTrace(exception, logger,
 				$"{nameof(Transaction)}.{nameof(CaptureException)}", configurationReader);
 
 			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger)
 			{
-				Culprit = capturedCulprit, Context = transaction.Context
+				Culprit = capturedCulprit,
+				Context = transaction.Context
 			});
 		}
 
@@ -188,8 +189,12 @@ namespace Elastic.Apm.Model
 
 			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger)
 			{
-				Culprit = capturedCulprit, Context = transaction.Context
+				Culprit = capturedCulprit,
+				Context = transaction.Context
 			});
 		}
+
+		internal static IExecutionSegment GetCurrentExecutionSegment(IApmAgent agent) =>
+			agent.Tracer.CurrentSpan ?? (IExecutionSegment)agent.Tracer.CurrentTransaction;
 	}
 }

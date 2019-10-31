@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mime;
@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.Extensions;
+using Elastic.Apm.AspNetCore.Helpers;
 using Elastic.Apm.Config;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Logging;
@@ -51,7 +52,8 @@ namespace Elastic.Apm.AspNetCore
 				await _next(context);
 			}
 			catch (Exception e) when (transaction != null
-				&& Helpers.ExceptionFilter.Capture(e, transaction, context, _configurationReader, _logger)) { }
+				&& ExceptionFilter.Capture(e, transaction, context, _configurationReader, _logger))
+			{ }
 			finally
 			{
 				StopTransaction(transaction, context);
@@ -172,11 +174,7 @@ namespace Elastic.Apm.AspNetCore
 
 				transaction.Context.Request = new Request(context.Request.Method, url)
 				{
-					Socket = new Socket
-					{
-						Encrypted = context.Request.IsHttps,
-						RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
-					},
+					Socket = new Socket { Encrypted = context.Request.IsHttps, RemoteAddress = context.Connection?.RemoteIpAddress?.ToString() },
 					HttpVersion = GetHttpVersion(context.Request.Protocol),
 					Headers = GetHeaders(context.Request.Headers),
 					Body = GetRequestBody(context.Request)

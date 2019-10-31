@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Timers;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Report;
-using Timer = System.Timers.Timer;
 
 namespace Elastic.Apm.Metrics
 {
@@ -71,7 +71,7 @@ namespace Elastic.Apm.Metrics
 		{
 			using (var acq = _isCollectionInProgress.TryAcquireWithDisposable())
 			{
-				if (! acq.IsAcquired)
+				if (!acq.IsAcquired)
 				{
 					_logger.Trace()?.Log("Previous CollectAllMetrics call is still in progress - skipping this one");
 					return;

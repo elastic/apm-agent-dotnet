@@ -32,7 +32,7 @@ namespace Elastic.Apm
 			Service = Service.GetDefaultService(ConfigurationReader, Logger);
 
 			var systemInfoHelper = new SystemInfoHelper(Logger);
-			var system = systemInfoHelper.ReadContainerId(Logger);
+			var system = systemInfoHelper.ParseSystemInfo();
 
 			ConfigStore = new ConfigStore(new ConfigSnapshotFromReader(ConfigurationReader, "local"), Logger);
 

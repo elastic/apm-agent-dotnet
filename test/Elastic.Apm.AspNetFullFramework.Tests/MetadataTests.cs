@@ -5,14 +5,13 @@ using AspNetFullFrameworkSampleApp.Controllers;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
-	[Collection("AspNetFullFrameworkTests")]
+	[Collection(Consts.AspNetFullFrameworkTestsCollection)]
 	public class MetadataTests : TestsBase
 	{
 		private const string ThisClassName = nameof(AspNetFullFramework) + "." + nameof(Tests) + "." + nameof(MetadataTests);

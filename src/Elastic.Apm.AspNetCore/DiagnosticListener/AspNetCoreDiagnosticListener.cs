@@ -11,9 +11,9 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 {
 	internal class AspNetCoreDiagnosticListener : IDiagnosticListener
 	{
-		private readonly ScopedLogger _logger;
-		private readonly IConfigurationReader _confgurationReader;
 		private readonly IApmAgent _agent;
+		private readonly IConfigurationReader _confgurationReader;
+		private readonly ScopedLogger _logger;
 
 		public AspNetCoreDiagnosticListener(IApmAgent agent)
 		{
@@ -42,10 +42,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 			var httpContext = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("httpContext").GetValue(kv.Value) as HttpContext;
 
-			if (_confgurationReader.ShouldExtractRequestBodyOnError())
-			{
-				transaction.CollectRequestInfo(httpContext, _confgurationReader, _logger);
-			}
+			if (_confgurationReader.ShouldExtractRequestBodyOnError()) transaction.CollectRequestInfo(httpContext, _confgurationReader, _logger);
 		}
 	}
 }

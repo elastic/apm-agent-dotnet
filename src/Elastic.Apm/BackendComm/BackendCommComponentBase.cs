@@ -108,7 +108,6 @@ namespace Elastic.Apm.BackendComm
 					// ReSharper disable once AccessToDisposedClosure
 					CtsInstance.Cancel();
 					_logger.Debug()?.Log("Called CtsInstance.Cancel()");
-
 				});
 				_logger.Debug()?.Log("Posted CtsInstance.Cancel() to default (ThreadPool) TaskScheduler");
 

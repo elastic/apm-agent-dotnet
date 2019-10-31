@@ -102,7 +102,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 		[Theory]
 		[MemberData(nameof(ThreadSafeSpinLockImpls))]
-//		[MemberData(nameof(AllSpinLockImpls))]
+		//		[MemberData(nameof(AllSpinLockImpls))]
 		internal void multiple_threads(ISpinLockForTest spinLock)
 		{
 			var mutexProtectedVar = 0;

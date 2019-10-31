@@ -133,7 +133,10 @@ namespace Elastic.Apm.BackendComm
 
 			// Replace invalid characters by underscore. All invalid characters can be found at
 			// https://github.com/dotnet/corefx/blob/e64cac6dcacf996f98f0b3f75fb7ad0c12f588f7/src/System.Net.Http/src/System/Net/Http/HttpRuleParser.cs#L41
-			string AdaptUserAgentValue(string value) => Regex.Replace(value, "[ /()<>@,:;={}?\\[\\]\"\\\\]", "_");
+			string AdaptUserAgentValue(string value)
+			{
+				return Regex.Replace(value, "[ /()<>@,:;={}?\\[\\]\"\\\\]", "_");
+			}
 		}
 	}
 }

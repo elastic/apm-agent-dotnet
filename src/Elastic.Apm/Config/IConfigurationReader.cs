@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
@@ -39,6 +40,8 @@ namespace Elastic.Apm.Config
 		/// Default value: <seealso cref="ConfigConsts.DefaultValues.FlushIntervalInMilliseconds" />
 		/// </summary>
 		TimeSpan FlushInterval { get; }
+
+		IReadOnlyDictionary<string, string> GlobalLabels { get; }
 
 		LogLevel LogLevel { get; }
 
@@ -86,6 +89,13 @@ namespace Elastic.Apm.Config
 		int MaxQueueEventCount { get; }
 
 		double MetricsIntervalInMilliseconds { get; }
+
+		// <summary>
+		// Sometimes it is necessary to sanitize the data sent to Elastic APM, e.g. remove sensitive data.
+		// Configure a list of wildcard patterns of field names which should be sanitized.
+		// These apply for example to HTTP headers and application/x-www-form-urlencoded data.
+		// </summary>
+		IReadOnlyList<WildcardMatcher> SanitizeFieldNames { get; }
 		string SecretToken { get; }
 		IReadOnlyList<Uri> ServerUrls { get; }
 		string ServiceName { get; }
@@ -108,13 +118,13 @@ namespace Elastic.Apm.Config
 		/// </summary>
 		int StackTraceLimit { get; }
 
-		double TransactionSampleRate { get; }
-
 		/// <summary>
-		///	The number of spans that are recorded per transaction.
-		/// 0: no spans will be collected.
-		/// -1: all spans will be collected.
+		/// 	The number of spans that are recorded per transaction.
+		///  0: no spans will be collected.
+		///  -1: all spans will be collected.
 		/// </summary>
 		int TransactionMaxSpans { get; }
+
+		double TransactionSampleRate { get; }
 	}
 }

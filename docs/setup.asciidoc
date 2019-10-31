@@ -1,21 +1,45 @@
 [[setup]]
-== Set up
-The agent ships as a set of NuGet packages via https://nuget.org[nuget.org].
+== Set up the Agent
+The .NET Agent ships as a set of NuGet packages via https://nuget.org[nuget.org].
+You can add the Agent to your .NET application by referencing one of these packages.
+
+[float]
+=== Packages
 
 The following packages are available:
 
-* https://www.nuget.org/packages/Elastic.Apm.NetCoreAll[Elastic.Apm.NetCoreAll]: This is a meta package that references every other Elastic APM .NET agent package. If you plan to monitor a typical ASP.NET Core application that depends on the https://www.nuget.org/packages/Microsoft.AspNetCore.All[Microsoft.AspNetCore.All] package and uses Entity Framework Core then you should reference this package. 
-In order to avoid adding unnecessary dependencies in applications that aren’t depending on the https://www.nuget.org/packages/Microsoft.AspNetCore.All[Microsoft.AspNetCore.All] package we also offer some other packages - those are all referenced by the `Elastic.Apm.NetCoreAll` package.
-* https://www.nuget.org/packages/Elastic.Apm[Elastic.Apm]: This is the core of the agent, which we didn’t name “Core”, because someone already took that name :) This package also contains the <<public-api>> and it is a .NET Standard 2.0 package. We also ship every tracing component that traces classes that are part of .NET Standard 2.0 in this package, which includes the monitoring part for HttpClient. Every other Elastic APM package references this package.
-* https://www.nuget.org/packages/Elastic.Apm.AspNetCore[Elastic.Apm.AspNetCore]: This package contains ASP.NET Core monitoring related code. The main difference between this package and the `Elastic.Apm.NetCoreAll` package is that this package does not reference the `Elastic.Apm.EntityFrameworkCore` package, so if you have an ASP.NET Core application that does not use EF Core and you want to avoid adding additional unused references, you should use this package.
-* https://www.nuget.org/packages/Elastic.Apm.EntityFrameworkCore[Elastic.Apm.EntityFrameworkCore]: This package contains EF Core monitoring related code.
-* https://www.nuget.org/packages/Elastic.Apm.AspNetFullFramework[Elastic.Apm.AspNetFullFramework]: This package contains ASP.NET (Full .NET Framework) monitoring related code.
+https://www.nuget.org/packages/Elastic.Apm.NetCoreAll[**Elastic.Apm.NetCoreAll**]::
 
-You simply add the agent to your .NET application by referencing one of these packages.
+This is a meta package that references every other Elastic APM .NET agent package. If you plan to monitor a typical ASP.NET Core application that depends on the https://www.nuget.org/packages/Microsoft.AspNetCore.All[Microsoft.AspNetCore.All] package and uses Entity Framework Core then you should reference this package. 
+In order to avoid adding unnecessary dependencies in applications that aren’t depending on the https://www.nuget.org/packages/Microsoft.AspNetCore.All[Microsoft.AspNetCore.All] package we also offer some other packages - those are all referenced by the `Elastic.Apm.NetCoreAll` package.
+
+https://www.nuget.org/packages/Elastic.Apm[**Elastic.Apm**]::
+
+This is the core of the agent, which we didn’t name “Core”, because someone already took that name :) This package also contains the <<public-api>> and it is a .NET Standard 2.0 package. We also ship every tracing component that traces classes that are part of .NET Standard 2.0 in this package, which includes the monitoring part for HttpClient. Every other Elastic APM package references this package.
+https://www.nuget.org/packages/Elastic.Apm.AspNetCore[**Elastic.Apm.AspNetCore**]::
+
+This package contains ASP.NET Core monitoring related code. The main difference between this package and the `Elastic.Apm.NetCoreAll` package is that this package does not reference the `Elastic.Apm.EntityFrameworkCore` package, so if you have an ASP.NET Core application that does not use EF Core and you want to avoid adding additional unused references, you should use this package.
+https://www.nuget.org/packages/Elastic.Apm.EntityFrameworkCore[**Elastic.Apm.EntityFrameworkCore**]::
+
+This package contains EF Core monitoring related code.
+https://www.nuget.org/packages/Elastic.Apm.AspNetFullFramework[**Elastic.Apm.AspNetFullFramework**]::
+
+This package contains ASP.NET (Full .NET Framework) monitoring related code.
+
+https://www.nuget.org/packages/Elastic.Apm.EntityFramework6[**Elastic.Apm.EntityFramework6**]::
+
+This package contains an interceptor that automatically creates spans for DB operations executed by Entity Framework 6 (EF6) on behalf of the application.
+
+[float]
+=== Quick start
+
+* <<setup-asp-net-core>>
+* <<setup-asp-net>>
+* <<setup-ef6>>
 
 [float]
 [[setup-asp-net-core]]
-=== ASP.NET Core
+==== ASP.NET Core
 
 For ASP.NET Core, once you referenced the `Elastic.Apm.NetCoreAll` package, you can enable auto instrumentation by calling `UseAllElasticApm()` extension method:
 
@@ -41,7 +65,7 @@ In case you only want to use the <<public-api>>, you don't need to do any initia
 
 [float]
 [[setup-asp-net]]
-=== ASP.NET
+==== ASP.NET
 
 For ASP.NET (Full .NET Framework), once you've referenced the `Elastic.Apm.AspNetFullFramework` package,
 you can enable auto instrumentation by including the `ElasticApmModule` IIS Module in your application's `web.config`: 
@@ -75,3 +99,34 @@ as shown in the following example:
 ----
 
 You can also configure the agent using `web.config` as described at <<configuration-on-asp-net>>.
+
+
+[float]
+[[setup-ef6]]
+==== Entity Framework 6
+
+You can enable auto instrumentation for Entity Framework 6 by referencing the `Elastic.Apm.EntityFramework6` package
+and including the `Ef6Interceptor` interceptor in your application's `web.config`:
+
+[source,xml]
+----
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+    <entityFramework>
+        <interceptors>
+            <interceptor type="Elastic.Apm.EntityFramework6.Ef6Interceptor, Elastic.Apm.EntityFramework6" />
+        </interceptors>		
+    </entityFramework>
+</configuration>
+----
+
+As an alternative to registering the interceptor via the configuration, you can register it in the application code:   
+[source,csharp]
+----
+DbInterception.Add(new Elastic.Apm.EntityFramework6.Ef6Interceptor());
+----
+For example, in an ASP.NET MVC application, you can place the above call in the `Application_Start` method.
+
+NOTE: Be careful not to execute `DbInterception.Add` for the same interceptor more than once,
+or you'll get additional interceptor instances.
+For example, if you add `Ef6Interceptor` interceptor twice, you'll see two spans for every SQL query. 

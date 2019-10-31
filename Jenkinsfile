@@ -3,7 +3,7 @@
 @Library('apm@current') _
 
 pipeline {
-  agent any
+  agent { label 'linux && immutable' }
   environment {
     REPO = 'apm-agent-dotnet'
     // keep it short to avoid the 248 characters PATH limit in Windows
@@ -34,7 +34,6 @@ pipeline {
     stage('Initializing'){
       stages{
         stage('Checkout') {
-          agent { label 'immutable' }
           options { skipDefaultCheckout() }
           steps {
             deleteDir()
@@ -45,12 +44,28 @@ pipeline {
         stage('Parallel'){
           parallel{
             stage('Linux'){
-              agent { label 'linux && immutable' }
               options { skipDefaultCheckout() }
               environment {
                 MSBUILDDEBUGPATH = "${env.WORKSPACE}"
               }
+              /**
+              Make sure there are no code style violation in the repo.
+              */
               stages{
+                // Disable until https://github.com/elastic/apm-agent-dotnet/issues/563
+                // stage('CodeStyleCheck') {
+                //   steps {
+                //     withGithubNotify(context: 'CodeStyle check') {
+                //       deleteDir()
+                //       unstash 'source'
+                //       dir("${BASE_DIR}"){
+                //         dotnet(){
+                //           sh label: 'Install and run dotnet/format', script: '.ci/linux/codestyle.sh'
+                //         }
+                //       }
+                //     }
+                //   }
+                // }
                 /**
                 Build the project from code..
                 */
@@ -290,7 +305,6 @@ pipeline {
             }
           }
           stage('Release to AppVeyor') {
-            agent { label 'linux && immutable' }
             options { skipDefaultCheckout() }
             when {
               beforeAgent true
@@ -316,7 +330,6 @@ pipeline {
             }
           }
           stage('Release to NuGet') {
-            agent { label 'linux && immutable' }
             options { skipDefaultCheckout() }
             when {
               beforeAgent true
@@ -377,7 +390,7 @@ def dotnet(Closure body){
   def home = "/tmp"
   def dotnetRoot = "/${home}/.dotnet"
   def path = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/${home}/bin:${dotnetRoot}:${dotnetRoot}/bin:${dotnetRoot}/tools"
-  docker.image('mcr.microsoft.com/dotnet/core/sdk:2.2').inside("-e HOME='${home}' -e PATH='${path}'"){
+  docker.image('mcr.microsoft.com/dotnet/core/sdk:2.1.505').inside("-e HOME='${home}' -e PATH='${path}'"){
     body()
   }
 }

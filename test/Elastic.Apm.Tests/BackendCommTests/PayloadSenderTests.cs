@@ -28,25 +28,16 @@ namespace Elastic.Apm.Tests.BackendCommTests
 
 		private static readonly IEnumerable<TimeSpan?> FlushIntervalVariants = new TimeSpan?[]
 		{
-			null,
-			ConfigConsts.DefaultValues.FlushIntervalInMilliseconds.Milliseconds(),
-			TimeSpan.Zero,
-			10.Milliseconds(),
-			100.Milliseconds(),
-			1.Seconds(),
-			1.Hours(),
-			1.Days()
+			null, ConfigConsts.DefaultValues.FlushIntervalInMilliseconds.Milliseconds(), TimeSpan.Zero, 10.Milliseconds(), 100.Milliseconds(),
+			1.Seconds(), 1.Hours(), 1.Days()
 		};
 
 		private static readonly TimeSpan VeryLongFlushInterval = 1.Hours();
 		private static readonly TimeSpan VeryShortFlushInterval = 1.Seconds();
 		private readonly IApmLogger _logger;
 
-		public PayloadSenderTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper /*, LogLevel.Debug */)
-		{
+		public PayloadSenderTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper /*, LogLevel.Debug */) =>
 			_logger = LoggerBase.Scoped(ThisClassName);
-//			LoggerBase.Level = LogLevel.Debug;
-		}
 
 		public static IEnumerable<object[]> TestArgsVariantsWithVeryLongFlushInterval =>
 			TestArgsVariants(args => args.FlushInterval.HasValue && args.FlushInterval >= VeryLongFlushInterval).Select(t => new object[] { t });
@@ -140,7 +131,9 @@ namespace Elastic.Apm.Tests.BackendCommTests
 
 						yield return new TestArgs
 						{
-							FlushInterval = flushInterval, MaxBatchEventCount = maxBatchEventCount, MaxQueueEventCount = maxQueueEventCount
+							FlushInterval = flushInterval,
+							MaxBatchEventCount = maxBatchEventCount,
+							MaxQueueEventCount = maxQueueEventCount
 						};
 					}
 				}
@@ -209,7 +202,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		[MemberData(nameof(TestArgsVariantsWithVeryLongFlushInterval))]
 		internal async Task MaxQueueEventCount_should_be_enforced_after_send(TestArgs args)
 		{
-//			LoggerBase.Level = LogLevel.Debug;
+			//			LoggerBase.Level = LogLevel.Debug;
 
 			var sendTcs = new TaskCompletionSource<object>();
 			var firstBatchDequeuedTcs = new TaskCompletionSource<object>();
@@ -251,7 +244,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			foreach (var args in TestArgsVariantsWithVeryLongFlushInterval)
 			{
 				foreach (var numberOfBatches in numberOfBatchesVariants)
-					yield return new [] { args[0], numberOfBatches };
+					yield return new[] { args[0], numberOfBatches };
 			}
 		}
 
@@ -277,7 +270,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
 			{
 				var numberOfEventsEnqueuedSuccessfully = 0;
-				for (var txIndex = 1;; ++txIndex)
+				for (var txIndex = 1; ; ++txIndex)
 				{
 					if (EnqueueDummyEvent(payloadSender, agent, txIndex))
 						++numberOfEventsEnqueuedSuccessfully;
@@ -305,7 +298,9 @@ namespace Elastic.Apm.Tests.BackendCommTests
 				foreach (var numberOfEventsToSend in numberOfEventsToSendVariants)
 				{
 					yield return new object[]
-						{ new TestArgs { ArgsIndex = argsVariantsCounter++, FlushInterval = flushInterval }, numberOfEventsToSend };
+					{
+						new TestArgs { ArgsIndex = argsVariantsCounter++, FlushInterval = flushInterval }, numberOfEventsToSend
+					};
 				}
 			}
 		}

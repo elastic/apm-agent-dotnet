@@ -1,5 +1,4 @@
-:branch: current
-:server-branch: 6.5
+include::{asciidoc-dir}/../../shared/versions/stack/current.asciidoc[]
 include::{asciidoc-dir}/../../shared/attributes.asciidoc[]
 
 ifdef::env-github[]
@@ -9,11 +8,24 @@ endif::[]
 
 = APM .NET Agent Reference
 
-include::./intro.asciidoc[Introduction]
-include::./setup.asciidoc[Set Up]
-include::./supported-technologies.asciidoc[Supported Technologies]
-include::./metrics.asciidoc[Metrics]
-include::./configuration.asciidoc[Configuration]
-include::./public-api.asciidoc[Public API]
-include::./performance-tuning.asciidoc[Performance Tuning]
-include::./release-notes.asciidoc[Release notes]
+include::./intro.asciidoc[]
+
+include::./setup.asciidoc[]
+
+include::./supported-technologies.asciidoc[]
+
+include::./configuration.asciidoc[]
+
+include::./public-api.asciidoc[]
+
+include::./metrics.asciidoc[]
+
+// OpenTracing API
+
+// Log correlation
+
+include::./performance-tuning.asciidoc[]
+
+// Troubleshooting
+
+include::./release-notes.asciidoc[]

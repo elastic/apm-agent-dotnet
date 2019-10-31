@@ -15,10 +15,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
 			var appSettings = (AppSettingsSection)config.GetSection("appSettings");
 			appSettings.Settings.Clear();
-			foreach (var v in values)
-			{
-				appSettings.Settings.Add(v.Key, v.Value);
-			}
+			foreach (var v in values) appSettings.Settings.Add(v.Key, v.Value);
 			config.Save();
 			ConfigurationManager.RefreshSection("appSettings");
 		}
@@ -34,7 +31,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			config.Environment.Should().Be("Development");
 
-			UpdateAppSettings(new Dictionary<string, string>() { { ConfigConsts.KeyNames.Environment, "Staging" } });
+			UpdateAppSettings(new Dictionary<string, string> { { ConfigConsts.KeyNames.Environment, "Staging" } });
 
 			config.Environment.Should().Be("Staging");
 		}
@@ -50,7 +47,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			config.FlushInterval.Should().Be(TimeSpan.FromMilliseconds(10));
 
-			UpdateAppSettings(new Dictionary<string, string>() { { ConfigConsts.KeyNames.FlushInterval, "20ms" } });
+			UpdateAppSettings(new Dictionary<string, string> { { ConfigConsts.KeyNames.FlushInterval, "20ms" } });
 
 			config.FlushInterval.Should().Be(TimeSpan.FromMilliseconds(20));
 		}

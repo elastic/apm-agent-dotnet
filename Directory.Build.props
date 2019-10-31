@@ -1,0 +1,7 @@
+<Project>
+  <!-- Root Directory Build Properties -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <NoWarn>NU1503</NoWarn>
+  </PropertyGroup>
+</Project>

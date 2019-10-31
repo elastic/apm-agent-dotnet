@@ -19,6 +19,8 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		private static readonly LazyContextualInit InitOnceHelper = new LazyContextualInit();
 
+		private readonly string _dbgInstanceName;
+
 		// ReSharper disable once ImpureMethodCallOnReadonlyValueField
 		public ElasticApmModule() => _dbgInstanceName = DbgInstanceNameGenerator.Generate($"{nameof(ElasticApmModule)}.#");
 
@@ -29,8 +31,6 @@ namespace Elastic.Apm.AspNetFullFramework
 		private HttpApplication _httpApp;
 
 		private IApmLogger _logger;
-
-		private readonly string _dbgInstanceName;
 		private static Version IisVersion => HttpRuntime.IISVersion;
 
 		public void Init(HttpApplication httpApp)

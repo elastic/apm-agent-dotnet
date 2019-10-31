@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
 {
 	internal class EnvironmentConfigurationReader : AbstractConfigurationReader, IConfigSnapshot
 	{
-		private const string ThisClassName = nameof(EnvironmentConfigurationReader);
-
 		internal const string Origin = "environment variables";
+		private const string ThisClassName = nameof(EnvironmentConfigurationReader);
 
 		private readonly Lazy<double> _spanFramesMinDurationInMilliseconds;
 
@@ -23,8 +23,6 @@ namespace Elastic.Apm.Config
 			_stackTraceLimit = new Lazy<int>(() => ParseStackTraceLimit(Read(ConfigConsts.EnvVarNames.StackTraceLimit)));
 		}
 
-		public string DbgDescription => Origin;
-
 		public string CaptureBody => ParseCaptureBody(Read(ConfigConsts.EnvVarNames.CaptureBody));
 
 		public List<string> CaptureBodyContentTypes =>
@@ -34,9 +32,13 @@ namespace Elastic.Apm.Config
 
 		public bool CentralConfig => ParseCentralConfig(Read(ConfigConsts.EnvVarNames.CentralConfig));
 
+		public string DbgDescription => Origin;
+
 		public string Environment => ParseEnvironment(Read(ConfigConsts.EnvVarNames.Environment));
 
 		public TimeSpan FlushInterval => ParseFlushInterval(Read(ConfigConsts.EnvVarNames.FlushInterval));
+
+		public IReadOnlyDictionary<string, string> GlobalLabels => ParseGlobalLabels(Read(ConfigConsts.EnvVarNames.GlobalLabels));
 
 		public LogLevel LogLevel => ParseLogLevel(Read(ConfigConsts.EnvVarNames.LogLevel));
 
@@ -45,6 +47,8 @@ namespace Elastic.Apm.Config
 		public int MaxQueueEventCount => ParseMaxQueueEventCount(Read(ConfigConsts.EnvVarNames.MaxQueueEventCount));
 
 		public double MetricsIntervalInMilliseconds => ParseMetricsInterval(Read(ConfigConsts.EnvVarNames.MetricsInterval));
+
+		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => ParseSanitizeFieldNames(Read(ConfigConsts.EnvVarNames.SanitizeFieldNames));
 
 		public string SecretToken => ParseSecretToken(Read(ConfigConsts.EnvVarNames.SecretToken));
 
@@ -58,9 +62,9 @@ namespace Elastic.Apm.Config
 
 		public int StackTraceLimit => _stackTraceLimit.Value;
 
-		public double TransactionSampleRate => ParseTransactionSampleRate(Read(ConfigConsts.EnvVarNames.TransactionSampleRate));
-
 		public int TransactionMaxSpans => ParseTransactionMaxSpans(Read(ConfigConsts.EnvVarNames.TransactionMaxSpans));
+
+		public double TransactionSampleRate => ParseTransactionSampleRate(Read(ConfigConsts.EnvVarNames.TransactionSampleRate));
 
 		private ConfigurationKeyValue Read(string key) =>
 			new ConfigurationKeyValue(key, ReadEnvVarValue(key), Origin);

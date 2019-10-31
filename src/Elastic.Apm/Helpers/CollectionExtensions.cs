@@ -8,7 +8,7 @@ namespace Elastic.Apm.Helpers
 	{
 		internal static bool IsEmpty<T>(this T[] thisObj) => thisObj.Length == 0;
 
-		internal static bool IsEmpty<T>(this IEnumerable<T> thisObj) => ! thisObj.Any();
+		internal static bool IsEmpty<T>(this IEnumerable<T> thisObj) => !thisObj.Any();
 
 		internal static bool IsEmpty<T>(this IReadOnlyCollection<T> thisObj) => thisObj.Count == 0;
 
