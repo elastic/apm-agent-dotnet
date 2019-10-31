@@ -3,6 +3,7 @@ root=true
 [*.cs]
 trim_trailing_whitespace=true
 insert_final_newline=true
+end_of_line = lf
 
 [*]
 indent_style = tab
@@ -11,14 +12,17 @@ indent_size = 4
 [*.cshtml]
 indent_style = tab
 indent_size = 4
+end_of_line = lf
 
 [*.{fs,fsx,yml}]
 indent_style = space
 indent_size = 4
+end_of_line = lf
 
 [*.{md,markdown,json,js,csproj,fsproj,targets,targets,props}]
 indent_style = space
 indent_size = 2
+end_of_line = lf
 
 # Dotnet code style settings:
 [*.{cs,vb}]
