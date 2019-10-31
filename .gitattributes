@@ -1,0 +1,15 @@
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
+
+# Set default behavior for command prompt diff. 
+# This gives output on command line taking C# language constructs into consideration (e.g showing class name)
+*.cs text diff=csharp
+
+# Set windows specific files explicitly to crlf line ending
+*.cmd eol=crlf
+*.bat eol=crlf
+*.ps1 eol=crlf
+
+# Mark files specifically as binary to avoid line ending conversion
+*.snk binary
+*.png binary
