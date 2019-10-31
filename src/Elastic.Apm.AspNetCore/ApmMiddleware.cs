@@ -52,7 +52,8 @@ namespace Elastic.Apm.AspNetCore
 				await _next(context);
 			}
 			catch (Exception e) when (transaction != null
-				&& ExceptionFilter.Capture(e, transaction, context, _configurationReader, _logger)) { }
+				&& ExceptionFilter.Capture(e, transaction, context, _configurationReader, _logger))
+			{ }
 			finally
 			{
 				StopTransaction(transaction, context);

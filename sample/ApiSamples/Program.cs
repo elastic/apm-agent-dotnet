@@ -207,7 +207,9 @@ namespace ApiSamples
 					{
 						span.Context.Db = new Database
 						{
-							Statement = "GET /_all/_search?q=tag:wow", Type = Database.TypeElasticsearch, Instance = "MyInstance"
+							Statement = "GET /_all/_search?q=tag:wow",
+							Type = Database.TypeElasticsearch,
+							Instance = "MyInstance"
 						};
 					});
 			});
