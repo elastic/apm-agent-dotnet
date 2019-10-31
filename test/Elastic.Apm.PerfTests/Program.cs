@@ -14,19 +14,16 @@ namespace Elastic.Apm.PerfTests
 	[MemoryDiagnoser]
 	public class Program
 	{
-		public static void Main(string[] args) => BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
-
-
-		private string str;
 		public Program()
 		{
 			var random = new Random();
-			for (var i = 0; i < 1000; i++)
-			{
-				str += random.Next(10).ToString();
-			}
-
+			for (var i = 0; i < 1000; i++) str += random.Next(10).ToString();
 		}
+
+
+		private readonly string str;
+
+		public static void Main(string[] args) => BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
 
 		[Benchmark]
 		public void MatcherVerbatimCaseSensitive()

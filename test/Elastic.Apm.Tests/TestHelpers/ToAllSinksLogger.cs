@@ -12,7 +12,6 @@ namespace Elastic.Apm.Tests.TestHelpers
 					new SystemDiagnosticsTraceLineWriter("<Elastic APM .NET Tests> "),
 					new FlushingTextWriterToLineWriterAdaptor(Console.Out),
 					new XunitOutputToLineWriterAdaptor(xUnitOutputHelper))
-				, level)
-		{ }
+				, level) { }
 	}
 }

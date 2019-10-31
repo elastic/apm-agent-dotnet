@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Elastic.Apm.Api;
@@ -18,12 +17,13 @@ namespace Elastic.Apm.Tests.Mocks
 	{
 		private readonly PayloadItemSerializer _payloadItemSerializer;
 
-		public SerializerMockPayloadSender(IConfigurationReader configurationReader) => _payloadItemSerializer = new PayloadItemSerializer(configurationReader);
-
-		public Transaction FirstTransaction => Transactions.First() as Transaction;
-		public Error FirstError => Errors.First() as Error;
+		public SerializerMockPayloadSender(IConfigurationReader configurationReader) =>
+			_payloadItemSerializer = new PayloadItemSerializer(configurationReader);
 
 		public List<IError> Errors { get; } = new List<IError>();
+		public Error FirstError => Errors.First() as Error;
+
+		public Transaction FirstTransaction => Transactions.First();
 		public List<Transaction> Transactions { get; } = new List<Transaction>();
 
 		public void QueueError(IError error)

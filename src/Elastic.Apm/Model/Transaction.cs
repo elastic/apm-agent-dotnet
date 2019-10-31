@@ -43,8 +43,7 @@ namespace Elastic.Apm.Model
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigurationReader,
-				agent.TracerInternal.CurrentExecutionSegmentsContainer)
-		{ }
+				agent.TracerInternal.CurrentExecutionSegmentsContainer) { }
 
 		internal Transaction(
 			IApmLogger logger,

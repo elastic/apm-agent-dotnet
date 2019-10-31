@@ -522,9 +522,7 @@ namespace Elastic.Apm.Tests.ApiTests
 							new Request("GET",
 								new Url { Full = "https://elastic.co", Raw = "https://elastic.co", HostName = "elastic", Protocol = "HTTP" })
 							{
-								HttpVersion = "2.0",
-								Socket = new Socket { Encrypted = true, RemoteAddress = "127.0.0.1" },
-								Body = "123"
+								HttpVersion = "2.0", Socket = new Socket { Encrypted = true, RemoteAddress = "127.0.0.1" }, Body = "123"
 							};
 					});
 				});

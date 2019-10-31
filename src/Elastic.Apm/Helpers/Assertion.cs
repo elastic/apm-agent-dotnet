@@ -13,7 +13,6 @@ namespace Elastic.Apm.Helpers
 	internal static class Assertion
 	{
 		private const AssertionLevel DefaultLevel = AssertionLevel.O_1;
-
 		private static readonly AssertIfEnabled SingletonAssertIfEnabled = new AssertIfEnabled();
 		private static readonly Impl ImplSingleton = new Impl(DefaultLevel);
 

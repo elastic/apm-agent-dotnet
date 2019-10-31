@@ -739,7 +739,7 @@ namespace Elastic.Apm.Config
 							, key, kv.Value);
 					return new Dictionary<string, string>();
 				}
-				result.Add(key, pair.Substring(keyValueSeparatorIndex+1,pair.Length-(keyValueSeparatorIndex+1)));
+				result.Add(key, pair.Substring(keyValueSeparatorIndex + 1, pair.Length - (keyValueSeparatorIndex + 1)));
 			}
 
 			_logger?.Debug()

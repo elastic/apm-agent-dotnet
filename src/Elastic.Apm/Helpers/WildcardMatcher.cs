@@ -64,6 +64,7 @@ namespace Elastic.Apm.Helpers
 			{
 				if (!matcher.StartsWith(Wildcard) && !matcher.EndsWith(Wildcard))
 					return new VerbatimMatcher(split[0], ignoreCase);
+
 				return new SimpleWildcardMatcher(split[0], matcher.StartsWith(Wildcard), matcher.EndsWith(Wildcard), ignoreCase);
 			}
 
@@ -218,8 +219,8 @@ namespace Elastic.Apm.Helpers
 
 		internal class VerbatimMatcher : WildcardMatcher
 		{
-			private readonly string _matcher;
 			private readonly bool _ignoreCase;
+			private readonly string _matcher;
 
 			public VerbatimMatcher(string s, bool ignoreCase)
 			{

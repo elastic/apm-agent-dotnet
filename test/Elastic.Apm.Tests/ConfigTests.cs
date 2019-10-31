@@ -40,7 +40,7 @@ namespace Elastic.Apm.Tests
 			{ "k=,=", new Dictionary<string, string> { { "k", "" }, { "", "" } } },
 
 			// key and value are empty strings in the middle pair
-			{ "key1=value1,=,key3=value3", new Dictionary<string, string> { { "key1", "value1" }, { "", "" }, { "key3", "value3" } } },
+			{ "key1=value1,=,key3=value3", new Dictionary<string, string> { { "key1", "value1" }, { "", "" }, { "key3", "value3" } } }
 		};
 
 		[Fact]

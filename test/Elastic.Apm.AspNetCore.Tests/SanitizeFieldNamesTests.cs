@@ -17,11 +17,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 	[Collection("DiagnosticListenerTest")]
 	public class SanitizeFieldNamesTests : IClassFixture<WebApplicationFactory<Startup>>
 	{
-		private SerializerMockPayloadSender _capturedPayload;
-		private HttpClient _client;
-		private readonly IApmLogger _logger;
 		private readonly WebApplicationFactory<Startup> _factory;
-		private ApmAgent _agent;
+		private readonly IApmLogger _logger;
 
 		public SanitizeFieldNamesTests(WebApplicationFactory<Startup> factory)
 		{
@@ -29,9 +26,15 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_factory = factory;
 		}
 
+		private ApmAgent _agent;
+		private SerializerMockPayloadSender _capturedPayload;
+		private HttpClient _client;
+
 		private void CreateAgent(string sanitizeFieldNames = null)
 		{
-			var configSnapshot = sanitizeFieldNames == null ? new MockConfigSnapshot(_logger, captureBody: "all") : new MockConfigSnapshot(_logger, captureBody: "all", sanitizeFieldNames: sanitizeFieldNames);
+			var configSnapshot = sanitizeFieldNames == null
+				? new MockConfigSnapshot(_logger, captureBody: "all")
+				: new MockConfigSnapshot(_logger, captureBody: "all", sanitizeFieldNames: sanitizeFieldNames);
 			_capturedPayload = new SerializerMockPayloadSender(configSnapshot);
 
 			var agentComponents = new TestAgentComponents(
@@ -140,12 +143,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		/// <summary>
-		/// ASP.NET Core seems to rewrite the name of these headers (so <code>authorization</code> becomes <code>Authorization</code>).
+		/// ASP.NET Core seems to rewrite the name of these headers (so <code>authorization</code> becomes
+		/// <code>Authorization</code>).
 		/// Our "by default case insensitivity" still works, the only difference is that if we send a header with name
 		/// <code>authorization</code> it'll be captured as <code>Authorization</code> (capital letter).
-		///
-		/// Otherwise same as <see cref="DefaultsWithHeaders"/>.
-		///
+		/// Otherwise same as <see cref="DefaultsWithHeaders" />.
 		/// </summary>
 		/// <param name="headerName">The original header name sent in the HTTP GET</param>
 		/// <param name="returnedHeaderName">The header name (with capital letter) seen on the request in ASP.NET Core</param>
@@ -225,7 +227,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		/// <summary>
-		/// Same as <see cref="DefaultWithRequestBodyNoError"/> except this time the request ends up with an error
+		/// Same as <see cref="DefaultWithRequestBodyNoError" /> except this time the request ends up with an error
 		/// </summary>
 		/// <param name="formName"></param>
 		/// <returns></returns>

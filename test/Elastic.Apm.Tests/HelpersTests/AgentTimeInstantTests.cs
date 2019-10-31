@@ -25,8 +25,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var agentTimers = new IAgentTimerForTesting[] { new AgentTimerForTesting(), new MockAgentTimer() };
 
 			foreach (var agentTimer in agentTimers)
-				foreach (var timeSpan in shortTimeSpans)
-					yield return new[] { (object)agentTimer, timeSpan };
+			foreach (var timeSpan in shortTimeSpans)
+				yield return new[] { (object)agentTimer, timeSpan };
 
 			var longTimeSpans = new[]
 			{
@@ -42,8 +42,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var agentTimerSet1 = new IAgentTimerForTesting[] { new AgentTimerForTesting(), new MockAgentTimer() };
 			var agentTimerSet2 = new IAgentTimerForTesting[] { new AgentTimerForTesting(), new MockAgentTimer() };
 			foreach (var agentTimer1 in agentTimerSet1)
-				foreach (var agentTimer2 in agentTimerSet2)
-					yield return new object[] { agentTimer1, agentTimer2 };
+			foreach (var agentTimer2 in agentTimerSet2)
+				yield return new object[] { agentTimer1, agentTimer2 };
 		}
 
 		[Theory]

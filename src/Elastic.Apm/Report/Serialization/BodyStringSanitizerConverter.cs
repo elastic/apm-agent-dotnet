@@ -7,7 +7,8 @@ using Newtonsoft.Json;
 namespace Elastic.Apm.Report.Serialization
 {
 	/// <summary>
-	/// Sanitizes request body based on the config passed to the constructor, in case it's in  `Key1=Value1& Key2=Value2` format.
+	/// Sanitizes request body based on the config passed to the constructor, in case it's in  `Key1=Value1& Key2=Value2`
+	/// format.
 	/// Ideally this would inherit from <code> JsonConverter{string} </code>.
 	/// Until  https://github.com/elastic/apm-agent-dotnet/issues/555 is not done, we roll with a generic JsonConverter.
 	/// </summary>
@@ -53,7 +54,8 @@ namespace Elastic.Apm.Report.Serialization
 		}
 
 		/// <summary>
-		/// Returns <code>true</code> if <paramref name="bodyValue"/> follows the Key1=Value1& Key2=Value2 format, <code>false</code> otherwise
+		/// Returns <code>true</code> if <paramref name="bodyValue" /> follows the Key1=Value1& Key2=Value2 format,
+		/// <code>false</code> otherwise
 		/// </summary>
 		/// <param name="bodyValue"></param>
 		/// <returns></returns>

@@ -20,8 +20,9 @@ namespace Elastic.Apm.Api
 
 		/// <summary>
 		/// Sets the URL of the HTTP request.
-		/// The setter will parse and sanitize the URL and filter out user name and password from the URL in case it contains those.
-		/// In case you have an <see cref="Uri"/> instance, consider using the <see cref="SetUrl"/> method on this class.
+		/// The setter will parse and sanitize the URL and filter out user name and password from the URL in case it contains
+		/// those.
+		/// In case you have an <see cref="Uri" /> instance, consider using the <see cref="SetUrl" /> method on this class.
 		/// </summary>
 		public string Url
 		{

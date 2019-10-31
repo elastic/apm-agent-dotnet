@@ -160,8 +160,7 @@ namespace Elastic.Apm.Model
 
 			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger)
 			{
-				Culprit = capturedCulprit,
-				Context = transaction.Context
+				Culprit = capturedCulprit, Context = transaction.Context
 			});
 		}
 
@@ -189,8 +188,7 @@ namespace Elastic.Apm.Model
 
 			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger)
 			{
-				Culprit = capturedCulprit,
-				Context = transaction.Context
+				Culprit = capturedCulprit, Context = transaction.Context
 			});
 		}
 

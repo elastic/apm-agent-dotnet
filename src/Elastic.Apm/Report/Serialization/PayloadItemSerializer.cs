@@ -1,6 +1,5 @@
 using Elastic.Apm.Config;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Report.Serialization
 {
@@ -13,7 +12,7 @@ namespace Elastic.Apm.Report.Serialization
 			{
 				ContractResolver = new ElasticApmContractResolver(configurationReader),
 				NullValueHandling = NullValueHandling.Ignore,
-				Formatting = Formatting.None,
+				Formatting = Formatting.None
 			};
 
 		internal string SerializeObject(object item) =>

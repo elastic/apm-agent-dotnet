@@ -131,9 +131,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 
 						yield return new TestArgs
 						{
-							FlushInterval = flushInterval,
-							MaxBatchEventCount = maxBatchEventCount,
-							MaxQueueEventCount = maxQueueEventCount
+							FlushInterval = flushInterval, MaxBatchEventCount = maxBatchEventCount, MaxQueueEventCount = maxQueueEventCount
 						};
 					}
 				}
@@ -270,7 +268,7 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			using (var agent = new ApmAgent(new TestAgentComponents(_logger, payloadSender: payloadSender)))
 			{
 				var numberOfEventsEnqueuedSuccessfully = 0;
-				for (var txIndex = 1; ; ++txIndex)
+				for (var txIndex = 1;; ++txIndex)
 				{
 					if (EnqueueDummyEvent(payloadSender, agent, txIndex))
 						++numberOfEventsEnqueuedSuccessfully;

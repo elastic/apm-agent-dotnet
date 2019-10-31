@@ -125,10 +125,11 @@ namespace Elastic.Apm.DiagnosticListeners
 				return;
 			}
 
-			var span = (Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(_agent).StartSpan(
-				$"{RequestGetMethod(request)} {requestUrl.Host}",
-				ApiConstants.TypeExternal,
-				ApiConstants.SubtypeHttp);
+			var span = (Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(_agent)
+				.StartSpan(
+					$"{RequestGetMethod(request)} {requestUrl.Host}",
+					ApiConstants.TypeExternal,
+					ApiConstants.SubtypeHttp);
 
 			if (!ProcessingRequests.TryAdd(request, span))
 			{
@@ -144,10 +145,10 @@ namespace Elastic.Apm.DiagnosticListeners
 				RequestHeadersAdd(request, TraceParent.TraceParentHeaderName, TraceParent.BuildTraceparent(span.OutgoingDistributedTracingData));
 
 			if (span.ShouldBeSentToApmServer)
-      {
-        span.Context.Http = new Http { Method = RequestGetMethod(request) };
-        span.Context.Http.SetUrl(requestUrl);
-      }
+			{
+				span.Context.Http = new Http { Method = RequestGetMethod(request) };
+				span.Context.Http.SetUrl(requestUrl);
+			}
 		}
 
 		private void ProcessStopEvent(object eventValue, TRequest request, Uri requestUrl)

@@ -8,8 +8,9 @@ namespace Elastic.Apm.Model
 	internal static class DbSpanCommon
 	{
 		internal static Span StartSpan(IApmAgent agent, IDbCommand dbCommand) =>
-			(Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(agent).StartSpan(dbCommand.CommandText.Replace(Environment.NewLine, " ")
-				, ApiConstants.TypeDb);
+			(Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(agent)
+				.StartSpan(dbCommand.CommandText.Replace(Environment.NewLine, " ")
+					, ApiConstants.TypeDb);
 
 		internal static void EndSpan(Span span, IDbCommand dbCommand, TimeSpan? duration = null)
 		{
@@ -57,7 +58,6 @@ namespace Elastic.Apm.Model
 			}
 
 			span.End();
-
 		}
 	}
 }

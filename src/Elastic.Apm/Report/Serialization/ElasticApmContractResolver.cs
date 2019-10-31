@@ -10,8 +10,8 @@ namespace Elastic.Apm.Report.Serialization
 {
 	internal class ElasticApmContractResolver : DefaultContractResolver
 	{
-		private readonly HeaderDictionarySanitizerConverter _headerDictionarySanitizerConverter;
 		private readonly BodyStringSanitizerConverter _bodyStringSanitizerConverter;
+		private readonly HeaderDictionarySanitizerConverter _headerDictionarySanitizerConverter;
 
 		public ElasticApmContractResolver(IConfigurationReader configurationReader)
 		{
