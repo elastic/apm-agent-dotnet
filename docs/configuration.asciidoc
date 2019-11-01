@@ -651,8 +651,8 @@ Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `Non
 | <<config-service-version,`ServiceVersion`>> | No | Core
 | <<config-span-frames-min-duration,`SpanFramesMinDuration`>> | No | Stacktrace, Performance
 | <<config-stack-trace-limit,`StackTraceLimit`>> | No | Stacktrace, Performance
-| <<config-transaction-max-spans,`TransactionMaxSpans`>>  | Yes | Performance, Core
-| <<config-transaction-sample-rate,`TransactionSampleRate`>> | Yes | Performance, Core
+| <<config-transaction-max-spans,`TransactionMaxSpans`>>  | Yes | Core, Performance
+| <<config-transaction-sample-rate,`TransactionSampleRate`>> | Yes | Core, Performance
 |============
 
 NOTE: Reloadable means that the setting can be changed after agent's start.
