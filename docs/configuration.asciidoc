@@ -655,7 +655,7 @@ Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `Non
 | <<config-transaction-sample-rate,`TransactionSampleRate`>> | Yes | Performance, Core
 |============
 
-NOTE: Option being reloadable means that the setting can be changed after agent's start.
+NOTE: Reloadable means that the setting can be changed after agent's start.
 For example some reloadable options can be changed
 via {apm-app-ref}/agent-configuration.html[APM Agent configuration]).
 
