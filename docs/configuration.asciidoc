@@ -656,6 +656,6 @@ Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `Non
 |============
 
 NOTE: Reloadable means that the setting can be changed after agent's start.
-For example some reloadable options can be changed
+For example, some reloadable options can be changed
 via {apm-app-ref}/agent-configuration.html[APM Agent configuration]).
 
