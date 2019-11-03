@@ -11,8 +11,6 @@ using Elastic.Apm.BackendComm;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Metrics;
-using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
@@ -35,9 +33,8 @@ namespace Elastic.Apm.Report
 
 		private readonly IApmLogger _logger;
 		private readonly int _maxQueueEventCount;
-		private readonly Metadata _metadata;
 
-		private readonly PayloadItemSerializer _payloadItemSerializer;
+		private readonly IPayloadFormatter _payloadFormatter;
 
 		public PayloadSenderV2(IApmLogger logger, IConfigSnapshot config, Service service, Api.System system,
 			HttpMessageHandler httpMessageHandler = null, string dbgName = null
@@ -45,14 +42,16 @@ namespace Elastic.Apm.Report
 			: base( /* isEnabled: */ true, logger, ThisClassName, service, config, httpMessageHandler)
 		{
 			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
-			_payloadItemSerializer = new PayloadItemSerializer(config);
+			new PayloadItemSerializer(config);
 
 			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(config.ServerUrls.First());
 
 			System = system;
 
-			_metadata = new Metadata { Service = service, System = System };
-			foreach (var globalLabelKeyValue in config.GlobalLabels) _metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
+			var metadata = new Metadata { Service = service, System = System };
+			foreach (var globalLabelKeyValue in config.GlobalLabels) metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
+
+			_payloadFormatter = new PayloadFormatterV2(_logger, config, metadata);
 
 			if (config.MaxQueueEventCount < config.MaxBatchEventCount)
 			{
@@ -83,8 +82,6 @@ namespace Elastic.Apm.Report
 
 			StartWorkLoop();
 		}
-
-		private string _cachedMetadataJsonLine;
 
 		private long _eventQueueCount;
 
@@ -206,33 +203,9 @@ namespace Elastic.Apm.Report
 		{
 			try
 			{
-				var ndjson = new StringBuilder();
-				if (_cachedMetadataJsonLine == null)
-					_cachedMetadataJsonLine = "{\"metadata\": " + _payloadItemSerializer.SerializeObject(_metadata) + "}";
-				ndjson.AppendLine(_cachedMetadataJsonLine);
+				var payloadString = _payloadFormatter.FormatPayload(queueItems);
 
-				foreach (var item in queueItems)
-				{
-					var serialized = _payloadItemSerializer.SerializeObject(item);
-					switch (item)
-					{
-						case Transaction _:
-							ndjson.AppendLine("{\"transaction\": " + serialized + "}");
-							break;
-						case Span _:
-							ndjson.AppendLine("{\"span\": " + serialized + "}");
-							break;
-						case Error _:
-							ndjson.AppendLine("{\"error\": " + serialized + "}");
-							break;
-						case MetricSet _:
-							ndjson.AppendLine("{\"metricset\": " + serialized + "}");
-							break;
-					}
-					_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItem}", item, serialized);
-				}
-
-				var content = new StringContent(ndjson.ToString(), Encoding.UTF8, "application/x-ndjson");
+				var content = new StringContent(payloadString, Encoding.UTF8, "application/x-ndjson");
 
 				var result = await HttpClientInstance.PostAsync(_intakeV2EventsAbsoluteUrl, content, CtsInstance.Token);
 
