@@ -1,26 +1,26 @@
 using System;
+using System.IO;
 using System.Text;
 using System.Threading;
 using Elastic.Apm.Config;
-using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
+using Newtonsoft.Json;
 
 namespace Elastic.Apm.Report
 {
-	internal class StringBuilderPool : ObjectPool<StringBuilder>
+	internal class StringWriterPool : ObjectPool<StringWriter>
 	{
-		internal StringBuilderPool(int amount, int initialCharactersAmount, int charactersLimit)
+		internal StringWriterPool(int amount, int initialCharactersAmount, int charactersLimit)
 			: base(amount,
-				() => new StringBuilder(initialCharactersAmount),
-				builder =>
+				() => new StringWriter(new StringBuilder(initialCharactersAmount)),
+				writer =>
 				{
+					var builder = writer.GetStringBuilder();
 					builder.Length = 0;
 					if (builder.Capacity > charactersLimit) builder.Capacity = charactersLimit;
-				})
-		{
-		}
+				}) { }
 	}
 
 	internal class ObjectPool<T> where T : class
@@ -80,63 +80,71 @@ namespace Elastic.Apm.Report
 
 	internal class EnhancedPayloadFormatter : IPayloadFormatter
 	{
-		private readonly IApmLogger _logger;
-		private readonly PayloadItemSerializer _payloadItemSerializer;
 		private readonly Metadata _metadata;
 
 		private string _cachedMetadataJsonLine;
 
-		private readonly StringBuilderPool _stringBuilderPool;
+		private readonly StringWriterPool _stringWriterPool;
 
-		public EnhancedPayloadFormatter(IApmLogger logger, IConfigurationReader config, Metadata metadata)
+		internal JsonSerializerSettings Settings { get; }
+		private readonly JsonSerializer _jsonSerializer;
+
+		public EnhancedPayloadFormatter(IConfigurationReader config, Metadata metadata)
 		{
-			_logger = logger.Scoped(nameof(EnhancedPayloadFormatter));
-			_payloadItemSerializer = new PayloadItemSerializer(config);
 			_metadata = metadata;
 
-			_stringBuilderPool = new StringBuilderPool(5, 1_000, 20_000);
+			_stringWriterPool = new StringWriterPool(5, 1_000, 20_000);
+
+			Settings = new JsonSerializerSettings
+			{
+				ContractResolver = new ElasticApmContractResolver(config),
+				NullValueHandling = NullValueHandling.Ignore,
+				Formatting = Formatting.None,
+			};
+			_jsonSerializer = JsonSerializer.CreateDefault(Settings);
 		}
 
 		public string FormatPayload(object[] items)
 		{
-			using (var holder = _stringBuilderPool.Get())
+			static void WriteItem(string name, object item, StringWriter writer, JsonSerializer jsonSerializer)
 			{
-				var ndjson = holder.Object;
-				if (_cachedMetadataJsonLine == null)
-					_cachedMetadataJsonLine = "{\"metadata\": " + _payloadItemSerializer.SerializeObject(_metadata) + "}";
-				ndjson.AppendLine(_cachedMetadataJsonLine);
+				writer.Write($"{{\"{name}\":");
+
+				using (var jsonWriter = new JsonTextWriter(writer) { CloseOutput = false })
+					jsonSerializer.Serialize(jsonWriter, item);
+
+				writer.WriteLine("}");
+			}
+
+			if (_cachedMetadataJsonLine == null)
+				_cachedMetadataJsonLine = "{\"metadata\":" + JsonConvert.SerializeObject(_metadata, Settings) + "}";
+
+			using (var holder = _stringWriterPool.Get())
+			{
+				var writer = holder.Object;
+
+				writer.WriteLine(_cachedMetadataJsonLine);
 
 				foreach (var item in items)
 				{
-					var serialized = _payloadItemSerializer.SerializeObject(item);
 					switch (item)
 					{
 						case Transaction _:
-							ndjson.Append("{\"transaction\": ");
-							ndjson.Append(serialized);
-							ndjson.AppendLine("}");
+							WriteItem("transaction", item, writer, _jsonSerializer);
 							break;
 						case Span _:
-							ndjson.Append("{\"span\": ");
-							ndjson.Append(serialized);
-							ndjson.AppendLine("}");
+							WriteItem("span", item, writer, _jsonSerializer);
 							break;
 						case Error _:
-							ndjson.Append("{\"error\": ");
-							ndjson.Append(serialized);
-							ndjson.AppendLine("}");
+							WriteItem("error", item, writer, _jsonSerializer);
 							break;
 						case MetricSet _:
-							ndjson.Append("{\"metricset\": ");
-							ndjson.Append(serialized);
-							ndjson.AppendLine("}");
+							WriteItem("metricset", item, writer, _jsonSerializer);
 							break;
 					}
-
-					_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItem}", item, serialized);
 				}
 
-				return ndjson.ToString();
+				return writer.ToString();
 			}
 		}
 	}

@@ -33,33 +33,28 @@ namespace Elastic.Apm.PerfTests
 			};
 
 			_oldPayloadFormatter = new PayloadFormatterV2(logger, apmAgent.ConfigurationReader, metadata);
-			_newPayloadFormatter = new EnhancedPayloadFormatter(logger, apmAgent.ConfigurationReader, metadata);
+			_newPayloadFormatter = new EnhancedPayloadFormatter(apmAgent.ConfigurationReader, metadata);
 
-			var transaction = new Elastic.Apm.Model.Transaction(apmAgent, "transaction", "transaction");
+			var transaction = new Transaction(apmAgent, "transaction", "transaction");
 			var span = new Span("span", "type", transaction.Id, transaction.TraceId, transaction, apmAgent.PayloadSender, logger,
 				apmAgent.ConfigurationReader, apmAgent.TracerInternal.CurrentExecutionSegmentsContainer);
 			var error = new Error(new CapturedException(), transaction, span.Id, logger);
 			var metricSet = new MetricSet(TimeUtils.TimestampNow(), new List<MetricSample> { new MetricSample("key", 25.0) });
 
-			_items = new object[] { transaction, span, error, metricSet };
-		}
-
-		[Benchmark]
-		public void PayloadFormatterV2()
-		{
-			for (var i = 0; i <= CallAmount; i++)
+			_items = new object[4 * CallAmount];
+			for (var i = 0; i < CallAmount; i++)
 			{
-				_oldPayloadFormatter.FormatPayload(_items);
+				_items[0 + 4 * i] = transaction;
+				_items[1 + 4 * i] = span;
+				_items[2 + 4 * i] = error;
+				_items[3 + 4 * i] = metricSet;
 			}
 		}
 
 		[Benchmark]
-		public void EnhancedPayloadFormatter()
-		{
-			for (var i = 0; i <= CallAmount; i++)
-			{
-				_newPayloadFormatter.FormatPayload(_items);
-			}
-		}
+		public string PayloadFormatterV2() => _oldPayloadFormatter.FormatPayload(_items);
+
+		[Benchmark]
+		public string EnhancedPayloadFormatter() => _newPayloadFormatter.FormatPayload(_items);
 	}
 }

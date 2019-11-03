@@ -42,7 +42,6 @@ namespace Elastic.Apm.Report
 			: base( /* isEnabled: */ true, logger, ThisClassName, service, config, httpMessageHandler)
 		{
 			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
-			new PayloadItemSerializer(config);
 
 			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(config.ServerUrls.First());
 
@@ -51,7 +50,8 @@ namespace Elastic.Apm.Report
 			var metadata = new Metadata { Service = service, System = System };
 			foreach (var globalLabelKeyValue in config.GlobalLabels) metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
 
-			_payloadFormatter = new PayloadFormatterV2(_logger, config, metadata);
+			//_payloadFormatter = new PayloadFormatterV2(_logger, config, metadata);
+			_payloadFormatter = new EnhancedPayloadFormatter(config, metadata);
 
 			if (config.MaxQueueEventCount < config.MaxBatchEventCount)
 			{
