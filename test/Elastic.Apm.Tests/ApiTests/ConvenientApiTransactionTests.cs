@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Mocks;
@@ -614,6 +615,28 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstTransaction.Context.User.Email.Should().Be(emailAddress);
 		}
 
+		/// <summary>
+		/// Makes sure Transaction.Custom is captured and it is not truncated.
+		/// </summary>
+		[Fact]
+		public void CaptureCustom()
+		{
+			var payloadSender = new MockPayloadSender();
+			var customValue = "b".Repeat(10_000);
+			var customKey = "a";
+
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, (transaction) =>
+				{
+					transaction.Custom.Add(customKey, customValue);
+					transaction.End();
+				});
+			}
+
+			payloadSender.FirstTransaction.Should().NotBeNull();
+			payloadSender.FirstTransaction.Custom[customKey].Should().Be(customValue);
+		}
 
 		/// <summary>
 		/// Asserts on 1 transaction with async code

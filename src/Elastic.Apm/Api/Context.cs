@@ -7,7 +7,10 @@ namespace Elastic.Apm.Api
 {
 	public class Context
 	{
+		private readonly Lazy<Dictionary<string, string>> _custom = new Lazy<Dictionary<string, string>>();
 		private readonly Lazy<Dictionary<string, string>> _labels = new Lazy<Dictionary<string, string>>();
+
+		public Dictionary<string, string> Custom => _custom.Value;
 
 		/// <summary>
 		/// <seealso cref="ShouldSerializeLabels" />
@@ -41,5 +44,7 @@ namespace Elastic.Apm.Api
 		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
 		/// </summary>
 		public bool ShouldSerializeLabels() => _labels.IsValueCreated && Labels.Count > 0;
+
+		public bool ShouldSerializeCustom() => _custom.IsValueCreated && Custom.Count > 0;
 	}
 }

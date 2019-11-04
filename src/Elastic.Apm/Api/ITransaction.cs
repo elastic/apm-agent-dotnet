@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Elastic.Apm.Api
 {
 	public interface ITransaction : IExecutionSegment
@@ -7,6 +9,11 @@ namespace Elastic.Apm.Api
 		/// This field is lazily initialized, you don't have to assign a value to it and you don't have to null check it either.
 		/// </summary>
 		Context Context { get; }
+
+		/// <summary>
+		/// An arbitrary mapping of additional metadata to store with the event.
+		/// </summary>
+		Dictionary<string, string> Custom { get; }
 
 		/// <summary>
 		/// A string describing the result of the transaction.
