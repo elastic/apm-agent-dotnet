@@ -19,9 +19,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 	[Collection("DiagnosticListenerTest")]
 	public class SanitizeFieldNamesTests : IClassFixture<CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup>>
 	{
-		private readonly WebApplicationFactory<Startup> _factory;
+		private readonly CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup> _factory;
 
-		public SanitizeFieldNamesTests(WebApplicationFactory<Startup> factory) => _factory = factory;
+		public SanitizeFieldNamesTests(CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup> factory) => _factory = factory;
 
 		private static ApmAgent GetAgent(string sanitizeFieldNames = null)
 		{
@@ -48,7 +48,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 				using (await client.GetAsync("/Home/SimplePage"))
 				{
-					var capturedPayload = (MockPayloadSender)agent.PayloadSender;
+					var capturedPayload = (SerializerMockPayloadSender)agent.PayloadSender;
 
 					capturedPayload.Transactions.Should().ContainSingle();
 					capturedPayload.FirstTransaction.Context.Should().NotBeNull();
@@ -84,7 +84,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 				using (await client.GetAsync("/Home/SimplePage"))
 				{
-					var capturedPayload = (MockPayloadSender)agent.PayloadSender;
+					var capturedPayload = (SerializerMockPayloadSender)agent.PayloadSender;
 
 					capturedPayload.Transactions.Should().ContainSingle();
 					capturedPayload.FirstTransaction.Context.Should().NotBeNull();
@@ -117,7 +117,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				client.DefaultRequestHeaders.Add(headerName, "123");
 				using (await client.GetAsync("/Home/SimplePage"))
 				{
-					var capturedPayload = (MockPayloadSender)agent.PayloadSender;
+					var capturedPayload = (SerializerMockPayloadSender)agent.PayloadSender;
 
 					capturedPayload.Transactions.Should().ContainSingle();
 					capturedPayload.FirstTransaction.Context.Should().NotBeNull();
@@ -148,7 +148,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				client.DefaultRequestHeaders.Add(headerName, "123");
 				using (await client.GetAsync("/Home/SimplePage"))
 				{
-					var capturedPayload = (MockPayloadSender)agent.PayloadSender;
+					var capturedPayload = (SerializerMockPayloadSender)agent.PayloadSender;
 
 					capturedPayload.Transactions.Should().ContainSingle();
 					capturedPayload.FirstTransaction.Context.Should().NotBeNull();
@@ -189,7 +189,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				using (var res = await client.SendAsync(req))
 				{
 					res.IsSuccessStatusCode.Should().BeTrue();
-					var capturedPayload = (MockPayloadSender)agent.PayloadSender;
+					var capturedPayload = (SerializerMockPayloadSender)agent.PayloadSender;
 
 					capturedPayload.Errors.Should().BeNullOrEmpty();
 					capturedPayload.Transactions.Should().ContainSingle();
@@ -213,7 +213,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				using (var res = await client.SendAsync(req))
 				{
 					res.IsSuccessStatusCode.Should().BeTrue();
-					var capturedPayload = (MockPayloadSender)agent.PayloadSender;
+					var capturedPayload = (SerializerMockPayloadSender)agent.PayloadSender;
 
 					capturedPayload.Errors.Should().BeNullOrEmpty();
 					capturedPayload.Transactions.Should().ContainSingle();
@@ -252,7 +252,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 					using (var res = await client.SendAsync(req))
 					{
 						res.IsSuccessStatusCode.Should().BeFalse();
-						var capturedPayload = (MockPayloadSender)agent.PayloadSender;
+						var capturedPayload = (SerializerMockPayloadSender)agent.PayloadSender;
 
 						capturedPayload.Transactions.Should().ContainSingle();
 						capturedPayload.FirstError.Should().NotBeNull();
@@ -294,7 +294,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				using (var res = await client.SendAsync(req))
 				{
 					res.IsSuccessStatusCode.Should().BeTrue();
-					var capturedPayload = (MockPayloadSender)agent.PayloadSender;
+					var capturedPayload = (SerializerMockPayloadSender)agent.PayloadSender;
 
 					capturedPayload.Errors.Should().BeNullOrEmpty();
 					capturedPayload.Transactions.Should().ContainSingle();
