@@ -7,22 +7,23 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
-	[Collection("AspNetFullFrameworkTests")]
+	[Collection(Consts.AspNetFullFrameworkTestsCollection)]
 	public class SampleRate0Tests : TestsBase
 	{
 		public SampleRate0Tests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper,
-			envVarsToSetForSampleAppPool: new Dictionary<string, string>() { { ConfigConsts.EnvVarNames.TransactionSampleRate, "0" } }) { }
+			envVarsToSetForSampleAppPool: new Dictionary<string, string> { { ConfigConsts.EnvVarNames.TransactionSampleRate, "0" } })
+		{ }
 
 		[AspNetFullFrameworkTheory]
 		[MemberData(nameof(AllSampleAppUrlPaths))]
 		public async Task Test(SampleAppUrlPathData sampleAppUrlPathDataForSampled)
 		{
 			var sampleAppUrlPathData = sampleAppUrlPathDataForSampled.Clone(spansCount: 0);
-			await SendGetRequestToSampleAppAndVerifyResponseStatusCode(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.StatusCode);
 
-			VerifyDataReceivedFromAgent(receivedData =>
+			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				TryVerifyDataReceivedFromAgent(sampleAppUrlPathData, receivedData);
+				VerifyReceivedDataSharedConstraints(sampleAppUrlPathData, receivedData);
 
 				foreach (var transaction in receivedData.Transactions)
 				{

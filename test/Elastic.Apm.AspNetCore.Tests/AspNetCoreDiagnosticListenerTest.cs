@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using Elastic.Apm.AspNetCore.Tests.Factories;
 using Elastic.Apm.AspNetCore.Tests.Fakes;
@@ -60,28 +61,31 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task TestJsonBodyRetrievalOnRequestFailureInAspNetCore()
 		{
-			using (var agent = new ApmAgent(new TestAgentComponents(captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors, captureBodyContentTypes: ConfigConsts.DefaultValues.CaptureBodyContentTypes)))
-			using (var client = TestHelper.GetClient(_factory, agent))
-			{
-				var body = "{\"id\" : \"1\"}";
-				var response = await client.PostAsync("api/Home/PostError", new StringContent(body, System.Text.Encoding.UTF8, "application/json"));
+            using (var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(
+				captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors,
+				// ReSharper disable once RedundantArgumentDefaultValue
+                captureBodyContentTypes: ConfigConsts.DefaultValues.CaptureBodyContentTypes))))
+            using (var client = TestHelper.GetClient(_factory, agent))
+            {
+                var body = "{\"id\" : \"1\"}";
+                var response = await client.PostAsync("api/Home/PostError", new StringContent(body, Encoding.UTF8, "application/json"));
 
-				var capturedPayload = (MockPayloadSender)agent.PayloadSender;
-				capturedPayload.Should().NotBeNull();
-				capturedPayload.Transactions.Should().ContainSingle();
-				capturedPayload.Errors.Should().ContainSingle();
+                var capturedPayload = (MockPayloadSender)agent.PayloadSender;
+                capturedPayload.Should().NotBeNull();
+                capturedPayload.Transactions.Should().ContainSingle();
+                capturedPayload.Errors.Should().ContainSingle();
 
-				var errorException = capturedPayload.FirstError.Exception;
-				errorException.Message.Should().Be("This is a post method test exception!");
-				errorException.Type.Should().Be(typeof(Exception).FullName);
+                var errorException = capturedPayload.FirstError.Exception;
+                errorException.Message.Should().Be("This is a post method test exception!");
+                errorException.Type.Should().Be(typeof(Exception).FullName);
 
-				var context = capturedPayload.FirstError.Context;
-				context.Request.Url.Full.Should().Be("http://localhost/api/Home/PostError");
-				context.Request.Method.Should().Be(HttpMethod.Post.Method);
-				context.Request.Body.Should().Be(body);
-				errorException.Should().NotBeNull();
-				errorException.Handled.Should().BeFalse();
-			}
+                var context = capturedPayload.FirstError.Context;
+                context.Request.Url.Full.Should().Be("http://localhost/api/Home/PostError");
+                context.Request.Method.Should().Be(HttpMethod.Post.Method);
+                context.Request.Body.Should().Be(body);
+                errorException.Should().NotBeNull();
+                errorException.Handled.Should().BeFalse();
+            }
 		}
 	}
 }

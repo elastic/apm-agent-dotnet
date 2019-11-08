@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading.Tasks;
-
 namespace Elastic.Apm.Api
 {
 	public interface ITransaction : IExecutionSegment

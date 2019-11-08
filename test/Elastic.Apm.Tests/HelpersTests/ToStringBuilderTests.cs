@@ -50,6 +50,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 				"C: " + nameof(ClassWithoutAnyProperties) + "{}, " +
 				"D: " + nameof(ClassWithOneProperty) + "{prop: 789}" +
 				"}");
+
 		private class ClassWithoutAnyProperties
 		{
 			public override string ToString() => new ToStringBuilder(nameof(ClassWithoutAnyProperties)).ToString();
@@ -61,10 +62,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 			public ClassWithOneProperty(int intPropertyValue) => _intPropertyValue = intPropertyValue;
 
-			public override string ToString() => new ToStringBuilder(nameof(ClassWithOneProperty))
-			{
-				{ "prop", _intPropertyValue }
-			}.ToString();
+			public override string ToString() => new ToStringBuilder(nameof(ClassWithOneProperty)) { { "prop", _intPropertyValue } }.ToString();
 		}
 
 		private class ClassWithAFewProperties

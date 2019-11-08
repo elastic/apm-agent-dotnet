@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <RootNamespace>Elastic.Apm.All</RootNamespace>
-    <VersionPrefix>1.0.1</VersionPrefix>
+    <VersionPrefix>1.1.2</VersionPrefix>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>

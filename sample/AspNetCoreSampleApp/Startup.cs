@@ -1,4 +1,4 @@
-﻿using AspNetCoreSampleApp.Data;
+using AspNetCoreSampleApp.Data;
 using Elastic.Apm.NetCoreAll;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -38,7 +38,7 @@ namespace AspNetCoreSampleApp
 
 			services.AddMvc()
 				.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-		}
+        }
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)

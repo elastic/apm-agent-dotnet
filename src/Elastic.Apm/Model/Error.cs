@@ -26,6 +26,22 @@ namespace Elastic.Apm.Model
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 		}
 
+		// This constructor is meant for serialization
+		[JsonConstructor]
+		private Error(string culprit, CapturedException capturedException, string id, string parentId, long timestamp, string traceId,
+			string transactionId, TransactionData transaction
+		)
+		{
+			Culprit = culprit;
+			Exception = capturedException;
+			Id = id;
+			ParentId = parentId;
+			Timestamp = timestamp;
+			TraceId = traceId;
+			TransactionId = transactionId;
+			Transaction = transaction;
+		}
+
 		/// <summary>
 		/// <seealso cref="ShouldSerializeContext" />
 		/// </summary>
@@ -68,11 +84,12 @@ namespace Elastic.Apm.Model
 
 		public override string ToString() => new ToStringBuilder(nameof(Error))
 		{
-			{ nameof(Id), Id }, { nameof(TraceId), TraceId }, { nameof(ParentId), ParentId }, { nameof(TransactionId), TransactionId },
+			{ nameof(Id), Id }, { nameof(TraceId), TraceId }, { nameof(ParentId), ParentId }, { nameof(TransactionId), TransactionId }
 		}.ToString();
 
 		public class TransactionData
 		{
+			[JsonConstructor]
 			internal TransactionData(bool isSampled, string type)
 			{
 				IsSampled = isSampled;
@@ -86,7 +103,7 @@ namespace Elastic.Apm.Model
 			public string Type { get; }
 
 			public override string ToString() =>
-				new ToStringBuilder(nameof(TransactionData)) { { "IsSampled", IsSampled }, { "Type", Type }, }.ToString();
+				new ToStringBuilder(nameof(TransactionData)) { { "IsSampled", IsSampled }, { "Type", Type } }.ToString();
 		}
 	}
 }

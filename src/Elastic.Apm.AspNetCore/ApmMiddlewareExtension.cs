@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -9,6 +9,7 @@ using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -46,7 +47,7 @@ namespace Elastic.Apm.AspNetCore
 
 			var configReader = configuration == null
 				? new EnvironmentConfigurationReader(logger)
-				: new MicrosoftExtensionsConfig(configuration, logger) as IConfigurationReader;
+				: new MicrosoftExtensionsConfig(configuration, logger, builder.ApplicationServices.GetEnvironmentName()) as IConfigurationReader;
 
 			var config = new AgentComponents(configurationReader: configReader, logger: logger);
 			UpdateServiceInformation(config.Service);
@@ -67,6 +68,9 @@ namespace Elastic.Apm.AspNetCore
 			agent.Subscribe(subs.ToArray());
 			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer, agent);
 		}
+
+		internal static string GetEnvironmentName(this IServiceProvider serviceProvider) =>
+			(serviceProvider.GetService(typeof(IHostingEnvironment)) as IHostingEnvironment)?.EnvironmentName;
 
 		internal static IApmLogger GetApmLogger(this IServiceProvider serviceProvider) =>
 			serviceProvider.GetService(typeof(ILoggerFactory)) is ILoggerFactory loggerFactory

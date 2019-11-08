@@ -4,8 +4,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.28803.352
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3734A52F-2222-454B-BF58-1BA5C1F29D77}"
+ProjectSection(SolutionItems) = preProject
+	src\Directory.Build.props = src\Directory.Build.props
+EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{3C791D9C-6F19-4F46-B367-2EC0F818762D}"
+ProjectSection(SolutionItems) = preProject
+	sample\Directory.Build.props = sample\Directory.Build.props
+EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCoreSampleApp", "sample\AspNetCoreSampleApp\AspNetCoreSampleApp.csproj", "{0ADF687D-4DB7-417E-80B4-27B3FD86875E}"
 EndProject
@@ -36,6 +42,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "files", "files", "{B406113B
 		Jenkinsfile = Jenkinsfile
 		LICENSE = LICENSE
 		README.md = README.md
+		global.json = global.json
+		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.PerfTests", "test\Elastic.Apm.PerfTests\Elastic.Apm.PerfTests.csproj", "{F069CE99-F418-4BC2-9E44-8F03497D8DA8}"
@@ -46,11 +54,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApiSample", "sample\WebA
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.AspNetFullFramework", "src\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj", "{D6FFDDAB-9D76-442F-8F1D-BD6F553F92FA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.EntityFramework6", "src\Elastic.Apm.EntityFramework6\Elastic.Apm.EntityFramework6.csproj", "{12FFCFF6-858C-4E6E-935C-E304712DECA4}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.DockerTests", "test\Elastic.Apm.DockerTests\Elastic.Apm.DockerTests.csproj", "{40B47FD4-6E67-4D52-B9A4-607B9D01D9F5}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.AspNetFullFramework.Tests", "test\Elastic.Apm.AspNetFullFramework.Tests\Elastic.Apm.AspNetFullFramework.Tests.csproj", "{4253798D-A160-40B3-8F16-5BF64C559B93}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Tests.MockApmServer", "test\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj", "{AFFB238B-10C0-4229-9527-184EFCF0F5AC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.EntityFrameworkCore.Tests", "test\Elastic.Apm.EntityFrameworkCore.Tests\Elastic.Apm.EntityFrameworkCore.Tests.csproj", "{79BEA612-E2C8-47FD-84DC-A1B17AAD5038}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -110,6 +122,10 @@ Global
 		{D6FFDDAB-9D76-442F-8F1D-BD6F553F92FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D6FFDDAB-9D76-442F-8F1D-BD6F553F92FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D6FFDDAB-9D76-442F-8F1D-BD6F553F92FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12FFCFF6-858C-4E6E-935C-E304712DECA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12FFCFF6-858C-4E6E-935C-E304712DECA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12FFCFF6-858C-4E6E-935C-E304712DECA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12FFCFF6-858C-4E6E-935C-E304712DECA4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{40B47FD4-6E67-4D52-B9A4-607B9D01D9F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{40B47FD4-6E67-4D52-B9A4-607B9D01D9F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{40B47FD4-6E67-4D52-B9A4-607B9D01D9F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -122,6 +138,10 @@ Global
 		{AFFB238B-10C0-4229-9527-184EFCF0F5AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AFFB238B-10C0-4229-9527-184EFCF0F5AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AFFB238B-10C0-4229-9527-184EFCF0F5AC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79BEA612-E2C8-47FD-84DC-A1B17AAD5038}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79BEA612-E2C8-47FD-84DC-A1B17AAD5038}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79BEA612-E2C8-47FD-84DC-A1B17AAD5038}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79BEA612-E2C8-47FD-84DC-A1B17AAD5038}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -140,9 +160,11 @@ Global
 		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{319E2094-D2E1-46C5-8985-9693CD8DDCBD} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{D6FFDDAB-9D76-442F-8F1D-BD6F553F92FA} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
+		{12FFCFF6-858C-4E6E-935C-E304712DECA4} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{40B47FD4-6E67-4D52-B9A4-607B9D01D9F5} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{4253798D-A160-40B3-8F16-5BF64C559B93} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{AFFB238B-10C0-4229-9527-184EFCF0F5AC} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{79BEA612-E2C8-47FD-84DC-A1B17AAD5038} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}

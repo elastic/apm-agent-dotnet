@@ -21,10 +21,30 @@ namespace Elastic.Apm.Model
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
 
+		// This constructor is meant for serialization
+		[JsonConstructor]
+		private Transaction(Context context, string name, string type, double duration, long timestamp, string id, string traceId, string parentId,
+			bool isSampled, string result, SpanCount spanCount
+		)
+		{
+			_context = new Lazy<Context>(() => context);
+			Name = name;
+			Duration = duration;
+			Timestamp = timestamp;
+			Type = type;
+			Id = id;
+			TraceId = traceId;
+			ParentId = parentId;
+			IsSampled = isSampled;
+			Result = result;
+			SpanCount = spanCount;
+		}
+
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigurationReader,
-				agent.TracerInternal.CurrentExecutionSegmentsContainer) { }
+				agent.TracerInternal.CurrentExecutionSegmentsContainer)
+		{ }
 
 		internal Transaction(
 			IApmLogger logger,
@@ -119,6 +139,9 @@ namespace Elastic.Apm.Model
 		[JsonProperty("sampled")]
 		public bool IsSampled { get; }
 
+		[JsonIgnore]
+		public Dictionary<string, string> Labels => Context.Labels;
+
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name
 		{
@@ -150,9 +173,6 @@ namespace Elastic.Apm.Model
 
 		[JsonProperty("span_count")]
 		public SpanCount SpanCount { get; set; }
-
-		[JsonIgnore]
-		public Dictionary<string, string> Labels => Context.Labels;
 
 		/// <summary>
 		/// Recorded time of the event, UTC based and formatted as microseconds since Unix epoch
@@ -224,7 +244,7 @@ namespace Elastic.Apm.Model
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
-			var retVal = new Span(name, type, Id, TraceId, this, IsSampled, _sender, _logger, _configurationReader, _currentExecutionSegmentsContainer);
+			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _configurationReader, _currentExecutionSegmentsContainer);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 

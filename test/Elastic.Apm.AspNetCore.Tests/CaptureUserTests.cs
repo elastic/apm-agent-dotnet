@@ -20,7 +20,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// The ASP.NET Core auto instrumentation is able to capture logged in users. This class tests that feature.
 	/// </summary>
 	[Collection("DiagnosticListenerTest")]
-	public class CaptureUserTests : IDisposable, IClassFixture<CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup>>
+	public class CaptureUserTests : IClassFixture<CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup>>, IDisposable
 	{
 		private readonly CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup> _factory;
 

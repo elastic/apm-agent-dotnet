@@ -22,7 +22,7 @@ namespace Elastic.Apm.Model
 
 		public override string ToString() => new ToStringBuilder(nameof(CapturedException))
 		{
-			{ nameof(Type), Type }, { nameof(Message), Message }, { nameof(Handled), Handled }, { nameof(Code), Code },
+			{ nameof(Type), Type }, { nameof(Message), Message }, { nameof(Handled), Handled }, { nameof(Code), Code }
 		}.ToString();
 	}
 }

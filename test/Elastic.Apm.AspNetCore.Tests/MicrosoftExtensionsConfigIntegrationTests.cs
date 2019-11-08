@@ -29,7 +29,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			var logger = new TestLogger();
 
-			var config = new MicrosoftExtensionsConfig(MicrosoftExtensionsConfigTests.GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger);
+			var config = new MicrosoftExtensionsConfig(MicrosoftExtensionsConfigTests.GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), logger, "test");
 
 			using (var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(), configurationReader: config, logger: logger)))
 			using (var client = TestHelper.GetClient(_factory, agent))

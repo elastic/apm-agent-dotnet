@@ -1,27 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net461</TargetFramework>
-    <VersionPrefix>0.0.2.0</VersionPrefix>
-    <VersionSuffix>alpha</VersionSuffix>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <AssemblyName>Elastic.Apm.AspNetFullFramework</AssemblyName>
+    <RootNamespace>Elastic.Apm.AspNetFullFramework</RootNamespace>
+    <VersionPrefix>1.1.2</VersionPrefix>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
+    <PackageId>Elastic.Apm.AspNetFullFramework</PackageId>
     <Copyright>2019 Elasticsearch BV</Copyright>
-    <Company>Elastic and contributors</Company>
-    <Description>Elastic APM for ASP.NET. This package contains auto instrumentation for ASP.NET. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
-    <Authors>Elastic and contributors</Authors>
     <PackageLicenseUrl>https://github.com/elastic/apm-agent-dotnet/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/elastic/apm-agent-dotnet</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/elastic/apm-agent-dotnet/master/build/nuget-icon.png</PackageIconUrl>
-    <PackageTags>apm, monitoring, elastic, elasticapm, analytics, aspnet</PackageTags>
+    <Description>Elastic APM for ASP.NET Full Framework. This package contains auto instrumentation for ASP.NET Full Framework. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
+    <PackageTags>apm monitoring elastic elasticapm analytics aspnet</PackageTags>
+    <Authors>Elastic and contributors</Authors>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj">
-      <Project>{90bc9629-c8d2-4fd5-863e-ea2d5fb37341}</Project>
-      <Name>Elastic.Apm</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Web" />
+    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
   </ItemGroup>
 </Project>

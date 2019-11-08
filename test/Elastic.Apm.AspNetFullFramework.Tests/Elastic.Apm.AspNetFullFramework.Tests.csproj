@@ -9,19 +9,28 @@
     <!-- Always generate debug symbols this allows fluent symbols exception messages to include variable names -->
     <DebugSymbols>True</DebugSymbols>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
+    <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="FluentAssertions" Version="5.7.0" />
     <PackageReference Include="FluentAssertions.Analyzers" Version="0.11.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
-    <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="2.1.1" />
     <PackageReference Include="Microsoft.Web.Administration" Version="11.1.0" />
+    <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
+    <ProjectReference Include="..\..\src\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj" />
     <ProjectReference Include="..\..\sample\AspNetFullFrameworkSampleApp\AspNetFullFrameworkSampleApp.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(OS)' != 'WINDOWS_NT'">
+    <Compile Remove="*" />
+    <Compile Include="Program-Unix.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
+    <Compile Remove="Program-Unix.cs" />
   </ItemGroup>
 </Project>

@@ -135,8 +135,9 @@ you can manually propagate distributed tracing context from the caller to the ca
 First you serialize distributed tracing context on the caller side:
 [source,csharp]
 ----
-string outgoingDistributedTracingData = Agent.Tracer.CurrentTransaction
-                     .OutgoingDistributedTracingData.SerializeToString();
+string outgoingDistributedTracingData =
+    (Agent.Tracer.CurrentSpan?.OutgoingDistributedTracingData 
+        ?? Agent.Tracer.CurrentTransaction?.OutgoingDistributedTracingData)?.SerializeToString();
 ----
 Then you transfer the resulted string to the callee side
 and you continue the trace by passing deserialized distributed tracing context to any of

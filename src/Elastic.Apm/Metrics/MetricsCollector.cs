@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
+using System.Timers;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Report;
-using Timer = System.Timers.Timer;
 
 namespace Elastic.Apm.Metrics
 {
@@ -25,13 +24,13 @@ namespace Elastic.Apm.Metrics
 	{
 		internal const int MaxTryWithoutSuccess = 5;
 
-		private static int _syncPoint;
-
 		/// <summary>
 		/// List of all providers that can provide metrics values.
 		/// Add new providers to this list in case you want the agent to collect more metrics
 		/// </summary>
 		internal readonly List<IMetricsProvider> MetricsProviders;
+
+		private readonly AgentSpinLock _isCollectionInProgress = new AgentSpinLock();
 
 		private readonly IApmLogger _logger;
 
@@ -70,91 +69,101 @@ namespace Elastic.Apm.Metrics
 
 		internal void CollectAllMetrics()
 		{
-			var sync = Interlocked.CompareExchange(ref _syncPoint, 1, 0);
-			if (sync != 0) return;
-
-			_logger.Trace()?.Log("CollectAllMetrics started");
-
-			try
+			using (var acq = _isCollectionInProgress.TryAcquireWithDisposable())
 			{
-				var samplesFromAllProviders = new List<MetricSample>();
-
-				foreach (var metricsProvider in MetricsProviders)
+				if (!acq.IsAcquired)
 				{
-					if (metricsProvider.ConsecutiveNumberOfFailedReads == MaxTryWithoutSuccess)
-						continue;
-
-					try
-					{
-						_logger.Trace()?.Log("Start collecting {MetricsProviderName}", metricsProvider.DbgName);
-						var samplesFromCurrentProvider = metricsProvider.GetSamples();
-						if (samplesFromCurrentProvider != null)
-						{
-							var sampleArray = samplesFromCurrentProvider as MetricSample[] ?? samplesFromCurrentProvider.ToArray();
-							if (sampleArray.Any())
-							{
-								_logger.Trace()?.Log("Collected {MetricsProviderName} - adding it to MetricSet", metricsProvider.DbgName);
-								samplesFromAllProviders.AddRange(sampleArray);
-							}
-
-							metricsProvider.ConsecutiveNumberOfFailedReads = 0;
-						}
-						else
-							metricsProvider.ConsecutiveNumberOfFailedReads++;
-					}
-					catch (Exception e)
-					{
-						metricsProvider.ConsecutiveNumberOfFailedReads++;
-						_logger.Error()
-							?.LogException(e, "Failed reading {ProviderName} {NumberOfFail} times", metricsProvider.DbgName,
-								metricsProvider.ConsecutiveNumberOfFailedReads);
-					}
-
-					if (metricsProvider.ConsecutiveNumberOfFailedReads != MaxTryWithoutSuccess) continue;
-
-					_logger.Info()
-						?.Log("Failed reading {operationName} {numberOfTimes} consecutively - the agent won't try reading {operationName} anymore",
-							metricsProvider.DbgName, metricsProvider.ConsecutiveNumberOfFailedReads, metricsProvider.DbgName);
+					_logger.Trace()?.Log("Previous CollectAllMetrics call is still in progress - skipping this one");
+					return;
 				}
-
-				var metricSet = new MetricSet(TimeUtils.TimestampNow(), samplesFromAllProviders);
 
 				try
 				{
-					_payloadSender.QueueMetrics(metricSet);
-					_logger.Debug()
-						?.Log("Metrics collected: {data}",
-							samplesFromAllProviders.Any()
-								? samplesFromAllProviders.Select(n => n.ToString()).Aggregate((i, j) => i + ", " + j)
-								: "no metrics collected");
+					CollectAllMetricsImpl();
 				}
 				catch (Exception e)
 				{
 					_logger.Error()
-						?.LogException(e, "Failed sending metrics through PayloadSender - metrics collection stops");
-					_timer.Stop();
-					_timer.Dispose();
+						?.LogExceptionWithCaller(e);
 				}
+			}
+		}
+
+		internal void CollectAllMetricsImpl()
+		{
+			_logger.Trace()?.Log("CollectAllMetrics started");
+
+			var samplesFromAllProviders = new List<MetricSample>();
+
+			// ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+			foreach (var metricsProvider in MetricsProviders)
+			{
+				if (metricsProvider.ConsecutiveNumberOfFailedReads == MaxTryWithoutSuccess)
+					continue;
+
+				try
+				{
+					_logger.Trace()?.Log("Start collecting {MetricsProviderName}", metricsProvider.DbgName);
+					var samplesFromCurrentProvider = metricsProvider.GetSamples();
+					if (samplesFromCurrentProvider != null)
+					{
+						var sampleArray = samplesFromCurrentProvider as MetricSample[] ?? samplesFromCurrentProvider.ToArray();
+						if (sampleArray.Any())
+						{
+							_logger.Trace()?.Log("Collected {MetricsProviderName} - adding it to MetricSet", metricsProvider.DbgName);
+							samplesFromAllProviders.AddRange(sampleArray);
+						}
+
+						metricsProvider.ConsecutiveNumberOfFailedReads = 0;
+					}
+					else
+						metricsProvider.ConsecutiveNumberOfFailedReads++;
+				}
+				catch (Exception e)
+				{
+					metricsProvider.ConsecutiveNumberOfFailedReads++;
+					_logger.Error()
+						?.LogException(e, "Failed reading {ProviderName} {NumberOfFail} times", metricsProvider.DbgName,
+							metricsProvider.ConsecutiveNumberOfFailedReads);
+				}
+
+				if (metricsProvider.ConsecutiveNumberOfFailedReads != MaxTryWithoutSuccess) continue;
+
+				_logger.Info()
+					?.Log("Failed reading {operationName} {numberOfTimes} consecutively - the agent won't try reading {operationName} anymore",
+						metricsProvider.DbgName, metricsProvider.ConsecutiveNumberOfFailedReads, metricsProvider.DbgName);
+			}
+
+			var metricSet = new MetricSet(TimeUtils.TimestampNow(), samplesFromAllProviders);
+
+			try
+			{
+				_payloadSender.QueueMetrics(metricSet);
+				_logger.Debug()
+					?.Log("Metrics collected: {data}",
+						samplesFromAllProviders.Any()
+							? samplesFromAllProviders.Select(n => n.ToString()).Aggregate((i, j) => i + ", " + j)
+							: "no metrics collected");
 			}
 			catch (Exception e)
 			{
 				_logger.Error()
-					?.LogExceptionWithCaller(e);
-			}
-			finally
-			{
-				_syncPoint = 0;
+					?.LogException(e, "Failed sending metrics through PayloadSender - metrics collection stops");
+				_timer.Stop();
+				_timer.Dispose();
 			}
 		}
 
 		public void Dispose()
 		{
+			if (MetricsProviders == null) return;
+
 			_timer?.Stop();
 			_timer?.Dispose();
 
 			foreach (var provider in MetricsProviders)
 			{
-				if(provider is IDisposable disposable)
+				if (provider is IDisposable disposable)
 					disposable.Dispose();
 			}
 		}

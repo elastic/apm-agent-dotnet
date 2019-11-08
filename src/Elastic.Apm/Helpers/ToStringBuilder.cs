@@ -10,7 +10,7 @@ namespace Elastic.Apm.Helpers
 	public struct ToStringBuilder : IEnumerable
 	{
 		private const int StringBuilderInitialCapacity = 100;
-		private readonly StringBuilder _stringBuilder;
+		private StringBuilder _stringBuilder;
 		private bool _addedAny;
 
 		public ToStringBuilder(string className)
@@ -22,7 +22,11 @@ namespace Elastic.Apm.Helpers
 
 		public void Add(string propertyName, object propertyValue)
 		{
-			if (_addedAny) _stringBuilder.Append(", ");
+			if (_addedAny)
+				_stringBuilder.Append(", ");
+			else if (_stringBuilder == null)
+				_stringBuilder = new StringBuilder(StringBuilderInitialCapacity);
+
 			_stringBuilder.Append(propertyName).Append(": ");
 			if (propertyValue == null)
 				_stringBuilder.Append("null");

@@ -12,15 +12,15 @@ namespace Elastic.Apm.AspNetCore.Extensions
 		/// </summary>
 		/// <returns></returns>
 		public static bool ShouldExtractRequestBodyOnError(this IConfigurationReader configurationReader) =>
-			(configurationReader.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyAll) ||
-			configurationReader.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyErrors));
+			configurationReader.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyAll) ||
+			configurationReader.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyErrors);
 
 		/// <summary>
 		/// Returns weather we should collect the request body in transaction logging (according to the Apm configuration)
 		/// </summary>
 		/// <returns></returns>
 		public static bool ShouldExtractRequestBodyOnTransactions(this IConfigurationReader configurationReader) =>
-			(configurationReader.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyAll) ||
-			configurationReader.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyTransactions));
+			configurationReader.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyAll) ||
+			configurationReader.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyTransactions);
 	}
 }

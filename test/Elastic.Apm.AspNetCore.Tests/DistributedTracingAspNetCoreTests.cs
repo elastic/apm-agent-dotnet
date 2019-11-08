@@ -84,9 +84,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			using (var primaryAgent = GetAgent())
 			{
-				primaryAgent.TracerInternal.Sampler = new Sampler(0);
+				primaryAgent.ConfigStore.CurrentSnapshot = new MockConfigSnapshot(transactionSampleRate: "0");
 
-				await ExecuteAndCheckDistributedCall(primaryAgent);
+                await ExecuteAndCheckDistributedCall(primaryAgent);
 
 				var capturedPayload1 = (MockPayloadSender)primaryAgent.PayloadSender;
 				var capturedPayload2 = (MockPayloadSender)_webApiAgent.PayloadSender;

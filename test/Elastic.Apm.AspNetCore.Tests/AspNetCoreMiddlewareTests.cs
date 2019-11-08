@@ -26,15 +26,15 @@ namespace Elastic.Apm.AspNetCore.Tests
 	/// It's basically an integration test.
 	/// </summary>
 	[Collection("DiagnosticListenerTest")] // To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
-	public class AspNetCoreMiddlewareTests : IClassFixture<CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup>>, IDisposable
+	public class AspNetCoreMiddlewareTests : LoggingTestBase, IClassFixture<CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup>>
 	{
 		private readonly CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup> _factory;
 		private readonly IApmLogger _logger;
 
-		public AspNetCoreMiddlewareTests(CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup> factory, ITestOutputHelper testOutputHelper)
-		{
+		public AspNetCoreMiddlewareTests(CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup> factory, ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+        {
 			_factory = factory;
-			_logger = new XunitOutputLogger(testOutputHelper).Scoped(nameof(AspNetCoreMiddlewareTests));
+			_logger = LoggerBase.Scoped(nameof(AspNetCoreMiddlewareTests));
 		}
 
 		/// <summary>
@@ -232,12 +232,17 @@ namespace Elastic.Apm.AspNetCore.Tests
 				var controllerActionSpan = spans.Last();
 				controllerActionSpan.Name.Should().Be("Index_span_name");
 				controllerActionSpan.Type.Should().Be("Index_span_type");
-				var httpSpans = spans.Where(span => span.Context.Db != null).ToArray();
+				var dbSpans = spans.Where(span => span.Context.Db != null).ToArray();
+				dbSpans.Should().NotBeEmpty();
+				foreach (var dbSpan in dbSpans)
+				{
+					dbSpan.Type.Should().Be(ApiConstants.TypeDb);
+					dbSpan.Subtype.Should().Be(ApiConstants.SubtypeSqLite);
+					dbSpan.ParentId.Should().Be(controllerActionSpan.Id);
+				}
+				var httpSpans = spans.Where(span => span.Context.Http != null).ToArray();
 				httpSpans.Should().NotBeEmpty();
 				foreach (var httpSpan in httpSpans) httpSpan.ParentId.Should().Be(controllerActionSpan.Id);
-				var dbSpans = spans.Where(span => span.Context.Http != null).ToArray();
-				dbSpans.Should().NotBeEmpty();
-				foreach (var dbSpan in dbSpans) dbSpan.ParentId.Should().Be(controllerActionSpan.Id);
 			}
 		}
 
@@ -320,7 +325,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			// We need to ensure Agent.Instance is created because we need the ApmAgent to use TracerCurrentExecutionSegmentsContainer.
 			var agent = new ApmAgent(new TestAgentComponents(
 				_logger,
-				captureBody: ConfigConsts.SupportedValues.CaptureBodyAll,
+				new MockConfigSnapshot(_logger, captureBody: ConfigConsts.SupportedValues.CaptureBodyAll),
 				// The ApmAgent needs to share CurrentExecutionSegmentsContainer with Agent.Instance because the sample application
 				// used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan.
 				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer));
@@ -329,6 +334,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 			return agent;
 		}
 
-		public void Dispose() => _factory.Dispose();
+		public override void Dispose()
+		{
+			_factory.Dispose();
+			base.Dispose();
+		}
 	}
 }

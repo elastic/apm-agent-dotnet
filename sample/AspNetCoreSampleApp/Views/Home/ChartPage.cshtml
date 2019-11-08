@@ -38,12 +38,12 @@
 						backgroundColor: 'rgb(255, 99, 132)',
 						borderColor: 'rgb(255, 99, 132)',
 						data: [ @{
-									foreach (var item in Model.Select(n => n.Close))
-									{
-										@String.Concat(item.ToString("0.00").Replace(',', '.'), ",")
-										;
-									}
-								}
+							        foreach (var item in Model.Select(n => n.Close))
+							        {
+								        @string.Concat(item.ToString("0.00").Replace(',', '.'), ",")
+								        ;
+							        }
+						        }
 						]
 					}
 				]

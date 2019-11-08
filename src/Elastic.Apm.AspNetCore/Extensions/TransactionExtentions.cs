@@ -15,7 +15,9 @@ namespace Elastic.Apm.AspNetCore.Extensions
 		/// <param name="transaction">Transaction object</param>
 		/// <param name="httpContext">Current http context</param>
 		/// <param name="logger">Logger object</param>
-		public static void CollectRequestInfo(this ITransaction transaction, HttpContext httpContext, IConfigurationReader configurationReader, IApmLogger logger)
+		public static void CollectRequestInfo(this ITransaction transaction, HttpContext httpContext, IConfigurationReader configurationReader,
+			IApmLogger logger
+		)
 		{
 			var body = Consts.BodyRedacted; // According to the documentation - the default value of 'body' is '[Redacted]'
 
@@ -26,9 +28,7 @@ namespace Elastic.Apm.AspNetCore.Extensions
 
 				//Request must not be null and the content type must be matched with the 'captureBodyContentTypes' configured
 				if (httpContext?.Request != null && configurationReader.CaptureBodyContentTypes.ContainsLike(contentType.MediaType))
-				{
 					body = httpContext.Request.ExtractRequestBody(logger);
-				}
 				transaction.Context.Request.Body = string.IsNullOrEmpty(body) ? Consts.BodyRedacted : body;
 			}
 		}
