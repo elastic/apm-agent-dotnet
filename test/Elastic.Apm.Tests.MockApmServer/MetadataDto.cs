@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Elastic.Apm.Api;
+using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -11,9 +13,15 @@ namespace Elastic.Apm.Tests.MockApmServer
 	{
 		public Service Service { get; set; }
 		public Api.System System { get; set; }
+		public Dictionary<string, string> Labels { get; set; }
 
 		public override string ToString() =>
-			new ToStringBuilder(nameof(MetadataDto)) { { nameof(Service), Service }, { nameof(System), System }, }.ToString();
+			new ToStringBuilder(nameof(MetadataDto))
+			{
+				{ nameof(Service), Service },
+				{ nameof(System), System },
+				{ nameof(Labels), AbstractConfigurationReader.ToLogString(Labels) }
+			}.ToString();
 
 		public void AssertValid()
 		{

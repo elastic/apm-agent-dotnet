@@ -14,13 +14,15 @@ namespace Elastic.Apm.AspNetCore.Helpers
 	/// </summary>
 	internal static class ExceptionFilter
 	{
-		internal static bool Capture(Exception e, ITransaction transaction, HttpContext httpContext, IConfigurationReader configurationReader, IApmLogger logger)
+		internal static bool Capture(Exception e, ITransaction transaction, HttpContext httpContext, IConfigurationReader configurationReader,
+			IApmLogger logger
+		)
 		{
 			transaction.CaptureException(e);
 
 			if (httpContext != null && configurationReader.ShouldExtractRequestBodyOnError())
 				transaction.CollectRequestInfo(httpContext, configurationReader, logger);
-			
+
 			return false;
 		}
 	}

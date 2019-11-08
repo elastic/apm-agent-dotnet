@@ -99,7 +99,7 @@ namespace ApiSamples
 		public static void SampleCustomTransactionWithConvenientApi() => Agent.Tracer.CaptureTransaction("TestTransaction", "TestType",
 			t =>
 			{
-				t.Context.Response = new Response() { Finished = true, StatusCode = 200 };
+				t.Context.Response = new Response { Finished = true, StatusCode = 200 };
 				t.Context.Request = new Request("GET", new Url { Protocol = "HTTP" });
 
 				t.Labels["fooTransaction1"] = "barTransaction1";
@@ -155,19 +155,20 @@ namespace ApiSamples
 				//In the main method we check for this and continue the trace.
 				var startInfo = new ProcessStartInfo();
 				startInfo.Environment["ELASTIC_APM_SERVICE_NAME"] = "Service2";
-				var outgoingDistributedTracingData = transaction.OutgoingDistributedTracingData.SerializeToString();
+				var outgoingDistributedTracingData = (Agent.Tracer.CurrentSpan?.OutgoingDistributedTracingData
+					?? Agent.Tracer.CurrentTransaction?.OutgoingDistributedTracingData)?.SerializeToString();
 				startInfo.FileName = "dotnet";
 				startInfo.Arguments = $"run {outgoingDistributedTracingData}";
 				WriteLineToConsole(
 					$"Spawning callee process and passing outgoing distributed tracing data: {outgoingDistributedTracingData} to it...");
 				var calleeProcess = Process.Start(startInfo);
-				WriteLineToConsole($"Spawned callee process");
+				WriteLineToConsole("Spawned callee process");
 
 				Thread.Sleep(1100);
 
-				WriteLineToConsole($"Waiting for callee process to exit...");
+				WriteLineToConsole("Waiting for callee process to exit...");
 				calleeProcess.WaitForExit();
-				WriteLineToConsole($"Callee process exited");
+				WriteLineToConsole("Callee process exited");
 			}
 			finally
 			{
@@ -185,10 +186,7 @@ namespace ApiSamples
 				transaction =>
 				{
 					transaction.CaptureSpan("SampleSpan", "SampleSpanType",
-						span =>
-						{
-							span.Context.Db = new Database { Statement = "GET /_all/_search?q=tag:wow", Type = Database.TypeElasticsearch, };
-						});
+						span => { span.Context.Db = new Database { Statement = "GET /_all/_search?q=tag:wow", Type = Database.TypeElasticsearch }; });
 				});
 		}
 
@@ -209,7 +207,9 @@ namespace ApiSamples
 					{
 						span.Context.Db = new Database
 						{
-							Statement = "GET /_all/_search?q=tag:wow", Type = Database.TypeElasticsearch, Instance = "MyInstance"
+							Statement = "GET /_all/_search?q=tag:wow",
+							Type = Database.TypeElasticsearch,
+							Instance = "MyInstance"
 						};
 					});
 			});

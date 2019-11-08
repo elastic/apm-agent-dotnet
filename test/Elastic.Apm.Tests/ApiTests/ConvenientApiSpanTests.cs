@@ -708,25 +708,14 @@ namespace Elastic.Apm.Tests.ApiTests
 			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 			{
 				WaitHelpers.SleepMinimum();
-				t.CaptureSpan("SampleSpan1", "SampleSpanType", span =>
-				{
-					span.Context.Http = new Http
-					{
-						Url = "http://mysite.com",
-						Method = "GET",
-						StatusCode = 200
-					};
-				});
+				t.CaptureSpan("SampleSpan1", "SampleSpanType",
+					span => { span.Context.Http = new Http { Url = "http://mysite.com", Method = "GET", StatusCode = 200 }; });
 
-				t.CaptureSpan("SampleSpan2", "SampleSpanType", span =>
-				{
-					span.Context.Db = new Database
+				t.CaptureSpan("SampleSpan2", "SampleSpanType",
+					span =>
 					{
-						Statement = "Select * from MyTable",
-						Type = Database.TypeSql,
-						Instance = "MyInstance"
-					};
-				});
+						span.Context.Db = new Database { Statement = "Select * from MyTable", Type = Database.TypeSql, Instance = "MyInstance" };
+					});
 			});
 
 			payloadSender.Spans[0].Name.Should().Be("SampleSpan1");

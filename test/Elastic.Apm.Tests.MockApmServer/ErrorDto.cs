@@ -41,7 +41,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			{ nameof(Culprit), Culprit },
 			{ nameof(Timestamp), Timestamp },
 			{ nameof(Transaction), Transaction },
-			{ nameof(Context), Context },
+			{ nameof(Context), Context }
 		}.ToString();
 
 		public void AssertValid()
@@ -68,7 +68,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 			public string Type { get; set; }
 
-			public override string ToString() => new ToStringBuilder(nameof(ErrorDto)) { { "Type", Type }, { "IsSampled", IsSampled }, }.ToString();
+			public override string ToString() => new ToStringBuilder(nameof(ErrorDto)) { { "Type", Type }, { "IsSampled", IsSampled } }.ToString();
 
 			public void AssertValid() => Type?.AssertValid();
 		}

@@ -12,9 +12,10 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 {
 	internal class SystemTotalCpuProvider : IMetricsProvider, IDisposable
 	{
+		internal const string SystemCpuTotalPct = "system.cpu.total.norm.pct";
+
 		// ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
 		private readonly IApmLogger _logger;
-		internal const string SystemCpuTotalPct = "system.cpu.total.norm.pct";
 		private readonly PerformanceCounter _processorTimePerfCounter;
 		private readonly StreamReader _procStatStreamReader;
 

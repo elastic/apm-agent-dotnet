@@ -1,10 +1,8 @@
-using System;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.Tests.Mocks;
@@ -20,13 +18,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 	[Collection("DiagnosticListenerTest")]
 	public class DistributedTracingAspNetCoreTests : IAsyncLifetime
 	{
-		private ApmAgent _agent1;
-		private ApmAgent _agent2;
-
 		private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
 		private readonly MockPayloadSender _payloadSender1 = new MockPayloadSender();
 		private readonly MockPayloadSender _payloadSender2 = new MockPayloadSender();
+		private ApmAgent _agent1;
+		private ApmAgent _agent2;
 
 		private Task _taskForApp1;
 		private Task _taskForApp2;
@@ -114,7 +111,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task NonSampledDistributedTraceAcross2Service()
 		{
-			_agent1.TracerInternal.Sampler = new Sampler(0);
+			_agent1.ConfigStore.CurrentSnapshot = new MockConfigSnapshot(transactionSampleRate: "0");
 
 			await ExecuteAndCheckDistributedCall();
 

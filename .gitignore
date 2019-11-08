@@ -332,3 +332,5 @@ ASALocalRun/
 
 .DS_Store
 *.db
+
+_TEMP/
