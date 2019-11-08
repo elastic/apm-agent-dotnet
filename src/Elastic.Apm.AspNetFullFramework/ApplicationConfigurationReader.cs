@@ -9,13 +9,30 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
-	internal class ApplicationConfigurationReader : EnvironmentConfigurationReader
+	internal class ApplicationConfigurationReader : AbstractConfigurationWithEnvFallbackReader
 	{
-		internal new const string Origin = "Configuration Provider";
+		private const string Origin = "System.Configuration.ConfigurationManager.AppSettings";
+		private readonly IApmLogger _logger;
 
-		public ApplicationConfigurationReader(IApmLogger logger = null) : base(logger) { }
+		public FullFrameworApplicationConfigurationReaderkConfigReader(IApmLogger logger = null)
+			: base(logger, null, nameof(ApplicationConfigurationReader)) => _logger = logger?.Scoped(nameof(ApplicationConfigurationReader));
 
 		protected override string DiscoverServiceName() => DiscoverFullFrameworkServiceName() ?? base.DiscoverServiceName();
+
+		protected override ConfigurationKeyValue Read(string key, string fallBackEnvVarName)
+		{
+			try
+			{
+				var value = ConfigurationManager.AppSettings[key];
+				if (value != null) return Kv(key, value, Origin);
+			}
+			catch (ConfigurationErrorsException ex)
+			{
+				_logger.Error()?.LogException(ex, "Exception thrown from ConfigurationManager.AppSettings - falling back on environment variables");
+			}
+
+			return Kv(fallBackEnvVarName, ReadEnvVarValue(fallBackEnvVarName), EnvironmentConfigurationReader.Origin);
+		}
 
 		private string DiscoverFullFrameworkServiceName()
 		{
@@ -34,11 +51,11 @@ namespace Elastic.Apm.AspNetFullFramework
 		{
 			try
 			{
-				return Environment.GetEnvironmentVariable("APP_POOL_ID");
+				return ReadEnvVarValue("APP_POOL_ID");
 			}
 			catch (SecurityException ex)
 			{
-				Logger.Error()?.Log("Failed to get app pool name: {Exception}", ex);
+				_logger.Error()?.Log("Failed to get app pool name: {Exception}", ex);
 				return null;
 			}
 		}
@@ -51,7 +68,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (SecurityException ex)
 			{
-				Logger.Error()?.Log("Failed to get site name: {Exception}", ex);
+				_logger.Error()?.Log("Failed to get site name: {Exception}", ex);
 				return null;
 			}
 		}

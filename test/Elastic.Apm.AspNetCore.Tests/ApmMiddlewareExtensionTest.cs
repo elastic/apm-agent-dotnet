@@ -1,10 +1,11 @@
+using Elastic.Apm.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
 	/// <summary>
-	/// Tests the <see cref="Elastic.Apm.AspNetCore.ApmMiddlewareExtension"/> type.
+	/// Tests the <see cref="Elastic.Apm.AspNetCore.ApmMiddlewareExtension" /> type.
 	/// </summary>
 	public class ApmMiddlewareExtensionTest
 	{
@@ -26,8 +27,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var logger = services.BuildServiceProvider().GetApmLogger();
 
-			Assert.IsType<Logging.ConsoleLogger>(logger);
-			Assert.Same(Logging.ConsoleLogger.Instance, logger);
+			Assert.IsType<ConsoleLogger>(logger);
+			Assert.Same(ConsoleLogger.Instance, logger);
 		}
 	}
 }

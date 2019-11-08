@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.Tests.Mocks;
@@ -63,14 +64,16 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task TestJsonBodyRetrievalOnRequestFailureInAspNetCore()
 		{
-			using (var agent = new ApmAgent(new TestAgentComponents(captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors,
-				captureBodyContentTypes: ConfigConsts.DefaultValues.CaptureBodyContentTypes)))
+			using (var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(
+				captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors,
+				// ReSharper disable once RedundantArgumentDefaultValue
+				captureBodyContentTypes: ConfigConsts.DefaultValues.CaptureBodyContentTypes))))
 			{
 				var capturedPayload = agent.PayloadSender as MockPayloadSender;
 				var client = Helper.GetClient(agent, _factory);
 
 				var body = "{\"id\" : \"1\"}";
-				var response = await client.PostAsync("api/Home/PostError", new StringContent(body, System.Text.Encoding.UTF8, "application/json"));
+				var response = await client.PostAsync("api/Home/PostError", new StringContent(body, Encoding.UTF8, "application/json"));
 
 				capturedPayload.Should().NotBeNull();
 

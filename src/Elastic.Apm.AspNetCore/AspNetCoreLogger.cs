@@ -9,10 +9,8 @@ namespace Elastic.Apm.AspNetCore
 	{
 		private readonly ILogger _logger;
 
-		public AspNetCoreLogger(ILoggerFactory loggerFactory)
-		{
+		public AspNetCoreLogger(ILoggerFactory loggerFactory) =>
 			_logger = loggerFactory?.CreateLogger("Elastic.Apm") ?? throw new ArgumentNullException(nameof(loggerFactory));
-		}
 
 		public bool IsEnabled(LogLevel level) => _logger.IsEnabled(Convert(level));
 

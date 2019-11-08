@@ -13,6 +13,6 @@ namespace Elastic.Apm.Api
 
 		internal KeyValuePair<string, double> KeyValue { get; set; }
 
-		public override string ToString() => new ToStringBuilder(nameof(MetricSample)) { { KeyValue.Key, KeyValue.Value }, }.ToString();
+		public override string ToString() => new ToStringBuilder(nameof(MetricSample)) { { KeyValue.Key, KeyValue.Value } }.ToString();
 	}
 }

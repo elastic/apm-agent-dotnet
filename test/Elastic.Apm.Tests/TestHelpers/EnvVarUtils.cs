@@ -2,11 +2,11 @@
 
 namespace Elastic.Apm.Tests.TestHelpers
 {
-	public static class EnvVarUtils
+	internal static class EnvVarUtils
 	{
-		public static bool GetBoolValue(string envVarName, bool defaultValue) => GetBoolValue(envVarName, defaultValue, out _);
+		internal static bool GetBoolValue(string envVarName, bool defaultValue) => GetBoolValue(envVarName, defaultValue, out _);
 
-		public static bool GetBoolValue(string envVarName, bool defaultValue, out string reason)
+		internal static bool GetBoolValue(string envVarName, bool defaultValue, out string reason)
 		{
 			var value = GetBoolValue(envVarName, out reason);
 			if (value == null) return defaultValue;
@@ -15,7 +15,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 		}
 
 		// ReSharper disable once MemberCanBePrivate.Global
-		public static bool? GetBoolValue(string envVarName, out string reason)
+		internal static bool? GetBoolValue(string envVarName, out string reason)
 		{
 			var envVarValue = Environment.GetEnvironmentVariable(envVarName);
 			if (envVarValue == null)

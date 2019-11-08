@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.IO;
+using Elastic.Apm.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

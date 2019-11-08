@@ -2,14 +2,14 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>Elastic.Apm.AspNetCore</AssemblyName>
-    <AssemblyVersion>1.0.1</AssemblyVersion>
-    <InformationalVersion>1.0.1</InformationalVersion>
-    <FileVersion>1.0.1</FileVersion>
+    <AssemblyVersion>1.1.2</AssemblyVersion>
+    <InformationalVersion>1.1.2</InformationalVersion>
+    <FileVersion>1.1.2</FileVersion>
     <RootNamespace>Elastic.Apm.AspNetCore</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
-    <PackageVersion>1.0.1</PackageVersion>
+    <PackageVersion>1.1.2</PackageVersion>
     <Authors>Elastic and contributors</Authors>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <PackageId>Elastic.Apm.AspNetCore</PackageId>
@@ -28,6 +28,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Extensions" Version="2.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Routing.Abstractions" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />

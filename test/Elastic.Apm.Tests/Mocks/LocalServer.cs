@@ -37,7 +37,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private long _seenRequests;
 		public long SeenRequests => _seenRequests;
 
-		public string Uri { get; private set; }
+		public string Uri { get; }
 
 		public void Dispose()
 		{

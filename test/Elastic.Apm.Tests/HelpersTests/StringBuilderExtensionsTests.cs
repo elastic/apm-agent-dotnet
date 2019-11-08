@@ -15,6 +15,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 			new StringBuilder().Append("abc").IsEmpty().Should().BeFalse();
 			new StringBuilder().Append("abc").Clear().IsEmpty().Should().BeTrue();
 		}
+
 		[Fact]
 		public void AppendSeparatedIfNotEmptyTest()
 		{

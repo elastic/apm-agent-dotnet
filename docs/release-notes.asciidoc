@@ -1,4 +1,9 @@
+:pull: https://github.com/elastic/apm-agent-dotnet/pull/
+
 [[release-notes]]
 == Release notes
 
-Release notes are published on the https://github.com/elastic/apm-agent-dotnet/releases[GitHub releases page].
+* <<release-notes-1.x>>
+* <<release-notes-beta>>
+
+include::../CHANGELOG.asciidoc[]

@@ -4,8 +4,7 @@ please view this documentation at https://www.elastic.co/guide/en/apm/agent/dotn
 endif::[]
 
 [[supported-technologies]]
-== Supported Technologies
-This page describes the technologies supported by the Elastic APM .NET agent.
+== Supported technologies
 
 If your favorite technology is not supported yet,
 you can vote for it by participating in our
@@ -33,7 +32,7 @@ This means .NET Core 2.0 (or newer) and .NET Framework 4.6.1 (or newer).
 
 [float]
 [[supported-web-frameworks]]
-=== Web Frameworks
+=== Web frameworks
 
 Automatic instrumentation for a web framework means
 a transaction is automatically created for each incoming request and it is named after the registered route.
@@ -47,12 +46,16 @@ We support automatic instrumentation for the following web frameworks.
 |2.x
 |1.0
 
+|ASP.NET (.NET Framework) on IIS
+|4.6.1 or newer (IIS 7.0 or newer)
+|1.1
+
 |===
 
 
 [float]
 [[supported-data-access-technologies]]
-=== Data Access Technologies
+=== Data access technologies
 
 We support automatic instrumentation for the following data access technologies.
 
@@ -63,6 +66,11 @@ We support automatic instrumentation for the following data access technologies.
 |2.x
 |A DB span is automatically created for each access to underlying database performed by Entity Framework Core.
 |1.0
+
+|Entity Framework (EF) 6
+|6.2 and later
+|A DB span is automatically created for each access to underlying database performed by Entity Framework 6.
+|1.2
 
 |===
 
@@ -80,5 +88,9 @@ The spans are named after the schema `<method> <host>`, for example `GET elastic
 |System.Net.Http.HttpClient on .NET Core
 |
 |1.0
+
+|System.Net.Http.HttpClient on .NET Framework
+|
+|1.1
 
 |===

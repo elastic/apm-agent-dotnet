@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
-using FluentAssertions;
 using Elastic.Apm.AspNetCore.Extensions;
+using FluentAssertions;
 using Xunit;
 
 namespace Elastic.Apm.AspNetCore.Tests
@@ -18,7 +18,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public void ReadValidConfigsFromAppSettingsJson()
 		{
-			var list = new List<string>() {"application/x-www-form-urlencoded*", "text/*", "application/json*", "application/xml*" };
+			var list = new List<string> { "application/x-www-form-urlencoded*", "text/*", "application/json*", "application/xml*" };
 
 			list.ContainsLike("application/x-www-form-urlencoded*___").Should().BeTrue();
 			list.ContainsLike("application/x-www-form-urlencoded").Should().BeTrue();

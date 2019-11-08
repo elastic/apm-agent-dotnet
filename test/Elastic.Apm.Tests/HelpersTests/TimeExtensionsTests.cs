@@ -1,13 +1,28 @@
 using System;
 using System.Collections.Generic;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
+using FluentAssertions.Extensions;
 using Xunit;
 
 namespace Elastic.Apm.Tests.HelpersTests
 {
 	public class TimeExtensionsTests
 	{
+		private static readonly ValueTuple<TimeSpan, string>[] ToHmsStringVariantsInternal =
+		{
+			(TimeSpan.Zero, "0"), (1.Nanosecond(), "0"), (49.Nanosecond(), "0"), (51.Nanosecond(), "100ns"), (99.Nanosecond(), "100ns"),
+			(100.Nanosecond(), "100ns"), (150.Nanosecond(), "200ns"), (199.Nanosecond(), "200ns"), (200.Nanosecond(), "200ns"),
+			(1200.Nanosecond(), "1us 200ns"), (1.Microseconds(), "1us"), (1.Millisecond(), "1ms"), (2.Second(), "2s"), (3.Minutes(), "3m"),
+			(4.Hours(), "4h"), (5.Days(), "5d"), (678.Days(), "678d"),
+			(9.Days() + 8.Hours() + 7.Minutes() + 6.Seconds() + 5.Milliseconds(), "9d 8h 7m 6s 5ms"), (
+				1200.Days() + 25.Hours() + 59.Minutes() + 52.Seconds() + 9876.Milliseconds() + 2345.Microseconds() + 6789.Nanoseconds()
+				, "1201d 2h 1s 878ms 351us 800ns")
+		};
+
+		public static IEnumerable<object[]> ToHmsStringVariants => GenToHmsStringVariants();
+
 		[Theory]
 		[InlineData(DateTimeKind.Utc, "UTC")]
 		[InlineData(DateTimeKind.Local, "Local")]
@@ -46,7 +61,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 		{
 			yield return new object[]
 			{
-				new DateTimeOffset(new DateTime(1234, 5, 16, 17, 28, 39, DateTimeKind.Utc) + TimeUtils.TimeSpanFromFractionalMilliseconds(987.654)),
+				new DateTimeOffset(
+					new DateTime(1234, 5, 16, 17, 28, 39, DateTimeKind.Utc) + TimeUtils.TimeSpanFromFractionalMilliseconds(987.654)),
 				"1234-05-16 17:28:39.9876540 +00:00"
 			};
 
@@ -67,5 +83,144 @@ namespace Elastic.Apm.Tests.HelpersTests
 		[MemberData(nameof(DateTimeOffsetFormattedForLogVariantsToTest))]
 		public void DateTimeOffsetFormatForLogTests(DateTimeOffset dateTimeOffset, string expectedFormattedForLog) =>
 			dateTimeOffset.FormatForLog().Should().Be(expectedFormattedForLog);
+
+		private static IEnumerable<object[]> GenToHmsStringVariants()
+		{
+			var variantIndex = 0;
+			foreach (var (timeSpan, expectedHmsString) in AddNegativeVariants(ToHmsStringVariantsInternal))
+				yield return new object[] { variantIndex++, timeSpan, expectedHmsString };
+
+			IEnumerable<ValueTuple<TimeSpan, string>> AddNegativeVariants(IEnumerable<ValueTuple<TimeSpan, string>> source)
+			{
+				foreach (var (timeSpan, expectedHmsString) in source)
+				{
+					yield return (timeSpan, expectedHmsString);
+
+					if (timeSpan != TimeSpan.Zero && !expectedHmsString.StartsWith("-") && timeSpan.Ticks % 100 == 0)
+						yield return (-timeSpan, "-" + expectedHmsString);
+				}
+			}
+		}
+
+		[Theory]
+		[MemberData(nameof(ToHmsStringVariants))]
+		public void ToHmsString_tests(int variantIndex, TimeSpan timeSpan, string expectedHmsString) =>
+			timeSpan.ToHms().Should().Be(expectedHmsString, $"variantIndex: {variantIndex}");
+
+		public static IEnumerable<object[]> GenTruncateToSecondsVariants()
+		{
+			TimeSpan[] deltas =
+			{
+				TimeSpan.Zero, TimeSpan.FromTicks(1), 1.Nanosecond(), 999.Nanosecond(), 1.Microsecond(), 999.Microseconds(), 1.Millisecond(),
+				501.Milliseconds(), 789.Milliseconds(), 999.Milliseconds()
+			};
+
+			TimeSpan[] baseTimeSpans =
+			{
+				TimeSpan.Zero, 1.Second(), 59.Second(), 1.Minute() + 7.Second(), 29.Minutes() + 23.Second(), 53.Minutes(), 1.Hour(),
+				13.Hours() + 29.Minutes() + 23.Second(), 22.Hours() + 1.Minute() + 7.Second()
+			};
+
+			IEnumerable<ValueTuple<TimeSpan, TimeSpan>> GenBasePlusDeltas()
+			{
+				foreach (var baseTimeSpan in baseTimeSpans)
+				{
+					foreach (var delta in deltas)
+						yield return (baseTimeSpan + delta, baseTimeSpan);
+				}
+			}
+
+			IEnumerable<ValueTuple<TimeSpan, TimeSpan>> AddNegativeVariants(IEnumerable<ValueTuple<TimeSpan, TimeSpan>> source)
+			{
+				foreach (var (timeSpan, expectedTruncatedTimeSpan) in source)
+				{
+					yield return (timeSpan, expectedTruncatedTimeSpan);
+
+					if (timeSpan != TimeSpan.Zero) yield return (-timeSpan, -expectedTruncatedTimeSpan);
+				}
+			}
+
+			var allVariants = AddNegativeVariants(GenBasePlusDeltas());
+
+			var variantIndex = 0;
+			foreach (var (timeSpan, expectedHmsString) in allVariants)
+				yield return new object[] { variantIndex++, timeSpan, expectedHmsString };
+
+			variantIndex.Should().BeGreaterThan(baseTimeSpans.Length * deltas.Length);
+		}
+
+		[Theory]
+		[MemberData(nameof(GenTruncateToSecondsVariants))]
+		public void TruncateToSeconds_tests(int variantIndex, TimeSpan timeSpan, TimeSpan expectedTruncatedTimeSpan) =>
+			timeSpan.TruncateToSeconds()
+				.Should()
+				.Be(expectedTruncatedTimeSpan, $"variantIndex: {variantIndex}, timeSpan: {timeSpan.ToHms()}"
+					+ $", expectedRoundedTimeSpan: {expectedTruncatedTimeSpan.ToHms()}");
+
+		public static IEnumerable<object[]> GenToHmsInSecondsVariants()
+		{
+			TimeSpan[] deltas =
+			{
+				TimeSpan.Zero, TimeSpan.FromTicks(1), 1.Nanosecond(), 999.Nanosecond(), 1.Microsecond(), 999.Microseconds(), 1.Millisecond(),
+				501.Milliseconds(), 789.Milliseconds(), 999.Milliseconds()
+			};
+
+			ValueTuple<TimeSpan, string>[] baseVariants =
+			{
+				(TimeSpan.Zero, "0s"), (1.Second(), "1s"), (59.Second(), "59s"), (1.Minute() + 7.Second(), "1m 7s"),
+				(29.Minutes() + 23.Second(), "29m 23s"), (53.Minutes(), "53m"), (1.Hour() + 29.Minutes() + 23.Second(), "1h 29m 23s"),
+				(13.Hours() + 59.Second(), "13h 59s"), (22.Hours() + 1.Minute() + 7.Second(), "22h 1m 7s")
+			};
+
+			IEnumerable<ValueTuple<TimeSpan, string>> GenBasePlusDeltas()
+			{
+				foreach (var (baseTimeSpan, hmsInSeconds) in baseVariants)
+				{
+					foreach (var delta in deltas)
+					{
+						if (baseTimeSpan == TimeSpan.Zero)
+						{
+							if (delta == TimeSpan.Zero)
+								yield return (baseTimeSpan + delta, hmsInSeconds);
+							else
+								yield return (delta, "<1s");
+						}
+						else
+							yield return (baseTimeSpan + delta, hmsInSeconds);
+					}
+				}
+			}
+
+			IEnumerable<ValueTuple<TimeSpan, string>> AddNegativeVariants(IEnumerable<ValueTuple<TimeSpan, string>> source)
+			{
+				foreach (var (timeSpan, hmsInSeconds) in source)
+				{
+					yield return (timeSpan, hmsInSeconds);
+
+					if (timeSpan == TimeSpan.Zero) continue;
+
+					if (timeSpan >= 1.Second())
+						yield return (-timeSpan, "-" + hmsInSeconds);
+					else
+						yield return (-timeSpan, ">-1s");
+				}
+			}
+
+			var allVariants = AddNegativeVariants(GenBasePlusDeltas());
+
+			var variantIndex = 0;
+			foreach (var (timeSpan, expectedHmsString) in allVariants)
+				yield return new object[] { variantIndex++, timeSpan, expectedHmsString };
+
+			variantIndex.Should().BeGreaterThan(baseVariants.Length * deltas.Length);
+		}
+
+		[Theory]
+		[MemberData(nameof(GenToHmsInSecondsVariants))]
+		public void ToHmsInSeconds_tests(int variantIndex, TimeSpan timeSpan, string expectedToHmsInSeconds) =>
+			timeSpan.ToHmsInSeconds()
+				.Should()
+				.Be(expectedToHmsInSeconds, $"variantIndex: {variantIndex}, timeSpan: {timeSpan.ToHms()}"
+					+ $", expectedToHmsInSeconds: {expectedToHmsInSeconds}");
 	}
 }
