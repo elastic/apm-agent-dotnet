@@ -1,8 +1,6 @@
-using System;
 using System.IO;
-using System.Text;
-using System.Threading;
 using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
@@ -10,74 +8,6 @@ using Newtonsoft.Json;
 
 namespace Elastic.Apm.Report
 {
-	internal class StringWriterPool : ObjectPool<StringWriter>
-	{
-		internal StringWriterPool(int amount, int initialCharactersAmount, int charactersLimit)
-			: base(amount,
-				() => new StringWriter(new StringBuilder(initialCharactersAmount)),
-				writer =>
-				{
-					var builder = writer.GetStringBuilder();
-					builder.Length = 0;
-					if (builder.Capacity > charactersLimit) builder.Capacity = charactersLimit;
-				}) { }
-	}
-
-	internal class ObjectPool<T> where T : class
-	{
-		private readonly T[] _objects;
-		private readonly Action<T> _returnAction;
-
-		private int _index = -1;
-
-		internal ObjectPool(int amount, Func<T> valueFactory, Action<T> returnAction)
-		{
-			if (amount <= 0) throw new ArgumentOutOfRangeException(nameof(amount));
-			if (valueFactory == null) throw new ArgumentNullException(nameof(valueFactory));
-			if (returnAction == null) throw new ArgumentNullException(nameof(returnAction));
-
-			_objects = new T[amount];
-			for (var i = 0; i < amount; i++) _objects[i] = valueFactory();
-
-			_returnAction = returnAction;
-		}
-
-		public ObjectHolder Get()
-		{
-			int index;
-			T @object;
-
-			do
-				index = Interlocked.Increment(ref _index) % _objects.Length;
-			while ((@object = Interlocked.Exchange(ref _objects[index], null)) == null);
-
-			return new ObjectHolder(this, @object, index);
-		}
-
-		private void ReturnToPool(T @object, int index)
-		{
-			_returnAction(@object);
-			_objects[index] = @object;
-		}
-
-		internal struct ObjectHolder : IDisposable
-		{
-			internal T Object { get; }
-
-			private readonly ObjectPool<T> _pool;
-			private readonly int _index;
-
-			public ObjectHolder(ObjectPool<T> pool, T @object, int index)
-			{
-				_pool = pool;
-				Object = @object;
-				_index = index;
-			}
-
-			public void Dispose() => _pool.ReturnToPool(Object, _index);
-		}
-	}
-
 	internal class EnhancedPayloadFormatter : IPayloadFormatter
 	{
 		private readonly Metadata _metadata;
@@ -93,7 +23,7 @@ namespace Elastic.Apm.Report
 		{
 			_metadata = metadata;
 
-			_stringWriterPool = new StringWriterPool(5, 1_000, 20_000);
+			_stringWriterPool = new StringWriterPool(5, 1_000, 100_000);
 
 			Settings = new JsonSerializerSettings
 			{
@@ -106,14 +36,15 @@ namespace Elastic.Apm.Report
 
 		public string FormatPayload(object[] items)
 		{
-			static void WriteItem(string name, object item, StringWriter writer, JsonSerializer jsonSerializer)
+			//todo: after upgrade CI to .Net Core 3.0, need to be marked as static to forbid variable closure
+			void WriteItem(string name, object item, TextWriter textWriter, JsonSerializer jsonSerializer)
 			{
-				writer.Write($"{{\"{name}\":");
+				textWriter.Write($"{{\"{name}\":");
 
-				using (var jsonWriter = new JsonTextWriter(writer) { CloseOutput = false })
+				using (var jsonWriter = new JsonTextWriter(textWriter) { CloseOutput = false })
 					jsonSerializer.Serialize(jsonWriter, item);
 
-				writer.WriteLine("}");
+				textWriter.WriteLine("}");
 			}
 
 			if (_cachedMetadataJsonLine == null)
