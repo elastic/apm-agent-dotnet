@@ -1,15 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <LangVersion>8</LangVersion>
     <RootNamespace>Elastic.Apm.SqlClient</RootNamespace>
     <AssemblyName>Elastic.Apm.SqlClient</AssemblyName>
-    <AssemblyVersion>1.1.0</AssemblyVersion>
-    <InformationalVersion>1.1.0</InformationalVersion>
-    <FileVersion>1.1.0</FileVersion>
+    <AssemblyVersion>1.1.2</AssemblyVersion>
+    <InformationalVersion>1.1.2</InformationalVersion>
+    <FileVersion>1.1.2</FileVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
-    <PackageVersion>1.1.0</PackageVersion>
+    <PackageVersion>1.1.2</PackageVersion>
     <Authors>Elastic and contributors</Authors>
     <PackageId>Elastic.Apm.SqlClient</PackageId>
     <Copyright>2019 Elasticsearch BV</Copyright>

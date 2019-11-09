@@ -152,9 +152,6 @@ namespace Elastic.Apm.SqlClient
 
 	public static class PropertyExtensions
 	{
-		public static object GetProperty(this object _this, string propertyName)
-		{
-			return _this.GetType().GetTypeInfo().GetDeclaredProperty(propertyName)?.GetValue(_this);
-		}
+		public static object GetProperty(this object _this, string propertyName) => _this.GetType().GetTypeInfo().GetDeclaredProperty(propertyName)?.GetValue(_this);
 	}
 }
