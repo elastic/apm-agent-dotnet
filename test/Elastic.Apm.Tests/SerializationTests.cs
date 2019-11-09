@@ -300,6 +300,29 @@ namespace Elastic.Apm.Tests
 			SerializationUtils.TrimToPropertyMaxLength(original).Should().Be(expectedTrimmed);
 		}
 
+		/// <summary>
+		/// Makes sure that keys in the label are de dotted.
+		/// </summary>
+		[Fact]
+		public void LabelDeDotting()
+		{
+			var context = new Context();
+			context.Labels["a.b"] = "labelValue";
+			var json = SerializePayloadItem(context);
+			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue\"}}");
+
+			context = new Context();
+			context.Labels["a.b.c"] = "labelValue";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"tags\":{\"a_b_c\":\"labelValue\"}}");
+
+			context = new Context();
+			context.Labels["a.b"] = "labelValue1";
+			context.Labels["a.b.c"] = "labelValue2";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue1\",\"a_b_c\":\"labelValue2\"}}");
+		}
+
 		private static string SerializePayloadItem(object item) =>
 			new PayloadItemSerializer(new MockConfigSnapshot()).SerializeObject(item);
 
