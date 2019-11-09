@@ -3,5 +3,9 @@
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
     <NoWarn>NU1503</NoWarn>
+
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
   </PropertyGroup>
 </Project>
