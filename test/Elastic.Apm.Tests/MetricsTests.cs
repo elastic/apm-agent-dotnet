@@ -13,6 +13,7 @@ using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
+using Moq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -148,6 +149,33 @@ namespace Elastic.Apm.Tests
 			res.total.Should().Be(expectedTotal);
 		}
 
+		[Theory]
+		[InlineData(double.NaN)]
+		[InlineData(double.NegativeInfinity)]
+		[InlineData(double.PositiveInfinity)]
+		public void CollectAllMetrics_ShouldNotReportNaNOrInfiniteValue(double value)
+		{
+			// Arrange
+			var logger = new NoopLogger();
+			var mockPayloadSender = new MockPayloadSender();
+
+			var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
+
+			var metricsProviderMock = new Mock<IMetricsProvider>();
+			metricsProviderMock.Setup(x => x.GetSamples())
+				.Returns(() => new List<MetricSample> { new MetricSample("metricKey", value) });
+
+			metricsCollector.MetricsProviders.Clear();
+			metricsCollector.MetricsProviders.Add(metricsProviderMock.Object);
+
+			// Act
+			metricsCollector.CollectAllMetrics();
+
+			// Assert
+			mockPayloadSender.Metrics.Count.Should().Be(1);
+			mockPayloadSender.FirstMetric.Samples.Should().BeEmpty();
+		}
+
 		private class MetricsProviderWithException : IMetricsProvider
 		{
 			public const string ExceptionMessage = "testException";
@@ -166,8 +194,7 @@ namespace Elastic.Apm.Tests
 		private class TestSystemTotalCpuProvider : SystemTotalCpuProvider
 		{
 			public TestSystemTotalCpuProvider(string procStatContent) : base(new NoopLogger(),
-				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent))))
-			{ }
+				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent)))) { }
 		}
 	}
 }

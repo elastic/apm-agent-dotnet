@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Elastic.Apm.Api;
+using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 
@@ -26,6 +27,9 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public Transaction FirstTransaction => DoUnderLock(() => _transactions.First() as Transaction);
 		public IReadOnlyList<IMetricSet> Metrics => DoUnderLock(() => CreateImmutableSnapshot(_metrics));
+
+		public MetricSet FirstMetric => DoUnderLock(() => _metrics.First() as MetricSet);
+
 		public IReadOnlyList<ISpan> Spans => DoUnderLock(() => CreateImmutableSnapshot(_spans));
 
 		public Span[] SpansOnFirstTransaction =>
