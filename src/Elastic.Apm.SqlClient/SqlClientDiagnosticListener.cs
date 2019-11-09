@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Reflection;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.SqlClient
@@ -15,10 +15,26 @@ namespace Elastic.Apm.SqlClient
 
 		private readonly ConcurrentDictionary<Guid, ISpan> _processingQueries = new ConcurrentDictionary<Guid, ISpan>();
 
+		private readonly PropertyFetcher _correlationIdFetcher = new PropertyFetcher("OperationId");
+		private readonly PropertyFetcher _statisticsFetcher = new PropertyFetcher("Statistics");
+		private readonly PropertyFetcher _commandPropertyFetcher = new PropertyFetcher("Command");
+
+		private readonly PropertyFetcher _commandTextPropertyFetcher;
+		private readonly PropertyFetcher _commandTypePropertyFetcher;
+		private readonly PropertyFetcher _databasePropertyFetcher;
+
+		private readonly PropertyFetcher _exceptionFetcher = new PropertyFetcher("Exception");
+
 		public SqlClientDiagnosticListener(IApmAgent apmAgent)
 		{
 			_apmAgent = apmAgent;
 			_logger = _apmAgent.Logger.Scoped(nameof(SqlClientDiagnosticListener));
+
+			var connectionPropertyFetcher = new CascadePropertyFetcher(_commandPropertyFetcher, "Connection");
+			_commandTextPropertyFetcher = new CascadePropertyFetcher(_commandPropertyFetcher, "CommandText");
+			_commandTypePropertyFetcher = new CascadePropertyFetcher(_commandPropertyFetcher, "CommandType");
+
+			_databasePropertyFetcher = new CascadePropertyFetcher(connectionPropertyFetcher, "Database");
 		}
 
 		public string Name => "SqlClientDiagnosticListener";
@@ -50,27 +66,16 @@ namespace Elastic.Apm.SqlClient
 				var transaction = _apmAgent.Tracer.CurrentTransaction;
 				var currentExecutionSegment = _apmAgent.Tracer.CurrentSpan ?? (IExecutionSegment)transaction;
 
-				if (payloadData.GetProperty("OperationId") is Guid operationId)
+				if (_correlationIdFetcher.Fetch(payloadData) is Guid operationId)
 				{
-					var providerType = payloadData.GetProperty("Command").GetProperty("Connection").GetType().FullName;
-					var commandText = payloadData.GetProperty("Command").GetProperty("CommandText").ToString();
-					var commandType = payloadData.GetProperty("Command").GetProperty("CommandType").ToString();
-					var instance = payloadData.GetProperty("Command")
-						.GetProperty("Connection")
-						.GetProperty("Database")
-						.ToString();
-
-					var subType = providerType switch
-					{
-						{ } s when s.Contains("Sqlite") => ApiConstants.SubtypeSqLite,
-						{ } s when s.Contains("SqlConnection") => ApiConstants.SubtypeMssql,
-						_ => providerType
-					};
+					var commandText = _commandTextPropertyFetcher.Fetch(payloadData).ToString();
+					var commandType =_commandTypePropertyFetcher.Fetch(payloadData).ToString();
+					var instance = _databasePropertyFetcher.Fetch(payloadData).ToString();
 
 					var span = currentExecutionSegment.StartSpan(
 						commandText,
 						ApiConstants.TypeDb,
-						subType);
+						ApiConstants.SubtypeMssql);
 
 					if (!_processingQueries.TryAdd(operationId, span)) return;
 
@@ -101,11 +106,11 @@ namespace Elastic.Apm.SqlClient
 		{
 			try
 			{
-				if (payloadData.GetProperty("OperationId") is Guid operationId)
+				if (_correlationIdFetcher.Fetch(payloadData) is Guid operationId)
 				{
 					if (!_processingQueries.TryRemove(operationId, out var span)) return;
 
-					if (payloadData.GetProperty("Statistics") is IDictionary<object, object> statistics &&
+					if (_statisticsFetcher.Fetch(payloadData) is IDictionary<object, object> statistics &&
 						statistics.ContainsKey("ExecutionTime") && statistics["ExecutionTime"] is long duration)
 						span.Duration = duration;
 
@@ -123,11 +128,11 @@ namespace Elastic.Apm.SqlClient
 		{
 			try
 			{
-				if (payloadData.GetProperty("OperationId") is Guid operationId)
+				if (_correlationIdFetcher.Fetch(payloadData) is Guid operationId)
 				{
 					if (!_processingQueries.TryRemove(operationId, out var span)) return;
 
-					if (payloadData.GetProperty("Exception") is Exception exception) span.CaptureException(exception);
+					if (_exceptionFetcher.Fetch(payloadData) is Exception exception) span.CaptureException(exception);
 
 					span.End();
 				}
@@ -148,10 +153,5 @@ namespace Elastic.Apm.SqlClient
 		{
 			// do nothing because it's not necessary to handle such event from provider
 		}
-	}
-
-	public static class PropertyExtensions
-	{
-		public static object GetProperty(this object _this, string propertyName) => _this.GetType().GetTypeInfo().GetDeclaredProperty(propertyName)?.GetValue(_this);
 	}
 }
