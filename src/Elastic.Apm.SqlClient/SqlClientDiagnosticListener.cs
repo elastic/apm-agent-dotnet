@@ -10,31 +10,45 @@ namespace Elastic.Apm.SqlClient
 {
 	public class SqlClientDiagnosticListener : IDiagnosticListener
 	{
+		private class Fetchers
+		{
+			public PropertyFetcher StartCorrelationId { get; } = new PropertyFetcher("OperationId");
+			public PropertyFetcher StopCorrelationId { get; } = new PropertyFetcher("OperationId");
+			public PropertyFetcher ErrorCorrelationId { get; } = new PropertyFetcher("OperationId");
+
+			public PropertyFetcher Statistics { get; } = new PropertyFetcher("Statistics");
+
+			public PropertyFetcher CommandText { get; }
+			public PropertyFetcher CommandType { get; }
+			public PropertyFetcher Database { get; }
+
+			public PropertyFetcher Exception { get; } = new PropertyFetcher("Exception");
+
+			public Fetchers()
+			{
+				var commandPropertyFetcher = new PropertyFetcher("Command");
+				var connectionPropertyFetcher = new CascadePropertyFetcher(commandPropertyFetcher, "Connection");
+
+				CommandText = new CascadePropertyFetcher(commandPropertyFetcher, "CommandText");
+				CommandType = new CascadePropertyFetcher(commandPropertyFetcher, "CommandType");
+
+				Database = new CascadePropertyFetcher(connectionPropertyFetcher, "Database");
+			}
+		}
+
 		private readonly IApmAgent _apmAgent;
 		private readonly IApmLogger _logger;
 
 		private readonly ConcurrentDictionary<Guid, ISpan> _processingQueries = new ConcurrentDictionary<Guid, ISpan>();
 
-		private readonly PropertyFetcher _correlationIdFetcher = new PropertyFetcher("OperationId");
-		private readonly PropertyFetcher _statisticsFetcher = new PropertyFetcher("Statistics");
-		private readonly PropertyFetcher _commandPropertyFetcher = new PropertyFetcher("Command");
+		private readonly Fetchers _systemFetchers = new Fetchers();
+		private readonly Fetchers _microsoftFetchers = new Fetchers();
 
-		private readonly PropertyFetcher _commandTextPropertyFetcher;
-		private readonly PropertyFetcher _commandTypePropertyFetcher;
-		private readonly PropertyFetcher _databasePropertyFetcher;
-
-		private readonly PropertyFetcher _exceptionFetcher = new PropertyFetcher("Exception");
 
 		public SqlClientDiagnosticListener(IApmAgent apmAgent)
 		{
 			_apmAgent = apmAgent;
 			_logger = _apmAgent.Logger.Scoped(nameof(SqlClientDiagnosticListener));
-
-			var connectionPropertyFetcher = new CascadePropertyFetcher(_commandPropertyFetcher, "Connection");
-			_commandTextPropertyFetcher = new CascadePropertyFetcher(_commandPropertyFetcher, "CommandText");
-			_commandTypePropertyFetcher = new CascadePropertyFetcher(_commandPropertyFetcher, "CommandType");
-
-			_databasePropertyFetcher = new CascadePropertyFetcher(connectionPropertyFetcher, "Database");
 		}
 
 		public string Name => "SqlClientDiagnosticListener";
@@ -46,31 +60,31 @@ namespace Elastic.Apm.SqlClient
 			{
 				switch (value.Key)
 				{
-					case { } s when s.EndsWith("WriteCommandBefore") && _apmAgent.Tracer.CurrentTransaction != null:
-						HandleStartCommand(value.Value);
+					case string s when s.EndsWith("WriteCommandBefore") && _apmAgent.Tracer.CurrentTransaction != null:
+						HandleStartCommand(value.Value, value.Key.StartsWith("System") ? _systemFetchers : _microsoftFetchers);
 						break;
-					case { } s when s.EndsWith("WriteCommandAfter"):
-						HandleStopCommand(value.Value);
+					case string s when s.EndsWith("WriteCommandAfter"):
+						HandleStopCommand(value.Value, value.Key.StartsWith("System") ? _systemFetchers : _microsoftFetchers);
 						break;
-					case { } s when s.EndsWith("WriteCommandError"):
-						HandleErrorCommand(value.Value);
+					case string s when s.EndsWith("WriteCommandError"):
+						HandleErrorCommand(value.Value, value.Key.StartsWith("System") ? _systemFetchers : _microsoftFetchers);
 						break;
 				}
 			}
 		}
 
-		private void HandleStartCommand(object payloadData)
+		private void HandleStartCommand(object payloadData, Fetchers fetchers)
 		{
 			try
 			{
 				var transaction = _apmAgent.Tracer.CurrentTransaction;
 				var currentExecutionSegment = _apmAgent.Tracer.CurrentSpan ?? (IExecutionSegment)transaction;
 
-				if (_correlationIdFetcher.Fetch(payloadData) is Guid operationId)
+				if (fetchers.StartCorrelationId.Fetch(payloadData) is Guid operationId)
 				{
-					var commandText = _commandTextPropertyFetcher.Fetch(payloadData).ToString();
-					var commandType =_commandTypePropertyFetcher.Fetch(payloadData).ToString();
-					var instance = _databasePropertyFetcher.Fetch(payloadData).ToString();
+					var commandText = fetchers.CommandText.Fetch(payloadData).ToString();
+					var commandType = fetchers.CommandType.Fetch(payloadData).ToString();
+					var instance = fetchers.Database.Fetch(payloadData).ToString();
 
 					var span = currentExecutionSegment.StartSpan(
 						commandText,
@@ -79,20 +93,23 @@ namespace Elastic.Apm.SqlClient
 
 					if (!_processingQueries.TryAdd(operationId, span)) return;
 
-					span.Action = commandType switch
+					switch (commandType)
 					{
-						"Text" => ApiConstants.ActionQuery,
-						"StoredProcedure" => ApiConstants.ActionExec,
-						"TableDirect" => "tabledirect",
-						_ => commandType
-					};
+						case "Text":
+							span.Action = ApiConstants.ActionQuery;
+							break;
+						case "StoredProcedure":
+							span.Action = ApiConstants.ActionExec;
+							break;
+						case "TableDirect":
+							span.Action = "tabledirect";
+							break;
+						default:
+							span.Action = commandType;
+							break;
+					}
 
-					span.Context.Db = new Database
-					{
-						Statement = commandText,
-						Instance = instance,
-						Type = Database.TypeSql
-					};
+					span.Context.Db = new Database { Statement = commandText, Instance = instance, Type = Database.TypeSql };
 				}
 			}
 			catch (Exception ex)
@@ -102,15 +119,15 @@ namespace Elastic.Apm.SqlClient
 			}
 		}
 
-		private void HandleStopCommand(object payloadData)
+		private void HandleStopCommand(object payloadData, Fetchers fetchers)
 		{
 			try
 			{
-				if (_correlationIdFetcher.Fetch(payloadData) is Guid operationId)
+				if (fetchers.StopCorrelationId.Fetch(payloadData) is Guid operationId)
 				{
 					if (!_processingQueries.TryRemove(operationId, out var span)) return;
 
-					if (_statisticsFetcher.Fetch(payloadData) is IDictionary<object, object> statistics &&
+					if (fetchers.Statistics.Fetch(payloadData) is IDictionary<object, object> statistics &&
 						statistics.ContainsKey("ExecutionTime") && statistics["ExecutionTime"] is long duration)
 						span.Duration = duration;
 
@@ -124,15 +141,15 @@ namespace Elastic.Apm.SqlClient
 			}
 		}
 
-		private void HandleErrorCommand(object payloadData)
+		private void HandleErrorCommand(object payloadData, Fetchers fetchers)
 		{
 			try
 			{
-				if (_correlationIdFetcher.Fetch(payloadData) is Guid operationId)
+				if (fetchers.ErrorCorrelationId.Fetch(payloadData) is Guid operationId)
 				{
 					if (!_processingQueries.TryRemove(operationId, out var span)) return;
 
-					if (_exceptionFetcher.Fetch(payloadData) is Exception exception) span.CaptureException(exception);
+					if (fetchers.Exception.Fetch(payloadData) is Exception exception) span.CaptureException(exception);
 
 					span.End();
 				}

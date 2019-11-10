@@ -28,7 +28,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var fetcher = new CascadePropertyFetcher(new CascadePropertyFetcher(new PropertyFetcher("Command"), "Connection"), "Database");
 
 			// Act
-			var result = fetcher.Fetch(new { Command = new { Connection = new {Database = database} } });
+			var result = fetcher.Fetch(new { Command = new { Connection = new { Database = database } } });
 
 			// Assert
 			result.Should().Be(database);
