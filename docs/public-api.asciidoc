@@ -205,6 +205,8 @@ WARNING: Avoid defining too many user-specified labels.
 Defining too many unique fields in an index is a condition that can lead to a
 {ref}/mapping.html#mapping-limit-settings[mapping explosion].
 
+Dots (`.`) in the keys are not allowed. In case you have a `.` in your label key, it will be replaced by `_`. For example `foo.bar` will be stored as `foo_bar`.
+
 [source,csharp]
 ----
 Ageny.Tracer
@@ -346,6 +348,8 @@ TIP: Before using custom labels, ensure you understand the different types of
 WARNING: Avoid defining too many user-specified labels.
 Defining too many unique fields in an index is a condition that can lead to a
 {ref}/mapping.html#mapping-limit-settings[mapping explosion].
+
+Dots (`.`) in the keys are not allowed. In case you have a `.` in your label key, it will be replaced by `_`. For example `foo.bar` will be stored as `foo_bar`.
 
 [source,csharp]
 ----
