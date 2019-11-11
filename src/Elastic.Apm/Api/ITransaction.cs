@@ -12,6 +12,11 @@ namespace Elastic.Apm.Api
 
 		/// <summary>
 		/// An arbitrary mapping of additional metadata to store with the event.
+		/// Custom is used to add non-indexed, custom contextual information to transactions. Non-indexed means the data is
+		/// not searchable or aggregatable in Elasticsearch, and you cannot build dashboards on top of the data. However,
+		/// non-indexed information is useful for other reasons, like providing contextual information to help you quickly debug
+		/// performance issues or errors.
+		/// Unlike <see cref="IExecutionSegment.Labels"/> the data in this property is not trimmed.
 		/// </summary>
 		Dictionary<string, string> Custom { get; }
 
