@@ -1,4 +1,3 @@
-using System;
 using System.Configuration;
 using System.Security;
 using System.Text;
@@ -14,7 +13,7 @@ namespace Elastic.Apm.AspNetFullFramework
 		private const string Origin = "System.Configuration.ConfigurationManager.AppSettings";
 		private readonly IApmLogger _logger;
 
-		public FullFrameworApplicationConfigurationReaderkConfigReader(IApmLogger logger = null)
+		public ApplicationConfigurationReader(IApmLogger logger = null)
 			: base(logger, null, nameof(ApplicationConfigurationReader)) => _logger = logger?.Scoped(nameof(ApplicationConfigurationReader));
 
 		protected override string DiscoverServiceName() => DiscoverFullFrameworkServiceName() ?? base.DiscoverServiceName();
@@ -71,12 +70,6 @@ namespace Elastic.Apm.AspNetFullFramework
 				_logger.Error()?.Log("Failed to get site name: {Exception}", ex);
 				return null;
 			}
-		}
-
-		protected override ConfigurationKeyValue Read(string key)
-		{
-			var value = ConfigurationManager.AppSettings[key];
-			return value != null ? new ConfigurationKeyValue(key, value, Origin) : base.Read(key);
 		}
 	}
 }

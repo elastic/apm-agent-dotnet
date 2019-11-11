@@ -25,7 +25,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			UpdateAppSettings(new Dictionary<string, string>());
 
-			var config = new FullFrameworkConfigReader();
+			var config = new ApplicationConfigurationReader();
 
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.Environment, "Development");
 
@@ -41,7 +41,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			UpdateAppSettings(new Dictionary<string, string>());
 
-			var config = new FullFrameworkConfigReader();
+			var config = new ApplicationConfigurationReader();
 
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.FlushInterval, "10ms");
 

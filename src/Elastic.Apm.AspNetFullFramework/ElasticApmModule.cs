@@ -16,6 +16,7 @@ namespace Elastic.Apm.AspNetFullFramework
 	{
 		private static bool _isCaptureHeadersEnabled;
 		private static readonly DbgInstanceNameGenerator DbgInstanceNameGenerator = new DbgInstanceNameGenerator();
+		private readonly string _dbgInstanceName;
 
 		// We can store current transaction because each IHttpModule is used for at most one request at a time.
 		// For example see https://bytes.com/topic/asp-net/answers/324305-httpmodule-multithreading-request-response-corelation
@@ -25,13 +26,11 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		private static readonly LazyContextualInit InitOnceHelper = new LazyContextualInit();
 
-		private readonly string _dbgInstanceName;
-
 		// ReSharper disable once ImpureMethodCallOnReadonlyValueField
 		public ElasticApmModule() => _dbgInstanceName = DbgInstanceNameGenerator.Generate($"{nameof(ElasticApmModule)}.#");
 
-
 		private IApmLogger _logger;
+
 		private static Version IisVersion => HttpRuntime.IISVersion;
 
 		public void Init(HttpApplication context)
@@ -45,9 +44,9 @@ namespace Elastic.Apm.AspNetFullFramework
 						PlatformDetection.DotNetRuntimeDescription, IisVersion);
 			}
 
-			_httpApp = context;
-			_httpApp.BeginRequest += OnBeginRequest;
-			_httpApp.EndRequest += OnEndRequest;
+			_context = context;
+			_context.BeginRequest += OnBeginRequest;
+			_context.EndRequest += OnEndRequest;
 		}
 
 		public void Dispose() => _context = null;
@@ -218,10 +217,10 @@ namespace Elastic.Apm.AspNetFullFramework
 				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(httpResponse.Headers) : null
 			};
 
-		private static void FillSampledTransactionContextUser(HttpContext context, ITransaction transaction)
+		private void FillSampledTransactionContextUser(HttpContext context, ITransaction transaction)
 		{
 			var userIdentity = context.User?.Identity;
-			if (userIdentity == null || !userIdentity.IsAuthenticated) return;
+			if (userIdentity is null || !userIdentity.IsAuthenticated) return;
 
 			transaction.Context.User = new User { UserName = userIdentity.Name };
 
@@ -297,7 +296,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			var rootLogger = AgentDependencies.Logger ?? ConsoleLogger.Instance;
 			var scopedLogger = rootLogger.Scoped(dbgInstanceName);
 
-			var agentComponents = new AgentComponents(rootLogger, new FullFrameworkConfigReader(rootLogger));
+			var agentComponents = new AgentComponents(rootLogger, new ApplicationConfigurationReader(rootLogger));
 
 			var aspNetVersion = FindAspNetVersion(scopedLogger);
 
