@@ -254,7 +254,6 @@ pipeline {
                     steps {
                       withGithubNotify(context: 'Build dotnet - Windows') {
                         retry(3) {
-                          sleep randomNumber(min: 5, max: 10)
                           cleanDir("${WORKSPACE}/${BASE_DIR}")
                           unstash 'source'
                           dir("${BASE_DIR}"){
