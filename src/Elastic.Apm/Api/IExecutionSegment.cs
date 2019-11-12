@@ -32,7 +32,7 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// A flat mapping of user-defined labels with string values.
 		/// Dots (<code>.</code>) in the keys are not allowed. In case you have a <code>.</code> in your label key, it will be replaced by <code>_</code>.
-		/// For example <code>foo.bar</code> will be stored as <code>foo_bar</code>.
+		/// For example <code>foo.bar</code> will be stored as <code>foo_bar</code> in Elasticsearch.
 		/// </summary>
 		/// <exception cref="ArgumentException"><c>null</c> as key is not allowed.</exception>
 		Dictionary<string, string> Labels { get; }

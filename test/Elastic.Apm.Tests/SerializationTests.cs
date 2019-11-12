@@ -321,6 +321,22 @@ namespace Elastic.Apm.Tests
 			context.Labels["a.b.c"] = "labelValue2";
 			json = SerializePayloadItem(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue1\",\"a_b_c\":\"labelValue2\"}}");
+
+			context = new Context();
+			context.Labels["a\"b"] = "labelValue";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue\"}}");
+
+			context = new Context();
+			context.Labels["a*b"] = "labelValue";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue\"}}");
+
+			context = new Context();
+			context.Labels["a*b"] = "labelValue1";
+			context.Labels["a\"b_c"] = "labelValue2";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue1\",\"a_b_c\":\"labelValue2\"}}");
 		}
 
 		private static string SerializePayloadItem(object item) =>
