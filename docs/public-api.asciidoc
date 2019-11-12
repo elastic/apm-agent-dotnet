@@ -306,7 +306,9 @@ NOTE: Code samples above use `Elastic.Apm.Agent.Tracer.CurrentTransaction`. In p
 [[api-transaction-Custom]]
 ==== `Dictionary<string,string> Custom`
 
-Custom context is used to add non-indexed, custom contextual information to transactions. Non-indexed means the data is not searchable or aggregatable in Elasticsearch, and you cannot build dashboards on top of the data. However, non-indexed information is useful for other reasons, like providing contextual information to help you quickly debug performance issues or errors.
+Custom context is used to add non-indexed, custom contextual information to transactions.
+Non-indexed means the data is not searchable or aggregatable in Elasticsearch, and you cannot build dashboards on top of the data.
+However, non-indexed information is useful for other reasons, like providing contextual information to help you quickly debug performance issues or errors.
 
 Unlike <<api-transaction-tags>> the data in this property is not trimmed.
 
