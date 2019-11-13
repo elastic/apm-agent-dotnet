@@ -35,6 +35,22 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		public void Init(HttpApplication httpApp)
 		{
+			try
+			{
+				InitImpl(httpApp);
+			}
+			catch (Exception ex)
+			{
+				const string linePrefix = "Elastic APM .NET Agent: ";
+				System.Diagnostics.Trace.WriteLine($"{linePrefix}[CRITICAL] Exception thrown by {nameof(ElasticApmModule)}.{nameof(InitImpl)}."
+					+ Environment.NewLine + linePrefix + $"+-> Exception: {ex.GetType().FullName}: {ex.Message}"
+					+ Environment.NewLine + TextUtils.PrefixEveryLine(ex.StackTrace, linePrefix + " ".Repeat(4))
+				);
+			}
+		}
+
+		private void InitImpl(HttpApplication httpApp)
+		{
 			var isInitedByThisCall = InitOnceForAllInstancesUnderLock(_dbgInstanceName);
 
 			_logger = Agent.Instance.Logger.Scoped(_dbgInstanceName);
@@ -283,8 +299,7 @@ namespace Elastic.Apm.AspNetFullFramework
 		private static bool InitOnceForAllInstancesUnderLock(string dbgInstanceName) =>
 			InitOnceHelper.IfNotInited?.Init(() =>
 			{
-				var agentComponents = BuildAgentComponents(dbgInstanceName);
-				Agent.Setup(agentComponents);
+				SafeAgentSetup(BuildAgentComponents(dbgInstanceName));
 
 				_isCaptureHeadersEnabled = Agent.Instance.ConfigurationReader.CaptureHeaders;
 
@@ -304,6 +319,20 @@ namespace Elastic.Apm.AspNetFullFramework
 			agentComponents.Service.Language = new Language { Name = "C#" }; //TODO
 
 			return agentComponents;
+		}
+
+		private static void SafeAgentSetup(AgentComponents agentComponents)
+		{
+			try
+			{
+				Agent.Setup(agentComponents);
+			}
+			catch (Agent.InstanceAlreadyCreatedException ex)
+			{
+				Agent.Instance.Logger.Error()?.LogException(ex, "Agent's singleton instance already exists before call to"
+					+ $" {nameof(ElasticApmModule)}.{nameof(Init)} - {nameof(ElasticApmModule)} will use existing instance"
+					+ " even though it might lead to using incorrect configuration (for example environment variables instead of Web.config)");
+			}
 		}
 	}
 }
