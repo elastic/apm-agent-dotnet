@@ -198,6 +198,8 @@ finally
 ==== `Dictionary<string,string> Labels`
 A flat mapping of user-defined labels with string values. 
 
+If the key contains any special characters (`.`,`*`, `"`), they will be replaced with underscores. For example `a.b` will be stored as `a_b`.
+
 TIP: Before using custom labels, ensure you understand the different types of
 {apm-overview-ref-v}/metadata.html[metadata] that are available.
 
@@ -360,6 +362,8 @@ and the type will hold information about the database type.
 [[api-span-tags]]
 ==== `Dictionary<string,string> Labels`
 Similar to <<api-transaction-tags>> on the <<api-transaction>>: A flat mapping of user-defined labels with string values.
+
+If the key contains any special characters (`.`,`*`, `"`), they will be replaced with underscores. For example `a.b` will be stored as `a_b`.
 
 TIP: Before using custom labels, ensure you understand the different types of
 {apm-overview-ref-v}/metadata.html[metadata] that are available.

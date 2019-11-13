@@ -11,7 +11,11 @@ namespace Elastic.Apm.Report.Serialization
 			writer.WriteStartObject();
 			foreach (var keyValue in labels)
 			{
-				writer.WritePropertyName(SerializationUtils.TrimToPropertyMaxLength(keyValue.Key));
+				// Labels are trimmed and also de dotted in order to satisfy the Intake API
+				writer.WritePropertyName(SerializationUtils.TrimToPropertyMaxLength(keyValue.Key)
+					.Replace('.', '_')
+					.Replace('*', '_')
+					.Replace('"', '_'));
 
 				if (keyValue.Value != null)
 					writer.WriteValue(SerializationUtils.TrimToPropertyMaxLength(keyValue.Value));
