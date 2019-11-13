@@ -10,6 +10,7 @@ namespace Elastic.Apm.Api
 		private readonly Lazy<Dictionary<string, string>> _custom = new Lazy<Dictionary<string, string>>();
 		private readonly Lazy<Dictionary<string, string>> _labels = new Lazy<Dictionary<string, string>>();
 
+		[JsonConverter(typeof(CustomJsonConverter))]
 		public Dictionary<string, string> Custom => _custom.Value;
 
 		/// <summary>
