@@ -338,6 +338,45 @@ namespace Elastic.Apm.Tests
 			json = SerializePayloadItem(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue1\",\"a_b_c\":\"labelValue2\"}}");
 		}
+    
+    /// <summary>
+		/// Makes sure that keys in custom are de dotted.
+		/// </summary>
+		[Fact]
+		public void CustomDeDotting()
+		{
+			var context = new Context();
+			context.Custom["a.b"] = "customValue";
+			var json = SerializePayloadItem(context);
+			json.Should().Be("{\"custom\":{\"a_b\":\"customValue\"}}");
+
+			context = new Context();
+			context.Custom["a.b.c"] = "customValue";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"custom\":{\"a_b_c\":\"customValue\"}}");
+
+			context = new Context();
+			context.Custom["a.b"] = "customValue1";
+			context.Custom["a.b.c"] = "customValue2";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"custom\":{\"a_b\":\"customValue1\",\"a_b_c\":\"customValue2\"}}");
+
+			context = new Context();
+			context.Custom["a\"b"] = "customValue";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"custom\":{\"a_b\":\"customValue\"}}");
+
+			context = new Context();
+			context.Custom["a*b"] = "customValue";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"custom\":{\"a_b\":\"customValue\"}}");
+
+			context = new Context();
+			context.Custom["a*b"] = "customValue1";
+			context.Custom["a\"b_c"] = "customValue2";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"custom\":{\"a_b\":\"customValue1\",\"a_b_c\":\"customValue2\"}}");
+		}
 
 		private static string SerializePayloadItem(object item) =>
 			new PayloadItemSerializer(new MockConfigSnapshot()).SerializeObject(item);

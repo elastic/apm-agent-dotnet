@@ -305,6 +305,27 @@ NOTE: Return value of <<convenient-capture-span>> method overloads that accept T
 NOTE: Code samples above use `Elastic.Apm.Agent.Tracer.CurrentTransaction`. In production code you should make sure the `CurrentTransaction` is not `null`.
 
 [float]
+[[api-transaction-custom]]
+==== `Dictionary<string,string> Custom`
+
+Custom context is used to add non-indexed, custom contextual information to transactions.
+Non-indexed means the data is not searchable or aggregatable in Elasticsearch, and you cannot build dashboards on top of the data.
+However, non-indexed information is useful for other reasons, like providing contextual information to help you quickly debug performance issues or errors.
+
+If the key contains any special characters (`.`,`*`, `"`), they will be replaced with underscores. For example `a.b` will be stored as `a_b`.
+
+Unlike <<api-transaction-tags>>, the data in this property is not trimmed.
+
+[source,csharp]
+----
+Agent.Tracer.CaptureTransaction(transactionName, transactionType, (transaction) =>
+{
+	transaction.Custom["foo"] = "bar";
+	transaction.End();
+});
+----
+
+[float]
 [[api-transaction-context]]
 ==== `Context`
 You can attach additional context to manually captured transactions.

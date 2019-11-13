@@ -38,11 +38,13 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			, "http://1.2.3.4:8200/config/v1/agents?service.name=My+svc&service.environment=My+env+amp%3A%28%26%29+plus%3A%28%2B%29+ang%3A%28%3C%3E%29+eq%3A%28%3D%29+qm%3A%28%3F%29")]
 		[InlineData("https://5.6.7.8:9", "My svc", null, "https://5.6.7.8:9/config/v1/agents?service.name=My+svc")]
 		[InlineData("https://1.2.3.4/", null, "My env", "https://1.2.3.4/config/v1/agents?service.environment=My+env")]
-		public void BuildGetConfigAbsoluteUrl_tests(string serverBaseUrl, string serviceName, string envName, string expectedGetConfigApiAbsoluteUrl
-		) =>
-			BuildGetConfigAbsoluteUrl(new Uri(serverBaseUrl, UriKind.Absolute), BuildService(serviceName, envName))
-				.Should()
-				.Be(expectedGetConfigApiAbsoluteUrl);
+		public void BuildGetConfigAbsoluteUrl_tests(string serverBaseUrl, string serviceName, string envName, string expectedGetConfigApiAbsoluteUrl)
+		{
+			var actualGetConfigApiAbsoluteUrl =
+				BuildGetConfigAbsoluteUrl(new Uri(serverBaseUrl, UriKind.Absolute), BuildService(serviceName, envName));
+			actualGetConfigApiAbsoluteUrl.IsAbsoluteUri.Should().BeTrue($"{nameof(actualGetConfigApiAbsoluteUrl)}: {actualGetConfigApiAbsoluteUrl}");
+			actualGetConfigApiAbsoluteUrl.Should().Be(expectedGetConfigApiAbsoluteUrl);
+		}
 
 		private static Service BuildService(string serviceName, string envName)
 		{
@@ -66,10 +68,12 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		[InlineData("http://1.2.3.4/base_relative_path/", "http://1.2.3.4/base_relative_path/intake/v2/events")]
 		[InlineData("http://1.2.3.4/base/relative/path", "http://1.2.3.4/base/relative/path/intake/v2/events")]
 		[InlineData("http://1.2.3.4/base/relative/path/", "http://1.2.3.4/base/relative/path/intake/v2/events")]
-		public void BuildIntakeV2EventsAbsoluteUrl_normal_cases(string serverBaseUrl, string expectedIntakeApiAbsoluteUrl) =>
-			BuildIntakeV2EventsAbsoluteUrl(new Uri(serverBaseUrl, UriKind.Absolute))
-				.Should()
-				.Be(expectedIntakeApiAbsoluteUrl);
+		public void BuildIntakeV2EventsAbsoluteUrl_normal_cases(string serverBaseUrl, string expectedIntakeApiAbsoluteUrl)
+		{
+			var actualGetConfigApiAbsoluteUrl = BuildIntakeV2EventsAbsoluteUrl(new Uri(serverBaseUrl, UriKind.Absolute));
+			actualGetConfigApiAbsoluteUrl.IsAbsoluteUri.Should().BeTrue($"{nameof(actualGetConfigApiAbsoluteUrl)}: {actualGetConfigApiAbsoluteUrl}");
+			actualGetConfigApiAbsoluteUrl.Should().Be(expectedIntakeApiAbsoluteUrl);
+		}
 
 		[Fact]
 		public void BuildIntakeV2EventsAbsoluteUrl_throws_on_not_absolute_base() =>

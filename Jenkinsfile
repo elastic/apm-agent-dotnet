@@ -253,10 +253,12 @@ pipeline {
                   stage('Build - dotnet') {
                     steps {
                       withGithubNotify(context: 'Build dotnet - Windows') {
-                        cleanDir("${WORKSPACE}/${BASE_DIR}")
-                        unstash 'source'
-                        dir("${BASE_DIR}"){
-                          bat '.ci/windows/dotnet.bat'
+                        retry(3) {
+                          cleanDir("${WORKSPACE}/${BASE_DIR}")
+                          unstash 'source'
+                          dir("${BASE_DIR}"){
+                            bat '.ci/windows/dotnet.bat'
+                          }
                         }
                       }
                     }
