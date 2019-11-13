@@ -116,9 +116,15 @@ namespace Elastic.Apm
 
 		public static void Setup(AgentComponents agentComponents)
 		{
-			if (IsInstanceCreated) throw new Exception("The singleton APM agent has already been instantiated and can no longer be configured");
+			if (IsInstanceCreated)
+				throw new InstanceAlreadyCreatedException("The singleton APM agent has already been instantiated and can no longer be configured");
 
 			_components = agentComponents;
+		}
+
+		internal class InstanceAlreadyCreatedException : Exception
+		{
+			internal InstanceAlreadyCreatedException(string message) : base(message) { }
 		}
 	}
 }
