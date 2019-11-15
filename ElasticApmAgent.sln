@@ -61,6 +61,7 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Tests.MockApmServer", "test\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj", "{AFFB238B-10C0-4229-9527-184EFCF0F5AC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ci", ".ci\ci.csproj", "{9AAC1E7A-5887-46BC-96DA-DDFFF0F7CDC2}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.EntityFrameworkCore.Tests", "test\Elastic.Apm.EntityFrameworkCore.Tests\Elastic.Apm.EntityFrameworkCore.Tests.csproj", "{79BEA612-E2C8-47FD-84DC-A1B17AAD5038}"
 EndProject
 Global
