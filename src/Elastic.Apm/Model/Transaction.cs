@@ -186,6 +186,9 @@ namespace Elastic.Apm.Model
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
 
+		[JsonIgnore]
+		public Dictionary<string, string> Custom => Context.Custom;
+
 		/// <summary>
 		/// Method to conditionally serialize <see cref="Context" /> because context should be serialized only when the transaction
 		/// is sampled.
