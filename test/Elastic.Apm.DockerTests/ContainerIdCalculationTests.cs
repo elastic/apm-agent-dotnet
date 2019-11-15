@@ -29,7 +29,7 @@ namespace Elastic.Apm.DockerTests
 			var noopLogger = new NoopLogger();
 			var systemInfoHelper = new TestSystemInfoHelper(noopLogger, cGroupContent);
 
-			var systemInfo = systemInfoHelper.ReadContainerId(noopLogger);
+			var systemInfo = systemInfoHelper.ParseSystemInfo();
 			systemInfo.Should().NotBeNull();
 			systemInfo.Container.Should().NotBeNull();
 			systemInfo.Container.Id.Should().Be(expectedContainerId);
@@ -43,11 +43,9 @@ namespace Elastic.Apm.DockerTests
 			var noopLogger = new NoopLogger();
 			var systemInfoHelper = new TestSystemInfoHelper(noopLogger, "asdf:invalid-dockerid:243543");
 
-			var systemInfo = systemInfoHelper.ReadContainerId(noopLogger);
+			var systemInfo = systemInfoHelper.ParseSystemInfo();
 
-			//The current implementation returns null instead of an empty System instance.
-			//This may changes later, the point of the test is to make sure there is no container id
-			systemInfo.Should().BeNull();
+			systemInfo.Container.Should().BeNull();
 		}
 	}
 

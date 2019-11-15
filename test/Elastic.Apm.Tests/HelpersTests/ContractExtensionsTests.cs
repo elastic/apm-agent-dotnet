@@ -13,7 +13,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 		{
 			string stringArg1 = null;
 			// ReSharper disable once ExpressionIsAlwaysNull
-			AsAction(() => stringArg1.ThrowIfArgumentNull(nameof(stringArg1))).Should()
+			AsAction(() => stringArg1.ThrowIfArgumentNull(nameof(stringArg1)))
+				.Should()
 				.ThrowExactly<ArgumentNullException>()
 				.WithMessage($"*{nameof(stringArg1)}*");
 
@@ -29,7 +30,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 		{
 			int? nullableIntArg1 = null;
 			// ReSharper disable once ExpressionIsAlwaysNull
-			AsAction(() => nullableIntArg1.ThrowIfNullableValueArgumentNull(nameof(nullableIntArg1))).Should()
+			AsAction(() => nullableIntArg1.ThrowIfNullableValueArgumentNull(nameof(nullableIntArg1)))
+				.Should()
 				.ThrowExactly<ArgumentNullException>()
 				.WithMessage($"*{nameof(nullableIntArg1)}*");
 
@@ -44,12 +46,14 @@ namespace Elastic.Apm.Tests.HelpersTests
 		public void ThrowIfArgumentNegativeTest()
 		{
 			var intArg1 = -1;
-			AsAction(() => intArg1.ThrowIfArgumentNegative(nameof(intArg1))).Should()
+			AsAction(() => intArg1.ThrowIfArgumentNegative(nameof(intArg1)))
+				.Should()
 				.ThrowExactly<ArgumentException>()
 				.WithMessage($"*{nameof(intArg1)}*-1*");
 
 			var intArg2 = -9876;
-			AsAction(() => intArg2.ThrowIfArgumentNegative(nameof(intArg2))).Should()
+			AsAction(() => intArg2.ThrowIfArgumentNegative(nameof(intArg2)))
+				.Should()
 				.ThrowExactly<ArgumentException>()
 				.WithMessage($"*{nameof(intArg2)}*-9876*");
 

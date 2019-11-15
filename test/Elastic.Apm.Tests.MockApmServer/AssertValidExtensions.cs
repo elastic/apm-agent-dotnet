@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using Elastic.Apm.Api;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Model;
@@ -25,7 +24,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			thisObj.Should().NotBeNull();
 
 			thisObj.Name.Should().Be(Consts.AgentName);
-			thisObj.Version.Should().Be(Service.GetDefaultService(new TestAgentConfigurationReader(new NoopLogger()), new NoopLogger()).Agent.Version);
+			thisObj.Version.Should().Be(Service.GetDefaultService(new MockConfigSnapshot(new NoopLogger()), new NoopLogger()).Agent.Version);
 		}
 
 		private static void AssertValid(this Framework thisObj)
@@ -120,7 +119,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 		private static void HttpMethodAssertValid(this string thisObj)
 		{
 			thisObj.NonEmptyAssertValid();
-			var validValues = new List<string>()
+			var validValues = new List<string>
 			{
 				"GET",
 				"POST",
@@ -168,7 +167,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			thisObj.RemoteAddress?.NonEmptyAssertValid();
 		}
 
-		internal static void AssertValid(this SpanCount thisObj) => thisObj.Should().NotBeNull();
+		internal static void AssertValid(this SpanCountDto thisObj) => thisObj.Should().NotBeNull();
 
 		internal static void TimestampAssertValid(this long thisObj) => thisObj.Should().BeGreaterOrEqualTo(0);
 
@@ -217,7 +216,16 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 			thisObj.Code?.AssertValid();
 			thisObj.StackTrace?.AssertValid();
-			thisObj.Type.AssertValid();
+
+			if (string.IsNullOrEmpty(thisObj.Type))
+				thisObj.Message.AssertValid();
+			else
+				thisObj.Message?.AssertValid();
+
+			if (string.IsNullOrEmpty(thisObj.Message))
+				thisObj.Type.AssertValid();
+			else
+				thisObj.Type?.AssertValid();
 		}
 
 		internal static void AssertValid(this Database thisObj)

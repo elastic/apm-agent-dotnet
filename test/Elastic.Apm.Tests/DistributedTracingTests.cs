@@ -65,7 +65,9 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void ValidateTraceParentWithInvalidTraceIdLength()
 		{
-			const string traceParent = "00-0af7651916cd43dd8448eb211c80319ca-7ad6b7169203331-01"; //TraceId is 1 char longer than expected, and parentId is 1 char longer
+			const string
+				traceParent =
+					"00-0af7651916cd43dd8448eb211c80319ca-7ad6b7169203331-01"; //TraceId is 1 char longer than expected, and parentId is 1 char longer
 			var res = TraceParent.TryExtractTraceparent(traceParent);
 			res.Should().BeNull();
 		}

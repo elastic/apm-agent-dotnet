@@ -16,6 +16,16 @@ namespace Elastic.Apm.Tests
 	/// </summary>
 	public class SerializationTests
 	{
+		// ReSharper disable once MemberCanBePrivate.Global
+		public static TheoryData SerializationUtilsTrimToPropertyMaxLengthVariantsToTest => new TheoryData<string, string>
+		{
+			{ "", "" },
+			{ "A", "A" },
+			{ "B".Repeat(Consts.PropertyMaxLength), "B".Repeat(Consts.PropertyMaxLength) },
+			{ "C".Repeat(Consts.PropertyMaxLength + 1), "C".Repeat(Consts.PropertyMaxLength - 3) + "..." },
+			{ "D".Repeat(Consts.PropertyMaxLength * 2), "D".Repeat(Consts.PropertyMaxLength - 3) + "..." }
+		};
+
 		/// <summary>
 		/// Tests the <see cref="TrimmedStringJsonConverter" />. It serializes a transaction with Transaction.Name.Length > 1024.
 		/// Makes sure that the Transaction.Name is truncated correctly.
@@ -25,13 +35,13 @@ namespace Elastic.Apm.Tests
 		{
 			var str = new string('a', 1200);
 
-			var transaction =
-				new Transaction(new TestAgentComponents(), str, "test", new TestAgentConfigurationReader(new NoopLogger()))
-				{
-					Duration = 1, Result = "fail"
-				};
+			string json;
+			using (var agent = new ApmAgent(new TestAgentComponents()))
+			{
+				var transaction = new Transaction(agent, str, "test") { Duration = 1, Result = "fail" };
+				json = SerializePayloadItem(transaction);
+			}
 
-			var json = SerializePayloadItem(transaction);
 			var deserializedTransaction = JsonConvert.DeserializeObject(json) as JObject;
 
 			Assert.NotNull(deserializedTransaction);
@@ -116,6 +126,38 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
+		/// Makes sure that labels with `null` don't cause exception during serialization
+		/// </summary>
+		[Fact]
+		public void LabelWithNullValueShouldBeCaptured()
+		{
+			var context = new SpanContext();
+			context.Labels["foo"] = null;
+
+			var json = SerializePayloadItem(context);
+			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
+
+			Assert.NotNull(deserializedContext);
+			deserializedContext["tags"]["foo"].Value<string>().Should().BeNull();
+		}
+
+		/// <summary>
+		/// Makes sure that labels with an empty string are captured and not causing any trouble
+		/// </summary>
+		[Fact]
+		public void LabelWithEmptyStringShouldBeCaptured()
+		{
+			var context = new SpanContext();
+			context.Labels["foo"] = string.Empty;
+
+			var json = SerializePayloadItem(context);
+			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
+
+			Assert.NotNull(deserializedContext);
+			deserializedContext["tags"]["foo"].Value<string>().Should().BeEmpty();
+		}
+
+		/// <summary>
 		/// It creates an instance of <see cref="DummyType" /> with a <see cref="DummyType.DictionaryProp" /> that has a value
 		/// which is longer than <see cref="Consts.PropertyMaxLength" />.
 		/// Makes sure that the serialized instance still contains the whole value (aka it was not trimmed), since
@@ -139,13 +181,13 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Creates a db instance with a statement that is longer than <see cref="Consts.PropertyMaxLength" />.
-		/// Makes sure the statement is not truncated.
+		/// Creates a db instance with a statement that is longer than 10 000 characters.
+		/// Makes sure the statement is truncated.
 		/// </summary>
 		[Fact]
 		public void DbStatementLengthTest()
 		{
-			var str = new string('a', 1200);
+			var str = new string('a', 12000);
 			var db = new Database { Statement = str };
 
 			var json = SerializePayloadItem(db);
@@ -153,8 +195,44 @@ namespace Elastic.Apm.Tests
 
 			Assert.NotNull(deserializedDb);
 
-			Assert.Equal(str.Length, deserializedDb.Statement.Length);
-			Assert.Equal(str, deserializedDb.Statement);
+			Assert.Equal(10_000, deserializedDb.Statement.Length);
+			Assert.Equal("...", deserializedDb.Statement.Substring(10_000 - 3, 3));
+		}
+
+		[Fact]
+		public void ServiceVersionLengthTest()
+		{
+			var logger = new NoopLogger();
+			var service = Service.GetDefaultService(new MockConfigSnapshot(logger), logger);
+			service.Version = new string('a', 1200);
+
+			var json = SerializePayloadItem(service);
+			var deserializedService = JsonConvert.DeserializeObject<Service>(json);
+
+			Assert.NotNull(deserializedService);
+
+			Assert.Equal(Consts.PropertyMaxLength, deserializedService.Version.Length);
+			Assert.Equal("...", deserializedService.Version.Substring(Consts.PropertyMaxLength - 3, 3));
+		}
+
+		/// <summary>
+		/// Creates a service instance with a name that is longer than <see cref="Consts.PropertyMaxLength" />.
+		/// Makes sure the name is truncated.
+		/// </summary>
+		[Fact]
+		public void ServiceNameLengthTest()
+		{
+			var logger = new NoopLogger();
+			var service = Service.GetDefaultService(new MockConfigSnapshot(logger), logger);
+			service.Name = new string('a', 1200);
+
+			var json = SerializePayloadItem(service);
+			var deserializedService = JsonConvert.DeserializeObject<Service>(json);
+
+			Assert.NotNull(deserializedService);
+
+			Assert.Equal(Consts.PropertyMaxLength, deserializedService.Name.Length);
+			Assert.Equal("...", deserializedService.Name.Substring(Consts.PropertyMaxLength - 3, 3));
 		}
 
 		/// <summary>
@@ -165,14 +243,14 @@ namespace Elastic.Apm.Tests
 		{
 			var agent = new TestAgentComponents();
 			// Create a transaction that is sampled (because the sampler is constant sampling-everything sampler
-			var sampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(1.0), null, agent.PayloadSender,
-				new TestAgentConfigurationReader(new NoopLogger()));
+			var sampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(1.0), /* distributedTracingData: */ null,
+				agent.PayloadSender, new MockConfigSnapshot(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer);
 			sampledTransaction.Context.Request = new Request("GET",
 				new Url { Full = "https://elastic.co", Raw = "https://elastic.co", HostName = "elastic.co", Protocol = "HTTP" });
 
 			// Create a transaction that is not sampled (because the sampler is constant not-sampling-anything sampler
-			var nonSampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(0.0), null, agent.PayloadSender,
-				new TestAgentConfigurationReader(new NoopLogger()));
+			var nonSampledTransaction = new Transaction(agent.Logger, "dummy_name", "dumm_type", new Sampler(0.0), /* distributedTracingData: */ null,
+				agent.PayloadSender, new MockConfigSnapshot(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer);
 			nonSampledTransaction.Context.Request = sampledTransaction.Context.Request;
 
 			var serializedSampledTransaction = SerializePayloadItem(sampledTransaction);
@@ -180,11 +258,14 @@ namespace Elastic.Apm.Tests
 			var serializedNonSampledTransaction = SerializePayloadItem(nonSampledTransaction);
 			var deserializedNonSampledTransaction = JsonConvert.DeserializeObject(serializedNonSampledTransaction) as JObject;
 
+			// ReSharper disable once PossibleNullReferenceException
 			deserializedSampledTransaction["sampled"].Value<bool>().Should().BeTrue();
 			deserializedSampledTransaction["context"].Value<JObject>()["request"].Value<JObject>()["url"].Value<JObject>()["full"]
+				.Value<string>()
 				.Should()
-				.Equals("https://elastic.co");
+				.Be("https://elastic.co");
 
+			// ReSharper disable once PossibleNullReferenceException
 			deserializedNonSampledTransaction["sampled"].Value<bool>().Should().BeFalse();
 			deserializedNonSampledTransaction.Should().NotContainKey("context");
 		}
@@ -211,15 +292,6 @@ namespace Elastic.Apm.Tests
 		public void SerializationUtilsTrimToLengthTests(string original, int maxLength, string expectedTrimmed) =>
 			SerializationUtils.TrimToLength(original, maxLength).Should().Be(expectedTrimmed);
 
-		public static IEnumerable<object[]> SerializationUtilsTrimToPropertyMaxLengthVariantsToTest()
-		{
-			yield return new object[] { "", "" };
-			yield return new object[] { "A", "A" };
-			yield return new object[] { "B".Repeat(Consts.PropertyMaxLength), "B".Repeat(Consts.PropertyMaxLength) };
-			yield return new object[] { "C".Repeat(Consts.PropertyMaxLength + 1), "C".Repeat(Consts.PropertyMaxLength - 3) + "..." };
-			yield return new object[] { "D".Repeat(Consts.PropertyMaxLength * 2), "D".Repeat(Consts.PropertyMaxLength - 3) + "..." };
-		}
-
 		[Theory]
 		[MemberData(nameof(SerializationUtilsTrimToPropertyMaxLengthVariantsToTest))]
 		public void SerializationUtilsTrimToPropertyMaxLengthTests(string original, string expectedTrimmed)
@@ -228,8 +300,86 @@ namespace Elastic.Apm.Tests
 			SerializationUtils.TrimToPropertyMaxLength(original).Should().Be(expectedTrimmed);
 		}
 
+		/// <summary>
+		/// Makes sure that keys in the label are de dotted.
+		/// </summary>
+		[Fact]
+		public void LabelDeDotting()
+		{
+			var context = new Context();
+			context.Labels["a.b"] = "labelValue";
+			var json = SerializePayloadItem(context);
+			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue\"}}");
+
+			context = new Context();
+			context.Labels["a.b.c"] = "labelValue";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"tags\":{\"a_b_c\":\"labelValue\"}}");
+
+			context = new Context();
+			context.Labels["a.b"] = "labelValue1";
+			context.Labels["a.b.c"] = "labelValue2";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue1\",\"a_b_c\":\"labelValue2\"}}");
+
+			context = new Context();
+			context.Labels["a\"b"] = "labelValue";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue\"}}");
+
+			context = new Context();
+			context.Labels["a*b"] = "labelValue";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue\"}}");
+
+			context = new Context();
+			context.Labels["a*b"] = "labelValue1";
+			context.Labels["a\"b_c"] = "labelValue2";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue1\",\"a_b_c\":\"labelValue2\"}}");
+		}
+    
+    /// <summary>
+		/// Makes sure that keys in custom are de dotted.
+		/// </summary>
+		[Fact]
+		public void CustomDeDotting()
+		{
+			var context = new Context();
+			context.Custom["a.b"] = "customValue";
+			var json = SerializePayloadItem(context);
+			json.Should().Be("{\"custom\":{\"a_b\":\"customValue\"}}");
+
+			context = new Context();
+			context.Custom["a.b.c"] = "customValue";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"custom\":{\"a_b_c\":\"customValue\"}}");
+
+			context = new Context();
+			context.Custom["a.b"] = "customValue1";
+			context.Custom["a.b.c"] = "customValue2";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"custom\":{\"a_b\":\"customValue1\",\"a_b_c\":\"customValue2\"}}");
+
+			context = new Context();
+			context.Custom["a\"b"] = "customValue";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"custom\":{\"a_b\":\"customValue\"}}");
+
+			context = new Context();
+			context.Custom["a*b"] = "customValue";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"custom\":{\"a_b\":\"customValue\"}}");
+
+			context = new Context();
+			context.Custom["a*b"] = "customValue1";
+			context.Custom["a\"b_c"] = "customValue2";
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"custom\":{\"a_b\":\"customValue1\",\"a_b_c\":\"customValue2\"}}");
+		}
+
 		private static string SerializePayloadItem(object item) =>
-			new PayloadItemSerializer().SerializeObject(item);
+			new PayloadItemSerializer(new MockConfigSnapshot()).SerializeObject(item);
 
 		/// <summary>
 		/// A dummy type for tests.

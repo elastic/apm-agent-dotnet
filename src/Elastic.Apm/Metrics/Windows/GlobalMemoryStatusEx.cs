@@ -27,7 +27,9 @@ namespace Elastic.Apm.Metrics.Windows
 		{
 			var statEx = new MemoryStatusEx { dwLength = (uint)Marshal.SizeOf(typeof(MemoryStatusEx)) };
 
-			return GlobalMemoryStatusEx(ref statEx) ? (true, statEx.ullTotalPhys, statEx.ullAvailPhys) : ((bool success, ulong total, ulong avail))(false, 0, 0);
+			return GlobalMemoryStatusEx(ref statEx)
+				? (true, statEx.ullTotalPhys, statEx.ullAvailPhys)
+				: ((bool success, ulong total, ulong avail))(false, 0, 0);
 		}
 	}
 }

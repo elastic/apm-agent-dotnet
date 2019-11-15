@@ -1,19 +1,20 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Elastic.Apm.Api;
+using Elastic.Apm.BackendComm;
 using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
+using Newtonsoft.Json;
 
 namespace Elastic.Apm.Report
 {
@@ -21,118 +22,194 @@ namespace Elastic.Apm.Report
 	/// Responsible for sending the data to the server. Implements Intake V2.
 	/// Each instance creates its own thread to do the work. Therefore, instances should be reused if possible.
 	/// </summary>
-	internal class PayloadSenderV2 : IPayloadSender, IDisposable
+	internal class PayloadSenderV2 : BackendCommComponentBase, IPayloadSender
 	{
-		private static readonly int DnsTimeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds;
+		private const string ThisClassName = nameof(PayloadSenderV2);
 
-		private readonly BatchBlock<object> _eventQueue =
-			new BatchBlock<object>(20);
+		internal readonly Api.System System;
 
-		private readonly HttpClient _httpClient;
+		private readonly BatchBlock<object> _eventQueue;
+
+		private readonly TimeSpan _flushInterval;
+		private readonly Uri _intakeV2EventsAbsoluteUrl;
+
 		private readonly IApmLogger _logger;
-
-		private readonly Service _service;
-		internal readonly Api.System _system;
-
-		private CancellationTokenSource _batchBlockReceiveAsyncCts;
-
-		private readonly PayloadItemSerializer _payloadItemSerializer = new PayloadItemSerializer();
-
-		private readonly SingleThreadTaskScheduler _singleThreadTaskScheduler = new SingleThreadTaskScheduler(CancellationToken.None);
+		private readonly int _maxQueueEventCount;
 		private readonly Metadata _metadata;
 
-		public PayloadSenderV2(IApmLogger logger, IConfigurationReader configurationReader, Service service, Api.System system, HttpMessageHandler handler = null)
+		private readonly PayloadItemSerializer _payloadItemSerializer;
+
+		public PayloadSenderV2(IApmLogger logger, IConfigSnapshot config, Service service, Api.System system,
+			HttpMessageHandler httpMessageHandler = null, string dbgName = null
+		)
+			: base( /* isEnabled: */ true, logger, ThisClassName, service, config, httpMessageHandler)
 		{
-			_service = service;
-			_system = system;
-			_metadata = new Metadata { Service = _service, System = _system};
-			_logger = logger?.Scoped(nameof(PayloadSenderV2));
+			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
+			_payloadItemSerializer = new PayloadItemSerializer(config);
 
-			var serverUrlBase = configurationReader.ServerUrls.First();
-			var servicePoint = ServicePointManager.FindServicePoint(serverUrlBase);
+			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(config.ServerUrls.First());
 
-			servicePoint.ConnectionLeaseTimeout = DnsTimeout;
-			servicePoint.ConnectionLimit = 20;
+			System = system;
 
-			_httpClient = new HttpClient(handler ?? new HttpClientHandler()) { BaseAddress = serverUrlBase };
+			_metadata = new Metadata { Service = service, System = System };
+			foreach (var globalLabelKeyValue in config.GlobalLabels) _metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
 
-			if (configurationReader.SecretToken != null)
+			if (config.MaxQueueEventCount < config.MaxBatchEventCount)
 			{
-				_httpClient.DefaultRequestHeaders.Authorization =
-					new AuthenticationHeaderValue("Bearer", configurationReader.SecretToken);
+				_logger?.Error()
+					?.Log(
+						"MaxQueueEventCount is less than MaxBatchEventCount - using MaxBatchEventCount as MaxQueueEventCount."
+						+ " MaxQueueEventCount: {MaxQueueEventCount}."
+						+ " MaxBatchEventCount: {MaxBatchEventCount}.",
+						config.MaxQueueEventCount, config.MaxBatchEventCount);
+
+				_maxQueueEventCount = config.MaxBatchEventCount;
 			}
-			Task.Factory.StartNew(
-				() =>
+			else
+				_maxQueueEventCount = config.MaxQueueEventCount;
+
+			_flushInterval = config.FlushInterval;
+
+			_logger?.Debug()
+				?.Log(
+					"Using the following configuration options:"
+					+ " Events intake API absolute URL: {EventsIntakeAbsoluteUrl}"
+					+ ", FlushInterval: {FlushInterval}"
+					+ ", MaxBatchEventCount: {MaxBatchEventCount}"
+					+ ", MaxQueueEventCount: {MaxQueueEventCount}"
+					, _intakeV2EventsAbsoluteUrl, _flushInterval.ToHms(), config.MaxBatchEventCount, _maxQueueEventCount);
+
+			_eventQueue = new BatchBlock<object>(config.MaxBatchEventCount);
+
+			StartWorkLoop();
+		}
+
+		private string _cachedMetadataJsonLine;
+
+		private long _eventQueueCount;
+
+		public void QueueTransaction(ITransaction transaction) => EnqueueEvent(transaction, "Transaction");
+
+		public void QueueSpan(ISpan span) => EnqueueEvent(span, "Span");
+
+		public void QueueMetrics(IMetricSet metricSet) => EnqueueEvent(metricSet, "MetricSet");
+
+		public void QueueError(IError error) => EnqueueEvent(error, "Error");
+
+		internal bool EnqueueEvent(object eventObj, string dbgEventKind)
+		{
+			ThrowIfDisposed();
+
+			// Enforce _maxQueueEventCount manually instead of using BatchBlock's BoundedCapacity
+			// because of the issue of Post returning false when TriggerBatch is in progress. For more details see
+			// https://stackoverflow.com/questions/35626955/unexpected-behaviour-tpl-dataflow-batchblock-rejects-items-while-triggerbatch
+			var newEventQueueCount = Interlocked.Increment(ref _eventQueueCount);
+			if (newEventQueueCount > _maxQueueEventCount)
+			{
+				_logger.Debug()
+					?.Log("Queue reached max capacity - " + dbgEventKind + " will be discarded."
+						+ " newEventQueueCount: {EventQueueCount}."
+						+ " MaxQueueEventCount: {MaxQueueEventCount}."
+						+ " " + dbgEventKind + ": {" + dbgEventKind + "}."
+						, newEventQueueCount, _maxQueueEventCount, eventObj);
+				Interlocked.Decrement(ref _eventQueueCount);
+				return false;
+			}
+
+			var enqueuedSuccessfully = _eventQueue.Post(eventObj);
+			if (!enqueuedSuccessfully)
+			{
+				_logger.Debug()
+					?.Log("Failed to enqueue " + dbgEventKind + "."
+						+ " newEventQueueCount: {EventQueueCount}."
+						+ " MaxQueueEventCount: {MaxQueueEventCount}."
+						+ " " + dbgEventKind + ": {" + dbgEventKind + "}."
+						, newEventQueueCount, _maxQueueEventCount, eventObj);
+				Interlocked.Decrement(ref _eventQueueCount);
+				return false;
+			}
+
+			_logger.Debug()
+				?.Log("Enqueued " + dbgEventKind + "."
+					+ " newEventQueueCount: {EventQueueCount}."
+					+ " MaxQueueEventCount: {MaxQueueEventCount}."
+					+ " " + dbgEventKind + ": {" + dbgEventKind + "}."
+					, newEventQueueCount, _maxQueueEventCount, eventObj);
+
+			if (_flushInterval == TimeSpan.Zero) _eventQueue.TriggerBatch();
+
+			return true;
+		}
+
+		protected override async Task WorkLoopIteration() => await ProcessQueueItems(await ReceiveBatchAsync());
+
+		private async Task<object[]> ReceiveBatchAsync()
+		{
+			var receiveAsyncTask = _eventQueue.ReceiveAsync(CtsInstance.Token);
+
+			if (_flushInterval == TimeSpan.Zero)
+				_logger.Trace()?.Log("Waiting for data to send... (not using FlushInterval timer because FlushInterval is 0)");
+			else
+			{
+				_logger.Trace()?.Log("Waiting for data to send... FlushInterval: {FlushInterval}", _flushInterval.ToHms());
+				while (true)
 				{
-					try
-					{
-#pragma warning disable 4014
-						DoWork();
-#pragma warning restore 4014
-					}
-					catch (TaskCanceledException ex)
-					{
-						_logger?.Debug()?.LogExceptionWithCaller(ex);
-					}
-				}, CancellationToken.None, TaskCreationOptions.LongRunning, _singleThreadTaskScheduler);
-		}
+					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, CtsInstance.Token)) break;
 
-		public void QueueTransaction(ITransaction transaction)
-		{
-			var res = _eventQueue.Post(transaction);
-			_logger.Debug()
-				?.Log(!res
-					? "Failed adding Transaction to the queue, {Transaction}"
-					: "Transaction added to the queue, {Transaction}", transaction);
-
-			_eventQueue.TriggerBatch();
-		}
-
-		public void QueueSpan(ISpan span)
-		{
-			var res = _eventQueue.Post(span);
-			_logger.Debug()
-				?.Log(!res
-					? "Failed adding Span to the queue, {Span}"
-					: "Span added to the queue, {Span}", span);
-		}
-
-		public void QueueMetrics(IMetricSet metricSet)
-		{
-			var res = _eventQueue.Post(metricSet);
-			_logger.Debug()
-				?.Log(!res
-					? "Failed adding MetricSet to the queue, {MetricSet}"
-					: "MetricSet added to the queue, {MetricSet}", metricSet);
-		}
-
-		public void QueueError(IError error)
-		{
-			var res = _eventQueue.Post(error);
-			_logger.Debug()
-				?.Log(!res
-					? "Failed adding Error to the queue, {Error}"
-					: "Error added to the queue, {Error}", error);
-		}
-
-		private async Task DoWork()
-		{
-			_batchBlockReceiveAsyncCts = new CancellationTokenSource();
-			while (true)
-			{
-				var queueItems = await _eventQueue.ReceiveAsync(_batchBlockReceiveAsyncCts.Token);
-				await ProcessQueueItems(queueItems);
+					_eventQueue.TriggerBatch();
+				}
 			}
-			// ReSharper disable once FunctionNeverReturns
+
+			var eventBatchToSend = await receiveAsyncTask;
+			var newEventQueueCount = Interlocked.Add(ref _eventQueueCount, -eventBatchToSend.Length);
+			_logger.Trace()
+				?.Log("There's data to be sent. Batch size: {BatchSize}. newEventQueueCount: {newEventQueueCount}. First event: {Event}."
+					, eventBatchToSend.Length, newEventQueueCount, eventBatchToSend.Length > 0 ? eventBatchToSend[0].ToString() : "<N/A>");
+			return eventBatchToSend;
+		}
+
+		/// <summary>
+		/// It's recommended to use this method (or another TryAwaitOrTimeout or AwaitOrTimeout method)
+		/// instead of just Task.WhenAny(taskToAwait, Task.Delay(timeout))
+		/// because this method cancels the timer for timeout while <c>Task.Delay(timeout)</c>.
+		/// If the number of “zombie” timer jobs starts becoming significant, performance could suffer.
+		/// For more detailed explanation see https://devblogs.microsoft.com/pfxteam/crafting-a-task-timeoutafter-method/
+		/// </summary>
+		/// <returns><c>true</c> if <c>taskToAwait</c> completed before the timeout, <c>false</c> otherwise</returns>
+		private static async Task<bool> TryAwaitOrTimeout(Task taskToAwait, TimeSpan timeout, CancellationToken cancellationToken = default)
+		{
+			var timeoutDelayCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+			var timeoutDelayTask = Task.Delay(timeout, timeoutDelayCts.Token);
+			try
+			{
+				var completedTask = await Task.WhenAny(taskToAwait, timeoutDelayTask);
+				if (completedTask == taskToAwait)
+				{
+					await taskToAwait;
+					return true;
+				}
+
+				Assertion.IfEnabled?.That(completedTask == timeoutDelayTask
+					, $"{nameof(completedTask)}: {completedTask}, {nameof(timeoutDelayTask)}: timeOutTask, {nameof(taskToAwait)}: taskToAwait");
+				// no need to cancel timeout timer if it has been triggered
+				timeoutDelayTask = null;
+				return false;
+			}
+			finally
+			{
+				if (timeoutDelayTask != null) timeoutDelayCts.Cancel();
+				timeoutDelayCts.Dispose();
+			}
 		}
 
 		private async Task ProcessQueueItems(object[] queueItems)
 		{
 			try
 			{
-				var metadataJson = _payloadItemSerializer.SerializeObject(_metadata);
 				var ndjson = new StringBuilder();
-				ndjson.AppendLine("{\"metadata\": " + metadataJson + "}");
+				if (_cachedMetadataJsonLine == null)
+					_cachedMetadataJsonLine = "{\"metadata\": " + _payloadItemSerializer.SerializeObject(_metadata) + "}";
+				ndjson.AppendLine(_cachedMetadataJsonLine);
 
 				foreach (var item in queueItems)
 				{
@@ -148,90 +225,61 @@ namespace Elastic.Apm.Report
 						case Error _:
 							ndjson.AppendLine("{\"error\": " + serialized + "}");
 							break;
-						case Metrics.MetricSet _:
+						case MetricSet _:
 							ndjson.AppendLine("{\"metricset\": " + serialized + "}");
 							break;
 					}
-					_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItemToSend}", item, serialized);
+					_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItem}", item, serialized);
 				}
 
 				var content = new StringContent(ndjson.ToString(), Encoding.UTF8, "application/x-ndjson");
 
-				var result = await _httpClient.PostAsync(Consts.IntakeV2Events, content);
+				var result = await HttpClientInstance.PostAsync(_intakeV2EventsAbsoluteUrl, content, CtsInstance.Token);
 
 				if (result != null && !result.IsSuccessStatusCode)
 				{
-					_logger?.Error()?.Log("Failed sending event. {ApmServerResponse}", await result.Content.ReadAsStringAsync());
+					_logger?.Error()
+						?.Log("Failed sending event."
+							+ " Events intake API absolute URL: {EventsIntakeAbsoluteUrl}."
+							+ " APM Server response: status code: {ApmServerResponseStatusCode}"
+							+ ", content: \n{ApmServerResponseContent}"
+							, _intakeV2EventsAbsoluteUrl, result.StatusCode, await result.Content.ReadAsStringAsync());
 				}
 				else
 				{
 					_logger?.Debug()
-						?.Log($"Sent items to server: {Environment.NewLine}{{items}}", string.Join($",{Environment.NewLine}", queueItems.ToArray()));
+						?.Log("Sent items to server:\n{SerializedItems}",
+							TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray())));
 				}
 			}
 			catch (Exception e)
 			{
 				_logger?.Warning()
 					?.LogException(
-						e, "Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):\n{items}",
-						_httpClient.BaseAddress,
-						string.Join($",{Environment.NewLine}", queueItems.ToArray()));
+						e,
+						"Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):\n{SerializedItems}"
+						, HttpClientInstance.BaseAddress
+						, TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray()))
+					);
 			}
 		}
-
-		public void Dispose() => _batchBlockReceiveAsyncCts?.Dispose();
 	}
 
 	internal class Metadata
 	{
+		[JsonConverter(typeof(LabelsJsonConverter))]
+		public Dictionary<string, string> Labels { get; set; } = new Dictionary<string, string>();
+
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global - used by Json.Net
 		public Service Service { get; set; }
 
 		public Api.System System { get; set; }
-	}
 
-	//Credit: https://stackoverflow.com/a/30726903/1783306
-	internal sealed class SingleThreadTaskScheduler : TaskScheduler
-	{
-		[ThreadStatic]
-		private static bool _isExecuting;
-
-		private readonly CancellationToken _cancellationToken;
-
-		private readonly BlockingCollection<Task> _taskQueue;
-
-		public SingleThreadTaskScheduler(CancellationToken cancellationToken)
-		{
-			_cancellationToken = cancellationToken;
-			_taskQueue = new BlockingCollection<Task>();
-			new Thread(RunOnCurrentThread) { Name = "ElasticApmPayloadSender", IsBackground = true }.Start();
-		}
-
-		private void RunOnCurrentThread()
-		{
-			_isExecuting = true;
-
-			try
-			{
-				foreach (var task in _taskQueue.GetConsumingEnumerable(_cancellationToken)) TryExecuteTask(task);
-			}
-			finally
-			{
-				_isExecuting = false;
-			}
-		}
-
-		protected override IEnumerable<Task> GetScheduledTasks() => null;
-
-		protected override void QueueTask(Task task) => _taskQueue.Add(task, _cancellationToken);
-
-		protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued)
-		{
-			// We'd need to remove the task from queue if it was already queued.
-			// That would be too hard.
-			if (taskWasPreviouslyQueued) return false;
-
-			return _isExecuting && TryExecuteTask(task);
-		}
+		/// <summary>
+		/// Method to conditionally serialize <see cref="Labels" /> - serialize only when there is at least one label.
+		/// See
+		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
+		/// </summary>
+		public bool ShouldSerializeLabels() => !Labels.IsEmpty();
 	}
 }

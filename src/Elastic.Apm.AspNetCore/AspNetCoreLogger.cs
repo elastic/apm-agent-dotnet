@@ -9,10 +9,8 @@ namespace Elastic.Apm.AspNetCore
 	{
 		private readonly ILogger _logger;
 
-		public AspNetCoreLogger(ILoggerFactory loggerFactory)
-		{
+		public AspNetCoreLogger(ILoggerFactory loggerFactory) =>
 			_logger = loggerFactory?.CreateLogger("Elastic.Apm") ?? throw new ArgumentNullException(nameof(loggerFactory));
-		}
 
 		public bool IsEnabled(LogLevel level) => _logger.IsEnabled(Convert(level));
 
@@ -29,6 +27,7 @@ namespace Elastic.Apm.AspNetCore
 				case LogLevel.Warning: return Microsoft.Extensions.Logging.LogLevel.Warning;
 				case LogLevel.Error: return Microsoft.Extensions.Logging.LogLevel.Error;
 				case LogLevel.Critical: return Microsoft.Extensions.Logging.LogLevel.Critical;
+				// ReSharper disable once RedundantCaseLabel
 				case LogLevel.None:
 				default: return Microsoft.Extensions.Logging.LogLevel.None;
 			}

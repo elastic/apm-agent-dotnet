@@ -12,35 +12,42 @@ namespace Elastic.Apm.Api
 {
 	internal class Tracer : ITracer
 	{
+		private readonly IConfigSnapshotProvider _configProvider;
 		private readonly ScopedLogger _logger;
 		private readonly IPayloadSender _sender;
-		private readonly IConfigurationReader _configurationReader;
 		private readonly Service _service;
 
-		public Tracer(IApmLogger logger, Service service, IPayloadSender payloadSender, IConfigurationReader configurationReader)
+		public Tracer(
+			IApmLogger logger,
+			Service service,
+			IPayloadSender payloadSender,
+			IConfigSnapshotProvider configProvider,
+			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer
+		)
 		{
 			_logger = logger?.Scoped(nameof(Tracer));
 			_service = service;
-			_sender = payloadSender;
-			_configurationReader = configurationReader;
-			Sampler = new Sampler(configurationReader.TransactionSampleRate);
+			_sender = payloadSender.ThrowIfArgumentNull(nameof(payloadSender));
+			_configProvider = configProvider.ThrowIfArgumentNull(nameof(configProvider));
+			CurrentExecutionSegmentsContainer = currentExecutionSegmentsContainer.ThrowIfArgumentNull(nameof(currentExecutionSegmentsContainer));
 		}
 
-		internal Sampler Sampler { get; set; }
+		internal ICurrentExecutionSegmentsContainer CurrentExecutionSegmentsContainer { get; }
 
-		public ITransaction CurrentTransaction => Agent.TransactionContainer.Transactions.Value;
+		public ISpan CurrentSpan => CurrentExecutionSegmentsContainer.CurrentSpan;
+
+		public ITransaction CurrentTransaction => CurrentExecutionSegmentsContainer.CurrentTransaction;
 
 		public ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null) =>
 			StartTransactionInternal(name, type, distributedTracingData);
 
 		internal Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null)
 		{
-			var retVal = new Transaction(_logger, name, type, Sampler, distributedTracingData, _sender, _configurationReader)
-			{
-				Service = _service
-			};
+			var currentConfig = _configProvider.CurrentSnapshot;
+			var retVal = new Transaction(_logger, name, type, new Sampler(currentConfig.TransactionSampleRate), distributedTracingData
+				, _sender, currentConfig, CurrentExecutionSegmentsContainer)
+			{ Service = _service };
 
-			Agent.TransactionContainer.Transactions.Value = retVal;
 			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);
 			return retVal;
 		}
@@ -134,7 +141,9 @@ namespace Elastic.Apm.Api
 			return task;
 		}
 
-		public Task<T> CaptureTransaction<T>(string name, string type, Func<ITransaction, Task<T>> func, DistributedTracingData distributedTracingData = null)
+		public Task<T> CaptureTransaction<T>(string name, string type, Func<ITransaction, Task<T>> func,
+			DistributedTracingData distributedTracingData = null
+		)
 		{
 			var transaction = StartTransaction(name, type, distributedTracingData);
 			var task = func(transaction);

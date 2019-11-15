@@ -33,7 +33,11 @@ public class Startup
 }
 ----
 
-With this you can use any configuration source that you configured on the `IConfiguration` instance that you passed to the APM Agent. You can find the key of each configuration below in the IConfiguration key column.
+NOTE: As explained in <<setup-asp-net-core>>, the `UseElasticApm` method only turns on ASP.NET Core monitoring. If you want to turn on everything (including HTTP and Database monitoring) you can use the `UseAllElasticApm` method from the `Elastic.Apm.NetCoreAll` package, which has the same overloads and behavior, except it turns on tracing for everything that is supported by the agent on .NET Core including database and HTTP tracing.
+
+With this you can use any configuration source that you configured on the `IConfiguration` instance that you passed to the APM Agent.
+You can find the key of each configuration option
+in the `IConfiguration or Web.config key` column of the corresponding option's description.
 
 NOTE: By simply calling `app.UseElasticApm()` without the overload, the agent will read configurations only from environment variables.
 
@@ -44,7 +48,7 @@ NOTE: By simply calling `app.UseElasticApm()` without the overload, the agent wi
 Below is a sample `appsettings.json` configuration file for a typical ASP.NET Core application. There are two important takeaways:
 
 1. The part below `ElasticApm` is fetched by the agent if the corresponding `IConfiguration` is passed to the agent.
-2. With ASP.NET Core, you must set `LogLevel for the internal APM logger in the standard `Logging` section with the `ElasticApm` category name.
+2. With ASP.NET Core, you must set `LogLevel` for the internal APM logger in the standard `Logging` section with the `ElasticApm` category name.
 
 [source,js]
 ----
@@ -85,6 +89,41 @@ In this case, you can set the log level of the agent with `ElasticApm:LogLevel`,
 }
 ----
 
+[[configuration-on-asp-net]]
+=== Configuration on ASP.NET
+
+When monitoring ASP.NET applications the agent uses two source of configuration:
+Web.config and environment variables.
+Web.config has precedence over environment variables which means that
+the agent first tries to find a configuration option value by its key in Web.config.
+Only if it's not present then the agent tries to look for it among environment variables
+and if it's not present there as well the agent falls back on the option's default value.
+
+You can find the key of each configuration option
+in the `IConfiguration or Web.config key` column of the corresponding option's description.
+
+[float]
+[[asp-net-sample-config]]
+==== Sample configuration file
+
+Below is a sample `Web.config` configuration file for a ASP.NET application.
+
+[source,xml]
+----
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ... -->
+<configuration>
+    <!-- ... -->
+    <appSettings>
+        <!-- ... -->
+        <add key="ElasticApm:ServerUrls" value="https://my-apm-server:8200" />
+        <!-- ... -->
+    </appSettings>
+    <!-- ... -->
+</configuration>
+----
+
+
 [[config-core]]
 === Core configuration options
 
@@ -95,11 +134,11 @@ In this case, you can set the log level of the agent with `ElasticApm:LogLevel`,
 This is used to keep all the errors and transactions of your service together
 and is the primary filter in the Elastic APM user interface.
 
-NOTE: The service name must conform to this regular expression: ^[a-zA-Z0-9 _-]+$. In less regexy terms: Your service name must only contain characters from the ASCII alphabet, numbers, dashes, underscores and spaces. Characters in service name which don't match regular expression will be replaced by `__` symbol.
+NOTE: The service name must conform to this regular expression: `^[a-zA-Z0-9 _-]+$`. In less regexy terms: Your service name must only contain characters from the ASCII alphabet, numbers, dashes, underscores and spaces. Characters in service name which don't match regular expression will be replaced by `_` symbol.
 
 [options="header"]
 |============
-| Environment variable name      | IConfiguration key 
+| Environment variable name      | IConfiguration or Web.config key 
 | `ELASTIC_APM_SERVICE_NAME` | `ElasticApm:ServiceName`
 |============
 
@@ -108,6 +147,53 @@ NOTE: The service name must conform to this regular expression: ^[a-zA-Z0-9 _-]+
 | Default                          | Type
 | Name of the entry assembly       | String 
 |============
+
+[float]
+[[config-service-version]]
+==== `ServiceVersion`
+
+A version string for the currently deployed version of the service. If you don’t
+version your deployments, the recommended value for this field is the commit identifier
+of the deployed revision, e.g. the output of git rev-parse HEAD.
+
+[options="header"]
+|============
+| Environment variable name      | IConfiguration or Web.config key 
+| `ELASTIC_APM_SERVICE_VERSION` | `ElasticApm:ServiceVersion`
+|============
+
+[options="header"]
+|============
+| Default                                        | Type
+| Informational version of the entry assembly    | String 
+|============
+
+[float]
+[[config-environment]]
+==== `Environment` (added[1.1])
+
+The name of the environment this service is deployed in, e.g. "production" or "staging".
+
+Environments allow you to easily filter data on a global level in the APM app.
+It's important to be consistent when naming environments across agents.
+See {apm-app-ref}/filters.html#environment-selector[environment selector] in the Kibana UI for more information.
+
+NOTE: This feature is fully supported in the APM app in Kibana versions >= 7.2.
+You must use the query bar to filter for a specific environment in versions prior to 7.2.
+
+[options="header"]
+|============
+| Environment variable name      | IConfiguration or Web.config key 
+| `ELASTIC_APM_ENVIRONMENT`      | `ElasticApm:Environment`
+|============
+
+[options="header"]
+|============
+| Default        | Type
+| See note below | String 
+|============
+
+NOTE: On ASP.NET Core application the agent uses https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.hosting.ihostingenvironment.environmentname?view=aspnetcore-2.2#Microsoft_AspNetCore_Hosting_IHostingEnvironment_EnvironmentName[EnvironmentName from IHostingEnvironment] as default environment name.
 
 [float]
 [[config-transaction-sample-rate]]
@@ -123,7 +209,7 @@ It also expects that a period (`.`) is used to separate the integer and the frac
 
 [options="header"]
 |============
-| Environment variable name             | IConfiguration key 
+| Environment variable name             | IConfiguration or Web.config key 
 | `ELASTIC_APM_TRANSACTION_SAMPLE_RATE` | `ElasticApm:TransactionSampleRate`
 |============
 
@@ -133,8 +219,125 @@ It also expects that a period (`.`) is used to separate the integer and the frac
 | 1.0     | Double 
 |============
 
+[float]
+[[config-transaction-max-spans]]
+==== `TransactionMaxSpans` (performance) (added[1.1.1])
+
+Limits the amount of spans that are recorded per transaction.
+This is helpful in cases where a transaction creates a very high amount of spans,
+for example, thousands of SQL queries.
+Setting an upper limit helps prevent overloading the Agent and APM server in these edge cases.
+
+NOTE: A value of `0` means that spans will never be collected.
+Setting `-1` means that spans will never be dropped.
+The Agent will revert to the default value if the value is set below `-1`.
+
+[options="header"]
+|============
+| Environment variable name           | IConfiguration key 
+| `ELASTIC_APM_TRANSACTION_MAX_SPANS` | `ElasticApm:TransactionMaxSpans`
+|============
+
+[options="header"]
+|============
+| Default | Type
+| `500`     | Integer 
+|============
+
+[float]
+[[config-central-config]]
+==== `CentralConfig` (added[1.1])
+
+If set to `true`, the agent makes periodic requests to the APM Server to fetch the latest {apm-app-ref}/agent-configuration.html[APM Agent configuration].
+
+[options="header"]
+|============
+| Environment variable name    | IConfiguration key 
+| `ELASTIC_APM_CENTRAL_CONFIG` | `ElasticApm:CentralConfig`
+|============
+
+[options="header"]
+|============
+| Default | Type
+| true    | Boolean 
+|============
+
+[float]
+[[config-sanitize-field-names]]
+==== `SanitizeFieldNames` (added[1.2])
+
+Sometimes it is necessary to sanitize, i.e., remove, sensitive data sent to Elastic APM.
+This config accepts a list of wildcard patterns of field names which should be sanitized.
+These apply for example to HTTP headers and `application/x-www-form-urlencoded` data.
+
+The wildcard, `*`, matches zero or more characters, and matching is case insensitive by default.
+Prepending an element with `(?-i)` makes the matching case sensitive.
+Examples: `/foo/*/bar/*/baz*`, `*foo*`.
+
+You should review the data captured by Elastic APM carefully to make sure it does not contain sensitive information.
+If you do find sensitive data in your Elasticsearch index,
+you should add an additional entry to this list.
+Make sure to include the default entries as well, as setting a value here will overwrite the defaults. 
+
+NOTE: Data in the query string is considered non-sensitive,
+as sensitive information should not be sent in the query string.
+See https://www.owasp.org/index.php/Information_exposure_through_query_strings_in_url[owasp.org] for more information.
+
+[options="header"]
+|============
+| Environment variable name    | IConfiguration key 
+| `ELASTIC_APM_SANITIZE_FIELD_NAMES` | `ElasticApm:SanitizeFieldNames`
+|============
+
+[options="header"]
+|============
+| Default | Type
+| `password, passwd, pwd, secret, *key, *token*, *session*, *credit*, *card*, authorization, set-cookie` | List<string> 
+|============
+
+[float]
+[[config-global-labels]]
+==== `GlobalLabels` (added[1.2])
+
+Labels added to all events, with the format `key=value[,key=value[,...]]`.
+Any labels set by the application via the agent's public API will override global labels with the same keys.
+
+[options="header"]
+|============
+| Environment variable name    | IConfiguration key
+| `ELASTIC_APM_GLOBAL_LABELS` | `ElasticApm:GlobalLabels`
+|============
+
+[options="header"]
+|============
+| Default     | Type
+| <empty map> | Map of string to string
+|============
+
+NOTE: This option requires APM Server 7.2 or later. It will have no effect on older versions.
+
 [[config-reporter]]
 === Reporter configuration options
+
+[float]
+[[config-server-urls]]
+==== `ServerUrls`
+
+[options="header"]
+|============
+| Environment variable name | IConfiguration or Web.config key
+| `ELASTIC_APM_SERVER_URLS` | `ElasticApm:ServerUrls`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `http://localhost:8200` | String
+|============
+
+The URL for your APM Server. The URL must be fully qualified, including protocol (`http` or `https`) and port.
+
+NOTE: Providing multiple URLs is not supported by the agent yet. If multiple URLs are provided only the first one will be used.
 
 [float]
 [[config-secret-token]]
@@ -142,7 +345,7 @@ It also expects that a period (`.`) is used to separate the integer and the frac
 
 [options="header"]
 |============
-| Environment variable name | IConfiguration key
+| Environment variable name | IConfiguration or Web.config key
 | `ELASTIC_APM_SECRET_TOKEN` | `ElasticApm:SecretToken`
 |============
 
@@ -158,44 +361,85 @@ Both the agents and the APM server have to be configured with the same secret to
 Use this setting in case the APM Server requires a token (e.g. APM Server in Elastic Cloud).
 
 [float]
-[[config-server-urls]]
-==== `ServerUrls`
+[[config-flush-interval]]
+==== `FlushInterval` (added[1.1])
 
 [options="header"]
 |============
-| Environment variable name | IConfiguration key
-| `ELASTIC_APM_SERVER_URLS` | `ElasticApm:ServerUrls`
+| Environment variable name | IConfiguration or Web.config key
+| `ELASTIC_APM_FLUSH_INTERVAL` | `ElasticApm:FlushInterval`
 |============
 
 [options="header"]
 |============
 | Default                 | Type
-| `http://localhost:8200` | String
+| `10s`                   | TimeDuration
 |============
 
-The URL for your APM Server. The URL must be fully qualified, including protocol (`http` or `https`) and port.
+The maximal amount of time events are held in the queue until there is enough to send a batch.
+It's possible for a batch to contain less than <<config-max-batch-event-count,`MaxBatchEventCount`>> events
+if there are events that need to be sent out because they were held for too long.
+A lower value will increase the load on your APM server,
+while a higher value can increase the memory pressure on your app.
+A higher value also impacts the time until transactions are indexed and searchable in Elasticsearch.
 
-NOTE: Providing multiple URLs is not supported by the agent yet. If multiple URLs are provided only the first one will be used.
+Supports the duration suffixes `ms`, `s` and `m`.
+Example: `30s`.
+The default unit for this option is `s`.
+
+If `FlushInterval` is set to `0` (or `0s`, `0ms`, etc.) and
+there's no event sending operation still in progress 
+then the Agent won't hold events in the queue and instead will send them immediately.
+
+Setting `FlushInterval` to a negative value (for example `-1`, `-54s`, `-89ms`, etc.) is invalid and
+in that case agent uses the default value instead.    
 
 [float]
-[[config-log-level]]
-==== `LogLevel`
+[[config-max-batch-event-count]]
+==== `MaxBatchEventCount` (added[1.1])
 
 [options="header"]
 |============
-| Environment variable name | IConfiguration key
-| `ELASTIC_APM_LOG_LEVEL`   | `ElasticApm:LogLevel`
+| Environment variable name | IConfiguration or Web.config key
+| `ELASTIC_APM_MAX_BATCH_EVENT_COUNT` | `ElasticApm:MaxBatchEventCount`
 |============
 
 [options="header"]
 |============
 | Default                 | Type
-| `Error`                 | String
+| 10                      | Integer
 |============
 
-Sets the logging level for the agent.
+The maximal number of events to send in a batch.
+It's possible for a batch to contain less then the maximum events
+if there are events that need to be sent out because they were held for too long
+ (see <<config-flush-interval,`FlushInterval`>>).
 
-Valid options: `Error`, `Warning`, `Info`, `Debug`.
+Setting `MaxBatchEventCount` to 0 or a negative value is invalid and
+in that case the Agent will use the default value instead.  
+
+[float]
+[[config-max-queue-event-count]]
+==== `MaxQueueEventCount` (added[1.1])
+
+[options="header"]
+|============
+| Environment variable name | IConfiguration or Web.config key
+| `ELASTIC_APM_MAX_QUEUE_EVENT_COUNT` | `ElasticApm:MaxQueueEventCount`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| 1000                    | Integer
+|============
+
+The maximal number of events to hold in the queue as candidates to be sent.
+If the queue is at its maximum capacity then the agent discards the new events
+until the queue has free space.
+
+Setting `MaxQueueEventCount` to 0 or a negative value is invalid and
+in that case the Agent will use the default value instead.
 
 [float]
 [[config-metrics-interval]]
@@ -218,7 +462,7 @@ The default unit for this option is `s`.
 
 [options="header"]
 |============
-| Environment variable name      | IConfiguration key 
+| Environment variable name      | IConfiguration or Web.config key 
 | `ELASTIC_APM_METRICS_INTERVAL` | `ElasticApm:MetricsInterval`
 |============
 
@@ -226,12 +470,65 @@ The default unit for this option is `s`.
 === HTTP configuration options
 
 [float]
+[[config-capture-body]]
+==== `CaptureBody` (performance) (added[1.0.1])
+
+For transactions that are HTTP requests, the agent can optionally capture the request body, e.g., POST variables.
+If the request has a body and this setting is disabled, the body will be shown as [REDACTED].
+This option is case-insensitive.
+
+WARNING: Request bodies often contain sensitive values like passwords, credit card numbers, etc.
+If your service handles data like this, we advise to only enable this feature with care.
+Turning on body capturing can also significantly increase the overhead in terms of heap usage, network utilization, and Elasticsearch index size.
+
+Possible options are `off`, `errors`, `transactions` and `all`:
+
+* `off` - request bodies will never be reported
+* `errors` - request bodies will only be reported with errors
+* `transactions` - request bodies will only be reported with request transactions
+* `all` - request bodies will be reported with both errors and request transactions
+
+[options="header"]
+|============
+| Environment variable name     | IConfiguration or Web.config key
+| `ELASTIC_APM_CAPTURE_BODY` | `ElasticApm:CaptureBody`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `off`                  | String
+|============
+
+[float]
+[[config-capture-body-content-types]]
+==== `CaptureBodyContentTypes` (performance) (added[1.0.1])
+
+Configures which content types should be captured.
+
+This option supports the wildcard `*`, which matches zero or more characters.
+Examples: `/foo/*/bar/*/baz*`, `*foo*`.
+Matching is case insensitive.
+
+[options="header"]
+|============
+| Environment variable name     | IConfiguration or Web.config key
+| `ELASTIC_APM_CAPTURE_BODY_CONTENT_TYPES` | `ElasticApm:CaptureBodyContentTypes`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `application/x-www-form-urlencoded*, text/*, application/json*, application/xml*`                  | List<string>
+|============
+
+[float]
 [[config-capture-headers]]
 ==== `CaptureHeaders` (performance)
 
 [options="header"]
 |============
-| Environment variable name     | IConfiguration key
+| Environment variable name     | IConfiguration or Web.config key
 | `ELASTIC_APM_CAPTURE_HEADERS` | `ElasticApm:CaptureHeaders`
 |============
 
@@ -262,7 +559,7 @@ Setting it to 0 will disable stack trace collection. Any positive integer value 
 
 [options="header"]
 |============
-| Environment variable name     | IConfiguration key
+| Environment variable name     | IConfiguration or Web.config key
 | `ELASTIC_APM_STACK_TRACE_LIMIT` | `ElasticApm:StackTraceLimit`
 |============
 
@@ -293,6 +590,30 @@ The default unit for this option is `ms`
 
 [options="header"]
 |============
-| Environment variable name     | IConfiguration key
+| Environment variable name     | IConfiguration or Web.config key
 | `ELASTIC_APM_SPAN_FRAMES_MIN_DURATION` | `ElasticApm:SpanFramesMinDuration`
 |============
+
+
+[[config-supportability]]
+=== Supportability configuration options
+
+[float]
+[[config-log-level]]
+==== `LogLevel`
+
+[options="header"]
+|============
+| Environment variable name | IConfiguration or Web.config key
+| `ELASTIC_APM_LOG_LEVEL`   | `ElasticApm:LogLevel`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `Error`                 | String
+|============
+
+Sets the logging level for the agent.
+
+Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `None` (`None` disables the logging).

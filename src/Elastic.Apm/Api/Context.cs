@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
@@ -7,7 +7,18 @@ namespace Elastic.Apm.Api
 {
 	public class Context
 	{
+		private readonly Lazy<Dictionary<string, string>> _custom = new Lazy<Dictionary<string, string>>();
 		private readonly Lazy<Dictionary<string, string>> _labels = new Lazy<Dictionary<string, string>>();
+
+		[JsonConverter(typeof(CustomJsonConverter))]
+		public Dictionary<string, string> Custom => _custom.Value;
+
+		/// <summary>
+		/// <seealso cref="ShouldSerializeLabels" />
+		/// </summary>
+		[JsonProperty("tags")]
+		[JsonConverter(typeof(LabelsJsonConverter))]
+		public Dictionary<string, string> Labels => _labels.Value;
 
 		/// <summary>
 		/// If a log record was generated as a result of a http request, the http interface can be used to collect this
@@ -26,12 +37,7 @@ namespace Elastic.Apm.Api
 		/// </summary>
 		public Response Response { get; set; }
 
-		/// <summary>
-		/// <seealso cref="ShouldSerializeLabels" />
-		/// </summary>
-		[JsonProperty("tags")]
-		[JsonConverter(typeof(LabelsJsonConverter))]
-		public Dictionary<string, string> Labels => _labels.Value;
+		public User User { get; set; }
 
 		/// <summary>
 		/// Method to conditionally serialize <see cref="Labels" /> - serialize only when there is at least one label.
@@ -40,6 +46,6 @@ namespace Elastic.Apm.Api
 		/// </summary>
 		public bool ShouldSerializeLabels() => _labels.IsValueCreated && Labels.Count > 0;
 
-		public User User { get; set; }
+		public bool ShouldSerializeCustom() => _custom.IsValueCreated && Custom.Count > 0;
 	}
 }

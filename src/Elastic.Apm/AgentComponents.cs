@@ -1,6 +1,6 @@
 ﻿using System;
-using System.IO;
 using Elastic.Apm.Api;
+using Elastic.Apm.BackendComm;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -15,39 +15,49 @@ namespace Elastic.Apm
 			IApmLogger logger = null,
 			IConfigurationReader configurationReader = null,
 			IPayloadSender payloadSender = null
+		) : this(logger, configurationReader, payloadSender, null, null, null) { }
+
+		internal AgentComponents(
+			IApmLogger logger,
+			IConfigurationReader configurationReader,
+			IPayloadSender payloadSender,
+			IMetricsCollector metricsCollector,
+			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
+			ICentralConfigFetcher centralConfigFetcher
 		)
 		{
-			Logger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
-			ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(Logger);
+			var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
+			ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(tempLogger);
+			Logger = logger ?? ConsoleLogger.LoggerOrDefault(ConfigurationReader.LogLevel);
 			Service = Service.GetDefaultService(ConfigurationReader, Logger);
 
 			var systemInfoHelper = new SystemInfoHelper(Logger);
-			var system = systemInfoHelper.ReadContainerId(Logger);
+			var system = systemInfoHelper.ParseSystemInfo();
 
-			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigurationReader, Service, system);
+			ConfigStore = new ConfigStore(new ConfigSnapshotFromReader(ConfigurationReader, "local"), Logger);
 
-			MetricsCollector = new MetricsCollector(Logger, PayloadSender, ConfigurationReader);
+			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigStore.CurrentSnapshot, Service, system);
+
+			MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigurationReader);
 			MetricsCollector.StartCollecting();
 
-			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigurationReader);
-			TransactionContainer = new TransactionContainer();
+			CentralConfigFetcher = centralConfigFetcher ?? new CentralConfigFetcher(Logger, ConfigStore, Service);
+
+			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigStore,
+				currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(Logger));
 		}
 
-		internal AgentComponents(
-			IMetricsCollector metricsCollector,
-			IApmLogger logger = null,
-			IConfigurationReader configurationReader = null,
-			IPayloadSender payloadSender = null
-		) : this(logger, configurationReader, payloadSender)
-			=> (MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigurationReader)).StartCollecting();
+		internal ICentralConfigFetcher CentralConfigFetcher { get; }
+
+		internal IConfigStore ConfigStore { get; }
 
 		public IConfigurationReader ConfigurationReader { get; }
 
 		public IApmLogger Logger { get; }
 
-		public IPayloadSender PayloadSender { get; }
-
 		private IMetricsCollector MetricsCollector { get; }
+
+		public IPayloadSender PayloadSender { get; }
 
 		/// <summary>
 		/// Identifies the monitored service. If this remains unset the agent
@@ -58,21 +68,15 @@ namespace Elastic.Apm
 
 		public ITracer Tracer => TracerInternal;
 
-		private Tracer TracerInternal { get; }
-
-		internal TransactionContainer TransactionContainer { get; }
+		internal Tracer TracerInternal { get; }
 
 		public void Dispose()
 		{
-			if (MetricsCollector is IDisposable disposableMetricsCollector)
-			{
-				disposableMetricsCollector.Dispose();
-			}
+			if (MetricsCollector is IDisposable disposableMetricsCollector) disposableMetricsCollector.Dispose();
 
-			if (PayloadSender is IDisposable disposablePayloadSender)
-			{
-				disposablePayloadSender.Dispose();
-			}
+			if (PayloadSender is IDisposable disposablePayloadSender) disposablePayloadSender.Dispose();
+
+			CentralConfigFetcher.Dispose();
 		}
 	}
 }

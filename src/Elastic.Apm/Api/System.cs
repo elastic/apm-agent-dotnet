@@ -1,4 +1,6 @@
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Report.Serialization;
+using Newtonsoft.Json;
 
 namespace Elastic.Apm.Api
 {
@@ -6,6 +8,15 @@ namespace Elastic.Apm.Api
 	{
 		public Container Container { get; set; }
 
-		public override string ToString() => new ToStringBuilder(nameof(System)) { { "Container", Container } }.ToString();
+		[JsonProperty("detected_hostname")]
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		public string DetectedHostName { get; set; }
+
+		[JsonProperty("hostname")]
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		public string HostName => DetectedHostName;
+
+		public override string ToString() =>
+			new ToStringBuilder(nameof(System)) { { nameof(Container), Container }, { nameof(DetectedHostName), DetectedHostName } }.ToString();
 	}
 }

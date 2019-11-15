@@ -18,18 +18,20 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
-	public class MetricsTests
+	public class MetricsTests : LoggingTestBase
 	{
-		private readonly ITestOutputHelper _testOutputHelper;
+		private const string ThisClassName = nameof(MetricsTests);
 
-		public MetricsTests(ITestOutputHelper testOutputHelper) => _testOutputHelper = testOutputHelper;
+		private readonly IApmLogger _logger;
+
+		public MetricsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = LoggerBase.Scoped(ThisClassName);
 
 		[Fact]
 		public void CollectAllMetrics()
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var testLogger = new TestLogger();
-			var mc = new MetricsCollector(testLogger, mockPayloadSender, new TestAgentConfigurationReader(testLogger));
+			var mc = new MetricsCollector(testLogger, mockPayloadSender, new MockConfigSnapshot(testLogger));
 
 			mc.CollectAllMetrics();
 
@@ -46,8 +48,8 @@ namespace Elastic.Apm.Tests
 			var retVal = systemTotalCpuProvider.GetSamples();
 			var metricSamples = retVal as MetricSample[] ?? retVal.ToArray();
 
-			metricSamples.First().KeyValue.Value.Should().BeGreaterThan(0);
-			metricSamples.First().KeyValue.Value.Should().BeLessThan(1);
+			metricSamples.First().KeyValue.Value.Should().BeGreaterOrEqualTo(0);
+			metricSamples.First().KeyValue.Value.Should().BeLessOrEqualTo(1);
 		}
 
 		[Fact]
@@ -75,7 +77,7 @@ namespace Elastic.Apm.Tests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var testLogger = new TestLogger(LogLevel.Information);
-			var mc = new MetricsCollector(testLogger, mockPayloadSender, new TestAgentConfigurationReader(testLogger, "Information"));
+			var mc = new MetricsCollector(testLogger, mockPayloadSender, new MockConfigSnapshot(testLogger, "Information"));
 
 			mc.MetricsProviders.Clear();
 			var providerWithException = new MetricsProviderWithException();
@@ -85,12 +87,12 @@ namespace Elastic.Apm.Tests
 
 			providerWithException.NumberOfGetValueCalls.Should().Be(MetricsCollector.MaxTryWithoutSuccess);
 
-			// *2 because exceptions are logged in a new line, + 2 because 1) printing the metricsinterval and 2) printing that the given metrics
-			// wont be collected anymore:
-			testLogger.Lines.Count.Should().Be(MetricsCollector.MaxTryWithoutSuccess * 2 + 2);
+			testLogger.Lines.Count(line => line.Contains(MetricsProviderWithException.ExceptionMessage))
+				.Should()
+				.Be(MetricsCollector.MaxTryWithoutSuccess);
 
 			testLogger.Lines[1].Should().Contain($"Failed reading {providerWithException.DbgName} 1 times");
-			testLogger.Lines.Last()
+			testLogger.Lines.Last(line => line.Contains("Failed reading"))
 				.Should()
 				.Contain(
 					$"Failed reading {providerWithException.DbgName} {MetricsCollector.MaxTryWithoutSuccess} consecutively - the agent won't try reading {providerWithException.DbgName} anymore");
@@ -98,17 +100,30 @@ namespace Elastic.Apm.Tests
 			//make sure GetValue() in MetricsProviderWithException is not called anymore:
 			for (var i = 0; i < 10; i++) mc.CollectAllMetrics();
 
-			//no more logs, no more call to GetValue():
+			var logLineBeforeStage2 = testLogger.Lines.Count;
+			//no more logs, no more calls to GetValue():
 			providerWithException.NumberOfGetValueCalls.Should().Be(MetricsCollector.MaxTryWithoutSuccess);
-			testLogger.Lines.Count.Should().Be(MetricsCollector.MaxTryWithoutSuccess * 2 + 2);
+			testLogger.Lines.Count.Should().Be(logLineBeforeStage2);
 		}
 
 		[Fact]
 		public async Task MetricsWithRealAgent()
 		{
-			var logger = new XunitOutputLogger(_testOutputHelper);
+			// Note: If XunitOutputLogger is used with MetricsCollector it might cause issues because
+			// MetricsCollector's Dispose is currently broken - it doesn't guarantee that MetricsCollector's behaves correctly (i.e., ignores)
+			// timer callbacks after Dispose completed.
+			// This bug in turn causes MetricsCollector to possibly use XunitOutputLogger even after the current test has exited
+			// and ITestOutputHelper on which XunitOutputLogger is based became invalid.
+			//
+			// After https://github.com/elastic/apm-agent-dotnet/issues/494 is fixed the line below can be uncommented.
+			//
+			// var logger = _logger;
+			//
+			var logger = new NoopLogger();
+			//
+
 			var payloadSender = new MockPayloadSender();
-			var configReader = new TestAgentConfigurationReader(logger, metricsInterval: "1s", logLevel: "Debug");
+			var configReader = new MockConfigSnapshot(logger, metricsInterval: "1s", logLevel: "Debug");
 			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender, logger: logger, configurationReader: configReader)))
 			{
 				await Task.Delay(10000); //make sure we wait enough to collect 1 set of metrics
@@ -135,6 +150,7 @@ namespace Elastic.Apm.Tests
 
 		private class MetricsProviderWithException : IMetricsProvider
 		{
+			public const string ExceptionMessage = "testException";
 			public int ConsecutiveNumberOfFailedReads { get; set; }
 			public string DbgName => "test metric";
 
@@ -143,14 +159,15 @@ namespace Elastic.Apm.Tests
 			public IEnumerable<MetricSample> GetSamples()
 			{
 				NumberOfGetValueCalls++;
-				throw new Exception("testException");
+				throw new Exception(ExceptionMessage);
 			}
 		}
 
 		private class TestSystemTotalCpuProvider : SystemTotalCpuProvider
 		{
 			public TestSystemTotalCpuProvider(string procStatContent) : base(new NoopLogger(),
-				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent)))) { }
+				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent))))
+			{ }
 		}
 	}
 }

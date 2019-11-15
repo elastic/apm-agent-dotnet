@@ -1,20 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
-    <TargetFramework>netstandard2.0</TargetFramework>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
+  <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
     <RootNamespace>Elastic.Apm</RootNamespace>
     <AssemblyName>Elastic.Apm</AssemblyName>
-    <AssemblyVersion>1.0.0</AssemblyVersion>
-    <InformationalVersion>1.0.0-beta1</InformationalVersion>
-    <FileVersion>1.0.0</FileVersion>
+    <AssemblyVersion>1.1.2</AssemblyVersion>
+    <InformationalVersion>1.1.2</InformationalVersion>
+    <FileVersion>1.1.2</FileVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
-    <PackageVersion>1.0.0-beta1</PackageVersion>
+    <PackageVersion>1.1.2</PackageVersion>
     <Authors>Elastic and contributors</Authors>
     <PackageId>Elastic.Apm</PackageId>
     <copyright>2019 Elasticsearch BV</copyright>

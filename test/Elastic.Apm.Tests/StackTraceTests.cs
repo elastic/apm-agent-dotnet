@@ -271,9 +271,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					new TestAgentConfigurationReader(new NoopLogger()), payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
 					=>
@@ -283,17 +281,34 @@ namespace Elastic.Apm.Tests
 			}
 
 			payloadSender.FirstSpan.Should().NotBeNull();
-			payloadSender.FirstSpan.StackTrace.Should().BeNullOrEmpty();
+
+			if (payloadSender.FirstSpan.Duration < ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds)
+				payloadSender.FirstSpan.StackTrace.Should().BeNullOrEmpty();
+			else
+				payloadSender.FirstSpan.StackTrace.Should().NotBeNullOrEmpty();
 		}
+
+		/// <summary>
+		/// Makes sure the stacktrace is not captured when the span is shorter than spanFramesMinDuration.
+		/// In https://github.com/elastic/apm-agent-dotnet/pull/451 we found that with the
+		/// default spanFramesMinDuration (currently 5)
+		/// the test became in CI flaky - sometimes the spans in CI are shorter than 5 ms, sometimes not.
+		/// To avoid this in this test we set spanFramesMinDuration to 10000 and execute a span with empty method body.
+		/// </summary>
+		[Fact]
+		public void StackTraceLimit2SpanFramesMinDuration1000NoSleepInSpan() =>
+			AssertWithAgent("2", "1000", payloadSender =>
+			{
+				payloadSender.FirstSpan.Should().NotBeNull();
+				payloadSender.FirstSpan.StackTrace.Should().BeNullOrEmpty();
+			});
 
 		[Fact]
 		public void DefaultStackTraceLimitAndSpanFramesMinDuration_LongSpan()
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					new TestAgentConfigurationReader(new NoopLogger()), payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
 				agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
 					=>
@@ -315,9 +330,7 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					new TestAgentConfigurationReader(new NoopLogger()), payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
 				Assert.Throws<Exception>(() =>
 				{
@@ -350,9 +363,8 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: "2"), payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(stackTraceLimit: "2"),
+				payloadSender: payloadSender)))
 			{
 				Assert.Throws<Exception>(() =>
 				{
@@ -379,10 +391,9 @@ namespace Elastic.Apm.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: "2", spanFramesMinDurationInMilliseconds: "-2"),
-					payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(
+				config: new MockConfigSnapshot(stackTraceLimit: "2", spanFramesMinDurationInMilliseconds: "-2"),
+				payloadSender: payloadSender)))
 			{
 				Assert.Throws<Exception>(() =>
 				{
@@ -406,9 +417,9 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new MockPayloadSender();
 
 			using (var agent =
-				new ApmAgent(new TestAgentComponents(
-					new TestAgentConfigurationReader(new NoopLogger(), stackTraceLimit: stackTraceLimit,
-						spanFramesMinDurationInMilliseconds: spanFramesMinDuration), payloadSender)))
+				new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+					config: new MockConfigSnapshot(new NoopLogger(), stackTraceLimit: stackTraceLimit,
+						spanFramesMinDurationInMilliseconds: spanFramesMinDuration))))
 			{
 				agent.Tracer.CaptureTransaction("TestTransaction", "Test", t
 					=>

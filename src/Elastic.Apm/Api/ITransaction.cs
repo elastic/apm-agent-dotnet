@@ -1,7 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace Elastic.Apm.Api
 {
@@ -12,6 +9,16 @@ namespace Elastic.Apm.Api
 		/// This field is lazily initialized, you don't have to assign a value to it and you don't have to null check it either.
 		/// </summary>
 		Context Context { get; }
+
+		/// <summary>
+		/// An arbitrary mapping of additional metadata to store with the event.
+		/// Custom is used to add non-indexed, custom contextual information to transactions. Non-indexed means the data is
+		/// not searchable or aggregatable in Elasticsearch, and you cannot build dashboards on top of the data. However,
+		/// non-indexed information is useful for other reasons, like providing contextual information to help you quickly debug
+		/// performance issues or errors.
+		/// Unlike <see cref="IExecutionSegment.Labels"/> the data in this property is not trimmed.
+		/// </summary>
+		Dictionary<string, string> Custom { get; }
 
 		/// <summary>
 		/// A string describing the result of the transaction.

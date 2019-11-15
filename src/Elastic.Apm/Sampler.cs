@@ -12,10 +12,8 @@ namespace Elastic.Apm
 	/// This implementation samples based on a sampling probability (AKA sampling rate) between 0.0 and 1.0.
 	/// A sampling rate of 0.5 means that 50% of all transactions should be sampled.
 	/// </summary>
-	internal class Sampler
+	internal readonly struct Sampler
 	{
-		private readonly bool _constantValue;
-		private readonly bool _isConstant;
 		private readonly ulong _maxSampledUInt64;
 		private readonly double _rate;
 
@@ -33,23 +31,21 @@ namespace Elastic.Apm
 			switch (_rate)
 			{
 				case 0:
-					_isConstant = true;
-					_constantValue = false;
+					Constant = false;
 					_maxSampledUInt64 = 0;
 					break;
 				case 1:
-					_isConstant = true;
-					_constantValue = true;
+					Constant = true;
 					_maxSampledUInt64 = ulong.MaxValue;
 					break;
 				default:
 					_maxSampledUInt64 = Convert.ToUInt64(ulong.MaxValue * rate);
-					_isConstant = false;
+					Constant = null;
 					break;
 			}
 		}
 
-		internal bool? Constant => _isConstant ? _constantValue : default(bool?);
+		internal bool? Constant { get; }
 
 		/// <summary>
 		/// Decides if to sample or not based on the given randomBytes.
@@ -60,12 +56,7 @@ namespace Elastic.Apm
 		/// than 8.
 		/// </exception>
 		/// <returns>True if and only if the decision is to sample</returns>
-		internal bool DecideIfToSample(byte[] randomBytes)
-		{
-			if (_isConstant) return _constantValue;
-
-			return BitConverter.ToUInt64(randomBytes, 0) <= _maxSampledUInt64;
-		}
+		internal bool DecideIfToSample(byte[] randomBytes) => Constant ?? BitConverter.ToUInt64(randomBytes, 0) <= _maxSampledUInt64;
 
 		internal static bool IsValidRate(double rate) => 0 <= rate && rate <= 1.0;
 
@@ -74,14 +65,10 @@ namespace Elastic.Apm
 			var retVal = new StringBuilder();
 			retVal.Append(nameof(Sampler));
 			retVal.Append("{ ");
-			if (_isConstant)
-			{
-				retVal.Append($"constant: {_constantValue}");
-			}
+			if (Constant.HasValue)
+				retVal.Append($"constant: {Constant}");
 			else
-			{
 				retVal.Append($"rate: {_rate}");
-			}
 			retVal.Append(" }");
 			return retVal.ToString();
 		}

@@ -11,14 +11,15 @@
 <br/>
 
 <p>Result of the HttpClient call: </p>
-<p>Number of stargazers of the <a href="https://github.com/elastic/apm-agent-dotnet" target="_blank">APM .NET Agent repo</a> on GitHub: 
+<p>
+	Number of stargazers of the <a href="https://github.com/elastic/apm-agent-dotnet" target="_blank">APM .NET Agent repo</a> on GitHub:
 	@ViewData["stargazers_count"]
 </p>
 
 <br/>
 <p>Result of the database call:</p>
 <ul>
-	@foreach(var userName in Model)
+	@foreach (var userName in Model)
 	{
 		<li>@userName</li>
 	}
