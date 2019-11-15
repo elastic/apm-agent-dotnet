@@ -37,7 +37,7 @@ namespace Elastic.Apm.AspNetFullFramework
 		{
 			try
 			{
-				InitImpl(httpApp);
+				InitImpl(context);
 			}
 			catch (Exception ex)
 			{
@@ -49,7 +49,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 		}
 
-		private void InitImpl(HttpApplication httpApp)
+		private void InitImpl(HttpApplication context)
 		{
 			var isInitedByThisCall = InitOnceForAllInstancesUnderLock(_dbgInstanceName);
 
