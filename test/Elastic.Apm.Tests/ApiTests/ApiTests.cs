@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
@@ -711,6 +712,27 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstError.ParentId.Should()
 				.Be(errorCapturingExecutionSegment.IsSampled ? errorCapturingExecutionSegment.Id : capturedTransaction.Id);
 			payloadSender.FirstError.Context.Should().BeEquivalentTo(expectedErrorContext);
+		}
+
+		/// <summary>
+		/// Makes sure Transaction.Custom is captured and it is not truncated.
+		/// </summary>
+		[Fact]
+		public void CaptureCustom()
+		{
+			var payloadSender = new MockPayloadSender();
+			var customValue = "b".Repeat(10_000);
+			var customKey = "a";
+
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				var transaction = agent.Tracer.StartTransaction(TestTransaction, CustomTransactionTypeForTests);
+				transaction.Custom.Add(customKey, customValue);
+				transaction.End();
+			}
+
+			payloadSender.FirstTransaction.Should().NotBeNull();
+			payloadSender.FirstTransaction.Custom[customKey].Should().Be(customValue);
 		}
 
 		private class TestException : Exception
