@@ -28,7 +28,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 		public void OnError(Exception error) { }
 
-		public async void OnNext(KeyValuePair<string, object> kv)
+		public void OnNext(KeyValuePair<string, object> kv)
 		{
 			if (kv.Key != "Microsoft.AspNetCore.Diagnostics.UnhandledException"
 				&& kv.Key != "Microsoft.AspNetCore.Diagnostics.HandledException") return;
@@ -40,10 +40,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 			transaction?.CaptureException(exception, "ASP.NET Core Unhandled Exception",
 				kv.Key == "Microsoft.AspNetCore.Diagnostics.HandledException");
 
-			var httpContext = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("httpContext").GetValue(kv.Value) as HttpContext;
-
-			if (_confgurationReader.ShouldExtractRequestBodyOnError())
-				await transaction.CollectRequestInfoAsync(httpContext, _confgurationReader, _logger);
+			//Depending on config, request body may also be captured on errors. Since we do this async, this happens in the ApmMiddleware
 		}
 	}
 }
