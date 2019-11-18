@@ -45,10 +45,11 @@ namespace Elastic.Apm.AspNetCore
 
 		public async Task InvokeAsync(HttpContext context)
 		{
-			var transaction = StartTransaction(context);
+			var transaction = await StartTransactionAsync(context);
 
 			try
 			{
+				_tracer.CurrentExecutionSegmentsContainer.CurrentTransaction = transaction;
 				await _next(context);
 			}
 			catch (Exception e) when (transaction != null
@@ -60,7 +61,7 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		private Transaction StartTransaction(HttpContext context)
+		private async Task<Transaction> StartTransactionAsync(HttpContext context)
 		{
 			try
 			{
@@ -103,7 +104,7 @@ namespace Elastic.Apm.AspNetCore
 						ApiConstants.TypeRequest);
 				}
 
-				if (transaction.IsSampled) FillSampledTransactionContextRequest(context, transaction);
+				if (transaction.IsSampled) await FillSampledTransactionContextRequestAsync(context, transaction);
 
 				return transaction;
 			}
@@ -156,7 +157,7 @@ namespace Elastic.Apm.AspNetCore
 			return rawPathAndQuery == null ? null : UriHelper.BuildAbsolute(httpRequest.Scheme, httpRequest.Host, rawPathAndQuery);
 		}
 
-		private void FillSampledTransactionContextRequest(HttpContext context, Transaction transaction)
+		private async Task FillSampledTransactionContextRequestAsync(HttpContext context, Transaction transaction)
 		{
 			try
 			{
@@ -177,7 +178,7 @@ namespace Elastic.Apm.AspNetCore
 					Socket = new Socket { Encrypted = context.Request.IsHttps, RemoteAddress = context.Connection?.RemoteIpAddress?.ToString() },
 					HttpVersion = GetHttpVersion(context.Request.Protocol),
 					Headers = GetHeaders(context.Request.Headers),
-					Body = GetRequestBody(context)
+					Body =  await GetRequestBodyAsync(context)
 				};
 			}
 			catch (Exception ex)
@@ -189,7 +190,7 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		private string GetRequestBody(HttpContext context)
+		private async Task<string> GetRequestBodyAsync(HttpContext context)
 		{
 			// ReSharper disable once InvertIf
 			if (_configurationReader.ShouldExtractRequestBodyOnTransactions() && !string.IsNullOrEmpty(context.Request?.ContentType))
@@ -197,9 +198,8 @@ namespace Elastic.Apm.AspNetCore
 				var contentType = new ContentType(context.Request.ContentType);
 				if (!_configurationReader.CaptureBodyContentTypes.ContainsLike(contentType.MediaType)) return Consts.BodyRedacted;
 
-				var syncIoFeature = context.Features.Get<IHttpBodyControlFeature>();
-				if (syncIoFeature != null) syncIoFeature.AllowSynchronousIO = true;
-				return context.Request.ExtractRequestBody(_logger) ?? Consts.BodyRedacted;
+
+				return await context.Request.ExtractRequestBodyAsync(_logger) ?? Consts.BodyRedacted;
 			}
 
 			// According to the documentation - the default value of 'body' is '[Redacted]'
