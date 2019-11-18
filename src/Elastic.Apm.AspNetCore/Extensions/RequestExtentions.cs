@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using Elastic.Apm.Logging;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Http.Internal;
 
 namespace Elastic.Apm.AspNetCore.Extensions
@@ -22,7 +23,7 @@ namespace Elastic.Apm.AspNetCore.Extensions
 
 			try
 			{
-				request.EnableRewind();
+				request.EnableBuffering();
 				request.Body.Position = 0;
 
 				using (var reader = new StreamReader(request.Body,

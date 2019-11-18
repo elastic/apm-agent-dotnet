@@ -3,6 +3,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace Elastic.Apm.AspNetCore.Extensions
 {
@@ -21,7 +22,7 @@ namespace Elastic.Apm.AspNetCore.Extensions
 		{
 			var body = Consts.BodyRedacted; // According to the documentation - the default value of 'body' is '[Redacted]'
 
-			// We need to parse the content type and check it's not null and is of valid value 
+			// We need to parse the content type and check it's not null and is of valid value
 			if (!string.IsNullOrEmpty(httpContext?.Request?.ContentType))
 			{
 				var contentType = new ContentType(httpContext.Request.ContentType);
@@ -29,7 +30,11 @@ namespace Elastic.Apm.AspNetCore.Extensions
 				//Request must not be null and the content type must be matched with the 'captureBodyContentTypes' configured
 				if (httpContext?.Request != null && configurationReader.CaptureBodyContentTypes.ContainsLike(contentType.MediaType))
 					body = httpContext.Request.ExtractRequestBody(logger);
-				transaction.Context.Request.Body = string.IsNullOrEmpty(body) ? Consts.BodyRedacted : body;
+				{
+					var syncIoFeature = httpContext.Features.Get<IHttpBodyControlFeature>();
+					if (syncIoFeature != null) syncIoFeature.AllowSynchronousIO = true;
+					transaction.Context.Request.Body = string.IsNullOrEmpty(body) ? Consts.BodyRedacted : body;
+				}
 			}
 		}
 	}

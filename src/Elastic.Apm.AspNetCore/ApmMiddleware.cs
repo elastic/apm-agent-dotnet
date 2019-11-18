@@ -177,7 +177,7 @@ namespace Elastic.Apm.AspNetCore
 					Socket = new Socket { Encrypted = context.Request.IsHttps, RemoteAddress = context.Connection?.RemoteIpAddress?.ToString() },
 					HttpVersion = GetHttpVersion(context.Request.Protocol),
 					Headers = GetHeaders(context.Request.Headers),
-					Body = GetRequestBody(context.Request)
+					Body = GetRequestBody(context)
 				};
 			}
 			catch (Exception ex)
@@ -189,14 +189,17 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		private string GetRequestBody(HttpRequest request)
+		private string GetRequestBody(HttpContext context)
 		{
 			// ReSharper disable once InvertIf
-			if (_configurationReader.ShouldExtractRequestBodyOnTransactions() && !string.IsNullOrEmpty(request?.ContentType))
+			if (_configurationReader.ShouldExtractRequestBodyOnTransactions() && !string.IsNullOrEmpty(context.Request?.ContentType))
 			{
-				var contentType = new ContentType(request.ContentType);
-				if (_configurationReader.CaptureBodyContentTypes.ContainsLike(contentType.MediaType))
-					return request.ExtractRequestBody(_logger) ?? Consts.BodyRedacted;
+				var contentType = new ContentType(context.Request.ContentType);
+				if (!_configurationReader.CaptureBodyContentTypes.ContainsLike(contentType.MediaType)) return Consts.BodyRedacted;
+
+				var syncIoFeature = context.Features.Get<IHttpBodyControlFeature>();
+				if (syncIoFeature != null) syncIoFeature.AllowSynchronousIO = true;
+				return context.Request.ExtractRequestBody(_logger) ?? Consts.BodyRedacted;
 			}
 
 			// According to the documentation - the default value of 'body' is '[Redacted]'
