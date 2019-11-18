@@ -293,7 +293,7 @@ namespace Elastic.Apm.AspNetFullFramework
 		private static bool InitOnceForAllInstancesUnderLock(string dbgInstanceName) =>
 			InitOnceHelper.IfNotInited?.Init(() =>
 			{
-				SafeAgentSetup(BuildAgentComponents(dbgInstanceName));
+				SafeAgentSetup(dbgInstanceName);
 
 				_isCaptureHeadersEnabled = Agent.Instance.ConfigurationReader.CaptureHeaders;
 
@@ -315,18 +315,21 @@ namespace Elastic.Apm.AspNetFullFramework
 			return agentComponents;
 		}
 
-		private static void SafeAgentSetup(AgentComponents agentComponents)
+		private static void SafeAgentSetup(string dbgInstanceName)
 		{
+			var agentComponents = BuildAgentComponents(dbgInstanceName);
 			try
 			{
 				Agent.Setup(agentComponents);
 			}
 			catch (Agent.InstanceAlreadyCreatedException ex)
 			{
-				Agent.Instance.Logger.Error()?.LogException(ex, "The Elastic APM agent was already initialized before call to"
+				Agent.Instance.Logger.Scoped(dbgInstanceName).Error()?.LogException(ex, "The Elastic APM agent was already initialized before call to"
 					+ $" {nameof(ElasticApmModule)}.{nameof(Init)} - {nameof(ElasticApmModule)} will use existing instance"
 					+ " even though it might lead to unexpected behavior"
 					+ " (for example agent using incorrect configuration source such as environment variables instead of Web.config).");
+
+				agentComponents.Dispose();
 			}
 		}
 	}

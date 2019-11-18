@@ -39,7 +39,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "files", "files", "{B406113B
 		.gitignore = .gitignore
 		codecov.yml = codecov.yml
 		CONTRIBUTING.md = CONTRIBUTING.md
-		Jenkinsfile = Jenkinsfile
 		LICENSE = LICENSE
 		README.md = README.md
 		global.json = global.json
@@ -61,6 +60,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.AspNetFullFramework.Tests", "test\Elastic.Apm.AspNetFullFramework.Tests\Elastic.Apm.AspNetFullFramework.Tests.csproj", "{4253798D-A160-40B3-8F16-5BF64C559B93}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Tests.MockApmServer", "test\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj", "{AFFB238B-10C0-4229-9527-184EFCF0F5AC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ci", ".ci\ci.csproj", "{9AAC1E7A-5887-46BC-96DA-DDFFF0F7CDC2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.EntityFrameworkCore.Tests", "test\Elastic.Apm.EntityFrameworkCore.Tests\Elastic.Apm.EntityFrameworkCore.Tests.csproj", "{79BEA612-E2C8-47FD-84DC-A1B17AAD5038}"
 EndProject
@@ -138,6 +139,8 @@ Global
 		{AFFB238B-10C0-4229-9527-184EFCF0F5AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AFFB238B-10C0-4229-9527-184EFCF0F5AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AFFB238B-10C0-4229-9527-184EFCF0F5AC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9AAC1E7A-5887-46BC-96DA-DDFFF0F7CDC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9AAC1E7A-5887-46BC-96DA-DDFFF0F7CDC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{79BEA612-E2C8-47FD-84DC-A1B17AAD5038}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{79BEA612-E2C8-47FD-84DC-A1B17AAD5038}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79BEA612-E2C8-47FD-84DC-A1B17AAD5038}.Release|Any CPU.ActiveCfg = Release|Any CPU
