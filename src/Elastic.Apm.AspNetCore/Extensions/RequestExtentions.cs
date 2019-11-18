@@ -25,12 +25,13 @@ namespace Elastic.Apm.AspNetCore.Extensions
 				request.EnableBuffering();
 				request.Body.Position = 0;
 
-				using var reader = new StreamReader(request.Body,
+				using (var reader = new StreamReader(request.Body,
 					Encoding.UTF8,
 					false,
 					1024 * 2,
-					true);
-				body = await reader.ReadToEndAsync();
+					true))
+					body = await reader.ReadToEndAsync();
+
 				// Truncate the body to the first 2kb if it's longer
 				if (body.Length > Consts.RequestBodyMaxLength) body = body.Substring(0, Consts.RequestBodyMaxLength);
 				request.Body.Position = 0;
