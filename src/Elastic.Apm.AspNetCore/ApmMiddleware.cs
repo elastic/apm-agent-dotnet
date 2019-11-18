@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Mime;
 using System.Runtime.CompilerServices;
@@ -315,13 +316,14 @@ namespace Elastic.Apm.AspNetCore
 			return name;
 		}
 
+		[SuppressMessage("ReSharper", "PatternAlwaysOfType")]
 		private static string GetProtocolName(string protocol)
 		{
 			switch (protocol)
 			{
-				case { } s when string.IsNullOrEmpty(s):
+				case string s when string.IsNullOrEmpty(s):
 					return string.Empty;
-				case { } s when s.StartsWith("HTTP", StringComparison.InvariantCulture): //in case of HTTP/2.x we only need HTTP
+				case string s when s.StartsWith("HTTP", StringComparison.InvariantCulture): //in case of HTTP/2.x we only need HTTP
 					return "HTTP";
 				default:
 					return protocol;
