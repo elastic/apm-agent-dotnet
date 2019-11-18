@@ -1,9 +1,9 @@
 using System.Net.Mime;
-using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace Elastic.Apm.AspNetCore.Extensions
 {
@@ -15,10 +15,8 @@ namespace Elastic.Apm.AspNetCore.Extensions
 		/// </summary>
 		/// <param name="transaction">Transaction object</param>
 		/// <param name="httpContext">Current http context</param>
-		/// <param name="configurationReader"></param>
 		/// <param name="logger">Logger object</param>
-		public static async Task CollectRequestInfoAsync(this ITransaction transaction, HttpContext httpContext,
-			IConfigurationReader configurationReader,
+		public static void CollectRequestInfo(this ITransaction transaction, HttpContext httpContext, IConfigurationReader configurationReader,
 			IApmLogger logger
 		)
 		{
@@ -30,10 +28,13 @@ namespace Elastic.Apm.AspNetCore.Extensions
 				var contentType = new ContentType(httpContext.Request.ContentType);
 
 				//Request must not be null and the content type must be matched with the 'captureBodyContentTypes' configured
-				if (httpContext.Request != null && configurationReader.CaptureBodyContentTypes.ContainsLike(contentType.MediaType))
-					body = await httpContext.Request.ExtractRequestBodyAsync(logger);
-
-				transaction.Context.Request.Body = string.IsNullOrEmpty(body) ? Consts.BodyRedacted : body;
+				if (httpContext?.Request != null && configurationReader.CaptureBodyContentTypes.ContainsLike(contentType.MediaType))
+					body = httpContext.Request.ExtractRequestBody(logger);
+				{
+					var syncIoFeature = httpContext.Features.Get<IHttpBodyControlFeature>();
+					if (syncIoFeature != null) syncIoFeature.AllowSynchronousIO = true;
+					transaction.Context.Request.Body = string.IsNullOrEmpty(body) ? Consts.BodyRedacted : body;
+				}
 			}
 		}
 	}

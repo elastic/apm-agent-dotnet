@@ -28,7 +28,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 		public void OnError(Exception error) { }
 
-		public async void OnNext(KeyValuePair<string, object> kv)
+		public void OnNext(KeyValuePair<string, object> kv)
 		{
 			if (kv.Key != "Microsoft.AspNetCore.Diagnostics.UnhandledException"
 				&& kv.Key != "Microsoft.AspNetCore.Diagnostics.HandledException") return;
@@ -42,8 +42,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 			var httpContext = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("httpContext").GetValue(kv.Value) as HttpContext;
 
-			if (_confgurationReader.ShouldExtractRequestBodyOnError())
-				await transaction.CollectRequestInfoAsync(httpContext, _confgurationReader, _logger);
+			if (_confgurationReader.ShouldExtractRequestBodyOnError()) transaction.CollectRequestInfo(httpContext, _confgurationReader, _logger);
 		}
 	}
 }

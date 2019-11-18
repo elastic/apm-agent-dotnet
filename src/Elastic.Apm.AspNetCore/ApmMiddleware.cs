@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.Extensions;
+using Elastic.Apm.AspNetCore.Helpers;
 using Elastic.Apm.Config;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Logging;
@@ -44,32 +45,22 @@ namespace Elastic.Apm.AspNetCore
 
 		public async Task InvokeAsync(HttpContext context)
 		{
-			var transaction = await StartTransactionAsync(context);
+			var transaction = StartTransaction(context);
 
 			try
 			{
-				// We need to reset the current transaction (which is async local), since the StartTransactionAsync call above ended with all its
-				// child spans at this point, therefore need to set the current transaction here again.
-				_tracer.CurrentExecutionSegmentsContainer.CurrentTransaction = transaction;
 				await _next(context);
 			}
-			catch (Exception e) when (transaction != null)
-			{
-				transaction.CaptureException(e);
-				// It'd be nice to have this in an exception filter, but that would force us capturing the request body synchronously.
-				// Therefore we rather unwind the stack an the catch block and call the async method.
-				if (context != null && _configurationReader.ShouldExtractRequestBodyOnError())
-					await transaction.CollectRequestInfoAsync(context, _configurationReader, _logger);
-
-				throw;
-			}
+			catch (Exception e) when (transaction != null
+				&& ExceptionFilter.Capture(e, transaction, context, _configurationReader, _logger))
+			{ }
 			finally
 			{
 				StopTransaction(transaction, context);
 			}
 		}
 
-		private async Task<Transaction> StartTransactionAsync(HttpContext context)
+		private Transaction StartTransaction(HttpContext context)
 		{
 			try
 			{
@@ -112,7 +103,7 @@ namespace Elastic.Apm.AspNetCore
 						ApiConstants.TypeRequest);
 				}
 
-				if (transaction.IsSampled) await FillSampledTransactionContextRequest(context, transaction);
+				if (transaction.IsSampled) FillSampledTransactionContextRequest(context, transaction);
 
 				return transaction;
 			}
@@ -165,7 +156,7 @@ namespace Elastic.Apm.AspNetCore
 			return rawPathAndQuery == null ? null : UriHelper.BuildAbsolute(httpRequest.Scheme, httpRequest.Host, rawPathAndQuery);
 		}
 
-		private async Task FillSampledTransactionContextRequest(HttpContext context, Transaction transaction)
+		private void FillSampledTransactionContextRequest(HttpContext context, Transaction transaction)
 		{
 			try
 			{
@@ -186,7 +177,7 @@ namespace Elastic.Apm.AspNetCore
 					Socket = new Socket { Encrypted = context.Request.IsHttps, RemoteAddress = context.Connection?.RemoteIpAddress?.ToString() },
 					HttpVersion = GetHttpVersion(context.Request.Protocol),
 					Headers = GetHeaders(context.Request.Headers),
-					Body = await GetRequestBodyAsync(context)
+					Body = GetRequestBody(context)
 				};
 			}
 			catch (Exception ex)
@@ -198,7 +189,7 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		private async Task<string> GetRequestBodyAsync(HttpContext context)
+		private string GetRequestBody(HttpContext context)
 		{
 			// ReSharper disable once InvertIf
 			if (_configurationReader.ShouldExtractRequestBodyOnTransactions() && !string.IsNullOrEmpty(context.Request?.ContentType))
@@ -206,7 +197,9 @@ namespace Elastic.Apm.AspNetCore
 				var contentType = new ContentType(context.Request.ContentType);
 				if (!_configurationReader.CaptureBodyContentTypes.ContainsLike(contentType.MediaType)) return Consts.BodyRedacted;
 
-				return (await context.Request.ExtractRequestBodyAsync(_logger)) ?? Consts.BodyRedacted;
+				var syncIoFeature = context.Features.Get<IHttpBodyControlFeature>();
+				if (syncIoFeature != null) syncIoFeature.AllowSynchronousIO = true;
+				return context.Request.ExtractRequestBody(_logger) ?? Consts.BodyRedacted;
 			}
 
 			// According to the documentation - the default value of 'body' is '[Redacted]'
@@ -319,9 +312,9 @@ namespace Elastic.Apm.AspNetCore
 		{
 			switch (protocol)
 			{
-				case { } s when string.IsNullOrEmpty(s):
+				case string s when string.IsNullOrEmpty(s):
 					return string.Empty;
-				case { } s when s.StartsWith("HTTP", StringComparison.InvariantCulture): //in case of HTTP/2.x we only need HTTP
+				case string s when s.StartsWith("HTTP", StringComparison.InvariantCulture): //in case of HTTP/2.x we only need HTTP
 					return "HTTP";
 				default:
 					return protocol;
