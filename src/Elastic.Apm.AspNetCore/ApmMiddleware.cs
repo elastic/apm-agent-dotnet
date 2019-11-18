@@ -57,7 +57,7 @@ namespace Elastic.Apm.AspNetCore
 			{
 				transaction.CaptureException(e);
 				// It'd be nice to have this in an exception filter, but that would force us capturing the request body synchronously.
-				// Therefore we rather unwind the stack an the catch block and call the async method.
+				// Therefore we rather unwind the stack in the catch block and call the async method.
 				if (context != null && _configurationReader.ShouldExtractRequestBodyOnError())
 					await transaction.CollectRequestInfoAsync(context, _configurationReader, _logger);
 
