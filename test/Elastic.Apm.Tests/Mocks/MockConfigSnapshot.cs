@@ -17,6 +17,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _centralConfig;
 		private readonly string _dbgDescription;
 		private readonly string _environment;
+		private readonly string _serviceNodeName;
 		private readonly string _flushInterval;
 		private readonly string _globalLabels;
 		private readonly string _logLevel;
@@ -40,6 +41,7 @@ namespace Elastic.Apm.Tests.Mocks
 			string serviceName = null,
 			string serviceVersion = null,
 			string environment = null,
+			string serviceNodeName = null,
 			string secretToken = null,
 			string captureHeaders = null,
 			string centralConfig = null,
@@ -63,6 +65,7 @@ namespace Elastic.Apm.Tests.Mocks
 			_serviceName = serviceName;
 			_serviceVersion = serviceVersion;
 			_environment = environment;
+			_serviceNodeName = serviceNodeName;
 			_secretToken = secretToken;
 			_captureHeaders = captureHeaders;
 			_centralConfig = centralConfig;
@@ -91,6 +94,7 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public string DbgDescription => _dbgDescription ?? nameof(MockConfigSnapshot);
 		public string Environment => ParseEnvironment(Kv(ConfigConsts.EnvVarNames.Environment, _environment, Origin));
+		public string ServiceNodeName => ParseServiceNodeName(Kv(ConfigConsts.EnvVarNames.ServiceNodeName, _serviceNodeName, Origin));
 
 		public TimeSpan FlushInterval => ParseFlushInterval(Kv(ConfigConsts.EnvVarNames.FlushInterval, _flushInterval, Origin));
 

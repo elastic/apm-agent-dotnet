@@ -62,6 +62,7 @@ namespace Elastic.Apm.Config
 			public const string CaptureHeaders = Prefix + "CAPTURE_HEADERS";
 			public const string CentralConfig = Prefix + "CENTRAL_CONFIG";
 			public const string Environment = Prefix + "ENVIRONMENT";
+			public const string ServiceNodeName = Prefix + "SERVICE_NODE_NAME";
 			public const string FlushInterval = Prefix + "FLUSH_INTERVAL";
 			public const string GlobalLabels = Prefix + "GLOBAL_LABELS";
 			public const string LogLevel = Prefix + "LOG_LEVEL";
