@@ -2,15 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <IsPackable>false</IsPackable>
     <RootNamespace>Elastic.Apm.EntityFrameworkCore.Tests</RootNamespace>
     <AssemblyName>Elastic.Apm.EntityFrameworkCore.Tests</AssemblyName>
-
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
-    <DelaySign>false</DelaySign>
-    <!-- Always generate debug symbols this allows fluent symbols exception messages to include variable names -->
-    <DebugSymbols>True</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,13 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <IsPackable>false</IsPackable>
     <AssemblyName>Elastic.Apm.AspNetCore.Tests</AssemblyName>
     <RootNamespace>Elastic.Apm.AspNetCore.Tests</RootNamespace>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
-    <!-- Always generate debug symbols this allows fluent symbols exception messages to include variable names -->
-    <DebugSymbols>True</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="5.7.0" />

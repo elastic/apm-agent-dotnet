@@ -1,15 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <IsPackable>false</IsPackable>
     <RootNamespace>Elastic.Apm.Tests</RootNamespace>
     <AssemblyName>Elastic.Apm.Tests</AssemblyName>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
-    <DelaySign>false</DelaySign>
-    <!-- Always generate debug symbols this allows fluent symbols exception messages to include variable names -->
-    <DebugSymbols>True</DebugSymbols>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="5.7.0" />

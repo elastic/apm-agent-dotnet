@@ -1,0 +1,9 @@
+<Project>
+  <!-- Test Directory Build Properties -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <!-- Always generate debug symbols this allows fluent symbols exception messages to include variable names -->
+    <DebugSymbols>True</DebugSymbols>
+  </PropertyGroup>
+</Project>

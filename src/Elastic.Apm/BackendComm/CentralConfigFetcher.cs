@@ -211,21 +211,25 @@ namespace Elastic.Apm.BackendComm
 			var severity = 400 <= statusCode && statusCode < 500 ? LogLevel.Debug : LogLevel.Error;
 
 			string message;
-			var msgPrefix = $"HTTP status code is {httpResponse.ReasonPhrase} which most likely means that ";
+			var statusAsString = $"HTTP status code is {httpResponse.ReasonPhrase} ({(int)httpResponse.StatusCode})";
+			var msgPrefix = $"{statusAsString} which most likely means that ";
 			// ReSharper disable once SwitchStatementMissingSomeCases
 			switch (httpResponse.StatusCode)
 			{
 				case HttpStatusCode.NotModified: // 304
 					_logger.Trace()
-						?.Log("HTTP status code is {HttpResponseReasonPhrase}"
+						?.Log("HTTP status code is {HttpResponseReasonPhrase} ({HttpStatusCode})"
 							+ " which means the configuration has not changed since the previous fetch."
 							+ " Response:{NewLine}{HttpResponse}"
-							, httpResponse.ReasonPhrase, Environment.NewLine, TextUtils.Indent(httpResponse.ToString()));
+							, httpResponse.ReasonPhrase
+							, (int)httpResponse.StatusCode
+							, Environment.NewLine
+							, TextUtils.Indent(httpResponse.ToString()));
 					return false;
 
 				case HttpStatusCode.BadRequest: // 400
 					severity = LogLevel.Error;
-					message = $"HTTP status code is {httpResponse.ReasonPhrase} which is unexpected";
+					message = $"{statusAsString} which is unexpected";
 					break;
 
 				case HttpStatusCode.Forbidden: // 403
@@ -242,7 +246,7 @@ namespace Elastic.Apm.BackendComm
 					break;
 
 				default:
-					message = $"HTTP status code ({httpResponse.ReasonPhrase}) signifies a failure";
+					message = $"{statusAsString} signifies a failure";
 					break;
 			}
 
@@ -267,7 +271,13 @@ namespace Elastic.Apm.BackendComm
 						, string.Join(", ", ConfigPayload.SupportedOptions.Select(k => $"`{k}'")));
 			}
 
-			return new ConfigDelta(transactionSampleRate: configParser.TransactionSampleRate, eTag: eTag);
+			return new ConfigDelta(
+				captureBody: configParser.CaptureBody,
+				captureBodyContentTypes: configParser.CaptureBodyContentTypes,
+				transactionMaxSpans: configParser.TransactionMaxSpans,
+				transactionSampleRate: configParser.TransactionSampleRate,
+				eTag: eTag
+			);
 		}
 
 		private static WaitInfoS ExtractWaitInfo(HttpResponseMessage httpResponse)
@@ -314,9 +324,27 @@ namespace Elastic.Apm.BackendComm
 
 		private class ConfigPayload
 		{
+			internal const string CaptureBodyContentTypesKey = "capture_body_content_types";
+			internal const string CaptureBodyKey = "capture_body";
+			internal const string TransactionMaxSpansKey = "transaction_max_spans";
 			internal const string TransactionSampleRateKey = "transaction_sample_rate";
 
-			internal static readonly string[] SupportedOptions = { TransactionSampleRateKey };
+			internal static readonly string[] SupportedOptions =
+			{
+				CaptureBodyKey,
+				CaptureBodyContentTypesKey,
+				TransactionMaxSpansKey,
+				TransactionSampleRateKey,
+			};
+
+			[JsonProperty(CaptureBodyKey)]
+			public string CaptureBody { get; set; }
+
+			[JsonProperty(CaptureBodyContentTypesKey)]
+			public string CaptureBodyContentTypes { get; set; }
+
+			[JsonProperty(TransactionMaxSpansKey)]
+			public string TransactionMaxSpans { get; set; }
 
 			[JsonProperty(TransactionSampleRateKey)]
 			public string TransactionSampleRate { get; set; }
@@ -329,20 +357,37 @@ namespace Elastic.Apm.BackendComm
 
 		private class ConfigDelta
 		{
-			internal ConfigDelta(string eTag, double? transactionSampleRate)
+			internal ConfigDelta(
+				string eTag
+				, string captureBody
+				, List<string> captureBodyContentTypes
+				, int? transactionMaxSpans
+				, double? transactionSampleRate
+			)
 			{
 				ETag = eTag;
+
+				CaptureBody = captureBody;
+				CaptureBodyContentTypes = captureBodyContentTypes;
+				TransactionMaxSpans = transactionMaxSpans;
 				TransactionSampleRate = transactionSampleRate;
 			}
 
-			internal string ETag { get; }
+			internal string CaptureBody { get; }
+			internal List<string> CaptureBodyContentTypes { get; }
 
+			internal string ETag { get; }
+			internal int? TransactionMaxSpans { get; }
 			internal double? TransactionSampleRate { get; }
 
 			public override string ToString()
 			{
 				var builder = new ToStringBuilder($"[ETag: `{ETag}']");
 
+				if (CaptureBody != null) builder.Add(nameof(CaptureBody), CaptureBody);
+				if (CaptureBodyContentTypes != null)
+					builder.Add(nameof(CaptureBodyContentTypes), string.Join(", ", CaptureBodyContentTypes.Select(x => $"`{x}'")));
+				if (TransactionMaxSpans.HasValue) builder.Add(nameof(TransactionMaxSpans), TransactionMaxSpans.Value);
 				if (TransactionSampleRate.HasValue) builder.Add(nameof(TransactionSampleRate), TransactionSampleRate.Value);
 
 				return builder.ToString();
@@ -363,6 +408,14 @@ namespace Elastic.Apm.BackendComm
 				_eTag = eTag;
 			}
 
+			internal string CaptureBody => _configPayload.CaptureBody?.Let(value => ParseCaptureBody(BuildKv(ConfigPayload.CaptureBodyKey, value)));
+
+			internal List<string> CaptureBodyContentTypes => _configPayload.CaptureBodyContentTypes?.Let(
+				value => ParseCaptureBodyContentTypes(BuildKv(ConfigPayload.CaptureBodyContentTypesKey, value)));
+
+			internal int? TransactionMaxSpans => _configPayload.TransactionMaxSpans?.Let(
+				value => ParseTransactionMaxSpans(BuildKv(ConfigPayload.TransactionMaxSpansKey, value)));
+
 			internal double? TransactionSampleRate => _configPayload.TransactionSampleRate?.Let(
 				value => ParseTransactionSampleRate(BuildKv(ConfigPayload.TransactionSampleRateKey, value)));
 
@@ -382,9 +435,9 @@ namespace Elastic.Apm.BackendComm
 				DbgDescription = dbgDescription;
 			}
 
-			public string CaptureBody => _wrapped.CaptureBody;
+			public string CaptureBody => _configDelta.CaptureBody ?? _wrapped.CaptureBody;
 
-			public List<string> CaptureBodyContentTypes => _wrapped.CaptureBodyContentTypes;
+			public List<string> CaptureBodyContentTypes => _configDelta.CaptureBodyContentTypes ?? _wrapped.CaptureBodyContentTypes;
 
 			public bool CaptureHeaders => _wrapped.CaptureHeaders;
 			public bool CentralConfig => _wrapped.CentralConfig;
@@ -419,7 +472,7 @@ namespace Elastic.Apm.BackendComm
 
 			public int StackTraceLimit => _wrapped.StackTraceLimit;
 
-			public int TransactionMaxSpans => _wrapped.TransactionMaxSpans;
+			public int TransactionMaxSpans => _configDelta.TransactionMaxSpans ?? _wrapped.TransactionMaxSpans;
 
 			public double TransactionSampleRate => _configDelta.TransactionSampleRate ?? _wrapped.TransactionSampleRate;
 		}

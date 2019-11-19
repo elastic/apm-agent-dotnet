@@ -3,18 +3,9 @@
     <TargetFramework>net461</TargetFramework>
     <AssemblyName>Elastic.Apm.AspNetFullFramework</AssemblyName>
     <RootNamespace>Elastic.Apm.AspNetFullFramework</RootNamespace>
-    <VersionPrefix>1.1.2</VersionPrefix>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
-    <DelaySign>false</DelaySign>
     <PackageId>Elastic.Apm.AspNetFullFramework</PackageId>
-    <Copyright>2019 Elasticsearch BV</Copyright>
-    <PackageLicenseUrl>https://github.com/elastic/apm-agent-dotnet/blob/master/LICENSE</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/elastic/apm-agent-dotnet</PackageProjectUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/elastic/apm-agent-dotnet/master/build/nuget-icon.png</PackageIconUrl>
     <Description>Elastic APM for ASP.NET Full Framework. This package contains auto instrumentation for ASP.NET Full Framework. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
     <PackageTags>apm monitoring elastic elasticapm analytics aspnet</PackageTags>
-    <Authors>Elastic and contributors</Authors>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System.Configuration" />
