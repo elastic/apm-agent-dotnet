@@ -15,12 +15,12 @@ namespace Elastic.Apm.Tests.TestHelpers
 
 		protected readonly IApmLogger LoggerBase;
 
-		private readonly ITest _currentXunitTest;
+		protected readonly ITest CurrentXunitTest;
 		private readonly LineWriterToLoggerAdaptor _loggerForStartFinish;
 
 		protected LoggingTestBase(ITestOutputHelper xUnitOutputHelper)
 		{
-			_currentXunitTest = GetCurrentXunitTest(xUnitOutputHelper);
+			CurrentXunitTest = GetCurrentXunitTest(xUnitOutputHelper);
 
 			var lineWriters = new List<ILineWriter>();
 
@@ -48,7 +48,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 			LoggerBase = new LineWriterToLoggerAdaptor(new SplittingLineWriter(lineWriters.ToArray()), config.LogLevel);
 		}
 
-		protected string TestDisplayName => _currentXunitTest?.DisplayName;
+		protected string TestDisplayName => CurrentXunitTest?.DisplayName;
 
 		public virtual void Dispose() => LogTestStartFinish( /* isStart: */ false);
 

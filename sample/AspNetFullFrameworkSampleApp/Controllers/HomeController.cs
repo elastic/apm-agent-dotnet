@@ -46,6 +46,9 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		internal const string ExceptionMessage = "For testing purposes";
 
 		internal const string ForbidHttpResponsePageRelativePath = HomePageRelativePath + "/" + nameof(ForbidHttpResponse);
+
+		internal const string GenNSpansPageRelativePath = HomePageRelativePath + "/" + nameof(GenNSpans);
+
 		internal const string GetDotNetRuntimeDescriptionPageRelativePath = HomePageRelativePath + "/" + nameof(GetDotNetRuntimeDescription);
 		internal const string HomePageRelativePath = "Home";
 		internal const string ReturnBadRequestPageRelativePath = HomePageRelativePath + "/" + nameof(ReturnBadRequest);
@@ -62,6 +65,8 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		internal const string ThrowsInvalidOperationPageRelativePath = HomePageRelativePath + "/" + nameof(ThrowsInvalidOperation);
 		internal static readonly Uri ChildHttpCallToExternalServiceUrl = new Uri("https://elastic.co");
 
+		internal const string NumberOfSpansQueryStringKey = "numberOfSpans";
+
 		public ActionResult Index() => View();
 
 		public ActionResult About()
@@ -71,18 +76,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 			return View();
 		}
 
-		private bool GetCaptureControllerActionAsSpan()
-		{
-			var captureControllerActionAsSpanValues = HttpContext.Request.QueryString.GetValues(CaptureControllerActionAsSpanQueryStringKey);
-			if (captureControllerActionAsSpanValues == null || captureControllerActionAsSpanValues.Length == 0) return false;
-
-			if (captureControllerActionAsSpanValues.Length > 1)
-			{
-				throw new ArgumentException($"{CaptureControllerActionAsSpanQueryStringKey} should appear in query string at most once",
-					CaptureControllerActionAsSpanQueryStringKey);
-			}
-			return bool.Parse(captureControllerActionAsSpanValues[0]);
-		}
+		private bool GetCaptureControllerActionAsSpan() => bool.Parse(GetQueryStringValue(CaptureControllerActionAsSpanQueryStringKey, "false"));
 
 		public async Task<ActionResult> ForbidHttpResponse()
 		{
@@ -283,6 +277,27 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 					+ $" actual result: {simpleDbTestResult.StatusCode}");
 			}
 			return new HttpStatusCodeResult(HttpStatusCode.Accepted);
+		}
+
+		public ActionResult GenNSpans()
+		{
+			var numberOfSpans = int.Parse(GetQueryStringValue(NumberOfSpansQueryStringKey, /* defaultValue: */ "0"));
+
+			for (var i = 0; i < numberOfSpans; ++i)
+				Agent.Tracer.CurrentTransaction.CaptureSpan($"Span_#{i}_name", $"Span_#{i}_type", () => {});
+
+			return new HttpStatusCodeResult(HttpStatusCode.Created);
+		}
+
+		private string GetQueryStringValue(string key, string defaultValue)
+		{
+			var values = HttpContext.Request.QueryString.GetValues(key);
+			if (values == null || values.Length == 0) return defaultValue;
+
+			if (values.Length > 1)
+				throw new ArgumentException($"{key} should appear in query string at most once", key);
+
+			return values[0];
 		}
 
 		private Uri GetUrlForMethod(string methodName)
