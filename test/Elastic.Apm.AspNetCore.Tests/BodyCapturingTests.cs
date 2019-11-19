@@ -116,6 +116,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 				, transactionSampleRate: startCfgVariant.IsSampled ? "1" : "0");
 			var sutEnv = StartSutEnv(startConfigSnapshot);
 
+			//
+			// Verify that capture-body feature works as expected according to the initial configuration
+			//
+
 			foreach (var isError in new[] { false, true })
 			{
 				var body = new ToStringBuilder
@@ -127,6 +131,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 				await TestBodyCapture(body, isError, ShouldRequestBodyBeCaptured(startConfigSnapshot, isError), startCfgVariant.IsSampled);
 			}
+
+			//
+			// Change the configuration and verify that capture-body feature as expected according to the updated configuration
+			//
 
 			await BuildOptionsTestVariants()
 				.ForEachIndexed(async (updateCfgVariant, updateCfgVariantIndex) =>
