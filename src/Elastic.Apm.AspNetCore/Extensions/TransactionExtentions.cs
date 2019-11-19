@@ -20,6 +20,7 @@ namespace Elastic.Apm.AspNetCore.Extensions
 			if (!transaction.IsSampled) return;
 
 			// Is request body already captured?
+			// We check transaction.IsContextCreated to avoid creating empty Context (that accessing transaction.Context directly would have done).
 			if (transaction.IsContextCreated
 				&& transaction.Context.Request.Body != null
 				&& !ReferenceEquals(transaction.Context.Request.Body, Apm.Consts.Redacted)) return;
