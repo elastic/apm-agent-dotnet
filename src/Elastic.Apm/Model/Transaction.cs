@@ -116,6 +116,12 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		public Context Context => _context.Value;
 
+		/// <summary>
+		/// Holds configuration snapshot (which is immutable) that was current when this transaction started.
+		/// We would like transaction data to be consistent and not to be affected by possible changes in agent's configuration
+		/// between the start and the end of the transaction. That is why the way all the data is collected for the transaction
+		/// and its spans is controlled by this configuration snapshot.
+		/// </summary>
 		[JsonIgnore]
 		internal IConfigSnapshot ConfigSnapshot { get; }
 
