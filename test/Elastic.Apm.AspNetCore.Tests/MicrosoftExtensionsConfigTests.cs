@@ -114,6 +114,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServerUrls, serverUrl);
 			var serviceName = "MyServiceName123";
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceName, serviceName);
+			var serviceNodeName = "Some service node name";
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceNodeName, serviceNodeName);
 			var serviceVersion = "2.1.0.5";
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceVersion, serviceVersion);
 			var environment = "staging";
@@ -130,6 +132,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.LogLevel.Should().Be(LogLevel.Debug);
 			config.ServerUrls[0].Should().Be(new Uri(serverUrl));
 			config.ServiceName.Should().Be(serviceName);
+			config.ServiceNodeName.Should().Be(serviceNodeName);
 			config.ServiceVersion.Should().Be(serviceVersion);
 			config.Environment.Should().Be(environment);
 			config.SecretToken.Should().Be(secretToken);

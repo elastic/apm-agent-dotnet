@@ -453,6 +453,23 @@ namespace Elastic.Apm.Tests
 			agent.Service.Version.Should().Be(serviceVersion);
 		}
 
+		[Fact]
+		public void ReadServiceNodeNameViaEnvironmentVariable()
+		{
+			// Arrange
+			var serviceNodeName = "Some service node name";
+			Environment.SetEnvironmentVariable(EnvVarNames.ServiceNodeName, serviceNodeName);
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender)))
+			{
+				// Act
+				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+
+				// Assert
+				agent.Service.Node.ConfiguredName.Should().Be(serviceNodeName);
+			}
+		}
+
 		/// <summary>
 		/// In case the user does not provide us a service name we try to calculate it based on the callstack.
 		/// This test makes sure we recognize mscorlib and our own assemblies correctly in the
