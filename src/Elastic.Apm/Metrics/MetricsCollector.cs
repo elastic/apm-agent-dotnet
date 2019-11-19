@@ -126,31 +126,30 @@ namespace Elastic.Apm.Metrics
 				try
 				{
 					_logger.Trace()?.Log("Start collecting {MetricsProviderName}", metricsProvider.DbgName);
-					var samplesFromCurrentProvider = metricsProvider.GetSamples();
-					if (samplesFromCurrentProvider != null)
+
+					var samplesFromProvider = metricsProvider.GetSamples()
+						?.Where(x => !double.IsNaN(x.KeyValue.Value) && !double.IsInfinity(x.KeyValue.Value))
+						.ToArray();
+
+					if (samplesFromProvider != null && samplesFromProvider.Length > 0)
 					{
-						var sampleArray = samplesFromCurrentProvider as MetricSample[] ?? samplesFromCurrentProvider.ToArray();
-						if (sampleArray.Length != 0 && sampleArray.All(x => !double.IsNaN(x.KeyValue.Value) && !double.IsInfinity(x.KeyValue.Value)))
-						{
-							_logger.Trace()?.Log("Collected {MetricsProviderName} - adding it to MetricSet", metricsProvider.DbgName);
-							samples.AddRange(sampleArray);
-							metricsProvider.ConsecutiveNumberOfFailedReads = 0;
-						}
-						else
-						{
-							metricsProvider.ConsecutiveNumberOfFailedReads++;
-							_logger.Warning()
-								?.Log("{MetricsProviderName} returned invalid samples", metricsProvider.DbgName);
-						}
+						_logger.Trace()?.Log("Collected {MetricsProviderName} - adding it to MetricSet", metricsProvider.DbgName);
+						samples.AddRange(samplesFromProvider);
+						metricsProvider.ConsecutiveNumberOfFailedReads = 0;
 					}
 					else
+					{
 						metricsProvider.ConsecutiveNumberOfFailedReads++;
+						_logger.Warning()
+							?.Log("Failed reading {MetricsProviderName} {NumberOfFails} times: no valid samples", metricsProvider.DbgName,
+								metricsProvider.ConsecutiveNumberOfFailedReads);
+					}
 				}
 				catch (Exception e)
 				{
 					metricsProvider.ConsecutiveNumberOfFailedReads++;
 					_logger.Error()
-						?.LogException(e, "Failed reading {MetricsProviderName} {NumberOfFail} times", metricsProvider.DbgName,
+						?.LogException(e, "Failed reading {MetricsProviderName} {NumberOfFails} times", metricsProvider.DbgName,
 							metricsProvider.ConsecutiveNumberOfFailedReads);
 				}
 

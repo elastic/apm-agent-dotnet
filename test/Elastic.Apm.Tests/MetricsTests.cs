@@ -149,12 +149,24 @@ namespace Elastic.Apm.Tests
 			res.total.Should().Be(expectedTotal);
 		}
 
-		[Theory]
-		[InlineData(double.NaN)]
-		[InlineData(double.NegativeInfinity)]
-		[InlineData(double.PositiveInfinity)]
-		public void CollectAllMetrics_ShouldNotReportNaNOrInfiniteValue(double value)
+		public static IEnumerable<object[]> DisableProviderTestData
 		{
+			get
+			{
+				yield return new object[] { null };
+				yield return new object[] { new List<MetricSample>() };
+				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.NaN) } };
+				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.NegativeInfinity) } };
+				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.PositiveInfinity) } };
+			}
+		}
+
+		[Theory]
+		[MemberData(nameof(DisableProviderTestData))]
+		public void CollectAllMetrics_ShouldDisableProvider_WhenSamplesAreInvalid(List<MetricSample> samples)
+		{
+			const int iterations = MetricsCollector.MaxTryWithoutSuccess * 2;
+
 			// Arrange
 			var logger = new NoopLogger();
 			var mockPayloadSender = new MockPayloadSender();
@@ -163,17 +175,53 @@ namespace Elastic.Apm.Tests
 
 			var metricsProviderMock = new Mock<IMetricsProvider>();
 			metricsProviderMock.Setup(x => x.GetSamples())
-				.Returns(() => new List<MetricSample> { new MetricSample("metricKey", value) });
+				.Returns(() => samples);
+			metricsProviderMock.SetupProperty(x => x.ConsecutiveNumberOfFailedReads);
 
 			metricsCollector.MetricsProviders.Clear();
 			metricsCollector.MetricsProviders.Add(metricsProviderMock.Object);
 
 			// Act
-			metricsCollector.CollectAllMetrics();
+			foreach (var _ in Enumerable.Range(0, iterations))
+			{
+				metricsCollector.CollectAllMetrics();
+			}
 
 			// Assert
-			mockPayloadSender.Metrics.Count.Should().Be(1);
-			mockPayloadSender.FirstMetric.Samples.Should().BeEmpty();
+			mockPayloadSender.Metrics.Count.Should().Be(iterations);
+			mockPayloadSender.Metrics.Should().OnlyContain(x => !x.Samples.Any());
+			metricsProviderMock.Verify(x => x.GetSamples(), Times.Exactly(MetricsCollector.MaxTryWithoutSuccess));
+		}
+
+		[Fact]
+		public void CollectAllMetrics_ShouldNotDisableProvider_WhenAnyValueIsSamplesIsValid()
+		{
+			const int iterations = MetricsCollector.MaxTryWithoutSuccess * 2;
+
+			// Arrange
+			var logger = new NoopLogger();
+			var mockPayloadSender = new MockPayloadSender();
+
+			var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
+
+			var metricsProviderMock = new Mock<IMetricsProvider>();
+			metricsProviderMock.Setup(x => x.GetSamples())
+				.Returns(() => new List<MetricSample> { new MetricSample("key1", double.NaN), new MetricSample("key2", 0.95) });
+			metricsProviderMock.SetupProperty(x => x.ConsecutiveNumberOfFailedReads);
+
+			metricsCollector.MetricsProviders.Clear();
+			metricsCollector.MetricsProviders.Add(metricsProviderMock.Object);
+
+			// Act
+			foreach (var _ in Enumerable.Range(0, iterations))
+			{
+				metricsCollector.CollectAllMetrics();
+			}
+
+			// Assert
+			mockPayloadSender.Metrics.Count.Should().Be(iterations);
+			mockPayloadSender.Metrics.Should().OnlyContain(x => x.Samples.Count() == 1);
+			metricsProviderMock.Verify(x => x.GetSamples(), Times.Exactly(iterations));
 		}
 
 		private class MetricsProviderWithException : IMetricsProvider
