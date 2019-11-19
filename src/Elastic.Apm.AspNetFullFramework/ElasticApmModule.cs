@@ -35,11 +35,9 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		public void Init(HttpApplication httpApp)
 		{
-			var isInitedByThisCall = InitOnceForAllInstancesUnderLock(_dbgInstanceName);
-
 			_logger = Agent.Instance.Logger.Scoped(_dbgInstanceName);
 
-			if (isInitedByThisCall)
+			if (InitOnceForAllInstancesUnderLock(_dbgInstanceName))
 			{
 				_logger.Debug()
 					?.Log("Initialized Agent singleton. .NET runtime: {DotNetRuntimeDescription}; IIS: {IisVersion}",
