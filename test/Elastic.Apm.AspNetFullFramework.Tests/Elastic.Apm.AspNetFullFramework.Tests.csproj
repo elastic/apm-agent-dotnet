@@ -1,13 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <IsPackable>false</IsPackable>
     <AssemblyName>Elastic.Apm.AspNetFullFramework.Tests</AssemblyName>
     <RootNamespace>Elastic.Apm.AspNetFullFramework.Tests</RootNamespace>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
-    <!-- Always generate debug symbols this allows fluent symbols exception messages to include variable names -->
-    <DebugSymbols>True</DebugSymbols>
   </PropertyGroup>
   <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
     <PackageReference Include="Microsoft.AspNetCore.App" />
