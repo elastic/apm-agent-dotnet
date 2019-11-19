@@ -2,7 +2,6 @@ namespace Elastic.Apm.AspNetCore
 {
 	internal static class Consts
 	{
-		public const string BodyRedacted = "REDACTED";
 		public const int RequestBodyMaxLength = 2048;
 
 		internal static class OpenIdClaimTypes

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Net.Mime;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -29,7 +28,6 @@ namespace Elastic.Apm.AspNetCore
 	// ReSharper disable once ClassNeverInstantiated.Global
 	internal class ApmMiddleware
 	{
-		private readonly IConfigurationReader _configurationReader;
 		private readonly IApmLogger _logger;
 
 		private readonly RequestDelegate _next;
@@ -39,7 +37,6 @@ namespace Elastic.Apm.AspNetCore
 		{
 			_next = next;
 			_tracer = tracer;
-			_configurationReader = agent.ConfigurationReader;
 			_logger = agent.Logger.Scoped(nameof(ApmMiddleware));
 		}
 
@@ -59,8 +56,8 @@ namespace Elastic.Apm.AspNetCore
 				transaction.CaptureException(e);
 				// It'd be nice to have this in an exception filter, but that would force us capturing the request body synchronously.
 				// Therefore we rather unwind the stack in the catch block and call the async method.
-				if (context != null && _configurationReader.ShouldExtractRequestBodyOnError())
-					await transaction.CollectRequestInfoAsync(context, _configurationReader, _logger);
+				if (context != null && transaction.IsCaptureRequestBodyEnabled(true))
+					await transaction.CollectRequestBody(true, context.Request, _logger);
 
 				throw;
 			}
@@ -69,8 +66,8 @@ namespace Elastic.Apm.AspNetCore
 				// In case an error handler middleware is registered, the catch block above won't be executed, because the
 				// error handler handles all the exceptions - in this case, based on the response code and the config, we may capture the body here
 				if (transaction != null && context?.Response.StatusCode >= 300 && transaction.Context?.Request?.Body is string body
-					&& (string.IsNullOrEmpty(body) || body == Consts.BodyRedacted) && _configurationReader.ShouldExtractRequestBodyOnError())
-					await transaction.CollectRequestInfoAsync(context, _configurationReader, _logger);
+					&& (string.IsNullOrEmpty(body) || body == Apm.Consts.Redacted) && transaction.IsCaptureRequestBodyEnabled(true))
+					await transaction.CollectRequestBody(true, context.Request, _logger);
 
 				StopTransaction(transaction, context);
 			}
@@ -190,11 +187,15 @@ namespace Elastic.Apm.AspNetCore
 
 				transaction.Context.Request = new Request(context.Request.Method, url)
 				{
-					Socket = new Socket { Encrypted = context.Request.IsHttps, RemoteAddress = context.Connection?.RemoteIpAddress?.ToString() },
+					Socket = new Socket
+					{
+						Encrypted = context.Request.IsHttps, RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
+					},
 					HttpVersion = GetHttpVersion(context.Request.Protocol),
-					Headers = GetHeaders(context.Request.Headers),
-					Body = await GetRequestBodyAsync(context)
+					Headers = GetHeaders(context.Request.Headers, transaction.ConfigSnapshot)
 				};
+
+				await transaction.CollectRequestBody(false, context.Request, _logger);
 			}
 			catch (Exception ex)
 			{
@@ -205,23 +206,8 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		private async Task<string> GetRequestBodyAsync(HttpContext context)
-		{
-			// ReSharper disable once InvertIf
-			if (_configurationReader.ShouldExtractRequestBodyOnTransactions() && !string.IsNullOrEmpty(context.Request?.ContentType))
-			{
-				var contentType = new ContentType(context.Request.ContentType);
-				if (!_configurationReader.CaptureBodyContentTypes.ContainsLike(contentType.MediaType)) return Consts.BodyRedacted;
-
-				return (await context.Request.ExtractRequestBodyAsync(_logger)) ?? Consts.BodyRedacted;
-			}
-
-			// According to the documentation - the default value of 'body' is '[Redacted]'
-			return Consts.BodyRedacted;
-		}
-
-		private Dictionary<string, string> GetHeaders(IHeaderDictionary headers) =>
-			_configurationReader.CaptureHeaders && headers != null
+		private Dictionary<string, string> GetHeaders(IHeaderDictionary headers, IConfigSnapshot configSnapshot) =>
+			configSnapshot.CaptureHeaders && headers != null
 				? headers.ToDictionary(header => header.Key, header => header.Value.ToString())
 				: null;
 
@@ -233,7 +219,7 @@ namespace Elastic.Apm.AspNetCore
 				{
 					Finished = context.Response.HasStarted, //TODO ?
 					StatusCode = context.Response.StatusCode,
-					Headers = GetHeaders(context.Response.Headers)
+					Headers = GetHeaders(context.Response.Headers, transaction.ConfigSnapshot)
 				};
 			}
 			catch (Exception ex)

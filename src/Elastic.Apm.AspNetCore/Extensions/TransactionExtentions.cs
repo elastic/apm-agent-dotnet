@@ -1,40 +1,62 @@
 using System.Net.Mime;
 using System.Threading.Tasks;
-using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Model;
 using Microsoft.AspNetCore.Http;
 
 namespace Elastic.Apm.AspNetCore.Extensions
 {
-	public static class TransactionExtensions
+	internal static class TransactionExtensions
 	{
 		/// <summary>
-		/// Collects the Request body (and possibly additional information in the future)
-		/// in the transaction
+		/// Collects the Request body in the transaction
 		/// </summary>
 		/// <param name="transaction">Transaction object</param>
-		/// <param name="httpContext">Current http context</param>
-		/// <param name="configurationReader"></param>
+		/// <param name="isForError">Is request body being captured for error (otherwise it's for transaction)</param>
+		/// <param name="httpRequest">Current http context containing the http request</param>
 		/// <param name="logger">Logger object</param>
-		public static async Task CollectRequestInfoAsync(this ITransaction transaction, HttpContext httpContext,
-			IConfigurationReader configurationReader,
-			IApmLogger logger
-		)
+		internal static async Task CollectRequestBody(this Transaction transaction, bool isForError, HttpRequest httpRequest, IApmLogger logger)
 		{
-			var body = Consts.BodyRedacted; // According to the documentation - the default value of 'body' is '[Redacted]'
+			if (!transaction.IsSampled) return;
 
+			if(httpRequest == null) return;
+
+			if (transaction.IsContextCreated && transaction.Context.Request.Body != null
+				&& !ReferenceEquals(transaction.Context.Request.Body, Apm.Consts.Redacted)) return;
+
+			string body = null;
+
+			// Is request body already captured?
+			// We check transaction.IsContextCreated to avoid creating empty Context (that accessing transaction.Context directly would have done).
+			if (transaction.IsContextCreated
+				&& transaction.Context.Request.Body != null
+				&& !ReferenceEquals(transaction.Context.Request.Body, Apm.Consts.Redacted)) return;
+
+
+			if (transaction.IsCaptureRequestBodyEnabled(isForError) && IsCaptureRequestBodyEnabledForContentType(transaction, httpRequest))
+				body = await httpRequest.ExtractRequestBodyAsync(logger);
+
+			// According to the documentation - the default value of 'body' is '[Redacted]'
+			transaction.Context.Request.Body = body ?? Apm.Consts.Redacted;
+		}
+
+		internal static bool IsCaptureRequestBodyEnabled(this Transaction transaction, bool isForError) =>
+			transaction.ConfigSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyAll)
+			||
+			(isForError
+				? transaction.ConfigSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyErrors)
+				: transaction.ConfigSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyTransactions));
+
+		private static bool IsCaptureRequestBodyEnabledForContentType(Transaction transaction, HttpRequest request)
+		{
 			// We need to parse the content type and check it's not null and is of valid value
-			if (!string.IsNullOrEmpty(httpContext?.Request?.ContentType))
-			{
-				var contentType = new ContentType(httpContext.Request.ContentType);
+			if (string.IsNullOrEmpty(request?.ContentType)) return false;
 
-				//Request must not be null and the content type must be matched with the 'captureBodyContentTypes' configured
-				if (httpContext.Request != null && configurationReader.CaptureBodyContentTypes.ContainsLike(contentType.MediaType))
-					body = await httpContext.Request.ExtractRequestBodyAsync(logger);
+			var contentType = new ContentType(request.ContentType);
 
-				transaction.Context.Request.Body = string.IsNullOrEmpty(body) ? Consts.BodyRedacted : body;
-			}
+			//Request must not be null and the content type must be matched with the 'captureBodyContentTypes' configured
+			return transaction.ConfigSnapshot.CaptureBodyContentTypes.ContainsLike(contentType.MediaType);
 		}
 	}
 }

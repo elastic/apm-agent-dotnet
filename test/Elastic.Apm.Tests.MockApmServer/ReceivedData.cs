@@ -10,5 +10,15 @@ namespace Elastic.Apm.Tests.MockApmServer
 		internal ImmutableList<MetricSetDto> Metrics = ImmutableList<MetricSetDto>.Empty;
 		internal ImmutableList<SpanDto> Spans = ImmutableList<SpanDto>.Empty;
 		internal ImmutableList<TransactionDto> Transactions = ImmutableList<TransactionDto>.Empty;
+
+		internal void Clear()
+		{
+			Errors = ImmutableList<ErrorDto>.Empty;
+			InvalidPayloadErrors = ImmutableList<string>.Empty;
+			Metadata = ImmutableList<MetadataDto>.Empty;
+			Metrics = ImmutableList<MetricSetDto>.Empty;
+			Spans = ImmutableList<SpanDto>.Empty;
+			Transactions = ImmutableList<TransactionDto>.Empty;
+		}
 	}
 }
