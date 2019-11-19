@@ -2,16 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-
-    <IsPackable>false</IsPackable>
     <RootNamespace>Elastic.Apm.SqlClient.Tests</RootNamespace>
-    <RootNamespace>Elastic.Apm.SqlClient.Tests</RootNamespace>
-
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
-    <DelaySign>false</DelaySign>
-    <!-- Always generate debug symbols this allows fluent symbols exception messages to include variable names -->
-    <DebugSymbols>True</DebugSymbols>
+    <AssemblyName>Elastic.Apm.SqlClient.Tests</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
