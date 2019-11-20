@@ -207,6 +207,8 @@ but no context information, labels, or spans will be recorded.
 NOTE: When parsing the value for this option, the agent doesn't consider the current culture.
 It also expects that a period (`.`) is used to separate the integer and the fraction of a floating-point number.
 
+This setting can be changed after agent's start.
+
 [options="header"]
 |============
 | Environment variable name             | IConfiguration or Web.config key 
@@ -232,6 +234,8 @@ NOTE: A value of `0` means that spans will never be collected.
 Setting `-1` means that spans will never be dropped.
 The Agent will revert to the default value if the value is set below `-1`.
 
+This setting can be changed after agent's start.
+
 [options="header"]
 |============
 | Environment variable name           | IConfiguration key 
@@ -248,7 +252,8 @@ The Agent will revert to the default value if the value is set below `-1`.
 [[config-central-config]]
 ==== `CentralConfig` (added[1.1])
 
-If set to `true`, the agent makes periodic requests to the APM Server to fetch the latest {apm-app-ref}/agent-configuration.html[APM Agent configuration].
+If set to `true`, the agent makes periodic requests to the APM Server to fetch
+the latest {apm-app-ref}/agent-configuration.html[APM Agent configuration].
 
 [options="header"]
 |============
@@ -488,6 +493,8 @@ Possible options are `off`, `errors`, `transactions` and `all`:
 * `transactions` - request bodies will only be reported with request transactions
 * `all` - request bodies will be reported with both errors and request transactions
 
+This setting can be changed after agent's start.
+
 [options="header"]
 |============
 | Environment variable name     | IConfiguration or Web.config key
@@ -509,6 +516,8 @@ Configures which content types should be captured.
 This option supports the wildcard `*`, which matches zero or more characters.
 Examples: `/foo/*/bar/*/baz*`, `*foo*`.
 Matching is case insensitive.
+
+This setting can be changed after agent's start.
 
 [options="header"]
 |============
@@ -617,3 +626,36 @@ The default unit for this option is `ms`
 Sets the logging level for the agent.
 
 Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `None` (`None` disables the logging).
+
+[[config-all-options-summary]]
+=== All options summary
+
+[options="header"]
+|============
+| Option name | Is reloadable? | Keywords
+| <<config-capture-body,`CaptureBody`>> | Yes | HTTP, Performance
+| <<config-capture-body-content-types,`CaptureBodyContentTypes`>> | Yes | HTTP, Performance
+| <<config-capture-headers,`CaptureHeaders`>> | No | HTTP, Performance
+| <<config-central-config,`CentralConfig`>> | No | Core
+| <<config-environment,`Environment`>> | No | Core
+| <<config-flush-interval,`FlushInterval`>> | No | Reporter
+| <<config-global-labels,`GlobalLabels`>> | No | Core
+| <<config-log-level,`LogLevel`>> | No | Supportability
+| <<config-max-batch-event-count,`MaxBatchEventCount`>> | No | Reporter
+| <<config-max-queue-event-count,`MaxQueueEventCount`>> | No | Reporter
+| <<config-metrics-interval,`MetricsInterval`>> | No | Reporter
+| <<config-sanitize-field-names,`SanitizeFieldNames`>> | No | Core
+| <<config-secret-token,`SecretToken`>> | No | Reporter
+| <<config-server-urls,`ServerUrls`>> | No | Reporter
+| <<config-service-name,`ServiceName`>> | No | Core
+| <<config-service-version,`ServiceVersion`>> | No | Core
+| <<config-span-frames-min-duration,`SpanFramesMinDuration`>> | No | Stacktrace, Performance
+| <<config-stack-trace-limit,`StackTraceLimit`>> | No | Stacktrace, Performance
+| <<config-transaction-max-spans,`TransactionMaxSpans`>>  | Yes | Core, Performance
+| <<config-transaction-sample-rate,`TransactionSampleRate`>> | Yes | Core, Performance
+|============
+
+NOTE: Reloadable means that the setting can be changed after agent's start.
+For example, some reloadable options can be changed
+via {apm-app-ref}/agent-configuration.html[APM Agent configuration]).
+
