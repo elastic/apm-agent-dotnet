@@ -14,8 +14,7 @@ namespace Elastic.Apm.Report.Serialization
 
 			foreach (var item in value.Samples)
 			{
-				var valueObj = new JObject();
-				valueObj.Add("value", item.KeyValue.Value);
+				var valueObj = new JObject { { "value", item.KeyValue.Value } };
 
 				if (!samples.ContainsKey(item.KeyValue.Key))
 					samples.Add(item.KeyValue.Key, valueObj);
