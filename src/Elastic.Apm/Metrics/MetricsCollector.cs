@@ -93,45 +93,11 @@ namespace Elastic.Apm.Metrics
 		{
 			_logger.Trace()?.Log("CollectAllMetrics started");
 
-			var samplesFromAllProviders = new List<MetricSample>();
-
-			// ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-			foreach (var metricsProvider in MetricsProviders)
+			var samplesFromAllProviders = CollectMetricsFromProviders();
+			if (samplesFromAllProviders.IsEmpty())
 			{
-				if (metricsProvider.ConsecutiveNumberOfFailedReads == MaxTryWithoutSuccess)
-					continue;
-
-				try
-				{
-					_logger.Trace()?.Log("Start collecting {MetricsProviderName}", metricsProvider.DbgName);
-					var samplesFromCurrentProvider = metricsProvider.GetSamples();
-					if (samplesFromCurrentProvider != null)
-					{
-						var sampleArray = samplesFromCurrentProvider as MetricSample[] ?? samplesFromCurrentProvider.ToArray();
-						if (sampleArray.Any())
-						{
-							_logger.Trace()?.Log("Collected {MetricsProviderName} - adding it to MetricSet", metricsProvider.DbgName);
-							samplesFromAllProviders.AddRange(sampleArray);
-						}
-
-						metricsProvider.ConsecutiveNumberOfFailedReads = 0;
-					}
-					else
-						metricsProvider.ConsecutiveNumberOfFailedReads++;
-				}
-				catch (Exception e)
-				{
-					metricsProvider.ConsecutiveNumberOfFailedReads++;
-					_logger.Error()
-						?.LogException(e, "Failed reading {ProviderName} {NumberOfFail} times", metricsProvider.DbgName,
-							metricsProvider.ConsecutiveNumberOfFailedReads);
-				}
-
-				if (metricsProvider.ConsecutiveNumberOfFailedReads != MaxTryWithoutSuccess) continue;
-
-				_logger.Info()
-					?.Log("Failed reading {operationName} {numberOfTimes} consecutively - the agent won't try reading {operationName} anymore",
-						metricsProvider.DbgName, metricsProvider.ConsecutiveNumberOfFailedReads, metricsProvider.DbgName);
+				_logger.Debug()?.Log("No metrics collected (no provider returned valid samples) - nothing to send to APM Server");
+				return;
 			}
 
 			var metricSet = new MetricSet(TimeUtils.TimestampNow(), samplesFromAllProviders);
@@ -152,6 +118,55 @@ namespace Elastic.Apm.Metrics
 				_timer.Stop();
 				_timer.Dispose();
 			}
+		}
+
+		private List<MetricSample> CollectMetricsFromProviders()
+		{
+			var samples = new List<MetricSample>();
+			// ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+			foreach (var metricsProvider in MetricsProviders)
+			{
+				if (metricsProvider.ConsecutiveNumberOfFailedReads == MaxTryWithoutSuccess)
+					continue;
+
+				try
+				{
+					_logger.Trace()?.Log("Start collecting {MetricsProviderName}", metricsProvider.DbgName);
+
+					var samplesFromProvider = metricsProvider.GetSamples()
+						?.Where(x => !double.IsNaN(x.KeyValue.Value) && !double.IsInfinity(x.KeyValue.Value))
+						.ToArray();
+
+					if (samplesFromProvider != null && samplesFromProvider.Length > 0)
+					{
+						_logger.Trace()?.Log("Collected {MetricsProviderName} - adding it to MetricSet", metricsProvider.DbgName);
+						samples.AddRange(samplesFromProvider);
+						metricsProvider.ConsecutiveNumberOfFailedReads = 0;
+					}
+					else
+					{
+						metricsProvider.ConsecutiveNumberOfFailedReads++;
+						_logger.Warning()
+							?.Log("Failed reading {MetricsProviderName} {NumberOfFails} times: no valid samples", metricsProvider.DbgName,
+								metricsProvider.ConsecutiveNumberOfFailedReads);
+					}
+				}
+				catch (Exception e)
+				{
+					metricsProvider.ConsecutiveNumberOfFailedReads++;
+					_logger.Error()
+						?.LogException(e, "Failed reading {MetricsProviderName} {NumberOfFails} times", metricsProvider.DbgName,
+							metricsProvider.ConsecutiveNumberOfFailedReads);
+				}
+
+				if (metricsProvider.ConsecutiveNumberOfFailedReads != MaxTryWithoutSuccess) continue;
+
+				_logger.Info()
+					?.Log("Failed reading {operationName} {numberOfTimes} consecutively - the agent won't try reading {operationName} anymore",
+						metricsProvider.DbgName, metricsProvider.ConsecutiveNumberOfFailedReads, metricsProvider.DbgName);
+			}
+
+			return samples;
 		}
 
 		public void Dispose()
