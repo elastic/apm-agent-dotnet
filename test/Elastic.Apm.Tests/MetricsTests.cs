@@ -188,8 +188,7 @@ namespace Elastic.Apm.Tests
 			}
 
 			// Assert
-			mockPayloadSender.Metrics.Count.Should().Be(iterations);
-			mockPayloadSender.Metrics.Should().OnlyContain(x => !x.Samples.Any());
+			mockPayloadSender.Metrics.Should().BeEmpty();
 			metricsProviderMock.Verify(x => x.GetSamples(), Times.Exactly(MetricsCollector.MaxTryWithoutSuccess));
 		}
 

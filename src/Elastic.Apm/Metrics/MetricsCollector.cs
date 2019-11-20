@@ -94,6 +94,12 @@ namespace Elastic.Apm.Metrics
 			_logger.Trace()?.Log("CollectAllMetrics started");
 
 			var samplesFromAllProviders = CollectMetricsFromProviders();
+			if (samplesFromAllProviders.IsEmpty())
+			{
+				_logger.Debug()?.Log("No metrics collected (no provider returned valid samples) - nothing to send to APM Server");
+				return;
+			}
+
 			var metricSet = new MetricSet(TimeUtils.TimestampNow(), samplesFromAllProviders);
 
 			try
