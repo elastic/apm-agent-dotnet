@@ -216,7 +216,7 @@
   <ItemGroup Condition="'$(OS)' != 'WINDOWS_NT'">
     <Content Include="LinuxReadme.md" />
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
     <PackageReference Include="Antlr3.Runtime">
       <Version>3.5.1</Version>
     </PackageReference>
