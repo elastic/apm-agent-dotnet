@@ -1,24 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Elastic.Apm.AspNetCore.Extensions;
 using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.Logging;
-using Elastic.Apm.Model;
-using Microsoft.AspNetCore.Http;
 
 namespace Elastic.Apm.AspNetCore.DiagnosticListener
 {
 	internal class AspNetCoreDiagnosticListener : IDiagnosticListener
 	{
 		private readonly IApmAgent _agent;
-		private readonly ScopedLogger _logger;
 
-		public AspNetCoreDiagnosticListener(IApmAgent agent)
-		{
-			_agent = agent;
-			_logger = agent.Logger?.Scoped(nameof(AspNetCoreDiagnosticListener));
-		}
+		public AspNetCoreDiagnosticListener(IApmAgent agent) => _agent = agent;
 
 		public string Name => "Microsoft.AspNetCore";
 
@@ -33,15 +24,12 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 			var exception = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("exception").GetValue(kv.Value) as Exception;
 
-			var transaction = (Transaction)_agent.Tracer.CurrentTransaction;
-			if (transaction == null) return;
+			var transaction = _agent.Tracer.CurrentTransaction;
 
-			transaction.CaptureException(exception, "ASP.NET Core Unhandled Exception",
+			transaction?.CaptureException(exception, "ASP.NET Core Unhandled Exception",
 				kv.Key == "Microsoft.AspNetCore.Diagnostics.HandledException");
 
-			var httpContext = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("httpContext").GetValue(kv.Value) as HttpContext;
-
-			transaction.CollectRequestBody(/* isForError: */ true, httpContext?.Request, _logger);
+			//Depending on config, request body may also be captured on errors. Since we do this async, this happens in the ApmMiddleware
 		}
 	}
 }
