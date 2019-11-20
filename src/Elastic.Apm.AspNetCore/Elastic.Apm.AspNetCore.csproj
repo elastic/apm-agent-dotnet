@@ -23,6 +23,5 @@
   <ItemGroup>
     <Folder Include="Config\" />
     <Folder Include="DiagnosticListener\" />
-    <Folder Include="Helpers" />
   </ItemGroup>
 </Project>
