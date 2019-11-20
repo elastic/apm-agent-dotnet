@@ -18,7 +18,7 @@ namespace Elastic.Apm.AspNetCore.Extensions
 		/// <returns></returns>
 		public static async Task<string> ExtractRequestBodyAsync(this HttpRequest request, IApmLogger logger)
 		{
-			var body = Apm.Consts.Redacted;
+			string body = null;
 
 			try
 			{
