@@ -13,6 +13,7 @@ using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
+using Moq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -148,6 +149,80 @@ namespace Elastic.Apm.Tests
 			res.total.Should().Be(expectedTotal);
 		}
 
+		public static IEnumerable<object[]> DisableProviderTestData
+		{
+			get
+			{
+				yield return new object[] { null };
+				yield return new object[] { new List<MetricSample>() };
+				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.NaN) } };
+				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.NegativeInfinity) } };
+				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.PositiveInfinity) } };
+			}
+		}
+
+		[Theory]
+		[MemberData(nameof(DisableProviderTestData))]
+		public void CollectAllMetrics_ShouldDisableProvider_WhenSamplesAreInvalid(List<MetricSample> samples)
+		{
+			const int iterations = MetricsCollector.MaxTryWithoutSuccess * 2;
+
+			// Arrange
+			var logger = new NoopLogger();
+			var mockPayloadSender = new MockPayloadSender();
+
+			var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
+
+			var metricsProviderMock = new Mock<IMetricsProvider>();
+			metricsProviderMock.Setup(x => x.GetSamples())
+				.Returns(() => samples);
+			metricsProviderMock.SetupProperty(x => x.ConsecutiveNumberOfFailedReads);
+
+			metricsCollector.MetricsProviders.Clear();
+			metricsCollector.MetricsProviders.Add(metricsProviderMock.Object);
+
+			// Act
+			foreach (var _ in Enumerable.Range(0, iterations))
+			{
+				metricsCollector.CollectAllMetrics();
+			}
+
+			// Assert
+			mockPayloadSender.Metrics.Should().BeEmpty();
+			metricsProviderMock.Verify(x => x.GetSamples(), Times.Exactly(MetricsCollector.MaxTryWithoutSuccess));
+		}
+
+		[Fact]
+		public void CollectAllMetrics_ShouldNotDisableProvider_WhenAnyValueIsSamplesIsValid()
+		{
+			const int iterations = MetricsCollector.MaxTryWithoutSuccess * 2;
+
+			// Arrange
+			var logger = new NoopLogger();
+			var mockPayloadSender = new MockPayloadSender();
+
+			var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
+
+			var metricsProviderMock = new Mock<IMetricsProvider>();
+			metricsProviderMock.Setup(x => x.GetSamples())
+				.Returns(() => new List<MetricSample> { new MetricSample("key1", double.NaN), new MetricSample("key2", 0.95) });
+			metricsProviderMock.SetupProperty(x => x.ConsecutiveNumberOfFailedReads);
+
+			metricsCollector.MetricsProviders.Clear();
+			metricsCollector.MetricsProviders.Add(metricsProviderMock.Object);
+
+			// Act
+			foreach (var _ in Enumerable.Range(0, iterations))
+			{
+				metricsCollector.CollectAllMetrics();
+			}
+
+			// Assert
+			mockPayloadSender.Metrics.Count.Should().Be(iterations);
+			mockPayloadSender.Metrics.Should().OnlyContain(x => x.Samples.Count() == 1);
+			metricsProviderMock.Verify(x => x.GetSamples(), Times.Exactly(iterations));
+		}
+
 		private class MetricsProviderWithException : IMetricsProvider
 		{
 			public const string ExceptionMessage = "testException";
@@ -166,8 +241,7 @@ namespace Elastic.Apm.Tests
 		private class TestSystemTotalCpuProvider : SystemTotalCpuProvider
 		{
 			public TestSystemTotalCpuProvider(string procStatContent) : base(new NoopLogger(),
-				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent))))
-			{ }
+				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent)))) { }
 		}
 	}
 }

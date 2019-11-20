@@ -11,7 +11,7 @@ namespace Elastic.Apm.Api
 		public MetricSample(string key, double value)
 			=> KeyValue = new KeyValuePair<string, double>(key, value);
 
-		internal KeyValuePair<string, double> KeyValue { get; set; }
+		internal KeyValuePair<string, double> KeyValue { get; }
 
 		public override string ToString() => new ToStringBuilder(nameof(MetricSample)) { { KeyValue.Key, KeyValue.Value } }.ToString();
 	}
