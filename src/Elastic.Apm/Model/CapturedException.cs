@@ -30,15 +30,15 @@ namespace Elastic.Apm.Model
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Code { get; set; }
 
-		public bool Handled { get; }
+		public bool Handled { get; set; }
 
-		public string Message { get; }
+		public string Message { get; set; }
 
 		[JsonProperty("stacktrace")]
-		public List<CapturedStackFrame> StackTrace { get; }
+		public List<CapturedStackFrame> StackTrace { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
-		public string Type { get; }
+		public string Type { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(CapturedException))
 		{
