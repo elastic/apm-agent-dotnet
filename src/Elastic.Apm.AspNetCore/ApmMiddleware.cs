@@ -42,13 +42,11 @@ namespace Elastic.Apm.AspNetCore
 
 		public async Task InvokeAsync(HttpContext context)
 		{
-			var transaction = await StartTransactionAsync(context);
+			var transaction = StartTransactionAsync(context);
+			await FillSampledTransactionContextRequest(transaction, context);
 
 			try
 			{
-				// We need to reset the current transaction (which is async local), since the StartTransactionAsync call above ended with all its
-				// child spans at this point, therefore need to set the current transaction here again.
-				_tracer.CurrentExecutionSegmentsContainer.CurrentTransaction = transaction;
 				await _next(context);
 			}
 			catch (Exception e) when (transaction != null)
@@ -56,7 +54,7 @@ namespace Elastic.Apm.AspNetCore
 				transaction.CaptureException(e);
 				// It'd be nice to have this in an exception filter, but that would force us capturing the request body synchronously.
 				// Therefore we rather unwind the stack in the catch block and call the async method.
-				if (context != null && transaction.IsContextCreated && transaction.IsCaptureRequestBodyEnabled(true))
+				if (context != null && transaction.IsContextCreated)
 					await transaction.CollectRequestBody(true, context.Request, _logger);
 
 				throw;
@@ -67,14 +65,14 @@ namespace Elastic.Apm.AspNetCore
 				// error handler handles all the exceptions - in this case, based on the response code and the config, we may capture the body here
 				if (transaction != null && transaction.IsContextCreated && context?.Response.StatusCode >= 300
 					&& transaction.Context?.Request?.Body is string body
-					&& (string.IsNullOrEmpty(body) || body == Apm.Consts.Redacted) && transaction.IsCaptureRequestBodyEnabled(true))
+					&& (string.IsNullOrEmpty(body) || body == Apm.Consts.Redacted))
 					await transaction.CollectRequestBody(true, context.Request, _logger);
 
 				StopTransaction(transaction, context);
 			}
 		}
 
-		private async Task<Transaction> StartTransactionAsync(HttpContext context)
+		private Transaction StartTransactionAsync(HttpContext context)
 		{
 			try
 			{
@@ -117,8 +115,6 @@ namespace Elastic.Apm.AspNetCore
 						ApiConstants.TypeRequest);
 				}
 
-				if (transaction.IsSampled) await FillSampledTransactionContextRequest(context, transaction);
-
 				return transaction;
 			}
 			catch (Exception ex)
@@ -126,6 +122,11 @@ namespace Elastic.Apm.AspNetCore
 				_logger?.Error()?.LogException(ex, "Exception thrown while trying to start transaction");
 				return null;
 			}
+		}
+
+		private async Task FillSampledTransactionContextRequest(Transaction transaction, HttpContext context)
+		{
+			if (transaction.IsSampled) await FillSampledTransactionContextRequest(context, transaction);
 		}
 
 		private void StopTransaction(Transaction transaction, HttpContext context)
