@@ -46,7 +46,7 @@ namespace Elastic.Apm.EntityFramework6
 		/// DB spans can be created only when there's a current transaction
 		/// which in turn means agent singleton instance should already be created.
 		/// </summary>
-		private Impl CreateImplIfReady() => Agent.IsInstanceCreated ? _impl.Value : null;
+		private Impl CreateImplIfReady() => Agent.IsConfigured ? _impl.Value : null;
 
 		private class Impl
 		{
