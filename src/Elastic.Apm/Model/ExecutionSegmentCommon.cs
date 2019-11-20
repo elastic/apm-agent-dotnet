@@ -153,8 +153,7 @@ namespace Elastic.Apm.Model
 
 			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger)
 			{
-				Culprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit,
-				Context = transaction.Context
+				Culprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit
 			});
 		}
 
@@ -175,8 +174,7 @@ namespace Elastic.Apm.Model
 
 			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger)
 			{
-				Culprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit,
-				Context = transaction.Context
+				Culprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit
 			});
 		}
 

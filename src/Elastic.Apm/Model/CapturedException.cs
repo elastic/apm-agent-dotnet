@@ -20,6 +20,7 @@ namespace Elastic.Apm.Model
 			Type = exception.GetType().FullName;
 		}
 
+		[JsonConstructor]
 		public CapturedException(string message, List<CapturedStackFrame> stacktrace)
 		{
 			Message = message;
