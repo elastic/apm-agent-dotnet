@@ -63,7 +63,7 @@ namespace Elastic.Apm.AspNetCore
 			{
 				// In case an error handler middleware is registered, the catch block above won't be executed, because the
 				// error handler handles all the exceptions - in this case, based on the response code and the config, we may capture the body here
-				if (transaction != null && transaction.IsContextCreated && context?.Response.StatusCode >= 300
+				if (transaction != null && transaction.IsContextCreated && context?.Response.StatusCode >= 400
 					&& transaction.Context?.Request?.Body is string body
 					&& (string.IsNullOrEmpty(body) || body == Apm.Consts.Redacted))
 					await transaction.CollectRequestBody(true, context.Request, _logger);
