@@ -338,8 +338,8 @@ namespace Elastic.Apm.Tests
 			json = SerializePayloadItem(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue1\",\"a_b_c\":\"labelValue2\"}}");
 		}
-    
-    /// <summary>
+
+		/// <summary>
 		/// Makes sure that keys in custom are de dotted.
 		/// </summary>
 		[Fact]
@@ -376,6 +376,20 @@ namespace Elastic.Apm.Tests
 			context.Custom["a\"b_c"] = "customValue2";
 			json = SerializePayloadItem(context);
 			json.Should().Be("{\"custom\":{\"a_b\":\"customValue1\",\"a_b_c\":\"customValue2\"}}");
+		}
+
+		/// <summary>
+		/// Makes sure that the request bodies that contain json are not changed by serialization.
+		/// It basically tests <see cref="BodyStringSanitizerConverter"/>.
+		/// </summary>
+		[Fact]
+		public void RequestBodyWithJson()
+		{
+			var context = new Context();
+			context.Request = new Request("GET", new Url()) { Body = "{\"foo\": \"bar\"}" };
+
+			var json = SerializePayloadItem(context);
+			json.Should().Be("{\"request\":{\"body\":\"{\\\"foo\\\": \\\"bar\\\"}\",\"method\":\"GET\",\"url\":{}}}");
 		}
 
 		private static string SerializePayloadItem(object item) =>
