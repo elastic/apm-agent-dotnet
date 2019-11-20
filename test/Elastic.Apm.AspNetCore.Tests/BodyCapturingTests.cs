@@ -34,6 +34,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 	{
 		private readonly CustomWebApplicationFactory<FakeAspNetCoreSampleAppStartup> _factory;
 
+		private readonly Uri _testBaseAddress = new Uri("http://localhost:5903");
 		private const string MyCustomContentType = "application/my-custom-content";
 
 		public static IEnumerable<object[]> OptionsChangedAfterStartTestVariants =>
@@ -68,7 +69,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			using (var agent = GetAgent(new MockConfigSnapshot(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll)))
 			using (var client = TestHelper.GetClient(_factory, agent))
 			{
-				client.BaseAddress = new Uri("http://localhost:5903");
+				client.BaseAddress = _testBaseAddress;
 				using (var result = await client.PostAsync("api/Home/Send", new StringContent(body, Encoding.UTF8, "application/json")))
 				{
 					// Make sure the sample app received the data.
@@ -122,7 +123,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			using (var agent = GetAgent(startConfigSnapshot))
 			using (var client = TestHelper.GetClient(_factory, agent))
 			{
-				client.BaseAddress = new Uri("http://localhost:5903");
+				client.BaseAddress = _testBaseAddress;
 
 				foreach (var isError in new[] { false, true })
 				{
@@ -143,11 +144,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 				await BuildOptionsTestVariants().ForEachIndexed(async (updateCfgVariant, updateCfgVariantIndex) =>
 				{
 					var updateConfigSnapshot = new MockConfigSnapshot(
-						new NoopLogger()
-						, captureBody: updateCfgVariant.CaptureBody
-						, captureBodyContentTypes: updateCfgVariant.CaptureBodyContentTypes
-						, transactionSampleRate: updateCfgVariant.IsSampled ? "1" : "0"
-					);
+						new NoopLogger(),
+						captureBody: updateCfgVariant.CaptureBody,
+						captureBodyContentTypes: updateCfgVariant.CaptureBodyContentTypes,
+						transactionSampleRate: updateCfgVariant.IsSampled ? "1" : "0");
 
 					agent.ConfigStore.CurrentSnapshot = updateConfigSnapshot;
 
@@ -159,14 +159,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 							{ nameof(startCfgVariant), startCfgVariant },
 							{ nameof(updateCfgVariantIndex), updateCfgVariantIndex },
 							{ nameof(updateCfgVariant), updateCfgVariant },
-							{ nameof(isError), isError },
+							{ nameof(isError), isError }
 						}.ToString();
 
 						await TestBodyCapture(agent, client, body, isError, ShouldRequestBodyBeCaptured(updateConfigSnapshot, isError), updateCfgVariant.IsSampled);
 					}
 				});
 
-				bool ShouldRequestBodyBeCaptured(IConfigurationReader configSnapshot, bool isError)
+				static bool ShouldRequestBodyBeCaptured(IConfigurationReader configSnapshot, bool isError)
 				{
 					if (!configSnapshot.CaptureBodyContentTypes.Contains(MyCustomContentType)) return false;
 
@@ -176,60 +176,49 @@ namespace Elastic.Apm.AspNetCore.Tests
 					return isError || configSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyTransactions);
 				}
 
-				async Task TestBodyCapture(IApmAgent localAgent, HttpClient localClient, string body, bool isError, bool shouldRequestBodyBeCaptured, bool isSampled)
+				static async Task TestBodyCapture(IApmAgent localAgent, HttpClient localClient, string body, bool isError, bool shouldRequestBodyBeCaptured, bool isSampled)
 				{
 					var capturedPayload = (MockPayloadSender)localAgent.PayloadSender;
 					capturedPayload.Clear();
 
-					var urlPath = isError ? "api/Home/PostError" : "api/Home/Post";
-					HttpResponseMessage response = null;
-
-					Func<Task<HttpResponseMessage>> func = async () => await localClient.PostAsync(urlPath, new StringContent(body, Encoding.UTF8, MyCustomContentType));;
-
-					if (isError)
+					using (var response = await localClient.PostAsync($"api/Home/Post{(isError ? "Error" : string.Empty)}", new StringContent(body, Encoding.UTF8, MyCustomContentType)))
 					{
-						func.Should().Throw<Exception>();
-					}
-					else
-					{
-						response = await func();
-					}
+						capturedPayload.Transactions.Should().ContainSingle();
+						var transaction = capturedPayload.FirstTransaction;
+						object capturedRequestBody = null;
+						transaction.IsSampled.Should().Be(isSampled);
+						transaction.IsContextCreated.Should().Be(isSampled, $"body: {body}");
 
-					capturedPayload.Transactions.Should().ContainSingle();
-					var transaction = capturedPayload.FirstTransaction;
-					object capturedRequestBody = null;
-					transaction.IsSampled.Should().Be(isSampled);
-					transaction.IsContextCreated.Should().Be(isSampled, $"body: {body}");
-					if (isSampled)
-					{
-						capturedRequestBody = transaction.Context.Request.Body;
-						capturedRequestBody.Should().Be(shouldRequestBodyBeCaptured ? body : Elastic.Apm.Consts.Redacted);
-					}
-
-					if (isError)
-					{
-						capturedPayload.Errors.Should().ContainSingle();
-						var error = capturedPayload.FirstError;
 						if (isSampled)
 						{
-							error.Transaction.IsSampled.Should().BeTrue();
-							error.Context.Should().NotBeNull();
-							error.Context.Request.Body.Should().Be(capturedRequestBody);
+							capturedRequestBody = transaction.Context.Request.Body;
+							capturedRequestBody.Should().Be(shouldRequestBodyBeCaptured ? body : Elastic.Apm.Consts.Redacted);
+						}
+
+						if (isError)
+						{
+							capturedPayload.Errors.Should().ContainSingle();
+							var error = capturedPayload.FirstError;
+
+							if (isSampled)
+							{
+								error.Transaction.IsSampled.Should().BeTrue();
+								error.Context.Should().NotBeNull();
+								error.Context.Request.Body.Should().Be(capturedRequestBody);
+							}
+							else
+							{
+								error.Transaction.IsSampled.Should().BeFalse();
+								error.Context.Should().BeNull();
+							}
 						}
 						else
 						{
-							error.Transaction.IsSampled.Should().BeFalse();
-							error.Context.Should().BeNull();
+							var responseBody = await response.Content.ReadAsStringAsync();
+							responseBody.Should().NotBeNull().And.Be(HomeController.PostResponseBody);
+							capturedPayload.Errors.Should().BeEmpty();
 						}
 					}
-					else
-					{
-						var responseBody = await response.Content.ReadAsStringAsync();
-						responseBody.Should().NotBeNull().And.Be(HomeController.PostResponseBody);
-						capturedPayload.Errors.Should().BeEmpty();
-					}
-
-					response.Dispose();
 				}
 			}
 		}
@@ -237,7 +226,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public class OptionsTestVariant
 		{
 			internal string CaptureBody { get; set; }
+
 			internal string CaptureBodyContentTypes { get; set; }
+
 			internal bool IsSampled { get; set; }
 
 			public override string ToString() => new ToStringBuilder(nameof(OptionsTestVariant))
