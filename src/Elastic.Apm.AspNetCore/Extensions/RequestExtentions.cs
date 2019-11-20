@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace Elastic.Apm.AspNetCore.Extensions
 {
-	public static class HttpRequestExtensions
+	internal static class HttpRequestExtensions
 	{
 		/// <summary>
 		/// Extracts the request body using measure to prevent the 'read once' problem (cannot read after the body ha been already

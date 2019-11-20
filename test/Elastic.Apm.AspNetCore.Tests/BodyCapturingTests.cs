@@ -193,7 +193,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				var transaction = sutEnv.MockPayloadSender.FirstTransaction;
 				object capturedRequestBody = null;
 				transaction.IsSampled.Should().Be(isSampled);
-				//transaction.IsContextCreated.Should().Be(isSampled, $"body: {body}");
+				transaction.IsContextCreated.Should().Be(isSampled, $"body: {body}");
 				if (isSampled)
 				{
 					capturedRequestBody = transaction.Context.Request.Body;

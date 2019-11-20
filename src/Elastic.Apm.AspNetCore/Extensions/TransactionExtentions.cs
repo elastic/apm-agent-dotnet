@@ -14,16 +14,13 @@ namespace Elastic.Apm.AspNetCore.Extensions
 		/// </summary>
 		/// <param name="transaction">Transaction object</param>
 		/// <param name="isForError">Is request body being captured for error (otherwise it's for transaction)</param>
-		/// <param name="httpRequest">Current http context containing the http request</param>
+		/// <param name="httpRequest">Current http request</param>
 		/// <param name="logger">Logger object</param>
 		internal static async Task CollectRequestBody(this Transaction transaction, bool isForError, HttpRequest httpRequest, IApmLogger logger)
 		{
 			if (!transaction.IsSampled) return;
 
-			if(httpRequest == null) return;
-
-			if (transaction.IsContextCreated && transaction.Context.Request.Body != null
-				&& !ReferenceEquals(transaction.Context.Request.Body, Apm.Consts.Redacted)) return;
+			if (httpRequest == null) return;
 
 			string body = null;
 
@@ -32,7 +29,6 @@ namespace Elastic.Apm.AspNetCore.Extensions
 			if (transaction.IsContextCreated
 				&& transaction.Context.Request.Body != null
 				&& !ReferenceEquals(transaction.Context.Request.Body, Apm.Consts.Redacted)) return;
-
 
 			if (transaction.IsCaptureRequestBodyEnabled(isForError) && IsCaptureRequestBodyEnabledForContentType(transaction, httpRequest))
 				body = await httpRequest.ExtractRequestBodyAsync(logger);

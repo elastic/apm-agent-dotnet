@@ -56,7 +56,7 @@ namespace Elastic.Apm.AspNetCore
 				transaction.CaptureException(e);
 				// It'd be nice to have this in an exception filter, but that would force us capturing the request body synchronously.
 				// Therefore we rather unwind the stack in the catch block and call the async method.
-				if (context != null && transaction.IsCaptureRequestBodyEnabled(true))
+				if (context != null && transaction.IsContextCreated && transaction.IsCaptureRequestBodyEnabled(true))
 					await transaction.CollectRequestBody(true, context.Request, _logger);
 
 				throw;
@@ -65,7 +65,8 @@ namespace Elastic.Apm.AspNetCore
 			{
 				// In case an error handler middleware is registered, the catch block above won't be executed, because the
 				// error handler handles all the exceptions - in this case, based on the response code and the config, we may capture the body here
-				if (transaction != null && context?.Response.StatusCode >= 300 && transaction.Context?.Request?.Body is string body
+				if (transaction != null && transaction.IsContextCreated && context?.Response.StatusCode >= 300
+					&& transaction.Context?.Request?.Body is string body
 					&& (string.IsNullOrEmpty(body) || body == Apm.Consts.Redacted) && transaction.IsCaptureRequestBodyEnabled(true))
 					await transaction.CollectRequestBody(true, context.Request, _logger);
 
@@ -187,10 +188,7 @@ namespace Elastic.Apm.AspNetCore
 
 				transaction.Context.Request = new Request(context.Request.Method, url)
 				{
-					Socket = new Socket
-					{
-						Encrypted = context.Request.IsHttps, RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
-					},
+					Socket = new Socket { Encrypted = context.Request.IsHttps, RemoteAddress = context.Connection?.RemoteIpAddress?.ToString() },
 					HttpVersion = GetHttpVersion(context.Request.Protocol),
 					Headers = GetHeaders(context.Request.Headers, transaction.ConfigSnapshot)
 				};
