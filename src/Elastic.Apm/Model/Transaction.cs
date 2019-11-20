@@ -14,7 +14,6 @@ namespace Elastic.Apm.Model
 {
 	internal class Transaction : ITransaction
 	{
-		private readonly IConfigurationReader _configurationReader;
 		private readonly Lazy<Context> _context = new Lazy<Context>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 
@@ -42,7 +41,7 @@ namespace Elastic.Apm.Model
 
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type)
-			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigurationReader,
+			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigStore.CurrentSnapshot,
 				agent.TracerInternal.CurrentExecutionSegmentsContainer)
 		{ }
 
@@ -53,17 +52,17 @@ namespace Elastic.Apm.Model
 			Sampler sampler,
 			DistributedTracingData distributedTracingData,
 			IPayloadSender sender,
-			IConfigurationReader configurationReader,
+			IConfigSnapshot configSnapshot,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer
 		)
 		{
+			ConfigSnapshot = configSnapshot;
 			Timestamp = TimeUtils.TimestampNow();
 			var idBytes = new byte[8];
 			Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 			_logger = logger?.Scoped($"{nameof(Transaction)}.{Id}");
 
 			_sender = sender;
-			_configurationReader = configurationReader;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
 
 			Name = name;
@@ -116,6 +115,15 @@ namespace Elastic.Apm.Model
 		/// <seealso cref="ShouldSerializeContext" />
 		/// </summary>
 		public Context Context => _context.Value;
+
+		/// <summary>
+		/// Holds configuration snapshot (which is immutable) that was current when this transaction started.
+		/// We would like transaction data to be consistent and not to be affected by possible changes in agent's configuration
+		/// between the start and the end of the transaction. That is why the way all the data is collected for the transaction
+		/// and its spans is controlled by this configuration snapshot.
+		/// </summary>
+		[JsonIgnore]
+		internal IConfigSnapshot ConfigSnapshot { get; }
 
 		/// <inheritdoc />
 		/// <summary>
@@ -197,6 +205,9 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		public bool ShouldSerializeContext() => IsSampled;
 
+		[JsonIgnore]
+		internal bool IsContextCreated => _context.IsValueCreated;
+
 		public override string ToString() => new ToStringBuilder(nameof(Transaction))
 		{
 			{ nameof(Id), Id },
@@ -247,7 +258,7 @@ namespace Elastic.Apm.Model
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
-			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _configurationReader, _currentExecutionSegmentsContainer);
+			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 
@@ -263,7 +274,7 @@ namespace Elastic.Apm.Model
 				_logger,
 				_sender,
 				this,
-				_configurationReader,
+				ConfigSnapshot,
 				this,
 				culprit,
 				isHandled,
@@ -278,7 +289,7 @@ namespace Elastic.Apm.Model
 				_sender,
 				_logger,
 				this,
-				_configurationReader,
+				ConfigSnapshot,
 				this,
 				parentId
 			);

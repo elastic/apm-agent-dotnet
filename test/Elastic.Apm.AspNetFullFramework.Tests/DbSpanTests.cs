@@ -1,15 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
+using AspNetFullFrameworkSampleApp.Controllers;
 using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.MockApmServer;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
-using AspNetFullFrameworkSampleApp.Controllers;
-using Elastic.Apm.Tests.TestHelpers;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
@@ -41,7 +40,10 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				VerifyReceivedDataSharedConstraints(pageData, receivedData);
 
 				// See comment for TestsBase.SampleAppUrlPaths.SimpleDbTestPage
-				var dbStatements = new[] { "CREATE TABLE", "INSERT", "SELECT", "SELECT" };
+				var dbStatements = new[]
+				{
+					"CREATE TABLE", "INSERT", "SELECT", "SELECT"
+				};
 
 				var transaction = receivedData.Transactions.First();
 
@@ -76,8 +78,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task ConcurrentDbTest()
 		{
 			const int numberOfConcurrentIterations = HomeController.ConcurrentDbTestNumberOfIterations;
-			(numberOfConcurrentIterations % 2).Should().Be(0
-				, $"because numberOfConcurrentIterations should be even. numberOfConcurrentIterations: {numberOfConcurrentIterations}");
+			(numberOfConcurrentIterations % 2).Should()
+				.Be(0
+					, $"because numberOfConcurrentIterations should be even. numberOfConcurrentIterations: {numberOfConcurrentIterations}");
 			// numberOfConcurrentIterations *3 + 5 DB spans:
 			// 		1) CREATE TABLE
 			// 		2) SELECT for
@@ -137,31 +140,36 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					var containingSpan = allChildDbSpans[containingSpanBranchIndex][indexInBranch[containingSpanBranchIndex]];
 					var containedSpanBefore = allChildDbSpans[containedSpansBranchIndex][indexInBranch[containedSpansBranchIndex]];
 					var containedSpanAfter = allChildDbSpans[containedSpansBranchIndex][indexInBranch[containedSpansBranchIndex] + 1];
-					(OccursBetween(containedSpanBefore, containingSpan) || OccursBetween(containedSpanAfter, containingSpan)).Should().BeTrue(
-						$"containingSpan: {containingSpan}, containedSpanBefore: {containedSpanBefore}, containedSpanAfter: {containedSpanAfter}");
+					(OccursBetween(containedSpanBefore, containingSpan) || OccursBetween(containedSpanAfter, containingSpan)).Should()
+						.BeTrue(
+							$"containingSpan: {containingSpan}, containedSpanBefore: {containedSpanBefore}, containedSpanAfter: {containedSpanAfter}");
 					indexInBranch[containingSpanBranchIndex] += 1;
 					indexInBranch[containedSpansBranchIndex] += 2;
 				});
 
-				var dbStatements = new List<string> { "CREATE TABLE", "SELECT", "SELECT" };
+				var dbStatements = new List<string>
+				{
+					"CREATE TABLE", "SELECT", "SELECT"
+				};
 				var allChildDbSpansFlattened = allChildDbSpans.SelectMany(x => x);
 				dbStatements.AddRange(Enumerable.Repeat("INSERT", allChildDbSpansFlattened.Count()));
-				topLevelDbSpans.Concat(allChildDbSpansFlattened).ForEachIndexed((dbSpan, i) =>
-				{
-					dbSpan.Name.Should().StartWith(dbStatements[i]);
-					dbSpan.Type.Should().Be(ApiConstants.TypeDb);
-					dbSpan.Subtype.Should().Be(ApiConstants.SubtypeSqLite);
-					dbSpan.Context.Db.Type.Should().Be(Database.TypeSql);
+				topLevelDbSpans.Concat(allChildDbSpansFlattened)
+					.ForEachIndexed((dbSpan, i) =>
+					{
+						dbSpan.Name.Should().StartWith(dbStatements[i]);
+						dbSpan.Type.Should().Be(ApiConstants.TypeDb);
+						dbSpan.Subtype.Should().Be(ApiConstants.SubtypeSqLite);
+						dbSpan.Context.Db.Type.Should().Be(Database.TypeSql);
 
-					dbSpan.Context.Db.Instance.Should().NotBeNull();
-					dbSpan.Context.Db.Instance.Should().Be(topLevelDbSpans.First().Context.Db.Instance);
+						dbSpan.Context.Db.Instance.Should().NotBeNull();
+						dbSpan.Context.Db.Instance.Should().Be(topLevelDbSpans.First().Context.Db.Instance);
 
-					dbSpan.Context.Db.Statement.Should().StartWith(dbStatements[i]);
+						dbSpan.Context.Db.Statement.Should().StartWith(dbStatements[i]);
 
-					dbSpan.TraceId.Should().Be(transaction.TraceId);
-					dbSpan.TransactionId.Should().Be(transaction.Id);
-					dbSpan.ShouldOccurBetween(transaction);
-				});
+						dbSpan.TraceId.Should().Be(transaction.TraceId);
+						dbSpan.TransactionId.Should().Be(transaction.Id);
+						dbSpan.ShouldOccurBetween(transaction);
+					});
 
 				// ReSharper restore PossibleMultipleEnumeration
 			});

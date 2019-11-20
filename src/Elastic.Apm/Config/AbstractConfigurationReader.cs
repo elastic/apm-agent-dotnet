@@ -438,7 +438,7 @@ namespace Elastic.Apm.Config
 				var adaptedServiceName = AdaptServiceName(nameInConfig);
 
 				if (nameInConfig == adaptedServiceName)
-					_logger?.Warning()?.Log("Service name provided in configuration is {ServiceName}", nameInConfig);
+					_logger?.Debug()?.Log("Service name provided in configuration is {ServiceName}", nameInConfig);
 				else
 				{
 					_logger?.Warning()
@@ -635,22 +635,13 @@ namespace Elastic.Apm.Config
 			return captureBodyInConfig.ToLowerInvariant();
 		}
 
-		protected List<string> ParseCaptureBodyContentTypes(ConfigurationKeyValue kv, string captureBody)
+		protected List<string> ParseCaptureBodyContentTypes(ConfigurationKeyValue kv)
 		{
-			var captureBodyContentTypesInConfig = kv.Value;
+			var valueToParse = kv.Value;
 
-			//CaptureBodyContentTypes and CaptureBody are linked. Verify that in case CaptureBody is ON - then CaptureBodyContentTypes is not empty
-			if (string.IsNullOrEmpty(captureBodyContentTypesInConfig) && captureBody != SupportedValues.CaptureBodyOff)
-			{
-				_logger?.Error()?.Log("Capture_Body is on but no content types are configured. Request bodies will not be captured.");
-				return new List<string>();
-			}
+			if (string.IsNullOrEmpty(valueToParse)) valueToParse = DefaultValues.CaptureBodyContentTypes;
 
-			var captureBodyContentTypes = new List<string>();
-			if (captureBodyContentTypesInConfig != null)
-				captureBodyContentTypes = captureBodyContentTypesInConfig.Split(',').Select(p => p.Trim()).ToList();
-
-			return captureBodyContentTypes;
+			return valueToParse.Split(',').Select(p => p.Trim()).ToList();
 		}
 
 		protected bool ParseCentralConfig(ConfigurationKeyValue kv) => ParseBoolOption(kv, DefaultValues.CentralConfig, "CentralConfig");
@@ -736,6 +727,8 @@ namespace Elastic.Apm.Config
 
 		internal static string ToLogString(IReadOnlyDictionary<string, string> stringToStringMap)
 		{
+			if (stringToStringMap == null) return ObjectExtensions.NullAsString;
+
 			// [count: 3]: [0]: `key0': `value0', [1]: `key1': `value1', [2]: `key2': `value2'
 			var result = new StringBuilder();
 

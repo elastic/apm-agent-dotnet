@@ -172,9 +172,11 @@ namespace SampleAspNetCoreApp.Controllers
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 		public IActionResult Error() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
 
+		public const string PostResponseBody = "somevalue";
+
 		[HttpPost]
 		[Route("api/Home/Post")]
-		public ActionResult<string> Post() => "somevalue";
+		public ActionResult<string> Post() => PostResponseBody;
 
 		[HttpPost]
 		[Route("api/Home/PostError")]

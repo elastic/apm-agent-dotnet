@@ -2,21 +2,8 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>Elastic.Apm.AspNetCore</AssemblyName>
-    <AssemblyVersion>1.1.2</AssemblyVersion>
-    <InformationalVersion>1.1.2</InformationalVersion>
-    <FileVersion>1.1.2</FileVersion>
     <RootNamespace>Elastic.Apm.AspNetCore</RootNamespace>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
-    <DelaySign>false</DelaySign>
-    <PackageVersion>1.1.2</PackageVersion>
-    <Authors>Elastic and contributors</Authors>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <PackageId>Elastic.Apm.AspNetCore</PackageId>
-    <Copyright>2019 Elasticsearch BV</Copyright>
-    <PackageLicenseUrl>https://github.com/elastic/apm-agent-dotnet/blob/master/LICENSE</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/elastic/apm-agent-dotnet</PackageProjectUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/elastic/apm-agent-dotnet/master/build/nuget-icon.png</PackageIconUrl>
     <Description>Elastic APM for ASP.NET Core. This package contains auto instrumentation for ASP.NET Core. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, aspnetcore</PackageTags>
   </PropertyGroup>

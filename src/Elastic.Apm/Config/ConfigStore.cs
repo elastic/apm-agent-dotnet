@@ -15,14 +15,11 @@ namespace Elastic.Apm.Config
 			_currentSnapshot = initialSnapshot;
 		}
 
-		private IConfigSnapshot _currentSnapshot;
+		private volatile IConfigSnapshot _currentSnapshot;
 
 		public IConfigSnapshot CurrentSnapshot
 		{
-			get
-			{
-				lock (_lock) return _currentSnapshot;
-			}
+			get => _currentSnapshot;
 
 			set
 			{

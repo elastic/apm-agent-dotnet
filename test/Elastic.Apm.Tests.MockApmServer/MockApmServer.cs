@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics.Contracts;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,6 +6,7 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -32,15 +32,22 @@ namespace Elastic.Apm.Tests.MockApmServer
 		}
 
 		private CancellationTokenSource _cancellationTokenSource;
+		private volatile Func<HttpRequest, HttpResponse, IActionResult> _getAgentsConfig;
 		private int _port;
 		private Task _runningTask;
+
+		internal Func<HttpRequest, HttpResponse, IActionResult> GetAgentsConfig
+		{
+			get => _getAgentsConfig;
+			set => _getAgentsConfig = value;
+		}
 
 		internal IApmLogger InternalLogger { get; }
 
 		internal int FindAvailablePortToListen()
 		{
 			var numberOfPortsTried = 0;
-			var numberOfPortsInScanRange = PortScanRange.End - PortScanRange.Begin;
+			const int numberOfPortsInScanRange = PortScanRange.End - PortScanRange.Begin;
 			var currentPort = RandomGenerator.GetInstance().Next(PortScanRange.Begin, PortScanRange.End);
 			while (true)
 			{
@@ -75,8 +82,8 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		internal void RunInBackground(int port)
 		{
-			Contract.Requires(_cancellationTokenSource == null);
-			Contract.Requires(_runningTask == null);
+			Assertion.IfEnabled?.That(_cancellationTokenSource == null, "");
+			Assertion.IfEnabled?.That(_runningTask == null, "");
 
 			_cancellationTokenSource = new CancellationTokenSource();
 			_port = port;
@@ -92,6 +99,11 @@ namespace Elastic.Apm.Tests.MockApmServer
 			webHost.Run();
 		}
 
+		internal TResult DoUnderLock<TResult>(Func<TResult> func)
+		{
+			lock (_lock) return func();
+		}
+
 		internal Task<TResult> DoUnderLock<TResult>(Func<Task<TResult>> asyncFunc)
 		{
 			lock (_lock) return asyncFunc();
@@ -99,16 +111,20 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		internal async Task StopAsync()
 		{
-			Contract.Requires(_cancellationTokenSource != null);
-			Contract.Requires(_runningTask != null);
+			Assertion.IfEnabled?.That(_cancellationTokenSource != null, "");
+			Assertion.IfEnabled?.That(_runningTask != null, "");
 
+			// ReSharper disable once PossibleNullReferenceException
 			_cancellationTokenSource.Cancel();
+			// ReSharper disable once PossibleNullReferenceException
 			await _runningTask;
 			_cancellationTokenSource = null;
 			_runningTask = null;
 
 			InternalLogger.Info()?.Log("Stopped");
 		}
+
+		internal void ClearState() => ReceivedData.Clear();
 
 		private IWebHostBuilder CreateWebHostBuilder() =>
 			WebHost.CreateDefaultBuilder(new string[0])

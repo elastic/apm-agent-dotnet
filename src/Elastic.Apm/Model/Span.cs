@@ -14,7 +14,6 @@ namespace Elastic.Apm.Model
 {
 	internal class Span : ISpan
 	{
-		private readonly IConfigurationReader _configurationReader;
 		private readonly Lazy<SpanContext> _context = new Lazy<SpanContext>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly Transaction _enclosingTransaction;
@@ -32,7 +31,6 @@ namespace Elastic.Apm.Model
 			Transaction enclosingTransaction,
 			IPayloadSender payloadSender,
 			IApmLogger logger,
-			IConfigurationReader configurationReader,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
 			Span parentSpan = null
 		)
@@ -42,7 +40,6 @@ namespace Elastic.Apm.Model
 			_logger = logger?.Scoped($"{nameof(Span)}.{Id}");
 
 			_payloadSender = payloadSender;
-			_configurationReader = configurationReader;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
 			_parentSpan = parentSpan;
 			_enclosingTransaction = enclosingTransaction;
@@ -55,8 +52,8 @@ namespace Elastic.Apm.Model
 			if (IsSampled)
 			{
 				// Started and dropped spans should be counted only for sampled transactions
-				if (enclosingTransaction.SpanCount.IncrementTotal() > _configurationReader.TransactionMaxSpans
-					&& _configurationReader.TransactionMaxSpans >= 0)
+				if (enclosingTransaction.SpanCount.IncrementTotal() > ConfigSnapshot.TransactionMaxSpans
+					&& ConfigSnapshot.TransactionMaxSpans >= 0)
 				{
 					_isDropped = true;
 					enclosingTransaction.SpanCount.IncrementDropped();
@@ -99,6 +96,9 @@ namespace Elastic.Apm.Model
 
 		[JsonIgnore]
 		public Dictionary<string, string> Labels => Context.Labels;
+
+		[JsonIgnore]
+		private IConfigSnapshot ConfigSnapshot => _enclosingTransaction.ConfigSnapshot;
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
@@ -158,8 +158,7 @@ namespace Elastic.Apm.Model
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
 		{
-			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _configurationReader,
-				_currentExecutionSegmentsContainer, this);
+			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer, this);
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 
 			if (!string.IsNullOrEmpty(action)) retVal.Action = action;
@@ -201,13 +200,13 @@ namespace Elastic.Apm.Model
 			{
 				// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
-				if (_configurationReader.StackTraceLimit != 0 && _configurationReader.SpanFramesMinDurationInMilliseconds != 0)
+				if (ConfigSnapshot.StackTraceLimit != 0 && ConfigSnapshot.SpanFramesMinDurationInMilliseconds != 0)
 				{
-					if (Duration >= _configurationReader.SpanFramesMinDurationInMilliseconds
-						|| _configurationReader.SpanFramesMinDurationInMilliseconds < 0)
+					if (Duration >= ConfigSnapshot.SpanFramesMinDurationInMilliseconds
+						|| ConfigSnapshot.SpanFramesMinDurationInMilliseconds < 0)
 					{
 						StackTrace = StacktraceHelper.GenerateApmStackTrace(new StackTrace(true).GetFrames(), _logger,
-							_configurationReader, $"Span `{Name}'");
+							ConfigSnapshot, $"Span `{Name}'");
 					}
 				}
 
@@ -223,7 +222,7 @@ namespace Elastic.Apm.Model
 				_logger,
 				_payloadSender,
 				this,
-				_configurationReader,
+				ConfigSnapshot,
 				_enclosingTransaction,
 				culprit,
 				isHandled,
@@ -262,7 +261,7 @@ namespace Elastic.Apm.Model
 				_payloadSender,
 				_logger,
 				this,
-				_configurationReader,
+				ConfigSnapshot,
 				_enclosingTransaction,
 				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id)
 			);

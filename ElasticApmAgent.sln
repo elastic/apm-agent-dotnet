@@ -15,6 +15,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleAspNetCoreApp", "sample\SampleAspNetCoreApp\SampleAspNetCoreApp.csproj", "{0ADF687D-4DB7-417E-80B4-27B3FD86875E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{267A241E-571F-458F-B04C-B6C4DE79E735}"
+ProjectSection(SolutionItems) = preProject
+	test\Directory.Build.props = test\Directory.Build.props
+EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm", "src\Elastic.Apm\Elastic.Apm.csproj", "{90BC9629-C8D2-4FD5-863E-EA2D5FB37341}"
 EndProject
