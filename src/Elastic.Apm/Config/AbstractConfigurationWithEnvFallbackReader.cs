@@ -41,8 +41,7 @@ namespace Elastic.Apm.Config
 		public virtual string Environment => ParseEnvironment(Read(ConfigConsts.KeyNames.Environment, ConfigConsts.EnvVarNames.Environment))
 			?? _defaultEnvironmentName;
 
-		public string ServiceNodeName => ParseServiceNodeName(Kv(ConfigConsts.EnvVarNames.ServiceNodeName,
-			ReadEnvVarValue(ConfigConsts.EnvVarNames.ServiceNodeName), EnvironmentConfigurationReader.Origin));
+		public string ServiceNodeName => ParseServiceNodeName(Read(ConfigConsts.KeyNames.ServiceNodeName, ConfigConsts.EnvVarNames.ServiceNodeName));
 
 		public virtual TimeSpan FlushInterval =>
 			ParseFlushInterval(Read(ConfigConsts.KeyNames.FlushInterval, ConfigConsts.EnvVarNames.FlushInterval));

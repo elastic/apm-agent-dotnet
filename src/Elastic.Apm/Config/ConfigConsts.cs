@@ -98,6 +98,7 @@ namespace Elastic.Apm.Config
 			public const string SecretToken = "ElasticApm:SecretToken";
 			public const string ServerUrls = "ElasticApm:ServerUrls";
 			public const string ServiceName = "ElasticApm:ServiceName";
+			public const string ServiceNodeName = "ElasticApm:ServiceNodeName";
 			public const string ServiceVersion = "ElasticApm:ServiceVersion";
 			public const string SpanFramesMinDuration = "ElasticApm:SpanFramesMinDuration";
 			public const string StackTraceLimit = "ElasticApm:StackTraceLimit";

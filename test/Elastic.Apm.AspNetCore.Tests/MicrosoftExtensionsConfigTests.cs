@@ -38,6 +38,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.LogLevel.Should().Be(LogLevel.Debug);
 			config.ServerUrls[0].Should().Be(new Uri("http://myServerFromTheConfigFile:8080"));
 			config.ServiceName.Should().Be("My_Test_Application");
+			config.ServiceNodeName.Should().Be("Instance1");
 			config.ServiceVersion.Should().Be("2.1.0.5");
 			config.Environment.Should().Be("staging");
 			config.CaptureHeaders.Should().Be(false);
