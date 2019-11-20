@@ -12,8 +12,8 @@ namespace Elastic.Apm.Metrics
 	internal interface IMetricsProvider
 	{
 		/// <summary>
-		/// Stores the number of calls to the <see cref="GetSamples" /> method when it either returned null or an empty list.
-		/// This is used by <see cref="MetricsCollector" />
+		/// Stores the number of calls to the <see cref="GetSamples" /> method when it returned null, an empty list or
+		/// any of values is either NaN or Infinite. This is used by <see cref="MetricsCollector" />
 		/// </summary>
 		int ConsecutiveNumberOfFailedReads { get; set; }
 
