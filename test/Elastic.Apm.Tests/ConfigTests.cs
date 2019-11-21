@@ -303,7 +303,7 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
-		public void DefaultLogLevelTest() => Agent.Config.LogLevel.Should().Be(LogLevel.Error);
+		public void DefaultLogLevelTest() => new ApmAgent(new TestAgentComponents()).ConfigurationReader.LogLevel.Should().Be(LogLevel.Error);
 
 		[Theory]
 		[InlineData("Trace", LogLevel.Trace)]

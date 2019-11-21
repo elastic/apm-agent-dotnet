@@ -52,18 +52,6 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Makes sure Agent.IsConfigured only returns true after Setup is called.
-		/// </summary>
-		[Fact]
-		public void IsConfigured()
-		{
-			Agent.IsConfigured.Should().BeFalse();
-
-			Agent.Setup(new AgentComponents());
-			Agent.IsConfigured.Should().BeTrue();
-		}
-
-		/// <summary>
 		/// Creates 1 span and 1 transaction.
 		/// Makes sure that the ids have the correct lengths.
 		/// </summary>
