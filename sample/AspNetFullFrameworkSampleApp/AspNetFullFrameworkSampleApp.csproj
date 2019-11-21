@@ -283,5 +283,6 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
+  <!--https://github.com/aspnet/RoslynCodeDomProvider/issues/51-->
   <Target Name="CheckIfShouldKillVBCSCompiler" />
 </Project>

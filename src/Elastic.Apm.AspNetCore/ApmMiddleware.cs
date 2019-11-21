@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.Extensions;
-using Elastic.Apm.AspNetCore.Helpers;
 using Elastic.Apm.Config;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Logging;
@@ -42,21 +42,37 @@ namespace Elastic.Apm.AspNetCore
 
 		public async Task InvokeAsync(HttpContext context)
 		{
-			var transaction = StartTransaction(context);
+			var transaction = StartTransactionAsync(context);
+			await FillSampledTransactionContextRequest(transaction, context);
 
 			try
 			{
 				await _next(context);
 			}
-			catch (Exception e) when (transaction != null && ExceptionFilter.Capture(e, transaction, context, _logger))
-			{ }
+			catch (Exception e) when (transaction != null)
+			{
+				transaction.CaptureException(e);
+				// It'd be nice to have this in an exception filter, but that would force us capturing the request body synchronously.
+				// Therefore we rather unwind the stack in the catch block and call the async method.
+				if (context != null)
+					await transaction.CollectRequestBody(true, context.Request, _logger);
+
+				throw;
+			}
 			finally
 			{
+				// In case an error handler middleware is registered, the catch block above won't be executed, because the
+				// error handler handles all the exceptions - in this case, based on the response code and the config, we may capture the body here
+				if (transaction != null && transaction.IsContextCreated && context?.Response.StatusCode >= 400
+					&& transaction.Context?.Request?.Body is string body
+					&& (string.IsNullOrEmpty(body) || body == Apm.Consts.Redacted))
+					await transaction.CollectRequestBody(true, context.Request, _logger);
+
 				StopTransaction(transaction, context);
 			}
 		}
 
-		private Transaction StartTransaction(HttpContext context)
+		private Transaction StartTransactionAsync(HttpContext context)
 		{
 			try
 			{
@@ -99,8 +115,6 @@ namespace Elastic.Apm.AspNetCore
 						ApiConstants.TypeRequest);
 				}
 
-				if (transaction.IsSampled) FillSampledTransactionContextRequest(context, transaction);
-
 				return transaction;
 			}
 			catch (Exception ex)
@@ -108,6 +122,11 @@ namespace Elastic.Apm.AspNetCore
 				_logger?.Error()?.LogException(ex, "Exception thrown while trying to start transaction");
 				return null;
 			}
+		}
+
+		private async Task FillSampledTransactionContextRequest(Transaction transaction, HttpContext context)
+		{
+			if (transaction.IsSampled) await FillSampledTransactionContextRequest(context, transaction);
 		}
 
 		private void StopTransaction(Transaction transaction, HttpContext context)
@@ -152,7 +171,7 @@ namespace Elastic.Apm.AspNetCore
 			return rawPathAndQuery == null ? null : UriHelper.BuildAbsolute(httpRequest.Scheme, httpRequest.Host, rawPathAndQuery);
 		}
 
-		private void FillSampledTransactionContextRequest(HttpContext context, Transaction transaction)
+		private async Task FillSampledTransactionContextRequest(HttpContext context, Transaction transaction)
 		{
 			try
 			{
@@ -170,15 +189,12 @@ namespace Elastic.Apm.AspNetCore
 
 				transaction.Context.Request = new Request(context.Request.Method, url)
 				{
-					Socket = new Socket
-					{
-						Encrypted = context.Request.IsHttps, RemoteAddress = context.Connection?.RemoteIpAddress?.ToString()
-					},
+					Socket = new Socket { Encrypted = context.Request.IsHttps, RemoteAddress = context.Connection?.RemoteIpAddress?.ToString() },
 					HttpVersion = GetHttpVersion(context.Request.Protocol),
-					Headers = GetHeaders(context.Request.Headers, transaction.ConfigSnapshot),
+					Headers = GetHeaders(context.Request.Headers, transaction.ConfigSnapshot)
 				};
 
-				transaction.CollectRequestBody( /* isForError: */ false, context.Request, _logger);
+				await transaction.CollectRequestBody(false, context.Request, _logger);
 			}
 			catch (Exception ex)
 			{
@@ -291,6 +307,7 @@ namespace Elastic.Apm.AspNetCore
 			return name;
 		}
 
+		[SuppressMessage("ReSharper", "PatternAlwaysOfType")]
 		private static string GetProtocolName(string protocol)
 		{
 			switch (protocol)

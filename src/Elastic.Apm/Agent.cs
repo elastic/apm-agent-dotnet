@@ -94,15 +94,14 @@ namespace Elastic.Apm
 
 	public static class Agent
 	{
-		private static readonly Lazy<ApmAgent> Lazy = new Lazy<ApmAgent>(() => new ApmAgent(_components));
+		private static readonly Lazy<ApmAgent> LazyApmAgent = new Lazy<ApmAgent>(() => new ApmAgent(_components));
 		private static AgentComponents _components;
 
+		public static IConfigurationReader Config => Instance.ConfigurationReader;
 
-		public static IConfigurationReader Config => Lazy.Value.ConfigurationReader;
+		internal static ApmAgent Instance => LazyApmAgent.Value;
 
-		internal static ApmAgent Instance => Lazy.Value;
-
-		internal static bool IsInstanceCreated => Lazy.IsValueCreated;
+		public static bool IsConfigured { get; private set; }
 
 		/// <summary>
 		/// The entry point for manual instrumentation. The <see cref="Tracer" /> property returns the tracer,
@@ -112,24 +111,25 @@ namespace Elastic.Apm
 		public static ITracer Tracer => Instance.Tracer;
 
 		/// <summary>
-		/// Sets up multiple <see cref="IDiagnosticsSubscriber" />'s to start listening to one or more
-		/// <see cref="IDiagnosticListener" />'s
+		/// Sets up multiple <see cref="IDiagnosticsSubscriber" />s to start listening to one or more
+		/// <see cref="IDiagnosticListener" />s.
 		/// </summary>
 		/// <param name="subscribers">
-		/// An array of <see cref="IDiagnosticsSubscriber" /> that will set up <see cref="IDiagnosticListener" /> subscriptions
+		/// An array of <see cref="IDiagnosticsSubscriber" /> that will set up <see cref="IDiagnosticListener" /> subscriptions.
 		/// </param>
 		/// <returns>
-		/// A disposable referencing all the subscriptions, disposing this is not necessary for clean up, only to unsubscribe if
+		/// A disposable referencing all the subscriptions. Disposing this is not necessary for clean up, only to unsubscribe if
 		/// desired.
 		/// </returns>
 		public static IDisposable Subscribe(params IDiagnosticsSubscriber[] subscribers) => Instance.Subscribe(subscribers);
 
 		public static void Setup(AgentComponents agentComponents)
 		{
-			if (IsInstanceCreated)
-				throw new InstanceAlreadyCreatedException("The singleton APM agent has already been instantiated and can no longer be configured");
+			if (LazyApmAgent.IsValueCreated)
+				throw new InstanceAlreadyCreatedException("The singleton APM agent has already been instantiated and can no longer be configured.");
 
 			_components = agentComponents;
+			IsConfigured = true;
 		}
 
 		internal class InstanceAlreadyCreatedException : Exception
