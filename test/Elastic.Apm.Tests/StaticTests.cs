@@ -6,7 +6,7 @@ namespace Elastic.Apm.Tests
 	/// <summary>
 	/// These tests access the static <see cref="Agent"/> instance.
 	/// All other tests should have their own <see cref="ApmAgent"/> instance and not rely on anything static.
-	/// Tests accessing the static <see cref="Agent"/> instance can not run in parallel with tests that also access the static instance.
+	/// Tests accessing the static <see cref="Agent"/> instance cannot run in parallel with tests that also access the static instance.
 	/// </summary>
 	public class StaticAgentTests
 	{
