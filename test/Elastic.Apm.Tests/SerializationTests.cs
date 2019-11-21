@@ -412,6 +412,40 @@ namespace Elastic.Apm.Tests
 			json.Should().Be("{\"request\":{\"body\":\"password=[REDACTED]&pwd=[REDACTED]\",\"method\":\"GET\",\"url\":{}}}");
 		}
 
+		[Fact]
+		public void RequestBodyWithJsonAndMultipleValues()
+		{
+			var context = new Context();
+			context.Request = new Request("GET", new Url()) { Body = "{\"foo\": \"k1=v1&k2\"}" };
+
+			var json = SerializePayloadItem(context);
+			json.Should().Be("{\"request\":{\"body\":\"{\\\"foo\\\": \\\"k1=v1&k2\\\"}\",\"method\":\"GET\",\"url\":{}}}");
+		}
+
+		[Fact]
+		public void RequestBodyWithEdgeCases()
+		{
+			var context = new Context();
+			context.Request = new Request("GET", new Url()) { Body = "foo=" };
+			var json = SerializePayloadItem(context);
+			json.Should().Be("{\"request\":{\"body\":\"foo=\",\"method\":\"GET\",\"url\":{}}}");
+
+			context.Request = new Request("GET", new Url()) { Body = "foo&" };
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"request\":{\"body\":\"foo&\",\"method\":\"GET\",\"url\":{}}}");
+
+			context.Request = new Request("GET", new Url()) { Body = "foo&=&=" };
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"request\":{\"body\":\"foo&=&=\",\"method\":\"GET\",\"url\":{}}}");
+
+			context.Request = new Request("GET", new Url()) { Body = "a&b=c" };
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"request\":{\"body\":\"a&b=c\",\"method\":\"GET\",\"url\":{}}}");
+
+			context.Request = new Request("GET", new Url()) { Body = "&=" };
+			json = SerializePayloadItem(context);
+			json.Should().Be("{\"request\":{\"body\":\"&=\",\"method\":\"GET\",\"url\":{}}}");
+		}
 
 		private static string SerializePayloadItem(object item) =>
 			new PayloadItemSerializer(new MockConfigSnapshot()).SerializeObject(item);
