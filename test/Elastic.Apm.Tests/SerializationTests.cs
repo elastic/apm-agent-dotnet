@@ -392,6 +392,27 @@ namespace Elastic.Apm.Tests
 			json.Should().Be("{\"request\":{\"body\":\"{\\\"foo\\\": \\\"bar\\\"}\",\"method\":\"GET\",\"url\":{}}}");
 		}
 
+		[Fact]
+		public void RequestBodyWithSingleValue()
+		{
+			var context = new Context();
+			context.Request = new Request("GET", new Url()) { Body = "password=foo" };
+
+			var json = SerializePayloadItem(context);
+			json.Should().Be("{\"request\":{\"body\":\"password=[REDACTED]\",\"method\":\"GET\",\"url\":{}}}");
+		}
+
+		[Fact]
+		public void RequestBodyWithTwoValue()
+		{
+			var context = new Context();
+			context.Request = new Request("GET", new Url()) { Body = "password=foo&pwd=bar" };
+
+			var json = SerializePayloadItem(context);
+			json.Should().Be("{\"request\":{\"body\":\"password=[REDACTED]&pwd=[REDACTED]\",\"method\":\"GET\",\"url\":{}}}");
+		}
+
+
 		private static string SerializePayloadItem(object item) =>
 			new PayloadItemSerializer(new MockConfigSnapshot()).SerializeObject(item);
 
