@@ -62,23 +62,29 @@ namespace Elastic.Apm.Report.Serialization
 			if (!bodyValue.Contains("=") && !bodyValue.Contains("&"))
 				return false;
 
+			var numberOfEqual = 0;
+			var numberOfAnds = 0;
+
 			var i = 0;
 			foreach (var c in bodyValue)
 			{
 				if (c == '=')
 				{
+					numberOfEqual++;
 					i++;
 					if (i > 1)
 						return false;
 				}
 				if (c == '&')
 				{
+					numberOfAnds++;
 					i--;
 					if (i < 0)
 						return false;
 				}
 			}
-			return true;
+
+			return numberOfAnds != 0 || numberOfEqual != 0;
 		}
 
 		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) =>
