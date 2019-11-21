@@ -1,4 +1,5 @@
 using System.Net.Mime;
+using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
@@ -13,11 +14,15 @@ namespace Elastic.Apm.AspNetCore.Extensions
 		/// </summary>
 		/// <param name="transaction">Transaction object</param>
 		/// <param name="isForError">Is request body being captured for error (otherwise it's for transaction)</param>
-		/// <param name="request">Current http request</param>
+		/// <param name="httpRequest">Current http request</param>
 		/// <param name="logger">Logger object</param>
-		internal static void CollectRequestBody(this Transaction transaction, bool isForError, HttpRequest request, IApmLogger logger)
+		internal static async Task CollectRequestBody(this Transaction transaction, bool isForError, HttpRequest httpRequest, IApmLogger logger)
 		{
 			if (!transaction.IsSampled) return;
+
+			if (httpRequest == null) return;
+
+			string body = null;
 
 			// Is request body already captured?
 			// We check transaction.IsContextCreated to avoid creating empty Context (that accessing transaction.Context directly would have done).
@@ -25,14 +30,14 @@ namespace Elastic.Apm.AspNetCore.Extensions
 				&& transaction.Context.Request.Body != null
 				&& !ReferenceEquals(transaction.Context.Request.Body, Apm.Consts.Redacted)) return;
 
-			string body = null;
-			if (IsCaptureRequestBodyEnabled(transaction, isForError) && IsCaptureRequestBodyEnabledForContentType(transaction, request))
-				body = request.ExtractRequestBody(logger);
+			if (transaction.IsCaptureRequestBodyEnabled(isForError) && IsCaptureRequestBodyEnabledForContentType(transaction, httpRequest))
+				body = await httpRequest.ExtractRequestBodyAsync(logger);
+
 			// According to the documentation - the default value of 'body' is '[Redacted]'
 			transaction.Context.Request.Body = body ?? Apm.Consts.Redacted;
 		}
 
-		private static bool IsCaptureRequestBodyEnabled(Transaction transaction, bool isForError) =>
+		internal static bool IsCaptureRequestBodyEnabled(this Transaction transaction, bool isForError) =>
 			transaction.ConfigSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyAll)
 			||
 			(isForError
