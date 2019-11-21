@@ -548,11 +548,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			service.Name.Should().Be(expectedServiceName);
 			service.Environment.Should().Be(expectedEnvironment);
-
-			if (expectedServiceNodeName == null)
-				service.Node.Should().BeNull();
-			else
-				service.Node.ConfiguredName.Should().Be(expectedServiceNodeName);
+			service.Node.ConfiguredName.Should().Be(expectedServiceNodeName);
 		}
 
 		private static void FullFwAssertValid(Framework framework)
