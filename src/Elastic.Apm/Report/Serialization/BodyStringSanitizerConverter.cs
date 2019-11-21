@@ -32,8 +32,8 @@ namespace Elastic.Apm.Report.Serialization
 					foreach (var formValue in formValues)
 					{
 						var formsValueSplit = formValue.Split('=');
-						if (formsValueSplit.Length != 2 || string.IsNullOrWhiteSpace(formsValueSplit[0])
-							|| string.IsNullOrWhiteSpace(formsValueSplit[1]))
+						if (formsValueSplit.Length != 2 || string.IsNullOrEmpty(formsValueSplit[0])
+							|| string.IsNullOrEmpty(formsValueSplit[1]))
 						{
 							//in this case it's not in the expected format, so we won't (and can't) sanitize, we just write it and move on
 							writer.WriteValue(strValue);
