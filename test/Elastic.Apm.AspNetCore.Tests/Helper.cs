@@ -103,11 +103,21 @@ namespace Elastic.Apm.AspNetCore.Tests
 		internal static void ConfigureServices(IServiceCollection services)
 		{
 			Startup.ConfigureServicesExceptMvc(services);
-			services.AddMvc()
+			services.AddMvc(options =>
+				{
+#if NETCOREAPP30
+					options.EnableEndpointRouting = false;
+#endif
+				})
 				//this is needed because of a (probably) bug:
 				//https://github.com/aspnet/Mvc/issues/5992
 				.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))))
+#if NETCOREAPP30
+				.SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+#else
 				.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+#endif
 		}
 	}
 }
+
