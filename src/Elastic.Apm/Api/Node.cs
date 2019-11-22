@@ -10,6 +10,6 @@ namespace Elastic.Apm.Api
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string ConfiguredName { get; set; }
 
-		public override string ToString() => new ToStringBuilder(nameof(Service)) { { nameof(ConfiguredName), ConfiguredName } }.ToString();
+		public override string ToString() => new ToStringBuilder(nameof(Node)) { { nameof(ConfiguredName), ConfiguredName } }.ToString();
 	}
 }
