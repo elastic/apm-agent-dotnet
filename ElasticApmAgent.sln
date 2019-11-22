@@ -4,21 +4,21 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.28803.352
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3734A52F-2222-454B-BF58-1BA5C1F29D77}"
-ProjectSection(SolutionItems) = preProject
-	src\Directory.Build.props = src\Directory.Build.props
-EndProjectSection
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.Build.props = src\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{3C791D9C-6F19-4F46-B367-2EC0F818762D}"
-ProjectSection(SolutionItems) = preProject
-	sample\Directory.Build.props = sample\Directory.Build.props
-EndProjectSection
+	ProjectSection(SolutionItems) = preProject
+		sample\Directory.Build.props = sample\Directory.Build.props
+	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCoreSampleApp", "sample\AspNetCoreSampleApp\AspNetCoreSampleApp.csproj", "{0ADF687D-4DB7-417E-80B4-27B3FD86875E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleAspNetCoreApp", "sample\SampleAspNetCoreApp\SampleAspNetCoreApp.csproj", "{0ADF687D-4DB7-417E-80B4-27B3FD86875E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{267A241E-571F-458F-B04C-B6C4DE79E735}"
-ProjectSection(SolutionItems) = preProject
-	test\Directory.Build.props = test\Directory.Build.props
-EndProjectSection
+	ProjectSection(SolutionItems) = preProject
+		test\Directory.Build.props = test\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm", "src\Elastic.Apm\Elastic.Apm.csproj", "{90BC9629-C8D2-4FD5-863E-EA2D5FB37341}"
 EndProject
@@ -42,10 +42,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "files", "files", "{B406113B
 		.gitignore = .gitignore
 		codecov.yml = codecov.yml
 		CONTRIBUTING.md = CONTRIBUTING.md
+		Directory.Build.props = Directory.Build.props
+		global.json = global.json
 		LICENSE = LICENSE
 		README.md = README.md
-		global.json = global.json
-		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.PerfTests", "test\Elastic.Apm.PerfTests\Elastic.Apm.PerfTests.csproj", "{F069CE99-F418-4BC2-9E44-8F03497D8DA8}"
@@ -56,7 +56,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApiSample", "sample\WebA
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.AspNetFullFramework", "src\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj", "{D6FFDDAB-9D76-442F-8F1D-BD6F553F92FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.EntityFramework6", "src\Elastic.Apm.EntityFramework6\Elastic.Apm.EntityFramework6.csproj", "{12FFCFF6-858C-4E6E-935C-E304712DECA4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.EntityFramework6", "src\Elastic.Apm.EntityFramework6\Elastic.Apm.EntityFramework6.csproj", "{12FFCFF6-858C-4E6E-935C-E304712DECA4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.DockerTests", "test\Elastic.Apm.DockerTests\Elastic.Apm.DockerTests.csproj", "{40B47FD4-6E67-4D52-B9A4-607B9D01D9F5}"
 EndProject
@@ -64,9 +64,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.AspNetFullFrame
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Tests.MockApmServer", "test\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj", "{AFFB238B-10C0-4229-9527-184EFCF0F5AC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ci", ".ci\ci.csproj", "{9AAC1E7A-5887-46BC-96DA-DDFFF0F7CDC2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ci", ".ci\ci.csproj", "{9AAC1E7A-5887-46BC-96DA-DDFFF0F7CDC2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.EntityFrameworkCore.Tests", "test\Elastic.Apm.EntityFrameworkCore.Tests\Elastic.Apm.EntityFrameworkCore.Tests.csproj", "{79BEA612-E2C8-47FD-84DC-A1B17AAD5038}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.EntityFrameworkCore.Tests", "test\Elastic.Apm.EntityFrameworkCore.Tests\Elastic.Apm.EntityFrameworkCore.Tests.csproj", "{79BEA612-E2C8-47FD-84DC-A1B17AAD5038}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -45,8 +45,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		/// <summary>
 		/// Distributed tracing integration test.
-		/// It starts <see cref="AspNetCoreSampleApp" /> with one agent and <see cref="WebApiSample" /> with another agent.
-		/// It calls the 'DistributedTracingMiniSample' in <see cref="AspNetCoreSampleApp" />, which generates a simple HTTP
+		/// It starts <see cref="SampleAspNetCoreApp" /> with one agent and <see cref="WebApiSample" /> with another agent.
+		/// It calls the 'DistributedTracingMiniSample' in <see cref="SampleAspNetCoreApp" />, which generates a simple HTTP
 		/// response by calling <see cref="WebApiSample" /> via HTTP.
 		/// Makes sure that all spans and transactions across the two services have the same trace ID.
 		/// </summary>

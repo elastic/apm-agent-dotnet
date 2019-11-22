@@ -1,4 +1,4 @@
-﻿namespace AspNetCoreSampleApp.Data
+﻿namespace SampleAspNetCoreApp.Data
 {
 	public class SampleData
 	{

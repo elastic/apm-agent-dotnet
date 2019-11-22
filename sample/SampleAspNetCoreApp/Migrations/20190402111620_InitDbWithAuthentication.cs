@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace AspNetCoreSampleApp.Migrations
+namespace SampleAspNetCoreApp.Migrations
 {
 	public partial class InitDbWithAuthentication : Migration
 	{

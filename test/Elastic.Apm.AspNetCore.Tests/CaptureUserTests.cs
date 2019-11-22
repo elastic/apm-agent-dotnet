@@ -28,7 +28,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		/// <summary>
 		/// Integration test that makes sure that the ASP.NET Core auto instrumentation captures logged in users.
-		/// It starts up the <see cref="AspNetCoreSampleApp" /> and creates a user
+		/// It starts up the <see cref="SampleAspNetCoreApp" /> and creates a user
 		/// then it logs in the user and then it sends an HTTP GET request to /Home/SimplePage (with the logged in user)
 		/// It makes sure that this last transaction contains the user.
 		/// This test uses the test app that is built on top of the default ASP.NET Core  <see cref="UserManager{TUser}" />

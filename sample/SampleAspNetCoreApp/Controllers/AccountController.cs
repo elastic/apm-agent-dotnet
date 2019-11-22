@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AspNetCoreSampleApp.Controllers
+namespace SampleAspNetCoreApp.Controllers
 {
 	public class AccountController : Controller
 	{

@@ -1,4 +1,4 @@
-# AspNetCoreSampleApp with Elastic .NET Agent. 
+# SampleAspNetCoreApp with Elastic .NET Agent. 
 
 The goal of this sample is to show you how you can use the Elastic APM .NET Agent with an ASP.NET Core application.
 

@@ -1,8 +1,8 @@
-﻿using AspNetCoreSampleApp;
-using Elastic.Apm.AspNetCore.Tests.Services;
+﻿using Elastic.Apm.AspNetCore.Tests.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SampleAspNetCoreApp;
 
 namespace Elastic.Apm.AspNetCore.Tests.Fakes
 {

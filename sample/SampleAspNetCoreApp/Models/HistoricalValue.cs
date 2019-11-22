@@ -1,6 +1,6 @@
 using System;
 
-namespace AspNetCoreSampleApp.Models
+namespace SampleAspNetCoreApp.Models
 {
 	/// <summary>
 	/// Represents a historical value with date. e.g. can be a historical price from a stock or from an index.

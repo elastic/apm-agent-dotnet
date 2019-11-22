@@ -5,8 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using AspNetCoreSampleApp.Data;
-using AspNetCoreSampleApp.Models;
 using Elastic.Apm;
 using Elastic.Apm.Api;
 using Microsoft.AspNetCore.Http;
@@ -14,8 +12,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SampleAspNetCoreApp.Data;
+using SampleAspNetCoreApp.Models;
 
-namespace AspNetCoreSampleApp.Controllers
+namespace SampleAspNetCoreApp.Controllers
 {
 	public class HomeController : Controller
 	{

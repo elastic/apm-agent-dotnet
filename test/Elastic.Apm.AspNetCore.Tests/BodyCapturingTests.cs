@@ -4,8 +4,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using AspNetCoreSampleApp;
-using AspNetCoreSampleApp.Controllers;
 using Elastic.Apm.AspNetCore.Tests.Factories;
 using Elastic.Apm.AspNetCore.Tests.Fakes;
 using Elastic.Apm.AspNetCore.Tests.Helpers;
@@ -17,6 +15,8 @@ using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using SampleAspNetCoreApp;
+using SampleAspNetCoreApp.Controllers;
 using Xunit;
 
 namespace Elastic.Apm.AspNetCore.Tests

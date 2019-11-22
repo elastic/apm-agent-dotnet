@@ -22,7 +22,7 @@ using Xunit.Abstractions;
 namespace Elastic.Apm.AspNetCore.Tests
 {
 	/// <summary>
-	/// Uses the samples/AspNetCoreSampleApp as the test application and tests the agent with it.
+	/// Uses the samples/SampleAspNetCoreApp as the test application and tests the agent with it.
 	/// It's basically an integration test.
 	/// </summary>
 	[Collection("DiagnosticListenerTest")] // To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.

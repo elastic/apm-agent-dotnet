@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
-using AspNetCoreSampleApp.Models;
+using SampleAspNetCoreApp.Models;
 
-namespace AspNetCoreSampleApp.Data
+namespace SampleAspNetCoreApp.Data
 {
 	/// <summary>
 	/// This is a very simple custom class that reads CSV files.
