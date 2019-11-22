@@ -43,7 +43,7 @@ We support automatic instrumentation for the following web frameworks.
 |Framework |Supported versions |Supported since agent's version
 
 |ASP.NET Core
-|2.x
+|2.1 and later
 |1.0
 
 |ASP.NET (.NET Framework) on IIS
