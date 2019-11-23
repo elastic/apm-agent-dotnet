@@ -36,6 +36,7 @@ namespace Elastic.Apm.Tests
 			public bool CaptureHeaders => ConfigConsts.DefaultValues.CaptureHeaders;
 			public bool CentralConfig => ConfigConsts.DefaultValues.CentralConfig;
 			public string Environment { get; }
+			public string ServiceNodeName { get; }
 			public TimeSpan FlushInterval => TimeSpan.FromMilliseconds(ConfigConsts.DefaultValues.FlushIntervalInMilliseconds);
 			public IReadOnlyDictionary<string, string> GlobalLabels => new Dictionary<string, string>();
 			public LogLevel LogLevel { get; }

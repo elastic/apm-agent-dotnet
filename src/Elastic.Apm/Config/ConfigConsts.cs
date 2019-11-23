@@ -62,6 +62,7 @@ namespace Elastic.Apm.Config
 			public const string CaptureHeaders = Prefix + "CAPTURE_HEADERS";
 			public const string CentralConfig = Prefix + "CENTRAL_CONFIG";
 			public const string Environment = Prefix + "ENVIRONMENT";
+			public const string ServiceNodeName = Prefix + "SERVICE_NODE_NAME";
 			public const string FlushInterval = Prefix + "FLUSH_INTERVAL";
 			public const string GlobalLabels = Prefix + "GLOBAL_LABELS";
 			public const string LogLevel = Prefix + "LOG_LEVEL";
@@ -97,6 +98,7 @@ namespace Elastic.Apm.Config
 			public const string SecretToken = "ElasticApm:SecretToken";
 			public const string ServerUrls = "ElasticApm:ServerUrls";
 			public const string ServiceName = "ElasticApm:ServiceName";
+			public const string ServiceNodeName = "ElasticApm:ServiceNodeName";
 			public const string ServiceVersion = "ElasticApm:ServiceVersion";
 			public const string SpanFramesMinDuration = "ElasticApm:SpanFramesMinDuration";
 			public const string StackTraceLimit = "ElasticApm:StackTraceLimit";

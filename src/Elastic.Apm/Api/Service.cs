@@ -27,6 +27,8 @@ namespace Elastic.Apm.Api
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Version { get; set; }
 
+		public Node Node { get; set; }
+
 		public override string ToString() => new ToStringBuilder(nameof(Service))
 		{
 			{ nameof(Name), Name },
@@ -35,7 +37,8 @@ namespace Elastic.Apm.Api
 			{ nameof(Runtime), Runtime },
 			{ nameof(Framework), Framework },
 			{ nameof(Agent), Agent },
-			{ nameof(Language), Language }
+			{ nameof(Language), Language },
+			{ nameof(Node), Node }
 		}.ToString();
 
 		internal static Service GetDefaultService(IConfigurationReader configurationReader, IApmLogger loggerArg)
@@ -51,7 +54,8 @@ namespace Elastic.Apm.Api
 					Version = typeof(Agent).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion
 				},
 				Runtime = PlatformDetection.GetServiceRuntime(logger),
-				Environment = configurationReader.Environment
+				Environment = configurationReader.Environment,
+				Node = new Node { ConfiguredName = configurationReader.ServiceNodeName }
 			};
 		}
 

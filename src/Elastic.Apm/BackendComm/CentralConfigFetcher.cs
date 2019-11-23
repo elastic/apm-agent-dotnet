@@ -445,6 +445,7 @@ namespace Elastic.Apm.BackendComm
 			public string DbgDescription { get; }
 
 			public string Environment => _wrapped.Environment;
+			public string ServiceNodeName => _wrapped.ServiceNodeName;
 
 			public TimeSpan FlushInterval => _wrapped.FlushInterval;
 
