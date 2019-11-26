@@ -150,7 +150,7 @@ NOTE: The service name must conform to this regular expression: `^[a-zA-Z0-9 _-]
 
 [float]
 [[config-service-node-name]]
-==== `ServiceNodeName` (added[1.2])
+==== `ServiceNodeName` (added[1.3])
 
 Optional name used to differentiate between nodes in a service.
 If not set, data aggregations will be done based on a container ID (where valid) or on the reported hostname (automatically discovered).
