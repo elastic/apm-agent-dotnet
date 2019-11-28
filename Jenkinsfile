@@ -33,6 +33,16 @@ pipeline {
   stages {
     stage('Initializing'){
       stages{
+        /**
+        Cancel all the previous running old builds for the current PR.
+        */
+        stage('Cancel old builds') {
+          when { changeRequest() }
+          options { skipDefaultCheckout() }
+          steps {
+            cancelPreviousRunningBuilds()
+          }
+        }
         stage('Checkout') {
           options { skipDefaultCheckout() }
           steps {
