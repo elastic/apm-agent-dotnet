@@ -544,9 +544,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var expectedServiceName = AgentConfig.ServiceName
 				?? AbstractConfigurationReader.AdaptServiceName($"{Consts.SampleApp.SiteName}_{Consts.SampleApp.AppPoolName}");
 			var expectedEnvironment = AgentConfig.Environment;
+			var expectedServiceNodeName = AgentConfig.ServiceNodeName;
 
 			service.Name.Should().Be(expectedServiceName);
 			service.Environment.Should().Be(expectedEnvironment);
+			service.Node.ConfiguredName.Should().Be(expectedServiceNodeName);
 		}
 
 		private static void FullFwAssertValid(Framework framework)
@@ -779,6 +781,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal string Environment;
 			internal Dictionary<string, string> GlobalLabels;
 			internal string ServiceName;
+			internal string ServiceNodeName;
 		}
 
 		public class SampleAppUrlPathData

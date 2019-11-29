@@ -13,6 +13,8 @@ namespace Elastic.Apm.Config
 		bool CentralConfig { get; }
 		string Environment { get; }
 
+		string ServiceNodeName { get; }
+
 		/// <summary>
 		/// The maximal amount of time (in seconds) events are held in queue until there is enough to send a batch.
 		/// It's possible for a batch to contain less then <seealso cref="MaxBatchEventCount" /> events

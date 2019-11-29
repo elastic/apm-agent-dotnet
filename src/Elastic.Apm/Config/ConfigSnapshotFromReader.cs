@@ -21,6 +21,7 @@ namespace Elastic.Apm.Config
 		public bool CentralConfig => _content.CentralConfig;
 		public string DbgDescription { get; }
 		public string Environment => _content.Environment;
+		public string ServiceNodeName => _content.ServiceNodeName;
 		public TimeSpan FlushInterval => _content.FlushInterval;
 		public IReadOnlyDictionary<string, string> GlobalLabels => _content.GlobalLabels;
 		public LogLevel LogLevel => _content.LogLevel;
