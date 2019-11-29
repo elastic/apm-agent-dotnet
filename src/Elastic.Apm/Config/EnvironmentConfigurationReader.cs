@@ -35,6 +35,8 @@ namespace Elastic.Apm.Config
 
 		public string Environment => ParseEnvironment(Read(ConfigConsts.EnvVarNames.Environment));
 
+		public string ServiceNodeName => ParseServiceNodeName(Read(ConfigConsts.EnvVarNames.ServiceNodeName));
+
 		public TimeSpan FlushInterval => ParseFlushInterval(Read(ConfigConsts.EnvVarNames.FlushInterval));
 
 		public IReadOnlyDictionary<string, string> GlobalLabels => ParseGlobalLabels(Read(ConfigConsts.EnvVarNames.GlobalLabels));

@@ -149,6 +149,27 @@ NOTE: The service name must conform to this regular expression: `^[a-zA-Z0-9 _-]
 |============
 
 [float]
+[[config-service-node-name]]
+==== `ServiceNodeName` (added[1.3])
+
+Optional name used to differentiate between nodes in a service.
+If not set, data aggregations will be done based on a container ID (where valid) or on the reported hostname (automatically discovered).
+
+NOTE: This feature requires APM Server versions >= 7.5
+
+[options="header"]
+|============
+| Environment variable name       | IConfiguration or Web.config key 
+| `ELASTIC_APM_SERVICE_NODE_NAME` | `ElasticApm:ServiceNodeName`
+|============
+
+[options="header"]
+|============
+| Default        | Type
+| `<none>`       | String 
+|============
+
+[float]
 [[config-service-version]]
 ==== `ServiceVersion`
 
@@ -648,6 +669,7 @@ Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `Non
 | <<config-secret-token,`SecretToken`>> | No | Reporter
 | <<config-server-urls,`ServerUrls`>> | No | Reporter
 | <<config-service-name,`ServiceName`>> | No | Core
+| <<config-service-node-name, `ServiceNodeName`>> | No | Core
 | <<config-service-version,`ServiceVersion`>> | No | Core
 | <<config-span-frames-min-duration,`SpanFramesMinDuration`>> | No | Stacktrace, Performance
 | <<config-stack-trace-limit,`StackTraceLimit`>> | No | Stacktrace, Performance

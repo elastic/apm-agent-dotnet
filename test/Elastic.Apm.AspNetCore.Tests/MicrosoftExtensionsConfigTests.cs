@@ -32,6 +32,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.LogLevel.Should().Be(LogLevel.Debug);
 			config.ServerUrls.Single().Should().Be(new Uri("http://myServerFromTheConfigFile:8080"));
 			config.ServiceName.Should().Be("My_Test_Application");
+			config.ServiceNodeName.Should().Be("Instance1");
 			config.ServiceVersion.Should().Be("2.1.0.5");
 			config.Environment.Should().Be("staging");
 			config.CaptureHeaders.Should().BeFalse();
@@ -106,6 +107,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServerUrls, serverUrl);
 			const string serviceName = "MyServiceName123";
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceName, serviceName);
+			const string serviceNodeName = "Some service node name";
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceNodeName, serviceNodeName);
 			const string serviceVersion = "2.1.0.5";
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ServiceVersion, serviceVersion);
 			const string environment = "staging";
@@ -120,6 +123,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.LogLevel.Should().Be(LogLevel.Debug);
 			config.ServerUrls.Single().Should().Be(new Uri(serverUrl));
 			config.ServiceName.Should().Be(serviceName);
+			config.ServiceNodeName.Should().Be(serviceNodeName);
 			config.ServiceVersion.Should().Be(serviceVersion);
 			config.Environment.Should().Be(environment);
 			config.SecretToken.Should().Be(secretToken);
