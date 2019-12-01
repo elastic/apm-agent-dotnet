@@ -42,7 +42,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			await httpClient.GetAsync("home/sample/3");
 			await httpClient.GetAsync("home/sample/2");
 
-			_payloadSender.Transactions.Should().OnlyContain(n => n.Name == "GET home/sample {id}");
+			_payloadSender.Transactions.Should().OnlyContain(n => n.Name.Equals("GET home/sample {id}", StringComparison.OrdinalIgnoreCase));
 		}
 
 		/// <summary>
@@ -83,7 +83,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var httpClient = Helper.GetClient(_agent, _factory);
 			await httpClient.GetAsync("home/sample");
 
-			_payloadSender.Transactions.Should().OnlyContain(n => n.Name == "GET home/sample");
+			_payloadSender.Transactions.Should().OnlyContain(n => n.Name.Equals("GET home/sample", StringComparison.OrdinalIgnoreCase));
 		}
 
 		/// <summary>
