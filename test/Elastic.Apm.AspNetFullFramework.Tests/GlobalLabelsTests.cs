@@ -12,7 +12,10 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 	{
 		private static readonly Dictionary<string, string> CustomGlobalLabels = new Dictionary<string, string>
 		{
-			{ "k", "v" }, { "key_B", "value_B" }, { "", "" }, { "key_with_empty_string_value", "" }
+			{ "k", "v" },
+			{ "key_B", "value_B" },
+			{ "", "" },
+			{ "key_with_empty_string_value", "" }
 		};
 
 		public GlobalLabelsTests(ITestOutputHelper xUnitOutputHelper)
