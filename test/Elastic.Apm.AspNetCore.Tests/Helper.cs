@@ -33,13 +33,21 @@ namespace Elastic.Apm.AspNetCore.Tests
 						app.UseCookiePolicy();
 
 						app.UseAuthentication();
-
+#if NETCOREAPP3_0
+						app.UseRouting();
+						app.UseEndpoints(endpoints =>
+						{
+							endpoints.MapControllers();
+							endpoints.MapRazorPages();
+						});
+#else
 						app.UseMvc(routes =>
 						{
 							routes.MapRoute(
 								"default",
 								"{controller=Home}/{action=Index}/{id?}");
 						});
+#endif
 					});
 
 					n.ConfigureServices(ConfigureServices);
@@ -56,12 +64,21 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 						app.UseAuthentication();
 
+#if NETCOREAPP3_0
+						app.UseRouting();
+						app.UseEndpoints(endpoints =>
+						{
+							endpoints.MapControllers();
+							endpoints.MapRazorPages();
+						});
+#else
 						app.UseMvc(routes =>
 						{
 							routes.MapRoute(
 								"default",
 								"{controller=Home}/{action=Index}/{id?}");
 						});
+#endif
 					});
 
 					n.ConfigureServices(ConfigureServices);
@@ -88,12 +105,21 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 						app.UseAuthentication();
 
+#if NETCOREAPP3_0
+						app.UseRouting();
+						app.UseEndpoints(endpoints =>
+						{
+							endpoints.MapControllers();
+							endpoints.MapRazorPages();
+						});
+#else
 						app.UseMvc(routes =>
 						{
 							routes.MapRoute(
 								"default",
 								"{controller=Home}/{action=Index}/{id?}");
 						});
+#endif
 					});
 
 					n.ConfigureServices(ConfigureServices);

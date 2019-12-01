@@ -18,11 +18,11 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="3.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Data\"/>
-    <Folder Include="Data\HistoricalData"/>
-    <Folder Include="Migrations"/>
+    <Folder Include="Data\" />
+    <Folder Include="Data\HistoricalData" />
+    <Folder Include="Migrations" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Elastic.Apm.NetCoreAll\Elastic.Apm.NetCoreAll.csproj"/>
+    <ProjectReference Include="..\..\src\Elastic.Apm.NetCoreAll\Elastic.Apm.NetCoreAll.csproj" />
   </ItemGroup>
 </Project>
