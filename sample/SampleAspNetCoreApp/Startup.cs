@@ -71,15 +71,20 @@ namespace SampleAspNetCoreApp
 			app.UseStaticFiles();
 			app.UseCookiePolicy();
 
-			app.UseAuthentication();
 #if NETCOREAPP3_0
 			app.UseRouting();
+
+			app.UseAuthentication();
+
 			app.UseEndpoints(endpoints =>
 			{
+				endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
 				endpoints.MapControllers();
 				endpoints.MapRazorPages();
 			});
 #else
+			app.UseAuthentication();
+
 			app.UseMvc(routes =>
 			{
 				routes.MapRoute(

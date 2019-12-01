@@ -39,17 +39,20 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.ConfigureServices(services =>
 				{
 					Startup.ConfigureServicesExceptMvc(services);
-					services.AddMvc()
+					services
+#if NETCOREAPP3_0
+						.AddRazorPages()
+						.SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
+#elif NETCOREAPP2_2
+						.AddMvc()
+						.SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+#else
+						.AddMvc()
+						.SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+#endif
 						//this is needed because of a (probably) bug:
 						//https://github.com/aspnet/Mvc/issues/5992
-						.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))))
-#if NETCOREAPP3_0
-						.SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
-#elif NETCOREAPP2_2
-						.SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-#else
-						.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-#endif
+						.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))));
 				})
 				.UseUrls("http://localhost:5900") //CI doesn't like https, so we roll with http
 				.Build()

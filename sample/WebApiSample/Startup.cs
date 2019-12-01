@@ -40,7 +40,10 @@ namespace WebApiSample
 			app.UseDeveloperExceptionPage();
 
 			app.UseHttpsRedirection();
+
 #if NETCOREAPP3_0
+			app.UseRouting();
+
 			app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 #else
 			app.UseMvc();

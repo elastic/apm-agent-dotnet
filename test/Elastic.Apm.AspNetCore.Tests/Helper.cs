@@ -32,15 +32,20 @@ namespace Elastic.Apm.AspNetCore.Tests
 						app.UseStaticFiles();
 						app.UseCookiePolicy();
 
-						app.UseAuthentication();
 #if NETCOREAPP3_0
 						app.UseRouting();
+
+						app.UseAuthentication();
+
 						app.UseEndpoints(endpoints =>
 						{
+							endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
 							endpoints.MapControllers();
 							endpoints.MapRazorPages();
 						});
 #else
+						app.UseAuthentication();
+
 						app.UseMvc(routes =>
 						{
 							routes.MapRoute(
@@ -62,16 +67,20 @@ namespace Elastic.Apm.AspNetCore.Tests
 					{
 						app.UseElasticApm(agent, agent.Logger);
 
-						app.UseAuthentication();
-
 #if NETCOREAPP3_0
 						app.UseRouting();
+
+						app.UseAuthentication();
+
 						app.UseEndpoints(endpoints =>
 						{
+							endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
 							endpoints.MapControllers();
 							endpoints.MapRazorPages();
 						});
 #else
+						app.UseAuthentication();
+
 						app.UseMvc(routes =>
 						{
 							routes.MapRoute(
@@ -103,16 +112,20 @@ namespace Elastic.Apm.AspNetCore.Tests
 						app.UseStaticFiles();
 						app.UseCookiePolicy();
 
-						app.UseAuthentication();
-
 #if NETCOREAPP3_0
 						app.UseRouting();
+
+						app.UseAuthentication();
+
 						app.UseEndpoints(endpoints =>
 						{
+							endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
 							endpoints.MapControllers();
 							endpoints.MapRazorPages();
 						});
 #else
+						app.UseAuthentication();
+
 						app.UseMvc(routes =>
 						{
 							routes.MapRoute(
@@ -129,17 +142,20 @@ namespace Elastic.Apm.AspNetCore.Tests
 		internal static void ConfigureServices(IServiceCollection services)
 		{
 			Startup.ConfigureServicesExceptMvc(services);
-			services.AddMvc()
+			services
+#if NETCOREAPP3_0
+				.AddRazorPages()
+				.SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
+#elif NETCOREAPP2_2
+				.AddMvc()
+				.SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+#else
+				.AddMvc()
+				.SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+#endif
 				//this is needed because of a (probably) bug:
 				//https://github.com/aspnet/Mvc/issues/5992
-				.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))))
-#if NETCOREAPP3_0
-				.SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
-#elif NETCOREAPP2_2
-				.SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-#else
-				.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-#endif
+				.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))));
 		}
 	}
 }
