@@ -10,6 +10,8 @@ namespace Elastic.Apm
 		private readonly ContextLocalHolder<Span> _currentSpan;
 		private readonly ContextLocalHolder<Transaction> _currentTransaction;
 
+		internal ITransactionObserver TransactionObserver { get; set; }
+
 		internal CurrentExecutionSegmentsContainer(IApmLogger logger)
 		{
 			_currentTransaction = new ContextLocalHolder<Transaction>(logger, "transaction");
@@ -25,7 +27,11 @@ namespace Elastic.Apm
 		public Transaction CurrentTransaction
 		{
 			get => _currentTransaction.Value;
-			set => _currentTransaction.Value = value;
+			set
+			{
+				_currentTransaction.Value = value;
+				TransactionObserver?.TransactionStarted(value);
+			}
 		}
 
 		private sealed class ContextLocalHolder<T>

@@ -124,6 +124,14 @@ namespace Elastic.Apm
 		/// </returns>
 		public static IDisposable Subscribe(params IDiagnosticsSubscriber[] subscribers) => Instance.Subscribe(subscribers);
 
+		public static void SetLogCorrelation(ITransactionObserver transactionObserver)
+		{
+			if (!_isConfigured) return;
+
+			if (Instance.TracerInternal.CurrentExecutionSegmentsContainer is CurrentExecutionSegmentsContainer executionSegmentsContainer)
+				executionSegmentsContainer.TransactionObserver = transactionObserver;
+		}
+
 		public static void Setup(AgentComponents agentComponents)
 		{
 			if (LazyApmAgent.IsValueCreated)
