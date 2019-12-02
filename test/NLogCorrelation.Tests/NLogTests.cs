@@ -22,7 +22,7 @@ namespace NLogCorrelation.Tests
 			var target = new MemoryTarget();
 			target.Layout = "${mdlc:item=Trace.Id}|${mdlc:item=Transaction.Id}|${message}";
 
-			NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(target, NLog.LogLevel.Debug);
+			NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(target, LogLevel.Debug);
 			var logger = LogManager.GetLogger("Example");
 
 			logger.Debug("PreTransaction");
