@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Threading;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -9,6 +11,10 @@ namespace Elastic.Apm
 	{
 		private readonly ContextLocalHolder<Span> _currentSpan;
 		private readonly ContextLocalHolder<Transaction> _currentTransaction;
+
+		private readonly Lazy<List<ITransactionObserver>> _transactionObservers = new Lazy<List<ITransactionObserver>>();
+
+		internal List<ITransactionObserver> TransactionObservers => _transactionObservers.Value;
 
 		internal CurrentExecutionSegmentsContainer(IApmLogger logger)
 		{
@@ -25,7 +31,13 @@ namespace Elastic.Apm
 		public Transaction CurrentTransaction
 		{
 			get => _currentTransaction.Value;
-			set => _currentTransaction.Value = value;
+			set
+			{
+				_currentTransaction.Value = value;
+				if (!_transactionObservers.IsValueCreated) return;
+
+				foreach (var observer in TransactionObservers) observer?.ActiveTransactionChanged(value);
+			}
 		}
 
 		private sealed class ContextLocalHolder<T>

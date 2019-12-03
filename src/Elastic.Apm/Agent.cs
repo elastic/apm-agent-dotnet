@@ -98,6 +98,39 @@ namespace Elastic.Apm
 		private static AgentComponents _components;
 		private static volatile bool _isConfigured;
 
+		/// <summary>
+		/// Adds an <see cref="ITransactionObserver"/> instance to the agent, which gets called each time the currently active transaction changes.
+		/// You can only add <see cref="ITransactionObserver"/>s when the agent is already configured - which you can check
+		/// with the <see cref="IsConfigured"/> property.
+		/// </summary>
+		/// <param name="transactionObserver">The instance that will be informed when the active transaction changes</param>
+		/// <returns><code>true</code> if the <param name="transactionObserver"></param> was successfully added, <code>false</code> otherwise.</returns>
+		internal static bool RegisterTransactionObserver(ITransactionObserver transactionObserver)
+		{
+			if (!_isConfigured)
+				return false;
+
+			if (!(Instance.TracerInternal.CurrentExecutionSegmentsContainer is CurrentExecutionSegmentsContainer currentExecutionSegmentsContainer))
+				return false;
+
+			currentExecutionSegmentsContainer.TransactionObservers.Add(transactionObserver);
+			return true;
+		}
+
+		/// <summary>
+		/// Clears all <see cref="ITransactionObserver"/> instances that are currently registered for the agent.
+		/// </summary>
+		internal static void ClearTransactionObservers()
+		{
+			if (!_isConfigured)
+				return;
+
+			if (!(Instance.TracerInternal.CurrentExecutionSegmentsContainer is CurrentExecutionSegmentsContainer currentExecutionSegmentsContainer))
+				return;
+
+			currentExecutionSegmentsContainer.TransactionObservers.Clear();
+		}
+
 		public static IConfigurationReader Config => Instance.ConfigurationReader;
 
 		internal static ApmAgent Instance => LazyApmAgent.Value;
