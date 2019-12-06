@@ -9,4 +9,7 @@ set -euxo pipefail
 
 # Install .Net SDK
 curl -O https://dot.net/v1/dotnet-install.sh
+
+chmod +x dotnet-install.sh
+
 /bin/bash ./dotnet-install.sh --install-dir ${HOME}/dotnet -version 2.1.505
