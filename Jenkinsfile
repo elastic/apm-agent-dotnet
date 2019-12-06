@@ -333,38 +333,17 @@ pipeline {
               }
             }
           }
-          stage('Release') {
+          stage('AfterRelease') {
             options {
               skipDefaultCheckout()
-              timeout(time: 12, unit: 'HOURS')
             }
             when {
-              beforeInput true
               anyOf {
                 tag pattern: '\\d+\\.\\d+\\.\\d+', comparator: 'REGEXP'
                 expression { return params.Run_As_Master_Branch }
               }
             }
             stages {
-              stage('Notify') {
-                steps {
-                    emailext subject: '[apm-agent-dotnet] Release ready to be pushed',
-                            to: "${NOTIFY_TO}",
-                            body: "Please go to ${env.BUILD_URL}input to approve or reject within 12 hours."
-                }
-              }
-              stage('Release to NuGet') {
-                steps {
-                  input(message: 'Should we release a new version on NuGet?', ok: 'Yes, we should.')
-                  withGithubNotify(context: 'Release NuGet', tab: 'artifacts') {
-                    deleteDir()
-                    unstash 'source'
-                    dir("${BASE_DIR}"){
-                      release('secret/apm-team/ci/elastic-observability-nuget')
-                    }
-                  }
-                }
-              }
               stage('Opbeans') {
                 environment {
                   REPO_NAME = "${OPBEANS_REPO}"
