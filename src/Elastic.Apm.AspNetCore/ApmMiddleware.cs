@@ -138,11 +138,7 @@ namespace Elastic.Apm.AspNetCore
 				if (!transaction.HasCustomName)
 				{
 					//fixup Transaction.Name - e.g. /user/profile/1 -> /user/profile/{id}
-#if NETCOREAPP2_2
-					var routeData = context.Features.Get<IRouteValuesFeature>()?.RouteValues;
-#else
-					var routeData = (context.Features[typeof(IRoutingFeature)] as IRoutingFeature)?.RouteData.Values;
-#endif
+					var routeData = context.GetRouteData()?.Values;
 
 					if (routeData != null)
 					{
