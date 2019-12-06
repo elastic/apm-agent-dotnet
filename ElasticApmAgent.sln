@@ -77,6 +77,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Feature.Tests",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleHttpSelfHostApp", "sample\SampleHttpSelfHostApp\SampleHttpSelfHostApp.csproj", "{5CB23275-A8E1-49B9-889E-BCC74D89EB58}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleHttpOwinSelfHostApp", "sample\SampleHttpOwinSelfHostApp\SampleHttpOwinSelfHostApp.csproj", "{3F860E65-3CCE-4D95-934F-388854291CB5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -173,6 +175,10 @@ Global
 		{5CB23275-A8E1-49B9-889E-BCC74D89EB58}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5CB23275-A8E1-49B9-889E-BCC74D89EB58}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5CB23275-A8E1-49B9-889E-BCC74D89EB58}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F860E65-3CCE-4D95-934F-388854291CB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F860E65-3CCE-4D95-934F-388854291CB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F860E65-3CCE-4D95-934F-388854291CB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F860E65-3CCE-4D95-934F-388854291CB5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -200,6 +206,7 @@ Global
 		{968E1E85-E996-42DE-9845-D20DAE16165A} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{A4EF875C-92AD-4538-AFF1-1DA277F1085A} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{5CB23275-A8E1-49B9-889E-BCC74D89EB58} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
+		{3F860E65-3CCE-4D95-934F-388854291CB5} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}
