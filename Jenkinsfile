@@ -13,6 +13,7 @@ pipeline {
     CODECOV_SECRET = 'secret/apm-team/ci/apm-agent-dotnet-codecov'
     GITHUB_CHECK_ITS_NAME = 'Integration Tests'
     ITS_PIPELINE = 'apm-integration-tests-selector-mbp/master'
+    OPBEANS_REPO = 'opbeans-dotnet'
   }
   options {
     timeout(time: 1, unit: 'HOURS')
@@ -332,22 +333,32 @@ pipeline {
               }
             }
           }
-          stage('Release to NuGet') {
-            options { skipDefaultCheckout() }
+          stage('AfterRelease') {
+            options {
+              skipDefaultCheckout()
+            }
             when {
-              beforeAgent true
               anyOf {
-                tag "\\d+\\.\\d+\\.\\d+*"
+                tag pattern: '\\d+\\.\\d+\\.\\d+', comparator: 'REGEXP'
                 expression { return params.Run_As_Master_Branch }
               }
             }
-            steps {
-              input(message: 'Should we release a new version on NuGet?', ok: 'Yes, we should.')
-              withGithubNotify(context: 'Release NuGet', tab: 'artifacts') {
-                deleteDir()
-                unstash 'source'
-                dir("${BASE_DIR}"){
-                  release('secret/apm-team/ci/elastic-observability-nuget')
+            stages {
+              stage('Opbeans') {
+                environment {
+                  REPO_NAME = "${OPBEANS_REPO}"
+                }
+                steps {
+                  deleteDir()
+                  dir("${OPBEANS_REPO}"){
+                    git credentialsId: 'f6c7695a-671e-4f4f-a331-acdce44ff9ba',
+                        url: "git@github.com:elastic/${OPBEANS_REPO}.git"
+                    sh script: ".ci/bump-version.sh ${env.BRANCH_NAME}", label: 'Bump version'
+                    // The opbeans pipeline will trigger a release for the master branch
+                    gitPush()
+                    // The opbeans pipeline will trigger a release for the release tag
+                    gitCreateTag(tag: "${env.BRANCH_NAME}")
+                  }
                 }
               }
             }
