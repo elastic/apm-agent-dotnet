@@ -341,7 +341,7 @@ pipeline {
             when {
               beforeInput true
               anyOf {
-                tag pattern: 'v\\d+\\.\\d+\\d+', comparator: 'REGEXP'
+                tag pattern: '\\d+\\.\\d+\\.\\d+', comparator: 'REGEXP'
                 expression { return params.Run_As_Master_Branch }
               }
             }
