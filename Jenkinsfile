@@ -76,7 +76,7 @@ pipeline {
                       deleteDir()
                       unstash 'source'
                       dir("${BASE_DIR}"){
-                        dotnet2x(){
+                        dotnet(){
                           sh '.ci/linux/build.sh'
                         }
                       }
@@ -98,7 +98,7 @@ pipeline {
                       deleteDir()
                       unstash 'source'
                       dir("${BASE_DIR}"){
-                        dotnet2x(){
+                        dotnet(){
                           sh label: 'Install test tools', script: '.ci/linux/test-tools.sh'
                           sh label: 'Build', script: '.ci/linux/build.sh'
                           sh label: 'Test & coverage', script: '.ci/linux/test.sh'
@@ -389,11 +389,11 @@ def cleanDir(path){
   powershell label: "Clean ${path}", script: "Remove-Item -Recurse -Force ${path}"
 }
 
-def dotnet2x(Closure body){
+def dotnet(Closure body){
   def home = "/tmp"
   def dotnetRoot = "/${home}/.dotnet"
   def path = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/${home}/bin:${dotnetRoot}:${dotnetRoot}/bin:${dotnetRoot}/tools"
-  docker.image('mcr.microsoft.com/dotnet/core/sdk:3.1.100'){
+  docker.image('mcr.microsoft.com/dotnet/core/sdk:3.1.100').inside("-e HOME='${home}' -e PATH='${path}'"){
     sh 'chmod +x .ci/linux/tools.sh'
     sh '.ci/linux/tools.sh'
     body()
