@@ -1,4 +1,3 @@
-@@ -1,12 +0,0 @@
 #!/usr/bin/env bash
 #
 # This script installs the required tools to be used during the build
