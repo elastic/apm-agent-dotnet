@@ -8,7 +8,8 @@ Install-WindowsFeature -Name Web-Server, Web-Mgmt-Tools ;
 Add-WindowsFeature NET-Framework-45-ASPNET ;
 Add-WindowsFeature Web-Asp-Net45 ;
 
-# Install .Net SDK'
+# Install .Net SDKs
+& choco install dotnetcore-sdk -m -y --no-progress -r --version 3.1.100
 & choco install dotnetcore-sdk -m -y --no-progress -r --version 2.1.505
 
 # Install NuGet Tool

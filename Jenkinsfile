@@ -394,6 +394,8 @@ def dotnet(Closure body){
   def dotnetRoot = "/${home}/.dotnet"
   def path = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/${home}/bin:${dotnetRoot}:${dotnetRoot}/bin:${dotnetRoot}/tools"
   docker.image('mcr.microsoft.com/dotnet/core/sdk:2.1.505').inside("-e HOME='${home}' -e PATH='${path}'"){
+    sh 'chmod +x .ci/linux/tools.sh'
+    sh '.ci/linux/tools.sh'
     body()
   }
 }
