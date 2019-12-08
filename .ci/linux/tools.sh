@@ -13,6 +13,4 @@ chmod +x dotnet-install.sh
 
 source ./dotnet-install.sh -version 2.1.505
 
-whoami
-
 dotnet --list-sdks
