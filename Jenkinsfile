@@ -393,7 +393,7 @@ def dotnet2x(Closure body){
   def home = "/tmp"
   def dotnetRoot = "/${home}/.dotnet"
   def path = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/${home}/bin:${dotnetRoot}:${dotnetRoot}/bin:${dotnetRoot}/tools"
-  docker.image('mcr.microsoft.com/dotnet/core/sdk:3.1.100').
+  docker.image('mcr.microsoft.com/dotnet/core/sdk:3.1.100')
   .withRun('curl https://dot.net/v1/dotnet-install.sh > dotnet-install.sh && chmod +x *.sh \
 &&  ./dotnet-install.sh -Channel 2.0 -InstallDir /usr/share/dotnet \
 &&  rm *').inside("-e HOME='${home}' -e PATH='${path}'"){
