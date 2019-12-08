@@ -11,4 +11,4 @@ curl -O https://dot.net/v1/dotnet-install.sh -L
 
 chmod +x dotnet-install.sh
 
-/bin/bash ./dotnet-install.sh -InstallDir /usr/share/dotnet -version 2.1.505
+su -c "/bin/bash ./dotnet-install.sh -InstallDir /usr/share/dotnet -version 2.1.505" root
