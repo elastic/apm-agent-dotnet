@@ -23,10 +23,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				envVarsToSetForSampleAppPool: new Dictionary<string, string>
 				{
 					{ ConfigConsts.EnvVarNames.GlobalLabels, GlobalLabelsToRawOptionValue(CustomGlobalLabels) }
-				})
-		{
+				}) =>
 			AgentConfig.GlobalLabels = CustomGlobalLabels;
-		}
 
 		/// <returns>key=value[,key=value[,...]]</returns>
 		private static string GlobalLabelsToRawOptionValue(IReadOnlyDictionary<string, string> stringToStringMap) =>
