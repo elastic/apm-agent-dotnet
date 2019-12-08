@@ -32,7 +32,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 						app.UseStaticFiles();
 						app.UseCookiePolicy();
 
-#if NETCOREAPP3_0
+#if NETCOREAPP3_0 || NETCOREAPP3_1
 						app.UseRouting();
 
 						app.UseAuthentication();
@@ -67,7 +67,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 					{
 						app.UseElasticApm(agent, agent.Logger);
 
-#if NETCOREAPP3_0
+#if NETCOREAPP3_0 || NETCOREAPP3_1
 						app.UseRouting();
 
 						app.UseAuthentication();
@@ -112,7 +112,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 						app.UseStaticFiles();
 						app.UseCookiePolicy();
 
-#if NETCOREAPP3_0
+#if NETCOREAPP3_0 || NETCOREAPP3_1
 						app.UseRouting();
 
 						app.UseAuthentication();
@@ -144,14 +144,16 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Startup.ConfigureServicesExceptMvc(services);
 			services
 #if NETCOREAPP3_0
-				.AddRazorPages()
+				.AddMvc()
 				.SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
 #elif NETCOREAPP2_2
 				.AddMvc()
 				.SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
-#else
+#elif NETCOREAPP2_1
 				.AddMvc()
 				.SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+#else
+				.AddMvc()
 #endif
 				//this is needed because of a (probably) bug:
 				//https://github.com/aspnet/Mvc/issues/5992

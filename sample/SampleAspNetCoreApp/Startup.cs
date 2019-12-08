@@ -20,13 +20,16 @@ namespace SampleAspNetCoreApp
 		public void ConfigureServices(IServiceCollection services)
 		{
 			ConfigureServicesExceptMvc(services);
-
-#if NETCOREAPP3_0
-			services.AddRazorPages().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+#if NETCOREAPP3_1
+			services.AddMvc();
+#elif NETCOREAPP3_0
+			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
 #elif NETCOREAPP2_2
 			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-#else
+#elif NETCOREAPP2_1
 			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+#else
+			services.AddMvc();
 #endif
 		}
 
@@ -53,7 +56,7 @@ namespace SampleAspNetCoreApp
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-#if NETCOREAPP3_0
+#if NETCOREAPP3_0 || NETCOREAPP3_1
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 #else
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -71,7 +74,7 @@ namespace SampleAspNetCoreApp
 			app.UseStaticFiles();
 			app.UseCookiePolicy();
 
-#if NETCOREAPP3_0
+#if NETCOREAPP3_0 || NETCOREAPP3_1
 			app.UseRouting();
 
 			app.UseAuthentication();

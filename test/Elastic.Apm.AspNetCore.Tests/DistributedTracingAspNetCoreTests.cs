@@ -40,14 +40,16 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 						services
 #if NETCOREAPP3_0
-							.AddRazorPages()
+							.AddMvc()
 							.SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
 #elif NETCOREAPP2_2
 							.AddMvc()
 							.SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
-#else
+#elif NETCOREAPP2_1
 							.AddMvc()
 							.SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+#else
+							.AddMvc()
 #endif
 							.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))));
 					}
@@ -71,8 +73,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 						.SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
 #elif NETCOREAPP2_2
 						.SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-#else
+#elif NETCOREAPP2_1
 						.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+#else
+;
 #endif
 				})
 				.Configure(app =>
