@@ -13,7 +13,7 @@ RUN "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::T
 RUN Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-install.ps1 -UseBasicParsing ;
 
 # Install .Net SDK'
-RUN & ./dotnet-install.ps1 -Channel LTS -InstallDir ./dotnet -Version 2.1.505
+RUN & ./dotnet-install.ps1 -Channel LTS -InstallDir ./dotnet -Version 3.1.100
 
 # Install NuGet Tool
 RUN Invoke-WebRequest "https://dist.nuget.org/win-x86-commandline/v4.9.4/nuget.exe" -OutFile dotnet\\nuget.exe -UseBasicParsing ;
