@@ -272,10 +272,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 								.SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
 #elif NETCOREAPP2_2
 								.SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-#else
+#elif NETCOREAPP2_1
 								.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+#else
+								;
 #endif
-
 						}
 					)
 					.Configure(app =>
