@@ -20,17 +20,7 @@ namespace SampleAspNetCoreApp
 		public void ConfigureServices(IServiceCollection services)
 		{
 			ConfigureServicesExceptMvc(services);
-#if NETCOREAPP3_1
 			services.AddMvc();
-#elif NETCOREAPP3_0
-			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
-#elif NETCOREAPP2_2
-			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-#elif NETCOREAPP2_1
-			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-#else
-			services.AddMvc();
-#endif
 		}
 
 		public static void ConfigureServicesExceptMvc(IServiceCollection services)

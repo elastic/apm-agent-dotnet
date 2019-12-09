@@ -5,7 +5,6 @@ using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.EntityFrameworkCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using SampleAspNetCoreApp;
@@ -32,27 +31,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 						app.UseStaticFiles();
 						app.UseCookiePolicy();
 
-#if NETCOREAPP3_0 || NETCOREAPP3_1
-						app.UseRouting();
-
-						app.UseAuthentication();
-
-						app.UseEndpoints(endpoints =>
-						{
-							endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
-							endpoints.MapControllers();
-							endpoints.MapRazorPages();
-						});
-#else
-						app.UseAuthentication();
-
-						app.UseMvc(routes =>
-						{
-							routes.MapRoute(
-								"default",
-								"{controller=Home}/{action=Index}/{id?}");
-						});
-#endif
+						RegisterRoutingAndMvc(app);
 					});
 
 					n.ConfigureServices(ConfigureServices);
@@ -67,27 +46,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 					{
 						app.UseElasticApm(agent, agent.Logger);
 
-#if NETCOREAPP3_0 || NETCOREAPP3_1
-						app.UseRouting();
-
-						app.UseAuthentication();
-
-						app.UseEndpoints(endpoints =>
-						{
-							endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
-							endpoints.MapControllers();
-							endpoints.MapRazorPages();
-						});
-#else
-						app.UseAuthentication();
-
-						app.UseMvc(routes =>
-						{
-							routes.MapRoute(
-								"default",
-								"{controller=Home}/{action=Index}/{id?}");
-						});
-#endif
+						RegisterRoutingAndMvc(app);
 					});
 
 					n.ConfigureServices(ConfigureServices);
@@ -112,49 +71,43 @@ namespace Elastic.Apm.AspNetCore.Tests
 						app.UseStaticFiles();
 						app.UseCookiePolicy();
 
-#if NETCOREAPP3_0 || NETCOREAPP3_1
-						app.UseRouting();
-
-						app.UseAuthentication();
-
-						app.UseEndpoints(endpoints =>
-						{
-							endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
-							endpoints.MapControllers();
-							endpoints.MapRazorPages();
-						});
-#else
-						app.UseAuthentication();
-
-						app.UseMvc(routes =>
-						{
-							routes.MapRoute(
-								"default",
-								"{controller=Home}/{action=Index}/{id?}");
-						});
-#endif
+						RegisterRoutingAndMvc(app);
 					});
 
 					n.ConfigureServices(ConfigureServices);
 				})
 				.CreateClient();
 
+		private static void RegisterRoutingAndMvc(IApplicationBuilder app)
+		{
+#if NETCOREAPP3_0 || NETCOREAPP3_1
+			app.UseRouting();
+
+			app.UseAuthentication();
+
+			app.UseEndpoints(endpoints =>
+			{
+				endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
+				endpoints.MapControllers();
+				endpoints.MapRazorPages();
+			});
+#else
+			app.UseAuthentication();
+
+			app.UseMvc(routes =>
+			{
+				routes.MapRoute(
+					"default",
+					"{controller=Home}/{action=Index}/{id?}");
+			});
+#endif
+		}
+
 		internal static void ConfigureServices(IServiceCollection services)
 		{
 			Startup.ConfigureServicesExceptMvc(services);
 			services
-#if NETCOREAPP3_0
 				.AddMvc()
-				.SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
-#elif NETCOREAPP2_2
-				.AddMvc()
-				.SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
-#elif NETCOREAPP2_1
-				.AddMvc()
-				.SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
-#else
-				.AddMvc()
-#endif
 				//this is needed because of a (probably) bug:
 				//https://github.com/aspnet/Mvc/issues/5992
 				.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))));
