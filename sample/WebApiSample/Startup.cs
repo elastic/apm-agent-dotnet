@@ -15,17 +15,11 @@ namespace WebApiSample
 
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services) =>
-#if NETCOREAPP3_0
-			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
-#elif NETCOREAPP2_2
-			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-#else
-			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-#endif
+			services.AddMvc();
 
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-#if NETCOREAPP3_0
+#if NETCOREAPP3_0 || NETCOREAPP3_1
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 #else
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -41,7 +35,7 @@ namespace WebApiSample
 
 			app.UseHttpsRedirection();
 
-#if NETCOREAPP3_0
+#if NETCOREAPP3_0 || NETCOREAPP3_1
 			app.UseRouting();
 
 			app.UseEndpoints(endpoints => { endpoints.MapControllers(); });

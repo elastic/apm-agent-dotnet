@@ -40,16 +40,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				{
 					Startup.ConfigureServicesExceptMvc(services);
 					services
-#if NETCOREAPP3_0
-						.AddRazorPages()
-						.SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
-#elif NETCOREAPP2_2
 						.AddMvc()
-						.SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
-#else
-						.AddMvc()
-						.SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
-#endif
 						//this is needed because of a (probably) bug:
 						//https://github.com/aspnet/Mvc/issues/5992
 						.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))));
