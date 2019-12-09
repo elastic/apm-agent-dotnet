@@ -135,7 +135,7 @@ pipeline {
                 }
                 stages{
                   /**
-                  Checkout the code and stash it, to use it on other stages.
+                  Install the required tools
                   */
                   stage('Install tools') {
                     steps {
@@ -143,6 +143,7 @@ pipeline {
                       unstash 'source'
                       dir("${HOME}"){
                         powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
+                        powershell label: 'Install more sdks', script: "${BASE_DIR}\\.ci\\windows\\dotnet-more-sdks.ps1"
                       }
                     }
                   }
@@ -237,7 +238,7 @@ pipeline {
                 }
                 stages{
                   /**
-                  Checkout the code and stash it, to use it on other stages.
+                  Install the required tools
                   */
                   stage('Install tools') {
                     steps {
@@ -245,6 +246,7 @@ pipeline {
                       unstash 'source'
                       dir("${HOME}"){
                         powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
+                        powershell label: 'Install more sdks', script: "${BASE_DIR}\\.ci\\windows\\dotnet-more-sdks.ps1"
                       }
                     }
 
