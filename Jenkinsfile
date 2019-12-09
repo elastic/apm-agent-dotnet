@@ -396,6 +396,7 @@ def dotnet(Closure body){
   def dotnetRoot = '/usr/share/dotnet'
   def path = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${home}/bin:${dotnetRoot}"
   docker.image('mcr.microsoft.com/dotnet/core/sdk:3.1.100').inside("-e DOTNET_ROOT='${dotnetRoot}' -e HOME='${home}' -e PATH='${path}'"){
+    sh label: 'Install tools', script: '.ci/linux/tools.sh'
     body()
   }
 }
