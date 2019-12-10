@@ -95,9 +95,9 @@ pipeline {
                 stage('Test') {
                   steps {
                     withGithubNotify(context: 'Test - Linux', tab: 'tests') {
+                      deleteDir()
+                      unstash 'source'
                       dir("${BASE_DIR}"){
-                        deleteDir()
-                        unstash 'source'
                         dotnet(){
                           sh label: 'Test & coverage', script: '.ci/linux/test.sh'
                           sh label: 'Convert Test Results to junit format', script: '.ci/linux/convert.sh'
