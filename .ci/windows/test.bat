@@ -11,5 +11,4 @@ dotnet test -v n -r target -d target\diag.log --no-build ^
  -verbosity:diagnostic ^
  /p:Threshold=0 ^
  /p:ThresholdType=branch ^
- /p:ThresholdStat=total ^
- || echo "\033[31;49mTests FAILED\033[0m"
+ /p:ThresholdStat=total
