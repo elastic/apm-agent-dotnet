@@ -7,7 +7,7 @@ build and test goals for the linux OS.
 
 ```bash
 ## Build docker image
-docker build -t sdk .ci/docker/sdk-linux
+docker build -t sdk .ci/docker/sdk
 
 ## Run container to build the apm-agent-dotnet
 docker run --rm -ti \
