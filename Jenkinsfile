@@ -392,8 +392,9 @@ def cleanDir(path){
 }
 
 def dotnet(Closure body){
-  sh label: 'Docker build', script: 'docker build --tag sdk .ci/docker/sdk-linux'
-  docker.image('sdk:latest').inside("-e HOME='${env.WORKSPACE}/${env.BASE_DIR}'"){
+  def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-sdk-linux:latest'
+  sh label: 'Docker build', script: "docker build --tag ${dockerTagName} .ci/docker/sdk-linux"
+  docker.image("${dockerTagName}").inside("-e HOME='${env.WORKSPACE}/${env.BASE_DIR}'"){
     body()
   }
 }
