@@ -8,7 +8,6 @@ dotnet test -v n -r target -d target\diag.log --no-build ^
  /p:CoverletOutputFormat=cobertura ^
  /p:CoverletOutput=target\Coverage\ ^
  /p:Exclude=\"[Elastic.Apm.Tests]*,[SampleAspNetCoreApp*]*,[xunit*]*\" ^
- -verbosity:diagnostic ^
  /p:Threshold=0 ^
  /p:ThresholdType=branch ^
  /p:ThresholdStat=total
