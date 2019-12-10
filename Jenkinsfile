@@ -76,8 +76,6 @@ pipeline {
                       deleteDir()
                       unstash 'source'
                       dir("${BASE_DIR}"){
-                        sh 'ls -ltrah'
-                        sh 'find . -name Dockerfile'
                         dotnet(){
                           sh '.ci/linux/build.sh'
                         }
