@@ -141,7 +141,7 @@ pipeline {
                       unstash 'source'
                       dir("${HOME}"){
                         powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
-                        powershell label: 'Install more sdks', script: "${BASE_DIR}\\.ci\\windows\\dotnet-more-sdks.ps1"
+                        bat label: 'Install more sdks', script: "${BASE_DIR}\\.ci\\windows\\dotnet-more-sdks.bat"
                       }
                     }
                   }
@@ -244,7 +244,7 @@ pipeline {
                       unstash 'source'
                       dir("${HOME}"){
                         powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
-                        powershell label: 'Install more sdks', script: "${BASE_DIR}\\.ci\\windows\\dotnet-more-sdks.ps1"
+                        bat label: 'Install more sdks', script: "${BASE_DIR}\\.ci\\windows\\dotnet-more-sdks.bat"
                       }
                     }
 
