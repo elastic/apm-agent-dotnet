@@ -27,7 +27,7 @@ do
 done
 
 # Run tests
-dotnet test -v n -r target -d target/diag.log --no-build \
+dotnet test -v n -r target -d target/diag.log \
     --logger:"xunit;LogFilePath=TestResults.xml" \
     /p:CollectCoverage=true \
     /p:CoverletOutputFormat=cobertura \
