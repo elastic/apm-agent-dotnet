@@ -391,7 +391,7 @@ def cleanDir(path){
 
 def dotnet(Closure body){
   sh label: 'Docker build', script: 'docker build --tag sdk .ci/docker/sdk'
-  docker.image('sdk:latest').inside('-e HOME=/app'){
+  docker.image('sdk:latest').inside("-e HOME='${env.WORKSPACE}/${env.BASE_DIR}'"){
     body()
   }
 }
