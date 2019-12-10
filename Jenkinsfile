@@ -141,7 +141,6 @@ pipeline {
                       unstash 'source'
                       dir("${HOME}"){
                         powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
-                        bat label: 'Install more sdks', script: "${BASE_DIR}\\.ci\\windows\\dotnet-more-sdks.bat"
                       }
                     }
                   }
@@ -229,7 +228,7 @@ pipeline {
                 options { skipDefaultCheckout() }
                 environment {
                   HOME = "${env.WORKSPACE}"
-                  DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
+                  DOTNET_ROOT = "C:\\Program Files\\dotnet"
                   VS_HOME = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise"
                   PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
                   MSBUILDDEBUGPATH = "${env.WORKSPACE}"
@@ -244,7 +243,6 @@ pipeline {
                       unstash 'source'
                       dir("${HOME}"){
                         powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
-                        bat label: 'Install more sdks', script: "${BASE_DIR}\\.ci\\windows\\dotnet-more-sdks.bat"
                       }
                     }
 
@@ -281,7 +279,6 @@ pipeline {
                         unstash 'source'
                         dir("${BASE_DIR}"){
                           powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                          bat label: 'Build', script: '.ci/windows/dotnet.bat'
                           bat label: 'Test & coverage', script: '.ci/windows/test.bat'
                           powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
                         }
