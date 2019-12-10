@@ -21,6 +21,26 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.2.0]]
+==== 1.2.0
+
+[float]
+===== Features
+
+- Entity framework support with Interceptor (https://www.elastic.co/guide/en/apm/agent/dotnet/1.x/setup.html#setup-ef6[docs])
+- Sanitization of HTTP headers and request body (https://www.elastic.co/guide/en/apm/agent/dotnet/1.x/config-core.html#config-sanitize-field-names[docs])
+- Central configuration - 2 new configs: `CAPTURE_BODY` and `TRANSACTION_MAX_SPANS`. {pull}577[#577].
+- Support for global labels (https://www.elastic.co/guide/en/apm/agent/dotnet/1.x/config-core.html#config-global-labels[docs])
+- Custom context (https://www.elastic.co/guide/en/apm/agent/dotnet/1.x/public-api.html#api-transaction-context[docs])
+- Dropping support for ASP.NET Core 2.0 (which is already end of life) (https://www.elastic.co/guide/en/apm/agent/dotnet/1.x/supported-technologies.html#supported-web-frameworks[docs])
+
+[float]
+===== Bug fixes
+
+- De-dotting labels. {pull}583[#583].
+- Request body capturing TypeLoadException in ASP.NET Core 3.0. {pull}604[#604].
+- Metrics collection: filtering NaN and Infinity. {pull}589[#589].
+
 [[release-notes-1.1.2]]
 ==== 1.1.2
 

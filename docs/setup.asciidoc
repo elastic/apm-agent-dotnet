@@ -75,7 +75,7 @@ you can enable auto instrumentation by including the `ElasticApmModule` IIS Modu
 <configuration>
     <system.webServer>
         <modules>
-            <add name="ElasticApmModule" type="Elastic.Apm.AspNetFullFramework.ElasticApmModule" />
+            <add name="ElasticApmModule" type="Elastic.Apm.AspNetFullFramework.ElasticApmModule, Elastic.Apm.AspNetFullFramework" />
         </modules>
     </system.webServer>
 </configuration>
@@ -92,7 +92,7 @@ as shown in the following example:
 <configuration>
     <system.webServer>
         <modules>
-            <add name="ElasticApmModule" type="Elastic.Apm.AspNetFullFramework.ElasticApmModule" preCondition="managedHandler" />
+            <add name="ElasticApmModule" type="Elastic.Apm.AspNetFullFramework.ElasticApmModule, Elastic.Apm.AspNetFullFramework" preCondition="managedHandler" />
         </modules>
     </system.webServer>
 </configuration>
