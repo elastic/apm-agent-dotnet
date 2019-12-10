@@ -257,7 +257,7 @@ pipeline {
                           cleanDir("${WORKSPACE}/${BASE_DIR}")
                           unstash 'source'
                           dir("${BASE_DIR}"){
-                            bat '.ci/windows/dotnet.bat'
+                            bat label: 'Build', script: '.ci/windows/dotnet.bat'
                           }
                         }
                       }
@@ -279,6 +279,7 @@ pipeline {
                         unstash 'source'
                         dir("${BASE_DIR}"){
                           powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                          bat label: 'Build', script: '.ci/windows/dotnet.bat'
                           bat label: 'Test & coverage', script: '.ci/windows/test.bat'
                           powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
                         }
