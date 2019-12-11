@@ -11,8 +11,10 @@ namespace Elastic.Apm.Elasticsearch
 {
 	public abstract class ElasticsearchDiagnosticsListenerBase : IDiagnosticListener
 	{
+		private readonly IApmAgent _agent;
 		protected ElasticsearchDiagnosticsListenerBase(IApmAgent agent, string name)
 		{
+			_agent = agent;
 			Name = name;
 			Logger = agent.Logger.Scoped(GetType().Name);
 		}
@@ -34,7 +36,7 @@ namespace Elastic.Apm.Elasticsearch
 
 		void IObserver<KeyValuePair<string, object>>.OnNext(KeyValuePair<string, object> value)
 		{
-			if (Agent.TransactionContainer.Transactions == null || Agent.TransactionContainer.Transactions.Value == null)
+			if (_agent.Tracer.CurrentTransaction == null)
 			{
 				Logger.Debug()?.Log("No active transaction, skip creating span for outgoing HTTP request");
 				return;
@@ -46,11 +48,15 @@ namespace Elastic.Apm.Elasticsearch
 		internal bool TryStartElasticsearchSpan(string name, out Span span, string instance = null)
 		{
 			span = null;
-			if (Agent.TransactionContainer.Transactions == null || Agent.TransactionContainer.Transactions.Value == null)
+			var transaction = _agent.Tracer.CurrentTransaction;
+			if (transaction == null)
 				return false;
-			var transaction = Agent.TransactionContainer.Transactions.Value;
 
-			span = transaction.StartSpanInternal(name, ApiConstants.TypeDb, ApiConstants.SubtypeElasticsearch);
+			span = (Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(_agent).StartSpan(
+				name,
+				ApiConstants.TypeDb,
+				ApiConstants.SubtypeElasticsearch);
+
 			span.Action = name;
 			SetDbContext(span, instance);
 

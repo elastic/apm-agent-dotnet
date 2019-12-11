@@ -2,11 +2,8 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Elastic.Apm.Api;
-using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elasticsearch.Net;
 using Elasticsearch.Net.Diagnostics;
@@ -83,9 +80,10 @@ namespace Elastic.Apm.Elasticsearch
 					{
 						causeOnServer = true;
 						culprit = "Elasticsearch Server Error";
-						message = serverError.Error.RootCause.FirstOrDefault()?.Reason
-							?? serverError.Error.CausedBy?.Reason
-							?? serverError.Error.Reason;
+						message = serverError?.Error?.RootCause.FirstOrDefault()?.Reason
+							?? serverError?.Error?.CausedBy?.Reason
+							?? serverError?.Error?.Reason
+							?? "Response did not indicate a server error, usually means no json was with an error key was returned.";
 					}
 				}
 			}
