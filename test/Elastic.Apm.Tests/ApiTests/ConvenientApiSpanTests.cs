@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Extensions;
+using Elastic.Apm.Tests.HelpersTests;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
@@ -722,6 +723,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.Spans[0].Context.Http.Url.Should().Be("http://mysite.com");
 			payloadSender.Spans[0].Context.Http.Method.Should().Be("GET");
 			payloadSender.Spans[0].Context.Http.StatusCode.Should().Be(200);
+			payloadSender.Spans[0].Context.Destination.Address.Should().Be("mysite.com");
+			payloadSender.Spans[0].Context.Destination.Port.Should().Be(UrlUtilsTests.DefaultHttpPort);
 
 			payloadSender.Spans[1].Name.Should().Be("SampleSpan2");
 			payloadSender.Spans[1].Context.Db.Statement.Should().Be("Select * from MyTable");

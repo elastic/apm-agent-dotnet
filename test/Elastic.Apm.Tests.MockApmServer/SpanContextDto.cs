@@ -14,6 +14,8 @@ namespace Elastic.Apm.Tests.MockApmServer
 	{
 		public Database Db { get; set; }
 
+		public Destination Destination { get; set; }
+
 		public Http Http { get; set; }
 
 		[JsonProperty("tags")]
@@ -21,7 +23,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		public override string ToString() => new ToStringBuilder(nameof(SpanContextDto))
 		{
-			{ nameof(Db), Db }, { nameof(Http), Http }, { nameof(Labels), Labels }
+			{ nameof(Db), Db }, { nameof(Http), Http }, { nameof(Labels), Labels }, { nameof(Destination), Destination }
 		}.ToString();
 
 		public void AssertValid()
@@ -29,6 +31,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			Db?.AssertValid();
 			Http?.AssertValid();
 			Labels?.LabelsAssertValid();
+			Destination?.AssertValid();
 		}
 	}
 }

@@ -55,16 +55,20 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		[AspNetFullFrameworkFact]
 		public async Task HttpCallWithResponseForbidden()
 		{
-			var forbidResponsePageData = SampleAppUrlPaths.ForbidHttpResponsePageDescriptionPage;
-			await SendGetRequestToSampleAppAndVerifyResponse(forbidResponsePageData.RelativeUrlPath, forbidResponsePageData.StatusCode);
+			var pageData = SampleAppUrlPaths.ChildHttpSpanWithResponseForbiddenPage;
+			await SendGetRequestToSampleAppAndVerifyResponse(pageData.RelativeUrlPath, pageData.StatusCode);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
-				VerifyReceivedDataSharedConstraints(forbidResponsePageData, receivedData);
+				VerifyReceivedDataSharedConstraints(pageData, receivedData);
 
 				receivedData.Spans.First().Should().NotBeNull();
 				receivedData.Spans.First().Context.Http.Should().NotBeNull();
 				receivedData.Spans.First().Context.Http.StatusCode.Should().Be(403);
+				receivedData.Spans.First().Context.Http.Method.Should().Be("GET");
+				receivedData.Spans.First().Context.Http.Url.Should().Be(HomeController.ChildHttpSpanWithResponseForbiddenUrl.ToString());
+				receivedData.Spans.First().Context.Destination.Address.Should().Be(HomeController.ChildHttpSpanWithResponseForbiddenUrl.Host);
+				receivedData.Spans.First().Context.Destination.Port.Should().Be(HomeController.ChildHttpSpanWithResponseForbiddenUrl.Port);
 			});
 		}
 

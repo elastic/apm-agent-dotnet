@@ -246,6 +246,15 @@ namespace Elastic.Apm.Tests.MockApmServer
 			thisObj.Url.Should().NotBeNullOrEmpty();
 		}
 
+		internal static void AssertValid(this Destination thisObj)
+		{
+			thisObj.Should().NotBeNull();
+
+			thisObj.Address.Should().NotBeNullOrEmpty();
+			thisObj.Address.AssertValid();
+			thisObj.Port?.Should().BeGreaterOrEqualTo(0);
+		}
+
 		internal static void AssertValid(this List<CapturedStackFrame> thisObj)
 		{
 			thisObj.Should().NotBeNull();

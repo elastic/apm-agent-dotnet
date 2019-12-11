@@ -76,8 +76,16 @@ namespace Elastic.Apm.Model
 
 		/// <summary>
 		/// Any other arbitrary data captured by the agent, optionally provided by the user.
+		/// <seealso cref="ShouldSerializeContext" />
 		/// </summary>
 		public SpanContext Context => _context.Value;
+
+		/// <summary>
+		/// Method to conditionally serialize <see cref="Context" /> - serialize only if it was accessed at least once.
+		/// See
+		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
+		/// </summary>
+		public bool ShouldSerializeContext() => _context.IsValueCreated;
 
 		/// <inheritdoc />
 		/// <summary>
@@ -198,6 +206,8 @@ namespace Elastic.Apm.Model
 
 			if (ShouldBeSentToApmServer && isFirstEndCall)
 			{
+				DeduceDestination();
+
 				// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
 				if (ConfigSnapshot.StackTraceLimit != 0 && ConfigSnapshot.SpanFramesMinDurationInMilliseconds != 0)
@@ -265,5 +275,20 @@ namespace Elastic.Apm.Model
 				_enclosingTransaction,
 				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id)
 			);
+
+		private void DeduceDestination()
+		{
+			if (!_context.IsValueCreated) return;
+
+			if (Context.Http?.Destination != null) CopyMissingProperties(Context.Http.Destination);
+
+			void CopyMissingProperties(Destination src)
+			{
+				if (Context.Destination == null)
+					Context.Destination = src;
+				else
+					Context.Destination.CopyMissingPropertiesFrom(src);
+			}
+		}
 	}
 }

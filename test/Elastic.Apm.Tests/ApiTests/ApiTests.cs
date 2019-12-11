@@ -741,6 +741,58 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstTransaction.Custom[customKey].Should().Be(customValue);
 		}
 
+		[Fact]
+		public void destination_properties_set_manually_have_precedence_over_automatically_deduced()
+		{
+			var url = new Uri("http://elastic.co");
+			const string manualAddress = "manual.address";
+			const int manualPort = 1234;
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("test TX name", "test TX type", tx =>
+				{
+					tx.CaptureSpan("manually set destination address", "test_span_type", span =>
+					{
+						span.Context.Destination = new Destination{ Address = manualAddress };
+						span.Context.Http = new Http { Method = "PUT" };
+						span.Context.Http.SetUrl(url);
+					});
+					tx.CaptureSpan("manually set destination port", "test_span_type", span =>
+					{
+						span.Context.Destination = new Destination{ Port = manualPort };
+						span.Context.Http = new Http { Method = "PUT" };
+						span.Context.Http.SetUrl(url);
+					});
+				});
+			}
+
+			var manualAddressSpan = payloadSender.Spans.Single(s => s.Name == "manually set destination address");
+			manualAddressSpan.Context.Destination.Address.Should().Be(manualAddress);
+			manualAddressSpan.Context.Destination.Port.Should().Be(url.Port);
+
+			var manualPortSpan = payloadSender.Spans.Single(s => s.Name == "manually set destination port");
+			manualPortSpan.Context.Destination.Address.Should().Be(url.Host);
+			manualPortSpan.Context.Destination.Port.Should().Be(manualPort);
+		}
+
+		[Fact]
+		public void span_that_is_not_external_service_call_should_not_have_destination()
+		{
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("test TX name", "test TX type", tx =>
+				{
+					tx.CaptureSpan("test span name", "test_span_subtype", () => {});
+				});
+			}
+
+			payloadSender.Spans.Single(s => s.Name == "test span name").Context.Destination.Should().BeNull();
+		}
+
 		private class TestException : Exception
 		{
 			public TestException(string message) : base(message) { }
