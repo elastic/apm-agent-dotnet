@@ -3,4 +3,4 @@
 #
 
 # Install visualstudio2019buildtools
-& choco install visualstudio2019buildtools -m -y --no-progress -r --version=16.3.10.0
+& choco install visualstudio2019buildtools -m -y --no-progress -r --version=16.4.0.0
