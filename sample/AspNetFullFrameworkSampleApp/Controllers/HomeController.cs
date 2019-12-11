@@ -45,7 +45,8 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		internal const int DummyHttpStatusCode = 599;
 		internal const string ExceptionMessage = "For testing purposes";
 
-		internal const string ForbidHttpResponsePageRelativePath = HomePageRelativePath + "/" + nameof(ForbidHttpResponse);
+		internal const string ChildHttpSpanWithResponseForbiddenPath = HomePageRelativePath + "/" + nameof(ChildHttpSpanWithResponseForbidden);
+		internal static readonly Uri ChildHttpSpanWithResponseForbiddenUrl = new Uri("https://httpstat.us/403");
 
 		internal const string GenNSpansPageRelativePath = HomePageRelativePath + "/" + nameof(GenNSpans);
 
@@ -78,11 +79,11 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 
 		private bool GetCaptureControllerActionAsSpan() => bool.Parse(GetQueryStringValue(CaptureControllerActionAsSpanQueryStringKey, "false"));
 
-		public async Task<ActionResult> ForbidHttpResponse()
+		public async Task<ActionResult> ChildHttpSpanWithResponseForbidden()
 		{
 			//see https://github.com/elastic/apm-agent-dotnet/issues/443
 			var httpClient = new HttpClient();
-			var res = await httpClient.GetAsync("https://httpstat.us/403");
+			var res = await httpClient.GetAsync(ChildHttpSpanWithResponseForbiddenUrl);
 			var retVal = new ContentResult { Content = res.IsSuccessStatusCode.ToString() };
 			return retVal;
 		}

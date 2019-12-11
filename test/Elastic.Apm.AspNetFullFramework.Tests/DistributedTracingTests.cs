@@ -35,7 +35,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 				var spanExternalCall =
 					receivedData.Spans.Single(sp => sp.Context.Http.Url == HomeController.ChildHttpCallToExternalServiceUrl.ToString());
-				VerifyHttpCallSpan(spanExternalCall, HomeController.ChildHttpCallToExternalServiceUrl.ToString(), 200);
+				VerifyHttpCallSpan(spanExternalCall, HomeController.ChildHttpCallToExternalServiceUrl, 200);
 
 				spanExternalCall.TraceId.Should().Be(rootTx.TraceId);
 				spanExternalCall.ParentId.Should().Be(rootTx.Id);
@@ -70,8 +70,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					receivedData.Spans.Single(sp => sp.Context?.Http?.Url == HomeController.ChildHttpCallToExternalServiceUrl.ToString());
 
 				VerifySpanNameTypeSubtypeAction(rootTxControllerActionSpan, HomeController.ContactSpanPrefix);
-				VerifyHttpCallSpan(spanCallToChildTx, childTx.Context.Request.Url.Full, childTxData.StatusCode);
-				VerifyHttpCallSpan(spanExternalCall, HomeController.ChildHttpCallToExternalServiceUrl.ToString(), 200);
+				VerifyHttpCallSpan(spanCallToChildTx, new Uri(childTx.Context.Request.Url.Full), childTxData.StatusCode);
+				VerifyHttpCallSpan(spanExternalCall, HomeController.ChildHttpCallToExternalServiceUrl, 200);
 
 				rootTxControllerActionSpan.TraceId.Should().Be(rootTx.TraceId);
 				childTx.TraceId.Should().Be(rootTx.TraceId);
@@ -122,7 +122,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var childTx = FindAndVerifyTransaction(receivedData, childTxData);
 
 			var spanCallToChildTx = receivedData.Spans.Single(sp => sp.Context.Http.Url == childTx.Context.Request.Url.Full);
-			VerifyHttpCallSpan(spanCallToChildTx, childTx.Context.Request.Url.Full, childTxData.StatusCode);
+			VerifyHttpCallSpan(spanCallToChildTx, new Uri(childTx.Context.Request.Url.Full), childTxData.StatusCode);
 
 			childTx.TraceId.Should().Be(rootTx.TraceId);
 			spanCallToChildTx.TraceId.Should().Be(rootTx.TraceId);
@@ -181,20 +181,23 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			return transaction;
 		}
 
-		private static void VerifyHttpCallSpan(SpanDto span, string url, int statusCode)
+		private static void VerifyHttpCallSpan(SpanDto span, Uri url, int statusCode)
 		{
 			span.Context.Db.Should().BeNull();
 			span.Context.Labels.Should().BeNull();
 
 			span.Context.Http.Method.Should().Be("GET");
 			span.Context.Http.StatusCode.Should().Be(statusCode);
-			span.Context.Http.Url.Should().Be(url);
+			span.Context.Http.Url.Should().Be(url.ToString());
 
 			span.Type.Should().Be(ApiConstants.TypeExternal);
 			span.Subtype.Should().Be(ApiConstants.SubtypeHttp);
 			span.Action.Should().BeNull();
 
-			span.Name.Should().Be($"GET {new Uri(url).Host}");
+			span.Name.Should().Be($"GET {url.Host}");
+
+			span.Context.Destination.Address.Should().Be(url.Host);
+			span.Context.Destination.Port.Should().Be(url.Port);
 		}
 	}
 }

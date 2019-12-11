@@ -140,8 +140,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				new SampleAppUrlPathData(HomeController.CustomChildSpanThrowsPageRelativePath, 500, spansCount: 2, errorsCount: 3);
 
 
-			internal static readonly SampleAppUrlPathData ForbidHttpResponsePageDescriptionPage =
-				new SampleAppUrlPathData(HomeController.ForbidHttpResponsePageRelativePath, 200, spansCount: 1, errorsCount: 1);
+			internal static readonly SampleAppUrlPathData ChildHttpSpanWithResponseForbiddenPage =
+				new SampleAppUrlPathData(HomeController.ChildHttpSpanWithResponseForbiddenPath, 200, spansCount: 1, errorsCount: 1);
 
 			internal static readonly SampleAppUrlPathData GetDotNetRuntimeDescriptionPage =
 				new SampleAppUrlPathData(HomeController.GetDotNetRuntimeDescriptionPageRelativePath, 200);

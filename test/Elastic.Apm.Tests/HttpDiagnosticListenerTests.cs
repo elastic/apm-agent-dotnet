@@ -11,6 +11,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Tests.HelpersTests;
 using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
@@ -97,8 +98,12 @@ namespace Elastic.Apm.Tests
 			//Simulate Start
 			listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Start", new { Request = request }));
 			ProcessingRequestsCount(listener).Should().Be(1);
-			GetSpanForRequest(listener, request).Context.Http.Url.Should().Be(request.RequestUri.ToString());
-			GetSpanForRequest(listener, request).Context.Http.Method.Should().Be(HttpMethod.Get.ToString());
+			var span = GetSpanForRequest(listener, request);
+			span.Context.Http.Url.Should().Be(request.RequestUri.ToString());
+			span.Context.Http.Method.Should().Be(HttpMethod.Get.ToString());
+			span.End();
+			span.Context.Destination.Address.Should().Be(request.RequestUri.Host);
+			span.Context.Destination.Port.Should().Be(UrlUtilsTests.DefaultHttpsPort);
 		}
 
 		/// <summary>
@@ -129,6 +134,8 @@ namespace Elastic.Apm.Tests
 			firstSpan.Should().NotBeNull();
 			firstSpan.Context.Http.Url.Should().BeEquivalentTo(request.RequestUri.AbsoluteUri);
 			firstSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
+			firstSpan.Context.Destination.Address.Should().Be(request.RequestUri.Host);
+			firstSpan.Context.Destination.Port.Should().Be(UrlUtilsTests.DefaultHttpsPort);
 		}
 
 		/// <summary>
@@ -239,6 +246,8 @@ namespace Elastic.Apm.Tests
 				firstSpan.Context.Http.Url.Should().Be(localServer.Uri);
 				firstSpan.Context.Http.StatusCode.Should().Be(200);
 				firstSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
+				firstSpan.Context.Destination.Address.Should().Be(new Uri(localServer.Uri).Host);
+				firstSpan.Context.Destination.Port.Should().Be(new Uri(localServer.Uri).Port);
 			}
 		}
 
@@ -272,6 +281,8 @@ namespace Elastic.Apm.Tests
 						.Replace("TestPassword", "[REDACTED]"));
 				firstSpan.Context.Http.StatusCode.Should().Be(200);
 				firstSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
+				firstSpan.Context.Destination.Address.Should().Be(new Uri(localServer.Uri).Host);
+				firstSpan.Context.Destination.Port.Should().Be(new Uri(localServer.Uri).Port);
 			}
 		}
 
@@ -297,6 +308,8 @@ namespace Elastic.Apm.Tests
 				firstSpan.Context.Http.Url.Should().Be(localServer.Uri);
 				firstSpan.Context.Http.StatusCode.Should().Be(500);
 				firstSpan.Context.Http.Method.Should().Be(HttpMethod.Post.Method);
+				firstSpan.Context.Destination.Address.Should().Be(new Uri(localServer.Uri).Host);
+				firstSpan.Context.Destination.Port.Should().Be(new Uri(localServer.Uri).Port);
 			}
 		}
 
@@ -482,6 +495,8 @@ namespace Elastic.Apm.Tests
 					httpCallSpan.Context.Http.Url.Should().Be($"{localServer.Uri}?i={i}");
 					httpCallSpan.Context.Http.StatusCode.Should().Be(200);
 					httpCallSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
+					httpCallSpan.Context.Destination.Address.Should().Be(new Uri(localServer.Uri).Host);
+					httpCallSpan.Context.Destination.Port.Should().Be(new Uri(localServer.Uri).Port);
 					httpCallSpan.Duration.Should().BeGreaterThan(0);
 					topSpanSent.Duration.Value.Should().BeGreaterOrEqualTo(httpCallSpan.Duration.Value);
 					httpCallSpan.ParentId.Should().Be(topSpanSent.Id);

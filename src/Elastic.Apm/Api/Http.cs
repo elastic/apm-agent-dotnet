@@ -1,4 +1,5 @@
 using System;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
@@ -26,7 +27,11 @@ namespace Elastic.Apm.Api
 		public string Url
 		{
 			get => _url;
-			set => _url = Sanitize(value, out var newValue) ? newValue : value;
+			set
+			{
+				UpdateDestination(value);
+				_url = Sanitize(value, out var newValue) ? newValue : value;
+			}
 		}
 
 		/// <summary>
@@ -41,6 +46,7 @@ namespace Elastic.Apm.Api
 		{
 			try
 			{
+				UpdateDestination(uri);
 				_url = string.IsNullOrEmpty(uri.UserInfo) ? uri.ToString() : SanitizeUserNameAndPassword(uri).ToString();
 			}
 			catch
@@ -61,6 +67,21 @@ namespace Elastic.Apm.Api
 			return result;
 		}
 
+		private static bool Sanitize(string uriString, out Uri originalUri, out string result)
+		{
+			try
+			{
+				originalUri = new Uri(uriString, UriKind.RelativeOrAbsolute);
+				return Sanitize(originalUri, out result);
+			}
+			catch
+			{
+				result = null;
+				originalUri = null;
+				return false;
+			}
+		}
+
 		/// <summary>
 		/// Returns <code>true</code> if sanitization was applied, <code>false</code> otherwise.
 		/// In some cases turning a string into a URL and then turning it back to a string adds a trailing `/`.
@@ -73,19 +94,8 @@ namespace Elastic.Apm.Api
 		/// (because there was no username& password in the URL) then this contains the <paramref name="result" /> parameter.
 		/// </param>
 		/// <returns></returns>
-		internal static bool Sanitize(string uriString, out string result)
-		{
-			try
-			{
-				var uri = new Uri(uriString, UriKind.RelativeOrAbsolute);
-				return Sanitize(uri, out result);
-			}
-			catch
-			{
-				result = null;
-				return false;
-			}
-		}
+		internal static bool Sanitize(string uriString, out string result) =>
+			Sanitize(uriString, out _, out result);
 
 		internal static bool Sanitize(Uri uri, out string result)
 		{
@@ -117,6 +127,31 @@ namespace Elastic.Apm.Api
 			builder.UserName = "[REDACTED]";
 			builder.Password = "[REDACTED]";
 			return builder.Uri;
+		}
+
+		internal Destination Destination { get; set; }
+
+		private void UpdateDestination(string url)
+		{
+			try
+			{
+				UpdateDestination(new Uri(url));
+			}
+			catch
+			{
+				Destination = null;
+			}
+		}
+
+		private void UpdateDestination(Uri url)
+		{
+			if (! UrlUtils.TryExtractDestinationInfo(url, out var host, out var port))
+			{
+				Destination = null;
+				return;
+			}
+
+			Destination = new Destination { Address = host, Port = port };
 		}
 	}
 }
