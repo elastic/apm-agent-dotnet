@@ -127,8 +127,7 @@ pipeline {
                 environment {
                   HOME = "${env.WORKSPACE}"
                   DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
-                  VS_HOME = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise"
-                  PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin;\"${env.VS_HOME}\\MSBuild\\Current\\Bin\""
+                  PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
                   MSBUILDDEBUGPATH = "${env.WORKSPACE}"
                 }
                 stages{
@@ -230,8 +229,7 @@ pipeline {
                 environment {
                   HOME = "${env.WORKSPACE}"
                   DOTNET_ROOT = "C:\\Program Files\\dotnet"
-                  VS_HOME = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise"
-                  PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin;\"${env.VS_HOME}\\MSBuild\\Current\\Bin\""
+                  PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
                   MSBUILDDEBUGPATH = "${env.WORKSPACE}"
                 }
                 stages{
