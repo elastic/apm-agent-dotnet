@@ -487,11 +487,11 @@ namespace Elastic.Apm.Tests
 				var topSpanSent = payloadSender.Spans.Last();
 				topSpanSent.Name.Should().Be(topSpanName);
 				topSpanSent.Type.Should().Be(topSpanType);
+				// ReSharper disable AccessToDisposedClosure
 				numberOfHttpCalls.Repeat(i =>
 				{
 					var httpCallSpan = payloadSender.Spans[i];
 					httpCallSpan.Should().NotBeNull();
-					// ReSharper disable once AccessToDisposedClosure
 					httpCallSpan.Context.Http.Url.Should().Be($"{localServer.Uri}?i={i}");
 					httpCallSpan.Context.Http.StatusCode.Should().Be(200);
 					httpCallSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
@@ -501,6 +501,7 @@ namespace Elastic.Apm.Tests
 					topSpanSent.Duration.Value.Should().BeGreaterOrEqualTo(httpCallSpan.Duration.Value);
 					httpCallSpan.ParentId.Should().Be(topSpanSent.Id);
 				});
+				// ReSharper restore AccessToDisposedClosure
 			}
 		}
 

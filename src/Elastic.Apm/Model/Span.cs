@@ -293,7 +293,7 @@ namespace Elastic.Apm.Model
 			}
 		}
 
-		internal Destination DeduceHttpDestination()
+		private Destination DeduceHttpDestination()
 		{
 			try
 			{

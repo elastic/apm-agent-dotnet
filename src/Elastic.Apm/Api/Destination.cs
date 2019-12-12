@@ -27,6 +27,12 @@ namespace Elastic.Apm.Api
 			if (!_port.HasValue) _port = src._port;
 		}
 
+		/// <summary>
+		/// The goal is to allow public API user to prohibit automatic deduction of any of  `context.destination` properties.
+		/// To achieve that we need a way to distinguish between `null` as the initial value
+		/// (meaning public API user is okay with us automatically deducing it) and `null` explicitly set via public API
+		/// (meaning the user doesn't want us to automatically deduce it).
+		/// </summary>
 		private readonly struct Optional<T>
 		{
 			internal readonly bool HasValue;
