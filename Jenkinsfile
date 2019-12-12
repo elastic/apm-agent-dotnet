@@ -224,7 +224,7 @@ pipeline {
                 }
               }
               stage('Docker .NET Framework'){
-                agent { label 'windows-2019-docker' }
+                agent { label 'windows-2019-docker-immutable' }
                 options { skipDefaultCheckout() }
                 stages {
                   stage('Build - Docker MSBuild') {
