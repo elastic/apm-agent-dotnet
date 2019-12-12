@@ -234,7 +234,7 @@ pipeline {
                         cleanDir("${WORKSPACE}/${BASE_DIR}")
                         unstash 'source'
                         dir("${BASE_DIR}") {
-                          catchError(message: 'Beta stage', stageResult: 'UNSTABLE') {
+                          catchError(message: 'Beta stage', buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                             dotnetWindows(){
                               bat 'msbuild'
                             }
