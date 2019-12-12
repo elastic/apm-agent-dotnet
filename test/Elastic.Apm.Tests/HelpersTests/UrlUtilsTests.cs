@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
@@ -44,7 +45,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 		[InlineData("C:\\")] // no host (Basic host name type)
 		public void TryExtractDestinationInfo_invalid_input(string inputUrl)
 		{
-			var mockLogger = new TestLogger();
+			var mockLogger = new TestLogger(LogLevel.Trace);
 			UrlUtils.TryExtractDestinationInfo(new Uri(inputUrl), out var actualHost, out var actualPort, mockLogger).Should().BeFalse();
 			mockLogger.Lines.Should().Contain(line => line.Contains(nameof(UrlUtils)) && line.Contains(nameof(UrlUtils.TryExtractDestinationInfo)));
 		}
