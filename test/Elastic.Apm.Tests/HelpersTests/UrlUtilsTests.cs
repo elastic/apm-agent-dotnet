@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
 
@@ -33,7 +35,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 		[InlineData("http://Хост", "Хост", DefaultHttpPort)] // Host in Russian
 		public void TryExtractDestinationInfo_valid_input(string inputUrl, string expectedHost, int? expectedPort)
 		{
-			UrlUtils.TryExtractDestinationInfo(new Uri(inputUrl), out var actualHost, out var actualPort).Should().BeTrue();
+			UrlUtils.TryExtractDestinationInfo(new Uri(inputUrl), out var actualHost, out var actualPort, new NoopLogger()).Should().BeTrue();
 			actualHost.Should().Be(expectedHost);
 			actualPort.Should().Be(expectedPort);
 		}
@@ -42,7 +44,9 @@ namespace Elastic.Apm.Tests.HelpersTests
 		[InlineData("C:\\")] // no host (Basic host name type)
 		public void TryExtractDestinationInfo_invalid_input(string inputUrl)
 		{
-			UrlUtils.TryExtractDestinationInfo(new Uri(inputUrl), out var actualHost, out var actualPort).Should().BeFalse();
+			var mockLogger = new TestLogger();
+			UrlUtils.TryExtractDestinationInfo(new Uri(inputUrl), out var actualHost, out var actualPort, mockLogger).Should().BeFalse();
+			mockLogger.Lines.Should().Contain(line => line.Contains(nameof(UrlUtils)) && line.Contains(nameof(UrlUtils.TryExtractDestinationInfo)));
 		}
 	}
 }

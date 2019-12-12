@@ -1,13 +1,19 @@
 using System;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Helpers
 {
 	internal static class UrlUtils
 	{
-		internal static bool TryExtractDestinationInfo(Uri url, out string host, out int? port)
+		private const string ThisClassName = nameof(UrlUtils);
+
+		internal static bool TryExtractDestinationInfo(Uri url, out string host, out int? port, IApmLogger logger)
 		{
 			if (!url.IsAbsoluteUri || url.HostNameType == UriHostNameType.Basic || url.HostNameType == UriHostNameType.Unknown)
 			{
+				logger.Scoped($"{ThisClassName}.{DbgUtils.CurrentMethodName()}").Debug()?.Log("Cannot extract destination info."
+					+ " url: IsAbsoluteUri: {IsAbsoluteUri}, HostNameType: {HostNameType}."
+					, url.IsAbsoluteUri, url.HostNameType);
 				host = null;
 				port = null;
 				return false;

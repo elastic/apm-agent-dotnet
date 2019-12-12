@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
@@ -756,14 +757,22 @@ namespace Elastic.Apm.Tests.ApiTests
 					tx.CaptureSpan("manually set destination address", "test_span_type", span =>
 					{
 						span.Context.Destination = new Destination{ Address = manualAddress };
-						span.Context.Http = new Http { Method = "PUT" };
-						span.Context.Http.SetUrl(url);
+						span.Context.Http = new Http { Method = "PUT", Url = url.ToString() };
 					});
 					tx.CaptureSpan("manually set destination port", "test_span_type", span =>
 					{
 						span.Context.Destination = new Destination{ Port = manualPort };
-						span.Context.Http = new Http { Method = "PUT" };
-						span.Context.Http.SetUrl(url);
+						span.Context.Http = new Http { Method = "PUT", Url = url.ToString() };
+					});
+					tx.CaptureSpan("manually set destination address to null", "test_span_type", span =>
+					{
+						span.Context.Destination = new Destination{ Address = null };
+						span.Context.Http = new Http { Method = "PUT", Url = url.ToString() };
+					});
+					tx.CaptureSpan("manually set destination port to null", "test_span_type", span =>
+					{
+						span.Context.Destination = new Destination{ Port = null };
+						span.Context.Http = new Http { Method = "PUT", Url = url.ToString() };
 					});
 				});
 			}
@@ -775,6 +784,14 @@ namespace Elastic.Apm.Tests.ApiTests
 			var manualPortSpan = payloadSender.Spans.Single(s => s.Name == "manually set destination port");
 			manualPortSpan.Context.Destination.Address.Should().Be(url.Host);
 			manualPortSpan.Context.Destination.Port.Should().Be(manualPort);
+
+			var nullAddressSpan = payloadSender.Spans.Single(s => s.Name == "manually set destination address to null");
+			nullAddressSpan.Context.Destination.Address.Should().BeNull();
+			nullAddressSpan.Context.Destination.Port.Should().Be(url.Port);
+
+			var nullPortSpan = payloadSender.Spans.Single(s => s.Name == "manually set destination port to null");
+			nullPortSpan.Context.Destination.Address.Should().Be(url.Host);
+			nullPortSpan.Context.Destination.Port.Should().BeNull();
 		}
 
 		[Fact]
@@ -790,7 +807,29 @@ namespace Elastic.Apm.Tests.ApiTests
 				});
 			}
 
-			payloadSender.Spans.Single(s => s.Name == "test span name").Context.Destination.Should().BeNull();
+			payloadSender.Spans.Single().Context.Destination.Should().BeNull();
+		}
+
+		[Fact]
+		public void span_with_invalid_Context_Http_Url_should_not_have_destination()
+		{
+			var mockLogger = new TestLogger(LogLevel.Trace);
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent = new ApmAgent(new TestAgentComponents(mockLogger, payloadSender: payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("test TX name", "test TX type", tx =>
+				{
+					tx.CaptureSpan("test span name", "test_span_type", span =>
+					{
+						span.Context.Http = new Http { Method = "PUT", Url = "://" };
+					});
+				});
+			}
+
+			payloadSender.Spans.Single().Context.Destination.Should().BeNull();
+			mockLogger.Lines.Should().Contain(line => line.Contains("destination", StringComparison.OrdinalIgnoreCase)
+				&& line.Contains("URL", StringComparison.OrdinalIgnoreCase));
 		}
 
 		private class TestException : Exception

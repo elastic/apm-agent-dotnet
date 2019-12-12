@@ -280,14 +280,34 @@ namespace Elastic.Apm.Model
 		{
 			if (!_context.IsValueCreated) return;
 
-			if (Context.Http?.Destination != null) CopyMissingProperties(Context.Http.Destination);
+			if (Context.Http != null) CopyMissingProperties(DeduceHttpDestination());
 
 			void CopyMissingProperties(Destination src)
 			{
+				if (src == null) return;
+
 				if (Context.Destination == null)
 					Context.Destination = src;
 				else
 					Context.Destination.CopyMissingPropertiesFrom(src);
+			}
+		}
+
+		internal Destination DeduceHttpDestination()
+		{
+			try
+			{
+				var url = Context.Http.OriginalUrl ?? new Uri(Context.Http.Url);
+				// ReSharper disable once ConvertIfStatementToReturnStatement
+				if (! UrlUtils.TryExtractDestinationInfo(url, out var host, out var port, _logger)) return null;
+				return new Destination { Address = host, Port = port };
+			}
+			catch(Exception ex)
+			{
+				_logger.Trace()?.LogException(ex, "Failed to deduce destination info from Context.Http."
+					+ " Original URL: {OriginalUrl}. Context.Http.Url: {Context.Http.Url}."
+					, Context.Http.OriginalUrl, Context.Http.Url);
+				return null;
 			}
 		}
 	}

@@ -11,33 +11,32 @@ namespace Elastic.Apm.Api
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Address
 		{
-			get => _address?.Value;
-			set
-			{
-				if (_address == null) _address = new Optional<string>();
-				_address.Value = value;
-			}
+			get => _address.Value;
+			set => _address = new Optional<string>(value);
 		}
 
 		public int? Port
 		{
-			get => _port?.Value;
-			set
-			{
-				if (_port == null) _port = new Optional<int?>();
-				_port.Value = value;
-			}
+			get => _port.Value;
+			set => _port = new Optional<int?>(value);
 		}
 
 		internal void CopyMissingPropertiesFrom(Destination src)
 		{
-			if (_address == null) _address = src._address;
-			if (_port == null) _port = src._port;
+			if (!_address.HasValue) _address = src._address;
+			if (!_port.HasValue) _port = src._port;
 		}
 
-		private class Optional<T>
+		private readonly struct Optional<T>
 		{
-			internal T Value;
+			internal readonly bool HasValue;
+			internal readonly T Value;
+
+			internal Optional(T value)
+			{
+				Value = value;
+				HasValue = true;
+			}
 		}
 	}
 }

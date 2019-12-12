@@ -1,5 +1,6 @@
 using System;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
@@ -27,11 +28,7 @@ namespace Elastic.Apm.Api
 		public string Url
 		{
 			get => _url;
-			set
-			{
-				UpdateDestination(value);
-				_url = Sanitize(value, out var newValue) ? newValue : value;
-			}
+			set => _url = Sanitize(value, out var newValue) ? newValue : value;
 		}
 
 		/// <summary>
@@ -44,9 +41,9 @@ namespace Elastic.Apm.Api
 		/// <param name="uri"></param>
 		internal void SetUrl(Uri uri)
 		{
+			OriginalUrl = uri;
 			try
 			{
-				UpdateDestination(uri);
 				_url = string.IsNullOrEmpty(uri.UserInfo) ? uri.ToString() : SanitizeUserNameAndPassword(uri).ToString();
 			}
 			catch
@@ -54,6 +51,8 @@ namespace Elastic.Apm.Api
 				_url = string.Empty;
 			}
 		}
+
+		internal Uri OriginalUrl { get; private set; }
 
 		/// <summary>
 		/// Removes the username and password from the <paramref name="uri" /> and returns it as a <see cref="string" />.
@@ -127,31 +126,6 @@ namespace Elastic.Apm.Api
 			builder.UserName = "[REDACTED]";
 			builder.Password = "[REDACTED]";
 			return builder.Uri;
-		}
-
-		internal Destination Destination { get; set; }
-
-		private void UpdateDestination(string url)
-		{
-			try
-			{
-				UpdateDestination(new Uri(url));
-			}
-			catch
-			{
-				Destination = null;
-			}
-		}
-
-		private void UpdateDestination(Uri url)
-		{
-			if (! UrlUtils.TryExtractDestinationInfo(url, out var host, out var port))
-			{
-				Destination = null;
-				return;
-			}
-
-			Destination = new Destination { Address = host, Port = port };
 		}
 	}
 }
