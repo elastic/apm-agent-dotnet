@@ -9,9 +9,11 @@ namespace Elastic.Apm.Helpers
 
 		internal static bool TryExtractDestinationInfo(Uri url, out string host, out int? port, IApmLogger logger)
 		{
+			// We cannot extract
 			if (!url.IsAbsoluteUri || url.HostNameType == UriHostNameType.Basic || url.HostNameType == UriHostNameType.Unknown)
 			{
-				logger.Scoped($"{ThisClassName}.{DbgUtils.CurrentMethodName()}").Debug()?.Log("Cannot extract destination info."
+				logger.Scoped($"{ThisClassName}.{DbgUtils.CurrentMethodName()}").Debug()?.Log(
+					"Cannot extract destination info (URL is not absolute or doesn't point to an external resource)."
 					+ " url: IsAbsoluteUri: {IsAbsoluteUri}, HostNameType: {HostNameType}."
 					, url.IsAbsoluteUri, url.HostNameType);
 				host = null;

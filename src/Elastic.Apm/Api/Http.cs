@@ -1,6 +1,4 @@
 using System;
-using Elastic.Apm.Helpers;
-using Elastic.Apm.Logging;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
@@ -13,6 +11,7 @@ namespace Elastic.Apm.Api
 	public class Http
 	{
 		private string _url;
+		private Uri _originalUrl;
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Method { get; set; }
@@ -28,7 +27,7 @@ namespace Elastic.Apm.Api
 		public string Url
 		{
 			get => _url;
-			set => _url = Sanitize(value, out var newValue) ? newValue : value;
+			set => _url = Sanitize(value, out var newValue, out _originalUrl) ? newValue : value;
 		}
 
 		/// <summary>
@@ -41,7 +40,7 @@ namespace Elastic.Apm.Api
 		/// <param name="uri"></param>
 		internal void SetUrl(Uri uri)
 		{
-			OriginalUrl = uri;
+			_originalUrl = uri;
 			try
 			{
 				_url = string.IsNullOrEmpty(uri.UserInfo) ? uri.ToString() : SanitizeUserNameAndPassword(uri).ToString();
@@ -52,7 +51,10 @@ namespace Elastic.Apm.Api
 			}
 		}
 
-		internal Uri OriginalUrl { get; private set; }
+		/// <summary>
+		/// The Url in its original form as it was passed to the Agent, without sanitization or any other trimming.
+		/// </summary>
+		internal Uri OriginalUrl => _originalUrl;
 
 		/// <summary>
 		/// Removes the username and password from the <paramref name="uri" /> and returns it as a <see cref="string" />.
@@ -66,17 +68,17 @@ namespace Elastic.Apm.Api
 			return result;
 		}
 
-		private static bool Sanitize(string uriString, out Uri originalUri, out string result)
+		private static bool Sanitize(string uriString, out string result, out Uri originalUrl)
 		{
 			try
 			{
-				originalUri = new Uri(uriString, UriKind.RelativeOrAbsolute);
-				return Sanitize(originalUri, out result);
+				originalUrl = new Uri(uriString, UriKind.RelativeOrAbsolute);
+				return Sanitize(originalUrl, out result);
 			}
 			catch
 			{
 				result = null;
-				originalUri = null;
+				originalUrl = null;
 				return false;
 			}
 		}
@@ -94,7 +96,7 @@ namespace Elastic.Apm.Api
 		/// </param>
 		/// <returns></returns>
 		internal static bool Sanitize(string uriString, out string result) =>
-			Sanitize(uriString, out _, out result);
+			Sanitize(uriString, out result, out _);
 
 		internal static bool Sanitize(Uri uri, out string result)
 		{

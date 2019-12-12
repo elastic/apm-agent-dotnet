@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
@@ -32,8 +31,10 @@ namespace Elastic.Apm.Tests.HelpersTests
 		[InlineData("https://[fe80::200:39ff:fe36:1a2d%254]:54321/temp/example.htm", "fe80::200:39ff:fe36:1a2d", 54321)]
 		[InlineData("https://[fe80::200:39ff:fe36:1a2d%254]", "fe80::200:39ff:fe36:1a2d", DefaultHttpsPort)]
 		// Non-ASCII characters in host name
+		// ReSharper disable StringLiteralTypo
 		[InlineData("http://München", "münchen", DefaultHttpPort)]
 		[InlineData("http://Хост", "Хост", DefaultHttpPort)] // Host in Russian
+		// ReSharper restore StringLiteralTypo
 		public void TryExtractDestinationInfo_valid_input(string inputUrl, string expectedHost, int? expectedPort)
 		{
 			UrlUtils.TryExtractDestinationInfo(new Uri(inputUrl), out var actualHost, out var actualPort, new NoopLogger()).Should().BeTrue();
@@ -46,7 +47,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 		public void TryExtractDestinationInfo_invalid_input(string inputUrl)
 		{
 			var mockLogger = new TestLogger(LogLevel.Trace);
-			UrlUtils.TryExtractDestinationInfo(new Uri(inputUrl), out var actualHost, out var actualPort, mockLogger).Should().BeFalse();
+			UrlUtils.TryExtractDestinationInfo(new Uri(inputUrl), out _, out _, mockLogger).Should().BeFalse();
 			mockLogger.Lines.Should().Contain(line => line.Contains(nameof(UrlUtils)) && line.Contains(nameof(UrlUtils.TryExtractDestinationInfo)));
 		}
 	}
