@@ -421,7 +421,7 @@ def dotnet(Closure body){
 
 def dotnetWindows(Closure body){
   def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-windows:latest'
-  bat label: 'Docker Build', script: 'docker build --tag ${dockerTagName}  -m 2GB .ci\\docker\\buildtools-windows'
+  bat label: 'Docker Build', script: "docker build --tag ${dockerTagName}  -m 2GB .ci\\docker\\buildtools-windows"
   docker.image("${dockerTagName}").inside(){
     body()
   }
