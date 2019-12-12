@@ -223,6 +223,27 @@ pipeline {
                   }
                 }
               }
+              stage('Docker .NET Framework'){
+                agent { label 'windows-2019-docker' }
+                options { skipDefaultCheckout() }
+                stages {
+                  stage('Build - Docker MSBuild') {
+                    steps {
+                      withGithubNotify(context: 'Build MSBuild - Docker') {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}") {
+                          catchError(message: 'Beta stage', stageResult: 'UNSTABLE') {
+                            dotnetWindows(){
+                              bat 'msbuild'
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
               stage('Windows .NET Core'){
                 agent { label 'windows-2019-immutable' }
                 options { skipDefaultCheckout() }
@@ -394,6 +415,14 @@ def dotnet(Closure body){
   def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-sdk-linux:latest'
   sh label: 'Docker build', script: "docker build --tag ${dockerTagName} .ci/docker/sdk-linux"
   docker.image("${dockerTagName}").inside("-e HOME='${env.WORKSPACE}/${env.BASE_DIR}'"){
+    body()
+  }
+}
+
+def dotnetWindows(Closure body){
+  def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-windows:latest'
+  bat label: 'Docker Build', script: 'docker build --tag ${dockerTagName}  -m 2GB .ci\\docker\\buildtools-windows'
+  docker.image("${dockerTagName}").inside(){
     body()
   }
 }
