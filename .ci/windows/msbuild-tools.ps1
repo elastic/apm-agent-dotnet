@@ -4,4 +4,4 @@
 
 # Install visualstudio2019buildtools
 & choco install visualstudio2019buildtools -m -y --no-progress -r --version=16.4.0.0
-& choco install visualstudio2019enterprise -m -y --no-progress -r --version=16.4.0.0 --package-parameters "--includeRecommended"
+& choco install visualstudio2019enterprise -m -y --no-progress -r --version=16.4.0.0 --package-parameters "--includeRecommended --includeOptional"
