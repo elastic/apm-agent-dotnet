@@ -209,7 +209,7 @@ Defining too many unique fields in an index is a condition that can lead to a
 
 [source,csharp]
 ----
-Ageny.Tracer
+Agent.Tracer
  .CaptureTransaction(TransactionName, TransactionType, 
     transaction =>
     {
