@@ -10,6 +10,6 @@
     <PackageReference Include="Topshelf" Version="4.2.1" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Properties" />
+    <ProjectReference Include="..\..\src\Elastic.Apm.AspNet.WebApi.SelfHost\Elastic.Apm.AspNet.WebApi.SelfHost.csproj" />
   </ItemGroup>
 </Project>

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Routing;
 using System.Web.Http.SelfHost;
+using Elastic.Apm.AspNet.WebApi.SelfHost;
 using SampleHttpSelfHostApp.Controllers;
 
 namespace SampleHttpSelfHostApp
@@ -18,6 +19,8 @@ namespace SampleHttpSelfHostApp
 
 			config.Routes.MapHttpRoute("values", "api/values", new { controller = "Values", action = nameof(ValuesController.GetValues) },
 				new { httpMethod = new HttpMethodConstraint(HttpMethod.Get) });
+
+			config.MessageHandlers.Add(ApmMessageHandler.Create());
 
 			_server = new HttpSelfHostServer(config);
 
