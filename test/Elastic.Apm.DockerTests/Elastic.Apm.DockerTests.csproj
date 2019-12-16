@@ -1,20 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-<PropertyGroup>
-  <TargetFrameworks>netcoreapp2.1,netcoreapp2.2,netcoreapp3.0,netcoreapp3.1</TargetFrameworks>
-  <RootNamespace>Elastic.Apm.DockerTests</RootNamespace>
-  <AssemblyName>Elastic.Apm.DockerTests</AssemblyName>
-</PropertyGroup>
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp2.1;netcoreapp2.2;netcoreapp3.0;netcoreapp3.1</TargetFrameworks>
+    <RootNamespace>Elastic.Apm.DockerTests</RootNamespace>
+    <AssemblyName>Elastic.Apm.DockerTests</AssemblyName>
+  </PropertyGroup>
 
-<ItemGroup>
-  <PackageReference Include="FluentAssertions" Version="5.6.0" />
-  <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" />
-  <PackageReference Include="xunit" Version="2.3.1" />
-  <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
-  <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
-</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="5.6.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" />
+    <PackageReference Include="xunit" Version="2.3.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
+    <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
+  </ItemGroup>
 
-<ItemGroup>
-  <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
-  <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
-</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
+    <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
+  </ItemGroup>
 </Project>
