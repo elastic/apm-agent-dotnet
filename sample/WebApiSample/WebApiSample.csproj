@@ -2,11 +2,10 @@
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.1;netcoreapp2.2;netcoreapp3.0;netcoreapp3.1</TargetFrameworks>
-    <SignAssembly>false</SignAssembly>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.0' ">
+  <ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.0' AND '$(TargetFramework)' != 'netcoreapp3.1' ">
     <PackageReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
