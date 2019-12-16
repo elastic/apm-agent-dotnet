@@ -99,8 +99,6 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         dotnet(){
-                          sh label: 'Install test tools', script: '.ci/linux/test-tools.sh'
-                          sh label: 'Build', script: '.ci/linux/build.sh'
                           sh label: 'Test & coverage', script: '.ci/linux/test.sh'
                           sh label: 'Convert Test Results to junit format', script: '.ci/linux/convert.sh'
                         }
@@ -129,13 +127,12 @@ pipeline {
                 environment {
                   HOME = "${env.WORKSPACE}"
                   DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
-                  VS_HOME = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise"
-                  PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
+                  PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
                   MSBUILDDEBUGPATH = "${env.WORKSPACE}"
                 }
                 stages{
                   /**
-                  Checkout the code and stash it, to use it on other stages.
+                  Install the required tools
                   */
                   stage('Install tools') {
                     steps {
@@ -143,6 +140,7 @@ pipeline {
                       unstash 'source'
                       dir("${HOME}"){
                         powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
+                        powershell label: 'Install msbuild tools', script: "${BASE_DIR}\\.ci\\windows\\msbuild-tools.ps1"
                       }
                     }
                   }
@@ -176,6 +174,7 @@ pipeline {
                         unstash 'source'
                         dir("${BASE_DIR}"){
                           powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                          bat label: 'Prepare solution', script: '.ci/windows/prepare-test.bat'
                           bat label: 'Build', script: '.ci/windows/msbuild.bat'
                           bat label: 'Test & coverage', script: '.ci/windows/test.bat'
                           powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
@@ -184,6 +183,7 @@ pipeline {
                     }
                     post {
                       always {
+                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/target/diag.log,${BASE_DIR}/target/TestResults.xml")
                         junit(allowEmptyResults: true,
                           keepLongStdio: true,
                           testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
@@ -224,19 +224,39 @@ pipeline {
                   }
                 }
               }
+              stage('Docker .NET Framework'){
+                agent { label 'windows-2019-docker-immutable' }
+                options { skipDefaultCheckout() }
+                stages {
+                  stage('Build - Docker MSBuild') {
+                    steps {
+                      withGithubNotify(context: 'Build MSBuild - Docker') {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}") {
+                          catchError(message: 'Beta stage', buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+                            dotnetWindows(){
+                              bat 'msbuild'
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
               stage('Windows .NET Core'){
                 agent { label 'windows-2019-immutable' }
                 options { skipDefaultCheckout() }
                 environment {
                   HOME = "${env.WORKSPACE}"
-                  DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
-                  VS_HOME = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise"
-                  PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin;\"${env.VS_HOME}\\MSBuild\\15.0\\Bin\""
+                  DOTNET_ROOT = "C:\\Program Files\\dotnet"
+                  PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
                   MSBUILDDEBUGPATH = "${env.WORKSPACE}"
                 }
                 stages{
                   /**
-                  Checkout the code and stash it, to use it on other stages.
+                  Install the required tools
                   */
                   stage('Install tools') {
                     steps {
@@ -258,7 +278,7 @@ pipeline {
                           cleanDir("${WORKSPACE}/${BASE_DIR}")
                           unstash 'source'
                           dir("${BASE_DIR}"){
-                            bat '.ci/windows/dotnet.bat'
+                            bat label: 'Build', script: '.ci/windows/dotnet.bat'
                           }
                         }
                       }
@@ -280,7 +300,9 @@ pipeline {
                         unstash 'source'
                         dir("${BASE_DIR}"){
                           powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                          bat label: 'Build', script: '.ci/windows/dotnet.bat'
+                          retry(3) {
+                            bat label: 'Build', script: '.ci/windows/dotnet.bat'
+                          }
                           bat label: 'Test & coverage', script: '.ci/windows/test.bat'
                           powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
                         }
@@ -288,6 +310,7 @@ pipeline {
                     }
                     post {
                       always {
+                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/target/diag.log,${BASE_DIR}/target/TestResults.xml")
                         junit(allowEmptyResults: true,
                           keepLongStdio: true,
                           testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
@@ -390,12 +413,17 @@ def cleanDir(path){
 }
 
 def dotnet(Closure body){
-  def home = "/tmp"
-  def dotnetRoot = "/${home}/.dotnet"
-  def path = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/${home}/bin:${dotnetRoot}:${dotnetRoot}/bin:${dotnetRoot}/tools"
-  docker.image('mcr.microsoft.com/dotnet/core/sdk:2.1.505').inside("-e HOME='${home}' -e PATH='${path}'"){
-    sh 'chmod +x .ci/linux/tools.sh'
-    sh '.ci/linux/tools.sh'
+  def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-sdk-linux:latest'
+  sh label: 'Docker build', script: "docker build --tag ${dockerTagName} .ci/docker/sdk-linux"
+  docker.image("${dockerTagName}").inside("-e HOME='${env.WORKSPACE}/${env.BASE_DIR}'"){
+    body()
+  }
+}
+
+def dotnetWindows(Closure body){
+  def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-windows:latest'
+  bat label: 'Docker Build', script: "docker build --tag ${dockerTagName}  -m 2GB .ci\\docker\\buildtools-windows"
+  docker.image("${dockerTagName}").inside(){
     body()
   }
 }
