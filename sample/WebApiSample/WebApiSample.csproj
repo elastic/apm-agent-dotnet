@@ -6,7 +6,7 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.0' ">
+  <ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.0' AND '$(TargetFramework)' != 'netcoreapp3.1' ">
     <PackageReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
