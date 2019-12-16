@@ -8,7 +8,7 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.SqlClient
 {
-	public class SqlClientDiagnosticListener : IDiagnosticListener
+	internal class SqlClientDiagnosticListener : IDiagnosticListener
 	{
 		private class PropertyFetcherSet
 		{
