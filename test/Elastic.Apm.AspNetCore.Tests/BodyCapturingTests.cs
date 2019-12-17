@@ -13,7 +13,6 @@ using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -267,16 +266,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 							Startup.ConfigureServicesExceptMvc(services);
 
 							services.AddMvc()
-								.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))))
-#if NETCOREAPP3_0
-								.SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
-#elif NETCOREAPP2_2
-								.SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-#elif NETCOREAPP2_1
-								.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-#else
-								;
-#endif
+								.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))));
 						}
 					)
 					.Configure(app =>
