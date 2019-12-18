@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using Elastic.Apm.Api;
+using System.Data;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Model;
 
 namespace Elastic.Apm.SqlClient
 {
@@ -18,28 +19,16 @@ namespace Elastic.Apm.SqlClient
 
 			public PropertyFetcher Statistics { get; } = new PropertyFetcher("Statistics");
 
-			public PropertyFetcher CommandText { get; }
-			public PropertyFetcher CommandType { get; }
-			public PropertyFetcher Database { get; }
+			public PropertyFetcher StartCommand { get; } = new PropertyFetcher("Command");
+			public PropertyFetcher StopCommand { get; } = new PropertyFetcher("Command");
 
 			public PropertyFetcher Exception { get; } = new PropertyFetcher("Exception");
-
-			public PropertyFetcherSet()
-			{
-				var commandPropertyFetcher = new PropertyFetcher("Command");
-				var connectionPropertyFetcher = new CascadePropertyFetcher(commandPropertyFetcher, "Connection");
-
-				CommandText = new CascadePropertyFetcher(commandPropertyFetcher, "CommandText");
-				CommandType = new CascadePropertyFetcher(commandPropertyFetcher, "CommandType");
-
-				Database = new CascadePropertyFetcher(connectionPropertyFetcher, "Database");
-			}
 		}
 
 		private readonly IApmAgent _apmAgent;
 		private readonly IApmLogger _logger;
 
-		private readonly ConcurrentDictionary<Guid, ISpan> _processingQueries = new ConcurrentDictionary<Guid, ISpan>();
+		private readonly ConcurrentDictionary<Guid, Span> _spans = new ConcurrentDictionary<Guid, Span>();
 
 		private readonly PropertyFetcherSet _systemPropertyFetcherSet = new PropertyFetcherSet();
 		private readonly PropertyFetcherSet _microsoftPropertyFetcherSet = new PropertyFetcherSet();
@@ -77,39 +66,12 @@ namespace Elastic.Apm.SqlClient
 		{
 			try
 			{
-				var transaction = _apmAgent.Tracer.CurrentTransaction;
-				var currentExecutionSegment = _apmAgent.Tracer.CurrentSpan ?? (IExecutionSegment)transaction;
 
-				if (propertyFetcherSet.StartCorrelationId.Fetch(payloadData) is Guid operationId)
+				if (propertyFetcherSet.StartCorrelationId.Fetch(payloadData) is Guid operationId
+					&& propertyFetcherSet.StartCommand.Fetch(payloadData) is IDbCommand dbCommand)
 				{
-					var commandText = propertyFetcherSet.CommandText.Fetch(payloadData).ToString();
-					var commandType = propertyFetcherSet.CommandType.Fetch(payloadData).ToString();
-					var instance = propertyFetcherSet.Database.Fetch(payloadData).ToString();
-
-					var span = currentExecutionSegment.StartSpan(
-						commandText,
-						ApiConstants.TypeDb,
-						ApiConstants.SubtypeMssql);
-
-					if (!_processingQueries.TryAdd(operationId, span)) return;
-
-					switch (commandType)
-					{
-						case "Text":
-							span.Action = ApiConstants.ActionQuery;
-							break;
-						case "StoredProcedure":
-							span.Action = ApiConstants.ActionExec;
-							break;
-						case "TableDirect":
-							span.Action = "tabledirect";
-							break;
-						default:
-							span.Action = commandType;
-							break;
-					}
-
-					span.Context.Db = new Database { Statement = commandText, Instance = instance, Type = Database.TypeSql };
+					var span = DbSpanCommon.StartSpan(_apmAgent, dbCommand);
+					_spans.TryAdd(operationId, span);
 				}
 			}
 			catch (Exception ex)
@@ -123,15 +85,18 @@ namespace Elastic.Apm.SqlClient
 		{
 			try
 			{
-				if (propertyFetcherSet.StopCorrelationId.Fetch(payloadData) is Guid operationId)
+				if (propertyFetcherSet.StopCorrelationId.Fetch(payloadData) is Guid operationId
+					&& propertyFetcherSet.StopCommand.Fetch(payloadData) is IDbCommand dbCommand)
 				{
-					if (!_processingQueries.TryRemove(operationId, out var span)) return;
+					if (!_spans.TryRemove(operationId, out var span)) return;
+
+					TimeSpan? duration = null;
 
 					if (propertyFetcherSet.Statistics.Fetch(payloadData) is IDictionary<object, object> statistics &&
-						statistics.ContainsKey("ExecutionTime") && statistics["ExecutionTime"] is long duration)
-						span.Duration = duration;
+						statistics.ContainsKey("ExecutionTime") && statistics["ExecutionTime"] is long durationInMs)
+						duration = TimeSpan.FromMilliseconds(durationInMs);
 
-					span.End();
+					DbSpanCommon.EndSpan(span, dbCommand, duration);
 				}
 			}
 			catch (Exception ex)
@@ -147,7 +112,7 @@ namespace Elastic.Apm.SqlClient
 			{
 				if (propertyFetcherSet.ErrorCorrelationId.Fetch(payloadData) is Guid operationId)
 				{
-					if (!_processingQueries.TryRemove(operationId, out var span)) return;
+					if (!_spans.TryRemove(operationId, out var span)) return;
 
 					if (propertyFetcherSet.Exception.Fetch(payloadData) is Exception exception) span.CaptureException(exception);
 

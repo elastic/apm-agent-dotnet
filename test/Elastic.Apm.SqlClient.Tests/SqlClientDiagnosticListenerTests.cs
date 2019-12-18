@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
+using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using TestEnvironment.Docker;
@@ -49,6 +51,8 @@ namespace Elastic.Apm.SqlClient.Tests
 		[MemberData(nameof(Connections))]
 		public async Task SqlClientDiagnosticListener_ShouldCaptureSpan(Func<string, DbConnection> connectionCreator)
 		{
+			const string commandText = "SELECT getdate()";
+
 			// Arrange + Act
 			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async transaction =>
 			{
@@ -57,7 +61,7 @@ namespace Elastic.Apm.SqlClient.Tests
 					await dbConnection.OpenAsync();
 					using (var sqlCommand = dbConnection.CreateCommand())
 					{
-						sqlCommand.CommandText = "SELECT getdate()";
+						sqlCommand.CommandText = commandText;
 						using (await sqlCommand.ExecuteReaderAsync())
 						{
 							// ignore
@@ -72,12 +76,24 @@ namespace Elastic.Apm.SqlClient.Tests
 			// Assert
 			_payloadSender.Spans.Count.Should().Be(1);
 			_payloadSender.Errors.Count.Should().Be(0);
+
+			var span = _payloadSender.FirstSpan;
+
+			span.Name.Should().Be(commandText);
+			span.Type.Should().Be(ApiConstants.TypeDb);
+			span.Subtype.Should().Be(ApiConstants.SubtypeMssql);
+
+			span.Context.Db.Should().NotBeNull();
+			span.Context.Db.Statement.Should().Be(commandText);
+			span.Context.Db.Type.Should().Be(Database.TypeSql);
 		}
 
 		[Theory]
 		[MemberData(nameof(Connections))]
 		public async Task SqlClientDiagnosticListener_ShouldCaptureErrorFromSystemSqlClient(Func<string, DbConnection> connectionCreator)
 		{
+			const string commandText = "SELECT * FROM FakeTable";
+
 			// Arrange + Act
 			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async transaction =>
 			{
@@ -86,7 +102,7 @@ namespace Elastic.Apm.SqlClient.Tests
 					await dbConnection.OpenAsync();
 					using (var sqlCommand = dbConnection.CreateCommand())
 					{
-						sqlCommand.CommandText = "SELECT * FROM FakeTable";
+						sqlCommand.CommandText = commandText;
 						try
 						{
 							using (await sqlCommand.ExecuteReaderAsync())
@@ -108,6 +124,11 @@ namespace Elastic.Apm.SqlClient.Tests
 			// Assert
 			_payloadSender.Spans.Count.Should().Be(1);
 			_payloadSender.Errors.Count.Should().Be(1);
+
+			var span = _payloadSender.FirstSpan;
+
+			span.Name.Should().Be(commandText);
+			span.Type.Should().Be(ApiConstants.TypeDb);
 		}
 
 		public void Dispose()
