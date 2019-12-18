@@ -31,12 +31,13 @@ The enricher lives in the https://www.nuget.org/packages/Elastic.Apm.SerilogEnri
 
 You can enable it when you configure your Serilog logger:
 
-```
+[source,csharp]
+----
 var logger = new LoggerConfiguration()
    .Enrich.WithElasticApmCorrelationInfo()
    .WriteTo.Console(outputTemplate: "[{ElasticApmTraceId} {ElasticApmTransactionId} {Message:lj} {NewLine}{Exception}")
    .CreateLogger();
-```
+----
 
 In the code snippet above `.Enrich.WithElasticApmCorrelationInfo()` enables the enricher, which will set 2 properties for log lines that are created during a transaction:
 
@@ -49,7 +50,8 @@ If you want to send your logs directly to Elasticsearch you can use the https://
 
 Once you added the two packages mentioned above, you can configure your logger like this:
 
-```
+[source,csharp]
+----
 Log.Logger = new LoggerConfiguration()
 .Enrich.WithElasticApmCorrelationInfo()
 .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri("http://localhost:9200"))
@@ -57,7 +59,7 @@ Log.Logger = new LoggerConfiguration()
   CustomFormatter = new EcsTextFormatter()
 })
 .CreateLogger();
-``` 
+----
 
 With this setup the application will send all the logs automatically to Elasticsearch and you will be able to jump from traces to logs and from logs to traces.
 
