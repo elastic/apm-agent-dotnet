@@ -22,8 +22,7 @@ namespace Elastic.Apm.Helpers
 			if (_innerFetcher == null)
 			{
 				var type = obj.GetType().GetTypeInfo();
-				var property = type.DeclaredProperties.FirstOrDefault(p =>
-					string.Equals(p.Name, _propertyName, StringComparison.InvariantCultureIgnoreCase));
+				var property = type.DeclaredProperties.FirstOrDefault(p => string.Equals(p.Name, _propertyName, StringComparison.OrdinalIgnoreCase));
 				if (property == null)
 				{
 					property = type.GetProperty(_propertyName);
