@@ -37,9 +37,9 @@ namespace Elastic.Apm.Tests.HelpersTests
 		// ReSharper restore StringLiteralTypo
 		public void TryExtractDestinationInfo_valid_input(string inputUrl, string expectedHost, int? expectedPort)
 		{
-			UrlUtils.TryExtractDestinationInfo(new Uri(inputUrl), out var actualHost, out var actualPort, new NoopLogger()).Should().BeTrue();
-			actualHost.Should().Be(expectedHost);
-			actualPort.Should().Be(expectedPort);
+			var actualDestination = UrlUtils.TryExtractDestination(new Uri(inputUrl), new NoopLogger());
+			actualDestination.Address.Should().Be(expectedHost);
+			actualDestination.Port.Should().Be(expectedPort);
 		}
 
 		[Theory]
@@ -47,8 +47,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 		public void TryExtractDestinationInfo_invalid_input(string inputUrl)
 		{
 			var mockLogger = new TestLogger(LogLevel.Trace);
-			UrlUtils.TryExtractDestinationInfo(new Uri(inputUrl), out _, out _, mockLogger).Should().BeFalse();
-			mockLogger.Lines.Should().Contain(line => line.Contains(nameof(UrlUtils)) && line.Contains(nameof(UrlUtils.TryExtractDestinationInfo)));
+			UrlUtils.TryExtractDestination(new Uri(inputUrl), mockLogger).Should().BeNull();
+			mockLogger.Lines.Should().Contain(line => line.Contains(nameof(UrlUtils)) && line.Contains(nameof(UrlUtils.TryExtractDestination)));
 		}
 	}
 }

@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data;
-using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
@@ -12,9 +11,14 @@ namespace Elastic.Apm.EntityFrameworkCore
 	internal class EfCoreDiagnosticListener : IDiagnosticListener
 	{
 		private readonly IApmAgent _agent;
+		private readonly DbConnectionStringParser _dbConnectionStringParser;
 		private readonly ConcurrentDictionary<Guid, Span> _spans = new ConcurrentDictionary<Guid, Span>();
 
-		public EfCoreDiagnosticListener(IApmAgent agent) => _agent = agent;
+		public EfCoreDiagnosticListener(IApmAgent agent)
+		{
+			_agent = agent;
+			_dbConnectionStringParser = new DbConnectionStringParser(agent.Logger);
+		}
 
 		public string Name => "Microsoft.EntityFrameworkCore";
 
@@ -37,7 +41,10 @@ namespace Elastic.Apm.EntityFrameworkCore
 					if (kv.Value is CommandExecutedEventData commandExecutedEventData)
 					{
 						if (_spans.TryRemove(commandExecutedEventData.CommandId, out var span))
-							DbSpanCommon.EndSpan(span, commandExecutedEventData.Command, commandExecutedEventData.Duration);
+						{
+							DbSpanCommon.EndSpan(span, commandExecutedEventData.Command, _agent.Logger, _dbConnectionStringParser
+								, commandExecutedEventData.Duration);
+						}
 					}
 					break;
 				case string k when k == RelationalEventId.CommandError.Name:
@@ -46,7 +53,8 @@ namespace Elastic.Apm.EntityFrameworkCore
 						if (_spans.TryRemove(commandErrorEventData.CommandId, out var span))
 						{
 							span.CaptureException(commandErrorEventData.Exception);
-							DbSpanCommon.EndSpan(span, commandErrorEventData.Command, commandErrorEventData.Duration);
+							DbSpanCommon.EndSpan(span, commandErrorEventData.Command, _agent.Logger, _dbConnectionStringParser
+								, commandErrorEventData.Duration);
 						}
 					}
 					break;
