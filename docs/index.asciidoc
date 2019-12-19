@@ -22,7 +22,7 @@ include::./metrics.asciidoc[]
 
 // OpenTracing API
 
-// Log correlation
+include::./log-correlation.asciidoc[]
 
 include::./performance-tuning.asciidoc[]
 

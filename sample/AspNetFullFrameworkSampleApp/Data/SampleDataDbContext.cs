@@ -46,10 +46,7 @@ namespace AspNetFullFrameworkSampleApp.Data
 			Database.SetInitializer(initializer);
 		}
 
-		private static void ConfigureSampleDataEntity(DbModelBuilder modelBuilder)
-		{
-			modelBuilder.Entity<SampleData>();
-		}
+		private static void ConfigureSampleDataEntity(DbModelBuilder modelBuilder) => modelBuilder.Entity<SampleData>();
 
 		private class DbInitializer : SqliteDropCreateDatabaseAlways<SampleDataDbContext>
 		{

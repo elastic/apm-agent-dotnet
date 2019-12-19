@@ -8,7 +8,6 @@ using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using SampleAspNetCoreApp;
 using Xunit;
@@ -38,9 +37,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 					{
 						Startup.ConfigureServicesExceptMvc(services);
 
-						services.AddMvc()
-							.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))))
-							.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+						services
+							.AddMvc()
+							.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))));
 					}
 				)
 				.Configure(app =>
@@ -57,8 +56,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.ConfigureServices(services =>
 				{
 					services.AddMvc()
-						.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(WebApiSample))))
-						.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+						.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(WebApiSample))));
 				})
 				.Configure(app =>
 				{

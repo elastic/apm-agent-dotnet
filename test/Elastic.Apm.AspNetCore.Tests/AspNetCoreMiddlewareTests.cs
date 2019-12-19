@@ -51,6 +51,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
 			_client = Helper.GetClient(_agent, _factory);
+#if NETCOREAPP3_0 || NETCOREAPP3_1
+			_client.DefaultRequestVersion = new Version(2, 0);
+#endif
 		}
 
 		private HttpClient _client;
@@ -107,7 +110,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 			}
 
 			//test transaction.context.request
+#if NETCOREAPP3_0 || NETCOREAPP3_1
+			transaction.Context.Request.HttpVersion.Should().Be("2");
+#else
 			transaction.Context.Request.HttpVersion.Should().Be("2.0");
+#endif
 			transaction.Context.Request.Method.Should().Be("GET");
 
 			//test transaction.context.request.url
@@ -186,7 +193,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 			}
 
 			//test transaction.context.request
+#if NETCOREAPP3_0 || NETCOREAPP3_1
+			transaction.Context.Request.HttpVersion.Should().Be("2");
+#else
 			transaction.Context.Request.HttpVersion.Should().Be("2.0");
+#endif
 			transaction.Context.Request.Method.Should().Be("POST");
 
 			//test transaction.context.request.url
