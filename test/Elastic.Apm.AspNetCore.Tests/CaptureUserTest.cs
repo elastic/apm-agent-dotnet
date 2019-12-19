@@ -10,7 +10,6 @@ using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using SampleAspNetCoreApp;
@@ -40,11 +39,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 				.ConfigureServices(services =>
 				{
 					Startup.ConfigureServicesExceptMvc(services);
-					services.AddMvc()
+					services
+						.AddMvc()
 						//this is needed because of a (probably) bug:
 						//https://github.com/aspnet/Mvc/issues/5992
-						.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))))
-						.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+						.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))));
 				})
 				.UseUrls("http://localhost:5900") //CI doesn't like https, so we roll with http
 				.Build()

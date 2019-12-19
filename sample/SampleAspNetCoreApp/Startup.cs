@@ -20,9 +20,7 @@ namespace SampleAspNetCoreApp
 		public void ConfigureServices(IServiceCollection services)
 		{
 			ConfigureServicesExceptMvc(services);
-
-			services.AddMvc()
-				.SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+			services.AddMvc();
 		}
 
 		public static void ConfigureServicesExceptMvc(IServiceCollection services)
@@ -48,7 +46,11 @@ namespace SampleAspNetCoreApp
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+#if NETCOREAPP3_0 || NETCOREAPP3_1
+		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+#else
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+#endif
 		{
 			app.UseAllElasticApm(Configuration);
 			ConfigureAllExceptAgent(app);
@@ -62,13 +64,27 @@ namespace SampleAspNetCoreApp
 			app.UseStaticFiles();
 			app.UseCookiePolicy();
 
+#if NETCOREAPP3_0 || NETCOREAPP3_1
+			app.UseRouting();
+
 			app.UseAuthentication();
+
+			app.UseEndpoints(endpoints =>
+			{
+				endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
+				endpoints.MapControllers();
+				endpoints.MapRazorPages();
+			});
+#else
+			app.UseAuthentication();
+
 			app.UseMvc(routes =>
 			{
 				routes.MapRoute(
 					"default",
 					"{controller=Home}/{action=Index}/{id?}");
 			});
+#endif
 		}
 	}
 }
