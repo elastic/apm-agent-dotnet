@@ -16,6 +16,8 @@ The `UseElasticApm()` extension method offers an overload to pass an `IConfigura
 
 [source,csharp]
 ----
+using Elastic.Apm.AspNetCore;
+
 public class Startup
 {
     public Startup(IConfiguration configuration)

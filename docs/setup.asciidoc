@@ -45,6 +45,8 @@ For ASP.NET Core, once you referenced the `Elastic.Apm.NetCoreAll` package, you 
 
 [source,csharp]
 ----
+using Elastic.Apm.NetCoreAll;
+
 public class Startup
 {
   public void Configure(IApplicationBuilder app, IHostingEnvironment env)
