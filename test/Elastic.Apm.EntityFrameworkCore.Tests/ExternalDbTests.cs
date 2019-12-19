@@ -114,19 +114,7 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 		private void RunAgainstExternalDbIfConfigured(ExternalDbType externalDbType, Action<ConnectionDetails> test)
 		{
 			var connectionDetails = GetConnectionDetails(externalDbType);
-			if (connectionDetails == null) return;
-
-			try
-			{
-				TestOutputHelper.WriteLine($"Running test against {externalDbType.Description} with connection details {connectionDetails}...");
-				test(connectionDetails);
-				TestOutputHelper.WriteLine($"Test against {externalDbType.Description} completed successfully.");
-			}
-			catch (Exception ex)
-			{
-				TestOutputHelper.WriteLine($"Test against {externalDbType.Description} threw exception: {ex}");
-				throw;
-			}
+			if (connectionDetails != null) test(connectionDetails);
 		}
 
 		private static void ExecuteTestCrudSequence(Func<DbContextImplBase> dbContextFactory)
