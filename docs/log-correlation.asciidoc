@@ -1,0 +1,176 @@
+ifdef::env-github[]
+NOTE: For the best reading experience,
+please view this documentation at https://www.elastic.co/guide/en/apm/agent/java[elastic.co]
+endif::[]
+
+[[log-correlation]]
+== Log correlation
+
+
+The Elastic APM .NET agent provides integrations for popular logging frameworks, which take care of
+injecting trace ID fields into your application's log records. Currently supported logging frameworks are:
+
+- <<serilog>>
+- <<nlog>>
+
+If your favorite logging framework is not already supported, there are two other options:
+
+* Open a feature request, or contribute code, for additional support, as described in https://github.com/elastic/apm-agent-dotnet/blob/master/CONTRIBUTING.md[CONTRIBUTING.md].
+* Manually inject trace IDs into log records, as described in <<log-correlation-manual>>.
+
+Regardless of how you integrate APM with logging, you can use {filebeat-ref}[Filebeat] to
+send your logs to Elasticsearch, in order to correlate your traces and logs and link from
+APM to the {apm-app-ref}/xpack-logs.html[Logs app].
+
+[[serilog]]
+=== Serilog
+
+We offer a https://github.com/serilog/serilog/wiki/Enrichment[Serilog Enricher] that adds the trace id to every log line that is created during an active trace.
+
+The enricher lives in the https://www.nuget.org/packages/Elastic.Apm.SerilogEnricher[Elastic.Apm.SerilogEnricher] NuGet package.
+
+You can enable it when you configure your Serilog logger:
+
+[source,csharp]
+----
+var logger = new LoggerConfiguration()
+   .Enrich.WithElasticApmCorrelationInfo()
+   .WriteTo.Console(outputTemplate: "[{ElasticApmTraceId} {ElasticApmTransactionId} {Message:lj} {NewLine}{Exception}")
+   .CreateLogger();
+----
+
+In the code snippet above `.Enrich.WithElasticApmCorrelationInfo()` enables the enricher, which will set 2 properties for log lines that are created during a transaction:
+
+- ElasticApmTransactionId
+- ElasticApmTraceId
+
+As you can see, in the `outputTemplate` of the Console sink these two properties are printed. Of course they can be used with any other sink.
+
+If you want to send your logs directly to Elasticsearch you can use the https://www.nuget.org/packages/Serilog.Sinks.Elasticsearch[Serilog.Sinks.ElasticSearch] package. Furthermore, you can pass the `EcsTextFormatter` from the   https://www.nuget.org/packages/Elastic.CommonSchema.Serilog[Elastic.CommonSchema.Serilog] package to the Elasticsearch sink, which formats all your logs according to Elastic Common Schema (ECS) and it makes sure that the trace id ends up in the correct field.
+
+Once you added the two packages mentioned above, you can configure your logger like this:
+
+[source,csharp]
+----
+Log.Logger = new LoggerConfiguration()
+.Enrich.WithElasticApmCorrelationInfo()
+.WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri("http://localhost:9200"))
+{
+  CustomFormatter = new EcsTextFormatter()
+})
+.CreateLogger();
+----
+
+With this setup the application will send all the logs automatically to Elasticsearch and you will be able to jump from traces to logs and from logs to traces.
+
+
+[[nlog]]
+=== NLog
+
+For NLog, we offer two https://github.com/NLog/NLog/wiki/Layout-Renderers[LayoutRenderers] that inject the current trace and transaction id into logs. 
+
+In order to use them, you need to add the https://www.nuget.org/packages/Elastic.Apm.NLog[Elastic.Apm.NLog] NuGet package to your application and load it in the `<extensions>` section of your NLog config file:
+
+[source,xml]
+----
+<nlog>
+<extensions>
+   <add assembly="Elastic.Apm.NLog"/>
+</extensions>
+<targets>
+<target type="file" name="logfile" fileName="myfile.txt">
+    <layout type="jsonlayout">
+        <attribute name="traceid" layout="${ElasticApmTraceId}" />
+        <attribute name="transactionid" layout="${ElasticApmTransactionId}" />
+    </layout>
+</target>
+</targets>
+<rules>
+    <logger name="*" minLevel="Trace" writeTo="logfile" />
+</rules>
+</nlog>
+----
+
+As you can see in the sample file above, you can reference the current transaction id with `${ElasticApmTransactionId}` and the trace id with `${ElasticApmTraceId}`.
+
+[[log-correlation-manual]]
+=== Manual log correlation
+
+If the agent-provided logging integrations are not suitable or not available for your
+application, then you can use the agent's <<public-api, API>> to inject trace IDs manually.
+There are two main approaches you can take, depending on whether you are using structured
+or unstructured logging.
+
+[float]
+[[log-correlation-manual-structured]]
+==== Manual log correlation (structured)
+
+For correlating structured logs with traces, the following fields should be added to your logs:
+
+ - `trace.id`
+ - `transaction.id`
+ 
+Given a transaction object, you can obtain its trace id by using the `Transaction.TraceId` property and its transaction id by using the `Transaction.Id` property.
+
+You can also use the <<api-current-transaction, Elastic.Apm.Agent.Tracer.CurrentTransaction>> property anywhere in the code to access the currently active transaction.
+
+[source,csharp]
+----
+public (string traceId, string transactionId) GetTraceIds()
+{
+	if (!Agent.IsConfigured) return default;
+	if (Agent.Tracer.CurrentTransaction == null) return default;
+	return (Agent.Tracer.CurrentTransaction.TraceId, Agent.Tracer.CurrentTransaction.Id);
+}
+----
+
+In case the agent is configured and there is an active transaction, the `traceId` and `transactionId` will always return the current trace and transaction ids that you can manually add to your logs. Make sure you store those in the fields `trace.id` and `transaction.id` when you send them to Elasticsearch.
+
+[float]
+[[log-correlation-manual-unstructured]]
+==== Manual log correlation (unstructured)
+
+For correlating unstructured logs (e.g. basic printf-style logging, like
+`Console.WriteLine`), you will need to include the trace ids in your log message, and then
+extract them using Filebeat.
+
+If you already have a transaction object, then you can use the
+`TraceId` and `Id` properties. Both are of type `string`, so you can simply add them to the log.
+
+[source,csharp]
+----
+var currentTransaction = //Get Current transaction, e.g.: Agent.Tracer.CurrentTransaction;
+
+Console.WriteLine($"ERROR [trace.id={currentTransaction.TraceId} transaction.id={currentTransaction.Id}] an error occurred");
+----
+
+
+This would print a log message along the lines of:
+
+----
+    ERROR [trace.id=cd04f33b9c0c35ae8abe77e799f126b7 transaction.id=cd04f33b9c0c35ae] an error occurred
+----
+
+For log correlation to work, the trace ids must be extracted from the log message and
+stored in separate fields in the Elasticsearch document. This can be achieved by
+{filebeat-ref}/configuring-ingest-node.html[parsing the data by using ingest node], in particular
+by using {ref}/grok-processor.html[the grok processor].
+
+[source,json]
+----
+{
+  "description": "...",
+  "processors": [
+    {
+      "grok": {
+        "field": "message",
+        "patterns": [%{LOGLEVEL:log.level} \\[trace.id=%{TRACE_ID:trace.id}(?: transaction.id=%{SPAN_ID:transaction.id})?\\] %{GREEDYDATA:message}"],
+        "pattern_definitions": {
+          "TRACE_ID": "[0-9A-Fa-f]{32}",
+          "SPAN_ID": "[0-9A-Fa-f]{16}"
+        }
+      }
+    }
+  ]
+}
+----
