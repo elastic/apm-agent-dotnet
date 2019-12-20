@@ -21,7 +21,6 @@ namespace Elastic.Apm.SqlClient
 
 			public PropertyFetcher StartCommand { get; } = new PropertyFetcher("Command");
 			public PropertyFetcher StopCommand { get; } = new PropertyFetcher("Command");
-
 			public PropertyFetcher ErrorCommand { get; } = new PropertyFetcher("Command");
 
 			public PropertyFetcher Exception { get; } = new PropertyFetcher("Exception");
@@ -34,7 +33,6 @@ namespace Elastic.Apm.SqlClient
 
 		private readonly PropertyFetcherSet _systemPropertyFetcherSet = new PropertyFetcherSet();
 		private readonly PropertyFetcherSet _microsoftPropertyFetcherSet = new PropertyFetcherSet();
-
 
 		public SqlClientDiagnosticListener(IApmAgent apmAgent)
 		{
