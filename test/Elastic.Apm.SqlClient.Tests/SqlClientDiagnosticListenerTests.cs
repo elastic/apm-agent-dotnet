@@ -129,6 +129,11 @@ namespace Elastic.Apm.SqlClient.Tests
 
 			span.Name.Should().Be(commandText);
 			span.Type.Should().Be(ApiConstants.TypeDb);
+			span.Subtype.Should().Be(ApiConstants.SubtypeMssql);
+
+			span.Context.Db.Should().NotBeNull();
+			span.Context.Db.Statement.Should().Be(commandText);
+			span.Context.Db.Type.Should().Be(Database.TypeSql);
 		}
 
 		public void Dispose()

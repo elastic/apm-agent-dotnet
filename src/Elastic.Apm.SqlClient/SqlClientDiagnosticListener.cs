@@ -22,6 +22,8 @@ namespace Elastic.Apm.SqlClient
 			public PropertyFetcher StartCommand { get; } = new PropertyFetcher("Command");
 			public PropertyFetcher StopCommand { get; } = new PropertyFetcher("Command");
 
+			public PropertyFetcher ErrorCommand { get; } = new PropertyFetcher("Command");
+
 			public PropertyFetcher Exception { get; } = new PropertyFetcher("Exception");
 		}
 
@@ -66,7 +68,6 @@ namespace Elastic.Apm.SqlClient
 		{
 			try
 			{
-
 				if (propertyFetcherSet.StartCorrelationId.Fetch(payloadData) is Guid operationId
 					&& propertyFetcherSet.StartCommand.Fetch(payloadData) is IDbCommand dbCommand)
 				{
@@ -116,7 +117,15 @@ namespace Elastic.Apm.SqlClient
 
 					if (propertyFetcherSet.Exception.Fetch(payloadData) is Exception exception) span.CaptureException(exception);
 
-					span.End();
+					if (propertyFetcherSet.ErrorCommand.Fetch(payloadData) is IDbCommand dbCommand)
+					{
+						DbSpanCommon.EndSpan(span, dbCommand);
+					}
+					else
+					{
+						_logger.Warning()?.Log("Cannot extract database command from {PayloadData}", payloadData);
+						span.End();
+					}
 				}
 			}
 			catch (Exception ex)
