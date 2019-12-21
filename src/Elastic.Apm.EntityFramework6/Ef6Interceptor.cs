@@ -55,14 +55,12 @@ namespace Elastic.Apm.EntityFramework6
 
 			private readonly IApmLogger _logger;
 			private readonly string _userStateKey;
-			private readonly DbConnectionStringParser _dbConnectionStringParser;
 
 			internal Impl()
 			{
 				var thisInstanceDbgName = ThisClassName + "#" + RuntimeHelpers.GetHashCode(this).ToString("X");
 				_logger = Agent.Instance.Logger.Scoped(thisInstanceDbgName);
 				_userStateKey = "Elastic.Apm.EntityFramework6." + thisInstanceDbgName;
-				_dbConnectionStringParser = new DbConnectionStringParser(Agent.Instance.Logger);
 			}
 
 			private void LogEvent(string message, IDbCommand command, DbInterceptionContext interceptCtx, string dbgOriginalCaller) =>
@@ -116,7 +114,7 @@ namespace Elastic.Apm.EntityFramework6
 
 				LogEvent("DB operation started - starting a new span...", command, interceptCtx, dbgOriginalCaller);
 
-				var span = DbSpanCommon.StartSpan(Agent.Instance, command);
+				var span = Agent.Instance.TracerInternal.DbSpanCommon.StartSpan(Agent.Instance, command);
 				interceptCtx.SetUserState(_userStateKey, span);
 			}
 
@@ -133,7 +131,7 @@ namespace Elastic.Apm.EntityFramework6
 
 				LogEvent("DB operation ended - ending the corresponding span...", command, interceptCtx, dbgOriginalCaller);
 
-				DbSpanCommon.EndSpan(span, command, _logger, _dbConnectionStringParser);
+				Agent.Instance.TracerInternal.DbSpanCommon.EndSpan(span, command);
 			}
 		}
 	}

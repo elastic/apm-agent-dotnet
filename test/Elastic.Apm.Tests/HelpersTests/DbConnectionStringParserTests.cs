@@ -9,15 +9,17 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests.HelpersTests
 {
-	public class DbConnectionStringParserTests
+	public class DbConnectionStringParserTests : LoggingTestBase
 	{
+		public DbConnectionStringParserTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
+
 		internal static void TestImpl(IApmLogger logger, string dbgDescription, string connectionString, string expectedHost
 			, int? expectedPort
 		)
 		{
 			var dbgInfo = $"connectionString: `{connectionString}'. dbgDescription: {dbgDescription}.";
 			var parser = new DbConnectionStringParser(logger);
-			var actualDestination = parser.TryExtractDestination(connectionString);
+			var actualDestination = parser.ExtractDestination(connectionString);
 			actualDestination.Should().NotBeNull(dbgInfo);
 			actualDestination.Address.Should().Be(expectedHost, dbgInfo);
 			actualDestination.Port.Should().Be(expectedPort, dbgInfo);
@@ -28,7 +30,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var mockLogger = new TestLogger(LogLevel.Trace);
 			var dbgInfo = $"connectionString: `{connectionString}'. dbgDescription: {dbgDescription}.";
 			var parser = new DbConnectionStringParser(mockLogger);
-			parser.TryExtractDestination(connectionString).Should().BeNull(dbgInfo);
+			parser.ExtractDestination(connectionString).Should().BeNull(dbgInfo);
 			mockLogger.Lines.Should()
 				.Contain(line =>
 					line.Contains(nameof(DbConnectionStringParser))
@@ -335,6 +337,62 @@ namespace Elastic.Apm.Tests.HelpersTests
 				, "11.22.33.44", null)] // https://www.connectionstrings.com/mysql-connector-net-mysqlconnection/standard/
 			public void OLE_DB(string dbgDescription, string connectionString, string expectedHost, int? expectedPort)
 				=> TestImpl(LoggerBase, dbgDescription, connectionString, expectedHost, expectedPort);
+		}
+
+		[Fact]
+		public void positive_cache()
+		{
+			const string connectionString = @"Server=myServerAddress;Database=myDataBase;User Id=myUsername;Password=myPassword";
+			var parser = new DbConnectionStringParser(LoggerBase);
+			var actualDestination = parser.ExtractDestination(connectionString, out var wasFoundInCache);
+			wasFoundInCache.Should().BeFalse();
+			actualDestination.Should().NotBeNull();
+			actualDestination.Address.Should().Be("myServerAddress");
+			actualDestination.Port.Should().BeNull();
+			var actualDestination2 = parser.ExtractDestination(connectionString, out var wasFoundInCache2);
+			wasFoundInCache2.Should().BeTrue();
+			actualDestination2.Should().Be(actualDestination);
+		}
+
+		[Fact]
+		public void negative_cache()
+		{
+			const string connectionString = "";
+			var parser = new DbConnectionStringParser(LoggerBase);
+			var actualDestination = parser.ExtractDestination(connectionString, out var wasFoundInCache);
+			wasFoundInCache.Should().BeFalse();
+			actualDestination.Should().BeNull();
+			var actualDestination2 = parser.ExtractDestination(connectionString, out var wasFoundInCache2);
+			wasFoundInCache2.Should().BeTrue();
+			actualDestination2.Should().BeNull();
+		}
+
+		[Fact]
+		public void caches_only_first_MaxCacheSize_results()
+		{
+			const string validConnectionStringPrefix = @"Server=myServerAddress;Port=";
+			var parser = new DbConnectionStringParser(LoggerBase);
+			DbConnectionStringParser.MaxCacheSize.Repeat(i => { VerifyForIndex(i, /* isFirstTime: */ true); });
+			DbConnectionStringParser.MaxCacheSize.Repeat(i => { VerifyForIndex(i, /* isFirstTime: */ false); });
+			10.Repeat(i => { VerifyForIndex(DbConnectionStringParser.MaxCacheSize + i, /* isFirstTime: */ true); });
+			10.Repeat(i => { VerifyForIndex(DbConnectionStringParser.MaxCacheSize + i, /* isFirstTime: */ false); });
+
+			void VerifyForIndex(int index, bool isFirstTime)
+			{
+				var isValidConnectionString = index % 2 == 0;
+				var port = 10000 + index;
+				var connectionString = isValidConnectionString ? validConnectionStringPrefix + (port) : $"{index}";
+				var actualDestination = parser.ExtractDestination(connectionString, out var wasFoundInCache);
+				wasFoundInCache.Should().Be(!isFirstTime && index < DbConnectionStringParser.MaxCacheSize);
+				if (isValidConnectionString)
+				{
+					actualDestination.Should().NotBeNull();
+					actualDestination.Address.Should().Be("myServerAddress");
+					actualDestination.Port.Should().Be(port);
+				}
+				else
+					actualDestination.Should().BeNull();
+			}
 		}
 	}
 }

@@ -6,7 +6,7 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Model
 {
-	internal static class DbSpanCommon
+	internal class DbSpanCommon
 	{
 		internal static class DefaultPorts
 		{
@@ -16,12 +16,18 @@ namespace Elastic.Apm.Model
 			internal const int PostgreSql = 5432;
 		}
 
-		internal static Span StartSpan(IApmAgent agent, IDbCommand dbCommand) =>
+		private readonly DbConnectionStringParser _dbConnectionStringParser;
+
+		internal DbSpanCommon(IApmLogger logger)
+		{
+			_dbConnectionStringParser = new DbConnectionStringParser(logger);
+		}
+
+		internal Span StartSpan(IApmAgent agent, IDbCommand dbCommand) =>
 			(Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(agent).StartSpan(dbCommand.CommandText.Replace(Environment.NewLine, " ")
 				, ApiConstants.TypeDb);
 
-		internal static void EndSpan(Span span, IDbCommand dbCommand, IApmLogger logger, DbConnectionStringParser dbConnectionStringParser
-			, TimeSpan? duration = null)
+		internal void EndSpan(Span span, IDbCommand dbCommand, TimeSpan? duration = null)
 		{
 			if (duration.HasValue) span.Duration = duration.Value.TotalMilliseconds;
 
@@ -38,8 +44,7 @@ namespace Elastic.Apm.Model
 					Type = Database.TypeSql
 				};
 
-				span.Context.Destination =
-					GetDestination(dbCommand.Connection?.ConnectionString, isEmbeddedDb, defaultPort, dbConnectionStringParser);
+				span.Context.Destination = GetDestination(dbCommand.Connection?.ConnectionString, isEmbeddedDb, defaultPort);
 			}
 
 			span.End();
@@ -50,32 +55,32 @@ namespace Elastic.Apm.Model
 			isEmbeddedDb = false;
 			switch (dbConnectionClassName)
 			{
-				case string str when str.ContainsOrdinalIgnoreCase("SQLite"):
+				case { } str when str.ContainsOrdinalIgnoreCase("SQLite"):
 					spanSubtype = ApiConstants.SubtypeSqLite;
 					isEmbeddedDb = true;
 					defaultPort = null;
 					break;
-				case string str when str.ContainsOrdinalIgnoreCase("MySQL"):
+				case { } str when str.ContainsOrdinalIgnoreCase("MySQL"):
 					spanSubtype = ApiConstants.SubtypeMySql;
 					defaultPort = DefaultPorts.MySql;
 					break;
-				case string str when str.ContainsOrdinalIgnoreCase("Oracle"):
+				case { } str when str.ContainsOrdinalIgnoreCase("Oracle"):
 					spanSubtype = ApiConstants.SubtypeOracle;
 					defaultPort = DefaultPorts.Oracle;
 					break;
-				case string str when str.ContainsOrdinalIgnoreCase("Postgre"):
+				case { } str when str.ContainsOrdinalIgnoreCase("Postgre"):
 					spanSubtype = ApiConstants.SubtypePostgreSql;
 					defaultPort = DefaultPorts.PostgreSql;
 					break;
-				case string str when str.ContainsOrdinalIgnoreCase("NpgSQL"):
+				case { } str when str.ContainsOrdinalIgnoreCase("NpgSQL"):
 					spanSubtype = ApiConstants.SubtypePostgreSql;
 					defaultPort = DefaultPorts.PostgreSql;
 					break;
-				case string str when str.ContainsOrdinalIgnoreCase("Microsoft"):
+				case { } str when str.ContainsOrdinalIgnoreCase("Microsoft"):
 					spanSubtype = ApiConstants.SubtypeMssql;
 					defaultPort = DefaultPorts.MsSql;
 					break;
-				case string str when str.ContainsOrdinalIgnoreCase("System.Data.SqlClient"):
+				case { } str when str.ContainsOrdinalIgnoreCase("System.Data.SqlClient"):
 					spanSubtype = ApiConstants.SubtypeMssql;
 					defaultPort = DefaultPorts.MsSql;
 					break;
@@ -86,27 +91,20 @@ namespace Elastic.Apm.Model
 			}
 		}
 
-		private static string GetSpanAction(CommandType dbCommandType)
-		{
-			switch (dbCommandType)
+		private static string GetSpanAction(CommandType dbCommandType) =>
+			dbCommandType switch
 			{
-				case CommandType.Text:
-					return ApiConstants.ActionQuery;
-				case CommandType.StoredProcedure:
-					return ApiConstants.ActionExec;
-				case CommandType.TableDirect:
-					return "tabledirect";
-				default:
-					return dbCommandType.ToString();
-			}
-		}
+				CommandType.Text => ApiConstants.ActionQuery,
+				CommandType.StoredProcedure => ApiConstants.ActionExec,
+				CommandType.TableDirect => "tabledirect",
+				_ => dbCommandType.ToString()
+			};
 
-		private static Destination GetDestination(string dbConnectionString, bool isEmbeddedDb, int? defaultPort
-			, DbConnectionStringParser dbConnectionStringParser)
+		private Destination GetDestination(string dbConnectionString, bool isEmbeddedDb, int? defaultPort)
 		{
 			if (isEmbeddedDb || dbConnectionString == null) return null;
 
-			var destination = dbConnectionStringParser.TryExtractDestination(dbConnectionString);
+			var destination = _dbConnectionStringParser.ExtractDestination(dbConnectionString);
 
 			if (!destination.Port.HasValue) destination.Port = defaultPort;
 

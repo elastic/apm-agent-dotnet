@@ -9,7 +9,7 @@ namespace Elastic.Apm.Helpers
 		private const string ThisClassName = nameof(UrlUtils);
 
 		/// <returns><c>Destination</c> if successful and <c>null</c> otherwise</returns>
-		internal static Destination TryExtractDestination(Uri url, IApmLogger logger)
+		internal static Destination ExtractDestination(Uri url, IApmLogger logger)
 		{
 			if (!url.IsAbsoluteUri || url.HostNameType == UriHostNameType.Basic || url.HostNameType == UriHostNameType.Unknown)
 			{

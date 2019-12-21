@@ -42,7 +42,7 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 				{ "PASSWORD", (connectionDetails, envVarValue) => { connectionDetails.Password = envVarValue; } }
 			};
 
-		private static readonly IReadOnlyList<ExternalDbType> ExternalDbTypes = new List<ExternalDbType>
+		private static readonly IReadOnlyList<ExternalDbType> PotentialExternalDbTypes = new List<ExternalDbType>
 		{
 			new ExternalDbType
 			{
@@ -64,57 +64,61 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 
 		public ExternalDbTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
 
-		public static IEnumerable<object[]> ExternalDbTypeTestVariants => ExternalDbTypes.Select(x => new object[] { x });
+		private static IEnumerable<ValueTuple<ExternalDbType, ConnectionDetails>> FindConfiguredExternalDbs()
+		{
+			var isAtLeastOneExternalDbConfigured = false;
+			foreach (var externalDbType in PotentialExternalDbTypes)
+			{
+				var connectionDetails = GetConnectionDetails(externalDbType);
+				if (connectionDetails == null) continue;
+				isAtLeastOneExternalDbConfigured = true;
+				yield return (externalDbType, connectionDetails);
+			}
+
+			if (!isAtLeastOneExternalDbConfigured)
+				yield return (new ExternalDbType { Description = "None of the potential external DB types is configured " }, null);
+		}
+
+		public static IEnumerable<object[]> ConfiguredExternalDbVariants =>
+			FindConfiguredExternalDbs().Select(tuple => new object[] { tuple.Item1, tuple.Item2 });
 
 		[Theory]
-		[MemberData(nameof(ExternalDbTypeTestVariants))]
-		public void Context_Destination_from_Db(ExternalDbType externalDbType)
+		[MemberData(nameof(ConfiguredExternalDbVariants))]
+		public void Context_Destination_from_Db(ExternalDbType externalDbType, ConnectionDetails connectionDetails)
 		{
-			RunAgainstExternalDbIfConfigured(externalDbType, connectionDetails =>
+			if (connectionDetails == null) return;
+
+			var mockPayloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender)))
 			{
-				var mockPayloadSender = new MockPayloadSender();
-				using (var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender)))
-				{
-					agent.Subscribe(new EfCoreDiagnosticsSubscriber());
-					agent.Tracer.CaptureTransaction("test TX name", "test TX type"
-						, () => { ExecuteTestCrudSequence(() => externalDbType.DbContextBuilder(connectionDetails)); });
-				}
-				mockPayloadSender.Transactions.Should().HaveCount(1);
-				mockPayloadSender.Spans.ForEach(span =>
-				{
-					span.Type.Should().Be(ApiConstants.TypeDb);
-					span.Subtype.Should().Be(externalDbType.SpanSubtype);
-					span.Action.Should().Be(ApiConstants.ActionQuery);
-					span.Context.Db.Type.Should().Be(Database.TypeSql);
-					span.Context.Destination.Address.Should().Be(connectionDetails.Host);
-					span.Context.Destination.Port.Should().Be(externalDbType.DefaultPort);
-				});
+				agent.Subscribe(new EfCoreDiagnosticsSubscriber());
+				agent.Tracer.CaptureTransaction("test TX name", "test TX type"
+					, () => { ExecuteTestCrudSequence(() => externalDbType.DbContextBuilder(connectionDetails)); });
+			}
+			mockPayloadSender.Transactions.Should().HaveCount(1);
+			mockPayloadSender.Spans.ForEach(span =>
+			{
+				span.Type.Should().Be(ApiConstants.TypeDb);
+				span.Subtype.Should().Be(externalDbType.SpanSubtype);
+				span.Action.Should().Be(ApiConstants.ActionQuery);
+				span.Context.Db.Type.Should().Be(Database.TypeSql);
+				span.Context.Destination.Address.Should().Be(connectionDetails.Host);
+				span.Context.Destination.Port.Should().Be(externalDbType.DefaultPort);
 			});
 		}
 
-		private ConnectionDetails GetConnectionDetails(ExternalDbType externalDbType)
+		private static ConnectionDetails GetConnectionDetails(ExternalDbType externalDbType)
 		{
 			var connectionDetails = new ConnectionDetails();
 			foreach (var envVarSuffixToConnectionProperty in EnvVarSuffixToConnectionProperty)
 			{
 				var envVarName = "ELASTIC_APM_TESTS_" + externalDbType.EnvVarNameMiddlePart + "_" + envVarSuffixToConnectionProperty.Key;
 				var envVarValue = Environment.GetEnvironmentVariable(envVarName);
-				if (envVarValue == null)
-				{
-					TestOutputHelper.WriteLine($"{envVarName} environment variable is not defined"
-						+ $" - tests will not run against {externalDbType.Description}.");
-					return null;
-				}
+				if (envVarValue == null) return null;
 				envVarSuffixToConnectionProperty.Value(connectionDetails, envVarValue);
 			}
 
 			return connectionDetails;
-		}
-
-		private void RunAgainstExternalDbIfConfigured(ExternalDbType externalDbType, Action<ConnectionDetails> test)
-		{
-			var connectionDetails = GetConnectionDetails(externalDbType);
-			if (connectionDetails != null) test(connectionDetails);
 		}
 
 		private static void ExecuteTestCrudSequence(Func<DbContextImplBase> dbContextFactory)

@@ -297,8 +297,7 @@ namespace Elastic.Apm.Model
 		{
 			try
 			{
-				var url = Context.Http.OriginalUrl ?? new Uri(Context.Http.Url);
-				return UrlUtils.TryExtractDestination(url, _logger);
+				return UrlUtils.ExtractDestination(Context.Http.OriginalUrl ?? new Uri(Context.Http.Url), _logger);
 			}
 			catch(Exception ex)
 			{

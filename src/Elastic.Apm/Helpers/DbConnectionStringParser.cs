@@ -22,12 +22,12 @@ namespace Elastic.Apm.Helpers
 		}
 
 		/// <returns><c>Destination</c> if successful and <c>null</c> otherwise</returns>
-		internal Destination TryExtractDestination(string dbConnectionString) => TryExtractDestination(dbConnectionString, out _);
+		internal Destination ExtractDestination(string dbConnectionString) => ExtractDestination(dbConnectionString, out _);
 
 		/// <summary>
 		/// Used only by tests.
 		/// </summary>
-		internal Destination TryExtractDestination(string dbConnectionString, out bool wasFoundInCache)
+		internal Destination ExtractDestination(string dbConnectionString, out bool wasFoundInCache)
 		{
 			var cache = _cache.Value;
 			if (cache.TryGetValue(dbConnectionString, out var destination))
