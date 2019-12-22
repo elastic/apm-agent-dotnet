@@ -201,8 +201,6 @@ namespace Elastic.Apm.Helpers
 
 			destination.Address = ParseAddress(valueToParse.Substring(0, lastColumnIndex));
 			ParsePortValue(valueToParse.Substring(lastColumnIndex + 1), destination);
-			return;
-
 		}
 
 		private static string ParseAddress(string valueToParseArg)
