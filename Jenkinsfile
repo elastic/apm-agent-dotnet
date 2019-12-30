@@ -444,10 +444,12 @@ def release(secret){
     sh(label: 'Release', script: '.ci/linux/release.sh')
     def repo = getVaultSecret(secret: secret)
     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [
-      [var: 'REPO_API_KEY', password: repo.apiKey],
-      [var: 'REPO_API_URL', password: repo.url],
+      [var: 'REPO_API_KEY', password: repo.data.apiKey],
+      [var: 'REPO_API_URL', password: repo.data.url],
       ]]) {
-        sh(label: 'Deploy', script: ".ci/linux/deploy.sh ${repo.data.apiKey} ${repo.data.url}")
+      withEnv(["REPO_API_KEY=${repo.data.apiKey}", "REPO_API_URL=${repo.data.url}"]) {
+        sh(label: 'Deploy', script: ".ci/linux/deploy.sh ${REPO_API_KEY} ${REPO_API_URL}")
+      }
     }
   }
 }
