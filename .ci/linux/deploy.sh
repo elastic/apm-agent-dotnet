@@ -4,7 +4,7 @@
 #
 set -euo pipefail
 
-for nupkg in $(find . -type f -not -path '.nuget' -name '*.nupkg')
+for nupkg in $(find . -type f -not -path './.nuget/*' -name '*.nupkg')
 do
 	echo "dotnet nuget push ${nupkg}"
 	dotnet nuget push ${nupkg} -k ${1} -s ${2}
