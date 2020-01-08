@@ -26,8 +26,9 @@ namespace Elastic.Apm.SqlClient.Tests
 
 		public SqlClientDiagnosticListenerTests()
 		{
+			// BUILD_ID env variable is passed from the CI, therefore DockerInDocker is enabled.
 			_environment = new DockerEnvironmentBuilder()
-				.DockerInDocker(true)
+				.DockerInDocker(Environment.GetEnvironmentVariable("BUILD_ID") != null)
 				.AddMssqlContainer(ContainerName, "StrongPassword!!!!1")
 				.Build();
 
