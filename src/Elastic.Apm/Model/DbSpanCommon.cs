@@ -57,7 +57,6 @@ namespace Elastic.Apm.Model
 			}
 
 			span.End();
-
 		}
 	}
 }
