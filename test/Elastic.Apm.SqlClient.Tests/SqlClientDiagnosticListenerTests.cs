@@ -27,6 +27,7 @@ namespace Elastic.Apm.SqlClient.Tests
 		public SqlClientDiagnosticListenerTests()
 		{
 			_environment = new DockerEnvironmentBuilder()
+				.DockerInDocker(true)
 				.AddMssqlContainer(ContainerName, "StrongPassword!!!!1")
 				.Build();
 
