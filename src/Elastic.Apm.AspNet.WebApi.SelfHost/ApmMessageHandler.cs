@@ -4,15 +4,19 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNet.WebApi.SelfHost.Extensions;
 using Elastic.Apm.Config;
-using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
+
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.AspNet.WebApi.OwinSelfHost, PublicKey=002400000480000094000000060200000024000052534131000400000100010051df3e4d8341d66c6dfbf35b2fda3627d08073156ed98eef81122b94e86ef2e44e7980202d21826e367db9f494c265666ae30869fb4cd1a434d171f6b634aa67fa8ca5b9076d55dc3baa203d3a23b9c1296c9f45d06a45cf89520bef98325958b066d8c626db76dd60d0508af877580accdd0e9f88e46b6421bf09a33de53fe1")]
 
 namespace Elastic.Apm.AspNet.WebApi.SelfHost
 {
@@ -21,28 +25,9 @@ namespace Elastic.Apm.AspNet.WebApi.SelfHost
 		private readonly Tracer _tracer;
 		private readonly IApmLogger _logger;
 
-		public static ApmMessageHandler Create(IApmLogger logger = null, params IDiagnosticsSubscriber[] subscribers)
+		internal ApmMessageHandler(ApmAgent agent)
 		{
-			var rootLogger = logger ?? ConsoleLogger.Instance;
-			var config = new AgentComponents(rootLogger, configurationReader: new FullFrameworkConfigReader(rootLogger));
-
-			config.Service.Language = new Language { Name = "C#" }; //TODO
-
-			Agent.Setup(config);
-
-			var subs = new List<IDiagnosticsSubscriber>(subscribers ?? Array.Empty<IDiagnosticsSubscriber>())
-			{
-				new HttpDiagnosticsSubscriber()
-			};
-
-			Agent.Subscribe(subs.ToArray());
-
-			return new ApmMessageHandler(Agent.Instance.TracerInternal, Agent.Instance);
-		}
-
-		private ApmMessageHandler(Tracer tracer, IApmAgent agent)
-		{
-			_tracer = tracer;
+			_tracer = agent.TracerInternal;
 			_logger = agent.Logger.Scoped(nameof(ApmMessageHandler));
 		}
 
@@ -115,9 +100,7 @@ namespace Elastic.Apm.AspNet.WebApi.SelfHost
 			{
 				transaction.Context.Response = new Response
 				{
-					Finished = true,
-					StatusCode = (int) response.StatusCode,
-					Headers = GetHeaders(response.Headers, transaction.ConfigSnapshot)
+					Finished = true, StatusCode = (int)response.StatusCode, Headers = GetHeaders(response.Headers, transaction.ConfigSnapshot)
 				};
 			}
 			catch (Exception ex)

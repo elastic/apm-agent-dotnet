@@ -8,4 +8,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNet.WebApi.OwinSelfHost" Version="5.2.7" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Elastic.Apm.AspNet.WebApi.SelfHost\Elastic.Apm.AspNet.WebApi.SelfHost.csproj" />
+  </ItemGroup>
 </Project>

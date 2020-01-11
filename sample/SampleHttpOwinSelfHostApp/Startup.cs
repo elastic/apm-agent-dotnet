@@ -1,4 +1,5 @@
 using System.Web.Http;
+using Elastic.Apm.AspNet.WebApi.SelfHost;
 using Owin;
 
 namespace SampleHttpOwinSelfHostApp
@@ -16,6 +17,8 @@ namespace SampleHttpOwinSelfHostApp
 				routeTemplate: "api/{controller}/{id}",
 				defaults: new { id = RouteParameter.Optional }
 			);
+
+			config.MessageHandlers.AddElasticApmMessageHandler();
 
 			appBuilder.UseWebApi(config);
 		}

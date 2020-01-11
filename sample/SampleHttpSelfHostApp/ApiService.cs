@@ -20,7 +20,7 @@ namespace SampleHttpSelfHostApp
 			config.Routes.MapHttpRoute("values", "api/values", new { controller = "Values", action = nameof(ValuesController.GetValues) },
 				new { httpMethod = new HttpMethodConstraint(HttpMethod.Get) });
 
-			config.MessageHandlers.Add(ApmMessageHandler.Create());
+			config.MessageHandlers.AddElasticApmMessageHandler();
 
 			_server = new HttpSelfHostServer(config);
 

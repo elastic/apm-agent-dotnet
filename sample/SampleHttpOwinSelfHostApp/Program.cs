@@ -12,6 +12,7 @@ namespace SampleHttpOwinSelfHostApp
 			// Start OWIN host
 			using (WebApp.Start<Startup>(url: baseAddress))
 			{
+				Console.WriteLine("Api Service started with listening `54321` port");
 				Console.ReadLine();
 			}
 		}
