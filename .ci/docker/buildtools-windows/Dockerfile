@@ -6,21 +6,26 @@ FROM mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-1909
 # Restore the default Windows shell for correct batch processing.
 SHELL ["cmd", "/S", "/C"]
 
-# Download the Build Tools bootstrapper.
-ADD https://aka.ms/vs/16/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
+# Download NuGet v5.4.0 
+ADD https://dist.nuget.org/win-x86-commandline/v5.4.0/nuget.exe C:\nuget\nuget.exe
 
-# Install Build Tools excluding workloads and components with known issues.
-RUN C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --nocache `
-    --installPath C:\BuildTools `
-    --all `
-    --remove Microsoft.VisualStudio.Component.Windows10SDK.10240 `
-    --remove Microsoft.VisualStudio.Component.Windows10SDK.10586 `
-    --remove Microsoft.VisualStudio.Component.Windows10SDK.14393 `
-    --remove Microsoft.VisualStudio.Component.Windows81SDK `
- || IF "%ERRORLEVEL%"=="3010" EXIT 0
+# Add NuGet to Beginning of Path (We want this version of Nuget before any other versions that may be in the path)
+RUN @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "[Environment]::SetEnvironmentVariable(\"Path\", \"C:\nuget;\" + $env:Path, [EnvironmentVariableTarget]::Machine)"
 
-# Start developer command prompt with any other commands specified.
-ENTRYPOINT C:\BuildTools\Common7\Tools\VsDevCmd.bat &&
+#This route takes 20-30 minutes
+# We need a place to download this from adding it to Github and copying locally is a potential option 
+#COPY vs_enterprise__833835998.1575916908.exe C:\temp\vs_enterprise__833835998.1575916908.exe
+# Install Visual Studio Enterprise with Only packages necessary to build apm-agent-dotnet
+#RUN C:\temp\vs_enterprise__833835998.1575916908.exe --quiet --wait --norestart --nocache --add Microsoft.Net.Core.Component.SDK.2.1 --add Microsoft.VisualStudio.Component.Web --add Microsoft.Component.MSBuild
+
+# This route takes about 40-50 minutes
+#Install Chocolatey
+RUN @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
+
+#Install Visual Studio From Chocolatey
+RUN @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "& choco install visualstudio2019buildtools -m -y --no-progress -r --version=16.4.0.0"
+RUN @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "& choco install visualstudio2019enterprise -m -y --no-progress -r --version=16.4.0.0 --package-parameters \"--includeRecommended --includeOptional\""
+RUN @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "& choco install visualstudio2019-workload-netweb -m -y --no-progress -r --version=1.0.0"
 
 # Default to PowerShell if no other command specified.
 CMD ["powershell.exe", "-NoLogo", "-ExecutionPolicy", "Bypass"]
