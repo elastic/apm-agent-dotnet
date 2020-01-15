@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net461</TargetFramework>
+    <RootNamespace>Elastic.Apm.Z.EntityFramework6</RootNamespace>
+    <AssemblyName>Elastic.Apm.Z.EntityFramework6</AssemblyName>
+    <PackageId>Elastic.Apm.EntityFramework6</PackageId>
+    <Description>Elastic APM for Z Entity Framework 6. This package contains auto instrumentation for Z Entity Framework 6. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
+    <PackageTags>apm, monitoring, elastic, elasticapm, analytics, entiryframework6, ef6</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Z.EntityFramework.Classic" Version="7.1.21" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+  </ItemGroup>
+</Project>
