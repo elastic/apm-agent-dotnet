@@ -57,7 +57,8 @@ namespace Elastic.Apm.Metrics
 				new FreeAndTotalMemoryProvider(),
 				new ProcessWorkingSetAndVirtualMemoryProvider(),
 				new SystemTotalCpuProvider(_logger),
-				new ProcessTotalCpuTimeProvider(_logger)
+				new ProcessTotalCpuTimeProvider(_logger),
+				new GcMetricsProvider()
 			};
 
 			_logger.Info()?.Log("Collecting metrics in {interval} milliseconds interval", interval);
