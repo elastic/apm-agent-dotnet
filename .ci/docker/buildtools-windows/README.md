@@ -28,7 +28,7 @@ docker run --rm -ti \
 - Refresh Page
 - Find vs_enterprise.exe in network tab list
 - Right click and Copy URL
-- Replace URL below with the new URL
+- Replace URL in dockerfile with the new URL
 
 ## Further details
 
