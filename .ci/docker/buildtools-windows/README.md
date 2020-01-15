@@ -20,16 +20,15 @@ docker run --rm -ti \
 
 ## Debugging
 
-```bash
-## If docker fails while downloading visual studio do the following:
-- Using Chrome go to https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=enterprise&rel=16&utm_medium=microsoft&utm_source=docs.microsoft.com&utm_campaign=network+install&utm_content=download+vs2019
+### If docker fails while downloading visual studio do the following
+
+- Using Chrome go to <https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=enterprise&rel=16&utm_medium=microsoft&utm_source=docs.microsoft.com&utm_campaign=network+install&utm_content=download+vs2019>
 - Open Chrome Dev Tools
 - Select Network Tab
 - Refresh Page
 - Find vs_enterprise.exe in network tab list
 - Right click and Copy URL
 - Replace URL below with the new URL
-```
 
 ## Further details
 
