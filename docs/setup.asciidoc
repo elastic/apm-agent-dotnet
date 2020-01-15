@@ -72,7 +72,7 @@ For example:
 ----
 app.UseElasticApm(Configuration,
 	new HttpDiagnosticsSubscriber(),  /* Enable tracing of outgoing HTTP requests */
-	new EfCoreDiagnosticsSubscriber()) /* Enable tracing of database calls through EF Core*/
+	new EfCoreDiagnosticsSubscriber()); /* Enable tracing of database calls through EF Core*/
 ----
 
 In case you only want to use the <<public-api>>, you don't need to do any initialization, you can simply start using the API and the agent will send the data to the APM Server.
