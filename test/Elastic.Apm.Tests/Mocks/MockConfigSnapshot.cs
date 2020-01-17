@@ -13,6 +13,7 @@ namespace Elastic.Apm.Tests.Mocks
 
 		private readonly string _captureBody;
 		private readonly string _captureBodyContentTypes;
+		private readonly string _captureUserData;
 		private readonly string _captureHeaders;
 		private readonly string _centralConfig;
 		private readonly string _dbgDescription;
@@ -43,6 +44,7 @@ namespace Elastic.Apm.Tests.Mocks
 			string environment = null,
 			string serviceNodeName = null,
 			string secretToken = null,
+			string captureUserData = null,
 			string captureHeaders = null,
 			string centralConfig = null,
 			string dbgDescription = null,
@@ -67,6 +69,7 @@ namespace Elastic.Apm.Tests.Mocks
 			_environment = environment;
 			_serviceNodeName = serviceNodeName;
 			_secretToken = secretToken;
+			_captureUserData = captureUserData;
 			_captureHeaders = captureHeaders;
 			_centralConfig = centralConfig;
 			_dbgDescription = dbgDescription;
@@ -89,6 +92,7 @@ namespace Elastic.Apm.Tests.Mocks
 		public List<string> CaptureBodyContentTypes =>
 			ParseCaptureBodyContentTypes(Kv(ConfigConsts.EnvVarNames.CaptureBodyContentTypes, _captureBodyContentTypes, Origin));
 
+		public bool CaptureUserData => ParseCaptureUserData(Kv(ConfigConsts.EnvVarNames.CaptureUserData, _captureUserData, Origin));
 		public bool CaptureHeaders => ParseCaptureHeaders(Kv(ConfigConsts.EnvVarNames.CaptureHeaders, _captureHeaders, Origin));
 		public bool CentralConfig => ParseCentralConfig(Kv(ConfigConsts.EnvVarNames.CentralConfig, _centralConfig, Origin));
 

@@ -777,6 +777,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		protected class AgentConfiguration
 		{
+			internal bool CaptureUserData = true;
 			internal bool CaptureHeaders = true;
 			internal string Environment;
 			internal Dictionary<string, string> GlobalLabels;

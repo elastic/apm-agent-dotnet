@@ -439,6 +439,7 @@ namespace Elastic.Apm.BackendComm
 
 			public List<string> CaptureBodyContentTypes => _configDelta.CaptureBodyContentTypes ?? _wrapped.CaptureBodyContentTypes;
 
+			public bool CaptureUserData => _wrapped.CaptureUserData;
 			public bool CaptureHeaders => _wrapped.CaptureHeaders;
 			public bool CentralConfig => _wrapped.CentralConfig;
 

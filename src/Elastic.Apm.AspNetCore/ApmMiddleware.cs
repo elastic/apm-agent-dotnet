@@ -235,7 +235,8 @@ namespace Elastic.Apm.AspNetCore
 		{
 			try
 			{
-				if (context.User?.Identity != null && context.User.Identity.IsAuthenticated && transaction.Context.User == null)
+				if (transaction.ConfigSnapshot.CaptureUserData && context.User?.Identity != null
+					&& context.User.Identity.IsAuthenticated && transaction.Context.User == null)
 				{
 					transaction.Context.User = new User
 					{

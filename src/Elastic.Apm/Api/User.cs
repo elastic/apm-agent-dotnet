@@ -17,6 +17,7 @@ namespace Elastic.Apm.Api
 		public string UserName { get; set; }
 
 		public override string ToString() =>
-			new ToStringBuilder(nameof(User)) { { "Id", Id }, { "UserName", UserName }, { "Email", Email } }.ToString();
+			new ToStringBuilder(nameof(User)) { { "Id",
+					Id }, { "UserName", UserName }, { "Email", Email } }.ToString();
 	}
 }

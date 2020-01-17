@@ -189,6 +189,13 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
+		public void DefaultCaptureUserDataTest()
+		{
+			using var agent = new ApmAgent(new TestAgentComponents());
+			agent.ConfigurationReader.CaptureUserData.Should().Be(true);
+		}
+
+		[Fact]
 		public void DefaultCaptureHeadersTest()
 		{
 			using (var agent = new ApmAgent(new TestAgentComponents())) agent.ConfigurationReader.CaptureHeaders.Should().Be(true);
@@ -220,6 +227,14 @@ namespace Elastic.Apm.Tests
 				agent.ConfigurationReader.CaptureBodyContentTypes.Should().HaveCount(4);
 				agent.ConfigurationReader.CaptureBodyContentTypes.Should().BeEquivalentTo(expected);
 			}
+		}
+
+		[Fact]
+		public void SetCaptureUserDataTest()
+		{
+			Environment.SetEnvironmentVariable(EnvVarNames.CaptureUserData, "false");
+			var config = new EnvironmentConfigurationReader();
+			config.CaptureUserData.Should().Be(false);
 		}
 
 		[Fact]

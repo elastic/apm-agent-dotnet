@@ -124,6 +124,29 @@ namespace Elastic.Apm.AspNetCore.Tests
 			payloadSender.FirstTransaction.Context.User.Id.Should().Be(sub);
 		}
 
+		[Fact]
+		public async Task ShouldNotCaptureUserIfCaptureUserDataIsFalse()
+		{
+			const string mail = "my@mail.com";
+			const string sub = "123-456";
+
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+				config: new MockConfigSnapshot(captureUserData:"false"))))
+			{
+				var context = new DefaultHttpContext
+				{
+					User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("email", mail), new Claim("sub", sub) }, "someAuthTypeName"))
+				};
+
+				var middleware = new ApmMiddleware(async innerHttpContext => { await Task.Delay(1); }, agent.TracerInternal, agent);
+
+				await middleware.InvokeAsync(context);
+			}
+
+			payloadSender.FirstTransaction.Context.User.Should().BeNull();
+		}
+
 		public void Dispose() => _agent?.Dispose();
 	}
 }

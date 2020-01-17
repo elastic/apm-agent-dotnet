@@ -33,6 +33,9 @@ namespace Elastic.Apm.Config
 		public virtual List<string> CaptureBodyContentTypes =>
 			ParseCaptureBodyContentTypes(Read(ConfigConsts.KeyNames.CaptureBodyContentTypes, ConfigConsts.EnvVarNames.CaptureBodyContentTypes));
 
+		public bool CaptureUserData =>
+			ParseCaptureUserData(Read(ConfigConsts.KeyNames.CaptureUserData, ConfigConsts.EnvVarNames.CaptureUserData));
+
 		public virtual bool CaptureHeaders =>
 			ParseCaptureHeaders(Read(ConfigConsts.KeyNames.CaptureHeaders, ConfigConsts.EnvVarNames.CaptureHeaders));
 

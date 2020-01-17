@@ -33,6 +33,7 @@ namespace Elastic.Apm.Tests
 			public string CaptureBody => ConfigConsts.DefaultValues.CaptureBody;
 			public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => ConfigConsts.DefaultValues.SanitizeFieldNames;
 			public List<string> CaptureBodyContentTypes { get; }
+			public bool CaptureUserData => ConfigConsts.DefaultValues.CaptureUserData;
 			public bool CaptureHeaders => ConfigConsts.DefaultValues.CaptureHeaders;
 			public bool CentralConfig => ConfigConsts.DefaultValues.CentralConfig;
 			public string Environment { get; }

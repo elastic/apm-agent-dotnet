@@ -9,6 +9,8 @@ namespace Elastic.Apm.Config
 	{
 		string CaptureBody { get; }
 		List<string> CaptureBodyContentTypes { get; }
+
+		bool CaptureUserData { get; }
 		bool CaptureHeaders { get; }
 		bool CentralConfig { get; }
 		string Environment { get; }

@@ -16,6 +16,7 @@ namespace Elastic.Apm.Config
 			public const int ApmServerPort = 8200;
 			public const string CaptureBody = SupportedValues.CaptureBodyOff;
 			public const string CaptureBodyContentTypes = "application/x-www-form-urlencoded*, text/*, application/json*, application/xml*";
+			public const bool CaptureUserData = true;
 			public const bool CaptureHeaders = true;
 			public const bool CentralConfig = true;
 			public const int FlushIntervalInMilliseconds = 10_000; // 10 seconds
@@ -59,6 +60,7 @@ namespace Elastic.Apm.Config
 		{
 			public const string CaptureBody = Prefix + "CAPTURE_BODY";
 			public const string CaptureBodyContentTypes = Prefix + "CAPTURE_BODY_CONTENT_TYPES";
+			public const string CaptureUserData = Prefix + "CAPTURE_USER_DATA";
 			public const string CaptureHeaders = Prefix + "CAPTURE_HEADERS";
 			public const string CentralConfig = Prefix + "CENTRAL_CONFIG";
 			public const string Environment = Prefix + "ENVIRONMENT";
@@ -85,6 +87,7 @@ namespace Elastic.Apm.Config
 		{
 			public const string CaptureBody = "ElasticApm:CaptureBody";
 			public const string CaptureBodyContentTypes = "ElasticApm:CaptureBodyContentTypes";
+			public const string CaptureUserData = "ElasticApm:CaptureUserData";
 			public const string CaptureHeaders = "ElasticApm:CaptureHeaders";
 			public const string CentralConfig = "ElasticApm:CentralConfig";
 			public const string Environment = "ElasticApm:Environment";

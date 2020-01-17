@@ -17,6 +17,7 @@ namespace Elastic.Apm.Config
 
 		public string CaptureBody => _content.CaptureBody;
 		public List<string> CaptureBodyContentTypes => _content.CaptureBodyContentTypes;
+		public bool CaptureUserData => _content.CaptureUserData;
 		public bool CaptureHeaders => _content.CaptureHeaders;
 		public bool CentralConfig => _content.CentralConfig;
 		public string DbgDescription { get; }

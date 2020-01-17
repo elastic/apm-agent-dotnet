@@ -41,6 +41,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.ServiceNodeName.Should().Be("Instance1");
 			config.ServiceVersion.Should().Be("2.1.0.5");
 			config.Environment.Should().Be("staging");
+			config.CaptureUserData.Should().Be(false);
 			config.CaptureHeaders.Should().Be(false);
 			config.TransactionSampleRate.Should().Be(0.456);
 			config.TransactionMaxSpans.Should().Be(375);
@@ -74,6 +75,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				);
 
 			config.Environment.Should().Be("test");
+			config.CaptureUserData.Should().Be(true);
 			config.CaptureHeaders.Should().Be(true);
 			config.TransactionSampleRate.Should().Be(1.0);
 		}
@@ -108,7 +110,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// This test makes sure that configs are applied to the agent when those are stored in env vars.
 		/// </summary>
 		[Fact]
-		public void ReadConfingsFromEnvVarsViaIConfig()
+		public void ReadConfigsFromEnvVarsViaIConfig()
 		{
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.LogLevel, "Debug");
 			var serverUrl = "http://myServerFromEnvVar.com:1234";
@@ -123,6 +125,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.Environment, environment);
 			var secretToken = "SecretToken";
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.SecretToken, secretToken);
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.CaptureUserData, false.ToString());
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.CaptureHeaders, false.ToString());
 			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.TransactionSampleRate, "0.123");
 			var configBuilder = new ConfigurationBuilder()
@@ -137,6 +140,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			config.ServiceVersion.Should().Be(serviceVersion);
 			config.Environment.Should().Be(environment);
 			config.SecretToken.Should().Be(secretToken);
+			config.CaptureUserData.Should().Be(false);
 			config.CaptureHeaders.Should().Be(false);
 			config.TransactionSampleRate.Should().Be(0.123);
 		}

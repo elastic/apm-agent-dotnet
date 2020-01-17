@@ -88,6 +88,8 @@ namespace Elastic.Apm.Config
 			return kv.Value;
 		}
 
+		protected bool ParseCaptureUserData(ConfigurationKeyValue kv) => ParseBoolOption(kv, DefaultValues.CaptureUserData, nameof(DefaultValues.CaptureUserData));
+
 		protected bool ParseCaptureHeaders(ConfigurationKeyValue kv) => ParseBoolOption(kv, DefaultValues.CaptureHeaders, "CaptureHeaders");
 
 		protected LogLevel ParseLogLevel(ConfigurationKeyValue kv)
