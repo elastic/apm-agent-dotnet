@@ -356,6 +356,20 @@ pipeline {
               }
             }
           }
+          stage('Release to NuGet') {
+            options { skipDefaultCheckout() }
+            when {
+              // Tagged release events ONLY
+              tag pattern: '\\d+\\.\\d+\\.\\d+', comparator: 'REGEXP'
+            }
+            steps {
+              deleteDir()
+              unstash 'source'
+              dir("${BASE_DIR}") {
+                release('secret/apm-team/ci/elastic-observability-nuget')
+              }
+            }
+          }
           stage('AfterRelease') {
             options {
               skipDefaultCheckout()
