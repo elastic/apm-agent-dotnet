@@ -341,12 +341,10 @@ pipeline {
               }
             }
             steps {
-              withGithubNotify(context: 'Release AppVeyor', tab: 'artifacts') {
-                deleteDir()
-                unstash 'source'
-                dir("${BASE_DIR}"){
-                  release('secret/apm-team/ci/elastic-observability-appveyor')
-                }
+              deleteDir()
+              unstash 'source'
+              dir("${BASE_DIR}"){
+                release('secret/apm-team/ci/elastic-observability-appveyor')
               }
             }
             post{
