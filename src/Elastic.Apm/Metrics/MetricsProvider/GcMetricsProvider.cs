@@ -7,7 +7,11 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 {
 	internal class GcMetricsProvider : IMetricsProvider //TODO: Make disposable
 	{
-		private SimpleEventListener _eventListener;
+		private const string GcCount = "clr.gc.count";
+		private readonly SimpleEventListener _eventListener;
+
+		private static readonly object Lock = new object();
+
 		public GcMetricsProvider() => _eventListener = new SimpleEventListener();
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
@@ -15,53 +19,54 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		public IEnumerable<MetricSample> GetSamples()
 		{
-			var a = 0;
-			return new List<MetricSample>();
-		}
-	}
+			if (_eventListener.Samples == null)
+				return null;
 
-	internal class SimpleEventListener : EventListener
-	{
-		private ulong _countTotalEvents = 0;
-		private static int keyword = 1; //TODO
-
-		private long _timeGcStart = 0;
-		private EventSource _eventSourceDotNet;
-
-		public SimpleEventListener() =>
-			Console.WriteLine("SimpleEventListener ctor");
-
-		// Called whenever an EventSource is created.
-		protected override void OnEventSourceCreated(EventSource eventSource)
-		{
-			Console.WriteLine(eventSource.Name);
-			if (!eventSource.Name.Equals("Microsoft-Windows-DotNETRuntime")) return;
-
-			EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)keyword);
-			_eventSourceDotNet = eventSource;
-		}
-		// Called whenever an event is written.
-		protected override void OnEventWritten(EventWrittenEventArgs eventData)
-		{
-			Console.WriteLine("OnEventWritten :" + eventData.EventName);
-			// Write the contents of the event to the console.
-			if (eventData.EventName.Contains("GCStart"))
+			var retVal = new MetricSample[_eventListener.Samples.Count];
+			lock (Lock)
 			{
-
-				//_timeGcStart = eventData.TimeStamp.Ticks;
-			}
-			else if (eventData.EventName.Contains("GCEnd"))
-			{
-				//long timeGCEnd = eventData.TimeStamp.Ticks;
-			//	long gcIndex = long.Parse(eventData.Payload[0].ToString());
-				// Console.WriteLine("GC#{0} took {1:f3}ms",
-				// 	gcIndex, (double) (timeGCEnd - _timeGcStart)/10.0/1000.0);
-				//
-				// if (gcIndex >= 5)
-				// 	DisableEvents(_eventSourceDotNet);
+				_eventListener.Samples.CopyTo(retVal, 0);
+				_eventListener.Samples.Clear();
 			}
 
-			_countTotalEvents++;
+			return retVal;
+		}
+
+		private class SimpleEventListener : EventListener
+		{
+			private static readonly int keyword = 1; //TODO
+
+			internal List<MetricSample> Samples = new List<MetricSample>();
+
+			public SimpleEventListener() =>
+				Console.WriteLine("SimpleEventListener ctor");
+
+			protected override void OnEventSourceCreated(EventSource eventSource)
+			{
+				Console.WriteLine(eventSource.Name);
+				if (!eventSource.Name.Equals("Microsoft-Windows-DotNETRuntime")) return;
+
+				EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)keyword);
+			}
+
+			protected override void OnEventWritten(EventWrittenEventArgs eventData)
+			{
+				Console.WriteLine("OnEventWritten :" + eventData.EventName);
+
+				if (eventData.EventName.Contains("GCStart")) { } //TODO: remove
+
+				else if (eventData.EventName.Contains("GCEnd"))
+				{
+					var indexOfCount = eventData.PayloadNames.IndexOf("Count");
+					if (indexOfCount < 0) return;
+
+					var gcCount = eventData.Payload[indexOfCount];
+
+					if (!(gcCount is uint gcCountInt)) return;
+
+					lock (Lock) Samples.Add(new MetricSample(GcCount, gcCountInt));
+				}
+			}
 		}
 	}
 }
