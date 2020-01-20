@@ -401,12 +401,9 @@ pipeline {
           stage('Integration Tests') {
             agent none
             when {
-              beforeAgent true
-              allOf {
-                anyOf {
-                  environment name: 'GIT_BUILD_CAUSE', value: 'pr'
-                  expression { return !params.Run_As_Master_Branch }
-                }
+              anyOf {
+                changeRequest()
+                expression { return !params.Run_As_Master_Branch }
               }
             }
             steps {
