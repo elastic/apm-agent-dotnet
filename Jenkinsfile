@@ -46,6 +46,10 @@ pipeline {
         stage('Parallel'){
           parallel{
             stage('Linux'){
+              when {
+                triggeredBy 'a'
+                beforeAgent true
+              }
               options { skipDefaultCheckout() }
               environment {
                 MSBUILDDEBUGPATH = "${env.WORKSPACE}"
@@ -123,6 +127,10 @@ pipeline {
                 }
               }
               stage('Windows .NET Framework'){
+                when {
+                  triggeredBy 'a'
+                  beforeAgent true
+                }
                 agent { label 'windows-2019-immutable' }
                 options { skipDefaultCheckout() }
                 environment {
@@ -226,6 +234,10 @@ pipeline {
                 }
               }
               stage('Docker .NET Framework'){
+                when {
+                  triggeredBy 'a'
+                  beforeAgent true
+                }
                 agent { label 'windows-2019-docker-immutable' }
                 options { skipDefaultCheckout() }
                 stages {
@@ -247,6 +259,10 @@ pipeline {
                 }
               }
               stage('Windows .NET Core'){
+                when {
+                  triggeredBy 'a'
+                  beforeAgent true
+                }
                 agent { label 'windows-2019-immutable' }
                 options { skipDefaultCheckout() }
                 environment {
@@ -332,14 +348,11 @@ pipeline {
             }
           }
           stage('Release to AppVeyor') {
-            options { skipDefaultCheckout() }
             when {
+              triggeredBy 'a'
               beforeAgent true
-              anyOf {
-                branch 'master'
-                expression { return params.Run_As_Master_Branch }
-              }
             }
+            options { skipDefaultCheckout() }
             steps {
               deleteDir()
               unstash 'source'
@@ -367,7 +380,7 @@ pipeline {
             stages {
               stage('Notify') {
                 steps {
-                  emailext subject: '[apm-agent-dotnet] Release ready to be pushed',
+                  emailext subject: '[PoC][apm-agent-dotnet] Release ready to be pushed',
                            to: "${NOTIFY_TO}",
                            body: "Please go to ${env.BUILD_URL}input to approve or reject within 12 hours."
                 }
@@ -392,10 +405,8 @@ pipeline {
               skipDefaultCheckout()
             }
             when {
-              anyOf {
-                tag pattern: '\\d+\\.\\d+\\.\\d+', comparator: 'REGEXP'
-                expression { return params.Run_As_Master_Branch }
-              }
+              triggeredBy 'a'
+              beforeAgent true
             }
             stages {
               stage('Opbeans') {
@@ -420,10 +431,8 @@ pipeline {
           stage('Integration Tests') {
             agent none
             when {
-              anyOf {
-                changeRequest()
-                expression { return !params.Run_As_Master_Branch }
-              }
+              triggeredBy 'a'
+              beforeAgent true
             }
             steps {
               log(level: 'INFO', text: 'Launching Async ITs')
@@ -476,7 +485,7 @@ def release(secret){
       [var: 'REPO_API_URL', password: repo.data.url],
       ]]) {
       withEnv(["REPO_API_KEY=${repo.data.apiKey}", "REPO_API_URL=${repo.data.url}"]) {
-        sh(label: 'Deploy', script: ".ci/linux/deploy.sh ${REPO_API_KEY} ${REPO_API_URL}")
+        sh(label: 'Deploy', script: "echo '.ci/linux/deploy.sh ${REPO_API_KEY} ${REPO_API_URL}'")
       }
     }
   }
