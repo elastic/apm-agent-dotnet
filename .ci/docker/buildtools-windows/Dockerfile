@@ -10,14 +10,21 @@ SHELL ["cmd", "/S", "/C"]
 ADD https://dist.nuget.org/win-x86-commandline/v5.4.0/nuget.exe C:\nuget\nuget.exe
 
 # Add NuGet to Beginning of Path (We want this version of Nuget before any other versions that may be in the path)
-RUN @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "[Environment]::SetEnvironmentVariable(\"Path\", \"C:\nuget;\" + $env:Path, [EnvironmentVariableTarget]::Machine)"
+RUN setx /M PATH "C:\nuget;%PATH%;"
 
 # We download Visual Studio from Microsoft
 # If this fails see the Readme: https://github.com/elastic/apm-agent-dotnet/tree/master/.ci/docker/buildtools-windows
 ADD https://download.visualstudio.microsoft.com/download/pr/b79d5d47-f792-4eec-adcf-2da2dfa3e3db/4a244b3dd7c258763614d6e4eb914d42f47917e7cc6a70b509e9d9029aceddf2/vs_Enterprise.exe C:\temp\vs_enterprise.exe
 
 # Install Visual Studio Enterprise with Only packages necessary to build apm-agent-dotnet
-RUN C:\temp\vs_enterprise__833835998.1575916908.exe --quiet --wait --norestart --nocache --add Microsoft.Net.Core.Component.SDK.2.1 --add Microsoft.VisualStudio.Component.Web --add Microsoft.Component.MSBuild
+RUN C:\temp\vs_enterprise.exe `
+                --quiet `
+                --wait `
+                --norestart `
+                --nocache `
+                --add Microsoft.Net.Core.Component.SDK.2.1 `
+                --add Microsoft.VisualStudio.Component.Web `
+                --add Microsoft.Component.MSBuild
 
 # Default to PowerShell if no other command specified.
 CMD ["powershell.exe", "-NoLogo", "-ExecutionPolicy", "Bypass"]
