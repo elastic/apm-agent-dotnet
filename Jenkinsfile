@@ -358,7 +358,7 @@ pipeline {
             options { skipDefaultCheckout() }
             when {
               // Tagged release events ONLY
-              tag pattern: '\\d+\\.\\d+\\.\\d+', comparator: 'REGEXP'
+              tag pattern: '\\d+\\.\\d+\\.\\d+(-alpha|-beta|-rc)?', comparator: 'REGEXP'
             }
             steps {
               deleteDir()
