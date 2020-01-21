@@ -361,6 +361,7 @@ pipeline {
             }
             when {
               beforeInput true
+              beforeAgent true
               // Tagged release events ONLY
               tag pattern: '\\d+\\.\\d+\\.\\d+(-alpha|-beta|-rc)?', comparator: 'REGEXP'
             }
