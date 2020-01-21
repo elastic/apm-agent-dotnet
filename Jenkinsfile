@@ -354,17 +354,36 @@ pipeline {
               }
             }
           }
-          stage('Release to NuGet') {
-            options { skipDefaultCheckout() }
+          stage('Release') {
+            options {
+              skipDefaultCheckout()
+              timeout(time: 12, unit: 'HOURS')
+            }
             when {
+              beforeInput true
               // Tagged release events ONLY
               tag pattern: '\\d+\\.\\d+\\.\\d+(-alpha|-beta|-rc)?', comparator: 'REGEXP'
             }
-            steps {
-              deleteDir()
-              unstash 'source'
-              dir("${BASE_DIR}") {
-                release('secret/apm-team/ci/elastic-observability-nuget')
+            stages {
+              stage('Notify') {
+                steps {
+                  emailext subject: '[apm-agent-dotnet] Release ready to be pushed',
+                           to: "${NOTIFY_TO}",
+                           body: "Please go to ${env.BUILD_URL}input to approve or reject within 12 hours."
+                }
+              }
+              stage('Release to NuGet') {
+                input {
+                  message 'Should we release a new version?'
+                  ok 'Yes, we should.'
+                }
+                steps {
+                  deleteDir()
+                  unstash 'source'
+                  dir("${BASE_DIR}") {
+                    release('secret/apm-team/ci/elastic-observability-nuget')
+                  }
+                }
               }
             }
           }
