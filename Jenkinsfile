@@ -374,8 +374,7 @@ pipeline {
             }
             when {
               beforeInput true
-              // Tagged release events ONLY
-              tag pattern: '\\d+\\.\\d+\\.\\d+(-alpha|-beta|-rc)?', comparator: 'REGEXP'
+              changeRequest()
             }
             stages {
               stage('Notify') {
