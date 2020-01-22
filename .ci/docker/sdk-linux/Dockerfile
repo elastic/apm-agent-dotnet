@@ -11,3 +11,14 @@ RUN /bin/bash ./dotnet-install.sh --install-dir "${DOTNET_ROOT}" -version 2.1.50
 
 # Install dotnet-xunit-to-junit
 RUN dotnet tool install --tool-path /usr/share/dotnet/tools dotnet-xunit-to-junit --version 0.3.1
+
+# Install docker
+RUN apt update \
+ && apt-get -qq install -y apt-transport-https ca-certificates curl \
+    gnupg2 software-properties-common --no-install-recommends \
+ && curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - \
+ && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" \
+ && apt -qq update \
+ && apt-get -qq install -y docker-ce docker-ce-cli containerd.io \
+    --no-install-recommends \
+ && rm -rf /var/lib/apt/lists/*

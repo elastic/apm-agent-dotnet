@@ -426,7 +426,7 @@ def cleanDir(path){
 def dotnet(Closure body){
   def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-sdk-linux:latest'
   sh label: 'Docker build', script: "docker build --tag ${dockerTagName} .ci/docker/sdk-linux"
-  docker.image("${dockerTagName}").inside("-e HOME='${env.WORKSPACE}/${env.BASE_DIR}'"){
+  docker.image("${dockerTagName}").inside("-e HOME='${env.WORKSPACE}/${env.BASE_DIR}' -v /var/run/docker.sock:/var/run/docker.sock"){
     body()
   }
 }
@@ -444,10 +444,12 @@ def release(secret){
     sh(label: 'Release', script: '.ci/linux/release.sh')
     def repo = getVaultSecret(secret: secret)
     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [
-      [var: 'REPO_API_KEY', password: repo.apiKey],
-      [var: 'REPO_API_URL', password: repo.url],
+      [var: 'REPO_API_KEY', password: repo.data.apiKey],
+      [var: 'REPO_API_URL', password: repo.data.url],
       ]]) {
-        sh(label: 'Deploy', script: ".ci/linux/deploy.sh ${repo.data.apiKey} ${repo.data.url}")
+      withEnv(["REPO_API_KEY=${repo.data.apiKey}", "REPO_API_URL=${repo.data.url}"]) {
+        sh(label: 'Deploy', script: ".ci/linux/deploy.sh ${REPO_API_KEY} ${REPO_API_URL}")
+      }
     }
   }
 }
