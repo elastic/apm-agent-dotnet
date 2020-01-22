@@ -363,7 +363,7 @@ pipeline {
               beforeInput true
               beforeAgent true
               // Tagged release events ONLY
-              tag pattern: '\\d+\\.\\d+\\.\\d+(-alpha|-beta|-rc)?', comparator: 'REGEXP'
+              tag pattern: '\\d+\\.\\d+\\.\\d+(-(alpha|beta|rc)\\d*)?', comparator: 'REGEXP'
             }
             stages {
               stage('Notify') {
