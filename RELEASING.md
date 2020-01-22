@@ -44,7 +44,7 @@ After the new changelog and version have been merged to master, the only thing r
  git push upstream <major>.<minor>.<bug>(-<suffix>)?
  ```
 
-The above commands will push the GitHub tag and will trigger the corresponding [Build pipeline](Jenkinsfile) which will run all the required stages to satisfy the release is in a good shape, then it will ask for approval to release to the NuGet repo.
+The above commands will push the GitHub tag and will trigger the corresponding [CI Build pipeline](Jenkinsfile) which will run all the required stages to satisfy the release is in a good shape, then at the very end of the pipeline there will be an input approval waiting for an UI interaction to release to the NuGet repo. This particular input approval step will notify by email, to the owners of this repo, regarding the expected action to be done for doing the release.
 
 This release process is a tagged release event based with an input approval.
 
