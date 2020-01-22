@@ -20,6 +20,7 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 	/// Tests using external DB servers.
 	/// Tests will not run (even though they will show as passed) if any of the following environment variables is not set:
 	///  	- ELASTIC_APM_TESTS_XYZ_HOST
+	/// 			Note: The value should contain only the host name i.e., without DB instance name - the test uses default DB instance
 	///  	- ELASTIC_APM_TESTS_XYZ_USERNAME
 	///  	- ELASTIC_APM_TESTS_XYZ_PASSWORD
 	/// where XYZ is database type.
@@ -246,10 +247,7 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 
 			internal readonly ConnectionDetails ConnectionDetails;
 
-			protected DbContextImplBase(ConnectionDetails connectionDetails)
-			{
-				ConnectionDetails = connectionDetails;
-			}
+			protected DbContextImplBase(ConnectionDetails connectionDetails) => ConnectionDetails = connectionDetails;
 
 			protected override void OnModelCreating(ModelBuilder modelBuilder)
 			{

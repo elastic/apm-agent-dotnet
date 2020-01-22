@@ -18,10 +18,7 @@ namespace Elastic.Apm.Model
 
 		private readonly DbConnectionStringParser _dbConnectionStringParser;
 
-		internal DbSpanCommon(IApmLogger logger)
-		{
-			_dbConnectionStringParser = new DbConnectionStringParser(logger);
-		}
+		internal DbSpanCommon(IApmLogger logger) => _dbConnectionStringParser = new DbConnectionStringParser(logger);
 
 		internal Span StartSpan(IApmAgent agent, IDbCommand dbCommand) =>
 			(Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(agent).StartSpan(dbCommand.CommandText.Replace(Environment.NewLine, " ")

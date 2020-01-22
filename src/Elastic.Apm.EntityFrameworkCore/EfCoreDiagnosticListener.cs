@@ -12,10 +12,7 @@ namespace Elastic.Apm.EntityFrameworkCore
 		private readonly ApmAgent _agent;
 		private readonly ConcurrentDictionary<Guid, Span> _spans = new ConcurrentDictionary<Guid, Span>();
 
-		public EfCoreDiagnosticListener(IApmAgent agent)
-		{
-			_agent = (ApmAgent)agent;
-		}
+		public EfCoreDiagnosticListener(IApmAgent agent) => _agent = (ApmAgent)agent;
 
 		public string Name => "Microsoft.EntityFrameworkCore";
 

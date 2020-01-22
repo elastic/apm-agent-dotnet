@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
@@ -13,13 +14,12 @@ namespace Elastic.Apm.Helpers
 		internal const int MaxCacheSize = 100;
 
 		private readonly IApmLogger _logger;
-		private readonly ThreadLocal<Dictionary<string, Destination>> _cache =
-			new ThreadLocal<Dictionary<string, Destination>>(() => new Dictionary<string, Destination>());
+		private readonly ConcurrentDictionary<string, Destination> _cache = new ConcurrentDictionary<string, Destination>();
+		// We keep count for _cache because ConcurrentDictionary.Count is very heavy operation
+		// (for example see https://github.com/dotnet/corefx/issues/3357)
+		private volatile int _cacheCount;
 
-		internal DbConnectionStringParser(IApmLogger logger)
-		{
-			_logger = logger.Scoped(ThisClassName);
-		}
+		internal DbConnectionStringParser(IApmLogger logger) => _logger = logger.Scoped(ThisClassName);
 
 		/// <returns><c>Destination</c> if successful and <c>null</c> otherwise</returns>
 		internal Destination ExtractDestination(string dbConnectionString) => ExtractDestination(dbConnectionString, out _);
@@ -29,8 +29,7 @@ namespace Elastic.Apm.Helpers
 		/// </summary>
 		internal Destination ExtractDestination(string dbConnectionString, out bool wasFoundInCache)
 		{
-			var cache = _cache.Value;
-			if (cache.TryGetValue(dbConnectionString, out var destination))
+			if (_cache.TryGetValue(dbConnectionString, out var destination))
 			{
 				wasFoundInCache = true;
 				return destination;
@@ -38,7 +37,7 @@ namespace Elastic.Apm.Helpers
 
 			wasFoundInCache = false;
 			destination = ParseConnectionString(dbConnectionString);
-			if (cache.Count < MaxCacheSize) cache.Add(dbConnectionString, destination);
+			if (_cacheCount < MaxCacheSize && _cache.TryAdd(dbConnectionString, destination)) Interlocked.Increment(ref _cacheCount);
 			return destination;
 		}
 
