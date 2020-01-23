@@ -49,13 +49,13 @@ namespace Elastic.Apm.SqlClient
 			{
 				switch (value.Key)
 				{
-					case string s when s.EndsWith("WriteCommandBefore") && _apmAgent.Tracer.CurrentTransaction != null:
+					case { } s when s.EndsWith("WriteCommandBefore") && _apmAgent.Tracer.CurrentTransaction != null:
 						HandleStartCommand(value.Value, value.Key.StartsWith("System") ? _systemPropertyFetcherSet : _microsoftPropertyFetcherSet);
 						break;
-					case string s when s.EndsWith("WriteCommandAfter"):
+					case { } s when s.EndsWith("WriteCommandAfter"):
 						HandleStopCommand(value.Value, value.Key.StartsWith("System") ? _systemPropertyFetcherSet : _microsoftPropertyFetcherSet);
 						break;
-					case string s when s.EndsWith("WriteCommandError"):
+					case { } s when s.EndsWith("WriteCommandError"):
 						HandleErrorCommand(value.Value, value.Key.StartsWith("System") ? _systemPropertyFetcherSet : _microsoftPropertyFetcherSet);
 						break;
 				}

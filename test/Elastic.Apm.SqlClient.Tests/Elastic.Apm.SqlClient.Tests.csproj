@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
     <RootNamespace>Elastic.Apm.SqlClient.Tests</RootNamespace>
     <AssemblyName>Elastic.Apm.SqlClient.Tests</AssemblyName>
+    <TargetFrameworks>net461;netcoreapp2.1</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
