@@ -21,14 +21,20 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "GcMetricsProvider";
 
-		public IEnumerable<MetricSample> GetSamples() => new List<MetricSample>
+		public IEnumerable<MetricSample> GetSamples()
 		{
-			new MetricSample(GcCountName, _eventListener.GcCount),
-			new MetricSample(GcGen0SizeName, _eventListener.Gen0Size),
-			new MetricSample(GcGen1SizeName, _eventListener.Gen1Size),
-			new MetricSample(GcGen2SizeName, _eventListener.Gen2Size),
-			new MetricSample(GcGen3SizeName, _eventListener.Gen3Size)
-		};
+			if (_eventListener.GcCount != 0 || _eventListener.Gen0Size != 0 || _eventListener.Gen2Size != 0 || _eventListener.Gen3Size != 0)
+				return null;
+
+			return new List<MetricSample>
+			{
+				new MetricSample(GcCountName, _eventListener.GcCount),
+				new MetricSample(GcGen0SizeName, _eventListener.Gen0Size),
+				new MetricSample(GcGen1SizeName, _eventListener.Gen1Size),
+				new MetricSample(GcGen2SizeName, _eventListener.Gen2Size),
+				new MetricSample(GcGen3SizeName, _eventListener.Gen3Size)
+			};
+		}
 
 		public void Dispose() => _eventListener?.Dispose();
 
