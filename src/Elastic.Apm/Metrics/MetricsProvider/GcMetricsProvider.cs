@@ -1,7 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
+using Microsoft.Diagnostics.Tracing;
+using Microsoft.Diagnostics.Tracing.Analysis;
+using Microsoft.Diagnostics.Tracing.Analysis.GC;
+using Microsoft.Diagnostics.Tracing.Etlx;
+using Microsoft.Diagnostics.Tracing.Parsers;
+using Microsoft.Diagnostics.Tracing.Session;
 
 namespace Elastic.Apm.Metrics.MetricsProvider
 {
@@ -16,7 +25,50 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private const string GcGen2SizeName = "clr.gc.gen2size";
 		private const string GcGen3SizeName = "clr.gc.gen3size";
 
+
 		private readonly GcEventListener _eventListener = new GcEventListener();
+
+		public GcMetricsProvider()
+		{
+			if (PlatformDetection.IsDotNetFullFramework)
+			{
+				var sessionName = "EtwSessionForCLR_" + Guid.NewGuid().ToString();
+				Console.WriteLine($"Starting {sessionName}...\r\n");
+				using (var userSession = new TraceEventSession(sessionName, TraceEventSessionOptions.Create))
+				{
+					Task.Run(() =>
+					{
+						userSession.EnableProvider(
+							ClrTraceEventParser.ProviderGuid,
+							TraceEventLevel.Verbose,
+							(ulong)(
+							ClrTraceEventParser.Keywords.GC     // garbage collector details
+							)
+						);
+
+						var source = userSession.Source;
+						source.NeedLoadedDotNetRuntimes();
+						source.AddCallbackOnProcessStart((Microsoft.Diagnostics.Tracing.Analysis.TraceProcess proc) =>
+						{
+							proc.AddCallbackOnDotNetRuntimeLoad((TraceLoadedDotNetRuntime runtime) =>
+							{
+								runtime.GCStart += (Microsoft.Diagnostics.Tracing.Analysis.TraceProcess p, TraceGC gc) =>
+								{
+									
+								};
+								runtime.GCEnd += (Microsoft.Diagnostics.Tracing.Analysis.TraceProcess p, TraceGC gc) =>
+								{
+									
+									
+								};
+							});
+						});
+
+						userSession.Source.Process();
+					});
+				}
+			}
+		}
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "GcMetricsProvider";
