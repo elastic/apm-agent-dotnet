@@ -41,10 +41,12 @@ namespace Elastic.Apm.SqlClient.Tests
 			get
 			{
 				yield return new object[] { new Func<string, DbConnection>(connectionString => new SqlConnection(connectionString)) };
+#if !NETFRAMEWORK
 				yield return new object[]
 				{
 					new Func<string, DbConnection>(connectionString => new Microsoft.Data.SqlClient.SqlConnection(connectionString))
 				};
+#endif
 			}
 		}
 
