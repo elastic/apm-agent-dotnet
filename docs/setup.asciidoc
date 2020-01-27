@@ -36,6 +36,7 @@ This package contains an interceptor that automatically creates spans for DB ope
 * <<setup-asp-net-core>>
 * <<setup-asp-net>>
 * <<setup-ef6>>
+* <<setup-general>>
 
 [float]
 [[setup-asp-net-core]]
@@ -145,3 +146,11 @@ For example, in an ASP.NET MVC application, you can place the above call in the 
 NOTE: Be careful not to execute `DbInterception.Add` for the same interceptor more than once,
 or you'll get additional interceptor instances.
 For example, if you add `Ef6Interceptor` interceptor twice, you'll see two spans for every SQL query. 
+
+[float]
+[[setup-general]]
+==== Other .NET applications
+
+In case you have a .NET application which is not covered above, you can still use the agent and instrument your application manually. 
+
+In those cases, you can add the https://www.nuget.org/packages/Elastic.Apm[Elastic.Apm] package to your application and use the  <<public-api>>.
