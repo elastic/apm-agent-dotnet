@@ -46,7 +46,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			_logger = logger.Scoped(nameof(SystemTotalCpuProvider));
 			if (PlatformDetection.IsDotNetFullFramework)
 			{
-				var sessionName = "EtwSessionForCLRElasticApm_" + Guid.NewGuid().ToString();
+				var sessionName = SessionNamePrefix + Guid.NewGuid().ToString();
 
 				using (_traceEventSession = new TraceEventSession(sessionName))
 				{
@@ -131,6 +131,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		{
 			private static readonly int keywordGC = 1; //TODO
 
+			private object _lock = new object();
+
 			private EventSource _eventSourceDotNet;
 			private readonly GcMetricsProvider _gcMetricsProvider;
 
@@ -138,10 +140,13 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			protected override void OnEventSourceCreated(EventSource eventSource)
 			{
-				if (!eventSource.Name.Equals("Microsoft-Windows-DotNETRuntime")) return;
+				lock (_lock)
+				{
+					if (!eventSource.Name.Equals("Microsoft-Windows-DotNETRuntime")) return;
 
-				EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)keywordGC);
-				_eventSourceDotNet = eventSource;
+					EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)keywordGC);
+					_eventSourceDotNet = eventSource;
+				}
 			}
 
 			protected override void OnEventWritten(EventWrittenEventArgs eventData)
@@ -184,9 +189,12 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			public override void Dispose()
 			{
-				if(_eventSourceDotNet != null)
-					DisableEvents(_eventSourceDotNet);
-				base.Dispose();
+				lock (_lock)
+				{
+					if(_eventSourceDotNet != null)
+						DisableEvents(_eventSourceDotNet);
+					base.Dispose();
+				}
 			}
 		}
 	}
