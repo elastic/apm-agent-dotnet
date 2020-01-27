@@ -184,7 +184,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			public override void Dispose()
 			{
-				DisableEvents(_eventSourceDotNet);
+				if(_eventSourceDotNet != null)
+					DisableEvents(_eventSourceDotNet);
 				base.Dispose();
 			}
 		}
