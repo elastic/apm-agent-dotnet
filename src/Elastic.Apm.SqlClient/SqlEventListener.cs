@@ -53,7 +53,7 @@ namespace Elastic.Apm.SqlClient
 			}
 			catch (Exception ex)
 			{
-				_logger?.Error()?.LogException(ex, "Error was occurred during handle event from SqlClient. EventData: {@EventData}", eventData);
+				_logger?.Error()?.LogException(ex, "Error has occurred during handle event from SqlClient. EventData: {@EventData}", eventData);
 			}
 		}
 
@@ -69,7 +69,7 @@ namespace Elastic.Apm.SqlClient
 				var start = Stopwatch.GetTimestamp();
 
 				// todo: let's try to enable Instrumentation Engine and check does it work without AppInsights
-				https://docs.microsoft.com/en-us/azure/azure-monitor/app/asp-net-dependencies#advanced-sql-tracking-to-get-full-sql-query
+				https: //docs.microsoft.com/en-us/azure/azure-monitor/app/asp-net-dependencies#advanced-sql-tracking-to-get-full-sql-query
 				var spanName = !string.IsNullOrWhiteSpace(commandText)
 					? commandText.Replace(Environment.NewLine, "")
 					// todo: what we need to use here
@@ -107,9 +107,13 @@ namespace Elastic.Apm.SqlClient
 				if (_spans.TryGetValue(id, out var item))
 				{
 					// todo: enrich span result
-					// todo: check sqlExceptionNumber
+					var isSuccess = (compositeState & 1) == 1;
+					var isSqlException = (compositeState & 2) == 2;
+					// 4 - is synchronous
 
 					item.Span.Duration = ((stop - item.Start) / (double)Stopwatch.Frequency) * 1000;
+
+					if (isSqlException) item.Span.CaptureError("Exception has occurred", sqlExceptionNumber != 0 ? $"SQL Exception {sqlExceptionNumber}" : null, null);
 
 					item.Span.End();
 				}
