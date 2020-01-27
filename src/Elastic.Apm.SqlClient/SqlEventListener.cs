@@ -91,6 +91,8 @@ namespace Elastic.Apm.SqlClient
 					// todo: destination
 
 					// todo: check provider types. Do they can spread events via EventSource?
+					// System.Data.SQLite and Microsoft.Data.Sqlite don't spread events via EventSource, however,
+					// can we say that other providers also don't do it?
 				}
 			}
 		}
