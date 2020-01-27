@@ -19,7 +19,8 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		public void Dispose_stops_the_thread()
 		{
 			CentralConfigFetcher lastCentralConfigFetcher;
-			using (var agent = new ApmAgent(new AgentComponents(LoggerBase)))
+			using var agentComponents = new AgentComponents(LoggerBase);
+			using (var agent = new ApmAgent(agentComponents))
 			{
 				lastCentralConfigFetcher = (CentralConfigFetcher)agent.CentralConfigFetcher;
 				lastCentralConfigFetcher.IsRunning.Should().BeTrue();
@@ -43,9 +44,12 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			var agents = new ApmAgent[numberOfAgentInstances];
 			numberOfAgentInstances.Repeat(i =>
 			{
-				agents[i] = new ApmAgent(new AgentComponents(LoggerBase));
-				((CentralConfigFetcher)agents[i].CentralConfigFetcher).IsRunning.Should().BeTrue();
-				((PayloadSenderV2)agents[i].PayloadSender).IsRunning.Should().BeTrue();
+				using var agentComponent = new AgentComponents(LoggerBase);
+				using (agents[i] = new ApmAgent(agentComponent))
+				{
+					((CentralConfigFetcher)agents[i].CentralConfigFetcher).IsRunning.Should().BeTrue();
+					((PayloadSenderV2)agents[i].PayloadSender).IsRunning.Should().BeTrue();
+				}
 			});
 
 			// Sleep a few seconds to let backend component to get to the stage where they contact APM Server

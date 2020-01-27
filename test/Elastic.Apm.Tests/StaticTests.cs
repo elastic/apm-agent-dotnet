@@ -18,7 +18,8 @@ namespace Elastic.Apm.Tests
 		{
 			Agent.IsConfigured.Should().BeFalse();
 
-			Agent.Setup(new AgentComponents());
+			using var agentComponents = new AgentComponents();
+			Agent.Setup(agentComponents);
 			Agent.IsConfigured.Should().BeTrue();
 		}
 	}

@@ -32,10 +32,7 @@ namespace Elastic.Apm.Tests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var testLogger = new TestLogger();
-			var mc = new MetricsCollector(testLogger, mockPayloadSender, new MockConfigSnapshot(testLogger));
-
-			mc.CollectAllMetrics();
-
+			using (var mc = new MetricsCollector(testLogger, mockPayloadSender, new MockConfigSnapshot(testLogger))) mc.CollectAllMetrics();
 			mockPayloadSender.Metrics.Should().NotBeEmpty();
 		}
 
@@ -78,33 +75,35 @@ namespace Elastic.Apm.Tests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var testLogger = new TestLogger(LogLevel.Information);
-			var mc = new MetricsCollector(testLogger, mockPayloadSender, new MockConfigSnapshot(testLogger, "Information"));
+			using (var mc = new MetricsCollector(testLogger, mockPayloadSender, new MockConfigSnapshot(testLogger, "Information")))
+			{
 
-			mc.MetricsProviders.Clear();
-			var providerWithException = new MetricsProviderWithException();
-			mc.MetricsProviders.Add(providerWithException);
+				mc.MetricsProviders.Clear();
+				var providerWithException = new MetricsProviderWithException();
+				mc.MetricsProviders.Add(providerWithException);
 
-			for (var i = 0; i < MetricsCollector.MaxTryWithoutSuccess; i++) mc.CollectAllMetrics();
+				for (var i = 0; i < MetricsCollector.MaxTryWithoutSuccess; i++) mc.CollectAllMetrics();
 
-			providerWithException.NumberOfGetValueCalls.Should().Be(MetricsCollector.MaxTryWithoutSuccess);
+				providerWithException.NumberOfGetValueCalls.Should().Be(MetricsCollector.MaxTryWithoutSuccess);
 
-			testLogger.Lines.Count(line => line.Contains(MetricsProviderWithException.ExceptionMessage))
-				.Should()
-				.Be(MetricsCollector.MaxTryWithoutSuccess);
+				testLogger.Lines.Count(line => line.Contains(MetricsProviderWithException.ExceptionMessage))
+					.Should()
+					.Be(MetricsCollector.MaxTryWithoutSuccess);
 
-			testLogger.Lines[1].Should().Contain($"Failed reading {providerWithException.DbgName} 1 times");
-			testLogger.Lines.Last(line => line.Contains("Failed reading"))
-				.Should()
-				.Contain(
-					$"Failed reading {providerWithException.DbgName} {MetricsCollector.MaxTryWithoutSuccess} consecutively - the agent won't try reading {providerWithException.DbgName} anymore");
+				testLogger.Lines[1].Should().Contain($"Failed reading {providerWithException.DbgName} 1 times");
+				testLogger.Lines.Last(line => line.Contains("Failed reading"))
+					.Should()
+					.Contain(
+						$"Failed reading {providerWithException.DbgName} {MetricsCollector.MaxTryWithoutSuccess} consecutively - the agent won't try reading {providerWithException.DbgName} anymore");
 
-			//make sure GetValue() in MetricsProviderWithException is not called anymore:
-			for (var i = 0; i < 10; i++) mc.CollectAllMetrics();
+				//make sure GetValue() in MetricsProviderWithException is not called anymore:
+				for (var i = 0; i < 10; i++) mc.CollectAllMetrics();
 
-			var logLineBeforeStage2 = testLogger.Lines.Count;
-			//no more logs, no more calls to GetValue():
-			providerWithException.NumberOfGetValueCalls.Should().Be(MetricsCollector.MaxTryWithoutSuccess);
-			testLogger.Lines.Count.Should().Be(logLineBeforeStage2);
+				var logLineBeforeStage2 = testLogger.Lines.Count;
+				//no more logs, no more calls to GetValue():
+				providerWithException.NumberOfGetValueCalls.Should().Be(MetricsCollector.MaxTryWithoutSuccess);
+				testLogger.Lines.Count.Should().Be(logLineBeforeStage2);
+			}
 		}
 
 		[Fact]
@@ -125,7 +124,8 @@ namespace Elastic.Apm.Tests
 
 			var payloadSender = new MockPayloadSender();
 			var configReader = new MockConfigSnapshot(logger, metricsInterval: "1s", logLevel: "Debug");
-			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender, logger: logger, configurationReader: configReader)))
+			using var agentComponents = new AgentComponents(payloadSender: payloadSender, logger: logger, configurationReader: configReader);
+			using (var agent = new ApmAgent(agentComponents))
 			{
 				await Task.Delay(10000); //make sure we wait enough to collect 1 set of metrics
 				agent.ConfigurationReader.MetricsIntervalInMilliseconds.Should().Be(1000);
@@ -171,25 +171,26 @@ namespace Elastic.Apm.Tests
 			var logger = new NoopLogger();
 			var mockPayloadSender = new MockPayloadSender();
 
-			var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
-
-			var metricsProviderMock = new Mock<IMetricsProvider>();
-			metricsProviderMock.Setup(x => x.GetSamples())
-				.Returns(() => samples);
-			metricsProviderMock.SetupProperty(x => x.ConsecutiveNumberOfFailedReads);
-
-			metricsCollector.MetricsProviders.Clear();
-			metricsCollector.MetricsProviders.Add(metricsProviderMock.Object);
-
-			// Act
-			foreach (var _ in Enumerable.Range(0, iterations))
+			using (var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information")))
 			{
-				metricsCollector.CollectAllMetrics();
-			}
+				var metricsProviderMock = new Mock<IMetricsProvider>();
+				metricsProviderMock.Setup(x => x.GetSamples())
+					.Returns(() => samples);
+				metricsProviderMock.SetupProperty(x => x.ConsecutiveNumberOfFailedReads);
 
-			// Assert
-			mockPayloadSender.Metrics.Should().BeEmpty();
-			metricsProviderMock.Verify(x => x.GetSamples(), Times.Exactly(MetricsCollector.MaxTryWithoutSuccess));
+				metricsCollector.MetricsProviders.Clear();
+				metricsCollector.MetricsProviders.Add(metricsProviderMock.Object);
+
+				// Act
+				foreach (var _ in Enumerable.Range(0, iterations))
+				{
+					metricsCollector.CollectAllMetrics();
+				}
+
+				// Assert
+				mockPayloadSender.Metrics.Should().BeEmpty();
+				metricsProviderMock.Verify(x => x.GetSamples(), Times.Exactly(MetricsCollector.MaxTryWithoutSuccess));
+			}
 		}
 
 		[Fact]
@@ -223,7 +224,7 @@ namespace Elastic.Apm.Tests
 			metricsProviderMock.Verify(x => x.GetSamples(), Times.Exactly(iterations));
 		}
 
-		private class MetricsProviderWithException : IMetricsProvider
+		internal class MetricsProviderWithException : IMetricsProvider
 		{
 			public const string ExceptionMessage = "testException";
 			public int ConsecutiveNumberOfFailedReads { get; set; }
@@ -238,7 +239,7 @@ namespace Elastic.Apm.Tests
 			}
 		}
 
-		private class TestSystemTotalCpuProvider : SystemTotalCpuProvider
+		internal class TestSystemTotalCpuProvider : SystemTotalCpuProvider
 		{
 			public TestSystemTotalCpuProvider(string procStatContent) : base(new NoopLogger(),
 				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent)))) { }
