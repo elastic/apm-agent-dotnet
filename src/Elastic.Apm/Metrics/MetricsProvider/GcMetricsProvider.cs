@@ -27,6 +27,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private const string GcGen2SizeName = "clr.gc.gen2size";
 		private const string GcGen3SizeName = "clr.gc.gen3size";
 
+		private const string SessionNamePrefix = "EtwSessionForCLRElasticApm_";
+
 		private readonly GcEventListener _eventListener;
 
 		private uint _gcCount;
@@ -37,6 +39,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		private readonly IApmLogger _logger;
 
+		private readonly TraceEventSession _traceEventSession;
+
 		public GcMetricsProvider(IApmLogger logger)
 		{
 			_logger = logger.Scoped(nameof(SystemTotalCpuProvider));
@@ -44,43 +48,46 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			{
 				var sessionName = "EtwSessionForCLRElasticApm_" + Guid.NewGuid().ToString();
 
-				using var userSession = new TraceEventSession(sessionName);
-				Task.Run(() =>
+				using (_traceEventSession = new TraceEventSession(sessionName))
 				{
-					try
+					Task.Run(() =>
 					{
-						userSession.EnableProvider(
-							ClrTraceEventParser.ProviderGuid,
-							TraceEventLevel.Verbose,
-							(ulong)
-							ClrTraceEventParser.Keywords.GC // garbage collector details
-						);
-					}
-					catch (Exception e)
-					{
-						_logger.Warning()?.LogException(e, "TraceEventSession initialization failed - GC metrics won't be collected");
-						return;
-					}
-
-					var source = userSession.Source;
-					source.NeedLoadedDotNetRuntimes();
-					source.AddCallbackOnProcessStart((proc) =>
-					{
-						proc.AddCallbackOnDotNetRuntimeLoad((runtime) =>
+						try
 						{
-							runtime.GCEnd += (process, gc) =>
-							{
-								_gen0Size = (ulong)gc.HeapStats.GenerationSize0;
-								_gen1Size = (ulong)gc.HeapStats.GenerationSize1;
-								_gen2Size = (ulong)gc.HeapStats.GenerationSize2;
-								_gen3Size = (ulong)gc.HeapStats.GenerationSize3;
-								_gcCount = (uint)runtime.GC.GCs.Count;
-							};
-						});
-					});
+							_traceEventSession.EnableProvider(
+								ClrTraceEventParser.ProviderGuid,
+								TraceEventLevel.Verbose,
+								(ulong)
+								ClrTraceEventParser.Keywords.GC // garbage collector details
+							);
+						}
+						catch (Exception e)
+						{
+							_logger.Warning()?.LogException(e, "TraceEventSession initialization failed - GC metrics won't be collected");
+							return;
+						}
 
-					userSession.Source.Process();
-				});
+						var source = _traceEventSession.Source;
+						source.NeedLoadedDotNetRuntimes();
+						source.AddCallbackOnProcessStart((proc) =>
+						{
+							proc.AddCallbackOnDotNetRuntimeLoad((runtime) =>
+							{
+								runtime.GCEnd += (process, gc) =>
+								{
+									_gen0Size = (ulong)gc.HeapStats.GenerationSize0;
+									_gen1Size = (ulong)gc.HeapStats.GenerationSize1;
+									_gen2Size = (ulong)gc.HeapStats.GenerationSize2;
+									_gen3Size = (ulong)gc.HeapStats.GenerationSize3;
+									_gcCount = (uint)runtime.GC.GCs.Count;
+								};
+
+							});
+						});
+
+						_traceEventSession.Source.Process();
+					});
+				}
 			}
 
 			if (PlatformDetection.IsDotNetCore)
@@ -110,7 +117,12 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			return null;
 		}
 
-		public void Dispose() => _eventListener?.Dispose();
+		public void Dispose()
+		{
+			_eventListener?.Dispose();
+			_traceEventSession?.Dispose();
+		}
+
 
 		/// <summary>
 		/// An event listener that collects the GC stats
