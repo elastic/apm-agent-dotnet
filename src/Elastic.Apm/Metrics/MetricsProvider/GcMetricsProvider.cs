@@ -68,14 +68,13 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					{
 						proc.AddCallbackOnDotNetRuntimeLoad((runtime) =>
 						{
-							runtime.GCStart += (process, gc) => { };
 							runtime.GCEnd += (process, gc) =>
 							{
 								_gen0Size = (ulong)gc.HeapStats.GenerationSize0;
 								_gen1Size = (ulong)gc.HeapStats.GenerationSize1;
 								_gen2Size = (ulong)gc.HeapStats.GenerationSize2;
 								_gen3Size = (ulong)gc.HeapStats.GenerationSize3;
-								_gcCount = (uint)gc.Number;
+								_gcCount = (uint)runtime.GC.GCs.Count;
 							};
 						});
 					});
