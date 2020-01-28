@@ -224,6 +224,20 @@ namespace Elastic.Apm.Tests
 			metricsProviderMock.Verify(x => x.GetSamples(), Times.Exactly(iterations));
 		}
 
+		[Fact]
+		public void CollectGcMetrics()
+		{
+			var gcMetricsProvider = new GcMetricsProvider(_logger);
+
+			for (var i = 0; i < 300_000_000; i++)
+			{
+				var _ = new int[100];
+			}
+
+			var samples = gcMetricsProvider.GetSamples();
+			samples.Should().NotBeEmpty();
+		}
+
 		internal class MetricsProviderWithException : IMetricsProvider
 		{
 			public const string ExceptionMessage = "testException";

@@ -129,9 +129,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		/// </summary>
 		private class GcEventListener : EventListener
 		{
-			private static readonly int keywordGC = 1; //TODO
-
-			private object _lock = new object();
+			private static readonly int keywordGC = 1;
 
 			private EventSource _eventSourceDotNet;
 			private readonly GcMetricsProvider _gcMetricsProvider;
@@ -140,12 +138,16 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			protected override void OnEventSourceCreated(EventSource eventSource)
 			{
-				lock (_lock)
+				try
 				{
 					if (!eventSource.Name.Equals("Microsoft-Windows-DotNETRuntime")) return;
 
 					EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)keywordGC);
 					_eventSourceDotNet = eventSource;
+				}
+				catch(Exception e)
+				{
+					_gcMetricsProvider?._logger.Warning()?.LogException(e, "EnableEvents failed - no GC metrics will be collected");
 				}
 			}
 
@@ -189,11 +191,15 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			public override void Dispose()
 			{
-				lock (_lock)
+				try
 				{
-					if(_eventSourceDotNet != null)
+					if (_eventSourceDotNet != null)
 						DisableEvents(_eventSourceDotNet);
 					base.Dispose();
+				}
+				catch(Exception e)
+				{
+					_gcMetricsProvider?._logger.Warning()?.LogException(e, "Disposing {classname} failed", nameof(GcEventListener));
 				}
 			}
 		}
