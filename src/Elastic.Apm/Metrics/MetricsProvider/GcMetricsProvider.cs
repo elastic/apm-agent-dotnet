@@ -113,7 +113,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			_logger.Trace()
 				?.Log(
 					"Collected gc metrics values: gcCount: {gcCount}, gen0Size: {gen0Size},  gen1Size: {gen1Size}, gen2Size: {gen2Size}, gen1Size: {gen3Size}",
-					_gcCount, _gen0Size, _gen2Size, _gen3Size);
+					_gcCount, _gen0Size, _gen1Size, _gen2Size, _gen3Size);
 			return null;
 		}
 
@@ -194,7 +194,10 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				try
 				{
 					if (_eventSourceDotNet != null)
+					{
 						DisableEvents(_eventSourceDotNet);
+						_eventSourceDotNet.Dispose();
+					}
 					base.Dispose();
 				}
 				catch(Exception e)
