@@ -65,7 +65,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void GetWorkingSetAndVirtualMemory()
 		{
-			var processWorkingSetAndVirtualMemoryProvider = new ProcessWorkingSetAndVirtualMemoryProvider();
+			var processWorkingSetAndVirtualMemoryProvider = new ProcessWorkingSetAndVirtualMemoryProvider(true, true);
 			var retVal = processWorkingSetAndVirtualMemoryProvider.GetSamples();
 
 			var enumerable = retVal as MetricSample[] ?? retVal.ToArray();

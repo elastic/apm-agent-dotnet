@@ -72,6 +72,9 @@ namespace Elastic.Apm.Config
 		public virtual string ServiceVersion =>
 			ParseServiceVersion(Read(ConfigConsts.KeyNames.ServiceVersion, ConfigConsts.EnvVarNames.ServiceVersion));
 
+		public IReadOnlyList<WildcardMatcher> DisableMetrics =>
+			ParseDisableMetrics(Read(ConfigConsts.KeyNames.DisableMetrics, ConfigConsts.EnvVarNames.DisableMetrics));
+
 		public virtual double SpanFramesMinDurationInMilliseconds => _spanFramesMinDurationInMilliseconds.Value;
 
 		public virtual int StackTraceLimit => _stackTraceLimit.Value;

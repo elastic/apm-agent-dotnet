@@ -104,6 +104,11 @@ namespace Elastic.Apm.Config
 		string ServiceVersion { get; }
 
 		/// <summary>
+		/// Disables the collection of certain metrics. If the name of a metric matches any of the wildcard expressions, it will not be collected
+		/// </summary>
+		IReadOnlyList<WildcardMatcher> DisableMetrics { get; }
+
+		/// <summary>
 		/// The agent limits stack trace collection to spans with durations equal or longer than the given value
 		/// 0: Disables stack trace collection for spans completely
 		/// negative value: stacktrace will be collected for all spans

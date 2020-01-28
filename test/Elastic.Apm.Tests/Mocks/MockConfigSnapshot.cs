@@ -33,6 +33,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _stackTraceLimit;
 		private readonly string _transactionMaxSpans;
 		private readonly string _transactionSampleRate;
+		private readonly string _disableMetrics;
 
 		public MockConfigSnapshot(
 			IApmLogger logger = null,
@@ -57,7 +58,8 @@ namespace Elastic.Apm.Tests.Mocks
 			string maxBatchEventCount = null,
 			string maxQueueEventCount = null,
 			string sanitizeFieldNames = null,
-			string globalLabels = null
+			string globalLabels = null,
+			string disableMetrics = null
 		) : base(logger, ThisClassName)
 		{
 			_serverUrls = serverUrls;
@@ -82,6 +84,7 @@ namespace Elastic.Apm.Tests.Mocks
 			_maxQueueEventCount = maxQueueEventCount;
 			_sanitizeFieldNames = sanitizeFieldNames;
 			_globalLabels = globalLabels;
+			_disableMetrics = disableMetrics;
 		}
 
 		public string CaptureBody => ParseCaptureBody(Kv(ConfigConsts.EnvVarNames.CaptureBody, _captureBody, Origin));
@@ -113,6 +116,9 @@ namespace Elastic.Apm.Tests.Mocks
 		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Kv(ConfigConsts.EnvVarNames.ServerUrls, _serverUrls, Origin));
 		public string ServiceName => ParseServiceName(Kv(ConfigConsts.EnvVarNames.ServiceName, _serviceName, Origin));
 		public string ServiceVersion => ParseServiceVersion(Kv(ConfigConsts.EnvVarNames.ServiceVersion, _serviceVersion, Origin));
+
+		public IReadOnlyList<WildcardMatcher> DisableMetrics =>
+			ParseDisableMetrics(Kv(ConfigConsts.EnvVarNames.DisableMetrics, _disableMetrics, Origin));
 
 		public double SpanFramesMinDurationInMilliseconds => ParseSpanFramesMinDurationInMilliseconds(Kv(
 			ConfigConsts.EnvVarNames.SpanFramesMinDuration,

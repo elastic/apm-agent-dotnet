@@ -32,6 +32,8 @@ namespace Elastic.Apm.Config
 
 			public static List<WildcardMatcher> SanitizeFieldNames;
 
+			public static List<WildcardMatcher> DisableMetrics = new List<WildcardMatcher>();
+
 			static DefaultValues()
 			{
 				SanitizeFieldNames = new List<WildcardMatcher>();
@@ -79,6 +81,7 @@ namespace Elastic.Apm.Config
 			public const string StackTraceLimit = Prefix + "STACK_TRACE_LIMIT";
 			public const string TransactionMaxSpans = Prefix + "TRANSACTION_MAX_SPANS";
 			public const string TransactionSampleRate = Prefix + "TRANSACTION_SAMPLE_RATE";
+			public const string DisableMetrics = Prefix + "DISABLE_METRICS";
 		}
 
 		public static class KeyNames
@@ -104,6 +107,7 @@ namespace Elastic.Apm.Config
 			public const string StackTraceLimit = "ElasticApm:StackTraceLimit";
 			public const string TransactionMaxSpans = "ElasticApm:TransactionMaxSpans";
 			public const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
+			public const string DisableMetrics = "ElasticApm:DisableMetrics";
 		}
 
 		public static class SupportedValues

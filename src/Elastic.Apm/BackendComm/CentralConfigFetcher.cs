@@ -469,6 +469,8 @@ namespace Elastic.Apm.BackendComm
 
 			public string ServiceVersion => _wrapped.ServiceVersion;
 
+			public IReadOnlyList<WildcardMatcher> DisableMetrics => _wrapped.DisableMetrics;
+
 			public double SpanFramesMinDurationInMilliseconds => _wrapped.SpanFramesMinDurationInMilliseconds;
 
 			public int StackTraceLimit => _wrapped.StackTraceLimit;

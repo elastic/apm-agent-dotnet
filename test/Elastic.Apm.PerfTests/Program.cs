@@ -107,7 +107,7 @@ namespace Elastic.Apm.PerfTests
 		[Benchmark]
 		public void CollectTotalAndFreeMemory2X()
 		{
-			var mockPayloadSender = new FreeAndTotalMemoryProvider();
+			var mockPayloadSender = new FreeAndTotalMemoryProvider(true, true);
 
 			mockPayloadSender.GetSamples();
 			mockPayloadSender.GetSamples();
@@ -116,7 +116,7 @@ namespace Elastic.Apm.PerfTests
 		[Benchmark]
 		public void CollectWorkingSetAndVirMem2X()
 		{
-			var mockPayloadSender = new ProcessWorkingSetAndVirtualMemoryProvider();
+			var mockPayloadSender = new ProcessWorkingSetAndVirtualMemoryProvider(true, true);
 
 			mockPayloadSender.GetSamples();
 			mockPayloadSender.GetSamples();

@@ -34,6 +34,7 @@ namespace Elastic.Apm.Config
 		public IReadOnlyList<Uri> ServerUrls => _content.ServerUrls;
 		public string ServiceName => _content.ServiceName;
 		public string ServiceVersion => _content.ServiceVersion;
+		public IReadOnlyList<WildcardMatcher> DisableMetrics => _content.DisableMetrics;
 		public double SpanFramesMinDurationInMilliseconds => _content.SpanFramesMinDurationInMilliseconds;
 		public int StackTraceLimit => _content.StackTraceLimit;
 		public int TransactionMaxSpans => _content.TransactionMaxSpans;
