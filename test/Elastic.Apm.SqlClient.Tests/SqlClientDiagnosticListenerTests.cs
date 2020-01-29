@@ -73,7 +73,7 @@ namespace Elastic.Apm.SqlClient.Tests
 			});
 
 			// without delay, listener doesn't have time to process stop event
-			await Task.Delay(TimeSpan.FromSeconds(5));
+			await Task.Delay(TimeSpan.FromSeconds(10));
 
 			// Assert
 			_payloadSender.Spans.Count.Should().Be(1);
