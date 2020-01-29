@@ -20,7 +20,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private readonly bool _collectTotalMemory;
 
 		public FreeAndTotalMemoryProvider(bool collectFreeMemory, bool collectTotalMemory) =>
-			(_collectFreeMemory, _collectFreeMemory) = (collectFreeMemory, collectTotalMemory);
+			(_collectFreeMemory, _collectTotalMemory) = (collectFreeMemory, collectTotalMemory);
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "total and free memory";
