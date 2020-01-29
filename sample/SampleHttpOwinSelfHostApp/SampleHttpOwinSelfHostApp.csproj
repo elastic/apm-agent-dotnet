@@ -7,6 +7,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNet.WebApi.OwinSelfHost" Version="5.2.7" />
+    <!-- Without the reference there are no event from HttpClient. It's the lowest version which works -->
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.4.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Elastic.Apm.AspNet.WebApi.SelfHost\Elastic.Apm.AspNet.WebApi.SelfHost.csproj" />
