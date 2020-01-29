@@ -25,5 +25,33 @@ namespace SampleHttpSelfHostApp.Controllers
 
 			return new[] { "value1", "value2", lastValue };
 		}
+
+		public async Task<IEnumerable<string>> GetValue(int id)
+		{
+			var lastValue = "call to elastic.co: ";
+			try
+			{
+				using (var httpClient = new HttpClient())
+				{
+					var elasticRes = await httpClient.GetAsync("https://elastic.co");
+					lastValue += elasticRes.StatusCode;
+				}
+			}
+			catch
+			{
+				lastValue += "failed";
+			}
+
+			return new[] { $"value{id}", lastValue };
+		}
+
+		public Model CreateValue(Model model) => model;
+	}
+
+	public class Model
+	{
+		public int Id { get; set; }
+
+		public string Name { get; set; }
 	}
 }
