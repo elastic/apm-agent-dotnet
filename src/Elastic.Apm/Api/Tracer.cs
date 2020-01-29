@@ -30,6 +30,7 @@ namespace Elastic.Apm.Api
 			_sender = payloadSender.ThrowIfArgumentNull(nameof(payloadSender));
 			_configProvider = configProvider.ThrowIfArgumentNull(nameof(configProvider));
 			CurrentExecutionSegmentsContainer = currentExecutionSegmentsContainer.ThrowIfArgumentNull(nameof(currentExecutionSegmentsContainer));
+			DbSpanCommon = new DbSpanCommon(logger);
 		}
 
 		internal ICurrentExecutionSegmentsContainer CurrentExecutionSegmentsContainer { get; }
@@ -37,6 +38,8 @@ namespace Elastic.Apm.Api
 		public ISpan CurrentSpan => CurrentExecutionSegmentsContainer.CurrentSpan;
 
 		public ITransaction CurrentTransaction => CurrentExecutionSegmentsContainer.CurrentTransaction;
+
+		public DbSpanCommon DbSpanCommon { get; }
 
 		public ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null) =>
 			StartTransactionInternal(name, type, distributedTracingData);

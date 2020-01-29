@@ -51,6 +51,11 @@ namespace Elastic.Apm.Tests.HelpersTests
 				"D: " + nameof(ClassWithOneProperty) + "{prop: 789}" +
 				"}");
 
+		[Fact]
+		public void ToStringWithoutClassName_test() => new ClassWithToStringWithoutClassName("abc").ToString()
+			.Should()
+			.Be("{Prop: abc}");
+
 		private class ClassWithoutAnyProperties
 		{
 			public override string ToString() => new ToStringBuilder(nameof(ClassWithoutAnyProperties)).ToString();
@@ -86,6 +91,21 @@ namespace Elastic.Apm.Tests.HelpersTests
 				{ "B", _propertyB },
 				{ "C", _propertyC },
 				{ "D", _propertyD }
+			}.ToString();
+		}
+
+		private class ClassWithToStringWithoutClassName
+		{
+			internal string Prop { get; }
+
+			public ClassWithToStringWithoutClassName(string prop)
+			{
+				Prop = prop;
+			}
+
+			public override string ToString() => new ToStringBuilder
+			{
+				{ nameof(Prop), Prop },
 			}.ToString();
 		}
 	}

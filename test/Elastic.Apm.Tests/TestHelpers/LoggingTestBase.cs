@@ -15,11 +15,13 @@ namespace Elastic.Apm.Tests.TestHelpers
 
 		protected readonly IApmLogger LoggerBase;
 
+		protected readonly ITestOutputHelper TestOutputHelper;
 		protected readonly ITest CurrentXunitTest;
 		private readonly LineWriterToLoggerAdaptor _loggerForStartFinish;
 
 		protected LoggingTestBase(ITestOutputHelper xUnitOutputHelper)
 		{
+			TestOutputHelper = xUnitOutputHelper;
 			CurrentXunitTest = GetCurrentXunitTest(xUnitOutputHelper);
 
 			var lineWriters = new List<ILineWriter>();

@@ -254,6 +254,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 				dbSpan.Type.Should().Be(ApiConstants.TypeDb);
 				dbSpan.Subtype.Should().Be(ApiConstants.SubtypeSqLite);
 				dbSpan.ParentId.Should().Be(controllerActionSpan.Id);
+				dbSpan.Context.Db.Type.Should().Be(Database.TypeSql);
+				dbSpan.Context.Destination.Should().BeNull("because SQLite is an embedded DB");
 			}
 			var httpSpans = spans.Where(span => span.Context.Http != null);
 			httpSpans.Should().NotBeEmpty();

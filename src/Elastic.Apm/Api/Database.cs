@@ -10,8 +10,8 @@ namespace Elastic.Apm.Api
 	public class Database
 	{
 		public const string TypeElasticsearch = "elasticsearch";
-
 		public const string TypeSql = "sql";
+
 		public string Instance { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter), 10_000)]

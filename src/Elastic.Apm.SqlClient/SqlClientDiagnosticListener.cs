@@ -26,7 +26,7 @@ namespace Elastic.Apm.SqlClient
 			public PropertyFetcher Exception { get; } = new PropertyFetcher("Exception");
 		}
 
-		private readonly IApmAgent _apmAgent;
+		private readonly ApmAgent _apmAgent;
 		private readonly IApmLogger _logger;
 
 		private readonly ConcurrentDictionary<Guid, Span> _spans = new ConcurrentDictionary<Guid, Span>();
@@ -36,7 +36,7 @@ namespace Elastic.Apm.SqlClient
 
 		public SqlClientDiagnosticListener(IApmAgent apmAgent)
 		{
-			_apmAgent = apmAgent;
+			_apmAgent = (ApmAgent)apmAgent;
 			_logger = _apmAgent.Logger.Scoped(nameof(SqlClientDiagnosticListener));
 		}
 
@@ -69,7 +69,7 @@ namespace Elastic.Apm.SqlClient
 				if (propertyFetcherSet.StartCorrelationId.Fetch(payloadData) is Guid operationId
 					&& propertyFetcherSet.StartCommand.Fetch(payloadData) is IDbCommand dbCommand)
 				{
-					var span = DbSpanCommon.StartSpan(_apmAgent, dbCommand);
+					var span = _apmAgent.TracerInternal.DbSpanCommon.StartSpan(_apmAgent, dbCommand);
 					_spans.TryAdd(operationId, span);
 				}
 			}
@@ -95,7 +95,7 @@ namespace Elastic.Apm.SqlClient
 						statistics.ContainsKey("ExecutionTime") && statistics["ExecutionTime"] is long durationInMs)
 						duration = TimeSpan.FromMilliseconds(durationInMs);
 
-					DbSpanCommon.EndSpan(span, dbCommand, duration);
+					_apmAgent.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand, duration);
 				}
 			}
 			catch (Exception ex)
@@ -117,7 +117,7 @@ namespace Elastic.Apm.SqlClient
 
 					if (propertyFetcherSet.ErrorCommand.Fetch(payloadData) is IDbCommand dbCommand)
 					{
-						DbSpanCommon.EndSpan(span, dbCommand);
+						_apmAgent.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand);
 					}
 					else
 					{
