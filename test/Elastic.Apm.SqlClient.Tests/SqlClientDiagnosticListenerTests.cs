@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
@@ -64,16 +63,13 @@ namespace Elastic.Apm.SqlClient.Tests
 					using (var sqlCommand = dbConnection.CreateCommand())
 					{
 						sqlCommand.CommandText = commandText;
-						using (await sqlCommand.ExecuteReaderAsync())
+						using (sqlCommand.ExecuteReader())
 						{
 							// ignore
 						}
 					}
 				}
 			});
-
-			// without delay, listener doesn't have time to process stop event
-			await Task.Delay(TimeSpan.FromSeconds(5));
 
 			// Assert
 			_payloadSender.Spans.Count.Should().Be(1);
@@ -107,7 +103,7 @@ namespace Elastic.Apm.SqlClient.Tests
 						sqlCommand.CommandText = commandText;
 						try
 						{
-							using (await sqlCommand.ExecuteReaderAsync())
+							using (sqlCommand.ExecuteReader())
 							{
 								// ignore
 							}
@@ -119,9 +115,6 @@ namespace Elastic.Apm.SqlClient.Tests
 					}
 				}
 			});
-
-			// without delay, listener doesn't have time to process stop event
-			await Task.Delay(TimeSpan.FromSeconds(5));
 
 			// Assert
 			_payloadSender.Spans.Count.Should().Be(1);
