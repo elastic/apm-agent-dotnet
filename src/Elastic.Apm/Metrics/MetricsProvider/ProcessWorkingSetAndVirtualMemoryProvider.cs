@@ -26,7 +26,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			var retVal = new List<MetricSample>();
 
-			if(_collectProcessVirtualMemory)
+			if (_collectProcessVirtualMemory)
 			{
 				if (virtualMemory != 0)
 					retVal.Add(new MetricSample(ProcessVirtualMemory, virtualMemory));

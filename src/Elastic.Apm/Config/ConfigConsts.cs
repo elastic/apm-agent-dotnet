@@ -30,9 +30,9 @@ namespace Elastic.Apm.Config
 			public const double TransactionSampleRate = 1.0;
 			public const string UnknownServiceName = "unknown";
 
-			public static List<WildcardMatcher> SanitizeFieldNames;
-
 			public static List<WildcardMatcher> DisableMetrics = new List<WildcardMatcher>();
+
+			public static List<WildcardMatcher> SanitizeFieldNames;
 
 			static DefaultValues()
 			{
@@ -63,8 +63,8 @@ namespace Elastic.Apm.Config
 			public const string CaptureBodyContentTypes = Prefix + "CAPTURE_BODY_CONTENT_TYPES";
 			public const string CaptureHeaders = Prefix + "CAPTURE_HEADERS";
 			public const string CentralConfig = Prefix + "CENTRAL_CONFIG";
+			public const string DisableMetrics = Prefix + "DISABLE_METRICS";
 			public const string Environment = Prefix + "ENVIRONMENT";
-			public const string ServiceNodeName = Prefix + "SERVICE_NODE_NAME";
 			public const string FlushInterval = Prefix + "FLUSH_INTERVAL";
 			public const string GlobalLabels = Prefix + "GLOBAL_LABELS";
 			public const string LogLevel = Prefix + "LOG_LEVEL";
@@ -76,12 +76,12 @@ namespace Elastic.Apm.Config
 			public const string SecretToken = Prefix + "SECRET_TOKEN";
 			public const string ServerUrls = Prefix + "SERVER_URLS";
 			public const string ServiceName = Prefix + "SERVICE_NAME";
+			public const string ServiceNodeName = Prefix + "SERVICE_NODE_NAME";
 			public const string ServiceVersion = Prefix + "SERVICE_VERSION";
 			public const string SpanFramesMinDuration = Prefix + "SPAN_FRAMES_MIN_DURATION";
 			public const string StackTraceLimit = Prefix + "STACK_TRACE_LIMIT";
 			public const string TransactionMaxSpans = Prefix + "TRANSACTION_MAX_SPANS";
 			public const string TransactionSampleRate = Prefix + "TRANSACTION_SAMPLE_RATE";
-			public const string DisableMetrics = Prefix + "DISABLE_METRICS";
 		}
 
 		public static class KeyNames
@@ -90,6 +90,7 @@ namespace Elastic.Apm.Config
 			public const string CaptureBodyContentTypes = "ElasticApm:CaptureBodyContentTypes";
 			public const string CaptureHeaders = "ElasticApm:CaptureHeaders";
 			public const string CentralConfig = "ElasticApm:CentralConfig";
+			public const string DisableMetrics = "ElasticApm:DisableMetrics";
 			public const string Environment = "ElasticApm:Environment";
 			public const string FlushInterval = "ElasticApm:FlushInterval";
 			public const string GlobalLabels = "ElasticApm:GlobalLabels";
@@ -107,7 +108,6 @@ namespace Elastic.Apm.Config
 			public const string StackTraceLimit = "ElasticApm:StackTraceLimit";
 			public const string TransactionMaxSpans = "ElasticApm:TransactionMaxSpans";
 			public const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
-			public const string DisableMetrics = "ElasticApm:DisableMetrics";
 		}
 
 		public static class SupportedValues

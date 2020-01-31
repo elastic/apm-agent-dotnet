@@ -38,10 +38,11 @@ namespace Elastic.Apm.Config
 
 		public bool CentralConfig => ParseCentralConfig(Read(ConfigConsts.KeyNames.CentralConfig, ConfigConsts.EnvVarNames.CentralConfig));
 
+		public IReadOnlyList<WildcardMatcher> DisableMetrics =>
+			ParseDisableMetrics(Read(ConfigConsts.KeyNames.DisableMetrics, ConfigConsts.EnvVarNames.DisableMetrics));
+
 		public virtual string Environment => ParseEnvironment(Read(ConfigConsts.KeyNames.Environment, ConfigConsts.EnvVarNames.Environment))
 			?? _defaultEnvironmentName;
-
-		public string ServiceNodeName => ParseServiceNodeName(Read(ConfigConsts.KeyNames.ServiceNodeName, ConfigConsts.EnvVarNames.ServiceNodeName));
 
 		public virtual TimeSpan FlushInterval =>
 			ParseFlushInterval(Read(ConfigConsts.KeyNames.FlushInterval, ConfigConsts.EnvVarNames.FlushInterval));
@@ -69,11 +70,10 @@ namespace Elastic.Apm.Config
 
 		public virtual string ServiceName => ParseServiceName(Read(ConfigConsts.KeyNames.ServiceName, ConfigConsts.EnvVarNames.ServiceName));
 
+		public string ServiceNodeName => ParseServiceNodeName(Read(ConfigConsts.KeyNames.ServiceNodeName, ConfigConsts.EnvVarNames.ServiceNodeName));
+
 		public virtual string ServiceVersion =>
 			ParseServiceVersion(Read(ConfigConsts.KeyNames.ServiceVersion, ConfigConsts.EnvVarNames.ServiceVersion));
-
-		public IReadOnlyList<WildcardMatcher> DisableMetrics =>
-			ParseDisableMetrics(Read(ConfigConsts.KeyNames.DisableMetrics, ConfigConsts.EnvVarNames.DisableMetrics));
 
 		public virtual double SpanFramesMinDurationInMilliseconds => _spanFramesMinDurationInMilliseconds.Value;
 

@@ -98,10 +98,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 		{
 			internal string Prop { get; }
 
-			public ClassWithToStringWithoutClassName(string prop)
-			{
-				Prop = prop;
-			}
+			public ClassWithToStringWithoutClassName(string prop) => Prop = prop;
 
 			public override string ToString() => new ToStringBuilder
 			{

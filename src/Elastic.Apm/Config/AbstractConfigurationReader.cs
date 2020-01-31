@@ -19,10 +19,10 @@ namespace Elastic.Apm.Config
 		private readonly LazyContextualInit<int> _cachedMaxQueueEventCount = new LazyContextualInit<int>();
 		private readonly LazyContextualInit<IReadOnlyList<Uri>> _cachedServerUrls = new LazyContextualInit<IReadOnlyList<Uri>>();
 
-		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersSanitizeFieldNames =
+		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersDisableMetrics =
 			new LazyContextualInit<IReadOnlyList<WildcardMatcher>>();
 
-		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersDisableMetrics =
+		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersSanitizeFieldNames =
 			new LazyContextualInit<IReadOnlyList<WildcardMatcher>>();
 
 		private readonly IApmLogger _logger;
@@ -62,7 +62,8 @@ namespace Elastic.Apm.Config
 		}
 
 		protected IReadOnlyList<WildcardMatcher> ParseSanitizeFieldNames(ConfigurationKeyValue kv) =>
-			_cachedWildcardMatchersSanitizeFieldNames.IfNotInited?.InitOrGet(() => ParseSanitizeFieldNamesImpl(kv)) ?? _cachedWildcardMatchersSanitizeFieldNames.Value;
+			_cachedWildcardMatchersSanitizeFieldNames.IfNotInited?.InitOrGet(() => ParseSanitizeFieldNamesImpl(kv))
+			?? _cachedWildcardMatchersSanitizeFieldNames.Value;
 
 		protected IReadOnlyList<WildcardMatcher> ParseSanitizeFieldNamesImpl(ConfigurationKeyValue kv)
 		{
@@ -85,7 +86,8 @@ namespace Elastic.Apm.Config
 		}
 
 		protected IReadOnlyList<WildcardMatcher> ParseDisableMetrics(ConfigurationKeyValue kv) =>
-			_cachedWildcardMatchersDisableMetrics.IfNotInited?.InitOrGet(() => ParseDisableMetricsImpl(kv)) ?? _cachedWildcardMatchersDisableMetrics.Value;
+			_cachedWildcardMatchersDisableMetrics.IfNotInited?.InitOrGet(() => ParseDisableMetricsImpl(kv))
+			?? _cachedWildcardMatchersDisableMetrics.Value;
 
 
 		private IReadOnlyList<WildcardMatcher> ParseDisableMetricsImpl(ConfigurationKeyValue kv)
@@ -764,7 +766,7 @@ namespace Elastic.Apm.Config
 							, key, kv.Value);
 					return new Dictionary<string, string>();
 				}
-				result.Add(key, pair.Substring(keyValueSeparatorIndex+1,pair.Length-(keyValueSeparatorIndex+1)));
+				result.Add(key, pair.Substring(keyValueSeparatorIndex + 1, pair.Length - (keyValueSeparatorIndex + 1)));
 			}
 
 			_logger?.Debug()

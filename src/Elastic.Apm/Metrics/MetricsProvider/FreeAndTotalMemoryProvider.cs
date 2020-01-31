@@ -36,10 +36,10 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 				var retVal = new List<MetricSample>();
 
-				if(_collectFreeMemory)
-					 retVal.Add(new MetricSample(FreeMemory, freeMemory));
+				if (_collectFreeMemory)
+					retVal.Add(new MetricSample(FreeMemory, freeMemory));
 
-				if(_collectTotalMemory)
+				if (_collectTotalMemory)
 					retVal.Add(new MetricSample(TotalMemory, totalMemory));
 
 				return retVal;
@@ -72,7 +72,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 							hasMemTotal = true;
 						}
 
-						if ((hasMemFree || !_collectFreeMemory ) && (hasMemTotal ||  !_collectTotalMemory))
+						if ((hasMemFree || !_collectFreeMemory) && (hasMemTotal || !_collectTotalMemory))
 							break;
 
 						line = sr.ReadLine();

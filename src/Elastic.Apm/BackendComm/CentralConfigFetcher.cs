@@ -331,10 +331,7 @@ namespace Elastic.Apm.BackendComm
 
 			internal static readonly string[] SupportedOptions =
 			{
-				CaptureBodyKey,
-				CaptureBodyContentTypesKey,
-				TransactionMaxSpansKey,
-				TransactionSampleRateKey,
+				CaptureBodyKey, CaptureBodyContentTypesKey, TransactionMaxSpansKey, TransactionSampleRateKey,
 			};
 
 			[JsonProperty(CaptureBodyKey)]
@@ -444,8 +441,9 @@ namespace Elastic.Apm.BackendComm
 
 			public string DbgDescription { get; }
 
+			public IReadOnlyList<WildcardMatcher> DisableMetrics => _wrapped.DisableMetrics;
+
 			public string Environment => _wrapped.Environment;
-			public string ServiceNodeName => _wrapped.ServiceNodeName;
 
 			public TimeSpan FlushInterval => _wrapped.FlushInterval;
 
@@ -466,10 +464,9 @@ namespace Elastic.Apm.BackendComm
 			public IReadOnlyList<Uri> ServerUrls => _wrapped.ServerUrls;
 
 			public string ServiceName => _wrapped.ServiceName;
+			public string ServiceNodeName => _wrapped.ServiceNodeName;
 
 			public string ServiceVersion => _wrapped.ServiceVersion;
-
-			public IReadOnlyList<WildcardMatcher> DisableMetrics => _wrapped.DisableMetrics;
 
 			public double SpanFramesMinDurationInMilliseconds => _wrapped.SpanFramesMinDurationInMilliseconds;
 

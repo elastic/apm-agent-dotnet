@@ -11,9 +11,14 @@ namespace Elastic.Apm.Config
 		List<string> CaptureBodyContentTypes { get; }
 		bool CaptureHeaders { get; }
 		bool CentralConfig { get; }
-		string Environment { get; }
 
-		string ServiceNodeName { get; }
+		/// <summary>
+		/// Disables the collection of certain metrics. If the name of a metric matches any of the wildcard expressions, it will
+		/// not be collected
+		/// </summary>
+		IReadOnlyList<WildcardMatcher> DisableMetrics { get; }
+
+		string Environment { get; }
 
 		/// <summary>
 		/// The maximal amount of time (in seconds) events are held in queue until there is enough to send a batch.
@@ -101,12 +106,9 @@ namespace Elastic.Apm.Config
 		string SecretToken { get; }
 		IReadOnlyList<Uri> ServerUrls { get; }
 		string ServiceName { get; }
-		string ServiceVersion { get; }
 
-		/// <summary>
-		/// Disables the collection of certain metrics. If the name of a metric matches any of the wildcard expressions, it will not be collected
-		/// </summary>
-		IReadOnlyList<WildcardMatcher> DisableMetrics { get; }
+		string ServiceNodeName { get; }
+		string ServiceVersion { get; }
 
 		/// <summary>
 		/// The agent limits stack trace collection to spans with durations equal or longer than the given value

@@ -54,8 +54,10 @@ namespace Elastic.Apm.Metrics
 
 			MetricsProviders = new List<IMetricsProvider>();
 
-			if (!WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics, ProcessTotalCpuTimeProvider.ProcessCpuTotalPct)) MetricsProviders.Add(new ProcessTotalCpuTimeProvider(_logger));
-			if (!WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics, SystemTotalCpuProvider.SystemCpuTotalPct)) MetricsProviders.Add(new SystemTotalCpuProvider(_logger));
+			if (!WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics, ProcessTotalCpuTimeProvider.ProcessCpuTotalPct))
+				MetricsProviders.Add(new ProcessTotalCpuTimeProvider(_logger));
+			if (!WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics, SystemTotalCpuProvider.SystemCpuTotalPct))
+				MetricsProviders.Add(new SystemTotalCpuProvider(_logger));
 
 			var collectProcessWorkingSet = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
 				ProcessWorkingSetAndVirtualMemoryProvider.ProcessWorkingSetMemory);
@@ -68,7 +70,7 @@ namespace Elastic.Apm.Metrics
 				FreeAndTotalMemoryProvider.TotalMemory);
 			var collectFreeMemory = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
 				FreeAndTotalMemoryProvider.FreeMemory);
-			if(collectFreeMemory || collectTotalMemory)
+			if (collectFreeMemory || collectTotalMemory)
 				MetricsProviders.Add(new FreeAndTotalMemoryProvider(collectFreeMemory, collectTotalMemory));
 
 			_logger.Info()?.Log("Collecting metrics in {interval} milliseconds interval", interval);
