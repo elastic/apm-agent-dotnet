@@ -297,10 +297,7 @@ namespace Elastic.Apm.Model
 		{
 			try
 			{
-				var url = Context.Http.OriginalUrl ?? new Uri(Context.Http.Url);
-				// ReSharper disable once ConvertIfStatementToReturnStatement
-				if (! UrlUtils.TryExtractDestinationInfo(url, out var host, out var port, _logger)) return null;
-				return new Destination { Address = host, Port = port };
+				return UrlUtils.ExtractDestination(Context.Http.OriginalUrl ?? new Uri(Context.Http.Url), _logger);
 			}
 			catch(Exception ex)
 			{

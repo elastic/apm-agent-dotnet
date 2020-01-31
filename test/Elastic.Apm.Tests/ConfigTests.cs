@@ -570,6 +570,16 @@ namespace Elastic.Apm.Tests
 		public void SetMetricsIntervalToNegativeMilliseconds()
 			=> MetricsIntervalTestCommon("-5ms").Should().Be(0);
 
+		[Fact]
+		public void SetSpanFramesMinDurationAndStackTraceLimit()
+		{
+			Environment.SetEnvironmentVariable(EnvVarNames.SpanFramesMinDuration, DefaultValues.SpanFramesMinDuration);
+			Environment.SetEnvironmentVariable(EnvVarNames.StackTraceLimit, DefaultValues.StackTraceLimit.ToString());
+			var config = new EnvironmentConfigurationReader(new NoopLogger());
+			config.SpanFramesMinDurationInMilliseconds.Should().Be(DefaultValues.SpanFramesMinDurationInMilliseconds);
+			config.StackTraceLimit.Should().Be(DefaultValues.StackTraceLimit);
+		}
+
 		/// <summary>
 		/// Make sure <see cref="DefaultValues.MetricsInterval" /> and <see cref="DefaultValues.MetricsIntervalInMilliseconds" />
 		/// are in sync

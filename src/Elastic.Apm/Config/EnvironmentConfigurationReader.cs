@@ -18,7 +18,7 @@ namespace Elastic.Apm.Config
 		{
 			_spanFramesMinDurationInMilliseconds
 				= new Lazy<double>(() =>
-					ParseSpanFramesMinDurationInMilliseconds(Read(ConfigConsts.EnvVarNames.StackTraceLimit)));
+					ParseSpanFramesMinDurationInMilliseconds(Read(ConfigConsts.EnvVarNames.SpanFramesMinDuration)));
 
 			_stackTraceLimit = new Lazy<int>(() => ParseStackTraceLimit(Read(ConfigConsts.EnvVarNames.StackTraceLimit)));
 		}

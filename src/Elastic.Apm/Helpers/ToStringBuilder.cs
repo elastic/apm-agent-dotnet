@@ -25,7 +25,10 @@ namespace Elastic.Apm.Helpers
 			if (_addedAny)
 				_stringBuilder.Append(", ");
 			else if (_stringBuilder == null)
+			{
 				_stringBuilder = new StringBuilder(StringBuilderInitialCapacity);
+				_stringBuilder.Append("{");
+			}
 
 			_stringBuilder.Append(propertyName).Append(": ");
 			if (propertyValue == null)
