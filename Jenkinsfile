@@ -237,7 +237,7 @@ pipeline {
                         dir("${BASE_DIR}") {
                           catchError(message: 'Beta stage', buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                             dotnetWindows(){
-                              bat "\\.ci\\windows\\msbuild.bat"
+                              bat ".ci\\windows\\msbuild.bat"
                             }
                           }
                         }
