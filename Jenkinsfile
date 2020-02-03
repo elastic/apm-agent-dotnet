@@ -244,6 +244,21 @@ pipeline {
                       }
                     }
                   }
+                  stage('Test') {
+                    steps {
+                      withGithubNotify(context: 'Test Docker msbuild - Windows', tab: 'tests') {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                          retry(3) {
+                            bat label: 'Build', script: '.ci/windows/dotnet.bat'
+                          }
+                          bat label: 'Test & coverage', script: '.ci/windows/test.bat'
+                          powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                        }
+                      }
+                    }
                 }
               }
               stage('Windows .NET Core'){
