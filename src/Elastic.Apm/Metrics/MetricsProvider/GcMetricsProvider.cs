@@ -204,8 +204,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			public override void Dispose()
 			{
-				base.Dispose();
-
 				try
 				{
 					if (_eventSourceDotNet != null)
@@ -213,7 +211,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 						_logger.Trace()?.Log("disposing {classname}", nameof(GcEventListener));
 						DisableEvents(_eventSourceDotNet);
 						_eventSourceDotNet = null;
-
 						// calling _eventSourceDotNet.Dispose makes it impossible to re-enable the eventsource, so if we call _eventSourceDotNet.Dispose()
 						// all tests will fail after Dispose()
 					}
