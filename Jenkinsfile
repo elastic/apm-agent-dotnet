@@ -238,7 +238,7 @@ pipeline {
                           catchError(message: 'Beta stage', buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                             dotnetWindows(){
                               dir("${BASE_DIR}"){
-                                bat label: 'Build', script: '.ci/windows/dotnet.bat'
+                                bat label: 'Build', script: '.ci\\windows\\dotnet.bat'
                               }
                             }
                           }
@@ -281,7 +281,7 @@ pipeline {
                           cleanDir("${WORKSPACE}/${BASE_DIR}")
                           unstash 'source'
                           dir("${BASE_DIR}"){
-                            bat label: 'Build', script: '.ci\\windows\\dotnet.bat'
+                            bat label: 'Build', script: '.ci/windows/dotnet.bat'
                           }
                         }
                       }
