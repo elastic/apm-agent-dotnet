@@ -73,6 +73,20 @@ namespace Elastic.Apm.Metrics
 			if (collectFreeMemory || collectTotalMemory)
 				MetricsProviders.Add(new FreeAndTotalMemoryProvider(collectFreeMemory, collectTotalMemory));
 
+			var collectGcCount = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+				GcMetricsProvider.GcCountName);
+			var collectGen0Size = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+				GcMetricsProvider.GcGen0SizeName);
+			var collectGen1Size = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+				GcMetricsProvider.GcGen1SizeName);
+			var collectGen2Size = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+				GcMetricsProvider.GcGen2SizeName);
+			var collectGen3Size = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+				GcMetricsProvider.GcGen3SizeName);
+			if (collectGcCount || collectGen0Size || collectGen1Size || collectGen2Size || collectGen3Size)
+				MetricsProviders.Add(new GcMetricsProvider(_logger, collectGcCount, collectGen0Size, collectGen1Size, collectGen2Size,
+					collectGen3Size));
+
 			_logger.Info()?.Log("Collecting metrics in {interval} milliseconds interval", interval);
 			_timer = new Timer(interval);
 			_timer.Elapsed += (sender, args) => { CollectAllMetrics(); };

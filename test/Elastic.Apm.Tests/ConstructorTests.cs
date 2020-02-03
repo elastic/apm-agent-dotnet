@@ -17,7 +17,9 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void Compose()
 		{
-			var agent = new ApmAgent(new AgentComponents(configurationReader: new LogConfig(LogLevel.Warning)));
+			//build AgentComponents manually so we can disable metrics collection. reason: creating metrics collector pro test and disposing it makes test failing (ETW or EventSource subscribe unsubscribe in each test in parallel if all tests are running)
+			var agent = new ApmAgent(new AgentComponents(null, configurationReader: new LogConfig(LogLevel.Warning), null, metricsCollector: null,
+				null, null));
 			var logger = agent.Logger as ConsoleLogger;
 
 			logger.Should().NotBeNull();
@@ -25,7 +27,7 @@ namespace Elastic.Apm.Tests
 			logger?.IsEnabled(LogLevel.Information).Should().BeFalse();
 		}
 
-		private class LogConfig : IConfigurationReader
+		private class LogConfig : IConfigSnapshot
 		{
 			public LogConfig(LogLevel level) => LogLevel = level;
 
@@ -54,6 +56,8 @@ namespace Elastic.Apm.Tests
 
 			public int TransactionMaxSpans => ConfigConsts.DefaultValues.TransactionMaxSpans;
 			// ReSharper restore UnassignedGetOnlyAutoProperty
+
+			public string DbgDescription => "LogConfig";
 		}
 	}
 }

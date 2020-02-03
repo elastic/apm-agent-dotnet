@@ -172,7 +172,7 @@ namespace Elastic.Apm.Tests
 			var serverUrlsWithSpace = "http://myServer:1234 \r\n";
 			Environment.SetEnvironmentVariable(EnvVarNames.ServerUrls, serverUrlsWithSpace);
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, config: new EnvironmentConfigurationReader())))
 			{
 #if !NETCOREAPP3_0 && !NETCOREAPP3_1
 				agent.ConfigurationReader.ServerUrls.First().Should().NotBe(serverUrlsWithSpace);
@@ -358,14 +358,16 @@ namespace Elastic.Apm.Tests
 		public void DefaultServiceNameTest()
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
-			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
-			//By default XUnit uses 'testhost' as the entry assembly, and that is what the
-			//agent reports if we don't set it to anything:
-			var serviceName = agent.Service.Name;
-			serviceName.Should().NotBeNullOrWhiteSpace();
-			serviceName.Should().NotContain(".");
+				//By default XUnit uses 'testhost' as the entry assembly, and that is what the
+				//agent reports if we don't set it to anything:
+				var serviceName = agent.Service.Name;
+				serviceName.Should().NotBeNullOrWhiteSpace();
+				serviceName.Should().NotContain(".");
+			}
 		}
 
 		/// <summary>
@@ -379,10 +381,12 @@ namespace Elastic.Apm.Tests
 			var serviceName = "MyService123";
 			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
-			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, config: new EnvironmentConfigurationReader())))
+			{
+				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
-			agent.Service.Name.Should().Be(serviceName);
+				agent.Service.Name.Should().Be(serviceName);
+			}
 		}
 
 		/// <summary>
@@ -397,12 +401,13 @@ namespace Elastic.Apm.Tests
 			var serviceName = "My.Service.Test";
 			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
-			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, config: new EnvironmentConfigurationReader())))
+			{
+				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
-
-			agent.Service.Name.Should().Be(serviceName.Replace('.', '_'));
-			agent.Service.Name.Should().NotContain(".");
+				agent.Service.Name.Should().Be(serviceName.Replace('.', '_'));
+				agent.Service.Name.Should().NotContain(".");
+			}
 		}
 
 		/// <summary>
@@ -414,13 +419,15 @@ namespace Elastic.Apm.Tests
 			var serviceName = "MyService123!";
 			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
-			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, config: new EnvironmentConfigurationReader())))
+			{
+				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
-			agent.Service.Name.Should().NotBe(serviceName);
-			agent.Service.Name.Should()
-				.MatchRegex("^[a-zA-Z0-9 _-]+$")
-				.And.Be("MyService123_");
+				agent.Service.Name.Should().NotBe(serviceName);
+				agent.Service.Name.Should()
+					.MatchRegex("^[a-zA-Z0-9 _-]+$")
+					.And.Be("MyService123_");
+			}
 		}
 
 		/// <summary>
@@ -432,11 +439,13 @@ namespace Elastic.Apm.Tests
 			var serviceName = DefaultValues.UnknownServiceName;
 			Environment.SetEnvironmentVariable(EnvVarNames.ServiceName, serviceName);
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
-			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, config: new EnvironmentConfigurationReader())))
+			{
+				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
-			agent.Service.Name.Should().Be(serviceName);
-			agent.Service.Name.Should().MatchRegex("^[a-zA-Z0-9 _-]+$");
+				agent.Service.Name.Should().Be(serviceName);
+				agent.Service.Name.Should().MatchRegex("^[a-zA-Z0-9 _-]+$");
+			}
 		}
 
 		/// <summary>
@@ -450,10 +459,12 @@ namespace Elastic.Apm.Tests
 			var serviceVersion = "2.1.0.5";
 			Environment.SetEnvironmentVariable(EnvVarNames.ServiceVersion, serviceVersion);
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
-			agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, config: new EnvironmentConfigurationReader())))
+			{
+				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
 
-			agent.Service.Version.Should().Be(serviceVersion);
+				agent.Service.Version.Should().Be(serviceVersion);
+			}
 		}
 
 		[Fact]
@@ -463,7 +474,7 @@ namespace Elastic.Apm.Tests
 			var serviceNodeName = "Some service node name";
 			Environment.SetEnvironmentVariable(EnvVarNames.ServiceNodeName, serviceNodeName);
 			var payloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, config: new EnvironmentConfigurationReader())))
 			{
 				// Act
 				agent.Tracer.CaptureTransaction("TestTransactionName", "TestTransactionType", t => { Thread.Sleep(2); });
