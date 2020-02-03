@@ -341,18 +341,50 @@ pipeline {
               }
             }
             steps {
-              withGithubNotify(context: 'Release AppVeyor', tab: 'artifacts') {
-                deleteDir()
-                unstash 'source'
-                dir("${BASE_DIR}"){
-                  release('secret/apm-team/ci/elastic-observability-appveyor')
-                }
+              deleteDir()
+              unstash 'source'
+              dir("${BASE_DIR}"){
+                release('secret/apm-team/ci/elastic-observability-appveyor')
               }
             }
             post{
               success {
                 archiveArtifacts(allowEmptyArchive: true,
                   artifacts: "${BASE_DIR}/**/bin/Release/**/*.nupkg")
+              }
+            }
+          }
+          stage('Release') {
+            options {
+              skipDefaultCheckout()
+              timeout(time: 12, unit: 'HOURS')
+            }
+            when {
+              beforeInput true
+              beforeAgent true
+              // Tagged release events ONLY
+              tag pattern: '\\d+\\.\\d+\\.\\d+(-(alpha|beta|rc)\\d*)?', comparator: 'REGEXP'
+            }
+            stages {
+              stage('Notify') {
+                steps {
+                  emailext subject: '[apm-agent-dotnet] Release ready to be pushed',
+                           to: "${NOTIFY_TO}",
+                           body: "Please go to ${env.BUILD_URL}input to approve or reject within 12 hours."
+                }
+              }
+              stage('Release to NuGet') {
+                input {
+                  message 'Should we release a new version?'
+                  ok 'Yes, we should.'
+                }
+                steps {
+                  deleteDir()
+                  unstash 'source'
+                  dir("${BASE_DIR}") {
+                    release('secret/apm-team/ci/elastic-observability-nuget')
+                  }
+                }
               }
             }
           }
@@ -389,12 +421,9 @@ pipeline {
           stage('Integration Tests') {
             agent none
             when {
-              beforeAgent true
-              allOf {
-                anyOf {
-                  environment name: 'GIT_BUILD_CAUSE', value: 'pr'
-                  expression { return !params.Run_As_Master_Branch }
-                }
+              anyOf {
+                changeRequest()
+                expression { return !params.Run_As_Master_Branch }
               }
             }
             steps {

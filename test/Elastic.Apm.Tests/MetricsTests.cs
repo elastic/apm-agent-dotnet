@@ -43,6 +43,18 @@ namespace Elastic.Apm.Tests
 
 		public MetricsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = new Logger((xUnitOutputHelper));
 
+		public static IEnumerable<object[]> DisableProviderTestData
+		{
+			get
+			{
+				yield return new object[] { null };
+				yield return new object[] { new List<MetricSample>() };
+				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.NaN) } };
+				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.NegativeInfinity) } };
+				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.PositiveInfinity) } };
+			}
+		}
+
 		[Fact]
 		public void CollectAllMetrics()
 		{
@@ -79,7 +91,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void GetWorkingSetAndVirtualMemory()
 		{
-			var processWorkingSetAndVirtualMemoryProvider = new ProcessWorkingSetAndVirtualMemoryProvider();
+			var processWorkingSetAndVirtualMemoryProvider = new ProcessWorkingSetAndVirtualMemoryProvider(true, true);
 			var retVal = processWorkingSetAndVirtualMemoryProvider.GetSamples();
 
 			var enumerable = retVal as MetricSample[] ?? retVal.ToArray();
@@ -165,18 +177,6 @@ namespace Elastic.Apm.Tests
 			res.total.Should().Be(expectedTotal);
 		}
 
-		public static IEnumerable<object[]> DisableProviderTestData
-		{
-			get
-			{
-				yield return new object[] { null };
-				yield return new object[] { new List<MetricSample>() };
-				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.NaN) } };
-				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.NegativeInfinity) } };
-				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.PositiveInfinity) } };
-			}
-		}
-
 		[Theory]
 		[MemberData(nameof(DisableProviderTestData))]
 		public void CollectAllMetrics_ShouldDisableProvider_WhenSamplesAreInvalid(List<MetricSample> samples)
@@ -187,26 +187,24 @@ namespace Elastic.Apm.Tests
 			var logger = new NoopLogger();
 			var mockPayloadSender = new MockPayloadSender();
 
-			using (var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information")))
+			using var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
+			var metricsProviderMock = new Mock<IMetricsProvider>();
+			metricsProviderMock.Setup(x => x.GetSamples())
+				.Returns(() => samples);
+			metricsProviderMock.SetupProperty(x => x.ConsecutiveNumberOfFailedReads);
+
+			metricsCollector.MetricsProviders.Clear();
+			metricsCollector.MetricsProviders.Add(metricsProviderMock.Object);
+
+			// Act
+			foreach (var _ in Enumerable.Range(0, iterations))
 			{
-				var metricsProviderMock = new Mock<IMetricsProvider>();
-				metricsProviderMock.Setup(x => x.GetSamples())
-					.Returns(() => samples);
-				metricsProviderMock.SetupProperty(x => x.ConsecutiveNumberOfFailedReads);
-
-				metricsCollector.MetricsProviders.Clear();
-				metricsCollector.MetricsProviders.Add(metricsProviderMock.Object);
-
-				// Act
-				foreach (var _ in Enumerable.Range(0, iterations))
-				{
-					metricsCollector.CollectAllMetrics();
-				}
-
-				// Assert
-				mockPayloadSender.Metrics.Should().BeEmpty();
-				metricsProviderMock.Verify(x => x.GetSamples(), Times.Exactly(MetricsCollector.MaxTryWithoutSuccess));
+				metricsCollector.CollectAllMetrics();
 			}
+
+			// Assert
+			mockPayloadSender.Metrics.Should().BeEmpty();
+			metricsProviderMock.Verify(x => x.GetSamples(), Times.Exactly(MetricsCollector.MaxTryWithoutSuccess));
 		}
 
 		[Fact]
@@ -229,10 +227,7 @@ namespace Elastic.Apm.Tests
 			metricsCollector.MetricsProviders.Add(metricsProviderMock.Object);
 
 			// Act
-			foreach (var _ in Enumerable.Range(0, iterations))
-			{
-				metricsCollector.CollectAllMetrics();
-			}
+			foreach (var _ in Enumerable.Range(0, iterations)) metricsCollector.CollectAllMetrics();
 
 			// Assert
 			mockPayloadSender.Metrics.Count.Should().Be(iterations);

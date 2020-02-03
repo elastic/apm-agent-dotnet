@@ -5,6 +5,7 @@ using System.Threading;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Metrics;
 using Elastic.Apm.Tests.Data;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
@@ -580,6 +581,16 @@ namespace Elastic.Apm.Tests
 		public void SetMetricsIntervalToNegativeMilliseconds()
 			=> MetricsIntervalTestCommon("-5ms").Should().Be(0);
 
+		[Fact]
+		public void SetSpanFramesMinDurationAndStackTraceLimit()
+		{
+			Environment.SetEnvironmentVariable(EnvVarNames.SpanFramesMinDuration, DefaultValues.SpanFramesMinDuration);
+			Environment.SetEnvironmentVariable(EnvVarNames.StackTraceLimit, DefaultValues.StackTraceLimit.ToString());
+			var config = new EnvironmentConfigurationReader(new NoopLogger());
+			config.SpanFramesMinDurationInMilliseconds.Should().Be(DefaultValues.SpanFramesMinDurationInMilliseconds);
+			config.StackTraceLimit.Should().Be(DefaultValues.StackTraceLimit);
+		}
+
 		/// <summary>
 		/// Make sure <see cref="DefaultValues.MetricsInterval" /> and <see cref="DefaultValues.MetricsIntervalInMilliseconds" />
 		/// are in sync
@@ -740,6 +751,32 @@ namespace Elastic.Apm.Tests
 					&& line.ContainsOrdinalIgnoreCase(nameof(AbstractConfigurationReader))
 					&& line.ContainsOrdinalIgnoreCase("GlobalLabels")
 				);
+		}
+
+		/// <summary>
+		/// Disables CPU metrics and makes sure that remaining metrics are still captured
+		/// </summary>
+		[Fact]
+		public void DisableMetrics_DisableCpuMetrics()
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			Environment.SetEnvironmentVariable(EnvVarNames.DisableMetrics, "*cpu*");
+
+			using var metricsProvider = new MetricsCollector(new NoopLogger(), mockPayloadSender, new EnvironmentConfigurationReader());
+			metricsProvider.CollectAllMetrics();
+
+			mockPayloadSender.Metrics.Should().NotBeEmpty();
+
+			var firstMetrics = mockPayloadSender.Metrics.First();
+			firstMetrics.Should().NotBeNull();
+
+			firstMetrics.Samples.Should().NotContain(n => n.KeyValue.Key.Contains("cpu"));
+
+			//These are collected on all platforms, with the given config they always should be there
+			firstMetrics.Samples.Should()
+				.Contain(n => n.KeyValue.Key.Equals("system.process.memory.size", StringComparison.InvariantCultureIgnoreCase));
+			firstMetrics.Samples.Should()
+				.Contain(n => n.KeyValue.Key.Equals("system.process.memory.rss.bytes", StringComparison.InvariantCultureIgnoreCase));
 		}
 
 		private static double MetricsIntervalTestCommon(string configValue)

@@ -35,6 +35,10 @@ Please note that we reserve GitHub tickets for confirmed bugs and enhancement re
 
 See the [contributing documentation](CONTRIBUTING.md)
 
+## Releasing
+
+See the [releasing documentation](RELEASING.md)
+
 ## Repository structure
 
 These are the main folders within the repository:
