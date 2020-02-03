@@ -298,7 +298,7 @@ Sometimes it is necessary to sanitize, i.e., remove, sensitive data sent to Elas
 This config accepts a list of wildcard patterns of field names which should be sanitized.
 These apply for example to HTTP headers and `application/x-www-form-urlencoded` data.
 
-NOTE: In case you capture the request body manually through the public API, the agent won't sanitize the body - this setting only applies to values that are captured automatically by the agent.
+IMPORTANT: This setting only applies to values that are captured automatically by the agent. If you capture the request body manually with the public API, this configuration doesn't apply, and the agent won't sanitize the body. 
 
 The wildcard, `*`, matches zero or more characters, and matching is case insensitive by default.
 Prepending an element with `(?-i)` makes the matching case sensitive.
@@ -684,4 +684,3 @@ Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `Non
 NOTE: Reloadable means that the setting can be changed after agent's start.
 For example, some reloadable options can be changed
 via {apm-app-ref}/agent-configuration.html[APM Agent configuration]).
-
