@@ -487,11 +487,32 @@ The default unit for this option is `s`.
 | `30s`                   | TimeDuration
 |============
 
-
 [options="header"]
 |============
 | Environment variable name      | IConfiguration or Web.config key 
 | `ELASTIC_APM_METRICS_INTERVAL` | `ElasticApm:MetricsInterval`
+|============
+
+[float]
+[[config-disable-metrics]]
+==== `DisableMetrics` (added[1.3.0])
+
+Disables the collection of certain metrics. If the name of a metric matches any of the wildcard expressions, it will not be collected. Example: `foo.*,bar.*`
+
+You can find the name of the available metrics in <<metrics>>.
+
+This option supports the wildcard `*`, which matches zero or more characters. Examples: `/foo/*/bar/*/baz*, *foo*`. Matching is case insensitive by default. Prepending an element with (?-i) makes the matching case sensitive.
+
+[options="header"]
+|============
+| Default                 | Type
+| <none>                  | List<string>
+|============
+
+[options="header"]
+|============
+| Environment variable name      | IConfiguration or Web.config key 
+| `ELASTIC_APM_DISABLE_METRICS` | `ElasticApm:DisableMetrics`
 |============
 
 [[config-http]]

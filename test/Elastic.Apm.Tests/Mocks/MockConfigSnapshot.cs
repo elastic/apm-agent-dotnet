@@ -16,8 +16,8 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _captureHeaders;
 		private readonly string _centralConfig;
 		private readonly string _dbgDescription;
+		private readonly string _disableMetrics;
 		private readonly string _environment;
-		private readonly string _serviceNodeName;
 		private readonly string _flushInterval;
 		private readonly string _globalLabels;
 		private readonly string _logLevel;
@@ -28,6 +28,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _secretToken;
 		private readonly string _serverUrls;
 		private readonly string _serviceName;
+		private readonly string _serviceNodeName;
 		private readonly string _serviceVersion;
 		private readonly string _spanFramesMinDurationInMilliseconds;
 		private readonly string _stackTraceLimit;
@@ -57,7 +58,8 @@ namespace Elastic.Apm.Tests.Mocks
 			string maxBatchEventCount = null,
 			string maxQueueEventCount = null,
 			string sanitizeFieldNames = null,
-			string globalLabels = null
+			string globalLabels = null,
+			string disableMetrics = null
 		) : base(logger, ThisClassName)
 		{
 			_serverUrls = serverUrls;
@@ -82,6 +84,7 @@ namespace Elastic.Apm.Tests.Mocks
 			_maxQueueEventCount = maxQueueEventCount;
 			_sanitizeFieldNames = sanitizeFieldNames;
 			_globalLabels = globalLabels;
+			_disableMetrics = disableMetrics;
 		}
 
 		public string CaptureBody => ParseCaptureBody(Kv(ConfigConsts.EnvVarNames.CaptureBody, _captureBody, Origin));
@@ -93,8 +96,11 @@ namespace Elastic.Apm.Tests.Mocks
 		public bool CentralConfig => ParseCentralConfig(Kv(ConfigConsts.EnvVarNames.CentralConfig, _centralConfig, Origin));
 
 		public string DbgDescription => _dbgDescription ?? nameof(MockConfigSnapshot);
+
+		public IReadOnlyList<WildcardMatcher> DisableMetrics =>
+			ParseDisableMetrics(Kv(ConfigConsts.EnvVarNames.DisableMetrics, _disableMetrics, Origin));
+
 		public string Environment => ParseEnvironment(Kv(ConfigConsts.EnvVarNames.Environment, _environment, Origin));
-		public string ServiceNodeName => ParseServiceNodeName(Kv(ConfigConsts.EnvVarNames.ServiceNodeName, _serviceNodeName, Origin));
 
 		public TimeSpan FlushInterval => ParseFlushInterval(Kv(ConfigConsts.EnvVarNames.FlushInterval, _flushInterval, Origin));
 
@@ -112,6 +118,7 @@ namespace Elastic.Apm.Tests.Mocks
 		public string SecretToken => ParseSecretToken(Kv(ConfigConsts.EnvVarNames.SecretToken, _secretToken, Origin));
 		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Kv(ConfigConsts.EnvVarNames.ServerUrls, _serverUrls, Origin));
 		public string ServiceName => ParseServiceName(Kv(ConfigConsts.EnvVarNames.ServiceName, _serviceName, Origin));
+		public string ServiceNodeName => ParseServiceNodeName(Kv(ConfigConsts.EnvVarNames.ServiceNodeName, _serviceNodeName, Origin));
 		public string ServiceVersion => ParseServiceVersion(Kv(ConfigConsts.EnvVarNames.ServiceVersion, _serviceVersion, Origin));
 
 		public double SpanFramesMinDurationInMilliseconds => ParseSpanFramesMinDurationInMilliseconds(Kv(

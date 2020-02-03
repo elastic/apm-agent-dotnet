@@ -47,6 +47,7 @@ namespace Elastic.Apm.Tests
 			public IReadOnlyList<Uri> ServerUrls => new List<Uri> { ConfigConsts.DefaultValues.ServerUri };
 			public string ServiceName { get; }
 			public string ServiceVersion { get; }
+			public IReadOnlyList<WildcardMatcher> DisableMetrics => ConfigConsts.DefaultValues.DisableMetrics;
 			public double SpanFramesMinDurationInMilliseconds => ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;
 			public int StackTraceLimit => ConfigConsts.DefaultValues.StackTraceLimit;
 			public double TransactionSampleRate => ConfigConsts.DefaultValues.TransactionSampleRate;
