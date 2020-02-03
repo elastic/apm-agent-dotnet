@@ -240,25 +240,36 @@ namespace Elastic.Apm.Tests
 		{
 			using (var gcMetricsProvider = new GcMetricsProvider(_logger))
 			{
-				Thread.Sleep(500);
-				for (var i = 0; i < 300_000; i++)
+				var containsValue = false;
+
+				//repeat the allocation multiple times and make sure at least 1 GetSamples() call returns value
+				for (var j = 0; j < 100; j++)
 				{
-					var _ = new int[100];
+					Thread.Sleep(500);
+					for (var i = 0; i < 300_000; i++)
+					{
+						var _ = new int[100];
+					}
+
+					Thread.Sleep(1000);
+
+					for (var i = 0; i < 300_000; i++)
+					{
+						var _ = new int[100];
+					}
+
+					Thread.Sleep(1000);
+
+					var samples = gcMetricsProvider.GetSamples();
+
+					containsValue = samples.Count() != 0;
+
+					if(containsValue)
+						break;
 				}
-
-				Thread.Sleep(1000);
-
-				for (var i = 0; i < 300_000; i++)
-				{
-					var _ = new int[100];
-				}
-
-				Thread.Sleep(1000);
-
-				var samples = gcMetricsProvider.GetSamples();
 #if !NETCOREAPP2_1
 				//EventSource Microsoft-Windows-DotNETRuntime is only 2.2+, no gc metrics on 2.1
-				samples.Should().NotBeEmpty();
+				containsValue.Should().BeTrue();
 #endif
 			}
 		}
