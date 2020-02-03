@@ -19,20 +19,37 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
+	internal class Logger : IApmLogger
+	{
+		private readonly ITestOutputHelper _testOutputHelper;
+
+		public Logger(ITestOutputHelper testOutputHelper)
+			=> _testOutputHelper = testOutputHelper;
+
+		public bool IsEnabled(LogLevel level) => true;
+
+		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
+		{
+			var v = formatter(state, e);
+			_testOutputHelper.WriteLine(v);
+		}
+	}
+
 	public class MetricsTests : LoggingTestBase
 	{
 		private const string ThisClassName = nameof(MetricsTests);
 
 		private readonly IApmLogger _logger;
 
-		public MetricsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = LoggerBase.Scoped(ThisClassName);
+		public MetricsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = new Logger((xUnitOutputHelper));
 
 		[Fact]
 		public void CollectAllMetrics()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			var testLogger = new TestLogger();
-			using (var mc = new MetricsCollector(testLogger, mockPayloadSender, new MockConfigSnapshot(testLogger))) mc.CollectAllMetrics();
+			using (var mc = new MetricsCollector(_logger, mockPayloadSender, new MockConfigSnapshot(_logger)))
+				mc.CollectAllMetrics();
+
 			mockPayloadSender.Metrics.Should().NotBeEmpty();
 		}
 
@@ -41,7 +58,7 @@ namespace Elastic.Apm.Tests
 		{
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
 
-			var systemTotalCpuProvider = new SystemTotalCpuProvider(new NoopLogger());
+			using var systemTotalCpuProvider = new SystemTotalCpuProvider(new NoopLogger());
 			Thread.Sleep(1000); //See https://github.com/elastic/apm-agent-dotnet/pull/264#issuecomment-499778288
 			var retVal = systemTotalCpuProvider.GetSamples();
 			var metricSamples = retVal as MetricSample[] ?? retVal.ToArray();
@@ -77,7 +94,6 @@ namespace Elastic.Apm.Tests
 			var testLogger = new TestLogger(LogLevel.Information);
 			using (var mc = new MetricsCollector(testLogger, mockPayloadSender, new MockConfigSnapshot(testLogger, "Information")))
 			{
-
 				mc.MetricsProviders.Clear();
 				var providerWithException = new MetricsProviderWithException();
 				mc.MetricsProviders.Add(providerWithException);
@@ -141,7 +157,7 @@ namespace Elastic.Apm.Tests
 		[InlineData("cpu    1192 0 2285 40280 626 0 376 0 0 0", 40280, 44759)]
 		public void ProcStatParser(string procStatContent, long expectedIdle, long expectedTotal)
 		{
-			var systemTotalCpuProvider = new TestSystemTotalCpuProvider(procStatContent);
+			using var systemTotalCpuProvider = new TestSystemTotalCpuProvider(procStatContent);
 			var res = systemTotalCpuProvider.ReadProcStat();
 
 			res.success.Should().BeTrue();
@@ -202,7 +218,7 @@ namespace Elastic.Apm.Tests
 			var logger = new NoopLogger();
 			var mockPayloadSender = new MockPayloadSender();
 
-			var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
+			using var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
 
 			var metricsProviderMock = new Mock<IMetricsProvider>();
 			metricsProviderMock.Setup(x => x.GetSamples())
@@ -227,15 +243,16 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void CollectGcMetrics()
 		{
-			var gcMetricsProvider = new GcMetricsProvider(_logger);
-
-			for (var i = 0; i < 300_000_000; i++)
+			using (var gcMetricsProvider = new GcMetricsProvider(_logger))
 			{
-				var _ = new int[100];
-			}
+				for (var i = 0; i < 300_000_00; i++)
+				{
+					var _ = new int[100];
+				}
 
-			var samples = gcMetricsProvider.GetSamples();
-			samples.Should().NotBeEmpty();
+				var samples = gcMetricsProvider.GetSamples();
+				samples.Should().NotBeEmpty();
+			}
 		}
 
 		internal class MetricsProviderWithException : IMetricsProvider

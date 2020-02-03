@@ -1,3 +1,4 @@
+using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
 
@@ -18,7 +19,7 @@ namespace Elastic.Apm.Tests
 		{
 			Agent.IsConfigured.Should().BeFalse();
 
-			using var agentComponents = new AgentComponents();
+			using var agentComponents = new TestAgentComponents();
 			Agent.Setup(agentComponents);
 			Agent.IsConfigured.Should().BeTrue();
 		}

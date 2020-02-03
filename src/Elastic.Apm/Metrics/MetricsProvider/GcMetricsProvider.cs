@@ -47,7 +47,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			if (PlatformDetection.IsDotNetFullFramework)
 			{
 				var sessionName = SessionNamePrefix + Guid.NewGuid().ToString();
-
 				using (_traceEventSession = new TraceEventSession(sessionName))
 				{
 					Task.Run(() =>
@@ -75,13 +74,15 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 							{
 								runtime.GCEnd += (process, gc) =>
 								{
+									_logger.Trace()
+										?.Log("GCEnd called");
+
 									_gen0Size = (ulong)gc.HeapStats.GenerationSize0;
 									_gen1Size = (ulong)gc.HeapStats.GenerationSize1;
 									_gen2Size = (ulong)gc.HeapStats.GenerationSize2;
 									_gen3Size = (ulong)gc.HeapStats.GenerationSize3;
 									_gcCount = (uint)runtime.GC.GCs.Count;
 								};
-
 							});
 						});
 
@@ -91,7 +92,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			}
 
 			if (PlatformDetection.IsDotNetCore)
-				_eventListener = new GcEventListener(this);
+				_eventListener = new GcEventListener(this, logger);
 		}
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
@@ -133,8 +134,15 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			private EventSource _eventSourceDotNet;
 			private readonly GcMetricsProvider _gcMetricsProvider;
+			private readonly IApmLogger _logger;
 
-			public GcEventListener(GcMetricsProvider gcMetricsProvider) => _gcMetricsProvider = gcMetricsProvider;
+			public GcEventListener(GcMetricsProvider gcMetricsProvider, IApmLogger logger)
+			{
+				_gcMetricsProvider = gcMetricsProvider ?? throw new Exception("gcMetricsProvider is null");
+
+				_logger = logger.Scoped(nameof(GcEventListener));
+				_logger.Trace()?.Log("Initialize GcEventListener to collect GC metrics");
+			}
 
 			protected override void OnEventSourceCreated(EventSource eventSource)
 			{
@@ -144,10 +152,11 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 					EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)keywordGC);
 					_eventSourceDotNet = eventSource;
+					_logger?.Trace()?.Log("Microsoft-Windows-DotNETRuntime enabled");
 				}
-				catch(Exception e)
+				catch (Exception e)
 				{
-					_gcMetricsProvider?._logger.Warning()?.LogException(e, "EnableEvents failed - no GC metrics will be collected");
+					_logger?.Warning()?.LogException(e, "EnableEvents failed - no GC metrics will be collected");
 				}
 			}
 
@@ -156,6 +165,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				// Collect heap sizes
 				if (eventData.EventName.Contains("GCHeapStats_V1"))
 				{
+					_logger?.Trace()?.Log("OnEventWritten with GCHeapStats_V1");
+
 					SetValue("GenerationSize0", ref _gcMetricsProvider._gen0Size);
 					SetValue("GenerationSize1", ref _gcMetricsProvider._gen1Size);
 					SetValue("GenerationSize2", ref _gcMetricsProvider._gen2Size);
@@ -165,6 +176,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				// Collect GC count
 				if (eventData.EventName.Contains("GCEnd"))
 				{
+					_logger?.Trace()?.Log("OnEventWritten with GCEnd");
+
 					var indexOfCount = IndexOf("Count");
 					if (indexOfCount < 0) return;
 
@@ -191,18 +204,23 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			public override void Dispose()
 			{
+				base.Dispose();
+
 				try
 				{
 					if (_eventSourceDotNet != null)
 					{
+						_logger.Trace()?.Log("disposing {classname}", nameof(GcEventListener));
 						DisableEvents(_eventSourceDotNet);
-						_eventSourceDotNet.Dispose();
+						_eventSourceDotNet = null;
+
+						// calling _eventSourceDotNet.Dispose makes it impossible to re-enable the eventsource, so if we call _eventSourceDotNet.Dispose()
+						// all tests will fail after Dispose()
 					}
-					base.Dispose();
 				}
-				catch(Exception e)
+				catch (Exception e)
 				{
-					_gcMetricsProvider?._logger.Warning()?.LogException(e, "Disposing {classname} failed", nameof(GcEventListener));
+					_logger.Warning()?.LogException(e, "Disposing {classname} failed", nameof(GcEventListener));
 				}
 			}
 		}
