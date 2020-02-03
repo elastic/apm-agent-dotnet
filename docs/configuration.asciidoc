@@ -298,6 +298,8 @@ Sometimes it is necessary to sanitize, i.e., remove, sensitive data sent to Elas
 This config accepts a list of wildcard patterns of field names which should be sanitized.
 These apply for example to HTTP headers and `application/x-www-form-urlencoded` data.
 
+NOTE: In case you capture the request body manually through the public API, the agent won't sanitize the body - this setting only applies to values that are captured automatically by the agent.
+
 The wildcard, `*`, matches zero or more characters, and matching is case insensitive by default.
 Prepending an element with `(?-i)` makes the matching case sensitive.
 Examples: `/foo/*/bar/*/baz*`, `*foo*`.
