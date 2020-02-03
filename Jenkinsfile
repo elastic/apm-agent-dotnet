@@ -259,6 +259,7 @@ pipeline {
                         }
                       }
                     }
+                  }
                 }
               }
               stage('Windows .NET Core'){
