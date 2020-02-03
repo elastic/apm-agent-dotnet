@@ -21,11 +21,18 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 	/// </summary>
 	internal class GcMetricsProvider : IMetricsProvider, IDisposable
 	{
-		private const string GcCountName = "clr.gc.count";
-		private const string GcGen0SizeName = "clr.gc.gen0size";
-		private const string GcGen1SizeName = "clr.gc.gen1size";
-		private const string GcGen2SizeName = "clr.gc.gen2size";
-		private const string GcGen3SizeName = "clr.gc.gen3size";
+		internal const string GcCountName = "clr.gc.count";
+		internal const string GcGen0SizeName = "clr.gc.gen0size";
+		internal const string GcGen1SizeName = "clr.gc.gen1size";
+		internal const string GcGen2SizeName = "clr.gc.gen2size";
+		internal const string GcGen3SizeName = "clr.gc.gen3size";
+
+		private readonly bool _collectGcCount;
+		private readonly bool _collectGcGen0Size;
+		private readonly bool _collectGcGen1Size;
+		private readonly bool _collectGcGen2Size;
+		private readonly bool _collectGcGen3Size;
+
 
 		private const string SessionNamePrefix = "EtwSessionForCLRElasticApm_";
 
@@ -41,8 +48,16 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		private readonly TraceEventSession _traceEventSession;
 
-		public GcMetricsProvider(IApmLogger logger)
+		public GcMetricsProvider(IApmLogger logger, bool collectGcCount = true, bool collectGcGen0Size = true, bool collectGcGen1Size = true,
+			bool collectGcGen2Size = true, bool collectGcGen3Size = true
+		)
 		{
+			_collectGcCount = collectGcCount;
+			_collectGcGen0Size = collectGcGen0Size;
+			_collectGcGen1Size = collectGcGen1Size;
+			_collectGcGen2Size = collectGcGen2Size;
+			_collectGcGen3Size = collectGcGen3Size;
+
 			_logger = logger.Scoped(nameof(SystemTotalCpuProvider));
 			if (PlatformDetection.IsDotNetFullFramework)
 			{
@@ -102,14 +117,20 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		{
 			if (_gcCount != 0 || _gen0Size != 0 || _gen2Size != 0 || _gen3Size != 0)
 			{
-				return new List<MetricSample>
-				{
-					new MetricSample(GcCountName, _gcCount),
-					new MetricSample(GcGen0SizeName, _gen0Size),
-					new MetricSample(GcGen1SizeName, _gen1Size),
-					new MetricSample(GcGen2SizeName, _gen2Size),
-					new MetricSample(GcGen3SizeName, _gen3Size)
-				};
+				var retVal = new List<MetricSample>();
+
+				if(_collectGcCount)
+					retVal.Add(new MetricSample(GcCountName, _gcCount));
+				if(_collectGcGen0Size)
+					retVal.Add(new MetricSample(GcGen0SizeName, _gen0Size));
+				if(_collectGcGen1Size)
+					retVal.Add(new MetricSample(GcGen1SizeName, _gen1Size));
+				if(_collectGcGen2Size)
+					retVal.Add(new MetricSample(GcGen2SizeName, _gen2Size));
+				if(_collectGcGen3Size)
+					retVal.Add(new MetricSample(GcGen3SizeName, _gen3Size));
+
+				return retVal;
 			}
 			_logger.Trace()
 				?.Log(
