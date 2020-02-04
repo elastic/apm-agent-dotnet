@@ -12,6 +12,12 @@ ADD https://dist.nuget.org/win-x86-commandline/v5.4.0/nuget.exe C:\nuget\nuget.e
 # Add NuGet to Beginning of Path (We want this version of Nuget before any other versions that may be in the path)
 RUN setx /M PATH "C:\nuget;%PATH%;"
 
+# Download NuGet Packages for Tests
+ADD https://www.nuget.org/api/v2/package/Codecov.Tool/1.2.0 C:\packages\codecov.tool.1.2.0.nupkg
+Add https://www.nuget.org/api/v2/package/dotnet-xunit-to-junit/0.3.1 C:\packages\dotnet-xunit-to-junit.1.0.4.nupkg
+Add https://www.nuget.org/api/v2/package/XunitXml.TestLogger/2.0.0 c:\packages\xunitxml.testlogger.2.0.0.nupkg
+Add https://www.nuget.org/api/v2/package/coverlet.msbuild/2.5.1 C:\packages\coverlet.msbuild.2.5.1.nupkg
+
 # We download Visual Studio from Microsoft
 # If this fails see the Readme: https://github.com/elastic/apm-agent-dotnet/tree/master/.ci/docker/buildtools-windows
 ADD https://download.visualstudio.microsoft.com/download/pr/b79d5d47-f792-4eec-adcf-2da2dfa3e3db/4a244b3dd7c258763614d6e4eb914d42f47917e7cc6a70b509e9d9029aceddf2/vs_Enterprise.exe C:\temp\vs_enterprise.exe
