@@ -251,7 +251,7 @@ pipeline {
                         unstash 'source'
                         dir("${BASE_DIR}"){
                           retry(3) {
-                            bat label: 'Build', script: '.ci/windows/dotnet.bat'
+                            bat label: 'Build', script: '.ci/windows/msbuild-test.bat'
                           }
                           bat label: 'Test & coverage', script: '.ci/windows/test.bat'
                           powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
