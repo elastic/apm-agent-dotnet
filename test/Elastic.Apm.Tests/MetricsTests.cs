@@ -19,29 +19,13 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
-	internal class Logger : IApmLogger
-	{
-		private readonly ITestOutputHelper _testOutputHelper;
-
-		public Logger(ITestOutputHelper testOutputHelper)
-			=> _testOutputHelper = testOutputHelper;
-
-		public bool IsEnabled(LogLevel level) => true;
-
-		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
-		{
-			var v = formatter(state, e);
-			_testOutputHelper.WriteLine(v);
-		}
-	}
-
 	public class MetricsTests : LoggingTestBase
 	{
 		private const string ThisClassName = nameof(MetricsTests);
 
 		private readonly IApmLogger _logger;
 
-		public MetricsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = new Logger((xUnitOutputHelper));
+		public MetricsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = LoggerBase.Scoped(ThisClassName);
 
 		public static IEnumerable<object[]> DisableProviderTestData
 		{
@@ -197,10 +181,7 @@ namespace Elastic.Apm.Tests
 			metricsCollector.MetricsProviders.Add(metricsProviderMock.Object);
 
 			// Act
-			foreach (var _ in Enumerable.Range(0, iterations))
-			{
-				metricsCollector.CollectAllMetrics();
-			}
+			foreach (var _ in Enumerable.Range(0, iterations)) metricsCollector.CollectAllMetrics();
 
 			// Assert
 			mockPayloadSender.Metrics.Should().BeEmpty();
@@ -264,7 +245,7 @@ namespace Elastic.Apm.Tests
 
 					containsValue = samples?.Count() != 0;
 
-					if(containsValue)
+					if (containsValue)
 						break;
 				}
 #if !NETCOREAPP2_1
