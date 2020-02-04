@@ -84,8 +84,10 @@ namespace Elastic.Apm.Metrics
 			var collectGen3Size = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
 				GcMetricsProvider.GcGen3SizeName);
 			if (collectGcCount || collectGen0Size || collectGen1Size || collectGen2Size || collectGen3Size)
+			{
 				MetricsProviders.Add(new GcMetricsProvider(_logger, collectGcCount, collectGen0Size, collectGen1Size, collectGen2Size,
 					collectGen3Size));
+			}
 
 			_logger.Info()?.Log("Collecting metrics in {interval} milliseconds interval", interval);
 			_timer = new Timer(interval);
