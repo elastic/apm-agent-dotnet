@@ -135,5 +135,12 @@ namespace Elastic.Apm.Config
 		int TransactionMaxSpans { get; }
 
 		double TransactionSampleRate { get; }
+
+		/// <summary>
+		/// If true, for all outgoing HTTP requests the agent stores the traceparent in a header prefixed with elastic-apm
+		/// (elastic-apm-traceparent)
+		/// otherwise it'll use the official header name from w3c, which is "traceparewnt".
+		/// </summary>
+		bool UseElasticTraceparentHeader { get; }
 	}
 }

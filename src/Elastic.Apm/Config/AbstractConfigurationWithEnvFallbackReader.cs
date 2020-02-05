@@ -84,5 +84,8 @@ namespace Elastic.Apm.Config
 
 		public virtual double TransactionSampleRate =>
 			ParseTransactionSampleRate(Read(ConfigConsts.KeyNames.TransactionSampleRate, ConfigConsts.EnvVarNames.TransactionSampleRate));
+
+		public bool UseElasticTraceparentHeader => ParseUseElasticTraceparentHeader(Read(ConfigConsts.KeyNames.UseElasticTraceparentheader,
+			ConfigConsts.EnvVarNames.UseElasticTraceparentHeader));
 	}
 }

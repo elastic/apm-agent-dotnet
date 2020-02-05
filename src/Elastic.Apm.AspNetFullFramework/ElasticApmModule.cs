@@ -108,7 +108,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				_logger.Debug()
 					?.Log(
 						"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData} - continuing trace",
-						TraceParent.TraceParentHeaderName, distributedTracingData);
+						TraceParent.TraceParentHeaderNamePrefixed, distributedTracingData);
 
 				_currentTransaction = Agent.Instance.Tracer.StartTransaction($"{httpRequest.HttpMethod} {httpRequest.Path}", ApiConstants.TypeRequest,
 					distributedTracingData);
@@ -129,10 +129,15 @@ namespace Elastic.Apm.AspNetFullFramework
 			// ReSharper disable once InvertIf
 			if (headerValue == null)
 			{
-				_logger.Debug()
-					?.Log("Incoming request doesn't have {TraceParentHeaderName} header - " +
-						"it means request doesn't have incoming distributed tracing data", TraceParent.TraceParentHeaderName);
-				return null;
+				headerValue = httpRequest.Headers.Get(TraceParent.TraceParentHeaderNamePrefixed);
+
+				if (headerValue == null)
+				{
+					_logger.Debug()
+						?.Log("Incoming request doesn't have {TraceParentHeaderName} header - " +
+							"it means request doesn't have incoming distributed tracing data", TraceParent.TraceParentHeaderNamePrefixed);
+					return null;
+				}
 			}
 			return TraceParent.TryExtractTraceparent(headerValue);
 		}

@@ -1,9 +1,11 @@
+using System;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
@@ -96,6 +98,34 @@ namespace Elastic.Apm.AspNetCore.Tests
 			//make sure the parent of the 2. transaction is the spanid of the outgoing HTTP request from the 1. transaction:
 			_payloadSender2.FirstTransaction.ParentId.Should()
 				.Be(_payloadSender1.Spans.First(n => n.Context.Http.Url.Contains("api/values")).Id);
+		}
+
+		/// <summary>
+		/// Makes sure that in case ELASTIC_APM_USE_ELASTIC_TRACEPARENT_HEADER is set to true
+		/// both "traceparent" and "elastic-apm-traceparent" HTTP headers are set
+		/// </summary>
+		[Fact]
+		public async Task DistributedTraceAcross2ServicesWithUseElasticTraceParentTrue()
+		{
+			_agent1.ConfigStore.CurrentSnapshot = new MockConfigSnapshot(useElasticTraceparentHeader: "true");
+			await ExecuteAndCheckDistributedCall();
+
+			_payloadSender2.FirstTransaction.Context.Request.Headers.Keys.Should().Contain(TraceParent.TraceParentHeaderName);
+			_payloadSender2.FirstTransaction.Context.Request.Headers.Keys.Should().Contain(TraceParent.TraceParentHeaderNamePrefixed);
+		}
+
+		/// <summary>
+		/// Makes sure that in case ELASTIC_APM_USE_ELASTIC_TRACEPARENT_HEADER is set to false
+		/// only "traceparent" HTTP header is set and no "elastic-apm-traceparent" header is set
+		/// </summary>
+		[Fact]
+		public async Task DistributedTraceAcross2ServicesWithUseElasticTraceParentFalse()
+		{
+			_agent1.ConfigStore.CurrentSnapshot = new MockConfigSnapshot(useElasticTraceparentHeader: "false");
+			await ExecuteAndCheckDistributedCall();
+
+			_payloadSender2.FirstTransaction.Context.Request.Headers.Keys.Should().Contain(TraceParent.TraceParentHeaderName);
+			_payloadSender2.FirstTransaction.Context.Request.Headers.Keys.Should().NotContain(TraceParent.TraceParentHeaderNamePrefixed);
 		}
 
 		/// <summary>

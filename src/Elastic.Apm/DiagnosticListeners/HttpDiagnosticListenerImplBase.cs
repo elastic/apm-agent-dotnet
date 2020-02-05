@@ -144,6 +144,18 @@ namespace Elastic.Apm.DiagnosticListeners
 				// but here we want the string to be in W3C 'traceparent' header format.
 				RequestHeadersAdd(request, TraceParent.TraceParentHeaderName, TraceParent.BuildTraceparent(span.OutgoingDistributedTracingData));
 
+			if (transaction is Transaction t)
+			{
+				if (t.ConfigSnapshot.UseElasticTraceparentHeader)
+				{
+					if (!RequestHeadersContain(request, TraceParent.TraceParentHeaderNamePrefixed))
+					{
+						RequestHeadersAdd(request, TraceParent.TraceParentHeaderNamePrefixed,
+							TraceParent.BuildTraceparent(span.OutgoingDistributedTracingData));
+					}
+				}
+			}
+
 			if (!span.ShouldBeSentToApmServer) return;
 
 			span.Context.Http = new Http { Method = RequestGetMethod(request) };

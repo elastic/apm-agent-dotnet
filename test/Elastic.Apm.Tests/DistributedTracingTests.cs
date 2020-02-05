@@ -78,6 +78,6 @@ namespace Elastic.Apm.Tests
 		/// </summary>
 		[Fact]
 		public void TraceParentHeaderName() =>
-			TraceParent.TraceParentHeaderName.Should().Be("elastic-apm-traceparent");
+			TraceParent.TraceParentHeaderNamePrefixed.Should().Be("elastic-apm-traceparent");
 	}
 }

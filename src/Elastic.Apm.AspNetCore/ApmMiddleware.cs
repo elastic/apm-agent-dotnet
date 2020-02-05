@@ -79,9 +79,13 @@ namespace Elastic.Apm.AspNetCore
 				Transaction transaction;
 				var transactionName = $"{context.Request.Method} {context.Request.Path}";
 
-				if (context.Request.Headers.ContainsKey(TraceParent.TraceParentHeaderName))
+				if (context.Request.Headers.ContainsKey(TraceParent.TraceParentHeaderNamePrefixed)
+					|| context.Request.Headers.ContainsKey(TraceParent.TraceParentHeaderName))
 				{
-					var headerValue = context.Request.Headers[TraceParent.TraceParentHeaderName].ToString();
+					var headerValue = context.Request.Headers.ContainsKey(TraceParent.TraceParentHeaderName)
+						? context.Request.Headers[TraceParent.TraceParentHeaderName].ToString()
+						: context.Request.Headers[TraceParent.TraceParentHeaderNamePrefixed].ToString();
+
 
 					var distributedTracingData = TraceParent.TryExtractTraceparent(headerValue);
 
@@ -90,7 +94,7 @@ namespace Elastic.Apm.AspNetCore
 						_logger.Debug()
 							?.Log(
 								"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData}. Continuing trace.",
-								TraceParent.TraceParentHeaderName, distributedTracingData);
+								TraceParent.TraceParentHeaderNamePrefixed, distributedTracingData);
 
 						transaction = _tracer.StartTransactionInternal(
 							transactionName,
@@ -102,7 +106,7 @@ namespace Elastic.Apm.AspNetCore
 						_logger.Debug()
 							?.Log(
 								"Incoming request with invalid {TraceParentHeaderName} header (received value: {TraceParentHeaderValue}). Starting trace with new trace id.",
-								TraceParent.TraceParentHeaderName, headerValue);
+								TraceParent.TraceParentHeaderNamePrefixed, headerValue);
 
 						transaction = _tracer.StartTransactionInternal(transactionName,
 							ApiConstants.TypeRequest);
