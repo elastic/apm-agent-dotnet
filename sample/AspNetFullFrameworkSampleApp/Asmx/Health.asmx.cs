@@ -7,9 +7,6 @@ namespace AspNetFullFrameworkSampleApp.Asmx
 	public class Health : WebService
 	{
 		[WebMethod]
-		public string Ping()
-		{
-			return "Ok";
-		}
+		public string Ping() => "Ok";
 	}
 }

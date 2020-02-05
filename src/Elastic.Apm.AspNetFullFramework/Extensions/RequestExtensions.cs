@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using System.Web;
 using Elastic.Apm.Logging;
 
@@ -23,11 +22,8 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 
 				if (string.IsNullOrWhiteSpace(soapActionWithNamespace)) return null;
 
-				var indexPosition = soapActionWithNamespace.LastIndexOf(@"/");
-				if (indexPosition != -1)
-				{
-					return soapActionWithNamespace.Substring(indexPosition + 1).TrimEnd('\"');
-				}
+				var indexPosition = soapActionWithNamespace.LastIndexOf(@"/", StringComparison.InvariantCulture);
+				if (indexPosition != -1) return soapActionWithNamespace.Substring(indexPosition + 1).TrimEnd('\"');
 			}
 			catch (Exception e)
 			{

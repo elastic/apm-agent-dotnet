@@ -106,10 +106,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			var transactionName = $"{httpRequest.HttpMethod} {httpRequest.Path}";
 
 			var soapAction = httpRequest.ExtractSoapAction(_logger);
-			if (soapAction != null)
-			{
-				transactionName += $" {soapAction}";
-			}
+			if (soapAction != null) transactionName += $" {soapAction}";
 
 			var distributedTracingData = ExtractIncomingDistributedTracingData(httpRequest);
 			if (distributedTracingData != null)
