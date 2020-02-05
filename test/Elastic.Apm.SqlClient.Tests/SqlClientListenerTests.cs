@@ -12,7 +12,7 @@ using Xunit;
 
 namespace Elastic.Apm.SqlClient.Tests
 {
-	public class SqlClientDiagnosticListenerTests : IDisposable, IAsyncLifetime
+	public class SqlClientListenerTests : IDisposable, IAsyncLifetime
 	{
 		private readonly DockerEnvironment _environment;
 
@@ -23,7 +23,7 @@ namespace Elastic.Apm.SqlClient.Tests
 
 		private string _connectionString;
 
-		public SqlClientDiagnosticListenerTests()
+		public SqlClientListenerTests()
 		{
 			// BUILD_ID env variable is passed from the CI, therefore DockerInDocker is enabled.
 			_environment = new DockerEnvironmentBuilder()
@@ -79,13 +79,21 @@ namespace Elastic.Apm.SqlClient.Tests
 
 			var span = _payloadSender.FirstSpan;
 
+#if !NETFRAMEWORK
 			span.Name.Should().Be(commandText);
-			span.Type.Should().Be(ApiConstants.TypeDb);
 			span.Subtype.Should().Be(ApiConstants.SubtypeMssql);
+#endif
+			span.Type.Should().Be(ApiConstants.TypeDb);
 
 			span.Context.Db.Should().NotBeNull();
+#if !NETFRAMEWORK
 			span.Context.Db.Statement.Should().Be(commandText);
+#endif
 			span.Context.Db.Type.Should().Be(Database.TypeSql);
+
+			span.Context.Destination.Should().NotBeNull();
+			span.Context.Destination.Address.Should().Be("localhost");
+			span.Context.Destination.Port.Should().NotBeNull();
 		}
 
 		[Theory]
@@ -124,13 +132,21 @@ namespace Elastic.Apm.SqlClient.Tests
 
 			var span = _payloadSender.FirstSpan;
 
+#if !NETFRAMEWORK
 			span.Name.Should().Be(commandText);
-			span.Type.Should().Be(ApiConstants.TypeDb);
 			span.Subtype.Should().Be(ApiConstants.SubtypeMssql);
+#endif
+			span.Type.Should().Be(ApiConstants.TypeDb);
 
 			span.Context.Db.Should().NotBeNull();
+#if !NETFRAMEWORK
 			span.Context.Db.Statement.Should().Be(commandText);
+#endif
 			span.Context.Db.Type.Should().Be(Database.TypeSql);
+
+			span.Context.Destination.Should().NotBeNull();
+			span.Context.Destination.Address.Should().Be("localhost");
+			span.Context.Destination.Port.Should().NotBeNull();
 		}
 
 		public void Dispose()
