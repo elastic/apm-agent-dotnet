@@ -27,12 +27,9 @@ RUN C:\temp\vs_enterprise.exe `
                 --add Microsoft.Component.MSBuild
 
 # Download .net Core
-Add https://dotnet.microsoft.com/download/dotnet-core/thank-you/sdk-3.1.101-windows-x64-installer c:\temp\sdk-3.1.101-windows-x64-installer
-RUN C:\temp\sdk-3.1.101-windows-x64-installer `
-				--quiet `
-				--wait `
-				--norestart `
-				--nocache `
+Add https://dot.net/v1/dotnet-install.ps1 c:\temp\dotnet-install.ps1
+RUN powershell -File c:\temp\dotnet-install.ps1 -Channel 3.1
+
 
 # Default to PowerShell if no other command specified.
 CMD ["powershell.exe", "-NoLogo", "-ExecutionPolicy", "Bypass"]

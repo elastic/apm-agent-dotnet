@@ -246,16 +246,29 @@ pipeline {
                   }
                   stage('Test') {
                     steps {
-                      withGithubNotify(context: 'Test Docker msbuild - Windows', tab: 'tests') {
+                      withGithubNotify(context: 'Test Docker - Windows', tab: 'tests') {
                         cleanDir("${WORKSPACE}/${BASE_DIR}")
                         unstash 'source'
                         dir("${BASE_DIR}"){
+                          powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
                           retry(3) {
-                            bat label: 'Build', script: '.ci\\windows\\msbuild-test.bat'
+                            bat label: 'Build', script: '.ci/windows/dotnet.bat'
                           }
-                          bat label: 'Test & coverage', script: '.ci\\windows\\test.bat'
+                          bat label: 'Test & coverage', script: '.ci/windows/test.bat'
                           powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
                         }
+                      }
+                    }
+                    post {
+                      always {
+                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/target/diag.log,${BASE_DIR}/target/TestResults.xml")
+                        junit(allowEmptyResults: true,
+                          keepLongStdio: true,
+                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
+                      }
+                      unsuccessful {
+                        archiveArtifacts(allowEmptyArchive: true,
+                          artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
                       }
                     }
                   }
