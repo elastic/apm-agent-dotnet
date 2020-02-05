@@ -254,6 +254,15 @@
       <Version>4.5.3</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Asmx\Health.asmx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Asmx\Health.asmx.cs">
+      <DependentUpon>Health.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+  </ItemGroup>
   <PropertyGroup Condition="'$(OS)' == 'WINDOWS_NT'">
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>

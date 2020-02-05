@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Reflection;
 using System.Web;
 using Elastic.Apm.Api;
+using Elastic.Apm.AspNetFullFramework.Extensions;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
@@ -102,6 +103,14 @@ namespace Elastic.Apm.AspNetFullFramework
 			var httpApp = (HttpApplication)eventSender;
 			var httpRequest = httpApp.Context.Request;
 
+			var transactionName = $"{httpRequest.HttpMethod} {httpRequest.Path}";
+
+			var soapAction = httpRequest.ExtractSoapAction(_logger);
+			if (soapAction != null)
+			{
+				transactionName += $" {soapAction}";
+			}
+
 			var distributedTracingData = ExtractIncomingDistributedTracingData(httpRequest);
 			if (distributedTracingData != null)
 			{
@@ -110,14 +119,14 @@ namespace Elastic.Apm.AspNetFullFramework
 						"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData} - continuing trace",
 						TraceParent.TraceParentHeaderName, distributedTracingData);
 
-				_currentTransaction = Agent.Instance.Tracer.StartTransaction($"{httpRequest.HttpMethod} {httpRequest.Path}", ApiConstants.TypeRequest,
-					distributedTracingData);
+				_currentTransaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, distributedTracingData);
 			}
 			else
 			{
-				_logger.Debug()?.Log("Incoming request doesn't have valid incoming distributed tracing data - starting trace with new trace ID");
-				_currentTransaction =
-					Agent.Instance.Tracer.StartTransaction($"{httpRequest.HttpMethod} {httpRequest.Path}", ApiConstants.TypeRequest);
+				_logger.Debug()
+					?.Log("Incoming request doesn't have valid incoming distributed tracing data - starting trace with new trace ID");
+
+				_currentTransaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest);
 			}
 
 			if (_currentTransaction.IsSampled) FillSampledTransactionContextRequest(httpRequest, _currentTransaction);
