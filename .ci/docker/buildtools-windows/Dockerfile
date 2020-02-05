@@ -9,8 +9,12 @@ SHELL ["cmd", "/S", "/C"]
 # Download NuGet v5.4.0 
 ADD https://dist.nuget.org/win-x86-commandline/v5.4.0/nuget.exe C:\nuget\nuget.exe
 
+# Download .net Core
+Add https://dot.net/v1/dotnet-install.ps1 c:\temp\dotnet-install.ps1
+RUN powershell -File c:\temp\dotnet-install.ps1 -Channel 3.1 -InstallDir C:\DotNetCore
+
 # Add NuGet to Beginning of Path (We want this version of Nuget before any other versions that may be in the path)
-RUN setx /M PATH "C:\nuget;%PATH%;"
+RUN setx /M PATH "C:\nuget;%PATH%;C:\DotNetCore;"
 
 # We download Visual Studio from Microsoft
 # If this fails see the Readme: https://github.com/elastic/apm-agent-dotnet/tree/master/.ci/docker/buildtools-windows
@@ -26,9 +30,7 @@ RUN C:\temp\vs_enterprise.exe `
                 --add Microsoft.VisualStudio.Component.Web `
                 --add Microsoft.Component.MSBuild
 
-# Download .net Core
-Add https://dot.net/v1/dotnet-install.ps1 c:\temp\dotnet-install.ps1
-RUN powershell -File c:\temp\dotnet-install.ps1 -Channel 3.1
+
 
 
 # Default to PowerShell if no other command specified.
