@@ -16,14 +16,11 @@ RUN powershell -File c:\temp\dotnet-install.ps1 -Channel 3.1 -InstallDir C:\DotN
 # Download .net Core3.0
 RUN powershell -File c:\temp\dotnet-install.ps1 -Channel 3.0 -InstallDir C:\DotNetCore3.0
 
-# Download .net Core2.2
-RUN powershell -File c:\temp\dotnet-install.ps1 -Channel 2.2 -InstallDir C:\DotNetCore2.2
-
 # Download .net Core2.1
 RUN powershell -File c:\temp\dotnet-install.ps1 -Channel 2.1 -InstallDir C:\DotNetCore2.1
 
 # Add NuGet to Beginning of Path (We want this version of Nuget before any other versions that may be in the path)
-RUN setx /M PATH "C:\nuget;%PATH%;C:\DotNetCore3.1;C:\DotNetCore2.1;C:\DotNetCore2.2;C:\DotNetCore3.0;"
+RUN setx /M PATH "C:\nuget;%PATH%;C:\DotNetCore2.1;C:\DotNetCore3.1;C:\DotNetCore3.0;"
 
 # We download Visual Studio from Microsoft
 # If this fails see the Readme: https://github.com/elastic/apm-agent-dotnet/tree/master/.ci/docker/buildtools-windows
