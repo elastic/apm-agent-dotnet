@@ -6,15 +6,16 @@ namespace Elastic.Apm.DistributedTracing
 {
 	/// <summary>
 	/// This is an implementation of the
-	/// "https://www.w3.org/TR/trace-context/#traceparent-field" w3c 'traceparent' header draft.
-	/// elastic-apm-traceparent: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
-	/// (______________________)  () (______________________________) (______________) ()
+	/// "https://www.w3.org/TR/trace-context/#traceparent-field" w3c 'Trace Context'.
+	///
+	/// traceparent header:
+	/// traceparent: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
+	/// (_________)  () (______________________________) (______________) ()
 	///      v                     v                 v                        v         v
 	///  Header name           Version           Trace-Id                Span-Id     Flags
-	/// Since the w3c document is just a draft at the moment,
-	/// we don't use the official header name but prepend the custom prefix "Elastic-Apm-".
+	/// Also handles the tracestate header.
 	/// </summary>
-	internal static class TraceParent
+	internal static class TraceContext
 	{
 		private const byte FlagRecorded = 1; // 00000001
 		private const int OptionsLength = 2;
@@ -22,6 +23,7 @@ namespace Elastic.Apm.DistributedTracing
 		private const int TraceIdLength = 32;
 		internal const string TraceParentHeaderName = "traceparent";
 		internal const string TraceParentHeaderNamePrefixed = "elastic-apm-traceparent";
+		internal const string TraceStateHeaderName = "tracestate";
 		private const int VersionAndTraceIdAndSpanIdLength = 53;
 		private const int VersionAndTraceIdLength = 36;
 		private const int VersionPrefixIdLength = 3;
@@ -30,8 +32,9 @@ namespace Elastic.Apm.DistributedTracing
 		/// Parses the traceparent header
 		/// </summary>
 		/// <param name="traceParentValue">The value of the traceparent header</param>
+		/// <param name="traceStateValue">Tge value of the tracestate header</param>
 		/// <returns>The parsed data if parsing was successful, null otherwise.</returns>
-		internal static DistributedTracingData TryExtractTraceparent(string traceParentValue)
+		internal static DistributedTracingData TryExtractTracingData(string traceParentValue, string traceStateValue = null)
 		{
 			var bestAttempt = false;
 
@@ -114,7 +117,9 @@ namespace Elastic.Apm.DistributedTracing
 					return null;
 			}
 
-			return new DistributedTracingData(traceId, parentId, (traceFlags & FlagRecorded) == FlagRecorded);
+			return traceStateValue != null
+				? new DistributedTracingData(traceId, parentId, (traceFlags & FlagRecorded) == FlagRecorded, traceStateValue)
+				: new DistributedTracingData(traceId, parentId, (traceFlags & FlagRecorded) == FlagRecorded);
 		}
 
 		internal static bool IsHex(IEnumerable<char> chars)
@@ -135,10 +140,10 @@ namespace Elastic.Apm.DistributedTracing
 		public static string BuildTraceparent(DistributedTracingData distributedTracingData)
 			=> $"00-{distributedTracingData.TraceId}-{distributedTracingData.ParentId}-{(distributedTracingData.FlagRecorded ? "01" : "00")}";
 
-		internal static bool IsTraceIdValid(string traceId)
+		private static bool IsTraceIdValid(string traceId)
 			=> !string.IsNullOrWhiteSpace(traceId) && traceId.Length == 32 && IsHex(traceId) && traceId != "00000000000000000000000000000000";
 
-		internal static bool IsTraceParentValid(string parentId)
+		private static bool IsTraceParentValid(string parentId)
 			=> !string.IsNullOrWhiteSpace(parentId) && parentId.Length == 16 && IsHex(parentId) && parentId != "0000000000000000";
 
 		/// <summary>
@@ -169,5 +174,8 @@ namespace Elastic.Apm.DistributedTracing
 				throw new ArgumentOutOfRangeException("Invalid character: " + c);
 			}
 		}
+
+		internal static string BuildTraceState(DistributedTracingData distributedTracingData)
+			=> distributedTracingData.TraceState;
 	}
 }
