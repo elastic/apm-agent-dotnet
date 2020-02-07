@@ -65,6 +65,7 @@ Below is a sample `appsettings.json` configuration file for a typical ASP.NET Co
   "ElasticApm":
     {
       "ServerUrls":  "http://myapmserver:8200",
+      "SecretToken":  "apm-server-secret-token",
       "TransactionSampleRate": 1.0
     }
 }
@@ -86,6 +87,7 @@ In this case, you can set the log level of the agent with `ElasticApm:LogLevel`,
     {
       "LogLevel":  "Debug",
       "ServerUrls":  "http://myapmserver:8200",
+      "SecretToken":  "apm-server-secret-token",
       "TransactionSampleRate": 1.0
     }
 }
@@ -119,6 +121,7 @@ Below is a sample `Web.config` configuration file for a ASP.NET application.
     <appSettings>
         <!-- ... -->
         <add key="ElasticApm:ServerUrls" value="https://my-apm-server:8200" />
+        <add key="ElasticApm:SecretToken" value="apm-server-secret-token" />
         <!-- ... -->
     </appSettings>
     <!-- ... -->
