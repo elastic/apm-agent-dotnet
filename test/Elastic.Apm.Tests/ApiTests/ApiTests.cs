@@ -10,7 +10,6 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
-
 // ReSharper disable AccessToDisposedClosure
 
 namespace Elastic.Apm.Tests.ApiTests
@@ -757,22 +756,22 @@ namespace Elastic.Apm.Tests.ApiTests
 				{
 					tx.CaptureSpan("manually set destination address", "test_span_type", span =>
 					{
-						span.Context.Destination = new Destination { Address = manualAddress };
+						span.Context.Destination = new Destination{ Address = manualAddress };
 						span.Context.Http = new Http { Method = "PUT", Url = url.ToString() };
 					});
 					tx.CaptureSpan("manually set destination port", "test_span_type", span =>
 					{
-						span.Context.Destination = new Destination { Port = manualPort };
+						span.Context.Destination = new Destination{ Port = manualPort };
 						span.Context.Http = new Http { Method = "PUT", Url = url.ToString() };
 					});
 					tx.CaptureSpan("manually set destination address to null", "test_span_type", span =>
 					{
-						span.Context.Destination = new Destination { Address = null };
+						span.Context.Destination = new Destination{ Address = null };
 						span.Context.Http = new Http { Method = "PUT", Url = url.ToString() };
 					});
 					tx.CaptureSpan("manually set destination port to null", "test_span_type", span =>
 					{
-						span.Context.Destination = new Destination { Port = null };
+						span.Context.Destination = new Destination{ Port = null };
 						span.Context.Http = new Http { Method = "PUT", Url = url.ToString() };
 					});
 				});
@@ -802,8 +801,10 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-				agent.Tracer.CaptureTransaction("test TX name", "test TX type",
-					tx => { tx.CaptureSpan("test span name", "test_span_subtype", () => { }); });
+				agent.Tracer.CaptureTransaction("test TX name", "test TX type", tx =>
+				{
+					tx.CaptureSpan("test span name", "test_span_subtype", () => {});
+				});
 			}
 
 			payloadSender.Spans.Single().Context.Destination.Should().BeNull();
@@ -817,11 +818,13 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			using (var agent = new ApmAgent(new TestAgentComponents(mockLogger, payloadSender: payloadSender)))
 			{
-				agent.Tracer.CaptureTransaction("test TX name", "test TX type",
-					tx =>
+				agent.Tracer.CaptureTransaction("test TX name", "test TX type", tx =>
+				{
+					tx.CaptureSpan("test span name", "test_span_type", span =>
 					{
-						tx.CaptureSpan("test span name", "test_span_type", span => { span.Context.Http = new Http { Method = "PUT", Url = "://" }; });
+						span.Context.Http = new Http { Method = "PUT", Url = "://" };
 					});
+				});
 			}
 
 			payloadSender.Spans.Single().Context.Destination.Should().BeNull();

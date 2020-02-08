@@ -25,9 +25,7 @@ namespace Elastic.Apm.SqlClient
 		protected override void OnEventSourceCreated(EventSource eventSource)
 		{
 			if (eventSource != null && eventSource.Name == "Microsoft-AdoNet-SystemData")
-			{
 				EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)1);
-			}
 
 			base.OnEventSourceCreated(eventSource);
 		}
@@ -53,75 +51,88 @@ namespace Elastic.Apm.SqlClient
 			}
 			catch (Exception ex)
 			{
-				_logger?.Error()?.LogException(ex, "Error has occurred during handle event from SqlClient. EventData: {@EventData}", eventData);
+				_logger?.Error()?.LogException(ex, "Error has occurred during handle event from SqlClient. EventData: {EventData}", eventData);
 			}
 		}
 
 		private void ProcessBeginExecute(IReadOnlyList<object> payload)
 		{
-			if (payload.Count == 4)
+			if (payload.Count != 4)
 			{
-				var id = Convert.ToInt32(payload[0]);
-				var datasource = Convert.ToString(payload[1]);
-				var database = Convert.ToString(payload[2]);
-				var commandText = Convert.ToString(payload[3]);
-				var start = Stopwatch.GetTimestamp();
+				_logger?.Debug()
+					?.Log("BeginExecute event has {PayloadCount} payload items instead of 4. Event processing is skipped.", payload.Count);
+				return;
+			}
 
-				// todo: let's try to enable Instrumentation Engine and check does it work without AppInsights
-				// https://docs.microsoft.com/en-us/azure/azure-monitor/app/asp-net-dependencies#advanced-sql-tracking-to-get-full-sql-query
-				var spanName = !string.IsNullOrWhiteSpace(commandText)
-					? commandText.Replace(Environment.NewLine, "")
-					// todo: what we need to use here
-					: database;
+			var id = Convert.ToInt32(payload[0]);
+			var dataSource = Convert.ToString(payload[1]);
+			var database = Convert.ToString(payload[2]);
+			var commandText = Convert.ToString(payload[3]);
+			var start = Stopwatch.GetTimestamp();
 
-				var span = (Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(_apmAgent)?.StartSpan(spanName, ApiConstants.TypeDb);
-				if (span == null) return;
+			_logger?.Trace()
+				?.Log("Process BeginExecute event. Id: {Id}. Data source: {DataSource}. Database: {Database}. CommandText: {CommandText}.", id,
+					dataSource, database, commandText);
 
-				if (_spans.TryAdd(id, (span, start)))
+			var spanName = !string.IsNullOrWhiteSpace(commandText)
+				? commandText.Replace(Environment.NewLine, "")
+				: database;
+
+			var span = (Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(_apmAgent)?.StartSpan(spanName, ApiConstants.TypeDb);
+			if (span == null) return;
+
+			if (_spans.TryAdd(id, (span, start)))
+			{
+				span.Context.Db = new Database
 				{
-					span.Context.Db = new Database
-					{
-						Statement = !string.IsNullOrWhiteSpace(commandText)
-							? commandText.Replace(Environment.NewLine, "")
-							: string.Empty,
-						Instance = database,
-						Type = Database.TypeSql
-					};
+					Statement = !string.IsNullOrWhiteSpace(commandText)
+						? commandText.Replace(Environment.NewLine, "")
+						: string.Empty,
+					Instance = database,
+					Type = Database.TypeSql
+				};
 
-					span.Context.Destination = _apmAgent.TracerInternal.DbSpanCommon.GetDestination($"Data Source={datasource}", false, null);
+				span.Context.Destination = _apmAgent.TracerInternal.DbSpanCommon.GetDestination($"Data Source={dataSource}", false, null);
 
-					// todo: check provider types. Do they can spread events via EventSource?
-					// System.Data.SQLite and Microsoft.Data.Sqlite don't spread events via EventSource, however,
-					// can we say that other providers also don't do it?
-				}
+				// System.Data.SQLite and Microsoft.Data.Sqlite don't spread events via EventSource, however,
+				// can we say that other providers also don't do it?
+				// If only SqlClient can do that we can set span.SubType to ApiConstants.SubtypeMssql
 			}
 		}
 
 		private void ProcessEndExecute(IReadOnlyList<object> payload)
 		{
-			if (payload.Count == 3)
+			if (payload.Count != 3)
 			{
-				var id = Convert.ToInt32(payload[0]);
-				var compositeState = Convert.ToInt32(payload[1]);
-				var sqlExceptionNumber = Convert.ToInt32(payload[2]);
-				var stop = Stopwatch.GetTimestamp();
+				_logger?.Debug()
+					?.Log("EndExecute event has {PayloadCount} payload items instead of 3. Event processing is skipped.", payload.Count);
+				return;
+			}
 
-				if (_spans.TryGetValue(id, out var item))
+			var id = Convert.ToInt32(payload[0]);
+			var compositeState = Convert.ToInt32(payload[1]);
+			var sqlExceptionNumber = Convert.ToInt32(payload[2]);
+			var stop = Stopwatch.GetTimestamp();
+
+			_logger?.Trace()
+				?.Log("Process EndExecute event. Id: {Id}. Composite state: {CompositeState}. Sql exception number: {SqlExceptionNumber}.", id,
+					compositeState, sqlExceptionNumber);
+
+			if (_spans.TryGetValue(id, out var item))
+			{
+				var isSuccess = (compositeState & 1) == 1;
+				var isSqlException = (compositeState & 2) == 2;
+				// 4 - is synchronous
+
+				item.Span.Duration = ((stop - item.Start) / (double)Stopwatch.Frequency) * 1000;
+
+				if (isSqlException)
 				{
-					var isSuccess = (compositeState & 1) == 1;
-					var isSqlException = (compositeState & 2) == 2;
-					// 4 - is synchronous
-
-					item.Span.Duration = ((stop - item.Start) / (double)Stopwatch.Frequency) * 1000;
-
-					if (isSqlException)
-					{
-						item.Span.CaptureError("Exception has occurred", sqlExceptionNumber != 0 ? $"SQL Exception {sqlExceptionNumber}" : null,
-							null);
-					}
-
-					item.Span.End();
+					item.Span.CaptureError("Exception has occurred", sqlExceptionNumber != 0 ? $"SQL Exception {sqlExceptionNumber}" : null,
+						null);
 				}
+
+				item.Span.End();
 			}
 		}
 	}
