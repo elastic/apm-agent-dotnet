@@ -148,7 +148,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			var traceStateHeaderValue = httpRequest.Headers.Get(DistributedTracing.TraceContext.TraceStateHeaderName);
 
 			return traceStateHeaderValue != null
-				? DistributedTracing.TraceContext.TryExtractTracingData(traceParentHeaderValue, httpRequest.Headers.Get(traceStateHeaderValue))
+				? DistributedTracing.TraceContext.TryExtractTracingData(traceParentHeaderValue, traceStateHeaderValue)
 				: DistributedTracing.TraceContext.TryExtractTracingData(traceParentHeaderValue);
 		}
 
