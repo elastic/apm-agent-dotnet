@@ -492,7 +492,7 @@ def dotnet(Closure body){
 
 def dotnetWindows(Closure body){
   def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-windows:latest'
-  dockerLog(secret: "secret/apm-team/ci/docker-registry/prod",
+  dockerLogin(secret: "secret/apm-team/ci/docker-registry/prod",
   registry: "docker.elastic.co")
   bat label: 'Docker Pull', script: "docker pull --tag ${dockerTagName}"
   bat label: 'Docker Build', script: "docker build --tag ${dockerTagName}  -m 2GB .ci\\docker\\buildtools-windows"
