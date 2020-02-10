@@ -492,23 +492,9 @@ def dotnet(Closure body){
 
 def dotnetWindows(Closure body){
   def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-windows:latest'
-  def dockerLogin = getVaultSecret(secret: "secret/apm-team/ci/elastic-observability-dockerhub")
-  def data = dockerLogin.containsKey('data') ? dockerLogin.data : error("dockerLogin: No valid data in secret.")
-  def dockerUser = data.containsKey('user') ? data.user : error("dockerLogin: No valid user in secret.")
-  def dockerPassword = data.containsKey('password') ? data.password : error("dockerLogin: No valid password in secret.")
-   wrap([$class: 'MaskPasswordsBuildWrapper',
-    varPasswordPairs: [
-      [var: 'DOCKER_USER', password: dockerUser],
-      [var: 'DOCKER_PASSWORD', password: dockerPassword],
-  ]]) {
-    withEnv([
-      "DOCKER_USER=${dockerUser}",
-      "DOCKER_PASSWORD=${dockerPassword}"
-    ]) {
-        bat(label: 'Docker Login', script: "docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.elastic.co")
-      }
-    }
-    bat label: 'Docker Pull', script: "docker pull --tag ${dockerTagName}"
+  dockerLog(secret: "secret/apm-team/ci/docker-registry/prod",
+  registry: "docker.elastic.co")
+  bat label: 'Docker Pull', script: "docker pull --tag ${dockerTagName}"
   bat label: 'Docker Build', script: "docker build --tag ${dockerTagName}  -m 2GB .ci\\docker\\buildtools-windows"
   bat label: 'Docker Push', script: "docker push --tag ${dockerTagName}"
   docker.image("${dockerTagName}").inside(){
