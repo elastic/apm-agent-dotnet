@@ -155,6 +155,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			internal static readonly SampleAppUrlPathData GenNSpansPage =
 				new SampleAppUrlPathData(HomeController.GenNSpansPageRelativePath, (int)HttpStatusCode.Created);
+
+			internal static readonly SampleAppUrlPathData CallSoapServiceProtocolV1_1 =
+				new SampleAppUrlPathData("Asmx/Health.asmx", (int)HttpStatusCode.OK);
 		}
 
 		private TimedEvent? _sampleAppClientCallTiming;

@@ -13,6 +13,7 @@
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="2.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <!-- TODO: Are we ok with this reference/version? -->
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.0.0" />

@@ -26,5 +26,7 @@ namespace Elastic.Apm.Helpers
 		// Credit: https://stackoverflow.com/a/444818/973581
 		internal static bool ContainsOrdinalIgnoreCase(this string thisObj, string subStr) =>
 			thisObj.IndexOf(subStr, StringComparison.OrdinalIgnoreCase) >= 0;
+
+		internal static string ToLog(this string thisObj) => "`" + thisObj + "'";
 	}
 }

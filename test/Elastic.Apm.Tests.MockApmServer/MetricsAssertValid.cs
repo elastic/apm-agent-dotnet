@@ -23,6 +23,10 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 			foreach (var metricSample in metricSet.Samples)
 			{
+				//GC metrics are only captured when at least 1 GC happens during the test - so we don't assert on those.
+				if (metricSample.Key.Contains("clr.gc", StringComparison.CurrentCultureIgnoreCase))
+					continue;
+
 				MetricMetadataPerType.Should().ContainKey(metricSample.Key);
 				MetricMetadataPerType[metricSample.Key].VerifyAction(metricSample.Value.Value);
 			}

@@ -65,6 +65,7 @@ Below is a sample `appsettings.json` configuration file for a typical ASP.NET Co
   "ElasticApm":
     {
       "ServerUrls":  "http://myapmserver:8200",
+      "SecretToken":  "apm-server-secret-token",
       "TransactionSampleRate": 1.0
     }
 }
@@ -86,6 +87,7 @@ In this case, you can set the log level of the agent with `ElasticApm:LogLevel`,
     {
       "LogLevel":  "Debug",
       "ServerUrls":  "http://myapmserver:8200",
+      "SecretToken":  "apm-server-secret-token",
       "TransactionSampleRate": 1.0
     }
 }
@@ -119,6 +121,7 @@ Below is a sample `Web.config` configuration file for a ASP.NET application.
     <appSettings>
         <!-- ... -->
         <add key="ElasticApm:ServerUrls" value="https://my-apm-server:8200" />
+        <add key="ElasticApm:SecretToken" value="apm-server-secret-token" />
         <!-- ... -->
     </appSettings>
     <!-- ... -->
@@ -297,6 +300,8 @@ the latest {apm-app-ref}/agent-configuration.html[APM Agent configuration].
 Sometimes it is necessary to sanitize, i.e., remove, sensitive data sent to Elastic APM.
 This config accepts a list of wildcard patterns of field names which should be sanitized.
 These apply for example to HTTP headers and `application/x-www-form-urlencoded` data.
+
+IMPORTANT: This setting only applies to values that are captured automatically by the agent. If you capture the request body manually with the public API, this configuration doesn't apply, and the agent won't sanitize the body. 
 
 The wildcard, `*`, matches zero or more characters, and matching is case insensitive by default.
 Prepending an element with `(?-i)` makes the matching case sensitive.
@@ -487,11 +492,32 @@ The default unit for this option is `s`.
 | `30s`                   | TimeDuration
 |============
 
-
 [options="header"]
 |============
 | Environment variable name      | IConfiguration or Web.config key 
 | `ELASTIC_APM_METRICS_INTERVAL` | `ElasticApm:MetricsInterval`
+|============
+
+[float]
+[[config-disable-metrics]]
+==== `DisableMetrics` (added[1.3.0])
+
+Disables the collection of certain metrics. If the name of a metric matches any of the wildcard expressions, it will not be collected. Example: `foo.*,bar.*`
+
+You can find the name of the available metrics in <<metrics>>.
+
+This option supports the wildcard `*`, which matches zero or more characters. Examples: `/foo/*/bar/*/baz*, *foo*`. Matching is case insensitive by default. Prepending an element with (?-i) makes the matching case sensitive.
+
+[options="header"]
+|============
+| Default                 | Type
+| <none>                  | List<string>
+|============
+
+[options="header"]
+|============
+| Environment variable name      | IConfiguration or Web.config key 
+| `ELASTIC_APM_DISABLE_METRICS` | `ElasticApm:DisableMetrics`
 |============
 
 [[config-http]]
@@ -682,4 +708,3 @@ Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `Non
 NOTE: Reloadable means that the setting can be changed after agent's start.
 For example, some reloadable options can be changed
 via {apm-app-ref}/agent-configuration.html[APM Agent configuration]).
-

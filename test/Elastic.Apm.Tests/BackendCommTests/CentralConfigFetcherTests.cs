@@ -1,6 +1,10 @@
 using System.Threading;
+using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm;
+using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Report;
+using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using FluentAssertions.Extensions;
@@ -19,7 +23,13 @@ namespace Elastic.Apm.Tests.BackendCommTests
 		public void Dispose_stops_the_thread()
 		{
 			CentralConfigFetcher lastCentralConfigFetcher;
-			using (var agent = new ApmAgent(new AgentComponents(LoggerBase)))
+			var configSnapshotFromReader = new ConfigSnapshotFromReader(new EnvironmentConfigurationReader(), "local");
+			var configStore = new ConfigStore(configSnapshotFromReader, LoggerBase);
+			var service = Service.GetDefaultService(new EnvironmentConfigurationReader(), LoggerBase);
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase,
+				centralConfigFetcher: new CentralConfigFetcher(LoggerBase, configStore, service),
+				payloadSender: new PayloadSenderV2(LoggerBase, configSnapshotFromReader, service,
+					new SystemInfoHelper(LoggerBase).ParseSystemInfo()))))
 			{
 				lastCentralConfigFetcher = (CentralConfigFetcher)agent.CentralConfigFetcher;
 				lastCentralConfigFetcher.IsRunning.Should().BeTrue();
@@ -43,9 +53,17 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			var agents = new ApmAgent[numberOfAgentInstances];
 			numberOfAgentInstances.Repeat(i =>
 			{
-				agents[i] = new ApmAgent(new AgentComponents(LoggerBase));
-				((CentralConfigFetcher)agents[i].CentralConfigFetcher).IsRunning.Should().BeTrue();
-				((PayloadSenderV2)agents[i].PayloadSender).IsRunning.Should().BeTrue();
+				var configSnapshotFromReader = new ConfigSnapshotFromReader(new EnvironmentConfigurationReader(), "local");
+				var configStore = new ConfigStore(configSnapshotFromReader, LoggerBase);
+				var service = Service.GetDefaultService(new EnvironmentConfigurationReader(), LoggerBase);
+				using (agents[i] = new ApmAgent(new TestAgentComponents(LoggerBase,
+					centralConfigFetcher: new CentralConfigFetcher(LoggerBase, configStore, service),
+					payloadSender: new PayloadSenderV2(LoggerBase, configSnapshotFromReader, service,
+						new SystemInfoHelper(LoggerBase).ParseSystemInfo()))))
+				{
+					((CentralConfigFetcher)agents[i].CentralConfigFetcher).IsRunning.Should().BeTrue();
+					((PayloadSenderV2)agents[i].PayloadSender).IsRunning.Should().BeTrue();
+				}
 			});
 
 			// Sleep a few seconds to let backend component to get to the stage where they contact APM Server

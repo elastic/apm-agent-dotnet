@@ -114,7 +114,7 @@ namespace Elastic.Apm.EntityFramework6
 
 				LogEvent("DB operation started - starting a new span...", command, interceptCtx, dbgOriginalCaller);
 
-				var span = DbSpanCommon.StartSpan(Agent.Instance, command);
+				var span = Agent.Instance.TracerInternal.DbSpanCommon.StartSpan(Agent.Instance, command);
 				interceptCtx.SetUserState(_userStateKey, span);
 			}
 
@@ -131,7 +131,7 @@ namespace Elastic.Apm.EntityFramework6
 
 				LogEvent("DB operation ended - ending the corresponding span...", command, interceptCtx, dbgOriginalCaller);
 
-				DbSpanCommon.EndSpan(span, command);
+				Agent.Instance.TracerInternal.DbSpanCommon.EndSpan(span, command);
 			}
 		}
 	}

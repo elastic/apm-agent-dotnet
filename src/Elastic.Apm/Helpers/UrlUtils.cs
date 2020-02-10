@@ -1,4 +1,5 @@
 using System;
+using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Helpers
@@ -7,26 +8,23 @@ namespace Elastic.Apm.Helpers
 	{
 		private const string ThisClassName = nameof(UrlUtils);
 
-		internal static bool TryExtractDestinationInfo(Uri url, out string host, out int? port, IApmLogger logger)
+		/// <returns><c>Destination</c> if successful and <c>null</c> otherwise</returns>
+		internal static Destination ExtractDestination(Uri url, IApmLogger logger)
 		{
-			// We cannot extract
 			if (!url.IsAbsoluteUri || url.HostNameType == UriHostNameType.Basic || url.HostNameType == UriHostNameType.Unknown)
 			{
 				logger.Scoped($"{ThisClassName}.{DbgUtils.CurrentMethodName()}").Debug()?.Log(
 					"Cannot extract destination info (URL is not absolute or doesn't point to an external resource)."
 					+ " url: IsAbsoluteUri: {IsAbsoluteUri}, HostNameType: {HostNameType}."
 					, url.IsAbsoluteUri, url.HostNameType);
-				host = null;
-				port = null;
-				return false;
+				return null;
 			}
 
-			host = url.Host;
+			var host = url.Host;
 			if (url.HostNameType == UriHostNameType.IPv6 && host.Length > 2 && host[0] == '[' && host[host.Length - 1] == ']')
 				host = host.Substring(1, host.Length - 2);
 
-			port = url.Port == -1 ? (int?)null : url.Port;
-			return true;
+			return new Destination{ Address = host, Port = url.Port == -1 ? (int?)null : url.Port };
 		}
 	}
 }

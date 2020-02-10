@@ -55,7 +55,7 @@ namespace Elastic.Apm.AspNetCore
 				// It'd be nice to have this in an exception filter, but that would force us capturing the request body synchronously.
 				// Therefore we rather unwind the stack in the catch block and call the async method.
 				if (context != null)
-					await transaction.CollectRequestBody(true, context.Request, _logger);
+					await transaction.CollectRequestBodyAsync(true, context.Request, _logger, transaction.ConfigSnapshot);
 
 				throw;
 			}
@@ -66,7 +66,7 @@ namespace Elastic.Apm.AspNetCore
 				if (transaction != null && transaction.IsContextCreated && context?.Response.StatusCode >= 400
 					&& transaction.Context?.Request?.Body is string body
 					&& (string.IsNullOrEmpty(body) || body == Apm.Consts.Redacted))
-					await transaction.CollectRequestBody(true, context.Request, _logger);
+					await transaction.CollectRequestBodyAsync(true, context.Request, _logger, transaction.ConfigSnapshot);
 
 				StopTransaction(transaction, context);
 			}
@@ -195,7 +195,7 @@ namespace Elastic.Apm.AspNetCore
 					Headers = GetHeaders(context.Request.Headers, transaction.ConfigSnapshot)
 				};
 
-				await transaction.CollectRequestBody(false, context.Request, _logger);
+				await transaction.CollectRequestBodyAsync(false, context.Request, _logger, transaction.ConfigSnapshot);
 			}
 			catch (Exception ex)
 			{
