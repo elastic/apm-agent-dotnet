@@ -213,7 +213,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		private static string BuildApmServerUrl(int apmServerPort) => $"http://localhost:{apmServerPort}/";
 
 		protected async Task<SampleAppResponse> SendGetRequestToSampleAppAndVerifyResponse(string relativeUrlPath, int expectedStatusCode,
-			bool timeHttpCall = true
+			bool timeHttpCall = true, bool addTraceContextHeaders = false
 		)
 		{
 			var startTime = DateTime.UtcNow;
@@ -227,6 +227,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			{
 				using (var httpClient = new HttpClient())
 				{
+					if (addTraceContextHeaders)
+					{
+						httpClient.DefaultRequestHeaders.Add("traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01");
+						httpClient.DefaultRequestHeaders.Add("tracestate", "rojo=00f067aa0ba902b7,congo=t61rcWkgMzE");
+					}
 					var response = await SendGetRequestToSampleAppAndVerifyResponseImpl(httpClient, relativeUrlPath, expectedStatusCode);
 					return new SampleAppResponse(response.Headers, await response.Content.ReadAsStringAsync());
 				}

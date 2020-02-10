@@ -25,13 +25,15 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var rootTxData = SampleAppUrlPaths.ContactPage;
 			var childTxData = SampleAppUrlPaths.AboutPage;
 
-			await SendGetRequestToSampleAppAndVerifyResponse(rootTxData.RelativeUrlPath, rootTxData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(rootTxData.RelativeUrlPath, rootTxData.StatusCode, addTraceContextHeaders: true);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
 				VerifyReceivedDataSharedConstraints(rootTxData, receivedData);
 
 				VerifyRootChildTransactions(receivedData, rootTxData, childTxData, out var rootTx, out _);
+
+				receivedData.Transactions.All(n => n.Context.Request.Headers.ContainsKey("tracestate") && n.Context.Request.Headers["tracestate"] == "rojo=00f067aa0ba902b7,congo=t61rcWkgMzE").Should().BeTrue();
 
 				var spanExternalCall =
 					receivedData.Spans.Single(sp => sp.Context.Http.Url == HomeController.ChildHttpCallToExternalServiceUrl.ToString());
