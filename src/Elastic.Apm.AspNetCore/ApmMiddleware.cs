@@ -79,30 +79,35 @@ namespace Elastic.Apm.AspNetCore
 				Transaction transaction;
 				var transactionName = $"{context.Request.Method} {context.Request.Path}";
 
-				if (context.Request.Headers.ContainsKey(TraceParent.TraceParentHeaderName))
+				if (context.Request.Headers.ContainsKey(DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed)
+					|| context.Request.Headers.ContainsKey(DistributedTracing.TraceContext.TraceParentHeaderName))
 				{
-					var headerValue = context.Request.Headers[TraceParent.TraceParentHeaderName].ToString();
+					var headerValue = context.Request.Headers.ContainsKey(DistributedTracing.TraceContext.TraceParentHeaderName)
+						? context.Request.Headers[DistributedTracing.TraceContext.TraceParentHeaderName].ToString()
+						: context.Request.Headers[DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed].ToString();
 
-					var distributedTracingData = TraceParent.TryExtractTraceparent(headerValue);
+					var tracingData = context.Request.Headers.ContainsKey(DistributedTracing.TraceContext.TraceStateHeaderName)
+						? DistributedTracing.TraceContext.TryExtractTracingData(headerValue, context.Request.Headers[DistributedTracing.TraceContext.TraceStateHeaderName].ToString())
+						: DistributedTracing.TraceContext.TryExtractTracingData(headerValue);
 
-					if (distributedTracingData != null)
+					if (tracingData != null)
 					{
 						_logger.Debug()
 							?.Log(
 								"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData}. Continuing trace.",
-								TraceParent.TraceParentHeaderName, distributedTracingData);
+								DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed, tracingData);
 
 						transaction = _tracer.StartTransactionInternal(
 							transactionName,
 							ApiConstants.TypeRequest,
-							distributedTracingData);
+							tracingData);
 					}
 					else
 					{
 						_logger.Debug()
 							?.Log(
 								"Incoming request with invalid {TraceParentHeaderName} header (received value: {TraceParentHeaderValue}). Starting trace with new trace id.",
-								TraceParent.TraceParentHeaderName, headerValue);
+								DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed, headerValue);
 
 						transaction = _tracer.StartTransactionInternal(transactionName,
 							ApiConstants.TypeRequest);

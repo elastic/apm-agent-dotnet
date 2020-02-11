@@ -68,6 +68,8 @@ namespace Elastic.Apm.Config
 
 		public double TransactionSampleRate => ParseTransactionSampleRate(Read(ConfigConsts.EnvVarNames.TransactionSampleRate));
 
+		public bool UseElasticTraceparentHeader => ParseUseElasticTraceparentHeader(Read(ConfigConsts.EnvVarNames.UseElasticTraceparentHeader));
+
 		private ConfigurationKeyValue Read(string key) =>
 			new ConfigurationKeyValue(key, ReadEnvVarValue(key), Origin);
 	}

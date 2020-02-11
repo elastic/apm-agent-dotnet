@@ -114,7 +114,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				_logger.Debug()
 					?.Log(
 						"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData} - continuing trace",
-						TraceParent.TraceParentHeaderName, distributedTracingData);
+						DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed, distributedTracingData);
 
 				_currentTransaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, distributedTracingData);
 			}
@@ -129,18 +129,33 @@ namespace Elastic.Apm.AspNetFullFramework
 			if (_currentTransaction.IsSampled) FillSampledTransactionContextRequest(httpRequest, _currentTransaction);
 		}
 
+		/// <summary>
+		/// Extracts the traceparent and the tracestate headers from the <see cref="httpRequest"/>
+		/// </summary>
+		/// <param name="httpRequest"></param>
+		/// <returns>Null if traceparent is not set, otherwise the filled DistributedTracingData instance</returns>
 		private DistributedTracingData ExtractIncomingDistributedTracingData(HttpRequest httpRequest)
 		{
-			var headerValue = httpRequest.Headers.Get(TraceParent.TraceParentHeaderName);
+			var traceParentHeaderValue = httpRequest.Headers.Get(DistributedTracing.TraceContext.TraceParentHeaderName);
 			// ReSharper disable once InvertIf
-			if (headerValue == null)
+			if (traceParentHeaderValue == null)
 			{
-				_logger.Debug()
-					?.Log("Incoming request doesn't have {TraceParentHeaderName} header - " +
-						"it means request doesn't have incoming distributed tracing data", TraceParent.TraceParentHeaderName);
-				return null;
+				traceParentHeaderValue = httpRequest.Headers.Get(DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed);
+
+				if (traceParentHeaderValue == null)
+				{
+					_logger.Debug()
+						?.Log("Incoming request doesn't have {TraceParentHeaderName} header - " +
+							"it means request doesn't have incoming distributed tracing data", DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed);
+					return null;
+				}
 			}
-			return TraceParent.TryExtractTraceparent(headerValue);
+
+			var traceStateHeaderValue = httpRequest.Headers.Get(DistributedTracing.TraceContext.TraceStateHeaderName);
+
+			return traceStateHeaderValue != null
+				? DistributedTracing.TraceContext.TryExtractTracingData(traceParentHeaderValue, traceStateHeaderValue)
+				: DistributedTracing.TraceContext.TryExtractTracingData(traceParentHeaderValue);
 		}
 
 		private static void FillSampledTransactionContextRequest(HttpRequest httpRequest, ITransaction transaction)
@@ -189,7 +204,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				case "HTTP/2.0":
 					return "2.0";
 				default:
-					return protocolString.Replace("HTTP/", string.Empty);
+					return protocolString?.Replace("HTTP/", string.Empty);
 			}
 		}
 
@@ -336,10 +351,12 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (Agent.InstanceAlreadyCreatedException ex)
 			{
-				Agent.Instance.Logger.Scoped(dbgInstanceName).Error()?.LogException(ex, "The Elastic APM agent was already initialized before call to"
-					+ $" {nameof(ElasticApmModule)}.{nameof(Init)} - {nameof(ElasticApmModule)} will use existing instance"
-					+ " even though it might lead to unexpected behavior"
-					+ " (for example agent using incorrect configuration source such as environment variables instead of Web.config).");
+				Agent.Instance.Logger.Scoped(dbgInstanceName)
+					.Error()
+					?.LogException(ex, "The Elastic APM agent was already initialized before call to"
+						+ $" {nameof(ElasticApmModule)}.{nameof(Init)} - {nameof(ElasticApmModule)} will use existing instance"
+						+ " even though it might lead to unexpected behavior"
+						+ " (for example agent using incorrect configuration source such as environment variables instead of Web.config).");
 
 				agentComponents.Dispose();
 			}

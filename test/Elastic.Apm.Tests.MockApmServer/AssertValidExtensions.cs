@@ -193,7 +193,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			var because =
 				$"String should be {numHexChars} hex digits ({sizeInBits}-bits) but the actual value is `{thisObj}' (length: {thisObj.Length})";
 			thisObj.Length.Should().Be(numHexChars, because); // 2 hex chars per byte
-			TraceParent.IsHex(thisObj).Should().BeTrue(because);
+			DistributedTracing.TraceContext.IsHex(thisObj).Should().BeTrue(because);
 		}
 
 		internal static void NonEmptyAssertValid(this string thisObj, int maxLength = 1024)
