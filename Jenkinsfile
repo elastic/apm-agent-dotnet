@@ -494,9 +494,15 @@ def dotnetWindows(Closure body){
   def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-windows:latest'
   dockerLogin(secret: "secret/apm-team/ci/docker-registry/prod",
   registry: "docker.elastic.co")
-  //bat label: 'Docker Pull', script: "docker pull ${dockerTagName}"
+  try {
+    bat label: 'Docker Pull', script: "docker pull ${dockerTagName}"
+  } catch(all) {
+    // No tag to pull, Do nothing
+  }
   bat label: 'Docker Build', script: "docker build --tag ${dockerTagName}  -m 2GB .ci\\docker\\buildtools-windows"
-  //bat label: 'Docker Push', script: "docker push ${dockerTagName}"
+  dockerLogin(secret: "secret/apm-team/ci/docker-registry/prod",
+  registry: "push.docker.elastic.co")
+  bat label: 'Docker Push', script: "docker push push.${dockerTagName}"
   docker.image("${dockerTagName}").inside(){
     body()
   }
