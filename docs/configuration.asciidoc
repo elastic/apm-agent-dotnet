@@ -395,7 +395,7 @@ Use this setting in case the APM Server requires a token (e.g. APM Server in Ela
 
 [float]
 [[config-verify-server-cert]]
-==== `VerifyServerCert`
+==== `VerifyServerCert` (added[1.3])
 
 [options="header"]
 |============
