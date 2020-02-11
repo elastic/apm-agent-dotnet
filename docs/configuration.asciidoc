@@ -394,6 +394,26 @@ Both the agents and the APM server have to be configured with the same secret to
 Use this setting in case the APM Server requires a token (e.g. APM Server in Elastic Cloud).
 
 [float]
+[[config-verify-server-cert]]
+==== `VerifyServerCert`
+
+[options="header"]
+|============
+| Environment variable name        | IConfiguration or Web.config key
+| `ELASTIC_APM_VERIFY_SERVER_CERT` | `ElasticApm:VerifyServerCert`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `true`                  | Boolean
+|============
+
+By default, the agent verifies the SSL certificate if you use an HTTPS connection to the APM server.
+
+Verification can be disabled by changing this setting to false.
+
+[float]
 [[config-flush-interval]]
 ==== `FlushInterval` (added[1.1])
 
