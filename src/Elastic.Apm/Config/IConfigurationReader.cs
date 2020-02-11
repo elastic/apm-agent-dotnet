@@ -135,5 +135,11 @@ namespace Elastic.Apm.Config
 		int TransactionMaxSpans { get; }
 
 		double TransactionSampleRate { get; }
+
+		/// <summary>
+		/// The agent verifies the server's certificate if an HTTPS connection to the APM server is used.
+		/// Verification can be disabled by setting to <c>false</c>.
+		/// </summary>
+		bool VerifyServerCert { get; }
 	}
 }

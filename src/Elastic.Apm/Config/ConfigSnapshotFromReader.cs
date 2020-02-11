@@ -39,5 +39,6 @@ namespace Elastic.Apm.Config
 		public int StackTraceLimit => _content.StackTraceLimit;
 		public int TransactionMaxSpans => _content.TransactionMaxSpans;
 		public double TransactionSampleRate => _content.TransactionSampleRate;
+		public bool VerifyServerCert => _content.VerifyServerCert;
 	}
 }

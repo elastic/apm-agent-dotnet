@@ -53,6 +53,7 @@ namespace Elastic.Apm.Tests
 			public double SpanFramesMinDurationInMilliseconds => ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;
 			public int StackTraceLimit => ConfigConsts.DefaultValues.StackTraceLimit;
 			public double TransactionSampleRate => ConfigConsts.DefaultValues.TransactionSampleRate;
+			public bool VerifyServerCert => ConfigConsts.DefaultValues.VerifyServerCert;
 
 			public int TransactionMaxSpans => ConfigConsts.DefaultValues.TransactionMaxSpans;
 			// ReSharper restore UnassignedGetOnlyAutoProperty

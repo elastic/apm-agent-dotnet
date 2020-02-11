@@ -84,5 +84,8 @@ namespace Elastic.Apm.Config
 
 		public virtual double TransactionSampleRate =>
 			ParseTransactionSampleRate(Read(ConfigConsts.KeyNames.TransactionSampleRate, ConfigConsts.EnvVarNames.TransactionSampleRate));
+
+		public virtual bool VerifyServerCert =>
+			ParseVerifyServerCert(Read(ConfigConsts.KeyNames.VerifyServerCert, ConfigConsts.EnvVarNames.VerifyServerCert));
 	}
 }
