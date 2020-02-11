@@ -138,26 +138,29 @@ namespace Elastic.Apm.DiagnosticListeners
 				return;
 			}
 
-			if (!RequestHeadersContain(request, DistributedTracing.TraceContext.TraceParentHeaderName))
+			if (!RequestHeadersContain(request, TraceContext.TraceParentHeaderName))
 				// We call TraceParent.BuildTraceparent explicitly instead of DistributedTracingData.SerializeToString because
 				// in the future we might change DistributedTracingData.SerializeToString to use some other internal format
 				// but here we want the string to be in W3C 'traceparent' header format.
-				RequestHeadersAdd(request, DistributedTracing.TraceContext.TraceParentHeaderName, DistributedTracing.TraceContext.BuildTraceparent(span.OutgoingDistributedTracingData));
+				RequestHeadersAdd(request, TraceContext.TraceParentHeaderName, TraceContext.BuildTraceparent(span.OutgoingDistributedTracingData));
 
 			if (transaction is Transaction t)
 			{
 				if (t.ConfigSnapshot.UseElasticTraceparentHeader)
 				{
-					if (!RequestHeadersContain(request, DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed))
+					if (!RequestHeadersContain(request, TraceContext.TraceParentHeaderNamePrefixed))
 					{
-						RequestHeadersAdd(request, DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed,
-							DistributedTracing.TraceContext.BuildTraceparent(span.OutgoingDistributedTracingData));
+						RequestHeadersAdd(request, TraceContext.TraceParentHeaderNamePrefixed,
+							TraceContext.BuildTraceparent(span.OutgoingDistributedTracingData));
 					}
 				}
 			}
 
-			if (!RequestHeadersContain(request, DistributedTracing.TraceContext.TraceStateHeaderName) && transaction.OutgoingDistributedTracingData.HasTraceState)
-				RequestHeadersAdd(request, DistributedTracing.TraceContext.TraceStateHeaderName, DistributedTracing.TraceContext.BuildTraceState(transaction.OutgoingDistributedTracingData));
+			if (!RequestHeadersContain(request, TraceContext.TraceStateHeaderName) && transaction.OutgoingDistributedTracingData.HasTraceState)
+			{
+				RequestHeadersAdd(request, TraceContext.TraceStateHeaderName,
+					TraceContext.BuildTraceState(transaction.OutgoingDistributedTracingData));
+			}
 
 			if (!span.ShouldBeSentToApmServer) return;
 

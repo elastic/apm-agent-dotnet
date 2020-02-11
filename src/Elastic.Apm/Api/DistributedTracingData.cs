@@ -38,8 +38,6 @@ namespace Elastic.Apm.Api
 		/// </returns>
 		public string SerializeToString() => TraceContext.BuildTraceparent(this);
 
-		internal string SerializeTraceStateToString() => TraceContext.BuildTraceState(this);
-
 		/// <summary>
 		/// Deserializes an instance from a string.
 		/// This method should be used at the callee side and the deserialized instance can be passed to
@@ -52,9 +50,6 @@ namespace Elastic.Apm.Api
 		/// .
 		/// </returns>
 		public static DistributedTracingData TryDeserializeFromString(string serialized) => TraceContext.TryExtractTracingData(serialized);
-
-		internal static DistributedTracingData TryDeserializeFromString(string serializedTraceParent, string serializedTraceState) =>
-			TraceContext.TryExtractTracingData(serializedTraceParent, serializedTraceState);
 
 		public override string ToString() => new ToStringBuilder(nameof(DistributedTracingData))
 		{
