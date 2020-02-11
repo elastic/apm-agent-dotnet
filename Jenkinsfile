@@ -496,7 +496,7 @@ def dotnetWindows(Closure body){
   registry: "docker.elastic.co")
   //bat label: 'Docker Pull', script: "docker pull ${dockerTagName}"
   bat label: 'Docker Build', script: "docker build --tag ${dockerTagName}  -m 2GB .ci\\docker\\buildtools-windows"
-  bat label: 'Docker Push', script: "docker push ${dockerTagName}"
+  //bat label: 'Docker Push', script: "docker push ${dockerTagName}"
   docker.image("${dockerTagName}").inside(){
     body()
   }
