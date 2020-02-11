@@ -493,8 +493,8 @@ def dotnet(Closure body){
 def dotnetWindows(Closure body){
   //def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-windows:latest'
   dockerTagName = 'docker.io/elwpenn/windows-vstudio-msbuild:latest'
-  dockerLogin(secret: "secret/apm-team/ci/docker-registry/prod",
-  registry: "docker.io")
+  //dockerLogin(secret: "secret/apm-team/ci/docker-registry/prod",
+  //registry: "docker.io")
   try {
     bat label: 'Docker Pull', script: "docker pull ${dockerTagName}"
   } catch(all) {
