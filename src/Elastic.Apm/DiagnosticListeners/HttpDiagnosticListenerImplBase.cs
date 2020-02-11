@@ -138,11 +138,29 @@ namespace Elastic.Apm.DiagnosticListeners
 				return;
 			}
 
-			if (!RequestHeadersContain(request, TraceParent.TraceParentHeaderName))
+			if (!RequestHeadersContain(request, TraceContext.TraceParentHeaderName))
 				// We call TraceParent.BuildTraceparent explicitly instead of DistributedTracingData.SerializeToString because
 				// in the future we might change DistributedTracingData.SerializeToString to use some other internal format
 				// but here we want the string to be in W3C 'traceparent' header format.
-				RequestHeadersAdd(request, TraceParent.TraceParentHeaderName, TraceParent.BuildTraceparent(span.OutgoingDistributedTracingData));
+				RequestHeadersAdd(request, TraceContext.TraceParentHeaderName, TraceContext.BuildTraceparent(span.OutgoingDistributedTracingData));
+
+			if (transaction is Transaction t)
+			{
+				if (t.ConfigSnapshot.UseElasticTraceparentHeader)
+				{
+					if (!RequestHeadersContain(request, TraceContext.TraceParentHeaderNamePrefixed))
+					{
+						RequestHeadersAdd(request, TraceContext.TraceParentHeaderNamePrefixed,
+							TraceContext.BuildTraceparent(span.OutgoingDistributedTracingData));
+					}
+				}
+			}
+
+			if (!RequestHeadersContain(request, TraceContext.TraceStateHeaderName) && transaction.OutgoingDistributedTracingData.HasTraceState)
+			{
+				RequestHeadersAdd(request, TraceContext.TraceStateHeaderName,
+					TraceContext.BuildTraceState(transaction.OutgoingDistributedTracingData));
+			}
 
 			if (!span.ShouldBeSentToApmServer) return;
 

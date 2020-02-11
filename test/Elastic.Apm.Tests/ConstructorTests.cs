@@ -18,7 +18,7 @@ namespace Elastic.Apm.Tests
 		public void Compose()
 		{
 			//build AgentComponents manually so we can disable metrics collection. reason: creating metrics collector pro test and disposing it makes test failing (ETW or EventSource subscribe unsubscribe in each test in parallel if all tests are running)
-			var agent = new ApmAgent(new AgentComponents(null, configurationReader: new LogConfig(LogLevel.Warning), null, metricsCollector: null,
+			var agent = new ApmAgent(new AgentComponents(null, new LogConfig(LogLevel.Warning), null, null,
 				null, null));
 			var logger = agent.Logger as ConsoleLogger;
 
@@ -30,6 +30,8 @@ namespace Elastic.Apm.Tests
 		private class LogConfig : IConfigSnapshot
 		{
 			public LogConfig(LogLevel level) => LogLevel = level;
+
+			public string DbgDescription => "LogConfig";
 
 			// ReSharper disable UnassignedGetOnlyAutoProperty
 			public string CaptureBody => ConfigConsts.DefaultValues.CaptureBody;
@@ -53,12 +55,13 @@ namespace Elastic.Apm.Tests
 			public double SpanFramesMinDurationInMilliseconds => ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;
 			public int StackTraceLimit => ConfigConsts.DefaultValues.StackTraceLimit;
 			public double TransactionSampleRate => ConfigConsts.DefaultValues.TransactionSampleRate;
+
 			public bool VerifyServerCert => ConfigConsts.DefaultValues.VerifyServerCert;
+
+			public bool UseElasticTraceparentHeader => ConfigConsts.DefaultValues.UseElasticTraceparentHeader;
 
 			public int TransactionMaxSpans => ConfigConsts.DefaultValues.TransactionMaxSpans;
 			// ReSharper restore UnassignedGetOnlyAutoProperty
-
-			public string DbgDescription => "LogConfig";
 		}
 	}
 }

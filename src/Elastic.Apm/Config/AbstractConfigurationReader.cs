@@ -33,6 +33,9 @@ namespace Elastic.Apm.Config
 		protected static ConfigurationKeyValue Kv(string key, string value, string origin) =>
 			new ConfigurationKeyValue(key, value, origin);
 
+		protected bool ParseUseElasticTraceparentHeader(ConfigurationKeyValue kv) =>
+			ParseBoolOption(kv, DefaultValues.UseElasticTraceparentHeader, "UseElasticTraceparentHeader");
+
 		protected internal static bool TryParseLogLevel(string value, out LogLevel level)
 		{
 			level = default;

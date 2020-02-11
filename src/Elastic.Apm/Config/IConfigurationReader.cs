@@ -137,6 +137,13 @@ namespace Elastic.Apm.Config
 		double TransactionSampleRate { get; }
 
 		/// <summary>
+		/// If true, for all outgoing HTTP requests the agent stores the traceparent in a header prefixed with elastic-apm
+		/// (elastic-apm-traceparent)
+		/// otherwise it'll use the official header name from w3c, which is "traceparewnt".
+		/// </summary>
+		bool UseElasticTraceparentHeader { get; }
+
+		/// <summary>
 		/// The agent verifies the server's certificate if an HTTPS connection to the APM server is used.
 		/// Verification can be disabled by setting to <c>false</c>.
 		/// </summary>

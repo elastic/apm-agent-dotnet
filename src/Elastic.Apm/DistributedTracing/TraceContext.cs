@@ -1,26 +1,30 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using Elastic.Apm.Api;
 
 namespace Elastic.Apm.DistributedTracing
 {
 	/// <summary>
 	/// This is an implementation of the
-	/// "https://www.w3.org/TR/trace-context/#traceparent-field" w3c 'traceparent' header draft.
-	/// elastic-apm-traceparent: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
-	/// (______________________)  () (______________________________) (______________) ()
+	/// "https://www.w3.org/TR/trace-context/#traceparent-field" w3c 'Trace Context'.
+	/// traceparent header:
+	/// traceparent: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
+	/// (_________)  () (______________________________) (______________) ()
 	///      v                     v                 v                        v         v
 	///  Header name           Version           Trace-Id                Span-Id     Flags
-	/// Since the w3c document is just a draft at the moment,
-	/// we don't use the official header name but prepend the custom prefix "Elastic-Apm-".
+	/// Also handles the tracestate header.
 	/// </summary>
-	internal static class TraceParent
+	internal static class TraceContext
 	{
 		private const byte FlagRecorded = 1; // 00000001
 		private const int OptionsLength = 2;
 		private const int SpanIdLength = 16;
 		private const int TraceIdLength = 32;
-		internal const string TraceParentHeaderName = "elastic-apm-traceparent";
+		internal const string TraceParentHeaderName = "traceparent";
+		internal const string TraceParentHeaderNamePrefixed = "elastic-apm-traceparent";
+		internal const string TraceStateHeaderName = "tracestate";
 		private const int VersionAndTraceIdAndSpanIdLength = 53;
 		private const int VersionAndTraceIdLength = 36;
 		private const int VersionPrefixIdLength = 3;
@@ -29,9 +33,12 @@ namespace Elastic.Apm.DistributedTracing
 		/// Parses the traceparent header
 		/// </summary>
 		/// <param name="traceParentValue">The value of the traceparent header</param>
+		/// <param name="traceStateValue">Tge value of the tracestate header</param>
 		/// <returns>The parsed data if parsing was successful, null otherwise.</returns>
-		internal static DistributedTracingData TryExtractTraceparent(string traceParentValue)
+		internal static DistributedTracingData TryExtractTracingData(string traceParentValue, string traceStateValue = null)
 		{
+			Console.WriteLine("TraceState: " + traceStateValue);
+
 			var bestAttempt = false;
 
 			if (string.IsNullOrWhiteSpace(traceParentValue)) return null;
@@ -113,7 +120,109 @@ namespace Elastic.Apm.DistributedTracing
 					return null;
 			}
 
-			return new DistributedTracingData(traceId, parentId, (traceFlags & FlagRecorded) == FlagRecorded);
+			return traceStateValue != null
+				? new DistributedTracingData(traceId, parentId, (traceFlags & FlagRecorded) == FlagRecorded, ValidateTracestate(traceStateValue))
+				: new DistributedTracingData(traceId, parentId, (traceFlags & FlagRecorded) == FlagRecorded);
+		}
+
+		/// <summary>
+		/// Validates the tracestate value
+		/// </summary>
+		/// <param name="traceState">The value to validate</param>
+		/// <returns>The <see cref="traceState" /> if the value is a valid trace state, <code>null</code> otherwise</returns>
+		private static string ValidateTracestate(string traceState)
+		{
+			if (string.IsNullOrEmpty(traceState))
+				return null;
+
+			var listMembers = traceState.Split(',');
+			var set = new HashSet<string>();
+
+			if (!listMembers.Any() || listMembers.Length > 32) return null;
+
+			var sb = new StringBuilder();
+
+			foreach (var listMember in listMembers)
+			{
+				var item = listMember.Split('=');
+				if (item.Count() != 2)
+					continue;
+
+				if (set.Contains(item[0]))
+					return null;
+
+				if (item[0].Length > 256)
+					return null;
+
+				if (item[0].Contains('@'))
+				{
+					var vendorFormatKey = item[0].Split('@');
+					if (vendorFormatKey.Count() != 2)
+						return null;
+
+					if (vendorFormatKey[0].Length == 0 || string.IsNullOrEmpty(vendorFormatKey[0]) || vendorFormatKey[0].Length > 241)
+						return null;
+					if (vendorFormatKey[1].Length == 0 || string.IsNullOrEmpty(vendorFormatKey[1]) || vendorFormatKey[1].Length > 14)
+						return null;
+
+					if (!ValidateKey(vendorFormatKey[0]) || !ValidateKey(vendorFormatKey[1])) return null;
+				}
+				else
+				{
+					if (!ValidateKey(item[0]))
+						return null;
+				}
+
+				if (!ValidateValue(item[1]))
+					return null;
+
+				if (sb.Length != 0)
+					sb.Append(',');
+				sb.Append(listMember);
+
+				set.Add(item[0]);
+			}
+
+			return sb.Length != traceState.Length ? sb.ToString() : traceState;
+
+			static bool ValidateValue(string str)
+			{
+				if (string.IsNullOrEmpty(str))
+					return false;
+
+				// ReSharper disable once LoopCanBeConvertedToQuery
+				for (var i = 0; i < str.Length; i++)
+				{
+					var c = str[i];
+					var isOk = c >= 0x20 && c <= 0x7E || c == '\t' && c != ',' && c != '='
+						//OWS rule: if we hit a ' ', then it must be next to a '\t'
+						|| c == ' ' && (i > 0 && str[i - 1] == '\t' || i < str.Length - 2 && str[i + 1] == '\t');
+
+					if (!isOk)
+						return false;
+				}
+
+				return true;
+			}
+
+			static bool ValidateKey(string str)
+			{
+				// ReSharper disable once LoopCanBeConvertedToQuery
+				for (var i = 0; i < str.Length; i++)
+				{
+					var c = str[i];
+					var isOk = c >= '0' && c <= '9' ||
+						c >= 'a' && c <= 'z'
+						|| c == '_' || c == '-' || c == '*' || c == '/' || c == '\t'
+						//OWS rule: if we hit a ' ', then it must be next to a '\t'
+						|| c == ' ' && (i > 0 && str[i - 1] == '\t' || i < str.Length - 2 && str[i + 1] == '\t');
+
+					if (!isOk)
+						return false;
+				}
+
+				return true;
+			}
 		}
 
 		internal static bool IsHex(IEnumerable<char> chars)
@@ -134,10 +243,10 @@ namespace Elastic.Apm.DistributedTracing
 		public static string BuildTraceparent(DistributedTracingData distributedTracingData)
 			=> $"00-{distributedTracingData.TraceId}-{distributedTracingData.ParentId}-{(distributedTracingData.FlagRecorded ? "01" : "00")}";
 
-		internal static bool IsTraceIdValid(string traceId)
+		private static bool IsTraceIdValid(string traceId)
 			=> !string.IsNullOrWhiteSpace(traceId) && traceId.Length == 32 && IsHex(traceId) && traceId != "00000000000000000000000000000000";
 
-		internal static bool IsTraceParentValid(string parentId)
+		private static bool IsTraceParentValid(string parentId)
 			=> !string.IsNullOrWhiteSpace(parentId) && parentId.Length == 16 && IsHex(parentId) && parentId != "0000000000000000";
 
 		/// <summary>
@@ -168,5 +277,8 @@ namespace Elastic.Apm.DistributedTracing
 				throw new ArgumentOutOfRangeException("Invalid character: " + c);
 			}
 		}
+
+		internal static string BuildTraceState(DistributedTracingData distributedTracingData)
+			=> distributedTracingData.TraceState;
 	}
 }

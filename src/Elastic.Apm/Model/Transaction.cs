@@ -20,6 +20,8 @@ namespace Elastic.Apm.Model
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
 
+		private readonly string _traceState;
+
 		// This constructor is meant for serialization
 		[JsonConstructor]
 		private Transaction(Context context, string name, string type, double duration, long timestamp, string id, string traceId, string parentId,
@@ -42,8 +44,7 @@ namespace Elastic.Apm.Model
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigStore.CurrentSnapshot,
-				agent.TracerInternal.CurrentExecutionSegmentsContainer)
-		{ }
+				agent.TracerInternal.CurrentExecutionSegmentsContainer) { }
 
 		internal Transaction(
 			IApmLogger logger,
@@ -82,6 +83,7 @@ namespace Elastic.Apm.Model
 				ParentId = distributedTracingData.ParentId;
 				IsSampled = distributedTracingData.FlagRecorded;
 				isSamplingFromDistributedTracingData = true;
+				_traceState = distributedTracingData.TraceState;
 			}
 
 			SpanCount = new SpanCount();
@@ -111,12 +113,6 @@ namespace Elastic.Apm.Model
 		private string _name;
 
 		/// <summary>
-		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
-		/// <seealso cref="ShouldSerializeContext" />
-		/// </summary>
-		public Context Context => _context.Value;
-
-		/// <summary>
 		/// Holds configuration snapshot (which is immutable) that was current when this transaction started.
 		/// We would like transaction data to be consistent and not to be affected by possible changes in agent's configuration
 		/// between the start and the end of the transaction. That is why the way all the data is collected for the transaction
@@ -124,6 +120,15 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		[JsonIgnore]
 		internal IConfigSnapshot ConfigSnapshot { get; }
+
+		/// <summary>
+		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
+		/// <seealso cref="ShouldSerializeContext" />
+		/// </summary>
+		public Context Context => _context.Value;
+
+		[JsonIgnore]
+		public Dictionary<string, string> Custom => Context.Custom;
 
 		/// <inheritdoc />
 		/// <summary>
@@ -144,6 +149,9 @@ namespace Elastic.Apm.Model
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Id { get; }
 
+		[JsonIgnore]
+		internal bool IsContextCreated => _context.IsValueCreated;
+
 		[JsonProperty("sampled")]
 		public bool IsSampled { get; }
 
@@ -162,7 +170,7 @@ namespace Elastic.Apm.Model
 		}
 
 		[JsonIgnore]
-		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(TraceId, Id, IsSampled);
+		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(TraceId, Id, IsSampled, _traceState);
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		[JsonProperty("parent_id")]
@@ -194,9 +202,6 @@ namespace Elastic.Apm.Model
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
 
-		[JsonIgnore]
-		public Dictionary<string, string> Custom => Context.Custom;
-
 		/// <summary>
 		/// Method to conditionally serialize <see cref="Context" /> because context should be serialized only when the transaction
 		/// is sampled.
@@ -204,9 +209,6 @@ namespace Elastic.Apm.Model
 		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
 		/// </summary>
 		public bool ShouldSerializeContext() => IsSampled;
-
-		[JsonIgnore]
-		internal bool IsContextCreated => _context.IsValueCreated;
 
 		public override string ToString() => new ToStringBuilder(nameof(Transaction))
 		{

@@ -160,7 +160,7 @@ namespace Elastic.Apm.PerfTests
 		{
 			const string traceParent = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01";
 
-			var res = TraceParent.TryExtractTraceparent(traceParent);
+			var res = DistributedTracing.TraceContext.TryExtractTracingData(traceParent);
 			Debug.WriteLine($"{res}");
 		}
 	}
