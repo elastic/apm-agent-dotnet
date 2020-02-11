@@ -491,18 +491,22 @@ def dotnet(Closure body){
 }
 
 def dotnetWindows(Closure body){
-  def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-windows:latest'
+  //def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-windows:latest'
+  dockerTagName = 'docker.io/elwpenn/windows-vstudio-msbuild:latest'
   dockerLogin(secret: "secret/apm-team/ci/docker-registry/prod",
-  registry: "docker.elastic.co")
+  registry: "docker.io")
   try {
     bat label: 'Docker Pull', script: "docker pull ${dockerTagName}"
   } catch(all) {
     // No tag to pull, Do nothing
   }
   bat label: 'Docker Build', script: "docker build --tag ${dockerTagName}  -m 2GB .ci\\docker\\buildtools-windows"
-  dockerLogin(secret: "secret/apm-team/ci/docker-registry/prod",
-  registry: "push.docker.elastic.co")
-  bat label: 'Docker Push', script: "docker push push.${dockerTagName}"
+  try {
+    bat label: 'Docker Push', script: "docker push push.${dockerTagName}"
+  } catch(all) {
+    // Push didn't work, we can still build despite this
+  }
+  
   docker.image("${dockerTagName}").inside(){
     body()
   }
