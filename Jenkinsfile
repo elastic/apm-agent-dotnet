@@ -252,9 +252,9 @@ pipeline {
                         dir("${BASE_DIR}"){
                           dotnetWindows(){
                             powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                            retry(3) {
-                              bat label: 'Build', script: '.ci/windows/dotnet.bat'
-                            }
+                            bat label: 'Prepare solution', script: '.ci/windows/prepare-test.bat'
+                            bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                            powershell label: 'Add 2.2 To Path', script: '.ci\\windows\\path-dotnetCore22.ps1'
                             bat label: 'Test & coverage', script: '.ci/windows/test.bat'
                             powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
                           }
@@ -271,6 +271,28 @@ pipeline {
                       unsuccessful {
                         archiveArtifacts(allowEmptyArchive: true,
                           artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                      }
+                    }
+                  }
+                  stage('IIS Tests') {
+                    steps {
+                      withGithubNotify(context: 'IIS Tests', tab: 'tests') {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          dotnetWindows(){
+                            bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                            bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
+                            powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                          }
+                        }
+                      }
+                    }
+                    post {
+                      always {
+                        junit(allowEmptyResults: true,
+                          keepLongStdio: true,
+                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       }
                     }
                   }
