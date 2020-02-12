@@ -266,7 +266,7 @@ pipeline {
                         archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/target/diag.log,${BASE_DIR}/target/TestResults.xml")
                         junit(allowEmptyResults: true,
                           keepLongStdio: true,
-                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
+                          testResults: "${BASE_DIR}/1**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       }
                       unsuccessful {
                         archiveArtifacts(allowEmptyArchive: true,
@@ -491,18 +491,18 @@ def dotnet(Closure body){
 }
 
 def dotnetWindows(Closure body){
-  //def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-windows:latest'
-  dockerTagName = 'docker.io/elwpenn/windows-vstudio-msbuild:latest'
+  def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-windows:latest'
+  //dockerTagName = 'docker.io/elwpenn/windows-vstudio-msbuild:latest'
   //dockerLogin(secret: "secret/apm-team/ci/docker-registry/prod",
   //registry: "docker.io")
   try {
-    bat label: 'Docker Pull', script: "docker pull ${dockerTagName}"
+    //bat label: 'Docker Pull', script: "docker pull ${dockerTagName}"
   } catch(all) {
     // No tag to pull, Do nothing
   }
   bat label: 'Docker Build', script: "docker build --tag ${dockerTagName}  -m 2GB .ci\\docker\\buildtools-windows"
   try {
-    bat label: 'Docker Push', script: "docker push push.${dockerTagName}"
+    //bat label: 'Docker Push', script: "docker push ${dockerTagName}"
   } catch(all) {
     // Push didn't work, we can still build despite this
   }
