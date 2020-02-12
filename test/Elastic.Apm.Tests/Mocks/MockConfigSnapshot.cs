@@ -35,6 +35,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _transactionMaxSpans;
 		private readonly string _transactionSampleRate;
 		private readonly string _useElasticTraceparentHeader;
+		private readonly string _verifyServerCert;
 
 		public MockConfigSnapshot(
 			IApmLogger logger = null,
@@ -61,6 +62,7 @@ namespace Elastic.Apm.Tests.Mocks
 			string sanitizeFieldNames = null,
 			string globalLabels = null,
 			string disableMetrics = null,
+			string verifyServerCert = null,
 			string useElasticTraceparentHeader = null
 		) : base(logger, ThisClassName)
 		{
@@ -87,6 +89,7 @@ namespace Elastic.Apm.Tests.Mocks
 			_sanitizeFieldNames = sanitizeFieldNames;
 			_globalLabels = globalLabels;
 			_disableMetrics = disableMetrics;
+			_verifyServerCert = verifyServerCert;
 			_useElasticTraceparentHeader = useElasticTraceparentHeader;
 		}
 
@@ -137,5 +140,8 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public bool UseElasticTraceparentHeader =>
 			ParseUseElasticTraceparentHeader(Kv(ConfigConsts.EnvVarNames.UseElasticTraceparentHeader, _useElasticTraceparentHeader, Origin));
+
+		public bool VerifyServerCert =>
+			ParseVerifyServerCert(Kv(ConfigConsts.EnvVarNames.VerifyServerCert, _verifyServerCert, Origin));
 	}
 }

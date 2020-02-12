@@ -40,5 +40,6 @@ namespace Elastic.Apm.Config
 		public int TransactionMaxSpans => _content.TransactionMaxSpans;
 		public double TransactionSampleRate => _content.TransactionSampleRate;
 		public bool UseElasticTraceparentHeader => _content.UseElasticTraceparentHeader;
+		public bool VerifyServerCert => _content.VerifyServerCert;
 	}
 }

@@ -475,7 +475,10 @@ namespace Elastic.Apm.BackendComm
 			public int TransactionMaxSpans => _configDelta.TransactionMaxSpans ?? _wrapped.TransactionMaxSpans;
 
 			public double TransactionSampleRate => _configDelta.TransactionSampleRate ?? _wrapped.TransactionSampleRate;
+
 			public bool UseElasticTraceparentHeader => _wrapped.UseElasticTraceparentHeader;
+
+			public bool VerifyServerCert => _wrapped.VerifyServerCert;
 		}
 	}
 }

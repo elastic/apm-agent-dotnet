@@ -753,6 +753,8 @@ namespace Elastic.Apm.Tests
 				);
 		}
 
+
+
 		/// <summary>
 		/// Disables CPU metrics and makes sure that remaining metrics are still captured
 		/// </summary>
@@ -777,6 +779,23 @@ namespace Elastic.Apm.Tests
 				.Contain(n => n.KeyValue.Key.Equals("system.process.memory.size", StringComparison.InvariantCultureIgnoreCase));
 			firstMetrics.Samples.Should()
 				.Contain(n => n.KeyValue.Key.Equals("system.process.memory.rss.bytes", StringComparison.InvariantCultureIgnoreCase));
+		}
+
+		[Fact]
+		public void DefaultVerifyServerCertIsTrue()
+		{
+			var agent = new ApmAgent(new TestAgentComponents());
+			agent.ConfigurationReader.VerifyServerCert.Should().BeTrue();
+		}
+
+		[Theory]
+		[InlineData("false", false)]
+		[InlineData("true", true)]
+		[InlineData("nonsense value", true)]
+		public void SetVerifyServerCert(string verifyServerCert, bool expected)
+		{
+			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(verifyServerCert: verifyServerCert)));
+			agent.ConfigurationReader.VerifyServerCert.Should().Be(expected);
 		}
 
 		private static double MetricsIntervalTestCommon(string configValue)

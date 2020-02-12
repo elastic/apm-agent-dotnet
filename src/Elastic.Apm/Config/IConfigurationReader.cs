@@ -142,5 +142,11 @@ namespace Elastic.Apm.Config
 		/// otherwise it'll use the official header name from w3c, which is "traceparewnt".
 		/// </summary>
 		bool UseElasticTraceparentHeader { get; }
+
+		/// <summary>
+		/// The agent verifies the server's certificate if an HTTPS connection to the APM server is used.
+		/// Verification can be disabled by setting to <c>false</c>.
+		/// </summary>
+		bool VerifyServerCert { get; }
 	}
 }

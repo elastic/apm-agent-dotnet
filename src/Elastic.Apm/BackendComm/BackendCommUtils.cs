@@ -3,7 +3,9 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Security;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using Elastic.Apm.Api;
@@ -105,6 +107,18 @@ namespace Elastic.Apm.BackendComm
 				servicePoint.ConnectionLimit = 20;
 			});
 
+		private static HttpClientHandler CreateHttpClientHandler(bool verifyServerCert, IApmLogger logger)
+		{
+			bool ServerCertificateCustomValidationCallback(HttpRequestMessage message, X509Certificate2 certificate, X509Chain chain, SslPolicyErrors policyError)
+			{
+				if (policyError == SslPolicyErrors.None) return true;
+
+				logger.Trace()?.Log("Certificate validation failed. Policy error {PolicyError}", policyError);
+				return !verifyServerCert;
+			}
+
+			return new HttpClientHandler { ServerCertificateCustomValidationCallback = ServerCertificateCustomValidationCallback };
+		}
 
 		internal static HttpClient BuildHttpClient(IApmLogger loggerArg, IConfigSnapshot config, Service service, string dbgCallerDesc
 			, HttpMessageHandler httpMessageHandler = null
@@ -118,7 +132,8 @@ namespace Elastic.Apm.BackendComm
 			logger.Debug()
 				?.Log("Building HTTP client with BaseAddress: {ApmServerUrl} for {dbgCallerDesc}..."
 					, serverUrlBase, dbgCallerDesc);
-			var httpClient = new HttpClient(httpMessageHandler ?? new HttpClientHandler()) { BaseAddress = serverUrlBase };
+			var httpClient =
+				new HttpClient(httpMessageHandler ?? CreateHttpClientHandler(config.VerifyServerCert, loggerArg)) { BaseAddress = serverUrlBase };
 			httpClient.DefaultRequestHeaders.UserAgent.Add(
 				new ProductInfoHeaderValue($"elasticapm-{Consts.AgentName}", AdaptUserAgentValue(service.Agent.Version)));
 			httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("System.Net.Http",

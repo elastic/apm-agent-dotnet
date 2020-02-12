@@ -87,5 +87,8 @@ namespace Elastic.Apm.Config
 
 		public bool UseElasticTraceparentHeader => ParseUseElasticTraceparentHeader(Read(ConfigConsts.KeyNames.UseElasticTraceparentheader,
 			ConfigConsts.EnvVarNames.UseElasticTraceparentHeader));
+
+		public virtual bool VerifyServerCert =>
+			ParseVerifyServerCert(Read(ConfigConsts.KeyNames.VerifyServerCert, ConfigConsts.EnvVarNames.VerifyServerCert));
 	}
 }

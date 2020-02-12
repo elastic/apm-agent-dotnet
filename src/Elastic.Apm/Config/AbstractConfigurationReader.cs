@@ -120,6 +120,13 @@ namespace Elastic.Apm.Config
 			return kv.Value;
 		}
 
+		protected bool ParseVerifyServerCert(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.VerifyServerCert;
+			// ReSharper disable once SimplifyConditionalTernaryExpression
+			return bool.TryParse(kv.Value, out var value) ? value : DefaultValues.VerifyServerCert;
+		}
+
 		protected bool ParseCaptureHeaders(ConfigurationKeyValue kv) => ParseBoolOption(kv, DefaultValues.CaptureHeaders, "CaptureHeaders");
 
 		protected LogLevel ParseLogLevel(ConfigurationKeyValue kv)
