@@ -519,13 +519,13 @@ def dotnetWindows(Closure body){
   //registry: "docker.io")
   try {
     bat label: 'Docker Pull', script: "docker pull ${dockerTagName}"
-  } catch(all) {
+  } catch(pullEx) {
     // If Pull fails, rebuild image
     bat label: 'Docker Build', script: "docker build --tag ${dockerTagName}  -m 2GB .ci\\docker\\buildtools-windows"
     try {
       // This will fail until we are properly using the docker registry
       bat label: 'Docker Push', script: "docker push ${dockerTagName}"
-    } catch(all) {
+    } catch(pushEx) {
       // Push didn't work, we can still build despite this
     }
   }
