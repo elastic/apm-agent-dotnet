@@ -116,7 +116,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		}
 
 		[AspNetFullFrameworkFact]
-		public async Task CallSoapRequest()
+		public async Task CallSoap11Request()
 		{
 			var rootTxData = SampleAppUrlPaths.CallSoapServiceProtocolV1_1;
 			var fullUrl = Consts.SampleApp.RootUrl + "/" + rootTxData.RelativeUrlPath;
@@ -141,6 +141,42 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/xml"));
 				request.Content.Headers.ContentType = new MediaTypeHeaderValue("text/xml");
 				request.Headers.Add("SOAPAction", $"http://tempuri.org/{action}");
+
+				var response = client.SendAsync(request).Result;
+			}
+
+			await WaitAndCustomVerifyReceivedData(receivedData =>
+			{
+				receivedData.Transactions.Count.Should().Be(1);
+				receivedData.Transactions.First().Name.Should().EndWith(action);
+			});
+		}
+
+		[AspNetFullFrameworkFact]
+		public async Task CallSoap12Request()
+		{
+			var rootTxData = SampleAppUrlPaths.CallSoapServiceProtocolV1_2;
+			var fullUrl = Consts.SampleApp.RootUrl + "/" + rootTxData.RelativeUrlPath;
+			var action = "Ping";
+
+			var httpContent = new StringContent($@"<?xml version=""1.0"" encoding=""utf-8""?>
+                <soap12:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns:soap12=""http://www.w3.org/2003/05/soap-envelope"">
+                  <soap12:Body>
+                    <{action} xmlns=""http://tempuri.org/"" />
+                  </soap12:Body>
+                </soap12:Envelope>", Encoding.UTF8, "text/xml");
+
+			using (var client = new HttpClient())
+			{
+				var request = new HttpRequestMessage()
+				{
+					RequestUri = new Uri(fullUrl),
+					Method = HttpMethod.Post,
+					Content = httpContent
+				};
+
+				client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/xml"));
+				request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/soap+xml; charset=utf-8");
 
 				var response = client.SendAsync(request).Result;
 			}

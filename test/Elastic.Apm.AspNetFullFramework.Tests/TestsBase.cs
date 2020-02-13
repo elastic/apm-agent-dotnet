@@ -158,6 +158,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			internal static readonly SampleAppUrlPathData CallSoapServiceProtocolV1_1 =
 				new SampleAppUrlPathData("Asmx/Health.asmx", (int)HttpStatusCode.OK);
+
+			internal static readonly SampleAppUrlPathData CallSoapServiceProtocolV1_2 =
+			new SampleAppUrlPathData("Asmx/Health.asmx", (int)HttpStatusCode.OK);
 		}
 
 		private TimedEvent? _sampleAppClientCallTiming;
