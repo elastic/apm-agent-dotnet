@@ -513,18 +513,25 @@ def dotnet(Closure body){
 }
 
 def dotnetWindows(Closure body){
-  //def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-windows:latest'
-  dockerTagName = 'docker.io/elwpenn/windows-vstudio-msbuild:latest'
-  //dockerLogin(secret: "secret/apm-team/ci/docker-registry/prod",
-  //registry: "docker.io")
+  def dockerPullUri = 'docker.elastic.co/';
+  def dockerPushUri = 'container-registry-test.elastic.co';
+  def dockerBuildTag = 'observability-ci/apm-agent-dotnet-windows:latest'
+  def dockerPullTag = dockerPullUri + dockerBuildTag;
+  //dockerTagName = 'docker.io/elwpenn/windows-vstudio-msbuild:latest'
+  dockerLogin(secret: "secret/apm-team/ci/docker-registry/prod",
+  registry: "docker.elastic.co")
   try {
-    bat label: 'Docker Pull', script: "docker pull ${dockerTagName}"
+    bat label: 'Docker Pull', script: "docker pull ${dockerPullTag}"
   } catch(pullEx) {
     // If Pull fails, rebuild image
-    bat label: 'Docker Build', script: "docker build --tag ${dockerTagName}  -m 2GB .ci\\docker\\buildtools-windows"
+    bat label: 'Docker Build', script: "docker build --tag ${dockerPullTag}  -m 2GB .ci\\docker\\buildtools-windows"
     try {
       // This will fail until we are properly using the docker registry
-      bat label: 'Docker Push', script: "docker push ${dockerTagName}"
+      def dockerPushTag = dockerPushUri + dockerBuildTag;
+      dockerLogin(secret: "secret/apm-team/ci/docker-registry/prod",
+      registry: "container-registry-test.elastic.co")
+      bat label: 'Docker Tag', script: "docker tag ${dockerPullTag} ${dockerPushTag}"
+      bat label: 'Docker Push', script: "docker push ${dockerPushTag}"
     } catch(pushEx) {
       // Push didn't work, we can still build despite this
     }
