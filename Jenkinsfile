@@ -517,11 +517,11 @@ def dotnetWindows(Closure body){
   def dockerPushUri = 'container-registry-test.elastic.co';
   def dockerBuildTag = 'observability-ci/apm-agent-dotnet-windows:latest'
   def dockerPullTag = dockerPullUri + dockerBuildTag;
-  //dockerTagName = 'docker.io/elwpenn/windows-vstudio-msbuild:latest'
   dockerLogin(secret: "secret/apm-team/ci/docker-registry/prod",
   registry: "docker.elastic.co")
+  def dockerTagName = 'docker.io/elwpenn/windows-vstudio-msbuild:latest'
   try {
-    bat label: 'Docker Pull', script: "docker pull ${dockerPullTag}"
+    bat label: 'Docker Pull', script: "docker pull ${dockerTagName}"
   } catch(pullEx) {
     // If Pull fails, rebuild image
     bat label: 'Docker Build', script: "docker build --tag ${dockerPullTag}  -m 2GB .ci\\docker\\buildtools-windows"
