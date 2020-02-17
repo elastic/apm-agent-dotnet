@@ -23,8 +23,10 @@ namespace Elastic.Apm.Tests.HelpersTests
 			{ 5 * 24 * 60 * 60 * 1_000_000L, new DateTime(1970, 1, 6, 0, 0, 0, DateTimeKind.Utc) }
 		};
 
+#if NETCOREAPP
 		[Fact]
 		public void TimeUtilsUnixEpochDateTimeEqualsDateTimeUnixEpoch() => TimeUtils.UnixEpochDateTime.Should().Be(DateTime.UnixEpoch);
+#endif
 
 		[Theory]
 		[InlineData(0)]

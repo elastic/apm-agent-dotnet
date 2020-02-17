@@ -17,6 +17,6 @@ namespace Elastic.Apm.Tests.Mocks
 		public TestLogger(LogLevel level, StringWriter writer) : base(level, writer, writer) => _writer = writer;
 
 		public IReadOnlyList<string> Lines =>
-			_writer.GetStringBuilder().ToString().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).ToList();
+			_writer.GetStringBuilder().ToString().Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries).ToList();
 	}
 }
