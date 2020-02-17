@@ -255,7 +255,7 @@ pipeline {
                             bat label: 'Prepare solution', script: '.ci/windows/prepare-test.bat'
                             bat label: 'Build', script: '.ci/windows/msbuild.bat'
                             powershell label: 'Add .netCore 2.2 To Path', script: '.ci\\windows\\path-dotnetCore22.ps1'
-                            bat label: 'Test & coverage', script: '.ci/windows/test.bat'
+                            bat label: 'Test & coverage', script: '.ci/windows/test.bat > test.log'
                             powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
                           }
                         }
