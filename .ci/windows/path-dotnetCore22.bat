@@ -1,0 +1,1 @@
+setx /M PATH "C:\DotNetCore22;%PATH%;"
