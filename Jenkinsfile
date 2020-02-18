@@ -517,6 +517,8 @@ def dotnetWindows(Closure body){
   def dockerTagName = "${dockerUri}observability-ci/apm-agent-dotnet-windows:latest"
   dockerLogin(secret: "secret/apm-team/ci/docker-registry/prod",
   registry: "docker.elastic.co")
+  // Remove this line once push/pull is enabled by Infra
+  dockerTagName = 'docker.io/elwpenn/windows-vstudio-msbuild:latest'
   try {
     bat label: 'Docker Pull', script: "docker pull ${dockerTagName}"
   } catch(pullEx) {
