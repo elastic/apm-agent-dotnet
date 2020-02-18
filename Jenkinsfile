@@ -237,10 +237,62 @@ pipeline {
                         dir("${BASE_DIR}") {
                           catchError(message: 'Beta stage', buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                             dotnetWindows(){
-                              bat 'msbuild'
+                              bat label: 'Build', script: '.ci\\windows\\msbuild.bat'
                             }
                           }
                         }
+                      }
+                    }
+                  }
+                  stage('Test') {
+                    steps {
+                      withGithubNotify(context: 'Test Docker - Windows', tab: 'tests') {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          dotnetWindows(){
+                            powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                            bat label: 'Prepare solution', script: '.ci/windows/prepare-test.bat'
+                            bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                            bat label: 'Add .netCore 2.2 To Path', script: '.ci\\windows\\add-dotnet22Path.bat'
+                            bat label: 'Test & coverage', script: '.ci/windows/test.bat'
+                            powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                          }
+                        }
+                      }
+                    }
+                    post {
+                      always {
+                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/target/diag.log,${BASE_DIR}/target/TestResults.xml")
+                        junit(allowEmptyResults: true,
+                          keepLongStdio: true,
+                          testResults: "${BASE_DIR}/1**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
+                      }
+                      unsuccessful {
+                        archiveArtifacts(allowEmptyArchive: true,
+                          artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                      }
+                    }
+                  }
+                  stage('IIS Tests') {
+                    steps {
+                      withGithubNotify(context: 'IIS Tests', tab: 'tests') {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          dotnetWindows(){
+                            bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                            bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
+                            powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                          }
+                        }
+                      }
+                    }
+                    post {
+                      always {
+                        junit(allowEmptyResults: true,
+                          keepLongStdio: true,
+                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       }
                     }
                   }
@@ -461,8 +513,22 @@ def dotnet(Closure body){
 }
 
 def dotnetWindows(Closure body){
-  def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-windows:latest'
-  bat label: 'Docker Build', script: "docker build --tag ${dockerTagName}  -m 2GB .ci\\docker\\buildtools-windows"
+  def dockerUri = 'docker.elastic.co/';
+  def dockerTagName = "${dockerUri}observability-ci/apm-agent-dotnet-windows:latest"
+  dockerLogin(secret: "secret/apm-team/ci/docker-registry/prod",
+  registry: "docker.elastic.co")
+  try {
+    bat label: 'Docker Pull', script: "docker pull ${dockerTagName}"
+  } catch(pullEx) {
+    // If pull fails we rebuild Image
+    bat label: 'Docker Build', script: "docker build --tag ${dockerTagName}  -m 2GB .ci\\docker\\buildtools-windows"
+    try {
+      bat label: 'Docker Push', script: "docker push ${dockerPushTag}"
+    } catch(pushEx) {
+      // Push didn't work, we can still build despite this.
+      // Should generate a notification as this will slow the build process down
+    }
+  }
   docker.image("${dockerTagName}").inside(){
     body()
   }
