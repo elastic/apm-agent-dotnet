@@ -14,7 +14,7 @@ namespace Elastic.Apm.SqlClient
 		private readonly ApmAgent _apmAgent;
 		private readonly IApmLogger _logger;
 
-		private readonly ConcurrentDictionary<int, (Span Span, long Start)> _spans = new ConcurrentDictionary<int, (Span, long)>();
+		private readonly ConcurrentDictionary<int, (Span Span, long Start)> _processingSpans = new ConcurrentDictionary<int, (Span, long)>();
 
 		public SqlEventListener(IApmAgent apmAgent)
 		{
@@ -22,10 +22,17 @@ namespace Elastic.Apm.SqlClient
 			_logger = _apmAgent.Logger.Scoped(nameof(SqlEventListener));
 		}
 
+		private EventSource _eventSource;
+
 		protected override void OnEventSourceCreated(EventSource eventSource)
 		{
 			if (eventSource != null && eventSource.Name == "Microsoft-AdoNet-SystemData")
-				EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)1);
+			{
+				if (!eventSource.IsEnabled(EventLevel.Informational, (EventKeywords)1))
+				{
+					EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)1);
+				}
+			}
 
 			base.OnEventSourceCreated(eventSource);
 		}
@@ -81,7 +88,7 @@ namespace Elastic.Apm.SqlClient
 			var span = (Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(_apmAgent)?.StartSpan(spanName, ApiConstants.TypeDb);
 			if (span == null) return;
 
-			if (_spans.TryAdd(id, (span, start)))
+			if (_processingSpans.TryAdd(id, (span, start)))
 			{
 				span.Context.Db = new Database
 				{
@@ -94,9 +101,8 @@ namespace Elastic.Apm.SqlClient
 
 				span.Context.Destination = _apmAgent.TracerInternal.DbSpanCommon.GetDestination($"Data Source={dataSource}", false, null);
 
-				// System.Data.SQLite and Microsoft.Data.Sqlite don't spread events via EventSource, however,
-				// can we say that other providers also don't do it?
-				// If only SqlClient can do that we can set span.SubType to ApiConstants.SubtypeMssql
+				// At the moment only System.Data.SqlClient and Microsoft.Data.SqlClient spread events via EventSource with Microsoft-AdoNet-SystemData name
+				span.Subtype = ApiConstants.SubtypeMssql;
 			}
 		}
 
@@ -118,22 +124,26 @@ namespace Elastic.Apm.SqlClient
 				?.Log("Process EndExecute event. Id: {Id}. Composite state: {CompositeState}. Sql exception number: {SqlExceptionNumber}.", id,
 					compositeState, sqlExceptionNumber);
 
-			if (_spans.TryGetValue(id, out var item))
+			if (!_processingSpans.TryGetValue(id, out var item))
 			{
-				var isSuccess = (compositeState & 1) == 1;
-				var isSqlException = (compositeState & 2) == 2;
-				// 4 - is synchronous
-
-				item.Span.Duration = ((stop - item.Start) / (double)Stopwatch.Frequency) * 1000;
-
-				if (isSqlException)
-				{
-					item.Span.CaptureError("Exception has occurred", sqlExceptionNumber != 0 ? $"SQL Exception {sqlExceptionNumber}" : null,
-						null);
-				}
-
-				item.Span.End();
+				_logger?.Warning()
+					?.Log("Failed capturing sql statement (failed to remove from ProcessingSpans).");
+				return;
 			}
+
+			var isSuccess = (compositeState & 1) == 1;
+			var isSqlException = (compositeState & 2) == 2;
+			// 4 - is synchronous
+
+			item.Span.Duration = ((stop - item.Start) / (double)Stopwatch.Frequency) * 1000;
+
+			if (isSqlException)
+			{
+				item.Span.CaptureError("Exception has occurred", sqlExceptionNumber != 0 ? $"SQL Exception {sqlExceptionNumber}" : null,
+					null);
+			}
+
+			item.Span.End();
 		}
 	}
 }
