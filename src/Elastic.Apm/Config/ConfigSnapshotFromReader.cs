@@ -31,6 +31,7 @@ namespace Elastic.Apm.Config
 
 		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _content.SanitizeFieldNames;
 		public string SecretToken => _content.SecretToken;
+		public string ApiKey => _content.ApiKey;
 		public IReadOnlyList<Uri> ServerUrls => _content.ServerUrls;
 		public string ServiceName => _content.ServiceName;
 		public string ServiceNodeName => _content.ServiceNodeName;

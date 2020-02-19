@@ -104,6 +104,7 @@ namespace Elastic.Apm.Config
 		// </summary>
 		IReadOnlyList<WildcardMatcher> SanitizeFieldNames { get; }
 		string SecretToken { get; }
+		string ApiKey { get; }
 		IReadOnlyList<Uri> ServerUrls { get; }
 		string ServiceName { get; }
 

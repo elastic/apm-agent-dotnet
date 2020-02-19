@@ -76,6 +76,7 @@ namespace Elastic.Apm.Config
 			private const string Prefix = "ELASTIC_APM_";
 			public const string SanitizeFieldNames = Prefix + "SANITIZE_FIELD_NAMES";
 			public const string SecretToken = Prefix + "SECRET_TOKEN";
+			public const string ApiKey = Prefix + "API_KEY";
 			public const string ServerUrls = Prefix + "SERVER_URLS";
 			public const string ServiceName = Prefix + "SERVICE_NAME";
 			public const string ServiceNodeName = Prefix + "SERVICE_NODE_NAME";
@@ -104,6 +105,7 @@ namespace Elastic.Apm.Config
 			public const string MetricsInterval = "ElasticApm:MetricsInterval";
 			public const string SanitizeFieldNames = "ElasticApm:SanitizeFieldNames";
 			public const string SecretToken = "ElasticApm:SecretToken";
+			public const string ApiKey = "ElasticApm:ApiKey";
 			public const string ServerUrls = "ElasticApm:ServerUrls";
 			public const string ServiceName = "ElasticApm:ServiceName";
 			public const string ServiceNodeName = "ElasticApm:ServiceNodeName";
