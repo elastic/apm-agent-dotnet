@@ -98,6 +98,12 @@ namespace Elastic.Apm.DiagnosticListeners
 				return;
 			}
 
+			if (_agent.Tracer.CurrentTransaction == null)
+			{
+				Logger.Debug()?.Log("No current transaction, skip creating span for outgoing HTTP request, {url}", requestUrl);
+				return;
+			}
+
 			if (IsRequestFilteredOut(requestUrl))
 			{
 				Logger.Trace()?.Log("Request URL ({RequestUrl}) is filtered out - exiting", Http.Sanitize(requestUrl));
