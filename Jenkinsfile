@@ -50,6 +50,10 @@ pipeline {
               environment {
                 MSBUILDDEBUGPATH = "${env.WORKSPACE}"
               }
+              when {
+                beforeAgent true
+                expression { return false }
+              }
               /**
               Make sure there are no code style violation in the repo.
               */
@@ -227,6 +231,10 @@ pipeline {
               stage('Docker .NET Framework'){
                 agent { label 'windows-2019-docker-immutable' }
                 options { skipDefaultCheckout() }
+                when {
+                  beforeAgent true
+                  expression { return false }
+                }
                 stages {
                   stage('Build - Docker MSBuild') {
                     steps {
@@ -247,6 +255,10 @@ pipeline {
               }
               stage('Windows .NET Core'){
                 agent { label 'windows-2019-immutable' }
+                when {
+                  beforeAgent true
+                  expression { return false }
+                }
                 options { skipDefaultCheckout() }
                 environment {
                   HOME = "${env.WORKSPACE}"
@@ -420,10 +432,8 @@ pipeline {
           stage('Integration Tests') {
             agent none
             when {
-              anyOf {
-                changeRequest()
-                expression { return !params.Run_As_Master_Branch }
-              }
+              beforeAgent true
+              expression { return false }
             }
             steps {
               log(level: 'INFO', text: 'Launching Async ITs')
