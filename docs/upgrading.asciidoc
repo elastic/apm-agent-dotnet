@@ -1,0 +1,28 @@
+[[upgrading]]
+== Upgrading
+Upgrades between minor versions of the agent, like from 1.1 to 1.2 are always backwards compatible.
+Upgrades that involve a major version bump often come with some backwards incompatible changes.
+
+Before upgrading the agent, be sure to review the:
+
+* <<release-notes,Agent release notes>>
+* {apm-overview-ref-v}/agent-server-compatibility.html[Agent and Server compatibility chart]
+
+[float]
+[[end-of-life-dates]]
+=== End of life dates
+
+We love all our products, but sometimes we must say goodbye to a release so that we can continue moving
+forward on future development and innovation.
+Our https://www.elastic.co/support/eol[End of life policy] defines how long a given release is considered supported,
+as well as how long a release is considered still in active development or maintenance.
+The table below is a simplified description of this policy.
+
+[options="header"]
+|====
+|Agent version |EOL Date |Maintained until
+|1.3.x |2021-08-12 |1.4.0
+|1.2.x |2021-05-22 |1.3.0
+|1.1.x |2021-04-01 |1.2.0
+|1.0.x |2021-01-31 |1.1.0
+|====

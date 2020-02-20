@@ -18,9 +18,11 @@ For instance, the bump from version 1.1.2 to 1.2 can be found in this https://gi
 
 ### Generating a changelog for the new version
 
-Once the version is updated, we can then generate the changelog, you can see the current changelog in [`CHANGELOG.asciidoc`](CHANGELOG.asciidod). The idea is to fill all the applicable sections so that users can consume an orderly changelog.
+Once the version is updated, we can then generate the changelog, you can see the current changelog in [`CHANGELOG.asciidoc`](CHANGELOG.asciidoc). The idea is to fill all the applicable sections so that users can consume an orderly changelog.
 
-After a changelog has been manually curated, a new pull request can be opened with the changelog and version update changes.
+For major and minor releases, you'll also need to update the EOL table in [`upgrading.asciidoc`](docs/upgrading.asciidoc). The EOL date is the release date plus 18 months.
+
+After a changelog has been manually curated, a new pull request can be opened with the changelog and version update changes (and EOL table if applicable).
 
 For instance, the changelog that was created for the 1.2 release can be found in this https://github.com/elastic/apm-agent-dotnet/pull/640
 

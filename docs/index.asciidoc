@@ -28,4 +28,6 @@ include::./performance-tuning.asciidoc[]
 
 // Troubleshooting
 
+include::./upgrading.asciidoc[]
+
 include::./release-notes.asciidoc[]
