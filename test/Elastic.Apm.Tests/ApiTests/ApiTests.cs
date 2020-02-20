@@ -683,8 +683,8 @@ namespace Elastic.Apm.Tests.ApiTests
 				agent.Tracer.CaptureTransaction(TestTransaction, CustomTransactionTypeForTests, transaction =>
 				{
 					capturedTransaction = transaction;
-					foreach (var (key, value) in expectedErrorContext.Labels)
-						transaction.Context.Labels[key] = value;
+					foreach (var item in expectedErrorContext.Labels)
+						transaction.Context.Labels[item.Key] = item.Value;
 					ISpan span = null;
 					if (captureOnSpan)
 					{
@@ -828,8 +828,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			}
 
 			payloadSender.Spans.Single().Context.Destination.Should().BeNull();
-			mockLogger.Lines.Should().Contain(line => line.Contains("destination", StringComparison.OrdinalIgnoreCase)
-				&& line.Contains("URL", StringComparison.OrdinalIgnoreCase));
+			mockLogger.Lines.Should().Contain(line => line.Contains("destination")
+				&& line.Contains("URL"));
 		}
 
 		private class TestException : Exception
