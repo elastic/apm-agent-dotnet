@@ -264,7 +264,7 @@ pipeline {
                         archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/target/diag.log,${BASE_DIR}/target/TestResults.xml")
                         junit(allowEmptyResults: true,
                           keepLongStdio: true,
-                          testResults: "${BASE_DIR}/1**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
+                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
                       }
                       unsuccessful {
                         archiveArtifacts(allowEmptyArchive: true,
