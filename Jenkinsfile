@@ -521,7 +521,7 @@ def dotnetWindows(Closure body){
     // If pull fails we rebuild Image
     bat label: 'Docker Build', script: "docker build --tag ${dockerTagName}  -m 2GB .ci\\docker\\buildtools-windows"
     try {
-      bat label: 'Docker Push', script: "docker push ${dockerPushTag}"
+      bat label: 'Docker Push', script: "docker push ${dockerTagName}"
     } catch(pushEx) {
       // Push didn't work, we can still build despite this.
       // Should generate a notification as this will slow the build process down
