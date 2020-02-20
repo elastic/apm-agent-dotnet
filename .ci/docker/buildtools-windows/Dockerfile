@@ -21,9 +21,6 @@ RUN setx /M PATH "C:\nuget;%PATH%;"
 # VS 2019 Pro
 ADD https://download.visualstudio.microsoft.com/download/pr/378e5eb4-c1d7-4c05-8f5f-55678a94e7f4/bace7d50d04acb355cf67ea7bb2ef7da7ceca883d3282f9a6544cb48579cc2a2/vs_Professional.exe C:\temp\vs_Professional.exe
 
-# VS 2019 Enterprise
-# ADD https://download.visualstudio.microsoft.com/download/pr/b79d5d47-f792-4eec-adcf-2da2dfa3e3db/4a244b3dd7c258763614d6e4eb914d42f47917e7cc6a70b509e9d9029aceddf2/vs_Enterprise.exe C:\temp\vs_enterprise.exe
-
 # Install Visual Studio Enterprise with Only packages necessary to build apm-agent-dotnet
 RUN C:\temp\vs_Professional.exe `
                 --quiet `
