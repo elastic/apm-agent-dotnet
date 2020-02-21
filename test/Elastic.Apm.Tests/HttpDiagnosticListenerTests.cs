@@ -701,6 +701,32 @@ namespace Elastic.Apm.Tests
 			}
 		}
 
+		/// <summary>
+		/// Makes sure that in case of an HTTP request without an active transaction the agent does not print warnings.
+		/// Covers https://github.com/elastic/apm-agent-dotnet/issues/734
+		/// </summary>
+		[Fact]
+		public async Task NoWarningWithNoTransaction()
+		{
+			var logger = new TestLogger(LogLevel.Trace);
+
+			// ServiceVersion is set, otherwise in the xUnit context it'd log a warning, since it can be auto discovered
+			new ApmAgent(new TestAgentComponents(logger, new MockConfigSnapshot(serviceVersion: "1.0"))).Subscribe(new HttpDiagnosticsSubscriber());
+
+			// No active transaction, just an HTTP request with an active agent
+			try
+			{
+				var httpClient = new HttpClient();
+				await (await httpClient.GetAsync("https://elastic.co")).Content.ReadAsStringAsync();
+			}
+			catch
+			{
+				/*ignore - result of the request does not matter */
+			}
+
+			logger.Lines.Should().NotContain(line => line.ToLower().Contains("warn"));
+		}
+
 		internal static (IDisposable, MockPayloadSender, ApmAgent) RegisterListenerAndStartTransaction()
 		{
 			var payloadSender = new MockPayloadSender();
