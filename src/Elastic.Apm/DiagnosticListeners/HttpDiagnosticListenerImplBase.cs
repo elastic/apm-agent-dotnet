@@ -176,8 +176,10 @@ namespace Elastic.Apm.DiagnosticListeners
 			{
 				// if we don't find the request in the dictionary and current transaction is null, then this is not a big deal -
 				// it was probably not captured in Start either - so we skip with a debug log
-				if (_agent.Tracer.CurrentTransaction ==  null)
-					Logger.Debug()?.Log("{eventName} called with no active current transaction, url: {url} - skipping event", nameof(ProcessStopEvent), Http.Sanitize(requestUrl));
+				if (_agent.Tracer.CurrentTransaction == null)
+					Logger.Debug()
+						?.Log("{eventName} called with no active current transaction, url: {url} - skipping event", nameof(ProcessStopEvent),
+							Http.Sanitize(requestUrl));
 				// otherwise it's strange and it deserves a warning
 				else
 				{
