@@ -19,9 +19,13 @@ namespace Elastic.Apm.SqlClient.Tests
 		private readonly MockPayloadSender _payloadSender;
 		private readonly ITestOutputHelper _testOutputHelper;
 
+		private readonly string _expectedAddress;
+
 		public SqlClientListenerTests(ITestOutputHelper testOutputHelper, SqlClientListenerFixture sqlClientListenerFixture)
 		{
 			_connectionString = sqlClientListenerFixture.ConnectionString;
+
+			_expectedAddress = new SqlConnectionStringBuilder(_connectionString).DataSource.Split(',')[0];
 
 			_testOutputHelper = testOutputHelper;
 
@@ -97,7 +101,7 @@ namespace Elastic.Apm.SqlClient.Tests
 			span.Context.Db.Type.Should().Be(Database.TypeSql);
 
 			span.Context.Destination.Should().NotBeNull();
-			span.Context.Destination.Address.Should().Be("localhost");
+			span.Context.Destination.Address.Should().Be(_expectedAddress);
 			span.Context.Destination.Port.Should().NotBeNull();
 		}
 
@@ -154,7 +158,7 @@ namespace Elastic.Apm.SqlClient.Tests
 			span.Context.Db.Type.Should().Be(Database.TypeSql);
 
 			span.Context.Destination.Should().NotBeNull();
-			span.Context.Destination.Address.Should().Be("localhost");
+			span.Context.Destination.Address.Should().Be(_expectedAddress);
 			span.Context.Destination.Port.Should().NotBeNull();
 		}
 
