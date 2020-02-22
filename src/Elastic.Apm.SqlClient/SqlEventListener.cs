@@ -24,6 +24,10 @@ namespace Elastic.Apm.SqlClient
 
 		protected override void OnEventSourceCreated(EventSource eventSource)
 		{
+			// Sql event source for Microsoft.Data.SqlClient has the same name as for System.Data.SqlClient
+			// Event source architecture doesn't allow to register two event sources with the same names
+			// As a result, we enable event listening via event source only for System.Data.SqlClient
+			// Event listening for Microsoft.Data.SqlClient will be enabled later after https://github.com/dotnet/SqlClient/issues/436 fix
 			if (eventSource != null && eventSource.Name == "Microsoft-AdoNet-SystemData"
 				&& eventSource.GetType().FullName == "System.Data.SqlEventSource")
 			{
