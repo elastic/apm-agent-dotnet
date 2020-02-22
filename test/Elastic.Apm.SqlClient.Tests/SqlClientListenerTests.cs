@@ -4,44 +4,36 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
-using TestEnvironment.Docker;
-using TestEnvironment.Docker.Containers.Mssql;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Elastic.Apm.SqlClient.Tests
 {
-	public class SqlClientListenerTests : IDisposable, IAsyncLifetime
+	public class SqlClientListenerTests : IDisposable, IClassFixture<SqlClientListenerFixture>
 	{
-		private readonly ITestOutputHelper _testOutputHelper;
-		private readonly DockerEnvironment _environment;
-
-		private readonly MockPayloadSender _payloadSender;
 		private readonly ApmAgent _apmAgent;
 
-		private const string ContainerName = "mssql";
+		private readonly MockPayloadSender _payloadSender;
+		private readonly ITestOutputHelper _testOutputHelper;
 
-		private string _connectionString;
-
-		public SqlClientListenerTests(ITestOutputHelper testOutputHelper)
+		public SqlClientListenerTests(ITestOutputHelper testOutputHelper, SqlClientListenerFixture sqlClientListenerFixture)
 		{
+			_connectionString = sqlClientListenerFixture.ConnectionString;
+
 			_testOutputHelper = testOutputHelper;
-			// BUILD_ID env variable is passed from the CI, therefore DockerInDocker is enabled.
-			_environment = new DockerEnvironmentBuilder()
-				.DockerInDocker(Environment.GetEnvironmentVariable("BUILD_ID") != null)
-				.AddMssqlContainer(ContainerName, "StrongPassword!!!!1")
-				.Build();
 
 			_payloadSender = new MockPayloadSender();
 			_apmAgent = new ApmAgent(new AgentComponents(
-				logger: new LineWriterToLoggerAdaptor(new XunitOutputToLineWriterAdaptor(_testOutputHelper)),
+				new LineWriterToLoggerAdaptor(new XunitOutputToLineWriterAdaptor(_testOutputHelper)),
 				payloadSender: _payloadSender));
 			_apmAgent.Subscribe(new SqlClientDiagnosticSubscriber());
 		}
+
+
+		private readonly string _connectionString;
 
 		public static IEnumerable<object[]> Connections
 		{
@@ -51,11 +43,13 @@ namespace Elastic.Apm.SqlClient.Tests
 				{
 					"System.Data.SqlClient", new Func<string, DbConnection>(connectionString => new SqlConnection(connectionString))
 				};
+#if !NETFRAMEWORK
 				yield return new object[]
 				{
 					"Microsoft.Data.SqlClient",
 					new Func<string, DbConnection>(connectionString => new Microsoft.Data.SqlClient.SqlConnection(connectionString))
 				};
+#endif
 			}
 		}
 
@@ -164,19 +158,6 @@ namespace Elastic.Apm.SqlClient.Tests
 			span.Context.Destination.Port.Should().NotBeNull();
 		}
 
-		public void Dispose()
-		{
-			_environment?.Dispose();
-			_apmAgent?.Dispose();
-		}
-
-		public async Task InitializeAsync()
-		{
-			await _environment.Up();
-			var mssql = _environment.GetContainer<MssqlContainer>(ContainerName);
-			_connectionString = mssql.GetConnectionString();
-		}
-
-		public async Task DisposeAsync() => await _environment.Down();
+		public void Dispose() => _apmAgent?.Dispose();
 	}
 }

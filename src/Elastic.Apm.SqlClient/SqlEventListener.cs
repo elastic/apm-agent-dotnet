@@ -24,12 +24,10 @@ namespace Elastic.Apm.SqlClient
 
 		protected override void OnEventSourceCreated(EventSource eventSource)
 		{
-			if (eventSource != null && eventSource.Name == "Microsoft-AdoNet-SystemData")
+			if (eventSource != null && eventSource.Name == "Microsoft-AdoNet-SystemData"
+				&& eventSource.GetType().FullName == "System.Data.SqlEventSource")
 			{
-				if (!eventSource.IsEnabled(EventLevel.Informational, (EventKeywords)1))
-				{
-					EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)1);
-				}
+				EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)1);
 			}
 
 			base.OnEventSourceCreated(eventSource);
