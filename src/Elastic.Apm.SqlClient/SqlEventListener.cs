@@ -22,8 +22,6 @@ namespace Elastic.Apm.SqlClient
 			_logger = _apmAgent.Logger.Scoped(nameof(SqlEventListener));
 		}
 
-		private EventSource _eventSource;
-
 		protected override void OnEventSourceCreated(EventSource eventSource)
 		{
 			if (eventSource != null && eventSource.Name == "Microsoft-AdoNet-SystemData")
