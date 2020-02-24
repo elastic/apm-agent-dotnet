@@ -393,7 +393,7 @@ This string is used to ensure that only your agents can send data to your APM se
 Both the agents and the APM server have to be configured with the same secret token.
 Use this setting in case the APM Server requires a token (e.g. APM Server in Elastic Cloud).
 
-WARNING: the API Key is sent as plain-text in every request to the server, so you should also secure
+WARNING: the `SecretToken` is sent as plain-text in every request to the server, so you should also secure
 your communications using HTTPS. Unless you do so, your API Key could be observed by an attacker.
 
 [float]
@@ -413,13 +413,12 @@ your communications using HTTPS. Unless you do so, your API Key could be observe
 |============
 
 This base64-encoded string is used to ensure that only your agents can send data to your APM server.
-You must have created the API key using the APM server command line tool. Please see the APM server
-{apm-app-ref}/api-key.html#create-api-key[create-api-key] documentation for details on how to do that.
+You must have created the API key using the APM server's {apm-server-ref-v}/api-key.html[command line tool].
 
 
 NOTE: This feature is fully supported in the APM Server versions >= 7.6.
 
-WARNING: the API Key is sent as plain-text in every request to the server, so you should also secure
+WARNING: the `APIKey` is sent as plain-text in every request to the server, so you should also secure
 your communications using HTTPS. Unless you do so, your API Key could be observed by an attacker.
 
 [float]
