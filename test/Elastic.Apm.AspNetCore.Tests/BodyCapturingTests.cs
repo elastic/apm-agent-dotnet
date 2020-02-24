@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
@@ -78,6 +79,38 @@ namespace Elastic.Apm.AspNetCore.Tests
 			// and make sure the data is captured by the agent
 			sutEnv.MockPayloadSender.FirstTransaction.Should().NotBeNull();
 			sutEnv.MockPayloadSender.FirstTransaction.Context.Request.Body.Should().Be(body);
+		}
+
+		[Fact]
+		public async Task ApmMiddleware_ShouldSkipCapturing_WhenInvalidContentType()
+		{
+			// Arrange
+			var sutEnv = StartSutEnv(new MockConfigSnapshot(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors));
+
+			// build test data, which we send to the sample app
+			var data = new BaseReportFilter<SendMessageFilter>
+			{
+				ReportFilter = new SendMessageFilter
+				{
+					Body = "message body",
+					SenderApplicationCode = "26",
+					MediaType = "TokenBasedSms",
+					Recipients = new List<string> { "abc123" }
+				}
+			};
+
+			var body = JsonConvert.SerializeObject(data,
+				new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+
+			var content = new StringContent(body, Encoding.UTF8);
+			content.Headers.Clear();
+			content.Headers.TryAddWithoutValidation("Content-Type", "123");
+
+			// Act
+			var result = await sutEnv.HttpClient.PostAsync("api/Home/Send", content);
+
+			// Assert
+			result.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType);
 		}
 
 		private static IEnumerable<OptionsTestVariant> BuildOptionsTestVariants()
