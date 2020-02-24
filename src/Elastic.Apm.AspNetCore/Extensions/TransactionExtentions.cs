@@ -1,3 +1,4 @@
+using System;
 using System.Net.Mime;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
@@ -17,7 +18,9 @@ namespace Elastic.Apm.AspNetCore.Extensions
 		/// <param name="httpRequest">Current http request</param>
 		/// <param name="logger">Logger object</param>
 		/// <param name="configSnapshot">The config snapshot of the current transaction. This is for reading the sanitization settings.</param>
-		internal static async Task CollectRequestBodyAsync(this Transaction transaction, bool isForError, HttpRequest httpRequest, IApmLogger logger, IConfigSnapshot configSnapshot)
+		internal static async Task CollectRequestBodyAsync(this Transaction transaction, bool isForError, HttpRequest httpRequest, IApmLogger logger,
+			IConfigSnapshot configSnapshot
+		)
 		{
 			if (!transaction.IsSampled) return;
 
@@ -31,7 +34,7 @@ namespace Elastic.Apm.AspNetCore.Extensions
 				&& transaction.Context.Request.Body != null
 				&& !ReferenceEquals(transaction.Context.Request.Body, Apm.Consts.Redacted)) return;
 
-			if (transaction.IsCaptureRequestBodyEnabled(isForError) && IsCaptureRequestBodyEnabledForContentType(transaction, httpRequest))
+			if (transaction.IsCaptureRequestBodyEnabled(isForError) && IsCaptureRequestBodyEnabledForContentType(transaction, httpRequest, logger))
 				body = await httpRequest.ExtractRequestBodyAsync(logger, configSnapshot);
 
 			// According to the documentation - the default value of 'body' is '[Redacted]'
@@ -45,15 +48,23 @@ namespace Elastic.Apm.AspNetCore.Extensions
 				? transaction.ConfigSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyErrors)
 				: transaction.ConfigSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyTransactions));
 
-		private static bool IsCaptureRequestBodyEnabledForContentType(Transaction transaction, HttpRequest request)
+		private static bool IsCaptureRequestBodyEnabledForContentType(Transaction transaction, HttpRequest request, IApmLogger logger)
 		{
 			// We need to parse the content type and check it's not null and is of valid value
 			if (string.IsNullOrEmpty(request?.ContentType)) return false;
 
-			var contentType = new ContentType(request.ContentType);
+			try
+			{
+				var contentType = new ContentType(request.ContentType);
 
-			//Request must not be null and the content type must be matched with the 'captureBodyContentTypes' configured
-			return transaction.ConfigSnapshot.CaptureBodyContentTypes.ContainsLike(contentType.MediaType);
+				//Request must not be null and the content type must be matched with the 'captureBodyContentTypes' configured
+				return transaction.ConfigSnapshot.CaptureBodyContentTypes.ContainsLike(contentType.MediaType);
+			}
+			catch (Exception ex)
+			{
+				logger?.Info()?.LogException(ex, "Exception occurred when checking '{ContentType}' content type", request.ContentType);
+				return false;
+			}
 		}
 	}
 }
