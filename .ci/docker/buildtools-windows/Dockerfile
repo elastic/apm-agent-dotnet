@@ -32,5 +32,7 @@ RUN C:\temp\vs_Professional.exe `
                 --add Microsoft.VisualStudio.Component.Web `
                 --add Microsoft.Component.MSBuild
 
+RUN powershell -COMMAND "Add-WindowsFeature web-server, web-webserver"
+
 # Default to PowerShell if no other command specified.
 CMD ["powershell.exe", "-NoLogo", "-ExecutionPolicy", "Bypass"]
