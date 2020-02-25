@@ -143,5 +143,7 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public bool VerifyServerCert =>
 			ParseVerifyServerCert(Kv(ConfigConsts.EnvVarNames.VerifyServerCert, _verifyServerCert, Origin));
+		
+		public IReadOnlyCollection<string> ExcludedNamespaces => ConfigConsts.DefaultValues.DefaultExcludedNamespaces;
 	}
 }

@@ -71,6 +71,9 @@ namespace Elastic.Apm.Config
 		public bool UseElasticTraceparentHeader => ParseUseElasticTraceparentHeader(Read(ConfigConsts.EnvVarNames.UseElasticTraceparentHeader));
 
 		public bool VerifyServerCert => ParseVerifyServerCert(Read(ConfigConsts.EnvVarNames.VerifyServerCert));
+		
+		public IReadOnlyCollection<string> ExcludedNamespaces => 
+			ParseExcludedNamespaces(Read(ConfigConsts.EnvVarNames.ExcludedNamespaces));
 
 		private ConfigurationKeyValue Read(string key) =>
 			new ConfigurationKeyValue(key, ReadEnvVarValue(key), Origin);

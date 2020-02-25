@@ -94,6 +94,27 @@ namespace Elastic.Apm.Tests
 			StringToByteArray(payloadSender.FirstError.TransactionId).Should().HaveCount(8);
 		}
 
+		[Fact]
+		public void GetCulpritTest()
+		{
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				try
+				{
+					// Throw the exception to generate a stacktrace
+					throw new Exception("TestMst");
+				}
+				catch(Exception e)
+				{
+					agent.Tracer.CaptureTransaction("TestTransaction", "TestTransactionType",
+						t => { t.CaptureException(e); });
+				}
+			}
+
+			payloadSender.FirstError.Culprit.Should().Be("Elastic.Apm.Tests.BasicAgentTests");
+		}
+
 		private static IEnumerable<byte> StringToByteArray(string hex)
 		{
 			var numberChars = hex.Length;

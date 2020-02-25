@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -151,7 +152,7 @@ namespace Elastic.Apm.Model
 			string parentId = null
 		)
 		{
-			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
+			var capturedCulprit = string.IsNullOrEmpty(culprit) ? GetCulprit(exception, configurationReader) : culprit;
 
 			var capturedException = new CapturedException { Message = exception.Message, Type = exception.GetType().FullName, Handled = isHandled };
 
@@ -162,6 +163,46 @@ namespace Elastic.Apm.Model
 			{
 				Culprit = capturedCulprit,
 			});
+		}
+
+		private const string DefaultCulprit = "PublicAPI-CaptureException";
+		private static string GetCulprit(Exception exception, IConfigurationReader configurationReader)
+		{
+			if (exception == null) return DefaultCulprit;
+
+			var stackTrace = new StackTrace(exception);
+			var frames = stackTrace.GetFrames();
+			if(frames == null) return DefaultCulprit;
+
+			var excludedModules = configurationReader.ExcludedNamespaces;
+
+			foreach (var frame in frames)
+			{
+				var method = frame.GetMethod();
+				var module = method.DeclaringType?.FullName ?? "Unknown Module";
+				if (IsInApp(module,excludedModules))
+				{
+					return module;
+				}
+			}
+
+			return DefaultCulprit;
+		}
+
+		private static bool IsInApp(string module, IReadOnlyCollection<string> excludedModules)
+		{
+			if (string.IsNullOrEmpty(module))
+			{
+				return false;
+			}
+			foreach (var exclude in excludedModules)
+			{
+				if (module.StartsWith(exclude, StringComparison.Ordinal))
+				{
+					return false;
+				}
+			}
+			return true;
 		}
 
 		public static void CaptureError(

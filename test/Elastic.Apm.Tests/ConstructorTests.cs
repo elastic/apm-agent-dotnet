@@ -57,6 +57,7 @@ namespace Elastic.Apm.Tests
 			public double TransactionSampleRate => ConfigConsts.DefaultValues.TransactionSampleRate;
 
 			public bool VerifyServerCert => ConfigConsts.DefaultValues.VerifyServerCert;
+			public IReadOnlyCollection<string> ExcludedNamespaces => ConfigConsts.DefaultValues.DefaultExcludedNamespaces;
 
 			public bool UseElasticTraceparentHeader => ConfigConsts.DefaultValues.UseElasticTraceparentHeader;
 

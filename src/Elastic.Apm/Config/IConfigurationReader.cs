@@ -148,5 +148,7 @@ namespace Elastic.Apm.Config
 		/// Verification can be disabled by setting to <c>false</c>.
 		/// </summary>
 		bool VerifyServerCert { get; }
+
+		IReadOnlyCollection<string> ExcludedNamespaces { get; }
 	}
 }

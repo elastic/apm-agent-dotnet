@@ -25,6 +25,9 @@ namespace Elastic.Apm.Config
 		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersSanitizeFieldNames =
 			new LazyContextualInit<IReadOnlyList<WildcardMatcher>>();
 
+		private readonly LazyContextualInit<IReadOnlyList<string>> _cachedExcludedNamespaces =
+			new LazyContextualInit<IReadOnlyList<string>>();
+
 		private readonly IApmLogger _logger;
 
 		protected AbstractConfigurationReader(IApmLogger logger, string dbgDerivedClassName) =>
@@ -804,6 +807,26 @@ namespace Elastic.Apm.Config
 			}
 
 			return result.ToString();
+		}
+
+		
+
+		protected IReadOnlyList<string> ParseExcludedNamespaces(ConfigurationKeyValue kv) =>
+			_cachedExcludedNamespaces.IfNotInited?.InitOrGet(() => ParseExcludedNamespacesImpl(kv)) ?? _cachedExcludedNamespaces.Value;
+
+		private IReadOnlyList<string> ParseExcludedNamespacesImpl(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return LogAndReturnDefault().AsReadOnly();
+
+			var list = kv.Value.Split(',').ToList();
+
+			return list.Count == 0 ? LogAndReturnDefault().AsReadOnly() : list.AsReadOnly();
+
+			List<string> LogAndReturnDefault()
+			{
+				_logger?.Debug()?.Log("Using default excluded namespaces: {ExcludedNamespaces}", DefaultValues.DefaultExcludedNamespaces);
+				return DefaultValues.DefaultExcludedNamespaces.ToList();
+			}
 		}
 
 		protected string ReadEnvVarValue(string envVarName) => Environment.GetEnvironmentVariable(envVarName)?.Trim();

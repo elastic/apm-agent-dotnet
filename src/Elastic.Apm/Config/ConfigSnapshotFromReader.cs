@@ -41,5 +41,6 @@ namespace Elastic.Apm.Config
 		public double TransactionSampleRate => _content.TransactionSampleRate;
 		public bool UseElasticTraceparentHeader => _content.UseElasticTraceparentHeader;
 		public bool VerifyServerCert => _content.VerifyServerCert;
+		public IReadOnlyCollection<string> ExcludedNamespaces => _content.ExcludedNamespaces;
 	}
 }
