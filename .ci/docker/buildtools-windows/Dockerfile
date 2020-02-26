@@ -32,7 +32,39 @@ RUN C:\temp\vs_Professional.exe `
                 --add Microsoft.VisualStudio.Component.Web `
                 --add Microsoft.Component.MSBuild
 
-RUN powershell -COMMAND "Add-WindowsFeature web-server, web-webserver"
+# Adding IIS and components for IIS tests (This list can still be narrowed down to bare minimum)
+RUN powershell -Command "Add-WindowsFeature web-server, web-webserver"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-WebServerRole"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-WebServer"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-CommonHttpFeatures"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-HttpErrors"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-HttpRedirect"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-ApplicationDevelopment"
+RUN powershell -Command "Enable-WindowsOptionalFeature -online -FeatureName NetFx4Extended-ASPNET45"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-NetFxExtensibility45"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-HealthAndDiagnostics"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-HttpLogging"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-LoggingLibraries"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-RequestMonitor"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-HttpTracing"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-Security"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-RequestFiltering"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-Performance"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-WebServerManagementTools"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-IIS6ManagementCompatibility"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-Metabase"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-ManagementConsole"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-BasicAuthentication"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-WindowsAuthentication"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-StaticContent"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-DefaultDocument"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-WebSockets"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-ApplicationInit"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-ISAPIExtensions"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-ISAPIFilter"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-HttpCompressionStatic"
+RUN powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-ASPNET45"
+
 
 # Default to PowerShell if no other command specified.
 CMD ["powershell.exe", "-NoLogo", "-ExecutionPolicy", "Bypass"]
