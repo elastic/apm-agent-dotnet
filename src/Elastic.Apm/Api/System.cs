@@ -1,3 +1,4 @@
+using Elastic.Apm.Api.Kubernetes;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
@@ -6,6 +7,8 @@ namespace Elastic.Apm.Api
 {
 	public class System
 	{
+		public KubernetesMetadata Kubernetes { get; set; }
+
 		public Container Container { get; set; }
 
 		[JsonProperty("detected_hostname")]
