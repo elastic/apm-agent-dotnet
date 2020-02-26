@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Text.RegularExpressions;
 using Elastic.Apm.Api;
+using Elastic.Apm.Api.Kubernetes;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Helpers
@@ -72,8 +73,16 @@ namespace Elastic.Apm.Helpers
 			return null;
 		}
 
-		internal Api.System ParseSystemInfo() =>
-			new Api.System { Container = ParseContainerInfo(), DetectedHostName = GetHostName() };
+		internal Api.System ParseSystemInfo()
+		{
+			var containerInfo = ParseContainerInfo();
+			var hostName = GetHostName();
+
+			return new Api.System
+			{
+				Container = containerInfo, DetectedHostName = hostName, Kubernetes = ParseKubernetesInfo(containerInfo, hostName)
+			};
+		}
 
 		internal string GetHostName()
 		{
@@ -125,5 +134,28 @@ namespace Elastic.Apm.Helpers
 
 		protected virtual StreamReader GetCGroupAsStream()
 			=> File.Exists("/proc/self/cgroup") ? new StreamReader("/proc/self/cgroup") : null;
+
+		private KubernetesMetadata ParseKubernetesInfo(Container containerInfo, string hostName)
+		{
+			var @namespace = Environment.GetEnvironmentVariable("KUBERNETES_NAMESPACE");
+			var podName = Environment.GetEnvironmentVariable("KUBERNETES_POD_NAME");
+			var podUid = Environment.GetEnvironmentVariable("KUBERNETES_POD_UID");
+			var nodeName = Environment.GetEnvironmentVariable("KUBERNETES_NODE_NAME");
+
+			if (@namespace == null && podName == null && podUid == null && nodeName == null)
+			{
+				// By default, Kubernetes will set the hostname of the pod containers to the pod name.
+				// Users that override the name should use the Downard API to override the pod name.
+				return containerInfo != null
+					? new KubernetesMetadata { Pod = new Pod { Uid = containerInfo.Id, Name = hostName } }
+					: null;
+			}
+
+			var kubernetesMetadata = new KubernetesMetadata { Namespace = @namespace };
+			if (podName != null || podUid != null) kubernetesMetadata.Pod = new Pod { Name = podName, Uid = podUid };
+			if (nodeName != null) kubernetesMetadata.Node = new Api.Kubernetes.Node() { Name = nodeName };
+
+			return new KubernetesMetadata();
+		}
 	}
 }
