@@ -62,7 +62,7 @@ namespace Elastic.Apm.AspNetCore.Extensions
 			}
 			catch (Exception ex)
 			{
-				logger?.Info()?.LogException(ex, "Exception occurred when checking '{ContentType}' content type", request.ContentType);
+				logger?.Info()?.LogException(ex, "Exception occurred when capturing '{ContentType}' content type", request.ContentType);
 				return false;
 			}
 		}
