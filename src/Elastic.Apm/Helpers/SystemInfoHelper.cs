@@ -56,8 +56,6 @@ namespace Elastic.Apm.Helpers
 						if (string.IsNullOrWhiteSpace(podUid)) continue;
 
 						_logger.Debug()?.Log("Found Kubernetes pod UID: {podUid}", podUid);
-						// By default, Kubernetes will set the hostname of the pod containers to the pod name. Users that override
-						// the name should use the Downward API to override the pod name.
 						kubernetesPodUid = podUid;
 						break;
 					}
@@ -135,17 +133,22 @@ namespace Elastic.Apm.Helpers
 		protected virtual StreamReader GetCGroupAsStream()
 			=> File.Exists("/proc/self/cgroup") ? new StreamReader("/proc/self/cgroup") : null;
 
-		private KubernetesMetadata ParseKubernetesInfo(Container containerInfo, string hostName)
+		internal const string Namespace = "KUBERNETES_NAMESPACE";
+		internal const string PodName = "KUBERNETES_POD_NAME";
+		internal const string PodUid = "KUBERNETES_POD_UID";
+		internal const string NodeName = "KUBERNETES_NODE_NAME";
+
+		internal KubernetesMetadata ParseKubernetesInfo(Container containerInfo, string hostName)
 		{
-			var @namespace = Environment.GetEnvironmentVariable("KUBERNETES_NAMESPACE");
-			var podName = Environment.GetEnvironmentVariable("KUBERNETES_POD_NAME");
-			var podUid = Environment.GetEnvironmentVariable("KUBERNETES_POD_UID");
-			var nodeName = Environment.GetEnvironmentVariable("KUBERNETES_NODE_NAME");
+			var @namespace = Environment.GetEnvironmentVariable(Namespace);
+			var podName = Environment.GetEnvironmentVariable(PodName);
+			var podUid = Environment.GetEnvironmentVariable(PodUid);
+			var nodeName = Environment.GetEnvironmentVariable(NodeName);
 
 			if (@namespace == null && podName == null && podUid == null && nodeName == null)
 			{
 				// By default, Kubernetes will set the hostname of the pod containers to the pod name.
-				// Users that override the name should use the Downard API to override the pod name.
+				// Users that override the name should use the Downward API to override the pod name.
 				return containerInfo != null
 					? new KubernetesMetadata { Pod = new Pod { Uid = containerInfo.Id, Name = hostName } }
 					: null;
@@ -153,9 +156,9 @@ namespace Elastic.Apm.Helpers
 
 			var kubernetesMetadata = new KubernetesMetadata { Namespace = @namespace };
 			if (podName != null || podUid != null) kubernetesMetadata.Pod = new Pod { Name = podName, Uid = podUid };
-			if (nodeName != null) kubernetesMetadata.Node = new Api.Kubernetes.Node() { Name = nodeName };
+			if (nodeName != null) kubernetesMetadata.Node = new Api.Kubernetes.Node { Name = nodeName };
 
-			return new KubernetesMetadata();
+			return kubernetesMetadata;
 		}
 	}
 }
