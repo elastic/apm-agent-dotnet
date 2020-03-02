@@ -97,7 +97,7 @@ namespace Elastic.Apm.Model
 				_ => dbCommandType.ToString()
 			};
 
-		private Destination GetDestination(string dbConnectionString, bool isEmbeddedDb, int? defaultPort)
+		internal Destination GetDestination(string dbConnectionString, bool isEmbeddedDb, int? defaultPort)
 		{
 			if (isEmbeddedDb || dbConnectionString == null) return null;
 

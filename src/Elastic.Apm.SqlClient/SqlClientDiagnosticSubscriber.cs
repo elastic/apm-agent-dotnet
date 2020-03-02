@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.SqlClient
 {
@@ -9,13 +10,20 @@ namespace Elastic.Apm.SqlClient
 		public IDisposable Subscribe(IApmAgent agentComponents)
 		{
 			var retVal = new CompositeDisposable();
-			var initializer = new DiagnosticInitializer(agentComponents.Logger, new[] { new SqlClientDiagnosticListener(agentComponents) });
+			if (PlatformDetection.IsDotNetCore)
+			{
+				var initializer = new DiagnosticInitializer(agentComponents.Logger, new[] { new SqlClientDiagnosticListener(agentComponents) });
 
-			retVal.Add(initializer);
+				retVal.Add(initializer);
 
-			retVal.Add(DiagnosticListener
-				.AllListeners
-				.Subscribe(initializer));
+				retVal.Add(DiagnosticListener
+					.AllListeners
+					.Subscribe(initializer));
+			}
+			else
+			{
+				retVal.Add(new SqlEventListener(agentComponents));
+			}
 
 			return retVal;
 		}

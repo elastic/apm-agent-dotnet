@@ -174,10 +174,21 @@ namespace Elastic.Apm.DiagnosticListeners
 
 			if (!ProcessingRequests.TryRemove(request, out var span))
 			{
-				Logger.Warning()
-					?.Log("Failed capturing request (failed to remove from ProcessingRequests) - " +
-						"This Span will be skipped in case it wasn't captured before. " +
-						"Request: method: {HttpMethod}, URL: {RequestUrl}", RequestGetMethod(request), Http.Sanitize(requestUrl));
+				// if we don't find the request in the dictionary and current transaction is null, then this is not a big deal -
+				// it was probably not captured in Start either - so we skip with a debug log
+				if (_agent.Tracer.CurrentTransaction == null)
+					Logger.Debug()
+						?.Log("{eventName} called with no active current transaction, url: {url} - skipping event", nameof(ProcessStopEvent),
+							Http.Sanitize(requestUrl));
+				// otherwise it's strange and it deserves a warning
+				else
+				{
+					Logger.Warning()
+						?.Log("Failed capturing request (failed to remove from ProcessingRequests) - " +
+							"This Span will be skipped in case it wasn't captured before. " +
+							"Request: method: {HttpMethod}, URL: {RequestUrl}", RequestGetMethod(request), Http.Sanitize(requestUrl));
+				}
+
 				return;
 			}
 
