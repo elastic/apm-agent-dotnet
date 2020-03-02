@@ -186,9 +186,9 @@ namespace Elastic.Apm.Model
 			return DefaultCulprit;
 		}
 
-		private static bool IsInApp(string fullyQualifiedTypeName , IReadOnlyCollection<string> excludedModules)
+		private static bool IsInApp(string fullyQualifiedTypeName, IReadOnlyCollection<string> excludedModules)
 		{
-			if (string.IsNullOrEmpty(fullyQualifiedTypeName )) return false;
+			if (string.IsNullOrEmpty(fullyQualifiedTypeName)) return false;
 
 			foreach (var exclude in excludedModules)
 				if (fullyQualifiedTypeName.StartsWith(exclude, StringComparison.Ordinal)) return false;
