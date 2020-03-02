@@ -165,7 +165,7 @@ namespace Elastic.Apm.Model
 			});
 		}
 
-		private const string DefaultCulprit = "PublicAPI-CaptureException";
+		private const string DefaultCulprit = "ElasticApm.UnknownCulprit";
 		private static string GetCulprit(Exception exception, IConfigurationReader configurationReader)
 		{
 			if (exception == null) return DefaultCulprit;
@@ -174,34 +174,25 @@ namespace Elastic.Apm.Model
 			var frames = stackTrace.GetFrames();
 			if(frames == null) return DefaultCulprit;
 
-			var excludedModules = configurationReader.ExcludedNamespaces;
+			var excludedNamespaces = configurationReader.ExcludedNamespaces;
 
 			foreach (var frame in frames)
 			{
 				var method = frame.GetMethod();
-				var module = method.DeclaringType?.FullName ?? "Unknown Module";
-				if (IsInApp(module,excludedModules))
-				{
-					return module;
-				}
+				var fullyQualifiedTypeName  = method.DeclaringType?.FullName ?? "Unknown Type";
+				if (IsInApp(fullyQualifiedTypeName ,excludedNamespaces)) return fullyQualifiedTypeName ;
 			}
 
 			return DefaultCulprit;
 		}
 
-		private static bool IsInApp(string module, IReadOnlyCollection<string> excludedModules)
+		private static bool IsInApp(string fullyQualifiedTypeName , IReadOnlyCollection<string> excludedModules)
 		{
-			if (string.IsNullOrEmpty(module))
-			{
-				return false;
-			}
+			if (string.IsNullOrEmpty(fullyQualifiedTypeName )) return false;
+
 			foreach (var exclude in excludedModules)
-			{
-				if (module.StartsWith(exclude, StringComparison.Ordinal))
-				{
-					return false;
-				}
-			}
+				if (fullyQualifiedTypeName.StartsWith(exclude, StringComparison.Ordinal)) return false;
+
 			return true;
 		}
 
