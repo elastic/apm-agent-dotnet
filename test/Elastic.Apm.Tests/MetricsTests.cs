@@ -173,7 +173,11 @@ namespace Elastic.Apm.Tests
 
 			using var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
 			var metricsProviderMock = new Mock<IMetricsProvider>();
-			metricsProviderMock.Setup(x => x.GetSamples())
+
+			metricsProviderMock.Setup(x => x.IsMetricAlreadyCaptured).Returns(true);
+
+			metricsProviderMock
+				.Setup(x => x.GetSamples())
 				.Returns(() => samples);
 			metricsProviderMock.SetupProperty(x => x.ConsecutiveNumberOfFailedReads);
 
@@ -200,6 +204,9 @@ namespace Elastic.Apm.Tests
 			using var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
 
 			var metricsProviderMock = new Mock<IMetricsProvider>();
+
+			metricsProviderMock.Setup(x => x.IsMetricAlreadyCaptured).Returns(true);
+
 			metricsProviderMock.Setup(x => x.GetSamples())
 				.Returns(() => new List<MetricSample> { new MetricSample("key1", double.NaN), new MetricSample("key2", 0.95) });
 			metricsProviderMock.SetupProperty(x => x.ConsecutiveNumberOfFailedReads);
@@ -221,6 +228,10 @@ namespace Elastic.Apm.Tests
 		{
 			using (var gcMetricsProvider = new GcMetricsProvider(_logger))
 			{
+				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeFalse();
+
+				// ReSharper disable once TooWideLocalVariableScope
+				// ReSharper disable once RedundantAssignment
 				var containsValue = false;
 
 				//repeat the allocation multiple times and make sure at least 1 GetSamples() call returns value
@@ -251,6 +262,7 @@ namespace Elastic.Apm.Tests
 #if !NETCOREAPP2_1
 				//EventSource Microsoft-Windows-DotNETRuntime is only 2.2+, no gc metrics on 2.1
 				containsValue.Should().BeTrue();
+				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeTrue();
 #endif
 			}
 		}
@@ -268,6 +280,8 @@ namespace Elastic.Apm.Tests
 				NumberOfGetValueCalls++;
 				throw new Exception(ExceptionMessage);
 			}
+
+			public bool IsMetricAlreadyCaptured => true;
 		}
 
 		internal class TestSystemTotalCpuProvider : SystemTotalCpuProvider
