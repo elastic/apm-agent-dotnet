@@ -15,6 +15,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		{
 			IApmLogger loggerInCtor = logger.Scoped(nameof(ProcessTotalCpuTimeProvider));
 
+			IsMetricAlreadyCaptured = true;
+
 			try
 			{
 				_lastTimeWindowStart = DateTime.UtcNow;
@@ -79,5 +81,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			_lastCurrentProcessCpuTime = cpuUsage;
 			return new List<MetricSample> { new MetricSample(ProcessCpuTotalPct, cpuUsageTotal) };
 		}
+
+		public bool IsMetricAlreadyCaptured { get; }
 	}
 }

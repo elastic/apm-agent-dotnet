@@ -27,22 +27,18 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		internal const string GcGen2SizeName = "clr.gc.gen2size";
 		internal const string GcGen3SizeName = "clr.gc.gen3size";
 
+
+		private const string SessionNamePrefix = "EtwSessionForCLRElasticApm_";
+
 		private readonly bool _collectGcCount;
 		private readonly bool _collectGcGen0Size;
 		private readonly bool _collectGcGen1Size;
 		private readonly bool _collectGcGen2Size;
 		private readonly bool _collectGcGen3Size;
 
-
-		private const string SessionNamePrefix = "EtwSessionForCLRElasticApm_";
-
 		private readonly GcEventListener _eventListener;
 
-		private uint _gcCount;
-		private ulong _gen0Size;
-		private ulong _gen1Size;
-		private ulong _gen2Size;
-		private ulong _gen3Size;
+		private readonly object _lock = new object();
 
 		private readonly IApmLogger _logger;
 
@@ -61,7 +57,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			_logger = logger.Scoped(nameof(SystemTotalCpuProvider));
 			if (PlatformDetection.IsDotNetFullFramework)
 			{
-				var sessionName = SessionNamePrefix + Guid.NewGuid().ToString();
+				var sessionName = SessionNamePrefix + Guid.NewGuid();
 				using (_traceEventSession = new TraceEventSession(sessionName))
 				{
 					Task.Run(() =>
@@ -83,9 +79,9 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 						var source = _traceEventSession.Source;
 						source.NeedLoadedDotNetRuntimes();
-						source.AddCallbackOnProcessStart((proc) =>
+						source.AddCallbackOnProcessStart(proc =>
 						{
-							proc.AddCallbackOnDotNetRuntimeLoad((runtime) =>
+							proc.AddCallbackOnDotNetRuntimeLoad(runtime =>
 							{
 								runtime.GCEnd += (process, gc) =>
 								{
@@ -97,6 +93,12 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 									_gen2Size = (ulong)gc.HeapStats.GenerationSize2;
 									_gen3Size = (ulong)gc.HeapStats.GenerationSize3;
 									_gcCount = (uint)runtime.GC.GCs.Count;
+
+									if (!_isMetricAlreadyCaptured)
+									{
+										lock (_lock)
+											_isMetricAlreadyCaptured = true;
+									}
 								};
 							});
 						});
@@ -110,8 +112,23 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				_eventListener = new GcEventListener(this, logger);
 		}
 
+		private uint _gcCount;
+		private ulong _gen0Size;
+		private ulong _gen1Size;
+		private ulong _gen2Size;
+		private ulong _gen3Size;
+		private volatile bool _isMetricAlreadyCaptured;
+
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "GcMetricsProvider";
+
+		public bool IsMetricAlreadyCaptured
+		{
+			get
+			{
+				lock (_lock) return _isMetricAlreadyCaptured;
+			}
+		}
 
 		public IEnumerable<MetricSample> GetSamples()
 		{
@@ -119,15 +136,15 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			{
 				var retVal = new List<MetricSample>();
 
-				if(_collectGcCount)
+				if (_collectGcCount)
 					retVal.Add(new MetricSample(GcCountName, _gcCount));
-				if(_collectGcGen0Size)
+				if (_collectGcGen0Size)
 					retVal.Add(new MetricSample(GcGen0SizeName, _gen0Size));
-				if(_collectGcGen1Size)
+				if (_collectGcGen1Size)
 					retVal.Add(new MetricSample(GcGen1SizeName, _gen1Size));
-				if(_collectGcGen2Size)
+				if (_collectGcGen2Size)
 					retVal.Add(new MetricSample(GcGen2SizeName, _gen2Size));
-				if(_collectGcGen3Size)
+				if (_collectGcGen3Size)
 					retVal.Add(new MetricSample(GcGen3SizeName, _gen3Size));
 
 				return retVal;
@@ -152,8 +169,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private class GcEventListener : EventListener
 		{
 			private static readonly int keywordGC = 1;
-
-			private EventSource _eventSourceDotNet;
 			private readonly GcMetricsProvider _gcMetricsProvider;
 			private readonly IApmLogger _logger;
 
@@ -164,6 +179,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				_logger = logger.Scoped(nameof(GcEventListener));
 				_logger.Trace()?.Log("Initialize GcEventListener to collect GC metrics");
 			}
+
+			private EventSource _eventSourceDotNet;
 
 			protected override void OnEventSourceCreated(EventSource eventSource)
 			{
@@ -192,11 +209,23 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					SetValue("GenerationSize1", ref _gcMetricsProvider._gen1Size);
 					SetValue("GenerationSize2", ref _gcMetricsProvider._gen2Size);
 					SetValue("GenerationSize3", ref _gcMetricsProvider._gen3Size);
+
+					if (!_gcMetricsProvider._isMetricAlreadyCaptured)
+					{
+						lock (_gcMetricsProvider._lock)
+							_gcMetricsProvider._isMetricAlreadyCaptured = true;
+					}
 				}
 
 				// Collect GC count
 				if (eventData.EventName.Contains("GCEnd"))
 				{
+					if (!_gcMetricsProvider._isMetricAlreadyCaptured)
+					{
+						lock (_gcMetricsProvider._lock)
+							_gcMetricsProvider._isMetricAlreadyCaptured = true;
+					}
+
 					_logger?.Trace()?.Log("OnEventWritten with GCEnd");
 
 					var indexOfCount = IndexOf("Count");
@@ -220,7 +249,9 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				}
 
 				int IndexOf(string name)
-					=> eventData.PayloadNames.IndexOf(name);
+				{
+					return eventData.PayloadNames.IndexOf(name);
+				}
 			}
 
 			public override void Dispose()

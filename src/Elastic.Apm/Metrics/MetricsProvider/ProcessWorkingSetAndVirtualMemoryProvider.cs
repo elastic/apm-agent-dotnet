@@ -13,10 +13,13 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private readonly bool _collectProcessWorkingSetMemory;
 
 		public ProcessWorkingSetAndVirtualMemoryProvider(bool collectProcessVirtualMemory, bool collectProcessWorkingSetMemory) =>
-			(_collectProcessVirtualMemory, _collectProcessWorkingSetMemory) = (collectProcessVirtualMemory, collectProcessWorkingSetMemory);
+			(_collectProcessVirtualMemory, _collectProcessWorkingSetMemory, IsMetricAlreadyCaptured) =
+			(collectProcessVirtualMemory, collectProcessWorkingSetMemory, true);
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "process's working set and virtual memory size";
+
+		public bool IsMetricAlreadyCaptured { get; }
 
 		public IEnumerable<MetricSample> GetSamples()
 		{
