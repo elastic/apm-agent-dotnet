@@ -38,6 +38,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		private readonly GcEventListener _eventListener;
 
+		private readonly object _lock = new object();
+
 		private readonly IApmLogger _logger;
 
 		private readonly TraceEventSession _traceEventSession;
@@ -93,8 +95,10 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 									_gcCount = (uint)runtime.GC.GCs.Count;
 
 									if (!_isMetricAlreadyCaptured)
+									{
 										lock (_lock)
 											_isMetricAlreadyCaptured = true;
+									}
 								};
 							});
 						});
@@ -113,20 +117,16 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private ulong _gen1Size;
 		private ulong _gen2Size;
 		private ulong _gen3Size;
-
-		private readonly object _lock = new object();
 		private volatile bool _isMetricAlreadyCaptured;
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "GcMetricsProvider";
+
 		public bool IsMetricAlreadyCaptured
 		{
 			get
 			{
-				lock (_lock)
-				{
-					return _isMetricAlreadyCaptured;
-				}
+				lock (_lock) return _isMetricAlreadyCaptured;
 			}
 		}
 
@@ -211,16 +211,20 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					SetValue("GenerationSize3", ref _gcMetricsProvider._gen3Size);
 
 					if (!_gcMetricsProvider._isMetricAlreadyCaptured)
+					{
 						lock (_gcMetricsProvider._lock)
 							_gcMetricsProvider._isMetricAlreadyCaptured = true;
+					}
 				}
 
 				// Collect GC count
 				if (eventData.EventName.Contains("GCEnd"))
 				{
 					if (!_gcMetricsProvider._isMetricAlreadyCaptured)
+					{
 						lock (_gcMetricsProvider._lock)
 							_gcMetricsProvider._isMetricAlreadyCaptured = true;
+					}
 
 					_logger?.Trace()?.Log("OnEventWritten with GCEnd");
 

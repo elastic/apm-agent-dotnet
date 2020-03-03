@@ -234,6 +234,8 @@ namespace Elastic.Apm.Tests
 				// ReSharper disable once RedundantAssignment
 				var containsValue = false;
 
+#if !NETCOREAPP2_1
+				//EventSource Microsoft-Windows-DotNETRuntime is only 2.2+, no gc metrics on 2.1
 				//repeat the allocation multiple times and make sure at least 1 GetSamples() call returns value
 				for (var j = 0; j < 100; j++)
 				{
@@ -259,8 +261,7 @@ namespace Elastic.Apm.Tests
 					if (containsValue)
 						break;
 				}
-#if !NETCOREAPP2_1
-				//EventSource Microsoft-Windows-DotNETRuntime is only 2.2+, no gc metrics on 2.1
+
 				containsValue.Should().BeTrue();
 				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeTrue();
 #endif
