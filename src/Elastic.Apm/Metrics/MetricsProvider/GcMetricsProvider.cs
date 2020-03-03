@@ -83,7 +83,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 							{
 								runtime.GCEnd += (process, gc) =>
 								{
-									_isMetricAlreadyCaptured = true;
 									_logger.Trace()
 										?.Log("GCEnd called");
 
@@ -92,6 +91,10 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 									_gen2Size = (ulong)gc.HeapStats.GenerationSize2;
 									_gen3Size = (ulong)gc.HeapStats.GenerationSize3;
 									_gcCount = (uint)runtime.GC.GCs.Count;
+
+									if (!_isMetricAlreadyCaptured)
+										lock (_lock)
+											_isMetricAlreadyCaptured = true;
 								};
 							});
 						});
@@ -111,11 +114,21 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private ulong _gen2Size;
 		private ulong _gen3Size;
 
+		private readonly object _lock = new object();
 		private volatile bool _isMetricAlreadyCaptured;
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "GcMetricsProvider";
-		public bool IsMetricAlreadyCaptured => _isMetricAlreadyCaptured;
+		public bool IsMetricAlreadyCaptured
+		{
+			get
+			{
+				lock (_lock)
+				{
+					return _isMetricAlreadyCaptured;
+				}
+			}
+		}
 
 		public IEnumerable<MetricSample> GetSamples()
 		{
@@ -190,19 +203,25 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				// Collect heap sizes
 				if (eventData.EventName.Contains("GCHeapStats_V1"))
 				{
-					_gcMetricsProvider._isMetricAlreadyCaptured = true;
 					_logger?.Trace()?.Log("OnEventWritten with GCHeapStats_V1");
 
 					SetValue("GenerationSize0", ref _gcMetricsProvider._gen0Size);
 					SetValue("GenerationSize1", ref _gcMetricsProvider._gen1Size);
 					SetValue("GenerationSize2", ref _gcMetricsProvider._gen2Size);
 					SetValue("GenerationSize3", ref _gcMetricsProvider._gen3Size);
+
+					if (!_gcMetricsProvider._isMetricAlreadyCaptured)
+						lock (_gcMetricsProvider._lock)
+							_gcMetricsProvider._isMetricAlreadyCaptured = true;
 				}
 
 				// Collect GC count
 				if (eventData.EventName.Contains("GCEnd"))
 				{
-					_gcMetricsProvider._isMetricAlreadyCaptured = true;
+					if (!_gcMetricsProvider._isMetricAlreadyCaptured)
+						lock (_gcMetricsProvider._lock)
+							_gcMetricsProvider._isMetricAlreadyCaptured = true;
+
 					_logger?.Trace()?.Log("OnEventWritten with GCEnd");
 
 					var indexOfCount = IndexOf("Count");

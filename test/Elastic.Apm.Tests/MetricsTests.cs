@@ -254,7 +254,7 @@ namespace Elastic.Apm.Tests
 
 					var samples = gcMetricsProvider.GetSamples();
 
-					containsValue = samples?.Count() != 0;
+					containsValue = samples != null && samples.Count() != 0;
 
 					if (containsValue)
 						break;
