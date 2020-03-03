@@ -252,6 +252,8 @@ namespace Elastic.Apm.Tests
 						var _ = new int[100];
 					}
 
+					GC.Collect();
+
 					Thread.Sleep(1000);
 
 					var samples = gcMetricsProvider.GetSamples();
