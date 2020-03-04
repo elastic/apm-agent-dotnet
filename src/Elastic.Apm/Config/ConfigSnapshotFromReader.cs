@@ -42,5 +42,6 @@ namespace Elastic.Apm.Config
 		public bool UseElasticTraceparentHeader => _content.UseElasticTraceparentHeader;
 		public bool VerifyServerCert => _content.VerifyServerCert;
 		public IReadOnlyCollection<string> ExcludedNamespaces => _content.ExcludedNamespaces;
+		public IReadOnlyCollection<string> ApplicationNamespaces => _content.ApplicationNamespaces;
 	}
 }

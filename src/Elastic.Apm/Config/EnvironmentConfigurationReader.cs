@@ -72,8 +72,9 @@ namespace Elastic.Apm.Config
 
 		public bool VerifyServerCert => ParseVerifyServerCert(Read(ConfigConsts.EnvVarNames.VerifyServerCert));
 		
-		public IReadOnlyCollection<string> ExcludedNamespaces => 
-			ParseExcludedNamespaces(Read(ConfigConsts.EnvVarNames.ExcludedNamespaces));
+		public IReadOnlyCollection<string> ExcludedNamespaces => ParseExcludedNamespaces(Read(ConfigConsts.EnvVarNames.ExcludedNamespaces));
+
+		public IReadOnlyCollection<string> ApplicationNamespaces => ParseApplicationNamespaces(Read(ConfigConsts.EnvVarNames.ApplicationNamespaces));
 
 		private ConfigurationKeyValue Read(string key) =>
 			new ConfigurationKeyValue(key, ReadEnvVarValue(key), Origin);

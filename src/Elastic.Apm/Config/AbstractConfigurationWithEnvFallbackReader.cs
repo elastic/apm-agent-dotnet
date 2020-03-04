@@ -93,5 +93,8 @@ namespace Elastic.Apm.Config
 		
 		public IReadOnlyCollection<string> ExcludedNamespaces => 
 			ParseExcludedNamespaces(Read(ConfigConsts.KeyNames.ExcludedNamespaces, ConfigConsts.EnvVarNames.ExcludedNamespaces));
+
+		public IReadOnlyCollection<string> ApplicationNamespaces => 
+			ParseExcludedNamespaces(Read(ConfigConsts.KeyNames.ApplicationNamespaces, ConfigConsts.EnvVarNames.ApplicationNamespaces));
 	}
 }

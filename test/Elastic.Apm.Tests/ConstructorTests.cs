@@ -58,6 +58,7 @@ namespace Elastic.Apm.Tests
 
 			public bool VerifyServerCert => ConfigConsts.DefaultValues.VerifyServerCert;
 			public IReadOnlyCollection<string> ExcludedNamespaces => ConfigConsts.DefaultValues.DefaultExcludedNamespaces;
+			public IReadOnlyCollection<string> ApplicationNamespaces => ConfigConsts.DefaultValues.DefaultApplicationNamespaces;
 
 			public bool UseElasticTraceparentHeader => ConfigConsts.DefaultValues.UseElasticTraceparentHeader;
 

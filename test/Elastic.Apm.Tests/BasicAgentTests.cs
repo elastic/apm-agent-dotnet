@@ -114,6 +114,51 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.FirstError.Culprit.Should().Be("Elastic.Apm.Tests.BasicAgentTests");
 		}
+		
+
+		[Fact]
+		public void GetCulprit_ShouldNotReturnNotIncludedNamespaces()
+		{
+			var payloadSender = new MockPayloadSender();
+			var config = new MockConfigSnapshot(applicationNamespaces: "System.");
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, config:config)))
+			{
+				try
+				{
+					// Throw the exception to generate a stacktrace
+					throw new Exception("TestMst");
+				}
+				catch(Exception e)
+				{
+					agent.Tracer.CaptureTransaction("TestTransaction", "TestTransactionType",
+						t => { t.CaptureException(e); });
+				}
+			}
+
+			payloadSender.FirstError.Culprit.Should().NotBe("Elastic.Apm.Tests.BasicAgentTests");
+		}
+
+		[Fact]
+		public void GetCulprit_ShouldReturnIncludedNamespaces()
+		{
+			var payloadSender = new MockPayloadSender();
+			var config = new MockConfigSnapshot(applicationNamespaces: "Elastic.Apm.Tests.");
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, config:config)))
+			{
+				try
+				{
+					// Throw the exception to generate a stacktrace
+					throw new Exception("TestMst");
+				}
+				catch(Exception e)
+				{
+					agent.Tracer.CaptureTransaction("TestTransaction", "TestTransactionType",
+						t => { t.CaptureException(e); });
+				}
+			}
+
+			payloadSender.FirstError.Culprit.Should().Be("Elastic.Apm.Tests.BasicAgentTests");
+		}
 
 		private static IEnumerable<byte> StringToByteArray(string hex)
 		{

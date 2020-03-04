@@ -172,25 +172,34 @@ namespace Elastic.Apm.Model
 
 			var stackTrace = new StackTrace(exception);
 			var frames = stackTrace.GetFrames();
-			if(frames == null) return DefaultCulprit;
+			if (frames == null) return DefaultCulprit;
 
 			var excludedNamespaces = configurationReader.ExcludedNamespaces;
+			var applicationNamespaces = configurationReader.ApplicationNamespaces;
 
 			foreach (var frame in frames)
 			{
 				var method = frame.GetMethod();
-				var fullyQualifiedTypeName  = method.DeclaringType?.FullName ?? "Unknown Type";
-				if (IsInApp(fullyQualifiedTypeName ,excludedNamespaces)) return fullyQualifiedTypeName ;
+				var fullyQualifiedTypeName = method.DeclaringType?.FullName ?? "Unknown Type";
+				if (IsInApp(fullyQualifiedTypeName, excludedNamespaces, applicationNamespaces)) return fullyQualifiedTypeName;
 			}
 
 			return DefaultCulprit;
 		}
 
-		private static bool IsInApp(string fullyQualifiedTypeName, IReadOnlyCollection<string> excludedModules)
+		private static bool IsInApp(string fullyQualifiedTypeName, IReadOnlyCollection<string> excludedNamespaces, IReadOnlyCollection<string> applicationNamespaces)
 		{
 			if (string.IsNullOrEmpty(fullyQualifiedTypeName)) return false;
 
-			foreach (var exclude in excludedModules)
+			if (applicationNamespaces.Count != 0)
+			{
+				foreach (var include in applicationNamespaces)
+					if (fullyQualifiedTypeName.StartsWith(include, StringComparison.Ordinal)) return true;
+
+				return false;
+			}
+
+			foreach (var exclude in excludedNamespaces)
 				if (fullyQualifiedTypeName.StartsWith(exclude, StringComparison.Ordinal)) return false;
 
 			return true;
