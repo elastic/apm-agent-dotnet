@@ -237,16 +237,8 @@ namespace Elastic.Apm.Tests
 #if !NETCOREAPP2_1
 				//EventSource Microsoft-Windows-DotNETRuntime is only 2.2+, no gc metrics on 2.1
 				//repeat the allocation multiple times and make sure at least 1 GetSamples() call returns value
-				for (var j = 0; j < 100; j++)
+				for (var j = 0; j < 1000; j++)
 				{
-					Thread.Sleep(500);
-					for (var i = 0; i < 300_000; i++)
-					{
-						var _ = new int[100];
-					}
-
-					Thread.Sleep(1000);
-
 					for (var i = 0; i < 300_000; i++)
 					{
 						var _ = new int[100];
@@ -254,7 +246,12 @@ namespace Elastic.Apm.Tests
 
 					GC.Collect();
 
-					Thread.Sleep(1000);
+					for (var i = 0; i < 300_000; i++)
+					{
+						var _ = new int[100];
+					}
+
+					GC.Collect();
 
 					var samples = gcMetricsProvider.GetSamples();
 
@@ -290,7 +287,8 @@ namespace Elastic.Apm.Tests
 		internal class TestSystemTotalCpuProvider : SystemTotalCpuProvider
 		{
 			public TestSystemTotalCpuProvider(string procStatContent) : base(new NoopLogger(),
-				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent)))) { }
+				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent))))
+			{ }
 		}
 	}
 }
