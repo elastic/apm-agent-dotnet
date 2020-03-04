@@ -53,5 +53,14 @@ namespace Elastic.Apm.Helpers
 
 		internal static string Indent(string input, int indentationLevel) =>
 			Indent(input, Indentation.Repeat(indentationLevel));
+
+		internal static bool IsHex(char c) =>
+			( '0' <= c && c <= '9' ) ||
+			( 'a' <= c && c <= 'f' ) ||
+			( 'A' <= c && c <= 'F' );
+
+		internal static bool IsLatinLetter(char c) =>
+			( 'a' <= c && c <= 'z' ) ||
+			( 'A' <= c && c <= 'Z' );
 	}
 }
