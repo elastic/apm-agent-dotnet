@@ -51,6 +51,7 @@ namespace Elastic.Apm.Config
 		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => ParseSanitizeFieldNames(Read(ConfigConsts.EnvVarNames.SanitizeFieldNames));
 
 		public string SecretToken => ParseSecretToken(Read(ConfigConsts.EnvVarNames.SecretToken));
+		public string ApiKey => ParseApiKey(Read(ConfigConsts.EnvVarNames.ApiKey));
 
 		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Read(ConfigConsts.EnvVarNames.ServerUrls));
 

@@ -190,6 +190,14 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
+		public void ApiKeySimpleTest()
+		{
+			var apiKey = "apiKey";
+			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(apiKey: apiKey)));
+			agent.ConfigurationReader.ApiKey.Should().Be(apiKey);
+		}
+
+		[Fact]
 		public void DefaultCaptureHeadersTest()
 		{
 			using (var agent = new ApmAgent(new TestAgentComponents())) agent.ConfigurationReader.CaptureHeaders.Should().Be(true);
