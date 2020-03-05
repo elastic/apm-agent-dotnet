@@ -173,7 +173,11 @@ namespace Elastic.Apm.Tests
 
 			using var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
 			var metricsProviderMock = new Mock<IMetricsProvider>();
-			metricsProviderMock.Setup(x => x.GetSamples())
+
+			metricsProviderMock.Setup(x => x.IsMetricAlreadyCaptured).Returns(true);
+
+			metricsProviderMock
+				.Setup(x => x.GetSamples())
 				.Returns(() => samples);
 			metricsProviderMock.SetupProperty(x => x.ConsecutiveNumberOfFailedReads);
 
@@ -200,6 +204,9 @@ namespace Elastic.Apm.Tests
 			using var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
 
 			var metricsProviderMock = new Mock<IMetricsProvider>();
+
+			metricsProviderMock.Setup(x => x.IsMetricAlreadyCaptured).Returns(true);
+
 			metricsProviderMock.Setup(x => x.GetSamples())
 				.Returns(() => new List<MetricSample> { new MetricSample("key1", double.NaN), new MetricSample("key2", 0.95) });
 			metricsProviderMock.SetupProperty(x => x.ConsecutiveNumberOfFailedReads);
@@ -221,36 +228,41 @@ namespace Elastic.Apm.Tests
 		{
 			using (var gcMetricsProvider = new GcMetricsProvider(_logger))
 			{
+				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeFalse();
+
+				// ReSharper disable once TooWideLocalVariableScope
+				// ReSharper disable once RedundantAssignment
 				var containsValue = false;
 
+#if !NETCOREAPP2_1
+				//EventSource Microsoft-Windows-DotNETRuntime is only 2.2+, no gc metrics on 2.1
 				//repeat the allocation multiple times and make sure at least 1 GetSamples() call returns value
-				for (var j = 0; j < 100; j++)
+				for (var j = 0; j < 1000; j++)
 				{
-					Thread.Sleep(500);
 					for (var i = 0; i < 300_000; i++)
 					{
 						var _ = new int[100];
 					}
 
-					Thread.Sleep(1000);
+					GC.Collect();
 
 					for (var i = 0; i < 300_000; i++)
 					{
 						var _ = new int[100];
 					}
 
-					Thread.Sleep(1000);
+					GC.Collect();
 
 					var samples = gcMetricsProvider.GetSamples();
 
-					containsValue = samples?.Count() != 0;
+					containsValue = samples != null && samples.Count() != 0;
 
 					if (containsValue)
 						break;
 				}
-#if !NETCOREAPP2_1
-				//EventSource Microsoft-Windows-DotNETRuntime is only 2.2+, no gc metrics on 2.1
+
 				containsValue.Should().BeTrue();
+				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeTrue();
 #endif
 			}
 		}
@@ -268,12 +280,15 @@ namespace Elastic.Apm.Tests
 				NumberOfGetValueCalls++;
 				throw new Exception(ExceptionMessage);
 			}
+
+			public bool IsMetricAlreadyCaptured => true;
 		}
 
 		internal class TestSystemTotalCpuProvider : SystemTotalCpuProvider
 		{
 			public TestSystemTotalCpuProvider(string procStatContent) : base(new NoopLogger(),
-				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent)))) { }
+				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent))))
+			{ }
 		}
 	}
 }

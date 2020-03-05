@@ -124,6 +124,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			return null;
 		}
 
+		public bool IsMetricAlreadyCaptured => true;
+
 		public void Dispose()
 		{
 			_procStatStreamReader?.Dispose();
