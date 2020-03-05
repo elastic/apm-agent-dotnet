@@ -6,8 +6,10 @@
 set -euxo pipefail
 
 # Convert xunit files to junit files
+# shellcheck disable=SC2044
 for i in $(find . -name TestResults.xml)
 do
 	DIR=$(dirname "$i")
-	dotnet xunit-to-junit "$i" "${DIR}/junit-testTesults.xml"
+	dotnet xunit-to-junit "$i" "${DIR}/junit-${STAGE_NAME}-testTesults.xml"
+	mv "$i" "${DIR}/TestResults-${STAGE_NAME}.xml"
 done
