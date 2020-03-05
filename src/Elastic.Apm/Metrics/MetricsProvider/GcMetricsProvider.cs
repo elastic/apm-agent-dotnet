@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Tracing;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Microsoft.Diagnostics.Tracing;
-using Microsoft.Diagnostics.Tracing.Analysis;
 using Microsoft.Diagnostics.Tracing.Parsers;
 using Microsoft.Diagnostics.Tracing.Session;
 
@@ -66,7 +66,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 						{
 							_traceEventSession.EnableProvider(
 								ClrTraceEventParser.ProviderGuid,
-								TraceEventLevel.Verbose,
+								TraceEventLevel.Informational,
 								(ulong)
 								ClrTraceEventParser.Keywords.GC // garbage collector details
 							);
@@ -77,31 +77,34 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 							return;
 						}
 
-						var source = _traceEventSession.Source;
-						source.NeedLoadedDotNetRuntimes();
-						source.AddCallbackOnProcessStart(proc =>
+						_traceEventSession.Source.Clr.GCStop += (a) =>
 						{
-							proc.AddCallbackOnDotNetRuntimeLoad(runtime =>
+							if (a.ProcessID == Process.GetCurrentProcess().Id)
 							{
-								runtime.GCEnd += (process, gc) =>
+								if (!_isMetricAlreadyCaptured)
 								{
-									_logger.Trace()
-										?.Log("GCEnd called");
+									lock (_lock)
+										_isMetricAlreadyCaptured = true;
+								}
+								_gcCount = (uint)a.Count;
+							}
+						};
 
-									_gen0Size = (ulong)gc.HeapStats.GenerationSize0;
-									_gen1Size = (ulong)gc.HeapStats.GenerationSize1;
-									_gen2Size = (ulong)gc.HeapStats.GenerationSize2;
-									_gen3Size = (ulong)gc.HeapStats.GenerationSize3;
-									_gcCount = (uint)runtime.GC.GCs.Count;
-
-									if (!_isMetricAlreadyCaptured)
-									{
-										lock (_lock)
-											_isMetricAlreadyCaptured = true;
-									}
-								};
-							});
-						});
+						_traceEventSession.Source.Clr.GCHeapStats += (a) =>
+						{
+							if (a.ProcessID == Process.GetCurrentProcess().Id)
+							{
+								if (!_isMetricAlreadyCaptured)
+								{
+									lock (_lock)
+										_isMetricAlreadyCaptured = true;
+								}
+								_gen0Size = (ulong)a.GenerationSize0;
+								_gen1Size = (ulong)a.GenerationSize1;
+								_gen2Size = (ulong)a.GenerationSize2;
+								_gen3Size = (ulong)a.GenerationSize3;
+							}
+						};
 
 						_traceEventSession.Source.Process();
 					});
