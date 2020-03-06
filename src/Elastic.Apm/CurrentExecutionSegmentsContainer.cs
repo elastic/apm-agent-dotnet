@@ -38,23 +38,8 @@ namespace Elastic.Apm
 
 			internal T Value
 			{
-				get
-				{
-					_logger.Trace()
-						?.Log("Getting value..." +
-							" Current thread: {ThreadDesc}. Current value: {ExecutionSegment}."
-							, DbgUtils.CurrentThreadDesc, _value.Value);
-					return _value.Value;
-				}
-
-				set
-				{
-					_logger.Trace()
-						?.Log("Setting value..." +
-							" Current thread: {ThreadDesc}. Current value: {ExecutionSegment}. New value: {ExecutionSegment}."
-							, DbgUtils.CurrentThreadDesc, _value.Value, value);
-					_value.Value = value;
-				}
+				get => _value.Value;
+				set => _value.Value = value;
 			}
 		}
 	}
