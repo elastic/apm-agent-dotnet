@@ -246,6 +246,8 @@ namespace Elastic.Apm.Tests
 
 					GC.Collect();
 
+					Thread.Sleep(100);
+
 					for (var i = 0; i < 300_000; i++)
 					{
 						var _ = new int[100];
