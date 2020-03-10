@@ -229,6 +229,491 @@ pipeline {
                   }
                 }
               }
+              stage('msbuild-tools-16.4.1.0'){
+                agent { label 'windows-2019-test-immutable' }
+                options { skipDefaultCheckout() }
+                environment {
+                  HOME = "${env.WORKSPACE}"
+                  DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
+                  PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
+                  MSBUILDDEBUGPATH = "${env.WORKSPACE}"
+                }
+                stages{
+                  /**
+                  Install the required tools
+                  */
+                  stage('Install tools') {
+                    steps {
+                      cleanDir("${WORKSPACE}/*")
+                      unstash 'source'
+                      dir("${HOME}"){
+                        powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
+                        powershell label: 'Install msbuild tools', script: "${BASE_DIR}\\.ci\\windows\\msbuild-tools-16.4.1.0.ps1"
+                      }
+                    }
+                  }
+                  /**
+                  Build the project from code..
+                  */
+                  stage('Build - MSBuild') {
+                    steps {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          bat '.ci/windows/msbuild.bat'
+                        }
+                    }
+                    post {
+                      unsuccessful {
+                        archiveArtifacts(allowEmptyArchive: true,
+                          artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                      }
+                    }
+                  }
+                  /**
+                  Execute unit tests.
+                  */
+                  stage('Test') {
+                    steps {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                          bat label: 'Prepare solution', script: '.ci/windows/prepare-test.bat'
+                          bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                          bat label: 'Test & coverage', script: '.ci/windows/testnet461.bat'
+                          powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                        }
+                    }
+                    post {
+                      always {
+                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/target/diag.log,${BASE_DIR}/target/TestResults.xml")
+                        junit(allowEmptyResults: true,
+                          keepLongStdio: true,
+                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
+                      }
+                      unsuccessful {
+                        archiveArtifacts(allowEmptyArchive: true,
+                          artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                      }
+                    }
+                  }
+                  /**
+                  Execute IIS tests.
+                  */
+                  stage('IIS Tests') {
+                    steps {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                          bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
+                          powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                        }
+                    }
+                    post {
+                      always {
+                        junit(allowEmptyResults: true,
+                          keepLongStdio: true,
+                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
+                      }
+                    }
+                  }
+                }
+                post {
+                  always {
+                    cleanWs(disableDeferredWipeout: true, notFailBuild: true)
+                  }
+                }
+              }
+              stage('msbuild-tools-16.4.2.0'){
+                agent { label 'windows-2019-test-immutable' }
+                options { skipDefaultCheckout() }
+                environment {
+                  HOME = "${env.WORKSPACE}"
+                  DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
+                  PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
+                  MSBUILDDEBUGPATH = "${env.WORKSPACE}"
+                }
+                stages{
+                  /**
+                  Install the required tools
+                  */
+                  stage('Install tools') {
+                    steps {
+                      cleanDir("${WORKSPACE}/*")
+                      unstash 'source'
+                      dir("${HOME}"){
+                        powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
+                        powershell label: 'Install msbuild tools', script: "${BASE_DIR}\\.ci\\windows\\msbuild-tools-16.4.2.0.ps1"
+                      }
+                    }
+                  }
+                  /**
+                  Build the project from code..
+                  */
+                  stage('Build - MSBuild') {
+                    steps {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          bat '.ci/windows/msbuild.bat'
+                        }
+                    }
+                    post {
+                      unsuccessful {
+                        archiveArtifacts(allowEmptyArchive: true,
+                          artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                      }
+                    }
+                  }
+                  /**
+                  Execute unit tests.
+                  */
+                  stage('Test') {
+                    steps {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                          bat label: 'Prepare solution', script: '.ci/windows/prepare-test.bat'
+                          bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                          bat label: 'Test & coverage', script: '.ci/windows/testnet461.bat'
+                          powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                        }
+                    }
+                    post {
+                      always {
+                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/target/diag.log,${BASE_DIR}/target/TestResults.xml")
+                        junit(allowEmptyResults: true,
+                          keepLongStdio: true,
+                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
+                      }
+                      unsuccessful {
+                        archiveArtifacts(allowEmptyArchive: true,
+                          artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                      }
+                    }
+                  }
+                  /**
+                  Execute IIS tests.
+                  */
+                  stage('IIS Tests') {
+                    steps {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                          bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
+                          powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                        }
+                    }
+                    post {
+                      always {
+                        junit(allowEmptyResults: true,
+                          keepLongStdio: true,
+                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
+                      }
+                    }
+                  }
+                }
+                post {
+                  always {
+                    cleanWs(disableDeferredWipeout: true, notFailBuild: true)
+                  }
+                }
+              }
+              stage('msbuild-tools-16.4.3.0'){
+                agent { label 'windows-2019-test-immutable' }
+                options { skipDefaultCheckout() }
+                environment {
+                  HOME = "${env.WORKSPACE}"
+                  DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
+                  PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
+                  MSBUILDDEBUGPATH = "${env.WORKSPACE}"
+                }
+                stages{
+                  /**
+                  Install the required tools
+                  */
+                  stage('Install tools') {
+                    steps {
+                      cleanDir("${WORKSPACE}/*")
+                      unstash 'source'
+                      dir("${HOME}"){
+                        powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
+                        powershell label: 'Install msbuild tools', script: "${BASE_DIR}\\.ci\\windows\\msbuild-tools-16.4.3.0.ps1"
+                      }
+                    }
+                  }
+                  /**
+                  Build the project from code..
+                  */
+                  stage('Build - MSBuild') {
+                    steps {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          bat '.ci/windows/msbuild.bat'
+                        }
+                    }
+                    post {
+                      unsuccessful {
+                        archiveArtifacts(allowEmptyArchive: true,
+                          artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                      }
+                    }
+                  }
+                  /**
+                  Execute unit tests.
+                  */
+                  stage('Test') {
+                    steps {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                          bat label: 'Prepare solution', script: '.ci/windows/prepare-test.bat'
+                          bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                          bat label: 'Test & coverage', script: '.ci/windows/testnet461.bat'
+                          powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                        }
+                    }
+                    post {
+                      always {
+                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/target/diag.log,${BASE_DIR}/target/TestResults.xml")
+                        junit(allowEmptyResults: true,
+                          keepLongStdio: true,
+                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
+                      }
+                      unsuccessful {
+                        archiveArtifacts(allowEmptyArchive: true,
+                          artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                      }
+                    }
+                  }
+                  /**
+                  Execute IIS tests.
+                  */
+                  stage('IIS Tests') {
+                    steps {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                          bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
+                          powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                        }
+                    }
+                    post {
+                      always {
+                        junit(allowEmptyResults: true,
+                          keepLongStdio: true,
+                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
+                      }
+                    }
+                  }
+                }
+                post {
+                  always {
+                    cleanWs(disableDeferredWipeout: true, notFailBuild: true)
+                  }
+                }
+              }
+              stage('msbuild-tools-16.4.4.0'){
+                agent { label 'windows-2019-test-immutable' }
+                options { skipDefaultCheckout() }
+                environment {
+                  HOME = "${env.WORKSPACE}"
+                  DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
+                  PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
+                  MSBUILDDEBUGPATH = "${env.WORKSPACE}"
+                }
+                stages{
+                  /**
+                  Install the required tools
+                  */
+                  stage('Install tools') {
+                    steps {
+                      cleanDir("${WORKSPACE}/*")
+                      unstash 'source'
+                      dir("${HOME}"){
+                        powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
+                        powershell label: 'Install msbuild tools', script: "${BASE_DIR}\\.ci\\windows\\msbuild-tools-16.4.4.0.ps1"
+                      }
+                    }
+                  }
+                  /**
+                  Build the project from code..
+                  */
+                  stage('Build - MSBuild') {
+                    steps {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          bat '.ci/windows/msbuild.bat'
+                        }
+                    }
+                    post {
+                      unsuccessful {
+                        archiveArtifacts(allowEmptyArchive: true,
+                          artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                      }
+                    }
+                  }
+                  /**
+                  Execute unit tests.
+                  */
+                  stage('Test') {
+                    steps {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                          bat label: 'Prepare solution', script: '.ci/windows/prepare-test.bat'
+                          bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                          bat label: 'Test & coverage', script: '.ci/windows/testnet461.bat'
+                          powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                        }
+                    }
+                    post {
+                      always {
+                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/target/diag.log,${BASE_DIR}/target/TestResults.xml")
+                        junit(allowEmptyResults: true,
+                          keepLongStdio: true,
+                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
+                      }
+                      unsuccessful {
+                        archiveArtifacts(allowEmptyArchive: true,
+                          artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                      }
+                    }
+                  }
+                  /**
+                  Execute IIS tests.
+                  */
+                  stage('IIS Tests') {
+                    steps {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                          bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
+                          powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                        }
+                    }
+                    post {
+                      always {
+                        junit(allowEmptyResults: true,
+                          keepLongStdio: true,
+                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
+                      }
+                    }
+                  }
+                }
+                post {
+                  always {
+                    cleanWs(disableDeferredWipeout: true, notFailBuild: true)
+                  }
+                }
+              }
+              stage('msbuild-tools-16.4.5.0'){
+                agent { label 'windows-2019-test-immutable' }
+                options { skipDefaultCheckout() }
+                environment {
+                  HOME = "${env.WORKSPACE}"
+                  DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
+                  PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
+                  MSBUILDDEBUGPATH = "${env.WORKSPACE}"
+                }
+                stages{
+                  /**
+                  Install the required tools
+                  */
+                  stage('Install tools') {
+                    steps {
+                      cleanDir("${WORKSPACE}/*")
+                      unstash 'source'
+                      dir("${HOME}"){
+                        powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
+                        powershell label: 'Install msbuild tools', script: "${BASE_DIR}\\.ci\\windows\\msbuild-tools-16.4.5.0.ps1"
+                      }
+                    }
+                  }
+                  /**
+                  Build the project from code..
+                  */
+                  stage('Build - MSBuild') {
+                    steps {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          bat '.ci/windows/msbuild.bat'
+                        }
+                    }
+                    post {
+                      unsuccessful {
+                        archiveArtifacts(allowEmptyArchive: true,
+                          artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                      }
+                    }
+                  }
+                  /**
+                  Execute unit tests.
+                  */
+                  stage('Test') {
+                    steps {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                          bat label: 'Prepare solution', script: '.ci/windows/prepare-test.bat'
+                          bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                          bat label: 'Test & coverage', script: '.ci/windows/testnet461.bat'
+                          powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                        }
+                    }
+                    post {
+                      always {
+                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/target/diag.log,${BASE_DIR}/target/TestResults.xml")
+                        junit(allowEmptyResults: true,
+                          keepLongStdio: true,
+                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
+                      }
+                      unsuccessful {
+                        archiveArtifacts(allowEmptyArchive: true,
+                          artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                      }
+                    }
+                  }
+                  /**
+                  Execute IIS tests.
+                  */
+                  stage('IIS Tests') {
+                    steps {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                          bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
+                          powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1'
+                        }
+                    }
+                    post {
+                      always {
+                        junit(allowEmptyResults: true,
+                          keepLongStdio: true,
+                          testResults: "${BASE_DIR}/**/junit-*.xml,${BASE_DIR}/target/**/TEST-*.xml")
+                      }
+                    }
+                  }
+                }
+                post {
+                  always {
+                    cleanWs(disableDeferredWipeout: true, notFailBuild: true)
+                  }
+                }
+              }
               stage('Docker .NET Framework'){
                 agent { label 'windows-2019-docker-immutable' }
                 options { skipDefaultCheckout() }
