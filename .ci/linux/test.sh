@@ -35,5 +35,4 @@ dotnet test -v n -r target -d target/diag.log \
     /p:Exclude='"[Elastic.Apm.Tests]*,[SampleAspNetCoreApp*]*,[xunit*]*"' \
     /p:Threshold=0 \
     /p:ThresholdType=branch \
-    /p:ThresholdStat=total \
-    || echo -e "\033[31;49mTests FAILED\033[0m"
+    /p:ThresholdStat=total
