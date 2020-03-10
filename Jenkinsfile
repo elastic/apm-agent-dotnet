@@ -473,7 +473,9 @@ def release(secret){
 def reportTests() {
   dir("${BASE_DIR}"){
     if(isUnix()) {
-      sh label: 'Convert Test Results to junit format', script: '.ci/linux/convert.sh', returnStatus: true
+      dotnet(){
+        sh label: 'Convert Test Results to junit format', script: '.ci/linux/convert.sh', returnStatus: true
+      }
     } else {
       powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1', returnStatus: true
     }
