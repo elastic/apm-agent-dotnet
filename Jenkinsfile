@@ -479,7 +479,7 @@ def reportTests() {
     } else {
       powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1', returnStatus: true
     }
-    archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag.log,**/TestResults*.xml,**/junit-*.xml')
-    junit(allowEmptyResults: true, keepLongStdio: true, testResults: '**/junit-*.xml')
+    archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag.log,test/**/TestResults*.xml,test/**/junit-*.xml')
+    junit(allowEmptyResults: true, keepLongStdio: true, testResults: 'test/**/junit-*.xml')
   }
 }
