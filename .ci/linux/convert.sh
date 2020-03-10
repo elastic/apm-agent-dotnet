@@ -5,6 +5,7 @@
 #
 set -euxo pipefail
 
+env | sort
 # Convert xunit files to junit files
 # shellcheck disable=SC2044
 for i in $(find . -name TestResults.xml)
