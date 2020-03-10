@@ -145,7 +145,6 @@ pipeline {
                       unstash 'source'
                       dir("${HOME}"){
                         powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
-                        powershell label: 'Install msbuild tools', script: "${BASE_DIR}\\.ci\\windows\\msbuild-tools.ps1"
                       }
                     }
                   }
