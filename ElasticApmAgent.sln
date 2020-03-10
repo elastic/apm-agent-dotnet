@@ -46,6 +46,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "files", "files", "{B406113B
 		RELEASING.md = RELEASING.md
 		global.json = global.json
 		Directory.Build.props = Directory.Build.props
+		CHANGELOG.asciidoc = CHANGELOG.asciidoc
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.PerfTests", "test\Elastic.Apm.PerfTests\Elastic.Apm.PerfTests.csproj", "{F069CE99-F418-4BC2-9E44-8F03497D8DA8}"
@@ -71,6 +72,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.SqlClient", "src\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj", "{F6027B7F-2AD7-4F43-8DDC-123E4824F15F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.SqlClient.Tests", "test\Elastic.Apm.SqlClient.Tests\Elastic.Apm.SqlClient.Tests.csproj", "{968E1E85-E996-42DE-9845-D20DAE16165A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Feature.Tests", "test\Elastic.Apm.Feature.Tests\Elastic.Apm.Feature.Tests.csproj", "{A4EF875C-92AD-4538-AFF1-1DA277F1085A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -160,6 +163,10 @@ Global
 		{968E1E85-E996-42DE-9845-D20DAE16165A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{968E1E85-E996-42DE-9845-D20DAE16165A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{968E1E85-E996-42DE-9845-D20DAE16165A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4EF875C-92AD-4538-AFF1-1DA277F1085A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4EF875C-92AD-4538-AFF1-1DA277F1085A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4EF875C-92AD-4538-AFF1-1DA277F1085A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4EF875C-92AD-4538-AFF1-1DA277F1085A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -185,6 +192,7 @@ Global
 		{79BEA612-E2C8-47FD-84DC-A1B17AAD5038} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{F6027B7F-2AD7-4F43-8DDC-123E4824F15F} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{968E1E85-E996-42DE-9845-D20DAE16165A} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{A4EF875C-92AD-4538-AFF1-1DA277F1085A} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}

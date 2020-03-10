@@ -230,6 +230,43 @@ namespace Elastic.Apm.Tests.HelpersTests
 				=> TestImpl(LoggerBase, dbgDescription, connectionString, expectedHost, expectedPort);
 
 			[Theory]
+			// https://github.com/elastic/apm-agent-dotnet/issues/746
+			[InlineData("Issue #746"
+				, @"DATA SOURCE=192.168.0.151:1521/ORCL;PASSWORD=xxx;PERSIST SECURITY INFO=True;USER ID=xxx"
+				, "192.168.0.151", 1521)]
+			[InlineData("Issue #746 with dummy suffix"
+				, @"DATA SOURCE=192.168.0.151:1521/MYSUFFIX;PASSWORD=xxx;PERSIST SECURITY INFO=True;USER ID=xxx"
+				, "192.168.0.151", 1521)]
+			[InlineData("Issue #746 with IPv6 with port"
+				, @"DATA SOURCE=[ff02::2:ff00:0]:1521/ORCL;PASSWORD=xxx;PERSIST SECURITY INFO=True;USER ID=xxx"
+				, "ff02::2:ff00:0", 1521)]
+			[InlineData("Issue #746 with IPv6 without port address enclosed in []"
+				, @"DATA SOURCE=[ff02::2:ff00:0]/ORCL;PASSWORD=xxx;PERSIST SECURITY INFO=True;USER ID=xxx"
+				, "ff02::2:ff00:0", null)]
+			[InlineData("Issue #746 with IPv6 without port address not enclosed in []"
+				, @"DATA SOURCE=ff02::2:ff00:0/ORCL;PASSWORD=xxx;PERSIST SECURITY INFO=True;USER ID=xxx"
+				, "ff02::2:ff00:0", null)]
+			// According to https://en.wikipedia.org/wiki/IPv6_address#Special_addresses
+			// IPv6 can contain `/<hex number>' and we don't want to discard a part of the address
+			[InlineData("Issue #746 but with IPv6 with slash with port"
+				, @"DATA SOURCE=[ff02::2:ff00:0/104]:1521/ORCL;PASSWORD=xxx;PERSIST SECURITY INFO=True;USER ID=xxx"
+				, "ff02::2:ff00:0/104", 1521)]
+			[InlineData("Issue #746 but with IPv6 with slash without port address enclosed in []"
+				, @"DATA SOURCE=[ff02::2:ff00:0/104]/ORCL;PASSWORD=xxx;PERSIST SECURITY INFO=True;USER ID=xxx"
+				, "ff02::2:ff00:0/104", null)]
+			[InlineData("Issue #746 but with IPv6, with slash without port address not enclosed in []"
+				, @"DATA SOURCE=ff02::2:ff00:0/104/ORCL;PASSWORD=xxx;PERSIST SECURITY INFO=True;USER ID=xxx"
+				, "ff02::2:ff00:0/104", null)]
+			[InlineData("IPv6 with slash in the address part without port"
+				, @"DATA SOURCE=ff02::2:ff00:0/104;PASSWORD=xxx;PERSIST SECURITY INFO=True;USER ID=xxx"
+				, "ff02::2:ff00:0/104", null)]
+			[InlineData("IPv6 with slash in the address part with port"
+				, @"DATA SOURCE=[ff02::2:ff00:0/104]:1521;PASSWORD=xxx;PERSIST SECURITY INFO=True;USER ID=xxx"
+				, "ff02::2:ff00:0/104", 1521)]
+			public void issue_746_discardable_ORCL_suffix(string dbgDescription, string connectionString, string expectedHost, int? expectedPort)
+				=> TestImpl(LoggerBase, dbgDescription, connectionString, expectedHost, expectedPort);
+
+			[Theory]
 			[InlineData("Standard / IPv4 with invalid port - letters instead of digits"
 				, @"Driver=(Oracle in XEClient);dbq=111.21.31.99:abc/XE;Uid=myUsername;Pwd=myPassword;"
 				, "abc")] // https://www.connectionstrings.com/oracle-in-xeclient/standard/

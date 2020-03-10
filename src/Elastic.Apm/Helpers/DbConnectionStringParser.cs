@@ -59,14 +59,9 @@ namespace Elastic.Apm.Helpers
 		private const string SqlServerLocalDbPrefix = "(LocalDB)";
 		private const string SqlServerExpressUserInstancePrefix = @".\";
 		private const string SqlAzurePrefix = @"tcp:";
-		private const string OracleXeClientSuffix = @"/XE";
 		private static readonly IEnumerable<string> DiscardablePrefixes = new List<string>
 		{
 			SqlAzurePrefix
-		};
-		private static readonly IEnumerable<string> DiscardableSuffixes = new List<string>
-		{
-			OracleXeClientSuffix
 		};
 
 		/// <returns><c>Destination</c> if successful and <c>null</c> otherwise</returns>
@@ -133,13 +128,39 @@ namespace Elastic.Apm.Helpers
 					currentResult = currentResult.Substring(discardablePrefix.Length);
 			}
 
-			foreach (var discardableSuffix in DiscardableSuffixes)
-			{
-				if (currentResult.EndsWith(discardableSuffix, StringComparison.OrdinalIgnoreCase))
-					currentResult = currentResult.Substring(0, currentResult.Length - discardableSuffix.Length);
-			}
+			currentResult = TrimDiscardableSuffix(currentResult);
 
 			return currentResult;
+		}
+
+		private static string TrimDiscardableSuffix(string valueToParse)
+		{
+			// Trim suffix /xyz for connection strings such as:
+			//
+			// 		Driver=(Oracle in XEClient);dbq=111.21.31.99:4321/XE;Uid=myUsername;Pwd=myPassword;
+			//			`/XE' suffix should be removed
+			//
+			//		DATA SOURCE=192.168.0.151:1521/ORCL;PASSWORD=xxx;PERSIST SECURITY INFO=True;USER ID=xxx
+			//			`/ORCL' suffix should be removed
+			//
+			// To generalize we should trim any /<xyz> suffix if <xyz> is letters only string
+			// but not a valid hex number because according to https://en.wikipedia.org/wiki/IPv6_address#Special_addresses
+			// IPv6 can contain `/<hex number>' and we don't want to discard a part of the address
+
+			var lastSlashIndex = valueToParse.LastIndexOf('/');
+			if (lastSlashIndex == -1) return valueToParse;
+
+			var foundNonHexDigit = false;
+			for (var i = lastSlashIndex + 1 ; i < valueToParse.Length ; ++i )
+			{
+				if (! TextUtils.IsLatinLetter(valueToParse[i])) return valueToParse;
+				if (!foundNonHexDigit && !TextUtils.IsHex(valueToParse[i])) foundNonHexDigit = true;
+			}
+
+			// If the suffix part after / is not empty and it's a valid hex number - we don't want to trim it
+			if (lastSlashIndex < (valueToParse.Length - 1) && !foundNonHexDigit) return valueToParse;
+
+			return valueToParse.Substring(0, lastSlashIndex);
 		}
 
 		private static void ParseServerWithOptionalPort(string valueToParseArg, Destination destination)

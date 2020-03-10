@@ -65,6 +65,7 @@ namespace Elastic.Apm.Config
 			ParseSanitizeFieldNames(Read(ConfigConsts.KeyNames.SanitizeFieldNames, ConfigConsts.EnvVarNames.SanitizeFieldNames));
 
 		public virtual string SecretToken => ParseSecretToken(Read(ConfigConsts.KeyNames.SecretToken, ConfigConsts.EnvVarNames.SecretToken));
+		public string ApiKey => ParseApiKey(Read(ConfigConsts.KeyNames.ApiKey, ConfigConsts.EnvVarNames.ApiKey));
 
 		public virtual IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Read(ConfigConsts.KeyNames.ServerUrls, ConfigConsts.EnvVarNames.ServerUrls));
 

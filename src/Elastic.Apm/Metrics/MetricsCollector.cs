@@ -118,7 +118,7 @@ namespace Elastic.Apm.Metrics
 			}
 		}
 
-		internal void CollectAllMetricsImpl()
+		private void CollectAllMetricsImpl()
 		{
 			_logger.Trace()?.Log("CollectAllMetrics started");
 
@@ -157,6 +157,14 @@ namespace Elastic.Apm.Metrics
 			{
 				if (metricsProvider.ConsecutiveNumberOfFailedReads == MaxTryWithoutSuccess)
 					continue;
+
+				if (!metricsProvider.IsMetricAlreadyCaptured)
+				{
+					_logger.Trace()
+						?.Log("Skipping {MetricsProviderName} - {propertyName} indicated false", metricsProvider.DbgName,
+							nameof(IMetricsProvider.IsMetricAlreadyCaptured));
+					continue;
+				}
 
 				try
 				{

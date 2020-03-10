@@ -393,6 +393,34 @@ This string is used to ensure that only your agents can send data to your APM se
 Both the agents and the APM server have to be configured with the same secret token.
 Use this setting in case the APM Server requires a token (e.g. APM Server in Elastic Cloud).
 
+WARNING: the `SecretToken` is sent as plain-text in every request to the server, so you should also secure
+your communications using HTTPS. Unless you do so, your API Key could be observed by an attacker.
+
+[float]
+[[config-api-key]]
+==== `ApiKey` (added[1.4])
+
+[options="header"]
+|============
+| Environment variable name  | IConfiguration or Web.config key
+| `ELASTIC_APM_API_KEY`      | `ElasticApm:ApiKey`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `<none>`                | A base64-encoded string
+|============
+
+This base64-encoded string is used to ensure that only your agents can send data to your APM server.
+You must have created the API key using the APM server's {apm-server-ref-v}/api-key.html[command line tool].
+
+
+NOTE: This feature is fully supported in the APM Server versions >= 7.6.
+
+WARNING: the `APIKey` is sent as plain-text in every request to the server, so you should also secure
+your communications using HTTPS. Unless you do so, your API Key could be observed by an attacker.
+
 [float]
 [[config-verify-server-cert]]
 ==== `VerifyServerCert` (added[1.3])
@@ -738,6 +766,7 @@ Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `Non
 | <<config-metrics-interval,`MetricsInterval`>> | No | Reporter
 | <<config-sanitize-field-names,`SanitizeFieldNames`>> | No | Core
 | <<config-secret-token,`SecretToken`>> | No | Reporter
+| <<config-api-key,`ApiKey`>> | No | Reporter
 | <<config-server-urls,`ServerUrls`>> | No | Reporter
 | <<config-service-name,`ServiceName`>> | No | Core
 | <<config-service-node-name, `ServiceNodeName`>> | No | Core

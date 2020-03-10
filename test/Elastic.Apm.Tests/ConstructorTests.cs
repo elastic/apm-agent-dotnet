@@ -48,6 +48,7 @@ namespace Elastic.Apm.Tests
 			public int MaxQueueEventCount => ConfigConsts.DefaultValues.MaxQueueEventCount;
 			public double MetricsIntervalInMilliseconds => ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds;
 			public string SecretToken { get; }
+			public string ApiKey { get; }
 			public IReadOnlyList<Uri> ServerUrls => new List<Uri> { ConfigConsts.DefaultValues.ServerUri };
 			public string ServiceName { get; }
 			public string ServiceVersion { get; }
