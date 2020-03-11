@@ -200,6 +200,7 @@ pipeline {
                         cleanDir("${WORKSPACE}/${BASE_DIR}")
                         unstash 'source'
                         dir("${BASE_DIR}"){
+                          powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
                           bat label: 'Build', script: '.ci/windows/msbuild.bat'
                           bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
                         }
