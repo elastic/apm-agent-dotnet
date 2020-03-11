@@ -34,7 +34,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 				var capturedPayload = agent.PayloadSender as MockPayloadSender;
 				var client = Helper.GetClient(agent, _factory);
 
-				await client.GetAsync("/Home/TriggerError");
+				try
+				{
+					await client.GetAsync("/Home/TriggerError");
+				}
+				catch
+				{
+					// ignore
+				}
 
 				capturedPayload.Should().NotBeNull();
 

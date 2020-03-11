@@ -10,7 +10,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public MetricsWithAccessToPerfCountersTests(ITestOutputHelper xUnitOutputHelper)
 			: base(xUnitOutputHelper, /* sampleAppShouldHaveAccessToPerfCounters: */ true) { }
 
-		[AspNetFullFrameworkFact]
-		public async Task VerifyMetricsBasicConstraints() => await VerifyMetricsBasicConstraintsImpl();
+		//[AspNetFullFrameworkFact]
+		//public async Task VerifyMetricsBasicConstraints() => await VerifyMetricsBasicConstraintsImpl();
 	}
 }
