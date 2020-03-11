@@ -268,7 +268,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			{
 				response = await httpClient.GetAsync(url);
 			}
-			catch (XunitException ex)
+			catch (Exception ex)
 			{
 				_logger.Error()?.LogException(ex, "Exception was thrown while sending GET request to sample application.");
 				await PostTestFailureDiagnostics();
