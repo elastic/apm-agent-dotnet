@@ -28,7 +28,7 @@ done
 
 # Run tests
 dotnet test -v n -r target -d target/diag.log \
-	--logger:"junit;TestRunDirectory=artifacts\{framework}\;LogFilePath={assembly}-test-result.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
+	--logger:"junit;LogFilePath={framework}-{assembly}-test-result.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
     /p:CollectCoverage=true \
     /p:CoverletOutputFormat=cobertura \
     /p:CoverletOutput=target/Coverage/ \
