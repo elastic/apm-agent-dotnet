@@ -262,7 +262,19 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			var url = Consts.SampleApp.RootUrl + "/" + relativeUrlPath;
 			_logger.Debug()?.Log("Sending request with URL: {url} and expected status code: {HttpStatusCode}...", url, expectedStatusCode);
-			var response = await httpClient.GetAsync(url);
+
+			HttpResponseMessage response = null;
+			try
+			{
+				response = await httpClient.GetAsync(url);
+			}
+			catch (XunitException ex)
+			{
+				_logger.Error()?.LogException(ex, "Exception was thrown while sending GET request to sample application.");
+				await PostTestFailureDiagnostics();
+				throw;
+			}
+
 			_logger.Debug()
 				?.Log("Request sent. Actual status code: {HttpStatusCode} ({HttpStatusCodeEnum})",
 					(int)response.StatusCode, response.StatusCode);
