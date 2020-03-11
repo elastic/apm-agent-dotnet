@@ -141,7 +141,9 @@ namespace Elastic.Apm.BackendComm
 			httpClient.DefaultRequestHeaders.UserAgent.Add(
 				new ProductInfoHeaderValue(AdaptUserAgentValue(service.Runtime.Name), AdaptUserAgentValue(service.Runtime.Version)));
 
-			if (config.SecretToken != null)
+			if (config.ApiKey != null)
+				httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("ApiKey", config.ApiKey);
+			else if (config.SecretToken != null)
 				httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", config.SecretToken);
 
 			return httpClient;

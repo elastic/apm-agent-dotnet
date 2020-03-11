@@ -26,6 +26,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _metricsInterval;
 		private readonly string _sanitizeFieldNames;
 		private readonly string _secretToken;
+		private readonly string _apiKey;
 		private readonly string _serverUrls;
 		private readonly string _serviceName;
 		private readonly string _serviceNodeName;
@@ -46,6 +47,7 @@ namespace Elastic.Apm.Tests.Mocks
 			string environment = null,
 			string serviceNodeName = null,
 			string secretToken = null,
+			string apiKey = null,
 			string captureHeaders = null,
 			string centralConfig = null,
 			string dbgDescription = null,
@@ -73,6 +75,7 @@ namespace Elastic.Apm.Tests.Mocks
 			_environment = environment;
 			_serviceNodeName = serviceNodeName;
 			_secretToken = secretToken;
+			_apiKey = apiKey;
 			_captureHeaders = captureHeaders;
 			_centralConfig = centralConfig;
 			_dbgDescription = dbgDescription;
@@ -122,6 +125,7 @@ namespace Elastic.Apm.Tests.Mocks
 			ParseSanitizeFieldNames(Kv(ConfigConsts.EnvVarNames.SanitizeFieldNames, _sanitizeFieldNames, Origin));
 
 		public string SecretToken => ParseSecretToken(Kv(ConfigConsts.EnvVarNames.SecretToken, _secretToken, Origin));
+		public string ApiKey => ParseApiKey(Kv(ConfigConsts.EnvVarNames.ApiKey, _apiKey, Origin));
 		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Kv(ConfigConsts.EnvVarNames.ServerUrls, _serverUrls, Origin));
 		public string ServiceName => ParseServiceName(Kv(ConfigConsts.EnvVarNames.ServiceName, _serviceName, Origin));
 		public string ServiceNodeName => ParseServiceNodeName(Kv(ConfigConsts.EnvVarNames.ServiceNodeName, _serviceNodeName, Origin));

@@ -460,6 +460,7 @@ namespace Elastic.Apm.BackendComm
 			public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _wrapped.SanitizeFieldNames;
 
 			public string SecretToken => _wrapped.SecretToken;
+			public string ApiKey => _wrapped.ApiKey;
 
 			public IReadOnlyList<Uri> ServerUrls => _wrapped.ServerUrls;
 
