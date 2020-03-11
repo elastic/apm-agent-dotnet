@@ -23,7 +23,7 @@ do
 		continue
 	fi
 	dotnet add "$i" package JunitXml.TestLogger --version 2.1.15
-	dotnet add "$i" package coverlet.msbuild --version 2.5.1
+	dotnet add "$i" package coverlet.msbuild --version 2.8.0
 done
 
 # Run tests
