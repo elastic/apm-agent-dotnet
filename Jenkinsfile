@@ -50,6 +50,10 @@ pipeline {
               environment {
                 MSBUILDDEBUGPATH = "${env.WORKSPACE}"
               }
+              when {
+                beforeAgent true
+                expression { return false }
+              }
               /**
               Make sure there are no code style violation in the repo.
               */
@@ -149,6 +153,10 @@ pipeline {
                   Build the project from code..
                   */
                   stage('Build - MSBuild') {
+                    when {
+                      beforeAgent true
+                      expression { return false }
+                    }
                     steps {
                       withGithubNotify(context: 'Build MSBuild - Windows') {
                         cleanDir("${WORKSPACE}/${BASE_DIR}")
@@ -169,6 +177,10 @@ pipeline {
                   Execute unit tests.
                   */
                   stage('Test') {
+                    when {
+                      beforeAgent true
+                      expression { return false }
+                    }
                     steps {
                       withGithubNotify(context: 'Test MSBuild - Windows', tab: 'tests') {
                         cleanDir("${WORKSPACE}/${BASE_DIR}")
@@ -229,6 +241,10 @@ pipeline {
               stage('Docker .NET Framework'){
                 agent { label 'windows-2019-docker-immutable' }
                 options { skipDefaultCheckout() }
+                when {
+                  beforeAgent true
+                  expression { return false }
+                }
                 stages {
                   stage('Build - Docker MSBuild') {
                     steps {
