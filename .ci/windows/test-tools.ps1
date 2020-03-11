@@ -25,10 +25,8 @@ function Exec {
 # Install tools
 exec { dotnet tool install -g Codecov.Tool --version 1.2.0 }
 
-Get-ChildItem -Path . -Recurse -Filter *.csproj |
+Get-ChildItem -Path . -Recurse -Filter *.csproj | Where-Object { $_.Name -NotMatch "AspNetFullFrameworkSampleApp.csproj" } |
 Foreach-Object {
-	if ($_.FullName -notlike "*AspNetFullFrameworkSampleApp.csproj") {
-		exec { dotnet add $_.FullName package JunitXml.TestLogger --version 2.1.15 }
-		exec { dotnet add $_.FullName package coverlet.msbuild --version 2.5.1 }
-	}
+	exec { dotnet add $_.FullName package JunitXml.TestLogger --version 2.1.15 }
+	exec { dotnet add $_.FullName package coverlet.msbuild --version 2.5.1 }
 }
