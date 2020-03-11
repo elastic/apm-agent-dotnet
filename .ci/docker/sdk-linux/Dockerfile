@@ -9,9 +9,6 @@ RUN curl -s -O -L https://dot.net/v1/dotnet-install.sh
 # Install .Net SDKs
 RUN /bin/bash ./dotnet-install.sh --install-dir "${DOTNET_ROOT}" -version 2.1.505
 
-# Install dotnet-xunit-to-junit
-RUN dotnet tool install --tool-path /usr/share/dotnet/tools dotnet-xunit-to-junit --version 0.3.1
-
 # Install docker
 RUN apt update \
  && apt-get -qq install -y apt-transport-https ca-certificates curl \
