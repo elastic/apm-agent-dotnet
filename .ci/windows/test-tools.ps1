@@ -21,6 +21,10 @@ Write-Host "`nVisual Studio 2019 Command Prompt variables set." -ForegroundColor
 & dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
 & dotnet tool install -g Codecov.Tool --version 1.2.0
 
+
+# Set env variable required for the AspNetFullFrameworkSampleApp.csproj
+[System.Environment]::SetEnvironmentVariable("VSToolsPath", $Env:VSINSTALLDIR + "\\MSBuild\\Microsoft\\VisualStudio\\v" + $Env:VisualStudioVersion)
+
 Get-ChildItem -Path . -Recurse -Filter *.csproj | Where-Object { $_.Name -NotMatch "AspNetFullFrameworkSampleApp.csproj" } |
 Foreach-Object {
   & dotnet add $_.FullName package XunitXml.TestLogger --version 2.0.0
