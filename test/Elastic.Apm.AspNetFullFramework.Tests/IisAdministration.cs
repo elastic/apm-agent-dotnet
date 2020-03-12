@@ -214,7 +214,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var addedPool = serverManager.ApplicationPools.Add(Consts.SampleApp.AppPoolName);
 			addedPool.ManagedPipelineMode = ManagedPipelineMode.Integrated;
 			addedPool.StartMode = startMode;
-			if (sampleAppShouldUseHighPrivilegedAccount) addedPool.ProcessModel.IdentityType = ProcessModelIdentityType.LocalService;
+			if (sampleAppShouldUseHighPrivilegedAccount) addedPool.ProcessModel.IdentityType = ProcessModelIdentityType.LocalSystem;
 			_logger.Debug()
 				?.Log("Added application pool {IisAppPool}, useHighPrivilegedAccount: {useHighPrivilegedAccount}",
 					addedPool.Name, sampleAppShouldUseHighPrivilegedAccount);
