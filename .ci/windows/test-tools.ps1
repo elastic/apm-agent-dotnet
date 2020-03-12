@@ -15,10 +15,11 @@ popd
 Write-Host "`nVisual Studio 2019 Command Prompt variables set." -ForegroundColor Yellow
 
 # Install tools
+& dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
 & dotnet tool install -g Codecov.Tool --version 1.2.0
 
 Get-ChildItem -Path . -Recurse -Filter *.csproj | Where-Object { $_.Name -NotMatch "AspNetFullFrameworkSampleApp.csproj" } |
 Foreach-Object {
-	& dotnet add $_.FullName package JunitXml.TestLogger --version 2.1.15
-	& dotnet add $_.FullName package coverlet.msbuild --version 2.5.1
+  & dotnet add $_.FullName package XunitXml.TestLogger --version 2.0.0
+  & dotnet add $_.FullName package coverlet.msbuild --version 2.5.1
 }

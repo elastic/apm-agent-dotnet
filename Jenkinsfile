@@ -476,10 +476,16 @@ def release(secret){
   }
 }
 
-
 def reportTests() {
   dir("${BASE_DIR}"){
-    archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag.log,**/*-test-result.xml')
-    junit(allowEmptyResults: true, keepLongStdio: true, testResults: '**/*-test-result.xml')
+    if(isUnix()) {
+      dotnet(){
+        sh label: 'Convert Test Results to junit format', script: '.ci/linux/convert.sh', returnStatus: true
+      }
+    } else {
+      powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1', returnStatus: true
+    }
+    archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag.log,test/**/TestResults*.xml,test/**/junit-*.xml')
+    junit(allowEmptyResults: true, keepLongStdio: true, testResults: 'test/**/junit-*.xml')
   }
 }

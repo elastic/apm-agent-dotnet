@@ -22,13 +22,13 @@ do
 	if [[ $i == *"Elastic.Apm.AspNetFullFramework.Tests.csproj"* ]]; then
 		continue
 	fi
-	dotnet add "$i" package JunitXml.TestLogger --version 2.1.15
+	dotnet add "$i" package XunitXml.TestLogger --version 2.0.0
 	dotnet add "$i" package coverlet.msbuild --version 2.5.1
 done
 
 # Run tests
 dotnet test -v n -r target -d target/diag.log \
-    --logger:"junit;LogFilePath={framework}-{assembly}-test-result.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
+    --logger:"xunit;LogFilePath=TestResults.xml" \
     /p:CollectCoverage=true \
     /p:CoverletOutputFormat=cobertura \
     /p:CoverletOutput=target/Coverage/ \
