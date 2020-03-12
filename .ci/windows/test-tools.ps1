@@ -14,6 +14,9 @@ foreach {
 popd
 Write-Host "`nVisual Studio 2019 Command Prompt variables set." -ForegroundColor Yellow
 
+# List env variables
+& Get-ChildItem Env: | Sort Name
+
 # Install tools
 & dotnet tool install -g dotnet-xunit-to-junit --version 0.3.1
 & dotnet tool install -g Codecov.Tool --version 1.2.0
