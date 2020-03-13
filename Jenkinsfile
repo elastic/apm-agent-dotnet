@@ -108,7 +108,7 @@ pipeline {
                   post {
                     always {
                       reportTests()
-                      publishCoverage(adapters: [coberturaAdapter("${BASE_DIR}/target/**/coverage.cobertura.xml")],
+                      publishCoverage(adapters: [coberturaAdapter("${BASE_DIR}/target/*coverage.cobertura.xml")],
                                       sourceFileResolver: sourceFiles('STORE_ALL_BUILD'))
                       codecov(repo: env.REPO, basedir: "${BASE_DIR}", secret: "${CODECOV_SECRET}")
                     }
@@ -476,7 +476,7 @@ def reportTests() {
     } else {
       powershell label: 'Convert Test Results to junit format', script: '.ci\\windows\\convert.ps1', returnStatus: true
     }
-    archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag.log,test/**/TestResults*.xml,test/**/junit-*.xml')
+    archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag-*.log,test/**/*TestResults.xml,test/**/junit-*.xml,target/*coverage.cobertura.xml')
     junit(allowEmptyResults: true, keepLongStdio: true, testResults: 'test/**/junit-*.xml')
   }
 }

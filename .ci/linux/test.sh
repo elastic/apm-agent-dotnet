@@ -25,15 +25,24 @@ do
 	dotnet add "$i" package XunitXml.TestLogger --version 2.0.0
 done
 
-# Run tests
-dotnet test ElasticApmAgent.sln -v n -r target -d target/diag.log \
-    --logger:"xunit;LogFilePath=TestResults.xml" \
-	--collect:"XPlat Code Coverage" \
-	--settings coverlet.runsettings \
-    /p:CollectCoverage=true \
-    /p:CoverletOutputFormat=cobertura \
-    /p:CoverletOutput=target/Coverage/ \
-    /p:Threshold=0 \
-    /p:ThresholdType=branch \
-    /p:ThresholdStat=total \
-    || echo -e "\033[31;49mTests FAILED\033[0m"
+# Run tests per project to generate the coverage report individually.
+
+while IFS= read -r -d '' file
+do
+	projectName=$(basename "$file")
+	dotnet test "$file" \
+		--verbosity normal \
+		--results-directory target \
+		--diag "target/diag-${projectName}.log" \
+		--logger:"xunit;LogFilePath=${projectName}-TestResults.xml" \
+		--collect:"XPlat Code Coverage" \
+		--settings coverlet.runsettings \
+		/p:CollectCoverage=true \
+		/p:CoverletOutputFormat=cobertura \
+		/p:CoverletOutput=target/Coverage/ \
+		/p:Threshold=0 \
+		/p:ThresholdType=branch \
+		/p:ThresholdStat=total \
+		|| echo -e "\033[31;49mTests FAILED\033[0m"
+	mv target/*/coverage.cobertura.xml "target/${projectName}-coverage.cobertura.xml"
+done <  <(find test -name '*.csproj' -print0)
