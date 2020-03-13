@@ -26,7 +26,6 @@ do
 done
 
 # Run tests per project to generate the coverage report individually.
-
 while IFS= read -r -d '' file
 do
 	projectName=$(basename "$file")
