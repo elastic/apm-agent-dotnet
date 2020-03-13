@@ -43,5 +43,6 @@ do
 		/p:ThresholdType=branch \
 		/p:ThresholdStat=total \
 		|| echo -e "\033[31;49mTests FAILED\033[0m"
-	mv target/*/coverage.cobertura.xml "target/${projectName}-coverage.cobertura.xml"
+	echo 'Move coverage files if they were generated!'
+	mv target/*/coverage.cobertura.xml "target/${projectName}-coverage.cobertura.xml" || true
 done <  <(find test -name '*.csproj' -print0)
