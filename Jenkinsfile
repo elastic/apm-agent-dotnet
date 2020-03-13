@@ -100,9 +100,7 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         dotnet(){
-                          catchError(message: 'Test failures', buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                            sh label: 'Test & coverage', script: '.ci/linux/test.sh'
-                          }
+                          sh label: 'Test & coverage', script: '.ci/linux/test.sh'
                         }
                       }
                     }
@@ -175,9 +173,7 @@ pipeline {
                           powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
                           bat label: 'Prepare solution', script: '.ci/windows/prepare-test.bat'
                           bat label: 'Build', script: '.ci/windows/msbuild.bat'
-                          catchError(message: 'Test failures', buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                            bat label: 'Test & coverage', script: '.ci/windows/testnet461.bat'
-                          }
+                          bat label: 'Test & coverage', script: '.ci/windows/testnet461.bat'
                         }
                       }
                     }
@@ -297,9 +293,7 @@ pipeline {
                           retry(3) {
                             bat label: 'Build', script: '.ci/windows/dotnet.bat'
                           }
-                          catchError(message: 'Test failures', buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                            bat label: 'Test & coverage', script: '.ci/windows/test.bat'
-                          }
+                          bat label: 'Test & coverage', script: '.ci/windows/test.bat'
                         }
                       }
                     }

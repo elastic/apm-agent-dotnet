@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
@@ -154,11 +155,11 @@ namespace Elastic.Apm.Tests
 		public void ProcStatParser(string procStatContent, long expectedIdle, long expectedTotal)
 		{
 			using var systemTotalCpuProvider = new TestSystemTotalCpuProvider(procStatContent);
-			var res = systemTotalCpuProvider.ReadProcStat();
+			var (success, idle, total) = systemTotalCpuProvider.ReadProcStat();
 
-			res.success.Should().BeTrue();
-			res.idle.Should().Be(expectedIdle);
-			res.total.Should().Be(expectedTotal);
+			success.Should().BeTrue();
+			idle.Should().Be(expectedIdle);
+			total.Should().Be(expectedTotal);
 		}
 
 		[Theory]
@@ -226,7 +227,8 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void CollectGcMetrics()
 		{
-			using (var gcMetricsProvider = new GcMetricsProvider(_logger))
+			var logger = new TestLogger(LogLevel.Trace);
+			using (var gcMetricsProvider = new GcMetricsProvider(logger))
 			{
 				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeFalse();
 
@@ -261,6 +263,23 @@ namespace Elastic.Apm.Tests
 						break;
 				}
 
+				if (PlatformDetection.IsDotNetFullFramework)
+				{
+					if (logger.Lines.Where(n => n.Contains("TraceEventSession initialization failed - GC metrics won't be collected")).Any())
+					{
+						// If initialization fails, (e.g. because ETW session initalization fails) we don't assert
+						return;
+					}
+				}
+
+				if (PlatformDetection.IsDotNetCore)
+				{
+					if (!logger.Lines.Where(n => n.Contains("OnEventWritten with GC")).Any())
+					{
+						// If no OnWritten with a GC event was called then initialization failed -> we don't assert
+						return;
+					}
+				}
 				containsValue.Should().BeTrue();
 				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeTrue();
 #endif
