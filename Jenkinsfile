@@ -467,7 +467,7 @@ def release(secret){
 
 def reportTests() {
   dir("${BASE_DIR}"){
-    archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag.log,test/**/junit-*.xml')
+    archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag*.log,test/**/junit-*.xml')
     junit(allowEmptyResults: true, keepLongStdio: true, testResults: 'test/**/junit-*.xml')
   }
 }
