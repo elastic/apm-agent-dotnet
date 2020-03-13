@@ -108,6 +108,8 @@ pipeline {
                   post {
                     always {
                       reportTests()
+                      publishCoverage(adapters: [coberturaAdapter("${BASE_DIR}/target/**/coverage.cobertura.xml")],
+                                      sourceFileResolver: sourceFiles('STORE_ALL_BUILD'))
                       codecov(repo: env.REPO, basedir: "${BASE_DIR}", secret: "${CODECOV_SECRET}")
                     }
                     unsuccessful {
