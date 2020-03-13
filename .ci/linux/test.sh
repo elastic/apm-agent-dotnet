@@ -43,10 +43,13 @@ do
 		/p:ThresholdType=branch \
 		/p:ThresholdStat=total \
 		|| echo -e "\033[31;49mTests FAILED\033[0m"
+
 	echo 'Move coverage files if they were generated!'
-	find target -type f -name 'coverage.cobertura.xml' |
-    while IFS= read -r fileName; do
-		target=$(dirname "$fileName")
-        mv "$fileName" "${target}/${projectName}-${fileName##*\/}"
-    done
+	if [ -d target ] ; then
+		find target -type f -name 'coverage.cobertura.xml' |
+		while IFS= read -r fileName; do
+			target=$(dirname "$fileName")
+			mv "$fileName" "${target}/${projectName}-${fileName##*\/}"
+		done
+	fi
 done <  <(find test -name '*.csproj' -print0)
