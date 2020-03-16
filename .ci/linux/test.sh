@@ -11,19 +11,19 @@ dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFram
 dotnet sln remove test/Elastic.Apm.AspNetFullFramework.Tests/Elastic.Apm.AspNetFullFramework.Tests.csproj
 
 # Configure the projects for coverage and testing
-for i in $(find . -name '*.csproj')
+while IFS= read -r -d '' file
 do
-	if [[ $i == *"AspNetFullFrameworkSampleApp.csproj"* ]]; then
+	if [[ $file == *"AspNetFullFrameworkSampleApp.csproj"* ]]; then
 		continue
 	fi
-	if [[ $i == *"Elastic.Apm.AspNetFullFramework.csproj"* ]]; then
+	if [[ $file == *"Elastic.Apm.AspNetFullFramework.csproj"* ]]; then
 		continue
 	fi
-	if [[ $i == *"Elastic.Apm.AspNetFullFramework.Tests.csproj"* ]]; then
+	if [[ $file == *"Elastic.Apm.AspNetFullFramework.Tests.csproj"* ]]; then
 		continue
 	fi
-	dotnet add "$i" package XunitXml.TestLogger --version 2.0.0
-done
+	dotnet add "$file" package JunitXml.TestLogger --version 2.1.15
+done <  <(find . -name '*.csproj' -print0)
 
 # Run tests per project to generate the coverage report individually.
 while IFS= read -r -d '' file
@@ -33,7 +33,7 @@ do
 		--verbosity normal \
 		--results-directory target \
 		--diag "target/diag-${projectName}.log" \
-		--logger:"xunit;LogFilePath=${projectName}-TestResults.xml" \
+		--logger:"junit;LogFilePath=junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
 		--collect:"XPlat Code Coverage" \
 		--settings coverlet.runsettings \
 		/p:CollectCoverage=true \
