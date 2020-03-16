@@ -12,6 +12,9 @@ Add-WindowsFeature Web-Asp-Net45 ;
 & choco install dotnetcore-sdk -m -y --no-progress -r --version 2.1.505
 & choco install dotnetcore-sdk -m -y --no-progress -r --version 2.2.104
 
+# Install .NET Framework 4.6.1
+& choco install dotnet4.6.1
+
 # Install NuGet Tool
 & choco install nuget.commandline -y --no-progress -r --version 5.1.0
 
