@@ -255,7 +255,7 @@ namespace Elastic.Apm.Tests
 		/// Makes sure the outgoing request with URL that contains username and password is captured, but the
 		/// username and the password are redacted.
 		/// </summary>
-		[Fact]
+		[NetCoreFact]
 		public async Task TestUrlSanitization()
 		{
 			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
