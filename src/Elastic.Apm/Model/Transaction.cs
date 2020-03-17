@@ -202,6 +202,17 @@ namespace Elastic.Apm.Model
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
 
+		public string EnsureParentId()
+		{
+			if (!string.IsNullOrEmpty(ParentId))
+				return ParentId;
+
+			var idBytes = new byte[8];
+			ParentId = RandomGenerator.GenerateRandomBytesAsString(idBytes);
+			_logger?.Debug()?.Log("Setting ParentId to transaction, {transaction}", this);
+			return ParentId;
+		}
+
 		/// <summary>
 		/// Method to conditionally serialize <see cref="Context" /> because context should be serialized only when the transaction
 		/// is sampled.

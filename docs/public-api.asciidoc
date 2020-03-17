@@ -305,6 +305,33 @@ NOTE: Return value of <<convenient-capture-span>> method overloads that accept T
 NOTE: Code samples above use `Elastic.Apm.Agent.Tracer.CurrentTransaction`. In production code you should make sure the `CurrentTransaction` is not `null`.
 
 [float]
+[[api-transaction-ensure-parent-id]]
+==== `EnsureParentId`
+
+If the transaction does not have a ParentId yet, calling this method generates a new ID, sets it as the ParentId of this transaction, and returns it as a `string`.
+
+This enables the correlation of the spans the JavaScript Real User Monitoring (RUM) agent creates for the initial page load with the transaction of the backend service.
+
+If your service generates the HTML page dynamically, initializing the JavaScript RUM agent with the value of this method allows analyzing the time spent in the browser vs in the backend services.
+
+To enable the JavaScript RUM agent in ASP.NET Core, initialize the RUM agent with the .NET agent’s current transaction:
+
+[source,JavaScript]
+----
+<script>
+	elasticApm.init({
+		serviceName: 'MyService',
+		serverUrl: 'http://localhost:8200',
+		pageLoadTraceId: '@Elastic.Apm.Agent.Tracer.CurrentTransaction?.TraceId',
+		pageLoadSpanId: '@Elastic.Apm.Agent.Tracer.CurrentTransaction?.EnsureParentId()',
+		pageLoadSampled: @Json.Serialize(Elastic.Apm.Agent.Tracer?.CurrentTransaction.IsSampled)
+		})
+</script>
+----
+
+See the  {apm-rum-ref}[JavaScript RUM agent documentation] for more information.
+
+[float]
 [[api-transaction-custom]]
 ==== `Dictionary<string,string> Custom`
 
