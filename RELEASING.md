@@ -26,6 +26,10 @@ After a changelog has been manually curated, a new pull request can be opened wi
 
 For instance, the changelog that was created for the 1.2 release can be found in this https://github.com/elastic/apm-agent-dotnet/pull/640
 
+## Releasing a new package
+
+In case you release a package the first time and you rely on the CI to push that to nuget.org, you need to make sure that the [deploy.sh](https://github.com/elastic/apm-agent-dotnet/blob/master/.ci/linux/deploy.sh) script is updated. You need to add the name of the new package into that script.
+
 ## Executing the release
 
 After the new changelog and version have been merged to master, the only thing remaining is to run the below commands:
