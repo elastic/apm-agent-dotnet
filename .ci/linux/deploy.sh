@@ -4,8 +4,9 @@
 #
 set -euo pipefail
 
-for nupkg in $(find . -type f -not -path './.nuget/*' -name '*.nupkg')
+for nupkg in Elastic.Apm Elastic.Apm.AspNetCore Elastic.Apm.EntityFrameworkCore Elastic.Apm.NetCoreAll Elastic.Apm.EntityFramework6 Elastic.Apm.AspNetFullFramework
 do
+	nupkg+=".nupkg"
 	echo "dotnet nuget push ${nupkg}"
 	dotnet nuget push ${nupkg} -k ${1} -s ${2}
 done
