@@ -116,121 +116,120 @@ pipeline {
                       archiveArtifacts(allowEmptyArchive: true,
                         artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
                     }
-                    }
                   }
                 }
               }
-              stage('Windows .NET Framework'){
-                agent { label 'windows-2019-immutable' }
-                options { skipDefaultCheckout() }
-                environment {
-                  HOME = "${env.WORKSPACE}"
-                  DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
-                  PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
-                  MSBUILDDEBUGPATH = "${env.WORKSPACE}"
+            }
+            stage('Windows .NET Framework'){
+              agent { label 'windows-2019-immutable' }
+              options { skipDefaultCheckout() }
+              environment {
+                HOME = "${env.WORKSPACE}"
+                DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
+                PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
+                MSBUILDDEBUGPATH = "${env.WORKSPACE}"
+              }
+              stages{
+                /**
+                Install the required tools
+                */
+                stage('Install tools') {
+                  steps {
+                    cleanDir("${WORKSPACE}/*")
+                    unstash 'source'
+                    dir("${HOME}"){
+                      powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
+                      powershell label: 'Install msbuild tools', script: "${BASE_DIR}\\.ci\\windows\\msbuild-tools.ps1"
+                    }
+                  }
                 }
-                stages{
-                  /**
-                  Install the required tools
-                  */
-                  stage('Install tools') {
-                    steps {
-                      cleanDir("${WORKSPACE}/*")
+                /**
+                Build the project from code..
+                */
+                stage('Build - MSBuild') {
+                  steps {
+                    withGithubNotify(context: 'Build MSBuild - Windows') {
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
                       unstash 'source'
-                      dir("${HOME}"){
-                        powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
-                        powershell label: 'Install msbuild tools', script: "${BASE_DIR}\\.ci\\windows\\msbuild-tools.ps1"
+                      dir("${BASE_DIR}"){
+                        bat '.ci/windows/msbuild.bat'
                       }
                     }
                   }
-                  /**
-                  Build the project from code..
-                  */
-                  stage('Build - MSBuild') {
-                    steps {
-                      withGithubNotify(context: 'Build MSBuild - Windows') {
-                        cleanDir("${WORKSPACE}/${BASE_DIR}")
-                        unstash 'source'
-                        dir("${BASE_DIR}"){
-                          bat '.ci/windows/msbuild.bat'
-                        }
-                      }
-                    }
-                    post {
-                      unsuccessful {
-                        archiveArtifacts(allowEmptyArchive: true,
-                          artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                      }
-                    }
-                  }
-                  /**
-                  Execute unit tests.
-                  */
-                  stage('Test') {
-                    steps {
-                      withGithubNotify(context: 'Test MSBuild - Windows', tab: 'tests') {
-                        cleanDir("${WORKSPACE}/${BASE_DIR}")
-                        unstash 'source'
-                        dir("${BASE_DIR}"){
-                          powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                          bat label: 'Prepare solution', script: '.ci/windows/prepare-test.bat'
-                          bat label: 'Build', script: '.ci/windows/msbuild.bat'
-                          bat label: 'Test & coverage', script: '.ci/windows/testnet461.bat'
-                        }
-                      }
-                    }
-                    post {
-                      always {
-                        reportTests()
-                      }
-                      unsuccessful {
-                        archiveArtifacts(allowEmptyArchive: true,
-                          artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                      }
-                    }
-                  }
-                  /**
-                  Execute IIS tests.
-                  */
-                  stage('IIS Tests') {
-                    steps {
-                      withGithubNotify(context: 'IIS Tests', tab: 'tests') {
-                        cleanDir("${WORKSPACE}/${BASE_DIR}")
-                        unstash 'source'
-                        dir("${BASE_DIR}"){
-                          powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                          bat label: 'Build', script: '.ci/windows/msbuild.bat'
-                          bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
-                        }
-                      }
-                    }
-                    post {
-                      always {
-                        reportTests()
-                      }
+                  post {
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true,
+                        artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
                     }
                   }
                 }
-                post {
-                  always {
-                    cleanWs(disableDeferredWipeout: true, notFailBuild: true)
+                /**
+                Execute unit tests.
+                */
+                stage('Test') {
+                  steps {
+                    withGithubNotify(context: 'Test MSBuild - Windows', tab: 'tests') {
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                        bat label: 'Prepare solution', script: '.ci/windows/prepare-test.bat'
+                        bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                        bat label: 'Test & coverage', script: '.ci/windows/testnet461.bat'
+                      }
+                    }
+                  }
+                  post {
+                    always {
+                      reportTests()
+                    }
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true,
+                        artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                    }
+                  }
+                }
+                /**
+                Execute IIS tests.
+                */
+                stage('IIS Tests') {
+                  steps {
+                    withGithubNotify(context: 'IIS Tests', tab: 'tests') {
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                        bat label: 'Build', script: '.ci/windows/msbuild.bat'
+                        bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
+                      }
+                    }
+                  }
+                  post {
+                    always {
+                      reportTests()
+                    }
                   }
                 }
               }
-              stage('Docker .NET Framework'){
-                agent { label 'windows-2019-docker-immutable' }
-                options { skipDefaultCheckout() }
-                stages {
-                  stage('Build - Docker MSBuild') {
-                    steps {
-                      withGithubNotify(context: 'Build MSBuild - Docker') {
-                        cleanDir("${WORKSPACE}/${BASE_DIR}")
-                        unstash 'source'
-                        dir("${BASE_DIR}") {
-                          catchError(message: 'Beta stage', buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                            dotnetWindows(){
-                              bat 'msbuild'
-                            }
+              post {
+                always {
+                  cleanWs(disableDeferredWipeout: true, notFailBuild: true)
+                }
+              }
+            }
+            stage('Docker .NET Framework'){
+              agent { label 'windows-2019-docker-immutable' }
+              options { skipDefaultCheckout() }
+              stages {
+                stage('Build - Docker MSBuild') {
+                  steps {
+                    withGithubNotify(context: 'Build MSBuild - Docker') {
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
+                      unstash 'source'
+                      dir("${BASE_DIR}") {
+                        catchError(message: 'Beta stage', buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+                          dotnetWindows(){
+                            bat 'msbuild'
                           }
                         }
                       }
@@ -238,190 +237,191 @@ pipeline {
                   }
                 }
               }
-              stage('Windows .NET Core'){
-                agent { label 'windows-2019-immutable' }
-                options { skipDefaultCheckout() }
-                environment {
-                  HOME = "${env.WORKSPACE}"
-                  DOTNET_ROOT = "C:\\Program Files\\dotnet"
-                  PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
-                  MSBUILDDEBUGPATH = "${env.WORKSPACE}"
+            }
+            stage('Windows .NET Core'){
+              agent { label 'windows-2019-immutable' }
+              options { skipDefaultCheckout() }
+              environment {
+                HOME = "${env.WORKSPACE}"
+                DOTNET_ROOT = "C:\\Program Files\\dotnet"
+                PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
+                MSBUILDDEBUGPATH = "${env.WORKSPACE}"
+              }
+              stages{
+                /**
+                Install the required tools
+                */
+                stage('Install tools') {
+                  steps {
+                    cleanDir("${WORKSPACE}/*")
+                    unstash 'source'
+                    dir("${HOME}"){
+                      powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
+                    }
+                  }
                 }
-                stages{
-                  /**
-                  Install the required tools
-                  */
-                  stage('Install tools') {
-                    steps {
-                      cleanDir("${WORKSPACE}/*")
-                      unstash 'source'
-                      dir("${HOME}"){
-                        powershell label: 'Install tools', script: "${BASE_DIR}\\.ci\\windows\\tools.ps1"
+                /**
+                Build the project from code..
+                */
+                stage('Build - dotnet') {
+                  steps {
+                    withGithubNotify(context: 'Build dotnet - Windows') {
+                      retry(3) {
+                        cleanDir("${WORKSPACE}/${BASE_DIR}")
+                        unstash 'source'
+                        dir("${BASE_DIR}"){
+                          bat label: 'Build', script: '.ci/windows/dotnet.bat'
+                        }
                       }
                     }
                   }
-                  /**
-                  Build the project from code..
-                  */
-                  stage('Build - dotnet') {
-                    steps {
-                      withGithubNotify(context: 'Build dotnet - Windows') {
+                  post {
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true,
+                        artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                    }
+                  }
+                }
+                /**
+                Execute unit tests.
+                */
+                stage('Test') {
+                  steps {
+                    withGithubNotify(context: 'Test dotnet - Windows', tab: 'tests') {
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
                         retry(3) {
-                          cleanDir("${WORKSPACE}/${BASE_DIR}")
-                          unstash 'source'
-                          dir("${BASE_DIR}"){
-                            bat label: 'Build', script: '.ci/windows/dotnet.bat'
-                          }
+                          bat label: 'Build', script: '.ci/windows/dotnet.bat'
                         }
-                      }
-                    }
-                    post {
-                      unsuccessful {
-                        archiveArtifacts(allowEmptyArchive: true,
-                          artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                        bat label: 'Test & coverage', script: '.ci/windows/test.bat'
                       }
                     }
                   }
-                  /**
-                  Execute unit tests.
-                  */
-                  stage('Test') {
-                    steps {
-                      withGithubNotify(context: 'Test dotnet - Windows', tab: 'tests') {
-                        cleanDir("${WORKSPACE}/${BASE_DIR}")
-                        unstash 'source'
-                        dir("${BASE_DIR}"){
-                          powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
-                          retry(3) {
-                            bat label: 'Build', script: '.ci/windows/dotnet.bat'
-                          }
-                          bat label: 'Test & coverage', script: '.ci/windows/test.bat'
-                        }
-                      }
+                  post {
+                    always {
+                      reportTests()
                     }
-                    post {
-                      always {
-                        reportTests()
-                      }
-                      unsuccessful {
-                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                      }
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
                     }
                   }
                 }
-                post {
-                  always {
-                    cleanWs(disableDeferredWipeout: true, notFailBuild: true)
-                  }
+              }
+              post {
+                always {
+                  cleanWs(disableDeferredWipeout: true, notFailBuild: true)
+                }
+              }
+            }
+            stage('Integration Tests') {
+              agent none
+              when {
+                anyOf {
+                  changeRequest()
+                  expression { return !params.Run_As_Master_Branch }
+                }
+              }
+              steps {
+                build(job: env.ITS_PIPELINE, propagate: false, wait: false,
+                      parameters: [string(name: 'INTEGRATION_TEST', value: '.NET'),
+                                    string(name: 'BUILD_OPTS', value: "--dotnet-agent-version ${env.GIT_BASE_COMMIT} --opbeans-dotnet-agent-branch ${env.GIT_BASE_COMMIT}"),
+                                    string(name: 'GITHUB_CHECK_NAME', value: env.GITHUB_CHECK_ITS_NAME),
+                                    string(name: 'GITHUB_CHECK_REPO', value: env.REPO),
+                                    string(name: 'GITHUB_CHECK_SHA1', value: env.GIT_BASE_COMMIT)])
+                githubNotify(context: "${env.GITHUB_CHECK_ITS_NAME}", description: "${env.GITHUB_CHECK_ITS_NAME} ...", status: 'PENDING', targetUrl: "${env.JENKINS_URL}search/?q=${env.ITS_PIPELINE.replaceAll('/','+')}")
+              }
+            }
+          }
+        }
+        stage('Release to AppVeyor') {
+          options { skipDefaultCheckout() }
+          when {
+            beforeAgent true
+            anyOf {
+              branch 'master'
+              expression { return params.Run_As_Master_Branch }
+            }
+          }
+          steps {
+            deleteDir()
+            unstash 'source'
+            dir("${BASE_DIR}"){
+              release('secret/apm-team/ci/elastic-observability-appveyor')
+            }
+          }
+          post{
+            success {
+              archiveArtifacts(allowEmptyArchive: true,
+                artifacts: "${BASE_DIR}/**/bin/Release/**/*.nupkg")
+            }
+          }
+        }
+        stage('Release') {
+          options {
+            skipDefaultCheckout()
+            timeout(time: 12, unit: 'HOURS')
+          }
+          when {
+            beforeInput true
+            beforeAgent true
+            // Tagged release events ONLY
+            tag pattern: '\\d+\\.\\d+\\.\\d+(-(alpha|beta|rc)\\d*)?', comparator: 'REGEXP'
+          }
+          stages {
+            stage('Notify') {
+              steps {
+                emailext subject: '[apm-agent-dotnet] Release ready to be pushed',
+                          to: "${NOTIFY_TO}",
+                          body: "Please go to ${env.BUILD_URL}input to approve or reject within 12 hours."
+              }
+            }
+            stage('Release to NuGet') {
+              input {
+                message 'Should we release a new version?'
+                ok 'Yes, we should.'
+              }
+              steps {
+                deleteDir()
+                unstash 'source'
+                dir("${BASE_DIR}") {
+                  release('secret/apm-team/ci/elastic-observability-nuget')
                 }
               }
             }
           }
-          stage('Release to AppVeyor') {
-            options { skipDefaultCheckout() }
-            when {
-              beforeAgent true
-              anyOf {
-                branch 'master'
-                expression { return params.Run_As_Master_Branch }
-              }
-            }
-            steps {
-              deleteDir()
-              unstash 'source'
-              dir("${BASE_DIR}"){
-                release('secret/apm-team/ci/elastic-observability-appveyor')
-              }
-            }
-            post{
-              success {
-                archiveArtifacts(allowEmptyArchive: true,
-                  artifacts: "${BASE_DIR}/**/bin/Release/**/*.nupkg")
-              }
+        }
+        stage('AfterRelease') {
+          options {
+            skipDefaultCheckout()
+          }
+          when {
+            anyOf {
+              tag pattern: '\\d+\\.\\d+\\.\\d+', comparator: 'REGEXP'
+              expression { return params.Run_As_Master_Branch }
             }
           }
-          stage('Release') {
-            options {
-              skipDefaultCheckout()
-              timeout(time: 12, unit: 'HOURS')
-            }
-            when {
-              beforeInput true
-              beforeAgent true
-              // Tagged release events ONLY
-              tag pattern: '\\d+\\.\\d+\\.\\d+(-(alpha|beta|rc)\\d*)?', comparator: 'REGEXP'
-            }
-            stages {
-              stage('Notify') {
-                steps {
-                  emailext subject: '[apm-agent-dotnet] Release ready to be pushed',
-                           to: "${NOTIFY_TO}",
-                           body: "Please go to ${env.BUILD_URL}input to approve or reject within 12 hours."
-                }
+          stages {
+            stage('Opbeans') {
+              environment {
+                REPO_NAME = "${OPBEANS_REPO}"
               }
-              stage('Release to NuGet') {
-                input {
-                  message 'Should we release a new version?'
-                  ok 'Yes, we should.'
-                }
-                steps {
-                  deleteDir()
-                  unstash 'source'
-                  dir("${BASE_DIR}") {
-                    release('secret/apm-team/ci/elastic-observability-nuget')
-                  }
+              steps {
+                deleteDir()
+                dir("${OPBEANS_REPO}"){
+                  git credentialsId: 'f6c7695a-671e-4f4f-a331-acdce44ff9ba',
+                      url: "git@github.com:elastic/${OPBEANS_REPO}.git"
+                  sh script: ".ci/bump-version.sh ${env.BRANCH_NAME}", label: 'Bump version'
+                  // The opbeans pipeline will trigger a release for the master branch
+                  gitPush()
+                  // The opbeans pipeline will trigger a release for the release tag
+                  gitCreateTag(tag: "${env.BRANCH_NAME}")
                 }
               }
             }
           }
-          stage('AfterRelease') {
-            options {
-              skipDefaultCheckout()
-            }
-            when {
-              anyOf {
-                tag pattern: '\\d+\\.\\d+\\.\\d+', comparator: 'REGEXP'
-                expression { return params.Run_As_Master_Branch }
-              }
-            }
-            stages {
-              stage('Opbeans') {
-                environment {
-                  REPO_NAME = "${OPBEANS_REPO}"
-                }
-                steps {
-                  deleteDir()
-                  dir("${OPBEANS_REPO}"){
-                    git credentialsId: 'f6c7695a-671e-4f4f-a331-acdce44ff9ba',
-                        url: "git@github.com:elastic/${OPBEANS_REPO}.git"
-                    sh script: ".ci/bump-version.sh ${env.BRANCH_NAME}", label: 'Bump version'
-                    // The opbeans pipeline will trigger a release for the master branch
-                    gitPush()
-                    // The opbeans pipeline will trigger a release for the release tag
-                    gitCreateTag(tag: "${env.BRANCH_NAME}")
-                  }
-                }
-              }
-            }
-          }
-          stage('Integration Tests') {
-            agent none
-            when {
-              anyOf {
-                changeRequest()
-                expression { return !params.Run_As_Master_Branch }
-              }
-            }
-            steps {
-              build(job: env.ITS_PIPELINE, propagate: false, wait: false,
-                    parameters: [string(name: 'INTEGRATION_TEST', value: '.NET'),
-                                 string(name: 'BUILD_OPTS', value: "--dotnet-agent-version ${env.GIT_BASE_COMMIT} --opbeans-dotnet-agent-branch ${env.GIT_BASE_COMMIT}"),
-                                 string(name: 'GITHUB_CHECK_NAME', value: env.GITHUB_CHECK_ITS_NAME),
-                                 string(name: 'GITHUB_CHECK_REPO', value: env.REPO),
-                                 string(name: 'GITHUB_CHECK_SHA1', value: env.GIT_BASE_COMMIT)])
-              githubNotify(context: "${env.GITHUB_CHECK_ITS_NAME}", description: "${env.GITHUB_CHECK_ITS_NAME} ...", status: 'PENDING', targetUrl: "${env.JENKINS_URL}search/?q=${env.ITS_PIPELINE.replaceAll('/','+')}")
-            }
-          }
+        }
       }
     }
   }
