@@ -50,6 +50,9 @@ pipeline {
               environment {
                 MSBUILDDEBUGPATH = "${env.WORKSPACE}"
               }
+              when {
+                expression { return false }
+              }
               /**
               Make sure there are no code style violation in the repo.
               */
@@ -128,6 +131,9 @@ pipeline {
                 DOTNET_ROOT = "${env.WORKSPACE}\\dotnet"
                 PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
                 MSBUILDDEBUGPATH = "${env.WORKSPACE}"
+              }
+              when {
+                expression { return false }
               }
               stages{
                 /**
@@ -220,6 +226,10 @@ pipeline {
             stage('Docker .NET Framework'){
               agent { label 'windows-2019-docker-immutable' }
               options { skipDefaultCheckout() }
+
+              when {
+                expression { return false }
+              }
               stages {
                 stage('Build - Docker MSBuild') {
                   steps {
@@ -246,6 +256,9 @@ pipeline {
                 DOTNET_ROOT = "C:\\Program Files\\dotnet"
                 PATH = "${env.DOTNET_ROOT};${env.DOTNET_ROOT}\\tools;${env.PATH};${env.HOME}\\bin"
                 MSBUILDDEBUGPATH = "${env.WORKSPACE}"
+              }
+              when {
+                expression { return false }
               }
               stages{
                 /**
@@ -318,10 +331,7 @@ pipeline {
             stage('Integration Tests') {
               agent none
               when {
-                anyOf {
-                  changeRequest()
-                  expression { return !params.Run_As_Master_Branch }
-                }
+                expression { return false }
               }
               steps {
                 build(job: env.ITS_PIPELINE, propagate: false, wait: false,
@@ -337,13 +347,6 @@ pipeline {
         }
         stage('Release to AppVeyor') {
           options { skipDefaultCheckout() }
-          when {
-            beforeAgent true
-            anyOf {
-              branch 'master'
-              expression { return params.Run_As_Master_Branch }
-            }
-          }
           steps {
             deleteDir()
             unstash 'source'
@@ -362,12 +365,6 @@ pipeline {
           options {
             skipDefaultCheckout()
             timeout(time: 12, unit: 'HOURS')
-          }
-          when {
-            beforeInput true
-            beforeAgent true
-            // Tagged release events ONLY
-            tag pattern: '\\d+\\.\\d+\\.\\d+(-(alpha|beta|rc)\\d*)?', comparator: 'REGEXP'
           }
           stages {
             stage('Notify') {

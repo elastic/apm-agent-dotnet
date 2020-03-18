@@ -14,7 +14,7 @@ do
 		if [[ $nupkg =~ $pattern ]]
 		then
 			echo "dotnet nuget push ${nupkg}"
-			dotnet nuget push ${nupkg} -k ${1} -s ${2}
+			echo "dotnet nuget push ${nupkg} -k *** -s ***"
 		fi
 	done
 done
