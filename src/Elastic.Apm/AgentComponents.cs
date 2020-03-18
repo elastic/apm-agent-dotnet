@@ -44,7 +44,7 @@ namespace Elastic.Apm
 			CentralConfigFetcher = centralConfigFetcher ?? new CentralConfigFetcher(Logger, ConfigStore, Service);
 
 			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigStore,
-				currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(Logger));
+				currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer());
 		}
 
 		internal ICentralConfigFetcher CentralConfigFetcher { get; }
