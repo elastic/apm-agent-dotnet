@@ -9,6 +9,8 @@ using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
 
+using static Elastic.Apm.Tests.HelpersTests.DistributedTracingDataHelper;
+
 namespace Elastic.Apm.Tests.ApiTests
 {
 	/// <summary>
@@ -18,9 +20,6 @@ namespace Elastic.Apm.Tests.ApiTests
 	{
 		private const string TestTransaction = "TestTransaction";
 		private const string UnitTest = "UnitTest";
-		private const string ValidParentId = "5ec5de4fdae36f4c";
-		private const string ValidTraceFlags = "01";
-		private const string ValidTraceId = "005a6663c2fb9591a0e53d322df6c3e2";
 
 		/// <summary>
 		/// Passes a valid trace context to <see cref="Tracer.StartTransaction" />.
@@ -71,7 +70,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender1)))
 			{
 				var transaction =
-					agent.Tracer.StartTransaction(TestTransaction, UnitTest, BuildDistributedTracingData(traceId, parentId, traceFlags));
+					agent.Tracer.StartTransaction(TestTransaction, UnitTest,  BuildDistributedTracingData(traceId, parentId, traceFlags));
 				transaction.End();
 			}
 
@@ -80,31 +79,31 @@ namespace Elastic.Apm.Tests.ApiTests
 		}
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action, DistributedTracingData)" /> method with a
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,Action, DistributedTracingData)" /> method with a
 		/// valid
 		/// DistributedTracingData parameter
 		/// </summary>
 		[Fact]
 		public void DistributedTracingDataWithSimpleAction_Valid() =>
 			AssertValidDistributedTracingData(agent => agent.Tracer.CaptureTransaction(TestTransaction,
-				UnitTest, () => { WaitHelpers.SleepMinimum(); }, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
+				UnitTest, () => { WaitHelpers.SleepMinimum(); },  BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
 		[ClassData(typeof(InvalidDistributedTracingDataData))]
 		public void DistributedTracingDataWithSimpleAction_Invalid(string traceId, string parentId, string traceFlags) =>
 			AssertInvalidDistributedTracingData(agent => agent.Tracer.CaptureTransaction(TestTransaction,
-				UnitTest, () => { WaitHelpers.SleepMinimum(); }, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
+				UnitTest, () => { WaitHelpers.SleepMinimum(); },  BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
 
 		/// <summary>
 		/// Tests the
-		/// <see cref="Tracer.CaptureTransaction(string,string,System.Action{ITransaction}, DistributedTracingData)" /> method
+		/// <see cref="Tracer.CaptureTransaction(string,string,Action{ITransaction}, DistributedTracingData)" /> method
 		/// with valid DistributedTracingData parameter.
 		/// </summary>
 		[Fact]
 		public void DistributedTracingDataWitSimpleActionWithParameter_Valid() =>
 			AssertValidDistributedTracingData(agent => agent.Tracer.CaptureTransaction(TestTransaction,
-				UnitTest, t => { WaitHelpers.SleepMinimum(); }, BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
+				UnitTest, t => { WaitHelpers.SleepMinimum(); },  BuildDistributedTracingData(ValidTraceId, ValidParentId, ValidTraceFlags)));
 
 		[Theory]
 		[ClassData(typeof(InvalidDistributedTracingDataData))]
@@ -118,7 +117,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		/// <summary>
 		/// Tests the
-		/// <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,T}, DistributedTracingData)" />
+		/// <see cref="Tracer.CaptureTransaction{T}(string,string,Func{ITransaction,T}, DistributedTracingData)" />
 		/// method
 		/// with valid DistributedTracingData parameter.
 		/// </summary>
@@ -144,7 +143,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				}, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{T}, DistributedTracingData)" /> method
+		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,Func{ITransaction,T}, DistributedTracingData)" /> method
 		/// with valid DistributedTracingData parameter.
 		/// </summary>
 		[Fact]
@@ -165,7 +164,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			}, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Func{Task}, DistributedTracingData)" /> method
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,Func{Task}, DistributedTracingData)" /> method
 		/// with valid DistributedTracingData parameter.
 		/// </summary>
 		[Fact]
@@ -181,7 +180,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		/// <summary>
 		/// Tests the
-		/// <see cref="Tracer.CaptureTransaction(string,string,System.Func{ITransaction,Task}, DistributedTracingData)" />
+		/// <see cref="Tracer.CaptureTransaction(string,string,Func{ITransaction,Task}, DistributedTracingData)" />
 		/// method
 		/// with valid DistributedTracingData parameter.
 		/// </summary>
@@ -206,7 +205,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		/// <summary>
 		/// Tests the
-		/// <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,Task{T}}, DistributedTracingData)" />
+		/// <see cref="Tracer.CaptureTransaction{T}(string,string,Func{ITransaction,Task{T}}, DistributedTracingData)" />
 		/// method
 		/// with valid DistributedTracingData parameter.
 		/// </summary>
@@ -232,7 +231,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				}, BuildDistributedTracingData(traceId, parentId, traceFlags)), traceId);
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{Task{T}}, DistributedTracingData)" />
+		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,Func{Task{T}}, DistributedTracingData)" />
 		/// method
 		/// with valid DistributedTracingData parameter.
 		/// </summary>
@@ -294,13 +293,6 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstTransaction.TraceId.Should().NotBe(traceId);
 			payloadSender.FirstTransaction.ParentId.Should().BeNullOrWhiteSpace();
 		}
-
-		private static DistributedTracingData BuildDistributedTracingData(string traceId, string parentId, string traceFlags) =>
-			DistributedTracingData.TryDeserializeFromString(
-				"00-" + // version
-				(traceId == null ? "" : $"{traceId}") +
-				(parentId == null ? "" : $"-{parentId}") +
-				(traceFlags == null ? "" : $"-{traceFlags}"));
 
 		private class InvalidDistributedTracingDataData : IEnumerable<object[]>
 		{

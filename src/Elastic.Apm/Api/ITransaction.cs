@@ -16,7 +16,7 @@ namespace Elastic.Apm.Api
 		/// not searchable or aggregatable in Elasticsearch, and you cannot build dashboards on top of the data. However,
 		/// non-indexed information is useful for other reasons, like providing contextual information to help you quickly debug
 		/// performance issues or errors.
-		/// Unlike <see cref="IExecutionSegment.Labels"/> the data in this property is not trimmed.
+		/// Unlike <see cref="IExecutionSegment.Labels" /> the data in this property is not trimmed.
 		/// </summary>
 		Dictionary<string, string> Custom { get; }
 
@@ -32,5 +32,19 @@ namespace Elastic.Apm.Api
 		/// Example: 'request'
 		/// </summary>
 		string Type { get; set; }
+
+		/// <summary>
+		/// If the transaction does not have a ParentId yet, calling this method generates a new ID, sets it as the ParentId of
+		/// this transaction,
+		/// and returns it as a <see cref="string" />. If there is already a ParentId, the method just returns the existing
+		/// ParentId.
+		/// This enables the correlation of the spans the JavaScript Real User Monitoring (RUM) agent
+		/// creates for the initial page load with the transaction of the backend service.
+		/// </summary>
+		/// <returns>
+		/// The generated <see cref="IExecutionSegment.ParentId" /> that was applied to the current transaction, or the
+		/// existing one.
+		/// </returns>
+		string EnsureParentId();
 	}
 }
