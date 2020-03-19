@@ -35,7 +35,7 @@ endif::[]
 - Parsing for Oracle connection strings {pull}749[#749]
 - `StackOverflowException` when using the `Elastic.Apm.SerilogEnricher` package and the log level is set to `Verbose` {pull}753[#753]
 
-[Float]
+[float]
 ===== Breaking changes
 - We have some changes that are technically breaking changes. We made some helper classes internal that were never meant to be public. These are: `Elastic.Apm.Helpers.AgentTimeInstant`,  `Elastic.Apm.Helpers.ContractExtensions`,  `Elastic.Apm.Helpers.ObjectExtensions`, `Elastic.Apm.Helpers.ToStringBuilder`. None of these classes were documented or mentioned as part of the Public Agent API.
 
