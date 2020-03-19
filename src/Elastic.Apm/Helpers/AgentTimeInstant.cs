@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 namespace Elastic.Apm.Helpers
 {
 	[DebuggerDisplay("{" + nameof(_elapsedSinceTimerStarted) + "}")]
-	public readonly struct AgentTimeInstant
+	internal readonly struct AgentTimeInstant
 	{
 		private readonly IAgentTimer _sourceAgentTimer;
 		private readonly TimeSpan _elapsedSinceTimerStarted;

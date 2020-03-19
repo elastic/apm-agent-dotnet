@@ -2,7 +2,7 @@ using System;
 
 namespace Elastic.Apm.Helpers
 {
-	public static class ContractExtensions
+	internal static class ContractExtensions
 	{
 		public static T ThrowIfArgumentNull<T>(this T arg, string argName) where T : class =>
 			arg ?? throw new ArgumentNullException(argName);
