@@ -7,7 +7,7 @@ namespace Elastic.Apm.Helpers
 	//
 	// We need to implement IEnumerable to support collection initializer syntax
 	//
-	public struct ToStringBuilder : IEnumerable
+	internal struct ToStringBuilder : IEnumerable
 	{
 		private const int StringBuilderInitialCapacity = 100;
 		private StringBuilder _stringBuilder;

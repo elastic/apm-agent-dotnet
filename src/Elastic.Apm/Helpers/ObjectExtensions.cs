@@ -2,7 +2,7 @@ using System;
 
 namespace Elastic.Apm.Helpers
 {
-	public static class ObjectExtensions
+	internal static class ObjectExtensions
 	{
 		public const string NullAsString = "<null>";
 
