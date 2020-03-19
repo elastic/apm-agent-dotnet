@@ -37,7 +37,7 @@ endif::[]
 
 [float]
 ===== Breaking changes
-- We have some changes that are technically breaking changes. We made some helper classes internal that were never meant to be public. These are: `Elastic.Apm.Helpers.AgentTimeInstant`,  `Elastic.Apm.Helpers.ContractExtensions`,  `Elastic.Apm.Helpers.ObjectExtensions`, `Elastic.Apm.Helpers.ToStringBuilder`. None of these classes were documented or mentioned as part of the Public Agent API.
+- We have some changes that are technically breaking changes. We made some helper classes internal that were never meant to be public. These are: `Elastic.Apm.Helpers.AgentTimeInstant`,  `Elastic.Apm.Helpers.ContractExtensions`,  `Elastic.Apm.Helpers.ObjectExtensions`, `Elastic.Apm.Helpers.ToStringBuilder`. None of these classes were documented or mentioned as part of the Public Agent API. We expect no usage of these classes outside the agent.
 
 [[release-notes-1.3.1]]
 ==== 1.3.1
