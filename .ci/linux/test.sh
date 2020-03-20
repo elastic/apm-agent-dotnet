@@ -6,9 +6,7 @@
 set -euxo pipefail
 
 # Remove Full Framework projects
-dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
-dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFramework.csproj
-dotnet sln remove test/Elastic.Apm.AspNetFullFramework.Tests/Elastic.Apm.AspNetFullFramework.Tests.csproj
+.ci/linux/remove-projects.sh
 
 # Configure the projects for coverage and testing
 while IFS= read -r -d '' file
