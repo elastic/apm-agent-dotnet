@@ -30,12 +30,17 @@ https://www.nuget.org/packages/Elastic.Apm.EntityFramework6[**Elastic.Apm.Entity
 
 This package contains an interceptor that automatically creates spans for DB operations executed by Entity Framework 6 (EF6) on behalf of the application.
 
+https://www.nuget.org/packages/Elastic.Apm.SqlClient[**Elastic.Apm.SqlClient**]::
+
+This package contains https://www.nuget.org/packages/System.Data.SqlClient[System.Data.SqlClient] and https://www.nuget.org/packages/Microsoft.Data.SqlClient[Microsoft.Data.SqlClient] monitoring related code.
+
 [float]
 === Quick start
 
 * <<setup-asp-net-core>>
 * <<setup-asp-net>>
 * <<setup-ef6>>
+* <<setup-sqlclient>>
 * <<setup-general>>
 
 [float]
@@ -146,6 +151,35 @@ For example, in an ASP.NET MVC application, you can place the above call in the 
 NOTE: Be careful not to execute `DbInterception.Add` for the same interceptor more than once,
 or you'll get additional interceptor instances.
 For example, if you add `Ef6Interceptor` interceptor twice, you'll see two spans for every SQL query. 
+
+[float]
+[[setup-sqlclient]]
+==== SqlClient
+
+You can enable auto instrumentation for `System.Data.SqlClient` or `Microsoft.Data.SqlClient` by referencing `Elastic.Apm.SqlClient` package
+and passing `SqlClientDiagnosticSubscriber` to the `UseElasticApm` method in case of ASP.Net Core as it shown in example:
+
+[source,csharp]
+----
+app.UseElasticApm(Configuration,
+	new SqlClientDiagnosticSubscriber());  /* Enable tracing of outgoing db requests */
+----
+
+or passing `SqlClientDiagnosticSubscriber` to the `Subscribe` method in Global.asax in case of `ASP.NET` as it shown in example:
+
+[source,csharp]
+----
+public override void Init()
+{
+    // you need add custom code to be sure that Subscribe called only once and in a thread-safe manner
+
+    Agenct.Subscribe(new SqlClientDiagnosticSubscriber());  /* Enable tracing of outgoing db requests */
+}
+
+----
+
+NOTE: Auto intsrumentation for `System.Data.SqlClient` is available for both, .Net Core and .Net Framework applications, however, support of .Net Framework has one limitation:
+command text cannot be captured. In case of auto instrumentation for `Microsoft.Data.SqlClient`, only .Net Core is supported, at the moment.
 
 [float]
 [[setup-general]]

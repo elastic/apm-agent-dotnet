@@ -1,12 +1,12 @@
+# apm-agent-dotnet
+
 [![Build Status](https://apm-ci.elastic.co/buildStatus/icon?job=apm-agent-dotnet/apm-agent-dotnet-mbp/master)](https://apm-ci.elastic.co/job/apm-agent-dotnet/job/apm-agent-dotnet-mbp/job/master/)
 [![codecov](https://codecov.io/gh/elastic/apm-agent-dotnet/branch/master/graph/badge.svg)](https://codecov.io/gh/elastic/apm-agent-dotnet)
-
-# apm-agent-dotnet
 
 Please fill out this survey to help us prioritize framework support:
 [https://goo.gl/forms/FHHbhptcDx8eDNx92](https://goo.gl/forms/FHHbhptcDx8eDNx92)
 
-# Installation
+## Installation
 
 Official NuGet packages can be referenced from [NuGet.org](https://www.nuget.org).
 
@@ -16,8 +16,17 @@ Official NuGet packages can be referenced from [NuGet.org](https://www.nuget.org
 | `Elastic.Apm.AspNetCore` | ASP.NET Core auto instrumentation. | [![NuGet Release][ElasticApmAspNetCore-image]][ElasticApmAspNetCore-nuget-url] |
 | `Elastic.Apm.EntityFrameworkCore` | Entity Framework Core auto instrumentation. | [![NuGet Release][Elastic.Apm.EntityFrameworkCore-image]][Elastic.Apm.EntityFrameworkCore-nuget-url] |
 | `Elastic.Apm.NetCoreAll` | References every .NET Core related elastic APM package. It can be used to simply turn on the agent with a single line and activate all auto instrumentation. | [![NuGet Release][Elastic.Apm.NetCoreAll-image]][Elastic.Apm.NetCoreAll-nuget-url] |
-| `Elastic.Apm.AspNetFullFramework` | ASP.NET (classic) auto instrumentation with an IIS Module. | [![NuGet Release][Elastic.Apm.AspNetFullFramework-image]][Elastic.Apm.AspNetFullFramework-nuget-url] | 
+| `Elastic.Apm.AspNetFullFramework` | ASP.NET (classic) auto instrumentation with an IIS Module. | [![NuGet Release][Elastic.Apm.AspNetFullFramework-image]][Elastic.Apm.AspNetFullFramework-nuget-url] |
 | `Elastic.Apm.EntityFramework6` | Entity Framework 6 auto instrumentation. | [![NuGet Release][Elastic.Apm.EntityFramework6-image]][Elastic.Apm.EntityFramework6-nuget-url] |
+| `Elastic.Apm.SqlClient` | `System.Data.SqlClient` and `Microsoft.Data.SqlClient` auto instrumentation. [Read more details](#elasticapmsqlclient) | [![NuGet Release][Elastic.Apm.SqlClient-image]][Elastic.Apm.SqlClient-nuget-url] |
+
+### Elastic.Apm.SqlClient
+
+At the moment `Elastic.Apm.SqlClient` package has some limitations in depends on what you want to instrument.
+
+In case of auto instrumenation for `System.Data.SqlClient`, both .Net Framework and .Net Core are supported, however, support of .Net Framework has one limitation: сommand text cannot be captured.
+
+In case of auto instrumentation for `Microsoft.Data.SqlClient`, only .Net Core is supported.
 
 ## Documentation
 
@@ -42,24 +51,26 @@ See the [releasing documentation](RELEASING.md)
 ## Repository structure
 
 These are the main folders within the repository:
+
 * src: The source code of the agent. Each project within this folder targets a specific library, and there is one core project, which is referenced by all other projects.
-    * `Elastic.Apm`: The core project targeting .NET Standard 2.0. It contains the [Agent API](/docs/public-api.asciidoc), the infrastructure to report data to the APM Server, the logging infrastructure, and auto-instrumentation for things that are part of .NET Standard 2.0.
-    * `Elastic.Apm.AspNetCore`: Auto-instrumentation for ASP.NET Core.
-    * `Elastic.Apm.EntityFrameworkCore`: Auto-instrumentation for EntityFramework Core.
-    * `Elastic.Apm.NetCoreAll`: A convenient project that references all other .NET Core related projects from the `src` folder. It contains an ASP.NET Core middleware extension that enables the agent and every other component with a single line of code. In a typical ASP.NET Core application (e.g. apps referencing [Microsoft.AspNetCore.All](https://www.nuget.org/packages/Microsoft.AspNetCore.All)) that uses EF Core the `Elastic.Apm.NetCoreAll` can be referenced.
-    * `Elastic.Apm.AspNetFullFramework`: Auto-instrumentation for ASP.NET (classic).
-    * `Elastic.Apm.EntityFramework6`: Auto-instrumentation for Entity Framework 6.
+  * `Elastic.Apm`: The core project targeting .NET Standard 2.0. It contains the [Agent API](/docs/public-api.asciidoc), the infrastructure to report data to the APM Server, the logging infrastructure, and auto-instrumentation for things that are part of .NET Standard 2.0.
+  * `Elastic.Apm.AspNetCore`: Auto-instrumentation for ASP.NET Core.
+  * `Elastic.Apm.EntityFrameworkCore`: Auto-instrumentation for EntityFramework Core.
+  * `Elastic.Apm.NetCoreAll`: A convenient project that references all other .NET Core related projects from the `src` folder. It contains an ASP.NET Core middleware extension that enables the agent and every other component with a single line of code. In a typical ASP.NET Core application (e.g. apps referencing [Microsoft.AspNetCore.All](https://www.nuget.org/packages/Microsoft.AspNetCore.All)) that uses EF Core the `Elastic.Apm.NetCoreAll` can be referenced.
+  * `Elastic.Apm.AspNetFullFramework`: Auto-instrumentation for ASP.NET (classic).
+  * `Elastic.Apm.EntityFramework6`: Auto-instrumentation for Entity Framework 6.
+  * `Elastic.Apm.SqlClient`: Auto-instrumentation for `System.Data.SqlClient` and `Microsoft.Data.SqlClient`.
 * test: This folder contains test projects. Typically each project from the `src` folder has a corresponding test project.
-    * `Elastic.Apm.Tests`: Tests the `Elastic.Apm` project.
-    * `Elastic.Apm.AspNetCore.Tests`: Tests the `Elastic.Apm.AspNetCore` project.
-    * `Elastic.Apm.AspNetFullFramework.Tests`: Tests the `Elastic.Apm.AspNetFullFramework` project.
-    * `Elastic.Apm.Tests.MockApmServer`: Implementation of APM Server mock used for agent-as-component tests (for example in `Elastic.Apm.AspNetFullFramework.Tests`).
+  * `Elastic.Apm.Tests`: Tests the `Elastic.Apm` project.
+  * `Elastic.Apm.AspNetCore.Tests`: Tests the `Elastic.Apm.AspNetCore` project.
+  * `Elastic.Apm.AspNetFullFramework.Tests`: Tests the `Elastic.Apm.AspNetFullFramework` project.
+  * `Elastic.Apm.Tests.MockApmServer`: Implementation of APM Server mock used for agent-as-component tests (for example in `Elastic.Apm.AspNetFullFramework.Tests`).
 * docs: This folder contains the official documentation.
 * sample: Sample applications that are monitored by the APM .NET Agent. These are also very useful for development: you can start one of these applications and debug the agent through them.
 * .ci: This folder contains all the scripts used to build, test and release the agent within the CI.
 
-
 ## License
+
 Elastic APM .Net Agent is licensed under Apache License, Version 2.0.
 
 [ElasticApm-nuget-url]:https://www.nuget.org/packages/Elastic.Apm/
@@ -85,3 +96,7 @@ https://img.shields.io/nuget/v/Elastic.Apm.AspNetFullFramework.svg
 [Elastic.Apm.EntityFramework6-nuget-url]:https://www.nuget.org/packages/Elastic.Apm.EntityFramework6/
 [Elastic.Apm.EntityFramework6-image]:
 https://img.shields.io/nuget/v/Elastic.Apm.EntityFramework6.svg
+
+[Elastic.Apm.SqlClient-nuget-url]:https://www.nuget.org/packages/Elastic.Apm.SqlClient/
+[Elastic.Apm.SqlClient-image]:
+https://img.shields.io/nuget/v/Elastic.Apm.SqlClient.svg
