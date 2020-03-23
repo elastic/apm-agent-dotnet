@@ -149,5 +149,17 @@ namespace Elastic.Apm.Config
 		/// Verification can be disabled by setting to <c>false</c>.
 		/// </summary>
 		bool VerifyServerCert { get; }
+
+		/// <summary>
+		/// A list of namespaces to exclude when reading an exception's StackTrace to determine the culprit.
+		/// Namespaces are checked with string.StartsWith() so "System." matches all System namespaces
+		/// </summary>
+		IReadOnlyCollection<string> ExcludedNamespaces { get; }
+
+		/// <summary>
+		/// When defined, all namespaces not starting with one of the values of this collection are ignored when determining Exception culprit.
+		/// This suppresses any configuration of <see cref="ExcludedNamespaces"/>
+		/// </summary>
+		IReadOnlyCollection<string> ApplicationNamespaces { get; }
 	}
 }

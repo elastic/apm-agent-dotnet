@@ -480,6 +480,8 @@ namespace Elastic.Apm.BackendComm
 			public bool UseElasticTraceparentHeader => _wrapped.UseElasticTraceparentHeader;
 
 			public bool VerifyServerCert => _wrapped.VerifyServerCert;
+			public IReadOnlyCollection<string> ExcludedNamespaces => _wrapped.ExcludedNamespaces;
+			public IReadOnlyCollection<string> ApplicationNamespaces => _wrapped.ApplicationNamespaces;
 		}
 	}
 }

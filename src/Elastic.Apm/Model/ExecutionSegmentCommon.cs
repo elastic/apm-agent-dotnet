@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -151,7 +152,7 @@ namespace Elastic.Apm.Model
 			string parentId = null
 		)
 		{
-			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
+			var capturedCulprit = string.IsNullOrEmpty(culprit) ? GetCulprit(exception, configurationReader) : culprit;
 
 			var capturedException = new CapturedException { Message = exception.Message, Type = exception.GetType().FullName, Handled = isHandled };
 
@@ -162,6 +163,46 @@ namespace Elastic.Apm.Model
 			{
 				Culprit = capturedCulprit,
 			});
+		}
+
+		private const string DefaultCulprit = "ElasticApm.UnknownCulprit";
+		private static string GetCulprit(Exception exception, IConfigurationReader configurationReader)
+		{
+			if (exception == null) return DefaultCulprit;
+
+			var stackTrace = new StackTrace(exception);
+			var frames = stackTrace.GetFrames();
+			if (frames == null) return DefaultCulprit;
+
+			var excludedNamespaces = configurationReader.ExcludedNamespaces;
+			var applicationNamespaces = configurationReader.ApplicationNamespaces;
+
+			foreach (var frame in frames)
+			{
+				var method = frame.GetMethod();
+				var fullyQualifiedTypeName = method.DeclaringType?.FullName ?? "Unknown Type";
+				if (IsInApp(fullyQualifiedTypeName, excludedNamespaces, applicationNamespaces)) return fullyQualifiedTypeName;
+			}
+
+			return DefaultCulprit;
+		}
+
+		private static bool IsInApp(string fullyQualifiedTypeName, IReadOnlyCollection<string> excludedNamespaces, IReadOnlyCollection<string> applicationNamespaces)
+		{
+			if (string.IsNullOrEmpty(fullyQualifiedTypeName)) return false;
+
+			if (applicationNamespaces.Count != 0)
+			{
+				foreach (var include in applicationNamespaces)
+					if (fullyQualifiedTypeName.StartsWith(include, StringComparison.Ordinal)) return true;
+
+				return false;
+			}
+
+			foreach (var exclude in excludedNamespaces)
+				if (fullyQualifiedTypeName.StartsWith(exclude, StringComparison.Ordinal)) return false;
+
+			return true;
 		}
 
 		public static void CaptureError(

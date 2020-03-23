@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -37,9 +38,9 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _transactionSampleRate;
 		private readonly string _useElasticTraceparentHeader;
 		private readonly string _verifyServerCert;
+		private readonly string _applicationNamespaces;
 
-		public MockConfigSnapshot(
-			IApmLogger logger = null,
+		public MockConfigSnapshot(IApmLogger logger = null,
 			string logLevel = null,
 			string serverUrls = null,
 			string serviceName = null,
@@ -65,7 +66,8 @@ namespace Elastic.Apm.Tests.Mocks
 			string globalLabels = null,
 			string disableMetrics = null,
 			string verifyServerCert = null,
-			string useElasticTraceparentHeader = null
+			string useElasticTraceparentHeader = null,
+			string applicationNamespaces = null
 		) : base(logger, ThisClassName)
 		{
 			_serverUrls = serverUrls;
@@ -94,6 +96,7 @@ namespace Elastic.Apm.Tests.Mocks
 			_disableMetrics = disableMetrics;
 			_verifyServerCert = verifyServerCert;
 			_useElasticTraceparentHeader = useElasticTraceparentHeader;
+			_applicationNamespaces = applicationNamespaces;
 		}
 
 		public string CaptureBody => ParseCaptureBody(Kv(ConfigConsts.EnvVarNames.CaptureBody, _captureBody, Origin));
@@ -147,5 +150,8 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public bool VerifyServerCert =>
 			ParseVerifyServerCert(Kv(ConfigConsts.EnvVarNames.VerifyServerCert, _verifyServerCert, Origin));
+		
+		public IReadOnlyCollection<string> ExcludedNamespaces => ConfigConsts.DefaultValues.DefaultExcludedNamespaces;
+		public IReadOnlyCollection<string> ApplicationNamespaces => ParseApplicationNamespaces(new ConfigurationKeyValue(ConfigConsts.EnvVarNames.ApplicationNamespaces, _applicationNamespaces, Origin));
 	}
 }
