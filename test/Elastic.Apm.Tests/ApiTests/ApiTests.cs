@@ -400,7 +400,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 
-			payloadSender.FirstError.Culprit.Should().Be(!string.IsNullOrEmpty(culprit) ? culprit : "PublicAPI-CaptureException");
+			payloadSender.FirstError.Culprit.Should().Be(!string.IsNullOrEmpty(culprit) ? culprit : "Elastic.Apm.Tests.ApiTests.ApiTests");
 		}
 
 		/// <summary>
