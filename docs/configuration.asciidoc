@@ -674,6 +674,48 @@ When this setting is `true`, the agent will also add the header `elasticapm-trac
 [[config-stacktrace]]
 === Stacktrace configuration options
 [float]
+
+[[config-application-namespaces]]
+==== `ApplicationNamespaces (added[1.5])`
+
+Used to determine whether a stack trace frame is an in-app frame or a library frame. When defined, all namespaces that do not start with one of the values of this collection are ignored when determining error culprit.
+
+Multiple namespaces can be configured as a comma separated list. E.g. `"MyAppA, MyAppB"`.
+
+This suppresses any configuration of `ExcludedNamespaces`.
+
+[options="header"]
+|============
+| Default        | Type
+| <empty string> | String
+|============
+
+[options="header"]
+|============
+| Environment variable name            | IConfiguration or Web.config key
+| `ELASTIC_APM_APPLICATION_NAMESPACES` | `ElasticApm:ApplicationNamespaces`
+|============
+
+[float]
+[[config-excluded-namespaces]]
+==== `ExcludedNamespaces (added[1.5])`
+
+A list of namespaces to exclude when reading an exception's StackTrace to determine the culprit.
+
+Namespaces are checked with `string.StartsWith()` so "System." matches all System namespaces
+
+[options="header"]
+|============
+| Default        | Type
+| "System., Microsoft., MS., FSharp., Newtonsoft.Json, Serilog, NLog, Giraffe." | String
+|============
+
+[options="header"]
+|============
+| Environment variable name            | IConfiguration or Web.config key
+| `ELASTIC_APM_EXCLUDED_NAMESPACES` | `ElasticApm:ExcludedNamespaces`
+|============
+
 [[config-stack-trace-limit]]
 ==== `StackTraceLimit` (performance)
 
@@ -752,12 +794,14 @@ Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `Non
 [options="header"]
 |============
 | Option name | Is reloadable? | Keywords
+| <<config-application-namespaces,`ApplicationNamespaces`>> | No | Stacktrace
 | <<config-capture-body,`CaptureBody`>> | Yes | HTTP, Performance
 | <<config-capture-body-content-types,`CaptureBodyContentTypes`>> | Yes | HTTP, Performance
 | <<config-capture-headers,`CaptureHeaders`>> | No | HTTP, Performance
 | <<config-central-config,`CentralConfig`>> | No | Core
 | <<config-disable-metrics,`DisableMetrics`>> | No | Reporter
 | <<config-environment,`Environment`>> | No | Core
+| <<config-excluded-namespaces,`ExcludedNamespaces`>> | No | Stacktrace
 | <<config-flush-interval,`FlushInterval`>> | No | Reporter
 | <<config-global-labels,`GlobalLabels`>> | No | Core
 | <<config-log-level,`LogLevel`>> | No | Supportability
@@ -783,3 +827,4 @@ Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `Non
 NOTE: Reloadable means that the setting can be changed after agent's start.
 For example, some reloadable options can be changed
 via {apm-app-ref}/agent-configuration.html[APM Agent configuration]).
+

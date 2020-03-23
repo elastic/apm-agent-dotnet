@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -11,6 +10,8 @@ namespace Elastic.Apm.Tests.Mocks
 	{
 		public const string Origin = "unit test configuration";
 		private const string ThisClassName = nameof(MockConfigSnapshot);
+		private readonly string _apiKey;
+		private readonly string _applicationNamespaces;
 
 		private readonly string _captureBody;
 		private readonly string _captureBodyContentTypes;
@@ -19,6 +20,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _dbgDescription;
 		private readonly string _disableMetrics;
 		private readonly string _environment;
+		private readonly string _excludedNamespaces;
 		private readonly string _flushInterval;
 		private readonly string _globalLabels;
 		private readonly string _logLevel;
@@ -27,7 +29,6 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _metricsInterval;
 		private readonly string _sanitizeFieldNames;
 		private readonly string _secretToken;
-		private readonly string _apiKey;
 		private readonly string _serverUrls;
 		private readonly string _serviceName;
 		private readonly string _serviceNodeName;
@@ -38,7 +39,6 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _transactionSampleRate;
 		private readonly string _useElasticTraceparentHeader;
 		private readonly string _verifyServerCert;
-		private readonly string _applicationNamespaces;
 
 		public MockConfigSnapshot(IApmLogger logger = null,
 			string logLevel = null,
@@ -67,7 +67,8 @@ namespace Elastic.Apm.Tests.Mocks
 			string disableMetrics = null,
 			string verifyServerCert = null,
 			string useElasticTraceparentHeader = null,
-			string applicationNamespaces = null
+			string applicationNamespaces = null,
+			string excludedNamespaces = null
 		) : base(logger, ThisClassName)
 		{
 			_serverUrls = serverUrls;
@@ -97,7 +98,13 @@ namespace Elastic.Apm.Tests.Mocks
 			_verifyServerCert = verifyServerCert;
 			_useElasticTraceparentHeader = useElasticTraceparentHeader;
 			_applicationNamespaces = applicationNamespaces;
+			_excludedNamespaces = excludedNamespaces;
 		}
+
+		public string ApiKey => ParseApiKey(Kv(ConfigConsts.EnvVarNames.ApiKey, _apiKey, Origin));
+
+		public IReadOnlyCollection<string> ApplicationNamespaces =>
+			ParseApplicationNamespaces(new ConfigurationKeyValue(ConfigConsts.EnvVarNames.ApplicationNamespaces, _applicationNamespaces, Origin));
 
 		public string CaptureBody => ParseCaptureBody(Kv(ConfigConsts.EnvVarNames.CaptureBody, _captureBody, Origin));
 
@@ -114,6 +121,9 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public string Environment => ParseEnvironment(Kv(ConfigConsts.EnvVarNames.Environment, _environment, Origin));
 
+		public IReadOnlyCollection<string> ExcludedNamespaces =>
+			ParseExcludedNamespaces(new ConfigurationKeyValue(ConfigConsts.EnvVarNames.ExcludedNamespaces, _excludedNamespaces, Origin));
+
 		public TimeSpan FlushInterval => ParseFlushInterval(Kv(ConfigConsts.EnvVarNames.FlushInterval, _flushInterval, Origin));
 
 		public IReadOnlyDictionary<string, string> GlobalLabels =>
@@ -128,7 +138,6 @@ namespace Elastic.Apm.Tests.Mocks
 			ParseSanitizeFieldNames(Kv(ConfigConsts.EnvVarNames.SanitizeFieldNames, _sanitizeFieldNames, Origin));
 
 		public string SecretToken => ParseSecretToken(Kv(ConfigConsts.EnvVarNames.SecretToken, _secretToken, Origin));
-		public string ApiKey => ParseApiKey(Kv(ConfigConsts.EnvVarNames.ApiKey, _apiKey, Origin));
 		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Kv(ConfigConsts.EnvVarNames.ServerUrls, _serverUrls, Origin));
 		public string ServiceName => ParseServiceName(Kv(ConfigConsts.EnvVarNames.ServiceName, _serviceName, Origin));
 		public string ServiceNodeName => ParseServiceNodeName(Kv(ConfigConsts.EnvVarNames.ServiceNodeName, _serviceNodeName, Origin));
@@ -150,8 +159,5 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public bool VerifyServerCert =>
 			ParseVerifyServerCert(Kv(ConfigConsts.EnvVarNames.VerifyServerCert, _verifyServerCert, Origin));
-		
-		public IReadOnlyCollection<string> ExcludedNamespaces => ConfigConsts.DefaultValues.DefaultExcludedNamespaces;
-		public IReadOnlyCollection<string> ApplicationNamespaces => ParseApplicationNamespaces(new ConfigurationKeyValue(ConfigConsts.EnvVarNames.ApplicationNamespaces, _applicationNamespaces, Origin));
 	}
 }

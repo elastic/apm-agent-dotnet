@@ -819,8 +819,6 @@ namespace Elastic.Apm.Config
 			return result.ToString();
 		}
 
-		
-
 		protected IReadOnlyList<string> ParseExcludedNamespaces(ConfigurationKeyValue kv) =>
 			_cachedExcludedNamespaces.IfNotInited?.InitOrGet(() => ParseExcludedNamespacesImpl(kv)) ?? _cachedExcludedNamespaces.Value;
 
@@ -830,7 +828,7 @@ namespace Elastic.Apm.Config
 
 			var list = kv.Value.Split(',').ToList();
 
-			return list.Count == 0 ? LogAndReturnDefault().AsReadOnly() : list.AsReadOnly();
+			return list.Count == 0 ? LogAndReturnDefault().AsReadOnly() : list.Select(n => n.Trim()).ToList().AsReadOnly();
 
 			List<string> LogAndReturnDefault()
 			{
@@ -838,7 +836,6 @@ namespace Elastic.Apm.Config
 				return DefaultValues.DefaultExcludedNamespaces.ToList();
 			}
 		}
-		
 
 		protected IReadOnlyList<string> ParseApplicationNamespaces(ConfigurationKeyValue kv) =>
 			_cachedApplicationNamespaces.IfNotInited?.InitOrGet(() => ParseApplicationNamespacesImpl(kv)) ?? _cachedApplicationNamespaces.Value;
@@ -849,7 +846,7 @@ namespace Elastic.Apm.Config
 
 			var list = kv.Value.Split(',').ToList();
 
-			return list.Count == 0 ? LogAndReturnDefault().AsReadOnly() : list.AsReadOnly();
+			return list.Count == 0 ? LogAndReturnDefault().AsReadOnly() : list.Select(n => n.Trim()).ToList().AsReadOnly();
 
 			List<string> LogAndReturnDefault()
 			{
