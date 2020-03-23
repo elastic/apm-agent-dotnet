@@ -296,8 +296,7 @@ namespace Elastic.Apm.Tests
 		/// <summary>
 		/// Makes sure that getting the current transaction does not log anything.
 		/// Reason for this is that <code>Tracer.CurrentTransaction</code> is used in log correlation and within log correlation
-		/// the
-		/// agent should not log. See: https://github.com/elastic/ecs-dotnet/issues/58#issuecomment-595864256
+		/// the agent should not log. See: https://github.com/elastic/ecs-dotnet/issues/58#issuecomment-595864256
 		/// </summary>
 		[Fact]
 		public void GetCurrentTransactionNoLogging()
