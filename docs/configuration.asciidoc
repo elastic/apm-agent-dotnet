@@ -680,7 +680,7 @@ When this setting is `true`, the agent will also add the header `elasticapm-trac
 
 Used to determine whether a stack trace frame is an in-app frame or a library frame. When defined, all namespaces that do not start with one of the values of this collection are ignored when determining error culprit.
 
-Multiple namespaces can be configured as a comma separated list. E.g.: `"MyAppA, MyAppB"`.
+Multiple namespaces can be configured as a comma separated list. For example: `"MyAppA, MyAppB"`.
 
 This suppresses any configuration of `ExcludedNamespaces`.
 
