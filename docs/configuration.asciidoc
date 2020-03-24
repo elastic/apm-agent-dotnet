@@ -702,7 +702,7 @@ This suppresses any configuration of `ExcludedNamespaces`.
 
 A list of namespaces to exclude when reading an exception's StackTrace to determine the culprit.
 
-Namespaces are checked with `string.StartsWith()` so "System." matches all System namespaces
+Namespaces are checked with `string.StartsWith()`, so "System." matches all System namespaces.
 
 [options="header"]
 |============
@@ -827,4 +827,3 @@ Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `Non
 NOTE: Reloadable means that the setting can be changed after agent's start.
 For example, some reloadable options can be changed
 via {apm-app-ref}/agent-configuration.html[APM Agent configuration]).
-
