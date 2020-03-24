@@ -172,8 +172,7 @@ or passing `SqlClientDiagnosticSubscriber` to the `Subscribe` method in Global.a
 public override void Init()
 {
     // you need add custom code to be sure that Subscribe called only once and in a thread-safe manner
-
-    Agent.Subscribe(new SqlClientDiagnosticSubscriber());  /* Enable tracing of outgoing db requests */
+    if (Agent.IsConfigured) Agent.Subscribe(new SqlClientDiagnosticSubscriber());  /* Enable tracing of outgoing db requests */
 }
 
 ----
