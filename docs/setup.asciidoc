@@ -165,16 +165,12 @@ app.UseElasticApm(Configuration,
 	new SqlClientDiagnosticSubscriber());  /* Enable tracing of outgoing db requests */
 ----
 
-or passing `SqlClientDiagnosticSubscriber` to the `Subscribe` method in Global.asax in case of `ASP.NET` as it shown in example:
+or passing `SqlClientDiagnosticSubscriber` to the `Subscribe` method and make sure that the code is called only once, otherwise the same database call could be captured multiple times:
 
 [source,csharp]
 ----
-public override void Init()
-{
-    // you need add custom code to be sure that Subscribe called only once and in a thread-safe manner
-    if (Agent.IsConfigured) Agent.Subscribe(new SqlClientDiagnosticSubscriber());  /* Enable tracing of outgoing db requests */
-}
-
+// you need add custom code to be sure that Subscribe called only once and in a thread-safe manner
+if (Agent.IsConfigured) Agent.Subscribe(new SqlClientDiagnosticSubscriber());  /* Enable tracing of outgoing db requests */
 ----
 
 NOTE: Auto instrumentation  for `System.Data.SqlClient` is available for both, .NET Core and .NET Framework applications, however, support of .NET Framework has one limitation:
