@@ -39,6 +39,10 @@ namespace Elastic.Apm.Report
 
 		private readonly PayloadItemSerializer _payloadItemSerializer;
 
+		internal readonly List<Func<ITransaction, bool>> TransactionFilters = new List<Func<ITransaction, bool>>();
+		internal readonly List<Func<ISpan, bool>> SpanFilters = new List<Func<ISpan, bool>>();
+		internal readonly List<Func<IError, bool>> ErrorFilters = new List<Func<IError, bool>>();
+
 		public PayloadSenderV2(IApmLogger logger, IConfigSnapshot config, Service service, Api.System system,
 			HttpMessageHandler httpMessageHandler = null, string dbgName = null
 		)
@@ -213,23 +217,21 @@ namespace Elastic.Apm.Report
 
 				foreach (var item in queueItems)
 				{
-					var serialized = _payloadItemSerializer.SerializeObject(item);
 					switch (item)
 					{
-						case Transaction _:
-							ndjson.AppendLine("{\"transaction\": " + serialized + "}");
+						case Transaction transaction:
+							if (TryExecuteFilter(TransactionFilters, transaction)) SerializeAndSend(item, "transaction");
 							break;
-						case Span _:
-							ndjson.AppendLine("{\"span\": " + serialized + "}");
+						case Span span:
+							if (TryExecuteFilter(SpanFilters, span)) SerializeAndSend(item, "span");
 							break;
-						case Error _:
-							ndjson.AppendLine("{\"error\": " + serialized + "}");
+						case Error error:
+							if (TryExecuteFilter(ErrorFilters, error)) SerializeAndSend(item, "error");
 							break;
 						case MetricSet _:
-							ndjson.AppendLine("{\"metricset\": " + serialized + "}");
+							SerializeAndSend(item, "metricset");
 							break;
 					}
-					_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItem}", item, serialized);
 				}
 
 				var content = new StringContent(ndjson.ToString(), Encoding.UTF8, "application/x-ndjson");
@@ -250,6 +252,40 @@ namespace Elastic.Apm.Report
 					_logger?.Debug()
 						?.Log("Sent items to server:\n{SerializedItems}",
 							TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray())));
+				}
+
+				void SerializeAndSend(object item, string eventType)
+				{
+					var serialized = _payloadItemSerializer.SerializeObject(item);
+					ndjson.AppendLine($"{{\"{eventType}\": " + serialized + "}}");
+					_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItem}", item, serialized);
+				}
+
+				// Executes filters for the given filter collection and handles return value and errors
+				bool TryExecuteFilter<T>(IEnumerable<Func<T, bool>> filters, T item)
+				{
+					var includeTransaction = true;
+					var enumerable = filters as Func<T, bool>[] ?? filters.ToArray();
+					if (!enumerable.Any()) return true;
+
+					foreach (var filter in enumerable)
+					{
+						try
+						{
+							_logger?.Trace()?.Log("Start executing filter on transaction");
+							includeTransaction = filter(item);
+							if (includeTransaction) continue;
+
+							_logger?.Debug()?.Log("Filter returns false, item won't be sent, {filteredItemm}", item);
+							break;
+						}
+						catch(Exception e)
+						{
+							_logger.Warning()?.LogException(e, "Exception during execution of the filter on transaction");
+						}
+					}
+
+					return includeTransaction;
 				}
 			}
 			catch (Exception e)
@@ -273,6 +309,7 @@ namespace Elastic.Apm.Report
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global - used by Json.Net
 		public Service Service { get; set; }
 
+		// ReSharper disable once UnusedAutoPropertyAccessor.Global
 		public Api.System System { get; set; }
 
 		/// <summary>

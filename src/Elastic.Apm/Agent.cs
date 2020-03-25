@@ -107,6 +107,22 @@ namespace Elastic.Apm
 		private static AgentComponents _components;
 		private static volatile bool _isConfigured;
 
+		public static bool AddFilter(Func<ITransaction, bool> filter) => CheckAndAddFilter(p => p.TransactionFilters.Add(filter));
+
+		public static bool AddFilter(Func<ISpan, bool> filter) => CheckAndAddFilter(p => p.SpanFilters.Add(filter));
+
+		public static bool AddFilter(Func<IError, bool> filter)  => CheckAndAddFilter(p => p.ErrorFilters.Add(filter));
+
+		private static bool CheckAndAddFilter(Action<PayloadSenderV2> action)
+		{
+			// This check it TBD
+			// if (!IsConfigured) return false;
+			if (!(Instance.PayloadSender is PayloadSenderV2 payloadSenderV2)) return false;
+
+			action(payloadSenderV2);
+			return true;
+		}
+
 		public static IConfigurationReader Config => Instance.ConfigurationReader;
 
 		internal static ApmAgent Instance => LazyApmAgent.Value;
