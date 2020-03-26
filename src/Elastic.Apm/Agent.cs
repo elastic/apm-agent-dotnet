@@ -107,21 +107,6 @@ namespace Elastic.Apm
 		private static AgentComponents _components;
 		private static volatile bool _isConfigured;
 
-		public static bool AddFilter(Func<ITransaction, bool> filter) => CheckAndAddFilter(p => p.TransactionFilters.Add(filter));
-
-		public static bool AddFilter(Func<ISpan, bool> filter) => CheckAndAddFilter(p => p.SpanFilters.Add(filter));
-
-		public static bool AddFilter(Func<IError, bool> filter)  => CheckAndAddFilter(p => p.ErrorFilters.Add(filter));
-
-		private static bool CheckAndAddFilter(Action<PayloadSenderV2> action)
-		{
-			// This check it TBD
-			// if (!IsConfigured) return false;
-			if (!(Instance.PayloadSender is PayloadSenderV2 payloadSenderV2)) return false;
-
-			action(payloadSenderV2);
-			return true;
-		}
 
 		public static IConfigurationReader Config => Instance.ConfigurationReader;
 
@@ -135,6 +120,67 @@ namespace Elastic.Apm
 		/// a transaction.
 		/// </summary>
 		public static ITracer Tracer => Instance.Tracer;
+
+		/// <summary>
+		/// Adds a filter which gets called before each transaction gets sent to APM Server.
+		/// In the
+		/// <param name="filter"></param>
+		/// have access to the <see cref="ITransaction" /> instance which gets sent to  APM Server
+		/// and you can modify it. With the return value of the
+		/// <param name="filter"></param>
+		/// you can also control if the <see cref="ITransaction" /> should be sent to the server or not.
+		/// If the
+		/// <param name="filter"></param>
+		/// returns <code>false</code> the <see cref="ITransaction" /> will be dropped and won't be sent to the APM Server -
+		/// otherwise it'll be sent.
+		/// </summary>
+		/// <param name="filter">The filter that can process the <see cref="ITransaction"/> and decide if it should be sent to APM Server or not.</param>
+		/// <returns><code>true</code> if the filter was added successfully, <code>false</code> otherwise. In case the method returns <code>false</code> the filter won't be called.</returns>
+		public static bool AddFilter(Func<ITransaction, bool> filter) => CheckAndAddFilter(p => p.TransactionFilters.Add(filter));
+
+		/// <summary>
+		/// Adds a filter which gets called before each span gets sent to APM Server.
+		/// In the
+		/// <param name="filter"></param>
+		/// have access to the <see cref="ISpan" /> instance which gets sent to  APM Server
+		/// and you can modify it. With the return value of the
+		/// <param name="filter"></param>
+		/// you can also control if the <see cref="ISpan" /> should be sent to the server or not.
+		/// If the
+		/// <param name="filter"></param>
+		/// returns <code>false</code> the <see cref="ISpan" /> will be dropped and won't be sent to the APM Server -
+		/// otherwise it'll be sent.
+		/// </summary>
+		/// <param name="filter">The filter that can process the <see cref="ISpan"/> and decide if it should be sent to APM Server or not.</param>
+		/// <returns><code>true</code> if the filter was added successfully, <code>false</code> otherwise. In case the method returns <code>false</code> the filter won't be called.</returns>
+		public static bool AddFilter(Func<ISpan, bool> filter) => CheckAndAddFilter(p => p.SpanFilters.Add(filter));
+
+		/// <summary>
+		/// Adds a filter which gets called before each error gets sent to APM Server.
+		/// In the
+		/// <param name="filter"></param>
+		/// have access to the <see cref="IError" /> instance which gets sent to  APM Server
+		/// and you can modify it. With the return value of the
+		/// <param name="filter"></param>
+		/// you can also control if the <see cref="IError" /> should be sent to the server or not.
+		/// If the
+		/// <param name="filter"></param>
+		/// returns <code>false</code> the <see cref="IError" /> will be dropped and won't be sent to the APM Server -
+		/// otherwise it'll be sent.
+		/// </summary>
+		/// <param name="filter">The filter that can process the <see cref="IError"/> and decide if it should be sent to APM Server or not.</param>
+		/// <returns><code>true</code> if the filter was added successfully, <code>false</code> otherwise. In case the method returns <code>false</code> the filter won't be called.</returns>
+		public static bool AddFilter(Func<IError, bool> filter) => CheckAndAddFilter(p => p.ErrorFilters.Add(filter));
+
+		private static bool CheckAndAddFilter(Action<PayloadSenderV2> action)
+		{
+			// This check it TBD
+			// if (!IsConfigured) return false;
+			if (!(Instance.PayloadSender is PayloadSenderV2 payloadSenderV2)) return false;
+
+			action(payloadSenderV2);
+			return true;
+		}
 
 		/// <summary>
 		/// Sets up multiple <see cref="IDiagnosticsSubscriber" />s to start listening to one or more

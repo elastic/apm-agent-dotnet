@@ -23,6 +23,16 @@ namespace Elastic.Apm.Model
 		private readonly Span _parentSpan;
 		private readonly IPayloadSender _payloadSender;
 
+		// This constructor is meant for deserialization
+		[JsonConstructor]
+		private Span(double duration, string id, string name, string parentId)
+		{
+			Duration = duration;
+			Id = id;
+			Name = name;
+			ParentId = parentId;
+		}
+
 		public Span(
 			string name,
 			string type,
@@ -74,18 +84,14 @@ namespace Elastic.Apm.Model
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Action { get; set; }
 
+		[JsonIgnore]
+		private IConfigSnapshot ConfigSnapshot => _enclosingTransaction.ConfigSnapshot;
+
 		/// <summary>
 		/// Any other arbitrary data captured by the agent, optionally provided by the user.
 		/// <seealso cref="ShouldSerializeContext" />
 		/// </summary>
 		public SpanContext Context => _context.Value;
-
-		/// <summary>
-		/// Method to conditionally serialize <see cref="Context" /> - serialize only if it was accessed at least once.
-		/// See
-		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
-		/// </summary>
-		public bool ShouldSerializeContext() => _context.IsValueCreated;
 
 		/// <inheritdoc />
 		/// <summary>
@@ -104,9 +110,6 @@ namespace Elastic.Apm.Model
 
 		[JsonIgnore]
 		public Dictionary<string, string> Labels => Context.Labels;
-
-		[JsonIgnore]
-		private IConfigSnapshot ConfigSnapshot => _enclosingTransaction.ConfigSnapshot;
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
@@ -149,6 +152,13 @@ namespace Elastic.Apm.Model
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
+
+		/// <summary>
+		/// Method to conditionally serialize <see cref="Context" /> - serialize only if it was accessed at least once.
+		/// See
+		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
+		/// </summary>
+		public bool ShouldSerializeContext() => _context.IsValueCreated;
 
 		public override string ToString() => new ToStringBuilder(nameof(Span))
 		{
@@ -299,11 +309,12 @@ namespace Elastic.Apm.Model
 			{
 				return UrlUtils.ExtractDestination(Context.Http.OriginalUrl ?? new Uri(Context.Http.Url), _logger);
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
-				_logger.Trace()?.LogException(ex, "Failed to deduce destination info from Context.Http."
-					+ " Original URL: {OriginalUrl}. Context.Http.Url: {Context.Http.Url}."
-					, Context.Http.OriginalUrl, Context.Http.Url);
+				_logger.Trace()
+					?.LogException(ex, "Failed to deduce destination info from Context.Http."
+						+ " Original URL: {OriginalUrl}. Context.Http.Url: {Context.Http.Url}."
+						, Context.Http.OriginalUrl, Context.Http.Url);
 				return null;
 			}
 		}

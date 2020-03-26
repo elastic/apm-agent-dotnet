@@ -17,6 +17,10 @@ namespace Elastic.Apm.Tests
 {
 	public class FilterTests
 	{
+		/// <summary>
+		/// Registers 2 transaction filters - one changes the transaction name, one changes the transaction type.
+		/// Makes sure changes are applied to the serialized transaction.
+		/// </summary>
 		[Fact]
 		public void RenameTransactionNameAndTypeIn2Filters() =>
 			RegisterFilterRunCodeAndAssert(
@@ -41,6 +45,11 @@ namespace Elastic.Apm.Tests
 					transactions.First().Type.Should().Be("NewTransactionType");
 				});
 
+		/// <summary>
+		/// Registers 3 handlers - one of them throws, 2 other just change the transactions.
+		/// Makes sure that the changes from the 2 filters that don't throw get applied and also makes sure the transaction is
+		/// serialized with the changes.
+		/// </summary>
 		[Fact]
 		public void MultipleHandlerOneOfThemThrowingOnTransactions() =>
 			RegisterFilterRunCodeAndAssert(
@@ -69,6 +78,68 @@ namespace Elastic.Apm.Tests
 					transactions.First().Name.Should().Be("NewTransactionName");
 					transactions.First().Type.Should().Be("NewTransactionType");
 				});
+
+		/// <summary>
+		/// Registers 3 span-filters, 1 throws, 1 renames the span, 1 changes the span type.
+		/// Makes sure that changes from the 2 filters that don't throw get applied and the span is serialized accordingly.
+		/// </summary>
+		[Fact]
+		public void FilterSpanWith3Filters()
+			=>
+				RegisterFilterRunCodeAndAssert(
+					payloadSender =>
+					{
+						// Rename span name
+						payloadSender.SpanFilters.Add(span =>
+						{
+							span.Name = "NewSpanName";
+							return true;
+						});
+
+						// Throw an exception
+						payloadSender.SpanFilters.Add(span => throw new Exception("This is a test exception"));
+
+						// Rename span type
+						payloadSender.SpanFilters.Add(span =>
+						{
+							span.Type = "NewSpanType";
+							return true;
+						});
+					},
+					agent =>
+					{
+						agent.Tracer.CaptureTransaction("Test123", "TestTransaction",
+							t => { t.CaptureSpan("SampeSpan", "TestSpan", () => Thread.Sleep(10)); });
+					},
+					(transactions, spans, errors) =>
+					{
+						spans.First().Name.Should().Be("NewSpanName");
+						spans.First().Type.Should().Be("NewSpanType");
+					});
+
+		/// <summary>
+		/// Registers a span-filter that returns false for specific span names and sends a span with that specific name.
+		/// Makes sure the span is not sent and serialized.
+		/// </summary>
+		[Fact]
+		public void DropSpanWithSpecificName()
+			=> RegisterFilterRunCodeAndAssert(
+				payloadSender =>
+				{
+					// Rename span name
+					payloadSender.SpanFilters.Add(span =>
+					{
+						if (span.Name == "SpanToDrop") return false;
+
+						return true;
+					});
+				},
+				agent =>
+				{
+					agent.Tracer.CaptureTransaction("Test123", "TestTransaction",
+						t => { t.CaptureSpan("SpanToDrop", "TestSpan", () => Thread.Sleep(10)); });
+				},
+				(transactions, spans, errors) => { spans.Should().BeEmpty(); });
 
 		private void RegisterFilterRunCodeAndAssert(Action<PayloadSenderV2> registerFilters, Action<ApmAgent> executeCodeThatGeneratesData,
 			Action<List<Transaction>, List<Span>, List<Error>> assert
