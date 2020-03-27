@@ -41,9 +41,19 @@ pipeline {
             deleteDir()
             gitCheckout(basedir: "${BASE_DIR}", githubNotifyFirstTimeContributor: true)
             stash allowEmpty: true, name: 'source', useDefaultExcludes: false
+            script {
+              dir("${BASE_DIR}"){
+                // Skip all the stages except docs for PR's with asciidoc changes only
+                env.ONLY_DOCS = isGitRegionMatch(patterns: [ '.*\\.asciidoc' ], comparator: 'regexp', shouldMatchAll: true)
+              }
+            }
           }
         }
         stage('Parallel'){
+          when {
+            beforeAgent true
+            expression { return env.ONLY_DOCS == "false" }
+          }
           parallel{
             stage('Linux'){
               options { skipDefaultCheckout() }
