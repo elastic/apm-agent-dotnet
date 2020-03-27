@@ -45,6 +45,8 @@ namespace Elastic.Apm.Api
 			if (!_port.HasValue) _port = src._port;
 		}
 
+		internal bool AddressHasValue => _address.HasValue;
+
 		/// <summary>
 		/// The goal is to allow public API user to prohibit automatic deduction of any of  `context.destination` properties.
 		/// To achieve that we need a way to distinguish between `null` as the initial value

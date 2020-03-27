@@ -1,3 +1,4 @@
+using System.Text;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
@@ -195,6 +196,72 @@ namespace Elastic.Apm.Tests.HelpersTests
 				, "myServerName", null)] // https://www.connectionstrings.com/dotconnect-for-oracle/standard/
 			public void Devart_dotConnect(string dbgDescription, string connectionString, string expectedHost, int? expectedPort)
 				=> TestImpl(LoggerBase, dbgDescription, connectionString, expectedHost, expectedPort);
+
+			[Theory]
+			[InlineData("From issue #791 - Oracle [with Devart provider]"
+				, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=172.21.25.186)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORCLCDB)));User Id=SAJDDL; Direct=True;"
+				, "172.21.25.186", 1521)] // https://github.com/elastic/apm-agent-dotnet/issues/791
+			[InlineData("Oracle Data Provider for .NET / ODP.NET"
+				, @"Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=MyHost)(PORT=4321)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=MyOracleSID)));User Id=myUsername;Password=myPassword;"
+				, "MyHost", 4321)] // https://www.connectionstrings.com/oracle-data-provider-for-net-odp-net/using-odpnet-without-tnsnamesora/
+			[InlineData("Oracle Data Provider for .NET / ODP.NET - multiple addresses"
+				, @"Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=MyHost1)(PORT=1))(ADDRESS=(PROTOCOL=TCP)(HOST=MyHost2)(PORT=22)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=MyOracleSID)));User Id=myUsername;Password=myPassword;"
+				, "MyHost1", 1)] // https://www.connectionstrings.com/oracle-data-provider-for-net-odp-net/using-odpnet-without-tnsnamesora/
+			public void nested_value(string dbgDescription, string connectionString, string expectedHost, int? expectedPort)
+				=> TestImpl(LoggerBase, dbgDescription, connectionString, expectedHost, expectedPort);
+
+			[Theory]
+			[InlineData(DbConnectionStringParser.MaxNestingDepth/2, true)]
+			[InlineData(DbConnectionStringParser.MaxNestingDepth-1, true)]
+			[InlineData(DbConnectionStringParser.MaxNestingDepth, true)]
+			[InlineData(DbConnectionStringParser.MaxNestingDepth+1, false)]
+			[InlineData(DbConnectionStringParser.MaxNestingDepth*2, false)]
+			public void nested_value_max_depth(int nestingDepth, bool isValid)
+			{
+				// @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=172.21.25.186)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORCLCDB)));User Id=SAJDDL; Direct=True;"
+				const string expectedHost = "2012:b86a:f950::b86a:f950";
+				const int expectedPort = 9876;
+
+				// -2 because inner part already has nesting depth of 2
+				var connectionString = BuildString(nestingDepth - 2);
+				var dbgDescription = $"nestingDepth: {nestingDepth}";
+				if (isValid)
+					TestImpl(LoggerBase, dbgDescription, connectionString, expectedHost, expectedPort);
+				else
+					InvalidValueTestImpl(dbgDescription, connectionString, "");
+
+				string BuildString(int outerNestingDepth)
+				{
+					return
+						"Data Source=" +
+						$"(dummy_key_with_over_max_nesting={BuildNestedPart(DbConnectionStringParser.MaxNestingDepth, "(ADDRESS=(HOST=dummy))", 'D')})" +
+						BuildNestedPart(outerNestingDepth, $"(ADDRESS=(PROTOCOL=TCP)(HOST={expectedHost})(PORT={expectedPort}))", 'K') +
+						"(CONNECT_DATA=(SERVICE_NAME=ORCLCDB)));User Id=SAJDDL; Direct=True;";
+				}
+
+				string BuildNestedPart(int outerNestingDepth, string innerPart, char nestingKey)
+				{
+					var strBuilder = new StringBuilder(nestingDepth * 6);
+					for (var i = 0; i < outerNestingDepth; ++i) strBuilder.Append($"({nestingKey}{i+1}=");
+					strBuilder.Append(innerPart);
+					for (var i = 0; i < outerNestingDepth; ++i) strBuilder.Append(')');
+					return strBuilder.ToString();
+				}
+			}
+
+			[Theory]
+			[InlineData("Multiple values - the first one with all mandatory parts wins"
+				, @"Data Source=(ADDRESS_LIST=(ADDRESS=(PORT=1))(ADDRESS=(HOST=host_2)(PORT=2))(ADDRESS=(HOST=host_3)(PORT=3)))"
+				, "host_2", 2)]
+			public void multiple_nested_values(string dbgDescription, string connectionString, string expectedHost, int? expectedPort)
+				=> TestImpl(LoggerBase, dbgDescription, connectionString, expectedHost, expectedPort);
+
+			[Theory]
+			[InlineData("No address (which is mandatory) - just port"
+				, @"Data Source=(ADDRESS_LIST=(ADDRESS=(PORT=1))(ADDRESS=(not_host=xyz)(PORT=2))(ADDRESS=(not_host=xyz)(PORT=3)))"
+				, "mandatory")]
+			public void nested_values_without_mandatory_parts(string dbgDescription, string connectionString, string invalidPart)
+				=> InvalidValueTestImpl(dbgDescription, connectionString, invalidPart);
 
 			[Theory]
 			[InlineData("Standard security"

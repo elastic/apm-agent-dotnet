@@ -19,7 +19,12 @@ namespace Elastic.Apm.Helpers
 		// (for example see https://github.com/dotnet/corefx/issues/3357)
 		private volatile int _cacheCount;
 
-		internal DbConnectionStringParser(IApmLogger logger) => _logger = logger.Scoped(ThisClassName);
+		internal const int MaxNestingDepth = 100;
+
+		internal DbConnectionStringParser(IApmLogger logger)
+		{
+			_logger = logger.Scoped(ThisClassName);
+		}
 
 		/// <returns><c>Destination</c> if successful and <c>null</c> otherwise</returns>
 		internal Destination ExtractDestination(string dbConnectionString) => ExtractDestination(dbConnectionString, out _);
@@ -41,214 +46,376 @@ namespace Elastic.Apm.Helpers
 			return destination;
 		}
 
-		private static readonly Dictionary<string, Action<string, Destination>> KeyToPropertySetter =
-			new Dictionary<string, Action<string, Destination>>(StringComparer.OrdinalIgnoreCase)
-			{
-				{ "Server" , ParseServerValue },
-				{ "Data Source" , ParseServerValue },
-				{ "Host" , ParseServerValue },
-				{ "Hostname" , ParseServerValue },
-				{ "Network Address" , ParseServerValue },
-				{ "dbq" , ParseServerValue },
-				{ "Port" , ParsePortValue }
-			};
-
-		private const char KeyValuePairsSeparator = ';';
-		private const char KeyValueSeparator = '=';
-		private const char ServerNameDbInstanceSeparator = '\\';
-		private const string SqlServerLocalDbPrefix = "(LocalDB)";
-		private const string SqlServerExpressUserInstancePrefix = @".\";
-		private const string SqlAzurePrefix = @"tcp:";
-		private static readonly IEnumerable<string> DiscardablePrefixes = new List<string>
-		{
-			SqlAzurePrefix
-		};
-
 		/// <returns><c>Destination</c> if successful and <c>null</c> otherwise</returns>
 		private Destination ParseConnectionString(string dbConnectionString)
 		{
-			Destination result = null;
-			foreach (var keyValueString in dbConnectionString.Split(KeyValuePairsSeparator))
-			{
-				if (string.IsNullOrWhiteSpace(keyValueString)) continue;
+			var destination = new Destination();
 
-				var keyValueArray = keyValueString.Split(KeyValueSeparator);
-				if (keyValueArray.Length != 2)
+			try
+			{
+				new ParserWithState(_logger, destination).ParseFlatKeyValuePairs(dbConnectionString);
+			}
+			catch (Exception ex)
+			{
+				_logger.Trace()?.LogException(ex, "Encountered an issue while parsing"
+					+ " - considering the whole connection string as invalid and returning null."
+					+ " dbConnectionString: {DbConnectionString}."
+					, dbConnectionString);
+				return null;
+			}
+
+			// Check if all the mandatory parts are found
+			// ReSharper disable once InvertIf
+			if (!destination.AddressHasValue)
+			{
+				_logger.Trace()?.Log("Parsing did not find address part of destination (which is mandatory)"
+					+ " - considering the whole connection string as invalid and returning null."
+					+ " dbConnectionString: {DbConnectionString}."
+					, dbConnectionString);
+				return null;
+			}
+
+			return destination;
+		}
+
+		private class ParserWithState
+		{
+			// ReSharper disable once MemberHidesStaticFromOuterClass
+			private const string ThisClassName = DbConnectionStringParser.ThisClassName + "." + nameof(ParserWithState);
+
+			private readonly IApmLogger _logger;
+			private readonly Destination _destination;
+			private readonly Dictionary<string, Action<string>> _keyToPropertySetter;
+			private int _currentNestingDepth;
+
+			private const char NestedOpeningDelimiter = '(';
+			private const char NestedClosingDelimiter = ')';
+			private static readonly char[] NestedDelimiters = { NestedOpeningDelimiter, NestedClosingDelimiter };
+			private const char FlatKeyValuePairsSeparator = ';';
+			private const char KeyValueSeparator = '=';
+			private const char ServerNameDbInstanceSeparator = '\\';
+			private const string SqlServerLocalDbPrefix = "(LocalDB)";
+			private const string SqlServerExpressUserInstancePrefix = @".\";
+			private const string SqlAzurePrefix = @"tcp:";
+			private static readonly IEnumerable<string> DiscardablePrefixes = new List<string>
+			{
+				SqlAzurePrefix
+			};
+
+			internal ParserWithState(IApmLogger logger, Destination destination)
+			{
+				_logger = logger.Scoped(ThisClassName);
+				_destination = destination;
+				_keyToPropertySetter = new Dictionary<string, Action<string>>(StringComparer.OrdinalIgnoreCase)
 				{
-					_logger.Trace()?.Log("Encountered invalid key-value pair - skipping it."
-						+ " keyValueString: `{KeyValueString}'. keyValueArray: {KeyValueArray}. dbConnectionString: {DbConnectionString}."
-						, keyValueString, keyValueArray, dbConnectionString);
-					continue;
+					{ "Server" , ParseServerValue },
+					{ "Data Source" , ParseServerValue },
+					{ "Host" , ParseServerValue },
+					{ "Hostname" , ParseServerValue },
+					{ "Network Address" , ParseServerValue },
+					{ "dbq" , ParseServerValue },
+					{ "Port" , ParsePortValue },
+					{ "Address" , ParseAddressKeyWithNestedStructureValue },
+				};
+			}
+
+			internal void ParseFlatKeyValuePairs(string flatKeyValuePairs)
+			{
+				foreach (var keyValue in flatKeyValuePairs.Split(FlatKeyValuePairsSeparator))
+					ParseKeyValue(keyValue);
+			}
+
+			private void ParseKeyValue(string keyValue)
+			{
+				if (string.IsNullOrWhiteSpace(keyValue)) return;
+
+				var keyValueSplit = keyValue.Split(new[] { KeyValueSeparator }, 2);
+				if (keyValueSplit.Length < 2)
+				{
+					_logger.Trace()?.Log("Encountered key-value pair without value - skipping it."
+						+ " keyValue: `{KeyValueString}'. keyValueSplit: {KeyValueSplit}."
+						, keyValue, keyValueSplit);
+					return;
 				}
 
-				if (! KeyToPropertySetter.TryGetValue(keyValueArray[0].Trim(), out var propSetter)) continue;
+				var key = keyValueSplit[0].Trim();
+				var value = keyValueSplit[1].Trim();
 
-				if (result == null) result = new Destination();
+				// Skip unknown keys
+				if (!_keyToPropertySetter.TryGetValue(key, out var valueParser))
+				{
+					if (!HasNestedStructure(value)) return;
+
+					// Unless value for an unknown key has nested structure
+					// then we want to go into the value to see if we find known keys
+					ParseNestedStructure(value);
+					return;
+				}
 
 				try
 				{
-					propSetter(keyValueArray[1].Trim(), result);
+					valueParser(keyValueSplit[1].Trim());
+				}
+				catch (FormatException)
+				{
+					throw;
 				}
 				catch (Exception ex)
 				{
-					_logger.Trace()?.LogException(ex, "Encountered invalid value for a known key"
-						+ " - considering the whole connection string as invalid and returning null."
-						+ " keyValueString: `{KeyValueString}'. keyValueArray: {KeyValueArray}. dbConnectionString: {DbConnectionString}."
-						, keyValueString, keyValueArray, dbConnectionString);
-					return null;
+					throw new FormatException(
+						"Encountered invalid value for a known key."
+						+ $" keyValueSplit: {keyValueSplit}."
+						+ $" keyValue: `{keyValue}'."
+						, ex);
 				}
 			}
 
-			return result;
-		}
-
-		private static void ParseServerValue(string valueToParseArg, Destination destination)
-		{
-			var valueToParse = TrimDiscardable(valueToParseArg);
-
-			if (valueToParse.StartsWith(SqlServerLocalDbPrefix, StringComparison.OrdinalIgnoreCase)
-				|| valueToParse.StartsWith(SqlServerExpressUserInstancePrefix, StringComparison.OrdinalIgnoreCase))
+			private static bool HasNestedStructure(string value)
 			{
-				destination.Address = "localhost";
-				return;
+				return value.Length >= 2 && value[0] == NestedOpeningDelimiter && value[value.Length - 1] == NestedClosingDelimiter;
 			}
 
-			var dbInstanceSeparatorIndex = valueToParse.IndexOf(ServerNameDbInstanceSeparator);
-			if (dbInstanceSeparatorIndex != -1) valueToParse = valueToParse.Substring(0, dbInstanceSeparatorIndex);
-			ParseServerWithOptionalPort(valueToParse, destination);
-		}
-
-		private static string TrimDiscardable(string valueToParse)
-		{
-			var currentResult = valueToParse;
-
-			foreach (var discardablePrefix in DiscardablePrefixes)
+			private static int FindMatchingClosingDelimiter(string str, int openingDelimiterIndex)
 			{
-				if (currentResult.StartsWith(discardablePrefix, StringComparison.OrdinalIgnoreCase))
-					currentResult = currentResult.Substring(discardablePrefix.Length);
+				Assertion.IfEnabled?.That(str[openingDelimiterIndex] == NestedOpeningDelimiter,
+					"This method should called only on values with nested structure." +
+					$" String: `{str}'." +
+					$" openingDelimiterIndex: {openingDelimiterIndex}.");
+
+				var nestingDepth = 1;
+				var matchingClosingDelimiterIndex = -1;
+				var currentDelimiterIndex = openingDelimiterIndex;
+				while (true)
+				{
+					if (currentDelimiterIndex == str.Length - 1) break;
+
+					currentDelimiterIndex = str.IndexOfAny(NestedDelimiters, currentDelimiterIndex + 1);
+					if (currentDelimiterIndex == -1) break;
+
+					if (str[currentDelimiterIndex] == NestedOpeningDelimiter)
+					{
+						++nestingDepth;
+						continue;
+					}
+
+					--nestingDepth;
+					if (nestingDepth != 0) continue;
+
+					matchingClosingDelimiterIndex = currentDelimiterIndex;
+					break;
+				}
+
+				if (matchingClosingDelimiterIndex == -1)
+				{
+					throw new FormatException(
+						"Opening and closing delimiters are not balanced."
+						+ $" String: `{str}'."
+						+ $" openingDelimiterIndex: {openingDelimiterIndex}.");
+				}
+
+				return matchingClosingDelimiterIndex;
 			}
 
-			currentResult = TrimDiscardableSuffix(currentResult);
-
-			return currentResult;
-		}
-
-		private static string TrimDiscardableSuffix(string valueToParse)
-		{
-			// Trim suffix /xyz for connection strings such as:
-			//
-			// 		Driver=(Oracle in XEClient);dbq=111.21.31.99:4321/XE;Uid=myUsername;Pwd=myPassword;
-			//			`/XE' suffix should be removed
-			//
-			//		DATA SOURCE=192.168.0.151:1521/ORCL;PASSWORD=xxx;PERSIST SECURITY INFO=True;USER ID=xxx
-			//			`/ORCL' suffix should be removed
-			//
-			// To generalize we should trim any /<xyz> suffix if <xyz> is letters only string
-			// but not a valid hex number because according to https://en.wikipedia.org/wiki/IPv6_address#Special_addresses
-			// IPv6 can contain `/<hex number>' and we don't want to discard a part of the address
-
-			var lastSlashIndex = valueToParse.LastIndexOf('/');
-			if (lastSlashIndex == -1) return valueToParse;
-
-			var foundNonHexDigit = false;
-			for (var i = lastSlashIndex + 1 ; i < valueToParse.Length ; ++i )
+			private void ParseNestedStructure(string value)
 			{
-				if (! TextUtils.IsLatinLetter(valueToParse[i])) return valueToParse;
-				if (!foundNonHexDigit && !TextUtils.IsHex(valueToParse[i])) foundNonHexDigit = true;
+				Assertion.IfEnabled?.That(HasNestedStructure(value),
+					$"This method should called only on values with nested structure. Provided value: `{value}'.");
+
+				if (_currentNestingDepth + 1 > MaxNestingDepth) return;
+				++_currentNestingDepth;
+
+				var currentSubKeyValueOpenDelimiterIndex = 0;
+				while (true)
+				{
+					var currentSubKeyValueCloseDelimiterIndex = FindMatchingClosingDelimiter(value, currentSubKeyValueOpenDelimiterIndex);
+					ParseKeyValue(value.Substring(
+						currentSubKeyValueOpenDelimiterIndex + 1,
+						currentSubKeyValueCloseDelimiterIndex - (currentSubKeyValueOpenDelimiterIndex + 1)));
+
+					if (currentSubKeyValueCloseDelimiterIndex == value.Length - 1) break;
+
+					currentSubKeyValueOpenDelimiterIndex =
+						value.IndexOf(NestedOpeningDelimiter, currentSubKeyValueCloseDelimiterIndex + 1);
+					if (currentSubKeyValueOpenDelimiterIndex == -1) break;
+				}
+
+				--_currentNestingDepth;
 			}
 
-			// If the suffix part after / is not empty and it's a valid hex number - we don't want to trim it
-			if (lastSlashIndex < (valueToParse.Length - 1) && !foundNonHexDigit) return valueToParse;
-
-			return valueToParse.Substring(0, lastSlashIndex);
-		}
-
-		private static void ParseServerWithOptionalPort(string valueToParseArg, Destination destination)
-		{
-			// Possible values:
-			// 		- Name/IPv4 with/without port: "Name_or_IPv4_address", "Name_or_IPv4_address:port", "Name_or_IPv4_address,port"
-			// 		- IPv6 with/without port: "IPv6_address", "[IPv6_address]", "[IPv6_address]:port", "IPv6_address,port" or even "[IPv6_address],port"
-
-			var valueToParse = valueToParseArg.Trim();
-			if (valueToParse.IsEmpty())
-				throw new FormatException($"Server address part is white space only/empty string. valueToParseArg: `{valueToParseArg}'.");
-
-			var commaIndex = valueToParse.IndexOf(',');
-			if (commaIndex != -1)
+			// @"Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=MyHost)(PORT=4321)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=MyOracleSID)));User Id=myUsername;Password=myPassword;"
+			//                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+			private void ParseAddressKeyWithNestedStructureValue(string value)
 			{
-				// Server part has comma which means it's "Name_or_IPv4_address,port", "IPv6_address,port" or "[IPv6_address],port"
-				destination.Address = ParseAddress(valueToParse.Substring(0, commaIndex));
-				ParsePortValue(valueToParse.Substring(commaIndex + 1), destination);
-				return;
+				// If we already found address part of destination we don't need to parse anymore
+				if (_destination.AddressHasValue) return;
+
+				if (!HasNestedStructure(value))
+				{
+					throw new FormatException(
+						"Value for `Address' key is expected to have nested structure."
+						+ $" valueToParse: `{value}'.");
+				}
+
+				ParseNestedStructure(value);
 			}
 
-			var firstColumnIndex = valueToParse.IndexOf(':');
-			if (firstColumnIndex == -1)
+			private void ParseServerValue(string valueArg)
 			{
-				// Server part doesn't have even one column which means it's "Name_or_IPv4_address"
-				destination.Address = valueToParse.Trim();
-				return;
+				// Some DB connection string formats allow multiple addresses - we use only the first one
+				if (_destination.AddressHasValue) return;
+
+				var value = TrimDiscardable(valueArg);
+
+				if (value.StartsWith(SqlServerLocalDbPrefix, StringComparison.OrdinalIgnoreCase)
+					|| value.StartsWith(SqlServerExpressUserInstancePrefix, StringComparison.OrdinalIgnoreCase))
+				{
+					_destination.Address = "localhost";
+					return;
+				}
+
+				if (HasNestedStructure(value))
+				{
+					ParseNestedStructure(value);
+					return;
+				}
+
+				var dbInstanceSeparatorIndex = value.IndexOf(ServerNameDbInstanceSeparator);
+				if (dbInstanceSeparatorIndex != -1) value = value.Substring(0, dbInstanceSeparatorIndex);
+				ParseServerWithOptionalPort(value);
 			}
 
-			var lastColumnIndex = valueToParse.LastIndexOf(':');
-			if (firstColumnIndex == lastColumnIndex)
+			private static string TrimDiscardable(string value)
 			{
-				// Server part has just one column which means it's "Name_or_IPv4_address:port"
-				destination.Address = ParseAddress(valueToParse.Substring(0, firstColumnIndex));
-				ParsePortValue(valueToParse.Substring(firstColumnIndex + 1), destination);
-				return;
+				var currentResult = value;
+
+				foreach (var discardablePrefix in DiscardablePrefixes)
+				{
+					if (currentResult.StartsWith(discardablePrefix, StringComparison.OrdinalIgnoreCase))
+						currentResult = currentResult.Substring(discardablePrefix.Length);
+				}
+
+				currentResult = TrimDiscardableSuffix(currentResult);
+
+				return currentResult;
 			}
 
-			// Server part has more than one column which means it's "IPv6_address", "[IPv6_address]" or "[IPv6_address]:port"
-
-			if (valueToParse[0] != '[')
+			private static string TrimDiscardableSuffix(string value)
 			{
-				// Server part doesn't start with '[' which means it's "IPv6_address"
-				destination.Address = valueToParse;
-				return;
+				// Trim suffix /xyz for connection strings such as:
+				//
+				// 		Driver=(Oracle in XEClient);dbq=111.21.31.99:4321/XE;Uid=myUsername;Pwd=myPassword;
+				//			`/XE' suffix should be removed
+				//
+				//		DATA SOURCE=192.168.0.151:1521/ORCL;PASSWORD=xxx;PERSIST SECURITY INFO=True;USER ID=xxx
+				//			`/ORCL' suffix should be removed
+				//
+				// To generalize we should trim any /<xyz> suffix if <xyz> is letters only string
+				// but not a valid hex number because according to https://en.wikipedia.org/wiki/IPv6_address#Special_addresses
+				// IPv6 can contain `/<hex number>' and we don't want to discard a part of the address
+
+				var lastSlashIndex = value.LastIndexOf('/');
+				if (lastSlashIndex == -1) return value;
+
+				var foundNonHexDigit = false;
+				for (var i = lastSlashIndex + 1 ; i < value.Length ; ++i )
+				{
+					if (! TextUtils.IsLatinLetter(value[i])) return value;
+					if (!foundNonHexDigit && !TextUtils.IsHex(value[i])) foundNonHexDigit = true;
+				}
+
+				// If the suffix part after / is not empty and it's a valid hex number - we don't want to trim it
+				if (lastSlashIndex < value.Length - 1 && !foundNonHexDigit) return value;
+
+				return value.Substring(0, lastSlashIndex);
 			}
 
-			// Server part starts with '[' which means it's "[IPv6_address]" or "[IPv6_address]:port"
-
-			if (valueToParse[valueToParse.Length - 1] == ']')
+			private void ParseServerWithOptionalPort(string valueArg)
 			{
-				// Server part ends with ']' which means it's "[IPv6_address]"
-				destination.Address = ParseAddress(valueToParse);
-				return;
+				// Possible values:
+				// 		- Name/IPv4 with/without port: "Name_or_IPv4_address", "Name_or_IPv4_address:port", "Name_or_IPv4_address,port"
+				// 		- IPv6 with/without port: "IPv6_address", "[IPv6_address]", "[IPv6_address]:port", "IPv6_address,port" or even "[IPv6_address],port"
+
+				var value = valueArg.Trim();
+				if (value.IsEmpty())
+					throw new FormatException($"Server address part is white space only/empty string. valueToParseArg: `{valueArg}'.");
+
+				var commaIndex = value.IndexOf(',');
+				if (commaIndex != -1)
+				{
+					// Server part has comma which means it's "Name_or_IPv4_address,port", "IPv6_address,port" or "[IPv6_address],port"
+					_destination.Address = ParseAddress(value.Substring(0, commaIndex));
+					ParsePortValue(value.Substring(commaIndex + 1));
+					return;
+				}
+
+				var firstColumnIndex = value.IndexOf(':');
+				if (firstColumnIndex == -1)
+				{
+					// Server part doesn't have even one column which means it's "Name_or_IPv4_address"
+					_destination.Address = value.Trim();
+					return;
+				}
+
+				var lastColumnIndex = value.LastIndexOf(':');
+				if (firstColumnIndex == lastColumnIndex)
+				{
+					// Server part has just one column which means it's "Name_or_IPv4_address:port"
+					_destination.Address = ParseAddress(value.Substring(0, firstColumnIndex));
+					ParsePortValue(value.Substring(firstColumnIndex + 1));
+					return;
+				}
+
+				// Server part has more than one column which means it's "IPv6_address", "[IPv6_address]" or "[IPv6_address]:port"
+
+				if (value[0] != '[')
+				{
+					// Server part doesn't start with '[' which means it's "IPv6_address"
+					_destination.Address = value;
+					return;
+				}
+
+				// Server part starts with '[' which means it's "[IPv6_address]" or "[IPv6_address]:port"
+
+				if (value[value.Length - 1] == ']')
+				{
+					// Server part ends with ']' which means it's "[IPv6_address]"
+					_destination.Address = ParseAddress(value);
+					return;
+				}
+
+				// Server part doesn't end with ']' which means it's "[IPv6_address]:port"
+
+				_destination.Address = ParseAddress(value.Substring(0, lastColumnIndex));
+				ParsePortValue(value.Substring(lastColumnIndex + 1));
 			}
 
-			// Server part doesn't end with ']' which means it's "[IPv6_address]:port"
+			private static string ParseAddress(string valueArg)
+			{
+				// Possible values: "Name_or_IPv4_address", "IPv6_address", "[IPv6_address]"
 
-			destination.Address = ParseAddress(valueToParse.Substring(0, lastColumnIndex));
-			ParsePortValue(valueToParse.Substring(lastColumnIndex + 1), destination);
-		}
+				var value = valueArg.Trim();
+				if (value.IsEmpty())
+					throw new FormatException($"Server address part is white space only/empty string. valueToParseArg: `{valueArg}'.");
 
-		private static string ParseAddress(string valueToParseArg)
-		{
-			// Possible values: "Name_or_IPv4_address", "IPv6_address", "[IPv6_address]"
+				var startIndex = value[0] == '[' ? 1 : 0;
+				var endIndex = value[value.Length - 1] == ']' ? value.Length - 1 : value.Length;
 
-			var valueToParse = valueToParseArg.Trim();
-			if (valueToParse.IsEmpty())
-				throw new FormatException($"Server address part is white space only/empty string. valueToParseArg: `{valueToParseArg}'.");
+				return value.Substring(startIndex, endIndex - startIndex).Trim();
+			}
 
-			var startIndex = valueToParse[0] == '[' ? 1 : 0;
-			var endIndex = valueToParse[valueToParse.Length - 1] == ']' ? valueToParse.Length - 1 : valueToParse.Length;
+			private void ParsePortValue(string valueToParse)
+			{
+				if (string.IsNullOrWhiteSpace(valueToParse))
+					throw new FormatException($"Port part of server value is white space only/empty string. valueToParse: `{valueToParse}'.");
 
-			return valueToParse.Substring(startIndex, endIndex - startIndex).Trim();
-		}
+				if (! int.TryParse(valueToParse, NumberStyles.Integer, CultureInfo.InvariantCulture, out var port))
+					throw new FormatException($"Failed to parse port part of server value. valueToParse: `{valueToParse}'.");
 
-		private static void ParsePortValue(string valueToParse, Destination destination)
-		{
-			if (string.IsNullOrWhiteSpace(valueToParse))
-				throw new FormatException($"Port part of server value is white space only/empty string. valueToParse: `{valueToParse}'.");
+				if (port < 0)
+					throw new FormatException($"Port part of server value is a negative integer. port: {port}. valueToParse: `{valueToParse}'.");
 
-			if (! int.TryParse(valueToParse, NumberStyles.Integer, CultureInfo.InvariantCulture, out var port))
-				throw new FormatException($"Failed to parse port part of server value. valueToParse: `{valueToParse}'.");
-
-			if (port < 0)
-				throw new FormatException($"Port part of server value is a negative integer. port: {port}. valueToParse: `{valueToParse}'.");
-
-			destination.Port = port;
+				_destination.Port = port;
+			}
 		}
 	}
 }
