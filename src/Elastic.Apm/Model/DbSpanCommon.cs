@@ -102,6 +102,7 @@ namespace Elastic.Apm.Model
 			if (isEmbeddedDb || dbConnectionString == null) return null;
 
 			var destination = _dbConnectionStringParser.ExtractDestination(dbConnectionString);
+			if (destination == null ) return null;
 
 			if (!destination.Port.HasValue) destination.Port = defaultPort;
 
