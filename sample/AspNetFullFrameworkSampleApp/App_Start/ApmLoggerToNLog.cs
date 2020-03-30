@@ -8,17 +8,30 @@ namespace AspNetFullFrameworkSampleApp
 {
 	internal class ApmLoggerToNLog : IApmLogger
 	{
-		public bool IsEnabled(ApmLogLevel level) => true;
+		private readonly Lazy<Logger> _logger;
+
+		public bool IsEnabled(ApmLogLevel level) => _logger.Value.IsEnabled(ConvertLevel(level));
+
+		public ApmLoggerToNLog()
+			:this(string.Empty)
+		{
+
+		}
+
+		public ApmLoggerToNLog(string loggerName) => _logger = new Lazy<Logger>(() => LogManager.GetLogger(loggerName ?? string.Empty), true);
 
 		public void Log<TState>(ApmLogLevel apmLogLevel, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{
-			var nlogger = LogManager.GetLogger("");
+			var nlogLevel = ConvertLevel(apmLogLevel);
+			var nlogger = _logger.Value;
+			if (!nlogger.IsEnabled(nlogLevel))
+				return;
 
 			var message = formatter(state, e);
 			if (e == null)
-				nlogger.Log(ConvertLevel(apmLogLevel), message);
+				nlogger.Log(nlogLevel, message);
 			else
-				nlogger.Log(ConvertLevel(apmLogLevel), e, message);
+				nlogger.Log(nlogLevel, e, message);
 		}
 
 		private static NLogLevel ConvertLevel(ApmLogLevel apmLogLevel)
