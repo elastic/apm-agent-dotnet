@@ -18,10 +18,7 @@ namespace AspNetFullFrameworkSampleApp
 
 		}
 
-		public ApmLoggerToNLog(string loggerName)
-		{
-			_logger = new Lazy<Logger>(() => LogManager.GetLogger(loggerName ?? string.Empty), true);
-		}
+		public ApmLoggerToNLog(string loggerName) => _logger = new Lazy<Logger>(() => LogManager.GetLogger(loggerName ?? string.Empty), true);
 
 		public void Log<TState>(ApmLogLevel apmLogLevel, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{
