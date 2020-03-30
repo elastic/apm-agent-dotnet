@@ -8,6 +8,8 @@ using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
+using System.Diagnostics;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests.ApiTests
 {
@@ -27,6 +29,8 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		private const string TransactionName = "ConvenientApiTest";
 		private const string TransactionType = "Test";
+
+		public ConvenientApiTransactionTests(ITestOutputHelper testOutputHelper) => testOutputHelper.WriteLine($" Stopwatch.Frequency: {Stopwatch.Frequency}");
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action, DistributedTracingData)" /> method.
