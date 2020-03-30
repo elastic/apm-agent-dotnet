@@ -148,10 +148,10 @@ namespace Elastic.Apm.Tests
 			var handlerCompleted = false;
 			var mockConfig = new MockConfigSnapshot(maxBatchEventCount: "1", flushInterval: "0");
 
-			// The handler is executed in PayloadSenderV2, where all exceptions are handled - no exception bubbles up from PayloadSenderV2 (reason is that in prod if the HTTP Request fails, agent handles it and doesn't let it bubble up
-			// From this reason, failing asserts are also handled - a failing assert would not make the test fail, because the exception thrown be XUnit is caught by PayloadSenderV2
-			// So we simply store the exceptions in the variable below and assert on that after the code from the handler with the asserts were executed.
-			Exception exception = null;
+			// The handler is executed in PayloadSenderV2, in a separate thread where all exceptions are handled.
+			// No exception bubbles up from PayloadSenderV2 (reason is that in prod if the HTTP Request fails, agent handles it and doesn't let it bubble up)
+			// To hold up the test we use TaskCompletionSource and control its result within the PayloadSender's thread
+			var taskCompletionSource = new TaskCompletionSource<object>();
 
 			var handler = RegisterHandlerAndAssert((transactions, spans, errors) =>
 			{
@@ -159,10 +159,11 @@ namespace Elastic.Apm.Tests
 				try
 				{
 					assert(transactions, spans, errors);
+					taskCompletionSource.SetResult(null);
 				}
 				catch (Exception e)
 				{
-					exception = e;
+					taskCompletionSource.SetException(e);
 					throw;
 				}
 			});
@@ -176,7 +177,9 @@ namespace Elastic.Apm.Tests
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) executeCodeThatGeneratesData(agent);
 
-			exception.Should().BeNull();
+			// hold the test run until the event is processed within PayloadSender's thread
+			var _ = taskCompletionSource.Task.Result;
+
 			handlerCompleted.Should().BeTrue();
 		}
 
