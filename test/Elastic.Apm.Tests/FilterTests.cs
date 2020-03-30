@@ -145,7 +145,6 @@ namespace Elastic.Apm.Tests
 			Action<List<Transaction>, List<Span>, List<Error>> assert
 		)
 		{
-			var handlerCompleted = false;
 			var mockConfig = new MockConfigSnapshot(maxBatchEventCount: "1", flushInterval: "0");
 
 			// The handler is executed in PayloadSenderV2, in a separate thread where all exceptions are handled.
@@ -155,7 +154,6 @@ namespace Elastic.Apm.Tests
 
 			var handler = RegisterHandlerAndAssert((transactions, spans, errors) =>
 			{
-				handlerCompleted = true;
 				try
 				{
 					assert(transactions, spans, errors);
@@ -173,14 +171,15 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new PayloadSenderV2(noopLogger, mockConfig,
 				Service.GetDefaultService(mockConfig, noopLogger), new Api.System(), handler);
 
+			// Make sure the work-loop task of PayloadSenderV2 is started
+			Thread.Sleep(1000);
+
 			registerFilters(payloadSender);
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) executeCodeThatGeneratesData(agent);
 
 			// hold the test run until the event is processed within PayloadSender's thread
 			var _ = taskCompletionSource.Task.Result;
-
-			handlerCompleted.Should().BeTrue();
 		}
 
 		private static MockHttpMessageHandler RegisterHandlerAndAssert(Action<List<Transaction>, List<Span>, List<Error>> assert) =>
