@@ -10,6 +10,7 @@ using SampleAspNetCoreApp;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
+	[Collection("DiagnosticListenerTest")]
 	public class TraceIdWithActivityTests: IClassFixture<WebApplicationFactory<Startup>>, IDisposable
 	{
 		private readonly ApmAgent _agent;
