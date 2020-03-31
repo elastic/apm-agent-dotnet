@@ -73,9 +73,23 @@ namespace Elastic.Apm.Model
 			var isSamplingFromDistributedTracingData = false;
 			if (distributedTracingData == null)
 			{
-				var traceIdBytes = new byte[16];
-				TraceId = RandomGenerator.GenerateRandomBytesAsString(traceIdBytes);
+				// Here we ignore Activity.Current.ActivityTraceFlags because it starts out without setting the IsSampled flag, so relying on that would mean a transaction is never sampled.
 				IsSampled = sampler.DecideIfToSample(idBytes);
+
+				if (Activity.Current != null && Activity.Current.IdFormat == ActivityIdFormat.W3C)
+				{
+					TraceId = Activity.Current.TraceId.ToString();
+					ParentId = Activity.Current.ParentId;
+
+					// Also mark the sampling decision on the Activity
+					if(IsSampled)
+						Activity.Current.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
+				}
+				else
+				{
+					var traceIdBytes = new byte[16];
+					TraceId = RandomGenerator.GenerateRandomBytesAsString(traceIdBytes);
+				}
 			}
 			else
 			{

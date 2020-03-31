@@ -79,23 +79,23 @@ namespace Elastic.Apm.AspNetCore
 				Transaction transaction;
 				var transactionName = $"{context.Request.Method} {context.Request.Path}";
 
-				if (context.Request.Headers.ContainsKey(DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed)
-					|| context.Request.Headers.ContainsKey(DistributedTracing.TraceContext.TraceParentHeaderName))
+				if (context.Request.Headers.ContainsKey(TraceContext.TraceParentHeaderNamePrefixed)
+					|| context.Request.Headers.ContainsKey(TraceContext.TraceParentHeaderName))
 				{
-					var headerValue = context.Request.Headers.ContainsKey(DistributedTracing.TraceContext.TraceParentHeaderName)
-						? context.Request.Headers[DistributedTracing.TraceContext.TraceParentHeaderName].ToString()
-						: context.Request.Headers[DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed].ToString();
+					var headerValue = context.Request.Headers.ContainsKey(TraceContext.TraceParentHeaderName)
+						? context.Request.Headers[TraceContext.TraceParentHeaderName].ToString()
+						: context.Request.Headers[TraceContext.TraceParentHeaderNamePrefixed].ToString();
 
-					var tracingData = context.Request.Headers.ContainsKey(DistributedTracing.TraceContext.TraceStateHeaderName)
-						? DistributedTracing.TraceContext.TryExtractTracingData(headerValue, context.Request.Headers[DistributedTracing.TraceContext.TraceStateHeaderName].ToString())
-						: DistributedTracing.TraceContext.TryExtractTracingData(headerValue);
+					var tracingData = context.Request.Headers.ContainsKey(TraceContext.TraceStateHeaderName)
+						? TraceContext.TryExtractTracingData(headerValue, context.Request.Headers[TraceContext.TraceStateHeaderName].ToString())
+						: TraceContext.TryExtractTracingData(headerValue);
 
 					if (tracingData != null)
 					{
 						_logger.Debug()
 							?.Log(
 								"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData}. Continuing trace.",
-								DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed, tracingData);
+								TraceContext.TraceParentHeaderNamePrefixed, tracingData);
 
 						transaction = _tracer.StartTransactionInternal(
 							transactionName,
@@ -107,7 +107,7 @@ namespace Elastic.Apm.AspNetCore
 						_logger.Debug()
 							?.Log(
 								"Incoming request with invalid {TraceParentHeaderName} header (received value: {TraceParentHeaderValue}). Starting trace with new trace id.",
-								DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed, headerValue);
+								TraceContext.TraceParentHeaderNamePrefixed, headerValue);
 
 						transaction = _tracer.StartTransactionInternal(transactionName,
 							ApiConstants.TypeRequest);
