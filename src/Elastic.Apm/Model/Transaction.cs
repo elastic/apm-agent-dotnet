@@ -70,6 +70,8 @@ namespace Elastic.Apm.Model
 			HasCustomName = false;
 			Type = type;
 
+			StartActivity();
+
 			var isSamplingFromDistributedTracingData = false;
 			if (distributedTracingData == null)
 			{
@@ -82,14 +84,11 @@ namespace Elastic.Apm.Model
 					ParentId = Activity.Current.ParentId;
 
 					// Also mark the sampling decision on the Activity
-					if(IsSampled)
+					if (IsSampled)
 						Activity.Current.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
 				}
 				else
-				{
-					var traceIdBytes = new byte[16];
-					TraceId = RandomGenerator.GenerateRandomBytesAsString(traceIdBytes);
-				}
+					TraceId = _activity.TraceId.ToString();
 			}
 			else
 			{
@@ -120,7 +119,22 @@ namespace Elastic.Apm.Model
 						" Start time: {Time} (as timestamp: {Timestamp})",
 						this, IsSampled, sampler, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 			}
+
+			void StartActivity()
+			{
+				_activity = new Activity("ElasticApm.Transaction");
+				_activity.SetIdFormat(ActivityIdFormat.W3C);
+				_activity.Start();
+			}
 		}
+
+		/// <summary>
+		/// The agent also starts an Activity when a transaction is started and stops it when the transaction ends.
+		/// The TraceId of this activity is always the same as the TraceId of the transaction.
+		/// With this, in case Activity.Current is null, the agent will set it and when the next Activity gets created it'll
+		/// have this activity as its parent and the TraceId will flow to all Activity instances.
+		/// </summary>
+		private Activity _activity;
 
 		private bool _isEnded;
 
@@ -271,13 +285,14 @@ namespace Elastic.Apm.Model
 						TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
 			}
 
+			_activity?.Stop();
+
 			var isFirstEndCall = !_isEnded;
 			_isEnded = true;
-			if (isFirstEndCall)
-			{
-				_sender.QueueTransaction(this);
-				_currentExecutionSegmentsContainer.CurrentTransaction = null;
-			}
+			if (!isFirstEndCall) return;
+
+			_sender.QueueTransaction(this);
+			_currentExecutionSegmentsContainer.CurrentTransaction = null;
 		}
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)

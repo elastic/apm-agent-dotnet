@@ -32,7 +32,8 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
-		/// Makes sure that even if an activity is active, the agent will ignore it and not try to reuse the traceId if the IdFormat of the
+		/// Makes sure that even if an activity is active, the agent will ignore it and not try to reuse the traceId if the
+		/// IdFormat of the
 		/// activity is NOT w3c.
 		/// </summary>
 		[Fact]
@@ -50,6 +51,58 @@ namespace Elastic.Apm.Tests
 			payloadSender.FirstTransaction.TraceId.Should().NotBe(activity.TraceId.ToString());
 
 			activity.Stop();
+		}
+
+		/// <summary>
+		/// First starts an Elastic APM transaction, then starts an activity.
+		/// Makes sure the activity has the same TraceId as the transaction.
+		/// </summary>
+		[Fact]
+		public void StartActivityAfterTransaction()
+		{
+			Activity.Current = null;
+
+			string activityTraceId = null;
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("TestTransaction", "Test", () =>
+				{
+					var activity = new Activity("UnitTestActivity");
+					activity.Start();
+					Thread.Sleep(10);
+					activityTraceId = activity.TraceId.ToString();
+					activity.Stop();
+				});
+			}
+
+			activityTraceId.Should().Be(payloadSender.FirstTransaction.TraceId);
+		}
+
+		/// <summary>
+		/// Same as <see cref="StartActivityAfterTransaction" />, but sets ActivityIdFormat.Hierarchical first.
+		/// </summary>
+		[Fact]
+		public void StartActivityWithHierarchicalIdAfterTransaction()
+		{
+			Activity.Current = null;
+			Activity.DefaultIdFormat = ActivityIdFormat.Hierarchical;
+
+			string activityTraceId = null;
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				agent.Tracer.CaptureTransaction("TestTransaction", "Test", () =>
+				{
+					var activity = new Activity("UnitTestActivity");
+					activity.Start();
+					Thread.Sleep(10);
+					activityTraceId = activity.TraceId.ToString();
+					activity.Stop();
+				});
+			}
+
+			activityTraceId.Should().Be(payloadSender.FirstTransaction.TraceId);
 		}
 	}
 }
