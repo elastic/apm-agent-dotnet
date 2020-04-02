@@ -6,17 +6,27 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Newtonsoft.Json;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
 	public class FilterTests
 	{
+		private readonly IApmLogger _logger;
+
+		public FilterTests(ITestOutputHelper testOutputHelper)
+		{
+			var adapter = new XunitOutputToLineWriterAdaptor(testOutputHelper, nameof(FilterTests));
+			_logger = new LineWriterToLoggerAdaptor(new SplittingLineWriter(adapter), LogLevel.Trace);
+		}
 		/// <summary>
 		/// Registers 2 transaction filters - one changes the transaction name, one changes the transaction type.
 		/// Makes sure changes are applied to the serialized transaction.
@@ -176,7 +186,7 @@ namespace Elastic.Apm.Tests
 
 			registerFilters(payloadSender);
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender))) executeCodeThatGeneratesData(agent);
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, logger: _logger))) executeCodeThatGeneratesData(agent);
 
 			// hold the test run until the event is processed within PayloadSender's thread
 			var _ = taskCompletionSource.Task.Result;
