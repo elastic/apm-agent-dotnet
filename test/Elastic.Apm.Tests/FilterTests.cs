@@ -15,6 +15,7 @@ using FluentAssertions;
 using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
+using Timer = System.Timers.Timer;
 
 namespace Elastic.Apm.Tests
 {
@@ -27,6 +28,7 @@ namespace Elastic.Apm.Tests
 			var adapter = new XunitOutputToLineWriterAdaptor(testOutputHelper, nameof(FilterTests));
 			_logger = new LineWriterToLoggerAdaptor(new SplittingLineWriter(adapter), LogLevel.Trace);
 		}
+
 		/// <summary>
 		/// Registers 2 transaction filters - one changes the transaction name, one changes the transaction type.
 		/// Makes sure changes are applied to the serialized transaction.
@@ -164,8 +166,8 @@ namespace Elastic.Apm.Tests
 
 			// If from some reason the handler is not executed a timer is here defined that
 			// sets the task to cancelled, so the test is guaranteed to end
-			var timer = new System.Timers.Timer(20000);
-			timer.Elapsed += (o,args) => { taskCompletionSource.SetCanceled(); };
+			var timer = new Timer(20000);
+			timer.Elapsed += (o, args) => { taskCompletionSource.SetCanceled(); };
 			timer.Start();
 
 			var handler = RegisterHandlerAndAssert((transactions, spans, errors) =>
@@ -197,7 +199,7 @@ namespace Elastic.Apm.Tests
 			new MockHttpMessageHandler((r, c) =>
 			{
 				var content = r.Content.ReadAsStringAsync().Result;
-				var payloadStrings = content.Split('\n');
+				var payloadStrings = content.Split(Environment.NewLine.ToCharArray());
 
 				var transactions = new List<Transaction>();
 				var spans = new List<Span>();
