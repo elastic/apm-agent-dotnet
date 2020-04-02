@@ -21,10 +21,7 @@ namespace Elastic.Apm.Helpers
 
 		internal const int MaxNestingDepth = 100;
 
-		internal DbConnectionStringParser(IApmLogger logger)
-		{
-			_logger = logger.Scoped(ThisClassName);
-		}
+		internal DbConnectionStringParser(IApmLogger logger) => _logger = logger.Scoped(ThisClassName);
 
 		/// <returns><c>Destination</c> if successful and <c>null</c> otherwise</returns>
 		internal Destination ExtractDestination(string dbConnectionString) => ExtractDestination(dbConnectionString, out _);
@@ -170,10 +167,9 @@ namespace Elastic.Apm.Helpers
 				}
 			}
 
-			private static bool HasNestedStructure(string value)
-			{
-				return value.Length >= 2 && value[0] == NestedOpeningDelimiter && value[value.Length - 1] == NestedClosingDelimiter;
-			}
+			private static bool HasNestedStructure(string value) =>
+				value.Length >= 2
+				&& value[0] == NestedOpeningDelimiter && value[value.Length - 1] == NestedClosingDelimiter;
 
 			private static int FindMatchingClosingDelimiter(string str, int openingDelimiterIndex)
 			{
