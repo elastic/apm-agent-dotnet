@@ -162,6 +162,10 @@ namespace Elastic.Apm.Tests
 			// To hold up the test we use TaskCompletionSource and control its result within the PayloadSender's thread
 			var taskCompletionSource = new TaskCompletionSource<object>();
 
+			var timer = new System.Timers.Timer(20000);
+			timer.Elapsed += (o,args) => { taskCompletionSource.SetCanceled(); };
+			timer.Start();
+
 			var handler = RegisterHandlerAndAssert((transactions, spans, errors) =>
 			{
 				try

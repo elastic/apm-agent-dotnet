@@ -260,33 +260,6 @@ namespace Elastic.Apm.Report
 					ndjson.AppendLine($"{{\"{eventType}\": " + serialized + "}}");
 					_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItem}", item, serialized);
 				}
-
-				// Executes filters for the given filter collection and handles return value and errors
-				bool TryExecuteFilter<T>(IEnumerable<Func<T, bool>> filters, T item)
-				{
-					var includeTransaction = true;
-					var enumerable = filters as Func<T, bool>[] ?? filters.ToArray();
-					if (!enumerable.Any()) return true;
-
-					foreach (var filter in enumerable)
-					{
-						try
-						{
-							_logger?.Trace()?.Log("Start executing filter on transaction");
-							includeTransaction = filter(item);
-							if (includeTransaction) continue;
-
-							_logger?.Debug()?.Log("Filter returns false, item won't be sent, {filteredItemm}", item);
-							break;
-						}
-						catch(Exception e)
-						{
-							_logger.Warning()?.LogException(e, "Exception during execution of the filter on transaction");
-						}
-					}
-
-					return includeTransaction;
-				}
 			}
 			catch (Exception e)
 			{
@@ -297,6 +270,33 @@ namespace Elastic.Apm.Report
 						, HttpClientInstance.BaseAddress
 						, TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray()))
 					);
+			}
+
+			// Executes filters for the given filter collection and handles return value and errors
+			bool TryExecuteFilter<T>(IEnumerable<Func<T, bool>> filters, T item)
+			{
+				var sendEvent = true;
+				var enumerable = filters as Func<T, bool>[] ?? filters.ToArray();
+				if (!enumerable.Any()) return true;
+
+				foreach (var filter in enumerable)
+				{
+					try
+					{
+						_logger?.Trace()?.Log("Start executing filter on transaction");
+						sendEvent = filter(item);
+						if (sendEvent) continue;
+
+						_logger?.Debug()?.Log("Filter returns false, item won't be sent, {filteredItemm}", item);
+						break;
+					}
+					catch (Exception e)
+					{
+						_logger.Warning()?.LogException(e, "Exception during execution of the filter on transaction");
+					}
+				}
+
+				return sendEvent;
 			}
 		}
 	}
