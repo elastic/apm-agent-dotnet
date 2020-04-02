@@ -182,10 +182,8 @@ namespace Elastic.Apm.Tests
 				}
 			});
 
-			var noopLogger = new NoopLogger();
-
-			var payloadSender = new PayloadSenderV2(noopLogger, mockConfig,
-				Service.GetDefaultService(mockConfig, noopLogger), new Api.System(), handler);
+			var payloadSender = new PayloadSenderV2(_logger, mockConfig,
+				Service.GetDefaultService(mockConfig, _logger), new Api.System(), handler);
 
 			registerFilters(payloadSender);
 
