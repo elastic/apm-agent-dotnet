@@ -162,6 +162,8 @@ namespace Elastic.Apm.Tests
 			// To hold up the test we use TaskCompletionSource and control its result within the PayloadSender's thread
 			var taskCompletionSource = new TaskCompletionSource<object>();
 
+			// If from some reason the handler is not executed a timer is here defined that
+			// sets the task to cancelled, so the test is guaranteed to end
 			var timer = new System.Timers.Timer(20000);
 			timer.Elapsed += (o,args) => { taskCompletionSource.SetCanceled(); };
 			timer.Start();
@@ -185,12 +187,14 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new PayloadSenderV2(noopLogger, mockConfig,
 				Service.GetDefaultService(mockConfig, noopLogger), new Api.System(), handler);
 
-			// Make sure the work-loop task of PayloadSenderV2 is started
-			Thread.Sleep(1000);
-
 			registerFilters(payloadSender);
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, logger: _logger))) executeCodeThatGeneratesData(agent);
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, logger: _logger)))
+			{
+				// Make sure the work-loop task of PayloadSenderV2 is started
+				Thread.Sleep(1000);
+				executeCodeThatGeneratesData(agent);
+			}
 
 			// hold the test run until the event is processed within PayloadSender's thread
 			var _ = taskCompletionSource.Task.Result;
