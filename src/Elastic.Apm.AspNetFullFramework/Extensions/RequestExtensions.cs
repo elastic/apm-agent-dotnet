@@ -82,17 +82,11 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 		{
 			try
 			{
-
-
 				var settings = new XmlReaderSettings
 				{
 					IgnoreProcessingInstructions = true,
 					IgnoreComments = true,
-					IgnoreWhitespace = true,
-					ConformanceLevel = ConformanceLevel.Auto,
-					ValidationType = ValidationType.None,
-					DtdProcessing = DtdProcessing.Ignore,
-					ValidationFlags= System.Xml.Schema.XmlSchemaValidationFlags.None
+					IgnoreWhitespace = true
 				};
 
 				var reader = XmlReader.Create(stream, settings);
