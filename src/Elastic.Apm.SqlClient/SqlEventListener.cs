@@ -30,9 +30,7 @@ namespace Elastic.Apm.SqlClient
 			// Event listening for Microsoft.Data.SqlClient will be enabled later after https://github.com/dotnet/SqlClient/issues/436 fix
 			if (eventSource != null && eventSource.Name == "Microsoft-AdoNet-SystemData"
 				&& eventSource.GetType().FullName == "System.Data.SqlEventSource")
-			{
 				EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)1);
-			}
 
 			base.OnEventSourceCreated(eventSource);
 		}
@@ -43,6 +41,14 @@ namespace Elastic.Apm.SqlClient
 		protected override void OnEventWritten(EventWrittenEventArgs eventData)
 		{
 			if (eventData?.Payload == null) return;
+
+			// Check for competing instrumentation
+			if (_apmAgent.TracerInternal.CurrentTransaction is Transaction transaction)
+			{
+				if ((transaction.ActiveInstrumentationFlags & InstrumentationFlag.EfCore) == InstrumentationFlag.EfCore
+					|| (transaction.ActiveInstrumentationFlags & InstrumentationFlag.EfClassic) == InstrumentationFlag.EfClassic)
+					return;
+			}
 
 			try
 			{

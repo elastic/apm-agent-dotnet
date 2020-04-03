@@ -100,7 +100,7 @@ namespace Elastic.Apm.AspNetCore
 						transaction = _tracer.StartTransactionInternal(
 							transactionName,
 							ApiConstants.TypeRequest,
-							tracingData);
+							tracingData, InstrumentationFlag.AspNetCore);
 					}
 					else
 					{
@@ -110,14 +110,14 @@ namespace Elastic.Apm.AspNetCore
 								DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed, headerValue);
 
 						transaction = _tracer.StartTransactionInternal(transactionName,
-							ApiConstants.TypeRequest);
+							ApiConstants.TypeRequest, instrumentationFlag: InstrumentationFlag.AspNetCore);
 					}
 				}
 				else
 				{
 					_logger.Debug()?.Log("Incoming request. Starting Trace.");
 					transaction = _tracer.StartTransactionInternal(transactionName,
-						ApiConstants.TypeRequest);
+						ApiConstants.TypeRequest, instrumentationFlag: InstrumentationFlag.AspNetCore);
 				}
 
 				return transaction;

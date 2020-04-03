@@ -22,12 +22,19 @@ namespace Elastic.Apm.EntityFrameworkCore
 
 		public void OnNext(KeyValuePair<string, object> kv)
 		{
+			// check for competing instrumentation
+			if (_agent.TracerInternal.CurrentTransaction is Transaction transaction)
+			{
+				if ((transaction.ActiveInstrumentationFlags & InstrumentationFlag.SqlClient) == InstrumentationFlag.SqlClient)
+					return;
+			}
+
 			switch (kv.Key)
 			{
 				case { } k when k == RelationalEventId.CommandExecuting.Name && _agent.Tracer.CurrentTransaction != null:
 					if (kv.Value is CommandEventData commandEventData)
 					{
-						var newSpan = _agent.TracerInternal.DbSpanCommon.StartSpan(_agent, commandEventData.Command);
+						var newSpan = _agent.TracerInternal.DbSpanCommon.StartSpan(_agent, commandEventData.Command, InstrumentationFlag.EfCore);
 						_spans.TryAdd(commandEventData.CommandId, newSpan);
 					}
 					break;

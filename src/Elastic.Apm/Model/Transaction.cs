@@ -54,7 +54,8 @@ namespace Elastic.Apm.Model
 			DistributedTracingData distributedTracingData,
 			IPayloadSender sender,
 			IConfigSnapshot configSnapshot,
-			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer
+			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
+			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None
 		)
 		{
 			ConfigSnapshot = configSnapshot;
@@ -69,6 +70,7 @@ namespace Elastic.Apm.Model
 			Name = name;
 			HasCustomName = false;
 			Type = type;
+			ActiveInstrumentationFlags = instrumentationFlag;
 
 			var isSamplingFromDistributedTracingData = false;
 			if (distributedTracingData == null)
@@ -111,6 +113,14 @@ namespace Elastic.Apm.Model
 		private bool _isEnded;
 
 		private string _name;
+
+		/// <summary>
+		/// Stores the currently active instrumentation on the given transaction.
+		/// This can be used in "competing instrumentation" scenarios.
+		/// E.g. if 2 instrumentation would create the same span, each can look for the other instrumentation's flag here
+		/// and know if the other already captured something on this transaction
+		/// </summary>
+		internal InstrumentationFlag ActiveInstrumentationFlags { get; set; }
 
 		/// <summary>
 		/// Holds configuration snapshot (which is immutable) that was current when this transaction started.
@@ -269,9 +279,12 @@ namespace Elastic.Apm.Model
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
 			=> StartSpanInternal(name, type, subType, action);
 
-		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
+		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
+			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None
+		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer);
+			ActiveInstrumentationFlags |= instrumentationFlag;
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 

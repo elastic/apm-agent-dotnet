@@ -6,7 +6,6 @@ using System.Web;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetFullFramework.Extensions;
 using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
@@ -116,14 +115,14 @@ namespace Elastic.Apm.AspNetFullFramework
 						"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData} - continuing trace",
 						DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed, distributedTracingData);
 
-				_currentTransaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, distributedTracingData);
+				_currentTransaction = Agent.Instance.TracerInternal.StartTransactionInternal(transactionName, ApiConstants.TypeRequest, distributedTracingData, InstrumentationFlag.AspNetClassic);
 			}
 			else
 			{
 				_logger.Debug()
 					?.Log("Incoming request doesn't have valid incoming distributed tracing data - starting trace with new trace ID");
 
-				_currentTransaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest);
+				_currentTransaction = Agent.Instance.TracerInternal.StartTransactionInternal(transactionName, ApiConstants.TypeRequest, instrumentationFlag: InstrumentationFlag.AspNetClassic);
 			}
 
 			if (_currentTransaction.IsSampled) FillSampledTransactionContextRequest(httpRequest, _currentTransaction);

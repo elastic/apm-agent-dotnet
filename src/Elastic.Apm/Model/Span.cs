@@ -164,9 +164,11 @@ namespace Elastic.Apm.Model
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
 			=> StartSpanInternal(name, type, subType, action);
 
-		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null)
+		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null, InstrumentationFlag instrumentationFlag = InstrumentationFlag.None)
 		{
 			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer, this);
+			_enclosingTransaction.ActiveInstrumentationFlags |= instrumentationFlag;
+
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 
 			if (!string.IsNullOrEmpty(action)) retVal.Action = action;

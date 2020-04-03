@@ -45,6 +45,14 @@ namespace Elastic.Apm.SqlClient
 		// prefix - Microsoft.Data.SqlClient. or System.Data.SqlClient.
 		public void OnNext(KeyValuePair<string, object> value)
 		{
+			// check for competing instrumentation
+			if (_apmAgent.TracerInternal.CurrentTransaction is Transaction transaction)
+			{
+				if ((transaction.ActiveInstrumentationFlags & InstrumentationFlag.EfCore) == InstrumentationFlag.EfCore
+					|| (transaction.ActiveInstrumentationFlags & InstrumentationFlag.EfClassic) == InstrumentationFlag.EfClassic)
+					return;
+			}
+
 			if (value.Key.StartsWith("Microsoft.Data.SqlClient.") || value.Key.StartsWith("System.Data.SqlClient."))
 			{
 				switch (value.Key)
@@ -69,7 +77,7 @@ namespace Elastic.Apm.SqlClient
 				if (propertyFetcherSet.StartCorrelationId.Fetch(payloadData) is Guid operationId
 					&& propertyFetcherSet.StartCommand.Fetch(payloadData) is IDbCommand dbCommand)
 				{
-					var span = _apmAgent.TracerInternal.DbSpanCommon.StartSpan(_apmAgent, dbCommand);
+					var span = _apmAgent.TracerInternal.DbSpanCommon.StartSpan(_apmAgent, dbCommand, InstrumentationFlag.SqlClient);
 					_spans.TryAdd(operationId, span);
 				}
 			}
@@ -116,9 +124,7 @@ namespace Elastic.Apm.SqlClient
 					if (propertyFetcherSet.Exception.Fetch(payloadData) is Exception exception) span.CaptureException(exception);
 
 					if (propertyFetcherSet.ErrorCommand.Fetch(payloadData) is IDbCommand dbCommand)
-					{
 						_apmAgent.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand);
-					}
 					else
 					{
 						_logger.Warning()?.Log("Cannot extract database command from {PayloadData}", payloadData);

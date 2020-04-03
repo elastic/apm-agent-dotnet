@@ -20,9 +20,11 @@ namespace Elastic.Apm.Model
 
 		internal DbSpanCommon(IApmLogger logger) => _dbConnectionStringParser = new DbConnectionStringParser(logger);
 
-		internal Span StartSpan(IApmAgent agent, IDbCommand dbCommand) =>
-			(Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(agent).StartSpan(dbCommand.CommandText.Replace(Environment.NewLine, " ")
-				, ApiConstants.TypeDb);
+		internal Span StartSpan(IApmAgent agent, IDbCommand dbCommand, InstrumentationFlag instrumentationFlag)
+		{
+			var spanName = dbCommand.CommandText.Replace(Environment.NewLine, " ");
+			return ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(agent, spanName, ApiConstants.TypeDb, instrumentationFlag: instrumentationFlag);
+		}
 
 		internal void EndSpan(Span span, IDbCommand dbCommand, TimeSpan? duration = null)
 		{
