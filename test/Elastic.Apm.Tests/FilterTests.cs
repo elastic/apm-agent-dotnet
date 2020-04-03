@@ -211,19 +211,19 @@ namespace Elastic.Apm.Tests
 					{
 						case { } s when s.StartsWith("{\"transaction\":"):
 							var str = receivedEvent.Substring(16);
-							str = str.Remove(str.Length - 2);
+							str = str.Remove(str.Length - 1);
 							var transaction = JsonConvert.DeserializeObject<Transaction>(str);
 							transactions.Add(transaction);
 							break;
 						case { } s when s.StartsWith("{\"span\":"):
 							str = receivedEvent.Substring(9);
-							str = str.Remove(str.Length - 2);
+							str = str.Remove(str.Length - 1);
 							var span = JsonConvert.DeserializeObject<Span>(str);
 							spans.Add(span);
 							break;
 						case { } s when s.StartsWith("{\"error\":"):
 							str = receivedEvent.Substring(10);
-							str = str.Remove(str.Length - 2);
+							str = str.Remove(str.Length - 1);
 							var error = JsonConvert.DeserializeObject<Error>(str);
 							errors.Add(error);
 							break;

@@ -257,7 +257,7 @@ namespace Elastic.Apm.Report
 				void SerializeAndSend(object item, string eventType)
 				{
 					var serialized = _payloadItemSerializer.SerializeObject(item);
-					ndjson.AppendLine($"{{\"{eventType}\": " + serialized + "}}");
+					ndjson.AppendLine($"{{\"{eventType}\": " + serialized + "}");
 					_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItem}", item, serialized);
 				}
 			}
