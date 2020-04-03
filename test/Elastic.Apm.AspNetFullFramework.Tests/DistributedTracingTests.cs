@@ -164,7 +164,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
                   <soap12:Body>
                     <{action} xmlns=""http://tempuri.org/"" />
                   </soap12:Body>
-                </soap12:Envelope>", Encoding.UTF8, "text/xml");
+                </soap12:Envelope>", Encoding.UTF8, "application/soap+xml;");
 
 			using (var client = new HttpClient())
 			{
@@ -175,8 +175,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					Content = httpContent
 				};
 
-				client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/xml"));
-				request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/soap+xml;");
+				request.Headers.Accept.Clear();
+				request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue ("*/*"));
 
 				var response = client.SendAsync(request).Result;
 			}
