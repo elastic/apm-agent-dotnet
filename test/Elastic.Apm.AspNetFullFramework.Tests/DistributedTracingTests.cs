@@ -176,7 +176,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				};
 
 				client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/xml"));
-				request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/soap+xml; charset=utf-8");
+				request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/soap+xml;");
 
 				var response = client.SendAsync(request).Result;
 			}

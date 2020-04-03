@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Web;
 using System.Xml;
 using Elastic.Apm.Logging;
@@ -59,22 +61,61 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 		{
 			//[{"key":"Content-Type","value":"application/soap+xml; charset=utf-8"}]
 			var contentType = request.Headers.Get(ContentTypeHeaderName);
-			if (contentType?.Contains(SoapAction12ContentType) != true) return null;
-			if (!request.InputStream.CanSeek) return null;
+			if (contentType?.Contains(SoapAction12ContentType) != true)
+				return null;
+			if (!request.InputStream.CanSeek)
+				return null;
 
 			try
 			{
-				var xmlReader = new XmlTextReader(request.InputStream);
-				xmlReader.WhitespaceHandling = WhitespaceHandling.None;
-				xmlReader.Read();
-				xmlReader.ReadStartElement(); // if (xmlReader.LocalName != "Body") return null;
-				xmlReader.ReadStartElement();
-				var action = xmlReader?.LocalName;
+				var stream = request.InputStream;
+				var action = GetSoap12ActionInternal(stream);
 				return action;
 			}
 			finally
 			{
 				request.InputStream.Seek(0, SeekOrigin.Begin);
+			}
+		}
+
+		internal static string GetSoap12ActionInternal(Stream stream)
+		{
+			try
+			{
+
+
+				var settings = new XmlReaderSettings
+				{
+					IgnoreProcessingInstructions = true,
+					IgnoreComments = true,
+					IgnoreWhitespace = true,
+					ConformanceLevel = ConformanceLevel.Auto,
+					ValidationType = ValidationType.None,
+					DtdProcessing = DtdProcessing.Ignore,
+					ValidationFlags= System.Xml.Schema.XmlSchemaValidationFlags.None
+				};
+
+				var reader = XmlReader.Create(stream, settings);
+
+				reader.MoveToContent();
+				if (reader.LocalName != "Envelope")
+					return null;
+
+				if (reader.Read() && reader.LocalName == "Header")
+					reader.Skip();
+
+				if (reader.LocalName == "Body")
+					if (reader.Read())
+						return reader.LocalName;
+
+				return null;
+			}
+			catch (XmlException ex)
+			{
+				//previous code will skip some errors, but some others can raise an exception
+				//for instance undeclared namespaces, typographical quotes, etc...
+				//If that's the case we don't need to care about them here. They will flow somewere else.
+				return null;
 			}
 		}
 	}
