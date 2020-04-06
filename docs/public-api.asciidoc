@@ -19,7 +19,7 @@ You can access the API by using the static property on the Agent: `Elastic.Apm.A
 
 [float]
 [[api-start-transaction]]
-==== `ITransaction StartTransaction(string name, string type)`
+==== `ITransaction StartTransaction(string name, string type, DistributedTracingData = null)`
 Use this method to create a custom transaction.
 
 
@@ -82,7 +82,7 @@ var span = Elastic.Apm.Agent.Tracer.CurrentSpan;
 ==== `CaptureTransaction`
 
 This is a convenient method which starts and ends a transaction and captures unhandled exceptions.
-It has 3 parameters:
+It has 3 required parameters:
 
 * `name`: The name of the transaction
 * `type` The type of the transaction
@@ -95,6 +95,10 @@ It has 3 parameters:
 ** `Func<ITransaction,Task>`
 ** `Func<Task<T>>`
 ** `Func<ITransaction,Task<T>>`
+
+And an optional parameter:
+
+* `distributedTracingData`: A `DistributedTracingData` instance that contains the distributed tracing information in case you want the new transaction to be a part of a trace.
 
 The following code is the equivalent of the previous example with the convenient API. It automatically starts and ends the transaction and reports unhandled exceptions. The `t` parameter gives you access to the `ITransaction` instance which represents the transaction that you just created.
 [source,csharp]
@@ -386,6 +390,36 @@ In such a case, the name of the span will contain information about the query it
 and the type will hold information about the database type.
 
 [float]
+[[api-span-create-span]]
+==== `ISpan StartSpan(string name, string type, string subType = null, string action = null)`
+Start and return a new custom span as a child of the given span. Very similar to the <<api-transaction-create-span>> method on `ITransaction`, but in this case the parent of the newly created span is a span itself. 
+
+It is important to call <<api-span-end>> when the span has ended or to use the <<convenient-capture-span>> method.
+A best practice is to use the span in a try-catch-finally block.
+
+Example:
+
+[source,csharp]
+----
+ISpan childSpan = parentSpan.StartSpan("Select FROM customer",
+     ApiConstants.TypeDb, ApiConstants.SubtypeMssql, ApiConstants.ActionQuery);
+try
+{
+    //execute db query
+}
+catch(Exception e)
+{
+    childSpan?.CaptureException(e);
+    throw;
+}
+finally
+{
+    childSpan?.End();
+}
+----
+
+
+[float]
 [[api-span-tags]]
 ==== `Dictionary<string,string> Labels`
 Similar to <<api-transaction-tags>> on the <<api-transaction>>: A flat mapping of user-defined labels with string values.
@@ -462,3 +496,56 @@ Agent.Tracer.CurrentTransaction.CaptureSpan("MyHttpOperation", ApiConstants.Type
     span.Context.Http.StatusCode = myStatusCode;
 });
 ----
+
+[float]
+[[convenient-span-capture-span]]
+==== `CaptureSpan`
+
+This is a convenient method which starts and ends a child span on the given span and captures unhandled exceptions.
+
+Very similar to the <<convenient-capture-span>> method on `ITransaction`, but in this case the parent of the newly created span is a span itself. 
+
+It has 5 parameters:
+
+* `name`: The name of the span
+* `type` The type of the span
+*  One of the following types which references the code that you want to capture as a transaction: 
+** `Action`
+** `Action<ITransaction>`
+** `Func<T>`
+** `Func<ITransaction,T>`
+** `Func<Task>`
+** `Func<ITransaction,Task>`
+** `Func<Task<T>>`
+** `Func<ITransaction,Task<T>>`
+* `supType` (optional): The subtype of the span
+* `action` (optional): The action of the span
+
+The following code is the equivalent of the previous example from the <<api-span-create-span>> section with the convenient API. It automatically starts and ends the span and reports unhandled exceptions. The `s` parameter gives you access to the `ISpan` instance which represents the span that you just created.
+
+[source,csharp]
+----
+span.CaptureSpan("SampleSpan", ApiConstants.TypeDb, (s) =>
+{
+    //execute db query
+}, ApiConstants.SubtypeMssql, ApiConstants.ActionQuery);
+----
+
+Similar to the <<convenient-capture-transaction>> API, this method also supports `async` methods with the `Func<Task>` overloads.
+
+NOTE: The duration of the span will be the timespan between the first and the last line of the `async` lambda expression.
+
+This example shows you how to track an `async` code block that returns a result (`Task<T>`) as a span:
+[source,csharp]
+----
+var asyncResult = await span.CaptureSpan("Select FROM customer", ApiConstants.TypeDb, async(s) =>
+{
+    //application code that is captured as a span
+    await Task.Delay(500); //sample async code
+    return 42;
+});
+----
+
+NOTE: Return value of <<convenient-capture-span>> method overloads that accept Task (or Task<T>) is the same Task (or Task<T>) instance as the one passed as the argument so if your application should continue only after the task completes you have to call <<convenient-capture-span>> with `await` keyword.
+
+NOTE: Code samples above use `Elastic.Apm.Agent.Tracer.CurrentTransaction`. In production code you should make sure the `CurrentTransaction` is not `null`.
