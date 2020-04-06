@@ -44,11 +44,11 @@ namespace Elastic.Apm.Api
 		public ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null) =>
 			StartTransactionInternal(name, type, distributedTracingData);
 
-		internal Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null, InstrumentationFlag instrumentationFlag = InstrumentationFlag.None)
+		internal Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null)
 		{
 			var currentConfig = _configProvider.CurrentSnapshot;
 			var retVal = new Transaction(_logger, name, type, new Sampler(currentConfig.TransactionSampleRate), distributedTracingData
-				, _sender, currentConfig, CurrentExecutionSegmentsContainer, instrumentationFlag)
+				, _sender, currentConfig, CurrentExecutionSegmentsContainer)
 			{ Service = _service };
 
 			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);
@@ -164,7 +164,7 @@ namespace Elastic.Apm.Api
 			{
 				if (t.Exception != null)
 				{
-					if (t.Exception is AggregateException aggregateException)
+					if (t.Exception is { } aggregateException)
 					{
 						ExceptionFilter.Capture(
 							aggregateException.InnerExceptions.Count == 1

@@ -57,8 +57,8 @@ namespace Elastic.Apm.EntityFramework6
 				return null;
 
 			// Make sure DB spans were not already captured
-			if (!(Agent.Tracer.CurrentTransaction is Transaction transaction)) return impl;
-			return (transaction.ActiveInstrumentationFlags & InstrumentationFlag.SqlClient) == InstrumentationFlag.SqlClient ? null : impl;
+			if (!(Agent.Tracer.CurrentSpan is Span span)) return impl;
+			return span.InstrumentationFlag == InstrumentationFlag.SqlClient ? null : impl;
 		}
 
 		private class Impl

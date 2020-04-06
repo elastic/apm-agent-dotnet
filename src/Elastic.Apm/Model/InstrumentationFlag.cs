@@ -3,11 +3,11 @@ using System;
 namespace Elastic.Apm.Model
 {
 	/// <summary>
-	/// Represents a given instrumentation module. Each module can set its flag on a given transaction in
-	/// <see cref="Transaction.ActiveInstrumentationFlags" />.
-	/// With that every instrumentation module can know which other modules created spans on the given transaction.
-	/// In case of "competing modules" <see cref="Transaction.ActiveInstrumentationFlags" /> can be used to detect if a
-	/// competing instrumentation module already created spans on the given transaction.
+	/// Represents the presence of a given instrumentation module. Each module can set its flag on a given span in
+	/// <see cref="Span.InstrumentationFlag" />.
+	/// With that every instrumentation module can know which other modules created the given span.
+	/// In case of "competing modules" <see cref="Span.InstrumentationFlag" /> can be used to detect if a
+	/// competing instrumentation module created the given span.
 	/// </summary>
 	[Flags]
 	internal enum InstrumentationFlag : short

@@ -46,27 +46,25 @@ namespace Elastic.Apm.SqlClient
 		public void OnNext(KeyValuePair<string, object> value)
 		{
 			// check for competing instrumentation
-			if (_apmAgent.TracerInternal.CurrentTransaction is Transaction transaction)
+			if (_apmAgent.TracerInternal.CurrentSpan is Span span)
 			{
-				if ((transaction.ActiveInstrumentationFlags & InstrumentationFlag.EfCore) == InstrumentationFlag.EfCore
-					|| (transaction.ActiveInstrumentationFlags & InstrumentationFlag.EfClassic) == InstrumentationFlag.EfClassic)
+				if (span.InstrumentationFlag == InstrumentationFlag.EfCore || span.InstrumentationFlag == InstrumentationFlag.EfClassic)
 					return;
 			}
 
-			if (value.Key.StartsWith("Microsoft.Data.SqlClient.") || value.Key.StartsWith("System.Data.SqlClient."))
+			if (!value.Key.StartsWith("Microsoft.Data.SqlClient.") && !value.Key.StartsWith("System.Data.SqlClient.")) return;
+
+			switch (value.Key)
 			{
-				switch (value.Key)
-				{
-					case { } s when s.EndsWith("WriteCommandBefore") && _apmAgent.Tracer.CurrentTransaction != null:
-						HandleStartCommand(value.Value, value.Key.StartsWith("System") ? _systemPropertyFetcherSet : _microsoftPropertyFetcherSet);
-						break;
-					case { } s when s.EndsWith("WriteCommandAfter"):
-						HandleStopCommand(value.Value, value.Key.StartsWith("System") ? _systemPropertyFetcherSet : _microsoftPropertyFetcherSet);
-						break;
-					case { } s when s.EndsWith("WriteCommandError"):
-						HandleErrorCommand(value.Value, value.Key.StartsWith("System") ? _systemPropertyFetcherSet : _microsoftPropertyFetcherSet);
-						break;
-				}
+				case { } s when s.EndsWith("WriteCommandBefore") && _apmAgent.Tracer.CurrentTransaction != null:
+					HandleStartCommand(value.Value, value.Key.StartsWith("System") ? _systemPropertyFetcherSet : _microsoftPropertyFetcherSet);
+					break;
+				case { } s when s.EndsWith("WriteCommandAfter"):
+					HandleStopCommand(value.Value, value.Key.StartsWith("System") ? _systemPropertyFetcherSet : _microsoftPropertyFetcherSet);
+					break;
+				case { } s when s.EndsWith("WriteCommandError"):
+					HandleErrorCommand(value.Value, value.Key.StartsWith("System") ? _systemPropertyFetcherSet : _microsoftPropertyFetcherSet);
+					break;
 			}
 		}
 

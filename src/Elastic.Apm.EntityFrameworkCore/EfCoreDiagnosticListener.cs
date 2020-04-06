@@ -23,9 +23,9 @@ namespace Elastic.Apm.EntityFrameworkCore
 		public void OnNext(KeyValuePair<string, object> kv)
 		{
 			// check for competing instrumentation
-			if (_agent.TracerInternal.CurrentTransaction is Transaction transaction)
+			if (_agent.TracerInternal.CurrentSpan is Span currentSpan)
 			{
-				if ((transaction.ActiveInstrumentationFlags & InstrumentationFlag.SqlClient) == InstrumentationFlag.SqlClient)
+				if (currentSpan.InstrumentationFlag == InstrumentationFlag.SqlClient)
 					return;
 			}
 

@@ -43,10 +43,9 @@ namespace Elastic.Apm.SqlClient
 			if (eventData?.Payload == null) return;
 
 			// Check for competing instrumentation
-			if (_apmAgent.TracerInternal.CurrentTransaction is Transaction transaction)
+			if (_apmAgent.TracerInternal.CurrentSpan is Span span)
 			{
-				if ((transaction.ActiveInstrumentationFlags & InstrumentationFlag.EfCore) == InstrumentationFlag.EfCore
-					|| (transaction.ActiveInstrumentationFlags & InstrumentationFlag.EfClassic) == InstrumentationFlag.EfClassic)
+				if (span.InstrumentationFlag == InstrumentationFlag.EfCore || span.InstrumentationFlag == InstrumentationFlag.EfClassic)
 					return;
 			}
 

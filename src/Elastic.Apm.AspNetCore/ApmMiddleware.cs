@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.Extensions;
 using Elastic.Apm.Config;
-using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Microsoft.AspNetCore.Http;
@@ -97,10 +96,7 @@ namespace Elastic.Apm.AspNetCore
 								"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData}. Continuing trace.",
 								DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed, tracingData);
 
-						transaction = _tracer.StartTransactionInternal(
-							transactionName,
-							ApiConstants.TypeRequest,
-							tracingData, InstrumentationFlag.AspNetCore);
+						transaction = _tracer.StartTransactionInternal(transactionName, ApiConstants.TypeRequest);
 					}
 					else
 					{
@@ -109,15 +105,13 @@ namespace Elastic.Apm.AspNetCore
 								"Incoming request with invalid {TraceParentHeaderName} header (received value: {TraceParentHeaderValue}). Starting trace with new trace id.",
 								DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed, headerValue);
 
-						transaction = _tracer.StartTransactionInternal(transactionName,
-							ApiConstants.TypeRequest, instrumentationFlag: InstrumentationFlag.AspNetCore);
+						transaction = _tracer.StartTransactionInternal(transactionName, ApiConstants.TypeRequest);
 					}
 				}
 				else
 				{
 					_logger.Debug()?.Log("Incoming request. Starting Trace.");
-					transaction = _tracer.StartTransactionInternal(transactionName,
-						ApiConstants.TypeRequest, instrumentationFlag: InstrumentationFlag.AspNetCore);
+					transaction = _tracer.StartTransactionInternal(transactionName, ApiConstants.TypeRequest);
 				}
 
 				return transaction;
