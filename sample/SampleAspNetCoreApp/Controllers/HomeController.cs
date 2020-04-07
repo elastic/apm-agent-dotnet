@@ -103,6 +103,8 @@ namespace SampleAspNetCoreApp.Controllers
 			return View();
 		}
 
+		public string TraceId() => Activity.Current.TraceId.ToString();
+
 		public async Task<IActionResult> DistributedTracingMiniSample()
 		{
 			var httpClient = new HttpClient();
