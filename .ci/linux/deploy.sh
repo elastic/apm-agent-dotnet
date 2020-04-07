@@ -4,7 +4,7 @@
 #
 set -euo pipefail
 
-declare -a projectsToPublish=("Elastic.Apm" "Elastic.Apm.AspNetCore" "Elastic.Apm.EntityFrameworkCore" "Elastic.Apm.NetCoreAll" "Elastic.Apm.EntityFramework6" "Elastic.Apm.AspNetFullFramework")
+declare -a projectsToPublish=("Elastic.Apm" "Elastic.Apm.AspNetCore" "Elastic.Apm.EntityFrameworkCore" "Elastic.Apm.NetCoreAll" "Elastic.Apm.EntityFramework6" "Elastic.Apm.AspNetFullFramework" "Elastic.Apm.SqlClient")
 
 for project in  "${projectsToPublish[@]}"
 do
