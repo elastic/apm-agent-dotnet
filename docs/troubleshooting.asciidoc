@@ -58,6 +58,7 @@ internal class ApmLoggerBridge : IApmLogger
 	{
 		// You can log the given log into your logging system here.
 	}
+}
 ----
 
 An example implementation for NLog can be seen https://github.com/elastic/apm-agent-dotnet/blob/master/sample/AspNetFullFrameworkSampleApp/App_Start/ApmLoggerToNLog.cs[in our GitHub repository].
