@@ -164,7 +164,7 @@ namespace Elastic.Apm.Api
 			{
 				if (t.Exception != null)
 				{
-					if (t.Exception is AggregateException aggregateException)
+					if (t.Exception is { } aggregateException)
 					{
 						ExceptionFilter.Capture(
 							aggregateException.InnerExceptions.Count == 1

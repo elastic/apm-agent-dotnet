@@ -6,12 +6,12 @@ using Xunit;
 
 namespace Elastic.Apm.SqlClient.Tests
 {
-	public class SqlClientListenerFixture : IDisposable, IAsyncLifetime
+	public class DatabaseFixture : IDisposable, IAsyncLifetime
 	{
 		private const string ContainerName = "mssql";
 		private readonly DockerEnvironment _environment;
 
-		public SqlClientListenerFixture() =>
+		public DatabaseFixture() =>
 			// BUILD_ID env variable is passed from the CI, therefore DockerInDocker is enabled.
 			_environment = new DockerEnvironmentBuilder()
 				.DockerInDocker(Environment.GetEnvironmentVariable("BUILD_ID") != null)

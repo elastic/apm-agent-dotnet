@@ -12,7 +12,7 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.SqlClient.Tests
 {
-	public class SqlClientListenerTests : IDisposable, IClassFixture<SqlClientListenerFixture>
+	public class SqlClientListenerTests : IDisposable, IClassFixture<DatabaseFixture>
 	{
 		private readonly ApmAgent _apmAgent;
 
@@ -21,7 +21,7 @@ namespace Elastic.Apm.SqlClient.Tests
 
 		private readonly string _expectedAddress;
 
-		public SqlClientListenerTests(ITestOutputHelper testOutputHelper, SqlClientListenerFixture sqlClientListenerFixture)
+		public SqlClientListenerTests(ITestOutputHelper testOutputHelper, DatabaseFixture sqlClientListenerFixture)
 		{
 			_connectionString = sqlClientListenerFixture.ConnectionString;
 
@@ -35,7 +35,6 @@ namespace Elastic.Apm.SqlClient.Tests
 				payloadSender: _payloadSender));
 			_apmAgent.Subscribe(new SqlClientDiagnosticSubscriber());
 		}
-
 
 		private readonly string _connectionString;
 

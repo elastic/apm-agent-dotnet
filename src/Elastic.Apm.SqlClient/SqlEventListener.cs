@@ -30,9 +30,7 @@ namespace Elastic.Apm.SqlClient
 			// Event listening for Microsoft.Data.SqlClient will be enabled later after https://github.com/dotnet/SqlClient/issues/436 fix
 			if (eventSource != null && eventSource.Name == "Microsoft-AdoNet-SystemData"
 				&& eventSource.GetType().FullName == "System.Data.SqlEventSource")
-			{
 				EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)1);
-			}
 
 			base.OnEventSourceCreated(eventSource);
 		}
@@ -43,6 +41,13 @@ namespace Elastic.Apm.SqlClient
 		protected override void OnEventWritten(EventWrittenEventArgs eventData)
 		{
 			if (eventData?.Payload == null) return;
+
+			// Check for competing instrumentation
+			if (_apmAgent.TracerInternal.CurrentSpan is Span span)
+			{
+				if (span.InstrumentationFlag == InstrumentationFlag.EfCore || span.InstrumentationFlag == InstrumentationFlag.EfClassic)
+					return;
+			}
 
 			try
 			{
@@ -85,7 +90,9 @@ namespace Elastic.Apm.SqlClient
 				? commandText.Replace(Environment.NewLine, "")
 				: database;
 
-			var span = (Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(_apmAgent)?.StartSpan(spanName, ApiConstants.TypeDb);
+			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(_apmAgent, spanName, ApiConstants.TypeDb, ApiConstants.SubtypeMssql,
+				InstrumentationFlag.SqlClient);
+
 			if (span == null) return;
 
 			if (_processingSpans.TryAdd(id, (span, start)))
