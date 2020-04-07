@@ -90,7 +90,9 @@ namespace Elastic.Apm.SqlClient
 				? commandText.Replace(Environment.NewLine, "")
 				: database;
 
-			var span = (Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(_apmAgent)?.StartSpan(spanName, ApiConstants.TypeDb);
+			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(_apmAgent, spanName, ApiConstants.TypeDb, ApiConstants.SubtypeMssql,
+				InstrumentationFlag.SqlClient);
+
 			if (span == null) return;
 
 			if (_processingSpans.TryAdd(id, (span, start)))
