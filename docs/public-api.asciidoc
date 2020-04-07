@@ -260,7 +260,8 @@ This method is typically used when you want to report an error, but you don't ha
 ==== `CaptureSpan`
 
 This is a convenient method which starts and ends a span on the given transaction and captures unhandled exceptions. It has the same overloads as the <<convenient-capture-transaction>> method.
-It has 5 parameters:
+
+It has 3 required parameters:
 
 * `name`: The name of the span
 * `type` The type of the span
@@ -273,8 +274,11 @@ It has 5 parameters:
 ** `Func<ITransaction,Task>`
 ** `Func<Task<T>>`
 ** `Func<ITransaction,Task<T>>`
-* `supType` (optional): The subtype of the span
-* `action` (optional): The action of the span
+
+and 2 optional parameters:
+
+* `supType`: The subtype of the span
+* `action`: The action of the span
 
 The following code is the equivalent of the previous example from the <<api-transaction-create-span>> section with the convenient API. It automatically starts and ends the span and reports unhandled exceptions. The `s` parameter gives you access to the `ISpan` instance which represents the span that you just created.
 
@@ -505,7 +509,7 @@ This is a convenient method which starts and ends a child span on the given span
 
 Very similar to the <<convenient-capture-span>> method on `ITransaction`, but in this case the parent of the newly created span is a span itself. 
 
-It has 5 parameters:
+It has 3 required parameters:
 
 * `name`: The name of the span
 * `type` The type of the span
@@ -518,8 +522,11 @@ It has 5 parameters:
 ** `Func<ITransaction,Task>`
 ** `Func<Task<T>>`
 ** `Func<ITransaction,Task<T>>`
-* `supType` (optional): The subtype of the span
-* `action` (optional): The action of the span
+
+and 2 optional parameters:
+
+* `supType`: The subtype of the span
+* `action`: The action of the span
 
 The following code is the equivalent of the previous example from the <<api-span-create-span>> section with the convenient API. It automatically starts and ends the span and reports unhandled exceptions. The `s` parameter gives you access to the `ISpan` instance which represents the span that you just created.
 
