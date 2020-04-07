@@ -54,7 +54,7 @@ internal class ApmLoggerBridge : IApmLogger
 		// to the input parameter of this method and return if it's the same/higher or not
 	}
 
-	public void Log<TState>(ApmLogLevel apmLogLevel, TState state, Exception e, 	Func<TState, Exception, string> formatter)
+	public void Log<TState>(ApmLogLevel apmLogLevel, TState state, Exception e, Func<TState, Exception, string> formatter)
 	{
 		// You can log the given log into your logging system here.
 	}
