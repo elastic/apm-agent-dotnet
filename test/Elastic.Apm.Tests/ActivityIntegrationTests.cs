@@ -104,5 +104,33 @@ namespace Elastic.Apm.Tests
 
 			activityTraceId.Should().Be(payloadSender.FirstTransaction.TraceId);
 		}
+
+		/// <summary>
+		/// Makes sure that transactions on the same Activity are part of the same trace.
+		/// </summary>
+		[Fact]
+		public void MultipleTransactionInOneActivity()
+		{
+			Activity.Current = null;
+			Activity.DefaultIdFormat = ActivityIdFormat.W3C;
+			var activity = new Activity("UnitTestActivity");
+			activity.Start();
+
+			var payloadSender = new MockPayloadSender();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				var transaction1 = agent.Tracer.StartTransaction("transaction1", "test");
+				transaction1.End();
+
+				var transaction2 = agent.Tracer.StartTransaction("transaction2", "test");
+				transaction2.End();
+			}
+
+			payloadSender.Transactions.Should().HaveCount(2);
+			payloadSender.Transactions[0].TraceId.Should().Be(activity.TraceId.ToString());
+			payloadSender.Transactions[1].TraceId.Should().Be(activity.TraceId.ToString());
+			payloadSender.Transactions[0].Id.Should().NotBe(payloadSender.Transactions[1].Id);
+			activity.Stop();
+		}
 	}
 }
