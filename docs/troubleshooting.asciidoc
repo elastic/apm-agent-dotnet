@@ -8,7 +8,7 @@ endif::[]
 
 Use the information in this section to troubleshoot common problems and find
 answers for frequently asked questions.
-As a first step, please check if your stack is compatible with the currently <<supported-technologies,supported technologies>>.
+As a first step, ensure your stack is compatible with the Agent's <<supported-technologies,supported technologies>>.
 
 Don't worry if you can't figure out what the problem is.
 Open a topic in the https://discuss.elastic.co/c/apm[APM discuss forum]
