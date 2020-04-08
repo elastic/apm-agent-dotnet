@@ -6,9 +6,8 @@ endif::[]
 [[troubleshooting]]
 == Troubleshooting
 
-Something isn't quite working as expected?
-Here are some guidelines how to find out what's going wrong.
-
+Use the information in this section to troubleshoot common problems and find
+answers for frequently asked questions.
 As a first step, please check if your stack is compatible with the currently <<supported-technologies,supported technologies>>.
 
 Don't worry if you can't figure out what the problem is.
