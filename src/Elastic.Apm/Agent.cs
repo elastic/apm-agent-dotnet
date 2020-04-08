@@ -131,8 +131,8 @@ namespace Elastic.Apm
 		/// you can also control if the <see cref="ITransaction" /> should be sent to the server or not.
 		/// If the
 		/// <param name="filter"></param>
-		/// returns <code>false</code> the <see cref="ITransaction" /> will be dropped and won't be sent to the APM Server -
-		/// otherwise it'll be sent.
+		/// returns a non-null <see cref="ITransaction"/> instance then it will sent to the APM Server -
+		/// if it returns <code>null</code>, the event will be dropped and won't be sent to the APM server.
 		/// </summary>
 		/// <param name="filter">The filter that can process the <see cref="ITransaction"/> and decide if it should be sent to APM Server or not.</param>
 		/// <returns><code>true</code> if the filter was added successfully, <code>false</code> otherwise. In case the method returns <code>false</code> the filter won't be called.</returns>
@@ -148,8 +148,8 @@ namespace Elastic.Apm
 		/// you can also control if the <see cref="ISpan" /> should be sent to the server or not.
 		/// If the
 		/// <param name="filter"></param>
-		/// returns <code>false</code> the <see cref="ISpan" /> will be dropped and won't be sent to the APM Server -
-		/// otherwise it'll be sent.
+		/// returns a non-null <see cref="ISpan"/> instance then it will sent to the APM Server -
+		/// if it returns <code>null</code>, the event will be dropped and won't be sent to the APM server.
 		/// </summary>
 		/// <param name="filter">The filter that can process the <see cref="ISpan"/> and decide if it should be sent to APM Server or not.</param>
 		/// <returns><code>true</code> if the filter was added successfully, <code>false</code> otherwise. In case the method returns <code>false</code> the filter won't be called.</returns>
@@ -165,8 +165,8 @@ namespace Elastic.Apm
 		/// you can also control if the <see cref="IError" /> should be sent to the server or not.
 		/// If the
 		/// <param name="filter"></param>
-		/// returns <code>false</code> the <see cref="IError" /> will be dropped and won't be sent to the APM Server -
-		/// otherwise it'll be sent.
+		/// returns a non-null <see cref="IError"/> instance then it will sent to the APM Server -
+		/// if it returns <code>null</code>, the event will be dropped and won't be sent to the APM server.
 		/// </summary>
 		/// <param name="filter">The filter that can process the <see cref="IError"/> and decide if it should be sent to APM Server or not.</param>
 		/// <returns><code>true</code> if the filter was added successfully, <code>false</code> otherwise. In case the method returns <code>false</code> the filter won't be called.</returns>
