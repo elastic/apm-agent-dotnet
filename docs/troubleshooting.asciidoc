@@ -74,7 +74,8 @@ For this in ASP.NET Core you need to place the following code into the `Applicat
 AgentDependencies.Logger = new ApmLoggerBridge();
 ----
 
-The `AgentDependencies` class lives in the `Elastic.Apm.AspNetFullFramework` namespace and during initialization the agent checks if an additional logger was configured - the agent only does this once, therefore it's important to set it as early in the process as possible (typically in the `Application_Start` method).
+The `AgentDependencies` class lives in the `Elastic.Apm.AspNetFullFramework` namespace.
+During initialization, the agent checks if an additional logger was configured--the agent only does this once, so it's important to set it as early in the process as possible (typically in the `Application_Start` method).
 
 
 ==== General .NET applications
