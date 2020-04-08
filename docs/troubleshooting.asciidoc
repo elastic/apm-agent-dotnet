@@ -34,7 +34,9 @@ The way to collect logs depends on the setup of your application.
 
 ==== ASP.NET Core 
 
-In case you activated the agent with the `UseAllElasticApm` or the `UseElasticApm` method as described in <<setup-asp-net-core,the setup section>> the agent will integrate with the https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-3.1[ASP.NET Core logging infrastructure] and it'll log as any other component logs. This means, the agent will pick up the configured logging provider and log into that.
+When the Agent is activated with `UseAllElasticApm` or `UseElasticApm`, it will integrate with the
+https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-3.1[ASP.NET Core logging infrastructure].
+This means the Agent will pick up the configured logging provider and log as any other component logs.
 
 ==== ASP.NET Classic
 
@@ -67,7 +69,7 @@ An example implementation for NLog can be seen https://github.com/elastic/apm-ag
 
 Then tell the agent to use the `ApmLoggerBridge`.
 
-For this in ASP.NET Core you need to place the following code into the `Application_Start` method in the `HttpApplication` implementation of your app which is typically in the `Global.asx.cs` file:
+For this in ASP.NET (classic) you need to place the following code into the `Application_Start` method in the `HttpApplication` implementation of your app which is typically in the `Global.asx.cs` file:
 
 [source,csharp]
 ----
