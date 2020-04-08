@@ -10,9 +10,10 @@ Use the information in this section to troubleshoot common problems and find
 answers for frequently asked questions.
 As a first step, ensure your stack is compatible with the Agent's <<supported-technologies,supported technologies>>.
 
-Don't worry if you can't figure out what the problem is.
-Open a topic in the https://discuss.elastic.co/c/apm[APM discuss forum]
-and we will help you out.
+Don't worry if you can't figure out what the problem is; we’re here to help.
+If you are an existing Elastic customer with a support contract, please create a ticket in the
+https://support.elastic.co/customers/s/login/[Elastic Support portal].
+If not, post in the https://discuss.elastic.co/c/apm[APM discuss forum].
 
 IMPORTANT: If you do so, *please attach your debug logs* so that we can analyze the problem.
 Upload the *complete* logs to a service like https://gist.github.com.
