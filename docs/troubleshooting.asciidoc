@@ -26,7 +26,7 @@ The logs should include everything from the application startup up until the fir
 If neither errors nor performance metrics are being sent to the APM Server,
 it's a good idea to first check your logs and look for output just as the app starts.
 
-In case you don't see anything suspicious in the agent logs (no warning or error) it's recommended to turn the log level to `Trace` for further investigation.
+If you don't see anything suspicious in the agent logs (no warning or error), it's recommended to turn the log level to `Trace` for further investigation.
 
 === Collecting agent logs
 
