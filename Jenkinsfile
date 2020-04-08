@@ -16,7 +16,7 @@ pipeline {
     OPBEANS_REPO = 'opbeans-dotnet'
   }
   options {
-    timeout(time: 1, unit: 'HOURS')
+    timeout(time: 75, unit: 'MINUTES')
     buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20', daysToKeepStr: '30'))
     timestamps()
     ansiColor('xterm')
