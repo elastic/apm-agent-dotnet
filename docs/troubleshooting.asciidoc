@@ -38,9 +38,9 @@ In case you activated the agent with the `UseAllElasticApm` or the `UseElasticAp
 
 ==== ASP.NET Classic
 
-Unlike ASP.NET Core, ASP.NET (classic) does not have a predefined logging system. In case you already have a logging system in place (like NLog, Serilog, or similar) you can direct the agent logs into your logging system.
-
-For this you need to create a bridge between the agent's internal logger and your logging system. 
+Unlike ASP.NET Core, ASP.NET (classic) does not have a predefined logging system.
+However, if you have a logging system in place, like NLog, Serilog, or similar, you can direct the agent logs into your
+logging system by creating a bridge between the agent's internal logger and your logging system. 
 
 First implement the `IApmLogger` interface from the `Elastic.Apm.Logging` namespace:
 
