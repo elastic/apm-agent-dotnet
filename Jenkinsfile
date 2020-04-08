@@ -43,8 +43,8 @@ pipeline {
             stash allowEmpty: true, name: 'source', useDefaultExcludes: false
             script {
               dir("${BASE_DIR}"){
-                // Skip all the stages except docs for PR's with asciidoc and md changes only
-                env.ONLY_DOCS = isGitRegionMatch(patterns: [ '.*\\.(asciidoc|md)' ], shouldMatchAll: true)
+                // Skip all the stages for PRs with changes in the docs only
+                env.ONLY_DOCS = isGitRegionMatch(patterns: [ '^docs/.*' ], shouldMatchAll: true)
               }
             }
           }
