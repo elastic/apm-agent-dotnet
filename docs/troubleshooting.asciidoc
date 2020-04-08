@@ -65,7 +65,7 @@ internal class ApmLoggerBridge : IApmLogger
 
 An example implementation for NLog can be seen https://github.com/elastic/apm-agent-dotnet/blob/master/sample/AspNetFullFrameworkSampleApp/App_Start/ApmLoggerToNLog.cs[in our GitHub repository].
 
-Then you need to tell the agent to use the `ApmLoggerBridge`.
+Then tell the agent to use the `ApmLoggerBridge`.
 
 For this in ASP.NET Core you need to place the following code into the `Application_Start` method in the `HttpApplication` implementation of your app which is typically in the `Global.asx.cs` file:
 
