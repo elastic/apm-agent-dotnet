@@ -224,25 +224,25 @@ namespace ApiSamples
 		{
 			Agent.AddFilter((ITransaction transaction) => {
 				transaction.Name = "NewTransactionName";
-				return true;
+				return transaction;
 			});
 
 			Agent.AddFilter((ITransaction transaction) =>
 			{
 				transaction.Type = "NewSpanName";
-				return true;
+				return transaction;
 			});
 
 			Agent.AddFilter((ISpan span) =>
 			{
 				span.Name = "NewSpanName";
-				return true;
+				return span;
 			});
 
 			Agent.AddFilter((IError error) =>
 			{
 				Console.WriteLine($"Error id printed in a filter: {error.Id}");
-				return true;
+				return error;
 			});
 		}
 	}

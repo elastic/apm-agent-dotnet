@@ -41,13 +41,13 @@ namespace Elastic.Apm.Tests
 					payloadSender.TransactionFilters.Add(t =>
 					{
 						t.Name = "NewTransactionName";
-						return true;
+						return t;
 					});
 
 					payloadSender.TransactionFilters.Add(t =>
 					{
 						t.Type = "NewTransactionType";
-						return true;
+						return t;
 					});
 				},
 				agent => { agent.Tracer.CaptureTransaction("Test123", "TestTransaction", t => { Thread.Sleep(10); }); },
@@ -71,7 +71,7 @@ namespace Elastic.Apm.Tests
 					payloadSender.TransactionFilters.Add(t =>
 					{
 						t.Name = "NewTransactionName";
-						return true;
+						return t;
 					});
 
 					// Throw an exception
@@ -81,7 +81,7 @@ namespace Elastic.Apm.Tests
 					payloadSender.TransactionFilters.Add(t =>
 					{
 						t.Type = "NewTransactionType";
-						return true;
+						return t;
 					});
 				},
 				agent => { agent.Tracer.CaptureTransaction("Test123", "TestTransaction", t => { Thread.Sleep(10); }); },
@@ -105,7 +105,7 @@ namespace Elastic.Apm.Tests
 						payloadSender.SpanFilters.Add(span =>
 						{
 							span.Name = "NewSpanName";
-							return true;
+							return span;
 						});
 
 						// Throw an exception
@@ -115,7 +115,7 @@ namespace Elastic.Apm.Tests
 						payloadSender.SpanFilters.Add(span =>
 						{
 							span.Type = "NewSpanType";
-							return true;
+							return span;
 						});
 					},
 					agent =>
@@ -141,9 +141,9 @@ namespace Elastic.Apm.Tests
 					// Rename span name
 					payloadSender.SpanFilters.Add(span =>
 					{
-						if (span.Name == "SpanToDrop") return false;
+						if (span.Name == "SpanToDrop") return null;
 
-						return true;
+						return span;
 					});
 				},
 				agent =>

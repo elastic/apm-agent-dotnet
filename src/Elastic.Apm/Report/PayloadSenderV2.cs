@@ -39,9 +39,9 @@ namespace Elastic.Apm.Report
 
 		private readonly PayloadItemSerializer _payloadItemSerializer;
 
-		internal readonly List<Func<ITransaction, bool>> TransactionFilters = new List<Func<ITransaction, bool>>();
-		internal readonly List<Func<ISpan, bool>> SpanFilters = new List<Func<ISpan, bool>>();
-		internal readonly List<Func<IError, bool>> ErrorFilters = new List<Func<IError, bool>>();
+		internal readonly List<Func<ITransaction, ITransaction>> TransactionFilters = new List<Func<ITransaction, ITransaction>>();
+		internal readonly List<Func<ISpan, ISpan>> SpanFilters = new List<Func<ISpan, ISpan>>();
+		internal readonly List<Func<IError, IError>> ErrorFilters = new List<Func<IError, IError>>();
 
 		public PayloadSenderV2(IApmLogger logger, IConfigSnapshot config, Service service, Api.System system,
 			HttpMessageHandler httpMessageHandler = null, string dbgName = null
@@ -220,13 +220,13 @@ namespace Elastic.Apm.Report
 					switch (item)
 					{
 						case Transaction transaction:
-							if (TryExecuteFilter(TransactionFilters, transaction)) SerializeAndSend(item, "transaction");
+							if (TryExecuteFilter(TransactionFilters, transaction) != null) SerializeAndSend(item, "transaction");
 							break;
 						case Span span:
-							if (TryExecuteFilter(SpanFilters, span)) SerializeAndSend(item, "span");
+							if (TryExecuteFilter(SpanFilters, span) != null) SerializeAndSend(item, "span");
 							break;
 						case Error error:
-							if (TryExecuteFilter(ErrorFilters, error)) SerializeAndSend(item, "error");
+							if (TryExecuteFilter(ErrorFilters, error) != null) SerializeAndSend(item, "error");
 							break;
 						case MetricSet _:
 							SerializeAndSend(item, "metricset");
@@ -273,22 +273,21 @@ namespace Elastic.Apm.Report
 			}
 
 			// Executes filters for the given filter collection and handles return value and errors
-			bool TryExecuteFilter<T>(IEnumerable<Func<T, bool>> filters, T item)
+			T TryExecuteFilter<T>(IEnumerable<Func<T, T>> filters, T item) where T : class
 			{
-				var sendEvent = true;
-				var enumerable = filters as Func<T, bool>[] ?? filters.ToArray();
-				if (!enumerable.Any()) return true;
+				var enumerable = filters as Func<T, T>[] ?? filters.ToArray();
+				if (!enumerable.Any()) return item;
 
 				foreach (var filter in enumerable)
 				{
 					try
 					{
 						_logger?.Trace()?.Log("Start executing filter on transaction");
-						sendEvent = filter(item);
-						if (sendEvent) continue;
+						item = filter(item);
+						if (item != null) continue;
 
 						_logger?.Debug()?.Log("Filter returns false, item won't be sent, {filteredItemm}", item);
-						break;
+						return null;
 					}
 					catch (Exception e)
 					{
@@ -296,7 +295,7 @@ namespace Elastic.Apm.Report
 					}
 				}
 
-				return sendEvent;
+				return item;
 			}
 		}
 	}

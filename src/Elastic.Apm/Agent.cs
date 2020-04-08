@@ -136,7 +136,7 @@ namespace Elastic.Apm
 		/// </summary>
 		/// <param name="filter">The filter that can process the <see cref="ITransaction"/> and decide if it should be sent to APM Server or not.</param>
 		/// <returns><code>true</code> if the filter was added successfully, <code>false</code> otherwise. In case the method returns <code>false</code> the filter won't be called.</returns>
-		public static bool AddFilter(Func<ITransaction, bool> filter) => CheckAndAddFilter(p => p.TransactionFilters.Add(filter));
+		public static bool AddFilter(Func<ITransaction, ITransaction> filter) => CheckAndAddFilter(p => p.TransactionFilters.Add(filter));
 
 		/// <summary>
 		/// Adds a filter which gets called before each span gets sent to APM Server.
@@ -153,7 +153,7 @@ namespace Elastic.Apm
 		/// </summary>
 		/// <param name="filter">The filter that can process the <see cref="ISpan"/> and decide if it should be sent to APM Server or not.</param>
 		/// <returns><code>true</code> if the filter was added successfully, <code>false</code> otherwise. In case the method returns <code>false</code> the filter won't be called.</returns>
-		public static bool AddFilter(Func<ISpan, bool> filter) => CheckAndAddFilter(p => p.SpanFilters.Add(filter));
+		public static bool AddFilter(Func<ISpan, ISpan> filter) => CheckAndAddFilter(p => p.SpanFilters.Add(filter));
 
 		/// <summary>
 		/// Adds a filter which gets called before each error gets sent to APM Server.
@@ -170,7 +170,7 @@ namespace Elastic.Apm
 		/// </summary>
 		/// <param name="filter">The filter that can process the <see cref="IError"/> and decide if it should be sent to APM Server or not.</param>
 		/// <returns><code>true</code> if the filter was added successfully, <code>false</code> otherwise. In case the method returns <code>false</code> the filter won't be called.</returns>
-		public static bool AddFilter(Func<IError, bool> filter) => CheckAndAddFilter(p => p.ErrorFilters.Add(filter));
+		public static bool AddFilter(Func<IError, IError> filter) => CheckAndAddFilter(p => p.ErrorFilters.Add(filter));
 
 		private static bool CheckAndAddFilter(Action<PayloadSenderV2> action)
 		{
