@@ -283,10 +283,14 @@ namespace Elastic.Apm.Report
 					try
 					{
 						_logger?.Trace()?.Log("Start executing filter on transaction");
-						item = filter(item);
-						if (item != null) continue;
+						var itemAfterFilter = filter(item);
+						if (itemAfterFilter != null)
+						{
+							item = itemAfterFilter;
+							continue;
+						}
 
-						_logger?.Debug()?.Log("Filter returns false, item won't be sent, {filteredItemm}", item);
+						_logger?.Debug()?.Log("Filter returns false, item won't be sent, {filteredItem}", item);
 						return null;
 					}
 					catch (Exception e)

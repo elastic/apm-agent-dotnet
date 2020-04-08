@@ -107,7 +107,6 @@ namespace Elastic.Apm
 		private static AgentComponents _components;
 		private static volatile bool _isConfigured;
 
-
 		public static IConfigurationReader Config => Instance.ConfigurationReader;
 
 		internal static ApmAgent Instance => LazyApmAgent.Value;
@@ -125,13 +124,13 @@ namespace Elastic.Apm
 		/// Adds a filter which gets called before each transaction gets sent to APM Server.
 		/// In the
 		/// <param name="filter"></param>
-		/// have access to the <see cref="ITransaction" /> instance which gets sent to  APM Server
+		/// you have access to the <see cref="ITransaction" /> instance which gets sent to APM Server
 		/// and you can modify it. With the return value of the
 		/// <param name="filter"></param>
 		/// you can also control if the <see cref="ITransaction" /> should be sent to the server or not.
 		/// If the
 		/// <param name="filter"></param>
-		/// returns a non-null <see cref="ITransaction"/> instance then it will sent to the APM Server -
+		/// returns a non-null <see cref="ITransaction"/> instance then it will be sent to the APM Server -
 		/// if it returns <code>null</code>, the event will be dropped and won't be sent to the APM server.
 		/// </summary>
 		/// <param name="filter">The filter that can process the <see cref="ITransaction"/> and decide if it should be sent to APM Server or not.</param>
@@ -142,13 +141,13 @@ namespace Elastic.Apm
 		/// Adds a filter which gets called before each span gets sent to APM Server.
 		/// In the
 		/// <param name="filter"></param>
-		/// have access to the <see cref="ISpan" /> instance which gets sent to  APM Server
+		/// you have access to the <see cref="ISpan" /> instance which gets sent to APM Server
 		/// and you can modify it. With the return value of the
 		/// <param name="filter"></param>
 		/// you can also control if the <see cref="ISpan" /> should be sent to the server or not.
 		/// If the
 		/// <param name="filter"></param>
-		/// returns a non-null <see cref="ISpan"/> instance then it will sent to the APM Server -
+		/// returns a non-null <see cref="ISpan"/> instance then it will be sent to the APM Server -
 		/// if it returns <code>null</code>, the event will be dropped and won't be sent to the APM server.
 		/// </summary>
 		/// <param name="filter">The filter that can process the <see cref="ISpan"/> and decide if it should be sent to APM Server or not.</param>
@@ -159,13 +158,13 @@ namespace Elastic.Apm
 		/// Adds a filter which gets called before each error gets sent to APM Server.
 		/// In the
 		/// <param name="filter"></param>
-		/// have access to the <see cref="IError" /> instance which gets sent to  APM Server
+		/// you have access to the <see cref="IError" /> instance which gets sent to APM Server
 		/// and you can modify it. With the return value of the
 		/// <param name="filter"></param>
 		/// you can also control if the <see cref="IError" /> should be sent to the server or not.
 		/// If the
 		/// <param name="filter"></param>
-		/// returns a non-null <see cref="IError"/> instance then it will sent to the APM Server -
+		/// returns a non-null <see cref="IError"/> instance then it will be sent to the APM Server -
 		/// if it returns <code>null</code>, the event will be dropped and won't be sent to the APM server.
 		/// </summary>
 		/// <param name="filter">The filter that can process the <see cref="IError"/> and decide if it should be sent to APM Server or not.</param>
@@ -174,8 +173,6 @@ namespace Elastic.Apm
 
 		private static bool CheckAndAddFilter(Action<PayloadSenderV2> action)
 		{
-			// This check it TBD
-			// if (!IsConfigured) return false;
 			if (!(Instance.PayloadSender is PayloadSenderV2 payloadSenderV2)) return false;
 
 			action(payloadSenderV2);
