@@ -15,7 +15,7 @@ If you are an existing Elastic customer with a support contract, please create a
 https://support.elastic.co/customers/s/login/[Elastic Support portal].
 If not, post in the https://discuss.elastic.co/c/apm[APM discuss forum].
 
-IMPORTANT: If you do so, *please attach your debug logs* so that we can analyze the problem.
+IMPORTANT: *Please attach your debug logs* so that we can analyze the problem.
 Upload the *complete* logs to a service like https://gist.github.com.
 The logs should include everything from the application startup up until the first request has been executed.
 
