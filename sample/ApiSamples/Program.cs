@@ -167,7 +167,7 @@ namespace ApiSamples
 				Thread.Sleep(1100);
 
 				WriteLineToConsole("Waiting for callee process to exit...");
-				calleeProcess.WaitForExit();
+				calleeProcess?.WaitForExit();
 				WriteLineToConsole("Callee process exited");
 			}
 			finally
@@ -215,5 +215,35 @@ namespace ApiSamples
 			});
 		}
 		// ReSharper restore ArrangeMethodOrOperatorBody
+
+		/// <summary>
+		/// Registers some sample filters.
+		/// </summary>
+		// ReSharper disable once UnusedMember.Local
+		private static void FilterSample()
+		{
+			Agent.AddFilter((ITransaction transaction) => {
+				transaction.Name = "NewTransactionName";
+				return transaction;
+			});
+
+			Agent.AddFilter((ITransaction transaction) =>
+			{
+				transaction.Type = "NewSpanName";
+				return transaction;
+			});
+
+			Agent.AddFilter((ISpan span) =>
+			{
+				span.Name = "NewSpanName";
+				return span;
+			});
+
+			Agent.AddFilter((IError error) =>
+			{
+				Console.WriteLine($"Error id printed in a filter: {error.Id}");
+				return error;
+			});
+		}
 	}
 }
