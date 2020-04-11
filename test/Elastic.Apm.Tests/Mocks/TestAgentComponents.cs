@@ -1,4 +1,5 @@
 using Elastic.Apm.BackendComm;
+using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;

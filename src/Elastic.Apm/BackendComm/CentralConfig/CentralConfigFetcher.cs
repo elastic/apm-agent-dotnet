@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -9,10 +8,8 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
-namespace Elastic.Apm.BackendComm
+namespace Elastic.Apm.BackendComm.CentralConfig
 {
 	internal class CentralConfigFetcher : BackendCommComponentBase, ICentralConfigFetcher
 	{
@@ -21,18 +18,26 @@ namespace Elastic.Apm.BackendComm
 		internal static readonly TimeSpan GetConfigHttpRequestTimeout = TimeSpan.FromMinutes(5);
 
 		internal static readonly TimeSpan WaitTimeIfAnyError = TimeSpan.FromMinutes(5);
-		internal static readonly TimeSpan WaitTimeIfNoCacheControlMaxAge = TimeSpan.FromMinutes(5);
 
 		private readonly IAgentTimer _agentTimer;
 		private readonly IConfigStore _configStore;
 		private readonly Uri _getConfigAbsoluteUrl;
 		private readonly IConfigSnapshot _initialSnapshot;
 		private readonly IApmLogger _logger;
+		private readonly ICentralConfigResponseParser _centralConfigResponseParser;
+
+		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, ICentralConfigResponseParser centralConfigResponseParser,
+			Service service,
+			HttpMessageHandler httpMessageHandler = null, IAgentTimer agentTimer = null, string dbgName = null
+		) : this(logger, configStore, configStore.CurrentSnapshot, service, httpMessageHandler, agentTimer, dbgName)
+		{
+			_centralConfigResponseParser = centralConfigResponseParser;
+		}
 
 		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, Service service
 			, HttpMessageHandler httpMessageHandler = null, IAgentTimer agentTimer = null, string dbgName = null
 		)
-			: this(logger, configStore, configStore.CurrentSnapshot, service, httpMessageHandler, agentTimer, dbgName) { }
+			: this(logger, configStore, new CentralConfigResponseParser(logger), service, httpMessageHandler, agentTimer, dbgName) { }
 
 		/// <summary>
 		/// We need this private ctor to avoid calling configStore.CurrentSnapshot twice (and thus possibly using different
@@ -89,7 +94,7 @@ namespace Elastic.Apm.BackendComm
 				(httpResponse, httpResponseBody) = await FetchConfigHttpResponseAsync(httpRequest);
 
 				ConfigDelta configDelta;
-				(configDelta, waitInfo) = ProcessHttpResponse(httpResponse, httpResponseBody);
+				(configDelta, waitInfo) = _centralConfigResponseParser.ParseHttpResponse(httpResponse, httpResponseBody);
 				if (configDelta != null)
 				{
 					UpdateConfigStore(configDelta);
@@ -103,13 +108,16 @@ namespace Elastic.Apm.BackendComm
 			catch (Exception ex)
 			{
 				var severity = LogLevel.Error;
-				waitInfo = new WaitInfoS(WaitTimeIfAnyError, "Default wait time is used because exception was thrown"
-					+ " while fetching configuration from APM Server and parsing it.");
 
 				if (ex is FailedToFetchConfigException fEx)
 				{
 					severity = fEx.Severity;
-					fEx.WaitInfo?.Let(it => { waitInfo = it; });
+					waitInfo = fEx.WaitInfo;
+				}
+				else
+				{
+					waitInfo = new WaitInfoS(WaitTimeIfAnyError, "Default wait time is used because exception was thrown"
+						+ " while fetching configuration from APM Server and parsing it.");
 				}
 
 				if (severity == LogLevel.Error) waitingLogSeverity = LogLevel.Information;
@@ -147,7 +155,7 @@ namespace Elastic.Apm.BackendComm
 			return httpRequest;
 		}
 
-		private async Task<ValueTuple<HttpResponseMessage, string>> FetchConfigHttpResponseImplAsync(HttpRequestMessage httpRequest)
+		private async Task<(HttpResponseMessage, string)> FetchConfigHttpResponseImplAsync(HttpRequestMessage httpRequest)
 		{
 			_logger.Trace()?.Log("Making HTTP request to APM Server... Request: {HttpRequest}.", httpRequest);
 
@@ -156,7 +164,8 @@ namespace Elastic.Apm.BackendComm
 			if (httpResponse == null)
 			{
 				throw new FailedToFetchConfigException("HTTP client API call for request to APM Server returned null."
-					+ $" Request:{Environment.NewLine}{TextUtils.Indent(httpRequest.ToString())}");
+					+ $" Request:{Environment.NewLine}{TextUtils.Indent(httpRequest.ToString())}",
+					new WaitInfoS(WaitTimeIfAnyError, "HttpResponseMessage from APM Server is equal to null"));
 			}
 
 			_logger.Trace()?.Log("Reading HTTP response body... Response: {HttpResponse}.", httpResponse);
@@ -165,133 +174,9 @@ namespace Elastic.Apm.BackendComm
 			return (httpResponse, httpResponseBody);
 		}
 
-		private async Task<ValueTuple<HttpResponseMessage, string>> FetchConfigHttpResponseAsync(HttpRequestMessage httpRequest) =>
+		private async Task<(HttpResponseMessage, string)> FetchConfigHttpResponseAsync(HttpRequestMessage httpRequest) =>
 			await _agentTimer.AwaitOrTimeout(FetchConfigHttpResponseImplAsync(httpRequest)
 				, _agentTimer.Now + GetConfigHttpRequestTimeout, CtsInstance.Token);
-
-		private (ConfigDelta, WaitInfoS) ProcessHttpResponse(HttpResponseMessage httpResponse, string httpResponseBody)
-		{
-			_logger.Trace()
-				?.Log("Processing HTTP response..."
-					+ Environment.NewLine + "+-> Response:{HttpResponse}"
-					+ Environment.NewLine + "+-> Response body [length: {HttpResponseBodyLength}]:{HttpResponseBody}"
-					, httpResponse == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpResponse.ToString())
-					, httpResponseBody == null ? "N/A" : httpResponseBody.Length.ToString()
-					, httpResponseBody == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpResponseBody));
-
-			var waitInfo = ExtractWaitInfo(httpResponse);
-			try
-			{
-				if (!InterpretResponseStatusCode(httpResponse)) return (null, waitInfo);
-
-				var configPayload = JsonConvert.DeserializeObject<ConfigPayload>(httpResponseBody);
-				var configDelta = ParseConfigPayload(httpResponse, configPayload);
-
-				return (configDelta, waitInfo);
-			}
-			catch (FailedToFetchConfigException ex)
-			{
-				ex.WaitInfo = waitInfo;
-				throw;
-			}
-			catch (Exception ex)
-			{
-				throw new FailedToFetchConfigException("Exception was thrown while parsing response from APM Server", cause: ex)
-				{
-					WaitInfo = waitInfo
-				};
-			}
-		}
-
-		private bool InterpretResponseStatusCode(HttpResponseMessage httpResponse)
-		{
-			if (httpResponse.IsSuccessStatusCode) return true;
-
-			var statusCode = (int)httpResponse.StatusCode;
-			var severity = 400 <= statusCode && statusCode < 500 ? LogLevel.Debug : LogLevel.Error;
-
-			string message;
-			var statusAsString = $"HTTP status code is {httpResponse.ReasonPhrase} ({(int)httpResponse.StatusCode})";
-			var msgPrefix = $"{statusAsString} which most likely means that ";
-			// ReSharper disable once SwitchStatementMissingSomeCases
-			switch (httpResponse.StatusCode)
-			{
-				case HttpStatusCode.NotModified: // 304
-					_logger.Trace()
-						?.Log("HTTP status code is {HttpResponseReasonPhrase} ({HttpStatusCode})"
-							+ " which means the configuration has not changed since the previous fetch."
-							+ " Response:{NewLine}{HttpResponse}"
-							, httpResponse.ReasonPhrase
-							, (int)httpResponse.StatusCode
-							, Environment.NewLine
-							, TextUtils.Indent(httpResponse.ToString()));
-					return false;
-
-				case HttpStatusCode.BadRequest: // 400
-					severity = LogLevel.Error;
-					message = $"{statusAsString} which is unexpected";
-					break;
-
-				case HttpStatusCode.Forbidden: // 403
-					message = msgPrefix + "APM Server supports the central configuration endpoint but Kibana connection is not enabled";
-					break;
-
-				case HttpStatusCode.NotFound: // 404
-					message = msgPrefix + "APM Server is an old (pre 7.3) version which doesn't support the central configuration endpoint";
-					break;
-
-				case HttpStatusCode.ServiceUnavailable: // 503
-					message = msgPrefix + "APM Server supports the central configuration endpoint and Kibana connection is enabled"
-						+ ", but Kibana connection is unavailable";
-					break;
-
-				default:
-					message = $"{statusAsString} signifies a failure";
-					break;
-			}
-
-			throw new FailedToFetchConfigException(message, severity);
-		}
-
-		private ConfigDelta ParseConfigPayload(HttpResponseMessage httpResponse, ConfigPayload configPayload)
-		{
-			if (httpResponse.Headers?.ETag == null)
-				throw new FailedToFetchConfigException("Response from APM Server doesn't have ETag header");
-
-			var eTag = httpResponse.Headers.ETag.ToString();
-
-			var configParser = new ConfigParser(_logger, configPayload, eTag);
-
-			if (configPayload.UnknownKeys != null && !configPayload.UnknownKeys.IsEmpty())
-			{
-				_logger.Info()
-					?.Log("Central configuration response contains keys that are not in the list of options"
-						+ " that can be changed after Agent start: {UnknownKeys}. Supported options: {ReloadableOptions}."
-						, string.Join(", ", configPayload.UnknownKeys.Select(kv => $"`{kv.Key}'"))
-						, string.Join(", ", ConfigPayload.SupportedOptions.Select(k => $"`{k}'")));
-			}
-
-			return new ConfigDelta(
-				captureBody: configParser.CaptureBody,
-				captureBodyContentTypes: configParser.CaptureBodyContentTypes,
-				transactionMaxSpans: configParser.TransactionMaxSpans,
-				transactionSampleRate: configParser.TransactionSampleRate,
-				eTag: eTag
-			);
-		}
-
-		private static WaitInfoS ExtractWaitInfo(HttpResponseMessage httpResponse)
-		{
-			if (httpResponse.Headers?.CacheControl?.MaxAge != null)
-			{
-				return new WaitInfoS(httpResponse.Headers.CacheControl.MaxAge.Value,
-					"Wait time is taken from max-age directive in Cache-Control header in APM Server's response");
-			}
-
-			return new WaitInfoS(WaitTimeIfNoCacheControlMaxAge,
-				"Default wait time is used because there's no valid Cache-Control header with max-age directive in APM Server's response."
-				+ Environment.NewLine + "+-> Response:" + Environment.NewLine + TextUtils.Indent(httpResponse.ToString()));
-		}
 
 		private void UpdateConfigStore(ConfigDelta configDelta)
 		{
@@ -301,16 +186,20 @@ namespace Elastic.Apm.BackendComm
 				, $"{_initialSnapshot.DbgDescription} + central (ETag: `{configDelta.ETag}')");
 		}
 
-		private class FailedToFetchConfigException : Exception
+		internal class FailedToFetchConfigException : Exception
 		{
-			internal FailedToFetchConfigException(string message, LogLevel severity = LogLevel.Error, Exception cause = null)
-				: base(message, cause) => Severity = severity;
+			internal FailedToFetchConfigException(string message, WaitInfoS waitInfo, LogLevel severity = LogLevel.Error, Exception cause = null)
+				: base(message, cause)
+			{
+				Severity = severity;
+				WaitInfo = waitInfo;
+			}
 
 			internal LogLevel Severity { get; }
-			internal WaitInfoS? WaitInfo { get; set; }
+			internal WaitInfoS WaitInfo { get; }
 		}
 
-		private readonly struct WaitInfoS
+		internal readonly struct WaitInfoS
 		{
 			internal readonly TimeSpan Interval;
 			internal readonly string Reason;
@@ -322,37 +211,7 @@ namespace Elastic.Apm.BackendComm
 			}
 		}
 
-		private class ConfigPayload
-		{
-			internal const string CaptureBodyContentTypesKey = "capture_body_content_types";
-			internal const string CaptureBodyKey = "capture_body";
-			internal const string TransactionMaxSpansKey = "transaction_max_spans";
-			internal const string TransactionSampleRateKey = "transaction_sample_rate";
-
-			internal static readonly string[] SupportedOptions =
-			{
-				CaptureBodyKey, CaptureBodyContentTypesKey, TransactionMaxSpansKey, TransactionSampleRateKey
-			};
-
-			[JsonProperty(CaptureBodyKey)]
-			public string CaptureBody { get; set; }
-
-			[JsonProperty(CaptureBodyContentTypesKey)]
-			public string CaptureBodyContentTypes { get; set; }
-
-			[JsonProperty(TransactionMaxSpansKey)]
-			public string TransactionMaxSpans { get; set; }
-
-			[JsonProperty(TransactionSampleRateKey)]
-			public string TransactionSampleRate { get; set; }
-
-			[JsonExtensionData]
-			// ReSharper disable once UnusedAutoPropertyAccessor.Local
-			// ReSharper disable once CollectionNeverUpdated.Local
-			public IDictionary<string, JToken> UnknownKeys { get; set; }
-		}
-
-		private class ConfigDelta
+		internal class ConfigDelta
 		{
 			internal ConfigDelta(
 				string eTag
@@ -377,6 +236,14 @@ namespace Elastic.Apm.BackendComm
 			internal int? TransactionMaxSpans { get; }
 			internal double? TransactionSampleRate { get; }
 
+			// internal bool? CaptureHeaders { get; }
+			//
+			// internal LogLevel? LogLevel { get; }
+			//
+			// internal double? SpanFramesMinDurationInMilliseconds { get; }
+			//
+			// internal int? StackTraceLimit { get; }
+
 			public override string ToString()
 			{
 				var builder = new ToStringBuilder($"[ETag: `{ETag}']");
@@ -389,35 +256,6 @@ namespace Elastic.Apm.BackendComm
 
 				return builder.ToString();
 			}
-		}
-
-		private class ConfigParser : AbstractConfigurationReader
-		{
-			// ReSharper disable once MemberHidesStaticFromOuterClass
-			private const string ThisClassName = nameof(CentralConfigFetcher) + "." + nameof(ConfigParser);
-
-			private readonly ConfigPayload _configPayload;
-			private readonly string _eTag;
-
-			public ConfigParser(IApmLogger logger, ConfigPayload configPayload, string eTag) : base(logger, ThisClassName)
-			{
-				_configPayload = configPayload;
-				_eTag = eTag;
-			}
-
-			internal string CaptureBody => _configPayload.CaptureBody?.Let(value => ParseCaptureBody(BuildKv(ConfigPayload.CaptureBodyKey, value)));
-
-			internal List<string> CaptureBodyContentTypes => _configPayload.CaptureBodyContentTypes?.Let(
-				value => ParseCaptureBodyContentTypes(BuildKv(ConfigPayload.CaptureBodyContentTypesKey, value)));
-
-			internal int? TransactionMaxSpans => _configPayload.TransactionMaxSpans?.Let(
-				value => ParseTransactionMaxSpans(BuildKv(ConfigPayload.TransactionMaxSpansKey, value)));
-
-			internal double? TransactionSampleRate => _configPayload.TransactionSampleRate?.Let(
-				value => ParseTransactionSampleRate(BuildKv(ConfigPayload.TransactionSampleRateKey, value)));
-
-			private ConfigurationKeyValue BuildKv(string key, string value) =>
-				new ConfigurationKeyValue(key, value, /* readFrom */ $"Central configuration (ETag: `{_eTag}')");
 		}
 
 		private class WrappingConfigSnapshot : IConfigSnapshot
