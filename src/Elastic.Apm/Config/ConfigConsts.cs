@@ -132,7 +132,7 @@ namespace Elastic.Apm.Config
 			public const string CaptureBodyOff = "off";
 			public const string CaptureBodyTransactions = "transactions";
 
-			public static List<string> CaptureBodySupportedValues =
+			public static readonly List<string> CaptureBodySupportedValues =
 				new List<string> { CaptureBodyOff, CaptureBodyAll, CaptureBodyErrors, CaptureBodyTransactions };
 		}
 	}

@@ -93,11 +93,11 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 				(httpResponse, httpResponseBody) = await FetchConfigHttpResponseAsync(httpRequest);
 
-				ConfigDelta configDelta;
-				(configDelta, waitInfo) = _centralConfigResponseParser.ParseHttpResponse(httpResponse, httpResponseBody);
-				if (configDelta != null)
+				CentralConfigReader centralConfigReader;
+				(centralConfigReader, waitInfo) = _centralConfigResponseParser.ParseHttpResponse(httpResponse, httpResponseBody);
+				if (centralConfigReader != null)
 				{
-					UpdateConfigStore(configDelta);
+					UpdateConfigStore(centralConfigReader);
 					_eTag = httpResponse.Headers.ETag;
 				}
 			}
@@ -178,12 +178,12 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			await _agentTimer.AwaitOrTimeout(FetchConfigHttpResponseImplAsync(httpRequest)
 				, _agentTimer.Now + GetConfigHttpRequestTimeout, CtsInstance.Token);
 
-		private void UpdateConfigStore(ConfigDelta configDelta)
+		private void UpdateConfigStore(CentralConfigReader centralConfigReader)
 		{
-			_logger.Info()?.Log("Updating " + nameof(ConfigStore) + ". New central configuration: {ConfigDelta}", configDelta);
+			_logger.Info()?.Log("Updating " + nameof(ConfigStore) + ". New central configuration: {CentralConfiguration}", centralConfigReader);
 
-			_configStore.CurrentSnapshot = new WrappingConfigSnapshot(_initialSnapshot, configDelta
-				, $"{_initialSnapshot.DbgDescription} + central (ETag: `{configDelta.ETag}')");
+			_configStore.CurrentSnapshot = new WrappingConfigSnapshot(_initialSnapshot, centralConfigReader
+				, $"{_initialSnapshot.DbgDescription} + central (ETag: `{centralConfigReader.ETag}')");
 		}
 
 		internal class FailedToFetchConfigException : Exception
@@ -211,70 +211,23 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			}
 		}
 
-		internal class ConfigDelta
-		{
-			internal ConfigDelta(
-				string eTag
-				, string captureBody
-				, List<string> captureBodyContentTypes
-				, int? transactionMaxSpans
-				, double? transactionSampleRate
-			)
-			{
-				ETag = eTag;
-
-				CaptureBody = captureBody;
-				CaptureBodyContentTypes = captureBodyContentTypes;
-				TransactionMaxSpans = transactionMaxSpans;
-				TransactionSampleRate = transactionSampleRate;
-			}
-
-			internal string CaptureBody { get; }
-			internal List<string> CaptureBodyContentTypes { get; }
-
-			internal string ETag { get; }
-			internal int? TransactionMaxSpans { get; }
-			internal double? TransactionSampleRate { get; }
-
-			// internal bool? CaptureHeaders { get; }
-			//
-			// internal LogLevel? LogLevel { get; }
-			//
-			// internal double? SpanFramesMinDurationInMilliseconds { get; }
-			//
-			// internal int? StackTraceLimit { get; }
-
-			public override string ToString()
-			{
-				var builder = new ToStringBuilder($"[ETag: `{ETag}']");
-
-				if (CaptureBody != null) builder.Add(nameof(CaptureBody), CaptureBody);
-				if (CaptureBodyContentTypes != null)
-					builder.Add(nameof(CaptureBodyContentTypes), string.Join(", ", CaptureBodyContentTypes.Select(x => $"`{x}'")));
-				if (TransactionMaxSpans.HasValue) builder.Add(nameof(TransactionMaxSpans), TransactionMaxSpans.Value);
-				if (TransactionSampleRate.HasValue) builder.Add(nameof(TransactionSampleRate), TransactionSampleRate.Value);
-
-				return builder.ToString();
-			}
-		}
-
 		private class WrappingConfigSnapshot : IConfigSnapshot
 		{
-			private readonly ConfigDelta _configDelta;
+			private readonly CentralConfigReader _centralConfig;
 			private readonly IConfigSnapshot _wrapped;
 
-			internal WrappingConfigSnapshot(IConfigSnapshot wrapped, ConfigDelta configDelta, string dbgDescription)
+			internal WrappingConfigSnapshot(IConfigSnapshot wrapped, CentralConfigReader centralConfig, string dbgDescription)
 			{
 				_wrapped = wrapped;
-				_configDelta = configDelta;
+				_centralConfig = centralConfig;
 				DbgDescription = dbgDescription;
 			}
 
-			public string CaptureBody => _configDelta.CaptureBody ?? _wrapped.CaptureBody;
+			public string CaptureBody => _centralConfig.CaptureBody ?? _wrapped.CaptureBody;
 
-			public List<string> CaptureBodyContentTypes => _configDelta.CaptureBodyContentTypes ?? _wrapped.CaptureBodyContentTypes;
+			public List<string> CaptureBodyContentTypes => _centralConfig.CaptureBodyContentTypes ?? _wrapped.CaptureBodyContentTypes;
 
-			public bool CaptureHeaders => _wrapped.CaptureHeaders;
+			public bool CaptureHeaders => _centralConfig.CaptureHeaders ?? _wrapped.CaptureHeaders;
 			public bool CentralConfig => _wrapped.CentralConfig;
 
 			public string DbgDescription { get; }
@@ -287,7 +240,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			public IReadOnlyDictionary<string, string> GlobalLabels => _wrapped.GlobalLabels;
 
-			public LogLevel LogLevel => _wrapped.LogLevel;
+			public LogLevel LogLevel => _centralConfig.LogLevel ?? _wrapped.LogLevel;
 
 			public int MaxBatchEventCount => _wrapped.MaxBatchEventCount;
 
@@ -307,13 +260,14 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			public string ServiceVersion => _wrapped.ServiceVersion;
 
-			public double SpanFramesMinDurationInMilliseconds => _wrapped.SpanFramesMinDurationInMilliseconds;
+			public double SpanFramesMinDurationInMilliseconds =>
+				_centralConfig.SpanFramesMinDurationInMilliseconds ?? _wrapped.SpanFramesMinDurationInMilliseconds;
 
-			public int StackTraceLimit => _wrapped.StackTraceLimit;
+			public int StackTraceLimit => _centralConfig.StackTraceLimit ?? _wrapped.StackTraceLimit;
 
-			public int TransactionMaxSpans => _configDelta.TransactionMaxSpans ?? _wrapped.TransactionMaxSpans;
+			public int TransactionMaxSpans => _centralConfig.TransactionMaxSpans ?? _wrapped.TransactionMaxSpans;
 
-			public double TransactionSampleRate => _configDelta.TransactionSampleRate ?? _wrapped.TransactionSampleRate;
+			public double TransactionSampleRate => _centralConfig.TransactionSampleRate ?? _wrapped.TransactionSampleRate;
 
 			public bool UseElasticTraceparentHeader => _wrapped.UseElasticTraceparentHeader;
 

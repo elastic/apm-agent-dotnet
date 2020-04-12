@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using Elastic.Apm.BackendComm.CentralConfig;
+using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
@@ -13,10 +16,16 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 	public class CentralConfigResponseParserTests
 	{
 		private readonly CentralConfigResponseParser _parser;
+		private readonly HttpResponseMessage _correctResponse;
 
 		public CentralConfigResponseParserTests()
 		{
 			_parser = new CentralConfigResponseParser(new NoopLogger());
+			_correctResponse = new HttpResponseMessage
+			{
+				StatusCode = HttpStatusCode.OK,
+				Headers = { ETag = new EntityTagHeaderValue("\"33a64df551425fcc55e4d42a148795d9f25f89d4\"") }
+			};
 		}
 
 		[Fact]
@@ -61,8 +70,10 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			var response = new HttpResponseMessage { StatusCode = statusCode };
 
 			// Act + Assert
-			Assert.Throws<CentralConfigFetcher.FailedToFetchConfigException>(
+			var exception = Assert.Throws<CentralConfigFetcher.FailedToFetchConfigException>(
 				() => _parser.ParseHttpResponse(response, string.Empty));
+
+			exception.Message.Should().Contain("HTTP status code is ");
 		}
 
 		[Fact]
@@ -72,22 +83,17 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			var response = new HttpResponseMessage { StatusCode = HttpStatusCode.OK };
 
 			// Act + Assert
-			Assert.Throws<CentralConfigFetcher.FailedToFetchConfigException>(
+			var exception = Assert.Throws<CentralConfigFetcher.FailedToFetchConfigException>(
 				() => _parser.ParseHttpResponse(response, string.Empty));
+
+			exception.Message.Should().Contain("doesn't have ETag header");
 		}
 
 		[Fact]
 		public void ParseHttpResponse_ShouldReturnEmptyConfigDelta_WhenResponseBodyIsEmpty()
 		{
-			// Arrange
-			var response = new HttpResponseMessage
-			{
-				StatusCode = HttpStatusCode.OK,
-				Headers = { ETag = new EntityTagHeaderValue("\"33a64df551425fcc55e4d42a148795d9f25f89d4\"") }
-			};
-
-			// Act
-			var (configDelta, _) = _parser.ParseHttpResponse(response, "{}");
+			// Arrange + Act
+			var (configDelta, _) = _parser.ParseHttpResponse(_correctResponse, "{}");
 
 			// Assert
 			configDelta.Should().NotBeNull();
@@ -95,6 +101,10 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			configDelta.TransactionMaxSpans.Should().BeNull();
 			configDelta.TransactionSampleRate.Should().BeNull();
 			configDelta.CaptureBodyContentTypes.Should().BeNull();
+			configDelta.CaptureHeaders.Should().BeNull();
+			configDelta.LogLevel.Should().BeNull();
+			configDelta.SpanFramesMinDurationInMilliseconds.Should().BeNull();
+			configDelta.StackTraceLimit.Should().BeNull();
 		}
 
 		[Fact]
@@ -104,14 +114,8 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			var testLogger = new TestLogger(LogLevel.Information);
 			var parser = new CentralConfigResponseParser(testLogger);
 
-			var response = new HttpResponseMessage
-			{
-				StatusCode = HttpStatusCode.OK,
-				Headers = { ETag = new EntityTagHeaderValue("\"33a64df551425fcc55e4d42a148795d9f25f89d4\"") }
-			};
-
 			// Act
-			parser.ParseHttpResponse(response, "{\"unknownKey\": \"value\"}");
+			parser.ParseHttpResponse(_correctResponse, "{\"unknownKey\": \"value\"}");
 
 			// Assert
 			testLogger.Lines.Count.Should().Be(1);
@@ -119,6 +123,130 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				.Should()
 				.Contain(
 					"Central configuration response contains keys that are not in the list of options that can be changed after Agent start: `[unknownKey, value]'");
+		}
+
+		public static IEnumerable<object[]> ConfigDeltaData
+		{
+			get
+			{
+				foreach (var value in ConfigConsts.SupportedValues.CaptureBodySupportedValues)
+				{
+					yield return new object[]
+					{
+						$"{{\"{CentralConfigResponseParser.CentralConfigPayload.CaptureBodyKey}\": \"{value}\"}}",
+						new Action<CentralConfigReader>(cfg =>
+						{
+							cfg.CaptureBody.Should()
+								.NotBeNull()
+								.And.Be(value);
+						})
+					};
+				}
+
+				yield return new object[]
+				{
+					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.TransactionMaxSpansKey}\": \"{100}\"}}",
+					new Action<CentralConfigReader>(cfg =>
+					{
+						cfg.TransactionMaxSpans.Should()
+							.NotBeNull()
+							.And.Be(100);
+					})
+				};
+
+				yield return new object[]
+				{
+					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.TransactionSampleRateKey}\": \"{0.75}\"}}",
+					new Action<CentralConfigReader>(cfg =>
+					{
+						cfg.TransactionSampleRate.Should()
+							.NotBeNull()
+							.And.Be(0.75);
+					})
+				};
+
+				var captureBodyContentTypes = "application/x-www-form-urlencoded*, application/json*";
+				yield return new object[]
+				{
+					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.CaptureBodyContentTypesKey}\": \"{captureBodyContentTypes}\"}}",
+					new Action<CentralConfigReader>(cfg =>
+					{
+						cfg.CaptureBodyContentTypes.Should()
+							.NotBeNull()
+							.And.BeEquivalentTo(captureBodyContentTypes.Split(',').Select(x => x.Trim()));
+					})
+				};
+
+				yield return new object[]
+				{
+					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.StackTraceLimitKey}\": \"{150}\"}}",
+					new Action<CentralConfigReader>(cfg =>
+					{
+						cfg.StackTraceLimit.Should()
+							.NotBeNull()
+							.And.Be(150);
+					})
+				};
+
+				yield return new object[]
+				{
+					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.SpanFramesMinDurationKey}\": \"{150}\"}}",
+					new Action<CentralConfigReader>(cfg =>
+					{
+						cfg.SpanFramesMinDurationInMilliseconds.Should()
+							.NotBeNull()
+							.And.Be(150);
+					})
+				};
+
+				yield return new object[]
+				{
+					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.CaptureHeadersKey}\": \"{false}\"}}",
+					new Action<CentralConfigReader>(cfg =>
+					{
+						cfg.CaptureHeaders.Should()
+							.NotBeNull()
+							.And.Be(false);
+					})
+				};
+
+				yield return new object[]
+				{
+					$"{{\"{CentralConfigResponseParser.CentralConfigPayload.CaptureHeadersKey}\": \"{true}\"}}",
+					new Action<CentralConfigReader>(cfg =>
+					{
+						cfg.CaptureHeaders.Should()
+							.NotBeNull()
+							.And.Be(true);
+					})
+				};
+
+				foreach (var value in Enum.GetValues(typeof(LogLevel)))
+				{
+					yield return new object[]
+					{
+						$"{{\"{CentralConfigResponseParser.CentralConfigPayload.LogLevelKey}\": \"{value}\"}}",
+						new Action<CentralConfigReader>(cfg =>
+						{
+							cfg.LogLevel.Should()
+								.NotBeNull()
+								.And.Be(value);
+						})
+					};
+				}
+			}
+		}
+
+		[Theory]
+		[MemberData(nameof(ConfigDeltaData))]
+		internal void ParseHttpResponse_ShouldCorrectlyCalculateConfigDelta(string httpResponseBody, Action<CentralConfigReader> assert)
+		{
+			// Arrange + Act
+			var (configDelta, _) = _parser.ParseHttpResponse(_correctResponse, httpResponseBody);
+
+			// Assert
+			configDelta.Should().NotBeNull();
+			assert.Invoke(configDelta);
 		}
 	}
 }

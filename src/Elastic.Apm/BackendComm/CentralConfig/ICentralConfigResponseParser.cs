@@ -4,6 +4,6 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 {
 	internal interface ICentralConfigResponseParser
 	{
-		(CentralConfigFetcher.ConfigDelta, CentralConfigFetcher.WaitInfoS) ParseHttpResponse(HttpResponseMessage httpResponse, string httpResponseBody);
+		(CentralConfigReader, CentralConfigFetcher.WaitInfoS) ParseHttpResponse(HttpResponseMessage httpResponse, string httpResponseBody);
 	}
 }

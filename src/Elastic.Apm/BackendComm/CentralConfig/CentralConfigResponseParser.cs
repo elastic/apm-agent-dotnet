@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Newtonsoft.Json;
@@ -21,7 +20,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			_logger = logger?.Scoped(nameof(CentralConfigResponseParser));
 		}
 
-		public (CentralConfigFetcher.ConfigDelta, CentralConfigFetcher.WaitInfoS) ParseHttpResponse(HttpResponseMessage httpResponse,
+		public (CentralConfigReader, CentralConfigFetcher.WaitInfoS) ParseHttpResponse(HttpResponseMessage httpResponse,
 			string httpResponseBody
 		)
 		{
@@ -42,9 +41,9 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 					throw new CentralConfigFetcher.FailedToFetchConfigException("Response from APM Server doesn't have ETag header", waitInfo);
 
 				var keyValues = JsonConvert.DeserializeObject<IDictionary<string, string>>(httpResponseBody);
-				var configDelta = ParseConfigPayload(httpResponse, new CentralConfigPayload(keyValues));
+				var centralConfigReader = ParseConfigPayload(httpResponse, new CentralConfigPayload(keyValues));
 
-				return (configDelta, waitInfo);
+				return (centralConfigReader, waitInfo);
 			}
 			catch (Exception ex) when (!(ex is CentralConfigFetcher.FailedToFetchConfigException))
 			{
@@ -53,12 +52,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			}
 		}
 
-		private CentralConfigFetcher.ConfigDelta ParseConfigPayload(HttpResponseMessage httpResponse, CentralConfigPayload configPayload)
+		private CentralConfigReader ParseConfigPayload(HttpResponseMessage httpResponse, CentralConfigPayload configPayload)
 		{
-			var eTag = httpResponse.Headers.ETag.ToString();
-
-			var configParser = new ConfigParser(_logger, configPayload, eTag);
-
 			if (configPayload.UnknownKeys != null && !configPayload.UnknownKeys.IsEmpty())
 			{
 				_logger.Info()
@@ -68,13 +63,9 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 						, string.Join(", ", CentralConfigPayload.SupportedOptions.Select(k => $"`{k}'")));
 			}
 
-			return new CentralConfigFetcher.ConfigDelta(
-				captureBody: configParser.CaptureBody,
-				captureBodyContentTypes: configParser.CaptureBodyContentTypes,
-				transactionMaxSpans: configParser.TransactionMaxSpans,
-				transactionSampleRate: configParser.TransactionSampleRate,
-				eTag: eTag
-			);
+			var eTag = httpResponse.Headers.ETag.ToString();
+
+			return new CentralConfigReader(_logger, configPayload, eTag);
 		}
 
 		private static CentralConfigFetcher.WaitInfoS ExtractWaitInfo(HttpResponseMessage httpResponse)
@@ -140,56 +131,22 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			throw new CentralConfigFetcher.FailedToFetchConfigException(message, waitInfo, severity);
 		}
 
-		private class ConfigParser : AbstractConfigurationReader
-		{
-			// ReSharper disable once MemberHidesStaticFromOuterClass
-			private const string ThisClassName = nameof(CentralConfigFetcher) + "." + nameof(ConfigParser);
-
-			private readonly CentralConfigPayload _configPayload;
-			private readonly string _eTag;
-
-			public ConfigParser(IApmLogger logger, CentralConfigPayload configPayload, string eTag) : base(logger, ThisClassName)
-			{
-				_configPayload = configPayload;
-				_eTag = eTag;
-			}
-
-			internal string CaptureBody =>
-				_configPayload[CentralConfigPayload.CaptureBodyKey]
-					?.Let(value => ParseCaptureBody(BuildKv(CentralConfigPayload.CaptureBodyKey, value)));
-
-			internal List<string> CaptureBodyContentTypes =>
-				_configPayload[CentralConfigPayload.CaptureBodyContentTypesKey]
-					?.Let(value => ParseCaptureBodyContentTypes(BuildKv(CentralConfigPayload.CaptureBodyContentTypesKey, value)));
-
-			internal int? TransactionMaxSpans =>
-				_configPayload[CentralConfigPayload.TransactionMaxSpansKey]
-					?.Let(value => ParseTransactionMaxSpans(BuildKv(CentralConfigPayload.TransactionMaxSpansKey, value)));
-
-			internal double? TransactionSampleRate =>
-				_configPayload[CentralConfigPayload.TransactionSampleRateKey]
-					?.Let(value => ParseTransactionSampleRate(BuildKv(CentralConfigPayload.TransactionSampleRateKey, value)));
-
-			private ConfigurationKeyValue BuildKv(string key, string value) =>
-				new ConfigurationKeyValue(key, value, /* readFrom */ $"Central configuration (ETag: `{_eTag}')");
-		}
-
-		private class CentralConfigPayload
+		internal class CentralConfigPayload
 		{
 			internal const string CaptureBodyContentTypesKey = "capture_body_content_types";
 			internal const string CaptureBodyKey = "capture_body";
 			internal const string TransactionMaxSpansKey = "transaction_max_spans";
-
 			internal const string TransactionSampleRateKey = "transaction_sample_rate";
-			// internal const string CaptureHeadersKey = "capture_headers";
-			// internal const string LogLevelKey = "log_level";
-			// internal const string SpanFramesMinDurationKey = "span_frames_min_duration";
-			// internal const string StackTraceLimitKey = "stack_trace_limit";
+
+			internal const string CaptureHeadersKey = "capture_headers";
+			internal const string LogLevelKey = "log_level";
+			internal const string SpanFramesMinDurationKey = "span_frames_min_duration";
+			internal const string StackTraceLimitKey = "stack_trace_limit";
 
 			internal static readonly ISet<string> SupportedOptions = new HashSet<string>
 			{
 				CaptureBodyKey, CaptureBodyContentTypesKey, TransactionMaxSpansKey, TransactionSampleRateKey,
-				//CaptureHeadersKey, LogLevelKey, SpanFramesMinDurationKey, StackTraceLimitKey
+				CaptureHeadersKey, LogLevelKey, SpanFramesMinDurationKey, StackTraceLimitKey
 			};
 
 			private readonly IDictionary<string, string> _keyValues;
