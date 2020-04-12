@@ -649,7 +649,7 @@ This setting can be changed after agent's start.
 [[config-capture-headers]]
 ==== `CaptureHeaders` (performance)
 
-// <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
 [options="header"]
 |============
@@ -738,7 +738,7 @@ Namespaces are checked with `string.StartsWith()`, so "System." matches all Syst
 [[config-stack-trace-limit]]
 ==== `StackTraceLimit` (performance)
 
-// <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
 Setting it to 0 will disable stack trace collection. Any positive integer value will be used as the maximum number of frames to collect. Setting it to -1 means that all frames will be collected.
 
@@ -758,7 +758,7 @@ Setting it to 0 will disable stack trace collection. Any positive integer value 
 [[config-span-frames-min-duration]]
 ==== `SpanFramesMinDuration` (performance)
 
-// <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
 In its default settings,
 the APM agent collects a stack trace for every recorded span with duration longer than 5ms.
@@ -795,7 +795,7 @@ The default unit for this option is `ms`
 [[config-log-level]]
 ==== `LogLevel`
 
-// <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
 [options="header"]
 |============
