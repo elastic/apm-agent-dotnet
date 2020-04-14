@@ -1,62 +1,64 @@
 ﻿using System;
 using System.Diagnostics;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
-using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.CommonSchema.BenchmarkDotNetExporter;
 
 namespace Elastic.Apm.PerfTests
 {
 	[MemoryDiagnoser]
 	public class Program
 	{
-		public static void Main(string[] args) => BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
-
-
-		private string str;
-		public Program()
+		public static void Main(string[] args)
 		{
+			_str = string.Empty;
 			var random = new Random();
-			for (var i = 0; i < 1000; i++)
-			{
-				str += random.Next(10).ToString();
-			}
+			for (var i = 0; i < 1000; i++) _str += random.Next(10).ToString();
 
+			var options = new ElasticsearchBenchmarkExporterOptions("http://localhost:9200");
+			var exporter = new ElasticsearchBenchmarkExporter(options);
+
+			var config =  DefaultConfig.Instance.With(exporter);
+			BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config);
 		}
+
+		private static string _str;
 
 		[Benchmark]
 		public void MatcherVerbatimCaseSensitive()
 		{
-			var matcher = new WildcardMatcher.VerbatimMatcher(str, true);
-			var res = matcher.Matches(str);
+			var matcher = new WildcardMatcher.VerbatimMatcher(_str, true);
+			var res = matcher.Matches(_str);
 			Debug.WriteLine(res);
 		}
 
 		[Benchmark]
 		public void MatcherVerbatimCaseInsensitive()
 		{
-			var matcher = new WildcardMatcher.VerbatimMatcher(str, false);
-			var res = matcher.Matches(str);
+			var matcher = new WildcardMatcher.VerbatimMatcher(_str, false);
+			var res = matcher.Matches(_str);
 			Debug.WriteLine(res);
 		}
 
 		[Benchmark]
 		public void MatcherSimpleCaseSensitive()
 		{
-			var matcher = new WildcardMatcher.SimpleWildcardMatcher(str, false, false, false);
-			var res = matcher.Matches(str);
+			var matcher = new WildcardMatcher.SimpleWildcardMatcher(_str, false, false, false);
+			var res = matcher.Matches(_str);
 			Debug.WriteLine(res);
 		}
 
 		[Benchmark]
 		public void MatcherSimpleCaseInsensitive()
 		{
-			var matcher = new WildcardMatcher.SimpleWildcardMatcher(str, false, false, true);
-			var res = matcher.Matches(str);
+			var matcher = new WildcardMatcher.SimpleWildcardMatcher(_str, false, false, true);
+			var res = matcher.Matches(_str);
 			Debug.WriteLine(res);
 		}
 
@@ -126,15 +128,17 @@ namespace Elastic.Apm.PerfTests
 		public void Simple100Transaction10Spans()
 		{
 			var noopLogger = new NoopLogger();
-			var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(), logger: noopLogger,
-				configurationReader: new MockConfigSnapshot(noopLogger, spanFramesMinDurationInMilliseconds: "-1ms", stackTraceLimit: "10")));
 
-			for (var i = 0; i < 100; i++)
+			using (var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(), logger: noopLogger,
+				configurationReader: new MockConfigSnapshot(noopLogger))))
 			{
-				agent.Tracer.CaptureTransaction("transaction", "perfTransaction", transaction =>
+				for (var i = 0; i < 100; i++)
 				{
-					for (var j = 0; j < 10; j++) transaction.CaptureSpan("span", "perfSpan", () => { });
-				});
+					agent.Tracer.CaptureTransaction("transaction", "perfTransaction", transaction =>
+					{
+						for (var j = 0; j < 10; j++) transaction.CaptureSpan("span", "perfSpan", () => { });
+					});
+				}
 			}
 		}
 
@@ -142,16 +146,17 @@ namespace Elastic.Apm.PerfTests
 		public void DebugLogSimple100Transaction10Spans()
 		{
 			var testLogger = new PerfTestLogger(LogLevel.Debug);
-			var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(), logger: testLogger,
-				configurationReader: new MockConfigSnapshot(testLogger, "Debug")));
 
-
-			for (var i = 0; i < 100; i++)
+			using (var agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(), logger: testLogger,
+				configurationReader: new MockConfigSnapshot(testLogger, "Debug"))))
 			{
-				agent.Tracer.CaptureTransaction("transaction", "perfTransaction", transaction =>
+				for (var i = 0; i < 100; i++)
 				{
-					for (var j = 0; j < 10; j++) transaction.CaptureSpan("span", "perfSpan", () => { });
-				});
+					agent.Tracer.CaptureTransaction("transaction", "perfTransaction", transaction =>
+					{
+						for (var j = 0; j < 10; j++) transaction.CaptureSpan("span", "perfSpan", () => { });
+					});
+				}
 			}
 		}
 

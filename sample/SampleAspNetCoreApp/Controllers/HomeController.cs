@@ -19,6 +19,7 @@ namespace SampleAspNetCoreApp.Controllers
 {
 	public class HomeController : Controller
 	{
+		public const string PostResponseBody = "somevalue";
 		private readonly SampleDataContext _sampleDataContext;
 
 		public HomeController(SampleDataContext sampleDataContext) => _sampleDataContext = sampleDataContext;
@@ -160,9 +161,13 @@ namespace SampleAspNetCoreApp.Controllers
 
 		public IActionResult TransactionWithCustomName()
 		{
-			if (Agent.Tracer.CurrentTransaction != null) Agent.Tracer.CurrentTransaction.Name = "custom";
+			if (Agent.IsConfigured && Agent.Tracer.CurrentTransaction != null)
+				Agent.Tracer.CurrentTransaction.Name = "custom";
+
 			return Ok();
 		}
+
+		public IActionResult EmptyWebRequest() => Ok();
 
 		public IActionResult TransactionWithCustomNameUsingRequestInfo()
 		{
@@ -173,8 +178,6 @@ namespace SampleAspNetCoreApp.Controllers
 
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 		public IActionResult Error() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-
-		public const string PostResponseBody = "somevalue";
 
 		[HttpPost]
 		[Route("api/Home/Post")]
