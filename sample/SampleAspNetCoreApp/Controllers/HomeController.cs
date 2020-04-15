@@ -161,13 +161,22 @@ namespace SampleAspNetCoreApp.Controllers
 
 		public IActionResult TransactionWithCustomName()
 		{
-			if (Agent.IsConfigured && Agent.Tracer.CurrentTransaction != null)
-				Agent.Tracer.CurrentTransaction.Name = "custom";
-
+			if (Agent.Tracer.CurrentTransaction != null) Agent.Tracer.CurrentTransaction.Name = "custom";
 			return Ok();
 		}
 
 		public IActionResult EmptyWebRequest() => Ok();
+
+		public IActionResult TransactionWithDbCallAndCustomSpan()
+		{
+			_sampleDataContext.Database.Migrate();
+			var model = _sampleDataContext.SampleTable.Select(item => item.Name).ToList();
+			var str =  string.Join(",", model.ToArray());
+
+			if (Agent.Tracer.CurrentTransaction != null) Agent.Tracer.CurrentTransaction.CaptureSpan("SampleSpan", "PerfBenchmark", () => { });
+
+			return Ok(str);
+		}
 
 		public IActionResult TransactionWithCustomNameUsingRequestInfo()
 		{
