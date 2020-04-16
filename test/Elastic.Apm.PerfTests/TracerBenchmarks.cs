@@ -12,12 +12,12 @@ namespace Elastic.Apm.PerfTests
 	{
 		private ApmAgent _agent;
 
-		[GlobalSetup(Target = nameof(SimpleTransactionsWith1SpansWithStackTrace))]
+		[GlobalSetup(Target = nameof(SimpleTransactionsWith1SpanWithStackTrace))]
 		public void SetupWithStackTraceForAllSpans()
 			=> _agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(),
 				configurationReader: new MockConfigSnapshot(spanFramesMinDurationInMilliseconds: "-1ms")));
 
-		[GlobalSetup(Target = nameof(SimpleTransactionsWith1SpansWithoutStackTrace))]
+		[GlobalSetup(Target = nameof(SimpleTransactionsWith1SpanWithoutStackTrace))]
 		public void SetupWithTurnedOffStackTrace()
 			=> _agent = new ApmAgent(new AgentComponents(payloadSender: new MockPayloadSender(),
 				configurationReader: new MockConfigSnapshot(spanFramesMinDurationInMilliseconds: "0ms")));
@@ -39,12 +39,12 @@ namespace Elastic.Apm.PerfTests
 		}
 
 		[Benchmark]
-		public void SimpleTransactionsWith1SpansWithStackTrace()
+		public void SimpleTransactionsWith1SpanWithStackTrace()
 			=> _agent.Tracer.CaptureTransaction("transaction", "perfTransaction",
 				transaction => { transaction.CaptureSpan("span", "perfSpan", () => { }); });
 
 		[Benchmark]
-		public void SimpleTransactionsWith1SpansWithoutStackTrace()
+		public void SimpleTransactionsWith1SpanWithoutStackTrace()
 			=> _agent.Tracer.CaptureTransaction("transaction", "perfTransaction",
 				transaction => { transaction.CaptureSpan("span", "perfSpan", () => { }); });
 

@@ -8,16 +8,26 @@ namespace Elastic.Apm.PerfTests
 	[MemoryDiagnoser]
 	public class MetricsBenchmarks
 	{
-		[Benchmark]
-		public void CollectAllMetrics2X()
+		private MetricsCollector _metricsCollector;
+
+		[GlobalSetup(Target = nameof(CollectAllMetrics2X))]
+		public void SetUpForAllMetrics()
 		{
 			var noopLogger = new NoopLogger();
 			var mockPayloadSender = new MockPayloadSender();
-			using (var collector = new MetricsCollector(noopLogger, mockPayloadSender, new MockConfigSnapshot(noopLogger)))
-			{
-				collector.CollectAllMetrics();
-				collector.CollectAllMetrics();
-			}
+
+			_metricsCollector = new MetricsCollector(noopLogger, mockPayloadSender, new MockConfigSnapshot(noopLogger));
+		}
+
+		[GlobalCleanup(Target = nameof(CollectAllMetrics2X))]
+		public void CleanUpForAllMetrics()
+		 => _metricsCollector?.Dispose();
+
+		[Benchmark]
+		public void CollectAllMetrics2X()
+		{
+			_metricsCollector.CollectAllMetrics();
+			_metricsCollector.CollectAllMetrics();
 		}
 
 		[Benchmark]
@@ -55,6 +65,5 @@ namespace Elastic.Apm.PerfTests
 			mockPayloadSender.GetSamples();
 			mockPayloadSender.GetSamples();
 		}
-
 	}
 }
