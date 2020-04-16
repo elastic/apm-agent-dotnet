@@ -3,9 +3,9 @@ using BenchmarkDotNet.Attributes;
 
 namespace Elastic.Apm.PerfTests.AspNetCorePerf
 {
-
 	/// <summary>
-	/// A Test which triggers a simple ASP.NET Core endpoint and measures the response time while the agent is active in the process.
+	/// A Test which triggers a simple ASP.NET Core endpoint and measures the response time while the agent is active in the
+	/// process.
 	/// </summary>
 	public class AspNetCoreLoadTestWithAgent
 	{

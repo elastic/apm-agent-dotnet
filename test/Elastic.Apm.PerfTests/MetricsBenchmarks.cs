@@ -21,7 +21,7 @@ namespace Elastic.Apm.PerfTests
 
 		[GlobalCleanup(Target = nameof(CollectAllMetrics2X))]
 		public void CleanUpForAllMetrics()
-		 => _metricsCollector?.Dispose();
+			=> _metricsCollector?.Dispose();
 
 		[Benchmark]
 		public void CollectAllMetrics2X()

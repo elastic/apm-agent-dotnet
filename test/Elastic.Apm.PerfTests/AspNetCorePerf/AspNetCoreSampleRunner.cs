@@ -29,7 +29,7 @@ namespace Elastic.Apm.PerfTests.AspNetCorePerf
 				{
 					if (withAgent)
 					{
-						Environment.SetEnvironmentVariable("ELASTIC_APM_FLUSH_INTERVAL","0");
+						Environment.SetEnvironmentVariable("ELASTIC_APM_FLUSH_INTERVAL", "0");
 						app.UseElasticApm(subscribers: new IDiagnosticsSubscriber[]
 						{
 							new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber()

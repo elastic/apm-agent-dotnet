@@ -49,7 +49,5 @@ namespace Elastic.Apm.PerfTests
 			var res = matcher.Matches(_str);
 			Debug.WriteLine(res);
 		}
-
-
 	}
 }

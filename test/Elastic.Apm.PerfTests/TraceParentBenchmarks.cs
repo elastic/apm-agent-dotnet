@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using BenchmarkDotNet.Attributes;
+using Elastic.Apm.DistributedTracing;
 
 namespace Elastic.Apm.PerfTests
 {
@@ -11,7 +12,7 @@ namespace Elastic.Apm.PerfTests
 		{
 			const string traceParent = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01";
 
-			var res = DistributedTracing.TraceContext.TryExtractTracingData(traceParent);
+			var res = TraceContext.TryExtractTracingData(traceParent);
 			Debug.WriteLine($"{res}");
 		}
 	}
