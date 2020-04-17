@@ -356,6 +356,7 @@ pipeline {
               agent { label 'worker-854309' }
               environment {
                 REPORT_FILE = 'apm-agent-benchmark-results.json'
+                HOME = "${env.WORKSPACE}"
               }
               when {
                 beforeAgent true
@@ -370,6 +371,9 @@ pipeline {
                   }
                   expression { return env.ONLY_DOCS == "false" }
                 }
+              }
+              options {
+                warnError('Benchmark failed')
               }
               steps {
                 withGithubNotify(context: 'Benchmarks') {
