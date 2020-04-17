@@ -374,6 +374,7 @@ pipeline {
               }
               options {
                 warnError('Benchmark failed')
+                timeout(time: 1, unit: 'HOURS')
               }
               steps {
                 withGithubNotify(context: 'Benchmarks') {
