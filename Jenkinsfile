@@ -17,7 +17,7 @@ pipeline {
     BENCHMARK_SECRET  = 'secret/apm-team/ci/benchmark-cloud'
   }
   options {
-    timeout(time: 1, unit: 'HOURS')
+    timeout(time: 75, unit: 'MINUTES')
     buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20', daysToKeepStr: '30'))
     timestamps()
     ansiColor('xterm')
@@ -44,8 +44,8 @@ pipeline {
             stash allowEmpty: true, name: 'source', useDefaultExcludes: false
             script {
               dir("${BASE_DIR}"){
-                // Skip all the stages except docs for PR's with asciidoc and md changes only
-                env.ONLY_DOCS = isGitRegionMatch(patterns: [ '.*\\.(asciidoc|md)' ], shouldMatchAll: true)
+                // Skip all the stages for PRs with changes in the docs only
+                env.ONLY_DOCS = isGitRegionMatch(patterns: [ '^docs/.*' ], shouldMatchAll: true)
 
                  // Look for changes related to the benchmark, if so then set the env variable.
                 def patternList = [

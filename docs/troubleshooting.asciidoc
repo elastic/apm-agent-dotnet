@@ -1,0 +1,92 @@
+ifdef::env-github[]
+NOTE: For the best reading experience,
+please view this documentation at https://www.elastic.co/guide/en/apm/agent/dotnet[elastic.co]
+endif::[]
+
+[[troubleshooting]]
+== Troubleshooting
+
+Use the information in this section to troubleshoot common problems and find
+answers for frequently asked questions.
+As a first step, ensure your stack is compatible with the Agent's <<supported-technologies,supported technologies>>.
+
+Don't worry if you can't figure out what the problem is; we’re here to help.
+If you are an existing Elastic customer with a support contract, please create a ticket in the
+https://support.elastic.co/customers/s/login/[Elastic Support portal].
+If not, post in the https://discuss.elastic.co/c/apm[APM discuss forum].
+
+IMPORTANT: *Please attach your debug logs* so that we can analyze the problem.
+Upload the *complete* logs to a service like https://gist.github.com.
+The logs should include everything from the application startup up until the first request has been executed.
+
+[float]
+[[no-data-sent]]
+=== No data is sent to the APM Server
+
+If neither errors nor performance metrics are being sent to the APM Server,
+it's a good idea to first check your logs and look for output just as the app starts.
+
+If you don't see anything suspicious in the agent logs (no warning or error), it's recommended to turn the log level to `Trace` for further investigation.
+
+=== Collecting agent logs
+
+The way to collect logs depends on the setup of your application.
+
+==== ASP.NET Core 
+
+When the Agent is activated with `UseAllElasticApm` or `UseElasticApm`, it will integrate with the
+https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-3.1[ASP.NET Core logging infrastructure].
+This means the Agent will pick up the configured logging provider and log as any other component logs.
+
+==== ASP.NET Classic
+
+Unlike ASP.NET Core, ASP.NET (classic) does not have a predefined logging system.
+However, if you have a logging system in place, like NLog, Serilog, or similar, you can direct the agent logs into your
+logging system by creating a bridge between the agent's internal logger and your logging system. 
+
+First implement the `IApmLogger` interface from the `Elastic.Apm.Logging` namespace:
+
+[source,csharp]
+----
+internal class ApmLoggerBridge : IApmLogger
+{
+	private readonly Lazy<Logger> _logger;
+	public bool IsEnabled(ApmLogLevel level)
+	{
+		// Check for log level here.
+		// Typically you just compare the configured log level of your logger
+		// to the input parameter of this method and return if it's the same/higher or not
+	}
+
+	public void Log<TState>(ApmLogLevel apmLogLevel, TState state, Exception e, Func<TState, Exception, string> formatter)
+	{
+		// You can log the given log into your logging system here.
+	}
+}
+----
+
+An example implementation for NLog can be seen https://github.com/elastic/apm-agent-dotnet/blob/master/sample/AspNetFullFrameworkSampleApp/App_Start/ApmLoggerToNLog.cs[in our GitHub repository].
+
+Then tell the agent to use the `ApmLoggerBridge`.
+
+For this in ASP.NET (classic) you need to place the following code into the `Application_Start` method in the `HttpApplication` implementation of your app which is typically in the `Global.asx.cs` file:
+
+[source,csharp]
+----
+AgentDependencies.Logger = new ApmLoggerBridge();
+----
+
+The `AgentDependencies` class lives in the `Elastic.Apm.AspNetFullFramework` namespace.
+During initialization, the agent checks if an additional logger was configured--the agent only does this once, so it's important to set it as early in the process as possible (typically in the `Application_Start` method).
+
+
+==== General .NET applications
+
+If none of the above cases apply to your application, you can still use a bridge and redirect agent logs into a .NET logging system (like NLog, Serilog, or similar).
+
+For this you'll need an `IApmLogger` implementation (see above) which you need to pass to the `Setup` method during agent setup:
+
+[source,csharp]
+----
+Agent.Setup(new AgentComponents(logger: new ApmLoggerBridge()));
+----

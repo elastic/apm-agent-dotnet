@@ -207,6 +207,9 @@ namespace Elastic.Apm.Tests.HelpersTests
 			[InlineData("Oracle Data Provider for .NET / ODP.NET - multiple addresses"
 				, @"Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=MyHost1)(PORT=1))(ADDRESS=(PROTOCOL=TCP)(HOST=MyHost2)(PORT=22)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=MyOracleSID)));User Id=myUsername;Password=myPassword;"
 				, "MyHost1", 1)] // https://www.connectionstrings.com/oracle-data-provider-for-net-odp-net/using-odpnet-without-tnsnamesora/
+			[InlineData("Reported in a GitHub Issue"
+				, @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=DATABASENAME)(PORT=1521))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=DATABASESERVICENAME))); User ID=USERNAME; password=PASSWORD; Pooling=False;"
+				, "DATABASENAME", 1521)] // https://github.com/elastic/apm-agent-dotnet/issues/796#issuecomment-609668197
 			public void nested_value(string dbgDescription, string connectionString, string expectedHost, int? expectedPort)
 				=> TestImpl(LoggerBase, dbgDescription, connectionString, expectedHost, expectedPort);
 

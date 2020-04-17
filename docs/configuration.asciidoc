@@ -10,6 +10,17 @@ You can utilize configuration options to adapt the Elastic APM agent to your nee
 
 By default, the agent uses environment variables. Additionally, on ASP.NET Core, the agent can plug into the https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-2.2[Microsoft.Extensions.Configuration] infrastructure.
 
+[float]
+[[dynamic-configuration]]
+=== Dynamic configuration
+
+Configuration options marked with the image:./images/dynamic-config.svg[] badge can be changed at runtime
+when set from a supported source.
+
+The .NET Agent supports {apm-app-ref}/agent-configuration.html[Central configuration],
+which allows you to fine-tune certain configurations via the APM app.
+This feature is enabled in the Agent by default, with <<config-central-config>>.
+
 [[configuration-on-asp-net-core]]
 === Configuration on ASP.NET Core
 The `UseElasticApm()` extension method offers an overload to pass an `IConfiguration` instance to the APM Agent. By using this overload in a typical ASP.NET Core application, the `Startup.cs` file would contain code similar to the following:
@@ -143,14 +154,14 @@ NOTE: The service name must conform to this regular expression: `^[a-zA-Z0-9 _-]
 
 [options="header"]
 |============
-| Environment variable name      | IConfiguration or Web.config key 
+| Environment variable name      | IConfiguration or Web.config key
 | `ELASTIC_APM_SERVICE_NAME` | `ElasticApm:ServiceName`
 |============
 
 [options="header"]
 |============
 | Default                          | Type
-| Name of the entry assembly       | String 
+| Name of the entry assembly       | String
 |============
 
 [float]
@@ -164,14 +175,14 @@ NOTE: This feature requires APM Server versions >= 7.5
 
 [options="header"]
 |============
-| Environment variable name       | IConfiguration or Web.config key 
+| Environment variable name       | IConfiguration or Web.config key
 | `ELASTIC_APM_SERVICE_NODE_NAME` | `ElasticApm:ServiceNodeName`
 |============
 
 [options="header"]
 |============
 | Default        | Type
-| `<none>`       | String 
+| `<none>`       | String
 |============
 
 [float]
@@ -184,14 +195,14 @@ of the deployed revision, e.g. the output of git rev-parse HEAD.
 
 [options="header"]
 |============
-| Environment variable name      | IConfiguration or Web.config key 
+| Environment variable name      | IConfiguration or Web.config key
 | `ELASTIC_APM_SERVICE_VERSION` | `ElasticApm:ServiceVersion`
 |============
 
 [options="header"]
 |============
 | Default                                        | Type
-| Informational version of the entry assembly    | String 
+| Informational version of the entry assembly    | String
 |============
 
 [float]
@@ -209,14 +220,14 @@ You must use the query bar to filter for a specific environment in versions prio
 
 [options="header"]
 |============
-| Environment variable name      | IConfiguration or Web.config key 
+| Environment variable name      | IConfiguration or Web.config key
 | `ELASTIC_APM_ENVIRONMENT`      | `ElasticApm:Environment`
 |============
 
 [options="header"]
 |============
 | Default        | Type
-| See note below | String 
+| See note below | String
 |============
 
 NOTE: On ASP.NET Core application the agent uses https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.hosting.ihostingenvironment.environmentname?view=aspnetcore-2.2#Microsoft_AspNetCore_Hosting_IHostingEnvironment_EnvironmentName[EnvironmentName from IHostingEnvironment] as default environment name.
@@ -224,6 +235,8 @@ NOTE: On ASP.NET Core application the agent uses https://docs.microsoft.com/en-u
 [float]
 [[config-transaction-sample-rate]]
 ==== `TransactionSampleRate`
+
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
 By default, the agent will sample every transaction (e.g. a request to your service).
 To reduce overhead and storage requirements, you can set the sample rate to a value between 0.0 and 1.0.
@@ -237,19 +250,21 @@ This setting can be changed after agent's start.
 
 [options="header"]
 |============
-| Environment variable name             | IConfiguration or Web.config key 
+| Environment variable name             | IConfiguration or Web.config key
 | `ELASTIC_APM_TRANSACTION_SAMPLE_RATE` | `ElasticApm:TransactionSampleRate`
 |============
 
 [options="header"]
 |============
 | Default | Type
-| 1.0     | Double 
+| 1.0     | Double
 |============
 
 [float]
 [[config-transaction-max-spans]]
 ==== `TransactionMaxSpans` (performance) (added[1.1.1])
+
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
 Limits the amount of spans that are recorded per transaction.
 This is helpful in cases where a transaction creates a very high amount of spans,
@@ -264,14 +279,14 @@ This setting can be changed after agent's start.
 
 [options="header"]
 |============
-| Environment variable name           | IConfiguration key 
+| Environment variable name           | IConfiguration key
 | `ELASTIC_APM_TRANSACTION_MAX_SPANS` | `ElasticApm:TransactionMaxSpans`
 |============
 
 [options="header"]
 |============
 | Default | Type
-| `500`     | Integer 
+| `500`     | Integer
 |============
 
 [float]
@@ -283,14 +298,14 @@ the latest {apm-app-ref}/agent-configuration.html[APM Agent configuration].
 
 [options="header"]
 |============
-| Environment variable name    | IConfiguration key 
+| Environment variable name    | IConfiguration key
 | `ELASTIC_APM_CENTRAL_CONFIG` | `ElasticApm:CentralConfig`
 |============
 
 [options="header"]
 |============
 | Default | Type
-| true    | Boolean 
+| true    | Boolean
 |============
 
 [float]
@@ -301,7 +316,7 @@ Sometimes it is necessary to sanitize, i.e., remove, sensitive data sent to Elas
 This config accepts a list of wildcard patterns of field names which should be sanitized.
 These apply for example to HTTP headers and `application/x-www-form-urlencoded` data.
 
-IMPORTANT: This setting only applies to values that are captured automatically by the agent. If you capture the request body manually with the public API, this configuration doesn't apply, and the agent won't sanitize the body. 
+IMPORTANT: This setting only applies to values that are captured automatically by the agent. If you capture the request body manually with the public API, this configuration doesn't apply, and the agent won't sanitize the body.
 
 The wildcard, `*`, matches zero or more characters, and matching is case insensitive by default.
 Prepending an element with `(?-i)` makes the matching case sensitive.
@@ -310,7 +325,7 @@ Examples: `/foo/*/bar/*/baz*`, `*foo*`.
 You should review the data captured by Elastic APM carefully to make sure it does not contain sensitive information.
 If you do find sensitive data in your Elasticsearch index,
 you should add an additional entry to this list.
-Make sure to include the default entries as well, as setting a value here will overwrite the defaults. 
+Make sure to include the default entries as well, as setting a value here will overwrite the defaults.
 
 NOTE: Data in the query string is considered non-sensitive,
 as sensitive information should not be sent in the query string.
@@ -318,14 +333,14 @@ See https://www.owasp.org/index.php/Information_exposure_through_query_strings_i
 
 [options="header"]
 |============
-| Environment variable name    | IConfiguration key 
+| Environment variable name    | IConfiguration key
 | `ELASTIC_APM_SANITIZE_FIELD_NAMES` | `ElasticApm:SanitizeFieldNames`
 |============
 
 [options="header"]
 |============
 | Default | Type
-| `password, passwd, pwd, secret, *key, *token*, *session*, *credit*, *card*, authorization, set-cookie` | List<string> 
+| `password, passwd, pwd, secret, *key, *token*, *session*, *credit*, *card*, authorization, set-cookie` | List<string>
 |============
 
 [float]
@@ -469,11 +484,11 @@ Example: `30s`.
 The default unit for this option is `s`.
 
 If `FlushInterval` is set to `0` (or `0s`, `0ms`, etc.) and
-there's no event sending operation still in progress 
+there's no event sending operation still in progress
 then the Agent won't hold events in the queue and instead will send them immediately.
 
 Setting `FlushInterval` to a negative value (for example `-1`, `-54s`, `-89ms`, etc.) is invalid and
-in that case agent uses the default value instead.    
+in that case agent uses the default value instead.
 
 [float]
 [[config-max-batch-event-count]]
@@ -497,7 +512,7 @@ if there are events that need to be sent out because they were held for too long
  (see <<config-flush-interval,`FlushInterval`>>).
 
 Setting `MaxBatchEventCount` to 0 or a negative value is invalid and
-in that case the Agent will use the default value instead.  
+in that case the Agent will use the default value instead.
 
 [float]
 [[config-max-queue-event-count]]
@@ -542,7 +557,7 @@ The default unit for this option is `s`.
 
 [options="header"]
 |============
-| Environment variable name      | IConfiguration or Web.config key 
+| Environment variable name      | IConfiguration or Web.config key
 | `ELASTIC_APM_METRICS_INTERVAL` | `ElasticApm:MetricsInterval`
 |============
 
@@ -564,7 +579,7 @@ This option supports the wildcard `*`, which matches zero or more characters. Ex
 
 [options="header"]
 |============
-| Environment variable name      | IConfiguration or Web.config key 
+| Environment variable name      | IConfiguration or Web.config key
 | `ELASTIC_APM_DISABLE_METRICS` | `ElasticApm:DisableMetrics`
 |============
 
@@ -574,6 +589,8 @@ This option supports the wildcard `*`, which matches zero or more characters. Ex
 [float]
 [[config-capture-body]]
 ==== `CaptureBody` (performance) (added[1.0.1])
+
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
 For transactions that are HTTP requests, the agent can optionally capture the request body, e.g., POST variables.
 If the request has a body and this setting is disabled, the body will be shown as [REDACTED].
@@ -631,6 +648,8 @@ This setting can be changed after agent's start.
 [float]
 [[config-capture-headers]]
 ==== `CaptureHeaders` (performance)
+
+// <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
 [options="header"]
 |============
@@ -719,6 +738,8 @@ Namespaces are checked with `string.StartsWith()`, so "System." matches all Syst
 [[config-stack-trace-limit]]
 ==== `StackTraceLimit` (performance)
 
+// <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+
 Setting it to 0 will disable stack trace collection. Any positive integer value will be used as the maximum number of frames to collect. Setting it to -1 means that all frames will be collected.
 
 [options="header"]
@@ -737,10 +758,12 @@ Setting it to 0 will disable stack trace collection. Any positive integer value 
 [[config-span-frames-min-duration]]
 ==== `SpanFramesMinDuration` (performance)
 
+// <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+
 In its default settings,
 the APM agent collects a stack trace for every recorded span with duration longer than 5ms.
 While this is very helpful to find the exact place in your code that causes the span,
-collecting this stack trace does have some overhead. 
+collecting this stack trace does have some overhead.
 When setting this option to a negative value, like `-1ms`, stack traces will be collected for all spans.
 Setting it to a positive value, e.g. `5ms`,
 will limit stack trace collection to spans with durations equal to or longer than the given value,
@@ -772,6 +795,8 @@ The default unit for this option is `ms`
 [[config-log-level]]
 ==== `LogLevel`
 
+// <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+
 [options="header"]
 |============
 | Environment variable name | IConfiguration or Web.config key
@@ -793,7 +818,7 @@ Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `Non
 
 [options="header"]
 |============
-| Option name | Is reloadable? | Keywords
+| Option name | <<dynamic-configuration, image:./images/dynamic-config.svg[] >> | Keywords
 | <<config-application-namespaces,`ApplicationNamespaces`>> | No | Stacktrace
 | <<config-capture-body,`CaptureBody`>> | Yes | HTTP, Performance
 | <<config-capture-body-content-types,`CaptureBodyContentTypes`>> | Yes | HTTP, Performance
@@ -823,7 +848,3 @@ Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `Non
 | <<config-verify-server-cert,`VerifyServerCert`>> | No | Reporter
 
 |============
-
-NOTE: Reloadable means that the setting can be changed after agent's start.
-For example, some reloadable options can be changed
-via {apm-app-ref}/agent-configuration.html[APM Agent configuration]).

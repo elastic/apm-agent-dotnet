@@ -119,7 +119,7 @@ namespace Elastic.Apm.Helpers
 				_logger.Error()?.LogException(e, "Exception while parsing container id");
 			}
 
-			_logger.Error()?.Log("Failed parsing container id");
+			_logger.Warning()?.Log("Failed parsing container id - the agent will not report container id");
 			return null;
 		}
 
