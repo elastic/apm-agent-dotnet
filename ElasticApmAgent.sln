@@ -1,23 +1,23 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2050
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3734A52F-2222-454B-BF58-1BA5C1F29D77}"
-ProjectSection(SolutionItems) = preProject
-	src\Directory.Build.props = src\Directory.Build.props
-EndProjectSection
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.Build.props = src\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{3C791D9C-6F19-4F46-B367-2EC0F818762D}"
-ProjectSection(SolutionItems) = preProject
-	sample\Directory.Build.props = sample\Directory.Build.props
-EndProjectSection
+	ProjectSection(SolutionItems) = preProject
+		sample\Directory.Build.props = sample\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleAspNetCoreApp", "sample\SampleAspNetCoreApp\SampleAspNetCoreApp.csproj", "{0ADF687D-4DB7-417E-80B4-27B3FD86875E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{267A241E-571F-458F-B04C-B6C4DE79E735}"
-ProjectSection(SolutionItems) = preProject
-	test\Directory.Build.props = test\Directory.Build.props
-EndProjectSection
+	ProjectSection(SolutionItems) = preProject
+		test\Directory.Build.props = test\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm", "src\Elastic.Apm\Elastic.Apm.csproj", "{90BC9629-C8D2-4FD5-863E-EA2D5FB37341}"
 EndProject
@@ -52,17 +52,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "files", "files", "{B406113B
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.PerfTests", "test\Elastic.Apm.PerfTests\Elastic.Apm.PerfTests.csproj", "{F069CE99-F418-4BC2-9E44-8F03497D8DA8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspNetFullFrameworkSampleApp", "sample\AspNetFullFrameworkSampleApp\AspNetFullFrameworkSampleApp.csproj", "{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApiSample", "sample\WebApiSample\WebApiSample.csproj", "{319E2094-D2E1-46C5-8985-9693CD8DDCBD}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.AspNetFullFramework", "src\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj", "{D6FFDDAB-9D76-442F-8F1D-BD6F553F92FA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.EntityFramework6", "src\Elastic.Apm.EntityFramework6\Elastic.Apm.EntityFramework6.csproj", "{12FFCFF6-858C-4E6E-935C-E304712DECA4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.DockerTests", "test\Elastic.Apm.DockerTests\Elastic.Apm.DockerTests.csproj", "{40B47FD4-6E67-4D52-B9A4-607B9D01D9F5}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.AspNetFullFramework.Tests", "test\Elastic.Apm.AspNetFullFramework.Tests\Elastic.Apm.AspNetFullFramework.Tests.csproj", "{4253798D-A160-40B3-8F16-5BF64C559B93}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Tests.MockApmServer", "test\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj", "{AFFB238B-10C0-4229-9527-184EFCF0F5AC}"
 EndProject
@@ -128,18 +122,10 @@ Global
 		{F069CE99-F418-4BC2-9E44-8F03497D8DA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F069CE99-F418-4BC2-9E44-8F03497D8DA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F069CE99-F418-4BC2-9E44-8F03497D8DA8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{319E2094-D2E1-46C5-8985-9693CD8DDCBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{319E2094-D2E1-46C5-8985-9693CD8DDCBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{319E2094-D2E1-46C5-8985-9693CD8DDCBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{319E2094-D2E1-46C5-8985-9693CD8DDCBD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D6FFDDAB-9D76-442F-8F1D-BD6F553F92FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D6FFDDAB-9D76-442F-8F1D-BD6F553F92FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D6FFDDAB-9D76-442F-8F1D-BD6F553F92FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D6FFDDAB-9D76-442F-8F1D-BD6F553F92FA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{12FFCFF6-858C-4E6E-935C-E304712DECA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{12FFCFF6-858C-4E6E-935C-E304712DECA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{12FFCFF6-858C-4E6E-935C-E304712DECA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -148,10 +134,6 @@ Global
 		{40B47FD4-6E67-4D52-B9A4-607B9D01D9F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{40B47FD4-6E67-4D52-B9A4-607B9D01D9F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{40B47FD4-6E67-4D52-B9A4-607B9D01D9F5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4253798D-A160-40B3-8F16-5BF64C559B93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4253798D-A160-40B3-8F16-5BF64C559B93}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4253798D-A160-40B3-8F16-5BF64C559B93}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4253798D-A160-40B3-8F16-5BF64C559B93}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AFFB238B-10C0-4229-9527-184EFCF0F5AC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AFFB238B-10C0-4229-9527-184EFCF0F5AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AFFB238B-10C0-4229-9527-184EFCF0F5AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -201,12 +183,9 @@ Global
 		{C0F1E546-4388-4EA5-8C7C-ACA8CFA4CE2F} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{1AAB1A30-42C0-4C76-AE2E-9D7293945D80} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{F069CE99-F418-4BC2-9E44-8F03497D8DA8} = {267A241E-571F-458F-B04C-B6C4DE79E735}
-		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{319E2094-D2E1-46C5-8985-9693CD8DDCBD} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
-		{D6FFDDAB-9D76-442F-8F1D-BD6F553F92FA} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{12FFCFF6-858C-4E6E-935C-E304712DECA4} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{40B47FD4-6E67-4D52-B9A4-607B9D01D9F5} = {267A241E-571F-458F-B04C-B6C4DE79E735}
-		{4253798D-A160-40B3-8F16-5BF64C559B93} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{AFFB238B-10C0-4229-9527-184EFCF0F5AC} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{79BEA612-E2C8-47FD-84DC-A1B17AAD5038} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{F6027B7F-2AD7-4F43-8DDC-123E4824F15F} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}

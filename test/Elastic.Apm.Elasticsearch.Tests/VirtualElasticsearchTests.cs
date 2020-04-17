@@ -70,7 +70,7 @@ namespace Elastic.Apm.Elasticsearch.Tests
 					);
 					searchResponse.Should().NotBeNull();
 				}
-				catch (Exception e) { }
+				catch (Exception) { }
 
 				var spans = payloadSender.SpansOnFirstTransaction;
 				spans.Should().NotBeEmpty();
