@@ -14,6 +14,7 @@ pipeline {
     GITHUB_CHECK_ITS_NAME = 'Integration Tests'
     ITS_PIPELINE = 'apm-integration-tests-selector-mbp/master'
     OPBEANS_REPO = 'opbeans-dotnet'
+    BENCHMARK_SECRET  = 'secret/apm-team/ci/benchmark-cloud'
   }
   options {
     timeout(time: 1, unit: 'HOURS')
@@ -45,6 +46,12 @@ pipeline {
               dir("${BASE_DIR}"){
                 // Skip all the stages except docs for PR's with asciidoc and md changes only
                 env.ONLY_DOCS = isGitRegionMatch(patterns: [ '.*\\.(asciidoc|md)' ], shouldMatchAll: true)
+
+                 // Look for changes related to the benchmark, if so then set the env variable.
+                def patternList = [
+                  '^test/Elastic.Apm.PerfTests/.*'
+                ]
+                env.BENCHMARK_UPDATED = isGitRegionMatch(patterns: patternList)
               }
             }
           }
@@ -341,6 +348,47 @@ pipeline {
                                     string(name: 'GITHUB_CHECK_REPO', value: env.REPO),
                                     string(name: 'GITHUB_CHECK_SHA1', value: env.GIT_BASE_COMMIT)])
                 githubNotify(context: "${env.GITHUB_CHECK_ITS_NAME}", description: "${env.GITHUB_CHECK_ITS_NAME} ...", status: 'PENDING', targetUrl: "${env.JENKINS_URL}search/?q=${env.ITS_PIPELINE.replaceAll('/','+')}")
+              }
+            }
+            stage('Benchmarks') {
+              // agent { label 'metal' }
+              // TODO: tools are only installed in this worker for now
+              agent { label 'worker-854309' }
+              environment {
+                REPORT_FILE = 'apm-agent-benchmark-results.json'
+              }
+              when {
+                beforeAgent true
+                allOf {
+                  anyOf {
+                    branch 'master'
+                    tag pattern: 'v\\d+\\.\\d+\\.\\d+.*', comparator: 'REGEXP'
+                    expression { return params.Run_As_Master_Branch }
+                    // TODO: It's required to configure the benchmark for dotnet to be dryRun
+                    // or prepare an ES where to send the data to
+                    // expression { return env.BENCHMARK_UPDATED != "false" }
+                  }
+                  expression { return env.ONLY_DOCS == "false" }
+                }
+              }
+              steps {
+                withGithubNotify(context: 'Benchmarks') {
+                  deleteDir()
+                  unstash 'source'
+                  dir("${BASE_DIR}") {
+                    sendBenchmarks.prepareAndRun(secret: env.BENCHMARK_SECRET, url_var: 'ES_URL',
+                                                 user_var: 'ES_USER', pass_var: 'ES_PASS') {
+                      sh '.ci/linux/benchmark.sh'
+                    }
+                  }
+                }
+              }
+              post {
+                always {
+                  catchError(message: 'deleteDir failed', buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+                    deleteDir()
+                  }
+                }
               }
             }
           }
