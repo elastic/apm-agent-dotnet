@@ -9,7 +9,6 @@
     <DelaySign>false</DelaySign>
     <PackageVersion>1.0.0-beta1</PackageVersion>
     <Authors>Elastic and contributors</Authors>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <PackageId>Elastic.Apm.Elasticsearch</PackageId>
     <Copyright>2019 Elasticsearch BV</Copyright>
     <PackageLicenseUrl>https://github.com/elastic/apm-agent-dotnet/blob/master/LICENSE</PackageLicenseUrl>
@@ -21,7 +20,6 @@
   <ItemGroup>
 <!--    <PackageReference Include="Elasticsearch.Net" Version="7.0.0" />-->
     <PackageReference Include="Elasticsearch.Net" Version="7.5.0-ci20191211T182420" />
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.5.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />

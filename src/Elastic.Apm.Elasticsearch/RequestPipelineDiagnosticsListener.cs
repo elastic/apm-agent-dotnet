@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -22,10 +23,18 @@ namespace Elastic.Apm.Elasticsearch
 		{
 			if (!TryGetCurrentElasticsearchSpan(out var span)) return;
 
-			span.Name += $" ({response.HttpStatusCode})";
+			if (response != null)
+			{
+				span.Name += $" ({response.HttpStatusCode})";
 
-			RegisterStatement(span, response);
-			RegisterError(span, response);
+				RegisterStatement(span, response);
+				RegisterError(span, response);
+			}
+			else
+			{
+				span.Name += $" (Exception)";
+			}
+
 
 			Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
 			span.End();
@@ -33,16 +42,13 @@ namespace Elastic.Apm.Elasticsearch
 
 		private static void RegisterStatement(ISpan span, IApiCallDetails response)
 		{
-			//we can only register the statement if the client disables direct streaming
-			if (response.RequestBodyInBytes == null) return;
-
 			//make sure db exists
 			var db = span.Context.Db ?? (span.Context.Db = new Database
 			{
 				Instance = response.Uri?.GetLeftPart(UriPartial.Authority), Type = Database.TypeElasticsearch,
 			});
 
-			db.Statement = Encoding.UTF8.GetString(response.RequestBodyInBytes);
+			db.Statement = response.DebugInformation;
 
 		}
 
@@ -64,7 +70,7 @@ namespace Elastic.Apm.Elasticsearch
 				exception = un.InnerException ?? un;
 			}
 
-			var culprit = "Elasticsearch Error";
+			var culprit = "Client Error";
 
 			var message = $"{f.GetStringValue()} {exception?.Message}";
 			var stackFrames = exception == null ?  null : new StackTrace(exception, fNeedFileInfo: true).GetFrames();
@@ -74,24 +80,26 @@ namespace Elastic.Apm.Elasticsearch
 			var causeOnServer = false;
 			if (response.ResponseBodyInBytes != null)
 			{
-				using (var memoryStream = new MemoryStream(response.ResponseBodyInBytes))
+				using var memoryStream = new MemoryStream(response.ResponseBodyInBytes);
+				if (ServerError.TryCreate(memoryStream, out var serverError) && serverError != null)
 				{
-					if (ServerError.TryCreate(memoryStream, out var serverError))
-					{
-						causeOnServer = true;
-						culprit = "Elasticsearch Server Error";
-						message = serverError?.Error?.RootCause.FirstOrDefault()?.Reason
-							?? serverError?.Error?.CausedBy?.Reason
-							?? serverError?.Error?.Reason
-							?? "Response did not indicate a server error, usually means no json was with an error key was returned.";
-					}
+					causeOnServer = true;
+					culprit = $"Elasticsearch Server Error: {serverError.Error.Type}";
+					message = $"The server returned a ({response.HttpStatusCode}) and indicated: " + (
+						serverError.Error?.CausedBy?.Reason
+						?? serverError.Error?.CausedBy?.Type
+						?? serverError.Error?.RootCause.FirstOrDefault()?.Reason
+						?? serverError.Error?.Reason
+						?? "Response did not indicate a server error, usually means no json was with an error key was returned.");
 				}
 			}
 
 			if (exception == null && !causeOnServer) return;
 			if (causeOnServer && string.IsNullOrEmpty(message)) return;
 
-			span.CaptureError(message, culprit, stackFrames);
+			if (causeOnServer)
+				span.CaptureError(message, culprit, stackFrames);
+			else span.CaptureException(exception);
 		}
 
 		private void OnRequestData(string @event, RequestData requestData)

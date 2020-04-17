@@ -21,14 +21,27 @@ namespace Elastic.Apm.Elasticsearch
 
 			span.Name += $" ({statusCode})";
 			Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
+			if (statusCode.HasValue)
+				span.Context.Http.StatusCode = statusCode.Value;
 			span.End();
 		}
 
 		private void OnRequestData(string @event, RequestData requestData)
 		{
 			var name = ToName(@event);
-			if (TryStartElasticsearchSpan(name, out _, requestData?.Node?.Uri.ToString()))
+			if (requestData == null) return;
+
+			var instanceUri = requestData?.Node?.Uri;
+			if (TryStartElasticsearchSpan(name, out var span, instanceUri?.ToString()))
+			{
 				Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
+				var requestUri = requestData.Uri;
+				span.Context.Http = new Http
+				{
+					Method = requestData.Method.GetStringValue(),
+					Url = requestUri?.PathAndQuery
+				};
+			}
 		}
 
 		private const string ReceiveStart = nameof(DiagnosticSources.HttpConnection.ReceiveBody) + StartSuffix;

@@ -16,7 +16,7 @@ namespace Elastic.Apm.Elasticsearch
 		/// </summary>
 		public IDisposable Subscribe(IApmAgent agentComponents)
 		{
-			var retVal = new CompositeDisposable();
+			var composite = new CompositeDisposable();
 			var subscriber = new DiagnosticInitializer(agentComponents.Logger, new IDiagnosticListener[]
 			{
 				new AuditDiagnosticsListener(agentComponents),
@@ -24,13 +24,13 @@ namespace Elastic.Apm.Elasticsearch
 				new HttpConnectionDiagnosticsListener(agentComponents),
 				new SerializerDiagnosticsListener(agentComponents),
 			});
-			retVal.Add(subscriber);
+			composite.Add(subscriber);
 
-			retVal.Add(DiagnosticListener
+			composite.Add(DiagnosticListener
 				.AllListeners
 				.Subscribe(subscriber));
 
-			return retVal;
+			return composite;
 		}
 	}
 }
