@@ -2,17 +2,21 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.11.4"/>
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1"/>
+    <PackageReference Include="BenchmarkDotNet" Version="0.12.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Elastic.CommonSchema.BenchmarkDotNetExporter" Version="1.5.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj"/>
-    <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj"/>
+    <ProjectReference Include="..\..\sample\SampleAspNetCoreApp\SampleAspNetCoreApp.csproj" />
+    <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
+    <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
   </ItemGroup>
 
 </Project>

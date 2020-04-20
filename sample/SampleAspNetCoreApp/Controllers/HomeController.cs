@@ -19,6 +19,7 @@ namespace SampleAspNetCoreApp.Controllers
 {
 	public class HomeController : Controller
 	{
+		public const string PostResponseBody = "somevalue";
 		private readonly SampleDataContext _sampleDataContext;
 
 		public HomeController(SampleDataContext sampleDataContext) => _sampleDataContext = sampleDataContext;
@@ -164,6 +165,19 @@ namespace SampleAspNetCoreApp.Controllers
 			return Ok();
 		}
 
+		public IActionResult EmptyWebRequest() => Ok();
+
+		public IActionResult TransactionWithDbCallAndCustomSpan()
+		{
+			_sampleDataContext.Database.Migrate();
+			var model = _sampleDataContext.SampleTable.Select(item => item.Name).ToList();
+			var str =  string.Join(",", model.ToArray());
+
+			if (Agent.Tracer.CurrentTransaction != null) Agent.Tracer.CurrentTransaction.CaptureSpan("SampleSpan", "PerfBenchmark", () => { });
+
+			return Ok(str);
+		}
+
 		public IActionResult TransactionWithCustomNameUsingRequestInfo()
 		{
 			if (Agent.Tracer.CurrentTransaction != null)
@@ -173,8 +187,6 @@ namespace SampleAspNetCoreApp.Controllers
 
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 		public IActionResult Error() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-
-		public const string PostResponseBody = "somevalue";
 
 		[HttpPost]
 		[Route("api/Home/Post")]

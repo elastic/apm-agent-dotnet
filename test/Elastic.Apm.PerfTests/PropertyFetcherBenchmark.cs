@@ -10,15 +10,15 @@ namespace Elastic.Apm.PerfTests
 	{
 		private const string CommandPropertyName = "Command";
 		private const string CommandTextPropertyName = "CommandText";
-
-		private object _object;
 		private readonly PropertyFetcher _commandFetcher = new PropertyFetcher(CommandPropertyName);
 		private readonly PropertyFetcher _commandTextFetcher = new PropertyFetcher(CommandTextPropertyName);
 
-		private CascadePropertyFetcher _commandTextCascadeFetcher;
-
 		private MethodInfo _commandPropertyInfo;
+
+		private CascadePropertyFetcher _commandTextCascadeFetcher;
 		private MethodInfo _commandTextPropertyInfo;
+
+		private object _object;
 
 
 		[GlobalSetup]
