@@ -409,7 +409,6 @@ pipeline {
           when {
             anyOf {
               tag pattern: '\\d+\\.\\d+\\.\\d+', comparator: 'REGEXP'
-              expression { return params.Run_As_Master_Branch }
             }
           }
           stages {
