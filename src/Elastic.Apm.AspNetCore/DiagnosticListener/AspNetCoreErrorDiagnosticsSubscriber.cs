@@ -8,10 +8,10 @@ using Elastic.Apm.DiagnosticSource;
 namespace Elastic.Apm.AspNetCore.DiagnosticListener
 {
 	/// <summary>
-	/// Activates the <see cref="AspNetCoreDiagnosticListener" /> which enables
+	/// Activates the <see cref="AspNetCoreErrorDiagnosticListener" /> which enables
 	/// capturing errors within an ASP.NET Core application.
 	/// </summary>
-	public class AspNetCoreDiagnosticsSubscriber : IDiagnosticsSubscriber
+	public class AspNetCoreErrorDiagnosticsSubscriber : IDiagnosticsSubscriber
 	{
 		/// <summary>
 		/// Start listening for ASP.NET Core related diagnostic source events.
@@ -19,7 +19,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 		public IDisposable Subscribe(IApmAgent agent)
 		{
 			var retVal = new CompositeDisposable();
-			var subscriber = new DiagnosticInitializer(agent.Logger, new[] { new AspNetCoreDiagnosticListener(agent) });
+			var subscriber = new DiagnosticInitializer(agent.Logger, new[] { new AspNetCoreErrorDiagnosticListener(agent) });
 			retVal.Add(subscriber);
 
 			retVal.Add(System.Diagnostics.DiagnosticListener

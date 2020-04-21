@@ -8,12 +8,12 @@
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, entiryframework6, ef6</PackageTags>
   </PropertyGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
-    <PackageReference Include="EntityFramework" Version="6.2.0" >
+    <PackageReference Include="EntityFramework" Version="6.2.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
-    <PackageReference Include="EntityFramework" Version="6.3.0" >
+    <PackageReference Include="EntityFramework" Version="6.3.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>

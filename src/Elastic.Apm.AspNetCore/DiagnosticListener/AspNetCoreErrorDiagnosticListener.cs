@@ -9,11 +9,11 @@ using Elastic.Apm.DiagnosticSource;
 
 namespace Elastic.Apm.AspNetCore.DiagnosticListener
 {
-	internal class AspNetCoreDiagnosticListener : IDiagnosticListener
+	internal class AspNetCoreErrorDiagnosticListener : IDiagnosticListener
 	{
 		private readonly IApmAgent _agent;
 
-		public AspNetCoreDiagnosticListener(IApmAgent agent) => _agent = agent;
+		public AspNetCoreErrorDiagnosticListener(IApmAgent agent) => _agent = agent;
 
 		public string Name => "Microsoft.AspNetCore";
 
