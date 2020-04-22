@@ -9,6 +9,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.Extensions;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Model;
 using Microsoft.AspNetCore.Http;
 
 [assembly:
@@ -43,27 +44,36 @@ namespace Elastic.Apm.AspNetCore
 		public async Task InvokeAsync(HttpContext context)
 		{
 			var transaction = WebRequestTransactionCreator.StartTransactionAsync(context, _logger, _tracer);
+
 			if (transaction != null)
-				await WebRequestTransactionCreator.FillSampledTransactionContextRequest(transaction, context, _logger);
+				WebRequestTransactionCreator.FillSampledTransactionContextRequest(transaction, context, _logger);
 
 			try
 			{
 				await _next(context);
 			}
-			catch (Exception e) when (transaction != null)
-			{
-				transaction.CaptureException(e);
-				// It'd be nice to have this in an exception filter, but that would force us capturing the request body synchronously.
-				// Therefore we rather unwind the stack in the catch block and call the async method.
-				if (context != null)
-					await transaction.CollectRequestBodyAsync(true, context.Request, _logger, transaction.ConfigSnapshot);
-
-				throw;
-			}
+			catch (Exception e) when (CaptureExceptionAndRequestBody(e, context, transaction)) { }
 			finally
 			{
+				// In case an error handler middleware is registered, the catch block above won't be executed, because the
+				// error handler handles all the exceptions - in this case, based on the response code and the config, we may capture the body here
+				if (transaction != null && transaction.IsContextCreated && context?.Response.StatusCode >= 400
+					&& transaction.Context?.Request?.Body is string body
+					&& (string.IsNullOrEmpty(body) || body == Apm.Consts.Redacted))
+					transaction.CollectRequestBody(true, context.Request, _logger, transaction.ConfigSnapshot);
+
 				WebRequestTransactionCreator.StopTransaction(transaction, context, _logger);
 			}
+		}
+
+		private bool CaptureExceptionAndRequestBody(Exception e, HttpContext context, Transaction transaction)
+		{
+			transaction?.CaptureException(e);
+
+			if (context != null)
+				transaction?.CollectRequestBody(true, context.Request, _logger, transaction.ConfigSnapshot);
+
+			return false;
 		}
 	}
 }

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.Extensions;
 using Elastic.Apm.Config;
@@ -16,6 +15,9 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Elastic.Apm.AspNetCore
 {
+	/// <summary>
+	/// A helper class to capture an <see cref="HttpContext"/> as a transaction.
+	/// </summary>
 	internal static class WebRequestTransactionCreator
 	{
 		internal static Transaction StartTransactionAsync(HttpContext context, IApmLogger logger, Tracer tracer)
@@ -70,12 +72,12 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		internal static async Task FillSampledTransactionContextRequest(Transaction transaction, HttpContext context, IApmLogger logger)
+		internal static void FillSampledTransactionContextRequest(Transaction transaction, HttpContext context, IApmLogger logger)
 		{
-			if (transaction.IsSampled) await FillSampledTransactionContextRequest(context, transaction, logger);
+			if (transaction.IsSampled) FillSampledTransactionContextRequest(context, transaction, logger);
 		}
 
-		private static async Task FillSampledTransactionContextRequest(HttpContext context, Transaction transaction, IApmLogger logger)
+		private static void FillSampledTransactionContextRequest(HttpContext context, Transaction transaction, IApmLogger logger)
 		{
 			try
 			{
@@ -98,7 +100,7 @@ namespace Elastic.Apm.AspNetCore
 					Headers = GetHeaders(context.Request.Headers, transaction.ConfigSnapshot)
 				};
 
-				await transaction.CollectRequestBodyAsync(false, context.Request, logger, transaction.ConfigSnapshot);
+				transaction.CollectRequestBody(false, context.Request, logger, transaction.ConfigSnapshot);
 			}
 			catch (Exception ex)
 			{
