@@ -41,6 +41,22 @@ In the AgentComponents you can pass following optional components to the agent:
 
 NOTE: In case of ASP.NET Core, when you register the agent, the `UseElasticApm` and the `UseAllElasticApm` methods both implicitly initialize the agent by calling the `Elastic.Apm.Agent.Setup` method internally. In that setup the `IConfigurationReader` implementation will read configuration from the ASP.NET Core configuration system in case you pass an `IConfiguration` instance to the method. The `IApmLogger` instance will also log through the configured logging provider by integrating into the ASP.NET Core logging system.
 
+=== Auto instrumentation in combination with the Public Agent API
+
+With the `Elastic.ApmAgent.Subscribe(params IDiagnosticsSubscriber[] subscribers)` method you can turn on auto instrumentation for supported libraries.
+
+In case of ASP.NET Core, when you turn on the agent with the `UseAllElasticApm` method, the agent will do this automatically.
+
+In case of a typical console application, you need to do this manually.
+
+`IDiagnosticsSubscriber` implementations are offered by the agent and they subscribe to diagnostic source events or other data sources in order to capture events automatically.
+
+Some examples:
+
+- `HttpDiagnosticsSubscriber`: captures HTTP calls through `HttpClient`
+- `EfCoreDiagnosticsSubscriber`: captures database calls through Entity Framework Core
+- `SqlClientDiagnosticSubscriber`: captures database calls through `SqlClient` 
+
 [float]
 [[api-tracer-api]]
 === Tracer API
