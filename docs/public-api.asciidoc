@@ -16,6 +16,8 @@ as well as track errors.
 
 The API does not require explicit Agent initialization - agent initialization is optional. The `Elastic.Apm.Agent.IsConfigured` property lets you check whether the agent is already initialized.
 
+[float]
+[[implicit-initialization]]
 === Implicit agent initialization
 
 If you don't explicitly initialize the agent, it will be started with a default configuration. This means the agent will read <<configuration, configuration settings>> from environment variables. In case you don't set an environment variable, the Agent will use the default value (in case of `ServerUrls` this is `http://localhost:8200`).
@@ -28,7 +30,8 @@ Another example for initialization is when you enable the agent with one of the 
 
 The default agent setup should cover most of the use cases and the primary way to configure the agent is through environment variables.
 
-
+[float]
+[[explicit-initialization]]
 === Explicit agent initialization
 
 In case you would like to replace one of the agent components, you can do so by calling the `Elastic.Apm.Agent.Setup(AgentComponents)` method.
@@ -41,6 +44,8 @@ In the AgentComponents you can pass following optional components to the agent:
 
 NOTE: In case of ASP.NET Core, when you register the agent, the `UseElasticApm` and the `UseAllElasticApm` methods both implicitly initialize the agent by calling the `Elastic.Apm.Agent.Setup` method internally. In that setup the `IConfigurationReader` implementation will read configuration from the ASP.NET Core configuration system in case you pass an `IConfiguration` instance to the method. The `IApmLogger` instance will also log through the configured logging provider by integrating into the ASP.NET Core logging system.
 
+[float]
+[[auto-instrumentation-and-agent-api]]
 === Auto instrumentation in combination with the Public Agent API
 
 With the `Elastic.ApmAgent.Subscribe(params IDiagnosticsSubscriber[] subscribers)` method you can turn on auto instrumentation for supported libraries.
