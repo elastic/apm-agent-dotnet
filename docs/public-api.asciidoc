@@ -209,7 +209,7 @@ var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransactio
 //----------------------------
 [float]
 [[api-transaction]]
-=== Transaction API
+== Transaction API
 //----------------------------
 A transaction describes an event captured by an Elastic APM agent monitoring a service. Transactions help combine multiple <<api-span,Spans>> into logical groups, and they are the first <<api-span,Span>> of a service. More information on Transactions and Spans is available in the {apm-overview-ref-v}/apm-data-model.html[APM data model] documentation.
 
@@ -435,7 +435,7 @@ Agent.Tracer.CaptureTransaction("MyCustomTransaction",ApiConstants.TypeRequest, 
 //----------------------------
 [float]
 [[api-span]]
-=== Span API
+== Span API
 //----------------------------
 A span contains information about a specific code path, executed as part of a transaction.
 
