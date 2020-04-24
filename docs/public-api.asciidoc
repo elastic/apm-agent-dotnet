@@ -14,19 +14,19 @@ as well as track errors.
 [[api-initialization]]
 == Initialization
 
-The API does not require explicit Agent initialization - agent initialization is optional. The `Elastic.Apm.Agent.IsConfigured` property lets you check whether the agent is already initialized.
+The API does not require explicit Agent initialization—agent initialization is optional. The `Elastic.Apm.Agent.IsConfigured` property lets you check whether the agent is already initialized.
 
 [float]
 [[implicit-initialization]]
 === Implicit agent initialization
 
-If you don't explicitly initialize the agent, it will be started with a default configuration. This means the agent will read <<configuration, configuration settings>> from environment variables. In case you don't set an environment variable, the Agent will use the default value (in case of `ServerUrls` this is `http://localhost:8200`).
+If you don't explicitly initialize the agent, it will be started with a default configuration. This means the Agent will read <<configuration,configuration settings>> from environment variables. If you don't set an environment variable, the Agent will use the default value. For example, the `ServerUrls` default is `http://localhost:8200`.
 
 This implicit initialization of the agent happens on the first call on the `Elastic.Apm.Agent` class.
 
-NOTE: One exception is the `Elastic.Apm.Agent.IsConfigured` method. This method never initializes the agent, it only checks whether the agent is already initialized.
+NOTE: One exception is the `Elastic.Apm.Agent.IsConfigured` method. This method never initializes the agent, it only checks if the agent is already initialized.
 
-Another example for initialization is when you enable the agent with one of the technology specific methods from the <<setup>> instructions. Specifically when the `UseElasticApm` or `UseAllElasticApm` method is called in ASP.NET Core or when the IIS module is initialized in case of IIS applications.
+Another example of initialization is when you enable the Agent with one of the technology-specific methods from the <<setup>> instructions. Specifically when the `UseElasticApm` or `UseAllElasticApm` method is called in ASP.NET Core or when the IIS module is initialized in an IIS application.
 
 The default agent setup should cover most of the use cases and the primary way to configure the agent is through environment variables.
 
@@ -34,15 +34,14 @@ The default agent setup should cover most of the use cases and the primary way t
 [[explicit-initialization]]
 === Explicit agent initialization
 
-In case you would like to replace one of the agent components, you can do so by calling the `Elastic.Apm.Agent.Setup(AgentComponents)` method.
-
+If you would like to replace one of the agent components, you can do so by calling the `Elastic.Apm.Agent.Setup(AgentComponents)` method.
 In the AgentComponents you can pass following optional components to the agent:
 
-- `IApmLogger`: A logger implementation which will be used to print log messages. Default: A console logger.
-- `IPayloadSender`: A component that receives all the captured events like spans, transactions and metrics. The default implementation serializes all events and sends them to the Elastic APM Server
+- `IApmLogger`: A logger implementation that will be used to print log messages. Default: A console logger.
+- `IPayloadSender`: A component that receives all the captured events like spans, transactions, and metrics. The default implementation serializes all events and sends them to the Elastic APM Server
 - `IConfigurationReader`: A component that reads <<configuration, agent configuration settings>>. The default implementation reads configuration through environment variables.
 
-NOTE: In case of ASP.NET Core, when you register the agent, the `UseElasticApm` and the `UseAllElasticApm` methods both implicitly initialize the agent by calling the `Elastic.Apm.Agent.Setup` method internally. In that setup the `IConfigurationReader` implementation will read configuration from the ASP.NET Core configuration system in case you pass an `IConfiguration` instance to the method. The `IApmLogger` instance will also log through the configured logging provider by integrating into the ASP.NET Core logging system.
+NOTE: In the case of ASP.NET Core, when you register the agent, the `UseElasticApm` and the `UseAllElasticApm` methods both implicitly initialize the agent by calling the `Elastic.Apm.Agent.Setup` method internally. In that setup, the `IConfigurationReader` implementation will read configuration from the ASP.NET Core configuration system in case you pass an `IConfiguration` instance to the method. The `IApmLogger` instance will also log through the configured logging provider by integrating into the ASP.NET Core logging system.
 
 [float]
 [[auto-instrumentation-and-agent-api]]
@@ -50,9 +49,9 @@ NOTE: In case of ASP.NET Core, when you register the agent, the `UseElasticApm` 
 
 With the `Elastic.ApmAgent.Subscribe(params IDiagnosticsSubscriber[] subscribers)` method you can turn on auto instrumentation for supported libraries.
 
-In case of ASP.NET Core, when you turn on the agent with the `UseAllElasticApm` method, the agent will do this automatically.
+In the case of ASP.NET Core, when you turn on the agent with the `UseAllElasticApm` method, the agent will do this automatically.
 
-In case of a typical console application, you need to do this manually.
+With a typical console application, you need to do this manually.
 
 `IDiagnosticsSubscriber` implementations are offered by the agent and they subscribe to diagnostic source events or other data sources in order to capture events automatically.
 

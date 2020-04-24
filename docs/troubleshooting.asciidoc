@@ -95,19 +95,16 @@ Agent.Setup(new AgentComponents(logger: new ApmLoggerBridge()));
 [[double-agent-initialization]]
 === An `InstanceAlreadyCreatedException` exception is thrown
 
-It can happen that in a very early stage of the monitored process the agent throws an `InstanceAlreadyCreatedException` exception with the following message: "The singleton APM agent has already been instantiated and can no longer be configured."
-
-This happens when the agent would be initialized multiple times, which is prohibited.
+It can happen that in a very early stage of the monitored process the agent throws an `InstanceAlreadyCreatedException` exception with the following message: "The singleton APM agent has already been instantiated and can no longer be configured." This happens when the agent would be initialized multiple times, which is prohibited.
 
 NOTE: The reason for forcing a single agent instance per process is that enabling multiple agents would open up problems like capturing events and metrics multiple times for each agent instance, or having multiple background threads for event serialization and transfer to the APM server.
 
 Take a look at the initialization section of the <<public-api, Public Agent API>> for more information on how agent initialization works.
 
-This issue can happen for example if you call the `Elastic.Apm.Agent.Setup` method multiple times or in case you call another method on `Elastic.Apm.Agent` which implicitly initializes the agent and then you call the `Elastic.Apm.Agent.Setup` method on an already initialized agent.
+As an example, this issue can happen if you call the `Elastic.Apm.Agent.Setup` method multiple times, or if you call another method on `Elastic.Apm.Agent` that implicitly initializes the agent and then you call the `Elastic.Apm.Agent.Setup` method on the already initialized agent.
 
 Another scenario can be that you use the Public Agent API in combination of the IIS module or the ASP.NET Core NuGet package where you enable the agent with the `UseElasticApm` or `UseAllElasticApm` methods. Both the first call to the IIS module and the `UseElasticApm`/`UseAllElasticApm` methods internally call the `Elastic.Apm.Agent.Setup` method to initialize the agent.
 
 In case you use the Public Agent API with the `Elastic.Apm.Agent` class that can be potentially executed before the IIS module initializes or the `UseElasticApm`/`UseAllElasticApm` calls execute, then those will fail, since you implicitly initialized the agent before.
 
-To prevent the `InstanceAlreadyCreatedException` in those scenarios, in case you have code that can potentially run very early, before the agent is initialized, it's recommended to check with the `Elastic.Apm.Agent.IsConfigured` method whether the agent is already initialized and only then use other methods in the Public Agent API.
-
+To prevent the `InstanceAlreadyCreatedException` in those scenarios, in case you have code that can potentially run very early before the agent is initialized, it's recommended to check with the `Elastic.Apm.Agent.IsConfigured` method whether the agent is already initialized and only then use other methods in the Public Agent API.
