@@ -119,30 +119,35 @@ namespace Elastic.Apm.AspNet.WebApi.SelfHost
 				Transaction transaction;
 				var transactionName = $"{request.Method} {request.RequestUri.AbsolutePath}";
 
-				if (request.Headers.Contains(TraceParent.TraceParentHeaderName))
+				if (request.Headers.Contains(TraceContext.TraceParentHeaderName)
+					|| request.Headers.Contains(TraceContext.TraceParentHeaderName))
 				{
-					var headerValue = request.Headers.GetValues(TraceParent.TraceParentHeaderName).First();
+					var headerValue = request.Headers.Contains(TraceContext.TraceParentHeaderName)
+                    						? request.Headers.GetValues(TraceContext.TraceParentHeaderName).First()
+											: request.Headers.GetValues(TraceContext.TraceParentHeaderNamePrefixed).First();
 
-					var distributedTracingData = TraceParent.TryExtractTraceparent(headerValue);
+					var tracingData = request.Headers.Contains(TraceContext.TraceStateHeaderName)
+						? TraceContext.TryExtractTracingData(headerValue, request.Headers.GetValues(TraceContext.TraceStateHeaderName).First())
+						: TraceContext.TryExtractTracingData(headerValue);
 
-					if (distributedTracingData != null)
+					if (tracingData != null)
 					{
 						_logger.Debug()
 							?.Log(
 								"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData}. Continuing trace.",
-								TraceParent.TraceParentHeaderName, distributedTracingData);
+								TraceContext.TraceParentHeaderName, tracingData);
 
 						transaction = _tracer.StartTransactionInternal(
 							transactionName,
 							ApiConstants.TypeRequest,
-							distributedTracingData);
+							tracingData);
 					}
 					else
 					{
 						_logger.Debug()
 							?.Log(
 								"Incoming request with invalid {TraceParentHeaderName} header (received value: {TraceParentHeaderValue}). Starting trace with new trace id.",
-								TraceParent.TraceParentHeaderName, headerValue);
+								TraceContext.TraceParentHeaderName, headerValue);
 
 						transaction = _tracer.StartTransactionInternal(transactionName,
 							ApiConstants.TypeRequest);
