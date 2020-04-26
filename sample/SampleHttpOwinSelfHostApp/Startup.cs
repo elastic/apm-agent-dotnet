@@ -18,7 +18,7 @@ namespace SampleHttpOwinSelfHostApp
 				defaults: new { id = RouteParameter.Optional }
 			);
 
-			config.MessageHandlers.AddElasticApmMessageHandler();
+			config.AddElasticApm();
 
 			appBuilder.UseWebApi(config);
 		}

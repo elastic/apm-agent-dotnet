@@ -10,7 +10,14 @@ namespace Elastic.Apm.AspNet.WebApi.SelfHost
 {
 	public static class MessageHandlersExtensions
 	{
-		public static void AddElasticApmMessageHandler(this Collection<DelegatingHandler> messageHandlers, IApmLogger logger = null,
+		// Extension method on System.Web.Http.HttpConfiguration is needed to access Routes property in the future
+		/// <summary>
+		///
+		/// </summary>
+		/// <param name="configuration"></param>
+		/// <param name="logger"></param>
+		/// <param name="subscribers"></param>
+		public static void AddElasticApm(this System.Web.Http.HttpConfiguration configuration, IApmLogger logger = null,
 			params IDiagnosticsSubscriber[] subscribers
 		)
 		{
@@ -29,7 +36,7 @@ namespace Elastic.Apm.AspNet.WebApi.SelfHost
 
 			Agent.Subscribe(subs.ToArray());
 
-			messageHandlers.Add(new ApmMessageHandler(Agent.Instance));
+			configuration.MessageHandlers.Add(new ApmMessageHandler(Agent.Instance));
 		}
 	}
 }

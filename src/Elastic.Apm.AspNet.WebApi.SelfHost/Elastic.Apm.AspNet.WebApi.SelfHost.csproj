@@ -10,7 +10,11 @@
 
     <ItemGroup>
       <Reference Include="System.Configuration" />
-      <Reference Include="System.Web" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <!-- todo: check the lowest possible version -->
+      <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.7" />
     </ItemGroup>
 
 </Project>

@@ -24,7 +24,7 @@ namespace SampleHttpSelfHostApp
 			config.Routes.MapHttpRoute("CreateValue", "api/values", new { controller = "Values", action = nameof(ValuesController.CreateValue) },
 				new { httpMethod = new HttpMethodConstraint(HttpMethod.Post) });
 
-			config.MessageHandlers.AddElasticApmMessageHandler();
+			config.AddElasticApm();
 
 			_server = new HttpSelfHostServer(config);
 
