@@ -75,11 +75,9 @@ namespace Elastic.Apm.Helpers
 		{
 			var containerInfo = ParseContainerInfo();
 			var hostName = GetHostName();
+			var kubernetesInfo = ParseKubernetesInfo(containerInfo, hostName);
 
-			return new Api.System
-			{
-				Container = containerInfo, DetectedHostName = hostName, Kubernetes = ParseKubernetesInfo(containerInfo, hostName)
-			};
+			return new Api.System { Container = containerInfo, DetectedHostName = hostName, Kubernetes = kubernetesInfo };
 		}
 
 		internal string GetHostName()
