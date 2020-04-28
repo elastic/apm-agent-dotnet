@@ -81,6 +81,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleHttpOwinSelfHostApp",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.AspNet.WebApi.SelfHost", "src\Elastic.Apm.AspNet.WebApi.SelfHost\Elastic.Apm.AspNet.WebApi.SelfHost.csproj", "{14ED5EE5-B5C0-4446-B209-04D9875DE423}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.AspNet.WebApi.SelfHost.Tests", "test\Elastic.Apm.AspNet.WebApi.SelfHost.Tests\Elastic.Apm.AspNet.WebApi.SelfHost.Tests.csproj", "{5CF3FFB6-6F2B-4F9F-B771-FA6D444043D8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -185,6 +187,10 @@ Global
 		{14ED5EE5-B5C0-4446-B209-04D9875DE423}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{14ED5EE5-B5C0-4446-B209-04D9875DE423}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{14ED5EE5-B5C0-4446-B209-04D9875DE423}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5CF3FFB6-6F2B-4F9F-B771-FA6D444043D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CF3FFB6-6F2B-4F9F-B771-FA6D444043D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CF3FFB6-6F2B-4F9F-B771-FA6D444043D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CF3FFB6-6F2B-4F9F-B771-FA6D444043D8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -214,6 +220,7 @@ Global
 		{5CB23275-A8E1-49B9-889E-BCC74D89EB58} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{3F860E65-3CCE-4D95-934F-388854291CB5} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{14ED5EE5-B5C0-4446-B209-04D9875DE423} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
+		{5CF3FFB6-6F2B-4F9F-B771-FA6D444043D8} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}

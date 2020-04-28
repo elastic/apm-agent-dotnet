@@ -16,13 +16,7 @@ namespace SampleHttpSelfHostApp
 		public void Start()
 		{
 			var config = new HttpSelfHostConfiguration("http://localhost:12345");
-
-			config.Routes.MapHttpRoute("values", "api/values", new { controller = "Values", action = nameof(ValuesController.GetValues) },
-				new { httpMethod = new HttpMethodConstraint(HttpMethod.Get) });
-			config.Routes.MapHttpRoute("value", "api/values/{id}", new { controller = "Values", action = nameof(ValuesController.GetValue) },
-				new { httpMethod = new HttpMethodConstraint(HttpMethod.Get) });
-			config.Routes.MapHttpRoute("CreateValue", "api/values", new { controller = "Values", action = nameof(ValuesController.CreateValue) },
-				new { httpMethod = new HttpMethodConstraint(HttpMethod.Post) });
+			MapHttpRoutes(config);
 
 			config.AddElasticApm();
 
@@ -30,6 +24,16 @@ namespace SampleHttpSelfHostApp
 
 			_server.OpenAsync()
 				.ContinueWith(t => { Console.WriteLine("Api Service started with listening `12345` port"); }, TaskContinuationOptions.NotOnFaulted);
+		}
+
+		public static void MapHttpRoutes(HttpConfiguration config)
+		{
+			config.Routes.MapHttpRoute("values", "api/values", new { controller = "Values", action = nameof(ValuesController.GetValues) },
+				new { httpMethod = new HttpMethodConstraint(HttpMethod.Get) });
+			config.Routes.MapHttpRoute("value", "api/values/{id}", new { controller = "Values", action = nameof(ValuesController.GetValue) },
+				new { httpMethod = new HttpMethodConstraint(HttpMethod.Get) });
+			config.Routes.MapHttpRoute("CreateValue", "api/values", new { controller = "Values", action = nameof(ValuesController.CreateValue) },
+				new { httpMethod = new HttpMethodConstraint(HttpMethod.Post) });
 		}
 
 		public void Stop() => _server?.Dispose();

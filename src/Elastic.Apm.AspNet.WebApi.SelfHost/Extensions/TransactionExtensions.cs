@@ -1,5 +1,6 @@
 using System.Net.Http;
 using System.Threading.Tasks;
+using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
@@ -44,7 +45,7 @@ namespace Elastic.Apm.AspNet.WebApi.SelfHost.Extensions
 				? transaction.ConfigSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyErrors)
 				: transaction.ConfigSnapshot.CaptureBody.Equals(ConfigConsts.SupportedValues.CaptureBodyTransactions));
 
-		private static bool IsCaptureRequestBodyEnabledForContentType(Transaction transaction, HttpRequestMessage request)
+		private static bool IsCaptureRequestBodyEnabledForContentType(ITransaction transaction, HttpRequestMessage request)
 		{
 			//todo: it's temp
 			if (request?.Content != null && request.Content.GetType() == typeof(StringContent)) return false;
