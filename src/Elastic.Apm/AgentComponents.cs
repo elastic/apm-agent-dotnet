@@ -1,6 +1,7 @@
 ﻿using System;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm;
+using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
