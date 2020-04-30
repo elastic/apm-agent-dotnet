@@ -607,3 +607,46 @@ var asyncResult = await span.CaptureSpan("Select FROM customer", ApiConstants.Ty
 NOTE: Return value of <<convenient-capture-span>> method overloads that accept Task (or Task<T>) is the same Task (or Task<T>) instance as the one passed as the argument so if your application should continue only after the task completes you have to call <<convenient-capture-span>> with `await` keyword.
 
 NOTE: Code samples above use `Elastic.Apm.Agent.Tracer.CurrentTransaction`. In production code you should make sure the `CurrentTransaction` is not `null`.
+
+[float]
+[[filter-api]]
+== Filter API (added[1.5])
+
+Use `Agent.AddFilter(filter)` to supply a filter callback.
+
+Each filter callback will be called just before data is sent to the APM Server. This allows you to manipulate the data being sent, like to remove sensitive information such as passwords.
+
+Each filter callback is called in the order they are added and will receive a payload object containing the data about to be sent to the APM Server as the only argument.
+
+The filter callback is synchronous and should return the manipulated payload object. If a filter callback doesn’t return any value or returns a falsy value, the remaining filter callback will not be called and the payload will not be sent to the APM Server.
+
+There are 3 overloads of the `Agent.AddFilter` method with the following arguments:
+
+- `Func<ITransaction, ITransaction>`: A filter called for every transaction.
+- `Func<ISpan, ISpan>`: A filter called for every span.
+- `Func<IError, IError>`: A filter called for every error.
+
+Below are some usage examples of the Agent.AddFilter method.
+
+Drop all spans for a specific database:
+
+[source,csharp]
+----
+Agent.AddFilter((ISpan span) =>
+{
+	if (span.Context?.Db?.Instance == "VerySecretDb")
+		return null;
+	return span;
+});
+----
+
+Hide some data:
+
+[source,csharp]
+----
+Agent.AddFilter((ITransaction transaction) =>
+{
+	transaction.Context.Request.Url.Protocol = "[HIDDEN]";
+	return transaction;
+});
+----
