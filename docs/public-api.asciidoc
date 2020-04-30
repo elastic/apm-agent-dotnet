@@ -614,9 +614,9 @@ NOTE: Code samples above use `Elastic.Apm.Agent.Tracer.CurrentTransaction`. In p
 
 Use `Agent.AddFilter(filter)` to supply a filter callback.
 
-Each filter callback will be called just before data is being sent to the APM Server. This will allow you to manipulate the data being sent, for instance to remove sensitive information like passwords etc.
+Each filter callback will be called just before data is sent to the APM Server. This allows you to manipulate the data being sent, like to remove sensitive information such as passwords.
 
-Each filter callback will be called in the order they were added, and will receive a payload object as the only argument, containing the data about to be sent to the APM Server.
+Each filter callback is called in the order they are added and will receive a payload object containing the data about to be sent to the APM Server as the only argument.
 
 The filter callback is synchronous and should return the manipulated payload object. If a filter callback doesn’t return any value or returns a falsy value, the remaining filter callback will not be called and the payload will not be sent to the APM Server.
 
