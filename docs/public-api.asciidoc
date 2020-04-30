@@ -622,9 +622,11 @@ The filter callback is synchronous and should return the manipulated payload obj
 
 There are 3 overloads of the `Agent.AddFilter` method with the following arguments:
 
-- `Func<ITransaction, ITransaction>`: A filter called for every transaction
-- `Func<ISpan, ISpan>`: A filter called for every span
+- `Func<ITransaction, ITransaction>`: A filter called for every transaction.
+- `Func<ISpan, ISpan>`: A filter called for every span.
 - `Func<IError, IError>`: A filter called for every error.
+
+Below are some usage examples of the Agent.AddFilter method.
 
 Drop all spans for a specific database:
 
