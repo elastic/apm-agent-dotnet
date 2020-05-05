@@ -4,6 +4,7 @@ script_path=$(dirname $(realpath -s $0))/../
 
 
 (find "$script_path" -name "*.fs" | grep -v "/bin/" | grep -v "/obj/")|while read fname; do
+    awk '{ if (NR==1) sub(/^\xef\xbb\xbf/,""); print }' $fname > $fname
     line=$(head -n 1 "$fname")
     if [[ "$line" =~ ^/ ]] || [[ "$line" =~ ^# ]] ; then 
       echo "Skipped already starts with / or #: $fname"
@@ -14,6 +15,7 @@ script_path=$(dirname $(realpath -s $0))/../
 done
 
 (find "$script_path" -name "*.cs" | grep -v "/bin/" | grep -v "/obj/")|while read fname; do
+    awk '{ if (NR==1) sub(/^\xef\xbb\xbf/,""); print }' $fname > $fname
     line=$(head -n 1 "$fname")
     if [[ "$line" =~ ^/ ]] || [[ "$line" =~ ^# ]] ; then 
       echo "Skipped already starts with / or #: $fname"
