@@ -27,15 +27,15 @@ endif::[]
 [float]
 ===== Features
 - Auto instrumentation for `SqlClient` (https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup.html#setup-sqlclient[documentation])
-- Introducing Filter API {pull}#792[#792] (https://www.elastic.co/guide/en/apm/agent/dotnet/current/public-api.html#filter-api[documentation])
-- Auto-detect culprit for exceptions {pull}#740[#740]
+- Introducing Filter API {pull}792[#792] (https://www.elastic.co/guide/en/apm/agent/dotnet/current/public-api.html#filter-api[documentation])
+- Auto-detect culprit for exceptions {pull}740[#740]
 - New config settings: `ExcludedNamespaces`, `ApplicationNamespaces` (https://www.elastic.co/guide/en/apm/agent/dotnet/current/config-all-options-summary.html[documentation])
-- Keep `Activity.Current.TraceId` in sync with the Trace ID used by the agent {pull}#800[#800]
-- Report Kubernetes system metadata {pull}#741[#741]
+- Keep `Activity.Current.TraceId` in sync with the Trace ID used by the agent {pull}800[#800]
+- Report Kubernetes system metadata {pull}741[#741]
 
 [float]
 ===== Bug fixes
-- Database connection string parsing issue with Oracle {pull}#795[#795]
+- Database connection string parsing issue with Oracle {pull}795[#795]
 
 [[release-notes-1.4.0]]
 ==== 1.4.0
