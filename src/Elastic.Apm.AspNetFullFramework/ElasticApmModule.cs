@@ -330,9 +330,11 @@ namespace Elastic.Apm.AspNetFullFramework
 				Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
 			}) ?? false;
 
+		private static IApmLogger BuildLogger() => AgentDependencies.Logger ?? ConsoleLogger.Instance;
+
 		private static AgentComponents BuildAgentComponents(string dbgInstanceName)
 		{
-			var rootLogger = AgentDependencies.Logger ?? ConsoleLogger.Instance;
+			var rootLogger = BuildLogger();
 			var scopedLogger = rootLogger.Scoped(dbgInstanceName);
 
 			var agentComponents = new AgentComponents(rootLogger, new FullFrameworkConfigReader(rootLogger));
@@ -354,7 +356,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (Agent.InstanceAlreadyCreatedException ex)
 			{
-				Agent.Instance.Logger.Scoped(dbgInstanceName)
+				BuildLogger().Scoped(dbgInstanceName)
 					.Error()
 					?.LogException(ex, "The Elastic APM agent was already initialized before call to"
 						+ $" {nameof(ElasticApmModule)}.{nameof(Init)} - {nameof(ElasticApmModule)} will use existing instance"
