@@ -15,12 +15,13 @@ using Elastic.Apm.Report;
 
 namespace Elastic.Apm.Model
 {
+	// todo: move into ExecutionSegment
 	/// <summary>
 	/// Encapsulates common functionality shared between <see cref="Span" /> and <see cref="Transaction" />
 	/// </summary>
 	internal static class ExecutionSegmentCommon
 	{
-		internal static void CaptureSpan(Span span, Action<ISpan> capturedAction)
+		internal static void CaptureSpan(ISpan span, Action<ISpan> capturedAction)
 		{
 			try
 			{
@@ -33,7 +34,7 @@ namespace Elastic.Apm.Model
 			}
 		}
 
-		internal static void CaptureSpan(Span span, Action capturedAction)
+		internal static void CaptureSpan(ISpan span, Action capturedAction)
 		{
 			try
 			{
@@ -46,7 +47,7 @@ namespace Elastic.Apm.Model
 			}
 		}
 
-		internal static T CaptureSpan<T>(Span span, Func<ISpan, T> func)
+		internal static T CaptureSpan<T>(ISpan span, Func<ISpan, T> func)
 		{
 			var retVal = default(T);
 			try
@@ -62,7 +63,7 @@ namespace Elastic.Apm.Model
 			return retVal;
 		}
 
-		internal static T CaptureSpan<T>(Span span, Func<T> func)
+		internal static T CaptureSpan<T>(ISpan span, Func<T> func)
 		{
 			var retVal = default(T);
 			try
@@ -78,21 +79,21 @@ namespace Elastic.Apm.Model
 			return retVal;
 		}
 
-		internal static Task CaptureSpan(Span span, Func<Task> func)
+		internal static Task CaptureSpan(ISpan span, Func<Task> func)
 		{
 			var task = func();
 			RegisterContinuation(task, span);
 			return task;
 		}
 
-		internal static Task CaptureSpan(Span span, Func<ISpan, Task> func)
+		internal static Task CaptureSpan(ISpan span, Func<ISpan, Task> func)
 		{
 			var task = func(span);
 			RegisterContinuation(task, span);
 			return task;
 		}
 
-		internal static Task<T> CaptureSpan<T>(Span span, Func<Task<T>> func)
+		internal static Task<T> CaptureSpan<T>(ISpan span, Func<Task<T>> func)
 		{
 			var task = func();
 			RegisterContinuation(task, span);
@@ -100,7 +101,7 @@ namespace Elastic.Apm.Model
 			return task;
 		}
 
-		internal static Task<T> CaptureSpan<T>(Span span, Func<ISpan, Task<T>> func)
+		internal static Task<T> CaptureSpan<T>(ISpan span, Func<ISpan, Task<T>> func)
 		{
 			var task = func(span);
 			RegisterContinuation(task, span);

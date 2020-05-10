@@ -33,10 +33,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, ICentralConfigResponseParser centralConfigResponseParser,
 			Service service,
 			HttpMessageHandler httpMessageHandler = null, IAgentTimer agentTimer = null, string dbgName = null
-		) : this(logger, configStore, configStore.CurrentSnapshot, service, httpMessageHandler, agentTimer, dbgName)
-		{
+		) : this(logger, configStore, configStore.CurrentSnapshot, service, httpMessageHandler, agentTimer, dbgName) =>
 			_centralConfigResponseParser = centralConfigResponseParser;
-		}
 
 		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, Service service
 			, HttpMessageHandler httpMessageHandler = null, IAgentTimer agentTimer = null, string dbgName = null

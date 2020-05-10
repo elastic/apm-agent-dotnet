@@ -1,11 +1,11 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
@@ -16,34 +16,33 @@ using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model
 {
-	internal class Transaction : ITransaction
+	internal class Transaction : ExecutionSegment, ITransaction
 	{
 		private readonly Lazy<Context> _context = new Lazy<Context>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 
-		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
 
 		private readonly string _traceState;
 
 		// This constructor is meant for serialization
-		[JsonConstructor]
-		private Transaction(Context context, string name, string type, double duration, long timestamp, string id, string traceId, string parentId,
-			bool isSampled, string result, SpanCount spanCount
-		)
-		{
-			_context = new Lazy<Context>(() => context);
-			Name = name;
-			Duration = duration;
-			Timestamp = timestamp;
-			Type = type;
-			Id = id;
-			TraceId = traceId;
-			ParentId = parentId;
-			IsSampled = isSampled;
-			Result = result;
-			SpanCount = spanCount;
-		}
+		//[JsonConstructor]
+		// private Transaction(Context context, string name, string type, double duration, long timestamp, string id, string traceId, string parentId,
+		// 	bool isSampled, string result, SpanCount spanCount
+		// )
+		// {
+		// 	_context = new Lazy<Context>(() => context);
+		// 	Name = name;
+		// 	Duration = duration;
+		// 	Timestamp = timestamp;
+		// 	Type = type;
+		// 	Id = id;
+		// 	TraceId = traceId;
+		// 	ParentId = parentId;
+		// 	IsSampled = isSampled;
+		// 	Result = result;
+		// 	SpanCount = spanCount;
+		// }
 
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type)
@@ -59,18 +58,15 @@ namespace Elastic.Apm.Model
 			IPayloadSender sender,
 			IConfigSnapshot configSnapshot,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer
-		)
+		) : base(name, logger)
 		{
 			ConfigSnapshot = configSnapshot;
-			Timestamp = TimeUtils.TimestampNow();
 			var idBytes = new byte[8];
 			Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
-			_logger = logger?.Scoped($"{nameof(Transaction)}.{Id}");
 
 			_sender = sender;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
 
-			Name = name;
 			HasCustomName = false;
 			Type = type;
 
@@ -109,7 +105,7 @@ namespace Elastic.Apm.Model
 
 			if (isSamplingFromDistributedTracingData)
 			{
-				_logger.Trace()
+				Logger.Trace()
 					?.Log("New Transaction instance created: {Transaction}. " +
 						"IsSampled ({IsSampled}) is based on incoming distributed tracing data ({DistributedTracingData})." +
 						" Start time: {Time} (as timestamp: {Timestamp})",
@@ -117,7 +113,7 @@ namespace Elastic.Apm.Model
 			}
 			else
 			{
-				_logger.Trace()
+				Logger.Trace()
 					?.Log("New Transaction instance created: {Transaction}. " +
 						"IsSampled ({IsSampled}) is based on the given sampler ({Sampler})." +
 						" Start time: {Time} (as timestamp: {Timestamp})",
@@ -140,8 +136,6 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		private Activity _activity;
 
-		private bool _isEnded;
-
 		private string _name;
 
 		/// <summary>
@@ -162,15 +156,6 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		public Dictionary<string, string> Custom => Context.Custom;
 
-		/// <inheritdoc />
-		/// <summary>
-		/// The duration of the transaction.
-		/// If it's not set (HasValue returns false) then the value
-		/// is automatically calculated when <see cref="End" /> is called.
-		/// </summary>
-		/// <value>The duration.</value>
-		public double? Duration { get; set; }
-
 		/// <summary>
 		/// If true, then the transaction name was modified by external code, and transaction name should not be changed
 		/// or "fixed" automatically ref https://github.com/elastic/apm-agent-dotnet/pull/258.
@@ -178,20 +163,14 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		internal bool HasCustomName { get; private set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
-		public string Id { get; }
-
 		[JsonIgnore]
 		internal bool IsContextCreated => _context.IsValueCreated;
 
-		[JsonProperty("sampled")]
-		public bool IsSampled { get; }
-
 		[JsonIgnore]
-		public Dictionary<string, string> Labels => Context.Labels;
+		public override Dictionary<string, string> Labels => Context.Labels;
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
-		public string Name
+		public override string Name
 		{
 			get => _name;
 			set
@@ -202,11 +181,7 @@ namespace Elastic.Apm.Model
 		}
 
 		[JsonIgnore]
-		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(TraceId, Id, IsSampled, _traceState);
-
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
-		[JsonProperty("parent_id")]
-		public string ParentId { get; set; }
+		public override DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(TraceId, Id, IsSampled, _traceState);
 
 		/// <inheritdoc />
 		/// <summary>
@@ -217,19 +192,12 @@ namespace Elastic.Apm.Model
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Result { get; set; }
 
+		protected override string SegmentName => "Transaction";
+
 		internal Service Service;
 
 		[JsonProperty("span_count")]
 		public SpanCount SpanCount { get; set; }
-
-		/// <summary>
-		/// Recorded time of the event, UTC based and formatted as microseconds since Unix epoch
-		/// </summary>
-		public long Timestamp { get; }
-
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
-		[JsonProperty("trace_id")]
-		public string TraceId { get; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
@@ -241,7 +209,7 @@ namespace Elastic.Apm.Model
 
 			var idBytes = new byte[8];
 			ParentId = RandomGenerator.GenerateRandomBytesAsString(idBytes);
-			_logger?.Debug()?.Log("Setting ParentId to transaction, {transaction}", this);
+			Logger?.Debug()?.Log("Setting ParentId to transaction, {transaction}", this);
 			return ParentId;
 		}
 
@@ -263,63 +231,24 @@ namespace Elastic.Apm.Model
 			{ nameof(IsSampled), IsSampled }
 		}.ToString();
 
-		public void End()
+		protected override void InternalEnd(bool isFirstEndCall, long endTimestamp)
 		{
-			if (Duration.HasValue)
-			{
-				_logger.Trace()
-					?.Log("Ended {Transaction} (with Duration already set)." +
-						" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
-			}
-			else
-			{
-				Assertion.IfEnabled?.That(!_isEnded,
-					$"Transaction's Duration doesn't have value even though {nameof(End)} method was already called." +
-					$" It contradicts the invariant enforced by {nameof(End)} method - Duration should have value when {nameof(End)} method exits" +
-					$" and {nameof(_isEnded)} field is set to true only when {nameof(End)} method exits." +
-					$" Context: this: {this}; {nameof(_isEnded)}: {_isEnded}");
-
-				var endTimestamp = TimeUtils.TimestampNow();
-				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
-				_logger.Trace()
-					?.Log("Ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp})," +
-						" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
-						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp,
-						TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
-			}
-
 			_activity?.Stop();
 
-			var isFirstEndCall = !_isEnded;
-			_isEnded = true;
 			if (!isFirstEndCall) return;
 
 			_sender.QueueTransaction(this);
 			_currentExecutionSegmentsContainer.CurrentTransaction = null;
 		}
 
-		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
-			=> StartSpanInternal(name, type, subType, action);
+		protected override Span CreateSpan(string name, string type, InstrumentationFlag instrumentationFlag) =>
+			new Span(name, type, Id, TraceId, this, _sender, Logger, _currentExecutionSegmentsContainer, instrumentationFlag: instrumentationFlag);
 
-		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
-			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None
-		)
-		{
-			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, instrumentationFlag: instrumentationFlag);
 
-			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
-
-			if (!string.IsNullOrEmpty(action)) retVal.Action = action;
-
-			_logger.Trace()?.Log("Starting {SpanDetails}", retVal.ToString());
-			return retVal;
-		}
-
-		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
+		public override void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
 			=> ExecutionSegmentCommon.CaptureException(
 				exception,
-				_logger,
+				Logger,
 				_sender,
 				this,
 				ConfigSnapshot,
@@ -329,42 +258,18 @@ namespace Elastic.Apm.Model
 				parentId
 			);
 
-		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null)
+		public override void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null)
 			=> ExecutionSegmentCommon.CaptureError(
 				message,
 				culprit,
 				frames,
 				_sender,
-				_logger,
+				Logger,
 				this,
 				ConfigSnapshot,
 				this,
 				parentId
 			);
-
-		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), capturedAction);
-
-		public void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), capturedAction);
-
-		public T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
-
-		public T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
-
-		public Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
-
-		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
-
-		public Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
-
-		public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 
 		internal static string StatusCodeToResult(string protocolName, int statusCode) => $"{protocolName} {statusCode.ToString()[0]}xx";
 	}

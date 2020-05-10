@@ -277,12 +277,12 @@ namespace Elastic.Apm.Report
 			}
 
 			// Executes filters for the given filter collection and handles return value and errors
-			T TryExecuteFilter<T>(IEnumerable<Func<T, T>> filters, T item) where T : class
+			T TryExecuteFilter<T>(IReadOnlyCollection<Func<T, T>> filters, T item) where T : class
 			{
-				var enumerable = filters as Func<T, T>[] ?? filters.ToArray();
-				if (!enumerable.Any()) return item;
+				//var enumerable = filters as Func<T, T>[] ?? filters.ToArray();
+				if (!filters.Any()) return item;
 
-				foreach (var filter in enumerable)
+				foreach (var filter in filters)
 				{
 					try
 					{
