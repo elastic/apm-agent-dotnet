@@ -19,10 +19,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		internal static readonly TimeSpan WaitTimeIfNoCacheControlMaxAge = TimeSpan.FromMinutes(5);
 
-		internal CentralConfigResponseParser(IApmLogger logger)
-		{
-			_logger = logger?.Scoped(nameof(CentralConfigResponseParser));
-		}
+		internal CentralConfigResponseParser(IApmLogger logger) => _logger = logger?.Scoped(nameof(CentralConfigResponseParser));
 
 		public (CentralConfigReader, CentralConfigFetcher.WaitInfoS) ParseHttpResponse(HttpResponseMessage httpResponse,
 			string httpResponseBody
@@ -155,10 +152,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			private readonly IDictionary<string, string> _keyValues;
 
-			public CentralConfigPayload(IDictionary<string, string> keyValues)
-			{
-				_keyValues = keyValues;
-			}
+			public CentralConfigPayload(IDictionary<string, string> keyValues) => _keyValues = keyValues;
 
 			[JsonIgnore]
 			public IEnumerable<KeyValuePair<string, string>> UnknownKeys => _keyValues.Where(x => !SupportedOptions.Contains(x.Key));

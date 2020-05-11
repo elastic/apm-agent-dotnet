@@ -4,9 +4,9 @@
 
 using Newtonsoft.Json;
 
-namespace Elastic.Apm.Model
+namespace Elastic.Apm.Api
 {
-	internal class CapturedStackFrame
+	public class CapturedStackFrame
 	{
 		/// <summary>
 		/// The absolute path of the file involved in the stack frame.
@@ -18,6 +18,9 @@ namespace Elastic.Apm.Model
 		public string FileName { get; set; }
 
 		public string Function { get; set; }
+
+		[JsonProperty("classname")]
+		public string ClassName { get; set; }
 
 		/// <summary>
 		/// The line number of code part of the stack frame.

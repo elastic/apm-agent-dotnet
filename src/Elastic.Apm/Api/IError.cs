@@ -6,6 +6,15 @@ namespace Elastic.Apm.Api
 {
 	public interface IError
 	{
+		string Culprit { get; set; }
+
+		CapturedException Exception { get; }
 		string Id { get; }
+
+		string ParentId { get; }
+
+		string TraceId { get; }
+
+		string TransactionId { get; }
 	}
 }
