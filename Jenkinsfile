@@ -17,7 +17,7 @@ pipeline {
     BENCHMARK_SECRET  = 'secret/apm-team/ci/benchmark-cloud'
   }
   options {
-    timeout(activity: true, time: 1, unit: 'HOURS')
+    timeout(time: 2, unit: 'HOURS')
     buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20', daysToKeepStr: '30'))
     timestamps()
     ansiColor('xterm')
@@ -34,6 +34,7 @@ pipeline {
   }
   stages {
     stage('Initializing'){
+      options { timeout(time: 75, unit: 'MINUTES') }
       stages{
         stage('Checkout') {
           options { skipDefaultCheckout() }
@@ -377,88 +378,88 @@ pipeline {
             }
           }
         }
-        stage('Release to AppVeyor') {
-          options { skipDefaultCheckout() }
-          when {
-            beforeAgent true
-            anyOf {
-              branch 'master'
-              expression { return params.Run_As_Master_Branch }
-            }
+      }
+    }
+    stage('Release to AppVeyor') {
+      options { skipDefaultCheckout() }
+      when {
+        beforeAgent true
+        anyOf {
+          branch 'master'
+          expression { return params.Run_As_Master_Branch }
+        }
+      }
+      steps {
+        deleteDir()
+        unstash 'source'
+        dir("${BASE_DIR}"){
+          release('secret/apm-team/ci/elastic-observability-appveyor')
+        }
+      }
+      post{
+        success {
+          archiveArtifacts(allowEmptyArchive: true,
+            artifacts: "${BASE_DIR}/**/bin/Release/**/*.nupkg")
+        }
+      }
+    }
+    stage('Release') {
+      options {
+        skipDefaultCheckout()
+      }
+      when {
+        beforeInput true
+        beforeAgent true
+        // Tagged release events ONLY
+        tag pattern: '\\d+\\.\\d+\\.\\d+(-(alpha|beta|rc)\\d*)?', comparator: 'REGEXP'
+      }
+      stages {
+        stage('Notify') {
+          steps {
+            emailext subject: '[apm-agent-dotnet] Release ready to be pushed',
+                      to: "${NOTIFY_TO}",
+                      body: "Please go to ${env.BUILD_URL}input to approve or reject within 12 hours."
+          }
+        }
+        stage('Release to NuGet') {
+          input {
+            message 'Should we release a new version?'
+            ok 'Yes, we should.'
           }
           steps {
             deleteDir()
             unstash 'source'
-            dir("${BASE_DIR}"){
-              release('secret/apm-team/ci/elastic-observability-appveyor')
-            }
-          }
-          post{
-            success {
-              archiveArtifacts(allowEmptyArchive: true,
-                artifacts: "${BASE_DIR}/**/bin/Release/**/*.nupkg")
+            dir("${BASE_DIR}") {
+              release('secret/apm-team/ci/elastic-observability-nuget')
             }
           }
         }
-        stage('Release') {
-          options {
-            skipDefaultCheckout()
-          }
-          when {
-            beforeInput true
-            beforeAgent true
-            // Tagged release events ONLY
-            tag pattern: '\\d+\\.\\d+\\.\\d+(-(alpha|beta|rc)\\d*)?', comparator: 'REGEXP'
-          }
-          stages {
-            stage('Notify') {
-              steps {
-                emailext subject: '[apm-agent-dotnet] Release ready to be pushed',
-                          to: "${NOTIFY_TO}",
-                          body: "Please go to ${env.BUILD_URL}input to approve or reject within 12 hours."
-              }
-            }
-            stage('Release to NuGet') {
-              input {
-                message 'Should we release a new version?'
-                ok 'Yes, we should.'
-              }
-              steps {
-                deleteDir()
-                unstash 'source'
-                dir("${BASE_DIR}") {
-                  release('secret/apm-team/ci/elastic-observability-nuget')
-                }
-              }
-            }
-          }
+      }
+    }
+    stage('AfterRelease') {
+      options {
+        skipDefaultCheckout()
+      }
+      when {
+        anyOf {
+          tag pattern: '\\d+\\.\\d+\\.\\d+', comparator: 'REGEXP'
         }
-        stage('AfterRelease') {
-          options {
-            skipDefaultCheckout()
+      }
+      stages {
+        stage('Opbeans') {
+          environment {
+            REPO_NAME = "${OPBEANS_REPO}"
           }
-          when {
-            anyOf {
-              tag pattern: '\\d+\\.\\d+\\.\\d+', comparator: 'REGEXP'
-            }
-          }
-          stages {
-            stage('Opbeans') {
-              environment {
-                REPO_NAME = "${OPBEANS_REPO}"
-              }
-              steps {
-                deleteDir()
-                dir("${OPBEANS_REPO}"){
-                  git credentialsId: 'f6c7695a-671e-4f4f-a331-acdce44ff9ba',
-                      url: "git@github.com:elastic/${OPBEANS_REPO}.git"
-                  sh script: ".ci/bump-version.sh ${env.BRANCH_NAME}", label: 'Bump version'
-                  // The opbeans pipeline will trigger a release for the master branch
-                  gitPush()
-                  // The opbeans pipeline will trigger a release for the release tag
-                  gitCreateTag(tag: "${env.BRANCH_NAME}")
-                }
-              }
+          steps {
+            deleteDir()
+            dir("${OPBEANS_REPO}"){
+              git credentialsId: 'f6c7695a-671e-4f4f-a331-acdce44ff9ba',
+                  url: "git@github.com:elastic/${OPBEANS_REPO}.git"
+              sh script: ".ci/bump-version.sh ${env.BRANCH_NAME}", label: 'Bump version'
+              // The opbeans pipeline will trigger a release for the master branch
+              gitPush()
+              // The opbeans pipeline will trigger a release for the release tag
+              gitCreateTag(tag: "${env.BRANCH_NAME}")
             }
           }
         }
