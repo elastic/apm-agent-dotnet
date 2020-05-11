@@ -17,7 +17,7 @@ pipeline {
     BENCHMARK_SECRET  = 'secret/apm-team/ci/benchmark-cloud'
   }
   options {
-    timeout(time: 75, unit: 'MINUTES')
+    timeout(activity: true, time: 1, unit: 'HOURS')
     buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20', daysToKeepStr: '30'))
     timestamps()
     ansiColor('xterm')
@@ -234,27 +234,6 @@ pipeline {
                 }
               }
             }
-            stage('Docker .NET Framework'){
-              agent { label 'windows-2019-docker-immutable' }
-              options { skipDefaultCheckout() }
-              stages {
-                stage('Build - Docker MSBuild') {
-                  steps {
-                    withGithubNotify(context: 'Build MSBuild - Docker') {
-                      cleanDir("${WORKSPACE}/${BASE_DIR}")
-                      unstash 'source'
-                      dir("${BASE_DIR}") {
-                        catchError(message: 'Beta stage', buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                          dotnetWindows(){
-                            bat 'msbuild'
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
             stage('Windows .NET Core'){
               agent { label 'windows-2019-immutable' }
               options { skipDefaultCheckout() }
@@ -424,7 +403,6 @@ pipeline {
         stage('Release') {
           options {
             skipDefaultCheckout()
-            timeout(time: 12, unit: 'HOURS')
           }
           when {
             beforeInput true
@@ -502,14 +480,6 @@ def dotnet(Closure body){
   def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-sdk-linux:latest'
   sh label: 'Docker build', script: "docker build --tag ${dockerTagName} .ci/docker/sdk-linux"
   docker.image("${dockerTagName}").inside("-e HOME='${env.WORKSPACE}/${env.BASE_DIR}' -v /var/run/docker.sock:/var/run/docker.sock"){
-    body()
-  }
-}
-
-def dotnetWindows(Closure body){
-  def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-windows:latest'
-  bat label: 'Docker Build', script: "docker build --tag ${dockerTagName}  -m 2GB .ci\\docker\\buildtools-windows"
-  docker.image("${dockerTagName}").inside(){
     body()
   }
 }
