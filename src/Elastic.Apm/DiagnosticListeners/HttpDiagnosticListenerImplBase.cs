@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Elastic.Apm.Api;
@@ -130,7 +131,7 @@ namespace Elastic.Apm.DiagnosticListeners
 			}
 
 			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(_agent, $"{RequestGetMethod(request)} {requestUrl.Host}",
-				ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient);
+				ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient, true);
 
 			if (!ProcessingRequests.TryAdd(request, span))
 			{
