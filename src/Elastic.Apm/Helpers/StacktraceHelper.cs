@@ -106,7 +106,7 @@ namespace Elastic.Apm.Helpers
 			try
 			{
 				return GenerateApmStackTrace(
-					new StackTrace(exception, true).GetFrames(), logger, configurationReader, dbgCapturingFor);
+					new EnhancedStackTrace(exception).GetFrames(), logger, configurationReader, dbgCapturingFor);
 			}
 			catch (Exception e)
 			{
