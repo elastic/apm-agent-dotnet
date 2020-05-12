@@ -741,6 +741,11 @@ namespace Elastic.Apm.Tests
 
 			try
 			{
+				ServicePointManager.Expect100Continue = true;
+				ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls
+					| SecurityProtocolType.Tls11
+					| SecurityProtocolType.Tls12;
+
 				var httpClient = new HttpClient();
 				await httpClient.GetAsync("https://elastic.co");
 			}
