@@ -747,7 +747,7 @@ namespace Elastic.Apm.Tests
 					| SecurityProtocolType.Tls12;
 
 				var httpClient = new HttpClient();
-				await httpClient.GetAsync("https://elastic.co");
+				await httpClient.GetAsync("http://elastic.co");
 			}
 			catch (Exception e)
 			{
