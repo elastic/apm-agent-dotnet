@@ -741,17 +741,13 @@ namespace Elastic.Apm.Tests
 
 			try
 			{
-				ServicePointManager.Expect100Continue = true;
-				ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls
-					| SecurityProtocolType.Tls11
-					| SecurityProtocolType.Tls12;
-
+				using var localServer = new LocalServer();
 				var httpClient = new HttpClient();
-				await httpClient.GetAsync("http://elastic.co");
+				await httpClient.GetAsync(localServer.Uri);
 			}
-			catch (Exception e)
+			catch (Exception)
 			{
-				// ignore - only thing we care about in this stack is the callstack.
+				// ignore - only thing we care about in this stack is the stack trace.
 			}
 
 			payloadSender.FirstSpan.StackTrace.Should().NotBeNull();
