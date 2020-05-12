@@ -19,9 +19,6 @@ namespace Elastic.Apm.Api
 
 		public string Function { get; set; }
 
-		[JsonProperty("classname")]
-		public string ClassName { get; set; }
-
 		/// <summary>
 		/// The line number of code part of the stack frame.
 		/// Zero value means the actual line number could not have been obtained.

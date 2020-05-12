@@ -53,23 +53,19 @@ namespace Elastic.Apm.Helpers
 			{
 				foreach (var frame in frames)
 				{
-					var className = frame?.GetMethod()
+					var fileName = frame?.GetMethod()
 						?.DeclaringType?.FullName; //see: https://github.com/elastic/apm-agent-dotnet/pull/240#discussion_r289619196
 
 					var functionName = GetRealMethodName(frame?.GetMethod());
-					var fileName = frame?.GetFileName();
 
 					logger.Trace()?.Log("{MethodName}, {lineNo}", functionName, frame?.GetFileLineNumber());
 
 					retVal.Add(new CapturedStackFrame
 					{
 						Function = functionName ?? "N/A",
-						ClassName = string.IsNullOrWhiteSpace(className) ? "N/A" : className,
+						FileName = string.IsNullOrWhiteSpace(fileName) ? "N/A" : fileName,
 						Module = frame?.GetMethod()?.ReflectedType?.Assembly.FullName,
 						LineNo = frame?.GetFileLineNumber() ?? 0,
-						FileName = string.IsNullOrWhiteSpace(fileName)
-							? string.IsNullOrEmpty(frame?.GetMethod()?.Module.Name) ? "n/a" : frame.GetMethod()?.Module.Name
-							: fileName,
 						AbsPath = frame?.GetFileName() // optional property
 					});
 				}

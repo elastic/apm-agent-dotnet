@@ -414,6 +414,58 @@ namespace Elastic.Apm.Tests
 			payloadSender.FirstError.Exception.StackTrace.Should().HaveCount(2);
 		}
 
+		/// <summary>
+		/// Makes sure that the captured stack trace for an async call is "demystified" by Ben.Demystifier
+		/// </summary>
+		[Fact]
+		public async Task EnhancedCallStack()
+		{
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
+			{
+				try
+				{
+					await agent.Tracer.CaptureTransaction("testTransaction", "test",
+						async t =>
+						{
+							await t.CaptureSpan("testSpan", "test", async () =>
+							{
+								await Task.Delay(1);
+								await VeryAsyncCall();
+							});
+						});
+				}
+				catch
+				{
+					// ignore exception - we only care about the stack trace
+				}
+			}
+
+			payloadSender.FirstError.Should().NotBeNull();
+			payloadSender.FirstError.Exception.StackTrace[0].Function.Should().Be(nameof(T3));
+			payloadSender.FirstError.Exception.StackTrace[1].Function.Should().Be(nameof(T2));
+			payloadSender.FirstError.Exception.StackTrace[2].Function.Should().Be(nameof(VeryAsyncCall));
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private async Task VeryAsyncCall()
+		{
+			await Task.Delay(1);
+			await T2();
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private async Task T2()
+			=> await T3();
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private async Task T3()
+		{
+			await Task.Delay(1);
+			throw new Exception("This is a test exception");
+		}
+
 		private static void AssertWithAgent(string stackTraceLimit, string spanFramesMinDuration, Action<MockPayloadSender> assertAction,
 			int sleepLength = 0
 		)
