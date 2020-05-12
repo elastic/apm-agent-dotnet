@@ -734,7 +734,7 @@ namespace Elastic.Apm.Tests
 		/// <summary>
 		/// Makes sure that in case of an async outgoing http call the caller method shows up in the captured callstack
 		/// </summary>
-		[Fact]
+		[NetCoreFact]
 		public async Task CallStackContainsCallerMethod()
 		{
 			var (_, payloadSender, _) = RegisterListenerAndStartTransaction();
