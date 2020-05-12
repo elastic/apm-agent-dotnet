@@ -111,16 +111,20 @@ namespace Elastic.Apm.Tests
 			payloadSender.Errors.Should().NotBeEmpty();
 			(payloadSender.Errors.First() as Error).Should().NotBeNull();
 
+			var currentFileName = new StackTrace(true).GetFrame(0).GetFileName();
+
 			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should()
-				.Contain(m => m.FileName == typeof(Base).FullName
+				.Contain(m => m.ClassName == typeof(Base).FullName
 					&& m.Function == nameof(Base.Method1)
 					&& m.Module == typeof(Base).Assembly.FullName
+					&& m.FileName == currentFileName
 				);
 
 			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should()
-				.Contain(m => m.FileName == typeof(Derived).FullName
+				.Contain(m => m.ClassName == typeof(Derived).FullName
 					&& m.Function == nameof(Derived.TestMethod)
-					&& m.Module == typeof(Derived).Assembly.FullName);
+					&& m.Module == typeof(Derived).Assembly.FullName
+					&& m.FileName == currentFileName);
 		}
 
 		/// <summary>
@@ -154,11 +158,13 @@ namespace Elastic.Apm.Tests
 			payloadSender.Errors.First().Should().NotBeNull();
 			payloadSender.Errors.First().Should().BeOfType(typeof(Error));
 
-			//note: since filename is used on the UI (and there is no other way to show the classname, we misuse this field
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].FileName.Should().Be(typeof(Derived).FullName);
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].ClassName.Should().Be(typeof(Derived).FullName);
 			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].Function.Should().Be(nameof(Derived.MethodThrowingIDerived));
 
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[1].FileName.Should().Be(typeof(Derived).FullName);
+			var fileName = new StackTrace(true).GetFrame(0).GetFileName();
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].FileName.Should().Be(fileName);
+
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[1].ClassName.Should().Be(typeof(Derived).FullName);
 			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[1].Function.Should().Be(nameof(Base.MyMethod));
 		}
 
@@ -175,9 +181,11 @@ namespace Elastic.Apm.Tests
 			payloadSender.Errors.First().Should().NotBeNull();
 			payloadSender.Errors.First().Should().BeOfType(typeof(Error));
 
-			//note: since filename is used on the UI (and there is no other way to show the classname, we misuse this field
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].FileName.Should().Be(typeof(Base).FullName);
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].ClassName.Should().Be(typeof(Base).FullName);
 			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].Function.Should().Be(nameof(Base.JustThrow));
+
+			var fileName = new StackTrace(true).GetFrame(0).GetFileName();
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].FileName.Should().Be(fileName);
 		}
 
 		[Fact]
