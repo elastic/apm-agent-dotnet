@@ -739,8 +739,15 @@ namespace Elastic.Apm.Tests
 		{
 			var (_, payloadSender, _) = RegisterListenerAndStartTransaction();
 
-			var httpClient = new HttpClient();
-			await httpClient.GetAsync("https://elastic.co");
+			try
+			{
+				var httpClient = new HttpClient();
+				await httpClient.GetAsync("https://elastic.co");
+			}
+			catch (Exception e)
+			{
+				// ignore - only thing we care about in this stack is the callstack.
+			}
 
 			payloadSender.FirstSpan.StackTrace.Should().NotBeNull();
 			payloadSender.FirstSpan.StackTrace.Should().Contain(n => n.Function.Contains(nameof(CallStackContainsCallerMethod)));
