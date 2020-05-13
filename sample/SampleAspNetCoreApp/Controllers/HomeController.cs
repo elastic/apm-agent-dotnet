@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Apm;
 using Elastic.Apm.Api;
@@ -187,6 +188,30 @@ namespace SampleAspNetCoreApp.Controllers
 			if (Agent.Tracer.CurrentTransaction != null)
 				Agent.Tracer.CurrentTransaction.Name = $"{HttpContext.Request.Method} {HttpContext.Request.Path}";
 			return Ok();
+		}
+
+		public async Task<IActionResult> VeryAsyncCall()
+		{
+			await T1();
+			return Ok();
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private async Task T1()
+		{
+			await Task.Delay(1);
+			await T2();
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private async Task T2()
+			=> await T3();
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private async Task T3()
+		{
+			await Task.Delay(1);
+			throw new Exception("This is a test exception");
 		}
 
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

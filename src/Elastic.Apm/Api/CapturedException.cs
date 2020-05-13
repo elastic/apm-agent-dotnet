@@ -7,9 +7,9 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
-namespace Elastic.Apm.Model
+namespace Elastic.Apm.Api
 {
-	internal class CapturedException
+	public class CapturedException
 	{
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Code { get; set; }

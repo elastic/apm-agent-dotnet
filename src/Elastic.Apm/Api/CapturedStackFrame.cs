@@ -4,9 +4,9 @@
 
 using Newtonsoft.Json;
 
-namespace Elastic.Apm.Model
+namespace Elastic.Apm.Api
 {
-	internal class CapturedStackFrame
+	public class CapturedStackFrame
 	{
 		/// <summary>
 		/// The absolute path of the file involved in the stack frame.
