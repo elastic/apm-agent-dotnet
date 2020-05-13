@@ -731,6 +731,29 @@ namespace Elastic.Apm.Tests
 			logger.Lines.Should().NotContain(line => line.ToLower().Contains("warn"));
 		}
 
+		/// <summary>
+		/// Makes sure that in case of an async outgoing http call the caller method shows up in the captured callstack
+		/// </summary>
+		[NetCoreFact]
+		public async Task CallStackContainsCallerMethod()
+		{
+			var (_, payloadSender, _) = RegisterListenerAndStartTransaction();
+
+			try
+			{
+				using var localServer = new LocalServer();
+				var httpClient = new HttpClient();
+				await httpClient.GetAsync(localServer.Uri);
+			}
+			catch (Exception)
+			{
+				// ignore - only thing we care about in this stack is the stack trace.
+			}
+
+			payloadSender.FirstSpan.StackTrace.Should().NotBeNull();
+			payloadSender.FirstSpan.StackTrace.Should().Contain(n => n.Function.Contains(nameof(CallStackContainsCallerMethod)));
+		}
+
 		internal static (IDisposable, MockPayloadSender, ApmAgent) RegisterListenerAndStartTransaction()
 		{
 			var payloadSender = new MockPayloadSender();

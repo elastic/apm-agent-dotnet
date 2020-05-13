@@ -130,7 +130,7 @@ namespace Elastic.Apm.DiagnosticListeners
 			}
 
 			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(_agent, $"{RequestGetMethod(request)} {requestUrl.Host}",
-				ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient);
+				ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient, true);
 
 			if (!ProcessingRequests.TryAdd(request, span))
 			{
