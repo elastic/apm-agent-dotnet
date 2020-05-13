@@ -67,8 +67,10 @@ namespace Elastic.Apm.Helpers
 						ClassName = string.IsNullOrWhiteSpace(className) ? "N/A" : className,
 						Module = frame?.GetMethod()?.ReflectedType?.Assembly.FullName,
 						LineNo = frame?.GetFileLineNumber() ?? 0,
+						// FileName is either the .cs file or the assembly location as fallback
 						FileName = string.IsNullOrWhiteSpace(fileName)
-							? string.IsNullOrEmpty(frame?.GetMethod()?.Module.Name) ? "n/a" : frame.GetMethod()?.Module.Name
+							? string.IsNullOrEmpty(frame?.GetMethod()?.GetType().Assembly.Location) ? "n/a" :
+							frame?.GetMethod()?.GetType().Assembly.Location
 							: fileName,
 						AbsPath = frame?.GetFileName() // optional property
 					});
