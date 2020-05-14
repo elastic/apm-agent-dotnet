@@ -21,6 +21,13 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.5.1]]
+==== 1.5.1
+
+[float]
+===== Bug fixes
+- Memory issue in SqlEventListener {pull}851[#851]
+
 [[release-notes-1.5.0]]
 ==== 1.5.0
 
