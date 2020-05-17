@@ -47,7 +47,7 @@ namespace Elastic.Apm.Model
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
 			Span parentSpan = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None
-		) : base(name, logger)
+		) : base(name, logger, enclosingTransaction.ConfigSnapshot)
 		{
 			InstrumentationFlag = instrumentationFlag;
 			Id = RandomGenerator.GenerateRandomBytesAsString(new byte[8]);
@@ -87,9 +87,6 @@ namespace Elastic.Apm.Model
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Action { get; set; }
 
-		[JsonIgnore]
-		private IConfigSnapshot ConfigSnapshot => _enclosingTransaction.ConfigSnapshot;
-
 		/// <summary>
 		/// Any other arbitrary data captured by the agent, optionally provided by the user.
 		/// <seealso cref="ShouldSerializeContext" />
@@ -103,9 +100,6 @@ namespace Elastic.Apm.Model
 
 		[JsonIgnore]
 		public override Dictionary<string, string> Labels => Context.Labels;
-
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
-		public override string Name { get; set; }
 
 		[JsonIgnore]
 		public override DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(

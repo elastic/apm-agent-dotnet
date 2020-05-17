@@ -58,16 +58,14 @@ namespace Elastic.Apm.Model
 			IPayloadSender sender,
 			IConfigSnapshot configSnapshot,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer
-		) : base(name, logger)
+		) : base(name, logger, configSnapshot)
 		{
-			ConfigSnapshot = configSnapshot;
 			var idBytes = new byte[8];
 			Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 
 			_sender = sender;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
 
-			HasCustomName = false;
 			Type = type;
 
 			StartActivity();
@@ -136,17 +134,6 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		private Activity _activity;
 
-		private string _name;
-
-		/// <summary>
-		/// Holds configuration snapshot (which is immutable) that was current when this transaction started.
-		/// We would like transaction data to be consistent and not to be affected by possible changes in agent's configuration
-		/// between the start and the end of the transaction. That is why the way all the data is collected for the transaction
-		/// and its spans is controlled by this configuration snapshot.
-		/// </summary>
-		[JsonIgnore]
-		internal IConfigSnapshot ConfigSnapshot { get; }
-
 		/// <summary>
 		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
 		/// <seealso cref="ShouldSerializeContext" />
@@ -156,29 +143,15 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		public Dictionary<string, string> Custom => Context.Custom;
 
-		/// <summary>
-		/// If true, then the transaction name was modified by external code, and transaction name should not be changed
-		/// or "fixed" automatically ref https://github.com/elastic/apm-agent-dotnet/pull/258.
-		/// </summary>
-		[JsonIgnore]
-		internal bool HasCustomName { get; private set; }
-
 		[JsonIgnore]
 		internal bool IsContextCreated => _context.IsValueCreated;
 
+		/// <inheritdoc />
+		[JsonProperty("sampled")]
+		public override bool IsSampled { get; }
+
 		[JsonIgnore]
 		public override Dictionary<string, string> Labels => Context.Labels;
-
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
-		public override string Name
-		{
-			get => _name;
-			set
-			{
-				HasCustomName = true;
-				_name = value;
-			}
-		}
 
 		[JsonIgnore]
 		public override DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(TraceId, Id, IsSampled, _traceState);

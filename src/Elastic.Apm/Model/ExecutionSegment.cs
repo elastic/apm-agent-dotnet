@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report.Serialization;
@@ -22,12 +23,15 @@ namespace Elastic.Apm.Model
 
 		private readonly ChildDurationTimer _childDurations = new ChildDurationTimer();
 
-		public ExecutionSegment(string name, IApmLogger logger)
+		public ExecutionSegment(string name, IApmLogger logger, IConfigSnapshot configSnapshot)
 		{
-			Name = name;
 			Timestamp = TimeUtils.TimestampNow();
 
+			Name = name;
+			HasCustomName = false;
+
 			Logger = logger?.Scoped($"{GetType().Name}.{Id}");
+			ConfigSnapshot = configSnapshot;
 		}
 
 		public abstract void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null);
@@ -40,7 +44,34 @@ namespace Elastic.Apm.Model
 
 		public abstract Dictionary<string, string> Labels { get; }
 
-		public abstract string Name { get; set; }
+		/// <summary>
+		/// Holds configuration snapshot (which is immutable) that was current when transaction started.
+		/// We would like transaction data to be consistent and not to be affected by possible changes in agent's configuration
+		/// between the start and the end of the transaction. That is why the way all the data is collected for the transaction
+		/// and its spans is controlled by this configuration snapshot.
+		/// </summary>
+		[JsonIgnore]
+		internal IConfigSnapshot ConfigSnapshot { get; }
+
+		private string _name;
+
+		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		public string Name
+		{
+			get => _name;
+			set
+			{
+				HasCustomName = true;
+				_name = value;
+			}
+		}
+
+		/// <summary>
+		/// If true, then the execution segment name was modified by external code, and name should not be changed
+		/// or "fixed" automatically ref https://github.com/elastic/apm-agent-dotnet/pull/258.
+		/// </summary>
+		[JsonIgnore]
+		internal bool HasCustomName { get; private set; }
 
 		public abstract DistributedTracingData OutgoingDistributedTracingData { get; }
 
@@ -57,9 +88,7 @@ namespace Elastic.Apm.Model
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Id { get; set; }
 
-		/// <inheritdoc />
-		[JsonProperty("sampled")]
-		public virtual bool IsSampled { get; protected set; }
+		public abstract bool IsSampled { get; }
 
 		/// <inheritdoc />
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
@@ -128,7 +157,7 @@ namespace Elastic.Apm.Model
 
 			var calculatedEndTimestamp = Timestamp + (long)(Duration.Value * 1000);
 
-			_childDurations.OnSegmentEnd(calculatedEndTimestamp);
+			if (ConfigSnapshot.BreakdownMetrics) _childDurations.OnSegmentEnd(calculatedEndTimestamp);
 
 			var isFirstEndCall = !_isEnded;
 			_isEnded = true;
@@ -154,9 +183,15 @@ namespace Elastic.Apm.Model
 			return span;
 		}
 
-		public void OnChildStart(long timestamp) => _childDurations.OnChildStart(timestamp);
+		public void OnChildStart(long timestamp)
+		{
+			if (ConfigSnapshot.BreakdownMetrics) _childDurations.OnChildStart(timestamp);
+		}
 
-		public void OnChildEnd(long timestamp) => _childDurations.OnChildEnd(timestamp);
+		public void OnChildEnd(long timestamp)
+		{
+			if (ConfigSnapshot.BreakdownMetrics) _childDurations.OnChildEnd(timestamp);
+		}
 
 		private class ChildDurationTimer
 		{
