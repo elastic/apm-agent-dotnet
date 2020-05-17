@@ -43,6 +43,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _transactionSampleRate;
 		private readonly string _useElasticTraceparentHeader;
 		private readonly string _verifyServerCert;
+		private readonly string _breakdownMetrics;
 
 		public MockConfigSnapshot(IApmLogger logger = null,
 			string logLevel = null,
@@ -72,7 +73,8 @@ namespace Elastic.Apm.Tests.Mocks
 			string verifyServerCert = null,
 			string useElasticTraceparentHeader = null,
 			string applicationNamespaces = null,
-			string excludedNamespaces = null
+			string excludedNamespaces = null,
+			string breakdownMetrics = null
 		) : base(logger, ThisClassName)
 		{
 			_serverUrls = serverUrls;
@@ -103,12 +105,15 @@ namespace Elastic.Apm.Tests.Mocks
 			_useElasticTraceparentHeader = useElasticTraceparentHeader;
 			_applicationNamespaces = applicationNamespaces;
 			_excludedNamespaces = excludedNamespaces;
+			_breakdownMetrics = breakdownMetrics;
 		}
 
 		public string ApiKey => ParseApiKey(Kv(ConfigConsts.EnvVarNames.ApiKey, _apiKey, Origin));
 
 		public IReadOnlyCollection<string> ApplicationNamespaces =>
 			ParseApplicationNamespaces(new ConfigurationKeyValue(ConfigConsts.EnvVarNames.ApplicationNamespaces, _applicationNamespaces, Origin));
+
+		public bool BreakdownMetrics => ParseBreakdownMetrics(Kv(ConfigConsts.EnvVarNames.BreakdownMetrics, _breakdownMetrics, Origin));
 
 		public string CaptureBody => ParseCaptureBody(Kv(ConfigConsts.EnvVarNames.CaptureBody, _captureBody, Origin));
 

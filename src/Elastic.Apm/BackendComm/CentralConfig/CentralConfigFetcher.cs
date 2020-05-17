@@ -276,6 +276,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public bool VerifyServerCert => _wrapped.VerifyServerCert;
 			public IReadOnlyCollection<string> ExcludedNamespaces => _wrapped.ExcludedNamespaces;
 			public IReadOnlyCollection<string> ApplicationNamespaces => _wrapped.ApplicationNamespaces;
+			public bool BreakdownMetrics => _wrapped.BreakdownMetrics;
 		}
 	}
 }

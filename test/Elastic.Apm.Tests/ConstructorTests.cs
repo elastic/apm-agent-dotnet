@@ -68,6 +68,8 @@ namespace Elastic.Apm.Tests
 			public bool UseElasticTraceparentHeader => ConfigConsts.DefaultValues.UseElasticTraceparentHeader;
 
 			public int TransactionMaxSpans => ConfigConsts.DefaultValues.TransactionMaxSpans;
+
+			public bool BreakdownMetrics => ConfigConsts.DefaultValues.BreakdownMetrics;
 			// ReSharper restore UnassignedGetOnlyAutoProperty
 		}
 	}

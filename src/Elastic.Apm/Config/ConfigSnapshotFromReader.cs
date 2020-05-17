@@ -48,5 +48,6 @@ namespace Elastic.Apm.Config
 		public bool VerifyServerCert => _content.VerifyServerCert;
 		public IReadOnlyCollection<string> ExcludedNamespaces => _content.ExcludedNamespaces;
 		public IReadOnlyCollection<string> ApplicationNamespaces => _content.ApplicationNamespaces;
+		public bool BreakdownMetrics => _content.BreakdownMetrics;
 	}
 }

@@ -95,11 +95,14 @@ namespace Elastic.Apm.Config
 
 		public virtual bool VerifyServerCert =>
 			ParseVerifyServerCert(Read(ConfigConsts.KeyNames.VerifyServerCert, ConfigConsts.EnvVarNames.VerifyServerCert));
-		
-		public IReadOnlyCollection<string> ExcludedNamespaces => 
+
+		public IReadOnlyCollection<string> ExcludedNamespaces =>
 			ParseExcludedNamespaces(Read(ConfigConsts.KeyNames.ExcludedNamespaces, ConfigConsts.EnvVarNames.ExcludedNamespaces));
 
-		public IReadOnlyCollection<string> ApplicationNamespaces => 
+		public IReadOnlyCollection<string> ApplicationNamespaces =>
 			ParseExcludedNamespaces(Read(ConfigConsts.KeyNames.ApplicationNamespaces, ConfigConsts.EnvVarNames.ApplicationNamespaces));
+
+		public bool BreakdownMetrics =>
+			ParseBreakdownMetrics(Read(ConfigConsts.KeyNames.BreakdownMetrics, ConfigConsts.EnvVarNames.BreakdownMetrics));
 	}
 }

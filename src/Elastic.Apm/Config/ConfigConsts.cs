@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Config
@@ -36,8 +35,22 @@ namespace Elastic.Apm.Config
 			public const string UnknownServiceName = "unknown";
 			public const bool UseElasticTraceparentHeader = true;
 			public const bool VerifyServerCert = true;
-			public static readonly IReadOnlyCollection<string> DefaultExcludedNamespaces = new List<string>{"System.", "Microsoft.", "MS.", "FSharp.", "Newtonsoft.Json", "Serilog", "NLog", "Giraffe."}.AsReadOnly();
+
+			public static readonly IReadOnlyCollection<string> DefaultExcludedNamespaces =
+				new List<string>
+				{
+					"System.",
+					"Microsoft.",
+					"MS.",
+					"FSharp.",
+					"Newtonsoft.Json",
+					"Serilog",
+					"NLog",
+					"Giraffe."
+				}.AsReadOnly();
+
 			public static readonly IReadOnlyCollection<string> DefaultApplicationNamespaces = new List<string>().AsReadOnly();
+			public static readonly bool BreakdownMetrics = true;
 
 			public static List<WildcardMatcher> DisableMetrics = new List<WildcardMatcher>();
 
@@ -96,6 +109,7 @@ namespace Elastic.Apm.Config
 			public const string VerifyServerCert = Prefix + "VERIFY_SERVER_CERT";
 			public const string ExcludedNamespaces = Prefix + "EXCLUDED_NAMESPACES";
 			public const string ApplicationNamespaces = Prefix + "APPLICATION_NAMESPACES";
+			public const string BreakdownMetrics = Prefix + "BREAKDOWN_METRICS";
 		}
 
 		public static class KeyNames
@@ -127,6 +141,7 @@ namespace Elastic.Apm.Config
 			public const string VerifyServerCert = "ElasticApm:VerifyServerCert";
 			public const string ExcludedNamespaces = "ElasticApm:ExcludedNamespaces";
 			public const string ApplicationNamespaces = "ElasticApm:ApplicationNamespaces";
+			public const string BreakdownMetrics = "ElasticApm:BreakdownMetrics";
 		}
 
 		public static class SupportedValues

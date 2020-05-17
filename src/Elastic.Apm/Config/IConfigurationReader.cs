@@ -165,5 +165,10 @@ namespace Elastic.Apm.Config
 		/// This suppresses any configuration of <see cref="ExcludedNamespaces"/>
 		/// </summary>
 		IReadOnlyCollection<string> ApplicationNamespaces { get; }
+
+		/// <summary>
+		/// Whether to collect breakdown metrics (`span.self_time`)
+		/// </summary>
+		bool BreakdownMetrics { get; }
 	}
 }

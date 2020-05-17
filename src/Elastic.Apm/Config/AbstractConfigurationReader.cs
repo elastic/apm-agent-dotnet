@@ -140,6 +140,7 @@ namespace Elastic.Apm.Config
 		protected bool ParseVerifyServerCert(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.VerifyServerCert;
+
 			// ReSharper disable once SimplifyConditionalTernaryExpression
 			return bool.TryParse(kv.Value, out var value) ? value : DefaultValues.VerifyServerCert;
 		}
@@ -724,6 +725,8 @@ namespace Elastic.Apm.Config
 		}
 
 		protected bool ParseCentralConfig(ConfigurationKeyValue kv) => ParseBoolOption(kv, DefaultValues.CentralConfig, "CentralConfig");
+
+		protected bool ParseBreakdownMetrics(ConfigurationKeyValue kv) => ParseBoolOption(kv, DefaultValues.BreakdownMetrics, "BreakdownMetrics");
 
 		private bool ParseBoolOption(ConfigurationKeyValue kv, bool defaultValue, string dbgOptionName)
 		{
