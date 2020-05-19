@@ -2,6 +2,8 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using Microsoft.AspNetCore.Http.Features;
+
 namespace Elastic.Apm.AspNetCore
 {
 	internal static class Consts
@@ -13,5 +15,7 @@ namespace Elastic.Apm.AspNetCore
 			internal const string Email = "email";
 			internal const string UserId = "sub";
 		}
+
+		internal static FormOptions FormContentOptions => new FormOptions { BufferBody = true };
 	}
 }
