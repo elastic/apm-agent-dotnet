@@ -246,7 +246,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			thisObj.Should().NotBeNull();
 
 			thisObj.Method.HttpMethodAssertValid();
-			thisObj.StatusCode.HttpStatusCodeAssertValid();
+			thisObj.Response.StatusCode.HttpStatusCodeAssertValid();
 			thisObj.Url.Should().NotBeNullOrEmpty();
 		}
 

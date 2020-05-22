@@ -20,8 +20,21 @@ namespace Elastic.Apm.Api
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Method { get; set; }
 
+		/// <summary>
+		/// This field is deprecated in the Elastic APM Server 7.7.0 release,
+		/// replaced by `context.http.response.status_code`. We continue to
+		/// send this field for backwards compatibility.
+		/// </summary>
 		[JsonProperty("status_code")]
-		public int StatusCode { get; set; }
+		[Obsolete("Response.StatusCode should be used instead.")]
+		public int StatusCode
+		{
+			get => Response.StatusCode;
+			set => Response.StatusCode = value;
+		}
+
+		[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+		public SpanResponse Response { get; } = new SpanResponse();
 
 		/// <summary>
 		/// Sets the URL of the HTTP request.

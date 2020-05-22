@@ -51,6 +51,8 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		protected abstract int ResponseGetStatusCode(TResponse response);
 
+		protected abstract Dictionary<string, string[]> GetHeaders(TResponse response);
+
 		internal abstract string ExceptionEventKey { get; }
 
 		public abstract string Name { get; }
@@ -205,7 +207,10 @@ namespace Elastic.Apm.DiagnosticListeners
 				if (responseObject != null)
 				{
 					if (responseObject is TResponse response)
-						span.Context.Http.StatusCode = ResponseGetStatusCode(response);
+					{
+						span.Context.Http.Response.StatusCode = ResponseGetStatusCode(response);
+						span.Context.Http.Response.Headers = GetHeaders(response);
+					}
 					else
 					{
 						Logger.Trace()

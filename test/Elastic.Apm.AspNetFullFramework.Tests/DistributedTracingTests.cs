@@ -40,7 +40,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 				VerifyRootChildTransactions(receivedData, rootTxData, childTxData, out var rootTx, out _);
 
-				receivedData.Transactions.All(n => n.Context.Request.Headers.ContainsKey("tracestate") && n.Context.Request.Headers["tracestate"] == "rojo=00f067aa0ba902b7,congo=t61rcWkgMzE").Should().BeTrue();
+				receivedData.Transactions.All(n =>
+						n.Context.Request.Headers.ContainsKey("tracestate")
+						&& n.Context.Request.Headers["tracestate"] == "rojo=00f067aa0ba902b7,congo=t61rcWkgMzE")
+					.Should()
+					.BeTrue();
 
 				var spanExternalCall =
 					receivedData.Spans.Single(sp => sp.Context.Http.Url == HomeController.ChildHttpCallToExternalServiceUrl.ToString());
@@ -135,12 +139,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			using (var client = new HttpClient())
 			{
-				var request = new HttpRequestMessage()
-				{
-					RequestUri = new Uri(fullUrl),
-					Method = HttpMethod.Post,
-					Content = httpContent
-				};
+				var request = new HttpRequestMessage() { RequestUri = new Uri(fullUrl), Method = HttpMethod.Post, Content = httpContent };
 
 				client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/xml"));
 				request.Content.Headers.ContentType = new MediaTypeHeaderValue("text/xml");
@@ -233,7 +232,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			span.Context.Labels.Should().BeNull();
 
 			span.Context.Http.Method.Should().Be("GET");
-			span.Context.Http.StatusCode.Should().Be(statusCode);
+			span.Context.Http.Response.StatusCode.Should().Be(statusCode);
 			span.Context.Http.Url.Should().Be(url.ToString());
 
 			span.Type.Should().Be(ApiConstants.TypeExternal);

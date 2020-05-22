@@ -714,7 +714,11 @@ namespace Elastic.Apm.Tests.ApiTests
 			{
 				WaitHelpers.SleepMinimum();
 				t.CaptureSpan("SampleSpan1", "SampleSpanType",
-					span => { span.Context.Http = new Http { Url = "http://mysite.com", Method = "GET", StatusCode = 200 }; });
+					span =>
+					{
+						span.Context.Http = new Http { Url = "http://mysite.com", Method = "GET", };
+						span.Context.Http.Response.StatusCode = 200;
+					});
 
 				t.CaptureSpan("SampleSpan2", "SampleSpanType",
 					span =>
@@ -726,7 +730,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.Spans[0].Name.Should().Be("SampleSpan1");
 			payloadSender.Spans[0].Context.Http.Url.Should().Be("http://mysite.com");
 			payloadSender.Spans[0].Context.Http.Method.Should().Be("GET");
-			payloadSender.Spans[0].Context.Http.StatusCode.Should().Be(200);
+			payloadSender.Spans[0].Context.Http.Response.StatusCode.Should().Be(200);
 			payloadSender.Spans[0].Context.Destination.Address.Should().Be("mysite.com");
 			payloadSender.Spans[0].Context.Destination.Port.Should().Be(UrlUtilsTests.DefaultHttpPort);
 

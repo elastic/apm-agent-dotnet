@@ -246,10 +246,9 @@ namespace ApiSamples
 			{
 				transaction.CaptureSpan("SampleSpan1", "SampleSpanType", span =>
 				{
-					// ReSharper disable once UseObjectOrCollectionInitializer
 					span.Context.Http = new Http { Url = "http://mysite.com", Method = "GET" };
+					span.Context.Http.Response.StatusCode = 200;
 					// send request, get response with status code
-					span.Context.Http.StatusCode = 200;
 				});
 
 				transaction.CaptureSpan("SampleSpan2", "SampleSpanType",

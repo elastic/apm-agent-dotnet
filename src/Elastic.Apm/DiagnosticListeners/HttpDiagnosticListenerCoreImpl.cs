@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 
 namespace Elastic.Apm.DiagnosticListeners
@@ -11,6 +13,11 @@ namespace Elastic.Apm.DiagnosticListeners
 	{
 		public HttpDiagnosticListenerCoreImpl(IApmAgent agent)
 			: base(agent) { }
+
+		protected override Dictionary<string, string[]> GetHeaders(HttpResponseMessage response) =>
+			response.Headers?.ToDictionary(
+				header => header.Key,
+				header => header.Value?.ToArray());
 
 		internal override string ExceptionEventKey => "System.Net.Http.Exception";
 

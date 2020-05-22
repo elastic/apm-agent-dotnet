@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Reflection;
 using Elastic.Apm.Logging;
@@ -13,6 +14,20 @@ namespace Elastic.Apm.DiagnosticListeners
 	{
 		public HttpDiagnosticListenerFullFrameworkImpl(IApmAgent agent)
 			: base(agent) { }
+
+		protected override Dictionary<string, string[]> GetHeaders(HttpWebResponse response)
+		{
+			var dictionary = new Dictionary<string, string[]>(response.Headers.Count);
+
+			for (var i = 0; i < response.Headers.Count; i++)
+			{
+				var header = response.Headers.GetKey(i);
+				var values = response.Headers.GetValues(i);
+				dictionary.Add(header, values);
+			}
+
+			return dictionary;
+		}
 
 		internal override string ExceptionEventKey => "System.Net.Http.Desktop.HttpRequestOut.Ex.Stop";
 
@@ -70,9 +85,9 @@ namespace Elastic.Apm.DiagnosticListeners
 				{
 					if (statusCodeObject is HttpStatusCode statusCode)
 					{
-						span.Context.Http.StatusCode = (int)statusCode;
+						span.Context.Http.Response.StatusCode = (int)statusCode;
 
-						if (span.Context.Http.StatusCode >= 300)
+						if (span.Context.Http.Response.StatusCode >= 300)
 						{
 							span.CaptureError($"Failed outgoing HTTP call with HttpClient - StatusCode: {statusCode.ToString()}",
 								$"HTTP {statusCode}", null);

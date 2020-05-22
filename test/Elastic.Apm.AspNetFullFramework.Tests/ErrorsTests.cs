@@ -68,7 +68,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 				receivedData.Spans.First().Should().NotBeNull();
 				receivedData.Spans.First().Context.Http.Should().NotBeNull();
-				receivedData.Spans.First().Context.Http.StatusCode.Should().Be(403);
+				receivedData.Spans.First().Context.Http.Response.StatusCode.Should().Be(403);
 				receivedData.Spans.First().Context.Http.Method.Should().Be("GET");
 				receivedData.Spans.First().Context.Http.Url.Should().Be(HomeController.ChildHttpSpanWithResponseForbiddenUrl.ToString());
 				receivedData.Spans.First().Context.Destination.Address.Should().Be(HomeController.ChildHttpSpanWithResponseForbiddenUrl.Host);

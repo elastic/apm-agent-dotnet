@@ -248,7 +248,7 @@ namespace Elastic.Apm.Tests
 				var firstSpan = payloadSender.FirstSpan;
 				firstSpan.Should().NotBeNull();
 				firstSpan.Context.Http.Url.Should().Be(localServer.Uri);
-				firstSpan.Context.Http.StatusCode.Should().Be(200);
+				firstSpan.Context.Http.Response.StatusCode.Should().Be(200);
 				firstSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
 				firstSpan.Context.Destination.Address.Should().Be(new Uri(localServer.Uri).Host);
 				firstSpan.Context.Destination.Port.Should().Be(new Uri(localServer.Uri).Port);
@@ -283,7 +283,7 @@ namespace Elastic.Apm.Tests
 					.Be(uriBuilder.Uri.ToString()
 						.Replace("TestUser", "[REDACTED]")
 						.Replace("TestPassword", "[REDACTED]"));
-				firstSpan.Context.Http.StatusCode.Should().Be(200);
+				firstSpan.Context.Http.Response.StatusCode.Should().Be(200);
 				firstSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
 				firstSpan.Context.Destination.Address.Should().Be(new Uri(localServer.Uri).Host);
 				firstSpan.Context.Destination.Port.Should().Be(new Uri(localServer.Uri).Port);
@@ -310,7 +310,7 @@ namespace Elastic.Apm.Tests
 				var firstSpan = payloadSender.FirstSpan;
 				firstSpan.Should().NotBeNull();
 				firstSpan.Context.Http.Url.Should().Be(localServer.Uri);
-				firstSpan.Context.Http.StatusCode.Should().Be(500);
+				firstSpan.Context.Http.Response.StatusCode.Should().Be(500);
 				firstSpan.Context.Http.Method.Should().Be(HttpMethod.Post.Method);
 				firstSpan.Context.Destination.Address.Should().Be(new Uri(localServer.Uri).Host);
 				firstSpan.Context.Destination.Port.Should().Be(new Uri(localServer.Uri).Port);
@@ -432,7 +432,7 @@ namespace Elastic.Apm.Tests
 				var firstSpan = payloadSender.FirstSpan;
 				firstSpan.Should().NotBeNull();
 				firstSpan.Context.Http.Url.Should().Be(localServer.Uri);
-				firstSpan.Context.Http.StatusCode.Should().Be(200);
+				firstSpan.Context.Http.Response.StatusCode.Should().Be(200);
 				firstSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
 				firstSpan.Duration.Should().BeGreaterThan(0);
 			}
@@ -456,7 +456,7 @@ namespace Elastic.Apm.Tests
 				var firstSpan = payloadSender.FirstSpan;
 				firstSpan.Should().NotBeNull();
 				firstSpan.Context.Http.Url.Should().Be(localServer.Uri);
-				firstSpan.Context.Http.StatusCode.Should().Be(200);
+				firstSpan.Context.Http.Response.StatusCode.Should().Be(200);
 				firstSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
 				firstSpan.Duration.Should().BeGreaterThan(0);
 			}
@@ -497,7 +497,7 @@ namespace Elastic.Apm.Tests
 					var httpCallSpan = payloadSender.Spans[i];
 					httpCallSpan.Should().NotBeNull();
 					httpCallSpan.Context.Http.Url.Should().Be($"{localServer.Uri}?i={i}");
-					httpCallSpan.Context.Http.StatusCode.Should().Be(200);
+					httpCallSpan.Context.Http.Response.StatusCode.Should().Be(200);
 					httpCallSpan.Context.Http.Method.Should().Be(HttpMethod.Get.Method);
 					httpCallSpan.Context.Destination.Address.Should().Be(new Uri(localServer.Uri).Host);
 					httpCallSpan.Context.Destination.Port.Should().Be(new Uri(localServer.Uri).Port);
