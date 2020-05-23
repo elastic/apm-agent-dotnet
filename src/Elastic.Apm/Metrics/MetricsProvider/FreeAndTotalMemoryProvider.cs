@@ -35,62 +35,109 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		{
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
-				var (success, totalMemory, freeMemory) = GlobalMemoryStatus.GetTotalPhysAndAvailPhys();
-
-				if (!success || totalMemory == 0 || freeMemory == 0)
-					return null;
-
-				var retVal = new List<MetricSample>();
-
-				if (_collectFreeMemory)
-					retVal.Add(new MetricSample(FreeMemory, freeMemory));
-
-				if (_collectTotalMemory)
-					retVal.Add(new MetricSample(TotalMemory, totalMemory));
-
-				return retVal;
+				return GetSamplesForWindows();
 			}
 
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 			{
-				var retVal = new List<MetricSample>();
+				return GetSamplesForLinux();
+			}
+
+			return null;
+		}
+
+		private IEnumerable<MetricSample> GetSamplesForWindows()
+		{
+			var (success, totalMemory, freeMemory) = GlobalMemoryStatus.GetTotalPhysAndAvailPhys();
+
+			if (!success || totalMemory == 0 || freeMemory == 0)
+				return null;
+
+			var retVal = new List<MetricSample>();
+
+			if (_collectFreeMemory)
+				retVal.Add(new MetricSample(FreeMemory, freeMemory));
+
+			if (_collectTotalMemory)
+				retVal.Add(new MetricSample(TotalMemory, totalMemory));
+
+			return retVal;
+		}
+
+		private IEnumerable<MetricSample> GetSamplesForLinux()
+		{
+			var retVal = new List<MetricSample>();
+
+			var (cGroupUsageInBytes, cGroupLimitInBytes) = GetCGroupMemoryInfo();
+			var (procFreeMemory, procTotalMemory) = GetProcMemoryInfo();
+
+			// cgroup limits are empty if container are running without limits
+			var totalMemory = cGroupLimitInBytes ?? procTotalMemory;
+
+			if (_collectTotalMemory && totalMemory.HasValue) retVal.Add(new MetricSample(TotalMemory, totalMemory.Value));
+
+			var freeMemory = cGroupUsageInBytes.HasValue && totalMemory.HasValue
+				? totalMemory.Value - cGroupUsageInBytes.Value
+				: procFreeMemory;
+
+			if (_collectFreeMemory && freeMemory.HasValue) retVal.Add(new MetricSample(FreeMemory, freeMemory.Value));
+
+			ConsecutiveNumberOfFailedReads = 0;
+
+			return retVal;
+
+			(ulong?, ulong?) GetCGroupMemoryInfo()
+			{
+				// https://www.kernel.org/doc/Documentation/cgroup-v1/memory.txt
+				const string usagePath = "/sys/fs/cgroup/memory/memory.usage_in_bytes";
+				const string limitPath = "/sys/fs/cgroup/memory/memory.limit_in_bytes";
+
+				ulong? usageInBytes = null;
+				ulong? limitInBytes = null;
+
+
+				if (_collectFreeMemory && File.Exists(usagePath) && ulong.TryParse(File.ReadAllText(usagePath), out var usage)) usageInBytes = usage;
+				if (_collectTotalMemory && File.Exists(limitPath) && ulong.TryParse(limitPath, out var limit)) limitInBytes = limit;
+
+				return (usageInBytes, limitInBytes);
+			}
+
+			(ulong?, ulong?) GetProcMemoryInfo()
+			{
+				ulong? memFree = 0;
+				ulong? memTotal = 0;
 
 				using (var sr = new StreamReader("/proc/meminfo"))
 				{
-					var hasMemFree = false;
-					var hasMemTotal = false;
+					var hasMemFree = !_collectFreeMemory;
+					var hasMemTotal = !_collectTotalMemory;
 
 					var line = sr.ReadLine();
 
-					while (line != null || retVal.Count != 2)
+					while (line != null && (!hasMemFree || !hasMemTotal))
 					{
 						//See: https://github.com/elastic/beats/issues/4202
-						if (line != null && line.Contains("MemAvailable:") && _collectFreeMemory)
+						if (!hasMemFree && line.Contains("MemAvailable:"))
 						{
 							var (suc, res) = GetEntry(line, "MemAvailable:");
-							if (suc) retVal.Add(new MetricSample(FreeMemory, res));
+							if (suc) memFree = res;
 							hasMemFree = true;
 						}
-						if (line != null && line.Contains("MemTotal:") && _collectTotalMemory)
+						if (!hasMemTotal && line.Contains("MemTotal:"))
 						{
 							var (suc, res) = GetEntry(line, "MemTotal:");
-							if (suc) retVal.Add(new MetricSample(TotalMemory, res));
+							if (suc) memTotal = res;
 							hasMemTotal = true;
 						}
-
-						if ((hasMemFree || !_collectFreeMemory) && (hasMemTotal || !_collectTotalMemory))
-							break;
 
 						line = sr.ReadLine();
 					}
 				}
 
-				ConsecutiveNumberOfFailedReads = 0;
-
-				return retVal;
+				return (memFree, memTotal);
 			}
 
-			(bool, ulong) GetEntry(string line, string name)
+			static (bool, ulong) GetEntry(string line, string name)
 			{
 				var nameIndex = line.IndexOf(name, StringComparison.Ordinal);
 				if (nameIndex < 0)
@@ -102,15 +149,13 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 				var items = values.Trim().Split(' ');
 
-				switch (items.Length)
+				return items.Length switch
 				{
-					case 1 when ulong.TryParse(items[0], out var res): return (true, res);
-					case 2 when items[1].ToLowerInvariant() == "kb" && ulong.TryParse(items[0], out var res): return (true, res * 1024);
-					default: return (false, 0);
-				}
+					1 when ulong.TryParse(items[0], out var res) => (true, res),
+					2 when items[1].ToLowerInvariant() == "kb" && ulong.TryParse(items[0], out var res) => (true, res * 1024),
+					_ => (false, 0)
+				};
 			}
-
-			return null;
 		}
 	}
 }
