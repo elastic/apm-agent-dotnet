@@ -30,7 +30,7 @@ namespace Elastic.Apm.AspNetCore.Extensions
 			{
 				if (request.HasFormContentType)
 				{
-					var form = await request.ReadFormAsync();
+					var form = await request.ReadFormAsync(Consts.FormContentOptions);
 
 					var itemProcessed = 0;
 					if (form != null && form.Count > 0)
