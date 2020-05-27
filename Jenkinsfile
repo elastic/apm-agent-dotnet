@@ -380,7 +380,7 @@ pipeline {
         }
       }
     }
-    stage('Release to AppVeyor') {
+    stage('Release to feedz.io') {
       options { skipDefaultCheckout() }
       when {
         beforeAgent true
@@ -393,7 +393,7 @@ pipeline {
         deleteDir()
         unstash 'source'
         dir("${BASE_DIR}"){
-          release('secret/apm-team/ci/elastic-observability-appveyor')
+          release('secret/apm-team/ci/elastic-observability-feedz.io')
         }
       }
       post{
