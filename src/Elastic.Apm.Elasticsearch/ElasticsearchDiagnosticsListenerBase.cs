@@ -34,15 +34,16 @@ namespace Elastic.Apm.Elasticsearch
 
 		void IObserver<KeyValuePair<string, object>>.OnError(Exception error) => Observer.OnError(error);
 
-		void IObserver<KeyValuePair<string, object>>.OnNext(KeyValuePair<string, object> value)
+		void IObserver<KeyValuePair<string, object>>.OnNext(KeyValuePair<string, object> kv)
 		{
+			Logger.Trace()?.Log("Called with key: `{DiagnosticEventKey}'", kv.Key);
 			if (_agent.Tracer.CurrentTransaction == null)
 			{
 				Logger.Debug()?.Log("No active transaction, skip creating span for outgoing HTTP request");
 				return;
 			}
 
-			Observer.OnNext(value);
+			Observer.OnNext(kv);
 		}
 
 		internal bool TryStartElasticsearchSpan(string name, out Span span, string instance = null)
