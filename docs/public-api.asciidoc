@@ -11,8 +11,59 @@ as well as track errors.
 
 
 [float]
+[[api-initialization]]
+== Initialization
+
+The API does not require explicit Agent initialization—agent initialization is optional. The `Elastic.Apm.Agent.IsConfigured` property lets you check whether the agent is already initialized.
+
+[float]
+[[implicit-initialization]]
+=== Implicit agent initialization
+
+If you don't explicitly initialize the agent, it will be started with a default component setup. This means the Agent will read <<configuration,configuration settings>> from environment variables. If you don't set an environment variable, the Agent will use the default value. For example, the `ServerUrls` default is `http://localhost:8200`.
+
+This implicit initialization of the agent happens on the first call on the `Elastic.Apm.Agent` class.
+
+NOTE: One exception is the `Elastic.Apm.Agent.IsConfigured` method. This method never initializes the agent, it only checks if the agent is already initialized.
+
+Another example of initialization is when you enable the Agent with one of the technology-specific methods from the <<setup>> instructions. Specifically when the `UseElasticApm` or `UseAllElasticApm` method is called in ASP.NET Core or when the IIS module is initialized in an IIS application.
+
+The default agent setup should cover most of the use cases and the primary way to configure the agent is through environment variables.
+
+[float]
+[[explicit-initialization]]
+=== Explicit agent initialization
+
+If you would like to replace one of the agent components, you can do so by calling the `Elastic.Apm.Agent.Setup(AgentComponents)` method.
+In the AgentComponents you can pass following optional components to the agent:
+
+- `IApmLogger`: A logger implementation that will be used to print log messages. Default: A console logger.
+- `IPayloadSender`: A component that receives all the captured events like spans, transactions, and metrics. The default implementation serializes all events and sends them to the Elastic APM Server
+- `IConfigurationReader`: A component that reads <<configuration, agent configuration settings>>. The default implementation reads configuration through environment variables.
+
+NOTE: In the case of ASP.NET Core, when you register the agent, the `UseElasticApm` and the `UseAllElasticApm` methods both implicitly initialize the agent by calling the `Elastic.Apm.Agent.Setup` method internally. In that setup, the `IConfigurationReader` implementation will read configuration from the ASP.NET Core configuration system in case you pass an `IConfiguration` instance to the method. The `IApmLogger` instance will also log through the configured logging provider by integrating into the ASP.NET Core logging system.
+
+[float]
+[[auto-instrumentation-and-agent-api]]
+== Auto instrumentation in combination with the Public Agent API
+
+With the `Elastic.ApmAgent.Subscribe(params IDiagnosticsSubscriber[] subscribers)` method you can turn on auto instrumentation for supported libraries.
+
+In the case of ASP.NET Core, when you turn on the agent with the `UseAllElasticApm` method, the agent will do this automatically.
+
+With a typical console application, you need to do this manually.
+
+`IDiagnosticsSubscriber` implementations are offered by the agent and they subscribe to diagnostic source events or other data sources in order to capture events automatically.
+
+Some examples:
+
+- `HttpDiagnosticsSubscriber`: captures HTTP calls through `HttpClient`
+- `EfCoreDiagnosticsSubscriber`: captures database calls through Entity Framework Core
+- `SqlClientDiagnosticSubscriber`: captures database calls through `SqlClient` 
+
+[float]
 [[api-tracer-api]]
-=== Tracer API
+== Tracer API
 The tracer gives you access to the currently active transaction and it enables you to manually start a transaction.
 
 You can access the API by using the static property on the Agent: `Elastic.Apm.Agent.Tracer`.
@@ -158,7 +209,7 @@ var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransactio
 //----------------------------
 [float]
 [[api-transaction]]
-=== Transaction API
+== Transaction API
 //----------------------------
 A transaction describes an event captured by an Elastic APM agent monitoring a service. Transactions help combine multiple <<api-span,Spans>> into logical groups, and they are the first <<api-span,Span>> of a service. More information on Transactions and Spans is available in the {apm-overview-ref-v}/apm-data-model.html[APM data model] documentation.
 
@@ -384,7 +435,7 @@ Agent.Tracer.CaptureTransaction("MyCustomTransaction",ApiConstants.TypeRequest, 
 //----------------------------
 [float]
 [[api-span]]
-=== Span API
+== Span API
 //----------------------------
 A span contains information about a specific code path, executed as part of a transaction.
 
@@ -556,3 +607,46 @@ var asyncResult = await span.CaptureSpan("Select FROM customer", ApiConstants.Ty
 NOTE: Return value of <<convenient-capture-span>> method overloads that accept Task (or Task<T>) is the same Task (or Task<T>) instance as the one passed as the argument so if your application should continue only after the task completes you have to call <<convenient-capture-span>> with `await` keyword.
 
 NOTE: Code samples above use `Elastic.Apm.Agent.Tracer.CurrentTransaction`. In production code you should make sure the `CurrentTransaction` is not `null`.
+
+[float]
+[[filter-api]]
+== Filter API (added[1.5])
+
+Use `Agent.AddFilter(filter)` to supply a filter callback.
+
+Each filter callback will be called just before data is sent to the APM Server. This allows you to manipulate the data being sent, like to remove sensitive information such as passwords.
+
+Each filter callback is called in the order they are added and will receive a payload object containing the data about to be sent to the APM Server as the only argument.
+
+The filter callback is synchronous and should return the manipulated payload object. If a filter callback doesn’t return any value or returns a falsy value, the remaining filter callback will not be called and the payload will not be sent to the APM Server.
+
+There are 3 overloads of the `Agent.AddFilter` method with the following arguments:
+
+- `Func<ITransaction, ITransaction>`: A filter called for every transaction.
+- `Func<ISpan, ISpan>`: A filter called for every span.
+- `Func<IError, IError>`: A filter called for every error.
+
+Below are some usage examples of the Agent.AddFilter method.
+
+Drop all spans for a specific database:
+
+[source,csharp]
+----
+Agent.AddFilter((ISpan span) =>
+{
+	if (span.Context?.Db?.Instance == "VerySecretDb")
+		return null;
+	return span;
+});
+----
+
+Hide some data:
+
+[source,csharp]
+----
+Agent.AddFilter((ITransaction transaction) =>
+{
+	transaction.Context.Request.Url.Protocol = "[HIDDEN]";
+	return transaction;
+});
+----

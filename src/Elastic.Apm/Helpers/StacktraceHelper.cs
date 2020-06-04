@@ -1,12 +1,16 @@
-﻿using System;
+﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Helpers
 {
@@ -98,7 +102,7 @@ namespace Elastic.Apm.Helpers
 			try
 			{
 				return GenerateApmStackTrace(
-					new StackTrace(exception, true).GetFrames(), logger, configurationReader, dbgCapturingFor);
+					new EnhancedStackTrace(exception).GetFrames(), logger, configurationReader, dbgCapturingFor);
 			}
 			catch (Exception e)
 			{

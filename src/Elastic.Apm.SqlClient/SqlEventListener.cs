@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -131,14 +135,13 @@ namespace Elastic.Apm.SqlClient
 				?.Log("Process EndExecute event. Id: {Id}. Composite state: {CompositeState}. Sql exception number: {SqlExceptionNumber}.", id,
 					compositeState, sqlExceptionNumber);
 
-			if (!_processingSpans.TryGetValue(id, out var item))
+			if (!_processingSpans.TryRemove(id, out var item))
 			{
 				_logger?.Warning()
 					?.Log("Failed capturing sql statement (failed to remove from ProcessingSpans).");
 				return;
 			}
 
-			var isSuccess = (compositeState & 1) == 1;
 			var isSqlException = (compositeState & 2) == 2;
 			// 4 - is synchronous
 

@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -299,10 +303,11 @@ namespace Elastic.Apm.Model
 			=> StartSpanInternal(name, type, subType, action);
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
-			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None
+			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false
 		)
 		{
-			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, instrumentationFlag: instrumentationFlag);
+			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer,
+				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
 

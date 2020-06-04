@@ -21,6 +21,29 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.5.1]]
+==== 1.5.1
+
+[float]
+===== Bug fixes
+- Memory issue in SqlEventListener {pull}851[#851]
+
+[[release-notes-1.5.0]]
+==== 1.5.0
+
+[float]
+===== Features
+- Auto instrumentation for `SqlClient` (<<setup-sqlclient,documentation>>)
+- Introducing Filter API {pull}792[#792] (<<filter-api,documentation>>)
+- Auto-detect culprit for exceptions {pull}740[#740]
+- New config settings: `ExcludedNamespaces`, `ApplicationNamespaces` (<<config-all-options-summary,documentation>>)
+- Keep `Activity.Current.TraceId` in sync with the Trace ID used by the agent {pull}800[#800]
+- Report Kubernetes system metadata {pull}741[#741]
+
+[float]
+===== Bug fixes
+- Database connection string parsing issue with Oracle {pull}795[#795]
+
 [[release-notes-1.4.0]]
 ==== 1.4.0
 

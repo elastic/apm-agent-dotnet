@@ -28,21 +28,27 @@ it's a good idea to first check your logs and look for output just as the app st
 
 If you don't see anything suspicious in the agent logs (no warning or error), it's recommended to turn the log level to `Trace` for further investigation.
 
+[float]
+[[collect-agent-logs]]
 === Collecting agent logs
 
 The way to collect logs depends on the setup of your application.
 
-==== ASP.NET Core 
+[float]
+[[collect-logs-core]]
+==== ASP.NET Core
 
 When the Agent is activated with `UseAllElasticApm` or `UseElasticApm`, it will integrate with the
 https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-3.1[ASP.NET Core logging infrastructure].
 This means the Agent will pick up the configured logging provider and log as any other component logs.
 
+[float]
+[[collect-logs-classic]]
 ==== ASP.NET Classic
 
 Unlike ASP.NET Core, ASP.NET (classic) does not have a predefined logging system.
 However, if you have a logging system in place, like NLog, Serilog, or similar, you can direct the agent logs into your
-logging system by creating a bridge between the agent's internal logger and your logging system. 
+logging system by creating a bridge between the agent's internal logger and your logging system.
 
 First implement the `IApmLogger` interface from the `Elastic.Apm.Logging` namespace:
 
@@ -79,7 +85,8 @@ AgentDependencies.Logger = new ApmLoggerBridge();
 The `AgentDependencies` class lives in the `Elastic.Apm.AspNetFullFramework` namespace.
 During initialization, the agent checks if an additional logger was configured--the agent only does this once, so it's important to set it as early in the process as possible (typically in the `Application_Start` method).
 
-
+[float]
+[[collect-logs-general]]
 ==== General .NET applications
 
 If none of the above cases apply to your application, you can still use a bridge and redirect agent logs into a .NET logging system (like NLog, Serilog, or similar).
@@ -90,3 +97,19 @@ For this you'll need an `IApmLogger` implementation (see above) which you need t
 ----
 Agent.Setup(new AgentComponents(logger: new ApmLoggerBridge()));
 ----
+
+[float]
+[[double-agent-initialization]]
+=== An `InstanceAlreadyCreatedException` exception is thrown
+
+In the early stage of a monitored process, the Agent might throw an `InstanceAlreadyCreatedException` exception with the following message: "The singleton APM agent has already been instantiated and can no longer be configured." This happens when you attempt to initialize the Agent multiple times, which is prohibited. Allowing multiple Agent instances per process would open up problems, like capturing events and metrics multiple times for each instance, or having multiple background threads for event serialization and transfer to the APM Server.
+
+TIP: Take a look at the initialization section of the <<public-api,Public Agent API>> for more information on how agent initialization works.
+
+As an example, this issue can happen if you call the `Elastic.Apm.Agent.Setup` method multiple times, or if you call another method on `Elastic.Apm.Agent` that implicitly initializes the agent, and then you call the `Elastic.Apm.Agent.Setup` method on the already initialized agent.
+
+Another example might be when you use the Public Agent API in combination with the IIS module or the ASP.NET Core NuGet package, where you enable the agent with the `UseElasticApm` or `UseAllElasticApm` methods. Both the first call to the IIS module and the `UseElasticApm`/`UseAllElasticApm` methods internally call the `Elastic.Apm.Agent.Setup` method to initialize the agent.
+
+You may use the Public Agent API with the `Elastic.Apm.Agent` class in code that can potentially execute before the IIS module initializes or the `UseElasticApm`/`UseAllElasticApm` calls execute. If that happens, those will fail, as the Agent has been implicitly initialized already.
+
+To prevent the `InstanceAlreadyCreatedException` in these scenarios, first use the `Elastic.Apm.Agent.IsConfigured` method to check if the agent is already initialized. After the check, you can safely use other methods in the Public Agent API. This will prevent accidental implicit agent initialization.
