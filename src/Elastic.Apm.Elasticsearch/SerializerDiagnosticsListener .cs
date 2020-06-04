@@ -1,6 +1,3 @@
-using System;
-using System.Diagnostics;
-using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
 using Elasticsearch.Net;
 using Elasticsearch.Net.Diagnostics;
@@ -18,7 +15,7 @@ namespace Elastic.Apm.Elasticsearch
 			// 		- _source
 			//		- script parameters
 			//		- script values
-			// This is to granular of information for tracing and is more there to aid profiling.
+			// This is too granular of information for tracing and is more there to aid profiling.
 			if (serializerInfo.Purpose != "request/response") return;
 
 			var name = ToName(@event);
@@ -48,7 +45,7 @@ namespace Elastic.Apm.Elasticsearch
 				case DeserializeStop:
 					return DiagnosticSources.Serializer.Deserialize;
 				default:
-					return @event.Replace(StartSuffix, string.Empty).Replace(StopSuffix, string.Empty);
+					return @event?.Replace(StartSuffix, string.Empty).Replace(StopSuffix, string.Empty);
 
 			}
 		}

@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
 using Elasticsearch.Net;
@@ -31,9 +29,7 @@ namespace Elastic.Apm.Elasticsearch
 				RegisterError(span, response);
 			}
 			else
-			{
-				span.Name += $" (Exception)";
-			}
+				span.Name += " (Exception)";
 
 
 			Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
@@ -135,7 +131,7 @@ namespace Elastic.Apm.Elasticsearch
 				case CallStop:
 					return DiagnosticSources.RequestPipeline.CallElasticsearch;
 				default:
-					return @event.Replace(StartSuffix, string.Empty).Replace(StopSuffix, string.Empty);
+					return @event?.Replace(StartSuffix, string.Empty).Replace(StopSuffix, string.Empty);
 			}
 		}
 	}

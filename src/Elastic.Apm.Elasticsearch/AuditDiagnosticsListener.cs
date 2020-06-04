@@ -1,6 +1,3 @@
-using System;
-using System.Diagnostics;
-using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
 using Elasticsearch.Net;
 using Elasticsearch.Net.Diagnostics;

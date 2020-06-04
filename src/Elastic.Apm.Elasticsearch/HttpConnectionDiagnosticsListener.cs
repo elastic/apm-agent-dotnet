@@ -31,7 +31,7 @@ namespace Elastic.Apm.Elasticsearch
 			var name = ToName(@event);
 			if (requestData == null) return;
 
-			var instanceUri = requestData?.Node?.Uri;
+			var instanceUri = requestData.Node?.Uri;
 			if (TryStartElasticsearchSpan(name, out var span, instanceUri?.ToString()))
 			{
 				Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
@@ -60,11 +60,9 @@ namespace Elastic.Apm.Elasticsearch
 				case SendStop:
 					return DiagnosticSources.HttpConnection.SendAndReceiveHeaders;
 				default:
-					return @event.Replace(".Start", string.Empty).Replace(".Stop", string.Empty);
+					return @event?.Replace(".Start", string.Empty).Replace(".Stop", string.Empty);
 
 			}
 		}
-
-
 	}
 }
