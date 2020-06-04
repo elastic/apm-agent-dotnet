@@ -43,7 +43,14 @@ namespace Elastic.Apm.Elasticsearch
 				return;
 			}
 
-			Observer.OnNext(kv);
+			try
+			{
+				Observer.OnNext(kv);
+			}
+			catch (Exception e)
+			{
+				Logger.Error()?.LogException(e, "An exception occured calling OnNext on an ElasticsearchDiagnostic observer");
+			}
 		}
 
 		internal bool TryStartElasticsearchSpan(string name, out Span span, string instance = null)
