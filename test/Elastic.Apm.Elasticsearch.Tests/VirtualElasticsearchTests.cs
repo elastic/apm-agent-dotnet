@@ -74,10 +74,12 @@ namespace Elastic.Apm.Elasticsearch.Tests
 
 				var spans = payloadSender.SpansOnFirstTransaction;
 				spans.Should().NotBeEmpty();
-				spans.Should().OnlyContain(s => s.Context.Db.Statement != null);
+				spans.Should().Contain(s => s.Context.Db.Statement != null);
 				//ensure we the last span is closed even if the listener does not receive a response
 				spans.Where(s => s.Action == "Ping").Should().HaveCount(2);
 				spans.Where(s => s.Action == "CallElasticsearch").Should().HaveCount(2);
+
+				payloadSender.Errors.Should().Contain(e => ((Elastic.Apm.Model.Error)e).Exception.Message == "boom!");
 			}
 		}
 
