@@ -27,7 +27,7 @@ pipeline {
     quietPeriod(10)
   }
   triggers {
-    issueCommentTrigger('(?i).*(?:jenkins\\W+)?run\\W+(?:the\\W+)?tests(?:\\W+please)?.*')
+    issueCommentTrigger('(?i).*(?:jenkins\\W+)?run\\W+(?:the\\W+)?(?:benchmark\\W+)?tests(?:\\W+please)?.*')
   }
   parameters {
     booleanParam(name: 'Run_As_Master_Branch', defaultValue: false, description: 'Allow to run any steps on a PR, some steps normally only run on master branch.')
@@ -343,9 +343,8 @@ pipeline {
                     branch 'master'
                     tag pattern: 'v\\d+\\.\\d+\\.\\d+.*', comparator: 'REGEXP'
                     expression { return params.Run_As_Master_Branch }
-                    // TODO: It's required to configure the benchmark for dotnet to be dryRun
-                    // or prepare an ES where to send the data to
-                    // expression { return env.BENCHMARK_UPDATED != "false" }
+                    expression { return env.BENCHMARK_UPDATED != "false" }
+                    expression { return env.GITHUB_COMMENT?.contains('benchmark tests') }
                   }
                   expression { return env.ONLY_DOCS == "false" }
                 }
