@@ -393,7 +393,7 @@ pipeline {
         deleteDir()
         unstash 'source'
         dir("${BASE_DIR}"){
-          releaseWithTimeStamp('secret/apm-team/ci/elastic-observability-feedz.io')
+          release(secret: 'secret/apm-team/ci/elastic-observability-feedz.io', withSuffix: true)
         }
       }
       post{
@@ -430,7 +430,7 @@ pipeline {
             deleteDir()
             unstash 'source'
             dir("${BASE_DIR}") {
-              release('secret/apm-team/ci/elastic-observability-nuget')
+              release(secret: 'secret/apm-team/ci/elastic-observability-nuget')
             }
           }
         }
@@ -485,24 +485,11 @@ def dotnet(Closure body){
   }
 }
 
-def release(secret){
+def release(Map args = [:]){
+  def secret = args.secret
+  def withSuffix = args.get('withSuffix', false)
   dotnet(){
-    sh(label: 'Release', script: '.ci/linux/release.sh')
-    def repo = getVaultSecret(secret: secret)
-    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [
-      [var: 'REPO_API_KEY', password: repo.data.apiKey],
-      [var: 'REPO_API_URL', password: repo.data.url],
-      ]]) {
-      withEnv(["REPO_API_KEY=${repo.data.apiKey}", "REPO_API_URL=${repo.data.url}"]) {
-        sh(label: 'Deploy', script: ".ci/linux/deploy.sh ${REPO_API_KEY} ${REPO_API_URL}")
-      }
-    }
-  }
-}
-
-def releaseWithTimeStamp(secret){
-  dotnet(){
-    sh(label: 'Release', script: '.ci/linux/releaseWithTimeStamp.sh')
+    sh(label: 'Release', script: ".ci/linux/release.sh ${withSuffix}")
     def repo = getVaultSecret(secret: secret)
     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [
       [var: 'REPO_API_KEY', password: repo.data.apiKey],
