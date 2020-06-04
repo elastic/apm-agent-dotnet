@@ -6,7 +6,7 @@
     <InformationalVersion>1.5.1</InformationalVersion>
     <FileVersion>1.5.1</FileVersion>
     
-    <PackageVersion>1.5.1</PackageVersion>
+    <VersionPrefix>1.5.1</VersionPrefix>
     <Authors>Elastic and contributors</Authors>
     <Copyright>2020 Elasticsearch BV</Copyright>
     <PackageLicenseUrl>https://github.com/elastic/apm-agent-dotnet/blob/master/LICENSE</PackageLicenseUrl>
