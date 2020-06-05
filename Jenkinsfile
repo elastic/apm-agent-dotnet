@@ -392,7 +392,7 @@ pipeline {
         deleteDir()
         unstash 'source'
         dir("${BASE_DIR}"){
-          release('secret/apm-team/ci/elastic-observability-feedz.io')
+          release(secret: 'secret/apm-team/ci/elastic-observability-feedz.io', withSuffix: true)
         }
       }
       post{
@@ -429,7 +429,7 @@ pipeline {
             deleteDir()
             unstash 'source'
             dir("${BASE_DIR}") {
-              release('secret/apm-team/ci/elastic-observability-nuget')
+              release(secret: 'secret/apm-team/ci/elastic-observability-nuget')
             }
           }
         }
@@ -484,9 +484,11 @@ def dotnet(Closure body){
   }
 }
 
-def release(secret){
+def release(Map args = [:]){
+  def secret = args.secret
+  def withSuffix = args.get('withSuffix', false)
   dotnet(){
-    sh(label: 'Release', script: '.ci/linux/release.sh')
+    sh(label: 'Release', script: ".ci/linux/release.sh ${withSuffix}")
     def repo = getVaultSecret(secret: secret)
     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [
       [var: 'REPO_API_KEY', password: repo.data.apiKey],
