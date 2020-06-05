@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net461</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="1.2.0" />
+    <PackageReference Include="FluentAssertions" Version="5.6.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+    <PackageReference Include="xunit" Version="2.3.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\sample\SampleHttpSelfHostApp\SampleHttpSelfHostApp.csproj" />
+    <ProjectReference Include="..\..\src\Elastic.Apm.AspNet.WebApi.SelfHost\Elastic.Apm.AspNet.WebApi.SelfHost.csproj" />
+    <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
+  </ItemGroup>
+</Project>

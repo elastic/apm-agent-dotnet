@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net461</TargetFramework>
+    <LangVersion>7.1</LangVersion>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNet.WebApi.OwinSelfHost" Version="5.2.7" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Elastic.Apm.AspNet.WebApi.SelfHost\Elastic.Apm.AspNet.WebApi.SelfHost.csproj" />
+  </ItemGroup>
+</Project>
