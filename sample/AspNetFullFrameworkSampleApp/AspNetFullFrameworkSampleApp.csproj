@@ -254,10 +254,8 @@
       <Version>4.5.3</Version>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
     <Content Include="Asmx\Health.asmx" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="Asmx\Health.asmx.cs">
       <DependentUpon>Health.asmx</DependentUpon>
       <SubType>Component</SubType>

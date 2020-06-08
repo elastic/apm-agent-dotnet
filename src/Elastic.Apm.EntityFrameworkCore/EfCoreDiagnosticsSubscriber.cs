@@ -9,12 +9,12 @@ using Elastic.Apm.DiagnosticSource;
 namespace Elastic.Apm.EntityFrameworkCore
 {
 	/// <summary>
-	/// Manages the Entity Framework Core listener, which listenes to EF Core events
+	/// Manages the Entity Framework Core listener, which listens to EF Core events
 	/// </summary>
 	public class EfCoreDiagnosticsSubscriber : IDiagnosticsSubscriber
 	{
 		/// <summary>
-		/// Start listening for EF Core diagnosticsource events
+		/// Start listening for EF Core <see cref="DiagnosticSource"/> events
 		/// </summary>
 		public IDisposable Subscribe(IApmAgent agentComponents)
 		{

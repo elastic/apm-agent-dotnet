@@ -19,6 +19,7 @@ Official NuGet packages can be referenced from [NuGet.org](https://www.nuget.org
 | `Elastic.Apm.AspNetFullFramework` | ASP.NET (classic) auto instrumentation with an IIS Module. | [![NuGet Release][Elastic.Apm.AspNetFullFramework-image]][Elastic.Apm.AspNetFullFramework-nuget-url] |
 | `Elastic.Apm.EntityFramework6` | Entity Framework 6 auto instrumentation. | [![NuGet Release][Elastic.Apm.EntityFramework6-image]][Elastic.Apm.EntityFramework6-nuget-url] |
 | `Elastic.Apm.SqlClient` | `System.Data.SqlClient` and `Microsoft.Data.SqlClient` auto instrumentation. [More details](/src/Elastic.Apm.SqlClient/README.md) | [![NuGet Release][Elastic.Apm.SqlClient-image]][Elastic.Apm.SqlClient-nuget-url] |
+| `Elastic.Apm.Elasticsearch` | Integration with the .NET clients for Elasticsearch. | [![NuGet Release][Elastic.Apm.EntityFramework6-image]][Elastic.Apm.EntityFramework6-nuget-url] |
 
 ## Documentation
 
@@ -52,6 +53,7 @@ These are the main folders within the repository:
   * `Elastic.Apm.AspNetFullFramework`: Auto-instrumentation for ASP.NET (classic).
   * `Elastic.Apm.EntityFramework6`: Auto-instrumentation for Entity Framework 6.
   * `Elastic.Apm.SqlClient`: Auto-instrumentation for `System.Data.SqlClient` and `Microsoft.Data.SqlClient`.
+  * `Elastic.Apm.Elasticsearch`: Auto-instrumentation for the official .NET clients for Elasticsearch.
 * `test`: This folder contains test projects. Typically each project from the `src` folder has a corresponding test project.
   * `Elastic.Apm.Tests`: Tests the `Elastic.Apm` project.
   * `Elastic.Apm.AspNetCore.Tests`: Tests the `Elastic.Apm.AspNetCore` project.
@@ -92,3 +94,7 @@ https://img.shields.io/nuget/v/Elastic.Apm.EntityFramework6.svg
 [Elastic.Apm.SqlClient-nuget-url]:https://www.nuget.org/packages/Elastic.Apm.SqlClient/
 [Elastic.Apm.SqlClient-image]:
 https://img.shields.io/nuget/v/Elastic.Apm.SqlClient.svg
+
+[Elastic.Apm.Elasticsearch-nuget-url]:https://www.nuget.org/packages/Elastic.Apm.Elasticsearch/
+[Elastic.Apm.Elasticsearch-image]:
+https://img.shields.io/nuget/v/Elastic.Apm.Elasticsearch.svg

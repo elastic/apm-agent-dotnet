@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>netcoreapp2.1</TargetFramework>
-    </PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+     <MSBUILDSINGLELOADCONTEXT>1</MSBUILDSINGLELOADCONTEXT>
+  </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="FluentAssertions" Version="5.6.0" />
@@ -17,8 +18,8 @@
         <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
     </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj"/>
+  </ItemGroup>
 
 </Project>

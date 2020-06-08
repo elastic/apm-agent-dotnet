@@ -11,6 +11,7 @@ namespace Elastic.Apm.Api
 		public const string ActionExec = "exec";
 		public const string ActionQuery = "query";
 
+		public const string SubtypeElasticsearch = "elasticsearch";
 		public const string SubtypeHttp = "http";
 		public const string SubtypeMssql = "mssql";
 		public const string SubtypeSqLite = "sqlite";

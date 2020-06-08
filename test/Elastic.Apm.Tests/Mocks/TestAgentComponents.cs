@@ -12,6 +12,7 @@ namespace Elastic.Apm.Tests.Mocks
 {
 	internal class TestAgentComponents : AgentComponents
 	{
+		/// <inheritdoc />
 		public TestAgentComponents(
 			IApmLogger logger = null,
 			IConfigSnapshot config = null,
