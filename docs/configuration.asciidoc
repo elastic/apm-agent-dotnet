@@ -48,7 +48,10 @@ public class Startup
 }
 ----
 
-With this you can use any configuration source that you configured on the `IConfiguration` instance that you passed to the APM Agent.
+With this setup, the Agent is able to be configured in the same way as any other library in your application.
+For example, any configuration source that has been configured on the `IConfiguration` instance being passed to the APM Agent can be used to set Agent configuration values.
+
+More information is available in the official https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-3.1[Microsoft .NET Core configuration docs]
 You can find the key for each APM configuration option in this documentation, under the `IConfiguration or Web.config key` column of the option's description.
 
 NOTE: It is also possible to call `UseElasticApm()` without the overload. In this case, the agent will only read configurations from environment variables.
