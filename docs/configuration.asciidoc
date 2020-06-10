@@ -83,7 +83,7 @@ Below is a sample `appsettings.json` configuration file for a typical ASP.NET Co
 ----
 
 In certain scenarios -- like when you're not using ASP.NET Core -- you wont activate the agent with the `UseElasticApm()` method.
-In this case, you can set the log level of the agent with `ElasticApm:LogLevel`, as shown in the following `appsettings.json` file:
+In this case, you can set the log level of the agent with <<config-log-level,`ElasticApm:LogLevel`>>, as shown in the following `appsettings.json` file:
 
 [source,js]
 ----
@@ -812,6 +812,12 @@ The default unit for this option is `ms`
 Sets the logging level for the agent.
 
 Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `None` (`None` disables the logging).
+
+IMPORTANT: The `UseElasticApm()` extension offers an overload to pass an `IConfiguration` instance to the agent.
+When configuring your agent in this way, as is typical in an ASP.NET Core application,
+you must instead set the `LogLevel` for the internal APM logger.
+More details, including a <<sample-config,sample configuration file>>
+are available in <<configuration-on-asp-net-core>>.
 
 [[config-all-options-summary]]
 === All options summary
