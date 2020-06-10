@@ -815,9 +815,7 @@ Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `Non
 
 IMPORTANT: The `UseElasticApm()` extension offers an overload to pass an `IConfiguration` instance to the agent.
 When configuring your agent in this way, as is typical in an ASP.NET Core application,
-you must instead set the `LogLevel` for the internal APM logger.
-More details, including a <<sample-config,sample configuration file>>
-are available in <<configuration-on-asp-net-core>>.
+you must instead set the `LogLevel` for the internal APM logger under the `Logging` section of `appsettings.json`. More details, including a <<sample-config,sample configuration file>> are available in <<configuration-on-asp-net-core>>.
 
 [[config-all-options-summary]]
 === All options summary
