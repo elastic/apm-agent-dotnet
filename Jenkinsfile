@@ -15,6 +15,7 @@ pipeline {
     ITS_PIPELINE = 'apm-integration-tests-selector-mbp/master'
     OPBEANS_REPO = 'opbeans-dotnet'
     BENCHMARK_SECRET  = 'secret/apm-team/ci/benchmark-cloud'
+    PIPELINE_LOG_LEVEL = 'DEBUG'
   }
   options {
     timeout(time: 2, unit: 'HOURS')
