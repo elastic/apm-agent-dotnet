@@ -23,7 +23,9 @@ This feature is enabled in the Agent by default, with <<config-central-config>>.
 
 [[configuration-on-asp-net-core]]
 === Configuration on ASP.NET Core
-The `UseElasticApm()` extension method offers an overload to pass an `IConfiguration` instance to the APM Agent. By using this overload in a typical ASP.NET Core application, the `Startup.cs` file would contain code similar to the following:
+
+The `UseElasticApm()` extension method offers an overload to pass an `IConfiguration` instance to the APM Agent.
+To use this type of setup, which is typical in an ASP.NET Core application, your application's `Startup.cs` file should contain code similar to the following:
 
 [source,csharp]
 ----
@@ -46,34 +48,33 @@ public class Startup
 }
 ----
 
-NOTE: As explained in <<setup-asp-net-core>>, the `UseElasticApm` method only turns on ASP.NET Core monitoring. If you want to turn on everything (including HTTP and Database monitoring) you can use the `UseAllElasticApm` method from the `Elastic.Apm.NetCoreAll` package, which has the same overloads and behavior, except it turns on tracing for everything that is supported by the agent on .NET Core including database and HTTP tracing.
+With this setup, the Agent is able to be configured in the same way as any other library in your application.
+For example, any configuration source that has been configured on the `IConfiguration` instance being passed to the APM Agent can be used to set Agent configuration values.
 
-With this you can use any configuration source that you configured on the `IConfiguration` instance that you passed to the APM Agent.
-You can find the key of each configuration option
-in the `IConfiguration or Web.config key` column of the corresponding option's description.
+More information is available in the official https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-3.1[Microsoft .NET Core configuration docs]
+You can find the key for each APM configuration option in this documentation, under the `IConfiguration or Web.config key` column of the option's description.
 
-NOTE: By simply calling `app.UseElasticApm()` without the overload, the agent will read configurations only from environment variables.
+NOTE: It is also possible to call `UseElasticApm()` without the overload. In this case, the agent will only read configurations from environment variables.
+
+NOTE: The `UseElasticApm` method only turns on ASP.NET Core monitoring. To turn on tracing for everything supported by the Agent on .NET Core, including HTTP and database monitoring, use the `UseAllElasticApm` method from the `Elastic.Apm NetCoreAll` package. Learn more in <<setup-asp-net-core,ASP.NET Core setup>>.
 
 [float]
 [[sample-config]]
 ==== Sample configuration file
 
-Below is a sample `appsettings.json` configuration file for a typical ASP.NET Core application. There are two important takeaways:
-
-1. The part below `ElasticApm` is fetched by the agent if the corresponding `IConfiguration` is passed to the agent.
-2. With ASP.NET Core, you must set `LogLevel` for the internal APM logger in the standard `Logging` section with the `ElasticApm` category name.
+Here is a sample `appsettings.json` configuration file for a typical ASP.NET Core application that has been activated with `UseElasticApm()`. There are two important takeaways, which are listed as callouts below the example:
 
 [source,js]
 ----
 {
   "Logging": {
-    "LogLevel": {
+    "LogLevel": { <1>
       "Default": "Warning",
       "Elastic.Apm": "Debug"
     }
   },
   "AllowedHosts": "*",
-  "ElasticApm":
+  "ElasticApm": <2>
     {
       "ServerUrls":  "http://myapmserver:8200",
       "SecretToken":  "apm-server-secret-token",
@@ -81,9 +82,11 @@ Below is a sample `appsettings.json` configuration file for a typical ASP.NET Co
     }
 }
 ----
+<1> With ASP.NET Core, you must set `LogLevel` for the internal APM logger in the standard `Logging` section with the `Elastic.Apm` category name.
+<2> The configurations below `ElasticApm` are fetched by the agent if the corresponding `IConfiguration` is passed to the agent.
 
-In certain scenarios -- like when you're not using ASP.NET Core -- you wont activate the agent with the `UseElasticApm()` method.
-In this case, you can set the log level of the agent with `ElasticApm:LogLevel`, as shown in the following `appsettings.json` file:
+In certain scenarios--like when you're not using ASP.NET Core--you won't activate the agent with the `UseElasticApm()` method.
+In this case, you can set the agent's log level with <<config-log-level,`ElasticApm:LogLevel`>>, as shown in the following `appsettings.json` file:
 
 [source,js]
 ----
@@ -812,6 +815,10 @@ The default unit for this option is `ms`
 Sets the logging level for the agent.
 
 Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `None` (`None` disables the logging).
+
+IMPORTANT: The `UseElasticApm()` extension offers an overload to pass an `IConfiguration` instance to the agent.
+When configuring your agent in this way, as is typical in an ASP.NET Core application,
+you must instead set the `LogLevel` for the internal APM logger under the `Logging` section of `appsettings.json`. More details, including a <<sample-config,sample configuration file>> are available in <<configuration-on-asp-net-core>>.
 
 [[config-all-options-summary]]
 === All options summary
