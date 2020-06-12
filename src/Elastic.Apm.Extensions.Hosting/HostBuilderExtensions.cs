@@ -13,6 +13,16 @@ namespace Elastic.Apm.Extensions.Hosting
 {
 	public static class HostBuilderExtensions
 	{
+		/// <summary>
+		///  Register Elastic APM .NET Agent with components in the container.
+		///  You can customize the agent by passing additional IDiagnosticsSubscriber components to this method.
+		///  Use this method if you want to control what tracing capability of the agent you would like to use
+		///  or in case you want to minimize the number of dependencies added to your application.
+		///  If you want to simply enable every tracing component without configuration please use the
+		///  UseAllElasticApm extension method from the Elastic.Apm.NetCoreAll package.
+		/// </summary>
+		/// <param name="builder">Builder.</param>
+		/// <param name="subscribers">Specify which diagnostic source subscribers you want to connect.</param>
 		public static IHostBuilder UseElasticApm(this IHostBuilder builder, params IDiagnosticsSubscriber[] subscribers)
 		{
 			builder.ConfigureServices((ctx, services) =>
@@ -27,12 +37,15 @@ namespace Elastic.Apm.Extensions.Hosting
 					UpdateServiceInformation(components.Service);
 					return components;
 				});
+
 				services.AddSingleton<IApmAgent, ApmAgent>(sp =>
 				{
 					var apmAgent = new ApmAgent(sp.GetService<AgentComponents>());
 					if (subscribers != null && subscribers.Any()) apmAgent.Subscribe(subscribers);
 					return apmAgent;
 				});
+
+				services.AddSingleton(sp => sp.GetRequiredService<IApmAgent>().Tracer);
 			});
 
 			return builder;
