@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
+using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
@@ -51,7 +52,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
 				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer)
 			);
-			ApmMiddlewareExtension.UpdateServiceInformation(_agent.Service);
+			HostBuilderExtensions.UpdateServiceInformation(_agent.Service);
 
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
 			_client = Helper.GetClient(_agent, _factory);

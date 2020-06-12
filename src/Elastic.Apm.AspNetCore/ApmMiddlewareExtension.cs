@@ -4,9 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
@@ -14,9 +11,14 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.Extensions.Hosting.Config;
 using Microsoft.AspNetCore.Builder;
+#if NETSTANDARD2_0
 using Microsoft.AspNetCore.Hosting;
+#endif
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+#if NETCOREAPP3_0
+using IHostEnvironment = Microsoft.Extensions.Hosting.IHostEnvironment;
+#endif
 
 namespace Elastic.Apm.AspNetCore
 {
@@ -56,7 +58,7 @@ namespace Elastic.Apm.AspNetCore
 				: new MicrosoftExtensionsConfig(configuration, logger, builder.ApplicationServices.GetEnvironmentName()) as IConfigurationReader;
 
 			var config = new AgentComponents(configurationReader: configReader, logger: logger);
-			UpdateServiceInformation(config.Service);
+			HostBuilderExtensions.UpdateServiceInformation(config.Service);
 
 			Agent.Setup(config);
 			return UseElasticApm(builder, Agent.Instance, logger, subscribers);
@@ -78,29 +80,15 @@ namespace Elastic.Apm.AspNetCore
 		}
 
 		internal static string GetEnvironmentName(this IServiceProvider serviceProvider) =>
+#if NETSTANDARD2_0
 			(serviceProvider.GetService(typeof(IHostingEnvironment)) as IHostingEnvironment)?.EnvironmentName;
+#elif NETCOREAPP3_0
+			(serviceProvider.GetService(typeof(IHostEnvironment)) as IHostEnvironment)?.EnvironmentName;
+#endif
 
 		internal static IApmLogger GetApmLogger(this IServiceProvider serviceProvider) =>
 			serviceProvider.GetService(typeof(ILoggerFactory)) is ILoggerFactory loggerFactory
 				? (IApmLogger)new NetCoreLogger(loggerFactory)
 				: ConsoleLogger.Instance;
-
-		internal static void UpdateServiceInformation(Service service)
-		{
-			string version;
-			var versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name == "Microsoft.AspNetCore");
-			var assemblies = versionQuery as Assembly[] ?? versionQuery.ToArray();
-			if (assemblies.Any())
-				version = assemblies.First().GetName().Version.ToString();
-			else
-			{
-				versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name.Contains("Microsoft.AspNetCore"));
-				var enumerable = versionQuery as Assembly[] ?? versionQuery.ToArray();
-				version = enumerable.Any() ? enumerable.FirstOrDefault()?.GetName().Version.ToString() : "n/a";
-			}
-
-			service.Framework = new Framework { Name = "ASP.NET Core", Version = version };
-			service.Language = new Language { Name = "C#" }; //TODO
-		}
 	}
 }

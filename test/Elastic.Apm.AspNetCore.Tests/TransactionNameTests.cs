@@ -4,6 +4,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -32,7 +33,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
 				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer));
-			ApmMiddlewareExtension.UpdateServiceInformation(_agent.Service);
+			HostBuilderExtensions.UpdateServiceInformation(_agent.Service);
 		}
 
 		/// <summary>

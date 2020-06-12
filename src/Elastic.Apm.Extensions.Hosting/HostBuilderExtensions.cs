@@ -40,21 +40,23 @@ namespace Elastic.Apm.Extensions.Hosting
 
 		internal static void UpdateServiceInformation(Service service)
 		{
-			string version;
-			// todo: WILL CHANGE IT
-			var versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name == "Microsoft.AspNetCore");
-			var assemblies = versionQuery as Assembly[] ?? versionQuery.ToArray();
-			if (assemblies.Any())
-				version = assemblies.First().GetName().Version.ToString();
-			else
-			{
-				versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name.Contains("Microsoft.AspNetCore"));
-				var enumerable = versionQuery as Assembly[] ?? versionQuery.ToArray();
-				version = enumerable.Any() ? enumerable.FirstOrDefault()?.GetName().Version.ToString() : "n/a";
-			}
+			var aspNetCoreVersion = GetAssemblyVersion("Microsoft.AspNetCore");
+			var hostingVersion = GetAssemblyVersion("Microsoft.Extensions.Hosting");
+			var version = aspNetCoreVersion ?? hostingVersion ?? "n/a";
 
-			service.Framework = new Framework { Name = ".NET Core", Version = version };
+			service.Framework = new Framework { Name = aspNetCoreVersion != null ? "ASP.NET Core" : ".NET Core", Version = version };
 			service.Language = new Language { Name = "C#" }; //TODO
+		}
+
+		private static string GetAssemblyVersion(string assemblyName)
+		{
+			var versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name == assemblyName);
+			var assemblies = versionQuery as Assembly[] ?? versionQuery.ToArray();
+			if (assemblies.Any()) return assemblies.First().GetName().Version.ToString();
+
+			versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name.Contains(assemblyName));
+			var enumerable = versionQuery as Assembly[] ?? versionQuery.ToArray();
+			return enumerable.Any() ? enumerable.FirstOrDefault()?.GetName().Version.ToString() : null;
 		}
 	}
 }
