@@ -11,14 +11,9 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.Extensions.Hosting.Config;
 using Microsoft.AspNetCore.Builder;
-#if NETSTANDARD2_0
 using Microsoft.AspNetCore.Hosting;
-#endif
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-#if NETCOREAPP3_0
-using IHostEnvironment = Microsoft.Extensions.Hosting.IHostEnvironment;
-#endif
 
 namespace Elastic.Apm.AspNetCore
 {
@@ -80,11 +75,7 @@ namespace Elastic.Apm.AspNetCore
 		}
 
 		internal static string GetEnvironmentName(this IServiceProvider serviceProvider) =>
-#if NETSTANDARD2_0
 			(serviceProvider.GetService(typeof(IHostingEnvironment)) as IHostingEnvironment)?.EnvironmentName;
-#elif NETCOREAPP3_0
-			(serviceProvider.GetService(typeof(IHostEnvironment)) as IHostEnvironment)?.EnvironmentName;
-#endif
 
 		internal static IApmLogger GetApmLogger(this IServiceProvider serviceProvider) =>
 			serviceProvider.GetService(typeof(ILoggerFactory)) is ILoggerFactory loggerFactory
