@@ -6,7 +6,7 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Microsoft.Extensions.Configuration;
 
-namespace Elastic.Apm.AspNetCore.Config
+namespace Elastic.Apm.Extensions.Hosting.Config
 {
 	/// <summary>
 	/// An agent-config provider based on Microsoft.Extensions.Configuration.IConfiguration.

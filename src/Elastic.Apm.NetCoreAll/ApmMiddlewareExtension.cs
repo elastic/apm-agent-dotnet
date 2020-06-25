@@ -14,7 +14,7 @@ namespace Elastic.Apm.NetCoreAll
 	{
 		/// <summary>
 		/// Adds the Elastic APM Middleware to the ASP.NET Core pipeline and enables <see cref="HttpDiagnosticsSubscriber" />,
-		/// <see cref="EfCoreDiagnosticsSubscriber" />.
+		/// <see cref="EfCoreDiagnosticsSubscriber" />, and <see cref="SqlClientDiagnosticSubscriber"/>.
 		/// This method turns on ASP.NET Core monitoring with every other related monitoring components, for example the agent
 		/// will also automatically trace outgoing HTTP requests and database statements.
 		/// </summary>
