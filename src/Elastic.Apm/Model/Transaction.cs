@@ -64,10 +64,6 @@ namespace Elastic.Apm.Model
 		/// The ExecutionSegmentsContainer which makes sure this transaction flows
 		/// across async work-flows
 		/// </param>
-		/// <param name="suppressActivityReuse">
-		/// By setting this to true, you can suppress reusing activity parent ids. See:
-		/// https://github.com/elastic/apm-agent-dotnet/issues/883
-		/// </param>
 		internal Transaction(
 			IApmLogger logger,
 			string name,
@@ -76,8 +72,7 @@ namespace Elastic.Apm.Model
 			DistributedTracingData distributedTracingData,
 			IPayloadSender sender,
 			IConfigSnapshot configSnapshot,
-			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
-			bool suppressActivityReuse = false
+			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer
 		)
 		{
 			ConfigSnapshot = configSnapshot;
@@ -101,16 +96,9 @@ namespace Elastic.Apm.Model
 				// Here we ignore Activity.Current.ActivityTraceFlags because it starts out without setting the IsSampled flag, so relying on that would mean a transaction is never sampled.
 				IsSampled = sampler.DecideIfToSample(idBytes);
 
-				if (Activity.Current != null && Activity.Current.IdFormat == ActivityIdFormat.W3C && !suppressActivityReuse)
-				{
-					TraceId = Activity.Current.TraceId.ToString();
-
-					// make sure the parent id is not in hierarchical format (like "|4bed8544-4e7c8c05967b3dbf.1.")
-					if (Activity.Current.ParentId.Length > 0 && Activity.Current.ParentId[0] != '|')
-						ParentId = Activity.Current.ParentId;
-				}
-				else
-					TraceId = _activity.TraceId.ToString();
+				// PrentId could be also set here, but currently in the UI each trace must start with a transaction where the ParentId is null,
+				// so to avoid https://github.com/elastic/apm-agent-dotnet/issues/883 we don't set it yet.
+				TraceId = _activity.TraceId.ToString();
 			}
 			else
 			{

@@ -48,11 +48,11 @@ namespace Elastic.Apm.Api
 		public ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null) =>
 			StartTransactionInternal(name, type, distributedTracingData);
 
-		internal Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null, bool suppressActivityReuse = false)
+		internal Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null)
 		{
 			var currentConfig = _configProvider.CurrentSnapshot;
 			var retVal = new Transaction(_logger, name, type, new Sampler(currentConfig.TransactionSampleRate), distributedTracingData
-				, _sender, currentConfig, CurrentExecutionSegmentsContainer, suppressActivityReuse)
+				, _sender, currentConfig, CurrentExecutionSegmentsContainer)
 			{ Service = _service };
 
 			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);
