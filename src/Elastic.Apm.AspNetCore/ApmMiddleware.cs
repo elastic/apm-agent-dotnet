@@ -113,13 +113,17 @@ namespace Elastic.Apm.AspNetCore
 								"Incoming request with invalid {TraceParentHeaderName} header (received value: {TraceParentHeaderValue}). Starting trace with new trace id.",
 								TraceContext.TraceParentHeaderNamePrefixed, headerValue);
 
-						transaction = _tracer.StartTransactionInternal(transactionName, ApiConstants.TypeRequest);
+						// In case there is no traceparent header, we suppress activity reuse, this way the transaction.parentID WON't be set
+						// to the activity parent id if the activity from ASP.NET Core.
+						transaction = _tracer.StartTransactionInternal(transactionName, ApiConstants.TypeRequest, suppressActivityReuse: true);
 					}
 				}
 				else
 				{
 					_logger.Debug()?.Log("Incoming request. Starting Trace.");
-					transaction = _tracer.StartTransactionInternal(transactionName, ApiConstants.TypeRequest);
+
+					// Same suppressActivityReuse: true as above
+					transaction = _tracer.StartTransactionInternal(transactionName, ApiConstants.TypeRequest, suppressActivityReuse: true);
 				}
 
 				return transaction;

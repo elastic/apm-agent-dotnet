@@ -50,6 +50,24 @@ namespace Elastic.Apm.Model
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigStore.CurrentSnapshot,
 				agent.TracerInternal.CurrentExecutionSegmentsContainer) { }
 
+		/// <summary>
+		/// Creates a new transaction
+		/// </summary>
+		/// <param name="logger">The logger which logs debug information during the transaction  creation process</param>
+		/// <param name="name">The name of the transaction</param>
+		/// <param name="type">The type of the transaction</param>
+		/// <param name="sampler">The sampler implementation which makes the sampling decision</param>
+		/// <param name="distributedTracingData">Distributed tracing data, in case this transaction is part of a distributed trace</param>
+		/// <param name="sender">The IPayloadSender implementation which will record this transaction</param>
+		/// <param name="configSnapshot">The current configuration snapshot which contains the up-do-date config setting values</param>
+		/// <param name="currentExecutionSegmentsContainer">
+		/// The ExecutionSegmentsContainer which makes sure this transaction flows
+		/// across async work-flows
+		/// </param>
+		/// <param name="suppressActivityReuse">
+		/// By setting this to true, you can suppress reusing activity parent ids. See:
+		/// https://github.com/elastic/apm-agent-dotnet/issues/883
+		/// </param>
 		internal Transaction(
 			IApmLogger logger,
 			string name,
@@ -58,7 +76,8 @@ namespace Elastic.Apm.Model
 			DistributedTracingData distributedTracingData,
 			IPayloadSender sender,
 			IConfigSnapshot configSnapshot,
-			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer
+			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
+			bool suppressActivityReuse = false
 		)
 		{
 			ConfigSnapshot = configSnapshot;
@@ -82,14 +101,13 @@ namespace Elastic.Apm.Model
 				// Here we ignore Activity.Current.ActivityTraceFlags because it starts out without setting the IsSampled flag, so relying on that would mean a transaction is never sampled.
 				IsSampled = sampler.DecideIfToSample(idBytes);
 
-				if (Activity.Current != null && Activity.Current.IdFormat == ActivityIdFormat.W3C)
+				if (Activity.Current != null && Activity.Current.IdFormat == ActivityIdFormat.W3C && !suppressActivityReuse)
 				{
 					TraceId = Activity.Current.TraceId.ToString();
-					ParentId = Activity.Current.ParentId;
 
-					// Also mark the sampling decision on the Activity
-					if (IsSampled)
-						Activity.Current.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
+					// make sure the parent id is not in hierarchical format (like "|4bed8544-4e7c8c05967b3dbf.1.")
+					if (Activity.Current.ParentId.Length > 0 && Activity.Current.ParentId[0] != '|')
+						ParentId = Activity.Current.ParentId;
 				}
 				else
 					TraceId = _activity.TraceId.ToString();
@@ -102,6 +120,10 @@ namespace Elastic.Apm.Model
 				isSamplingFromDistributedTracingData = true;
 				_traceState = distributedTracingData.TraceState;
 			}
+
+			// Also mark the sampling decision on the Activity
+			if (IsSampled && Activity.Current != null)
+				Activity.Current.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
 
 			SpanCount = new SpanCount();
 
