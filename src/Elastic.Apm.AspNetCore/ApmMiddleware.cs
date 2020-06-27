@@ -119,7 +119,6 @@ namespace Elastic.Apm.AspNetCore
 				else
 				{
 					_logger.Debug()?.Log("Incoming request. Starting Trace.");
-
 					transaction = _tracer.StartTransactionInternal(transactionName, ApiConstants.TypeRequest);
 				}
 
