@@ -77,9 +77,8 @@ namespace Elastic.Apm.Model
 		{
 			ConfigSnapshot = configSnapshot;
 			Timestamp = TimeUtils.TimestampNow();
-			var idBytes = new byte[8];
-			Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
-			_logger = logger?.Scoped($"{nameof(Transaction)}.{Id}");
+
+			_logger = logger?.Scoped($"{nameof(Transaction)}");
 
 			_sender = sender;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
@@ -88,17 +87,41 @@ namespace Elastic.Apm.Model
 			HasCustomName = false;
 			Type = type;
 
+			// For each transaction start, we fire an Activity
+			// If Activity.Current is null, then we create one with this and set its traceid, which will flow to all child activities and we also reuse it in Elastic APM, so it'll be the same on all Activities and in Elastic
+			// If Activity.Current is not null, we pick up its traceid and apply it in Elastic APM
 			StartActivity();
 
 			var isSamplingFromDistributedTracingData = false;
 			if (distributedTracingData == null)
 			{
 				// Here we ignore Activity.Current.ActivityTraceFlags because it starts out without setting the IsSampled flag, so relying on that would mean a transaction is never sampled.
-				IsSampled = sampler.DecideIfToSample(idBytes);
+				// To be sure activity creation was successful let's check on it
+				if (_activity != null)
+				{
+					// In case activity creation was successful, let's reuse the ids
+					Id = _activity.SpanId.ToHexString();
+					TraceId = _activity.TraceId.ToHexString();
+
+					var idBytesFromActivity = new Span<byte>(new byte[16]);
+					_activity.TraceId.CopyTo(idBytesFromActivity);
+					// Read right most bits. From W3C TraceContext: "it is important for trace-id to carry "uniqueness" and "randomness" in the right part of the trace-id..."
+					idBytesFromActivity = idBytesFromActivity.Slice(8);
+					IsSampled = sampler.DecideIfToSample(idBytesFromActivity.ToArray());
+				}
+				else
+				{
+					// In case from some reason the activity creation was not successful, let's create new random ids
+					var idBytes = new byte[8];
+					Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
+					IsSampled = sampler.DecideIfToSample(idBytes);
+
+					idBytes = new byte[16];
+					TraceId = RandomGenerator.GenerateRandomBytesAsString(idBytes);
+				}
 
 				// PrentId could be also set here, but currently in the UI each trace must start with a transaction where the ParentId is null,
 				// so to avoid https://github.com/elastic/apm-agent-dotnet/issues/883 we don't set it yet.
-				TraceId = _activity.TraceId.ToString();
 			}
 			else
 			{
@@ -110,11 +133,10 @@ namespace Elastic.Apm.Model
 			}
 
 			// Also mark the sampling decision on the Activity
-			if (IsSampled && Activity.Current != null)
-				Activity.Current.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
+			if (IsSampled && _activity != null)
+				_activity.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
 
 			SpanCount = new SpanCount();
-
 			_currentExecutionSegmentsContainer.CurrentTransaction = this;
 
 			if (isSamplingFromDistributedTracingData)
