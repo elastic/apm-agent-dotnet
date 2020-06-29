@@ -125,6 +125,13 @@ namespace Elastic.Apm.Model
 			}
 			else
 			{
+				if (_activity != null)
+					Id = _activity.SpanId.ToHexString();
+				else
+				{
+					var idBytes = new byte[8];
+					Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
+				}
 				TraceId = distributedTracingData.TraceId;
 				ParentId = distributedTracingData.ParentId;
 				IsSampled = distributedTracingData.FlagRecorded;
