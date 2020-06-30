@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.SqlClient;
@@ -20,6 +21,7 @@ namespace Elastic.Apm.NetCoreAll
 		/// <param name="builder">Builder.</param>
 		public static IHostBuilder UseAllElasticApm(this IHostBuilder builder) => builder.UseElasticApm(new HttpDiagnosticsSubscriber(),
 			new EfCoreDiagnosticsSubscriber(),
-			new SqlClientDiagnosticSubscriber());
+			new SqlClientDiagnosticSubscriber(),
+			new ElasticsearchDiagnosticsSubscriber());
 	}
 }

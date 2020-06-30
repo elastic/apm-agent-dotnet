@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.SqlClient;
 using Microsoft.AspNetCore.Builder;
@@ -30,6 +31,6 @@ namespace Elastic.Apm.NetCoreAll
 			IConfiguration configuration = null
 		) => AspNetCore.ApmMiddlewareExtension
 			.UseElasticApm(builder, configuration, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber(),
-				new SqlClientDiagnosticSubscriber());
+				new SqlClientDiagnosticSubscriber(), new ElasticsearchDiagnosticsSubscriber());
 	}
 }
