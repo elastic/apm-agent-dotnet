@@ -341,7 +341,7 @@ pipeline {
                 allOf {
                   anyOf {
                     branch 'master'
-                    tag pattern: 'v\\d+\\.\\d+\\.\\d+.*', comparator: 'REGEXP'
+                    tag pattern: '\\d+\\.\\d+\\.\\d+.*', comparator: 'REGEXP'
                     expression { return params.Run_As_Master_Branch }
                     expression { return env.BENCHMARK_UPDATED != "false" }
                     expression { return env.GITHUB_COMMENT?.contains('benchmark tests') }
@@ -457,8 +457,8 @@ pipeline {
               sh script: ".ci/bump-version.sh ${env.BRANCH_NAME}", label: 'Bump version'
               // The opbeans pipeline will trigger a release for the master branch
               gitPush()
-              // The opbeans pipeline will trigger a release for the release tag
-              gitCreateTag(tag: "${env.BRANCH_NAME}")
+              // The opbeans pipeline will trigger a release for the release tag with the format v<major>.<minor>.<patch>
+              gitCreateTag(tag: "v${env.BRANCH_NAME}")
             }
           }
         }
