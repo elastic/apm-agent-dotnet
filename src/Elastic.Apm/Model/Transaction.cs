@@ -50,6 +50,20 @@ namespace Elastic.Apm.Model
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigStore.CurrentSnapshot,
 				agent.TracerInternal.CurrentExecutionSegmentsContainer) { }
 
+		/// <summary>
+		/// Creates a new transaction
+		/// </summary>
+		/// <param name="logger">The logger which logs debug information during the transaction  creation process</param>
+		/// <param name="name">The name of the transaction</param>
+		/// <param name="type">The type of the transaction</param>
+		/// <param name="sampler">The sampler implementation which makes the sampling decision</param>
+		/// <param name="distributedTracingData">Distributed tracing data, in case this transaction is part of a distributed trace</param>
+		/// <param name="sender">The IPayloadSender implementation which will record this transaction</param>
+		/// <param name="configSnapshot">The current configuration snapshot which contains the up-do-date config setting values</param>
+		/// <param name="currentExecutionSegmentsContainer">
+		/// The ExecutionSegmentsContainer which makes sure this transaction flows
+		/// across async work-flows
+		/// </param>
 		internal Transaction(
 			IApmLogger logger,
 			string name,
@@ -63,9 +77,8 @@ namespace Elastic.Apm.Model
 		{
 			ConfigSnapshot = configSnapshot;
 			Timestamp = TimeUtils.TimestampNow();
-			var idBytes = new byte[8];
-			Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
-			_logger = logger?.Scoped($"{nameof(Transaction)}.{Id}");
+
+			_logger = logger?.Scoped($"{nameof(Transaction)}");
 
 			_sender = sender;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
@@ -74,28 +87,51 @@ namespace Elastic.Apm.Model
 			HasCustomName = false;
 			Type = type;
 
+			// For each transaction start, we fire an Activity
+			// If Activity.Current is null, then we create one with this and set its traceid, which will flow to all child activities and we also reuse it in Elastic APM, so it'll be the same on all Activities and in Elastic
+			// If Activity.Current is not null, we pick up its traceid and apply it in Elastic APM
 			StartActivity();
 
 			var isSamplingFromDistributedTracingData = false;
 			if (distributedTracingData == null)
 			{
 				// Here we ignore Activity.Current.ActivityTraceFlags because it starts out without setting the IsSampled flag, so relying on that would mean a transaction is never sampled.
-				IsSampled = sampler.DecideIfToSample(idBytes);
-
-				if (Activity.Current != null && Activity.Current.IdFormat == ActivityIdFormat.W3C)
+				// To be sure activity creation was successful let's check on it
+				if (_activity != null)
 				{
-					TraceId = Activity.Current.TraceId.ToString();
-					ParentId = Activity.Current.ParentId;
+					// In case activity creation was successful, let's reuse the ids
+					Id = _activity.SpanId.ToHexString();
+					TraceId = _activity.TraceId.ToHexString();
 
-					// Also mark the sampling decision on the Activity
-					if (IsSampled)
-						Activity.Current.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
+					var idBytesFromActivity = new Span<byte>(new byte[16]);
+					_activity.TraceId.CopyTo(idBytesFromActivity);
+					// Read right most bits. From W3C TraceContext: "it is important for trace-id to carry "uniqueness" and "randomness" in the right part of the trace-id..."
+					idBytesFromActivity = idBytesFromActivity.Slice(8);
+					IsSampled = sampler.DecideIfToSample(idBytesFromActivity.ToArray());
 				}
 				else
-					TraceId = _activity.TraceId.ToString();
+				{
+					// In case from some reason the activity creation was not successful, let's create new random ids
+					var idBytes = new byte[8];
+					Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
+					IsSampled = sampler.DecideIfToSample(idBytes);
+
+					idBytes = new byte[16];
+					TraceId = RandomGenerator.GenerateRandomBytesAsString(idBytes);
+				}
+
+				// PrentId could be also set here, but currently in the UI each trace must start with a transaction where the ParentId is null,
+				// so to avoid https://github.com/elastic/apm-agent-dotnet/issues/883 we don't set it yet.
 			}
 			else
 			{
+				if (_activity != null)
+					Id = _activity.SpanId.ToHexString();
+				else
+				{
+					var idBytes = new byte[8];
+					Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
+				}
 				TraceId = distributedTracingData.TraceId;
 				ParentId = distributedTracingData.ParentId;
 				IsSampled = distributedTracingData.FlagRecorded;
@@ -103,8 +139,11 @@ namespace Elastic.Apm.Model
 				_traceState = distributedTracingData.TraceState;
 			}
 
-			SpanCount = new SpanCount();
+			// Also mark the sampling decision on the Activity
+			if (IsSampled && _activity != null)
+				_activity.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
 
+			SpanCount = new SpanCount();
 			_currentExecutionSegmentsContainer.CurrentTransaction = this;
 
 			if (isSamplingFromDistributedTracingData)

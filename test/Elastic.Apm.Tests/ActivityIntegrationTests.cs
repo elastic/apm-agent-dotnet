@@ -31,6 +31,7 @@ namespace Elastic.Apm.Tests
 				agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => Thread.Sleep(10));
 
 			payloadSender.FirstTransaction.TraceId.Should().Be(activity.TraceId.ToString());
+			payloadSender.FirstTransaction.ParentId.Should().BeNullOrEmpty();
 
 			activity.Stop();
 		}
@@ -53,6 +54,7 @@ namespace Elastic.Apm.Tests
 				agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => Thread.Sleep(10));
 
 			payloadSender.FirstTransaction.TraceId.Should().NotBe(activity.TraceId.ToString());
+			payloadSender.FirstTransaction.ParentId.Should().BeNullOrEmpty();
 
 			activity.Stop();
 		}
@@ -131,6 +133,7 @@ namespace Elastic.Apm.Tests
 			}
 
 			payloadSender.Transactions.Should().HaveCount(2);
+			payloadSender.Transactions[0].ParentId.Should().BeNullOrEmpty();
 			payloadSender.Transactions[0].TraceId.Should().Be(activity.TraceId.ToString());
 			payloadSender.Transactions[1].TraceId.Should().Be(activity.TraceId.ToString());
 			payloadSender.Transactions[0].Id.Should().NotBe(payloadSender.Transactions[1].Id);
