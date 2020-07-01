@@ -101,7 +101,7 @@ namespace Elastic.Apm.Elasticsearch
 		private void OnRequestData(string @event, RequestData requestData)
 		{
 			var name = ToName(@event);
-			if (TryStartElasticsearchSpan(name, out var span, requestData?.Node?.Uri.ToString()))
+			if (TryStartElasticsearchSpan(name, out var span, requestData?.Node?.Uri))
 			{
 				if (@event == CallStart && requestData != null)
 					span.Name = $"Elasticsearch: {requestData.Method.GetStringValue()} {requestData.Uri?.AbsolutePath}";

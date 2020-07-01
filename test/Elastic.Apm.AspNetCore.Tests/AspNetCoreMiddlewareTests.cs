@@ -237,6 +237,34 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		/// <summary>
+		/// Simulates an HTTP GET call to /home/index and asserts that the agent captures Span.Context.Destination fields.
+		/// Prerequisite: The /home/index has to generate spans (which should be the case).
+		/// It also assumes that /home/index makes a requrst to github.com
+		/// </summary>
+		[Fact]
+		public async Task HomeIndexDestinationTest()
+		{
+			var response = await _client.GetAsync("/Home/Index");
+
+			response.IsSuccessStatusCode.Should().BeTrue();
+			_capturedPayload.SpansOnFirstTransaction.Should().NotBeEmpty().And.Contain(n => n.Context.Http != null);
+			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null).Context.Destination.Should().NotBeNull();
+			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null).Context.Destination.Service.Should().NotBeNull();
+
+			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null)
+				.Context.Destination.Service.Name.ToLower().Should()
+				.Be("https://api.github.com");
+
+			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null)
+				.Context.Destination.Service.Resource.ToLower().Should()
+				.Be("api.github.com:443");
+
+			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null)
+				.Context.Destination.Service.Type.ToLower().Should()
+				.Be(ApiConstants.TypeExternal);
+		}
+
+		/// <summary>
 		/// Simulates an HTTP GET call to /Home/Index?captureControllerActionAsSpan=true
 		/// and asserts that all automatically captured spans are children of the span for controller's action.
 		/// </summary>

@@ -53,7 +53,7 @@ namespace Elastic.Apm.Elasticsearch
 			}
 		}
 
-		internal bool TryStartElasticsearchSpan(string name, out Span span, string instance = null)
+		internal bool TryStartElasticsearchSpan(string name, out Span span, Uri instanceUri = null)
 		{
 			span = null;
 			var transaction = _agent.Tracer.CurrentTransaction;
@@ -66,7 +66,8 @@ namespace Elastic.Apm.Elasticsearch
 				ApiConstants.SubtypeElasticsearch);
 
 			span.Action = name;
-			SetDbContext(span, instance);
+			SetDbContext(span, instanceUri);
+			SetDestination(span, instanceUri);
 
 			var id = Activity.Current.Id;
 			if (Spans.TryAdd(id, span)) return true;
@@ -76,7 +77,16 @@ namespace Elastic.Apm.Elasticsearch
 			return false;
 		}
 
-		internal bool TryGetCurrentElasticsearchSpan(out Span span, string instance = null)
+		private void SetDestination(Span span, Uri instance)
+		{
+			if (instance == null)
+				return;
+			span.Context.Destination = new Destination();
+			span.Context.Destination.Port = instance.Port;
+			span.Context.Destination.Address = instance.Host;
+		}
+
+		internal bool TryGetCurrentElasticsearchSpan(out Span span, Uri instance = null)
 		{
 			var id = Activity.Current.Id;
 			if (Spans.TryRemove(id, out span))
@@ -91,13 +101,14 @@ namespace Elastic.Apm.Elasticsearch
 			return false;
 		}
 
-		private static void SetDbContext(ISpan span, string instance)
+		private static void SetDbContext(ISpan span, Uri instance)
 		{
-			if (span.Context.Db?.Instance != null || instance == null) return;
+			var instanceUriString = instance?.ToString();
+			if (span.Context.Db?.Instance != null || instanceUriString == null) return;
 
 			span.Context.Db = new Database
 			{
-				Instance = instance,
+				Instance = instanceUriString,
 				Type = Database.TypeElasticsearch,
 			};
 		}
