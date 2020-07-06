@@ -2,11 +2,12 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Xunit;
 using Elastic.Apm.Tests.Mocks;
 using Elasticsearch.Net;
 using Elasticsearch.Net.VirtualizedCluster;
 using FluentAssertions;
+using Xunit;
+using Error = Elastic.Apm.Model.Error;
 
 namespace Elastic.Apm.Elasticsearch.Tests
 {
@@ -47,6 +48,19 @@ namespace Elastic.Apm.Elasticsearch.Tests
 				spans.Should().OnlyContain(s => s.Context != null);
 				spans.Should().OnlyContain(s => s.Context.Db != null);
 				spans.Should().OnlyContain(s => s.Context.Db.Statement != null);
+
+				spans.First(n => n.Subtype == ApiConstants.SubtypeElasticsearch).Context.Destination.Should().NotBeNull();
+				spans.First(n => n.Subtype == ApiConstants.SubtypeElasticsearch).Context.Destination.Address.Should().Be("localhost");
+				spans.First(n => n.Subtype == ApiConstants.SubtypeElasticsearch).Context.Destination.Port.Should().Be(9200);
+
+				spans.First(n => n.Subtype == ApiConstants.SubtypeElasticsearch).Context.Destination.Service.Should().NotBeNull();
+				spans.First(n => n.Subtype == ApiConstants.SubtypeElasticsearch).Context.Destination.Service.Type.Should().Be(ApiConstants.TypeDb);
+				spans.First(n => n.Subtype == ApiConstants.SubtypeElasticsearch)
+					.Context.Destination.Service.Name.Should()
+					.Be(ApiConstants.SubtypeElasticsearch);
+				spans.First(n => n.Subtype == ApiConstants.SubtypeElasticsearch)
+					.Context.Destination.Service.Resource.Should()
+					.Be(ApiConstants.SubtypeElasticsearch);
 			}
 		}
 
@@ -79,7 +93,7 @@ namespace Elastic.Apm.Elasticsearch.Tests
 				spans.Where(s => s.Action == "Ping").Should().HaveCount(2);
 				spans.Where(s => s.Action == "CallElasticsearch").Should().HaveCount(2);
 
-				payloadSender.Errors.Should().Contain(e => ((Elastic.Apm.Model.Error)e).Exception.Message == "boom!");
+				payloadSender.Errors.Should().Contain(e => ((Error)e).Exception.Message == "boom!");
 			}
 		}
 
@@ -102,7 +116,7 @@ namespace Elastic.Apm.Elasticsearch.Tests
 
 				var spans = payloadSender.SpansOnFirstTransaction;
 				var span = spans.Should().NotBeEmpty().And.HaveCount(1).And.Subject.First();
-				var error = (Elastic.Apm.Model.Error)payloadSender.Errors.Should().HaveCount(1).And.Subject.First();
+				var error = (Error)payloadSender.Errors.Should().HaveCount(1).And.Subject.First();
 
 				error.Culprit.Should().StartWith("Elasticsearch.Net.VirtualizedCluster.VirtualClusterConnection");
 				error.Exception.Should().NotBeNull();
@@ -137,13 +151,10 @@ namespace Elastic.Apm.Elasticsearch.Tests
 								},
 							type = "script_exception",
 							reason = "runtime error",
-							script_stack =  new string[] {},
+							script_stack = new string[] { },
 							script = "ctx._source",
 							lang = "painless",
-							caused_by = new {
-								type = "null_pointer_exception",
-								reason = (object)null
-							}
+							caused_by = new { type = "null_pointer_exception", reason = (object)null }
 						},
 						status = 500
 					})
@@ -161,7 +172,7 @@ namespace Elastic.Apm.Elasticsearch.Tests
 
 				var spans = payloadSender.SpansOnFirstTransaction;
 				var span = spans.Should().NotBeEmpty().And.HaveCount(1).And.Subject.First();
-				var error = (Elastic.Apm.Model.Error)payloadSender.Errors.Should().HaveCount(1).And.Subject.First();
+				var error = (Error)payloadSender.Errors.Should().HaveCount(1).And.Subject.First();
 
 				error.Culprit.Should().StartWith("Elasticsearch Server Error: script_exception");
 				error.Exception.Should().NotBeNull();

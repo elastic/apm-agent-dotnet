@@ -32,7 +32,7 @@ namespace Elastic.Apm.Elasticsearch
 			if (requestData == null) return;
 
 			var instanceUri = requestData.Node?.Uri;
-			if (TryStartElasticsearchSpan(name, out var span, instanceUri?.ToString()))
+			if (TryStartElasticsearchSpan(name, out var span, instanceUri))
 			{
 				Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
 				var requestUri = requestData.Uri;

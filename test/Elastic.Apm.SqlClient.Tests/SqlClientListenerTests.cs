@@ -106,6 +106,11 @@ namespace Elastic.Apm.SqlClient.Tests
 			span.Context.Destination.Should().NotBeNull();
 			span.Context.Destination.Address.Should().Be(_expectedAddress);
 			span.Context.Destination.Port.Should().NotBeNull();
+
+			span.Context.Destination.Service.Should().NotBeNull();
+			span.Context.Destination.Service.Name.Should().Be(ApiConstants.SubtypeMssql);
+			span.Context.Destination.Service.Resource.Should().Be(ApiConstants.SubtypeMssql);
+			span.Context.Destination.Service.Type.Should().Be(ApiConstants.TypeDb);
 		}
 
 		[Theory]
@@ -163,6 +168,11 @@ namespace Elastic.Apm.SqlClient.Tests
 			span.Context.Destination.Should().NotBeNull();
 			span.Context.Destination.Address.Should().Be(_expectedAddress);
 			span.Context.Destination.Port.Should().NotBeNull();
+
+			span.Context.Destination.Service.Should().NotBeNull();
+			span.Context.Destination.Service.Name.Should().Be(ApiConstants.SubtypeMssql);
+			span.Context.Destination.Service.Resource.Should().Be(ApiConstants.SubtypeMssql);
+			span.Context.Destination.Service.Type.Should().Be(ApiConstants.TypeDb);
 		}
 
 		public void Dispose() => _apmAgent?.Dispose();

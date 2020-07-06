@@ -28,10 +28,12 @@ namespace Elastic.Apm.Model
 		private readonly IPayloadSender _payloadSender;
 
 		/// <summary>
-		/// In some cases capturing the stacktrace in <see cref="End"/> results in a stack trace which is not very useful.
+		/// In some cases capturing the stacktrace in <see cref="End" /> results in a stack trace which is not very useful.
 		/// In such cases we capture the stacktrace on span start.
-		/// These are typically async calls - e.g. capturing stacktrace for outgoing HTTP requests in the System.Net.Http.HttpRequestOut.Stop
-		/// diagnostic source event produces a stack trace that does not contain the caller method in user code - therefore we capture the stacktrace is .Start
+		/// These are typically async calls - e.g. capturing stacktrace for outgoing HTTP requests in the
+		/// System.Net.Http.HttpRequestOut.Stop
+		/// diagnostic source event produces a stack trace that does not contain the caller method in user code - therefore we
+		/// capture the stacktrace is .Start
 		/// </summary>
 		private readonly StackFrame[] _stackFrames;
 
@@ -87,7 +89,7 @@ namespace Elastic.Apm.Model
 				{
 					enclosingTransaction.SpanCount.IncrementStarted();
 
-					if(captureStackTraceOnStart)
+					if (captureStackTraceOnStart)
 						_stackFrames = new StackTrace(true).GetFrames();
 				}
 			}
@@ -242,7 +244,14 @@ namespace Elastic.Apm.Model
 
 			if (ShouldBeSentToApmServer && isFirstEndCall)
 			{
-				DeduceDestination();
+				try
+				{
+					DeduceDestination();
+				}
+				catch (Exception e)
+				{
+					_logger.Warning()?.LogException(e, "Failed deducing destination fields for span.");
+				}
 
 				// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
@@ -316,7 +325,49 @@ namespace Elastic.Apm.Model
 		{
 			if (!_context.IsValueCreated) return;
 
-			if (Context.Http != null) CopyMissingProperties(DeduceHttpDestination());
+			if (Context.Http != null)
+			{
+				var destination = DeduceHttpDestination();
+				if (destination == null)
+					// In case of invalid destination just return
+					return;
+
+				CopyMissingProperties(destination);
+			}
+
+			FillDestinationService();
+
+			// Fills Context.Destination.Service
+			void FillDestinationService()
+			{
+				// Context.Destination must be set by the instrumentation part - otherwise we won't fill Context.Destination.Service
+				if (Context.Destination == null)
+					return;
+
+				Context.Destination.Service = new Destination.DestinationService { Type = Type };
+
+				if (_context.Value.Http != null)
+				{
+					if (!_context.Value.Http.OriginalUrl.IsAbsoluteUri)
+					{
+						// Can't fill Destination.Service - we just set it to null and return
+						Context.Destination.Service = null;
+						return;
+					}
+
+					var port = _context.Value.Http.OriginalUrl.IsDefaultPort ? string.Empty : $":{_context.Value.Http.OriginalUrl.Port}";
+					var scheme = $"{_context.Value.Http.OriginalUrl?.Scheme}://";
+
+					Context.Destination.Service.Name = scheme + _context.Value.Http.OriginalUrl?.Host + port;
+					Context.Destination.Service.Resource = $"{_context.Value.Http.OriginalUrl.Host}:{_context.Value.Http.OriginalUrl.Port}";
+				}
+				else
+				{
+					// Once messaging is added, for messaging, we'll additionally need to add the queue name here
+					Context.Destination.Service.Resource = Subtype;
+					Context.Destination.Service.Name = Subtype;
+				}
+			}
 
 			void CopyMissingProperties(Destination src)
 			{
