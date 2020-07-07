@@ -3,6 +3,9 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+#if NETCOREAPP3_0
+using System.Collections.Generic;
+#endif
 using System.Diagnostics;
 using System.Threading;
 using Elastic.Apm;
@@ -263,5 +266,12 @@ namespace ApiSamples
 			});
 		}
 		// ReSharper restore ArrangeMethodOrOperatorBody
+
+#if NETCOREAPP3_0
+		/// <summary>
+		/// Test for https://github.com/elastic/apm-agent-dotnet/issues/884
+		/// </summary>
+		private IAsyncEnumerable<int> TestCompilation() => throw new Exception();
+#endif
 	}
 }
