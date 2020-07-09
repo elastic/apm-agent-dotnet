@@ -1,20 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-      <PackageId>Elastic.Apm.Extensions.Hosting</PackageId>
-      <Description>NEED TO BE ADDED</Description>
-      <PackageTags>apm, monitoring, elastic, elasticapm, analytics, netcore</PackageTags>
-      <TargetFrameworks>netstandard2.0;netcoreapp3.0</TargetFrameworks>
-    </PropertyGroup>
+  <PropertyGroup>
+    <PackageId>Elastic.Apm.Extensions.Hosting</PackageId>
+    <Description>Elastic APM .NET Agent. This package offers integration with Microsoft.Extensions.Hosting.IHostBuilder for agent registration </Description>
+    <PackageTags>apm, monitoring, elastic, elasticapm, analytics, netcore</PackageTags>
+    <TargetFrameworks>netstandard2.0;netcoreapp3.0</TargetFrameworks>
+    <VersionSuffix>beta</VersionSuffix>
+  </PropertyGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+  </ItemGroup>
 
-    <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-      <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.1.0" />
-      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.1.0" />
-    </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.1.0" />
+  </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.0' ">
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.0.0" />
