@@ -45,14 +45,14 @@ namespace Elastic.Apm.Api
 
 		public DbSpanCommon DbSpanCommon { get; }
 
-		public ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null) =>
-			StartTransactionInternal(name, type, distributedTracingData);
+		public ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null, bool ignoreActivity = false) =>
+			StartTransactionInternal(name, type, distributedTracingData, ignoreActivity);
 
-		internal Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null)
+		internal Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null, bool ignoreActivity = false)
 		{
 			var currentConfig = _configProvider.CurrentSnapshot;
 			var retVal = new Transaction(_logger, name, type, new Sampler(currentConfig.TransactionSampleRate), distributedTracingData
-				, _sender, currentConfig, CurrentExecutionSegmentsContainer)
+				, _sender, currentConfig, CurrentExecutionSegmentsContainer, ignoreActivity)
 			{ Service = _service };
 
 			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);

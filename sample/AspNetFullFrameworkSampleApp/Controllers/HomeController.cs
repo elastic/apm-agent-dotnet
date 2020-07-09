@@ -99,7 +99,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 			return SafeCaptureSpan<ActionResult>($"{ContactSpanPrefix}{SpanNameSuffix}", $"{ContactSpanPrefix}{SpanTypeSuffix}", async () =>
 			{
 				var callToThisAppUrl =
-					new Uri(HttpContext.ApplicationInstance.Request.Url.ToString().Replace(ContactPageRelativePath, AboutPageRelativePath));
+					new Uri(HttpContext.ApplicationInstance.Request.Url.ToString().ToLower().Replace(ContactPageRelativePath.ToLower(), AboutPageRelativePath));
 				var responseFromLocalHost = await GetContentFromUrl(callToThisAppUrl);
 				var callToExternalServiceUrl = ChildHttpCallToExternalServiceUrl;
 				var responseFromElasticCo = await GetContentFromUrl(callToExternalServiceUrl);
@@ -289,7 +289,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 			var numberOfSpans = int.Parse(GetQueryStringValue(NumberOfSpansQueryStringKey, /* defaultValue: */ "0"));
 
 			for (var i = 0; i < numberOfSpans; ++i)
-				Agent.Tracer.CurrentTransaction.CaptureSpan($"Span_#{i}_name", $"Span_#{i}_type", () => {});
+				Agent.Tracer.CurrentTransaction.CaptureSpan($"Span_#{i}_name", $"Span_#{i}_type", () => { });
 
 			return new HttpStatusCodeResult(HttpStatusCode.Created);
 		}

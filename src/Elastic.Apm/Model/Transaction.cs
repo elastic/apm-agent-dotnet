@@ -62,6 +62,8 @@ namespace Elastic.Apm.Model
 		/// <param name="configSnapshot">The current configuration snapshot which contains the up-do-date config setting values</param>
 		/// <param name="currentExecutionSegmentsContainer">
 		/// The ExecutionSegmentsContainer which makes sure this transaction flows
+		/// <paramref name="ignoreActivity"> If set the transaction will ignore Activity.Current and it's trace id,
+		/// otherwise the agent will try to keep ids in-sync </paramref>
 		/// across async work-flows
 		/// </param>
 		internal Transaction(
@@ -72,7 +74,8 @@ namespace Elastic.Apm.Model
 			DistributedTracingData distributedTracingData,
 			IPayloadSender sender,
 			IConfigSnapshot configSnapshot,
-			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer
+			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
+			bool ignoreActivity = false
 		)
 		{
 			ConfigSnapshot = configSnapshot;
@@ -90,7 +93,8 @@ namespace Elastic.Apm.Model
 			// For each transaction start, we fire an Activity
 			// If Activity.Current is null, then we create one with this and set its traceid, which will flow to all child activities and we also reuse it in Elastic APM, so it'll be the same on all Activities and in Elastic
 			// If Activity.Current is not null, we pick up its traceid and apply it in Elastic APM
-			StartActivity();
+			if(!ignoreActivity)
+				StartActivity();
 
 			var isSamplingFromDistributedTracingData = false;
 			if (distributedTracingData == null)
@@ -140,7 +144,7 @@ namespace Elastic.Apm.Model
 			}
 
 			// Also mark the sampling decision on the Activity
-			if (IsSampled && _activity != null)
+			if (IsSampled && _activity != null && !ignoreActivity)
 				_activity.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
 
 			SpanCount = new SpanCount();

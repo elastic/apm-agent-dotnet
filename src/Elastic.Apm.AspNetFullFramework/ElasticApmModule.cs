@@ -118,15 +118,16 @@ namespace Elastic.Apm.AspNetFullFramework
 					?.Log(
 						"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData} - continuing trace",
 						DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed, distributedTracingData);
-
-				_currentTransaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, distributedTracingData);
+				// we set ignoreActivity to true to avoid the HttpContext W3C DiagnosticSource issue (see https://github.com/elastic/apm-agent-dotnet/issues/867#issuecomment-650170150)
+				_currentTransaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, distributedTracingData, true);
 			}
 			else
 			{
 				_logger.Debug()
 					?.Log("Incoming request doesn't have valid incoming distributed tracing data - starting trace with new trace ID");
 
-				_currentTransaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest);
+				// we set ignoreActivity to true to avoid the HttpContext W3C DiagnosticSource issue(see https://github.com/elastic/apm-agent-dotnet/issues/867#issuecomment-650170150)
+				_currentTransaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, ignoreActivity: true);
 			}
 
 			if (_currentTransaction.IsSampled) FillSampledTransactionContextRequest(httpRequest, _currentTransaction);
