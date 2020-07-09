@@ -21,6 +21,23 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.6.0]]
+==== 1.6.0
+
+[float]
+===== Features
+- Elasticsearch client instrumentation {pull}329[#329]
+- Introducing `Elastic.Apm.Extensions.Hosting` package with an extension method on `IHostBuilder` {pull}537[#537]
+- Stack trace improvements: async call stack demystification ({pull}847[#847]) and showing frames from user code for outgoing HTTP calls ({pull}845[#845]) 
+- Making fields on `IError` public {pull}847[#847]
+- Service map improvements: {pull}893[#893]
+
+[float]
+===== Bug fixes
+- Missing traces from the Kibana traces list due to setting `Transaction.ParentId` to an `Activity` {pull}888[#888]
+- Exception around runtime detection {pull}859[#859]
+- Missing outgoing HTTP calls in .NET Framework applications and causing memory issues {pull}896[#896]
+
 [[release-notes-1.5.1]]
 ==== 1.5.1
 
