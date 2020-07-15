@@ -54,6 +54,9 @@ namespace Elastic.Apm.Config
 		public IReadOnlyDictionary<string, string> GlobalLabels =>
 			ParseGlobalLabels(Read(ConfigConsts.KeyNames.GlobalLabels, ConfigConsts.EnvVarNames.GlobalLabels));
 
+		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
+			ParseTransactionIgnoreUrls(Read(ConfigConsts.KeyNames.TransactionIgnoreUrls, ConfigConsts.EnvVarNames.TransactionIgnoreUrls));
+
 		public virtual LogLevel LogLevel => ParseLogLevel(Read(ConfigConsts.KeyNames.LogLevel, ConfigConsts.EnvVarNames.LogLevel));
 
 		public virtual int MaxBatchEventCount =>

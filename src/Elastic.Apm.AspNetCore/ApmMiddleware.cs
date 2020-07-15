@@ -13,6 +13,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.Extensions;
 using Elastic.Apm.Config;
 using Elastic.Apm.DistributedTracing;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Microsoft.AspNetCore.Http;
@@ -39,18 +40,22 @@ namespace Elastic.Apm.AspNetCore
 
 		private readonly RequestDelegate _next;
 		private readonly Tracer _tracer;
+		private readonly IConfigurationReader _configurationReader;
 
 		public ApmMiddleware(RequestDelegate next, Tracer tracer, IApmAgent agent)
 		{
 			_next = next;
 			_tracer = tracer;
 			_logger = agent.Logger.Scoped(nameof(ApmMiddleware));
+			_configurationReader = agent.ConfigurationReader;
 		}
 
 		public async Task InvokeAsync(HttpContext context)
 		{
 			var transaction = StartTransactionAsync(context);
-			await FillSampledTransactionContextRequest(transaction, context);
+
+			if(transaction != null)
+				await FillSampledTransactionContextRequest(transaction, context);
 
 			try
 			{
@@ -75,7 +80,8 @@ namespace Elastic.Apm.AspNetCore
 					&& (string.IsNullOrEmpty(body) || body == Apm.Consts.Redacted))
 					await transaction.CollectRequestBodyAsync(true, context.Request, _logger, transaction.ConfigSnapshot);
 
-				StopTransaction(transaction, context);
+				if(transaction != null)
+					StopTransaction(transaction, context);
 			}
 		}
 
@@ -83,6 +89,12 @@ namespace Elastic.Apm.AspNetCore
 		{
 			try
 			{
+				if (WildcardMatcher.IsAnyMatch(_configurationReader.TransactionIgnoreUrls, context.Request.Path))
+				{
+					_logger.Debug()?.Log("Request ignored based on TransactionIgnoreUrls, url: {urlPath}", context.Request.Path);
+					return null;
+				}
+
 				Transaction transaction;
 				var transactionName = $"{context.Request.Method} {context.Request.Path}";
 

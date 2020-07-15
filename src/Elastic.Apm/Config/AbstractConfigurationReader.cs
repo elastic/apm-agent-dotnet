@@ -29,6 +29,9 @@ namespace Elastic.Apm.Config
 		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersSanitizeFieldNames =
 			new LazyContextualInit<IReadOnlyList<WildcardMatcher>>();
 
+		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersTransactionIgnoreUrls =
+			new LazyContextualInit<IReadOnlyList<WildcardMatcher>>();
+
 		private readonly LazyContextualInit<IReadOnlyList<string>> _cachedExcludedNamespaces =
 			new LazyContextualInit<IReadOnlyList<string>>();
 
@@ -283,6 +286,30 @@ namespace Elastic.Apm.Config
 					kv.Value, DefaultValues.StackTraceLimit);
 
 			return DefaultValues.StackTraceLimit;
+		}
+
+		protected IReadOnlyList<WildcardMatcher> ParseTransactionIgnoreUrls(ConfigurationKeyValue kv) =>
+			_cachedWildcardMatchersTransactionIgnoreUrls.IfNotInited?.InitOrGet(() => ParseTransactionIgnoreUrlsImpl(kv))
+			?? _cachedWildcardMatchersTransactionIgnoreUrls.Value;
+
+		private IReadOnlyList<WildcardMatcher> ParseTransactionIgnoreUrlsImpl(ConfigurationKeyValue kv)
+		{
+			if (kv?.Value == null) return DefaultValues.TransactionIgnoreUrls;
+
+			try
+			{
+				_logger?.Trace()?.Log("Try parsing TransactionIgnoreUrls, values: {TransactionIgnoreUrlsValues}", kv.Value);
+				var transactionIgnoreUrls = kv.Value.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
+
+				var retVal = new List<WildcardMatcher>(transactionIgnoreUrls.Count);
+				foreach (var item in transactionIgnoreUrls) retVal.Add(WildcardMatcher.ValueOf(item));
+				return retVal;
+			}
+			catch (Exception e)
+			{
+				_logger?.Error()?.LogException(e, "Failed parsing TransactionIgnoreUrls, values in the config: {TransactionIgnoreUrlsValues}", kv.Value);
+				return DefaultValues.TransactionIgnoreUrls;
+			}
 		}
 
 		protected double ParseSpanFramesMinDurationInMilliseconds(ConfigurationKeyValue kv)

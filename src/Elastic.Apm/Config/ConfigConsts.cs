@@ -36,12 +36,27 @@ namespace Elastic.Apm.Config
 			public const string UnknownServiceName = "unknown";
 			public const bool UseElasticTraceparentHeader = true;
 			public const bool VerifyServerCert = true;
-			public static readonly IReadOnlyCollection<string> DefaultExcludedNamespaces = new List<string>{"System.", "Microsoft.", "MS.", "FSharp.", "Newtonsoft.Json", "Serilog", "NLog", "Giraffe."}.AsReadOnly();
+
+			public static readonly IReadOnlyCollection<string> DefaultExcludedNamespaces =
+				new List<string>
+				{
+					"System.",
+					"Microsoft.",
+					"MS.",
+					"FSharp.",
+					"Newtonsoft.Json",
+					"Serilog",
+					"NLog",
+					"Giraffe."
+				}.AsReadOnly();
+
 			public static readonly IReadOnlyCollection<string> DefaultApplicationNamespaces = new List<string>().AsReadOnly();
 
 			public static List<WildcardMatcher> DisableMetrics = new List<WildcardMatcher>();
 
 			public static List<WildcardMatcher> SanitizeFieldNames;
+
+			public static List<WildcardMatcher> TransactionIgnoreUrls;
 
 			static DefaultValues()
 			{
@@ -61,6 +76,26 @@ namespace Elastic.Apm.Config
 					"set-cookie"
 				})
 					SanitizeFieldNames.Add(WildcardMatcher.ValueOf(item));
+
+				TransactionIgnoreUrls = new List<WildcardMatcher>();
+
+				foreach (var item in new List<string>
+				{
+					"/VAADIN/*",
+					"/heartbeat*",
+					"/favicon.ico",
+					"*.js",
+					"*.css",
+					"*.jpg",
+					"*.jpeg",
+					"*.png",
+					"*.gif",
+					"*.webp",
+					"*.svg",
+					"*.woff",
+					"*.woff2"
+				})
+					TransactionIgnoreUrls.Add(WildcardMatcher.ValueOf(item));
 			}
 
 			public static Uri ServerUri => new Uri($"http://localhost:{ApmServerPort}");
@@ -96,6 +131,7 @@ namespace Elastic.Apm.Config
 			public const string VerifyServerCert = Prefix + "VERIFY_SERVER_CERT";
 			public const string ExcludedNamespaces = Prefix + "EXCLUDED_NAMESPACES";
 			public const string ApplicationNamespaces = Prefix + "APPLICATION_NAMESPACES";
+			public static string TransactionIgnoreUrls = Prefix + "TRANSACTION_IGNORE_URLS";
 		}
 
 		public static class KeyNames
@@ -127,6 +163,7 @@ namespace Elastic.Apm.Config
 			public const string VerifyServerCert = "ElasticApm:VerifyServerCert";
 			public const string ExcludedNamespaces = "ElasticApm:ExcludedNamespaces";
 			public const string ApplicationNamespaces = "ElasticApm:ApplicationNamespaces";
+			public static string TransactionIgnoreUrls = "ElasticApm:TransactionIgnoreUrls";
 		}
 
 		public static class SupportedValues
