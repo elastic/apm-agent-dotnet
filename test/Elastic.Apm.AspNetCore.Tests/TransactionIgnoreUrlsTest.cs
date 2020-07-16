@@ -51,7 +51,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 #endif
 		}
 
-
 		/// <summary>
 		/// In the ctor we add `*SimplePage` to the ignoreUrl list. This test makes sure that /home/SimplePage is indeed ignored.
 		/// </summary>

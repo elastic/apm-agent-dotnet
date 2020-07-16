@@ -13,6 +13,7 @@ using System.Threading.Tasks.Dataflow;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm;
 using Elastic.Apm.Config;
+using Elastic.Apm.Filters;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
@@ -88,7 +89,7 @@ namespace Elastic.Apm.Report
 					, _intakeV2EventsAbsoluteUrl, _flushInterval.ToHms(), config.MaxBatchEventCount, _maxQueueEventCount);
 
 			_eventQueue = new BatchBlock<object>(config.MaxBatchEventCount);
-
+			TransactionFilters.Add(new TransactionIgnoreUrlsFilter(config).Filter);
 			StartWorkLoop();
 		}
 
@@ -219,6 +220,7 @@ namespace Elastic.Apm.Report
 					_cachedMetadataJsonLine = "{\"metadata\": " + _payloadItemSerializer.SerializeObject(_metadata) + "}";
 				ndjson.AppendLine(_cachedMetadataJsonLine);
 
+				// Apply filters
 				foreach (var item in queueItems)
 				{
 					switch (item)
