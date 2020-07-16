@@ -37,7 +37,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			_agent = new ApmAgent(new TestAgentComponents(
 				_logger,
-				new MockConfigSnapshot(_logger, transactionIgnoreUrls: "*SimplePage"),
+				new MockConfigSnapshot(_logger, transactionIgnoreUrls: "*simplepage"),
 				// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
 				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer)
@@ -63,6 +63,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			response.IsSuccessStatusCode.Should().BeTrue();
 			_capturedPayload.Transactions.Should().BeEmpty();
+			_capturedPayload.Spans.Should().BeEmpty();
+			_capturedPayload.Errors.Should().BeEmpty();
 		}
 	}
 }
