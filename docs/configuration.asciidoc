@@ -691,6 +691,14 @@ Used to restrict requests to certain URLs from being instrumented.
 
 This property should be set to a list containing one or more strings.
 When an incoming HTTP request is detected, its request path will be tested against each element in this list.
+For example, adding `/home/index` to this list would match and remove instrumentation from the following URLs:
+
+[source,txt]
+----
+https://www.mycoolsite.com/home/index
+http://localhost/home/index
+http://whatever.com/home/index?value1=123
+----
 
 This option supports the wildcard `*`, which matches zero or more characters.
 Examples: `/foo/*/bar/*/baz*`, `*foo*`.
