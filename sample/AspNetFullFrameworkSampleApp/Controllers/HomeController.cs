@@ -99,7 +99,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 			return SafeCaptureSpan<ActionResult>($"{ContactSpanPrefix}{SpanNameSuffix}", $"{ContactSpanPrefix}{SpanTypeSuffix}", async () =>
 			{
 				var callToThisAppUrl =
-					new Uri(HttpContext.ApplicationInstance.Request.Url.ToString().ToLower().Replace(ContactPageRelativePath.ToLower(), AboutPageRelativePath));
+					new Uri(HttpContext.ApplicationInstance.Request.Url.ToString().Replace(ContactPageRelativePath, AboutPageRelativePath));
 				var responseFromLocalHost = await GetContentFromUrl(callToThisAppUrl);
 				var callToExternalServiceUrl = ChildHttpCallToExternalServiceUrl;
 				var responseFromElasticCo = await GetContentFromUrl(callToExternalServiceUrl);
