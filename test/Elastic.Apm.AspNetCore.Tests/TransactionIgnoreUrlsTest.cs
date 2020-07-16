@@ -57,7 +57,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task IgnoreSimplePage()
 		{
-			var response = await _client.GetAsync("/Home/SimplePage");
+			var response = await _client.GetAsync("/Home/SimplePage?myUrlParam=123");
 
 			response.IsSuccessStatusCode.Should().BeTrue();
 			_capturedPayload.Transactions.Should().BeEmpty();
