@@ -29,7 +29,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		private readonly HttpClient _client;
 
-
 		public TransactionIgnoreUrlsTest(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper)
 		{
 			_factory = factory;

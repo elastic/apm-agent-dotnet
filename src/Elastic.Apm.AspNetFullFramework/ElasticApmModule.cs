@@ -106,6 +106,12 @@ namespace Elastic.Apm.AspNetFullFramework
 			var httpApp = (HttpApplication)eventSender;
 			var httpRequest = httpApp.Context.Request;
 
+			if (WildcardMatcher.IsAnyMatch(Agent.Instance.ConfigurationReader.TransactionIgnoreUrls, httpRequest.Path))
+			{
+				_logger.Debug()?.Log("Request ignored based on TransactionIgnoreUrls, url: {urlPath}", httpRequest.Path);
+				return;
+			}
+
 			var transactionName = $"{httpRequest.HttpMethod} {httpRequest.Path}";
 
 			var soapAction = httpRequest.ExtractSoapAction(_logger);
