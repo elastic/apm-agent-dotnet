@@ -672,6 +672,34 @@ the agent will capture request and response headers, including cookies.
 NOTE: Setting this to `false` reduces memory allocations, network bandwidth and disk space used by Elasticsearch.
 
 [float]
+[[config-transaction-ignore-urls]]
+==== `TransactionIgnoreUrls` (performance)
+
+[options="header"]
+|============
+| Environment variable name             | IConfiguration or Web.config key
+| `ELASTIC_APM_TRANSACTION_IGNORE_URLS` | `ElasticApm:TransactionIgnoreUrls`
+|============
+
+[options="header"]
+|============
+| Default                                                                                                                    | Type
+| `/VAADIN/*, /heartbeat*, /favicon.ico", *.js", *.css", *.jpg", *.jpeg", *.png", *.gif", *.webp", *.svg", *.woff", *.woff2` | List<string>
+|============
+
+Used to restrict requests to certain URLs from being instrumented.
+
+This property should be set to a list containing one or more strings.
+When an incoming HTTP request is detected, its request path will be tested against each element in this list.
+
+This option supports the wildcard `*`, which matches zero or more characters.
+Examples: `/foo/*/bar/*/baz*`, `*foo*`.
+Matching is case insensitive by default.
+Prepending an element with `(?-i)` makes the matching case sensitive.
+
+NOTE: All errors that are captured during a request to an ignored URL are still sent to the APM Server regardless of this setting.
+
+[float]
 [[config-use-elastic-apm-traceparent-header]]
 ==== `UseElasticTraceparentHeader` (added[1.3.0])
 
@@ -849,6 +877,7 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-service-version,`ServiceVersion`>> | No | Core
 | <<config-span-frames-min-duration,`SpanFramesMinDuration`>> | No | Stacktrace, Performance
 | <<config-stack-trace-limit,`StackTraceLimit`>> | No | Stacktrace, Performance
+| <<config-transaction-ignore-urls,`TransactionIgnoreUrls`>>  | No | HTTP, Performance
 | <<config-transaction-max-spans,`TransactionMaxSpans`>>  | Yes | Core, Performance
 | <<config-transaction-sample-rate,`TransactionSampleRate`>> | Yes | Core, Performance
 | <<config-use-elastic-apm-traceparent-header,`UseElasticTraceparentHeader`>> | No | HTTP
