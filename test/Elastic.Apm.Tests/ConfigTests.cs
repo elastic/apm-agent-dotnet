@@ -813,9 +813,28 @@ namespace Elastic.Apm.Tests
 		/// Sets the TransactionIgnoreUrls setting and makes sure the agent config contains those
 		/// </summary>
 		[Fact]
-		public void TransactionIgnoreUrlsTestWithCustomSetting()
+		public void TransactionIgnoreUrlsTestWithCustomSettingNoSpace()
 		{
 			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(transactionIgnoreUrls: "*index,*myPageToIgnore*")));
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "INDEX").Should().BeTrue();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "/home/INDEX").Should().BeTrue();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "INdEX").Should().BeTrue();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "index").Should().BeTrue();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "myPageToIgnore").Should().BeTrue();
+
+			// default list is not applied when TransactionIgnoreUrls is set
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "myJsScripts.js").Should().BeFalse();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "bootstrap.css").Should().BeFalse();
+		}
+
+		/// <summary>
+		/// Sets the TransactionIgnoreUrls setting and makes sure the agent config contains those.
+		/// It uses a space in the list.
+		/// </summary>
+		[Fact]
+		public void TransactionIgnoreUrlsTestWithCustomSettingWithSpace()
+		{
+			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(transactionIgnoreUrls: "*index, *myPageToIgnore*")));
 			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "INDEX").Should().BeTrue();
 			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "/home/INDEX").Should().BeTrue();
 			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "INdEX").Should().BeTrue();

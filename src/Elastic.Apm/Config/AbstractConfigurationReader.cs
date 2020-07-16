@@ -91,7 +91,7 @@ namespace Elastic.Apm.Config
 				var sanitizeFieldNames = kv.Value.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
 
 				var retVal = new List<WildcardMatcher>(sanitizeFieldNames.Count);
-				foreach (var item in sanitizeFieldNames) retVal.Add(WildcardMatcher.ValueOf(item));
+				foreach (var item in sanitizeFieldNames) retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
 				return retVal;
 			}
 			catch (Exception e)
@@ -116,7 +116,7 @@ namespace Elastic.Apm.Config
 				var disableMetrics = kv.Value.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
 
 				var retVal = new List<WildcardMatcher>(disableMetrics.Count);
-				foreach (var item in disableMetrics) retVal.Add(WildcardMatcher.ValueOf(item));
+				foreach (var item in disableMetrics) retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
 				return retVal;
 			}
 			catch (Exception e)
@@ -302,7 +302,7 @@ namespace Elastic.Apm.Config
 				var transactionIgnoreUrls = kv.Value.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
 
 				var retVal = new List<WildcardMatcher>(transactionIgnoreUrls.Count);
-				foreach (var item in transactionIgnoreUrls) retVal.Add(WildcardMatcher.ValueOf(item));
+				foreach (var item in transactionIgnoreUrls) retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
 				return retVal;
 			}
 			catch (Exception e)
