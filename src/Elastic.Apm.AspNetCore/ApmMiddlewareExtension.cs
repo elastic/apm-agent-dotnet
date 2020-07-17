@@ -75,7 +75,12 @@ namespace Elastic.Apm.AspNetCore
 		}
 
 		internal static string GetEnvironmentName(this IServiceProvider serviceProvider) =>
+#if NETCOREAPP3_0
+			(serviceProvider.GetService(typeof(IWebHostEnvironment)) as IWebHostEnvironment)?.EnvironmentName;
+#else
 			(serviceProvider.GetService(typeof(IHostingEnvironment)) as IHostingEnvironment)?.EnvironmentName;
+#endif
+
 
 		internal static IApmLogger GetApmLogger(this IServiceProvider serviceProvider) =>
 			serviceProvider.GetService(typeof(ILoggerFactory)) is ILoggerFactory loggerFactory
