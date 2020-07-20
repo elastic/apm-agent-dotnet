@@ -50,7 +50,7 @@ namespace Elastic.Apm.Api
 		/// Destination service context.
 		/// <see cref="DestinationService" />
 		/// </summary>
-		internal DestinationService Service
+		public DestinationService Service
 		{
 			get => _service.Value;
 			set => _service = new Optional<DestinationService>(value);
