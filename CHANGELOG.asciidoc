@@ -21,6 +21,14 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+
+[[release-notes-1.6.1]]
+==== 1.6.1
+
+[float]
+===== Bug fixes
+- Service map: missing connection between .NET services ({pull}909[#909])
+
 [[release-notes-1.6.0]]
 ==== 1.6.0
 
