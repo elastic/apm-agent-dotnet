@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyVersion>1.0.0</AssemblyVersion>
-    <InformationalVersion>1.0.0-beta1</InformationalVersion>
-    <FileVersion>1.0.0</FileVersion>
+    <AssemblyVersion>1.0.1</AssemblyVersion>
+    <InformationalVersion>1.0.1-beta1</InformationalVersion>
+    <FileVersion>1.0.1</FileVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
-    <PackageVersion>1.0.0-beta1</PackageVersion>
+    <PackageVersion>1.0.1-beta1</PackageVersion>
     <Authors>Elastic and contributors</Authors>
     <PackageId>Elastic.Apm.Elasticsearch</PackageId>
     <Copyright>2019 Elasticsearch BV</Copyright>
