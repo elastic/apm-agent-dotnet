@@ -46,7 +46,7 @@ namespace Elastic.Apm.AspNetFullFramework
 					+ Environment.NewLine + linePrefix + $"+-> Exception: {ex.GetType().FullName}: {ex.Message}"
 					+ Environment.NewLine + TextUtils.PrefixEveryLine(ex.StackTrace, linePrefix + " ".Repeat(4))
 				);
-			}x²²
+			}
 		}
 
 		private void InitImpl(HttpApplication httpApp)
