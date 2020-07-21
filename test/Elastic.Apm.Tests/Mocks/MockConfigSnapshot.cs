@@ -43,6 +43,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _transactionSampleRate;
 		private readonly string _useElasticTraceparentHeader;
 		private readonly string _verifyServerCert;
+		private readonly string _transactionIgnoreUrls;
 
 		public MockConfigSnapshot(IApmLogger logger = null,
 			string logLevel = null,
@@ -72,7 +73,8 @@ namespace Elastic.Apm.Tests.Mocks
 			string verifyServerCert = null,
 			string useElasticTraceparentHeader = null,
 			string applicationNamespaces = null,
-			string excludedNamespaces = null
+			string excludedNamespaces = null,
+			string transactionIgnoreUrls = null
 		) : base(logger, ThisClassName)
 		{
 			_serverUrls = serverUrls;
@@ -103,6 +105,7 @@ namespace Elastic.Apm.Tests.Mocks
 			_useElasticTraceparentHeader = useElasticTraceparentHeader;
 			_applicationNamespaces = applicationNamespaces;
 			_excludedNamespaces = excludedNamespaces;
+			_transactionIgnoreUrls = transactionIgnoreUrls;
 		}
 
 		public string ApiKey => ParseApiKey(Kv(ConfigConsts.EnvVarNames.ApiKey, _apiKey, Origin));
@@ -132,6 +135,9 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public IReadOnlyDictionary<string, string> GlobalLabels =>
 			ParseGlobalLabels(Kv(ConfigConsts.EnvVarNames.GlobalLabels, _globalLabels, Origin));
+
+		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
+			ParseTransactionIgnoreUrls(Kv(ConfigConsts.EnvVarNames.TransactionIgnoreUrls, _transactionIgnoreUrls, Origin));
 
 		public LogLevel LogLevel => ParseLogLevel(Kv(ConfigConsts.EnvVarNames.LogLevel, _logLevel, Origin));
 		public int MaxBatchEventCount => ParseMaxBatchEventCount(Kv(ConfigConsts.EnvVarNames.MaxBatchEventCount, _maxBatchEventCount, Origin));

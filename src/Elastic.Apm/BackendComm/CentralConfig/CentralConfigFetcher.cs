@@ -241,6 +241,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public TimeSpan FlushInterval => _wrapped.FlushInterval;
 
 			public IReadOnlyDictionary<string, string> GlobalLabels => _wrapped.GlobalLabels;
+			public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => _wrapped.TransactionIgnoreUrls;
 
 			public LogLevel LogLevel => _centralConfig.LogLevel ?? _wrapped.LogLevel;
 

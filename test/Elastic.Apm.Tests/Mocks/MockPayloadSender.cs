@@ -43,7 +43,7 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public void QueueError(IError error) => DoUnderLock(() => { _errors.Add(error); });
 
-		public void QueueTransaction(ITransaction transaction) => DoUnderLock(() => { _transactions.Add(transaction); });
+		public virtual void QueueTransaction(ITransaction transaction) => DoUnderLock(() => { _transactions.Add(transaction); });
 
 		public void QueueSpan(ISpan span) => DoUnderLock(() => { _spans.Add(span); });
 

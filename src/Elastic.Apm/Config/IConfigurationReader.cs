@@ -11,6 +11,15 @@ namespace Elastic.Apm.Config
 {
 	public interface IConfigurationReader
 	{
+		string ApiKey { get; }
+
+		/// <summary>
+		/// When defined, all namespaces not starting with one of the values of this collection are ignored when determining
+		/// Exception culprit.
+		/// This suppresses any configuration of <see cref="ExcludedNamespaces" />
+		/// </summary>
+		IReadOnlyCollection<string> ApplicationNamespaces { get; }
+
 		string CaptureBody { get; }
 		List<string> CaptureBodyContentTypes { get; }
 		bool CaptureHeaders { get; }
@@ -23,6 +32,12 @@ namespace Elastic.Apm.Config
 		IReadOnlyList<WildcardMatcher> DisableMetrics { get; }
 
 		string Environment { get; }
+
+		/// <summary>
+		/// A list of namespaces to exclude when reading an exception's StackTrace to determine the culprit.
+		/// Namespaces are checked with string.StartsWith() so "System." matches all System namespaces
+		/// </summary>
+		IReadOnlyCollection<string> ExcludedNamespaces { get; }
 
 		/// <summary>
 		/// The maximal amount of time (in seconds) events are held in queue until there is enough to send a batch.
@@ -53,6 +68,11 @@ namespace Elastic.Apm.Config
 		TimeSpan FlushInterval { get; }
 
 		IReadOnlyDictionary<string, string> GlobalLabels { get; }
+
+		/// <summary>
+		/// A list of patterns to match HTTP requests to ignore. An incoming HTTP request whose request line matches any of the patterns will not be reported as a transaction.
+		/// </summary>
+		IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls { get; }
 
 		LogLevel LogLevel { get; }
 
@@ -108,7 +128,6 @@ namespace Elastic.Apm.Config
 		// </summary>
 		IReadOnlyList<WildcardMatcher> SanitizeFieldNames { get; }
 		string SecretToken { get; }
-		string ApiKey { get; }
 		IReadOnlyList<Uri> ServerUrls { get; }
 		string ServiceName { get; }
 
@@ -153,17 +172,5 @@ namespace Elastic.Apm.Config
 		/// Verification can be disabled by setting to <c>false</c>.
 		/// </summary>
 		bool VerifyServerCert { get; }
-
-		/// <summary>
-		/// A list of namespaces to exclude when reading an exception's StackTrace to determine the culprit.
-		/// Namespaces are checked with string.StartsWith() so "System." matches all System namespaces
-		/// </summary>
-		IReadOnlyCollection<string> ExcludedNamespaces { get; }
-
-		/// <summary>
-		/// When defined, all namespaces not starting with one of the values of this collection are ignored when determining Exception culprit.
-		/// This suppresses any configuration of <see cref="ExcludedNamespaces"/>
-		/// </summary>
-		IReadOnlyCollection<string> ApplicationNamespaces { get; }
 	}
 }
