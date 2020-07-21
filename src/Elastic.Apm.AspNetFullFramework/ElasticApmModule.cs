@@ -46,7 +46,7 @@ namespace Elastic.Apm.AspNetFullFramework
 					+ Environment.NewLine + linePrefix + $"+-> Exception: {ex.GetType().FullName}: {ex.Message}"
 					+ Environment.NewLine + TextUtils.PrefixEveryLine(ex.StackTrace, linePrefix + " ".Repeat(4))
 				);
-			}
+			}x²²
 		}
 
 		private void InitImpl(HttpApplication httpApp)
@@ -311,7 +311,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			var rootLogger = AgentDependencies.Logger ?? ConsoleLogger.Instance;
 			var scopedLogger = rootLogger.Scoped(dbgInstanceName);
 
-			var agentComponents = new AgentComponents(rootLogger, new FullFrameworkConfigReader(rootLogger));
+			var agentComponents = new AgentComponents(rootLogger, GetConfigReader(rootLogger));
 
 			var aspNetVersion = FindAspNetVersion(scopedLogger);
 
@@ -321,6 +321,28 @@ namespace Elastic.Apm.AspNetFullFramework
 			return agentComponents;
 		}
 
+		public static IConfigurationReader GetConfigReader(IApmLogger logger)
+        {
+            if (ConfigurationManager.AppSettings["ElasticApm:ConfigurationReaderType"] != null)
+            {
+                try
+                {
+                    Type type = Type.GetType(ConfigurationManager.AppSettings["ElasticApm:ConfigurationReaderType"]);
+                    IConfigurationReader reader = Activator.CreateInstance(type, logger) as IConfigurationReader;
+                    if (reader != null)
+                    {
+                         return reader;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.Error()?.LogException(ex, "GetConfigReader exception");
+                }
+            }
+
+            return new FullFrameworkConfigReader(logger);
+        }
+		
 		private static void SafeAgentSetup(string dbgInstanceName)
 		{
 			var agentComponents = BuildAgentComponents(dbgInstanceName);
