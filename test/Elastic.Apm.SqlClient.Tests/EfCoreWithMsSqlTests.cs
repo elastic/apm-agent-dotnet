@@ -5,6 +5,7 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using Elastic.Apm.DatabaseTests.Common;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
