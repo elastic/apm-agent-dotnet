@@ -4,6 +4,7 @@
     <TargetFrameworks>net461;netcoreapp3.1</TargetFrameworks>
     <RootNamespace>Elastic.Apm.EntityFramework6.Tests</RootNamespace>
     <AssemblyName>Elastic.Apm.EntityFramework6.Tests</AssemblyName>
+    <GenerateErrorForMissingTargetingPacks>false</GenerateErrorForMissingTargetingPacks>
   </PropertyGroup>
 
   <ItemGroup>
