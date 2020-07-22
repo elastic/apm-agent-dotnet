@@ -36,4 +36,6 @@
     <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
   </ItemGroup>
 
+  <Import Project="..\Elastic.Apm.DatabaseTests.Common\Elastic.Apm.DatabaseTests.Common.projitems" Label="Shared" />
+
 </Project>

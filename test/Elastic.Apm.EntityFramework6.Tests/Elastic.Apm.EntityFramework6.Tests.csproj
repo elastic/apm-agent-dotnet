@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net461;netcoreapp3.1</TargetFrameworks>
+    <RootNamespace>Elastic.Apm.EntityFramework6.Tests</RootNamespace>
+    <AssemblyName>Elastic.Apm.EntityFramework6.Tests</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="5.6.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+    <PackageReference Include="coverlet.collector" Version="1.2.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="xunit" Version="2.3.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
+    <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
+    <PackageReference Include="TestEnvironment.Docker" Version="1.2.2" />
+    <PackageReference Include="TestEnvironment.Docker.Containers.Mssql" Version="1.0.3" />
+    <PackageReference Include="coverlet.collector" Version="1.2.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
+    <PackageReference Include="EntityFramework" Version="6.2.0" />
+    <PackageReference Include="StrongNamer" Version="0.2.5" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+    <PackageReference Include="EntityFramework" Version="6.3.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Elastic.Apm.EntityFramework6\Elastic.Apm.EntityFramework6.csproj" />
+    <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
+  </ItemGroup>
+  <Import Project="..\Elastic.Apm.DatabaseTests.Common\Elastic.Apm.DatabaseTests.Common.projitems" Label="Shared" />
+
+</Project>

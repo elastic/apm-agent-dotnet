@@ -1,6 +1,7 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2050
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30309.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3734A52F-2222-454B-BF58-1BA5C1F29D77}"
 	ProjectSection(SolutionItems) = preProject
@@ -85,7 +86,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.AspNetFullFrame
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.AspNetFullFramework.Tests", "test\Elastic.Apm.AspNetFullFramework.Tests\Elastic.Apm.AspNetFullFramework.Tests.csproj", "{F931907F-9483-475D-8A42-E052BD493435}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.EntityFramework6.Tests", "test\Elastic.Apm.EntityFramework6.Tests\Elastic.Apm.EntityFramework6.Tests.csproj", "{DAB56045-0129-433B-B5A4-5ECC48222862}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Elastic.Apm.DatabaseTests.Common", "test\Elastic.Apm.DatabaseTests.Common\Elastic.Apm.DatabaseTests.Common.shproj", "{94100523-EE50-4912-873E-D1A15813A2B6}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		test\Elastic.Apm.DatabaseTests.Common\Elastic.Apm.DatabaseTests.Common.projitems*{94100523-ee50-4912-873e-d1a15813a2b6}*SharedItemsImports = 13
+		test\Elastic.Apm.DatabaseTests.Common\Elastic.Apm.DatabaseTests.Common.projitems*{968e1e85-e996-42de-9845-d20dae16165a}*SharedItemsImports = 5
+		test\Elastic.Apm.DatabaseTests.Common\Elastic.Apm.DatabaseTests.Common.projitems*{dab56045-0129-433b-b5a4-5ecc48222862}*SharedItemsImports = 5
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -198,6 +208,10 @@ Global
 		{F931907F-9483-475D-8A42-E052BD493435}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F931907F-9483-475D-8A42-E052BD493435}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F931907F-9483-475D-8A42-E052BD493435}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DAB56045-0129-433B-B5A4-5ECC48222862}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DAB56045-0129-433B-B5A4-5ECC48222862}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DAB56045-0129-433B-B5A4-5ECC48222862}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DAB56045-0129-433B-B5A4-5ECC48222862}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -229,6 +243,8 @@ Global
 		{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{7A2EEC30-A6CD-452D-B938-AD25224ABE79} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{F931907F-9483-475D-8A42-E052BD493435} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{DAB56045-0129-433B-B5A4-5ECC48222862} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{94100523-EE50-4912-873E-D1A15813A2B6} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}
