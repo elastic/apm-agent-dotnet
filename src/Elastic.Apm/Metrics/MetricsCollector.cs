@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -52,13 +56,42 @@ namespace Elastic.Apm.Metrics
 				return;
 			}
 
-			MetricsProviders = new List<IMetricsProvider>
+			MetricsProviders = new List<IMetricsProvider>();
+
+			if (!WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics, ProcessTotalCpuTimeProvider.ProcessCpuTotalPct))
+				MetricsProviders.Add(new ProcessTotalCpuTimeProvider(_logger));
+			if (!WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics, SystemTotalCpuProvider.SystemCpuTotalPct))
+				MetricsProviders.Add(new SystemTotalCpuProvider(_logger));
+
+			var collectProcessWorkingSet = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+				ProcessWorkingSetAndVirtualMemoryProvider.ProcessWorkingSetMemory);
+			var collectProcessVirtualMemory = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+				ProcessWorkingSetAndVirtualMemoryProvider.ProcessVirtualMemory);
+			if (collectProcessVirtualMemory || collectProcessWorkingSet)
+				MetricsProviders.Add(new ProcessWorkingSetAndVirtualMemoryProvider(collectProcessVirtualMemory, collectProcessWorkingSet));
+
+			var collectTotalMemory = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+				FreeAndTotalMemoryProvider.TotalMemory);
+			var collectFreeMemory = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+				FreeAndTotalMemoryProvider.FreeMemory);
+			if (collectFreeMemory || collectTotalMemory)
+				MetricsProviders.Add(new FreeAndTotalMemoryProvider(collectFreeMemory, collectTotalMemory));
+
+			var collectGcCount = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+				GcMetricsProvider.GcCountName);
+			var collectGen0Size = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+				GcMetricsProvider.GcGen0SizeName);
+			var collectGen1Size = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+				GcMetricsProvider.GcGen1SizeName);
+			var collectGen2Size = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+				GcMetricsProvider.GcGen2SizeName);
+			var collectGen3Size = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+				GcMetricsProvider.GcGen3SizeName);
+			if (collectGcCount || collectGen0Size || collectGen1Size || collectGen2Size || collectGen3Size)
 			{
-				new FreeAndTotalMemoryProvider(),
-				new ProcessWorkingSetAndVirtualMemoryProvider(),
-				new SystemTotalCpuProvider(_logger),
-				new ProcessTotalCpuTimeProvider(_logger)
-			};
+				MetricsProviders.Add(new GcMetricsProvider(_logger, collectGcCount, collectGen0Size, collectGen1Size, collectGen2Size,
+					collectGen3Size));
+			}
 
 			_logger.Info()?.Log("Collecting metrics in {interval} milliseconds interval", interval);
 			_timer = new Timer(interval);
@@ -89,7 +122,7 @@ namespace Elastic.Apm.Metrics
 			}
 		}
 
-		internal void CollectAllMetricsImpl()
+		private void CollectAllMetricsImpl()
 		{
 			_logger.Trace()?.Log("CollectAllMetrics started");
 
@@ -128,6 +161,14 @@ namespace Elastic.Apm.Metrics
 			{
 				if (metricsProvider.ConsecutiveNumberOfFailedReads == MaxTryWithoutSuccess)
 					continue;
+
+				if (!metricsProvider.IsMetricAlreadyCaptured)
+				{
+					_logger.Trace()
+						?.Log("Skipping {MetricsProviderName} - {propertyName} indicated false", metricsProvider.DbgName,
+							nameof(IMetricsProvider.IsMetricAlreadyCaptured));
+					continue;
+				}
 
 				try
 				{

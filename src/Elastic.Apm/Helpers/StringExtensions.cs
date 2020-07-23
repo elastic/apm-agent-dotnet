@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Text;
 
@@ -26,5 +30,7 @@ namespace Elastic.Apm.Helpers
 		// Credit: https://stackoverflow.com/a/444818/973581
 		internal static bool ContainsOrdinalIgnoreCase(this string thisObj, string subStr) =>
 			thisObj.IndexOf(subStr, StringComparison.OrdinalIgnoreCase) >= 0;
+
+		internal static string ToLog(this string thisObj) => "`" + thisObj + "'";
 	}
 }

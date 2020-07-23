@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -11,13 +15,11 @@ namespace Elastic.Apm.Report.Serialization
 	internal class ElasticApmContractResolver : DefaultContractResolver
 	{
 		private readonly HeaderDictionarySanitizerConverter _headerDictionarySanitizerConverter;
-		private readonly BodyStringSanitizerConverter _bodyStringSanitizerConverter;
 
 		public ElasticApmContractResolver(IConfigurationReader configurationReader)
 		{
 			NamingStrategy = new CamelCaseNamingStrategy { ProcessDictionaryKeys = true, OverrideSpecifiedNames = true };
 			_headerDictionarySanitizerConverter = new HeaderDictionarySanitizerConverter(configurationReader);
-			_bodyStringSanitizerConverter = new BodyStringSanitizerConverter(configurationReader);
 		}
 
 		protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
@@ -29,10 +31,6 @@ namespace Elastic.Apm.Report.Serialization
 
 			if (propInfo.PropertyType == typeof(Dictionary<string, string>))
 				property.Converter = _headerDictionarySanitizerConverter;
-			// Currently Request.Body is an object, which makes having checks based on the type harder.
-			// Once https://github.com/elastic/apm-agent-dotnet/issues/555 is done this can be changed
-			if (propInfo.Name == nameof(Request.Body))
-				property.Converter = _bodyStringSanitizerConverter;
 
 			return property;
 		}

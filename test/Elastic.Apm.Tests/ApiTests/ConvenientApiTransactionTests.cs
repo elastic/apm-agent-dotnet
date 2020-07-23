@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
@@ -8,6 +12,8 @@ using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
+using System.Diagnostics;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests.ApiTests
 {
@@ -27,6 +33,8 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		private const string TransactionName = "ConvenientApiTest";
 		private const string TransactionType = "Test";
+
+		public ConvenientApiTransactionTests(ITestOutputHelper testOutputHelper) => testOutputHelper.WriteLine($" Stopwatch.Frequency: {Stopwatch.Frequency}");
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action, DistributedTracingData)" /> method.

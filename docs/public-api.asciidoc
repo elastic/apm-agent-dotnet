@@ -11,15 +11,66 @@ as well as track errors.
 
 
 [float]
+[[api-initialization]]
+== Initialization
+
+The API does not require explicit Agent initialization—agent initialization is optional. The `Elastic.Apm.Agent.IsConfigured` property lets you check whether the agent is already initialized.
+
+[float]
+[[implicit-initialization]]
+=== Implicit agent initialization
+
+If you don't explicitly initialize the agent, it will be started with a default component setup. This means the Agent will read <<configuration,configuration settings>> from environment variables. If you don't set an environment variable, the Agent will use the default value. For example, the `ServerUrls` default is `http://localhost:8200`.
+
+This implicit initialization of the agent happens on the first call on the `Elastic.Apm.Agent` class.
+
+NOTE: One exception is the `Elastic.Apm.Agent.IsConfigured` method. This method never initializes the agent, it only checks if the agent is already initialized.
+
+Another example of initialization is when you enable the Agent with one of the technology-specific methods from the <<setup>> instructions. Specifically when the `UseElasticApm` or `UseAllElasticApm` method is called in ASP.NET Core or when the IIS module is initialized in an IIS application.
+
+The default agent setup should cover most of the use cases and the primary way to configure the agent is through environment variables.
+
+[float]
+[[explicit-initialization]]
+=== Explicit agent initialization
+
+If you would like to replace one of the agent components, you can do so by calling the `Elastic.Apm.Agent.Setup(AgentComponents)` method.
+In the AgentComponents you can pass following optional components to the agent:
+
+- `IApmLogger`: A logger implementation that will be used to print log messages. Default: A console logger.
+- `IPayloadSender`: A component that receives all the captured events like spans, transactions, and metrics. The default implementation serializes all events and sends them to the Elastic APM Server
+- `IConfigurationReader`: A component that reads <<configuration, agent configuration settings>>. The default implementation reads configuration through environment variables.
+
+NOTE: In the case of ASP.NET Core, when you register the agent, the `UseElasticApm` and the `UseAllElasticApm` methods both implicitly initialize the agent by calling the `Elastic.Apm.Agent.Setup` method internally. In that setup, the `IConfigurationReader` implementation will read configuration from the ASP.NET Core configuration system in case you pass an `IConfiguration` instance to the method. The `IApmLogger` instance will also log through the configured logging provider by integrating into the ASP.NET Core logging system.
+
+[float]
+[[auto-instrumentation-and-agent-api]]
+== Auto instrumentation in combination with the Public Agent API
+
+With the `Elastic.ApmAgent.Subscribe(params IDiagnosticsSubscriber[] subscribers)` method you can turn on auto instrumentation for supported libraries.
+
+In the case of ASP.NET Core, when you turn on the agent with the `UseAllElasticApm` method, the agent will do this automatically.
+
+With a typical console application, you need to do this manually.
+
+`IDiagnosticsSubscriber` implementations are offered by the agent and they subscribe to diagnostic source events or other data sources in order to capture events automatically.
+
+Some examples:
+
+- `HttpDiagnosticsSubscriber`: captures HTTP calls through `HttpClient`
+- `EfCoreDiagnosticsSubscriber`: captures database calls through Entity Framework Core
+- `SqlClientDiagnosticSubscriber`: captures database calls through `SqlClient` 
+
+[float]
 [[api-tracer-api]]
-=== Tracer API
+== Tracer API
 The tracer gives you access to the currently active transaction and it enables you to manually start a transaction.
 
 You can access the API by using the static property on the Agent: `Elastic.Apm.Agent.Tracer`.
 
 [float]
 [[api-start-transaction]]
-==== `ITransaction StartTransaction(string name, string type)`
+==== `ITransaction StartTransaction(string name, string type, DistributedTracingData = null)`
 Use this method to create a custom transaction.
 
 
@@ -82,7 +133,7 @@ var span = Elastic.Apm.Agent.Tracer.CurrentSpan;
 ==== `CaptureTransaction`
 
 This is a convenient method which starts and ends a transaction and captures unhandled exceptions.
-It has 3 parameters:
+It has 3 required parameters:
 
 * `name`: The name of the transaction
 * `type` The type of the transaction
@@ -95,6 +146,10 @@ It has 3 parameters:
 ** `Func<ITransaction,Task>`
 ** `Func<Task<T>>`
 ** `Func<ITransaction,Task<T>>`
+
+And an optional parameter:
+
+* `distributedTracingData`: A `DistributedTracingData` instance that contains the distributed tracing information in case you want the new transaction to be a part of a trace.
 
 The following code is the equivalent of the previous example with the convenient API. It automatically starts and ends the transaction and reports unhandled exceptions. The `t` parameter gives you access to the `ITransaction` instance which represents the transaction that you just created.
 [source,csharp]
@@ -154,7 +209,7 @@ var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransactio
 //----------------------------
 [float]
 [[api-transaction]]
-=== Transaction API
+== Transaction API
 //----------------------------
 A transaction describes an event captured by an Elastic APM agent monitoring a service. Transactions help combine multiple <<api-span,Spans>> into logical groups, and they are the first <<api-span,Span>> of a service. More information on Transactions and Spans is available in the {apm-overview-ref-v}/apm-data-model.html[APM data model] documentation.
 
@@ -256,7 +311,8 @@ This method is typically used when you want to report an error, but you don't ha
 ==== `CaptureSpan`
 
 This is a convenient method which starts and ends a span on the given transaction and captures unhandled exceptions. It has the same overloads as the <<convenient-capture-transaction>> method.
-It has 5 parameters:
+
+It has 3 required parameters:
 
 * `name`: The name of the span
 * `type` The type of the span
@@ -269,8 +325,11 @@ It has 5 parameters:
 ** `Func<ITransaction,Task>`
 ** `Func<Task<T>>`
 ** `Func<ITransaction,Task<T>>`
-* `supType` (optional): The subtype of the span
-* `action` (optional): The action of the span
+
+and 2 optional parameters:
+
+* `supType`: The subtype of the span
+* `action`: The action of the span
 
 The following code is the equivalent of the previous example from the <<api-transaction-create-span>> section with the convenient API. It automatically starts and ends the span and reports unhandled exceptions. The `s` parameter gives you access to the `ISpan` instance which represents the span that you just created.
 
@@ -303,6 +362,33 @@ var asyncResult = await transaction.CaptureSpan("Select FROM customer", ApiConst
 NOTE: Return value of <<convenient-capture-span>> method overloads that accept Task (or Task<T>) is the same Task (or Task<T>) instance as the one passed as the argument so if your application should continue only after the task completes you have to call <<convenient-capture-span>> with `await` keyword.
 
 NOTE: Code samples above use `Elastic.Apm.Agent.Tracer.CurrentTransaction`. In production code you should make sure the `CurrentTransaction` is not `null`.
+
+[float]
+[[api-transaction-ensure-parent-id]]
+==== `EnsureParentId`
+
+If the transaction does not have a ParentId yet, calling this method generates a new ID, sets it as the ParentId of this transaction, and returns it as a `string`.
+
+This enables the correlation of the spans the JavaScript Real User Monitoring (RUM) agent creates for the initial page load with the transaction of the backend service.
+
+If your service generates the HTML page dynamically, initializing the JavaScript RUM agent with the value of this method allows analyzing the time spent in the browser vs in the backend services.
+
+To enable the JavaScript RUM agent in ASP.NET Core, initialize the RUM agent with the .NET agent’s current transaction:
+
+[source,JavaScript]
+----
+<script>
+	elasticApm.init({
+		serviceName: 'MyService',
+		serverUrl: 'http://localhost:8200',
+		pageLoadTraceId: '@Elastic.Apm.Agent.Tracer.CurrentTransaction?.TraceId',
+		pageLoadSpanId: '@Elastic.Apm.Agent.Tracer.CurrentTransaction?.EnsureParentId()',
+		pageLoadSampled: @Json.Serialize(Elastic.Apm.Agent.Tracer?.CurrentTransaction.IsSampled)
+		})
+</script>
+----
+
+See the  {apm-rum-ref}[JavaScript RUM agent documentation] for more information.
 
 [float]
 [[api-transaction-custom]]
@@ -349,7 +435,7 @@ Agent.Tracer.CaptureTransaction("MyCustomTransaction",ApiConstants.TypeRequest, 
 //----------------------------
 [float]
 [[api-span]]
-=== Span API
+== Span API
 //----------------------------
 A span contains information about a specific code path, executed as part of a transaction.
 
@@ -357,6 +443,36 @@ If for example a database query happens within a recorded transaction,
 a span representing this database query may be created.
 In such a case, the name of the span will contain information about the query itself,
 and the type will hold information about the database type.
+
+[float]
+[[api-span-create-span]]
+==== `ISpan StartSpan(string name, string type, string subType = null, string action = null)`
+Start and return a new custom span as a child of the given span. Very similar to the <<api-transaction-create-span>> method on `ITransaction`, but in this case the parent of the newly created span is a span itself. 
+
+It is important to call <<api-span-end>> when the span has ended or to use the <<convenient-capture-span>> method.
+A best practice is to use the span in a try-catch-finally block.
+
+Example:
+
+[source,csharp]
+----
+ISpan childSpan = parentSpan.StartSpan("Select FROM customer",
+     ApiConstants.TypeDb, ApiConstants.SubtypeMssql, ApiConstants.ActionQuery);
+try
+{
+    //execute db query
+}
+catch(Exception e)
+{
+    childSpan?.CaptureException(e);
+    throw;
+}
+finally
+{
+    childSpan?.End();
+}
+----
+
 
 [float]
 [[api-span-tags]]
@@ -433,5 +549,104 @@ Agent.Tracer.CurrentTransaction.CaptureSpan("MyHttpOperation", ApiConstants.Type
     // ... code executing the HTTP operation
 
     span.Context.Http.StatusCode = myStatusCode;
+});
+----
+
+[float]
+[[convenient-span-capture-span]]
+==== `CaptureSpan`
+
+This is a convenient method which starts and ends a child span on the given span and captures unhandled exceptions.
+
+Very similar to the <<convenient-capture-span>> method on `ITransaction`, but in this case the parent of the newly created span is a span itself. 
+
+It has 3 required parameters:
+
+* `name`: The name of the span
+* `type` The type of the span
+*  One of the following types which references the code that you want to capture as a transaction: 
+** `Action`
+** `Action<ITransaction>`
+** `Func<T>`
+** `Func<ITransaction,T>`
+** `Func<Task>`
+** `Func<ITransaction,Task>`
+** `Func<Task<T>>`
+** `Func<ITransaction,Task<T>>`
+
+and 2 optional parameters:
+
+* `supType`: The subtype of the span
+* `action`: The action of the span
+
+The following code is the equivalent of the previous example from the <<api-span-create-span>> section with the convenient API. It automatically starts and ends the span and reports unhandled exceptions. The `s` parameter gives you access to the `ISpan` instance which represents the span that you just created.
+
+[source,csharp]
+----
+span.CaptureSpan("SampleSpan", ApiConstants.TypeDb, (s) =>
+{
+    //execute db query
+}, ApiConstants.SubtypeMssql, ApiConstants.ActionQuery);
+----
+
+Similar to the <<convenient-capture-transaction>> API, this method also supports `async` methods with the `Func<Task>` overloads.
+
+NOTE: The duration of the span will be the timespan between the first and the last line of the `async` lambda expression.
+
+This example shows you how to track an `async` code block that returns a result (`Task<T>`) as a span:
+[source,csharp]
+----
+var asyncResult = await span.CaptureSpan("Select FROM customer", ApiConstants.TypeDb, async(s) =>
+{
+    //application code that is captured as a span
+    await Task.Delay(500); //sample async code
+    return 42;
+});
+----
+
+NOTE: Return value of <<convenient-capture-span>> method overloads that accept Task (or Task<T>) is the same Task (or Task<T>) instance as the one passed as the argument so if your application should continue only after the task completes you have to call <<convenient-capture-span>> with `await` keyword.
+
+NOTE: Code samples above use `Elastic.Apm.Agent.Tracer.CurrentTransaction`. In production code you should make sure the `CurrentTransaction` is not `null`.
+
+[float]
+[[filter-api]]
+== Filter API (added[1.5])
+
+Use `Agent.AddFilter(filter)` to supply a filter callback.
+
+Each filter callback will be called just before data is sent to the APM Server. This allows you to manipulate the data being sent, like to remove sensitive information such as passwords.
+
+Each filter callback is called in the order they are added and will receive a payload object containing the data about to be sent to the APM Server as the only argument.
+
+The filter callback is synchronous and should return the manipulated payload object. If a filter callback doesn’t return any value or returns a falsy value, the remaining filter callback will not be called and the payload will not be sent to the APM Server.
+
+There are 3 overloads of the `Agent.AddFilter` method with the following arguments:
+
+- `Func<ITransaction, ITransaction>`: A filter called for every transaction.
+- `Func<ISpan, ISpan>`: A filter called for every span.
+- `Func<IError, IError>`: A filter called for every error.
+
+Below are some usage examples of the Agent.AddFilter method.
+
+Drop all spans for a specific database:
+
+[source,csharp]
+----
+Agent.AddFilter((ISpan span) =>
+{
+	if (span.Context?.Db?.Instance == "VerySecretDb")
+		return null;
+	return span;
+});
+----
+
+Hide some data:
+
+[source,csharp]
+----
+Agent.AddFilter((ITransaction transaction) =>
+{
+	transaction.Context.Request.Url.Protocol = "[HIDDEN]";
+	return transaction;
 });
 ----

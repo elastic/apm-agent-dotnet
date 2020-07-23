@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -319,13 +323,13 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 			public void VerifyTryAwaitCompletedSuccessfully(Task tryAwaitOrTimeoutTask, Task delayTask)
 			{
-				tryAwaitOrTimeoutTask.IsCompletedSuccessfully.Should().BeTrue();
+				tryAwaitOrTimeoutTask.IsCompletedSuccessfully().Should().BeTrue();
 
 				UnpackTryAwaitOrTimeoutTaskResult(tryAwaitOrTimeoutTask, out var hasTaskToAwaitCompleted, out var taskToAwaitResult);
 				hasTaskToAwaitCompleted.Should().BeTrue();
 				taskToAwaitResult.Should().Be(_resultValue);
 
-				_taskToAwaitTcs.Task.IsCompletedSuccessfully.Should().BeTrue();
+				_taskToAwaitTcs.Task.IsCompletedSuccessfully().Should().BeTrue();
 				_taskToAwaitTcs.Task.Result.Should().Be(_resultValue);
 
 				VerifyFinalAgentTimerState(delayTask);
@@ -333,11 +337,11 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 			public void VerifyAwaitCompletedSuccessfully(Task awaitOrTimeoutTask, Task delayTask)
 			{
-				awaitOrTimeoutTask.IsCompletedSuccessfully.Should().BeTrue();
+				awaitOrTimeoutTask.IsCompletedSuccessfully().Should().BeTrue();
 
 				if (!_isVoid) ((Task<TResult>)awaitOrTimeoutTask).Result.Should().Be(_resultValue);
 
-				_taskToAwaitTcs.Task.IsCompletedSuccessfully.Should().BeTrue();
+				_taskToAwaitTcs.Task.IsCompletedSuccessfully().Should().BeTrue();
 				_taskToAwaitTcs.Task.Result.Should().Be(_resultValue);
 
 				VerifyFinalAgentTimerState(delayTask);
@@ -345,7 +349,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 			public void VerifyTryAwaitTimeout(Task tryAwaitOrTimeoutTask, Task delayTask)
 			{
-				tryAwaitOrTimeoutTask.IsCompletedSuccessfully.Should().BeTrue();
+				tryAwaitOrTimeoutTask.IsCompletedSuccessfully().Should().BeTrue();
 
 				UnpackTryAwaitOrTimeoutTaskResult(tryAwaitOrTimeoutTask, out var hasTaskToAwaitCompleted, out var taskToAwaitResult);
 				hasTaskToAwaitCompleted.Should().BeFalse();
@@ -429,7 +433,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 				if (wasDelayCancelled)
 					delayTask.IsCanceled.Should().BeTrue();
 				else
-					delayTask.IsCompletedSuccessfully.Should().BeTrue();
+					delayTask.IsCompletedSuccessfully().Should().BeTrue();
 			}
 		}
 	}

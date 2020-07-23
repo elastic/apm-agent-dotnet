@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -125,11 +129,8 @@ namespace Elastic.Apm.DiagnosticListeners
 				return;
 			}
 
-			var span = (Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(_agent)
-				.StartSpan(
-					$"{RequestGetMethod(request)} {requestUrl.Host}",
-					ApiConstants.TypeExternal,
-					ApiConstants.SubtypeHttp);
+			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(_agent, $"{RequestGetMethod(request)} {requestUrl.Host}",
+				ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient, true);
 
 			if (!ProcessingRequests.TryAdd(request, span))
 			{
@@ -138,11 +139,29 @@ namespace Elastic.Apm.DiagnosticListeners
 				return;
 			}
 
-			if (!RequestHeadersContain(request, TraceParent.TraceParentHeaderName))
+			if (!RequestHeadersContain(request, TraceContext.TraceParentHeaderName))
 				// We call TraceParent.BuildTraceparent explicitly instead of DistributedTracingData.SerializeToString because
 				// in the future we might change DistributedTracingData.SerializeToString to use some other internal format
 				// but here we want the string to be in W3C 'traceparent' header format.
-				RequestHeadersAdd(request, TraceParent.TraceParentHeaderName, TraceParent.BuildTraceparent(span.OutgoingDistributedTracingData));
+				RequestHeadersAdd(request, TraceContext.TraceParentHeaderName, TraceContext.BuildTraceparent(span.OutgoingDistributedTracingData));
+
+			if (transaction is Transaction t)
+			{
+				if (t.ConfigSnapshot.UseElasticTraceparentHeader)
+				{
+					if (!RequestHeadersContain(request, TraceContext.TraceParentHeaderNamePrefixed))
+					{
+						RequestHeadersAdd(request, TraceContext.TraceParentHeaderNamePrefixed,
+							TraceContext.BuildTraceparent(span.OutgoingDistributedTracingData));
+					}
+				}
+			}
+
+			if (!RequestHeadersContain(request, TraceContext.TraceStateHeaderName) && transaction.OutgoingDistributedTracingData.HasTraceState)
+			{
+				RequestHeadersAdd(request, TraceContext.TraceStateHeaderName,
+					TraceContext.BuildTraceState(transaction.OutgoingDistributedTracingData));
+			}
 
 			if (!span.ShouldBeSentToApmServer) return;
 
@@ -156,10 +175,23 @@ namespace Elastic.Apm.DiagnosticListeners
 
 			if (!ProcessingRequests.TryRemove(request, out var span))
 			{
-				Logger.Warning()
-					?.Log("Failed capturing request (failed to remove from ProcessingRequests) - " +
-						"This Span will be skipped in case it wasn't captured before. " +
-						"Request: method: {HttpMethod}, URL: {RequestUrl}", RequestGetMethod(request), Http.Sanitize(requestUrl));
+				// if we don't find the request in the dictionary and current transaction is null, then this is not a big deal -
+				// it was probably not captured in Start either - so we skip with a debug log
+				if (_agent.Tracer.CurrentTransaction == null)
+				{
+					Logger.Debug()
+						?.Log("{eventName} called with no active current transaction, url: {url} - skipping event", nameof(ProcessStopEvent),
+							Http.Sanitize(requestUrl));
+				}
+				// otherwise it's strange and it deserves a warning
+				else
+				{
+					Logger.Warning()
+						?.Log("Failed capturing request (failed to remove from ProcessingRequests) - " +
+							"This Span will be skipped in case it wasn't captured before. " +
+							"Request: method: {HttpMethod}, URL: {RequestUrl}", RequestGetMethod(request), Http.Sanitize(requestUrl));
+				}
+
 				return;
 			}
 

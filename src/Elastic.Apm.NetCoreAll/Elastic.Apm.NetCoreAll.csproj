@@ -1,14 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;netcoreapp3.0</TargetFrameworks>
     <RootNamespace>Elastic.Apm.NetCoreAll</RootNamespace>
     <PackageId>Elastic.Apm.NetCoreAll</PackageId>
     <Description>Elastic APM .NET agent. This is a convenient package that automatically pulls in ASP.NET Core, and Entity Framework Core auto instrumentation with the Elastic APM .NET Agent. If your application uses the Microsoft.AspNetCore.All package the easiest way to reference the Elastic APM project is to use this package. If you only need specific functionalities (e.g. EF Core monitoring, or ASP.NET Core without EF Core monitoring, etc) you can reference specific Elastic.Apm packages. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, aspnetcore, entiryframeworkcore, efcore</PackageTags>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj"/>
-    <ProjectReference Include="..\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj"/>
-    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj"/>
+    <ProjectReference Include="..\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
+    <ProjectReference Include="..\Elastic.Apm.Elasticsearch\Elastic.Apm.Elasticsearch.csproj" />
+    <ProjectReference Include="..\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj" />
+    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
   </ItemGroup>
 </Project>

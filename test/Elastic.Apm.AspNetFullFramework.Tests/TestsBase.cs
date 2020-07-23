@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -155,6 +159,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			internal static readonly SampleAppUrlPathData GenNSpansPage =
 				new SampleAppUrlPathData(HomeController.GenNSpansPageRelativePath, (int)HttpStatusCode.Created);
+
+			internal static readonly SampleAppUrlPathData CallSoapServiceProtocolV1_1 =
+				new SampleAppUrlPathData("Asmx/Health.asmx", (int)HttpStatusCode.OK);
 		}
 
 		private TimedEvent? _sampleAppClientCallTiming;
@@ -213,7 +220,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		private static string BuildApmServerUrl(int apmServerPort) => $"http://localhost:{apmServerPort}/";
 
 		protected async Task<SampleAppResponse> SendGetRequestToSampleAppAndVerifyResponse(string relativeUrlPath, int expectedStatusCode,
-			bool timeHttpCall = true
+			bool timeHttpCall = true, bool addTraceContextHeaders = false
 		)
 		{
 			var startTime = DateTime.UtcNow;
@@ -227,6 +234,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			{
 				using (var httpClient = new HttpClient())
 				{
+					if (addTraceContextHeaders)
+					{
+						httpClient.DefaultRequestHeaders.Add("traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01");
+						httpClient.DefaultRequestHeaders.Add("tracestate", "rojo=00f067aa0ba902b7,congo=t61rcWkgMzE");
+					}
 					var response = await SendGetRequestToSampleAppAndVerifyResponseImpl(httpClient, relativeUrlPath, expectedStatusCode);
 					return new SampleAppResponse(response.Headers, await response.Content.ReadAsStringAsync());
 				}

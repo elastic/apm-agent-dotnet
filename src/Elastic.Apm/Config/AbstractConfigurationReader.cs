@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -19,8 +23,20 @@ namespace Elastic.Apm.Config
 		private readonly LazyContextualInit<int> _cachedMaxQueueEventCount = new LazyContextualInit<int>();
 		private readonly LazyContextualInit<IReadOnlyList<Uri>> _cachedServerUrls = new LazyContextualInit<IReadOnlyList<Uri>>();
 
-		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchers =
+		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersDisableMetrics =
 			new LazyContextualInit<IReadOnlyList<WildcardMatcher>>();
+
+		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersSanitizeFieldNames =
+			new LazyContextualInit<IReadOnlyList<WildcardMatcher>>();
+
+		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersTransactionIgnoreUrls =
+			new LazyContextualInit<IReadOnlyList<WildcardMatcher>>();
+
+		private readonly LazyContextualInit<IReadOnlyList<string>> _cachedExcludedNamespaces =
+			new LazyContextualInit<IReadOnlyList<string>>();
+
+		private readonly LazyContextualInit<IReadOnlyList<string>> _cachedApplicationNamespaces =
+			new LazyContextualInit<IReadOnlyList<string>>();
 
 		private readonly IApmLogger _logger;
 
@@ -29,6 +45,9 @@ namespace Elastic.Apm.Config
 
 		protected static ConfigurationKeyValue Kv(string key, string value, string origin) =>
 			new ConfigurationKeyValue(key, value, origin);
+
+		protected bool ParseUseElasticTraceparentHeader(ConfigurationKeyValue kv) =>
+			ParseBoolOption(kv, DefaultValues.UseElasticTraceparentHeader, "UseElasticTraceparentHeader");
 
 		protected internal static bool TryParseLogLevel(string value, out LogLevel level)
 		{
@@ -59,7 +78,8 @@ namespace Elastic.Apm.Config
 		}
 
 		protected IReadOnlyList<WildcardMatcher> ParseSanitizeFieldNames(ConfigurationKeyValue kv) =>
-			_cachedWildcardMatchers.IfNotInited?.InitOrGet(() => ParseSanitizeFieldNamesImpl(kv)) ?? _cachedWildcardMatchers.Value;
+			_cachedWildcardMatchersSanitizeFieldNames.IfNotInited?.InitOrGet(() => ParseSanitizeFieldNamesImpl(kv))
+			?? _cachedWildcardMatchersSanitizeFieldNames.Value;
 
 		protected IReadOnlyList<WildcardMatcher> ParseSanitizeFieldNamesImpl(ConfigurationKeyValue kv)
 		{
@@ -71,7 +91,7 @@ namespace Elastic.Apm.Config
 				var sanitizeFieldNames = kv.Value.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
 
 				var retVal = new List<WildcardMatcher>(sanitizeFieldNames.Count);
-				foreach (var item in sanitizeFieldNames) retVal.Add(WildcardMatcher.ValueOf(item));
+				foreach (var item in sanitizeFieldNames) retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
 				return retVal;
 			}
 			catch (Exception e)
@@ -81,11 +101,50 @@ namespace Elastic.Apm.Config
 			}
 		}
 
+		protected IReadOnlyList<WildcardMatcher> ParseDisableMetrics(ConfigurationKeyValue kv) =>
+			_cachedWildcardMatchersDisableMetrics.IfNotInited?.InitOrGet(() => ParseDisableMetricsImpl(kv))
+			?? _cachedWildcardMatchersDisableMetrics.Value;
+
+
+		private IReadOnlyList<WildcardMatcher> ParseDisableMetricsImpl(ConfigurationKeyValue kv)
+		{
+			if (kv?.Value == null) return DefaultValues.DisableMetrics;
+
+			try
+			{
+				_logger?.Trace()?.Log("Try parsing DisableMetrics, values: {SanitizeFieldNamesValues}", kv.Value);
+				var disableMetrics = kv.Value.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
+
+				var retVal = new List<WildcardMatcher>(disableMetrics.Count);
+				foreach (var item in disableMetrics) retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
+				return retVal;
+			}
+			catch (Exception e)
+			{
+				_logger?.Error()?.LogException(e, "Failed parsing DisableMetrics, values in the config: {DisableMetricsNamesValues}", kv.Value);
+				return DefaultValues.DisableMetrics;
+			}
+		}
+
 		protected string ParseSecretToken(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return null;
 
 			return kv.Value;
+		}
+
+		protected string ParseApiKey(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return null;
+
+			return kv.Value;
+		}
+
+		protected bool ParseVerifyServerCert(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.VerifyServerCert;
+			// ReSharper disable once SimplifyConditionalTernaryExpression
+			return bool.TryParse(kv.Value, out var value) ? value : DefaultValues.VerifyServerCert;
 		}
 
 		protected bool ParseCaptureHeaders(ConfigurationKeyValue kv) => ParseBoolOption(kv, DefaultValues.CaptureHeaders, "CaptureHeaders");
@@ -227,6 +286,30 @@ namespace Elastic.Apm.Config
 					kv.Value, DefaultValues.StackTraceLimit);
 
 			return DefaultValues.StackTraceLimit;
+		}
+
+		protected IReadOnlyList<WildcardMatcher> ParseTransactionIgnoreUrls(ConfigurationKeyValue kv) =>
+			_cachedWildcardMatchersTransactionIgnoreUrls.IfNotInited?.InitOrGet(() => ParseTransactionIgnoreUrlsImpl(kv))
+			?? _cachedWildcardMatchersTransactionIgnoreUrls.Value;
+
+		private IReadOnlyList<WildcardMatcher> ParseTransactionIgnoreUrlsImpl(ConfigurationKeyValue kv)
+		{
+			if (kv?.Value == null) return DefaultValues.TransactionIgnoreUrls;
+
+			try
+			{
+				_logger?.Trace()?.Log("Try parsing TransactionIgnoreUrls, values: {TransactionIgnoreUrlsValues}", kv.Value);
+				var transactionIgnoreUrls = kv.Value.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
+
+				var retVal = new List<WildcardMatcher>(transactionIgnoreUrls.Count);
+				foreach (var item in transactionIgnoreUrls) retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
+				return retVal;
+			}
+			catch (Exception e)
+			{
+				_logger?.Error()?.LogException(e, "Failed parsing TransactionIgnoreUrls, values in the config: {TransactionIgnoreUrlsValues}", kv.Value);
+				return DefaultValues.TransactionIgnoreUrls;
+			}
 		}
 
 		protected double ParseSpanFramesMinDurationInMilliseconds(ConfigurationKeyValue kv)
@@ -737,7 +820,7 @@ namespace Elastic.Apm.Config
 							, key, kv.Value);
 					return new Dictionary<string, string>();
 				}
-				result.Add(key, pair.Substring(keyValueSeparatorIndex+1,pair.Length-(keyValueSeparatorIndex+1)));
+				result.Add(key, pair.Substring(keyValueSeparatorIndex + 1, pair.Length - (keyValueSeparatorIndex + 1)));
 			}
 
 			_logger?.Debug()
@@ -765,6 +848,42 @@ namespace Elastic.Apm.Config
 			}
 
 			return result.ToString();
+		}
+
+		protected IReadOnlyList<string> ParseExcludedNamespaces(ConfigurationKeyValue kv) =>
+			_cachedExcludedNamespaces.IfNotInited?.InitOrGet(() => ParseExcludedNamespacesImpl(kv)) ?? _cachedExcludedNamespaces.Value;
+
+		private IReadOnlyList<string> ParseExcludedNamespacesImpl(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return LogAndReturnDefault().AsReadOnly();
+
+			var list = kv.Value.Split(',').ToList();
+
+			return list.Count == 0 ? LogAndReturnDefault().AsReadOnly() : list.Select(n => n.Trim()).ToList().AsReadOnly();
+
+			List<string> LogAndReturnDefault()
+			{
+				_logger?.Debug()?.Log("Using default excluded namespaces: {ExcludedNamespaces}", DefaultValues.DefaultExcludedNamespaces);
+				return DefaultValues.DefaultExcludedNamespaces.ToList();
+			}
+		}
+
+		protected IReadOnlyList<string> ParseApplicationNamespaces(ConfigurationKeyValue kv) =>
+			_cachedApplicationNamespaces.IfNotInited?.InitOrGet(() => ParseApplicationNamespacesImpl(kv)) ?? _cachedApplicationNamespaces.Value;
+
+		private IReadOnlyList<string> ParseApplicationNamespacesImpl(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return LogAndReturnDefault().AsReadOnly();
+
+			var list = kv.Value.Split(',').ToList();
+
+			return list.Count == 0 ? LogAndReturnDefault().AsReadOnly() : list.Select(n => n.Trim()).ToList().AsReadOnly();
+
+			List<string> LogAndReturnDefault()
+			{
+				_logger?.Debug()?.Log("Using default application namespaces: {ApplicationNamespaces}", DefaultValues.DefaultApplicationNamespaces);
+				return DefaultValues.DefaultApplicationNamespaces.ToList();
+			}
 		}
 
 		protected string ReadEnvVarValue(string envVarName) => Environment.GetEnvironmentVariable(envVarName)?.Trim();

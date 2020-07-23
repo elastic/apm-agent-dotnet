@@ -1,9 +1,14 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
@@ -99,6 +104,34 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		/// <summary>
+		/// Makes sure that in case ELASTIC_APM_USE_ELASTIC_TRACEPARENT_HEADER is set to true
+		/// both "traceparent" and "elastic-apm-traceparent" HTTP headers are set
+		/// </summary>
+		[Fact]
+		public async Task DistributedTraceAcross2ServicesWithUseElasticTraceParentTrue()
+		{
+			_agent1.ConfigStore.CurrentSnapshot = new MockConfigSnapshot(useElasticTraceparentHeader: "true");
+			await ExecuteAndCheckDistributedCall();
+
+			_payloadSender2.FirstTransaction.Context.Request.Headers.Keys.Should().Contain(TraceContext.TraceParentHeaderName);
+			_payloadSender2.FirstTransaction.Context.Request.Headers.Keys.Should().Contain(TraceContext.TraceParentHeaderNamePrefixed);
+		}
+
+		/// <summary>
+		/// Makes sure that in case ELASTIC_APM_USE_ELASTIC_TRACEPARENT_HEADER is set to false
+		/// only "traceparent" HTTP header is set and no "elastic-apm-traceparent" header is set
+		/// </summary>
+		[Fact]
+		public async Task DistributedTraceAcross2ServicesWithUseElasticTraceParentFalse()
+		{
+			_agent1.ConfigStore.CurrentSnapshot = new MockConfigSnapshot(useElasticTraceparentHeader: "false");
+			await ExecuteAndCheckDistributedCall();
+
+			_payloadSender2.FirstTransaction.Context.Request.Headers.Keys.Should().Contain(TraceContext.TraceParentHeaderName);
+			_payloadSender2.FirstTransaction.Context.Request.Headers.Keys.Should().NotContain(TraceContext.TraceParentHeaderNamePrefixed);
+		}
+
+		/// <summary>
 		/// The same as <see cref="DistributedTraceAcross2Service" /> except that the 1st agent configured with sampling rate 0
 		/// (to non-sample all the transaction) causing both transactions to be non-sampled (since is-sampled decision is passed
 		/// via distributed tracing to downstream agents).
@@ -123,6 +156,30 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			// Since the trace is non-sampled the parent ID of the 2nd transaction is the 1st transaction ID (not span ID as it was in sampled case)
 			_payloadSender2.FirstTransaction.ParentId.Should().Be(_payloadSender1.FirstTransaction.Id);
+		}
+
+		/// <summary>
+		/// Starts 2 services and sends a request to the 1. service with a tracestate header set
+		/// Makes sure that the tracestate is available in all services
+		/// </summary>
+		/// <returns></returns>
+		[Fact]
+		public async Task DistributedTraceAcross2ServicesWithTraceState()
+		{
+			var client = new HttpClient();
+			client.DefaultRequestHeaders.Add("traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01");
+			client.DefaultRequestHeaders.Add("tracestate", "rojo=00f067aa0ba902b7,congo=t61rcWkgMzE");
+			var res = await client.GetAsync("http://localhost:5901/Home/DistributedTracingMiniSample");
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
+			_payloadSender2.FirstTransaction.IsSampled.Should().BeTrue();
+
+			_payloadSender1.FirstTransaction.Context.Request.Headers.Should().ContainKey("tracestate");
+			_payloadSender1.FirstTransaction.Context.Request.Headers["tracestate"].Should().Be("rojo=00f067aa0ba902b7,congo=t61rcWkgMzE");
+
+			_payloadSender2.FirstTransaction.Context.Request.Headers.Should().ContainKey("tracestate");
+			_payloadSender2.FirstTransaction.Context.Request.Headers["tracestate"].Should().Be("rojo=00f067aa0ba902b7,congo=t61rcWkgMzE");
 		}
 
 		public async Task DisposeAsync()

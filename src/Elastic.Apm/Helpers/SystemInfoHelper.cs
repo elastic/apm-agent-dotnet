@@ -1,8 +1,13 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.IO;
 using System.Net;
 using System.Text.RegularExpressions;
 using Elastic.Apm.Api;
+using Elastic.Apm.Api.Kubernetes;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Helpers
@@ -55,8 +60,6 @@ namespace Elastic.Apm.Helpers
 						if (string.IsNullOrWhiteSpace(podUid)) continue;
 
 						_logger.Debug()?.Log("Found Kubernetes pod UID: {podUid}", podUid);
-						// By default, Kubernetes will set the hostname of the pod containers to the pod name. Users that override
-						// the name should use the Downward API to override the pod name.
 						kubernetesPodUid = podUid;
 						break;
 					}
@@ -72,8 +75,14 @@ namespace Elastic.Apm.Helpers
 			return null;
 		}
 
-		internal Api.System ParseSystemInfo() =>
-			new Api.System { Container = ParseContainerInfo(), DetectedHostName = GetHostName() };
+		internal Api.System ParseSystemInfo()
+		{
+			var containerInfo = ParseContainerInfo();
+			var hostName = GetHostName();
+			var kubernetesInfo = ParseKubernetesInfo(containerInfo, hostName);
+
+			return new Api.System { Container = containerInfo, DetectedHostName = hostName, Kubernetes = kubernetesInfo };
+		}
 
 		internal string GetHostName()
 		{
@@ -119,11 +128,39 @@ namespace Elastic.Apm.Helpers
 				_logger.Error()?.LogException(e, "Exception while parsing container id");
 			}
 
-			_logger.Error()?.Log("Failed parsing container id");
+			_logger.Warning()?.Log("Failed parsing container id - the agent will not report container id");
 			return null;
 		}
 
 		protected virtual StreamReader GetCGroupAsStream()
 			=> File.Exists("/proc/self/cgroup") ? new StreamReader("/proc/self/cgroup") : null;
+
+		internal const string Namespace = "KUBERNETES_NAMESPACE";
+		internal const string PodName = "KUBERNETES_POD_NAME";
+		internal const string PodUid = "KUBERNETES_POD_UID";
+		internal const string NodeName = "KUBERNETES_NODE_NAME";
+
+		internal KubernetesMetadata ParseKubernetesInfo(Container containerInfo, string hostName)
+		{
+			var @namespace = Environment.GetEnvironmentVariable(Namespace);
+			var podName = Environment.GetEnvironmentVariable(PodName);
+			var podUid = Environment.GetEnvironmentVariable(PodUid);
+			var nodeName = Environment.GetEnvironmentVariable(NodeName);
+
+			if (@namespace == null && podName == null && podUid == null && nodeName == null)
+			{
+				// By default, Kubernetes will set the hostname of the pod containers to the pod name.
+				// Users that override the name should use the Downward API to override the pod name.
+				return containerInfo != null
+					? new KubernetesMetadata { Pod = new Pod { Uid = containerInfo.Id, Name = hostName } }
+					: null;
+			}
+
+			var kubernetesMetadata = new KubernetesMetadata { Namespace = @namespace };
+			if (podName != null || podUid != null) kubernetesMetadata.Pod = new Pod { Name = podName, Uid = podUid };
+			if (nodeName != null) kubernetesMetadata.Node = new Api.Kubernetes.Node { Name = nodeName };
+
+			return kubernetesMetadata;
+		}
 	}
 }

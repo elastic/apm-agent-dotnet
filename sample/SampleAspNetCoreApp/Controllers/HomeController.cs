@@ -1,9 +1,14 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Apm;
 using Elastic.Apm.Api;
@@ -19,6 +24,7 @@ namespace SampleAspNetCoreApp.Controllers
 {
 	public class HomeController : Controller
 	{
+		public const string PostResponseBody = "somevalue";
 		private readonly SampleDataContext _sampleDataContext;
 
 		public HomeController(SampleDataContext sampleDataContext) => _sampleDataContext = sampleDataContext;
@@ -103,6 +109,8 @@ namespace SampleAspNetCoreApp.Controllers
 			return View();
 		}
 
+		public string TraceId() => Activity.Current.TraceId.ToString();
+
 		public async Task<IActionResult> DistributedTracingMiniSample()
 		{
 			var httpClient = new HttpClient();
@@ -162,6 +170,19 @@ namespace SampleAspNetCoreApp.Controllers
 			return Ok();
 		}
 
+		public IActionResult EmptyWebRequest() => Ok();
+
+		public IActionResult TransactionWithDbCallAndCustomSpan()
+		{
+			_sampleDataContext.Database.Migrate();
+			var model = _sampleDataContext.SampleTable.Select(item => item.Name).ToList();
+			var str =  string.Join(",", model.ToArray());
+
+			if (Agent.Tracer.CurrentTransaction != null) Agent.Tracer.CurrentTransaction.CaptureSpan("SampleSpan", "PerfBenchmark", () => { });
+
+			return Ok(str);
+		}
+
 		public IActionResult TransactionWithCustomNameUsingRequestInfo()
 		{
 			if (Agent.Tracer.CurrentTransaction != null)
@@ -169,10 +190,32 @@ namespace SampleAspNetCoreApp.Controllers
 			return Ok();
 		}
 
+		public async Task<IActionResult> VeryAsyncCall()
+		{
+			await T1();
+			return Ok();
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private async Task T1()
+		{
+			await Task.Delay(1);
+			await T2();
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private async Task T2()
+			=> await T3();
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private async Task T3()
+		{
+			await Task.Delay(1);
+			throw new Exception("This is a test exception");
+		}
+
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 		public IActionResult Error() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-
-		public const string PostResponseBody = "somevalue";
 
 		[HttpPost]
 		[Route("api/Home/Post")]

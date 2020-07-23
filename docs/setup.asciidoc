@@ -30,12 +30,18 @@ https://www.nuget.org/packages/Elastic.Apm.EntityFramework6[**Elastic.Apm.Entity
 
 This package contains an interceptor that automatically creates spans for DB operations executed by Entity Framework 6 (EF6) on behalf of the application.
 
+https://www.nuget.org/packages/Elastic.Apm.SqlClient[**Elastic.Apm.SqlClient**]::
+
+This package contains https://www.nuget.org/packages/System.Data.SqlClient[System.Data.SqlClient] and https://www.nuget.org/packages/Microsoft.Data.SqlClient[Microsoft.Data.SqlClient] monitoring related code.
+
 [float]
 === Quick start
 
 * <<setup-asp-net-core>>
 * <<setup-asp-net>>
 * <<setup-ef6>>
+* <<setup-sqlclient>>
+* <<setup-general>>
 
 [float]
 [[setup-asp-net-core]]
@@ -63,6 +69,17 @@ The `app.UseAllElasticApm(...)` line must be the first line in the `Configure` m
 With this you enable every agent component including ASP.NET Core tracing, monitoring of outgoing HTTP request, Entity Framework Core database tracing, etc.
 
 In case you only reference the `Elastic.Apm.AspNetCore` package, you won't find the `UseAllElasticApm`. Instead you need to use the `UseElasticApm()` method from the `Elastic.Apm.AspNetCore` namespace. This method turns on ASP.NET Core tracing, and gives you the opportunity to manually turn on other components. By default it will only trace ASP.NET Core requests - No HTTP request tracing, database call tracing or any other tracing component will be turned on.
+
+In case you would like to turn on specific tracing components you can pass those to the `UseElasticApm` method.
+
+For example:
+
+[source,csharp]
+----
+app.UseElasticApm(Configuration,
+	new HttpDiagnosticsSubscriber(),  /* Enable tracing of outgoing HTTP requests */
+	new EfCoreDiagnosticsSubscriber()); /* Enable tracing of database calls through EF Core*/
+----
 
 In case you only want to use the <<public-api>>, you don't need to do any initialization, you can simply start using the API and the agent will send the data to the APM Server.
 
@@ -134,3 +151,35 @@ For example, in an ASP.NET MVC application, you can place the above call in the 
 NOTE: Be careful not to execute `DbInterception.Add` for the same interceptor more than once,
 or you'll get additional interceptor instances.
 For example, if you add `Ef6Interceptor` interceptor twice, you'll see two spans for every SQL query. 
+
+[float]
+[[setup-sqlclient]]
+==== SqlClient
+
+You can enable auto instrumentation for `System.Data.SqlClient` or `Microsoft.Data.SqlClient` by referencing `Elastic.Apm.SqlClient` package
+and passing `SqlClientDiagnosticSubscriber` to the `UseElasticApm` method in case of ASP.NET Core as it shown in example:
+
+[source,csharp]
+----
+app.UseElasticApm(Configuration,
+	new SqlClientDiagnosticSubscriber());  /* Enable tracing of outgoing db requests */
+----
+
+or passing `SqlClientDiagnosticSubscriber` to the `Subscribe` method and make sure that the code is called only once, otherwise the same database call could be captured multiple times:
+
+[source,csharp]
+----
+// you need add custom code to be sure that Subscribe called only once and in a thread-safe manner
+if (Agent.IsConfigured) Agent.Subscribe(new SqlClientDiagnosticSubscriber());  /* Enable tracing of outgoing db requests */
+----
+
+NOTE: Auto instrumentation  for `System.Data.SqlClient` is available for both, .NET Core and .NET Framework applications, however, support of .NET Framework has one limitation:
+command text cannot be captured. In case of auto instrumentation for `Microsoft.Data.SqlClient`, only .NET Core is supported, at the moment.
+
+[float]
+[[setup-general]]
+==== Other .NET applications
+
+In case you have a .NET application which is not covered above, you can still use the agent and instrument your application manually. 
+
+In those cases, you can add the https://www.nuget.org/packages/Elastic.Apm[Elastic.Apm] package to your application and use the  <<public-api>>.

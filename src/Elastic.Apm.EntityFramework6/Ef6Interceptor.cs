@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System;
 using System.Data;
 using System.Data.Common;
 using System.Data.Entity.Infrastructure.Interception;
@@ -25,28 +29,41 @@ namespace Elastic.Apm.EntityFramework6
 		private readonly Lazy<Impl> _impl = new Lazy<Impl>(() => new Impl());
 
 		public void NonQueryExecuting(DbCommand command, DbCommandInterceptionContext<int> interceptCtx) =>
-			CreateImplIfReady()?.StartSpan(command, interceptCtx);
+			CreateImplIfReadyAndNoConflict()?.StartSpan(command, interceptCtx);
 
 		public void NonQueryExecuted(DbCommand command, DbCommandInterceptionContext<int> interceptCtx) =>
-			CreateImplIfReady()?.EndSpan(command, interceptCtx);
+			CreateImplIfReadyAndNoConflict()?.EndSpan(command, interceptCtx);
 
 		public void ReaderExecuting(DbCommand command, DbCommandInterceptionContext<DbDataReader> interceptCtx) =>
-			CreateImplIfReady()?.StartSpan(command, interceptCtx);
+			CreateImplIfReadyAndNoConflict()?.StartSpan(command, interceptCtx);
 
 		public void ReaderExecuted(DbCommand command, DbCommandInterceptionContext<DbDataReader> interceptCtx) =>
-			CreateImplIfReady()?.EndSpan(command, interceptCtx);
+			CreateImplIfReadyAndNoConflict()?.EndSpan(command, interceptCtx);
 
 		public void ScalarExecuting(DbCommand command, DbCommandInterceptionContext<object> interceptCtx) =>
-			CreateImplIfReady()?.StartSpan(command, interceptCtx);
+			CreateImplIfReadyAndNoConflict()?.StartSpan(command, interceptCtx);
 
 		public void ScalarExecuted(DbCommand command, DbCommandInterceptionContext<object> interceptCtx) =>
-			CreateImplIfReady()?.EndSpan(command, interceptCtx);
+			CreateImplIfReadyAndNoConflict()?.EndSpan(command, interceptCtx);
 
 		/// <summary>
 		/// DB spans can be created only when there's a current transaction
 		/// which in turn means agent singleton instance should already be created.
+		///
+		/// Also checks for competing instrumentation. If SqlClient already instrumented, it'll return null, so the interceptor won't create
+		/// duplicate spans
 		/// </summary>
-		private Impl CreateImplIfReady() => Agent.IsConfigured ? _impl.Value : null;
+		private Impl CreateImplIfReadyAndNoConflict()
+		{
+			// Make sure agent is configured
+			var impl = Agent.IsConfigured ? _impl.Value : null;
+			if (impl == null)
+				return null;
+
+			// Make sure DB spans were not already captured
+			if (!(Agent.Tracer.CurrentSpan is Span span)) return impl;
+			return span.InstrumentationFlag == InstrumentationFlag.SqlClient ? null : impl;
+		}
 
 		private class Impl
 		{
@@ -114,7 +131,7 @@ namespace Elastic.Apm.EntityFramework6
 
 				LogEvent("DB operation started - starting a new span...", command, interceptCtx, dbgOriginalCaller);
 
-				var span = DbSpanCommon.StartSpan(Agent.Instance, command);
+				var span = Agent.Instance.TracerInternal.DbSpanCommon.StartSpan(Agent.Instance, command, InstrumentationFlag.EfClassic);
 				interceptCtx.SetUserState(_userStateKey, span);
 			}
 
@@ -131,7 +148,7 @@ namespace Elastic.Apm.EntityFramework6
 
 				LogEvent("DB operation ended - ending the corresponding span...", command, interceptCtx, dbgOriginalCaller);
 
-				DbSpanCommon.EndSpan(span, command);
+				Agent.Instance.TracerInternal.DbSpanCommon.EndSpan(span, command);
 			}
 		}
 	}

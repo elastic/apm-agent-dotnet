@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -58,6 +62,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					span.Context.Db.Instance.Should().Be(receivedData.Spans.First().Context.Db.Instance);
 
 					span.Context.Db.Statement.Should().StartWith(dbStatements[i]);
+
+					span.Context.Destination.Should().BeNull("because SQLite is an embedded DB");
 
 					span.TraceId.Should().Be(transaction.TraceId);
 					span.TransactionId.Should().Be(transaction.Id);
@@ -165,6 +171,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 						dbSpan.Context.Db.Instance.Should().Be(topLevelDbSpans.First().Context.Db.Instance);
 
 						dbSpan.Context.Db.Statement.Should().StartWith(dbStatements[i]);
+
+						dbSpan.Context.Destination.Should().BeNull("because SQLite is an embedded DB");
 
 						dbSpan.TraceId.Should().Be(transaction.TraceId);
 						dbSpan.TransactionId.Should().Be(transaction.Id);

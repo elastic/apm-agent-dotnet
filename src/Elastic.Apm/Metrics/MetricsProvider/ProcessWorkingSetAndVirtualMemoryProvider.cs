@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.Api;
@@ -9,9 +13,17 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		internal const string ProcessVirtualMemory = "system.process.memory.size";
 		internal const string ProcessWorkingSetMemory = "system.process.memory.rss.bytes";
 
+		private readonly bool _collectProcessVirtualMemory;
+		private readonly bool _collectProcessWorkingSetMemory;
+
+		public ProcessWorkingSetAndVirtualMemoryProvider(bool collectProcessVirtualMemory, bool collectProcessWorkingSetMemory) =>
+			(_collectProcessVirtualMemory, _collectProcessWorkingSetMemory, IsMetricAlreadyCaptured) =
+			(collectProcessVirtualMemory, collectProcessWorkingSetMemory, true);
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "process's working set and virtual memory size";
+
+		public bool IsMetricAlreadyCaptured { get; }
 
 		public IEnumerable<MetricSample> GetSamples()
 		{
@@ -21,11 +33,17 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			var retVal = new List<MetricSample>();
 
-			if (virtualMemory != 0)
-				retVal.Add(new MetricSample(ProcessVirtualMemory, virtualMemory));
+			if (_collectProcessVirtualMemory)
+			{
+				if (virtualMemory != 0)
+					retVal.Add(new MetricSample(ProcessVirtualMemory, virtualMemory));
+			}
 
-			if (workingSet != 0)
-				retVal.Add(new MetricSample(ProcessWorkingSetMemory, workingSet));
+			if (_collectProcessWorkingSetMemory)
+			{
+				if (workingSet != 0)
+					retVal.Add(new MetricSample(ProcessWorkingSetMemory, workingSet));
+			}
 
 			return retVal;
 		}

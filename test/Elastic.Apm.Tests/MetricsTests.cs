@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,6 +11,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+#if !NETCOREAPP2_1
+using Elastic.Apm.Helpers;
+#endif
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
@@ -27,14 +34,24 @@ namespace Elastic.Apm.Tests
 
 		public MetricsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = LoggerBase.Scoped(ThisClassName);
 
+		public static IEnumerable<object[]> DisableProviderTestData
+		{
+			get
+			{
+				yield return new object[] { null };
+				yield return new object[] { new List<MetricSample>() };
+				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.NaN) } };
+				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.NegativeInfinity) } };
+				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.PositiveInfinity) } };
+			}
+		}
+
 		[Fact]
 		public void CollectAllMetrics()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			var testLogger = new TestLogger();
-			var mc = new MetricsCollector(testLogger, mockPayloadSender, new MockConfigSnapshot(testLogger));
-
-			mc.CollectAllMetrics();
+			using (var mc = new MetricsCollector(_logger, mockPayloadSender, new MockConfigSnapshot(_logger)))
+				mc.CollectAllMetrics();
 
 			mockPayloadSender.Metrics.Should().NotBeEmpty();
 		}
@@ -44,7 +61,7 @@ namespace Elastic.Apm.Tests
 		{
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
 
-			var systemTotalCpuProvider = new SystemTotalCpuProvider(new NoopLogger());
+			using var systemTotalCpuProvider = new SystemTotalCpuProvider(new NoopLogger());
 			Thread.Sleep(1000); //See https://github.com/elastic/apm-agent-dotnet/pull/264#issuecomment-499778288
 			var retVal = systemTotalCpuProvider.GetSamples();
 			var metricSamples = retVal as MetricSample[] ?? retVal.ToArray();
@@ -65,7 +82,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void GetWorkingSetAndVirtualMemory()
 		{
-			var processWorkingSetAndVirtualMemoryProvider = new ProcessWorkingSetAndVirtualMemoryProvider();
+			var processWorkingSetAndVirtualMemoryProvider = new ProcessWorkingSetAndVirtualMemoryProvider(true, true);
 			var retVal = processWorkingSetAndVirtualMemoryProvider.GetSamples();
 
 			var enumerable = retVal as MetricSample[] ?? retVal.ToArray();
@@ -78,33 +95,34 @@ namespace Elastic.Apm.Tests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var testLogger = new TestLogger(LogLevel.Information);
-			var mc = new MetricsCollector(testLogger, mockPayloadSender, new MockConfigSnapshot(testLogger, "Information"));
+			using (var mc = new MetricsCollector(testLogger, mockPayloadSender, new MockConfigSnapshot(testLogger, "Information")))
+			{
+				mc.MetricsProviders.Clear();
+				var providerWithException = new MetricsProviderWithException();
+				mc.MetricsProviders.Add(providerWithException);
 
-			mc.MetricsProviders.Clear();
-			var providerWithException = new MetricsProviderWithException();
-			mc.MetricsProviders.Add(providerWithException);
+				for (var i = 0; i < MetricsCollector.MaxTryWithoutSuccess; i++) mc.CollectAllMetrics();
 
-			for (var i = 0; i < MetricsCollector.MaxTryWithoutSuccess; i++) mc.CollectAllMetrics();
+				providerWithException.NumberOfGetValueCalls.Should().Be(MetricsCollector.MaxTryWithoutSuccess);
 
-			providerWithException.NumberOfGetValueCalls.Should().Be(MetricsCollector.MaxTryWithoutSuccess);
+				testLogger.Lines.Count(line => line.Contains(MetricsProviderWithException.ExceptionMessage))
+					.Should()
+					.Be(MetricsCollector.MaxTryWithoutSuccess);
 
-			testLogger.Lines.Count(line => line.Contains(MetricsProviderWithException.ExceptionMessage))
-				.Should()
-				.Be(MetricsCollector.MaxTryWithoutSuccess);
+				testLogger.Lines[1].Should().Contain($"Failed reading {providerWithException.DbgName} 1 times");
+				testLogger.Lines.Last(line => line.Contains("Failed reading"))
+					.Should()
+					.Contain(
+						$"Failed reading {providerWithException.DbgName} {MetricsCollector.MaxTryWithoutSuccess} consecutively - the agent won't try reading {providerWithException.DbgName} anymore");
 
-			testLogger.Lines[1].Should().Contain($"Failed reading {providerWithException.DbgName} 1 times");
-			testLogger.Lines.Last(line => line.Contains("Failed reading"))
-				.Should()
-				.Contain(
-					$"Failed reading {providerWithException.DbgName} {MetricsCollector.MaxTryWithoutSuccess} consecutively - the agent won't try reading {providerWithException.DbgName} anymore");
+				//make sure GetValue() in MetricsProviderWithException is not called anymore:
+				for (var i = 0; i < 10; i++) mc.CollectAllMetrics();
 
-			//make sure GetValue() in MetricsProviderWithException is not called anymore:
-			for (var i = 0; i < 10; i++) mc.CollectAllMetrics();
-
-			var logLineBeforeStage2 = testLogger.Lines.Count;
-			//no more logs, no more calls to GetValue():
-			providerWithException.NumberOfGetValueCalls.Should().Be(MetricsCollector.MaxTryWithoutSuccess);
-			testLogger.Lines.Count.Should().Be(logLineBeforeStage2);
+				var logLineBeforeStage2 = testLogger.Lines.Count;
+				//no more logs, no more calls to GetValue():
+				providerWithException.NumberOfGetValueCalls.Should().Be(MetricsCollector.MaxTryWithoutSuccess);
+				testLogger.Lines.Count.Should().Be(logLineBeforeStage2);
+			}
 		}
 
 		[Fact]
@@ -125,7 +143,8 @@ namespace Elastic.Apm.Tests
 
 			var payloadSender = new MockPayloadSender();
 			var configReader = new MockConfigSnapshot(logger, metricsInterval: "1s", logLevel: "Debug");
-			using (var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender, logger: logger, configurationReader: configReader)))
+			using var agentComponents = new AgentComponents(payloadSender: payloadSender, logger: logger, configurationReader: configReader);
+			using (var agent = new ApmAgent(agentComponents))
 			{
 				await Task.Delay(10000); //make sure we wait enough to collect 1 set of metrics
 				agent.ConfigurationReader.MetricsIntervalInMilliseconds.Should().Be(1000);
@@ -141,24 +160,12 @@ namespace Elastic.Apm.Tests
 		[InlineData("cpu    1192 0 2285 40280 626 0 376 0 0 0", 40280, 44759)]
 		public void ProcStatParser(string procStatContent, long expectedIdle, long expectedTotal)
 		{
-			var systemTotalCpuProvider = new TestSystemTotalCpuProvider(procStatContent);
-			var res = systemTotalCpuProvider.ReadProcStat();
+			using var systemTotalCpuProvider = new TestSystemTotalCpuProvider(procStatContent);
+			var (success, idle, total) = systemTotalCpuProvider.ReadProcStat();
 
-			res.success.Should().BeTrue();
-			res.idle.Should().Be(expectedIdle);
-			res.total.Should().Be(expectedTotal);
-		}
-
-		public static IEnumerable<object[]> DisableProviderTestData
-		{
-			get
-			{
-				yield return new object[] { null };
-				yield return new object[] { new List<MetricSample>() };
-				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.NaN) } };
-				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.NegativeInfinity) } };
-				yield return new object[] { new List<MetricSample> { new MetricSample("key", double.PositiveInfinity) } };
-			}
+			success.Should().BeTrue();
+			idle.Should().Be(expectedIdle);
+			total.Should().Be(expectedTotal);
 		}
 
 		[Theory]
@@ -171,10 +178,13 @@ namespace Elastic.Apm.Tests
 			var logger = new NoopLogger();
 			var mockPayloadSender = new MockPayloadSender();
 
-			var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
-
+			using var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
 			var metricsProviderMock = new Mock<IMetricsProvider>();
-			metricsProviderMock.Setup(x => x.GetSamples())
+
+			metricsProviderMock.Setup(x => x.IsMetricAlreadyCaptured).Returns(true);
+
+			metricsProviderMock
+				.Setup(x => x.GetSamples())
 				.Returns(() => samples);
 			metricsProviderMock.SetupProperty(x => x.ConsecutiveNumberOfFailedReads);
 
@@ -182,10 +192,7 @@ namespace Elastic.Apm.Tests
 			metricsCollector.MetricsProviders.Add(metricsProviderMock.Object);
 
 			// Act
-			foreach (var _ in Enumerable.Range(0, iterations))
-			{
-				metricsCollector.CollectAllMetrics();
-			}
+			foreach (var _ in Enumerable.Range(0, iterations)) metricsCollector.CollectAllMetrics();
 
 			// Assert
 			mockPayloadSender.Metrics.Should().BeEmpty();
@@ -201,9 +208,12 @@ namespace Elastic.Apm.Tests
 			var logger = new NoopLogger();
 			var mockPayloadSender = new MockPayloadSender();
 
-			var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
+			using var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
 
 			var metricsProviderMock = new Mock<IMetricsProvider>();
+
+			metricsProviderMock.Setup(x => x.IsMetricAlreadyCaptured).Returns(true);
+
 			metricsProviderMock.Setup(x => x.GetSamples())
 				.Returns(() => new List<MetricSample> { new MetricSample("key1", double.NaN), new MetricSample("key2", 0.95) });
 			metricsProviderMock.SetupProperty(x => x.ConsecutiveNumberOfFailedReads);
@@ -212,10 +222,7 @@ namespace Elastic.Apm.Tests
 			metricsCollector.MetricsProviders.Add(metricsProviderMock.Object);
 
 			// Act
-			foreach (var _ in Enumerable.Range(0, iterations))
-			{
-				metricsCollector.CollectAllMetrics();
-			}
+			foreach (var _ in Enumerable.Range(0, iterations)) metricsCollector.CollectAllMetrics();
 
 			// Assert
 			mockPayloadSender.Metrics.Count.Should().Be(iterations);
@@ -223,7 +230,70 @@ namespace Elastic.Apm.Tests
 			metricsProviderMock.Verify(x => x.GetSamples(), Times.Exactly(iterations));
 		}
 
-		private class MetricsProviderWithException : IMetricsProvider
+		[Fact]
+		public void CollectGcMetrics()
+		{
+			var logger = new TestLogger(LogLevel.Trace);
+			using (var gcMetricsProvider = new GcMetricsProvider(logger))
+			{
+				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeFalse();
+
+#if !NETCOREAPP2_1
+				//EventSource Microsoft-Windows-DotNETRuntime is only 2.2+, no gc metrics on 2.1
+				//repeat the allocation multiple times and make sure at least 1 GetSamples() call returns value
+
+				// ReSharper disable once TooWideLocalVariableScope
+				// ReSharper disable once RedundantAssignment
+				var containsValue = false;
+
+				for (var j = 0; j < 1000; j++)
+				{
+					for (var i = 0; i < 300_000; i++)
+					{
+						var _ = new int[100];
+					}
+
+					GC.Collect();
+
+					for (var i = 0; i < 300_000; i++)
+					{
+						var _ = new int[100];
+					}
+
+					GC.Collect();
+
+					var samples = gcMetricsProvider.GetSamples();
+
+					containsValue = samples != null && samples.Count() != 0;
+
+					if (containsValue)
+						break;
+				}
+
+				if (PlatformDetection.IsDotNetFullFramework)
+				{
+					if (logger.Lines.Where(n => n.Contains("TraceEventSession initialization failed - GC metrics won't be collected")).Any())
+					{
+						// If initialization fails, (e.g. because ETW session initalization fails) we don't assert
+						return;
+					}
+				}
+
+				if (PlatformDetection.IsDotNetCore)
+				{
+					if (!logger.Lines.Where(n => n.Contains("OnEventWritten with GC")).Any())
+					{
+						// If no OnWritten with a GC event was called then initialization failed -> we don't assert
+						return;
+					}
+				}
+				containsValue.Should().BeTrue();
+				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeTrue();
+#endif
+			}
+		}
+
+		internal class MetricsProviderWithException : IMetricsProvider
 		{
 			public const string ExceptionMessage = "testException";
 			public int ConsecutiveNumberOfFailedReads { get; set; }
@@ -236,12 +306,15 @@ namespace Elastic.Apm.Tests
 				NumberOfGetValueCalls++;
 				throw new Exception(ExceptionMessage);
 			}
+
+			public bool IsMetricAlreadyCaptured => true;
 		}
 
-		private class TestSystemTotalCpuProvider : SystemTotalCpuProvider
+		internal class TestSystemTotalCpuProvider : SystemTotalCpuProvider
 		{
 			public TestSystemTotalCpuProvider(string procStatContent) : base(new NoopLogger(),
-				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent)))) { }
+				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent))))
+			{ }
 		}
 	}
 }

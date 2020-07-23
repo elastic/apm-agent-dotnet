@@ -1,16 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFrameworks>net461;netstandard2.1</TargetFrameworks>
     <RootNamespace>Elastic.Apm.EntityFramework6</RootNamespace>
     <AssemblyName>Elastic.Apm.EntityFramework6</AssemblyName>
     <PackageId>Elastic.Apm.EntityFramework6</PackageId>
     <Description>Elastic APM for Entity Framework 6. This package contains auto instrumentation for Entity Framework 6. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, entiryframework6, ef6</PackageTags>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="EntityFramework" Version="6.2.0" />
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
+    <PackageReference Include="EntityFramework" Version="6.2.0" >
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
+    <PackageReference Include="EntityFramework" Version="6.3.0" >
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj"/>
+    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
   </ItemGroup>
 </Project>

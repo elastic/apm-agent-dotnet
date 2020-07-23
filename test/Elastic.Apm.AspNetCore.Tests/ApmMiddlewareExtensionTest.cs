@@ -1,3 +1,8 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -17,7 +22,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var logger = services.BuildServiceProvider().GetApmLogger();
 
-			Assert.IsType<AspNetCoreLogger>(logger);
+			Assert.IsType<NetCoreLogger>(logger);
 		}
 
 		[Fact]

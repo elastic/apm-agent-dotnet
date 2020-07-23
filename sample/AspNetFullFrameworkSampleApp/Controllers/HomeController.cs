@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -285,7 +289,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 			var numberOfSpans = int.Parse(GetQueryStringValue(NumberOfSpansQueryStringKey, /* defaultValue: */ "0"));
 
 			for (var i = 0; i < numberOfSpans; ++i)
-				Agent.Tracer.CurrentTransaction.CaptureSpan($"Span_#{i}_name", $"Span_#{i}_type", () => {});
+				Agent.Tracer.CurrentTransaction.CaptureSpan($"Span_#{i}_name", $"Span_#{i}_type", () => { });
 
 			return new HttpStatusCodeResult(HttpStatusCode.Created);
 		}

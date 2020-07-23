@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System;
 using System.Collections.Generic;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -38,16 +42,20 @@ namespace Elastic.Apm.Config
 
 		public bool CentralConfig => ParseCentralConfig(Read(ConfigConsts.KeyNames.CentralConfig, ConfigConsts.EnvVarNames.CentralConfig));
 
+		public IReadOnlyList<WildcardMatcher> DisableMetrics =>
+			ParseDisableMetrics(Read(ConfigConsts.KeyNames.DisableMetrics, ConfigConsts.EnvVarNames.DisableMetrics));
+
 		public virtual string Environment => ParseEnvironment(Read(ConfigConsts.KeyNames.Environment, ConfigConsts.EnvVarNames.Environment))
 			?? _defaultEnvironmentName;
-
-		public string ServiceNodeName => ParseServiceNodeName(Read(ConfigConsts.KeyNames.ServiceNodeName, ConfigConsts.EnvVarNames.ServiceNodeName));
 
 		public virtual TimeSpan FlushInterval =>
 			ParseFlushInterval(Read(ConfigConsts.KeyNames.FlushInterval, ConfigConsts.EnvVarNames.FlushInterval));
 
 		public IReadOnlyDictionary<string, string> GlobalLabels =>
 			ParseGlobalLabels(Read(ConfigConsts.KeyNames.GlobalLabels, ConfigConsts.EnvVarNames.GlobalLabels));
+
+		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
+			ParseTransactionIgnoreUrls(Read(ConfigConsts.KeyNames.TransactionIgnoreUrls, ConfigConsts.EnvVarNames.TransactionIgnoreUrls));
 
 		public virtual LogLevel LogLevel => ParseLogLevel(Read(ConfigConsts.KeyNames.LogLevel, ConfigConsts.EnvVarNames.LogLevel));
 
@@ -64,10 +72,13 @@ namespace Elastic.Apm.Config
 			ParseSanitizeFieldNames(Read(ConfigConsts.KeyNames.SanitizeFieldNames, ConfigConsts.EnvVarNames.SanitizeFieldNames));
 
 		public virtual string SecretToken => ParseSecretToken(Read(ConfigConsts.KeyNames.SecretToken, ConfigConsts.EnvVarNames.SecretToken));
+		public string ApiKey => ParseApiKey(Read(ConfigConsts.KeyNames.ApiKey, ConfigConsts.EnvVarNames.ApiKey));
 
 		public virtual IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Read(ConfigConsts.KeyNames.ServerUrls, ConfigConsts.EnvVarNames.ServerUrls));
 
 		public virtual string ServiceName => ParseServiceName(Read(ConfigConsts.KeyNames.ServiceName, ConfigConsts.EnvVarNames.ServiceName));
+
+		public string ServiceNodeName => ParseServiceNodeName(Read(ConfigConsts.KeyNames.ServiceNodeName, ConfigConsts.EnvVarNames.ServiceNodeName));
 
 		public virtual string ServiceVersion =>
 			ParseServiceVersion(Read(ConfigConsts.KeyNames.ServiceVersion, ConfigConsts.EnvVarNames.ServiceVersion));
@@ -81,5 +92,17 @@ namespace Elastic.Apm.Config
 
 		public virtual double TransactionSampleRate =>
 			ParseTransactionSampleRate(Read(ConfigConsts.KeyNames.TransactionSampleRate, ConfigConsts.EnvVarNames.TransactionSampleRate));
+
+		public bool UseElasticTraceparentHeader => ParseUseElasticTraceparentHeader(Read(ConfigConsts.KeyNames.UseElasticTraceparentheader,
+			ConfigConsts.EnvVarNames.UseElasticTraceparentHeader));
+
+		public virtual bool VerifyServerCert =>
+			ParseVerifyServerCert(Read(ConfigConsts.KeyNames.VerifyServerCert, ConfigConsts.EnvVarNames.VerifyServerCert));
+		
+		public IReadOnlyCollection<string> ExcludedNamespaces => 
+			ParseExcludedNamespaces(Read(ConfigConsts.KeyNames.ExcludedNamespaces, ConfigConsts.EnvVarNames.ExcludedNamespaces));
+
+		public IReadOnlyCollection<string> ApplicationNamespaces => 
+			ParseExcludedNamespaces(Read(ConfigConsts.KeyNames.ApplicationNamespaces, ConfigConsts.EnvVarNames.ApplicationNamespaces));
 	}
 }
