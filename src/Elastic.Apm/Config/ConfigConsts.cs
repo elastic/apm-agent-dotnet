@@ -79,6 +79,7 @@ namespace Elastic.Apm.Config
 			public const string StackTraceLimit = Prefix + "STACK_TRACE_LIMIT";
 			public const string TransactionMaxSpans = Prefix + "TRANSACTION_MAX_SPANS";
 			public const string TransactionSampleRate = Prefix + "TRANSACTION_SAMPLE_RATE";
+			public const string ConfigurationReaderType = Prefix + "CONFIGURATION_READER_TYPE";
 		}
 
 		public static class KeyNames
@@ -104,6 +105,7 @@ namespace Elastic.Apm.Config
 			public const string StackTraceLimit = "ElasticApm:StackTraceLimit";
 			public const string TransactionMaxSpans = "ElasticApm:TransactionMaxSpans";
 			public const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
+			public const string ConfigurationReaderType = "ElasticApm:ConfigurationReaderType";
 		}
 
 		public static class SupportedValues

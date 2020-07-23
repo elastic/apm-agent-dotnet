@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Configuration;
 using System.Reflection;
 using System.Web;
 using Elastic.Apm.Api;
+using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
@@ -311,7 +313,9 @@ namespace Elastic.Apm.AspNetFullFramework
 			var rootLogger = AgentDependencies.Logger ?? ConsoleLogger.Instance;
 			var scopedLogger = rootLogger.Scoped(dbgInstanceName);
 
-			var agentComponents = new AgentComponents(rootLogger, GetConfigReader(rootLogger));
+			var reader = ConfigHelper.CreateReader(rootLogger) ?? new FullFrameworkConfigReader(rootLogger);
+
+			var agentComponents = new AgentComponents(rootLogger, reader);
 
 			var aspNetVersion = FindAspNetVersion(scopedLogger);
 
@@ -321,28 +325,6 @@ namespace Elastic.Apm.AspNetFullFramework
 			return agentComponents;
 		}
 
-		public static IConfigurationReader GetConfigReader(IApmLogger logger)
-        {
-            if (ConfigurationManager.AppSettings["ElasticApm:ConfigurationReaderType"] != null)
-            {
-                try
-                {
-                    Type type = Type.GetType(ConfigurationManager.AppSettings["ElasticApm:ConfigurationReaderType"]);
-                    IConfigurationReader reader = Activator.CreateInstance(type, logger) as IConfigurationReader;
-                    if (reader != null)
-                    {
-                         return reader;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    logger.Error()?.LogException(ex, "GetConfigReader exception");
-                }
-            }
-
-            return new FullFrameworkConfigReader(logger);
-        }
-		
 		private static void SafeAgentSetup(string dbgInstanceName)
 		{
 			var agentComponents = BuildAgentComponents(dbgInstanceName);

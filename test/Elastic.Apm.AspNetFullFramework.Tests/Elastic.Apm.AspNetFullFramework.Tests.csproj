@@ -4,6 +4,12 @@
     <AssemblyName>Elastic.Apm.AspNetFullFramework.Tests</AssemblyName>
     <RootNamespace>Elastic.Apm.AspNetFullFramework.Tests</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
+  </ItemGroup>
   <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
     <PackageReference Include="Microsoft.AspNetCore.App" />
     
