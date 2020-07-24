@@ -11,8 +11,7 @@ namespace Elastic.Apm.Helpers
 	{
 		public static IConfigurationReader CreateReader(IApmLogger logger)
 		{
-			if (ConfigurationManager.AppSettings[ConfigConsts.KeyNames.ConfigurationReaderType] != null
-				&& !string.IsNullOrEmpty(ConfigurationManager.AppSettings[ConfigConsts.KeyNames.ConfigurationReaderType]))
+			if(!string.IsNullOrEmpty(ConfigurationManager.AppSettings[ConfigConsts.KeyNames.ConfigurationReaderType]))
 			{
 				try
 				{

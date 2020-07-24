@@ -79,6 +79,11 @@ namespace Elastic.Apm.Config
 			public const string StackTraceLimit = Prefix + "STACK_TRACE_LIMIT";
 			public const string TransactionMaxSpans = Prefix + "TRANSACTION_MAX_SPANS";
 			public const string TransactionSampleRate = Prefix + "TRANSACTION_SAMPLE_RATE";
+			public const string UseElasticTraceparentHeader = Prefix + "USE_ELASTIC_TRACEPARENT_HEADER";
+			public const string VerifyServerCert = Prefix + "VERIFY_SERVER_CERT";
+			public const string ExcludedNamespaces = Prefix + "EXCLUDED_NAMESPACES";
+			public const string ApplicationNamespaces = Prefix + "APPLICATION_NAMESPACES";
+			public static string TransactionIgnoreUrls = Prefix + "TRANSACTION_IGNORE_URLS";
 			public const string ConfigurationReaderType = Prefix + "CONFIGURATION_READER_TYPE";
 		}
 
@@ -105,6 +110,10 @@ namespace Elastic.Apm.Config
 			public const string StackTraceLimit = "ElasticApm:StackTraceLimit";
 			public const string TransactionMaxSpans = "ElasticApm:TransactionMaxSpans";
 			public const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
+			public const string VerifyServerCert = "ElasticApm:VerifyServerCert";
+			public const string ExcludedNamespaces = "ElasticApm:ExcludedNamespaces";
+			public const string ApplicationNamespaces = "ElasticApm:ApplicationNamespaces";
+			public static string TransactionIgnoreUrls = "ElasticApm:TransactionIgnoreUrls";
 			public const string ConfigurationReaderType = "ElasticApm:ConfigurationReaderType";
 		}
 
