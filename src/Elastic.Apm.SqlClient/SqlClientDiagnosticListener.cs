@@ -16,28 +16,13 @@ namespace Elastic.Apm.SqlClient
 {
 	internal class SqlClientDiagnosticListener : IDiagnosticListener
 	{
-		private class PropertyFetcherSet
-		{
-			public PropertyFetcher StartCorrelationId { get; } = new PropertyFetcher("OperationId");
-			public PropertyFetcher StopCorrelationId { get; } = new PropertyFetcher("OperationId");
-			public PropertyFetcher ErrorCorrelationId { get; } = new PropertyFetcher("OperationId");
-
-			public PropertyFetcher Statistics { get; } = new PropertyFetcher("Statistics");
-
-			public PropertyFetcher StartCommand { get; } = new PropertyFetcher("Command");
-			public PropertyFetcher StopCommand { get; } = new PropertyFetcher("Command");
-			public PropertyFetcher ErrorCommand { get; } = new PropertyFetcher("Command");
-
-			public PropertyFetcher Exception { get; } = new PropertyFetcher("Exception");
-		}
-
 		private readonly ApmAgent _apmAgent;
 		private readonly IApmLogger _logger;
+		private readonly PropertyFetcherSet _microsoftPropertyFetcherSet = new PropertyFetcherSet();
 
 		private readonly ConcurrentDictionary<Guid, Span> _spans = new ConcurrentDictionary<Guid, Span>();
 
 		private readonly PropertyFetcherSet _systemPropertyFetcherSet = new PropertyFetcherSet();
-		private readonly PropertyFetcherSet _microsoftPropertyFetcherSet = new PropertyFetcherSet();
 
 		public SqlClientDiagnosticListener(IApmAgent apmAgent)
 		{
@@ -104,7 +89,7 @@ namespace Elastic.Apm.SqlClient
 					TimeSpan? duration = null;
 
 					if (propertyFetcherSet.Statistics.Fetch(payloadData) is IDictionary<object, object> statistics &&
-						statistics.ContainsKey("ExecutionTime") && statistics["ExecutionTime"] is long durationInMs)
+						statistics.ContainsKey("ExecutionTime") && statistics["ExecutionTime"] is long durationInMs && durationInMs > 0)
 						duration = TimeSpan.FromMilliseconds(durationInMs);
 
 					_apmAgent.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand, duration);
@@ -151,6 +136,21 @@ namespace Elastic.Apm.SqlClient
 		public void OnCompleted()
 		{
 			// do nothing because it's not necessary to handle such event from provider
+		}
+
+		private class PropertyFetcherSet
+		{
+			public PropertyFetcher ErrorCommand { get; } = new PropertyFetcher("Command");
+			public PropertyFetcher ErrorCorrelationId { get; } = new PropertyFetcher("OperationId");
+
+			public PropertyFetcher Exception { get; } = new PropertyFetcher("Exception");
+
+			public PropertyFetcher StartCommand { get; } = new PropertyFetcher("Command");
+			public PropertyFetcher StartCorrelationId { get; } = new PropertyFetcher("OperationId");
+
+			public PropertyFetcher Statistics { get; } = new PropertyFetcher("Statistics");
+			public PropertyFetcher StopCommand { get; } = new PropertyFetcher("Command");
+			public PropertyFetcher StopCorrelationId { get; } = new PropertyFetcher("OperationId");
 		}
 	}
 }
