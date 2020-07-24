@@ -1,3 +1,8 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
 
@@ -18,7 +23,8 @@ namespace Elastic.Apm.Tests
 		{
 			Agent.IsConfigured.Should().BeFalse();
 
-			Agent.Setup(new AgentComponents());
+			using var agentComponents = new TestAgentComponents();
+			Agent.Setup(agentComponents);
 			Agent.IsConfigured.Should().BeTrue();
 		}
 	}

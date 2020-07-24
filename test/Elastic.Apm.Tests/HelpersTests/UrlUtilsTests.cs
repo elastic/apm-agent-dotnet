@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -37,9 +41,10 @@ namespace Elastic.Apm.Tests.HelpersTests
 		// ReSharper restore StringLiteralTypo
 		public void TryExtractDestinationInfo_valid_input(string inputUrl, string expectedHost, int? expectedPort)
 		{
-			UrlUtils.TryExtractDestinationInfo(new Uri(inputUrl), out var actualHost, out var actualPort, new NoopLogger()).Should().BeTrue();
-			actualHost.Should().Be(expectedHost);
-			actualPort.Should().Be(expectedPort);
+			var actualDestination = UrlUtils.ExtractDestination(new Uri(inputUrl), new NoopLogger());
+			actualDestination.Should().NotBeNull();
+			actualDestination.Address.Should().Be(expectedHost);
+			actualDestination.Port.Should().Be(expectedPort);
 		}
 
 		[Theory]
@@ -47,8 +52,8 @@ namespace Elastic.Apm.Tests.HelpersTests
 		public void TryExtractDestinationInfo_invalid_input(string inputUrl)
 		{
 			var mockLogger = new TestLogger(LogLevel.Trace);
-			UrlUtils.TryExtractDestinationInfo(new Uri(inputUrl), out _, out _, mockLogger).Should().BeFalse();
-			mockLogger.Lines.Should().Contain(line => line.Contains(nameof(UrlUtils)) && line.Contains(nameof(UrlUtils.TryExtractDestinationInfo)));
+			UrlUtils.ExtractDestination(new Uri(inputUrl), mockLogger).Should().BeNull();
+			mockLogger.Lines.Should().Contain(line => line.Contains(nameof(UrlUtils)) && line.Contains(nameof(UrlUtils.ExtractDestination)));
 		}
 	}
 }

@@ -3,7 +3,7 @@
 :: LogFilePath property
 ::
 dotnet test -v n -r target -d target\diag.log --no-build ^
- --logger:"xunit;LogFilePath=TestResults.xml" ^
+ --logger:"junit;LogFilePath=junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" ^
  /p:CollectCoverage=true ^
  /p:CoverletOutputFormat=cobertura ^
  /p:CoverletOutput=target\Coverage\ ^

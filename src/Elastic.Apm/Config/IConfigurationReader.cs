@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Generic;
 using Elastic.Apm.Helpers;
@@ -7,13 +11,33 @@ namespace Elastic.Apm.Config
 {
 	public interface IConfigurationReader
 	{
+		string ApiKey { get; }
+
+		/// <summary>
+		/// When defined, all namespaces not starting with one of the values of this collection are ignored when determining
+		/// Exception culprit.
+		/// This suppresses any configuration of <see cref="ExcludedNamespaces" />
+		/// </summary>
+		IReadOnlyCollection<string> ApplicationNamespaces { get; }
+
 		string CaptureBody { get; }
 		List<string> CaptureBodyContentTypes { get; }
 		bool CaptureHeaders { get; }
 		bool CentralConfig { get; }
+
+		/// <summary>
+		/// Disables the collection of certain metrics. If the name of a metric matches any of the wildcard expressions, it will
+		/// not be collected
+		/// </summary>
+		IReadOnlyList<WildcardMatcher> DisableMetrics { get; }
+
 		string Environment { get; }
 
-		string ServiceNodeName { get; }
+		/// <summary>
+		/// A list of namespaces to exclude when reading an exception's StackTrace to determine the culprit.
+		/// Namespaces are checked with string.StartsWith() so "System." matches all System namespaces
+		/// </summary>
+		IReadOnlyCollection<string> ExcludedNamespaces { get; }
 
 		/// <summary>
 		/// The maximal amount of time (in seconds) events are held in queue until there is enough to send a batch.
@@ -44,6 +68,11 @@ namespace Elastic.Apm.Config
 		TimeSpan FlushInterval { get; }
 
 		IReadOnlyDictionary<string, string> GlobalLabels { get; }
+
+		/// <summary>
+		/// A list of patterns to match HTTP requests to ignore. An incoming HTTP request whose request line matches any of the patterns will not be reported as a transaction.
+		/// </summary>
+		IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls { get; }
 
 		LogLevel LogLevel { get; }
 
@@ -101,6 +130,8 @@ namespace Elastic.Apm.Config
 		string SecretToken { get; }
 		IReadOnlyList<Uri> ServerUrls { get; }
 		string ServiceName { get; }
+
+		string ServiceNodeName { get; }
 		string ServiceVersion { get; }
 
 		/// <summary>
@@ -128,5 +159,18 @@ namespace Elastic.Apm.Config
 		int TransactionMaxSpans { get; }
 
 		double TransactionSampleRate { get; }
+
+		/// <summary>
+		/// If true, for all outgoing HTTP requests the agent stores the traceparent in a header prefixed with elastic-apm
+		/// (elastic-apm-traceparent)
+		/// otherwise it'll use the official header name from w3c, which is "traceparewnt".
+		/// </summary>
+		bool UseElasticTraceparentHeader { get; }
+
+		/// <summary>
+		/// The agent verifies the server's certificate if an HTTPS connection to the APM server is used.
+		/// Verification can be disabled by setting to <c>false</c>.
+		/// </summary>
+		bool VerifyServerCert { get; }
 	}
 }

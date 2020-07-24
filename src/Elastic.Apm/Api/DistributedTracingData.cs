@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 
@@ -12,17 +16,20 @@ namespace Elastic.Apm.Api
 	/// </summary>
 	public class DistributedTracingData
 	{
-		internal DistributedTracingData(string traceId, string parentId, bool flagRecorded)
+		internal DistributedTracingData(string traceId, string parentId, bool flagRecorded, string traceState = null)
 		{
 			TraceId = traceId;
 			ParentId = parentId;
 			FlagRecorded = flagRecorded;
+			TraceState = traceState;
 		}
 
 		internal bool FlagRecorded { get; }
-		internal string ParentId { get; }
 
+		internal bool HasTraceState => !string.IsNullOrEmpty(TraceState);
+		internal string ParentId { get; }
 		internal string TraceId { get; }
+		internal string TraceState { get; }
 
 		/// <summary>
 		/// Serializes this instance to a string.
@@ -33,7 +40,7 @@ namespace Elastic.Apm.Api
 		/// <returns>
 		/// String containing the instance in serialized form.
 		/// </returns>
-		public string SerializeToString() => TraceParent.BuildTraceparent(this);
+		public string SerializeToString() => TraceContext.BuildTraceparent(this);
 
 		/// <summary>
 		/// Deserializes an instance from a string.
@@ -46,7 +53,7 @@ namespace Elastic.Apm.Api
 		/// <param name="serialized" />
 		/// .
 		/// </returns>
-		public static DistributedTracingData TryDeserializeFromString(string serialized) => TraceParent.TryExtractTraceparent(serialized);
+		public static DistributedTracingData TryDeserializeFromString(string serialized) => TraceContext.TryExtractTracingData(serialized);
 
 		public override string ToString() => new ToStringBuilder(nameof(DistributedTracingData))
 		{

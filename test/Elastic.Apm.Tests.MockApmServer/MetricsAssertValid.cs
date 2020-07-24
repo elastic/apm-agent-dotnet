@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Generic;
 using Elastic.Apm.Metrics.MetricsProvider;
@@ -23,6 +27,10 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 			foreach (var metricSample in metricSet.Samples)
 			{
+				//GC metrics are only captured when at least 1 GC happens during the test - so we don't assert on those.
+				if (metricSample.Key.Contains("clr.gc", StringComparison.CurrentCultureIgnoreCase))
+					continue;
+
 				MetricMetadataPerType.Should().ContainKey(metricSample.Key);
 				MetricMetadataPerType[metricSample.Key].VerifyAction(metricSample.Value.Value);
 			}

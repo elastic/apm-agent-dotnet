@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Generic;
 using Elastic.Apm.Config;
@@ -17,7 +21,9 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void Compose()
 		{
-			var agent = new ApmAgent(new AgentComponents(configurationReader: new LogConfig(LogLevel.Warning)));
+			//build AgentComponents manually so we can disable metrics collection. reason: creating metrics collector pro test and disposing it makes test failing (ETW or EventSource subscribe unsubscribe in each test in parallel if all tests are running)
+			var agent = new ApmAgent(new AgentComponents(null, new LogConfig(LogLevel.Warning), null, null,
+				null, null));
 			var logger = agent.Logger as ConsoleLogger;
 
 			logger.Should().NotBeNull();
@@ -25,9 +31,11 @@ namespace Elastic.Apm.Tests
 			logger?.IsEnabled(LogLevel.Information).Should().BeFalse();
 		}
 
-		private class LogConfig : IConfigurationReader
+		private class LogConfig : IConfigSnapshot
 		{
 			public LogConfig(LogLevel level) => LogLevel = level;
+
+			public string DbgDescription => "LogConfig";
 
 			// ReSharper disable UnassignedGetOnlyAutoProperty
 			public string CaptureBody => ConfigConsts.DefaultValues.CaptureBody;
@@ -39,17 +47,26 @@ namespace Elastic.Apm.Tests
 			public string ServiceNodeName { get; }
 			public TimeSpan FlushInterval => TimeSpan.FromMilliseconds(ConfigConsts.DefaultValues.FlushIntervalInMilliseconds);
 			public IReadOnlyDictionary<string, string> GlobalLabels => new Dictionary<string, string>();
+			public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => ConfigConsts.DefaultValues.TransactionIgnoreUrls;
 			public LogLevel LogLevel { get; }
 			public int MaxBatchEventCount => ConfigConsts.DefaultValues.MaxBatchEventCount;
 			public int MaxQueueEventCount => ConfigConsts.DefaultValues.MaxQueueEventCount;
 			public double MetricsIntervalInMilliseconds => ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds;
 			public string SecretToken { get; }
+			public string ApiKey { get; }
 			public IReadOnlyList<Uri> ServerUrls => new List<Uri> { ConfigConsts.DefaultValues.ServerUri };
 			public string ServiceName { get; }
 			public string ServiceVersion { get; }
+			public IReadOnlyList<WildcardMatcher> DisableMetrics => ConfigConsts.DefaultValues.DisableMetrics;
 			public double SpanFramesMinDurationInMilliseconds => ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;
 			public int StackTraceLimit => ConfigConsts.DefaultValues.StackTraceLimit;
 			public double TransactionSampleRate => ConfigConsts.DefaultValues.TransactionSampleRate;
+
+			public bool VerifyServerCert => ConfigConsts.DefaultValues.VerifyServerCert;
+			public IReadOnlyCollection<string> ExcludedNamespaces => ConfigConsts.DefaultValues.DefaultExcludedNamespaces;
+			public IReadOnlyCollection<string> ApplicationNamespaces => ConfigConsts.DefaultValues.DefaultApplicationNamespaces;
+
+			public bool UseElasticTraceparentHeader => ConfigConsts.DefaultValues.UseElasticTraceparentHeader;
 
 			public int TransactionMaxSpans => ConfigConsts.DefaultValues.TransactionMaxSpans;
 			// ReSharper restore UnassignedGetOnlyAutoProperty

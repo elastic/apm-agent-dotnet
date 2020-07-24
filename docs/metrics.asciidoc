@@ -100,3 +100,66 @@ platform: all
 
 The total physical memory the process has.
 --
+
+[float]
+[[metrics-runtime]]
+=== Runtime metrics
+
+
+*`clr.gc.count`*::
++
+--
+type: long
+
+Platform: all.
+
+The total number of GC collections that have occurred.
+--
+
+*`clr.gc.gen0size`*::
++
+--
+type: long
+
+format: bytes
+
+Platform: all.
+
+The size of the generation 0 heap.
+--
+
+*`clr.gc.gen1size`*::
++
+--
+type: long
+
+format: bytes
+
+Platform: all.
+
+The size of the generation 1 heap.
+--
+
+*`clr.gc.gen2size`*::
++
+--
+type: long
+
+format: bytes
+
+Platform: all.
+
+The size of the generation 2 heap.
+--
+
+*`clr.gc.gen3size`*::
++
+--
+type: long
+
+format: bytes
+
+Platform: all.
+
+The size of the generation 3 heap - also known as Large Object Heap (LOH).
+--

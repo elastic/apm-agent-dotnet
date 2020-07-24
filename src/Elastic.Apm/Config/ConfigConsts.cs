@@ -1,5 +1,10 @@
-﻿using System;
+﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Config
@@ -29,8 +34,29 @@ namespace Elastic.Apm.Config
 			public const int TransactionMaxSpans = 500;
 			public const double TransactionSampleRate = 1.0;
 			public const string UnknownServiceName = "unknown";
+			public const bool UseElasticTraceparentHeader = true;
+			public const bool VerifyServerCert = true;
+
+			public static readonly IReadOnlyCollection<string> DefaultExcludedNamespaces =
+				new List<string>
+				{
+					"System.",
+					"Microsoft.",
+					"MS.",
+					"FSharp.",
+					"Newtonsoft.Json",
+					"Serilog",
+					"NLog",
+					"Giraffe."
+				}.AsReadOnly();
+
+			public static readonly IReadOnlyCollection<string> DefaultApplicationNamespaces = new List<string>().AsReadOnly();
+
+			public static List<WildcardMatcher> DisableMetrics = new List<WildcardMatcher>();
 
 			public static List<WildcardMatcher> SanitizeFieldNames;
+
+			public static List<WildcardMatcher> TransactionIgnoreUrls;
 
 			static DefaultValues()
 			{
@@ -50,6 +76,26 @@ namespace Elastic.Apm.Config
 					"set-cookie"
 				})
 					SanitizeFieldNames.Add(WildcardMatcher.ValueOf(item));
+
+				TransactionIgnoreUrls = new List<WildcardMatcher>();
+
+				foreach (var item in new List<string>
+				{
+					"/VAADIN/*",
+					"/heartbeat*",
+					"/favicon.ico",
+					"*.js",
+					"*.css",
+					"*.jpg",
+					"*.jpeg",
+					"*.png",
+					"*.gif",
+					"*.webp",
+					"*.svg",
+					"*.woff",
+					"*.woff2"
+				})
+					TransactionIgnoreUrls.Add(WildcardMatcher.ValueOf(item));
 			}
 
 			public static Uri ServerUri => new Uri($"http://localhost:{ApmServerPort}");
@@ -61,8 +107,8 @@ namespace Elastic.Apm.Config
 			public const string CaptureBodyContentTypes = Prefix + "CAPTURE_BODY_CONTENT_TYPES";
 			public const string CaptureHeaders = Prefix + "CAPTURE_HEADERS";
 			public const string CentralConfig = Prefix + "CENTRAL_CONFIG";
+			public const string DisableMetrics = Prefix + "DISABLE_METRICS";
 			public const string Environment = Prefix + "ENVIRONMENT";
-			public const string ServiceNodeName = Prefix + "SERVICE_NODE_NAME";
 			public const string FlushInterval = Prefix + "FLUSH_INTERVAL";
 			public const string GlobalLabels = Prefix + "GLOBAL_LABELS";
 			public const string LogLevel = Prefix + "LOG_LEVEL";
@@ -72,8 +118,10 @@ namespace Elastic.Apm.Config
 			private const string Prefix = "ELASTIC_APM_";
 			public const string SanitizeFieldNames = Prefix + "SANITIZE_FIELD_NAMES";
 			public const string SecretToken = Prefix + "SECRET_TOKEN";
+			public const string ApiKey = Prefix + "API_KEY";
 			public const string ServerUrls = Prefix + "SERVER_URLS";
 			public const string ServiceName = Prefix + "SERVICE_NAME";
+			public const string ServiceNodeName = Prefix + "SERVICE_NODE_NAME";
 			public const string ServiceVersion = Prefix + "SERVICE_VERSION";
 			public const string SpanFramesMinDuration = Prefix + "SPAN_FRAMES_MIN_DURATION";
 			public const string StackTraceLimit = Prefix + "STACK_TRACE_LIMIT";
@@ -93,6 +141,7 @@ namespace Elastic.Apm.Config
 			public const string CaptureBodyContentTypes = "ElasticApm:CaptureBodyContentTypes";
 			public const string CaptureHeaders = "ElasticApm:CaptureHeaders";
 			public const string CentralConfig = "ElasticApm:CentralConfig";
+			public const string DisableMetrics = "ElasticApm:DisableMetrics";
 			public const string Environment = "ElasticApm:Environment";
 			public const string FlushInterval = "ElasticApm:FlushInterval";
 			public const string GlobalLabels = "ElasticApm:GlobalLabels";
@@ -102,6 +151,7 @@ namespace Elastic.Apm.Config
 			public const string MetricsInterval = "ElasticApm:MetricsInterval";
 			public const string SanitizeFieldNames = "ElasticApm:SanitizeFieldNames";
 			public const string SecretToken = "ElasticApm:SecretToken";
+			public const string ApiKey = "ElasticApm:ApiKey";
 			public const string ServerUrls = "ElasticApm:ServerUrls";
 			public const string ServiceName = "ElasticApm:ServiceName";
 			public const string ServiceNodeName = "ElasticApm:ServiceNodeName";
@@ -110,6 +160,7 @@ namespace Elastic.Apm.Config
 			public const string StackTraceLimit = "ElasticApm:StackTraceLimit";
 			public const string TransactionMaxSpans = "ElasticApm:TransactionMaxSpans";
 			public const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
+			public const string UseElasticTraceparentheader = "ElasticApm:UseElasticTraceparentHeder";
 			public const string VerifyServerCert = "ElasticApm:VerifyServerCert";
 			public const string ExcludedNamespaces = "ElasticApm:ExcludedNamespaces";
 			public const string ApplicationNamespaces = "ElasticApm:ApplicationNamespaces";
@@ -124,7 +175,7 @@ namespace Elastic.Apm.Config
 			public const string CaptureBodyOff = "off";
 			public const string CaptureBodyTransactions = "transactions";
 
-			public static List<string> CaptureBodySupportedValues =
+			public static readonly List<string> CaptureBodySupportedValues =
 				new List<string> { CaptureBodyOff, CaptureBodyAll, CaptureBodyErrors, CaptureBodyTransactions };
 		}
 	}

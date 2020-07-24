@@ -1,4 +1,9 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -112,7 +117,7 @@ namespace Elastic.Apm.Model
 			{
 				if (t.Exception != null)
 				{
-					if (t.Exception is AggregateException aggregateException)
+					if (t.Exception is { } aggregateException)
 					{
 						ExceptionFilter.Capture(
 							aggregateException.InnerExceptions.Count == 1
@@ -151,7 +156,7 @@ namespace Elastic.Apm.Model
 			string parentId = null
 		)
 		{
-			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
+			var capturedCulprit = string.IsNullOrEmpty(culprit) ? GetCulprit(exception, configurationReader) : culprit;
 
 			var capturedException = new CapturedException { Message = exception.Message, Type = exception.GetType().FullName, Handled = isHandled };
 
@@ -162,6 +167,46 @@ namespace Elastic.Apm.Model
 			{
 				Culprit = capturedCulprit,
 			});
+		}
+
+		private const string DefaultCulprit = "ElasticApm.UnknownCulprit";
+		private static string GetCulprit(Exception exception, IConfigurationReader configurationReader)
+		{
+			if (exception == null) return DefaultCulprit;
+
+			var stackTrace = new StackTrace(exception);
+			var frames = stackTrace.GetFrames();
+			if (frames == null) return DefaultCulprit;
+
+			var excludedNamespaces = configurationReader.ExcludedNamespaces;
+			var applicationNamespaces = configurationReader.ApplicationNamespaces;
+
+			foreach (var frame in frames)
+			{
+				var method = frame.GetMethod();
+				var fullyQualifiedTypeName = method.DeclaringType?.FullName ?? "Unknown Type";
+				if (IsInApp(fullyQualifiedTypeName, excludedNamespaces, applicationNamespaces)) return fullyQualifiedTypeName;
+			}
+
+			return DefaultCulprit;
+		}
+
+		private static bool IsInApp(string fullyQualifiedTypeName, IReadOnlyCollection<string> excludedNamespaces, IReadOnlyCollection<string> applicationNamespaces)
+		{
+			if (string.IsNullOrEmpty(fullyQualifiedTypeName)) return false;
+
+			if (applicationNamespaces.Count != 0)
+			{
+				foreach (var include in applicationNamespaces)
+					if (fullyQualifiedTypeName.StartsWith(include, StringComparison.Ordinal)) return true;
+
+				return false;
+			}
+
+			foreach (var exclude in excludedNamespaces)
+				if (fullyQualifiedTypeName.StartsWith(exclude, StringComparison.Ordinal)) return false;
+
+			return true;
 		}
 
 		public static void CaptureError(
@@ -194,5 +239,20 @@ namespace Elastic.Apm.Model
 
 		internal static IExecutionSegment GetCurrentExecutionSegment(IApmAgent agent) =>
 			agent.Tracer.CurrentSpan ?? (IExecutionSegment)agent.Tracer.CurrentTransaction;
+
+		internal static Span StartSpanOnCurrentExecutionSegment(IApmAgent agent, string spanName, string spanType, string subType = null, InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false)
+		{
+			var currentExecutionSegment = GetCurrentExecutionSegment(agent);
+
+			if (currentExecutionSegment == null)
+				return null;
+
+			return currentExecutionSegment switch
+			{
+				Span span => span.StartSpanInternal(spanName, spanType, subType, instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart),
+				Transaction transaction => transaction.StartSpanInternal(spanName, spanType, subType, instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart),
+				_ => null
+			};
+		}
 	}
 }

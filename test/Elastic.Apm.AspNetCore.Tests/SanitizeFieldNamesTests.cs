@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -37,7 +41,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var agentComponents = new TestAgentComponents(
 				_logger,
 				configSnapshot, _capturedPayload,
-				new CurrentExecutionSegmentsContainer(_logger));
+				new CurrentExecutionSegmentsContainer());
 
 			_agent = new ApmAgent(agentComponents);
 			_client = Helper.GetClient(_agent, _factory);

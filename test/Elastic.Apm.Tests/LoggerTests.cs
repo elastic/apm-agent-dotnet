@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -291,6 +295,26 @@ namespace Elastic.Apm.Tests
 				.Should()
 				.NotContain(
 					"placeholders with missing values:");
+		}
+
+		/// <summary>
+		/// Makes sure that getting the current transaction does not log anything.
+		/// Reason for this is that <code>Tracer.CurrentTransaction</code> is used in log correlation and within log correlation
+		/// the agent should not log. See: https://github.com/elastic/ecs-dotnet/issues/58#issuecomment-595864256
+		/// </summary>
+		[Fact]
+		public void GetCurrentTransactionNoLogging()
+		{
+			var testLogger = new TestLogger(LogLevel.Trace);
+			using var agent = new ApmAgent(new TestAgentComponents(testLogger));
+			agent.Tracer.CaptureTransaction("TestTransaction", "Test", () =>
+			{
+				var numberOfLinesPreCurrentTransaction = testLogger.Lines.Count;
+				// ReSharper disable once AccessToDisposedClosure
+				var currentTransaction = agent.Tracer.CurrentTransaction;
+				currentTransaction.Should().NotBeNull();
+				testLogger.Lines.Count.Should().Be(numberOfLinesPreCurrentTransaction);
+			});
 		}
 
 		private static TestLogger LogWithLevel(LogLevel logLevel)

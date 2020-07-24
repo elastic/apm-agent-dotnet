@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System.Collections.Generic;
 using Elastic.Apm.Api;
 
@@ -29,5 +33,16 @@ namespace Elastic.Apm.Metrics
 		/// </summary>
 		/// <returns>The key and the value of the metric(s)</returns>
 		IEnumerable<MetricSample> GetSamples();
+
+		/// <summary>
+		/// Indicates if metrics were already collected - or there was an attempt to collect them.
+		/// Until this property is false, metrics from the implementor won't be collected.
+		/// This property exists to cover cases when the metric collection happens in the background
+		/// (e.g. collecting GC metrics through EventListener) and values are not captured directly in
+		/// the <see cref="GetSamples"/> method.
+		/// If metrics are captured on the fly in <see cref="GetSamples"/> just set this to <code>true</code>
+		/// during initialization.
+		/// </summary>
+		bool IsMetricAlreadyCaptured { get; }
 	}
 }

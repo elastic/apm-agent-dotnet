@@ -1,3 +1,9 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System.Collections.Generic;
+
 namespace Elastic.Apm.Api
 {
 	public interface ISpan : IExecutionSegment
@@ -12,6 +18,11 @@ namespace Elastic.Apm.Api
 		/// Any other arbitrary data captured by the agent, optionally provided by the user.
 		/// </summary>
 		SpanContext Context { get; }
+
+		/// <summary>
+		/// The stack trace which was captured for the given span.
+		/// </summary>
+		List<CapturedStackFrame> StackTrace { get; }
 
 		/// <summary>
 		/// The subtype of the span.

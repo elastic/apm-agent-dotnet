@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.IO;
 using System.Linq;
@@ -8,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
+using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
@@ -47,7 +52,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
 				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer)
 			);
-			ApmMiddlewareExtension.UpdateServiceInformation(_agent.Service);
+			HostBuilderExtensions.UpdateServiceInformation(_agent.Service);
 
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
 			_client = Helper.GetClient(_agent, _factory);
@@ -232,6 +237,34 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		/// <summary>
+		/// Simulates an HTTP GET call to /home/index and asserts that the agent captures Span.Context.Destination fields.
+		/// Prerequisite: The /home/index has to generate spans (which should be the case).
+		/// It also assumes that /home/index makes a requrst to github.com
+		/// </summary>
+		[Fact]
+		public async Task HomeIndexDestinationTest()
+		{
+			var response = await _client.GetAsync("/Home/Index");
+
+			response.IsSuccessStatusCode.Should().BeTrue();
+			_capturedPayload.SpansOnFirstTransaction.Should().NotBeEmpty().And.Contain(n => n.Context.Http != null);
+			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null).Context.Destination.Should().NotBeNull();
+			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null).Context.Destination.Service.Should().NotBeNull();
+
+			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null)
+				.Context.Destination.Service.Name.ToLower().Should()
+				.Be("https://api.github.com");
+
+			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null)
+				.Context.Destination.Service.Resource.ToLower().Should()
+				.Be("api.github.com:443");
+
+			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null)
+				.Context.Destination.Service.Type.ToLower().Should()
+				.Be(ApiConstants.TypeExternal);
+		}
+
+		/// <summary>
 		/// Simulates an HTTP GET call to /Home/Index?captureControllerActionAsSpan=true
 		/// and asserts that all automatically captured spans are children of the span for controller's action.
 		/// </summary>
@@ -254,6 +287,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 				dbSpan.Type.Should().Be(ApiConstants.TypeDb);
 				dbSpan.Subtype.Should().Be(ApiConstants.SubtypeSqLite);
 				dbSpan.ParentId.Should().Be(controllerActionSpan.Id);
+				dbSpan.Context.Db.Type.Should().Be(Database.TypeSql);
+				dbSpan.Context.Destination.Should().BeNull("because SQLite is an embedded DB");
 			}
 			var httpSpans = spans.Where(span => span.Context.Http != null);
 			httpSpans.Should().NotBeEmpty();

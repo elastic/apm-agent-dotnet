@@ -6,34 +6,48 @@
 set -euxo pipefail
 
 # Remove Full Framework projects
-dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
-dotnet sln remove src/Elastic.Apm.AspNetFullFramework/Elastic.Apm.AspNetFullFramework.csproj
-dotnet sln remove test/Elastic.Apm.AspNetFullFramework.Tests/Elastic.Apm.AspNetFullFramework.Tests.csproj
+.ci/linux/remove-projects.sh
 
 # Configure the projects for coverage and testing
-for i in $(find . -name '*.csproj')
+while IFS= read -r -d '' file
 do
-	if [[ $i == *"AspNetFullFrameworkSampleApp.csproj"* ]]; then
+	if [[ $file == *"AspNetFullFrameworkSampleApp.csproj"* ]]; then
 		continue
 	fi
-	if [[ $i == *"Elastic.Apm.AspNetFullFramework.csproj"* ]]; then
+	if [[ $file == *"Elastic.Apm.AspNetFullFramework.csproj"* ]]; then
 		continue
 	fi
-	if [[ $i == *"Elastic.Apm.AspNetFullFramework.Tests.csproj"* ]]; then
+	if [[ $file == *"Elastic.Apm.AspNetFullFramework.Tests.csproj"* ]]; then
 		continue
 	fi
-	dotnet add "$i" package XunitXml.TestLogger --version 2.0.0
-	dotnet add "$i" package coverlet.msbuild --version 2.5.1
-done
+	dotnet add "$file" package JunitXml.TestLogger --version 2.1.15
+done <  <(find . -name '*.csproj' -print0)
 
-# Run tests
-dotnet test -v n -r target -d target/diag.log \
-    --logger:"xunit;LogFilePath=TestResults.xml" \
-    /p:CollectCoverage=true \
-    /p:CoverletOutputFormat=cobertura \
-    /p:CoverletOutput=target/Coverage/ \
-    /p:Exclude='"[Elastic.Apm.Tests]*,[SampleAspNetCoreApp*]*,[xunit*]*"' \
-    /p:Threshold=0 \
-    /p:ThresholdType=branch \
-    /p:ThresholdStat=total \
-    || echo -e "\033[31;49mTests FAILED\033[0m"
+# Run tests per project to generate the coverage report individually.
+while IFS= read -r -d '' file
+do
+	projectName=$(basename "$file")
+	dotnet test "$file" \
+		--verbosity normal \
+		--results-directory target \
+		--diag "target/diag-${projectName}.log" \
+		--logger:"junit;LogFilePath=junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
+		--collect:"XPlat Code Coverage" \
+		--settings coverlet.runsettings \
+		/p:CollectCoverage=true \
+		/p:CoverletOutputFormat=cobertura \
+		/p:CoverletOutput=target/Coverage/ \
+		/p:Threshold=0 \
+		/p:ThresholdType=branch \
+		/p:ThresholdStat=total \
+		|| echo -e "\033[31;49mTests FAILED\033[0m"
+
+	echo 'Move coverage files if they were generated!'
+	if [ -d target ] ; then
+		find target -type f -name 'coverage.cobertura.xml' |
+		while IFS= read -r fileName; do
+			target=$(dirname "$fileName")
+			mv "$fileName" "${target}/${projectName}-${fileName##*\/}"
+		done
+	fi
+done <  <(find test -name '*.csproj' -print0)

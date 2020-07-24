@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using Elastic.Apm.Helpers;
 using FluentAssertions;
 using Xunit;
@@ -51,6 +55,11 @@ namespace Elastic.Apm.Tests.HelpersTests
 				"D: " + nameof(ClassWithOneProperty) + "{prop: 789}" +
 				"}");
 
+		[Fact]
+		public void ToStringWithoutClassName_test() => new ClassWithToStringWithoutClassName("abc").ToString()
+			.Should()
+			.Be("{Prop: abc}");
+
 		private class ClassWithoutAnyProperties
 		{
 			public override string ToString() => new ToStringBuilder(nameof(ClassWithoutAnyProperties)).ToString();
@@ -86,6 +95,18 @@ namespace Elastic.Apm.Tests.HelpersTests
 				{ "B", _propertyB },
 				{ "C", _propertyC },
 				{ "D", _propertyD }
+			}.ToString();
+		}
+
+		private class ClassWithToStringWithoutClassName
+		{
+			internal string Prop { get; }
+
+			public ClassWithToStringWithoutClassName(string prop) => Prop = prop;
+
+			public override string ToString() => new ToStringBuilder
+			{
+				{ nameof(Prop), Prop },
 			}.ToString();
 		}
 	}

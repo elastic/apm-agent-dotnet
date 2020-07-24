@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,6 +34,7 @@ namespace Elastic.Apm.Api
 			_sender = payloadSender.ThrowIfArgumentNull(nameof(payloadSender));
 			_configProvider = configProvider.ThrowIfArgumentNull(nameof(configProvider));
 			CurrentExecutionSegmentsContainer = currentExecutionSegmentsContainer.ThrowIfArgumentNull(nameof(currentExecutionSegmentsContainer));
+			DbSpanCommon = new DbSpanCommon(logger);
 		}
 
 		internal ICurrentExecutionSegmentsContainer CurrentExecutionSegmentsContainer { get; }
@@ -38,14 +43,16 @@ namespace Elastic.Apm.Api
 
 		public ITransaction CurrentTransaction => CurrentExecutionSegmentsContainer.CurrentTransaction;
 
-		public ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null) =>
-			StartTransactionInternal(name, type, distributedTracingData);
+		public DbSpanCommon DbSpanCommon { get; }
 
-		internal Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null)
+		public ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null, bool ignoreActivity = false) =>
+			StartTransactionInternal(name, type, distributedTracingData, ignoreActivity);
+
+		internal Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null, bool ignoreActivity = false)
 		{
 			var currentConfig = _configProvider.CurrentSnapshot;
 			var retVal = new Transaction(_logger, name, type, new Sampler(currentConfig.TransactionSampleRate), distributedTracingData
-				, _sender, currentConfig, CurrentExecutionSegmentsContainer)
+				, _sender, currentConfig, CurrentExecutionSegmentsContainer, ignoreActivity)
 			{ Service = _service };
 
 			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);
@@ -161,7 +168,7 @@ namespace Elastic.Apm.Api
 			{
 				if (t.Exception != null)
 				{
-					if (t.Exception is AggregateException aggregateException)
+					if (t.Exception is { } aggregateException)
 					{
 						ExceptionFilter.Capture(
 							aggregateException.InnerExceptions.Count == 1

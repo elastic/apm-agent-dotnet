@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -44,11 +48,11 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return;
 
-			var procStatValues = ReadProcStat();
-			if (!procStatValues.success) return;
+			var (success, idle, total) = ReadProcStat();
+			if (!success) return;
 
-			_prevIdleTime = procStatValues.idle;
-			_prevTotalTime = procStatValues.total;
+			_prevIdleTime = idle;
+			_prevTotalTime = total;
 		}
 
 		internal SystemTotalCpuProvider(IApmLogger logger, StreamReader procStatStreamReader)
@@ -108,21 +112,23 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 			{
-				var procStatValues = ReadProcStat();
-				if (!procStatValues.success) return null;
+				var (success, idle, total) = ReadProcStat();
+				if (!success) return null;
 
-				var idleTimeDelta = procStatValues.idle - _prevIdleTime;
-				var totalTimeDelta = procStatValues.total - _prevTotalTime;
+				var idleTimeDelta = idle - _prevIdleTime;
+				var totalTimeDelta = total - _prevTotalTime;
 				var notIdle = 1.0 - idleTimeDelta / (double)totalTimeDelta;
 
-				_prevIdleTime = procStatValues.idle;
-				_prevTotalTime = procStatValues.total;
+				_prevIdleTime = idle;
+				_prevTotalTime = total;
 
 				return new List<MetricSample> { new MetricSample(SystemCpuTotalPct, notIdle) };
 			}
 
 			return null;
 		}
+
+		public bool IsMetricAlreadyCaptured => true;
 
 		public void Dispose()
 		{

@@ -26,6 +26,8 @@ include::./log-correlation.asciidoc[]
 
 include::./performance-tuning.asciidoc[]
 
-// Troubleshooting
+include::./troubleshooting.asciidoc[]
+
+include::./upgrading.asciidoc[]
 
 include::./release-notes.asciidoc[]

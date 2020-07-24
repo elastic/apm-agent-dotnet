@@ -1,8 +1,15 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 using AspNetFullFrameworkSampleApp.Controllers;
 using Elastic.Apm.Api;
@@ -25,13 +32,15 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var rootTxData = SampleAppUrlPaths.ContactPage;
 			var childTxData = SampleAppUrlPaths.AboutPage;
 
-			await SendGetRequestToSampleAppAndVerifyResponse(rootTxData.RelativeUrlPath, rootTxData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(rootTxData.RelativeUrlPath, rootTxData.StatusCode, addTraceContextHeaders: true);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
 				VerifyReceivedDataSharedConstraints(rootTxData, receivedData);
 
 				VerifyRootChildTransactions(receivedData, rootTxData, childTxData, out var rootTx, out _);
+
+				receivedData.Transactions.All(n => n.Context.Request.Headers.ContainsKey("tracestate") && n.Context.Request.Headers["tracestate"] == "rojo=00f067aa0ba902b7,congo=t61rcWkgMzE").Should().BeTrue();
 
 				var spanExternalCall =
 					receivedData.Spans.Single(sp => sp.Context.Http.Url == HomeController.ChildHttpCallToExternalServiceUrl.ToString());
@@ -107,6 +116,43 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				VerifyReceivedDataSharedConstraints(rootTxData, receivedData);
 
 				VerifyRootChildTransactions(receivedData, rootTxData, childTxData, out _, out _);
+			});
+		}
+
+		[AspNetFullFrameworkFact]
+		public async Task CallSoapRequest()
+		{
+			var rootTxData = SampleAppUrlPaths.CallSoapServiceProtocolV1_1;
+			var fullUrl = Consts.SampleApp.RootUrl + "/" + rootTxData.RelativeUrlPath;
+			var action = "Ping";
+
+			var httpContent = new StringContent($@"<?xml version=""1.0"" encoding=""utf-8""?>
+                <soap:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
+                  <soap:Body>
+                    <{action} xmlns=""http://tempuri.org/"" />
+                  </soap:Body>
+                </soap:Envelope>", Encoding.UTF8, "text/xml");
+
+			using (var client = new HttpClient())
+			{
+				var request = new HttpRequestMessage()
+				{
+					RequestUri = new Uri(fullUrl),
+					Method = HttpMethod.Post,
+					Content = httpContent
+				};
+
+				client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/xml"));
+				request.Content.Headers.ContentType = new MediaTypeHeaderValue("text/xml");
+				request.Headers.Add("SOAPAction", $"http://tempuri.org/{action}");
+
+				var response = client.SendAsync(request).Result;
+			}
+
+			await WaitAndCustomVerifyReceivedData(receivedData =>
+			{
+				receivedData.Transactions.Count.Should().Be(1);
+				receivedData.Transactions.First().Name.Should().EndWith(action);
 			});
 		}
 

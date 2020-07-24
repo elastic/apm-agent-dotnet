@@ -1,4 +1,11 @@
-﻿using System;
+﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System;
+#if NETCOREAPP3_0
+using System.Collections.Generic;
+#endif
 using System.Diagnostics;
 using System.Threading;
 using Elastic.Apm;
@@ -167,7 +174,7 @@ namespace ApiSamples
 				Thread.Sleep(1100);
 
 				WriteLineToConsole("Waiting for callee process to exit...");
-				calleeProcess.WaitForExit();
+				calleeProcess?.WaitForExit();
 				WriteLineToConsole("Callee process exited");
 			}
 			finally
@@ -178,6 +185,52 @@ namespace ApiSamples
 
 		private static void WriteLineToConsole(string line) =>
 			Console.WriteLine($"[{Process.GetCurrentProcess().Id}] {line}");
+
+		/// <summary>
+		/// Registers some sample filters.
+		/// </summary>
+		// ReSharper disable once UnusedMember.Local
+		private static void FilterSample()
+		{
+			Agent.AddFilter((ITransaction transaction) =>
+			{
+				transaction.Name = "NewTransactionName";
+				return transaction;
+			});
+
+			Agent.AddFilter((ITransaction transaction) =>
+			{
+				transaction.Type = "NewSpanName";
+				return transaction;
+			});
+
+			Agent.AddFilter((ISpan span) =>
+			{
+				span.Name = "NewSpanName";
+				return span;
+			});
+
+			Agent.AddFilter(span =>
+			{
+				if (span.StackTrace.Count > 10)
+					span.StackTrace.RemoveRange(10, span.StackTrace.Count - 10);
+
+				return span;
+			});
+
+			Agent.AddFilter(error =>
+			{
+				if (error.Culprit == "SecretComponent")
+					return null;
+
+				if (error.Exception.Type == "SecretType")
+					error.Exception.Message = "[HIDDEN]";
+
+				Console.WriteLine(
+					$"Error printed in a filter - culprit: {error.Culprit}, id: {error.Id}, parentId: {error.ParentId}, traceId: {error.TraceId}, transactionId: {error.TransactionId}");
+				return error;
+			});
+		}
 
 		// ReSharper disable ArrangeMethodOrOperatorBody
 		public static void SampleSpanWithCustomContext()
@@ -207,13 +260,18 @@ namespace ApiSamples
 					{
 						span.Context.Db = new Database
 						{
-							Statement = "GET /_all/_search?q=tag:wow",
-							Type = Database.TypeElasticsearch,
-							Instance = "MyInstance"
+							Statement = "GET /_all/_search?q=tag:wow", Type = Database.TypeElasticsearch, Instance = "MyInstance"
 						};
 					});
 			});
 		}
 		// ReSharper restore ArrangeMethodOrOperatorBody
+
+#if NETCOREAPP3_0
+		/// <summary>
+		/// Test for https://github.com/elastic/apm-agent-dotnet/issues/884
+		/// </summary>
+		private IAsyncEnumerable<int> TestCompilation() => throw new Exception();
+#endif
 	}
 }

@@ -2,18 +2,15 @@
   <!-- Src Directory Build Properties -->
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
   <PropertyGroup>
-    <AssemblyVersion>1.2</AssemblyVersion>
-    <InformationalVersion>1.2</InformationalVersion>
-    <FileVersion>1.2</FileVersion>
+    <AssemblyVersion>1.6.1</AssemblyVersion>
+    <InformationalVersion>1.6.1</InformationalVersion>
+    <FileVersion>1.6.1</FileVersion>
     
-    <PackageVersion>1.2</PackageVersion>
+    <VersionPrefix>1.6.1</VersionPrefix>
     <Authors>Elastic and contributors</Authors>
-    <Copyright>2019 Elasticsearch BV</Copyright>
+    <Copyright>2020 Elasticsearch BV</Copyright>
     <PackageLicenseUrl>https://github.com/elastic/apm-agent-dotnet/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/elastic/apm-agent-dotnet</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/elastic/apm-agent-dotnet/master/build/nuget-icon.png</PackageIconUrl>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Condition=" '$(OS)' != 'Windows_NT' " Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="All"/>
-  </ItemGroup>
 </Project>
