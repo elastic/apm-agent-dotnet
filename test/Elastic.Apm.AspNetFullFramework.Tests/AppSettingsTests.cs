@@ -97,7 +97,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			UpdateAppSettings(config);
 
-			var reader = Elastic.Apm.Helpers.ConfigHelper.CreateReader(logger);
+			var reader = Elastic.Apm.AspNetFullFramework.Helper.ConfigHelper.CreateReader(logger);
 
 			Assert.NotNull(reader);
 

@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Web;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetFullFramework.Extensions;
+using Elastic.Apm.AspNetFullFramework.Helper;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;

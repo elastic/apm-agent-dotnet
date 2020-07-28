@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 
-namespace Elastic.Apm.Helpers
+namespace Elastic.Apm.AspNetFullFramework.Helper
 {
 	public class ConfigHelper
 	{
 		public static IConfigurationReader CreateReader(IApmLogger logger)
 		{
-			if(!string.IsNullOrEmpty(ConfigurationManager.AppSettings[ConfigConsts.KeyNames.ConfigurationReaderType]))
+			if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings[ConfigConsts.KeyNames.ConfigurationReaderType]))
 			{
 				try
 				{
