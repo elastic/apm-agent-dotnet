@@ -165,6 +165,7 @@ namespace Elastic.Apm.Config
 			public const string ExcludedNamespaces = "ElasticApm:ExcludedNamespaces";
 			public const string ApplicationNamespaces = "ElasticApm:ApplicationNamespaces";
 			public static string TransactionIgnoreUrls = "ElasticApm:TransactionIgnoreUrls";
+			//This setting is Full Framework only:
 			public const string ConfigurationReaderType = "ElasticApm:FullFrameworkConfigurationReaderType";
 		}
 
