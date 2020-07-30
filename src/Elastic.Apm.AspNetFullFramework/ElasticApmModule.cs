@@ -5,10 +5,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Configuration;
 using System.Reflection;
 using System.Web;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetFullFramework.Extensions;
+using Elastic.Apm.AspNetFullFramework.Helper;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -344,7 +346,9 @@ namespace Elastic.Apm.AspNetFullFramework
 			var rootLogger = BuildLogger();
 			var scopedLogger = rootLogger.Scoped(dbgInstanceName);
 
-			var agentComponents = new AgentComponents(rootLogger, new FullFrameworkConfigReader(rootLogger));
+			var reader = ConfigHelper.CreateReader(rootLogger) ?? new FullFrameworkConfigReader(rootLogger);
+
+			var agentComponents = new AgentComponents(rootLogger, reader);
 
 			var aspNetVersion = FindAspNetVersion(scopedLogger);
 
