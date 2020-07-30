@@ -11,6 +11,11 @@ namespace Elastic.Apm.AspNetFullFramework.Helper
 {
 	public class ConfigHelper
 	{
+		/// <summary>
+		/// Instantiate a custom configurationreader
+		/// </summary>
+		/// <param name="logger"></param>
+		/// <returns></returns>
 		public static IConfigurationReader CreateReader(IApmLogger logger)
 		{
 			if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings[ConfigConsts.KeyNames.ConfigurationReaderType]))
