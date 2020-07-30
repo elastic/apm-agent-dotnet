@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Config
@@ -132,7 +131,8 @@ namespace Elastic.Apm.Config
 			public const string ExcludedNamespaces = Prefix + "EXCLUDED_NAMESPACES";
 			public const string ApplicationNamespaces = Prefix + "APPLICATION_NAMESPACES";
 			public static string TransactionIgnoreUrls = Prefix + "TRANSACTION_IGNORE_URLS";
-			public const string ConfigurationReaderType = Prefix + "CONFIGURATION_READER_TYPE";
+			//This setting is Full Framework only:
+			public const string ConfigurationReaderType = Prefix + "FULL_FRAMEWORK_CONFIGURATION_READER_TYPE";
 		}
 
 		public static class KeyNames
@@ -165,7 +165,7 @@ namespace Elastic.Apm.Config
 			public const string ExcludedNamespaces = "ElasticApm:ExcludedNamespaces";
 			public const string ApplicationNamespaces = "ElasticApm:ApplicationNamespaces";
 			public static string TransactionIgnoreUrls = "ElasticApm:TransactionIgnoreUrls";
-			public const string ConfigurationReaderType = "ElasticApm:ConfigurationReaderType";
+			public const string ConfigurationReaderType = "ElasticApm:FullFrameworkConfigurationReaderType";
 		}
 
 		public static class SupportedValues
