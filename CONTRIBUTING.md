@@ -31,7 +31,7 @@ We aim to maintain high code quality, therefore every PR goes through the same r
 
 Generally, we require that you test any code you add or modify. This means you run all existing tests and in case you add new code you make sure it's covered by at least 1 test.
 
-No new feature will be merged without tests covering it.
+**No new feature will be merged without tests covering it.**
 
 Once your changes are ready to submit for review:
 
