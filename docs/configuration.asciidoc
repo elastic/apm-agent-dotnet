@@ -167,7 +167,7 @@ Use type name in  https://docs.microsoft.com/en-us/dotnet/api/system.type.assemb
 | None       | String
 |============
 
-NOTE: In case you set this setting both in the web.config file and as an environment variable then the web.config file has precedence.
+If this setting is set in both the web.config file and as an environment variable, then the web.config file has precedence.
 
 
 [[config-core]]
