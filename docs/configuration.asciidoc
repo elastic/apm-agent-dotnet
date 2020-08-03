@@ -142,9 +142,8 @@ Below is a sample `Web.config` configuration file for a ASP.NET application.
 </configuration>
 ----
 
-Additionally on ASP.NET you can also implement your own configuration reader. For this you need to implement the `IConfigurationReader` interface from the `Elastic.Apm.Config` namespace.
-
-Once you have your `IConfiguration` implementation you can use the <<config-full-framework-configuration-reader-type, FullFrameworkConfigurationReaderType>> setting.
+Additionally, on ASP.NET, you can implement your own configuration reader. To do this, implement the `IConfigurationReader` interface from the `Elastic.Apm.Config` namespace.
+Once implemented, you can make use of the <<config-full-framework-configuration-reader-type, `FullFrameworkConfigurationReaderType`>> setting.
 
 [float]
 [[config-full-framework-configuration-reader-type]]
