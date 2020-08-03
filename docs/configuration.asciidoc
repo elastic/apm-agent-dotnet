@@ -142,6 +142,33 @@ Below is a sample `Web.config` configuration file for a ASP.NET application.
 </configuration>
 ----
 
+Additionally, on ASP.NET, you can implement your own configuration reader. To do this, implement the `IConfigurationReader` interface from the `Elastic.Apm.Config` namespace.
+Once implemented, you can make use of the <<config-full-framework-configuration-reader-type, `FullFrameworkConfigurationReaderType`>> setting.
+
+[float]
+[[config-full-framework-configuration-reader-type]]
+==== `FullFrameworkConfigurationReaderType`
+
+This setting is .NET Full Framework only.
+
+With this setting you can point an agent to a custom `IConfigurationReader` implementation and the agent will read configuration from your `IConfigurationReader` implementation.
+
+Use type name in  https://docs.microsoft.com/en-us/dotnet/api/system.type.assemblyqualifiedname?view=netcore-3.1#System_Type_AssemblyQualifiedName[AssemblyQualifiedName] format (e.g: `MyClass, MyNamespace`).
+
+[options="header"]
+|============
+| Environment variable name                              | Web.config key
+| `ELASTIC_APM_FULL_FRAMEWORK_CONFIGURATION_READER_TYPE` | `ElasticApm:FullFrameworkConfigurationReaderType`
+|============
+
+[options="header"]
+|============
+| Default                          | Type
+| None       | String
+|============
+
+If this setting is set in both the web.config file and as an environment variable, then the web.config file has precedence.
+
 
 [[config-core]]
 === Core configuration options

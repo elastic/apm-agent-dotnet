@@ -2,7 +2,6 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 using System;
-using System.Web;
 using System.Collections.Generic;
 using System.Configuration;
 using Elastic.Apm.Config;
@@ -19,7 +18,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		private readonly IApmLogger _logger;
 		private const string ThisClassName = nameof(ConfigTestReader);
 
-		//public ConfigTestReader(IApmLogger logger, string defaultEnvironmentName, string dbgDerivedClassName) : base(logger, defaultEnvironmentName, dbgDerivedClassName) => _logger = logger?.Scoped("TestReader");
 
 		public ConfigTestReader(IApmLogger logger = null)
 			: base(logger, null, null) => _logger = logger?.Scoped(ThisClassName);
@@ -86,7 +84,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		}
 
 		[Fact]
-		public void ConfigReaderTest()
+		public void CreateConfigurationReaderThroughApSettings()
 		{
 			var logger = new ConsoleLogger(LogLevel.Information);
 			var config = new Dictionary<string, string>();
@@ -97,10 +95,24 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			UpdateAppSettings(config);
 
-			var reader = Elastic.Apm.AspNetFullFramework.Helper.ConfigHelper.CreateReader(logger);
+			var reader = Helper.ConfigHelper.CreateReader(logger);
 
 			Assert.NotNull(reader);
+		}
 
+		[Fact]
+		public void CreateConfigurationReaderThroughEnvVar()
+		{
+			var logger = new ConsoleLogger(LogLevel.Information);
+			var config = new Dictionary<string, string>();
+
+			var type = "Elastic.Apm.AspNetFullFramework.Tests.ConfigTestReader, Elastic.Apm.AspNetFullFramework.Tests";
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ConfigurationReaderType, type);
+
+			UpdateAppSettings(config);
+			var reader = Helper.ConfigHelper.CreateReader(logger);
+
+			Assert.NotNull(reader);
 		}
 	}
 }
