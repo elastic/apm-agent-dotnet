@@ -3,6 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,6 +22,10 @@ namespace SampleConsoleNetCoreApp
 		{
 			var response = await _apmAgent.Tracer.CaptureTransaction("Console .Net Core Example", "background", async () =>
 			{
+				// Make sure Agent.Tracer.CurrentTransaction is not null
+				var currentTransaction = Agent.Tracer.CurrentTransaction;
+				if (currentTransaction == null) throw new Exception("Agent.Tracer.CurrentTransaction returns null");
+
 				var httpClient = new HttpClient();
 				return await httpClient.GetAsync("https://elastic.co", cancellationToken);
 			});
