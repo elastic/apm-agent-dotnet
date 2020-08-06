@@ -64,7 +64,8 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void SystemCpu()
 		{
-			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
+			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+				return;
 
 			using var systemTotalCpuProvider = new SystemTotalCpuProvider(new NoopLogger());
 			Thread.Sleep(1000); //See https://github.com/elastic/apm-agent-dotnet/pull/264#issuecomment-499778288
@@ -106,7 +107,8 @@ namespace Elastic.Apm.Tests
 				var providerWithException = new MetricsProviderWithException();
 				mc.MetricsProviders.Add(providerWithException);
 
-				for (var i = 0; i < MetricsCollector.MaxTryWithoutSuccess; i++) mc.CollectAllMetrics();
+				for (var i = 0; i < MetricsCollector.MaxTryWithoutSuccess; i++)
+					mc.CollectAllMetrics();
 
 				providerWithException.NumberOfGetValueCalls.Should().Be(MetricsCollector.MaxTryWithoutSuccess);
 
@@ -121,7 +123,8 @@ namespace Elastic.Apm.Tests
 						$"Failed reading {providerWithException.DbgName} {MetricsCollector.MaxTryWithoutSuccess} consecutively - the agent won't try reading {providerWithException.DbgName} anymore");
 
 				//make sure GetValue() in MetricsProviderWithException is not called anymore:
-				for (var i = 0; i < 10; i++) mc.CollectAllMetrics();
+				for (var i = 0; i < 10; i++)
+					mc.CollectAllMetrics();
 
 				var logLineBeforeStage2 = testLogger.Lines.Count;
 				//no more logs, no more calls to GetValue():
@@ -234,7 +237,8 @@ namespace Elastic.Apm.Tests
 			metricsCollector.MetricsProviders.Add(metricsProviderMock.Object);
 
 			// Act
-			foreach (var _ in Enumerable.Range(0, iterations)) metricsCollector.CollectAllMetrics();
+			foreach (var _ in Enumerable.Range(0, iterations))
+				metricsCollector.CollectAllMetrics();
 
 			// Assert
 			mockPayloadSender.Metrics.Should().BeEmpty();
@@ -265,7 +269,8 @@ namespace Elastic.Apm.Tests
 			metricsCollector.MetricsProviders.Add(metricsProviderMock.Object);
 
 			// Act
-			foreach (var _ in Enumerable.Range(0, iterations)) metricsCollector.CollectAllMetrics();
+			foreach (var _ in Enumerable.Range(0, iterations))
+				metricsCollector.CollectAllMetrics();
 
 			// Assert
 			mockPayloadSender.Metrics.Count.Should().Be(iterations);
@@ -292,6 +297,7 @@ namespace Elastic.Apm.Tests
 				var containsValue = false;
 				var hasGenSize = false;
 
+
 				for (var j = 0; j < 1000; j++)
 				{
 					for (var i = 0; i < 300_000; i++)
@@ -308,7 +314,7 @@ namespace Elastic.Apm.Tests
 
 					GC.Collect();
 
-					var samples = gcMetricsProvider.GetSamples();
+					var samples = gcMetricsProvider.GetSamples()?.ToArray();
 
 					containsValue = samples != null && samples.Any();
 					hasGenSize = samples != null && samples
@@ -318,6 +324,7 @@ namespace Elastic.Apm.Tests
 
 					if (containsValue && hasGenSize)
 						break;
+
 				}
 
 				if (PlatformDetection.IsDotNetFullFramework)

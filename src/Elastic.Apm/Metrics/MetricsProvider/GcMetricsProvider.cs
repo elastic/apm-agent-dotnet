@@ -11,6 +11,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Microsoft.Diagnostics.Tracing;
+using Microsoft.Diagnostics.Tracing.Analysis;
 using Microsoft.Diagnostics.Tracing.Parsers;
 using Microsoft.Diagnostics.Tracing.Parsers.Clr;
 using Microsoft.Diagnostics.Tracing.Session;
@@ -29,12 +30,14 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private const string SessionNamePrefix = "EtwSessionForCLRElasticApm_";
 
 		internal const string GcCountName = "clr.gc.count";
+		internal const string GcTimeName = "clr.gc.time";
 		internal const string GcGen0SizeName = "clr.gc.gen0size";
 		internal const string GcGen1SizeName = "clr.gc.gen1size";
 		internal const string GcGen2SizeName = "clr.gc.gen2size";
 		internal const string GcGen3SizeName = "clr.gc.gen3size";
 
 		private readonly bool _collectGcCount;
+		private readonly bool _collectGcTime;
 		private readonly bool _collectGcGen0Size;
 		private readonly bool _collectGcGen1Size;
 		private readonly bool _collectGcGen2Size;
@@ -53,12 +56,14 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private ulong _gen1Size;
 		private ulong _gen2Size;
 		private ulong _gen3Size;
+		private double _gcTime;
 
 		public GcMetricsProvider(IApmLogger logger, bool collectGcCount = true, bool collectGcGen0Size = true, bool collectGcGen1Size = true,
-			bool collectGcGen2Size = true, bool collectGcGen3Size = true
+			bool collectGcGen2Size = true, bool collectGcGen3Size = true, bool collectGcTime = true
 		)
 		{
 			_collectGcCount = collectGcCount;
+			_collectGcTime = collectGcTime;
 			_collectGcGen0Size = collectGcGen0Size;
 			_collectGcGen1Size = collectGcGen1Size;
 			_collectGcGen2Size = collectGcGen2Size;
@@ -74,6 +79,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				{
 					try
 					{
+						_traceEventSession.Source.NeedLoadedDotNetRuntimes();
 						_traceEventSession.EnableProvider(
 							ClrTraceEventParser.ProviderGuid,
 							TraceEventLevel.Informational,
@@ -89,8 +95,48 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					_traceEventSession.Source.Clr.GCStop += ClrOnGCStop;
 					_traceEventSession.Source.Clr.GCHeapStats += ClrOnGCHeapStats;
 					_traceEventSession.Source.Process();
+
+
+					_traceEventSession.Source.AddCallbackOnProcessStart(process =>
+					{
+						process.AddCallbackOnDotNetRuntimeLoad(runtime =>
+						{
+							runtime.GCEnd += (traceProcess, gc) =>
+							{
+								if (traceProcess.ProcessID == Process.GetCurrentProcess().Id)
+								{
+									if (!_isMetricAlreadyCaptured)
+									{
+										lock (_lock)
+											_isMetricAlreadyCaptured = true;
+									}
+									_gcTime = gc.DurationMSec;
+									_gcCount = (uint)gc.Number;
+								}
+							};
+						});
+					});
+
+					_traceEventSession.Source.Clr.GCHeapStats += (a) =>
+					{
+						if (a.ProcessID == Process.GetCurrentProcess().Id)
+						{
+							if (!_isMetricAlreadyCaptured)
+							{
+								lock (_lock)
+									_isMetricAlreadyCaptured = true;
+							}
+							_gen0Size = (ulong)a.GenerationSize0;
+							_gen1Size = (ulong)a.GenerationSize1;
+							_gen2Size = (ulong)a.GenerationSize2;
+							_gen3Size = (ulong)a.GenerationSize3;
+						}
+					};
+
+					_traceEventSession.Source.Process();
 				});
 			}
+
 
 			if (PlatformDetection.IsDotNetCore || PlatformDetection.IsDotNet5)
 				_eventListener = new GcEventListener(this, logger);
@@ -103,7 +149,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		{
 			get
 			{
-				lock (_lock) return _isMetricAlreadyCaptured;
+				lock (_lock)
+					return _isMetricAlreadyCaptured;
 			}
 		}
 
@@ -115,12 +162,14 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		public IEnumerable<MetricSample> GetSamples()
 		{
-			if (_gcCount != 0 || _gen0Size != 0 || _gen2Size != 0 || _gen3Size != 0)
+			if (_gcCount != 0 || _gen0Size != 0 || _gen2Size != 0 || _gen3Size != 0 || _gcTime > 0)
 			{
 				var retVal = new List<MetricSample>(5);
 
 				if (_collectGcCount)
 					retVal.Add(new MetricSample(GcCountName, _gcCount));
+				if (_collectGcTime)
+					retVal.Add(new MetricSample(GcTimeName, _gcTime));
 				if (_collectGcGen0Size)
 					retVal.Add(new MetricSample(GcGen0SizeName, _gen0Size));
 				if (_collectGcGen1Size)
@@ -134,8 +183,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			}
 			_logger.Trace()
 				?.Log(
-					"Collected gc metrics values: gcCount: {gcCount}, gen0Size: {gen0Size},  gen1Size: {gen1Size}, gen2Size: {gen2Size}, gen1Size: {gen3Size}",
-					_gcCount, _gen0Size, _gen1Size, _gen2Size, _gen3Size);
+					"Collected gc metrics values: gcCount: {gcCount}, gen0Size: {gen0Size},  gen1Size: {gen1Size}, gen2Size: {gen2Size}, gen1Size: {gen3Size}, gcTime: {gcTime}",
+					_gcCount, _gen0Size, _gen1Size, _gen2Size, _gen3Size, _gcTime);
 			return null;
 		}
 
@@ -190,6 +239,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			private static readonly int keywordGC = 1;
 			private readonly GcMetricsProvider _gcMetricsProvider;
 			private readonly IApmLogger _logger;
+			private long _gcStartTime;
 
 			public GcEventListener(GcMetricsProvider gcMetricsProvider, IApmLogger logger)
 			{
@@ -205,7 +255,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			{
 				try
 				{
-					if (!eventSource.Name.Equals("Microsoft-Windows-DotNETRuntime")) return;
+					if (!eventSource.Name.Equals("Microsoft-Windows-DotNETRuntime"))
+						return;
 
 					EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)keywordGC);
 					_eventSourceDotNet = eventSource;
@@ -252,6 +303,9 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					}
 				}
 
+				if (eventData.EventName.Contains("GCStart"))
+					_gcStartTime = DateTime.UtcNow.Ticks;
+
 				// Collect GC count
 				if (eventData.EventName.Contains("GCEnd"))
 				{
@@ -263,12 +317,16 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 					_logger?.Trace()?.Log("OnEventWritten with GCEnd");
 
+					_gcMetricsProvider._gcTime = (DateTime.UtcNow.Ticks - _gcStartTime) / 10_000.0;
+
 					var indexOfCount = IndexOf("Count");
-					if (indexOfCount < 0) return;
+					if (indexOfCount < 0)
+						return;
 
 					var gcCount = eventData.Payload[indexOfCount];
 
-					if (!(gcCount is uint gcCountInt)) return;
+					if (!(gcCount is uint gcCountInt))
+						return;
 
 					_gcMetricsProvider._gcCount = gcCountInt;
 				}
@@ -276,7 +334,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				void SetValue(string name, ref ulong value)
 				{
 					var gen0SizeIndex = IndexOf(name);
-					if (gen0SizeIndex < 0) return;
+					if (gen0SizeIndex < 0)
+						return;
 
 					var gen0Size = eventData.Payload[gen0SizeIndex];
 					if (gen0Size is ulong gen0SizeLong)
