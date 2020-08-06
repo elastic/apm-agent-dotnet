@@ -18,6 +18,7 @@ using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -129,7 +130,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			{
 				foreach (var captureBodyContentTypes in captureBodyContentTypesVariants)
 				{
-					foreach (var isSampled in new[] { false, true})
+					foreach (var isSampled in new[] { false, true })
 					{
 						yield return new OptionsTestVariant
 						{
@@ -300,6 +301,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 				_taskForSampleApp = Program.CreateWebHostBuilder(null)
 					.ConfigureServices(services =>
 						{
+							services.Configure<KestrelServerOptions>(options =>
+							{
+								options.AllowSynchronousIO = true;
+							});
 							Startup.ConfigureServicesExceptMvc(services);
 
 							services.AddMvc()
