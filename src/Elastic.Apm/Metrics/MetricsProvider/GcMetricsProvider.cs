@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Tracing;
+using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
@@ -57,6 +58,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private ulong _gen2Size;
 		private ulong _gen3Size;
 		private double _gcTime;
+		private long _gcTimeInTicks;
 
 		public GcMetricsProvider(IApmLogger logger, bool collectGcCount = true, bool collectGcGen0Size = true, bool collectGcGen1Size = true,
 			bool collectGcGen2Size = true, bool collectGcGen3Size = true, bool collectGcTime = true
@@ -109,6 +111,10 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 									{
 										lock (_lock)
 											_isMetricAlreadyCaptured = true;
+
+										var durationInTicks = (long)(gc.DurationMSec * 10_000);
+										Interlocked.Exchange(ref _gcTimeInTicks, _gcTimeInTicks + durationInTicks);
+										_gcCount = (uint)gc.Number;
 									}
 									_gcTime = gc.DurationMSec;
 									_gcCount = (uint)gc.Number;
@@ -162,14 +168,17 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		public IEnumerable<MetricSample> GetSamples()
 		{
-			if (_gcCount != 0 || _gen0Size != 0 || _gen2Size != 0 || _gen3Size != 0 || _gcTime > 0)
+			var gcTimeInMs = Interlocked.Read(ref _gcTimeInTicks) / 10_000.0;
+			Interlocked.Exchange(ref _gcTimeInTicks, 0);
+
+			if (_gcCount != 0 || _gen0Size != 0 || _gen2Size != 0 || _gen3Size != 0 || gcTimeInMs > 0)
 			{
 				var retVal = new List<MetricSample>(5);
 
 				if (_collectGcCount)
 					retVal.Add(new MetricSample(GcCountName, _gcCount));
 				if (_collectGcTime)
-					retVal.Add(new MetricSample(GcTimeName, _gcTime));
+					retVal.Add(new MetricSample(GcTimeName, Math.Round(gcTimeInMs, 6)));
 				if (_collectGcGen0Size)
 					retVal.Add(new MetricSample(GcGen0SizeName, _gen0Size));
 				if (_collectGcGen1Size)
@@ -184,7 +193,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			_logger.Trace()
 				?.Log(
 					"Collected gc metrics values: gcCount: {gcCount}, gen0Size: {gen0Size},  gen1Size: {gen1Size}, gen2Size: {gen2Size}, gen1Size: {gen3Size}, gcTime: {gcTime}",
-					_gcCount, _gen0Size, _gen1Size, _gen2Size, _gen3Size, _gcTime);
+					_gcCount, _gen0Size, _gen1Size, _gen2Size, _gen3Size, gcTimeInMs);
 			return null;
 		}
 
@@ -304,9 +313,9 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				}
 
 				if (eventData.EventName.Contains("GCStart"))
-					_gcStartTime = DateTime.UtcNow.Ticks;
+					Interlocked.Exchange(ref _gcStartTime, DateTime.UtcNow.Ticks);
 
-				// Collect GC count
+				// Collect GC count and time
 				if (eventData.EventName.Contains("GCEnd"))
 				{
 					if (!_gcMetricsProvider._isMetricAlreadyCaptured)
@@ -317,7 +326,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 					_logger?.Trace()?.Log("OnEventWritten with GCEnd");
 
-					_gcMetricsProvider._gcTime = (DateTime.UtcNow.Ticks - _gcStartTime) / 10_000.0;
+					var durationInTicks = DateTime.UtcNow.Ticks - Interlocked.Read(ref _gcStartTime);
+					Interlocked.Exchange(ref _gcMetricsProvider._gcTimeInTicks, Interlocked.Read(ref _gcMetricsProvider._gcTimeInTicks) + durationInTicks);
 
 					var indexOfCount = IndexOf("Count");
 					if (indexOfCount < 0)
