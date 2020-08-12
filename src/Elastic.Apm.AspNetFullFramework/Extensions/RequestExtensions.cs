@@ -60,7 +60,7 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 		{
 			//[{"key":"Content-Type","value":"application/soap+xml; charset=utf-8"}]
 			var contentType = request.Headers.Get(ContentTypeHeaderName);
-			if (!contentType?.Contains(SoapAction12ContentType) != true)
+			if (contentType?.Contains(SoapAction12ContentType) != true)
 				return null;
 			if (!request.InputStream.CanSeek)
 				return null;
