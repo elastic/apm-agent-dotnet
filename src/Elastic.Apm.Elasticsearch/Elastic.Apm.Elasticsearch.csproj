@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyVersion>1.0.1</AssemblyVersion>
+    <InformationalVersion>1.0.1-beta1</InformationalVersion>
+    <FileVersion>1.0.1</FileVersion>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
+    <PackageVersion>1.0.1-beta1</PackageVersion>
+    <Authors>Elastic and contributors</Authors>
+    <PackageId>Elastic.Apm.Elasticsearch</PackageId>
+    <Copyright>2019 Elasticsearch BV</Copyright>
+    <PackageLicenseUrl>https://github.com/elastic/apm-agent-dotnet/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/elastic/apm-agent-dotnet</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/elastic/apm-agent-dotnet/master/build/nuget-icon.png</PackageIconUrl>
+    <Description>Elastic APM for the Elasticsearch .NET clients. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
+    <PackageTags>apm, monitoring, elastic, elasticapm, analytics, elasticsearch, NEST</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Elasticsearch.Net" Version="7.6.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+  </ItemGroup>
+</Project>

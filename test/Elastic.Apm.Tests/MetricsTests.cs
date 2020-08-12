@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,6 +11,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+#if !NETCOREAPP2_1
+using Elastic.Apm.Helpers;
+#endif
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
@@ -154,11 +161,11 @@ namespace Elastic.Apm.Tests
 		public void ProcStatParser(string procStatContent, long expectedIdle, long expectedTotal)
 		{
 			using var systemTotalCpuProvider = new TestSystemTotalCpuProvider(procStatContent);
-			var res = systemTotalCpuProvider.ReadProcStat();
+			var (success, idle, total) = systemTotalCpuProvider.ReadProcStat();
 
-			res.success.Should().BeTrue();
-			res.idle.Should().Be(expectedIdle);
-			res.total.Should().Be(expectedTotal);
+			success.Should().BeTrue();
+			idle.Should().Be(expectedIdle);
+			total.Should().Be(expectedTotal);
 		}
 
 		[Theory]
@@ -173,7 +180,11 @@ namespace Elastic.Apm.Tests
 
 			using var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
 			var metricsProviderMock = new Mock<IMetricsProvider>();
-			metricsProviderMock.Setup(x => x.GetSamples())
+
+			metricsProviderMock.Setup(x => x.IsMetricAlreadyCaptured).Returns(true);
+
+			metricsProviderMock
+				.Setup(x => x.GetSamples())
 				.Returns(() => samples);
 			metricsProviderMock.SetupProperty(x => x.ConsecutiveNumberOfFailedReads);
 
@@ -200,6 +211,9 @@ namespace Elastic.Apm.Tests
 			using var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
 
 			var metricsProviderMock = new Mock<IMetricsProvider>();
+
+			metricsProviderMock.Setup(x => x.IsMetricAlreadyCaptured).Returns(true);
+
 			metricsProviderMock.Setup(x => x.GetSamples())
 				.Returns(() => new List<MetricSample> { new MetricSample("key1", double.NaN), new MetricSample("key2", 0.95) });
 			metricsProviderMock.SetupProperty(x => x.ConsecutiveNumberOfFailedReads);
@@ -219,38 +233,62 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void CollectGcMetrics()
 		{
-			using (var gcMetricsProvider = new GcMetricsProvider(_logger))
+			var logger = new TestLogger(LogLevel.Trace);
+			using (var gcMetricsProvider = new GcMetricsProvider(logger))
 			{
+				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeFalse();
+
+#if !NETCOREAPP2_1
+				//EventSource Microsoft-Windows-DotNETRuntime is only 2.2+, no gc metrics on 2.1
+				//repeat the allocation multiple times and make sure at least 1 GetSamples() call returns value
+
+				// ReSharper disable once TooWideLocalVariableScope
+				// ReSharper disable once RedundantAssignment
 				var containsValue = false;
 
-				//repeat the allocation multiple times and make sure at least 1 GetSamples() call returns value
-				for (var j = 0; j < 100; j++)
+				for (var j = 0; j < 1000; j++)
 				{
-					Thread.Sleep(500);
 					for (var i = 0; i < 300_000; i++)
 					{
 						var _ = new int[100];
 					}
 
-					Thread.Sleep(1000);
+					GC.Collect();
 
 					for (var i = 0; i < 300_000; i++)
 					{
 						var _ = new int[100];
 					}
 
-					Thread.Sleep(1000);
+					GC.Collect();
 
 					var samples = gcMetricsProvider.GetSamples();
 
-					containsValue = samples?.Count() != 0;
+					containsValue = samples != null && samples.Count() != 0;
 
 					if (containsValue)
 						break;
 				}
-#if !NETCOREAPP2_1
-				//EventSource Microsoft-Windows-DotNETRuntime is only 2.2+, no gc metrics on 2.1
+
+				if (PlatformDetection.IsDotNetFullFramework)
+				{
+					if (logger.Lines.Where(n => n.Contains("TraceEventSession initialization failed - GC metrics won't be collected")).Any())
+					{
+						// If initialization fails, (e.g. because ETW session initalization fails) we don't assert
+						return;
+					}
+				}
+
+				if (PlatformDetection.IsDotNetCore)
+				{
+					if (!logger.Lines.Where(n => n.Contains("OnEventWritten with GC")).Any())
+					{
+						// If no OnWritten with a GC event was called then initialization failed -> we don't assert
+						return;
+					}
+				}
 				containsValue.Should().BeTrue();
+				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeTrue();
 #endif
 			}
 		}
@@ -268,12 +306,15 @@ namespace Elastic.Apm.Tests
 				NumberOfGetValueCalls++;
 				throw new Exception(ExceptionMessage);
 			}
+
+			public bool IsMetricAlreadyCaptured => true;
 		}
 
 		internal class TestSystemTotalCpuProvider : SystemTotalCpuProvider
 		{
 			public TestSystemTotalCpuProvider(string procStatContent) : base(new NoopLogger(),
-				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent)))) { }
+				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent))))
+			{ }
 		}
 	}
 }

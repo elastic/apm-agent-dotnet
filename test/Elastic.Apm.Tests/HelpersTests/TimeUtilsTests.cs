@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using Elastic.Apm.Helpers;
 using FluentAssertions;
@@ -23,8 +27,10 @@ namespace Elastic.Apm.Tests.HelpersTests
 			{ 5 * 24 * 60 * 60 * 1_000_000L, new DateTime(1970, 1, 6, 0, 0, 0, DateTimeKind.Utc) }
 		};
 
+#if NETCOREAPP
 		[Fact]
 		public void TimeUtilsUnixEpochDateTimeEqualsDateTimeUnixEpoch() => TimeUtils.UnixEpochDateTime.Should().Be(DateTime.UnixEpoch);
+#endif
 
 		[Theory]
 		[InlineData(0)]

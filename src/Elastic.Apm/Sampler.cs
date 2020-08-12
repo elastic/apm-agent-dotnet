@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Text;
 
@@ -14,7 +18,8 @@ namespace Elastic.Apm
 	/// </summary>
 	internal readonly struct Sampler
 	{
-		private readonly ulong _maxSampledUInt64;
+		private readonly long _higherBound;
+		private readonly long _lowerBound;
 		private readonly double _rate;
 
 		/// <summary>
@@ -32,14 +37,17 @@ namespace Elastic.Apm
 			{
 				case 0:
 					Constant = false;
-					_maxSampledUInt64 = 0;
+					_higherBound = 0;
+					_lowerBound = 0;
 					break;
 				case 1:
 					Constant = true;
-					_maxSampledUInt64 = ulong.MaxValue;
+					_higherBound = long.MaxValue;
+					_lowerBound = long.MinValue;
 					break;
 				default:
-					_maxSampledUInt64 = Convert.ToUInt64(ulong.MaxValue * rate);
+					_higherBound = (long) (long.MaxValue * rate);
+					_lowerBound = -_higherBound;
 					Constant = null;
 					break;
 			}
@@ -56,7 +64,11 @@ namespace Elastic.Apm
 		/// than 8.
 		/// </exception>
 		/// <returns>True if and only if the decision is to sample</returns>
-		internal bool DecideIfToSample(byte[] randomBytes) => Constant ?? BitConverter.ToUInt64(randomBytes, 0) <= _maxSampledUInt64;
+		internal bool DecideIfToSample(byte[] randomBytes)
+		{
+			var longVal = BitConverter.ToInt64(randomBytes, 0);
+			return Constant ?? longVal > _lowerBound && longVal < _higherBound;
+		}
 
 		internal static bool IsValidRate(double rate) => 0 <= rate && rate <= 1.0;
 

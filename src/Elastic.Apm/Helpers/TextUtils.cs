@@ -1,4 +1,8 @@
-﻿using System.IO;
+﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System.IO;
 using System.Text;
 
 namespace Elastic.Apm.Helpers
@@ -53,5 +57,14 @@ namespace Elastic.Apm.Helpers
 
 		internal static string Indent(string input, int indentationLevel) =>
 			Indent(input, Indentation.Repeat(indentationLevel));
+
+		internal static bool IsHex(char c) =>
+			( '0' <= c && c <= '9' ) ||
+			( 'a' <= c && c <= 'f' ) ||
+			( 'A' <= c && c <= 'F' );
+
+		internal static bool IsLatinLetter(char c) =>
+			( 'a' <= c && c <= 'z' ) ||
+			( 'A' <= c && c <= 'Z' );
 	}
 }

@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,8 +47,11 @@ namespace Elastic.Apm.Tests.BackendCommTests
 			TestArgsVariants(args => args.FlushInterval.HasValue && args.FlushInterval >= VeryLongFlushInterval).Select(t => new object[] { t });
 
 		[Fact]
-		public async Task SecretToken_test()
+		public async Task SecretToken_ShouldBeSent_WhenApiKeyIsNotSpecified()
 		{
+			// Arrange
+			const string secretToken = "SecretToken";
+
 			var isRequestFinished = new TaskCompletionSource<object>();
 
 			AuthenticationHeaderValue authHeader = null;
@@ -55,21 +62,57 @@ namespace Elastic.Apm.Tests.BackendCommTests
 				return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
 			});
 
-			const string secretToken = "SecretToken";
 			var noopLogger = new NoopLogger();
 			var mockConfig = new MockConfigSnapshot(_logger, secretToken: secretToken, maxBatchEventCount: "1");
 			var payloadSender = new PayloadSenderV2(_logger, mockConfig,
 				Service.GetDefaultService(mockConfig, noopLogger), new Api.System(), handler, /* dbgName: */ TestDisplayName);
 
+			// Act
 			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, mockConfig, payloadSender)))
 			{
 				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
 				await isRequestFinished.Task;
 			}
 
+			// Assert
 			authHeader.Should().NotBeNull();
 			authHeader.Scheme.Should().Be("Bearer");
 			authHeader.Parameter.Should().Be(secretToken);
+		}
+
+		[Fact]
+		public async Task ApiKey_ShouldBeSent_WhenApiKeyAndSecretTokenAreSpecified()
+		{
+			// Arrange
+			const string secretToken = "SecretToken";
+			const string apiKey = "ApiKey";
+
+			var isRequestFinished = new TaskCompletionSource<object>();
+
+			AuthenticationHeaderValue authHeader = null;
+			var handler = new MockHttpMessageHandler((r, c) =>
+			{
+				authHeader = r.Headers.Authorization;
+				isRequestFinished.SetResult(null);
+				return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+			});
+
+			var noopLogger = new NoopLogger();
+			var mockConfig = new MockConfigSnapshot(_logger, secretToken: secretToken, apiKey: apiKey, maxBatchEventCount: "1");
+			var payloadSender = new PayloadSenderV2(_logger, mockConfig,
+				Service.GetDefaultService(mockConfig, noopLogger), new Api.System(), handler, /* dbgName: */ TestDisplayName);
+
+			// Act
+			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase, mockConfig, payloadSender)))
+			{
+				agent.PayloadSender.QueueTransaction(new Transaction(agent, "TestName", "TestType"));
+				await isRequestFinished.Task;
+			}
+
+			// Assert
+			authHeader.Should().NotBeNull();
+			authHeader.Scheme.Should().Be("ApiKey");
+			authHeader.Parameter.Should().Be(apiKey);
 		}
 
 		[Fact]

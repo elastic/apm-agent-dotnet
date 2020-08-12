@@ -1,4 +1,9 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
+using System.Diagnostics;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
@@ -67,6 +72,9 @@ namespace Elastic.Apm.Tests
 
 			total.Repeat(i =>
 			{
+				// reset current activity, otherwise all transactions share the same traceid which influences the sampling decision
+				Activity.Current = null;
+
 				var transaction = new Transaction(noopLogger, "test transaction name", "test transaction type", sampler,
 					/* distributedTracingData: */ null, noopPayloadSender, configurationReader, currentExecutionSegmentsContainer);
 				if (transaction.IsSampled) ++sampledCount;

@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -41,7 +45,7 @@ namespace Elastic.Apm.Tests
 			{ "k=,=", new Dictionary<string, string> { { "k", "" }, { "", "" } } },
 
 			// key and value are empty strings in the middle pair
-			{ "key1=value1,=,key3=value3", new Dictionary<string, string> { { "key1", "value1" }, { "", "" }, { "key3", "value3" } } },
+			{ "key1=value1,=,key3=value3", new Dictionary<string, string> { { "key1", "value1" }, { "", "" }, { "key3", "value3" } } }
 		};
 
 		[Fact]
@@ -187,6 +191,14 @@ namespace Elastic.Apm.Tests
 			var secretToken = "secretToken";
 			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(secretToken: secretToken)));
 			agent.ConfigurationReader.SecretToken.Should().Be(secretToken);
+		}
+
+		[Fact]
+		public void ApiKeySimpleTest()
+		{
+			var apiKey = "apiKey";
+			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(apiKey: apiKey)));
+			agent.ConfigurationReader.ApiKey.Should().Be(apiKey);
 		}
 
 		[Fact]
@@ -754,7 +766,6 @@ namespace Elastic.Apm.Tests
 		}
 
 
-
 		/// <summary>
 		/// Disables CPU metrics and makes sure that remaining metrics are still captured
 		/// </summary>
@@ -796,6 +807,85 @@ namespace Elastic.Apm.Tests
 		{
 			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(verifyServerCert: verifyServerCert)));
 			agent.ConfigurationReader.VerifyServerCert.Should().Be(expected);
+		}
+
+		/// <summary>
+		/// Sets the TransactionIgnoreUrls setting and makes sure the agent config contains those
+		/// </summary>
+		[Fact]
+		public void TransactionIgnoreUrlsTestWithCustomSettingNoSpace()
+		{
+			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(transactionIgnoreUrls: "*index,*myPageToIgnore*")));
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "INDEX").Should().BeTrue();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "/home/INDEX").Should().BeTrue();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "INdEX").Should().BeTrue();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "index").Should().BeTrue();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "myPageToIgnore").Should().BeTrue();
+
+			// default list is not applied when TransactionIgnoreUrls is set
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "myJsScripts.js").Should().BeFalse();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "bootstrap.css").Should().BeFalse();
+		}
+
+		/// <summary>
+		/// Sets the TransactionIgnoreUrls setting and makes sure the agent config contains those.
+		/// It uses a space in the list.
+		/// </summary>
+		[Fact]
+		public void TransactionIgnoreUrlsTestWithCustomSettingWithSpace()
+		{
+			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(transactionIgnoreUrls: "*index, *myPageToIgnore*")));
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "INDEX").Should().BeTrue();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "/home/INDEX").Should().BeTrue();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "INdEX").Should().BeTrue();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "index").Should().BeTrue();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "myPageToIgnore").Should().BeTrue();
+
+			// default list is not applied when TransactionIgnoreUrls is set
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "myJsScripts.js").Should().BeFalse();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "bootstrap.css").Should().BeFalse();
+		}
+
+		/// <summary>
+		/// Tests case sensitive TransactionIgnoreUrls
+		/// </summary>
+		[Fact]
+		public void TransactionIgnoreUrlsTestWithCustomCaseSensitiveSetting()
+		{
+			var agent = new ApmAgent(
+				new TestAgentComponents(config: new MockConfigSnapshot(transactionIgnoreUrls: "(?-i)*index,(?-i)*myPageToIgnore*")));
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "index").Should().BeTrue();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "INDEX").Should().BeFalse();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "/home/INDEX").Should().BeFalse();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "INdEX").Should().BeFalse();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "myPageToIgnore").Should().BeTrue();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "myPagetoignore").Should().BeFalse();
+
+			// default list is not applied when TransactionIgnoreUrls is set
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "myJsScripts.js").Should().BeFalse();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "bootstrap.css").Should().BeFalse();
+		}
+
+		/// <summary>
+		/// Applies the default agent settings and makes sure that *js and *css are filtered out, but
+		/// some other random urls are not ignored.
+		/// </summary>
+		[Fact]
+		public void TransactionIgnoreUrlsTestWithDefaultSetting()
+		{
+			// use default settings
+			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot()));
+
+			// some random pages should be captured
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "INDEX").Should().BeFalse();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "/home/INDEX").Should().BeFalse();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "INdEX").Should().BeFalse();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "index").Should().BeFalse();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "myRandomPage").Should().BeFalse();
+
+			// *js and *css is by default ignored
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "myJsScripts.js").Should().BeTrue();
+			WildcardMatcher.IsAnyMatch(agent.ConfigurationReader.TransactionIgnoreUrls, "bootstrap.css").Should().BeTrue();
 		}
 
 		private static double MetricsIntervalTestCommon(string configValue)

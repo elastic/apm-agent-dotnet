@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System;
 using System.Collections.Generic;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -50,6 +54,9 @@ namespace Elastic.Apm.Config
 		public IReadOnlyDictionary<string, string> GlobalLabels =>
 			ParseGlobalLabels(Read(ConfigConsts.KeyNames.GlobalLabels, ConfigConsts.EnvVarNames.GlobalLabels));
 
+		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
+			ParseTransactionIgnoreUrls(Read(ConfigConsts.KeyNames.TransactionIgnoreUrls, ConfigConsts.EnvVarNames.TransactionIgnoreUrls));
+
 		public virtual LogLevel LogLevel => ParseLogLevel(Read(ConfigConsts.KeyNames.LogLevel, ConfigConsts.EnvVarNames.LogLevel));
 
 		public virtual int MaxBatchEventCount =>
@@ -65,6 +72,7 @@ namespace Elastic.Apm.Config
 			ParseSanitizeFieldNames(Read(ConfigConsts.KeyNames.SanitizeFieldNames, ConfigConsts.EnvVarNames.SanitizeFieldNames));
 
 		public virtual string SecretToken => ParseSecretToken(Read(ConfigConsts.KeyNames.SecretToken, ConfigConsts.EnvVarNames.SecretToken));
+		public string ApiKey => ParseApiKey(Read(ConfigConsts.KeyNames.ApiKey, ConfigConsts.EnvVarNames.ApiKey));
 
 		public virtual IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Read(ConfigConsts.KeyNames.ServerUrls, ConfigConsts.EnvVarNames.ServerUrls));
 
@@ -90,5 +98,11 @@ namespace Elastic.Apm.Config
 
 		public virtual bool VerifyServerCert =>
 			ParseVerifyServerCert(Read(ConfigConsts.KeyNames.VerifyServerCert, ConfigConsts.EnvVarNames.VerifyServerCert));
+		
+		public IReadOnlyCollection<string> ExcludedNamespaces => 
+			ParseExcludedNamespaces(Read(ConfigConsts.KeyNames.ExcludedNamespaces, ConfigConsts.EnvVarNames.ExcludedNamespaces));
+
+		public IReadOnlyCollection<string> ApplicationNamespaces => 
+			ParseExcludedNamespaces(Read(ConfigConsts.KeyNames.ApplicationNamespaces, ConfigConsts.EnvVarNames.ApplicationNamespaces));
 	}
 }

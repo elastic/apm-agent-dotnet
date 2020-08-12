@@ -21,6 +21,81 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+
+[[release-notes-1.6.1]]
+==== 1.6.1
+
+[float]
+===== Bug fixes
+- Service map: missing connection between .NET services ({pull}909[#909])
+
+[[release-notes-1.6.0]]
+==== 1.6.0
+
+[float]
+===== Features
+- Elasticsearch client instrumentation {pull}329[#329]
+- Introducing `Elastic.Apm.Extensions.Hosting` package with an extension method on `IHostBuilder` {pull}537[#537]
+- Stack trace improvements: async call stack demystification ({pull}847[#847]) and showing frames from user code for outgoing HTTP calls ({pull}845[#845]) 
+- Making fields on `IError` public {pull}847[#847]
+- Service map improvements: {pull}893[#893]
+
+[float]
+===== Bug fixes
+- Missing traces from the Kibana traces list due to setting `Transaction.ParentId` to an `Activity` {pull}888[#888]
+- Exception around runtime detection {pull}859[#859]
+- Missing outgoing HTTP calls in .NET Framework applications and causing memory issues {pull}896[#896]
+
+[[release-notes-1.5.1]]
+==== 1.5.1
+
+[float]
+===== Bug fixes
+- Memory issue in SqlEventListener {pull}851[#851]
+
+[[release-notes-1.5.0]]
+==== 1.5.0
+
+[float]
+===== Features
+- Auto instrumentation for `SqlClient` (<<setup-sqlclient,documentation>>)
+- Introducing Filter API {pull}792[#792] (<<filter-api,documentation>>)
+- Auto-detect culprit for exceptions {pull}740[#740]
+- New config settings: `ExcludedNamespaces`, `ApplicationNamespaces` (<<config-all-options-summary,documentation>>)
+- Keep `Activity.Current.TraceId` in sync with the Trace ID used by the agent {pull}800[#800]
+- Report Kubernetes system metadata {pull}741[#741]
+
+[float]
+===== Bug fixes
+- Database connection string parsing issue with Oracle {pull}795[#795]
+
+[[release-notes-1.4.0]]
+==== 1.4.0
+
+[float]
+===== Features
+- Introducing `ITransaction.EnsureParentId()` to integrate with RUM in dynamically loaded HTML pages (including page loads in ASP.NET Core) {pull}771[#771]
+- New config setting: `ApiKey` {pull}733[#733]
+
+[float]
+===== Bug fixes
+- Memory issue in .NET Full Framework with default metrics turned on {pull}750[#750]
+- Parsing for Oracle connection strings {pull}749[#749]
+- `StackOverflowException` when using the `Elastic.Apm.SerilogEnricher` package and the log level is set to `Verbose` {pull}753[#753]
+
+[float]
+===== Breaking changes
+- We have some changes that are technically breaking changes. We made some helper classes internal that were never meant to be public. These are: `Elastic.Apm.Helpers.AgentTimeInstant`,  `Elastic.Apm.Helpers.ContractExtensions`,  `Elastic.Apm.Helpers.ObjectExtensions`, `Elastic.Apm.Helpers.ToStringBuilder`. None of these classes were documented or mentioned as part of the Public Agent API. We expect no usage of these classes outside the agent.
+
+[[release-notes-1.3.1]]
+==== 1.3.1
+
+[float]
+===== Bug fixes
+- Fix log spamming issues  {pull}736[#736], {pull}738[#738]
+- Fix turning HTTP 415 responses in ASP.NET Core to HTTP 500 when request body capturing is active {pull}739[#739]
+- Fix disabling GC metrics collection in case no GC is triggered during the first "5*MetricsInterval" of the process {pull}745[#745]
+
 [[release-notes-1.3.0]]
 ==== 1.3.0
 

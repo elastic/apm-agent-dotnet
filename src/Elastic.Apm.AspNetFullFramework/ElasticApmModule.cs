@@ -1,12 +1,16 @@
-﻿using System;
+﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Reflection;
 using System.Web;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetFullFramework.Extensions;
+using Elastic.Apm.AspNetFullFramework.Helper;
 using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
@@ -103,6 +107,12 @@ namespace Elastic.Apm.AspNetFullFramework
 			var httpApp = (HttpApplication)eventSender;
 			var httpRequest = httpApp.Context.Request;
 
+			if (WildcardMatcher.IsAnyMatch(Agent.Instance.ConfigurationReader.TransactionIgnoreUrls, httpRequest.Path))
+			{
+				_logger.Debug()?.Log("Request ignored based on TransactionIgnoreUrls, url: {urlPath}", httpRequest.Path);
+				return;
+			}
+
 			var transactionName = $"{httpRequest.HttpMethod} {httpRequest.Path}";
 
 			var soapAction = httpRequest.ExtractSoapAction(_logger);
@@ -115,15 +125,16 @@ namespace Elastic.Apm.AspNetFullFramework
 					?.Log(
 						"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData} - continuing trace",
 						DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed, distributedTracingData);
-
-				_currentTransaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, distributedTracingData);
+				// we set ignoreActivity to true to avoid the HttpContext W3C DiagnosticSource issue (see https://github.com/elastic/apm-agent-dotnet/issues/867#issuecomment-650170150)
+				_currentTransaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, distributedTracingData, true);
 			}
 			else
 			{
 				_logger.Debug()
 					?.Log("Incoming request doesn't have valid incoming distributed tracing data - starting trace with new trace ID");
 
-				_currentTransaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest);
+				// we set ignoreActivity to true to avoid the HttpContext W3C DiagnosticSource issue(see https://github.com/elastic/apm-agent-dotnet/issues/867#issuecomment-650170150)
+				_currentTransaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, ignoreActivity: true);
 			}
 
 			if (_currentTransaction.IsSampled) FillSampledTransactionContextRequest(httpRequest, _currentTransaction);
@@ -327,12 +338,16 @@ namespace Elastic.Apm.AspNetFullFramework
 				Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
 			}) ?? false;
 
+		private static IApmLogger BuildLogger() => AgentDependencies.Logger ?? ConsoleLogger.Instance;
+
 		private static AgentComponents BuildAgentComponents(string dbgInstanceName)
 		{
-			var rootLogger = AgentDependencies.Logger ?? ConsoleLogger.Instance;
+			var rootLogger = BuildLogger();
 			var scopedLogger = rootLogger.Scoped(dbgInstanceName);
 
-			var agentComponents = new AgentComponents(rootLogger, new FullFrameworkConfigReader(rootLogger));
+			var reader = ConfigHelper.CreateReader(rootLogger) ?? new FullFrameworkConfigReader(rootLogger);
+
+			var agentComponents = new AgentComponents(rootLogger, reader);
 
 			var aspNetVersion = FindAspNetVersion(scopedLogger);
 
@@ -351,7 +366,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (Agent.InstanceAlreadyCreatedException ex)
 			{
-				Agent.Instance.Logger.Scoped(dbgInstanceName)
+				BuildLogger().Scoped(dbgInstanceName)
 					.Error()
 					?.LogException(ex, "The Elastic APM agent was already initialized before call to"
 						+ $" {nameof(ElasticApmModule)}.{nameof(Init)} - {nameof(ElasticApmModule)} will use existing instance"

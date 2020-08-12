@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Reflection;
 using BenchmarkDotNet.Attributes;
@@ -10,15 +14,15 @@ namespace Elastic.Apm.PerfTests
 	{
 		private const string CommandPropertyName = "Command";
 		private const string CommandTextPropertyName = "CommandText";
-
-		private object _object;
 		private readonly PropertyFetcher _commandFetcher = new PropertyFetcher(CommandPropertyName);
 		private readonly PropertyFetcher _commandTextFetcher = new PropertyFetcher(CommandTextPropertyName);
 
-		private CascadePropertyFetcher _commandTextCascadeFetcher;
-
 		private MethodInfo _commandPropertyInfo;
+
+		private CascadePropertyFetcher _commandTextCascadeFetcher;
 		private MethodInfo _commandTextPropertyInfo;
+
+		private object _object;
 
 
 		[GlobalSetup]

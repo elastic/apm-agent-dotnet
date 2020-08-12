@@ -1,4 +1,9 @@
-﻿using System.Reflection;
+﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System;
+using System.Reflection;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -44,7 +49,7 @@ namespace Elastic.Apm.Api
 		internal static Service GetDefaultService(IConfigurationReader configurationReader, IApmLogger loggerArg)
 		{
 			IApmLogger logger = loggerArg.Scoped(nameof(Service));
-			return new Service
+			var service = new Service
 			{
 				Name = configurationReader.ServiceName,
 				Version = configurationReader.ServiceVersion,
@@ -53,10 +58,21 @@ namespace Elastic.Apm.Api
 					Name = Consts.AgentName,
 					Version = typeof(Agent).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion
 				},
-				Runtime = PlatformDetection.GetServiceRuntime(logger),
 				Environment = configurationReader.Environment,
 				Node = new Node { ConfiguredName = configurationReader.ServiceNodeName }
 			};
+
+			//see https://github.com/elastic/apm-agent-dotnet/issues/859
+			try
+			{
+				service.Runtime = PlatformDetection.GetServiceRuntime(logger);
+			}
+			catch (Exception e)
+			{
+				logger.Warning()?.LogException(e, "Failed detecting runtime - no runtime name and version will be reported");
+			}
+
+			return service;
 		}
 
 		public class AgentC
@@ -100,6 +116,8 @@ namespace Elastic.Apm.Api
 		internal const string DotNetCoreName = ".NET Core";
 
 		internal const string DotNetFullFrameworkName = ".NET Framework";
+
+		internal const string MonoName = "Mono";
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }

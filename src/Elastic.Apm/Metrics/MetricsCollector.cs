@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -118,7 +122,7 @@ namespace Elastic.Apm.Metrics
 			}
 		}
 
-		internal void CollectAllMetricsImpl()
+		private void CollectAllMetricsImpl()
 		{
 			_logger.Trace()?.Log("CollectAllMetrics started");
 
@@ -157,6 +161,14 @@ namespace Elastic.Apm.Metrics
 			{
 				if (metricsProvider.ConsecutiveNumberOfFailedReads == MaxTryWithoutSuccess)
 					continue;
+
+				if (!metricsProvider.IsMetricAlreadyCaptured)
+				{
+					_logger.Trace()
+						?.Log("Skipping {MetricsProviderName} - {propertyName} indicated false", metricsProvider.DbgName,
+							nameof(IMetricsProvider.IsMetricAlreadyCaptured));
+					continue;
+				}
 
 				try
 				{

@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Data;
 using Elastic.Apm.Api;
@@ -20,9 +24,11 @@ namespace Elastic.Apm.Model
 
 		internal DbSpanCommon(IApmLogger logger) => _dbConnectionStringParser = new DbConnectionStringParser(logger);
 
-		internal Span StartSpan(IApmAgent agent, IDbCommand dbCommand) =>
-			(Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(agent).StartSpan(dbCommand.CommandText.Replace(Environment.NewLine, " ")
-				, ApiConstants.TypeDb);
+		internal Span StartSpan(IApmAgent agent, IDbCommand dbCommand, InstrumentationFlag instrumentationFlag, string subType = null)
+		{
+			var spanName = dbCommand.CommandText.Replace(Environment.NewLine, " ");
+			return ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(agent, spanName, ApiConstants.TypeDb, subType, instrumentationFlag);
+		}
 
 		internal void EndSpan(Span span, IDbCommand dbCommand, TimeSpan? duration = null)
 		{
@@ -97,11 +103,12 @@ namespace Elastic.Apm.Model
 				_ => dbCommandType.ToString()
 			};
 
-		private Destination GetDestination(string dbConnectionString, bool isEmbeddedDb, int? defaultPort)
+		internal Destination GetDestination(string dbConnectionString, bool isEmbeddedDb, int? defaultPort)
 		{
 			if (isEmbeddedDb || dbConnectionString == null) return null;
 
 			var destination = _dbConnectionStringParser.ExtractDestination(dbConnectionString);
+			if (destination == null ) return null;
 
 			if (!destination.Port.HasValue) destination.Port = defaultPort;
 

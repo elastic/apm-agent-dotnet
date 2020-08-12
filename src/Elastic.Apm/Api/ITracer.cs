@@ -1,5 +1,10 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Elastic.Apm.Api
 {
@@ -192,7 +197,10 @@ namespace Elastic.Apm.Api
 		/// automatically part of a distributed trace.
 		/// Use <see cref="ISpan.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller side.
 		/// </param>
+		/// <param name="tyignoreActivitype">
+		/// The agent by default does a best effort to keep <see cref="Activity.TraceId"/> in sync with the trace id which is used in Elasitc APM.
+		/// By setting <paramref name="ignoreActivity"/> to false you can turn off this functionality. </param>
 		/// <returns>The transaction that is created based on the parameters. This transaction is already active.</returns>
-		ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null);
+		ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null, bool ignoreActivity = false);
 	}
 }

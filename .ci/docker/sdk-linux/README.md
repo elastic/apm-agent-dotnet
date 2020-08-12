@@ -21,6 +21,7 @@ docker run --rm -ti \
 docker run --rm -ti \
        --name sdk \
        -v $(pwd):/src \
+       -v /var/run/docker.sock:/var/run/docker.sock \
        -w /src \
        sdk:latest \
        /bin/bash -c '.ci/linux/test.sh'

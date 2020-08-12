@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,10 +24,12 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private readonly bool _collectTotalMemory;
 
 		public FreeAndTotalMemoryProvider(bool collectFreeMemory, bool collectTotalMemory) =>
-			(_collectFreeMemory, _collectTotalMemory) = (collectFreeMemory, collectTotalMemory);
+			(_collectFreeMemory, _collectTotalMemory, IsMetricAlreadyCaptured) = (collectFreeMemory, collectTotalMemory, true);
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "total and free memory";
+
+		public bool IsMetricAlreadyCaptured { get; }
 
 		public IEnumerable<MetricSample> GetSamples()
 		{
