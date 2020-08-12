@@ -3,9 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Web;
 using System.Xml;
 using Elastic.Apm.Logging;
@@ -43,7 +41,6 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 		/// Extracts the soap action from the header if exists only with Soap 1.1
 		/// </summary>
 		/// <param name="request">The request.</param>
-		/// <param name="logger">The logger.</param>
 		private static string GetSoap11Action(HttpRequest request)
 		{
 			var soapActionWithNamespace = request.Headers.Get(SoapActionHeaderName);
@@ -59,12 +56,11 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 		/// Lightweight parser that extracts the soap action from the xml body only with Soap 1.2
 		/// </summary>
 		/// <param name="request">The request.</param>
-		/// <param name="logger">The logger.</param>
 		private static string GetSoap12Action(HttpRequest request)
 		{
 			//[{"key":"Content-Type","value":"application/soap+xml; charset=utf-8"}]
 			var contentType = request.Headers.Get(ContentTypeHeaderName);
-			if (contentType?.Contains(SoapAction12ContentType) != true)
+			if (!contentType?.Contains(SoapAction12ContentType) != true)
 				return null;
 			if (!request.InputStream.CanSeek)
 				return null;
@@ -102,12 +98,14 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 					reader.Skip();
 
 				if (reader.LocalName == "Body")
+				{
 					if (reader.Read())
 						return reader.LocalName;
+				}
 
 				return null;
 			}
-			catch (XmlException ex)
+			catch (XmlException)
 			{
 				//previous code will skip some errors, but some others can raise an exception
 				//for instance undeclared namespaces, typographical quotes, etc...
