@@ -7,13 +7,19 @@ using System.Text;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.DockerTests
 {
 	public class ContainerIdCalculationTests
 	{
+		private readonly ITestOutputHelper _xUnitOutputHelper;
+
+		public ContainerIdCalculationTests(ITestOutputHelper xUnitOutputHelper) => _xUnitOutputHelper = xUnitOutputHelper;
+
 		[Theory]
 		[InlineData("13:name=systemd:/docker/ae8d0ef9c8757a42d01e994b0ffe0e93e26ece256f68cd850467836c83202367",
 			"ae8d0ef9c8757a42d01e994b0ffe0e93e26ece256f68cd850467836c83202367")]
@@ -38,10 +44,8 @@ namespace Elastic.Apm.DockerTests
 			systemInfo.Container.Should().NotBeNull();
 			systemInfo.Container.Id.Should().Be(expectedContainerId);
 
-			System.Console.Error.WriteLine($"systemInfo.Container.Id: {systemInfo.Container.Id}");
-			System.Console.Out.WriteLine($"systemInfo.Container.Id: {systemInfo.Container.Id}");
-			System.Console.Error.WriteLine($"systemInfo.Kubernetes.Pod.Uid: {systemInfo.Kubernetes.Pod.Uid}");
-			System.Console.Out.WriteLine($"systemInfo.Kubernetes.Pod.Uid: {systemInfo.Kubernetes.Pod.Uid}");
+			_xUnitOutputHelper.WriteLine($"ContainerIdCalculationTests.TestCGroupContent: systemInfo.Container.Id: {systemInfo.Container.Id}");
+			_xUnitOutputHelper.WriteLine($"ContainerIdCalculationTests.TestCGroupContent: systemInfo.Kubernetes.Pod.Uid: {systemInfo.Kubernetes.Pod.Uid}");
 		}
 
 		[Fact]
