@@ -37,6 +37,11 @@ namespace Elastic.Apm.DockerTests
 			systemInfo.Should().NotBeNull();
 			systemInfo.Container.Should().NotBeNull();
 			systemInfo.Container.Id.Should().Be(expectedContainerId);
+
+			System.Console.Error.WriteLine($"systemInfo.Container.Id: {systemInfo.Container.Id}");
+			System.Console.Out.WriteLine($"systemInfo.Container.Id: {systemInfo.Container.Id}");
+			System.Console.Error.WriteLine($"systemInfo.Kubernetes.Pod.Uid: {systemInfo.Kubernetes.Pod.Uid}");
+			System.Console.Out.WriteLine($"systemInfo.Kubernetes.Pod.Uid: {systemInfo.Kubernetes.Pod.Uid}");
 		}
 
 		[Fact]
