@@ -106,8 +106,10 @@ namespace Elastic.Apm.Helpers
 			}
 			catch (Exception e)
 			{
-				logger?.Warning()?.LogException(e, "Failed extracting stack trace from exception for {ApmContext}. Exception to extract from: {ExceptionToExtractFrom}.",
-					dbgCapturingFor, exception);
+				logger?.Warning()?.Log("Failed extracting stack trace from exception for {ApmContext}."
+					+ " Exception for failure to extract: {ExceptionForFailureToExtract}."
+					+ " Exception to extract from: {ExceptionToExtractFrom}.",
+					dbgCapturingFor, e, exception);
 			}
 
 			return null;
