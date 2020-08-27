@@ -19,12 +19,12 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 		public IDisposable Subscribe(IApmAgent agent)
 		{
 			var retVal = new CompositeDisposable();
-			var subscriber = new DiagnosticInitializer(agent.Logger, new[] { new AspNetCoreErrorDiagnosticListener(agent) });
-			retVal.Add(subscriber);
+			//var subscriber = new DiagnosticInitializer(agent.Logger, new[] { new AspNetCoreErrorDiagnosticListener(agent) });
+			//retVal.Add(subscriber);
 
-			retVal.Add(System.Diagnostics.DiagnosticListener
-				.AllListeners
-				.Subscribe(subscriber));
+			//retVal.Add(System.Diagnostics.DiagnosticListener
+			//	.AllListeners
+			//	.Subscribe(subscriber));
 
 			return retVal;
 		}

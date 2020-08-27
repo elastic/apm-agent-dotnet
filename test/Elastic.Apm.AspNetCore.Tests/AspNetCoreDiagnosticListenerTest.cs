@@ -5,6 +5,7 @@
 using System;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.Config;
@@ -34,6 +35,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task TestErrorInAspNetCore()
 		{
+			//TODO: diagnostic source ending the request seems to finish later than the request itself
 			using (var agent = new ApmAgent(new TestAgentComponents()))
 			{
 				var capturedPayload = agent.PayloadSender as MockPayloadSender;

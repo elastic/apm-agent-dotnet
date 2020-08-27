@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using Elastic.Apm.AspNetCore.Extensions;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Helpers;
@@ -38,7 +39,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 			switch (kv.Key)
 			{
-				case "Microsoft.AspNetCore.Hosting.HttpRequestIn.Start":
+				case "Microsoft.AspNetCore.Hosting.HttpRequestIn.Start": //"Microsoft.AspNetCore.Hosting.HttpRequestIn.Start":
 					if (_httpContextPropertyFetcher.Fetch(kv.Value) is HttpContext httpContextStart)
 					{
 						var transaction = WebRequestTransactionCreator.StartTransactionAsync(httpContextStart, _logger, _agent.TracerInternal);
@@ -46,21 +47,27 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 						_processingRequests[httpContextStart] = transaction;
 					}
 					break;
-				case "Microsoft.AspNetCore.Hosting.HttpRequestIn.Stop":
+				case "Microsoft.AspNetCore.Hosting.HttpRequestIn.Stop": //"Microsoft.AspNetCore.Hosting.EndRequest": //"Microsoft.AspNetCore.Hosting.HttpRequestIn.Stop":
 					if (_httpContextPropertyFetcher.Fetch(kv.Value) is HttpContext httpContextStop)
 					{
 						if (_processingRequests.TryRemove(httpContextStop, out var transaction))
 						{
-							if (transaction != null && transaction.IsContextCreated && httpContextStop.Response.StatusCode >= 400
-								&& transaction.Context?.Request?.Body is string body
-								&& (string.IsNullOrEmpty(body) || body == Apm.Consts.Redacted))
-								transaction.CollectRequestBody(true, httpContextStop.Request, _logger, transaction.ConfigSnapshot);
 
 							WebRequestTransactionCreator.StopTransaction(transaction, httpContextStop, _logger);
 						}
 					}
 					break;
-				case "Microsoft.AspNetCore.Hosting.UnhandledException":
+				case "Microsoft.AspNetCore.Diagnostics.UnhandledException": //Called when exception handler is registrered
+				case "Microsoft.AspNetCore.Diagnostics.HandledException":
+					if (!(_defaultHttpContextFetcher.Fetch(kv.Value) is DefaultHttpContext httpContextDiagnosticsUnhandledException)) return;
+					if (!(_exceptionContextPropertyFetcher.Fetch(kv.Value) is Exception diagnosticsException)) return;
+					if (!_processingRequests.TryGetValue(httpContextDiagnosticsUnhandledException, out var diagnosticsTransaction)) return;
+
+					diagnosticsTransaction.CaptureException(diagnosticsException);
+					diagnosticsTransaction.CollectRequestBody(true, httpContextDiagnosticsUnhandledException.Request, _logger, diagnosticsTransaction.ConfigSnapshot);
+
+					break;
+				case "Microsoft.AspNetCore.Hosting.UnhandledException": // Not called when exception handler registered
 					if (!(_defaultHttpContextFetcher.Fetch(kv.Value) is DefaultHttpContext httpContextUnhandledException)) return;
 					if (!(_exceptionContextPropertyFetcher.Fetch(kv.Value) is Exception exception)) return;
 					if (!_processingRequests.TryGetValue(httpContextUnhandledException, out var currentTransaction)) return;

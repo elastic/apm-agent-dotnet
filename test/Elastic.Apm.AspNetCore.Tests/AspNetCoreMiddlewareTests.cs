@@ -40,6 +40,24 @@ namespace Elastic.Apm.AspNetCore.Tests
 		// ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
 		private readonly IApmLogger _logger;
 
+
+		private void Configure(bool createDefaultClient, bool useOnlyDiagnosticSource)
+		{
+			if (createDefaultClient)
+			{
+#pragma warning disable IDE0022 // Use expression body for methods
+				_client = Helper.GetClient(_agent, _factory, useOnlyDiagnosticSource);
+#pragma warning restore IDE0022 // Use expression body for methods
+#if NETCOREAPP3_0 || NETCOREAPP3_1
+				_client.DefaultRequestVersion = new Version(2, 0);
+#endif
+			}
+			else
+			{
+				_client = Helper.GetClientWithoutExceptionPage(_agent, _factory, useOnlyDiagnosticSource);
+			}
+		}
+
 		public AspNetCoreMiddlewareTests(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper)
 		{
 			_logger = LoggerBase.Scoped(ThisClassName);
@@ -53,12 +71,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer)
 			);
 			HostBuilderExtensions.UpdateServiceInformation(_agent.Service);
-
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
-			_client = Helper.GetClient(_agent, _factory);
-#if NETCOREAPP3_0 || NETCOREAPP3_1
-			_client.DefaultRequestVersion = new Version(2, 0);
-#endif
 		}
 
 		private HttpClient _client;
@@ -66,9 +79,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// <summary>
 		/// Simulates an HTTP GET call to /home/simplePage and asserts on what the agent should send to the server
 		/// </summary>
-		[Fact]
-		public async Task HomeSimplePageTransactionTest()
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task HomeSimplePageTransactionTest(bool withDiagnosticSourceOnly)
 		{
+			Configure(true, withDiagnosticSourceOnly);
+
 			var headerKey = "X-Additional-Header";
 			var headerValue = "For-Elastic-Apm-Agent";
 			_client.DefaultRequestHeaders.Add(headerKey, headerValue);
@@ -147,6 +164,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task HomeSimplePagePostTransactionTest()
 		{
+			CreateDefaultClient();
 			var headerKey = "X-Additional-Header";
 			var headerValue = "For-Elastic-Apm-Agent";
 			_client.DefaultRequestHeaders.Add(headerKey, headerValue);
@@ -230,9 +248,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task HomeIndexSpanTest()
 		{
+			CreateDefaultClient();
 			var response = await _client.GetAsync("/Home/Index");
 
 			response.IsSuccessStatusCode.Should().BeTrue();
+
+			//System.Threading.Thread.Sleep(500);
 			_capturedPayload.SpansOnFirstTransaction.Should().NotBeEmpty().And.Contain(n => n.Context.Db != null);
 		}
 
@@ -244,6 +265,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task HomeIndexDestinationTest()
 		{
+
+			CreateDefaultClient();
 			var response = await _client.GetAsync("/Home/Index");
 
 			response.IsSuccessStatusCode.Should().BeTrue();
@@ -271,6 +294,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Fact]
 		public async Task HomeIndexAutoCapturedSpansAreChildrenOfControllerActionAsSpan()
 		{
+			CreateDefaultClient();
 			var response = await _client.GetAsync("/Home/Index?captureControllerActionAsSpan=true");
 
 			response.IsSuccessStatusCode.Should().BeTrue();
