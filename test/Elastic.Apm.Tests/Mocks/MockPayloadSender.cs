@@ -36,7 +36,7 @@ namespace Elastic.Apm.Tests.Mocks
 		public Transaction FirstTransaction => DoUnderLock(() =>
 		{
 			_transactionTaskCompletionSource.Task.Wait();
-			return _transactions.First() as Transaction;
+			return Transactions.First() as Transaction;
 			;
 		});
 		public IReadOnlyList<IMetricSet> Metrics => DoUnderLock(() => CreateImmutableSnapshot(_metrics));
@@ -68,7 +68,6 @@ namespace Elastic.Apm.Tests.Mocks
 			_transactionTaskCompletionSource.Task.Wait();
 			return CreateImmutableSnapshot(_transactions);
 		});
-
 
 		public void QueueError(IError error) => DoUnderLock(() => { _errors.Add(error); });
 

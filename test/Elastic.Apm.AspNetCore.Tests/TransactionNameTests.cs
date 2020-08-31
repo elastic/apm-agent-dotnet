@@ -40,10 +40,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Calls a URL that maps to a route with optional parameter (id).
 		/// Makes sure the Transaction.Name contains "{id}" instead of the value.
 		/// </summary>
-		[Fact]
-		public async Task OptionalRouteParameter()
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task OptionalRouteParameter(bool diagnosticSourceOnly)
 		{
-			var httpClient = Helper.GetClient(_agent, _factory);
+			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
 			await httpClient.GetAsync("home/sample/3");
 			await httpClient.GetAsync("home/sample/2");
 
@@ -54,10 +56,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Calls a URL and sets custom transaction name.
 		/// Makes sure the Transaction.Name can be set to custom name.
 		/// </summary>
-		[Fact]
-		public async Task CustomTransactionName()
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task CustomTransactionName(bool diagnosticSourceOnly)
 		{
-			var httpClient = Helper.GetClient(_agent, _factory);
+			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
 			await httpClient.GetAsync("home/TransactionWithCustomName");
 
 			_payloadSender.Transactions.Should().OnlyContain(n => n.Name == "custom");
@@ -69,10 +73,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// change that.
 		/// See: https://github.com/elastic/apm-agent-dotnet/pull/258#discussion_r291025014
 		/// </summary>
-		[Fact]
-		public async Task CustomTransactionNameWithNameUsingRequestInfo()
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task CustomTransactionNameWithNameUsingRequestInfo(bool diagnosticSourceOnly)
 		{
-			var httpClient = Helper.GetClient(_agent, _factory);
+			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
 			await httpClient.GetAsync("home/TransactionWithCustomNameUsingRequestInfo");
 
 			_payloadSender.Transactions.Should().OnlyContain(n => n.Name == "GET /home/TransactionWithCustomNameUsingRequestInfo");
@@ -82,10 +88,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Calls a URL that would map to a route with optional parameter (id), but does not pass the id value.
 		/// Makes sure no template value is captured in Transaction.Name.
 		/// </summary>
-		[Fact]
-		public async Task OptionalRouteParameterWithNull()
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task OptionalRouteParameterWithNull(bool diagnosticSourceOnly)
 		{
-			var httpClient = Helper.GetClient(_agent, _factory);
+			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
 			await httpClient.GetAsync("home/sample");
 
 			_payloadSender.Transactions.Should().OnlyContain(n => n.Name.Equals("GET home/sample", StringComparison.OrdinalIgnoreCase));
@@ -95,10 +103,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Tests a URL that maps to a route with default values. Calls "/", which maps to "home/index".
 		/// Makes sure "Home/Index" is in the Transaction.Name.
 		/// </summary>
-		[Fact]
-		public async Task DefaultRouteParameterValues()
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task DefaultRouteParameterValues(bool diagnosticSourceOnly)
 		{
-			var httpClient = Helper.GetClient(_agent, _factory);
+			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
 			await httpClient.GetAsync("/");
 
 			_payloadSender.FirstTransaction.Name.Should().Be("GET Home/Index");

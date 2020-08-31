@@ -161,10 +161,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Simulates an HTTP POST call to /home/simplePage and asserts on what the agent should send to the server
 		/// to test the 'CaptureBody' configuration option
 		/// </summary>
-		[Fact]
-		public async Task HomeSimplePagePostTransactionTest()
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task HomeSimplePagePostTransactionTest(bool withDiagnosticSourceOnly)
 		{
-			CreateDefaultClient();
+			Configure(true, withDiagnosticSourceOnly);
 			var headerKey = "X-Additional-Header";
 			var headerValue = "For-Elastic-Apm-Agent";
 			_client.DefaultRequestHeaders.Add(headerKey, headerValue);
@@ -245,10 +247,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Simulates an HTTP GET call to /home/index and asserts that the agent captures spans.
 		/// Prerequisite: The /home/index has to generate spans (which should be the case).
 		/// </summary>
-		[Fact]
-		public async Task HomeIndexSpanTest()
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task HomeIndexSpanTest(bool withDiagnosticSourceOnly)
 		{
-			CreateDefaultClient();
+			Configure(true, withDiagnosticSourceOnly);
 			var response = await _client.GetAsync("/Home/Index");
 
 			response.IsSuccessStatusCode.Should().BeTrue();
@@ -262,11 +266,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Prerequisite: The /home/index has to generate spans (which should be the case).
 		/// It also assumes that /home/index makes a requrst to github.com
 		/// </summary>
-		[Fact]
-		public async Task HomeIndexDestinationTest()
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task HomeIndexDestinationTest(bool withDiagnosticSourceOnly)
 		{
 
-			CreateDefaultClient();
+			Configure(true, withDiagnosticSourceOnly);
 			var response = await _client.GetAsync("/Home/Index");
 
 			response.IsSuccessStatusCode.Should().BeTrue();
@@ -291,10 +297,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Simulates an HTTP GET call to /Home/Index?captureControllerActionAsSpan=true
 		/// and asserts that all automatically captured spans are children of the span for controller's action.
 		/// </summary>
-		[Fact]
-		public async Task HomeIndexAutoCapturedSpansAreChildrenOfControllerActionAsSpan()
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task HomeIndexAutoCapturedSpansAreChildrenOfControllerActionAsSpan(bool withDiagnosticSourceOnly)
 		{
-			CreateDefaultClient();
+			Configure(true, withDiagnosticSourceOnly);
 			var response = await _client.GetAsync("/Home/Index?captureControllerActionAsSpan=true");
 
 			response.IsSuccessStatusCode.Should().BeTrue();
@@ -325,10 +333,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// With other words: there is no error page with an exception handler configured in the ASP.NET Core pipeline.
 		/// Makes sure that we still capture the failed request.
 		/// </summary>
-		[Fact]
-		public async Task FailingRequestWithoutConfiguredExceptionPage()
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task FailingRequestWithoutConfiguredExceptionPage(bool withDiagnosticSourceOnly)
 		{
-			_client = Helper.GetClientWithoutExceptionPage(_agent, _factory);
+			Configure(false, withDiagnosticSourceOnly);
 
 			Func<Task> act = async () => await _client.GetAsync("Home/TriggerError");
 			await act.Should().ThrowAsync<Exception>();
@@ -355,10 +365,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// With other words: there is no error page with an exception handler configured in the ASP.NET Core pipeline.
 		/// Makes sure that we still capture the failed request along with the request body
 		/// </summary>
-		[Fact]
-		public async Task FailingPostRequestWithoutConfiguredExceptionPage()
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task FailingPostRequestWithoutConfiguredExceptionPage(bool withDiagnosticSourceOnly)
 		{
-			_client = Helper.GetClientWithoutExceptionPage(_agent, _factory);
+			Configure(false, withDiagnosticSourceOnly);
 
 			_client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 

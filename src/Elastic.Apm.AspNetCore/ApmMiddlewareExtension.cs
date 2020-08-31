@@ -71,11 +71,10 @@ namespace Elastic.Apm.AspNetCore
 		{
 			var subs = new List<IDiagnosticsSubscriber>(subscribers ?? Array.Empty<IDiagnosticsSubscriber>())
 			{
-				new AspNetCoreErrorDiagnosticsSubscriber(),
-				new AspNetCorePageLoadDiagnosticSubscriber()
+				new AspNetCoreErrorDiagnosticsSubscriber()
 			};
 			agent.Subscribe(subs.ToArray());
-			return builder; //.UseMiddleware<ApmMiddleware>(agent.Tracer, agent);
+			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer, agent);
 		}
 
 		internal static string GetEnvironmentName(this IServiceProvider serviceProvider) =>
