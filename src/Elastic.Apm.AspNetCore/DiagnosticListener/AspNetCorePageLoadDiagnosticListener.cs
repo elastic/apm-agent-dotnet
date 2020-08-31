@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using Elastic.Apm.AspNetCore.Extensions;
+using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -39,20 +40,23 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 			switch (kv.Key)
 			{
-				case "Microsoft.AspNetCore.Hosting.HttpRequestIn.Start": //"Microsoft.AspNetCore.Hosting.HttpRequestIn.Start":
+				case "Microsoft.AspNetCore.Hosting.HttpRequestIn.Start":
 					if (_httpContextPropertyFetcher.Fetch(kv.Value) is HttpContext httpContextStart)
 					{
-						var transaction = WebRequestTransactionCreator.StartTransactionAsync(httpContextStart, _logger, _agent.TracerInternal);
-						WebRequestTransactionCreator.FillSampledTransactionContextRequest(transaction, httpContextStart, _logger);
-						_processingRequests[httpContextStart] = transaction;
+						var transaction = WebRequestTransactionCreator.StartTransactionAsync(httpContextStart, _logger, _agent.TracerInternal, _agent.ConfigStore.CurrentSnapshot);
+
+						if (transaction != null)
+						{
+							WebRequestTransactionCreator.FillSampledTransactionContextRequest(transaction, httpContextStart, _logger);
+							_processingRequests[httpContextStart] = transaction;
+						}
 					}
 					break;
-				case "Microsoft.AspNetCore.Hosting.HttpRequestIn.Stop": //"Microsoft.AspNetCore.Hosting.EndRequest": //"Microsoft.AspNetCore.Hosting.HttpRequestIn.Stop":
+				case "Microsoft.AspNetCore.Hosting.HttpRequestIn.Stop":
 					if (_httpContextPropertyFetcher.Fetch(kv.Value) is HttpContext httpContextStop)
 					{
 						if (_processingRequests.TryRemove(httpContextStop, out var transaction))
 						{
-
 							WebRequestTransactionCreator.StopTransaction(transaction, httpContextStop, _logger);
 						}
 					}

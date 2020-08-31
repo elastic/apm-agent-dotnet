@@ -32,18 +32,20 @@ namespace Elastic.Apm.AspNetCore
 		private readonly RequestDelegate _next;
 		private readonly Tracer _tracer;
 		private readonly IConfigurationReader _configurationReader;
+		private readonly ApmAgent _agent;
 
-		public ApmMiddleware(RequestDelegate next, Tracer tracer, IApmAgent agent)
+		public ApmMiddleware(RequestDelegate next, Tracer tracer, ApmAgent agent)
 		{
 			_next = next;
 			_tracer = tracer;
 			_logger = agent.Logger.Scoped(nameof(ApmMiddleware));
 			_configurationReader = agent.ConfigurationReader;
+			_agent = agent;
 		}
 
 		public async Task InvokeAsync(HttpContext context)
 		{
-			var transaction = WebRequestTransactionCreator.StartTransactionAsync(context, _logger, _tracer);
+			var transaction = WebRequestTransactionCreator.StartTransactionAsync(context, _logger, _tracer, _agent.ConfigStore.CurrentSnapshot);
 
 			if (transaction != null)
 				WebRequestTransactionCreator.FillSampledTransactionContextRequest(transaction, context, _logger);

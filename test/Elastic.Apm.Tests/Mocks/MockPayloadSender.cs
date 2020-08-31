@@ -61,11 +61,19 @@ namespace Elastic.Apm.Tests.Mocks
 
 			timer.Elapsed += (a, b) =>
 			{
-				_transactionTaskCompletionSource.SetCanceled();
+				_transactionTaskCompletionSource.TrySetCanceled();
 				timer.Stop();
 			};
 
-			_transactionTaskCompletionSource.Task.Wait();
+			try
+			{
+				_transactionTaskCompletionSource.Task.Wait();
+			}
+			catch
+			{
+				return null;
+			}
+
 			return CreateImmutableSnapshot(_transactions);
 		});
 

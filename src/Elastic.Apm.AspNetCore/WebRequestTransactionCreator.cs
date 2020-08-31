@@ -6,6 +6,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.Extensions;
 using Elastic.Apm.Config;
 using Elastic.Apm.DistributedTracing;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Microsoft.AspNetCore.Http;
@@ -20,10 +21,16 @@ namespace Elastic.Apm.AspNetCore
 	/// </summary>
 	internal static class WebRequestTransactionCreator
 	{
-		internal static Transaction StartTransactionAsync(HttpContext context, IApmLogger logger, Tracer tracer)
+		internal static Transaction StartTransactionAsync(HttpContext context, IApmLogger logger, Tracer tracer, IConfigSnapshot configSnapshot)
 		{
 			try
 			{
+				if (WildcardMatcher.IsAnyMatch(configSnapshot.TransactionIgnoreUrls, context.Request.Path))
+				{
+					logger.Debug()?.Log("Request ignored based on TransactionIgnoreUrls, url: {urlPath}", context.Request.Path);
+					return null;
+				}
+
 				Transaction transaction;
 				var transactionName = $"{context.Request.Method} {context.Request.Path}";
 
