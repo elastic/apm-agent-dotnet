@@ -86,7 +86,7 @@ namespace Elastic.Apm.Tests.Mocks
 		{
 			_transactions.Add(transaction);
 			_transactionTaskCompletionSource.TrySetResult(transaction);
-		});
+		}
 
 		public void QueueSpan(ISpan span) => _spans.Add(span);
 
@@ -98,7 +98,7 @@ namespace Elastic.Apm.Tests.Mocks
 			_errors.Clear();
 			_transactions.Clear();
 			_metrics.Clear();
-		});
+		}
 
 		private static IReadOnlyList<T> CreateImmutableSnapshot<T>(IEnumerable<T> source) => new List<T>(source);
 	}
