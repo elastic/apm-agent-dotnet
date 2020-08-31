@@ -8,6 +8,7 @@ using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.SqlClient;
+using Elastic.Apm.Elasticsearch;
 
 // ReSharper disable once CheckNamespace - per doc. this must be called StartupHook without a namespace with an Initialize method.
 internal class StartupHook
@@ -15,7 +16,7 @@ internal class StartupHook
 	public static void Initialize()
 	{
 
-		var agentLibsToLoad =  new[]{ "Elastic.Apm", "Elastic.Apm.AspNetCore", "Elastic.Apm.EntityFrameworkCore", "Elastic.Apm.SqlClient" };
+		var agentLibsToLoad =  new[]{ "Elastic.Apm", "Elastic.Apm.AspNetCore", "Elastic.Apm.EntityFrameworkCore", "Elastic.Apm.SqlClient", "Elastic.Apm.Elasticsearch" };
 		var agentDependencyLibsToLoad = new[] { "System.Diagnostics.PerformanceCounter", "Microsoft.Diagnostics.Tracing.TraceEvent", "Newtonsoft.Json", };
 
 		var startupHookEnvVar = Environment.GetEnvironmentVariable("DOTNET_STARTUP_HOOKS");
@@ -45,7 +46,8 @@ internal class StartupHook
 				new AspNetCoreErrorDiagnosticsSubscriber(),
 				new AspNetCorePageLoadDiagnosticSubscriber(),
 				new EfCoreDiagnosticsSubscriber(),
-				new SqlClientDiagnosticSubscriber()
+				new SqlClientDiagnosticSubscriber(),
+				new ElasticsearchDiagnosticsSubscriber()
 			);
 		}
 	}

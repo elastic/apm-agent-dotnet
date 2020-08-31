@@ -37,7 +37,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Theory]
 		public async Task TestErrorInAspNetCore(bool useOnlyDiagnosticSource)
 		{
-			//TODO: diagnostic source ending the request seems to finish later than the request itself
 			using (var agent = new ApmAgent(new TestAgentComponents()))
 			{
 				var capturedPayload = agent.PayloadSender as MockPayloadSender;

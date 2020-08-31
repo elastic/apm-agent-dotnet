@@ -4,6 +4,7 @@
     <AssemblyName>ElasticApmAgentStartupHook</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\apm-agent-dotnet\src\Elastic.Apm.Elasticsearch\Elastic.Apm.Elasticsearch.csproj" />
     <ProjectReference Include="..\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
     <ProjectReference Include="..\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj" />
