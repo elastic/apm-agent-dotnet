@@ -44,7 +44,7 @@ internal class StartupHook
 		{
 			Agent.Subscribe(
 				new AspNetCoreErrorDiagnosticsSubscriber(),
-				new AspNetCorePageLoadDiagnosticSubscriber(),
+				new AspNetCoreDiagnosticSubscriber(),
 				new EfCoreDiagnosticsSubscriber(),
 				new SqlClientDiagnosticSubscriber(),
 				new ElasticsearchDiagnosticsSubscriber()

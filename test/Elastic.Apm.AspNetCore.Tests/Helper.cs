@@ -34,7 +34,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 						{
 							var subs = new List<IDiagnosticsSubscriber>()
 							{
-								new AspNetCorePageLoadDiagnosticSubscriber(),
+								new AspNetCoreDiagnosticSubscriber(),
 								new HttpDiagnosticsSubscriber(),
 								new EfCoreDiagnosticsSubscriber()
 							};
@@ -74,7 +74,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 							  var subs = new List<IDiagnosticsSubscriber>()
 							{
 								new AspNetCoreErrorDiagnosticsSubscriber(),
-								new AspNetCorePageLoadDiagnosticSubscriber()
+								new AspNetCoreDiagnosticSubscriber()
 							};
 							  agent.Subscribe(subs.ToArray());
 						  }

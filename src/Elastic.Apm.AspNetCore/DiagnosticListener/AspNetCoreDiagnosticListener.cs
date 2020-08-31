@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace Elastic.Apm.AspNetCore.DiagnosticListener
 {
-	internal class AspNetCorePageLoadDiagnosticListener : IDiagnosticListener
+	internal class AspNetCoreDiagnosticListener : IDiagnosticListener
 	{
 		private readonly ApmAgent _agent;
 		private readonly PropertyFetcher _exceptionContextPropertyFetcher = new PropertyFetcher("Exception");
@@ -23,8 +23,8 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 		/// </summary>
 		private readonly ConcurrentDictionary<HttpContext, Transaction> _processingRequests = new ConcurrentDictionary<HttpContext, Transaction>();
 
-		public AspNetCorePageLoadDiagnosticListener(ApmAgent agent) =>
-			(_agent, _logger) = (agent, agent.Logger.Scoped(nameof(AspNetCorePageLoadDiagnosticListener)));
+		public AspNetCoreDiagnosticListener(ApmAgent agent) =>
+			(_agent, _logger) = (agent, agent.Logger.Scoped(nameof(AspNetCoreDiagnosticListener)));
 
 		public string Name => "Microsoft.AspNetCore";
 

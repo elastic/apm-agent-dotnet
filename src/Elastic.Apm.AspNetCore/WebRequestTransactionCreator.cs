@@ -195,7 +195,7 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-	private static void FillSampledTransactionContextResponse(HttpContext context, Transaction transaction, IApmLogger logger)
+		private static void FillSampledTransactionContextResponse(HttpContext context, Transaction transaction, IApmLogger logger)
 		{
 			try
 			{

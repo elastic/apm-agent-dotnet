@@ -21,7 +21,7 @@ namespace Elastic.Apm.NetCoreAll
 		/// </summary>
 		/// <param name="builder">Builder.</param>
 		public static IHostBuilder UseAllElasticApm(this IHostBuilder builder) => builder.UseElasticApm(new HttpDiagnosticsSubscriber(),
-			new AspNetCorePageLoadDiagnosticSubscriber(),
+			new AspNetCoreDiagnosticSubscriber(),
 			new EfCoreDiagnosticsSubscriber(),
 			new SqlClientDiagnosticSubscriber(),
 			new ElasticsearchDiagnosticsSubscriber());

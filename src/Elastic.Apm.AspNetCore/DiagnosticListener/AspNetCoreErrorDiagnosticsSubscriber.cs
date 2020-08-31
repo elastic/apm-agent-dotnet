@@ -10,6 +10,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 	/// <summary>
 	/// Activates the <see cref="AspNetCoreErrorDiagnosticListener" /> which enables
 	/// capturing errors within an ASP.NET Core application.
+	/// This is used in combination with <see cref="ApmMiddleware"/> to capture errors handled by error pages
 	/// </summary>
 	public class AspNetCoreErrorDiagnosticsSubscriber : IDiagnosticsSubscriber
 	{
