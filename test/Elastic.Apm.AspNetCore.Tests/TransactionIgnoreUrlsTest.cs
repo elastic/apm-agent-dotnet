@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.Logging;
@@ -17,7 +18,7 @@ using System;
 namespace Elastic.Apm.AspNetCore.Tests
 {
 	[Collection("DiagnosticListenerTest")]
-	public class TransactionIgnoreUrlsTest : LoggingTestBase, IClassFixture<WebApplicationFactory<Startup>>
+	public class TransactionIgnoreUrlsTest : IClassFixture<WebApplicationFactory<Startup>>, IDisposable
 	{
 		private const string ThisClassName = nameof(TransactionIgnoreUrlsTest);
 		private readonly ApmAgent _agent;
@@ -29,10 +30,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 		private HttpClient _client;
 
-		public TransactionIgnoreUrlsTest(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper)
+		public TransactionIgnoreUrlsTest(WebApplicationFactory<Startup> factory)
 		{
 			_factory = factory;
-			_logger = LoggerBase.Scoped(ThisClassName);
+			_logger = new NoopLogger(); // _logger.Scoped(ThisClassName);
 
 			_agent = new ApmAgent(new TestAgentComponents(
 				_logger,
@@ -72,6 +73,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.Transactions.Should().BeNullOrEmpty();
 			_capturedPayload.Spans.Should().BeNullOrEmpty();
 			_capturedPayload.Errors.Should().BeNullOrEmpty();
+		}
+
+		public void Dispose()
+		{
+			_agent?.Dispose();
+			_factory?.Dispose();
+			_client?.Dispose();
 		}
 	}
 }
