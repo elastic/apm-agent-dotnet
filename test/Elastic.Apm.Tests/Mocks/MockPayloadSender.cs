@@ -71,7 +71,7 @@ namespace Elastic.Apm.Tests.Mocks
 			}
 			catch
 			{
-				return null;
+				return new List<ITransaction>();
 			}
 
 			return CreateImmutableSnapshot(_transactions);
