@@ -88,7 +88,11 @@ namespace Elastic.Apm.Tests.Mocks
 			_transactionTaskCompletionSource.TrySetResult(transaction);
 		}
 
-		public void QueueSpan(ISpan span) => _spans.Add(span);
+		public void QueueSpan(ISpan span)
+		{
+			lock(_lock)
+				_spans.Add(span);
+		}
 
 		public void QueueMetrics(IMetricSet metricSet) => _metrics.Add(metricSet);
 

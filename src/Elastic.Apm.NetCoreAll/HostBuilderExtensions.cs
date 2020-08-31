@@ -3,6 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.EntityFrameworkCore;
@@ -20,6 +21,7 @@ namespace Elastic.Apm.NetCoreAll
 		/// </summary>
 		/// <param name="builder">Builder.</param>
 		public static IHostBuilder UseAllElasticApm(this IHostBuilder builder) => builder.UseElasticApm(new HttpDiagnosticsSubscriber(),
+			new AspNetCorePageLoadDiagnosticSubscriber(),
 			new EfCoreDiagnosticsSubscriber(),
 			new SqlClientDiagnosticSubscriber(),
 			new ElasticsearchDiagnosticsSubscriber());

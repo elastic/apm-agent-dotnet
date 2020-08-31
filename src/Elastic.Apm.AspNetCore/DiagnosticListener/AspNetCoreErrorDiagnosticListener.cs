@@ -32,8 +32,6 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 			transaction?.CaptureException(exception, "ASP.NET Core Unhandled Exception",
 				kv.Key == "Microsoft.AspNetCore.Diagnostics.HandledException");
-
-			//Depending on config, request body may also be captured on errors. Since we do this async, this happens in the ApmMiddleware
 		}
 	}
 }
