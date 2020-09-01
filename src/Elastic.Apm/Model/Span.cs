@@ -90,7 +90,7 @@ namespace Elastic.Apm.Model
 					enclosingTransaction.SpanCount.IncrementStarted();
 
 					if (captureStackTraceOnStart)
-						_stackFrames = new StackTrace(true).GetFrames();
+						_stackFrames = new EnhancedStackTrace(new StackTrace(true)).GetFrames();
 				}
 			}
 
@@ -260,7 +260,7 @@ namespace Elastic.Apm.Model
 					if (Duration >= ConfigSnapshot.SpanFramesMinDurationInMilliseconds
 						|| ConfigSnapshot.SpanFramesMinDurationInMilliseconds < 0)
 					{
-						StackTrace = StacktraceHelper.GenerateApmStackTrace(_stackFrames ?? new StackTrace(true).GetFrames(), _logger,
+						StackTrace = StacktraceHelper.GenerateApmStackTrace(_stackFrames ?? new EnhancedStackTrace(new StackTrace(true)).GetFrames(), _logger,
 							ConfigSnapshot, $"Span `{Name}'");
 					}
 				}
