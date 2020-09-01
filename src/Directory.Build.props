@@ -5,9 +5,7 @@
     <AssemblyVersion>1.7.0</AssemblyVersion>
     <InformationalVersion>1.7.0</InformationalVersion>
     <FileVersion>1.7.0</FileVersion>
-    
     <VersionPrefix>1.7.0</VersionPrefix>
-    <VersionSuffix>beta1</VersionSuffix>
     <Authors>Elastic and contributors</Authors>
     <Copyright>2020 Elasticsearch BV</Copyright>
     <PackageLicenseUrl>https://github.com/elastic/apm-agent-dotnet/blob/master/LICENSE</PackageLicenseUrl>
