@@ -15,9 +15,8 @@ internal class StartupHook
 {
 	public static void Initialize()
 	{
-
-		var agentLibsToLoad =  new[]{ "Elastic.Apm", "Elastic.Apm.AspNetCore", "Elastic.Apm.EntityFrameworkCore", "Elastic.Apm.SqlClient", "Elastic.Apm.Elasticsearch" };
-		var agentDependencyLibsToLoad = new[] { "System.Diagnostics.PerformanceCounter", "Microsoft.Diagnostics.Tracing.TraceEvent", "Newtonsoft.Json", };
+		var agentLibsToLoad =  new[]{ "Elastic.Apm", "Elastic.Apm.Extensions.Logging", "Elastic.Apm.AspNetCore", "Elastic.Apm.EntityFrameworkCore", "Elastic.Apm.SqlClient", "Elastic.Apm.Elasticsearch" };
+		var agentDependencyLibsToLoad = new[] { "System.Diagnostics.PerformanceCounter", "Microsoft.Diagnostics.Tracing.TraceEvent", "Newtonsoft.Json", "Elasticsearch.Net" };
 
 		var startupHookEnvVar = Environment.GetEnvironmentVariable("DOTNET_STARTUP_HOOKS");
 
