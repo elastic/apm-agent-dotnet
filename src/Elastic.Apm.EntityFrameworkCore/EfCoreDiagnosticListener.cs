@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Model;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -38,7 +39,8 @@ namespace Elastic.Apm.EntityFrameworkCore
 				case { } k when k == RelationalEventId.CommandExecuting.Name && _agent.Tracer.CurrentTransaction != null:
 					if (kv.Value is CommandEventData commandEventData)
 					{
-						var newSpan = _agent.TracerInternal.DbSpanCommon.StartSpan(_agent, commandEventData.Command, InstrumentationFlag.EfCore);
+						var spanName = commandEventData.Command.CommandText.Replace(Environment.NewLine, " ");
+						var newSpan = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(_agent, spanName, ApiConstants.TypeDb, null, InstrumentationFlag.EfCore, true);
 						_spans.TryAdd(commandEventData.CommandId, newSpan);
 					}
 					break;
