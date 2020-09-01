@@ -2,9 +2,11 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.EntityFrameworkCore;
 using Microsoft.AspNetCore.Builder;
@@ -21,13 +23,27 @@ namespace Elastic.Apm.AspNetCore.Tests
 {
 	public static class Helper
 	{
-		internal static HttpClient GetClient<T>(ApmAgent agent, WebApplicationFactory<T> factory) where T : class
-			=> factory
+		internal static HttpClient GetClient<T>(ApmAgent agent, WebApplicationFactory<T> factory, bool useOnlyDiagnosticSource) where T : class
+		{
+			var builder = factory
 				.WithWebHostBuilder(n =>
 				{
 					n.Configure(app =>
 					{
-						app.UseElasticApm(agent, agent.Logger, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
+						if (useOnlyDiagnosticSource)
+						{
+							var subs = new List<IDiagnosticsSubscriber>()
+							{
+								new AspNetCoreDiagnosticSubscriber(),
+								new HttpDiagnosticsSubscriber(),
+								new EfCoreDiagnosticsSubscriber()
+							};
+							agent.Subscribe(subs.ToArray());
+						}
+						else
+						{
+							app.UseElasticApm(agent, agent.Logger, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
+						}
 
 						app.UseDeveloperExceptionPage();
 
@@ -39,23 +55,44 @@ namespace Elastic.Apm.AspNetCore.Tests
 					});
 
 					n.ConfigureServices(ConfigureServices);
-				})
-				.CreateClient();
+				});
+#if !NETCOREAPP2_1 && !NETCOREAPP2_2
+			builder.Server.AllowSynchronousIO = true;
+#endif
+			return builder.CreateClient();
+		}
 
-		internal static HttpClient GetClientWithoutExceptionPage<T>(ApmAgent agent, WebApplicationFactory<T> factory) where T : class
-			=> factory
-				.WithWebHostBuilder(n =>
-				{
-					n.Configure(app =>
-					{
-						app.UseElasticApm(agent, agent.Logger);
+		internal static HttpClient GetClientWithoutExceptionPage<T>(ApmAgent agent, WebApplicationFactory<T> factory, bool useOnlyDiagnosticSource) where T : class
+		{
+			var builder = factory
+				  .WithWebHostBuilder(n =>
+				  {
+					  n.Configure(app =>
+					  {
+						  if (useOnlyDiagnosticSource)
+						  {
+							  var subs = new List<IDiagnosticsSubscriber>()
+							{
+								new AspNetCoreErrorDiagnosticsSubscriber(),
+								new AspNetCoreDiagnosticSubscriber()
+							};
+							  agent.Subscribe(subs.ToArray());
+						  }
+						  else
+						  {
+							  app.UseElasticApm(agent, agent.Logger, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
+						  }
 
-						RegisterRoutingAndMvc(app);
-					});
+						  RegisterRoutingAndMvc(app);
+					  });
 
-					n.ConfigureServices(ConfigureServices);
-				})
-				.CreateClient();
+					  n.ConfigureServices(ConfigureServices);
+				  });
+#if !NETCOREAPP2_1 && !NETCOREAPP2_2
+			builder.Server.AllowSynchronousIO = true;
+#endif
+			return builder.CreateClient();
+		}
 
 		/// <summary>
 		/// Configures the sample app without any diagnostic listener

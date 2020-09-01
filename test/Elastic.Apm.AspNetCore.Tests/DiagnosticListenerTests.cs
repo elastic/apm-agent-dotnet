@@ -37,9 +37,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		/// <summary>
-		/// Manually starts <see cref="AspNetCoreDiagnosticsSubscriber" /> and does 1 HTTP call
+		/// Manually starts <see cref="AspNetCoreErrorDiagnosticsSubscriber" /> and does 1 HTTP call
 		/// that throws an exception,
-		/// then it disposes the <see cref="AspNetCoreDiagnosticsSubscriber" /> (aka unsubsribes)
+		/// then it disposes the <see cref="AspNetCoreErrorDiagnosticsSubscriber" /> (aka unsubsribes)
 		/// and does another HTTP call that throws an exception.
 		/// It makes sure that for the 1. HTTP call the errors is captured and for the 2. it isn't.
 		/// </summary>

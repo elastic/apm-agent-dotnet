@@ -5,7 +5,6 @@
 using System;
 using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -22,7 +21,7 @@ namespace Elastic.Apm.AspNetCore.Extensions
 		/// <param name="request"></param>
 		/// <param name="logger"></param>
 		/// <returns></returns>
-		public static async Task<string> ExtractRequestBodyAsync(this HttpRequest request, IApmLogger logger, IConfigSnapshot configSnapshot)
+		public static string ExtractRequestBody(this HttpRequest request, IApmLogger logger, IConfigSnapshot configSnapshot)
 		{
 			string body = null;
 
@@ -30,7 +29,7 @@ namespace Elastic.Apm.AspNetCore.Extensions
 			{
 				if (request.HasFormContentType)
 				{
-					var form = await request.ReadFormAsync(Consts.FormContentOptions);
+					var form = request.Form;
 
 					var itemProcessed = 0;
 					if (form != null && form.Count > 0)
@@ -65,7 +64,7 @@ namespace Elastic.Apm.AspNetCore.Extensions
 						false,
 						1024 * 2,
 						true))
-						body = await reader.ReadToEndAsync();
+						body = reader.ReadToEnd();
 
 					// Truncate the body to the first 2kb if it's longer
 					if (body.Length > Consts.RequestBodyMaxLength) body = body.Substring(0, Consts.RequestBodyMaxLength);

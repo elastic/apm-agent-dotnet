@@ -16,12 +16,12 @@ using SampleAspNetCoreApp;
 namespace Elastic.Apm.AspNetCore.Tests
 {
 	[Collection("DiagnosticListenerTest")]
-	public class TraceIdWithActivityTests: IClassFixture<WebApplicationFactory<Startup>>, IDisposable
+	public class TraceIdWithActivityTests : IClassFixture<WebApplicationFactory<Startup>>, IDisposable
 	{
 		private readonly ApmAgent _agent;
 		private readonly WebApplicationFactory<Startup> _factory;
 		private readonly MockPayloadSender _payloadSender = new MockPayloadSender();
-		private HttpClient _client;
+		private readonly HttpClient _client;
 
 		public TraceIdWithActivityTests(WebApplicationFactory<Startup> factory)
 		{
@@ -32,7 +32,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
 				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer));
 			HostBuilderExtensions.UpdateServiceInformation(_agent.Service);
-			_client = Helper.GetClient(_agent, _factory);
+			_client = Helper.GetClient(_agent, _factory, true);
 		}
 
 		public void Dispose()

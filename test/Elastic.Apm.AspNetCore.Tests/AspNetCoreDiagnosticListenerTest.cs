@@ -5,7 +5,9 @@
 using System;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.Config;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
@@ -16,7 +18,7 @@ using Xunit;
 namespace Elastic.Apm.AspNetCore.Tests
 {
 	/// <summary>
-	/// Tests the <see cref="Elastic.Apm.AspNetCore.DiagnosticListener.AspNetCoreDiagnosticListener" /> type.
+	/// Tests the <see cref="AspNetCoreErrorDiagnosticListener" /> type.
 	/// </summary>
 	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
 	public class AspNetCoreDiagnosticListenerTest : IClassFixture<WebApplicationFactory<Startup>>
@@ -30,13 +32,15 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// and makes sure that the error is captured.
 		/// </summary>
 		/// <returns>The error in ASP net core.</returns>
-		[Fact]
-		public async Task TestErrorInAspNetCore()
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task TestErrorInAspNetCore(bool useOnlyDiagnosticSource)
 		{
 			using (var agent = new ApmAgent(new TestAgentComponents()))
 			{
 				var capturedPayload = agent.PayloadSender as MockPayloadSender;
-				var client = Helper.GetClient(agent, _factory);
+				var client = Helper.GetClient(agent, _factory, useOnlyDiagnosticSource);
 
 				try
 				{
@@ -72,8 +76,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// retrieved from the HttpRequest
 		/// </summary>
 		/// <returns>The error in ASP net core.</returns>
-		[Fact]
-		public async Task TestJsonBodyRetrievalOnRequestFailureInAspNetCore()
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task TestJsonBodyRetrievalOnRequestFailureInAspNetCore(bool useOnlyDiagnosticSource)
 		{
 			using (var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(
 				captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors,
@@ -81,7 +87,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				captureBodyContentTypes: ConfigConsts.DefaultValues.CaptureBodyContentTypes))))
 			{
 				var capturedPayload = agent.PayloadSender as MockPayloadSender;
-				var client = Helper.GetClient(agent, _factory);
+				var client = Helper.GetClient(agent, _factory, useOnlyDiagnosticSource);
 
 				var body = "{\"id\" : \"1\"}";
 				var response = await client.PostAsync("api/Home/PostError", new StringContent(body, Encoding.UTF8, "application/json"));

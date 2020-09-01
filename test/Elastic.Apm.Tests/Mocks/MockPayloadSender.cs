@@ -5,6 +5,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Timers;
 using Elastic.Apm.Api;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
@@ -20,51 +22,86 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly List<ISpan> _spans = new List<ISpan>();
 		private readonly List<ITransaction> _transactions = new List<ITransaction>();
 
-		public IReadOnlyList<IError> Errors => DoUnderLock(() => CreateImmutableSnapshot(_errors));
+		private readonly TaskCompletionSource<ITransaction> _transactionTaskCompletionSource = new TaskCompletionSource<ITransaction>();
 
-		public Error FirstError => DoUnderLock(() => _errors.First() as Error);
+		public IReadOnlyList<IError> Errors => CreateImmutableSnapshot(_errors);
+
+		public Error FirstError => _errors.First() as Error;
 
 		/// <summary>
 		/// The 1. Span on the 1. Transaction
 		/// </summary>
-		public Span FirstSpan => DoUnderLock(() => _spans.First() as Span);
+		public Span FirstSpan => _spans.First() as Span;
 
-		public Transaction FirstTransaction => DoUnderLock(() => _transactions.First() as Transaction);
-		public IReadOnlyList<IMetricSet> Metrics => DoUnderLock(() => CreateImmutableSnapshot(_metrics));
+		public Transaction FirstTransaction =>
+			 Transactions.First() as Transaction;
 
-		public MetricSet FirstMetric => DoUnderLock(() => _metrics.First() as MetricSet);
+		public IReadOnlyList<IMetricSet> Metrics => CreateImmutableSnapshot(_metrics);
 
-		public IReadOnlyList<ISpan> Spans => DoUnderLock(() => CreateImmutableSnapshot(_spans));
+		public MetricSet FirstMetric => _metrics.First() as MetricSet;
+
+		public IReadOnlyList<ISpan> Spans => CreateImmutableSnapshot(_spans);
 
 		public Span[] SpansOnFirstTransaction =>
-			DoUnderLock(() => _spans.Where(n => n.TransactionId == _transactions.First().Id).Select(n => n as Span).ToArray());
+			_spans.Where(n => n.TransactionId == Transactions.First().Id).Select(n => n as Span).ToArray();
 
-		public IReadOnlyList<ITransaction> Transactions => DoUnderLock(() => CreateImmutableSnapshot(_transactions));
+		public IReadOnlyList<ITransaction> Transactions
+		{
+			get
+			{
 
-		public void QueueError(IError error) => DoUnderLock(() => { _errors.Add(error); });
+				var timer = new Timer
+				{
+					Interval = 1000
+				};
 
-		public virtual void QueueTransaction(ITransaction transaction) => DoUnderLock(() => { _transactions.Add(transaction); });
+				timer.Enabled = true;
+				timer.Start();
 
-		public void QueueSpan(ISpan span) => DoUnderLock(() => { _spans.Add(span); });
+				timer.Elapsed += (a, b) =>
+				{
+					_transactionTaskCompletionSource.TrySetCanceled();
+					timer.Stop();
+				};
 
-		public void QueueMetrics(IMetricSet metricSet) => DoUnderLock(() => { _metrics.Add(metricSet); });
+				try
+				{
+					_transactionTaskCompletionSource.Task.Wait();
+				}
+				catch
+				{
+					if (_transactions != null)
+						return CreateImmutableSnapshot(_transactions);
 
-		public void Clear() => DoUnderLock(() =>
+					return new List<ITransaction>();
+				}
+
+				return CreateImmutableSnapshot(_transactions);
+			}
+		}
+
+		public void QueueError(IError error) => _errors.Add(error);
+
+		public virtual void QueueTransaction(ITransaction transaction)
+		{
+			_transactions.Add(transaction);
+			_transactionTaskCompletionSource.TrySetResult(transaction);
+		}
+
+		public void QueueSpan(ISpan span)
+		{
+			lock(_lock)
+				_spans.Add(span);
+		}
+
+		public void QueueMetrics(IMetricSet metricSet) => _metrics.Add(metricSet);
+
+		public void Clear()
 		{
 			_spans.Clear();
 			_errors.Clear();
 			_transactions.Clear();
 			_metrics.Clear();
-		});
-
-		private TResult DoUnderLock<TResult>(Func<TResult> func)
-		{
-			lock (_lock) return func();
-		}
-
-		private void DoUnderLock(Action action)
-		{
-			lock (_lock) action();
 		}
 
 		private static IReadOnlyList<T> CreateImmutableSnapshot<T>(IEnumerable<T> source) => new List<T>(source);
