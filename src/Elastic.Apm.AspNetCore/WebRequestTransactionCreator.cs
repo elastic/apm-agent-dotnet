@@ -95,7 +95,7 @@ namespace Elastic.Apm.AspNetCore
 					Full = context.Request.GetEncodedUrl(),
 					HostName = context.Request.Host.Host,
 					Protocol = GetProtocolName(context.Request.Protocol),
-					Raw = GetRawUrl(context.Request) ?? context.Request.GetEncodedUrl(),
+					Raw = GetRawUrl(context.Request, logger) ?? context.Request.GetEncodedUrl(),
 					PathName = context.Request.Path,
 					Search = context.Request.QueryString.Value.Length > 0 ? context.Request.QueryString.Value.Substring(1) : string.Empty
 				};
@@ -122,10 +122,22 @@ namespace Elastic.Apm.AspNetCore
 			configSnapshot.CaptureHeaders && headers != null
 				? headers.ToDictionary(header => header.Key, header => header.Value.ToString())
 				: null;
-		private static string GetRawUrl(HttpRequest httpRequest)
+		private static string GetRawUrl(HttpRequest httpRequest, IApmLogger logger)
 		{
-			var rawPathAndQuery = httpRequest.HttpContext.Features.Get<IHttpRequestFeature>()?.RawTarget;
-			return rawPathAndQuery == null ? null : UriHelper.BuildAbsolute(httpRequest.Scheme, httpRequest.Host, rawPathAndQuery);
+			try
+			{
+				var rawPathAndQuery = httpRequest.HttpContext.Features.Get<IHttpRequestFeature>()?.RawTarget;
+
+				if (!string.IsNullOrEmpty(rawPathAndQuery) && rawPathAndQuery.Count() > 0 && rawPathAndQuery[0] != '/')
+					return rawPathAndQuery;
+
+				return rawPathAndQuery == null ? null : UriHelper.BuildAbsolute(httpRequest.Scheme, httpRequest.Host, rawPathAndQuery);
+			}
+			catch(Exception e)
+			{
+				logger.Warning()?.LogException(e, "Failed reading RawUrl");
+				return null;
+			}
 		}
 
 		private static string GetProtocolName(string protocol)
