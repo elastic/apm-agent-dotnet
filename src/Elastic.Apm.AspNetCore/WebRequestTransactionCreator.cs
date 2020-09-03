@@ -32,7 +32,7 @@ namespace Elastic.Apm.AspNetCore
 				}
 
 				Transaction transaction;
-				var transactionName = $"{context.Request.Method} Unknown Route";
+				var transactionName = $"{context.Request.Method} {context.Request.Path}";
 
 				if (context.Request.Headers.ContainsKey(TraceContext.TraceParentHeaderNamePrefixed)
 					|| context.Request.Headers.ContainsKey(TraceContext.TraceParentHeaderName))
@@ -186,6 +186,10 @@ namespace Elastic.Apm.AspNetCore
 						var name = GetNameFromRouteContext(routeData);
 
 						if (!string.IsNullOrWhiteSpace(name)) transaction.Name = $"{context.Request.Method} {name}";
+					}
+					else if (context.Response.StatusCode == StatusCodes.Status404NotFound)
+					{
+						transaction.Name = $"{context.Request.Method} Unknown Route";
 					}
 				}
 
