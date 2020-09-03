@@ -115,6 +115,22 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_payloadSender.FirstTransaction.Context.Request.Url.Full.Should().Be("http://localhost/");
 		}
 
+		
+
+		/// <summary>
+		/// Calls a URL that maps to no route and causes a 404
+		/// </summary>
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task NotFoundRoute_ShouldBe_Aggregatable(bool diagnosticSourceOnly)
+		{
+			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
+			await httpClient.GetAsync("home/doesnotexist");
+
+			_payloadSender.Transactions.Should().OnlyContain(n => n.Name.Equals("GET unknown route", StringComparison.OrdinalIgnoreCase));
+		}
+
 		public void Dispose()
 		{
 			_agent?.Dispose();

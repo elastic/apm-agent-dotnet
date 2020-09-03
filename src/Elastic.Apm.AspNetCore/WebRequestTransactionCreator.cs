@@ -32,7 +32,7 @@ namespace Elastic.Apm.AspNetCore
 				}
 
 				Transaction transaction;
-				var transactionName = $"{context.Request.Method} {context.Request.Path}";
+				var transactionName = $"{context.Request.Method} Unknown Route";
 
 				if (context.Request.Headers.ContainsKey(TraceContext.TraceParentHeaderNamePrefixed)
 					|| context.Request.Headers.ContainsKey(TraceContext.TraceParentHeaderName))
