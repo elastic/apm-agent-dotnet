@@ -117,6 +117,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			transaction.Name.Should().Be(transactionName);
 			transaction.Result.Should().Be("HTTP 2xx");
 			transaction.Duration.Should().BeGreaterThan(0);
+			transaction.Outcome.Should().Be(Outcome.Success);
 
 			transaction.Type.Should().Be("request");
 			transaction.Id.Should().NotBeEmpty();

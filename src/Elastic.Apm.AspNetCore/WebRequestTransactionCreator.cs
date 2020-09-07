@@ -191,6 +191,11 @@ namespace Elastic.Apm.AspNetCore
 
 				transaction.Result = Transaction.StatusCodeToResult(GetProtocolName(context.Request.Protocol), context.Response.StatusCode);
 
+				if (context.Response.StatusCode >= 500)
+					transaction.Outcome = Outcome.Failure;
+				else
+					transaction.Outcome = Outcome.Success;
+
 				if (transaction.IsSampled)
 				{
 					FillSampledTransactionContextResponse(context, transaction, logger);

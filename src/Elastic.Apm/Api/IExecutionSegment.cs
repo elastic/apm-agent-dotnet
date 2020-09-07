@@ -241,5 +241,10 @@ namespace Elastic.Apm.Api
 		/// <param name="action">The action of the span.</param>
 		/// <returns>Returns the newly created and active span.</returns>
 		ISpan StartSpan(string name, string type, string subType = null, string action = null);
+
+		/// <summary>
+		/// The outcome of the IExecutionSegment: success, failure, or unknown.
+		/// </summary>
+		public Outcome Outcome { get; set; }
 	}
 }

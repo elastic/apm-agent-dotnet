@@ -13,6 +13,7 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Elastic.Apm.Model
 {
@@ -48,7 +49,8 @@ namespace Elastic.Apm.Model
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigStore.CurrentSnapshot,
-				agent.TracerInternal.CurrentExecutionSegmentsContainer) { }
+				agent.TracerInternal.CurrentExecutionSegmentsContainer)
+		{ }
 
 		/// <summary>
 		/// Creates a new transaction
@@ -93,7 +95,7 @@ namespace Elastic.Apm.Model
 			// For each transaction start, we fire an Activity
 			// If Activity.Current is null, then we create one with this and set its traceid, which will flow to all child activities and we also reuse it in Elastic APM, so it'll be the same on all Activities and in Elastic
 			// If Activity.Current is not null, we pick up its traceid and apply it in Elastic APM
-			if(!ignoreActivity)
+			if (!ignoreActivity)
 				StartActivity();
 
 			var isSamplingFromDistributedTracingData = false;
@@ -276,6 +278,14 @@ namespace Elastic.Apm.Model
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
+
+		/// <summary>
+		/// The outcome of the transaction: success, failure, or unknown.
+		/// This is similar to 'result', but has a limited set of permitted values describing the success or failure of the transaction from the service's perspective.
+		/// This field can be used for calculating error rates for incoming requests.
+		/// </summary>
+		[JsonConverter(typeof(StringEnumConverter))]
+		public Outcome Outcome { get; set; }
 
 		public string EnsureParentId()
 		{

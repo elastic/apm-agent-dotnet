@@ -13,6 +13,7 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Elastic.Apm.Model
 {
@@ -108,6 +109,14 @@ namespace Elastic.Apm.Model
 
 		[JsonIgnore]
 		private IConfigSnapshot ConfigSnapshot => _enclosingTransaction.ConfigSnapshot;
+
+		/// <summary>
+		/// The outcome of the span: success, failure, or unknown.
+		/// Outcome may be one of a limited set of permitted values describing the success or failure of the span.
+		/// This field can be used for calculating error rates for outgoing requests.
+		/// </summary>
+		[JsonConverter(typeof(StringEnumConverter))]
+		public Outcome Outcome { get; set; }
 
 		/// <summary>
 		/// Any other arbitrary data captured by the agent, optionally provided by the user.
