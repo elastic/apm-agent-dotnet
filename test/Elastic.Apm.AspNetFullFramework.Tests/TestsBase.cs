@@ -109,7 +109,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			/// and exception propagates out of transaction as well so both span and transaction send an error event
 			/// </summary>
 			internal static readonly SampleAppUrlPathData CustomSpanThrowsExceptionPage =
-				new SampleAppUrlPathData(HomeController.CustomSpanThrowsPageRelativePath, 500, spansCount: 1, errorsCount: 2);
+				new SampleAppUrlPathData(HomeController.CustomSpanThrowsPageRelativePath, 500, spansCount: 1, errorsCount: 2, outcome: Outcome.Failure);
 
 			internal static readonly SampleAppUrlPathData HomePage =
 				new SampleAppUrlPathData(HomeController.HomePageRelativePath, 200);
@@ -512,6 +512,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					}
 
 					transaction.Context.Response.StatusCode.Should().Be(sampleAppUrlPathData.StatusCode);
+					transaction.Outcome.Should().Be(sampleAppUrlPathData.Outcome);
 				}
 
 				var httpStatusFirstDigit = sampleAppUrlPathData.StatusCode / 100;
@@ -806,14 +807,16 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			public readonly int SpansCount;
 			public readonly int StatusCode;
 			public readonly int TransactionsCount;
+			public readonly Outcome Outcome;
 
-			public SampleAppUrlPathData(string relativeUrlPath, int statusCode, int transactionsCount = 1, int spansCount = 0, int errorsCount = 0)
+			public SampleAppUrlPathData(string relativeUrlPath, int statusCode, int transactionsCount = 1, int spansCount = 0, int errorsCount = 0, Outcome outcome = Outcome.Success)
 			{
 				RelativeUrlPath = relativeUrlPath;
 				StatusCode = statusCode;
 				TransactionsCount = transactionsCount;
 				SpansCount = spansCount;
 				ErrorsCount = errorsCount;
+				Outcome = outcome;
 			}
 
 			public SampleAppUrlPathData Clone(
@@ -821,13 +824,15 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				int? status = null,
 				int? transactionsCount = null,
 				int? spansCount = null,
-				int? errorsCount = null
+				int? errorsCount = null,
+				Outcome outcome = Outcome.Success
 			) => new SampleAppUrlPathData(
 				relativeUrlPath ?? RelativeUrlPath,
 				status ?? StatusCode,
 				transactionsCount ?? TransactionsCount,
 				spansCount ?? SpansCount,
-				errorsCount ?? ErrorsCount);
+				errorsCount ?? ErrorsCount,
+				outcome);
 		}
 	}
 }

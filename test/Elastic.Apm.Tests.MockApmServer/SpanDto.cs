@@ -30,6 +30,8 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		public string Subtype { get; set; }
 
+		public Outcome Outcome { get; set; }
+
 		public long Timestamp { get; set; }
 
 		[JsonProperty("trace_id")]
