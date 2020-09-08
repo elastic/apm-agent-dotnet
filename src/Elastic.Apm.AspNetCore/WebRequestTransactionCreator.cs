@@ -189,7 +189,7 @@ namespace Elastic.Apm.AspNetCore
 					}
 					else if (context.Response.StatusCode == StatusCodes.Status404NotFound)
 					{
-						transaction.Name = $"{context.Request.Method} Unknown Route";
+						transaction.Name = $"{context.Request.Method} unknown route";
 					}
 				}
 
