@@ -141,7 +141,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			/// and exception propagates out of transaction as well so both spans and the transaction send an error event
 			/// </summary>
 			internal static readonly SampleAppUrlPathData CustomChildSpanThrowsExceptionPage =
-				new SampleAppUrlPathData(HomeController.CustomChildSpanThrowsPageRelativePath, 500, spansCount: 2, errorsCount: 3);
+				new SampleAppUrlPathData(HomeController.CustomChildSpanThrowsPageRelativePath, 500, spansCount: 2, errorsCount: 3, outcome: Outcome.Failure);
 
 
 			internal static readonly SampleAppUrlPathData ChildHttpSpanWithResponseForbiddenPage =
@@ -155,7 +155,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				new SampleAppUrlPathData(HomeController.ReturnBadRequestPageRelativePath, (int)HttpStatusCode.BadRequest);
 
 			internal static readonly SampleAppUrlPathData ThrowsInvalidOperationPage =
-				new SampleAppUrlPathData(HomeController.ThrowsInvalidOperationPageRelativePath, 500, errorsCount: 1);
+				new SampleAppUrlPathData(HomeController.ThrowsInvalidOperationPageRelativePath, 500, errorsCount: 1, outcome: Outcome.Failure);
 
 			internal static readonly SampleAppUrlPathData GenNSpansPage =
 				new SampleAppUrlPathData(HomeController.GenNSpansPageRelativePath, (int)HttpStatusCode.Created);
