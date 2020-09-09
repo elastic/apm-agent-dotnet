@@ -201,6 +201,7 @@ namespace Elastic.Apm.Model
 			{ nameof(TraceId), TraceId },
 			{ nameof(Name), Name },
 			{ nameof(Type), Type },
+			{ nameof(Outcome), Outcome },
 			{ nameof(IsSampled), IsSampled }
 		}.ToString();
 

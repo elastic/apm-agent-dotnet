@@ -313,6 +313,7 @@ namespace Elastic.Apm.Model
 			{ nameof(ParentId), ParentId },
 			{ nameof(Name), Name },
 			{ nameof(Type), Type },
+			{ nameof(Outcome), Outcome },
 			{ nameof(IsSampled), IsSampled }
 		}.ToString();
 
