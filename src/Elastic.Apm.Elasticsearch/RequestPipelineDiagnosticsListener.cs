@@ -27,9 +27,17 @@ namespace Elastic.Apm.Elasticsearch
 
 				RegisterStatement(span, response);
 				RegisterError(span, response);
+
+				if (response.Success)
+					span.Outcome = Outcome.Success;
+				else
+					span.Outcome = Outcome.Failure;
 			}
 			else
+			{
 				span.Name += " (Exception)";
+				span.Outcome = Outcome.Failure;
+			}
 
 
 			Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);

@@ -81,9 +81,11 @@ namespace Elastic.Apm.Elasticsearch
 		{
 			if (instance == null)
 				return;
-			span.Context.Destination = new Destination();
-			span.Context.Destination.Port = instance.Port;
-			span.Context.Destination.Address = instance.Host;
+			span.Context.Destination = new Destination
+			{
+				Port = instance.Port,
+				Address = instance.Host
+			};
 		}
 
 		internal bool TryGetCurrentElasticsearchSpan(out Span span, Uri instance = null)

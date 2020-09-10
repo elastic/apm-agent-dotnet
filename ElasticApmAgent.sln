@@ -84,6 +84,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Elasticsearch",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleConsoleNetCoreApp", "sample\SampleConsoleNetCoreApp\SampleConsoleNetCoreApp.csproj", "{00AD0047-92A6-48CC-B67D-A3DB2812CE28}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Elasticsearch.Tests", "test\Elastic.Apm.Elasticsearch.Tests\Elastic.Apm.Elasticsearch.Tests.csproj", "{E30DEF03-4E0B-46A0-87D0-E80545D99BBA}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		test\Elastic.Apm.DatabaseTests.Common\Elastic.Apm.DatabaseTests.Common.projitems*{968e1e85-e996-42de-9845-d20dae16165a}*SharedItemsImports = 5
@@ -195,6 +197,10 @@ Global
 		{00AD0047-92A6-48CC-B67D-A3DB2812CE28}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{00AD0047-92A6-48CC-B67D-A3DB2812CE28}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{00AD0047-92A6-48CC-B67D-A3DB2812CE28}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E30DEF03-4E0B-46A0-87D0-E80545D99BBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E30DEF03-4E0B-46A0-87D0-E80545D99BBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E30DEF03-4E0B-46A0-87D0-E80545D99BBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E30DEF03-4E0B-46A0-87D0-E80545D99BBA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -225,6 +231,7 @@ Global
 		{9BA642D5-2C8A-4B5E-AA75-50A4C29B0CCC} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{77812373-D9CB-4DDC-B0D4-A192F7FC2330} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{00AD0047-92A6-48CC-B67D-A3DB2812CE28} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
+		{E30DEF03-4E0B-46A0-87D0-E80545D99BBA} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}
