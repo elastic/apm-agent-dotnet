@@ -678,7 +678,7 @@ NOTE: Setting this to `false` reduces memory allocations, network bandwidth and 
 [options="header"]
 |============
 | Environment variable name                    | IConfiguration or Web.config key
-| `ELASTIC_APM_USE_ELASTIC_TRACEPARENT_HEADER` | `ElasticApm:UseElasticTraceparentHeder`
+| `ELASTIC_APM_USE_ELASTIC_TRACEPARENT_HEADER` | `ElasticApm:UseElasticTraceparentHeader`
 |============
 
 [options="header"]
