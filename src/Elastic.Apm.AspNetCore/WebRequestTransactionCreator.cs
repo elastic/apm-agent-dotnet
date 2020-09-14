@@ -221,6 +221,8 @@ namespace Elastic.Apm.AspNetCore
 					StatusCode = context.Response.StatusCode,
 					Headers = GetHeaders(context.Response.Headers, transaction.ConfigSnapshot)
 				};
+
+				logger?.Trace()?.Log("Filling transaction.Context.Response, StatusCode: {statuscode}", transaction.Context.Response.StatusCode);
 			}
 			catch (Exception ex)
 			{
