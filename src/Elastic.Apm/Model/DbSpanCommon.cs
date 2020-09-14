@@ -30,7 +30,7 @@ namespace Elastic.Apm.Model
 			return ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(agent, spanName, ApiConstants.TypeDb, subType, instrumentationFlag, captureStackTraceOnStart);
 		}
 
-		internal void EndSpan(Span span, IDbCommand dbCommand, TimeSpan? duration = null)
+		internal void EndSpan(Span span, IDbCommand dbCommand, Outcome outcome, TimeSpan? duration = null)
 		{
 			if (duration.HasValue) span.Duration = duration.Value.TotalMilliseconds;
 
@@ -50,6 +50,7 @@ namespace Elastic.Apm.Model
 				span.Context.Destination = GetDestination(dbCommand.Connection?.ConnectionString, isEmbeddedDb, defaultPort);
 			}
 
+			span.Outcome = outcome;
 			span.End();
 		}
 

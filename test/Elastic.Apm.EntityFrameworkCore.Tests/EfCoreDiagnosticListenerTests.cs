@@ -66,6 +66,8 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 
 			// Assert
 			_payloadSender.Spans.Count.Should().Be(1);
+			_payloadSender.FirstSpan.Should().NotBeNull();
+			_payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Failure);
 
 			_payloadSender.Errors.Count.Should().Be(1);
 			_payloadSender.FirstError.Exception.Type.Should().Be(typeof(SqliteException).FullName);
@@ -91,6 +93,9 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 			// Assert
 			_payloadSender.Spans.Count.Should().Be(1);
 			_payloadSender.Errors.Count.Should().Be(0);
+
+			_payloadSender.FirstSpan.Should().NotBeNull();
+			_payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Success);
 		}
 
 		[Fact]

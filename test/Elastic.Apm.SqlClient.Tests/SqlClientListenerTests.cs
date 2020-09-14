@@ -90,6 +90,9 @@ namespace Elastic.Apm.SqlClient.Tests
 			_payloadSender.Spans.Count.Should().Be(1);
 			_payloadSender.Errors.Count.Should().Be(0);
 
+			_payloadSender.FirstSpan.Should().NotBeNull();
+			_payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Success);
+
 			var span = _payloadSender.FirstSpan;
 
 #if !NETFRAMEWORK
@@ -151,6 +154,9 @@ namespace Elastic.Apm.SqlClient.Tests
 			// Assert
 			_payloadSender.Spans.Count.Should().Be(1);
 			_payloadSender.Errors.Count.Should().Be(1);
+
+			_payloadSender.FirstSpan.Should().NotBeNull();
+			_payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Failure);
 
 			var span = _payloadSender.FirstSpan;
 

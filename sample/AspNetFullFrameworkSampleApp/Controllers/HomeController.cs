@@ -43,6 +43,11 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		internal const string DbOperationOutsideTransactionTestPageRelativePath =
 			HomePageRelativePath + "/" + nameof(DbOperationOutsideTransactionTest);
 
+		internal const string FailingDbCallTestPageRelativePath =
+			HomePageRelativePath + "/" + nameof(FailingDbCallTest);
+
+		internal const int FailingDbCallTestStatusCode = (int)HttpStatusCode.OK;
+
 		internal const int DbOperationOutsideTransactionTestStatusCode = (int)HttpStatusCode.Accepted;
 
 		internal const string DotNetRuntimeDescriptionHttpHeaderName = "DotNetRuntimeDescription";
@@ -192,6 +197,23 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 					throw new InvalidOperationException($"dbCtx.Set<SampleData>().Count(): {dbCtx.Set<SampleData>().Count()}");
 				if (dbCtx.Set<SampleData>().First().Name != sampleDataName)
 					throw new InvalidOperationException($"dbCtx.Set<SampleData>().First().Name: {dbCtx.Set<SampleData>().First().Name}");
+			}
+
+			return new HttpStatusCodeResult(HttpStatusCode.OK);
+		}
+
+		public HttpStatusCodeResult FailingDbCallTest()
+		{
+			try
+			{
+				using (var dbCtx = new SampleDataDbContext())
+				{
+					dbCtx.Database.ExecuteSqlCommand("Select * From NonExistingTable");
+				}
+			}
+			catch
+			{
+				//ignore exception
 			}
 
 			return new HttpStatusCodeResult(HttpStatusCode.OK);

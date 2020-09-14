@@ -57,6 +57,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					span.Type.Should().Be(ApiConstants.TypeDb);
 					span.Subtype.Should().Be(ApiConstants.SubtypeSqLite);
 					span.Context.Db.Type.Should().Be(Database.TypeSql);
+					span.Outcome.Should().Be(Outcome.Success);
 
 					span.Context.Db.Instance.Should().NotBeNull();
 					span.Context.Db.Instance.Should().Be(receivedData.Spans.First().Context.Db.Instance);
@@ -194,6 +195,27 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			await SendGetRequestToSampleAppAndVerifyResponse(pageData.RelativeUrlPath, pageData.StatusCode);
 			await WaitAndVerifyReceivedDataSharedConstraints(pageData);
+		}
+
+		/// <summary>
+		/// The test app generates a failing DB call and this test makes sure the outcome is set correctly to Failure
+		/// </summary>
+		[AspNetFullFrameworkFact]
+		public async Task FailingDbCallTest()
+		{
+			var pageData = new SampleAppUrlPathData(HomeController.FailingDbCallTestPageRelativePath
+				, HomeController.FailingDbCallTestStatusCode);
+
+			await SendGetRequestToSampleAppAndVerifyResponse(pageData.RelativeUrlPath, pageData.StatusCode);
+
+			await WaitAndCustomVerifyReceivedData(receivedData =>
+			{
+				receivedData.Spans.Should().NotBeNullOrEmpty();
+
+				var selectSpan = receivedData.Spans.Where(n => n.Context.Db != null && n.Context.Db.Statement.Contains("Select * From NonExistingTable")).First();
+				selectSpan.Should().NotBeNull();
+				selectSpan.Outcome.Should().Be(Outcome.Failure);
+			});
 		}
 	}
 }

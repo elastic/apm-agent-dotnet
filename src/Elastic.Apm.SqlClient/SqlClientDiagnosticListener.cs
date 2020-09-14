@@ -92,7 +92,7 @@ namespace Elastic.Apm.SqlClient
 						statistics.ContainsKey("ExecutionTime") && statistics["ExecutionTime"] is long durationInMs && durationInMs > 0)
 						duration = TimeSpan.FromMilliseconds(durationInMs);
 
-					_apmAgent.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand, duration);
+					_apmAgent.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand, Outcome.Success, duration);
 				}
 			}
 			catch (Exception ex)
@@ -113,10 +113,11 @@ namespace Elastic.Apm.SqlClient
 					if (propertyFetcherSet.Exception.Fetch(payloadData) is Exception exception) span.CaptureException(exception);
 
 					if (propertyFetcherSet.ErrorCommand.Fetch(payloadData) is IDbCommand dbCommand)
-						_apmAgent.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand);
+						_apmAgent.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand, Outcome.Failure);
 					else
 					{
 						_logger.Warning()?.Log("Cannot extract database command from {PayloadData}", payloadData);
+						span.Outcome = Outcome.Failure;
 						span.End();
 					}
 				}

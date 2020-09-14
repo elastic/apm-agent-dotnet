@@ -7,6 +7,7 @@ using System.Data;
 using System.Data.Common;
 using System.Data.Entity.Infrastructure.Interception;
 using System.Runtime.CompilerServices;
+using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
@@ -113,7 +114,8 @@ namespace Elastic.Apm.EntityFramework6
 			{
 				try
 				{
-					DoEndSpan(command, interceptCtx, dbgCaller);
+					DoEndSpan(command, interceptCtx,
+						interceptCtx.OriginalException == null ? Outcome.Success : Outcome.Failure, dbgCaller);
 				}
 				catch (Exception ex)
 				{
@@ -135,7 +137,7 @@ namespace Elastic.Apm.EntityFramework6
 				interceptCtx.SetUserState(_userStateKey, span);
 			}
 
-			private void DoEndSpan<TResult>(IDbCommand command, DbCommandInterceptionContext<TResult> interceptCtx, string dbgOriginalCaller)
+			private void DoEndSpan<TResult>(IDbCommand command, DbCommandInterceptionContext<TResult> interceptCtx, Outcome outcome, string dbgOriginalCaller)
 			{
 				var span = (Span)interceptCtx.FindUserState(_userStateKey);
 				if (span == null)
@@ -148,7 +150,7 @@ namespace Elastic.Apm.EntityFramework6
 
 				LogEvent("DB operation ended - ending the corresponding span...", command, interceptCtx, dbgOriginalCaller);
 
-				Agent.Instance.TracerInternal.DbSpanCommon.EndSpan(span, command);
+				Agent.Instance.TracerInternal.DbSpanCommon.EndSpan(span, command, outcome);
 			}
 		}
 	}

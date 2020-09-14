@@ -149,9 +149,12 @@ namespace Elastic.Apm.SqlClient
 
 			if (isSqlException)
 			{
+				item.Span.Outcome = Outcome.Failure;
 				item.Span.CaptureError("Exception has occurred", sqlExceptionNumber != 0 ? $"SQL Exception {sqlExceptionNumber}" : null,
 					null);
 			}
+			else
+				item.Span.Outcome = Outcome.Success;
 
 			item.Span.End();
 		}
