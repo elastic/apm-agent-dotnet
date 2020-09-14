@@ -6,10 +6,12 @@ using System;
 using System.Threading.Tasks;
 using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
@@ -25,14 +27,20 @@ namespace Elastic.Apm.AspNetCore.Tests
 		private readonly WebApplicationFactory<Startup> _factory;
 		private readonly MockPayloadSender _payloadSender = new MockPayloadSender();
 
-		public TransactionNameTests(WebApplicationFactory<Startup> factory)
+		public TransactionNameTests(WebApplicationFactory<Startup> factory, ITestOutputHelper testOutputHelper)
 		{
 			_factory = factory;
 
+			var logger = new LineWriterToLoggerAdaptor(new XunitOutputToLineWriterAdaptor(testOutputHelper))
+			{
+				Level = Logging.LogLevel.Trace
+			};
+
 			_agent = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender,
+				logger: logger,
 				// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
-				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer));
+				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer));;
 			HostBuilderExtensions.UpdateServiceInformation(_agent.Service);
 		}
 
@@ -113,6 +121,23 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			_payloadSender.FirstTransaction.Name.Should().Be("GET Home/Index");
 			_payloadSender.FirstTransaction.Context.Request.Url.Full.Should().Be("http://localhost/");
+		}
+
+		/// <summary>
+		/// Calls a URL that maps to no route and causes a 404
+		/// </summary>
+		[InlineData("home/doesnotexist", true)]
+		[InlineData("home/doesnotexist", false)]
+		[InlineData("files/doesnotexist/somefile", true)]
+		[InlineData("files/doesnotexist/somefile", false)]
+		[Theory]
+		public async Task NotFoundRoute_ShouldBe_Aggregatable(string url, bool diagnosticSourceOnly)
+		{
+			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
+			await httpClient.GetAsync(url);
+
+			_payloadSender.Transactions.Should().OnlyContain(n => n.Name.Equals("GET unknown route", StringComparison.OrdinalIgnoreCase));
+			_payloadSender.Transactions.Should().HaveCount(1);
 		}
 
 		public void Dispose()
