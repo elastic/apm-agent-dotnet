@@ -4,7 +4,9 @@
 
 using System;
 using System.Data.Common;
+using System.Linq;
 using System.Threading.Tasks;
+using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
@@ -32,6 +34,7 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 				.Options;
 
 			_dbContext = new FakeDbContext(options);
+			_dbContext.Database.EnsureCreated();
 
 			_payloadSender = new MockPayloadSender();
 			_apmAgent = new ApmAgent(new AgentComponents(payloadSender: _payloadSender));
@@ -106,6 +109,21 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 			// Assert
 			_payloadSender.Spans.Count.Should().Be(0);
 			_payloadSender.Errors.Count.Should().Be(0);
+		}
+
+
+		[Fact]
+		public async Task EfCoreDiagnosticListener_ShouldCaptureCallingMember_WhenCalledInAsyncContext()
+		{
+			// Arrange + Act
+			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async transaction =>
+			{
+				await _dbContext.Data.FirstOrDefaultAsync();
+			});
+
+			// Assert
+			_payloadSender.FirstSpan.StackTrace.Should().NotBeNull();
+			_payloadSender.FirstSpan.StackTrace.Should().Contain(n => n.Function.Contains(nameof(EfCoreDiagnosticListener_ShouldCaptureCallingMember_WhenCalledInAsyncContext)));
 		}
 	}
 }
