@@ -101,8 +101,20 @@ namespace Elastic.Apm.Helpers
 
 			try
 			{
-				return GenerateApmStackTrace(
-					new EnhancedStackTrace(exception).GetFrames(), logger, configurationReader, dbgCapturingFor);
+				try
+				{
+					return GenerateApmStackTrace(
+						new EnhancedStackTrace(exception).GetFrames(), logger, configurationReader, dbgCapturingFor);
+				}
+				catch (Exception e)
+				{
+					logger?.Debug()?
+						.LogException(e, "Failed generating stack trace with EnhancedStackTrace - using fallback without demystification");
+					// Fallback, see https://github.com/elastic/apm-agent-dotnet/issues/957
+					// This callstack won't be demystified, but at least it'll be captured.
+					return GenerateApmStackTrace(
+						new StackTrace(exception, true).GetFrames(), logger, configurationReader, dbgCapturingFor);
+				}
 			}
 			catch (Exception e)
 			{
