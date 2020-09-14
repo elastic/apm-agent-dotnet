@@ -35,7 +35,8 @@ namespace Elastic.Apm.Api
 
 		/// <summary>
 		/// A flat mapping of user-defined labels with string values.
-		/// Dots (<code>.</code>) in the keys are not allowed. In case you have a <code>.</code> in your label key, it will be replaced by <code>_</code>.
+		/// Dots (<code>.</code>) in the keys are not allowed. In case you have a <code>.</code> in your label key, it will be
+		/// replaced by <code>_</code>.
 		/// For example <code>foo.bar</code> will be stored as <code>foo_bar</code> in Elasticsearch.
 		/// </summary>
 		/// <exception cref="ArgumentException"><c>null</c> as key is not allowed.</exception>
@@ -45,6 +46,11 @@ namespace Elastic.Apm.Api
 		/// The name of the item.
 		/// </summary>
 		string Name { get; set; }
+
+		/// <summary>
+		/// The outcome of the IExecutionSegment: success, failure, or unknown.
+		/// </summary>
+		public Outcome Outcome { get; set; }
 
 		/// <summary>
 		/// Distributed tracing data for this segment as the distributed tracing caller.

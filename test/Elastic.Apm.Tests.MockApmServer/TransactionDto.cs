@@ -2,6 +2,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using FluentAssertions;
 using Newtonsoft.Json;
@@ -21,6 +22,8 @@ namespace Elastic.Apm.Tests.MockApmServer
 		public bool IsSampled { get; set; }
 
 		public string Name { get; set; }
+
+		public Outcome Outcome { get; set; }
 
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }

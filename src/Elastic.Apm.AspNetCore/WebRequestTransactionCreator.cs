@@ -17,7 +17,7 @@ using Microsoft.AspNetCore.Routing;
 namespace Elastic.Apm.AspNetCore
 {
 	/// <summary>
-	/// A helper class to capture an <see cref="HttpContext"/> as a transaction.
+	/// A helper class to capture an <see cref="HttpContext" /> as a transaction.
 	/// </summary>
 	internal static class WebRequestTransactionCreator
 	{
@@ -122,6 +122,7 @@ namespace Elastic.Apm.AspNetCore
 			configSnapshot.CaptureHeaders && headers != null
 				? headers.ToDictionary(header => header.Key, header => header.Value.ToString())
 				: null;
+
 		private static string GetRawUrl(HttpRequest httpRequest, IApmLogger logger)
 		{
 			try
@@ -197,6 +198,11 @@ namespace Elastic.Apm.AspNetCore
 				}
 
 				transaction.Result = Transaction.StatusCodeToResult(GetProtocolName(context.Request.Protocol), context.Response.StatusCode);
+
+				if (context.Response.StatusCode >= 500)
+					transaction.Outcome = Outcome.Failure;
+				else
+					transaction.Outcome = Outcome.Success;
 
 				if (transaction.IsSampled)
 				{

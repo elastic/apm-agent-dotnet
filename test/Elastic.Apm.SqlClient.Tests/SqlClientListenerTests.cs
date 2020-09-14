@@ -21,10 +21,11 @@ namespace Elastic.Apm.SqlClient.Tests
 	{
 		private readonly ApmAgent _apmAgent;
 
+		private readonly string _connectionString;
+		private readonly string _expectedAddress;
+
 		private readonly MockPayloadSender _payloadSender;
 		private readonly ITestOutputHelper _testOutputHelper;
-
-		private readonly string _expectedAddress;
 
 		public SqlClientListenerTests(ITestOutputHelper testOutputHelper, DatabaseFixture sqlClientListenerFixture)
 		{
@@ -40,8 +41,6 @@ namespace Elastic.Apm.SqlClient.Tests
 				payloadSender: _payloadSender));
 			_apmAgent.Subscribe(new SqlClientDiagnosticSubscriber());
 		}
-
-		private readonly string _connectionString;
 
 		public static IEnumerable<object[]> Connections
 		{
@@ -72,23 +71,23 @@ namespace Elastic.Apm.SqlClient.Tests
 
 			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async transaction =>
 			{
-				using (var dbConnection = connectionCreator.Invoke(_connectionString))
+				using var dbConnection = connectionCreator.Invoke(_connectionString);
+				await dbConnection.OpenAsync();
+				using var sqlCommand = dbConnection.CreateCommand();
+				sqlCommand.CommandText = commandText;
+				// ReSharper disable once MethodHasAsyncOverload
+				using (sqlCommand.ExecuteReader())
 				{
-					await dbConnection.OpenAsync();
-					using (var sqlCommand = dbConnection.CreateCommand())
-					{
-						sqlCommand.CommandText = commandText;
-						using (sqlCommand.ExecuteReader())
-						{
-							// ignore
-						}
-					}
+					// ignore
 				}
 			});
 
 			// Assert
 			_payloadSender.Spans.Count.Should().Be(1);
 			_payloadSender.Errors.Count.Should().Be(0);
+
+			_payloadSender.FirstSpan.Should().NotBeNull();
+			_payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Success);
 
 			var span = _payloadSender.FirstSpan;
 
@@ -127,30 +126,30 @@ namespace Elastic.Apm.SqlClient.Tests
 
 			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async transaction =>
 			{
-				using (var dbConnection = connectionCreator.Invoke(_connectionString))
+				using var dbConnection = connectionCreator.Invoke(_connectionString);
+				await dbConnection.OpenAsync();
+				using var sqlCommand = dbConnection.CreateCommand();
+				sqlCommand.CommandText = commandText;
+				try
 				{
-					await dbConnection.OpenAsync();
-					using (var sqlCommand = dbConnection.CreateCommand())
+					// ReSharper disable once MethodHasAsyncOverload
+					using (sqlCommand.ExecuteReader())
 					{
-						sqlCommand.CommandText = commandText;
-						try
-						{
-							using (sqlCommand.ExecuteReader())
-							{
-								// ignore
-							}
-						}
-						catch
-						{
-							// ignore
-						}
+						// ignore
 					}
+				}
+				catch
+				{
+					// ignore
 				}
 			});
 
 			// Assert
 			_payloadSender.Spans.Count.Should().Be(1);
 			_payloadSender.Errors.Count.Should().Be(1);
+
+			_payloadSender.FirstSpan.Should().NotBeNull();
+			_payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Failure);
 
 			var span = _payloadSender.FirstSpan;
 

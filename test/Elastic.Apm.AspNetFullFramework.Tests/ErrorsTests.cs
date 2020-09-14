@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using AspNetFullFrameworkSampleApp.Controllers;
+using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.TestHelpers;
@@ -33,6 +34,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				var transaction = receivedData.Transactions.First();
 				transaction.Context.Request.Url.Search.Should().BeNull();
 				transaction.IsSampled.Should().BeTrue();
+				transaction.Outcome.Should().Be(Outcome.Failure);
 
 				var span = receivedData.Spans.First();
 				VerifySpanNameTypeSubtypeAction(span, HomeController.TestSpanPrefix);

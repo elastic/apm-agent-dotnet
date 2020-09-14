@@ -13,6 +13,7 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Elastic.Apm.Model
 {
@@ -138,6 +139,14 @@ namespace Elastic.Apm.Model
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
 
+		/// <summary>
+		/// The outcome of the span: success, failure, or unknown.
+		/// Outcome may be one of a limited set of permitted values describing the success or failure of the span.
+		/// This field can be used for calculating error rates for outgoing requests.
+		/// </summary>
+		[JsonConverter(typeof(StringEnumConverter))]
+		public Outcome Outcome { get; set; }
+
 		[JsonIgnore]
 		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(
 			TraceId,
@@ -192,6 +201,7 @@ namespace Elastic.Apm.Model
 			{ nameof(TraceId), TraceId },
 			{ nameof(Name), Name },
 			{ nameof(Type), Type },
+			{ nameof(Outcome), Outcome },
 			{ nameof(IsSampled), IsSampled }
 		}.ToString();
 
@@ -260,7 +270,8 @@ namespace Elastic.Apm.Model
 					if (Duration >= ConfigSnapshot.SpanFramesMinDurationInMilliseconds
 						|| ConfigSnapshot.SpanFramesMinDurationInMilliseconds < 0)
 					{
-						StackTrace = StacktraceHelper.GenerateApmStackTrace(_stackFrames ?? new EnhancedStackTrace(new StackTrace(true)).GetFrames(), _logger,
+						StackTrace = StacktraceHelper.GenerateApmStackTrace(_stackFrames ?? new EnhancedStackTrace(new StackTrace(true)).GetFrames(),
+							_logger,
 							ConfigSnapshot, $"Span `{Name}'");
 					}
 				}

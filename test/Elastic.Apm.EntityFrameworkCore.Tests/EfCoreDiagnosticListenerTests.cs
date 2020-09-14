@@ -4,7 +4,6 @@
 
 using System;
 using System.Data.Common;
-using System.Linq;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Mocks;
@@ -66,6 +65,8 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 
 			// Assert
 			_payloadSender.Spans.Count.Should().Be(1);
+			_payloadSender.FirstSpan.Should().NotBeNull();
+			_payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Failure);
 
 			_payloadSender.Errors.Count.Should().Be(1);
 			_payloadSender.FirstError.Exception.Type.Should().Be(typeof(SqliteException).FullName);
@@ -91,6 +92,9 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 			// Assert
 			_payloadSender.Spans.Count.Should().Be(1);
 			_payloadSender.Errors.Count.Should().Be(0);
+
+			_payloadSender.FirstSpan.Should().NotBeNull();
+			_payloadSender.FirstSpan.Outcome.Should().Be(Outcome.Success);
 		}
 
 		[Fact]
@@ -116,14 +120,12 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 		public async Task EfCoreDiagnosticListener_ShouldCaptureCallingMember_WhenCalledInAsyncContext()
 		{
 			// Arrange + Act
-			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async transaction =>
-			{
-				await _dbContext.Data.FirstOrDefaultAsync();
-			});
+			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async transaction => { await _dbContext.Data.FirstOrDefaultAsync(); });
 
 			// Assert
 			_payloadSender.FirstSpan.StackTrace.Should().NotBeNull();
-			_payloadSender.FirstSpan.StackTrace.Should().Contain(n => n.Function.Contains(nameof(EfCoreDiagnosticListener_ShouldCaptureCallingMember_WhenCalledInAsyncContext)));
+			_payloadSender.FirstSpan.StackTrace.Should()
+				.Contain(n => n.Function.Contains(nameof(EfCoreDiagnosticListener_ShouldCaptureCallingMember_WhenCalledInAsyncContext)));
 		}
 	}
 }

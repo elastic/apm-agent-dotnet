@@ -28,6 +28,8 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 
 		internal const string CaptureControllerActionAsSpanQueryStringKey = "captureControllerActionAsSpan";
 
+		internal const string ChildHttpSpanWithResponseForbiddenPath = HomePageRelativePath + "/" + nameof(ChildHttpSpanWithResponseForbidden);
+
 		internal const int ConcurrentDbTestNumberOfIterations = 10;
 		internal const string ConcurrentDbTestPageRelativePath = HomePageRelativePath + "/" + nameof(ConcurrentDbTest);
 		internal const string ConcurrentDbTestSpanType = "concurrent";
@@ -49,13 +51,17 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		internal const int DummyHttpStatusCode = 599;
 		internal const string ExceptionMessage = "For testing purposes";
 
-		internal const string ChildHttpSpanWithResponseForbiddenPath = HomePageRelativePath + "/" + nameof(ChildHttpSpanWithResponseForbidden);
-		internal static readonly Uri ChildHttpSpanWithResponseForbiddenUrl = new Uri("https://httpstat.us/403");
+		internal const string FailingDbCallTestPageRelativePath =
+			HomePageRelativePath + "/" + nameof(FailingDbCallTest);
+
+		internal const int FailingDbCallTestStatusCode = (int)HttpStatusCode.OK;
 
 		internal const string GenNSpansPageRelativePath = HomePageRelativePath + "/" + nameof(GenNSpans);
 
 		internal const string GetDotNetRuntimeDescriptionPageRelativePath = HomePageRelativePath + "/" + nameof(GetDotNetRuntimeDescription);
 		internal const string HomePageRelativePath = "Home";
+
+		internal const string NumberOfSpansQueryStringKey = "numberOfSpans";
 		internal const string ReturnBadRequestPageRelativePath = HomePageRelativePath + "/" + nameof(ReturnBadRequest);
 
 		internal const string SimpleDbTestPageRelativePath = HomePageRelativePath + "/" + nameof(SimpleDbTest);
@@ -69,8 +75,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 
 		internal const string ThrowsInvalidOperationPageRelativePath = HomePageRelativePath + "/" + nameof(ThrowsInvalidOperation);
 		internal static readonly Uri ChildHttpCallToExternalServiceUrl = new Uri("https://elastic.co");
-
-		internal const string NumberOfSpansQueryStringKey = "numberOfSpans";
+		internal static readonly Uri ChildHttpSpanWithResponseForbiddenUrl = new Uri("https://httpstat.us/403");
 
 		public ActionResult Index() => View();
 
@@ -192,6 +197,20 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 					throw new InvalidOperationException($"dbCtx.Set<SampleData>().Count(): {dbCtx.Set<SampleData>().Count()}");
 				if (dbCtx.Set<SampleData>().First().Name != sampleDataName)
 					throw new InvalidOperationException($"dbCtx.Set<SampleData>().First().Name: {dbCtx.Set<SampleData>().First().Name}");
+			}
+
+			return new HttpStatusCodeResult(HttpStatusCode.OK);
+		}
+
+		public HttpStatusCodeResult FailingDbCallTest()
+		{
+			try
+			{
+				using (var dbCtx = new SampleDataDbContext()) dbCtx.Database.ExecuteSqlCommand("Select * From NonExistingTable");
+			}
+			catch
+			{
+				//ignore exception
 			}
 
 			return new HttpStatusCodeResult(HttpStatusCode.OK);

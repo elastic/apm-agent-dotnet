@@ -61,6 +61,8 @@ namespace Elastic.Apm.Elasticsearch.Tests
 				spans.First(n => n.Subtype == ApiConstants.SubtypeElasticsearch)
 					.Context.Destination.Service.Resource.Should()
 					.Be(ApiConstants.SubtypeElasticsearch);
+
+				spans.First(n => n.Subtype == ApiConstants.SubtypeElasticsearch).Outcome.Should().Be(Outcome.Success);
 			}
 		}
 
@@ -84,14 +86,20 @@ namespace Elastic.Apm.Elasticsearch.Tests
 					);
 					searchResponse.Should().NotBeNull();
 				}
-				catch (Exception) { }
+				catch (Exception)
+				{
+					// ignored
+				}
 
 				var spans = payloadSender.SpansOnFirstTransaction;
 				spans.Should().NotBeEmpty();
 				spans.Should().Contain(s => s.Context.Db.Statement != null);
 				//ensure we the last span is closed even if the listener does not receive a response
 				spans.Where(s => s.Action == "Ping").Should().HaveCount(2);
+				spans.Where(s => s.Action == "Ping").All(n => n.Outcome == Outcome.Success).Should().BeTrue();
+
 				spans.Where(s => s.Action == "CallElasticsearch").Should().HaveCount(2);
+				spans.Where(s => s.Action == "CallElasticsearch").All(n => n.Outcome == Outcome.Failure).Should().BeTrue();
 
 				payloadSender.Errors.Should().Contain(e => ((Error)e).Exception.Message == "boom!");
 			}
@@ -116,6 +124,7 @@ namespace Elastic.Apm.Elasticsearch.Tests
 
 				var spans = payloadSender.SpansOnFirstTransaction;
 				var span = spans.Should().NotBeEmpty().And.HaveCount(1).And.Subject.First();
+				span.Outcome.Should().Be(Outcome.Failure);
 				var error = (Error)payloadSender.Errors.Should().HaveCount(1).And.Subject.First();
 
 				error.Culprit.Should().StartWith("Elasticsearch.Net.VirtualizedCluster.VirtualClusterConnection");
@@ -172,6 +181,7 @@ namespace Elastic.Apm.Elasticsearch.Tests
 
 				var spans = payloadSender.SpansOnFirstTransaction;
 				var span = spans.Should().NotBeEmpty().And.HaveCount(1).And.Subject.First();
+				span.Outcome.Should().Be(Outcome.Failure);
 				var error = (Error)payloadSender.Errors.Should().HaveCount(1).And.Subject.First();
 
 				error.Culprit.Should().StartWith("Elasticsearch Server Error: script_exception");

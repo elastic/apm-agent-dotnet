@@ -13,6 +13,7 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Elastic.Apm.Model
 {
@@ -60,11 +61,11 @@ namespace Elastic.Apm.Model
 		/// <param name="distributedTracingData">Distributed tracing data, in case this transaction is part of a distributed trace</param>
 		/// <param name="sender">The IPayloadSender implementation which will record this transaction</param>
 		/// <param name="configSnapshot">The current configuration snapshot which contains the up-do-date config setting values</param>
-		/// <param name="currentExecutionSegmentsContainer">
+		/// <param name="currentExecutionSegmentsContainer"/>
 		/// The ExecutionSegmentsContainer which makes sure this transaction flows
-		/// <paramref name="ignoreActivity"> If set the transaction will ignore Activity.Current and it's trace id,
-		/// otherwise the agent will try to keep ids in-sync </paramref>
-		/// across async work-flows
+		/// <param name="ignoreActivity">
+		/// If set the transaction will ignore Activity.Current and it's trace id,
+		/// otherwise the agent will try to keep ids in-sync across async work-flows
 		/// </param>
 		internal Transaction(
 			IApmLogger logger,
@@ -93,7 +94,7 @@ namespace Elastic.Apm.Model
 			// For each transaction start, we fire an Activity
 			// If Activity.Current is null, then we create one with this and set its traceid, which will flow to all child activities and we also reuse it in Elastic APM, so it'll be the same on all Activities and in Elastic
 			// If Activity.Current is not null, we pick up its traceid and apply it in Elastic APM
-			if(!ignoreActivity)
+			if (!ignoreActivity)
 				StartActivity();
 
 			var isSamplingFromDistributedTracingData = false;
@@ -244,6 +245,15 @@ namespace Elastic.Apm.Model
 			}
 		}
 
+		/// <summary>
+		/// The outcome of the transaction: success, failure, or unknown.
+		/// This is similar to 'result', but has a limited set of permitted values describing the success or failure of the
+		/// transaction from the service's perspective.
+		/// This field can be used for calculating error rates for incoming requests.
+		/// </summary>
+		[JsonConverter(typeof(StringEnumConverter))]
+		public Outcome Outcome { get; set; }
+
 		[JsonIgnore]
 		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(TraceId, Id, IsSampled, _traceState);
 
@@ -303,6 +313,7 @@ namespace Elastic.Apm.Model
 			{ nameof(ParentId), ParentId },
 			{ nameof(Name), Name },
 			{ nameof(Type), Type },
+			{ nameof(Outcome), Outcome },
 			{ nameof(IsSampled), IsSampled }
 		}.ToString();
 

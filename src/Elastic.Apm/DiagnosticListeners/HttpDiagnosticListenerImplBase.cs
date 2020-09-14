@@ -205,7 +205,14 @@ namespace Elastic.Apm.DiagnosticListeners
 				if (responseObject != null)
 				{
 					if (responseObject is TResponse response)
+					{
 						span.Context.Http.StatusCode = ResponseGetStatusCode(response);
+
+						if (span.Context.Http.StatusCode < 400)
+							span.Outcome = Outcome.Success;
+						else
+							span.Outcome = Outcome.Failure;
+					}
 					else
 					{
 						Logger.Trace()

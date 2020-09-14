@@ -242,6 +242,11 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			_currentTransaction.Result = Transaction.StatusCodeToResult("HTTP", httpResponse.StatusCode);
 
+			if (httpResponse.StatusCode >= 500)
+				_currentTransaction.Outcome = Outcome.Failure;
+			else
+				_currentTransaction.Outcome = Outcome.Success;
+
 			if (_currentTransaction.IsSampled)
 			{
 				FillSampledTransactionContextResponse(httpResponse, _currentTransaction);

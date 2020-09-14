@@ -122,7 +122,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		[AspNetFullFrameworkFact]
 		public async Task CallSoap11Request()
 		{
-			var rootTxData = SampleAppUrlPaths.CallSoapServiceProtocolV1_1;
+			var rootTxData = SampleAppUrlPaths.CallSoapServiceProtocolV11;
 			var fullUrl = Consts.SampleApp.RootUrl + "/" + rootTxData.RelativeUrlPath;
 			var action = "Ping";
 
@@ -159,7 +159,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		[AspNetFullFrameworkFact]
 		public async Task CallSoap12Request()
 		{
-			var rootTxData = SampleAppUrlPaths.CallSoapServiceProtocolV1_2;
+			var rootTxData = SampleAppUrlPaths.CallSoapServiceProtocolV12;
 			var fullUrl = Consts.SampleApp.RootUrl + "/" + rootTxData.RelativeUrlPath;
 			var action = "Ping";
 

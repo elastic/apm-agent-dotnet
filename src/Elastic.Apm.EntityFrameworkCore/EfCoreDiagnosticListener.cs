@@ -39,7 +39,8 @@ namespace Elastic.Apm.EntityFrameworkCore
 				case { } k when k == RelationalEventId.CommandExecuting.Name && _agent.Tracer.CurrentTransaction != null:
 					if (kv.Value is CommandEventData commandEventData)
 					{
-						var newSpan = _agent.TracerInternal.DbSpanCommon.StartSpan(_agent, commandEventData.Command, InstrumentationFlag.EfCore, captureStackTraceOnStart: true);
+						var newSpan = _agent.TracerInternal.DbSpanCommon.StartSpan(_agent, commandEventData.Command, InstrumentationFlag.EfCore,
+							captureStackTraceOnStart: true);
 						_spans.TryAdd(commandEventData.CommandId, newSpan);
 					}
 					break;
@@ -47,7 +48,8 @@ namespace Elastic.Apm.EntityFrameworkCore
 					if (kv.Value is CommandExecutedEventData commandExecutedEventData)
 					{
 						if (_spans.TryRemove(commandExecutedEventData.CommandId, out var span))
-							_agent.TracerInternal.DbSpanCommon.EndSpan(span, commandExecutedEventData.Command, commandExecutedEventData.Duration);
+							_agent.TracerInternal.DbSpanCommon.EndSpan(span, commandExecutedEventData.Command, Outcome.Success,
+								commandExecutedEventData.Duration);
 					}
 					break;
 				case { } k when k == RelationalEventId.CommandError.Name:
@@ -56,7 +58,8 @@ namespace Elastic.Apm.EntityFrameworkCore
 						if (_spans.TryRemove(commandErrorEventData.CommandId, out var span))
 						{
 							span.CaptureException(commandErrorEventData.Exception);
-							_agent.TracerInternal.DbSpanCommon.EndSpan(span, commandErrorEventData.Command, commandErrorEventData.Duration);
+							_agent.TracerInternal.DbSpanCommon.EndSpan(span, commandErrorEventData.Command, Outcome.Failure,
+								commandErrorEventData.Duration);
 						}
 					}
 					break;

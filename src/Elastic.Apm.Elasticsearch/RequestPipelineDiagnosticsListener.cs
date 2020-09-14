@@ -11,6 +11,14 @@ namespace Elastic.Apm.Elasticsearch
 {
 	public class RequestPipelineDiagnosticsListener : ElasticsearchDiagnosticsListenerBase
 	{
+		private const string CallStart = nameof(DiagnosticSources.RequestPipeline.CallElasticsearch) + StartSuffix;
+		private const string CallStop = nameof(DiagnosticSources.RequestPipeline.CallElasticsearch) + StopSuffix;
+
+		private const string PingStart = nameof(DiagnosticSources.RequestPipeline.Ping) + StartSuffix;
+		private const string PingStop = nameof(DiagnosticSources.RequestPipeline.Ping) + StopSuffix;
+		private const string SniffStart = nameof(DiagnosticSources.RequestPipeline.Sniff) + StartSuffix;
+		private const string SniffStop = nameof(DiagnosticSources.RequestPipeline.Sniff) + StopSuffix;
+
 		public RequestPipelineDiagnosticsListener(IApmAgent agent) : base(agent, DiagnosticSources.RequestPipeline.SourceName) =>
 			Observer = new RequestPipelineDiagnosticObserver(
 				a => OnRequestData(a.Key, a.Value),
@@ -27,9 +35,17 @@ namespace Elastic.Apm.Elasticsearch
 
 				RegisterStatement(span, response);
 				RegisterError(span, response);
+
+				if (response.Success)
+					span.Outcome = Outcome.Success;
+				else
+					span.Outcome = Outcome.Failure;
 			}
 			else
+			{
 				span.Name += " (Exception)";
+				span.Outcome = Outcome.Failure;
+			}
 
 
 			Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
@@ -41,11 +57,10 @@ namespace Elastic.Apm.Elasticsearch
 			//make sure db exists
 			var db = span.Context.Db ?? (span.Context.Db = new Database
 			{
-				Instance = response.Uri?.GetLeftPart(UriPartial.Authority), Type = Database.TypeElasticsearch,
+				Instance = response.Uri?.GetLeftPart(UriPartial.Authority), Type = Database.TypeElasticsearch
 			});
 
 			db.Statement = response.DebugInformation;
-
 		}
 
 		private static void RegisterError(ISpan span, IApiCallDetails response)
@@ -69,9 +84,9 @@ namespace Elastic.Apm.Elasticsearch
 			var culprit = "Client Error";
 
 			var message = $"{f.GetStringValue()} {exception?.Message}";
-			var stackFrames = exception == null ?  null : new StackTrace(exception, fNeedFileInfo: true).GetFrames();
+			var stackFrames = exception == null ? null : new StackTrace(exception, true).GetFrames();
 			if (stackFrames == null || stackFrames.Length == 0)
-				stackFrames = new StackTrace(fNeedFileInfo: true).GetFrames();
+				stackFrames = new StackTrace(true).GetFrames();
 
 			var causeOnServer = false;
 			if (response.ResponseBodyInBytes != null)
@@ -109,13 +124,6 @@ namespace Elastic.Apm.Elasticsearch
 				Logger.Info()?.Log("Received an {Event} event from elasticsearch", @event);
 			}
 		}
-
-		private const string PingStart = nameof(DiagnosticSources.RequestPipeline.Ping) + StartSuffix;
-		private const string PingStop = nameof(DiagnosticSources.RequestPipeline.Ping) + StopSuffix;
-		private const string SniffStart = nameof(DiagnosticSources.RequestPipeline.Sniff) + StartSuffix;
-		private const string SniffStop = nameof(DiagnosticSources.RequestPipeline.Sniff) + StopSuffix;
-		private const string CallStart = nameof(DiagnosticSources.RequestPipeline.CallElasticsearch) + StartSuffix;
-		private const string CallStop = nameof(DiagnosticSources.RequestPipeline.CallElasticsearch) + StopSuffix;
 
 		private static string ToName(string @event)
 		{
