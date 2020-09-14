@@ -133,7 +133,7 @@ namespace Elastic.Apm.AspNetCore
 
 				return rawPathAndQuery == null ? null : UriHelper.BuildAbsolute(httpRequest.Scheme, httpRequest.Host, rawPathAndQuery);
 			}
-			catch(Exception e)
+			catch (Exception e)
 			{
 				logger.Warning()?.LogException(e, "Failed reading RawUrl");
 				return null;
@@ -181,14 +181,17 @@ namespace Elastic.Apm.AspNetCore
 					//fixup Transaction.Name - e.g. /user/profile/1 -> /user/profile/{id}
 					var routeData = context.GetRouteData()?.Values;
 
-					if (routeData != null)
+					if (routeData != null && context.Response.StatusCode != StatusCodes.Status404NotFound)
 					{
+						logger?.Trace()?.Log("Calculating transaction name based on route data");
 						var name = GetNameFromRouteContext(routeData);
 
 						if (!string.IsNullOrWhiteSpace(name)) transaction.Name = $"{context.Request.Method} {name}";
 					}
 					else if (context.Response.StatusCode == StatusCodes.Status404NotFound)
 					{
+						logger?.Trace()?
+							.Log("No route data found or status code is 404 - setting transaction name to 'unknown route");
 						transaction.Name = $"{context.Request.Method} unknown route";
 					}
 				}
