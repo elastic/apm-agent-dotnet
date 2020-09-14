@@ -135,8 +135,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 			await httpClient.GetAsync("home/doesnotexist");
 			await httpClient.GetAsync("files/doesnotexist/somefile");
 
-			true.Should().BeFalse();
-
 			_payloadSender.Transactions.Should().OnlyContain(n => n.Name.Equals("GET unknown route", StringComparison.OrdinalIgnoreCase));
 			_payloadSender.Transactions.Should().HaveCount(2);
 		}
