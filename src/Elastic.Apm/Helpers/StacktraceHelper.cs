@@ -27,7 +27,7 @@ namespace Elastic.Apm.Helpers
 		/// <param name="dbgCapturingFor">Just for logging.</param>
 		/// <param name="configurationReader">
 		/// Config reader - this controls the collection of stack traces (e.g. limit on frames,
-		/// etc)e
+		/// etc)
 		/// </param>
 		/// <returns>A prepared List that can be passed to the APM server</returns>
 		internal static List<CapturedStackFrame> GenerateApmStackTrace(StackFrame[] frames, IApmLogger logger,
