@@ -27,7 +27,7 @@ namespace Elastic.Apm.Helpers
 		/// <param name="dbgCapturingFor">Just for logging.</param>
 		/// <param name="configurationReader">
 		/// Config reader - this controls the collection of stack traces (e.g. limit on frames,
-		/// etc)
+		/// etc)e
 		/// </param>
 		/// <returns>A prepared List that can be passed to the APM server</returns>
 		internal static List<CapturedStackFrame> GenerateApmStackTrace(StackFrame[] frames, IApmLogger logger,
@@ -101,8 +101,20 @@ namespace Elastic.Apm.Helpers
 
 			try
 			{
-				return GenerateApmStackTrace(
-					new EnhancedStackTrace(exception).GetFrames(), logger, configurationReader, dbgCapturingFor);
+				try
+				{
+					return GenerateApmStackTrace(
+						new EnhancedStackTrace(exception).GetFrames(), logger, configurationReader, dbgCapturingFor);
+				}
+				catch (Exception e)
+				{
+					logger?.Debug()?
+						.LogException(e, "Failed generating stack trace with EnhancedStackTrace - using fallback without demystification");
+					// Fallback, see https://github.com/elastic/apm-agent-dotnet/issues/957
+					// This callstack won't be demystified, but at least it'll be captured.
+					return GenerateApmStackTrace(
+						new StackTrace(exception, true).GetFrames(), logger, configurationReader, dbgCapturingFor);
+				}
 			}
 			catch (Exception e)
 			{
