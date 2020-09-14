@@ -49,8 +49,7 @@ namespace Elastic.Apm.Model
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigStore.CurrentSnapshot,
-				agent.TracerInternal.CurrentExecutionSegmentsContainer)
-		{ }
+				agent.TracerInternal.CurrentExecutionSegmentsContainer) { }
 
 		/// <summary>
 		/// Creates a new transaction
@@ -62,11 +61,11 @@ namespace Elastic.Apm.Model
 		/// <param name="distributedTracingData">Distributed tracing data, in case this transaction is part of a distributed trace</param>
 		/// <param name="sender">The IPayloadSender implementation which will record this transaction</param>
 		/// <param name="configSnapshot">The current configuration snapshot which contains the up-do-date config setting values</param>
-		/// <param name="currentExecutionSegmentsContainer">
+		/// <param name="currentExecutionSegmentsContainer"/>
 		/// The ExecutionSegmentsContainer which makes sure this transaction flows
-		/// <paramref name="ignoreActivity"> If set the transaction will ignore Activity.Current and it's trace id,
-		/// otherwise the agent will try to keep ids in-sync </paramref>
-		/// across async work-flows
+		/// <param name="ignoreActivity">
+		/// If set the transaction will ignore Activity.Current and it's trace id,
+		/// otherwise the agent will try to keep ids in-sync across async work-flows
 		/// </param>
 		internal Transaction(
 			IApmLogger logger,
@@ -246,6 +245,15 @@ namespace Elastic.Apm.Model
 			}
 		}
 
+		/// <summary>
+		/// The outcome of the transaction: success, failure, or unknown.
+		/// This is similar to 'result', but has a limited set of permitted values describing the success or failure of the
+		/// transaction from the service's perspective.
+		/// This field can be used for calculating error rates for incoming requests.
+		/// </summary>
+		[JsonConverter(typeof(StringEnumConverter))]
+		public Outcome Outcome { get; set; }
+
 		[JsonIgnore]
 		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(TraceId, Id, IsSampled, _traceState);
 
@@ -278,14 +286,6 @@ namespace Elastic.Apm.Model
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Type { get; set; }
-
-		/// <summary>
-		/// The outcome of the transaction: success, failure, or unknown.
-		/// This is similar to 'result', but has a limited set of permitted values describing the success or failure of the transaction from the service's perspective.
-		/// This field can be used for calculating error rates for incoming requests.
-		/// </summary>
-		[JsonConverter(typeof(StringEnumConverter))]
-		public Outcome Outcome { get; set; }
 
 		public string EnsureParentId()
 		{

@@ -86,7 +86,10 @@ namespace Elastic.Apm.Elasticsearch.Tests
 					);
 					searchResponse.Should().NotBeNull();
 				}
-				catch (Exception) { }
+				catch (Exception)
+				{
+					// ignored
+				}
 
 				var spans = payloadSender.SpansOnFirstTransaction;
 				spans.Should().NotBeEmpty();

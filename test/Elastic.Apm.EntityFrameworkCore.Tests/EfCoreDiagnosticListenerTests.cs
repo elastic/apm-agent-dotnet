@@ -4,7 +4,6 @@
 
 using System;
 using System.Data.Common;
-using System.Linq;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Mocks;
@@ -121,14 +120,12 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 		public async Task EfCoreDiagnosticListener_ShouldCaptureCallingMember_WhenCalledInAsyncContext()
 		{
 			// Arrange + Act
-			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async transaction =>
-			{
-				await _dbContext.Data.FirstOrDefaultAsync();
-			});
+			await _apmAgent.Tracer.CaptureTransaction("transaction", "type", async transaction => { await _dbContext.Data.FirstOrDefaultAsync(); });
 
 			// Assert
 			_payloadSender.FirstSpan.StackTrace.Should().NotBeNull();
-			_payloadSender.FirstSpan.StackTrace.Should().Contain(n => n.Function.Contains(nameof(EfCoreDiagnosticListener_ShouldCaptureCallingMember_WhenCalledInAsyncContext)));
+			_payloadSender.FirstSpan.StackTrace.Should()
+				.Contain(n => n.Function.Contains(nameof(EfCoreDiagnosticListener_ShouldCaptureCallingMember_WhenCalledInAsyncContext)));
 		}
 	}
 }

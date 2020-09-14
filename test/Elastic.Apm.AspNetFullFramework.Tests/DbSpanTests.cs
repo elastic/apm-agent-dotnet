@@ -44,10 +44,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				VerifyReceivedDataSharedConstraints(pageData, receivedData);
 
 				// See comment for TestsBase.SampleAppUrlPaths.SimpleDbTestPage
-				var dbStatements = new[]
-				{
-					"CREATE TABLE", "INSERT", "SELECT", "SELECT"
-				};
+				var dbStatements = new[] { "CREATE TABLE", "INSERT", "SELECT", "SELECT" };
 
 				var transaction = receivedData.Transactions.First();
 
@@ -154,10 +151,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					indexInBranch[containedSpansBranchIndex] += 2;
 				});
 
-				var dbStatements = new List<string>
-				{
-					"CREATE TABLE", "SELECT", "SELECT"
-				};
+				var dbStatements = new List<string> { "CREATE TABLE", "SELECT", "SELECT" };
 				var allChildDbSpansFlattened = allChildDbSpans.SelectMany(x => x);
 				dbStatements.AddRange(Enumerable.Repeat("INSERT", allChildDbSpansFlattened.Count()));
 				topLevelDbSpans.Concat(allChildDbSpansFlattened)
@@ -212,7 +206,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			{
 				receivedData.Spans.Should().NotBeNullOrEmpty();
 
-				var selectSpan = receivedData.Spans.Where(n => n.Context.Db != null && n.Context.Db.Statement.Contains("Select * From NonExistingTable")).First();
+				var selectSpan = receivedData.Spans
+					.First(n => n.Context.Db != null && n.Context.Db.Statement.Contains("Select * From NonExistingTable"));
 				selectSpan.Should().NotBeNull();
 				selectSpan.Outcome.Should().Be(Outcome.Failure);
 			});

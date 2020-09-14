@@ -15,6 +15,8 @@ namespace Elastic.Apm.SqlClient
 {
 	internal class SqlEventListener : EventListener
 	{
+		private const int BeginExecuteEventId = 1;
+		private const int EndExecuteId = 2;
 		private readonly ApmAgent _apmAgent;
 		private readonly IApmLogger _logger;
 
@@ -38,9 +40,6 @@ namespace Elastic.Apm.SqlClient
 
 			base.OnEventSourceCreated(eventSource);
 		}
-
-		private const int BeginExecuteEventId = 1;
-		private const int EndExecuteId = 2;
 
 		protected override void OnEventWritten(EventWrittenEventArgs eventData)
 		{
@@ -145,7 +144,7 @@ namespace Elastic.Apm.SqlClient
 			var isSqlException = (compositeState & 2) == 2;
 			// 4 - is synchronous
 
-			item.Span.Duration = ((stop - item.Start) / (double)Stopwatch.Frequency) * 1000;
+			item.Span.Duration = (stop - item.Start) / (double)Stopwatch.Frequency * 1000;
 
 			if (isSqlException)
 			{

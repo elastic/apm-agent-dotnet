@@ -11,7 +11,12 @@ namespace Elastic.Apm.Elasticsearch
 {
 	public abstract class ElasticsearchDiagnosticsListenerBase : IDiagnosticListener
 	{
+		protected const string StartSuffix = ".Start";
+		protected const string StopSuffix = ".Stop";
+
+		internal readonly ConcurrentDictionary<string, Span> Spans = new ConcurrentDictionary<string, Span>();
 		private readonly IApmAgent _agent;
+
 		protected ElasticsearchDiagnosticsListenerBase(IApmAgent agent, string name)
 		{
 			_agent = agent;
@@ -19,16 +24,11 @@ namespace Elastic.Apm.Elasticsearch
 			Logger = agent.Logger.Scoped(GetType().Name);
 		}
 
-		protected const string StartSuffix = ".Start";
-		protected const string StopSuffix = ".Stop";
-
-		internal readonly ConcurrentDictionary<string, Span> Spans = new ConcurrentDictionary<string, Span>();
+		protected IApmLogger Logger { get; }
 
 		public string Name { get; }
 
 		protected IObserver<KeyValuePair<string, object>> Observer { get; set; }
-
-		protected IApmLogger Logger { get; }
 
 		void IObserver<KeyValuePair<string, object>>.OnCompleted() => Observer.OnCompleted();
 
@@ -60,10 +60,11 @@ namespace Elastic.Apm.Elasticsearch
 			if (transaction == null)
 				return false;
 
-			span = (Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(_agent).StartSpan(
-				name,
-				ApiConstants.TypeDb,
-				ApiConstants.SubtypeElasticsearch);
+			span = (Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(_agent)
+				.StartSpan(
+					name,
+					ApiConstants.TypeDb,
+					ApiConstants.SubtypeElasticsearch);
 
 			span.Action = name;
 			SetDbContext(span, instanceUri);
@@ -81,11 +82,8 @@ namespace Elastic.Apm.Elasticsearch
 		{
 			if (instance == null)
 				return;
-			span.Context.Destination = new Destination
-			{
-				Port = instance.Port,
-				Address = instance.Host
-			};
+
+			span.Context.Destination = new Destination { Port = instance.Port, Address = instance.Host };
 		}
 
 		internal bool TryGetCurrentElasticsearchSpan(out Span span, Uri instance = null)
@@ -98,7 +96,7 @@ namespace Elastic.Apm.Elasticsearch
 			}
 
 			span = null;
-			Logger.Error()?.Log("Failed to find current span in ConcurrentDictionary {ActiviyId}",id);
+			Logger.Error()?.Log("Failed to find current span in ConcurrentDictionary {ActiviyId}", id);
 
 			return false;
 		}
@@ -108,11 +106,7 @@ namespace Elastic.Apm.Elasticsearch
 			var instanceUriString = instance?.ToString();
 			if (span.Context.Db?.Instance != null || instanceUriString == null) return;
 
-			span.Context.Db = new Database
-			{
-				Instance = instanceUriString,
-				Type = Database.TypeElasticsearch,
-			};
+			span.Context.Db = new Database { Instance = instanceUriString, Type = Database.TypeElasticsearch };
 		}
 	}
 }

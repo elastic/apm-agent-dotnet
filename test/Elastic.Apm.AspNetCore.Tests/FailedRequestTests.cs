@@ -1,6 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System.Net.Http;
 using System.Reflection;
 using System.Threading;
@@ -33,13 +34,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			_taskForApp1 = Program.CreateWebHostBuilder(null)
 				.ConfigureServices(services =>
-				{
-					Startup.ConfigureServicesExceptMvc(services);
+					{
+						Startup.ConfigureServicesExceptMvc(services);
 
-					services
-						.AddMvc()
-						.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))));
-				}
+						services
+							.AddMvc()
+							.AddApplicationPart(Assembly.Load(new AssemblyName(nameof(SampleAspNetCoreApp))));
+					}
 				)
 				.Configure(app =>
 				{
@@ -67,8 +68,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			res.IsSuccessStatusCode.Should().BeFalse();
 
 			_payloadSender1.Transactions.Count.Should().Be(1);
-			_payloadSender1.Transactions.FirstOrDefault().Result.Should().Be("HTTP 5xx");
-			_payloadSender1.Transactions.FirstOrDefault().Outcome.Should().Be(Outcome.Failure);
+			_payloadSender1.FirstTransaction.Should().NotBeNull();
+			_payloadSender1.FirstTransaction.Result.Should().Be("HTTP 5xx");
+			_payloadSender1.FirstTransaction.Outcome.Should().Be(Outcome.Failure);
 		}
 
 		public async Task DisposeAsync()

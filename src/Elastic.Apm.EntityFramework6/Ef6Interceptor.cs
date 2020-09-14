@@ -50,8 +50,8 @@ namespace Elastic.Apm.EntityFramework6
 		/// <summary>
 		/// DB spans can be created only when there's a current transaction
 		/// which in turn means agent singleton instance should already be created.
-		///
-		/// Also checks for competing instrumentation. If SqlClient already instrumented, it'll return null, so the interceptor won't create
+		/// Also checks for competing instrumentation. If SqlClient already instrumented, it'll return null, so the interceptor
+		/// won't create
 		/// duplicate spans
 		/// </summary>
 		private Impl CreateImplIfReadyAndNoConflict()
@@ -63,6 +63,7 @@ namespace Elastic.Apm.EntityFramework6
 
 			// Make sure DB spans were not already captured
 			if (!(Agent.Tracer.CurrentSpan is Span span)) return impl;
+
 			return span.InstrumentationFlag == InstrumentationFlag.SqlClient ? null : impl;
 		}
 
@@ -137,7 +138,9 @@ namespace Elastic.Apm.EntityFramework6
 				interceptCtx.SetUserState(_userStateKey, span);
 			}
 
-			private void DoEndSpan<TResult>(IDbCommand command, DbCommandInterceptionContext<TResult> interceptCtx, Outcome outcome, string dbgOriginalCaller)
+			private void DoEndSpan<TResult>(IDbCommand command, DbCommandInterceptionContext<TResult> interceptCtx, Outcome outcome,
+				string dbgOriginalCaller
+			)
 			{
 				var span = (Span)interceptCtx.FindUserState(_userStateKey);
 				if (span == null)

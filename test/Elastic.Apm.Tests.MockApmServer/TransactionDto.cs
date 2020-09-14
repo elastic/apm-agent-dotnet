@@ -23,12 +23,12 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		public string Name { get; set; }
 
+		public Outcome Outcome { get; set; }
+
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
 
 		public string Result { get; set; }
-
-		public Outcome Outcome { get; set; }
 
 		[JsonProperty("span_count")]
 		public SpanCountDto SpanCount { get; set; }

@@ -5,7 +5,6 @@
 using System.Collections.Generic;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Model;
 using Newtonsoft.Json;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -22,6 +21,8 @@ namespace Elastic.Apm.Tests.MockApmServer
 		public string Id { get; set; }
 		public string Name { get; set; }
 
+		public Outcome Outcome { get; set; }
+
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
 
@@ -29,8 +30,6 @@ namespace Elastic.Apm.Tests.MockApmServer
 		public List<CapturedStackFrame> StackTrace { get; set; }
 
 		public string Subtype { get; set; }
-
-		public Outcome Outcome { get; set; }
 
 		public long Timestamp { get; set; }
 

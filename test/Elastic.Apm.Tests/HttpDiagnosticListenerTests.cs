@@ -271,11 +271,7 @@ namespace Elastic.Apm.Tests
 			{
 				var uri = new Uri(localServer.Uri);
 
-				var uriBuilder = new UriBuilder(uri)
-				{
-					UserName = "TestUser",
-					Password = "TestPassword"
-				};
+				var uriBuilder = new UriBuilder(uri) { UserName = "TestUser", Password = "TestPassword" };
 
 				var httpClient = new HttpClient();
 				var res = await httpClient.GetAsync(uriBuilder.Uri);
@@ -565,11 +561,7 @@ namespace Elastic.Apm.Tests
 			using (var localServer = new LocalServer())
 			using (var httpClient = new HttpClient())
 			{
-				var uriBuilder = new UriBuilder(localServer.Uri)
-				{
-					UserName = "TestUser289421",
-					Password = "Password973243"
-				};
+				var uriBuilder = new UriBuilder(localServer.Uri) { UserName = "TestUser289421", Password = "Password973243" };
 
 				var res = await httpClient.GetAsync(uriBuilder.Uri);
 				res.IsSuccessStatusCode.Should().BeTrue();

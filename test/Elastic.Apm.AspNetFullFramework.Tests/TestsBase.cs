@@ -19,7 +19,6 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.MockApmServer;
 using Elastic.Apm.Tests.TestHelpers;
@@ -42,9 +41,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 
 		protected readonly AgentConfiguration AgentConfig = new AgentConfiguration();
+		protected readonly Dictionary<string, string> EnvVarsToSetForSampleAppPool;
 		protected readonly MockApmServer MockApmServer;
 		protected readonly bool SampleAppShouldHaveAccessToPerfCounters;
-		protected readonly Dictionary<string, string> EnvVarsToSetForSampleAppPool;
 		private readonly IisAdministration _iisAdministration;
 
 		private readonly IApmLogger _logger;
@@ -109,7 +108,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			/// and exception propagates out of transaction as well so both span and transaction send an error event
 			/// </summary>
 			internal static readonly SampleAppUrlPathData CustomSpanThrowsExceptionPage =
-				new SampleAppUrlPathData(HomeController.CustomSpanThrowsPageRelativePath, 500, spansCount: 1, errorsCount: 2, outcome: Outcome.Failure);
+				new SampleAppUrlPathData(HomeController.CustomSpanThrowsPageRelativePath, 500, spansCount: 1, errorsCount: 2,
+					outcome: Outcome.Failure);
 
 			internal static readonly SampleAppUrlPathData HomePage =
 				new SampleAppUrlPathData(HomeController.HomePageRelativePath, 200);
@@ -133,6 +133,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				new SampleAppUrlPathData(HomeController.CallReturnBadRequestPageRelativePath,
 					HomeController.DummyHttpStatusCode, /* transactionsCount: */ 2, /* spansCount: */ 1);
 
+			internal static readonly SampleAppUrlPathData CallSoapServiceProtocolV11 =
+				new SampleAppUrlPathData("Asmx/Health.asmx", (int)HttpStatusCode.OK);
+
+			internal static readonly SampleAppUrlPathData CallSoapServiceProtocolV12 =
+				new SampleAppUrlPathData("Asmx/Health.asmx", (int)HttpStatusCode.OK);
+
+			internal static readonly SampleAppUrlPathData ChildHttpSpanWithResponseForbiddenPage =
+				new SampleAppUrlPathData(HomeController.ChildHttpSpanWithResponseForbiddenPath, 200, spansCount: 1, errorsCount: 1);
 
 			/// <summary>
 			/// errorsCount is 3 because the exception is thrown inside a child span of a another span -
@@ -141,11 +149,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			/// and exception propagates out of transaction as well so both spans and the transaction send an error event
 			/// </summary>
 			internal static readonly SampleAppUrlPathData CustomChildSpanThrowsExceptionPage =
-				new SampleAppUrlPathData(HomeController.CustomChildSpanThrowsPageRelativePath, 500, spansCount: 2, errorsCount: 3, outcome: Outcome.Failure);
+				new SampleAppUrlPathData(HomeController.CustomChildSpanThrowsPageRelativePath, 500, spansCount: 2, errorsCount: 3,
+					outcome: Outcome.Failure);
 
-
-			internal static readonly SampleAppUrlPathData ChildHttpSpanWithResponseForbiddenPage =
-				new SampleAppUrlPathData(HomeController.ChildHttpSpanWithResponseForbiddenPath, 200, spansCount: 1, errorsCount: 1);
+			internal static readonly SampleAppUrlPathData GenNSpansPage =
+				new SampleAppUrlPathData(HomeController.GenNSpansPageRelativePath, (int)HttpStatusCode.Created);
 
 			internal static readonly SampleAppUrlPathData GetDotNetRuntimeDescriptionPage =
 				new SampleAppUrlPathData(HomeController.GetDotNetRuntimeDescriptionPageRelativePath, 200);
@@ -156,15 +164,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			internal static readonly SampleAppUrlPathData ThrowsInvalidOperationPage =
 				new SampleAppUrlPathData(HomeController.ThrowsInvalidOperationPageRelativePath, 500, errorsCount: 1, outcome: Outcome.Failure);
-
-			internal static readonly SampleAppUrlPathData GenNSpansPage =
-				new SampleAppUrlPathData(HomeController.GenNSpansPageRelativePath, (int)HttpStatusCode.Created);
-
-			internal static readonly SampleAppUrlPathData CallSoapServiceProtocolV1_1 =
-				new SampleAppUrlPathData("Asmx/Health.asmx", (int)HttpStatusCode.OK);
-
-			internal static readonly SampleAppUrlPathData CallSoapServiceProtocolV1_2 =
-			new SampleAppUrlPathData("Asmx/Health.asmx", (int)HttpStatusCode.OK);
 		}
 
 		private TimedEvent? _sampleAppClientCallTiming;
@@ -803,13 +802,15 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public class SampleAppUrlPathData
 		{
 			public readonly int ErrorsCount;
+			public readonly Outcome Outcome;
 			public readonly string RelativeUrlPath;
 			public readonly int SpansCount;
 			public readonly int StatusCode;
 			public readonly int TransactionsCount;
-			public readonly Outcome Outcome;
 
-			public SampleAppUrlPathData(string relativeUrlPath, int statusCode, int transactionsCount = 1, int spansCount = 0, int errorsCount = 0, Outcome outcome = Outcome.Success)
+			public SampleAppUrlPathData(string relativeUrlPath, int statusCode, int transactionsCount = 1, int spansCount = 0, int errorsCount = 0,
+				Outcome outcome = Outcome.Success
+			)
 			{
 				RelativeUrlPath = relativeUrlPath;
 				StatusCode = statusCode;

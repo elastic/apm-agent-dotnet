@@ -12,22 +12,25 @@ namespace Elastic.Apm.Model
 {
 	internal class DbSpanCommon
 	{
-		internal static class DefaultPorts
-		{
-			internal const int MsSql = 1433;
-			internal const int Oracle = 1521;
-			internal const int MySql = 3306;
-			internal const int PostgreSql = 5432;
-		}
-
 		private readonly DbConnectionStringParser _dbConnectionStringParser;
 
 		internal DbSpanCommon(IApmLogger logger) => _dbConnectionStringParser = new DbConnectionStringParser(logger);
 
-		internal Span StartSpan(IApmAgent agent, IDbCommand dbCommand, InstrumentationFlag instrumentationFlag, string subType = null, bool captureStackTraceOnStart = false)
+		internal static class DefaultPorts
+		{
+			internal const int MsSql = 1433;
+			internal const int MySql = 3306;
+			internal const int Oracle = 1521;
+			internal const int PostgreSql = 5432;
+		}
+
+		internal Span StartSpan(IApmAgent agent, IDbCommand dbCommand, InstrumentationFlag instrumentationFlag, string subType = null,
+			bool captureStackTraceOnStart = false
+		)
 		{
 			var spanName = dbCommand.CommandText.Replace(Environment.NewLine, " ");
-			return ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(agent, spanName, ApiConstants.TypeDb, subType, instrumentationFlag, captureStackTraceOnStart);
+			return ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(agent, spanName, ApiConstants.TypeDb, subType, instrumentationFlag,
+				captureStackTraceOnStart);
 		}
 
 		internal void EndSpan(Span span, IDbCommand dbCommand, Outcome outcome, TimeSpan? duration = null)
@@ -109,7 +112,7 @@ namespace Elastic.Apm.Model
 			if (isEmbeddedDb || dbConnectionString == null) return null;
 
 			var destination = _dbConnectionStringParser.ExtractDestination(dbConnectionString);
-			if (destination == null ) return null;
+			if (destination == null) return null;
 
 			if (!destination.Port.HasValue) destination.Port = defaultPort;
 
