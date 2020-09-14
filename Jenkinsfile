@@ -97,6 +97,9 @@ pipeline {
                       dir("${BASE_DIR}"){
                         dotnet(){
                           sh '.ci/linux/build.sh'
+                          whenTrue(isPR()) {
+                            sh(label: 'Package', script: '.ci/linux/release.sh true')
+                          }
                         }
                       }
                     }
@@ -105,6 +108,11 @@ pipeline {
                     unsuccessful {
                       archiveArtifacts(allowEmptyArchive: true,
                         artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                    }
+                    success {
+                      whenTrue(isPR()) {
+                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/**/bin/Release/**/*.nupkg")
+                      }
                     }
                   }
                 }
