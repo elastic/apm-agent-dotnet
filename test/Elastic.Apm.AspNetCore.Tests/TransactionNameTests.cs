@@ -126,17 +126,18 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// <summary>
 		/// Calls a URL that maps to no route and causes a 404
 		/// </summary>
-		[InlineData(true)]
-		[InlineData(false)]
+		[InlineData("home/doesnotexist", true)]
+		[InlineData("home/doesnotexist", false)]
+		[InlineData("files/doesnotexist/somefile", true)]
+		[InlineData("files/doesnotexist/somefile", false)]
 		[Theory]
-		public async Task NotFoundRoute_ShouldBe_Aggregatable(bool diagnosticSourceOnly)
+		public async Task NotFoundRoute_ShouldBe_Aggregatable(string url, bool diagnosticSourceOnly)
 		{
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
-			await httpClient.GetAsync("home/doesnotexist");
-			await httpClient.GetAsync("files/doesnotexist/somefile");
+			await httpClient.GetAsync(url);
 
 			_payloadSender.Transactions.Should().OnlyContain(n => n.Name.Equals("GET unknown route", StringComparison.OrdinalIgnoreCase));
-			_payloadSender.Transactions.Should().HaveCount(2);
+			_payloadSender.Transactions.Should().HaveCount(1);
 		}
 
 		public void Dispose()
