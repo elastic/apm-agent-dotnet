@@ -204,10 +204,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
+				receivedData.Transactions.Should().NotBeNullOrEmpty();
 				receivedData.Spans.Should().NotBeNullOrEmpty();
 
 				var selectSpan = receivedData.Spans
-					.First(n => n.Context.Db != null && n.Context.Db.Statement.Contains("Select * From NonExistingTable"));
+					.First(n => n.Context.Db != null && n.Context.Db.Statement.ToLower().Contains("select * from nonexistingtable"));
 				selectSpan.Should().NotBeNull();
 				selectSpan.Outcome.Should().Be(Outcome.Failure);
 			});
