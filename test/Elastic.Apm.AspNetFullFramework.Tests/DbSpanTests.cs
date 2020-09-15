@@ -204,31 +204,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
+				receivedData.Transactions.Should().NotBeNullOrEmpty();
 				receivedData.Spans.Should().NotBeNullOrEmpty();
-
-
-				var spans = string.Empty;
-
-				foreach (var item in receivedData.Spans)
-				{
-					spans +=  item.ToString();
-					if (item.Context.Db != null)
-						spans += "statement: " + item.Context.Db.Statement;
-					spans += "\n";
-				}
-
-				TestOutputHelper.WriteLine("Spans: \n" + spans);
-
-				var transaction = receivedData.Transactions;
-				var transactionsString = string.Empty;
-
-				foreach (var item in transaction)
-				{
-					transactionsString += item.ToString();
-					transactionsString += "\n";
-				}
-
-				TestOutputHelper.WriteLine("Transactions: \n" + transactionsString);
 
 				var selectSpan = receivedData.Spans
 					.First(n => n.Context.Db != null && n.Context.Db.Statement.ToLower().Contains("select * from nonexistingtable"));
