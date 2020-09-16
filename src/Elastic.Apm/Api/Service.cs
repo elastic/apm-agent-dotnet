@@ -27,12 +27,12 @@ namespace Elastic.Apm.Api
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Name { get; set; }
 
+		public Node Node { get; set; }
+
 		public Runtime Runtime { get; set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Version { get; set; }
-
-		public Node Node { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(Service))
 		{
@@ -113,6 +113,7 @@ namespace Elastic.Apm.Api
 	/// </summary>
 	public class Runtime
 	{
+		internal const string DotNet5Name = ".NET 5";
 		internal const string DotNetCoreName = ".NET Core";
 
 		internal const string DotNetFullFrameworkName = ".NET Framework";

@@ -26,14 +26,17 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 			switch (RuntimeInformation.FrameworkDescription)
 			{
-				case string str when str.StartsWith(PlatformDetection.MonoDescriptionPrefix, StringComparison.OrdinalIgnoreCase):
+				case { } str when str.StartsWith(PlatformDetection.MonoDescriptionPrefix, StringComparison.OrdinalIgnoreCase):
 					mockPayloadSender.FirstTransaction.Service.Runtime.Name.Should().Be(Runtime.MonoName);
 					break;
-				case string str when str.StartsWith(PlatformDetection.DotNetFullFrameworkDescriptionPrefix, StringComparison.OrdinalIgnoreCase):
+				case { } str when str.StartsWith(PlatformDetection.DotNetFullFrameworkDescriptionPrefix, StringComparison.OrdinalIgnoreCase):
 					mockPayloadSender.FirstTransaction.Service.Runtime.Name.Should().Be(Runtime.DotNetFullFrameworkName);
 					break;
-				case string str when str.StartsWith(PlatformDetection.DotNetCoreDescriptionPrefix, StringComparison.OrdinalIgnoreCase):
+				case { } str when str.StartsWith(PlatformDetection.DotNetCoreDescriptionPrefix, StringComparison.OrdinalIgnoreCase):
 					mockPayloadSender.FirstTransaction.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
+					break;
+				case { } str when str.StartsWith(PlatformDetection.DotNet5Prefix, StringComparison.OrdinalIgnoreCase):
+					mockPayloadSender.FirstTransaction.Service.Runtime.Name.Should().Be(Runtime.DotNet5Name);
 					break;
 			}
 		}
