@@ -115,9 +115,7 @@ namespace Elastic.Apm.Api
 	{
 		internal const string DotNet5Name = ".NET 5";
 		internal const string DotNetCoreName = ".NET Core";
-
 		internal const string DotNetFullFrameworkName = ".NET Framework";
-
 		internal const string MonoName = "Mono";
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
