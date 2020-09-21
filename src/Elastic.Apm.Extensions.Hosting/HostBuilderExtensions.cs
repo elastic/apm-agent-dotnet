@@ -27,24 +27,32 @@ namespace Elastic.Apm.Extensions.Hosting
 		{
 			builder.ConfigureServices((ctx, services) =>
 			{
-				services.AddSingleton<IApmLogger, NetCoreLogger>();
-				services.AddSingleton<IConfigurationReader>(sp =>
-					new MicrosoftExtensionsConfig(ctx.Configuration, sp.GetService<IApmLogger>(), ctx.HostingEnvironment.EnvironmentName));
+				//services.AddSingleton<IApmLogger, NetCoreLogger>();
+				//services.AddSingleton<IConfigurationReader>(sp =>
+				//	new MicrosoftExtensionsConfig(ctx.Configuration, sp.GetService<IApmLogger>(), ctx.HostingEnvironment.EnvironmentName));
 
-				services.AddSingleton(sp =>
-				{
-					var components = new AgentComponents(sp.GetService<IApmLogger>(), sp.GetService<IConfigurationReader>());
+				Console.WriteLine("b");
+
+				//services.AddSingleton(sp =>
+				//{
+					Console.WriteLine("bla");
+
+
+				var components = new AgentComponents(new ConsoleLogger( LogLevel.Trace), new EnvironmentConfigurationReader());
 					UpdateServiceInformation(components.Service);
-					return components;
-				});
+					//return components;
+				//});
 
-				services.AddSingleton<IApmAgent, ApmAgent>(sp =>
-				{
-					var apmAgent = new ApmAgent(sp.GetService<AgentComponents>());
-					Agent.Setup(sp.GetService<AgentComponents>());
+
+				
+				//services.AddSingleton<IApmAgent, ApmAgent>(sp =>
+				//{
+					Console.WriteLine("bla");
+					var apmAgent = new ApmAgent(components);
+					Agent.Setup(components);
 					if (subscribers != null && subscribers.Any()) apmAgent.Subscribe(subscribers);
-					return apmAgent;
-				});
+			//		return apmAgent;
+			//	});
 
 				services.AddSingleton(sp => sp.GetRequiredService<IApmAgent>().Tracer);
 			});

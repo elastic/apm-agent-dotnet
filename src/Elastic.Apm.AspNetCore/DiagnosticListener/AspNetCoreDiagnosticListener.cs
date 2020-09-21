@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using Elastic.Apm.AspNetCore.Extensions;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Helpers;
@@ -43,6 +45,11 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 					{
 						var transaction = WebRequestTransactionCreator.StartTransactionAsync(httpContextStart, _logger, _agent.TracerInternal, _agent.ConfigStore.CurrentSnapshot);
 
+						if (Activity.Current != null)
+						{
+							var grpcMethodName = Activity.Current.Tags.Where(n => n.Key == "grpc.method").FirstOrDefault();
+							var grpcStatusCode = Activity.Current.Tags.Where(n => n.Key == "grpc.status_code").FirstOrDefault();
+						}
 						if (transaction != null)
 						{
 							WebRequestTransactionCreator.FillSampledTransactionContextRequest(transaction, httpContextStart, _logger);
@@ -53,6 +60,11 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 				case "Microsoft.AspNetCore.Hosting.HttpRequestIn.Stop":
 					if (_httpContextPropertyFetcher.Fetch(kv.Value) is HttpContext httpContextStop)
 					{
+						if (Activity.Current != null)
+						{
+							var grpcMethodName = Activity.Current.Tags.Where(n => n.Key == "grpc.method").FirstOrDefault();
+							var grpcStatusCode = Activity.Current.Tags.Where(n => n.Key == "grpc.status_code").FirstOrDefault();
+						}
 						if (_processingRequests.TryRemove(httpContextStop, out var transaction))
 						{
 							WebRequestTransactionCreator.StopTransaction(transaction, httpContextStop, _logger);
