@@ -889,6 +889,7 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 [options="header"]
 |============
 | Option name | <<dynamic-configuration, image:./images/dynamic-config.svg[] >> | Keywords
+| <<config-api-key,`ApiKey`>> | No | Reporter
 | <<config-application-namespaces,`ApplicationNamespaces`>> | No | Stacktrace
 | <<config-capture-body,`CaptureBody`>> | Yes | HTTP, Performance
 | <<config-capture-body-content-types,`CaptureBodyContentTypes`>> | Yes | HTTP, Performance
@@ -905,7 +906,6 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-metrics-interval,`MetricsInterval`>> | No | Reporter
 | <<config-sanitize-field-names,`SanitizeFieldNames`>> | No | Core
 | <<config-secret-token,`SecretToken`>> | No | Reporter
-| <<config-api-key,`ApiKey`>> | No | Reporter
 | <<config-server-urls,`ServerUrls`>> | No | Reporter
 | <<config-service-name,`ServiceName`>> | No | Core
 | <<config-service-node-name, `ServiceNodeName`>> | No | Core
