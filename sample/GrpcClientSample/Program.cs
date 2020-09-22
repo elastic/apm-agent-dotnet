@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Elastic.Apm;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.GrpcClient;
 using Grpc.Net.Client;
 using GrpcServiceSample;
 
@@ -12,6 +13,7 @@ namespace GrpcClientSample
 		public static async Task Main(string[] args)
 		{
 			Agent.Subscribe(new HttpDiagnosticsSubscriber());
+			Agent.Subscribe(new GrpcClientDiagnosticSubscriber());
 
 			await Agent.Tracer.CaptureTransaction("SampleCall", "test", async () =>
 			  {

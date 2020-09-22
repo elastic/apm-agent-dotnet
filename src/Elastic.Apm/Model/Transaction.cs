@@ -27,6 +27,8 @@ namespace Elastic.Apm.Model
 
 		private readonly string _traceState;
 
+		public static string ApmTransactionActivityName = "ElasticApm.Transaction";
+
 		// This constructor is meant for serialization
 		[JsonConstructor]
 		private Transaction(Context context, string name, string type, double duration, long timestamp, string id, string traceId, string parentId,
@@ -170,7 +172,7 @@ namespace Elastic.Apm.Model
 
 			void StartActivity()
 			{
-				_activity = new Activity("ElasticApm.Transaction");
+				_activity = new Activity(ApmTransactionActivityName);
 				_activity.SetIdFormat(ActivityIdFormat.W3C);
 				_activity.Start();
 			}

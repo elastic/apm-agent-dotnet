@@ -171,7 +171,7 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		internal static void StopTransaction(Transaction transaction, HttpContext context, IApmLogger logger)
+		internal static void StopTransaction(Transaction transaction, HttpContext context, IApmLogger logger, (string methodname, string result) grpcCallInfo = default)
 		{
 			if (transaction == null) return;
 
@@ -197,12 +197,26 @@ namespace Elastic.Apm.AspNetCore
 					}
 				}
 
-				transaction.Result = Transaction.StatusCodeToResult(GetProtocolName(context.Request.Protocol), context.Response.StatusCode);
+				if (grpcCallInfo == default)
+				{
 
-				if (context.Response.StatusCode >= 500)
-					transaction.Outcome = Outcome.Failure;
+					transaction.Result = Transaction.StatusCodeToResult(GetProtocolName(context.Request.Protocol), context.Response.StatusCode);
+
+					if (context.Response.StatusCode >= 500)
+						transaction.Outcome = Outcome.Failure;
+					else
+						transaction.Outcome = Outcome.Success;
+				}
 				else
-					transaction.Outcome = Outcome.Success;
+				{
+					transaction.Name = grpcCallInfo.methodname;
+					transaction.Result = GrpcReturnCodeToString(grpcCallInfo.result);
+
+					if (transaction.Result == "OK")
+						transaction.Outcome = Outcome.Success;
+					else
+						transaction.Outcome = Outcome.Failure;
+				}
 
 				if (transaction.IsSampled)
 				{
@@ -218,6 +232,53 @@ namespace Elastic.Apm.AspNetCore
 			{
 				transaction.End();
 			}
+		}
+
+		private static string GrpcReturnCodeToString(string returnCode)
+		{
+			if (int.TryParse(returnCode, out var intValue))
+			{
+				switch (intValue)
+				{
+					case 0:
+						return "OK";
+					case 1:
+						return "CANCELLED";
+					case 2:
+						return "UNKNOWN";
+					case 3:
+						return "INVALID_ARGUMENT";
+					case 4:
+						return "DEADLINE_EXCEEDED";
+					case 5:
+						return "NOT_FOUND";
+					case 6:
+						return "ALREADY_EXISTS";
+					case 7:
+						return "PERMISSION_DENIED";
+					case 8:
+						return "RESOURCE_EXHAUSTED";
+					case 9:
+						return "FAILED_PRECONDITION";
+					case 10:
+						return "ABORTED";
+					case 11:
+						return "OUT_OF_RANGE";
+					case 12:
+						return "UNIMPLEMENTED";
+					case 13:
+						return "INTERNAL";
+					case 14:
+						return "UNAVAILABLE";
+					case 15:
+						return "DATA_LOSS";
+					case 16:
+						return "UNAUTHENTICATED";
+					default:
+						return "UNDEFINED";
+				}
+			}
+			return "UNDEFINED";
 		}
 
 		private static void FillSampledTransactionContextResponse(HttpContext context, Transaction transaction, IApmLogger logger)

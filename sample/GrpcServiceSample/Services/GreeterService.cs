@@ -2,6 +2,7 @@ using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,10 +18,12 @@ namespace GrpcServiceSample
 
 		public override Task<HelloReply> SayHello(HelloRequest request, ServerCallContext context)
 		{
+
+			throw new Exception("blaaa");
 			return Task.FromResult(new HelloReply
 			{
 				Message = "Hello " + request.Name
-			});
+			}); ;
 		}
 	}
 }
