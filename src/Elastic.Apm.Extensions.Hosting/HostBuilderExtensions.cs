@@ -54,7 +54,7 @@ namespace Elastic.Apm.Extensions.Hosting
 			//		return apmAgent;
 			//	});
 
-				services.AddSingleton(sp => sp.GetRequiredService<IApmAgent>().Tracer);
+				services.AddSingleton(apmAgent.Tracer);
 			});
 
 			return builder;

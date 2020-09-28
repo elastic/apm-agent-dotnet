@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Claims;
 using Elastic.Apm.Api;
@@ -171,9 +172,11 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		internal static void StopTransaction(Transaction transaction, HttpContext context, IApmLogger logger, (string methodname, string result) grpcCallInfo = default)
+		internal static void StopTransaction(Transaction transaction, HttpContext context, IApmLogger logger)
 		{
 			if (transaction == null) return;
+
+			var grpcCallInfo = CollectGrpcInfo();
 
 			try
 			{
@@ -199,7 +202,6 @@ namespace Elastic.Apm.AspNetCore
 
 				if (grpcCallInfo == default)
 				{
-
 					transaction.Result = Transaction.StatusCodeToResult(GetProtocolName(context.Request.Protocol), context.Response.StatusCode);
 
 					if (context.Response.StatusCode >= 500)
@@ -210,7 +212,7 @@ namespace Elastic.Apm.AspNetCore
 				else
 				{
 					transaction.Name = grpcCallInfo.methodname;
-					transaction.Result = GrpcReturnCodeToString(grpcCallInfo.result);
+					transaction.Result = GrpcHelper.GrpcReturnCodeToString(grpcCallInfo.result);
 
 					if (transaction.Result == "OK")
 						transaction.Outcome = Outcome.Success;
@@ -234,51 +236,25 @@ namespace Elastic.Apm.AspNetCore
 			}
 		}
 
-		private static string GrpcReturnCodeToString(string returnCode)
+		/// <summary>
+		/// Collects gRPC info for the given request
+		/// </summary>
+		/// <returns>default if it's not a grpc call, otherwise the Grpc method name and result as a tuple </returns>
+		private static (string methodname, string result) CollectGrpcInfo()
 		{
-			if (int.TryParse(returnCode, out var intValue))
+			var parentActivty = Activity.Current.Parent;
+			(string methodname, string result) grpcCallInfo = default;
+
+			if (parentActivty != null)
 			{
-				switch (intValue)
-				{
-					case 0:
-						return "OK";
-					case 1:
-						return "CANCELLED";
-					case 2:
-						return "UNKNOWN";
-					case 3:
-						return "INVALID_ARGUMENT";
-					case 4:
-						return "DEADLINE_EXCEEDED";
-					case 5:
-						return "NOT_FOUND";
-					case 6:
-						return "ALREADY_EXISTS";
-					case 7:
-						return "PERMISSION_DENIED";
-					case 8:
-						return "RESOURCE_EXHAUSTED";
-					case 9:
-						return "FAILED_PRECONDITION";
-					case 10:
-						return "ABORTED";
-					case 11:
-						return "OUT_OF_RANGE";
-					case 12:
-						return "UNIMPLEMENTED";
-					case 13:
-						return "INTERNAL";
-					case 14:
-						return "UNAVAILABLE";
-					case 15:
-						return "DATA_LOSS";
-					case 16:
-						return "UNAUTHENTICATED";
-					default:
-						return "UNDEFINED";
-				}
+				var grpcMethodName = parentActivty.Tags.Where(n => n.Key == "grpc.method").FirstOrDefault().Value;
+				var grpcStatusCode = parentActivty.Tags.Where(n => n.Key == "grpc.status_code").FirstOrDefault().Value;
+
+				if (!string.IsNullOrEmpty(grpcMethodName) && !string.IsNullOrEmpty(grpcStatusCode))
+					grpcCallInfo = (grpcMethodName, grpcStatusCode);
 			}
-			return "UNDEFINED";
+
+			return grpcCallInfo;
 		}
 
 		private static void FillSampledTransactionContextResponse(HttpContext context, Transaction transaction, IApmLogger logger)

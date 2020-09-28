@@ -355,6 +355,10 @@ namespace Elastic.Apm.Model
 				if (Context.Destination == null)
 					return;
 
+				// Context.Destination.Service can be set by the instrumentation part - only fill it if needed.
+				if (Context.Destination.Service != null)
+					return;
+
 				Context.Destination.Service = new Destination.DestinationService { Type = Type };
 
 				if (_context.Value.Http != null)
@@ -366,11 +370,7 @@ namespace Elastic.Apm.Model
 						return;
 					}
 
-					var port = _context.Value.Http.OriginalUrl.IsDefaultPort ? string.Empty : $":{_context.Value.Http.OriginalUrl.Port}";
-					var scheme = $"{_context.Value.Http.OriginalUrl?.Scheme}://";
-
-					Context.Destination.Service.Name = scheme + _context.Value.Http.OriginalUrl?.Host + port;
-					Context.Destination.Service.Resource = $"{_context.Value.Http.OriginalUrl.Host}:{_context.Value.Http.OriginalUrl.Port}";
+					Context.Destination.Service = UrlUtils.ExtractService(_context.Value.Http.OriginalUrl, this);
 				}
 				else
 				{

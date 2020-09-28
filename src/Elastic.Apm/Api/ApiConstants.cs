@@ -18,6 +18,7 @@ namespace Elastic.Apm.Api
 		public const string SubtypeMySql = "mysql";
 		public const string SubtypeOracle = "oracle";
 		public const string SubtypePostgreSql = "postgresql";
+		public const string SubTypeGrpc = "grpc";
 
 		public const string TypeDb = "db";
 		public const string TypeExternal = "external";

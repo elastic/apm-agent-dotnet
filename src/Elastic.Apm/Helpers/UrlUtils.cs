@@ -5,6 +5,7 @@
 using System;
 using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Helpers
 {
@@ -28,7 +29,19 @@ namespace Elastic.Apm.Helpers
 			if (url.HostNameType == UriHostNameType.IPv6 && host.Length > 2 && host[0] == '[' && host[host.Length - 1] == ']')
 				host = host.Substring(1, host.Length - 2);
 
-			return new Destination{ Address = host, Port = url.Port == -1 ? (int?)null : url.Port };
+			return new Destination { Address = host, Port = url.Port == -1 ? (int?)null : url.Port };
+		}
+
+		internal static Destination.DestinationService ExtractService(Uri url, ISpan span)
+		{
+			var port = url.IsDefaultPort ? string.Empty : $":{url.Port}";
+			var scheme = $"{url.Scheme}://";
+			return new Destination.DestinationService
+			{
+				Type = span.Type,
+				Name = scheme + url.Host + port,
+				Resource = $"{url.Host}:{url.Port}"
+			};
 		}
 	}
 }

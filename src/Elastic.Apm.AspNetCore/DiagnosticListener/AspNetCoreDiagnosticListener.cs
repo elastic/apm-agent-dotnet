@@ -56,28 +56,9 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 				case "Microsoft.AspNetCore.Hosting.HttpRequestIn.Stop":
 					if (_httpContextPropertyFetcher.Fetch(kv.Value) is HttpContext httpContextStop)
 					{
-						var isGrpc = false;
 						if (_processingRequests.TryRemove(httpContextStop, out var transaction))
 						{
-							if (Activity.Current != null && Activity.Current.OperationName == Transaction.ApmTransactionActivityName)
-							{
-								var parentActivty = Activity.Current.Parent;
-
-								if (parentActivty != null)
-								{
-									var grpcMethodName = parentActivty.Tags.Where(n => n.Key == "grpc.method").FirstOrDefault().Value;
-									var grpcStatusCode = parentActivty.Tags.Where(n => n.Key == "grpc.status_code").FirstOrDefault().Value;
-
-									if (!string.IsNullOrEmpty(grpcMethodName) && !string.IsNullOrEmpty(grpcStatusCode))
-									{
-										isGrpc = true;
-										WebRequestTransactionCreator.StopTransaction(transaction, httpContextStop, _logger, (grpcMethodName, grpcStatusCode));
-									}
-								}
-							}
-
-							if(!isGrpc)
-								WebRequestTransactionCreator.StopTransaction(transaction, httpContextStop, _logger);
+							WebRequestTransactionCreator.StopTransaction(transaction, httpContextStop, _logger);
 						}
 					}
 					break;
