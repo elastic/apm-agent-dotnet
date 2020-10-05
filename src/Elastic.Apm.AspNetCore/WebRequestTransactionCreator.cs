@@ -194,7 +194,8 @@ namespace Elastic.Apm.AspNetCore
 					}
 					else if (context.Response.StatusCode == StatusCodes.Status404NotFound)
 					{
-						logger?.Trace()?
+						logger?.Trace()
+							?
 							.Log("No route data found or status code is 404 - setting transaction name to 'unknown route");
 						transaction.Name = $"{context.Request.Method} unknown route";
 					}

@@ -86,6 +86,12 @@ namespace Elastic.Apm.Grpc.Tests
 			await sampleAppHost.StopAsync();
 		}
 
+		/// <summary>
+		/// Calls a gRPC service that throws an exception.
+		/// Makes sure that <see cref="IExecutionSegment.Outcome" /> is set correctly both on spans and on the gRPC transaction.
+		/// </summary>
+		/// <param name="withDiagnosticSource"></param>
+		/// <returns></returns>
 		[InlineData(true)]
 		[InlineData(false)]
 		[Theory]
@@ -94,13 +100,9 @@ namespace Elastic.Apm.Grpc.Tests
 			var payloadSender = new MockPayloadSender();
 			using var apmAgent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			IHost sampleAppHost;
-
-			if (withDiagnosticSource)
-				sampleAppHost = new SampleAppHostBuilder().BuildHost();
-			else
-				sampleAppHost = new SampleAppHostBuilder().BuildHostWithMiddleware(apmAgent);
-
+			var sampleAppHost = withDiagnosticSource
+				? new SampleAppHostBuilder().BuildHost()
+				: new SampleAppHostBuilder().BuildHostWithMiddleware(apmAgent);
 			apmAgent.Subscribe(new AspNetCoreDiagnosticSubscriber(), new GrpcClientDiagnosticSubscriber(), new HttpDiagnosticsSubscriber());
 
 			await sampleAppHost.StartAsync();

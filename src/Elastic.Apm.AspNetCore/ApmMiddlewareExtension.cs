@@ -10,9 +10,9 @@ using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.Logging;
 using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.Extensions.Hosting.Config;
+using Elastic.Apm.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -96,12 +96,12 @@ namespace Elastic.Apm.AspNetCore
 			var versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name == "Microsoft.AspNetCore");
 			var assemblies = versionQuery as Assembly[] ?? versionQuery.ToArray();
 			if (assemblies.Any())
-				version = assemblies.First().GetName().Version.ToString();
+				version = assemblies.First().GetName().Version?.ToString();
 			else
 			{
 				versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name.Contains("Microsoft.AspNetCore"));
 				var enumerable = versionQuery as Assembly[] ?? versionQuery.ToArray();
-				version = enumerable.Any() ? enumerable.FirstOrDefault()?.GetName().Version.ToString() : "n/a";
+				version = enumerable.Any() ? enumerable.FirstOrDefault()?.GetName().Version?.ToString() : "n/a";
 			}
 
 			service.Framework = new Framework { Name = "ASP.NET Core", Version = version };

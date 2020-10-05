@@ -5,7 +5,6 @@
 using System;
 using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Helpers
 {
@@ -18,10 +17,12 @@ namespace Elastic.Apm.Helpers
 		{
 			if (!url.IsAbsoluteUri || url.HostNameType == UriHostNameType.Basic || url.HostNameType == UriHostNameType.Unknown)
 			{
-				logger.Scoped($"{ThisClassName}.{DbgUtils.CurrentMethodName()}").Debug()?.Log(
-					"Cannot extract destination info (URL is not absolute or doesn't point to an external resource)."
-					+ " url: IsAbsoluteUri: {IsAbsoluteUri}, HostNameType: {HostNameType}."
-					, url.IsAbsoluteUri, url.HostNameType);
+				logger.Scoped($"{ThisClassName}.{DbgUtils.CurrentMethodName()}")
+					.Debug()
+					?.Log(
+						"Cannot extract destination info (URL is not absolute or doesn't point to an external resource)."
+						+ " url: IsAbsoluteUri: {IsAbsoluteUri}, HostNameType: {HostNameType}."
+						, url.IsAbsoluteUri, url.HostNameType);
 				return null;
 			}
 
@@ -36,12 +37,7 @@ namespace Elastic.Apm.Helpers
 		{
 			var port = url.IsDefaultPort ? string.Empty : $":{url.Port}";
 			var scheme = $"{url.Scheme}://";
-			return new Destination.DestinationService
-			{
-				Type = span.Type,
-				Name = scheme + url.Host + port,
-				Resource = $"{url.Host}:{url.Port}"
-			};
+			return new Destination.DestinationService { Type = span.Type, Name = scheme + url.Host + port, Resource = $"{url.Host}:{url.Port}" };
 		}
 	}
 }

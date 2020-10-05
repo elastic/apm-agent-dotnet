@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Elastic.Apm.DiagnosticSource;
 
 namespace Elastic.Apm.GrpcClient
@@ -11,7 +12,7 @@ namespace Elastic.Apm.GrpcClient
 			var subscriber = new DiagnosticInitializer(agent.Logger, new[] { new GrpcClientDiagnosticListener(agent as ApmAgent) });
 			retVal.Add(subscriber);
 
-			retVal.Add(System.Diagnostics.DiagnosticListener
+			retVal.Add(DiagnosticListener
 				.AllListeners
 				.Subscribe(subscriber));
 

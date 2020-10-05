@@ -16,20 +16,20 @@ namespace GrpcClientSample
 			Agent.Subscribe(new GrpcClientDiagnosticSubscriber());
 
 			await Agent.Tracer.CaptureTransaction("SampleCall", "test", async () =>
-			  {
-				  var channel = GrpcChannel.ForAddress("https://localhost:5001");
-				  var client = new Greeter.GreeterClient(channel);
+			{
+				var channel = GrpcChannel.ForAddress("https://localhost:5001");
+				var client = new Greeter.GreeterClient(channel);
 
-				  var response = await client.SayHelloAsync(
-					  new HelloRequest { Name = "World" });
+				var response = await client.SayHelloAsync(
+					new HelloRequest { Name = "World" });
 
-				  var response2 = await client.SayHelloAsync(
-					  new HelloRequest { Name = "World2" });
+				var response2 = await client.SayHelloAsync(
+					new HelloRequest { Name = "World2" });
 
-				  Console.WriteLine(response.Message);
-				  Console.WriteLine(response2.Message);
-				  Console.WriteLine("Hello World!");
-			  });
+				Console.WriteLine(response.Message);
+				Console.WriteLine(response2.Message);
+				Console.WriteLine("Hello World!");
+			});
 
 			Console.ReadKey();
 		}

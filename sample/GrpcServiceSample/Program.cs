@@ -1,11 +1,6 @@
 using Elastic.Apm.NetCoreAll;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace GrpcServiceSample
 {
@@ -17,9 +12,7 @@ namespace GrpcServiceSample
 		// For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682
 		public static IHostBuilder CreateHostBuilder(string[] args) =>
 			Host.CreateDefaultBuilder(args)
-				.ConfigureWebHostDefaults(webBuilder =>
-				{
-					webBuilder.UseStartup<Startup>();
-				}).UseAllElasticApm();
+				.ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); })
+				.UseAllElasticApm();
 	}
 }
