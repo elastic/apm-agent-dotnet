@@ -20,5 +20,7 @@ namespace GrpcServiceSample
 				Message = "Hello " + request.Name
 			}); ;
 		}
+
+		public override Task<HelloReply> ThrowAnException(HelloRequest request, ServerCallContext context) => throw new Exception("Test Exception");
 	}
 }

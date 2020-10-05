@@ -4,10 +4,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.Model;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Helpers;
 
