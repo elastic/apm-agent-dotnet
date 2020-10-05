@@ -19,6 +19,12 @@ namespace Elastic.Apm.Grpc.Tests
 {
 	public class GrpcTests
 	{
+		/// <summary>
+		/// Creates a call to a simple gRPC service and asserts that all transactions, spans are captured
+		/// and gRPC related fields are filled.
+		/// </summary>
+		/// <param name="withDiagnosticSource"></param>
+		/// <returns></returns>
 		[InlineData(true)]
 		[InlineData(false)]
 		[Theory]
@@ -30,15 +36,17 @@ namespace Elastic.Apm.Grpc.Tests
 			IHost sampleAppHost;
 
 			if (withDiagnosticSource)
+			{
 				sampleAppHost = new SampleAppHostBuilder().BuildHost();
+				apmAgent.Subscribe(new AspNetCoreDiagnosticSubscriber());
+			}
 			else
 				sampleAppHost = new SampleAppHostBuilder().BuildHostWithMiddleware(apmAgent);
 
-			apmAgent.Subscribe(new AspNetCoreDiagnosticSubscriber(), new GrpcClientDiagnosticSubscriber(), new HttpDiagnosticsSubscriber());
+			apmAgent.Subscribe(new GrpcClientDiagnosticSubscriber(), new HttpDiagnosticsSubscriber());
 
 			await sampleAppHost.StartAsync();
 
-			// This switch must be set before creating the GrpcChannel/HttpClient.
 			AppContext.SetSwitch(
 				"System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
@@ -52,6 +60,8 @@ namespace Elastic.Apm.Grpc.Tests
 
 				Debug.WriteLine(response.Message);
 			});
+
+			payloadSender.Transactions.Should().HaveCount(2);
 
 			payloadSender.Transactions.Should()
 				.Contain(transaction => transaction.Result == "OK"
@@ -95,7 +105,6 @@ namespace Elastic.Apm.Grpc.Tests
 
 			await sampleAppHost.StartAsync();
 
-			// This switch must be set before creating the GrpcChannel/HttpClient.
 			AppContext.SetSwitch(
 				"System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
