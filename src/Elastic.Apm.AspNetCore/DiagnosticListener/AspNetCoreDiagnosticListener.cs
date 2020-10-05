@@ -13,9 +13,9 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 	internal class AspNetCoreDiagnosticListener : IDiagnosticListener
 	{
 		private readonly ApmAgent _agent;
+		private readonly PropertyFetcher _defaultHttpContextFetcher = new PropertyFetcher("HttpContext");
 		private readonly PropertyFetcher _exceptionContextPropertyFetcher = new PropertyFetcher("Exception");
 		private readonly PropertyFetcher _httpContextPropertyFetcher = new PropertyFetcher("HttpContext");
-		private readonly PropertyFetcher _defaultHttpContextFetcher = new PropertyFetcher("HttpContext");
 		private readonly IApmLogger _logger;
 
 		/// <summary>
@@ -41,7 +41,8 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 				case "Microsoft.AspNetCore.Hosting.HttpRequestIn.Start":
 					if (_httpContextPropertyFetcher.Fetch(kv.Value) is HttpContext httpContextStart)
 					{
-						var transaction = WebRequestTransactionCreator.StartTransactionAsync(httpContextStart, _logger, _agent.TracerInternal, _agent.ConfigStore.CurrentSnapshot);
+						var transaction = WebRequestTransactionCreator.StartTransactionAsync(httpContextStart, _logger, _agent.TracerInternal,
+							_agent.ConfigStore.CurrentSnapshot);
 
 						if (transaction != null)
 						{
@@ -54,9 +55,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 					if (_httpContextPropertyFetcher.Fetch(kv.Value) is HttpContext httpContextStop)
 					{
 						if (_processingRequests.TryRemove(httpContextStop, out var transaction))
-						{
 							WebRequestTransactionCreator.StopTransaction(transaction, httpContextStop, _logger);
-						}
 					}
 					break;
 				case "Microsoft.AspNetCore.Diagnostics.UnhandledException": //Called when exception handler is registrered
@@ -66,7 +65,8 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 					if (!_processingRequests.TryGetValue(httpContextDiagnosticsUnhandledException, out var diagnosticsTransaction)) return;
 
 					diagnosticsTransaction.CaptureException(diagnosticsException);
-					diagnosticsTransaction.CollectRequestBody(true, httpContextDiagnosticsUnhandledException.Request, _logger, diagnosticsTransaction.ConfigSnapshot);
+					diagnosticsTransaction.CollectRequestBody(true, httpContextDiagnosticsUnhandledException.Request, _logger,
+						diagnosticsTransaction.ConfigSnapshot);
 
 					break;
 				case "Microsoft.AspNetCore.Hosting.UnhandledException": // Not called when exception handler registered

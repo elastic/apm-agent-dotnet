@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Claims;
 using Elastic.Apm.Api;
@@ -175,6 +176,8 @@ namespace Elastic.Apm.AspNetCore
 		{
 			if (transaction == null) return;
 
+			var grpcCallInfo = CollectGrpcInfo();
+
 			try
 			{
 				if (!transaction.HasCustomName)
@@ -191,18 +194,32 @@ namespace Elastic.Apm.AspNetCore
 					}
 					else if (context.Response.StatusCode == StatusCodes.Status404NotFound)
 					{
-						logger?.Trace()?
+						logger?.Trace()
+							?
 							.Log("No route data found or status code is 404 - setting transaction name to 'unknown route");
 						transaction.Name = $"{context.Request.Method} unknown route";
 					}
 				}
 
-				transaction.Result = Transaction.StatusCodeToResult(GetProtocolName(context.Request.Protocol), context.Response.StatusCode);
+				if (grpcCallInfo == default)
+				{
+					transaction.Result = Transaction.StatusCodeToResult(GetProtocolName(context.Request.Protocol), context.Response.StatusCode);
 
-				if (context.Response.StatusCode >= 500)
-					transaction.Outcome = Outcome.Failure;
+					if (context.Response.StatusCode >= 500)
+						transaction.Outcome = Outcome.Failure;
+					else
+						transaction.Outcome = Outcome.Success;
+				}
 				else
-					transaction.Outcome = Outcome.Success;
+				{
+					transaction.Name = grpcCallInfo.methodname;
+					transaction.Result = GrpcHelper.GrpcReturnCodeToString(grpcCallInfo.result);
+
+					if (transaction.Result == "OK")
+						transaction.Outcome = Outcome.Success;
+					else
+						transaction.Outcome = Outcome.Failure;
+				}
 
 				if (transaction.IsSampled)
 				{
@@ -218,6 +235,27 @@ namespace Elastic.Apm.AspNetCore
 			{
 				transaction.End();
 			}
+		}
+
+		/// <summary>
+		/// Collects gRPC info for the given request
+		/// </summary>
+		/// <returns>default if it's not a grpc call, otherwise the Grpc method name and result as a tuple </returns>
+		private static (string methodname, string result) CollectGrpcInfo()
+		{
+			var parentActivty = Activity.Current.Parent;
+			(string methodname, string result) grpcCallInfo = default;
+
+			if (parentActivty != null)
+			{
+				var grpcMethodName = parentActivty.Tags.Where(n => n.Key == "grpc.method").FirstOrDefault().Value;
+				var grpcStatusCode = parentActivty.Tags.Where(n => n.Key == "grpc.status_code").FirstOrDefault().Value;
+
+				if (!string.IsNullOrEmpty(grpcMethodName) && !string.IsNullOrEmpty(grpcStatusCode))
+					grpcCallInfo = (grpcMethodName, grpcStatusCode);
+			}
+
+			return grpcCallInfo;
 		}
 
 		private static void FillSampledTransactionContextResponse(HttpContext context, Transaction transaction, IApmLogger logger)

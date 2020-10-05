@@ -5,6 +5,7 @@
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.EntityFrameworkCore;
+using Elastic.Apm.GrpcClient;
 using Elastic.Apm.SqlClient;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -31,6 +32,6 @@ namespace Elastic.Apm.NetCoreAll
 			IConfiguration configuration = null
 		) => AspNetCore.ApmMiddlewareExtension
 			.UseElasticApm(builder, configuration, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber(),
-				new SqlClientDiagnosticSubscriber(), new ElasticsearchDiagnosticsSubscriber());
+				new SqlClientDiagnosticSubscriber(), new ElasticsearchDiagnosticsSubscriber(), new GrpcClientDiagnosticSubscriber());
 	}
 }

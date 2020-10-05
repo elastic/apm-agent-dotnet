@@ -42,9 +42,10 @@ namespace Elastic.Apm.Extensions.Hosting
 				{
 					var apmAgent = new ApmAgent(sp.GetService<AgentComponents>());
 					Agent.Setup(sp.GetService<AgentComponents>());
-					if (subscribers != null && subscribers.Any()) apmAgent.Subscribe(subscribers);
 					return apmAgent;
 				});
+
+				if (subscribers != null && subscribers.Any() && Agent.IsConfigured) Agent.Subscribe(subscribers);
 
 				services.AddSingleton(sp => sp.GetRequiredService<IApmAgent>().Tracer);
 			});
@@ -66,11 +67,12 @@ namespace Elastic.Apm.Extensions.Hosting
 		{
 			var versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name == assemblyName);
 			var assemblies = versionQuery as Assembly[] ?? versionQuery.ToArray();
-			if (assemblies.Any()) return assemblies.First().GetName().Version.ToString();
+			if (assemblies.Any()) return assemblies.First().GetName().Version?.ToString();
 
-			versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name.Contains(assemblyName));
+			versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name != null
+				&& n.GetName().Name.Contains(assemblyName));
 			var enumerable = versionQuery as Assembly[] ?? versionQuery.ToArray();
-			return enumerable.Any() ? enumerable.FirstOrDefault()?.GetName().Version.ToString() : null;
+			return enumerable.Any() ? enumerable.FirstOrDefault()?.GetName().Version?.ToString() : null;
 		}
 	}
 }

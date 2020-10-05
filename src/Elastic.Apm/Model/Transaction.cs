@@ -19,6 +19,7 @@ namespace Elastic.Apm.Model
 {
 	internal class Transaction : ITransaction
 	{
+		private static string ApmTransactionActivityName = "ElasticApm.Transaction";
 		private readonly Lazy<Context> _context = new Lazy<Context>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 
@@ -61,7 +62,7 @@ namespace Elastic.Apm.Model
 		/// <param name="distributedTracingData">Distributed tracing data, in case this transaction is part of a distributed trace</param>
 		/// <param name="sender">The IPayloadSender implementation which will record this transaction</param>
 		/// <param name="configSnapshot">The current configuration snapshot which contains the up-do-date config setting values</param>
-		/// <param name="currentExecutionSegmentsContainer"/>
+		/// <param name="currentExecutionSegmentsContainer" />
 		/// The ExecutionSegmentsContainer which makes sure this transaction flows
 		/// <param name="ignoreActivity">
 		/// If set the transaction will ignore Activity.Current and it's trace id,
@@ -170,7 +171,7 @@ namespace Elastic.Apm.Model
 
 			void StartActivity()
 			{
-				_activity = new Activity("ElasticApm.Transaction");
+				_activity = new Activity(ApmTransactionActivityName);
 				_activity.SetIdFormat(ActivityIdFormat.W3C);
 				_activity.Start();
 			}
