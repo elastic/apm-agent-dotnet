@@ -41,7 +41,8 @@ namespace Elastic.Apm.Extensions.Hosting
 				services.AddSingleton<IApmAgent, ApmAgent>(sp =>
 				{
 					var apmAgent = new ApmAgent(sp.GetService<AgentComponents>());
-					Agent.Setup(sp.GetService<AgentComponents>());
+					if(!Agent.IsConfigured)
+						Agent.Setup(sp.GetService<AgentComponents>());
 					return apmAgent;
 				});
 
