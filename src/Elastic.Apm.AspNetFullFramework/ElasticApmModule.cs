@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Security.Claims;
 using System.Web;
@@ -24,7 +25,6 @@ namespace Elastic.Apm.AspNetFullFramework
 		internal const string Email = "email";
 		internal const string UserId = "sub";
 	}
-
 	public class ElasticApmModule : IHttpModule
 	{
 		private static bool _isCaptureHeadersEnabled;
@@ -243,10 +243,50 @@ namespace Elastic.Apm.AspNetFullFramework
 			var httpApp = (HttpApplication)eventSender;
 			var httpCtx = httpApp.Context;
 			var httpResponse = httpCtx.Response;
+			var transaction = _currentTransaction;
 
-			if (_currentTransaction == null) return;
+			if (transaction == null) return;
 
 			SendErrorEventIfPresent(httpCtx);
+
+			if (!transaction.HasCustomName)
+			{
+				//fixup Transaction.Name - e.g. /user/profile/1 -> /user/profile/{id}
+				var values = httpApp.Request.RequestContext?.RouteData?.Values;
+
+				if (values != null && httpResponse.StatusCode != StatusCodes.Status404NotFound)
+				{
+					if (httpResponse.StatusCode != StatusCodes.Status404NotFound)
+					{
+						// handle MVC areas. The area name will be included in the DataTokens.
+						object area = null;
+						httpApp.Request.RequestContext?.RouteData?.DataTokens?.TryGetValue("area", out area);
+						IDictionary<string, object> routeData;
+						if (area != null)
+						{
+							routeData = new Dictionary<string, object>(values.Count + 1);
+							foreach (var value in values) routeData.Add(value.Key, value.Value);
+							routeData.Add("area", area);
+						}
+						else
+							routeData = values;
+
+						_logger?.Trace()?.Log("Calculating transaction name based on route data");
+						var name = Transaction.GetNameFromRouteContext(routeData);
+
+						if (!string.IsNullOrWhiteSpace(name)) _currentTransaction.Name = $"{httpCtx.Request.HttpMethod} {name}";
+					}
+					else
+					{
+						// only set unknown route as the transaction name when RouteData values exist but happened to
+						// resolve to an unknown route. Other 404 responses may be the result of asmx web services.
+						_logger?.Trace()
+							?
+							.Log("Route data found but status code is 404 - setting transaction name to 'unknown route");
+						transaction.Name = $"{httpCtx.Request.HttpMethod} unknown route";
+					}
+				}
+			}
 
 			_currentTransaction.Result = Transaction.StatusCodeToResult("HTTP", httpResponse.StatusCode);
 
@@ -405,5 +445,10 @@ namespace Elastic.Apm.AspNetFullFramework
 				agentComponents.Dispose();
 			}
 		}
+	}
+
+	internal static class StatusCodes
+	{
+		public const int Status404NotFound = 404;
 	}
 }

@@ -188,7 +188,7 @@ namespace Elastic.Apm.AspNetCore
 					if (routeData != null && context.Response.StatusCode != StatusCodes.Status404NotFound)
 					{
 						logger?.Trace()?.Log("Calculating transaction name based on route data");
-						var name = GetNameFromRouteContext(routeData);
+						var name = Transaction.GetNameFromRouteContext(routeData);
 
 						if (!string.IsNullOrWhiteSpace(name)) transaction.Name = $"{context.Request.Method} {name}";
 					}
@@ -310,51 +310,6 @@ namespace Elastic.Apm.AspNetCore
 				var enumerable = idClaims.ToList();
 				return enumerable.Any() ? enumerable.First().Value : string.Empty;
 			}
-		}
-
-		//credit: https://github.com/Microsoft/ApplicationInsights-aspnetcore
-		private static string GetNameFromRouteContext(IDictionary<string, object> routeValues)
-		{
-			string name = null;
-
-			if (routeValues.Count <= 0) return null;
-
-			routeValues.TryGetValue("controller", out var controller);
-			var controllerString = controller == null ? string.Empty : controller.ToString();
-
-			if (!string.IsNullOrEmpty(controllerString))
-			{
-				name = controllerString;
-
-				routeValues.TryGetValue("action", out var action);
-				var actionString = action == null ? string.Empty : action.ToString();
-
-				if (!string.IsNullOrEmpty(actionString)) name += "/" + actionString;
-
-				if (routeValues.Keys.Count <= 2) return name;
-
-				// Add parameters
-				var sortedKeys = routeValues.Keys
-					.Where(key =>
-						!string.Equals(key, "controller", StringComparison.OrdinalIgnoreCase) &&
-						!string.Equals(key, "action", StringComparison.OrdinalIgnoreCase) &&
-						!string.Equals(key, "!__route_group", StringComparison.OrdinalIgnoreCase))
-					.OrderBy(key => key, StringComparer.OrdinalIgnoreCase)
-					.ToArray();
-
-				if (sortedKeys.Length <= 0) return name;
-
-				var arguments = string.Join(@"/", sortedKeys);
-				name += " {" + arguments + "}";
-			}
-			else
-			{
-				routeValues.TryGetValue("page", out var page);
-				var pageString = page == null ? string.Empty : page.ToString();
-				if (!string.IsNullOrEmpty(pageString)) name = pageString;
-			}
-
-			return name;
 		}
 	}
 }

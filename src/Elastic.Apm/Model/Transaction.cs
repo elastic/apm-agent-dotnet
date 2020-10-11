@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
@@ -216,12 +217,9 @@ namespace Elastic.Apm.Model
 		/// <value>The duration.</value>
 		public double? Duration { get; set; }
 
-		/// <summary>
-		/// If true, then the transaction name was modified by external code, and transaction name should not be changed
-		/// or "fixed" automatically ref https://github.com/elastic/apm-agent-dotnet/pull/258.
-		/// </summary>
+		/// <inheritdoc />
 		[JsonIgnore]
-		internal bool HasCustomName { get; private set; }
+		public bool HasCustomName { get; private set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Id { get; }
@@ -423,5 +421,57 @@ namespace Elastic.Apm.Model
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 
 		internal static string StatusCodeToResult(string protocolName, int statusCode) => $"{protocolName} {statusCode.ToString()[0]}xx";
+
+		//credit: https://github.com/Microsoft/ApplicationInsights-aspnetcore
+		internal static string GetNameFromRouteContext(IDictionary<string, object> routeValues)
+		{
+			if (routeValues.Count <= 0) return null;
+
+			string name = null;
+
+			routeValues.TryGetValue("controller", out var controller);
+			var controllerString = controller == null ? string.Empty : controller.ToString();
+
+			if (!string.IsNullOrEmpty(controllerString))
+			{
+				// Check for MVC areas
+				string areaString = null;
+				if (routeValues.TryGetValue("area", out var area)) areaString = area.ToString();
+
+				name = !string.IsNullOrEmpty(areaString)
+					? areaString + "/" + controllerString
+					: controllerString;
+
+				routeValues.TryGetValue("action", out var action);
+				var actionString = action == null ? string.Empty : action.ToString();
+
+				if (!string.IsNullOrEmpty(actionString)) name += "/" + actionString;
+
+				if (routeValues.Keys.Count <= 2) return name;
+
+				// Add parameters
+				var sortedKeys = routeValues.Keys
+					.Where(key =>
+						!string.Equals(key, "area", StringComparison.OrdinalIgnoreCase) &&
+						!string.Equals(key, "controller", StringComparison.OrdinalIgnoreCase) &&
+						!string.Equals(key, "action", StringComparison.OrdinalIgnoreCase) &&
+						!string.Equals(key, "!__route_group", StringComparison.OrdinalIgnoreCase))
+					.OrderBy(key => key, StringComparer.OrdinalIgnoreCase)
+					.ToArray();
+
+				if (sortedKeys.Length <= 0) return name;
+
+				var arguments = string.Join(@"/", sortedKeys);
+				name += " {" + arguments + "}";
+			}
+			else
+			{
+				routeValues.TryGetValue("page", out var page);
+				var pageString = page == null ? string.Empty : page.ToString();
+				if (!string.IsNullOrEmpty(pageString)) name = pageString;
+			}
+
+			return name;
+		}
 	}
 }

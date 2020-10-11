@@ -23,7 +23,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task Test()
 		{
 			var sampleAppUrlPathData = SampleAppUrlPaths.HomePage;
-			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.Uri, sampleAppUrlPathData.StatusCode);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{

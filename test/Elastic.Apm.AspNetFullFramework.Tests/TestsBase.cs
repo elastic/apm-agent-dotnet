@@ -52,6 +52,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		private readonly string _sampleAppLogFilePath;
 		private readonly bool _startMockApmServer;
 		private readonly DateTime _testStartTime = DateTime.UtcNow;
+		private readonly HttpClient _httpClient;
 
 		protected TestsBase(
 			ITestOutputHelper xUnitOutputHelper,
@@ -72,6 +73,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			_sampleAppLogEnabled = sampleAppLogEnabled;
 			_sampleAppLogFilePath = GetSampleAppLogFilePath();
+			_httpClient = new HttpClient();
 
 			EnvVarsToSetForSampleAppPool = envVarsToSetForSampleAppPool == null
 				? new Dictionary<string, string>()
@@ -221,7 +223,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		private static string BuildApmServerUrl(int apmServerPort) => $"http://localhost:{apmServerPort}/";
 
-		protected async Task<SampleAppResponse> SendGetRequestToSampleAppAndVerifyResponse(string relativeUrlPath, int expectedStatusCode,
+		protected async Task<SampleAppResponse> SendGetRequestToSampleAppAndVerifyResponse(Uri uri, int expectedStatusCode,
 			bool timeHttpCall = true, bool addTraceContextHeaders = false
 		)
 		{
@@ -234,16 +236,15 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			}
 			try
 			{
-				using (var httpClient = new HttpClient())
+				var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
+				if (addTraceContextHeaders)
 				{
-					if (addTraceContextHeaders)
-					{
-						httpClient.DefaultRequestHeaders.Add("traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01");
-						httpClient.DefaultRequestHeaders.Add("tracestate", "rojo=00f067aa0ba902b7,congo=t61rcWkgMzE");
-					}
-					var response = await SendGetRequestToSampleAppAndVerifyResponseImpl(httpClient, relativeUrlPath, expectedStatusCode);
-					return new SampleAppResponse(response.Headers, await response.Content.ReadAsStringAsync());
+					httpRequestMessage.Headers.Add("traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01");
+					httpRequestMessage.Headers.Add("tracestate", "rojo=00f067aa0ba902b7,congo=t61rcWkgMzE");
 				}
+
+				var response = await SendGetRequestToSampleAppAndVerifyResponseImpl(httpRequestMessage, expectedStatusCode);
+				return new SampleAppResponse(response.Headers, await response.Content.ReadAsStringAsync());
 			}
 			finally
 			{
@@ -261,14 +262,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		}
 
 		private async Task<HttpResponseMessage> SendGetRequestToSampleAppAndVerifyResponseImpl(
-			HttpClient httpClient,
-			string relativeUrlPath,
+			HttpRequestMessage httpRequestMessage,
 			int expectedStatusCode
 		)
 		{
-			var url = Consts.SampleApp.RootUrl + "/" + relativeUrlPath;
+			var url = httpRequestMessage.RequestUri;
 			_logger.Debug()?.Log("Sending request with URL: {url} and expected status code: {HttpStatusCode}...", url, expectedStatusCode);
-			var response = await httpClient.GetAsync(url);
+			var response = await _httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
 			_logger.Debug()
 				?.Log("Request sent. Actual status code: {HttpStatusCode} ({HttpStatusCodeEnum})",
 					(int)response.StatusCode, response.StatusCode);
@@ -422,10 +422,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		private async Task LogSampleAppDiagnosticsPage()
 		{
-			var httpClient = new HttpClient();
-			const string url = Consts.SampleApp.RootUrl + "/" + DiagnosticsController.DiagnosticsPageRelativePath;
+			var url = new SampleAppUri(DiagnosticsController.DiagnosticsPageRelativePath);
 			_logger.Debug()?.Log("Getting content of sample application diagnostics page ({url})...", url);
-			var response = await httpClient.GetAsync(url);
+			var response = await _httpClient.GetAsync(url);
 			_logger.Debug()
 				?.Log("Received sample application's diagnostics page. Status code: {HttpStatusCode} ({HttpStatusCodeEnum})",
 					(int)response.StatusCode, response.StatusCode);
@@ -487,37 +486,31 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			receivedData.Spans.Count.Should().Be(sampleAppUrlPathData.SpansCount);
 			receivedData.Errors.Count.Should().Be(sampleAppUrlPathData.ErrorsCount);
 
-			// ReSharper disable once InvertIf
-			if (receivedData.Transactions.Count == 1)
+			if (receivedData.Transactions.Count != 1)
+				return;
+
+			var transaction = receivedData.Transactions.First();
+			if (transaction.Context != null)
 			{
-				var transaction = receivedData.Transactions.First();
+				transaction.Context.Request.Url.Full.Should().Be(sampleAppUrlPathData.Uri.AbsoluteUri);
+				transaction.Context.Request.Url.PathName.Should().Be(sampleAppUrlPathData.Uri.AbsolutePath);
 
-				if (transaction.Context != null)
+				if (string.IsNullOrEmpty(sampleAppUrlPathData.Uri.Query))
+					transaction.Context.Request.Url.Search.Should().BeNull();
+				else
 				{
-					transaction.Context.Request.Url.Full.Should().Be(Consts.SampleApp.RootUrl + "/" + sampleAppUrlPathData.RelativeUrlPath);
-
-					var questionMarkIndex = sampleAppUrlPathData.RelativeUrlPath.IndexOf('?');
-					if (questionMarkIndex == -1)
-					{
-						transaction.Context.Request.Url.PathName.Should()
-							.Be(Consts.SampleApp.RootUrlPath + "/" + sampleAppUrlPathData.RelativeUrlPath);
-						transaction.Context.Request.Url.Search.Should().BeNull();
-					}
-					else
-					{
-						transaction.Context.Request.Url.PathName.Should()
-							.Be(Consts.SampleApp.RootUrlPath + "/" + sampleAppUrlPathData.RelativeUrlPath.Substring(0, questionMarkIndex));
-						transaction.Context.Request.Url.Search.Should().Be(sampleAppUrlPathData.RelativeUrlPath.Substring(questionMarkIndex + 1));
-					}
-
-					transaction.Context.Response.StatusCode.Should().Be(sampleAppUrlPathData.StatusCode);
-					transaction.Outcome.Should().Be(sampleAppUrlPathData.Outcome);
+					// Uri.Query always unescapes the querystring so don't use it, and instead get the escaped querystring.
+					var queryString = sampleAppUrlPathData.Uri.GetComponents(UriComponents.Query, UriFormat.UriEscaped);
+					transaction.Context.Request.Url.Search.Should().Be(queryString);
 				}
 
-				var httpStatusFirstDigit = sampleAppUrlPathData.StatusCode / 100;
-				transaction.Result.Should().Be($"HTTP {httpStatusFirstDigit}xx");
-				transaction.SpanCount.Started.Should().Be(sampleAppUrlPathData.SpansCount);
+				transaction.Context.Response.StatusCode.Should().Be(sampleAppUrlPathData.StatusCode);
+				transaction.Outcome.Should().Be(sampleAppUrlPathData.Outcome);
 			}
+
+			var httpStatusFirstDigit = sampleAppUrlPathData.StatusCode / 100;
+			transaction.Result.Should().Be($"HTTP {httpStatusFirstDigit}xx");
+			transaction.SpanCount.Started.Should().Be(sampleAppUrlPathData.SpansCount);
 		}
 
 		internal void VerifySpanNameTypeSubtypeAction(SpanDto span, string spanPrefix)
@@ -800,20 +793,39 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal string HostName;
 		}
 
+		/// <summary>
+		/// Uri for the sample application
+		/// </summary>
+		public class SampleAppUri
+		{
+			private readonly UriBuilder _builder;
+			public SampleAppUri(string relativePathAndQuery) =>
+				_builder = new UriBuilder($"{Consts.SampleApp.RootUrl}/{relativePathAndQuery.TrimStart('/')}") { Port = -1 };
+
+			public Uri Uri => _builder.Uri;
+			public string RelativePath => _builder.Uri.AbsolutePath.Substring(Consts.SampleApp.RootUrlPath.Length + 1);
+			public static implicit operator Uri(SampleAppUri sampleAppUri) => sampleAppUri.Uri;
+		}
+
 		public class SampleAppUrlPathData
 		{
+			private readonly SampleAppUri _sampleAppUri;
+
 			public readonly int ErrorsCount;
 			public readonly Outcome Outcome;
-			public readonly string RelativeUrlPath;
 			public readonly int SpansCount;
+			private readonly string _relativePathAndQuery;
 			public readonly int StatusCode;
 			public readonly int TransactionsCount;
+			public Uri Uri => _sampleAppUri.Uri;
+			public string RelativePath => _sampleAppUri.RelativePath;
 
-			public SampleAppUrlPathData(string relativeUrlPath, int statusCode, int transactionsCount = 1, int spansCount = 0, int errorsCount = 0,
+			public SampleAppUrlPathData(string relativePathAndQuery, int statusCode, int transactionsCount = 1, int spansCount = 0, int errorsCount = 0,
 				Outcome outcome = Outcome.Success
 			)
 			{
-				RelativeUrlPath = relativeUrlPath;
+				_sampleAppUri = new SampleAppUri(relativePathAndQuery);
+				_relativePathAndQuery = relativePathAndQuery;
 				StatusCode = statusCode;
 				TransactionsCount = transactionsCount;
 				SpansCount = spansCount;
@@ -822,14 +834,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			}
 
 			public SampleAppUrlPathData Clone(
-				string relativeUrlPath = null,
+				string relativePathAndQuery = null,
 				int? status = null,
 				int? transactionsCount = null,
 				int? spansCount = null,
 				int? errorsCount = null,
 				Outcome outcome = Outcome.Success
 			) => new SampleAppUrlPathData(
-				relativeUrlPath ?? RelativeUrlPath,
+				relativePathAndQuery ?? _relativePathAndQuery,
 				status ?? StatusCode,
 				transactionsCount ?? TransactionsCount,
 				spansCount ?? SpansCount,

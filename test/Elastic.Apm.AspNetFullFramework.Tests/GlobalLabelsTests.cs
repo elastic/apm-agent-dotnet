@@ -38,7 +38,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task Test()
 		{
 			var pageData = SampleAppUrlPaths.HomePage;
-			await SendGetRequestToSampleAppAndVerifyResponse(pageData.RelativeUrlPath, pageData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(pageData.Uri, pageData.StatusCode);
 			await WaitAndVerifyReceivedDataSharedConstraints(pageData);
 		}
 	}

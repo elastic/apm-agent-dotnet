@@ -29,7 +29,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task AspNetVersionTest()
 		{
 			var pageThatThrows = SampleAppUrlPaths.ThrowsInvalidOperationPage;
-			var sampleAppResponse = await SendGetRequestToSampleAppAndVerifyResponse(pageThatThrows.RelativeUrlPath, pageThatThrows.StatusCode);
+			var sampleAppResponse = await SendGetRequestToSampleAppAndVerifyResponse(pageThatThrows.Uri, pageThatThrows.StatusCode);
 			var aspNetVersionFromErrorPage = GetAspNetVersionFromErrorPage(sampleAppResponse.Content);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
@@ -76,7 +76,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task ServiceRuntimeTest()
 		{
 			var page = SampleAppUrlPaths.GetDotNetRuntimeDescriptionPage;
-			var sampleAppResponse = await SendGetRequestToSampleAppAndVerifyResponse(page.RelativeUrlPath, page.StatusCode);
+			var sampleAppResponse = await SendGetRequestToSampleAppAndVerifyResponse(page.Uri, page.StatusCode);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{

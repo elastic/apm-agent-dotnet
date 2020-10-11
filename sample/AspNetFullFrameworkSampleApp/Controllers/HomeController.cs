@@ -126,6 +126,8 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 			}
 		}
 
+		public ActionResult Sample(int id) => Content(id.ToString());
+
 		internal static async Task<ActionResult> CustomSpanThrowsInternal()
 		{
 			await Task.Delay(1);

@@ -26,7 +26,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			// Send any request to the sample application to make sure it's running since IIS might start worker process lazily
 			var sampleAppUrlPathData = RandomSampleAppUrlPath();
-			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.RelativeUrlPath,
+			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.Uri,
 				sampleAppUrlPathData.StatusCode, /* timeHttpCall: */ false);
 
 			// Wait enough time to give agent a chance to gather all the metrics

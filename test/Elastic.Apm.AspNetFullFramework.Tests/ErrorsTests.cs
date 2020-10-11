@@ -25,7 +25,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task CustomSpanThrowsTest()
 		{
 			var errorPageData = SampleAppUrlPaths.CustomSpanThrowsExceptionPage;
-			await SendGetRequestToSampleAppAndVerifyResponse(errorPageData.RelativeUrlPath, errorPageData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(errorPageData.Uri, errorPageData.StatusCode);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
@@ -62,7 +62,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task HttpCallWithResponseForbidden()
 		{
 			var pageData = SampleAppUrlPaths.ChildHttpSpanWithResponseForbiddenPage;
-			await SendGetRequestToSampleAppAndVerifyResponse(pageData.RelativeUrlPath, pageData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(pageData.Uri, pageData.StatusCode);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
@@ -82,7 +82,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task CustomChildSpanThrowsTest()
 		{
 			var errorPageData = SampleAppUrlPaths.CustomChildSpanThrowsExceptionPage;
-			await SendGetRequestToSampleAppAndVerifyResponse(errorPageData.RelativeUrlPath, errorPageData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(errorPageData.Uri, errorPageData.StatusCode);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
@@ -135,7 +135,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task PageThatDoesNotExit_test()
 		{
 			var pageData = SampleAppUrlPaths.PageThatDoesNotExit;
-			await SendGetRequestToSampleAppAndVerifyResponse(pageData.RelativeUrlPath, pageData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(pageData.Uri, pageData.StatusCode);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
@@ -147,7 +147,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				VerifyTransactionError(error, transaction);
 
 				error.Exception.Type.Should().Be("System.Web.HttpException");
-				error.Exception.Message.Should().ContainAll(pageData.RelativeUrlPath, "not found");
+				error.Exception.Message.Should().ContainAll(pageData.Uri.PathAndQuery, "not found");
 			});
 		}
 
