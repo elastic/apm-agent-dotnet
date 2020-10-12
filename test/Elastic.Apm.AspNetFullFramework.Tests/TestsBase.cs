@@ -166,6 +166,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			internal static readonly SampleAppUrlPathData ThrowsInvalidOperationPage =
 				new SampleAppUrlPathData(HomeController.ThrowsInvalidOperationPageRelativePath, 500, errorsCount: 1, outcome: Outcome.Failure);
+
+			internal static readonly SampleAppUrlPathData MyAreaHomePage =
+				new SampleAppUrlPathData(AspNetFullFrameworkSampleApp.Areas.MyArea.Controllers.HomeController.HomePageRelativePath, 200);
 		}
 
 		private TimedEvent? _sampleAppClientCallTiming;

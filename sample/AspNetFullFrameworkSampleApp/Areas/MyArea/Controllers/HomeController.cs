@@ -9,6 +9,8 @@ namespace AspNetFullFrameworkSampleApp.Areas.MyArea.Controllers
 {
 	public class HomeController : Controller
 	{
+		internal const string HomePageRelativePath = "MyArea/Home";
+
 		public ActionResult Index() => View();
 	}
 }
