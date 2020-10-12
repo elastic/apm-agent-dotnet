@@ -22,6 +22,7 @@ namespace SampleConsoleNetCoreApp
 		{
 			var response = await _apmAgent.Tracer.CaptureTransaction("Console .Net Core Example", "background", async () =>
 			{
+				Console.WriteLine("HostedService running");
 				// Make sure Agent.Tracer.CurrentTransaction is not null
 				var currentTransaction = Agent.Tracer.CurrentTransaction;
 				if (currentTransaction == null) throw new Exception("Agent.Tracer.CurrentTransaction returns null");
