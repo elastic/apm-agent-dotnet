@@ -76,11 +76,10 @@ namespace Elastic.Apm.Helpers
 			return null;
 		}
 
-		internal Api.System ParseSystemInfo(IConfigurationReader configurationReader)
+		internal Api.System ParseSystemInfo(string hostName)
 		{
 			var containerInfo = ParseContainerInfo();
 			var detectedHostName = GetHostName();
-			var hostName = configurationReader.HostName;
 			var kubernetesInfo = ParseKubernetesInfo(containerInfo, detectedHostName);
 
 			return new Api.System
