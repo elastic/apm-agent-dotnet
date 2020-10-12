@@ -11,6 +11,7 @@ namespace Elastic.Apm.Api
 {
 	public class System
 	{
+		private string _hostName;
 		public KubernetesMetadata Kubernetes { get; set; }
 
 		public Container Container { get; set; }
@@ -21,9 +22,18 @@ namespace Elastic.Apm.Api
 
 		[JsonProperty("hostname")]
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
-		public string HostName => DetectedHostName;
+		public string HostName
+		{
+			get => _hostName ??= DetectedHostName;
+			set => _hostName = value;
+		}
 
 		public override string ToString() =>
-			new ToStringBuilder(nameof(System)) { { nameof(Container), Container }, { nameof(DetectedHostName), DetectedHostName } }.ToString();
+			new ToStringBuilder(nameof(System))
+			{
+				{ nameof(Container), Container },
+				{ nameof(DetectedHostName), DetectedHostName },
+				{ nameof(HostName), HostName }
+			}.ToString();
 	}
 }

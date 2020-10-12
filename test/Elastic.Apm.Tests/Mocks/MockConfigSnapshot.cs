@@ -44,6 +44,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _useElasticTraceparentHeader;
 		private readonly string _verifyServerCert;
 		private readonly string _transactionIgnoreUrls;
+		private readonly string _hostName;
 
 		public MockConfigSnapshot(IApmLogger logger = null,
 			string logLevel = null,
@@ -74,7 +75,8 @@ namespace Elastic.Apm.Tests.Mocks
 			string useElasticTraceparentHeader = null,
 			string applicationNamespaces = null,
 			string excludedNamespaces = null,
-			string transactionIgnoreUrls = null
+			string transactionIgnoreUrls = null,
+			string hostName = null
 		) : base(logger, ThisClassName)
 		{
 			_serverUrls = serverUrls;
@@ -106,6 +108,7 @@ namespace Elastic.Apm.Tests.Mocks
 			_applicationNamespaces = applicationNamespaces;
 			_excludedNamespaces = excludedNamespaces;
 			_transactionIgnoreUrls = transactionIgnoreUrls;
+			_hostName = hostName;
 		}
 
 		public string ApiKey => ParseApiKey(Kv(ConfigConsts.EnvVarNames.ApiKey, _apiKey, Origin));
@@ -135,6 +138,8 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public IReadOnlyDictionary<string, string> GlobalLabels =>
 			ParseGlobalLabels(Kv(ConfigConsts.EnvVarNames.GlobalLabels, _globalLabels, Origin));
+
+		public string HostName => ParseHostName(Kv(ConfigConsts.EnvVarNames.HostName, _hostName, Origin));
 
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
 			ParseTransactionIgnoreUrls(Kv(ConfigConsts.EnvVarNames.TransactionIgnoreUrls, _transactionIgnoreUrls, Origin));

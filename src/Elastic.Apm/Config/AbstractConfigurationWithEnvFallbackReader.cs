@@ -54,6 +54,8 @@ namespace Elastic.Apm.Config
 		public IReadOnlyDictionary<string, string> GlobalLabels =>
 			ParseGlobalLabels(Read(ConfigConsts.KeyNames.GlobalLabels, ConfigConsts.EnvVarNames.GlobalLabels));
 
+		public virtual string HostName => ParseHostName(Read(ConfigConsts.KeyNames.HostName, ConfigConsts.EnvVarNames.HostName));
+
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
 			ParseTransactionIgnoreUrls(Read(ConfigConsts.KeyNames.TransactionIgnoreUrls, ConfigConsts.EnvVarNames.TransactionIgnoreUrls));
 
@@ -98,11 +100,11 @@ namespace Elastic.Apm.Config
 
 		public virtual bool VerifyServerCert =>
 			ParseVerifyServerCert(Read(ConfigConsts.KeyNames.VerifyServerCert, ConfigConsts.EnvVarNames.VerifyServerCert));
-		
-		public IReadOnlyCollection<string> ExcludedNamespaces => 
+
+		public IReadOnlyCollection<string> ExcludedNamespaces =>
 			ParseExcludedNamespaces(Read(ConfigConsts.KeyNames.ExcludedNamespaces, ConfigConsts.EnvVarNames.ExcludedNamespaces));
 
-		public IReadOnlyCollection<string> ApplicationNamespaces => 
+		public IReadOnlyCollection<string> ApplicationNamespaces =>
 			ParseExcludedNamespaces(Read(ConfigConsts.KeyNames.ApplicationNamespaces, ConfigConsts.EnvVarNames.ApplicationNamespaces));
 	}
 }

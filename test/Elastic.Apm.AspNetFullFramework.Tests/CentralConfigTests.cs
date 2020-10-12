@@ -27,6 +27,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 	{
 		private const string CustomEnvironment = "AspNetFullFramework_Tests_CentralConfigTests-CustomEnvironment";
 		private const string CustomServiceName = "AspNetFullFramework_Tests_CentralConfigTests-CustomServiceName";
+		private const string CustomHostName = "AspNetFullFramework_Tests_CentralConfigTests-CustomHostName";
 
 		private const string TransactionMaxSpansKey = "transaction_max_spans";
 		private const string TransactionSampleRateKey = "transaction_sample_rate";
@@ -39,13 +40,15 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				envVarsToSetForSampleAppPool: new Dictionary<string, string>
 				{
 					{ ConfigConsts.EnvVarNames.ServiceName, CustomServiceName },
-					{ ConfigConsts.EnvVarNames.Environment, CustomEnvironment }
+					{ ConfigConsts.EnvVarNames.Environment, CustomEnvironment },
+					{ ConfigConsts.EnvVarNames.HostName, CustomHostName },
 				})
 		{
 			ConfigState = new ConfigStateC(LoggerBase);
 
 			AgentConfig.ServiceName = AbstractConfigurationReader.AdaptServiceName(CustomServiceName);
 			AgentConfig.Environment = CustomEnvironment;
+			AgentConfig.HostName = CustomHostName;
 		}
 
 		[Collection(Consts.AspNetFullFrameworkTestsCollection)]

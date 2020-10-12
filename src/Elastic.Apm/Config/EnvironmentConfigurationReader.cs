@@ -43,6 +43,9 @@ namespace Elastic.Apm.Config
 		public TimeSpan FlushInterval => ParseFlushInterval(Read(ConfigConsts.EnvVarNames.FlushInterval));
 
 		public IReadOnlyDictionary<string, string> GlobalLabels => ParseGlobalLabels(Read(ConfigConsts.EnvVarNames.GlobalLabels));
+
+		public string HostName => ParseHostName(Read(ConfigConsts.EnvVarNames.HostName));
+
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => ParseTransactionIgnoreUrls(Read(ConfigConsts.EnvVarNames.TransactionIgnoreUrls));
 
 		public LogLevel LogLevel => ParseLogLevel(Read(ConfigConsts.EnvVarNames.LogLevel));
@@ -77,7 +80,7 @@ namespace Elastic.Apm.Config
 		public bool UseElasticTraceparentHeader => ParseUseElasticTraceparentHeader(Read(ConfigConsts.EnvVarNames.UseElasticTraceparentHeader));
 
 		public bool VerifyServerCert => ParseVerifyServerCert(Read(ConfigConsts.EnvVarNames.VerifyServerCert));
-		
+
 		public IReadOnlyCollection<string> ExcludedNamespaces => ParseExcludedNamespaces(Read(ConfigConsts.EnvVarNames.ExcludedNamespaces));
 
 		public IReadOnlyCollection<string> ApplicationNamespaces => ParseApplicationNamespaces(Read(ConfigConsts.EnvVarNames.ApplicationNamespaces));

@@ -103,7 +103,6 @@ namespace Elastic.Apm.Config
 		public static class EnvVarNames
 		{
 			private const string Prefix = "ELASTIC_APM_";
-
 			public const string CaptureBody = Prefix + "CAPTURE_BODY";
 			public const string CaptureBodyContentTypes = Prefix + "CAPTURE_BODY_CONTENT_TYPES";
 			public const string CaptureHeaders = Prefix + "CAPTURE_HEADERS";
@@ -112,6 +111,7 @@ namespace Elastic.Apm.Config
 			public const string Environment = Prefix + "ENVIRONMENT";
 			public const string FlushInterval = Prefix + "FLUSH_INTERVAL";
 			public const string GlobalLabels = Prefix + "GLOBAL_LABELS";
+			public const string HostName = Prefix + "HOSTNAME";
 			public const string LogLevel = Prefix + "LOG_LEVEL";
 			public const string MaxBatchEventCount = Prefix + "MAX_BATCH_EVENT_COUNT";
 			public const string MaxQueueEventCount = Prefix + "MAX_QUEUE_EVENT_COUNT";
@@ -148,6 +148,7 @@ namespace Elastic.Apm.Config
 			public const string Environment = Prefix + nameof(Environment);
 			public const string FlushInterval = Prefix + nameof(FlushInterval);
 			public const string GlobalLabels = Prefix + nameof(GlobalLabels);
+			public const string HostName = "ElasticApm:HostName";
 			public const string LogLevel = Prefix + nameof(LogLevel);
 			public const string MaxBatchEventCount = Prefix + nameof(MaxBatchEventCount);
 			public const string MaxQueueEventCount = Prefix + nameof(MaxQueueEventCount);

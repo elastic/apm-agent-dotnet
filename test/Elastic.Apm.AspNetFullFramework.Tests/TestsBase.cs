@@ -579,7 +579,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			system.Should().NotBeNull();
 
 			system.DetectedHostName.Should().Be(new SystemInfoHelper(LoggerBase).GetHostName());
-			system.HostName.Should().Be(system.DetectedHostName);
+			system.HostName.Should().Be(AgentConfig.HostName ?? system.DetectedHostName);
 		}
 
 		private void FullFwAssertValid(ErrorDto error)
@@ -797,6 +797,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal Dictionary<string, string> GlobalLabels;
 			internal string ServiceName;
 			internal string ServiceNodeName;
+			internal string HostName;
 		}
 
 		public class SampleAppUrlPathData

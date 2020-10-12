@@ -8,6 +8,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Kubernetes;
+using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Helpers
@@ -75,13 +76,20 @@ namespace Elastic.Apm.Helpers
 			return null;
 		}
 
-		internal Api.System ParseSystemInfo()
+		internal Api.System ParseSystemInfo(IConfigurationReader configurationReader)
 		{
 			var containerInfo = ParseContainerInfo();
-			var hostName = GetHostName();
-			var kubernetesInfo = ParseKubernetesInfo(containerInfo, hostName);
+			var detectedHostName = GetHostName();
+			var hostName = configurationReader.HostName;
+			var kubernetesInfo = ParseKubernetesInfo(containerInfo, detectedHostName);
 
-			return new Api.System { Container = containerInfo, DetectedHostName = hostName, Kubernetes = kubernetesInfo };
+			return new Api.System
+			{
+				Container = containerInfo,
+				DetectedHostName = detectedHostName,
+				HostName = hostName,
+				Kubernetes = kubernetesInfo
+			};
 		}
 
 		internal string GetHostName()

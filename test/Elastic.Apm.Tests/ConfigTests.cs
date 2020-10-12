@@ -765,6 +765,16 @@ namespace Elastic.Apm.Tests
 				);
 		}
 
+		[Theory]
+		[InlineData("My HostName", "My HostName")]
+		[InlineData("", null)]
+		[InlineData(null, null)]
+		public void Set_HostName(string hostName, string expected)
+		{
+			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(hostName: hostName)));
+			agent.ConfigurationReader.HostName.Should().Be(expected);
+		}
+
 
 		/// <summary>
 		/// Disables CPU metrics and makes sure that remaining metrics are still captured
