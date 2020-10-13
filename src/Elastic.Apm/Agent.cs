@@ -125,9 +125,11 @@ namespace Elastic.Apm
 
 	public static class Agent
 	{
-		private static readonly Lazy<ApmAgent> LazyApmAgent = new Lazy<ApmAgent>(() => new ApmAgent(_components));
-		private static AgentComponents _components;
+		private static readonly Lazy<ApmAgent> LazyApmAgent = new Lazy<ApmAgent>(() => new ApmAgent(Components));
 		private static volatile bool _isConfigured;
+
+
+		internal static AgentComponents Components { get; private set; }
 
 		public static IConfigurationReader Config => Instance.ConfigurationReader;
 
@@ -152,11 +154,17 @@ namespace Elastic.Apm
 		/// you can also control if the <see cref="ITransaction" /> should be sent to the server or not.
 		/// If the
 		/// <param name="filter"></param>
-		/// returns a non-null <see cref="ITransaction"/> instance then it will be sent to the APM Server -
+		/// returns a non-null <see cref="ITransaction" /> instance then it will be sent to the APM Server -
 		/// if it returns <code>null</code>, the event will be dropped and won't be sent to the APM server.
 		/// </summary>
-		/// <param name="filter">The filter that can process the <see cref="ITransaction"/> and decide if it should be sent to APM Server or not.</param>
-		/// <returns><code>true</code> if the filter was added successfully, <code>false</code> otherwise. In case the method returns <code>false</code> the filter won't be called.</returns>
+		/// <param name="filter">
+		/// The filter that can process the <see cref="ITransaction" /> and decide if it should be sent to APM
+		/// Server or not.
+		/// </param>
+		/// <returns>
+		/// <code>true</code> if the filter was added successfully, <code>false</code> otherwise. In case the method
+		/// returns <code>false</code> the filter won't be called.
+		/// </returns>
 		public static bool AddFilter(Func<ITransaction, ITransaction> filter) => CheckAndAddFilter(p => p.TransactionFilters.Add(filter));
 
 		/// <summary>
@@ -169,11 +177,17 @@ namespace Elastic.Apm
 		/// you can also control if the <see cref="ISpan" /> should be sent to the server or not.
 		/// If the
 		/// <param name="filter"></param>
-		/// returns a non-null <see cref="ISpan"/> instance then it will be sent to the APM Server -
+		/// returns a non-null <see cref="ISpan" /> instance then it will be sent to the APM Server -
 		/// if it returns <code>null</code>, the event will be dropped and won't be sent to the APM server.
 		/// </summary>
-		/// <param name="filter">The filter that can process the <see cref="ISpan"/> and decide if it should be sent to APM Server or not.</param>
-		/// <returns><code>true</code> if the filter was added successfully, <code>false</code> otherwise. In case the method returns <code>false</code> the filter won't be called.</returns>
+		/// <param name="filter">
+		/// The filter that can process the <see cref="ISpan" /> and decide if it should be sent to APM Server
+		/// or not.
+		/// </param>
+		/// <returns>
+		/// <code>true</code> if the filter was added successfully, <code>false</code> otherwise. In case the method
+		/// returns <code>false</code> the filter won't be called.
+		/// </returns>
 		public static bool AddFilter(Func<ISpan, ISpan> filter) => CheckAndAddFilter(p => p.SpanFilters.Add(filter));
 
 		/// <summary>
@@ -186,11 +200,17 @@ namespace Elastic.Apm
 		/// you can also control if the <see cref="IError" /> should be sent to the server or not.
 		/// If the
 		/// <param name="filter"></param>
-		/// returns a non-null <see cref="IError"/> instance then it will be sent to the APM Server -
+		/// returns a non-null <see cref="IError" /> instance then it will be sent to the APM Server -
 		/// if it returns <code>null</code>, the event will be dropped and won't be sent to the APM server.
 		/// </summary>
-		/// <param name="filter">The filter that can process the <see cref="IError"/> and decide if it should be sent to APM Server or not.</param>
-		/// <returns><code>true</code> if the filter was added successfully, <code>false</code> otherwise. In case the method returns <code>false</code> the filter won't be called.</returns>
+		/// <param name="filter">
+		/// The filter that can process the <see cref="IError" /> and decide if it should be sent to APM
+		/// Server or not.
+		/// </param>
+		/// <returns>
+		/// <code>true</code> if the filter was added successfully, <code>false</code> otherwise. In case the method
+		/// returns <code>false</code> the filter won't be called.
+		/// </returns>
 		public static bool AddFilter(Func<IError, IError> filter) => CheckAndAddFilter(p => p.ErrorFilters.Add(filter));
 
 		private static bool CheckAndAddFilter(Action<PayloadSenderV2> action)
@@ -219,7 +239,7 @@ namespace Elastic.Apm
 			if (LazyApmAgent.IsValueCreated)
 				throw new InstanceAlreadyCreatedException("The singleton APM agent has already been instantiated and can no longer be configured.");
 
-			_components = agentComponents;
+			Components = agentComponents;
 			_isConfigured = true;
 		}
 
