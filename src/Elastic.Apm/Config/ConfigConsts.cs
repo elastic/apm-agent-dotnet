@@ -102,6 +102,8 @@ namespace Elastic.Apm.Config
 
 		public static class EnvVarNames
 		{
+			private const string Prefix = "ELASTIC_APM_";
+
 			public const string CaptureBody = Prefix + "CAPTURE_BODY";
 			public const string CaptureBodyContentTypes = Prefix + "CAPTURE_BODY_CONTENT_TYPES";
 			public const string CaptureHeaders = Prefix + "CAPTURE_HEADERS";
@@ -114,7 +116,6 @@ namespace Elastic.Apm.Config
 			public const string MaxBatchEventCount = Prefix + "MAX_BATCH_EVENT_COUNT";
 			public const string MaxQueueEventCount = Prefix + "MAX_QUEUE_EVENT_COUNT";
 			public const string MetricsInterval = Prefix + "METRICS_INTERVAL";
-			private const string Prefix = "ELASTIC_APM_";
 			public const string SanitizeFieldNames = Prefix + "SANITIZE_FIELD_NAMES";
 			public const string SecretToken = Prefix + "SECRET_TOKEN";
 			public const string ApiKey = Prefix + "API_KEY";
@@ -132,41 +133,43 @@ namespace Elastic.Apm.Config
 			public const string ApplicationNamespaces = Prefix + "APPLICATION_NAMESPACES";
 			public static string TransactionIgnoreUrls = Prefix + "TRANSACTION_IGNORE_URLS";
 			//This setting is Full Framework only:
-			public const string ConfigurationReaderType = Prefix + "FULL_FRAMEWORK_CONFIGURATION_READER_TYPE";
+			public const string FullFrameworkConfigurationReaderType = Prefix + "FULL_FRAMEWORK_CONFIGURATION_READER_TYPE";
 		}
 
 		public static class KeyNames
 		{
-			public const string CaptureBody = "ElasticApm:CaptureBody";
-			public const string CaptureBodyContentTypes = "ElasticApm:CaptureBodyContentTypes";
-			public const string CaptureHeaders = "ElasticApm:CaptureHeaders";
-			public const string CentralConfig = "ElasticApm:CentralConfig";
-			public const string DisableMetrics = "ElasticApm:DisableMetrics";
-			public const string Environment = "ElasticApm:Environment";
-			public const string FlushInterval = "ElasticApm:FlushInterval";
-			public const string GlobalLabels = "ElasticApm:GlobalLabels";
-			public const string LogLevel = "ElasticApm:LogLevel";
-			public const string MaxBatchEventCount = "ElasticApm:MaxBatchEventCount";
-			public const string MaxQueueEventCount = "ElasticApm:MaxQueueEventCount";
-			public const string MetricsInterval = "ElasticApm:MetricsInterval";
-			public const string SanitizeFieldNames = "ElasticApm:SanitizeFieldNames";
-			public const string SecretToken = "ElasticApm:SecretToken";
-			public const string ApiKey = "ElasticApm:ApiKey";
-			public const string ServerUrls = "ElasticApm:ServerUrls";
-			public const string ServiceName = "ElasticApm:ServiceName";
-			public const string ServiceNodeName = "ElasticApm:ServiceNodeName";
-			public const string ServiceVersion = "ElasticApm:ServiceVersion";
-			public const string SpanFramesMinDuration = "ElasticApm:SpanFramesMinDuration";
-			public const string StackTraceLimit = "ElasticApm:StackTraceLimit";
-			public const string TransactionMaxSpans = "ElasticApm:TransactionMaxSpans";
-			public const string TransactionSampleRate = "ElasticApm:TransactionSampleRate";
-			public const string UseElasticTraceparentheader = "ElasticApm:UseElasticTraceparentHeder";
-			public const string VerifyServerCert = "ElasticApm:VerifyServerCert";
-			public const string ExcludedNamespaces = "ElasticApm:ExcludedNamespaces";
-			public const string ApplicationNamespaces = "ElasticApm:ApplicationNamespaces";
-			public static string TransactionIgnoreUrls = "ElasticApm:TransactionIgnoreUrls";
+			private const string Prefix = "ElasticApm:";
+
+			public const string CaptureBody = Prefix + nameof(CaptureBody);
+			public const string CaptureBodyContentTypes = Prefix + nameof(CaptureBodyContentTypes);
+			public const string CaptureHeaders = Prefix + nameof(CaptureHeaders);
+			public const string CentralConfig = Prefix + nameof(CentralConfig);
+			public const string DisableMetrics = Prefix + nameof(DisableMetrics);
+			public const string Environment = Prefix + nameof(Environment);
+			public const string FlushInterval = Prefix + nameof(FlushInterval);
+			public const string GlobalLabels = Prefix + nameof(GlobalLabels);
+			public const string LogLevel = Prefix + nameof(LogLevel);
+			public const string MaxBatchEventCount = Prefix + nameof(MaxBatchEventCount);
+			public const string MaxQueueEventCount = Prefix + nameof(MaxQueueEventCount);
+			public const string MetricsInterval = Prefix + nameof(MetricsInterval);
+			public const string SanitizeFieldNames = Prefix + nameof(SanitizeFieldNames);
+			public const string SecretToken = Prefix + nameof(SecretToken);
+			public const string ApiKey = Prefix + nameof(ApiKey);
+			public const string ServerUrls = Prefix + nameof(ServerUrls);
+			public const string ServiceName = Prefix + nameof(ServiceName);
+			public const string ServiceNodeName = Prefix + nameof(ServiceNodeName);
+			public const string ServiceVersion = Prefix + nameof(ServiceVersion);
+			public const string SpanFramesMinDuration = Prefix + nameof(SpanFramesMinDuration);
+			public const string StackTraceLimit = Prefix + nameof(StackTraceLimit);
+			public const string TransactionMaxSpans = Prefix + nameof(TransactionMaxSpans);
+			public const string TransactionSampleRate = Prefix + nameof(TransactionSampleRate);
+			public const string UseElasticTraceparentHeader = Prefix + nameof(UseElasticTraceparentHeader);
+			public const string VerifyServerCert = Prefix + nameof(VerifyServerCert);
+			public const string ExcludedNamespaces = Prefix + nameof(ExcludedNamespaces);
+			public const string ApplicationNamespaces = Prefix + nameof(ApplicationNamespaces);
+			public static string TransactionIgnoreUrls = Prefix + nameof(TransactionIgnoreUrls);
 			//This setting is Full Framework only:
-			public const string ConfigurationReaderType = "ElasticApm:FullFrameworkConfigurationReaderType";
+			public const string FullFrameworkConfigurationReaderType = Prefix + nameof(FullFrameworkConfigurationReaderType);
 		}
 
 		public static class SupportedValues
