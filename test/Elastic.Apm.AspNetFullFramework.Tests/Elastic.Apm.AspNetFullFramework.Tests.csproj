@@ -40,4 +40,7 @@
   <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
     <Compile Remove="Program-Unix.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="AngleSharp" Version="0.14.0" />
+  </ItemGroup>
 </Project>
