@@ -13,13 +13,13 @@ using NLog.Common;
 namespace AspNetFullFrameworkSampleApp.Controllers
 {
 	/// Note that this application is used by Elastic.Apm.AspNetFullFramework.Tests so changing it might break the tests
-	public class DiagnosticsController : Controller
+	public class DiagnosticsController : ControllerBase
 	{
 		internal const string DiagnosticsPageRelativePath = "Diagnostics";
 
 		public ActionResult Index()
 		{
-			var model = new DiagnosticsModel();
+			var model = new DiagnosticsViewModel();
 
 			var envVarsBuilder = new StringBuilder();
 			foreach (var nameValue in Environment.GetEnvironmentVariables().Cast<DictionaryEntry>().OrderBy(nv => nv.Key))

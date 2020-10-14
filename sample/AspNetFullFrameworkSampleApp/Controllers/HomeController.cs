@@ -20,7 +20,7 @@ using Elastic.Apm.Api;
 namespace AspNetFullFrameworkSampleApp.Controllers
 {
 	/// Note that this application is used by Elastic.Apm.AspNetFullFramework.Tests so changing it might break the tests
-	public class HomeController : Controller
+	public class HomeController : ControllerBase
 	{
 		internal const string AboutPageRelativePath = HomePageRelativePath + "/" + nameof(About);
 

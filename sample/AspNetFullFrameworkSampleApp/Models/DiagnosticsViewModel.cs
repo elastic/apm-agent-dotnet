@@ -6,7 +6,7 @@ using System;
 
 namespace AspNetFullFrameworkSampleApp.Models
 {
-	public class DiagnosticsModel
+	public class DiagnosticsViewModel
 	{
 		public string EnvironmentVariables { get; set; }
 		public string InMemoryLogContent { get; set; }

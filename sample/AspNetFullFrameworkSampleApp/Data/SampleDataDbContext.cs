@@ -7,11 +7,13 @@ using System.Data.Common;
 using System.Data.Entity;
 using System.Data.SQLite;
 using System.Threading;
+using AspNetFullFrameworkSampleApp.Models;
+using Microsoft.AspNet.Identity.EntityFramework;
 using SQLite.CodeFirst;
 
 namespace AspNetFullFrameworkSampleApp.Data
 {
-	internal class SampleDataDbContext : DbContext
+	internal class SampleDataDbContext : IdentityDbContext<ApplicationUser>
 	{
 		private static readonly InitOnceHelper InitOnceHelperInstance = new InitOnceHelper();
 		private static readonly Lazy<DbConnection> Connection = new Lazy<DbConnection>(CreateDbConnection);
@@ -45,6 +47,9 @@ namespace AspNetFullFrameworkSampleApp.Data
 
 		protected override void OnModelCreating(DbModelBuilder modelBuilder)
 		{
+			// create the ASP.NET Identity db models
+			base.OnModelCreating(modelBuilder);
+
 			ConfigureSampleDataEntity(modelBuilder);
 			var initializer = new DbInitializer(modelBuilder);
 			Database.SetInitializer(initializer);
