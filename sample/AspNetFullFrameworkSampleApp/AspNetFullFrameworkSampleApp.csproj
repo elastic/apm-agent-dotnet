@@ -278,9 +278,16 @@
     <Compile Include="Services\Auth\ApplicationUserClaimsIdentityFactory.cs" />
     <Compile Include="Areas\MyArea\Controllers\HomeController.cs" />
     <Compile Include="Areas\MyArea\MyAreaRegistration.cs" />
+    <Compile Include="Webforms.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+      <DependentUpon>Webforms.aspx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
     <Content Include="Areas\MyArea\Views\Home\Index.cshtml" />
     <Content Include="Areas\MyArea\Web.config" />
     <Content Include="Areas\MyArea\_ViewStart.cshtml" />
+    <Content Include="Webforms.aspx" />
   </ItemGroup>
   <PropertyGroup Condition="'$(OS)' == 'WINDOWS_NT'">
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

@@ -254,7 +254,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				//fixup Transaction.Name - e.g. /user/profile/1 -> /user/profile/{id}
 				var values = httpApp.Request.RequestContext?.RouteData?.Values;
 
-				if (values != null && httpResponse.StatusCode != StatusCodes.Status404NotFound)
+				if (values?.Count > 0 && httpResponse.StatusCode != StatusCodes.Status404NotFound)
 				{
 					if (httpResponse.StatusCode != StatusCodes.Status404NotFound)
 					{
@@ -278,8 +278,8 @@ namespace Elastic.Apm.AspNetFullFramework
 					}
 					else
 					{
-						// only set unknown route as the transaction name when RouteData values exist but happened to
-						// resolve to an unknown route. Other 404 responses may be the result of asmx web services.
+						// only set unknown route as the transaction name when there are RouteData values but happened to
+						// resolve to an unknown route. Other 404 responses may be the result of asmx web services or web forms.
 						_logger?.Trace()
 							?
 							.Log("Route data found but status code is 404 - setting transaction name to 'unknown route");

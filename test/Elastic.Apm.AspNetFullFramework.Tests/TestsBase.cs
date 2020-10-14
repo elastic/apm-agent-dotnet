@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using AspNetFullFrameworkSampleApp;
+using AspNetFullFrameworkSampleApp.Asmx;
 using AspNetFullFrameworkSampleApp.Controllers;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
@@ -52,7 +53,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		private readonly string _sampleAppLogFilePath;
 		private readonly bool _startMockApmServer;
 		private readonly DateTime _testStartTime = DateTime.UtcNow;
-		private readonly HttpClient _httpClient;
+
+		protected readonly HttpClient HttpClient;
 
 		protected TestsBase(
 			ITestOutputHelper xUnitOutputHelper,
@@ -73,7 +75,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			_sampleAppLogEnabled = sampleAppLogEnabled;
 			_sampleAppLogFilePath = GetSampleAppLogFilePath();
-			_httpClient = new HttpClient();
+			HttpClient = new HttpClient();
 
 			EnvVarsToSetForSampleAppPool = envVarsToSetForSampleAppPool == null
 				? new Dictionary<string, string>()
@@ -169,6 +171,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			internal static readonly SampleAppUrlPathData MyAreaHomePage =
 				new SampleAppUrlPathData(AspNetFullFrameworkSampleApp.Areas.MyArea.Controllers.HomeController.HomePageRelativePath, 200);
+
+			internal static readonly SampleAppUrlPathData WebformsPage =
+				new SampleAppUrlPathData(nameof(Webforms) + ".aspx", 200);
 		}
 
 		private TimedEvent? _sampleAppClientCallTiming;
@@ -271,7 +276,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			var url = httpRequestMessage.RequestUri;
 			_logger.Debug()?.Log("Sending request with URL: {url} and expected status code: {HttpStatusCode}...", url, expectedStatusCode);
-			var response = await _httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
+			var response = await HttpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
 			_logger.Debug()
 				?.Log("Request sent. Actual status code: {HttpStatusCode} ({HttpStatusCodeEnum})",
 					(int)response.StatusCode, response.StatusCode);
@@ -427,7 +432,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			var url = new SampleAppUri(DiagnosticsController.DiagnosticsPageRelativePath);
 			_logger.Debug()?.Log("Getting content of sample application diagnostics page ({url})...", url);
-			var response = await _httpClient.GetAsync(url);
+			var response = await HttpClient.GetAsync(url);
 			_logger.Debug()
 				?.Log("Received sample application's diagnostics page. Status code: {HttpStatusCode} ({HttpStatusCodeEnum})",
 					(int)response.StatusCode, response.StatusCode);
