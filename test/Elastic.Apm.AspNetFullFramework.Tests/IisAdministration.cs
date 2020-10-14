@@ -8,6 +8,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Threading;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -218,7 +220,37 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var addedPool = serverManager.ApplicationPools.Add(Consts.SampleApp.AppPoolName);
 			addedPool.ManagedPipelineMode = ManagedPipelineMode.Integrated;
 			addedPool.StartMode = startMode;
-			if (sampleAppShouldUseHighPrivilegedAccount) addedPool.ProcessModel.IdentityType = ProcessModelIdentityType.LocalSystem;
+
+			if (sampleAppShouldUseHighPrivilegedAccount)
+				addedPool.ProcessModel.IdentityType = ProcessModelIdentityType.LocalSystem;
+			else
+			{
+				// When running with the ApplicationPoolIdentity (the default), ensure that the account has access to read and execute SQLite.Interop.dlls.
+				// Without granting access, the repository may be cloned and the application running from a location that the ApplicationPoolIdentity
+				// does not have access to execute the SQLite.Interop.dlls e.g. running from inside %USERPROFILE%.
+				//
+				// If access is not granted, a DllNotFoundException is thrown with the message:
+				// Unable to load DLL 'SQLite.Interop.dll': The specified module could not be found. (Exception from HRESULT: 0x8007007E)
+				var appBinPath = Path.Combine(FindSolutionRoot().FullName, Consts.SampleApp.SrcDirPathRelativeToSolutionRoot, "bin");
+				foreach (var processorArch in new[] { "x86", "x64" })
+				{
+					var sqliteInteropDll = new FileInfo(Path.Combine(appBinPath, processorArch, "SQLite.Interop.dll"));
+					if (sqliteInteropDll.Exists)
+					{
+						// Getting file security details may require elevated privileges, depending on where the repository is cloned.
+						// Running the IDE (or cmd line) in Administrator mode should resolve
+						var accessControl = sqliteInteropDll.GetAccessControl(AccessControlSections.All);
+						var account = new NTAccount("IIS_IUSRS");
+						accessControl.AddAccessRule(new FileSystemAccessRule(
+							account,
+							FileSystemRights.ReadAndExecute,
+							AccessControlType.Allow));
+
+						sqliteInteropDll.SetAccessControl(accessControl);
+					}
+				}
+			}
+
 			_logger.Debug()
 				?.Log("Added application pool {IisAppPool}, useHighPrivilegedAccount: {useHighPrivilegedAccount}",
 					addedPool.Name, sampleAppShouldUseHighPrivilegedAccount);
@@ -233,8 +265,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var site = serverManager.Sites[Consts.SampleApp.SiteName];
 			var existingApp = site.Applications[Consts.SampleApp.RootUrlPath];
 			if (existingApp != null) site.Applications.Remove(existingApp);
-			var addedApp = site.Applications.Add(Consts.SampleApp.RootUrlPath,
-				Path.Combine(FindSolutionRoot().FullName, Consts.SampleApp.SrcDirPathRelativeToSolutionRoot));
+
+			var appPath = Path.Combine(FindSolutionRoot().FullName, Consts.SampleApp.SrcDirPathRelativeToSolutionRoot);
+			var addedApp = site.Applications.Add(Consts.SampleApp.RootUrlPath, appPath);
 			addedApp.ApplicationPoolName = Consts.SampleApp.AppPoolName;
 			_logger.Debug()?.Log("Added application {IisApp}", Consts.SampleApp.RootUrlPath);
 		}
