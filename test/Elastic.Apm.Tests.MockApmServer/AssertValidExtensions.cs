@@ -237,7 +237,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			thisObj.Should().NotBeNull();
 
 			thisObj.Instance?.AssertValid();
-			thisObj.Statement?.AssertValid();
+			thisObj.Statement?.AssertValid(10_000);
 			thisObj.Type?.AssertValid();
 		}
 
