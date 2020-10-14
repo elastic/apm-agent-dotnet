@@ -5,7 +5,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Reflection;
+using System.Security.Claims;
 using System.Web;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetFullFramework.Extensions;
@@ -17,6 +19,12 @@ using Elastic.Apm.Model;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
+	internal static class OpenIdClaimTypes
+	{
+		internal const string Email = "email";
+		internal const string UserId = "sub";
+	}
+
 	public class ElasticApmModule : IHttpModule
 	{
 		private static bool _isCaptureHeadersEnabled;
@@ -276,7 +284,21 @@ namespace Elastic.Apm.AspNetFullFramework
 			var userIdentity = httpCtx.User?.Identity;
 			if (userIdentity == null || !userIdentity.IsAuthenticated) return;
 
-			transaction.Context.User = new User { UserName = userIdentity.Name };
+			var user = new User { UserName = userIdentity.Name };
+
+			if (httpCtx.User is ClaimsPrincipal claimsPrincipal)
+			{
+				static string GetClaimWithFallbackValue(ClaimsPrincipal principal, string claimType, string fallbackClaimType)
+				{
+					var claim = principal.Claims.FirstOrDefault(n => n.Type == claimType || n.Type == fallbackClaimType);
+					return claim != null ? claim.Value : string.Empty;
+				}
+
+				user.Email = GetClaimWithFallbackValue(claimsPrincipal, ClaimTypes.Email, OpenIdClaimTypes.Email);
+				user.Id = GetClaimWithFallbackValue(claimsPrincipal, ClaimTypes.NameIdentifier, OpenIdClaimTypes.UserId);
+			}
+
+			transaction.Context.User = user;
 
 			_logger.Debug()?.Log("Captured user - {CapturedUser}", transaction.Context.User);
 		}
