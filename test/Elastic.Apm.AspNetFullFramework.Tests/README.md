@@ -13,7 +13,7 @@ In this case .NET agent being the component under test.
 
 Below is the diagram of components and communication between them:
  
-![](https://user-images.githubusercontent.com/7782093/59779351-c0f26d00-92c0-11e9-9413-57c05653ced4.png)
+![Components and communication](https://user-images.githubusercontent.com/7782093/59779351-c0f26d00-92c0-11e9-9413-57c05653ced4.png)
 
 # Prerequisites
 
@@ -21,11 +21,16 @@ Prerequisites to execute tests are:
 
 1. Operating system - Windows
 2. IIS (10 or later) and ASP.NET installed and IIS started.
+
+   Specific features such as HTTP Errors **must** be enabled. Here's an example set of IIS 10 on Windows 10 features that work:
+  
+   ![Enabled Windows features for IIS](../../docs/images/iis_windows_features.png)
+
 3. Process running the tests has environment variable `ELASTIC_APM_TESTS_FULL_FRAMEWORK_ENABLED` set to `true`. There is no need to set this environment variable globally - for example, IIS worker process, running sample application used by the tests, does not depend on this environment variable.
 4. Run tests as a user with local administrator permissions (a member in local `Administrators` group).
 
 Requirement to set environment variable `ELASTIC_APM_TESTS_FULL_FRAMEWORK_ENABLED` set to `true` is to have user opt-in.
-Before opting-in please note that these tests perform various operations on this machine's IIS such as adding/removing sample applications, stopping/starting application pools, etc.
+Before opting-in please note that these tests perform various operations on the machine's IIS such as adding/removing sample applications, stopping/starting application pools, etc.
 **So it's not recommended to run these tests on a production environment.**
 
 
