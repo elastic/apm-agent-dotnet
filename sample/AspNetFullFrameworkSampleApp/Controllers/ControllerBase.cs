@@ -12,7 +12,5 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 	public abstract class ControllerBase : Controller
 	{
 		protected void AddAlert(Alert alert) => TempData.Put("alert", alert);
-
-		protected void AddSuccessAlert(string message) => AddAlert(new Alert("Success!", message) { Status = AlertStatus.Success });
 	}
 }

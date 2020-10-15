@@ -102,7 +102,6 @@
       <DependentUpon>Health.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="Bootstrap\Alert.cs" />
     <Compile Include="Bootstrap\AlertStatus.cs" />
     <Compile Include="Controllers\AccountController.cs" />
@@ -114,7 +113,6 @@
     <Compile Include="Models\ResetPasswordViewModel.cs" />
     <Compile Include="Services\Auth\ApplicationSignInManager.cs" />
     <Compile Include="Services\Auth\ApplicationUserManager.cs" />
-    <Compile Include="Startup.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
     <Content Include="Content\bootstrap-grid.css" />
@@ -272,7 +270,10 @@
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ActionFilters\RedirectIfAuthenticatedAttribute.cs" />
+    <Compile Include="App_Start\Startup.cs" />
     <Compile Include="Extensions\TempDataExtensions.cs" />
+    <Compile Include="Services\Auth\ApplicationUserClaimsIdentityFactory.cs" />
   </ItemGroup>
   <PropertyGroup Condition="'$(OS)' == 'WINDOWS_NT'">
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

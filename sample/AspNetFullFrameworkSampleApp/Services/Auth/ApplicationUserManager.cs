@@ -4,58 +4,43 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Threading.Tasks;
-using AspNetFullFrameworkSampleApp.Data;
 using AspNetFullFrameworkSampleApp.Models;
 using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
-using Microsoft.Owin;
+using Microsoft.Owin.Security.DataProtection;
 
 namespace AspNetFullFrameworkSampleApp.Services.Auth
 {
-	// Configure the application user manager used in this application. UserManager is defined in ASP.NET Identity and is used by the application.
-    public class ApplicationUserManager : UserManager<ApplicationUser>
-    {
-        public ApplicationUserManager(IUserStore<ApplicationUser> store)
-            : base(store)
-        {
-        }
+	/// <summary>
+	/// ASP.NET Identity user manager for this application
+	/// </summary>
+	public class ApplicationUserManager : UserManager<ApplicationUser>
+	{
+		public ApplicationUserManager(IUserStore<ApplicationUser> store, IDataProtectionProvider dataProtectionProvider)
+			: base(store)
+		{
+			UserValidator = new UserValidator<ApplicationUser>(this)
+			{
+				AllowOnlyAlphanumericUserNames = false,
+				RequireUniqueEmail = true
+			};
 
-		public static ApplicationUserManager Create(IdentityFactoryOptions<ApplicationUserManager> options, IOwinContext context)
-        {
-            var manager = new ApplicationUserManager(new UserStore<ApplicationUser>(context.Get<SampleDataDbContext>()));
+			PasswordValidator = new PasswordValidator
+			{
+				RequiredLength = 1,
+				RequireNonLetterOrDigit = false,
+				RequireDigit = false,
+				RequireLowercase = false,
+				RequireUppercase = false,
+			};
 
-			// Configure validation logic for usernames
-            manager.UserValidator = new UserValidator<ApplicationUser>(manager)
-            {
-                AllowOnlyAlphanumericUserNames = false,
-                RequireUniqueEmail = true
-            };
+			UserLockoutEnabledByDefault = false;
+			DefaultAccountLockoutTimeSpan = TimeSpan.FromMinutes(5);
+			MaxFailedAccessAttemptsBeforeLockout = 5;
 
-            // Configure validation logic for passwords
-            manager.PasswordValidator = new PasswordValidator
-            {
-                RequiredLength = 1,
-                RequireNonLetterOrDigit = false,
-                RequireDigit = false,
-                RequireLowercase = false,
-                RequireUppercase = false,
-            };
-
-            // Configure user lockout defaults
-            manager.UserLockoutEnabledByDefault = false;
-            manager.DefaultAccountLockoutTimeSpan = TimeSpan.FromMinutes(5);
-            manager.MaxFailedAccessAttemptsBeforeLockout = 5;
-
-            var dataProtectionProvider = options.DataProtectionProvider;
-            if (dataProtectionProvider != null)
-            {
-                manager.UserTokenProvider =
-                    new DataProtectorTokenProvider<ApplicationUser>(dataProtectionProvider.Create("ASP.NET Identity"));
-            }
-
-            return manager;
-        }
-    }
+			ClaimsIdentityFactory = new ApplicationUserClaimsIdentityFactory();
+			UserTokenProvider =
+				new DataProtectorTokenProvider<ApplicationUser>(dataProtectionProvider.Create("ASP.NET Identity"));
+		}
+	}
 }

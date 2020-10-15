@@ -281,6 +281,8 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		private void FillSampledTransactionContextUser(HttpContext httpCtx, ITransaction transaction)
 		{
+			if (transaction.Context.User != null) return;
+
 			var userIdentity = httpCtx.User?.Identity;
 			if (userIdentity == null || !userIdentity.IsAuthenticated) return;
 

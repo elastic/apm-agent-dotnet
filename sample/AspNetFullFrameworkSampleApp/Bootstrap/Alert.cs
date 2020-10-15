@@ -11,6 +11,13 @@ namespace AspNetFullFrameworkSampleApp.Bootstrap
 			helper.ViewContext.TempData.Get<Alert>("alert") ?? (IHtmlString)MvcHtmlString.Empty;
 	}
 
+	public class SuccessAlert : Alert
+	{
+		public SuccessAlert(string message) : base(message) => Status = AlertStatus.Success;
+
+		public SuccessAlert(string title, string message) : base(title, message) => Status = AlertStatus.Success;
+	}
+
 	public class Alert : IHtmlString
 	{
 		public Alert(string message) => Message = message;
