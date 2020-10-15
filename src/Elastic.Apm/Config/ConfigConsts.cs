@@ -148,7 +148,7 @@ namespace Elastic.Apm.Config
 			public const string Environment = Prefix + nameof(Environment);
 			public const string FlushInterval = Prefix + nameof(FlushInterval);
 			public const string GlobalLabels = Prefix + nameof(GlobalLabels);
-			public const string HostName = "ElasticApm:HostName";
+			public const string HostName = Prefix + nameof(HostName);
 			public const string LogLevel = Prefix + nameof(LogLevel);
 			public const string MaxBatchEventCount = Prefix + nameof(MaxBatchEventCount);
 			public const string MaxQueueEventCount = Prefix + nameof(MaxQueueEventCount);
