@@ -18,10 +18,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 	[Collection(Consts.AspNetFullFrameworkTestsCollection)]
 	public class CaptureUserTests : TestsBase
 	{
-		public CaptureUserTests(ITestOutputHelper xUnitOutputHelper)
-			// set sampleAppShouldHaveAccessToPerfCounters until https://github.com/elastic/apm-agent-dotnet/pull/973/commits/93e7a98e1f58b5c4f3d10c4499c96b384bc6c680 is merged
-			: base(xUnitOutputHelper, sampleAppShouldHaveAccessToPerfCounters: true)
-		{ }
+		public CaptureUserTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
 
 		[AspNetFullFrameworkFact]
 		public async Task User_Should_Contain_Id_And_Email_When_Using_Authenticated_ClaimsPrincipal()
