@@ -91,7 +91,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			var type = "Elastic.Apm.AspNetFullFramework.Tests.ConfigTestReader, Elastic.Apm.AspNetFullFramework.Tests";
 
-			config.Add(ConfigConsts.KeyNames.ConfigurationReaderType, type);
+			config.Add(ConfigConsts.KeyNames.FullFrameworkConfigurationReaderType, type);
 
 			UpdateAppSettings(config);
 
@@ -107,7 +107,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var config = new Dictionary<string, string>();
 
 			var type = "Elastic.Apm.AspNetFullFramework.Tests.ConfigTestReader, Elastic.Apm.AspNetFullFramework.Tests";
-			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.ConfigurationReaderType, type);
+			Environment.SetEnvironmentVariable(ConfigConsts.EnvVarNames.FullFrameworkConfigurationReaderType, type);
 
 			UpdateAppSettings(config);
 			var reader = Helper.ConfigHelper.CreateReader(logger);
