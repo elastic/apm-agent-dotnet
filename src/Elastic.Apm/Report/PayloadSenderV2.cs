@@ -30,8 +30,12 @@ namespace Elastic.Apm.Report
 	internal class PayloadSenderV2 : BackendCommComponentBase, IPayloadSender
 	{
 		private const string ThisClassName = nameof(PayloadSenderV2);
+		internal readonly List<Func<IError, IError>> ErrorFilters = new List<Func<IError, IError>>();
+		internal readonly List<Func<ISpan, ISpan>> SpanFilters = new List<Func<ISpan, ISpan>>();
 
 		internal readonly Api.System System;
+
+		internal readonly List<Func<ITransaction, ITransaction>> TransactionFilters = new List<Func<ITransaction, ITransaction>>();
 
 		private readonly BatchBlock<object> _eventQueue;
 
@@ -43,10 +47,6 @@ namespace Elastic.Apm.Report
 		private readonly Metadata _metadata;
 
 		private readonly PayloadItemSerializer _payloadItemSerializer;
-
-		internal readonly List<Func<ITransaction, ITransaction>> TransactionFilters = new List<Func<ITransaction, ITransaction>>();
-		internal readonly List<Func<ISpan, ISpan>> SpanFilters = new List<Func<ISpan, ISpan>>();
-		internal readonly List<Func<IError, IError>> ErrorFilters = new List<Func<IError, IError>>();
 
 		public PayloadSenderV2(IApmLogger logger, IConfigSnapshot config, Service service, Api.System system,
 			HttpMessageHandler httpMessageHandler = null, string dbgName = null
@@ -251,7 +251,10 @@ namespace Elastic.Apm.Report
 							+ " Events intake API absolute URL: {EventsIntakeAbsoluteUrl}."
 							+ " APM Server response: status code: {ApmServerResponseStatusCode}"
 							+ ", content: \n{ApmServerResponseContent}"
-							, _intakeV2EventsAbsoluteUrl, result.StatusCode, await result.Content.ReadAsStringAsync());
+							, Http.Sanitize(_intakeV2EventsAbsoluteUrl, out var sanitizedServerUrl)
+								? sanitizedServerUrl
+								: _intakeV2EventsAbsoluteUrl.ToString()
+							, result.StatusCode, await result.Content.ReadAsStringAsync());
 				}
 				else
 				{
@@ -273,7 +276,9 @@ namespace Elastic.Apm.Report
 					?.LogException(
 						e,
 						"Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):\n{SerializedItems}"
-						, HttpClientInstance.BaseAddress
+						, Http.Sanitize(HttpClientInstance.BaseAddress, out var sanitizedServerUrl)
+							? sanitizedServerUrl
+							: HttpClientInstance.BaseAddress.ToString()
 						, TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray()))
 					);
 			}
