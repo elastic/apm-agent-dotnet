@@ -389,8 +389,9 @@ namespace Elastic.Apm.Specification
 			if (!typeCheck(propertyType))
 				result.AddError(ValidationError.ExpectedType(specType, expectedType, schema.DocumentPath, specificationProperty.Name, propertyType.FullName));
 
-			if (property.Type.HasFlag(JsonObjectType.Null) && !nullable)
-				result.AddError(new ValidationError(specType, schema.DocumentPath, property.Name, "expected type to be nullable"));
+			// TODO: don't check for null for now...
+			// if (property.Type.HasFlag(JsonObjectType.Null) && !nullable)
+			// 	result.AddError(new ValidationError(specType, schema.DocumentPath, property.Name, "expected type to be nullable"));
 		}
 
 		private static void CheckMaxLength(Type specType, JsonSchema schema, JsonSchema schemaProperty, SpecificationProperty specificationProperty,
