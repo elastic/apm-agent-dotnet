@@ -7,6 +7,7 @@ namespace Elastic.Apm.Api
 	/// <summary>
 	/// Represents an error which was captured by the agent.
 	/// </summary>
+	[Specification("docs/spec/errors/error.json")]
 	public interface IError
 	{
 		/// <summary>

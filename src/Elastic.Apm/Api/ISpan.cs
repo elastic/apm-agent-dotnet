@@ -6,6 +6,7 @@ using System.Collections.Generic;
 
 namespace Elastic.Apm.Api
 {
+	[Specification("docs/spec/spans/span.json")]
 	public interface ISpan : IExecutionSegment
 	{
 		/// <summary>

@@ -102,6 +102,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Extensions.Host
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "scripts", "build\scripts\scripts.fsproj", "{CB623206-F69E-4004-8527-D4B971AA981A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Specification", "src\Elastic.Apm.Specification\Elastic.Apm.Specification.csproj", "{5D076C7F-1F8B-4B11-9910-48717D133963}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		test\Elastic.Apm.DatabaseTests.Common\Elastic.Apm.DatabaseTests.Common.projitems*{968e1e85-e996-42de-9845-d20dae16165a}*SharedItemsImports = 5
@@ -243,6 +245,10 @@ Global
 		{3CCB9193-8416-49AF-A1A3-8D1118CFB25B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CB623206-F69E-4004-8527-D4B971AA981A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CB623206-F69E-4004-8527-D4B971AA981A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D076C7F-1F8B-4B11-9910-48717D133963}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D076C7F-1F8B-4B11-9910-48717D133963}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D076C7F-1F8B-4B11-9910-48717D133963}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D076C7F-1F8B-4B11-9910-48717D133963}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -281,6 +287,7 @@ Global
 		{3AD5584E-057A-4C52-84EA-32A9BBE12F03} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{3CCB9193-8416-49AF-A1A3-8D1118CFB25B} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{CB623206-F69E-4004-8527-D4B971AA981A} = {B406113B-0917-4531-AFEE-66DDB952590F}
+		{5D076C7F-1F8B-4B11-9910-48717D133963} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}
