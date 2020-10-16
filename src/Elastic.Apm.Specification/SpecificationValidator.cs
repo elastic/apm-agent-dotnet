@@ -270,11 +270,16 @@ namespace Elastic.Apm.Specification
 
 			foreach (var kv in schema.ActualProperties)
 			{
-				var schemaProperty = kv.Value;
-				var name = schemaProperty.Name;
+				JsonSchema schemaProperty = kv.Value;
+				var name = kv.Value.Name;
 				var specTypeProperty = properties.SingleOrDefault(p => p.Name == name);
 				if (specTypeProperty == null)
 				{
+					if (schemaProperty.Type.HasFlag(JsonObjectType.None))
+					{
+						schemaProperty = schemaProperty.ActualSchema;
+					}
+
 					if (!schemaProperty.Type.HasFlag(JsonObjectType.Null))
 						result.AddError(ValidationError.NotFound(specType, schema.DocumentPath, name));
 
@@ -299,7 +304,7 @@ namespace Elastic.Apm.Specification
 						if (schemaProperty.Type.HasFlag(JsonObjectType.Number))
 							CheckNumber(specType, schema, schemaProperty, specTypeProperty, result);
 						else
-							result.AddError(new ValidationError(specType, schema.DocumentPath, schemaProperty.Name, $"expecting 'number' type but found {schemaProperty.Type}"));
+							result.AddError(new ValidationError(specType, schema.DocumentPath, name, $"expecting 'number' type but found {schemaProperty.Type}"));
 						break;
 					case "System.Int64":
 					case "System.Int32":
@@ -308,19 +313,19 @@ namespace Elastic.Apm.Specification
 						else if (schemaProperty.Type.HasFlag(JsonObjectType.Integer))
 							CheckInteger(specType, schema, schemaProperty, specTypeProperty, result);
 						else
-							result.AddError(new ValidationError(specType, schema.DocumentPath, schemaProperty.Name, $"expecting 'number' or 'integer' type but found {schemaProperty.Type}"));
+							result.AddError(new ValidationError(specType, schema.DocumentPath, name, $"expecting 'number' or 'integer' type but found {schemaProperty.Type}"));
 						break;
 					case "System.String":
 						if (schemaProperty.Type.HasFlag(JsonObjectType.String))
 							CheckString(specType, schema, schemaProperty, specTypeProperty, result);
 						else
-							result.AddError(new ValidationError(specType, schema.DocumentPath, schemaProperty.Name, $"expecting 'string' type but found {schemaProperty.Type}"));
+							result.AddError(new ValidationError(specType, schema.DocumentPath, name, $"expecting 'string' type but found {schemaProperty.Type}"));
 						break;
 					case "System.Boolean":
 						if (schemaProperty.Type.HasFlag(JsonObjectType.Boolean))
 							CheckBoolean(specType, schema, schemaProperty, specTypeProperty, result);
 						else
-							result.AddError(new ValidationError(specType, schema.DocumentPath, schemaProperty.Name, $"expecting 'boolean' type but found {schemaProperty.Type}"));
+							result.AddError(new ValidationError(specType, schema.DocumentPath, name, $"expecting 'boolean' type but found {schemaProperty.Type}"));
 						break;
 					default:
 						if (schemaProperty.Type.HasFlag(JsonObjectType.Boolean))
@@ -345,7 +350,7 @@ namespace Elastic.Apm.Specification
 			// TODO: handle AnyOf, AllOf, OneOf
 		}
 
-		private static void CheckString(Type specType, JsonSchema schema, JsonSchemaProperty property, SpecificationProperty specTypeProperty,
+		private static void CheckString(Type specType, JsonSchema schema, JsonSchema property, SpecificationProperty specTypeProperty,
 			ValidationResult result
 		)
 		{
@@ -353,42 +358,42 @@ namespace Elastic.Apm.Specification
 			CheckMaxLength(specType, schema, property, specTypeProperty, result);
 		}
 
-		private static void CheckBoolean(Type specType, JsonSchema schema, JsonSchemaProperty property, SpecificationProperty specTypeProperty,
+		private static void CheckBoolean(Type specType, JsonSchema schema, JsonSchema property, SpecificationProperty specTypeProperty,
 			ValidationResult result
 		) =>
 			CheckType(specType, "boolean", schema, property, specTypeProperty, result, t => t == typeof(bool));
 
-		private static void CheckInteger(Type specType, JsonSchema schema, JsonSchemaProperty property, SpecificationProperty specTypeProperty,
+		private static void CheckInteger(Type specType, JsonSchema schema, JsonSchema property, SpecificationProperty specTypeProperty,
 			ValidationResult result
 		) =>
 			CheckType(specType, "integer", schema, property, specTypeProperty, result, t => t == typeof(int) || t == typeof(long));
 
-		private static void CheckNumber(Type specType, JsonSchema schema, JsonSchemaProperty property, SpecificationProperty specTypeProperty,
+		private static void CheckNumber(Type specType, JsonSchema schema, JsonSchema property, SpecificationProperty specTypeProperty,
 			ValidationResult result
 		) =>
 			CheckType(specType, "number", schema, property, specTypeProperty, result, t => NumericTypeNames.Contains(t.FullName));
 
-		private static void CheckType(Type specType, string expectedType, JsonSchema schema, JsonSchemaProperty property, SpecificationProperty specTypeProperty,
+		private static void CheckType(Type specType, string expectedType, JsonSchema schema, JsonSchema property, SpecificationProperty specificationProperty,
 			ValidationResult result, Func<Type, bool> typeCheck
 		)
 		{
-			var propertyType = specTypeProperty.PropertyType;
+			var propertyType = specificationProperty.PropertyType;
 			var nullable = !propertyType.IsValueType;
 
 			if (IsNullableType(propertyType))
 			{
 				nullable = true;
-				propertyType = Nullable.GetUnderlyingType(specTypeProperty.PropertyType);
+				propertyType = Nullable.GetUnderlyingType(specificationProperty.PropertyType);
 			}
 
 			if (!typeCheck(propertyType))
-				result.AddError(ValidationError.ExpectedType(specType, expectedType, schema.DocumentPath, property.Name, propertyType.FullName));
+				result.AddError(ValidationError.ExpectedType(specType, expectedType, schema.DocumentPath, specificationProperty.Name, propertyType.FullName));
 
 			if (property.Type.HasFlag(JsonObjectType.Null) && !nullable)
 				result.AddError(new ValidationError(specType, schema.DocumentPath, property.Name, "expected type to be nullable"));
 		}
 
-		private static void CheckMaxLength(Type specType, JsonSchema schema, JsonSchemaProperty schemaProperty, SpecificationProperty specificationProperty,
+		private static void CheckMaxLength(Type specType, JsonSchema schema, JsonSchema schemaProperty, SpecificationProperty specificationProperty,
 			ValidationResult result
 		)
 		{
@@ -396,11 +401,11 @@ namespace Elastic.Apm.Specification
 			{
 				var maxLength = schemaProperty.MaxLength.Value;
 				if (!specificationProperty.MaxLength.HasValue)
-					result.AddError(new ValidationError(specType, schema.DocumentPath, schemaProperty.Name, $"expected property to enforce maxLength of {maxLength} but does not"));
+					result.AddError(new ValidationError(specType, schema.DocumentPath, specificationProperty.Name, $"expected property to enforce maxLength of {maxLength} but does not"));
 				else
 				{
 					if (specificationProperty.MaxLength != maxLength)
-						result.AddError(new ValidationError(specType, schema.DocumentPath, schemaProperty.Name,
+						result.AddError(new ValidationError(specType, schema.DocumentPath, specificationProperty.Name,
 							$"property max length {specificationProperty.MaxLength} not equal to spec maxLength {maxLength}"));
 				}
 			}
