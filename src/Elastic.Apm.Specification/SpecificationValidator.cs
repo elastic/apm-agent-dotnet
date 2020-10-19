@@ -136,17 +136,11 @@ namespace Elastic.Apm.Specification
 			}
 		}
 
-		/// <summary>
-		///
-		/// </summary>
-		/// <param name="specificationId"></param>
-		/// <returns></returns>
-		/// <exception cref="FileNotFoundException">
-		/// Spec file does not exist
-		/// </exception>
 		public async Task<JsonSchema> LoadSchemaAsync(string specificationId)
 		{
 			var branchDirectory = Path.Combine(_directory, Branch);
+			await DownloadAsync(branchDirectory, false).ConfigureAwait(false);
+
 			var path = Path.Combine(branchDirectory, specificationId);
 
 			if (!File.Exists(path))
@@ -156,20 +150,14 @@ namespace Elastic.Apm.Specification
 		}
 
 		/// <summary>
-		/// /// <summary>
-		/// Validates the specification against the type. A specification may be more lenient, or define more
-		/// properties than are specified on a type.
+		/// Gets the specification id for the given type.
 		/// </summary>
-		/// <param name="type"></param>
-		/// <returns></returns>
+		/// <param name="type">the type to get the specification id for</param>
+		/// <returns>the specification id</returns>
 		/// <exception cref="Exception">
-		/// A type implements more than one spec
+		/// A type does not implement a spec or implements more than one spec
 		/// </exception>
-		/// <exception cref="FileNotFoundException">
-		/// Spec file does not exist
-		/// </exception>
-		/// </summary>
-		public async Task<ValidationResult> ValidateSpecAgainstTypeAsync(Type type)
+		public string GetSpecificationIdForType(Type type)
 		{
 			var specAttribute = type.GetCustomAttribute<SpecificationAttribute>();
 			var specAttributes = type.GetInterfaces()
@@ -189,7 +177,28 @@ namespace Elastic.Apm.Specification
 				throw new Exception($"{type.FullName} has more than one spec {string.Join(", ", paths)}");
 			}
 
-			var specificationId = specAttributes.Single().Path;
+			return specAttributes.Single().Path;
+		}
+
+		/// <summary>
+		/// Validates the specification against the type. A specification may be more lenient, or define more
+		/// properties than are specified on a type.
+		/// </summary>
+		/// <remarks>
+		/// It's expected that the type is the implementation of the entire specification and not a subset
+		/// of certain optional properties.
+		/// </remarks>
+		/// <param name="type"></param>
+		/// <returns></returns>
+		/// <exception cref="Exception">
+		/// A type does not implement a spec or implements more than one spec
+		/// </exception>
+		/// <exception cref="FileNotFoundException">
+		/// Spec file does not exist
+		/// </exception>
+		public async Task<ValidationResult> ValidateSpecAgainstTypeAsync(Type type)
+		{
+			var specificationId = GetSpecificationIdForType(type);
 			return await ValidateSpecAgainstTypeAsync(type, specificationId);
 		}
 
@@ -264,24 +273,19 @@ namespace Elastic.Apm.Specification
 			}
 			catch (ContractResolveException e)
 			{
-				result.AddIgnore(new ValidationIgnore(schema.DocumentPath, specType.Name, e.Message));
+				result.AddIgnore(new ValidationIgnore(schema.GetSpecificationIdOrName(), specType.Name, e.Message));
 				return;
 			}
 
 			foreach (var kv in schema.ActualProperties)
 			{
-				JsonSchema schemaProperty = kv.Value;
+				var schemaProperty = kv.Value.ActualSchema;
 				var name = kv.Value.Name;
 				var specTypeProperty = properties.SingleOrDefault(p => p.Name == name);
 				if (specTypeProperty == null)
 				{
-					if (schemaProperty.Type.HasFlag(JsonObjectType.None))
-					{
-						schemaProperty = schemaProperty.ActualSchema;
-					}
-
 					if (!schemaProperty.Type.HasFlag(JsonObjectType.Null))
-						result.AddError(ValidationError.NotFound(specType, schema.DocumentPath, name));
+						result.AddError(ValidationError.NotFound(specType, schema.GetSpecificationIdOrName(), name));
 
 					continue;
 				}
@@ -304,7 +308,7 @@ namespace Elastic.Apm.Specification
 						if (schemaProperty.Type.HasFlag(JsonObjectType.Number))
 							CheckNumber(specType, schema, schemaProperty, specTypeProperty, result);
 						else
-							result.AddError(new ValidationError(specType, schema.DocumentPath, name, $"expecting 'number' type but found {schemaProperty.Type}"));
+							result.AddError(new ValidationError(specType, schema.GetSpecificationIdOrName(), name, $"expecting 'number' type but found {schemaProperty.Type}"));
 						break;
 					case "System.Int64":
 					case "System.Int32":
@@ -313,35 +317,56 @@ namespace Elastic.Apm.Specification
 						else if (schemaProperty.Type.HasFlag(JsonObjectType.Integer))
 							CheckInteger(specType, schema, schemaProperty, specTypeProperty, result);
 						else
-							result.AddError(new ValidationError(specType, schema.DocumentPath, name, $"expecting 'number' or 'integer' type but found {schemaProperty.Type}"));
+							result.AddError(new ValidationError(specType, schema.GetSpecificationIdOrName(), name, $"expecting 'number' or 'integer' type but found {schemaProperty.Type}"));
 						break;
 					case "System.String":
 						if (schemaProperty.Type.HasFlag(JsonObjectType.String))
 							CheckString(specType, schema, schemaProperty, specTypeProperty, result);
 						else
-							result.AddError(new ValidationError(specType, schema.DocumentPath, name, $"expecting 'string' type but found {schemaProperty.Type}"));
+							result.AddError(new ValidationError(specType, schema.GetSpecificationIdOrName(), name, $"expecting 'string' type but found {schemaProperty.Type}"));
 						break;
 					case "System.Boolean":
 						if (schemaProperty.Type.HasFlag(JsonObjectType.Boolean))
 							CheckBoolean(specType, schema, schemaProperty, specTypeProperty, result);
 						else
-							result.AddError(new ValidationError(specType, schema.DocumentPath, name, $"expecting 'boolean' type but found {schemaProperty.Type}"));
+							result.AddError(new ValidationError(specType, schema.GetSpecificationIdOrName(), name, $"expecting 'boolean' type but found {schemaProperty.Type}"));
 						break;
 					default:
-						if (schemaProperty.Type.HasFlag(JsonObjectType.Boolean))
+						var typeFlags = schemaProperty.Type;
+
+						// remove null flag if it exists, and check to see if we have more than one flag
+						if (typeFlags.HasFlag(JsonObjectType.Null))
+							typeFlags &= ~JsonObjectType.Null;
+
+						// is there still more than one flag? Check to see if it's a power of two. If so, based on the .NET type not being a
+						// primitive type, we would expect the presence of the schema "object" or "array" type in the majority of cases, so check
+						// these first. For types with custom serialization, the schema type may be a primitive type.
+						if ((typeFlags & (typeFlags - 1)) != 0)
+						{
+							if (typeFlags.HasFlag(JsonObjectType.Object))
+								ValidateSpecProperties(specTypeProperty.PropertyType, schemaProperty, result);
+							else if (typeFlags.HasFlag(JsonObjectType.Array))
+							{
+								if (IsEnumerableType(specTypeProperty.PropertyType, out var elementType))
+									ValidateSpecProperties(elementType, schemaProperty.Item.ActualSchema, result);
+							}
+							else
+								result.AddIgnore(new ValidationIgnore(schema.GetSpecificationIdOrName(), name, $"Cannot statically check types. .NET type id {specType} and schema type is {schemaProperty.Type}"));
+						}
+						else if (typeFlags.HasFlag(JsonObjectType.Boolean))
 							CheckBoolean(specType, schema, schemaProperty, specTypeProperty, result);
-						else if (schemaProperty.Type.HasFlag(JsonObjectType.Integer))
+						else if (typeFlags.HasFlag(JsonObjectType.Integer))
 							CheckInteger(specType, schema, schemaProperty, specTypeProperty, result);
-						else if (schemaProperty.Type.HasFlag(JsonObjectType.Number))
+						else if (typeFlags.HasFlag(JsonObjectType.Number))
 							CheckNumber(specType, schema, schemaProperty, specTypeProperty, result);
-						else if (schemaProperty.Type.HasFlag(JsonObjectType.String))
+						else if (typeFlags.HasFlag(JsonObjectType.String))
 							CheckString(specType, schema, schemaProperty, specTypeProperty, result);
-						else if (schemaProperty.Type.HasFlag(JsonObjectType.Object))
+						else if (typeFlags.HasFlag(JsonObjectType.Object))
 							ValidateSpecProperties(specTypeProperty.PropertyType, schemaProperty, result);
-						else if (schemaProperty.Type.HasFlag(JsonObjectType.Array))
+						else if (typeFlags.HasFlag(JsonObjectType.Array))
 						{
 							if (IsEnumerableType(specTypeProperty.PropertyType, out var elementType))
-								ValidateSpecProperties(elementType, schemaProperty.Item, result);
+								ValidateSpecProperties(elementType, schemaProperty.Item.ActualSchema, result);
 						}
 						break;
 				}
@@ -387,11 +412,11 @@ namespace Elastic.Apm.Specification
 			}
 
 			if (!typeCheck(propertyType))
-				result.AddError(ValidationError.ExpectedType(specType, expectedType, schema.DocumentPath, specificationProperty.Name, propertyType.FullName));
+				result.AddError(ValidationError.ExpectedType(specType, expectedType, schema.GetSpecificationIdOrName(), specificationProperty.Name, propertyType.FullName));
 
 			// TODO: don't check for null for now...
 			// if (property.Type.HasFlag(JsonObjectType.Null) && !nullable)
-			// 	result.AddError(new ValidationError(specType, schema.DocumentPath, property.Name, "expected type to be nullable"));
+			// 	result.AddError(new ValidationError(specType, schema.GetSpecificationIdOrName(), property.Name, "expected type to be nullable"));
 		}
 
 		private static void CheckMaxLength(Type specType, JsonSchema schema, JsonSchema schemaProperty, SpecificationProperty specificationProperty,
@@ -402,11 +427,11 @@ namespace Elastic.Apm.Specification
 			{
 				var maxLength = schemaProperty.MaxLength.Value;
 				if (!specificationProperty.MaxLength.HasValue)
-					result.AddError(new ValidationError(specType, schema.DocumentPath, specificationProperty.Name, $"expected property to enforce maxLength of {maxLength} but does not"));
+					result.AddError(new ValidationError(specType, schema.GetSpecificationIdOrName(), specificationProperty.Name, $"expected property to enforce maxLength of {maxLength} but does not"));
 				else
 				{
 					if (specificationProperty.MaxLength != maxLength)
-						result.AddError(new ValidationError(specType, schema.DocumentPath, specificationProperty.Name,
+						result.AddError(new ValidationError(specType, schema.GetSpecificationIdOrName(), specificationProperty.Name,
 							$"property max length {specificationProperty.MaxLength} not equal to spec maxLength {maxLength}"));
 				}
 			}

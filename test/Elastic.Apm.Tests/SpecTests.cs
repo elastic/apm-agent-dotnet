@@ -21,7 +21,10 @@ namespace Elastic.Apm.Tests
 		public async Task Agent_Should_Conform_To_ApmServer_Specs()
 		{
 			var downloadDir = Directory.GetCurrentDirectory();
-			var specification = new SpecificationValidator("v7.0.0", downloadDir);
+
+			// schema in master branch has a bug: https://github.com/elastic/apm-server/issues/4326
+			// use latest version that works for now.
+			var specification = new SpecificationValidator("v7.2.0", downloadDir);
 
 			var agentTypes = typeof(Agent).Assembly.GetTypes();
 
@@ -38,7 +41,7 @@ namespace Elastic.Apm.Tests
 				where type.IsClass && specInterfaces.Any(i => i.IsAssignableFrom(type))
 				select type).ToList();
 
-			var results = new List<ValidationResult>();
+			var results = new List<ValidationResult>(specTypes.Count);
 
 			foreach (var specType in specTypes)
 				results.Add(await specification.ValidateSpecAgainstTypeAsync(specType));
