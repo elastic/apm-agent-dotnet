@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -231,10 +232,10 @@ namespace Elastic.Apm.Specification
 			var schema = await LoadSchemaAsync(specificationId).ConfigureAwait(false);
 			var result = new ValidationResult(type, specificationId, validation);
 
-			ValidateSpecProperties(type, schema, result);
+			ValidateProperties(type, schema, result);
 
 			foreach (var inheritedSchema in schema.AllInheritedSchemas)
-				ValidateSpecProperties(type, inheritedSchema, result);
+				ValidateProperties(type, inheritedSchema, result);
 
 			return result;
 		}
@@ -283,7 +284,7 @@ namespace Elastic.Apm.Specification
 			return specProperties.ToArray();
 		}
 
-		private static void ValidateSpecProperties(Type specType, JsonSchema schema, ValidationResult result)
+		private static void ValidateProperties(Type specType, JsonSchema schema, ValidationResult result)
 		{
 			SpecificationProperty[] properties;
 
@@ -297,10 +298,10 @@ namespace Elastic.Apm.Specification
 				return;
 			}
 
-			ValidateSpecProperties(specType, schema, properties, result);
+			ValidateProperties(specType, schema, properties, result);
 
 			foreach (var inheritedSchema in schema.AllInheritedSchemas)
-				ValidateSpecProperties(specType, inheritedSchema, properties, result);
+				ValidateProperties(specType, inheritedSchema, properties, result);
 
 			if (schema.AnyOf != null && schema.AnyOf.Count > 0)
 			{
@@ -312,7 +313,7 @@ namespace Elastic.Apm.Specification
 				var index = 0;
 				foreach (var anyOfSchema in schema.AnyOf)
 				{
-					ValidateSpecProperties(specType, anyOfSchema, properties, anyOfResults[index]);
+					ValidateProperties(specType, anyOfSchema, properties, anyOfResults[index]);
 					++index;
 				}
 
@@ -334,7 +335,7 @@ namespace Elastic.Apm.Specification
 				var index = 0;
 				foreach (var oneOfSchema in schema.OneOf)
 				{
-					ValidateSpecProperties(specType, oneOfSchema, properties, oneOfResults[index]);
+					ValidateProperties(specType, oneOfSchema, properties, oneOfResults[index]);
 					++index;
 				}
 
@@ -353,7 +354,7 @@ namespace Elastic.Apm.Specification
 
 		}
 
-		private static void ValidateSpecProperties(Type specType, JsonSchema schema, SpecificationProperty[] properties, ValidationResult result)
+		private static void ValidateProperties(Type specType, JsonSchema schema, SpecificationProperty[] properties, ValidationResult result)
 		{
 			IReadOnlyDictionary<string, JsonSchemaProperty> schemaProperties;
 
@@ -400,7 +401,7 @@ namespace Elastic.Apm.Specification
 					case "System.Double":
 					case "System.UInt64":
 						if (schemaProperty.Type.HasFlag(JsonObjectType.Number))
-							CheckNumber(specType, schema, schemaProperty, specTypeProperty, result);
+							ValidateNumber(specType, schema, schemaProperty, specTypeProperty, result);
 						else
 							result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), name,
 								$"expecting 'number' type but found {schemaProperty.Type}"));
@@ -408,97 +409,139 @@ namespace Elastic.Apm.Specification
 					case "System.Int64":
 					case "System.Int32":
 						if (schemaProperty.Type.HasFlag(JsonObjectType.Number))
-							CheckNumber(specType, schema, schemaProperty, specTypeProperty, result);
+							ValidateNumber(specType, schema, schemaProperty, specTypeProperty, result);
 						else if (schemaProperty.Type.HasFlag(JsonObjectType.Integer))
-							CheckInteger(specType, schema, schemaProperty, specTypeProperty, result);
+							ValidateInteger(specType, schema, schemaProperty, specTypeProperty, result);
 						else
 							result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), name,
 								$"expecting 'number' or 'integer' type but found {schemaProperty.Type}"));
 						break;
 					case "System.String":
 						if (schemaProperty.Type.HasFlag(JsonObjectType.String))
-							CheckString(specType, schema, schemaProperty, specTypeProperty, result);
+							ValidateString(specType, schema, schemaProperty, specTypeProperty, result);
 						else
 							result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), name,
 								$"expecting 'string' type but found {schemaProperty.Type}"));
 						break;
 					case "System.Boolean":
 						if (schemaProperty.Type.HasFlag(JsonObjectType.Boolean))
-							CheckBoolean(specType, schema, schemaProperty, specTypeProperty, result);
+							ValidateBoolean(specType, schema, schemaProperty, specTypeProperty, result);
 						else
 							result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), name,
 								$"expecting 'boolean' type but found {schemaProperty.Type}"));
 						break;
 					default:
-						var typeFlags = schemaProperty.Type;
-
-						// remove null flag if it exists, and check to see if we have more than one flag
-						if (typeFlags.HasFlag(JsonObjectType.Null))
-							typeFlags &= ~JsonObjectType.Null;
-
-						// is there still more than one flag? Check to see if it's a power of two. If so, based on the .NET type not being a
-						// primitive type, we would expect the presence of the schema "object" or "array" type in the majority of cases, so check
-						// these first. For types with custom serialization, the schema type may be a primitive type.
-						if ((typeFlags & (typeFlags - 1)) != 0)
+						// Are there multiple types? If so, based on the .NET type not being a primitive type, we would expect the presence of the
+						// schema "object" or "array" type in the majority of cases, so check these first.
+						// For types with custom serialization, the schema type may be a primitive type, so we can't easily statically validate it.
+						if (HasMultipleNonNullTypes(schemaProperty.Type))
 						{
-							if (typeFlags.HasFlag(JsonObjectType.Object))
-								ValidateSpecProperties(specTypeProperty.PropertyType, schemaProperty, result);
-							else if (typeFlags.HasFlag(JsonObjectType.Array))
-							{
-								if (IsEnumerableType(specTypeProperty.PropertyType, out var elementType))
-									ValidateSpecProperties(elementType, schemaProperty.Item.ActualSchema, result);
-							}
+							if (schemaProperty.Type.HasFlag(JsonObjectType.Object))
+								ValidateProperties(specTypeProperty.PropertyType, schemaProperty, result);
+							else if (schemaProperty.Type.HasFlag(JsonObjectType.Array) &&
+								IsEnumerableType(specTypeProperty.PropertyType, out var elementType))
+								ValidateProperties(elementType, schemaProperty.Item.ActualSchema, result);
 							else
 							{
 								result.AddIgnore(new ValidationIgnore(schema.GetNameOrSpecificationId(), name,
-									$"Cannot statically check types. .NET type id {specType} and schema type is {schemaProperty.Type}"));
+									$"Cannot statically check type. .NET type '{specType}', schema type '{schemaProperty.Type}'"));
 							}
 						}
-						else if (typeFlags.HasFlag(JsonObjectType.Boolean))
-							CheckBoolean(specType, schema, schemaProperty, specTypeProperty, result);
-						else if (typeFlags.HasFlag(JsonObjectType.Integer))
-							CheckInteger(specType, schema, schemaProperty, specTypeProperty, result);
-						else if (typeFlags.HasFlag(JsonObjectType.Number))
-							CheckNumber(specType, schema, schemaProperty, specTypeProperty, result);
-						else if (typeFlags.HasFlag(JsonObjectType.String))
-							CheckString(specType, schema, schemaProperty, specTypeProperty, result);
-						else if (typeFlags.HasFlag(JsonObjectType.Object))
-							ValidateSpecProperties(specTypeProperty.PropertyType, schemaProperty, result);
-						else if (typeFlags.HasFlag(JsonObjectType.Array))
+						else if (schemaProperty.Type.HasFlag(JsonObjectType.Boolean))
+							ValidateBoolean(specType, schema, schemaProperty, specTypeProperty, result);
+						else if (schemaProperty.Type.HasFlag(JsonObjectType.Integer))
+							ValidateInteger(specType, schema, schemaProperty, specTypeProperty, result);
+						else if (schemaProperty.Type.HasFlag(JsonObjectType.Number))
+							ValidateNumber(specType, schema, schemaProperty, specTypeProperty, result);
+						else if (schemaProperty.Type.HasFlag(JsonObjectType.String))
+						{
+							if (schemaProperty.IsEnumeration && specTypeProperty.PropertyType.IsEnum)
+								ValidateEnum(specType, schema, schemaProperty, specTypeProperty, result);
+							else
+								ValidateString(specType, schema, schemaProperty, specTypeProperty, result);
+						}
+						else if (schemaProperty.Type.HasFlag(JsonObjectType.Object))
+							ValidateProperties(specTypeProperty.PropertyType, schemaProperty, result);
+						else if (schemaProperty.Type.HasFlag(JsonObjectType.Array))
 						{
 							if (IsEnumerableType(specTypeProperty.PropertyType, out var elementType))
-								ValidateSpecProperties(elementType, schemaProperty.Item.ActualSchema, result);
+								ValidateProperties(elementType, schemaProperty.Item.ActualSchema, result);
 						}
 						break;
 				}
 			}
 		}
 
-		private static void CheckString(Type specType, JsonSchema schema, JsonSchema property, SpecificationProperty specTypeProperty,
+		/// <summary>
+		/// Check if the JSON schema type has more than one value, other than "null"
+		/// </summary>
+		/// <param name="type"></param>
+		/// <returns></returns>
+		private static bool HasMultipleNonNullTypes(JsonObjectType type)
+		{
+			var typeFlags = type;
+
+			// remove null flag if it exists, and check to see if we have more than one flag
+			if (typeFlags.HasFlag(JsonObjectType.Null))
+				typeFlags &= ~JsonObjectType.Null;
+
+			// is there still more than one flag? Check to see if it's a power of two
+			return (typeFlags & (typeFlags - 1)) != 0;
+		}
+
+		private static void ValidateEnum(Type specType, JsonSchema schema,
+			JsonSchema schemaProperty, SpecificationProperty specTypeProperty, ValidationResult result
+		)
+		{
+			var enumValues = GetEnumValues(specTypeProperty.PropertyType);
+			foreach (var enumValue in enumValues)
+			{
+				if (!schemaProperty.Enumeration.Cast<string>().Contains(enumValue))
+				{
+					result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(),
+						schemaProperty.GetNameOrSpecificationId(), $"enum did not contain value {enumValue}"));
+				}
+			}
+		}
+
+		private static IEnumerable<string> GetEnumValues(Type enumType)
+		{
+			var values = Enum.GetValues(enumType);
+			for (var i = 0; i < values.Length; i++)
+			{
+				var value = values.GetValue(i);
+				var info = enumType.GetField(value.ToString());
+				var da = info.GetCustomAttribute<EnumMemberAttribute>();
+				var enumValue = da != null ? da.Value : Enum.GetName(enumType, value);
+				yield return enumValue;
+			}
+		}
+
+		private static void ValidateString(Type specType, JsonSchema schema, JsonSchema property, SpecificationProperty specTypeProperty,
 			ValidationResult result
 		)
 		{
-			CheckType(specType, "string", schema, property, specTypeProperty, result, t => t == typeof(string));
+			CheckType(specType, "string", schema, property, specTypeProperty, result, (t, s) => (t == typeof(string)));
 			CheckMaxLength(specType, schema, property, specTypeProperty, result);
 		}
 
-		private static void CheckBoolean(Type specType, JsonSchema schema, JsonSchema property, SpecificationProperty specTypeProperty,
+		private static void ValidateBoolean(Type specType, JsonSchema schema, JsonSchema property, SpecificationProperty specTypeProperty,
 			ValidationResult result
 		) =>
-			CheckType(specType, "boolean", schema, property, specTypeProperty, result, t => t == typeof(bool));
+			CheckType(specType, "boolean", schema, property, specTypeProperty, result, (t, s) => t == typeof(bool));
 
-		private static void CheckInteger(Type specType, JsonSchema schema, JsonSchema property, SpecificationProperty specTypeProperty,
+		private static void ValidateInteger(Type specType, JsonSchema schema, JsonSchema property, SpecificationProperty specTypeProperty,
 			ValidationResult result
 		) =>
-			CheckType(specType, "integer", schema, property, specTypeProperty, result, t => t == typeof(int) || t == typeof(long));
+			CheckType(specType, "integer", schema, property, specTypeProperty, result, (t, s) => t == typeof(int) || t == typeof(long));
 
-		private static void CheckNumber(Type specType, JsonSchema schema, JsonSchema property, SpecificationProperty specTypeProperty,
+		private static void ValidateNumber(Type specType, JsonSchema schema, JsonSchema property, SpecificationProperty specTypeProperty,
 			ValidationResult result
 		) =>
-			CheckType(specType, "number", schema, property, specTypeProperty, result, t => NumericTypeNames.Contains(t.FullName));
+			CheckType(specType, "number", schema, property, specTypeProperty, result, (t, s) => NumericTypeNames.Contains(t.FullName));
 
 		private static void CheckType(Type specType, string expectedType, JsonSchema schema, JsonSchema property, SpecificationProperty specificationProperty,
-			ValidationResult result, Func<Type, bool> typeCheck
+			ValidationResult result, Func<Type, JsonSchema, bool> typeCheck
 		)
 		{
 			var propertyType = specificationProperty.PropertyType;
@@ -510,7 +553,7 @@ namespace Elastic.Apm.Specification
 				propertyType = Nullable.GetUnderlyingType(specificationProperty.PropertyType);
 			}
 
-			if (!typeCheck(propertyType))
+			if (!typeCheck(propertyType, property))
 				result.AddError(ValidationError.ExpectedType(specType, propertyType, expectedType, schema.GetNameOrSpecificationId(), property.GetNameOrSpecificationId()));
 
 			if (result.Validation == Validation.SpecToType && property.Type.HasFlag(JsonObjectType.Null) && !nullable)
