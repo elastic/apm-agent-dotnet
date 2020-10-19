@@ -51,8 +51,7 @@ namespace Elastic.Apm.Model
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigStore.CurrentSnapshot,
-				agent.TracerInternal.CurrentExecutionSegmentsContainer)
-		{ }
+				agent.TracerInternal.CurrentExecutionSegmentsContainer) { }
 
 		/// <summary>
 		/// Creates a new transaction
@@ -488,21 +487,21 @@ namespace Elastic.Apm.Model
 		}
 
 		public void SetLabel(string key, string value)
-		 => _context.Value.Labels.Add(key, value);
+			=> _context.Value.Labels.Add(key, value);
 
 		public void SetLabel(string key, bool value)
-		 => _context.Value.Labels.Add(key, value);
+			=> _context.Value.Labels.Add(key, value);
 
 		public void SetLabel(string key, double value)
-		 => _context.Value.Labels.Add(key, value);
+			=> _context.Value.Labels.Add(key, value);
 
 		public void SetLabel(string key, int value)
-		=> _context.Value.Labels.Add(key, value);
+			=> _context.Value.Labels.Add(key, value);
 
 		public void SetLabel(string key, long value)
-		=> _context.Value.Labels.Add(key, value);
+			=> _context.Value.Labels.Add(key, value);
 
 		public void SetLabel(string key, decimal value)
-		=> _context.Value.Labels.Add(key, value);
+			=> _context.Value.Labels.Add(key, value);
 	}
 }

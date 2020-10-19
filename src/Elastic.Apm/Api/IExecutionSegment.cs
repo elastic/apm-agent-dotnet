@@ -45,18 +45,6 @@ namespace Elastic.Apm.Api
 		/// <exception cref="ArgumentException"><c>null</c> as key is not allowed.</exception>
 		Dictionary<string, object> Labels { get; }
 
-		public void SetLabel(string key, string value);
-
-		public void SetLabel(string key, bool value);
-
-		public void SetLabel(string key, double value);
-
-		public void SetLabel(string key, int value);
-
-		public void SetLabel(string key, long value);
-
-		public void SetLabel(string key, decimal value);
-
 		/// <summary>
 		/// The name of the item.
 		/// </summary>
@@ -253,6 +241,18 @@ namespace Elastic.Apm.Api
 		/// It is illegal to call any methods on a span instance which has already ended.
 		/// </summary>
 		void End();
+
+		public void SetLabel(string key, string value);
+
+		public void SetLabel(string key, bool value);
+
+		public void SetLabel(string key, double value);
+
+		public void SetLabel(string key, int value);
+
+		public void SetLabel(string key, long value);
+
+		public void SetLabel(string key, decimal value);
 
 		/// <summary>
 		/// Start and return a new custom span as a child of this execution segment.

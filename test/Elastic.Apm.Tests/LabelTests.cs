@@ -1,7 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System;
 using System.Globalization;
-using System.Text;
 using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
@@ -24,7 +26,7 @@ namespace Elastic.Apm.Tests
 			var mockPaylaodSender = new MockPayloadSender();
 			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPaylaodSender));
 
-			agent.Tracer.CaptureTransaction("test", "test", (t) =>
+			agent.Tracer.CaptureTransaction("test", "test", t =>
 			{
 				var labelName = "myLabel";
 				SetLabel(t, labelValue, labelName);
@@ -48,9 +50,9 @@ namespace Elastic.Apm.Tests
 			var mockPaylaodSender = new MockPayloadSender();
 			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPaylaodSender));
 
-			agent.Tracer.CaptureTransaction("test", "test", (t) =>
+			agent.Tracer.CaptureTransaction("test", "test", t =>
 			{
-				t.CaptureSpan("testSpan", "test", (s) =>
+				t.CaptureSpan("testSpan", "test", s =>
 				{
 					var labelName = "myLabel";
 					SetLabel(s, labelValue, labelName);
@@ -77,6 +79,51 @@ namespace Elastic.Apm.Tests
 		{
 			var decimalValue = Convert.ToDecimal(number);
 			SingleLabelOnSpanTests(decimalValue);
+		}
+
+		[Fact]
+		public void MultipleLabelsTest()
+		{
+			var mockPaylaodSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPaylaodSender));
+
+			agent.Tracer.CaptureTransaction("test", "test", t =>
+			{
+				t.CaptureSpan("testSpan", "test", s =>
+				{
+					SetLabel(s, 1, "intLabel");
+					SetLabel(s, "abc", "stringLabel");
+					SetLabel(s, true, "boolLabel");
+
+					var spanJsonString = JsonConvert.SerializeObject(s);
+					spanJsonString.Should().Contain("\"intLabel\":1,\"stringLabel\":\"abc\",\"boolLabel\":true");
+
+					s.Labels["intLabel"].Should().Be(1);
+					s.Context.Labels["intLabel"].Should().Be(1);
+
+					s.Labels["stringLabel"].Should().Be("abc");
+					s.Context.Labels["stringLabel"].Should().Be("abc");
+
+					s.Labels["boolLabel"].Should().Be(true);
+					s.Context.Labels["boolLabel"].Should().Be(true);
+				});
+
+				SetLabel(t, 1, "intLabel");
+				SetLabel(t, "abc", "stringLabel");
+				SetLabel(t, true, "boolLabel");
+
+				var transactionJsonString = JsonConvert.SerializeObject(t);
+				transactionJsonString.Should().Contain("\"intLabel\":1,\"stringLabel\":\"abc\",\"boolLabel\":true");
+
+				t.Labels["intLabel"].Should().Be(1);
+				t.Context.Labels["intLabel"].Should().Be(1);
+
+				t.Labels["stringLabel"].Should().Be("abc");
+				t.Context.Labels["stringLabel"].Should().Be("abc");
+
+				t.Labels["boolLabel"].Should().Be(true);
+				t.Context.Labels["boolLabel"].Should().Be(true);
+			});
 		}
 
 		private void SetLabel(IExecutionSegment executionSegment, object labelValue, string labelName)
@@ -113,7 +160,7 @@ namespace Elastic.Apm.Tests
 				serializedStrPattern += "\"";
 
 			if (labelValue is bool boolVal)
-				serializedStrPattern += boolVal.ToString().ToString().ToLower();
+				serializedStrPattern += boolVal.ToString().ToLower();
 			else if (labelValue is double doubleValToStr)
 				serializedStrPattern += string.Format(CultureInfo.InvariantCulture, "{0:N1}", doubleValToStr);
 			else if (labelValue is decimal dedimalValToStr)
