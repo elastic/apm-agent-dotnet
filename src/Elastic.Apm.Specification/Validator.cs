@@ -304,7 +304,11 @@ namespace Elastic.Apm.Specification
 
 			if (schema.AnyOf != null && schema.AnyOf.Count > 0)
 			{
-				var anyOfResults = Enumerable.Repeat(new ValidationResult(specType, result.SpecificationId, result.Validation), schema.AnyOf.Count).ToList();
+				var anyOfResults = Enumerable
+					.Range(1, schema.AnyOf.Count)
+					.Select(_ =>  new ValidationResult(specType, result.SpecificationId, result.Validation))
+					.ToList();
+
 				var index = 0;
 				foreach (var anyOfSchema in schema.AnyOf)
 				{
@@ -322,7 +326,11 @@ namespace Elastic.Apm.Specification
 
 			if (schema.OneOf != null && schema.OneOf.Count > 0)
 			{
-				var oneOfResults = Enumerable.Repeat(new ValidationResult(specType, result.SpecificationId, result.Validation), schema.AnyOf.Count).ToList();
+				var oneOfResults = Enumerable
+					.Range(1, schema.OneOf.Count)
+					.Select(_ =>  new ValidationResult(specType, result.SpecificationId, result.Validation))
+					.ToList();
+
 				var index = 0;
 				foreach (var oneOfSchema in schema.OneOf)
 				{
