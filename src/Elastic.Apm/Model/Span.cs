@@ -18,6 +18,7 @@ using Newtonsoft.Json.Converters;
 
 namespace Elastic.Apm.Model
 {
+	/// <inheritdoc />
 	internal class Span : ISpan
 	{
 		private readonly IApmServerInfo _apmServerInfo;

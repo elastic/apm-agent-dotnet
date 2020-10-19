@@ -292,6 +292,56 @@ namespace Elastic.Apm.Specification
 				return;
 			}
 
+			ValidateSpecProperties(specType, schema, properties, result);
+
+			foreach (var inheritedSchema in schema.AllInheritedSchemas)
+				ValidateSpecProperties(specType, inheritedSchema, properties, result);
+
+			if (schema.AnyOf != null && schema.AnyOf.Count > 0)
+			{
+				var anyOfResults = Enumerable.Repeat(new ValidationResult(specType, result.SpecificationId), schema.AnyOf.Count).ToList();
+				var index = 0;
+				foreach (var anyOfSchema in schema.AnyOf)
+				{
+					ValidateSpecProperties(specType, anyOfSchema, properties, anyOfResults[index]);
+					++index;
+				}
+
+				// at least one must be successful
+				if (!anyOfResults.Any(r => r.Success))
+				{
+					var errors = anyOfResults.Select(r => r.ToString());
+					result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), specType.Name, $"anyOf failure: {string.Join(",", errors)}"));
+				}
+			}
+
+			if (schema.OneOf != null && schema.OneOf.Count > 0)
+			{
+				var oneOfResults = Enumerable.Repeat(new ValidationResult(specType, result.SpecificationId), schema.AnyOf.Count).ToList();
+				var index = 0;
+				foreach (var oneOfSchema in schema.OneOf)
+				{
+					ValidateSpecProperties(specType, oneOfSchema, properties, oneOfResults[index]);
+					++index;
+				}
+
+				// only one must be successful
+				if (!oneOfResults.Any(r => r.Success))
+				{
+					var errors = oneOfResults.Select(r => r.ToString());
+					result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), specType.Name, $"oneOf all failure: {string.Join(",", errors)}"));
+				}
+				else if (oneOfResults.Count(r => r.Success) > 0)
+				{
+					var errors = oneOfResults.Where(r => r.Success).Select(r => r.ToString());
+					result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), specType.Name, $"oneOf more than one successful failure: {string.Join(",", errors)}"));
+				}
+			}
+
+		}
+
+		private static void ValidateSpecProperties(Type specType, JsonSchema schema, SpecificationProperty[] properties, ValidationResult result)
+		{
 			foreach (var kv in schema.ActualProperties)
 			{
 				var schemaProperty = kv.Value.ActualSchema;
@@ -323,7 +373,8 @@ namespace Elastic.Apm.Specification
 						if (schemaProperty.Type.HasFlag(JsonObjectType.Number))
 							CheckNumber(specType, schema, schemaProperty, specTypeProperty, result);
 						else
-							result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), name, $"expecting 'number' type but found {schemaProperty.Type}"));
+							result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), name,
+								$"expecting 'number' type but found {schemaProperty.Type}"));
 						break;
 					case "System.Int64":
 					case "System.Int32":
@@ -332,19 +383,22 @@ namespace Elastic.Apm.Specification
 						else if (schemaProperty.Type.HasFlag(JsonObjectType.Integer))
 							CheckInteger(specType, schema, schemaProperty, specTypeProperty, result);
 						else
-							result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), name, $"expecting 'number' or 'integer' type but found {schemaProperty.Type}"));
+							result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), name,
+								$"expecting 'number' or 'integer' type but found {schemaProperty.Type}"));
 						break;
 					case "System.String":
 						if (schemaProperty.Type.HasFlag(JsonObjectType.String))
 							CheckString(specType, schema, schemaProperty, specTypeProperty, result);
 						else
-							result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), name, $"expecting 'string' type but found {schemaProperty.Type}"));
+							result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), name,
+								$"expecting 'string' type but found {schemaProperty.Type}"));
 						break;
 					case "System.Boolean":
 						if (schemaProperty.Type.HasFlag(JsonObjectType.Boolean))
 							CheckBoolean(specType, schema, schemaProperty, specTypeProperty, result);
 						else
-							result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), name, $"expecting 'boolean' type but found {schemaProperty.Type}"));
+							result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), name,
+								$"expecting 'boolean' type but found {schemaProperty.Type}"));
 						break;
 					default:
 						var typeFlags = schemaProperty.Type;
@@ -366,7 +420,10 @@ namespace Elastic.Apm.Specification
 									ValidateSpecProperties(elementType, schemaProperty.Item.ActualSchema, result);
 							}
 							else
-								result.AddIgnore(new ValidationIgnore(schema.GetNameOrSpecificationId(), name, $"Cannot statically check types. .NET type id {specType} and schema type is {schemaProperty.Type}"));
+							{
+								result.AddIgnore(new ValidationIgnore(schema.GetNameOrSpecificationId(), name,
+									$"Cannot statically check types. .NET type id {specType} and schema type is {schemaProperty.Type}"));
+							}
 						}
 						else if (typeFlags.HasFlag(JsonObjectType.Boolean))
 							CheckBoolean(specType, schema, schemaProperty, specTypeProperty, result);
@@ -386,8 +443,6 @@ namespace Elastic.Apm.Specification
 						break;
 				}
 			}
-
-			// TODO: handle AnyOf, AllOf, OneOf
 		}
 
 		private static void CheckString(Type specType, JsonSchema schema, JsonSchema property, SpecificationProperty specTypeProperty,
