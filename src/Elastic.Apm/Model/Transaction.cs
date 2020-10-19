@@ -20,7 +20,7 @@ namespace Elastic.Apm.Model
 {
 	internal class Transaction : ITransaction
 	{
-		private static string ApmTransactionActivityName = "ElasticApm.Transaction";
+		private static readonly string ApmTransactionActivityName = "ElasticApm.Transaction";
 		private readonly Lazy<Context> _context = new Lazy<Context>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 
@@ -51,7 +51,8 @@ namespace Elastic.Apm.Model
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigStore.CurrentSnapshot,
-				agent.TracerInternal.CurrentExecutionSegmentsContainer) { }
+				agent.TracerInternal.CurrentExecutionSegmentsContainer)
+		{ }
 
 		/// <summary>
 		/// Creates a new transaction
@@ -234,7 +235,7 @@ namespace Elastic.Apm.Model
 		public bool IsSampled { get; }
 
 		[JsonIgnore]
-		public Dictionary<string, string> Labels => Context.Labels;
+		public Dictionary<string, object> Labels => Context.Labels;
 
 		[MaxLength]
 		public string Name
@@ -485,5 +486,23 @@ namespace Elastic.Apm.Model
 
 			return name;
 		}
+
+		public void SetLabel(string key, string value)
+		 => _context.Value.Labels.Add(key, value);
+
+		public void SetLabel(string key, bool value)
+		 => _context.Value.Labels.Add(key, value);
+
+		public void SetLabel(string key, double value)
+		 => _context.Value.Labels.Add(key, value);
+
+		public void SetLabel(string key, int value)
+		=> _context.Value.Labels.Add(key, value);
+
+		public void SetLabel(string key, long value)
+		=> _context.Value.Labels.Add(key, value);
+
+		public void SetLabel(string key, decimal value)
+		=> _context.Value.Labels.Add(key, value);
 	}
 }

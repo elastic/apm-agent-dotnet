@@ -12,7 +12,7 @@ namespace Elastic.Apm.Api
 	public class Context
 	{
 		private readonly Lazy<Dictionary<string, string>> _custom = new Lazy<Dictionary<string, string>>();
-		private readonly Lazy<Dictionary<string, string>> _labels = new Lazy<Dictionary<string, string>>();
+		private readonly Lazy<Dictionary<string, object>> _labels = new Lazy<Dictionary<string, object>>();
 
 		[JsonConverter(typeof(CustomJsonConverter))]
 		public Dictionary<string, string> Custom => _custom.Value;
@@ -22,7 +22,7 @@ namespace Elastic.Apm.Api
 		/// </summary>
 		[JsonProperty("tags")]
 		[JsonConverter(typeof(LabelsJsonConverter))]
-		public Dictionary<string, string> Labels => _labels.Value;
+		public Dictionary<string, object> Labels => _labels.Value;
 
 		/// <summary>
 		/// If a log record was generated as a result of a http request, the http interface can be used to collect this

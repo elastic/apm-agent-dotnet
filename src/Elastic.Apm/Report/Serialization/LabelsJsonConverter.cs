@@ -9,9 +9,9 @@ using Newtonsoft.Json;
 
 namespace Elastic.Apm.Report.Serialization
 {
-	internal class LabelsJsonConverter : JsonConverter<Dictionary<string, string>>
+	internal class LabelsJsonConverter : JsonConverter<Dictionary<string, object>>
 	{
-		public override void WriteJson(JsonWriter writer, Dictionary<string, string> labels, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, Dictionary<string, object> labels, JsonSerializer serializer)
 		{
 			writer.WriteStartObject();
 			foreach (var keyValue in labels)
@@ -23,16 +23,26 @@ namespace Elastic.Apm.Report.Serialization
 					.Replace('"', '_'));
 
 				if (keyValue.Value != null)
-					writer.WriteValue(keyValue.Value.Truncate());
+				{
+					switch (keyValue.Value)
+					{
+						case string strValue:
+							writer.WriteValue(strValue.Truncate());
+							break;
+						default:
+							writer.WriteValue(keyValue.Value);
+							break;
+					}
+				}
 				else
 					writer.WriteNull();
 			}
 			writer.WriteEndObject();
 		}
 
-		public override Dictionary<string, string> ReadJson(JsonReader reader, Type objectType, Dictionary<string, string> existingValue,
+		public override Dictionary<string, object> ReadJson(JsonReader reader, Type objectType, Dictionary<string, object> existingValue,
 			bool hasExistingValue, JsonSerializer serializer
 		)
-			=> serializer.Deserialize<Dictionary<string, string>>(reader);
+			=> serializer.Deserialize<Dictionary<string, object>>(reader);
 	}
 }

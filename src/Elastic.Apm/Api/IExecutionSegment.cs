@@ -43,7 +43,19 @@ namespace Elastic.Apm.Api
 		/// For example <code>foo.bar</code> will be stored as <code>foo_bar</code> in Elasticsearch.
 		/// </summary>
 		/// <exception cref="ArgumentException"><c>null</c> as key is not allowed.</exception>
-		Dictionary<string, string> Labels { get; }
+		Dictionary<string, object> Labels { get; }
+
+		public void SetLabel(string key, string value);
+
+		public void SetLabel(string key, bool value);
+
+		public void SetLabel(string key, double value);
+
+		public void SetLabel(string key, int value);
+
+		public void SetLabel(string key, long value);
+
+		public void SetLabel(string key, decimal value);
 
 		/// <summary>
 		/// The name of the item.

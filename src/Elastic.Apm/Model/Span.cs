@@ -134,7 +134,7 @@ namespace Elastic.Apm.Model
 		public bool IsSampled => _enclosingTransaction.IsSampled;
 
 		[JsonIgnore]
-		public Dictionary<string, string> Labels => Context.Labels;
+		public Dictionary<string, object> Labels => Context.Labels;
 
 		[MaxLength]
 		public string Name { get; set; }
@@ -406,5 +406,23 @@ namespace Elastic.Apm.Model
 				return null;
 			}
 		}
+
+		public void SetLabel(string key, string value)
+			=> Context.Labels.Add(key, value);
+
+		public void SetLabel(string key, bool value)
+			=> Context.Labels.Add(key, value);
+
+		public void SetLabel(string key, double value)
+			=> Context.Labels.Add(key, value);
+
+		public void SetLabel(string key, int value)
+			=> Context.Labels.Add(key, value);
+
+		public void SetLabel(string key, long value)
+			=> Context.Labels.Add(key, value);
+
+		public void SetLabel(string key, decimal value)
+			=> Context.Labels.Add(key, value);
 	}
 }
