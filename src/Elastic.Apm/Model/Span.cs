@@ -282,7 +282,7 @@ namespace Elastic.Apm.Model
 			if (isFirstEndCall) _currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
 		}
 
-		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
+		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null, Dictionary<string, object> labels = null)
 			=> ExecutionSegmentCommon.CaptureException(
 				exception,
 				_logger,
@@ -292,7 +292,8 @@ namespace Elastic.Apm.Model
 				_enclosingTransaction,
 				culprit,
 				isHandled,
-				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id)
+				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id),
+				labels
 			);
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)
@@ -319,7 +320,7 @@ namespace Elastic.Apm.Model
 		public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 
-		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null)
+		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null, Dictionary<string, object> labels = null)
 			=> ExecutionSegmentCommon.CaptureError(
 				message,
 				culprit,
@@ -329,7 +330,8 @@ namespace Elastic.Apm.Model
 				this,
 				ConfigSnapshot,
 				_enclosingTransaction,
-				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id)
+				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id),
+				labels
 			);
 
 		private void DeduceDestination()

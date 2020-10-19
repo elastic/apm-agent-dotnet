@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
@@ -11,8 +12,27 @@ namespace Elastic.Apm.Api
 {
 	public class Context
 	{
-		private readonly Lazy<Dictionary<string, string>> _custom = new Lazy<Dictionary<string, string>>();
-		private readonly Lazy<Dictionary<string, object>> _labels = new Lazy<Dictionary<string, object>>();
+
+		internal Context DeepCopy()
+		{
+			var newItem = (Context)MemberwiseClone();
+
+			newItem._custom = new Lazy<Dictionary<string, string>>();
+			if (_custom.IsValueCreated)
+				foreach (var item in _custom.Value) newItem._custom.Value[item.Key] = item.Value;
+
+			newItem._labels = new Lazy<Dictionary<string, object>>( () => new Dictionary<string, object>());
+			if (_labels.IsValueCreated)
+				foreach (var item in _labels.Value) newItem._labels.Value[item.Key] = item.Value;
+
+			newItem.Request = Request?.DeepCopy();
+			newItem.Response?.DeepCopy();
+
+			return newItem;
+		}
+
+		private  Lazy<Dictionary<string, string>> _custom = new Lazy<Dictionary<string, string>>();
+		private  Lazy<Dictionary<string, object>> _labels = new Lazy<Dictionary<string, object>>();
 
 		[JsonConverter(typeof(CustomJsonConverter))]
 		public Dictionary<string, string> Custom => _custom.Value;

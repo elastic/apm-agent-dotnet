@@ -373,7 +373,7 @@ namespace Elastic.Apm.Model
 			return retVal;
 		}
 
-		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
+		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null, Dictionary<string, object> labels = null)
 			=> ExecutionSegmentCommon.CaptureException(
 				exception,
 				_logger,
@@ -383,10 +383,11 @@ namespace Elastic.Apm.Model
 				this,
 				culprit,
 				isHandled,
-				parentId
+				parentId,
+				labels
 			);
 
-		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null)
+		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null, Dictionary<string, object> labels = null)
 			=> ExecutionSegmentCommon.CaptureError(
 				message,
 				culprit,
@@ -396,7 +397,8 @@ namespace Elastic.Apm.Model
 				this,
 				ConfigSnapshot,
 				this,
-				parentId
+				parentId,
+				labels
 			);
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)

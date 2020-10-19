@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Mocks;
@@ -23,8 +25,8 @@ namespace Elastic.Apm.Tests
 		[Theory]
 		public void SingleLabelOnTransactionTests(object labelValue)
 		{
-			var mockPaylaodSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPaylaodSender));
+			var mockPayloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
 
 			agent.Tracer.CaptureTransaction("test", "test", t =>
 			{
@@ -47,8 +49,8 @@ namespace Elastic.Apm.Tests
 		[Theory]
 		public void SingleLabelOnSpanTests(object labelValue)
 		{
-			var mockPaylaodSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPaylaodSender));
+			var mockPayloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
 
 			agent.Tracer.CaptureTransaction("test", "test", t =>
 			{
@@ -84,8 +86,8 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void MultipleLabelsTest()
 		{
-			var mockPaylaodSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPaylaodSender));
+			var mockPayloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
 
 			agent.Tracer.CaptureTransaction("test", "test", t =>
 			{
@@ -126,7 +128,28 @@ namespace Elastic.Apm.Tests
 			});
 		}
 
-		private void SetLabel(IExecutionSegment executionSegment, object labelValue, string labelName)
+		[Fact]
+		public void LabelsOnErrorTest()
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+
+			agent.Tracer.CaptureTransaction("test", "test", t =>
+			{
+				t.SetLabel("intLabel", 5);
+				t.CaptureError("Test Error", "TestMethod", new StackTrace().GetFrames(),
+					labels: new Dictionary<string, object> { { "stringLabel", "test" } });
+
+				// add label to transaction after the error - error does not contain this
+				t.SetLabel("boolLabel", true);
+
+				mockPayloadSender.FirstError.Context.Labels["intLabel"].Should().Be(5);
+				mockPayloadSender.FirstError.Context.Labels["stringLabel"].Should().Be("test");
+				mockPayloadSender.FirstError.Context.Labels.Should().NotContainKey("boolLabel");
+			});
+		}
+
+		private static void SetLabel(IExecutionSegment executionSegment, object labelValue, string labelName)
 		{
 			switch (labelValue)
 			{
@@ -153,7 +176,7 @@ namespace Elastic.Apm.Tests
 			}
 		}
 
-		private string GetAssertString(object labelValue, string labelName)
+		private static string GetAssertString(object labelValue, string labelName)
 		{
 			var serializedStrPattern = "\"tags\":{\"" + labelName + "\":";
 			if (labelValue is string)

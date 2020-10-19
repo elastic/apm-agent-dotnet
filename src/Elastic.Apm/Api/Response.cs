@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Api
@@ -23,5 +24,12 @@ namespace Elastic.Apm.Api
 		/// </summary>
 		[JsonProperty("status_code")]
 		public int StatusCode { get; set; }
+
+		internal Response DeepCopy()
+		{
+			var newItem = (Response)MemberwiseClone();
+			newItem.Headers = Headers.ToDictionary(entry => entry.Key, entry => entry.Value);
+			return newItem;
+		}
 	}
 }
