@@ -18,11 +18,6 @@ using NJsonSchema;
 
 namespace Elastic.Apm.Specification
 {
-	public class ValidationOptions
-	{
-		public bool CheckNullable { get; set; }
-	}
-
 	/// <summary>
 	/// Validates types against the APM server specification
 	/// </summary>
@@ -51,7 +46,7 @@ namespace Elastic.Apm.Specification
 			new Regex("^.*?/(?<path>docs/spec/.*?\\.json)$", RegexOptions.ExplicitCapture);
 
 		private readonly string _directory;
-		public string Branch { get; private set; }
+		public string Branch { get; }
 
 		public Validator(string branch, string directory)
 		{
@@ -73,6 +68,15 @@ namespace Elastic.Apm.Specification
 			Branch = branch;
 		}
 
+		/// <summary>
+		/// Downloads the APM server specifications for a given branch
+		/// </summary>
+		/// <param name="branch"></param>
+		/// <param name="overwrite">If <c>true</c>, overwrite existing files.</param>
+		/// <returns>A task that can be awaited</returns>
+		/// <exception cref="Exception">
+		/// Exception deleting current directory, or creating new directory.
+		/// </exception>
 		public async Task DownloadAsync(string branch, bool overwrite)
 		{
 			var branchDirectory = Path.Combine(_directory, branch);
@@ -161,7 +165,14 @@ namespace Elastic.Apm.Specification
 			if (!File.Exists(path))
 				throw new FileNotFoundException($"'{specificationId}' does not exist at {path}", path);
 
-			return await JsonSchema.FromFileAsync(path).ConfigureAwait(false);
+			try
+			{
+				return await JsonSchema.FromFileAsync(path).ConfigureAwait(false);
+			}
+			catch (Exception e)
+			{
+				throw new JsonSchemaException($"Cannot load schema from path {path}, {e.Message}", e);
+			}
 		}
 
 		/// <summary>
@@ -196,14 +207,11 @@ namespace Elastic.Apm.Specification
 		}
 
 		/// <summary>
-		/// Validates the specification against the type. A specification may be more lenient, or define more
-		/// properties than are specified on a type.
+		/// Validates an agent type with the APM server specification. The validation options determine
+		/// how validation is performed.
 		/// </summary>
-		/// <remarks>
-		/// It's expected that the type is the implementation of the entire specification and not a subset
-		/// of certain optional properties.
-		/// </remarks>
 		/// <param name="type"></param>
+		/// <param name="validation">The validation</param>
 		/// <returns></returns>
 		/// <exception cref="Exception">
 		/// A type does not implement a spec or implements more than one spec
@@ -211,17 +219,17 @@ namespace Elastic.Apm.Specification
 		/// <exception cref="FileNotFoundException">
 		/// Spec file does not exist
 		/// </exception>
-		public async Task<ValidationResult> ValidateSpecAgainstTypeAsync(Type type)
+		public async Task<ValidationResult> ValidateAsync(Type type, Validation validation)
 		{
 			var specificationId = GetSpecificationIdForType(type);
-			return await ValidateSpecAgainstTypeAsync(type, specificationId);
+			return await ValidateAsync(type, specificationId, validation);
 		}
 
-		private async Task<ValidationResult> ValidateSpecAgainstTypeAsync(Type type, string specificationId)
+		private async Task<ValidationResult> ValidateAsync(Type type, string specificationId, Validation validation)
 		{
 			await DownloadAsync(Branch, false);
 			var schema = await LoadSchemaAsync(specificationId).ConfigureAwait(false);
-			var result = new ValidationResult(type, specificationId);
+			var result = new ValidationResult(type, specificationId, validation);
 
 			ValidateSpecProperties(type, schema, result);
 
@@ -264,15 +272,12 @@ namespace Elastic.Apm.Specification
 				if (jsonProperty.Ignored)
 					continue;
 
-				if (jsonProperty != null)
-				{
-					var specProperty = new SpecificationProperty(jsonProperty.PropertyName, jsonProperty.PropertyType, specType);
+				var specProperty = new SpecificationProperty(jsonProperty.PropertyName, jsonProperty.PropertyType, specType);
 
-					if (jsonProperty.Converter != null && jsonProperty.Converter is TrimmedStringJsonConverter trimmedStringJsonConverter)
-						specProperty.MaxLength = trimmedStringJsonConverter.MaxLength;
+				if (jsonProperty.Converter != null && jsonProperty.Converter is TrimmedStringJsonConverter trimmedStringJsonConverter)
+					specProperty.MaxLength = trimmedStringJsonConverter.MaxLength;
 
-					specProperties.Add(specProperty);
-				}
+				specProperties.Add(specProperty);
 			}
 
 			return specProperties.ToArray();
@@ -299,7 +304,7 @@ namespace Elastic.Apm.Specification
 
 			if (schema.AnyOf != null && schema.AnyOf.Count > 0)
 			{
-				var anyOfResults = Enumerable.Repeat(new ValidationResult(specType, result.SpecificationId), schema.AnyOf.Count).ToList();
+				var anyOfResults = Enumerable.Repeat(new ValidationResult(specType, result.SpecificationId, result.Validation), schema.AnyOf.Count).ToList();
 				var index = 0;
 				foreach (var anyOfSchema in schema.AnyOf)
 				{
@@ -317,7 +322,7 @@ namespace Elastic.Apm.Specification
 
 			if (schema.OneOf != null && schema.OneOf.Count > 0)
 			{
-				var oneOfResults = Enumerable.Repeat(new ValidationResult(specType, result.SpecificationId), schema.AnyOf.Count).ToList();
+				var oneOfResults = Enumerable.Repeat(new ValidationResult(specType, result.SpecificationId, result.Validation), schema.AnyOf.Count).ToList();
 				var index = 0;
 				foreach (var oneOfSchema in schema.OneOf)
 				{
@@ -342,14 +347,30 @@ namespace Elastic.Apm.Specification
 
 		private static void ValidateSpecProperties(Type specType, JsonSchema schema, SpecificationProperty[] properties, ValidationResult result)
 		{
-			foreach (var kv in schema.ActualProperties)
+			IReadOnlyDictionary<string, JsonSchemaProperty> schemaProperties;
+
+			try
+			{
+				schemaProperties = schema.ActualProperties;
+			}
+			catch (InvalidOperationException e)
+			{
+				throw new JsonSchemaException($"Cannot get schema properties for {schema.GetNameOrSpecificationId()}. {e.Message}", e);
+			}
+
+			foreach (var kv in schemaProperties)
 			{
 				var schemaProperty = kv.Value.ActualSchema;
 				var name = kv.Value.Name;
 				var specTypeProperty = properties.SingleOrDefault(p => p.Name == name);
 				if (specTypeProperty == null)
 				{
-					if (!schemaProperty.Type.HasFlag(JsonObjectType.Null))
+					if (schemaProperty.Type.HasFlag(JsonObjectType.Null))
+					{
+						if (result.Validation == Validation.SpecToType)
+							result.AddError(ValidationError.NotFound(specType, schema.GetNameOrSpecificationId(), name));
+					}
+					else
 						result.AddError(ValidationError.NotFound(specType, schema.GetNameOrSpecificationId(), name));
 
 					continue;
@@ -482,11 +503,10 @@ namespace Elastic.Apm.Specification
 			}
 
 			if (!typeCheck(propertyType))
-				result.AddError(ValidationError.ExpectedType(specType, expectedType, schema.GetNameOrSpecificationId(), specificationProperty.Name, propertyType.FullName));
+				result.AddError(ValidationError.ExpectedType(specType, propertyType, expectedType, schema.GetNameOrSpecificationId(), property.GetNameOrSpecificationId()));
 
-			// TODO: don't check for null for now...
-			// if (property.Type.HasFlag(JsonObjectType.Null) && !nullable)
-			// 	result.AddError(new ValidationError(specType, schema.GetSpecificationIdOrName(), property.Name, "expected type to be nullable"));
+			if (result.Validation == Validation.SpecToType && property.Type.HasFlag(JsonObjectType.Null) && !nullable)
+				result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), property.GetNameOrSpecificationId(), "expected type to be nullable"));
 		}
 
 		private static void CheckMaxLength(Type specType, JsonSchema schema, JsonSchema schemaProperty, SpecificationProperty specificationProperty,
@@ -510,6 +530,12 @@ namespace Elastic.Apm.Specification
 		private static bool IsNullableType(Type type) =>
 			type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
 
+		/// <summary>
+		/// Check if type implements <see cref="IEnumerable{T}"/>
+		/// </summary>
+		/// <param name="type">The type to check</param>
+		/// <param name="elementType">The type of T in <see cref="IEnumerable{T}"/> if the type implements <see cref="IEnumerable{T}"/></param>
+		/// <returns><c>true</c> if type implements <see cref="IEnumerable{T}"/>, <c>false</c> otherwise</returns>
 		private static bool IsEnumerableType(Type type, out Type elementType)
 		{
 			elementType = default;
@@ -529,6 +555,14 @@ namespace Elastic.Apm.Specification
 	internal class ContractResolveException : Exception
 	{
 		public ContractResolveException(string message) : base(message)
+		{
+		}
+	}
+
+	public class JsonSchemaException : Exception
+	{
+		public JsonSchemaException(string message, Exception innerException)
+			: base(message, innerException)
 		{
 		}
 	}

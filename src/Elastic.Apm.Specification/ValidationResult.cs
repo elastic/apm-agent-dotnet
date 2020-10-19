@@ -17,6 +17,7 @@ namespace Elastic.Apm.Specification
 
 		public Type Type { get; }
 		public string SpecificationId { get; }
+		public Validation Validation { get; }
 		public IEnumerable<ValidationError> Errors => _errors;
 
 		public IEnumerable<ValidationIgnore> Ignores => _ignores;
@@ -26,10 +27,11 @@ namespace Elastic.Apm.Specification
 
 		internal void AddIgnore(ValidationIgnore error) => _ignores.Add(error);
 
-		public ValidationResult(Type type, string specificationId)
+		public ValidationResult(Type type, string specificationId, Validation validation)
 		{
 			Type = type;
 			SpecificationId = specificationId;
+			Validation = validation;
 		}
 
 		public override string ToString()

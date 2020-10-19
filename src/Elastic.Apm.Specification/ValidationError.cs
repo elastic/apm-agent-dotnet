@@ -41,8 +41,8 @@ namespace Elastic.Apm.Specification
 		public static ValidationError NotFound(Type specType, string id, string name) =>
 			new ValidationError(specType, id, name, "not found");
 
-		public static ValidationError ExpectedType(Type specType, string expectedType, string id, string name, string property) =>
-			new ValidationError(specType, id, name, $"expected type '{expectedType}' but found '{property}'");
+		public static ValidationError ExpectedType(Type specType, Type propertyType, string expectedType, string id, string name) =>
+			new ValidationError(specType, id, name, $"expected type '{expectedType}' but found '{propertyType.FullName}'");
 
 		public override string ToString() => $"{SpecType}, property name: {PropertyName}, schema: {Schema}. {Message}.";
 	}
