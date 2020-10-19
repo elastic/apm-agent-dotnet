@@ -10,10 +10,13 @@ namespace Elastic.Apm.Specification
 {
 	public static class JsonSchemaExtensions
 	{
-		public static string GetSpecificationIdOrName(this JsonSchema schema)
+		public static string GetNameOrSpecificationId(this JsonSchema schema)
 		{
 			if (schema.ExtensionData != null && schema.ExtensionData.TryGetValue("$id", out var id))
 				return id.ToString();
+
+			if (schema is JsonSchemaProperty schemaProperty && !string.IsNullOrEmpty(schemaProperty.Name))
+				return schemaProperty.Name;
 
 			if (!string.IsNullOrEmpty(schema.DocumentPath))
 				return Path.GetFileNameWithoutExtension(schema.DocumentPath);
