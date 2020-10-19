@@ -18,6 +18,11 @@ using NJsonSchema;
 
 namespace Elastic.Apm.Specification
 {
+	public class ValidationOptions
+	{
+		public bool CheckNullable { get; set; }
+	}
+
 	/// <summary>
 	/// Validates types against the APM server specification
 	/// </summary>
@@ -25,7 +30,7 @@ namespace Elastic.Apm.Specification
 	///	Not thread-safe when more than one instance points to the same directory because
 	/// directories and files are deleted and created as needed.
 	/// </remarks>
-	public class SpecificationValidator
+	public class Validator
 	{
 		private static readonly HashSet<string> NumericTypeNames = new HashSet<string>
 		{
@@ -48,7 +53,7 @@ namespace Elastic.Apm.Specification
 		private readonly string _directory;
 		public string Branch { get; private set; }
 
-		public SpecificationValidator(string branch, string directory)
+		public Validator(string branch, string directory)
 		{
 			if (string.IsNullOrWhiteSpace(branch))
 				throw new ArgumentException("must have a value", nameof(branch));
@@ -136,6 +141,16 @@ namespace Elastic.Apm.Specification
 			}
 		}
 
+		/// <summary>
+		/// Loads the schema for the given specification id. Downloads the schema if it not already downloaded.
+		/// </summary>
+		/// <param name="specificationId"></param>
+		/// <returns>
+		/// The schema for the specification id.
+		/// </returns>
+		/// <exception cref="FileNotFoundException">
+		/// The given specification id does not exist
+		/// </exception>
 		public async Task<JsonSchema> LoadSchemaAsync(string specificationId)
 		{
 			var branchDirectory = Path.Combine(_directory, Branch);
@@ -234,7 +249,7 @@ namespace Elastic.Apm.Specification
 			{
 				// the json schema may indicate a type is an "object", but the agent may model it in some other way
 				// e.g. samples on metricset is modelled as a collection. In these scenarios, we won't be dealing with
-				// an object contract and won't be able to determine validity of the type to the schema through reflection.
+				// an object contract and won't be able to statically determine validity of the type to the schema through reflection.
 				// The only way to validate these against the schema is to serialize the types.
 				contract = (JsonObjectContract)resolver.ResolveContract(specType);
 			}
@@ -273,7 +288,7 @@ namespace Elastic.Apm.Specification
 			}
 			catch (ContractResolveException e)
 			{
-				result.AddIgnore(new ValidationIgnore(schema.GetSpecificationIdOrName(), specType.Name, e.Message));
+				result.AddIgnore(new ValidationIgnore(schema.GetNameOrSpecificationId(), specType.Name, e.Message));
 				return;
 			}
 
@@ -285,7 +300,7 @@ namespace Elastic.Apm.Specification
 				if (specTypeProperty == null)
 				{
 					if (!schemaProperty.Type.HasFlag(JsonObjectType.Null))
-						result.AddError(ValidationError.NotFound(specType, schema.GetSpecificationIdOrName(), name));
+						result.AddError(ValidationError.NotFound(specType, schema.GetNameOrSpecificationId(), name));
 
 					continue;
 				}
@@ -308,7 +323,7 @@ namespace Elastic.Apm.Specification
 						if (schemaProperty.Type.HasFlag(JsonObjectType.Number))
 							CheckNumber(specType, schema, schemaProperty, specTypeProperty, result);
 						else
-							result.AddError(new ValidationError(specType, schema.GetSpecificationIdOrName(), name, $"expecting 'number' type but found {schemaProperty.Type}"));
+							result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), name, $"expecting 'number' type but found {schemaProperty.Type}"));
 						break;
 					case "System.Int64":
 					case "System.Int32":
@@ -317,19 +332,19 @@ namespace Elastic.Apm.Specification
 						else if (schemaProperty.Type.HasFlag(JsonObjectType.Integer))
 							CheckInteger(specType, schema, schemaProperty, specTypeProperty, result);
 						else
-							result.AddError(new ValidationError(specType, schema.GetSpecificationIdOrName(), name, $"expecting 'number' or 'integer' type but found {schemaProperty.Type}"));
+							result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), name, $"expecting 'number' or 'integer' type but found {schemaProperty.Type}"));
 						break;
 					case "System.String":
 						if (schemaProperty.Type.HasFlag(JsonObjectType.String))
 							CheckString(specType, schema, schemaProperty, specTypeProperty, result);
 						else
-							result.AddError(new ValidationError(specType, schema.GetSpecificationIdOrName(), name, $"expecting 'string' type but found {schemaProperty.Type}"));
+							result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), name, $"expecting 'string' type but found {schemaProperty.Type}"));
 						break;
 					case "System.Boolean":
 						if (schemaProperty.Type.HasFlag(JsonObjectType.Boolean))
 							CheckBoolean(specType, schema, schemaProperty, specTypeProperty, result);
 						else
-							result.AddError(new ValidationError(specType, schema.GetSpecificationIdOrName(), name, $"expecting 'boolean' type but found {schemaProperty.Type}"));
+							result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), name, $"expecting 'boolean' type but found {schemaProperty.Type}"));
 						break;
 					default:
 						var typeFlags = schemaProperty.Type;
@@ -351,7 +366,7 @@ namespace Elastic.Apm.Specification
 									ValidateSpecProperties(elementType, schemaProperty.Item.ActualSchema, result);
 							}
 							else
-								result.AddIgnore(new ValidationIgnore(schema.GetSpecificationIdOrName(), name, $"Cannot statically check types. .NET type id {specType} and schema type is {schemaProperty.Type}"));
+								result.AddIgnore(new ValidationIgnore(schema.GetNameOrSpecificationId(), name, $"Cannot statically check types. .NET type id {specType} and schema type is {schemaProperty.Type}"));
 						}
 						else if (typeFlags.HasFlag(JsonObjectType.Boolean))
 							CheckBoolean(specType, schema, schemaProperty, specTypeProperty, result);
@@ -412,7 +427,7 @@ namespace Elastic.Apm.Specification
 			}
 
 			if (!typeCheck(propertyType))
-				result.AddError(ValidationError.ExpectedType(specType, expectedType, schema.GetSpecificationIdOrName(), specificationProperty.Name, propertyType.FullName));
+				result.AddError(ValidationError.ExpectedType(specType, expectedType, schema.GetNameOrSpecificationId(), specificationProperty.Name, propertyType.FullName));
 
 			// TODO: don't check for null for now...
 			// if (property.Type.HasFlag(JsonObjectType.Null) && !nullable)
@@ -427,11 +442,11 @@ namespace Elastic.Apm.Specification
 			{
 				var maxLength = schemaProperty.MaxLength.Value;
 				if (!specificationProperty.MaxLength.HasValue)
-					result.AddError(new ValidationError(specType, schema.GetSpecificationIdOrName(), specificationProperty.Name, $"expected property to enforce maxLength of {maxLength} but does not"));
+					result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), specificationProperty.Name, $"expected property to enforce maxLength of {maxLength} but does not"));
 				else
 				{
 					if (specificationProperty.MaxLength != maxLength)
-						result.AddError(new ValidationError(specType, schema.GetSpecificationIdOrName(), specificationProperty.Name,
+						result.AddError(new ValidationError(specType, schema.GetNameOrSpecificationId(), specificationProperty.Name,
 							$"property max length {specificationProperty.MaxLength} not equal to spec maxLength {maxLength}"));
 				}
 			}
