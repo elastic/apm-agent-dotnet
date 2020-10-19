@@ -62,6 +62,7 @@ namespace Elastic.Apm.Tests
 				}
 				catch (JsonSchemaException e)
 				{
+					// bug in specs: https://github.com/elastic/apm-server/issues/4326
 					// log but continue for now
 					_output.WriteLine(e.Message);
 				}
@@ -82,6 +83,7 @@ namespace Elastic.Apm.Tests
 				}
 				catch (JsonSchemaException e)
 				{
+					// bug in specs: https://github.com/elastic/apm-server/issues/4326
 					// log but continue for now
 					_output.WriteLine(e.Message);
 				}
