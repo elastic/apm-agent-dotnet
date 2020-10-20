@@ -6,7 +6,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Elastic.Apm.Api;
+using Elastic.Apm.BackendComm.CentralConfig;
+using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Report;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
@@ -315,6 +319,85 @@ namespace Elastic.Apm.Tests
 				currentTransaction.Should().NotBeNull();
 				testLogger.Lines.Count.Should().Be(numberOfLinesPreCurrentTransaction);
 			});
+		}
+
+		/// <summary>
+		/// Initializes a <see cref="PayloadSenderV2" /> with a server url which contains basic authentication.
+		/// In this test the server does not exist. The test makes sure that the user name and password from basic auth. is not
+		/// printed in the logs.
+		/// </summary>
+		[Fact]
+		public void PayloadSenderNoUserNamePwPrintedForServerUrl()
+		{
+			var userName = "abc";
+			var pw = "def";
+			var inMemoryLogger = new InMemoryBlockingLogger(LogLevel.Warning);
+			var configReader = new MockConfigSnapshot(serverUrls: $"http://{userName}:{pw}@localhost:8234", maxBatchEventCount: "0",
+				flushInterval: "0");
+
+			using var payloadSender = new PayloadSenderV2(inMemoryLogger, configReader,
+				Service.GetDefaultService(configReader, inMemoryLogger), new Api.System());
+
+			using var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+
+			agent.Tracer.CaptureTransaction("Test", "TestTransaction", () => { });
+
+			inMemoryLogger.Lines.Should().HaveCount(1);
+			inMemoryLogger.Lines.Should().NotContain(n => n.Contains($"{userName}:{pw}"));
+			inMemoryLogger.Lines.Should().Contain(n => n.Contains("http://[REDACTED]:[REDACTED]@localhost:8234"));
+		}
+
+		/// <summary>
+		/// Initializes a <see cref="PayloadSenderV2" /> with a server url which contains basic authentication.
+		/// In this test the server exists and return HTTP 500.
+		/// The test makes sure that the user name and password from basic auth. is not printed in the logs.
+		/// </summary>
+		[Fact]
+		public void PayloadSenderNoUserNamePwPrintedForServerUrlWithServerReturn()
+		{
+			var userName = "abc";
+			var pw = "def";
+			var inMemoryLogger = new InMemoryBlockingLogger(LogLevel.Error);
+			var port = new Random(DateTime.UtcNow.Millisecond).Next(8100, 65535);
+			var configReader = new MockConfigSnapshot(serverUrls: $"http://{userName}:{pw}@localhost:{port}", maxBatchEventCount: "0",
+				flushInterval: "0");
+
+			using var payloadSender = new PayloadSenderV2(inMemoryLogger, configReader,
+				Service.GetDefaultService(configReader, inMemoryLogger), new Api.System());
+
+			using var localServer = new LocalServer(httpListenerContext => { httpListenerContext.Response.StatusCode = 500; },
+				$"http://localhost:{port}/");
+
+			using var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+
+			agent.Tracer.CaptureTransaction("Test", "TestTransaction", () => { });
+
+			inMemoryLogger.Lines.Should().HaveCount(1);
+			inMemoryLogger.Lines.Should().NotContain(n => n.Contains($"{userName}:{pw}"));
+			inMemoryLogger.Lines.Should().Contain(n => n.Contains($"http://[REDACTED]:[REDACTED]@localhost:{port}"));
+		}
+
+		/// <summary>
+		/// Initializes a <see cref="CentralConfigFetcher" /> with a server url which contains basic authentication.
+		/// The test makes sure that the user name and password from basic auth. is not printed in the logs on error level.
+		/// </summary>
+		[Fact]
+		public void CentralConfigNoUserNamePwPrinted()
+		{
+			var userName = "abc";
+			var pw = "def";
+
+			var inMemoryLogger = new InMemoryBlockingLogger(LogLevel.Error);
+			var configReader = new MockConfigSnapshot(serverUrls: $"http://{userName}:{pw}@localhost:8123", maxBatchEventCount: "0",
+				flushInterval: "0");
+
+			var configStore = new ConfigStore(configReader, inMemoryLogger);
+			using var centralConfigFetcher =
+				new CentralConfigFetcher(inMemoryLogger, configStore, Service.GetDefaultService(configReader, inMemoryLogger));
+
+			inMemoryLogger.Lines.Should().HaveCount(1);
+			inMemoryLogger.Lines.Should().NotContain(n => n.Contains($"{userName}:{pw}"));
+			inMemoryLogger.Lines.Should().Contain(n => n.Contains("http://[REDACTED]:[REDACTED]@localhost:8123"));
 		}
 
 		private static TestLogger LogWithLevel(LogLevel logLevel)
