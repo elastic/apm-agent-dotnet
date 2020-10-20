@@ -139,13 +139,8 @@ namespace Elastic.Apm.Api
 
 		private static Uri SanitizeUserNameAndPassword(Uri uri)
 		{
-			var builder = new UriBuilder
+			var builder = new UriBuilder(uri)
 			{
-				Scheme = uri.Scheme,
-				Host = uri.Host,
-				Port = uri.Port,
-				Query = uri.Query,
-				Fragment = uri.Fragment,
 				UserName = "[REDACTED]",
 				Password = "[REDACTED]"
 			};
