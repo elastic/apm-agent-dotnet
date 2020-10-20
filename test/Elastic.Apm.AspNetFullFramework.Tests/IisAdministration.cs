@@ -14,21 +14,29 @@ using System.Threading;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Microsoft.Web.Administration;
+using Polly;
+using Polly.Retry;
+using static Elastic.Apm.AspNetFullFramework.Tests.Consts;
+using static Elastic.Apm.AspNetFullFramework.Tests.StateChangeConsts;
 
 namespace Elastic.Apm.AspNetFullFramework.Tests
 {
 	internal class IisAdministration
 	{
 		private readonly IApmLogger _logger;
+		private readonly RetryPolicy _policy;
+		private static readonly DirectoryInfo SolutionRoot;
+		static IisAdministration() => SolutionRoot = FindSolutionRoot();
 
-		internal IisAdministration(IApmLogger logger) => _logger = logger?.Scoped(nameof(IisAdministration));
-
-		private static class StateChangeConsts
+		internal IisAdministration(IApmLogger logger)
 		{
-			internal const int LogMessageAfterNInitialAttempts = 30; // i.e., log the first message after 3 seconds (if it's still failing)
-			internal const int LogMessageEveryNAttempts = 10; // i.e., log message every second (if it's still failing)
-			internal const int MaxNumberOfAttemptsToVerify = 600; // 1 minute (60 seconds) max wait time (600 * 100ms)
-			internal const int WaitBetweenVerifyAttemptsMs = 100;
+			_logger = logger?.Scoped(nameof(IisAdministration));
+			_policy = Policy
+				.Handle<FileLoadException>()
+				.Retry(3, (exception, retryCount) =>
+				{
+					_logger.Debug()?.LogException(exception, "Error commiting changes. retry {RetryCount}", retryCount);
+				});
 		}
 
 		internal void SetupSampleAppInCleanState(Dictionary<string, string> envVarsToSetForSampleAppPool,
@@ -41,14 +49,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			_logger.Debug()?.Log("IIS applicationHost config before stopping and removing application pool:");
 			LogIisApplicationHostConfig();
 
-			using (var serverManager = new ServerManager())
+			_policy.Execute(() =>
 			{
-				//				AddSampleAppPool(serverManager, envVarsToSetForSampleAppPool, sampleAppShouldUseHighPrivilegedAccount, StartMode.AlwaysRunning);
+				using var serverManager = new ServerManager();
+				// AddSampleAppPool(serverManager, envVarsToSetForSampleAppPool, sampleAppShouldUseHighPrivilegedAccount, StartMode.AlwaysRunning);
 				AddSampleAppPool(serverManager, envVarsToSetForSampleAppPool, sampleAppShouldUseHighPrivilegedAccount, StartMode.OnDemand);
 				AddSampleApp(serverManager);
-
 				serverManager.CommitChanges();
-			}
+			});
 
 			_logger.Debug()?.Log("IIS applicationHost config after removing and adding application pool:");
 			LogIisApplicationHostConfig();
@@ -58,17 +66,19 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			LogAboutWorkerProcesses("Before stopping application pool");
 
-			using (var serverManager = new ServerManager())
+			_policy.Execute(() =>
 			{
+				using var serverManager = new ServerManager();
 				StopSampleAppPool(serverManager);
 				serverManager.CommitChanges();
-			}
+			});
 
-			using (var serverManager = new ServerManager())
+			_policy.Execute(() =>
 			{
-				ChangeAppPoolStateTo(serverManager.ApplicationPools[Consts.SampleApp.AppPoolName], ObjectState.Started);
+				using var serverManager = new ServerManager();
+				ChangeAppPoolStateTo(serverManager.ApplicationPools[SampleApp.AppPoolName], ObjectState.Started);
 				serverManager.CommitChanges();
-			}
+			});
 
 			LogAboutWorkerProcesses("After starting application pool");
 
@@ -84,52 +94,54 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			LogAboutWorkerProcesses("Before stopping application pool");
 
-			using (var serverManager = new ServerManager())
+			_policy.Execute(() =>
 			{
+				using var serverManager = new ServerManager();
 				StopSampleAppPool(serverManager);
 				serverManager.CommitChanges();
-			}
+			});
 
-			using (var serverManager = new ServerManager())
+			_policy.Execute(() =>
 			{
-				ChangeAppPoolStateTo(serverManager.ApplicationPools[Consts.SampleApp.AppPoolName], ObjectState.Started);
+				using var serverManager = new ServerManager();
+				ChangeAppPoolStateTo(serverManager.ApplicationPools[SampleApp.AppPoolName], ObjectState.Started);
 				serverManager.CommitChanges();
-			}
+			});
 
 			LogAboutWorkerProcesses("After starting application pool");
 		}
 
 		private void LogAboutWorkerProcesses(string prefix)
 		{
-			using (var serverManager = new ServerManager())
-			{
-				var workerProcessesPids = GetWorkerProcessesPids(serverManager);
-				_logger.Debug()
-					?.Log(prefix + " found {NumberOfWorkerProcesses} worker processes." +
-						" Their PIDs: {WorkerProcessesPIDs}", workerProcessesPids.Count, string.Join(", ", workerProcessesPids));
-			}
+			using var serverManager = new ServerManager();
+			var workerProcessIds = GetSampleAppWorkerProcessIds(serverManager);
+
+			_logger.Debug()
+				?.Log(prefix + " found {NumberOfWorkerProcesses} worker processes." +
+					" Their PIDs: {WorkerProcessesPIDs}", workerProcessIds.Count, string.Join(", ", workerProcessIds));
 		}
 
-		private static List<int> GetWorkerProcessesPids(ServerManager serverManager) =>
-			serverManager.WorkerProcesses.Where(wp => wp.AppPoolName == Consts.SampleApp.AppPoolName).Select(wp => wp.ProcessId).ToList();
+		private static List<int> GetSampleAppWorkerProcessIds(ServerManager serverManager) =>
+			serverManager.WorkerProcesses
+				.Where(wp => wp.AppPoolName == SampleApp.AppPoolName)
+				.Select(wp => wp.ProcessId)
+				.ToList();
 
 		private void StopSampleAppPool(ServerManager serverManager)
 		{
-			serverManager.ApplicationPools[Consts.SampleApp.AppPoolName]?.Let(appPool => ChangeAppPoolStateTo(appPool, ObjectState.Stopped));
-
+			serverManager.ApplicationPools[SampleApp.AppPoolName]?.Let(appPool => ChangeAppPoolStateTo(appPool, ObjectState.Stopped));
 			EnsureNoRunningWorkerProcesses(serverManager);
 		}
 
 		private void EnsureNoRunningWorkerProcesses(ServerManager serverManager)
 		{
-			var workerProcessesPids = serverManager.WorkerProcesses.Where(wp => wp.AppPoolName == Consts.SampleApp.AppPoolName)
-				.Select(wp => wp.ProcessId)
-				.ToList();
+			var workerProcessIds = GetSampleAppWorkerProcessIds(serverManager);
+
 			_logger.Debug()
 				?.Log("After stopping application pool found {NumberOfWorkerProcesses} worker processes." +
-					" Their PIDs: {WorkerProcessesPIDs}", workerProcessesPids.Count, string.Join(", ", workerProcessesPids));
+					" Their PIDs: {WorkerProcessesPIDs}", workerProcessIds.Count, string.Join(", ", workerProcessIds));
 
-			foreach (var workerProcessPid in workerProcessesPids)
+			foreach (var workerProcessPid in workerProcessIds)
 			{
 				Process workerProcess;
 				try
@@ -173,37 +185,39 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		internal void DisposeSampleApp()
 		{
-			using (var serverManager = new ServerManager())
+			_policy.Execute(() =>
 			{
-				var existingAppPool = serverManager.ApplicationPools[Consts.SampleApp.AppPoolName];
+				using var serverManager = new ServerManager();
+				var existingAppPool = serverManager.ApplicationPools[SampleApp.AppPoolName];
 				if (existingAppPool != null) ChangeAppPoolStateTo(existingAppPool, ObjectState.Stopped);
 
-				var site = serverManager.Sites[Consts.SampleApp.SiteName];
-				var existingApp = site.Applications[Consts.SampleApp.RootUrlPath];
+				var site = serverManager.Sites[SampleApp.SiteName];
+				var existingApp = site.Applications[SampleApp.RootUrlPath];
 				if (existingApp != null)
 				{
 					site.Applications.Remove(existingApp);
-					_logger.Debug()?.Log("Removed application {IisApp}", Consts.SampleApp.RootUrlPath);
+					_logger.Debug()?.Log("Removed application {IisApp}", SampleApp.RootUrlPath);
 				}
 				else
-					_logger.Debug()?.Log("No need to remove application {IisApp} - it doesn't exist", Consts.SampleApp.RootUrlPath);
+					_logger.Debug()?.Log("No need to remove application {IisApp} - it doesn't exist", SampleApp.RootUrlPath);
 
 				if (existingAppPool != null)
 				{
 					serverManager.ApplicationPools.Remove(existingAppPool);
-					_logger.Debug()?.Log("Removed application pool {IisAppPool}", Consts.SampleApp.AppPoolName);
+					_logger.Debug()?.Log("Removed application pool {IisAppPool}", SampleApp.AppPoolName);
 				}
 				else
-					_logger.Debug()?.Log("No need to remove application pool {IisAppPool} - it doesn't exist", Consts.SampleApp.AppPoolName);
+					_logger.Debug()?.Log("No need to remove application pool {IisAppPool} - it doesn't exist", SampleApp.AppPoolName);
 
 				serverManager.CommitChanges();
-			}
+			});
 
-			using (var serverManager = new ServerManager())
+			_policy.Execute(() =>
 			{
+				using var serverManager = new ServerManager();
 				StopSampleAppPool(serverManager);
 				serverManager.CommitChanges();
-			}
+			});
 		}
 
 		private void AddSampleAppPool(ServerManager serverManager,
@@ -214,62 +228,68 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			_logger.Debug()
 				?.Log("Adding application pool {IisAppPool}, useHighPrivilegedAccount: {useHighPrivilegedAccount}...",
-					Consts.SampleApp.AppPoolName, sampleAppShouldUseHighPrivilegedAccount);
-			var existingAppPool = serverManager.ApplicationPools[Consts.SampleApp.AppPoolName];
-			if (existingAppPool != null) serverManager.ApplicationPools.Remove(existingAppPool);
-			var addedPool = serverManager.ApplicationPools.Add(Consts.SampleApp.AppPoolName);
-			addedPool.ManagedPipelineMode = ManagedPipelineMode.Integrated;
-			addedPool.StartMode = startMode;
+					SampleApp.AppPoolName, sampleAppShouldUseHighPrivilegedAccount);
+
+			var applicationPool = serverManager.ApplicationPools[SampleApp.AppPoolName];
+			if (applicationPool != null) serverManager.ApplicationPools.Remove(applicationPool);
+
+			applicationPool = serverManager.ApplicationPools.Add(SampleApp.AppPoolName);
+			applicationPool.ManagedPipelineMode = ManagedPipelineMode.Integrated;
+			applicationPool.StartMode = startMode;
 
 			if (sampleAppShouldUseHighPrivilegedAccount)
-				addedPool.ProcessModel.IdentityType = ProcessModelIdentityType.LocalSystem;
+				applicationPool.ProcessModel.IdentityType = ProcessModelIdentityType.LocalSystem;
 			else
-			{
-				// When running with the ApplicationPoolIdentity (the default), ensure that the account has access to read and execute SQLite.Interop.dlls.
-				// Without granting access, the repository may be cloned and the application running from a location that the ApplicationPoolIdentity
-				// does not have access to execute the SQLite.Interop.dlls e.g. running from inside %USERPROFILE%.
-				//
-				// If access is not granted, a DllNotFoundException is thrown with the message:
-				// Unable to load DLL 'SQLite.Interop.dll': The specified module could not be found. (Exception from HRESULT: 0x8007007E)
-				var appBinPath = Path.Combine(FindSolutionRoot().FullName, Consts.SampleApp.SrcDirPathRelativeToSolutionRoot, "bin");
-				foreach (var processorArch in new[] { "x86", "x64" })
-				{
-					var sqliteInteropDll = new FileInfo(Path.Combine(appBinPath, processorArch, "SQLite.Interop.dll"));
-					if (sqliteInteropDll.Exists)
-					{
-						// Getting file security details may require elevated privileges, depending on where the repository is cloned.
-						// Running the IDE (or cmd line) in Administrator mode should resolve
-						var accessControl = sqliteInteropDll.GetAccessControl(AccessControlSections.All);
-						var account = new NTAccount("IIS_IUSRS");
-						accessControl.AddAccessRule(new FileSystemAccessRule(
-							account,
-							FileSystemRights.ReadAndExecute,
-							AccessControlType.Allow));
-
-						sqliteInteropDll.SetAccessControl(accessControl);
-					}
-				}
-			}
+				EnsureAccessToSqliteInterop();
 
 			_logger.Debug()
 				?.Log("Added application pool {IisAppPool}, useHighPrivilegedAccount: {useHighPrivilegedAccount}",
-					addedPool.Name, sampleAppShouldUseHighPrivilegedAccount);
+					applicationPool.Name, sampleAppShouldUseHighPrivilegedAccount);
 
 			ClearEnvVarsForSampleAppPool(serverManager);
 			AddEnvVarsForSampleAppPool(serverManager, envVarsToSetForSampleAppPool);
 		}
 
+		private void EnsureAccessToSqliteInterop()
+		{
+			// When running with the ApplicationPoolIdentity (the default), ensure that the account has access to read and execute SQLite.Interop.dlls.
+			// Without granting access, the repository may be cloned and the application running from a location that the ApplicationPoolIdentity
+			// does not have access to execute the SQLite.Interop.dlls e.g. running from inside %USERPROFILE%.
+			//
+			// If access is not granted, a DllNotFoundException is thrown with the message:
+			// Unable to load DLL 'SQLite.Interop.dll': The specified module could not be found. (Exception from HRESULT: 0x8007007E)
+			var appBinPath = Path.Combine(SolutionRoot.FullName, SampleApp.SrcDirPathRelativeToSolutionRoot, "bin");
+			foreach (var processorArch in new[] { "x86", "x64" })
+			{
+				var sqliteInteropDll = new FileInfo(Path.Combine(appBinPath, processorArch, "SQLite.Interop.dll"));
+				if (sqliteInteropDll.Exists)
+				{
+					// Getting file security details may require elevated privileges, depending on where the repository is cloned.
+					// Running the IDE (or cmd line) in Administrator mode should resolve
+					var accessControl = sqliteInteropDll.GetAccessControl(AccessControlSections.All);
+					var account = new NTAccount("IIS_IUSRS");
+					accessControl.AddAccessRule(new FileSystemAccessRule(
+						account,
+						FileSystemRights.ReadAndExecute,
+						AccessControlType.Allow));
+
+					sqliteInteropDll.SetAccessControl(accessControl);
+				}
+			}
+		}
+
 		private void AddSampleApp(ServerManager serverManager)
 		{
-			_logger.Debug()?.Log("Adding application {IisApp}...", Consts.SampleApp.RootUrlPath);
-			var site = serverManager.Sites[Consts.SampleApp.SiteName];
-			var existingApp = site.Applications[Consts.SampleApp.RootUrlPath];
-			if (existingApp != null) site.Applications.Remove(existingApp);
+			_logger.Debug()?.Log("Adding application {IisApp}...", SampleApp.RootUrlPath);
+			var site = serverManager.Sites[SampleApp.SiteName];
+			var application = site.Applications[SampleApp.RootUrlPath];
+			if (application != null) site.Applications.Remove(application);
 
-			var appPath = Path.Combine(FindSolutionRoot().FullName, Consts.SampleApp.SrcDirPathRelativeToSolutionRoot);
-			var addedApp = site.Applications.Add(Consts.SampleApp.RootUrlPath, appPath);
-			addedApp.ApplicationPoolName = Consts.SampleApp.AppPoolName;
-			_logger.Debug()?.Log("Added application {IisApp}", Consts.SampleApp.RootUrlPath);
+			var appPath = Path.Combine(SolutionRoot.FullName, SampleApp.SrcDirPathRelativeToSolutionRoot);
+			application = site.Applications.Add(SampleApp.RootUrlPath, appPath);
+			application.ApplicationPoolName = SampleApp.AppPoolName;
+
+			_logger.Debug()?.Log("Added application {IisApp}", SampleApp.RootUrlPath);
 		}
 
 		private ObjectState? TryGetAppPoolState(ApplicationPool appPool)
@@ -319,7 +339,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 								" Attempt to verify #{AttemptNumber} out of {MaxNumberOfAttempts}.",
 								appPool.Name, targetState,
 								timerSinceStart.Elapsed.TotalSeconds,
-								attemptNumber, StateChangeConsts.MaxNumberOfAttemptsToVerify);
+								attemptNumber, MaxNumberOfAttemptsToVerify);
 						return;
 					}
 
@@ -342,7 +362,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					}
 				}
 
-				if (attemptNumber == StateChangeConsts.MaxNumberOfAttemptsToVerify)
+				if (attemptNumber == MaxNumberOfAttemptsToVerify)
 				{
 					var ex = new InvalidOperationException($"Could not change IIS application pool `{appPool.Name}' state to {targetState}." +
 						$" Time elapsed: {timerSinceStart.Elapsed.TotalSeconds}s." +
@@ -353,8 +373,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 					throw ex;
 				}
 
-				if (attemptNumber >= StateChangeConsts.LogMessageAfterNInitialAttempts
-					&& attemptNumber % StateChangeConsts.LogMessageEveryNAttempts == 0)
+				if (attemptNumber >= LogMessageAfterNInitialAttempts
+					&& attemptNumber % LogMessageEveryNAttempts == 0)
 				{
 					_logger.Debug()
 						?.Log("IIS application pool `{IisAppPoolName}' still did NOT change to target state {IisAppPoolState}." +
@@ -366,28 +386,23 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 							appPool.Name, targetState,
 							currentState,
 							timerSinceStart.Elapsed.TotalSeconds,
-							attemptNumber, StateChangeConsts.MaxNumberOfAttemptsToVerify,
-							StateChangeConsts.WaitBetweenVerifyAttemptsMs,
-							StateChangeConsts.LogMessageEveryNAttempts);
+							attemptNumber, MaxNumberOfAttemptsToVerify,
+							WaitBetweenVerifyAttemptsMs,
+							LogMessageEveryNAttempts);
 				}
-				Thread.Sleep(StateChangeConsts.WaitBetweenVerifyAttemptsMs);
+				Thread.Sleep(WaitBetweenVerifyAttemptsMs);
 			}
 		}
 
-		private DirectoryInfo FindSolutionRoot()
+		private static DirectoryInfo FindSolutionRoot()
 		{
 			var solutionFileName = "ElasticApmAgent.sln";
-
 			var currentDirectory = Directory.GetCurrentDirectory();
-			_logger.Debug()?.Log("Looking for solution root... Current directory: `{Directory}'", currentDirectory);
 			var candidateDirectory = new DirectoryInfo(currentDirectory);
 			do
 			{
 				if (File.Exists(Path.Combine(candidateDirectory.FullName, solutionFileName)))
-				{
-					_logger.Debug()?.Log("Found solution root: `{Directory}'", candidateDirectory);
 					return candidateDirectory;
-				}
 
 				candidateDirectory = candidateDirectory.Parent;
 			} while (candidateDirectory != null);
@@ -395,14 +410,14 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			throw new InvalidOperationException($"Could not find solution root directory from the current directory `{currentDirectory}'");
 		}
 
-		private ConfigurationElementCollection GetEnvVarsConfigCollectionForSampleAppPool(ServerManager serverManager)
+		private static ConfigurationElementCollection GetEnvVarsConfigCollectionForSampleAppPool(ServerManager serverManager)
 		{
 			var config = serverManager.GetApplicationHostConfiguration();
 			var appPoolsSection = config.GetSection("system.applicationHost/applicationPools");
 			var appPoolsCollection = appPoolsSection.GetCollection();
-			var sampleAppPoolAddElement = FindConfigurationElement(appPoolsCollection, "add", "name", Consts.SampleApp.AppPoolName);
+			var sampleAppPoolAddElement = FindConfigurationElement(appPoolsCollection, "add", "name", SampleApp.AppPoolName);
 			if (sampleAppPoolAddElement == null)
-				throw new InvalidOperationException($"Element <add> for application pool {Consts.SampleApp.AppPoolName} not found");
+				throw new InvalidOperationException($"Element <add> for application pool {SampleApp.AppPoolName} not found");
 
 			return sampleAppPoolAddElement.GetCollection("environmentVariables");
 		}
@@ -418,7 +433,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				envVarsCollection.Add(envVarAddElement);
 				_logger.Debug()
 					?.Log("Added environment variable `{EnvVarName}'=`{EnvVarValue}' to application pool {IisAppPool}",
-						envVarNameValue.Key, envVarNameValue.Value, Consts.SampleApp.AppPoolName);
+						envVarNameValue.Key, envVarNameValue.Value, SampleApp.AppPoolName);
 			}
 		}
 
@@ -485,5 +500,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			_logger.Debug()?.Log("Found {NumberOfLines} interesting lines in IIS config file `{FilePath}'", interestingLines.Count, filePath);
 			foreach (var line in interestingLines) _logger.Debug()?.Log("{Line}", TextUtils.Indent(line));
 		}
+	}
+
+	internal static class StateChangeConsts
+	{
+		internal const int LogMessageAfterNInitialAttempts = 30; // i.e., log the first message after 3 seconds (if it's still failing)
+		internal const int LogMessageEveryNAttempts = 10; // i.e., log message every second (if it's still failing)
+		internal const int MaxNumberOfAttemptsToVerify = 600; // 1 minute (60 seconds) max wait time (600 * 100ms)
+		internal const int WaitBetweenVerifyAttemptsMs = 100;
 	}
 }

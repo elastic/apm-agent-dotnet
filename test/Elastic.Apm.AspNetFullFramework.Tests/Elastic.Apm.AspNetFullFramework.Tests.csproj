@@ -12,7 +12,6 @@
   </ItemGroup>
   <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
     <PackageReference Include="Microsoft.AspNetCore.App" />
-    
     <PackageReference Include="FluentAssertions" Version="5.6.0" />
     <PackageReference Include="FluentAssertions.Analyzers" Version="0.11.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
@@ -24,11 +23,14 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="2.1.0" />
     <PackageReference Include="Microsoft.Web.Administration" Version="11.1.0" />
+    <PackageReference Include="Polly" Version="7.2.1" />
     <PackageReference Include="System.IO.FileSystem.AccessControl" Version="4.7.0" />
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
   <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
-    <ProjectReference Include="..\..\src\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj" />
+    <ProjectReference Include="..\..\src\Elastic.Apm.AspNetFullFramework\Elastic.Apm.AspNetFullFramework.csproj" >
+      <SetTargetFramework>TargetFramework=net461</SetTargetFramework>
+    </ProjectReference>
     <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj" />
     <ProjectReference Include="..\..\sample\AspNetFullFrameworkSampleApp\AspNetFullFrameworkSampleApp.csproj" />
@@ -39,5 +41,8 @@
   </ItemGroup>
   <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
     <Compile Remove="Program-Unix.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="AngleSharp" Version="0.14.0" />
   </ItemGroup>
 </Project>

@@ -24,11 +24,11 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		internal static readonly TimeSpan WaitTimeIfAnyError = TimeSpan.FromMinutes(5);
 
 		private readonly IAgentTimer _agentTimer;
+		private readonly ICentralConfigResponseParser _centralConfigResponseParser;
 		private readonly IConfigStore _configStore;
 		private readonly Uri _getConfigAbsoluteUrl;
 		private readonly IConfigSnapshot _initialSnapshot;
 		private readonly IApmLogger _logger;
-		private readonly ICentralConfigResponseParser _centralConfigResponseParser;
 
 		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, ICentralConfigResponseParser centralConfigResponseParser,
 			Service service,
@@ -131,9 +131,14 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 						+ Environment.NewLine + "+-> Request:{HttpRequest}"
 						+ Environment.NewLine + "+-> Response:{HttpResponse}"
 						+ Environment.NewLine + "+-> Response body [length: {HttpResponseBodyLength}]:{HttpResponseBody}"
-						, _eTag.AsNullableToString(), _getConfigAbsoluteUrl, HttpClientInstance.BaseAddress, waitInfo.Interval.ToHms(),
+						, _eTag.AsNullableToString()
+						, Http.Sanitize(_getConfigAbsoluteUrl, out var sanitizedAbsoluteUrl) ? sanitizedAbsoluteUrl : _getConfigAbsoluteUrl.ToString()
+						, Http.Sanitize(HttpClientInstance.BaseAddress, out var sanitizedBaseAddress)
+							? sanitizedBaseAddress
+							: HttpClientInstance.BaseAddress.ToString()
+						, waitInfo.Interval.ToHms(),
 						_dbgIterationsCount
-						, httpRequest == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpRequest.ToString())
+						, httpRequest == null ? " N/A" : Environment.NewLine + TextUtils.Indent(Http.HttpRequestSanitizedToString(httpRequest))
 						, httpResponse == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpResponse.ToString())
 						, httpResponseBody == null ? "N/A" : httpResponseBody.Length.ToString()
 						, httpResponseBody == null ? " N/A" : Environment.NewLine + TextUtils.Indent(httpResponseBody));
@@ -225,6 +230,9 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				DbgDescription = dbgDescription;
 			}
 
+			public string ApiKey => _wrapped.ApiKey;
+			public IReadOnlyCollection<string> ApplicationNamespaces => _wrapped.ApplicationNamespaces;
+
 			public string CaptureBody => _centralConfig.CaptureBody ?? _wrapped.CaptureBody;
 
 			public List<string> CaptureBodyContentTypes => _centralConfig.CaptureBodyContentTypes ?? _wrapped.CaptureBodyContentTypes;
@@ -237,6 +245,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public IReadOnlyList<WildcardMatcher> DisableMetrics => _wrapped.DisableMetrics;
 
 			public string Environment => _wrapped.Environment;
+			public IReadOnlyCollection<string> ExcludedNamespaces => _wrapped.ExcludedNamespaces;
 
 			public TimeSpan FlushInterval => _wrapped.FlushInterval;
 
@@ -257,7 +266,6 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _wrapped.SanitizeFieldNames;
 
 			public string SecretToken => _wrapped.SecretToken;
-			public string ApiKey => _wrapped.ApiKey;
 
 			public IReadOnlyList<Uri> ServerUrls => _wrapped.ServerUrls;
 
@@ -270,6 +278,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				_centralConfig.SpanFramesMinDurationInMilliseconds ?? _wrapped.SpanFramesMinDurationInMilliseconds;
 
 			public int StackTraceLimit => _centralConfig.StackTraceLimit ?? _wrapped.StackTraceLimit;
+			public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => _wrapped.TransactionIgnoreUrls;
 
 			public int TransactionMaxSpans => _centralConfig.TransactionMaxSpans ?? _wrapped.TransactionMaxSpans;
 
@@ -278,8 +287,6 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public bool UseElasticTraceparentHeader => _wrapped.UseElasticTraceparentHeader;
 
 			public bool VerifyServerCert => _wrapped.VerifyServerCert;
-			public IReadOnlyCollection<string> ExcludedNamespaces => _wrapped.ExcludedNamespaces;
-			public IReadOnlyCollection<string> ApplicationNamespaces => _wrapped.ApplicationNamespaces;
 		}
 	}
 }

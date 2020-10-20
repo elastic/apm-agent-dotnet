@@ -3,35 +3,40 @@
 <head>
 	<meta charset="utf-8"/>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>@ViewBag.Title - My ASP.NET Application</title>
+	<title>@ViewBag.Title - Elastic APM</title>
 	@Styles.Render("~/Content/css")
 	@Scripts.Render("~/bundles/modernizr")
 </head>
 <body>
-<div class="navbar navbar-inverse navbar-fixed-top">
-	<div class="container">
-		<div class="navbar-header">
-			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-			</button>
-			@Html.ActionLink("Application name", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
-		</div>
-		<div class="navbar-collapse collapse">
-			<ul class="nav navbar-nav">
-				<li>@Html.ActionLink("Home", "Index", "Home")</li>
-				<li>@Html.ActionLink("About", "About", "Home")</li>
-				<li>@Html.ActionLink("Contact", "Contact", "Home")</li>
-			</ul>
-		</div>
+<nav class="navbar navbar-expand-lg navbar-fixed-top navbar-light bg-light">
+	@Html.ActionLink("Elastic APM", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
+	<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+		<span class="navbar-toggler-icon"></span>
+	</button>
+	<div class="collapse navbar-collapse" id="navbarSupportedContent">
+		<ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+			<li class="nav-item">
+				@Html.ActionLink("Home", "Index", "Home", null, new { @class = "nav-link" })
+			</li>
+			<li class="nav-item">
+				@Html.ActionLink("About", "About", "Home", null, new { @class = "nav-link" })
+			</li>
+			<li class="nav-item">
+				@Html.ActionLink("Contact", "Contact", "Home", null, new { @class = "nav-link" })
+			</li>
+			<li class="nav-item">
+            	@Html.ActionLink("Diagnostics", "Index", "Diagnostics", null, new { @class = "nav-link" })
+            </li>
+		</ul>
+		@Html.Partial("_LoginPartial")
 	</div>
-</div>
-<div class="container body-content">
+</nav>
+<div class="container body-content mt-5">
+	@Html.Alert()
 	@RenderBody()
 	<hr/>
 	<footer>
-		<p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
+		<p>&copy; @DateTime.Now.Year - Elastic APM</p>
 	</footer>
 </div>
 

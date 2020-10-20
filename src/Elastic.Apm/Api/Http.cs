@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Net.Http;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
@@ -14,19 +15,25 @@ namespace Elastic.Apm.Api
 	/// </summary>
 	public class Http
 	{
-		private string _url;
 		private Uri _originalUrl;
+		private string _url;
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Method { get; set; }
+
+		/// <summary>
+		/// The Url in its original form as it was passed to the Agent, without sanitization or any other trimming.
+		/// </summary>
+		internal Uri OriginalUrl => _originalUrl;
 
 		[JsonProperty("status_code")]
 		public int StatusCode { get; set; }
 
 		/// <summary>
 		/// Sets the URL of the HTTP request.
-		/// The setter will parse and sanitize the URL and filter out user name and password from the URL in case it contains those.
-		/// In case you have an <see cref="Uri"/> instance, consider using the <see cref="SetUrl"/> method on this class.
+		/// The setter will parse and sanitize the URL and filter out user name and password from the URL in case it contains
+		/// those.
+		/// In case you have an <see cref="Uri" /> instance, consider using the <see cref="SetUrl" /> method on this class.
 		/// </summary>
 		public string Url
 		{
@@ -56,11 +63,6 @@ namespace Elastic.Apm.Api
 		}
 
 		/// <summary>
-		/// The Url in its original form as it was passed to the Agent, without sanitization or any other trimming.
-		/// </summary>
-		internal Uri OriginalUrl => _originalUrl;
-
-		/// <summary>
 		/// Removes the username and password from the <paramref name="uri" /> and returns it as a <see cref="string" />.
 		/// If there is no username and password in the <paramref name="uri" />, the simple string representation is returned.
 		/// </summary>
@@ -70,6 +72,20 @@ namespace Elastic.Apm.Api
 		{
 			Sanitize(uri, out var result);
 			return result;
+		}
+
+		/// <summary>
+		/// Returns the .ToString representation of an <see cref="HttpRequestMessage" />
+		/// but makes sure that the username and the password is sanitized.
+		/// </summary>
+		/// <param name="msg"></param>
+		/// <returns></returns>
+		internal static string HttpRequestSanitizedToString(HttpRequestMessage msg)
+		{
+			if (!string.IsNullOrEmpty(msg.RequestUri?.UserInfo))
+				msg.RequestUri = new Uri(Sanitize(msg.RequestUri));
+
+			return msg.ToString();
 		}
 
 		private static bool Sanitize(string uriString, out string result, out Uri originalUrl)
@@ -123,14 +139,11 @@ namespace Elastic.Apm.Api
 
 		private static Uri SanitizeUserNameAndPassword(Uri uri)
 		{
-			var builder = new UriBuilder();
-			builder.Scheme = uri.Scheme;
-			builder.Host = uri.Host;
-			builder.Port = uri.Port;
-			builder.Query = uri.Query;
-			builder.Fragment = uri.Fragment;
-			builder.UserName = "[REDACTED]";
-			builder.Password = "[REDACTED]";
+			var builder = new UriBuilder(uri)
+			{
+				UserName = "[REDACTED]",
+				Password = "[REDACTED]"
+			};
 			return builder.Uri;
 		}
 	}
