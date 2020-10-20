@@ -8,7 +8,6 @@ using System.Net;
 using System.Text.RegularExpressions;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Kubernetes;
-using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Helpers
