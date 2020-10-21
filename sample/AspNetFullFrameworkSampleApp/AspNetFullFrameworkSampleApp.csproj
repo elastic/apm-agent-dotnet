@@ -115,6 +115,16 @@
     <Compile Include="Models\ResetPasswordViewModel.cs" />
     <Compile Include="Services\Auth\ApplicationSignInManager.cs" />
     <Compile Include="Services\Auth\ApplicationUserManager.cs" />
+    <Compile Include="ActionFilters\RedirectIfAuthenticatedAttribute.cs" />
+    <Compile Include="App_Start\Startup.cs" />
+    <Compile Include="Extensions\TempDataExtensions.cs" />
+    <Compile Include="Services\Auth\ApplicationUserClaimsIdentityFactory.cs" />
+    <Compile Include="Areas\MyArea\Controllers\HomeController.cs" />
+    <Compile Include="Areas\MyArea\MyAreaRegistration.cs" />
+    <Compile Include="Webforms.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+      <DependentUpon>Webforms.aspx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
     <Content Include="Content\bootstrap-grid.css" />
@@ -191,6 +201,11 @@
     <Content Include="Views\Account\Register.cshtml" />
     <Content Include="Views\Account\ResetPassword.cshtml" />
     <Content Include="Views\Account\ResetPasswordConfirmation.cshtml" />
+    <Content Include="Views\Shared\_LoginPartial.cshtml" />
+    <Content Include="Areas\MyArea\Views\Home\Index.cshtml" />
+    <Content Include="Areas\MyArea\Web.config" />
+    <Content Include="Areas\MyArea\_ViewStart.cshtml" />
+    <Content Include="Webforms.aspx" />
     <Content Include="Scripts\umd\popper.min.js.map" />
     <Content Include="Scripts\umd\popper.js.map" />
     <Content Include="Scripts\umd\popper-utils.min.js.map" />
@@ -267,27 +282,6 @@
     <PackageReference Include="Microsoft.Owin.Host.SystemWeb">
       <Version>4.1.1</Version>
     </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Views\Shared\_LoginPartial.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="ActionFilters\RedirectIfAuthenticatedAttribute.cs" />
-    <Compile Include="App_Start\Startup.cs" />
-    <Compile Include="Extensions\TempDataExtensions.cs" />
-    <Compile Include="Services\Auth\ApplicationUserClaimsIdentityFactory.cs" />
-    <Compile Include="Areas\MyArea\Controllers\HomeController.cs" />
-    <Compile Include="Areas\MyArea\MyAreaRegistration.cs" />
-    <Compile Include="Webforms.aspx.cs">
-      <SubType>ASPXCodeBehind</SubType>
-      <DependentUpon>Webforms.aspx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Areas\MyArea\Views\Home\Index.cshtml" />
-    <Content Include="Areas\MyArea\Web.config" />
-    <Content Include="Areas\MyArea\_ViewStart.cshtml" />
-    <Content Include="Webforms.aspx" />
   </ItemGroup>
   <PropertyGroup Condition="'$(OS)' == 'WINDOWS_NT'">
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
