@@ -134,7 +134,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		[AspNetFullFrameworkFact]
 		public async Task PageThatDoesNotExit_test()
 		{
-			var pageData = SampleAppUrlPaths.PageThatDoesNotExit;
+			var pageData = SampleAppUrlPaths.PageThatDoesNotExist;
 			await SendGetRequestToSampleAppAndVerifyResponse(pageData.Uri, pageData.StatusCode);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>

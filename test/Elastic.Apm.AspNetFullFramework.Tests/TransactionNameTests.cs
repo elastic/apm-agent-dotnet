@@ -49,9 +49,79 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		}
 
 		[AspNetFullFrameworkFact]
+		public async Task Name_Should_Be_Controller_Action_When_Mvc_Controller_Action_Returns_404_ActionResult()
+		{
+			var pathData = SampleAppUrlPaths.NotFoundPage;
+			await SendGetRequestToSampleAppAndVerifyResponse(pathData.Uri, pathData.StatusCode);
+
+			await WaitAndCustomVerifyReceivedData(receivedData =>
+			{
+				receivedData.Transactions.Count.Should().Be(1);
+				var transaction = receivedData.Transactions.Single();
+				transaction.Name.Should().Be("GET Home/NotFound");
+			});
+		}
+
+		[AspNetFullFrameworkFact]
+		public async Task Name_Should_Be_Unknown_Route_When_Mvc_Controller_Action_Does_Not_Exist()
+		{
+			var pathData = SampleAppUrlPaths.PageThatDoesNotExist;
+			await SendGetRequestToSampleAppAndVerifyResponse(pathData.Uri, pathData.StatusCode);
+
+			await WaitAndCustomVerifyReceivedData(receivedData =>
+			{
+				receivedData.Transactions.Count.Should().Be(1);
+				var transaction = receivedData.Transactions.Single();
+				transaction.Name.Should().Be("GET unknown route");
+			});
+		}
+
+		[AspNetFullFrameworkFact]
+		public async Task Name_Should_Be_Controller_Action_When_Mvc_Controller_Action_Throws_HttpException_404()
+		{
+			var pathData = SampleAppUrlPaths.ThrowsHttpException404PageRelativePath;
+			await SendGetRequestToSampleAppAndVerifyResponse(pathData.Uri, pathData.StatusCode);
+
+			await WaitAndCustomVerifyReceivedData(receivedData =>
+			{
+				receivedData.Transactions.Count.Should().Be(1);
+				var transaction = receivedData.Transactions.Single();
+				transaction.Name.Should().Be("GET Home/ThrowsHttpException404");
+			});
+		}
+
+		[AspNetFullFrameworkFact]
+		public async Task Name_Should_Be_Path_When_Mvc_Controller_Action_Throws_InvalidOperationException()
+		{
+			var pathData = SampleAppUrlPaths.ThrowsInvalidOperationPage;
+			await SendGetRequestToSampleAppAndVerifyResponse(pathData.Uri, pathData.StatusCode);
+
+			await WaitAndCustomVerifyReceivedData(receivedData =>
+			{
+				receivedData.Transactions.Count.Should().Be(1);
+				var transaction = receivedData.Transactions.Single();
+				transaction.Name.Should().Be("GET Home/ThrowsInvalidOperation");
+			});
+		}
+
+		[AspNetFullFrameworkFact]
 		public async Task Name_Should_Be_Path_When_Webforms_Page()
 		{
 			var pathData = SampleAppUrlPaths.WebformsPage;
+			await SendGetRequestToSampleAppAndVerifyResponse(pathData.Uri, pathData.StatusCode);
+
+			await WaitAndCustomVerifyReceivedData(receivedData =>
+			{
+				receivedData.Transactions.Count.Should().Be(1);
+				var transaction = receivedData.Transactions.Single();
+				transaction.Name.Should().Be($"GET {pathData.Uri.AbsolutePath}");
+			});
+		}
+
+		[AspNetFullFrameworkFact]
+		public async Task Name_Should_Be_Path_When_Routed_Webforms_Page()
+		{
+			var pathData = SampleAppUrlPaths.RoutedWebformsPage;
 			await SendGetRequestToSampleAppAndVerifyResponse(pathData.Uri, pathData.StatusCode);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>

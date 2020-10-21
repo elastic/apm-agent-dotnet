@@ -118,7 +118,10 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData HomePage =
 				new SampleAppUrlPathData(HomeController.HomePageRelativePath, 200);
 
-			internal static readonly SampleAppUrlPathData PageThatDoesNotExit =
+			internal static readonly SampleAppUrlPathData NotFoundPage =
+				new SampleAppUrlPathData(HomeController.NotFoundPageRelativePath, 404, errorsCount: 1);
+
+			internal static readonly SampleAppUrlPathData PageThatDoesNotExist =
 				new SampleAppUrlPathData("dummy_URL_path_to_page_that_does_not_exist", 404, errorsCount: 1);
 
 			internal static readonly List<SampleAppUrlPathData> AllPaths = new List<SampleAppUrlPathData>
@@ -127,7 +130,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				HomePage,
 				ContactPage,
 				CustomSpanThrowsExceptionPage,
-				PageThatDoesNotExit
+				PageThatDoesNotExist
 			};
 
 			/// <summary>
@@ -169,11 +172,17 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData ThrowsInvalidOperationPage =
 				new SampleAppUrlPathData(HomeController.ThrowsInvalidOperationPageRelativePath, 500, errorsCount: 1, outcome: Outcome.Failure);
 
+			internal static readonly SampleAppUrlPathData ThrowsHttpException404PageRelativePath =
+				new SampleAppUrlPathData(HomeController.ThrowsHttpException404PageRelativePath, 404, errorsCount: 1, outcome: Outcome.Failure);
+
 			internal static readonly SampleAppUrlPathData MyAreaHomePage =
 				new SampleAppUrlPathData(AspNetFullFrameworkSampleApp.Areas.MyArea.Controllers.HomeController.HomePageRelativePath, 200);
 
 			internal static readonly SampleAppUrlPathData WebformsPage =
 				new SampleAppUrlPathData(nameof(Webforms) + ".aspx", 200);
+
+			internal static readonly SampleAppUrlPathData RoutedWebformsPage =
+				new SampleAppUrlPathData(nameof(Webforms.RoutedWebforms), 200);
 		}
 
 		private TimedEvent? _sampleAppClientCallTiming;

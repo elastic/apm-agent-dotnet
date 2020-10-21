@@ -50,11 +50,5 @@ namespace Elastic.Apm.Api
 		/// existing one.
 		/// </returns>
 		string EnsureParentId();
-
-		/// <summary>
-		/// If true, then the transaction name was modified by external code, and transaction name should not be changed
-		/// or "fixed" automatically.
-		/// </summary>
-		bool HasCustomName { get; }
 	}
 }

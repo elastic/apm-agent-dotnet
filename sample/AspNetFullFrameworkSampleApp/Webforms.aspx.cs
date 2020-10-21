@@ -6,10 +6,15 @@ namespace AspNetFullFrameworkSampleApp
 {
 	public partial class Webforms : Page
 	{
-		protected void Page_Load(object sender, EventArgs e)
-		{
+		internal const string RoutedWebforms = nameof(RoutedWebforms);
 
-		}
+		protected void Page_Load(object sender, EventArgs e) =>
+			// Determine if the PageRouteHandler routed here, or whether
+			// the page was accessed from the .aspx virtual path
+			Title = RouteData.RouteHandler == null
+				? nameof(Webforms)
+				: RoutedWebforms;
+
 	}
 }
 

@@ -217,7 +217,10 @@ namespace Elastic.Apm.Model
 		/// <value>The duration.</value>
 		public double? Duration { get; set; }
 
-		/// <inheritdoc />
+		/// <summary>
+		/// If true, then the transaction name was modified by external code, and transaction name should not be changed
+		/// or "fixed" automatically.
+		/// </summary>
 		[JsonIgnore]
 		public bool HasCustomName { get; private set; }
 

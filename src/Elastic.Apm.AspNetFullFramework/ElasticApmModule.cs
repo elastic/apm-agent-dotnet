@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Security.Claims;
 using System.Web;
@@ -249,14 +248,22 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			SendErrorEventIfPresent(httpCtx);
 
-			if (!transaction.HasCustomName)
+			// update the transaction name based on route values, if applicable
+			if (transaction is Transaction t && !t.HasCustomName)
 			{
-				//fixup Transaction.Name - e.g. /user/profile/1 -> /user/profile/{id}
 				var values = httpApp.Request.RequestContext?.RouteData?.Values;
-
-				if (values?.Count > 0 && httpResponse.StatusCode != StatusCodes.Status404NotFound)
+				if (values?.Count > 0)
 				{
-					if (httpResponse.StatusCode != StatusCodes.Status404NotFound)
+					// Determine if the route data *actually* routed to a controller action or not i.e.
+					// we need to differentiate between
+					// 1. route data that didn't route to a controller action and returned a 404
+					// 2. route data that did route to a controller action, and the action result returned a 404
+					//
+					// In normal MVC setup, the former will set a HttpException with a 404 status code with System.Web.Mvc as the source.
+					// We need to check the source of the exception because we want to differentiate between a 404 HttpException from the
+					// framework and a 404 HttpException from the application.
+					if (httpCtx.Error is null || !(httpCtx.Error is HttpException httpException) ||
+						httpException.Source != "System.Web.Mvc" || httpException.GetHttpCode() != StatusCodes.Status404NotFound)
 					{
 						// handle MVC areas. The area name will be included in the DataTokens.
 						object area = null;
@@ -273,16 +280,13 @@ namespace Elastic.Apm.AspNetFullFramework
 
 						_logger?.Trace()?.Log("Calculating transaction name based on route data");
 						var name = Transaction.GetNameFromRouteContext(routeData);
-
 						if (!string.IsNullOrWhiteSpace(name)) _currentTransaction.Name = $"{httpCtx.Request.HttpMethod} {name}";
 					}
 					else
 					{
-						// only set unknown route as the transaction name when there are RouteData values but happened to
-						// resolve to an unknown route. Other 404 responses may be the result of asmx web services or web forms.
-						_logger?.Trace()
-							?
-							.Log("Route data found but status code is 404 - setting transaction name to 'unknown route");
+						// dealing with a 404 HttpException that came from System.Web.Mvc
+						_logger?.Trace()?
+							.Log("Route data found but a HttpException with 404 status code was thrown from System.Web.Mvc - setting transaction name to 'unknown route");
 						transaction.Name = $"{httpCtx.Request.HttpMethod} unknown route";
 					}
 				}

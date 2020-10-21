@@ -13,6 +13,11 @@ namespace AspNetFullFrameworkSampleApp
 		{
 			routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
+			routes.MapPageRoute(Webforms.RoutedWebforms,
+				Webforms.RoutedWebforms,
+				"~/Webforms.aspx"
+			);
+
 			routes.MapRoute(
 				"Default",
 				"{controller}/{action}/{id}",

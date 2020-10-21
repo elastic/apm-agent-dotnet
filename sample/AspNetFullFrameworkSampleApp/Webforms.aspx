@@ -4,7 +4,7 @@
 <head runat="server">
 	<meta charset="utf-8"/>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>@ViewBag.Title - My ASP.NET Application</title>
+	<title><%: Title %> - My ASP.NET Application</title>
 	<%: System.Web.Optimization.Styles.Render("~/Content/css") %>
 	<%: System.Web.Optimization.Scripts.Render("~/bundles/modernizr") %>
 </head>
@@ -32,7 +32,7 @@
 <div class="container body-content">
 	<div class="row">
     	<div class="col-md-12">
-    		<h2>A webforms page</h2>
+    		<h2>A <%: Title %> page</h2>
     		<p>
     			This is an example of a ASP.NET Webforms page
     		</p>
