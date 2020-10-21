@@ -51,7 +51,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 						app.UseStaticFiles();
 						app.UseCookiePolicy();
 
-						RegisterRoutingAndMvc(app);
+						Startup.ConfigureRoutingAndMvc(app);
 					});
 
 					n.ConfigureServices(ConfigureServices);
@@ -84,7 +84,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 							  app.UseElasticApm(agent, agent.Logger, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
 						  }
 
-						  RegisterRoutingAndMvc(app);
+						  Startup.ConfigureRoutingAndMvc(app);
 					  });
 
 					  n.ConfigureServices(ConfigureServices);
@@ -106,44 +106,17 @@ namespace Elastic.Apm.AspNetCore.Tests
 						app.UseMiddleware<ApmMiddleware>(agent.Tracer, agent);
 
 						app.UseDeveloperExceptionPage();
-
 						app.UseHsts();
-
 						app.UseHttpsRedirection();
 						app.UseStaticFiles();
 						app.UseCookiePolicy();
 
-						RegisterRoutingAndMvc(app);
+						Startup.ConfigureRoutingAndMvc(app);
 					});
 
 					n.ConfigureServices(ConfigureServices);
 				})
 				.CreateClient();
-
-		private static void RegisterRoutingAndMvc(IApplicationBuilder app)
-		{
-#if NETCOREAPP3_0 || NETCOREAPP3_1
-			app.UseRouting();
-
-			app.UseAuthentication();
-
-			app.UseEndpoints(endpoints =>
-			{
-				endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
-				endpoints.MapControllers();
-				endpoints.MapRazorPages();
-			});
-#else
-			app.UseAuthentication();
-
-			app.UseMvc(routes =>
-			{
-				routes.MapRoute(
-					"default",
-					"{controller=Home}/{action=Index}/{id?}");
-			});
-#endif
-		}
 
 		internal static void ConfigureServices(IServiceCollection services)
 		{

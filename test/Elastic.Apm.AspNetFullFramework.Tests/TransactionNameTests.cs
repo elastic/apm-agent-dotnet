@@ -35,7 +35,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		}
 
 		[AspNetFullFrameworkFact]
-		public async Task Name_Should_Be_Controller_Action_When_Mvc_Area_Controller_Action()
+		public async Task Name_Should_Be_Area_Controller_Action_When_Mvc_Area_Controller_Action()
 		{
 			var pathData = SampleAppUrlPaths.MyAreaHomePage;
 			await SendGetRequestToSampleAppAndVerifyResponse(pathData.Uri, pathData.StatusCode);
