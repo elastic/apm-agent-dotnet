@@ -70,6 +70,11 @@ namespace Elastic.Apm.Config
 		IReadOnlyDictionary<string, string> GlobalLabels { get; }
 
 		/// <summary>
+		/// Allows for the reported hostname to be manually specified. If unset, the hostname will be detected.
+		/// </summary>
+		string HostName { get; }
+
+		/// <summary>
 		/// A list of patterns to match HTTP requests to ignore. An incoming HTTP request whose request line matches any of the patterns will not be reported as a transaction.
 		/// </summary>
 		IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls { get; }

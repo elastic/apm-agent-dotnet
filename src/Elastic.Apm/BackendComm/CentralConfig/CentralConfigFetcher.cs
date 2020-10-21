@@ -251,6 +251,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			public IReadOnlyDictionary<string, string> GlobalLabels => _wrapped.GlobalLabels;
 
+			public string HostName => _wrapped.HostName;
+
 			public LogLevel LogLevel => _centralConfig.LogLevel ?? _wrapped.LogLevel;
 
 			public int MaxBatchEventCount => _wrapped.MaxBatchEventCount;

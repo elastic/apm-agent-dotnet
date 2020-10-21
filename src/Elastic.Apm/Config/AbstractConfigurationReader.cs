@@ -779,6 +779,12 @@ namespace Elastic.Apm.Config
 
 		protected IReadOnlyDictionary<string, string> ParseGlobalLabels(ConfigurationKeyValue kv) => ParseKeyValuePairs(kv, "GlobalLabels");
 
+		protected string ParseHostName(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return null;
+			return kv.Value;
+		}
+
 		private IReadOnlyDictionary<string, string> ParseKeyValuePairs(ConfigurationKeyValue kv, string dbgOptionName)
 		{
 			//

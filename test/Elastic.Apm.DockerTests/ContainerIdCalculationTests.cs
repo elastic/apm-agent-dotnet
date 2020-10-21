@@ -4,6 +4,7 @@
 
 using System.IO;
 using System.Text;
+using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
@@ -33,7 +34,7 @@ namespace Elastic.Apm.DockerTests
 			var noopLogger = new NoopLogger();
 			var systemInfoHelper = new TestSystemInfoHelper(noopLogger, cGroupContent);
 
-			var systemInfo = systemInfoHelper.ParseSystemInfo();
+			var systemInfo = systemInfoHelper.ParseSystemInfo(null);
 			systemInfo.Should().NotBeNull();
 			systemInfo.Container.Should().NotBeNull();
 			systemInfo.Container.Id.Should().Be(expectedContainerId);
@@ -47,7 +48,7 @@ namespace Elastic.Apm.DockerTests
 			var noopLogger = new NoopLogger();
 			var systemInfoHelper = new TestSystemInfoHelper(noopLogger, "asdf:invalid-dockerid:243543");
 
-			var systemInfo = systemInfoHelper.ParseSystemInfo();
+			var systemInfo = systemInfoHelper.ParseSystemInfo(null);
 
 			systemInfo.Container.Should().BeNull();
 		}
