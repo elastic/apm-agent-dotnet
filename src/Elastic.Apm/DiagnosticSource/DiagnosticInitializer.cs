@@ -14,14 +14,14 @@ namespace Elastic.Apm.DiagnosticSource
 	{
 		private readonly IEnumerable<IDiagnosticListener> _listeners;
 		private readonly ScopedLogger _logger;
+		private readonly CompositeDisposable _sourceSubscription;
 
 		internal DiagnosticInitializer(IApmLogger baseLogger, IEnumerable<IDiagnosticListener> listeners)
 		{
 			_logger = baseLogger.Scoped(nameof(DiagnosticInitializer));
 			_listeners = listeners;
+			_sourceSubscription = new CompositeDisposable();
 		}
-
-		private IDisposable _sourceSubscription;
 
 		public void OnCompleted() { }
 
@@ -34,7 +34,8 @@ namespace Elastic.Apm.DiagnosticSource
 			{
 				if (value.Name == listener.Name)
 				{
-					_sourceSubscription = value.Subscribe(listener);
+					_sourceSubscription.Add(value.Subscribe(listener));
+
 					_logger.Debug()
 						?.Log("Subscribed {DiagnosticListenerType} to `{DiagnosticListenerName}' events source",
 							listener.GetType().FullName, value.Name);
@@ -52,6 +53,6 @@ namespace Elastic.Apm.DiagnosticSource
 			}
 		}
 
-		public void Dispose() => _sourceSubscription?.Dispose();
+		public void Dispose() => _sourceSubscription.Dispose();
 	}
 }
