@@ -18,8 +18,6 @@ namespace Elastic.Apm.Api
 		public Destination Destination { get; set; }
 		public Http Http { get; set; }
 
-		public ServiceContext Service { get; set; }
-
 		/// <summary>
 		/// <seealso cref="ShouldSerializeLabels" />
 		/// </summary>
@@ -39,13 +37,5 @@ namespace Elastic.Apm.Api
 		{
 			{ nameof(Db), Db }, { nameof(Http), Http }, { "Labels", InternalLabels }, { nameof(Destination), Destination }, { nameof(Service), Service },
 		}.ToString();
-
-		public class ServiceContext
-		{
-			public Service.AgentC Agent { get; set; }
-
-			[JsonConverter(typeof(TrimmedStringJsonConverter))]
-			public string Name { get; set; }
-		}
 	}
 }
