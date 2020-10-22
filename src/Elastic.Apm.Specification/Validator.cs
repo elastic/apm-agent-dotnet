@@ -100,6 +100,11 @@ namespace Elastic.Apm.Specification
 			}
 
 			using var client = new HttpClient();
+#if !NETSTANDARD
+			// force use of TLS 1.2 on older Full Framework, in order to call GitHub API
+			ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+#endif
+
 			client.DefaultRequestHeaders.UserAgent.Clear();
 			client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("apm-agent-dotnet", "1"));
 
