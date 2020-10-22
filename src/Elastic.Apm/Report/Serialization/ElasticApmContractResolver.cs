@@ -40,11 +40,12 @@ namespace Elastic.Apm.Report.Serialization
 						: new TruncateJsonConverter(maxLengthAttribute.Length);
 				}
 			}
-
-			var sanitizeAttribute = member.GetCustomAttribute<SanitizeAttribute>();
-
-			if (sanitizeAttribute != null && property.PropertyType == typeof(Dictionary<string, string>))
-				property.Converter = _headerDictionarySanitizerConverter;
+			else if (property.PropertyType == typeof(Dictionary<string, string>))
+			{
+				var sanitizeAttribute = member.GetCustomAttribute<SanitizeAttribute>();
+				if (sanitizeAttribute != null)
+					property.Converter = _headerDictionarySanitizerConverter;
+			}
 
 			return property;
 		}
