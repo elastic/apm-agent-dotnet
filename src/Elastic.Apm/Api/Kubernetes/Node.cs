@@ -10,7 +10,7 @@ namespace Elastic.Apm.Api.Kubernetes
 {
 	public class Node
 	{
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Name { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(Node)) { { nameof(Name), Name } }.ToString();

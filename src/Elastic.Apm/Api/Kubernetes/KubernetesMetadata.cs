@@ -10,7 +10,7 @@ namespace Elastic.Apm.Api.Kubernetes
 {
 	public class KubernetesMetadata
 	{
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Namespace { get; set; }
 
 		public Node Node { get; set; }

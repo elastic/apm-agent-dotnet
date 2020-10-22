@@ -16,12 +16,10 @@ namespace Elastic.Apm.Api
 
 		public Container Container { get; set; }
 
-		[JsonProperty("detected_hostname")]
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonProperty("detected_hostnameTruncateToMaxLengthJsonConverterf(TrimmedStringJsonConverter))]
 		public string DetectedHostName { get; set; }
 
-		[JsonProperty("hostname")]
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonProperty("hostnameTruncateToMaxLengthJsonConverterf(TrimmedStringJsonConverter))]
 		public string HostName
 		{
 			get => _hostName ??= DetectedHostName;

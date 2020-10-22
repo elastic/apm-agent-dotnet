@@ -32,7 +32,7 @@ namespace Elastic.Apm.Tests
 		};
 
 		/// <summary>
-		/// Tests the <see cref="TrimmedStringJsonConverter" />. It serializes a transaction with Transaction.Name.Length > 1024.
+		/// Tests the <see cref="TruncateToMaxLengthJsonConverter" />. It serializes a transaction with Transaction.Name.Length > 1024.
 		/// Makes sure that the Transaction.Name is truncated correctly.
 		/// </summary>
 		[Fact]

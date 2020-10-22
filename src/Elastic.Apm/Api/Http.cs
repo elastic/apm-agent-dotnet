@@ -18,7 +18,7 @@ namespace Elastic.Apm.Api
 		private Uri _originalUrl;
 		private string _url;
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+	TruncateToMaxLengthJsonConvertermmedStringJsonConverter))]
 		public string Method { get; set; }
 
 		/// <summary>

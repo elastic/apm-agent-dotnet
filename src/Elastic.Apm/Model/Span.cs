@@ -104,7 +104,7 @@ namespace Elastic.Apm.Model
 
 		private bool _isEnded;
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Action { get; set; }
 
 		[JsonIgnore]
@@ -125,7 +125,7 @@ namespace Elastic.Apm.Model
 		/// <value>The duration.</value>
 		public double? Duration { get; set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Id { get; set; }
 
 		internal InstrumentationFlag InstrumentationFlag { get; }
@@ -136,7 +136,7 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		public Dictionary<string, string> Labels => Context.Labels;
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Name { get; set; }
 
 		/// <summary>
@@ -155,7 +155,7 @@ namespace Elastic.Apm.Model
 			ShouldBeSentToApmServer ? Id : TransactionId,
 			IsSampled);
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
 
@@ -165,7 +165,7 @@ namespace Elastic.Apm.Model
 		[JsonProperty("stacktrace")]
 		public List<CapturedStackFrame> StackTrace { get; set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Subtype { get; set; }
 
 		//public decimal Start { get; set; }
@@ -175,15 +175,15 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		public long Timestamp { get; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		[JsonProperty("trace_id")]
 		public string TraceId { get; set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		[JsonProperty("transaction_id")]
 		public string TransactionId => _enclosingTransaction.Id;
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Type { get; set; }
 
 		/// <summary>

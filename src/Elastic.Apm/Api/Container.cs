@@ -9,7 +9,7 @@ namespace Elastic.Apm.Api
 {
 	public class Container
 	{
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Id { get; set; }
 	}
 }

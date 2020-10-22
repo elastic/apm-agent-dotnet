@@ -10,10 +10,10 @@ namespace Elastic.Apm.Api.Kubernetes
 {
 	public class Pod
 	{
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Name { get; set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Uid { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(Pod)) { { nameof(Name), Name }, { nameof(Uid), Uid } }.ToString();

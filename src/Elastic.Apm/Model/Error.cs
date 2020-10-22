@@ -53,15 +53,15 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		public Context Context { get; set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Culprit { get; set; }
 
 		public CapturedException Exception { get; set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Id { get; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
 
@@ -70,13 +70,13 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		public long Timestamp { get; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		[JsonProperty("trace_id")]
 		public string TraceId { get; set; }
 
 		public TransactionData Transaction { get; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		[JsonProperty("transaction_id")]
 		public string TransactionId { get; set; }
 
@@ -105,7 +105,7 @@ namespace Elastic.Apm.Model
 			[JsonProperty("sampled")]
 			public bool IsSampled { get; }
 
-			[JsonConverter(typeof(TrimmedStringJsonConverter))]
+			[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 			public string Type { get; }
 
 			public override string ToString() =>

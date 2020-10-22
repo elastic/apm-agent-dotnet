@@ -25,10 +25,10 @@ namespace Elastic.Apm.Api
 		public Dictionary<string, string> Headers { get; set; }
 
 		[JsonProperty("http_version")]
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string HttpVersion { get; set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Method { get; set; }
 
 		public Socket Socket { get; set; }
@@ -55,25 +55,25 @@ namespace Elastic.Apm.Api
 		private string _full;
 		private string _raw;
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Full
 		{
 			get => _full;
 			set => _full = Http.Sanitize(value, out var newValue) ? newValue : value;
 		}
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		[JsonProperty("hostname")]
 		public string HostName { get; set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		[JsonProperty("pathname")]
 		public string PathName { get; set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Protocol { get; set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Raw
 		{
 			get => _raw;
@@ -84,7 +84,7 @@ namespace Elastic.Apm.Api
 		/// The search describes the query string of the request.
 		/// It is expected to have values delimited by ampersands.
 		/// </summary>
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		[JsonProperty("search")]
 		public string Search { get; set; }
 

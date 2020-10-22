@@ -10,13 +10,13 @@ namespace Elastic.Apm.Api
 {
 	public class User
 	{
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Email { get; set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Id { get; set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		[JsonProperty("username")]
 		public string UserName { get; set; }
 

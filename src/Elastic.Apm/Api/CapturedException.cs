@@ -11,7 +11,7 @@ namespace Elastic.Apm.Api
 {
 	public class CapturedException
 	{
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Code { get; set; }
 
 		public bool Handled { get; set; }
@@ -21,7 +21,7 @@ namespace Elastic.Apm.Api
 		[JsonProperty("stacktrace")]
 		public List<CapturedStackFrame> StackTrace { get; set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string Type { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(CapturedException))

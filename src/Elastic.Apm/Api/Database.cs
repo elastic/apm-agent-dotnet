@@ -18,7 +18,7 @@ namespace Elastic.Apm.Api
 
 		public string Instance { get; set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter), 10_000)]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter), 10_000)]
 		public string Statement { get; set; }
 
 		public string Type { get; set; }

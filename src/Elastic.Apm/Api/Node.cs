@@ -11,7 +11,7 @@ namespace Elastic.Apm.Api
 	public class Node
 	{
 		[JsonProperty("configured_name")]
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
 		public string ConfiguredName { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(Node)) { { nameof(ConfiguredName), ConfiguredName } }.ToString();
