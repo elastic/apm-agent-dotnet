@@ -11,7 +11,7 @@ namespace Elastic.Apm.Api.Constraints
 	/// Specifies the maximum length of string data allowed in a property, based on the APM server specification.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property)]
-	public class MaxLengthAttribute : Attribute
+	public sealed class MaxLengthAttribute : Attribute
 	{
 		/// <summary>
 		/// The maximum length.
@@ -19,7 +19,7 @@ namespace Elastic.Apm.Api.Constraints
 		public int Length { get; }
 
 		/// <summary>
-		/// Instantiates a new instance of <see cref="MaxLengthAttribute"/>
+		/// Initializes a new instance of <see cref="MaxLengthAttribute"/>
 		/// with a maximum length of <see cref="Consts.PropertyMaxLength"/>
 		/// </summary>
 		public MaxLengthAttribute() : this(Consts.PropertyMaxLength)
@@ -27,8 +27,8 @@ namespace Elastic.Apm.Api.Constraints
 		}
 
 		/// <summary>
-		/// Instantiates a new instance of <see cref="MaxLengthAttribute"/> with a given maximum length
+		/// Initializes a new instance of <see cref="MaxLengthAttribute"/> with a given maximum length
 		/// </summary>
-		public MaxLengthAttribute(int maxLength) => Length = maxLength;
+		public MaxLengthAttribute(int length) => Length = length;
 	}
 }

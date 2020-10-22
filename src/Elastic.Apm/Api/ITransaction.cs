@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
+using Elastic.Apm.Api.Constraints;
+using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Api
 {
@@ -35,7 +37,14 @@ namespace Elastic.Apm.Api
 		/// The type of the transaction.
 		/// Example: 'request'
 		/// </summary>
+		[Required]
 		string Type { get; set; }
+
+		/// <summary>
+		/// The total number of correlated spans, including started and dropped
+		/// </summary>
+		[Required]
+		SpanCount SpanCount { get; }
 
 		/// <summary>
 		/// If the transaction does not have a ParentId yet, calling this method generates a new ID, sets it as the ParentId of

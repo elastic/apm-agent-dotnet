@@ -30,10 +30,12 @@ namespace Elastic.Apm.Api
 		public string HttpVersion { get; set; }
 
 		[MaxLength]
+		[Required]
 		public string Method { get; set; }
 
 		public Socket Socket { get; set; }
 
+		[Required]
 		public Url Url { get; set; }
 
 		public override string ToString() =>

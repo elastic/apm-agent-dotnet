@@ -11,5 +11,5 @@ namespace Elastic.Apm.Api.Constraints
 	/// An attribute to mark fields for sanitization. This attribute is known to <see cref="ElasticApmContractResolver"/> and it applies a Converter
 	/// to sanitize field(s) accordingly.
 	/// </summary>
-	internal class SanitizeAttribute : Attribute { }
+	internal sealed class SanitizeAttribute : Attribute { }
 }

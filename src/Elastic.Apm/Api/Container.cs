@@ -8,6 +8,7 @@ namespace Elastic.Apm.Api
 {
 	public class Container
 	{
+		[Required]
 		[MaxLength]
 		public string Id { get; set; }
 	}
