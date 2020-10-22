@@ -3,15 +3,15 @@
 // See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
+using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Api
 {
 	public class CapturedException
 	{
-		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+		[MaxLength]
 		public string Code { get; set; }
 
 		public bool Handled { get; set; }
@@ -21,7 +21,7 @@ namespace Elastic.Apm.Api
 		[JsonProperty("stacktrace")]
 		public List<CapturedStackFrame> StackTrace { get; set; }
 
-		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+		[MaxLength]
 		public string Type { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(CapturedException))

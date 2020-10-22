@@ -2,8 +2,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using Elastic.Apm.Report.Serialization;
-using Newtonsoft.Json;
+using Elastic.Apm.Api.Constraints;
 
 namespace Elastic.Apm.Api
 {
@@ -18,7 +17,7 @@ namespace Elastic.Apm.Api
 
 		public string Instance { get; set; }
 
-		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter), 10_000)]
+		[MaxLength(10_000)]
 		public string Statement { get; set; }
 
 		public string Type { get; set; }

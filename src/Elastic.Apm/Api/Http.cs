@@ -4,6 +4,7 @@
 
 using System;
 using System.Net.Http;
+using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
@@ -18,7 +19,7 @@ namespace Elastic.Apm.Api
 		private Uri _originalUrl;
 		private string _url;
 
-	TruncateToMaxLengthJsonConvertermmedStringJsonConverter))]
+		[MaxLength]
 		public string Method { get; set; }
 
 		/// <summary>

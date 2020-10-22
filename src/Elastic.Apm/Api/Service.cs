@@ -4,11 +4,10 @@
 
 using System;
 using System.Reflection;
+using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Report.Serialization;
-using Newtonsoft.Json;
 
 namespace Elastic.Apm.Api
 {
@@ -18,20 +17,20 @@ namespace Elastic.Apm.Api
 
 		public AgentC Agent { get; set; }
 
-		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+		[MaxLength]
 		public string Environment { get; set; }
 
 		public Framework Framework { get; set; }
 		public Language Language { get; set; }
 
-		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+		[MaxLength]
 		public string Name { get; set; }
 
 		public Node Node { get; set; }
 
 		public Runtime Runtime { get; set; }
 
-		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+		[MaxLength]
 		public string Version { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(Service))
@@ -77,10 +76,10 @@ namespace Elastic.Apm.Api
 
 		public class AgentC
 		{
-			[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+			[MaxLength]
 			public string Name { get; set; }
 
-			[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+			[MaxLength]
 			public string Version { get; set; }
 
 			public override string ToString() =>
@@ -90,10 +89,10 @@ namespace Elastic.Apm.Api
 
 	public class Framework
 	{
-		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+		[MaxLength]
 		public string Name { get; set; }
 
-		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+		[MaxLength]
 		public string Version { get; set; }
 
 		public override string ToString() =>
@@ -102,7 +101,7 @@ namespace Elastic.Apm.Api
 
 	public class Language
 	{
-		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+		[MaxLength]
 		public string Name { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(Language)) { { nameof(Name), Name } }.ToString();
@@ -118,10 +117,10 @@ namespace Elastic.Apm.Api
 		internal const string DotNetFullFrameworkName = ".NET Framework";
 		internal const string MonoName = "Mono";
 
-		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+		[MaxLength]
 		public string Name { get; set; }
 
-		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+		[MaxLength]
 		public string Version { get; set; }
 
 		public override string ToString() => new ToStringBuilder(nameof(Runtime)) { { nameof(Name), Name }, { nameof(Version), Version } }.ToString();

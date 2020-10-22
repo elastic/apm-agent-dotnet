@@ -7,11 +7,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
-using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -104,7 +104,7 @@ namespace Elastic.Apm.Model
 
 		private bool _isEnded;
 
-		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+		[MaxLength]
 		public string Action { get; set; }
 
 		[JsonIgnore]
@@ -125,7 +125,7 @@ namespace Elastic.Apm.Model
 		/// <value>The duration.</value>
 		public double? Duration { get; set; }
 
-		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+		[MaxLength]
 		public string Id { get; set; }
 
 		internal InstrumentationFlag InstrumentationFlag { get; }
@@ -136,7 +136,7 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		public Dictionary<string, string> Labels => Context.Labels;
 
-		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+		[MaxLength]
 		public string Name { get; set; }
 
 		/// <summary>
@@ -155,7 +155,7 @@ namespace Elastic.Apm.Model
 			ShouldBeSentToApmServer ? Id : TransactionId,
 			IsSampled);
 
-		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+		[MaxLength]
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
 
@@ -165,7 +165,7 @@ namespace Elastic.Apm.Model
 		[JsonProperty("stacktrace")]
 		public List<CapturedStackFrame> StackTrace { get; set; }
 
-		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+		[MaxLength]
 		public string Subtype { get; set; }
 
 		//public decimal Start { get; set; }
@@ -175,15 +175,15 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		public long Timestamp { get; }
 
-		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+		[MaxLength]
 		[JsonProperty("trace_id")]
 		public string TraceId { get; set; }
 
-		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+		[MaxLength]
 		[JsonProperty("transaction_id")]
 		public string TransactionId => _enclosingTransaction.Id;
 
-		[JsonConverter(typeof(TruncateToMaxLengthJsonConverter))]
+		[MaxLength]
 		public string Type { get; set; }
 
 		/// <summary>
