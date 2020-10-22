@@ -41,18 +41,21 @@ namespace Elastic.Apm.Tests
 					where type.IsClass && specInterfaces.Any(i => i.IsAssignableFrom(type))
 					select type).ToList();
 
-			_validator = new Validator("master", downloadDir);
+			var specBranch = "7.x";
+
+			_validator = new Validator(specBranch, downloadDir);
+
+			// force tests to always get the latest spec on the branch
+			_validator.DownloadAsync(specBranch, true).Wait();
+
 			_output = output;
 		}
 
-		/// <summary>
-		/// Validates the specification against the agent type.
-		/// </summary>
-		/// <returns></returns>
-		[Fact]
+		[Fact(Skip = "The agent API is an implementation of the spec rather than a full implementation "
+			+ "(null properties are nullable, all properties exist on type, etc). This test tests for a full implementation")]
 		public async Task Validate_Spec_To_Type_Should_Be_Valid()
 		{
-			var results = new List<ValidationResult>(_specTypes.Count);
+			var results = new List<TypeValidationResult>(_specTypes.Count);
 
 			foreach (var specType in _specTypes)
 			{
@@ -62,8 +65,6 @@ namespace Elastic.Apm.Tests
 				}
 				catch (JsonSchemaException e)
 				{
-					// bug in specs: https://github.com/elastic/apm-server/issues/4326
-					// log but continue for now
 					_output.WriteLine(e.Message);
 				}
 			}
@@ -74,7 +75,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task Validate_Type_To_Spec_Should_Be_Valid()
 		{
-			var results = new List<ValidationResult>(_specTypes.Count);
+			var results = new List<TypeValidationResult>(_specTypes.Count);
 			foreach (var specType in _specTypes)
 			{
 				try
@@ -83,8 +84,6 @@ namespace Elastic.Apm.Tests
 				}
 				catch (JsonSchemaException e)
 				{
-					// bug in specs: https://github.com/elastic/apm-server/issues/4326
-					// log but continue for now
 					_output.WriteLine(e.Message);
 				}
 			}

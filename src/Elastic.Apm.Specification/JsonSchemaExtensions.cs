@@ -10,6 +10,12 @@ namespace Elastic.Apm.Specification
 {
 	public static class JsonSchemaExtensions
 	{
+		/// <summary>
+		/// Gets the schema $id if it exists, the name of the property if the schema represents a property,
+		/// or the file name of the schema document path.
+		/// </summary>
+		/// <param name="schema"></param>
+		/// <returns></returns>
 		public static string GetNameOrSpecificationId(this JsonSchema schema)
 		{
 			if (schema.ExtensionData != null && schema.ExtensionData.TryGetValue("$id", out var id))

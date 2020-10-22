@@ -12,7 +12,7 @@ namespace Elastic.Apm.Specification
 	{
 		/// <summary>
 		/// Validates the type against the specification. A type must be a valid implementation of the specification, but
-		/// it may be only a subset of the properties i.e. required properties only.
+		/// it may be only a subset of the properties i.e. schema properties of type "null" may not be implemented.
 		/// </summary>
 		TypeToSpec,
 		/// <summary>
@@ -20,7 +20,7 @@ namespace Elastic.Apm.Specification
 		/// </summary>
 		/// <remarks>
 		/// It's expected that the type is the implementation of the entire specification and not a subset
-		/// of certain optional properties.
+		/// of properties.
 		/// </remarks>
 		SpecToType
 	}

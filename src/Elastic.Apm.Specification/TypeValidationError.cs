@@ -8,21 +8,23 @@ using System.IO;
 
 namespace Elastic.Apm.Specification
 {
-	public class ValidationIgnore
+	public class TypeValidationIgnore
 	{
 		public string Schema { get; }
 		public string PropertyName { get; }
 		public string Message { get; }
 
-		public ValidationIgnore(string schema, string propertyName, string message)
+		public TypeValidationIgnore(string schema, string propertyName, string message)
 		{
-			Schema = Path.GetFileNameWithoutExtension(schema);
+			Schema = schema;
 			PropertyName = propertyName;
 			Message = message;
 		}
+
+		public override string ToString() => $"ignored property name: {PropertyName}, schema: {Schema}. {Message}.";
 	}
 
-	public class ValidationError
+	public class TypeValidationError
 	{
 		public string Schema { get; }
 		public string PropertyName { get; }
@@ -30,19 +32,19 @@ namespace Elastic.Apm.Specification
 
 		public Type SpecType { get; }
 
-		public ValidationError(Type specType, string schema, string propertyName, string message)
+		public TypeValidationError(Type specType, string schema, string propertyName, string message)
 		{
 			SpecType = specType;
-			Schema = Path.GetFileNameWithoutExtension(schema);
+			Schema = schema;
 			PropertyName = propertyName;
 			Message = message;
 		}
 
-		public static ValidationError NotFound(Type specType, string id, string name) =>
-			new ValidationError(specType, id, name, "not found");
+		public static TypeValidationError NotFound(Type specType, string id, string name) =>
+			new TypeValidationError(specType, id, name, "not found");
 
-		public static ValidationError ExpectedType(Type specType, Type propertyType, string expectedType, string id, string name) =>
-			new ValidationError(specType, id, name, $"expected type '{expectedType}' but found '{propertyType.FullName}'");
+		public static TypeValidationError ExpectedType(Type specType, Type propertyType, string expectedType, string id, string name) =>
+			new TypeValidationError(specType, id, name, $"expected type '{expectedType}' but found '{propertyType.FullName}'");
 
 		public override string ToString() => $"{SpecType}, property name: {PropertyName}, schema: {Schema}. {Message}.";
 	}
