@@ -8,17 +8,18 @@ namespace Elastic.Apm.Report.Serialization
 {
 	internal static class SerializationUtils
 	{
-		internal static string TrimToLength(string input, int maxLength)
+		/// <summary>
+		/// Truncates the string to a given length, if longer than the length
+		/// </summary>
+		internal static string Truncate(string input, int length = Consts.PropertyMaxLength)
 		{
 			input.ThrowIfArgumentNull(nameof(input));
 
-			if (input.Length <= maxLength) return input;
+			if (input.Length <= length) return input;
 
-			if (maxLength <= 5) return input.Substring(0, maxLength);
+			if (length <= 5) return input.Substring(0, length);
 
-			return $"{input.Substring(0, maxLength - 3)}...";
+			return $"{input.Substring(0, length - 3)}...";
 		}
-
-		internal static string TrimToPropertyMaxLength(string input) => TrimToLength(input, Consts.PropertyMaxLength);
 	}
 }

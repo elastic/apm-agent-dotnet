@@ -16,13 +16,13 @@ namespace Elastic.Apm.Report.Serialization
 			foreach (var keyValue in labels)
 			{
 				// Labels are trimmed and also de dotted in order to satisfy the Intake API
-				writer.WritePropertyName(SerializationUtils.TrimToPropertyMaxLength(keyValue.Key)
+				writer.WritePropertyName(SerializationUtils.Truncate(keyValue.Key)
 					.Replace('.', '_')
 					.Replace('*', '_')
 					.Replace('"', '_'));
 
 				if (keyValue.Value != null)
-					writer.WriteValue(SerializationUtils.TrimToPropertyMaxLength(keyValue.Value));
+					writer.WriteValue(SerializationUtils.Truncate(keyValue.Value));
 				else
 					writer.WriteNull();
 			}

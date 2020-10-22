@@ -294,15 +294,15 @@ namespace Elastic.Apm.Tests
 		[InlineData("ABCDEFG", 6, "ABC...")]
 		[InlineData("ABCDEFGH", 6, "ABC...")]
 		[InlineData("ABCDEFGH", 7, "ABCD...")]
-		public void SerializationUtilsTrimToLengthTests(string original, int maxLength, string expectedTrimmed) =>
-			SerializationUtils.TrimToLength(original, maxLength).Should().Be(expectedTrimmed);
+		public void SerializationUtilsTruncateTests(string original, int maxLength, string expectedTrimmed) =>
+			SerializationUtils.Truncate(original, maxLength).Should().Be(expectedTrimmed);
 
 		[Theory]
 		[MemberData(nameof(SerializationUtilsTrimToPropertyMaxLengthVariantsToTest))]
-		public void SerializationUtilsTrimToPropertyMaxLengthTests(string original, string expectedTrimmed)
+		public void SerializationUtilsTruncateToPropertyMaxLengthTests(string original, string expectedTrimmed)
 		{
 			Consts.PropertyMaxLength.Should().BeGreaterThan(3);
-			SerializationUtils.TrimToPropertyMaxLength(original).Should().Be(expectedTrimmed);
+			SerializationUtils.Truncate(original).Should().Be(expectedTrimmed);
 		}
 
 		/// <summary>
@@ -343,7 +343,7 @@ namespace Elastic.Apm.Tests
 			json = SerializePayloadItem(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue1\",\"a_b_c\":\"labelValue2\"}}");
 		}
-    
+
     /// <summary>
 		/// Makes sure that keys in custom are de dotted.
 		/// </summary>

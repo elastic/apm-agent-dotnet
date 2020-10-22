@@ -18,7 +18,7 @@ namespace Elastic.Apm.Report.Serialization
 		public TruncateToMaxLengthJsonConverter(int maxLength) => _maxLength = maxLength;
 
 		public override void WriteJson(JsonWriter writer, string value, JsonSerializer serializer) =>
-			writer.WriteValue(SerializationUtils.TrimToLength(value, _maxLength));
+			writer.WriteValue(SerializationUtils.Truncate(value, _maxLength));
 
 		public override string ReadJson(JsonReader reader, Type objectType, string existingValue, bool hasExistingValue, JsonSerializer serializer) =>
 			reader.Value as string;
