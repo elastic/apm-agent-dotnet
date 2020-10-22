@@ -13,6 +13,7 @@ using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
+	[Specification("docs/spec/metadata.json")]
 	internal class MetadataDto : IDto
 	{
 		public Service Service { get; set; }

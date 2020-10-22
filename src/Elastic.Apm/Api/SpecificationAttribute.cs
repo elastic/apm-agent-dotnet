@@ -11,7 +11,7 @@ namespace Elastic.Apm.Api
 	/// Defines the apm server specification that the type adheres to
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Interface | AttributeTargets.Class)]
-	internal class SpecificationAttribute : Attribute
+	public class SpecificationAttribute : Attribute
 	{
 		public SpecificationAttribute(string path) => Path = path;
 
