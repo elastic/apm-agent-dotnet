@@ -37,7 +37,7 @@ namespace Elastic.Apm.Tests
 		};
 
 		/// <summary>
-		/// Tests the <see cref="TruncateToMaxLengthJsonConverter" />. It serializes a transaction with Transaction.Name.Length > 1024.
+		/// Tests the <see cref="TruncateJsonConverter" />. It serializes a transaction with Transaction.Name.Length > 1024.
 		/// Makes sure that the Transaction.Name is truncated correctly.
 		/// </summary>
 		[Fact]
@@ -300,14 +300,14 @@ namespace Elastic.Apm.Tests
 		[InlineData("ABCDEFGH", 6, "ABC...")]
 		[InlineData("ABCDEFGH", 7, "ABCD...")]
 		public void SerializationUtilsTruncateTests(string original, int maxLength, string expectedTrimmed) =>
-			SerializationUtils.Truncate(original, maxLength).Should().Be(expectedTrimmed);
+			original.Truncate(maxLength).Should().Be(expectedTrimmed);
 
 		[Theory]
 		[MemberData(nameof(SerializationUtilsTrimToPropertyMaxLengthVariantsToTest))]
 		public void SerializationUtilsTruncateToPropertyMaxLengthTests(string original, string expectedTrimmed)
 		{
 			Consts.PropertyMaxLength.Should().BeGreaterThan(3);
-			SerializationUtils.Truncate(original).Should().Be(expectedTrimmed);
+			original.Truncate().Should().Be(expectedTrimmed);
 		}
 
 		/// <summary>

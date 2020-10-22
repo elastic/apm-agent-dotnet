@@ -17,8 +17,8 @@ namespace Elastic.Apm.Report.Serialization
 	{
 		private readonly HeaderDictionarySanitizerConverter _headerDictionarySanitizerConverter;
 
-		private readonly TruncateToMaxLengthJsonConverter _defaultTruncateToMaxLengthJsonConverter =
-			new TruncateToMaxLengthJsonConverter(Consts.PropertyMaxLength);
+		private readonly TruncateJsonConverter _defaultTruncateJsonConverter =
+			new TruncateJsonConverter(Consts.PropertyMaxLength);
 
 		public ElasticApmContractResolver(IConfigurationReader configurationReader)
 		{
@@ -36,8 +36,8 @@ namespace Elastic.Apm.Report.Serialization
 				if (maxLengthAttribute != null)
 				{
 					property.Converter = maxLengthAttribute.Length == Consts.PropertyMaxLength
-						? _defaultTruncateToMaxLengthJsonConverter
-						: new TruncateToMaxLengthJsonConverter(maxLengthAttribute.Length);
+						? _defaultTruncateJsonConverter
+						: new TruncateJsonConverter(maxLengthAttribute.Length);
 				}
 			}
 
