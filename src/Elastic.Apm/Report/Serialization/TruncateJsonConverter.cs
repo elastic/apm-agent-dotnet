@@ -8,6 +8,9 @@ using Newtonsoft.Json;
 
 namespace Elastic.Apm.Report.Serialization
 {
+	/// <summary>
+	/// Truncates a string to a given length
+	/// </summary>
 	internal class TruncateJsonConverter : JsonConverter<string>
 	{
 		private readonly int _maxLength;

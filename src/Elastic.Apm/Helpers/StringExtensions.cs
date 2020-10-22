@@ -31,6 +31,8 @@ namespace Elastic.Apm.Helpers
 		internal static bool ContainsOrdinalIgnoreCase(this string thisObj, string subStr) =>
 			thisObj.IndexOf(subStr, StringComparison.OrdinalIgnoreCase) >= 0;
 
+		internal static string ToLog(this string thisObj) => "`" + thisObj + "'";
+
 		/// <summary>
 		/// Truncates the string to a given length, if longer than the length
 		/// </summary>
