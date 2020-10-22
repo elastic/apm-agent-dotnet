@@ -32,20 +32,18 @@ namespace Elastic.Apm.Report.Serialization
 
 			if (property.PropertyType == typeof(string))
 			{
-				var maxLengthAttributes = property.AttributeProvider.GetAttributes(typeof(MaxLengthAttribute), true);
-				if (maxLengthAttributes.Count > 0)
+				var maxLengthAttribute = member.GetCustomAttribute<MaxLengthAttribute>();
+				if (maxLengthAttribute != null)
 				{
-					var maxLengthAttribute = (MaxLengthAttribute)maxLengthAttributes[0];
 					property.Converter = maxLengthAttribute.Length == Consts.PropertyMaxLength
 						? _defaultTruncateToMaxLengthJsonConverter
 						: new TruncateToMaxLengthJsonConverter(maxLengthAttribute.Length);
 				}
 			}
 
-			if (member.MemberType != MemberTypes.Property || !(member is PropertyInfo propInfo)
-				|| propInfo.CustomAttributes.All(n => n.AttributeType != typeof(SanitizationAttribute))) return property;
+			var sanitizeAttribute = member.GetCustomAttribute<SanitizeAttribute>();
 
-			if (propInfo.PropertyType == typeof(Dictionary<string, string>))
+			if (sanitizeAttribute != null && property.PropertyType == typeof(Dictionary<string, string>))
 				property.Converter = _headerDictionarySanitizerConverter;
 
 			return property;
