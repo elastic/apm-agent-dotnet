@@ -28,7 +28,8 @@ namespace Elastic.Apm.Api
 		internal Response DeepCopy()
 		{
 			var newItem = (Response)MemberwiseClone();
-			newItem.Headers = Headers.ToDictionary(entry => entry.Key, entry => entry.Value);
+			if(Headers != null)
+				newItem.Headers = Headers.ToDictionary(entry => entry.Key, entry => entry.Value);
 			return newItem;
 		}
 	}

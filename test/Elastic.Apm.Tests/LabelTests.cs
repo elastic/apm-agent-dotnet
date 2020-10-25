@@ -35,8 +35,8 @@ namespace Elastic.Apm.Tests
 				var jsonString = JsonConvert.SerializeObject(t);
 				jsonString.Should().Contain(GetAssertString(labelValue, labelName));
 
-				t.Labels[labelName].Should().Be(labelValue);
-				t.Context.Labels[labelName].Should().Be(labelValue);
+				t.Labels[labelName].Value.Should().Be(labelValue);
+				t.Context.Labels[labelName].Value.Should().Be(labelValue);
 			});
 		}
 
@@ -61,8 +61,8 @@ namespace Elastic.Apm.Tests
 					var jsonString = JsonConvert.SerializeObject(s);
 					jsonString.Should().Contain(GetAssertString(labelValue, labelName));
 
-					s.Labels[labelName].Should().Be(labelValue);
-					s.Context.Labels[labelName].Should().Be(labelValue);
+					s.Labels[labelName].Value.Should().Be(labelValue);
+					s.Context.Labels[labelName].Value.Should().Be(labelValue);
 				});
 			});
 		}
@@ -100,14 +100,14 @@ namespace Elastic.Apm.Tests
 					var spanJsonString = JsonConvert.SerializeObject(s);
 					spanJsonString.Should().Contain("\"intLabel\":1,\"stringLabel\":\"abc\",\"boolLabel\":true");
 
-					s.Labels["intLabel"].Should().Be(1);
-					s.Context.Labels["intLabel"].Should().Be(1);
+					s.Labels["intLabel"].Value.Should().Be(1);
+					s.Context.Labels["intLabel"].Value.Should().Be(1);
 
-					s.Labels["stringLabel"].Should().Be("abc");
-					s.Context.Labels["stringLabel"].Should().Be("abc");
+					s.Labels["stringLabel"].Value.Should().Be("abc");
+					s.Context.Labels["stringLabel"].Value.Should().Be("abc");
 
-					s.Labels["boolLabel"].Should().Be(true);
-					s.Context.Labels["boolLabel"].Should().Be(true);
+					s.Labels["boolLabel"].Value.Should().Be(true);
+					s.Context.Labels["boolLabel"].Value.Should().Be(true);
 				});
 
 				SetLabel(t, 1, "intLabel");
@@ -117,14 +117,14 @@ namespace Elastic.Apm.Tests
 				var transactionJsonString = JsonConvert.SerializeObject(t);
 				transactionJsonString.Should().Contain("\"intLabel\":1,\"stringLabel\":\"abc\",\"boolLabel\":true");
 
-				t.Labels["intLabel"].Should().Be(1);
-				t.Context.Labels["intLabel"].Should().Be(1);
+				t.Labels["intLabel"].Value.Should().Be(1);
+				t.Context.Labels["intLabel"].Value.Should().Be(1);
 
-				t.Labels["stringLabel"].Should().Be("abc");
-				t.Context.Labels["stringLabel"].Should().Be("abc");
+				t.Labels["stringLabel"].Value.Should().Be("abc");
+				t.Context.Labels["stringLabel"].Value.Should().Be("abc");
 
-				t.Labels["boolLabel"].Should().Be(true);
-				t.Context.Labels["boolLabel"].Should().Be(true);
+				t.Labels["boolLabel"].Value.Should().Be(true);
+				t.Context.Labels["boolLabel"].Value.Should().Be(true);
 			});
 		}
 
@@ -138,15 +138,30 @@ namespace Elastic.Apm.Tests
 			{
 				t.SetLabel("intLabel", 5);
 				t.CaptureError("Test Error", "TestMethod", new StackTrace().GetFrames(),
-					labels: new Dictionary<string, object> { { "stringLabel", "test" } });
+					labels: new Dictionary<string, Label> { { "stringLabel", "test" } });
 
 				// add label to transaction after the error - error does not contain this
 				t.SetLabel("boolLabel", true);
 
-				mockPayloadSender.FirstError.Context.Labels["intLabel"].Should().Be(5);
-				mockPayloadSender.FirstError.Context.Labels["stringLabel"].Should().Be("test");
+				mockPayloadSender.FirstError.Context.Labels["intLabel"].Value.Should().Be(5);
+				mockPayloadSender.FirstError.Context.Labels["stringLabel"].Value.Should().Be("test");
 				mockPayloadSender.FirstError.Context.Labels.Should().NotContainKey("boolLabel");
 			});
+		}
+
+		[Fact]
+		public void SameLabelTwice()
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+
+			agent.Tracer.CaptureTransaction("test", "test", t =>
+			{
+				t.SetLabel("intLabel", 5);
+				t.SetLabel("intLabel", 6);
+			});
+
+			mockPayloadSender.FirstTransaction.Context.Labels["intLabel"].Value.Should().Be(6);
 		}
 
 		private static void SetLabel(IExecutionSegment executionSegment, object labelValue, string labelName)

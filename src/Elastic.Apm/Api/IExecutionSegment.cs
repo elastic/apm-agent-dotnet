@@ -43,7 +43,7 @@ namespace Elastic.Apm.Api
 		/// For example <code>foo.bar</code> will be stored as <code>foo_bar</code> in Elasticsearch.
 		/// </summary>
 		/// <exception cref="ArgumentException"><c>null</c> as key is not allowed.</exception>
-		Dictionary<string, object> Labels { get; }
+		Dictionary<string, Label> Labels { get; }
 
 		/// <summary>
 		/// The name of the item.
@@ -82,7 +82,7 @@ namespace Elastic.Apm.Api
 		/// will be automatically set to the current instance
 		/// </param>
 		/// <param name="labels">Labels that will be added to the captured error</param>
-		void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null, Dictionary<string, object> labels = null);
+		void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null, Dictionary<string, Label> labels = null);
 
 		/// <summary>
 		/// Captures an exception and reports it to the APM server.
@@ -96,7 +96,7 @@ namespace Elastic.Apm.Api
 		/// </param>
 		/// <param name="labels">Labels that will be added to the captured error</param>
 		void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null,
-			Dictionary<string, object> labels = null
+			Dictionary<string, Label> labels = null
 		);
 
 		/// <summary>
@@ -250,43 +250,66 @@ namespace Elastic.Apm.Api
 		/// Labels are used to add indexed information to transactions, spans, and errors. Indexed means the data is searchable and
 		/// aggregatable in Elasticsearch. Multiple labels can be defined with different key-value pairs.
 		/// </summary>
-		/// <param name="key">The key of the label. If the key contains any special characters (., *, "), they will be replaced with underscores.</param>
+		/// <param name="key">
+		/// The key of the label. If the key contains any special characters (., *, "), they will be replaced
+		/// with underscores.
+		/// </param>
 		/// <param name="value">The value of the label</param>
 		public void SetLabel(string key, string value);
 
 		/// <summary>
-		/// <inheritdoc cref="SetLabel(string,string)"/>
+		/// <inheritdoc cref="SetLabel(string,string)" />
 		/// </summary>
-		/// <param name="key"><inheritdoc cref="SetLabel(string,string)"/></param>
-		/// <param name="value"><inheritdoc cref="SetLabel(string,string)"/></param>
+		/// <param name="key">
+		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// </param>
+		/// <param name="value">
+		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// </param>
 		public void SetLabel(string key, bool value);
 
 		/// <summary>
-		/// <inheritdoc cref="SetLabel(string,string)"/>
+		/// <inheritdoc cref="SetLabel(string,string)" />
 		/// </summary>
-		/// <param name="key"><inheritdoc cref="SetLabel(string,string)"/></param>
-		/// <param name="value"><inheritdoc cref="SetLabel(string,string)"/></param>
+		/// <param name="key">
+		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// </param>
+		/// <param name="value">
+		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// </param>
 		public void SetLabel(string key, double value);
 
 		/// <summary>
-		/// <inheritdoc cref="SetLabel(string,string)"/>
+		/// <inheritdoc cref="SetLabel(string,string)" />
 		/// </summary>
-		/// <param name="key"><inheritdoc cref="SetLabel(string,string)"/></param>
-		/// <param name="value"><inheritdoc cref="SetLabel(string,string)"/></param>
+		/// <param name="key">
+		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// </param>
+		/// <param name="value">
+		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// </param>
 		public void SetLabel(string key, int value);
 
 		/// <summary>
-		/// <inheritdoc cref="SetLabel(string,string)"/>
+		/// <inheritdoc cref="SetLabel(string,string)" />
 		/// </summary>
-		/// <param name="key"><inheritdoc cref="SetLabel(string,string)"/></param>
-		/// <param name="value"><inheritdoc cref="SetLabel(string,string)"/></param>
+		/// <param name="key">
+		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// </param>
+		/// <param name="value">
+		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// </param>
 		public void SetLabel(string key, long value);
 
 		/// <summary>
-		/// <inheritdoc cref="SetLabel(string,string)"/>
+		/// <inheritdoc cref="SetLabel(string,string)" />
 		/// </summary>
-		/// <param name="key"><inheritdoc cref="SetLabel(string,string)"/></param>
-		/// <param name="value"><inheritdoc cref="SetLabel(string,string)"/></param>
+		/// <param name="key">
+		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// </param>
+		/// <param name="value">
+		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// </param>
 		public void SetLabel(string key, decimal value);
 
 		/// <summary>

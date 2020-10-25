@@ -154,7 +154,7 @@ namespace Elastic.Apm.Model
 			string culprit = null,
 			bool isHandled = false,
 			string parentId = null,
-			Dictionary<string, object> labels = null
+			Dictionary<string, Label> labels = null
 		)
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? GetCulprit(exception, configurationReader) : culprit;
@@ -220,7 +220,7 @@ namespace Elastic.Apm.Model
 			IConfigurationReader configurationReader,
 			Transaction transaction,
 			string parentId = null,
-			Dictionary<string, object> labels = null
+			Dictionary<string, Label> labels = null
 		)
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;

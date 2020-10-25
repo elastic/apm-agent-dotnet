@@ -5,13 +5,14 @@
 using System;
 using System.Collections.Generic;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Api;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Report.Serialization
 {
-	internal class LabelsJsonConverter : JsonConverter<Dictionary<string, object>>
+	internal class LabelsJsonConverter : JsonConverter<Dictionary<string, Label>>
 	{
-		public override void WriteJson(JsonWriter writer, Dictionary<string, object> labels, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, Dictionary<string, Label> labels, JsonSerializer serializer)
 		{
 			writer.WriteStartObject();
 			foreach (var keyValue in labels)
@@ -24,13 +25,13 @@ namespace Elastic.Apm.Report.Serialization
 
 				if (keyValue.Value != null)
 				{
-					switch (keyValue.Value)
+					switch (keyValue.Value.Value)
 					{
 						case string strValue:
 							writer.WriteValue(strValue.Truncate());
 							break;
 						default:
-							writer.WriteValue(keyValue.Value);
+							writer.WriteValue(keyValue.Value.Value);
 							break;
 					}
 				}
@@ -40,9 +41,9 @@ namespace Elastic.Apm.Report.Serialization
 			writer.WriteEndObject();
 		}
 
-		public override Dictionary<string, object> ReadJson(JsonReader reader, Type objectType, Dictionary<string, object> existingValue,
+		public override Dictionary<string, Label> ReadJson(JsonReader reader, Type objectType, Dictionary<string, Label> existingValue,
 			bool hasExistingValue, JsonSerializer serializer
 		)
-			=> serializer.Deserialize<Dictionary<string, object>>(reader);
+			=> serializer.Deserialize<Dictionary<string, Label>>(reader);
 	}
 }

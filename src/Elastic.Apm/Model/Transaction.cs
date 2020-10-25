@@ -234,7 +234,7 @@ namespace Elastic.Apm.Model
 		public bool IsSampled { get; }
 
 		[JsonIgnore]
-		public Dictionary<string, object> Labels => Context.Labels;
+		public Dictionary<string, Label> Labels => Context.Labels;
 
 		[MaxLength]
 		public string Name
@@ -373,7 +373,7 @@ namespace Elastic.Apm.Model
 			return retVal;
 		}
 
-		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null, Dictionary<string, object> labels = null)
+		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null, Dictionary<string, Label> labels = null)
 			=> ExecutionSegmentCommon.CaptureException(
 				exception,
 				_logger,
@@ -387,7 +387,7 @@ namespace Elastic.Apm.Model
 				labels
 			);
 
-		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null, Dictionary<string, object> labels = null)
+		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null, Dictionary<string, Label> labels = null)
 			=> ExecutionSegmentCommon.CaptureError(
 				message,
 				culprit,
@@ -489,21 +489,21 @@ namespace Elastic.Apm.Model
 		}
 
 		public void SetLabel(string key, string value)
-			=> _context.Value.Labels.Add(key, value);
+			=> _context.Value.Labels[key] = value;
 
 		public void SetLabel(string key, bool value)
 			=> _context.Value.Labels.Add(key, value);
 
 		public void SetLabel(string key, double value)
-			=> _context.Value.Labels.Add(key, value);
+			=> _context.Value.Labels[key] = value;
 
 		public void SetLabel(string key, int value)
-			=> _context.Value.Labels.Add(key, value);
+			=> _context.Value.Labels[key] = value;
 
 		public void SetLabel(string key, long value)
-			=> _context.Value.Labels.Add(key, value);
+			=> _context.Value.Labels[key] = value;
 
 		public void SetLabel(string key, decimal value)
-			=> _context.Value.Labels.Add(key, value);
+			=> _context.Value.Labels[key] = value;
 	}
 }

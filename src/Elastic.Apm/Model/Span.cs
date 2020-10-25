@@ -134,7 +134,7 @@ namespace Elastic.Apm.Model
 		public bool IsSampled => _enclosingTransaction.IsSampled;
 
 		[JsonIgnore]
-		public Dictionary<string, object> Labels => Context.Labels;
+		public Dictionary<string, Label> Labels => Context.Labels;
 
 		[MaxLength]
 		public string Name { get; set; }
@@ -282,7 +282,9 @@ namespace Elastic.Apm.Model
 			if (isFirstEndCall) _currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
 		}
 
-		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null, Dictionary<string, object> labels = null)
+		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null,
+			Dictionary<string, Label> labels = null
+		)
 			=> ExecutionSegmentCommon.CaptureException(
 				exception,
 				_logger,
@@ -320,7 +322,7 @@ namespace Elastic.Apm.Model
 		public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null)
 			=> ExecutionSegmentCommon.CaptureSpan(StartSpanInternal(name, type, subType, action), func);
 
-		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null, Dictionary<string, object> labels = null)
+		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null, Dictionary<string, Label> labels = null)
 			=> ExecutionSegmentCommon.CaptureError(
 				message,
 				culprit,
@@ -410,21 +412,21 @@ namespace Elastic.Apm.Model
 		}
 
 		public void SetLabel(string key, string value)
-			=> Context.Labels.Add(key, value);
+			=> Context.Labels[key] = value;
 
 		public void SetLabel(string key, bool value)
-			=> Context.Labels.Add(key, value);
+			=> Context.Labels[key] = value;
 
 		public void SetLabel(string key, double value)
-			=> Context.Labels.Add(key, value);
+			=> Context.Labels[key] = value;
 
 		public void SetLabel(string key, int value)
-			=> Context.Labels.Add(key, value);
+			=> Context.Labels[key] = value;
 
 		public void SetLabel(string key, long value)
-			=> Context.Labels.Add(key, value);
+			=> Context.Labels[key] = value;
 
 		public void SetLabel(string key, decimal value)
-			=> Context.Labels.Add(key, value);
+			=> Context.Labels[key] = value;
 	}
 }
