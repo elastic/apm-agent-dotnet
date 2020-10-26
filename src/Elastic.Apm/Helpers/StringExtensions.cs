@@ -32,5 +32,19 @@ namespace Elastic.Apm.Helpers
 			thisObj.IndexOf(subStr, StringComparison.OrdinalIgnoreCase) >= 0;
 
 		internal static string ToLog(this string thisObj) => "`" + thisObj + "'";
+
+		/// <summary>
+		/// Truncates the string to a given length, if longer than the length
+		/// </summary>
+		internal static string Truncate(this string input, int length = Consts.PropertyMaxLength)
+		{
+			input.ThrowIfArgumentNull(nameof(input));
+
+			if (input.Length <= length) return input;
+
+			if (length <= 5) return input.Substring(0, length);
+
+			return $"{input.Substring(0, length - 3)}...";
+		}
 	}
 }

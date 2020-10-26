@@ -25,7 +25,7 @@ namespace Elastic.Apm.Report.Serialization
 			writer.WriteStartObject();
 			foreach (var keyValue in headers)
 			{
-				writer.WritePropertyName(SerializationUtils.TrimToPropertyMaxLength(keyValue.Key));
+				writer.WritePropertyName(keyValue.Key.Truncate());
 
 				if (keyValue.Value != null)
 				{

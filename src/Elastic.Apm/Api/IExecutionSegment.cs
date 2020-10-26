@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Elastic.Apm.Api.Constraints;
 
 namespace Elastic.Apm.Api
 {
@@ -21,11 +22,13 @@ namespace Elastic.Apm.Api
 		/// is automatically calculated when <see cref="End" /> is called.
 		/// </summary>
 		/// <value>The duration.</value>
+		[Required]
 		double? Duration { get; set; }
 
 		/// <summary>
 		/// The id of the item.
 		/// </summary>
+		[Required]
 		string Id { get; }
 
 		/// <summary>
@@ -65,6 +68,7 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// Hex encoded 128 random bits ID of the correlated trace.
 		/// </summary>
+		[Required]
 		string TraceId { get; }
 
 		/// <summary>

@@ -2,15 +2,14 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Report.Serialization;
-using Newtonsoft.Json;
 
 namespace Elastic.Apm.Api.Kubernetes
 {
 	public class KubernetesMetadata
 	{
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[MaxLength]
 		public string Namespace { get; set; }
 
 		public Node Node { get; set; }

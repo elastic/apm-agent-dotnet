@@ -2,8 +2,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using Elastic.Apm.Report.Serialization;
-using Newtonsoft.Json;
+using Elastic.Apm.Api.Constraints;
 
 namespace Elastic.Apm.Api
 {
@@ -24,7 +23,7 @@ namespace Elastic.Apm.Api
 		/// (for example <see cref="SpanContext.Http" /> or <see cref="SpanContext.Db" />).
 		/// Explicitly setting this property to <c>null</c> will prohibit this automatic deduction.
 		/// </summary>
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[MaxLength]
 		public string Address
 		{
 			get => _address.Value;
@@ -72,20 +71,20 @@ namespace Elastic.Apm.Api
 			/// <summary>
 			/// Identifier for the destination service (e.g. 'http://elastic.co', 'elasticsearch', 'rabbitmq')"
 			/// </summary>
-			[JsonConverter(typeof(TrimmedStringJsonConverter))]
+			[MaxLength]
 			public string Name { get; set; }
 
 			/// <summary>
 			/// Identifier for the destination service resource being operated on (e.g. 'http://elastic.co:80', 'elasticsearch',
 			/// 'rabbitmq/queue_name')
 			/// </summary>
-			[JsonConverter(typeof(TrimmedStringJsonConverter))]
+			[MaxLength]
 			public string Resource { get; set; }
 
 			/// <summary>
 			/// Type of the destination service (e.g. 'db', 'elasticsearch'). Should typically be the same as span.type.
 			/// </summary>
-			[JsonConverter(typeof(TrimmedStringJsonConverter))]
+			[MaxLength]
 			public string Type { get; set; }
 		}
 

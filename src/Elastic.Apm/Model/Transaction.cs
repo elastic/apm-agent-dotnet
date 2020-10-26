@@ -7,11 +7,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
-using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -223,7 +223,7 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		internal bool HasCustomName { get; private set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[MaxLength]
 		public string Id { get; }
 
 		[JsonIgnore]
@@ -235,7 +235,7 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		public Dictionary<string, string> Labels => Context.Labels;
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[MaxLength]
 		public string Name
 		{
 			get => _name;
@@ -258,7 +258,7 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(TraceId, Id, IsSampled, _traceState);
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[MaxLength]
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
 
@@ -268,7 +268,7 @@ namespace Elastic.Apm.Model
 		/// This is typically the HTTP status code, or e.g. "success" for a background task.
 		/// </summary>
 		/// <value>The result.</value>
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[MaxLength]
 		public string Result { get; set; }
 
 		internal Service Service;
@@ -281,11 +281,11 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		public long Timestamp { get; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[MaxLength]
 		[JsonProperty("trace_id")]
 		public string TraceId { get; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[MaxLength]
 		public string Type { get; set; }
 
 		public string EnsureParentId()

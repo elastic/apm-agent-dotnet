@@ -3,22 +3,26 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using Elastic.Apm.Helpers;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Report.Serialization
 {
-	internal class TrimmedStringJsonConverter : JsonConverter<string>
+	/// <summary>
+	/// Truncates a string to a given length
+	/// </summary>
+	internal class TruncateJsonConverter : JsonConverter<string>
 	{
 		private readonly int _maxLength;
 
 		// ReSharper disable once UnusedMember.Global
-		public TrimmedStringJsonConverter() : this(Consts.PropertyMaxLength) { }
+		public TruncateJsonConverter() : this(Consts.PropertyMaxLength) { }
 
 		// ReSharper disable once MemberCanBePrivate.Global
-		public TrimmedStringJsonConverter(int maxLength) => _maxLength = maxLength;
+		public TruncateJsonConverter(int maxLength) => _maxLength = maxLength;
 
 		public override void WriteJson(JsonWriter writer, string value, JsonSerializer serializer) =>
-			writer.WriteValue(SerializationUtils.TrimToLength(value, _maxLength));
+			writer.WriteValue(value.Truncate(_maxLength));
 
 		public override string ReadJson(JsonReader reader, Type objectType, string existingValue, bool hasExistingValue, JsonSerializer serializer) =>
 			reader.Value as string;

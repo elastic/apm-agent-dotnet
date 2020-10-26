@@ -3,9 +3,9 @@
 // See the LICENSE file in the project root for more information
 
 using Elastic.Apm.Api;
+using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model
@@ -53,15 +53,15 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		public Context Context { get; set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[MaxLength]
 		public string Culprit { get; set; }
 
 		public CapturedException Exception { get; set; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[MaxLength]
 		public string Id { get; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[MaxLength]
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
 
@@ -70,13 +70,13 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		public long Timestamp { get; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[MaxLength]
 		[JsonProperty("trace_id")]
 		public string TraceId { get; set; }
 
 		public TransactionData Transaction { get; }
 
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
+		[MaxLength]
 		[JsonProperty("transaction_id")]
 		public string TransactionId { get; set; }
 
@@ -105,7 +105,7 @@ namespace Elastic.Apm.Model
 			[JsonProperty("sampled")]
 			public bool IsSampled { get; }
 
-			[JsonConverter(typeof(TrimmedStringJsonConverter))]
+			[MaxLength]
 			public string Type { get; }
 
 			public override string ToString() =>

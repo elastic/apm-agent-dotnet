@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
+using Elastic.Apm.Api.Constraints;
 
 namespace Elastic.Apm.Api
 {
@@ -14,6 +15,7 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// List of captured metrics as key - value pairs
 		/// </summary>
+		[Required]
 		IEnumerable<MetricSample> Samples { get; set; }
 
 		// TODO: Rename to Timestamp for consistency?

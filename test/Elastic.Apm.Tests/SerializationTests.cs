@@ -21,6 +21,11 @@ namespace Elastic.Apm.Tests
 	/// </summary>
 	public class SerializationTests
 	{
+		private readonly PayloadItemSerializer _payloadItemSerializer;
+
+		public SerializationTests() =>
+			_payloadItemSerializer = new PayloadItemSerializer(new MockConfigSnapshot());
+
 		// ReSharper disable once MemberCanBePrivate.Global
 		public static TheoryData SerializationUtilsTrimToPropertyMaxLengthVariantsToTest => new TheoryData<string, string>
 		{
@@ -32,7 +37,7 @@ namespace Elastic.Apm.Tests
 		};
 
 		/// <summary>
-		/// Tests the <see cref="TrimmedStringJsonConverter" />. It serializes a transaction with Transaction.Name.Length > 1024.
+		/// Tests the <see cref="TruncateJsonConverter" />. It serializes a transaction with Transaction.Name.Length > 1024.
 		/// Makes sure that the Transaction.Name is truncated correctly.
 		/// </summary>
 		[Fact]
@@ -101,8 +106,8 @@ namespace Elastic.Apm.Tests
 			// In Intake API the property is still named `tags'
 			// See https://github.com/elastic/apm-server/blob/6.5/docs/spec/context.json#L43
 			const string intakeApiLabelsPropertyName = "tags";
-			Assert.Equal(Consts.PropertyMaxLength, deserializedContext[intakeApiLabelsPropertyName].Value<JObject>()["foo"]?.Value<string>()?.Length);
-			Assert.Equal("...", deserializedContext[intakeApiLabelsPropertyName].Value<JObject>()["foo"].Value<string>().Substring(1021, 3));
+			Assert.Equal(Consts.PropertyMaxLength, deserializedContext[intakeApiLabelsPropertyName]["foo"].Value<string>().Length);
+			Assert.Equal("...", deserializedContext[intakeApiLabelsPropertyName]["foo"].Value<string>().Substring(1021, 3));
 		}
 
 		/// <summary>
@@ -126,8 +131,8 @@ namespace Elastic.Apm.Tests
 			// In Intake API the property is still named `tags'
 			// See https://github.com/elastic/apm-server/blob/6.5/docs/spec/spans/common_span.json#L50
 			const string intakeApiLabelsPropertyName = "tags";
-			Assert.Equal(Consts.PropertyMaxLength, deserializedContext[intakeApiLabelsPropertyName].Value<JObject>()["foo"]?.Value<string>()?.Length);
-			Assert.Equal("...", deserializedContext[intakeApiLabelsPropertyName].Value<JObject>()["foo"].Value<string>().Substring(1021, 3));
+			Assert.Equal(Consts.PropertyMaxLength, deserializedContext[intakeApiLabelsPropertyName]["foo"].Value<string>().Length);
+			Assert.Equal("...", deserializedContext[intakeApiLabelsPropertyName]["foo"].Value<string>().Substring(1021, 3));
 		}
 
 		/// <summary>
@@ -177,12 +182,12 @@ namespace Elastic.Apm.Tests
 			dummyInstance.DictionaryProp["foo"] = str;
 
 			var json = SerializePayloadItem(dummyInstance);
-			var deserializedDummyInstance = JsonConvert.DeserializeObject(json) as JObject;
+			var deserializedDummyInstance = JsonConvert.DeserializeObject<JObject>(json);
 
 			Assert.NotNull(deserializedDummyInstance);
 
-			Assert.Equal(str.Length, deserializedDummyInstance["dictionaryProp"].Value<JObject>()["foo"]?.Value<string>()?.Length);
-			Assert.Equal(str, deserializedDummyInstance["dictionaryProp"].Value<JObject>()["foo"].Value<string>());
+			Assert.Equal(str.Length, deserializedDummyInstance["dictionaryProp"]["foo"].Value<string>().Length);
+			Assert.Equal(str, deserializedDummyInstance["dictionaryProp"]["foo"].Value<string>());
 		}
 
 		/// <summary>
@@ -259,13 +264,13 @@ namespace Elastic.Apm.Tests
 			nonSampledTransaction.Context.Request = sampledTransaction.Context.Request;
 
 			var serializedSampledTransaction = SerializePayloadItem(sampledTransaction);
-			var deserializedSampledTransaction = JsonConvert.DeserializeObject(serializedSampledTransaction) as JObject;
+			var deserializedSampledTransaction = JsonConvert.DeserializeObject<JObject>(serializedSampledTransaction);
 			var serializedNonSampledTransaction = SerializePayloadItem(nonSampledTransaction);
-			var deserializedNonSampledTransaction = JsonConvert.DeserializeObject(serializedNonSampledTransaction) as JObject;
+			var deserializedNonSampledTransaction = JsonConvert.DeserializeObject<JObject>(serializedNonSampledTransaction);
 
 			// ReSharper disable once PossibleNullReferenceException
 			deserializedSampledTransaction["sampled"].Value<bool>().Should().BeTrue();
-			deserializedSampledTransaction["context"].Value<JObject>()["request"].Value<JObject>()["url"].Value<JObject>()["full"]
+			deserializedSampledTransaction["context"]["request"]["url"]["full"]
 				.Value<string>()
 				.Should()
 				.Be("https://elastic.co");
@@ -294,15 +299,15 @@ namespace Elastic.Apm.Tests
 		[InlineData("ABCDEFG", 6, "ABC...")]
 		[InlineData("ABCDEFGH", 6, "ABC...")]
 		[InlineData("ABCDEFGH", 7, "ABCD...")]
-		public void SerializationUtilsTrimToLengthTests(string original, int maxLength, string expectedTrimmed) =>
-			SerializationUtils.TrimToLength(original, maxLength).Should().Be(expectedTrimmed);
+		public void SerializationUtilsTruncateTests(string original, int maxLength, string expectedTrimmed) =>
+			original.Truncate(maxLength).Should().Be(expectedTrimmed);
 
 		[Theory]
 		[MemberData(nameof(SerializationUtilsTrimToPropertyMaxLengthVariantsToTest))]
-		public void SerializationUtilsTrimToPropertyMaxLengthTests(string original, string expectedTrimmed)
+		public void SerializationUtilsTruncateToPropertyMaxLengthTests(string original, string expectedTrimmed)
 		{
 			Consts.PropertyMaxLength.Should().BeGreaterThan(3);
-			SerializationUtils.TrimToPropertyMaxLength(original).Should().Be(expectedTrimmed);
+			original.Truncate().Should().Be(expectedTrimmed);
 		}
 
 		/// <summary>
@@ -343,7 +348,7 @@ namespace Elastic.Apm.Tests
 			json = SerializePayloadItem(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue1\",\"a_b_c\":\"labelValue2\"}}");
 		}
-    
+
     /// <summary>
 		/// Makes sure that keys in custom are de dotted.
 		/// </summary>
@@ -410,8 +415,8 @@ namespace Elastic.Apm.Tests
 			}
 		}
 
-		private static string SerializePayloadItem(object item) =>
-			new PayloadItemSerializer(new MockConfigSnapshot()).SerializeObject(item);
+		private string SerializePayloadItem(object item) =>
+			_payloadItemSerializer.SerializeObject(item);
 
 		/// <summary>
 		/// A dummy type for tests.

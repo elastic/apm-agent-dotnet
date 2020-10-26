@@ -3,23 +3,33 @@
 // See the LICENSE file in the project root for more information
 
 using System.Threading;
+using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Helpers;
 
-namespace Elastic.Apm.Model
+namespace Elastic.Apm.Api
 {
-	internal class SpanCount
+	public class SpanCount
 	{
 		private int _dropped;
 		private int _started;
 		private int _total;
+
+		/// <summary>
+		/// Number of spans that have been dropped by the agent recording the transaction
+		/// </summary>
 		public int Dropped => _dropped;
+
+		/// <summary>
+		/// Number of correlated spans that are recorded
+		/// </summary>
+		[Required]
 		public int Started => _started;
 
-		public void IncrementStarted() => Interlocked.Increment(ref _started);
+		internal void IncrementStarted() => Interlocked.Increment(ref _started);
 
-		public void IncrementDropped() => Interlocked.Increment(ref _dropped);
+		internal void IncrementDropped() => Interlocked.Increment(ref _dropped);
 
-		public int IncrementTotal() => Interlocked.Increment(ref _total);
+		internal int IncrementTotal() => Interlocked.Increment(ref _total);
 
 		public override string ToString() =>
 			new ToStringBuilder(nameof(SpanCount)) { { nameof(Started), Started }, { nameof(Dropped), Dropped } }.ToString();

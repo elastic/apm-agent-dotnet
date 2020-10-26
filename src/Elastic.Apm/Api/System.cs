@@ -2,6 +2,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Api.Kubernetes;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Report.Serialization;
@@ -16,12 +17,12 @@ namespace Elastic.Apm.Api
 
 		public Container Container { get; set; }
 
+		[MaxLength]
 		[JsonProperty("detected_hostname")]
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string DetectedHostName { get; set; }
 
+		[MaxLength]
 		[JsonProperty("hostname")]
-		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string HostName
 		{
 			get => _hostName ??= DetectedHostName;

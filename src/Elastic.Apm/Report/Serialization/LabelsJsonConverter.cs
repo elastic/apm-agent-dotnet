@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using Elastic.Apm.Helpers;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Report.Serialization
@@ -16,13 +17,13 @@ namespace Elastic.Apm.Report.Serialization
 			foreach (var keyValue in labels)
 			{
 				// Labels are trimmed and also de dotted in order to satisfy the Intake API
-				writer.WritePropertyName(SerializationUtils.TrimToPropertyMaxLength(keyValue.Key)
+				writer.WritePropertyName(keyValue.Key.Truncate()
 					.Replace('.', '_')
 					.Replace('*', '_')
 					.Replace('"', '_'));
 
 				if (keyValue.Value != null)
-					writer.WriteValue(SerializationUtils.TrimToPropertyMaxLength(keyValue.Value));
+					writer.WriteValue(keyValue.Value.Truncate());
 				else
 					writer.WriteNull();
 			}
