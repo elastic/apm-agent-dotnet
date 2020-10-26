@@ -183,6 +183,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 			internal static readonly SampleAppUrlPathData RoutedWebformsPage =
 				new SampleAppUrlPathData(nameof(Webforms.RoutedWebforms), 200);
+
+			internal static readonly SampleAppUrlPathData WebApiPage =
+				new SampleAppUrlPathData(WebApiController.Path, 200);
 		}
 
 		private TimedEvent? _sampleAppClientCallTiming;

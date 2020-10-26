@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information
 
 using System.Web;
+using System.Web.Http;
+using System.Web.Http.Batch;
 using System.Web.Mvc;
 using System.Web.Routing;
 
@@ -10,6 +12,21 @@ namespace AspNetFullFrameworkSampleApp
 {
 	public class RouteConfig
 	{
+		/// <summary>
+		/// Registers Web API routes
+		/// </summary>
+		public static void RegisterWebApiRoutes(HttpConfiguration configuration, HttpBatchHandler batchHandler)
+		{
+			configuration.MapHttpAttributeRoutes();
+
+			configuration.Routes.MapHttpBatchRoute("Batch", "api/batch", batchHandler);
+			configuration.Routes.MapHttpRoute("DefaultApi", "api/{controller}/{id}", new { id = RouteParameter.Optional });
+		}
+
+		/// <summary>
+		/// Registers MVC and Webpage routes
+		/// </summary>
+		/// <param name="routes"></param>
 		public static void RegisterRoutes(RouteCollection routes)
 		{
 			routes.IgnoreRoute("{resource}.axd/{*pathInfo}");

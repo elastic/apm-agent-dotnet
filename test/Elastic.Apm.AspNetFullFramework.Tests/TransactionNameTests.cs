@@ -105,6 +105,20 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		}
 
 		[AspNetFullFrameworkFact]
+		public async Task Name_Should_Be_Controller_When_WebApi_Controller_Action()
+		{
+			var pathData = SampleAppUrlPaths.WebApiPage;
+			await SendGetRequestToSampleAppAndVerifyResponse(pathData.Uri, pathData.StatusCode);
+
+			await WaitAndCustomVerifyReceivedData(receivedData =>
+			{
+				receivedData.Transactions.Count.Should().Be(1);
+				var transaction = receivedData.Transactions.Single();
+				transaction.Name.Should().Be("GET WebApi");
+			});
+		}
+
+		[AspNetFullFrameworkFact]
 		public async Task Name_Should_Be_Path_When_Webforms_Page()
 		{
 			var pathData = SampleAppUrlPaths.WebformsPage;

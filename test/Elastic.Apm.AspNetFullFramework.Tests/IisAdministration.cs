@@ -506,7 +506,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 	{
 		internal const int LogMessageAfterNInitialAttempts = 30; // i.e., log the first message after 3 seconds (if it's still failing)
 		internal const int LogMessageEveryNAttempts = 10; // i.e., log message every second (if it's still failing)
-		internal const int MaxNumberOfAttemptsToVerify = 600; // 1 minute (60 seconds) max wait time (600 * 100ms)
+		internal const int MaxNumberOfAttemptsToVerify = 1200; // 2 minutes (120 seconds) max wait time (1200 * 100ms)
 		internal const int WaitBetweenVerifyAttemptsMs = 100;
 	}
 }
