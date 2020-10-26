@@ -15,8 +15,10 @@ namespace Elastic.Apm.Metrics
 		public MetricSet(long timeStamp, IEnumerable<MetricSample> samples)
 			=> (TimeStamp, Samples) = (timeStamp, samples);
 
+		/// <inheritdoc />
 		public IEnumerable<MetricSample> Samples { get; set; }
 
+		/// <inheritdoc />
 		[JsonProperty("timestamp")]
 		public long TimeStamp { get; set; }
 	}

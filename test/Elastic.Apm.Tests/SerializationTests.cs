@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
+using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
@@ -380,6 +381,33 @@ namespace Elastic.Apm.Tests
 			context.Custom["a\"b_c"] = "customValue2";
 			json = SerializePayloadItem(context);
 			json.Should().Be("{\"custom\":{\"a_b\":\"customValue1\",\"a_b_c\":\"customValue2\"}}");
+		}
+
+		[Fact]
+		public void MetricSet_Serializes_And_Deserializes()
+		{
+			var samples = new List<MetricSample>
+			{
+				new MetricSample("sample_1", 1),
+				new MetricSample("sample*\"2", 2),
+				new MetricSample("sample_1", 3),
+			};
+
+			var metricSet = new Metrics.MetricSet(1603343944891, samples);
+			var json = SerializePayloadItem(metricSet);
+
+			json.Should().Be("{\"samples\":{\"sample_1\":{\"value\":1.0},\"sample__2\":{\"value\":2.0}},\"timestamp\":1603343944891}");
+
+			var deserialized = JsonConvert.DeserializeObject<Metrics.MetricSet>(json);
+			deserialized.TimeStamp.Should().Be(metricSet.TimeStamp);
+			deserialized.Samples.Count().Should().Be(2);
+			var count = 0;
+			foreach (var sample in deserialized.Samples)
+			{
+				sample.KeyValue.Key.Should().Be(samples[count].KeyValue.Key.Replace("*", "_").Replace("\"", "_"));
+				sample.KeyValue.Value.Should().Be(samples[count].KeyValue.Value);
+				++count;
+			}
 		}
 
 		private static string SerializePayloadItem(object item) =>

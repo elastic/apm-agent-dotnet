@@ -3,6 +3,9 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using Elastic.Apm.Api;
 using Elastic.Apm.Metrics;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -13,25 +16,86 @@ namespace Elastic.Apm.Report.Serialization
 	{
 		public override void WriteJson(JsonWriter writer, MetricSet value, JsonSerializer serializer)
 		{
-			var metrics = new JObject();
-			var samples = new JObject();
+			writer.WriteStartObject();
+			writer.WritePropertyName("samples");
+			writer.WriteStartObject();
 
+			var addedKeys = new HashSet<string>();
 			foreach (var item in value.Samples)
 			{
-				var valueObj = new JObject { { "value", item.KeyValue.Value } };
-
-				if (!samples.ContainsKey(item.KeyValue.Key))
-					samples.Add(item.KeyValue.Key, valueObj);
+				if (addedKeys.Add(item.KeyValue.Key))
+				{
+					writer.WritePropertyName(item.KeyValue.Key
+						.Replace('*', '_')
+						.Replace('"', '_'));
+					writer.WriteStartObject();
+					writer.WritePropertyName("value");
+					writer.WriteValue(item.KeyValue.Value);
+					writer.WriteEndObject();
+				}
 			}
 
-			metrics.Add("samples", samples);
-			metrics.Add("timestamp", value.TimeStamp);
-
-			metrics.WriteTo(writer);
+			writer.WriteEndObject();
+			writer.WritePropertyName("timestamp");
+			writer.WriteValue(value.TimeStamp);
+			writer.WriteEndObject();
 		}
 
 		public override MetricSet ReadJson(JsonReader reader, Type objectType, MetricSet existingValue, bool hasExistingValue,
 			JsonSerializer serializer
-		) => null; //unused
+		)
+		{
+			if (reader.TokenType == JsonToken.Null)
+				return null;
+
+			if (reader.TokenType != JsonToken.StartObject)
+				throw new JsonReaderException($"Expected {JsonToken.StartObject} but found {reader.TokenType}");
+
+			long timestamp = 0;
+			var samples = new List<MetricSample>();
+
+			while (reader.Read())
+			{
+				if (reader.TokenType == JsonToken.EndObject)
+					break;
+
+				var property = (string)reader.Value;
+				switch (property)
+				{
+					case "samples":
+						reader.Read(); // {
+						while (reader.Read())
+						{
+							if (reader.TokenType == JsonToken.EndObject)
+								break;
+
+							var key = (string)reader.Value;
+							double value = 0;
+							reader.Read(); // {
+							while (reader.Read())
+							{
+								if (reader.TokenType == JsonToken.EndObject)
+									break;
+
+								var sampleValueProperty = (string)reader.Value;
+								if (sampleValueProperty == "value")
+								{
+									reader.Read();
+									value = (double)reader.Value;
+								}
+							}
+
+							samples.Add(new MetricSample(key, value));
+						}
+						break;
+					case "timestamp":
+						reader.Read();
+						timestamp = (long)reader.Value;
+						break;
+				}
+			}
+
+			return new MetricSet(timestamp, samples);
+		}
 	}
 }
