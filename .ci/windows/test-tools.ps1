@@ -8,5 +8,5 @@
 Get-ChildItem -Path . -Recurse -Filter *.csproj |
 Foreach-Object {
   & dotnet add $_.FullName package JunitXml.TestLogger --version 2.1.15
-  & dotnet add $_.FullName package coverlet.msbuild --version 2.5.1
+  & dotnet add $_.FullName package coverlet.msbuild --version 2.9.0
 }
