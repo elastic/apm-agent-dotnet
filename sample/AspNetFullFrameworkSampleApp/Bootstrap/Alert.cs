@@ -18,6 +18,13 @@ namespace AspNetFullFrameworkSampleApp.Bootstrap
 		public SuccessAlert(string title, string message) : base(title, message) => Status = AlertStatus.Success;
 	}
 
+	public class DangerAlert : Alert
+	{
+		public DangerAlert(string message) : base(message) => Status = AlertStatus.Danger;
+
+		public DangerAlert(string title, string message) : base(title, message) => Status = AlertStatus.Danger;
+	}
+
 	public class Alert : IHtmlString
 	{
 		public Alert(string message) => Message = message;

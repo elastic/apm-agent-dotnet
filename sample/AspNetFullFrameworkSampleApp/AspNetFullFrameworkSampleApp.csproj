@@ -286,11 +286,24 @@
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\WebApiController.cs" />
+    <Content Include="Views\Shared\_LoginPartial.cshtml" />
+    <Content Include="Views\Database\Create.cshtml" />
+    <Content Include="Views\Database\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNet.WebApi">
       <Version>5.2.4</Version>
     </PackageReference>
+    <Compile Include="ActionFilters\RedirectIfAuthenticatedAttribute.cs" />
+    <Compile Include="App_Start\Startup.cs" />
+    <Compile Include="Extensions\TempDataExtensions.cs" />
+    <Compile Include="Services\Auth\ApplicationUserClaimsIdentityFactory.cs" />
+    <Compile Include="Controllers\DatabaseController.cs" />
+    <Compile Include="Models\CreateSampleDataViewModel.cs" />
+    <Compile Include="Mvc\JsonBadRequestResult.cs" />
+    <Compile Include="Mvc\JsonNetValueProviderFactory.cs" />
+    <Compile Include="Mvc\StreamResult.cs" />
+    <Compile Include="Services\Auth\ApplicationUserClaimsIdentityFactory.cs" />
   </ItemGroup>
   <PropertyGroup Condition="'$(OS)' == 'WINDOWS_NT'">
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
