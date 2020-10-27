@@ -115,15 +115,15 @@ namespace Elastic.Apm.AspNetFullFramework
 			var httpApp = (HttpApplication)eventSender;
 			var httpRequest = httpApp.Context.Request;
 
-			if (WildcardMatcher.IsAnyMatch(Agent.Instance.ConfigurationReader.TransactionIgnoreUrls, httpRequest.Path))
+			if (WildcardMatcher.IsAnyMatch(Agent.Instance.ConfigurationReader.TransactionIgnoreUrls, httpRequest.Unvalidated.Path))
 			{
-				_logger.Debug()?.Log("Request ignored based on TransactionIgnoreUrls, url: {urlPath}", httpRequest.Path);
+				_logger.Debug()?.Log("Request ignored based on TransactionIgnoreUrls, url: {urlPath}", httpRequest.Unvalidated.Path);
 				return;
 			}
 
-			var transactionName = $"{httpRequest.HttpMethod} {httpRequest.Path}";
+			var transactionName = $"{httpRequest.HttpMethod} {httpRequest.Unvalidated.Path}";
 
-			var soapAction = httpRequest.ExtractSoapAction(_logger);
+			var soapAction = SoapRequest.ExtractSoapAction(httpRequest.Unvalidated.Headers, httpRequest.InputStream, _logger);
 			if (soapAction != null) transactionName += $" {soapAction}";
 
 			var distributedTracingData = ExtractIncomingDistributedTracingData(httpRequest);
@@ -155,11 +155,11 @@ namespace Elastic.Apm.AspNetFullFramework
 		/// <returns>Null if traceparent is not set, otherwise the filled DistributedTracingData instance</returns>
 		private DistributedTracingData ExtractIncomingDistributedTracingData(HttpRequest httpRequest)
 		{
-			var traceParentHeaderValue = httpRequest.Headers.Get(DistributedTracing.TraceContext.TraceParentHeaderName);
+			var traceParentHeaderValue = httpRequest.Unvalidated.Headers.Get(DistributedTracing.TraceContext.TraceParentHeaderName);
 			// ReSharper disable once InvertIf
 			if (traceParentHeaderValue == null)
 			{
-				traceParentHeaderValue = httpRequest.Headers.Get(DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed);
+				traceParentHeaderValue = httpRequest.Unvalidated.Headers.Get(DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed);
 
 				if (traceParentHeaderValue == null)
 				{
@@ -170,7 +170,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				}
 			}
 
-			var traceStateHeaderValue = httpRequest.Headers.Get(DistributedTracing.TraceContext.TraceStateHeaderName);
+			var traceStateHeaderValue = httpRequest.Unvalidated.Headers.Get(DistributedTracing.TraceContext.TraceStateHeaderName);
 
 			return traceStateHeaderValue != null
 				? DistributedTracing.TraceContext.TryExtractTracingData(traceParentHeaderValue, traceStateHeaderValue)
@@ -179,7 +179,7 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		private static void FillSampledTransactionContextRequest(HttpRequest httpRequest, ITransaction transaction)
 		{
-			var httpRequestUrl = httpRequest.Url;
+			var httpRequestUrl = httpRequest.Unvalidated.Url;
 			var queryString = httpRequestUrl.Query;
 			var fullUrl = httpRequestUrl.AbsoluteUri;
 			if (queryString.IsEmpty())
@@ -187,7 +187,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				// Uri.Query returns empty string both when query string is empty ("http://host/path?") and
 				// when there's no query string at all ("http://host/path") so we need a way to distinguish between these cases
 				// HttpRequest.RawUrl contains only raw URL path and query (not a full raw URL with protocol, host, etc.)
-				if (httpRequest.RawUrl.IndexOf('?') == -1)
+				if (httpRequest.Unvalidated.RawUrl.IndexOf('?') == -1)
 					queryString = null;
 				else if (!fullUrl.IsEmpty() && fullUrl[fullUrl.Length - 1] != '?')
 					fullUrl += "?";
@@ -208,7 +208,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				Socket = new Socket { Encrypted = httpRequest.IsSecureConnection, RemoteAddress = httpRequest.UserHostAddress },
 				HttpVersion = GetHttpVersion(httpRequest.ServerVariables["SERVER_PROTOCOL"]),
-				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(httpRequest.Headers) : null
+				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(httpRequest.Unvalidated.Headers) : null
 			};
 		}
 
@@ -229,7 +229,7 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		private static Dictionary<string, string> ConvertHeaders(NameValueCollection httpHeaders)
 		{
-			var convertedHeaders = new Dictionary<string, string>();
+			var convertedHeaders = new Dictionary<string, string>(httpHeaders.Count);
 			foreach (var headerName in httpHeaders.AllKeys)
 			{
 				var headerValue = httpHeaders.Get(headerName);

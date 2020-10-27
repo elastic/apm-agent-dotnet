@@ -3,14 +3,14 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Specialized;
 using System.IO;
-using System.Web;
 using System.Xml;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.AspNetFullFramework.Extensions
 {
-	internal static class HttpRequestExtensions
+	internal static class SoapRequest
 	{
 		private const string SoapActionHeaderName = "SOAPAction";
 		private const string ContentTypeHeaderName = "Content-Type";
@@ -19,15 +19,14 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 		/// <summary>
 		/// Extracts the soap action from the header if exists only with Soap 1.1
 		/// </summary>
-		/// <param name="request">The request.</param>
+		/// <param name="headers">The request headers</param>
+		/// <param name="requestStream">The request stream</param>
 		/// <param name="logger">The logger.</param>
-		public static string ExtractSoapAction(this HttpRequest request, IApmLogger logger)
+		public static string ExtractSoapAction(NameValueCollection headers, Stream requestStream, IApmLogger logger)
 		{
 			try
 			{
-				return
-					GetSoap11Action(request)
-					?? GetSoap12Action(request);
+				return GetSoap11Action(headers) ?? GetSoap12Action(headers, requestStream);
 			}
 			catch (Exception e)
 			{
@@ -40,10 +39,10 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 		/// <summary>
 		/// Extracts the soap action from the header if exists only with Soap 1.1
 		/// </summary>
-		/// <param name="request">The request.</param>
-		private static string GetSoap11Action(HttpRequest request)
+		/// <param name="headers">the request headers</param>
+		private static string GetSoap11Action(NameValueCollection headers)
 		{
-			var soapActionWithNamespace = request.Headers.Get(SoapActionHeaderName);
+			var soapActionWithNamespace = headers.Get(SoapActionHeaderName);
 			if (!string.IsNullOrWhiteSpace(soapActionWithNamespace))
 			{
 				var indexPosition = soapActionWithNamespace.LastIndexOf(@"/", StringComparison.InvariantCulture);
@@ -55,25 +54,27 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 		/// <summary>
 		/// Lightweight parser that extracts the soap action from the xml body only with Soap 1.2
 		/// </summary>
-		/// <param name="request">The request.</param>
-		private static string GetSoap12Action(HttpRequest request)
+		/// <param name="headers">the request headers</param>
+		/// <param name="requestStream">the request stream</param>
+		private static string GetSoap12Action(NameValueCollection headers, Stream requestStream)
 		{
 			//[{"key":"Content-Type","value":"application/soap+xml; charset=utf-8"}]
-			var contentType = request.Headers.Get(ContentTypeHeaderName);
-			if (contentType?.Contains(SoapAction12ContentType) != true)
+			var contentType = headers.Get(ContentTypeHeaderName);
+			if (contentType is null || !contentType.Contains(SoapAction12ContentType))
 				return null;
-			if (!request.InputStream.CanSeek)
+
+			var stream = requestStream;
+			if (!stream.CanSeek)
 				return null;
 
 			try
 			{
-				var stream = request.InputStream;
 				var action = GetSoap12ActionInternal(stream);
 				return action;
 			}
 			finally
 			{
-				request.InputStream.Seek(0, SeekOrigin.Begin);
+				stream.Seek(0, SeekOrigin.Begin);
 			}
 		}
 
@@ -88,8 +89,7 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 					IgnoreWhitespace = true
 				};
 
-				var reader = XmlReader.Create(stream, settings);
-
+				using var reader = XmlReader.Create(stream, settings);
 				reader.MoveToContent();
 				if (reader.LocalName != "Envelope")
 					return null;
@@ -109,7 +109,7 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 			{
 				//previous code will skip some errors, but some others can raise an exception
 				//for instance undeclared namespaces, typographical quotes, etc...
-				//If that's the case we don't need to care about them here. They will flow somewere else.
+				//If that's the case we don't need to care about them here. They will flow somewhere else.
 				return null;
 			}
 		}
