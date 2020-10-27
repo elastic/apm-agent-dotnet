@@ -4,7 +4,9 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Elastic.Apm.Api;
+using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
@@ -13,6 +15,8 @@ using FluentAssertions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
+using static Elastic.Apm.Consts;
+using static Elastic.Apm.Helpers.StringExtensions;
 
 namespace Elastic.Apm.Tests
 {
@@ -31,9 +35,9 @@ namespace Elastic.Apm.Tests
 		{
 			{ "", "" },
 			{ "A", "A" },
-			{ "B".Repeat(Consts.PropertyMaxLength), "B".Repeat(Consts.PropertyMaxLength) },
-			{ "C".Repeat(Consts.PropertyMaxLength + 1), "C".Repeat(Consts.PropertyMaxLength - 3) + "..." },
-			{ "D".Repeat(Consts.PropertyMaxLength * 2), "D".Repeat(Consts.PropertyMaxLength - 3) + "..." }
+			{ "B".Repeat(PropertyMaxLength), "B".Repeat(PropertyMaxLength) },
+			{ "C".Repeat(PropertyMaxLength + 1), "C".Repeat(PropertyMaxLength - Ellipsis.Length) + Ellipsis },
+			{ "D".Repeat(PropertyMaxLength * 2), "D".Repeat(PropertyMaxLength - Ellipsis.Length) + Ellipsis }
 		};
 
 		/// <summary>
@@ -52,14 +56,13 @@ namespace Elastic.Apm.Tests
 				json = SerializePayloadItem(transaction);
 			}
 
-			var deserializedTransaction = JsonConvert.DeserializeObject(json) as JObject;
+			var deserializedTransaction = JsonConvert.DeserializeObject<JObject>(json);
 
-			Assert.NotNull(deserializedTransaction);
-
-			Assert.Equal(Consts.PropertyMaxLength, deserializedTransaction["name"]?.Value<string>()?.Length);
-			Assert.Equal("...", deserializedTransaction["name"].Value<string>().Substring(1021, 3));
-			Assert.Equal("test", deserializedTransaction["type"].Value<string>());
-			Assert.Equal("fail", deserializedTransaction["result"].Value<string>());
+			deserializedTransaction.Should().NotBeNull();
+			deserializedTransaction["name"].Value<string>().Length.Should().Be(PropertyMaxLength);
+			deserializedTransaction["name"].Value<string>().Substring(PropertyMaxLength - Ellipsis.Length, Ellipsis.Length).Should().Be(Ellipsis);
+			deserializedTransaction["type"].Value<string>().Should().Be("test");
+			deserializedTransaction["result"].Value<string>().Should().Be("fail");
 		}
 
 		/// <summary>
@@ -78,11 +81,9 @@ namespace Elastic.Apm.Tests
 			var json = SerializePayloadItem(dummyInstance);
 			var deserializedDummyInstance = JsonConvert.DeserializeObject<DummyType>(json);
 
-			Assert.NotNull(deserializedDummyInstance);
-
-			Assert.Equal(str.Length, deserializedDummyInstance.StringProp.Length);
-			Assert.Equal(str, deserializedDummyInstance.StringProp);
-			Assert.Equal(42, deserializedDummyInstance.IntProp);
+			deserializedDummyInstance.Should().NotBeNull();
+			deserializedDummyInstance.StringProp.Should().Be(str);
+			deserializedDummyInstance.IntProp.Should().Be(42);
 		}
 
 		/// <summary>
@@ -99,15 +100,20 @@ namespace Elastic.Apm.Tests
 			context.Labels["foo"] = str;
 
 			var json = SerializePayloadItem(context);
-			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
+			var deserializedContext = JsonConvert.DeserializeObject<JObject>(json);
 
-			Assert.NotNull(deserializedContext);
+			deserializedContext.Should().NotBeNull();
 
 			// In Intake API the property is still named `tags'
 			// See https://github.com/elastic/apm-server/blob/6.5/docs/spec/context.json#L43
 			const string intakeApiLabelsPropertyName = "tags";
-			Assert.Equal(Consts.PropertyMaxLength, deserializedContext[intakeApiLabelsPropertyName]["foo"].Value<string>().Length);
-			Assert.Equal("...", deserializedContext[intakeApiLabelsPropertyName]["foo"].Value<string>().Substring(1021, 3));
+
+			deserializedContext[intakeApiLabelsPropertyName]["foo"].Value<string>().Length.Should().Be(PropertyMaxLength);
+			deserializedContext[intakeApiLabelsPropertyName]["foo"]
+				.Value<string>()
+				.Substring(PropertyMaxLength - Ellipsis.Length, Ellipsis.Length)
+				.Should()
+				.Be(Ellipsis);
 		}
 
 		/// <summary>
@@ -124,15 +130,20 @@ namespace Elastic.Apm.Tests
 			context.Labels["foo"] = str;
 
 			var json = SerializePayloadItem(context);
-			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
+			var deserializedContext = JsonConvert.DeserializeObject<JObject>(json);
 
-			Assert.NotNull(deserializedContext);
+			deserializedContext.Should().NotBeNull();
 
 			// In Intake API the property is still named `tags'
 			// See https://github.com/elastic/apm-server/blob/6.5/docs/spec/spans/common_span.json#L50
 			const string intakeApiLabelsPropertyName = "tags";
-			Assert.Equal(Consts.PropertyMaxLength, deserializedContext[intakeApiLabelsPropertyName]["foo"].Value<string>().Length);
-			Assert.Equal("...", deserializedContext[intakeApiLabelsPropertyName]["foo"].Value<string>().Substring(1021, 3));
+
+			deserializedContext[intakeApiLabelsPropertyName]["foo"].Value<string>().Length.Should().Be(PropertyMaxLength);
+			deserializedContext[intakeApiLabelsPropertyName]["foo"]
+				.Value<string>()
+				.Substring(PropertyMaxLength - Ellipsis.Length, Ellipsis.Length)
+				.Should()
+				.Be(Ellipsis);
 		}
 
 		/// <summary>
@@ -145,9 +156,9 @@ namespace Elastic.Apm.Tests
 			context.Labels["foo"] = null;
 
 			var json = SerializePayloadItem(context);
-			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
+			var deserializedContext = JsonConvert.DeserializeObject<JObject>(json);
 
-			Assert.NotNull(deserializedContext);
+			deserializedContext.Should().NotBeNull();
 			deserializedContext["tags"]["foo"].Value<string>().Should().BeNull();
 		}
 
@@ -161,9 +172,9 @@ namespace Elastic.Apm.Tests
 			context.Labels["foo"] = string.Empty;
 
 			var json = SerializePayloadItem(context);
-			var deserializedContext = JsonConvert.DeserializeObject(json) as JObject;
+			var deserializedContext = JsonConvert.DeserializeObject<JObject>(json);
 
-			Assert.NotNull(deserializedContext);
+			deserializedContext.Should().NotBeNull();
 			deserializedContext["tags"]["foo"].Value<string>().Should().BeEmpty();
 		}
 
@@ -184,10 +195,8 @@ namespace Elastic.Apm.Tests
 			var json = SerializePayloadItem(dummyInstance);
 			var deserializedDummyInstance = JsonConvert.DeserializeObject<JObject>(json);
 
-			Assert.NotNull(deserializedDummyInstance);
-
-			Assert.Equal(str.Length, deserializedDummyInstance["dictionaryProp"]["foo"].Value<string>().Length);
-			Assert.Equal(str, deserializedDummyInstance["dictionaryProp"]["foo"].Value<string>());
+			deserializedDummyInstance.Should().NotBeNull();
+			deserializedDummyInstance["dictionaryProp"]["foo"].Value<string>().Should().Be(str);
 		}
 
 		/// <summary>
@@ -197,32 +206,35 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void DbStatementLengthTest()
 		{
-			var str = new string('a', 12000);
+			var maxLength = typeof(Database).GetMember(nameof(Database.Statement))[0].GetCustomAttribute<MaxLengthAttribute>().Length;
+
+			var str = new string('a', maxLength * 2);
 			var db = new Database { Statement = str };
 
 			var json = SerializePayloadItem(db);
 			var deserializedDb = JsonConvert.DeserializeObject<Database>(json);
 
-			Assert.NotNull(deserializedDb);
-
-			Assert.Equal(10_000, deserializedDb.Statement.Length);
-			Assert.Equal("...", deserializedDb.Statement.Substring(10_000 - 3, 3));
+			deserializedDb.Should().NotBeNull();
+			deserializedDb.Statement.Length.Should().Be(maxLength);
+			deserializedDb.Statement.Substring(maxLength - Ellipsis.Length, Ellipsis.Length).Should().Be(Ellipsis);
 		}
 
 		[Fact]
 		public void ServiceVersionLengthTest()
 		{
+			var maxLength = typeof(Service).GetMember(nameof(Service.Version))[0].GetCustomAttribute<MaxLengthAttribute>().Length;
+
 			var logger = new NoopLogger();
 			var service = Service.GetDefaultService(new MockConfigSnapshot(logger), logger);
-			service.Version = new string('a', 1200);
+			service.Version = new string('a', maxLength * 2);
 
 			var json = SerializePayloadItem(service);
 			var deserializedService = JsonConvert.DeserializeObject<Service>(json);
 
-			Assert.NotNull(deserializedService);
-
-			Assert.Equal(Consts.PropertyMaxLength, deserializedService.Version.Length);
-			Assert.Equal("...", deserializedService.Version.Substring(Consts.PropertyMaxLength - 3, 3));
+			maxLength.Should().Be(PropertyMaxLength);
+			deserializedService.Should().NotBeNull();
+			deserializedService.Version.Length.Should().Be(maxLength);
+			deserializedService.Version.Substring(maxLength - Ellipsis.Length, Ellipsis.Length).Should().Be(Ellipsis);
 		}
 
 		/// <summary>
@@ -232,17 +244,19 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void ServiceNameLengthTest()
 		{
+			var maxLength = typeof(Service).GetMember(nameof(Service.Name))[0].GetCustomAttribute<MaxLengthAttribute>().Length;
+
 			var logger = new NoopLogger();
 			var service = Service.GetDefaultService(new MockConfigSnapshot(logger), logger);
-			service.Name = new string('a', 1200);
+			service.Name = new string('a', maxLength * 2);
 
 			var json = SerializePayloadItem(service);
 			var deserializedService = JsonConvert.DeserializeObject<Service>(json);
 
-			Assert.NotNull(deserializedService);
-
-			Assert.Equal(Consts.PropertyMaxLength, deserializedService.Name.Length);
-			Assert.Equal("...", deserializedService.Name.Substring(Consts.PropertyMaxLength - 3, 3));
+			maxLength.Should().Be(PropertyMaxLength);
+			deserializedService.Should().NotBeNull();
+			deserializedService.Name.Length.Should().Be(maxLength);
+			deserializedService.Name.Substring(maxLength - Ellipsis.Length, Ellipsis.Length).Should().Be(Ellipsis);
 		}
 
 		/// <summary>
@@ -296,9 +310,9 @@ namespace Elastic.Apm.Tests
 		[InlineData("ABCDE", 5, "ABCDE")]
 		[InlineData("ABCDEF", 5, "ABCDE")]
 		[InlineData("ABCDEF", 6, "ABCDEF")]
-		[InlineData("ABCDEFG", 6, "ABC...")]
-		[InlineData("ABCDEFGH", 6, "ABC...")]
-		[InlineData("ABCDEFGH", 7, "ABCD...")]
+		[InlineData("ABCDEFG", 6, "ABCDE" + Ellipsis)]
+		[InlineData("ABCDEFGH", 6, "ABCDE" + Ellipsis)]
+		[InlineData("ABCDEFGH", 7, "ABCDEF" + Ellipsis)]
 		public void SerializationUtilsTruncateTests(string original, int maxLength, string expectedTrimmed) =>
 			original.Truncate(maxLength).Should().Be(expectedTrimmed);
 
@@ -306,7 +320,7 @@ namespace Elastic.Apm.Tests
 		[MemberData(nameof(SerializationUtilsTrimToPropertyMaxLengthVariantsToTest))]
 		public void SerializationUtilsTruncateToPropertyMaxLengthTests(string original, string expectedTrimmed)
 		{
-			Consts.PropertyMaxLength.Should().BeGreaterThan(3);
+			PropertyMaxLength.Should().BeGreaterThan(3);
 			original.Truncate().Should().Be(expectedTrimmed);
 		}
 
