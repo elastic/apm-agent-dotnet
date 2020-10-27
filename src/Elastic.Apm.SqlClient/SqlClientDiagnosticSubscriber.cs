@@ -14,6 +14,10 @@ namespace Elastic.Apm.SqlClient
 		public IDisposable Subscribe(IApmAgent agentComponents)
 		{
 			var retVal = new CompositeDisposable();
+
+			if (!agentComponents.ConfigurationReader.Enabled)
+				return retVal;
+
 			if (PlatformDetection.IsDotNetCore)
 			{
 				var initializer = new DiagnosticInitializer(agentComponents.Logger, new[] { new SqlClientDiagnosticListener(agentComponents) });
@@ -25,9 +29,7 @@ namespace Elastic.Apm.SqlClient
 					.Subscribe(initializer));
 			}
 			else
-			{
 				retVal.Add(new SqlEventListener(agentComponents));
-			}
 
 			return retVal;
 		}

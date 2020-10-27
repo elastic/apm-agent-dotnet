@@ -24,10 +24,12 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _centralConfig;
 		private readonly string _dbgDescription;
 		private readonly string _disableMetrics;
+		private readonly string _enabled;
 		private readonly string _environment;
 		private readonly string _excludedNamespaces;
 		private readonly string _flushInterval;
 		private readonly string _globalLabels;
+		private readonly string _hostName;
 		private readonly string _logLevel;
 		private readonly string _maxBatchEventCount;
 		private readonly string _maxQueueEventCount;
@@ -40,12 +42,11 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _serviceVersion;
 		private readonly string _spanFramesMinDurationInMilliseconds;
 		private readonly string _stackTraceLimit;
+		private readonly string _transactionIgnoreUrls;
 		private readonly string _transactionMaxSpans;
 		private readonly string _transactionSampleRate;
 		private readonly string _useElasticTraceparentHeader;
 		private readonly string _verifyServerCert;
-		private readonly string _transactionIgnoreUrls;
-		private readonly string _hostName;
 		private string _cloudProvider;
 
 		public MockConfigSnapshot(IApmLogger logger = null,
@@ -80,7 +81,8 @@ namespace Elastic.Apm.Tests.Mocks
 			string transactionIgnoreUrls = null,
 			string hostName = null,
 			// false is **not** the default value, but we don't want to query for cloud metadata in all tests
-			string cloudProvider = SupportedValues.CloudProviderFalse
+			string cloudProvider = SupportedValues.CloudProviderFalse,
+			string enabled = null
 		) : base(logger, ThisClassName)
 		{
 			_serverUrls = serverUrls;
@@ -114,6 +116,7 @@ namespace Elastic.Apm.Tests.Mocks
 			_transactionIgnoreUrls = transactionIgnoreUrls;
 			_hostName = hostName;
 			_cloudProvider = cloudProvider;
+			_enabled = enabled;
 		}
 
 		public string ApiKey => ParseApiKey(Kv(EnvVarNames.ApiKey, _apiKey, Origin));
@@ -136,6 +139,8 @@ namespace Elastic.Apm.Tests.Mocks
 			ParseDisableMetrics(Kv(EnvVarNames.DisableMetrics, _disableMetrics, Origin));
 
 		public string Environment => ParseEnvironment(Kv(EnvVarNames.Environment, _environment, Origin));
+
+		public bool Enabled => ParseEnabled(Kv(EnvVarNames.Enabled, _enabled, Origin));
 
 		public IReadOnlyCollection<string> ExcludedNamespaces =>
 			ParseExcludedNamespaces(new ConfigurationKeyValue(EnvVarNames.ExcludedNamespaces, _excludedNamespaces, Origin));

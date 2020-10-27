@@ -45,8 +45,15 @@ namespace Elastic.Apm.Api
 
 		public DbSpanCommon DbSpanCommon { get; }
 
-		public ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null, bool ignoreActivity = false) =>
-			StartTransactionInternal(name, type, distributedTracingData, ignoreActivity);
+		public ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null,
+			bool ignoreActivity = false
+		)
+		{
+			if (_configProvider.CurrentSnapshot.Enabled)
+				return StartTransactionInternal(name, type, distributedTracingData, ignoreActivity);
+
+			return new NoopTransaction(name, type, CurrentExecutionSegmentsContainer);
+		}
 
 		internal Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null, bool ignoreActivity = false)
 		{

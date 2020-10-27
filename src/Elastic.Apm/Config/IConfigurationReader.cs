@@ -38,6 +38,12 @@ namespace Elastic.Apm.Config
 		/// </summary>
 		IReadOnlyList<WildcardMatcher> DisableMetrics { get; }
 
+		/// <summary>
+		/// Setting to false will completely disable the agent, including instrumentation and remote config polling.
+		/// If you want to dynamically change the status of the agent, use recording instead.
+		/// </summary>
+		bool Enabled { get; }
+
 		string Environment { get; }
 
 		/// <summary>
@@ -80,11 +86,6 @@ namespace Elastic.Apm.Config
 		/// Allows for the reported hostname to be manually specified. If unset, the hostname will be detected.
 		/// </summary>
 		string HostName { get; }
-
-		/// <summary>
-		/// A list of patterns to match HTTP requests to ignore. An incoming HTTP request whose request line matches any of the patterns will not be reported as a transaction.
-		/// </summary>
-		IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls { get; }
 
 		LogLevel LogLevel { get; }
 
@@ -162,6 +163,12 @@ namespace Elastic.Apm.Config
 		/// positive number n: top n frames must be collected
 		/// </summary>
 		int StackTraceLimit { get; }
+
+		/// <summary>
+		/// A list of patterns to match HTTP requests to ignore. An incoming HTTP request whose request line matches any of the
+		/// patterns will not be reported as a transaction.
+		/// </summary>
+		IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls { get; }
 
 		/// <summary>
 		/// 	The number of spans that are recorded per transaction.

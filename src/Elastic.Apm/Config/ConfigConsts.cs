@@ -38,6 +38,8 @@ namespace Elastic.Apm.Config
 			public const bool UseElasticTraceparentHeader = true;
 			public const bool VerifyServerCert = true;
 
+			public static readonly IReadOnlyCollection<string> DefaultApplicationNamespaces = new List<string>().AsReadOnly();
+
 			public static readonly IReadOnlyCollection<string> DefaultExcludedNamespaces =
 				new List<string>
 				{
@@ -50,8 +52,6 @@ namespace Elastic.Apm.Config
 					"NLog",
 					"Giraffe."
 				}.AsReadOnly();
-
-			public static readonly IReadOnlyCollection<string> DefaultApplicationNamespaces = new List<string>().AsReadOnly();
 
 			public static List<WildcardMatcher> DisableMetrics = new List<WildcardMatcher>();
 
@@ -104,24 +104,31 @@ namespace Elastic.Apm.Config
 
 		public static class EnvVarNames
 		{
-			private const string Prefix = "ELASTIC_APM_";
+			public const string ApiKey = Prefix + "API_KEY";
+			public const string ApplicationNamespaces = Prefix + "APPLICATION_NAMESPACES";
 			public const string CaptureBody = Prefix + "CAPTURE_BODY";
 			public const string CaptureBodyContentTypes = Prefix + "CAPTURE_BODY_CONTENT_TYPES";
 			public const string CaptureHeaders = Prefix + "CAPTURE_HEADERS";
 			public const string CentralConfig = Prefix + "CENTRAL_CONFIG";
 			public const string CloudProvider = Prefix + "CLOUD_PROVIDER";
 			public const string DisableMetrics = Prefix + "DISABLE_METRICS";
+			public const string Enabled = Prefix + "ENABLED";
 			public const string Environment = Prefix + "ENVIRONMENT";
+			public const string ExcludedNamespaces = Prefix + "EXCLUDED_NAMESPACES";
+
 			public const string FlushInterval = Prefix + "FLUSH_INTERVAL";
+
+			//This setting is Full Framework only:
+			public const string FullFrameworkConfigurationReaderType = Prefix + "FULL_FRAMEWORK_CONFIGURATION_READER_TYPE";
 			public const string GlobalLabels = Prefix + "GLOBAL_LABELS";
 			public const string HostName = Prefix + "HOSTNAME";
 			public const string LogLevel = Prefix + "LOG_LEVEL";
 			public const string MaxBatchEventCount = Prefix + "MAX_BATCH_EVENT_COUNT";
 			public const string MaxQueueEventCount = Prefix + "MAX_QUEUE_EVENT_COUNT";
 			public const string MetricsInterval = Prefix + "METRICS_INTERVAL";
+			private const string Prefix = "ELASTIC_APM_";
 			public const string SanitizeFieldNames = Prefix + "SANITIZE_FIELD_NAMES";
 			public const string SecretToken = Prefix + "SECRET_TOKEN";
-			public const string ApiKey = Prefix + "API_KEY";
 			public const string ServerUrls = Prefix + "SERVER_URLS";
 			public const string ServiceName = Prefix + "SERVICE_NAME";
 			public const string ServiceNodeName = Prefix + "SERVICE_NODE_NAME";
@@ -132,16 +139,13 @@ namespace Elastic.Apm.Config
 			public const string TransactionSampleRate = Prefix + "TRANSACTION_SAMPLE_RATE";
 			public const string UseElasticTraceparentHeader = Prefix + "USE_ELASTIC_TRACEPARENT_HEADER";
 			public const string VerifyServerCert = Prefix + "VERIFY_SERVER_CERT";
-			public const string ExcludedNamespaces = Prefix + "EXCLUDED_NAMESPACES";
-			public const string ApplicationNamespaces = Prefix + "APPLICATION_NAMESPACES";
 			public static string TransactionIgnoreUrls = Prefix + "TRANSACTION_IGNORE_URLS";
-			//This setting is Full Framework only:
-			public const string FullFrameworkConfigurationReaderType = Prefix + "FULL_FRAMEWORK_CONFIGURATION_READER_TYPE";
 		}
 
 		public static class KeyNames
 		{
-			private const string Prefix = "ElasticApm:";
+			public const string ApiKey = Prefix + nameof(ApiKey);
+			public const string ApplicationNamespaces = Prefix + nameof(ApplicationNamespaces);
 
 			public const string CaptureBody = Prefix + nameof(CaptureBody);
 			public const string CaptureBodyContentTypes = Prefix + nameof(CaptureBodyContentTypes);
@@ -149,17 +153,23 @@ namespace Elastic.Apm.Config
 			public const string CentralConfig = Prefix + nameof(CentralConfig);
 			public const string CloudProvider = Prefix + nameof(CloudProvider);
 			public const string DisableMetrics = Prefix + nameof(DisableMetrics);
+			public const string Enabled = Prefix + nameof(Enabled);
 			public const string Environment = Prefix + nameof(Environment);
+			public const string ExcludedNamespaces = Prefix + nameof(ExcludedNamespaces);
+
 			public const string FlushInterval = Prefix + nameof(FlushInterval);
+
+			//This setting is Full Framework only:
+			public const string FullFrameworkConfigurationReaderType = Prefix + nameof(FullFrameworkConfigurationReaderType);
 			public const string GlobalLabels = Prefix + nameof(GlobalLabels);
 			public const string HostName = Prefix + nameof(HostName);
 			public const string LogLevel = Prefix + nameof(LogLevel);
 			public const string MaxBatchEventCount = Prefix + nameof(MaxBatchEventCount);
 			public const string MaxQueueEventCount = Prefix + nameof(MaxQueueEventCount);
 			public const string MetricsInterval = Prefix + nameof(MetricsInterval);
+			private const string Prefix = "ElasticApm:";
 			public const string SanitizeFieldNames = Prefix + nameof(SanitizeFieldNames);
 			public const string SecretToken = Prefix + nameof(SecretToken);
-			public const string ApiKey = Prefix + nameof(ApiKey);
 			public const string ServerUrls = Prefix + nameof(ServerUrls);
 			public const string ServiceName = Prefix + nameof(ServiceName);
 			public const string ServiceNodeName = Prefix + nameof(ServiceNodeName);
@@ -170,11 +180,7 @@ namespace Elastic.Apm.Config
 			public const string TransactionSampleRate = Prefix + nameof(TransactionSampleRate);
 			public const string UseElasticTraceparentHeader = Prefix + nameof(UseElasticTraceparentHeader);
 			public const string VerifyServerCert = Prefix + nameof(VerifyServerCert);
-			public const string ExcludedNamespaces = Prefix + nameof(ExcludedNamespaces);
-			public const string ApplicationNamespaces = Prefix + nameof(ApplicationNamespaces);
 			public static string TransactionIgnoreUrls = Prefix + nameof(TransactionIgnoreUrls);
-			//This setting is Full Framework only:
-			public const string FullFrameworkConfigurationReaderType = Prefix + nameof(FullFrameworkConfigurationReaderType);
 		}
 
 		public static class SupportedValues

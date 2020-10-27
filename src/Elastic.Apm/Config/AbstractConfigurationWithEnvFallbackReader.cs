@@ -48,6 +48,8 @@ namespace Elastic.Apm.Config
 		public IReadOnlyList<WildcardMatcher> DisableMetrics =>
 			ParseDisableMetrics(Read(KeyNames.DisableMetrics, EnvVarNames.DisableMetrics));
 
+		public bool Enabled => ParseEnabled(Read(KeyNames.Enabled, EnvVarNames.Enabled));
+
 		public virtual string Environment => ParseEnvironment(Read(KeyNames.Environment, EnvVarNames.Environment))
 			?? _defaultEnvironmentName;
 

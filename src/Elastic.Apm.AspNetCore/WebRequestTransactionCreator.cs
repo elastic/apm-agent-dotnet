@@ -22,7 +22,7 @@ namespace Elastic.Apm.AspNetCore
 	/// </summary>
 	internal static class WebRequestTransactionCreator
 	{
-		internal static Transaction StartTransactionAsync(HttpContext context, IApmLogger logger, Tracer tracer, IConfigSnapshot configSnapshot)
+		internal static ITransaction StartTransactionAsync(HttpContext context, IApmLogger logger, Tracer tracer, IConfigSnapshot configSnapshot)
 		{
 			try
 			{

@@ -56,9 +56,10 @@ namespace Elastic.Apm.Report
 			Service service,
 			Api.System system,
 			HttpMessageHandler httpMessageHandler = null,
-			string dbgName = null
+			string dbgName = null,
+			bool isEnabled = true
 		)
-			: base( /* isEnabled: */ true, logger, ThisClassName, service, config, httpMessageHandler)
+			: base(isEnabled, logger, ThisClassName, service, config, httpMessageHandler)
 		{
 			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
 			_payloadItemSerializer = new PayloadItemSerializer(config);

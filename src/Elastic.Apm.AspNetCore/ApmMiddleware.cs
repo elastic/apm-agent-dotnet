@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.Extensions;
-using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Microsoft.AspNetCore.Http;
@@ -34,7 +33,6 @@ namespace Elastic.Apm.AspNetCore
 
 		private readonly RequestDelegate _next;
 		private readonly Tracer _tracer;
-		private readonly IConfigurationReader _configurationReader;
 		private readonly ApmAgent _agent;
 
 		public ApmMiddleware(RequestDelegate next, Tracer tracer, ApmAgent agent)
@@ -42,13 +40,16 @@ namespace Elastic.Apm.AspNetCore
 			_next = next;
 			_tracer = tracer;
 			_logger = agent.Logger.Scoped(nameof(ApmMiddleware));
-			_configurationReader = agent.ConfigurationReader;
 			_agent = agent;
 		}
 
 		public async Task InvokeAsync(HttpContext context)
 		{
-			var transaction = WebRequestTransactionCreator.StartTransactionAsync(context, _logger, _tracer, _agent.ConfigStore.CurrentSnapshot);
+			var newTransaction = WebRequestTransactionCreator.StartTransactionAsync(context, _logger, _tracer, _agent.ConfigStore.CurrentSnapshot);
+
+			Transaction transaction = null;
+			if (newTransaction is Transaction createdTransaction)
+				transaction = createdTransaction;
 
 			if (transaction != null)
 				WebRequestTransactionCreator.FillSampledTransactionContextRequest(transaction, context, _logger);
@@ -67,17 +68,16 @@ namespace Elastic.Apm.AspNetCore
 					&& (string.IsNullOrEmpty(body) || body == Apm.Consts.Redacted))
 					transaction.CollectRequestBody(true, context.Request, _logger, transaction.ConfigSnapshot);
 
-				WebRequestTransactionCreator.StopTransaction(transaction, context, _logger);
+				if(transaction != null)
+					WebRequestTransactionCreator.StopTransaction(transaction, context, _logger);
 			}
 		}
 
 		private bool CaptureExceptionAndRequestBody(Exception e, HttpContext context, Transaction transaction)
 		{
 			transaction?.CaptureException(e);
-
 			if (context != null)
 				transaction?.CollectRequestBody(true, context.Request, _logger, transaction.ConfigSnapshot);
-
 			return false;
 		}
 	}
