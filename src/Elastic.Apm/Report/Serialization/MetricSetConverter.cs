@@ -37,7 +37,7 @@ namespace Elastic.Apm.Report.Serialization
 
 			writer.WriteEndObject();
 			writer.WritePropertyName("timestamp");
-			writer.WriteValue(value.TimeStamp);
+			writer.WriteValue(value.Timestamp);
 			writer.WriteEndObject();
 		}
 

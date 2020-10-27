@@ -12,14 +12,13 @@ namespace Elastic.Apm.Metrics
 	[JsonConverter(typeof(MetricSetConverter))]
 	internal class MetricSet : IMetricSet
 	{
-		public MetricSet(long timeStamp, IEnumerable<MetricSample> samples)
-			=> (TimeStamp, Samples) = (timeStamp, samples);
+		public MetricSet(long timestamp, IEnumerable<MetricSample> samples)
+			=> (Timestamp, Samples) = (timestamp, samples);
 
 		/// <inheritdoc />
 		public IEnumerable<MetricSample> Samples { get; set; }
 
 		/// <inheritdoc />
-		[JsonProperty("timestamp")]
-		public long TimeStamp { get; set; }
+		public long Timestamp { get; set; }
 	}
 }

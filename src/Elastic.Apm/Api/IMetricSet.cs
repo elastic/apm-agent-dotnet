@@ -18,10 +18,9 @@ namespace Elastic.Apm.Api
 		[Required]
 		IEnumerable<MetricSample> Samples { get; set; }
 
-		// TODO: Rename to Timestamp for consistency?
 		/// <summary>
 		/// Number of milliseconds in unix time
 		/// </summary>
-		long TimeStamp { get; set; }
+		long Timestamp { get; set; }
 	}
 }
