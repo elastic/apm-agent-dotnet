@@ -186,7 +186,7 @@ namespace Elastic.Apm.Tests.Soap
 		public void Soap12Parser_ParsesHeaderAndBody(string soap, string expectedAction)
 		{
 			var requestStream = new MemoryStream(Encoding.UTF8.GetBytes(soap));
-			var action = HttpRequestExtensions.GetSoap12ActionInternal(requestStream);
+			var action = SoapRequest.GetSoap12ActionInternal(requestStream);
 
 			action.Should().Be(expectedAction);
 		}
