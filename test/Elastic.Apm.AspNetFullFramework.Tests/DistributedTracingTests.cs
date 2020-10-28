@@ -32,7 +32,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var rootTxData = SampleAppUrlPaths.ContactPage;
 			var childTxData = SampleAppUrlPaths.AboutPage;
 
-			await SendGetRequestToSampleAppAndVerifyResponse(rootTxData.RelativeUrlPath, rootTxData.StatusCode, addTraceContextHeaders: true);
+			await SendGetRequestToSampleAppAndVerifyResponse(rootTxData.Uri, rootTxData.StatusCode, addTraceContextHeaders: true);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
@@ -60,11 +60,11 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		{
 			const string queryString = "?" + HomeController.CaptureControllerActionAsSpanQueryStringKey + "=true";
 			var rootTxData = SampleAppUrlPaths.ContactPage.Clone(
-				$"{SampleAppUrlPaths.ContactPage.RelativeUrlPath}{queryString}",
+				$"{SampleAppUrlPaths.ContactPage.RelativePath}{queryString}",
 				spansCount: SampleAppUrlPaths.ContactPage.SpansCount + 1);
-			var childTxData = SampleAppUrlPaths.AboutPage.Clone($"{SampleAppUrlPaths.AboutPage.RelativeUrlPath}{queryString}");
+			var childTxData = SampleAppUrlPaths.AboutPage.Clone($"{SampleAppUrlPaths.AboutPage.RelativePath}{queryString}");
 
-			await SendGetRequestToSampleAppAndVerifyResponse(rootTxData.RelativeUrlPath, rootTxData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(rootTxData.Uri, rootTxData.StatusCode);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
@@ -109,86 +109,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var rootTxData = SampleAppUrlPaths.CallReturnBadRequestPage;
 			var childTxData = SampleAppUrlPaths.ReturnBadRequestPage;
 
-			await SendGetRequestToSampleAppAndVerifyResponse(rootTxData.RelativeUrlPath, rootTxData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(rootTxData.Uri, rootTxData.StatusCode);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
 				VerifyReceivedDataSharedConstraints(rootTxData, receivedData);
 
 				VerifyRootChildTransactions(receivedData, rootTxData, childTxData, out _, out _);
-			});
-		}
-
-		[AspNetFullFrameworkFact]
-		public async Task CallSoap11Request()
-		{
-			var rootTxData = SampleAppUrlPaths.CallSoapServiceProtocolV11;
-			var fullUrl = Consts.SampleApp.RootUrl + "/" + rootTxData.RelativeUrlPath;
-			var action = "Ping";
-
-			var httpContent = new StringContent($@"<?xml version=""1.0"" encoding=""utf-8""?>
-                <soap:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
-                  <soap:Body>
-                    <{action} xmlns=""http://tempuri.org/"" />
-                  </soap:Body>
-                </soap:Envelope>", Encoding.UTF8, "text/xml");
-
-			using (var client = new HttpClient())
-			{
-				var request = new HttpRequestMessage()
-				{
-					RequestUri = new Uri(fullUrl),
-					Method = HttpMethod.Post,
-					Content = httpContent
-				};
-
-				client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/xml"));
-				request.Content.Headers.ContentType = new MediaTypeHeaderValue("text/xml");
-				request.Headers.Add("SOAPAction", $"http://tempuri.org/{action}");
-
-				var response = client.SendAsync(request).Result;
-			}
-
-			await WaitAndCustomVerifyReceivedData(receivedData =>
-			{
-				receivedData.Transactions.Count.Should().Be(1);
-				receivedData.Transactions.First().Name.Should().EndWith(action);
-			});
-		}
-
-		[AspNetFullFrameworkFact]
-		public async Task CallSoap12Request()
-		{
-			var rootTxData = SampleAppUrlPaths.CallSoapServiceProtocolV12;
-			var fullUrl = Consts.SampleApp.RootUrl + "/" + rootTxData.RelativeUrlPath;
-			var action = "Ping";
-
-			var httpContent = new StringContent($@"<?xml version=""1.0"" encoding=""utf-8""?>
-				<soap12:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns:soap12=""http://www.w3.org/2003/05/soap-envelope"">
-					<soap12:Body>
-					<{action} xmlns=""http://tempuri.org/"" />
-					</soap12:Body>
-				</soap12:Envelope>", Encoding.UTF8, "application/soap+xml");
-
-			using (var client = new HttpClient())
-			{
-				var request = new HttpRequestMessage()
-				{
-					RequestUri = new Uri(fullUrl),
-					Method = HttpMethod.Post,
-					Content = httpContent
-				};
-
-				request.Headers.Accept.Clear();
-				request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*"));
-
-				var response = client.SendAsync(request).Result;
-			}
-
-			await WaitAndCustomVerifyReceivedData(receivedData =>
-			{
-				receivedData.Transactions.Count.Should().Be(1);
-				receivedData.Transactions.First().Name.Should().EndWith(action);
 			});
 		}
 
@@ -223,24 +150,21 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		private static TransactionDto FindAndVerifyTransaction(ReceivedData receivedData, SampleAppUrlPathData txData)
 		{
-			var txUrlPath = Consts.SampleApp.RootUrlPath + "/" + txData.RelativeUrlPath;
-			var expectedFullUrlAsString = "http://" + Consts.SampleApp.Host + txUrlPath;
-			var expectedFullUrl = new Uri(expectedFullUrlAsString);
-			var queryString = expectedFullUrl.Query;
+			var queryString = txData.Uri.Query;
 			if (queryString.IsEmpty())
 			{
 				// Uri.Query returns empty string both when query string is empty ("http://host/path?") and
 				// when there's no query string at all ("http://host/path") so we need a way to distinguish between these cases
-				if (expectedFullUrlAsString.IndexOf('?') == -1)
+				if (txData.Uri.ToString().IndexOf('?') == -1)
 					queryString = null;
 			}
 			else if (queryString[0] == '?')
 				queryString = queryString.Substring(1, queryString.Length - 1);
 
-			var transaction = receivedData.Transactions.Single(tx => tx.Context.Request.Url.PathName == expectedFullUrl.AbsolutePath);
+			var transaction = receivedData.Transactions.Single(tx => tx.Context.Request.Url.PathName == txData.Uri.AbsolutePath);
 			transaction.Context.Request.Method.ToUpperInvariant().Should().Be("GET");
-			transaction.Context.Request.Url.Full.Should().Be(expectedFullUrlAsString);
-			transaction.Context.Request.Url.PathName.Should().Be(expectedFullUrl.AbsolutePath);
+			transaction.Context.Request.Url.Full.Should().Be(txData.Uri.ToString());
+			transaction.Context.Request.Url.PathName.Should().Be(txData.Uri.AbsolutePath);
 			transaction.Context.Request.Url.Search.Should().Be(queryString);
 
 			transaction.Context.Response.Finished.Should().BeTrue();
@@ -256,7 +180,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			transaction.Context.User.Should().BeNull();
 
 			transaction.IsSampled.Should().BeTrue();
-			transaction.Name.Should().Be($"GET {expectedFullUrl.AbsolutePath}");
+			transaction.Name.Should().Be($"GET {txData.RelativePath}");
 			transaction.SpanCount.Started.Should().Be(txData.SpansCount);
 			transaction.SpanCount.Dropped.Should().Be(0);
 

@@ -6,6 +6,8 @@ using System;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Web;
+using System.Web.Http;
+using System.Web.Http.Batch;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
@@ -24,6 +26,16 @@ namespace AspNetFullFrameworkSampleApp
 			logger.Info("Current process ID: {ProcessID}, ELASTIC_APM_SERVER_URLS: {ELASTIC_APM_SERVER_URLS}",
 				Process.GetCurrentProcess().Id, Environment.GetEnvironmentVariable("ELASTIC_APM_SERVER_URLS"));
 
+			// Web API setup
+			HttpBatchHandler batchHandler = new DefaultHttpBatchHandler(GlobalConfiguration.DefaultServer)
+			{
+				ExecutionOrder = BatchExecutionOrder.NonSequential
+			};
+			var configuration = GlobalConfiguration.Configuration;
+			RouteConfig.RegisterWebApiRoutes(configuration, batchHandler);
+			GlobalConfiguration.Configure(WebApiConfig.Register);
+
+			// MVC setup
 			AreaRegistration.RegisterAllAreas();
 			FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
 			RouteConfig.RegisterRoutes(RouteTable.Routes);

@@ -25,7 +25,13 @@
 				@Html.ActionLink("Contact", "Contact", "Home", null, new { @class = "nav-link" })
 			</li>
 			<li class="nav-item">
-            	@Html.ActionLink("Diagnostics", "Index", "Diagnostics", null, new { @class = "nav-link" })
+				@Html.ActionLink("Diagnostics", "Index", "Diagnostics", null, new { @class = "nav-link" })
+			</li>
+			<li class="nav-item">
+				<a href="@Url.Content("~/Webforms.aspx")" class="nav-link">Webforms</a>
+			</li>
+			<li class="nav-item">
+            	<a href="@Url.RouteUrl("RoutedWebforms", new {})" class="nav-link">RoutedWebforms</a>
             </li>
 		</ul>
 		@Html.Partial("_LoginPartial")

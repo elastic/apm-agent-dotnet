@@ -24,7 +24,6 @@ namespace Elastic.Apm.AspNetFullFramework
 		internal const string Email = "email";
 		internal const string UserId = "sub";
 	}
-
 	public class ElasticApmModule : IHttpModule
 	{
 		private static bool _isCaptureHeadersEnabled;
@@ -243,10 +242,55 @@ namespace Elastic.Apm.AspNetFullFramework
 			var httpApp = (HttpApplication)eventSender;
 			var httpCtx = httpApp.Context;
 			var httpResponse = httpCtx.Response;
+			var transaction = _currentTransaction;
 
-			if (_currentTransaction == null) return;
+			if (transaction == null) return;
 
 			SendErrorEventIfPresent(httpCtx);
+
+			// update the transaction name based on route values, if applicable
+			if (transaction is Transaction t && !t.HasCustomName)
+			{
+				var values = httpApp.Request.RequestContext?.RouteData?.Values;
+				if (values?.Count > 0)
+				{
+					// Determine if the route data *actually* routed to a controller action or not i.e.
+					// we need to differentiate between
+					// 1. route data that didn't route to a controller action and returned a 404
+					// 2. route data that did route to a controller action, and the action result returned a 404
+					//
+					// In normal MVC setup, the former will set a HttpException with a 404 status code with System.Web.Mvc as the source.
+					// We need to check the source of the exception because we want to differentiate between a 404 HttpException from the
+					// framework and a 404 HttpException from the application.
+					if (httpCtx.Error is null || !(httpCtx.Error is HttpException httpException) ||
+						httpException.Source != "System.Web.Mvc" || httpException.GetHttpCode() != StatusCodes.Status404NotFound)
+					{
+						// handle MVC areas. The area name will be included in the DataTokens.
+						object area = null;
+						httpApp.Request.RequestContext?.RouteData?.DataTokens?.TryGetValue("area", out area);
+						IDictionary<string, object> routeData;
+						if (area != null)
+						{
+							routeData = new Dictionary<string, object>(values.Count + 1);
+							foreach (var value in values) routeData.Add(value.Key, value.Value);
+							routeData.Add("area", area);
+						}
+						else
+							routeData = values;
+
+						_logger?.Trace()?.Log("Calculating transaction name based on route data");
+						var name = Transaction.GetNameFromRouteContext(routeData);
+						if (!string.IsNullOrWhiteSpace(name)) _currentTransaction.Name = $"{httpCtx.Request.HttpMethod} {name}";
+					}
+					else
+					{
+						// dealing with a 404 HttpException that came from System.Web.Mvc
+						_logger?.Trace()?
+							.Log("Route data found but a HttpException with 404 status code was thrown from System.Web.Mvc - setting transaction name to 'unknown route");
+						transaction.Name = $"{httpCtx.Request.HttpMethod} unknown route";
+					}
+				}
+			}
 
 			_currentTransaction.Result = Transaction.StatusCodeToResult("HTTP", httpResponse.StatusCode);
 
@@ -405,5 +449,10 @@ namespace Elastic.Apm.AspNetFullFramework
 				agentComponents.Dispose();
 			}
 		}
+	}
+
+	internal static class StatusCodes
+	{
+		public const int Status404NotFound = 404;
 	}
 }

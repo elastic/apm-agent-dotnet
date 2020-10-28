@@ -16,6 +16,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		[AspNetFullFrameworkTheory]
 		[MemberData(nameof(AllSampleAppUrlPaths))]
 		public async Task SampleAppShouldBeAvailableEvenWhenApmServerStopped(SampleAppUrlPathData sampleAppUrlPathData) =>
-			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.Uri, sampleAppUrlPathData.StatusCode);
 	}
 }

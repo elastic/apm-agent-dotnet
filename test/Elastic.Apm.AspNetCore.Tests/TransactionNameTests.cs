@@ -124,6 +124,38 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		/// <summary>
+		/// Tests a URL that maps to an area route with an area route value and default values. Calls "/MyArea", which maps to "MyArea/Home/Index".
+		/// Makes sure "GET MyArea/Home/Index" is the Transaction.Name.
+		/// </summary>
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task Name_Should_Be_Area_Controller_Action_When_Mvc_Area_Controller_Action(bool diagnosticSourceOnly)
+		{
+			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
+			await httpClient.GetAsync("/MyArea");
+
+			_payloadSender.FirstTransaction.Name.Should().Be("GET MyArea/Home/Index");
+			_payloadSender.FirstTransaction.Context.Request.Url.Full.Should().Be("http://localhost/MyArea");
+		}
+
+		/// <summary>
+		/// Tests a URL that maps to an explicit area route with default values. Calls "/MyOtherArea", which maps to "MyOtherArea/Home/Index".
+		/// Makes sure "GET MyOtherArea/Home/Index" is the Transaction.Name.
+		/// </summary>
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task Name_Should_Be_Area_Controller_Action_When_Mvc_Area_Controller_Action_With_Area_Route(bool diagnosticSourceOnly)
+		{
+			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
+			await httpClient.GetAsync("/MyOtherArea");
+
+			_payloadSender.FirstTransaction.Name.Should().Be("GET MyOtherArea/Home/Index");
+			_payloadSender.FirstTransaction.Context.Request.Url.Full.Should().Be("http://localhost/MyOtherArea");
+		}
+
+		/// <summary>
 		/// Calls a URL that maps to no route and causes a 404
 		/// </summary>
 		[InlineData("home/doesnotexist", true)]

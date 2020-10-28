@@ -70,6 +70,11 @@ namespace SampleAspNetCoreApp
 			app.UseStaticFiles();
 			app.UseCookiePolicy();
 
+			ConfigureRoutingAndMvc(app);
+		}
+
+		public static void ConfigureRoutingAndMvc(IApplicationBuilder app)
+		{
 #if NETCOREAPP3_0 || NETCOREAPP3_1
 			app.UseRouting();
 
@@ -77,7 +82,16 @@ namespace SampleAspNetCoreApp
 
 			app.UseEndpoints(endpoints =>
 			{
-				endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
+				endpoints.MapAreaControllerRoute(
+					"MyOtherArea",
+					"MyOtherArea",
+					"MyOtherArea/{controller=Home}/{action=Index}/{id?}");
+				endpoints.MapControllerRoute(
+					"MyArea",
+					"{area:exists}/{controller=Home}/{action=Index}/{id?}");
+				endpoints.MapControllerRoute(
+					"default",
+					"{controller=Home}/{action=Index}/{id?}");
 				endpoints.MapControllers();
 				endpoints.MapRazorPages();
 			});
@@ -86,6 +100,15 @@ namespace SampleAspNetCoreApp
 
 			app.UseMvc(routes =>
 			{
+				routes.MapAreaRoute(
+					"MyOtherArea",
+					"MyOtherArea",
+					"MyOtherArea/{controller=Home}/{action=Index}/{id?}");
+
+				routes.MapRoute(
+					"MyArea",
+					"{area:exists}/{controller=Home}/{action=Index}/{id?}");
+
 				routes.MapRoute(
 					"default",
 					"{controller=Home}/{action=Index}/{id?}");

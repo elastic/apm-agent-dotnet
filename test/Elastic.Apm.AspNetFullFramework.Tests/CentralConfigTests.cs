@@ -253,9 +253,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 				async Task SendRequestAssertReceivedData(int maxSpans, bool isSampled, int spansToExecCount)
 				{
-					var urlPath = srcPageData.RelativeUrlPath + $"?{HomeController.NumberOfSpansQueryStringKey}={spansToExecCount}";
+					var urlPath = srcPageData.RelativePath + $"?{HomeController.NumberOfSpansQueryStringKey}={spansToExecCount}";
 					var pageData = srcPageData.Clone(urlPath, spansCount: isSampled ? Math.Min(spansToExecCount, maxSpans) : 0);
-					await SendGetRequestToSampleAppAndVerifyResponse(pageData.RelativeUrlPath, pageData.StatusCode);
+					await SendGetRequestToSampleAppAndVerifyResponse(pageData.Uri, pageData.StatusCode);
 
 					await WaitAndCustomVerifyReceivedData(receivedData =>
 					{

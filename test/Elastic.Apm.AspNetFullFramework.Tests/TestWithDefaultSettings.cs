@@ -19,7 +19,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		[MemberData(nameof(AllSampleAppUrlPaths))]
 		public async Task TestVariousPages(SampleAppUrlPathData sampleAppUrlPathData)
 		{
-			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.Uri, sampleAppUrlPathData.StatusCode);
 
 			await WaitAndVerifyReceivedDataSharedConstraints(sampleAppUrlPathData);
 		}
@@ -35,8 +35,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		// key "?" without value
 		public async Task QueryStringTests(string queryString)
 		{
-			var homePageAndQueryString = SampleAppUrlPaths.HomePage.Clone(SampleAppUrlPaths.HomePage.RelativeUrlPath + $"?{queryString}");
-			await SendGetRequestToSampleAppAndVerifyResponse(homePageAndQueryString.RelativeUrlPath, homePageAndQueryString.StatusCode);
+			var homePageAndQueryString = SampleAppUrlPaths.HomePage.Clone(SampleAppUrlPaths.HomePage.RelativePath + $"?{queryString}");
+			await SendGetRequestToSampleAppAndVerifyResponse(homePageAndQueryString.Uri, homePageAndQueryString.StatusCode);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{

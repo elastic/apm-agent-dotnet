@@ -8,6 +8,14 @@ using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Api
 {
+	/// <summary>
+	/// A transaction describes an event captured by the APM agent instrumentation. They are a special kind of Span that have additional
+	/// attributes associated with them.
+	/// </summary>
+	/// <remarks>
+	/// This interface is the public contract for a transaction. It is not intended to be used by a consumer of the agent to
+	/// provide different transaction implementations.
+	/// </remarks>
 	public interface ITransaction : IExecutionSegment
 	{
 		/// <summary>

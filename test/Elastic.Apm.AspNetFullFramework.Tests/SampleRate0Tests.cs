@@ -21,7 +21,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public async Task Test(SampleAppUrlPathData sampleAppUrlPathDataForSampled)
 		{
 			var sampleAppUrlPathData = sampleAppUrlPathDataForSampled.Clone(spansCount: 0);
-			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.RelativeUrlPath, sampleAppUrlPathData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(sampleAppUrlPathData.Uri, sampleAppUrlPathData.StatusCode);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{

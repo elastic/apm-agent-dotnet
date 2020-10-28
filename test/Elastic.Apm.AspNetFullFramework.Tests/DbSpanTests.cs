@@ -37,7 +37,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			// 		4) SELECT for
 			// 						if (dbCtx.Set<SampleData>().First().Name != simpleDbTestSampleDataName)
 			var pageData = new SampleAppUrlPathData(HomeController.SimpleDbTestPageRelativePath, 200, spansCount: 4);
-			await SendGetRequestToSampleAppAndVerifyResponse(pageData.RelativeUrlPath, pageData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(pageData.Uri, pageData.StatusCode);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
@@ -96,7 +96,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			//
 			var pageData = new SampleAppUrlPathData(HomeController.ConcurrentDbTestPageRelativePath, 200
 				, spansCount: numberOfConcurrentIterations * 3 + 5);
-			await SendGetRequestToSampleAppAndVerifyResponse(pageData.RelativeUrlPath, pageData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(pageData.Uri, pageData.StatusCode);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
@@ -187,7 +187,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var pageData = new SampleAppUrlPathData(HomeController.DbOperationOutsideTransactionTestPageRelativePath
 				, HomeController.DbOperationOutsideTransactionTestStatusCode);
 
-			await SendGetRequestToSampleAppAndVerifyResponse(pageData.RelativeUrlPath, pageData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(pageData.Uri, pageData.StatusCode);
 			await WaitAndVerifyReceivedDataSharedConstraints(pageData);
 		}
 
@@ -200,7 +200,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			var pageData = new SampleAppUrlPathData(HomeController.FailingDbCallTestPageRelativePath
 				, HomeController.FailingDbCallTestStatusCode);
 
-			await SendGetRequestToSampleAppAndVerifyResponse(pageData.RelativeUrlPath, pageData.StatusCode);
+			await SendGetRequestToSampleAppAndVerifyResponse(pageData.Uri, pageData.StatusCode);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
 			{
