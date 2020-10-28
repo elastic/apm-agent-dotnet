@@ -222,7 +222,7 @@ namespace Elastic.Apm.Model
 		/// or "fixed" automatically.
 		/// </summary>
 		[JsonIgnore]
-		public bool HasCustomName { get; private set; }
+		internal bool HasCustomName { get; private set; }
 
 		[JsonConverter(typeof(TrimmedStringJsonConverter))]
 		public string Id { get; }
