@@ -20,8 +20,8 @@ namespace Elastic.Apm.Tests
 	public class SpecTests
 	{
 		private readonly ITestOutputHelper _output;
-		private List<Type> _specTypes;
-		private Validator _validator;
+		private readonly List<Type> _specTypes;
+		private readonly Validator _validator;
 
 		public SpecTests(ITestOutputHelper output)
 		{
