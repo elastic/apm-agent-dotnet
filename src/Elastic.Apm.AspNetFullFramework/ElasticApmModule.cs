@@ -280,7 +280,7 @@ namespace Elastic.Apm.AspNetFullFramework
 
 						_logger?.Trace()?.Log("Calculating transaction name based on route data");
 						var name = Transaction.GetNameFromRouteContext(routeData);
-						if (!string.IsNullOrWhiteSpace(name)) _currentTransaction.Name = $"{httpCtx.Request.HttpMethod} {name}";
+						if (!string.IsNullOrWhiteSpace(name)) transaction.Name = $"{httpCtx.Request.HttpMethod} {name}";
 					}
 					else
 					{
