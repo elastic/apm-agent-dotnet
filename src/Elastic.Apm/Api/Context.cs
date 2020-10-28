@@ -61,6 +61,9 @@ namespace Elastic.Apm.Api
 			{
 				foreach (var item in InternalLabels.Value.InnerDictionary)
 					newItem.InternalLabels.Value.InnerDictionary[item.Key] = item.Value;
+
+				foreach (var item in InternalLabels.Value)
+					newItem.InternalLabels.Value[item.Key] = item.Value;
 			}
 
 			newItem.Request = Request?.DeepCopy();
