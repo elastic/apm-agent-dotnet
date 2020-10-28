@@ -33,18 +33,21 @@ namespace Elastic.Apm.Helpers
 
 		internal static string ToLog(this string thisObj) => "`" + thisObj + "'";
 
+		internal const string Ellipsis = "…";
+
 		/// <summary>
 		/// Truncates the string to a given length, if longer than the length
 		/// </summary>
 		internal static string Truncate(this string input, int length = Consts.PropertyMaxLength)
 		{
-			input.ThrowIfArgumentNull(nameof(input));
+			if (input is null)
+				return null;
 
 			if (input.Length <= length) return input;
 
 			if (length <= 5) return input.Substring(0, length);
 
-			return $"{input.Substring(0, length - 3)}...";
+			return $"{input.Substring(0, length - Ellipsis.Length)}{Ellipsis}";
 		}
 	}
 }
