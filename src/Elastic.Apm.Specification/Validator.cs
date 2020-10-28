@@ -12,6 +12,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
 using Elastic.Apm.Report.Serialization;
 using ICSharpCode.SharpZipLib.Tar;
@@ -280,9 +281,10 @@ namespace Elastic.Apm.Specification
 					continue;
 
 				var implementationProperty = new ImplementationProperty(jsonProperty.PropertyName, jsonProperty.PropertyType, specType);
+				var maxLength = (MaxLengthAttribute)(jsonProperty.AttributeProvider.GetAttributes(typeof(MaxLengthAttribute), true).FirstOrDefault());
 
-				if (jsonProperty.Converter != null && jsonProperty.Converter is TrimmedStringJsonConverter trimmedStringJsonConverter)
-					implementationProperty.MaxLength = trimmedStringJsonConverter.MaxLength;
+				if (maxLength != null)
+					implementationProperty.MaxLength = maxLength.Length;
 
 				specProperties.Add(implementationProperty);
 			}
