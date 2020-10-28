@@ -3,19 +3,18 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Collections.Generic;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Api;
+using Elastic.Apm.Model;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Report.Serialization
 {
-	internal class LabelsJsonConverter : JsonConverter<Dictionary<string, Label>>
+	internal class LabelsJsonConverter : JsonConverter<LabelsDictionary>
 	{
-		public override void WriteJson(JsonWriter writer, Dictionary<string, Label> labels, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, LabelsDictionary labels, JsonSerializer serializer)
 		{
 			writer.WriteStartObject();
-			foreach (var keyValue in labels)
+			foreach (var keyValue in labels.MergedDictionary)
 			{
 				// Labels are trimmed and also de dotted in order to satisfy the Intake API
 				writer.WritePropertyName(keyValue.Key.Truncate()
@@ -41,9 +40,9 @@ namespace Elastic.Apm.Report.Serialization
 			writer.WriteEndObject();
 		}
 
-		public override Dictionary<string, Label> ReadJson(JsonReader reader, Type objectType, Dictionary<string, Label> existingValue,
+		public override LabelsDictionary ReadJson(JsonReader reader, Type objectType, LabelsDictionary existingValue,
 			bool hasExistingValue, JsonSerializer serializer
 		)
-			=> serializer.Deserialize<Dictionary<string, Label>>(reader);
+			=> serializer.Deserialize<LabelsDictionary>(reader);
 	}
 }

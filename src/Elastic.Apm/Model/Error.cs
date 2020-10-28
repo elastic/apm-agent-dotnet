@@ -30,7 +30,7 @@ namespace Elastic.Apm.Model
 				Context = transaction.Context.DeepCopy();
 
 				if (labels != null)
-					foreach (var item in labels) Context.Labels[item.Key] = item.Value;
+					foreach (var item in labels) Context.InternalLabels.Value.InnerDictionary[item.Key] = item.Value;
 			}
 
 			IApmLogger logger = loggerArg?.Scoped($"{nameof(Error)}.{Id}");

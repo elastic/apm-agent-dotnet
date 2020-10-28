@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
@@ -35,8 +36,7 @@ namespace Elastic.Apm.Tests
 				var jsonString = JsonConvert.SerializeObject(t);
 				jsonString.Should().Contain(GetAssertString(labelValue, labelName));
 
-				t.Labels[labelName].Value.Should().Be(labelValue);
-				t.Context.Labels[labelName].Value.Should().Be(labelValue);
+				t.Context.InternalLabels.Value.InnerDictionary[labelName].Value.Should().Be(labelValue);
 			});
 		}
 
@@ -61,8 +61,7 @@ namespace Elastic.Apm.Tests
 					var jsonString = JsonConvert.SerializeObject(s);
 					jsonString.Should().Contain(GetAssertString(labelValue, labelName));
 
-					s.Labels[labelName].Value.Should().Be(labelValue);
-					s.Context.Labels[labelName].Value.Should().Be(labelValue);
+					s.Context.InternalLabels.Value.InnerDictionary[labelName].Value.Should().Be(labelValue);
 				});
 			});
 		}
@@ -100,14 +99,9 @@ namespace Elastic.Apm.Tests
 					var spanJsonString = JsonConvert.SerializeObject(s);
 					spanJsonString.Should().Contain("\"intLabel\":1,\"stringLabel\":\"abc\",\"boolLabel\":true");
 
-					s.Labels["intLabel"].Value.Should().Be(1);
-					s.Context.Labels["intLabel"].Value.Should().Be(1);
-
-					s.Labels["stringLabel"].Value.Should().Be("abc");
-					s.Context.Labels["stringLabel"].Value.Should().Be("abc");
-
-					s.Labels["boolLabel"].Value.Should().Be(true);
-					s.Context.Labels["boolLabel"].Value.Should().Be(true);
+					s.Context.InternalLabels.Value.InnerDictionary["intLabel"].Value.Should().Be(1);
+					s.Context.InternalLabels.Value.InnerDictionary["stringLabel"].Value.Should().Be("abc");
+					s.Context.InternalLabels.Value.InnerDictionary["boolLabel"].Value.Should().Be(true);
 				});
 
 				SetLabel(t, 1, "intLabel");
@@ -117,14 +111,9 @@ namespace Elastic.Apm.Tests
 				var transactionJsonString = JsonConvert.SerializeObject(t);
 				transactionJsonString.Should().Contain("\"intLabel\":1,\"stringLabel\":\"abc\",\"boolLabel\":true");
 
-				t.Labels["intLabel"].Value.Should().Be(1);
-				t.Context.Labels["intLabel"].Value.Should().Be(1);
-
-				t.Labels["stringLabel"].Value.Should().Be("abc");
-				t.Context.Labels["stringLabel"].Value.Should().Be("abc");
-
-				t.Labels["boolLabel"].Value.Should().Be(true);
-				t.Context.Labels["boolLabel"].Value.Should().Be(true);
+				t.Context.InternalLabels.Value.InnerDictionary["intLabel"].Value.Should().Be(1);
+				t.Context.InternalLabels.Value.InnerDictionary["stringLabel"].Value.Should().Be("abc");
+				t.Context.InternalLabels.Value.InnerDictionary["boolLabel"].Value.Should().Be(true);
 			});
 		}
 
@@ -143,9 +132,9 @@ namespace Elastic.Apm.Tests
 				// add label to transaction after the error - error does not contain this
 				t.SetLabel("boolLabel", true);
 
-				mockPayloadSender.FirstError.Context.Labels["intLabel"].Value.Should().Be(5);
-				mockPayloadSender.FirstError.Context.Labels["stringLabel"].Value.Should().Be("test");
-				mockPayloadSender.FirstError.Context.Labels.Should().NotContainKey("boolLabel");
+				mockPayloadSender.FirstError.Context.InternalLabels.Value.InnerDictionary["intLabel"].Value.Should().Be(5);
+				mockPayloadSender.FirstError.Context.InternalLabels.Value.InnerDictionary["stringLabel"].Value.Should().Be("test");
+				mockPayloadSender.FirstError.Context.InternalLabels.Value.InnerDictionary.Should().NotContainKey("boolLabel");
 			});
 		}
 
@@ -161,7 +150,86 @@ namespace Elastic.Apm.Tests
 				t.SetLabel("intLabel", 6);
 			});
 
-			mockPayloadSender.FirstTransaction.Context.Labels["intLabel"].Value.Should().Be(6);
+			mockPayloadSender.FirstTransaction.Context.InternalLabels.Value.InnerDictionary["intLabel"].Value.Should().Be(6);
+		}
+
+		[Fact]
+		public void PublicStringDictionaryPropertySerializationTest()
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+
+			agent.Tracer.CaptureTransaction("test", "test", t =>
+			{
+				t.Labels["foo1"] = "bar1";
+				var transactionJsonString = JsonConvert.SerializeObject(t);
+				transactionJsonString.Should().Contain(GetAssertString("bar1", "foo1"));
+				t.Context.InternalLabels.Value.MergedDictionary["foo1"].Value.Should().Be("bar1");
+
+
+				t.CaptureSpan("testSpan", "test", s =>
+				{
+					s.Labels["foo2"] = "bar2";
+					var spanJsonString = JsonConvert.SerializeObject(s);
+					spanJsonString.Should().Contain(GetAssertString("bar2", "foo2"));
+
+					s.Context.InternalLabels.Value.MergedDictionary["foo2"].Value.Should().Be("bar2");
+				});
+			});
+		}
+
+		[Fact]
+		public void PublicStringDictionaryPropertyInSyncTest()
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+
+			var transaction = agent.Tracer.StartTransaction("test", "test");
+
+			transaction.Labels["foo"] = "bar";
+
+			transaction.Labels.Should().HaveCount(1);
+			transaction.Labels.Keys.Should().HaveCount(1);
+
+			transaction.Labels.Keys.First().Should().Be("foo");
+			transaction.Context.InternalLabels.Value.MergedDictionary["foo"].Value.Should().Be("bar");
+
+			transaction.SetLabel("item2", 123);
+
+			//assert that the string API still only contains 1 item:
+			transaction.Labels.Should().HaveCount(1);
+			transaction.Context.InternalLabels.Value.MergedDictionary.Keys.Should().HaveCount(2);
+
+			foreach (var item in transaction.Labels)
+			{
+				item.Key.Should().Be("foo");
+				item.Value.Should().Be("bar");
+			}
+
+			transaction.Labels.Clear();
+			transaction.Labels.Keys.Should().HaveCount(0);
+
+			transaction.End();
+		}
+
+		[Fact]
+		public void PublicStringDictionaryPropertyRemoveItem()
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+
+			var transaction = agent.Tracer.StartTransaction("test", "test");
+
+			transaction.Labels["foo"] = "bar";
+			transaction.SetLabel("intItem", 42);
+			transaction.Labels.Remove("foo");
+
+			var spanJsonString = JsonConvert.SerializeObject(transaction);
+			spanJsonString.Should().Contain(GetAssertString(42, "intItem"));
+			spanJsonString.Should().NotContain("foo");
+			spanJsonString.Should().NotContain("bar");
+
+			transaction.End();
 		}
 
 		private static void SetLabel(IExecutionSegment executionSegment, object labelValue, string labelName)
