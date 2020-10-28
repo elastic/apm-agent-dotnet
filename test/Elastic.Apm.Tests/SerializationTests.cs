@@ -418,7 +418,7 @@ namespace Elastic.Apm.Tests
 			json.Should().Be("{\"samples\":{\"sample_1\":{\"value\":1.0},\"sample__2\":{\"value\":2.0}},\"timestamp\":1603343944891}");
 
 			var deserialized = JsonConvert.DeserializeObject<Metrics.MetricSet>(json);
-			deserialized.TimeStamp.Should().Be(metricSet.TimeStamp);
+			deserialized.Timestamp.Should().Be(metricSet.Timestamp);
 			deserialized.Samples.Count().Should().Be(2);
 			var count = 0;
 			foreach (var sample in deserialized.Samples)
