@@ -134,9 +134,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 					{
 						yield return new OptionsTestVariant
 						{
-							CaptureBody = captureBody,
-							CaptureBodyContentTypes = captureBodyContentTypes,
-							IsSampled = isSampled
+							CaptureBody = captureBody, CaptureBodyContentTypes = captureBodyContentTypes, IsSampled = isSampled
 						};
 					}
 				}
@@ -196,6 +194,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 							{ nameof(isError), isError },
 						}.ToString();
 
+
 						await TestBodyCapture(body, isError, ShouldRequestBodyBeCaptured(updateConfigSnapshot, isError), updateCfgVariant.IsSampled);
 					}
 				});
@@ -234,7 +233,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 				if (isSampled)
 				{
 					capturedRequestBody = transaction.Context.Request.Body;
-					capturedRequestBody.Should().Be(shouldRequestBodyBeCaptured ? body : Elastic.Apm.Consts.Redacted);
+
+						capturedRequestBody.Should().Be(shouldRequestBodyBeCaptured ? body : Elastic.Apm.Consts.Redacted);
+
 				}
 
 				if (isError)
@@ -245,7 +246,16 @@ namespace Elastic.Apm.AspNetCore.Tests
 					{
 						error.Transaction.IsSampled.Should().BeTrue();
 						error.Context.Should().NotBeNull();
-						error.Context.Request.Body.Should().Be(capturedRequestBody);
+						try
+						{
+							error.Context.Request.Body.Should().Be(capturedRequestBody);
+						}
+						catch (Exception e)
+						{
+							Console.WriteLine(e);
+							throw;
+						}
+
 					}
 					else
 					{
@@ -301,10 +311,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				_taskForSampleApp = Program.CreateWebHostBuilder(null)
 					.ConfigureServices(services =>
 						{
-							services.Configure<KestrelServerOptions>(options =>
-							{
-								options.AllowSynchronousIO = true;
-							});
+							services.Configure<KestrelServerOptions>(options => { options.AllowSynchronousIO = true; });
 							Startup.ConfigureServicesExceptMvc(services);
 
 							services.AddMvc()
