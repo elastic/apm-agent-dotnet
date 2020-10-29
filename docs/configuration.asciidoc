@@ -235,6 +235,26 @@ of the deployed revision, e.g. the output of git rev-parse HEAD.
 | Informational version of the entry assembly    | String
 |============
 
+
+[float]
+[[config-hostname]]
+==== `HostName` (added[1.7])
+
+Allows for the reported hostname to be manually specified. If unset, the hostname will be looked up.
+
+[options="header"]
+|============
+| Environment variable name      | IConfiguration or Web.config key
+| `ELASTIC_APM_HOSTNAME` | `ElasticApm:HostName`
+|============
+
+[options="header"]
+|============
+| Default                                        | Type
+| `<none>`                                       | String
+|============
+
+
 [float]
 [[config-environment]]
 ==== `Environment` (added[1.1])
@@ -900,6 +920,7 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-excluded-namespaces,`ExcludedNamespaces`>> | No | Stacktrace
 | <<config-flush-interval,`FlushInterval`>> | No | Reporter
 | <<config-global-labels,`GlobalLabels`>> | No | Core
+| <<config-hostname,`HostName`>> | No | Core
 | <<config-log-level,`LogLevel`>> | No | Supportability
 | <<config-max-batch-event-count,`MaxBatchEventCount`>> | No | Reporter
 | <<config-max-queue-event-count,`MaxQueueEventCount`>> | No | Reporter
