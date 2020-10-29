@@ -41,8 +41,11 @@ namespace Elastic.Apm.Api
 		/// Dots (<code>.</code>) in the keys are not allowed. In case you have a <code>.</code> in your label key, it will be
 		/// replaced by <code>_</code>.
 		/// For example <code>foo.bar</code> will be stored as <code>foo_bar</code> in Elasticsearch.
+		/// Note: values added through the <see cref="SetLabel(string,string)" /> method won't be visible through this property.
 		/// </summary>
 		/// <exception cref="ArgumentException"><c>null</c> as key is not allowed.</exception>
+		[Obsolete(
+			"Instead of this dictionary, use the `SetLabel` method which supports more types than just string. This property will be removed in a future release.")]
 		Dictionary<string, string> Labels { get; }
 
 		/// <summary>
@@ -246,6 +249,20 @@ namespace Elastic.Apm.Api
 		/// </summary>
 		void End();
 
+
+		/// <summary>
+		/// Labels are used to add indexed information to transactions, spans, and errors. Indexed means the data is searchable and
+		/// aggregatable in Elasticsearch. Multiple labels can be defined with different key-value pairs.
+		/// Note: Values added through this method won't be visible through <see cref="Labels" />.
+		/// <param name="key">
+		/// <inheritdoc cref="SetLabel(string,bool)" />
+		/// </param>
+		/// <param name="value">
+		/// <inheritdoc cref="SetLabel(string,bool)" />
+		/// </param>
+		/// </summary>
+		public void SetLabel(string key, string value);
+
 		/// <summary>
 		/// Labels are used to add indexed information to transactions, spans, and errors. Indexed means the data is searchable and
 		/// aggregatable in Elasticsearch. Multiple labels can be defined with different key-value pairs.
@@ -255,60 +272,49 @@ namespace Elastic.Apm.Api
 		/// with underscores.
 		/// </param>
 		/// <param name="value">The value of the label</param>
-		public void SetLabel(string key, string value);
-
-		/// <summary>
-		/// <inheritdoc cref="SetLabel(string,string)" />
-		/// </summary>
-		/// <param name="key">
-		/// <inheritdoc cref="SetLabel(string,string)" />
-		/// </param>
-		/// <param name="value">
-		/// <inheritdoc cref="SetLabel(string,string)" />
-		/// </param>
 		public void SetLabel(string key, bool value);
 
 		/// <summary>
-		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// <inheritdoc cref="SetLabel(string,bool)" />
 		/// </summary>
 		/// <param name="key">
-		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// <inheritdoc cref="SetLabel(string,bool)" />
 		/// </param>
 		/// <param name="value">
-		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// <inheritdoc cref="SetLabel(string,bool)" />
 		/// </param>
 		public void SetLabel(string key, double value);
 
 		/// <summary>
-		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// <inheritdoc cref="SetLabel(string,bool)" />
 		/// </summary>
 		/// <param name="key">
-		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// <inheritdoc cref="SetLabel(string,bool)" />
 		/// </param>
 		/// <param name="value">
-		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// <inheritdoc cref="SetLabel(string,bool)" />
 		/// </param>
 		public void SetLabel(string key, int value);
 
 		/// <summary>
-		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// <inheritdoc cref="SetLabel(string,bool)" />
 		/// </summary>
 		/// <param name="key">
-		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// <inheritdoc cref="SetLabel(string,bool)" />
 		/// </param>
 		/// <param name="value">
-		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// <inheritdoc cref="SetLabel(string,bool)" />
 		/// </param>
 		public void SetLabel(string key, long value);
 
 		/// <summary>
-		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// <inheritdoc cref="SetLabel(string,bool)" />
 		/// </summary>
 		/// <param name="key">
-		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// <inheritdoc cref="SetLabel(string,bool)" />
 		/// </param>
 		/// <param name="value">
-		/// <inheritdoc cref="SetLabel(string,string)" />
+		/// <inheritdoc cref="SetLabel(string,bool)" />
 		/// </param>
 		public void SetLabel(string key, decimal value);
 

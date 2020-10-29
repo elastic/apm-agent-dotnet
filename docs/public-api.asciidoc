@@ -249,8 +249,44 @@ finally
 
 
 [float]
+[[api-transaction-set-label]]
+==== `void SetLabel(string key, T value) added[1.7.0,Number and boolean labels require APM Server 6.7]
+
+Labels are used to add *indexed* information to transactions, spans, and errors.
+Indexed means the data is searchable and aggregatable in Elasticsearch.
+Multiple labels can be defined with different key-value pairs.
+
+* Indexed: Yes
+* Elasticsearch type: {ref}/object.html[object]
+* Elasticsearch field: `labels` (previously `context.tags` in <v.7.0)
+
+Label values can be a string, boolean, or number.
+Because labels for a given key are stored in the same place in Elasticsearch, all label values of a given key must have the same data type.
+Multiple data types per key will throw an exception, e.g. `{foo: bar}` and `{foo: 42}`
+
+NOTE: Number and boolean labels were only introduced in APM Server 6.7+.
+Using this API in combination with an older APM Server versions leads to validation errors.
+
+IMPORTANT: Avoid defining too many user-specified labels.
+Defining too many unique fields in an index is a condition that can lead to a
+{ref}/mapping.html#mapping-limit-settings[mapping explosion].
+
+[source,csharp]
+----
+transaction.SetLabel("stringSample", "bar");
+transaction.SetLabel("boolSample", true);
+transaction.SetLabel("intSample", 42);
+----
+
+* `String key`:   The tag key
+* `String|Number|bool value`: The tag value
+
+[float]
 [[api-transaction-tags]]
 ==== `Dictionary<string,string> Labels`
+
+WARNING: This property is obsolete and will be be removed in a future version. Use the <<api-transaction-set-label>> method instead.   
+
 A flat mapping of user-defined labels with string values. 
 
 If the key contains any special characters (`.`,`*`, `"`), they will be replaced with underscores. For example `a.b` will be stored as `a_b`.
@@ -473,10 +509,37 @@ finally
 }
 ----
 
+[float]
+[[api-span-set-label]]
+==== `void SetLabel(string key, T value) added[1.7.0,Number and boolean labels require APM Server 6.7]
+
+A flat mapping of user-defined labels with string, number or boolean values.
+
+NOTE: In version 6.x, labels are stored under `context.tags` in Elasticsearch.
+As of version 7.x, they are stored as `labels` to comply with the https://github.com/elastic/ecs[Elastic Common Schema (ECS)].
+
+NOTE: The labels are indexed in Elasticsearch so that they are searchable and aggregatable.
+By all means,
+you should avoid that user specified data,
+like URL parameters,
+is used as a tag key as it can lead to mapping explosions.
+
+[source,csharp]
+----
+span.SetLabel("stringSample", "bar");
+span.SetLabel("boolSample", true);
+span.SetLabel("intSample", 42);
+----
+
+* `String key`:   The tag key
+* `String|Number|bool value`: The tag value
 
 [float]
 [[api-span-tags]]
 ==== `Dictionary<string,string> Labels`
+
+WARNING: This property is obsolete and will be be removed in a future version. Use the <<api-span-set-label>> method instead.   
+
 Similar to <<api-transaction-tags>> on the <<api-transaction>>: A flat mapping of user-defined labels with string values.
 
 If the key contains any special characters (`.`,`*`, `"`), they will be replaced with underscores. For example `a.b` will be stored as `a_b`.

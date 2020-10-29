@@ -24,6 +24,8 @@ namespace Elastic.Apm.Api
 		/// </summary>
 		[JsonProperty("tags")]
 		[JsonConverter(typeof(LabelsJsonConverter))]
+		[Obsolete(
+			"Instead of this dictionary, use the `SetLabel` method which supports more types than just string. This property will be removed in a future release.")]
 		public Dictionary<string, string> Labels => InternalLabels.Value;
 
 		/// <summary>
