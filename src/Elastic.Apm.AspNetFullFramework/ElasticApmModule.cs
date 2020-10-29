@@ -24,6 +24,7 @@ namespace Elastic.Apm.AspNetFullFramework
 		internal const string Email = "email";
 		internal const string UserId = "sub";
 	}
+
 	public class ElasticApmModule : IHttpModule
 	{
 		private static bool _isCaptureHeadersEnabled;
@@ -35,10 +36,6 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		// ReSharper disable once ImpureMethodCallOnReadonlyValueField
 		public ElasticApmModule() => _dbgInstanceName = DbgInstanceNameGenerator.Generate($"{nameof(ElasticApmModule)}.#");
-
-		// We can store current transaction because each IHttpModule is used for at most one request at a time
-		// For example see https://bytes.com/topic/asp-net/answers/324305-httpmodule-multithreading-request-response-corelation
-		private ITransaction _currentTransaction;
 
 		private HttpApplication _httpApp;
 
@@ -126,14 +123,17 @@ namespace Elastic.Apm.AspNetFullFramework
 			if (soapAction != null) transactionName += $" {soapAction}";
 
 			var distributedTracingData = ExtractIncomingDistributedTracingData(httpRequest);
+			ITransaction transaction;
+
 			if (distributedTracingData != null)
 			{
 				_logger.Debug()
 					?.Log(
 						"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData} - continuing trace",
 						DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed, distributedTracingData);
+
 				// we set ignoreActivity to true to avoid the HttpContext W3C DiagnosticSource issue (see https://github.com/elastic/apm-agent-dotnet/issues/867#issuecomment-650170150)
-				_currentTransaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, distributedTracingData, true);
+				transaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, distributedTracingData, true);
 			}
 			else
 			{
@@ -141,10 +141,10 @@ namespace Elastic.Apm.AspNetFullFramework
 					?.Log("Incoming request doesn't have valid incoming distributed tracing data - starting trace with new trace ID");
 
 				// we set ignoreActivity to true to avoid the HttpContext W3C DiagnosticSource issue(see https://github.com/elastic/apm-agent-dotnet/issues/867#issuecomment-650170150)
-				_currentTransaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, ignoreActivity: true);
+				transaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, ignoreActivity: true);
 			}
 
-			if (_currentTransaction.IsSampled) FillSampledTransactionContextRequest(httpRequest, _currentTransaction);
+			if (transaction.IsSampled) FillSampledTransactionContextRequest(httpRequest, transaction);
 		}
 
 		/// <summary>
@@ -242,11 +242,11 @@ namespace Elastic.Apm.AspNetFullFramework
 			var httpApp = (HttpApplication)eventSender;
 			var httpCtx = httpApp.Context;
 			var httpResponse = httpCtx.Response;
-			var transaction = _currentTransaction;
+			var transaction = Agent.Instance.Tracer.CurrentTransaction;
 
 			if (transaction == null) return;
 
-			SendErrorEventIfPresent(httpCtx);
+			SendErrorEventIfPresent(httpCtx, transaction);
 
 			// update the transaction name based on route values, if applicable
 			if (transaction is Transaction t && !t.HasCustomName)
@@ -280,7 +280,7 @@ namespace Elastic.Apm.AspNetFullFramework
 
 						_logger?.Trace()?.Log("Calculating transaction name based on route data");
 						var name = Transaction.GetNameFromRouteContext(routeData);
-						if (!string.IsNullOrWhiteSpace(name)) _currentTransaction.Name = $"{httpCtx.Request.HttpMethod} {name}";
+						if (!string.IsNullOrWhiteSpace(name)) transaction.Name = $"{httpCtx.Request.HttpMethod} {name}";
 					}
 					else
 					{
@@ -292,27 +292,27 @@ namespace Elastic.Apm.AspNetFullFramework
 				}
 			}
 
-			_currentTransaction.Result = Transaction.StatusCodeToResult("HTTP", httpResponse.StatusCode);
+			transaction.Result = Transaction.StatusCodeToResult("HTTP", httpResponse.StatusCode);
 
 			if (httpResponse.StatusCode >= 500)
-				_currentTransaction.Outcome = Outcome.Failure;
+				transaction.Outcome = Outcome.Failure;
 			else
-				_currentTransaction.Outcome = Outcome.Success;
+				transaction.Outcome = Outcome.Success;
 
-			if (_currentTransaction.IsSampled)
+			if (transaction.IsSampled)
 			{
-				FillSampledTransactionContextResponse(httpResponse, _currentTransaction);
-				FillSampledTransactionContextUser(httpCtx, _currentTransaction);
+				FillSampledTransactionContextResponse(httpResponse, transaction);
+				FillSampledTransactionContextUser(httpCtx, transaction);
 			}
 
-			_currentTransaction.End();
-			_currentTransaction = null;
+			transaction.End();
+			transaction = null;
 		}
 
-		private void SendErrorEventIfPresent(HttpContext httpCtx)
+		private void SendErrorEventIfPresent(HttpContext httpCtx, ITransaction transaction)
 		{
 			var lastError = httpCtx.Server.GetLastError();
-			if (lastError != null) _currentTransaction.CaptureException(lastError);
+			if (lastError != null) transaction.CaptureException(lastError);
 		}
 
 		private static void FillSampledTransactionContextResponse(HttpResponse httpResponse, ITransaction transaction) =>
@@ -420,7 +420,13 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			var reader = ConfigHelper.CreateReader(rootLogger) ?? new FullFrameworkConfigReader(rootLogger);
 
-			var agentComponents = new AgentComponents(rootLogger, reader);
+			var agentComponents = new AgentComponents(
+				rootLogger,
+				reader,
+				null,
+				null,
+				new HttpContextCurrentExecutionSegmentsContainer(),
+				null);
 
 			var aspNetVersion = FindAspNetVersion(scopedLogger);
 

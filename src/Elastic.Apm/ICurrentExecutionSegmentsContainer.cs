@@ -8,7 +8,14 @@ namespace Elastic.Apm
 {
 	internal interface ICurrentExecutionSegmentsContainer
 	{
+		/// <summary>
+		/// Gets or sets the current span
+		/// </summary>
 		Span CurrentSpan { get; set; }
+
+		/// <summary>
+		/// Gets or sets the current transaction
+		/// </summary>
 		Transaction CurrentTransaction { get; set; }
 	}
 }

@@ -92,13 +92,20 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		public Task<ActionResult> Contact()
 		{
 			var httpClient = new HttpClient();
+			var callToThisAppUrl = new Uri(Request.Url.ToString().Replace(ContactPageRelativePath, AboutPageRelativePath));
+			var callToExternalServiceUrl = ChildHttpCallToExternalServiceUrl;
 
 			return SafeCaptureSpan<ActionResult>($"{ContactSpanPrefix}{SpanNameSuffix}", $"{ContactSpanPrefix}{SpanTypeSuffix}", async () =>
 			{
-				var callToThisAppUrl =
-					new Uri(HttpContext.ApplicationInstance.Request.Url.ToString().Replace(ContactPageRelativePath, AboutPageRelativePath));
+				async Task<HttpResponseMessage> GetContentFromUrl(Uri url)
+				{
+					Console.WriteLine($"Getting `{url}'...");
+					var response = await httpClient.GetAsync(url).ConfigureAwait(false);
+					Console.WriteLine($"Response status code from `{url}' - {response.StatusCode}");
+					return response;
+				}
+
 				var responseFromLocalHost = await GetContentFromUrl(callToThisAppUrl);
-				var callToExternalServiceUrl = ChildHttpCallToExternalServiceUrl;
 				var responseFromElasticCo = await GetContentFromUrl(callToExternalServiceUrl);
 
 				ViewBag.Message =
@@ -108,14 +115,6 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 
 				return View();
 			}, $"{ContactSpanPrefix}{SpanSubtypeSuffix}", $"{ContactSpanPrefix}{SpanActionSuffix}", GetCaptureControllerActionAsSpan());
-
-			async Task<HttpResponseMessage> GetContentFromUrl(Uri urlToGet)
-			{
-				Console.WriteLine($"Getting `{urlToGet}'...");
-				var response = await httpClient.GetAsync(urlToGet);
-				Console.WriteLine($"Response status code from `{urlToGet}' - {response.StatusCode}");
-				return response;
-			}
 		}
 
 		public ActionResult Sample(int id) => Content(id.ToString());

@@ -5,12 +5,14 @@
 using System;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Linq;
 using System.Web;
 using System.Web.Http;
 using System.Web.Http.Batch;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
+using AspNetFullFrameworkSampleApp.Mvc;
 using Elastic.Apm;
 using NLog;
 
@@ -40,6 +42,9 @@ namespace AspNetFullFrameworkSampleApp
 			FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
 			RouteConfig.RegisterRoutes(RouteTable.Routes);
 			BundleConfig.RegisterBundles(BundleTable.Bundles);
+
+			ValueProviderFactories.Factories.Remove(ValueProviderFactories.Factories.OfType<JsonValueProviderFactory>().FirstOrDefault());
+			ValueProviderFactories.Factories.Add(new JsonNetValueProviderFactory());
 		}
 
 		protected void Application_BeginRequest(object sender, EventArgs e)

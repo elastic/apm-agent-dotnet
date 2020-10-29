@@ -1,0 +1,18 @@
+@model CreateSampleDataViewModel
+
+@using (Html.BeginForm("Create", "Database", FormMethod.Post, new { id = "createForm", @class = "form-horizontal", role = "form" }))
+{
+	@Html.AntiForgeryToken()
+	<h4>Add a new sample</h4>
+	<hr />
+	@Html.ValidationSummary(true, "", new { @class = "text-danger" })
+	<div class="form-group">
+		@Html.Hidden("samples.Index", "index")
+		@Html.Label("samples[index].Name")
+		@Html.TextBox("samples[index].Name", "", new { @class = "form-control" })
+		@Html.ValidationMessage("samples[index].Name", "", new { @class = "text-danger" })
+	</div>
+	<div class="form-group">
+		<input type="submit" value="Create" class="btn btn-primary" />
+	</div>
+}

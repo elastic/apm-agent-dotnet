@@ -1,0 +1,26 @@
+@model IEnumerable<AspNetFullFrameworkSampleApp.Data.SampleData>
+
+@if (!Model.Any())
+{
+	<p>No samples in the database.</p>
+}
+else
+{
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th scope="col">Id</th>
+				<th scope="col">Name</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var sample in Model)
+			{
+				<tr>
+					<th scope="row">@sample.Id</th>
+					<td>@sample.Name</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
