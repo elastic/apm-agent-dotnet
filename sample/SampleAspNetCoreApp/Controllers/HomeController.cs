@@ -164,6 +164,11 @@ namespace SampleAspNetCoreApp.Controllers
 		//Used as test for optional route parameters
 		public IActionResult Sample(int id) => Ok(id);
 
+		[HttpPost]
+		[DisableRequestSizeLimit]
+		[RequestFormLimits(ValueLengthLimit = int.MaxValue, MultipartBodyLengthLimit = int.MaxValue)]
+		public long File(IFormFile file) => file.Length;
+
 		public IActionResult TransactionWithCustomName()
 		{
 			if (Agent.Tracer.CurrentTransaction != null) Agent.Tracer.CurrentTransaction.Name = "custom";

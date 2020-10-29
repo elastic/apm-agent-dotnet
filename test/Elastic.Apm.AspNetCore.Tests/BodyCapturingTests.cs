@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -84,6 +85,52 @@ namespace Elastic.Apm.AspNetCore.Tests
 			// and make sure the data is captured by the agent
 			sutEnv.MockPayloadSender.FirstTransaction.Should().NotBeNull();
 			sutEnv.MockPayloadSender.FirstTransaction.Context.Request.Body.Should().Be(body);
+		}
+
+		[Fact]
+		public async Task Body_Capture_Should_Not_Error_When_Large_File()
+		{
+			var sutEnv = StartSutEnv(new MockConfigSnapshot(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+			var file = Path.GetTempFileName();
+
+			try
+			{
+				var content = $"Building a large file for testing!{Environment.NewLine}";
+				var count = Encoding.UTF8.GetByteCount(content);
+				var bytes = Encoding.UTF8.GetBytes(content);
+				var repeat = (150 * 1024 * 1024) / count;
+
+				// create a ~150Mb file for testing
+				using (var stream = new FileStream(file, FileMode.OpenOrCreate, FileAccess.Write))
+				{
+					for (var i = 0; i < repeat; i++)
+						stream.Write(bytes, 0, count);
+				}
+
+				HttpResponseMessage response;
+				using (var formData = new MultipartFormDataContent
+				{
+					{ new StreamContent(new FileStream(file, FileMode.Open, FileAccess.Read)), "file", "file" }
+				})
+					response = await sutEnv.HttpClient.PostAsync("Home/File", formData);
+
+				response.IsSuccessStatusCode.Should().BeTrue();
+				var responseContent = int.Parse(await response.Content.ReadAsStringAsync());
+				responseContent.Should().Be(repeat * count);
+				sutEnv.MockPayloadSender.Transactions.Should().HaveCount(1);
+				sutEnv.MockPayloadSender.Errors.Should().BeEmpty();
+			}
+			finally
+			{
+				try
+				{
+					File.Delete(file);
+				}
+				catch
+				{
+					// problem deleting temp file. ignore.
+				}
+			}
 		}
 
 		[Fact]
