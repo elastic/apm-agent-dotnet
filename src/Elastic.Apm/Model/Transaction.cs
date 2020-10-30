@@ -234,6 +234,8 @@ namespace Elastic.Apm.Model
 		public bool IsSampled { get; }
 
 		[JsonIgnore]
+		[Obsolete(
+			"Instead of this dictionary, use the `SetLabel` method which supports more types than just string. This property will be removed in a future release.")]
 		public Dictionary<string, string> Labels => Context.Labels;
 
 		[MaxLength]

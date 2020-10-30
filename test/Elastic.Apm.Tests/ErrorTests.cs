@@ -32,7 +32,7 @@ namespace Elastic.Apm.Tests
 				};
 				t.Context.Response = new Response { StatusCode = 404, Finished = false };
 
-				t.Labels["foo"] = "bar";
+				t.SetLabel("foo", "bar");
 				// Let's capture an error
 				t.CaptureError("Test Error", "Test", new StackTrace().GetFrames());
 
@@ -45,7 +45,7 @@ namespace Elastic.Apm.Tests
 				t.Context.Request.Url.Search = "cde";
 				t.Context.Response.StatusCode = 500;
 				t.Context.Response.Finished = true;
-				t.Labels["foo"] = "bar1";
+				t.Context.InternalLabels.Value.InnerDictionary["foo"].Value.Should().Be("bar");
 
 				// Asserts on the captured error
 				mockPayloadSender.FirstError.Context.Request.Method.Should().Be("GET");
@@ -57,7 +57,7 @@ namespace Elastic.Apm.Tests
 				mockPayloadSender.FirstError.Context.Request.Url.Search = "abc";
 				mockPayloadSender.FirstError.Context.Response.StatusCode = 404;
 				mockPayloadSender.FirstError.Context.Response.Finished = false;
-				mockPayloadSender.FirstError.Context.Labels["foo"] = "bar";
+				mockPayloadSender.FirstError.Context.InternalLabels.Value.InnerDictionary["foo"].Value.Should().Be("bar");
 				mockPayloadSender.FirstError.Context.Response.Headers.Should().BeNull();
 			});
 
@@ -72,7 +72,7 @@ namespace Elastic.Apm.Tests
 			mockPayloadSender.FirstTransaction.Context.Request.Url.Search = "cde";
 			mockPayloadSender.FirstTransaction.Context.Response.StatusCode = 500;
 			mockPayloadSender.FirstTransaction.Context.Response.Finished = true;
-			mockPayloadSender.FirstTransaction.Context.Labels["foo"] = "bar1";
+			mockPayloadSender.FirstTransaction.Context.InternalLabels.Value.InnerDictionary["foo"].Value.Should().Be("bar");
 			mockPayloadSender.FirstTransaction.Context.Response.Headers.Should().BeNull();
 		}
 
@@ -115,7 +115,7 @@ namespace Elastic.Apm.Tests
 				mockPayloadSender.FirstError.Context.Request.Headers.Should().BeNull();
 				mockPayloadSender.FirstError.Context.Response.Should().NotBeNull();
 				mockPayloadSender.FirstError.Context.Response.Headers.Should().BeNull();
-				mockPayloadSender.FirstError.Context.Labels.Should().BeEmpty();
+				mockPayloadSender.FirstError.Context.InternalLabels.Value.InnerDictionary.Should().BeEmpty();
 			});
 		}
 	}

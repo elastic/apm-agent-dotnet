@@ -153,6 +153,9 @@ namespace Elastic.Apm.Tests
 			mockPayloadSender.FirstTransaction.Context.InternalLabels.Value.InnerDictionary["intLabel"].Value.Should().Be(6);
 		}
 
+#pragma warning disable CS0618 // Type or member is obsolete
+		//For testing backwards compatibility we also test the obsolete Dictionary<string,string> Labels property here.
+
 		[Fact]
 		public void PublicStringDictionaryPropertySerializationTest()
 		{

@@ -427,15 +427,12 @@ namespace Elastic.Apm.Tests.ApiTests
 					t.Tracer.CaptureTransaction(TransactionName, TransactionType, transaction =>
 					{
 						WaitHelpers.SleepMinimum();
-						transaction.Labels["foo"] = "bar";
+						transaction.SetLabel("foo", "bar");
 					});
 				});
 
 			//According to the Intake API labels are stored on the Context (and not on Transaction.Labels directly).
-			payloadSender.FirstTransaction.Context.Labels.Should().Contain("foo", "bar");
-
-			//Also make sure the label is visible directly on Transaction.Labels.
-			payloadSender.FirstTransaction.Labels.Should().Contain("foo", "bar");
+			payloadSender.FirstTransaction.Context.InternalLabels.Value.InnerDictionary["foo"].Value.Should().Be("bar");
 		}
 
 		/// <summary>
@@ -451,15 +448,12 @@ namespace Elastic.Apm.Tests.ApiTests
 					await t.Tracer.CaptureTransaction(TransactionName, TransactionType, async transaction =>
 					{
 						await WaitHelpers.DelayMinimum();
-						transaction.Labels["foo"] = "bar";
+						transaction.SetLabel("foo", "bar");
 					});
 				});
 
 			//According to the Intake API labels are stored on the Context (and not on Transaction.Labels directly).
-			payloadSender.FirstTransaction.Context.Labels.Should().Contain("foo", "bar");
-
-			//Also make sure the label is visible directly on Transaction.Labels.
-			payloadSender.FirstTransaction.Labels.Should().Contain("foo", "bar");
+			payloadSender.FirstTransaction.Context.InternalLabels.Value.MergedDictionary["foo"].Value.Should().Be("bar");
 		}
 
 		/// <summary>
@@ -477,7 +471,7 @@ namespace Elastic.Apm.Tests.ApiTests
 						await t.Tracer.CaptureTransaction(TransactionName, TransactionType, async transaction =>
 						{
 							await WaitHelpers.DelayMinimum();
-							transaction.Labels["foo"] = "bar";
+							transaction.SetLabel("foo", "bar");
 
 							if (new Random().Next(1) == 0) //avoid unreachable code warning.
 								throw new InvalidOperationException(ExceptionMessage);
@@ -487,10 +481,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				});
 
 			//According to the Intake API labels are stored on the Context (and not on Transaction.Labels directly).
-			payloadSender.FirstTransaction.Context.Labels.Should().Contain("foo", "bar");
-
-			//Also make sure the label is visible directly on Transaction.Labels.
-			payloadSender.FirstTransaction.Labels.Should().Contain("foo", "bar");
+			payloadSender.FirstTransaction.Context.InternalLabels.Value.MergedDictionary["foo"].Value.Should().Be("bar");
 		}
 
 		/// <summary>
