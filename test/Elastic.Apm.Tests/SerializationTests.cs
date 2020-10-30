@@ -412,12 +412,12 @@ namespace Elastic.Apm.Tests
 				new MetricSample("sample_1", 3),
 			};
 
-			var metricSet = new Metrics.MetricSet(1603343944891, samples);
+			var metricSet = new Elastic.Apm.Metrics.MetricSet(1603343944891, samples);
 			var json = SerializePayloadItem(metricSet);
 
 			json.Should().Be("{\"samples\":{\"sample_1\":{\"value\":1.0},\"sample__2\":{\"value\":2.0}},\"timestamp\":1603343944891}");
 
-			var deserialized = JsonConvert.DeserializeObject<Metrics.MetricSet>(json);
+			var deserialized = JsonConvert.DeserializeObject<Elastic.Apm.Metrics.MetricSet>(json);
 			deserialized.Timestamp.Should().Be(metricSet.Timestamp);
 			deserialized.Samples.Count().Should().Be(2);
 			var count = 0;
