@@ -246,15 +246,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 					{
 						error.Transaction.IsSampled.Should().BeTrue();
 						error.Context.Should().NotBeNull();
-						try
-						{
-							error.Context.Request.Body.Should().Be(capturedRequestBody);
-						}
-						catch (Exception e)
-						{
-							Console.WriteLine(e);
-							throw;
-						}
+						error.Context.Request.Body.Should().Be(capturedRequestBody);
 
 					}
 					else
