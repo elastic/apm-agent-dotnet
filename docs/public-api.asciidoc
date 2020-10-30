@@ -250,7 +250,7 @@ finally
 
 [float]
 [[api-transaction-set-label]]
-==== `void SetLabel(string key, T value) added[1.7.0,Number and boolean labels require APM Server 6.7]
+==== `void SetLabel(string key, T value)` added[1.7.0,Number and boolean labels require APM Server 6.7+]
 
 Labels are used to add *indexed* information to transactions, spans, and errors.
 Indexed means the data is searchable and aggregatable in Elasticsearch.
@@ -262,7 +262,7 @@ Multiple labels can be defined with different key-value pairs.
 
 Label values can be a string, boolean, or number.
 Because labels for a given key are stored in the same place in Elasticsearch, all label values of a given key must have the same data type.
-Multiple data types per key will throw an exception, e.g. `{foo: bar}` and `{foo: 42}`
+Multiple data types per key will throw an exception, e.g., `{foo: bar}` and `{foo: 42}`.
 
 NOTE: Number and boolean labels were only introduced in APM Server 6.7+.
 Using this API in combination with an older APM Server versions leads to validation errors.
@@ -538,7 +538,7 @@ span.SetLabel("intSample", 42);
 [[api-span-tags]]
 ==== `Dictionary<string,string> Labels`
 
-WARNING: This property is obsolete and will be be removed in a future version. Use the <<api-span-set-label>> method instead.   
+WARNING: This property is obsolete and will be be removed in a future version. Use the <<api-span-set-label,`void SetLabel()`>> method instead.   
 
 Similar to <<api-transaction-tags>> on the <<api-transaction>>: A flat mapping of user-defined labels with string values.
 
