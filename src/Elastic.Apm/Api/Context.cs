@@ -41,6 +41,13 @@ namespace Elastic.Apm.Api
 		/// </summary>
 		public Response Response { get; set; }
 
+		/// <summary>
+		/// Service related information can be sent per event. Provided information will override the more generic information from
+		/// metadata, non provided fields will be set according to the metadata information.
+		/// </summary>
+		[JsonProperty("service")]
+		internal Service Service { get; set; }
+
 		public User User { get; set; }
 
 		/// <summary>

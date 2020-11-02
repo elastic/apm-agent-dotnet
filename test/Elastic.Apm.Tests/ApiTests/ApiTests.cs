@@ -877,6 +877,65 @@ namespace Elastic.Apm.Tests.ApiTests
 					DistributedTracingDataHelper.ValidParentId, DistributedTracingDataHelper.ValidTraceFlags));
 		}
 
+		/// <summary>
+		/// Creates 3 transactions and overwrites the service name and version of 2 of them.
+		/// Makes sure that the service name and version is set for the 2 changed transaction.
+		/// </summary>
+		[Fact]
+		public void CustomServiceTest()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var transaction1 = agent.Tracer.StartTransaction("Transaction1", "test");
+			transaction1.SetService("Service1", "1.0-beta1");
+			transaction1.End();
+
+			var transaction2 = agent.Tracer.StartTransaction("Transaction2", "test");
+			transaction2.SetService("Service2", "1.0-beta2");
+			transaction2.End();
+
+			var transaction3 = agent.Tracer.StartTransaction("Transaction3", "test");
+			transaction3.End();
+
+			payloadSender.Transactions.Count.Should().Be(3);
+
+			var recordedTransaction1 = payloadSender.Transactions.FirstOrDefault(t => t.Name == "Transaction1");
+			recordedTransaction1.Should().NotBeNull();
+			recordedTransaction1?.Context.Service.Name.Should().Be("Service1");
+			recordedTransaction1?.Context.Service.Version.Should().Be("1.0-beta1");
+
+			var recordedTransaction2 = payloadSender.Transactions.FirstOrDefault(t => t.Name == "Transaction2");
+			recordedTransaction2.Should().NotBeNull();
+			recordedTransaction2?.Context.Service.Name.Should().Be("Service2");
+			recordedTransaction2?.Context.Service.Version.Should().Be("1.0-beta2");
+
+			var recordedTransaction3 = payloadSender.Transactions.FirstOrDefault(t => t.Name == "Transaction3");
+			recordedTransaction3.Should().NotBeNull();
+			recordedTransaction3?.Context.Service.Should().BeNull();
+		}
+
+		/// <summary>
+		/// Calls <exception cref="ITransaction.SetService"></exception> twice and makes sure the last value is reflected on the
+		/// transaction
+		/// </summary>
+		[Fact]
+		public void CustomServiceSetTwice()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var transaction1 = agent.Tracer.StartTransaction("Transaction1", "test");
+			transaction1.SetService("Service1", "1.0-beta1");
+
+			transaction1.SetService("Service2", "1.0-beta2");
+			transaction1.End();
+
+			payloadSender.FirstTransaction.Should().NotBeNull();
+			payloadSender.FirstTransaction?.Context.Service.Name.Should().Be("Service2");
+			payloadSender.FirstTransaction?.Context.Service.Version.Should().Be("1.0-beta2");
+		}
+
 		private class TestException : Exception
 		{
 			public TestException(string message) : base(message) { }

@@ -289,6 +289,18 @@ namespace Elastic.Apm.Model
 		[MaxLength]
 		public string Type { get; set; }
 
+		///<inheritdoc/>
+		public void SetService(string serviceName, string serviceVersion)
+		{
+			if (Context.Service == null)
+				Context.Service = new Service(serviceName, serviceVersion);
+			else
+			{
+				Context.Service.Name = serviceName;
+				Context.Service.Version = serviceVersion;
+			}
+		}
+
 		public string EnsureParentId()
 		{
 			if (!string.IsNullOrEmpty(ParentId))
