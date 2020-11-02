@@ -13,27 +13,28 @@ namespace Elastic.Apm.Api
 {
 	public class SpanContext
 	{
+		/// <summary>
+		/// <seealso cref="ShouldSerializeInternalLabels" />
+		/// </summary>.
+		[JsonProperty("tags")]
+		[JsonConverter(typeof(LazyLabelsDictionaryConverter))]
 		internal readonly Lazy<LabelsDictionary> InternalLabels = new Lazy<LabelsDictionary>();
 
 		public Database Db { get; set; }
 		public Destination Destination { get; set; }
 		public Http Http { get; set; }
 
-		/// <summary>
-		/// <seealso cref="ShouldSerializeLabels" />
-		/// </summary>
-		[JsonProperty("tags")]
-		[JsonConverter(typeof(LabelsJsonConverter))]
+		[JsonIgnore]
 		[Obsolete(
 			"Instead of this dictionary, use the `SetLabel` method which supports more types than just string. This property will be removed in a future release.")]
 		public Dictionary<string, string> Labels => InternalLabels.Value;
 
 		/// <summary>
-		/// Method to conditionally serialize <see cref="Labels" /> - serialize only when there is at least one label.
+		/// Method to conditionally serialize <see cref="InternalLabels" /> - serialize only when there is at least one label.
 		/// See
 		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
 		/// </summary>
-		public bool ShouldSerializeLabels() => InternalLabels.IsValueCreated && InternalLabels.Value.MergedDictionary.Count > 0;
+		public bool ShouldSerializeInternalLabels() => InternalLabels.IsValueCreated && InternalLabels.Value.MergedDictionary.Count > 0;
 
 		public override string ToString() => new ToStringBuilder(nameof(SpanContext))
 		{

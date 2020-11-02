@@ -5,6 +5,8 @@
 
 using System.Collections.Generic;
 using Elastic.Apm.Api;
+using Elastic.Apm.Report.Serialization;
+using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model
 {
@@ -15,6 +17,7 @@ namespace Elastic.Apm.Model
 	/// The reason for this is backwards compatibility - this type makes sure that we don't break user that rely on the old
 	/// interface.
 	/// </summary>
+	[JsonConverter(typeof(LabelsJsonConverter))]
 	internal class LabelsDictionary : Dictionary<string, string>
 	{
 		internal Dictionary<string, Label> InnerDictionary { get; } = new Dictionary<string, Label>();

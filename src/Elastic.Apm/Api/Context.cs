@@ -17,13 +17,14 @@ namespace Elastic.Apm.Api
 		[JsonConverter(typeof(CustomJsonConverter))]
 		public Dictionary<string, string> Custom => _custom.Value;
 
-		internal Lazy<LabelsDictionary> InternalLabels = new Lazy<LabelsDictionary>();
-
 		/// <summary>
-		/// <seealso cref="ShouldSerializeLabels" />
+		/// <seealso cref="ShouldSerializeInternalLabels" />
 		/// </summary>
 		[JsonProperty("tags")]
-		[JsonConverter(typeof(LabelsJsonConverter))]
+		[JsonConverter(typeof(LazyLabelsDictionaryConverter))]
+		internal Lazy<LabelsDictionary> InternalLabels = new Lazy<LabelsDictionary>();
+
+		[JsonIgnore]
 		[Obsolete(
 			"Instead of this dictionary, use the `SetLabel` method which supports more types than just string. This property will be removed in a future release.")]
 		public Dictionary<string, string> Labels => InternalLabels.Value;
@@ -75,11 +76,11 @@ namespace Elastic.Apm.Api
 		}
 
 		/// <summary>
-		/// Method to conditionally serialize <see cref="Labels" /> - serialize only when there is at least one label.
+		/// Method to conditionally serialize <see cref="InternalLabels" /> - serialize only when there is at least one label.
 		/// See
 		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
 		/// </summary>
-		public bool ShouldSerializeLabels() => InternalLabels.IsValueCreated && InternalLabels.Value.MergedDictionary.Count > 0;
+		public bool ShouldSerializeInternalLabels() => InternalLabels.IsValueCreated && InternalLabels.Value.MergedDictionary.Count > 0;
 
 		public bool ShouldSerializeCustom() => _custom.IsValueCreated && Custom.Count > 0;
 	}
