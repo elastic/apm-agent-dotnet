@@ -22,14 +22,6 @@ namespace Elastic.Apm.Tests.Metrics
 		public CgroupMetricsProviderTests()
 		{
 			var appRoot = new DirectoryInfo(AppContext.BaseDirectory);
-			do
-			{
-				if (appRoot.Name == "Elastic.Apm.Tests")
-					break;
-
-				appRoot = appRoot.Parent;
-			} while (appRoot != null);
-
 			_projectRoot = appRoot.FullName;
 		}
 

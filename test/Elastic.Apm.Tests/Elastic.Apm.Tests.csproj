@@ -25,8 +25,10 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
   </ItemGroup>
-
+  
   <ItemGroup>
-    <Folder Include="TestResources" />
+    <Content Include="TestResources\proc\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>
