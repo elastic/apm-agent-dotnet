@@ -262,7 +262,7 @@ Multiple labels can be defined with different key-value pairs.
 
 Label values can be a string, boolean, or number.
 Because labels for a given key are stored in the same place in Elasticsearch, all label values of a given key must have the same data type.
-Multiple data types per key will throw an exception, e.g., `{foo: bar}` and `{foo: 42}`.
+Multiple data types per key will throw an exception, e.g., `{"foo": "bar"}` and `{"foo": 42}`.
 
 NOTE: Number and boolean labels were only introduced in APM Server 6.7+.
 Using this API in combination with an older APM Server versions leads to validation errors.
@@ -285,7 +285,7 @@ transaction.SetLabel("intSample", 42);
 [[api-transaction-tags]]
 ==== `Dictionary<string,string> Labels`
 
-WARNING: This property is obsolete and will be be removed in a future version. Use the <<api-transaction-set-label>> method instead.   
+WARNING: This property is obsolete and will be be removed in a future version. Use the <<api-transaction-set-label, `void SetLabel()`>> method instead, which allows setting labels of string, boolean and number. This property remains for now in order to not break binary compatibility, and at serialization time, the values set with `.SetLabel()` are combined with `Labels` to form the set of labels sent to APM server, with values in `Labels` taking precedence. 
 
 A flat mapping of user-defined labels with string values. 
 
@@ -538,7 +538,7 @@ span.SetLabel("intSample", 42);
 [[api-span-tags]]
 ==== `Dictionary<string,string> Labels`
 
-WARNING: This property is obsolete and will be be removed in a future version. Use the <<api-span-set-label,`void SetLabel()`>> method instead.   
+WARNING: This property is obsolete and will be be removed in a future version. Use the <<api-span-set-label, `void SetLabel()`>> method instead, which allows setting labels of string, boolean and number. This property remains for now in order to not break binary compatibility, and at serialization time, the values set with `.SetLabel()` are combined with `Labels` to form the set of labels sent to APM server, with values in `Labels` taking precedence. 
 
 Similar to <<api-transaction-tags>> on the <<api-transaction>>: A flat mapping of user-defined labels with string values.
 
