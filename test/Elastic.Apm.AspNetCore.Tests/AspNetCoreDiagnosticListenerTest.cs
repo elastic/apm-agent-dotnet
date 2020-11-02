@@ -39,6 +39,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			using (var agent = new ApmAgent(new TestAgentComponents()))
 			{
+
 				var capturedPayload = agent.PayloadSender as MockPayloadSender;
 				var client = Helper.GetClient(agent, _factory, useOnlyDiagnosticSource);
 
@@ -53,20 +54,23 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 				capturedPayload.Should().NotBeNull();
 
-				capturedPayload.Transactions.Should().ContainSingle();
+				if (capturedPayload != null)
+				{
+					capturedPayload.Transactions.Should().ContainSingle();
 
-				capturedPayload.Errors.Should().ContainSingle();
+					capturedPayload.Errors.Should().ContainSingle();
 
-				var errorException = capturedPayload.FirstError.Exception;
-				errorException.Message.Should().Be("This is a test exception!");
-				errorException.Type.Should().Be(typeof(Exception).FullName);
+					var errorException = capturedPayload.FirstError.Exception;
+					errorException.Message.Should().Be("This is a test exception!");
+					errorException.Type.Should().Be(typeof(Exception).FullName);
 
-				var context = capturedPayload.FirstError.Context;
-				context.Request.Url.Full.Should().Be("http://localhost/Home/TriggerError");
-				context.Request.Method.Should().Be(HttpMethod.Get.Method);
+					var context = capturedPayload.FirstError.Context;
+					context.Request.Url.Full.Should().Be("http://localhost/Home/TriggerError");
+					context.Request.Method.Should().Be(HttpMethod.Get.Method);
 
-				errorException.Should().NotBeNull();
-				errorException.Handled.Should().BeFalse();
+					errorException.Should().NotBeNull();
+					errorException.Handled.Should().BeFalse();
+				}
 			}
 		}
 

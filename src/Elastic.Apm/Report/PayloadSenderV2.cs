@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm;
+using Elastic.Apm.Cloud;
 using Elastic.Apm.Config;
 using Elastic.Apm.Filters;
 using Elastic.Apm.Helpers;
@@ -34,6 +35,7 @@ namespace Elastic.Apm.Report
 		internal readonly List<Func<ISpan, ISpan>> SpanFilters = new List<Func<ISpan, ISpan>>();
 
 		internal readonly Api.System System;
+		private readonly CloudMetadataProviderCollection _cloudMetadataProviderCollection;
 
 		internal readonly List<Func<ITransaction, ITransaction>> TransactionFilters = new List<Func<ITransaction, ITransaction>>();
 
@@ -48,8 +50,13 @@ namespace Elastic.Apm.Report
 
 		private readonly PayloadItemSerializer _payloadItemSerializer;
 
-		public PayloadSenderV2(IApmLogger logger, IConfigSnapshot config, Service service, Api.System system,
-			HttpMessageHandler httpMessageHandler = null, string dbgName = null
+		public PayloadSenderV2(
+			IApmLogger logger,
+			IConfigSnapshot config,
+			Service service,
+			Api.System system,
+			HttpMessageHandler httpMessageHandler = null,
+			string dbgName = null
 		)
 			: base( /* isEnabled: */ true, logger, ThisClassName, service, config, httpMessageHandler)
 		{
@@ -60,6 +67,7 @@ namespace Elastic.Apm.Report
 
 			System = system;
 
+			_cloudMetadataProviderCollection = new CloudMetadataProviderCollection(config.CloudProvider, _logger);
 			_metadata = new Metadata { Service = service, System = System };
 			foreach (var globalLabelKeyValue in config.GlobalLabels) _metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
 
@@ -96,6 +104,7 @@ namespace Elastic.Apm.Report
 		private string _cachedMetadataJsonLine;
 
 		private long _eventQueueCount;
+		private bool _getCloudMetadata;
 
 		public void QueueTransaction(ITransaction transaction) => EnqueueEvent(transaction, "Transaction");
 
@@ -150,7 +159,19 @@ namespace Elastic.Apm.Report
 			return true;
 		}
 
-		protected override async Task WorkLoopIteration() => await ProcessQueueItems(await ReceiveBatchAsync());
+		protected override async Task WorkLoopIteration()
+		{
+			if (!_getCloudMetadata)
+			{
+				var cloud = await _cloudMetadataProviderCollection.GetMetadataAsync().ConfigureAwait(false);
+				if (cloud != null)
+					_metadata.Cloud = cloud;
+
+				_getCloudMetadata = true;
+			}
+
+			await ProcessQueueItems(await ReceiveBatchAsync());
+		}
 
 		private async Task<object[]> ReceiveBatchAsync()
 		{
@@ -218,6 +239,7 @@ namespace Elastic.Apm.Report
 				var ndjson = new StringBuilder();
 				if (_cachedMetadataJsonLine == null)
 					_cachedMetadataJsonLine = "{\"metadata\": " + _payloadItemSerializer.SerializeObject(_metadata) + "}";
+
 				ndjson.AppendLine(_cachedMetadataJsonLine);
 
 				// Apply filters
@@ -325,6 +347,9 @@ namespace Elastic.Apm.Report
 
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global
 		public Api.System System { get; set; }
+
+		/// <inheritdoc cref="Api.Cloud"/>
+		public Api.Cloud Cloud { get; set; }
 
 		/// <summary>
 		/// Method to conditionally serialize <see cref="Labels" /> - serialize only when there is at least one label.

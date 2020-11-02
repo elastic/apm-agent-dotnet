@@ -23,6 +23,7 @@ namespace Elastic.Apm.Config
 		public List<string> CaptureBodyContentTypes => _content.CaptureBodyContentTypes;
 		public bool CaptureHeaders => _content.CaptureHeaders;
 		public bool CentralConfig => _content.CentralConfig;
+		public string CloudProvider => _content.CloudProvider;
 		public string DbgDescription { get; }
 		public IReadOnlyList<WildcardMatcher> DisableMetrics => _content.DisableMetrics;
 		public string Environment => _content.Environment;

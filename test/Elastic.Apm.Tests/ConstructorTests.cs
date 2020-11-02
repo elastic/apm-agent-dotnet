@@ -43,6 +43,7 @@ namespace Elastic.Apm.Tests
 			public List<string> CaptureBodyContentTypes { get; }
 			public bool CaptureHeaders => ConfigConsts.DefaultValues.CaptureHeaders;
 			public bool CentralConfig => ConfigConsts.DefaultValues.CentralConfig;
+			public string CloudProvider => ConfigConsts.DefaultValues.CloudProvider;
 			public string Environment { get; }
 			public string ServiceNodeName { get; }
 			public TimeSpan FlushInterval => TimeSpan.FromMilliseconds(ConfigConsts.DefaultValues.FlushIntervalInMilliseconds);

@@ -240,6 +240,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public bool CaptureHeaders => _centralConfig.CaptureHeaders ?? _wrapped.CaptureHeaders;
 			public bool CentralConfig => _wrapped.CentralConfig;
 
+			public string CloudProvider => _wrapped.CloudProvider;
+
 			public string DbgDescription { get; }
 
 			public IReadOnlyList<WildcardMatcher> DisableMetrics => _wrapped.DisableMetrics;

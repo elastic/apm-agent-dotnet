@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
+using static Elastic.Apm.Config.ConfigConsts;
 
 namespace Elastic.Apm.Config
 {
@@ -23,88 +24,90 @@ namespace Elastic.Apm.Config
 			_defaultEnvironmentName = defaultEnvironmentName;
 
 			_stackTraceLimit =
-				new Lazy<int>(() => ParseStackTraceLimit(Read(ConfigConsts.KeyNames.StackTraceLimit, ConfigConsts.EnvVarNames.StackTraceLimit)));
+				new Lazy<int>(() => ParseStackTraceLimit(Read(KeyNames.StackTraceLimit, EnvVarNames.StackTraceLimit)));
 
 			_spanFramesMinDurationInMilliseconds = new Lazy<double>(() =>
-				ParseSpanFramesMinDurationInMilliseconds(Read(ConfigConsts.KeyNames.SpanFramesMinDuration,
-					ConfigConsts.EnvVarNames.SpanFramesMinDuration)));
+				ParseSpanFramesMinDurationInMilliseconds(Read(KeyNames.SpanFramesMinDuration,
+					EnvVarNames.SpanFramesMinDuration)));
 		}
 
 		protected abstract ConfigurationKeyValue Read(string key, string fallBackEnvVarName);
 
-		public virtual string CaptureBody => ParseCaptureBody(Read(ConfigConsts.KeyNames.CaptureBody, ConfigConsts.EnvVarNames.CaptureBody));
+		public virtual string CaptureBody => ParseCaptureBody(Read(KeyNames.CaptureBody, EnvVarNames.CaptureBody));
 
 		public virtual List<string> CaptureBodyContentTypes =>
-			ParseCaptureBodyContentTypes(Read(ConfigConsts.KeyNames.CaptureBodyContentTypes, ConfigConsts.EnvVarNames.CaptureBodyContentTypes));
+			ParseCaptureBodyContentTypes(Read(KeyNames.CaptureBodyContentTypes, EnvVarNames.CaptureBodyContentTypes));
 
 		public virtual bool CaptureHeaders =>
-			ParseCaptureHeaders(Read(ConfigConsts.KeyNames.CaptureHeaders, ConfigConsts.EnvVarNames.CaptureHeaders));
+			ParseCaptureHeaders(Read(KeyNames.CaptureHeaders, EnvVarNames.CaptureHeaders));
 
-		public bool CentralConfig => ParseCentralConfig(Read(ConfigConsts.KeyNames.CentralConfig, ConfigConsts.EnvVarNames.CentralConfig));
+		public bool CentralConfig => ParseCentralConfig(Read(KeyNames.CentralConfig, EnvVarNames.CentralConfig));
+
+		public virtual string CloudProvider => ParseCloudProvider(Read(KeyNames.CloudProvider, EnvVarNames.CloudProvider));
 
 		public IReadOnlyList<WildcardMatcher> DisableMetrics =>
-			ParseDisableMetrics(Read(ConfigConsts.KeyNames.DisableMetrics, ConfigConsts.EnvVarNames.DisableMetrics));
+			ParseDisableMetrics(Read(KeyNames.DisableMetrics, EnvVarNames.DisableMetrics));
 
-		public virtual string Environment => ParseEnvironment(Read(ConfigConsts.KeyNames.Environment, ConfigConsts.EnvVarNames.Environment))
+		public virtual string Environment => ParseEnvironment(Read(KeyNames.Environment, EnvVarNames.Environment))
 			?? _defaultEnvironmentName;
 
 		public virtual TimeSpan FlushInterval =>
-			ParseFlushInterval(Read(ConfigConsts.KeyNames.FlushInterval, ConfigConsts.EnvVarNames.FlushInterval));
+			ParseFlushInterval(Read(KeyNames.FlushInterval, EnvVarNames.FlushInterval));
 
 		public IReadOnlyDictionary<string, string> GlobalLabels =>
-			ParseGlobalLabels(Read(ConfigConsts.KeyNames.GlobalLabels, ConfigConsts.EnvVarNames.GlobalLabels));
+			ParseGlobalLabels(Read(KeyNames.GlobalLabels, EnvVarNames.GlobalLabels));
 
-		public virtual string HostName => ParseHostName(Read(ConfigConsts.KeyNames.HostName, ConfigConsts.EnvVarNames.HostName));
+		public virtual string HostName => ParseHostName(Read(KeyNames.HostName, EnvVarNames.HostName));
 
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
-			ParseTransactionIgnoreUrls(Read(ConfigConsts.KeyNames.TransactionIgnoreUrls, ConfigConsts.EnvVarNames.TransactionIgnoreUrls));
+			ParseTransactionIgnoreUrls(Read(KeyNames.TransactionIgnoreUrls, EnvVarNames.TransactionIgnoreUrls));
 
-		public virtual LogLevel LogLevel => ParseLogLevel(Read(ConfigConsts.KeyNames.LogLevel, ConfigConsts.EnvVarNames.LogLevel));
+		public virtual LogLevel LogLevel => ParseLogLevel(Read(KeyNames.LogLevel, EnvVarNames.LogLevel));
 
 		public virtual int MaxBatchEventCount =>
-			ParseMaxBatchEventCount(Read(ConfigConsts.KeyNames.MaxBatchEventCount, ConfigConsts.EnvVarNames.MaxBatchEventCount));
+			ParseMaxBatchEventCount(Read(KeyNames.MaxBatchEventCount, EnvVarNames.MaxBatchEventCount));
 
 		public virtual int MaxQueueEventCount =>
-			ParseMaxQueueEventCount(Read(ConfigConsts.KeyNames.MaxQueueEventCount, ConfigConsts.EnvVarNames.MaxQueueEventCount));
+			ParseMaxQueueEventCount(Read(KeyNames.MaxQueueEventCount, EnvVarNames.MaxQueueEventCount));
 
 		public virtual double MetricsIntervalInMilliseconds =>
-			ParseMetricsInterval(Read(ConfigConsts.KeyNames.MetricsInterval, ConfigConsts.EnvVarNames.MetricsInterval));
+			ParseMetricsInterval(Read(KeyNames.MetricsInterval, EnvVarNames.MetricsInterval));
 
 		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames =>
-			ParseSanitizeFieldNames(Read(ConfigConsts.KeyNames.SanitizeFieldNames, ConfigConsts.EnvVarNames.SanitizeFieldNames));
+			ParseSanitizeFieldNames(Read(KeyNames.SanitizeFieldNames, EnvVarNames.SanitizeFieldNames));
 
-		public virtual string SecretToken => ParseSecretToken(Read(ConfigConsts.KeyNames.SecretToken, ConfigConsts.EnvVarNames.SecretToken));
-		public string ApiKey => ParseApiKey(Read(ConfigConsts.KeyNames.ApiKey, ConfigConsts.EnvVarNames.ApiKey));
+		public virtual string SecretToken => ParseSecretToken(Read(KeyNames.SecretToken, EnvVarNames.SecretToken));
+		public string ApiKey => ParseApiKey(Read(KeyNames.ApiKey, EnvVarNames.ApiKey));
 
-		public virtual IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Read(ConfigConsts.KeyNames.ServerUrls, ConfigConsts.EnvVarNames.ServerUrls));
+		public virtual IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Read(KeyNames.ServerUrls, EnvVarNames.ServerUrls));
 
-		public virtual string ServiceName => ParseServiceName(Read(ConfigConsts.KeyNames.ServiceName, ConfigConsts.EnvVarNames.ServiceName));
+		public virtual string ServiceName => ParseServiceName(Read(KeyNames.ServiceName, EnvVarNames.ServiceName));
 
-		public string ServiceNodeName => ParseServiceNodeName(Read(ConfigConsts.KeyNames.ServiceNodeName, ConfigConsts.EnvVarNames.ServiceNodeName));
+		public string ServiceNodeName => ParseServiceNodeName(Read(KeyNames.ServiceNodeName, EnvVarNames.ServiceNodeName));
 
 		public virtual string ServiceVersion =>
-			ParseServiceVersion(Read(ConfigConsts.KeyNames.ServiceVersion, ConfigConsts.EnvVarNames.ServiceVersion));
+			ParseServiceVersion(Read(KeyNames.ServiceVersion, EnvVarNames.ServiceVersion));
 
 		public virtual double SpanFramesMinDurationInMilliseconds => _spanFramesMinDurationInMilliseconds.Value;
 
 		public virtual int StackTraceLimit => _stackTraceLimit.Value;
 
 		public virtual int TransactionMaxSpans =>
-			ParseTransactionMaxSpans(Read(ConfigConsts.KeyNames.TransactionMaxSpans, ConfigConsts.EnvVarNames.TransactionMaxSpans));
+			ParseTransactionMaxSpans(Read(KeyNames.TransactionMaxSpans, EnvVarNames.TransactionMaxSpans));
 
 		public virtual double TransactionSampleRate =>
-			ParseTransactionSampleRate(Read(ConfigConsts.KeyNames.TransactionSampleRate, ConfigConsts.EnvVarNames.TransactionSampleRate));
+			ParseTransactionSampleRate(Read(KeyNames.TransactionSampleRate, EnvVarNames.TransactionSampleRate));
 
-		public bool UseElasticTraceparentHeader => ParseUseElasticTraceparentHeader(Read(ConfigConsts.KeyNames.UseElasticTraceparentHeader,
-			ConfigConsts.EnvVarNames.UseElasticTraceparentHeader));
+		public bool UseElasticTraceparentHeader => ParseUseElasticTraceparentHeader(Read(KeyNames.UseElasticTraceparentHeader,
+			EnvVarNames.UseElasticTraceparentHeader));
 
 		public virtual bool VerifyServerCert =>
-			ParseVerifyServerCert(Read(ConfigConsts.KeyNames.VerifyServerCert, ConfigConsts.EnvVarNames.VerifyServerCert));
+			ParseVerifyServerCert(Read(KeyNames.VerifyServerCert, EnvVarNames.VerifyServerCert));
 
 		public IReadOnlyCollection<string> ExcludedNamespaces =>
-			ParseExcludedNamespaces(Read(ConfigConsts.KeyNames.ExcludedNamespaces, ConfigConsts.EnvVarNames.ExcludedNamespaces));
+			ParseExcludedNamespaces(Read(KeyNames.ExcludedNamespaces, EnvVarNames.ExcludedNamespaces));
 
 		public IReadOnlyCollection<string> ApplicationNamespaces =>
-			ParseExcludedNamespaces(Read(ConfigConsts.KeyNames.ApplicationNamespaces, ConfigConsts.EnvVarNames.ApplicationNamespaces));
+			ParseExcludedNamespaces(Read(KeyNames.ApplicationNamespaces, EnvVarNames.ApplicationNamespaces));
 	}
 }

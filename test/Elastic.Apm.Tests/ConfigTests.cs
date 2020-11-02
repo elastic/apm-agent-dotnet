@@ -277,6 +277,31 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
+		public void DefaultCloudProviderTest()
+		{
+			using var agent = new ApmAgent(new AgentComponents(new NoopLogger(), payloadSender: new MockPayloadSender()));
+			agent.ConfigurationReader.CloudProvider.Should().Be(DefaultValues.CloudProvider);
+		}
+
+		[Fact]
+		public void DefaultCloudProviderEnvironmentTest()
+		{
+			var reader = new EnvironmentConfigurationReader();
+			reader.CloudProvider.Should().Be(DefaultValues.CloudProvider);
+		}
+
+		[Fact]
+		public void SetCloudProviderTest()
+		{
+			foreach (var value in SupportedValues.CloudProviders)
+			{
+				Environment.SetEnvironmentVariable(EnvVarNames.CloudProvider, value);
+				var config = new EnvironmentConfigurationReader();
+				config.CloudProvider.Should().Be(value);
+			}
+		}
+
+		[Fact]
 		public void DefaultTransactionSampleRateTest()
 		{
 			using (var agent = new ApmAgent(new TestAgentComponents()))

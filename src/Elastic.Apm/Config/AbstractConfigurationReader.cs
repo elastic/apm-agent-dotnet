@@ -752,6 +752,25 @@ namespace Elastic.Apm.Config
 
 		protected bool ParseCentralConfig(ConfigurationKeyValue kv) => ParseBoolOption(kv, DefaultValues.CentralConfig, "CentralConfig");
 
+		protected string ParseCloudProvider(ConfigurationKeyValue kv)
+		{
+			var cloudProvider = kv.Value;
+			if (string.IsNullOrEmpty(cloudProvider))
+				return DefaultValues.CloudProvider;
+
+			if (!SupportedValues.CloudProviders.Contains(cloudProvider))
+			{
+				_logger?.Error()
+					?.Log("The CloudProvider value '{CloudProvider}' is not supported. " +
+						"Falling back to {DefaultValue}. Supported values are: {SupportedValues} or leave empty",
+						cloudProvider, DefaultValues.CloudProvider, string.Join(", ", SupportedValues.CloudProviders));
+
+				return DefaultValues.CloudProvider;
+			}
+
+			return cloudProvider.ToLowerInvariant();
+		}
+
 		private bool ParseBoolOption(ConfigurationKeyValue kv, bool defaultValue, string dbgOptionName)
 		{
 			if (kv == null || string.IsNullOrWhiteSpace(kv.Value))
