@@ -412,6 +412,39 @@ Agent.Tracer.CaptureTransaction(transactionName, transactionType, (transaction) 
 ----
 
 [float]
+[[api-transaction-set-service]]
+==== `void SetService(string serviceName, string serviceVersion)` (added[1.7])
+
+With this method you can overwrite the service name and version on a per transaction basis. If this is not set, the transaction will be associated with the default service.
+
+This method is useful when you host multiple services in a single process.
+
+The method has 2 `string` parameters:
+
+* `serviceName`: The name of the service which the transaction will be associated with.
+* `serviceVersion`: The version of the service which the transaction will be associated with.
+
+Usage:
+
+[source,csharp]
+----
+var transaction = agent.Tracer.StartTransaction("Transaction1", "sample");
+transaction.SetService("MyServiceName", "1.0-beta1");
+----
+
+It can also be used with the <<filter-api>>:
+
+[source,csharp]
+----
+Agent.AddFilter( transaction =>
+{
+	transaction.SetService("MyServiceName", "1.0-beta1");
+	return transaction;
+});
+----
+
+
+[float]
 [[api-transaction-context]]
 ==== `Context`
 You can attach additional context to manually captured transactions.
