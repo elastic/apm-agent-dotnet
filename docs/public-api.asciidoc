@@ -415,14 +415,14 @@ Agent.Tracer.CaptureTransaction(transactionName, transactionType, (transaction) 
 [[api-transaction-set-service]]
 ==== `void SetService(string serviceName, string serviceVersion)` (added[1.7])
 
-With this method you can overwrite the service name and version on a per transaction basis. If this is not set, the transaction will be associated with the default service.
+Overwrite the service name and version on a per transaction basis. This is useful when you host multiple services in a single process.
 
-This method is useful when you host multiple services in a single process.
+When not set, transactions are associated with the default service.
 
-The method has 2 `string` parameters:
+This method has two `string` parameters:
 
-* `serviceName`: The name of the service which the transaction will be associated with.
-* `serviceVersion`: The version of the service which the transaction will be associated with.
+* `serviceName`: The name of the service to associate with the transaction.
+* `serviceVersion`: The version of the service to associate with the transaction.
 
 Usage:
 
