@@ -7,7 +7,7 @@ namespace Elastic.Apm.Api
 {
 	/// <summary>
 	/// Represents the value of a label (see <see cref="IExecutionSegment.SetLabel(string,string)"/> with all its overloads).
-	/// It contains an implicit operator which coverts all supported types into a <see cref="Label"/> instance.
+	/// It contains implicit operators to convert all supported types to a new instance of <see cref="Label"/>
 	/// </summary>
 	public class Label
 	{
