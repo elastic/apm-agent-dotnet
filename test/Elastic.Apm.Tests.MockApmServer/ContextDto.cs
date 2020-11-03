@@ -2,9 +2,9 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using System.Collections.Generic;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Model;
 using Newtonsoft.Json;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -15,7 +15,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 	internal class ContextDto : IDto
 	{
 		[JsonProperty("tags")]
-		public Dictionary<string, string> Labels { get; set; }
+		public LabelsDictionary Labels { get; set; }
 
 		public Request Request { get; set; }
 

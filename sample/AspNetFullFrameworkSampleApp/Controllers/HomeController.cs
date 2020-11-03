@@ -23,40 +23,41 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 	/// Note that this application is used by Elastic.Apm.AspNetFullFramework.Tests so changing it might break the tests
 	public class HomeController : ControllerBase
 	{
-		internal const string HomePageRelativePath = "Home";
-		internal const string ConcurrentDbTestPageRelativePath = HomePageRelativePath + "/" + nameof(ConcurrentDbTest);
-		internal const string ContactPageRelativePath = HomePageRelativePath + "/" + nameof(Contact);
-		internal const string CustomChildSpanThrowsPageRelativePath = HomePageRelativePath + "/" + nameof(CustomChildSpanThrows);
 		internal const string AboutPageRelativePath = HomePageRelativePath + "/" + nameof(About);
-		internal const string ChildHttpSpanWithResponseForbiddenPath = HomePageRelativePath + "/" + nameof(ChildHttpSpanWithResponseForbidden);
 		internal const string CallReturnBadRequestPageRelativePath = HomePageRelativePath + "/" + nameof(CallReturnBadRequest);
-		internal const string CustomSpanThrowsPageRelativePath = HomePageRelativePath + "/" + nameof(CustomSpanThrows);
-		internal const string DbOperationOutsideTransactionTestPageRelativePath =
-			HomePageRelativePath + "/" + nameof(DbOperationOutsideTransactionTest);
-		internal const string FailingDbCallTestPageRelativePath = HomePageRelativePath + "/" + nameof(FailingDbCallTest);
-		internal const string GenNSpansPageRelativePath = HomePageRelativePath + "/" + nameof(GenNSpans);
-		internal const string GetDotNetRuntimeDescriptionPageRelativePath = HomePageRelativePath + "/" + nameof(GetDotNetRuntimeDescription);
-		internal const string NotFoundPageRelativePath = HomePageRelativePath + "/" + nameof(NotFound);
-		internal const string ReturnBadRequestPageRelativePath = HomePageRelativePath + "/" + nameof(ReturnBadRequest);
-		internal const string SimpleDbTestPageRelativePath = HomePageRelativePath + "/" + nameof(SimpleDbTest);
-		internal const string ThrowsInvalidOperationPageRelativePath = HomePageRelativePath + "/" + nameof(ThrowsInvalidOperation);
-		internal const string ThrowsHttpException404PageRelativePath = HomePageRelativePath + "/" + nameof(ThrowsHttpException404);
 
 		internal const string CaptureControllerActionAsSpanQueryStringKey = "captureControllerActionAsSpan";
+		internal const string ChildHttpSpanWithResponseForbiddenPath = HomePageRelativePath + "/" + nameof(ChildHttpSpanWithResponseForbidden);
 		internal const int ConcurrentDbTestNumberOfIterations = 10;
+		internal const string ConcurrentDbTestPageRelativePath = HomePageRelativePath + "/" + nameof(ConcurrentDbTest);
 		internal const string ConcurrentDbTestSpanType = "concurrent";
+		internal const string ContactPageRelativePath = HomePageRelativePath + "/" + nameof(Contact);
 
 		internal const string ContactSpanPrefix = nameof(Contact);
+		internal const string CustomChildSpanThrowsPageRelativePath = HomePageRelativePath + "/" + nameof(CustomChildSpanThrows);
 		internal const string CustomSpanThrowsInternalMethodName = nameof(CustomSpanThrowsInternal);
+		internal const string CustomSpanThrowsPageRelativePath = HomePageRelativePath + "/" + nameof(CustomSpanThrows);
+
+		internal const string DbOperationOutsideTransactionTestPageRelativePath =
+			HomePageRelativePath + "/" + nameof(DbOperationOutsideTransactionTest);
+
 		internal const int DbOperationOutsideTransactionTestStatusCode = (int)HttpStatusCode.Accepted;
 
 		internal const string DotNetRuntimeDescriptionHttpHeaderName = "DotNetRuntimeDescription";
 		internal const int DummyHttpStatusCode = 599;
 		internal const string ExceptionMessage = "For testing purposes";
+		internal const string FailingDbCallTestPageRelativePath = HomePageRelativePath + "/" + nameof(FailingDbCallTest);
 
 		internal const int FailingDbCallTestStatusCode = (int)HttpStatusCode.OK;
+		internal const string GenNSpansPageRelativePath = HomePageRelativePath + "/" + nameof(GenNSpans);
+		internal const string GetDotNetRuntimeDescriptionPageRelativePath = HomePageRelativePath + "/" + nameof(GetDotNetRuntimeDescription);
+		internal const string HomePageRelativePath = "Home";
+		internal const string LabelsTestRelativePath = HomePageRelativePath + "/" + nameof(LabelsTest);
+		internal const string NotFoundPageRelativePath = HomePageRelativePath + "/" + nameof(NotFound);
 
 		internal const string NumberOfSpansQueryStringKey = "numberOfSpans";
+		internal const string ReturnBadRequestPageRelativePath = HomePageRelativePath + "/" + nameof(ReturnBadRequest);
+		internal const string SimpleDbTestPageRelativePath = HomePageRelativePath + "/" + nameof(SimpleDbTest);
 
 		internal const string SpanActionSuffix = "_span_action";
 		internal const string SpanNameSuffix = "_span_name";
@@ -65,6 +66,8 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 
 		internal const string TestChildSpanPrefix = "test_child";
 		internal const string TestSpanPrefix = "test";
+		internal const string ThrowsHttpException404PageRelativePath = HomePageRelativePath + "/" + nameof(ThrowsHttpException404);
+		internal const string ThrowsInvalidOperationPageRelativePath = HomePageRelativePath + "/" + nameof(ThrowsInvalidOperation);
 
 		internal static readonly Uri ChildHttpCallToExternalServiceUrl = new Uri("https://elastic.co");
 		internal static readonly Uri ChildHttpSpanWithResponseForbiddenUrl = new Uri("https://httpstat.us/403");
@@ -153,6 +156,27 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 			var result = await new HttpClient().GetAsync("http://dsfklgjdfgkdfg.mmmm");
 			Console.WriteLine(result.IsSuccessStatusCode);
 			return null;
+		}
+
+		public ActionResult LabelsTest()
+		{
+			var currentTransaction = Agent.Tracer.CurrentTransaction;
+
+			if (currentTransaction != null)
+			{
+				currentTransaction.SetLabel("TransactionStringLabel", "foo");
+				currentTransaction.SetLabel("TransactionNumberLabel", 42);
+				currentTransaction.SetLabel("TransactionBoolLabel", true);
+
+				currentTransaction.CaptureSpan("TestSpan", "Test", span =>
+				{
+					span.SetLabel("SpanStringLabel", "foo");
+					span.SetLabel("SpanNumberLabel", 42);
+					span.SetLabel("SpanBoolLabel", true);
+				});
+			}
+
+			return new HttpStatusCodeResult(HttpStatusCode.OK);
 		}
 
 		public ActionResult ThrowsHttpException404()
