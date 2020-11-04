@@ -64,7 +64,7 @@ namespace Elastic.Apm.Tests
 				{
 					var labelName = "myLabel";
 					SetLabel(s, labelValue, labelName);
-					var jsonString = new PayloadItemSerializer(new MockConfigSnapshot()).SerializeObject(s);
+					var jsonString = SerializePayloadItem(s);
 					jsonString.Should().Contain(GetAssertString(labelValue, labelName));
 
 					s.Context.InternalLabels.Value.InnerDictionary[labelName].Value.Should().Be(labelValue);
