@@ -4,8 +4,8 @@
 
 using System.Collections.Generic;
 using Elastic.Apm.Api.Constraints;
+using System.Linq;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Api
@@ -38,6 +38,17 @@ namespace Elastic.Apm.Api
 		[Required]
 		public Url Url { get; set; }
 
+		internal Request DeepCopy()
+		{
+			var newItem = (Request)MemberwiseClone();
+			if (Headers != null)
+				newItem.Headers = Headers.ToDictionary(entry => entry.Key, entry => entry.Value);
+
+			newItem.Socket = Socket?.DeepCopy();
+			newItem.Url = Url?.DeepCopy();
+			return newItem;
+		}
+
 		public override string ToString() =>
 			new ToStringBuilder(nameof(Request)) { { "Method", Method }, { "Url", Url }, { "Socket", Socket } }.ToString();
 	}
@@ -48,6 +59,8 @@ namespace Elastic.Apm.Api
 
 		[JsonProperty("remote_address")]
 		public string RemoteAddress { get; set; }
+
+		internal Socket DeepCopy() => (Socket)MemberwiseClone();
 
 		public override string ToString() =>
 			new ToStringBuilder(nameof(Socket)) { { "Encrypted", Encrypted }, { "RemoteAddress", RemoteAddress } }.ToString();
@@ -90,6 +103,8 @@ namespace Elastic.Apm.Api
 		[MaxLength]
 		[JsonProperty("search")]
 		public string Search { get; set; }
+
+		internal Url DeepCopy() => (Url)MemberwiseClone();
 
 		public override string ToString() => new ToStringBuilder(nameof(Url)) { { "Full", Full } }.ToString();
 	}

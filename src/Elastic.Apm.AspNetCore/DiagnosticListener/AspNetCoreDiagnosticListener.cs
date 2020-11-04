@@ -64,9 +64,9 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 					if (!(_exceptionContextPropertyFetcher.Fetch(kv.Value) is Exception diagnosticsException)) return;
 					if (!_processingRequests.TryGetValue(httpContextDiagnosticsUnhandledException, out var diagnosticsTransaction)) return;
 
-					diagnosticsTransaction.CaptureException(diagnosticsException);
 					diagnosticsTransaction.CollectRequestBody(true, httpContextDiagnosticsUnhandledException.Request, _logger,
 						diagnosticsTransaction.ConfigSnapshot);
+					diagnosticsTransaction.CaptureException(diagnosticsException);
 
 					break;
 				case "Microsoft.AspNetCore.Hosting.UnhandledException": // Not called when exception handler registered
@@ -74,8 +74,8 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 					if (!(_exceptionContextPropertyFetcher.Fetch(kv.Value) is Exception exception)) return;
 					if (!_processingRequests.TryGetValue(httpContextUnhandledException, out var currentTransaction)) return;
 
-					currentTransaction.CaptureException(exception);
 					currentTransaction.CollectRequestBody(true, httpContextUnhandledException.Request, _logger, currentTransaction.ConfigSnapshot);
+					currentTransaction.CaptureException(exception);
 					break;
 			}
 		}

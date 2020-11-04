@@ -460,12 +460,12 @@ namespace Elastic.Apm.Tests.ApiTests
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
 				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
-				transaction.Labels["fooTransaction1"] = "barTransaction1";
-				transaction.Labels["fooTransaction2"] = "barTransaction2";
+				transaction.SetLabel("fooTransaction1", "barTransaction1");
+				transaction.SetLabel("fooTransaction2", "barTransaction2");
 
 				var span = transaction.StartSpan(spanName, ApiConstants.TypeExternal);
-				span.Labels["fooSpan1"] = "barSpan1";
-				span.Labels["fooSpan2"] = "barSpan2";
+				span.SetLabel("fooSpan1", "barSpan1");
+				span.SetLabel("fooSpan2", "barSpan2");
 
 				Thread.Sleep(5); //Make sure we have duration > 0
 
@@ -486,17 +486,11 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.Errors.Should().ContainSingle();
 			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 
-			payloadSender.FirstTransaction.Labels.Should().Contain("fooTransaction1", "barTransaction1");
-			payloadSender.FirstTransaction.Context.Labels.Should().Contain("fooTransaction1", "barTransaction1");
+			payloadSender.FirstTransaction.Context.InternalLabels.Value.MergedDictionary["fooTransaction1"].Value.Should().Be("barTransaction1");
+			payloadSender.FirstTransaction.Context.InternalLabels.Value.MergedDictionary["fooTransaction2"].Value.Should().Be("barTransaction2");
 
-			payloadSender.FirstTransaction.Labels.Should().Contain("fooTransaction2", "barTransaction2");
-			payloadSender.FirstTransaction.Context.Labels.Should().Contain("fooTransaction2", "barTransaction2");
-
-			payloadSender.SpansOnFirstTransaction[0].Labels.Should().Contain("fooSpan1", "barSpan1");
-			payloadSender.SpansOnFirstTransaction[0].Context.Labels.Should().Contain("fooSpan1", "barSpan1");
-
-			payloadSender.SpansOnFirstTransaction[0].Labels.Should().Contain("fooSpan2", "barSpan2");
-			payloadSender.SpansOnFirstTransaction[0].Context.Labels.Should().Contain("fooSpan2", "barSpan2");
+			payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.Value.MergedDictionary["fooSpan1"].Value.Should().Be("barSpan1");
+			payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.Value.MergedDictionary["fooSpan2"].Value.Should().Be("barSpan2");
 		}
 
 		/// <summary>
@@ -579,11 +573,11 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void SubSpanWithLabels()
 		{
 			var payloadSender = new MockPayloadSender();
-			StartTransactionAndSpanWithSubSpan(payloadSender, span2 => { span2.Labels["foo"] = "bar"; });
+			StartTransactionAndSpanWithSubSpan(payloadSender, span2 => { span2.SetLabel("foo", 42); });
 
-			payloadSender.FirstSpan.Context.Labels.Should().NotBeEmpty();
-			payloadSender.FirstSpan.Context.Labels.Should().ContainKey("foo");
-			payloadSender.FirstSpan.Context.Labels["foo"].Should().Be("bar");
+			payloadSender.FirstSpan.Context.InternalLabels.Value.MergedDictionary.Should().NotBeEmpty();
+			payloadSender.FirstSpan.Context.InternalLabels.Value.MergedDictionary.Should().ContainKey("foo");
+			payloadSender.FirstSpan.Context.InternalLabels.Value.MergedDictionary["foo"].Value.Should().Be(42);
 		}
 
 		/// <summary>
@@ -678,8 +672,9 @@ namespace Elastic.Apm.Tests.ApiTests
 		{
 			var payloadSender = new MockPayloadSender();
 			var expectedErrorContext = new Context();
-			expectedErrorContext.Labels["one"] = "1";
-			expectedErrorContext.Labels["twenty two"] = "22";
+			expectedErrorContext.InternalLabels.Value.InnerDictionary["one"] = 1;
+			expectedErrorContext.InternalLabels.Value.InnerDictionary["twenty two"] = "22";
+			expectedErrorContext.InternalLabels.Value.InnerDictionary["true"] = true;
 
 			ITransaction capturedTransaction = null;
 			IExecutionSegment errorCapturingExecutionSegment = null;
@@ -689,8 +684,8 @@ namespace Elastic.Apm.Tests.ApiTests
 				agent.Tracer.CaptureTransaction(TestTransaction, CustomTransactionTypeForTests, transaction =>
 				{
 					capturedTransaction = transaction;
-					foreach (var item in expectedErrorContext.Labels)
-						transaction.Context.Labels[item.Key] = item.Value;
+					foreach (var item in expectedErrorContext.InternalLabels.Value.MergedDictionary)
+						transaction.Context.InternalLabels.Value.MergedDictionary[item.Key] = item.Value;
 					ISpan span = null;
 					if (captureOnSpan)
 					{

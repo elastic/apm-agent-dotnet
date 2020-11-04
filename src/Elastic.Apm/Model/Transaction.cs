@@ -20,7 +20,7 @@ namespace Elastic.Apm.Model
 {
 	internal class Transaction : ITransaction
 	{
-		private static string ApmTransactionActivityName = "ElasticApm.Transaction";
+		private static readonly string ApmTransactionActivityName = "ElasticApm.Transaction";
 		private readonly Lazy<Context> _context = new Lazy<Context>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 
@@ -234,6 +234,8 @@ namespace Elastic.Apm.Model
 		public bool IsSampled { get; }
 
 		[JsonIgnore]
+		[Obsolete(
+			"Instead of this dictionary, use the `SetLabel` method which supports more types than just string. This property will be removed in a future release.")]
 		public Dictionary<string, string> Labels => Context.Labels;
 
 		[MaxLength]
@@ -385,7 +387,7 @@ namespace Elastic.Apm.Model
 			return retVal;
 		}
 
-		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
+		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null, Dictionary<string, Label> labels = null)
 			=> ExecutionSegmentCommon.CaptureException(
 				exception,
 				_logger,
@@ -395,10 +397,11 @@ namespace Elastic.Apm.Model
 				this,
 				culprit,
 				isHandled,
-				parentId
+				parentId,
+				labels
 			);
 
-		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null)
+		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null, Dictionary<string, Label> labels = null)
 			=> ExecutionSegmentCommon.CaptureError(
 				message,
 				culprit,
@@ -408,7 +411,8 @@ namespace Elastic.Apm.Model
 				this,
 				ConfigSnapshot,
 				this,
-				parentId
+				parentId,
+				labels
 			);
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)
@@ -497,5 +501,23 @@ namespace Elastic.Apm.Model
 
 			return name;
 		}
+
+		public void SetLabel(string key, string value)
+			=> _context.Value.InternalLabels.Value.InnerDictionary[key] = value;
+
+		public void SetLabel(string key, bool value)
+			=> _context.Value.InternalLabels.Value.InnerDictionary[key] = value;
+
+		public void SetLabel(string key, double value)
+			=> _context.Value.InternalLabels.Value.InnerDictionary[key] = value;
+
+		public void SetLabel(string key, int value)
+			=> _context.Value.InternalLabels.Value.InnerDictionary[key] = value;
+
+		public void SetLabel(string key, long value)
+			=> _context.Value.InternalLabels.Value.InnerDictionary[key] = value;
+
+		public void SetLabel(string key, decimal value)
+			=> _context.Value.InternalLabels.Value.InnerDictionary[key] = value;
 	}
 }

@@ -41,8 +41,11 @@ namespace Elastic.Apm.Api
 		/// Dots (<code>.</code>) in the keys are not allowed. In case you have a <code>.</code> in your label key, it will be
 		/// replaced by <code>_</code>.
 		/// For example <code>foo.bar</code> will be stored as <code>foo_bar</code> in Elasticsearch.
+		/// Note: values added through the <see cref="SetLabel(string,string)" /> method won't be visible through this property.
 		/// </summary>
 		/// <exception cref="ArgumentException"><c>null</c> as key is not allowed.</exception>
+		[Obsolete(
+			"Instead of this dictionary, use the `SetLabel` method which supports more types than just string. This property will be removed in a future release.")]
 		Dictionary<string, string> Labels { get; }
 
 		/// <summary>
@@ -81,7 +84,8 @@ namespace Elastic.Apm.Api
 		/// The parent ID that is attached to the error. In case it's null the parent
 		/// will be automatically set to the current instance
 		/// </param>
-		void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null);
+		/// <param name="labels">Labels that will be added to the captured error</param>
+		void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null, Dictionary<string, Label> labels = null);
 
 		/// <summary>
 		/// Captures an exception and reports it to the APM server.
@@ -93,7 +97,10 @@ namespace Elastic.Apm.Api
 		/// The parent ID that is attached to the error. In case it's null the parent
 		/// will be automatically set to the current instance
 		/// </param>
-		void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null);
+		/// <param name="labels">Labels that will be added to the captured error</param>
+		void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null,
+			Dictionary<string, Label> labels = null
+		);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
@@ -241,6 +248,75 @@ namespace Elastic.Apm.Api
 		/// It is illegal to call any methods on a span instance which has already ended.
 		/// </summary>
 		void End();
+
+
+		/// <summary>
+		/// Labels are used to add indexed information to transactions, spans, and errors. Indexed means the data is searchable and
+		/// aggregatable in Elasticsearch. Multiple labels can be defined with different key-value pairs.
+		/// Note: Values added through this method won't be visible through <see cref="Labels" />.
+		/// <param name="key">
+		/// <inheritdoc cref="SetLabel(string,bool)" />
+		/// </param>
+		/// <param name="value">
+		/// <inheritdoc cref="SetLabel(string,bool)" />
+		/// </param>
+		/// </summary>
+		public void SetLabel(string key, string value);
+
+		/// <summary>
+		/// Labels are used to add indexed information to transactions, spans, and errors. Indexed means the data is searchable and
+		/// aggregatable in Elasticsearch. Multiple labels can be defined with different key-value pairs.
+		/// </summary>
+		/// <param name="key">
+		/// The key of the label. If the key contains any special characters (., *, "), they will be replaced
+		/// with underscores.
+		/// </param>
+		/// <param name="value">The value of the label</param>
+		public void SetLabel(string key, bool value);
+
+		/// <summary>
+		/// <inheritdoc cref="SetLabel(string,bool)" />
+		/// </summary>
+		/// <param name="key">
+		/// <inheritdoc cref="SetLabel(string,bool)" />
+		/// </param>
+		/// <param name="value">
+		/// <inheritdoc cref="SetLabel(string,bool)" />
+		/// </param>
+		public void SetLabel(string key, double value);
+
+		/// <summary>
+		/// <inheritdoc cref="SetLabel(string,bool)" />
+		/// </summary>
+		/// <param name="key">
+		/// <inheritdoc cref="SetLabel(string,bool)" />
+		/// </param>
+		/// <param name="value">
+		/// <inheritdoc cref="SetLabel(string,bool)" />
+		/// </param>
+		public void SetLabel(string key, int value);
+
+		/// <summary>
+		/// <inheritdoc cref="SetLabel(string,bool)" />
+		/// </summary>
+		/// <param name="key">
+		/// <inheritdoc cref="SetLabel(string,bool)" />
+		/// </param>
+		/// <param name="value">
+		/// <inheritdoc cref="SetLabel(string,bool)" />
+		/// </param>
+		public void SetLabel(string key, long value);
+
+		/// <summary>
+		/// <inheritdoc cref="SetLabel(string,bool)" />
+		/// </summary>
+		/// <param name="key">
+		/// <inheritdoc cref="SetLabel(string,bool)" />
+		/// </param>
+		/// <param name="value">
+		/// <inheritdoc cref="SetLabel(string,bool)" />
+		/// </param>
+		public void SetLabel(string key, decimal value);
 
 		/// <summary>
 		/// Start and return a new custom span as a child of this execution segment.

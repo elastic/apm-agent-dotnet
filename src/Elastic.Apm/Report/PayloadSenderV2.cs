@@ -317,8 +317,7 @@ namespace Elastic.Apm.Report
 
 	internal class Metadata
 	{
-		[JsonConverter(typeof(LabelsJsonConverter))]
-		public Dictionary<string, string> Labels { get; set; } = new Dictionary<string, string>();
+		public LabelsDictionary Labels { get; set; } = new LabelsDictionary();
 
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global - used by Json.Net
 		public Service Service { get; set; }
