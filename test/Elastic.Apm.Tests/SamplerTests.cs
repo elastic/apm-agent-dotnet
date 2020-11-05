@@ -20,13 +20,13 @@ namespace Elastic.Apm.Tests
 		public static TheoryData RateVariantsToTest => new TheoryData<double>
 		{
 			0,
-			0.000000001,
-			0.00123,
+			0.0001,
+			0.0123,
 			0.3,
 			0.5,
 			0.75,
 			0.789,
-			0.999999999,
+			0.9999,
 			1
 		};
 

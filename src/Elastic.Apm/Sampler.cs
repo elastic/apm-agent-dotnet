@@ -60,7 +60,7 @@ namespace Elastic.Apm
 		/// </summary>
 		/// <param name="rate">The rate</param>
 		/// <returns>The rounded rate</returns>
-		private static double RoundToPrecision(double rate) => rate < 0.0001 ? 0.0001 : Math.Round(rate, 4, MidpointRounding.AwayFromZero);
+		private static double RoundToPrecision(double rate) => rate > 0 && rate < 0.0001 ? 0.0001 : Math.Round(rate, 4, MidpointRounding.AwayFromZero);
 
 		internal bool? Constant { get; }
 
