@@ -27,6 +27,12 @@ namespace Elastic.Apm.DockerTests
 		[InlineData(
 			"1:name=systemd:/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod90d81341_92de_11e7_8cf2_507b9d4141fa.slice/crio-2227daf62df6694645fee5df53c1f91271546a9560e8600a525690ae252b7f63.scope",
 			"2227daf62df6694645fee5df53c1f91271546a9560e8600a525690ae252b7f63")]
+		[InlineData(
+			"12:pids:/kubepods/kubepods/besteffort/pod0e886e9a-3879-45f9-b44d-86ef9df03224/244a65edefdffe31685c42317c9054e71dc1193048cf9459e2a4dd35cbc1dba4",
+			"244a65edefdffe31685c42317c9054e71dc1193048cf9459e2a4dd35cbc1dba4")]
+		[InlineData(
+			"10:cpuset:/kubepods/pod5eadac96-ab58-11ea-b82b-0242ac110009/7fe41c8a2d1da09420117894f11dd91f6c3a44dfeb7d125dc594bd53468861df",
+			"7fe41c8a2d1da09420117894f11dd91f6c3a44dfeb7d125dc594bd53468861df")]
 		public void TestCGroupContent(string cGroupContent, string expectedContainerId)
 		{
 			if (!File.Exists("/proc/self/cgroup")) return; //only run in Docker - this check can be improved
