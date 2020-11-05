@@ -2,8 +2,7 @@
   <!-- Root Directory Build Properties -->
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
-    <NoWarn>NU1503</NoWarn>
-
+    <NoWarn>NU1503,NETSDK1138</NoWarn>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
     <AssemblyOriginatorKeyFile Condition="EXISTS('../../../../../../build/elasticapm.snk')">../../../../../../build/elasticapm.snk</AssemblyOriginatorKeyFile>
