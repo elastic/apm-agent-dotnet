@@ -4,12 +4,12 @@
 
 using System.Collections.Generic;
 using Elastic.Apm.Api.Constraints;
-using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Api
 {
 	/// <summary>
-	/// A transaction describes an event captured by the APM agent instrumentation. They are a special kind of Span that have additional
+	/// A transaction describes an event captured by the APM agent instrumentation. They are a special kind of Span that have
+	/// additional
 	/// attributes associated with them.
 	/// </summary>
 	/// <remarks>
@@ -42,17 +42,17 @@ namespace Elastic.Apm.Api
 		string Result { get; set; }
 
 		/// <summary>
+		/// The total number of correlated spans, including started and dropped
+		/// </summary>
+		[Required]
+		SpanCount SpanCount { get; }
+
+		/// <summary>
 		/// The type of the transaction.
 		/// Example: 'request'
 		/// </summary>
 		[Required]
 		string Type { get; set; }
-
-		/// <summary>
-		/// The total number of correlated spans, including started and dropped
-		/// </summary>
-		[Required]
-		SpanCount SpanCount { get; }
 
 		/// <summary>
 		/// If the transaction does not have a ParentId yet, calling this method generates a new ID, sets it as the ParentId of
@@ -67,5 +67,13 @@ namespace Elastic.Apm.Api
 		/// existing one.
 		/// </returns>
 		string EnsureParentId();
+
+		/// <summary>
+		/// With this method you can overwrite the service name and version on a per transaction basis.
+		/// If this is not set, the transaction will be associated with the default service.
+		/// </summary>
+		/// <param name="serviceName">The name of the service which the transaction will be associated with.</param>
+		/// <param name="serviceVersion">The version of the service which the transaction will be associated with.</param>
+		void SetService(string serviceName, string serviceVersion);
 	}
 }

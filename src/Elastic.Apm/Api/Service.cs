@@ -15,6 +15,8 @@ namespace Elastic.Apm.Api
 	{
 		private Service() { }
 
+		internal Service(string name, string version) => (Name, Version) = (name, version);
+
 		public AgentC Agent { get; set; }
 
 		[MaxLength]
