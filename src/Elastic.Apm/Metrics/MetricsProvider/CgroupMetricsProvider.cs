@@ -110,9 +110,9 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					return null;
 				}
 			}
-			catch (IOException)
+			catch (IOException e)
 			{
-				_logger.Info()?.Log("Cannot read {File}. Cgroup metrics will not be reported", procSelfCGroup);
+				_logger.Info()?.LogException(e, "Cannot read {File}. Cgroup metrics will not be reported", procSelfCGroup);
 				return null;
 			}
 
@@ -145,9 +145,9 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 						}
 					}
 				}
-				catch (IOException)
+				catch (IOException e)
 				{
-					_logger.Info()?.Log("Failed to discover memory mount files path based on mountinfo line '{MountLine}'.", mountLine);
+					_logger.Info()?.LogException(e, "Failed to discover memory mount files path based on mountinfo line '{MountLine}'.", mountLine);
 				}
 			}
 			else
@@ -225,9 +225,9 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 				return maxMemoryFile;
 			}
-			catch (IOException)
+			catch (IOException e)
 			{
-				_logger.Info()?.Log("Cannot read {File}.", maxMemoryFile);
+				_logger.Info()?.LogException(e, "Cannot read {File}.", maxMemoryFile);
 				return null;
 			}
 		}
@@ -267,7 +267,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				if (double.TryParse(line, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
 					samples.Add(new MetricSample(SystemProcessCgroupMemoryMemLimitBytes, value));
 			}
-			catch (Exception e)
+			catch (IOException e)
 			{
 				_logger.Info()?.LogException(e, "error collecting {Metric} metric", SystemProcessCgroupMemoryMemLimitBytes);
 			}
@@ -283,7 +283,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				if (double.TryParse(line, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
 					samples.Add(new MetricSample(SystemProcessCgroupMemoryMemUsageBytes, value));
 			}
-			catch (Exception e)
+			catch (IOException e)
 			{
 				_logger.Info()?.LogException(e, "error collecting {metric} metric", SystemProcessCgroupMemoryMemUsageBytes);
 			}
@@ -316,7 +316,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				if (inactiveBytes != null && double.TryParse(inactiveBytes, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
 					samples.Add(new MetricSample(SystemProcessCgroupMemoryStatsInactiveFileBytes, value));
 			}
-			catch (Exception e)
+			catch (IOException e)
 			{
 				_logger.Info()?.LogException(e, "error collecting {Metric} metric", SystemProcessCgroupMemoryStatsInactiveFileBytes);
 			}
