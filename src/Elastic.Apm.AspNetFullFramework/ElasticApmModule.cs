@@ -64,6 +64,9 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			_logger = Agent.Instance.Logger.Scoped(_dbgInstanceName);
 
+			if (!Agent.Config.Enabled)
+				return;
+
 			if (isInitedByThisCall)
 			{
 				_logger.Debug()
