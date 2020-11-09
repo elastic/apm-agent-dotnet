@@ -53,13 +53,13 @@ namespace Elastic.Apm.Tests.Metrics
 
 				var memUsageSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
 				memUsageSample.Should().NotBeNull();
-				memUsageSample.KeyValue.Value.Should().Be(value);
+				memUsageSample?.KeyValue.Value.Should().Be(value);
 
 				if (memLimit.HasValue)
 				{
 					var memLimitSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
 					memLimitSample.Should().NotBeNull();
-					memLimitSample.KeyValue.Value.Should().Be(memLimit);
+					memLimitSample?.KeyValue.Value.Should().Be(memLimit);
 				}
 			}
 		}
@@ -91,7 +91,7 @@ namespace Elastic.Apm.Tests.Metrics
 
 			var memUsageSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
 			memUsageSample.Should().NotBeNull();
-			memUsageSample.KeyValue.Value.Should().Be(964778496);
+			memUsageSample?.KeyValue.Value.Should().Be(964778496);
 		}
 
 		[Fact]
@@ -105,7 +105,7 @@ namespace Elastic.Apm.Tests.Metrics
 
 			var memUsageSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
 			memUsageSample.Should().NotBeNull();
-			memUsageSample.KeyValue.Value.Should().Be(964778496);
+			memUsageSample?.KeyValue.Value.Should().Be(964778496);
 		}
 
 		/// <summary>
