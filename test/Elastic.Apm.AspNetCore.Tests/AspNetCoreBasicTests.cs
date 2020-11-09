@@ -9,7 +9,6 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
@@ -35,28 +34,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
 	public class AspNetCoreBasicTests : LoggingTestBase, IClassFixture<WebApplicationFactory<Startup>>
 	{
-		private ApmAgent _agent;
 		private readonly MockPayloadSender _capturedPayload;
 		private readonly WebApplicationFactory<Startup> _factory;
 
 		// ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
 		private readonly IApmLogger _logger;
-
-
-		private void Configure(bool createDefaultClient, bool useOnlyDiagnosticSource)
-		{
-			if (createDefaultClient)
-			{
-#pragma warning disable IDE0022 // Use expression body for methods
-				_client = Helper.GetClient(_agent, _factory, useOnlyDiagnosticSource);
-#pragma warning restore IDE0022 // Use expression body for methods
-#if NETCOREAPP3_0 || NETCOREAPP3_1
-				_client.DefaultRequestVersion = new Version(2, 0);
-#endif
-			}
-			else
-				_client = Helper.GetClientWithoutExceptionPage(_agent, _factory, useOnlyDiagnosticSource);
-		}
 
 		public AspNetCoreBasicTests(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper)
 		{
@@ -74,7 +56,25 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
 		}
 
+		private ApmAgent _agent;
+
 		private HttpClient _client;
+
+
+		private void Configure(bool createDefaultClient, bool useOnlyDiagnosticSource)
+		{
+			if (createDefaultClient)
+			{
+#pragma warning disable IDE0022 // Use expression body for methods
+				_client = Helper.GetClient(_agent, _factory, useOnlyDiagnosticSource);
+#pragma warning restore IDE0022 // Use expression body for methods
+#if NETCOREAPP3_0 || NETCOREAPP3_1
+				_client.DefaultRequestVersion = new Version(2, 0);
+#endif
+			}
+			else
+				_client = Helper.GetClientWithoutExceptionPage(_agent, _factory, useOnlyDiagnosticSource);
+		}
 
 		/// <summary>
 		/// Simulates an HTTP GET call to /home/simplePage and asserts on what the agent should send to the server
@@ -191,37 +191,27 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_agent = new ApmAgent(new TestAgentComponents(
 				_logger, new MockConfigSnapshot(recording: "false"), _capturedPayload));
 
-			Environment.SetEnvironmentVariable("ELASTIC_APM_RECORDING", "false");
-			try
-			{
-				Configure(true, withDiagnosticSourceOnly);
+			Configure(true, withDiagnosticSourceOnly);
 
-				var response = await _client.GetAsync("/Home/Index");
+			var response = await _client.GetAsync("/Home/Index");
 
-				response.IsSuccessStatusCode.Should().BeTrue();
+			response.IsSuccessStatusCode.Should().BeTrue();
 
-				_capturedPayload.Transactions.Should().BeNullOrEmpty();
-				_capturedPayload.Spans.Should().BeNullOrEmpty();
-				_capturedPayload.Errors.Should().BeNullOrEmpty();
+			_capturedPayload.Transactions.Should().BeNullOrEmpty();
+			_capturedPayload.Spans.Should().BeNullOrEmpty();
+			_capturedPayload.Errors.Should().BeNullOrEmpty();
 
-				//flip recording to true
-				_agent.ConfigStore.CurrentSnapshot = new MockConfigSnapshot(recording:"true");
+			//flip recording to true
+			_agent.ConfigStore.CurrentSnapshot = new MockConfigSnapshot(recording: "true");
 
-				//Environment.SetEnvironmentVariable("ELASTIC_APM_RECORDING", "true");
+			response = await _client.GetAsync("/Home/Index");
+			response.IsSuccessStatusCode.Should().BeTrue();
 
-				response = await _client.GetAsync("/Home/Index");
-				response.IsSuccessStatusCode.Should().BeTrue();
+			_capturedPayload.ResetTransactionTaskCompletionSource();
 
-				_capturedPayload.ResetTransactionTaskCompletionSource();
-
-				_capturedPayload.Transactions.Should().NotBeEmpty();
-				_capturedPayload.Spans.Should().NotBeEmpty();
-				_capturedPayload.Errors.Should().BeNullOrEmpty();
-			}
-			finally
-			{
-			//	Environment.SetEnvironmentVariable("ELASTIC_APM_RECORDING", null);
-			}
+			_capturedPayload.Transactions.Should().NotBeEmpty();
+			_capturedPayload.Spans.Should().NotBeEmpty();
+			_capturedPayload.Errors.Should().BeNullOrEmpty();
 		}
 
 		/// <summary>
@@ -336,7 +326,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Theory]
 		public async Task HomeIndexDestinationTest(bool withDiagnosticSourceOnly)
 		{
-
 			Configure(true, withDiagnosticSourceOnly);
 			var response = await _client.GetAsync("/Home/Index");
 
@@ -346,15 +335,18 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null).Context.Destination.Service.Should().NotBeNull();
 
 			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null)
-				.Context.Destination.Service.Name.ToLower().Should()
+				.Context.Destination.Service.Name.ToLower()
+				.Should()
 				.Be("https://api.github.com");
 
 			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null)
-				.Context.Destination.Service.Resource.ToLower().Should()
+				.Context.Destination.Service.Resource.ToLower()
+				.Should()
 				.Be("api.github.com:443");
 
 			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null)
-				.Context.Destination.Service.Type.ToLower().Should()
+				.Context.Destination.Service.Type.ToLower()
+				.Should()
 				.Be(ApiConstants.TypeExternal);
 		}
 
@@ -423,7 +415,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var labels = error?.Context.InternalLabels.Value.InnerDictionary;
 			labels.Should().NotBeEmpty().And.ContainKey("foo");
-			labels["foo"].Value.Should().Be("bar");
+			var val = labels?["foo"];
+			val.Should().NotBeNull();
+			if(val != null)
+				labels["foo"].Value.Should().Be("bar");
 		}
 
 		/// <summary>
