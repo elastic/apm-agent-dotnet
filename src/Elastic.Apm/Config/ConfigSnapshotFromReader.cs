@@ -39,7 +39,7 @@ namespace Elastic.Apm.Config
 		public int MaxBatchEventCount => _content.MaxBatchEventCount;
 		public int MaxQueueEventCount => _content.MaxQueueEventCount;
 		public double MetricsIntervalInMilliseconds => _content.MetricsIntervalInMilliseconds;
-
+		public bool Recording => _content.Recording;
 		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _content.SanitizeFieldNames;
 		public string SecretToken => _content.SecretToken;
 		public IReadOnlyList<Uri> ServerUrls => _content.ServerUrls;

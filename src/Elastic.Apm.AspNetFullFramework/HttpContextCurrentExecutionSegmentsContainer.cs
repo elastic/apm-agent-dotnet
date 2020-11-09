@@ -5,6 +5,7 @@
 
 using System.Threading;
 using System.Web;
+using Elastic.Apm.Api;
 using Elastic.Apm.Model;
 
 namespace Elastic.Apm.AspNetFullFramework
@@ -15,13 +16,13 @@ namespace Elastic.Apm.AspNetFullFramework
 	/// </summary>
 	internal sealed class HttpContextCurrentExecutionSegmentsContainer : ICurrentExecutionSegmentsContainer
 	{
-		private readonly AsyncLocal<Span> _currentSpan = new AsyncLocal<Span>();
-		private readonly AsyncLocal<Transaction> _currentTransaction = new AsyncLocal<Transaction>();
+		private readonly AsyncLocal<ISpan> _currentSpan = new AsyncLocal<ISpan>();
+		private readonly AsyncLocal<ITransaction> _currentTransaction = new AsyncLocal<ITransaction>();
 
 		private const string CurrentSpanKey = "Elastic.Apm.Agent.CurrentSpan";
 		private const string CurrentTransactionKey = "Elastic.Apm.Agent.CurrentTransaction";
 
-		public Span CurrentSpan
+		public ISpan CurrentSpan
 		{
 			get => _currentSpan.Value ?? HttpContext.Current?.Items[CurrentSpanKey] as Span;
 			set
@@ -33,7 +34,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 		}
 
-		public Transaction CurrentTransaction
+		public ITransaction CurrentTransaction
 		{
 			get => _currentTransaction.Value ?? HttpContext.Current?.Items[CurrentTransactionKey] as Transaction;
 			set

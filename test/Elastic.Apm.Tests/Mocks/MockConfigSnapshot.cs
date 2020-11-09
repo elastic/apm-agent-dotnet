@@ -34,6 +34,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _maxBatchEventCount;
 		private readonly string _maxQueueEventCount;
 		private readonly string _metricsInterval;
+		private readonly string _recording;
 		private readonly string _sanitizeFieldNames;
 		private readonly string _secretToken;
 		private readonly string _serverUrls;
@@ -82,7 +83,8 @@ namespace Elastic.Apm.Tests.Mocks
 			string hostName = null,
 			// false is **not** the default value, but we don't want to query for cloud metadata in all tests
 			string cloudProvider = SupportedValues.CloudProviderFalse,
-			string enabled = null
+			string enabled = null,
+			string recording = null
 		) : base(logger, ThisClassName)
 		{
 			_serverUrls = serverUrls;
@@ -117,6 +119,7 @@ namespace Elastic.Apm.Tests.Mocks
 			_hostName = hostName;
 			_cloudProvider = cloudProvider;
 			_enabled = enabled;
+			_recording = recording;
 		}
 
 		public string ApiKey => ParseApiKey(Kv(EnvVarNames.ApiKey, _apiKey, Origin));
@@ -159,7 +162,7 @@ namespace Elastic.Apm.Tests.Mocks
 		public int MaxBatchEventCount => ParseMaxBatchEventCount(Kv(EnvVarNames.MaxBatchEventCount, _maxBatchEventCount, Origin));
 		public int MaxQueueEventCount => ParseMaxQueueEventCount(Kv(EnvVarNames.MaxQueueEventCount, _maxQueueEventCount, Origin));
 		public double MetricsIntervalInMilliseconds => ParseMetricsInterval(Kv(EnvVarNames.MetricsInterval, _metricsInterval, Origin));
-
+		public bool Recording => ParseRecording(Kv(KeyNames.Recording, _recording, Origin));
 		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames =>
 			ParseSanitizeFieldNames(Kv(EnvVarNames.SanitizeFieldNames, _sanitizeFieldNames, Origin));
 

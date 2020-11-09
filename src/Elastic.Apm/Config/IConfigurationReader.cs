@@ -134,6 +134,15 @@ namespace Elastic.Apm.Config
 
 		double MetricsIntervalInMilliseconds { get; }
 
+		/// <summary>
+		/// A boolean specifying if the agent should be recording or not. When recording, the agent instruments and capture
+		/// requests, tracks errors and collects and sends metrics. When not recording, the agent works as a noop, not collecting
+		/// data and not communicating with the APM sever, except for polling the central configuration endpoint. As this is a
+		/// reversible switch, agent threads are not being killed when inactivated, but they will be mostly idle in this state, so
+		/// the overhead should be negligible.
+		/// </summary>
+		public bool Recording { get; }
+
 		// <summary>
 		// Sometimes it is necessary to sanitize the data sent to Elastic APM, e.g. remove sensitive data.
 		// Configure a list of wildcard patterns of field names which should be sanitized.

@@ -263,6 +263,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public int MaxQueueEventCount => _wrapped.MaxQueueEventCount;
 
 			public double MetricsIntervalInMilliseconds => _wrapped.MetricsIntervalInMilliseconds;
+			public bool Recording => _centralConfig.Recording ?? _wrapped.Recording;
 
 			public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _wrapped.SanitizeFieldNames;
 

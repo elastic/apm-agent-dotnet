@@ -151,6 +151,17 @@ namespace Elastic.Apm.Config
 			return true;
 		}
 
+		protected bool ParseRecording(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return true;
+
+			if (bool.TryParse(kv.Value, out var isRecording))
+				return isRecording;
+
+			_logger.Warning()?.Log("Failed parsing value for 'Recording' setting to 'bool'. Received value: {receivedValue}", kv.Value);
+			return true;
+		}
+
 		protected bool ParseVerifyServerCert(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.VerifyServerCert;

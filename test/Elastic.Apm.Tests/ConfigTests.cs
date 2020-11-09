@@ -111,6 +111,18 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
+		/// Makes sure that in case Recording is not set, the agent uses true as default value
+		/// </summary>
+		[Fact]
+		public void RecordingTestWithNoValue()
+		{
+			using var agent =
+				new ApmAgent(new TestAgentComponents(
+					config: new MockConfigSnapshot()));
+			agent.ConfigurationReader.Recording.Should().BeTrue();
+		}
+
+		/// <summary>
 		/// Sets 2 servers and makes sure that they are all parsed
 		/// </summary>
 		[Fact]

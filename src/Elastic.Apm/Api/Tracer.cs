@@ -49,7 +49,7 @@ namespace Elastic.Apm.Api
 			bool ignoreActivity = false
 		)
 		{
-			if (_configProvider.CurrentSnapshot.Enabled)
+			if (_configProvider.CurrentSnapshot.Enabled || _configProvider.CurrentSnapshot.Recording)
 				return StartTransactionInternal(name, type, distributedTracingData, ignoreActivity);
 
 			return new NoopTransaction(name, type, CurrentExecutionSegmentsContainer);
