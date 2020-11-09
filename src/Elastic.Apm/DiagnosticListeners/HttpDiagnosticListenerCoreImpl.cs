@@ -27,7 +27,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		protected override void RequestHeadersAdd(HttpRequestMessage request, string headerName, string headerValue)
 		{
-			if(string.IsNullOrEmpty(headerValue))
+			if(!string.IsNullOrEmpty(headerValue))
 				request.Headers.Add(headerName, headerValue);
 		}
 
