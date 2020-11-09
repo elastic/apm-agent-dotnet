@@ -51,28 +51,28 @@ namespace Elastic.Apm.Model
 		) { }
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action), capturedAction);
+			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer), capturedAction);
 
 		public void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action), capturedAction);
+			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer), capturedAction);
 
 		public T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action), func);
+			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer), func);
 
 		public T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action), func);
+			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer), func);
 
 		public Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action), func);
+			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer), func);
 
 		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action), func);
+			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer), func);
 
 		public Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action), func);
+			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer), func);
 
 		public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action), func);
+			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer), func);
 
 		public void End() => _currentExecutionSegmentsContainer.CurrentTransaction = null;
 
@@ -88,7 +88,7 @@ namespace Elastic.Apm.Model
 
 		public void SetLabel(string key, decimal value) { }
 
-		public ISpan StartSpan(string name, string type, string subType = null, string action = null) => new NoopSpan();
+		public ISpan StartSpan(string name, string type, string subType = null, string action = null) => new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer);
 
 		public string EnsureParentId() => string.Empty;
 

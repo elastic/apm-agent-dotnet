@@ -15,14 +15,26 @@ namespace Elastic.Apm.Model
 	{
 		private static readonly SpanContext ReusableContextInstance = new SpanContext();
 
-		public NoopSpan() { }
 
-		internal NoopSpan(string name, string type, string parentId, string traceId)
+		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
+
+		private readonly ISpan _parentSpan;
+
+		internal NoopSpan(string name, string type, string subtype, string action,
+			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer, string parentId = null, string traceId = null, ISpan
+				parentSpan = null
+		)
 		{
 			Name = name;
 			Type = type;
 			ParentId = parentId;
 			TraceId = traceId;
+			Subtype = subtype;
+			Action = action;
+
+			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
+			_currentExecutionSegmentsContainer.CurrentSpan = this;
+			_parentSpan = parentSpan;
 		}
 
 		public string Action { get; set; }
@@ -51,30 +63,38 @@ namespace Elastic.Apm.Model
 		) { }
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action), capturedAction);
+			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId, this),
+				capturedAction);
 
 		public void CaptureSpan(string name, string type, Action capturedAction, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action), capturedAction);
+			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId, this),
+				capturedAction);
 
 		public T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action), func);
+			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId, this),
+				func);
 
 		public T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action), func);
+			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId, this),
+				func);
 
 		public Task CaptureSpan(string name, string type, Func<Task> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action), func);
+			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId, this),
+				func);
 
 		public Task CaptureSpan(string name, string type, Func<ISpan, Task> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action), func);
+			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId, this),
+				func);
 
 		public Task<T> CaptureSpan<T>(string name, string type, Func<Task<T>> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action), func);
+			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId, this),
+				func);
 
 		public Task<T> CaptureSpan<T>(string name, string type, Func<ISpan, Task<T>> func, string subType = null, string action = null)
-			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action), func);
+			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId, this),
+				func);
 
-		public void End() { }
+		public void End() => _currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
 
 		public void SetLabel(string key, string value) { }
 
@@ -88,6 +108,7 @@ namespace Elastic.Apm.Model
 
 		public void SetLabel(string key, decimal value) { }
 
-		public ISpan StartSpan(string name, string type, string subType = null, string action = null) => new NoopSpan(name, type, subType, action);
+		public ISpan StartSpan(string name, string type, string subType = null, string action = null) =>
+			new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId, this);
 	}
 }
