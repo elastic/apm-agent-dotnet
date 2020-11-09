@@ -856,9 +856,10 @@ namespace Elastic.Apm.Tests
 		public void DisableMetrics_DisableCpuMetrics()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			Environment.SetEnvironmentVariable(EnvVarNames.DisableMetrics, "*cpu*");
 
-			using var metricsProvider = new MetricsCollector(new NoopLogger(), mockPayloadSender, new EnvironmentConfigurationReader());
+			var noopLogger = new NoopLogger();
+			using var metricsProvider =
+				new MetricsCollector(noopLogger, mockPayloadSender, new ConfigStore(new MockConfigSnapshot(disableMetrics: "*cpu*"), noopLogger));
 			metricsProvider.CollectAllMetrics();
 
 			mockPayloadSender.Metrics.Should().NotBeEmpty();

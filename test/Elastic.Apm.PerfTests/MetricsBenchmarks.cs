@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using BenchmarkDotNet.Attributes;
+using Elastic.Apm.Config;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Mocks;
@@ -20,7 +21,7 @@ namespace Elastic.Apm.PerfTests
 			var noopLogger = new NoopLogger();
 			var mockPayloadSender = new MockPayloadSender();
 
-			_metricsCollector = new MetricsCollector(noopLogger, mockPayloadSender, new MockConfigSnapshot(noopLogger));
+			_metricsCollector = new MetricsCollector(noopLogger, mockPayloadSender, new ConfigStore(new MockConfigSnapshot(noopLogger), noopLogger));
 		}
 
 		[GlobalCleanup(Target = nameof(CollectAllMetrics2X))]

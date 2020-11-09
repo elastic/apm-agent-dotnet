@@ -45,9 +45,9 @@ namespace Elastic.Apm
 
 			if (ConfigurationReader.Enabled)
 			{
-				MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigurationReader);
-				MetricsCollector.StartCollecting();
 				CentralConfigFetcher = centralConfigFetcher ?? new CentralConfigFetcher(Logger, ConfigStore, Service);
+				MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigStore);
+				MetricsCollector.StartCollecting();
 			}
 
 			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigStore,
