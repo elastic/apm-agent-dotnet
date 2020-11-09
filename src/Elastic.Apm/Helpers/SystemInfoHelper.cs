@@ -16,7 +16,7 @@ namespace Elastic.Apm.Helpers
 	{
 		private const string ContainerUidRegexString = "^[0-9a-fA-F]{64}$";
 
-		private const string PodRegexString = @"(?:^/kubepods/[^/]+/pod([^/]+)$)|"
+		private const string PodRegexString = @"(?:^/kubepods[\S]*/pod([^/]+)$)|"
 			+ @"(?:^/kubepods\.slice/kubepods-[^/]+\.slice/kubepods-[^/]+-pod([^/]+)\.slice$)";
 
 		private readonly Regex _containerUidRegex = new Regex(ContainerUidRegexString);
@@ -108,25 +108,23 @@ namespace Elastic.Apm.Helpers
 		{
 			try
 			{
-				using (var sr = GetCGroupAsStream())
+				using var sr = GetCGroupAsStream();
+				if (sr == null)
 				{
-					if (sr == null)
-					{
-						//just debug log, since this is normal on non-docker environments
-						_logger.Debug()?.Log("No /proc/self/cgroup found - the agent will not report container id");
-						return null;
-					}
+					//just debug log, since this is normal on non-docker environments
+					_logger.Debug()?.Log("No /proc/self/cgroup found - the agent will not report container id");
+					return null;
+				}
 
-					var line = sr.ReadLine();
+				var line = sr.ReadLine();
 
-					while (line != null)
-					{
-						var res = ParseContainerId(line);
-						if (res != null)
-							return res;
+				while (line != null)
+				{
+					var res = ParseContainerId(line);
+					if (res != null)
+						return res;
 
-						line = sr.ReadLine();
-					}
+					line = sr.ReadLine();
 				}
 			}
 			catch (Exception e)

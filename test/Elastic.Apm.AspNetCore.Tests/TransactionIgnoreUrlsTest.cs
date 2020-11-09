@@ -4,12 +4,10 @@ using System.Threading.Tasks;
 using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
-using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
 using Xunit;
-using Xunit.Abstractions;
 
 #if NETCOREAPP3_0 || NETCOREAPP3_1
 using System;
@@ -20,15 +18,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 	[Collection("DiagnosticListenerTest")]
 	public class TransactionIgnoreUrlsTest : IClassFixture<WebApplicationFactory<Startup>>, IDisposable
 	{
-		private const string ThisClassName = nameof(TransactionIgnoreUrlsTest);
 		private readonly ApmAgent _agent;
 		private readonly MockPayloadSender _capturedPayload;
 		private readonly WebApplicationFactory<Startup> _factory;
 
 		// ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
 		private readonly IApmLogger _logger;
-
-		private HttpClient _client;
 
 		public TransactionIgnoreUrlsTest(WebApplicationFactory<Startup> factory)
 		{
@@ -46,6 +41,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
 		}
+
+		private HttpClient _client;
 
 		private void Setup(bool useOnlyDiagnosticSource)
 		{

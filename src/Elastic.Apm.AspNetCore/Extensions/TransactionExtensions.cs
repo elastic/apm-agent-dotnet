@@ -4,7 +4,6 @@
 
 using System;
 using System.Net.Mime;
-using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
@@ -21,7 +20,10 @@ namespace Elastic.Apm.AspNetCore.Extensions
 		/// <param name="isForError">Is request body being captured for error (otherwise it's for transaction)</param>
 		/// <param name="httpRequest">Current http request</param>
 		/// <param name="logger">Logger object</param>
-		/// <param name="configSnapshot">The config snapshot of the current transaction. This is for reading the sanitization settings.</param>
+		/// <param name="configSnapshot">
+		/// The config snapshot of the current transaction. This is for reading the sanitization
+		/// settings.
+		/// </param>
 		internal static void CollectRequestBody(this Transaction transaction, bool isForError, HttpRequest httpRequest, IApmLogger logger,
 			IConfigSnapshot configSnapshot
 		)

@@ -30,9 +30,10 @@ namespace Elastic.Apm
 		/// <returns>The same value as the given rate</returns>
 		internal Sampler(double rate)
 		{
-			if (!IsValidRate(rate)) throw new ArgumentOutOfRangeException($"Invalid rate: {rate} - it must be between 0 and 1 (including both)");
+			if (!IsValidRate(rate))
+				throw new ArgumentOutOfRangeException($"Invalid rate: {rate} - it must be between 0 and 1, inclusive");
 
-			_rate = rate;
+			_rate = RoundToPrecision(rate);
 			switch (_rate)
 			{
 				case 0:
@@ -52,6 +53,14 @@ namespace Elastic.Apm
 					break;
 			}
 		}
+
+		/// <summary>
+		/// Rounds the sampling rate half away from zero to 4 decimal places so that the maximum precision of the sampling rate is `0.0001` (0.01%).
+		/// Values greater than 0 but less than 0.0001 are rounded to 0.0001
+		/// </summary>
+		/// <param name="rate">The rate</param>
+		/// <returns>The rounded rate</returns>
+		private static double RoundToPrecision(double rate) => rate > 0 && rate < 0.0001 ? 0.0001 : Math.Round(rate, 4, MidpointRounding.AwayFromZero);
 
 		internal bool? Constant { get; }
 
@@ -74,9 +83,7 @@ namespace Elastic.Apm
 
 		public override string ToString()
 		{
-			var retVal = new StringBuilder();
-			retVal.Append(nameof(Sampler));
-			retVal.Append("{ ");
+			var retVal = new StringBuilder(nameof(Sampler)).Append("{ ");
 			if (Constant.HasValue)
 				retVal.Append($"constant: {Constant}");
 			else

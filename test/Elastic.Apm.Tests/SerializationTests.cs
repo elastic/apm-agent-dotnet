@@ -7,7 +7,7 @@ using System.Linq;
 using System.Reflection;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
-using Elastic.Apm.Helpers;
+using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
 using Elastic.Apm.Tests.Mocks;
@@ -97,7 +97,7 @@ namespace Elastic.Apm.Tests
 			var str = new string('a', 1200);
 
 			var context = new Context();
-			context.Labels["foo"] = str;
+			context.InternalLabels.Value.InnerDictionary["foo"] = str;
 
 			var json = SerializePayloadItem(context);
 			var deserializedContext = JsonConvert.DeserializeObject<JObject>(json);
@@ -127,7 +127,7 @@ namespace Elastic.Apm.Tests
 			var str = new string('a', 1200);
 
 			var context = new SpanContext();
-			context.Labels["foo"] = str;
+			context.InternalLabels.Value.InnerDictionary["foo"] = str;
 
 			var json = SerializePayloadItem(context);
 			var deserializedContext = JsonConvert.DeserializeObject<JObject>(json);
@@ -153,7 +153,7 @@ namespace Elastic.Apm.Tests
 		public void LabelWithNullValueShouldBeCaptured()
 		{
 			var context = new SpanContext();
-			context.Labels["foo"] = null;
+			context.InternalLabels.Value.InnerDictionary["foo"] = null;
 
 			var json = SerializePayloadItem(context);
 			var deserializedContext = JsonConvert.DeserializeObject<JObject>(json);
@@ -169,7 +169,7 @@ namespace Elastic.Apm.Tests
 		public void LabelWithEmptyStringShouldBeCaptured()
 		{
 			var context = new SpanContext();
-			context.Labels["foo"] = string.Empty;
+			context.InternalLabels.Value.InnerDictionary["foo"] = string.Empty;
 
 			var json = SerializePayloadItem(context);
 			var deserializedContext = JsonConvert.DeserializeObject<JObject>(json);
@@ -331,39 +331,39 @@ namespace Elastic.Apm.Tests
 		public void LabelDeDotting()
 		{
 			var context = new Context();
-			context.Labels["a.b"] = "labelValue";
+			context.InternalLabels.Value.InnerDictionary["a.b"] = "labelValue";
 			var json = SerializePayloadItem(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue\"}}");
 
 			context = new Context();
-			context.Labels["a.b.c"] = "labelValue";
+			context.InternalLabels.Value.InnerDictionary["a.b.c"] = "labelValue";
 			json = SerializePayloadItem(context);
 			json.Should().Be("{\"tags\":{\"a_b_c\":\"labelValue\"}}");
 
 			context = new Context();
-			context.Labels["a.b"] = "labelValue1";
-			context.Labels["a.b.c"] = "labelValue2";
+			context.InternalLabels.Value.InnerDictionary["a.b"] = "labelValue1";
+			context.InternalLabels.Value.InnerDictionary["a.b.c"] = "labelValue2";
 			json = SerializePayloadItem(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue1\",\"a_b_c\":\"labelValue2\"}}");
 
 			context = new Context();
-			context.Labels["a\"b"] = "labelValue";
+			context.InternalLabels.Value.InnerDictionary["a\"b"] = "labelValue";
 			json = SerializePayloadItem(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue\"}}");
 
 			context = new Context();
-			context.Labels["a*b"] = "labelValue";
+			context.InternalLabels.Value.InnerDictionary["a*b"] = "labelValue";
 			json = SerializePayloadItem(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue\"}}");
 
 			context = new Context();
-			context.Labels["a*b"] = "labelValue1";
-			context.Labels["a\"b_c"] = "labelValue2";
+			context.InternalLabels.Value.InnerDictionary["a*b"] = "labelValue1";
+			context.InternalLabels.Value.InnerDictionary["a\"b_c"] = "labelValue2";
 			json = SerializePayloadItem(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue1\",\"a_b_c\":\"labelValue2\"}}");
 		}
 
-    /// <summary>
+		/// <summary>
 		/// Makes sure that keys in custom are de dotted.
 		/// </summary>
 		[Fact]
@@ -407,9 +407,7 @@ namespace Elastic.Apm.Tests
 		{
 			var samples = new List<MetricSample>
 			{
-				new MetricSample("sample_1", 1),
-				new MetricSample("sample*\"2", 2),
-				new MetricSample("sample_1", 3),
+				new MetricSample("sample_1", 1), new MetricSample("sample*\"2", 2), new MetricSample("sample_1", 3)
 			};
 
 			var metricSet = new Elastic.Apm.Metrics.MetricSet(1603343944891, samples);
@@ -427,6 +425,23 @@ namespace Elastic.Apm.Tests
 				sample.KeyValue.Value.Should().Be(samples[count].KeyValue.Value);
 				++count;
 			}
+		}
+
+		/// <summary>
+		/// Serializes a transaction which has custom transaction and service.
+		/// </summary>
+		[Fact]
+		public void CustomServiceName_ShouldBeOnTransaction()
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			var apmAgent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
+
+			var transaction = apmAgent.Tracer.StartTransaction("Transaction1", "Test");
+			transaction.SetService("CustomService", "1.0-beta1");
+
+			var serializedTransaction = SerializePayloadItem(transaction);
+
+			serializedTransaction.Should().Contain("\"service\":{\"name\":\"CustomService\",\"version\":\"1.0-beta1\"");
 		}
 
 		private string SerializePayloadItem(object item) =>

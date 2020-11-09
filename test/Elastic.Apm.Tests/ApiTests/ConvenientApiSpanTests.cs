@@ -635,15 +635,12 @@ namespace Elastic.Apm.Tests.ApiTests
 					t.CaptureSpan(SpanName, SpanType, span =>
 					{
 						WaitHelpers.Sleep2XMinimum();
-						span.Labels["foo"] = "bar";
+						span.SetLabel("foo", "bar");
 					});
 				});
 
 			//According to the Intake API labels are stored on the Context (and not on Spans.Labels directly).
-			payloadSender.SpansOnFirstTransaction[0].Context.Labels.Should().Contain("foo", "bar");
-
-			//Also make sure the label is visible directly on Span.Labels.
-			payloadSender.SpansOnFirstTransaction[0].Labels.Should().Contain("foo", "bar");
+			payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.Value.InnerDictionary["foo"].Value.Should().Be("bar");
 		}
 
 		/// <summary>
@@ -659,15 +656,12 @@ namespace Elastic.Apm.Tests.ApiTests
 					await t.CaptureSpan(SpanName, SpanType, async span =>
 					{
 						await WaitHelpers.Delay2XMinimum();
-						span.Labels["foo"] = "bar";
+						span.SetLabel("foo", "bar");
 					});
 				});
 
 			//According to the Intake API labels are stored on the Context (and not on Spans.Labels directly).
-			payloadSender.SpansOnFirstTransaction[0].Context.Labels.Should().Contain("foo", "bar");
-
-			//Also make sure the label is visible directly on Span.Labels.
-			payloadSender.SpansOnFirstTransaction[0].Labels.Should().Contain("foo", "bar");
+			payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.Value.MergedDictionary["foo"].Value.Should().Be("bar");
 		}
 
 		/// <summary>
@@ -684,7 +678,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					await t.CaptureSpan(SpanName, SpanType, async span =>
 					{
 						await WaitHelpers.Delay2XMinimum();
-						span.Labels["foo"] = "bar";
+						span.SetLabel("foo", "bar");
 
 						if (new Random().Next(1) == 0) //avoid unreachable code warning.
 							throw new InvalidOperationException(ExceptionMessage);
@@ -694,10 +688,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 			//According to the Intake API labels are stored on the Context (and not on Spans.Labels directly).
-			payloadSender.SpansOnFirstTransaction[0].Context.Labels.Should().Contain("foo", "bar");
-
-			//Also make sure the label is visible directly on Span.Labels.
-			payloadSender.SpansOnFirstTransaction[0].Labels.Should().Contain("foo", "bar");
+			payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.Value.MergedDictionary["foo"].Value.Should().Be("bar");
 		}
 
 		/// <summary>

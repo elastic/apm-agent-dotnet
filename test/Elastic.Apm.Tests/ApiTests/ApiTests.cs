@@ -460,12 +460,12 @@ namespace Elastic.Apm.Tests.ApiTests
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
 				var transaction = agent.Tracer.StartTransaction(transactionName, transactionType);
-				transaction.Labels["fooTransaction1"] = "barTransaction1";
-				transaction.Labels["fooTransaction2"] = "barTransaction2";
+				transaction.SetLabel("fooTransaction1", "barTransaction1");
+				transaction.SetLabel("fooTransaction2", "barTransaction2");
 
 				var span = transaction.StartSpan(spanName, ApiConstants.TypeExternal);
-				span.Labels["fooSpan1"] = "barSpan1";
-				span.Labels["fooSpan2"] = "barSpan2";
+				span.SetLabel("fooSpan1", "barSpan1");
+				span.SetLabel("fooSpan2", "barSpan2");
 
 				Thread.Sleep(5); //Make sure we have duration > 0
 
@@ -486,17 +486,11 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.Errors.Should().ContainSingle();
 			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 
-			payloadSender.FirstTransaction.Labels.Should().Contain("fooTransaction1", "barTransaction1");
-			payloadSender.FirstTransaction.Context.Labels.Should().Contain("fooTransaction1", "barTransaction1");
+			payloadSender.FirstTransaction.Context.InternalLabels.Value.MergedDictionary["fooTransaction1"].Value.Should().Be("barTransaction1");
+			payloadSender.FirstTransaction.Context.InternalLabels.Value.MergedDictionary["fooTransaction2"].Value.Should().Be("barTransaction2");
 
-			payloadSender.FirstTransaction.Labels.Should().Contain("fooTransaction2", "barTransaction2");
-			payloadSender.FirstTransaction.Context.Labels.Should().Contain("fooTransaction2", "barTransaction2");
-
-			payloadSender.SpansOnFirstTransaction[0].Labels.Should().Contain("fooSpan1", "barSpan1");
-			payloadSender.SpansOnFirstTransaction[0].Context.Labels.Should().Contain("fooSpan1", "barSpan1");
-
-			payloadSender.SpansOnFirstTransaction[0].Labels.Should().Contain("fooSpan2", "barSpan2");
-			payloadSender.SpansOnFirstTransaction[0].Context.Labels.Should().Contain("fooSpan2", "barSpan2");
+			payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.Value.MergedDictionary["fooSpan1"].Value.Should().Be("barSpan1");
+			payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.Value.MergedDictionary["fooSpan2"].Value.Should().Be("barSpan2");
 		}
 
 		/// <summary>
@@ -579,11 +573,11 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void SubSpanWithLabels()
 		{
 			var payloadSender = new MockPayloadSender();
-			StartTransactionAndSpanWithSubSpan(payloadSender, span2 => { span2.Labels["foo"] = "bar"; });
+			StartTransactionAndSpanWithSubSpan(payloadSender, span2 => { span2.SetLabel("foo", 42); });
 
-			payloadSender.FirstSpan.Context.Labels.Should().NotBeEmpty();
-			payloadSender.FirstSpan.Context.Labels.Should().ContainKey("foo");
-			payloadSender.FirstSpan.Context.Labels["foo"].Should().Be("bar");
+			payloadSender.FirstSpan.Context.InternalLabels.Value.MergedDictionary.Should().NotBeEmpty();
+			payloadSender.FirstSpan.Context.InternalLabels.Value.MergedDictionary.Should().ContainKey("foo");
+			payloadSender.FirstSpan.Context.InternalLabels.Value.MergedDictionary["foo"].Value.Should().Be(42);
 		}
 
 		/// <summary>
@@ -678,8 +672,9 @@ namespace Elastic.Apm.Tests.ApiTests
 		{
 			var payloadSender = new MockPayloadSender();
 			var expectedErrorContext = new Context();
-			expectedErrorContext.Labels["one"] = "1";
-			expectedErrorContext.Labels["twenty two"] = "22";
+			expectedErrorContext.InternalLabels.Value.InnerDictionary["one"] = 1;
+			expectedErrorContext.InternalLabels.Value.InnerDictionary["twenty two"] = "22";
+			expectedErrorContext.InternalLabels.Value.InnerDictionary["true"] = true;
 
 			ITransaction capturedTransaction = null;
 			IExecutionSegment errorCapturingExecutionSegment = null;
@@ -689,8 +684,8 @@ namespace Elastic.Apm.Tests.ApiTests
 				agent.Tracer.CaptureTransaction(TestTransaction, CustomTransactionTypeForTests, transaction =>
 				{
 					capturedTransaction = transaction;
-					foreach (var item in expectedErrorContext.Labels)
-						transaction.Context.Labels[item.Key] = item.Value;
+					foreach (var item in expectedErrorContext.InternalLabels.Value.MergedDictionary)
+						transaction.Context.InternalLabels.Value.MergedDictionary[item.Key] = item.Value;
 					ISpan span = null;
 					if (captureOnSpan)
 					{
@@ -875,6 +870,65 @@ namespace Elastic.Apm.Tests.ApiTests
 				},
 				DistributedTracingDataHelper.BuildDistributedTracingData(DistributedTracingDataHelper.ValidTraceId,
 					DistributedTracingDataHelper.ValidParentId, DistributedTracingDataHelper.ValidTraceFlags));
+		}
+
+		/// <summary>
+		/// Creates 3 transactions and overwrites the service name and version of 2 of them.
+		/// Makes sure that the service name and version is set for the 2 changed transaction.
+		/// </summary>
+		[Fact]
+		public void CustomServiceTest()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var transaction1 = agent.Tracer.StartTransaction("Transaction1", "test");
+			transaction1.SetService("Service1", "1.0-beta1");
+			transaction1.End();
+
+			var transaction2 = agent.Tracer.StartTransaction("Transaction2", "test");
+			transaction2.SetService("Service2", "1.0-beta2");
+			transaction2.End();
+
+			var transaction3 = agent.Tracer.StartTransaction("Transaction3", "test");
+			transaction3.End();
+
+			payloadSender.Transactions.Count.Should().Be(3);
+
+			var recordedTransaction1 = payloadSender.Transactions.FirstOrDefault(t => t.Name == "Transaction1");
+			recordedTransaction1.Should().NotBeNull();
+			recordedTransaction1?.Context.Service.Name.Should().Be("Service1");
+			recordedTransaction1?.Context.Service.Version.Should().Be("1.0-beta1");
+
+			var recordedTransaction2 = payloadSender.Transactions.FirstOrDefault(t => t.Name == "Transaction2");
+			recordedTransaction2.Should().NotBeNull();
+			recordedTransaction2?.Context.Service.Name.Should().Be("Service2");
+			recordedTransaction2?.Context.Service.Version.Should().Be("1.0-beta2");
+
+			var recordedTransaction3 = payloadSender.Transactions.FirstOrDefault(t => t.Name == "Transaction3");
+			recordedTransaction3.Should().NotBeNull();
+			recordedTransaction3?.Context.Service.Should().BeNull();
+		}
+
+		/// <summary>
+		/// Calls <exception cref="ITransaction.SetService"></exception> twice and makes sure the last value is reflected on the
+		/// transaction
+		/// </summary>
+		[Fact]
+		public void CustomServiceSetTwice()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var transaction1 = agent.Tracer.StartTransaction("Transaction1", "test");
+			transaction1.SetService("Service1", "1.0-beta1");
+
+			transaction1.SetService("Service2", "1.0-beta2");
+			transaction1.End();
+
+			payloadSender.FirstTransaction.Should().NotBeNull();
+			payloadSender.FirstTransaction?.Context.Service.Name.Should().Be("Service2");
+			payloadSender.FirstTransaction?.Context.Service.Version.Should().Be("1.0-beta2");
 		}
 
 		private class TestException : Exception

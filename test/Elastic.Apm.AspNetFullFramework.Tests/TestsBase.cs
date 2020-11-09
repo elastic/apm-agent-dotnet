@@ -14,7 +14,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using AspNetFullFrameworkSampleApp;
-using AspNetFullFrameworkSampleApp.Asmx;
 using AspNetFullFrameworkSampleApp.Controllers;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
@@ -43,6 +42,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 		protected readonly AgentConfiguration AgentConfig = new AgentConfiguration();
 		protected readonly Dictionary<string, string> EnvVarsToSetForSampleAppPool;
+
+		protected readonly HttpClient HttpClient;
 		protected readonly MockApmServer MockApmServer;
 		protected readonly bool SampleAppShouldHaveAccessToPerfCounters;
 		private readonly IisAdministration _iisAdministration;
@@ -53,8 +54,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		private readonly string _sampleAppLogFilePath;
 		private readonly bool _startMockApmServer;
 		private readonly DateTime _testStartTime = DateTime.UtcNow;
-
-		protected readonly HttpClient HttpClient;
 
 		protected TestsBase(
 			ITestOutputHelper xUnitOutputHelper,
@@ -118,9 +117,6 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData HomePage =
 				new SampleAppUrlPathData(HomeController.HomePageRelativePath, 200);
 
-			internal static readonly SampleAppUrlPathData NotFoundPage =
-				new SampleAppUrlPathData(HomeController.NotFoundPageRelativePath, 404, errorsCount: 1);
-
 			internal static readonly SampleAppUrlPathData PageThatDoesNotExist =
 				new SampleAppUrlPathData("dummy_URL_path_to_page_that_does_not_exist", 404, errorsCount: 1);
 
@@ -149,6 +145,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData ChildHttpSpanWithResponseForbiddenPage =
 				new SampleAppUrlPathData(HomeController.ChildHttpSpanWithResponseForbiddenPath, 200, spansCount: 1, errorsCount: 1);
 
+
 			/// <summary>
 			/// errorsCount is 3 because the exception is thrown inside a child span of a another span -
 			/// AspNetFullFrameworkSampleApp.Controllers.HomeController.CustomSpanThrowsInternal - child span
@@ -159,6 +156,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				new SampleAppUrlPathData(HomeController.CustomChildSpanThrowsPageRelativePath, 500, spansCount: 2, errorsCount: 3,
 					outcome: Outcome.Failure);
 
+
 			internal static readonly SampleAppUrlPathData GenNSpansPage =
 				new SampleAppUrlPathData(HomeController.GenNSpansPageRelativePath, (int)HttpStatusCode.Created);
 
@@ -166,26 +164,33 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				new SampleAppUrlPathData(HomeController.GetDotNetRuntimeDescriptionPageRelativePath, 200);
 
 
-			internal static readonly SampleAppUrlPathData ReturnBadRequestPage =
-				new SampleAppUrlPathData(HomeController.ReturnBadRequestPageRelativePath, (int)HttpStatusCode.BadRequest);
-
-			internal static readonly SampleAppUrlPathData ThrowsInvalidOperationPage =
-				new SampleAppUrlPathData(HomeController.ThrowsInvalidOperationPageRelativePath, 500, errorsCount: 1, outcome: Outcome.Failure);
-
-			internal static readonly SampleAppUrlPathData ThrowsHttpException404PageRelativePath =
-				new SampleAppUrlPathData(HomeController.ThrowsHttpException404PageRelativePath, 404, errorsCount: 1, outcome: Outcome.Failure);
+			internal static readonly SampleAppUrlPathData LabelsTest =
+				new SampleAppUrlPathData(HomeController.LabelsTestRelativePath, 200, 1, 1);
 
 			internal static readonly SampleAppUrlPathData MyAreaHomePage =
 				new SampleAppUrlPathData(AspNetFullFrameworkSampleApp.Areas.MyArea.Controllers.HomeController.HomePageRelativePath, 200);
 
-			internal static readonly SampleAppUrlPathData WebformsPage =
-				new SampleAppUrlPathData(nameof(Webforms) + ".aspx", 200);
+			internal static readonly SampleAppUrlPathData NotFoundPage =
+				new SampleAppUrlPathData(HomeController.NotFoundPageRelativePath, 404, errorsCount: 1);
+
+
+			internal static readonly SampleAppUrlPathData ReturnBadRequestPage =
+				new SampleAppUrlPathData(HomeController.ReturnBadRequestPageRelativePath, (int)HttpStatusCode.BadRequest);
 
 			internal static readonly SampleAppUrlPathData RoutedWebformsPage =
 				new SampleAppUrlPathData(nameof(Webforms.RoutedWebforms), 200);
 
+			internal static readonly SampleAppUrlPathData ThrowsHttpException404PageRelativePath =
+				new SampleAppUrlPathData(HomeController.ThrowsHttpException404PageRelativePath, 404, errorsCount: 1, outcome: Outcome.Failure);
+
+			internal static readonly SampleAppUrlPathData ThrowsInvalidOperationPage =
+				new SampleAppUrlPathData(HomeController.ThrowsInvalidOperationPageRelativePath, 500, errorsCount: 1, outcome: Outcome.Failure);
+
 			internal static readonly SampleAppUrlPathData WebApiPage =
 				new SampleAppUrlPathData(WebApiController.Path, 200);
+
+			internal static readonly SampleAppUrlPathData WebformsPage =
+				new SampleAppUrlPathData(nameof(Webforms) + ".aspx", 200);
 		}
 
 		private TimedEvent? _sampleAppClientCallTiming;
@@ -808,9 +813,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal bool CaptureHeaders = true;
 			internal string Environment;
 			internal Dictionary<string, string> GlobalLabels;
+			internal string HostName;
 			internal string ServiceName;
 			internal string ServiceNodeName;
-			internal string HostName;
 		}
 
 		/// <summary>
@@ -819,28 +824,29 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		public class SampleAppUri
 		{
 			private readonly UriBuilder _builder;
+
 			public SampleAppUri(string relativePathAndQuery) =>
 				_builder = new UriBuilder($"{Consts.SampleApp.RootUrl}/{relativePathAndQuery.TrimStart('/')}") { Port = -1 };
 
-			public Uri Uri => _builder.Uri;
 			public string RelativePath => _builder.Uri.AbsolutePath.Substring(Consts.SampleApp.RootUrlPath.Length + 1);
+
+			public Uri Uri => _builder.Uri;
+
 			public static implicit operator Uri(SampleAppUri sampleAppUri) => sampleAppUri.Uri;
 		}
 
 		public class SampleAppUrlPathData
 		{
-			private readonly SampleAppUri _sampleAppUri;
-
 			public readonly int ErrorsCount;
 			public readonly Outcome Outcome;
 			public readonly int SpansCount;
-			private readonly string _relativePathAndQuery;
 			public readonly int StatusCode;
 			public readonly int TransactionsCount;
-			public Uri Uri => _sampleAppUri.Uri;
-			public string RelativePath => _sampleAppUri.RelativePath;
+			private readonly string _relativePathAndQuery;
+			private readonly SampleAppUri _sampleAppUri;
 
-			public SampleAppUrlPathData(string relativePathAndQuery, int statusCode, int transactionsCount = 1, int spansCount = 0, int errorsCount = 0,
+			public SampleAppUrlPathData(string relativePathAndQuery, int statusCode, int transactionsCount = 1, int spansCount = 0,
+				int errorsCount = 0,
 				Outcome outcome = Outcome.Success
 			)
 			{
@@ -852,6 +858,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				ErrorsCount = errorsCount;
 				Outcome = outcome;
 			}
+
+			public string RelativePath => _sampleAppUri.RelativePath;
+			public Uri Uri => _sampleAppUri.Uri;
 
 			public SampleAppUrlPathData Clone(
 				string relativePathAndQuery = null,

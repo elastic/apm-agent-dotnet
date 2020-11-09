@@ -153,7 +153,8 @@ namespace Elastic.Apm.Model
 			Transaction transaction,
 			string culprit = null,
 			bool isHandled = false,
-			string parentId = null
+			string parentId = null,
+			Dictionary<string, Label> labels = null
 		)
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? GetCulprit(exception, configurationReader) : culprit;
@@ -163,7 +164,7 @@ namespace Elastic.Apm.Model
 			capturedException.StackTrace = StacktraceHelper.GenerateApmStackTrace(exception, logger,
 				$"{nameof(Transaction)}.{nameof(CaptureException)}", configurationReader);
 
-			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger)
+			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger, labels)
 			{
 				Culprit = capturedCulprit,
 			});
@@ -218,7 +219,8 @@ namespace Elastic.Apm.Model
 			IExecutionSegment executionSegment,
 			IConfigurationReader configurationReader,
 			Transaction transaction,
-			string parentId = null
+			string parentId = null,
+			Dictionary<string, Label> labels = null
 		)
 		{
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
@@ -231,7 +233,7 @@ namespace Elastic.Apm.Model
 					= StacktraceHelper.GenerateApmStackTrace(frames, logger, configurationReader, "failed capturing stacktrace");
 			}
 
-			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger)
+			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger, labels)
 			{
 				Culprit = capturedCulprit,
 			});
