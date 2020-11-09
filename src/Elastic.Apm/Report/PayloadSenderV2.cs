@@ -61,6 +61,9 @@ namespace Elastic.Apm.Report
 		)
 			: base(isEnabled, logger, ThisClassName, service, config, httpMessageHandler)
 		{
+			if (!isEnabled)
+				return;
+
 			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
 			_payloadItemSerializer = new PayloadItemSerializer(config);
 

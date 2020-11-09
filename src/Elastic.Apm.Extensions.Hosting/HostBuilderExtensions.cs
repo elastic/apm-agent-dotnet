@@ -62,7 +62,8 @@ namespace Elastic.Apm.Extensions.Hosting
 					return apmAgent;
 				});
 
-				if (subscribers != null && subscribers.Any() && Agent.IsConfigured) Agent.Subscribe(subscribers);
+				if(Agent.IsConfigured && Agent.Config.Enabled)
+					if (subscribers != null && subscribers.Any() && Agent.IsConfigured) Agent.Subscribe(subscribers);
 
 				services.AddSingleton(sp => sp.GetRequiredService<IApmAgent>().Tracer);
 			});
