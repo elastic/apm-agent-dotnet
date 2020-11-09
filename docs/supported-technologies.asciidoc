@@ -52,7 +52,6 @@ We support automatic instrumentation for the following web frameworks.
 
 |===
 
-
 [float]
 [[supported-rpc-frameworks]]
 === RPC Frameworks
@@ -68,7 +67,6 @@ Streaming is not supported. In practice this means for streaming use-cases the a
 |2.23.2 and later
 |1.7
 |===
-
 
 [float]
 [[supported-data-access-technologies]]
