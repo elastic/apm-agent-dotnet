@@ -6,7 +6,6 @@ endif::[]
 [[log-correlation]]
 == Log correlation
 
-
 The Elastic APM .NET agent provides integrations for popular logging frameworks, which take care of
 injecting trace ID fields into your application's log records. Currently supported logging frameworks are:
 
@@ -20,7 +19,12 @@ If your favorite logging framework is not already supported, there are two other
 
 Regardless of how you integrate APM with logging, you can use {filebeat-ref}[Filebeat] to
 send your logs to Elasticsearch, in order to correlate your traces and logs and link from
+ifeval::["{branch}"=="7.9"]
 APM to the {apm-app-ref}/xpack-logs.html[Logs app].
+endif::[]
+ifeval::["{branch}"!="7.9"]
+APM to the {observability-guide}/monitor-logs.html[Logs app].
+endif::[]
 
 [[serilog]]
 === Serilog
@@ -67,7 +71,7 @@ With this setup the application will send all the logs automatically to Elastics
 [[nlog]]
 === NLog
 
-For NLog, we offer two https://github.com/NLog/NLog/wiki/Layout-Renderers[LayoutRenderers] that inject the current trace and transaction id into logs. 
+For NLog, we offer two https://github.com/NLog/NLog/wiki/Layout-Renderers[LayoutRenderers] that inject the current trace and transaction id into logs.
 
 In order to use them, you need to add the https://www.nuget.org/packages/Elastic.Apm.NLog[Elastic.Apm.NLog] NuGet package to your application and load it in the `<extensions>` section of your NLog config file:
 
@@ -109,7 +113,7 @@ For correlating structured logs with traces, the following fields should be adde
 
  - `trace.id`
  - `transaction.id`
- 
+
 Given a transaction object, you can obtain its trace id by using the `Transaction.TraceId` property and its transaction id by using the `Transaction.Id` property.
 
 You can also use the <<api-current-transaction, Elastic.Apm.Agent.Tracer.CurrentTransaction>> property anywhere in the code to access the currently active transaction.

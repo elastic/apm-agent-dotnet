@@ -4,6 +4,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
@@ -19,13 +20,13 @@ namespace Elastic.Apm.Tests
 		public static TheoryData RateVariantsToTest => new TheoryData<double>
 		{
 			0,
-			0.000000001,
-			0.00123,
+			0.0001,
+			0.0123,
 			0.3,
 			0.5,
 			0.75,
 			0.789,
-			0.999999999,
+			0.9999,
 			1
 		};
 
@@ -104,6 +105,19 @@ namespace Elastic.Apm.Tests
 			RandomGenerator.GenerateRandomBytes(randomBytes);
 			var firstIsSampled = sampler.DecideIfToSample(randomBytes);
 			10.Repeat(() => sampler.DecideIfToSample(randomBytes).Should().Be(firstIsSampled));
+		}
+
+		[Theory]
+		[InlineData(0.0001, 0.0001)]
+		[InlineData(0.00001, 0.0001)]
+		[InlineData(0.000001, 0.0001)]
+		[InlineData(0.55554, 0.5555)]
+		[InlineData(0.55555, 0.5556)]
+		[InlineData(0.55556, 0.5556)]
+		public void Rate_Precision_Should_Be_Rounded_To_Four_Decimal_Places(double rate, double expectedRate)
+		{
+			var sampler = new Sampler(rate);
+			sampler.ToString().Should().Be($"Sampler{{ rate: {expectedRate.ToString(CultureInfo.InvariantCulture)} }}");
 		}
 
 		[Theory]

@@ -92,11 +92,11 @@ namespace Elastic.Apm.Tests.MockApmServer
 			thisObj?.Email.AssertValid();
 		}
 
-		internal static void LabelsAssertValid(this Dictionary<string, string> thisObj)
+		internal static void LabelsAssertValid(this LabelsDictionary thisObj)
 		{
 			thisObj.Should().NotBeNull();
 
-			foreach (var (key, value) in thisObj)
+			foreach (var (key, value) in thisObj.MergedDictionary)
 			{
 				key.AssertValid();
 				value?.AssertValid();
@@ -197,7 +197,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			var because =
 				$"String should be {numHexChars} hex digits ({sizeInBits}-bits) but the actual value is `{thisObj}' (length: {thisObj.Length})";
 			thisObj.Length.Should().Be(numHexChars, because); // 2 hex chars per byte
-			DistributedTracing.TraceContext.IsHex(thisObj).Should().BeTrue(because);
+			TraceContext.IsHex(thisObj).Should().BeTrue(because);
 		}
 
 		internal static void NonEmptyAssertValid(this string thisObj, int maxLength = 1024)
@@ -210,6 +210,12 @@ namespace Elastic.Apm.Tests.MockApmServer
 		{
 			thisObj.UnlimitedLengthAssertValid();
 			thisObj.Length.Should().BeLessOrEqualTo(maxLength);
+		}
+
+		internal static void AssertValid(this Label thisObj)
+		{
+			thisObj.Should().NotBeNull();
+			thisObj.Value.Should().NotBeNull();
 		}
 
 		internal static void UnlimitedLengthAssertValid(this string thisObj) => thisObj.Should().NotBeNull();

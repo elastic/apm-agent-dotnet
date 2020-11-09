@@ -5,7 +5,6 @@
 using System;
 using System.Net.Http;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.Config;
@@ -53,20 +52,20 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 				capturedPayload.Should().NotBeNull();
 
-				capturedPayload.Transactions.Should().ContainSingle();
+				capturedPayload?.Transactions.Should().ContainSingle();
 
-				capturedPayload.Errors.Should().ContainSingle();
+				capturedPayload?.Errors.Should().ContainSingle();
 
-				var errorException = capturedPayload.FirstError.Exception;
-				errorException.Message.Should().Be("This is a test exception!");
-				errorException.Type.Should().Be(typeof(Exception).FullName);
+				var errorException = capturedPayload?.FirstError.Exception;
+				errorException?.Message.Should().Be("This is a test exception!");
+				errorException?.Type.Should().Be(typeof(Exception).FullName);
 
-				var context = capturedPayload.FirstError.Context;
-				context.Request.Url.Full.Should().Be("http://localhost/Home/TriggerError");
-				context.Request.Method.Should().Be(HttpMethod.Get.Method);
+				var context = capturedPayload?.FirstError.Context;
+				context?.Request.Url.Full.Should().Be("http://localhost/Home/TriggerError");
+				context?.Request.Method.Should().Be(HttpMethod.Get.Method);
 
-				errorException.Should().NotBeNull();
-				errorException.Handled.Should().BeFalse();
+				errorException?.Should().NotBeNull();
+				errorException?.Handled.Should().BeFalse();
 			}
 		}
 
@@ -90,24 +89,24 @@ namespace Elastic.Apm.AspNetCore.Tests
 				var client = Helper.GetClient(agent, _factory, useOnlyDiagnosticSource);
 
 				var body = "{\"id\" : \"1\"}";
-				var response = await client.PostAsync("api/Home/PostError", new StringContent(body, Encoding.UTF8, "application/json"));
+				await client.PostAsync("api/Home/PostError", new StringContent(body, Encoding.UTF8, "application/json"));
 
 				capturedPayload.Should().NotBeNull();
 
-				capturedPayload.Transactions.Should().ContainSingle();
+				capturedPayload?.Transactions.Should().ContainSingle();
 
-				capturedPayload.Errors.Should().ContainSingle();
+				capturedPayload?.Errors.Should().ContainSingle();
 
-				var errorException = capturedPayload.FirstError.Exception;
-				errorException.Message.Should().Be("This is a post method test exception!");
-				errorException.Type.Should().Be(typeof(Exception).FullName);
+				var errorException = capturedPayload?.FirstError.Exception;
+				errorException?.Message.Should().Be("This is a post method test exception!");
+				errorException?.Type.Should().Be(typeof(Exception).FullName);
 
-				var context = capturedPayload.FirstError.Context;
-				context.Request.Url.Full.Should().Be("http://localhost/api/Home/PostError");
-				context.Request.Method.Should().Be(HttpMethod.Post.Method);
-				context.Request.Body.Should().Be(body);
-				errorException.Should().NotBeNull();
-				errorException.Handled.Should().BeFalse();
+				var context = capturedPayload?.FirstError.Context;
+				context?.Request.Url.Full.Should().Be("http://localhost/api/Home/PostError");
+				context?.Request.Method.Should().Be(HttpMethod.Post.Method);
+				context?.Request.Body.Should().Be(body);
+				errorException?.Should().NotBeNull();
+				errorException?.Handled.Should().BeFalse();
 			}
 		}
 	}

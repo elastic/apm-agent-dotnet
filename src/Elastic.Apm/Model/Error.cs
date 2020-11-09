@@ -2,6 +2,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System.Collections.Generic;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Helpers;
@@ -12,7 +13,7 @@ namespace Elastic.Apm.Model
 {
 	internal class Error : IError
 	{
-		public Error(CapturedException capturedException, Transaction transaction, string parentId, IApmLogger loggerArg)
+		public Error(CapturedException capturedException, Transaction transaction, string parentId, IApmLogger loggerArg, Dictionary<string, Label> labels = null)
 		{
 			Timestamp = TimeUtils.TimestampNow();
 			Id = RandomGenerator.GenerateRandomBytesAsString(new byte[16]);
@@ -24,7 +25,13 @@ namespace Elastic.Apm.Model
 			ParentId = parentId;
 			Transaction = new TransactionData(transaction.IsSampled, transaction.Type);
 
-			if (transaction.IsSampled) Context = transaction.Context;
+			if (transaction.IsSampled)
+			{
+				Context = transaction.Context.DeepCopy();
+
+				if (labels != null)
+					foreach (var item in labels) Context.InternalLabels.Value.InnerDictionary[item.Key] = item.Value;
+			}
 
 			IApmLogger logger = loggerArg?.Scoped($"{nameof(Error)}.{Id}");
 			logger.Trace()

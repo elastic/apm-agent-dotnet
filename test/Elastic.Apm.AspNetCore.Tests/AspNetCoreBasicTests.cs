@@ -356,8 +356,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var errorDetail = error?.Exception;
 			errorDetail.Should().NotBeNull();
 
-			var labels = error?.Context.Labels;
-			labels.Should().NotBeEmpty().And.ContainKey("foo").And.Contain("foo", "bar");
+			var labels = error?.Context.InternalLabels.Value.InnerDictionary;
+			labels.Should().NotBeEmpty().And.ContainKey("foo");
+			labels["foo"].Value.Should().Be("bar");
 		}
 
 		/// <summary>
