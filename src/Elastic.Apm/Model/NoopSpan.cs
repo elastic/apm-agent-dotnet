@@ -15,7 +15,6 @@ namespace Elastic.Apm.Model
 	{
 		private static readonly SpanContext ReusableContextInstance = new SpanContext();
 
-
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 
 		private readonly ISpan _parentSpan;
