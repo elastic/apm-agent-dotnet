@@ -140,7 +140,7 @@ namespace Elastic.Apm.Config
 			public const string UseElasticTraceparentHeader = Prefix + "USE_ELASTIC_TRACEPARENT_HEADER";
 			public const string VerifyServerCert = Prefix + "VERIFY_SERVER_CERT";
 			public static string TransactionIgnoreUrls = Prefix + "TRANSACTION_IGNORE_URLS";
-			public static string Recording = Prefix + "Recording";
+			public static string Recording = Prefix + "RECORDING";
 		}
 
 		public static class KeyNames

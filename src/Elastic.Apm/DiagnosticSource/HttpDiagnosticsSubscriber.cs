@@ -27,7 +27,6 @@ namespace Elastic.Apm.DiagnosticSource
 
 			var logger = agent.Logger.Scoped(nameof(HttpDiagnosticsSubscriber));
 
-
 			var initializer = new DiagnosticInitializer(agent.Logger, new[] { HttpDiagnosticListener.New(agent) });
 			retVal.Add(initializer);
 

@@ -123,6 +123,42 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
+		/// Makes sure that in case Enabled is not set, the agent uses true as default value
+		/// </summary>
+		[Fact]
+		public void EnabledTestWithNoValue()
+		{
+			using var agent =
+				new ApmAgent(new TestAgentComponents(
+					config: new MockConfigSnapshot()));
+			agent.ConfigurationReader.Enabled.Should().BeTrue();
+		}
+
+		/// <summary>
+		/// Makes sure that in case Recording is set to invalid value, the agent uses true as default value
+		/// </summary>
+		[Fact]
+		public void RecordingTestWithInvalidValue()
+		{
+			using var agent =
+				new ApmAgent(new TestAgentComponents(
+					config: new MockConfigSnapshot(recording: "foobar")));
+			agent.ConfigurationReader.Recording.Should().BeTrue();
+		}
+
+		/// <summary>
+		/// Makes sure that in case Enabled is set to invalid value, the agent uses true as default value
+		/// </summary>
+		[Fact]
+		public void EnabledTestWithInvalidValue()
+		{
+			using var agent =
+				new ApmAgent(new TestAgentComponents(
+					config: new MockConfigSnapshot(enabled: "foobar")));
+			agent.ConfigurationReader.Enabled.Should().BeTrue();
+		}
+
+		/// <summary>
 		/// Sets 2 servers and makes sure that they are all parsed
 		/// </summary>
 		[Fact]

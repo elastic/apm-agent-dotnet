@@ -15,7 +15,7 @@ namespace Elastic.Apm.EntityFrameworkCore
 	internal class EfCoreDiagnosticListener : IDiagnosticListener
 	{
 		private readonly ApmAgent _agent;
-		private readonly ConcurrentDictionary<Guid, Span> _spans = new ConcurrentDictionary<Guid, Span>();
+		private readonly ConcurrentDictionary<Guid, ISpan> _spans = new ConcurrentDictionary<Guid, ISpan>();
 
 		public EfCoreDiagnosticListener(IApmAgent agent) => _agent = (ApmAgent)agent;
 
@@ -48,8 +48,10 @@ namespace Elastic.Apm.EntityFrameworkCore
 					if (kv.Value is CommandExecutedEventData commandExecutedEventData)
 					{
 						if (_spans.TryRemove(commandExecutedEventData.CommandId, out var span))
+						{
 							_agent.TracerInternal.DbSpanCommon.EndSpan(span, commandExecutedEventData.Command, Outcome.Success,
 								commandExecutedEventData.Duration);
+						}
 					}
 					break;
 				case { } k when k == RelationalEventId.CommandError.Name:

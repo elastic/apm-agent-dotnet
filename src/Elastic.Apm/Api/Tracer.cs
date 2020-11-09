@@ -49,13 +49,13 @@ namespace Elastic.Apm.Api
 			bool ignoreActivity = false
 		)
 		{
-			if (_configProvider.CurrentSnapshot.Enabled || _configProvider.CurrentSnapshot.Recording)
+			if (_configProvider.CurrentSnapshot.Enabled && _configProvider.CurrentSnapshot.Recording)
 				return StartTransactionInternal(name, type, distributedTracingData, ignoreActivity);
 
 			return new NoopTransaction(name, type, CurrentExecutionSegmentsContainer);
 		}
 
-		internal Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null, bool ignoreActivity = false)
+		private Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null, bool ignoreActivity = false)
 		{
 			var currentConfig = _configProvider.CurrentSnapshot;
 			var retVal = new Transaction(_logger, name, type, new Sampler(currentConfig.TransactionSampleRate), distributedTracingData

@@ -24,7 +24,7 @@ namespace Elastic.Apm.Model
 			internal const int PostgreSql = 5432;
 		}
 
-		internal Span StartSpan(IApmAgent agent, IDbCommand dbCommand, InstrumentationFlag instrumentationFlag, string subType = null,
+		internal ISpan StartSpan(IApmAgent agent, IDbCommand dbCommand, InstrumentationFlag instrumentationFlag, string subType = null,
 			bool captureStackTraceOnStart = false
 		)
 		{
@@ -33,28 +33,34 @@ namespace Elastic.Apm.Model
 				captureStackTraceOnStart);
 		}
 
-		internal void EndSpan(Span span, IDbCommand dbCommand, Outcome outcome, TimeSpan? duration = null)
+		internal void EndSpan(ISpan iSpan, IDbCommand dbCommand, Outcome outcome, TimeSpan? duration = null)
 		{
-			if (duration.HasValue) span.Duration = duration.Value.TotalMilliseconds;
-
-			GetDefaultProperties(dbCommand.Connection.GetType().FullName, out var spanSubtype, out var isEmbeddedDb, out var defaultPort);
-			span.Subtype = spanSubtype;
-			span.Action = GetSpanAction(dbCommand.CommandType);
-
-			if (span.ShouldBeSentToApmServer)
+			if (iSpan is Span span)
 			{
-				span.Context.Db = new Database
-				{
-					Statement = dbCommand.CommandText.Replace(Environment.NewLine, " "),
-					Instance = dbCommand.Connection.Database,
-					Type = Database.TypeSql
-				};
 
-				span.Context.Destination = GetDestination(dbCommand.Connection?.ConnectionString, isEmbeddedDb, defaultPort);
+				if (duration.HasValue) span.Duration = duration.Value.TotalMilliseconds;
+
+				GetDefaultProperties(dbCommand.Connection.GetType().FullName, out var spanSubtype, out var isEmbeddedDb, out var defaultPort);
+				span.Subtype = spanSubtype;
+				span.Action = GetSpanAction(dbCommand.CommandType);
+
+				if (span.ShouldBeSentToApmServer)
+				{
+					span.Context.Db = new Database
+					{
+						Statement = dbCommand.CommandText.Replace(Environment.NewLine, " "),
+						Instance = dbCommand.Connection.Database,
+						Type = Database.TypeSql
+					};
+
+					span.Context.Destination = GetDestination(dbCommand.Connection?.ConnectionString, isEmbeddedDb, defaultPort);
+				}
+
+				span.Outcome = outcome;
+				span.End();
 			}
 
-			span.Outcome = outcome;
-			span.End();
+			iSpan.End();
 		}
 
 		private static void GetDefaultProperties(string dbConnectionClassName, out string spanSubtype, out bool isEmbeddedDb, out int? defaultPort)

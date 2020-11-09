@@ -209,10 +209,10 @@ namespace Elastic.Apm.Model
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
 		{
-			if(ConfigSnapshot.Enabled || ConfigSnapshot.Recording)
+			if(ConfigSnapshot.Enabled && ConfigSnapshot.Recording)
 				return StartSpanInternal(name, type, subType, action);
-			else
-				return new NoopSpan();
+
+			return new NoopSpan();
 		}
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,

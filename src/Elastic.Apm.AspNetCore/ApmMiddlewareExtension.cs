@@ -72,7 +72,7 @@ namespace Elastic.Apm.AspNetCore
 			params IDiagnosticsSubscriber[] subscribers
 		)
 		{
-			if (agent.ConfigurationReader.Enabled)
+			if (!agent.ConfigurationReader.Enabled)
 				return builder;
 
 			var subs = new List<IDiagnosticsSubscriber>(subscribers ?? Array.Empty<IDiagnosticsSubscriber>())

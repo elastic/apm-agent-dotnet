@@ -13,7 +13,9 @@ namespace Elastic.Apm.Model
 {
 	internal class NoopTransaction : ITransaction
 	{
-		private ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
+		private static readonly Context ReusableContextInstance = new Context();
+		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
+
 		public NoopTransaction(string name, string type, ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer)
 		{
 			Name = name;
@@ -22,12 +24,14 @@ namespace Elastic.Apm.Model
 			_currentExecutionSegmentsContainer.CurrentTransaction = this;
 		}
 
-		public Context Context { get; }
+		public Context Context =>
+			ReusableContextInstance;
+
 		public Dictionary<string, string> Custom { get; }
 		public double? Duration { get; set; }
 		public string Id { get; }
 		public bool IsSampled { get; }
-		public Dictionary<string, string> Labels { get; }
+		public Dictionary<string, string> Labels { get; } = new Dictionary<string, string>();
 		public string Name { get; set; }
 		public Outcome Outcome { get; set; }
 		public DistributedTracingData OutgoingDistributedTracingData { get; }
@@ -37,13 +41,14 @@ namespace Elastic.Apm.Model
 		public SpanCount SpanCount { get; }
 		public string TraceId { get; }
 
-		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null, Dictionary<string, Label> labels = null) {}
+		public string Type { get; set; }
+
+		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null, Dictionary<string, Label> labels = null
+		) { }
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null,
 			Dictionary<string, Label> labels = null
 		) { }
-
-		public string Type { get; set; }
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)
 			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action), capturedAction);
@@ -71,22 +76,22 @@ namespace Elastic.Apm.Model
 
 		public void End() => _currentExecutionSegmentsContainer.CurrentTransaction = null;
 
-		public void SetLabel(string key, string value) {}
+		public void SetLabel(string key, string value) { }
 
-		public void SetLabel(string key, bool value){}
+		public void SetLabel(string key, bool value) { }
 
-		public void SetLabel(string key, double value) {}
+		public void SetLabel(string key, double value) { }
 
-		public void SetLabel(string key, int value){}
+		public void SetLabel(string key, int value) { }
 
-		public void SetLabel(string key, long value) {}
+		public void SetLabel(string key, long value) { }
 
-		public void SetLabel(string key, decimal value) {}
+		public void SetLabel(string key, decimal value) { }
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null) => new NoopSpan();
 
 		public string EnsureParentId() => string.Empty;
 
-		public void SetService(string serviceName, string serviceVersion) => throw new NotImplementedException();
+		public void SetService(string serviceName, string serviceVersion) { }
 	}
 }

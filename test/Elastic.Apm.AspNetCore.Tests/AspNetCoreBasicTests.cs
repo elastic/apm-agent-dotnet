@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
@@ -34,7 +35,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
 	public class AspNetCoreBasicTests : LoggingTestBase, IClassFixture<WebApplicationFactory<Startup>>
 	{
-		private readonly ApmAgent _agent;
+		private ApmAgent _agent;
 		private readonly MockPayloadSender _capturedPayload;
 		private readonly WebApplicationFactory<Startup> _factory;
 
@@ -54,9 +55,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 #endif
 			}
 			else
-			{
 				_client = Helper.GetClientWithoutExceptionPage(_agent, _factory, useOnlyDiagnosticSource);
-			}
 		}
 
 		public AspNetCoreBasicTests(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper)
@@ -157,6 +156,72 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			//test transaction.context.request.encrypted
 			transaction.Context.Request.Socket.Encrypted.Should().BeFalse();
+		}
+
+		/// <summary>
+		/// Creates an agent with Enabled=false and makes sure the agent does not capture anything.
+		/// </summary>
+		/// <param name="withDiagnosticSourceOnly"></param>
+		/// <returns></returns>
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task HomeSimplePageTransactionWithEnabledFalse(bool withDiagnosticSourceOnly)
+		{
+			_agent = new ApmAgent(new TestAgentComponents(
+				_logger,
+				new MockConfigSnapshot(_logger, enabled: "false"), _capturedPayload));
+
+			Configure(true, withDiagnosticSourceOnly);
+
+			var response = await _client.GetAsync("/Home/Index");
+
+			response.IsSuccessStatusCode.Should().BeTrue();
+
+			_capturedPayload.Transactions.Should().BeNullOrEmpty();
+			_capturedPayload.Spans.Should().BeNullOrEmpty();
+			_capturedPayload.Errors.Should().BeNullOrEmpty();
+		}
+
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task HomeSimplePageTransactionWithTuggleRecording(bool withDiagnosticSourceOnly)
+		{
+			_agent = new ApmAgent(new TestAgentComponents(
+				_logger, new MockConfigSnapshot(recording: "false"), _capturedPayload));
+
+			Environment.SetEnvironmentVariable("ELASTIC_APM_RECORDING", "false");
+			try
+			{
+				Configure(true, withDiagnosticSourceOnly);
+
+				var response = await _client.GetAsync("/Home/Index");
+
+				response.IsSuccessStatusCode.Should().BeTrue();
+
+				_capturedPayload.Transactions.Should().BeNullOrEmpty();
+				_capturedPayload.Spans.Should().BeNullOrEmpty();
+				_capturedPayload.Errors.Should().BeNullOrEmpty();
+
+				//flip recording to true
+				_agent.ConfigStore.CurrentSnapshot = new MockConfigSnapshot(recording:"true");
+
+				//Environment.SetEnvironmentVariable("ELASTIC_APM_RECORDING", "true");
+
+				response = await _client.GetAsync("/Home/Index");
+				response.IsSuccessStatusCode.Should().BeTrue();
+
+				_capturedPayload.ResetTransactionTaskCompletionSource();
+
+				_capturedPayload.Transactions.Should().NotBeEmpty();
+				_capturedPayload.Spans.Should().NotBeEmpty();
+				_capturedPayload.Errors.Should().BeNullOrEmpty();
+			}
+			finally
+			{
+			//	Environment.SetEnvironmentVariable("ELASTIC_APM_RECORDING", null);
+			}
 		}
 
 		/// <summary>

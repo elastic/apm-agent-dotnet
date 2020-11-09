@@ -20,7 +20,7 @@ namespace Elastic.Apm.SqlClient
 		private readonly IApmLogger _logger;
 		private readonly PropertyFetcherSet _microsoftPropertyFetcherSet = new PropertyFetcherSet();
 
-		private readonly ConcurrentDictionary<Guid, Span> _spans = new ConcurrentDictionary<Guid, Span>();
+		private readonly ConcurrentDictionary<Guid, ISpan> _spans = new ConcurrentDictionary<Guid, ISpan>();
 
 		private readonly PropertyFetcherSet _systemPropertyFetcherSet = new PropertyFetcherSet();
 

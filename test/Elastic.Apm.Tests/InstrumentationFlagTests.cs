@@ -18,7 +18,7 @@ namespace Elastic.Apm.Tests
 		public void SpanOnTransactionWithSpecificInstrumentationFlag()
 		{
 			using var agent = new ApmAgent(new TestAgentComponents());
-			var transaction = agent.TracerInternal.StartTransactionInternal("test", "test");
+			var transaction = (Transaction)agent.TracerInternal.StartTransaction("test", "test");
 
 			var span1 = transaction.StartSpanInternal("span", "test", instrumentationFlag: InstrumentationFlag.SqlClient);
 
@@ -34,7 +34,7 @@ namespace Elastic.Apm.Tests
 		public void ChildSpanWithSpecificInstrumentationFlag()
 		{
 			using var agent = new ApmAgent(new TestAgentComponents());
-			var transaction = agent.TracerInternal.StartTransactionInternal("test", "test");
+			var transaction = (Transaction)agent.TracerInternal.StartTransaction("test", "test");
 
 			var span1 = transaction.StartSpanInternal("span", "test", instrumentationFlag: InstrumentationFlag.AspNetCore);
 			span1.InstrumentationFlag.Should().Be(InstrumentationFlag.AspNetCore);

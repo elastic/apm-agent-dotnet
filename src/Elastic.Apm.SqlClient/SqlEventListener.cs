@@ -20,7 +20,7 @@ namespace Elastic.Apm.SqlClient
 		private readonly ApmAgent _apmAgent;
 		private readonly IApmLogger _logger;
 
-		private readonly ConcurrentDictionary<int, (Span Span, long Start)> _processingSpans = new ConcurrentDictionary<int, (Span, long)>();
+		private readonly ConcurrentDictionary<int, (ISpan Span, long Start)> _processingSpans = new ConcurrentDictionary<int, (ISpan, long)>();
 
 		public SqlEventListener(IApmAgent apmAgent)
 		{
