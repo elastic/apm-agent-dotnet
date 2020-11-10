@@ -27,13 +27,13 @@ namespace Elastic.Apm.Cloud
 		private readonly HttpMessageHandler _handler;
 		private readonly IApmLogger _logger;
 
-		internal AzureCloudMetadataProvider(HttpMessageHandler handler, IApmLogger logger)
+		internal AzureCloudMetadataProvider(IApmLogger logger, HttpMessageHandler handler)
 		{
 			_handler = handler;
 			_logger = logger.Scoped(nameof(AzureCloudMetadataProvider));
 		}
 
-		public AzureCloudMetadataProvider(IApmLogger logger) : this(new HttpClientHandler(), logger)
+		public AzureCloudMetadataProvider(IApmLogger logger) : this(logger, new HttpClientHandler())
 		{
 		}
 
@@ -43,15 +43,14 @@ namespace Elastic.Apm.Cloud
 		/// <inheritdoc />
 		public async Task<Api.Cloud> GetMetadataAsync()
 		{
-			var client = new HttpClient(_handler, false);
+			var client = new HttpClient(_handler, false) { Timeout = TimeSpan.FromSeconds(3) };
 			try
 			{
 				JObject metadata;
 				using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, MetadataUri))
 				{
 					requestMessage.Headers.Add("Metadata", "true");
-					using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-					var responseMessage = await client.SendAsync(requestMessage, tokenSource.Token).ConfigureAwait(false);
+					var responseMessage = await client.SendAsync(requestMessage).ConfigureAwait(false);
 
 					using var stream = await responseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
 					using var streamReader = new StreamReader(stream, Encoding.UTF8);
@@ -66,7 +65,7 @@ namespace Elastic.Apm.Cloud
 					Account = new CloudAccount { Id = metadata["subscriptionId"].Value<string>() },
 					Instance = new CloudInstance { Id = metadata["vmId"].Value<string>(), Name = metadata["name"].Value<string>() },
 					Project = new CloudProject { Name = metadata["resourceGroupName"].Value<string>() },
-					AvailabilityZone = metadata["zone"].Value<string>(),
+					AvailabilityZone = metadata["zone"]?.Value<string>(),
 					Machine = new CloudMachine { Type = metadata["vmSize"].Value<string>() },
 					Provider = Provider,
 					Region = metadata["location"].Value<string>()
@@ -74,7 +73,7 @@ namespace Elastic.Apm.Cloud
 			}
 			catch (Exception e)
 			{
-				_logger.Warning()?.LogException(e, "Unable to get {Provider} cloud metadata", Provider);
+				_logger.Info()?.LogException(e, "Unable to get {Provider} cloud metadata", Provider);
 				return null;
 			}
 		}

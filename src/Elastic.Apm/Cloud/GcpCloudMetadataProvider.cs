@@ -28,13 +28,13 @@ namespace Elastic.Apm.Cloud
 		private readonly HttpMessageHandler _handler;
 		private readonly IApmLogger _logger;
 
-		internal GcpCloudMetadataProvider(HttpMessageHandler handler, IApmLogger logger)
+		internal GcpCloudMetadataProvider(IApmLogger logger, HttpMessageHandler handler)
 		{
 			_handler = handler;
 			_logger = logger.Scoped(nameof(GcpCloudMetadataProvider));
 		}
 
-		public GcpCloudMetadataProvider(IApmLogger logger) : this(new HttpClientHandler(), logger)
+		public GcpCloudMetadataProvider(IApmLogger logger) : this(logger, new HttpClientHandler())
 		{
 		}
 
@@ -44,15 +44,14 @@ namespace Elastic.Apm.Cloud
 		/// <inheritdoc />
 		public async Task<Api.Cloud> GetMetadataAsync()
 		{
-			var client = new HttpClient(_handler, false);
+			var client = new HttpClient(_handler, false) { Timeout = TimeSpan.FromSeconds(3) };
 			try
 			{
 				JObject metadata;
 				using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, MetadataUri))
 				{
 					requestMessage.Headers.Add("Metadata-Flavor", "Google");
-					using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-					var responseMessage = await client.SendAsync(requestMessage, tokenSource.Token).ConfigureAwait(false);
+					var responseMessage = await client.SendAsync(requestMessage).ConfigureAwait(false);
 
 					using var stream = await responseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
 					using var streamReader = new StreamReader(stream, Encoding.UTF8);
@@ -90,7 +89,7 @@ namespace Elastic.Apm.Cloud
 			}
 			catch (Exception e)
 			{
-				_logger.Warning()?.LogException(e, "Unable to get {Provider} cloud metadata", Provider);
+				_logger.Info()?.LogException(e, "Unable to get {Provider} cloud metadata", Provider);
 				return null;
 			}
 		}

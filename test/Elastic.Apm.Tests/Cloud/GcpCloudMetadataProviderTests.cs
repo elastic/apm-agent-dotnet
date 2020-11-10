@@ -35,7 +35,7 @@ namespace Elastic.Apm.Tests.Cloud
 			handler.When(GcpCloudMetadataProvider.MetadataUri)
 				.Respond("application/json", JsonConvert.SerializeObject(stubMetadata));
 
-			var provider = new GcpCloudMetadataProvider(handler, new NoopLogger());
+			var provider = new GcpCloudMetadataProvider(new NoopLogger(), handler);
 
 			var metadata = await provider.GetMetadataAsync();
 

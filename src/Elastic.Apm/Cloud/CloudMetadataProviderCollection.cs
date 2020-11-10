@@ -22,13 +22,13 @@ namespace Elastic.Apm.Cloud
 		{
 			switch (cloudProvider?.ToLowerInvariant())
 			{
-				case AwsCloudMetadataProvider.Name:
+				case SupportedValues.CloudProviderAws:
 					Add(new AwsCloudMetadataProvider(logger));
 					break;
-				case GcpCloudMetadataProvider.Name:
+				case SupportedValues.CloudProviderGcp:
 					Add(new GcpCloudMetadataProvider(logger));
 					break;
-				case AzureCloudMetadataProvider.Name:
+				case SupportedValues.CloudProviderAzure:
 					Add(new AzureCloudMetadataProvider(logger));
 					break;
 				case SupportedValues.CloudProviderFalse:

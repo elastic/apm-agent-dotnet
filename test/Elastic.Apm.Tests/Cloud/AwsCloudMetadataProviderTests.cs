@@ -44,7 +44,7 @@ namespace Elastic.Apm.Tests.Cloud
 			handler.When(AwsCloudMetadataProvider.MetadataUri)
 				.Respond("application/json", JsonConvert.SerializeObject(stubMetadata));
 
-			var provider = new AwsCloudMetadataProvider(handler, new NoopLogger());
+			var provider = new AwsCloudMetadataProvider(new NoopLogger(), handler);
 
 			var metadata = await provider.GetMetadataAsync();
 
