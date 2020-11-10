@@ -93,6 +93,18 @@ namespace Elastic.Apm.Metrics
 					collectGen3Size));
 			}
 
+			var collectCgroupMemLimitBytes = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+				CgroupMetricsProvider.SystemProcessCgroupMemoryMemLimitBytes);
+			var collectCgroupMemUsageBytes = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+				CgroupMetricsProvider.SystemProcessCgroupMemoryMemUsageBytes);
+			var collectCgroupStatsInactiveFileBytes = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+				CgroupMetricsProvider.SystemProcessCgroupMemoryStatsInactiveFileBytes);
+			if (collectCgroupMemLimitBytes || collectCgroupMemUsageBytes || collectCgroupStatsInactiveFileBytes)
+			{
+				MetricsProviders.Add(
+					new CgroupMetricsProvider(_logger, collectCgroupMemLimitBytes, collectCgroupMemUsageBytes, collectCgroupStatsInactiveFileBytes));
+			}
+
 			_logger.Info()?.Log("Collecting metrics in {interval} milliseconds interval", interval);
 			_timer = new Timer(interval);
 			_timer.Elapsed += (sender, args) => { CollectAllMetrics(); };
