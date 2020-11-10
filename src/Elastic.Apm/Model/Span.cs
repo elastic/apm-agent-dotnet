@@ -28,7 +28,6 @@ namespace Elastic.Apm.Model
 		private readonly IApmLogger _logger;
 		private readonly Span _parentSpan;
 		private readonly IPayloadSender _payloadSender;
-		private IServerInfo _serverInfo;
 
 		/// <summary>
 		/// In some cases capturing the stacktrace in <see cref="End" /> results in a stack trace which is not very useful.
@@ -114,7 +113,6 @@ namespace Elastic.Apm.Model
 						{
 							_stackFrames = stackTrace.GetFrames();
 						}
-
 					}
 				}
 			}
@@ -129,6 +127,7 @@ namespace Elastic.Apm.Model
 		}
 
 		private bool _isEnded;
+		private readonly IServerInfo _serverInfo;
 
 		[MaxLength]
 		public string Action { get; set; }
@@ -245,7 +244,8 @@ namespace Elastic.Apm.Model
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false
 		)
 		{
-			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer, _serverInfo, this,
+			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer,
+				_serverInfo, this,
 				instrumentationFlag, captureStackTraceOnStart);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
@@ -303,7 +303,6 @@ namespace Elastic.Apm.Model
 					if (Duration >= ConfigSnapshot.SpanFramesMinDurationInMilliseconds
 						|| ConfigSnapshot.SpanFramesMinDurationInMilliseconds < 0)
 					{
-
 						if (_stackFrames == null)
 						{
 							StackFrame[] trace;
@@ -325,7 +324,6 @@ namespace Elastic.Apm.Model
 						}
 						else
 						{
-
 							StackTrace = StacktraceHelper.GenerateApmStackTrace(_stackFrames,
 								_logger,
 								ConfigSnapshot, _serverInfo, $"Span `{Name}'");

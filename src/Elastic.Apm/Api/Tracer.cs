@@ -20,8 +20,8 @@ namespace Elastic.Apm.Api
 		private readonly IConfigSnapshotProvider _configProvider;
 		private readonly ScopedLogger _logger;
 		private readonly IPayloadSender _sender;
-		private readonly Service _service;
 		private readonly IServerInfo _serverInfo;
+		private readonly Service _service;
 
 		public Tracer(
 			IApmLogger logger,
@@ -59,12 +59,13 @@ namespace Elastic.Apm.Api
 			return new NoopTransaction(name, type, CurrentExecutionSegmentsContainer);
 		}
 
-		private Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null, bool ignoreActivity = false)
+		private Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null,
+			bool ignoreActivity = false
+		)
 		{
 			var currentConfig = _configProvider.CurrentSnapshot;
 			var retVal = new Transaction(_logger, name, type, new Sampler(currentConfig.TransactionSampleRate), distributedTracingData
-				, _sender, currentConfig, CurrentExecutionSegmentsContainer, _serverInfo, ignoreActivity)
-			{ Service = _service };
+				, _sender, currentConfig, CurrentExecutionSegmentsContainer, _serverInfo, ignoreActivity) { Service = _service };
 
 			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);
 			return retVal;

@@ -21,7 +21,6 @@ using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
 using Elastic.Apm.ServerInfo;
-using Newtonsoft.Json;
 
 namespace Elastic.Apm.Report
 {
@@ -76,7 +75,7 @@ namespace Elastic.Apm.Report
 			System = system;
 
 			_cloudMetadataProviderCollection = new CloudMetadataProviderCollection(config.CloudProvider, _logger);
-			 _serverInfo = serverInfo;
+			_serverInfo = serverInfo;
 			_metadata = new Metadata { Service = service, System = System };
 			foreach (var globalLabelKeyValue in config.GlobalLabels) _metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
 

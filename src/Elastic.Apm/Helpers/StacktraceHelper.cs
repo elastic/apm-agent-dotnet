@@ -133,7 +133,8 @@ namespace Elastic.Apm.Helpers
 				}
 				catch (Exception e)
 				{
-					logger?.Debug()?
+					logger?.Debug()
+						?
 						.LogException(e, "Failed generating stack trace with EnhancedStackTrace - using fallback without demystification");
 					// Fallback, see https://github.com/elastic/apm-agent-dotnet/issues/957
 					// This callstack won't be demystified, but at least it'll be captured.
@@ -143,10 +144,11 @@ namespace Elastic.Apm.Helpers
 			}
 			catch (Exception e)
 			{
-				logger?.Warning()?.Log("Failed extracting stack trace from exception for {ApmContext}."
-					+ " Exception for failure to extract: {ExceptionForFailureToExtract}."
-					+ " Exception to extract from: {ExceptionToExtractFrom}.",
-					dbgCapturingFor, e, exception);
+				logger?.Warning()
+					?.Log("Failed extracting stack trace from exception for {ApmContext}."
+						+ " Exception for failure to extract: {ExceptionForFailureToExtract}."
+						+ " Exception to extract from: {ExceptionToExtractFrom}.",
+						dbgCapturingFor, e, exception);
 			}
 
 			return null;

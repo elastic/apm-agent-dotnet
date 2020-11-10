@@ -14,18 +14,18 @@ namespace Elastic.Apm.ServerInfo
 	internal interface IServerInfo
 	{
 		/// <summary>
-		/// The version of the server.
-		/// Only the following 3 fields are filled:
-		/// <see cref="System.Version.Major"/>
-		/// <see cref="System.Version.Minor"/>
-		/// <see cref="System.Version.Build"/>
-		/// </summary>
-		public Version Version { get; }
-
-		/// <summary>
 		/// Indicates if the Server Info Endpoint whether queried.
 		/// </summary>
 		public bool ServerVersionQueried { get; }
+
+		/// <summary>
+		/// The version of the server.
+		/// Only the following 3 fields are filled:
+		/// <see cref="System.Version.Major" />
+		/// <see cref="System.Version.Minor" />
+		/// <see cref="System.Version.Build" />
+		/// </summary>
+		public Version Version { get; }
 
 		/// <summary>
 		/// Queries the Server Info Endpoint.

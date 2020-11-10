@@ -16,8 +16,8 @@ using Newtonsoft.Json.Linq;
 namespace Elastic.Apm.ServerInfo
 {
 	/// <summary>
-	/// A "real" <see cref="IServerInfo"/> implementation.
-	/// The <see cref="GetServerInfoAsync"/> method must be called once, which sets the <see cref="Version"/> property.
+	/// A "real" <see cref="IServerInfo" /> implementation.
+	/// The <see cref="GetServerInfoAsync" /> method must be called once, which sets the <see cref="Version" /> property.
 	/// </summary>
 	internal class ServerInfo : IServerInfo
 	{

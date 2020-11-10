@@ -54,7 +54,8 @@ namespace Elastic.Apm
 				MetricsCollector.StartCollecting();
 			}
 
-			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigStore, currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ServerInfo);
+			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigStore,
+				currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ServerInfo);
 
 			if (!ConfigurationReader.Enabled)
 				Logger?.Info()?.Log("The Elastic APM .NET Agent is disabled - the agent won't capture traces and metrics.");
@@ -72,6 +73,8 @@ namespace Elastic.Apm
 
 		public IPayloadSender PayloadSender { get; }
 
+		internal IServerInfo ServerInfo { get; }
+
 		/// <summary>
 		/// Identifies the monitored service. If this remains unset the agent
 		/// automatically populates it based on the entry assembly.
@@ -82,8 +85,6 @@ namespace Elastic.Apm
 		public ITracer Tracer => TracerInternal;
 
 		internal Tracer TracerInternal { get; }
-
-		internal IServerInfo ServerInfo { get; }
 
 		public void Dispose()
 		{

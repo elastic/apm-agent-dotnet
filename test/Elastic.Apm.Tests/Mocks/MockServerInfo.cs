@@ -16,9 +16,10 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public MockServerInfo(Version version) => Version = version;
 
+		public bool ServerVersionQueried => true;
+
 		public Version Version { get; }
 
-		public bool ServerVersionQueried => true;
 		public Task GetServerInfoAsync() => Task.CompletedTask;
 	}
 }
