@@ -11,6 +11,7 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
+using Elastic.Apm.ServerInfo;
 
 namespace Elastic.Apm.Api
 {
@@ -20,13 +21,15 @@ namespace Elastic.Apm.Api
 		private readonly ScopedLogger _logger;
 		private readonly IPayloadSender _sender;
 		private readonly Service _service;
+		private readonly IServerInfo _serverInfo;
 
 		public Tracer(
 			IApmLogger logger,
 			Service service,
 			IPayloadSender payloadSender,
 			IConfigSnapshotProvider configProvider,
-			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer
+			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
+			IServerInfo serverInfo
 		)
 		{
 			_logger = logger?.Scoped(nameof(Tracer));
@@ -35,6 +38,7 @@ namespace Elastic.Apm.Api
 			_configProvider = configProvider.ThrowIfArgumentNull(nameof(configProvider));
 			CurrentExecutionSegmentsContainer = currentExecutionSegmentsContainer.ThrowIfArgumentNull(nameof(currentExecutionSegmentsContainer));
 			DbSpanCommon = new DbSpanCommon(logger);
+			_serverInfo = serverInfo;
 		}
 
 		internal ICurrentExecutionSegmentsContainer CurrentExecutionSegmentsContainer { get; }
