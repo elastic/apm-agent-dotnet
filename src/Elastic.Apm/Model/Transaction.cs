@@ -276,6 +276,9 @@ namespace Elastic.Apm.Model
 		[MaxLength]
 		public string Result { get; set; }
 
+		/// <summary>
+		/// Captures the sample rate of the agent when this transaction was created.
+		/// </summary>
 		[JsonProperty("sample_rate")]
 		internal double SampleRate { get; set; }
 

@@ -19,9 +19,6 @@ namespace Elastic.Apm.Model
 {
 	internal class Span : ISpan
 	{
-		[JsonProperty("sample_rate")]
-		internal readonly double SampleRate;
-
 		private readonly Lazy<SpanContext> _context = new Lazy<SpanContext>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly Transaction _enclosingTransaction;
@@ -40,6 +37,12 @@ namespace Elastic.Apm.Model
 		/// capture the stacktrace is .Start
 		/// </summary>
 		private readonly StackFrame[] _stackFrames;
+
+		/// <summary>
+		/// Captures the sample rate of the agent when this span was created.
+		/// </summary>
+		[JsonProperty("sample_rate")]
+		internal readonly double SampleRate;
 
 		// This constructor is meant for deserialization
 		[JsonConstructor]
