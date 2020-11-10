@@ -143,6 +143,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			internal const string LogLevelKey = "log_level";
 			internal const string SpanFramesMinDurationKey = "span_frames_min_duration";
 			internal const string StackTraceLimitKey = "stack_trace_limit";
+			internal const string Recording = "recording";
 
 			internal static readonly ISet<string> SupportedOptions = new HashSet<string>
 			{

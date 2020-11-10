@@ -64,6 +64,9 @@ namespace Elastic.Apm.AspNetFullFramework
 
 			_logger = Agent.Instance.Logger.Scoped(_dbgInstanceName);
 
+			if (!Agent.Config.Enabled)
+				return;
+
 			if (isInitedByThisCall)
 			{
 				_logger.Debug()
@@ -406,6 +409,9 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				SafeAgentSetup(dbgInstanceName);
 
+				if (!Agent.Instance.ConfigurationReader.Enabled)
+					return;
+
 				_isCaptureHeadersEnabled = Agent.Instance.ConfigurationReader.CaptureHeaders;
 
 				Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
@@ -441,6 +447,9 @@ namespace Elastic.Apm.AspNetFullFramework
 			var agentComponents = BuildAgentComponents(dbgInstanceName);
 			try
 			{
+				if (!agentComponents.ConfigurationReader.Enabled)
+					return;
+
 				Agent.Setup(agentComponents);
 			}
 			catch (Agent.InstanceAlreadyCreatedException ex)

@@ -157,13 +157,17 @@ namespace Elastic.Apm.DiagnosticListeners
 				}
 			}
 
-			if (!RequestHeadersContain(request, TraceContext.TraceStateHeaderName) && transaction.OutgoingDistributedTracingData.HasTraceState)
+			if (!RequestHeadersContain(request, TraceContext.TraceStateHeaderName) && transaction.OutgoingDistributedTracingData != null && transaction.OutgoingDistributedTracingData.HasTraceState)
 			{
 				RequestHeadersAdd(request, TraceContext.TraceStateHeaderName,
 					TraceContext.BuildTraceState(transaction.OutgoingDistributedTracingData));
 			}
 
-			if (!span.ShouldBeSentToApmServer) return;
+			if(span is Span spanInstance)
+			{
+				if (!spanInstance.ShouldBeSentToApmServer)
+					return;
+			}
 
 			span.Context.Http = new Http { Method = RequestGetMethod(request) };
 			span.Context.Http.SetUrl(requestUrl);

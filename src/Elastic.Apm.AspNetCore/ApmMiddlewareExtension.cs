@@ -4,9 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
@@ -55,6 +52,9 @@ namespace Elastic.Apm.AspNetCore
 				? new EnvironmentConfigurationReader(logger)
 				: new MicrosoftExtensionsConfig(configuration, logger, builder.ApplicationServices.GetEnvironmentName()) as IConfigurationReader;
 
+			if (!configReader.Enabled)
+				return builder;
+
 			var config = new AgentComponents(configurationReader: configReader, logger: logger);
 			HostBuilderExtensions.UpdateServiceInformation(config.Service);
 
@@ -69,6 +69,9 @@ namespace Elastic.Apm.AspNetCore
 			params IDiagnosticsSubscriber[] subscribers
 		)
 		{
+			if (!agent.ConfigurationReader.Enabled)
+				return builder;
+
 			var subs = new List<IDiagnosticsSubscriber>(subscribers ?? Array.Empty<IDiagnosticsSubscriber>())
 			{
 				new AspNetCoreErrorDiagnosticsSubscriber()
@@ -89,23 +92,5 @@ namespace Elastic.Apm.AspNetCore
 			serviceProvider.GetService(typeof(ILoggerFactory)) is ILoggerFactory loggerFactory
 				? (IApmLogger)new NetCoreLogger(loggerFactory)
 				: ConsoleLogger.Instance;
-
-		internal static void UpdateServiceInformation(Service service)
-		{
-			string version;
-			var versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name == "Microsoft.AspNetCore");
-			var assemblies = versionQuery as Assembly[] ?? versionQuery.ToArray();
-			if (assemblies.Any())
-				version = assemblies.First().GetName().Version?.ToString();
-			else
-			{
-				versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name.Contains("Microsoft.AspNetCore"));
-				var enumerable = versionQuery as Assembly[] ?? versionQuery.ToArray();
-				version = enumerable.Any() ? enumerable.FirstOrDefault()?.GetName().Version?.ToString() : "n/a";
-			}
-
-			service.Framework = new Framework { Name = "ASP.NET Core", Version = version };
-			service.Language = new Language { Name = "C#" }; //TODO
-		}
 	}
 }

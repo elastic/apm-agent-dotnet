@@ -2,6 +2,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using Elastic.Apm.Api;
 using Elastic.Apm.Model;
 
 namespace Elastic.Apm
@@ -11,11 +12,11 @@ namespace Elastic.Apm
 		/// <summary>
 		/// Gets or sets the current span
 		/// </summary>
-		Span CurrentSpan { get; set; }
+		ISpan CurrentSpan { get; set; }
 
 		/// <summary>
 		/// Gets or sets the current transaction
 		/// </summary>
-		Transaction CurrentTransaction { get; set; }
+		ITransaction CurrentTransaction { get; set; }
 	}
 }

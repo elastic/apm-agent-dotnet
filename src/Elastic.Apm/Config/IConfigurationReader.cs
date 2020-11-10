@@ -38,6 +38,16 @@ namespace Elastic.Apm.Config
 		/// </summary>
 		IReadOnlyList<WildcardMatcher> DisableMetrics { get; }
 
+		/// <summary>
+		/// Enables the agent.
+		/// When set to <c>true</c> (the default), the agent is enabled.
+		/// When set to <c>false</c>, the agent is disabled, including instrumentation and remote config polling.
+		/// The value of <see cref="Enabled" /> cannot be changed during the lifetime of the application.
+		/// <para />
+		/// To dynamically change agent operation, use <see cref="Recording" />
+		/// </summary>
+		bool Enabled { get; }
+
 		string Environment { get; }
 
 		/// <summary>
@@ -80,11 +90,6 @@ namespace Elastic.Apm.Config
 		/// Allows for the reported hostname to be manually specified. If unset, the hostname will be detected.
 		/// </summary>
 		string HostName { get; }
-
-		/// <summary>
-		/// A list of patterns to match HTTP requests to ignore. An incoming HTTP request whose request line matches any of the patterns will not be reported as a transaction.
-		/// </summary>
-		IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls { get; }
 
 		LogLevel LogLevel { get; }
 
@@ -133,6 +138,20 @@ namespace Elastic.Apm.Config
 
 		double MetricsIntervalInMilliseconds { get; }
 
+		/// <summary>
+		/// Whether the agent is recording.
+		/// When set to <c>true</c>. the agent instruments and capture requests, tracks errors, and 
+		/// collects and sends metrics. 
+		/// When set to <c>false</c>, the agent does not collect data or communicate with the APM server, except to 
+		/// fetch central configuration. 
+		/// Recording can be changed during the lifetime of the application.		
+		/// </summary>
+		/// <remarks>
+		/// As this is a reversible switch, agent threads are not terminated when inactivated, but they will be mostly 
+		/// idle in this state, so the overhead should be negligible.
+		/// </remarks>
+		public bool Recording { get; }
+
 		// <summary>
 		// Sometimes it is necessary to sanitize the data sent to Elastic APM, e.g. remove sensitive data.
 		// Configure a list of wildcard patterns of field names which should be sanitized.
@@ -162,6 +181,12 @@ namespace Elastic.Apm.Config
 		/// positive number n: top n frames must be collected
 		/// </summary>
 		int StackTraceLimit { get; }
+
+		/// <summary>
+		/// A list of patterns to match HTTP requests to ignore. An incoming HTTP request whose request line matches any of the
+		/// patterns will not be reported as a transaction.
+		/// </summary>
+		IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls { get; }
 
 		/// <summary>
 		/// 	The number of spans that are recorded per transaction.

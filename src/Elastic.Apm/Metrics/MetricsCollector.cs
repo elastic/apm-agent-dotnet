@@ -34,6 +34,8 @@ namespace Elastic.Apm.Metrics
 		/// </summary>
 		internal readonly List<IMetricsProvider> MetricsProviders;
 
+		private readonly IConfigSnapshotProvider _configSnapshotProvider;
+
 		private readonly AgentSpinLock _isCollectionInProgress = new AgentSpinLock();
 
 		private readonly IApmLogger _logger;
@@ -42,12 +44,15 @@ namespace Elastic.Apm.Metrics
 
 		private readonly Timer _timer;
 
-		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender, IConfigurationReader configurationReader)
+		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender, IConfigSnapshotProvider configSnapshotProvider)
 		{
 			_logger = logger.Scoped(nameof(MetricsCollector));
 			_payloadSender = payloadSender;
+			_configSnapshotProvider = configSnapshotProvider;
 
-			var interval = configurationReader.MetricsIntervalInMilliseconds;
+			var currentConfigSnapshot = configSnapshotProvider.CurrentSnapshot;
+
+			var interval = currentConfigSnapshot.MetricsIntervalInMilliseconds;
 
 			// ReSharper disable once CompareOfFloatsByEqualityOperator
 			if (interval == 0)
@@ -58,34 +63,34 @@ namespace Elastic.Apm.Metrics
 
 			MetricsProviders = new List<IMetricsProvider>();
 
-			if (!WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics, ProcessTotalCpuTimeProvider.ProcessCpuTotalPct))
+			if (!WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics, ProcessTotalCpuTimeProvider.ProcessCpuTotalPct))
 				MetricsProviders.Add(new ProcessTotalCpuTimeProvider(_logger));
-			if (!WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics, SystemTotalCpuProvider.SystemCpuTotalPct))
+			if (!WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics, SystemTotalCpuProvider.SystemCpuTotalPct))
 				MetricsProviders.Add(new SystemTotalCpuProvider(_logger));
 
-			var collectProcessWorkingSet = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+			var collectProcessWorkingSet = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
 				ProcessWorkingSetAndVirtualMemoryProvider.ProcessWorkingSetMemory);
-			var collectProcessVirtualMemory = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+			var collectProcessVirtualMemory = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
 				ProcessWorkingSetAndVirtualMemoryProvider.ProcessVirtualMemory);
 			if (collectProcessVirtualMemory || collectProcessWorkingSet)
 				MetricsProviders.Add(new ProcessWorkingSetAndVirtualMemoryProvider(collectProcessVirtualMemory, collectProcessWorkingSet));
 
-			var collectTotalMemory = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+			var collectTotalMemory = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
 				FreeAndTotalMemoryProvider.TotalMemory);
-			var collectFreeMemory = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+			var collectFreeMemory = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
 				FreeAndTotalMemoryProvider.FreeMemory);
 			if (collectFreeMemory || collectTotalMemory)
 				MetricsProviders.Add(new FreeAndTotalMemoryProvider(collectFreeMemory, collectTotalMemory));
 
-			var collectGcCount = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+			var collectGcCount = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
 				GcMetricsProvider.GcCountName);
-			var collectGen0Size = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+			var collectGen0Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
 				GcMetricsProvider.GcGen0SizeName);
-			var collectGen1Size = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+			var collectGen1Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
 				GcMetricsProvider.GcGen1SizeName);
-			var collectGen2Size = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+			var collectGen2Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
 				GcMetricsProvider.GcGen2SizeName);
-			var collectGen3Size = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+			var collectGen3Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
 				GcMetricsProvider.GcGen3SizeName);
 			if (collectGcCount || collectGen0Size || collectGen1Size || collectGen2Size || collectGen3Size)
 			{
@@ -93,11 +98,11 @@ namespace Elastic.Apm.Metrics
 					collectGen3Size));
 			}
 
-			var collectCgroupMemLimitBytes = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+			var collectCgroupMemLimitBytes = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
 				CgroupMetricsProvider.SystemProcessCgroupMemoryMemLimitBytes);
-			var collectCgroupMemUsageBytes = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+			var collectCgroupMemUsageBytes = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
 				CgroupMetricsProvider.SystemProcessCgroupMemoryMemUsageBytes);
-			var collectCgroupStatsInactiveFileBytes = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+			var collectCgroupStatsInactiveFileBytes = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
 				CgroupMetricsProvider.SystemProcessCgroupMemoryStatsInactiveFileBytes);
 			if (collectCgroupMemLimitBytes || collectCgroupMemUsageBytes || collectCgroupStatsInactiveFileBytes)
 			{
@@ -119,6 +124,13 @@ namespace Elastic.Apm.Metrics
 				if (!acq.IsAcquired)
 				{
 					_logger.Trace()?.Log("Previous CollectAllMetrics call is still in progress - skipping this one");
+					return;
+				}
+
+				if (!_configSnapshotProvider.CurrentSnapshot.Recording)
+				{
+					//We only handle the Recording=false here. If Enabled=false, then the MetricsCollector is not started at all.
+					_logger.Trace()?.Log("Skip collecting metrics - Recording is set to false");
 					return;
 				}
 

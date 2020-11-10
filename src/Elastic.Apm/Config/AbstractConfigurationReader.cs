@@ -140,6 +140,28 @@ namespace Elastic.Apm.Config
 			return kv.Value;
 		}
 
+		protected bool ParseEnabled(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return true;
+
+			if (bool.TryParse(kv.Value, out var isEnabledParsed))
+				return isEnabledParsed;
+
+			_logger?.Warning()?.Log("Failed parsing value for 'Enabled' setting to 'bool'. Received value: {receivedValue}", kv.Value);
+			return true;
+		}
+
+		protected bool ParseRecording(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return true;
+
+			if (bool.TryParse(kv.Value, out var isRecording))
+				return isRecording;
+
+			_logger?.Warning()?.Log("Failed parsing value for 'Recording' setting to 'bool'. Received value: {receivedValue}", kv.Value);
+			return true;
+		}
+
 		protected bool ParseVerifyServerCert(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.VerifyServerCert;

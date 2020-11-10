@@ -20,9 +20,13 @@ namespace Elastic.Apm.DiagnosticSource
 		/// </summary>
 		public IDisposable Subscribe(IApmAgent agent)
 		{
+			var retVal = new CompositeDisposable();
+
+			if (!agent.ConfigurationReader.Enabled)
+				return retVal;
+
 			var logger = agent.Logger.Scoped(nameof(HttpDiagnosticsSubscriber));
 
-			var retVal = new CompositeDisposable();
 			var initializer = new DiagnosticInitializer(agent.Logger, new[] { HttpDiagnosticListener.New(agent) });
 			retVal.Add(initializer);
 

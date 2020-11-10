@@ -37,42 +37,33 @@ namespace Elastic.Apm.Extensions.Hosting
 				}
 				else
 				{
-					services.AddSingleton<IApmLogger>(Agent.Instance.Logger);
-					services.AddSingleton<IConfigurationReader>(Agent.Instance.ConfigurationReader);
+					services.AddSingleton(Agent.Instance.Logger);
+					services.AddSingleton(Agent.Instance.ConfigurationReader);
 				}
 
 				services.AddSingleton(sp =>
 				{
-					if (!Agent.IsConfigured)
-					{
-						var logger = sp.GetService<IApmLogger>();
-						var configReader = sp.GetService<IConfigurationReader>();
+					if (Agent.IsConfigured) return Agent.Components;
 
-						var components = new AgentComponents(logger, configReader);
-						UpdateServiceInformation(components.Service);
-						return components;
-					}
-					else
-					{
-						return Agent.Components;
-					}
+					var logger = sp.GetService<IApmLogger>();
+					var configReader = sp.GetService<IConfigurationReader>();
+
+					var components = new AgentComponents(logger, configReader);
+					UpdateServiceInformation(components.Service);
+					return components;
 				});
 
 				services.AddSingleton<IApmAgent, ApmAgent>(sp =>
 				{
-					if (!Agent.IsConfigured)
-					{
-						var apmAgent = new ApmAgent(sp.GetService<AgentComponents>());
-						Agent.Setup(sp.GetService<AgentComponents>());
-						return apmAgent;
-					}
-					else
-					{
-						return Agent.Instance;
-					}
+					if (Agent.IsConfigured) return Agent.Instance;
+
+					var apmAgent = new ApmAgent(sp.GetService<AgentComponents>());
+					Agent.Setup(sp.GetService<AgentComponents>());
+					return apmAgent;
 				});
 
-				if (subscribers != null && subscribers.Any() && Agent.IsConfigured) Agent.Subscribe(subscribers);
+				if(Agent.IsConfigured && Agent.Config.Enabled)
+					if (subscribers != null && subscribers.Any() && Agent.IsConfigured) Agent.Subscribe(subscribers);
 
 				services.AddSingleton(sp => sp.GetRequiredService<IApmAgent>().Tracer);
 			});
@@ -96,8 +87,11 @@ namespace Elastic.Apm.Extensions.Hosting
 			var assemblies = versionQuery as Assembly[] ?? versionQuery.ToArray();
 			if (assemblies.Any()) return assemblies.First().GetName().Version?.ToString();
 
-			versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name != null
-				&& n.GetName().Name.Contains(assemblyName));
+			versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n =>
+			{
+				var name = n.GetName().Name;
+				return name != null && name.Contains(assemblyName);
+			});
 			var enumerable = versionQuery as Assembly[] ?? versionQuery.ToArray();
 			return enumerable.Any() ? enumerable.FirstOrDefault()?.GetName().Version?.ToString() : null;
 		}

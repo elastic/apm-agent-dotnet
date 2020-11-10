@@ -370,7 +370,12 @@ namespace Elastic.Apm.Model
 		}
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
-			=> StartSpanInternal(name, type, subType, action);
+		{
+			if (ConfigSnapshot.Enabled && ConfigSnapshot.Recording)
+				return StartSpanInternal(name, type, subType, action);
+
+			return new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId);
+		}
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false

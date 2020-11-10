@@ -22,11 +22,13 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly List<ISpan> _spans = new List<ISpan>();
 		private readonly List<ITransaction> _transactions = new List<ITransaction>();
 
-		private readonly TaskCompletionSource<ITransaction> _transactionTaskCompletionSource = new TaskCompletionSource<ITransaction>();
+		private TaskCompletionSource<ITransaction> _transactionTaskCompletionSource = new TaskCompletionSource<ITransaction>();
 
 		public IReadOnlyList<IError> Errors => CreateImmutableSnapshot(_errors);
 
 		public Error FirstError => _errors.First() as Error;
+
+		internal void ResetTransactionTaskCompletionSource() => _transactionTaskCompletionSource = new TaskCompletionSource<ITransaction>();
 
 		/// <summary>
 		/// The 1. Span on the 1. Transaction

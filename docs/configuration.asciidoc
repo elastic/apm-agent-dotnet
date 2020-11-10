@@ -174,6 +174,55 @@ If this setting is set in both the web.config file and as an environment variabl
 === Core configuration options
 
 [float]
+[[config-recording]]
+==== `Recording` (added[1.7.0])
+
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+
+A boolean specifying if the agent should be recording or not.
+When recording, the agent captures HTTP requests, tracks errors, and collects and sends metrics.
+When not recording, the agent works as a noop, not collecting data and not communicating with the APM server,
+except for polling the central configuration endpoint.
+As this is a reversible switch, agent threads are not being killed when inactivated, but they will be 
+mostly idle in this state, so the overhead should be negligible.
+
+You can use this setting to dynamically disable Elastic APM at runtime.
+
+[options="header"]
+|============
+| Environment variable name       | IConfiguration or Web.config key
+| `ELASTIC_APM_RECORDING`         | `ElasticApm:Recording`
+|============
+
+
+[options="header"]
+|============
+| Default        | Type
+| `true`         | Boolean
+|============
+
+
+[float]
+[[config-enabled]]
+==== `Enabled` (added[1.7.0])
+
+Setting to false will completely disable the agent, including instrumentation and remote config polling.
+If you want to dynamically change the status of the agent, use <<config-recording,`recording`>> instead.
+
+[options="header"]
+|============
+| Environment variable name       | IConfiguration or Web.config key
+| `ELASTIC_APM_ENABLED`           | `ElasticApm:Enabled`
+|============
+
+[options="header"]
+|============
+| Default        | Type
+| `true`         | Boolean
+|============
+
+
+[float]
 [[config-service-name]]
 ==== `ServiceName`
 
@@ -938,6 +987,7 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-cloud-provider,`CloudProvider`>> | No | Reporter
 | <<config-disable-metrics,`DisableMetrics`>> | No | Reporter
 | <<config-environment,`Environment`>> | No | Core
+| <<config-enabled,`Enabled`>> | No | Core
 | <<config-excluded-namespaces,`ExcludedNamespaces`>> | No | Stacktrace
 | <<config-flush-interval,`FlushInterval`>> | No | Reporter
 | <<config-global-labels,`GlobalLabels`>> | No | Core
@@ -946,6 +996,7 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-max-batch-event-count,`MaxBatchEventCount`>> | No | Reporter
 | <<config-max-queue-event-count,`MaxQueueEventCount`>> | No | Reporter
 | <<config-metrics-interval,`MetricsInterval`>> | No | Reporter
+| <<config-recording,`Recording`>> | Yes | Core
 | <<config-sanitize-field-names,`SanitizeFieldNames`>> | No | Core
 | <<config-secret-token,`SecretToken`>> | No | Reporter
 | <<config-server-urls,`ServerUrls`>> | No | Reporter

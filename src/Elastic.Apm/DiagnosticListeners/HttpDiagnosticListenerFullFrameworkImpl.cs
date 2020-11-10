@@ -30,8 +30,11 @@ namespace Elastic.Apm.DiagnosticListeners
 			return values != null && values.Length > 0;
 		}
 
-		protected override void RequestHeadersAdd(HttpWebRequest request, string headerName, string headerValue) =>
-			request.Headers.Add(headerName, headerValue);
+		protected override void RequestHeadersAdd(HttpWebRequest request, string headerName, string headerValue)
+		{
+			if(!string.IsNullOrEmpty(headerValue))
+				request.Headers.Add(headerName, headerValue);
+		}
 
 		protected override int ResponseGetStatusCode(HttpWebResponse response) => (int)response.StatusCode;
 

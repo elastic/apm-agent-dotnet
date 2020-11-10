@@ -245,6 +245,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public string DbgDescription { get; }
 
 			public IReadOnlyList<WildcardMatcher> DisableMetrics => _wrapped.DisableMetrics;
+			public bool Enabled => _wrapped.Enabled;
 
 			public string Environment => _wrapped.Environment;
 			public IReadOnlyCollection<string> ExcludedNamespaces => _wrapped.ExcludedNamespaces;
@@ -262,6 +263,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public int MaxQueueEventCount => _wrapped.MaxQueueEventCount;
 
 			public double MetricsIntervalInMilliseconds => _wrapped.MetricsIntervalInMilliseconds;
+			public bool Recording => _centralConfig.Recording ?? _wrapped.Recording;
 
 			public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _wrapped.SanitizeFieldNames;
 

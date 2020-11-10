@@ -22,7 +22,7 @@ namespace Elastic.Apm.AspNetCore
 	/// </summary>
 	internal static class WebRequestTransactionCreator
 	{
-		internal static Transaction StartTransactionAsync(HttpContext context, IApmLogger logger, Tracer tracer, IConfigSnapshot configSnapshot)
+		internal static ITransaction StartTransactionAsync(HttpContext context, IApmLogger logger, Tracer tracer, IConfigSnapshot configSnapshot)
 		{
 			try
 			{
@@ -32,7 +32,7 @@ namespace Elastic.Apm.AspNetCore
 					return null;
 				}
 
-				Transaction transaction;
+				ITransaction transaction;
 				var transactionName = $"{context.Request.Method} {context.Request.Path}";
 
 				if (context.Request.Headers.ContainsKey(TraceContext.TraceParentHeaderNamePrefixed)
@@ -53,7 +53,7 @@ namespace Elastic.Apm.AspNetCore
 								"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData}. Continuing trace.",
 								TraceContext.TraceParentHeaderNamePrefixed, tracingData);
 
-						transaction = tracer.StartTransactionInternal(transactionName, ApiConstants.TypeRequest, tracingData);
+						transaction = tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, tracingData);
 					}
 					else
 					{
@@ -62,13 +62,13 @@ namespace Elastic.Apm.AspNetCore
 								"Incoming request with invalid {TraceParentHeaderName} header (received value: {TraceParentHeaderValue}). Starting trace with new trace id.",
 								TraceContext.TraceParentHeaderNamePrefixed, headerValue);
 
-						transaction = tracer.StartTransactionInternal(transactionName, ApiConstants.TypeRequest);
+						transaction = tracer.StartTransaction(transactionName, ApiConstants.TypeRequest);
 					}
 				}
 				else
 				{
 					logger.Debug()?.Log("Incoming request. Starting Trace.");
-					transaction = tracer.StartTransactionInternal(transactionName, ApiConstants.TypeRequest);
+					transaction = tracer.StartTransaction(transactionName, ApiConstants.TypeRequest);
 				}
 
 				return transaction;

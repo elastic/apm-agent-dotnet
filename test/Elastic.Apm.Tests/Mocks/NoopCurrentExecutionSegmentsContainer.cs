@@ -2,13 +2,14 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using Elastic.Apm.Api;
 using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Tests.Mocks
 {
 	internal class NoopCurrentExecutionSegmentsContainer : ICurrentExecutionSegmentsContainer
 	{
-		public Span CurrentSpan { get; set; }
-		public Transaction CurrentTransaction { get; set; }
+		public ISpan CurrentSpan { get; set; }
+		public ITransaction CurrentTransaction { get; set; }
 	}
 }

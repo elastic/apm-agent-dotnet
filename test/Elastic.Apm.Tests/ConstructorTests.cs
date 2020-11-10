@@ -39,11 +39,13 @@ namespace Elastic.Apm.Tests
 
 			// ReSharper disable UnassignedGetOnlyAutoProperty
 			public string CaptureBody => ConfigConsts.DefaultValues.CaptureBody;
+			public bool Recording { get; }
 			public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => ConfigConsts.DefaultValues.SanitizeFieldNames;
 			public List<string> CaptureBodyContentTypes { get; }
 			public bool CaptureHeaders => ConfigConsts.DefaultValues.CaptureHeaders;
 			public bool CentralConfig => ConfigConsts.DefaultValues.CentralConfig;
 			public string CloudProvider => ConfigConsts.DefaultValues.CloudProvider;
+			public bool Enabled { get; }
 			public string Environment { get; }
 			public string ServiceNodeName { get; }
 			public TimeSpan FlushInterval => TimeSpan.FromMilliseconds(ConfigConsts.DefaultValues.FlushIntervalInMilliseconds);

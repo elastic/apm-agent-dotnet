@@ -243,7 +243,9 @@ namespace Elastic.Apm.DistributedTracing
 		}
 
 		public static string BuildTraceparent(DistributedTracingData distributedTracingData)
-			=> $"00-{distributedTracingData.TraceId}-{distributedTracingData.ParentId}-{(distributedTracingData.FlagRecorded ? "01" : "00")}";
+			=> distributedTracingData == null
+				? null
+				: $"00-{distributedTracingData.TraceId}-{distributedTracingData.ParentId}-{(distributedTracingData.FlagRecorded ? "01" : "00")}";
 
 		private static bool IsTraceIdValid(string traceId)
 			=> !string.IsNullOrWhiteSpace(traceId) && traceId.Length == 32 && IsHex(traceId) && traceId != "00000000000000000000000000000000";

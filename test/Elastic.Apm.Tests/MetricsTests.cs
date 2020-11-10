@@ -11,9 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-#if !NETCOREAPP2_1
-using Elastic.Apm.Helpers;
-#endif
+using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
@@ -23,6 +21,10 @@ using FluentAssertions;
 using Moq;
 using Xunit;
 using Xunit.Abstractions;
+#if !NETCOREAPP2_1
+using Elastic.Apm.Helpers;
+
+#endif
 
 namespace Elastic.Apm.Tests
 {
@@ -50,7 +52,7 @@ namespace Elastic.Apm.Tests
 		public void CollectAllMetrics()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using (var mc = new MetricsCollector(_logger, mockPayloadSender, new MockConfigSnapshot(_logger)))
+			using (var mc = new MetricsCollector(_logger, mockPayloadSender, new ConfigStore(new MockConfigSnapshot(_logger), _logger)))
 				mc.CollectAllMetrics();
 
 			mockPayloadSender.Metrics.Should().NotBeEmpty();
@@ -95,7 +97,7 @@ namespace Elastic.Apm.Tests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var testLogger = new TestLogger(LogLevel.Information);
-			using (var mc = new MetricsCollector(testLogger, mockPayloadSender, new MockConfigSnapshot(testLogger, "Information")))
+			using (var mc = new MetricsCollector(testLogger, mockPayloadSender, new ConfigStore(new MockConfigSnapshot(), testLogger)))
 			{
 				mc.MetricsProviders.Clear();
 				var providerWithException = new MetricsProviderWithException();
@@ -154,6 +156,42 @@ namespace Elastic.Apm.Tests
 			payloadSender.Metrics.First().Samples.Should().NotBeEmpty();
 		}
 
+		/// <summary>
+		/// Sets recording=false and makes sure the agent does not capture metrics.
+		/// Then sets recording=true and makes sure agent captures metrics.
+		/// Then sets recording=false again and makes sure no more metrics are captured.
+		/// </summary>
+		/// <returns></returns>
+		[Fact]
+		public async Task ToggleRecordingAndCaptureMetrics()
+		{
+			var logger = new NoopLogger();
+
+			var payloadSender = new MockPayloadSender();
+			var configReader = new MockConfigSnapshot(logger, metricsInterval: "1s", logLevel: "Debug", recording: "false");
+			using var agentComponents = new AgentComponents(payloadSender: payloadSender, logger: logger, configurationReader: configReader);
+			using var agent = new ApmAgent(agentComponents);
+
+			await Task.Delay(10000); //make sure we wait enough to collect 1 set of metrics
+			agent.ConfigurationReader.MetricsIntervalInMilliseconds.Should().Be(1000);
+			payloadSender.Metrics.Should().BeEmpty();
+
+			//start recording
+			agent.ConfigStore.CurrentSnapshot = new MockConfigSnapshot(logger, metricsInterval: "1s", logLevel: "Debug", recording: "true");
+
+			await Task.Delay(10000); //make sure we wait enough to collect 1 set of metrics
+
+			//stop recording
+			agent.ConfigStore.CurrentSnapshot = new MockConfigSnapshot(logger, metricsInterval: "1s", logLevel: "Debug", recording: "false");
+			payloadSender.Metrics.Should().NotBeEmpty();
+
+			await Task.Delay(500); //make sure collection on the MetricCollector is finished
+			var numberOfEvents = payloadSender.Metrics.Count;
+
+			await Task.Delay(10000); //make sure we wait enough to collect 1 set of metrics
+			payloadSender.Metrics.Count.Should().Be(numberOfEvents);
+		}
+
 		[Theory]
 		[InlineData("cpu 74608 2520 24433 1117073 6176 4054 0 0 0 0", 1117073, 1228864)]
 		[InlineData("cpu  1192 0 2285 40280 626 0 376 0 0 0", 40280, 44759)]
@@ -178,7 +216,8 @@ namespace Elastic.Apm.Tests
 			var logger = new NoopLogger();
 			var mockPayloadSender = new MockPayloadSender();
 
-			using var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
+			using var metricsCollector = new MetricsCollector(logger, mockPayloadSender,
+				new ConfigStore(new MockConfigSnapshot(logger, "Information"), _logger));
 			var metricsProviderMock = new Mock<IMetricsProvider>();
 
 			metricsProviderMock.Setup(x => x.IsMetricAlreadyCaptured).Returns(true);
@@ -208,7 +247,8 @@ namespace Elastic.Apm.Tests
 			var logger = new NoopLogger();
 			var mockPayloadSender = new MockPayloadSender();
 
-			using var metricsCollector = new MetricsCollector(logger, mockPayloadSender, new MockConfigSnapshot(logger, "Information"));
+			using var metricsCollector = new MetricsCollector(logger, mockPayloadSender,
+				new ConfigStore(new MockConfigSnapshot(logger, "Information"), _logger));
 
 			var metricsProviderMock = new Mock<IMetricsProvider>();
 
@@ -299,6 +339,8 @@ namespace Elastic.Apm.Tests
 			public int ConsecutiveNumberOfFailedReads { get; set; }
 			public string DbgName => "test metric";
 
+			public bool IsMetricAlreadyCaptured => true;
+
 			public int NumberOfGetValueCalls { get; private set; }
 
 			public IEnumerable<MetricSample> GetSamples()
@@ -306,15 +348,12 @@ namespace Elastic.Apm.Tests
 				NumberOfGetValueCalls++;
 				throw new Exception(ExceptionMessage);
 			}
-
-			public bool IsMetricAlreadyCaptured => true;
 		}
 
 		internal class TestSystemTotalCpuProvider : SystemTotalCpuProvider
 		{
 			public TestSystemTotalCpuProvider(string procStatContent) : base(new NoopLogger(),
-				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent))))
-			{ }
+				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent)))) { }
 		}
 	}
 }

@@ -111,6 +111,54 @@ namespace Elastic.Apm.Tests
 		}
 
 		/// <summary>
+		/// Makes sure that in case Recording is not set, the agent uses true as default value
+		/// </summary>
+		[Fact]
+		public void RecordingTestWithNoValue()
+		{
+			using var agent =
+				new ApmAgent(new TestAgentComponents(
+					config: new MockConfigSnapshot()));
+			agent.ConfigurationReader.Recording.Should().BeTrue();
+		}
+
+		/// <summary>
+		/// Makes sure that in case Enabled is not set, the agent uses true as default value
+		/// </summary>
+		[Fact]
+		public void EnabledTestWithNoValue()
+		{
+			using var agent =
+				new ApmAgent(new TestAgentComponents(
+					config: new MockConfigSnapshot()));
+			agent.ConfigurationReader.Enabled.Should().BeTrue();
+		}
+
+		/// <summary>
+		/// Makes sure that in case Recording is set to invalid value, the agent uses true as default value
+		/// </summary>
+		[Fact]
+		public void RecordingTestWithInvalidValue()
+		{
+			using var agent =
+				new ApmAgent(new TestAgentComponents(
+					config: new MockConfigSnapshot(recording: "foobar")));
+			agent.ConfigurationReader.Recording.Should().BeTrue();
+		}
+
+		/// <summary>
+		/// Makes sure that in case Enabled is set to invalid value, the agent uses true as default value
+		/// </summary>
+		[Fact]
+		public void EnabledTestWithInvalidValue()
+		{
+			using var agent =
+				new ApmAgent(new TestAgentComponents(
+					config: new MockConfigSnapshot(enabled: "foobar")));
+			agent.ConfigurationReader.Enabled.Should().BeTrue();
+		}
+
+		/// <summary>
 		/// Sets 2 servers and makes sure that they are all parsed
 		/// </summary>
 		[Fact]
@@ -808,9 +856,10 @@ namespace Elastic.Apm.Tests
 		public void DisableMetrics_DisableCpuMetrics()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			Environment.SetEnvironmentVariable(EnvVarNames.DisableMetrics, "*cpu*");
 
-			using var metricsProvider = new MetricsCollector(new NoopLogger(), mockPayloadSender, new EnvironmentConfigurationReader());
+			var noopLogger = new NoopLogger();
+			using var metricsProvider =
+				new MetricsCollector(noopLogger, mockPayloadSender, new ConfigStore(new MockConfigSnapshot(disableMetrics: "*cpu*"), noopLogger));
 			metricsProvider.CollectAllMetrics();
 
 			mockPayloadSender.Metrics.Should().NotBeEmpty();

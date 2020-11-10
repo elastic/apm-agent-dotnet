@@ -19,6 +19,9 @@ namespace Elastic.Apm.Config
 			DbgDescription = dbgDescription;
 		}
 
+		public string ApiKey => _content.ApiKey;
+		public IReadOnlyCollection<string> ApplicationNamespaces => _content.ApplicationNamespaces;
+
 		public string CaptureBody => _content.CaptureBody;
 		public List<string> CaptureBodyContentTypes => _content.CaptureBodyContentTypes;
 		public bool CaptureHeaders => _content.CaptureHeaders;
@@ -26,30 +29,29 @@ namespace Elastic.Apm.Config
 		public string CloudProvider => _content.CloudProvider;
 		public string DbgDescription { get; }
 		public IReadOnlyList<WildcardMatcher> DisableMetrics => _content.DisableMetrics;
+		public bool Enabled => _content.Enabled;
 		public string Environment => _content.Environment;
+		public IReadOnlyCollection<string> ExcludedNamespaces => _content.ExcludedNamespaces;
 		public TimeSpan FlushInterval => _content.FlushInterval;
 		public IReadOnlyDictionary<string, string> GlobalLabels => _content.GlobalLabels;
 		public string HostName => _content.HostName;
-		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => _content.TransactionIgnoreUrls;
 		public LogLevel LogLevel => _content.LogLevel;
 		public int MaxBatchEventCount => _content.MaxBatchEventCount;
 		public int MaxQueueEventCount => _content.MaxQueueEventCount;
 		public double MetricsIntervalInMilliseconds => _content.MetricsIntervalInMilliseconds;
-
+		public bool Recording => _content.Recording;
 		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _content.SanitizeFieldNames;
 		public string SecretToken => _content.SecretToken;
-		public string ApiKey => _content.ApiKey;
 		public IReadOnlyList<Uri> ServerUrls => _content.ServerUrls;
 		public string ServiceName => _content.ServiceName;
 		public string ServiceNodeName => _content.ServiceNodeName;
 		public string ServiceVersion => _content.ServiceVersion;
 		public double SpanFramesMinDurationInMilliseconds => _content.SpanFramesMinDurationInMilliseconds;
 		public int StackTraceLimit => _content.StackTraceLimit;
+		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => _content.TransactionIgnoreUrls;
 		public int TransactionMaxSpans => _content.TransactionMaxSpans;
 		public double TransactionSampleRate => _content.TransactionSampleRate;
 		public bool UseElasticTraceparentHeader => _content.UseElasticTraceparentHeader;
 		public bool VerifyServerCert => _content.VerifyServerCert;
-		public IReadOnlyCollection<string> ExcludedNamespaces => _content.ExcludedNamespaces;
-		public IReadOnlyCollection<string> ApplicationNamespaces => _content.ApplicationNamespaces;
 	}
 }

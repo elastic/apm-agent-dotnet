@@ -33,6 +33,11 @@ namespace Elastic.Apm.Config
 
 		protected abstract ConfigurationKeyValue Read(string key, string fallBackEnvVarName);
 
+		public string ApiKey => ParseApiKey(Read(KeyNames.ApiKey, EnvVarNames.ApiKey));
+
+		public IReadOnlyCollection<string> ApplicationNamespaces =>
+			ParseExcludedNamespaces(Read(KeyNames.ApplicationNamespaces, EnvVarNames.ApplicationNamespaces));
+
 		public virtual string CaptureBody => ParseCaptureBody(Read(KeyNames.CaptureBody, EnvVarNames.CaptureBody));
 
 		public virtual List<string> CaptureBodyContentTypes =>
@@ -48,8 +53,13 @@ namespace Elastic.Apm.Config
 		public IReadOnlyList<WildcardMatcher> DisableMetrics =>
 			ParseDisableMetrics(Read(KeyNames.DisableMetrics, EnvVarNames.DisableMetrics));
 
+		public bool Enabled => ParseEnabled(Read(KeyNames.Enabled, EnvVarNames.Enabled));
+
 		public virtual string Environment => ParseEnvironment(Read(KeyNames.Environment, EnvVarNames.Environment))
 			?? _defaultEnvironmentName;
+
+		public IReadOnlyCollection<string> ExcludedNamespaces =>
+			ParseExcludedNamespaces(Read(KeyNames.ExcludedNamespaces, EnvVarNames.ExcludedNamespaces));
 
 		public virtual TimeSpan FlushInterval =>
 			ParseFlushInterval(Read(KeyNames.FlushInterval, EnvVarNames.FlushInterval));
@@ -58,9 +68,6 @@ namespace Elastic.Apm.Config
 			ParseGlobalLabels(Read(KeyNames.GlobalLabels, EnvVarNames.GlobalLabels));
 
 		public virtual string HostName => ParseHostName(Read(KeyNames.HostName, EnvVarNames.HostName));
-
-		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
-			ParseTransactionIgnoreUrls(Read(KeyNames.TransactionIgnoreUrls, EnvVarNames.TransactionIgnoreUrls));
 
 		public virtual LogLevel LogLevel => ParseLogLevel(Read(KeyNames.LogLevel, EnvVarNames.LogLevel));
 
@@ -73,11 +80,13 @@ namespace Elastic.Apm.Config
 		public virtual double MetricsIntervalInMilliseconds =>
 			ParseMetricsInterval(Read(KeyNames.MetricsInterval, EnvVarNames.MetricsInterval));
 
+		public bool Recording =>
+			ParseEnabled(Read(KeyNames.Enabled, EnvVarNames.Enabled));
+
 		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames =>
 			ParseSanitizeFieldNames(Read(KeyNames.SanitizeFieldNames, EnvVarNames.SanitizeFieldNames));
 
 		public virtual string SecretToken => ParseSecretToken(Read(KeyNames.SecretToken, EnvVarNames.SecretToken));
-		public string ApiKey => ParseApiKey(Read(KeyNames.ApiKey, EnvVarNames.ApiKey));
 
 		public virtual IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Read(KeyNames.ServerUrls, EnvVarNames.ServerUrls));
 
@@ -92,6 +101,9 @@ namespace Elastic.Apm.Config
 
 		public virtual int StackTraceLimit => _stackTraceLimit.Value;
 
+		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
+			ParseTransactionIgnoreUrls(Read(KeyNames.TransactionIgnoreUrls, EnvVarNames.TransactionIgnoreUrls));
+
 		public virtual int TransactionMaxSpans =>
 			ParseTransactionMaxSpans(Read(KeyNames.TransactionMaxSpans, EnvVarNames.TransactionMaxSpans));
 
@@ -103,11 +115,5 @@ namespace Elastic.Apm.Config
 
 		public virtual bool VerifyServerCert =>
 			ParseVerifyServerCert(Read(KeyNames.VerifyServerCert, EnvVarNames.VerifyServerCert));
-
-		public IReadOnlyCollection<string> ExcludedNamespaces =>
-			ParseExcludedNamespaces(Read(KeyNames.ExcludedNamespaces, EnvVarNames.ExcludedNamespaces));
-
-		public IReadOnlyCollection<string> ApplicationNamespaces =>
-			ParseExcludedNamespaces(Read(KeyNames.ApplicationNamespaces, EnvVarNames.ApplicationNamespaces));
 	}
 }

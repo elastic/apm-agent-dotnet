@@ -5,7 +5,7 @@ using Elastic.Apm.DiagnosticSource;
 namespace Elastic.Apm.Elasticsearch
 {
 	/// <summary>
-	/// Registers for listeners from the elasticsearch client. 
+	/// Registers for listeners from the elasticsearch client.
 	/// </summary>
 	public class ElasticsearchDiagnosticsSubscriber : IDiagnosticsSubscriber
 	{
@@ -15,6 +15,10 @@ namespace Elastic.Apm.Elasticsearch
 		public IDisposable Subscribe(IApmAgent agentComponents)
 		{
 			var composite = new CompositeDisposable();
+
+			if (!agentComponents.ConfigurationReader.Enabled)
+				return composite;
+
 			var subscriber = new DiagnosticInitializer(agentComponents.Logger, new IDiagnosticListener[]
 			{
 				new AuditDiagnosticsListener(agentComponents),

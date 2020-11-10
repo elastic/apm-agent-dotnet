@@ -20,7 +20,6 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
-using Newtonsoft.Json;
 
 namespace Elastic.Apm.Report
 {
@@ -35,9 +34,9 @@ namespace Elastic.Apm.Report
 		internal readonly List<Func<ISpan, ISpan>> SpanFilters = new List<Func<ISpan, ISpan>>();
 
 		internal readonly Api.System System;
-		private readonly CloudMetadataProviderCollection _cloudMetadataProviderCollection;
 
 		internal readonly List<Func<ITransaction, ITransaction>> TransactionFilters = new List<Func<ITransaction, ITransaction>>();
+		private readonly CloudMetadataProviderCollection _cloudMetadataProviderCollection;
 
 		private readonly BatchBlock<object> _eventQueue;
 
@@ -56,10 +55,14 @@ namespace Elastic.Apm.Report
 			Service service,
 			Api.System system,
 			HttpMessageHandler httpMessageHandler = null,
-			string dbgName = null
+			string dbgName = null,
+			bool isEnabled = true
 		)
-			: base( /* isEnabled: */ true, logger, ThisClassName, service, config, httpMessageHandler)
+			: base(isEnabled, logger, ThisClassName, service, config, httpMessageHandler)
 		{
+			if (!isEnabled)
+				return;
+
 			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
 			_payloadItemSerializer = new PayloadItemSerializer(config);
 
@@ -339,6 +342,9 @@ namespace Elastic.Apm.Report
 
 	internal class Metadata
 	{
+		/// <inheritdoc cref="Api.Cloud" />
+		public Api.Cloud Cloud { get; set; }
+
 		public LabelsDictionary Labels { get; set; } = new LabelsDictionary();
 
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global - used by Json.Net
@@ -346,9 +352,6 @@ namespace Elastic.Apm.Report
 
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global
 		public Api.System System { get; set; }
-
-		/// <inheritdoc cref="Api.Cloud"/>
-		public Api.Cloud Cloud { get; set; }
 
 		/// <summary>
 		/// Method to conditionally serialize <see cref="Labels" /> - serialize only when there is at least one label.

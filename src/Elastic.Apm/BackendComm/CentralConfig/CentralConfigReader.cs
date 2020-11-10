@@ -36,6 +36,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			SpanFramesMinDurationInMilliseconds =
 				GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.SpanFramesMinDurationKey, ParseSpanFramesMinDurationInMilliseconds);
 			StackTraceLimit = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.StackTraceLimitKey, ParseStackTraceLimit);
+			Recording = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.Recording, ParseRecording);
 		}
 
 		internal string ETag { get; }
@@ -55,6 +56,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		internal double? SpanFramesMinDurationInMilliseconds { get; private set; }
 
 		internal int? StackTraceLimit { get; private set; }
+
+		internal bool? Recording { get; private set; }
 
 		private ConfigurationKeyValue BuildKv(string key, string value) =>
 			new ConfigurationKeyValue(key, value, /* readFrom */ $"Central configuration (ETag: `{ETag}')");
@@ -76,6 +79,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				builder.Add(nameof(CaptureBodyContentTypes), string.Join(", ", CaptureBodyContentTypes.Select(x => $"`{x}'")));
 			if (TransactionMaxSpans.HasValue) builder.Add(nameof(TransactionMaxSpans), TransactionMaxSpans.Value);
 			if (TransactionSampleRate.HasValue) builder.Add(nameof(TransactionSampleRate), TransactionSampleRate.Value);
+			if (Recording.HasValue) builder.Add(nameof(Recording), Recording.Value);
 
 			return builder.ToString();
 		}
