@@ -48,7 +48,6 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _transactionSampleRate;
 		private readonly string _useElasticTraceparentHeader;
 		private readonly string _verifyServerCert;
-		private string _cloudProvider;
 
 		public MockConfigSnapshot(IApmLogger logger = null,
 			string logLevel = null,
@@ -122,6 +121,8 @@ namespace Elastic.Apm.Tests.Mocks
 			_recording = recording;
 		}
 
+		private readonly string _cloudProvider;
+
 		public string ApiKey => ParseApiKey(Kv(EnvVarNames.ApiKey, _apiKey, Origin));
 
 		public IReadOnlyCollection<string> ApplicationNamespaces =>
@@ -141,9 +142,9 @@ namespace Elastic.Apm.Tests.Mocks
 		public IReadOnlyList<WildcardMatcher> DisableMetrics =>
 			ParseDisableMetrics(Kv(EnvVarNames.DisableMetrics, _disableMetrics, Origin));
 
-		public string Environment => ParseEnvironment(Kv(EnvVarNames.Environment, _environment, Origin));
-
 		public bool Enabled => ParseEnabled(Kv(EnvVarNames.Enabled, _enabled, Origin));
+
+		public string Environment => ParseEnvironment(Kv(EnvVarNames.Environment, _environment, Origin));
 
 		public IReadOnlyCollection<string> ExcludedNamespaces =>
 			ParseExcludedNamespaces(new ConfigurationKeyValue(EnvVarNames.ExcludedNamespaces, _excludedNamespaces, Origin));
@@ -155,14 +156,12 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public string HostName => ParseHostName(Kv(EnvVarNames.HostName, _hostName, Origin));
 
-		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
-			ParseTransactionIgnoreUrls(Kv(EnvVarNames.TransactionIgnoreUrls, _transactionIgnoreUrls, Origin));
-
 		public LogLevel LogLevel => ParseLogLevel(Kv(EnvVarNames.LogLevel, _logLevel, Origin));
 		public int MaxBatchEventCount => ParseMaxBatchEventCount(Kv(EnvVarNames.MaxBatchEventCount, _maxBatchEventCount, Origin));
 		public int MaxQueueEventCount => ParseMaxQueueEventCount(Kv(EnvVarNames.MaxQueueEventCount, _maxQueueEventCount, Origin));
 		public double MetricsIntervalInMilliseconds => ParseMetricsInterval(Kv(EnvVarNames.MetricsInterval, _metricsInterval, Origin));
 		public bool Recording => ParseRecording(Kv(KeyNames.Recording, _recording, Origin));
+
 		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames =>
 			ParseSanitizeFieldNames(Kv(EnvVarNames.SanitizeFieldNames, _sanitizeFieldNames, Origin));
 
@@ -177,6 +176,9 @@ namespace Elastic.Apm.Tests.Mocks
 			_spanFramesMinDurationInMilliseconds, Origin));
 
 		public int StackTraceLimit => ParseStackTraceLimit(Kv(EnvVarNames.StackTraceLimit, _stackTraceLimit, Origin));
+
+		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
+			ParseTransactionIgnoreUrls(Kv(EnvVarNames.TransactionIgnoreUrls, _transactionIgnoreUrls, Origin));
 
 		public int TransactionMaxSpans => ParseTransactionMaxSpans(Kv(EnvVarNames.TransactionMaxSpans, _transactionMaxSpans, Origin));
 

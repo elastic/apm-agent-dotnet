@@ -5,7 +5,6 @@
 using System;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm.CentralConfig;
-using Elastic.Apm.Cloud;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -41,7 +40,8 @@ namespace Elastic.Apm
 
 			ConfigStore = new ConfigStore(new ConfigSnapshotFromReader(ConfigurationReader, "local"), Logger);
 
-			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigStore.CurrentSnapshot, Service, system, isEnabled: ConfigurationReader.Enabled);
+			PayloadSender = payloadSender
+				?? new PayloadSenderV2(Logger, ConfigStore.CurrentSnapshot, Service, system, isEnabled: ConfigurationReader.Enabled);
 
 			if (ConfigurationReader.Enabled)
 			{
@@ -53,7 +53,8 @@ namespace Elastic.Apm
 			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigStore,
 				currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer());
 
-			if (!ConfigurationReader.Enabled) Logger?.Info()?.Log("The Elastic APM .NET Agent is disabled - the agent won't capture traces and metrics.");
+			if (!ConfigurationReader.Enabled)
+				Logger?.Info()?.Log("The Elastic APM .NET Agent is disabled - the agent won't capture traces and metrics.");
 		}
 
 		internal ICentralConfigFetcher CentralConfigFetcher { get; }
