@@ -39,8 +39,12 @@ namespace Elastic.Apm.Config
 		IReadOnlyList<WildcardMatcher> DisableMetrics { get; }
 
 		/// <summary>
-		/// Setting to false will completely disable the agent, including instrumentation and remote config polling.
-		/// If you want to dynamically change the status of the agent, use recording instead.
+		/// Enables the agent.
+		/// When set to <c>true</c> (the default), the agent is enabled.
+		/// When set to <c>false</c>, the agent is disabled, including instrumentation and remote config polling.
+		/// The value of <see cref="Enabled" /> cannot be changed during the lifetime of the application.
+		/// <para />
+		/// To dynamically change agent operation, use <see cref="Recording" />
 		/// </summary>
 		bool Enabled { get; }
 
