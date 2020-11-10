@@ -109,14 +109,14 @@ namespace ApiSamples
 				t.Context.Response = new Response { Finished = true, StatusCode = 200 };
 				t.Context.Request = new Request("GET", new Url { Protocol = "HTTP" });
 
-				t.Labels["fooTransaction1"] = "barTransaction1";
-				t.Labels["fooTransaction2"] = "barTransaction2";
+				t.SetLabel("fooTransaction1", "barTransaction1");
+				t.SetLabel("fooTransaction2", "barTransaction2");
 
 				Thread.Sleep(10);
 				t.CaptureSpan("TestSpan", "TestSpanType", s =>
 				{
 					Thread.Sleep(20);
-					s.Labels["fooSpan"] = "barSpan";
+					s.SetLabel("fooSpan", "barSpan");
 				});
 			});
 
