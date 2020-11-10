@@ -6,6 +6,7 @@ using System;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm;
 using Elastic.Apm.BackendComm.CentralConfig;
+using Elastic.Apm.Cloud;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -40,7 +41,6 @@ namespace Elastic.Apm
 			var system = systemInfoHelper.ParseSystemInfo(ConfigurationReader.HostName);
 
 			ConfigStore = new ConfigStore(new ConfigSnapshotFromReader(ConfigurationReader, "local"), Logger);
-
 			PayloadSender = payloadSender ?? new PayloadSenderV2(Logger, ConfigStore.CurrentSnapshot, Service, system);
 
 			MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigurationReader);

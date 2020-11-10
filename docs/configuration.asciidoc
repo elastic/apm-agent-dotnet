@@ -633,6 +633,26 @@ This option supports the wildcard `*`, which matches zero or more characters. Ex
 | `ELASTIC_APM_DISABLE_METRICS` | `ElasticApm:DisableMetrics`
 |============
 
+[float]
+[[config-cloud-provider]]
+==== `CloudProvider` (added[1.7.0])
+
+Allows you to specify which cloud provider should be assumed for metadata collection. By default, the agent will attempt to detect the cloud provider and, if that fails, use trial and error to collect the metadata.
+
+Valid options are `"aws"`, `"gcp"`, `"azure"`, and `"false"`. If this config value is set to `"false"`, no cloud metadata will be collected.
+
+[options="header"]
+|============
+| Environment variable name      | IConfiguration or Web.config key
+| `ELASTIC_APM_CLOUD_PROVIDER`   | `ElasticApm:CloudProvider`
+|============
+
+[options="header"]
+|============
+| Default | Type
+| `null`  | String
+|============
+
 [[config-http]]
 === HTTP configuration options
 
@@ -915,6 +935,7 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-capture-body-content-types,`CaptureBodyContentTypes`>> | Yes | HTTP, Performance
 | <<config-capture-headers,`CaptureHeaders`>> | No | HTTP, Performance
 | <<config-central-config,`CentralConfig`>> | No | Core
+| <<config-cloud-provider,`CloudProvider`>> | No | Reporter
 | <<config-disable-metrics,`DisableMetrics`>> | No | Reporter
 | <<config-environment,`Environment`>> | No | Core
 | <<config-excluded-namespaces,`ExcludedNamespaces`>> | No | Stacktrace

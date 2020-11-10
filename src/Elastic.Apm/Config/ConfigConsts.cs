@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using Elastic.Apm.Cloud;
 using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Config
@@ -22,6 +23,7 @@ namespace Elastic.Apm.Config
 			public const string CaptureBodyContentTypes = "application/x-www-form-urlencoded*, text/*, application/json*, application/xml*";
 			public const bool CaptureHeaders = true;
 			public const bool CentralConfig = true;
+			public const string CloudProvider = "";
 			public const int FlushIntervalInMilliseconds = 10_000; // 10 seconds
 			public const int MaxBatchEventCount = 10;
 			public const int MaxQueueEventCount = 1000;
@@ -107,6 +109,7 @@ namespace Elastic.Apm.Config
 			public const string CaptureBodyContentTypes = Prefix + "CAPTURE_BODY_CONTENT_TYPES";
 			public const string CaptureHeaders = Prefix + "CAPTURE_HEADERS";
 			public const string CentralConfig = Prefix + "CENTRAL_CONFIG";
+			public const string CloudProvider = Prefix + "CLOUD_PROVIDER";
 			public const string DisableMetrics = Prefix + "DISABLE_METRICS";
 			public const string Environment = Prefix + "ENVIRONMENT";
 			public const string FlushInterval = Prefix + "FLUSH_INTERVAL";
@@ -144,6 +147,7 @@ namespace Elastic.Apm.Config
 			public const string CaptureBodyContentTypes = Prefix + nameof(CaptureBodyContentTypes);
 			public const string CaptureHeaders = Prefix + nameof(CaptureHeaders);
 			public const string CentralConfig = Prefix + nameof(CentralConfig);
+			public const string CloudProvider = Prefix + nameof(CloudProvider);
 			public const string DisableMetrics = Prefix + nameof(DisableMetrics);
 			public const string Environment = Prefix + nameof(Environment);
 			public const string FlushInterval = Prefix + nameof(FlushInterval);
@@ -182,6 +186,16 @@ namespace Elastic.Apm.Config
 
 			public static readonly List<string> CaptureBodySupportedValues =
 				new List<string> { CaptureBodyOff, CaptureBodyAll, CaptureBodyErrors, CaptureBodyTransactions };
+
+			public const string CloudProviderAws = AwsCloudMetadataProvider.Name;
+			public const string CloudProviderAzure = AzureCloudMetadataProvider.Name;
+			public const string CloudProviderGcp = GcpCloudMetadataProvider.Name;
+			public const string CloudProviderFalse = "false";
+
+			public static readonly HashSet<string> CloudProviders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+			{
+				CloudProviderAws, CloudProviderAzure, CloudProviderGcp, CloudProviderFalse
+			};
 		}
 	}
 }

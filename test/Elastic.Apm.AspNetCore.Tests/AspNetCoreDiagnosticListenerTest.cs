@@ -38,6 +38,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			using (var agent = new ApmAgent(new TestAgentComponents()))
 			{
+
 				var capturedPayload = agent.PayloadSender as MockPayloadSender;
 				var client = Helper.GetClient(agent, _factory, useOnlyDiagnosticSource);
 
@@ -51,7 +52,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 				}
 
 				capturedPayload.Should().NotBeNull();
-
 				capturedPayload?.Transactions.Should().ContainSingle();
 
 				capturedPayload?.Errors.Should().ContainSingle();

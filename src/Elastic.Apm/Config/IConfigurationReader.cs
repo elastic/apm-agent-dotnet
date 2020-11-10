@@ -26,6 +26,13 @@ namespace Elastic.Apm.Config
 		bool CentralConfig { get; }
 
 		/// <summary>
+		/// Specify which cloud provider should be assumed for metadata collection. By default, the agent will attempt to detect the cloud
+		/// provider or, if that fails, will use trial and error to collect the metadata. Valid options are "aws", "gcp", and "azure".
+		/// If this config value is set to "False", no cloud metadata will be collected.
+		/// </summary>
+		string CloudProvider { get; }
+
+		/// <summary>
 		/// Disables the collection of certain metrics. If the name of a metric matches any of the wildcard expressions, it will
 		/// not be collected
 		/// </summary>

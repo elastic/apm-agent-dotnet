@@ -35,6 +35,8 @@ namespace Elastic.Apm.Config
 
 		public bool CentralConfig => ParseCentralConfig(Read(ConfigConsts.EnvVarNames.CentralConfig));
 
+		public string CloudProvider => ParseCloudProvider(Read(ConfigConsts.EnvVarNames.CloudProvider));
+
 		public string DbgDescription => Origin;
 		public IReadOnlyList<WildcardMatcher> DisableMetrics => ParseDisableMetrics(Read(ConfigConsts.EnvVarNames.DisableMetrics));
 
