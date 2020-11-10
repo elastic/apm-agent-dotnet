@@ -166,7 +166,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[InlineData(true)]
 		[InlineData(false)]
 		[Theory]
-		public async Task HomeSimplePageTransactionWithEnabledFalse(bool withDiagnosticSourceOnly)
+		public async Task HomeIndexTransactionWithEnabledFalse(bool withDiagnosticSourceOnly)
 		{
 			_agent = new ApmAgent(new TestAgentComponents(
 				_logger,
@@ -186,7 +186,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[InlineData(true)]
 		[InlineData(false)]
 		[Theory]
-		public async Task HomeSimplePageTransactionWithTuggleRecording(bool withDiagnosticSourceOnly)
+		public async Task HomeIndexTransactionWithToggleRecording(bool withDiagnosticSourceOnly)
 		{
 			_agent = new ApmAgent(new TestAgentComponents(
 				_logger, new MockConfigSnapshot(recording: "false"), _capturedPayload));

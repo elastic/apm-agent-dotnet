@@ -11,6 +11,11 @@ using Elastic.Apm.Api;
 
 namespace Elastic.Apm.Model
 {
+	/// <summary>
+	/// A span implementation which is used when the agent is not recording (either recording=false or enabled=false).
+	/// It has no knowledge about the PayloadSender and will be never sent to APM Server.
+	/// It only executes minimum amount of code and isn't guaranteed that values you set on it will be kept.
+	/// </summary>
 	internal class NoopSpan : ISpan
 	{
 		private static readonly SpanContext ReusableContextInstance = new SpanContext();

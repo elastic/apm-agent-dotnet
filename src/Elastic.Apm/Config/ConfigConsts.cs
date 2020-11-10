@@ -104,6 +104,7 @@ namespace Elastic.Apm.Config
 
 		public static class EnvVarNames
 		{
+			private const string Prefix = "ELASTIC_APM_";
 			public const string ApiKey = Prefix + "API_KEY";
 			public const string ApplicationNamespaces = Prefix + "APPLICATION_NAMESPACES";
 			public const string CaptureBody = Prefix + "CAPTURE_BODY";
@@ -115,7 +116,6 @@ namespace Elastic.Apm.Config
 			public const string Enabled = Prefix + "ENABLED";
 			public const string Environment = Prefix + "ENVIRONMENT";
 			public const string ExcludedNamespaces = Prefix + "EXCLUDED_NAMESPACES";
-
 			public const string FlushInterval = Prefix + "FLUSH_INTERVAL";
 
 			//This setting is Full Framework only:
@@ -126,7 +126,6 @@ namespace Elastic.Apm.Config
 			public const string MaxBatchEventCount = Prefix + "MAX_BATCH_EVENT_COUNT";
 			public const string MaxQueueEventCount = Prefix + "MAX_QUEUE_EVENT_COUNT";
 			public const string MetricsInterval = Prefix + "METRICS_INTERVAL";
-			private const string Prefix = "ELASTIC_APM_";
 			public const string SanitizeFieldNames = Prefix + "SANITIZE_FIELD_NAMES";
 			public const string SecretToken = Prefix + "SECRET_TOKEN";
 			public const string ServerUrls = Prefix + "SERVER_URLS";
@@ -145,9 +144,9 @@ namespace Elastic.Apm.Config
 
 		public static class KeyNames
 		{
+			private const string Prefix = "ElasticApm:";
 			public const string ApiKey = Prefix + nameof(ApiKey);
 			public const string ApplicationNamespaces = Prefix + nameof(ApplicationNamespaces);
-
 			public const string CaptureBody = Prefix + nameof(CaptureBody);
 			public const string CaptureBodyContentTypes = Prefix + nameof(CaptureBodyContentTypes);
 			public const string CaptureHeaders = Prefix + nameof(CaptureHeaders);
@@ -157,9 +156,7 @@ namespace Elastic.Apm.Config
 			public const string Enabled = Prefix + nameof(Enabled);
 			public const string Environment = Prefix + nameof(Environment);
 			public const string ExcludedNamespaces = Prefix + nameof(ExcludedNamespaces);
-
 			public const string FlushInterval = Prefix + nameof(FlushInterval);
-
 			//This setting is Full Framework only:
 			public const string FullFrameworkConfigurationReaderType = Prefix + nameof(FullFrameworkConfigurationReaderType);
 			public const string GlobalLabels = Prefix + nameof(GlobalLabels);
@@ -168,7 +165,6 @@ namespace Elastic.Apm.Config
 			public const string MaxBatchEventCount = Prefix + nameof(MaxBatchEventCount);
 			public const string MaxQueueEventCount = Prefix + nameof(MaxQueueEventCount);
 			public const string MetricsInterval = Prefix + nameof(MetricsInterval);
-			private const string Prefix = "ElasticApm:";
 			public const string SanitizeFieldNames = Prefix + nameof(SanitizeFieldNames);
 			public const string SecretToken = Prefix + nameof(SecretToken);
 			public const string ServerUrls = Prefix + nameof(ServerUrls);

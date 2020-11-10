@@ -24,7 +24,7 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		public ISpan CurrentSpan
 		{
-			get => _currentSpan.Value ?? HttpContext.Current?.Items[CurrentSpanKey] as Span;
+			get => _currentSpan.Value ?? HttpContext.Current?.Items[CurrentSpanKey] as ISpan;
 			set
 			{
 				_currentSpan.Value = value;
@@ -36,7 +36,7 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		public ITransaction CurrentTransaction
 		{
-			get => _currentTransaction.Value ?? HttpContext.Current?.Items[CurrentTransactionKey] as Transaction;
+			get => _currentTransaction.Value ?? HttpContext.Current?.Items[CurrentTransactionKey] as ITransaction;
 			set
 			{
 				_currentTransaction.Value = value;

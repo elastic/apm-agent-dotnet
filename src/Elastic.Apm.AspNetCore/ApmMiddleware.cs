@@ -45,11 +45,11 @@ namespace Elastic.Apm.AspNetCore
 
 		public async Task InvokeAsync(HttpContext context)
 		{
-			var newTransaction = WebRequestTransactionCreator.StartTransactionAsync(context, _logger, _tracer, _agent.ConfigStore.CurrentSnapshot);
+			var createdTransaction = WebRequestTransactionCreator.StartTransactionAsync(context, _logger, _tracer, _agent.ConfigStore.CurrentSnapshot);
 
 			Transaction transaction = null;
-			if (newTransaction is Transaction createdTransaction)
-				transaction = createdTransaction;
+			if (createdTransaction is Transaction t)
+				transaction = t;
 
 			if (transaction != null)
 				WebRequestTransactionCreator.FillSampledTransactionContextRequest(transaction, context, _logger);
@@ -70,6 +70,8 @@ namespace Elastic.Apm.AspNetCore
 
 				if(transaction != null)
 					WebRequestTransactionCreator.StopTransaction(transaction, context, _logger);
+				else
+					createdTransaction?.End();
 			}
 		}
 
