@@ -3,6 +3,8 @@
 The .NET Agent ships as a set of NuGet packages via https://nuget.org[nuget.org].
 You can add the Agent to your .NET application by referencing one of these packages.
 
+On .NET Core the agent also supports auto instrumentation without any code change and without any recompilation of your projects. See section <<zero-code-change-setup,  Zero code change setup on .NET Core>> for more details.
+
 [float]
 === Packages
 
@@ -16,6 +18,11 @@ In order to avoid adding unnecessary dependencies in applications that aren’t 
 https://www.nuget.org/packages/Elastic.Apm[**Elastic.Apm**]::
 
 This is the core of the agent, which we didn’t name “Core”, because someone already took that name :) This package also contains the <<public-api>> and it is a .NET Standard 2.0 package. We also ship every tracing component that traces classes that are part of .NET Standard 2.0 in this package, which includes the monitoring part for HttpClient. Every other Elastic APM package references this package.
+
+https://www.nuget.org/packages/Elastic.Apm.Extensions.Hosting[**Elastic.Apm.Extensions.Hosting**](Added in 1.6.0-beta)::
+
+This package offers integration with `Microsoft.Extensions.Hosting.IHostBuilder` for agent registration.
+
 https://www.nuget.org/packages/Elastic.Apm.AspNetCore[**Elastic.Apm.AspNetCore**]::
 
 This package contains ASP.NET Core monitoring related code. The main difference between this package and the `Elastic.Apm.NetCoreAll` package is that this package does not reference the `Elastic.Apm.EntityFrameworkCore` package, so if you have an ASP.NET Core application that does not use EF Core and you want to avoid adding additional unused references, you should use this package.
@@ -34,18 +41,103 @@ https://www.nuget.org/packages/Elastic.Apm.SqlClient[**Elastic.Apm.SqlClient**]:
 
 This package contains https://www.nuget.org/packages/System.Data.SqlClient[System.Data.SqlClient] and https://www.nuget.org/packages/Microsoft.Data.SqlClient[Microsoft.Data.SqlClient] monitoring related code.
 
+
 [float]
 === Quick start
 
+* <<setup-dotnet-net-core>>
 * <<setup-asp-net-core>>
 * <<setup-asp-net>>
 * <<setup-ef6>>
 * <<setup-sqlclient>>
 * <<setup-general>>
 
+
+[float]
+[[setup-dotnet-net-core]]
+==== NET Core
+
+On .NET Core the agent can be registered on the `IHostBuilder`. This applies to both ASP.NET Core and to other .NET Core applications that depend on `IHostBuilder` like https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/hosted-services[background tasks]. In this case you need to reference the `Elastic.Apm.NetCoreAll` package.
+
+
+[source,csharp]
+----
+using Elastic.Apm.NetCoreAll;
+
+namespace MyApplication
+{
+  public class Program
+  {
+    public static IHostBuilder CreateHostBuilder(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+            .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); })
+            .UseAllElasticApm();
+
+    public static void Main(string[] args) => CreateHostBuilder(args).Build().Run();
+  }
+}
+----
+
+With the `UseAllElasticApm()` the agent with all its components is turned on. On ASP.NET Core it'll automatically capture incoming requests, database calls through supported technologies, outgoing HTTP requests and so on.
+
+Additionally the `UseAllElasticApm` will also add an `ITracer` to the Dependency Injection system. This means you can use the <<public-api>> in your code like this:
+
+[source,csharp]
+----
+using Elastic.Apm.Api;
+
+namespace WebApplication.Controllers
+{
+    public class HomeController : Controller
+    {
+        private readonly ITracer _tracer;
+        public HomeController(ITracer tracer) //inject ITracer
+        => _tracer = tracer;
+
+        public IActionResult Index()
+        {
+            //use ITracer
+            var span = _tracer.CurrentTransaction?.StartSpan("MySampleSpan", "Sample");
+            try
+            {
+                //your code here
+            }
+            catch (Exception e)
+            {
+                span?.CaptureException(e);
+                throw;
+            }
+            finally { }
+            {
+                span?.End();
+            }
+            return View();
+        }
+    }
+}
+----
+
+Similarly to this ASP.NET Core controller, you can use the same approach with `IHostedService` implementations.
+
+The `Elastic.Apm.NetCoreAll` will reference every agent components. This is usually not a problem. Nevertheless in case you want to keep dependencies minimal you can also reference the `Elastic.Apm.Extensions.Hosting` and use the `UseElasticApm` method instead of `UseAllElasticApm`. With this you can control what the agent will listen for.
+
+For example the following only turns on outgoing HTTP monitoring (so, for example database or elasticsearch calls won't be automatically captured):
+
+[source,csharp]
+----
+    public static IHostBuilder CreateHostBuilder(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+            .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); })
+            .UseElasticApm(new HttpDiagnosticsSubscriber());
+
+----
+
+
 [float]
 [[setup-asp-net-core]]
 ==== ASP.NET Core
+
+We suggest using the approach described in the <<setup-dotnet-net-core, .NET Core setup instructions>> section above. We keep the `IApplicationBuilder` introduced here only for backwards compatibility.
 
 For ASP.NET Core, once you referenced the `Elastic.Apm.NetCoreAll` package, you can enable auto instrumentation by calling `UseAllElasticApm()` extension method:
 
@@ -177,9 +269,24 @@ NOTE: Auto instrumentation  for `System.Data.SqlClient` is available for both, .
 command text cannot be captured. In case of auto instrumentation for `Microsoft.Data.SqlClient`, only .NET Core is supported, at the moment.
 
 [float]
+[[zero-code-change-setup]]
+==== Zero code change setup on .NET Core (Added in 1.7)
+
+If you can't or don't want to reference NuGet packages in your application, you can also inject the agent during startup if your application runs on .NET Core. This feature is supported on .NET Core 2.2 and newer versions.
+
+Steps:
+
+1. Download the `ElasticApmAgent_[version].zip` file from the https://github.com/elastic/apm-agent-dotnet/releases[Release] page of the .NET APM Agent GitHub repository. You can find the file under Assets.
+2. Unzip the folder into a folder.
+3. Set the `DOTNET_STARTUP_HOOKS` environment variable to point to the `ElasticApmAgentStartupHook.dll` file from the unzipped folder: `set DOTNET_STARTUP_HOOKS=[pathToAgent]\ElasticApmAgentStartupHook.dll`.
+4. Start your .NET Core application in a context where the `DOTNET_STARTUP_HOOKS` environment variable is visible.
+
+With this setup the agent will be injected into the application during startup and it will start every auto instrumentation feature. On ASP.NET Core (including gRPC) incoming requests will be automatically captured.
+
+[float]
 [[setup-general]]
 ==== Other .NET applications
 
-In case you have a .NET application which is not covered above, you can still use the agent and instrument your application manually. 
+In case you have a .NET application which is not covered above, you can still use the agent and instrument your application manually.
 
 In those cases, you can add the https://www.nuget.org/packages/Elastic.Apm[Elastic.Apm] package to your application and use the  <<public-api>>.
