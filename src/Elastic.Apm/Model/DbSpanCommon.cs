@@ -33,34 +33,34 @@ namespace Elastic.Apm.Model
 				captureStackTraceOnStart);
 		}
 
-		internal void EndSpan(ISpan iSpan, IDbCommand dbCommand, Outcome outcome, TimeSpan? duration = null)
+		internal void EndSpan(ISpan span, IDbCommand dbCommand, Outcome outcome, TimeSpan? duration = null)
 		{
-			if (iSpan is Span span)
+			if (span is Span capturedSpan)
 			{
 
-				if (duration.HasValue) span.Duration = duration.Value.TotalMilliseconds;
+				if (duration.HasValue) capturedSpan.Duration = duration.Value.TotalMilliseconds;
 
 				GetDefaultProperties(dbCommand.Connection.GetType().FullName, out var spanSubtype, out var isEmbeddedDb, out var defaultPort);
-				span.Subtype = spanSubtype;
-				span.Action = GetSpanAction(dbCommand.CommandType);
+				capturedSpan.Subtype = spanSubtype;
+				capturedSpan.Action = GetSpanAction(dbCommand.CommandType);
 
-				if (span.ShouldBeSentToApmServer)
+				if (capturedSpan.ShouldBeSentToApmServer)
 				{
-					span.Context.Db = new Database
+					capturedSpan.Context.Db = new Database
 					{
 						Statement = dbCommand.CommandText.Replace(Environment.NewLine, " "),
 						Instance = dbCommand.Connection.Database,
 						Type = Database.TypeSql
 					};
 
-					span.Context.Destination = GetDestination(dbCommand.Connection?.ConnectionString, isEmbeddedDb, defaultPort);
+					capturedSpan.Context.Destination = GetDestination(dbCommand.Connection?.ConnectionString, isEmbeddedDb, defaultPort);
 				}
 
-				span.Outcome = outcome;
-				span.End();
+				capturedSpan.Outcome = outcome;
+				capturedSpan.End();
 			}
 
-			iSpan.End();
+			span.End();
 		}
 
 		private static void GetDefaultProperties(string dbConnectionClassName, out string spanSubtype, out bool isEmbeddedDb, out int? defaultPort)
