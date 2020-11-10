@@ -34,6 +34,8 @@ namespace Elastic.Apm.Metrics
 		/// </summary>
 		internal readonly List<IMetricsProvider> MetricsProviders;
 
+		private readonly IConfigSnapshotProvider _configSnapshotProvider;
+
 		private readonly AgentSpinLock _isCollectionInProgress = new AgentSpinLock();
 
 		private readonly IApmLogger _logger;
@@ -96,11 +98,11 @@ namespace Elastic.Apm.Metrics
 					collectGen3Size));
 			}
 
-			var collectCgroupMemLimitBytes = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+			var collectCgroupMemLimitBytes = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
 				CgroupMetricsProvider.SystemProcessCgroupMemoryMemLimitBytes);
-			var collectCgroupMemUsageBytes = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+			var collectCgroupMemUsageBytes = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
 				CgroupMetricsProvider.SystemProcessCgroupMemoryMemUsageBytes);
-			var collectCgroupStatsInactiveFileBytes = !WildcardMatcher.IsAnyMatch(configurationReader.DisableMetrics,
+			var collectCgroupStatsInactiveFileBytes = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
 				CgroupMetricsProvider.SystemProcessCgroupMemoryStatsInactiveFileBytes);
 			if (collectCgroupMemLimitBytes || collectCgroupMemUsageBytes || collectCgroupStatsInactiveFileBytes)
 			{
@@ -112,8 +114,6 @@ namespace Elastic.Apm.Metrics
 			_timer = new Timer(interval);
 			_timer.Elapsed += (sender, args) => { CollectAllMetrics(); };
 		}
-
-		private readonly IConfigSnapshotProvider _configSnapshotProvider;
 
 		public void StartCollecting() => _timer?.Start();
 
