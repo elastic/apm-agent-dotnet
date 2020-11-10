@@ -148,12 +148,12 @@ endif::[]
 [float]
 ===== Features
 
-Configure transaction max spans. {pull}472[#472] 
+Configure transaction max spans. {pull}472[#472]
 
 [float]
 ===== Bug fixes
 
-Fixing missing "Date Modified" field on the files from the `1.1.0` packages causing an error while executing `dotnet pack` or `nuget pack` on a project with Elastic APM Agent packages. {pull}527[#527] 
+Fixing missing "Date Modified" field on the files from the `1.1.0` packages causing an error while executing `dotnet pack` or `nuget pack` on a project with Elastic APM Agent packages. {pull}527[#527]
 
 [[release-notes-1.1.0]]
 ==== 1.1.0
@@ -161,15 +161,15 @@ Fixing missing "Date Modified" field on the files from the `1.1.0` packages caus
 [float]
 ===== Features
 
-- ASP.NET Support, documentation can be found https://www.elastic.co/guide/en/apm/agent/dotnet/master/setup.html#setup-asp-net[here]
+- ASP.NET Support, documentation can be found <<setup-asp-dot-net,here>>
 - Central configuration (Beta)
 
 [float]
 ===== Bug fixes
 
-- Addressed some performance issues {pull}359[#359]  
-- Improved error handling in ASP.NET Core {pull}512[#512] 
-- Fix for mono {pull}164[#164] 
+- Addressed some performance issues {pull}359[#359]
+- Improved error handling in ASP.NET Core {pull}512[#512]
+- Fix for mono {pull}164[#164]
 
 [[release-notes-1.0.1]]
 ==== 1.0.1
@@ -179,7 +179,7 @@ Fixing missing "Date Modified" field on the files from the `1.1.0` packages caus
 
 - `NullReferenceException` on .NET Framework with outgoing HTTP calls created with `HttpClient` in case the response code is HTTP3xx {pull}450[#450]
 - Added missing `net461` target to the https://www.nuget.org/packages/Elastic.Apm/[`Elastic.Apm`] package
-- Handling https://www.elastic.co/guide/en/apm/agent/dotnet/current/public-api.html#api-transaction-tags[`Labels`] with `null` {pull}429[#429] 
+- Handling https://www.elastic.co/guide/en/apm/agent/dotnet/current/public-api.html#api-transaction-tags[`Labels`] with `null` {pull}429[#429]
 
 [float]
 ===== Features
