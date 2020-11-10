@@ -10,7 +10,7 @@ On .NET Core the agent also supports auto instrumentation without any code chang
 
 * <<setup-dotnet-net-core>>
 * <<setup-asp-net-core>>
-* <<setup-asp-net>>
+* <<setup-asp-dot-net>>
 * <<setup-ef6>>
 * <<setup-sqlclient>>
 * <<setup-general>>
@@ -33,6 +33,7 @@ https://www.nuget.org/packages/Elastic.Apm.Extensions.Hosting[**Elastic.Apm.Exte
 
 This package offers integration with `Microsoft.Extensions.Hosting.IHostBuilder` for agent registration.
 
+[[setup-asp-net]]
 https://www.nuget.org/packages/Elastic.Apm.AspNetCore[**Elastic.Apm.AspNetCore**]::
 
 This package contains ASP.NET Core monitoring related code. The main difference between this package and the `Elastic.Apm.NetCoreAll` package is that this package does not reference the `Elastic.Apm.EntityFrameworkCore` package, so if you have an ASP.NET Core application that does not use EF Core and you want to avoid adding additional unused references, you should use this package.
@@ -201,7 +202,7 @@ app.UseElasticApm(Configuration,
 In case you only want to use the <<public-api>>, you don't need to do any initialization, you can simply start using the API and the agent will send the data to the APM Server.
 
 
-[[setup-asp-net]]
+[[setup-asp-dot-net]]
 === ASP.NET
 
 [float]
