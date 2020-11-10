@@ -179,7 +179,7 @@ namespace Elastic.Apm.Report
 				_getCloudMetadata = true;
 			}
 
-			if (!_serverInfo.Initialized) await _serverInfo.GetServerInfoAsync().ConfigureAwait(false);
+			if (!_serverInfo.ServerVersionQueried) await _serverInfo.GetServerInfoAsync().ConfigureAwait(false);
 
 			await ProcessQueueItems(await ReceiveBatchAsync());
 		}

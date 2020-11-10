@@ -15,30 +15,35 @@ using Newtonsoft.Json.Linq;
 
 namespace Elastic.Apm.ServerInfo
 {
+	/// <summary>
+	/// A "real" <see cref="IServerInfo"/> implementation.
+	/// The <see cref="GetServerInfoAsync"/> method must be called once, which sets the <see cref="Version"/> property.
+	/// </summary>
 	internal class ServerInfo : IServerInfo
 	{
-		public ServerInfo(IConfigSnapshot configSnapshot, IApmLogger logger) => (_configSnapshot, _logger) = (configSnapshot, logger);
-
 		private readonly IConfigSnapshot _configSnapshot;
 		private readonly IApmLogger _logger;
 
+		public ServerInfo(IConfigSnapshot configSnapshot, IApmLogger logger) => (_configSnapshot, _logger) = (configSnapshot, logger);
 
 		private volatile bool _initialized;
-		public bool Initialized => _initialized;
-		public Version Version { get; set; }
+		public bool ServerVersionQueried => _initialized;
+		public Version Version { get; private set; }
 
 		public async Task GetServerInfoAsync()
 		{
 			try
 			{
+				var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
 
+				using var requestMessage = new HttpRequestMessage(HttpMethod.Get, _configSnapshot.ServerUrls[0]);
+				requestMessage.Headers.Add("Metadata", "true");
 
-				var httpClient = new HttpClient();
-				var result = await httpClient.GetAsync(_configSnapshot.ServerUrls[0]).ConfigureAwait(false);
+				var responseMessage = await httpClient.SendAsync(requestMessage).ConfigureAwait(false);
 
-				if (result.IsSuccessStatusCode)
+				if (responseMessage.IsSuccessStatusCode)
 				{
-					using var stream = await result.Content.ReadAsStreamAsync().ConfigureAwait(false);
+					using var stream = await responseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
 					using var streamReader = new StreamReader(stream, Encoding.UTF8);
 					using var jsonReader = new JsonTextReader(streamReader);
 
@@ -57,6 +62,8 @@ namespace Elastic.Apm.ServerInfo
 						}
 					}
 				}
+				else
+					_logger.Warning()?.Log("Failed reading APM Server info, respnse from sever: {ResponseCode}", responseMessage.StatusCode);
 			}
 			catch (Exception e)
 			{

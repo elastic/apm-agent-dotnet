@@ -7,6 +7,7 @@ using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
+using Elastic.Apm.ServerInfo;
 
 namespace Elastic.Apm.Tests.Mocks
 {
@@ -18,14 +19,16 @@ namespace Elastic.Apm.Tests.Mocks
 			IConfigSnapshot config = null,
 			IPayloadSender payloadSender = null,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer = null,
-			ICentralConfigFetcher centralConfigFetcher = null
+			ICentralConfigFetcher centralConfigFetcher = null,
+			IServerInfo serverInfo = null
 		) : base(
 			logger ?? new NoopLogger(),
 			config ?? new MockConfigSnapshot(logger ?? new NoopLogger()),
 			payloadSender ?? new MockPayloadSender(),
 			new FakeMetricsCollector(),
 			currentExecutionSegmentsContainer,
-			centralConfigFetcher ?? new NoopCentralConfigFetcher()
+			centralConfigFetcher ?? new NoopCentralConfigFetcher(),
+			serverInfo ?? new MockServerInfo()
 		)
 		{ }
 	}

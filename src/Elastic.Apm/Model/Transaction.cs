@@ -13,6 +13,7 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
+using Elastic.Apm.ServerInfo;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -26,6 +27,7 @@ namespace Elastic.Apm.Model
 
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
+		private readonly IServerInfo _serverInfo;
 
 		private readonly string _traceState;
 
@@ -51,7 +53,7 @@ namespace Elastic.Apm.Model
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigStore.CurrentSnapshot,
-				agent.TracerInternal.CurrentExecutionSegmentsContainer) { }
+				agent.TracerInternal.CurrentExecutionSegmentsContainer, null) { }
 
 		/// <summary>
 		/// Creates a new transaction
@@ -65,6 +67,7 @@ namespace Elastic.Apm.Model
 		/// <param name="configSnapshot">The current configuration snapshot which contains the up-do-date config setting values</param>
 		/// <param name="currentExecutionSegmentsContainer" />
 		/// The ExecutionSegmentsContainer which makes sure this transaction flows
+		/// <param name="serverInfo">Component to fetch info about APM Server (e.g. APM Server version)</param>
 		/// <param name="ignoreActivity">
 		/// If set the transaction will ignore Activity.Current and it's trace id,
 		/// otherwise the agent will try to keep ids in-sync across async work-flows
@@ -78,6 +81,7 @@ namespace Elastic.Apm.Model
 			IPayloadSender sender,
 			IConfigSnapshot configSnapshot,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
+			IServerInfo serverInfo,
 			bool ignoreActivity = false
 		)
 		{
@@ -85,6 +89,7 @@ namespace Elastic.Apm.Model
 			Timestamp = TimeUtils.TimestampNow();
 
 			_logger = logger?.Scoped($"{nameof(Transaction)}");
+			_serverInfo = serverInfo;
 
 			_sender = sender;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
@@ -389,7 +394,7 @@ namespace Elastic.Apm.Model
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false
 		)
 		{
-			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer,
+			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, _serverInfo,
 				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
@@ -410,6 +415,7 @@ namespace Elastic.Apm.Model
 				this,
 				ConfigSnapshot,
 				this,
+				_serverInfo,
 				culprit,
 				isHandled,
 				parentId,
@@ -426,6 +432,7 @@ namespace Elastic.Apm.Model
 				this,
 				ConfigSnapshot,
 				this,
+				_serverInfo,
 				parentId,
 				labels
 			);

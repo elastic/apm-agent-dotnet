@@ -116,7 +116,7 @@ namespace Elastic.Apm.Tests
 				Activity.Current = null;
 
 				var transaction = new Transaction(noopLogger, "test transaction name", "test transaction type", sampler,
-					/* distributedTracingData: */ null, noopPayloadSender, configurationReader, currentExecutionSegmentsContainer);
+					/* distributedTracingData: */ null, noopPayloadSender, configurationReader, currentExecutionSegmentsContainer, new MockServerInfo());
 				if (transaction.IsSampled) ++sampledCount;
 
 				// ReSharper disable once InvertIf

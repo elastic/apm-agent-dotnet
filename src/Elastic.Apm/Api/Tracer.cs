@@ -63,7 +63,7 @@ namespace Elastic.Apm.Api
 		{
 			var currentConfig = _configProvider.CurrentSnapshot;
 			var retVal = new Transaction(_logger, name, type, new Sampler(currentConfig.TransactionSampleRate), distributedTracingData
-				, _sender, currentConfig, CurrentExecutionSegmentsContainer, ignoreActivity)
+				, _sender, currentConfig, CurrentExecutionSegmentsContainer, _serverInfo, ignoreActivity)
 			{ Service = _service };
 
 			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);

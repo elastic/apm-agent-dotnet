@@ -18,6 +18,7 @@ namespace Elastic.Apm.Helpers
 	internal static class StacktraceHelper
 	{
 		private const string DefaultAsyncMethodName = "MoveNext";
+		private static readonly Version V710 = new Version(7, 10);
 
 		/// <summary>
 		/// Turns a System.Diagnostic.StackFrame[] into a <see cref="CapturedStackFrame" /> list which can be reported to the APM
@@ -63,19 +64,34 @@ namespace Elastic.Apm.Helpers
 
 					logger.Trace()?.Log("{MethodName}, {lineNo}", functionName, frame?.GetFileLineNumber());
 
-					retVal.Add(new CapturedStackFrame
+					var capturedStackFrame = new CapturedStackFrame
 					{
 						Function = functionName ?? "N/A",
-						ClassName = string.IsNullOrWhiteSpace(className) ? "N/A" : className,
 						Module = frame?.GetMethod()?.ReflectedType?.Assembly.FullName,
 						LineNo = frame?.GetFileLineNumber() ?? 0,
-						// FileName is either the .cs file or the assembly location as fallback
-						FileName = string.IsNullOrWhiteSpace(fileName)
-							? string.IsNullOrEmpty(frame?.GetMethod()?.GetType().Assembly.Location) ? "n/a" :
-							frame.GetMethod()?.GetType().Assembly.Location
-							: fileName,
 						AbsPath = frame?.GetFileName() // optional property
-					});
+					};
+
+					if (serverInfo.ServerVersionQueried && serverInfo.Version != null && serverInfo.Version < V710)
+						// In pre 7.10, Kibana shows stack traces in format: `[FileName] in [MethodName]` and there is no way to show ClassName.
+						// For .NET that format is less useful especially because in some cases we only have a `.dll` file as filename.
+						// Therefore as a workaround we send the real classname in the file name field and
+						// we don't send anything in the ClassName field, since that's not used.
+						// We don't have this issue in 7.10 and newer versions.
+						capturedStackFrame.FileName = string.IsNullOrWhiteSpace(className) ? "N/A" : className;
+					else
+					{
+						// FileName is either the .cs file or the assembly location as fallback
+						capturedStackFrame.FileName =
+							string.IsNullOrWhiteSpace(fileName)
+								? string.IsNullOrEmpty(frame?.GetMethod()?.GetType().Assembly.Location) ? "n/a" :
+								frame.GetMethod()?.GetType().Assembly.Location
+								: fileName;
+
+						capturedStackFrame.ClassName = string.IsNullOrWhiteSpace(className) ? "N/A" : className;
+					}
+
+					retVal.Add(capturedStackFrame);
 				}
 			}
 			catch (Exception e)

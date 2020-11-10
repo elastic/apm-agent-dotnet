@@ -8,26 +8,29 @@ using System.Threading.Tasks;
 
 namespace Elastic.Apm.ServerInfo
 {
+	/// <summary>
+	/// Encapsulates information about the APM Server that receives data from the agent.
+	/// </summary>
 	internal interface IServerInfo
 	{
-		public Version Version { get; set; }
+		/// <summary>
+		/// The version of the server.
+		/// Only the following 3 fields are filled:
+		/// <see cref="System.Version.Major"/>
+		/// <see cref="System.Version.Minor"/>
+		/// <see cref="System.Version.Build"/>
+		/// </summary>
+		public Version Version { get; }
 
-		public bool Initialized { get; }
+		/// <summary>
+		/// Indicates if the Server Info Endpoint whether queried.
+		/// </summary>
+		public bool ServerVersionQueried { get; }
 
+		/// <summary>
+		/// Queries the Server Info Endpoint.
+		/// </summary>
+		/// <returns></returns>
 		public Task GetServerInfoAsync();
-	}
-
-	public class Version
-	{
-		public Version(int major, int minor, int path)
-		{
-			Major = major;
-			Minor = minor;
-			Path = path;
-		}
-
-		public int Major { get; }
-		public int Minor { get; }
-		public int Path { get; }
 	}
 }

@@ -188,6 +188,29 @@ namespace Elastic.Apm.Tests
 			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].FileName.Should().Be(fileName);
 		}
 
+		/// <summary>
+		/// In old versions (pre 7.10), due to the way kibana shows stack traces the agent puts the real classname into the
+		/// FileName field.
+		/// This test tests for that.
+		/// </summary>
+		[Fact]
+		public void InheritedChainWithOldAgents()
+		{
+			Base testClass = new Derived();
+
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, serverInfo: new MockServerInfo(new Version(7, 5)))))
+				Assert.Throws<Exception>(() => { agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => { testClass.JustThrow(); }); });
+
+			payloadSender.Errors.First().Should().NotBeNull();
+			payloadSender.Errors.First().Should().BeOfType(typeof(Error));
+
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].FileName.Should().Be(typeof(Base).FullName);
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].Function.Should().Be(nameof(Base.JustThrow));
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].ClassName.Should().BeNullOrEmpty();
+		}
+
 		[Fact]
 		public void StackTraceLimit0SpanFramesMinDurationNegative() =>
 			AssertWithAgent("0", "-1", payloadSender =>
