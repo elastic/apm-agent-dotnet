@@ -60,14 +60,20 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				var configSnapshotFromReader = new ConfigSnapshotFromReader(new EnvironmentConfigurationReader(), "local");
 				var configStore = new ConfigStore(configSnapshotFromReader, LoggerBase);
 				var service = Service.GetDefaultService(new EnvironmentConfigurationReader(), LoggerBase);
-				using (agents[i] = new ApmAgent(new TestAgentComponents(LoggerBase,
-					centralConfigFetcher: new CentralConfigFetcher(LoggerBase, configStore, service),
-					payloadSender: new PayloadSenderV2(LoggerBase, configSnapshotFromReader, service,
-						new SystemInfoHelper(LoggerBase).ParseSystemInfo(null), MockApmServerInfo.Version710))))
-				{
-					((CentralConfigFetcher)agents[i].CentralConfigFetcher).IsRunning.Should().BeTrue();
-					((PayloadSenderV2)agents[i].PayloadSender).IsRunning.Should().BeTrue();
-				}
+				var centralConfigFetcher = new CentralConfigFetcher(LoggerBase, configStore, service);
+				var payloadSender = new PayloadSenderV2(
+					LoggerBase,
+					configSnapshotFromReader,
+					service,
+					new SystemInfoHelper(LoggerBase).ParseSystemInfo(null),
+					MockApmServerInfo.Version710);
+
+				var components = new TestAgentComponents(LoggerBase, centralConfigFetcher: centralConfigFetcher, payloadSender: payloadSender);
+
+				agents[i] = new ApmAgent(components);
+
+				payloadSender.IsRunning.Should().BeTrue();
+				centralConfigFetcher.IsRunning.Should().BeTrue();
 			});
 
 			// Sleep a few seconds to let backend component to get to the stage where they contact APM Server

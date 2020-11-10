@@ -43,7 +43,7 @@ namespace Elastic.Apm.Tests
 				transaction = t;
 			});
 
-			var jsonString = SerializePayloadItem(transaction);
+			var jsonString = _payloadItemSerializer.Serialize(transaction);
 			jsonString.Should().Contain(GetAssertString(labelValue, labelName));
 		}
 
@@ -71,7 +71,7 @@ namespace Elastic.Apm.Tests
 				});
 			});
 
-			var jsonString = SerializePayloadItem(span);
+			var jsonString = _payloadItemSerializer.Serialize(span);
 			jsonString.Should().Contain(GetAssertString(labelValue, labelName));
 		}
 
@@ -123,10 +123,10 @@ namespace Elastic.Apm.Tests
 				t.Context.InternalLabels.Value.InnerDictionary["boolLabel"].Value.Should().Be(true);
 			});
 
-			var transactionJsonString = SerializePayloadItem(transaction);
+			var transactionJsonString = _payloadItemSerializer.Serialize(transaction);
 			transactionJsonString.Should().Contain("\"intLabel\":1,\"stringLabel\":\"abc\",\"boolLabel\":true");
 
-			var spanJsonString = SerializePayloadItem(span);
+			var spanJsonString = _payloadItemSerializer.Serialize(span);
 			spanJsonString.Should().Contain("\"intLabel\":1,\"stringLabel\":\"abc\",\"boolLabel\":true");
 		}
 
@@ -190,10 +190,10 @@ namespace Elastic.Apm.Tests
 				});
 			});
 
-			var transactionJsonString = SerializePayloadItem(transaction);
+			var transactionJsonString = _payloadItemSerializer.Serialize(transaction);
 			transactionJsonString.Should().Contain(GetAssertString("bar1", "foo1"));
 
-			var spanJsonString = SerializePayloadItem(span);
+			var spanJsonString = _payloadItemSerializer.Serialize(span);
 			spanJsonString.Should().Contain(GetAssertString("bar2", "foo2"));
 		}
 
@@ -245,7 +245,7 @@ namespace Elastic.Apm.Tests
 
 			transaction.End();
 
-			var spanJsonString = SerializePayloadItem(transaction);
+			var spanJsonString = _payloadItemSerializer.Serialize(transaction);
 			spanJsonString.Should().Contain(GetAssertString(42, "intItem"));
 			spanJsonString.Should().NotContain("foo");
 			spanJsonString.Should().NotContain("bar");
@@ -299,8 +299,5 @@ namespace Elastic.Apm.Tests
 
 			return serializedStrPattern;
 		}
-
-		private string SerializePayloadItem(object item) =>
-			_payloadItemSerializer.SerializeObject(item);
 	}
 }

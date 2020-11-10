@@ -27,21 +27,30 @@ namespace Elastic.Apm.Tests.Mocks
 			get
 			{
 				var timer = new Timer { Interval = 10000, Enabled = true };
-				timer.Elapsed += (a, b) =>
-				{
-					_transactionTaskCompletionSource.TrySetCanceled();
-					timer.Stop();
-				};
-				timer.Start();
 
 				try
 				{
-					_transactionTaskCompletionSource.Task.Wait();
-					return _transactionTaskCompletionSource.Task.Result;
+					timer.Elapsed += (a, b) =>
+					{
+						_transactionTaskCompletionSource.TrySetCanceled();
+						timer.Stop();
+					};
+
+					timer.Start();
+
+					try
+					{
+						_transactionTaskCompletionSource.Task.Wait();
+						return _transactionTaskCompletionSource.Task.Result;
+					}
+					catch
+					{
+						return new List<string>();
+					}
 				}
-				catch
+				finally
 				{
-					return new List<string>();
+					timer.Dispose();
 				}
 			}
 		}
