@@ -180,8 +180,8 @@ If this setting is set in both the web.config file and as an environment variabl
 <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
 A boolean specifying if the agent should be recording or not.
-When recording, the agent captures HTTP requests, tracks errors and collects and sends metrics.
-When not recording, the agent works as a noop, not collecting data and not communicating with the APM sever,
+When recording, the agent captures HTTP requests, tracks errors, and collects and sends metrics.
+When not recording, the agent works as a noop, not collecting data and not communicating with the APM server,
 except for polling the central configuration endpoint.
 As this is a reversible switch, agent threads are not being killed when inactivated, but they will be 
 mostly idle in this state, so the overhead should be negligible.
