@@ -150,6 +150,8 @@ namespace Elastic.Apm.Model
 			if (IsSampled && _activity != null && !ignoreActivity)
 				_activity.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
 
+			SampleRate = IsSampled ? sampler.Rate : 0;
+
 			SpanCount = new SpanCount();
 			_currentExecutionSegmentsContainer.CurrentTransaction = this;
 
@@ -274,6 +276,9 @@ namespace Elastic.Apm.Model
 		[MaxLength]
 		public string Result { get; set; }
 
+		[JsonProperty("sample_rate")]
+		internal double SampleRate { get; set; }
+
 		internal Service Service;
 
 		[JsonProperty("span_count")]
@@ -291,7 +296,7 @@ namespace Elastic.Apm.Model
 		[MaxLength]
 		public string Type { get; set; }
 
-		///<inheritdoc/>
+		/// <inheritdoc />
 		public void SetService(string serviceName, string serviceVersion)
 		{
 			if (Context.Service == null)
@@ -392,7 +397,9 @@ namespace Elastic.Apm.Model
 			return retVal;
 		}
 
-		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null, Dictionary<string, Label> labels = null)
+		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null,
+			Dictionary<string, Label> labels = null
+		)
 			=> ExecutionSegmentCommon.CaptureException(
 				exception,
 				_logger,
@@ -474,7 +481,7 @@ namespace Elastic.Apm.Model
 					? areaString + "/" + controllerString
 					: controllerString;
 
-				count = routeValues.TryGetValue("action", out var action) ? (count + 1) : count;
+				count = routeValues.TryGetValue("action", out var action) ? count + 1 : count;
 				var actionString = action == null ? string.Empty : action.ToString();
 
 				if (!string.IsNullOrEmpty(actionString)) name += "/" + actionString;

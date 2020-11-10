@@ -58,6 +58,45 @@ namespace Elastic.Apm.Tests
 
 		[Theory]
 		[MemberData(nameof(RateVariantsToTest))]
+		public void SampleRateShouldBeSetOnTransactionAndSpan(double rate)
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			using var agent =
+				new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender,
+					config: new MockConfigSnapshot(transactionSampleRate: rate.ToString(CultureInfo.InvariantCulture))));
+			agent.Tracer.CaptureTransaction("TestTransaction", "test", t =>
+			{
+				var transaction = t as Transaction;
+				transaction.Should().NotBeNull();
+
+				if (transaction!.IsSampled)
+					transaction.SampleRate.Should().Be(rate);
+				else
+					transaction.SampleRate.Should().Be(0);
+
+				t.CaptureSpan("TestSpan", "Test", s =>
+				{
+					var span = s as Span;
+					span.Should().NotBeNull();
+
+					if (span!.IsSampled)
+						span.SampleRate.Should().Be(rate);
+					else
+						span.SampleRate.Should().Be(0);
+				});
+			});
+
+			if (mockPayloadSender.FirstTransaction.IsSampled)
+			{
+				mockPayloadSender.FirstTransaction.SampleRate.Should().Be(rate);
+				mockPayloadSender.FirstSpan.SampleRate.Should().Be(rate);
+			}
+			else
+				mockPayloadSender.FirstTransaction.SampleRate.Should().Be(0);
+		}
+
+		[Theory]
+		[MemberData(nameof(RateVariantsToTest))]
 		public void DistributionShouldBeUniform(double rate)
 		{
 			const int total = 1_000_000;

@@ -19,6 +19,9 @@ namespace Elastic.Apm.Model
 {
 	internal class Span : ISpan
 	{
+		[JsonProperty("sample_rate")]
+		internal readonly double SampleRate;
+
 		private readonly Lazy<SpanContext> _context = new Lazy<SpanContext>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly Transaction _enclosingTransaction;
@@ -79,6 +82,7 @@ namespace Elastic.Apm.Model
 
 			if (IsSampled)
 			{
+				SampleRate = enclosingTransaction.SampleRate;
 				// Started and dropped spans should be counted only for sampled transactions
 				if (enclosingTransaction.SpanCount.IncrementTotal() > ConfigSnapshot.TransactionMaxSpans
 					&& ConfigSnapshot.TransactionMaxSpans >= 0)
@@ -94,6 +98,8 @@ namespace Elastic.Apm.Model
 						_stackFrames = new EnhancedStackTrace(new StackTrace(true)).GetFrames();
 				}
 			}
+			else
+				SampleRate = 0;
 
 			_currentExecutionSegmentsContainer.CurrentSpan = this;
 
@@ -209,7 +215,7 @@ namespace Elastic.Apm.Model
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
 		{
-			if(ConfigSnapshot.Enabled && ConfigSnapshot.Recording)
+			if (ConfigSnapshot.Enabled && ConfigSnapshot.Recording)
 				return StartSpanInternal(name, type, subType, action);
 
 			return new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId);
