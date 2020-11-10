@@ -56,7 +56,7 @@ This package contains https://www.nuget.org/packages/System.Data.SqlClient[Syste
 === .NET Core
 
 [float]
-==== Quickstart
+==== Quick start
 
 On .NET Core, the agent can be registered on the `IHostBuilder`. This applies to both ASP.NET Core and to other .NET Core applications that depend on `IHostBuilder`, like https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/hosted-services[background tasks]. In this case, you need to reference the https://www.nuget.org/packages/Elastic.Apm.NetCoreAll[`Elastic.Apm.NetCoreAll`] package.
 
@@ -160,7 +160,7 @@ With this setup the agent will be injected into the application during startup a
 === ASP.NET Core
 
 [float]
-==== Quickstart
+==== Quick start
 
 We suggest using the approach described in the <<setup-dotnet-net-core, .NET Core setup instructions>>. We keep the `IApplicationBuilder` introduced here only for backwards compatibility.
 
@@ -205,7 +205,7 @@ In case you only want to use the <<public-api>>, you don't need to do any initia
 === ASP.NET
 
 [float]
-==== Quickstart
+==== Quick start
 
 For ASP.NET (Full .NET Framework), once you've referenced the https://www.nuget.org/packages/Elastic.Apm.AspNetFullFramework[`Elastic.Apm.AspNetFullFramework`] package,
 you can enable auto instrumentation by including the `ElasticApmModule` IIS Module in your application's `web.config`:
@@ -245,7 +245,7 @@ You can also configure the agent using `web.config` as described at <<configurat
 === Entity Framework 6
 
 [float]
-==== Quickstart
+==== Quick start
 
 You can enable auto instrumentation for Entity Framework 6 by referencing the https://www.nuget.org/packages/Elastic.Apm.EntityFramework6[`Elastic.Apm.EntityFramework6`] package
 and including the `Ef6Interceptor` interceptor in your application's `web.config`:
@@ -277,7 +277,7 @@ For example, if you add `Ef6Interceptor` interceptor twice, you'll see two spans
 === SqlClient
 
 [float]
-==== Quickstart
+==== Quick start
 
 You can enable auto instrumentation for `System.Data.SqlClient` or `Microsoft.Data.SqlClient` by referencing https://www.nuget.org/packages/Elastic.Apm.SqlClient[`Elastic.Apm.SqlClient`] package
 and passing `SqlClientDiagnosticSubscriber` to the `UseElasticApm` method in case of ASP.NET Core as it shown in example:
