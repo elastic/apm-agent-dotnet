@@ -757,7 +757,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task HttpCallWithW3CActivityFormar()
 		{
-			Activity.DefaultIdFormat = ActivityIdFormat.Hierarchical;
+			Activity.DefaultIdFormat = ActivityIdFormat.W3C;
 
 			var mockPayloadSender = new MockPayloadSender();
 			using var localServer = new LocalServer();
