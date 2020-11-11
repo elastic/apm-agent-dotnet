@@ -61,12 +61,16 @@ namespace Elastic.Apm.Cloud
 					metadata = serializer.Deserialize<JObject>(jsonReader);
 				}
 
-				var availabilityZone = Path.GetFileName(metadata["instance"]["zone"].Value<string>());
+				var zoneParts = metadata["instance"]["zone"].Value<string>().Split('/');
+				var availabilityZone = zoneParts[zoneParts.Length - 1];
 
 				var lastHyphen = availabilityZone.LastIndexOf('-');
 				var region = lastHyphen > -1
 					? availabilityZone.Substring(0, lastHyphen)
 					: availabilityZone;
+
+				var machineTypeParts = metadata["instance"]["machineType"].Value<string>().Split('/');
+				var machineType = machineTypeParts[machineTypeParts.Length - 1];
 
 				return new Api.Cloud
 				{
@@ -82,7 +86,7 @@ namespace Elastic.Apm.Cloud
 						Name = metadata["project"]["projectId"].Value<string>()
 					},
 					AvailabilityZone = availabilityZone,
-					Machine = new CloudMachine { Type = metadata["instance"]["machineType"].Value<string>() },
+					Machine = new CloudMachine { Type = machineType },
 					Provider = Provider,
 					Region = region
 				};
