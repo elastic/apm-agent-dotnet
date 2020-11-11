@@ -226,7 +226,7 @@ namespace Elastic.Apm.Tests
 			var payloadSender = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, config: new EnvironmentConfigurationReader())))
 			{
-#if !NETCOREAPP3_0 && !NETCOREAPP3_1
+#if !NETCOREAPP3_0 && !NETCOREAPP3_1 && !NET5_0
 				agent.ConfigurationReader.ServerUrls.First().Should().NotBe(serverUrlsWithSpace);
 #endif
 				agent.ConfigurationReader.ServerUrls.First().Should().Be("http://myServer:1234");
