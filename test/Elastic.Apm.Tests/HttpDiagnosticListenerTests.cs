@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
@@ -751,6 +752,31 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.FirstSpan.StackTrace.Should().NotBeNull();
 			payloadSender.FirstSpan.StackTrace.Should().Contain(n => n.Function.Contains(nameof(CallStackContainsCallerMethod)));
+		}
+
+		[Fact]
+		public async Task HttpCallWithW3CActivityFormar()
+		{
+			Activity.DefaultIdFormat = ActivityIdFormat.Hierarchical;
+
+			var mockPayloadSender = new MockPayloadSender();
+			using var localServer = new LocalServer();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
+			agent.Subscribe(new HttpDiagnosticsSubscriber());
+			await agent.Tracer.CaptureTransaction("Test", "Test", async () =>
+			{
+				var httpClient = new HttpClient();
+				try
+				{
+					await httpClient.GetAsync(localServer.Uri);
+				}
+				catch (Exception e)
+				{
+					//ignore - we don't care about the result
+				}
+			});
+
+			mockPayloadSender.Spans.Should().HaveCount(1);
 		}
 
 		internal static (IDisposable, MockPayloadSender, ApmAgent) RegisterListenerAndStartTransaction()

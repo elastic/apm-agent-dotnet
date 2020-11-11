@@ -292,8 +292,10 @@
     <PackageReference Include="System.Data.SQLite">
       <Version>1.0.112</Version>
     </PackageReference>
-    <PackageReference Include="System.Memory">
-      <Version>4.5.3</Version>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe">
+      <Version>5.0.0</Version>
     </PackageReference>
   </ItemGroup>
   <PropertyGroup Condition="'$(OS)' == 'WINDOWS_NT'">
