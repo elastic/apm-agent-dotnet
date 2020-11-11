@@ -110,13 +110,13 @@ namespace Elastic.Apm.Tests
 				t.Context.Response = new Response();
 
 				t.CaptureError("Test Error", "Test", new StackTrace().GetFrames());
-
-				mockPayloadSender.FirstError.Context.Request.Should().NotBeNull();
-				mockPayloadSender.FirstError.Context.Request.Headers.Should().BeNull();
-				mockPayloadSender.FirstError.Context.Response.Should().NotBeNull();
-				mockPayloadSender.FirstError.Context.Response.Headers.Should().BeNull();
-				mockPayloadSender.FirstError.Context.InternalLabels.Value.InnerDictionary.Should().BeEmpty();
 			});
+
+			mockPayloadSender.FirstError.Context.Request.Should().NotBeNull();
+			mockPayloadSender.FirstError.Context.Request.Headers.Should().BeNull();
+			mockPayloadSender.FirstError.Context.Response.Should().NotBeNull();
+			mockPayloadSender.FirstError.Context.Response.Headers.Should().BeNull();
+			mockPayloadSender.FirstError.Context.InternalLabels.Value.InnerDictionary.Should().BeEmpty();
 		}
 	}
 }
