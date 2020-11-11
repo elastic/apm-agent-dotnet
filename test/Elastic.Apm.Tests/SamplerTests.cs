@@ -157,6 +157,7 @@ namespace Elastic.Apm.Tests
 		{
 			var sampler = new Sampler(rate);
 			sampler.ToString().Should().Be($"Sampler{{ rate: {expectedRate.ToString(CultureInfo.InvariantCulture)} }}");
+			sampler.Rate.Should().Be(expectedRate);
 		}
 
 		[Theory]
