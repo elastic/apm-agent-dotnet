@@ -20,7 +20,7 @@ namespace Elastic.Apm.Api
 		private readonly IConfigSnapshotProvider _configProvider;
 		private readonly ScopedLogger _logger;
 		private readonly IPayloadSender _sender;
-		private readonly IServerInfo _serverInfo;
+		private readonly IApmServerInfo _apmServerInfo;
 		private readonly Service _service;
 
 		public Tracer(
@@ -29,7 +29,7 @@ namespace Elastic.Apm.Api
 			IPayloadSender payloadSender,
 			IConfigSnapshotProvider configProvider,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
-			IServerInfo serverInfo
+			IApmServerInfo apmServerInfo
 		)
 		{
 			_logger = logger?.Scoped(nameof(Tracer));
@@ -38,7 +38,7 @@ namespace Elastic.Apm.Api
 			_configProvider = configProvider.ThrowIfArgumentNull(nameof(configProvider));
 			CurrentExecutionSegmentsContainer = currentExecutionSegmentsContainer.ThrowIfArgumentNull(nameof(currentExecutionSegmentsContainer));
 			DbSpanCommon = new DbSpanCommon(logger);
-			_serverInfo = serverInfo;
+			_apmServerInfo = apmServerInfo;
 		}
 
 		internal ICurrentExecutionSegmentsContainer CurrentExecutionSegmentsContainer { get; }
@@ -65,7 +65,7 @@ namespace Elastic.Apm.Api
 		{
 			var currentConfig = _configProvider.CurrentSnapshot;
 			var retVal = new Transaction(_logger, name, type, new Sampler(currentConfig.TransactionSampleRate), distributedTracingData
-				, _sender, currentConfig, CurrentExecutionSegmentsContainer, _serverInfo, ignoreActivity) { Service = _service };
+				, _sender, currentConfig, CurrentExecutionSegmentsContainer, _apmServerInfo, ignoreActivity) { Service = _service };
 
 			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);
 			return retVal;

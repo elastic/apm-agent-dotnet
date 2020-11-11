@@ -27,7 +27,7 @@ namespace Elastic.Apm.Model
 
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
-		private readonly IServerInfo _serverInfo;
+		private readonly IApmServerInfo _apmServerInfo;
 
 		private readonly string _traceState;
 
@@ -67,7 +67,7 @@ namespace Elastic.Apm.Model
 		/// <param name="configSnapshot">The current configuration snapshot which contains the up-do-date config setting values</param>
 		/// <param name="currentExecutionSegmentsContainer" />
 		/// The ExecutionSegmentsContainer which makes sure this transaction flows
-		/// <param name="serverInfo">Component to fetch info about APM Server (e.g. APM Server version)</param>
+		/// <param name="apmServerInfo">Component to fetch info about APM Server (e.g. APM Server version)</param>
 		/// <param name="ignoreActivity">
 		/// If set the transaction will ignore Activity.Current and it's trace id,
 		/// otherwise the agent will try to keep ids in-sync across async work-flows
@@ -81,7 +81,7 @@ namespace Elastic.Apm.Model
 			IPayloadSender sender,
 			IConfigSnapshot configSnapshot,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
-			IServerInfo serverInfo,
+			IApmServerInfo apmServerInfo,
 			bool ignoreActivity = false
 		)
 		{
@@ -89,7 +89,7 @@ namespace Elastic.Apm.Model
 			Timestamp = TimeUtils.TimestampNow();
 
 			_logger = logger?.Scoped($"{nameof(Transaction)}");
-			_serverInfo = serverInfo;
+			_apmServerInfo = apmServerInfo;
 
 			_sender = sender;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
@@ -394,7 +394,7 @@ namespace Elastic.Apm.Model
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false
 		)
 		{
-			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, _serverInfo,
+			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, _apmServerInfo,
 				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
@@ -415,7 +415,7 @@ namespace Elastic.Apm.Model
 				this,
 				ConfigSnapshot,
 				this,
-				_serverInfo,
+				_apmServerInfo,
 				culprit,
 				isHandled,
 				parentId,
@@ -432,7 +432,7 @@ namespace Elastic.Apm.Model
 				this,
 				ConfigSnapshot,
 				this,
-				_serverInfo,
+				_apmServerInfo,
 				parentId,
 				labels
 			);

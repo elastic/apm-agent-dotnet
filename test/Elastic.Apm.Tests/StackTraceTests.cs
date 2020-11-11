@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.Model;
+using Elastic.Apm.ServerInfo;
 using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
@@ -200,7 +201,7 @@ namespace Elastic.Apm.Tests
 
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, serverInfo: new MockServerInfo(new Version(7, 5)))))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: new MockApmServerInfo(new ElasticVersion(7, 5, 0, null)))))
 				Assert.Throws<Exception>(() => { agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => { testClass.JustThrow(); }); });
 
 			payloadSender.Errors.First().Should().NotBeNull();

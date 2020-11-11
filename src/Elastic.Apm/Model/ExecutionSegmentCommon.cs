@@ -154,7 +154,7 @@ namespace Elastic.Apm.Model
 			IExecutionSegment executionSegment,
 			IConfigurationReader configurationReader,
 			Transaction transaction,
-			IServerInfo serverInfo,
+			IApmServerInfo apmServerInfo,
 			string culprit = null,
 			bool isHandled = false,
 			string parentId = null,
@@ -166,7 +166,7 @@ namespace Elastic.Apm.Model
 			var capturedException = new CapturedException { Message = exception.Message, Type = exception.GetType().FullName, Handled = isHandled };
 
 			capturedException.StackTrace = StacktraceHelper.GenerateApmStackTrace(exception, logger,
-				$"{nameof(Transaction)}.{nameof(CaptureException)}", configurationReader, serverInfo);
+				$"{nameof(Transaction)}.{nameof(CaptureException)}", configurationReader, apmServerInfo);
 
 			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger, labels)
 			{
@@ -230,7 +230,7 @@ namespace Elastic.Apm.Model
 			IExecutionSegment executionSegment,
 			IConfigurationReader configurationReader,
 			Transaction transaction,
-			IServerInfo serverInfo,
+			IApmServerInfo apmServerInfo,
 			string parentId = null,
 			Dictionary<string, Label> labels = null
 		)
@@ -242,7 +242,7 @@ namespace Elastic.Apm.Model
 			if (frames != null)
 			{
 				capturedException.StackTrace
-					= StacktraceHelper.GenerateApmStackTrace(frames, logger, configurationReader, serverInfo, "failed capturing stacktrace");
+					= StacktraceHelper.GenerateApmStackTrace(frames, logger, configurationReader, apmServerInfo, "failed capturing stacktrace");
 			}
 
 			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger, labels)

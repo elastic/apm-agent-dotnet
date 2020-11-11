@@ -64,7 +64,7 @@ namespace Elastic.Apm.Model
 			IPayloadSender payloadSender,
 			IApmLogger logger,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
-			IServerInfo serverInfo,
+			IApmServerInfo apmServerInfo,
 			Span parentSpan = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None,
 			bool captureStackTraceOnStart = false
@@ -79,7 +79,7 @@ namespace Elastic.Apm.Model
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
 			_parentSpan = parentSpan;
 			_enclosingTransaction = enclosingTransaction;
-			_serverInfo = serverInfo;
+			_apmServerInfo = apmServerInfo;
 			Name = name;
 			Type = type;
 
@@ -127,7 +127,7 @@ namespace Elastic.Apm.Model
 		}
 
 		private bool _isEnded;
-		private readonly IServerInfo _serverInfo;
+		private readonly IApmServerInfo _apmServerInfo;
 
 		[MaxLength]
 		public string Action { get; set; }
@@ -245,7 +245,7 @@ namespace Elastic.Apm.Model
 		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer,
-				_serverInfo, this,
+				_apmServerInfo, this,
 				instrumentationFlag, captureStackTraceOnStart);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
@@ -320,13 +320,13 @@ namespace Elastic.Apm.Model
 
 							StackTrace = StacktraceHelper.GenerateApmStackTrace(trace,
 								_logger,
-								ConfigSnapshot, _serverInfo, $"Span `{Name}'");
+								ConfigSnapshot, _apmServerInfo, $"Span `{Name}'");
 						}
 						else
 						{
 							StackTrace = StacktraceHelper.GenerateApmStackTrace(_stackFrames,
 								_logger,
-								ConfigSnapshot, _serverInfo, $"Span `{Name}'");
+								ConfigSnapshot, _apmServerInfo, $"Span `{Name}'");
 						}
 					}
 				}
@@ -347,7 +347,7 @@ namespace Elastic.Apm.Model
 				this,
 				ConfigSnapshot,
 				_enclosingTransaction,
-				_serverInfo,
+				_apmServerInfo,
 				culprit,
 				isHandled,
 				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id),
@@ -388,7 +388,7 @@ namespace Elastic.Apm.Model
 				this,
 				ConfigSnapshot,
 				_enclosingTransaction,
-				_serverInfo,
+				_apmServerInfo,
 				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id),
 				labels
 			);

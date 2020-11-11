@@ -37,7 +37,10 @@ namespace Elastic.Apm.Report
 		internal readonly Api.System System;
 
 		internal readonly List<Func<ITransaction, ITransaction>> TransactionFilters = new List<Func<ITransaction, ITransaction>>();
+
+		private readonly IApmServerInfo _apmServerInfo;
 		private readonly CloudMetadataProviderCollection _cloudMetadataProviderCollection;
+		private readonly IConfigSnapshot _configSnapshot;
 
 		private readonly BatchBlock<object> _eventQueue;
 
@@ -50,14 +53,12 @@ namespace Elastic.Apm.Report
 
 		private readonly PayloadItemSerializer _payloadItemSerializer;
 
-		private readonly IServerInfo _serverInfo;
-
 		public PayloadSenderV2(
 			IApmLogger logger,
 			IConfigSnapshot config,
 			Service service,
 			Api.System system,
-			IServerInfo serverInfo,
+			IApmServerInfo apmServerInfo,
 			HttpMessageHandler httpMessageHandler = null,
 			string dbgName = null,
 			bool isEnabled = true
@@ -69,13 +70,14 @@ namespace Elastic.Apm.Report
 
 			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
 			_payloadItemSerializer = new PayloadItemSerializer(config);
+			_configSnapshot = config;
 
 			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(config.ServerUrls.First());
 
 			System = system;
 
 			_cloudMetadataProviderCollection = new CloudMetadataProviderCollection(config.CloudProvider, _logger);
-			_serverInfo = serverInfo;
+			_apmServerInfo = apmServerInfo;
 			_metadata = new Metadata { Service = service, System = System };
 			foreach (var globalLabelKeyValue in config.GlobalLabels) _metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
 
@@ -112,6 +114,7 @@ namespace Elastic.Apm.Report
 		private string _cachedMetadataJsonLine;
 
 		private long _eventQueueCount;
+		private bool _getApmServerVersion;
 		private bool _getCloudMetadata;
 
 		public void QueueTransaction(ITransaction transaction) => EnqueueEvent(transaction, "Transaction");
@@ -178,7 +181,11 @@ namespace Elastic.Apm.Report
 				_getCloudMetadata = true;
 			}
 
-			if (!_serverInfo.ServerVersionQueried) await _serverInfo.GetServerInfoAsync().ConfigureAwait(false);
+			if (!_getApmServerVersion)
+			{
+				await ApmServerInfoProvider.FillApmServerInfo(_apmServerInfo, _logger, _configSnapshot, HttpClientInstance).ConfigureAwait(false);
+				_getApmServerVersion = true;
+			}
 
 			await ProcessQueueItems(await ReceiveBatchAsync());
 		}

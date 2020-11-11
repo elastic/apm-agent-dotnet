@@ -29,7 +29,7 @@ namespace Elastic.Apm
 			IMetricsCollector metricsCollector,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
 			ICentralConfigFetcher centralConfigFetcher,
-			IServerInfo serverInfo
+			IApmServerInfo apmServerInfo
 		)
 		{
 			var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
@@ -42,10 +42,10 @@ namespace Elastic.Apm
 
 			ConfigStore = new ConfigStore(new ConfigSnapshotFromReader(ConfigurationReader, "local"), Logger);
 
-			ServerInfo = serverInfo ?? new ServerInfo.ServerInfo(ConfigStore.CurrentSnapshot, Logger);
+			ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
 
 			PayloadSender = payloadSender
-				?? new PayloadSenderV2(Logger, ConfigStore.CurrentSnapshot, Service, system, ServerInfo, isEnabled: ConfigurationReader.Enabled);
+				?? new PayloadSenderV2(Logger, ConfigStore.CurrentSnapshot, Service, system, ApmServerInfo, isEnabled: ConfigurationReader.Enabled);
 
 			if (ConfigurationReader.Enabled)
 			{
@@ -55,7 +55,7 @@ namespace Elastic.Apm
 			}
 
 			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigStore,
-				currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ServerInfo);
+				currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo);
 
 			if (!ConfigurationReader.Enabled)
 				Logger?.Info()?.Log("The Elastic APM .NET Agent is disabled - the agent won't capture traces and metrics.");
@@ -73,7 +73,7 @@ namespace Elastic.Apm
 
 		public IPayloadSender PayloadSender { get; }
 
-		internal IServerInfo ServerInfo { get; }
+		internal IApmServerInfo ApmServerInfo { get; }
 
 		/// <summary>
 		/// Identifies the monitored service. If this remains unset the agent
