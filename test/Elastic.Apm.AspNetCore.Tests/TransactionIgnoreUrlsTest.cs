@@ -9,10 +9,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
 using Xunit;
 
-#if NETCOREAPP3_0 || NETCOREAPP3_1
-using System;
-#endif
-
 namespace Elastic.Apm.AspNetCore.Tests
 {
 	[Collection("DiagnosticListenerTest")]
