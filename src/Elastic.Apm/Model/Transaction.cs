@@ -280,7 +280,7 @@ namespace Elastic.Apm.Model
 		/// Captures the sample rate of the agent when this transaction was created.
 		/// </summary>
 		[JsonProperty("sample_rate")]
-		internal double SampleRate { get; set; }
+		internal double SampleRate { get; }
 
 		internal Service Service;
 

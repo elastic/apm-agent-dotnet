@@ -42,7 +42,7 @@ namespace Elastic.Apm.Model
 		/// Captures the sample rate of the agent when this span was created.
 		/// </summary>
 		[JsonProperty("sample_rate")]
-		internal readonly double SampleRate;
+		internal double SampleRate { get; }
 
 		// This constructor is meant for deserialization
 		[JsonConstructor]
