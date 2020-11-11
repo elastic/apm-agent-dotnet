@@ -333,6 +333,11 @@ namespace Elastic.Apm.Model
 			{ nameof(IsSampled), IsSampled }
 		}.ToString();
 
+		/// <summary>
+		/// When the transaction has ended and before being queued to send to APM server
+		/// </summary>
+		public event EventHandler Ended;
+
 		public void End()
 		{
 			if (Duration.HasValue)
@@ -364,6 +369,9 @@ namespace Elastic.Apm.Model
 			var isFirstEndCall = !_isEnded;
 			_isEnded = true;
 			if (!isFirstEndCall) return;
+
+			var handler = Ended;
+			handler?.Invoke(this, EventArgs.Empty);
 
 			_sender.QueueTransaction(this);
 			_currentExecutionSegmentsContainer.CurrentTransaction = null;

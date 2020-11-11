@@ -175,7 +175,7 @@ namespace Elastic.Apm.Model
 		/// <summary>
 		/// Recorded time of the event, UTC based and formatted as microseconds since Unix epoch
 		/// </summary>
-		public long Timestamp { get; }
+		public long Timestamp { get; internal set; }
 
 		[MaxLength]
 		[JsonProperty("trace_id")]

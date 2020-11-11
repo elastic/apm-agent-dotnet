@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+      <RootNamespace>Elastic.Apm.StackExchange.Redis</RootNamespace>
+      <AssemblyName>Elastic.Apm.StackExchange.Redis</AssemblyName>
+      <PackageId>Elastic.Apm.StackExchange.Redis</PackageId>
+      <Description>Elastic APM for StackExchange.Redis. This package contains instrumentation for StackExchange.Redis Redis client. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
+      <PackageTags>apm, monitoring, elastic, elasticapm, analytics, redis, stackExchange.redis</PackageTags>
+      <TargetFramework>netstandard2.0</TargetFramework>
+    </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="StackExchange.Redis" Version="[2.0.495,3.0)" />
+  </ItemGroup>
+
+</Project>
