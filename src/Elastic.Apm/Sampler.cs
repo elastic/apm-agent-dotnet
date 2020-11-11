@@ -20,7 +20,8 @@ namespace Elastic.Apm
 	{
 		private readonly long _higherBound;
 		private readonly long _lowerBound;
-		private readonly double _rate;
+
+		public double Rate { get; }
 
 		/// <summary>
 		/// Constructs a new Sampler
@@ -33,8 +34,8 @@ namespace Elastic.Apm
 			if (!IsValidRate(rate))
 				throw new ArgumentOutOfRangeException($"Invalid rate: {rate} - it must be between 0 and 1, inclusive");
 
-			_rate = RoundToPrecision(rate);
-			switch (_rate)
+			Rate = RoundToPrecision(rate);
+			switch (Rate)
 			{
 				case 0:
 					Constant = false;
@@ -47,7 +48,7 @@ namespace Elastic.Apm
 					_lowerBound = long.MinValue;
 					break;
 				default:
-					_higherBound = (long) (long.MaxValue * rate);
+					_higherBound = (long)(long.MaxValue * rate);
 					_lowerBound = -_higherBound;
 					Constant = null;
 					break;
@@ -55,12 +56,14 @@ namespace Elastic.Apm
 		}
 
 		/// <summary>
-		/// Rounds the sampling rate half away from zero to 4 decimal places so that the maximum precision of the sampling rate is `0.0001` (0.01%).
+		/// Rounds the sampling rate half away from zero to 4 decimal places so that the maximum precision of the sampling rate is
+		/// `0.0001` (0.01%).
 		/// Values greater than 0 but less than 0.0001 are rounded to 0.0001
 		/// </summary>
 		/// <param name="rate">The rate</param>
 		/// <returns>The rounded rate</returns>
-		private static double RoundToPrecision(double rate) => rate > 0 && rate < 0.0001 ? 0.0001 : Math.Round(rate, 4, MidpointRounding.AwayFromZero);
+		private static double RoundToPrecision(double rate) =>
+			rate > 0 && rate < 0.0001 ? 0.0001 : Math.Round(rate, 4, MidpointRounding.AwayFromZero);
 
 		internal bool? Constant { get; }
 
@@ -87,7 +90,7 @@ namespace Elastic.Apm
 			if (Constant.HasValue)
 				retVal.Append($"constant: {Constant}");
 			else
-				retVal.Append($"rate: {_rate}");
+				retVal.Append($"rate: {Rate}");
 			retVal.Append(" }");
 			return retVal.ToString();
 		}

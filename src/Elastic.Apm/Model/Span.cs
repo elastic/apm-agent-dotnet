@@ -38,6 +38,12 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		private readonly StackFrame[] _stackFrames;
 
+		/// <summary>
+		/// Captures the sample rate of the agent when this span was created.
+		/// </summary>
+		[JsonProperty("sample_rate")]
+		internal double SampleRate { get; }
+
 		// This constructor is meant for deserialization
 		[JsonConstructor]
 		private Span(double duration, string id, string name, string parentId)
@@ -79,6 +85,7 @@ namespace Elastic.Apm.Model
 
 			if (IsSampled)
 			{
+				SampleRate = enclosingTransaction.SampleRate;
 				// Started and dropped spans should be counted only for sampled transactions
 				if (enclosingTransaction.SpanCount.IncrementTotal() > ConfigSnapshot.TransactionMaxSpans
 					&& ConfigSnapshot.TransactionMaxSpans >= 0)
@@ -94,6 +101,8 @@ namespace Elastic.Apm.Model
 						_stackFrames = new EnhancedStackTrace(new StackTrace(true)).GetFrames();
 				}
 			}
+			else
+				SampleRate = 0;
 
 			_currentExecutionSegmentsContainer.CurrentSpan = this;
 
@@ -209,7 +218,7 @@ namespace Elastic.Apm.Model
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
 		{
-			if(ConfigSnapshot.Enabled && ConfigSnapshot.Recording)
+			if (ConfigSnapshot.Enabled && ConfigSnapshot.Recording)
 				return StartSpanInternal(name, type, subType, action);
 
 			return new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId);
