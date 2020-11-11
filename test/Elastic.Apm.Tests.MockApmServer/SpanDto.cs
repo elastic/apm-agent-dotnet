@@ -26,6 +26,9 @@ namespace Elastic.Apm.Tests.MockApmServer
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
 
+		[JsonProperty("sample_rate")]
+		public string SampleRate { get; set; }
+
 		[JsonProperty("stacktrace")]
 		public List<CapturedStackFrame> StackTrace { get; set; }
 
