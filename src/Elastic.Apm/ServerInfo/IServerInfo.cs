@@ -14,7 +14,7 @@ namespace Elastic.Apm.ServerInfo
 	internal interface IServerInfo
 	{
 		/// <summary>
-		/// Indicates if the Server Info Endpoint whether queried.
+		/// Indicates if the Server Info Endpoint has been queried.
 		/// </summary>
 		public bool ServerVersionQueried { get; }
 

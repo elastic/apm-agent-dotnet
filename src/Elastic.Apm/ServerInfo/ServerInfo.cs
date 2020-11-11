@@ -63,11 +63,11 @@ namespace Elastic.Apm.ServerInfo
 					}
 				}
 				else
-					_logger.Warning()?.Log("Failed reading APM Server info, respnse from sever: {ResponseCode}", responseMessage.StatusCode);
+					_logger.Warning()?.Log("Failed reading APM server info, response from server: {ResponseCode}", responseMessage.StatusCode);
 			}
 			catch (Exception e)
 			{
-				_logger.Warning()?.LogException(e, "Failed reading APM Server info");
+				_logger.Warning()?.LogException(e, "Failed reading APM server info");
 			}
 			finally
 			{

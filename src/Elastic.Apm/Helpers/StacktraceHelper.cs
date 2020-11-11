@@ -84,8 +84,9 @@ namespace Elastic.Apm.Helpers
 						// FileName is either the .cs file or the assembly location as fallback
 						capturedStackFrame.FileName =
 							string.IsNullOrWhiteSpace(fileName)
-								? string.IsNullOrEmpty(frame?.GetMethod()?.GetType().Assembly.Location) ? "n/a" :
-								frame.GetMethod()?.GetType().Assembly.Location
+								? string.IsNullOrEmpty(frame?.GetMethod()?.GetType().Assembly.Location) 
+								    ? "n/a" 
+								    : frame.GetMethod()?.GetType().Assembly.Location
 								: fileName;
 
 						capturedStackFrame.ClassName = string.IsNullOrWhiteSpace(className) ? "N/A" : className;
