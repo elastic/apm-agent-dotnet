@@ -284,7 +284,7 @@ Packages can be found on https://www.nuget.org/packages?q=Elastic.apm[nuget.org]
 - Entity Framework Core auto instrumentation
 - https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=netstandard-2.0[HttpClient] auto instrumentation
 
-- <<public-api.html,Public Agent API>>
+- <<public-api,Public Agent API>>
 
 We shipped the following packages:
 
