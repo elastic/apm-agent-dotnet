@@ -31,8 +31,9 @@ namespace Elastic.Apm.Cloud
 				case SupportedValues.CloudProviderAzure:
 					Add(new AzureCloudMetadataProvider(logger));
 					break;
-				case SupportedValues.CloudProviderFalse:
+				case SupportedValues.CloudProviderNone:
 					break;
+				case SupportedValues.CloudProviderAuto:
 				case "":
 				case null:
 					// keyed collection is ordered

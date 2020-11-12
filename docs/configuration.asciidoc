@@ -688,7 +688,9 @@ This option supports the wildcard `*`, which matches zero or more characters. Ex
 
 Allows you to specify which cloud provider should be assumed for metadata collection. By default, the agent will attempt to detect the cloud provider and, if that fails, use trial and error to collect the metadata.
 
-Valid options are `"aws"`, `"gcp"`, `"azure"`, and `"false"`. If this config value is set to `"false"`, no cloud metadata will be collected.
+Valid options are `"auto"`, `"aws"`, `"gcp"`, `"azure"`, and `"none"`. If this config value is set to `"none"`, no cloud metadata will be collected. If set to any of
+`"aws"`, `"gcp"`, or `"azure"`, attempts to collect metadata will only be performed 
+from the chosen provider.
 
 [options="header"]
 |============
@@ -699,7 +701,7 @@ Valid options are `"aws"`, `"gcp"`, `"azure"`, and `"false"`. If this config val
 [options="header"]
 |============
 | Default | Type
-| `null`  | String
+| `auto`  | String
 |============
 
 [[config-http]]

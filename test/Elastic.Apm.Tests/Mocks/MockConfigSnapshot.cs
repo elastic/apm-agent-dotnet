@@ -80,8 +80,8 @@ namespace Elastic.Apm.Tests.Mocks
 			string excludedNamespaces = null,
 			string transactionIgnoreUrls = null,
 			string hostName = null,
-			// false is **not** the default value, but we don't want to query for cloud metadata in all tests
-			string cloudProvider = SupportedValues.CloudProviderFalse,
+			// none is **not** the default value, but we don't want to query for cloud metadata in all tests
+			string cloudProvider = SupportedValues.CloudProviderNone,
 			string enabled = null,
 			string recording = null
 		) : base(logger, ThisClassName)

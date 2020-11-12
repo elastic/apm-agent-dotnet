@@ -56,7 +56,7 @@ namespace Elastic.Apm.Cloud
 				}
 
 				JObject metadata;
-				using (var requestMessage = new HttpRequestMessage(HttpMethod.Put, MetadataUri))
+				using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, MetadataUri))
 				{
 					requestMessage.Headers.Add("X-aws-ec2-metadata-token", awsToken);
 					var responseMessage = await client.SendAsync(requestMessage).ConfigureAwait(false);

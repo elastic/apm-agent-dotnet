@@ -23,7 +23,7 @@ namespace Elastic.Apm.Config
 			public const string CaptureBodyContentTypes = "application/x-www-form-urlencoded*, text/*, application/json*, application/xml*";
 			public const bool CaptureHeaders = true;
 			public const bool CentralConfig = true;
-			public const string CloudProvider = "";
+			public const string CloudProvider = SupportedValues.CloudProviderAuto;
 			public const int FlushIntervalInMilliseconds = 10_000; // 10 seconds
 			public const int MaxBatchEventCount = 10;
 			public const int MaxQueueEventCount = 1000;
@@ -194,11 +194,12 @@ namespace Elastic.Apm.Config
 			public const string CloudProviderAws = AwsCloudMetadataProvider.Name;
 			public const string CloudProviderAzure = AzureCloudMetadataProvider.Name;
 			public const string CloudProviderGcp = GcpCloudMetadataProvider.Name;
-			public const string CloudProviderFalse = "false";
+			public const string CloudProviderNone = "none";
+			public const string CloudProviderAuto = "auto";
 
 			public static readonly HashSet<string> CloudProviders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 			{
-				CloudProviderAws, CloudProviderAzure, CloudProviderGcp, CloudProviderFalse
+				CloudProviderAuto, CloudProviderAws, CloudProviderAzure, CloudProviderGcp, CloudProviderNone
 			};
 		}
 	}
