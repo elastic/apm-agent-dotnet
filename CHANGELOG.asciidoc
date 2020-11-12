@@ -30,7 +30,7 @@ endif::[]
 - {pull}969[#969] gRPC support (issue: https://github.com/elastic/apm-agent-dotnet/issues/478[#478])
 - {pull}974[#974] Add ability to configure Hostname (issue: https://github.com/elastic/apm-agent-dotnet/issues/932[#932])
 - {pull}997[#997] Add Enabled and Recording configuration (issue: #122)
-- {pull}912[#912] Add `FullFrameworkConfigurationReaderType` config to load custom configuration reader on ASP.NET 
+- {pull}912[#912] Add `FullFrameworkConfigurationReaderType` config to load custom configuration reader on ASP.NET
 - {pull}978[#978] Capture User id and email on ASP.NET (issue: #540)
 - {pull}982[#982] Support boolean and numeric labels in addition to string labels  (issues: https://github.com/elastic/apm-agent-dotnet/issues/967[#967], https://github.com/elastic/apm-agent-dotnet/issues/788[#788], https://github.com/elastic/apm-agent-dotnet/issues/473[#473], https://github.com/elastic/apm-agent-dotnet/issues/192[#191], https://github.com/elastic/apm-agent-dotnet/issues/788[#788], https://github.com/elastic/apm-agent-dotnet/issues/473[#473], https://github.com/elastic/apm-agent-dotnet/issues/191[#191])
 - {pull}1000[#1000] Collecting metrics based on cGroup (issue: https://github.com/elastic/apm-agent-dotnet/issues/937[#937])
@@ -60,7 +60,7 @@ endif::[]
 ===== Features
 - Elasticsearch client instrumentation {pull}329[#329]
 - Introducing `Elastic.Apm.Extensions.Hosting` package with an extension method on `IHostBuilder` {pull}537[#537]
-- Stack trace improvements: async call stack demystification ({pull}847[#847]) and showing frames from user code for outgoing HTTP calls ({pull}845[#845]) 
+- Stack trace improvements: async call stack demystification ({pull}847[#847]) and showing frames from user code for outgoing HTTP calls ({pull}845[#845])
 - Making fields on `IError` public {pull}847[#847]
 - Service map improvements: {pull}893[#893]
 
@@ -127,7 +127,7 @@ endif::[]
 ===== Features
 - New GC metrics: `clr.gc.count`, `clr.gc.gen[X]size`, where [X]: heap generation {pull}697[#697]
 - Capturing SOAP action name as part of the transaction name {pull}683[#683]
-- New config options: `ServiceNodeName`, `VerifyServerCert`, `DisableMetrics`, `UseElasticTraceparentHeader` (https://www.elastic.co/guide/en/apm/agent/dotnet/current/config-all-options-summary.html[docs])
+- New config options: `ServiceNodeName`, `VerifyServerCert`, `DisableMetrics`, `UseElasticTraceparentHeader` (<<config-all-options-summary,docs>>)
 - Full https://www.w3.org/TR/trace-context[W3C TraceContext] support {pull}717[#717]
 
 
@@ -143,12 +143,12 @@ endif::[]
 [float]
 ===== Features
 
-- Entity framework support with Interceptor (https://www.elastic.co/guide/en/apm/agent/dotnet/1.x/setup.html#setup-ef6[docs])
-- Sanitization of HTTP headers and request body (https://www.elastic.co/guide/en/apm/agent/dotnet/1.x/config-core.html#config-sanitize-field-names[docs])
+- Entity framework support with Interceptor (<<setup-ef6,docs>>)
+- Sanitization of HTTP headers and request body (<<config-sanitize-field-names,docs>>)
 - Central configuration - 2 new configs: `CAPTURE_BODY` and `TRANSACTION_MAX_SPANS`. {pull}577[#577].
-- Support for global labels (https://www.elastic.co/guide/en/apm/agent/dotnet/1.x/config-core.html#config-global-labels[docs])
-- Custom context (https://www.elastic.co/guide/en/apm/agent/dotnet/1.x/public-api.html#api-transaction-context[docs])
-- Dropping support for ASP.NET Core 2.0 (which is already end of life) (https://www.elastic.co/guide/en/apm/agent/dotnet/1.x/supported-technologies.html#supported-web-frameworks[docs])
+- Support for global labels (<<config-global-labels,docs>>)
+- Custom context (<<api-transaction-context,docs>>)
+- Dropping support for ASP.NET Core 2.0 (which is already end of life) (<<supported-web-frameworks,docs>>)
 
 [float]
 ===== Bug fixes
@@ -203,7 +203,7 @@ Fixing missing "Date Modified" field on the files from the `1.1.0` packages caus
 
 - `NullReferenceException` on .NET Framework with outgoing HTTP calls created with `HttpClient` in case the response code is HTTP3xx {pull}450[#450]
 - Added missing `net461` target to the https://www.nuget.org/packages/Elastic.Apm/[`Elastic.Apm`] package
-- Handling https://www.elastic.co/guide/en/apm/agent/dotnet/current/public-api.html#api-transaction-tags[`Labels`] with `null` {pull}429[#429]
+- Handling <<api-transaction-tags,`Labels`>> with `null` {pull}429[#429]
 
 [float]
 ===== Features
@@ -219,15 +219,15 @@ The 1. GA release of the Elastic APM .NET Agent. Stabilization of the 1.0.0-beta
 [float]
 ===== Features
 
-- Out of the box integration with `ILoggerFactory` and the logging  infrastructure in ASP.NET Core {pull}249[#249] 
+- Out of the box integration with `ILoggerFactory` and the logging  infrastructure in ASP.NET Core {pull}249[#249]
 - Introduced `StackTraceLimit` and `SpanFramesMinDurationInMilliseconds` configs {pull}374[#374]
-- The Public Agent API now support `Elastic.Apm.Agent.Tracer.CurrentSpan` {pull}391[#391] 
+- The Public Agent API now support `Elastic.Apm.Agent.Tracer.CurrentSpan` {pull}391[#391]
 
 [float]
 ===== Bug fixes
 
-- Thread safety for some bookkeeping around spans {pull}394[#394] 
-- Auto instrumentation automatically creates sub-spans in case a span is already active {pull}391[#391] 
+- Thread safety for some bookkeeping around spans {pull}394[#394]
+- Auto instrumentation automatically creates sub-spans in case a span is already active {pull}391[#391]
 
 
 [float]
@@ -237,7 +237,7 @@ We have some breaking changes in this release. We wanted to do these changes pri
 
 - For better naming we replaced the `Elastic.Apm.All` packages with `Elastic.Apm.NetCoreAll`  {pull}371[#371]
 - Based on feedback we also renamed the `UseElasticApm()` method in the `Elastic.Apm.NetCoreAll` package to `UseAllElasticApm` - this method turns on every component of the Agent for ASP.NET Core. {pull}371[#371]
-- Our logger abstraction, specifically the `IApmLogger` interface changed: {pull}389[#389] 
+- Our logger abstraction, specifically the `IApmLogger` interface changed: {pull}389[#389]
 - To follow the https://www.elastic.co/guide/en/ecs/current/index.html[Elastic Common Schema (ECS)], we renamed our `Tags` properties to `Labels`. {pull}416[#416]
 
 [[release-notes-beta]]
@@ -250,7 +250,7 @@ We have some breaking changes in this release. We wanted to do these changes pri
 ===== Features
 
 - Distributed tracing support (based on W3C Trace Context)
-- Sampling 
+- Sampling
 - Metrics (Process and System CPU usage, Free and total Memory, Process working set and private bytes)
 - Capture Docker container id (linux containers only)
 
@@ -267,7 +267,7 @@ We have some breaking changes in this release. We wanted to do these changes pri
 [float]
 ===== Features
 
-- https://www.elastic.co/guide/en/apm/agent/dotnet/current/config-reporter.html#config-secret-token[`SecretToken` setting] - with this you can use the agent with Elastic Cloud.
+- <<config-secret-token,`SecretToken` setting>> - with this you can use the agent with Elastic Cloud.
 - Intake V2 protocol to server communication - support for APM Server 7.x
 - Extended public agent API: support for setting custom HTTP and Database related fields.
 - Improved logging.
@@ -282,9 +282,9 @@ Packages can be found on https://www.nuget.org/packages?q=Elastic.apm[nuget.org]
 
 - ASP.NET Core auto instrumentation
 - Entity Framework Core auto instrumentation
-- https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=netstandard-2.0[HttpClient] auto instrumentation 
+- https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient?view=netstandard-2.0[HttpClient] auto instrumentation
 
-- https://www.elastic.co/guide/en/apm/agent/dotnet/current/public-api.html[Public Agent API]
+- <<public-api,Public Agent API>>
 
 We shipped the following packages:
 
@@ -292,7 +292,7 @@ We shipped the following packages:
 In order to avoid adding unnecessary dependencies in applications that aren’t depending on the https://www.nuget.org/packages/Microsoft.AspNetCore.All[Microsoft.AspNetCore.All] package we also shipped some other packages - those are all referenced by the Elastic.Apm.All package.
 
 - Elastic.Apm: This is the core of the agent, which we didn’t name “Core”, because someone already took that name :) This package also contains the Public Agent API and it is a .NET Standard 2.0 package. We also ship every tracing component that traces things that are part of .NET Standard 2.0 in this package, which includes the monitoring part for HttpClient.
-Elastic.Apm.AspNetCore: This package contains ASP.NET Core monitoring related code. The main difference between this package and the Elastic.Apm.All package is that this package does not reference the 
+Elastic.Apm.AspNetCore: This package contains ASP.NET Core monitoring related code. The main difference between this package and the Elastic.Apm.All package is that this package does not reference the
 
 - Elastic.Apm.EntityFrameworkCore package, so if you have an ASP.NET Core application that does not use EF Core and you want to avoid adding additional unused references, you should use this package.
 
