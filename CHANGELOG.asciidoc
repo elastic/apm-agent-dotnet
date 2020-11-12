@@ -18,6 +18,8 @@ endif::[]
 ===== Bug fixes
 ////
 
+[[release-notes-1.x]]
+=== .NET Agent version 1.x
 
 [[release-notes-1.7.0]]
 ==== 1.7.0
@@ -43,10 +45,6 @@ endif::[]
 - {pull}992[#992] On ASP.NET Core `CurrentTransaction` is null in some cases (issues: https://github.com/elastic/apm-agent-dotnet/issues/934[#934], https://github.com/elastic/apm-agent-dotnet/issues/972[#972])
 - {pull}971[#971] Avoid double initialization in `HostBuilderExtensions`
 - {pull}999[#999] Capture body with large file error (issue: https://github.com/elastic/apm-agent-dotnet/issues/960[#960])
-
-[[release-notes-1.x]]
-=== .NET Agent version 1.x
-
 
 [[release-notes-1.6.1]]
 ==== 1.6.1
