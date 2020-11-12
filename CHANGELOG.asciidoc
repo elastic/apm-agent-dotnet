@@ -21,6 +21,30 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.7.0]]
+==== 1.7.0
+
+[float]
+===== Features
+- {pull}828[#828] Agent loading with zero code change on .NET Core (issue: https://github.com/elastic/apm-agent-dotnet/issues/71[#71])
+- {pull}969[#969] gRPC support (issue: https://github.com/elastic/apm-agent-dotnet/issues/478[#478])
+- {pull}974[#974] Add ability to configure Hostname (issue: https://github.com/elastic/apm-agent-dotnet/issues/932[#932])
+- {pull}997[#997] Add Enabled and Recording configuration (issue: #122)
+- {pull}912[#912] Add `FullFrameworkConfigurationReaderType` config to load custom configuration reader on ASP.NET 
+- {pull}978[#978] Capture User id and email on ASP.NET (issue: #540)
+- {pull}982[#982] Support boolean and numeric labels in addition to string labels  (issues: https://github.com/elastic/apm-agent-dotnet/issues/967[#967], https://github.com/elastic/apm-agent-dotnet/issues/788[#788], https://github.com/elastic/apm-agent-dotnet/issues/473[#473], https://github.com/elastic/apm-agent-dotnet/issues/192[#191], https://github.com/elastic/apm-agent-dotnet/issues/788[#788], https://github.com/elastic/apm-agent-dotnet/issues/473[#473], https://github.com/elastic/apm-agent-dotnet/issues/191[#191])
+- {pull}1000[#1000] Collecting metrics based on cGroup (issue: https://github.com/elastic/apm-agent-dotnet/issues/937[#937])
+- {pull}1002[#1002] `ITransaction.SetService` API to support multiple services in a single process (issue: https://github.com/elastic/apm-agent-dotnet/issues/1001[#1001])
+- {pull}1003[#1003] Collecting cloud metadata (supporting AWS, Azure,  GCP) (issue: https://github.com/elastic/apm-agent-dotnet/issues/918[#918])
+- {pull}973[#973] Transaction grouping on ASP.NET (issue: https://github.com/elastic/apm-agent-dotnet/issues/[#201])
+- {pull}913[#913] Entity Framework 6 support on .NET Core (issue: https://github.com/elastic/apm-agent-dotnet/issues/902[#902])
+
+
+[float]
+===== Bug fixes
+- {pull}992[#992] On ASP.NET Core `CurrentTransaction` is null in some cases (issues: https://github.com/elastic/apm-agent-dotnet/issues/934[#934], https://github.com/elastic/apm-agent-dotnet/issues/972[#972])
+- {pull}971[#971] Avoid double initialization in `HostBuilderExtensions`
+- {pull}999[#999] Capture body with large file error (issue: https://github.com/elastic/apm-agent-dotnet/issues/960[#960])
 
 [[release-notes-1.6.1]]
 ==== 1.6.1
