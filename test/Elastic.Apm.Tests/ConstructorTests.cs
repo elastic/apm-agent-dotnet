@@ -23,7 +23,7 @@ namespace Elastic.Apm.Tests
 		{
 			//build AgentComponents manually so we can disable metrics collection. reason: creating metrics collector pro test and disposing it makes test failing (ETW or EventSource subscribe unsubscribe in each test in parallel if all tests are running)
 			var agent = new ApmAgent(new AgentComponents(null, new LogConfig(LogLevel.Warning), null, null,
-				null, null));
+				null, null, null));
 			var logger = agent.Logger as ConsoleLogger;
 
 			logger.Should().NotBeNull();

@@ -12,6 +12,7 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
+using Elastic.Apm.ServerInfo;
 
 namespace Elastic.Apm.Model
 {
@@ -20,6 +21,8 @@ namespace Elastic.Apm.Model
 	/// </summary>
 	internal static class ExecutionSegmentCommon
 	{
+		private const string DefaultCulprit = "ElasticApm.UnknownCulprit";
+
 		internal static void CaptureSpan(ISpan span, Action<ISpan> capturedAction)
 		{
 			try
@@ -151,6 +154,7 @@ namespace Elastic.Apm.Model
 			IExecutionSegment executionSegment,
 			IConfigurationReader configurationReader,
 			Transaction transaction,
+			IApmServerInfo apmServerInfo,
 			string culprit = null,
 			bool isHandled = false,
 			string parentId = null,
@@ -162,15 +166,14 @@ namespace Elastic.Apm.Model
 			var capturedException = new CapturedException { Message = exception.Message, Type = exception.GetType().FullName, Handled = isHandled };
 
 			capturedException.StackTrace = StacktraceHelper.GenerateApmStackTrace(exception, logger,
-				$"{nameof(Transaction)}.{nameof(CaptureException)}", configurationReader);
+				$"{nameof(Transaction)}.{nameof(CaptureException)}", configurationReader, apmServerInfo);
 
 			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger, labels)
 			{
-				Culprit = capturedCulprit,
+				Culprit = capturedCulprit
 			});
 		}
 
-		private const string DefaultCulprit = "ElasticApm.UnknownCulprit";
 		private static string GetCulprit(Exception exception, IConfigurationReader configurationReader)
 		{
 			if (exception == null) return DefaultCulprit;
@@ -192,20 +195,28 @@ namespace Elastic.Apm.Model
 			return DefaultCulprit;
 		}
 
-		private static bool IsInApp(string fullyQualifiedTypeName, IReadOnlyCollection<string> excludedNamespaces, IReadOnlyCollection<string> applicationNamespaces)
+		private static bool IsInApp(string fullyQualifiedTypeName, IReadOnlyCollection<string> excludedNamespaces,
+			IReadOnlyCollection<string> applicationNamespaces
+		)
 		{
 			if (string.IsNullOrEmpty(fullyQualifiedTypeName)) return false;
 
 			if (applicationNamespaces.Count != 0)
 			{
 				foreach (var include in applicationNamespaces)
-					if (fullyQualifiedTypeName.StartsWith(include, StringComparison.Ordinal)) return true;
+				{
+					if (fullyQualifiedTypeName.StartsWith(include, StringComparison.Ordinal))
+						return true;
+				}
 
 				return false;
 			}
 
 			foreach (var exclude in excludedNamespaces)
-				if (fullyQualifiedTypeName.StartsWith(exclude, StringComparison.Ordinal)) return false;
+			{
+				if (fullyQualifiedTypeName.StartsWith(exclude, StringComparison.Ordinal))
+					return false;
+			}
 
 			return true;
 		}
@@ -219,6 +230,7 @@ namespace Elastic.Apm.Model
 			IExecutionSegment executionSegment,
 			IConfigurationReader configurationReader,
 			Transaction transaction,
+			IApmServerInfo apmServerInfo,
 			string parentId = null,
 			Dictionary<string, Label> labels = null
 		)
@@ -230,19 +242,21 @@ namespace Elastic.Apm.Model
 			if (frames != null)
 			{
 				capturedException.StackTrace
-					= StacktraceHelper.GenerateApmStackTrace(frames, logger, configurationReader, "failed capturing stacktrace");
+					= StacktraceHelper.GenerateApmStackTrace(frames, logger, configurationReader, apmServerInfo, "failed capturing stacktrace");
 			}
 
 			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger, labels)
 			{
-				Culprit = capturedCulprit,
+				Culprit = capturedCulprit
 			});
 		}
 
 		internal static IExecutionSegment GetCurrentExecutionSegment(IApmAgent agent) =>
 			agent.Tracer.CurrentSpan ?? (IExecutionSegment)agent.Tracer.CurrentTransaction;
 
-		internal static ISpan StartSpanOnCurrentExecutionSegment(IApmAgent agent, string spanName, string spanType, string subType = null, InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false)
+		internal static ISpan StartSpanOnCurrentExecutionSegment(IApmAgent agent, string spanName, string spanType, string subType = null,
+			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false
+		)
 		{
 			var currentExecutionSegment = GetCurrentExecutionSegment(agent);
 
@@ -251,8 +265,10 @@ namespace Elastic.Apm.Model
 
 			return currentExecutionSegment switch
 			{
-				Span span => span.StartSpanInternal(spanName, spanType, subType, instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart),
-				Transaction transaction => transaction.StartSpanInternal(spanName, spanType, subType, instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart),
+				Span span => span.StartSpanInternal(spanName, spanType, subType, instrumentationFlag: instrumentationFlag,
+					captureStackTraceOnStart: captureStackTraceOnStart),
+				Transaction transaction => transaction.StartSpanInternal(spanName, spanType, subType, instrumentationFlag: instrumentationFlag,
+					captureStackTraceOnStart: captureStackTraceOnStart),
 				ISpan iSpan => iSpan.StartSpan(spanName, spanType, subType),
 				ITransaction iTransaction => iTransaction.StartSpan(spanName, spanType, subType),
 				_ => null

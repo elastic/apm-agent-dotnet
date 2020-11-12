@@ -12,6 +12,7 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
+using Elastic.Apm.ServerInfo;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -63,6 +64,7 @@ namespace Elastic.Apm.Model
 			IPayloadSender payloadSender,
 			IApmLogger logger,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
+			IApmServerInfo apmServerInfo,
 			Span parentSpan = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None,
 			bool captureStackTraceOnStart = false
@@ -77,6 +79,7 @@ namespace Elastic.Apm.Model
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
 			_parentSpan = parentSpan;
 			_enclosingTransaction = enclosingTransaction;
+			_apmServerInfo = apmServerInfo;
 			Name = name;
 			Type = type;
 
@@ -98,7 +101,19 @@ namespace Elastic.Apm.Model
 					enclosingTransaction.SpanCount.IncrementStarted();
 
 					if (captureStackTraceOnStart)
-						_stackFrames = new EnhancedStackTrace(new StackTrace(true)).GetFrames();
+					{
+						var stackTrace = new StackTrace(true);
+						try
+						{
+							// I saw EnhancedStackTrace throwing exceptions in some environments
+							// therefore we try-catch and fall back to a non-demystified call stack.
+							_stackFrames = new EnhancedStackTrace(stackTrace).GetFrames();
+						}
+						catch
+						{
+							_stackFrames = stackTrace.GetFrames();
+						}
+					}
 				}
 			}
 			else
@@ -112,6 +127,7 @@ namespace Elastic.Apm.Model
 		}
 
 		private bool _isEnded;
+		private readonly IApmServerInfo _apmServerInfo;
 
 		[MaxLength]
 		public string Action { get; set; }
@@ -228,7 +244,8 @@ namespace Elastic.Apm.Model
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false
 		)
 		{
-			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer, this,
+			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer,
+				_apmServerInfo, this,
 				instrumentationFlag, captureStackTraceOnStart);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
@@ -286,9 +303,31 @@ namespace Elastic.Apm.Model
 					if (Duration >= ConfigSnapshot.SpanFramesMinDurationInMilliseconds
 						|| ConfigSnapshot.SpanFramesMinDurationInMilliseconds < 0)
 					{
-						StackTrace = StacktraceHelper.GenerateApmStackTrace(_stackFrames ?? new EnhancedStackTrace(new StackTrace(true)).GetFrames(),
-							_logger,
-							ConfigSnapshot, $"Span `{Name}'");
+						if (_stackFrames == null)
+						{
+							StackFrame[] trace;
+							var stackTrace = new StackTrace(true);
+							try
+							{
+								// I saw EnhancedStackTrace throwing exceptions in some environments
+								// therefore we try-catch and fall back to a non-demystified call stack.
+								trace = new EnhancedStackTrace(stackTrace).GetFrames();
+							}
+							catch
+							{
+								trace = stackTrace.GetFrames();
+							}
+
+							StackTrace = StacktraceHelper.GenerateApmStackTrace(trace,
+								_logger,
+								ConfigSnapshot, _apmServerInfo, $"Span `{Name}'");
+						}
+						else
+						{
+							StackTrace = StacktraceHelper.GenerateApmStackTrace(_stackFrames,
+								_logger,
+								ConfigSnapshot, _apmServerInfo, $"Span `{Name}'");
+						}
 					}
 				}
 
@@ -308,6 +347,7 @@ namespace Elastic.Apm.Model
 				this,
 				ConfigSnapshot,
 				_enclosingTransaction,
+				_apmServerInfo,
 				culprit,
 				isHandled,
 				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id),
@@ -348,6 +388,7 @@ namespace Elastic.Apm.Model
 				this,
 				ConfigSnapshot,
 				_enclosingTransaction,
+				_apmServerInfo,
 				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id),
 				labels
 			);
