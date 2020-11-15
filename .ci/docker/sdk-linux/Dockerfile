@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:5.0.100-rc.2
+FROM mcr.microsoft.com/dotnet/sdk:5.0
 
 ENV DOTNET_ROOT=/usr/share/dotnet
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${DOTNET_ROOT}/tools:${DOTNET_ROOT}
