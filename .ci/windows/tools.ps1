@@ -14,7 +14,7 @@ choco install dotnetcore-sdk -m -y --no-progress -r --version 2.2.104
 choco install dotnet-sdk -m -y --no-progress -r --version 5.0.100
 
 # Install NuGet Tool
-choco install nuget.commandline -y --no-progress -r --version 5.1.0
+choco install nuget.commandline -y --no-progress -r --version 5.8.0
 
 # Install vswhere
-choco install vswhere -y --no-progress -r --version 2.7.1
+choco install vswhere -y --no-progress -r --version 2.8.4
