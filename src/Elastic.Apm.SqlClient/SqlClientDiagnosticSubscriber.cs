@@ -18,7 +18,7 @@ namespace Elastic.Apm.SqlClient
 			if (!agentComponents.ConfigurationReader.Enabled)
 				return retVal;
 
-			if (PlatformDetection.IsDotNetCore)
+			if (PlatformDetection.IsDotNetCore || PlatformDetection.IsDotNet5)
 			{
 				var initializer = new DiagnosticInitializer(agentComponents.Logger, new[] { new SqlClientDiagnosticListener(agentComponents) });
 
