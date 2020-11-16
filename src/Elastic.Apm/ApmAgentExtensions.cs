@@ -27,7 +27,10 @@ namespace Elastic.Apm
 		public static IDisposable Subscribe(this IApmAgent agent, params IDiagnosticsSubscriber[] subscribers)
 		{
 			var subs = subscribers ?? Array.Empty<IDiagnosticsSubscriber>();
-			var retVal = subs.Aggregate(new CompositeDisposable(), (d, s) => d.Add(s.Subscribe(agent)));
+			
+			var retVal = subs.Aggregate(
+				(ICompositeDisposable)new CompositeDisposable(), 
+				(d, s) => d.Add(s.Subscribe(agent)));
 
 			if (agent is ApmAgent apmAgent)
 				apmAgent.Disposables.Add(retVal);
@@ -36,14 +39,29 @@ namespace Elastic.Apm
 		}
 	}
 
-	internal class CompositeDisposable : IDisposable
+	/// <summary>
+	/// A collection of <see cref="IDisposable"/> instances 
+	/// </summary>
+	public interface ICompositeDisposable : IDisposable
+	{
+		/// <summary>
+		/// Adds an instance of <see cref="IDisposable"/> to the collection
+		/// </summary>
+		/// <param name="disposable">A disposable</param>
+		/// <returns>This instance of <see cref="ICompositeDisposable"/></returns>
+		ICompositeDisposable Add(IDisposable disposable);
+	}
+
+	/// <inheritdoc />
+	internal class CompositeDisposable : ICompositeDisposable
 	{
 		private readonly List<IDisposable> _disposables = new List<IDisposable>();
 		private readonly object _lock = new object();
 
 		private bool _isDisposed;
 
-		public CompositeDisposable Add(IDisposable disposable)
+		/// <inheritdoc />
+		public ICompositeDisposable Add(IDisposable disposable)
 		{
 			if (_isDisposed) throw new ObjectDisposedException(nameof(CompositeDisposable));
 

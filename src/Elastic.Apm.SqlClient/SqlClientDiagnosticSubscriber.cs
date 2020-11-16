@@ -9,29 +9,28 @@ using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.SqlClient
 {
-	public class SqlClientDiagnosticSubscriber : IDiagnosticsSubscriber
+	/// <summary>
+	/// Subscribes to diagnostics events from System.Data.SqlClient and Microsoft.Data.SqlClient
+	/// </summary>
+	public class SqlClientDiagnosticSubscriber : DiagnosticsSubscriberBase
 	{
-		public IDisposable Subscribe(IApmAgent agentComponents)
+		/// <inheritdoc />
+		protected override IDisposable Subscribe(IApmAgent agentComponents, ICompositeDisposable disposable)
 		{
-			var retVal = new CompositeDisposable();
-
-			if (!agentComponents.ConfigurationReader.Enabled)
-				return retVal;
-
 			if (PlatformDetection.IsDotNetCore || PlatformDetection.IsDotNet5)
 			{
 				var initializer = new DiagnosticInitializer(agentComponents.Logger, new[] { new SqlClientDiagnosticListener(agentComponents) });
 
-				retVal.Add(initializer);
+				disposable.Add(initializer);
 
-				retVal.Add(DiagnosticListener
+				disposable.Add(DiagnosticListener
 					.AllListeners
 					.Subscribe(initializer));
 			}
 			else
-				retVal.Add(new SqlEventListener(agentComponents));
+				disposable.Add(new SqlEventListener(agentComponents));
 
-			return retVal;
+			return disposable;
 		}
 	}
 }
