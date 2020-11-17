@@ -7,6 +7,5 @@ nuget restore -verbosity detailed -NonInteractive
 
 rem TODO: Workaround for https://github.com/dotnet/sdk/issues/14497
 setx DOTNET_HOST_PATH "%ProgramFiles%\dotnet\dotnet.exe" /M
-rmdir /s /q "%ProgramFiles%\dotnet\sdk\NuGetFallbackFolder"
 
 msbuild
