@@ -112,6 +112,17 @@ namespace Elastic.Apm.Report
 		}
 		private bool _getApmServerVersion;
 		private bool _getCloudMetadata;
+		private static readonly UTF8Encoding Utf8Encoding;
+		private static readonly MediaTypeHeaderValue MediaTypeHeaderValue;
+
+		static PayloadSenderV2()
+		{
+			Utf8Encoding = new UTF8Encoding(false);
+			MediaTypeHeaderValue = new MediaTypeHeaderValue("application/x-ndjson")
+			{
+				CharSet = Utf8Encoding.WebName
+			};
+		}
 
 		public void QueueTransaction(ITransaction transaction) => EnqueueEvent(transaction, "Transaction");
 
@@ -255,7 +266,7 @@ namespace Elastic.Apm.Report
 			{
 				_cachedMetadataJsonLine ??= _payloadItemSerializer.Serialize(_metadata);
 
-				using (var writer = new StreamWriter(stream, new UTF8Encoding(false), 1024, true))
+				using (var writer = new StreamWriter(stream, Utf8Encoding, 1024, true))
 				{
 					writer.Write("{\"metadata\":");
 					writer.Write(_cachedMetadataJsonLine);
@@ -284,7 +295,7 @@ namespace Elastic.Apm.Report
 				stream.Position = 0;
 				using (var content = new StreamContent(stream))
 				{
-					content.Headers.ContentType = new MediaTypeHeaderValue("application/x-ndjson");
+					content.Headers.ContentType = MediaTypeHeaderValue;
 					var result = await HttpClientInstance.PostAsync(_intakeV2EventsAbsoluteUrl, content, CtsInstance.Token);
 
 					if (result != null && !result.IsSuccessStatusCode)
