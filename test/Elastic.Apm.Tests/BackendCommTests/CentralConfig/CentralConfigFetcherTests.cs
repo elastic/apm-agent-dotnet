@@ -70,10 +70,11 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 				var components = new TestAgentComponents(LoggerBase, centralConfigFetcher: centralConfigFetcher, payloadSender: payloadSender);
 
-				agents[i] = new ApmAgent(components);
-
-				payloadSender.IsRunning.Should().BeTrue();
-				centralConfigFetcher.IsRunning.Should().BeTrue();
+				using (agents[i] = new ApmAgent(components))
+				{
+					payloadSender.IsRunning.Should().BeTrue();
+					centralConfigFetcher.IsRunning.Should().BeTrue();
+				}
 			});
 
 			// Sleep a few seconds to let backend component to get to the stage where they contact APM Server
