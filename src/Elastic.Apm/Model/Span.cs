@@ -295,36 +295,6 @@ namespace Elastic.Apm.Model
 						|| ConfigSnapshot.SpanFramesMinDurationInMilliseconds < 0))
 					RawStackTrace = new StackTrace(true);
 
-				// if (Duration >= ConfigSnapshot.SpanFramesMinDurationInMilliseconds
-				// 	|| ConfigSnapshot.SpanFramesMinDurationInMilliseconds < 0)
-				// {
-				// 	if (StackFrames == null)
-				// 	{
-				// 		StackFrame[] trace;
-				// 		var stackTrace = new StackTrace(true);
-				// 		try
-				// 		{
-				// 			// I saw EnhancedStackTrace throwing exceptions in some environments
-				// 			// therefore we try-catch and fall back to a non-demystified call stack.
-				// 			trace = new EnhancedStackTrace(stackTrace).GetFrames();
-				// 		}
-				// 		catch
-				// 		{
-				// 			trace = stackTrace.GetFrames();
-				// 		}
-				//
-				// 		StackTrace = StacktraceHelper.GenerateApmStackTrace(trace,
-				// 			_logger,
-				// 			ConfigSnapshot, _apmServerInfo, $"Span `{Name}'");
-				// 	}
-				// 	else
-				// 	{
-				// 		StackTrace = StacktraceHelper.GenerateApmStackTrace(StackFrames,
-				// 			_logger,
-				// 			ConfigSnapshot, _apmServerInfo, $"Span `{Name}'");
-				// 	}
-				// }
-
 				_payloadSender.QueueSpan(this);
 			}
 
