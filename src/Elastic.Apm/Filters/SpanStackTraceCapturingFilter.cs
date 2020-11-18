@@ -27,32 +27,28 @@ namespace Elastic.Apm.Filters
 			(_logger, _apmServerInfo) = (logger, apmServerInfo);
 
 		public ISpan Filter(ISpan iSpan)
-
 		{
-			if (iSpan is Span span)
+			if (!(iSpan is Span span)) return iSpan;
+
+			if (span.RawStackTrace == null) return span;
+
+			StackFrame[] trace;
+			try
 			{
-				if (span.RawStackTrace != null)
-				{
-					StackFrame[] trace;
-					try
-					{
-						// I saw EnhancedStackTrace throwing exceptions in some environments
-						// therefore we try-catch and fall back to a non-demystified call stack.
-						trace = new EnhancedStackTrace(span.RawStackTrace).GetFrames();
-					}
-					catch
-					{
-						trace = span.RawStackTrace.GetFrames();
-					}
-
-					span.StackTrace = StacktraceHelper.GenerateApmStackTrace(trace,
-						_logger,
-						span.ConfigSnapshot, _apmServerInfo, $"Span `{span.Name}'");
-				}
-
-				return span;
+				// I saw EnhancedStackTrace throwing exceptions in some environments
+				// therefore we try-catch and fall back to a non-demystified call stack.
+				trace = new EnhancedStackTrace(span.RawStackTrace).GetFrames();
 			}
-			return iSpan;
+			catch
+			{
+				trace = span.RawStackTrace.GetFrames();
+			}
+
+			span.StackTrace = StacktraceHelper.GenerateApmStackTrace(trace,
+				_logger,
+				span.ConfigSnapshot, _apmServerInfo, $"Span `{span.Name}'");
+
+			return span;
 		}
 	}
 }

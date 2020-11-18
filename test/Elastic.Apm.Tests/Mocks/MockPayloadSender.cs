@@ -19,7 +19,7 @@ namespace Elastic.Apm.Tests.Mocks
 {
 	internal class MockPayloadSender : IPayloadSender
 	{
-		internal readonly List<Func<ISpan, ISpan>> SpanFilters = new List<Func<ISpan, ISpan>>();
+		private readonly List<Func<ISpan, ISpan>> _spanFilters = new List<Func<ISpan, ISpan>>();
 		private readonly List<IError> _errors = new List<IError>();
 		private readonly object _lock = new object();
 		private readonly List<IMetricSet> _metrics = new List<IMetricSet>();
@@ -27,7 +27,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly List<ITransaction> _transactions = new List<ITransaction>();
 
 		public MockPayloadSender(IApmLogger logger = null)
-			=> SpanFilters.Add(
+			=> _spanFilters.Add(
 				new SpanStackTraceCapturingFilter(logger ?? new NoopLogger(), new MockApmServerInfo(new ElasticVersion(7, 10, 0, null))).Filter);
 
 		private TaskCompletionSource<ITransaction> _transactionTaskCompletionSource = new TaskCompletionSource<ITransaction>();
@@ -98,7 +98,7 @@ namespace Elastic.Apm.Tests.Mocks
 		{
 			lock (_lock)
 			{
-				foreach (var filter in SpanFilters) span = filter(span);
+				foreach (var filter in _spanFilters) span = filter(span);
 				_spans.Add(span);
 			}
 		}
