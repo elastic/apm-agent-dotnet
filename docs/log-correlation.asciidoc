@@ -19,12 +19,7 @@ If your favorite logging framework is not already supported, there are two other
 
 Regardless of how you integrate APM with logging, you can use {filebeat-ref}[Filebeat] to
 send your logs to Elasticsearch, in order to correlate your traces and logs and link from
-ifeval::["{branch}"=="7.9"]
-APM to the {apm-app-ref}/xpack-logs.html[Logs app].
-endif::[]
-ifeval::["{branch}"!="7.9"]
 APM to the {observability-guide}/monitor-logs.html[Logs app].
-endif::[]
 
 [[serilog]]
 === Serilog
