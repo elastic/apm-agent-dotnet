@@ -9,8 +9,7 @@ namespace Elastic.Apm.Tests.Mocks
 {
 	internal class MockApmServerInfo : IApmServerInfo
 	{
-		public MockApmServerInfo()
-			=> Version = new ElasticVersion(7, 10, 0, null);
+		public static MockApmServerInfo Version710 { get; } = new MockApmServerInfo(new ElasticVersion(7, 10, 0, null));
 
 		public MockApmServerInfo(ElasticVersion version) => Version = version;
 
