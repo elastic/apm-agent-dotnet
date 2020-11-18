@@ -181,7 +181,7 @@ namespace Elastic.Apm.Report
 				_getCloudMetadata = true;
 			}
 
-			if (!_getApmServerVersion)
+			if (!_getApmServerVersion && _apmServerInfo?.Version is null)
 			{
 				await ApmServerInfoProvider.FillApmServerInfo(_apmServerInfo, _logger, _configSnapshot, HttpClientInstance).ConfigureAwait(false);
 				_getApmServerVersion = true;

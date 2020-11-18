@@ -189,7 +189,7 @@ namespace Elastic.Apm.Tests
 			});
 
 			var payloadSender = new PayloadSenderV2(_logger, mockConfig,
-				Service.GetDefaultService(mockConfig, _logger), new Api.System(),new MockApmServerInfo(), handler);
+				Service.GetDefaultService(mockConfig, _logger), new Api.System(),MockApmServerInfo.Version710, handler);
 
 			registerFilters(payloadSender);
 
