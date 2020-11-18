@@ -108,6 +108,8 @@ namespace Elastic.Apm.Report
 
 			_eventQueue = new BatchBlock<object>(config.MaxBatchEventCount);
 			TransactionFilters.Add(new TransactionIgnoreUrlsFilter(config).Filter);
+			// with this stack trace demystification and conversion to the intake API model happens on a non-application thread:
+			SpanFilters.Add(new SpanStackTraceCapturingFilter(_logger, apmServerInfo).Filter);
 			StartWorkLoop();
 		}
 

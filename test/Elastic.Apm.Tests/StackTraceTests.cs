@@ -201,7 +201,8 @@ namespace Elastic.Apm.Tests
 
 			var payloadSender = new MockPayloadSender();
 
-			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, apmServerInfo: new MockApmServerInfo(new ElasticVersion(7, 5, 0, null)))))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+				apmServerInfo: new MockApmServerInfo(new ElasticVersion(7, 5, 0, null)))))
 				Assert.Throws<Exception>(() => { agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => { testClass.JustThrow(); }); });
 
 			payloadSender.Errors.First().Should().NotBeNull();
@@ -518,7 +519,6 @@ namespace Elastic.Apm.Tests
 
 			assertAction(payloadSender);
 		}
-
 
 		private void TestMethod() => InnerTestMethod(() => throw new Exception("TestException"));
 
