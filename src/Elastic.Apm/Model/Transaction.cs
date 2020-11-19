@@ -384,7 +384,7 @@ namespace Elastic.Apm.Model
 
 		public Label GetLabel(string key) => _context.Value.InternalLabels.Value.InnerDictionary.ContainsKey(key)
 			? _context.Value.InternalLabels.Value.InnerDictionary[key]
-			: null
+			: null;
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
 		{
