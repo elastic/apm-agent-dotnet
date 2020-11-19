@@ -232,8 +232,8 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		{
 			try
 			{
-				using var dbCtx = new SampleDataDbContext();
-				dbCtx.Database.ExecuteSqlCommand("Select * From NonExistingTable");
+				using (var dbCtx = new SampleDataDbContext())
+					dbCtx.Database.ExecuteSqlCommand("Select * From NonExistingTable");
 			}
 			catch
 			{
