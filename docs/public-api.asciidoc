@@ -282,6 +282,19 @@ transaction.SetLabel("intSample", 42);
 * `String|Number|bool value`: The tag value
 
 [float]
+[[api-transaction-get-label]]
+==== `Label GetLabel(string key)` added[1.8.0,Number and boolean labels require APM Server 6.7+]
+
+Returns the label which was added in the <<api-transaction-set-label, SetLabel>> method. If the key does not exist, the method returns `null`.
+
+
+[source,csharp]
+----
+var myLabel = transaction.GetLabel("foo");
+Console.WriteLine(myLabel.Value);
+----
+
+[float]
 [[api-transaction-tags]]
 ==== `Dictionary<string,string> Labels`
 
@@ -566,6 +579,20 @@ span.SetLabel("intSample", 42);
 
 * `String key`:   The tag key
 * `String|Number|bool value`: The tag value
+
+
+[float]
+[[api-span-get-label]]
+==== `Label GetLabel(string key)` added[1.8.0,Number and boolean labels require APM Server 6.7+]
+
+Returns the label which was added in the <<api-span-set-label, SetLabel>> method. If the key does not exist, the method returns `null`.
+
+
+[source,csharp]
+----
+var myLabel = span.GetLabel("foo");
+Console.WriteLine(myLabel.Value);
+----
 
 [float]
 [[api-span-tags]]
