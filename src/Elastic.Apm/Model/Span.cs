@@ -223,6 +223,10 @@ namespace Elastic.Apm.Model
 			{ nameof(IsSampled), IsSampled }
 		}.ToString();
 
+		public Label GetLabel(string key) => Context.InternalLabels.Value.InnerDictionary.ContainsKey(key)
+			? Context.InternalLabels.Value.InnerDictionary[key]
+			: null;
+
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
 		{
 			if (ConfigSnapshot.Enabled && ConfigSnapshot.Recording)

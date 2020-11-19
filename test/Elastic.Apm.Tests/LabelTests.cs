@@ -251,6 +251,57 @@ namespace Elastic.Apm.Tests
 			spanJsonString.Should().NotContain("bar");
 		}
 
+		[Fact]
+		public void ReadLabels()
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+
+			agent.Tracer.CaptureTransaction("test", "test", t =>
+			{
+				t.SetLabel("fooT", 42);
+				t.SetLabel("barT", false);
+
+				t.CaptureSpan("test", "test", s =>
+				{
+					s.SetLabel("fooS", 43);
+					s.SetLabel("barS", true);
+
+					s.GetLabel("fooS").Value.Should().Be(43);
+					s.GetLabel("barS").Value.Should().Be(true);
+				});
+
+				t.GetLabel("fooT").Value.Should().Be(42);
+				t.GetLabel("barT").Value.Should().Be(false);
+			});
+		}
+
+		[Fact]
+		public void ReadLabelsWithMixedApiUsage()
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+
+			var t = agent.Tracer.StartTransaction("test", "test");
+
+			t.SetLabel("foo", 42);
+			t.SetLabel("bar", false);
+
+			t.Labels["oldApi"] = "43";
+
+			t.GetLabel("foo").Value.Should().Be(42);
+			t.GetLabel("bar").Value.Should().Be(false);
+
+			// values from the Labels dictionary aren't visible through the new API
+			t.GetLabel("oldApi").Should().BeNull();
+
+			t.End();
+
+			var spanJsonString = SerializePayloadItem(t);
+			spanJsonString.Should().Contain("\"tags\":{\"foo\":42,\"bar\":false,\"oldApi\":\"43\"");
+		}
+
+
 		private static void SetLabel(IExecutionSegment executionSegment, object labelValue, string labelName)
 		{
 			switch (labelValue)

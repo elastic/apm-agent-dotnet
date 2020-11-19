@@ -112,6 +112,8 @@ namespace Elastic.Apm.Model
 
 		public void SetLabel(string key, decimal value) { }
 
+		public Label GetLabel(string key) => null;
+
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null) =>
 			new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId, this);
 	}
