@@ -337,3 +337,4 @@ _TEMP/
 
 # Built Elastic documentation files
 html_docs
+build/output/
