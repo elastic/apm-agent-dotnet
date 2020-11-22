@@ -285,7 +285,8 @@ transaction.SetLabel("intSample", 42);
 [[api-transaction-get-label]]
 ==== `Label GetLabel(string key)` added[1.8.0,Number and boolean labels require APM Server 6.7+]
 
-Returns the label which was added in the <<api-transaction-set-label, SetLabel>> method. If the key does not exist, the method returns `null`.
+Returns the transaction's label. If the `key` does not exist, this method returns `null`.
+Labels can be added with the <<api-transaction-set-label, SetLabel>> method.
 
 
 [source,csharp]
@@ -585,7 +586,8 @@ span.SetLabel("intSample", 42);
 [[api-span-get-label]]
 ==== `Label GetLabel(string key)` added[1.8.0,Number and boolean labels require APM Server 6.7+]
 
-Returns the label which was added in the <<api-span-set-label, SetLabel>> method. If the key does not exist, the method returns `null`.
+Returns the span's label. If the `key` does not exist, this method returns `null`.
+Labels can be added with the <<api-span-set-label, SetLabel>> method.
 
 
 [source,csharp]
