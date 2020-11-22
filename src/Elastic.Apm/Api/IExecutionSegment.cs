@@ -253,9 +253,9 @@ namespace Elastic.Apm.Api
 		/// Returns the value of a label.
 		/// </summary>
 		/// <param name="key">The key of the label that you would like to read</param>
-		/// <returns>A <see cref="Label" /> instance if they key exists, <code>null</code> otherwise</returns>
-		Label GetLabel(string key);
-
+		/// <typeparam name="T">The type of the value for the given label. If the type does not match this method returns <code>default(T)</code></typeparam>
+		/// <returns>The value of the label if the key exists, <code>default(T)</code> otherwise.</returns>
+		T GetLabel<T>(string key);
 
 		/// <summary>
 		/// Labels are used to add indexed information to transactions, spans, and errors. Indexed means the data is searchable and

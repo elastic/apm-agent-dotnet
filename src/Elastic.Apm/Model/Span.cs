@@ -223,9 +223,14 @@ namespace Elastic.Apm.Model
 			{ nameof(IsSampled), IsSampled }
 		}.ToString();
 
-		public Label GetLabel(string key) => Context.InternalLabels.Value.InnerDictionary.ContainsKey(key)
-			? Context.InternalLabels.Value.InnerDictionary[key]
-			: null;
+		public T GetLabel<T>(string key)
+		{
+			if (Context.InternalLabels.Value.InnerDictionary.TryGetValue(key, out var label))
+				if (label?.Value is T t) return t;
+
+			return default;
+		}
+
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
 		{

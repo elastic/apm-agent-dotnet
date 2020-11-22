@@ -1,4 +1,5 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -267,12 +268,43 @@ namespace Elastic.Apm.Tests
 					s.SetLabel("fooS", 43);
 					s.SetLabel("barS", true);
 
-					s.GetLabel("fooS").Value.Should().Be(43);
-					s.GetLabel("barS").Value.Should().Be(true);
+					s.GetLabel<int>("fooS").Should().Be(43);
+					s.GetLabel<bool>("barS").Should().Be(true);
 				});
 
-				t.GetLabel("fooT").Value.Should().Be(42);
-				t.GetLabel("barT").Value.Should().Be(false);
+				t.GetLabel<int>("fooT").Should().Be(42);
+				t.GetLabel<bool>("barT").Should().Be(false);
+			});
+		}
+
+		/// <summary>
+		/// Utilizes <see cref="IExecutionSegment.GetLabel{T}" /> with mismatched types.
+		/// If the type parameter does not match the type of the given label, <see cref="IExecutionSegment.GetLabel{T}" /> returns
+		/// <code>default</code>.
+		/// </summary>
+		[Fact]
+		public void ReadLabelGenericTypeTest()
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+
+			agent.Tracer.CaptureTransaction("test", "test", t =>
+			{
+				t.SetLabel("intLabel", 42);
+				t.SetLabel("boolLabel", true);
+				t.SetLabel("stringLabel", "foo");
+
+				t.GetLabel<string>("intLabel").Should().BeNull();
+				t.GetLabel<bool>("intLabel").Should().BeFalse();
+				t.GetLabel<int>("intLabel").Should().Be(42);
+
+				t.GetLabel<string>("boolLabel").Should().BeNull();
+				t.GetLabel<bool>("boolLabel").Should().BeTrue();
+				t.GetLabel<int>("boolLabel").Should().Be(0);
+
+				t.GetLabel<string>("stringLabel").Should().Be("foo");
+				t.GetLabel<bool>("stringLabel").Should().BeFalse();
+				t.GetLabel<int>("stringLabel").Should().Be(0);
 			});
 		}
 
@@ -289,11 +321,11 @@ namespace Elastic.Apm.Tests
 
 			t.Labels["oldApi"] = "43";
 
-			t.GetLabel("foo").Value.Should().Be(42);
-			t.GetLabel("bar").Value.Should().Be(false);
+			t.GetLabel<int>("foo").Should().Be(42);
+			t.GetLabel<bool>("bar").Should().Be(false);
 
 			// values from the Labels dictionary aren't visible through the new API
-			t.GetLabel("oldApi").Should().BeNull();
+			t.GetLabel<string>("oldApi").Should().BeNull();
 
 			t.End();
 

@@ -382,9 +382,13 @@ namespace Elastic.Apm.Model
 			_currentExecutionSegmentsContainer.CurrentTransaction = null;
 		}
 
-		public Label GetLabel(string key) => _context.Value.InternalLabels.Value.InnerDictionary.ContainsKey(key)
-			? _context.Value.InternalLabels.Value.InnerDictionary[key]
-			: null;
+		public T GetLabel<T>(string key)
+		{
+			if (Context.InternalLabels.Value.InnerDictionary.TryGetValue(key, out var label))
+				if (label?.Value is T t) return t;
+
+			return default;
+		}
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
 		{
