@@ -21,7 +21,9 @@ module Paths =
     let Tool tool = sprintf "packages/build/%s" tool
     
     let NugetOutput = sprintf "%s/_packages" BuildOutputFolder
-    let SourceFolder = "src"   
+    let SrcFolder = "src"
+    let TestFolder = "test"
+    let SampleFolder = "sample"
     
     /// All .NET Core and .NET Framework projects
     let Solution = "ElasticApmAgent.sln"
@@ -30,7 +32,10 @@ module Paths =
     let SolutionNetCore = "ElasticApmAgent.NetCore.sln"
     
     let Keys(keyFile) = sprintf "%s/%s" BuildFolder keyFile
-    let Source folder = sprintf "%s/%s" SourceFolder folder
-    let Tests folder = sprintf "tests/%s" folder
+    let Src folder = sprintf "%s/%s" SrcFolder folder
+    let Test folder = sprintf "%s/%s" TestFolder folder
+    let Sample folder = sprintf "%s/%s" SampleFolder folder
     
-    let ProjFile project = sprintf "%s/%s/%s.csproj" SourceFolder project project
+    let SrcProjFile project = sprintf "%s/%s/%s.csproj" SrcFolder project project
+    let TestProjFile project = sprintf "%s/%s/%s.csproj" TestFolder project project
+    let SampleProjFile project = sprintf "%s/%s/%s.csproj" SampleFolder project project

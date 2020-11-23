@@ -17,14 +17,17 @@ open Tooling
 module Build =  
     let private isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
     
-    let private aspNetFullFramework = Paths.ProjFile "Elastic.Apm.AspNetFullFramework"
+    let private aspNetFullFramework = Paths.SrcProjFile "Elastic.Apm.AspNetFullFramework"
     
-    let private projects =
+    let private allSrcProjectsExceptFullFramework =
         !! "src/**/*.csproj"
-    
-    let private projectsExceptFullFramework =
-        projects
         -- "src/**/Elastic.Apm.AspNetFullFramework.csproj"
+        
+    let private fullFrameworkProjects = [
+        aspNetFullFramework
+        Paths.TestProjFile "Elastic.Apm.AspNetFullFramework.Tests"
+        Paths.SampleProjFile "AspNetFullFrameworkSampleApp"
+    ]
         
     let private getAllTargetFrameworks (p: string) =
         let doc = XElement.Load p          
@@ -42,9 +45,9 @@ module Build =
         
         (p, targetFrameworks)
     
-    // Copy all the bin release outputs to the build/output directory
+    /// Copy all the bin release outputs to the build/output directory
     let private copyBinRelease () =     
-        projectsExceptFullFramework
+        allSrcProjectsExceptFullFramework
         |> Seq.iter(fun p ->
             let directory = Path.GetDirectoryName p
             let project = Path.GetFileNameWithoutExtension p          
@@ -65,11 +68,18 @@ module Build =
                 "Configuration", "Release"
                 "Optimize", "True"
             ]
-            // current version of Fake does not support latest bin log file version of MSBuild in VS 16.8.
+            // current version of Fake MSBuild module does not support latest bin log file
+            // version of MSBuild in VS 16.8, so disable for now.
             DisableInternalBinLog = true
             NoLogo = true
         }) projectOrSln
     
+    /// Generates a .sln file that contains only .NET Core projects  
+    let GenerateNetCoreSln () =
+        File.Copy(Paths.Solution, Paths.SolutionNetCore, true)
+        fullFrameworkProjects
+        |> Seq.iter (fun proj -> DotNet.Exec ["sln" ; Paths.SolutionNetCore; "remove"; proj])
+        
     let Build () =
         dotnet "build" Paths.SolutionNetCore
         if isWindows then msBuild "Build" aspNetFullFramework
@@ -77,13 +87,12 @@ module Build =
                 
     /// Publishes all projects with framework versions
     let Publish () =
-        projectsExceptFullFramework
+        allSrcProjectsExceptFullFramework
         |> Seq.map getAllTargetFrameworks
         |> Seq.iter (fun (proj, frameworks) ->
-            let name = Path.GetFileNameWithoutExtension proj
             frameworks
             |> Seq.iter(fun framework ->
-                printfn "  Publishing %s %s" name framework
+                printfn "Publishing %s %s..." proj framework
                 DotNet.Exec ["publish" ; proj; "-c"; "Release"; "-f"; framework; "-v"; "q"; "--nologo"]
             )
         )
@@ -106,16 +115,17 @@ module Build =
         let agentDir = Paths.BuildOutput name |> DirectoryInfo                    
         agentDir.Create()
 
-        let rec copyRecursive (target: DirectoryInfo) (source: DirectoryInfo)   =
+        let rec copyRecursive (destination: DirectoryInfo) (source: DirectoryInfo) =
             source.GetDirectories()
-            |> Seq.iter (fun dir -> copyRecursive dir (target.CreateSubdirectory dir.Name))
+            |> Seq.iter (fun dir -> copyRecursive (destination.CreateSubdirectory dir.Name) dir)          
             source.GetFiles()
-            |> Seq.iter (fun file -> file.CopyTo(Path.combine target.FullName file.Name, true) |> ignore)
+            |> Seq.iter (fun file -> file.CopyTo(Path.combine destination.FullName file.Name, true) |> ignore)
             
         let copyToAgentDir = copyRecursive agentDir
 
-        !! (Paths.BuildOutput "/*/netstandard2.0/publish")
+        !! (Paths.BuildOutput "**/netstandard2.0/publish")
         ++ (Paths.BuildOutput "ElasticApmStartupHook/netcoreapp2.2/publish")
+        |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
         |> Seq.iter copyToAgentDir
             

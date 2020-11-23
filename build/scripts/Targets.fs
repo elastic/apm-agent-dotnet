@@ -71,7 +71,8 @@ module Main =
 
             Targets.Target("version", fun _ -> Versioning.CurrentVersion |> ignore)
             Targets.Target("clean", Build.Clean)
-            Targets.Target("restore", Build.Restore)
+            Targets.Target("netcore-sln", Build.GenerateNetCoreSln)
+            Targets.Target("restore", ["netcore-sln"], Build.Restore)
             Targets.Target("build", ["restore"; "clean"; "version"], Build.Build)
             Targets.Target("publish", ["restore"; "clean"; "version"], Build.Publish)
             Targets.Target("agent-zip", ["publish"], Build.AgentZip)           

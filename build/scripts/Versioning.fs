@@ -4,7 +4,7 @@ open Fake.Core
 open System.Xml.Linq
 
 module Versioning = 
-    let private buildProps = Paths.Source "Directory.Build.Props"    
+    let private buildProps = Paths.Src "Directory.Build.Props"    
     let private xName name = XName.op_Implicit name
     
     type AssemblyInfo = {
