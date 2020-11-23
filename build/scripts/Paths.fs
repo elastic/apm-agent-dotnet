@@ -13,26 +13,24 @@ module Paths =
     let BuildFolder = "build"
     let TargetsFolder = "build/scripts"
     
-    let BuildOutput = sprintf "%s/output" BuildFolder
-    let Output(folder) = sprintf "%s/%s" BuildOutput folder
+    let BuildOutputFolder = sprintf "%s/output" BuildFolder
     
-    let InplaceBuildOutput project tfm = 
-        sprintf "src/%s/bin/Release/%s" project tfm
+    /// A path to a folder in the build output folder
+    let BuildOutput(folder) = sprintf "%s/%s" BuildOutputFolder folder
+    
     let Tool tool = sprintf "packages/build/%s" tool
-    let CheckedInToolsFolder = "build/tools"
-    let NugetOutput = sprintf "%s/_packages" BuildOutput
+    
+    let NugetOutput = sprintf "%s/_packages" BuildOutputFolder
     let SourceFolder = "src"   
+    
+    /// All .NET Core and .NET Framework projects
     let Solution = "ElasticApmAgent.sln"
     
+    /// All .NET Core projects
+    let SolutionNetCore = "ElasticApmAgent.NetCore.sln"
+    
     let Keys(keyFile) = sprintf "%s/%s" BuildFolder keyFile
-    let Source(folder) = sprintf "%s/%s" SourceFolder folder
-    let TestsSource(folder) = sprintf "tests/%s" folder
+    let Source folder = sprintf "%s/%s" SourceFolder folder
+    let Tests folder = sprintf "tests/%s" folder
     
     let ProjFile project = sprintf "%s/%s/%s.csproj" SourceFolder project project
-    let TestProjFile project = sprintf "tests/%s/%s.csproj" project project
-
-    let BinFolder (folder:string) = 
-        let f = folder.Replace(@"\", "/")
-        sprintf "%s/%s/bin/Release" SourceFolder f
-        
-        

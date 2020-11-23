@@ -14,14 +14,12 @@ module Versioning =
         VersionPrefix: SemVerInfo
     }
     
-    /// Gets the current AssemblyInfo version from the Directory.Build.Props in src
+    /// Gets the current AssemblyInfo version from the Directory.Build.Props in /src
     let CurrentVersion =
         let project = XElement.Load(buildProps)
-        let propertyGroup = project.Element(xName "PropertyGroup")        
-        {
-            AssemblyVersion = propertyGroup.Element(xName "AssemblyVersion").Value |> SemVer.parse
-            InformationalVersion = propertyGroup.Element(xName "InformationalVersion").Value |> SemVer.parse
-            FileVersion = propertyGroup.Element(xName "FileVersion").Value |> SemVer.parse
-            VersionPrefix = propertyGroup.Element(xName "VersionPrefix").Value |> SemVer.parse
-        }
-
+        let propertyGroup = project.Element(xName "PropertyGroup")
+        
+        { AssemblyVersion = propertyGroup.Element(xName "AssemblyVersion").Value |> SemVer.parse
+          InformationalVersion = propertyGroup.Element(xName "InformationalVersion").Value |> SemVer.parse
+          FileVersion = propertyGroup.Element(xName "FileVersion").Value |> SemVer.parse
+          VersionPrefix = propertyGroup.Element(xName "VersionPrefix").Value |> SemVer.parse }

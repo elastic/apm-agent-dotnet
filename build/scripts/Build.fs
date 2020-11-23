@@ -6,6 +6,7 @@ namespace Scripts
 
 open System.IO
 open System.IO.Compression
+open System.Runtime.InteropServices
 open System.Xml.Linq
 open Fake.Core
 open Fake.DotNet
@@ -13,21 +14,42 @@ open Fake.IO
 open Fake.IO.Globbing.Operators
 open Tooling
 
-module Build =
+module Build =  
+    let private isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+    
+    let private aspNetFullFramework = Paths.ProjFile "Elastic.Apm.AspNetFullFramework"
+    
+    let private projects =
+        !! "src/**/*.csproj"
     
     let private projectsExceptFullFramework =
-        !! "src/**/*.csproj"
+        projects
         -- "src/**/Elastic.Apm.AspNetFullFramework.csproj"
+        
+    let private getAllTargetFrameworks (p: string) =
+        let doc = XElement.Load p          
+        let targetFrameworks =
+            let targetFrameworks =
+                doc.Descendants(XName.op_Implicit "TargetFrameworks")
+                |> Seq.map (fun p -> String.split ';' p.Value)
+                |> Seq.concat
+        
+            doc.Descendants(XName.op_Implicit "TargetFramework")
+            |> Seq.map (fun p -> p.Value)
+            |> Seq.append targetFrameworks
+            |> Seq.distinct
+            |> Seq.toArray
+        
+        (p, targetFrameworks)
     
-    let private copyBinRelease () =
-        // Copy all the bin release outputs
+    // Copy all the bin release outputs to the build/output directory
+    let private copyBinRelease () =     
         projectsExceptFullFramework
         |> Seq.iter(fun p ->
             let directory = Path.GetDirectoryName p
-            let project = Path.GetFileNameWithoutExtension p
-            
+            let project = Path.GetFileNameWithoutExtension p          
             let bin = Path.combine directory "bin/Release"
-            let buildOutput = Paths.Output project          
+            let buildOutput = Paths.BuildOutput project          
             Shell.copyDir buildOutput bin (fun _ -> true)
         )
         
@@ -43,34 +65,20 @@ module Build =
                 "Configuration", "Release"
                 "Optimize", "True"
             ]
-            // current version of fake does not support latest bin log file version
+            // current version of Fake does not support latest bin log file version of MSBuild in VS 16.8.
             DisableInternalBinLog = true
             NoLogo = true
         }) projectOrSln
     
     let Build () =
-        msBuild "Build" Paths.Solution
+        dotnet "build" Paths.SolutionNetCore
+        if isWindows then msBuild "Build" aspNetFullFramework
         copyBinRelease()
-        
-    /// Publishes all project framework versions
+                
+    /// Publishes all projects with framework versions
     let Publish () =
         projectsExceptFullFramework
-        |> Seq.map (fun p ->
-            let doc = XElement.Load p
-            
-            let targetFrameworks =
-                let targetFrameworks =
-                    doc.Descendants(XName.op_Implicit "TargetFrameworks")
-                    |> Seq.map (fun p -> String.split ';' p.Value)
-                    |> Seq.concat
-            
-                doc.Descendants(XName.op_Implicit "TargetFramework")
-                |> Seq.map (fun p -> p.Value)
-                |> Seq.append targetFrameworks
-                |> Seq.distinct
-                |> Seq.toArray
-            
-            (p, targetFrameworks))
+        |> Seq.map getAllTargetFrameworks
         |> Seq.iter (fun (proj, frameworks) ->
             let name = Path.GetFileNameWithoutExtension proj
             frameworks
@@ -83,15 +91,19 @@ module Build =
         copyBinRelease()
     
     let Clean () =
-        Shell.cleanDir Paths.BuildOutput
-        msBuild "Clean" Paths.Solution
+        Shell.cleanDir Paths.BuildOutputFolder
+        dotnet "clean" Paths.SolutionNetCore       
+        if isWindows then msBuild "Clean" aspNetFullFramework
 
-    let Restore () = DotNet.Exec ["restore"; Paths.Solution]
-           
+    /// Restores all packages for the solution
+    let Restore () =
+        DotNet.Exec ["restore" ; Paths.SolutionNetCore; "-v"; "q"]
+        if isWindows then DotNet.Exec ["restore" ; aspNetFullFramework; "-v"; "q"]
+            
     /// Creates versioned ElasticApmAgent.zip file    
     let AgentZip () =
         let name = sprintf "ElasticApmAgent_%s" (Versioning.CurrentVersion.AssemblyVersion.ToString())        
-        let agentDir = Paths.Output name |> DirectoryInfo                    
+        let agentDir = Paths.BuildOutput name |> DirectoryInfo                    
         agentDir.Create()
 
         let rec copyRecursive (target: DirectoryInfo) (source: DirectoryInfo)   =
@@ -102,9 +114,9 @@ module Build =
             
         let copyToAgentDir = copyRecursive agentDir
 
-        !! (Paths.Output "/*/netstandard2.0/publish")
-        ++ (Paths.Output "ElasticApmStartupHook/netcoreapp2.2/publish")
+        !! (Paths.BuildOutput "/*/netstandard2.0/publish")
+        ++ (Paths.BuildOutput "ElasticApmStartupHook/netcoreapp2.2/publish")
         |> Seq.map DirectoryInfo
         |> Seq.iter copyToAgentDir
             
-        ZipFile.CreateFromDirectory(agentDir.FullName, Paths.Output name + ".zip")
+        ZipFile.CreateFromDirectory(agentDir.FullName, Paths.BuildOutput name + ".zip")

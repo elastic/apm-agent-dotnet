@@ -13,18 +13,16 @@ open Fake.Core
 open Octokit
 
 module ReleaseNotes =
-    let issueNumberRegex(url: string) =
+    let private issueNumberRegex(url: string) =
         let pattern = sprintf "\s(?:#|%sissues/)(?<num>\d+)" url
         Regex(pattern, RegexOptions.Multiline ||| RegexOptions.IgnoreCase ||| RegexOptions.CultureInvariant
                        ||| RegexOptions.ExplicitCapture ||| RegexOptions.Compiled)
       
-    type GitHubItem(issue: Issue, relatedIssues: int list) =  
+    type private GitHubItem(issue: Issue, relatedIssues: int list) =  
         member val Issue = issue
         member val RelatedIssues = relatedIssues
         member this.Title =
-            let builder = StringBuilder("#")
-                              .Append(issue.Number)
-                              .Append(" ")       
+            let builder = StringBuilder("#").Append(issue.Number).Append(" ")       
             if issue.PullRequest = null then
                 builder.AppendFormat("[ISSUE] {0}", issue.Title)
             else
@@ -42,11 +40,11 @@ module ReleaseNotes =
         member this.Labels = issue.Labels   
         member this.Number = issue.Number
         
-    type Config =
+    type private Config =
         { labels: Map<string,string>
           uncategorized: string }
 
-    let config = {
+    let private config = {
         labels = Map.ofList <| [
             ("enhancement", "Features");
             ("bug", "Bug Fixes");
@@ -57,7 +55,7 @@ module ReleaseNotes =
         uncategorized = "uncategorized"
     };
         
-    let groupByLabel (config: Config) (items: List<GitHubItem>) =
+    let private groupByLabel (config: Config) (items: List<GitHubItem>) =
         let dict = Dictionary<string, GitHubItem list>()     
         for item in items do
             let mutable categorized = false
@@ -80,7 +78,7 @@ module ReleaseNotes =
                 | false -> dict.Add(config.uncategorized, [item])
         dict
         
-    let filterByPullRequests (issueNumberRegex: Regex) (issues:IReadOnlyList<Issue>): List<GitHubItem> =
+    let private filterByPullRequests (issueNumberRegex: Regex) (issues:IReadOnlyList<Issue>): List<GitHubItem> =
         let extractRelatedIssues(issue: Issue) =
             let matches = issueNumberRegex.Matches(issue.Body)
             if matches.Count = 0 then list.Empty
@@ -110,7 +108,7 @@ module ReleaseNotes =
         items.AddRange(collectedIssues)       
         items
         
-    let getClosedIssues(label: string, config: Config) =
+    let private getClosedIssues(label: string, config: Config) =
         let issueNumberRegex = issueNumberRegex Paths.Repository  
         let filter = RepositoryIssueRequest()
         filter.Labels.Add label
@@ -127,7 +125,7 @@ module ReleaseNotes =
     
     let private generateNotes newVersion oldVersion =
         let label = sprintf "v%O" newVersion
-        let releaseNotes = sprintf "ReleaseNotes-%O.md" newVersion |> Paths.Output
+        let releaseNotes = sprintf "ReleaseNotes-%O.md" newVersion |> Paths.BuildOutput
         
         let closedIssues = getClosedIssues(label, config)
                               

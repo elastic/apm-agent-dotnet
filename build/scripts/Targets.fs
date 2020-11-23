@@ -6,13 +6,13 @@ namespace Scripts
 
 open System
 open System.CommandLine
+open System.CommandLine.Invocation
 open System.CommandLine.Parsing
 open Bullseye
 open ProcNet
 open Fake.Core
 
-module Main =
-    
+module Main =  
     let excludeBullsEyeOptions = Set.ofList [
         "--verbose"
         "--clear"
@@ -29,6 +29,8 @@ module Main =
         Option<string>([| "-v"; "--version" |], "The version to use for the build")
     ]
     
+    /// Exception relating to passed options/arguments. Used by Bullseye to only include the message if this
+    /// type of exception is raised/thrown.
     type OptionException(msg : string) =
         inherit Exception(msg)
         
@@ -54,7 +56,7 @@ module Main =
             cmd.Add(Option(names, d.Description))
         )
         
-        cmd.Handler <- Invocation.CommandHandler.Create<ParseResult>(fun (cmdLine: ParseResult) ->
+        cmd.Handler <- CommandHandler.Create<ParseResult>(fun (cmdLine: ParseResult) ->
             // parse bullseye targets from commandline targets
             let targets =
                 cmdLine.CommandResult.Tokens
@@ -70,8 +72,8 @@ module Main =
             Targets.Target("version", fun _ -> Versioning.CurrentVersion |> ignore)
             Targets.Target("clean", Build.Clean)
             Targets.Target("restore", Build.Restore)
-            Targets.Target("build", ["clean"; "restore"; "version"], Build.Build)
-            Targets.Target("publish", ["clean"; "restore"; "version"], Build.Publish)
+            Targets.Target("build", ["restore"; "clean"; "version"], Build.Build)
+            Targets.Target("publish", ["restore"; "clean"; "version"], Build.Publish)
             Targets.Target("agent-zip", ["publish"], Build.AgentZip)           
             Targets.Target("release-notes", fun _ ->
                 let version = cmdLine.ValueForOption<string>("version")
