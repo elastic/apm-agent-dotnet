@@ -3,10 +3,10 @@
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
     <NoWarn>NU1503</NoWarn>
-
+    <SolutionRoot>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.bat))</SolutionRoot>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>
-    <AssemblyOriginatorKeyFile Condition="EXISTS('../../../../../../build/elasticapm.snk')">../../../../../../build/elasticapm.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile Condition="EXISTS('$(SolutionRoot)/build/elasticapm.snk')">$(SolutionRoot)/build/elasticapm.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
   </PropertyGroup>
   <ItemGroup>
