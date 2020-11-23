@@ -4,6 +4,7 @@
 
 namespace Scripts
 
+open System
 open System.IO
 open System.IO.Compression
 open System.Runtime.InteropServices
@@ -98,7 +99,15 @@ module Build =
         )
         
         copyBinRelease()
-    
+        
+    /// Packages projects into nuget packages
+    let Pack (canary:bool) =
+        let arguments =
+            let a = ["pack" ; Paths.SolutionNetCore; "-c"; "Release"; "-o"; Paths.NugetOutput]
+            if canary then List.append a ["--version-suffix"; DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") |> sprintf "alpha-%s"]
+            else a      
+        DotNet.Exec arguments
+          
     let Clean () =
         Shell.cleanDir Paths.BuildOutputFolder
         dotnet "clean" Paths.SolutionNetCore       

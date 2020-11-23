@@ -27,6 +27,7 @@ module Main =
     // Command line options for Targets
     let private options : Option list = [
         Option<string>([| "-v"; "--version" |], "The version to use for the build")
+        Option<bool>([| "-c"; "--canary" |], "Whether the build is a canary release. Used by pack")
     ]
     
     /// Exception relating to passed options/arguments. Used by Bullseye to only include the message if this
@@ -70,12 +71,21 @@ module Main =
                 Options(definitions)
 
             Targets.Target("version", fun _ -> Versioning.CurrentVersion |> ignore)
+            
             Targets.Target("clean", Build.Clean)
+            
             Targets.Target("netcore-sln", Build.GenerateNetCoreSln)
+            
             Targets.Target("restore", ["netcore-sln"], Build.Restore)
+           
             Targets.Target("build", ["restore"; "clean"; "version"], Build.Build)
+            
             Targets.Target("publish", ["restore"; "clean"; "version"], Build.Publish)
+            
+            Targets.Target("pack", ["build"], fun _ -> Build.Pack (cmdLine.ValueForOption<bool>("canary")))
+            
             Targets.Target("agent-zip", ["publish"], Build.AgentZip)           
+            
             Targets.Target("release-notes", fun _ ->
                 let version = cmdLine.ValueForOption<string>("version")
                 let currentVersion = Versioning.CurrentVersion.AssemblyVersion
