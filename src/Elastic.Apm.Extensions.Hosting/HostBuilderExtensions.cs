@@ -56,8 +56,9 @@ namespace Elastic.Apm.Extensions.Hosting
 				{
 					if (Agent.IsConfigured) return Agent.Instance;
 
-					var newAgentInstance = new ApmAgent(sp.GetService<AgentComponents>());
-					Agent.Setup(sp.GetService<AgentComponents>());
+					var components = sp.GetService<AgentComponents>();
+					var newAgentInstance = new ApmAgent(components);
+					Agent.Setup(components);
 					return newAgentInstance;
 				});
 
