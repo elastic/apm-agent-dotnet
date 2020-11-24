@@ -244,8 +244,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			_agent.Service.Framework.Name.Should().Be("ASP.NET Core");
 
-			var aspNetCoreMajorMinorVersion = Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString(2);
-			_agent.Service.Framework.Version.Should().StartWith(aspNetCoreMajorMinorVersion);
+			var aspNetCoreVersion = Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString();
+			_agent.Service.Framework.Version.Should().Be(aspNetCoreVersion);
 
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
 			_agent.Service.Runtime.Version.Should().Be(Directory.GetParent(typeof(object).Assembly.Location).Name);
