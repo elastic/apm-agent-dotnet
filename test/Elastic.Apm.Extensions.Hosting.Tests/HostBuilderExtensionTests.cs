@@ -56,6 +56,33 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 			fakeSubscriber.IsSubscribed.Should().BeTrue();
 		}
 
+		/// <summary>
+		/// Sets `enabled=false` and makes sure that <see cref="HostBuilderExtensions.UseElasticApm" /> does not turn on diagnostic
+		/// listeners.
+		/// </summary>
+		[Fact]
+		public void DiagnosticSubscriberWithUseElasticApmAgentDisabled()
+		{
+			var fakeSubscriber = new FakeSubscriber();
+			fakeSubscriber.IsSubscribed.Should().BeFalse();
+
+			Environment.SetEnvironmentVariable("ELASTIC_APM_ENABLED", "false");
+
+			try
+			{
+				Host.CreateDefaultBuilder()
+					.ConfigureServices((context, services) => { services.AddHostedService<HostedService>(); })
+					.UseElasticApm(fakeSubscriber)
+					.Build();
+
+				fakeSubscriber.IsSubscribed.Should().BeFalse();
+			}
+			finally
+			{
+				Environment.SetEnvironmentVariable("ELASTIC_APM_ENABLED", null);
+			}
+		}
+
 		private static IHostBuilder CreateHostBuilder() =>
 			Host.CreateDefaultBuilder()
 				.ConfigureServices((context, services) => { services.AddHostedService<HostedService>(); })
