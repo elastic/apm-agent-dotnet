@@ -350,7 +350,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				_taskForSampleApp = Program.CreateWebHostBuilder(null)
 					.ConfigureServices(services =>
 						{
-							services.Configure<KestrelServerOptions>(options => { options.AllowSynchronousIO = true; });
+							services.Configure<KestrelServerOptions>(options => {  });
 							Startup.ConfigureServicesExceptMvc(services);
 
 							services.AddMvc()
