@@ -6,6 +6,6 @@ call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\T
 nuget restore -verbosity detailed -NonInteractive
 
 rem TODO: Workaround for https://github.com/dotnet/sdk/issues/14497
-set DOTNET_HOST_PATH="dotnet"
+set DOTNET_HOST_PATH=dotnet
 
 msbuild
