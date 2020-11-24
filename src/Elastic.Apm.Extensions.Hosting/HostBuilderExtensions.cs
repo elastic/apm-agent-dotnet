@@ -28,12 +28,11 @@ namespace Elastic.Apm.Extensions.Hosting
 			builder.ConfigureServices((ctx, services) =>
 			{
 				//If the static agent doesn't exist, we create one here. If there is already 1 agent created, we reuse it.
-
 				if (!Agent.IsConfigured)
 				{
 					services.AddSingleton<IApmLogger, NetCoreLogger>();
 					services.AddSingleton<IConfigurationReader>(sp =>
-					new MicrosoftExtensionsConfig(ctx.Configuration, sp.GetService<IApmLogger>(), ctx.HostingEnvironment.EnvironmentName));
+						new MicrosoftExtensionsConfig(ctx.Configuration, sp.GetService<IApmLogger>(), ctx.HostingEnvironment.EnvironmentName));
 				}
 				else
 				{
@@ -56,16 +55,21 @@ namespace Elastic.Apm.Extensions.Hosting
 				services.AddSingleton<IApmAgent, ApmAgent>(sp =>
 				{
 					if (Agent.IsConfigured) return Agent.Instance;
-
-					var apmAgent = new ApmAgent(sp.GetService<AgentComponents>());
 					Agent.Setup(sp.GetService<AgentComponents>());
-					return apmAgent;
+					return Agent.Instance;
 				});
 
-				if(Agent.IsConfigured && Agent.Config.Enabled)
-					if (subscribers != null && subscribers.Any() && Agent.IsConfigured) Agent.Subscribe(subscribers);
-
 				services.AddSingleton(sp => sp.GetRequiredService<IApmAgent>().Tracer);
+
+				var serviceProvider = services.BuildServiceProvider();
+				var agent = serviceProvider.GetService<IApmAgent>();
+
+				if (!(agent is ApmAgent apmAgent)) return;
+
+				if (!Agent.IsConfigured || !apmAgent.ConfigurationReader.Enabled) return;
+
+				if (subscribers != null && subscribers.Any() && Agent.IsConfigured)
+					apmAgent.Subscribe(subscribers);
 			});
 
 			return builder;
