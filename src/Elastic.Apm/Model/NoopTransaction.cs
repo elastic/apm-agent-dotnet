@@ -93,10 +93,17 @@ namespace Elastic.Apm.Model
 
 		public void SetLabel(string key, decimal value) { }
 
-		public ISpan StartSpan(string name, string type, string subType = null, string action = null) => new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer);
+		public ISpan StartSpan(string name, string type, string subType = null, string action = null) =>
+			new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer);
 
 		public string EnsureParentId() => string.Empty;
 
 		public void SetService(string serviceName, string serviceVersion) { }
+
+		public bool TryGetLabel<T>(string key, out T value)
+		{
+			value = default;
+			return false;
+		}
 	}
 }
