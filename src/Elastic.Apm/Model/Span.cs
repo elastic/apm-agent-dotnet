@@ -169,7 +169,6 @@ namespace Elastic.Apm.Model
 		/// passed to the .ctor)
 		/// This will be turned into an elastic stack trace and sent to APM Server in the <see cref="StackTrace" /> property
 		/// </summary>
-		[JsonIgnore]
 		internal StackTrace RawStackTrace;
 
 		/// <summary>
