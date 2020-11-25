@@ -250,14 +250,6 @@ namespace Elastic.Apm.Api
 		void End();
 
 		/// <summary>
-		/// Returns the value of a label.
-		/// </summary>
-		/// <param name="key">The key of the label that you would like to read</param>
-		/// <typeparam name="T">The type of the value for the given label. If the type does not match this method returns <code>default(T)</code></typeparam>
-		/// <returns>The value of the label if the key exists, <code>default(T)</code> otherwise.</returns>
-		T GetLabel<T>(string key);
-
-		/// <summary>
 		/// Labels are used to add indexed information to transactions, spans, and errors. Indexed means the data is searchable and
 		/// aggregatable in Elasticsearch. Multiple labels can be defined with different key-value pairs.
 		/// Note: Values added through this method won't be visible through <see cref="Labels" />.
@@ -334,5 +326,17 @@ namespace Elastic.Apm.Api
 		/// <param name="action">The action of the span.</param>
 		/// <returns>Returns the newly created and active span.</returns>
 		ISpan StartSpan(string name, string type, string subType = null, string action = null);
+
+		/// <summary>
+		/// Returns the value of a label.
+		/// </summary>
+		/// <typeparam name="T">The type of the value for the label that you would like to read.</typeparam>
+		/// <param name="key">The key of the label that you would like to read.</param>
+		/// <param name="value">The out parameter to receive the value of the label.</param>
+		/// <returns>
+		/// <code>true</code> if the label was witten into <paramref name="value" />, <code>false</code> otherwise, which
+		/// can be because the label does not exit or <typeparamref name="T" /> does not match the type of the given label.
+		/// </returns>
+		bool TryGetLabel<T>(string key, out T value);
 	}
 }

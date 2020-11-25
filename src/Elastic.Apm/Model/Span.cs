@@ -223,12 +223,19 @@ namespace Elastic.Apm.Model
 			{ nameof(IsSampled), IsSampled }
 		}.ToString();
 
-		public T GetLabel<T>(string key)
+		public bool TryGetLabel<T>(string key, out T value)
 		{
 			if (Context.InternalLabels.Value.InnerDictionary.TryGetValue(key, out var label))
-				if (label?.Value is T t) return t;
+			{
+				if (label?.Value is T t)
+				{
+					value = t;
+					return true;
+				}
+			}
 
-			return default;
+			value = default;
+			return false;
 		}
 
 
