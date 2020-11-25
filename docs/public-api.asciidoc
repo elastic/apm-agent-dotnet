@@ -282,17 +282,17 @@ transaction.SetLabel("intSample", 42);
 * `String|Number|bool value`: The tag value
 
 [float]
-[[api-transaction-get-label]]
-==== `Label GetLabel(string key)` added[1.8.0,Number and boolean labels require APM Server 6.7+]
+[[api-transaction-try-get-label]]
+==== `T GetLabel<T>(string key, out T value)` added[1.7.1,Number and boolean labels require APM Server 6.7+]
 
-Returns the transaction's label. If the `key` does not exist, this method returns `null`.
+Returns the transaction's label in the `value` out parameter. If the `key` does not exist, this method returns false.
 Labels can be added with the <<api-transaction-set-label, SetLabel>> method.
 
 
 [source,csharp]
 ----
-var myLabel = transaction.GetLabel("foo");
-Console.WriteLine(myLabel.Value);
+if(transaction.TryGetLabel<int>("foo", our var myLabel))
+    Console.WriteLine(myLabel);
 ----
 
 [float]
@@ -583,17 +583,17 @@ span.SetLabel("intSample", 42);
 
 
 [float]
-[[api-span-get-label]]
-==== `Label GetLabel(string key)` added[1.8.0,Number and boolean labels require APM Server 6.7+]
+[[api-span-try-get-label]]
+==== `T GetLabel<T>(string key, out T value)` added[1.7.1,Number and boolean labels require APM Server 6.7+]
 
-Returns the span's label. If the `key` does not exist, this method returns `null`.
+Returns the span's label in the `value` out parameter. If the `key` does not exist, this method returns false.
 Labels can be added with the <<api-span-set-label, SetLabel>> method.
 
 
 [source,csharp]
 ----
-var myLabel = span.GetLabel("foo");
-Console.WriteLine(myLabel.Value);
+if(span.TryGetLabel<bool>("foo", out var myLabel))
+    Console.WriteLine(myLabel);
 ----
 
 [float]
