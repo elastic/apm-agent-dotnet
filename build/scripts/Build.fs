@@ -30,6 +30,7 @@ module Build =
         Paths.SampleProjFile "AspNetFullFrameworkSampleApp"
     ]
         
+    /// Gets all the Target Frameworks from a project file
     let private getAllTargetFrameworks (p: string) =
         let doc = XElement.Load p          
         let targetFrameworks =
@@ -75,12 +76,14 @@ module Build =
             NoLogo = true
         }) projectOrSln
     
-    /// Generates a .sln file that contains only .NET Core projects  
+    /// Generates a new .sln file that contains only .NET Core projects  
     let GenerateNetCoreSln () =
         File.Copy(Paths.Solution, Paths.SolutionNetCore, true)
         fullFrameworkProjects
         |> Seq.iter (fun proj -> DotNet.Exec ["sln" ; Paths.SolutionNetCore; "remove"; proj])
         
+    /// Runs dotnet build on all .NET core projects in the solution.
+    /// When running on Windows, also runs MSBuild Build on .NET Framework
     let Build () =
         dotnet "build" Paths.SolutionNetCore
         if isWindows then msBuild "Build" aspNetFullFramework

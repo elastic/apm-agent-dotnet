@@ -123,7 +123,7 @@ module ReleaseNotes =
         |> filterByPullRequests issueNumberRegex
         |> groupByLabel config
     
-    let private generateNotes newVersion oldVersion =
+    let GenerateNotes (oldVersion: SemVerInfo) (newVersion: SemVerInfo) =
         let label = sprintf "v%O" newVersion
         let releaseNotes = sprintf "ReleaseNotes-%O.md" newVersion |> Paths.BuildOutput
         
@@ -141,9 +141,6 @@ module ReleaseNotes =
             writer.WriteLine()
               
         sprintf "### [View the full list of issues and PRs](%sissues?utf8=%%E2%%9C%%93&q=label%%3A%s)" Paths.Repository label
-        |> writer.WriteLine
-                
-    let GenerateNotes (oldVersion: SemVerInfo) (newVersion: SemVerInfo) =
-        generateNotes newVersion oldVersion
+        |> writer.WriteLine           
         
 
