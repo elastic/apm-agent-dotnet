@@ -108,7 +108,7 @@ module ReleaseNotes =
         items.AddRange(collectedIssues)       
         items
         
-    let private getClosedIssues(label: string, config: Config) =
+    let private getClosedIssues (label: string) (config: Config) =
         let issueNumberRegex = issueNumberRegex Paths.Repository  
         let filter = RepositoryIssueRequest()
         filter.Labels.Add label
@@ -127,7 +127,7 @@ module ReleaseNotes =
         let label = sprintf "v%O" newVersion
         let releaseNotes = sprintf "ReleaseNotes-%O.md" newVersion |> Paths.BuildOutput
         
-        let closedIssues = getClosedIssues(label, config)
+        let closedIssues = getClosedIssues label config
                               
         use file = File.OpenWrite <| releaseNotes
         use writer = new StreamWriter(file)                   
