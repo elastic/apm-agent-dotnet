@@ -7,12 +7,12 @@ using StackExchange.Redis;
 
 namespace StackExchangeRedisSample
 {
-	class Program
+	public class Program
 	{
-		private static async Task Main(string[] args)
+		public static async Task Main(string[] args)
 		{
 			// requires redis to be running on localhost:6379, e.g. with docker
-			// docker run -p 6379:6379 --name some-redis -d redis
+			// docker run -p 6379:6379 -d redis
 			var connection = await ConnectionMultiplexer.ConnectAsync("localhost");
 			connection.UseElasticApm();
 
@@ -25,15 +25,12 @@ namespace StackExchangeRedisSample
 					await database.StringSetAsync($"string{i}", i);
 					await database.StringGetAsync($"string{i}");
 
-					// fire and forget commands do not appear in profiling sessions
+					// fire and forget commands may not end up in the profiling session before
+					// transaction end, and the profiling session is finished.
 					await database.StringSetAsync($"string{i}", i, flags: CommandFlags.FireAndForget);
 					await database.StringGetAsync($"string{i}", CommandFlags.FireAndForget);
 				});
 			}
-
-			// Allow the payload sender time to send to APM server.
-			Console.WriteLine("Press any key to continue...");
-			Console.ReadKey();
 		}
 	}
 }

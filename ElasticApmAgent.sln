@@ -102,6 +102,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.StackExchange.R
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StackExchangeRedisSample", "sample\StackExchangeRedisSample\StackExchangeRedisSample.csproj", "{9FBC8D8C-E600-464D-AE4E-AC1FB59485F6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.StackExchange.Redis.Tests", "test\Elastic.Apm.StackExchange.Redis.Tests\Elastic.Apm.StackExchange.Redis.Tests.csproj", "{6D413E0A-1CB7-4A2D-8E99-DB4F58D3463E}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		test\Elastic.Apm.DatabaseTests.Common\Elastic.Apm.DatabaseTests.Common.projitems*{968e1e85-e996-42de-9845-d20dae16165a}*SharedItemsImports = 5
@@ -249,6 +251,10 @@ Global
 		{9FBC8D8C-E600-464D-AE4E-AC1FB59485F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9FBC8D8C-E600-464D-AE4E-AC1FB59485F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9FBC8D8C-E600-464D-AE4E-AC1FB59485F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D413E0A-1CB7-4A2D-8E99-DB4F58D3463E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D413E0A-1CB7-4A2D-8E99-DB4F58D3463E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D413E0A-1CB7-4A2D-8E99-DB4F58D3463E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D413E0A-1CB7-4A2D-8E99-DB4F58D3463E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -288,6 +294,7 @@ Global
 		{3CCB9193-8416-49AF-A1A3-8D1118CFB25B} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{38227C61-EFFB-4B00-814B-A158000A5F55} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{9FBC8D8C-E600-464D-AE4E-AC1FB59485F6} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
+		{6D413E0A-1CB7-4A2D-8E99-DB4F58D3463E} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}
