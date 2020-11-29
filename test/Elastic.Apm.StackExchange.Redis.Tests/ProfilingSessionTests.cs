@@ -32,13 +32,22 @@ namespace Elastic.Apm.StackExchange.Redis.Tests
 			_containerId = output;
 		}
 
-		[Fact]
+		[DockerFact]
 		public async Task Capture_Redis_Commands()
 		{
 			var connection = await ConnectionMultiplexer.ConnectAsync("localhost");
+			var count = 0;
 
 			while (!connection.IsConnected)
-				await Task.Delay(500);
+			{
+				if (count < 5)
+				{
+					count++;
+					await Task.Delay(500);
+				}
+				else
+					throw new Exception("Could not connect to redis for integration test");
+			}
 
 			var payloadSender = new MockPayloadSender();
 			var transactionCount = 2;
