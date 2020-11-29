@@ -34,7 +34,7 @@ namespace Elastic.Apm.StackExchange.Redis
 
 		/// <summary>
 		/// Gets a profiling session for StackExchange.Redis to add redis commands to.
-		/// Tracks a profiling session per transaction
+		/// Creates a profiling session per transaction
 		/// </summary>
 		/// <remarks>
 		/// See https://stackexchange.github.io/StackExchange.Redis/Profiling_v2.html
@@ -48,7 +48,7 @@ namespace Elastic.Apm.StackExchange.Redis
 			var transaction = _agent.Tracer.CurrentTransaction;
 
 			// don't profile when there's no transaction or it's not a "real" transaction.
-			if (transaction is not Transaction realTransaction)
+			if (!(transaction is Transaction realTransaction))
 				return null;
 
 			if (!_transactionSessions.TryGetValue(realTransaction.Id, out var session))
@@ -130,7 +130,8 @@ namespace Elastic.Apm.StackExchange.Redis
 					span.Context.Destination = new Destination { Address = address, Port = port };
 
 				// update the timestamp to reflect the point at which the command was created
-				if (span is Span capturedSpan) capturedSpan.Timestamp = TimeUtils.ToTimestamp(profiledCommand.CommandCreated);
+				if (span is Span realSpan)
+					realSpan.Timestamp = TimeUtils.ToTimestamp(profiledCommand.CommandCreated);
 
 				span.Duration = profiledCommand.ElapsedTime.TotalMilliseconds;
 
