@@ -87,17 +87,20 @@ namespace Elastic.Apm.Extensions.Hosting
 
 		private static string GetAssemblyVersion(string assemblyName)
 		{
-			var versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name == assemblyName);
-			var assemblies = versionQuery as Assembly[] ?? versionQuery.ToArray();
-			if (assemblies.Any()) return assemblies.First().GetName().Version?.ToString();
+			var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+			var assembly = assemblies.FirstOrDefault(n => n.GetName().Name == assemblyName);
+			if (assembly != null)
+				return assembly.GetName().Version?.ToString();
 
-			versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n =>
-			{
-				var name = n.GetName().Name;
-				return name != null && name.Contains(assemblyName);
-			});
-			var enumerable = versionQuery as Assembly[] ?? versionQuery.ToArray();
-			return enumerable.Any() ? enumerable.FirstOrDefault()?.GetName().Version?.ToString() : null;
+			// if no exact match, try to find first assembly name that starts with given name
+			assembly = assemblies
+				.FirstOrDefault(n =>
+				{
+					var name = n.GetName().Name;
+					return name != null && name.StartsWith(assemblyName);
+				});
+
+			return assembly?.GetName().Version?.ToString();
 		}
 	}
 }
