@@ -65,7 +65,7 @@ namespace Elastic.Apm.StackExchange.Redis
 
 		private void EndProfilingSession(object sender, ProfilingSession session)
 		{
-			if (sender is not Transaction transaction) return;
+			if (!(sender is Transaction transaction)) return;
 
 			try
 			{
