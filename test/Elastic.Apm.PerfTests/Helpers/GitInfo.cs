@@ -13,6 +13,8 @@ namespace Elastic.Apm.PerfTests.Helpers
 	/// </summary>
 	public class GitInfo : IDisposable
 	{
+		private readonly Process _gitProcess;
+
 		public GitInfo()
 		{
 			var processInfo = new ProcessStartInfo
@@ -41,8 +43,6 @@ namespace Elastic.Apm.PerfTests.Helpers
 			_gitProcess.WaitForExit();
 			return output;
 		}
-
-		private readonly Process _gitProcess;
 
 		public void Dispose() => _gitProcess?.Dispose();
 	}
