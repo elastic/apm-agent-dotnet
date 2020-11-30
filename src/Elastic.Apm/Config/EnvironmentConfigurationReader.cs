@@ -68,7 +68,35 @@ namespace Elastic.Apm.Config
 
 		public string SecretToken => ParseSecretToken(Read(ConfigConsts.EnvVarNames.SecretToken));
 
-		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Read(ConfigConsts.EnvVarNames.ServerUrls));
+		/// <inheritdoc />
+		[Obsolete("Use ServerUrl")]
+		public IReadOnlyList<Uri> ServerUrls
+		{
+			get
+			{
+				// Use ServerUrl if there's no value for ServerUrls so that usage of ServerUrls
+				// outside of the agent will work with ServerUrl
+				var configurationKeyValue = Read(ConfigConsts.EnvVarNames.ServerUrls);
+				return ParseServerUrls(!string.IsNullOrEmpty(configurationKeyValue.Value)
+					? configurationKeyValue
+					: Read(ConfigConsts.EnvVarNames.ServerUrl));
+			}
+		}
+
+		/// <inheritdoc />
+		public Uri ServerUrl
+		{
+			get
+			{
+				// Fallback to using the first ServerUrls in the event ServerUrl is not specified
+				var configurationKeyValue = Read(ConfigConsts.EnvVarNames.ServerUrl);
+				return !string.IsNullOrEmpty(configurationKeyValue.Value)
+					? ParseServerUrl(configurationKeyValue)
+#pragma warning disable 618
+					: ServerUrls[0];
+#pragma warning restore 618
+			}
+		}
 
 		public string ServiceName => ParseServiceName(Read(ConfigConsts.EnvVarNames.ServiceName));
 

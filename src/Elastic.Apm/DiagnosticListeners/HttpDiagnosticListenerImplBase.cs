@@ -251,6 +251,6 @@ namespace Elastic.Apm.DiagnosticListeners
 		/// </summary>
 		/// <returns><c>true</c>, if request should not be captured, <c>false</c> otherwise.</returns>
 		/// <param name="requestUri">Request URI. It cannot be null</param>
-		private bool IsRequestFilteredOut(Uri requestUri) => _agent.ConfigurationReader.ServerUrls.Any(n => n.IsBaseOf(requestUri));
+		private bool IsRequestFilteredOut(Uri requestUri) => _agent.ConfigurationReader.ServerUrl.IsBaseOf(requestUri);
 	}
 }

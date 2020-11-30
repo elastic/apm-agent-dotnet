@@ -140,26 +140,37 @@ namespace Elastic.Apm.Config
 
 		/// <summary>
 		/// Whether the agent is recording.
-		/// When set to <c>true</c>. the agent instruments and capture requests, tracks errors, and 
-		/// collects and sends metrics. 
-		/// When set to <c>false</c>, the agent does not collect data or communicate with the APM server, except to 
-		/// fetch central configuration. 
-		/// Recording can be changed during the lifetime of the application.		
+		/// When set to <c>true</c>. the agent instruments and capture requests, tracks errors, and
+		/// collects and sends metrics.
+		/// When set to <c>false</c>, the agent does not collect data or communicate with the APM server, except to
+		/// fetch central configuration.
+		/// Recording can be changed during the lifetime of the application.
 		/// </summary>
 		/// <remarks>
-		/// As this is a reversible switch, agent threads are not terminated when inactivated, but they will be mostly 
+		/// As this is a reversible switch, agent threads are not terminated when inactivated, but they will be mostly
 		/// idle in this state, so the overhead should be negligible.
 		/// </remarks>
 		public bool Recording { get; }
 
-		// <summary>
-		// Sometimes it is necessary to sanitize the data sent to Elastic APM, e.g. remove sensitive data.
-		// Configure a list of wildcard patterns of field names which should be sanitized.
-		// These apply for example to HTTP headers and application/x-www-form-urlencoded data.
-		// </summary>
+		/// <summary>
+		/// Sometimes it is necessary to sanitize the data sent to Elastic APM, e.g. remove sensitive data.
+		/// Configure a list of wildcard patterns of field names which should be sanitized.
+		/// These apply for example to HTTP headers and application/x-www-form-urlencoded data.
+		/// </summary>
 		IReadOnlyList<WildcardMatcher> SanitizeFieldNames { get; }
 		string SecretToken { get; }
+
+		/// <summary>
+		/// The URLs for APM server.
+		/// </summary>
+		[Obsolete("Use ServerUrl")]
 		IReadOnlyList<Uri> ServerUrls { get; }
+
+		/// <summary>
+		/// The URL for APM server
+		/// </summary>
+		Uri ServerUrl { get; }
+
 		string ServiceName { get; }
 
 		string ServiceNodeName { get; }

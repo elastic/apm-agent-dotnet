@@ -76,7 +76,7 @@ Here is a sample `appsettings.json` configuration file for a typical ASP.NET Cor
   "AllowedHosts": "*",
   "ElasticApm": <2>
     {
-      "ServerUrls":  "http://myapmserver:8200",
+      "ServerUrl":  "http://myapmserver:8200",
       "SecretToken":  "apm-server-secret-token",
       "TransactionSampleRate": 1.0
     }
@@ -100,7 +100,7 @@ In this case, you can set the agent's log level with <<config-log-level,`Elastic
   "ElasticApm":
     {
       "LogLevel":  "Debug",
-      "ServerUrls":  "http://myapmserver:8200",
+      "ServerUrl":  "http://myapmserver:8200",
       "SecretToken":  "apm-server-secret-token",
       "TransactionSampleRate": 1.0
     }
@@ -134,7 +134,7 @@ Below is a sample `Web.config` configuration file for a ASP.NET application.
     <!-- ... -->
     <appSettings>
         <!-- ... -->
-        <add key="ElasticApm:ServerUrls" value="https://my-apm-server:8200" />
+        <add key="ElasticApm:ServerUrl" value="https://my-apm-server:8200" />
         <add key="ElasticApm:SecretToken" value="apm-server-secret-token" />
         <!-- ... -->
     </appSettings>
@@ -467,13 +467,13 @@ NOTE: This option requires APM Server 7.2 or later. It will have no effect on ol
 === Reporter configuration options
 
 [float]
-[[config-server-urls]]
-==== `ServerUrls`
+[[config-server-url]]
+==== `ServerUrl`
 
 [options="header"]
 |============
 | Environment variable name | IConfiguration or Web.config key
-| `ELASTIC_APM_SERVER_URLS` | `ElasticApm:ServerUrls`
+| `ELASTIC_APM_SERVER_URL` | `ElasticApm:ServerUrl`
 |============
 
 [options="header"]
@@ -484,7 +484,7 @@ NOTE: This option requires APM Server 7.2 or later. It will have no effect on ol
 
 The URL for your APM Server. The URL must be fully qualified, including protocol (`http` or `https`) and port.
 
-NOTE: Providing multiple URLs is not supported by the agent yet. If multiple URLs are provided only the first one will be used.
+IMPORTANT: Use of `ServerUrls` is deprecated. Use `ServerUrl`
 
 [float]
 [[config-secret-token]]
@@ -1016,7 +1016,7 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-recording,`Recording`>> | Yes | Core
 | <<config-sanitize-field-names,`SanitizeFieldNames`>> | No | Core
 | <<config-secret-token,`SecretToken`>> | No | Reporter
-| <<config-server-urls,`ServerUrls`>> | No | Reporter
+| <<config-server-url,`ServerUrl`>> | No | Reporter
 | <<config-service-name,`ServiceName`>> | No | Core
 | <<config-service-node-name, `ServiceNodeName`>> | No | Core
 | <<config-service-version,`ServiceVersion`>> | No | Core

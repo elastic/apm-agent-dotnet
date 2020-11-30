@@ -22,6 +22,7 @@ namespace Elastic.Apm.Config
 		private readonly LazyContextualInit<int> _cachedMaxBatchEventCount = new LazyContextualInit<int>();
 		private readonly LazyContextualInit<int> _cachedMaxQueueEventCount = new LazyContextualInit<int>();
 		private readonly LazyContextualInit<IReadOnlyList<Uri>> _cachedServerUrls = new LazyContextualInit<IReadOnlyList<Uri>>();
+		private readonly LazyContextualInit<Uri> _cachedServerUrl = new LazyContextualInit<Uri>();
 
 		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersDisableMetrics =
 			new LazyContextualInit<IReadOnlyList<WildcardMatcher>>();
@@ -187,6 +188,25 @@ namespace Elastic.Apm.Config
 			return ConsoleLogger.DefaultLogLevel;
 		}
 
+		protected Uri ParseServerUrl(ConfigurationKeyValue kv) =>
+			_cachedServerUrl.IfNotInited?.InitOrGet(() => ParseServerUrlImpl(kv)) ?? _cachedServerUrl.Value;
+
+		private Uri ParseServerUrlImpl(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value))
+			{
+				_logger?.Debug()?.Log("Using default ServerUrl: {ServerUrl}", DefaultValues.ServerUri);
+				return DefaultValues.ServerUri;
+			}
+
+			if (TryParseUri(kv.Value, out var uri))
+				return uri;
+
+			_logger?.Error()?.Log("Failed parsing server URL from {Origin}: {Key}, value: {Value}", kv.ReadFrom, kv.Key, kv.Value);
+			_logger?.Debug()?.Log("Using default ServerUrl: {ServerUrl}", DefaultValues.ServerUri);
+			return DefaultValues.ServerUri;
+		}
+
 		protected IReadOnlyList<Uri> ParseServerUrls(ConfigurationKeyValue kv) =>
 			_cachedServerUrls.IfNotInited?.InitOrGet(() => ParseServerUrlsImpl(kv)) ?? _cachedServerUrls.Value;
 
@@ -211,7 +231,7 @@ namespace Elastic.Apm.Config
 			{
 				_logger?.Warning()
 					?.Log(nameof(EnvVarNames.ServerUrls)
-						+ " configuration option contains more than one URL which is not supported by the agent yet"
+						+ " configuration option contains more than one URL which is not supported by the agent"
 						+ " - only the first URL will be used."
 						+ " Configuration option's source: {Origin}, key: `{Key}', value: `{Value}'."
 						+ " The first URL: `{ApmServerUrl}'",
@@ -225,16 +245,6 @@ namespace Elastic.Apm.Config
 				list.Add(DefaultValues.ServerUri);
 				_logger?.Debug()?.Log("Using default ServerUrl: {ServerUrl}", DefaultValues.ServerUri);
 				return list;
-			}
-
-			bool TryParseUri(string u, out Uri uri)
-			{
-				// https://stackoverflow.com/a/33573337
-				uri = null;
-				if (!Uri.IsWellFormedUriString(u, UriKind.Absolute)) return false;
-				if (!Uri.TryCreate(u, UriKind.Absolute, out uri)) return false;
-
-				return uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps;
 			}
 		}
 
@@ -940,6 +950,14 @@ namespace Elastic.Apm.Config
 			M,
 			Ms,
 			S
+		}
+
+		private static bool TryParseUri(string u, out Uri uri)
+		{
+			// https://stackoverflow.com/a/33573337
+			uri = null;
+			if (!Uri.TryCreate(u, UriKind.Absolute, out uri)) return false;
+			return uri.IsWellFormedOriginalString() && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
 		}
 	}
 }

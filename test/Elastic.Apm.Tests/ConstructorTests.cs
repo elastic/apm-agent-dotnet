@@ -59,6 +59,7 @@ namespace Elastic.Apm.Tests
 			public string SecretToken { get; }
 			public string ApiKey { get; }
 			public IReadOnlyList<Uri> ServerUrls => new List<Uri> { ConfigConsts.DefaultValues.ServerUri };
+			public Uri ServerUrl => ConfigConsts.DefaultValues.ServerUri;
 			public string ServiceName { get; }
 			public string ServiceVersion { get; }
 			public IReadOnlyList<WildcardMatcher> DisableMetrics => ConfigConsts.DefaultValues.DisableMetrics;

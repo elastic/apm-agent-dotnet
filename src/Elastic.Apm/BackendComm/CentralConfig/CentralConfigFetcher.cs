@@ -69,7 +69,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			_agentTimer = agentTimer ?? new AgentTimer();
 
-			_getConfigAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildGetConfigAbsoluteUrl(initialConfigSnapshot.ServerUrls.First(), service);
+			_getConfigAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildGetConfigAbsoluteUrl(initialConfigSnapshot.ServerUrl, service);
 			_logger.Debug()
 				?.Log("Combined absolute URL for APM Server get central configuration endpoint: `{Url}'. Service: {Service}."
 					, _getConfigAbsoluteUrl, service);
@@ -269,7 +269,10 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			public string SecretToken => _wrapped.SecretToken;
 
+			[Obsolete("Use ServerUrl")]
 			public IReadOnlyList<Uri> ServerUrls => _wrapped.ServerUrls;
+
+			public Uri ServerUrl => _wrapped.ServerUrl;
 
 			public string ServiceName => _wrapped.ServiceName;
 			public string ServiceNodeName => _wrapped.ServiceNodeName;
