@@ -21,6 +21,20 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.7.1]]
+==== 1.7.1
+
+[float]
+===== Features
+- {pull}1057[#1057] Introduce `GetLabel<T>` method on `IExecutionSegment` (issue: https://github.com/elastic/apm-agent-dotnet/issues/1033[#1033])
+
+[float]
+===== Bug fixes
+- {pull}1052[#1052] Increased transaction duration due to stack trace capturing (issue: https://github.com/elastic/apm-agent-dotnet/issues/1039[#1039])
+- {pull}1053[#1053] Warning with `Synchronous operations are disallowed` on ASP.NET Core during request body capturing (issue: https://github.com/elastic/apm-agent-dotnet/issues/1044[#1044])
+- {pull}1042[#1042] SqlClient instrumentation on .NET 5 (issue: https://github.com/elastic/apm-agent-dotnet/issues/1025[#1025])
+- {pull}1060[#1060] `UseAllElasticApm` with `IHostBuilder` missing auto instrumentation (issue: https://github.com/elastic/apm-agent-dotnet/issues/1059[#1059])
+
 [[release-notes-1.7.0]]
 ==== 1.7.0
 
@@ -45,6 +59,10 @@ endif::[]
 - {pull}992[#992] On ASP.NET Core `CurrentTransaction` is null in some cases (issues: https://github.com/elastic/apm-agent-dotnet/issues/934[#934], https://github.com/elastic/apm-agent-dotnet/issues/972[#972])
 - {pull}971[#971] Avoid double initialization in `HostBuilderExtensions`
 - {pull}999[#999] Capture body with large file error (issue: https://github.com/elastic/apm-agent-dotnet/issues/960[#960])
+
+[float]
+===== Breaking changes
+- Binary compatibility on `IExecutionSegment.CaptureException` and `IExecutionSegment.CaptureError` with libraries depending on previous version. If this happens you need to update `Elastic.Apm` to 1.7.0 in your projects (Issue: (https://github.com/elastic/apm-agent-dotnet/issues/1067)[#1067])
 
 [[release-notes-1.6.1]]
 ==== 1.6.1
