@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using SampleAspNetCoreApp;
 using SampleAspNetCoreApp.Controllers;
@@ -91,9 +92,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task Body_Capture_Should_Not_Error_When_Large_File()
 		{
 			var sutEnv = StartSutEnv(new MockConfigSnapshot(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
-			var file = Path.GetTempFileName();
 
-			try
+			using (var tempFile = new TempFile())
 			{
 				var content = $"Building a large file for testing!{Environment.NewLine}";
 				var count = Encoding.UTF8.GetByteCount(content);
@@ -101,7 +101,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				var repeat = (150 * 1024 * 1024) / count;
 
 				// create a ~150Mb file for testing
-				using (var stream = new FileStream(file, FileMode.OpenOrCreate, FileAccess.Write))
+				using (var stream = new FileStream(tempFile.Path, FileMode.OpenOrCreate, FileAccess.Write))
 				{
 					for (var i = 0; i < repeat; i++)
 						stream.Write(bytes, 0, count);
@@ -110,7 +110,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				HttpResponseMessage response;
 				using (var formData = new MultipartFormDataContent
 				{
-					{ new StreamContent(new FileStream(file, FileMode.Open, FileAccess.Read)), "file", "file" }
+					{ new StreamContent(new FileStream(tempFile.Path, FileMode.Open, FileAccess.Read)), "file", "file" }
 				})
 					response = await sutEnv.HttpClient.PostAsync("Home/File", formData);
 
@@ -120,17 +120,123 @@ namespace Elastic.Apm.AspNetCore.Tests
 				sutEnv.MockPayloadSender.Transactions.Should().HaveCount(1);
 				sutEnv.MockPayloadSender.Errors.Should().BeEmpty();
 			}
-			finally
+		}
+
+		[Fact]
+		public async Task Body_Capture_Should_Capture_Stream()
+		{
+			var sutEnv = StartSutEnv(new MockConfigSnapshot(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+
+			var json = JsonConvert.SerializeObject(new { key1 = "value1" });
+			var count = Encoding.UTF8.GetByteCount(json);
+
+			HttpResponseMessage response;
+			using (var content = new StringContent(json, Encoding.UTF8, "application/json"))
+				response = await sutEnv.HttpClient.PostAsync("Home/Stream", content);
+
+			response.IsSuccessStatusCode.Should().BeTrue();
+			var responseContent = int.Parse(await response.Content.ReadAsStringAsync());
+			responseContent.Should().Be(count);
+
+			sutEnv.MockPayloadSender.Transactions.Should().HaveCount(1);
+			var transaction = sutEnv.MockPayloadSender.FirstTransaction;
+			transaction.Context.Request.Body.Should().NotBeNull().And.BeOfType<string>();
+			var body = (string)transaction.Context.Request.Body;
+			body.Should().HaveLength(json.Length);
+			sutEnv.MockPayloadSender.Errors.Should().BeEmpty();
+		}
+
+		[Fact]
+		public async Task Body_Capture_Should_Capture_Stream_Up_To_MaxLength()
+		{
+			var sutEnv = StartSutEnv(new MockConfigSnapshot(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+
+			var jObject = new JObject();
+			var charLength = 0;
+			var i = 0;
+
+			// an approximation, since doesn't include JSON syntax
+			while (charLength < Consts.RequestBodyMaxLength)
 			{
-				try
-				{
-					File.Delete(file);
-				}
-				catch
-				{
-					// problem deleting temp file. ignore.
-				}
+				var key = $"key{i}";
+				var value = $"value{i}";
+				charLength += key.Length + value.Length;
+				jObject.Add(key, value);
+				++i;
 			}
+
+			var json = jObject.ToString(Formatting.None);
+			var count = Encoding.UTF8.GetByteCount(json);
+
+			HttpResponseMessage response;
+			using (var content = new StringContent(json, Encoding.UTF8, "application/json"))
+				response = await sutEnv.HttpClient.PostAsync("Home/Stream", content);
+
+			response.IsSuccessStatusCode.Should().BeTrue();
+			var responseContent = int.Parse(await response.Content.ReadAsStringAsync());
+			responseContent.Should().Be(count);
+
+			sutEnv.MockPayloadSender.Transactions.Should().HaveCount(1);
+			var transaction = sutEnv.MockPayloadSender.FirstTransaction;
+			transaction.Context.Request.Body.Should().NotBeNull().And.BeOfType<string>();
+			var body = (string)transaction.Context.Request.Body;
+			body.Should().HaveLength(Consts.RequestBodyMaxLength);
+			sutEnv.MockPayloadSender.Errors.Should().BeEmpty();
+		}
+
+		[Fact]
+		public async Task Body_Capture_Should_Capture_Form()
+		{
+			var sutEnv = StartSutEnv(new MockConfigSnapshot(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+
+			var formValues = new List<KeyValuePair<string, string>>
+			{
+				new KeyValuePair<string, string>("key1", "value1"),
+				new KeyValuePair<string, string>("key2", "value2"),
+			};
+
+			HttpResponseMessage response;
+			using (var formData = new FormUrlEncodedContent(formValues))
+				response = await sutEnv.HttpClient.PostAsync("Home/Form", formData);
+
+			response.IsSuccessStatusCode.Should().BeTrue();
+			sutEnv.MockPayloadSender.Transactions.Should().HaveCount(1);
+			var transaction = sutEnv.MockPayloadSender.FirstTransaction;
+			transaction.Context.Request.Body.Should().NotBeNull().And.BeOfType<string>();
+			var body = (string)transaction.Context.Request.Body;
+			body.Should().HaveLength("key1=value1&key2=value2".Length);
+			sutEnv.MockPayloadSender.Errors.Should().BeEmpty();
+		}
+
+		[Fact]
+		public async Task Body_Capture_Should_Capture_Form_Up_To_MaxLength()
+		{
+			var sutEnv = StartSutEnv(new MockConfigSnapshot(new NoopLogger(), captureBody: ConfigConsts.SupportedValues.CaptureBodyAll));
+
+			var charLength = 0;
+			var formValues = new List<KeyValuePair<string, string>>();
+			var i = 0;
+
+			while (charLength < Consts.RequestBodyMaxLength)
+			{
+				var key = $"key{i}";
+				var value = $"value{i}";
+				charLength += key.Length + value.Length;
+				formValues.Add(new KeyValuePair<string, string>(key, value));
+				++i;
+			}
+
+			HttpResponseMessage response;
+			using (var formData = new FormUrlEncodedContent(formValues))
+				response = await sutEnv.HttpClient.PostAsync("Home/Form", formData);
+
+			response.IsSuccessStatusCode.Should().BeTrue();
+			sutEnv.MockPayloadSender.Transactions.Should().HaveCount(1);
+			var transaction = sutEnv.MockPayloadSender.FirstTransaction;
+			transaction.Context.Request.Body.Should().NotBeNull().And.BeOfType<string>();
+			var body = (string)transaction.Context.Request.Body;
+			body.Should().HaveLength(Consts.RequestBodyMaxLength);
+			sutEnv.MockPayloadSender.Errors.Should().BeEmpty();
 		}
 
 		[Fact]
