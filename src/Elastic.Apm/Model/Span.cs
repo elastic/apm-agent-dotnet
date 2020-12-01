@@ -20,6 +20,7 @@ namespace Elastic.Apm.Model
 {
 	internal class Span : ISpan
 	{
+		private readonly IApmServerInfo _apmServerInfo;
 		private readonly Lazy<SpanContext> _context = new Lazy<SpanContext>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly Transaction _enclosingTransaction;
@@ -28,22 +29,6 @@ namespace Elastic.Apm.Model
 		private readonly IApmLogger _logger;
 		private readonly Span _parentSpan;
 		private readonly IPayloadSender _payloadSender;
-
-		/// <summary>
-		/// In some cases capturing the stacktrace in <see cref="End" /> results in a stack trace which is not very useful.
-		/// In such cases we capture the stacktrace on span start.
-		/// These are typically async calls - e.g. capturing stacktrace for outgoing HTTP requests in the
-		/// System.Net.Http.HttpRequestOut.Stop
-		/// diagnostic source event produces a stack trace that does not contain the caller method in user code - therefore we
-		/// capture the stacktrace is .Start
-		/// </summary>
-		private readonly StackFrame[] _stackFrames;
-
-		/// <summary>
-		/// Captures the sample rate of the agent when this span was created.
-		/// </summary>
-		[JsonProperty("sample_rate")]
-		internal double SampleRate { get; }
 
 		// This constructor is meant for deserialization
 		[JsonConstructor]
@@ -100,20 +85,14 @@ namespace Elastic.Apm.Model
 				{
 					enclosingTransaction.SpanCount.IncrementStarted();
 
-					if (captureStackTraceOnStart)
-					{
-						var stackTrace = new StackTrace(true);
-						try
-						{
-							// I saw EnhancedStackTrace throwing exceptions in some environments
-							// therefore we try-catch and fall back to a non-demystified call stack.
-							_stackFrames = new EnhancedStackTrace(stackTrace).GetFrames();
-						}
-						catch
-						{
-							_stackFrames = stackTrace.GetFrames();
-						}
-					}
+					// In some cases capturing the stacktrace in End() results in a stack trace which is not very useful.
+					// In such cases we capture the stacktrace on span start.
+					// These are typically async calls - e.g. capturing stacktrace for outgoing HTTP requests in the
+					// System.Net.Http.HttpRequestOut.Stop
+					// diagnostic source event produces a stack trace that does not contain the caller method in user code - therefore we
+					// capture the stacktrace is .Start
+					if (captureStackTraceOnStart && ConfigSnapshot.StackTraceLimit != 0 && ConfigSnapshot.SpanFramesMinDurationInMilliseconds != 0)
+						RawStackTrace = new StackTrace(true);
 				}
 			}
 			else
@@ -127,13 +106,12 @@ namespace Elastic.Apm.Model
 		}
 
 		private bool _isEnded;
-		private readonly IApmServerInfo _apmServerInfo;
 
 		[MaxLength]
 		public string Action { get; set; }
 
 		[JsonIgnore]
-		private IConfigSnapshot ConfigSnapshot => _enclosingTransaction.ConfigSnapshot;
+		internal IConfigSnapshot ConfigSnapshot => _enclosingTransaction.ConfigSnapshot;
 
 		/// <summary>
 		/// Any other arbitrary data captured by the agent, optionally provided by the user.
@@ -186,6 +164,19 @@ namespace Elastic.Apm.Model
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
 
+		/// <summary>
+		/// This holds the raw stack trace that was captured when the span either started or ended (depending on the parameter
+		/// passed to the .ctor)
+		/// This will be turned into an elastic stack trace and sent to APM Server in the <see cref="StackTrace" /> property
+		/// </summary>
+		internal StackTrace RawStackTrace;
+
+		/// <summary>
+		/// Captures the sample rate of the agent when this span was created.
+		/// </summary>
+		[JsonProperty("sample_rate")]
+		internal double SampleRate { get; }
+
 		[JsonIgnore]
 		internal bool ShouldBeSentToApmServer => IsSampled && !_isDropped;
 
@@ -231,6 +222,22 @@ namespace Elastic.Apm.Model
 			{ nameof(Outcome), Outcome },
 			{ nameof(IsSampled), IsSampled }
 		}.ToString();
+
+		public bool TryGetLabel<T>(string key, out T value)
+		{
+			if (Context.InternalLabels.Value.InnerDictionary.TryGetValue(key, out var label))
+			{
+				if (label?.Value is T t)
+				{
+					value = t;
+					return true;
+				}
+			}
+
+			value = default;
+			return false;
+		}
+
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
 		{
@@ -298,38 +305,10 @@ namespace Elastic.Apm.Model
 
 				// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
-				if (ConfigSnapshot.StackTraceLimit != 0 && ConfigSnapshot.SpanFramesMinDurationInMilliseconds != 0)
-				{
-					if (Duration >= ConfigSnapshot.SpanFramesMinDurationInMilliseconds
-						|| ConfigSnapshot.SpanFramesMinDurationInMilliseconds < 0)
-					{
-						if (_stackFrames == null)
-						{
-							StackFrame[] trace;
-							var stackTrace = new StackTrace(true);
-							try
-							{
-								// I saw EnhancedStackTrace throwing exceptions in some environments
-								// therefore we try-catch and fall back to a non-demystified call stack.
-								trace = new EnhancedStackTrace(stackTrace).GetFrames();
-							}
-							catch
-							{
-								trace = stackTrace.GetFrames();
-							}
-
-							StackTrace = StacktraceHelper.GenerateApmStackTrace(trace,
-								_logger,
-								ConfigSnapshot, _apmServerInfo, $"Span `{Name}'");
-						}
-						else
-						{
-							StackTrace = StacktraceHelper.GenerateApmStackTrace(_stackFrames,
-								_logger,
-								ConfigSnapshot, _apmServerInfo, $"Span `{Name}'");
-						}
-					}
-				}
+				if (ConfigSnapshot.StackTraceLimit != 0 && ConfigSnapshot.SpanFramesMinDurationInMilliseconds != 0 && RawStackTrace == null
+					&& (Duration >= ConfigSnapshot.SpanFramesMinDurationInMilliseconds
+						|| ConfigSnapshot.SpanFramesMinDurationInMilliseconds < 0))
+					RawStackTrace = new StackTrace(true);
 
 				_payloadSender.QueueSpan(this);
 			}

@@ -10,6 +10,7 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using static Elastic.Apm.AspNetCore.Consts;
 
 namespace Elastic.Apm.AspNetCore.Extensions
@@ -65,6 +66,12 @@ namespace Elastic.Apm.AspNetCore.Extensions
 				}
 				else
 				{
+					// allow synchronous reading of the request stream, which is false by default from 3.0 onwards.
+					// Reading must be synchronous as it can happen within a synchronous diagnostic listener method
+					var bodyControlFeature = request.HttpContext.Features.Get<IHttpBodyControlFeature>();
+					if (bodyControlFeature != null)
+						bodyControlFeature.AllowSynchronousIO = true;
+
 					request.EnableBuffering();
 					var requestBody = request.Body;
 					requestBody.Position = 0;
