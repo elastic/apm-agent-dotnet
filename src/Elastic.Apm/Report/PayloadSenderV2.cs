@@ -72,7 +72,7 @@ namespace Elastic.Apm.Report
 			_payloadItemSerializer = new PayloadItemSerializer(config);
 			_configSnapshot = config;
 
-			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(config.ServerUrls.First());
+			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(config.ServerUrl);
 
 			System = system;
 

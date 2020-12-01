@@ -20,7 +20,7 @@ The API does not require explicit Agent initialization—agent initialization is
 [[implicit-initialization]]
 === Implicit agent initialization
 
-If you don't explicitly initialize the agent, it will be started with a default component setup. This means the Agent will read <<configuration,configuration settings>> from environment variables. If you don't set an environment variable, the Agent will use the default value. For example, the `ServerUrls` default is `http://localhost:8200`.
+If you don't explicitly initialize the agent, it will be started with a default component setup. This means the Agent will read <<configuration,configuration settings>> from environment variables. If you don't set an environment variable, the Agent will use the default value. For example, the `ServerUrl` default is `http://localhost:8200`.
 
 This implicit initialization of the agent happens on the first call on the `Elastic.Apm.Agent` class.
 

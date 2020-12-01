@@ -23,7 +23,7 @@ namespace Elastic.Apm.ServerInfo
 		{
 			try
 			{
-				using var requestMessage = new HttpRequestMessage(HttpMethod.Get, configSnapshot.ServerUrls[0]);
+				using var requestMessage = new HttpRequestMessage(HttpMethod.Get, configSnapshot.ServerUrl);
 				requestMessage.Headers.Add("Metadata", "true");
 
 				var responseMessage = await httpClient.SendAsync(requestMessage).ConfigureAwait(false);

@@ -17,11 +17,11 @@ namespace Elastic.Apm.Tests.Mocks
 		private const string ThisClassName = nameof(MockConfigSnapshot);
 		private readonly string _apiKey;
 		private readonly string _applicationNamespaces;
-
 		private readonly string _captureBody;
 		private readonly string _captureBodyContentTypes;
 		private readonly string _captureHeaders;
 		private readonly string _centralConfig;
+		private readonly string _cloudProvider;
 		private readonly string _dbgDescription;
 		private readonly string _disableMetrics;
 		private readonly string _enabled;
@@ -37,6 +37,7 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly string _recording;
 		private readonly string _sanitizeFieldNames;
 		private readonly string _secretToken;
+		private readonly string _serverUrl;
 		private readonly string _serverUrls;
 		private readonly string _serviceName;
 		private readonly string _serviceNodeName;
@@ -83,7 +84,8 @@ namespace Elastic.Apm.Tests.Mocks
 			// none is **not** the default value, but we don't want to query for cloud metadata in all tests
 			string cloudProvider = SupportedValues.CloudProviderNone,
 			string enabled = null,
-			string recording = null
+			string recording = null,
+			string serverUrl = null
 		) : base(logger, ThisClassName)
 		{
 			_serverUrls = serverUrls;
@@ -119,9 +121,8 @@ namespace Elastic.Apm.Tests.Mocks
 			_cloudProvider = cloudProvider;
 			_enabled = enabled;
 			_recording = recording;
+			_serverUrl = serverUrl;
 		}
-
-		private readonly string _cloudProvider;
 
 		public string ApiKey => ParseApiKey(Kv(EnvVarNames.ApiKey, _apiKey, Origin));
 
@@ -166,7 +167,24 @@ namespace Elastic.Apm.Tests.Mocks
 			ParseSanitizeFieldNames(Kv(EnvVarNames.SanitizeFieldNames, _sanitizeFieldNames, Origin));
 
 		public string SecretToken => ParseSecretToken(Kv(EnvVarNames.SecretToken, _secretToken, Origin));
-		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(Kv(EnvVarNames.ServerUrls, _serverUrls, Origin));
+
+		[Obsolete("Use ServerUrl")]
+		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(_serverUrls != null
+			? Kv(EnvVarNames.ServerUrls, _serverUrls, Origin)
+			: Kv(EnvVarNames.ServerUrl, _serverUrl, Origin));
+
+		public Uri ServerUrl
+		{
+			get
+			{
+				return _serverUrl != null
+					? ParseServerUrl(Kv(EnvVarNames.ServerUrl, _serverUrl, Origin))
+#pragma warning disable 618
+					: ServerUrls[0];
+#pragma warning restore 618
+			}
+		}
+
 		public string ServiceName => ParseServiceName(Kv(EnvVarNames.ServiceName, _serviceName, Origin));
 		public string ServiceNodeName => ParseServiceNodeName(Kv(EnvVarNames.ServiceNodeName, _serviceNodeName, Origin));
 		public string ServiceVersion => ParseServiceVersion(Kv(EnvVarNames.ServiceVersion, _serviceVersion, Origin));
