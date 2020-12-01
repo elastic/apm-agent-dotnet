@@ -52,6 +52,7 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		internal const string GenNSpansPageRelativePath = HomePageRelativePath + "/" + nameof(GenNSpans);
 		internal const string GetDotNetRuntimeDescriptionPageRelativePath = HomePageRelativePath + "/" + nameof(GetDotNetRuntimeDescription);
 		internal const string HomePageRelativePath = "Home";
+		internal const string HttpUnhandledExceptionPageRelativePath = HomePageRelativePath + "/" + nameof(HttpUnhandledException);
 		internal const string LabelsTestRelativePath = HomePageRelativePath + "/" + nameof(LabelsTest);
 		internal const string NotFoundPageRelativePath = HomePageRelativePath + "/" + nameof(NotFound);
 
@@ -123,6 +124,9 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		public ActionResult Sample(int id) => Content(id.ToString());
 
 		public ActionResult NotFound() => HttpNotFound();
+
+		public ActionResult HttpUnhandledException() =>
+			throw new HttpUnhandledException("unhandled exception", new Exception("inner exception"));
 
 		internal static async Task<ActionResult> CustomSpanThrowsInternal()
 		{

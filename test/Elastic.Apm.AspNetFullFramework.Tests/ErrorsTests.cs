@@ -151,6 +151,37 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			});
 		}
 
+		[AspNetFullFrameworkFact]
+		public async Task InnerException_Captured_When_HttpUnhandledException_Thrown()
+		{
+			var errorPageData = SampleAppUrlPaths.HttpUnhandledExceptionPage;
+			await SendGetRequestToSampleAppAndVerifyResponse(errorPageData.Uri, errorPageData.StatusCode);
+
+			await WaitAndCustomVerifyReceivedData(receivedData =>
+			{
+				VerifyReceivedDataSharedConstraints(errorPageData, receivedData);
+
+				var transaction = receivedData.Transactions.First();
+				transaction.Context.Request.Url.Search.Should().BeNull();
+				transaction.IsSampled.Should().BeTrue();
+				transaction.Outcome.Should().Be(Outcome.Failure);
+
+				var span = receivedData.Spans.First();
+				VerifySpanNameTypeSubtypeAction(span, HomeController.TestSpanPrefix);
+				span.TraceId.Should().Be(transaction.TraceId);
+				span.TransactionId.Should().Be(transaction.Id);
+				span.ParentId.Should().Be(transaction.Id);
+				span.ShouldOccurBetween(transaction);
+
+				receivedData.Errors.Count.Should().Be(1);
+				var error = receivedData.Errors.First();
+				error.Exception.Message.Should().Be(HomeController.ExceptionMessage);
+				error.Exception.Type.Should().Be(typeof(Exception).FullName);
+				error.Exception.StackTrace.Should().Contain(f => f.Function == "HttpUnhandledException");
+				VerifyErrorShared(error, transaction);
+			});
+		}
+
 		private static void VerifyErrorShared(ErrorDto error, TransactionDto transaction)
 		{
 			error.TraceId.Should().Be(transaction.TraceId);

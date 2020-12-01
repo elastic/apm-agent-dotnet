@@ -311,7 +311,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			var exception = application.Server.GetLastError();
 			if (exception != null)
 			{
-				if (exception is HttpUnhandledException unhandledException)
+				if (exception is HttpUnhandledException unhandledException && unhandledException.InnerException != null)
 					exception = unhandledException.InnerException;
 
 				transaction.CaptureException(exception);
