@@ -62,7 +62,7 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
-		public void ServerUrlsInvalidUrlTest()
+		public void ServerUrls_Should_Use_Default_Value_When_Invalid_Url()
 		{
 			var serverUrl = "InvalidUrl";
 			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(serverUrls: serverUrl)));
@@ -79,7 +79,7 @@ namespace Elastic.Apm.Tests
 		}
 
 		[Fact]
-		public void ServerUrlInvalidUrlLogTest()
+		public void ServerUrls_Should_Log_Error_When_Invalid_Url()
 		{
 			var serverUrl = "InvalidUrl";
 			var logger = new TestLogger();
@@ -97,6 +97,22 @@ namespace Elastic.Apm.Tests
 					EnvVarNames.ServerUrls,
 					serverUrl
 				);
+		}
+
+		[Fact]
+		public void ServerUrls_Should_Log_Info_Deprecated()
+		{
+			var serverUrl = DefaultValues.ServerUri.ToString();
+			var logger = new TestLogger(LogLevel.Information);
+			var agent = new ApmAgent(new TestAgentComponents(logger, new MockConfigSnapshot(logger, serverUrls: serverUrl)));
+			agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultValues.ServerUri);
+			agent.ConfigurationReader.ServerUrl.Should().Be(DefaultValues.ServerUri);
+
+			logger.Lines.Should().NotBeEmpty();
+			// ReSharper disable once UseIndexFromEndExpression
+			logger.Lines[logger.Lines.Count - 1]
+				.Should()
+				.Contain($"{EnvVarNames.ServerUrls} is deprecated. Use {EnvVarNames.ServerUrl}");
 		}
 
 		[Fact]

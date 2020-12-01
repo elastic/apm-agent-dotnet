@@ -213,7 +213,20 @@ namespace Elastic.Apm.Config
 		private IReadOnlyList<Uri> ParseServerUrlsImpl(ConfigurationKeyValue kv)
 		{
 			var list = new List<Uri>();
-			if (kv == null || string.IsNullOrEmpty(kv.Value)) return LogAndReturnDefault().AsReadOnly();
+			if (kv == null || string.IsNullOrEmpty(kv.Value))
+				return LogAndReturnDefault().AsReadOnly();
+
+			switch (kv.Key)
+			{
+				case EnvVarNames.ServerUrls:
+					_logger?.Info()?.Log(
+						"{ServerUrls} is deprecated. Use {ServerUrl}", EnvVarNames.ServerUrls, EnvVarNames.ServerUrl);
+					break;
+				case KeyNames.ServerUrls:
+					_logger?.Info()?.Log(
+						"{ServerUrls} is deprecated. Use {ServerUrl}", KeyNames.ServerUrls, KeyNames.ServerUrl);
+					break;
+			}
 
 			var uriStrings = kv.Value.Split(',');
 			foreach (var u in uriStrings)
