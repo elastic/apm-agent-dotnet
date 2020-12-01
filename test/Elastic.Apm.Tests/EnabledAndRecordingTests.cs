@@ -6,15 +6,29 @@
 using System;
 using System.Diagnostics;
 using Elastic.Apm.Api;
+using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
+using Moq;
 using Xunit;
 
 namespace Elastic.Apm.Tests
 {
 	public class EnabledAndRecordingTests
 	{
+		[Fact]
+		public void Subscribers_Not_Subscribed_When_Agent_Disabled()
+		{
+			var payloadSender = new NoopPayloadSender();
+			var configReader = new MockConfigSnapshot(enabled: "false");
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, config: configReader));
+
+			var subscriber = new Mock<IDiagnosticsSubscriber>();
+			agent.Subscribe(subscriber.Object);
+			subscriber.Verify(s => s.Subscribe(It.IsAny<IApmAgent>()), Times.Never);
+		}
+
 		/// <summary>
 		/// Starts the agent with enabled=false and uses the API to capture 1 transaction.
 		/// Makes sure that the Tracer returns a NoopTransaction and no Transaction is captured by the PayloadSender
