@@ -61,6 +61,12 @@ Some examples:
 - `EfCoreDiagnosticsSubscriber`: captures database calls through Entity Framework Core
 - `SqlClientDiagnosticSubscriber`: captures database calls through `SqlClient` 
 
+[NOTE]
+--
+When the agent is configured with <<config-enabled, `Enabled` set to `false`>>, `Elastic.ApmAgent.Subscribe(params IDiagnosticsSubscriber[] subscribers)` will not subscribe the subscribers to
+diagnostic source events.
+--
+
 [float]
 [[api-tracer-api]]
 == Tracer API
