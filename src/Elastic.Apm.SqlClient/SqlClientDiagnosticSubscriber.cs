@@ -9,14 +9,15 @@ using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.SqlClient
 {
+	/// <summary>
+	/// Subscribes to diagnostics events from System.Data.SqlClient and Microsoft.Data.SqlClient
+	/// </summary>
 	public class SqlClientDiagnosticSubscriber : IDiagnosticsSubscriber
 	{
+		/// <inheritdoc />
 		public IDisposable Subscribe(IApmAgent agentComponents)
 		{
 			var retVal = new CompositeDisposable();
-
-			if (!agentComponents.ConfigurationReader.Enabled)
-				return retVal;
 
 			if (PlatformDetection.IsDotNetCore || PlatformDetection.IsDotNet5)
 			{
