@@ -484,7 +484,7 @@ NOTE: This option requires APM Server 7.2 or later. It will have no effect on ol
 
 The URL for your APM Server. The URL must be fully qualified, including protocol (`http` or `https`) and port.
 
-IMPORTANT: Use of `ServerUrls` is deprecated. Use `ServerUrl`
+IMPORTANT: Use of `ServerUrls` is deprecated. Use `ServerUrl`.
 
 [float]
 [[config-secret-token]]
