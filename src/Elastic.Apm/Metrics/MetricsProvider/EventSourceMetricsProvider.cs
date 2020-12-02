@@ -122,7 +122,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					?? throw new ArgumentNullException(nameof(eventSourceMetricsProvider));
 				_nameOfEnabledSources = nameOfEnabledSources ?? throw new ArgumentNullException(nameof(nameOfEnabledSources));
 				_metricsIntervalInSeconds = Math.Max(metricsIntervalInSeconds, 1);
-				TryEnablingEventSourceEventSource();
+				TryEnablingEvents();
 			}
 
 			protected override void OnEventSourceCreated(EventSource eventSource)
@@ -130,7 +130,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				if (AvailableMetrics.Keys.Contains(eventSource.Name))
 				{
 					_eventSourcesToEnable.Enqueue(eventSource);
-					TryEnablingEventSourceEventSource();
+					TryEnablingEvents();
 				}
 			}
 
@@ -217,7 +217,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				}
 			}
 
-			private void TryEnablingEventSourceEventSource()
+			private void TryEnablingEvents()
 			{
 				if (_nameOfEnabledSources == null)
 				{
