@@ -154,7 +154,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 		[AspNetFullFrameworkFact]
 		public async Task InnerException_Captured_When_HttpUnhandledException_Thrown()
 		{
-			var errorPageData = SampleAppUrlPaths.HttpUnhandledExceptionPage;
+			var errorPageData = SampleAppUrlPaths.WebformsExceptionPage;
 			await SendGetRequestToSampleAppAndVerifyResponse(errorPageData.Uri, errorPageData.StatusCode);
 
 			await WaitAndCustomVerifyReceivedData(receivedData =>
@@ -162,22 +162,17 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				VerifyReceivedDataSharedConstraints(errorPageData, receivedData);
 
 				var transaction = receivedData.Transactions.First();
+				transaction.Name.Should().Be("GET " + errorPageData.Uri.AbsolutePath);
 				transaction.Context.Request.Url.Search.Should().BeNull();
 				transaction.IsSampled.Should().BeTrue();
 				transaction.Outcome.Should().Be(Outcome.Failure);
 
-				var span = receivedData.Spans.First();
-				VerifySpanNameTypeSubtypeAction(span, HomeController.TestSpanPrefix);
-				span.TraceId.Should().Be(transaction.TraceId);
-				span.TransactionId.Should().Be(transaction.Id);
-				span.ParentId.Should().Be(transaction.Id);
-				span.ShouldOccurBetween(transaction);
-
 				receivedData.Errors.Count.Should().Be(1);
 				var error = receivedData.Errors.First();
-				error.Exception.Message.Should().Be(HomeController.ExceptionMessage);
-				error.Exception.Type.Should().Be(typeof(Exception).FullName);
-				error.Exception.StackTrace.Should().Contain(f => f.Function == "HttpUnhandledException");
+				error.Exception.Type.Should().Be(typeof(DivideByZeroException).FullName);
+				error.Exception.Message.Should().Be("Attempted to divide by zero.");
+				// happens in System.Web.UI.Page.Render
+				error.Exception.StackTrace.Should().Contain(f => f.Function == "Render");
 				VerifyErrorShared(error, transaction);
 			});
 		}

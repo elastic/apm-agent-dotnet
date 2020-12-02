@@ -191,8 +191,8 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData WebformsPage =
 				new SampleAppUrlPathData(nameof(Webforms) + ".aspx", 200);
 
-			internal static readonly SampleAppUrlPathData HttpUnhandledExceptionPage =
-				new SampleAppUrlPathData(HomeController.HttpUnhandledExceptionPageRelativePath, 500, errorsCount: 1, outcome: Outcome.Failure);
+			internal static readonly SampleAppUrlPathData WebformsExceptionPage =
+				new SampleAppUrlPathData(nameof(WebformsException) + ".aspx", 500, errorsCount: 1, outcome: Outcome.Failure);
 		}
 
 		private TimedEvent? _sampleAppClientCallTiming;
