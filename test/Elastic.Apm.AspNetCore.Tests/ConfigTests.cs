@@ -23,21 +23,28 @@ namespace Elastic.Apm.AspNetCore.Tests
 	{
 		private readonly WebApplicationFactory<Startup> _factory;
 
-		public ConfigTests(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _factory = factory;
+		public ConfigTests(WebApplicationFactory<Startup> factory, ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) =>
+			_factory = factory;
 
+		/// <summary>
+		/// Loads an appsetting.json with `enabled=false` and calls an HTTP endpoint which uses the public agent API.
+		/// Makes sure the agent does not capture a real transaction and no connection is made to the default APM Server endpoint.
+		/// Tests for: https://github.com/elastic/apm-agent-dotnet/issues/1077
+		/// </summary>
+		/// <param name="withDiagnosticSourceOnly"></param>
 		[InlineData(true)]
 		[InlineData(false)]
 		[Theory]
 		public async Task AgentDisabledInAppConfig(bool withDiagnosticSourceOnly)
 		{
 			var defaultServerUrlConnectionMade = false;
-			using var localServer = new LocalServer((context =>  defaultServerUrlConnectionMade = true ), "http://localhost:8200/");
+			using var localServer = new LocalServer(context => defaultServerUrlConnectionMade = true, "http://localhost:8200/");
 			var configReader = new MicrosoftExtensionsConfig(new ConfigurationBuilder()
 				.AddJsonFile($"TestConfigs{Path.DirectorySeparatorChar}appsettings_agentdisabled.json")
 				.Build(), new NoopLogger(), "test");
 
 			var capturedPayload = new MockPayloadSender();
-			 using var agent = new ApmAgent(new TestAgentComponents(
+			using var agent = new ApmAgent(new TestAgentComponents(
 				new NoopLogger(),
 				new ConfigSnapshotFromReader(configReader, "MicrosoftExtensionsConfigReader"), capturedPayload));
 
@@ -47,7 +54,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var response = await client.GetAsync("/Home/StartTransactionWithAgentApi");
 			response.IsSuccessStatusCode.Should().BeTrue();
 
-			var isParsed = (bool.TryParse(await response.Content.ReadAsStringAsync(), out var boolVal));
+			var isParsed = bool.TryParse(await response.Content.ReadAsStringAsync(), out var boolVal);
 
 			isParsed.Should().BeTrue();
 			boolVal.Should().BeFalse();

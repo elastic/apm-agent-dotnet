@@ -23,20 +23,22 @@ namespace Elastic.Apm.AspNetCore.Tests
 {
 	public static class Helper
 	{
-		internal static HttpClient ConfigureHttpClient<T>(bool createDefaultClient, bool useOnlyDiagnosticSource, ApmAgent agent, WebApplicationFactory<T> factory) where T : class
+		internal static HttpClient ConfigureHttpClient<T>(bool createDefaultClient, bool useOnlyDiagnosticSource, ApmAgent agent,
+			WebApplicationFactory<T> factory
+		) where T : class
 		{
 			HttpClient client;
 			if (createDefaultClient)
 			{
 #pragma warning disable IDE0022 // Use expression body for methods
-				client = Helper.GetClient(agent, factory, useOnlyDiagnosticSource);
+				client = GetClient(agent, factory, useOnlyDiagnosticSource);
 #pragma warning restore IDE0022 // Use expression body for methods
 #if NETCOREAPP3_0 || NETCOREAPP3_1
 				client.DefaultRequestVersion = new Version(2, 0);
 #endif
 			}
 			else
-				client = Helper.GetClientWithoutExceptionPage(agent, factory, useOnlyDiagnosticSource);
+				client = GetClientWithoutExceptionPage(agent, factory, useOnlyDiagnosticSource);
 
 			return client;
 		}
@@ -52,9 +54,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 						{
 							var subs = new IDiagnosticsSubscriber[]
 							{
-								new AspNetCoreDiagnosticSubscriber(),
-								new HttpDiagnosticsSubscriber(),
-								new EfCoreDiagnosticsSubscriber()
+								new AspNetCoreDiagnosticSubscriber(), new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber()
 							};
 							agent.Subscribe(subs);
 						}
@@ -76,31 +76,30 @@ namespace Elastic.Apm.AspNetCore.Tests
 			return builder.CreateClient();
 		}
 
-		internal static HttpClient GetClientWithoutExceptionPage<T>(ApmAgent agent, WebApplicationFactory<T> factory, bool useOnlyDiagnosticSource) where T : class
+		internal static HttpClient GetClientWithoutExceptionPage<T>(ApmAgent agent, WebApplicationFactory<T> factory, bool useOnlyDiagnosticSource)
+			where T : class
 		{
 			var builder = factory
-				  .WithWebHostBuilder(n =>
-				  {
-					  n.Configure(app =>
-					  {
-						  if (useOnlyDiagnosticSource)
-						  {
-							  var subs = new IDiagnosticsSubscriber[]
-							  {
-								  new HttpDiagnosticsSubscriber(),
-								  new EfCoreDiagnosticsSubscriber(),
-								  new AspNetCoreDiagnosticSubscriber()
-							  };
-							  agent.Subscribe(subs);
-						  }
-						  else
-							  app.UseElasticApm(agent, agent.Logger, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
+				.WithWebHostBuilder(n =>
+				{
+					n.Configure(app =>
+					{
+						if (useOnlyDiagnosticSource)
+						{
+							var subs = new IDiagnosticsSubscriber[]
+							{
+								new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber(), new AspNetCoreDiagnosticSubscriber()
+							};
+							agent.Subscribe(subs);
+						}
+						else
+							app.UseElasticApm(agent, agent.Logger, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber());
 
-						  Startup.ConfigureRoutingAndMvc(app);
-					  });
+						Startup.ConfigureRoutingAndMvc(app);
+					});
 
-					  n.ConfigureServices(ConfigureServices);
-				  });
+					n.ConfigureServices(ConfigureServices);
+				});
 
 			return builder.CreateClient();
 		}

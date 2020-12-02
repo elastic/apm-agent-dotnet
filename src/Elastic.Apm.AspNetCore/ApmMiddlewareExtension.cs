@@ -70,7 +70,7 @@ namespace Elastic.Apm.AspNetCore
 		{
 			if (!agent.ConfigurationReader.Enabled)
 			{
-				if(!Agent.IsConfigured)
+				if (!Agent.IsConfigured)
 					Agent.Setup(agent);
 				return builder;
 			}

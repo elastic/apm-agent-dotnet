@@ -194,7 +194,7 @@ namespace SampleAspNetCoreApp.Controllers
 		{
 			_sampleDataContext.Database.Migrate();
 			var model = _sampleDataContext.SampleTable.Select(item => item.Name).ToList();
-			var str =  string.Join(",", model.ToArray());
+			var str = string.Join(",", model.ToArray());
 
 			if (Agent.Tracer.CurrentTransaction != null) Agent.Tracer.CurrentTransaction.CaptureSpan("SampleSpan", "PerfBenchmark", () => { });
 
@@ -217,13 +217,13 @@ namespace SampleAspNetCoreApp.Controllers
 		/// <summary>
 		/// Used for testing the agent with `enabled=false` through appsettings.json
 		/// </summary>
-		/// <returns></returns>
+		/// <returns><code>true</code> if a real transaction was created, <code>false</code> otherwise</returns>
 		public IActionResult StartTransactionWithAgentApi()
 		{
 			var isTransactionWithValidTraceIdCreated = false;
 			Agent.Tracer.CaptureTransaction("a", "b", t =>
 			{
-				if(!string.IsNullOrEmpty(t.TraceId)) isTransactionWithValidTraceIdCreated = true;
+				if (!string.IsNullOrEmpty(t.TraceId)) isTransactionWithValidTraceIdCreated = true;
 			});
 			return Ok(isTransactionWithValidTraceIdCreated);
 		}
