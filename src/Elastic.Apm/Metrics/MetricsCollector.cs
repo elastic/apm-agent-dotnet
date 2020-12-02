@@ -110,6 +110,18 @@ namespace Elastic.Apm.Metrics
 					new CgroupMetricsProvider(_logger, collectCgroupMemLimitBytes, collectCgroupMemUsageBytes, collectCgroupStatsInactiveFileBytes));
 			}
 
+			if (PlatformDetection.IsDotNetCore || PlatformDetection.IsDotNet5)
+			{
+				var eventSourceMetricsToCollect = EventSourceMetricsProvider.AvailableMetrics
+					.SelectMany(x => x.Value)
+					.Where(metric => !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics, metric))
+					.ToList();
+				if (eventSourceMetricsToCollect.Any())
+				{
+					MetricsProviders.Add(new EventSourceMetricsProvider(_logger, eventSourceMetricsToCollect, (int)(interval / 1000)));
+				}
+			}
+
 			_logger.Info()?.Log("Collecting metrics in {interval} milliseconds interval", interval);
 			_timer = new Timer(interval);
 			_timer.Elapsed += (sender, args) => { CollectAllMetrics(); };
