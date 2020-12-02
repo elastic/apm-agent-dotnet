@@ -52,14 +52,13 @@ namespace Elastic.Apm.AspNetCore
 				? new EnvironmentConfigurationReader(logger)
 				: new MicrosoftExtensionsConfig(configuration, logger, builder.ApplicationServices.GetEnvironmentName()) as IConfigurationReader;
 
-			if (!configReader.Enabled)
-				return builder;
-
 			var config = new AgentComponents(configurationReader: configReader, logger: logger);
 			HostBuilderExtensions.UpdateServiceInformation(config.Service);
 
+			// Agent.Setup must be called, even if agent is disabled. This way static public API usage won't implicitly initialize an agent with default values, instead, this will be reused.
 			Agent.Setup(config);
-			return UseElasticApm(builder, Agent.Instance, logger, subscribers);
+
+			return !configReader.Enabled ? builder : UseElasticApm(builder, Agent.Instance, logger, subscribers);
 		}
 
 		internal static IApplicationBuilder UseElasticApm(
@@ -70,7 +69,11 @@ namespace Elastic.Apm.AspNetCore
 		)
 		{
 			if (!agent.ConfigurationReader.Enabled)
+			{
+				if(!Agent.IsConfigured)
+					Agent.Setup(agent);
 				return builder;
+			}
 
 			var subs = new List<IDiagnosticsSubscriber>(subscribers ?? Array.Empty<IDiagnosticsSubscriber>())
 			{

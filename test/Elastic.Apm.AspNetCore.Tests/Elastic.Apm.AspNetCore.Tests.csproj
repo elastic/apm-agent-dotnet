@@ -46,5 +46,8 @@
     <Content Update="TestConfigs\appsettings_invalid.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Update="TestConfigs\appsettings_agentdisabled.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>

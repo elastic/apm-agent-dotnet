@@ -106,7 +106,7 @@ namespace Elastic.Apm
 
 		internal ICentralConfigFetcher CentralConfigFetcher => Components.CentralConfigFetcher;
 
-		private AgentComponents Components { get; }
+		internal AgentComponents Components { get; }
 		internal IConfigStore ConfigStore => Components.ConfigStore;
 		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
 		public IApmLogger Logger => Components.Logger;
@@ -125,7 +125,9 @@ namespace Elastic.Apm
 
 	public static class Agent
 	{
-		private static readonly Lazy<ApmAgent> LazyApmAgent = new Lazy<ApmAgent>(() => new ApmAgent(Components));
+		private static readonly Lazy<ApmAgent> LazyApmAgent = new Lazy<ApmAgent>(()
+			=> new ApmAgent(Components)
+		);
 		private static volatile bool _isConfigured;
 
 
@@ -244,6 +246,8 @@ namespace Elastic.Apm
 			Components = agentComponents;
 			_isConfigured = true;
 		}
+
+		internal static void Setup(ApmAgent apmAgent) => Setup(apmAgent.Components);
 
 		internal class InstanceAlreadyCreatedException : Exception
 		{

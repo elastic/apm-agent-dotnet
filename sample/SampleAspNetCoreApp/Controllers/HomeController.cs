@@ -214,6 +214,20 @@ namespace SampleAspNetCoreApp.Controllers
 			return Ok();
 		}
 
+		/// <summary>
+		/// Used for testing the agent with `enabled=false` through appsettings.json
+		/// </summary>
+		/// <returns></returns>
+		public IActionResult StartTransactionWithAgentApi()
+		{
+			var isTransactionWithValidTraceIdCreated = false;
+			Agent.Tracer.CaptureTransaction("a", "b", t =>
+			{
+				if(!string.IsNullOrEmpty(t.TraceId)) isTransactionWithValidTraceIdCreated = true;
+			});
+			return Ok(isTransactionWithValidTraceIdCreated);
+		}
+
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		private async Task T1()
 		{
