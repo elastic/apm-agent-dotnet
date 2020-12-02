@@ -244,7 +244,11 @@ namespace Elastic.Apm
 			_isConfigured = true;
 		}
 
-		internal static void Setup(ApmAgent apmAgent) => Setup(apmAgent.Components);
+		internal static void Setup(ApmAgent apmAgent)
+		{
+			if(!LazyApmAgent.IsValueCreated)
+				Setup(apmAgent.Components);
+		}
 
 		internal class InstanceAlreadyCreatedException : Exception
 		{
