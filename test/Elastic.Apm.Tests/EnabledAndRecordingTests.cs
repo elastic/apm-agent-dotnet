@@ -250,6 +250,31 @@ namespace Elastic.Apm.Tests
 			mockPayloadSender.Errors.Should().BeEmpty();
 		}
 
+		/// <summary>
+		/// Makes sure <see cref="IExecutionSegment.Labels" /> and <see cref="ITransaction.Custom" /> don't show
+		/// <see cref="NullReferenceException" /> with `enabled=false`.
+		/// From https://github.com/elastic/apm-agent-dotnet/issues/1080
+		/// </summary>
+		[Fact]
+		public void CustomAndLabelDontThrowNullRef()
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			var mockConfigSnapshot = new MockConfigSnapshot(enabled: "false");
+			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender, configurationReader: mockConfigSnapshot));
+
+			var transaction = agent.Tracer.StartTransaction("foo", "bar");
+			transaction.Should().BeOfType<NoopTransaction>();
+			transaction.Custom["foo"] = "bar";
+#pragma warning disable 618
+			transaction.Labels["foo"] = "bar";
+			var span = transaction.StartSpan("foo", "bar");
+			span.Should().BeOfType<NoopSpan>();
+			span.Labels["foo"] = "bar";
+			span.End();
+			transaction.End();
+#pragma warning restore 618
+		}
+
 		private void CreateTransactionsAndSpans(ApmAgent agent)
 		{
 			var transaction1 = agent.Tracer.StartTransaction("Foo", "Bar");
