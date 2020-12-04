@@ -3,7 +3,9 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using System.IO;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.AspNetCore.Tests;
 using Elastic.Apm.Config;
@@ -39,7 +41,18 @@ namespace Elastic.Apm.AspNetCore.Static.Tests
 		public async Task AgentDisabledInAppConfig(bool withDiagnosticSourceOnly)
 		{
 			var defaultServerUrlConnectionMade = false;
-			using var localServer = new LocalServer(context => defaultServerUrlConnectionMade = true, "http://localhost:8200/");
+
+			using var localServer = new LocalServer(context =>
+			{
+				if (context.Request.HttpMethod != HttpMethod.Post.Method) return;
+
+				var body = new StreamReader(context.Request.InputStream).ReadToEnd();
+				if (context.Request.HttpMethod.Equals(HttpMethod.Post.Method, StringComparison.OrdinalIgnoreCase)) return;
+
+				// In CI with parallel tests running we could have multiple tests running and some of them may send HTTP post to the default server url
+				// So we only make the test fail, when the request body contains the sample app's url
+				if (body.ToLower().Contains("starttransactionwithagentapi")) defaultServerUrlConnectionMade = true;
+			}, "http://localhost:8200/");
 			var configReader = new MicrosoftExtensionsConfig(new ConfigurationBuilder()
 				.AddJsonFile($"TestConfigs{Path.DirectorySeparatorChar}appsettings_agentdisabled.json")
 				.Build(), new NoopLogger(), "test");
@@ -47,7 +60,7 @@ namespace Elastic.Apm.AspNetCore.Static.Tests
 			var capturedPayload = new MockPayloadSender();
 			using var agent = new ApmAgent(new TestAgentComponents(
 				new NoopLogger(),
-				new ConfigSnapshotFromReader(configReader, "MicrosoftExtensionsConfigReader"), capturedPayload));
+				new ConfigSnapshotFromReader(configReader, "MicrosoftExtensionsConfigReader")));
 
 			var client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, agent, _factory);
 			if (withDiagnosticSourceOnly)
@@ -63,6 +76,7 @@ namespace Elastic.Apm.AspNetCore.Static.Tests
 			capturedPayload.Transactions.Should().BeNullOrEmpty();
 			capturedPayload.Spans.Should().BeNullOrEmpty();
 			capturedPayload.Errors.Should().BeNullOrEmpty();
+			// Make the test fail if there was a connection to the server URL made with the sample app's url
 			defaultServerUrlConnectionMade.Should().BeFalse();
 		}
 	}
