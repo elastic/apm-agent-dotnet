@@ -5,6 +5,7 @@
 
 using System.IO;
 using System.Threading.Tasks;
+using Elastic.Apm.AspNetCore.Tests;
 using Elastic.Apm.Config;
 using Elastic.Apm.Extensions.Hosting.Config;
 using Elastic.Apm.Tests.Mocks;
@@ -16,7 +17,7 @@ using SampleAspNetCoreApp;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Elastic.Apm.AspNetCore.Tests
+namespace Elastic.Apm.AspNetCore.Static.Tests
 {
 	[Collection("DiagnosticListenerTest")] //To avoid tests from DiagnosticListenerTests running in parallel with this we add them to 1 collection.
 	public class ConfigTests : LoggingTestBase, IClassFixture<WebApplicationFactory<Startup>>
@@ -49,7 +50,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 				new ConfigSnapshotFromReader(configReader, "MicrosoftExtensionsConfigReader"), capturedPayload));
 
 			var client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, agent, _factory);
-
+			if (withDiagnosticSourceOnly)
+				Agent.Setup(agent);
 
 			var response = await client.GetAsync("/Home/StartTransactionWithAgentApi");
 			response.IsSuccessStatusCode.Should().BeTrue();
