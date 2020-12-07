@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -17,7 +18,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		private readonly CentralConfigResponseParser.CentralConfigPayload _configPayload;
 
-		public CentralConfigReader(IApmLogger logger, CentralConfigResponseParser.CentralConfigPayload configPayload, string eTag) : base(logger, ThisClassName)
+		public CentralConfigReader(IApmLogger logger, CentralConfigResponseParser.CentralConfigPayload configPayload, string eTag) : base(logger,
+			ThisClassName)
 		{
 			_configPayload = configPayload;
 			ETag = eTag;
@@ -25,39 +27,47 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			UpdateConfigurationValues();
 		}
 
-		private void UpdateConfigurationValues()
-		{
-			CaptureBody = GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.CaptureBodyKey, ParseCaptureBody);
-			CaptureBodyContentTypes = GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.CaptureBodyContentTypesKey, ParseCaptureBodyContentTypes);
-			TransactionMaxSpans = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.TransactionMaxSpansKey, ParseTransactionMaxSpans);
-			TransactionSampleRate = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.TransactionSampleRateKey, ParseTransactionSampleRate);
-			CaptureHeaders = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.CaptureHeadersKey, ParseCaptureHeaders);
-			LogLevel = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.LogLevelKey, ParseLogLevel);
-			SpanFramesMinDurationInMilliseconds =
-				GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.SpanFramesMinDurationKey, ParseSpanFramesMinDurationInMilliseconds);
-			StackTraceLimit = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.StackTraceLimitKey, ParseStackTraceLimit);
-			Recording = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.Recording, ParseRecording);
-		}
-
-		internal string ETag { get; }
-
 		internal string CaptureBody { get; private set; }
 
 		internal List<string> CaptureBodyContentTypes { get; private set; }
 
-		internal int? TransactionMaxSpans { get; private set; }
-
-		internal double? TransactionSampleRate { get; private set; }
-
 		internal bool? CaptureHeaders { get; private set; }
 
+		internal string ETag { get; }
+
 		internal LogLevel? LogLevel { get; private set; }
+
+		internal bool? Recording { get; private set; }
+
+		internal IReadOnlyList<WildcardMatcher> SanitizeFieldNames { get; private set; }
 
 		internal double? SpanFramesMinDurationInMilliseconds { get; private set; }
 
 		internal int? StackTraceLimit { get; private set; }
 
-		internal bool? Recording { get; private set; }
+		internal int? TransactionMaxSpans { get; private set; }
+
+		internal double? TransactionSampleRate { get; private set; }
+
+		private void UpdateConfigurationValues()
+		{
+			CaptureBody = GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.CaptureBodyKey, ParseCaptureBody);
+			CaptureBodyContentTypes = GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.CaptureBodyContentTypesKey,
+				ParseCaptureBodyContentTypes);
+			TransactionMaxSpans = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.TransactionMaxSpansKey,
+				ParseTransactionMaxSpans);
+			TransactionSampleRate = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.TransactionSampleRateKey,
+				ParseTransactionSampleRate);
+			CaptureHeaders = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.CaptureHeadersKey, ParseCaptureHeaders);
+			LogLevel = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.LogLevelKey, ParseLogLevel);
+			SpanFramesMinDurationInMilliseconds =
+				GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.SpanFramesMinDurationKey,
+					ParseSpanFramesMinDurationInMilliseconds);
+			StackTraceLimit = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.StackTraceLimitKey, ParseStackTraceLimit);
+			Recording = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.Recording, ParseRecording);
+			SanitizeFieldNames =
+				GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.SanitizeFieldNames, ParseSanitizeFieldNames);
+		}
 
 		private ConfigurationKeyValue BuildKv(string key, string value) =>
 			new ConfigurationKeyValue(key, value, /* readFrom */ $"Central configuration (ETag: `{ETag}')");

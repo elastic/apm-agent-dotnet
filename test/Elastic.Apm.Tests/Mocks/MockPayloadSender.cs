@@ -1,4 +1,5 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -8,7 +9,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 using Elastic.Apm.Api;
-using Elastic.Apm.Filters;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
@@ -19,16 +19,17 @@ namespace Elastic.Apm.Tests.Mocks
 {
 	internal class MockPayloadSender : IPayloadSender
 	{
-		private readonly List<Func<ISpan, ISpan>> _spanFilters = new List<Func<ISpan, ISpan>>();
 		private readonly List<IError> _errors = new List<IError>();
 		private readonly object _lock = new object();
 		private readonly List<IMetricSet> _metrics = new List<IMetricSet>();
+		private readonly List<Func<ISpan, ISpan>> _spanFilters = new List<Func<ISpan, ISpan>>();
 		private readonly List<ISpan> _spans = new List<ISpan>();
+		private readonly List<Func<ITransaction, ITransaction>> _transactionFilters = new List<Func<ITransaction, ITransaction>>();
 		private readonly List<ITransaction> _transactions = new List<ITransaction>();
 
 		public MockPayloadSender(IApmLogger logger = null)
-			=> _spanFilters.Add(
-				new SpanStackTraceCapturingFilter(logger ?? new NoopLogger(), new MockApmServerInfo(new ElasticVersion(7, 10, 0, null))).Filter);
+			=> PayloadSenderV2.SetUpFilters(_transactionFilters, _spanFilters, new MockConfigSnapshot(),
+				new MockApmServerInfo(new ElasticVersion(7, 10, 0, null)), logger ?? new NoopLogger());
 
 		private TaskCompletionSource<ITransaction> _transactionTaskCompletionSource = new TaskCompletionSource<ITransaction>();
 
@@ -90,6 +91,7 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public virtual void QueueTransaction(ITransaction transaction)
 		{
+			transaction = _transactionFilters.Aggregate(transaction, (current, filter) => filter(current));
 			_transactions.Add(transaction);
 			_transactionTaskCompletionSource.TrySetResult(transaction);
 		}
@@ -98,7 +100,7 @@ namespace Elastic.Apm.Tests.Mocks
 		{
 			lock (_lock)
 			{
-				foreach (var filter in _spanFilters) span = filter(span);
+				span = _spanFilters.Aggregate(span, (current, filter) => filter(current));
 				_spans.Add(span);
 			}
 		}

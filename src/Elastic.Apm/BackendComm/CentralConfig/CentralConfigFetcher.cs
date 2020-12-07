@@ -1,10 +1,10 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -265,14 +265,14 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public double MetricsIntervalInMilliseconds => _wrapped.MetricsIntervalInMilliseconds;
 			public bool Recording => _centralConfig.Recording ?? _wrapped.Recording;
 
-			public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _wrapped.SanitizeFieldNames;
+			public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _centralConfig.SanitizeFieldNames ?? _wrapped.SanitizeFieldNames;
 
 			public string SecretToken => _wrapped.SecretToken;
 
+			public Uri ServerUrl => _wrapped.ServerUrl;
+
 			[Obsolete("Use ServerUrl")]
 			public IReadOnlyList<Uri> ServerUrls => _wrapped.ServerUrls;
-
-			public Uri ServerUrl => _wrapped.ServerUrl;
 
 			public string ServiceName => _wrapped.ServiceName;
 			public string ServiceNodeName => _wrapped.ServiceNodeName;
