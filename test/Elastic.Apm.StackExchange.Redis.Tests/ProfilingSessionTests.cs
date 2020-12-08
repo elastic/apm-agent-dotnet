@@ -13,6 +13,7 @@ using StackExchange.Redis;
 using Xunit;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.StackExchange.Redis.Tests
 {
@@ -20,11 +21,13 @@ namespace Elastic.Apm.StackExchange.Redis.Tests
 	{
 		private readonly string _containerId;
 
-		public ProfilingSessionTests()
+		public ProfilingSessionTests(ITestOutputHelper outputHelper)
 		{
 			var args = new StartArguments("docker", "run", "-p", "6379:6379", "-d", "redis");
 			var result = Proc.Start(args, TimeSpan.FromSeconds(10));
 			var output = string.Join("", result.ConsoleOut.Select(o => o.Line));
+
+			outputHelper.WriteLine($"docker redis exit code: {result.ExitCode}, output: {output}");
 
 			if (!result.Completed || result.ExitCode != 0)
 				throw new Exception($"Could not start redis docker image for tests: {output}");
