@@ -6,39 +6,28 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using DotNet.Testcontainers.Containers.Builders;
+using DotNet.Testcontainers.Containers.Configurations.Databases;
+using DotNet.Testcontainers.Containers.Modules.Databases;
 using Elastic.Apm.Api;
-using ProcNet;
-using ProcNet.Std;
 using StackExchange.Redis;
-using Xunit;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
-using Xunit.Abstractions;
 
 namespace Elastic.Apm.StackExchange.Redis.Tests
 {
-	public class ProfilingSessionTests : IDisposable
+	public class ProfilingSessionTests
 	{
-		private readonly string _containerId;
-
-		public ProfilingSessionTests(ITestOutputHelper outputHelper)
-		{
-			var args = new StartArguments("docker", "run", "-p", "6379:6379", "-d", "redis");
-			var result = Proc.Start(args, TimeSpan.FromSeconds(10));
-			var output = string.Join("", result.ConsoleOut.Select(o => o.Line));
-
-			outputHelper.WriteLine($"docker redis exit code: {result.ExitCode}, output: {output}");
-
-			if (!result.Completed || result.ExitCode != 0)
-				throw new Exception($"Could not start redis docker image for tests: {output}");
-
-			_containerId = output;
-		}
-
 		[DockerFact]
 		public async Task Capture_Redis_Commands()
 		{
-			var connection = await ConnectionMultiplexer.ConnectAsync("localhost");
+			var containerBuilder = new TestcontainersBuilder<RedisTestcontainer>()
+				.WithDatabase(new RedisTestcontainerConfiguration());
+
+			await using var container = containerBuilder.Build();
+			await container.StartAsync();
+
+			var connection = await ConnectionMultiplexer.ConnectAsync(container.ConnectionString);
 			var count = 0;
 
 			while (!connection.IsConnected)
@@ -83,20 +72,8 @@ namespace Elastic.Apm.StackExchange.Redis.Tests
 
 			foreach (var transaction in transactions)
 				payloadSender.Spans.Count(s => s.TransactionId == transaction.Id).Should().BeGreaterOrEqualTo(minSpansPerTransaction);
-		}
 
-		public void Dispose()
-		{
-			if (_containerId != null)
-			{
-				var args = new StartArguments("docker", "rm", "--force", _containerId);
-				var result = Proc.Start(args, TimeSpan.FromSeconds(10));
-				if (!result.Completed || result.ExitCode != 0)
-				{
-					var output = string.Join("", result.ConsoleOut.Select(o => o.Line));
-					throw new Exception($"Could not delete redis docker image for tests: {output}");
-				}
-			}
+			await container.StopAsync();
 		}
 	}
 }

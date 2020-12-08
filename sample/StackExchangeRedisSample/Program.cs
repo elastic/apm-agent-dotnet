@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
+using DotNet.Testcontainers.Containers.Builders;
+using DotNet.Testcontainers.Containers.Configurations.Databases;
+using DotNet.Testcontainers.Containers.Modules.Databases;
 using Elastic.Apm;
 using Elastic.Apm.Api;
 using Elastic.Apm.StackExchange.Redis;
@@ -11,9 +14,14 @@ namespace StackExchangeRedisSample
 	{
 		public static async Task Main(string[] args)
 		{
-			// requires redis to be running on localhost:6379, e.g. with docker
-			// docker run -p 6379:6379 -d redis
-			var connection = await ConnectionMultiplexer.ConnectAsync("localhost");
+			// requires docker to run a redis container.
+			var containerBuilder = new TestcontainersBuilder<RedisTestcontainer>()
+				.WithDatabase(new RedisTestcontainerConfiguration());
+
+			await using var container = containerBuilder.Build();
+			await container.StartAsync();
+
+			var connection = await ConnectionMultiplexer.ConnectAsync(container.ConnectionString);
 			connection.UseElasticApm();
 
 			for (var i = 0; i < 10; i++)
@@ -31,6 +39,8 @@ namespace StackExchangeRedisSample
 					await database.StringGetAsync($"string{i}", CommandFlags.FireAndForget);
 				});
 			}
+
+			await container.StopAsync();
 		}
 	}
 }

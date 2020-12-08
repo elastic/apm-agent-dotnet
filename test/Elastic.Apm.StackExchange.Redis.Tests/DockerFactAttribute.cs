@@ -22,7 +22,7 @@ namespace Elastic.Apm.StackExchange.Redis.Tests
 				if (result.ExitCode != 0)
 					Skip = "docker not installed";
 			}
-			catch (Exception e)
+			catch (Exception)
 			{
 				Skip = "could not get version of docker";
 			}
