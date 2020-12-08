@@ -11,12 +11,14 @@ using System.Runtime.CompilerServices;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
+using Elastic.Apm.ServerInfo;
 
 namespace Elastic.Apm.Helpers
 {
 	internal static class StacktraceHelper
 	{
 		private const string DefaultAsyncMethodName = "MoveNext";
+		private static readonly ElasticVersion V710 = new ElasticVersion(7, 10, 0, null);
 
 		/// <summary>
 		/// Turns a System.Diagnostic.StackFrame[] into a <see cref="CapturedStackFrame" /> list which can be reported to the APM
@@ -24,6 +26,7 @@ namespace Elastic.Apm.Helpers
 		/// </summary>
 		/// <param name="frames">The stack frames to rewrite into APM stack traces</param>
 		/// <param name="logger">The logger to emit exceptions on should one occur</param>
+		/// <param name="apmServerInfo">The ServerInfo instance to query the server version</param>
 		/// <param name="dbgCapturingFor">Just for logging.</param>
 		/// <param name="configurationReader">
 		/// Config reader - this controls the collection of stack traces (e.g. limit on frames,
@@ -31,7 +34,7 @@ namespace Elastic.Apm.Helpers
 		/// </param>
 		/// <returns>A prepared List that can be passed to the APM server</returns>
 		internal static List<CapturedStackFrame> GenerateApmStackTrace(StackFrame[] frames, IApmLogger logger,
-			IConfigurationReader configurationReader, string dbgCapturingFor
+			IConfigurationReader configurationReader, IApmServerInfo apmServerInfo, string dbgCapturingFor
 		)
 		{
 			var stackTraceLimit = configurationReader.StackTraceLimit;
@@ -53,21 +56,42 @@ namespace Elastic.Apm.Helpers
 			{
 				foreach (var frame in frames)
 				{
-					var fileName = frame?.GetMethod()
+					var className = frame?.GetMethod()
 						?.DeclaringType?.FullName; //see: https://github.com/elastic/apm-agent-dotnet/pull/240#discussion_r289619196
 
 					var functionName = GetRealMethodName(frame?.GetMethod());
+					var fileName = frame?.GetFileName();
 
 					logger.Trace()?.Log("{MethodName}, {lineNo}", functionName, frame?.GetFileLineNumber());
 
-					retVal.Add(new CapturedStackFrame
+					var capturedStackFrame = new CapturedStackFrame
 					{
 						Function = functionName ?? "N/A",
-						FileName = string.IsNullOrWhiteSpace(fileName) ? "N/A" : fileName,
 						Module = frame?.GetMethod()?.ReflectedType?.Assembly.FullName,
 						LineNo = frame?.GetFileLineNumber() ?? 0,
 						AbsPath = frame?.GetFileName() // optional property
-					});
+					};
+
+					if (apmServerInfo?.Version < V710)
+						// In pre 7.10, Kibana shows stack traces in format: `[FileName] in [MethodName]` and there is no way to show ClassName.
+						// For .NET that format is less useful especially because in some cases we only have a `.dll` file as filename.
+						// Therefore as a workaround we send the real classname in the file name field and
+						// we don't send anything in the ClassName field, since that's not used.
+						// If versions 7.09 is out of support, this code can be removed.
+						capturedStackFrame.FileName = string.IsNullOrWhiteSpace(className) ? "N/A" : className;
+					else
+					{
+						// FileName is either the .cs file or the assembly location as fallback
+						capturedStackFrame.FileName =
+							string.IsNullOrWhiteSpace(fileName)
+								? string.IsNullOrEmpty(frame?.GetMethod()?.GetType().Assembly.Location) ? "n/a" :
+								frame.GetMethod()?.GetType().Assembly.Location
+								: fileName;
+
+						capturedStackFrame.ClassName = string.IsNullOrWhiteSpace(className) ? "N/A" : className;
+					}
+
+					retVal.Add(capturedStackFrame);
 				}
 			}
 			catch (Exception e)
@@ -89,9 +113,10 @@ namespace Elastic.Apm.Helpers
 		/// Config reader - this controls the collection of stack traces (e.g. limit on frames,
 		/// etc)
 		/// </param>
+		/// <param name="apmServerInfo">The server info instance to query the APM Server version</param>
 		/// <returns>A prepared List that can be passed to the APM server</returns>
 		internal static List<CapturedStackFrame> GenerateApmStackTrace(Exception exception, IApmLogger logger, string dbgCapturingFor,
-			IConfigurationReader configurationReader
+			IConfigurationReader configurationReader, IApmServerInfo apmServerInfo
 		)
 		{
 			var stackTraceLimit = configurationReader.StackTraceLimit;
@@ -104,24 +129,26 @@ namespace Elastic.Apm.Helpers
 				try
 				{
 					return GenerateApmStackTrace(
-						new EnhancedStackTrace(exception).GetFrames(), logger, configurationReader, dbgCapturingFor);
+						new EnhancedStackTrace(exception).GetFrames(), logger, configurationReader, apmServerInfo, dbgCapturingFor);
 				}
 				catch (Exception e)
 				{
-					logger?.Debug()?
+					logger?.Debug()
+						?
 						.LogException(e, "Failed generating stack trace with EnhancedStackTrace - using fallback without demystification");
 					// Fallback, see https://github.com/elastic/apm-agent-dotnet/issues/957
 					// This callstack won't be demystified, but at least it'll be captured.
 					return GenerateApmStackTrace(
-						new StackTrace(exception, true).GetFrames(), logger, configurationReader, dbgCapturingFor);
+						new StackTrace(exception, true).GetFrames(), logger, configurationReader, apmServerInfo, dbgCapturingFor);
 				}
 			}
 			catch (Exception e)
 			{
-				logger?.Warning()?.Log("Failed extracting stack trace from exception for {ApmContext}."
-					+ " Exception for failure to extract: {ExceptionForFailureToExtract}."
-					+ " Exception to extract from: {ExceptionToExtractFrom}.",
-					dbgCapturingFor, e, exception);
+				logger?.Warning()
+					?.Log("Failed extracting stack trace from exception for {ApmContext}."
+						+ " Exception for failure to extract: {ExceptionForFailureToExtract}."
+						+ " Exception to extract from: {ExceptionToExtractFrom}.",
+						dbgCapturingFor, e, exception);
 			}
 
 			return null;

@@ -14,6 +14,9 @@ namespace Elastic.Apm.Api
 		[JsonProperty("abs_path")]
 		public string AbsPath { get; set; }
 
+		[JsonProperty("classname")]
+		public string ClassName { get; set; }
+
 		[JsonProperty("filename")]
 		public string FileName { get; set; }
 

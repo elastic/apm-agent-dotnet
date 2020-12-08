@@ -23,7 +23,7 @@ namespace Elastic.Apm.Config
 			public const string CaptureBodyContentTypes = "application/x-www-form-urlencoded*, text/*, application/json*, application/xml*";
 			public const bool CaptureHeaders = true;
 			public const bool CentralConfig = true;
-			public const string CloudProvider = "";
+			public const string CloudProvider = SupportedValues.CloudProviderAuto;
 			public const int FlushIntervalInMilliseconds = 10_000; // 10 seconds
 			public const int MaxBatchEventCount = 10;
 			public const int MaxQueueEventCount = 1000;
@@ -129,6 +129,7 @@ namespace Elastic.Apm.Config
 			public const string SanitizeFieldNames = Prefix + "SANITIZE_FIELD_NAMES";
 			public const string SecretToken = Prefix + "SECRET_TOKEN";
 			public const string ServerUrls = Prefix + "SERVER_URLS";
+			public const string ServerUrl = Prefix + "SERVER_URL";
 			public const string ServiceName = Prefix + "SERVICE_NAME";
 			public const string ServiceNodeName = Prefix + "SERVICE_NODE_NAME";
 			public const string ServiceVersion = Prefix + "SERVICE_VERSION";
@@ -168,6 +169,7 @@ namespace Elastic.Apm.Config
 			public const string SanitizeFieldNames = Prefix + nameof(SanitizeFieldNames);
 			public const string SecretToken = Prefix + nameof(SecretToken);
 			public const string ServerUrls = Prefix + nameof(ServerUrls);
+			public const string ServerUrl = Prefix + nameof(ServerUrl);
 			public const string ServiceName = Prefix + nameof(ServiceName);
 			public const string ServiceNodeName = Prefix + nameof(ServiceNodeName);
 			public const string ServiceVersion = Prefix + nameof(ServiceVersion);
@@ -194,11 +196,12 @@ namespace Elastic.Apm.Config
 			public const string CloudProviderAws = AwsCloudMetadataProvider.Name;
 			public const string CloudProviderAzure = AzureCloudMetadataProvider.Name;
 			public const string CloudProviderGcp = GcpCloudMetadataProvider.Name;
-			public const string CloudProviderFalse = "false";
+			public const string CloudProviderNone = "none";
+			public const string CloudProviderAuto = "auto";
 
 			public static readonly HashSet<string> CloudProviders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 			{
-				CloudProviderAws, CloudProviderAzure, CloudProviderGcp, CloudProviderFalse
+				CloudProviderAuto, CloudProviderAws, CloudProviderAzure, CloudProviderGcp, CloudProviderNone
 			};
 		}
 	}

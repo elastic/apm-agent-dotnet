@@ -13,6 +13,7 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
+using Elastic.Apm.ServerInfo;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -21,6 +22,7 @@ namespace Elastic.Apm.Model
 	internal class Transaction : ITransaction
 	{
 		private static readonly string ApmTransactionActivityName = "ElasticApm.Transaction";
+		private readonly IApmServerInfo _apmServerInfo;
 		private readonly Lazy<Context> _context = new Lazy<Context>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 
@@ -51,7 +53,7 @@ namespace Elastic.Apm.Model
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigStore.CurrentSnapshot,
-				agent.TracerInternal.CurrentExecutionSegmentsContainer) { }
+				agent.TracerInternal.CurrentExecutionSegmentsContainer, null) { }
 
 		/// <summary>
 		/// Creates a new transaction
@@ -65,6 +67,7 @@ namespace Elastic.Apm.Model
 		/// <param name="configSnapshot">The current configuration snapshot which contains the up-do-date config setting values</param>
 		/// <param name="currentExecutionSegmentsContainer" />
 		/// The ExecutionSegmentsContainer which makes sure this transaction flows
+		/// <param name="apmServerInfo">Component to fetch info about APM Server (e.g. APM Server version)</param>
 		/// <param name="ignoreActivity">
 		/// If set the transaction will ignore Activity.Current and it's trace id,
 		/// otherwise the agent will try to keep ids in-sync across async work-flows
@@ -78,6 +81,7 @@ namespace Elastic.Apm.Model
 			IPayloadSender sender,
 			IConfigSnapshot configSnapshot,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
+			IApmServerInfo apmServerInfo,
 			bool ignoreActivity = false
 		)
 		{
@@ -85,6 +89,7 @@ namespace Elastic.Apm.Model
 			Timestamp = TimeUtils.TimestampNow();
 
 			_logger = logger?.Scoped($"{nameof(Transaction)}");
+			_apmServerInfo = apmServerInfo;
 
 			_sender = sender;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
@@ -149,6 +154,8 @@ namespace Elastic.Apm.Model
 			// Also mark the sampling decision on the Activity
 			if (IsSampled && _activity != null && !ignoreActivity)
 				_activity.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
+
+			SampleRate = IsSampled ? sampler.Rate : 0;
 
 			SpanCount = new SpanCount();
 			_currentExecutionSegmentsContainer.CurrentTransaction = this;
@@ -274,6 +281,12 @@ namespace Elastic.Apm.Model
 		[MaxLength]
 		public string Result { get; set; }
 
+		/// <summary>
+		/// Captures the sample rate of the agent when this transaction was created.
+		/// </summary>
+		[JsonProperty("sample_rate")]
+		internal double SampleRate { get; }
+
 		internal Service Service;
 
 		[JsonProperty("span_count")]
@@ -291,7 +304,7 @@ namespace Elastic.Apm.Model
 		[MaxLength]
 		public string Type { get; set; }
 
-		///<inheritdoc/>
+		/// <inheritdoc />
 		public void SetService(string serviceName, string serviceVersion)
 		{
 			if (Context.Service == null)
@@ -377,6 +390,21 @@ namespace Elastic.Apm.Model
 			_currentExecutionSegmentsContainer.CurrentTransaction = null;
 		}
 
+		public bool TryGetLabel<T>(string key, out T value)
+		{
+			if (Context.InternalLabels.Value.InnerDictionary.TryGetValue(key, out var label))
+			{
+				if (label?.Value is T t)
+				{
+					value = t;
+					return true;
+				}
+			}
+
+			value = default;
+			return false;
+		}
+
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
 		{
 			if (ConfigSnapshot.Enabled && ConfigSnapshot.Recording)
@@ -389,7 +417,7 @@ namespace Elastic.Apm.Model
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false
 		)
 		{
-			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer,
+			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, _apmServerInfo,
 				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
@@ -400,7 +428,9 @@ namespace Elastic.Apm.Model
 			return retVal;
 		}
 
-		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null, Dictionary<string, Label> labels = null)
+		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null,
+			Dictionary<string, Label> labels = null
+		)
 			=> ExecutionSegmentCommon.CaptureException(
 				exception,
 				_logger,
@@ -408,6 +438,7 @@ namespace Elastic.Apm.Model
 				this,
 				ConfigSnapshot,
 				this,
+				_apmServerInfo,
 				culprit,
 				isHandled,
 				parentId,
@@ -424,6 +455,7 @@ namespace Elastic.Apm.Model
 				this,
 				ConfigSnapshot,
 				this,
+				_apmServerInfo,
 				parentId,
 				labels
 			);
@@ -482,7 +514,7 @@ namespace Elastic.Apm.Model
 					? areaString + "/" + controllerString
 					: controllerString;
 
-				count = routeValues.TryGetValue("action", out var action) ? (count + 1) : count;
+				count = routeValues.TryGetValue("action", out var action) ? count + 1 : count;
 				var actionString = action == null ? string.Empty : action.ToString();
 
 				if (!string.IsNullOrEmpty(actionString)) name += "/" + actionString;

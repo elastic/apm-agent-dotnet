@@ -336,7 +336,7 @@ namespace Elastic.Apm.Tests
 				flushInterval: "0");
 
 			using var payloadSender = new PayloadSenderV2(inMemoryLogger, configReader,
-				Service.GetDefaultService(configReader, inMemoryLogger), new Api.System());
+				Service.GetDefaultService(configReader, inMemoryLogger), new Api.System(), MockApmServerInfo.Version710);
 
 			using var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
 
@@ -363,7 +363,7 @@ namespace Elastic.Apm.Tests
 				flushInterval: "0");
 
 			using var payloadSender = new PayloadSenderV2(inMemoryLogger, configReader,
-				Service.GetDefaultService(configReader, inMemoryLogger), new Api.System());
+				Service.GetDefaultService(configReader, inMemoryLogger), new Api.System(), MockApmServerInfo.Version710);
 
 			using var localServer = new LocalServer(httpListenerContext => { httpListenerContext.Response.StatusCode = 500; },
 				$"http://localhost:{port}/");

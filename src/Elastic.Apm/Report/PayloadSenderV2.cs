@@ -20,6 +20,7 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
+using Elastic.Apm.ServerInfo;
 
 namespace Elastic.Apm.Report
 {
@@ -36,7 +37,10 @@ namespace Elastic.Apm.Report
 		internal readonly Api.System System;
 
 		internal readonly List<Func<ITransaction, ITransaction>> TransactionFilters = new List<Func<ITransaction, ITransaction>>();
+
+		private readonly IApmServerInfo _apmServerInfo;
 		private readonly CloudMetadataProviderCollection _cloudMetadataProviderCollection;
+		private readonly IConfigSnapshot _configSnapshot;
 
 		private readonly BatchBlock<object> _eventQueue;
 
@@ -54,6 +58,7 @@ namespace Elastic.Apm.Report
 			IConfigSnapshot config,
 			Service service,
 			Api.System system,
+			IApmServerInfo apmServerInfo,
 			HttpMessageHandler httpMessageHandler = null,
 			string dbgName = null,
 			bool isEnabled = true
@@ -65,12 +70,14 @@ namespace Elastic.Apm.Report
 
 			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
 			_payloadItemSerializer = new PayloadItemSerializer(config);
+			_configSnapshot = config;
 
-			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(config.ServerUrls.First());
+			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(config.ServerUrl);
 
 			System = system;
 
 			_cloudMetadataProviderCollection = new CloudMetadataProviderCollection(config.CloudProvider, _logger);
+			_apmServerInfo = apmServerInfo;
 			_metadata = new Metadata { Service = service, System = System };
 			foreach (var globalLabelKeyValue in config.GlobalLabels) _metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
 
@@ -101,12 +108,15 @@ namespace Elastic.Apm.Report
 
 			_eventQueue = new BatchBlock<object>(config.MaxBatchEventCount);
 			TransactionFilters.Add(new TransactionIgnoreUrlsFilter(config).Filter);
+			// with this, stack trace demystification and conversion to the intake API model happens on a non-application thread:
+			SpanFilters.Add(new SpanStackTraceCapturingFilter(_logger, apmServerInfo).Filter);
 			StartWorkLoop();
 		}
 
 		private string _cachedMetadataJsonLine;
 
 		private long _eventQueueCount;
+		private bool _getApmServerVersion;
 		private bool _getCloudMetadata;
 
 		public void QueueTransaction(ITransaction transaction) => EnqueueEvent(transaction, "Transaction");
@@ -171,6 +181,12 @@ namespace Elastic.Apm.Report
 					_metadata.Cloud = cloud;
 
 				_getCloudMetadata = true;
+			}
+
+			if (!_getApmServerVersion && _apmServerInfo?.Version is null)
+			{
+				await ApmServerInfoProvider.FillApmServerInfo(_apmServerInfo, _logger, _configSnapshot, HttpClientInstance).ConfigureAwait(false);
+				_getApmServerVersion = true;
 			}
 
 			await ProcessQueueItems(await ReceiveBatchAsync());

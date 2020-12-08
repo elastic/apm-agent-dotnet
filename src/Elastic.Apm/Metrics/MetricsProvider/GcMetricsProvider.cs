@@ -115,7 +115,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				}
 			}
 
-			if (PlatformDetection.IsDotNetCore)
+			if (PlatformDetection.IsDotNetCore || PlatformDetection.IsDotNet5)
 				_eventListener = new GcEventListener(this, logger);
 		}
 
@@ -141,7 +141,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		{
 			if (_gcCount != 0 || _gen0Size != 0 || _gen2Size != 0 || _gen3Size != 0)
 			{
-				var retVal = new List<MetricSample>();
+				var retVal = new List<MetricSample>(5);
 
 				if (_collectGcCount)
 					retVal.Add(new MetricSample(GcCountName, _gcCount));

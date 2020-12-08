@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.Model;
+using Elastic.Apm.ServerInfo;
 using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
@@ -111,16 +112,20 @@ namespace Elastic.Apm.Tests
 			payloadSender.Errors.Should().NotBeEmpty();
 			(payloadSender.Errors.First() as Error).Should().NotBeNull();
 
+			var currentFileName = new StackTrace(true).GetFrame(0).GetFileName();
+
 			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should()
-				.Contain(m => m.FileName == typeof(Base).FullName
+				.Contain(m => m.ClassName == typeof(Base).FullName
 					&& m.Function == nameof(Base.Method1)
 					&& m.Module == typeof(Base).Assembly.FullName
+					&& m.FileName == currentFileName
 				);
 
 			(payloadSender.Errors.First() as Error)?.Exception.StackTrace.Should()
-				.Contain(m => m.FileName == typeof(Derived).FullName
+				.Contain(m => m.ClassName == typeof(Derived).FullName
 					&& m.Function == nameof(Derived.TestMethod)
-					&& m.Module == typeof(Derived).Assembly.FullName);
+					&& m.Module == typeof(Derived).Assembly.FullName
+					&& m.FileName == currentFileName);
 		}
 
 		/// <summary>
@@ -154,11 +159,13 @@ namespace Elastic.Apm.Tests
 			payloadSender.Errors.First().Should().NotBeNull();
 			payloadSender.Errors.First().Should().BeOfType(typeof(Error));
 
-			//note: since filename is used on the UI (and there is no other way to show the classname, we misuse this field
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].FileName.Should().Be(typeof(Derived).FullName);
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].ClassName.Should().Be(typeof(Derived).FullName);
 			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].Function.Should().Be(nameof(Derived.MethodThrowingIDerived));
 
-			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[1].FileName.Should().Be(typeof(Derived).FullName);
+			var fileName = new StackTrace(true).GetFrame(0).GetFileName();
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].FileName.Should().Be(fileName);
+
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[1].ClassName.Should().Be(typeof(Derived).FullName);
 			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[1].Function.Should().Be(nameof(Base.MyMethod));
 		}
 
@@ -175,9 +182,35 @@ namespace Elastic.Apm.Tests
 			payloadSender.Errors.First().Should().NotBeNull();
 			payloadSender.Errors.First().Should().BeOfType(typeof(Error));
 
-			//note: since filename is used on the UI (and there is no other way to show the classname, we misuse this field
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].ClassName.Should().Be(typeof(Base).FullName);
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].Function.Should().Be(nameof(Base.JustThrow));
+
+			var fileName = new StackTrace(true).GetFrame(0).GetFileName();
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].FileName.Should().Be(fileName);
+		}
+
+		/// <summary>
+		/// In old versions (pre 7.10), due to the way kibana shows stack traces the agent puts the real classname into the
+		/// FileName field.
+		/// This test tests for that.
+		/// </summary>
+		[Fact]
+		public void InheritedChainWithOldAgents()
+		{
+			Base testClass = new Derived();
+
+			var payloadSender = new MockPayloadSender();
+
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender,
+				apmServerInfo: new MockApmServerInfo(new ElasticVersion(7, 5, 0, null)))))
+				Assert.Throws<Exception>(() => { agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => { testClass.JustThrow(); }); });
+
+			payloadSender.Errors.First().Should().NotBeNull();
+			payloadSender.Errors.First().Should().BeOfType(typeof(Error));
+
 			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].FileName.Should().Be(typeof(Base).FullName);
 			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].Function.Should().Be(nameof(Base.JustThrow));
+			(payloadSender.Errors.First() as Error)?.Exception.StackTrace[0].ClassName.Should().BeNullOrEmpty();
 		}
 
 		[Fact]
@@ -486,7 +519,6 @@ namespace Elastic.Apm.Tests
 
 			assertAction(payloadSender);
 		}
-
 
 		private void TestMethod() => InnerTestMethod(() => throw new Exception("TestException"));
 

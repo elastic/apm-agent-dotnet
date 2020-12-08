@@ -166,8 +166,21 @@ namespace SampleAspNetCoreApp.Controllers
 
 		[HttpPost]
 		[DisableRequestSizeLimit]
+		public async Task<long> Stream()
+		{
+			using var stream = new MemoryStream();
+			await Request.Body.CopyToAsync(stream);
+			return stream.Length;
+		}
+
+		[HttpPost]
+		[DisableRequestSizeLimit]
 		[RequestFormLimits(ValueLengthLimit = int.MaxValue, MultipartBodyLengthLimit = int.MaxValue)]
 		public long File(IFormFile file) => file.Length;
+
+		[HttpPost]
+		[DisableRequestSizeLimit]
+		public long Form(IFormCollection form) => form.Count;
 
 		public IActionResult TransactionWithCustomName()
 		{

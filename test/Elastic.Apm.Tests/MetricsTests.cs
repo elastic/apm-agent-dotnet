@@ -319,7 +319,7 @@ namespace Elastic.Apm.Tests
 					}
 				}
 
-				if (PlatformDetection.IsDotNetCore)
+				if (PlatformDetection.IsDotNetCore || PlatformDetection.IsDotNet5)
 				{
 					if (!logger.Lines.Where(n => n.Contains("OnEventWritten with GC")).Any())
 					{

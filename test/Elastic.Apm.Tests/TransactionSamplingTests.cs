@@ -31,11 +31,13 @@ namespace Elastic.Apm.Tests
 			mockPayloadSender.FirstTransaction.SpanCount.Dropped.Should().Be(0);
 			if (isSampled)
 			{
+				mockPayloadSender.FirstTransaction.SampleRate.Should().Be(1);
 				mockPayloadSender.FirstTransaction.SpanCount.Started.Should().Be(1);
 				mockPayloadSender.Spans.Count.Should().Be(1);
 			}
 			else
 			{
+				mockPayloadSender.FirstTransaction.SampleRate.Should().Be(0);
 				mockPayloadSender.FirstTransaction.SpanCount.Started.Should().Be(0);
 				mockPayloadSender.Spans.Should().BeEmpty();
 			}
@@ -61,6 +63,7 @@ namespace Elastic.Apm.Tests
 			mockPayloadSender.Transactions.Count.Should().Be(1);
 			mockPayloadSender.Spans.Count.Should().Be(0);
 			mockPayloadSender.FirstTransaction.SpanCount.Dropped.Should().Be(1);
+			mockPayloadSender.FirstTransaction.SampleRate.Should().Be(1);
 		}
 
 		[Fact]

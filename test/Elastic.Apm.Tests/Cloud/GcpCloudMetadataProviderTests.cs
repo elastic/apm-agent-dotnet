@@ -50,7 +50,7 @@ namespace Elastic.Apm.Tests.Cloud
 			metadata.AvailabilityZone.Should().Be("us-west3-a");
 			metadata.Region.Should().Be("us-west3");
 			metadata.Machine.Should().NotBeNull();
-			metadata.Machine.Type.Should().Be(stubMetadata.instance.machineType);
+			metadata.Machine.Type.Should().Be("n1-standard-1");
 		}
 	}
 }

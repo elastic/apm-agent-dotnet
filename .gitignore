@@ -337,3 +337,7 @@ _TEMP/
 
 # Built Elastic documentation files
 html_docs
+build/output/
+
+# Generated .NET core sln file
+ElasticApmAgent.NetCore.sln

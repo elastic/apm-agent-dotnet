@@ -10,6 +10,7 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Report;
+using Elastic.Apm.ServerInfo;
 
 namespace Elastic.Apm
 {
@@ -19,7 +20,7 @@ namespace Elastic.Apm
 			IApmLogger logger = null,
 			IConfigurationReader configurationReader = null,
 			IPayloadSender payloadSender = null
-		) : this(logger, configurationReader, payloadSender, null, null, null) { }
+		) : this(logger, configurationReader, payloadSender, null, null, null, null) { }
 
 		internal AgentComponents(
 			IApmLogger logger,
@@ -27,7 +28,8 @@ namespace Elastic.Apm
 			IPayloadSender payloadSender,
 			IMetricsCollector metricsCollector,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
-			ICentralConfigFetcher centralConfigFetcher
+			ICentralConfigFetcher centralConfigFetcher,
+			IApmServerInfo apmServerInfo
 		)
 		{
 			var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
@@ -40,8 +42,10 @@ namespace Elastic.Apm
 
 			ConfigStore = new ConfigStore(new ConfigSnapshotFromReader(ConfigurationReader, "local"), Logger);
 
+			ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
+
 			PayloadSender = payloadSender
-				?? new PayloadSenderV2(Logger, ConfigStore.CurrentSnapshot, Service, system, isEnabled: ConfigurationReader.Enabled);
+				?? new PayloadSenderV2(Logger, ConfigStore.CurrentSnapshot, Service, system, ApmServerInfo, isEnabled: ConfigurationReader.Enabled);
 
 			if (ConfigurationReader.Enabled)
 			{
@@ -51,7 +55,7 @@ namespace Elastic.Apm
 			}
 
 			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigStore,
-				currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer());
+				currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo);
 
 			if (!ConfigurationReader.Enabled)
 				Logger?.Info()?.Log("The Elastic APM .NET Agent is disabled - the agent won't capture traces and metrics.");
@@ -68,6 +72,8 @@ namespace Elastic.Apm
 		private IMetricsCollector MetricsCollector { get; }
 
 		public IPayloadSender PayloadSender { get; }
+
+		internal IApmServerInfo ApmServerInfo { get; }
 
 		/// <summary>
 		/// Identifies the monitored service. If this remains unset the agent

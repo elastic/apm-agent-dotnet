@@ -114,5 +114,11 @@ namespace Elastic.Apm.Model
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null) =>
 			new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId, this);
+
+		public bool TryGetLabel<T>(string key, out T value)
+		{
+			value = default;
+			return false;
+		}
 	}
 }

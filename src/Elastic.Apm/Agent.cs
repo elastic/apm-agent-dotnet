@@ -231,6 +231,8 @@ namespace Elastic.Apm
 		/// <summary>
 		/// Sets up multiple <see cref="IDiagnosticsSubscriber" />s to start listening to one or more
 		/// <see cref="IDiagnosticListener" />s.
+		/// <para />
+		/// If the agent is not enabled, subscribers are not subscribed.
 		/// </summary>
 		/// <param name="subscribers">
 		/// An array of <see cref="IDiagnosticsSubscriber" /> that will set up <see cref="IDiagnosticListener" /> subscriptions.

@@ -30,6 +30,9 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		public string Result { get; set; }
 
+		[JsonProperty("sample_rate")]
+		public string SampleRate { get; set; }
+
 		[JsonProperty("span_count")]
 		public SpanCountDto SpanCount { get; set; }
 

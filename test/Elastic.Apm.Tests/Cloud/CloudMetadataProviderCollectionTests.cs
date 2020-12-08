@@ -27,9 +27,9 @@ namespace Elastic.Apm.Tests.Cloud
 		}
 
 		[Fact]
-		public void CloudProvider_False_Should_Not_Register_Any_Providers()
+		public void CloudProvider_None_Should_Not_Register_Any_Providers()
 		{
-			var providers = new CloudMetadataProviderCollection(SupportedValues.CloudProviderFalse, new NoopLogger());
+			var providers = new CloudMetadataProviderCollection(SupportedValues.CloudProviderNone, new NoopLogger());
 			providers.Count.Should().Be(0);
 		}
 

@@ -11,6 +11,7 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
+using Elastic.Apm.ServerInfo;
 
 namespace Elastic.Apm.Api
 {
@@ -19,6 +20,7 @@ namespace Elastic.Apm.Api
 		private readonly IConfigSnapshotProvider _configProvider;
 		private readonly ScopedLogger _logger;
 		private readonly IPayloadSender _sender;
+		private readonly IApmServerInfo _apmServerInfo;
 		private readonly Service _service;
 
 		public Tracer(
@@ -26,7 +28,8 @@ namespace Elastic.Apm.Api
 			Service service,
 			IPayloadSender payloadSender,
 			IConfigSnapshotProvider configProvider,
-			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer
+			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
+			IApmServerInfo apmServerInfo
 		)
 		{
 			_logger = logger?.Scoped(nameof(Tracer));
@@ -35,6 +38,7 @@ namespace Elastic.Apm.Api
 			_configProvider = configProvider.ThrowIfArgumentNull(nameof(configProvider));
 			CurrentExecutionSegmentsContainer = currentExecutionSegmentsContainer.ThrowIfArgumentNull(nameof(currentExecutionSegmentsContainer));
 			DbSpanCommon = new DbSpanCommon(logger);
+			_apmServerInfo = apmServerInfo;
 		}
 
 		internal ICurrentExecutionSegmentsContainer CurrentExecutionSegmentsContainer { get; }
@@ -55,12 +59,13 @@ namespace Elastic.Apm.Api
 			return new NoopTransaction(name, type, CurrentExecutionSegmentsContainer);
 		}
 
-		private Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null, bool ignoreActivity = false)
+		private Transaction StartTransactionInternal(string name, string type, DistributedTracingData distributedTracingData = null,
+			bool ignoreActivity = false
+		)
 		{
 			var currentConfig = _configProvider.CurrentSnapshot;
 			var retVal = new Transaction(_logger, name, type, new Sampler(currentConfig.TransactionSampleRate), distributedTracingData
-				, _sender, currentConfig, CurrentExecutionSegmentsContainer, ignoreActivity)
-			{ Service = _service };
+				, _sender, currentConfig, CurrentExecutionSegmentsContainer, _apmServerInfo, ignoreActivity) { Service = _service };
 
 			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);
 			return retVal;

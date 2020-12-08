@@ -432,6 +432,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				null,
 				null,
 				new HttpContextCurrentExecutionSegmentsContainer(),
+				null,
 				null);
 
 			var aspNetVersion = FindAspNetVersion(scopedLogger);

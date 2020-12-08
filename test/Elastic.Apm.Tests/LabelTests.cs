@@ -1,4 +1,5 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -34,16 +35,17 @@ namespace Elastic.Apm.Tests
 			var mockPayloadSender = new MockPayloadSender();
 			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
 
+			var labelName = "myLabel";
+			ITransaction transaction = null;
 			agent.Tracer.CaptureTransaction("test", "test", t =>
 			{
-				var labelName = "myLabel";
 				SetLabel(t, labelValue, labelName);
-
 				t.Context.InternalLabels.Value.InnerDictionary[labelName].Value.Should().Be(labelValue);
-
-				var jsonString = SerializePayloadItem(t);
-				jsonString.Should().Contain(GetAssertString(labelValue, labelName));
+				transaction = t;
 			});
+
+			var jsonString = SerializePayloadItem(transaction);
+			jsonString.Should().Contain(GetAssertString(labelValue, labelName));
 		}
 
 		[InlineData("StrValue")]
@@ -58,18 +60,20 @@ namespace Elastic.Apm.Tests
 			var mockPayloadSender = new MockPayloadSender();
 			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
 
+			var labelName = "myLabel";
+			ISpan span = null;
 			agent.Tracer.CaptureTransaction("test", "test", t =>
 			{
 				t.CaptureSpan("testSpan", "test", s =>
 				{
-					var labelName = "myLabel";
+					span = s;
 					SetLabel(s, labelValue, labelName);
-					var jsonString = SerializePayloadItem(s);
-					jsonString.Should().Contain(GetAssertString(labelValue, labelName));
-
 					s.Context.InternalLabels.Value.InnerDictionary[labelName].Value.Should().Be(labelValue);
 				});
 			});
+
+			var jsonString = SerializePayloadItem(span);
+			jsonString.Should().Contain(GetAssertString(labelValue, labelName));
 		}
 
 		[Theory]
@@ -94,16 +98,17 @@ namespace Elastic.Apm.Tests
 			var mockPayloadSender = new MockPayloadSender();
 			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
 
+			ITransaction transaction = null;
+			ISpan span = null;
 			agent.Tracer.CaptureTransaction("test", "test", t =>
 			{
+				transaction = t;
 				t.CaptureSpan("testSpan", "test", s =>
 				{
+					span = s;
 					SetLabel(s, 1, "intLabel");
 					SetLabel(s, "abc", "stringLabel");
 					SetLabel(s, true, "boolLabel");
-
-					var spanJsonString = SerializePayloadItem(s);
-					spanJsonString.Should().Contain("\"intLabel\":1,\"stringLabel\":\"abc\",\"boolLabel\":true");
 
 					s.Context.InternalLabels.Value.InnerDictionary["intLabel"].Value.Should().Be(1);
 					s.Context.InternalLabels.Value.InnerDictionary["stringLabel"].Value.Should().Be("abc");
@@ -114,13 +119,16 @@ namespace Elastic.Apm.Tests
 				SetLabel(t, "abc", "stringLabel");
 				SetLabel(t, true, "boolLabel");
 
-				var transactionJsonString = SerializePayloadItem(t);
-				transactionJsonString.Should().Contain("\"intLabel\":1,\"stringLabel\":\"abc\",\"boolLabel\":true");
-
 				t.Context.InternalLabels.Value.InnerDictionary["intLabel"].Value.Should().Be(1);
 				t.Context.InternalLabels.Value.InnerDictionary["stringLabel"].Value.Should().Be("abc");
 				t.Context.InternalLabels.Value.InnerDictionary["boolLabel"].Value.Should().Be(true);
 			});
+
+			var transactionJsonString = SerializePayloadItem(transaction);
+			transactionJsonString.Should().Contain("\"intLabel\":1,\"stringLabel\":\"abc\",\"boolLabel\":true");
+
+			var spanJsonString = SerializePayloadItem(span);
+			spanJsonString.Should().Contain("\"intLabel\":1,\"stringLabel\":\"abc\",\"boolLabel\":true");
 		}
 
 		[Fact]
@@ -167,23 +175,27 @@ namespace Elastic.Apm.Tests
 			var mockPayloadSender = new MockPayloadSender();
 			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
 
+			ITransaction transaction = null;
+			ISpan span = null;
 			agent.Tracer.CaptureTransaction("test", "test", t =>
 			{
+				transaction = t;
 				t.Labels["foo1"] = "bar1";
-				var transactionJsonString = SerializePayloadItem(t);
-				transactionJsonString.Should().Contain(GetAssertString("bar1", "foo1"));
 				t.Context.InternalLabels.Value.MergedDictionary["foo1"].Value.Should().Be("bar1");
-
 
 				t.CaptureSpan("testSpan", "test", s =>
 				{
+					span = s;
 					s.Labels["foo2"] = "bar2";
-					var spanJsonString = SerializePayloadItem(s);
-					spanJsonString.Should().Contain(GetAssertString("bar2", "foo2"));
-
 					s.Context.InternalLabels.Value.MergedDictionary["foo2"].Value.Should().Be("bar2");
 				});
 			});
+
+			var transactionJsonString = SerializePayloadItem(transaction);
+			transactionJsonString.Should().Contain(GetAssertString("bar1", "foo1"));
+
+			var spanJsonString = SerializePayloadItem(span);
+			spanJsonString.Should().Contain(GetAssertString("bar2", "foo2"));
 		}
 
 		[Fact]
@@ -232,13 +244,105 @@ namespace Elastic.Apm.Tests
 			transaction.SetLabel("intItem", 42);
 			transaction.Labels.Remove("foo");
 
+			transaction.End();
+
 			var spanJsonString = SerializePayloadItem(transaction);
 			spanJsonString.Should().Contain(GetAssertString(42, "intItem"));
 			spanJsonString.Should().NotContain("foo");
 			spanJsonString.Should().NotContain("bar");
-
-			transaction.End();
 		}
+
+		[Fact]
+		public void ReadLabels()
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+
+			agent.Tracer.CaptureTransaction("test", "test", t =>
+			{
+				t.SetLabel("fooT", 42);
+				t.SetLabel("barT", false);
+
+				t.CaptureSpan("test", "test", s =>
+				{
+					s.SetLabel("fooS", 43);
+					s.SetLabel("barS", true);
+
+					s.TryGetLabel<int>("fooS", out var fooSValue).Should().BeTrue();
+					fooSValue.Should().Be(43);
+					s.TryGetLabel<bool>("barS", out var barSValue).Should().BeTrue();
+					barSValue.Should().BeTrue();
+				});
+
+				t.TryGetLabel<int>("fooT", out var fooTValue).Should().BeTrue();
+				fooTValue.Should().Be(42);
+				t.TryGetLabel<bool>("barT", out var barTValue).Should().BeTrue();
+				barTValue.Should().BeFalse();
+			});
+		}
+
+		/// <summary>
+		/// Utilizes <see cref="IExecutionSegment.TryGetLabel{T}" /> with mismatched types.
+		/// If the type parameter does not match the type of the given label, <see cref="IExecutionSegment.TryGetLabel{T}" />
+		/// returns
+		/// <code>default</code>.
+		/// </summary>
+		[Fact]
+		public void ReadLabelGenericTypeTest()
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+
+			agent.Tracer.CaptureTransaction("test", "test", t =>
+			{
+				t.SetLabel("intLabel", 42);
+				t.SetLabel("boolLabel", true);
+				t.SetLabel("stringLabel", "foo");
+
+				t.TryGetLabel<string>("intLabel", out _).Should().BeFalse();
+				t.TryGetLabel<bool>("intLabel", out _).Should().BeFalse();
+				t.TryGetLabel<int>("intLabel", out var intVal).Should().BeTrue();
+				intVal.Should().Be(42);
+
+				t.TryGetLabel<string>("boolLabel", out _).Should().BeFalse();
+				t.TryGetLabel<bool>("boolLabel", out var boolVal).Should().BeTrue();
+				boolVal.Should().BeTrue();
+				t.TryGetLabel<int>("boolLabel", out _).Should().BeFalse();
+
+				t.TryGetLabel<string>("stringLabel", out var strVal).Should().BeTrue();
+				strVal.Should().Be("foo");
+				t.TryGetLabel<bool>("stringLabel", out _).Should().BeFalse();
+				t.TryGetLabel<int>("stringLabel", out _).Should().BeFalse();
+			});
+		}
+
+		[Fact]
+		public void ReadLabelsWithMixedApiUsage()
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+
+			var t = agent.Tracer.StartTransaction("test", "test");
+
+			t.SetLabel("foo", 42);
+			t.SetLabel("bar", false);
+
+			t.Labels["oldApi"] = "43";
+
+			t.TryGetLabel<int>("foo", out var fooVal).Should().BeTrue();
+			fooVal.Should().Be(42);
+			t.TryGetLabel<bool>("bar", out var barVal).Should().BeTrue();
+			barVal.Should().BeFalse();
+
+			// values from the Labels dictionary aren't visible through the new API
+			t.TryGetLabel<string>("oldApi", out _).Should().BeFalse();
+
+			t.End();
+
+			var spanJsonString = SerializePayloadItem(t);
+			spanJsonString.Should().Contain("\"tags\":{\"foo\":42,\"bar\":false,\"oldApi\":\"43\"");
+		}
+
 
 		private static void SetLabel(IExecutionSegment executionSegment, object labelValue, string labelName)
 		{

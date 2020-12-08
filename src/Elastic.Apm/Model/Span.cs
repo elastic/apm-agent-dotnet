@@ -12,6 +12,7 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
+using Elastic.Apm.ServerInfo;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -19,6 +20,7 @@ namespace Elastic.Apm.Model
 {
 	internal class Span : ISpan
 	{
+		private readonly IApmServerInfo _apmServerInfo;
 		private readonly Lazy<SpanContext> _context = new Lazy<SpanContext>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly Transaction _enclosingTransaction;
@@ -27,16 +29,6 @@ namespace Elastic.Apm.Model
 		private readonly IApmLogger _logger;
 		private readonly Span _parentSpan;
 		private readonly IPayloadSender _payloadSender;
-
-		/// <summary>
-		/// In some cases capturing the stacktrace in <see cref="End" /> results in a stack trace which is not very useful.
-		/// In such cases we capture the stacktrace on span start.
-		/// These are typically async calls - e.g. capturing stacktrace for outgoing HTTP requests in the
-		/// System.Net.Http.HttpRequestOut.Stop
-		/// diagnostic source event produces a stack trace that does not contain the caller method in user code - therefore we
-		/// capture the stacktrace is .Start
-		/// </summary>
-		private readonly StackFrame[] _stackFrames;
 
 		// This constructor is meant for deserialization
 		[JsonConstructor]
@@ -57,6 +49,7 @@ namespace Elastic.Apm.Model
 			IPayloadSender payloadSender,
 			IApmLogger logger,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
+			IApmServerInfo apmServerInfo,
 			Span parentSpan = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None,
 			bool captureStackTraceOnStart = false
@@ -71,6 +64,7 @@ namespace Elastic.Apm.Model
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
 			_parentSpan = parentSpan;
 			_enclosingTransaction = enclosingTransaction;
+			_apmServerInfo = apmServerInfo;
 			Name = name;
 			Type = type;
 
@@ -79,6 +73,7 @@ namespace Elastic.Apm.Model
 
 			if (IsSampled)
 			{
+				SampleRate = enclosingTransaction.SampleRate;
 				// Started and dropped spans should be counted only for sampled transactions
 				if (enclosingTransaction.SpanCount.IncrementTotal() > ConfigSnapshot.TransactionMaxSpans
 					&& ConfigSnapshot.TransactionMaxSpans >= 0)
@@ -90,10 +85,18 @@ namespace Elastic.Apm.Model
 				{
 					enclosingTransaction.SpanCount.IncrementStarted();
 
-					if (captureStackTraceOnStart)
-						_stackFrames = new EnhancedStackTrace(new StackTrace(true)).GetFrames();
+					// In some cases capturing the stacktrace in End() results in a stack trace which is not very useful.
+					// In such cases we capture the stacktrace on span start.
+					// These are typically async calls - e.g. capturing stacktrace for outgoing HTTP requests in the
+					// System.Net.Http.HttpRequestOut.Stop
+					// diagnostic source event produces a stack trace that does not contain the caller method in user code - therefore we
+					// capture the stacktrace is .Start
+					if (captureStackTraceOnStart && ConfigSnapshot.StackTraceLimit != 0 && ConfigSnapshot.SpanFramesMinDurationInMilliseconds != 0)
+						RawStackTrace = new StackTrace(true);
 				}
 			}
+			else
+				SampleRate = 0;
 
 			_currentExecutionSegmentsContainer.CurrentSpan = this;
 
@@ -108,7 +111,7 @@ namespace Elastic.Apm.Model
 		public string Action { get; set; }
 
 		[JsonIgnore]
-		private IConfigSnapshot ConfigSnapshot => _enclosingTransaction.ConfigSnapshot;
+		internal IConfigSnapshot ConfigSnapshot => _enclosingTransaction.ConfigSnapshot;
 
 		/// <summary>
 		/// Any other arbitrary data captured by the agent, optionally provided by the user.
@@ -161,6 +164,19 @@ namespace Elastic.Apm.Model
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
 
+		/// <summary>
+		/// This holds the raw stack trace that was captured when the span either started or ended (depending on the parameter
+		/// passed to the .ctor)
+		/// This will be turned into an elastic stack trace and sent to APM Server in the <see cref="StackTrace" /> property
+		/// </summary>
+		internal StackTrace RawStackTrace;
+
+		/// <summary>
+		/// Captures the sample rate of the agent when this span was created.
+		/// </summary>
+		[JsonProperty("sample_rate")]
+		internal double SampleRate { get; }
+
 		[JsonIgnore]
 		internal bool ShouldBeSentToApmServer => IsSampled && !_isDropped;
 
@@ -207,9 +223,25 @@ namespace Elastic.Apm.Model
 			{ nameof(IsSampled), IsSampled }
 		}.ToString();
 
+		public bool TryGetLabel<T>(string key, out T value)
+		{
+			if (Context.InternalLabels.Value.InnerDictionary.TryGetValue(key, out var label))
+			{
+				if (label?.Value is T t)
+				{
+					value = t;
+					return true;
+				}
+			}
+
+			value = default;
+			return false;
+		}
+
+
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
 		{
-			if(ConfigSnapshot.Enabled && ConfigSnapshot.Recording)
+			if (ConfigSnapshot.Enabled && ConfigSnapshot.Recording)
 				return StartSpanInternal(name, type, subType, action);
 
 			return new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId);
@@ -219,7 +251,8 @@ namespace Elastic.Apm.Model
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false
 		)
 		{
-			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer, this,
+			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer,
+				_apmServerInfo, this,
 				instrumentationFlag, captureStackTraceOnStart);
 
 			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
@@ -272,16 +305,10 @@ namespace Elastic.Apm.Model
 
 				// Spans are sent only for sampled transactions so it's only worth capturing stack trace for sampled spans
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
-				if (ConfigSnapshot.StackTraceLimit != 0 && ConfigSnapshot.SpanFramesMinDurationInMilliseconds != 0)
-				{
-					if (Duration >= ConfigSnapshot.SpanFramesMinDurationInMilliseconds
-						|| ConfigSnapshot.SpanFramesMinDurationInMilliseconds < 0)
-					{
-						StackTrace = StacktraceHelper.GenerateApmStackTrace(_stackFrames ?? new EnhancedStackTrace(new StackTrace(true)).GetFrames(),
-							_logger,
-							ConfigSnapshot, $"Span `{Name}'");
-					}
-				}
+				if (ConfigSnapshot.StackTraceLimit != 0 && ConfigSnapshot.SpanFramesMinDurationInMilliseconds != 0 && RawStackTrace == null
+					&& (Duration >= ConfigSnapshot.SpanFramesMinDurationInMilliseconds
+						|| ConfigSnapshot.SpanFramesMinDurationInMilliseconds < 0))
+					RawStackTrace = new StackTrace(true);
 
 				_payloadSender.QueueSpan(this);
 			}
@@ -299,6 +326,7 @@ namespace Elastic.Apm.Model
 				this,
 				ConfigSnapshot,
 				_enclosingTransaction,
+				_apmServerInfo,
 				culprit,
 				isHandled,
 				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id),
@@ -339,6 +367,7 @@ namespace Elastic.Apm.Model
 				this,
 				ConfigSnapshot,
 				_enclosingTransaction,
+				_apmServerInfo,
 				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id),
 				labels
 			);
