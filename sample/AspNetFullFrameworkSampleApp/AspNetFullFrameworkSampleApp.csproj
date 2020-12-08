@@ -126,6 +126,10 @@
       <SubType>ASPXCodeBehind</SubType>
       <DependentUpon>Webforms.aspx</DependentUpon>
     </Compile>
+    <Compile Include="WebformsException.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+      <DependentUpon>WebformsException.aspx</DependentUpon>
+    </Compile>
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\WebApiController.cs" />
     <Compile Include="Controllers\DatabaseController.cs" />
@@ -217,6 +221,7 @@
     <Content Include="Areas\MyArea\Web.config" />
     <Content Include="Areas\MyArea\_ViewStart.cshtml" />
     <Content Include="Webforms.aspx" />
+    <Content Include="WebformsException.aspx" />
     <Content Include="Scripts\umd\popper.min.js.map" />
     <Content Include="Scripts\umd\popper.js.map" />
     <Content Include="Scripts\umd\popper-utils.min.js.map" />
