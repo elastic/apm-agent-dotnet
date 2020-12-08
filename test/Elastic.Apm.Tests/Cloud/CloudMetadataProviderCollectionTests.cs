@@ -19,11 +19,12 @@ namespace Elastic.Apm.Tests.Cloud
 		{
 			var providers = new CloudMetadataProviderCollection(DefaultValues.CloudProvider, new NoopLogger());
 
-			providers.Count.Should().Be(3);
+			providers.Count.Should().Be(4);
 			providers.TryGetValue(AwsCloudMetadataProvider.Name, out _).Should().BeTrue();
 			providers.TryGetValue(GcpCloudMetadataProvider.Name, out _).Should().BeTrue();
 			providers.TryGetValue(AzureCloudMetadataProvider.Name, out _).Should().BeTrue();
-			providers.Select(p => p.Provider).Should().Equal("aws", "gcp", "azure");
+			providers.TryGetValue(AzureAppServiceMetadataProvider.Name, out _).Should().BeTrue();
+			providers.Select(p => p.Provider).Should().Equal("aws", "gcp", "azure", "azure-app-service");
 		}
 
 		[Fact]
@@ -52,12 +53,15 @@ namespace Elastic.Apm.Tests.Cloud
 		}
 
 		[Fact]
-		public void CloudProvider_Azure_Should_Register_Azure_Provider()
+		public void CloudProvider_Azure_Should_Register_Azure_Providers()
 		{
 			var providers = new CloudMetadataProviderCollection(SupportedValues.CloudProviderAzure, new NoopLogger());
-			providers.Count.Should().Be(1);
+			providers.Count.Should().Be(2);
 			providers.TryGetValue(SupportedValues.CloudProviderAzure, out var provider).Should().BeTrue();
 			provider.Should().BeOfType<AzureCloudMetadataProvider>();
+
+			providers.TryGetValue(AzureAppServiceMetadataProvider.Name, out provider).Should().BeTrue();
+			provider.Should().BeOfType<AzureAppServiceMetadataProvider>();
 		}
 	}
 }
