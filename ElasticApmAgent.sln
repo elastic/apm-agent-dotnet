@@ -48,6 +48,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "files", "files", "{B406113B
 		LICENSE = LICENSE
 		README.md = README.md
 		RELEASING.md = RELEASING.md
+		build.bat = build.bat
+		build.sh = build.sh
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.PerfTests", "test\Elastic.Apm.PerfTests\Elastic.Apm.PerfTests.csproj", "{F069CE99-F418-4BC2-9E44-8F03497D8DA8}"
@@ -97,6 +99,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Grpc.Tests", "test\Elastic.Apm.Grpc.Tests\Elastic.Apm.Grpc.Tests.csproj", "{3AD5584E-057A-4C52-84EA-32A9BBE12F03}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Extensions.Hosting.Tests", "test\Elastic.Apm.Extensions.Hosting.Tests\Elastic.Apm.Extensions.Hosting.Tests.csproj", "{3CCB9193-8416-49AF-A1A3-8D1118CFB25B}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "scripts", "build\scripts\scripts.fsproj", "{CB623206-F69E-4004-8527-D4B971AA981A}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -237,6 +241,8 @@ Global
 		{3CCB9193-8416-49AF-A1A3-8D1118CFB25B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3CCB9193-8416-49AF-A1A3-8D1118CFB25B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3CCB9193-8416-49AF-A1A3-8D1118CFB25B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CB623206-F69E-4004-8527-D4B971AA981A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CB623206-F69E-4004-8527-D4B971AA981A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -274,6 +280,7 @@ Global
 		{8F1B46E1-F1A0-4744-9D9A-AA1BB33842C8} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{3AD5584E-057A-4C52-84EA-32A9BBE12F03} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{3CCB9193-8416-49AF-A1A3-8D1118CFB25B} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{CB623206-F69E-4004-8527-D4B971AA981A} = {B406113B-0917-4531-AFEE-66DDB952590F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}

@@ -770,7 +770,7 @@ namespace Elastic.Apm.Tests
 				{
 					await httpClient.GetAsync(localServer.Uri);
 				}
-				catch (Exception e)
+				catch
 				{
 					//ignore - we don't care about the result
 				}

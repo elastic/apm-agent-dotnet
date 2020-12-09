@@ -28,8 +28,10 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		/// <returns></returns>
 		public ActionResult Index()
 		{
-			using var context = new SampleDataDbContext();
-			var samples = context.Set<SampleData>().ToList();
+			List<SampleData> samples;
+			using (var context = new SampleDataDbContext())
+				samples = context.Set<SampleData>().ToList();
+
 			return View(samples);
 		}
 

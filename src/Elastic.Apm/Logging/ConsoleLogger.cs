@@ -9,7 +9,9 @@ namespace Elastic.Apm.Logging
 {
 	internal class ConsoleLogger : IApmLogger
 	{
+		private static readonly object SyncRoot = new object();
 		internal static readonly LogLevel DefaultLogLevel = LogLevel.Error;
+
 		private readonly TextWriter _errorOut;
 		private readonly TextWriter _standardOut;
 
@@ -38,28 +40,46 @@ namespace Elastic.Apm.Logging
 		{
 			if (!IsEnabled(level)) return;
 
-			var dateTime = DateTime.Now;
-			var message = formatter(state, e);
-
-			var fullMessage = $"[{dateTime:yyyy-MM-dd HH:mm:ss.fff zzz}][{LevelToString(level)}] - {message}";
-			if (e != null)
-				fullMessage += $"{Environment.NewLine}+-> Exception: {e.GetType().FullName}: {e.Message}{Environment.NewLine}{e.StackTrace}";
-
+			TextWriter writer;
 			switch (level)
 			{
 				case LogLevel.Critical when Level <= LogLevel.Critical:
 				case LogLevel.Error when Level <= LogLevel.Error:
-					_errorOut.WriteLineAsync(fullMessage);
+					writer = _errorOut;
 					break;
 				case LogLevel.Warning when Level <= LogLevel.Warning:
 				case LogLevel.Debug when Level <= LogLevel.Debug:
 				case LogLevel.Information when Level <= LogLevel.Information:
 				case LogLevel.Trace when Level <= LogLevel.Trace:
-					_standardOut.WriteLineAsync(fullMessage);
+					writer = _standardOut;
 					break;
 				// ReSharper disable once RedundantCaseLabel
 				case LogLevel.None:
-				default: break;
+				default:
+					return;
+			}
+
+			var dateTime = DateTime.Now;
+			var message = formatter(state, e);
+
+			lock (SyncRoot)
+			{
+				writer.Write('[');
+				writer.Write(dateTime.ToString("yyyy-MM-dd HH:mm:ss.fff zzz"));
+				writer.Write("][");
+				writer.Write(LevelToString(level));
+				writer.Write("] - ");
+				writer.WriteLine(message);
+				if (e != null)
+				{
+					writer.Write("+-> Exception: ");
+					writer.Write(e.GetType().FullName);
+					writer.Write(": ");
+					writer.WriteLine(e.Message);
+					writer.WriteLine(e.StackTrace);
+				}
+
+				writer.Flush();
 			}
 		}
 

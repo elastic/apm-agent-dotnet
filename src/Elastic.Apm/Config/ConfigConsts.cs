@@ -129,6 +129,7 @@ namespace Elastic.Apm.Config
 			public const string SanitizeFieldNames = Prefix + "SANITIZE_FIELD_NAMES";
 			public const string SecretToken = Prefix + "SECRET_TOKEN";
 			public const string ServerUrls = Prefix + "SERVER_URLS";
+			public const string ServerUrl = Prefix + "SERVER_URL";
 			public const string ServiceName = Prefix + "SERVICE_NAME";
 			public const string ServiceNodeName = Prefix + "SERVICE_NODE_NAME";
 			public const string ServiceVersion = Prefix + "SERVICE_VERSION";
@@ -168,6 +169,7 @@ namespace Elastic.Apm.Config
 			public const string SanitizeFieldNames = Prefix + nameof(SanitizeFieldNames);
 			public const string SecretToken = Prefix + nameof(SecretToken);
 			public const string ServerUrls = Prefix + nameof(ServerUrls);
+			public const string ServerUrl = Prefix + nameof(ServerUrl);
 			public const string ServiceName = Prefix + nameof(ServiceName);
 			public const string ServiceNodeName = Prefix + nameof(ServiceNodeName);
 			public const string ServiceVersion = Prefix + nameof(ServiceVersion);

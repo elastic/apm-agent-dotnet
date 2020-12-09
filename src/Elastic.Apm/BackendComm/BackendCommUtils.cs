@@ -130,7 +130,7 @@ namespace Elastic.Apm.BackendComm
 		{
 			var logger = loggerArg.Scoped(ThisClassName);
 
-			var serverUrlBase = config.ServerUrls.First();
+			var serverUrlBase = config.ServerUrl;
 			ConfigServicePoint(serverUrlBase, loggerArg);
 
 			logger.Debug()

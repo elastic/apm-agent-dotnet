@@ -22,11 +22,6 @@ namespace Elastic.Apm.DiagnosticSource
 		{
 			var retVal = new CompositeDisposable();
 
-			if (!agent.ConfigurationReader.Enabled)
-				return retVal;
-
-			var logger = agent.Logger.Scoped(nameof(HttpDiagnosticsSubscriber));
-
 			var initializer = new DiagnosticInitializer(agent.Logger, new[] { HttpDiagnosticListener.New(agent) });
 			retVal.Add(initializer);
 

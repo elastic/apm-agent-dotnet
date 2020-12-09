@@ -32,13 +32,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 					{
 						if (useOnlyDiagnosticSource)
 						{
-							var subs = new List<IDiagnosticsSubscriber>()
+							var subs = new IDiagnosticsSubscriber[]
 							{
 								new AspNetCoreDiagnosticSubscriber(),
 								new HttpDiagnosticsSubscriber(),
 								new EfCoreDiagnosticsSubscriber()
 							};
-							agent.Subscribe(subs.ToArray());
+							agent.Subscribe(subs);
 						}
 						else
 						{
@@ -56,9 +56,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 					n.ConfigureServices(ConfigureServices);
 				});
-#if !NETCOREAPP2_1 && !NETCOREAPP2_2
-			builder.Server.AllowSynchronousIO = true;
-#endif
+
 			return builder.CreateClient();
 		}
 
@@ -71,13 +69,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 					  {
 						  if (useOnlyDiagnosticSource)
 						  {
-							  var subs = new List<IDiagnosticsSubscriber>()
-							{
-								new HttpDiagnosticsSubscriber(),
-								new EfCoreDiagnosticsSubscriber(),
-								new AspNetCoreDiagnosticSubscriber()
-							};
-							  agent.Subscribe(subs.ToArray());
+							  var subs = new IDiagnosticsSubscriber[]
+							  {
+								  new HttpDiagnosticsSubscriber(),
+								  new EfCoreDiagnosticsSubscriber(),
+								  new AspNetCoreDiagnosticSubscriber()
+							  };
+							  agent.Subscribe(subs);
 						  }
 						  else
 						  {
@@ -89,9 +87,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 					  n.ConfigureServices(ConfigureServices);
 				  });
-#if !NETCOREAPP2_1 && !NETCOREAPP2_2
-			builder.Server.AllowSynchronousIO = true;
-#endif
+
 			return builder.CreateClient();
 		}
 

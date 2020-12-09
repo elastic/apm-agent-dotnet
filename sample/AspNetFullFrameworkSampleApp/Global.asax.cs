@@ -57,7 +57,7 @@ namespace AspNetFullFrameworkSampleApp
 				var responseHeaders = httpContext?.Response?.Headers;
 				if (responseHeaders == null) return;
 
-				AddHeaderIfNotPresent(responseHeaders, Consts.ElasticApmServerUrlsResponseHeaderName, string.Join(", ", Agent.Config.ServerUrls));
+				AddHeaderIfNotPresent(responseHeaders, Consts.ElasticApmServerUrlsResponseHeaderName, Agent.Config.ServerUrl.ToString());
 				AddHeaderIfNotPresent(responseHeaders, Consts.ProcessIdResponseHeaderName, Process.GetCurrentProcess().Id.ToString());
 			});
 

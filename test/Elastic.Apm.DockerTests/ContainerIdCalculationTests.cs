@@ -33,6 +33,9 @@ namespace Elastic.Apm.DockerTests
 		[InlineData(
 			"10:cpuset:/kubepods/pod5eadac96-ab58-11ea-b82b-0242ac110009/7fe41c8a2d1da09420117894f11dd91f6c3a44dfeb7d125dc594bd53468861df",
 			"7fe41c8a2d1da09420117894f11dd91f6c3a44dfeb7d125dc594bd53468861df")]
+		[InlineData(
+			"9:freezer:/kubepods.slice/kubepods-pod22949dce_fd8b_11ea_8ede_98f2b32c645c.slice/docker-b15a5bdedd2e7645c3be271364324321b908314e4c77857bbfd32a041148c07f.scope",
+			"b15a5bdedd2e7645c3be271364324321b908314e4c77857bbfd32a041148c07f")]
 		public void TestCGroupContent(string cGroupContent, string expectedContainerId)
 		{
 			if (!File.Exists("/proc/self/cgroup")) return; //only run in Docker - this check can be improved

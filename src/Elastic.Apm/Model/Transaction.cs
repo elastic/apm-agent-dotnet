@@ -22,12 +22,12 @@ namespace Elastic.Apm.Model
 	internal class Transaction : ITransaction
 	{
 		private static readonly string ApmTransactionActivityName = "ElasticApm.Transaction";
+		private readonly IApmServerInfo _apmServerInfo;
 		private readonly Lazy<Context> _context = new Lazy<Context>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
-		private readonly IApmServerInfo _apmServerInfo;
 
 		private readonly string _traceState;
 
@@ -380,6 +380,21 @@ namespace Elastic.Apm.Model
 
 			_sender.QueueTransaction(this);
 			_currentExecutionSegmentsContainer.CurrentTransaction = null;
+		}
+
+		public bool TryGetLabel<T>(string key, out T value)
+		{
+			if (Context.InternalLabels.Value.InnerDictionary.TryGetValue(key, out var label))
+			{
+				if (label?.Value is T t)
+				{
+					value = t;
+					return true;
+				}
+			}
+
+			value = default;
+			return false;
 		}
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null)
