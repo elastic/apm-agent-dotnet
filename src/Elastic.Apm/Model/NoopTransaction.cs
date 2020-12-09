@@ -21,6 +21,10 @@ namespace Elastic.Apm.Model
 		private static readonly Context ReusableContextInstance = new Context();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 
+		private readonly Lazy<Dictionary<string, string>> _custom = new Lazy<Dictionary<string, string>>();
+
+		private readonly Lazy<Dictionary<string, string>> _labels = new Lazy<Dictionary<string, string>>();
+
 		public NoopTransaction(string name, string type, ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer)
 		{
 			Name = name;
@@ -32,11 +36,11 @@ namespace Elastic.Apm.Model
 		public Context Context =>
 			ReusableContextInstance;
 
-		public Dictionary<string, string> Custom { get; }
+		public Dictionary<string, string> Custom => _custom.Value;
 		public double? Duration { get; set; }
 		public string Id { get; }
-		public bool IsSampled { get; }
-		public Dictionary<string, string> Labels { get; } = new Dictionary<string, string>();
+		public bool IsSampled => false;
+		public Dictionary<string, string> Labels => _labels.Value;
 		public string Name { get; set; }
 		public Outcome Outcome { get; set; }
 		public DistributedTracingData OutgoingDistributedTracingData { get; }
