@@ -20,7 +20,7 @@ namespace Elastic.Apm.StackExchange.Redis
 	/// </summary>
 	internal class ElasticApmProfiler
 	{
-		private readonly ConcurrentDictionary<string, ProfilingSession> _transactionSessions =
+		private readonly ConcurrentDictionary<string, ProfilingSession> _executionSegmentSessions =
 			new ConcurrentDictionary<string, ProfilingSession>();
 
 		private readonly IApmLogger _logger;
@@ -34,76 +34,108 @@ namespace Elastic.Apm.StackExchange.Redis
 
 		/// <summary>
 		/// Gets a profiling session for StackExchange.Redis to add redis commands to.
-		/// Creates a profiling session per transaction
+		/// Creates a profiling session per span or transaction
 		/// </summary>
 		/// <remarks>
 		/// See https://stackexchange.github.io/StackExchange.Redis/Profiling_v2.html
 		/// </remarks>
-		/// <returns>A profiling session for the current transaction, or null if the agent is not enabled or not recording</returns>
+		/// <returns>A profiling session for the current span or transaction, or null if the agent is not enabled or not recording</returns>
 		public ProfilingSession GetProfilingSession()
 		{
 			if (!Agent.Config.Enabled || !Agent.Config.Recording)
 				return null;
 
-			var transaction = _agent.Tracer.CurrentTransaction;
+			var executionSegment = ExecutionSegmentCommon.GetCurrentExecutionSegment(_agent);
+			var realSpan = executionSegment as Span;
+			Transaction realTransaction = null;
 
-			// don't profile when there's no transaction or it's not a "real" transaction.
-			if (!(transaction is Transaction realTransaction))
-				return null;
-
-			if (!_transactionSessions.TryGetValue(realTransaction.Id, out var session))
+			// don't profile when there's no real span or transaction
+			if (realSpan is null)
 			{
-				_logger.Trace()?.Log("Creating profiling session for transaction {TransactionId}", realTransaction.Id);
-				session = new ProfilingSession();
-				if (!_transactionSessions.TryAdd(realTransaction.Id, session))
-					_logger.Debug()?.Log("could not add profiling session to tracked sessions for transaction {TransactionId}", realTransaction.Id);
+				realTransaction = executionSegment as Transaction;
+				if (realTransaction is null)
+					return null;
 			}
 
-			realTransaction.Ended += (sender, _) => EndProfilingSession(sender, session);
+			var isSpan = realSpan != null;
+			if (!_executionSegmentSessions.TryGetValue(executionSegment.Id, out var session))
+			{
+				_logger.Trace()?.Log("Creating profiling session for {ExecutionSegment} {Id}",
+					isSpan ? "span" : "transaction",
+					executionSegment.Id);
+
+				session = new ProfilingSession();
+
+				if (!_executionSegmentSessions.TryAdd(executionSegment.Id, session))
+				{
+					_logger.Debug()?.Log("could not add profiling session to tracked sessions for {ExecutionSegment} {Id}",
+						isSpan ? "span" : "transaction",
+						executionSegment.Id);
+				}
+
+				if (isSpan)
+					realSpan.Ended += (sender, _) => EndProfilingSession(sender, session);
+				else
+					realTransaction.Ended += (sender, _) => EndProfilingSession(sender, session);
+			}
+
 			return session;
 		}
 
 		private void EndProfilingSession(object sender, ProfilingSession session)
 		{
-			if (!(sender is Transaction transaction)) return;
+			IExecutionSegment executionSegment = sender as Span;
+			string segmentType;
+			if (executionSegment is null)
+			{
+				executionSegment = sender as Transaction;
+				if (executionSegment is null)
+					return;
+
+				segmentType = "transaction";
+			}
+			else
+				segmentType = "span";
 
 			try
 			{
 				// Remove the session. Use session passed to EndProfilingSession rather than the removed session in the event
 				// there was an issue in adding or removing the session
-				if (!_transactionSessions.TryRemove(transaction.Id, out _))
+				if (!_executionSegmentSessions.TryRemove(executionSegment.Id, out _))
 				{
 					_logger.Debug()?.Log(
-						"could not remove profiling session from tracked sessions for transaction {TransactionId}",
-						transaction.Id);
+						"could not remove profiling session from tracked sessions for {ExecutionSegment} {Id}",
+						segmentType, executionSegment.Id);
 				}
 
 				var profiledCommands = session.FinishProfiling();
 				_logger.Trace()?.Log(
-					"Finished profiling session for transaction {Transaction}. Collected {ProfiledCommandCount} commands",
-					transaction,
-					profiledCommands.Count());
+					"Finished profiling session for {ExecutionSegment}. Collected {ProfiledCommandCount} commands",
+					executionSegment, profiledCommands.Count());
 
-				foreach (var profiledCommand in profiledCommands) ProcessCommand(profiledCommand, transaction);
+				foreach (var profiledCommand in profiledCommands) ProcessCommand(profiledCommand, executionSegment);
 
-				_logger.Trace()?.Log("End profiling session for transaction {TransactionId}", transaction.Id);
+				_logger.Trace()?.Log(
+					"End profiling session for {ExecutionSegment} {Id}",
+					segmentType, executionSegment.Id);
 			}
 			catch (Exception e)
 			{
-				_logger.Error()?.LogException(e, "Exception ending profiling session for transaction {TransactionId}", transaction.Id);
+				_logger.Error()?.LogException(e,
+					"Exception ending profiling session for {ExecutionSegment} {Id}",
+					segmentType, executionSegment.Id);
 			}
 		}
-
-		private static void ProcessCommand(IProfiledCommand profiledCommand, Transaction transaction)
+		private static void ProcessCommand(IProfiledCommand profiledCommand, IExecutionSegment executionSegment)
 		{
 			var name = GetCommandName(profiledCommand);
 			if (profiledCommand.RetransmissionOf != null)
 			{
 				var retransmissionName = GetCommandName(profiledCommand.RetransmissionOf);
-				name += $" (Retransmission of {retransmissionName}, reason {profiledCommand.RetransmissionReason})";
+				name += $" (Retransmission of {retransmissionName}: {profiledCommand.RetransmissionReason})";
 			}
 
-			transaction.CaptureSpan(name, ApiConstants.TypeDb, span =>
+			executionSegment.CaptureSpan(name, ApiConstants.TypeDb, span =>
 			{
 				span.Context.Db = new Database
 				{

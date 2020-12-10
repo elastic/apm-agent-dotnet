@@ -385,6 +385,7 @@ namespace Elastic.Apm.Model
 
 			var handler = Ended;
 			handler?.Invoke(this, EventArgs.Empty);
+			Ended = null;
 
 			_sender.QueueTransaction(this);
 			_currentExecutionSegmentsContainer.CurrentTransaction = null;
