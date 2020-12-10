@@ -14,21 +14,6 @@ namespace Elastic.Apm.Helpers
 	/// </summary>
 	internal static class EnvironmentHelper
 	{
-		public static string GetEnvironmentVariable(string key, IApmLogger logger)
-		{
-			try
-			{
-				return Environment.GetEnvironmentVariable(key);
-			}
-			catch (Exception e)
-			{
-				logger.Debug()?.LogException(e,
-					"Error while getting environment variable {EnvironmentVariable}", key);
-			}
-
-			return null;
-		}
-
 		public static IDictionary GetEnvironmentVariables(IApmLogger logger)
 		{
 			try
