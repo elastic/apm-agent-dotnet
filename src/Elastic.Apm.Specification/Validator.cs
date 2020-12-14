@@ -410,7 +410,8 @@ namespace Elastic.Apm.Specification
 				var specTypeProperty = properties.SingleOrDefault(p => p.Name == name);
 				if (specTypeProperty == null)
 				{
-					if (schemaProperty.Type.HasFlag(JsonObjectType.Null))
+					// No "type" means any type, which maps to None
+					if (schemaProperty.Type.HasFlag(JsonObjectType.None) || schemaProperty.Type.HasFlag(JsonObjectType.Null))
 					{
 						if (result.Validation == Validation.SpecToType)
 							result.AddError(TypeValidationError.NotFound(specType, schema.GetNameOrSpecificationId(), name));
