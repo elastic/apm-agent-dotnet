@@ -356,6 +356,7 @@ namespace Elastic.Apm.Report
 		}
 	}
 
+	[Specification("docs/spec/v2/metadata.json")]
 	internal class Metadata
 	{
 		/// <inheritdoc cref="Api.Cloud" />
