@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+#if !NETSTANDARD
 using System.Net;
+#endif
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
@@ -167,6 +169,7 @@ namespace Elastic.Apm.Specification
 
 				try
 				{
+					// ReSharper disable once AssignNullToNotNullAttribute
 					Directory.CreateDirectory(parentDirectory);
 				}
 				catch (Exception e)
@@ -585,28 +588,29 @@ namespace Elastic.Apm.Specification
 			TypeValidationResult result
 		)
 		{
-			CheckType(specType, "string", schema, property, specTypeProperty, result, (t, s) => (t == typeof(string)));
+			CheckType(specType, "string", schema, property, specTypeProperty, result, t => t == typeof(string));
 			CheckMaxLength(specType, schema, property, specTypeProperty, result);
 		}
 
 		private static void ValidateBoolean(Type specType, JsonSchema schema, JsonSchema property, ImplementationProperty specTypeProperty,
 			TypeValidationResult result
 		) =>
-			CheckType(specType, "boolean", schema, property, specTypeProperty, result, (t, s) => t == typeof(bool));
+			CheckType(specType, "boolean", schema, property, specTypeProperty, result, t => t == typeof(bool));
 
 		private static void ValidateInteger(Type specType, JsonSchema schema, JsonSchema property, ImplementationProperty specTypeProperty,
 			TypeValidationResult result
 		) =>
-			CheckType(specType, "integer", schema, property, specTypeProperty, result, (t, s) => t == typeof(int) || t == typeof(long));
+			CheckType(specType, "integer", schema, property, specTypeProperty, result, t => t == typeof(int) || t == typeof(long));
 
 		private static void ValidateNumber(Type specType, JsonSchema schema, JsonSchema property, ImplementationProperty specTypeProperty,
 			TypeValidationResult result
 		) =>
-			CheckType(specType, "number", schema, property, specTypeProperty, result, (t, s) => NumericTypeNames.Contains(t.FullName));
+			CheckType(specType, "number", schema, property, specTypeProperty, result, t => NumericTypeNames.Contains(t.FullName));
 
 		private static void CheckType(Type specType, string expectedType, JsonSchema schema, JsonSchema property,
 			ImplementationProperty implementationProperty,
-			TypeValidationResult result, Func<Type, JsonSchema, bool> typeCheck
+			TypeValidationResult result,
+			Func<Type, bool> typeCheck
 		)
 		{
 			var propertyType = implementationProperty.PropertyType;
@@ -618,13 +622,17 @@ namespace Elastic.Apm.Specification
 				propertyType = Nullable.GetUnderlyingType(implementationProperty.PropertyType);
 			}
 
-			if (!typeCheck(propertyType, property))
+			if (!typeCheck(propertyType))
+			{
 				result.AddError(TypeValidationError.ExpectedType(specType, propertyType, expectedType, schema.GetNameOrSpecificationId(),
 					property.GetNameOrSpecificationId()));
+			}
 
 			if (result.Validation == Validation.SpecToType && property.Type.HasFlag(JsonObjectType.Null) && !nullable)
+			{
 				result.AddError(new TypeValidationError(specType, schema.GetNameOrSpecificationId(), property.GetNameOrSpecificationId(),
 					"expected type to be nullable"));
+			}
 		}
 
 		private static void CheckMaxLength(Type specType, JsonSchema schema, JsonSchema schemaProperty, ImplementationProperty implementationProperty,
@@ -635,13 +643,15 @@ namespace Elastic.Apm.Specification
 			{
 				var maxLength = schemaProperty.MaxLength.Value;
 				if (!implementationProperty.MaxLength.HasValue)
+				{
 					result.AddError(new TypeValidationError(specType, schema.GetNameOrSpecificationId(), implementationProperty.Name,
 						$"expected property to enforce maxLength of {maxLength} but does not"));
-				else
+				}
+				else if (implementationProperty.MaxLength != maxLength)
 				{
-					if (implementationProperty.MaxLength != maxLength)
-						result.AddError(new TypeValidationError(specType, schema.GetNameOrSpecificationId(), implementationProperty.Name,
-							$"property max length {implementationProperty.MaxLength} not equal to spec maxLength {maxLength}"));
+					result.AddError(new TypeValidationError(specType, schema.GetNameOrSpecificationId(), implementationProperty.Name,
+						$"property max length {implementationProperty.MaxLength} not equal to spec maxLength {maxLength}"));
+
 				}
 			}
 		}
