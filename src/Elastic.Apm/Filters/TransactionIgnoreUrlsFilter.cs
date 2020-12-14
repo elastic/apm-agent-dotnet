@@ -4,7 +4,6 @@
 // See the LICENSE file in the project root for more information
 
 using Elastic.Apm.Api;
-using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
 
@@ -15,10 +14,6 @@ namespace Elastic.Apm.Filters
 	/// </summary>
 	internal class TransactionIgnoreUrlsFilter
 	{
-		private readonly IConfigSnapshot _configSnapshot;
-
-		public TransactionIgnoreUrlsFilter(IConfigSnapshot configSnapshot) => _configSnapshot = configSnapshot;
-
 		public ITransaction Filter(ITransaction transaction)
 		{
 			if (transaction is Transaction realTransaction)
@@ -26,10 +21,13 @@ namespace Elastic.Apm.Filters
 				// If there is no context, there is no URL either, therefore this transaction can't be filtered based on the URL.
 				if (!realTransaction.IsContextCreated)
 					return transaction;
+
+				return WildcardMatcher.IsAnyMatch(realTransaction.ConfigSnapshot.TransactionIgnoreUrls, transaction.Context?.Request?.Url?.PathName)
+					? null
+					: transaction;
 			}
-			return WildcardMatcher.IsAnyMatch(_configSnapshot.TransactionIgnoreUrls, transaction?.Context?.Request?.Url?.PathName)
-				? null
-				: transaction;
+
+			return transaction;
 		}
 	}
 }

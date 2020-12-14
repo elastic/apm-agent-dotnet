@@ -45,6 +45,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		internal int? StackTraceLimit { get; private set; }
 
+		internal IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls { get; private set; }
+
 		internal int? TransactionMaxSpans { get; private set; }
 
 		internal double? TransactionSampleRate { get; private set; }
@@ -67,6 +69,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			Recording = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.Recording, ParseRecording);
 			SanitizeFieldNames =
 				GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.SanitizeFieldNames, ParseSanitizeFieldNames);
+			TransactionIgnoreUrls =
+				GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.TransactionIgnoreUrls, ParseTransactionIgnoreUrls);
 		}
 
 		private ConfigurationKeyValue BuildKv(string key, string value) =>
