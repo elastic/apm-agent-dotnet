@@ -300,6 +300,26 @@ if (Agent.IsConfigured) Agent.Subscribe(new SqlClientDiagnosticSubscriber());  /
 NOTE: Auto instrumentation  for `System.Data.SqlClient` is available for both, .NET Core and .NET Framework applications, however, support of .NET Framework has one limitation:
 command text cannot be captured. In case of auto instrumentation for `Microsoft.Data.SqlClient`, only .NET Core is supported, at the moment.
 
+[[setup-stackexchange-redis]]
+=== StackExchange.Redis
+
+[float]
+==== Quick start
+
+Instrumentation can be enabled for `StackExchange.Redis` by referencing https://www.nuget.org/packages/Elastic.Apm.StackExchange.Redis[`Elastic.Apm.StackExchange.Redis`] package
+and calling the `UseElasticApm()` extension method defined in `Elastic.Apm.StackExchange.Redis`, on `IConnectionMultiplexer`
+
+[source,csharp]
+----
+// using Elastic.Apm.StackExchange.Redis;
+
+var connection = await ConnectionMultiplexer.ConnectAsync("<redis connection>");
+connection.UseElasticApm();
+----
+
+A callback is registered with the `IConnectionMultiplexer` to provide a profiling session for each transaction and span that captures redis commands
+sent with `IConnectionMultiplexer`.
+
 [[setup-general]]
 === Other .NET applications
 
