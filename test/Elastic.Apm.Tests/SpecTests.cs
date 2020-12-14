@@ -41,7 +41,7 @@ namespace Elastic.Apm.Tests
 					where type.IsClass && specInterfaces.Any(i => i.IsAssignableFrom(type))
 					select type).ToList();
 
-			var specBranch = "7.x";
+			var specBranch = "master";
 
 			_validator = new Validator(specBranch, downloadDir);
 
