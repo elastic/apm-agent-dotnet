@@ -283,7 +283,7 @@ transaction.SetLabel("intSample", 42);
 
 [float]
 [[api-transaction-try-get-label]]
-==== `T GetLabel<T>(string key, out T value)` added[1.7.1,Number and boolean labels require APM Server 6.7+]
+==== `T TryGetLabel<T>(string key, out T value)` added[1.7.1,Number and boolean labels require APM Server 6.7+]
 
 Returns the transaction's label in the `value` out parameter. If the `key` does not exist, this method returns false.
 Labels can be added with the <<api-transaction-set-label, SetLabel>> method.
@@ -584,7 +584,7 @@ span.SetLabel("intSample", 42);
 
 [float]
 [[api-span-try-get-label]]
-==== `T GetLabel<T>(string key, out T value)` added[1.7.1,Number and boolean labels require APM Server 6.7+]
+==== `T TryGetLabel<T>(string key, out T value)` added[1.7.1,Number and boolean labels require APM Server 6.7+]
 
 Returns the span's label in the `value` out parameter. If the `key` does not exist, this method returns false.
 Labels can be added with the <<api-span-set-label, SetLabel>> method.
