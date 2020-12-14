@@ -49,10 +49,30 @@ namespace Elastic.Apm.Specification
 			new Regex("^.*?/(?<path>docs/spec/.*?\\.json)$", RegexOptions.ExplicitCapture);
 
 		private readonly string _directory;
+
+		/// <summary>
+		/// The branch in the GitHub repository
+		/// </summary>
 		public string Branch { get; }
 
-		public Validator(string branch, string directory)
+		/// <summary>
+		/// The name of the GitHub repository
+		/// </summary>
+		public string Repository { get; }
+
+		/// <summary>
+		/// The owner of the GitHub repository
+		/// </summary>
+		public string Owner { get; }
+
+		public Validator(string owner, string repository, string branch, string directory)
 		{
+			if (string.IsNullOrWhiteSpace(owner))
+				throw new ArgumentException("must have a value", nameof(owner));
+
+			if (string.IsNullOrWhiteSpace(repository))
+				throw new ArgumentException("must have a value", nameof(repository));
+
 			if (string.IsNullOrWhiteSpace(branch))
 				throw new ArgumentException("must have a value", nameof(branch));
 
@@ -68,7 +88,13 @@ namespace Elastic.Apm.Specification
 				throw new ArgumentException("must be a valid path", nameof(directory), e);
 			}
 
+			Owner = owner;
+			Repository = repository;
 			Branch = branch;
+		}
+
+		public Validator(string branch, string directory) : this("elastic", "apm-server", branch, directory)
+		{
 		}
 
 		/// <summary>
@@ -82,7 +108,7 @@ namespace Elastic.Apm.Specification
 		/// </exception>
 		public async Task DownloadAsync(string branch, bool overwrite)
 		{
-			var branchDirectory = Path.Combine(_directory, branch);
+			var branchDirectory = Path.Combine(_directory, Owner, Repository, branch);
 
 			// assume that if the branch already exists, it contains the specs
 			if (Directory.Exists(branchDirectory))
@@ -111,7 +137,7 @@ namespace Elastic.Apm.Specification
 
 			// use the GitHub api to download the tar.gz and extract the specs from the stream.
 			// This is considerably faster than downloading many small files.
-			var response = await client.GetAsync($"https://api.github.com/repos/elastic/apm-server/tarball/{branch}")
+			var response = await client.GetAsync($"https://api.github.com/repos/{Owner}/{Repository}/tarball/{branch}")
 				.ConfigureAwait(false);
 
 			using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
@@ -165,7 +191,7 @@ namespace Elastic.Apm.Specification
 		/// </exception>
 		public async Task<JsonSchema> LoadSchemaAsync(string specificationId)
 		{
-			var branchDirectory = Path.Combine(_directory, Branch);
+			var branchDirectory = Path.Combine(_directory, Owner, Repository, Branch);
 			await DownloadAsync(branchDirectory, false).ConfigureAwait(false);
 
 			var path = Path.Combine(branchDirectory, specificationId);
