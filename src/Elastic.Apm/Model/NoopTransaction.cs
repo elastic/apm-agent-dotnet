@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Api.Constraints;
+using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model
 {
@@ -38,18 +40,25 @@ namespace Elastic.Apm.Model
 
 		public Dictionary<string, string> Custom => _custom.Value;
 		public double? Duration { get; set; }
+		[MaxLength]
 		public string Id { get; }
 		public bool IsSampled => false;
 		public Dictionary<string, string> Labels => _labels.Value;
+		[MaxLength]
 		public string Name { get; set; }
 		public Outcome Outcome { get; set; }
 		public DistributedTracingData OutgoingDistributedTracingData { get; }
+		[JsonProperty("parent_id")]
+		[MaxLength]
 		public string ParentId { get; }
+		[MaxLength]
 		public string Result { get; set; }
-
+		[JsonProperty("span_count")]
 		public SpanCount SpanCount { get; }
+		[JsonProperty("trace_id")]
+		[MaxLength]
 		public string TraceId { get; }
-
+		[MaxLength]
 		public string Type { get; set; }
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null, Dictionary<string, Label> labels = null
