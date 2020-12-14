@@ -411,6 +411,8 @@ the latest {apm-app-ref}/agent-configuration.html[APM Agent configuration].
 [[config-sanitize-field-names]]
 ==== `SanitizeFieldNames` (added[1.2])
 
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+
 Sometimes it is necessary to sanitize, i.e., remove, sensitive data sent to Elastic APM.
 This config accepts a list of wildcard patterns of field names which should be sanitized.
 These apply for example to HTTP headers and `application/x-www-form-urlencoded` data.
@@ -808,6 +810,8 @@ NOTE: Setting this to `false` reduces memory allocations, network bandwidth and 
 [[config-transaction-ignore-urls]]
 ==== `TransactionIgnoreUrls` (performance)
 
+<<dynamic-configuration, image:./images/dynamic-config.svg[] >>
+
 [options="header"]
 |============
 | Environment variable name             | IConfiguration or Web.config key
@@ -1014,7 +1018,7 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-max-queue-event-count,`MaxQueueEventCount`>> | No | Reporter
 | <<config-metrics-interval,`MetricsInterval`>> | No | Reporter
 | <<config-recording,`Recording`>> | Yes | Core
-| <<config-sanitize-field-names,`SanitizeFieldNames`>> | No | Core
+| <<config-sanitize-field-names,`SanitizeFieldNames`>> | Yes | Core
 | <<config-secret-token,`SecretToken`>> | No | Reporter
 | <<config-server-url,`ServerUrl`>> | No | Reporter
 | <<config-service-name,`ServiceName`>> | No | Core
@@ -1022,7 +1026,7 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-service-version,`ServiceVersion`>> | No | Core
 | <<config-span-frames-min-duration,`SpanFramesMinDuration`>> | No | Stacktrace, Performance
 | <<config-stack-trace-limit,`StackTraceLimit`>> | No | Stacktrace, Performance
-| <<config-transaction-ignore-urls,`TransactionIgnoreUrls`>>  | No | HTTP, Performance
+| <<config-transaction-ignore-urls,`TransactionIgnoreUrls`>>  | Yes | HTTP, Performance
 | <<config-transaction-max-spans,`TransactionMaxSpans`>>  | Yes | Core, Performance
 | <<config-transaction-sample-rate,`TransactionSampleRate`>> | Yes | Core, Performance
 | <<config-use-elastic-apm-traceparent-header,`UseElasticTraceparentHeader`>> | No | HTTP
