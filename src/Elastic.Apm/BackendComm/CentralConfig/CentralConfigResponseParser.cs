@@ -163,7 +163,14 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			public CentralConfigPayload(IDictionary<string, string> keyValues) => _keyValues = keyValues;
 
-			public string this[string key] => _keyValues.ContainsKey(key) ? _keyValues[key] : null;
+			public string this[string key]
+			{
+				get
+				{
+					_keyValues.TryGetValue(key, out var val);
+					return val;
+				}
+			}
 
 			[JsonIgnore]
 			public IEnumerable<KeyValuePair<string, string>> UnknownKeys => _keyValues.Where(x => !SupportedOptions.Contains(x.Key));
