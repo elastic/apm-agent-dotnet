@@ -29,7 +29,7 @@ namespace Elastic.Apm.Tests.Mocks
 				var timer = new Timer { Interval = 10000, Enabled = true };
 				timer.Elapsed += (a, b) =>
 				{
-					_transactionTaskCompletionSource.TrySetCanceled();
+					_transactionTaskCompletionSource.SetCanceled();
 					timer.Stop();
 				};
 				timer.Start();
@@ -54,7 +54,7 @@ namespace Elastic.Apm.Tests.Mocks
 			if (!IsEnabled(level)) return;
 
 			_lines.Add(formatter(state, e));
-			_transactionTaskCompletionSource.TrySetResult(_lines);
+			_transactionTaskCompletionSource.SetResult(_lines);
 		}
 	}
 }

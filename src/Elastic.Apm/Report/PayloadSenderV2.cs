@@ -185,16 +185,17 @@ namespace Elastic.Apm.Report
 
 			if (!_getApmServerVersion && _apmServerInfo?.Version is null)
 			{
-				await ApmServerInfoProvider.FillApmServerInfo(_apmServerInfo, _logger, _configSnapshot, HttpClientInstance).ConfigureAwait(false);
+				await ApmServerInfoProvider.FillApmServerInfo(_apmServerInfo, _logger, _configSnapshot, HttpClient).ConfigureAwait(false);
 				_getApmServerVersion = true;
 			}
 
-			await ProcessQueueItems(await ReceiveBatchAsync());
+			var batch = await ReceiveBatchAsync().ConfigureAwait(false);
+			await ProcessQueueItems(batch).ConfigureAwait(false);
 		}
 
 		private async Task<object[]> ReceiveBatchAsync()
 		{
-			var receiveAsyncTask = _eventQueue.ReceiveAsync(CtsInstance.Token);
+			var receiveAsyncTask = _eventQueue.ReceiveAsync(CancellationTokenSource.Token);
 
 			if (_flushInterval == TimeSpan.Zero)
 				_logger.Trace()?.Log("Waiting for data to send... (not using FlushInterval timer because FlushInterval is 0)");
@@ -203,13 +204,14 @@ namespace Elastic.Apm.Report
 				_logger.Trace()?.Log("Waiting for data to send... FlushInterval: {FlushInterval}", _flushInterval.ToHms());
 				while (true)
 				{
-					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, CtsInstance.Token)) break;
+					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, CancellationTokenSource.Token).ConfigureAwait(false))
+						break;
 
 					_eventQueue.TriggerBatch();
 				}
 			}
 
-			var eventBatchToSend = await receiveAsyncTask;
+			var eventBatchToSend = await receiveAsyncTask.ConfigureAwait(false);
 			var newEventQueueCount = Interlocked.Add(ref _eventQueueCount, -eventBatchToSend.Length);
 			_logger.Trace()
 				?.Log("There's data to be sent. Batch size: {BatchSize}. newEventQueueCount: {newEventQueueCount}. First event: {Event}."
@@ -231,10 +233,10 @@ namespace Elastic.Apm.Report
 			var timeoutDelayTask = Task.Delay(timeout, timeoutDelayCts.Token);
 			try
 			{
-				var completedTask = await Task.WhenAny(taskToAwait, timeoutDelayTask);
+				var completedTask = await Task.WhenAny(taskToAwait, timeoutDelayTask).ConfigureAwait(false);
 				if (completedTask == taskToAwait)
 				{
-					await taskToAwait;
+					await taskToAwait.ConfigureAwait(false);
 					return true;
 				}
 
@@ -283,7 +285,8 @@ namespace Elastic.Apm.Report
 
 				var content = new StringContent(ndjson.ToString(), Encoding.UTF8, "application/x-ndjson");
 
-				var result = await HttpClientInstance.PostAsync(_intakeV2EventsAbsoluteUrl, content, CtsInstance.Token);
+				var result = await HttpClient.PostAsync(_intakeV2EventsAbsoluteUrl, content, CancellationTokenSource.Token)
+					.ConfigureAwait(false);
 
 				if (result != null && !result.IsSuccessStatusCode)
 				{
@@ -295,7 +298,7 @@ namespace Elastic.Apm.Report
 							, Http.Sanitize(_intakeV2EventsAbsoluteUrl, out var sanitizedServerUrl)
 								? sanitizedServerUrl
 								: _intakeV2EventsAbsoluteUrl.ToString()
-							, result.StatusCode, await result.Content.ReadAsStringAsync());
+							, result.StatusCode, await result.Content.ReadAsStringAsync().ConfigureAwait(false));
 				}
 				else
 				{
@@ -317,9 +320,9 @@ namespace Elastic.Apm.Report
 					?.LogException(
 						e,
 						"Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):\n{SerializedItems}"
-						, Http.Sanitize(HttpClientInstance.BaseAddress, out var sanitizedServerUrl)
+						, Http.Sanitize(HttpClient.BaseAddress, out var sanitizedServerUrl)
 							? sanitizedServerUrl
-							: HttpClientInstance.BaseAddress.ToString()
+							: HttpClient.BaseAddress.ToString()
 						, TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray()))
 					);
 			}

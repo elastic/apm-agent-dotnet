@@ -6,6 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
@@ -349,7 +352,6 @@ namespace Elastic.Apm.Tests
 
 		/// <summary>
 		/// Initializes a <see cref="PayloadSenderV2" /> with a server url which contains basic authentication.
-		/// In this test the server exists and return HTTP 500.
 		/// The test makes sure that the user name and password from basic auth. is not printed in the logs.
 		/// </summary>
 		[Fact]
