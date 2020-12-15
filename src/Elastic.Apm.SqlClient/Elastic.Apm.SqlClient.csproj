@@ -6,6 +6,7 @@
     <Description>Elastic APM for System.Data.SqlClient and Microsoft.Data.SqlClient. This package contains auto instrumentation for SqlClient. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, sqlclient</PackageTags>
     <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
