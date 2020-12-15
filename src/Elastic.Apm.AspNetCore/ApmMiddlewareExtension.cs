@@ -72,6 +72,8 @@ namespace Elastic.Apm.AspNetCore
 			{
 				if (!Agent.IsConfigured)
 					Agent.Setup(agent);
+
+				logger?.Info()?.Log("The 'Enabled' agent config is set to false - the agent won't collect and send any data.");
 				return builder;
 			}
 
