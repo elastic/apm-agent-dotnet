@@ -191,7 +191,7 @@ namespace Elastic.Apm.Model
 		/// <summary>
 		/// Recorded time of the event, UTC based and formatted as microseconds since Unix epoch
 		/// </summary>
-		public long Timestamp { get; }
+		public long Timestamp { get; internal set; }
 
 		[MaxLength]
 		[JsonProperty("trace_id")]
@@ -263,6 +263,11 @@ namespace Elastic.Apm.Model
 			return retVal;
 		}
 
+		/// <summary>
+		/// When the transaction has ended and before being queued to send to APM server
+		/// </summary>
+		public event EventHandler Ended;
+
 		public void End()
 		{
 			if (Duration.HasValue)
@@ -291,6 +296,10 @@ namespace Elastic.Apm.Model
 
 			var isFirstEndCall = !_isEnded;
 			_isEnded = true;
+
+			var handler = Ended;
+			handler?.Invoke(this, EventArgs.Empty);
+			Ended = null;
 
 			if (ShouldBeSentToApmServer && isFirstEndCall)
 			{
