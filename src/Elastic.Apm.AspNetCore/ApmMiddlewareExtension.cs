@@ -58,7 +58,7 @@ namespace Elastic.Apm.AspNetCore
 			// Agent.Setup must be called, even if agent is disabled. This way static public API usage won't implicitly initialize an agent with default values, instead, this will be reused.
 			Agent.Setup(config);
 
-			return !configReader.Enabled ? builder : UseElasticApm(builder, Agent.Instance, logger, subscribers);
+			return UseElasticApm(builder, Agent.Instance, logger, subscribers);
 		}
 
 		internal static IApplicationBuilder UseElasticApm(
