@@ -35,7 +35,7 @@ namespace Elastic.Apm.Tests.Mocks
 		{
 			PayloadSenderV2.SetUpFilters(_transactionFilters, _spanFilters,
 				new ConfigSnapshotFromReader(configurationReader, nameof(SerializerMockPayloadSender)),
-				new MockApmServerInfo(new ElasticVersion(7, 10, 0, null)), new NoopLogger());
+				MockApmServerInfo.Version710, new NoopLogger());
 			_payloadItemSerializer = new PayloadItemSerializer();
 		}
 

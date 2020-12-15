@@ -29,7 +29,7 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public MockPayloadSender(IApmLogger logger = null)
 			=> PayloadSenderV2.SetUpFilters(_transactionFilters, _spanFilters, new MockConfigSnapshot(),
-				new MockApmServerInfo(new ElasticVersion(7, 10, 0, null)), logger ?? new NoopLogger());
+				MockApmServerInfo.Version710, logger ?? new NoopLogger());
 
 		private TaskCompletionSource<ITransaction> _transactionTaskCompletionSource = new TaskCompletionSource<ITransaction>();
 
