@@ -93,6 +93,11 @@ We support automatic instrumentation for the following data access technologies.
 | 1.6.0
 |===
 
+| Redis (StackExchange.Redis)
+| 2.0.495
+| A DB span is automatically created for each profiled redis command peformed by StackExchange.Redis 
+| 1.8.0
+
 [float]
 [[supported-networking-client-side-technologies]]
 === Networking client-side technologies

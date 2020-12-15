@@ -84,7 +84,13 @@ using Elastic.Apm.Report;
 		"Elastic.Apm.Grpc.Tests, PublicKey=" + Signing.PublicKey)]
 [assembly:
 	InternalsVisibleTo(
-		"Elastic.Apm.Specification, PublicKey=" + Signing.PublicKey)]
+		"Elastic.Apm.Specification, PublicKey=" + Signing.PublicKey)]   
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.StackExchange.Redis, PublicKey=" + Signing.PublicKey)]
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.StackExchange.Redis.Tests, PublicKey=" + Signing.PublicKey)]
 
 internal static class Signing
 {
