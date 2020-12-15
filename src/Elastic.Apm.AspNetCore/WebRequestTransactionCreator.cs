@@ -108,7 +108,7 @@ namespace Elastic.Apm.AspNetCore
 					Headers = GetHeaders(context.Request.Headers, transaction.ConfigSnapshot)
 				};
 
-				transaction.CollectRequestBody(false, context.Request, logger, transaction.ConfigSnapshot);
+				transaction.CollectRequestBody(false, context.Request, logger);
 			}
 			catch (Exception ex)
 			{
@@ -243,13 +243,13 @@ namespace Elastic.Apm.AspNetCore
 		/// <returns>default if it's not a grpc call, otherwise the Grpc method name and result as a tuple </returns>
 		private static (string methodname, string result) CollectGrpcInfo()
 		{
-			var parentActivty = Activity.Current.Parent;
+			var parentActivity = Activity.Current?.Parent;
 			(string methodname, string result) grpcCallInfo = default;
 
-			if (parentActivty != null)
+			if (parentActivity != null)
 			{
-				var grpcMethodName = parentActivty.Tags.Where(n => n.Key == "grpc.method").FirstOrDefault().Value;
-				var grpcStatusCode = parentActivty.Tags.Where(n => n.Key == "grpc.status_code").FirstOrDefault().Value;
+				var grpcMethodName = parentActivity.Tags.FirstOrDefault(n => n.Key == "grpc.method").Value;
+				var grpcStatusCode = parentActivity.Tags.FirstOrDefault(n => n.Key == "grpc.status_code").Value;
 
 				if (!string.IsNullOrEmpty(grpcMethodName) && !string.IsNullOrEmpty(grpcStatusCode))
 					grpcCallInfo = (grpcMethodName, grpcStatusCode);

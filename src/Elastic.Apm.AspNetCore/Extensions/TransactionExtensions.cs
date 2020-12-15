@@ -20,13 +20,7 @@ namespace Elastic.Apm.AspNetCore.Extensions
 		/// <param name="isForError">Is request body being captured for error (otherwise it's for transaction)</param>
 		/// <param name="httpRequest">Current http request</param>
 		/// <param name="logger">Logger object</param>
-		/// <param name="configSnapshot">
-		/// The config snapshot of the current transaction. This is for reading the sanitization
-		/// settings.
-		/// </param>
-		internal static void CollectRequestBody(this Transaction transaction, bool isForError, HttpRequest httpRequest, IApmLogger logger,
-			IConfigSnapshot configSnapshot
-		)
+		internal static void CollectRequestBody(this Transaction transaction, bool isForError, HttpRequest httpRequest, IApmLogger logger)
 		{
 			if (!transaction.IsSampled) return;
 
@@ -41,7 +35,7 @@ namespace Elastic.Apm.AspNetCore.Extensions
 				&& !ReferenceEquals(transaction.Context.Request.Body, Apm.Consts.Redacted)) return;
 
 			if (transaction.IsCaptureRequestBodyEnabled(isForError) && IsCaptureRequestBodyEnabledForContentType(transaction, httpRequest, logger))
-				body = httpRequest.ExtractRequestBody(logger, configSnapshot);
+				body = httpRequest.ExtractRequestBody(logger, transaction.ConfigSnapshot);
 
 			// According to the documentation - the default value of 'body' is '[Redacted]'
 			transaction.Context.Request.Body = body ?? Apm.Consts.Redacted;
