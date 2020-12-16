@@ -9,6 +9,7 @@ open System.CommandLine
 open System.CommandLine.Invocation
 open System.CommandLine.Parsing
 open Bullseye
+open Fake.IO
 open ProcNet
 open Fake.Core
 
@@ -16,6 +17,7 @@ module Main =
     let excludeBullsEyeOptions = Set.ofList [
         "--verbose"
         "--clear"
+        "--parallel"
     ]
     
     // Command line options for Bullseye, excluding ones where we want to use the name
@@ -28,6 +30,8 @@ module Main =
     let private options : Option list = [
         Option<string>([| "-v"; "--version" |], "The version to use for the build")
         Option<bool>([| "-c"; "--canary" |], "Whether the build is a canary release. Used by pack")
+        Option<string>([| "-f"; "--framework" |], "The framework version to use for diffs. Used by diff")
+        Option<string[]>([| "-p"; "--packageids" |], "The ids of nuget packages to diff. Used by diff")
     ]
     
     /// Exception relating to passed options/arguments. Used by Bullseye to only include the message if this
@@ -100,6 +104,45 @@ module Main =
                     raise (sprintf "version '%O' must be greater than '%O'" version currentVersion |> OptionException)
               
                 ReleaseNotes.GenerateNotes Versioning.CurrentVersion.AssemblyVersion version
+            )
+            
+            Targets.Target("diff", ["build"], fun _ ->
+                let version =
+                    let v = cmdLine.ValueForOption<string>("version")
+                    match v with
+                    | null ->
+                        // the current version may not have yet been incremented since the last release
+                        // so create a patch version from the current version, which will work for both
+                        // an incremented and non-incremented cases
+                        let c = { Versioning.CurrentVersion.AssemblyVersion with
+                                    Patch = Versioning.CurrentVersion.AssemblyVersion.Patch + 1u
+                                    Original = None }         
+                        c.ToString()
+                    | _ -> v
+                    
+                let framework =
+                    let f = cmdLine.ValueForOption<string>("framework")
+                    match f with
+                    | null -> "netstandard2.0"
+                    | _ -> f
+                
+                let packageDirectories =
+                    let p = cmdLine.ValueForOption<string[]>("packageids")
+                    match p with
+                    | null -> IO.Directory.GetDirectories (Paths.BuildOutputFolder, "Elastic.*")
+                    | _ -> p |> Array.map Paths.BuildOutput
+                    
+                packageDirectories
+                |> Array.filter(fun id -> IO.Directory.Exists(Path.combine id framework))
+                |> Array.iter(fun dir ->
+                    let packageId = IO.Path.GetFileName dir
+                    
+                    let command = [ sprintf "previous-nuget|%s|%s|%s" packageId version framework
+                                    sprintf "directory|%s/%s" dir framework
+                                    "-a"; "-f"; "xml"; "--output"; (IO.Path.GetFullPath Paths.BuildOutputFolder)]
+                    
+                    Tooling.Diff command
+                )
             )
             
             // default target if none is specified
