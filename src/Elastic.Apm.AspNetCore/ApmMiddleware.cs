@@ -66,7 +66,7 @@ namespace Elastic.Apm.AspNetCore
 				if (transaction != null && transaction.IsContextCreated && context?.Response.StatusCode >= 400
 					&& transaction.Context?.Request?.Body is string body
 					&& (string.IsNullOrEmpty(body) || body == Apm.Consts.Redacted))
-					transaction.CollectRequestBody(true, context.Request, _logger, transaction.ConfigSnapshot);
+					transaction.CollectRequestBody(true, context.Request, _logger);
 
 				if(transaction != null)
 					WebRequestTransactionCreator.StopTransaction(transaction, context, _logger);
@@ -79,7 +79,7 @@ namespace Elastic.Apm.AspNetCore
 		{
 			transaction?.CaptureException(e);
 			if (context != null)
-				transaction?.CollectRequestBody(true, context.Request, _logger, transaction.ConfigSnapshot);
+				transaction?.CollectRequestBody(true, context.Request, _logger);
 			return false;
 		}
 	}

@@ -76,8 +76,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 					if (iDiagnosticsTransaction is Transaction diagnosticsTransaction)
 					{
-						diagnosticsTransaction.CollectRequestBody(true, httpContextDiagnosticsUnhandledException.Request, _logger,
-							diagnosticsTransaction.ConfigSnapshot);
+						diagnosticsTransaction.CollectRequestBody(true, httpContextDiagnosticsUnhandledException.Request, _logger);
 						diagnosticsTransaction.CaptureException(diagnosticsException);
 					}
 
@@ -89,8 +88,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 					if (iCurrentTransaction is Transaction currentTransaction)
 					{
-						currentTransaction.CollectRequestBody(true, httpContextUnhandledException.Request, _logger,
-							currentTransaction.ConfigSnapshot);
+						currentTransaction.CollectRequestBody(true, httpContextUnhandledException.Request, _logger);
 						currentTransaction.CaptureException(exception);
 					}
 					break;
