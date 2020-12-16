@@ -5,6 +5,7 @@
     <Description>Elastic APM .NET Agent. This package offers integration with Microsoft.Extensions.Hosting.IHostBuilder for agent registration</Description>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, netcore</PackageTags>
     <TargetFrameworks>netstandard2.0;netcoreapp3.0</TargetFrameworks>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>

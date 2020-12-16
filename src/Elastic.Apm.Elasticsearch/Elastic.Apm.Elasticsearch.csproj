@@ -7,6 +7,7 @@
     <PackageProjectUrl>https://github.com/elastic/apm-agent-dotnet</PackageProjectUrl>
     <Description>Elastic APM for the Elasticsearch .NET clients. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, elasticsearch, NEST</PackageTags>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Elasticsearch.Net" Version="7.6.0" />
