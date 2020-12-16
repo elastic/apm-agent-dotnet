@@ -44,6 +44,12 @@ using Elastic.Apm.Report;
 		"Elastic.Apm.NetCoreAll, PublicKey=" + Signing.PublicKey)]
 [assembly:
 	InternalsVisibleTo(
+		"Elastic.Apm.AspNetCore.Static.Tests, PublicKey=" + Signing.PublicKey)]
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.NetCoreAll, PublicKey=" + Signing.PublicKey)]
+[assembly:
+	InternalsVisibleTo(
 		"Elastic.Apm.NetCoreAll.Tests, PublicKey=" + Signing.PublicKey)]
 [assembly:
 	InternalsVisibleTo(
@@ -121,7 +127,7 @@ namespace Elastic.Apm
 
 		internal ICentralConfigFetcher CentralConfigFetcher => Components.CentralConfigFetcher;
 
-		private AgentComponents Components { get; }
+		internal AgentComponents Components { get; }
 		internal IConfigStore ConfigStore => Components.ConfigStore;
 		public IConfigurationReader ConfigurationReader => Components.ConfigurationReader;
 		public IApmLogger Logger => Components.Logger;
@@ -142,7 +148,6 @@ namespace Elastic.Apm
 	{
 		private static readonly Lazy<ApmAgent> LazyApmAgent = new Lazy<ApmAgent>(() => new ApmAgent(Components));
 		private static volatile bool _isConfigured;
-
 
 		internal static AgentComponents Components { get; private set; }
 
@@ -258,6 +263,12 @@ namespace Elastic.Apm
 
 			Components = agentComponents;
 			_isConfigured = true;
+		}
+
+		internal static void Setup(ApmAgent apmAgent)
+		{
+			if(!LazyApmAgent.IsValueCreated)
+				Setup(apmAgent.Components);
 		}
 
 		internal class InstanceAlreadyCreatedException : Exception

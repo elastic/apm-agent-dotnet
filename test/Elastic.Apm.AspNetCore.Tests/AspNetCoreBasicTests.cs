@@ -61,21 +61,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 		private HttpClient _client;
 
 
-		private void Configure(bool createDefaultClient, bool useOnlyDiagnosticSource)
-		{
-			if (createDefaultClient)
-			{
-#pragma warning disable IDE0022 // Use expression body for methods
-				_client = Helper.GetClient(_agent, _factory, useOnlyDiagnosticSource);
-#pragma warning restore IDE0022 // Use expression body for methods
-#if NETCOREAPP3_0 || NETCOREAPP3_1
-				_client.DefaultRequestVersion = new Version(2, 0);
-#endif
-			}
-			else
-				_client = Helper.GetClientWithoutExceptionPage(_agent, _factory, useOnlyDiagnosticSource);
-		}
-
 		/// <summary>
 		/// Simulates an HTTP GET call to /home/simplePage and asserts on what the agent should send to the server
 		/// </summary>
@@ -84,7 +69,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Theory]
 		public async Task HomeSimplePageTransactionTest(bool withDiagnosticSourceOnly)
 		{
-			Configure(true, withDiagnosticSourceOnly);
+			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
 
 			var headerKey = "X-Additional-Header";
 			var headerValue = "For-Elastic-Apm-Agent";
@@ -172,7 +157,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 				_logger,
 				new MockConfigSnapshot(_logger, enabled: "false"), _capturedPayload));
 
-			Configure(true, withDiagnosticSourceOnly);
+			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
 
 			var response = await _client.GetAsync("/Home/Index");
 
@@ -191,7 +176,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_agent = new ApmAgent(new TestAgentComponents(
 				_logger, new MockConfigSnapshot(recording: "false"), _capturedPayload));
 
-			Configure(true, withDiagnosticSourceOnly);
+			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
 
 			var response = await _client.GetAsync("/Home/Index");
 
@@ -223,7 +208,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Theory]
 		public async Task HomeSimplePagePostTransactionTest(bool withDiagnosticSourceOnly)
 		{
-			Configure(true, withDiagnosticSourceOnly);
+			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
 			var headerKey = "X-Additional-Header";
 			var headerValue = "For-Elastic-Apm-Agent";
 			_client.DefaultRequestHeaders.Add(headerKey, headerValue);
@@ -309,7 +294,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Theory]
 		public async Task HomeIndexSpanTest(bool withDiagnosticSourceOnly)
 		{
-			Configure(true, withDiagnosticSourceOnly);
+			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
 			var response = await _client.GetAsync("/Home/Index");
 
 			response.IsSuccessStatusCode.Should().BeTrue();
@@ -326,7 +311,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Theory]
 		public async Task HomeIndexDestinationTest(bool withDiagnosticSourceOnly)
 		{
-			Configure(true, withDiagnosticSourceOnly);
+			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
 			var response = await _client.GetAsync("/Home/Index");
 
 			response.IsSuccessStatusCode.Should().BeTrue();
@@ -359,7 +344,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Theory]
 		public async Task HomeIndexAutoCapturedSpansAreChildrenOfControllerActionAsSpan(bool withDiagnosticSourceOnly)
 		{
-			Configure(true, withDiagnosticSourceOnly);
+			_client = Helper.ConfigureHttpClient(true, withDiagnosticSourceOnly, _agent, _factory);
 			var response = await _client.GetAsync("/Home/Index?captureControllerActionAsSpan=true");
 
 			response.IsSuccessStatusCode.Should().BeTrue();
@@ -395,7 +380,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Theory]
 		public async Task FailingRequestWithoutConfiguredExceptionPage(bool withDiagnosticSourceOnly)
 		{
-			Configure(false, withDiagnosticSourceOnly);
+			_client = Helper.ConfigureHttpClient(false, withDiagnosticSourceOnly, _agent, _factory);
 
 			Func<Task> act = async () => await _client.GetAsync("Home/TriggerError");
 			await act.Should().ThrowAsync<Exception>();
@@ -417,7 +402,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			labels.Should().NotBeEmpty().And.ContainKey("foo");
 			var val = labels?["foo"];
 			val.Should().NotBeNull();
-			if(val != null)
+			if (val != null)
 				labels["foo"].Value.Should().Be("bar");
 		}
 
@@ -431,7 +416,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Theory]
 		public async Task FailingPostRequestWithoutConfiguredExceptionPage(bool withDiagnosticSourceOnly)
 		{
-			Configure(false, withDiagnosticSourceOnly);
+			_client = Helper.ConfigureHttpClient(false, withDiagnosticSourceOnly, _agent, _factory);
 
 			_client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
