@@ -21,7 +21,7 @@ namespace Elastic.Apm.Tests
 		private readonly PayloadItemSerializer _payloadItemSerializer;
 
 		public LabelTests() =>
-			_payloadItemSerializer = new PayloadItemSerializer(new MockConfigSnapshot());
+			_payloadItemSerializer = new PayloadItemSerializer();
 
 		[InlineData("StrValue")]
 		[InlineData(123)]

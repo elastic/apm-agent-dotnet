@@ -144,6 +144,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			internal const string SpanFramesMinDurationKey = "span_frames_min_duration";
 			internal const string StackTraceLimitKey = "stack_trace_limit";
 			internal const string Recording = "recording";
+			internal const string SanitizeFieldNames = "sanitize_field_names";
 
 			internal static readonly ISet<string> SupportedOptions = new HashSet<string>
 			{

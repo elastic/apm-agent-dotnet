@@ -2,9 +2,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using Elastic.Apm.Config;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Report.Serialization
 {
@@ -12,10 +10,10 @@ namespace Elastic.Apm.Report.Serialization
 	{
 		private readonly JsonSerializerSettings _settings;
 
-		internal PayloadItemSerializer(IConfigurationReader configurationReader) =>
+		internal PayloadItemSerializer() =>
 			_settings = new JsonSerializerSettings
 			{
-				ContractResolver = new ElasticApmContractResolver(configurationReader),
+				ContractResolver = new ElasticApmContractResolver(),
 				NullValueHandling = NullValueHandling.Ignore,
 				Formatting = Formatting.None,
 			};

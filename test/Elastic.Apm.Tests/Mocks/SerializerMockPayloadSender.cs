@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -12,6 +13,7 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 using Elastic.Apm.Report.Serialization;
+using Elastic.Apm.ServerInfo;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Tests.Mocks
@@ -22,36 +24,28 @@ namespace Elastic.Apm.Tests.Mocks
 	/// </summary>
 	internal class SerializerMockPayloadSender : IPayloadSender
 	{
-		private readonly PayloadItemSerializer _payloadItemSerializer;
-
-		private readonly TaskCompletionSource<ITransaction> _transactionTaskCompletionSource = new TaskCompletionSource<ITransaction>();
-		private readonly TaskCompletionSource<IError> _errorTaskCompletionSource = new TaskCompletionSource<IError>();
-		private readonly List<Transaction> _transactions = new List<Transaction>();
 		private readonly List<Error> _errors = new List<Error>();
+		private readonly TaskCompletionSource<IError> _errorTaskCompletionSource = new TaskCompletionSource<IError>();
+		private readonly PayloadItemSerializer _payloadItemSerializer;
+		private readonly List<Func<ISpan, ISpan>> _spanFilters = new List<Func<ISpan, ISpan>>();
+		private readonly List<Func<ITransaction, ITransaction>> _transactionFilters = new List<Func<ITransaction, ITransaction>>();
+		private readonly List<Transaction> _transactions = new List<Transaction>();
 
-		public SerializerMockPayloadSender(IConfigurationReader configurationReader) => _payloadItemSerializer = new PayloadItemSerializer(configurationReader);
-
-		public Transaction FirstTransaction
+		public SerializerMockPayloadSender(IConfigurationReader configurationReader)
 		{
-			get
-			{
-				_transactionTaskCompletionSource.Task.Wait();
-				return Transactions.First();
-			}
+			PayloadSenderV2.SetUpFilters(_transactionFilters, _spanFilters,
+				new ConfigSnapshotFromReader(configurationReader, nameof(SerializerMockPayloadSender)),
+				MockApmServerInfo.Version710, new NoopLogger());
+			_payloadItemSerializer = new PayloadItemSerializer();
 		}
 
-		public Error FirstError => Errors.First() as Error;
+		private TaskCompletionSource<ITransaction> _transactionTaskCompletionSource = new TaskCompletionSource<ITransaction>();
 
 		public List<Error> Errors
 		{
-
 			get
 			{
-
-				var timer = new Timer
-				{
-					Interval = 1000
-				};
+				var timer = new Timer { Interval = 1000 };
 
 				timer.Enabled = true;
 				timer.Start();
@@ -76,15 +70,22 @@ namespace Elastic.Apm.Tests.Mocks
 			}
 		}
 
+		public Error FirstError => Errors.First() as Error;
+
+		public Transaction FirstTransaction
+		{
+			get
+			{
+				_transactionTaskCompletionSource.Task.Wait();
+				return Transactions.First();
+			}
+		}
+
 		public List<Transaction> Transactions
 		{
 			get
 			{
-
-				var timer = new Timer
-				{
-					Interval = 1000
-				};
+				var timer = new Timer { Interval = 1000 };
 
 				timer.Enabled = true;
 				timer.Start();
@@ -95,10 +96,21 @@ namespace Elastic.Apm.Tests.Mocks
 					timer.Stop();
 				};
 
-				_transactionTaskCompletionSource.Task.Wait();
+
+				try
+				{
+					_transactionTaskCompletionSource.Task.Wait();
+				}
+				catch
+				{
+					return _transactions;
+				}
+
 				return _transactions;
 			}
 		}
+
+		internal void ResetTransactionTaskCompletionSource() => _transactionTaskCompletionSource = new TaskCompletionSource<ITransaction>();
 
 		public void QueueError(IError error)
 		{
@@ -114,6 +126,7 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public void QueueTransaction(ITransaction transaction)
 		{
+			transaction = _transactionFilters.Aggregate(transaction, (current, filter) => filter(current));
 			var item = _payloadItemSerializer.SerializeObject(transaction);
 			var deserializedTransaction = JsonConvert.DeserializeObject<Transaction>(item);
 			_transactions.Add(deserializedTransaction);

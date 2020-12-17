@@ -19,10 +19,11 @@ namespace Elastic.Apm.Api
 	{
 		public Request(string method, Url url) => (Method, Url) = (method, url);
 
-		[Sanitize]
 		public object Body { get; set; }
 
-		[Sanitize]
+		/// <summary>
+		/// This field is sanitized by a filter
+		/// </summary>
 		public Dictionary<string, string> Headers { get; set; }
 
 		[JsonProperty("http_version")]
