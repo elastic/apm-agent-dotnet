@@ -33,7 +33,10 @@ using Elastic.Apm.AspNetCore;
 
 public class Startup
 {
-    public Startup(IConfiguration configuration)
+
+    private readonly IConfiguration Configuration;
+    
+	public Startup(IConfiguration configuration)
     {
         Configuration = configuration;
     }
