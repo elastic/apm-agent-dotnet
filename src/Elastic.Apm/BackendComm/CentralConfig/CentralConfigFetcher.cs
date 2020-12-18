@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -20,7 +19,6 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		private const string ThisClassName = nameof(CentralConfigFetcher);
 
 		internal static readonly TimeSpan GetConfigHttpRequestTimeout = TimeSpan.FromMinutes(5);
-
 		internal static readonly TimeSpan WaitTimeIfAnyError = TimeSpan.FromMinutes(5);
 
 		private readonly IAgentTimer _agentTimer;
@@ -29,6 +27,10 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		private readonly Uri _getConfigAbsoluteUrl;
 		private readonly IConfigSnapshot _initialSnapshot;
 		private readonly IApmLogger _logger;
+		private readonly Action<CentralConfigReader> _onResponse;
+
+		private long _dbgIterationsCount;
+		private EntityTagHeaderValue _eTag;
 
 		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, ICentralConfigResponseParser centralConfigResponseParser,
 			Service service,
@@ -63,6 +65,15 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 					+ " (default value is {CentralConfigOptionDefaultValue})"
 					, centralConfigStatus, _initialSnapshot.CentralConfig, ConfigConsts.DefaultValues.CentralConfig);
 
+			// if the logger supports switching the log level at runtime, allow it to be updated by central configuration
+			if (_initialSnapshot.CentralConfig && logger is ILogLevelSwitchable switchable)
+				_onResponse += reader =>
+				{
+					var currentLevel = switchable.LogLevelSwitch.Level;
+					if (reader.LogLevel != null && reader.LogLevel != currentLevel)
+						switchable.LogLevelSwitch.Level = reader.LogLevel.Value;
+				};
+
 			if (!_initialSnapshot.CentralConfig) return;
 
 			_configStore = configStore;
@@ -76,10 +87,6 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			StartWorkLoop();
 		}
-
-		private long _dbgIterationsCount;
-
-		private EntityTagHeaderValue _eTag;
 
 		protected override async Task WorkLoopIteration()
 		{
@@ -99,6 +106,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				(centralConfigReader, waitInfo) = _centralConfigResponseParser.ParseHttpResponse(httpResponse, httpResponseBody);
 				if (centralConfigReader != null)
 				{
+					_onResponse?.Invoke(centralConfigReader);
 					UpdateConfigStore(centralConfigReader);
 					_eTag = httpResponse.Headers.ETag;
 				}

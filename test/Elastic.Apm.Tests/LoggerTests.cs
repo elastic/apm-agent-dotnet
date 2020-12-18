@@ -61,6 +61,22 @@ namespace Elastic.Apm.Tests
 			logger.Lines[3].Should().EndWith("[Debug] - Debug log");
 		}
 
+		[Fact]
+		public void LogLevelSwitch_Should_Switch_LogLevel()
+		{
+			var logger = LogWithLevel(LogLevel.Warning);
+
+			logger.Lines.Count.Should().Be(2);
+			logger.Lines[0].Should().EndWith("[Error] - Error log");
+			logger.Lines[1].Should().EndWith("[Warning] - Warning log");
+
+			logger.LogLevelSwitch.Level = LogLevel.Error;
+			LogWithLevel(logger, LogLevel.Warning);
+
+			logger.Lines.Should().HaveCount(3);
+			logger.Lines[2].Should().EndWith("[Error] - Error log");
+		}
+
 		/// <summary>
 		/// Logs a message with exception by using <see cref="LoggingExtensions.MaybeLogger.LogException" />.
 		/// Makes sure that both the message and the exception is printed.
@@ -403,6 +419,17 @@ namespace Elastic.Apm.Tests
 		private static TestLogger LogWithLevel(LogLevel logLevel)
 		{
 			var logger = new TestLogger(logLevel);
+
+			logger.Error()?.Log("Error log");
+			logger.Warning()?.Log("Warning log");
+			logger.Info()?.Log("Info log");
+			logger.Debug()?.Log("Debug log");
+			return logger;
+		}
+
+		private static TestLogger LogWithLevel(TestLogger logger, LogLevel logLevel)
+		{
+			logger ??= new TestLogger(logLevel);
 
 			logger.Error()?.Log("Error log");
 			logger.Warning()?.Log("Warning log");

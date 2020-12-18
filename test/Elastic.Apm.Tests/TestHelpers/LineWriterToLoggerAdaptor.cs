@@ -7,19 +7,17 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Tests.TestHelpers
 {
-	public class LineWriterToLoggerAdaptor : IApmLogger
+	public class LineWriterToLoggerAdaptor : IApmLogger, ILogLevelSwitchable
 	{
 		private readonly ILineWriter _lineWriter;
 
 		public LineWriterToLoggerAdaptor(ILineWriter lineWriter, LogLevel level = LogLevel.Information)
 		{
-			Level = level;
+			LogLevelSwitch = new LogLevelSwitch(level);
 			_lineWriter = lineWriter;
 		}
 
-		public LogLevel Level { get; set; }
-
-		public bool IsEnabled(LogLevel level) => Level <= level;
+		public bool IsEnabled(LogLevel level) => LogLevelSwitch.Level <= level;
 
 		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{
@@ -34,5 +32,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 			if (IsEnabled(level))
 				_lineWriter.WriteLine(fullMessage);
 		}
+
+		public LogLevelSwitch LogLevelSwitch { get; }
 	}
 }

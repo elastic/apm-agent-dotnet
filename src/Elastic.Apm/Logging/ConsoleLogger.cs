@@ -7,7 +7,7 @@ using System.IO;
 
 namespace Elastic.Apm.Logging
 {
-	internal class ConsoleLogger : IApmLogger
+	internal class ConsoleLogger : IApmLogger, ILogLevelSwitchable
 	{
 		private static readonly object SyncRoot = new object();
 		internal static readonly LogLevel DefaultLogLevel = LogLevel.Error;
@@ -17,14 +17,16 @@ namespace Elastic.Apm.Logging
 
 		public ConsoleLogger(LogLevel level, TextWriter standardOut = null, TextWriter errorOut = null)
 		{
-			Level = level;
+			LogLevelSwitch = new LogLevelSwitch(level);
 			_standardOut = standardOut ?? Console.Out;
 			_errorOut = errorOut ?? Console.Error;
 		}
 
 		public static ConsoleLogger Instance { get; } = new ConsoleLogger(DefaultLogLevel);
 
-		private LogLevel Level { get; }
+		public LogLevelSwitch LogLevelSwitch { get; }
+
+		private LogLevel Level => LogLevelSwitch.Level;
 
 		public static ConsoleLogger LoggerOrDefault(LogLevel? level)
 		{
