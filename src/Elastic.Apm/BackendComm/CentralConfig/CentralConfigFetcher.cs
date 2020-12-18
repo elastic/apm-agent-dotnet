@@ -283,7 +283,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				_centralConfig.SpanFramesMinDurationInMilliseconds ?? _wrapped.SpanFramesMinDurationInMilliseconds;
 
 			public int StackTraceLimit => _centralConfig.StackTraceLimit ?? _wrapped.StackTraceLimit;
-			public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => _wrapped.TransactionIgnoreUrls;
+			public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => _centralConfig.TransactionIgnoreUrls ?? _wrapped.TransactionIgnoreUrls;
 
 			public int TransactionMaxSpans => _centralConfig.TransactionMaxSpans ?? _wrapped.TransactionMaxSpans;
 

@@ -116,7 +116,7 @@ namespace Elastic.Apm.Report
 			IConfigSnapshot configSnapshot, IApmServerInfo apmServerInfo, IApmLogger logger
 		)
 		{
-			transactionFilters.Add(new TransactionIgnoreUrlsFilter(configSnapshot).Filter);
+			transactionFilters.Add(new TransactionIgnoreUrlsFilter().Filter);
 			transactionFilters.Add(new HeaderDictionarySanitizerFilter().Filter);
 			// with this, stack trace demystification and conversion to the intake API model happens on a non-application thread:
 			spanFilters.Add(new SpanStackTraceCapturingFilter(logger, apmServerInfo).Filter);

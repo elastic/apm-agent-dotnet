@@ -1,4 +1,9 @@
-﻿using System;
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.Extensions.Hosting;
@@ -14,8 +19,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 	[Collection("DiagnosticListenerTest")]
 	public class TransactionIgnoreUrlsTest : IClassFixture<WebApplicationFactory<Startup>>, IDisposable
 	{
-		private readonly ApmAgent _agent;
-		private readonly MockPayloadSender _capturedPayload;
 		private readonly WebApplicationFactory<Startup> _factory;
 
 		// ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
@@ -38,6 +41,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
 		}
 
+		private ApmAgent _agent;
+		private MockPayloadSender _capturedPayload;
+
 		private HttpClient _client;
 
 		private void Setup(bool useOnlyDiagnosticSource)
@@ -48,6 +54,62 @@ namespace Elastic.Apm.AspNetCore.Tests
 #if NETCOREAPP3_0 || NETCOREAPP3_1
 			_client.DefaultRequestVersion = new Version(2, 0);
 #endif
+		}
+
+		/// <summary>
+		/// Changes the transactionIgnoreUrls during startup and asserts that the agent reacts accordingly.
+		/// </summary>
+		/// <param name="useDiagnosticSourceOnly"></param>
+		/// <returns></returns>
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task ChangeTransactionIgnoreUrlsAfterStart(bool useDiagnosticSourceOnly)
+		{
+			// Start with default config
+			var startConfigSnapshot = new MockConfigSnapshot(new NoopLogger());
+			_capturedPayload = new MockPayloadSender();
+
+			var agentComponents = new TestAgentComponents(
+				_logger,
+				startConfigSnapshot, _capturedPayload,
+				new CurrentExecutionSegmentsContainer());
+
+			_agent = new ApmAgent(agentComponents);
+			_client = Helper.GetClient(_agent, _factory, useDiagnosticSourceOnly);
+
+			_client.DefaultRequestHeaders.Add("foo", "bar");
+			await _client.GetAsync("/Home/SimplePage");
+
+			_capturedPayload.Transactions.Should().ContainSingle();
+			_capturedPayload.FirstTransaction.Context.Request.Url.Full.ToLower().Should().Contain("simplepage");
+
+			_capturedPayload.ResetTransactionTaskCompletionSource();
+
+			//change config to ignore urls with SimplePage
+			var updateConfigSnapshot = new MockConfigSnapshot(
+				new NoopLogger()
+				, transactionIgnoreUrls: "*SimplePage*"
+			);
+			_agent.ConfigStore.CurrentSnapshot = updateConfigSnapshot;
+
+			await _client.GetAsync("/Home/SimplePage");
+
+			//assert that no more transaction is captured - so still 1 captured transaction
+			_capturedPayload.Transactions.Should().ContainSingle();
+
+			_capturedPayload.ResetTransactionTaskCompletionSource();
+			//update config again
+			updateConfigSnapshot = new MockConfigSnapshot(
+				new NoopLogger()
+				, transactionIgnoreUrls: "FooBar"
+			);
+			_agent.ConfigStore.CurrentSnapshot = updateConfigSnapshot;
+
+			await _client.GetAsync("/Home/SimplePage");
+
+			//assert that the number of captured transaction increased
+			_capturedPayload.Transactions.Count.Should().Be(2);
 		}
 
 		/// <summary>

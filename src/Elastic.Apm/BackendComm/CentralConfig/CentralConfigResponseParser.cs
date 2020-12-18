@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -15,9 +16,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 {
 	internal class CentralConfigResponseParser : ICentralConfigResponseParser
 	{
-		private readonly IApmLogger _logger;
-
 		internal static readonly TimeSpan WaitTimeIfNoCacheControlMaxAge = TimeSpan.FromMinutes(5);
+		private readonly IApmLogger _logger;
 
 		internal CentralConfigResponseParser(IApmLogger logger) => _logger = logger?.Scoped(nameof(CentralConfigResponseParser));
 
@@ -136,30 +136,44 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		{
 			internal const string CaptureBodyContentTypesKey = "capture_body_content_types";
 			internal const string CaptureBodyKey = "capture_body";
-			internal const string TransactionMaxSpansKey = "transaction_max_spans";
-			internal const string TransactionSampleRateKey = "transaction_sample_rate";
 
 			internal const string CaptureHeadersKey = "capture_headers";
 			internal const string LogLevelKey = "log_level";
-			internal const string SpanFramesMinDurationKey = "span_frames_min_duration";
-			internal const string StackTraceLimitKey = "stack_trace_limit";
 			internal const string Recording = "recording";
 			internal const string SanitizeFieldNames = "sanitize_field_names";
+			internal const string SpanFramesMinDurationKey = "span_frames_min_duration";
+			internal const string StackTraceLimitKey = "stack_trace_limit";
+			internal const string TransactionIgnoreUrls = "transaction_ignore_urls";
+			internal const string TransactionMaxSpansKey = "transaction_max_spans";
+			internal const string TransactionSampleRateKey = "transaction_sample_rate";
 
 			internal static readonly ISet<string> SupportedOptions = new HashSet<string>
 			{
-				CaptureBodyKey, CaptureBodyContentTypesKey, TransactionMaxSpansKey, TransactionSampleRateKey,
-				CaptureHeadersKey, LogLevelKey, SpanFramesMinDurationKey, StackTraceLimitKey
+				CaptureBodyKey,
+				CaptureBodyContentTypesKey,
+				TransactionMaxSpansKey,
+				TransactionSampleRateKey,
+				CaptureHeadersKey,
+				LogLevelKey,
+				SpanFramesMinDurationKey,
+				StackTraceLimitKey
 			};
 
 			private readonly IDictionary<string, string> _keyValues;
 
 			public CentralConfigPayload(IDictionary<string, string> keyValues) => _keyValues = keyValues;
 
+			public string this[string key]
+			{
+				get
+				{
+					_keyValues.TryGetValue(key, out var val);
+					return val;
+				}
+			}
+
 			[JsonIgnore]
 			public IEnumerable<KeyValuePair<string, string>> UnknownKeys => _keyValues.Where(x => !SupportedOptions.Contains(x.Key));
-
-			public string this[string key] => _keyValues.ContainsKey(key) ? _keyValues[key] : null;
 		}
 	}
 }
