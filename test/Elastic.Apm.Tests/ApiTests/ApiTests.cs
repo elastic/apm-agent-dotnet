@@ -660,7 +660,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				payloadSender.Spans.Should().HaveCount(0);
 				span.Duration = 123456.789;
 				span.End();
-				payloadSender.WaitForSpans(isSampled? null : TimeSpan.FromSeconds(5));
+				payloadSender.WaitForSpans(isSampled? (TimeSpan?)null : TimeSpan.FromSeconds(5));
 				payloadSender.Spans.Should().HaveCount(expectedSpansCount);
 				if (isSampled) payloadSender.FirstSpan.Duration.Should().Be(123456.789);
 
