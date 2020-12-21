@@ -51,7 +51,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 				transaction.End();
 
-
+				payloadSender.WaitForTransactions();
 				payloadSender.Transactions.Should().ContainSingle();
 
 				var capturedTransaction = payloadSender.Transactions[0];
@@ -79,6 +79,8 @@ namespace Elastic.Apm.Tests.ApiTests
 			{
 				var unused = agent.Tracer.StartTransaction(transactionName, transactionType);
 			}
+
+			payloadSender.WaitForTransactions(TimeSpan.FromSeconds(5));
 			payloadSender.Transactions.Should().BeEmpty();
 		}
 
@@ -100,6 +102,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				transaction.Result = result;
 				transaction.End();
 
+				payloadSender.WaitForTransactions();
 				payloadSender.Transactions[0].Result.Should().Be(result);
 			}
 		}
@@ -290,7 +293,11 @@ namespace Elastic.Apm.Tests.ApiTests
 
 				span.End();
 				transaction.End();
+
+				payloadSender.WaitForTransactions();
 				payloadSender.Transactions.Should().NotBeEmpty();
+
+				payloadSender.WaitForSpans();
 				payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
 				payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(spanName);
@@ -320,7 +327,10 @@ namespace Elastic.Apm.Tests.ApiTests
 				Thread.Sleep(5); //Make sure we have duration > 0
 
 				transaction.End(); //Ends transaction, but doesn't end span.
+
+				payloadSender.WaitForTransactions();
 				payloadSender.Transactions.Should().NotBeEmpty();
+				payloadSender.WaitForSpans(TimeSpan.FromSeconds(5));
 				payloadSender.SpansOnFirstTransaction.Should().BeEmpty();
 
 				agent.Service.Should().NotBeNull();
@@ -345,7 +355,9 @@ namespace Elastic.Apm.Tests.ApiTests
 				span.End();
 				transaction.End();
 
+				payloadSender.WaitForTransactions();
 				payloadSender.Transactions.Should().NotBeEmpty();
+				payloadSender.WaitForSpans();
 				payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
 				payloadSender.SpansOnFirstTransaction[0].Type.Should().Be(ApiConstants.TypeDb);
@@ -399,7 +411,9 @@ namespace Elastic.Apm.Tests.ApiTests
 				transaction.End();
 			}
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().ContainSingle();
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Should().ContainSingle();
 			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
@@ -440,7 +454,9 @@ namespace Elastic.Apm.Tests.ApiTests
 				transaction.End();
 			}
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().ContainSingle();
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Should().ContainSingle();
 			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 		}
@@ -482,13 +498,16 @@ namespace Elastic.Apm.Tests.ApiTests
 				transaction.End();
 			}
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().ContainSingle();
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Should().ContainSingle();
 			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 
 			payloadSender.FirstTransaction.Context.InternalLabels.Value.MergedDictionary["fooTransaction1"].Value.Should().Be("barTransaction1");
 			payloadSender.FirstTransaction.Context.InternalLabels.Value.MergedDictionary["fooTransaction2"].Value.Should().Be("barTransaction2");
 
+			payloadSender.WaitForSpans();
 			payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.Value.MergedDictionary["fooSpan1"].Value.Should().Be("barSpan1");
 			payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.Value.MergedDictionary["fooSpan2"].Value.Should().Be("barSpan2");
 		}
@@ -600,16 +619,22 @@ namespace Elastic.Apm.Tests.ApiTests
 
 				payloadSender.Spans.Should().HaveCount(0);
 				span.End();
+
+				payloadSender.WaitForSpans(isSampled? null : TimeSpan.FromSeconds(5));
 				payloadSender.Spans.Should().HaveCount(expectedSpansCount);
 				if (isSampled) payloadSender.FirstSpan.Name.Should().Be(TestSpan1);
 				span.End();
+
+				payloadSender.WaitForSpans(TimeSpan.FromSeconds(5));
 				payloadSender.Spans.Should().HaveCount(expectedSpansCount);
 
 				payloadSender.Transactions.Should().HaveCount(0);
 				transaction.End();
+				payloadSender.WaitForTransactions();
 				payloadSender.Transactions.Should().HaveCount(1);
 				payloadSender.FirstTransaction.Name.Should().Be(TestTransaction);
 				transaction.End();
+				payloadSender.WaitForTransactions(TimeSpan.FromSeconds(5));
 				payloadSender.Transactions.Should().HaveCount(1);
 			}
 		}
@@ -635,12 +660,14 @@ namespace Elastic.Apm.Tests.ApiTests
 				payloadSender.Spans.Should().HaveCount(0);
 				span.Duration = 123456.789;
 				span.End();
+				payloadSender.WaitForSpans(isSampled? null : TimeSpan.FromSeconds(5));
 				payloadSender.Spans.Should().HaveCount(expectedSpansCount);
 				if (isSampled) payloadSender.FirstSpan.Duration.Should().Be(123456.789);
 
 				payloadSender.Transactions.Should().HaveCount(0);
 				transaction.Duration = 987654.321;
 				transaction.End();
+				payloadSender.WaitForTransactions();
 				payloadSender.Transactions.Should().HaveCount(1);
 				payloadSender.FirstTransaction.Duration.Should().Be(987654.321);
 			}
@@ -707,6 +734,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				});
 			}
 
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Count.Should().Be(1);
 			payloadSender.FirstError.Transaction.IsSampled.Should().Be(isSampled);
 			payloadSender.FirstError.Transaction.Type.Should().Be(CustomTransactionTypeForTests);
@@ -739,6 +767,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				transaction.End();
 			}
 
+			payloadSender.WaitForTransactions();
 			payloadSender.FirstTransaction.Should().NotBeNull();
 			payloadSender.FirstTransaction.Custom[customKey].Should().Be(customValue);
 		}
@@ -778,6 +807,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				});
 			}
 
+			payloadSender.WaitForSpans(count:4);
 			var manualAddressSpan = payloadSender.Spans.Single(s => s.Name == "manually set destination address");
 			manualAddressSpan.Context.Destination.Address.Should().Be(manualAddress);
 			manualAddressSpan.Context.Destination.Port.Should().Be(url.Port);
@@ -806,6 +836,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					tx => { tx.CaptureSpan("test span name", "test_span_subtype", () => { }); });
 			}
 
+			payloadSender.WaitForSpans();
 			payloadSender.Spans.Single().Context.Destination.Should().BeNull();
 		}
 
@@ -824,6 +855,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					});
 			}
 
+			payloadSender.WaitForSpans();
 			payloadSender.Spans.Single().Context.Destination.Should().BeNull();
 			mockLogger.Lines.Should()
 				.Contain(line => line.Contains("destination")
@@ -832,7 +864,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		/// <summary>
 		/// Makes sure that <see cref="ITransaction.EnsureParentId" /> creates a new parent id, sets it to the transaction and
-		/// returrns it.
+		/// returns it.
 		/// </summary>
 		[Fact]
 		public void EnsureParentIdWithNoParentId()
@@ -893,6 +925,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var transaction3 = agent.Tracer.StartTransaction("Transaction3", "test");
 			transaction3.End();
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Count.Should().Be(3);
 
 			var recordedTransaction1 = payloadSender.Transactions.FirstOrDefault(t => t.Name == "Transaction1");
@@ -926,6 +959,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			transaction1.SetService("Service2", "1.0-beta2");
 			transaction1.End();
 
+			payloadSender.WaitForTransactions();
 			payloadSender.FirstTransaction.Should().NotBeNull();
 			payloadSender.FirstTransaction?.Context.Service.Name.Should().Be("Service2");
 			payloadSender.FirstTransaction?.Context.Service.Version.Should().Be("1.0-beta2");

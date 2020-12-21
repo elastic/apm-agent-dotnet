@@ -44,16 +44,17 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			_logger = LoggerBase.Scoped(nameof(AspNetCoreBasicTests));
 			_factory = factory;
-
+			_capturedPayload = new MockPayloadSender();
 			_agent = new ApmAgent(new TestAgentComponents(
 				_logger,
 				new MockConfigSnapshot(_logger, captureBody: ConfigConsts.SupportedValues.CaptureBodyAll),
+				_capturedPayload,
 				// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
-				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer)
+				Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer)
 			);
+
 			HostBuilderExtensions.UpdateServiceInformation(_agent.Service);
-			_capturedPayload = _agent.PayloadSender as MockPayloadSender;
 		}
 
 		private ApmAgent _agent;
@@ -77,6 +78,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var response = await _client.GetAsync("/Home/SimplePage");
 
 			//test service
+			_capturedPayload.WaitForTransactions();
 			_capturedPayload.Transactions.Should().ContainSingle();
 
 			_agent.Service.Name.Should()
@@ -95,7 +97,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
 			_agent.Service.Runtime.Version.Should().Be(Directory.GetParent(typeof(object).Assembly.Location).Name);
 
-			_capturedPayload.Transactions.Should().ContainSingle();
 			var transaction = _capturedPayload.FirstTransaction;
 			var transactionName = $"{response.RequestMessage.Method} Home/SimplePage";
 			transaction.Name.Should().Be(transactionName);
@@ -163,6 +164,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			response.IsSuccessStatusCode.Should().BeTrue();
 
+			_capturedPayload.WaitForAny(TimeSpan.FromSeconds(5));
 			_capturedPayload.Transactions.Should().BeNullOrEmpty();
 			_capturedPayload.Spans.Should().BeNullOrEmpty();
 			_capturedPayload.Errors.Should().BeNullOrEmpty();
@@ -182,6 +184,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			response.IsSuccessStatusCode.Should().BeTrue();
 
+			_capturedPayload.WaitForAny(TimeSpan.FromSeconds(5));
+
 			_capturedPayload.Transactions.Should().BeNullOrEmpty();
 			_capturedPayload.Spans.Should().BeNullOrEmpty();
 			_capturedPayload.Errors.Should().BeNullOrEmpty();
@@ -192,10 +196,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 			response = await _client.GetAsync("/Home/Index");
 			response.IsSuccessStatusCode.Should().BeTrue();
 
-			_capturedPayload.ResetTransactionTaskCompletionSource();
-
+			_capturedPayload.WaitForTransactions();
 			_capturedPayload.Transactions.Should().NotBeEmpty();
+
+			_capturedPayload.WaitForSpans();
 			_capturedPayload.Spans.Should().NotBeEmpty();
+
+			_capturedPayload.WaitForErrors(TimeSpan.FromSeconds(5));
 			_capturedPayload.Errors.Should().BeNullOrEmpty();
 		}
 
@@ -217,7 +224,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var body = "{\"id\" : \"1\"}";
 			var response = await _client.PostAsync("api/Home/Post", new StringContent(body, Encoding.UTF8, "application/json"));
 
-			_capturedPayload.Transactions.Should().ContainSingle();
+			_capturedPayload.WaitForTransactions();
 
 			_agent.Service.Name.Should()
 				.NotBeNullOrWhiteSpace()
@@ -234,6 +241,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
 			_agent.Service.Runtime.Version.Should().Be(Directory.GetParent(typeof(object).Assembly.Location).Name);
+
 
 			_capturedPayload.Transactions.Should().ContainSingle();
 			var transaction = _capturedPayload.FirstTransaction;
@@ -298,6 +306,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var response = await _client.GetAsync("/Home/Index");
 
 			response.IsSuccessStatusCode.Should().BeTrue();
+			_capturedPayload.WaitForSpans(count:5);
 			_capturedPayload.SpansOnFirstTransaction.Should().NotBeEmpty().And.Contain(n => n.Context.Db != null);
 		}
 
@@ -315,6 +324,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var response = await _client.GetAsync("/Home/Index");
 
 			response.IsSuccessStatusCode.Should().BeTrue();
+			_capturedPayload.WaitForTransactions();
+			_capturedPayload.WaitForSpans(count: 5);
 			_capturedPayload.SpansOnFirstTransaction.Should().NotBeEmpty().And.Contain(n => n.Context.Http != null);
 			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null).Context.Destination.Should().NotBeNull();
 			_capturedPayload.SpansOnFirstTransaction.First(n => n.Context.Http != null).Context.Destination.Service.Should().NotBeNull();
@@ -348,6 +359,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var response = await _client.GetAsync("/Home/Index?captureControllerActionAsSpan=true");
 
 			response.IsSuccessStatusCode.Should().BeTrue();
+
+			_capturedPayload.WaitForTransactions();
+			_capturedPayload.WaitForSpans(count:6);
 			var spans = _capturedPayload.SpansOnFirstTransaction;
 			spans.Should().NotBeEmpty();
 			var controllerActionSpan = spans.Last();
@@ -385,10 +399,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Func<Task> act = async () => await _client.GetAsync("Home/TriggerError");
 			await act.Should().ThrowAsync<Exception>();
 
+			_capturedPayload.WaitForTransactions();
 			_capturedPayload.Transactions.Should().ContainSingle();
 
+			_capturedPayload.WaitForErrors();
 			_capturedPayload.Errors.Should().NotBeEmpty();
-
 			_capturedPayload.Errors.Should().ContainSingle();
 
 			//also make sure the label is captured
@@ -425,7 +440,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			await act.Should().ThrowAsync<Exception>();
 
+			_capturedPayload.WaitForTransactions();
 			_capturedPayload.Transactions.Should().ContainSingle();
+			_capturedPayload.WaitForErrors();
 			_capturedPayload.Errors.Should().NotBeEmpty();
 			_capturedPayload.Errors.Should().ContainSingle();
 

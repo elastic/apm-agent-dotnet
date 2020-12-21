@@ -72,6 +72,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
 			await httpClient.GetAsync("home/TransactionWithCustomName");
 
+			_payloadSender.WaitForTransactions();
 			_payloadSender.Transactions.Should().OnlyContain(n => n.Name == "custom");
 		}
 
@@ -89,6 +90,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
 			await httpClient.GetAsync("home/TransactionWithCustomNameUsingRequestInfo");
 
+			_payloadSender.WaitForTransactions();
 			_payloadSender.Transactions.Should().OnlyContain(n => n.Name == "GET /home/TransactionWithCustomNameUsingRequestInfo");
 		}
 
@@ -104,6 +106,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
 			await httpClient.GetAsync("home/sample");
 
+			_payloadSender.WaitForTransactions();
 			_payloadSender.Transactions.Should().OnlyContain(n => n.Name.Equals("GET home/sample", StringComparison.OrdinalIgnoreCase));
 		}
 
@@ -119,6 +122,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
 			await httpClient.GetAsync("/");
 
+			_payloadSender.WaitForTransactions();
 			_payloadSender.FirstTransaction.Name.Should().Be("GET Home/Index");
 			_payloadSender.FirstTransaction.Context.Request.Url.Full.Should().Be("http://localhost/");
 		}
@@ -135,6 +139,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
 			await httpClient.GetAsync("/MyArea");
 
+			_payloadSender.WaitForTransactions();
 			_payloadSender.FirstTransaction.Name.Should().Be("GET MyArea/Home/Index");
 			_payloadSender.FirstTransaction.Context.Request.Url.Full.Should().Be("http://localhost/MyArea");
 		}
@@ -151,6 +156,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
 			await httpClient.GetAsync("/MyOtherArea");
 
+			_payloadSender.WaitForTransactions();
 			_payloadSender.FirstTransaction.Name.Should().Be("GET MyOtherArea/Home/Index");
 			_payloadSender.FirstTransaction.Context.Request.Url.Full.Should().Be("http://localhost/MyOtherArea");
 		}
@@ -168,6 +174,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
 			await httpClient.GetAsync(url);
 
+			_payloadSender.WaitForTransactions();
 			_payloadSender.Transactions.Should().OnlyContain(n => n.Name.Equals("GET unknown route", StringComparison.OrdinalIgnoreCase));
 			_payloadSender.Transactions.Should().HaveCount(1);
 		}
