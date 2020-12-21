@@ -306,7 +306,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var response = await _client.GetAsync("/Home/Index");
 
 			response.IsSuccessStatusCode.Should().BeTrue();
+
 			_capturedPayload.WaitForSpans(count:5);
+			_capturedPayload.WaitForTransactions();
 			_capturedPayload.SpansOnFirstTransaction.Should().NotBeEmpty().And.Contain(n => n.Context.Db != null);
 		}
 

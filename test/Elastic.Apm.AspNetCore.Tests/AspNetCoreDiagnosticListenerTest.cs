@@ -82,12 +82,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Theory]
 		public async Task TestJsonBodyRetrievalOnRequestFailureInAspNetCore(bool useOnlyDiagnosticSource)
 		{
+			var capturedPayload = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(
 				captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors,
 				// ReSharper disable once RedundantArgumentDefaultValue
-				captureBodyContentTypes: ConfigConsts.DefaultValues.CaptureBodyContentTypes))))
+				captureBodyContentTypes: ConfigConsts.DefaultValues.CaptureBodyContentTypes),
+				payloadSender: capturedPayload)))
 			{
-				var capturedPayload = agent.PayloadSender as MockPayloadSender;
 				var client = Helper.GetClient(agent, _factory, useOnlyDiagnosticSource);
 
 				var body = "{\"id\" : \"1\"}";
@@ -95,15 +96,17 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 				capturedPayload.Should().NotBeNull();
 
-				capturedPayload?.Transactions.Should().ContainSingle();
+				capturedPayload.WaitForTransactions();
+				capturedPayload.Transactions.Should().ContainSingle();
 
-				capturedPayload?.Errors.Should().ContainSingle();
+				capturedPayload.WaitForErrors();
+				capturedPayload.Errors.Should().ContainSingle();
 
-				var errorException = capturedPayload?.FirstError.Exception;
+				var errorException = capturedPayload.FirstError.Exception;
 				errorException?.Message.Should().Be("This is a post method test exception!");
 				errorException?.Type.Should().Be(typeof(Exception).FullName);
 
-				var context = capturedPayload?.FirstError.Context;
+				var context = capturedPayload.FirstError.Context;
 				context?.Request.Url.Full.Should().Be("http://localhost/api/Home/PostError");
 				context?.Request.Method.Should().Be(HttpMethod.Post.Method);
 				context?.Request.Body.Should().Be(body);
