@@ -22,9 +22,9 @@ namespace Elastic.Apm.Tests.Mocks
 		private readonly List<IError> _errors = new List<IError>();
 		private readonly object _lock = new object();
 		private readonly List<IMetricSet> _metrics = new List<IMetricSet>();
-		protected readonly List<Func<ISpan, ISpan>> SpanFilters = new List<Func<ISpan, ISpan>>();
+		private readonly List<Func<ISpan, ISpan>> _spanFilters = new List<Func<ISpan, ISpan>>();
 		private readonly List<ISpan> _spans = new List<ISpan>();
-		protected readonly List<Func<ITransaction, ITransaction>> TransactionFilters = new List<Func<ITransaction, ITransaction>>();
+		private readonly List<Func<ITransaction, ITransaction>> _transactionFilters = new List<Func<ITransaction, ITransaction>>();
 		private readonly List<ITransaction> _transactions = new List<ITransaction>();
 
 		public MockPayloadSender(IApmLogger logger = null)
@@ -42,7 +42,7 @@ namespace Elastic.Apm.Tests.Mocks
 			_errorWaitHandle = _waitHandles[2];
 			_metricSetWaitHandle = _waitHandles[3];
 
-			PayloadSenderV2.SetUpFilters(TransactionFilters, SpanFilters, MockApmServerInfo.Version710, logger ?? new NoopLogger());
+			PayloadSenderV2.SetUpFilters(_transactionFilters, _spanFilters, MockApmServerInfo.Version710, logger ?? new NoopLogger());
 		}
 
 		private readonly AutoResetEvent _transactionWaitHandle;
@@ -183,7 +183,7 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public virtual void QueueTransaction(ITransaction transaction)
 		{
-			transaction = TransactionFilters.Aggregate(transaction, (current, filter) => filter(current));
+			transaction = _transactionFilters.Aggregate(transaction, (current, filter) => filter(current));
 			_transactions.Add(transaction);
 			_transactionWaitHandle.Set();
 		}
@@ -192,7 +192,7 @@ namespace Elastic.Apm.Tests.Mocks
 		{
 			lock (_lock)
 			{
-				span = SpanFilters.Aggregate(span, (current, filter) => filter(current));
+				span = _spanFilters.Aggregate(span, (current, filter) => filter(current));
 				_spans.Add(span);
 				_spanWaitHandle.Set();
 			}
