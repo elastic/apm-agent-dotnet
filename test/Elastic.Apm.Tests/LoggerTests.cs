@@ -358,15 +358,16 @@ namespace Elastic.Apm.Tests
 			var userName = "abc";
 			var pw = "def";
 			var inMemoryLogger = new InMemoryBlockingLogger(LogLevel.Error);
-			var port = new Random(DateTime.UtcNow.Millisecond).Next(8100, 65535);
-			var configReader = new MockConfigSnapshot(serverUrls: $"http://{userName}:{pw}@localhost:{port}", maxBatchEventCount: "0",
+
+			using var localServer = LocalServer.Create(httpListenerContext => { httpListenerContext.Response.StatusCode = 500; });
+
+			var uri = new Uri(localServer.Uri);
+
+			var configReader = new MockConfigSnapshot(serverUrls: $"http://{userName}:{pw}@{uri.Authority}", maxBatchEventCount: "0",
 				flushInterval: "0");
 
 			using var payloadSender = new PayloadSenderV2(inMemoryLogger, configReader,
 				Service.GetDefaultService(configReader, inMemoryLogger), new Api.System(), MockApmServerInfo.Version710);
-
-			using var localServer = new LocalServer(httpListenerContext => { httpListenerContext.Response.StatusCode = 500; },
-				$"http://localhost:{port}/");
 
 			using var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
 
@@ -374,7 +375,7 @@ namespace Elastic.Apm.Tests
 
 			inMemoryLogger.Lines.Should().HaveCount(1);
 			inMemoryLogger.Lines.Should().NotContain(n => n.Contains($"{userName}:{pw}"));
-			inMemoryLogger.Lines.Should().Contain(n => n.Contains($"http://[REDACTED]:[REDACTED]@localhost:{port}"));
+			inMemoryLogger.Lines.Should().Contain(n => n.Contains($"http://[REDACTED]:[REDACTED]@{uri.Authority}"));
 		}
 
 		/// <summary>
