@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "assembly-differ": {
+      "version": "0.13.0",
+      "commands": [
+        "assembly-differ"
+      ]
+    }
+  }
+}

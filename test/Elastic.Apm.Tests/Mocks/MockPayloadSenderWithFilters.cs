@@ -14,7 +14,7 @@ namespace Elastic.Apm.Tests.Mocks
 	{
 		private readonly List<Func<ITransaction, ITransaction>> _transactionFilters = new List<Func<ITransaction, ITransaction>>();
 
-		public MockPayloadSenderWithFilters() => _transactionFilters.Add(new TransactionIgnoreUrlsFilter(new MockConfigSnapshot()).Filter);
+		public MockPayloadSenderWithFilters() => _transactionFilters.Add(new TransactionIgnoreUrlsFilter().Filter);
 
 		public override void QueueTransaction(ITransaction transaction)
 		{
