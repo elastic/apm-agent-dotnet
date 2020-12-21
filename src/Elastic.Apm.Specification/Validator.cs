@@ -287,7 +287,7 @@ namespace Elastic.Apm.Specification
 		/// <returns></returns>
 		private static ImplementationProperty[] GetProperties(Type specType)
 		{
-			var resolver = new ElasticApmContractResolver(new EnvironmentConfigurationReader());
+			var resolver = new ElasticApmContractResolver();
 			JsonObjectContract contract;
 
 			try
