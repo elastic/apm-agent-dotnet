@@ -175,7 +175,7 @@ namespace Elastic.Apm.Tests.Mocks
 		public Span[] SpansOnFirstTransaction =>
 			_spans.Where(n => n.TransactionId == Transactions.First().Id).Select(n => n as Span).ToArray();
 
-		public virtual void QueueError(IError error)
+		public void QueueError(IError error)
 		{
 			_errors.Add(error);
 			_errorWaitHandle.Set();
@@ -188,7 +188,7 @@ namespace Elastic.Apm.Tests.Mocks
 			_transactionWaitHandle.Set();
 		}
 
-		public virtual void QueueSpan(ISpan span)
+		public void QueueSpan(ISpan span)
 		{
 			lock (_lock)
 			{
@@ -198,7 +198,7 @@ namespace Elastic.Apm.Tests.Mocks
 			}
 		}
 
-		public virtual void QueueMetrics(IMetricSet metricSet)
+		public void QueueMetrics(IMetricSet metricSet)
 		{
 			_metrics.Add(metricSet);
 			_metricSetWaitHandle.Set();
