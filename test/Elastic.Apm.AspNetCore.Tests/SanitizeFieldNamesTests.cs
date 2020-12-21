@@ -3,6 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -44,7 +45,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		}
 
 		private ApmAgent _agent;
-		private SerializerMockPayloadSender _capturedPayload;
+		private MockPayloadSender _capturedPayload;
 		private HttpClient _client;
 
 		public static IEnumerable<object[]> GetData(Tests test)
@@ -151,11 +152,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var configSnapshot = sanitizeFieldNames == null
 				? new MockConfigSnapshot(_logger, captureBody: "all")
 				: new MockConfigSnapshot(_logger, captureBody: "all", sanitizeFieldNames: sanitizeFieldNames);
-			_capturedPayload = new SerializerMockPayloadSender(configSnapshot);
+
+			_capturedPayload = new MockPayloadSender();
 
 			var agentComponents = new TestAgentComponents(
 				_logger,
-				configSnapshot, _capturedPayload,
+				configSnapshot,
+				_capturedPayload,
 				new CurrentExecutionSegmentsContainer());
 
 			_agent = new ApmAgent(agentComponents);
@@ -180,6 +183,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			await _client.GetAsync("/Home/SimplePage");
 
+			_capturedPayload.WaitForTransactions();
 			_capturedPayload.Transactions.Should().ContainSingle();
 			_capturedPayload.FirstTransaction.Context.Should().NotBeNull();
 			_capturedPayload.FirstTransaction.Context.Request.Should().NotBeNull();
@@ -202,7 +206,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		public async Task ChangeSanitizeFieldNamesAfterStart(bool useDiagnosticSourceOnly)
 		{
 			var startConfigSnapshot = new MockConfigSnapshot(new NoopLogger());
-			_capturedPayload = new SerializerMockPayloadSender(startConfigSnapshot);
+			_capturedPayload = new MockPayloadSender();
 
 			var agentComponents = new TestAgentComponents(
 				_logger,
@@ -215,6 +219,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_client.DefaultRequestHeaders.Add("foo", "bar");
 			await _client.GetAsync("/Home/SimplePage");
 
+			_capturedPayload.WaitForTransactions();
 			_capturedPayload.Transactions.Should().ContainSingle();
 			_capturedPayload.FirstTransaction.Context.Should().NotBeNull();
 			_capturedPayload.FirstTransaction.Context.Request.Should().NotBeNull();
@@ -222,8 +227,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			_capturedPayload.FirstTransaction.Context.Request.Headers["foo"].Should().Be("bar");
 
-			_capturedPayload.Transactions.Clear();
-			_capturedPayload.ResetTransactionTaskCompletionSource();
+			_capturedPayload.Clear();
 
 			//change config to sanitize headers with "foo"
 			var updateConfigSnapshot = new MockConfigSnapshot(
@@ -235,6 +239,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			await _client.GetAsync("/Home/SimplePage");
 
+			_capturedPayload.WaitForTransactions();
 			_capturedPayload.Transactions.Should().ContainSingle();
 			_capturedPayload.FirstTransaction.Context.Should().NotBeNull();
 			_capturedPayload.FirstTransaction.Context.Request.Should().NotBeNull();
@@ -263,11 +268,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			await _client.GetAsync("/Home/SimplePage");
 
+			_capturedPayload.WaitForTransactions();
 			_capturedPayload.Transactions.Should().ContainSingle();
 			_capturedPayload.FirstTransaction.Context.Should().NotBeNull();
 			_capturedPayload.FirstTransaction.Context.Request.Should().NotBeNull();
 			_capturedPayload.FirstTransaction.Context.Request.Headers.Should().NotBeNull();
-
 			_capturedPayload.FirstTransaction.Context.Request.Headers[headerName].Should().Be(shouldBeSanitized ? "[REDACTED]" : headerValue);
 		}
 
@@ -286,6 +291,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_client.DefaultRequestHeaders.Add(headerName, "123");
 			await _client.GetAsync("/Home/SimplePage");
 
+			_capturedPayload.WaitForTransactions();
 			_capturedPayload.Transactions.Should().ContainSingle();
 			_capturedPayload.FirstTransaction.Context.Should().NotBeNull();
 			_capturedPayload.FirstTransaction.Context.Request.Should().NotBeNull();
@@ -312,6 +318,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_client.DefaultRequestHeaders.Add(headerName, "123");
 			await _client.GetAsync("/Home/SimplePage");
 
+			_capturedPayload.WaitForTransactions();
 			_capturedPayload.Transactions.Should().ContainSingle();
 			_capturedPayload.FirstTransaction.Context.Should().NotBeNull();
 			_capturedPayload.FirstTransaction.Context.Request.Should().NotBeNull();
@@ -342,8 +349,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			res.IsSuccessStatusCode.Should().BeTrue();
 
-			_capturedPayload.Errors.Should().BeNullOrEmpty();
+			_capturedPayload.WaitForTransactions();
 			_capturedPayload.Transactions.Should().ContainSingle();
+
+			_capturedPayload.WaitForErrors(TimeSpan.FromSeconds(1));
+			_capturedPayload.Errors.Should().BeNullOrEmpty();
 
 			_capturedPayload.FirstTransaction.Context.Request.Body.Should().Be($"Input1=test1&{formName}=[REDACTED]");
 		}
@@ -361,7 +371,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			res.IsSuccessStatusCode.Should().BeTrue();
 
+			_capturedPayload.WaitForErrors(TimeSpan.FromSeconds(5));
 			_capturedPayload.Errors.Should().BeNullOrEmpty();
+			_capturedPayload.WaitForTransactions();
 			_capturedPayload.Transactions.Should().ContainSingle();
 
 			_capturedPayload.FirstTransaction.Context.Request.Body.Should().Be(shouldBeSanitized ? $"{formName}=[REDACTED]" : $"{formName}=test");
@@ -395,7 +407,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 				// exception is fine, it doesn't really matter what happens with the call, important is the captured body, which we assert on later.
 			}
 
+			_capturedPayload.WaitForTransactions();
 			_capturedPayload.Transactions.Should().ContainSingle();
+			_capturedPayload.WaitForErrors();
 			_capturedPayload.FirstError.Should().NotBeNull();
 			_capturedPayload.FirstTransaction.Context.Request.Body.Should().Be($"Input1=test1&{formName}=[REDACTED]");
 		}
@@ -425,8 +439,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			res.IsSuccessStatusCode.Should().BeTrue();
 
-			_capturedPayload.Errors.Should().BeNullOrEmpty();
+			_capturedPayload.WaitForTransactions();
 			_capturedPayload.Transactions.Should().ContainSingle();
+			_capturedPayload.WaitForErrors(TimeSpan.FromSeconds(1));
+			_capturedPayload.Errors.Should().BeNullOrEmpty();
 
 			_capturedPayload.FirstTransaction.Context.Request.Body.Should()
 				.Be(shouldBeSanitized ? $"Input1=test1&{formName}=[REDACTED]" : $"Input1=test1&{formName}=test2");
