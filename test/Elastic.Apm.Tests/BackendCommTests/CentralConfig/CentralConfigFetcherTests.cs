@@ -2,18 +2,30 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading;
 using Elastic.Apm.Api;
+using Elastic.Apm.BackendComm;
 using Elastic.Apm.BackendComm.CentralConfig;
+using Elastic.Apm.Cloud;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using FluentAssertions.Extensions;
+using Newtonsoft.Json;
+using RichardSzalay.MockHttp;
 using Xunit;
 using Xunit.Abstractions;
+using MockHttpMessageHandler = RichardSzalay.MockHttp.MockHttpMessageHandler;
 
 // ReSharper disable ImplicitlyCapturedClosure
 
@@ -22,6 +34,101 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 	public class CentralConfigFetcherTests : LoggingTestBase
 	{
 		public CentralConfigFetcherTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
+
+		[Fact]
+		public void Should_Update_Logger_That_Is_ILogLevelSwitchable()
+		{
+			var testLogger = new ConsoleLogger(LogLevel.Trace);
+
+			var environmentConfigurationReader = new EnvironmentConfigurationReader();
+			var configSnapshotFromReader = new ConfigSnapshotFromReader(environmentConfigurationReader, "local");
+			var configStore = new ConfigStore(configSnapshotFromReader, testLogger);
+			var service = Service.GetDefaultService(environmentConfigurationReader, testLogger);
+
+			var waitHandle = new ManualResetEvent(false);
+			var handler = new MockHttpMessageHandler();
+			var configUrl = BackendCommUtils.ApmServerEndpoints
+				.BuildGetConfigAbsoluteUrl(environmentConfigurationReader.ServerUrl, service);
+
+			handler.When(configUrl.AbsoluteUri)
+				.Respond(_ =>
+				{
+					waitHandle.Set();
+					return new HttpResponseMessage(HttpStatusCode.OK)
+					{
+						Headers = { ETag = new EntityTagHeaderValue("\"etag\"") },
+						Content = new StringContent("{ \"log_level\": \"error\" }", Encoding.UTF8)
+					};
+				});
+
+			var centralConfigFetcher = new CentralConfigFetcher(testLogger, configStore, service, handler);
+
+			using (var agent = new ApmAgent(new TestAgentComponents(testLogger,
+				centralConfigFetcher: centralConfigFetcher,
+				payloadSender: new NoopPayloadSender())))
+			{
+				centralConfigFetcher.IsRunning.Should().BeTrue();
+				waitHandle.WaitOne();
+				Thread.Sleep(TimeSpan.FromSeconds(1));
+			}
+
+			testLogger.LogLevelSwitch.Level.Should().Be(LogLevel.Error);
+		}
+
+		/// <summary>
+		/// logger that has a log level switch but does not implement <see cref="ILogLevelSwitchable"/>
+		/// </summary>
+		private class UnswitchableLogger: IApmLogger
+		{
+			public LogLevelSwitch LogLevelSwitch { get; }
+
+			public UnswitchableLogger(LogLevelSwitch logLevelSwitch) => LogLevelSwitch = logLevelSwitch;
+
+			public bool IsEnabled(LogLevel level) => LogLevelSwitch.Level <= level;
+
+			public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
+			{
+			}
+		}
+
+		[Fact]
+		public void Should_Not_Update_Logger_That_Is_Not_ILogLevelSwitchable()
+		{
+			var testLogger = new UnswitchableLogger(new LogLevelSwitch(LogLevel.Trace));
+
+			var environmentConfigurationReader = new EnvironmentConfigurationReader();
+			var configSnapshotFromReader = new ConfigSnapshotFromReader(environmentConfigurationReader, "local");
+			var configStore = new ConfigStore(configSnapshotFromReader, testLogger);
+			var service = Service.GetDefaultService(environmentConfigurationReader, testLogger);
+
+			var waitHandle = new ManualResetEvent(false);
+			var handler = new MockHttpMessageHandler();
+			var configUrl = BackendCommUtils.ApmServerEndpoints
+				.BuildGetConfigAbsoluteUrl(environmentConfigurationReader.ServerUrl, service);
+
+			handler.When(configUrl.AbsoluteUri)
+				.Respond(_ =>
+				{
+					waitHandle.Set();
+					return new HttpResponseMessage(HttpStatusCode.OK)
+					{
+						Headers = { ETag = new EntityTagHeaderValue("\"etag\"") },
+						Content = new StringContent("{ \"log_level\": \"error\" }", Encoding.UTF8)
+					};
+				});
+
+			var centralConfigFetcher = new CentralConfigFetcher(testLogger, configStore, service, handler);
+			using (var agent = new ApmAgent(new TestAgentComponents(testLogger,
+				centralConfigFetcher: centralConfigFetcher,
+				payloadSender: new NoopPayloadSender())))
+			{
+				centralConfigFetcher.IsRunning.Should().BeTrue();
+				waitHandle.WaitOne();
+				Thread.Sleep(TimeSpan.FromSeconds(1));
+			}
+
+			testLogger.LogLevelSwitch.Level.Should().Be(LogLevel.Trace);
+		}
 
 		[Fact]
 		public void Dispose_stops_the_thread()
