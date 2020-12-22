@@ -28,12 +28,11 @@ namespace Elastic.Apm.Extensions.Hosting
 			builder.ConfigureServices((ctx, services) =>
 			{
 				//If the static agent doesn't exist, we create one here. If there is already 1 agent created, we reuse it.
-
 				if (!Agent.IsConfigured)
 				{
 					services.AddSingleton<IApmLogger, NetCoreLogger>();
 					services.AddSingleton<IConfigurationReader>(sp =>
-					new MicrosoftExtensionsConfig(ctx.Configuration, sp.GetService<IApmLogger>(), ctx.HostingEnvironment.EnvironmentName));
+						new MicrosoftExtensionsConfig(ctx.Configuration, sp.GetService<IApmLogger>(), ctx.HostingEnvironment.EnvironmentName));
 				}
 				else
 				{
@@ -56,16 +55,21 @@ namespace Elastic.Apm.Extensions.Hosting
 				services.AddSingleton<IApmAgent, ApmAgent>(sp =>
 				{
 					if (Agent.IsConfigured) return Agent.Instance;
-
-					var apmAgent = new ApmAgent(sp.GetService<AgentComponents>());
 					Agent.Setup(sp.GetService<AgentComponents>());
-					return apmAgent;
+					return Agent.Instance;
 				});
 
-				if(Agent.IsConfigured && Agent.Config.Enabled)
-					if (subscribers != null && subscribers.Any() && Agent.IsConfigured) Agent.Subscribe(subscribers);
-
 				services.AddSingleton(sp => sp.GetRequiredService<IApmAgent>().Tracer);
+
+				var serviceProvider = services.BuildServiceProvider();
+				var agent = serviceProvider.GetService<IApmAgent>();
+
+				if (!(agent is ApmAgent apmAgent)) return;
+
+				if (!Agent.IsConfigured || !apmAgent.ConfigurationReader.Enabled) return;
+
+				if (subscribers != null && subscribers.Any() && Agent.IsConfigured)
+					apmAgent.Subscribe(subscribers);
 			});
 
 			return builder;
@@ -83,17 +87,20 @@ namespace Elastic.Apm.Extensions.Hosting
 
 		private static string GetAssemblyVersion(string assemblyName)
 		{
-			var versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n => n.GetName().Name == assemblyName);
-			var assemblies = versionQuery as Assembly[] ?? versionQuery.ToArray();
-			if (assemblies.Any()) return assemblies.First().GetName().Version?.ToString();
+			var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+			var assembly = assemblies.FirstOrDefault(n => n.GetName().Name == assemblyName);
+			if (assembly != null)
+				return assembly.GetName().Version?.ToString();
 
-			versionQuery = AppDomain.CurrentDomain.GetAssemblies().Where(n =>
-			{
-				var name = n.GetName().Name;
-				return name != null && name.Contains(assemblyName);
-			});
-			var enumerable = versionQuery as Assembly[] ?? versionQuery.ToArray();
-			return enumerable.Any() ? enumerable.FirstOrDefault()?.GetName().Version?.ToString() : null;
+			// if no exact match, try to find first assembly name that starts with given name
+			assembly = assemblies
+				.FirstOrDefault(n =>
+				{
+					var name = n.GetName().Name;
+					return name != null && name.StartsWith(assemblyName);
+				});
+
+			return assembly?.GetName().Version?.ToString();
 		}
 	}
 }

@@ -28,7 +28,7 @@ namespace Elastic.Apm.Tests
 		private readonly PayloadItemSerializer _payloadItemSerializer;
 
 		public SerializationTests() =>
-			_payloadItemSerializer = new PayloadItemSerializer(new MockConfigSnapshot());
+			_payloadItemSerializer = new PayloadItemSerializer();
 
 		// ReSharper disable once MemberCanBePrivate.Global
 		public static TheoryData SerializationUtilsTrimToPropertyMaxLengthVariantsToTest => new TheoryData<string, string>

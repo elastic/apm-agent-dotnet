@@ -21,6 +21,10 @@ namespace Elastic.Apm.Model
 		private static readonly Context ReusableContextInstance = new Context();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 
+		private readonly Lazy<Dictionary<string, string>> _custom = new Lazy<Dictionary<string, string>>();
+
+		private readonly Lazy<Dictionary<string, string>> _labels = new Lazy<Dictionary<string, string>>();
+
 		public NoopTransaction(string name, string type, ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer)
 		{
 			Name = name;
@@ -32,11 +36,11 @@ namespace Elastic.Apm.Model
 		public Context Context =>
 			ReusableContextInstance;
 
-		public Dictionary<string, string> Custom { get; }
+		public Dictionary<string, string> Custom => _custom.Value;
 		public double? Duration { get; set; }
 		public string Id { get; }
-		public bool IsSampled { get; }
-		public Dictionary<string, string> Labels { get; } = new Dictionary<string, string>();
+		public bool IsSampled => false;
+		public Dictionary<string, string> Labels => _labels.Value;
 		public string Name { get; set; }
 		public Outcome Outcome { get; set; }
 		public DistributedTracingData OutgoingDistributedTracingData { get; }
@@ -93,10 +97,17 @@ namespace Elastic.Apm.Model
 
 		public void SetLabel(string key, decimal value) { }
 
-		public ISpan StartSpan(string name, string type, string subType = null, string action = null) => new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer);
+		public ISpan StartSpan(string name, string type, string subType = null, string action = null) =>
+			new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer);
 
 		public string EnsureParentId() => string.Empty;
 
 		public void SetService(string serviceName, string serviceVersion) { }
+
+		public bool TryGetLabel<T>(string key, out T value)
+		{
+			value = default;
+			return false;
+		}
 	}
 }

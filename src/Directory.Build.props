@@ -2,14 +2,24 @@
   <!-- Src Directory Build Properties -->
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
   <PropertyGroup>
-    <AssemblyVersion>1.7.0</AssemblyVersion>
-    <InformationalVersion>1.7.0</InformationalVersion>
-    <FileVersion>1.7.0</FileVersion>
-    <VersionPrefix>1.7.0</VersionPrefix>
+    <AssemblyVersion>1.7.1</AssemblyVersion>
+    <InformationalVersion>1.7.1</InformationalVersion>
+    <FileVersion>1.7.1</FileVersion>
+    <VersionPrefix>1.7.1</VersionPrefix>
     <Authors>Elastic and contributors</Authors>
     <Copyright>2020 Elasticsearch BV</Copyright>
-    <PackageLicenseUrl>https://github.com/elastic/apm-agent-dotnet/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/elastic/apm-agent-dotnet</PackageProjectUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/elastic/apm-agent-dotnet/master/build/nuget-icon.png</PackageIconUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageIcon>nuget-icon.png</PackageIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="$(SolutionRoot)/build/nuget-icon.png">
+      <Pack>True</Pack>
+      <PackagePath>.</PackagePath>
+    </None>
+    <None Include="$(SolutionRoot)/LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>.</PackagePath>
+    </None>
+  </ItemGroup>
 </Project>

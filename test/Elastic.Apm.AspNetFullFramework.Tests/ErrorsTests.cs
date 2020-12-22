@@ -151,6 +151,32 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			});
 		}
 
+		[AspNetFullFrameworkFact]
+		public async Task InnerException_Captured_When_HttpUnhandledException_Thrown()
+		{
+			var errorPageData = SampleAppUrlPaths.WebformsExceptionPage;
+			await SendGetRequestToSampleAppAndVerifyResponse(errorPageData.Uri, errorPageData.StatusCode);
+
+			await WaitAndCustomVerifyReceivedData(receivedData =>
+			{
+				VerifyReceivedDataSharedConstraints(errorPageData, receivedData);
+
+				var transaction = receivedData.Transactions.First();
+				transaction.Name.Should().Be("GET " + errorPageData.Uri.AbsolutePath);
+				transaction.Context.Request.Url.Search.Should().BeNull();
+				transaction.IsSampled.Should().BeTrue();
+				transaction.Outcome.Should().Be(Outcome.Failure);
+
+				receivedData.Errors.Count.Should().Be(1);
+				var error = receivedData.Errors.First();
+				error.Exception.Type.Should().Be(typeof(DivideByZeroException).FullName);
+				error.Exception.Message.Should().Be("Attempted to divide by zero.");
+				// happens in System.Web.UI.Page.Render
+				error.Exception.StackTrace.Should().Contain(f => f.Function == "Render");
+				VerifyErrorShared(error, transaction);
+			});
+		}
+
 		private static void VerifyErrorShared(ErrorDto error, TransactionDto transaction)
 		{
 			error.TraceId.Should().Be(transaction.TraceId);

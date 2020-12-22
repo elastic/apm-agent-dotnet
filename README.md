@@ -61,6 +61,8 @@ These are the main folders within the repository:
   * `Elastic.Apm.Tests.MockApmServer`: Implementation of APM Server mock used for agent-as-component tests (for example in `Elastic.Apm.AspNetFullFramework.Tests`).
 * `docs`: This folder contains the official documentation.
 * `sample`: Sample applications that are monitored by the APM .NET Agent. These are also very useful for development: you can start one of these applications and debug the agent through them.
+* `.build`: Contains files used when building the solution, and [a project to perform
+common build tasks](build/README.md).
 * `.ci`: This folder contains all the scripts used to build, test and release the agent within the CI.
 
 ## License

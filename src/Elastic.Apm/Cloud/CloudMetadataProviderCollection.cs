@@ -6,6 +6,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using static Elastic.Apm.Config.ConfigConsts;
 
@@ -30,6 +31,7 @@ namespace Elastic.Apm.Cloud
 					break;
 				case SupportedValues.CloudProviderAzure:
 					Add(new AzureCloudMetadataProvider(logger));
+					Add(new AzureAppServiceMetadataProvider(logger, EnvironmentHelper.GetEnvironmentVariables(logger)));
 					break;
 				case SupportedValues.CloudProviderNone:
 					break;
@@ -40,6 +42,7 @@ namespace Elastic.Apm.Cloud
 					Add(new AwsCloudMetadataProvider(logger));
 					Add(new GcpCloudMetadataProvider(logger));
 					Add(new AzureCloudMetadataProvider(logger));
+					Add(new AzureAppServiceMetadataProvider(logger, EnvironmentHelper.GetEnvironmentVariables(logger)));
 					break;
 				default:
 					throw new ArgumentException($"Unknown cloud provider {cloudProvider}", nameof(cloudProvider));

@@ -69,10 +69,10 @@ namespace Elastic.Apm.Report
 				return;
 
 			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
-			_payloadItemSerializer = new PayloadItemSerializer(config);
+			_payloadItemSerializer = new PayloadItemSerializer();
 			_configSnapshot = config;
 
-			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(config.ServerUrls.First());
+			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(config.ServerUrl);
 
 			System = system;
 
@@ -107,9 +107,21 @@ namespace Elastic.Apm.Report
 					, _intakeV2EventsAbsoluteUrl, _flushInterval.ToHms(), config.MaxBatchEventCount, _maxQueueEventCount);
 
 			_eventQueue = new BatchBlock<object>(config.MaxBatchEventCount);
-			TransactionFilters.Add(new TransactionIgnoreUrlsFilter(config).Filter);
+
+			SetUpFilters(TransactionFilters, SpanFilters, _configSnapshot, apmServerInfo, logger);
 			StartWorkLoop();
 		}
+
+		internal static void SetUpFilters(List<Func<ITransaction, ITransaction>> transactionFilters, List<Func<ISpan, ISpan>> spanFilters,
+			IConfigSnapshot configSnapshot, IApmServerInfo apmServerInfo, IApmLogger logger
+		)
+		{
+			transactionFilters.Add(new TransactionIgnoreUrlsFilter().Filter);
+			transactionFilters.Add(new HeaderDictionarySanitizerFilter().Filter);
+			// with this, stack trace demystification and conversion to the intake API model happens on a non-application thread:
+			spanFilters.Add(new SpanStackTraceCapturingFilter(logger, apmServerInfo).Filter);
+		}
+
 		private bool _getApmServerVersion;
 		private bool _getCloudMetadata;
 		private static readonly UTF8Encoding Utf8Encoding;

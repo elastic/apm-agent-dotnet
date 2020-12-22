@@ -1,8 +1,8 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using System.Collections;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -12,7 +12,6 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
 using Xunit;
-using Xunit.Sdk;
 
 namespace Elastic.Apm.AspNetCore.Tests
 {
@@ -23,13 +22,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 	[Collection("DiagnosticListenerTest")]
 	public class SanitizeFieldNamesTests : IClassFixture<WebApplicationFactory<Startup>>
 	{
-		private SerializerMockPayloadSender _capturedPayload;
-		private HttpClient _client;
-		private readonly IApmLogger _logger;
-		private readonly WebApplicationFactory<Startup> _factory;
-		private ApmAgent _agent;
-
-
 		public enum Tests
 		{
 			CustomSanitizeFieldNameSettingWithHeaders,
@@ -41,6 +33,19 @@ namespace Elastic.Apm.AspNetCore.Tests
 			DefaultWithRequestBodyWithError,
 			CustomWithRequestBodyNoError
 		}
+
+		private readonly WebApplicationFactory<Startup> _factory;
+		private readonly IApmLogger _logger;
+
+		public SanitizeFieldNamesTests(WebApplicationFactory<Startup> factory)
+		{
+			_logger = new TestLogger();
+			_factory = factory;
+		}
+
+		private ApmAgent _agent;
+		private SerializerMockPayloadSender _capturedPayload;
+		private HttpClient _client;
 
 		public static IEnumerable<object[]> GetData(Tests test)
 		{
@@ -118,8 +123,6 @@ namespace Elastic.Apm.AspNetCore.Tests
 					testData.Add(new object[] { "(?-i)*mySECURITYheader*", "TestmySECURITYheaderTest", true });
 					testData.Add(new object[] { "(?-i)*mySECURITYheader*", "TestmysecURITYheaderTest", false });
 					break;
-				default:
-					break;
 			}
 
 			var retVal = new List<object[]>();
@@ -128,19 +131,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 			foreach (var testDataItem in testData)
 			{
 				var newItem = new List<object>();
-				foreach (var item in testDataItem)
-				{
-					newItem.Add(item);
-				}
+				foreach (var item in testDataItem) newItem.Add(item);
 				newItem.Add(true);
 
 				retVal.Add(newItem.ToArray());
 
 				newItem = new List<object>();
-				foreach (var item in testDataItem)
-				{
-					newItem.Add(item);
-				}
+				foreach (var item in testDataItem) newItem.Add(item);
 				newItem.Add(false);
 
 				retVal.Add(newItem.ToArray());
@@ -149,15 +146,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 			return retVal;
 		}
 
-		public SanitizeFieldNamesTests(WebApplicationFactory<Startup> factory)
-		{
-			_logger = new TestLogger();
-			_factory = factory;
-		}
-
 		private void CreateAgent(bool useDiagnosticSourceOnly, string sanitizeFieldNames = null)
 		{
-			var configSnapshot = sanitizeFieldNames == null ? new MockConfigSnapshot(_logger, captureBody: "all") : new MockConfigSnapshot(_logger, captureBody: "all", sanitizeFieldNames: sanitizeFieldNames);
+			var configSnapshot = sanitizeFieldNames == null
+				? new MockConfigSnapshot(_logger, captureBody: "all")
+				: new MockConfigSnapshot(_logger, captureBody: "all", sanitizeFieldNames: sanitizeFieldNames);
 			_capturedPayload = new SerializerMockPayloadSender(configSnapshot);
 
 			var agentComponents = new TestAgentComponents(
@@ -175,6 +168,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// </summary>
 		/// <param name="sanitizeFieldNames"></param>
 		/// <param name="headerNames"></param>
+		/// <param name="useOnlyDiagnosticSource"></param>
 		/// <returns></returns>
 		[MemberData(nameof(GetData), Tests.CustomSanitizeFieldNameSettingWithHeaders)]
 		[Theory]
@@ -193,6 +187,60 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			foreach (var header in headerNames)
 				_capturedPayload.FirstTransaction.Context.Request.Headers[header].Should().Be("[REDACTED]");
+		}
+
+		/// <summary>
+		/// Sends a request to an app with default configs and makes sure the `foo` HTTP header is captured.
+		/// Then updates the config with `sanitizeFieldNames=foo` and sends another request and makes sure header `foo` is
+		/// redacted.
+		/// </summary>
+		/// <param name="useDiagnosticSourceOnly"></param>
+		/// <returns></returns>
+		[InlineData(true)]
+		[InlineData(false)]
+		[Theory]
+		public async Task ChangeSanitizeFieldNamesAfterStart(bool useDiagnosticSourceOnly)
+		{
+			var startConfigSnapshot = new MockConfigSnapshot(new NoopLogger());
+			_capturedPayload = new SerializerMockPayloadSender(startConfigSnapshot);
+
+			var agentComponents = new TestAgentComponents(
+				_logger,
+				startConfigSnapshot, _capturedPayload,
+				new CurrentExecutionSegmentsContainer());
+
+			_agent = new ApmAgent(agentComponents);
+			_client = Helper.GetClient(_agent, _factory, useDiagnosticSourceOnly);
+
+			_client.DefaultRequestHeaders.Add("foo", "bar");
+			await _client.GetAsync("/Home/SimplePage");
+
+			_capturedPayload.Transactions.Should().ContainSingle();
+			_capturedPayload.FirstTransaction.Context.Should().NotBeNull();
+			_capturedPayload.FirstTransaction.Context.Request.Should().NotBeNull();
+			_capturedPayload.FirstTransaction.Context.Request.Headers.Should().NotBeNull();
+
+			_capturedPayload.FirstTransaction.Context.Request.Headers["foo"].Should().Be("bar");
+
+			_capturedPayload.Transactions.Clear();
+			_capturedPayload.ResetTransactionTaskCompletionSource();
+
+			//change config to sanitize headers with "foo"
+			var updateConfigSnapshot = new MockConfigSnapshot(
+				new NoopLogger()
+				, sanitizeFieldNames: "foo"
+			);
+
+			_agent.ConfigStore.CurrentSnapshot = updateConfigSnapshot;
+
+			await _client.GetAsync("/Home/SimplePage");
+
+			_capturedPayload.Transactions.Should().ContainSingle();
+			_capturedPayload.FirstTransaction.Context.Should().NotBeNull();
+			_capturedPayload.FirstTransaction.Context.Request.Should().NotBeNull();
+			_capturedPayload.FirstTransaction.Context.Request.Headers.Should().NotBeNull();
+
+			_capturedPayload.FirstTransaction.Context.Request.Headers["foo"].Should().Be("[REDACTED]");
 		}
 
 		///// <summary>
@@ -286,8 +334,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var nvc = new List<KeyValuePair<string, string>>
 			{
-				new KeyValuePair<string, string>("Input1", "test1"),
-				new KeyValuePair<string, string>(formName, "test2")
+				new KeyValuePair<string, string>("Input1", "test1"), new KeyValuePair<string, string>(formName, "test2")
 			};
 
 			var req = new HttpRequestMessage(HttpMethod.Post, "api/Home/Post") { Content = new FormUrlEncodedContent(nvc) };
@@ -307,10 +354,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			CreateAgent(useOnlyDiagnosticSource);
 
-			var nvc = new List<KeyValuePair<string, string>>
-			{
-				new KeyValuePair<string, string>(formName, "test")
-			};
+			var nvc = new List<KeyValuePair<string, string>> { new KeyValuePair<string, string>(formName, "test") };
 
 			var req = new HttpRequestMessage(HttpMethod.Post, "api/Home/Post") { Content = new FormUrlEncodedContent(nvc) };
 			var res = await _client.SendAsync(req);
@@ -336,8 +380,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var nvc = new List<KeyValuePair<string, string>>
 			{
-				new KeyValuePair<string, string>("Input1", "test1"),
-				new KeyValuePair<string, string>(formName, "test2")
+				new KeyValuePair<string, string>("Input1", "test1"), new KeyValuePair<string, string>(formName, "test2")
 			};
 
 			var req = new HttpRequestMessage(HttpMethod.Post, "api/Home/PostError") { Content = new FormUrlEncodedContent(nvc) };
@@ -366,14 +409,15 @@ namespace Elastic.Apm.AspNetCore.Tests
 		///// <returns></returns>
 		[MemberData(nameof(GetData), Tests.CustomWithRequestBodyNoError)]
 		[Theory]
-		public async Task CustomWithRequestBodyNoError(string sanitizeFieldNames, string formName, bool shouldBeSanitized, bool useOnlyDiagnosticSource)
+		public async Task CustomWithRequestBodyNoError(string sanitizeFieldNames, string formName, bool shouldBeSanitized,
+			bool useOnlyDiagnosticSource
+		)
 		{
 			CreateAgent(useOnlyDiagnosticSource, sanitizeFieldNames);
 
 			var nvc = new List<KeyValuePair<string, string>>
 			{
-				new KeyValuePair<string, string>("Input1", "test1"),
-				new KeyValuePair<string, string>(formName, "test2")
+				new KeyValuePair<string, string>("Input1", "test1"), new KeyValuePair<string, string>(formName, "test2")
 			};
 
 			var req = new HttpRequestMessage(HttpMethod.Post, "api/Home/Post") { Content = new FormUrlEncodedContent(nvc) };

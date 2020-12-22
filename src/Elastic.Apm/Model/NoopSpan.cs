@@ -22,6 +22,8 @@ namespace Elastic.Apm.Model
 
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 
+		private readonly Lazy<Dictionary<string, string>> _labels = new Lazy<Dictionary<string, string>>();
+
 		private readonly ISpan _parentSpan;
 
 		internal NoopSpan(string name, string type, string subtype, string action,
@@ -46,8 +48,8 @@ namespace Elastic.Apm.Model
 
 		public double? Duration { get; set; }
 		public string Id { get; }
-		public bool IsSampled { get; }
-		public Dictionary<string, string> Labels { get; }
+		public bool IsSampled => false;
+		public Dictionary<string, string> Labels => _labels.Value;
 		public string Name { get; set; }
 		public Outcome Outcome { get; set; }
 		public DistributedTracingData OutgoingDistributedTracingData => null;
@@ -114,5 +116,11 @@ namespace Elastic.Apm.Model
 
 		public ISpan StartSpan(string name, string type, string subType = null, string action = null) =>
 			new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId, this);
+
+		public bool TryGetLabel<T>(string key, out T value)
+		{
+			value = default;
+			return false;
+		}
 	}
 }

@@ -17,11 +17,11 @@ namespace Elastic.Apm.Report.Serialization
 	{
 		private readonly JsonSerializer _serializer;
 
-		internal PayloadItemSerializer(IConfigurationReader configurationReader)
-		{
+		internal PayloadItemSerializer()
+    {
 			var settings = new JsonSerializerSettings
 			{
-				ContractResolver = new ElasticApmContractResolver(configurationReader),
+				ContractResolver = new ElasticApmContractResolver(),
 				NullValueHandling = NullValueHandling.Ignore,
 				Formatting = Formatting.None,
 			};
