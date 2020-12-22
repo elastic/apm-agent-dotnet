@@ -241,7 +241,7 @@ namespace Elastic.Apm.Tests
 			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			{
 				var httpClient = new HttpClient();
 				var res = await httpClient.GetAsync(localServer.Uri);
@@ -268,7 +268,7 @@ namespace Elastic.Apm.Tests
 			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			{
 				var uri = new Uri(localServer.Uri);
 
@@ -302,7 +302,7 @@ namespace Elastic.Apm.Tests
 			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
-			using (var localServer = new LocalServer(ctx => { ctx.Response.StatusCode = 500; }))
+			using (var localServer = LocalServer.Create(ctx => { ctx.Response.StatusCode = 500; }))
 			{
 				var httpClient = new HttpClient();
 				var res = await httpClient.PostAsync(localServer.Uri, new StringContent("foo"));
@@ -378,7 +378,7 @@ namespace Elastic.Apm.Tests
 			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			{
 				var httpClient = new HttpClient();
 				var res = await httpClient.GetAsync(localServer.Uri);
@@ -400,7 +400,7 @@ namespace Elastic.Apm.Tests
 			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			{
 				var httpClient = new HttpClient();
 				var res = await httpClient.GetAsync(localServer.Uri);
@@ -421,7 +421,7 @@ namespace Elastic.Apm.Tests
 			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
-			using (var localServer = new LocalServer(ctx =>
+			using (var localServer = LocalServer.Create(ctx =>
 			{
 				ctx.Response.StatusCode = 200;
 				Thread.Sleep(5); //Make sure duration is really > 0
@@ -449,7 +449,7 @@ namespace Elastic.Apm.Tests
 			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			{
 				var httpClient = new HttpClient();
 				var res = await httpClient.GetAsync(localServer.Uri);
@@ -474,7 +474,7 @@ namespace Elastic.Apm.Tests
 			var (listener, payloadSender, agent) = RegisterListenerAndStartTransaction();
 
 			using (listener)
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			{
 				{
 					var httpClient = new HttpClient();
@@ -523,7 +523,7 @@ namespace Elastic.Apm.Tests
 			var mockPayloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			{
 				await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async t =>
 				{
@@ -559,7 +559,7 @@ namespace Elastic.Apm.Tests
 			agent.Subscribe(new HttpDiagnosticsSubscriber());
 			StartTransaction(agent);
 
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			using (var httpClient = new HttpClient())
 			{
 				var uriBuilder = new UriBuilder(localServer.Uri) { UserName = "TestUser289421", Password = "Password973243" };
@@ -589,7 +589,7 @@ namespace Elastic.Apm.Tests
 
 			var spans = payloadSender.Spans;
 
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			using (var httpClient = new HttpClient())
 			{
 				spans.Should().BeEmpty();
@@ -624,7 +624,7 @@ namespace Elastic.Apm.Tests
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 			var subscriber = new HttpDiagnosticsSubscriber();
 
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			using (agent.Subscribe(subscriber))
 			{
 				var url = localServer.Uri;
@@ -662,7 +662,7 @@ namespace Elastic.Apm.Tests
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 			var subscriber = new HttpDiagnosticsSubscriber();
 
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			{
 				var url = localServer.Uri;
 				using (agent.Subscribe(subscriber)) //subscribe
@@ -741,7 +741,7 @@ namespace Elastic.Apm.Tests
 
 			try
 			{
-				using var localServer = new LocalServer();
+				using var localServer = LocalServer.Create();
 				var httpClient = new HttpClient();
 				await httpClient.GetAsync(localServer.Uri);
 			}
@@ -760,7 +760,7 @@ namespace Elastic.Apm.Tests
 			Activity.DefaultIdFormat = ActivityIdFormat.W3C;
 
 			var mockPayloadSender = new MockPayloadSender();
-			using var localServer = new LocalServer();
+			using var localServer = LocalServer.Create();
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 			agent.Subscribe(new HttpDiagnosticsSubscriber());
 			await agent.Tracer.CaptureTransaction("Test", "Test", async () =>
