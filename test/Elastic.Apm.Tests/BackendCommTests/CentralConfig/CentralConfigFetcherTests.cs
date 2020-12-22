@@ -36,7 +36,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		public CentralConfigFetcherTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) { }
 
 		[Fact]
-		public void Should_Not_Update_Logger_That_Is_ILogLevelSwitchable()
+		public void Should_Update_Logger_That_Is_ILogLevelSwitchable()
 		{
 			var testLogger = new ConsoleLogger(LogLevel.Trace);
 
