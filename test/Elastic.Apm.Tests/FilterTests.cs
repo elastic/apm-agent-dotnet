@@ -208,7 +208,7 @@ namespace Elastic.Apm.Tests
 			new MockHttpMessageHandler((r, c) =>
 			{
 				using var reader = new StreamReader(r.Content.ReadAsStreamAsync().Result);
-				var serializer = new PayloadItemSerializer(config);
+				var serializer = new PayloadItemSerializer();
 				var content = reader.ReadToEnd();
 				var payloadStrings = content.Split(new [] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 

@@ -339,7 +339,7 @@ namespace Elastic.Apm.Tests
 
 			t.End();
 
-			var spanJsonString = SerializePayloadItem(t);
+			var spanJsonString = _payloadItemSerializer.Serialize(t);
 			spanJsonString.Should().Contain("\"tags\":{\"foo\":42,\"bar\":false,\"oldApi\":\"43\"");
 		}
 

@@ -79,8 +79,6 @@ namespace Elastic.Apm.Tests.Mocks
 			}
 		}
 
-		public Error FirstError => Errors.First() as Error;
-
 		public Transaction FirstTransaction
 		{
 			get
@@ -113,10 +111,10 @@ namespace Elastic.Apm.Tests.Mocks
 				{
 					return _transactions;
 				}
-        finally
-        {
-          timer.Dispose();
-        }
+				finally
+				{
+					timer.Dispose();
+				}
 
 				return _transactions;
 			}
@@ -138,11 +136,10 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public void QueueTransaction(ITransaction transaction)
 		{
-      transaction = _transactionFilters.Aggregate(transaction, (current, filter) => filter(current));
+			transaction = _transactionFilters.Aggregate(transaction, (current, filter) => filter(current));
 			var item = _payloadItemSerializer.Serialize(transaction);
 			var deserializedTransaction = _payloadItemSerializer.Deserialize<Transaction>(item);
 			_transactions.Add(deserializedTransaction);
-
 			_transactionTaskCompletionSource.TrySetResult(transaction);
 		}
 	}
