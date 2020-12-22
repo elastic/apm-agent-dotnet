@@ -167,13 +167,20 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 				var configSnapshotFromReader = new ConfigSnapshotFromReader(new EnvironmentConfigurationReader(), "local");
 				var configStore = new ConfigStore(configSnapshotFromReader, LoggerBase);
 				var service = Service.GetDefaultService(new EnvironmentConfigurationReader(), LoggerBase);
-				using (agents[i] = new ApmAgent(new TestAgentComponents(LoggerBase,
-					centralConfigFetcher: new CentralConfigFetcher(LoggerBase, configStore, service),
-					payloadSender: new PayloadSenderV2(LoggerBase, configSnapshotFromReader, service,
-						new SystemInfoHelper(LoggerBase).ParseSystemInfo(null), MockApmServerInfo.Version710))))
+				var centralConfigFetcher = new CentralConfigFetcher(LoggerBase, configStore, service);
+				var payloadSender = new PayloadSenderV2(
+					LoggerBase,
+					configSnapshotFromReader,
+					service,
+					new SystemInfoHelper(LoggerBase).ParseSystemInfo(null),
+					MockApmServerInfo.Version710);
+
+				var components = new TestAgentComponents(LoggerBase, centralConfigFetcher: centralConfigFetcher, payloadSender: payloadSender);
+
+				using (agents[i] = new ApmAgent(components))
 				{
-					((CentralConfigFetcher)agents[i].CentralConfigFetcher).IsRunning.Should().BeTrue();
-					((PayloadSenderV2)agents[i].PayloadSender).IsRunning.Should().BeTrue();
+					payloadSender.IsRunning.Should().BeTrue();
+					centralConfigFetcher.IsRunning.Should().BeTrue();
 				}
 			});
 

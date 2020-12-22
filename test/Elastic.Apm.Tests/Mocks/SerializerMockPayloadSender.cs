@@ -39,6 +39,8 @@ namespace Elastic.Apm.Tests.Mocks
 			_payloadItemSerializer = new PayloadItemSerializer();
 		}
 
+		public Error FirstError => Errors.First();
+
 		private TaskCompletionSource<ITransaction> _transactionTaskCompletionSource = new TaskCompletionSource<ITransaction>();
 
 		public List<Error> Errors
@@ -47,30 +49,35 @@ namespace Elastic.Apm.Tests.Mocks
 			{
 				var timer = new Timer { Interval = 1000 };
 
-				timer.Enabled = true;
-				timer.Start();
-
-				timer.Elapsed += (a, b) =>
-				{
-					_errorTaskCompletionSource.TrySetCanceled();
-					timer.Stop();
-				};
-
-
 				try
 				{
-					_errorTaskCompletionSource.Task.Wait();
-				}
-				catch
-				{
-					return null;
-				}
+					timer.Enabled = true;
+					timer.Start();
 
-				return _errors;
+					timer.Elapsed += (a, b) =>
+					{
+						_errorTaskCompletionSource.TrySetCanceled();
+						timer.Stop();
+					};
+
+
+					try
+					{
+						_errorTaskCompletionSource.Task.Wait();
+					}
+					catch
+					{
+						return null;
+					}
+
+					return _errors;
+				}
+				finally
+				{
+					timer.Dispose();
+				}
 			}
 		}
-
-		public Error FirstError => Errors.First() as Error;
 
 		public Transaction FirstTransaction
 		{
@@ -96,7 +103,6 @@ namespace Elastic.Apm.Tests.Mocks
 					timer.Stop();
 				};
 
-
 				try
 				{
 					_transactionTaskCompletionSource.Task.Wait();
@@ -104,6 +110,10 @@ namespace Elastic.Apm.Tests.Mocks
 				catch
 				{
 					return _transactions;
+				}
+				finally
+				{
+					timer.Dispose();
 				}
 
 				return _transactions;
@@ -114,8 +124,8 @@ namespace Elastic.Apm.Tests.Mocks
 
 		public void QueueError(IError error)
 		{
-			var item = _payloadItemSerializer.SerializeObject(error);
-			var deserializedError = JsonConvert.DeserializeObject<Error>(item);
+			var item = _payloadItemSerializer.Serialize(error);
+			var deserializedError = _payloadItemSerializer.Deserialize<Error>(item);
 			_errors.Add(deserializedError);
 			_errorTaskCompletionSource.TrySetResult(deserializedError);
 		}
@@ -127,10 +137,9 @@ namespace Elastic.Apm.Tests.Mocks
 		public void QueueTransaction(ITransaction transaction)
 		{
 			transaction = _transactionFilters.Aggregate(transaction, (current, filter) => filter(current));
-			var item = _payloadItemSerializer.SerializeObject(transaction);
-			var deserializedTransaction = JsonConvert.DeserializeObject<Transaction>(item);
+			var item = _payloadItemSerializer.Serialize(transaction);
+			var deserializedTransaction = _payloadItemSerializer.Deserialize<Transaction>(item);
 			_transactions.Add(deserializedTransaction);
-
 			_transactionTaskCompletionSource.TrySetResult(transaction);
 		}
 	}
