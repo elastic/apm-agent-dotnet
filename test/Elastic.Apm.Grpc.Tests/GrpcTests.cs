@@ -19,6 +19,9 @@ namespace Elastic.Apm.Grpc.Tests
 {
 	public class GrpcTests
 	{
+		public GrpcTests() =>
+			AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
 		/// <summary>
 		/// Creates a call to a simple gRPC service and asserts that all transactions, spans are captured
 		/// and gRPC related fields are filled.
@@ -46,9 +49,6 @@ namespace Elastic.Apm.Grpc.Tests
 			apmAgent.Subscribe(new GrpcClientDiagnosticSubscriber(), new HttpDiagnosticsSubscriber());
 
 			await sampleAppHost.StartAsync();
-
-			AppContext.SetSwitch(
-				"System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
 			var channel = GrpcChannel.ForAddress(SampleAppHostBuilder.SampleAppUrl);
 			var client = new Greeter.GreeterClient(channel);
@@ -84,6 +84,7 @@ namespace Elastic.Apm.Grpc.Tests
 				);
 
 			await sampleAppHost.StopAsync();
+			sampleAppHost.Dispose();
 		}
 
 		/// <summary>
@@ -100,15 +101,12 @@ namespace Elastic.Apm.Grpc.Tests
 			var payloadSender = new MockPayloadSender();
 			using var apmAgent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			var sampleAppHost = withDiagnosticSource
+			using var sampleAppHost = withDiagnosticSource
 				? new SampleAppHostBuilder().BuildHost()
 				: new SampleAppHostBuilder().BuildHostWithMiddleware(apmAgent);
 			apmAgent.Subscribe(new AspNetCoreDiagnosticSubscriber(), new GrpcClientDiagnosticSubscriber(), new HttpDiagnosticsSubscriber());
 
 			await sampleAppHost.StartAsync();
-
-			AppContext.SetSwitch(
-				"System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
 			var channel = GrpcChannel.ForAddress(SampleAppHostBuilder.SampleAppUrl);
 			var client = new Greeter.GreeterClient(channel);
