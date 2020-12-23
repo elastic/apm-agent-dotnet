@@ -94,6 +94,8 @@ namespace Elastic.Apm.Tests
 				t.CaptureError("Test Error", "Test", new StackTrace().GetFrames());
 
 				mockPayloadSender.WaitForErrors();
+				mockPayloadSender.FirstError.Should().NotBeNull("error should not be null");
+				mockPayloadSender.FirstError.Context.Should().NotBeNull("error context should not be null");
 				mockPayloadSender.FirstError.Context.Request.Should().BeNull();
 				mockPayloadSender.FirstError.Context.Response.Should().BeNull();
 			});
