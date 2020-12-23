@@ -22,7 +22,7 @@ namespace Elastic.Apm.Tests
 		public void ChangeTransactionContextAfterError()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			agent.Tracer.CaptureTransaction("Test", "Test", t =>
 			{
@@ -49,6 +49,8 @@ namespace Elastic.Apm.Tests
 
 				// Asserts on the captured error
 				mockPayloadSender.WaitForErrors();
+				mockPayloadSender.FirstError.Should().NotBeNull("first error should not be null");
+				mockPayloadSender.FirstError.Context.Should().NotBeNull("context should not be null");
 				mockPayloadSender.FirstError.Context.Request.Method.Should().Be("GET");
 				mockPayloadSender.FirstError.Context.Request.Body = "abc";
 				mockPayloadSender.FirstError.Context.Request.Headers.Count.Should().Be(1);
