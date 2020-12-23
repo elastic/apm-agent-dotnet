@@ -48,8 +48,9 @@ namespace Elastic.Apm.Tests
 
 			transaction.End();
 
+			payloadSender.SignalEndTransactions();
 			agent.Tracer.CurrentTransaction.Should().BeNull();
-			payloadSender.WaitForTransactions(TimeSpan.FromSeconds(5));
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().BeNullOrEmpty();
 		}
 
@@ -76,7 +77,8 @@ namespace Elastic.Apm.Tests
 			});
 
 			codeExecuted.Should().BeTrue();
-			payloadSender.WaitForTransactions(TimeSpan.FromSeconds(5));
+			payloadSender.SignalEndTransactions();
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().BeNullOrEmpty();
 		}
 
@@ -108,7 +110,9 @@ namespace Elastic.Apm.Tests
 			span2.End();
 
 			transaction.End();
-			payloadSender.WaitForAny(TimeSpan.FromSeconds(5));
+
+			payloadSender.SignalEndTransactions();
+			payloadSender.WaitForAny();
 			payloadSender.Transactions.Should().BeNullOrEmpty();
 			payloadSender.Spans.Should().BeNullOrEmpty();
 		}
@@ -151,7 +155,9 @@ namespace Elastic.Apm.Tests
 			block1Ran.Should().BeTrue();
 			block2Ran.Should().BeTrue();
 			block3Ran.Should().BeTrue();
-			payloadSender.WaitForAny(TimeSpan.FromSeconds(5));
+
+			payloadSender.SignalEndTransactions();
+			payloadSender.WaitForAny();
 			payloadSender.Transactions.Should().BeNullOrEmpty();
 			payloadSender.Spans.Should().BeNullOrEmpty();
 		}

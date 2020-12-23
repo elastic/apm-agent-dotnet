@@ -80,7 +80,8 @@ namespace Elastic.Apm.Tests.ApiTests
 				var unused = agent.Tracer.StartTransaction(transactionName, transactionType);
 			}
 
-			payloadSender.WaitForTransactions(TimeSpan.FromSeconds(5));
+			payloadSender.SignalEndTransactions();
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().BeEmpty();
 		}
 
@@ -330,7 +331,9 @@ namespace Elastic.Apm.Tests.ApiTests
 
 				payloadSender.WaitForTransactions();
 				payloadSender.Transactions.Should().NotBeEmpty();
-				payloadSender.WaitForSpans(TimeSpan.FromSeconds(5));
+
+				payloadSender.SignalEndSpans();
+				payloadSender.WaitForSpans();
 				payloadSender.SpansOnFirstTransaction.Should().BeEmpty();
 
 				agent.Service.Should().NotBeNull();
@@ -620,12 +623,14 @@ namespace Elastic.Apm.Tests.ApiTests
 				payloadSender.Spans.Should().HaveCount(0);
 				span.End();
 
-				payloadSender.WaitForSpans(isSampled? (TimeSpan?)null : TimeSpan.FromSeconds(5));
+				payloadSender.SignalEndSpans();
+				payloadSender.WaitForSpans();
 				payloadSender.Spans.Should().HaveCount(expectedSpansCount);
 				if (isSampled) payloadSender.FirstSpan.Name.Should().Be(TestSpan1);
 				span.End();
 
-				payloadSender.WaitForSpans(TimeSpan.FromSeconds(5));
+				payloadSender.SignalEndSpans();
+				payloadSender.WaitForSpans();
 				payloadSender.Spans.Should().HaveCount(expectedSpansCount);
 
 				payloadSender.Transactions.Should().HaveCount(0);
@@ -634,7 +639,8 @@ namespace Elastic.Apm.Tests.ApiTests
 				payloadSender.Transactions.Should().HaveCount(1);
 				payloadSender.FirstTransaction.Name.Should().Be(TestTransaction);
 				transaction.End();
-				payloadSender.WaitForTransactions(TimeSpan.FromSeconds(5));
+				payloadSender.SignalEndTransactions();
+				payloadSender.WaitForTransactions();
 				payloadSender.Transactions.Should().HaveCount(1);
 			}
 		}
@@ -660,13 +666,16 @@ namespace Elastic.Apm.Tests.ApiTests
 				payloadSender.Spans.Should().HaveCount(0);
 				span.Duration = 123456.789;
 				span.End();
-				payloadSender.WaitForSpans(isSampled? (TimeSpan?)null : TimeSpan.FromSeconds(5));
+
+				payloadSender.SignalEndSpans();
+				payloadSender.WaitForSpans();
 				payloadSender.Spans.Should().HaveCount(expectedSpansCount);
 				if (isSampled) payloadSender.FirstSpan.Duration.Should().Be(123456.789);
 
 				payloadSender.Transactions.Should().HaveCount(0);
 				transaction.Duration = 987654.321;
 				transaction.End();
+				payloadSender.SignalEndTransactions();
 				payloadSender.WaitForTransactions();
 				payloadSender.Transactions.Should().HaveCount(1);
 				payloadSender.FirstTransaction.Duration.Should().Be(987654.321);

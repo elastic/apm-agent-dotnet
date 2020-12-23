@@ -67,8 +67,9 @@ namespace Elastic.Apm.Tests.Mocks
 		/// Waits for transactions to be queued
 		/// </summary>
 		/// <param name="timeout">Optional timeout to wait</param>
+		/// <param name="count"></param>
 		/// <returns><c>true</c> if the event was signalled, <c>false</c> otherwise.</returns>
-		public bool WaitForTransactions(TimeSpan? timeout = null, int? count = null)
+		public void WaitForTransactions(TimeSpan? timeout = null, int? count = null)
 		{
 			if (count != null)
 			{
@@ -77,7 +78,7 @@ namespace Elastic.Apm.Tests.Mocks
 					while (_transactions.Count < count)
 						_transactionWaitHandle.WaitOne();
 
-					return true;
+					return;
 				}
 
 				var stopWatch = Stopwatch.StartNew();
@@ -86,16 +87,16 @@ namespace Elastic.Apm.Tests.Mocks
 					var elapsedMilliseconds = Convert.ToInt32(timeout.Value.TotalMilliseconds - stopWatch.ElapsedMilliseconds);
 					var signalled = _transactionWaitHandle.WaitOne(elapsedMilliseconds);
 
-					if (!signalled)
-						return false;
+					if (!signalled) return;
 				}
 
-				return true;
+				return;
 			}
 
-			return timeout is null
-				? _transactionWaitHandle.WaitOne()
-				: _transactionWaitHandle.WaitOne(timeout.Value);
+			if (timeout is null)
+				_transactionWaitHandle.WaitOne();
+			else
+				_transactionWaitHandle.WaitOne(timeout.Value);
 		}
 
 		/// <summary>
@@ -103,7 +104,7 @@ namespace Elastic.Apm.Tests.Mocks
 		/// </summary>
 		/// <param name="timeout">Optional timeout to wait</param>
 		/// <returns><c>true</c> if the event was signalled, <c>false</c> otherwise.</returns>
-		public bool WaitForSpans(TimeSpan? timeout = null, int? count = null)
+		public void WaitForSpans(TimeSpan? timeout = null, int? count = null)
 		{
 			if (count != null)
 			{
@@ -112,7 +113,7 @@ namespace Elastic.Apm.Tests.Mocks
 					while (_spans.Count < count)
 						_spanWaitHandle.WaitOne();
 
-					return true;
+					return;
 				}
 
 				var stopWatch = Stopwatch.StartNew();
@@ -122,15 +123,16 @@ namespace Elastic.Apm.Tests.Mocks
 					var signalled = _spanWaitHandle.WaitOne(elapsedMilliseconds);
 
 					if (!signalled)
-						return false;
+						return;
 				}
 
-				return true;
+				return;
 			}
 
-			return timeout is null
-				? _spanWaitHandle.WaitOne()
-				: _spanWaitHandle.WaitOne(timeout.Value);
+			if (timeout is null)
+				_spanWaitHandle.WaitOne();
+			else
+				_spanWaitHandle.WaitOne(timeout.Value);
 		}
 
 		/// <summary>
@@ -138,20 +140,40 @@ namespace Elastic.Apm.Tests.Mocks
 		/// </summary>
 		/// <param name="timeout">Optional timeout to wait</param>
 		/// <returns><c>true</c> if the event was signalled, <c>false</c> otherwise.</returns>
-		public bool WaitForErrors(TimeSpan? timeout = null, int? count = null) =>
-			timeout is null
-				? _errorWaitHandle.WaitOne()
-				: _errorWaitHandle.WaitOne(timeout.Value);
+		public void WaitForErrors(TimeSpan? timeout = null)
+		{
+			if (timeout is null)
+				_errorWaitHandle.WaitOne();
+			else
+				_errorWaitHandle.WaitOne(timeout.Value);
+		}
 
 		/// <summary>
 		/// Waits for metrics to be queued
 		/// </summary>
 		/// <param name="timeout">Optional timeout to wait</param>
 		/// <returns><c>true</c> if the event was signalled, <c>false</c> otherwise.</returns>
-		public bool WaitForMetrics(TimeSpan? timeout = null, int? count = null) =>
-			timeout is null
-				? _metricSetWaitHandle.WaitOne()
-				: _metricSetWaitHandle.WaitOne(timeout.Value);
+		public void WaitForMetrics(TimeSpan? timeout = null)
+		{
+			if (timeout is null)
+				_metricSetWaitHandle.WaitOne();
+			else
+				_metricSetWaitHandle.WaitOne(timeout.Value);
+		}
+
+		/// <summary>
+		/// Sets transaction wait handle to signalled, allowing threads to proceed.
+		/// Can be called when making an assertion on the absence of a transaction where
+		/// the order of execution is known, to prevent waiting for a given timeout.
+		/// </summary>
+		public void SignalEndTransactions() => _transactionWaitHandle.Set();
+
+		/// <summary>
+		/// Sets spans wait handle to signalled, allowing threads to proceed.
+		/// Can be called when making an assertion on the absence of a span where
+		/// the order of execution is known, to prevent waiting for a given timeout.
+		/// </summary>
+		public void SignalEndSpans() => _spanWaitHandle.Set();
 
 		public IReadOnlyList<IError> Errors => CreateImmutableSnapshot(_errors);
 

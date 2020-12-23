@@ -27,7 +27,8 @@ namespace Elastic.Apm.Tests
 						new Request("GET", new Url { Full = "http://localhost/bootstrap.css", PathName = "/bootstrap.css" });
 				});
 
-			payloadSender.WaitForTransactions(TimeSpan.FromSeconds(5));
+			payloadSender.SignalEndTransactions();
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().BeEmpty();
 
 			agent.Tracer.CaptureTransaction("Test", "Test",

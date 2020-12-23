@@ -557,7 +557,8 @@ namespace Elastic.Apm.Tests
 
 				mockPayloadSender.WaitForTransactions();
 				mockPayloadSender.Transactions.Should().NotBeEmpty();
-				mockPayloadSender.WaitForSpans(TimeSpan.FromSeconds(5));
+				mockPayloadSender.SignalEndSpans();
+				mockPayloadSender.WaitForSpans();
 				mockPayloadSender.SpansOnFirstTransaction.Should().BeEmpty();
 			}
 		}
@@ -724,7 +725,8 @@ namespace Elastic.Apm.Tests
 
 				mockPayloadSender.WaitForTransactions();
 				mockPayloadSender.FirstTransaction.Should().NotBeNull();
-				mockPayloadSender.WaitForSpans(TimeSpan.FromSeconds(5));
+				mockPayloadSender.SignalEndSpans();
+				mockPayloadSender.WaitForSpans();
 				mockPayloadSender.SpansOnFirstTransaction.Should().BeEmpty();
 			}
 		}
