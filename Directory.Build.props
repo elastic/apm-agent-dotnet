@@ -3,6 +3,8 @@
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
     <NoWarn>NU1503</NoWarn>
+    <!-- suppress NETSDK1138 warnings for EOL frameworks -->
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <SolutionRoot>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.bat))</SolutionRoot>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\elasticapm.snk</AssemblyOriginatorKeyFile>

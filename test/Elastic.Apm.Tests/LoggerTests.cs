@@ -61,6 +61,22 @@ namespace Elastic.Apm.Tests
 			logger.Lines[3].Should().EndWith("[Debug] - Debug log");
 		}
 
+		[Fact]
+		public void LogLevelSwitch_Should_Switch_LogLevel()
+		{
+			var logger = LogWithLevel(LogLevel.Warning);
+
+			logger.Lines.Count.Should().Be(2);
+			logger.Lines[0].Should().EndWith("[Error] - Error log");
+			logger.Lines[1].Should().EndWith("[Warning] - Warning log");
+
+			logger.LogLevelSwitch.Level = LogLevel.Error;
+			LogWithLevel(logger, LogLevel.Warning);
+
+			logger.Lines.Should().HaveCount(3);
+			logger.Lines[2].Should().EndWith("[Error] - Error log");
+		}
+
 		/// <summary>
 		/// Logs a message with exception by using <see cref="LoggingExtensions.MaybeLogger.LogException" />.
 		/// Makes sure that both the message and the exception is printed.
@@ -358,15 +374,16 @@ namespace Elastic.Apm.Tests
 			var userName = "abc";
 			var pw = "def";
 			var inMemoryLogger = new InMemoryBlockingLogger(LogLevel.Error);
-			var port = new Random(DateTime.UtcNow.Millisecond).Next(8100, 65535);
-			var configReader = new MockConfigSnapshot(serverUrls: $"http://{userName}:{pw}@localhost:{port}", maxBatchEventCount: "0",
+
+			using var localServer = LocalServer.Create(httpListenerContext => { httpListenerContext.Response.StatusCode = 500; });
+
+			var uri = new Uri(localServer.Uri);
+
+			var configReader = new MockConfigSnapshot(serverUrls: $"http://{userName}:{pw}@{uri.Authority}", maxBatchEventCount: "0",
 				flushInterval: "0");
 
 			using var payloadSender = new PayloadSenderV2(inMemoryLogger, configReader,
 				Service.GetDefaultService(configReader, inMemoryLogger), new Api.System(), MockApmServerInfo.Version710);
-
-			using var localServer = new LocalServer(httpListenerContext => { httpListenerContext.Response.StatusCode = 500; },
-				$"http://localhost:{port}/");
 
 			using var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
 
@@ -374,7 +391,7 @@ namespace Elastic.Apm.Tests
 
 			inMemoryLogger.Lines.Should().HaveCount(1);
 			inMemoryLogger.Lines.Should().NotContain(n => n.Contains($"{userName}:{pw}"));
-			inMemoryLogger.Lines.Should().Contain(n => n.Contains($"http://[REDACTED]:[REDACTED]@localhost:{port}"));
+			inMemoryLogger.Lines.Should().Contain(n => n.Contains($"http://[REDACTED]:[REDACTED]@{uri.Authority}"));
 		}
 
 		/// <summary>
@@ -403,6 +420,17 @@ namespace Elastic.Apm.Tests
 		private static TestLogger LogWithLevel(LogLevel logLevel)
 		{
 			var logger = new TestLogger(logLevel);
+
+			logger.Error()?.Log("Error log");
+			logger.Warning()?.Log("Warning log");
+			logger.Info()?.Log("Info log");
+			logger.Debug()?.Log("Debug log");
+			return logger;
+		}
+
+		private static TestLogger LogWithLevel(TestLogger logger, LogLevel logLevel)
+		{
+			logger ??= new TestLogger(logLevel);
 
 			logger.Error()?.Log("Error log");
 			logger.Warning()?.Log("Warning log");

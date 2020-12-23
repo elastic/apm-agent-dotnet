@@ -19,6 +19,9 @@ namespace Elastic.Apm.SqlClient
 		{
 			var retVal = new CompositeDisposable();
 
+			if (!agentComponents.ConfigurationReader.Enabled)
+				return retVal;
+
 			if (PlatformDetection.IsDotNetCore || PlatformDetection.IsDotNet5)
 			{
 				var initializer = new DiagnosticInitializer(agentComponents.Logger, new[] { new SqlClientDiagnosticListener(agentComponents) });

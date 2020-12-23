@@ -42,7 +42,7 @@ namespace Elastic.Apm.AspNetCore.Static.Tests
 		{
 			var defaultServerUrlConnectionMade = false;
 
-			using var localServer = new LocalServer(context =>
+			using var localServer = LocalServer.Create("http://localhost:8200/", context =>
 			{
 				if (context.Request.HttpMethod != HttpMethod.Post.Method) return;
 
@@ -52,7 +52,8 @@ namespace Elastic.Apm.AspNetCore.Static.Tests
 				// In CI with parallel tests running we could have multiple tests running and some of them may send HTTP post to the default server url
 				// So we only make the test fail, when the request body contains the sample app's url
 				if (body.ToLower().Contains("starttransactionwithagentapi")) defaultServerUrlConnectionMade = true;
-			}, "http://localhost:8200/");
+			});
+
 			var configReader = new MicrosoftExtensionsConfig(new ConfigurationBuilder()
 				.AddJsonFile($"TestConfigs{Path.DirectorySeparatorChar}appsettings_agentdisabled.json")
 				.Build(), new NoopLogger(), "test");

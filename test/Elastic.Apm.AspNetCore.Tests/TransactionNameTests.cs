@@ -5,6 +5,7 @@
 using System;
 using System.Threading.Tasks;
 using Elastic.Apm.Extensions.Hosting;
+using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
@@ -33,14 +34,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var logger = new LineWriterToLoggerAdaptor(new XunitOutputToLineWriterAdaptor(testOutputHelper))
 			{
-				Level = Logging.LogLevel.Trace
+				LogLevelSwitch = { Level = LogLevel.Trace }
 			};
 
 			_agent = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender,
 				logger: logger,
 				// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
-				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer));;
+				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer));
 			HostBuilderExtensions.UpdateServiceInformation(_agent.Service);
 		}
 

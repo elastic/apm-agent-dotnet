@@ -4,19 +4,23 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
+using Elastic.Apm.Report.Serialization;
 using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
 using Timer = System.Timers.Timer;
@@ -125,7 +129,7 @@ namespace Elastic.Apm.Tests
 					agent =>
 					{
 						agent.Tracer.CaptureTransaction("Test123", "TestTransaction",
-							t => { t.CaptureSpan("SampeSpan", "TestSpan", () => Thread.Sleep(10)); });
+							t => { t.CaptureSpan("SampleSpan", "TestSpan", () => Thread.Sleep(10)); });
 					},
 					(transactions, spans, errors) =>
 					{
@@ -174,7 +178,8 @@ namespace Elastic.Apm.Tests
 			timer.Elapsed += (o, args) => { taskCompletionSource.SetCanceled(); };
 			timer.Start();
 
-			var handler = RegisterHandlerAndAssert((transactions, spans, errors) =>
+
+			var handler = RegisterHandlerAndAssert(mockConfig, (transactions, spans, errors) =>
 			{
 				try
 				{
@@ -199,11 +204,13 @@ namespace Elastic.Apm.Tests
 			var _ = taskCompletionSource.Task.Result;
 		}
 
-		private static MockHttpMessageHandler RegisterHandlerAndAssert(Action<List<Transaction>, List<Span>, List<Error>> assert) =>
+		private static MockHttpMessageHandler RegisterHandlerAndAssert(IConfigurationReader config, Action<List<Transaction>, List<Span>, List<Error>> assert) =>
 			new MockHttpMessageHandler((r, c) =>
 			{
-				var content = r.Content.ReadAsStringAsync().Result;
-				var payloadStrings = content.Split(Environment.NewLine.ToCharArray());
+				using var reader = new StreamReader(r.Content.ReadAsStreamAsync().Result);
+				var serializer = new PayloadItemSerializer();
+				var content = reader.ReadToEnd();
+				var payloadStrings = content.Split(new [] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
 				var transactions = new List<Transaction>();
 				var spans = new List<Span>();
@@ -211,28 +218,26 @@ namespace Elastic.Apm.Tests
 
 				foreach (var receivedEvent in payloadStrings)
 				{
-					switch (receivedEvent)
+					var jObject = serializer.Deserialize<JObject>(receivedEvent);
+					var property = jObject.Properties().First();
+
+					switch (property.Name)
 					{
-						case { } s when s.StartsWith("{\"transaction\":"):
-							var str = receivedEvent.Substring(16);
-							str = str.Remove(str.Length - 1);
-							var transaction = JsonConvert.DeserializeObject<Transaction>(str);
+						case "transaction":
+							var transaction = serializer.Deserialize<Transaction>(property.Value.ToString(Formatting.None));
 							transactions.Add(transaction);
 							break;
-						case { } s when s.StartsWith("{\"span\":"):
-							str = receivedEvent.Substring(9);
-							str = str.Remove(str.Length - 1);
-							var span = JsonConvert.DeserializeObject<Span>(str);
+						case "span":
+							var span = serializer.Deserialize<Span>(property.Value.ToString(Formatting.None));
 							spans.Add(span);
 							break;
-						case { } s when s.StartsWith("{\"error\":"):
-							str = receivedEvent.Substring(10);
-							str = str.Remove(str.Length - 1);
-							var error = JsonConvert.DeserializeObject<Error>(str);
+						case "error":
+							var error = serializer.Deserialize<Error>(property.Value.ToString(Formatting.None));
 							errors.Add(error);
 							break;
 					}
 				}
+
 				assert(transactions, spans, errors);
 				return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
 			});
