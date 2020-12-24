@@ -3,11 +3,13 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.Config;
+using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -36,10 +38,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Theory]
 		public async Task TestErrorInAspNetCore(bool useOnlyDiagnosticSource)
 		{
-			using (var agent = new ApmAgent(new TestAgentComponents()))
+			var capturedPayload = new MockPayloadSender();
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: capturedPayload)))
 			{
-
-				var capturedPayload = agent.PayloadSender as MockPayloadSender;
 				var client = Helper.GetClient(agent, _factory, useOnlyDiagnosticSource);
 
 				try
@@ -51,21 +52,22 @@ namespace Elastic.Apm.AspNetCore.Tests
 					// ignore
 				}
 
-				capturedPayload.Should().NotBeNull();
+				capturedPayload?.WaitForTransactions();
 				capturedPayload?.Transactions.Should().ContainSingle();
 
-				capturedPayload?.Errors.Should().ContainSingle();
+				capturedPayload?.WaitForErrors();
+				capturedPayload?.Errors.Should().NotBeEmpty();
 
-				var errorException = capturedPayload?.FirstError.Exception;
-				errorException?.Message.Should().Be("This is a test exception!");
-				errorException?.Type.Should().Be(typeof(Exception).FullName);
+				var error = capturedPayload?.Errors.FirstOrDefault(e => e.Exception.Message == "This is a test exception!") as Error;
+				error.Should().NotBeNull();
 
-				var context = capturedPayload?.FirstError.Context;
+				error?.Exception.Message.Should().Be("This is a test exception!");
+				error?.Exception.Type.Should().Be(typeof(Exception).FullName);
+				error?.Exception.Handled.Should().BeFalse();
+
+				var context = error?.Context;
 				context?.Request.Url.Full.Should().Be("http://localhost/Home/TriggerError");
 				context?.Request.Method.Should().Be(HttpMethod.Get.Method);
-
-				errorException?.Should().NotBeNull();
-				errorException?.Handled.Should().BeFalse();
 			}
 		}
 
@@ -80,12 +82,13 @@ namespace Elastic.Apm.AspNetCore.Tests
 		[Theory]
 		public async Task TestJsonBodyRetrievalOnRequestFailureInAspNetCore(bool useOnlyDiagnosticSource)
 		{
+			var capturedPayload = new MockPayloadSender();
 			using (var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(
 				captureBody: ConfigConsts.SupportedValues.CaptureBodyErrors,
 				// ReSharper disable once RedundantArgumentDefaultValue
-				captureBodyContentTypes: ConfigConsts.DefaultValues.CaptureBodyContentTypes))))
+				captureBodyContentTypes: ConfigConsts.DefaultValues.CaptureBodyContentTypes),
+				payloadSender: capturedPayload)))
 			{
-				var capturedPayload = agent.PayloadSender as MockPayloadSender;
 				var client = Helper.GetClient(agent, _factory, useOnlyDiagnosticSource);
 
 				var body = "{\"id\" : \"1\"}";
@@ -93,15 +96,17 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 				capturedPayload.Should().NotBeNull();
 
-				capturedPayload?.Transactions.Should().ContainSingle();
+				capturedPayload.WaitForTransactions();
+				capturedPayload.Transactions.Should().ContainSingle();
 
-				capturedPayload?.Errors.Should().ContainSingle();
+				capturedPayload.WaitForErrors();
+				capturedPayload.Errors.Should().ContainSingle();
 
-				var errorException = capturedPayload?.FirstError.Exception;
+				var errorException = capturedPayload.FirstError.Exception;
 				errorException?.Message.Should().Be("This is a post method test exception!");
 				errorException?.Type.Should().Be(typeof(Exception).FullName);
 
-				var context = capturedPayload?.FirstError.Context;
+				var context = capturedPayload.FirstError.Context;
 				context?.Request.Url.Full.Should().Be("http://localhost/api/Home/PostError");
 				context?.Request.Method.Should().Be(HttpMethod.Post.Method);
 				context?.Request.Body.Should().Be(body);

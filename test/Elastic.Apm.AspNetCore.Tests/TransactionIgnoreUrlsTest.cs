@@ -81,10 +81,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_client.DefaultRequestHeaders.Add("foo", "bar");
 			await _client.GetAsync("/Home/SimplePage");
 
+			_capturedPayload.WaitForTransactions();
 			_capturedPayload.Transactions.Should().ContainSingle();
 			_capturedPayload.FirstTransaction.Context.Request.Url.Full.ToLower().Should().Contain("simplepage");
-
-			_capturedPayload.ResetTransactionTaskCompletionSource();
 
 			//change config to ignore urls with SimplePage
 			var updateConfigSnapshot = new MockConfigSnapshot(
@@ -95,10 +94,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			await _client.GetAsync("/Home/SimplePage");
 
+			_capturedPayload.WaitForTransactions(TimeSpan.FromSeconds(5));
+
 			//assert that no more transaction is captured - so still 1 captured transaction
 			_capturedPayload.Transactions.Should().ContainSingle();
 
-			_capturedPayload.ResetTransactionTaskCompletionSource();
 			//update config again
 			updateConfigSnapshot = new MockConfigSnapshot(
 				new NoopLogger()
@@ -107,6 +107,8 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_agent.ConfigStore.CurrentSnapshot = updateConfigSnapshot;
 
 			await _client.GetAsync("/Home/SimplePage");
+
+			_capturedPayload.WaitForTransactions();
 
 			//assert that the number of captured transaction increased
 			_capturedPayload.Transactions.Count.Should().Be(2);

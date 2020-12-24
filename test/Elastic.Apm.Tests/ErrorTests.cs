@@ -22,7 +22,7 @@ namespace Elastic.Apm.Tests
 		public void ChangeTransactionContextAfterError()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			agent.Tracer.CaptureTransaction("Test", "Test", t =>
 			{
@@ -48,6 +48,9 @@ namespace Elastic.Apm.Tests
 				t.Context.InternalLabels.Value.InnerDictionary["foo"].Value.Should().Be("bar");
 
 				// Asserts on the captured error
+				mockPayloadSender.WaitForErrors();
+				mockPayloadSender.FirstError.Should().NotBeNull("first error should not be null");
+				mockPayloadSender.FirstError.Context.Should().NotBeNull("context should not be null");
 				mockPayloadSender.FirstError.Context.Request.Method.Should().Be("GET");
 				mockPayloadSender.FirstError.Context.Request.Body = "abc";
 				mockPayloadSender.FirstError.Context.Request.Headers.Count.Should().Be(1);
@@ -62,6 +65,7 @@ namespace Elastic.Apm.Tests
 			});
 
 			// Asserts on the captured transaction
+			mockPayloadSender.WaitForTransactions();
 			mockPayloadSender.FirstTransaction.Context.Request.Method.Should().Be("PUT");
 			mockPayloadSender.FirstTransaction.Context.Request.Body = "cde";
 			mockPayloadSender.FirstTransaction.Context.Request.Headers.Count.Should().Be(2);
@@ -89,6 +93,9 @@ namespace Elastic.Apm.Tests
 			{
 				t.CaptureError("Test Error", "Test", new StackTrace().GetFrames());
 
+				mockPayloadSender.WaitForErrors();
+				mockPayloadSender.FirstError.Should().NotBeNull("error should not be null");
+				mockPayloadSender.FirstError.Context.Should().NotBeNull("error context should not be null");
 				mockPayloadSender.FirstError.Context.Request.Should().BeNull();
 				mockPayloadSender.FirstError.Context.Response.Should().BeNull();
 			});
@@ -112,6 +119,7 @@ namespace Elastic.Apm.Tests
 				t.CaptureError("Test Error", "Test", new StackTrace().GetFrames());
 			});
 
+			mockPayloadSender.WaitForErrors();
 			mockPayloadSender.FirstError.Context.Request.Should().NotBeNull();
 			mockPayloadSender.FirstError.Context.Request.Headers.Should().BeNull();
 			mockPayloadSender.FirstError.Context.Response.Should().NotBeNull();

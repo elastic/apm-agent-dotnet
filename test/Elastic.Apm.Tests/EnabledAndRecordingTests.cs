@@ -48,7 +48,9 @@ namespace Elastic.Apm.Tests
 
 			transaction.End();
 
+			payloadSender.SignalEndTransactions();
 			agent.Tracer.CurrentTransaction.Should().BeNull();
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().BeNullOrEmpty();
 		}
 
@@ -75,6 +77,8 @@ namespace Elastic.Apm.Tests
 			});
 
 			codeExecuted.Should().BeTrue();
+			payloadSender.SignalEndTransactions();
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().BeNullOrEmpty();
 		}
 
@@ -106,6 +110,9 @@ namespace Elastic.Apm.Tests
 			span2.End();
 
 			transaction.End();
+
+			payloadSender.SignalEndTransactions();
+			payloadSender.WaitForAny();
 			payloadSender.Transactions.Should().BeNullOrEmpty();
 			payloadSender.Spans.Should().BeNullOrEmpty();
 		}
@@ -148,6 +155,9 @@ namespace Elastic.Apm.Tests
 			block1Ran.Should().BeTrue();
 			block2Ran.Should().BeTrue();
 			block3Ran.Should().BeTrue();
+
+			payloadSender.SignalEndTransactions();
+			payloadSender.WaitForAny();
 			payloadSender.Transactions.Should().BeNullOrEmpty();
 			payloadSender.Spans.Should().BeNullOrEmpty();
 		}
@@ -209,6 +219,7 @@ namespace Elastic.Apm.Tests
 				});
 			});
 
+			payloadSender.WaitForAny(TimeSpan.FromSeconds(5));
 			payloadSender.Transactions.Should().BeNullOrEmpty();
 			payloadSender.Spans.Should().BeNullOrEmpty();
 		}
@@ -226,6 +237,7 @@ namespace Elastic.Apm.Tests
 
 			CreateTransactionsAndSpans(agent);
 
+			mockPayloadSender.WaitForAny(TimeSpan.FromSeconds(5));
 			mockPayloadSender.Transactions.Should().BeEmpty();
 			mockPayloadSender.Spans.Should().BeEmpty();
 			mockPayloadSender.Errors.Should().BeEmpty();
@@ -245,6 +257,7 @@ namespace Elastic.Apm.Tests
 
 			CreateTransactionsAndSpans(agent);
 
+			mockPayloadSender.WaitForAny(TimeSpan.FromSeconds(5));
 			mockPayloadSender.Transactions.Should().BeEmpty();
 			mockPayloadSender.Spans.Should().BeEmpty();
 			mockPayloadSender.Errors.Should().BeEmpty();

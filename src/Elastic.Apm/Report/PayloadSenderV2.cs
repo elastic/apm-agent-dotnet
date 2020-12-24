@@ -108,13 +108,15 @@ namespace Elastic.Apm.Report
 
 			_eventQueue = new BatchBlock<object>(config.MaxBatchEventCount);
 
-			SetUpFilters(TransactionFilters, SpanFilters, _configSnapshot, apmServerInfo, logger);
+			SetUpFilters(TransactionFilters, SpanFilters, apmServerInfo, logger);
 			StartWorkLoop();
 		}
 
-		internal static void SetUpFilters(List<Func<ITransaction, ITransaction>> transactionFilters, List<Func<ISpan, ISpan>> spanFilters,
-			IConfigSnapshot configSnapshot, IApmServerInfo apmServerInfo, IApmLogger logger
-		)
+		internal static void SetUpFilters(
+			List<Func<ITransaction, ITransaction>> transactionFilters,
+			List<Func<ISpan, ISpan>> spanFilters,
+			IApmServerInfo apmServerInfo,
+			IApmLogger logger)
 		{
 			transactionFilters.Add(new TransactionIgnoreUrlsFilter().Filter);
 			transactionFilters.Add(new HeaderDictionarySanitizerFilter().Filter);

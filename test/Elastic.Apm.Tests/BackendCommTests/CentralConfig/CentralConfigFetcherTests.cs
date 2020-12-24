@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -12,7 +11,6 @@ using System.Threading;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm;
 using Elastic.Apm.BackendComm.CentralConfig;
-using Elastic.Apm.Cloud;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -21,7 +19,6 @@ using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using FluentAssertions.Extensions;
-using Newtonsoft.Json;
 using RichardSzalay.MockHttp;
 using Xunit;
 using Xunit.Abstractions;
@@ -69,7 +66,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			{
 				centralConfigFetcher.IsRunning.Should().BeTrue();
 				waitHandle.WaitOne();
-				Thread.Sleep(TimeSpan.FromSeconds(1));
+				Thread.Sleep(TimeSpan.FromSeconds(3));
 			}
 
 			testLogger.LogLevelSwitch.Level.Should().Be(LogLevel.Error);
@@ -124,7 +121,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			{
 				centralConfigFetcher.IsRunning.Should().BeTrue();
 				waitHandle.WaitOne();
-				Thread.Sleep(TimeSpan.FromSeconds(1));
+				Thread.Sleep(TimeSpan.FromSeconds(3));
 			}
 
 			testLogger.LogLevelSwitch.Level.Should().Be(LogLevel.Trace);
