@@ -8,5 +8,10 @@
     <WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
     <!-- Always generate debug symbols this allows fluent symbols exception messages to include variable names -->
     <DebugSymbols>True</DebugSymbols>
+    <IsTestProject>true</IsTestProject>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- use xunit config for all test files. Allow assemblies to run in parallel -->
+    <Content Include="$(SolutionRoot)/xunit.runner.json" CopyToOutputDirectory="PreserveNewest" Condition="$(IsTestProject) == 'true'" />
+  </ItemGroup>
 </Project>
