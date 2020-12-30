@@ -12,6 +12,7 @@ using AspNetFullFrameworkSampleApp.Controllers;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Extensions;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

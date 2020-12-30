@@ -19,7 +19,7 @@
     </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj"/>
+    <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj"/>
   </ItemGroup>
 
 </Project>

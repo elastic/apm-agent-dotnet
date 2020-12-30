@@ -5,7 +5,7 @@
 using System;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Tests.TestHelpers;
+using Elastic.Apm.Tests.Utilities;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {

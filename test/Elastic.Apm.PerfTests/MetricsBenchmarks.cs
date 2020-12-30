@@ -6,7 +6,7 @@ using BenchmarkDotNet.Attributes;
 using Elastic.Apm.Config;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 
 namespace Elastic.Apm.PerfTests
 {

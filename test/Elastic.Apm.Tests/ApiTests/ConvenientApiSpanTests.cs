@@ -10,7 +10,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.HelpersTests;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 
@@ -40,7 +40,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private const string TransactionType = "Test";
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Action,string,string)" /> method.
+		/// Tests the <see cref="Transaction.CaptureSpan(string,string,Action,string,string)" /> method.
 		/// It wraps a fake span (Thread.Sleep) into the CaptureSpan method
 		/// and it makes sure that the span is captured by the agent.
 		/// </summary>
@@ -49,7 +49,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			=> AssertWith1TransactionAnd1Span(t => { t.CaptureSpan(SpanName, SpanType, () => { WaitHelpers.Sleep2XMinimum(); }); });
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Action,string,string)" /> method with an exception.
+		/// Tests the <see cref="Transaction.CaptureSpan(string,string,Action,string,string)" /> method with an exception.
 		/// It wraps a fake span (Thread.Sleep) that throws an exception into the CaptureSpan method
 		/// and it makes sure that the span and the exception are captured by the agent.
 		/// </summary>
@@ -84,7 +84,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Action{ISpan},string,string)" /> method.
+		/// Tests the <see cref="Transaction.CaptureSpan(string,string,Action,string,string)" /> method.
 		/// It wraps a fake span (Thread.Sleep) into the CaptureSpan method with an <see cref="Action{T}" /> parameter
 		/// and it makes sure that the span is captured by the agent and the <see cref="Action{ISpan}" /> parameter is not null
 		/// </summary>
@@ -113,7 +113,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Action{ISpan},string,string)" /> method with an
+		/// Tests the <see cref="Transaction.CaptureSpan(string,string,Action,string,string)" /> method with an
 		/// exception.
 		/// It wraps a fake span (Thread.Sleep) that throws an exception into the CaptureSpan method with an
 		/// <see cref="Action{ISpan}" /> parameter
@@ -153,7 +153,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,System.Func{T},string,string)" /> method.
+		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,Func{TResult},string,string)" /> method.
 		/// It wraps a fake span (Thread.Sleep) with a return value into the CaptureSpan method
 		/// and it makes sure that the span is captured by the agent and the return value is correct.
 		/// </summary>
@@ -184,7 +184,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,System.Func{ISpan,T},string,string)" /> method.
+		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,Func{TResult},string,string)" /> method.
 		/// It wraps a fake span (Thread.Sleep) with a return value into the CaptureSpan method with an
 		/// <see cref="Action{ISpan}" /> parameter
 		/// and it makes sure that the span is captured by the agent and the return value is correct and the
@@ -219,7 +219,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,System.Func{ISpan,T},string,string)" /> method with an
+		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,Func{TResult},string,string)" /> method with an
 		/// exception.
 		/// It wraps a fake span (Thread.Sleep) with a return value that throws an exception into the CaptureSpan method with an
 		/// <see cref="Action{ISpan}" /> parameter
@@ -269,7 +269,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,System.Func{ISpan,T},string,string)" /> method with an
+		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,Func{TResult},string,string)" /> method with an
 		/// exception.
 		/// It wraps a fake span (Thread.Sleep) with a return value that throws an exception into the CaptureSpan method with an
 		/// <see cref="Action{ISpan}" /> parameter
@@ -311,7 +311,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Func{Task},string,string)" /> method.
+		/// Tests the <see cref="Transaction.CaptureSpan(string,string,Func{TResult},string,string)" /> method.
 		/// It wraps a fake async span (Task.Delay) into the CaptureSpan method
 		/// and it makes sure that the span is captured.
 		/// </summary>
@@ -330,7 +330,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Func{Task},string,string)" /> method with an
+		/// Tests the <see cref="Transaction.CaptureSpan(string,string,Func{TResult},string,string)" /> method with an
 		/// exception
 		/// It wraps a fake async span (Task.Delay) that throws an exception into the CaptureSpan method
 		/// and it makes sure that the span and the error are captured.
@@ -368,7 +368,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Func{ISpan, Task},string,string)" /> method.
+		/// Tests the <see cref="Transaction.CaptureSpan(string,string,Func{TResult},string,string)" /> method.
 		/// It wraps a fake async span (Task.Delay) into the CaptureSpan method with an <see cref="Action{ISpan}" /> parameter
 		/// and it makes sure that the span is captured and the <see cref="Action{ISpan}" /> parameter is not null.
 		/// </summary>
@@ -397,7 +397,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan(string,string,System.Func{ISpan, Task},string,string)" /> method with an
+		/// Tests the <see cref="Transaction.CaptureSpan(string,string,Func{TResult},string,string)" /> method with an
 		/// exception.
 		/// It wraps a fake async span (Task.Delay) that throws an exception into the CaptureSpan method with an
 		/// <see cref="Action{ISpan}" /> parameter
@@ -437,7 +437,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,System.Func{Task{T}},string,string)" /> method.
+		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,Func{TResult},string,string)" /> method.
 		/// It wraps a fake async span (Task.Delay) with a return value into the CaptureSpan method
 		/// and it makes sure that the span is captured by the agent and the return value is correct.
 		/// </summary>
@@ -466,7 +466,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,System.Func{ISpan,Task{T}},string,string)" /> method.
+		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,Func{TResult},string,string)" /> method.
 		/// It wraps a fake async span (Task.Delay) with a return value into the CaptureSpan method with an
 		/// <see cref="Action{ISpan}" /> parameter
 		/// and it makes sure that the span is captured by the agent and the return value is correct and the <see cref="ISpan" />
@@ -503,7 +503,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,System.Func{ISpan,Task{T}},string,string)" /> method with
+		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,Func{TResult},string,string)" /> method with
 		/// an exception.
 		/// It wraps a fake async span (Task.Delay) with a return value that throws an exception into the CaptureSpan method with
 		/// an <see cref="Action{ISpan}" /> parameter
@@ -551,7 +551,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			});
 
 		/// <summary>
-		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,System.Func{Task{T}},string,string)" /> method with an
+		/// Tests the <see cref="Transaction.CaptureSpan{T}(string,string,Func{TResult},string,string)" /> method with an
 		/// exception.
 		/// It wraps a fake async span (Task.Delay) with a return value that throws an exception into the CaptureSpan method
 		/// and it makes sure that the span and the error are captured by the agent.

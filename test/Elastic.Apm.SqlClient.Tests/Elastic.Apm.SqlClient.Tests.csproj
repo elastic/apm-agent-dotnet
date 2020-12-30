@@ -33,7 +33,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\..\src\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj" />
-    <ProjectReference Include="..\Elastic.Apm.Tests\Elastic.Apm.Tests.csproj" />
+    <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
   </ItemGroup>
 
   <Import Project="..\Elastic.Apm.DatabaseTests.Common\Elastic.Apm.DatabaseTests.Common.projitems" Label="Shared" />

@@ -4,7 +4,7 @@
 
 using System.Diagnostics;
 using System.Threading;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 

@@ -4,7 +4,7 @@
 
 using BenchmarkDotNet.Attributes;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 
 namespace Elastic.Apm.PerfTests
 {

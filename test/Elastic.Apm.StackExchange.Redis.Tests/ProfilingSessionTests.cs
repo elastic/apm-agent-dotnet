@@ -10,8 +10,8 @@ using DotNet.Testcontainers.Containers.Builders;
 using DotNet.Testcontainers.Containers.Configurations.Databases;
 using DotNet.Testcontainers.Containers.Modules.Databases;
 using Elastic.Apm.Api;
+using Elastic.Apm.Tests.Utilities;
 using StackExchange.Redis;
-using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 
 namespace Elastic.Apm.StackExchange.Redis.Tests

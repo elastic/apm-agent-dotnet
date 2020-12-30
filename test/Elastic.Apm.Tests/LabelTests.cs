@@ -10,7 +10,7 @@ using System.Globalization;
 using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.Report.Serialization;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 
