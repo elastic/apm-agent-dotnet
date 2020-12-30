@@ -7,10 +7,10 @@ using System.Diagnostics;
 using System.IO;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
-using Elastic.Apm.PerfTests.Helpers;
+using Elastic.Apm.Perf.Tests.Helpers;
 using Elastic.CommonSchema.BenchmarkDotNetExporter;
 
-namespace Elastic.Apm.PerfTests
+namespace Elastic.Apm.Perf.Tests
 {
 	public class Program
 	{

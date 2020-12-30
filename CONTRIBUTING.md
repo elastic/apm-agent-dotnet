@@ -121,9 +121,9 @@ The agent is designed to monitor production applications. Therefore it's very im
 
 It's not uncommon that you write or change code that can potentially change the performance characteristics of the agent and therefore also of the application's of our users.
 
-If this is the case then a perf. test should be added to the `test\Elastic.Apm.PerfTests` project which proves that the new code does not make the performance of the agent worse than it was before your PR.
+If this is the case then a perf. test should be added to the `test\Elastic.Apm.Perf.Tests` project which proves that the new code does not make the performance of the agent worse than it was before your PR.
 
-We care both about memory and CPU overhead and both should be measured. The `test\Elastic.Apm.PerfTests` is configured to measure both.
+We care both about memory and CPU overhead and both should be measured. The `test\Elastic.Apm.Perf.Tests` is configured to measure both.
 
 #### Compatibility
 

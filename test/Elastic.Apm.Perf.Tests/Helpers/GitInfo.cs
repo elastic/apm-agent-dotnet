@@ -6,7 +6,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace Elastic.Apm.PerfTests.Helpers
+namespace Elastic.Apm.Perf.Tests.Helpers
 {
 	/// <summary>
 	/// A helper class to get git related info about the git repo where the benchmark is running.

@@ -55,7 +55,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "files", "files", "{B406113B
 		coverlet.runsettings = coverlet.runsettings
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.PerfTests", "test\Elastic.Apm.PerfTests\Elastic.Apm.PerfTests.csproj", "{F069CE99-F418-4BC2-9E44-8F03497D8DA8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Perf.Tests", "test\Elastic.Apm.Perf.Tests\Elastic.Apm.Perf.Tests.csproj", "{F069CE99-F418-4BC2-9E44-8F03497D8DA8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspNetFullFrameworkSampleApp", "sample\AspNetFullFrameworkSampleApp\AspNetFullFrameworkSampleApp.csproj", "{C45DCD78-7E8A-437C-ABBB-01D154ABCFC4}"
 EndProject

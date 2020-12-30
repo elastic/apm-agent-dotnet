@@ -8,7 +8,7 @@ using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Utilities;
 
-namespace Elastic.Apm.PerfTests
+namespace Elastic.Apm.Perf.Tests
 {
 	[MemoryDiagnoser]
 	public class MetricsBenchmarks

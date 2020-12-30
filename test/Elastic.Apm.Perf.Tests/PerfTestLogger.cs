@@ -8,7 +8,7 @@ using System.IO;
 using System.Text;
 using Elastic.Apm.Logging;
 
-namespace Elastic.Apm.PerfTests
+namespace Elastic.Apm.Perf.Tests
 {
 	/// <summary>
 	/// A logger that doesn't do anything.

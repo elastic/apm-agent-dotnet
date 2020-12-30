@@ -7,7 +7,7 @@ using System.Diagnostics;
 using BenchmarkDotNet.Attributes;
 using Elastic.Apm.Helpers;
 
-namespace Elastic.Apm.PerfTests
+namespace Elastic.Apm.Perf.Tests
 {
 	[MemoryDiagnoser]
 	public class WildcardMatcherBenchmark

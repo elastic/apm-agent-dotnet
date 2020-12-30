@@ -6,7 +6,7 @@ using System.Diagnostics;
 using BenchmarkDotNet.Attributes;
 using Elastic.Apm.DistributedTracing;
 
-namespace Elastic.Apm.PerfTests
+namespace Elastic.Apm.Perf.Tests
 {
 	[MemoryDiagnoser]
 	public class TraceParentBenchmarks
