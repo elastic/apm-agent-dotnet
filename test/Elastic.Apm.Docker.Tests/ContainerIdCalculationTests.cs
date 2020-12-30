@@ -11,7 +11,7 @@ using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 
-namespace Elastic.Apm.DockerTests
+namespace Elastic.Apm.Docker.Tests
 {
 	public class ContainerIdCalculationTests
 	{

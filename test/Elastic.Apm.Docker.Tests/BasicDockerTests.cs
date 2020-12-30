@@ -7,7 +7,7 @@ using Elastic.Apm.Report;
 using FluentAssertions;
 using Xunit;
 
-namespace Elastic.Apm.DockerTests
+namespace Elastic.Apm.Docker.Tests
 {
 	public class BasicDockerTests
 	{
