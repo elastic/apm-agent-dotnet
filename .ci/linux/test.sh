@@ -29,6 +29,7 @@ if [ -d target ] ; then
 	find target -type f -name 'coverage.cobertura.xml' |
 	while IFS= read -r fileName; do
 		target=$(dirname "$fileName")
-		mv "$fileName" "${target}/${target}-${fileName##*\/}"
+		parent=$(basename "$target")
+		mv "$fileName" "${target}/${parent}-${fileName##*\/}"
 	done
 fi
