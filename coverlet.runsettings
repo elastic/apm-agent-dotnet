@@ -5,10 +5,10 @@
       <DataCollector friendlyName="XPlat code coverage">
         <Configuration>
           <Format>cobertura</Format>          
-          <Exclude>"[Elastic.Apm.Tests]*,[SampleAspNetCoreApp*]*,[xunit*]*"</Exclude>
+          <Exclude>"[Elastic.Apm.Tests]*,[Elastic.Apm.*.Tests]*,[Elastic.Apm.Tests.*]*,[SampleAspNetCoreApp*]*,[xunit*]*"</Exclude>
           <SingleHit>false</SingleHit>
           <UseSourceLink>true</UseSourceLink>
-          <IncludeTestAssembly>true</IncludeTestAssembly>
+          <IncludeTestAssembly>false</IncludeTestAssembly>
         </Configuration>
       </DataCollector>
     </DataCollectors>
