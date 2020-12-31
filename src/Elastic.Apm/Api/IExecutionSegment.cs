@@ -12,7 +12,7 @@ namespace Elastic.Apm.Api
 {
 	/// <summary>
 	/// A base interface that encapsulates basic functionality of a piece of work that the agent can measure (e.g.
-	/// <see cref="ISpan" /> and <see cref="ITracer" />)
+	/// <see cref="ISpan" /> and <see cref="ITransaction" />)
 	/// </summary>
 	public interface IExecutionSegment
 	{
@@ -147,9 +147,7 @@ namespace Elastic.Apm.Api
 		/// <param name="action">The action of the span.</param>
 		/// <typeparam name="T">The return type of the code that you want to capture as span.</typeparam>
 		/// <returns>
-		/// The result of the
-		/// <param name="func"></param>
-		/// .
+		/// The result of the <paramref name="func" />.
 		/// </returns>
 		T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null);
 
@@ -169,9 +167,7 @@ namespace Elastic.Apm.Api
 		/// <param name="action">The action of the span.</param>
 		/// <typeparam name="T">The return type of the code that you want to capture as span.</typeparam>
 		/// <returns>
-		/// The result of the
-		/// <param name="func"></param>
-		/// .
+		/// The result of the <paramref name="func" />.
 		/// </returns>
 		T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null);
 
