@@ -12,6 +12,7 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Microsoft.Diagnostics.Tracing;
 using Microsoft.Diagnostics.Tracing.Parsers;
+using Microsoft.Diagnostics.Tracing.Parsers.Clr;
 using Microsoft.Diagnostics.Tracing.Session;
 
 // ReSharper disable AccessToDisposedClosure
@@ -31,7 +32,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		internal const string GcGen2SizeName = "clr.gc.gen2size";
 		internal const string GcGen3SizeName = "clr.gc.gen3size";
 
-
 		private const string SessionNamePrefix = "EtwSessionForCLRElasticApm_";
 
 		private readonly bool _collectGcCount;
@@ -41,12 +41,17 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private readonly bool _collectGcGen3Size;
 
 		private readonly GcEventListener _eventListener;
-
 		private readonly object _lock = new object();
-
 		private readonly IApmLogger _logger;
-
 		private readonly TraceEventSession _traceEventSession;
+		private readonly Task _traceEventSessionTask;
+
+		private volatile bool _isMetricAlreadyCaptured;
+		private uint _gcCount;
+		private ulong _gen0Size;
+		private ulong _gen1Size;
+		private ulong _gen2Size;
+		private ulong _gen3Size;
 
 		public GcMetricsProvider(IApmLogger logger, bool collectGcCount = true, bool collectGcGen0Size = true, bool collectGcGen1Size = true,
 			bool collectGcGen2Size = true, bool collectGcGen3Size = true
@@ -62,69 +67,61 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			if (PlatformDetection.IsDotNetFullFramework)
 			{
 				var sessionName = SessionNamePrefix + Guid.NewGuid();
-				using (_traceEventSession = new TraceEventSession(sessionName))
+				_traceEventSession = new TraceEventSession(sessionName);
+				_traceEventSessionTask = Task.Run(() =>
 				{
-					Task.Run(() =>
+					try
 					{
-						try
-						{
-							_traceEventSession.EnableProvider(
-								ClrTraceEventParser.ProviderGuid,
-								TraceEventLevel.Informational,
-								(ulong)
-								ClrTraceEventParser.Keywords.GC // garbage collector details
-							);
-						}
-						catch (Exception e)
-						{
-							_logger.Warning()?.LogException(e, "TraceEventSession initialization failed - GC metrics won't be collected");
-							return;
-						}
+						_traceEventSession.EnableProvider(
+							ClrTraceEventParser.ProviderGuid,
+							TraceEventLevel.Informational,
+							(ulong)ClrTraceEventParser.Keywords.GC // garbage collector details
+						);
+					}
+					catch (Exception e)
+					{
+						_logger.Warning()?.LogException(e, "TraceEventSession initialization failed - GC metrics won't be collected");
+						return;
+					}
 
-						_traceEventSession.Source.Clr.GCStop += (a) =>
-						{
-							if (a.ProcessID == Process.GetCurrentProcess().Id)
-							{
-								if (!_isMetricAlreadyCaptured)
-								{
-									lock (_lock)
-										_isMetricAlreadyCaptured = true;
-								}
-								_gcCount = (uint)a.Count;
-							}
-						};
-
-						_traceEventSession.Source.Clr.GCHeapStats += (a) =>
-						{
-							if (a.ProcessID == Process.GetCurrentProcess().Id)
-							{
-								if (!_isMetricAlreadyCaptured)
-								{
-									lock (_lock)
-										_isMetricAlreadyCaptured = true;
-								}
-								_gen0Size = (ulong)a.GenerationSize0;
-								_gen1Size = (ulong)a.GenerationSize1;
-								_gen2Size = (ulong)a.GenerationSize2;
-								_gen3Size = (ulong)a.GenerationSize3;
-							}
-						};
-
-						_traceEventSession.Source.Process();
-					});
-				}
+					_traceEventSession.Source.Clr.GCStop += ClrOnGCStop;
+					_traceEventSession.Source.Clr.GCHeapStats += ClrOnGCHeapStats;
+					_traceEventSession.Source.Process();
+				});
 			}
 
 			if (PlatformDetection.IsDotNetCore || PlatformDetection.IsDotNet5)
 				_eventListener = new GcEventListener(this, logger);
 		}
 
-		private uint _gcCount;
-		private ulong _gen0Size;
-		private ulong _gen1Size;
-		private ulong _gen2Size;
-		private ulong _gen3Size;
-		private volatile bool _isMetricAlreadyCaptured;
+		private void ClrOnGCHeapStats(GCHeapStatsTraceData a)
+		{
+			if (a.ProcessID == Process.GetCurrentProcess().Id)
+			{
+				if (!_isMetricAlreadyCaptured)
+				{
+					lock (_lock)
+						_isMetricAlreadyCaptured = true;
+				}
+				_gen0Size = (ulong)a.GenerationSize0;
+				_gen1Size = (ulong)a.GenerationSize1;
+				_gen2Size = (ulong)a.GenerationSize2;
+				_gen3Size = (ulong)a.GenerationSize3;
+			}
+		}
+
+		private void ClrOnGCStop(GCEndTraceData a)
+		{
+			if (a.ProcessID == Process.GetCurrentProcess().Id)
+			{
+				if (!_isMetricAlreadyCaptured)
+				{
+					lock (_lock)
+						_isMetricAlreadyCaptured = true;
+				}
+				_gcCount = (uint)a.Count;
+			}
+		}
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "GcMetricsProvider";
@@ -166,7 +163,15 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		public void Dispose()
 		{
 			_eventListener?.Dispose();
-			_traceEventSession?.Dispose();
+			if (_traceEventSession != null)
+			{
+				_traceEventSession.Source.Clr.GCStop -= ClrOnGCStop;
+				_traceEventSession.Source.Clr.GCHeapStats -= ClrOnGCHeapStats;
+				_traceEventSession.Dispose();
+
+				if (_traceEventSessionTask.IsCompleted || _traceEventSessionTask.IsFaulted || _traceEventSessionTask.IsCanceled)
+					_traceEventSessionTask.Dispose();
+			}
 		}
 
 

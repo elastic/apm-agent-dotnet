@@ -33,8 +33,13 @@ namespace Elastic.Apm.Tests
 		private const string ThisClassName = nameof(MetricsTests);
 
 		private readonly IApmLogger _logger;
+		private ITestOutputHelper _output;
 
-		public MetricsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = LoggerBase.Scoped(ThisClassName);
+		public MetricsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper)
+		{
+			_output = xUnitOutputHelper;
+			_logger = LoggerBase.Scoped(ThisClassName);
+		}
 
 		public static IEnumerable<object[]> DisableProviderTestData
 		{
@@ -315,6 +320,7 @@ namespace Elastic.Apm.Tests
 					if (logger.Lines.Where(n => n.Contains("TraceEventSession initialization failed - GC metrics won't be collected")).Any())
 					{
 						// If initialization fails, (e.g. because ETW session initalization fails) we don't assert
+						_output.WriteLine("Initialization failed. don't make assertions");
 						return;
 					}
 				}
@@ -324,6 +330,7 @@ namespace Elastic.Apm.Tests
 					if (!logger.Lines.Where(n => n.Contains("OnEventWritten with GC")).Any())
 					{
 						// If no OnWritten with a GC event was called then initialization failed -> we don't assert
+						_output.WriteLine("Initialization failed. don't make assertions");
 						return;
 					}
 				}
