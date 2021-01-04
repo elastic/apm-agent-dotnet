@@ -6,6 +6,7 @@
     <PackageId>Elastic.Apm.EntityFrameworkCore</PackageId>
     <Description>Elastic APM for Entity Framework Core. This package contains auto instrumentation for Entity Framework Core. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, entiryframeworkcore, efcore</PackageTags>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="2.0.0">

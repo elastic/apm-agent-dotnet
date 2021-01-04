@@ -34,7 +34,6 @@ pipeline {
   }
   stages {
     stage('Initializing'){
-      options { timeout(time: 75, unit: 'MINUTES') }
       stages{
         stage('Checkout') {
           options { skipDefaultCheckout() }

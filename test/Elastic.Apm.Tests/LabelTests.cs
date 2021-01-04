@@ -21,7 +21,7 @@ namespace Elastic.Apm.Tests
 		private readonly PayloadItemSerializer _payloadItemSerializer;
 
 		public LabelTests() =>
-			_payloadItemSerializer = new PayloadItemSerializer(new MockConfigSnapshot());
+			_payloadItemSerializer = new PayloadItemSerializer();
 
 		[InlineData("StrValue")]
 		[InlineData(123)]
@@ -33,7 +33,7 @@ namespace Elastic.Apm.Tests
 		public void SingleLabelOnTransactionTests(object labelValue)
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			var labelName = "myLabel";
 			ITransaction transaction = null;
@@ -44,7 +44,7 @@ namespace Elastic.Apm.Tests
 				transaction = t;
 			});
 
-			var jsonString = SerializePayloadItem(transaction);
+			var jsonString = _payloadItemSerializer.Serialize(transaction);
 			jsonString.Should().Contain(GetAssertString(labelValue, labelName));
 		}
 
@@ -58,7 +58,7 @@ namespace Elastic.Apm.Tests
 		public void SingleLabelOnSpanTests(object labelValue)
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			var labelName = "myLabel";
 			ISpan span = null;
@@ -72,7 +72,7 @@ namespace Elastic.Apm.Tests
 				});
 			});
 
-			var jsonString = SerializePayloadItem(span);
+			var jsonString = _payloadItemSerializer.Serialize(span);
 			jsonString.Should().Contain(GetAssertString(labelValue, labelName));
 		}
 
@@ -96,7 +96,7 @@ namespace Elastic.Apm.Tests
 		public void MultipleLabelsTest()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			ITransaction transaction = null;
 			ISpan span = null;
@@ -124,10 +124,10 @@ namespace Elastic.Apm.Tests
 				t.Context.InternalLabels.Value.InnerDictionary["boolLabel"].Value.Should().Be(true);
 			});
 
-			var transactionJsonString = SerializePayloadItem(transaction);
+			var transactionJsonString = _payloadItemSerializer.Serialize(transaction);
 			transactionJsonString.Should().Contain("\"intLabel\":1,\"stringLabel\":\"abc\",\"boolLabel\":true");
 
-			var spanJsonString = SerializePayloadItem(span);
+			var spanJsonString = _payloadItemSerializer.Serialize(span);
 			spanJsonString.Should().Contain("\"intLabel\":1,\"stringLabel\":\"abc\",\"boolLabel\":true");
 		}
 
@@ -135,7 +135,7 @@ namespace Elastic.Apm.Tests
 		public void LabelsOnErrorTest()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			agent.Tracer.CaptureTransaction("test", "test", t =>
 			{
@@ -156,7 +156,7 @@ namespace Elastic.Apm.Tests
 		public void SameLabelTwice()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			agent.Tracer.CaptureTransaction("test", "test", t =>
 			{
@@ -173,7 +173,7 @@ namespace Elastic.Apm.Tests
 		public void PublicStringDictionaryPropertySerializationTest()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			ITransaction transaction = null;
 			ISpan span = null;
@@ -191,10 +191,10 @@ namespace Elastic.Apm.Tests
 				});
 			});
 
-			var transactionJsonString = SerializePayloadItem(transaction);
+			var transactionJsonString = _payloadItemSerializer.Serialize(transaction);
 			transactionJsonString.Should().Contain(GetAssertString("bar1", "foo1"));
 
-			var spanJsonString = SerializePayloadItem(span);
+			var spanJsonString = _payloadItemSerializer.Serialize(span);
 			spanJsonString.Should().Contain(GetAssertString("bar2", "foo2"));
 		}
 
@@ -202,7 +202,7 @@ namespace Elastic.Apm.Tests
 		public void PublicStringDictionaryPropertyInSyncTest()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			var transaction = agent.Tracer.StartTransaction("test", "test");
 
@@ -236,7 +236,7 @@ namespace Elastic.Apm.Tests
 		public void PublicStringDictionaryPropertyRemoveItem()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			var transaction = agent.Tracer.StartTransaction("test", "test");
 
@@ -246,7 +246,7 @@ namespace Elastic.Apm.Tests
 
 			transaction.End();
 
-			var spanJsonString = SerializePayloadItem(transaction);
+			var spanJsonString = _payloadItemSerializer.Serialize(transaction);
 			spanJsonString.Should().Contain(GetAssertString(42, "intItem"));
 			spanJsonString.Should().NotContain("foo");
 			spanJsonString.Should().NotContain("bar");
@@ -256,7 +256,7 @@ namespace Elastic.Apm.Tests
 		public void ReadLabels()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			agent.Tracer.CaptureTransaction("test", "test", t =>
 			{
@@ -291,7 +291,7 @@ namespace Elastic.Apm.Tests
 		public void ReadLabelGenericTypeTest()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			agent.Tracer.CaptureTransaction("test", "test", t =>
 			{
@@ -320,7 +320,7 @@ namespace Elastic.Apm.Tests
 		public void ReadLabelsWithMixedApiUsage()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			var t = agent.Tracer.StartTransaction("test", "test");
 
@@ -339,7 +339,7 @@ namespace Elastic.Apm.Tests
 
 			t.End();
 
-			var spanJsonString = SerializePayloadItem(t);
+			var spanJsonString = _payloadItemSerializer.Serialize(t);
 			spanJsonString.Should().Contain("\"tags\":{\"foo\":42,\"bar\":false,\"oldApi\":\"43\"");
 		}
 
@@ -392,8 +392,5 @@ namespace Elastic.Apm.Tests
 
 			return serializedStrPattern;
 		}
-
-		private string SerializePayloadItem(object item) =>
-			_payloadItemSerializer.SerializeObject(item);
 	}
 }

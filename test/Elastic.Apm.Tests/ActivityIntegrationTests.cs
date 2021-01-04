@@ -132,6 +132,7 @@ namespace Elastic.Apm.Tests
 				transaction2.End();
 			}
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().HaveCount(2);
 			payloadSender.Transactions[0].ParentId.Should().BeNullOrEmpty();
 			payloadSender.Transactions[0].TraceId.Should().Be(activity.TraceId.ToString());

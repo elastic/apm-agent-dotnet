@@ -60,3 +60,10 @@ module Tooling =
         member this.Exec arguments = this.ExecWithTimeout arguments timeout
 
     let DotNet = BuildTooling(None, "dotnet")
+    
+    let private restoreDotnetTools = lazy(DotNet.Exec ["tool"; "restore"])
+    
+    let Diff args =
+        restoreDotnetTools.Force()    
+        let args = args |> String.concat " "
+        DotNet.Exec ["assembly-differ"; args]

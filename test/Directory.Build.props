@@ -3,6 +3,9 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <!-- Suppress warnings when a proj is marked <IsPackable>false</IsPackable> 
+     but dotnet pack expects to pack it e.g. Microsoft.NET.Sdk.Web test and sample projects. -->
+    <WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
     <!-- Always generate debug symbols this allows fluent symbols exception messages to include variable names -->
     <DebugSymbols>True</DebugSymbols>
   </PropertyGroup>

@@ -6,6 +6,7 @@
     <Description>Elastic APM for ASP.NET Core. This package contains auto instrumentation for ASP.NET Core. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, aspnetcore</PackageTags>
     <TargetFrameworks>netstandard2.0;netcoreapp3.0</TargetFrameworks>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.1.0" />

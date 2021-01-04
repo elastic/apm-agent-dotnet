@@ -49,24 +49,23 @@ namespace Elastic.Apm.Tests.TestHelpers
 
 			_loggerForStartFinish = new LineWriterToLoggerAdaptor(new SplittingLineWriter(writerForStartFinish), config.LogLevel);
 
-			LogTestStartFinish( /* isStart: */ true);
+			LogProgress("Starting test: {UnitTestDisplayName}...");
 
 			LoggerBase = new LineWriterToLoggerAdaptor(new SplittingLineWriter(lineWriters.ToArray()), config.LogLevel);
 		}
 
 		protected string TestDisplayName => CurrentXunitTest?.DisplayName;
 
-		public virtual void Dispose() => LogTestStartFinish( /* isStart: */ false);
+		public virtual void Dispose() => LogProgress("Finished test: {UnitTestDisplayName}");
 
-		private void LogTestStartFinish(bool isStart)
+		private void LogProgress(string message)
 		{
-			var originalLogLevel = _loggerForStartFinish.Level;
-			_loggerForStartFinish.Level = LogLevel.Information;
+			var originalLogLevel = _loggerForStartFinish.LogLevelSwitch.Level;
+			_loggerForStartFinish.LogLevelSwitch.Level = LogLevel.Information;
 			_loggerForStartFinish.Scoped(ThisClassName)
 				.Info()
-				?.Log(
-					isStart ? "Starting test: {UnitTestDisplayName}..." : "Finished test: {UnitTestDisplayName}", TestDisplayName);
-			_loggerForStartFinish.Level = originalLogLevel;
+				?.Log(message, TestDisplayName);
+			_loggerForStartFinish.LogLevelSwitch.Level = originalLogLevel;
 		}
 
 		internal static ITest GetCurrentXunitTest(ITestOutputHelper xUnitOutputHelper)

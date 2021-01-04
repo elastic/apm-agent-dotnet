@@ -50,6 +50,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Activity.DefaultIdFormat = ActivityIdFormat.W3C;
 			var res = await _client.GetAsync("Home/TraceId");
 			var activityId = await res.Content.ReadAsStringAsync();
+			_payloadSender.WaitForTransactions();
 			_payloadSender.FirstTransaction.TraceId.Should().Be(activityId);
 		}
 	}

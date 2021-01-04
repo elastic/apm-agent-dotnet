@@ -1,10 +1,10 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -20,7 +20,6 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		private const string ThisClassName = nameof(CentralConfigFetcher);
 
 		internal static readonly TimeSpan GetConfigHttpRequestTimeout = TimeSpan.FromMinutes(5);
-
 		internal static readonly TimeSpan WaitTimeIfAnyError = TimeSpan.FromMinutes(5);
 
 		private readonly IAgentTimer _agentTimer;
@@ -29,6 +28,10 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		private readonly Uri _getConfigAbsoluteUrl;
 		private readonly IConfigSnapshot _initialSnapshot;
 		private readonly IApmLogger _logger;
+		private readonly Action<CentralConfigReader> _onResponse;
+
+		private long _dbgIterationsCount;
+		private EntityTagHeaderValue _eTag;
 
 		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, ICentralConfigResponseParser centralConfigResponseParser,
 			Service service,
@@ -63,6 +66,15 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 					+ " (default value is {CentralConfigOptionDefaultValue})"
 					, centralConfigStatus, _initialSnapshot.CentralConfig, ConfigConsts.DefaultValues.CentralConfig);
 
+			// if the logger supports switching the log level at runtime, allow it to be updated by central configuration
+			if (_initialSnapshot.CentralConfig && logger is ILogLevelSwitchable switchable)
+				_onResponse += reader =>
+				{
+					var currentLevel = switchable.LogLevelSwitch.Level;
+					if (reader.LogLevel != null && reader.LogLevel != currentLevel)
+						switchable.LogLevelSwitch.Level = reader.LogLevel.Value;
+				};
+
 			if (!_initialSnapshot.CentralConfig) return;
 
 			_configStore = configStore;
@@ -76,10 +88,6 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			StartWorkLoop();
 		}
-
-		private long _dbgIterationsCount;
-
-		private EntityTagHeaderValue _eTag;
 
 		protected override async Task WorkLoopIteration()
 		{
@@ -99,6 +107,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				(centralConfigReader, waitInfo) = _centralConfigResponseParser.ParseHttpResponse(httpResponse, httpResponseBody);
 				if (centralConfigReader != null)
 				{
+					_onResponse?.Invoke(centralConfigReader);
 					UpdateConfigStore(centralConfigReader);
 					_eTag = httpResponse.Headers.ETag;
 				}
@@ -266,14 +275,14 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public double MetricsIntervalInMilliseconds => _wrapped.MetricsIntervalInMilliseconds;
 			public bool Recording => _centralConfig.Recording ?? _wrapped.Recording;
 
-			public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _wrapped.SanitizeFieldNames;
+			public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _centralConfig.SanitizeFieldNames ?? _wrapped.SanitizeFieldNames;
 
 			public string SecretToken => _wrapped.SecretToken;
 
+			public Uri ServerUrl => _wrapped.ServerUrl;
+
 			[Obsolete("Use ServerUrl")]
 			public IReadOnlyList<Uri> ServerUrls => _wrapped.ServerUrls;
-
-			public Uri ServerUrl => _wrapped.ServerUrl;
 
 			public string ServiceName => _wrapped.ServiceName;
 			public string ServiceNodeName => _wrapped.ServiceNodeName;
@@ -284,7 +293,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				_centralConfig.SpanFramesMinDurationInMilliseconds ?? _wrapped.SpanFramesMinDurationInMilliseconds;
 
 			public int StackTraceLimit => _centralConfig.StackTraceLimit ?? _wrapped.StackTraceLimit;
-			public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => _wrapped.TransactionIgnoreUrls;
+			public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => _centralConfig.TransactionIgnoreUrls ?? _wrapped.TransactionIgnoreUrls;
 
 			public int TransactionMaxSpans => _centralConfig.TransactionMaxSpans ?? _wrapped.TransactionMaxSpans;
 

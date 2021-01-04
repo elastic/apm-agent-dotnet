@@ -741,6 +741,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				await func(t);
 			});
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().NotBeEmpty();
 
 			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
@@ -749,12 +750,13 @@ namespace Elastic.Apm.Tests.ApiTests
 			var duration = payloadSender.FirstTransaction.Duration;
 			duration.Should().BeGreaterOrEqualToMinimumSleepLength(3);
 
+			payloadSender.WaitForSpans();
 			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
 			payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(SpanName);
 			payloadSender.SpansOnFirstTransaction[0].Type.Should().Be(SpanType);
 
-
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Should().NotBeEmpty();
 
 			payloadSender.FirstError.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
@@ -779,6 +781,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				});
 			});
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().NotBeEmpty();
 
 			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
@@ -787,12 +790,13 @@ namespace Elastic.Apm.Tests.ApiTests
 			var duration = payloadSender.FirstTransaction.Duration;
 			duration.Should().BeGreaterOrEqualToMinimumSleepLength(3);
 
+			payloadSender.WaitForSpans();
 			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
 			payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(SpanName);
 			payloadSender.SpansOnFirstTransaction[0].Type.Should().Be(SpanType);
 
-
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Should().NotBeEmpty();
 
 			payloadSender.FirstError.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
@@ -827,6 +831,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				await func(t);
 			});
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().NotBeEmpty();
 
 			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
@@ -835,6 +840,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var duration = payloadSender.FirstTransaction.Duration;
 			duration.Should().BeGreaterOrEqualToMinimumSleepLength(3);
 
+			payloadSender.WaitForSpans();
 			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
 			payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(SpanName);
@@ -859,6 +865,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				});
 			});
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().NotBeEmpty();
 
 			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
@@ -867,6 +874,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var duration = payloadSender.FirstTransaction.Duration;
 			duration.Should().BeGreaterOrEqualToMinimumSleepLength(3);
 
+			payloadSender.WaitForSpans();
 			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
 			payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(SpanName);
@@ -900,11 +908,13 @@ namespace Elastic.Apm.Tests.ApiTests
 				action(t);
 			});
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().NotBeEmpty();
 
 			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
 			payloadSender.FirstTransaction.Type.Should().Be(TransactionType);
 
+			payloadSender.WaitForSpans();
 			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
 			payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(SpanName);
@@ -932,11 +942,13 @@ namespace Elastic.Apm.Tests.ApiTests
 				});
 			});
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().NotBeEmpty();
 
 			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
 			payloadSender.FirstTransaction.Type.Should().Be(TransactionType);
 
+			payloadSender.WaitForSpans();
 			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
 			payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(SpanName);
@@ -971,6 +983,8 @@ namespace Elastic.Apm.Tests.ApiTests
 					action(t);
 				});
 			}
+
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().NotBeEmpty();
 
 			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
@@ -979,12 +993,13 @@ namespace Elastic.Apm.Tests.ApiTests
 			var duration = payloadSender.FirstTransaction.Duration;
 			duration.Should().BeGreaterOrEqualToMinimumSleepLength(3);
 
+			payloadSender.WaitForSpans();
 			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
 			payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(SpanName);
 			payloadSender.SpansOnFirstTransaction[0].Type.Should().Be(SpanType);
 
-			payloadSender.Errors.Should().NotBeEmpty();
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Should().NotBeEmpty();
 
 			payloadSender.FirstError.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
@@ -1012,6 +1027,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				});
 			}
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().NotBeEmpty();
 
 			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
@@ -1020,11 +1036,13 @@ namespace Elastic.Apm.Tests.ApiTests
 			var duration = payloadSender.FirstTransaction.Duration;
 			duration.Should().BeGreaterOrEqualToMinimumSleepLength(3);
 
+			payloadSender.WaitForSpans();
 			payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
 			payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(SpanName);
 			payloadSender.SpansOnFirstTransaction[0].Type.Should().Be(SpanType);
 
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Should().NotBeEmpty();
 			payloadSender.Errors.Should().NotBeEmpty();
 

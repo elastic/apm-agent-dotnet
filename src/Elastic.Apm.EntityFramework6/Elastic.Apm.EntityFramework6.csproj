@@ -6,6 +6,7 @@
     <PackageId>Elastic.Apm.EntityFramework6</PackageId>
     <Description>Elastic APM for Entity Framework 6. This package contains auto instrumentation for Entity Framework 6. See: https://github.com/elastic/apm-agent-dotnet/tree/master/docs</Description>
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, entiryframework6, ef6</PackageTags>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
     <PackageReference Include="EntityFramework" Version="6.2.0">

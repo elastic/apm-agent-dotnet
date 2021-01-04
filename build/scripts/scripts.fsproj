@@ -3,6 +3,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <OutputType>Exe</OutputType>
     <NoWarn>$(NoWarn);NU1701</NoWarn>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Paths.fs" />

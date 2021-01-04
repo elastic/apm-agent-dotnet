@@ -27,6 +27,7 @@ namespace Elastic.Apm.Tests
 				);
 			}
 
+			mockPayloadSender.WaitForTransactions();
 			mockPayloadSender.Transactions.Count.Should().Be(1);
 			mockPayloadSender.FirstTransaction.SpanCount.Dropped.Should().Be(0);
 			if (isSampled)
@@ -60,6 +61,7 @@ namespace Elastic.Apm.Tests
 			}
 
 			// Assert
+			mockPayloadSender.WaitForTransactions();
 			mockPayloadSender.Transactions.Count.Should().Be(1);
 			mockPayloadSender.Spans.Count.Should().Be(0);
 			mockPayloadSender.FirstTransaction.SpanCount.Dropped.Should().Be(1);
@@ -87,6 +89,7 @@ namespace Elastic.Apm.Tests
 			}
 
 			// Assert
+			mockPayloadSender.WaitForTransactions();
 			mockPayloadSender.Transactions.Count.Should().Be(1);
 			mockPayloadSender.Spans.Count.Should().Be(maxSpansCount);
 			mockPayloadSender.FirstTransaction.SpanCount.Dropped.Should().Be(spansCount - maxSpansCount);
@@ -116,7 +119,9 @@ namespace Elastic.Apm.Tests
 			}
 
 			// Assert
+			mockPayloadSender.WaitForTransactions();
 			mockPayloadSender.Transactions.Count.Should().Be(1);
+			mockPayloadSender.WaitForSpans();
 			mockPayloadSender.Spans.Count.Should().Be(maxSpansCount);
 			mockPayloadSender.FirstTransaction.SpanCount.Dropped.Should().Be(spansCount - maxSpansCount);
 		}
@@ -141,7 +146,9 @@ namespace Elastic.Apm.Tests
 			}
 
 			// Assert
+			mockPayloadSender.WaitForTransactions();
 			mockPayloadSender.Transactions.Count.Should().Be(1);
+			mockPayloadSender.WaitForSpans();
 			mockPayloadSender.Spans.Count.Should().Be(spansCount);
 			mockPayloadSender.FirstTransaction.SpanCount.Dropped.Should().Be(0);
 		}

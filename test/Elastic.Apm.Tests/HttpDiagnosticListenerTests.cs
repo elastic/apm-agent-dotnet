@@ -175,7 +175,10 @@ namespace Elastic.Apm.Tests
 					line => line.Contains("HttpDiagnosticListener") && line.Contains("Failed capturing request")
 						&& line.Contains(HttpMethod.Get.Method)
 						&& line.Contains(request.RequestUri.AbsoluteUri));
+
+			payloadSender.WaitForTransactions(TimeSpan.FromSeconds(5));
 			payloadSender.Transactions.Should().NotBeNull();
+			payloadSender.WaitForSpans();
 			payloadSender.Spans.Should().ContainSingle();
 		}
 
@@ -241,12 +244,13 @@ namespace Elastic.Apm.Tests
 			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			{
 				var httpClient = new HttpClient();
 				var res = await httpClient.GetAsync(localServer.Uri);
 
 				res.IsSuccessStatusCode.Should().BeTrue();
+				payloadSender.WaitForSpans();
 				var firstSpan = payloadSender.FirstSpan;
 				firstSpan.Should().NotBeNull();
 				firstSpan.Context.Http.Url.Should().Be(localServer.Uri);
@@ -268,7 +272,7 @@ namespace Elastic.Apm.Tests
 			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			{
 				var uri = new Uri(localServer.Uri);
 
@@ -278,6 +282,7 @@ namespace Elastic.Apm.Tests
 				var res = await httpClient.GetAsync(uriBuilder.Uri);
 
 				res.IsSuccessStatusCode.Should().BeTrue();
+				payloadSender.WaitForSpans();
 				var firstSpan = payloadSender.FirstSpan;
 				firstSpan.Should().NotBeNull();
 				firstSpan.Context.Http.Url.Should()
@@ -302,12 +307,13 @@ namespace Elastic.Apm.Tests
 			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
-			using (var localServer = new LocalServer(ctx => { ctx.Response.StatusCode = 500; }))
+			using (var localServer = LocalServer.Create(ctx => { ctx.Response.StatusCode = 500; }))
 			{
 				var httpClient = new HttpClient();
 				var res = await httpClient.PostAsync(localServer.Uri, new StringContent("foo"));
 
 				res.IsSuccessStatusCode.Should().BeFalse();
+				payloadSender.WaitForSpans();
 				var firstSpan = payloadSender.FirstSpan;
 				firstSpan.Should().NotBeNull();
 				firstSpan.Context.Http.Url.Should().Be(localServer.Uri);
@@ -336,6 +342,7 @@ namespace Elastic.Apm.Tests
 				await act.Should().ThrowAsync<Exception>();
 			}
 
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Should().NotBeEmpty();
 		}
 
@@ -363,6 +370,7 @@ namespace Elastic.Apm.Tests
 				//Simulate Exception
 				listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Exception", new { Request = request, Exception = exception }));
 
+				payloadSender.WaitForErrors();
 				payloadSender.Errors.Should().NotBeEmpty();
 				payloadSender.FirstError.Exception.Message.Should().Be(exceptionMsg);
 				payloadSender.FirstError.Exception.Type.Should().Be(typeof(Exception).FullName);
@@ -378,7 +386,7 @@ namespace Elastic.Apm.Tests
 			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			{
 				var httpClient = new HttpClient();
 				var res = await httpClient.GetAsync(localServer.Uri);
@@ -386,6 +394,7 @@ namespace Elastic.Apm.Tests
 				res.IsSuccessStatusCode.Should().BeTrue();
 			}
 
+			payloadSender.WaitForSpans();
 			payloadSender.FirstSpan.Type.Should().Be(ApiConstants.TypeExternal);
 			payloadSender.FirstSpan.Subtype.Should().Be(ApiConstants.SubtypeHttp);
 			payloadSender.FirstSpan.Action.Should().BeNull(); //we don't set Action for HTTP calls
@@ -400,7 +409,7 @@ namespace Elastic.Apm.Tests
 			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			{
 				var httpClient = new HttpClient();
 				var res = await httpClient.GetAsync(localServer.Uri);
@@ -408,6 +417,7 @@ namespace Elastic.Apm.Tests
 				res.IsSuccessStatusCode.Should().BeTrue();
 			}
 
+			payloadSender.WaitForSpans();
 			payloadSender.FirstSpan.Name.Should().Be("GET localhost");
 		}
 
@@ -421,7 +431,7 @@ namespace Elastic.Apm.Tests
 			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
-			using (var localServer = new LocalServer(ctx =>
+			using (var localServer = LocalServer.Create(ctx =>
 			{
 				ctx.Response.StatusCode = 200;
 				Thread.Sleep(5); //Make sure duration is really > 0
@@ -431,6 +441,8 @@ namespace Elastic.Apm.Tests
 				var res = await httpClient.GetAsync(localServer.Uri);
 
 				res.IsSuccessStatusCode.Should().BeTrue();
+
+				payloadSender.WaitForSpans();
 				var firstSpan = payloadSender.FirstSpan;
 				firstSpan.Should().NotBeNull();
 				firstSpan.Context.Http.Url.Should().Be(localServer.Uri);
@@ -449,12 +461,14 @@ namespace Elastic.Apm.Tests
 			var (listener, payloadSender, _) = RegisterListenerAndStartTransaction();
 
 			using (listener)
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			{
 				var httpClient = new HttpClient();
 				var res = await httpClient.GetAsync(localServer.Uri);
 
 				res.IsSuccessStatusCode.Should().BeTrue();
+
+				payloadSender.WaitForSpans();
 				var firstSpan = payloadSender.FirstSpan;
 				firstSpan.Should().NotBeNull();
 				firstSpan.Context.Http.Url.Should().Be(localServer.Uri);
@@ -474,7 +488,7 @@ namespace Elastic.Apm.Tests
 			var (listener, payloadSender, agent) = RegisterListenerAndStartTransaction();
 
 			using (listener)
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			{
 				{
 					var httpClient = new HttpClient();
@@ -489,6 +503,7 @@ namespace Elastic.Apm.Tests
 					topSpan.End();
 				}
 
+				payloadSender.WaitForSpans();
 				payloadSender.Spans.Should().HaveCount(numberOfHttpCalls + 1);
 				var topSpanSent = payloadSender.Spans.Last();
 				topSpanSent.Name.Should().Be(topSpanName);
@@ -523,7 +538,7 @@ namespace Elastic.Apm.Tests
 			var mockPayloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			{
 				await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async t =>
 				{
@@ -540,7 +555,10 @@ namespace Elastic.Apm.Tests
 					}
 				});
 
+				mockPayloadSender.WaitForTransactions();
 				mockPayloadSender.Transactions.Should().NotBeEmpty();
+				mockPayloadSender.SignalEndSpans();
+				mockPayloadSender.WaitForSpans();
 				mockPayloadSender.SpansOnFirstTransaction.Should().BeEmpty();
 			}
 		}
@@ -559,7 +577,7 @@ namespace Elastic.Apm.Tests
 			agent.Subscribe(new HttpDiagnosticsSubscriber());
 			StartTransaction(agent);
 
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			using (var httpClient = new HttpClient())
 			{
 				var uriBuilder = new UriBuilder(localServer.Uri) { UserName = "TestUser289421", Password = "Password973243" };
@@ -589,7 +607,7 @@ namespace Elastic.Apm.Tests
 
 			var spans = payloadSender.Spans;
 
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			using (var httpClient = new HttpClient())
 			{
 				spans.Should().BeEmpty();
@@ -600,6 +618,8 @@ namespace Elastic.Apm.Tests
 					res = await httpClient.GetAsync(localServer.Uri);
 					res.IsSuccessStatusCode.Should().BeTrue();
 				}
+
+				payloadSender.WaitForSpans();
 				spans = payloadSender.Spans;
 				spans.Should().NotBeEmpty().And.HaveCount(2);
 				foreach (var _ in Enumerable.Range(0, 10))
@@ -624,7 +644,7 @@ namespace Elastic.Apm.Tests
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 			var subscriber = new HttpDiagnosticsSubscriber();
 
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			using (agent.Subscribe(subscriber))
 			{
 				var url = localServer.Uri;
@@ -643,7 +663,9 @@ namespace Elastic.Apm.Tests
 					}
 				});
 
+				mockPayloadSender.WaitForTransactions();
 				mockPayloadSender.Transactions.Should().NotBeEmpty();
+				mockPayloadSender.WaitForSpans();
 				mockPayloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
 				mockPayloadSender.SpansOnFirstTransaction[0].Context.Http.Should().NotBeNull();
@@ -662,7 +684,7 @@ namespace Elastic.Apm.Tests
 			var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 			var subscriber = new HttpDiagnosticsSubscriber();
 
-			using (var localServer = new LocalServer())
+			using (var localServer = LocalServer.Create())
 			{
 				var url = localServer.Uri;
 				using (agent.Subscribe(subscriber)) //subscribe
@@ -683,6 +705,7 @@ namespace Elastic.Apm.Tests
 					});
 				} //and then unsubscribe
 
+				mockPayloadSender.WaitForAny();
 				mockPayloadSender.Clear();
 
 				await agent.Tracer.CaptureTransaction("TestTransaction", "TestType", async t =>
@@ -700,7 +723,10 @@ namespace Elastic.Apm.Tests
 					}
 				});
 
+				mockPayloadSender.WaitForTransactions();
 				mockPayloadSender.FirstTransaction.Should().NotBeNull();
+				mockPayloadSender.SignalEndSpans();
+				mockPayloadSender.WaitForSpans();
 				mockPayloadSender.SpansOnFirstTransaction.Should().BeEmpty();
 			}
 		}
@@ -715,7 +741,8 @@ namespace Elastic.Apm.Tests
 			var logger = new TestLogger(LogLevel.Trace);
 
 			// ServiceVersion is set, otherwise in the xUnit context it'd log a warning, since it can be auto discovered
-			new ApmAgent(new TestAgentComponents(logger, new MockConfigSnapshot(serviceVersion: "1.0"))).Subscribe(new HttpDiagnosticsSubscriber());
+			using var agent = new ApmAgent(new TestAgentComponents(logger, new MockConfigSnapshot(serviceVersion: "1.0")))
+				.Subscribe(new HttpDiagnosticsSubscriber());
 
 			// No active transaction, just an HTTP request with an active agent
 			try
@@ -741,7 +768,7 @@ namespace Elastic.Apm.Tests
 
 			try
 			{
-				using var localServer = new LocalServer();
+				using var localServer = LocalServer.Create();
 				var httpClient = new HttpClient();
 				await httpClient.GetAsync(localServer.Uri);
 			}
@@ -750,6 +777,7 @@ namespace Elastic.Apm.Tests
 				// ignore - only thing we care about in this stack is the stack trace.
 			}
 
+			payloadSender.WaitForSpans();
 			payloadSender.FirstSpan.StackTrace.Should().NotBeNull();
 			payloadSender.FirstSpan.StackTrace.Should().Contain(n => n.Function.Contains(nameof(CallStackContainsCallerMethod)));
 		}
@@ -760,7 +788,7 @@ namespace Elastic.Apm.Tests
 			Activity.DefaultIdFormat = ActivityIdFormat.W3C;
 
 			var mockPayloadSender = new MockPayloadSender();
-			using var localServer = new LocalServer();
+			using var localServer = LocalServer.Create();
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 			agent.Subscribe(new HttpDiagnosticsSubscriber());
 			await agent.Tracer.CaptureTransaction("Test", "Test", async () =>
@@ -776,6 +804,7 @@ namespace Elastic.Apm.Tests
 				}
 			});
 
+			mockPayloadSender.WaitForSpans();
 			mockPayloadSender.Spans.Should().HaveCount(1);
 		}
 

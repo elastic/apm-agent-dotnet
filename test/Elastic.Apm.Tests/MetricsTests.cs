@@ -111,7 +111,7 @@ namespace Elastic.Apm.Tests
 					.Should()
 					.Be(MetricsCollector.MaxTryWithoutSuccess);
 
-				testLogger.Lines[1].Should().Contain($"Failed reading {providerWithException.DbgName} 1 times");
+				testLogger.Lines.Select(l => l.Contains($"Failed reading {providerWithException.DbgName} 1 times")).Should().HaveCountGreaterThan(0);
 				testLogger.Lines.Last(line => line.Contains("Failed reading"))
 					.Should()
 					.Contain(

@@ -75,7 +75,7 @@ namespace Elastic.Apm.Api
 			}
 
 			newItem.Request = Request?.DeepCopy();
-			newItem.Response?.DeepCopy();
+			newItem.Response = Response?.DeepCopy();
 
 			return newItem;
 		}

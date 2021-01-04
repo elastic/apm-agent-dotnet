@@ -400,6 +400,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			};
 			await act.Should().ThrowAsync<OperationCanceledException>();
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().NotBeEmpty();
 
 			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
@@ -408,6 +409,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var duration = payloadSender.FirstTransaction.Duration;
 			duration.Should().BeGreaterOrEqualToMinimumSleepLength();
 
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Should().NotBeEmpty();
 
 			payloadSender.FirstError.Culprit.Should().Be("A task was canceled");
@@ -633,6 +635,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				});
 			}
 
+			payloadSender.WaitForTransactions();
 			payloadSender.FirstTransaction.Should().NotBeNull();
 			payloadSender.FirstTransaction.Custom[customKey].Should().Be(customValue);
 		}
@@ -647,7 +650,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			await func(agent);
 
-			payloadSender.Transactions.Should().NotBeEmpty();
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().NotBeEmpty();
 
 			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
@@ -669,7 +672,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			await func(agent);
 
-			payloadSender.Transactions.Should().NotBeEmpty();
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().NotBeEmpty();
 
 			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
@@ -678,7 +681,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var duration = payloadSender.FirstTransaction.Duration;
 			duration.Should().BeGreaterOrEqualToMinimumSleepLength();
 
-			payloadSender.Errors.Should().NotBeEmpty();
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Should().NotBeEmpty();
 
 			payloadSender.FirstError.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
@@ -696,6 +699,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			action(agent);
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().NotBeEmpty();
 			payloadSender.Transactions.Should().NotBeEmpty();
 
@@ -718,7 +722,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			action(agent);
 
-			payloadSender.Transactions.Should().NotBeEmpty();
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().NotBeEmpty();
 
 			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
@@ -727,7 +731,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var duration = payloadSender.FirstTransaction.Duration;
 			duration.Should().BeGreaterOrEqualToMinimumSleepLength();
 
-			payloadSender.Errors.Should().NotBeEmpty();
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Should().NotBeEmpty();
 
 			payloadSender.FirstError.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);

@@ -72,7 +72,9 @@ namespace Elastic.Apm.Config
 					case "warning": return LogLevel.Warning;
 					case "error": return LogLevel.Error;
 					case "critical": return LogLevel.Critical;
-					case "none": return LogLevel.None;
+					case "off":
+					case "none":
+						return LogLevel.None;
 					default: return null;
 				}
 			}

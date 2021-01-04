@@ -28,7 +28,7 @@ namespace Elastic.Apm.Tests
 		private readonly PayloadItemSerializer _payloadItemSerializer;
 
 		public SerializationTests() =>
-			_payloadItemSerializer = new PayloadItemSerializer(new MockConfigSnapshot());
+			_payloadItemSerializer = new PayloadItemSerializer();
 
 		// ReSharper disable once MemberCanBePrivate.Global
 		public static TheoryData SerializationUtilsTrimToPropertyMaxLengthVariantsToTest => new TheoryData<string, string>
@@ -53,7 +53,7 @@ namespace Elastic.Apm.Tests
 			using (var agent = new ApmAgent(new TestAgentComponents()))
 			{
 				var transaction = new Transaction(agent, str, "test") { Duration = 1, Result = "fail" };
-				json = SerializePayloadItem(transaction);
+				json = _payloadItemSerializer.Serialize(transaction);
 			}
 
 			var deserializedTransaction = JsonConvert.DeserializeObject<JObject>(json);
@@ -78,7 +78,7 @@ namespace Elastic.Apm.Tests
 
 			var dummyInstance = new DummyType { IntProp = 42, StringProp = str };
 
-			var json = SerializePayloadItem(dummyInstance);
+			var json = _payloadItemSerializer.Serialize(dummyInstance);
 			var deserializedDummyInstance = JsonConvert.DeserializeObject<DummyType>(json);
 
 			deserializedDummyInstance.Should().NotBeNull();
@@ -99,7 +99,7 @@ namespace Elastic.Apm.Tests
 			var context = new Context();
 			context.InternalLabels.Value.InnerDictionary["foo"] = str;
 
-			var json = SerializePayloadItem(context);
+			var json = _payloadItemSerializer.Serialize(context);
 			var deserializedContext = JsonConvert.DeserializeObject<JObject>(json);
 
 			deserializedContext.Should().NotBeNull();
@@ -129,7 +129,7 @@ namespace Elastic.Apm.Tests
 			var context = new SpanContext();
 			context.InternalLabels.Value.InnerDictionary["foo"] = str;
 
-			var json = SerializePayloadItem(context);
+			var json = _payloadItemSerializer.Serialize(context);
 			var deserializedContext = JsonConvert.DeserializeObject<JObject>(json);
 
 			deserializedContext.Should().NotBeNull();
@@ -155,7 +155,7 @@ namespace Elastic.Apm.Tests
 			var context = new SpanContext();
 			context.InternalLabels.Value.InnerDictionary["foo"] = null;
 
-			var json = SerializePayloadItem(context);
+			var json = _payloadItemSerializer.Serialize(context);
 			var deserializedContext = JsonConvert.DeserializeObject<JObject>(json);
 
 			deserializedContext.Should().NotBeNull();
@@ -171,7 +171,7 @@ namespace Elastic.Apm.Tests
 			var context = new SpanContext();
 			context.InternalLabels.Value.InnerDictionary["foo"] = string.Empty;
 
-			var json = SerializePayloadItem(context);
+			var json = _payloadItemSerializer.Serialize(context);
 			var deserializedContext = JsonConvert.DeserializeObject<JObject>(json);
 
 			deserializedContext.Should().NotBeNull();
@@ -192,7 +192,7 @@ namespace Elastic.Apm.Tests
 			var dummyInstance = new DummyType();
 			dummyInstance.DictionaryProp["foo"] = str;
 
-			var json = SerializePayloadItem(dummyInstance);
+			var json = _payloadItemSerializer.Serialize(dummyInstance);
 			var deserializedDummyInstance = JsonConvert.DeserializeObject<JObject>(json);
 
 			deserializedDummyInstance.Should().NotBeNull();
@@ -211,7 +211,7 @@ namespace Elastic.Apm.Tests
 			var str = new string('a', maxLength * 2);
 			var db = new Database { Statement = str };
 
-			var json = SerializePayloadItem(db);
+			var json = _payloadItemSerializer.Serialize(db);
 			var deserializedDb = JsonConvert.DeserializeObject<Database>(json);
 
 			deserializedDb.Should().NotBeNull();
@@ -228,7 +228,7 @@ namespace Elastic.Apm.Tests
 			var service = Service.GetDefaultService(new MockConfigSnapshot(logger), logger);
 			service.Version = new string('a', maxLength * 2);
 
-			var json = SerializePayloadItem(service);
+			var json = _payloadItemSerializer.Serialize(service);
 			var deserializedService = JsonConvert.DeserializeObject<Service>(json);
 
 			maxLength.Should().Be(PropertyMaxLength);
@@ -250,7 +250,7 @@ namespace Elastic.Apm.Tests
 			var service = Service.GetDefaultService(new MockConfigSnapshot(logger), logger);
 			service.Name = new string('a', maxLength * 2);
 
-			var json = SerializePayloadItem(service);
+			var json = _payloadItemSerializer.Serialize(service);
 			var deserializedService = JsonConvert.DeserializeObject<Service>(json);
 
 			maxLength.Should().Be(PropertyMaxLength);
@@ -277,9 +277,9 @@ namespace Elastic.Apm.Tests
 				agent.PayloadSender, new MockConfigSnapshot(new NoopLogger()), agent.TracerInternal.CurrentExecutionSegmentsContainer, MockApmServerInfo.Version710);
 			nonSampledTransaction.Context.Request = sampledTransaction.Context.Request;
 
-			var serializedSampledTransaction = SerializePayloadItem(sampledTransaction);
+			var serializedSampledTransaction = _payloadItemSerializer.Serialize(sampledTransaction);
 			var deserializedSampledTransaction = JsonConvert.DeserializeObject<JObject>(serializedSampledTransaction);
-			var serializedNonSampledTransaction = SerializePayloadItem(nonSampledTransaction);
+			var serializedNonSampledTransaction = _payloadItemSerializer.Serialize(nonSampledTransaction);
 			var deserializedNonSampledTransaction = JsonConvert.DeserializeObject<JObject>(serializedNonSampledTransaction);
 
 			// ReSharper disable once PossibleNullReferenceException
@@ -332,34 +332,34 @@ namespace Elastic.Apm.Tests
 		{
 			var context = new Context();
 			context.InternalLabels.Value.InnerDictionary["a.b"] = "labelValue";
-			var json = SerializePayloadItem(context);
+			var json = _payloadItemSerializer.Serialize(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue\"}}");
 
 			context = new Context();
 			context.InternalLabels.Value.InnerDictionary["a.b.c"] = "labelValue";
-			json = SerializePayloadItem(context);
+			json = _payloadItemSerializer.Serialize(context);
 			json.Should().Be("{\"tags\":{\"a_b_c\":\"labelValue\"}}");
 
 			context = new Context();
 			context.InternalLabels.Value.InnerDictionary["a.b"] = "labelValue1";
 			context.InternalLabels.Value.InnerDictionary["a.b.c"] = "labelValue2";
-			json = SerializePayloadItem(context);
+			json = _payloadItemSerializer.Serialize(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue1\",\"a_b_c\":\"labelValue2\"}}");
 
 			context = new Context();
 			context.InternalLabels.Value.InnerDictionary["a\"b"] = "labelValue";
-			json = SerializePayloadItem(context);
+			json = _payloadItemSerializer.Serialize(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue\"}}");
 
 			context = new Context();
 			context.InternalLabels.Value.InnerDictionary["a*b"] = "labelValue";
-			json = SerializePayloadItem(context);
+			json = _payloadItemSerializer.Serialize(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue\"}}");
 
 			context = new Context();
 			context.InternalLabels.Value.InnerDictionary["a*b"] = "labelValue1";
 			context.InternalLabels.Value.InnerDictionary["a\"b_c"] = "labelValue2";
-			json = SerializePayloadItem(context);
+			json = _payloadItemSerializer.Serialize(context);
 			json.Should().Be("{\"tags\":{\"a_b\":\"labelValue1\",\"a_b_c\":\"labelValue2\"}}");
 		}
 
@@ -371,34 +371,34 @@ namespace Elastic.Apm.Tests
 		{
 			var context = new Context();
 			context.Custom["a.b"] = "customValue";
-			var json = SerializePayloadItem(context);
+			var json = _payloadItemSerializer.Serialize(context);
 			json.Should().Be("{\"custom\":{\"a_b\":\"customValue\"}}");
 
 			context = new Context();
 			context.Custom["a.b.c"] = "customValue";
-			json = SerializePayloadItem(context);
+			json = _payloadItemSerializer.Serialize(context);
 			json.Should().Be("{\"custom\":{\"a_b_c\":\"customValue\"}}");
 
 			context = new Context();
 			context.Custom["a.b"] = "customValue1";
 			context.Custom["a.b.c"] = "customValue2";
-			json = SerializePayloadItem(context);
+			json = _payloadItemSerializer.Serialize(context);
 			json.Should().Be("{\"custom\":{\"a_b\":\"customValue1\",\"a_b_c\":\"customValue2\"}}");
 
 			context = new Context();
 			context.Custom["a\"b"] = "customValue";
-			json = SerializePayloadItem(context);
+			json = _payloadItemSerializer.Serialize(context);
 			json.Should().Be("{\"custom\":{\"a_b\":\"customValue\"}}");
 
 			context = new Context();
 			context.Custom["a*b"] = "customValue";
-			json = SerializePayloadItem(context);
+			json = _payloadItemSerializer.Serialize(context);
 			json.Should().Be("{\"custom\":{\"a_b\":\"customValue\"}}");
 
 			context = new Context();
 			context.Custom["a*b"] = "customValue1";
 			context.Custom["a\"b_c"] = "customValue2";
-			json = SerializePayloadItem(context);
+			json = _payloadItemSerializer.Serialize(context);
 			json.Should().Be("{\"custom\":{\"a_b\":\"customValue1\",\"a_b_c\":\"customValue2\"}}");
 		}
 
@@ -411,7 +411,7 @@ namespace Elastic.Apm.Tests
 			};
 
 			var metricSet = new Elastic.Apm.Metrics.MetricSet(1603343944891, samples);
-			var json = SerializePayloadItem(metricSet);
+			var json = _payloadItemSerializer.Serialize(metricSet);
 
 			json.Should().Be("{\"samples\":{\"sample_1\":{\"value\":1.0},\"sample__2\":{\"value\":2.0}},\"timestamp\":1603343944891}");
 
@@ -439,13 +439,10 @@ namespace Elastic.Apm.Tests
 			var transaction = apmAgent.Tracer.StartTransaction("Transaction1", "Test");
 			transaction.SetService("CustomService", "1.0-beta1");
 
-			var serializedTransaction = SerializePayloadItem(transaction);
+			var serializedTransaction = _payloadItemSerializer.Serialize(transaction);
 
 			serializedTransaction.Should().Contain("\"service\":{\"name\":\"CustomService\",\"version\":\"1.0-beta1\"");
 		}
-
-		private string SerializePayloadItem(object item) =>
-			_payloadItemSerializer.SerializeObject(item);
 
 		/// <summary>
 		/// A dummy type for tests.
