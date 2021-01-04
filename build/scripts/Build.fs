@@ -20,9 +20,7 @@ module Build =
     
     let private aspNetFullFramework = Paths.SrcProjFile "Elastic.Apm.AspNetFullFramework"
     
-    let private allSrcProjectsExceptFullFramework =
-        !! "src/**/*.csproj"
-        -- "src/**/Elastic.Apm.AspNetFullFramework.csproj"
+    let private allSrcProjects = !! "src/**/*.csproj"
         
     let private fullFrameworkProjects = [
         aspNetFullFramework
@@ -49,7 +47,7 @@ module Build =
     
     /// Copy all the bin release outputs to the build/output directory
     let private copyBinRelease () =     
-        allSrcProjectsExceptFullFramework
+        allSrcProjects
         |> Seq.iter(fun p ->
             let directory = Path.GetDirectoryName p
             let project = Path.GetFileNameWithoutExtension p          
@@ -59,7 +57,7 @@ module Build =
         )
         
     let private dotnet target projectOrSln =
-        DotNet.Exec [target |> String.toLower ; projectOrSln; "-c"; "Release"; "-v"; "q"; "--nologo"]
+        DotNet.Exec [target; projectOrSln; "-c"; "Release"; "-v"; "q"; "--nologo"]
         
     let private msBuild target projectOrSln =     
         MSBuild.build (fun p -> {
@@ -91,7 +89,7 @@ module Build =
                 
     /// Publishes all projects with framework versions
     let Publish () =
-        allSrcProjectsExceptFullFramework
+        allSrcProjects
         |> Seq.map getAllTargetFrameworks
         |> Seq.iter (fun (proj, frameworks) ->
             frameworks
@@ -106,7 +104,7 @@ module Build =
     /// Packages projects into nuget packages
     let Pack (canary:bool) =
         let arguments =
-            let a = ["pack" ; Paths.SolutionNetCore; "-c"; "Release"; "-o"; Paths.NugetOutput]
+            let a = ["pack" ; Paths.Solution; "-c"; "Release"; "-o"; Paths.NugetOutput]
             if canary then List.append a ["--version-suffix"; DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") |> sprintf "alpha-%s"]
             else a      
         DotNet.Exec arguments
