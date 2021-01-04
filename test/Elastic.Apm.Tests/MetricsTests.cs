@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -331,6 +332,21 @@ namespace Elastic.Apm.Tests
 				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeTrue();
 #endif
 			}
+		}
+
+		/// <summary>
+		/// Makes sure that <see cref="MetricsCollector" /> does not throw an exception when <see cref="IConfigurationReader" />
+		/// returns <code>null</code> for <see cref="IConfigurationReader.DisableMetrics"/>.
+		/// From https://discuss.elastic.co/t/elastic-apm-object-reference-not-set-to-an-instance-of-an-object
+		/// </summary>
+		[Fact]
+		public void MetricsCollectorWithNoopConfigReader()
+		{
+			var noopConfigReader = new Mock<IConfigurationReader>();
+			noopConfigReader.SetupGet(n => n.MetricsIntervalInMilliseconds).Returns(1);
+
+			var _ = new MetricsCollector(new NoopLogger(), new NoopPayloadSender(),
+				new ConfigStore(new ConfigSnapshotFromReader(noopConfigReader.Object, ""), new NoopLogger()));
 		}
 
 		internal class MetricsProviderWithException : IMetricsProvider
