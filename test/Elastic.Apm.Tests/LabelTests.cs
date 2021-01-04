@@ -33,7 +33,7 @@ namespace Elastic.Apm.Tests
 		public void SingleLabelOnTransactionTests(object labelValue)
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			var labelName = "myLabel";
 			ITransaction transaction = null;
@@ -58,7 +58,7 @@ namespace Elastic.Apm.Tests
 		public void SingleLabelOnSpanTests(object labelValue)
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			var labelName = "myLabel";
 			ISpan span = null;
@@ -96,7 +96,7 @@ namespace Elastic.Apm.Tests
 		public void MultipleLabelsTest()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			ITransaction transaction = null;
 			ISpan span = null;
@@ -135,7 +135,7 @@ namespace Elastic.Apm.Tests
 		public void LabelsOnErrorTest()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			agent.Tracer.CaptureTransaction("test", "test", t =>
 			{
@@ -156,7 +156,7 @@ namespace Elastic.Apm.Tests
 		public void SameLabelTwice()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			agent.Tracer.CaptureTransaction("test", "test", t =>
 			{
@@ -173,7 +173,7 @@ namespace Elastic.Apm.Tests
 		public void PublicStringDictionaryPropertySerializationTest()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			ITransaction transaction = null;
 			ISpan span = null;
@@ -202,7 +202,7 @@ namespace Elastic.Apm.Tests
 		public void PublicStringDictionaryPropertyInSyncTest()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			var transaction = agent.Tracer.StartTransaction("test", "test");
 
@@ -236,7 +236,7 @@ namespace Elastic.Apm.Tests
 		public void PublicStringDictionaryPropertyRemoveItem()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			var transaction = agent.Tracer.StartTransaction("test", "test");
 
@@ -256,7 +256,7 @@ namespace Elastic.Apm.Tests
 		public void ReadLabels()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			agent.Tracer.CaptureTransaction("test", "test", t =>
 			{
@@ -291,7 +291,7 @@ namespace Elastic.Apm.Tests
 		public void ReadLabelGenericTypeTest()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			agent.Tracer.CaptureTransaction("test", "test", t =>
 			{
@@ -320,7 +320,7 @@ namespace Elastic.Apm.Tests
 		public void ReadLabelsWithMixedApiUsage()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			var t = agent.Tracer.StartTransaction("test", "test");
 
