@@ -6,8 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 using Elastic.Apm.Logging;
 
@@ -23,162 +21,315 @@ namespace Elastic.Apm.Tests.Utilities
 
 		private TestLogger(LogLevel level, SynchronizedStringWriter writer) : base(level, writer, writer) => _writer = writer;
 
-		public IReadOnlyList<string> Lines =>
-			_writer.GetStringBuilder()
-				.ToString()
-				.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
-				.ToList();
+		public IReadOnlyList<string> Lines
+		{
+			get
+			{
+				lock (_writer.Lock)
+				{
+					return _writer.GetStringBuilder()
+						.ToString()
+						.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
+						.ToList();
+				}
+			}
+		}
 	}
 
 	public class SynchronizedStringWriter : StringWriter
 	{
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void Close() => base.Close();
+		public readonly object Lock = new object();
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		protected override void Dispose(bool disposing) => base.Dispose(disposing);
+		public override void Close()
+		{
+			lock (Lock)
+				base.Close();
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void Flush() => base.Flush();
+		protected override void Dispose(bool disposing)
+		{
+			lock (Lock)
+				base.Dispose(disposing);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override StringBuilder GetStringBuilder() => base.GetStringBuilder();
+		public override void Flush()
+		{
+			lock (Lock)
+				base.Flush();
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void Write(char value) => base.Write(value);
+		public override void Write(char value)
+		{
+			lock (Lock)
+				base.Write(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void Write(char[] buffer) => base.Write(buffer);
+		public override void Write(char[] buffer)
+		{
+			lock (Lock)
+				base.Write(buffer);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void Write(char[] buffer, int index, int count) => base.Write(buffer, index, count);
+		public override void Write(char[] buffer, int index, int count)
+		{
+			lock (Lock)
+				base.Write(buffer, index, count);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void Write(bool value) => base.Write(value);
+		public override void Write(bool value)
+		{
+			lock (Lock)
+				base.Write(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void Write(int value) => base.Write(value);
+		public override void Write(int value)
+		{
+			lock (Lock)
+				base.Write(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void Write(uint value) => base.Write(value);
+		public override void Write(uint value)
+		{
+			lock (Lock)
+				base.Write(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void Write(long value) => base.Write(value);
+		public override void Write(long value)
+		{
+			lock (Lock)
+				base.Write(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void Write(ulong value) => base.Write(value);
+		public override void Write(ulong value)
+		{
+			lock (Lock)
+				base.Write(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void Write(float value) => base.Write(value);
+		public override void Write(float value)
+		{
+			lock (Lock)
+				base.Write(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void Write(double value) => base.Write(value);
+		public override void Write(double value)
+		{
+			lock (Lock)
+				base.Write(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void Write(decimal value) => base.Write(value);
+		public override void Write(decimal value)
+		{
+			lock (Lock)
+				base.Write(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void Write(string value) => base.Write(value);
+		public override void Write(string value)
+		{
+			lock (Lock)
+				base.Write(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void Write(object value) => base.Write(value);
+		public override void Write(object value)
+		{
+			lock (Lock)
+				base.Write(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void Write(string format, object arg0) => base.Write(format, arg0);
+		public override void Write(string format, object arg0)
+		{
+			lock (Lock)
+				base.Write(format, arg0);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void Write(string format, object arg0, object arg1) => base.Write(format, arg0, arg1);
+		public override void Write(string format, object arg0, object arg1)
+		{
+			lock (Lock)
+				base.Write(format, arg0, arg1);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void Write(string format, object arg0, object arg1, object arg2) => base.Write(format, arg0, arg1, arg2);
+		public override void Write(string format, object arg0, object arg1, object arg2)
+		{
+			lock (Lock)
+				base.Write(format, arg0, arg1, arg2);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void Write(string format, params object[] arg) => base.Write(format, arg);
+		public override void Write(string format, params object[] arg)
+		{
+			lock (Lock)
+				base.Write(format, arg);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void WriteLine() => base.WriteLine();
+		public override void WriteLine()
+		{
+			lock (Lock)
+				base.WriteLine();
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void WriteLine(char value) => base.WriteLine(value);
+		public override void WriteLine(char value)
+		{
+			lock (Lock)
+				base.WriteLine(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void WriteLine(char[] buffer) => base.WriteLine(buffer);
+		public override void WriteLine(char[] buffer)
+		{
+			lock (Lock)
+				base.WriteLine(buffer);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void WriteLine(char[] buffer, int index, int count) => base.WriteLine(buffer, index, count);
+		public override void WriteLine(char[] buffer, int index, int count)
+		{
+			lock (Lock)
+				base.WriteLine(buffer, index, count);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void WriteLine(bool value) => base.WriteLine(value);
+		public override void WriteLine(bool value)
+		{
+			lock (Lock)
+				base.WriteLine(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void WriteLine(int value) => base.WriteLine(value);
+		public override void WriteLine(int value)
+		{
+			lock (Lock)
+				base.WriteLine(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void WriteLine(uint value) => base.WriteLine(value);
+		public override void WriteLine(uint value)
+		{
+			lock (Lock)
+				base.WriteLine(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void WriteLine(long value) => base.WriteLine(value);
+		public override void WriteLine(long value)
+		{
+			lock (Lock)
+				base.WriteLine(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void WriteLine(ulong value) => base.WriteLine(value);
+		public override void WriteLine(ulong value)
+		{
+			lock (Lock)
+				base.WriteLine(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void WriteLine(float value) => base.WriteLine(value);
+		public override void WriteLine(float value)
+		{
+			lock (Lock)
+				base.WriteLine(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void WriteLine(double value) => base.WriteLine(value);
+		public override void WriteLine(double value)
+		{
+			lock (Lock)
+				base.WriteLine(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void WriteLine(decimal value) => base.WriteLine(value);
+		public override void WriteLine(decimal value)
+		{
+			lock (Lock)
+				base.WriteLine(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void WriteLine(string value) => base.WriteLine(value);
+		public override void WriteLine(string value)
+		{
+			lock (Lock)
+				base.WriteLine(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void WriteLine(object value) => base.WriteLine(value);
+		public override void WriteLine(object value)
+		{
+			lock (Lock)
+				base.WriteLine(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void WriteLine(string format, object arg0) => base.WriteLine(format, arg0);
+		public override void WriteLine(string format, object arg0)
+		{
+			lock (Lock)
+				base.WriteLine(format, arg0);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void WriteLine(string format, object arg0, object arg1) => base.WriteLine(format, arg0, arg1);
+		public override void WriteLine(string format, object arg0, object arg1)
+		{
+			lock (Lock)
+				base.WriteLine(format, arg0, arg1);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void WriteLine(string format, object arg0, object arg1, object arg2) => base.WriteLine(format, arg0, arg1, arg2);
+		public override void WriteLine(string format, object arg0, object arg1, object arg2)
+		{
+			lock (Lock)
+				base.WriteLine(format, arg0, arg1, arg2);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override void WriteLine(string format, params object[] arg) => base.WriteLine(format, arg);
+		public override void WriteLine(string format, params object[] arg)
+		{
+			lock (Lock)
+				base.WriteLine(format, arg);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override Task WriteAsync(char value) => base.WriteAsync(value);
+		public override Task WriteAsync(char value)
+		{
+			lock (Lock)
+				return base.WriteAsync(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override Task WriteAsync(string value) => base.WriteAsync(value);
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override Task WriteAsync(char[] buffer, int index, int count) => base.WriteAsync(buffer, index, count);
+		public override Task WriteAsync(string value)
+		{
+			lock (Lock)
+				return base.WriteAsync(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override Task WriteLineAsync(char value) => base.WriteLineAsync(value);
+		public override Task WriteAsync(char[] buffer, int index, int count)
+		{
+			lock (Lock)
+				return base.WriteAsync(buffer, index, count);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override Task WriteLineAsync(string value) => base.WriteLineAsync(value);
+		public override Task WriteLineAsync(char value)
+		{
+			lock (Lock)
+				return base.WriteLineAsync(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override Task WriteLineAsync(char[] buffer, int index, int count) => base.WriteLineAsync(buffer, index, count);
+		public override Task WriteLineAsync(string value)
+		{
+			lock (Lock)
+				return base.WriteLineAsync(value);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override Task WriteLineAsync() => base.WriteLineAsync();
+		public override Task WriteLineAsync(char[] buffer, int index, int count)
+		{
+			lock (Lock)
+				return base.WriteLineAsync(buffer, index, count);
+		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public override Task FlushAsync() => base.FlushAsync();
+		public override Task WriteLineAsync()
+		{
+			lock (Lock)
+				return base.WriteLineAsync();
+		}
+
+		public override Task FlushAsync()
+		{
+			lock (Lock)
+				return base.FlushAsync();
+		}
 
 		public override string NewLine
 		{
-			[MethodImpl(MethodImplOptions.Synchronized)]
-			get => base.NewLine;
-			[MethodImpl(MethodImplOptions.Synchronized)]
-			set => base.NewLine = value;
+			get
+			{
+				lock (Lock)
+					return base.NewLine;
+			}
+
+			set
+			{
+				lock (Lock)
+					base.NewLine = value;
+			}
 		}
 	}
 }

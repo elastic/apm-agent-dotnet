@@ -741,7 +741,8 @@ namespace Elastic.Apm.Tests
 			var logger = new TestLogger(LogLevel.Trace);
 
 			// ServiceVersion is set, otherwise in the xUnit context it'd log a warning, since it can be auto discovered
-			new ApmAgent(new TestAgentComponents(logger, new MockConfigSnapshot(serviceVersion: "1.0"))).Subscribe(new HttpDiagnosticsSubscriber());
+			using var agent = new ApmAgent(new TestAgentComponents(logger, new MockConfigSnapshot(serviceVersion: "1.0")))
+				.Subscribe(new HttpDiagnosticsSubscriber());
 
 			// No active transaction, just an HTTP request with an active agent
 			try
