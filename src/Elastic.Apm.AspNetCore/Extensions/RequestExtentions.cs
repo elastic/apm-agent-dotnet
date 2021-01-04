@@ -21,8 +21,9 @@ namespace Elastic.Apm.AspNetCore.Extensions
 		/// Extracts the request body, up to a specified maximum length.
 		/// The request body that is read is buffered.
 		/// </summary>
-		/// <param name="request"></param>
-		/// <param name="logger"></param>
+		/// <param name="request">The request</param>
+		/// <param name="logger">The logger</param>
+		/// <param name="configSnapshot">The configuration snapshot</param>
 		/// <returns></returns>
 		public static string ExtractRequestBody(this HttpRequest request, IApmLogger logger, IConfigSnapshot configSnapshot)
 		{
