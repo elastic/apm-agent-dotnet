@@ -43,6 +43,7 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 		public void Dispose()
 		{
 			_connection?.Close();
+			_connection?.Dispose();
 			_dbContext?.Dispose();
 			_apmAgent?.Dispose();
 		}
