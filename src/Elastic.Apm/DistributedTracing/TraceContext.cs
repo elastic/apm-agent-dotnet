@@ -131,7 +131,7 @@ namespace Elastic.Apm.DistributedTracing
 		/// Validates the tracestate value
 		/// </summary>
 		/// <param name="traceState">The value to validate</param>
-		/// <returns>The <see cref="traceState" /> if the value is a valid trace state, <code>null</code> otherwise</returns>
+		/// <returns>The <paramref name="traceState"/> if the value is a valid trace state, <code>null</code> otherwise</returns>
 		private static string ValidateTracestate(string traceState)
 		{
 			if (string.IsNullOrEmpty(traceState))

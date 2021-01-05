@@ -44,10 +44,8 @@ namespace Elastic.Apm.Api
 
 		/// <summary>
 		/// Sets the <see cref="Url" /> string property directly with a <see cref="Uri" /> instance.
-		/// The advantage of using this method is that the sanitization of the
-		/// <param name="uri"></param>
-		/// is
-		/// allocation free in case there is nothing to sanitize in the <paramref name="uri" />.
+		/// The advantage of using this method is that the sanitization of the <paramref name="uri" />
+		/// is allocation free in case there is nothing to sanitize in the <paramref name="uri" />.
 		/// </summary>
 		/// <param name="uri"></param>
 		internal void SetUrl(Uri uri)
@@ -113,7 +111,7 @@ namespace Elastic.Apm.Api
 		/// <param name="uriString">The Uri to sanitize.</param>
 		/// <param name="result">
 		/// The result, which is the sanitized string. If no sanitization was needed
-		/// (because there was no username& password in the URL) then this contains the <paramref name="result" /> parameter.
+		/// (because there was no username and password in the URL) then this contains the <paramref name="result" /> parameter.
 		/// </param>
 		/// <returns></returns>
 		internal static bool Sanitize(string uriString, out string result) =>

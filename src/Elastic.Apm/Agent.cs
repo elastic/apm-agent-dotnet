@@ -150,24 +150,20 @@ namespace Elastic.Apm
 		public static bool IsConfigured => _isConfigured;
 
 		/// <summary>
-		/// The entry point for manual instrumentation. The <see cref="Tracer" /> property returns the tracer,
-		/// which you access to the currently active transaction and span and it also enables you to manually start
-		/// a transaction.
+		/// The entry point for manual instrumentation. Gets an <see cref="ITracer"/> from
+		/// which the currently active transaction and span can be accessed, and enables starting
+		/// or capturing a new transaction.
 		/// </summary>
 		public static ITracer Tracer => Instance.Tracer;
 
 		/// <summary>
 		/// Adds a filter which gets called before each transaction gets sent to APM Server.
-		/// In the
-		/// <param name="filter"></param>
-		/// you have access to the <see cref="ITransaction" /> instance which gets sent to APM Server
-		/// and you can modify it. With the return value of the
-		/// <param name="filter"></param>
-		/// you can also control if the <see cref="ITransaction" /> should be sent to the server or not.
-		/// If the
-		/// <param name="filter"></param>
-		/// returns a non-null <see cref="ITransaction" /> instance then it will be sent to the APM Server -
-		/// if it returns <code>null</code>, the event will be dropped and won't be sent to the APM server.
+		/// In the <paramref name="filter" />, you have access to the <see cref="ITransaction" />
+		/// instance which gets sent to APM Server and you can modify it. With the return value of the
+		/// <paramref name="filter" />, you can also control if the <see cref="ITransaction" />
+		/// should be sent to the server or not. If the <paramref name="filter" />
+		/// returns a non-null <see cref="ITransaction" /> instance then it will be sent to the APM Server,
+		/// and if it returns <code>null</code>, the event will be dropped and won't be sent to the APM server.
 		/// </summary>
 		/// <param name="filter">
 		/// The filter that can process the <see cref="ITransaction" /> and decide if it should be sent to APM
@@ -181,15 +177,11 @@ namespace Elastic.Apm
 
 		/// <summary>
 		/// Adds a filter which gets called before each span gets sent to APM Server.
-		/// In the
-		/// <param name="filter"></param>
-		/// you have access to the <see cref="ISpan" /> instance which gets sent to APM Server
-		/// and you can modify it. With the return value of the
-		/// <param name="filter"></param>
-		/// you can also control if the <see cref="ISpan" /> should be sent to the server or not.
-		/// If the
-		/// <param name="filter"></param>
-		/// returns a non-null <see cref="ISpan" /> instance then it will be sent to the APM Server -
+		/// In the <paramref name="filter" />, you have access to the <see cref="ISpan" />
+		/// instance which gets sent to APM Server and you can modify it. With the return value of the
+		/// <paramref name="filter" />, you can also control if the <see cref="ISpan" />
+		/// should be sent to the server or not. If the <paramref name="filter" />
+		/// returns a non-null <see cref="ISpan" /> instance then it will be sent to the APM Server, and
 		/// if it returns <code>null</code>, the event will be dropped and won't be sent to the APM server.
 		/// </summary>
 		/// <param name="filter">
@@ -204,15 +196,11 @@ namespace Elastic.Apm
 
 		/// <summary>
 		/// Adds a filter which gets called before each error gets sent to APM Server.
-		/// In the
-		/// <param name="filter"></param>
-		/// you have access to the <see cref="IError" /> instance which gets sent to APM Server
-		/// and you can modify it. With the return value of the
-		/// <param name="filter"></param>
-		/// you can also control if the <see cref="IError" /> should be sent to the server or not.
-		/// If the
-		/// <param name="filter"></param>
-		/// returns a non-null <see cref="IError" /> instance then it will be sent to the APM Server -
+		/// In the <paramref name="filter" />, you have access to the <see cref="IError" />
+		/// instance which gets sent to APM Server and you can modify it. With the return value of the
+		/// <paramref name="filter" /> you can also control if the <see cref="IError" />
+		/// should be sent to the server or not. If the <paramref name="filter" />
+		/// returns a non-null <see cref="IError" /> instance then it will be sent to the APM Server, and
 		/// if it returns <code>null</code>, the event will be dropped and won't be sent to the APM server.
 		/// </summary>
 		/// <param name="filter">

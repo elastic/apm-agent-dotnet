@@ -13,7 +13,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 {
 	/// <summary>
 	/// Returns total and free system memory.
-	/// Currently Windows & Linux -only, no macOS support at the moment.
+	/// Currently Windows and Linux only, no macOS support at the moment.
 	/// </summary>
 	internal class FreeAndTotalMemoryProvider : IMetricsProvider
 	{

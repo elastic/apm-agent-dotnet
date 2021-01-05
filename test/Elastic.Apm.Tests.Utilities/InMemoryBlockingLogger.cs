@@ -63,7 +63,7 @@ namespace Elastic.Apm.Tests.Utilities
 			if (!IsEnabled(level)) return;
 
 			_lines.Add(formatter(state, e));
-			_transactionTaskCompletionSource.TrySetResult(_lines);
+			_transactionTaskCompletionSource.SetResult(_lines);
 		}
 	}
 }

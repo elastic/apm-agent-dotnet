@@ -49,7 +49,7 @@ namespace Elastic.Apm.Helpers
 			try
 			{
 				logger.Debug()?.Log(MethodStartingMsgFmt + ". Current thread: {ThreadDesc}", dbgCallerMethodName, DbgUtils.CurrentThreadDesc);
-				await asyncAction();
+				await asyncAction().ConfigureAwait(false);
 				logger.Debug()
 					?.Log(MethodExitingNormallyMsgFmt + ". Current thread: {ThreadDesc}", dbgCallerMethodName
 						, DbgUtils.CurrentThreadDesc);

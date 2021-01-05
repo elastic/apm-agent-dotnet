@@ -101,7 +101,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			{
 				httpRequest = BuildHttpRequest(_eTag);
 
-				(httpResponse, httpResponseBody) = await FetchConfigHttpResponseAsync(httpRequest);
+				(httpResponse, httpResponseBody) = await FetchConfigHttpResponseAsync(httpRequest).ConfigureAwait(false);
 
 				CentralConfigReader centralConfigReader;
 				(centralConfigReader, waitInfo) = _centralConfigResponseParser.ParseHttpResponse(httpResponse, httpResponseBody);
@@ -142,9 +142,9 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 						+ Environment.NewLine + "+-> Response body [length: {HttpResponseBodyLength}]:{HttpResponseBody}"
 						, _eTag.AsNullableToString()
 						, Http.Sanitize(_getConfigAbsoluteUrl, out var sanitizedAbsoluteUrl) ? sanitizedAbsoluteUrl : _getConfigAbsoluteUrl.ToString()
-						, Http.Sanitize(HttpClientInstance.BaseAddress, out var sanitizedBaseAddress)
+						, Http.Sanitize(HttpClient.BaseAddress, out var sanitizedBaseAddress)
 							? sanitizedBaseAddress
-							: HttpClientInstance.BaseAddress.ToString()
+							: HttpClient.BaseAddress.ToString()
 						, waitInfo.Interval.ToHms(),
 						_dbgIterationsCount
 						, httpRequest == null ? " N/A" : Environment.NewLine + TextUtils.Indent(Http.HttpRequestSanitizedToString(httpRequest))
@@ -161,7 +161,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			_logger.IfLevel(waitingLogSeverity)
 				?.Log("Waiting {WaitInterval}... {WaitReason}. dbgIterationsCount: {dbgIterationsCount}."
 					, waitInfo.Interval.ToHms(), waitInfo.Reason, _dbgIterationsCount);
-			await _agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, CtsInstance.Token);
+			await _agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, CancellationTokenSource.Token).ConfigureAwait(false);
 		}
 
 		private HttpRequestMessage BuildHttpRequest(EntityTagHeaderValue eTag)
@@ -175,7 +175,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		{
 			_logger.Trace()?.Log("Making HTTP request to APM Server... Request: {HttpRequest}.", httpRequest);
 
-			var httpResponse = await HttpClientInstance.SendAsync(httpRequest, HttpCompletionOption.ResponseContentRead, CtsInstance.Token);
+			var httpResponse = await HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseContentRead, CancellationTokenSource.Token)
+				.ConfigureAwait(false);
 			// ReSharper disable once InvertIf
 			if (httpResponse == null)
 			{
@@ -185,14 +186,14 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			}
 
 			_logger.Trace()?.Log("Reading HTTP response body... Response: {HttpResponse}.", httpResponse);
-			var httpResponseBody = await httpResponse.Content.ReadAsStringAsync();
+			var httpResponseBody = await httpResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
 
 			return (httpResponse, httpResponseBody);
 		}
 
 		private async Task<(HttpResponseMessage, string)> FetchConfigHttpResponseAsync(HttpRequestMessage httpRequest) =>
 			await _agentTimer.AwaitOrTimeout(FetchConfigHttpResponseImplAsync(httpRequest)
-				, _agentTimer.Now + GetConfigHttpRequestTimeout, CtsInstance.Token);
+				, _agentTimer.Now + GetConfigHttpRequestTimeout, CancellationTokenSource.Token).ConfigureAwait(false);
 
 		private void UpdateConfigStore(CentralConfigReader centralConfigReader)
 		{
