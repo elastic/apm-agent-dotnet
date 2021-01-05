@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
+using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -12,6 +13,7 @@ using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
+	[Specification("docs/spec/metricsets/metricset.json")]
 	internal class MetricSetDto : ITimestampedDto
 	{
 		public Dictionary<string, MetricSampleDto> Samples { get; set; }

@@ -35,7 +35,10 @@ namespace Elastic.Apm.Api
 
 		public override string ToString() => new ToStringBuilder(nameof(SpanContext))
 		{
-			{ nameof(Db), Db }, { nameof(Http), Http }, { "Labels", InternalLabels }, { nameof(Destination), Destination }
+			{ nameof(Db), Db },
+			{ nameof(Http), Http },
+			{ "Labels", InternalLabels },
+			{ nameof(Destination), Destination },
 		}.ToString();
 	}
 }

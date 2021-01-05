@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
+	[Specification("docs/spec/spans/span.json")]
 	internal class SpanDto : ITimedDto
 	{
 		public string Action { get; set; }
