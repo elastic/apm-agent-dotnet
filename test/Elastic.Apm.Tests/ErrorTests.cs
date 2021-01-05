@@ -52,14 +52,14 @@ namespace Elastic.Apm.Tests
 				mockPayloadSender.FirstError.Should().NotBeNull("first error should not be null");
 				mockPayloadSender.FirstError.Context.Should().NotBeNull("context should not be null");
 				mockPayloadSender.FirstError.Context.Request.Method.Should().Be("GET");
-				mockPayloadSender.FirstError.Context.Request.Body = "abc";
+				mockPayloadSender.FirstError.Context.Request.Body.Should().Be("abc");
 				mockPayloadSender.FirstError.Context.Request.Headers.Count.Should().Be(1);
-				mockPayloadSender.FirstError.Context.Request.Headers["header1"] = "headerValue";
-				mockPayloadSender.FirstError.Context.Request.Url.Full = "http://localhost";
-				mockPayloadSender.FirstError.Context.Request.Url.Protocol = "http";
-				mockPayloadSender.FirstError.Context.Request.Url.Search = "abc";
-				mockPayloadSender.FirstError.Context.Response.StatusCode = 404;
-				mockPayloadSender.FirstError.Context.Response.Finished = false;
+				mockPayloadSender.FirstError.Context.Request.Headers["header1"].Should().Be("headerValue");
+				mockPayloadSender.FirstError.Context.Request.Url.Full.Should().Be("http://localhost");
+				mockPayloadSender.FirstError.Context.Request.Url.Protocol.Should().Be("http");
+				mockPayloadSender.FirstError.Context.Request.Url.Search.Should().Be("abc");
+				mockPayloadSender.FirstError.Context.Response.StatusCode.Should().Be(404);
+				mockPayloadSender.FirstError.Context.Response.Finished.Should().BeFalse();
 				mockPayloadSender.FirstError.Context.InternalLabels.Value.InnerDictionary["foo"].Value.Should().Be("bar");
 				mockPayloadSender.FirstError.Context.Response.Headers.Should().BeNull();
 			});
@@ -69,13 +69,13 @@ namespace Elastic.Apm.Tests
 			mockPayloadSender.FirstTransaction.Context.Request.Method.Should().Be("PUT");
 			mockPayloadSender.FirstTransaction.Context.Request.Body = "cde";
 			mockPayloadSender.FirstTransaction.Context.Request.Headers.Count.Should().Be(2);
-			mockPayloadSender.FirstTransaction.Context.Request.Headers["header1"] = "headerValue";
-			mockPayloadSender.FirstTransaction.Context.Request.Headers["header2"] = "headerValue";
-			mockPayloadSender.FirstTransaction.Context.Request.Url.Full = "http://elastic.co";
-			mockPayloadSender.FirstTransaction.Context.Request.Url.Protocol = "tcp";
-			mockPayloadSender.FirstTransaction.Context.Request.Url.Search = "cde";
-			mockPayloadSender.FirstTransaction.Context.Response.StatusCode = 500;
-			mockPayloadSender.FirstTransaction.Context.Response.Finished = true;
+			mockPayloadSender.FirstTransaction.Context.Request.Headers["header1"].Should().Be("headerValue");
+			mockPayloadSender.FirstTransaction.Context.Request.Headers["header2"].Should().Be("headerValue");
+			mockPayloadSender.FirstTransaction.Context.Request.Url.Full.Should().Be("http://elastic.co");
+			mockPayloadSender.FirstTransaction.Context.Request.Url.Protocol.Should().Be("tcp");
+			mockPayloadSender.FirstTransaction.Context.Request.Url.Search.Should().Be("cde");
+			mockPayloadSender.FirstTransaction.Context.Response.StatusCode.Should().Be(500);
+			mockPayloadSender.FirstTransaction.Context.Response.Finished.Should().BeTrue();
 			mockPayloadSender.FirstTransaction.Context.InternalLabels.Value.InnerDictionary["foo"].Value.Should().Be("bar");
 			mockPayloadSender.FirstTransaction.Context.Response.Headers.Should().BeNull();
 		}
@@ -87,7 +87,7 @@ namespace Elastic.Apm.Tests
 		public void ErrorOnEmptyTransaction()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			agent.Tracer.CaptureTransaction("Test", "Test", t =>
 			{
@@ -109,7 +109,7 @@ namespace Elastic.Apm.Tests
 		public void ErrorOnTransactionWithEmptyHeaders()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
 
 			agent.Tracer.CaptureTransaction("Test", "Test", t =>
 			{
