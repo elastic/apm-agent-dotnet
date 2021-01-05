@@ -4,8 +4,9 @@
     <DataCollectors>
       <DataCollector friendlyName="XPlat code coverage">
         <Configuration>
-          <Format>cobertura</Format>          
-          <Exclude>"[Elastic.Apm.Tests]*,[Elastic.Apm.*.Tests]*,[Elastic.Apm.Tests.*]*,[SampleAspNetCoreApp*]*,[xunit*]*,[System*]*"</Exclude>
+          <Format>cobertura</Format>    
+          <Include>[Elastic.*]*,[ElasticApmStartupHook]*</Include>      
+          <Exclude>[Elastic.Apm.Tests]*,[Elastic.Apm.*.Tests]*,[Elastic.Apm.Tests.*]*</Exclude>
           <SingleHit>false</SingleHit>
           <UseSourceLink>true</UseSourceLink>
           <IncludeTestAssembly>false</IncludeTestAssembly>
