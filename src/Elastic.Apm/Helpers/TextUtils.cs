@@ -53,9 +53,9 @@ namespace Elastic.Apm.Helpers
 			return resultBuilder.ToString();
 		}
 
-		internal static string Indent(string input, string indentation = Indentation) => PrefixEveryLine(input, indentation);
+		internal static string Indent(this string input, string indentation = Indentation) => PrefixEveryLine(input, indentation);
 
-		internal static string Indent(string input, int indentationLevel) =>
+		internal static string Indent(this string input, int indentationLevel) =>
 			Indent(input, Indentation.Repeat(indentationLevel));
 
 		internal static bool IsHex(char c) =>
