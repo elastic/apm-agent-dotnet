@@ -67,7 +67,7 @@ namespace Elastic.Apm.Tests
 			// Asserts on the captured transaction
 			mockPayloadSender.WaitForTransactions();
 			mockPayloadSender.FirstTransaction.Context.Request.Method.Should().Be("PUT");
-			mockPayloadSender.FirstTransaction.Context.Request.Body = "cde";
+			mockPayloadSender.FirstTransaction.Context.Request.Body.Should().Be("cde");
 			mockPayloadSender.FirstTransaction.Context.Request.Headers.Count.Should().Be(2);
 			mockPayloadSender.FirstTransaction.Context.Request.Headers["header1"].Should().Be("headerValue");
 			mockPayloadSender.FirstTransaction.Context.Request.Headers["header2"].Should().Be("headerValue");
