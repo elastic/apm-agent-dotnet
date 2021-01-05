@@ -49,9 +49,7 @@ namespace Elastic.Apm.Api
 		/// </summary>
 		/// <param name="serialized">should be a return value from a call to <see cref="SerializeToString" />.</param>
 		/// <returns>
-		/// Instance deserialized from
-		/// <param name="serialized" />
-		/// .
+		/// Instance deserialized from <paramref name="serialized" />.
 		/// </returns>
 		public static DistributedTracingData TryDeserializeFromString(string serialized) => TraceContext.TryExtractTracingData(serialized);
 

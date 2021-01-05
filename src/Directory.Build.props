@@ -9,17 +9,29 @@
     <Authors>Elastic and contributors</Authors>
     <Copyright>2020 Elasticsearch BV</Copyright>
     <PackageProjectUrl>https://github.com/elastic/apm-agent-dotnet</PackageProjectUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>nuget-icon.png</PackageIcon>
+    <!-- Include .pdb in package -->
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <!-- Generate documentation files for each package -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- don't warn on missing XML documentation -->
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <!-- Include the icon referenced by <PackageIcon> in the package -->
     <None Include="$(SolutionRoot)/build/nuget-icon.png">
       <Pack>True</Pack>
       <PackagePath>.</PackagePath>
     </None>
+    <!-- Include the license referenced by <PackageLicenseFile> in the package -->
     <None Include="$(SolutionRoot)/LICENSE">
       <Pack>True</Pack>
       <PackagePath>.</PackagePath>
     </None>
+    <!-- Configure SourceLink for packages -->
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
   </ItemGroup>
 </Project>
