@@ -37,15 +37,14 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		{
 			var testLogger = new ConsoleLogger(LogLevel.Trace);
 
-			var environmentConfigurationReader = new EnvironmentConfigurationReader();
-			var configSnapshotFromReader = new ConfigSnapshotFromReader(environmentConfigurationReader, "local");
+			var configSnapshotFromReader = new MockConfigSnapshot(testLogger);
 			var configStore = new ConfigStore(configSnapshotFromReader, testLogger);
-			var service = Service.GetDefaultService(environmentConfigurationReader, testLogger);
+			var service = Service.GetDefaultService(configSnapshotFromReader, testLogger);
 
 			var waitHandle = new ManualResetEvent(false);
 			var handler = new MockHttpMessageHandler();
 			var configUrl = BackendCommUtils.ApmServerEndpoints
-				.BuildGetConfigAbsoluteUrl(environmentConfigurationReader.ServerUrl, service);
+				.BuildGetConfigAbsoluteUrl(configSnapshotFromReader.ServerUrl, service);
 
 			handler.When(configUrl.AbsoluteUri)
 				.Respond(_ =>
@@ -93,15 +92,14 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		{
 			var testLogger = new UnswitchableLogger(new LogLevelSwitch(LogLevel.Trace));
 
-			var environmentConfigurationReader = new EnvironmentConfigurationReader();
-			var configSnapshotFromReader = new ConfigSnapshotFromReader(environmentConfigurationReader, "local");
+			var configSnapshotFromReader = new MockConfigSnapshot(testLogger);
 			var configStore = new ConfigStore(configSnapshotFromReader, testLogger);
-			var service = Service.GetDefaultService(environmentConfigurationReader, testLogger);
+			var service = Service.GetDefaultService(configSnapshotFromReader, testLogger);
 
 			var waitHandle = new ManualResetEvent(false);
 			var handler = new MockHttpMessageHandler();
 			var configUrl = BackendCommUtils.ApmServerEndpoints
-				.BuildGetConfigAbsoluteUrl(environmentConfigurationReader.ServerUrl, service);
+				.BuildGetConfigAbsoluteUrl(configSnapshotFromReader.ServerUrl, service);
 
 			handler.When(configUrl.AbsoluteUri)
 				.Respond(_ =>
