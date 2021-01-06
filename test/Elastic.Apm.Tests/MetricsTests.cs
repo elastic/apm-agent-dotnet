@@ -275,7 +275,7 @@ namespace Elastic.Apm.Tests
 			metricsProviderMock.Verify(x => x.GetSamples(), Times.Exactly(iterations));
 		}
 
-		[Fact(Skip = "don't run gc metrics for now")]
+		[Fact]
 		public void CollectGcMetrics()
 		{
 			var logger = new TestLogger(LogLevel.Trace);
