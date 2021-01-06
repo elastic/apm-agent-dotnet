@@ -10,7 +10,7 @@ set -euxo pipefail
 
 # Run tests for all solution
 dotnet test ElasticApmAgent.sln \
-    --filter "FullyQualifiedName\!~Elastic.Apm.Tests" \
+    --filter "FullyQualifiedName!~Elastic.Apm.Tests" \
 	--verbosity normal \
 	--results-directory target \
 	--diag "target/diag-ElasticApmAgent.log" \
