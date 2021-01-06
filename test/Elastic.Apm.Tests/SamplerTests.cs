@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.Globalization;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
-using Elastic.Apm.Tests.TestHelpers;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
@@ -30,7 +29,7 @@ namespace Elastic.Apm.Tests
 			1
 		};
 
-		[Theory (Skip = "skip for now")]
+		[Theory]
 		[MemberData(nameof(RateVariantsToTest))]
 		public void ConstantSampler(double rate)
 		{
@@ -56,7 +55,7 @@ namespace Elastic.Apm.Tests
 			}));
 		}
 
-		[Theory (Skip = "skip for now")]
+		[Theory]
 		[MemberData(nameof(RateVariantsToTest))]
 		public void SampleRateShouldBeSetOnTransactionAndSpan(double rate)
 		{
@@ -95,7 +94,7 @@ namespace Elastic.Apm.Tests
 				mockPayloadSender.FirstTransaction.SampleRate.Should().Be(0);
 		}
 
-		[Theory (Skip = "skip for now")]
+		[Theory]
 		[MemberData(nameof(RateVariantsToTest))]
 		public void DistributionShouldBeUniform(double rate)
 		{
@@ -135,7 +134,7 @@ namespace Elastic.Apm.Tests
 			});
 		}
 
-		[Theory (Skip = "skip for now")]
+		[Theory]
 		[MemberData(nameof(RateVariantsToTest))]
 		public void SamplingDecisionDependsOnlyOnInput(double rate)
 		{
@@ -146,7 +145,7 @@ namespace Elastic.Apm.Tests
 			10.Repeat(() => sampler.DecideIfToSample(randomBytes).Should().Be(firstIsSampled));
 		}
 
-		[Theory (Skip = "skip for now")]
+		[Theory]
 		[InlineData(0.0001, 0.0001)]
 		[InlineData(0.00001, 0.0001)]
 		[InlineData(0.000001, 0.0001)]
@@ -160,7 +159,7 @@ namespace Elastic.Apm.Tests
 			sampler.Rate.Should().Be(expectedRate);
 		}
 
-		[Theory (Skip = "skip for now")]
+		[Theory]
 		[MemberData(nameof(RateVariantsToTest))]
 		public void ExceptionThrownIfTooFewRandomBytes(double rate)
 		{
