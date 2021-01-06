@@ -12,7 +12,7 @@ using Newtonsoft.Json;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
-	[Specification("docs/spec/errors/error.json")]
+	[Specification("docs/spec/v2/error.json")]
 	internal class ErrorDto : ITimestampedDto
 	{
 		public ContextDto Context { get; set; }
