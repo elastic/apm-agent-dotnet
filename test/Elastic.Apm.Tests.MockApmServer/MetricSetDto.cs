@@ -13,7 +13,7 @@ using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
-	[Specification("docs/spec/metricsets/metricset.json")]
+	[Specification("docs/spec/v2/metricset.json")]
 	internal class MetricSetDto : ITimestampedDto
 	{
 		public Dictionary<string, MetricSampleDto> Samples { get; set; }
