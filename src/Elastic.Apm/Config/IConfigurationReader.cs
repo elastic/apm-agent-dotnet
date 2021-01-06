@@ -9,8 +9,15 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
 {
+	/// <summary>
+	/// Reads configuration values used to configure the agent
+	/// </summary>
 	public interface IConfigurationReader
 	{
+		/// <summary>
+		/// The API key used to send data to the APM server.
+		/// Ensures that only your agents can send data to your APM server.
+		/// </summary>
 		string ApiKey { get; }
 
 		/// <summary>
@@ -20,9 +27,27 @@ namespace Elastic.Apm.Config
 		/// </summary>
 		IReadOnlyCollection<string> ApplicationNamespaces { get; }
 
+		/// <summary>
+		/// For transactions that are HTTP requests, the agent can optionally capture the request body, e.g., POST variables.
+		/// If the request has a body and this setting is disabled, the body will be shown as [REDACTED].
+		/// Valid values are <c>off</c>, <c>errors</c>, <c>transactions</c> and <c>all</c>.
+		/// </summary>
 		string CaptureBody { get; }
+
+		/// <summary>
+		/// Configures for which content types the body should be captured.
+		/// </summary>
 		List<string> CaptureBodyContentTypes { get; }
+
+		/// <summary>
+		/// Capture request and response headers, including cookies.
+		/// </summary>
 		bool CaptureHeaders { get; }
+
+		/// <summary>
+		/// Whether the agent is configured to make periodic requests to the APM server to fetch and use the latest
+		/// APM agent central configuration.
+		/// </summary>
 		bool CentralConfig { get; }
 
 		/// <summary>
@@ -48,6 +73,10 @@ namespace Elastic.Apm.Config
 		/// </summary>
 		bool Enabled { get; }
 
+		/// <summary>
+		/// The name of the environment this service is deployed in.
+		/// </summary>
+		/// <example>production</example>
 		string Environment { get; }
 
 		/// <summary>
@@ -91,6 +120,9 @@ namespace Elastic.Apm.Config
 		/// </summary>
 		string HostName { get; }
 
+		/// <summary>
+		/// The logging level for the agent.
+		/// </summary>
 		LogLevel LogLevel { get; }
 
 		/// <summary>
@@ -171,9 +203,23 @@ namespace Elastic.Apm.Config
 		/// </summary>
 		Uri ServerUrl { get; }
 
+		/// <summary>
+		/// The name of service instrumented by the APM agent. This is used to group all the errors and transactions
+		/// of the service together, and is the primary filter in the Elastic APM user interface.
+		/// </summary>
 		string ServiceName { get; }
 
+		/// <summary>
+		/// A name used to differentiate between nodes in a service. If not set, data aggregations will be done
+		/// based on a container ID (where valid) or on the reported hostname (automatically discovered).
+		/// </summary>
 		string ServiceNodeName { get; }
+
+		/// <summary>
+		/// The version of the service.
+		/// If deployments are not versioned, it is recommended to set this to the commit identifier of the deployed revision,
+		/// e.g. the output of <code>git rev-parse HEAD</code>.
+		/// </summary>
 		string ServiceVersion { get; }
 
 		/// <summary>
@@ -200,9 +246,19 @@ namespace Elastic.Apm.Config
 		IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls { get; }
 
 		/// <summary>
-		/// 	The number of spans that are recorded per transaction.
-		///  0: no spans will be collected.
-		///  -1: all spans will be collected.
+		/// The number of spans that are recorded per transaction.
+		/// <list type="bullet">
+		/// 	<item>
+		/// 		<description>
+		/// 			0: no spans will be collected.
+		/// 		</description>
+		/// 	</item>
+		/// 	<item>
+		/// 		<description>
+		/// 			-1: all spans will be collected.
+		/// 		</description>
+		/// 	</item>
+		/// </list>
 		/// </summary>
 		int TransactionMaxSpans { get; }
 
