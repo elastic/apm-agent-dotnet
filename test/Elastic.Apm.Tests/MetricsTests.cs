@@ -275,7 +275,7 @@ namespace Elastic.Apm.Tests
 			metricsProviderMock.Verify(x => x.GetSamples(), Times.Exactly(iterations));
 		}
 
-		[Fact]
+		[Fact(Skip = "don't run gc metrics for now")]
 		public void CollectGcMetrics()
 		{
 			var logger = new TestLogger(LogLevel.Trace);
@@ -317,7 +317,7 @@ namespace Elastic.Apm.Tests
 
 				if (PlatformDetection.IsDotNetFullFramework)
 				{
-					if (logger.Lines.Where(n => n.Contains("TraceEventSession initialization failed - GC metrics won't be collected")).Any())
+					if (logger.Lines.Any(n => n.Contains("TraceEventSession initialization failed - GC metrics won't be collected")))
 					{
 						// If initialization fails, (e.g. because ETW session initalization fails) we don't assert
 						_output.WriteLine("Initialization failed. don't make assertions");
@@ -327,7 +327,7 @@ namespace Elastic.Apm.Tests
 
 				if (PlatformDetection.IsDotNetCore || PlatformDetection.IsDotNet5)
 				{
-					if (!logger.Lines.Where(n => n.Contains("OnEventWritten with GC")).Any())
+					if (!logger.Lines.Any(n => n.Contains("OnEventWritten with GC")))
 					{
 						// If no OnWritten with a GC event was called then initialization failed -> we don't assert
 						_output.WriteLine("Initialization failed. don't make assertions");
