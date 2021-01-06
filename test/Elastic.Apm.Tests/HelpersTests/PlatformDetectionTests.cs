@@ -21,7 +21,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 		public void RuntimeName()
 		{
 			var mockPayloadSender = new MockPayloadSender();
-			using (var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender)))
+			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender)))
 				agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => { });
 
 			switch (RuntimeInformation.FrameworkDescription)

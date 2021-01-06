@@ -354,7 +354,7 @@ namespace Elastic.Apm.Tests
 			using var payloadSender = new PayloadSenderV2(inMemoryLogger, configReader,
 				Service.GetDefaultService(configReader, inMemoryLogger), new Api.System(), MockApmServerInfo.Version710);
 
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			agent.Tracer.CaptureTransaction("Test", "TestTransaction", () => { });
 
@@ -384,7 +384,7 @@ namespace Elastic.Apm.Tests
 			using var payloadSender = new PayloadSenderV2(inMemoryLogger, configReader,
 				Service.GetDefaultService(configReader, inMemoryLogger), new Api.System(), MockApmServerInfo.Version710);
 
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			agent.Tracer.CaptureTransaction("Test", "TestTransaction", () => { });
 

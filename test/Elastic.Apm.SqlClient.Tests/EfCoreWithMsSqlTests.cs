@@ -31,7 +31,7 @@ namespace Elastic.Apm.SqlClient.Tests
 			_connectionString = sqlClientListenerFixture.ConnectionString;
 
 			_payloadSender = new MockPayloadSender();
-			_apmAgent = new ApmAgent(new AgentComponents(
+			_apmAgent = new ApmAgent(new TestAgentComponents(
 				new LineWriterToLoggerAdaptor(new XunitOutputToLineWriterAdaptor(testOutputHelper)),
 				payloadSender: _payloadSender));
 			_apmAgent.Subscribe(new SqlClientDiagnosticSubscriber(), new EfCoreDiagnosticsSubscriber());
