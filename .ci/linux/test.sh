@@ -10,7 +10,7 @@ set -euxo pipefail
 
 # Run tests for all solution
 dotnet test ElasticApmAgent.sln \
-	--verbosity diagnostic \
+	--verbosity normal \
 	--results-directory target \
 	--diag "target/diag-ElasticApmAgent.log" \
 	--logger:"junit;LogFilePath=junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
