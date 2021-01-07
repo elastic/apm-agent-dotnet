@@ -3,11 +3,13 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Runtime.CompilerServices;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using LibraryNamespace;
 using Test.Application;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests.ApiTests
 {
@@ -135,6 +137,8 @@ namespace Test.Application
 {
 	public class ApplicationClass
 	{
+		// Don't allow the method to be inlined, which it might be in Release Configuration
+		[MethodImpl(MethodImplOptions.NoInlining)]
 		public void Method1() => new LibraryClass().LibraryMethod();
 	}
 }
