@@ -9,6 +9,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Http;
 using System.Web.Http.Batch;
+using System.Web.Http.Hosting;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
@@ -45,6 +46,8 @@ namespace AspNetFullFrameworkSampleApp
 
 			ValueProviderFactories.Factories.Remove(ValueProviderFactories.Factories.OfType<JsonValueProviderFactory>().FirstOrDefault());
 			ValueProviderFactories.Factories.Add(new JsonNetValueProviderFactory());
+
+			GlobalConfiguration.Configuration.Services.Replace(typeof(IHostBufferPolicySelector), new CustomWebHostBufferPolicySelector());
 		}
 
 		protected void Application_BeginRequest(object sender, EventArgs e)

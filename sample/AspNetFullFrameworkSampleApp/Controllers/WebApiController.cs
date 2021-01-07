@@ -6,6 +6,7 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
+using System.IO;
 
 namespace AspNetFullFrameworkSampleApp.Controllers
 {
@@ -14,6 +15,8 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 	{
 		public const string Path = "api/WebApi";
 
+		[Route]
+		[HttpGet]
 		public WebApiResponse Get() =>
 			new WebApiResponse { Content = "This is an example response from a web api controller" };
 
@@ -21,8 +24,13 @@ namespace AspNetFullFrameworkSampleApp.Controllers
 		[HttpPost]
 		public async Task<IHttpActionResult> Post()
 		{
-			var content = await Request.Content.ReadAsMultipartAsync(); //exception gets thrown here
-			return Ok(content.ToString());
+			var multipart = await Request.Content.ReadAsMultipartAsync(); //exception gets thrown here
+			var result = string.Empty;
+			foreach(var content in multipart.Contents)
+			{
+				result += await content.ReadAsStringAsync();
+			}
+			return Ok(result);
 		}
 	}
 
