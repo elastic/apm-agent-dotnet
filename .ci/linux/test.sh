@@ -10,7 +10,6 @@ set -euxo pipefail
 
 # Run tests for all solution
 dotnet test -c Release ElasticApmAgent.sln \
-	-nodereuse:false \
 	--verbosity normal \
 	--results-directory target \
 	--diag "target/diag-ElasticApmAgent.log" \
