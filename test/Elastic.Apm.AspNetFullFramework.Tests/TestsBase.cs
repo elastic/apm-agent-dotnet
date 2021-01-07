@@ -188,6 +188,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			internal static readonly SampleAppUrlPathData WebApiPage =
 				new SampleAppUrlPathData(WebApiController.Path, 200);
 
+			internal static readonly SampleAppUrlPathData MultiPartPostApiEndpoint =
+				new SampleAppUrlPathData(WebApiController.Path, (int)HttpStatusCode.OK);
+
 			internal static readonly SampleAppUrlPathData WebformsPage =
 				new SampleAppUrlPathData(nameof(Webforms) + ".aspx", 200);
 

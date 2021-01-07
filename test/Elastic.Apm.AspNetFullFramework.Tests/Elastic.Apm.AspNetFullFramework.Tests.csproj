@@ -45,4 +45,9 @@
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="0.14.0" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="README.md">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

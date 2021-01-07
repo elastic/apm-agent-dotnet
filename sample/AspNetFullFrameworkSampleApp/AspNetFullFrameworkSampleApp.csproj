@@ -17,8 +17,9 @@
     <OutputType>Library</OutputType>
     <RootNamespace>AspNetFullFrameworkSampleApp</RootNamespace>
     <AssemblyName>AspNetFullFrameworkSampleApp</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <RuntimeIdentifier>win</RuntimeIdentifier>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition="'$(OS)' == 'WINDOWS_NT'">
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -70,11 +71,7 @@
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Web" />
-    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Web.Abstractions" />
     <Reference Include="System.Web.Routing" />
     <Reference Include="System.Xml" />
@@ -330,7 +327,6 @@
     <IISExpressUseClassicPipelineMode />
     <UseGlobalApplicationHostFile />
   </PropertyGroup>
-  
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" Condition="'$(OS)' == 'WINDOWS_NT'" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="'$(OS)' == 'WINDOWS_NT' AND Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
   <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(OS)' == 'WINDOWS_NT' AND Exists('$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets')" />
@@ -347,8 +343,6 @@
           <DevelopmentServerPort>51565</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
           <IISUrl>http://localhost/Elastic.Apm.AspNetFullFramework.Tests.SampleApp</IISUrl>
-          <OverrideIISAppRootUrl>false</OverrideIISAppRootUrl>
-          <IISAppRootUrl>http://localhost:51565</IISAppRootUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>

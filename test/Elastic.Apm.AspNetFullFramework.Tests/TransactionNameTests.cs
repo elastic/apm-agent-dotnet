@@ -3,11 +3,13 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using AspNetFullFrameworkSampleApp.Controllers;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -174,6 +176,23 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				receivedData.Transactions.Count.Should().Be(1);
 				receivedData.Transactions.First().Name.Should().Be($"POST {pathData.Uri.AbsolutePath} {action}");
 			});
+		}
+
+		[AspNetFullFrameworkFact]
+		public async Task MultiPart_Async_Post_Should_Return_200_OK()
+		{
+			var pathData = SampleAppUrlPaths.MultiPartPostApiEndpoint;
+
+			var request = new HttpRequestMessage(HttpMethod.Post, pathData.Uri);
+
+			var multiPartContent = new MultipartFormDataContent("TestBoundryParameter");
+			var fileStream = System.IO.File.OpenRead("README.md");
+			multiPartContent.Add(new StreamContent(fileStream), "README.md", "README.md");
+			multiPartContent.Headers.Add("Content-Type", "application/octet-stream");
+			request.Content = multiPartContent;
+
+			var response = await HttpClient.SendAsync(request);
+			response.IsSuccessStatusCode.Should().BeTrue();
 		}
 
 		[AspNetFullFrameworkFact]
