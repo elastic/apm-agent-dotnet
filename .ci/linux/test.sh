@@ -9,7 +9,7 @@ set -euxo pipefail
 .ci/linux/remove-projects.sh
 
 # Run tests for all solution
-dotnet test ElasticApmAgent.sln \
+dotnet test -c Release ElasticApmAgent.sln \
 	-nodereuse:false \
 	--verbosity normal \
 	--results-directory target \
