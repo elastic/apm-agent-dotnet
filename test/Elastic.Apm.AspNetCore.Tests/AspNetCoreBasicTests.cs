@@ -507,7 +507,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			}
 		}
 
-		private int CountAspNetCoreErrorDiagnosticsSubscriber(IDisposable disposable, FieldInfo field)
+		private static int CountAspNetCoreErrorDiagnosticsSubscriber(IDisposable disposable, FieldInfo field)
 		{
 			if (disposable is DiagnosticInitializer diagnosticInitializer)
 			{
