@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -11,13 +12,16 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.Config;
+using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
 using Xunit;
@@ -464,6 +468,58 @@ namespace Elastic.Apm.AspNetCore.Tests
 			context.Request.Method.Should().Be(HttpMethod.Post.Method);
 			context.Request.Body.Should().Be(body);
 			// ReSharper restore PossibleNullReferenceException
+		}
+
+		[Fact]
+		public void AspNetCoreErrorDiagnosticsSubscriber_Should_Be_Registered_Only_Once()
+		{
+			var builder = _factory
+				.WithWebHostBuilder(n => n.Configure(app =>
+					app.UseElasticApm(_agent, _agent.Logger, new AspNetCoreErrorDiagnosticsSubscriber())));
+
+			builder.CreateClient();
+
+			_agent.Disposables.Should().NotBeNull();
+
+			var disposablesField = typeof(CompositeDisposable).GetField("_disposables", BindingFlags.Instance | BindingFlags.NonPublic);
+			disposablesField.Should().NotBeNull("private readonly _disposables field is not null");
+
+			var disposables = disposablesField.GetValue(_agent.Disposables) as List<IDisposable>;
+			disposables.Should().NotBeNull("_disposables should be a List<IDisposable>");
+
+			var listenersField = typeof(DiagnosticInitializer).GetField("_listeners", BindingFlags.Instance | BindingFlags.NonPublic);
+			listenersField.Should().NotBeNull("_listeners field is not null");
+
+			var count = UnwrapCompositeDisposable(disposables, disposablesField)
+				.Sum(disposable => CountAspNetCoreErrorDiagnosticsSubscriber(disposable, listenersField));
+
+			count.Should().Be(1, "One AspNetCoreErrorDiagnosticListener is registered");
+		}
+
+		private static IEnumerable<IDisposable> UnwrapCompositeDisposable(IEnumerable<IDisposable> disposables, FieldInfo disposablesField)
+		{
+			foreach (var disposable in disposables)
+			{
+				if (disposable is CompositeDisposable)
+				{
+					var innerDisposables = disposablesField.GetValue(disposable) as List<IDisposable>;
+					foreach (var innerDisposable in UnwrapCompositeDisposable(innerDisposables, disposablesField))
+						yield return innerDisposable;
+				}
+				else
+					yield return disposable;
+			}
+		}
+
+		private static int CountAspNetCoreErrorDiagnosticsSubscriber(IDisposable disposable, FieldInfo field)
+		{
+			if (disposable is DiagnosticInitializer diagnosticInitializer)
+			{
+				var listeners = (IEnumerable<IDiagnosticListener>)field.GetValue(diagnosticInitializer);
+				return listeners.Count(l => l is AspNetCoreErrorDiagnosticListener);
+			}
+
+			return 0;
 		}
 
 		public override void Dispose()
