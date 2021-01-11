@@ -68,6 +68,7 @@ namespace Elastic.Apm.Helpers
 			{
 				if (!matcher.StartsWith(Wildcard) && !matcher.EndsWith(Wildcard))
 					return new VerbatimMatcher(split[0], ignoreCase);
+
 				return new SimpleWildcardMatcher(split[0], matcher.StartsWith(Wildcard), matcher.EndsWith(Wildcard), ignoreCase);
 			}
 
@@ -110,7 +111,9 @@ namespace Elastic.Apm.Helpers
 		/// <returns>The first matching <see cref="WildcardMatcher" />, or <code>null</code> if none match.</returns>
 		internal static WildcardMatcher AnyMatch(IReadOnlyCollection<WildcardMatcher> matchers, string firstPart, string secondPart)
 		{
-			for (var i = 0; i < matchers?.Count; i++)
+			if (matchers is null) return null;
+
+			for (var i = 0; i < matchers.Count; i++)
 			{
 				if (matchers.ElementAt(i).Matches(firstPart, secondPart))
 					return matchers.ElementAt(i);
