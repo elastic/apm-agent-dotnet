@@ -10,18 +10,13 @@ using System.Web.Http;
 
 namespace AspNetFullFrameworkSampleApp.Controllers
 {
-	[RoutePrefix(Path)]
 	public class WebApiController : ApiController
 	{
 		public const string Path = "api/WebApi";
 
-		[Route]
-		[HttpGet]
 		public WebApiResponse Get() =>
 			new WebApiResponse { Content = "This is an example response from a web api controller" };
 
-		[Route]
-		[HttpPost]
 		public async Task<IHttpActionResult> Post()
 		{
 			var multipart = await Request.Content.ReadAsMultipartAsync();
