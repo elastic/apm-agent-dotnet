@@ -5,11 +5,15 @@
 using System;
 using System.Collections.Specialized;
 using System.IO;
+using System.Web;
 using System.Xml;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.AspNetFullFramework.Extensions
 {
+	/// <summary>
+	/// Extract details about a SOAP request from a HTTP request
+	/// </summary>
 	internal static class SoapRequest
 	{
 		private const string SoapActionHeaderName = "SOAPAction";
@@ -17,23 +21,44 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 		private const string SoapAction12ContentType = "application/soap+xml";
 
 		/// <summary>
-		/// Extracts the soap action from the header if exists only with Soap 1.1
+		/// Try to extract a Soap 1.1 or Soap 1.2 action from the request.
 		/// </summary>
-		/// <param name="headers">The request headers</param>
-		/// <param name="requestStream">The request stream</param>
-		/// <param name="logger">The logger.</param>
-		public static string ExtractSoapAction(NameValueCollection headers, Stream requestStream, IApmLogger logger)
+		/// <param name="logger">The logger</param>
+		/// <param name="request">The request</param>
+		/// <param name="soapAction">The extracted soap action. <c>null</c> if no soap action is extracted</param>
+		/// <returns><c>true</c> if a soap action can be extracted, <c>false</c> otherwise.</returns>
+		public static bool TryExtractSoapAction(IApmLogger logger, HttpRequest request, out string soapAction)
 		{
 			try
 			{
-				return GetSoap11Action(headers) ?? GetSoap12Action(headers, requestStream);
+				var headers = request.Unvalidated.Headers;
+				soapAction = GetSoap11Action(headers);
+				if (soapAction != null) return true;
+
+				// if the input stream has already been read bufferless, we can't inspect it
+				if (request.ReadEntityBodyMode == ReadEntityBodyMode.Bufferless)
+				{
+					soapAction = null;
+					return false;
+				}
+
+				if (IsSoap12Action(headers))
+				{
+					// use request.GetBufferedInputStream() which causes the framework to buffer what is read
+					// so that subsequent reads can read from the beginning.
+					// ASMX SOAP services by default deserialize the SOAP message in the input stream into
+					// the parameters for the method.
+					soapAction = GetSoap12ActionFromInputStream(request.GetBufferedInputStream());
+					if (soapAction != null) return true;
+				}
 			}
 			catch (Exception e)
 			{
-				logger.Error()?.LogException(e, "Error reading soap action header");
+				logger.Error()?.LogException(e, "Error extracting soap action");
 			}
 
-			return null;
+			soapAction = null;
+			return false;
 		}
 
 		/// <summary>
@@ -51,34 +76,13 @@ namespace Elastic.Apm.AspNetFullFramework.Extensions
 			return null;
 		}
 
-		/// <summary>
-		/// Lightweight parser that extracts the soap action from the xml body only with Soap 1.2
-		/// </summary>
-		/// <param name="headers">the request headers</param>
-		/// <param name="requestStream">the request stream</param>
-		private static string GetSoap12Action(NameValueCollection headers, Stream requestStream)
+		private static bool IsSoap12Action(NameValueCollection headers)
 		{
-			//[{"key":"Content-Type","value":"application/soap+xml; charset=utf-8"}]
 			var contentType = headers.Get(ContentTypeHeaderName);
-			if (contentType is null || !contentType.Contains(SoapAction12ContentType))
-				return null;
-
-			var stream = requestStream;
-			if (!stream.CanSeek)
-				return null;
-
-			try
-			{
-				var action = GetSoap12ActionInternal(stream);
-				return action;
-			}
-			finally
-			{
-				stream.Seek(0, SeekOrigin.Begin);
-			}
+			return contentType != null && contentType.Contains(SoapAction12ContentType);
 		}
 
-		internal static string GetSoap12ActionInternal(Stream stream)
+		internal static string GetSoap12ActionFromInputStream(Stream stream)
 		{
 			try
 			{
