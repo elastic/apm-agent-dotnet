@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using Elastic.Apm.AspNetFullFramework.Extensions;
 using FluentAssertions;
 using Xunit;
 
-namespace Elastic.Apm.Tests.Soap
+namespace Elastic.Apm.AspNetFullFramework.Tests.Soap
 {
 
-	public class Soap12Tests
+	public class SoapParsingTests
 	{
 		#region Samples
 		// Example 1: SOAP message containing a SOAP header block and a SOAP body
@@ -77,7 +75,7 @@ namespace Elastic.Apm.Tests.Soap
 ;
 
 		/// <summary>
-		/// This message is secured using WS-Security 
+		/// This message is secured using WS-Security
 		/// In fact, from a SOAP perspective, WS-Security is something that protects the contents of the message publishing one only method "EncryptedData".
 		/// Projects using WS-Security should log the actual methdod called deeper in the processing pipeline
 		/// </summary>
@@ -176,7 +174,7 @@ namespace Elastic.Apm.Tests.Soap
 		[InlineData(Sample2, "GetStockPrice")]
 		[InlineData(SampleWithComments, "GetStockPrice")]
 		[InlineData(SoapSampleOnlyBody, "GetStockPrice")]
-		[InlineData(SoapWithWsSecurity, "EncryptedData")] //special  
+		[InlineData(SoapWithWsSecurity, "EncryptedData")] //special
 		[InlineData(PartialMessage, "GetStockPrice")]
 		[InlineData(NotSoap, null)]
 		[InlineData(NotXml, null)]
@@ -186,7 +184,7 @@ namespace Elastic.Apm.Tests.Soap
 		public void Soap12Parser_ParsesHeaderAndBody(string soap, string expectedAction)
 		{
 			var requestStream = new MemoryStream(Encoding.UTF8.GetBytes(soap));
-			var action = SoapRequest.GetSoap12ActionInternal(requestStream);
+			var action = SoapRequest.GetSoap12ActionFromInputStream(requestStream);
 
 			action.Should().Be(expectedAction);
 		}
