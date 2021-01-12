@@ -46,7 +46,8 @@ namespace Elastic.Apm.Grpc.Tests
 			else
 				sampleAppHost = new SampleAppHostBuilder().BuildHostWithMiddleware(apmAgent);
 
-			apmAgent.Subscribe(new GrpcClientDiagnosticSubscriber(), new HttpDiagnosticsSubscriber());
+			var grpcClientDiagnosticSubscriber = new GrpcClientDiagnosticSubscriber();
+			apmAgent.Subscribe(grpcClientDiagnosticSubscriber, new HttpDiagnosticsSubscriber());
 
 			await sampleAppHost.StartAsync();
 
@@ -83,6 +84,8 @@ namespace Elastic.Apm.Grpc.Tests
 					&& span.Context.Destination.Service.Resource == $"localhost:{SampleAppHostBuilder.SampleAppPort}"
 				);
 
+			grpcClientDiagnosticSubscriber.Listener.ProcessingRequests.Should().BeEmpty();
+
 			await sampleAppHost.StopAsync();
 			sampleAppHost.Dispose();
 		}
@@ -100,11 +103,11 @@ namespace Elastic.Apm.Grpc.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using var apmAgent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
-
+			var grpcClientDiagnosticSubscriber = new GrpcClientDiagnosticSubscriber();
 			using var sampleAppHost = withDiagnosticSource
 				? new SampleAppHostBuilder().BuildHost()
 				: new SampleAppHostBuilder().BuildHostWithMiddleware(apmAgent);
-			apmAgent.Subscribe(new AspNetCoreDiagnosticSubscriber(), new GrpcClientDiagnosticSubscriber(), new HttpDiagnosticsSubscriber());
+			apmAgent.Subscribe(new AspNetCoreDiagnosticSubscriber(), grpcClientDiagnosticSubscriber, new HttpDiagnosticsSubscriber());
 
 			await sampleAppHost.StartAsync();
 
@@ -145,6 +148,8 @@ namespace Elastic.Apm.Grpc.Tests
 					&& span.Context.Destination.Service.Name == SampleAppHostBuilder.SampleAppUrl
 					&& span.Context.Destination.Service.Resource == $"localhost:{SampleAppHostBuilder.SampleAppPort}"
 				);
+
+			grpcClientDiagnosticSubscriber.Listener.ProcessingRequests.Should().BeEmpty();
 
 			await sampleAppHost.StopAsync();
 		}
