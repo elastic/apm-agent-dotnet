@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information
 
 using System.Linq;
-using Elastic.Apm.Tests.TestHelpers;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;

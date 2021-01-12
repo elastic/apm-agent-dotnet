@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Tests.TestHelpers;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;

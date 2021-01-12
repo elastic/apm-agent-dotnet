@@ -7,8 +7,6 @@ using System.Diagnostics;
 using System.Threading;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Tests.Extensions;
-using Elastic.Apm.Tests.TestHelpers;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;

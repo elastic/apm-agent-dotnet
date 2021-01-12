@@ -17,7 +17,6 @@ using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.HelpersTests;
-using Elastic.Apm.Tests.TestHelpers;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using FluentAssertions.Execution;

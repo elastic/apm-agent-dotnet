@@ -16,7 +16,6 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 using Elastic.Apm.Report.Serialization;
-using Elastic.Apm.Tests.TestHelpers;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Newtonsoft.Json;

@@ -7,7 +7,6 @@ using System;
 using System.IO;
 using System.Linq;
 using Elastic.Apm.Metrics.MetricsProvider;
-using Elastic.Apm.Tests.TestHelpers;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
