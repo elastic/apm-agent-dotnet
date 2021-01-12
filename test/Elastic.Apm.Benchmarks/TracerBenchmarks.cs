@@ -6,7 +6,7 @@ using BenchmarkDotNet.Attributes;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
 
-namespace Elastic.Apm.Perf.Tests
+namespace Elastic.Apm.Benchmarks
 {
 	/// <summary>
 	/// Benchmarks related to tracer (like starting a transaction, span, etc.)

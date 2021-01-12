@@ -5,35 +5,36 @@
 using System.Net.Http;
 using BenchmarkDotNet.Attributes;
 
-namespace Elastic.Apm.Perf.Tests.AspNetCorePerf
+namespace Elastic.Apm.Benchmarks.AspNetCorePerf
 {
 	/// <summary>
-	/// A Test which triggers a simple ASP.NET Core endpoint and measures the response WITHOUT agent.
+	/// A Test which triggers a simple ASP.NET Core endpoint and measures the response time while the agent is active in the
+	/// process.
 	/// </summary>
-	public class AspNetCoreLoadTestWithoutAgent
+	public class AspNetCoreLoadTestWithAgent
 	{
 		[GlobalSetup]
 		public void Setup()
 		{
 			var aspNetCoreTest = new AspNetCoreSampleRunner();
-			aspNetCoreTest.StartSampleAppWithAgent(false, "http://localhost:5902");
+			aspNetCoreTest.StartSampleAppWithAgent(true, "http://localhost:5901");
 
 			var httpClient = new HttpClient();
-			httpClient.GetAsync("http://localhost:5902").Wait();
+			httpClient.GetAsync("http://localhost:5901").Wait();
 		}
 
 		[Benchmark]
 		public void SimpleEmptyWebRequest()
 		{
 			var httpClient = new HttpClient();
-			httpClient.GetAsync("http://localhost:5902/Home/EmptyWebRequest").Wait();
+			httpClient.GetAsync("http://localhost:5901/Home/EmptyWebRequest").Wait();
 		}
 
 		[Benchmark]
 		public void WebRequestWithDbCallsAndCustomSpan()
 		{
 			var httpClient = new HttpClient();
-			httpClient.GetAsync("http://localhost:5902/Home/TransactionWithDbCallAndCustomSpan").Wait();
+			httpClient.GetAsync("http://localhost:5901/Home/TransactionWithDbCallAndCustomSpan").Wait();
 		}
 	}
 }

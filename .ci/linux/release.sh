@@ -19,7 +19,7 @@ if [ "${VERSION_SUFFIX_ENABLED}" = "true" ]; then
 fi
 
 # Remove sample projects - and other we don't want to pack
-dotnet sln remove test/Elastic.Apm.Perf.Tests/Elastic.Apm.Perf.Tests.csproj
+dotnet sln remove test/Elastic.Apm.Benchmarks/Elastic.Apm.Benchmarks.csproj
 dotnet sln remove test/Elastic.Apm.AspNetFullFramework.Tests/Elastic.Apm.AspNetFullFramework.Tests.csproj
 dotnet sln remove sample/AspNetFullFrameworkSampleApp/AspNetFullFrameworkSampleApp.csproj
 # shellcheck disable=SC2086

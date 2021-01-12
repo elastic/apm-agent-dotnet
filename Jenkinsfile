@@ -49,7 +49,7 @@ pipeline {
 
                  // Look for changes related to the benchmark, if so then set the env variable.
                 def patternList = [
-                  '^test/Elastic.Apm.Perf.Tests/.*'
+                  '^test/Elastic.Apm.Benchmarks/.*'
                 ]
                 env.BENCHMARK_UPDATED = isGitRegionMatch(patterns: patternList)
               }

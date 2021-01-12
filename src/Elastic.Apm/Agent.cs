@@ -51,7 +51,7 @@ using Elastic.Apm.Report;
 		"Elastic.Apm.AspNetCore.Static.Tests, PublicKey=" + Signing.PublicKey)]
 [assembly:
 	InternalsVisibleTo(
-		"Elastic.Apm.Perf.Tests, PublicKey=" + Signing.PublicKey)]
+		"Elastic.Apm.Benchmarks, PublicKey=" + Signing.PublicKey)]
 [assembly:
 	InternalsVisibleTo(
 		"Elastic.Apm.NetCoreAll.Tests, PublicKey=" + Signing.PublicKey)]

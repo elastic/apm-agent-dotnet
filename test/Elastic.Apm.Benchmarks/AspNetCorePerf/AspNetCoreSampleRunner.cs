@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using SampleAspNetCoreApp;
 
-namespace Elastic.Apm.Perf.Tests.AspNetCorePerf
+namespace Elastic.Apm.Benchmarks.AspNetCorePerf
 {
 	public class AspNetCoreSampleRunner
 	{

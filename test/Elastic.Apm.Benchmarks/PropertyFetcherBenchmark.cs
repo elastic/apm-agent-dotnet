@@ -8,7 +8,7 @@ using BenchmarkDotNet.Attributes;
 using Elastic.Apm.Helpers;
 using Microsoft.Data.SqlClient;
 
-namespace Elastic.Apm.Perf.Tests
+namespace Elastic.Apm.Benchmarks
 {
 	public class PropertyFetcherBenchmark
 	{
