@@ -16,7 +16,7 @@ namespace Elastic.Apm.GrpcClient
 {
 	public class GrpcClientDiagnosticSubscriber : IDiagnosticsSubscriber
 	{
-		internal GrpcClientDiagnosticListener GrpcClientDiagnosticListener { get; private set; }
+		internal GrpcClientDiagnosticListener Listener { get; private set; }
 
 		public IDisposable Subscribe(IApmAgent agent)
 		{
@@ -25,8 +25,8 @@ namespace Elastic.Apm.GrpcClient
 			if (!agent.ConfigurationReader.Enabled)
 				return retVal;
 
-			GrpcClientDiagnosticListener = new GrpcClientDiagnosticListener(agent as ApmAgent);
-			var subscriber = new DiagnosticInitializer(agent.Logger, new[] { GrpcClientDiagnosticListener });
+			Listener = new GrpcClientDiagnosticListener(agent as ApmAgent);
+			var subscriber = new DiagnosticInitializer(agent.Logger, new[] { Listener });
 			retVal.Add(subscriber);
 
 			retVal.Add(DiagnosticListener

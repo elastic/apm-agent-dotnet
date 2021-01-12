@@ -84,7 +84,7 @@ namespace Elastic.Apm.Grpc.Tests
 					&& span.Context.Destination.Service.Resource == $"localhost:{SampleAppHostBuilder.SampleAppPort}"
 				);
 
-			grpcClientDiagnosticSubscriber.GrpcClientDiagnosticListener.ProcessingRequests.Should().BeEmpty();
+			grpcClientDiagnosticSubscriber.Listener.ProcessingRequests.Should().BeEmpty();
 
 			await sampleAppHost.StopAsync();
 			sampleAppHost.Dispose();
@@ -149,7 +149,7 @@ namespace Elastic.Apm.Grpc.Tests
 					&& span.Context.Destination.Service.Resource == $"localhost:{SampleAppHostBuilder.SampleAppPort}"
 				);
 
-			grpcClientDiagnosticSubscriber.GrpcClientDiagnosticListener.ProcessingRequests.Should().BeEmpty();
+			grpcClientDiagnosticSubscriber.Listener.ProcessingRequests.Should().BeEmpty();
 
 			await sampleAppHost.StopAsync();
 		}
