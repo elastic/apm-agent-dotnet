@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
@@ -77,10 +78,11 @@ namespace Elastic.Apm.AspNetCore
 				return builder;
 			}
 
-			var subs = new List<IDiagnosticsSubscriber>(subscribers ?? Array.Empty<IDiagnosticsSubscriber>())
-			{
-				new AspNetCoreErrorDiagnosticsSubscriber()
-			};
+			var subs = subscribers?.ToList() ?? new List<IDiagnosticsSubscriber>(1);
+
+			if (subs.Count == 0 || subs.All(s => s.GetType() != typeof(AspNetCoreErrorDiagnosticsSubscriber)))
+				subs.Add(new AspNetCoreErrorDiagnosticsSubscriber());
+
 			agent.Subscribe(subs.ToArray());
 			return builder.UseMiddleware<ApmMiddleware>(agent.Tracer, agent);
 		}

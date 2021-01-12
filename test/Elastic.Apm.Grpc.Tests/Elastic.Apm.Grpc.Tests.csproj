@@ -23,30 +23,31 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Grpc.AspNetCore" Version="2.27.0" />
   </ItemGroup>
   <!--<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="3.1.0" />
   </ItemGroup>-->
-
-
+  
   <ItemGroup>
-    <ProjectReference Include="..\..\sample\GrpcServiceSample\GrpcServiceSample.csproj" />
     <ProjectReference Include="..\..\src\Elastic.Apm.GrpcClient\Elastic.Apm.GrpcClient.csproj" />
     <ProjectReference Include="..\..\src\Elastic.Apm\Elastic.Apm.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
+    <ProjectReference Include="..\..\src\Elastic.Apm.NetCoreAll\Elastic.Apm.NetCoreAll.csproj" />
   </ItemGroup>
-
-
+  
   <ItemGroup>
-    <Protobuf Include="..\..\sample\GrpcServiceSample\Protos\greet.proto" GrpcServices="Client">
+    <Protobuf Include="..\..\sample\GrpcServiceSample\Protos\greet.proto" GrpcServices="Both">
       <Link>Protos\greet.proto</Link>
     </Protobuf>
   </ItemGroup>
   <ItemGroup>
-    <Content Update="TestConfigs\appsettings_valid.json">
+    <Content Include="..\..\sample\GrpcServiceSample\appsettings.Development.json">
+      <Link>appsettings.Development.json</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Update="TestConfigs\appsettings_invalid.json">
+    <Content Include="..\..\sample\GrpcServiceSample\appsettings.json">
+      <Link>appsettings.json</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

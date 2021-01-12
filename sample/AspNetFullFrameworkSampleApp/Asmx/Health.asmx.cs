@@ -12,5 +12,8 @@ namespace AspNetFullFrameworkSampleApp.Asmx
 	{
 		[WebMethod]
 		public string Ping() => "Ok";
+
+		[WebMethod]
+		public string Input(string input) => input;
 	}
 }
