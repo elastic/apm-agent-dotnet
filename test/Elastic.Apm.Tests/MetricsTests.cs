@@ -276,8 +276,10 @@ namespace Elastic.Apm.Tests
 		public void CollectGcMetrics()
 		{
 			var logger = new TestLogger(LogLevel.Trace);
+			string traceEventSessionName = null;
 			using (var gcMetricsProvider = new GcMetricsProvider(logger))
 			{
+				traceEventSessionName = gcMetricsProvider.TraceEventSessionName;
 				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeFalse();
 
 #if !NETCOREAPP2_1
@@ -338,8 +340,8 @@ namespace Elastic.Apm.Tests
 
 			if (PlatformDetection.IsDotNetFullFramework)
 			{
-				var activeSessions = TraceEventSession.GetActiveSessionNames();
-				activeSessions.Should().NotContain(s => s.StartsWith(GcMetricsProvider.SessionNamePrefix));
+				var traceEventSession = TraceEventSession.GetActiveSession(traceEventSessionName);
+				traceEventSession.Should().BeNull();
 			}
 		}
 

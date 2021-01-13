@@ -66,8 +66,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			_logger = logger.Scoped(nameof(SystemTotalCpuProvider));
 			if (PlatformDetection.IsDotNetFullFramework)
 			{
-				var sessionName = SessionNamePrefix + Guid.NewGuid();
-				_traceEventSession = new TraceEventSession(sessionName);
+				TraceEventSessionName = SessionNamePrefix + Guid.NewGuid();
+				_traceEventSession = new TraceEventSession(TraceEventSessionName);
 				_traceEventSessionTask = Task.Run(() =>
 				{
 					try
@@ -94,35 +94,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				_eventListener = new GcEventListener(this, logger);
 		}
 
-		private void ClrOnGCHeapStats(GCHeapStatsTraceData a)
-		{
-			if (a.ProcessID == Process.GetCurrentProcess().Id)
-			{
-				if (!_isMetricAlreadyCaptured)
-				{
-					lock (_lock)
-						_isMetricAlreadyCaptured = true;
-				}
-				_gen0Size = (ulong)a.GenerationSize0;
-				_gen1Size = (ulong)a.GenerationSize1;
-				_gen2Size = (ulong)a.GenerationSize2;
-				_gen3Size = (ulong)a.GenerationSize3;
-			}
-		}
-
-		private void ClrOnGCStop(GCEndTraceData a)
-		{
-			if (a.ProcessID == Process.GetCurrentProcess().Id)
-			{
-				if (!_isMetricAlreadyCaptured)
-				{
-					lock (_lock)
-						_isMetricAlreadyCaptured = true;
-				}
-				_gcCount = (uint)a.Count;
-			}
-		}
-
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName => "GcMetricsProvider";
 
@@ -133,6 +104,12 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				lock (_lock) return _isMetricAlreadyCaptured;
 			}
 		}
+
+		/// <summary>
+		/// The name of the TraceEventSession when using <see cref="TraceEventSession"/>
+		/// to capture metrics, otherwise null.
+		/// </summary>
+		internal string TraceEventSessionName { get; }
 
 		public IEnumerable<MetricSample> GetSamples()
 		{
@@ -174,6 +151,34 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			}
 		}
 
+		private void ClrOnGCHeapStats(GCHeapStatsTraceData a)
+		{
+			if (a.ProcessID == Process.GetCurrentProcess().Id)
+			{
+				if (!_isMetricAlreadyCaptured)
+				{
+					lock (_lock)
+						_isMetricAlreadyCaptured = true;
+				}
+				_gen0Size = (ulong)a.GenerationSize0;
+				_gen1Size = (ulong)a.GenerationSize1;
+				_gen2Size = (ulong)a.GenerationSize2;
+				_gen3Size = (ulong)a.GenerationSize3;
+			}
+		}
+
+		private void ClrOnGCStop(GCEndTraceData a)
+		{
+			if (a.ProcessID == Process.GetCurrentProcess().Id)
+			{
+				if (!_isMetricAlreadyCaptured)
+				{
+					lock (_lock)
+						_isMetricAlreadyCaptured = true;
+				}
+				_gcCount = (uint)a.Count;
+			}
+		}
 
 		/// <summary>
 		/// An event listener that collects the GC stats
