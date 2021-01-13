@@ -26,13 +26,13 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 	/// </summary>
 	internal class GcMetricsProvider : IMetricsProvider, IDisposable
 	{
+		private const string SessionNamePrefix = "EtwSessionForCLRElasticApm_";
+
 		internal const string GcCountName = "clr.gc.count";
 		internal const string GcGen0SizeName = "clr.gc.gen0size";
 		internal const string GcGen1SizeName = "clr.gc.gen1size";
 		internal const string GcGen2SizeName = "clr.gc.gen2size";
 		internal const string GcGen3SizeName = "clr.gc.gen3size";
-
-		internal const string SessionNamePrefix = "EtwSessionForCLRElasticApm_";
 
 		private readonly bool _collectGcCount;
 		private readonly bool _collectGcGen0Size;
@@ -45,6 +45,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private readonly IApmLogger _logger;
 		private readonly TraceEventSession _traceEventSession;
 		private readonly Task _traceEventSessionTask;
+		private readonly int _currentProcessId;
 
 		private volatile bool _isMetricAlreadyCaptured;
 		private uint _gcCount;
@@ -68,6 +69,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			{
 				TraceEventSessionName = SessionNamePrefix + Guid.NewGuid();
 				_traceEventSession = new TraceEventSession(TraceEventSessionName);
+				_currentProcessId = Process.GetCurrentProcess().Id;
 				_traceEventSessionTask = Task.Run(() =>
 				{
 					try
@@ -153,7 +155,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		private void ClrOnGCHeapStats(GCHeapStatsTraceData a)
 		{
-			if (a.ProcessID == Process.GetCurrentProcess().Id)
+			if (a.ProcessID == _currentProcessId)
 			{
 				if (!_isMetricAlreadyCaptured)
 				{
@@ -169,7 +171,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		private void ClrOnGCStop(GCEndTraceData a)
 		{
-			if (a.ProcessID == Process.GetCurrentProcess().Id)
+			if (a.ProcessID == _currentProcessId)
 			{
 				if (!_isMetricAlreadyCaptured)
 				{

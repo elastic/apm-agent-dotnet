@@ -15,7 +15,7 @@ namespace Elastic.Apm.GrpcClient
 	public class GrpcClientDiagnosticListener : IDiagnosticListener
 	{
 		private readonly IApmAgent _agent;
-		private readonly ConcurrentDictionary<HttpRequestMessage, ISpan> _processingRequests = new ConcurrentDictionary<HttpRequestMessage, ISpan>();
+		internal readonly ConcurrentDictionary<HttpRequestMessage, ISpan> ProcessingRequests = new ConcurrentDictionary<HttpRequestMessage, ISpan>();
 
 		public GrpcClientDiagnosticListener(IApmAgent apmAgent) => _agent = apmAgent;
 
@@ -47,7 +47,7 @@ namespace Elastic.Apm.GrpcClient
 
 						_agent?.Logger.Trace()?.Log("Starting span for gRPC call, method:{methodName}", grpcMethodName);
 						var newSpan = currentTransaction.StartSpan(grpcMethodName, ApiConstants.TypeExternal, ApiConstants.SubTypeGrpc);
-						_processingRequests.TryAdd(requestObject, newSpan);
+						ProcessingRequests.TryAdd(requestObject, newSpan);
 					}
 				}
 			}
@@ -57,7 +57,7 @@ namespace Elastic.Apm.GrpcClient
 
 				if (requestObject == null) return;
 
-				if (!_processingRequests.TryGetValue(requestObject, out var span)) return;
+				if (!ProcessingRequests.TryRemove(requestObject, out var span)) return;
 
 				_agent?.Logger.Trace()?.Log("Ending span for gRPC call, span:{span}", span);
 

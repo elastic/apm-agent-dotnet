@@ -276,7 +276,7 @@ namespace Elastic.Apm.Tests
 		public void CollectGcMetrics()
 		{
 			var logger = new TestLogger(LogLevel.Trace);
-			string traceEventSessionName = null;
+			string traceEventSessionName;
 			using (var gcMetricsProvider = new GcMetricsProvider(logger))
 			{
 				traceEventSessionName = gcMetricsProvider.TraceEventSessionName;
@@ -308,7 +308,7 @@ namespace Elastic.Apm.Tests
 
 					var samples = gcMetricsProvider.GetSamples();
 
-					containsValue = samples != null && samples.Count() != 0;
+					containsValue = samples != null && samples.Any();
 
 					if (containsValue)
 						break;
