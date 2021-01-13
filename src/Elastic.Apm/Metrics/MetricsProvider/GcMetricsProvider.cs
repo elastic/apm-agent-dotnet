@@ -32,7 +32,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		internal const string GcGen2SizeName = "clr.gc.gen2size";
 		internal const string GcGen3SizeName = "clr.gc.gen3size";
 
-		private const string SessionNamePrefix = "EtwSessionForCLRElasticApm_";
+		internal const string SessionNamePrefix = "EtwSessionForCLRElasticApm_";
 
 		private readonly bool _collectGcCount;
 		private readonly bool _collectGcGen0Size;

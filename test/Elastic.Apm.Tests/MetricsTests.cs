@@ -17,13 +17,11 @@ using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
+using Microsoft.Diagnostics.Tracing.Session;
 using Moq;
 using Xunit;
 using Xunit.Abstractions;
-#if !NETCOREAPP2_1
 using Elastic.Apm.Helpers;
-
-#endif
 
 namespace Elastic.Apm.Tests
 {
@@ -336,6 +334,12 @@ namespace Elastic.Apm.Tests
 				containsValue.Should().BeTrue();
 				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeTrue();
 #endif
+			}
+
+			if (PlatformDetection.IsDotNetFullFramework)
+			{
+				var activeSessions = TraceEventSession.GetActiveSessionNames();
+				activeSessions.Should().NotContain(s => s.StartsWith(GcMetricsProvider.SessionNamePrefix));
 			}
 		}
 
