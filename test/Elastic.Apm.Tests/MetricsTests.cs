@@ -18,13 +18,11 @@ using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Mocks;
 using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
+using Microsoft.Diagnostics.Tracing.Session;
 using Moq;
 using Xunit;
 using Xunit.Abstractions;
-#if !NETCOREAPP2_1
 using Elastic.Apm.Helpers;
-
-#endif
 
 namespace Elastic.Apm.Tests
 {
@@ -33,8 +31,13 @@ namespace Elastic.Apm.Tests
 		private const string ThisClassName = nameof(MetricsTests);
 
 		private readonly IApmLogger _logger;
+		private ITestOutputHelper _output;
 
-		public MetricsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = LoggerBase.Scoped(ThisClassName);
+		public MetricsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper)
+		{
+			_output = xUnitOutputHelper;
+			_logger = LoggerBase.Scoped(ThisClassName);
+		}
 
 		public static IEnumerable<object[]> DisableProviderTestData
 		{
@@ -274,8 +277,10 @@ namespace Elastic.Apm.Tests
 		public void CollectGcMetrics()
 		{
 			var logger = new TestLogger(LogLevel.Trace);
+			string traceEventSessionName;
 			using (var gcMetricsProvider = new GcMetricsProvider(logger))
 			{
+				traceEventSessionName = gcMetricsProvider.TraceEventSessionName;
 				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeFalse();
 
 #if !NETCOREAPP2_1
@@ -304,7 +309,7 @@ namespace Elastic.Apm.Tests
 
 					var samples = gcMetricsProvider.GetSamples();
 
-					containsValue = samples != null && samples.Count() != 0;
+					containsValue = samples != null && samples.Any();
 
 					if (containsValue)
 						break;
@@ -312,24 +317,32 @@ namespace Elastic.Apm.Tests
 
 				if (PlatformDetection.IsDotNetFullFramework)
 				{
-					if (logger.Lines.Where(n => n.Contains("TraceEventSession initialization failed - GC metrics won't be collected")).Any())
+					if (logger.Lines.Any(n => n.Contains("TraceEventSession initialization failed - GC metrics won't be collected")))
 					{
 						// If initialization fails, (e.g. because ETW session initalization fails) we don't assert
+						_output.WriteLine("Initialization failed. don't make assertions");
 						return;
 					}
 				}
 
 				if (PlatformDetection.IsDotNetCore || PlatformDetection.IsDotNet5)
 				{
-					if (!logger.Lines.Where(n => n.Contains("OnEventWritten with GC")).Any())
+					if (!logger.Lines.Any(n => n.Contains("OnEventWritten with GC")))
 					{
 						// If no OnWritten with a GC event was called then initialization failed -> we don't assert
+						_output.WriteLine("Initialization failed. don't make assertions");
 						return;
 					}
 				}
 				containsValue.Should().BeTrue();
 				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeTrue();
 #endif
+			}
+
+			if (PlatformDetection.IsDotNetFullFramework)
+			{
+				var traceEventSession = TraceEventSession.GetActiveSession(traceEventSessionName);
+				traceEventSession.Should().BeNull();
 			}
 		}
 
