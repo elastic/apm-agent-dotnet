@@ -25,11 +25,10 @@ namespace Elastic.Apm.Extensions.Logging
 
 		public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
 		{
-			//if (_agent is ApmAgent apmAgent && !apmAgent.IsConfigured) return;
+			if (!Agent.IsConfigured) return;
 			if (logLevel < LogLevel.Error) return;
 
 			//TODO: do not capture agent errors as APM error
-
 
 			var logLine = formatter(state, exception);
 			var logOnError = new LogOnError(logLine);
@@ -39,6 +38,7 @@ namespace Elastic.Apm.Extensions.Logging
 					apmAgent.ConfigurationReader, apmAgent.Components.ApmServerInfo);
 
 			logOnError.Level = logLevel.ToString();
+
 			if (state is IEnumerable<KeyValuePair<string, object>> stateValues)
 			{
 				foreach (var item in stateValues)
@@ -56,7 +56,7 @@ namespace Elastic.Apm.Extensions.Logging
 			}
 			else if (_agent.Tracer.CurrentTransaction != null)
 			{
-				//(Agent.Tracer.CurrentTransaction as Transaction)?.CaptureLogError(logOnError);
+				(_agent.Tracer.CurrentTransaction as Transaction)?.CaptureLogError(logOnError);
 			}
 		}
 	}

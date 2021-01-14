@@ -33,12 +33,18 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 		public async Task CaptureErrorLogsAsApmError()
 		{
 			var payloadSender = new MockPayloadSender();
-			var hostBuilder1 = CreateHostBuilder(payloadSender).Build();
+			var hostBuilder = CreateHostBuilder(payloadSender).Build();
 
-			var builder1Task = hostBuilder1.StartAsync();
+			var builderTask = hostBuilder.StartAsync();
 
-			await Task.WhenAll(builder1Task);
-			await Task.WhenAll(hostBuilder1.StopAsync());
+			await builderTask;
+			payloadSender.WaitForErrors(TimeSpan.FromSeconds(5));
+			payloadSender.Errors.Should().NotBeEmpty();
+
+			payloadSender.FirstError.Log.Message.Should().Be("This is a sample error log message, with a sample value: 42");
+			payloadSender.FirstError.Log.ParamMessage.Should().Be("This is a sample error log message, with a sample value: {intParam}");
+
+			await hostBuilder.StopAsync();
 		}
 
 		/// <summary>

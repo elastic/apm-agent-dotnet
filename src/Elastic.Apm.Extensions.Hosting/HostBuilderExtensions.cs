@@ -8,11 +8,8 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-#if NET5_0
 using Microsoft.Extensions.Logging;
 using Elastic.Apm.Extensions.Logging;
-
-#endif
 
 namespace Elastic.Apm.Extensions.Hosting
 {
@@ -66,19 +63,20 @@ namespace Elastic.Apm.Extensions.Hosting
 					Agent.Setup(sp.GetService<AgentComponents>());
 					return Agent.Instance;
 				});
-#if NET5_0
-				services.AddSingleton<ILoggerProvider, ElasticApmErrorLoggingProvider>(sp =>
-					new ElasticApmErrorLoggingProvider(sp.GetService<IApmAgent>()));
-#endif
 
 				services.AddSingleton(sp => sp.GetRequiredService<IApmAgent>().Tracer);
 
+				// Force to create agent
 				var serviceProvider = services.BuildServiceProvider();
 				var agent = serviceProvider.GetService<IApmAgent>();
 
 				if (!(agent is ApmAgent apmAgent)) return;
 
 				if (!Agent.IsConfigured || !apmAgent.ConfigurationReader.Enabled) return;
+
+				// Only add ElasticApmErrorLoggingProvider after the agent is created, because it depends on the agent
+				services.AddSingleton<ILoggerProvider, ElasticApmErrorLoggingProvider>(sp =>
+					new ElasticApmErrorLoggingProvider(sp.GetService<IApmAgent>()));
 
 				if (subscribers != null && subscribers.Any() && Agent.IsConfigured)
 					apmAgent.Subscribe(subscribers);
