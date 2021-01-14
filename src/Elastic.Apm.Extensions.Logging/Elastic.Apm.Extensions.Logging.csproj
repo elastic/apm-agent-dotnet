@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <RootNamespace>Elastic.Apm.Extensions.Logging</RootNamespace>
+    <AssemblyName>Elastic.Apm.Extensions.Logging</AssemblyName>
+    <PackageId>Elastic.Apm.Extensions.Logging</PackageId>
+    <Description>TODO</Description>
+    <PackageTags>apm, monitoring, elastic, elasticapm, analytics, entiryframeworkcore, efcore</PackageTags>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="5.0.0">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

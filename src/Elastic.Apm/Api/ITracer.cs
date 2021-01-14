@@ -198,5 +198,29 @@ namespace Elastic.Apm.Api
 		/// By setting <paramref name="ignoreActivity"/> to <c>false</c> you can turn off this functionality. </param>
 		/// <returns>The transaction that is created based on the parameters. This transaction is already active.</returns>
 		ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null, bool ignoreActivity = false);
+
+		/// <summary>
+		/// Captures a custom error and reports it to the APM server.
+		/// </summary>
+		/// <param name="message">The error message.</param>
+		/// <param name="culprit">The culprit of the error.</param>
+		/// <param name="frames">The stack trace when the error occured.</param>
+		/// <param name="parentId">
+		/// The parent ID that is attached to the error. In case it's null the parent
+		/// will be automatically set to the current instance
+		/// </param>
+		void CaptureError(string message, string culprit, StackFrame[] frames = null, string parentId = null);
+
+		/// <summary>
+		/// Captures an exception and reports it to the APM server.
+		/// </summary>
+		/// <param name="exception">The exception to capture.</param>
+		/// <param name="culprit">The value of this parameter is shown as 'Culprit' on the APM UI.</param>
+		/// <param name="isHandled">Indicates whether the exception is handled or not.</param>
+		/// <param name="parentId">
+		/// The parent ID that is attached to the error. In case it's null the parent
+		/// will be automatically set to the current instance
+		/// </param>
+		void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null);
 	}
 }

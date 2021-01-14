@@ -474,5 +474,17 @@ namespace Elastic.Apm.Model
 
 		public void SetLabel(string key, decimal value)
 			=> Context.InternalLabels.Value.InnerDictionary[key] = value;
+
+		public void CaptureLogError(LogOnError logOnError, string parentId = null, Exception exception = null)
+			=> ExecutionSegmentCommon.CaptureLogError(
+				logOnError,
+				_payloadSender,
+				_logger,
+				this,
+				ConfigSnapshot,
+				_enclosingTransaction,
+				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id),
+				exception
+			);
 	}
 }

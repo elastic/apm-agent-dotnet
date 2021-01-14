@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.Report;
+using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -25,6 +27,18 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 
 			await Task.WhenAll(builder1Task, builder2Task);
 			await Task.WhenAll(hostBuilder1.StopAsync(), hostBuilder2.StopAsync());
+		}
+
+		[Fact]
+		public async Task CaptureErrorLogsAsApmError()
+		{
+			var payloadSender = new MockPayloadSender();
+			var hostBuilder1 = CreateHostBuilder(payloadSender).Build();
+
+			var builder1Task = hostBuilder1.StartAsync();
+
+			await Task.WhenAll(builder1Task);
+			await Task.WhenAll(hostBuilder1.StopAsync());
 		}
 
 		/// <summary>
@@ -83,10 +97,12 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 			}
 		}
 
-		private static IHostBuilder CreateHostBuilder() =>
+		private static IHostBuilder CreateHostBuilder(MockPayloadSender payloadSender = null) =>
 			Host.CreateDefaultBuilder()
+				.ConfigureServices(n=> n.AddSingleton<IPayloadSender, MockPayloadSender>( n=> payloadSender))
 				.ConfigureServices((context, services) => { services.AddHostedService<HostedService>(); })
 				.UseElasticApm();
+
 
 		public class FakeSubscriber : IDiagnosticsSubscriber
 		{

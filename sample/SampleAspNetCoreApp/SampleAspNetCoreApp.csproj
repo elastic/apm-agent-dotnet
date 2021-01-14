@@ -25,6 +25,7 @@
     <Folder Include="Migrations" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Elastic.Apm.Extensions.Logging\Elastic.Apm.Extensions.Logging.csproj" />
     <ProjectReference Include="..\..\src\Elastic.Apm.NetCoreAll\Elastic.Apm.NetCoreAll.csproj" />
   </ItemGroup>
   <ItemGroup>
