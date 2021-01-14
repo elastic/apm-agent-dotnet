@@ -86,7 +86,8 @@ namespace Elastic.Apm.BackendComm
 
 			await ExceptionUtils.DoSwallowingExceptions(_logger, async () =>
 				{
-					while (true) await WorkLoopIteration().ConfigureAwait(false);
+					while (!CancellationTokenSource.IsCancellationRequested)
+						await WorkLoopIteration().ConfigureAwait(false);
 					// ReSharper disable once FunctionNeverReturns
 				}
 				, dbgCallerMethodName: ThisClassName + "." + DbgUtils.CurrentMethodName()).ConfigureAwait(false);
@@ -106,13 +107,12 @@ namespace Elastic.Apm.BackendComm
 			_disposableHelper.DoOnce(_logger, _dbgName, () =>
 			{
 				_logger.Debug()?.Log("Calling CancellationTokenSource.Cancel()...");
-				// ReSharper disable once AccessToDisposedClosure
 				CancellationTokenSource.Cancel();
 				_logger.Debug()?.Log("Called CancellationTokenSource.Cancel()");
 
 				_logger.Debug()
 					?.Log("Waiting for loop to exit... Is cancellation token signaled: {IsCancellationRequested}",
-						CancellationTokenSource.Token.IsCancellationRequested);
+						CancellationTokenSource.IsCancellationRequested);
 				_loopCompleted.Wait();
 
 				_logger.Debug()?.Log("Disposing _singleThreadTaskScheduler ...");

@@ -236,15 +236,19 @@ namespace Elastic.Apm.Metrics
 
 		public void Dispose()
 		{
-			if (MetricsProviders == null) return;
-
-			_timer?.Stop();
-			_timer?.Dispose();
-
-			foreach (var provider in MetricsProviders)
+			if (_timer != null)
 			{
-				if (provider is IDisposable disposable)
-					disposable.Dispose();
+				_timer.Stop();
+				_timer.Dispose();
+			}
+
+			if (MetricsProviders != null)
+			{
+				foreach (var provider in MetricsProviders)
+				{
+					if (provider is IDisposable disposable)
+						disposable.Dispose();
+				}
 			}
 		}
 	}

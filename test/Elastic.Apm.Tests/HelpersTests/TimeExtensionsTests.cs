@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Tests.TestHelpers;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using Xunit;
@@ -16,9 +15,9 @@ namespace Elastic.Apm.Tests.HelpersTests
 	{
 		private static readonly ValueTuple<TimeSpan, string>[] ToHmsStringVariantsInternal =
 		{
-			(TimeSpan.Zero, "0"), (1.Nanosecond(), "0"), (49.Nanosecond(), "0"), (51.Nanosecond(), "100ns"), (99.Nanosecond(), "100ns"),
-			(100.Nanosecond(), "100ns"), (150.Nanosecond(), "200ns"), (199.Nanosecond(), "200ns"), (200.Nanosecond(), "200ns"),
-			(1200.Nanosecond(), "1us 200ns"), (1.Microseconds(), "1us"), (1.Millisecond(), "1ms"), (2.Second(), "2s"), (3.Minutes(), "3m"),
+			(TimeSpan.Zero, "0"), (1.Nanoseconds(), "0"), (49.Nanoseconds(), "0"), (51.Nanoseconds(), "100ns"), (99.Nanoseconds(), "100ns"),
+			(100.Nanoseconds(), "100ns"), (150.Nanoseconds(), "200ns"), (199.Nanoseconds(), "200ns"), (200.Nanoseconds(), "200ns"),
+			(1200.Nanoseconds(), "1us 200ns"), (1.Microseconds(), "1us"), (1.Milliseconds(), "1ms"), (2.Seconds(), "2s"), (3.Minutes(), "3m"),
 			(4.Hours(), "4h"), (5.Days(), "5d"), (678.Days(), "678d"),
 			(9.Days() + 8.Hours() + 7.Minutes() + 6.Seconds() + 5.Milliseconds(), "9d 8h 7m 6s 5ms"), (
 				1200.Days() + 25.Hours() + 59.Minutes() + 52.Seconds() + 9876.Milliseconds() + 2345.Microseconds() + 6789.Nanoseconds()
@@ -115,14 +114,14 @@ namespace Elastic.Apm.Tests.HelpersTests
 		{
 			TimeSpan[] deltas =
 			{
-				TimeSpan.Zero, TimeSpan.FromTicks(1), 1.Nanosecond(), 999.Nanosecond(), 1.Microsecond(), 999.Microseconds(), 1.Millisecond(),
+				TimeSpan.Zero, TimeSpan.FromTicks(1), 1.Nanoseconds(), 999.Nanoseconds(), 1.Microseconds(), 999.Microseconds(), 1.Milliseconds(),
 				501.Milliseconds(), 789.Milliseconds(), 999.Milliseconds()
 			};
 
 			TimeSpan[] baseTimeSpans =
 			{
-				TimeSpan.Zero, 1.Second(), 59.Second(), 1.Minute() + 7.Second(), 29.Minutes() + 23.Second(), 53.Minutes(), 1.Hour(),
-				13.Hours() + 29.Minutes() + 23.Second(), 22.Hours() + 1.Minute() + 7.Second()
+				TimeSpan.Zero, 1.Seconds(), 59.Seconds(), 1.Minutes() + 7.Seconds(), 29.Minutes() + 23.Seconds(), 53.Minutes(), 1.Hours(),
+				13.Hours() + 29.Minutes() + 23.Seconds(), 22.Hours() + 1.Minutes() + 7.Seconds()
 			};
 
 			IEnumerable<ValueTuple<TimeSpan, TimeSpan>> GenBasePlusDeltas()
@@ -165,15 +164,15 @@ namespace Elastic.Apm.Tests.HelpersTests
 		{
 			TimeSpan[] deltas =
 			{
-				TimeSpan.Zero, TimeSpan.FromTicks(1), 1.Nanosecond(), 999.Nanosecond(), 1.Microsecond(), 999.Microseconds(), 1.Millisecond(),
+				TimeSpan.Zero, TimeSpan.FromTicks(1), 1.Nanoseconds(), 999.Nanoseconds(), 1.Microseconds(), 999.Microseconds(), 1.Milliseconds(),
 				501.Milliseconds(), 789.Milliseconds(), 999.Milliseconds()
 			};
 
 			ValueTuple<TimeSpan, string>[] baseVariants =
 			{
-				(TimeSpan.Zero, "0s"), (1.Second(), "1s"), (59.Second(), "59s"), (1.Minute() + 7.Second(), "1m 7s"),
-				(29.Minutes() + 23.Second(), "29m 23s"), (53.Minutes(), "53m"), (1.Hour() + 29.Minutes() + 23.Second(), "1h 29m 23s"),
-				(13.Hours() + 59.Second(), "13h 59s"), (22.Hours() + 1.Minute() + 7.Second(), "22h 1m 7s")
+				(TimeSpan.Zero, "0s"), (1.Seconds(), "1s"), (59.Seconds(), "59s"), (1.Minutes() + 7.Seconds(), "1m 7s"),
+				(29.Minutes() + 23.Seconds(), "29m 23s"), (53.Minutes(), "53m"), (1.Hours() + 29.Minutes() + 23.Seconds(), "1h 29m 23s"),
+				(13.Hours() + 59.Seconds(), "13h 59s"), (22.Hours() + 1.Minutes() + 7.Seconds(), "22h 1m 7s")
 			};
 
 			IEnumerable<ValueTuple<TimeSpan, string>> GenBasePlusDeltas()
@@ -203,7 +202,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 
 					if (timeSpan == TimeSpan.Zero) continue;
 
-					if (timeSpan >= 1.Second())
+					if (timeSpan >= 1.Seconds())
 						yield return (-timeSpan, "-" + hmsInSeconds);
 					else
 						yield return (-timeSpan, ">-1s");

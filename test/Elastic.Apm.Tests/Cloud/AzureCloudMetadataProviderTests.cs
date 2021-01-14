@@ -5,7 +5,7 @@
 
 using System.Threading.Tasks;
 using Elastic.Apm.Cloud;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Newtonsoft.Json;
 using RichardSzalay.MockHttp;

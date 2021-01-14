@@ -16,13 +16,12 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
-using Elastic.Apm.Tests.Mocks;
-using Elastic.Apm.Tests.TestHelpers;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using Xunit;
 using Xunit.Abstractions;
-using static Elastic.Apm.Tests.TestHelpers.FluentAssertionsUtils;
+using static Elastic.Apm.Tests.Utilities.FluentAssertionsUtils;
 
 namespace Elastic.Apm.Tests.BackendCommTests
 {

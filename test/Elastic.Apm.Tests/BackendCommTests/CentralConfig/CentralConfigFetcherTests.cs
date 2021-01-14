@@ -15,8 +15,7 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
-using Elastic.Apm.Tests.Mocks;
-using Elastic.Apm.Tests.TestHelpers;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using RichardSzalay.MockHttp;
@@ -37,15 +36,14 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		{
 			var testLogger = new ConsoleLogger(LogLevel.Trace);
 
-			var environmentConfigurationReader = new EnvironmentConfigurationReader();
-			var configSnapshotFromReader = new ConfigSnapshotFromReader(environmentConfigurationReader, "local");
+			var configSnapshotFromReader = new MockConfigSnapshot(testLogger);
 			var configStore = new ConfigStore(configSnapshotFromReader, testLogger);
-			var service = Service.GetDefaultService(environmentConfigurationReader, testLogger);
+			var service = Service.GetDefaultService(configSnapshotFromReader, testLogger);
 
 			var waitHandle = new ManualResetEvent(false);
 			var handler = new MockHttpMessageHandler();
 			var configUrl = BackendCommUtils.ApmServerEndpoints
-				.BuildGetConfigAbsoluteUrl(environmentConfigurationReader.ServerUrl, service);
+				.BuildGetConfigAbsoluteUrl(configSnapshotFromReader.ServerUrl, service);
 
 			handler.When(configUrl.AbsoluteUri)
 				.Respond(_ =>
@@ -66,7 +64,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			{
 				centralConfigFetcher.IsRunning.Should().BeTrue();
 				waitHandle.WaitOne();
-				Thread.Sleep(TimeSpan.FromSeconds(3));
+				Thread.Sleep(5.Seconds());
 			}
 
 			testLogger.LogLevelSwitch.Level.Should().Be(LogLevel.Error);
@@ -93,15 +91,14 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		{
 			var testLogger = new UnswitchableLogger(new LogLevelSwitch(LogLevel.Trace));
 
-			var environmentConfigurationReader = new EnvironmentConfigurationReader();
-			var configSnapshotFromReader = new ConfigSnapshotFromReader(environmentConfigurationReader, "local");
+			var configSnapshotFromReader = new MockConfigSnapshot(testLogger);
 			var configStore = new ConfigStore(configSnapshotFromReader, testLogger);
-			var service = Service.GetDefaultService(environmentConfigurationReader, testLogger);
+			var service = Service.GetDefaultService(configSnapshotFromReader, testLogger);
 
 			var waitHandle = new ManualResetEvent(false);
 			var handler = new MockHttpMessageHandler();
 			var configUrl = BackendCommUtils.ApmServerEndpoints
-				.BuildGetConfigAbsoluteUrl(environmentConfigurationReader.ServerUrl, service);
+				.BuildGetConfigAbsoluteUrl(configSnapshotFromReader.ServerUrl, service);
 
 			handler.When(configUrl.AbsoluteUri)
 				.Respond(_ =>
@@ -134,8 +131,18 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			var configSnapshotFromReader = new ConfigSnapshotFromReader(new EnvironmentConfigurationReader(), "local");
 			var configStore = new ConfigStore(configSnapshotFromReader, LoggerBase);
 			var service = Service.GetDefaultService(new EnvironmentConfigurationReader(), LoggerBase);
+			var handler = new MockHttpMessageHandler();
+			var configUrl = BackendCommUtils.ApmServerEndpoints
+				.BuildGetConfigAbsoluteUrl(configSnapshotFromReader.ServerUrl, service);
+			handler.When(configUrl.AbsoluteUri)
+				.Respond(_ => new HttpResponseMessage(HttpStatusCode.OK)
+				{
+					Headers = { ETag = new EntityTagHeaderValue("\"etag\"") },
+					Content = new StringContent("{}", Encoding.UTF8)
+				});
+
 			using (var agent = new ApmAgent(new TestAgentComponents(LoggerBase,
-				centralConfigFetcher: new CentralConfigFetcher(LoggerBase, configStore, service),
+				centralConfigFetcher: new CentralConfigFetcher(LoggerBase, configStore, service, handler),
 				payloadSender: new PayloadSenderV2(LoggerBase, configSnapshotFromReader, service,
 					new SystemInfoHelper(LoggerBase).ParseSystemInfo(null), MockApmServerInfo.Version710))))
 			{
@@ -159,12 +166,25 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		public void Create_many_concurrent_instances(int numberOfAgentInstances)
 		{
 			var agents = new ApmAgent[numberOfAgentInstances];
+
 			numberOfAgentInstances.Repeat(i =>
 			{
 				var configSnapshotFromReader = new ConfigSnapshotFromReader(new EnvironmentConfigurationReader(), "local");
-				var configStore = new ConfigStore(configSnapshotFromReader, LoggerBase);
 				var service = Service.GetDefaultService(new EnvironmentConfigurationReader(), LoggerBase);
-				var centralConfigFetcher = new CentralConfigFetcher(LoggerBase, configStore, service);
+				var configStore = new ConfigStore(configSnapshotFromReader, LoggerBase);
+
+				var handler = new MockHttpMessageHandler();
+				var configUrl = BackendCommUtils.ApmServerEndpoints
+					.BuildGetConfigAbsoluteUrl(configSnapshotFromReader.ServerUrl, service);
+
+				handler.When(configUrl.AbsoluteUri)
+					.Respond(_ => new HttpResponseMessage(HttpStatusCode.OK)
+					{
+						Headers = { ETag = new EntityTagHeaderValue("\"etag\"") },
+						Content = new StringContent("{}", Encoding.UTF8)
+					});
+
+				var centralConfigFetcher = new CentralConfigFetcher(LoggerBase, configStore, service, handler);
 				var payloadSender = new PayloadSenderV2(
 					LoggerBase,
 					configSnapshotFromReader,

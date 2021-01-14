@@ -6,7 +6,7 @@ using System;
 using System.Data.Common;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -43,6 +43,7 @@ namespace Elastic.Apm.EntityFrameworkCore.Tests
 		public void Dispose()
 		{
 			_connection?.Close();
+			_connection?.Dispose();
 			_dbContext?.Dispose();
 			_apmAgent?.Dispose();
 		}

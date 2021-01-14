@@ -11,7 +11,7 @@ using System.Net.Http.Headers;
 using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 

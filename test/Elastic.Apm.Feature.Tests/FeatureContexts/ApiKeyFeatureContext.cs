@@ -8,7 +8,7 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 
 namespace Elastic.Apm.Feature.Tests.FeatureContexts

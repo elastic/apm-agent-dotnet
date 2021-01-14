@@ -9,8 +9,7 @@ using System.Data.SqlClient;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.DatabaseTests.Common;
-using Elastic.Apm.Tests.Mocks;
-using Elastic.Apm.Tests.TestHelpers;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -36,7 +35,7 @@ namespace Elastic.Apm.SqlClient.Tests
 			_testOutputHelper = testOutputHelper;
 
 			_payloadSender = new MockPayloadSender();
-			_apmAgent = new ApmAgent(new AgentComponents(
+			_apmAgent = new ApmAgent(new TestAgentComponents(
 				new LineWriterToLoggerAdaptor(new XunitOutputToLineWriterAdaptor(_testOutputHelper)),
 				payloadSender: _payloadSender));
 			_apmAgent.Subscribe(new SqlClientDiagnosticSubscriber());

@@ -8,7 +8,7 @@ using System.Diagnostics;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Model;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Moq;
 using Xunit;
@@ -233,7 +233,7 @@ namespace Elastic.Apm.Tests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var mockConfigSnapshot = new MockConfigSnapshot(enabled: "false");
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender, configurationReader: mockConfigSnapshot));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender, config: mockConfigSnapshot));
 
 			CreateTransactionsAndSpans(agent);
 
@@ -253,7 +253,7 @@ namespace Elastic.Apm.Tests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var mockConfigSnapshot = new MockConfigSnapshot(recording: "false");
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender, configurationReader: mockConfigSnapshot));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender, config: mockConfigSnapshot));
 
 			CreateTransactionsAndSpans(agent);
 
@@ -273,7 +273,7 @@ namespace Elastic.Apm.Tests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var mockConfigSnapshot = new MockConfigSnapshot(enabled: "false");
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender, configurationReader: mockConfigSnapshot));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender, config: mockConfigSnapshot));
 
 			var transaction = agent.Tracer.StartTransaction("foo", "bar");
 			transaction.Should().BeOfType<NoopTransaction>();

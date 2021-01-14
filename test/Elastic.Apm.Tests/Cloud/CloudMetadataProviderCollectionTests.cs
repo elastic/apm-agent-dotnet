@@ -5,7 +5,7 @@
 
 using System.Linq;
 using Elastic.Apm.Cloud;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 using static Elastic.Apm.Config.ConfigConsts;

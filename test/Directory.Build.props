@@ -8,5 +8,27 @@
     <WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
     <!-- Always generate debug symbols this allows fluent symbols exception messages to include variable names -->
     <DebugSymbols>True</DebugSymbols>
+    <!-- All projects in this directory are assumed to be Test projects by default i.e. containing tests. Some may not
+     be however, so they can override this setting so that common test components are not added.
+     -->
+    <IsTestProject>true</IsTestProject>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- use xunit config for all test files. Allow assemblies to run in parallel -->
+    <Content Include="$(SolutionRoot)/xunit.runner.json" CopyToOutputDirectory="PreserveNewest" Condition="'$(IsTestProject)' == 'true'" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <!-- Add coverlet MSBuild only for Windows -->
+    <PackageReference Include="coverlet.msbuild" Version="2.9.0" Condition="'$(IsTestProject)' == 'true' AND '$(OS)' == 'WINDOWS_NT'">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <!-- Add coverlet collector for all platforms -->
+    <PackageReference Include="coverlet.collector" Version="1.3.0" Condition="'$(IsTestProject)' == 'true'">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="JunitXml.TestLogger" Version="2.1.78" Condition="'$(IsTestProject)' == 'true'" />
+  </ItemGroup>
 </Project>

@@ -11,7 +11,7 @@ using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 
@@ -354,7 +354,7 @@ namespace Elastic.Apm.Tests
 			using var payloadSender = new PayloadSenderV2(inMemoryLogger, configReader,
 				Service.GetDefaultService(configReader, inMemoryLogger), new Api.System(), MockApmServerInfo.Version710);
 
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			agent.Tracer.CaptureTransaction("Test", "TestTransaction", () => { });
 
@@ -384,7 +384,7 @@ namespace Elastic.Apm.Tests
 			using var payloadSender = new PayloadSenderV2(inMemoryLogger, configReader,
 				Service.GetDefaultService(configReader, inMemoryLogger), new Api.System(), MockApmServerInfo.Version710);
 
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			agent.Tracer.CaptureTransaction("Test", "TestTransaction", () => { });
 

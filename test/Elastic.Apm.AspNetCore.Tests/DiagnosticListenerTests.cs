@@ -7,7 +7,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.EntityFrameworkCore;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;

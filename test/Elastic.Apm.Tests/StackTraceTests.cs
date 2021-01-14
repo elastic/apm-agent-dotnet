@@ -12,7 +12,7 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Model;
 using Elastic.Apm.ServerInfo;
 using Elastic.Apm.Tests.Extensions;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 

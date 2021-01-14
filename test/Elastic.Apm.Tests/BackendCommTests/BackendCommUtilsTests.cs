@@ -4,13 +4,12 @@
 
 using System;
 using Elastic.Apm.Api;
-using Elastic.Apm.Tests.Mocks;
-using Elastic.Apm.Tests.TestHelpers;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 using static Elastic.Apm.BackendComm.BackendCommUtils.ApmServerEndpoints;
-using static Elastic.Apm.Tests.TestHelpers.FluentAssertionsUtils;
+using static Elastic.Apm.Tests.Utilities.FluentAssertionsUtils;
 
 // ReSharper disable ImplicitlyCapturedClosure
 

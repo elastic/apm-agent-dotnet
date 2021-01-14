@@ -10,7 +10,7 @@ using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

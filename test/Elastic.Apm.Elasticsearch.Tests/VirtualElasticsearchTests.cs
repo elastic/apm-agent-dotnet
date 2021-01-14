@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using Elasticsearch.Net;
 using Elasticsearch.Net.VirtualizedCluster;
 using FluentAssertions;
