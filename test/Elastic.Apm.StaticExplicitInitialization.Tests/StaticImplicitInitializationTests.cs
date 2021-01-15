@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Xunit;
 
-namespace Elastic.Apm.Tests
+namespace Elastic.Apm.StaticExplicitInitialization.Tests
 {
 	public class StaticImplicitInitializationTests
 	{
