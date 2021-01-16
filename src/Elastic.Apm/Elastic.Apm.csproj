@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
     <IsPackable>true</IsPackable>
+    <UseDiagnosticSourceVersionFour>false</UseDiagnosticSourceVersionFour>
   </PropertyGroup>
   <PropertyGroup>
     <RootNamespace>Elastic.Apm</RootNamespace>
@@ -14,8 +15,13 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.5.0" />
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(UseDiagnosticSourceVersionFour)' == 'false'">
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="5.0.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseDiagnosticSourceVersionFour)' == 'true'">
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.6.0" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="2.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />

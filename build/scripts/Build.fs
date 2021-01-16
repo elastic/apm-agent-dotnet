@@ -5,10 +5,13 @@
 namespace Scripts
 
 open System
+open System.Collections.Generic
 open System.IO
 open System.IO.Compression
+open System.Linq
 open System.Runtime.InteropServices
 open System.Xml.Linq
+open Buildalyzer
 open Fake.Core
 open Fake.DotNet
 open Fake.IO
@@ -73,7 +76,67 @@ module Build =
             DisableInternalBinLog = true
             NoLogo = true
         }) projectOrSln
+        
+    let private elasticApmDiagnosticSourceVersions = Dictionary<bool, string>()
     
+    /// Gets the version of System.Diagnostics.DiagnosticSource referenced by Elastic.Apm    
+    let private getElasticApmDiagnosticSourceVersion useDiagnosticSourceVersionFour =
+        match elasticApmDiagnosticSourceVersions.TryGetValue useDiagnosticSourceVersionFour with
+        | true, v -> v
+        | false, _ ->        
+            let manager = AnalyzerManager();
+            let analyzer = manager.GetProject(Paths.SrcProjFile "Elastic.Apm")
+            
+            if useDiagnosticSourceVersionFour then
+                analyzer.SetGlobalProperty("UseDiagnosticSourceVersionFour", "true")
+                  
+            let analyzeResult = analyzer.Build("netstandard2.0").First()        
+            let values = analyzeResult.PackageReferences.["System.Diagnostics.DiagnosticSource"]          
+            let version = values.["Version"]
+            elasticApmDiagnosticSourceVersions.Add(useDiagnosticSourceVersionFour, version)
+            version
+        
+    let private majorVersions = Dictionary<SemVerInfo, SemVerInfo>()
+        
+    /// Converts a semantic version to its major version component only 
+    let private majorVersion (version: SemVerInfo) =
+        match majorVersions.TryGetValue version with
+        | true, v -> v
+        | false, _ -> 
+            let v = { version with
+                        Minor = 0u
+                        Patch = 0u
+                        PreRelease = None
+                        Original = None }
+            majorVersions.Add(version, v)
+            v
+        
+    /// Publishes ElasticApmStartupHook against a 4.x version of System.Diagnostics.DiagnosticSource
+    let private publishElasticApmStartupHookWithDiagnosticSourceVersion () =
+        let diagnosticSourceVersion = getElasticApmDiagnosticSourceVersion true         
+        let majorVersion = SemVer.parse diagnosticSourceVersion |> majorVersion
+           
+        let projs =
+            !! (Paths.SrcProjFile "Elastic.Apm")
+            ++ (Paths.SrcProjFile "Elastic.Apm.StartupHook.Loader")
+        
+        projs
+        |> Seq.map getAllTargetFrameworks
+        |> Seq.iter (fun (proj, frameworks) ->
+            frameworks
+            |> Seq.iter(fun framework ->
+                let output =
+                    Path.GetFileNameWithoutExtension proj
+                    |> (fun p -> sprintf "%s_%O" p majorVersion)
+                    |> Paths.BuildOutput
+                    |> Path.GetFullPath
+                
+                printfn "Publishing %s %s with System.Diagnostics.DiagnosticSource %s..." proj framework diagnosticSourceVersion
+                DotNet.Exec ["publish" ; proj; "\"/p:UseDiagnosticSourceVersionFour=true\""; "-c"; "Release"; "-f"; framework
+                             "-v"; "q"; "--nologo"; "--force"; "-o"; output ]
+            )
+        )
+
     /// Generates a new .sln file that contains only .NET Core projects  
     let GenerateNetCoreSln () =
         File.Copy(Paths.Solution, Paths.SolutionNetCore, true)
@@ -86,7 +149,7 @@ module Build =
         dotnet "build" Paths.SolutionNetCore
         if isWindows then msBuild "Build" aspNetFullFramework
         copyBinRelease()
-                
+                              
     /// Publishes all projects with framework versions
     let Publish () =
         allSrcProjects
@@ -94,13 +157,19 @@ module Build =
         |> Seq.iter (fun (proj, frameworks) ->
             frameworks
             |> Seq.iter(fun framework ->
+                let output =
+                    Path.GetFileNameWithoutExtension proj
+                    |> (fun p -> sprintf "%s/%s" p framework) 
+                    |> Paths.BuildOutput
+                    |> Path.GetFullPath
+                
                 printfn "Publishing %s %s..." proj framework
-                DotNet.Exec ["publish" ; proj; "-c"; "Release"; "-f"; framework; "-v"; "q"; "--nologo"]
+                DotNet.Exec ["publish" ; proj; "-c"; "Release"; "-f"; framework; "-v"; "q"; "--nologo"; "-o"; output]
             )
         )
         
-        copyBinRelease()
-        
+        publishElasticApmStartupHookWithDiagnosticSourceVersion()
+     
     /// Packages projects into nuget packages
     let Pack (canary:bool) =
         let arguments =
@@ -120,7 +189,7 @@ module Build =
         if isWindows then DotNet.Exec ["restore" ; aspNetFullFramework; "-v"; "q"]
             
     /// Creates versioned ElasticApmAgent.zip file    
-    let AgentZip () =
+    let AgentZip () =        
         let name = sprintf "ElasticApmAgent_%s" (Versioning.CurrentVersion.AssemblyVersion.ToString())        
         let agentDir = Paths.BuildOutput name |> DirectoryInfo                    
         agentDir.Create()
@@ -131,12 +200,18 @@ module Build =
             source.GetFiles()
             |> Seq.iter (fun file -> file.CopyTo(Path.combine destination.FullName file.Name, true) |> ignore)
             
-        let copyToAgentDir = copyRecursive agentDir
-
-        !! (Paths.BuildOutput "**/netstandard2.0/publish")
-        ++ (Paths.BuildOutput "ElasticApmStartupHook/netcoreapp2.2/publish")
+        let oldDiagnosticSourceVersion = getElasticApmDiagnosticSourceVersion true         
+        let oldMajorVersion = SemVer.parse oldDiagnosticSourceVersion |> majorVersion
+            
+        !! (Paths.BuildOutput "Elastic.Apm.StartupHook.Loader/netcoreapp2.2")
+        ++ (Paths.BuildOutput "ElasticApmStartupHook/netcoreapp2.2")       
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
-        |> Seq.iter copyToAgentDir
+        |> Seq.iter (copyRecursive agentDir)
+        
+        !! (sprintf "Elastic.Apm.StartupHook.Loader_%O" oldMajorVersion |> Paths.BuildOutput)
+        |> Seq.filter Path.isDirectory
+        |> Seq.map DirectoryInfo
+        |> Seq.iter (copyRecursive (agentDir.CreateSubdirectory(sprintf "%O" oldMajorVersion)))
             
         ZipFile.CreateFromDirectory(agentDir.FullName, Paths.BuildOutput name + ".zip")

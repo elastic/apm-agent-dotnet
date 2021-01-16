@@ -117,6 +117,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.AspNetCore.Stat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Tests.Utilities", "test\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj", "{43F9247D-544B-49FB-9E50-FC236D90DE1A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.StartupHook.Loader", "src\Elastic.Apm.StartupHook.Loader\Elastic.Apm.StartupHook.Loader.csproj", "{B5200DC5-5E48-4F72-ADA9-96D0380A00CB}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		test\Elastic.Apm.DatabaseTests.Common\Elastic.Apm.DatabaseTests.Common.projitems*{968e1e85-e996-42de-9845-d20dae16165a}*SharedItemsImports = 5
@@ -282,6 +284,10 @@ Global
 		{43F9247D-544B-49FB-9E50-FC236D90DE1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{43F9247D-544B-49FB-9E50-FC236D90DE1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{43F9247D-544B-49FB-9E50-FC236D90DE1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5200DC5-5E48-4F72-ADA9-96D0380A00CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5200DC5-5E48-4F72-ADA9-96D0380A00CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5200DC5-5E48-4F72-ADA9-96D0380A00CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5200DC5-5E48-4F72-ADA9-96D0380A00CB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -326,6 +332,7 @@ Global
 		{5D076C7F-1F8B-4B11-9910-48717D133963} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{2250D888-E4CC-4B2B-AF31-5C78D76EC73D} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{43F9247D-544B-49FB-9E50-FC236D90DE1A} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{B5200DC5-5E48-4F72-ADA9-96D0380A00CB} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}
