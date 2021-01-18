@@ -4,7 +4,9 @@
   </Target>
   <Target Name="Clean" Condition="'$(OS)' != 'WINDOWS_NT'">
   </Target>
-  <!-- dummy Pack target to allow dotnet pack to be called on solution file to package all <IsPackable>true</IsPackable> projects -->
+  <!-- dummy Pack target to allow dotnet pack to be called on solution file to package all <IsPackable>true</IsPackable> projects. 
+       Even though all sample apps inherit <IsPackable>false</IsPackable>, MSBuild still attempts to pack this project.
+  -->
   <Target Name="Pack">
   </Target>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props')" />
