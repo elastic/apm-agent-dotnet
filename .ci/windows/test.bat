@@ -10,7 +10,8 @@ dotnet test -c Release --no-build ^
  /p:CollectCoverage=true ^
  /p:CoverletOutputFormat=cobertura ^
  /p:CoverletOutput=target\Coverage\ ^
- /p:Exclude=\"[Elastic.Apm.Tests]*,[SampleAspNetCoreApp*]*,[xunit*]*\" ^
+ /p:Include=\"[Elastic.*]*,[ElasticApmStartupHook]*\" ^
+ /p:Exclude=\"[Elastic.Apm.Tests]*,[Elastic.Apm.*.Tests]*,[Elastic.Apm.Tests.*]*,[Elastic.Apm.Benchmarks]*\" ^
  /p:Threshold=0 ^
  /p:ThresholdType=branch ^
  /p:ThresholdStat=total
