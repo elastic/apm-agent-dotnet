@@ -151,8 +151,14 @@ module Build =
         copyBinRelease()
                               
     /// Publishes all projects with framework versions
-    let Publish () =
-        allSrcProjects
+    let Publish targets =
+        
+        let projs =
+            match targets with
+            | Some t -> t
+            | None -> allSrcProjects
+        
+        projs
         |> Seq.map getAllTargetFrameworks
         |> Seq.iter (fun (proj, frameworks) ->
             frameworks
@@ -169,12 +175,15 @@ module Build =
         )
         
         publishElasticApmStartupHookWithDiagnosticSourceVersion()
+    
+    /// Version suffix used for canary builds
+    let versionSuffix = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") |> sprintf "alpha-%s"
      
     /// Packages projects into nuget packages
     let Pack (canary:bool) =
         let arguments =
             let a = ["pack" ; Paths.Solution; "-c"; "Release"; "-o"; Paths.NugetOutput]
-            if canary then List.append a ["--version-suffix"; DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") |> sprintf "alpha-%s"]
+            if canary then List.append a ["--version-suffix"; versionSuffix]
             else a      
         DotNet.Exec arguments
           
@@ -189,15 +198,20 @@ module Build =
         if isWindows then DotNet.Exec ["restore" ; aspNetFullFramework; "-v"; "q"]
             
     /// Creates versioned ElasticApmAgent.zip file    
-    let AgentZip () =        
-        let name = sprintf "ElasticApmAgent_%s" (Versioning.CurrentVersion.AssemblyVersion.ToString())        
+    let AgentZip (canary:bool) =        
+        let name =
+            if canary then
+                sprintf "ElasticApmAgent_%s-%s" (Versioning.CurrentVersion.AssemblyVersion.ToString()) versionSuffix
+            else
+                sprintf "ElasticApmAgent_%s" (Versioning.CurrentVersion.AssemblyVersion.ToString())
+                
         let agentDir = Paths.BuildOutput name |> DirectoryInfo                    
         agentDir.Create()
 
-        let rec copyRecursive (destination: DirectoryInfo) (source: DirectoryInfo) =
-            source.GetDirectories()
-            |> Seq.iter (fun dir -> copyRecursive (destination.CreateSubdirectory dir.Name) dir)          
+        // all files of interest are top level files in the source directory
+        let rec copyRecursive (destination: DirectoryInfo) (source: DirectoryInfo) =        
             source.GetFiles()
+            |> Seq.filter (fun file -> file.Extension = ".dll" || file.Extension = ".pdb")
             |> Seq.iter (fun file -> file.CopyTo(Path.combine destination.FullName file.Name, true) |> ignore)
             
         let oldDiagnosticSourceVersion = getElasticApmDiagnosticSourceVersion true         

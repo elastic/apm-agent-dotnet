@@ -4,7 +4,4 @@
 #
 set -euxo pipefail
 
-# Remove Full Framework projects
-.ci/linux/remove-projects.sh
-
-dotnet build
+./build.sh

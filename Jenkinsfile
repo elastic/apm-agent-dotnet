@@ -110,7 +110,7 @@ pipeline {
                     }
                     success {
                       whenTrue(isPR()) {
-                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/**/bin/Release/**/*.nupkg")
+                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/_packages/*.nupkg,${BASE_DIR}/build/output/*.zip")
                       }
                     }
                   }
@@ -405,7 +405,7 @@ pipeline {
       post{
         success {
           archiveArtifacts(allowEmptyArchive: true,
-            artifacts: "${BASE_DIR}/**/bin/Release/**/*.nupkg")
+            artifacts: "${BASE_DIR}/build/output/_packages/*.nupkg")
         }
       }
     }
