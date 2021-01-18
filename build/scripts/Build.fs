@@ -55,8 +55,10 @@ module Build =
             let directory = Path.GetDirectoryName p
             let project = Path.GetFileNameWithoutExtension p          
             let bin = Path.combine directory "bin/Release"
-            let buildOutput = Paths.BuildOutput project          
-            Shell.copyDir buildOutput bin (fun _ -> true)
+            
+            if Directory.Exists bin then
+                let buildOutput = Paths.BuildOutput project          
+                Shell.copyDir buildOutput bin (fun _ -> true)
         )
         
     let private dotnet target projectOrSln =
