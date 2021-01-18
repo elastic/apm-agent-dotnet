@@ -146,7 +146,12 @@ namespace Elastic.Apm
 
 	public static class Agent
 	{
-		private static readonly Lazy<ApmAgent> LazyApmAgent = new Lazy<ApmAgent>(() => new ApmAgent(Components));
+		private static readonly Lazy<ApmAgent> LazyApmAgent = new Lazy<ApmAgent>(() =>
+		{
+			_isConfigured = true;
+			return new ApmAgent(Components);
+		});
+
 		private static volatile bool _isConfigured;
 
 		internal static AgentComponents Components { get; private set; }
@@ -255,7 +260,7 @@ namespace Elastic.Apm
 
 		internal static void Setup(ApmAgent apmAgent)
 		{
-			if(!LazyApmAgent.IsValueCreated)
+			if (!LazyApmAgent.IsValueCreated)
 				Setup(apmAgent.Components);
 		}
 
