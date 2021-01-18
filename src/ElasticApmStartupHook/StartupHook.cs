@@ -7,6 +7,9 @@ using System.Runtime.Loader;
 // ReSharper disable once CheckNamespace - per doc. this must be called StartupHook without a namespace with an Initialize method.
 internal class StartupHook
 {
+	private const string ElasticApmStartuphookLoaderDll = "Elastic.Apm.StartupHook.Loader.dll";
+	private const string SystemDiagnosticsDiagnosticsource = "System.Diagnostics.DiagnosticSource";
+
 	private static readonly byte[] SystemDiagnosticsDiagnosticSourcePublicKeyToken = { 204, 123, 19, 255, 205, 45, 221, 81 };
 
 	private static StartupHookLogger _logger;
@@ -25,43 +28,78 @@ internal class StartupHook
 		var startupHookLoggingEnvVar = Environment.GetEnvironmentVariable("ELASTIC_APM_STARTUP_HOOKS_LOGGING");
 		_logger = new StartupHookLogger(Path.Combine(startupHookDirectory, "StartupHook.log"), !string.IsNullOrEmpty(startupHookLoggingEnvVar));
 
-		_logger.WriteLine("Check if System.Diagnostics.DiagnosticSource is loaded");
-		var diagnosticSourceAssembly = AssemblyLoadContext.Default.LoadFromAssemblyName(new AssemblyName("System.Diagnostics.DiagnosticSource"));
+		_logger.WriteLine($"Check if {SystemDiagnosticsDiagnosticsource} is loaded");
+		var diagnosticSourceAssemblies = AppDomain.CurrentDomain.GetAssemblies()
+			.Where(a => a.GetName().Name.Equals(SystemDiagnosticsDiagnosticsource, StringComparison.Ordinal))
+			.ToList();
+
+
+
+		Assembly diagnosticSourceAssembly;
+		switch (diagnosticSourceAssemblies.Count)
+		{
+			case 0:
+				_logger.WriteLine($"No {SystemDiagnosticsDiagnosticsource} loaded");
+				diagnosticSourceAssembly = null;
+				break;
+			case 1:
+				diagnosticSourceAssembly = diagnosticSourceAssemblies[0];
+				break;
+			default:
+				_logger.WriteLine($"Found {diagnosticSourceAssemblies.Count} {SystemDiagnosticsDiagnosticsource} assemblies loaded in the app domain");
+				diagnosticSourceAssembly = diagnosticSourceAssemblies.First();
+				break;
+		}
+
 		Assembly loader = null;
 
 		if (diagnosticSourceAssembly is null)
 		{
-			_logger.WriteLine("No System.Diagnostics.DiagnosticSource loaded");
-
 			// use current agent
 			loader = AssemblyLoadContext.Default
-				.LoadFromAssemblyPath(Path.Combine(startupHookDirectory, "Elastic.Apm.StartupHook.Loader.dll"));
-
+				.LoadFromAssemblyPath(Path.Combine(startupHookDirectory, ElasticApmStartuphookLoaderDll));
 		}
 		else
 		{
 			var diagnosticSourceAssemblyName = diagnosticSourceAssembly.GetName();
 			var diagnosticSourcePublicKeyToken = diagnosticSourceAssemblyName.GetPublicKeyToken();
 			if (!diagnosticSourcePublicKeyToken.SequenceEqual(SystemDiagnosticsDiagnosticSourcePublicKeyToken))
+			{
+				_logger.WriteLine($"{SystemDiagnosticsDiagnosticsource} public key token "
+					+ $"{PublicKeyTokenBytesToString(diagnosticSourcePublicKeyToken)} did not match expected "
+					+ $"public key token {PublicKeyTokenBytesToString(SystemDiagnosticsDiagnosticSourcePublicKeyToken)}");
 				return;
+			}
 
 			var diagnosticSourceVersion = diagnosticSourceAssemblyName.Version;
-			_logger.WriteLine($"System.Diagnostics.DiagnosticSource {diagnosticSourceVersion} loaded");
+			_logger.WriteLine($"{SystemDiagnosticsDiagnosticsource} {diagnosticSourceVersion} loaded");
 
 			if (diagnosticSourceVersion.Major == 4)
 			{
 				var versionDirectory = Path.Combine(startupHookDirectory, "4.0.0");
 				loader = AssemblyLoadContext.Default
-					.LoadFromAssemblyPath(Path.Combine(versionDirectory, "Elastic.Apm.StartupHook.Loader.dll"));
+					.LoadFromAssemblyPath(Path.Combine(versionDirectory, ElasticApmStartuphookLoaderDll));
 			}
 			else if (diagnosticSourceVersion.Major == 5)
 			{
 				loader = AssemblyLoadContext.Default
-					.LoadFromAssemblyPath(Path.Combine(startupHookDirectory, "Elastic.Apm.StartupHook.Loader.dll"));
+					.LoadFromAssemblyPath(Path.Combine(startupHookDirectory, ElasticApmStartuphookLoaderDll));
 			}
 		}
 
 		InvokerLoaderMethod(loader);
+	}
+
+	/// <summary>
+	/// Converts public key token bytes into a string
+	/// </summary>
+	private static string PublicKeyTokenBytesToString(byte[] publicKeyToken)
+	{
+		var token = string.Empty;
+		for (var i = 0; i < publicKeyToken.Length; i++)
+			token += $"{publicKeyToken[i]:x2}";
+
+		return token;
 	}
 
 	/// <summary>
@@ -98,6 +136,9 @@ internal class StartupHook
 		initializeMethod.Invoke(null, null);
 	}
 
+	/// <summary>
+	/// Logs startup hook process, useful for debugging purposes.
+	/// </summary>
 	private class StartupHookLogger
 	{
 		private readonly string _logPath;
@@ -115,7 +156,7 @@ internal class StartupHook
 			{
 				try
 				{
-					File.AppendAllLines(_logPath, new[] { $"[{DateTime.UtcNow:u}] {message}" });
+					File.AppendAllLines(_logPath, new[] { $"[{DateTime.Now:u}] {message}" });
 				}
 				catch
 				{
