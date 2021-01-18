@@ -15,6 +15,7 @@ pipeline {
     ITS_PIPELINE = 'apm-integration-tests-selector-mbp/master'
     OPBEANS_REPO = 'opbeans-dotnet'
     BENCHMARK_SECRET  = 'secret/apm-team/ci/benchmark-cloud'
+    SLACK_CHANNEL = '#apm-agent-dotnet'
   }
   options {
     timeout(time: 2, unit: 'HOURS')
@@ -422,9 +423,8 @@ pipeline {
       stages {
         stage('Notify') {
           steps {
-            emailext subject: '[apm-agent-dotnet] Release ready to be pushed',
-                      to: "${NOTIFY_TO}",
-                      body: "Please go to ${env.BUILD_URL}input to approve or reject within 12 hours."
+            notifyStatus(slackStatus: 'warning', subject: "[${env.REPO}] Release ready to be pushed",
+                         body: "Please (<${env.BUILD_URL}input|approve>) it or reject within 12 hours.\n Changes: ${env.TAG_NAME}")
           }
         }
         stage('Release to NuGet') {
@@ -432,11 +432,22 @@ pipeline {
             message 'Should we release a new version?'
             ok 'Yes, we should.'
           }
+          environment {
+            RELEASE_URL_MESSAGE = "(<https://github.com/elastic/apm-agent-dotnet/releases/tag/${env.TAG_NAME}|${env.TAG_NAME}>)"
+          }
           steps {
             deleteDir()
             unstash 'source'
             dir("${BASE_DIR}") {
               release(secret: 'secret/apm-team/ci/elastic-observability-nuget')
+            }
+          }
+          post {
+            failure {
+              notifyStatus(slackStatus: 'danger', subject: "[${env.REPO}] Release *${env.TAG_NAME}* failed", body: "Build: (<${env.RUN_DISPLAY_URL}|here>)")
+            }
+            success {
+              notifyStatus(slackStatus: 'good', subject: "[${env.REPO}] Release *${env.TAG_NAME}* published", body: "Build: (<${env.RUN_DISPLAY_URL}|here>)\nRelease URL: ${env.RELEASE_URL_MESSAGE}")
             }
           }
         }
@@ -513,4 +524,12 @@ def reportTests() {
     archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag-*.log,test/**/junit-*.xml,target/**/*coverage.cobertura.xml')
     junit(allowEmptyResults: true, keepLongStdio: true, testResults: 'test/**/junit-*.xml')
   }
+}
+
+def notifyStatus(def args = [:]) {
+  slackSend(channel: env.SLACK_CHANNEL, color: args.slackStatus, message: "${args.subject}. ${args.body}",
+            tokenCredentialId: 'jenkins-slack-integration-token')
+  // transform slack URL format '(<URL|description>)' to 'URL'.
+  def bodyEmail = args.body.replaceAll('\\(<', '').replaceAll('\\|.*>\\)', '')
+  emailext(subject: args.subject, to: "${env.NOTIFY_TO}", body: bodyEmail)
 }
