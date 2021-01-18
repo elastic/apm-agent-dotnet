@@ -7,10 +7,11 @@ dotnet test -c Release ^
  --results-directory target ^
  --diag target\diag.log ^
  --logger:"junit;LogFilePath=junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" ^
- --settings coverlet.runsettings ^
  /p:CollectCoverage=true ^
  /p:CoverletOutputFormat=cobertura ^
  /p:CoverletOutput=target\Coverage\ ^
+ /p:Include=\"[Elastic.*]*,[ElasticApmStartupHook]*\" ^
+ /p:Exclude=\"[Elastic.Apm.Tests]*,[Elastic.Apm.*.Tests]*,[Elastic.Apm.Tests.*]*,[Elastic.Apm.Benchmarks]*\" ^
  /p:Threshold=0 ^
  /p:ThresholdType=branch ^
  /p:ThresholdStat=total
