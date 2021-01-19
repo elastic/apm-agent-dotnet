@@ -4,7 +4,7 @@ if not exist "%sample_app_log_dir%" mkdir "%sample_app_log_dir%"
 icacls %sample_app_log_dir% /t /grant Everyone:F
 set ELASTIC_APM_ASP_NET_FULL_FRAMEWORK_SAMPLE_APP_LOG_FILE=%sample_app_log_dir%\Elastic.Apm.AspNetFullFramework.Tests.SampleApp.log
 
-dotnet test -c Release test\Elastic.Apm.AspNetFullFramework.Tests --no-build ^
+dotnet test test\Elastic.Apm.AspNetFullFramework.Tests --no-build ^
  --verbosity normal ^
  --results-directory target ^
  --diag target\diag-iis.log ^
