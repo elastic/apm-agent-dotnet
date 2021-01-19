@@ -38,7 +38,7 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 			var builderTask = hostBuilder.StartAsync();
 
 			await builderTask;
-			payloadSender.WaitForErrors(TimeSpan.FromSeconds(5));
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Should().NotBeEmpty();
 
 			payloadSender.FirstError.Log.Message.Should().Be("This is a sample error log message, with a sample value: 42");
