@@ -213,6 +213,65 @@ var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransactio
 
 NOTE: The `OutgoingDistributedTracingData` property can be `null`. One such scenario is when the agent is disabled.
 
+=======
+[float]
+[[api-start-capture-error]]
+==== `void CaptureError(string message, string culprit, StackFrame[] frames = null, string parentId = null);`
+Use this method to capture an APM error with a message and a culprit.
+
+NOTE: If there is an active transaction, the captured error will be correlated to it, otherwise the error will show up, but it won't be correlated to a transaction on the APM UI.
+
+Example:
+
+[source,csharp]
+----
+Agent.Tracer.CaptureError("Something went wrong", "Database issue");
+----
+
+[float]
+[[api-start-capture-exception]]
+==== `void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null);`
+
+Use this method to capture a .NET exception as an APM error.
+
+NOTE: If there is an active transaction, the captured error will be correlated to it, otherwise the error will show up, but it won't be correlated to a transaction on the APM UI.
+
+Example:
+
+[source,csharp]
+----
+try
+{
+	//run my code
+}
+catch (Exception e)
+{
+	Agent.Tracer.CaptureException(e);
+	//handle error
+}
+----
+
+[float]
+[[api-start-capture-log-as-error]]
+==== `void CaptureLogAsError(ErrorLog logOnError, string parentId = null, Exception exception = null);`
+
+Use this method to capture a log line as an APM error.
+
+NOTE: If there is an active transaction, the captured error will be correlated to it, otherwise the error will show up, but it won't be correlated to a transaction on the APM UI.
+
+Example:
+
+[source,csharp]
+----
+var errorLog = new ErrorLog("Error message")
+{
+	Level = "error",
+	ParamMessage = "42"
+};
+
+Agent.Tracer.CaptureLogAsError(errorLog);
+----
+
 //----------------------------
 [float]
 [[api-transaction]]
@@ -362,6 +421,13 @@ Captures an exception and reports it to the APM server.
 Captures a custom error and reports it to the APM server.
 
 This method is typically used when you want to report an error, but you don't have an `Exception` instance.
+
+[float]
+[[api-transaction-capture-log-as-error]]
+==== `void CaptureLogAsError(ErrorLog logOnError, string parentId = null, Exception exception = null);`
+Captures a custom error and reports it to the APM server with a log attached to it.
+
+This method is typically used when you already log errors in your code and you want to attach this error to an APM transaction. The log will show up on the APM UI as part of the error and it will be correlated to the transaction.
 
 [float]
 [[convenient-capture-span]]
@@ -641,6 +707,13 @@ Captures an exception and reports it to the APM server.
 Captures a custom error and reports it to the APM server.
 
 This method is typically used when you want to report an error, but you don't have an `Exception` instance.
+
+[float]
+[[api-span-capture-log-as-error]]
+==== `void CaptureLogAsError(ErrorLog logOnError, string parentId = null, Exception exception = null);`
+Captures a custom error and reports it to the APM server with a log attached to it.
+
+This method is typically used when you already log errors in your code and you want to attach this error to an APM transaction. The log will show up on the APM UI as part of the error and it will be correlated to the transaction of the given span.
 
 [float]
 [[api-span-end]]
