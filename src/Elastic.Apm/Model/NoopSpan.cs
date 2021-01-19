@@ -1,5 +1,4 @@
-﻿
-// Licensed to Elasticsearch B.V under
+﻿// Licensed to Elasticsearch B.V under
 // one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
@@ -45,43 +44,55 @@ namespace Elastic.Apm.Model
 			_currentExecutionSegmentsContainer.CurrentSpan = this;
 			_parentSpan = parentSpan;
 		}
+
 		[MaxLength]
 		public string Action { get; set; }
+
 		public SpanContext Context => ReusableContextInstance;
 
 		public double? Duration { get; set; }
+
 		[MaxLength]
 		public string Id { get; }
+
 		public bool IsSampled => false;
 		public Dictionary<string, string> Labels => _labels.Value;
+
 		[MaxLength]
 		public string Name { get; set; }
+
 		public Outcome Outcome { get; set; }
 		public DistributedTracingData OutgoingDistributedTracingData => null;
+
 		[JsonProperty("parent_id")]
 		[MaxLength]
 		public string ParentId { get; }
+
 		public List<CapturedStackFrame> StackTrace { get; }
+
 		[MaxLength]
 		public string Subtype { get; set; }
+
 		public long Timestamp { get; }
+
 		[JsonProperty("trace_id")]
 		[MaxLength]
 		public string TraceId { get; }
+
 		public string TransactionId { get; }
+
 		[MaxLength]
 		public string Type { get; set; }
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null, Dictionary<string, Label> labels = null
-		)
-		{ }
+		) { }
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null,
 			Dictionary<string, Label> labels = null
-		)
-		{ }
+		) { }
 
 		public void CaptureLogAsError(ErrorLog logOnError, string parentId = null, Exception exception = null) { }
+
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)
 			=> ExecutionSegmentCommon.CaptureSpan(new NoopSpan(name, type, subType, action, _currentExecutionSegmentsContainer, Id, TraceId, this),
 				capturedAction);

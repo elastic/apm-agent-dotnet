@@ -4,12 +4,12 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Extensions.Hosting.Config;
+using Elastic.Apm.Extensions.Logging;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Elastic.Apm.Extensions.Logging;
 
 namespace Elastic.Apm.Extensions.Hosting
 {

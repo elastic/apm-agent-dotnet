@@ -13,11 +13,14 @@ namespace Elastic.Apm.Model
 {
 	internal class Error : IError
 	{
-		public Error(CapturedException capturedException, Transaction transaction, string parentId, IApmLogger loggerArg, Dictionary<string, Label> labels = null, ErrorLog errorLog = null)
-		: this(transaction, parentId, loggerArg, labels) => Exception = capturedException;
+		public Error(CapturedException capturedException, Transaction transaction, string parentId, IApmLogger loggerArg,
+			Dictionary<string, Label> labels = null
+		)
+			: this(transaction, parentId, loggerArg, labels) => Exception = capturedException;
 
-		public Error(ErrorLog errorLog, Transaction transaction, string parentId, IApmLogger loggerArg, Dictionary<string, Label> labels = null) : this(transaction, parentId, loggerArg, labels)
-		=> Log = errorLog;
+		public Error(ErrorLog errorLog, Transaction transaction, string parentId, IApmLogger loggerArg, Dictionary<string, Label> labels = null) :
+			this(transaction, parentId, loggerArg, labels)
+			=> Log = errorLog;
 
 
 		private Error(Transaction transaction, string parentId, IApmLogger loggerArg, Dictionary<string, Label> labels = null)
@@ -39,7 +42,10 @@ namespace Elastic.Apm.Model
 				Context = transaction.Context.DeepCopy();
 
 				if (labels != null)
-					foreach (var item in labels) Context.InternalLabels.Value.InnerDictionary[item.Key] = item.Value;
+				{
+					foreach (var item in labels)
+						Context.InternalLabels.Value.InnerDictionary[item.Key] = item.Value;
+				}
 			}
 
 			IApmLogger logger = loggerArg?.Scoped($"{nameof(Error)}.{Id}");
@@ -48,31 +54,11 @@ namespace Elastic.Apm.Model
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 		}
 
-
-		//public Error(ErrorLog logOnError, Transaction transaction, string parentId, IApmLogger loggerArg)
-		//{
-		//	Timestamp = TimeUtils.TimestampNow();
-		//	Id = RandomGenerator.GenerateRandomBytesAsString(new byte[16]);
-
-		//	Log = logOnError;
-
-		//	TraceId = transaction.TraceId;
-		//	TransactionId = transaction.Id;
-		//	ParentId = parentId;
-		//	Transaction = new TransactionData(transaction.IsSampled, transaction.Type);
-		//	if (transaction.IsSampled) Context = transaction.Context;
-		//	IApmLogger logger = loggerArg?.Scoped($"{nameof(Error)}.{Id}");
-		//	logger.Trace()
-		//		?.Log("New Error instance created: {Error}. Time: {Time} (as timestamp: {Timestamp})",
-		//			this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
-
-		//}
-
 		// This constructor is meant for serialization
 		[JsonConstructor]
 		private Error(string culprit, CapturedException capturedException, string id, string parentId, long timestamp, string traceId,
-		string transactionId, TransactionData transaction
-	)
+			string transactionId, TransactionData transaction
+		)
 		{
 			Culprit = culprit;
 			Exception = capturedException;
@@ -97,6 +83,8 @@ namespace Elastic.Apm.Model
 		[MaxLength]
 		public string Id { get; }
 
+		public ErrorLog Log { get; set; }
+
 		[MaxLength]
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
@@ -116,15 +104,13 @@ namespace Elastic.Apm.Model
 		[JsonProperty("transaction_id")]
 		public string TransactionId { get; set; }
 
-		public ErrorLog Log { get; set; }
-
 		/// <summary>
 		/// Method to conditionally serialize <see cref="Context" /> because context should be serialized only when the transaction
 		/// is sampled.
 		/// See
 		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
 		/// </summary>
-		public bool ShouldSerializeContext() => Transaction.IsSampled;
+		public bool ShouldSerializeContext() => Transaction != null && Transaction.IsSampled;
 
 		public override string ToString() => new ToStringBuilder(nameof(Error))
 		{

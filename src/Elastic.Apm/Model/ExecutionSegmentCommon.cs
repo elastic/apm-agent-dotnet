@@ -286,7 +286,10 @@ namespace Elastic.Apm.Model
 		/// <param name="enclosingTransaction"></param>
 		/// <param name="parentId"></param>
 		/// <param name="exception"></param>
-		internal static void CaptureLogAsError(ErrorLog logOnError, IPayloadSender payloadSender, IApmLogger logger, IExecutionSegment executionSegment, IConfigSnapshot configSnapshot, Transaction enclosingTransaction, string parentId, Exception exception = null)
+		internal static void CaptureLogAsError(ErrorLog logOnError, IPayloadSender payloadSender, IApmLogger logger,
+			IExecutionSegment executionSegment, IConfigSnapshot configSnapshot, Transaction enclosingTransaction, string parentId,
+			Exception exception = null
+		)
 		{
 			var error = new Error(logOnError, enclosingTransaction, parentId ?? executionSegment?.Id, logger)
 			{
@@ -295,11 +298,7 @@ namespace Elastic.Apm.Model
 
 			if (exception != null)
 			{
-				error.Exception = new CapturedException()
-				{
-					Message = exception.Message,
-					Type = exception.GetType().FullName
-				};
+				error.Exception = new CapturedException { Message = exception.Message, Type = exception.GetType().FullName };
 
 				if (exception.StackTrace != null)
 				{

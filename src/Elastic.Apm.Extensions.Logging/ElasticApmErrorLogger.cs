@@ -5,20 +5,20 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.Logging;
-using Elastic.Apm.Model;
+using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
+using Microsoft.Extensions.Logging;
 
 namespace Elastic.Apm.Extensions.Logging
 {
 	public class ElasticApmErrorLogger : ILogger
 	{
-		public IDisposable BeginScope<TState>(TState state) =>
-			null;
-
 		private readonly IApmAgent _agent;
 
 		public ElasticApmErrorLogger(IApmAgent agent) => _agent = agent;
+
+		public IDisposable BeginScope<TState>(TState state) =>
+			null;
 
 		public bool IsEnabled(LogLevel logLevel)
 			=> logLevel >= LogLevel.Error;
@@ -28,14 +28,14 @@ namespace Elastic.Apm.Extensions.Logging
 			if (!Agent.IsConfigured) return;
 			if (logLevel < LogLevel.Error) return;
 
-			//TODO: do not capture agent errors as APM error
-
 			var logLine = formatter(state, exception);
 			var logOnError = new ErrorLog(logLine);
 
 			if (_agent is ApmAgent apmAgent && exception != null)
+			{
 				logOnError.StackTrace = StacktraceHelper.GenerateApmStackTrace(exception, null, "CaptureErrorLogsAsApmError",
 					apmAgent.ConfigurationReader, apmAgent.Components.ApmServerInfo);
+			}
 
 			logOnError.Level = logLevel.ToString();
 
@@ -43,10 +43,7 @@ namespace Elastic.Apm.Extensions.Logging
 			{
 				foreach (var item in stateValues)
 				{
-					if (item.Key == "{OriginalFormat}")
-					{
-						logOnError.ParamMessage = item.Value.ToString();
-					}
+					if (item.Key == "{OriginalFormat}") logOnError.ParamMessage = item.Value.ToString();
 				}
 			}
 
@@ -55,7 +52,7 @@ namespace Elastic.Apm.Extensions.Logging
 			else if (_agent.Tracer.CurrentTransaction != null)
 				_agent.Tracer.CurrentTransaction.CaptureLogAsError(logOnError);
 			else
-				_agent.Tracer.CaptureError(logOnError);
+				_agent.Tracer.CaptureLogAsError(logOnError);
 		}
 	}
 }

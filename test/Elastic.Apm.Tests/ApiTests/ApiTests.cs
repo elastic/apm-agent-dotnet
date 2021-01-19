@@ -1020,11 +1020,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var payloadSender = new MockPayloadSender();
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			var errorLog = new ErrorLog("foo")
-			{
-				Level = "error",
-				ParamMessage = "42"
-			};
+			var errorLog = new ErrorLog("foo") { Level = "error", ParamMessage = "42" };
 
 			agent.Tracer.CaptureLogAsError(errorLog);
 

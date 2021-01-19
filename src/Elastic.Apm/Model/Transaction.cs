@@ -53,8 +53,7 @@ namespace Elastic.Apm.Model
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigStore.CurrentSnapshot,
-				agent.TracerInternal.CurrentExecutionSegmentsContainer, null)
-		{ }
+				agent.TracerInternal.CurrentExecutionSegmentsContainer, null) { }
 
 		/// <summary>
 		/// Creates a new transaction
@@ -550,16 +549,16 @@ namespace Elastic.Apm.Model
 		}
 
 		public void CaptureLogAsError(ErrorLog logOnError, string parentId = null, Exception exception = null)
-		=> ExecutionSegmentCommon.CaptureLogAsError(
-			logOnError,
-			_sender,
-			_logger,
-			this,
-			ConfigSnapshot,
-			this,
-			null,
-			exception
-		);
+			=> ExecutionSegmentCommon.CaptureLogAsError(
+				logOnError,
+				_sender,
+				_logger,
+				this,
+				ConfigSnapshot,
+				this,
+				null,
+				exception
+			);
 
 		public void SetLabel(string key, string value)
 			=> _context.Value.InternalLabels.Value.InnerDictionary[key] = value;

@@ -105,7 +105,7 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 
 		private static IHostBuilder CreateHostBuilder(MockPayloadSender payloadSender = null) =>
 			Host.CreateDefaultBuilder()
-				.ConfigureServices(n=> n.AddSingleton<IPayloadSender, MockPayloadSender>( n=> payloadSender))
+				.ConfigureServices(n => n.AddSingleton<IPayloadSender, MockPayloadSender>(n => payloadSender))
 				.ConfigureServices((context, services) => { services.AddHostedService<HostedService>(); })
 				.UseElasticApm();
 

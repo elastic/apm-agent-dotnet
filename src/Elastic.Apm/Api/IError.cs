@@ -30,6 +30,11 @@ namespace Elastic.Apm.Api
 		string Id { get; }
 
 		/// <summary>
+		/// Log holds additional information added when the error is logged.
+		/// </summary>
+		ErrorLog Log { get; set; }
+
+		/// <summary>
 		/// The Parent id of the error
 		/// </summary>
 		string ParentId { get; }
@@ -43,11 +48,6 @@ namespace Elastic.Apm.Api
 		/// The id of the transaction where this error happened
 		/// </summary>
 		string TransactionId { get; }
-
-		/// <summary>
-		/// Log holds additional information added when the error is logged.
-		/// </summary>
-		ErrorLog Log { get; set; }
 	}
 
 	/// <summary>
@@ -55,17 +55,13 @@ namespace Elastic.Apm.Api
 	/// </summary>
 	public class ErrorLog
 	{
+		public ErrorLog(string message)
+			=> Message = message;
+
 		/// <summary>
-		/// A parametrized message. E.g. 'Could not connect to %s'. The property message is still required, and should be equal
-		/// to the param_message, but with placeholders replaced. In some situations the param_message is used to group errors together.
-		/// The string is not interpreted, so feel free to use whichever placeholders makes sense in the client languange."
+		/// The severity of the record.
 		/// </summary>
-		[JsonProperty("param_message")]
-		public string ParamMessage { get; set; }
-		/// <summary>
-		/// The additionally logged error message.
-		/// </summary>
-		public string Message { get; set; }
+		public string Level { get; set; }
 
 		/// <summary>
 		/// The name of the logger instance used.
@@ -74,13 +70,19 @@ namespace Elastic.Apm.Api
 		public string LoggerName { get; set; }
 
 		/// <summary>
-		/// The severity of the record.
+		/// The additionally logged error message.
 		/// </summary>
-		public string Level { get; set; }
+		public string Message { get; set; }
+
+		/// <summary>
+		/// A parametrized message. E.g. 'Could not connect to %s'. The property message is still required, and should be equal
+		/// to the param_message, but with placeholders replaced. In some situations the param_message is used to group errors
+		/// together.
+		/// The string is not interpreted, so feel free to use whichever placeholders makes sense in the client languange."
+		/// </summary>
+		[JsonProperty("param_message")]
+		public string ParamMessage { get; set; }
 
 		public List<CapturedStackFrame> StackTrace { get; set; }
-
-		public ErrorLog(string message)
-			=> Message = message;
 	}
 }

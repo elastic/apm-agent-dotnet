@@ -18,14 +18,14 @@ namespace SampleConsoleNetCoreApp
 		private readonly IApmAgent _apmAgent;
 		private readonly ILogger _logger;
 
-		public HostedService(IApmAgent apmAgent, ILogger<HostedService> logger) => (_apmAgent, _logger) = (apmAgent,logger);
+		public HostedService(IApmAgent apmAgent, ILogger<HostedService> logger) => (_apmAgent, _logger) = (apmAgent, logger);
 
 		public async Task StartAsync(CancellationToken cancellationToken) =>
 			await _apmAgent.Tracer.CaptureTransaction("Console .Net Core Example", "background", async () =>
 			{
 				Console.WriteLine("HostedService running");
 
-				_logger.LogError("This is a sample error log message, with a sample value: {intParam}", 42 );
+				_logger.LogError("This is a sample error log message, with a sample value: {intParam}", 42);
 
 				// Make sure Agent.Tracer.CurrentTransaction is not null
 				var currentTransaction = Agent.Tracer.CurrentTransaction;

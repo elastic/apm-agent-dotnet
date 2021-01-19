@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
@@ -34,7 +35,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		private const string TransactionName = "ConvenientApiTest";
 		private const string TransactionType = "Test";
 
-		public ConvenientApiTransactionTests(ITestOutputHelper testOutputHelper) => testOutputHelper.WriteLine($" Stopwatch.Frequency: {Stopwatch.Frequency}");
+		public ConvenientApiTransactionTests(ITestOutputHelper testOutputHelper) =>
+			testOutputHelper.WriteLine($" Stopwatch.Frequency: {Stopwatch.Frequency}");
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,Action, DistributedTracingData)" /> method.
@@ -524,9 +526,7 @@ namespace Elastic.Apm.Tests.ApiTests
 							new Request("GET",
 								new Url { Full = "https://elastic.co", Raw = "https://elastic.co", HostName = "elastic", Protocol = "HTTP" })
 							{
-								HttpVersion = "2.0",
-								Socket = new Socket { Encrypted = true, RemoteAddress = "127.0.0.1" },
-								Body = "123"
+								HttpVersion = "2.0", Socket = new Socket { Encrypted = true, RemoteAddress = "127.0.0.1" }, Body = "123"
 							};
 					});
 				});
@@ -628,7 +628,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, (transaction) =>
+				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, transaction =>
 				{
 					transaction.Custom.Add(customKey, customValue);
 					transaction.End();
@@ -646,16 +646,9 @@ namespace Elastic.Apm.Tests.ApiTests
 			var payloadSender = new MockPayloadSender();
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
-			var errorLog = new ErrorLog("foo")
-			{
-				Level = "error",
-				ParamMessage = "42"
-			};
+			var errorLog = new ErrorLog("foo") { Level = "error", ParamMessage = "42" };
 
-			agent.Tracer.CaptureTransaction("foo", "bar", t =>
-			{
-				t.CaptureLogAsError(errorLog);
-			});
+			agent.Tracer.CaptureTransaction("foo", "bar", t => { t.CaptureLogAsError(errorLog); });
 
 			payloadSender.WaitForAny();
 
