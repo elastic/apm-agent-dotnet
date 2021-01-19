@@ -816,7 +816,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				});
 			}
 
-			payloadSender.WaitForSpans(count:4);
+			payloadSender.WaitForSpans(count: 4);
 			var manualAddressSpan = payloadSender.Spans.Single(s => s.Name == "manually set destination address");
 			manualAddressSpan.Context.Destination.Address.Should().Be(manualAddress);
 			manualAddressSpan.Context.Destination.Port.Should().Be(url.Port);
@@ -972,6 +972,70 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstTransaction.Should().NotBeNull();
 			payloadSender.FirstTransaction?.Context.Service.Name.Should().Be("Service2");
 			payloadSender.FirstTransaction?.Context.Service.Version.Should().Be("1.0-beta2");
+		}
+
+		[Fact]
+		public void CaptureErrorOnTracer()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			agent.Tracer.CaptureError("foo", "bar");
+
+			payloadSender.WaitForAny();
+
+			payloadSender.Transactions.Should().BeNullOrEmpty();
+			payloadSender.Spans.Should().BeNullOrEmpty();
+			payloadSender.Errors.Should().HaveCount(1);
+			payloadSender.FirstError.Culprit.Should().Be("bar");
+			payloadSender.FirstError.Exception.Message.Should().Be("foo");
+		}
+
+		[Fact]
+		public void CapturExceptionOnTracer()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			try
+			{
+				throw new Exception("foo");
+			}
+			catch (Exception e)
+			{
+				agent.Tracer.CaptureException(e);
+			}
+
+			payloadSender.WaitForAny();
+
+			payloadSender.Transactions.Should().BeNullOrEmpty();
+			payloadSender.Spans.Should().BeNullOrEmpty();
+			payloadSender.Errors.Should().HaveCount(1);
+			payloadSender.FirstError.Exception.Message.Should().Be("foo");
+		}
+
+		[Fact]
+		public void CaptureLogAsErrorOnTracer()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var errorLog = new ErrorLog("foo")
+			{
+				Level = "error",
+				ParamMessage = "42"
+			};
+
+			agent.Tracer.CaptureLogAsError(errorLog);
+
+			payloadSender.WaitForAny();
+
+			payloadSender.Transactions.Should().BeNullOrEmpty();
+			payloadSender.Spans.Should().BeNullOrEmpty();
+			payloadSender.Errors.Should().HaveCount(1);
+			payloadSender.FirstError.Log.Message.Should().Be("foo");
+			payloadSender.FirstError.Log.Level.Should().Be("error");
+			payloadSender.FirstError.Log.ParamMessage.Should().Be("42");
 		}
 
 		private class TestException : Exception

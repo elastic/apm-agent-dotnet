@@ -13,25 +13,33 @@ namespace Elastic.Apm.Model
 {
 	internal class Error : IError
 	{
-		public Error(CapturedException capturedException, Transaction transaction, string parentId, IApmLogger loggerArg, Dictionary<string, Label> labels = null)
+		public Error(CapturedException capturedException, Transaction transaction, string parentId, IApmLogger loggerArg, Dictionary<string, Label> labels = null, ErrorLog errorLog = null)
+		: this(transaction, parentId, loggerArg, labels) => Exception = capturedException;
+
+		public Error(ErrorLog errorLog, Transaction transaction, string parentId, IApmLogger loggerArg, Dictionary<string, Label> labels = null) : this(transaction, parentId, loggerArg, labels)
+		=> Log = errorLog;
+
+
+		private Error(Transaction transaction, string parentId, IApmLogger loggerArg, Dictionary<string, Label> labels = null)
 		{
 			Timestamp = TimeUtils.TimestampNow();
 			Id = RandomGenerator.GenerateRandomBytesAsString(new byte[16]);
 
-			Exception = capturedException;
+			if (transaction != null)
+			{
+				TraceId = transaction.TraceId;
+				TransactionId = transaction.Id;
+				Transaction = new TransactionData(transaction.IsSampled, transaction.Type);
+			}
 
-			TraceId = transaction.TraceId;
-			TransactionId = transaction.Id;
 			ParentId = parentId;
-			Transaction = new TransactionData(transaction.IsSampled, transaction.Type);
 
-			if (transaction.IsSampled)
+			if (transaction != null && transaction.IsSampled)
 			{
 				Context = transaction.Context.DeepCopy();
 
-				//TODO:
-				// if (labels != null)
-				// 	foreach (var item in labels) Context.InternalLabels.Value.InnerDictionary[item.Key] = item.Value;
+				if (labels != null)
+					foreach (var item in labels) Context.InternalLabels.Value.InnerDictionary[item.Key] = item.Value;
 			}
 
 			IApmLogger logger = loggerArg?.Scoped($"{nameof(Error)}.{Id}");
@@ -40,30 +48,31 @@ namespace Elastic.Apm.Model
 					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 		}
 
-		public Error(LogOnError logOnError, Transaction transaction, string parentId, IApmLogger loggerArg)
-		{
-			Timestamp = TimeUtils.TimestampNow();
-			Id = RandomGenerator.GenerateRandomBytesAsString(new byte[16]);
 
-			Log = logOnError;
+		//public Error(ErrorLog logOnError, Transaction transaction, string parentId, IApmLogger loggerArg)
+		//{
+		//	Timestamp = TimeUtils.TimestampNow();
+		//	Id = RandomGenerator.GenerateRandomBytesAsString(new byte[16]);
 
-			TraceId = transaction.TraceId;
-			TransactionId = transaction.Id;
-			ParentId = parentId;
-			Transaction = new TransactionData(transaction.IsSampled, transaction.Type);
-			if (transaction.IsSampled) Context = transaction.Context;
-			IApmLogger logger = loggerArg?.Scoped($"{nameof(Error)}.{Id}");
-			logger.Trace()
-				?.Log("New Error instance created: {Error}. Time: {Time} (as timestamp: {Timestamp})",
-					this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+		//	Log = logOnError;
 
-		}
+		//	TraceId = transaction.TraceId;
+		//	TransactionId = transaction.Id;
+		//	ParentId = parentId;
+		//	Transaction = new TransactionData(transaction.IsSampled, transaction.Type);
+		//	if (transaction.IsSampled) Context = transaction.Context;
+		//	IApmLogger logger = loggerArg?.Scoped($"{nameof(Error)}.{Id}");
+		//	logger.Trace()
+		//		?.Log("New Error instance created: {Error}. Time: {Time} (as timestamp: {Timestamp})",
+		//			this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+
+		//}
 
 		// This constructor is meant for serialization
 		[JsonConstructor]
 		private Error(string culprit, CapturedException capturedException, string id, string parentId, long timestamp, string traceId,
-			string transactionId, TransactionData transaction
-		)
+		string transactionId, TransactionData transaction
+	)
 		{
 			Culprit = culprit;
 			Exception = capturedException;
@@ -84,8 +93,6 @@ namespace Elastic.Apm.Model
 		public string Culprit { get; set; }
 
 		public CapturedException Exception { get; set; }
-
-		public LogOnError Log { get; set; }
 
 		[MaxLength]
 		public string Id { get; }
@@ -108,6 +115,8 @@ namespace Elastic.Apm.Model
 		[MaxLength]
 		[JsonProperty("transaction_id")]
 		public string TransactionId { get; set; }
+
+		public ErrorLog Log { get; set; }
 
 		/// <summary>
 		/// Method to conditionally serialize <see cref="Context" /> because context should be serialized only when the transaction
@@ -140,36 +149,5 @@ namespace Elastic.Apm.Model
 			public override string ToString() =>
 				new ToStringBuilder(nameof(TransactionData)) { { "IsSampled", IsSampled }, { "Type", Type } }.ToString();
 		}
-	}
-
-	internal class LogOnError
-	{
-		/// <summary>
-		/// A parametrized message. E.g. 'Could not connect to %s'. The property message is still required, and should be equal
-		/// to the param_message, but with placeholders replaced. In some situations the param_message is used to group errors together.
-		/// The string is not interpreted, so feel free to use whichever placeholders makes sense in the client languange."
-		/// </summary>
-		[JsonProperty("param_message")]
-		public string ParamMessage { get; set; }
-		/// <summary>
-		/// The additionally logged error message.
-		/// </summary>
-		public string Message { get; set; }
-
-		/// <summary>
-		/// The name of the logger instance used.
-		/// </summary>
-		[JsonProperty("logger_name")]
-		public string LoggerName { get; set; }
-
-		/// <summary>
-		/// The severity of the record.
-		/// </summary>
-		public string Level { get; set; }
-
-		public List<CapturedStackFrame> StackTrace { get; set; }
-
-		public LogOnError(string message)
-			=> Message = message;
 	}
 }

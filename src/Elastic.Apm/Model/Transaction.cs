@@ -549,8 +549,8 @@ namespace Elastic.Apm.Model
 			return name;
 		}
 
-		public void CaptureLogError(LogOnError logOnError, string parentId = null, Exception exception = null)
-		=> ExecutionSegmentCommon.CaptureLogError(
+		public void CaptureLogAsError(ErrorLog logOnError, string parentId = null, Exception exception = null)
+		=> ExecutionSegmentCommon.CaptureLogAsError(
 			logOnError,
 			_sender,
 			_logger,

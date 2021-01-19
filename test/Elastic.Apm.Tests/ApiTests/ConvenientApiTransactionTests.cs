@@ -640,6 +640,34 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstTransaction.Custom[customKey].Should().Be(customValue);
 		}
 
+		[Fact]
+		public void CaptureLogAsErrorOnTransaction()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var errorLog = new ErrorLog("foo")
+			{
+				Level = "error",
+				ParamMessage = "42"
+			};
+
+			agent.Tracer.CaptureTransaction("foo", "bar", t =>
+			{
+				t.CaptureLogAsError(errorLog);
+			});
+
+			payloadSender.WaitForAny();
+
+			payloadSender.Transactions.Should().HaveCount(1);
+			payloadSender.Spans.Should().BeNullOrEmpty();
+			payloadSender.Errors.Should().HaveCount(1);
+			payloadSender.FirstError.Log.Message.Should().Be("foo");
+			payloadSender.FirstError.Log.Level.Should().Be("error");
+			payloadSender.FirstError.Log.ParamMessage.Should().Be("42");
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstTransaction.Id);
+		}
+
 		/// <summary>
 		/// Asserts on 1 transaction with async code
 		/// </summary>

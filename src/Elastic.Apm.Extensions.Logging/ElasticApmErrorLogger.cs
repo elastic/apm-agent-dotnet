@@ -31,7 +31,7 @@ namespace Elastic.Apm.Extensions.Logging
 			//TODO: do not capture agent errors as APM error
 
 			var logLine = formatter(state, exception);
-			var logOnError = new LogOnError(logLine);
+			var logOnError = new ErrorLog(logLine);
 
 			if (_agent is ApmAgent apmAgent && exception != null)
 				logOnError.StackTrace = StacktraceHelper.GenerateApmStackTrace(exception, null, "CaptureErrorLogsAsApmError",
@@ -51,13 +51,11 @@ namespace Elastic.Apm.Extensions.Logging
 			}
 
 			if (_agent.Tracer.CurrentSpan != null)
-			{
-				(_agent.Tracer.CurrentSpan as Span)?.CaptureLogError(logOnError);
-			}
+				_agent.Tracer.CurrentSpan.CaptureLogAsError(logOnError);
 			else if (_agent.Tracer.CurrentTransaction != null)
-			{
-				(_agent.Tracer.CurrentTransaction as Transaction)?.CaptureLogError(logOnError);
-			}
+				_agent.Tracer.CurrentTransaction.CaptureLogAsError(logOnError);
+			else
+				_agent.Tracer.CaptureError(logOnError);
 		}
 	}
 }

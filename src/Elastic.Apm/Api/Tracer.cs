@@ -65,7 +65,8 @@ namespace Elastic.Apm.Api
 		{
 			var currentConfig = _configProvider.CurrentSnapshot;
 			var retVal = new Transaction(_logger, name, type, new Sampler(currentConfig.TransactionSampleRate), distributedTracingData
-				, _sender, currentConfig, CurrentExecutionSegmentsContainer, _apmServerInfo, ignoreActivity) { Service = _service };
+				, _sender, currentConfig, CurrentExecutionSegmentsContainer, _apmServerInfo, ignoreActivity)
+			{ Service = _service };
 
 			_logger.Debug()?.Log("Starting {TransactionValue}", retVal);
 			return retVal;
@@ -227,7 +228,34 @@ namespace Elastic.Apm.Api
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
 		{
-			//TODO
+			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
+
+			var capturedException = new CapturedException { Message = exception.Message };
+			capturedException.StackTrace = StacktraceHelper.GenerateApmStackTrace(exception, _logger, "CaptureException", _configProvider.CurrentSnapshot, _apmServerInfo);
+
+			_sender.QueueError(new Error(capturedException, null, parentId, _logger)
+			{
+				Culprit = capturedCulprit,
+			});
+		}
+
+		public void CaptureLogAsError(ErrorLog logOnError, string parentId = null, Exception exception = null)
+		{
+			var error = new Error(logOnError, null, parentId, _logger)
+			{
+				Culprit = "Log",
+			};
+
+			if (exception != null)
+			{
+				error.Exception = new CapturedException
+				{
+					Message = exception.Message,
+					StackTrace = StacktraceHelper.GenerateApmStackTrace(exception, _logger, "ErrorLog", _configProvider.CurrentSnapshot, _apmServerInfo)
+				};
+			}
+
+			_sender.QueueError(error);
 		}
 	}
 }

@@ -118,5 +118,7 @@ namespace Elastic.Apm.Model
 			value = default;
 			return false;
 		}
+
+		public void CaptureLogAsError(ErrorLog logOnError, string parentId = null, Exception exception = null) { }
 	}
 }

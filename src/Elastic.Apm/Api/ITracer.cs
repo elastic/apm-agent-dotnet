@@ -222,5 +222,13 @@ namespace Elastic.Apm.Api
 		/// will be automatically set to the current instance
 		/// </param>
 		void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null);
+
+		/// <summary>
+		/// Captures a log line as an APM error.
+		/// </summary>
+		/// <param name="logOnError"> The logline itself </param>
+		/// <param name="parentId"> ParentId pointing to the parent transaction or span. </param>
+		/// <param name="exception"> Exception which was captured as part of the log. </param>
+		void CaptureLogAsError(ErrorLog logOnError, string parentId = null, Exception exception = null);
 	}
 }
