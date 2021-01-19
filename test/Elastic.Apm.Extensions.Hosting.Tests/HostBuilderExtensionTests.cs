@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Report;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -105,7 +105,7 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 
 		private static IHostBuilder CreateHostBuilder(MockPayloadSender payloadSender = null) =>
 			Host.CreateDefaultBuilder()
-				.ConfigureServices(n => n.AddSingleton<IPayloadSender, MockPayloadSender>(n => payloadSender))
+				.ConfigureServices(n => n.AddSingleton<IPayloadSender, MockPayloadSender>(serviceProvider => payloadSender))
 				.ConfigureServices((context, services) => { services.AddHostedService<HostedService>(); })
 				.UseElasticApm();
 
