@@ -81,7 +81,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.SqlClient.Tests
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Feature.Tests", "test\Elastic.Apm.Feature.Tests\Elastic.Apm.Feature.Tests.csproj", "{A4EF875C-92AD-4538-AFF1-1DA277F1085A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ElasticApmStartupHook", "src\ElasticApmStartupHook\ElasticApmStartupHook.csproj", "{7B18C4C5-099B-41D1-8CC2-2D2C412B80CD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ElasticApmAgentStartupHook", "src\ElasticApmAgentStartupHook\ElasticApmAgentStartupHook.csproj", "{7B18C4C5-099B-41D1-8CC2-2D2C412B80CD}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Extensions.Hosting", "src\Elastic.Apm.Extensions.Hosting\Elastic.Apm.Extensions.Hosting.csproj", "{9BA642D5-2C8A-4B5E-AA75-50A4C29B0CCC}"
 EndProject

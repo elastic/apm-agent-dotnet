@@ -3,5 +3,6 @@
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <AssemblyName>ElasticApmAgentStartupHook</AssemblyName>
     <IsPackable>false</IsPackable>
+    <RootNamespace>ElasticApmStartupHook</RootNamespace>
   </PropertyGroup>
 </Project>
