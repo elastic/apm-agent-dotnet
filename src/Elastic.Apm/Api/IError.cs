@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System.Collections.Generic;
+using Elastic.Apm.Api.Constraints;
 using Newtonsoft.Json;
 
 namespace Elastic.Apm.Api
@@ -61,12 +62,14 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// The severity of the record.
 		/// </summary>
+		[MaxLength]
 		public string Level { get; set; }
 
 		/// <summary>
 		/// The name of the logger instance used.
 		/// </summary>
 		[JsonProperty("logger_name")]
+		[MaxLength]
 		public string LoggerName { get; set; }
 
 		/// <summary>
@@ -81,6 +84,7 @@ namespace Elastic.Apm.Api
 		/// The string is not interpreted, so feel free to use whichever placeholders makes sense in the client languange."
 		/// </summary>
 		[JsonProperty("param_message")]
+		[MaxLength]
 		public string ParamMessage { get; set; }
 
 		public List<CapturedStackFrame> StackTrace { get; set; }
