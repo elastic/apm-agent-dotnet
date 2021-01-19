@@ -25,8 +25,7 @@ namespace Elastic.Apm.StartupHook.Loader
 			get
 			{
 				var location = Assembly.GetExecutingAssembly().Location;
-				var builder = new UriBuilder(location);
-				return Path.GetDirectoryName(builder.Uri.LocalPath);
+				return Path.GetDirectoryName(location);
 			}
 		}
 

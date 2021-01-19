@@ -27,20 +27,21 @@ internal class StartupHook
 		var startupHookDirectory = Path.GetDirectoryName(startupHookEnvVar);
 		var startupHookLoggingEnvVar = Environment.GetEnvironmentVariable("ELASTIC_APM_STARTUP_HOOKS_LOGGING");
 		_logger = new StartupHookLogger(Path.Combine(startupHookDirectory, "StartupHook.log"), !string.IsNullOrEmpty(startupHookLoggingEnvVar));
-
 		_logger.WriteLine($"Check if {SystemDiagnosticsDiagnosticsource} is loaded");
-		var diagnosticSourceAssemblies = AppDomain.CurrentDomain.GetAssemblies()
+
+		var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+		_logger.WriteLine($"Assemblies loaded:{Environment.NewLine}{string.Join(",", assemblies.Select(a => a.GetName()))}");
+		var diagnosticSourceAssemblies = assemblies
 			.Where(a => a.GetName().Name.Equals(SystemDiagnosticsDiagnosticsource, StringComparison.Ordinal))
 			.ToList();
-
-
 
 		Assembly diagnosticSourceAssembly;
 		switch (diagnosticSourceAssemblies.Count)
 		{
 			case 0:
-				_logger.WriteLine($"No {SystemDiagnosticsDiagnosticsource} loaded");
-				diagnosticSourceAssembly = null;
+				_logger.WriteLine($"No {SystemDiagnosticsDiagnosticsource} loaded. Load using AssemblyLoadContext.Default");
+				diagnosticSourceAssembly = AssemblyLoadContext.Default.LoadFromAssemblyName(new AssemblyName(SystemDiagnosticsDiagnosticsource));
 				break;
 			case 1:
 				diagnosticSourceAssembly = diagnosticSourceAssemblies[0];
@@ -156,7 +157,10 @@ internal class StartupHook
 			{
 				try
 				{
-					File.AppendAllLines(_logPath, new[] { $"[{DateTime.Now:u}] {message}" });
+					var log = $"[{DateTime.Now:u}] {message}";
+					Console.Out.WriteLine(log);
+					Console.Out.Flush();
+					File.AppendAllLines(_logPath, new[] { log });
 				}
 				catch
 				{

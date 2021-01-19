@@ -95,7 +95,11 @@ module Main =
                 
                 Build.Publish (Some projs)
                 Build.AgentZip (cmdLine.ValueForOption<bool>("canary"))
-            )           
+            )
+            
+            Targets.Target("agent-docker", ["agent-zip"], fun _ ->
+                Build.AgentDocker (cmdLine.ValueForOption<bool>("canary"))
+            )   
             
             Targets.Target("release-notes", fun _ ->
                 let version = cmdLine.ValueForOption<string>("version")

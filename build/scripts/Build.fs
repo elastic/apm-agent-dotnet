@@ -201,11 +201,12 @@ module Build =
             
     /// Creates versioned ElasticApmAgent.zip file    
     let AgentZip (canary:bool) =        
-        let name =
+        let name = "ElasticApmAgent"      
+        let versionedName =
             if canary then
-                sprintf "ElasticApmAgent_%s-%s" (Versioning.CurrentVersion.AssemblyVersion.ToString()) versionSuffix
+                sprintf "%s_%s-%s" name (Versioning.CurrentVersion.AssemblyVersion.ToString()) versionSuffix
             else
-                sprintf "ElasticApmAgent_%s" (Versioning.CurrentVersion.AssemblyVersion.ToString())
+                sprintf "%s_%s" name (Versioning.CurrentVersion.AssemblyVersion.ToString())
                 
         let agentDir = Paths.BuildOutput name |> DirectoryInfo                    
         agentDir.Create()
@@ -216,18 +217,33 @@ module Build =
             |> Seq.filter (fun file -> file.Extension = ".dll" || file.Extension = ".pdb")
             |> Seq.iter (fun file -> file.CopyTo(Path.combine destination.FullName file.Name, true) |> ignore)
             
-        let oldDiagnosticSourceVersion = getElasticApmDiagnosticSourceVersion true         
-        let oldMajorVersion = SemVer.parse oldDiagnosticSourceVersion |> majorVersion
-            
+        // assemblies compiled against "current" version of System.Diagnostics.DiagnosticSource    
         !! (Paths.BuildOutput "Elastic.Apm.StartupHook.Loader/netcoreapp2.2")
-        ++ (Paths.BuildOutput "ElasticApmStartupHook/netcoreapp2.2")       
+        ++ (Paths.BuildOutput "ElasticApmAgentStartupHook/netcoreapp2.2")       
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
         |> Seq.iter (copyRecursive agentDir)
         
+        let oldDiagnosticSourceVersion = getElasticApmDiagnosticSourceVersion true         
+        let oldMajorVersion = SemVer.parse oldDiagnosticSourceVersion |> majorVersion
+        
+        // assemblies compiled against older version of System.Diagnostics.DiagnosticSource 
         !! (sprintf "Elastic.Apm.StartupHook.Loader_%O" oldMajorVersion |> Paths.BuildOutput)
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
         |> Seq.iter (copyRecursive (agentDir.CreateSubdirectory(sprintf "%O" oldMajorVersion)))
             
-        ZipFile.CreateFromDirectory(agentDir.FullName, Paths.BuildOutput name + ".zip")
+        // include version in the zip file name    
+        ZipFile.CreateFromDirectory(agentDir.FullName, Paths.BuildOutput versionedName + ".zip")
+      
+      
+    /// Builds docker image including the ElasticApmAgent  
+    let AgentDocker (canary:bool) =
+        let agentVersion =
+            if canary then
+                sprintf "%s-%s" (Versioning.CurrentVersion.AssemblyVersion.ToString()) versionSuffix
+            else
+                Versioning.CurrentVersion.AssemblyVersion.ToString()        
+        
+        Docker.Exec [ "build"; "--file"; "./build/docker/Dockerfile";
+                      "--tag"; sprintf "observability/apm-agent-dotnet:%s" agentVersion; "." ]
