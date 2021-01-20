@@ -35,9 +35,8 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 			var payloadSender = new MockPayloadSender();
 			var hostBuilder = CreateHostBuilder(payloadSender).Build();
 
-			var builderTask = hostBuilder.StartAsync();
+			await hostBuilder.StartAsync();
 
-			await builderTask;
 			payloadSender.WaitForErrors();
 			payloadSender.Errors.Should().NotBeEmpty();
 

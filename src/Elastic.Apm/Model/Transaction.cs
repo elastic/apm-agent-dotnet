@@ -557,6 +557,7 @@ namespace Elastic.Apm.Model
 				ConfigSnapshot,
 				this,
 				null,
+				_apmServerInfo,
 				exception
 			);
 

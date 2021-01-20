@@ -484,6 +484,7 @@ namespace Elastic.Apm.Model
 				ConfigSnapshot,
 				_enclosingTransaction,
 				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id),
+				_apmServerInfo,
 				exception
 			);
 	}

@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Elastic.Apm.Extensions.Logging
 {
-	public class ElasticApmErrorLogger : ILogger
+	internal class ElasticApmErrorLogger : ILogger
 	{
 		private readonly IApmAgent _agent;
 
@@ -27,6 +27,7 @@ namespace Elastic.Apm.Extensions.Logging
 		{
 			if (!Agent.IsConfigured) return;
 			if (logLevel < LogLevel.Error) return;
+			if (!_agent.ConfigurationReader.Enabled || !_agent.ConfigurationReader.Recording) return;
 
 			var logLine = formatter(state, exception);
 			var logOnError = new ErrorLog(logLine);

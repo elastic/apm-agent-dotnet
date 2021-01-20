@@ -5,12 +5,14 @@
     <RootNamespace>Elastic.Apm.Extensions.Logging</RootNamespace>
     <AssemblyName>Elastic.Apm.Extensions.Logging</AssemblyName>
     <PackageId>Elastic.Apm.Extensions.Logging</PackageId>
-    <Description>TODO</Description>
-    <PackageTags>apm, monitoring, elastic, elasticapm, analytics, entiryframeworkcore, efcore</PackageTags>
+    <Description>Elastic APM integration with Microsoft.Extensions.Logging.Configuration.
+      This package automatically captures logs on error level as APM logs and correlates those to APM traces.
+    </Description>
+    <PackageTags>apm, monitoring, elastic, elasticapm, logging, tracing</PackageTags>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj"/>
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net5.0' ">

@@ -234,9 +234,9 @@ namespace Elastic.Apm.Api
 			_sender.QueueError(new Error(capturedException, null, parentId, _logger) { Culprit = capturedCulprit });
 		}
 
-		public void CaptureLogAsError(ErrorLog logOnError, string parentId = null, Exception exception = null)
+		public void CaptureLogAsError(ErrorLog errorLog, string parentId = null, Exception exception = null)
 		{
-			var error = new Error(logOnError, null, parentId, _logger) { Culprit = "Log" };
+			var error = new Error(errorLog, null, parentId, _logger) { Culprit = "Log" };
 
 			if (exception != null)
 			{
