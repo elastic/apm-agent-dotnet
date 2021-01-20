@@ -3,10 +3,9 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-#if NETCOREAPP3_0
 using System.Collections.Generic;
-#endif
 using System.Diagnostics;
+using System.Reflection;
 using System.Threading;
 using Elastic.Apm;
 using Elastic.Apm.Api;
@@ -14,17 +13,19 @@ using Elastic.Apm.Api;
 namespace ApiSamples
 {
 	/// <summary>
-	/// This class exercices the Public Agent API.
+	/// This class exercises the Public Agent API.
 	/// </summary>
 	internal class Program
 	{
 		private static void Main(string[] args)
 		{
-			if (args.Length == 1) //in case it's started with an argument we try to parse the argument as a DistributedTracingData
+			if (args.Length == 2) //in case it's started with arguments, parse DistributedTracingData from them
 			{
-				WriteLineToConsole($"Callee process started - continuing trace with distributed tracing data: {args[0]}");
-				var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransaction",
-					DistributedTracingData.TryDeserializeFromString(args[0]));
+				var distributedTracingData =
+					DistributedTracingData.FromTraceContext(args[0], args[1]);
+
+				WriteLineToConsole($"Callee process started - continuing trace with distributed tracing data: {distributedTracingData}");
+				var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransaction", distributedTracingData);
 
 				try
 				{
@@ -35,7 +36,7 @@ namespace ApiSamples
 					transaction2.End();
 				}
 
-				Thread.Sleep(1000);
+				Thread.Sleep(TimeSpan.FromSeconds(11));
 				WriteLineToConsole("About to exit");
 			}
 			else
@@ -45,7 +46,7 @@ namespace ApiSamples
 
 				//WIP: if the process terminates the agent
 				//potentially does not have time to send the transaction to the server.
-				Thread.Sleep(1000);
+				Thread.Sleep(TimeSpan.FromSeconds(11));
 
 				WriteLineToConsole("About to exit - press any key...");
 				Console.ReadKey();
@@ -160,14 +161,23 @@ namespace ApiSamples
 
 				//We start the sample app again with a new service name and we pass DistributedTracingData to it
 				//In the main method we check for this and continue the trace.
-				var startInfo = new ProcessStartInfo();
-				startInfo.Environment["ELASTIC_APM_SERVICE_NAME"] = "Service2";
-				var outgoingDistributedTracingData = (Agent.Tracer.CurrentSpan?.OutgoingDistributedTracingData
-					?? Agent.Tracer.CurrentTransaction?.OutgoingDistributedTracingData)?.SerializeToString();
-				startInfo.FileName = "dotnet";
-				startInfo.Arguments = $"run {outgoingDistributedTracingData}";
+
+				var distributedTracingData = Agent.Tracer.CurrentSpan?.OutgoingDistributedTracingData
+					?? Agent.Tracer.CurrentTransaction?.OutgoingDistributedTracingData;
+
+				var traceParent = distributedTracingData?.TraceparentTextHeader;
+				var traceState = distributedTracingData?.TracestateTextHeader;
+				var assembly = Assembly.GetExecutingAssembly().Location;
+
 				WriteLineToConsole(
-					$"Spawning callee process and passing outgoing distributed tracing data: {outgoingDistributedTracingData} to it...");
+					$"Spawning callee process and passing outgoing distributed tracing data: {traceParent} {traceState} to it...");
+				var startInfo = new ProcessStartInfo
+				{
+					FileName = "dotnet",
+					Arguments = $"{assembly} {traceParent} {traceState}"
+				};
+
+				startInfo.Environment["ELASTIC_APM_SERVICE_NAME"] = "Service2";
 				var calleeProcess = Process.Start(startInfo);
 				WriteLineToConsole("Spawned callee process");
 

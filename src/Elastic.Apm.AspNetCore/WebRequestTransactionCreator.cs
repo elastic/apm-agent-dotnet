@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Primitives;
 
 namespace Elastic.Apm.AspNetCore
 {
@@ -35,23 +36,25 @@ namespace Elastic.Apm.AspNetCore
 				ITransaction transaction;
 				var transactionName = $"{context.Request.Method} {context.Request.Path}";
 
-				if (context.Request.Headers.ContainsKey(TraceContext.TraceParentHeaderNamePrefixed)
-					|| context.Request.Headers.ContainsKey(TraceContext.TraceParentHeaderName))
-				{
-					var headerValue = context.Request.Headers.ContainsKey(TraceContext.TraceParentHeaderName)
-						? context.Request.Headers[TraceContext.TraceParentHeaderName].ToString()
-						: context.Request.Headers[TraceContext.TraceParentHeaderNamePrefixed].ToString();
+				var containsPrefixedTraceParentHeader =
+					context.Request.Headers.TryGetValue(TraceContext.TraceParentHeaderNamePrefixed, out var traceParentHeader);
 
-					var tracingData = context.Request.Headers.ContainsKey(TraceContext.TraceStateHeaderName)
-						? TraceContext.TryExtractTracingData(headerValue, context.Request.Headers[TraceContext.TraceStateHeaderName].ToString())
-						: TraceContext.TryExtractTracingData(headerValue);
+				var containsTraceParentHeader = false;
+				if (!containsPrefixedTraceParentHeader)
+					containsTraceParentHeader = context.Request.Headers.TryGetValue(TraceContext.TraceParentHeaderName, out traceParentHeader);
+
+				if (containsPrefixedTraceParentHeader || containsTraceParentHeader)
+				{
+					var tracingData = context.Request.Headers.TryGetValue(TraceContext.TraceStateHeaderName, out var traceStateHeader)
+						? TraceContext.TryExtractTracingData(traceParentHeader, traceStateHeader)
+						: TraceContext.TryExtractTracingData(traceParentHeader);
 
 					if (tracingData != null)
 					{
 						logger.Debug()
 							?.Log(
 								"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData}. Continuing trace.",
-								TraceContext.TraceParentHeaderNamePrefixed, tracingData);
+								containsPrefixedTraceParentHeader? TraceContext.TraceParentHeaderNamePrefixed : TraceContext.TraceParentHeaderName, tracingData);
 
 						transaction = tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, tracingData);
 					}
@@ -60,7 +63,7 @@ namespace Elastic.Apm.AspNetCore
 						logger.Debug()
 							?.Log(
 								"Incoming request with invalid {TraceParentHeaderName} header (received value: {TraceParentHeaderValue}). Starting trace with new trace id.",
-								TraceContext.TraceParentHeaderNamePrefixed, headerValue);
+								containsPrefixedTraceParentHeader? TraceContext.TraceParentHeaderNamePrefixed : TraceContext.TraceParentHeaderName, traceParentHeader);
 
 						transaction = tracer.StartTransaction(transactionName, ApiConstants.TypeRequest);
 					}

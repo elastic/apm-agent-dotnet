@@ -13,7 +13,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 		internal const string ValidTraceId = "005a6663c2fb9591a0e53d322df6c3e2";
 
 		internal static DistributedTracingData BuildDistributedTracingData(string traceId, string parentId, string traceFlags) =>
-			DistributedTracingData.TryDeserializeFromString(
+			DistributedTracingData.FromTraceContext(
 				"00-" + // version
 				(traceId == null ? "" : $"{traceId}") +
 				(parentId == null ? "" : $"-{parentId}") +

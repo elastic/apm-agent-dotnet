@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Reflection;
 using Elastic.Apm.Logging;
@@ -24,11 +25,8 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		protected override string RequestGetMethod(HttpWebRequest request) => request.Method;
 
-		protected override bool RequestHeadersContain(HttpWebRequest request, string headerName)
-		{
-			var values = request.Headers.GetValues(headerName);
-			return values != null && values.Length > 0;
-		}
+		protected override bool RequestHeadersContain(HttpWebRequest request, string headerName) =>
+			RequestTryGetHeader(request, headerName, out _);
 
 		protected override void RequestHeadersAdd(HttpWebRequest request, string headerName, string headerValue)
 		{
@@ -37,6 +35,12 @@ namespace Elastic.Apm.DiagnosticListeners
 		}
 
 		protected override int ResponseGetStatusCode(HttpWebResponse response) => (int)response.StatusCode;
+
+		protected override bool RequestTryGetHeader(HttpWebRequest request, string headerName, out string value)
+		{
+			value = request.Headers.Get(headerName);
+			return value != null;
+		}
 
 		/// <summary>
 		/// In Full Framework "System.Net.Http.Desktop.HttpRequestOut.Ex.Stop" does not send the exception property.

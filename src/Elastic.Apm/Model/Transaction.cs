@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
+using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
@@ -28,8 +29,7 @@ namespace Elastic.Apm.Model
 
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
-
-		private readonly string _traceState;
+		internal readonly TraceState _traceState;
 
 		// This constructor is meant for serialization
 		[JsonConstructor]
@@ -132,7 +132,18 @@ namespace Elastic.Apm.Model
 					TraceId = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 				}
 
-				// PrentId could be also set here, but currently in the UI each trace must start with a transaction where the ParentId is null,
+				if (IsSampled)
+				{
+					_traceState = new TraceState(sampler.Rate);
+					SampleRate = sampler.Rate;
+				}
+				else
+				{
+					_traceState = new TraceState(0);
+					SampleRate = 0;
+				}
+
+				// ParentId could be also set here, but currently in the UI each trace must start with a transaction where the ParentId is null,
 				// so to avoid https://github.com/elastic/apm-agent-dotnet/issues/883 we don't set it yet.
 			}
 			else
@@ -149,13 +160,19 @@ namespace Elastic.Apm.Model
 				IsSampled = distributedTracingData.FlagRecorded;
 				isSamplingFromDistributedTracingData = true;
 				_traceState = distributedTracingData.TraceState;
+
+				// If there is no tracestate or no valid es entry with an s attribute, then the agent must
+				// omit sample_rate from non-root transactions and their spans.
+				// See https://github.com/elastic/apm/blob/master/specs/agents/tracing-sampling.md#propagation
+				if (_traceState?.SampleRate is null)
+					SampleRate = null;
+				else
+					SampleRate = _traceState.SampleRate.Value;
 			}
 
 			// Also mark the sampling decision on the Activity
 			if (IsSampled && _activity != null && !ignoreActivity)
 				_activity.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
-
-			SampleRate = IsSampled ? sampler.Rate : 0;
 
 			SpanCount = new SpanCount();
 			_currentExecutionSegmentsContainer.CurrentTransaction = this;
@@ -164,9 +181,9 @@ namespace Elastic.Apm.Model
 			{
 				_logger.Trace()
 					?.Log("New Transaction instance created: {Transaction}. " +
-						"IsSampled ({IsSampled}) is based on incoming distributed tracing data ({DistributedTracingData})." +
+						"IsSampled ({IsSampled}) and SampleRate ({SampleRate}) is based on incoming distributed tracing data ({DistributedTracingData})." +
 						" Start time: {Time} (as timestamp: {Timestamp})",
-						this, IsSampled, distributedTracingData, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+						this, IsSampled, SampleRate, distributedTracingData, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 			}
 			else
 			{
@@ -285,7 +302,7 @@ namespace Elastic.Apm.Model
 		/// Captures the sample rate of the agent when this transaction was created.
 		/// </summary>
 		[JsonProperty("sample_rate")]
-		internal double SampleRate { get; }
+		internal double? SampleRate { get; }
 
 		internal Service Service;
 
