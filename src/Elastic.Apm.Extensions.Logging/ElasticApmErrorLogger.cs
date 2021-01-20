@@ -26,7 +26,7 @@ namespace Elastic.Apm.Extensions.Logging
 		public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
 		{
 			if (!Agent.IsConfigured) return;
-			if (logLevel < LogLevel.Error) return;
+			if (!IsEnabled(logLevel)) return;
 			if (!_agent.ConfigurationReader.Enabled || !_agent.ConfigurationReader.Recording) return;
 
 			var logLine = formatter(state, exception);
