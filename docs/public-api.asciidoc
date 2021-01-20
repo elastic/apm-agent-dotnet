@@ -564,7 +564,7 @@ finally
 
 [float]
 [[api-span-set-label]]
-==== `void SetLabel(string key, T value) added[1.7.0,Number and boolean labels require APM Server 6.7]
+==== `void SetLabel(string key, T value)` added[1.7.0,Number and boolean labels require APM Server 6.7]
 
 A flat mapping of user-defined labels with string, number or boolean values.
 
