@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -46,83 +47,74 @@ namespace Elastic.Apm.Metrics
 
 		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender, IConfigSnapshotProvider configSnapshotProvider)
 		{
-			try
+			_logger = logger.Scoped(nameof(MetricsCollector));
+			_payloadSender = payloadSender;
+			_configSnapshotProvider = configSnapshotProvider;
+
+			var currentConfigSnapshot = configSnapshotProvider.CurrentSnapshot;
+
+			var interval = currentConfigSnapshot.MetricsIntervalInMilliseconds;
+
+			// ReSharper disable once CompareOfFloatsByEqualityOperator
+			if (interval == 0)
 			{
-				_logger = logger.Scoped(nameof(MetricsCollector));
-				_payloadSender = payloadSender;
-				_configSnapshotProvider = configSnapshotProvider;
-
-				var currentConfigSnapshot = configSnapshotProvider.CurrentSnapshot;
-
-				var interval = currentConfigSnapshot.MetricsIntervalInMilliseconds;
-
-				// ReSharper disable once CompareOfFloatsByEqualityOperator
-				if (interval == 0)
-				{
-					_logger.Info()?.Log("Collecting metrics is disabled - the agent won't collect metrics");
-					return;
-				}
-
-				MetricsProviders = new List<IMetricsProvider>();
-
-				if (!WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics, ProcessTotalCpuTimeProvider.ProcessCpuTotalPct))
-					MetricsProviders.Add(new ProcessTotalCpuTimeProvider(_logger));
-				if (!WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics, SystemTotalCpuProvider.SystemCpuTotalPct))
-					MetricsProviders.Add(new SystemTotalCpuProvider(_logger));
-
-				var collectProcessWorkingSet = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-					ProcessWorkingSetAndVirtualMemoryProvider.ProcessWorkingSetMemory);
-				var collectProcessVirtualMemory = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-					ProcessWorkingSetAndVirtualMemoryProvider.ProcessVirtualMemory);
-				if (collectProcessVirtualMemory || collectProcessWorkingSet)
-					MetricsProviders.Add(new ProcessWorkingSetAndVirtualMemoryProvider(collectProcessVirtualMemory, collectProcessWorkingSet));
-
-				var collectTotalMemory = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-					FreeAndTotalMemoryProvider.TotalMemory);
-				var collectFreeMemory = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-					FreeAndTotalMemoryProvider.FreeMemory);
-				if (collectFreeMemory || collectTotalMemory)
-					MetricsProviders.Add(new FreeAndTotalMemoryProvider(collectFreeMemory, collectTotalMemory));
-
-				var collectGcCount = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-					GcMetricsProvider.GcCountName);
-				var collectGen0Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-					GcMetricsProvider.GcGen0SizeName);
-				var collectGen1Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-					GcMetricsProvider.GcGen1SizeName);
-				var collectGen2Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-					GcMetricsProvider.GcGen2SizeName);
-				var collectGen3Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-					GcMetricsProvider.GcGen3SizeName);
-				if (collectGcCount || collectGen0Size || collectGen1Size || collectGen2Size || collectGen3Size)
-				{
-					MetricsProviders.Add(new GcMetricsProvider(_logger, collectGcCount, collectGen0Size, collectGen1Size, collectGen2Size,
-						collectGen3Size));
-				}
-
-				var collectCgroupMemLimitBytes = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-					CgroupMetricsProvider.SystemProcessCgroupMemoryMemLimitBytes);
-				var collectCgroupMemUsageBytes = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-					CgroupMetricsProvider.SystemProcessCgroupMemoryMemUsageBytes);
-				var collectCgroupStatsInactiveFileBytes = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
-					CgroupMetricsProvider.SystemProcessCgroupMemoryStatsInactiveFileBytes);
-				if (collectCgroupMemLimitBytes || collectCgroupMemUsageBytes || collectCgroupStatsInactiveFileBytes)
-				{
-					MetricsProviders.Add(
-						new CgroupMetricsProvider(_logger, collectCgroupMemLimitBytes, collectCgroupMemUsageBytes,
-							collectCgroupStatsInactiveFileBytes));
-				}
-
-				_logger.Info()?.Log("Collecting metrics in {interval} milliseconds interval", interval);
-				_timer = new Timer(interval);
-				_timer.Elapsed += (sender, args) => { CollectAllMetrics(); };
+				_logger.Info()?.Log("Collecting metrics is disabled - the agent won't collect metrics");
+				return;
 			}
-			catch (Exception e)
+
+			MetricsProviders = new List<IMetricsProvider>();
+
+			if (!WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics, ProcessTotalCpuTimeProvider.ProcessCpuTotalPct))
+				MetricsProviders.Add(new ProcessTotalCpuTimeProvider(_logger));
+			if (!WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics, SystemTotalCpuProvider.SystemCpuTotalPct))
+				MetricsProviders.Add(new SystemTotalCpuProvider(_logger));
+
+			var collectProcessWorkingSet = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
+				ProcessWorkingSetAndVirtualMemoryProvider.ProcessWorkingSetMemory);
+			var collectProcessVirtualMemory = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
+				ProcessWorkingSetAndVirtualMemoryProvider.ProcessVirtualMemory);
+			if (collectProcessVirtualMemory || collectProcessWorkingSet)
+				MetricsProviders.Add(new ProcessWorkingSetAndVirtualMemoryProvider(collectProcessVirtualMemory, collectProcessWorkingSet));
+
+			var collectTotalMemory = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
+				FreeAndTotalMemoryProvider.TotalMemory);
+			var collectFreeMemory = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
+				FreeAndTotalMemoryProvider.FreeMemory);
+			if (collectFreeMemory || collectTotalMemory)
+				MetricsProviders.Add(new FreeAndTotalMemoryProvider(collectFreeMemory, collectTotalMemory));
+
+			var collectGcCount = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
+				GcMetricsProvider.GcCountName);
+			var collectGen0Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
+				GcMetricsProvider.GcGen0SizeName);
+			var collectGen1Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
+				GcMetricsProvider.GcGen1SizeName);
+			var collectGen2Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
+				GcMetricsProvider.GcGen2SizeName);
+			var collectGen3Size = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
+				GcMetricsProvider.GcGen3SizeName);
+			if (collectGcCount || collectGen0Size || collectGen1Size || collectGen2Size || collectGen3Size)
 			{
-				_logger.Warning()?.LogException(e, "MetricsCollector initialization failed - the agent won't collect metrics");
-				_timer?.Stop();
-				_timer = null;
+				MetricsProviders.Add(new GcMetricsProvider(_logger, collectGcCount, collectGen0Size, collectGen1Size, collectGen2Size,
+					collectGen3Size));
 			}
+
+			var collectCgroupMemLimitBytes = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
+				CgroupMetricsProvider.SystemProcessCgroupMemoryMemLimitBytes);
+			var collectCgroupMemUsageBytes = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
+				CgroupMetricsProvider.SystemProcessCgroupMemoryMemUsageBytes);
+			var collectCgroupStatsInactiveFileBytes = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
+				CgroupMetricsProvider.SystemProcessCgroupMemoryStatsInactiveFileBytes);
+			if (collectCgroupMemLimitBytes || collectCgroupMemUsageBytes || collectCgroupStatsInactiveFileBytes)
+			{
+				MetricsProviders.Add(
+					new CgroupMetricsProvider(_logger, collectCgroupMemLimitBytes, collectCgroupMemUsageBytes,
+						collectCgroupStatsInactiveFileBytes));
+			}
+
+			_logger.Info()?.Log("Collecting metrics in {interval} milliseconds interval", interval);
+			_timer = new Timer(interval);
+			_timer.Elapsed += (sender, args) => { CollectAllMetrics(); };
 		}
 
 		public void StartCollecting() => _timer?.Start();
