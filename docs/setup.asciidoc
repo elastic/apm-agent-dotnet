@@ -145,17 +145,27 @@ The following example only turns on outgoing HTTP monitoring (so, for instance, 
 [[zero-code-change-setup]]
 ==== Zero code change setup on .NET Core (added[1.7])
 
-If you can't or don't want to reference NuGet packages in your application, you can also inject the agent during startup if your application runs on .NET Core. This feature is supported on .NET Core 2.2 and newer versions.
+If you can't or don't want to reference NuGet packages in your application, you can use the startup hook feature to inject the agent during startup, if your application runs on .NET Core. This feature is supported on .NET Core 2.2 and newer versions.
 
 Steps:
 
-1. Download the `ElasticApmAgent_[version].zip` file from the https://github.com/elastic/apm-agent-dotnet/releases[Release] page of the .NET APM Agent GitHub repository. You can find the file under Assets.
-2. Unzip the folder into a folder.
-3. Set the `DOTNET_STARTUP_HOOKS` environment variable to point to the `ElasticApmAgentStartupHook.dll` file from the unzipped folder: `set DOTNET_STARTUP_HOOKS=[pathToAgent]\ElasticApmAgentStartupHook.dll`.
-4. Start your .NET Core application in a context where the `DOTNET_STARTUP_HOOKS` environment variable is visible.
+. Download the `ElasticApmAgent_[version].zip` file from the https://github.com/elastic/apm-agent-dotnet/releases[Releases] page of the .NET APM Agent GitHub repository. You can find the file under Assets.
+. Unzip the zip file into a folder.
+. Set the `DOTNET_STARTUP_HOOKS` environment variable to point to the `ElasticApmAgentStartupHook.dll` file in the unzipped folder
 
-With this setup the agent will be injected into the application during startup and it will start every auto instrumentation feature. On ASP.NET Core (including gRPC), incoming requests will be automatically captured.
+[source,sh]
+----
+set DOTNET_STARTUP_HOOKS=[pathToAgent]\ElasticApmAgentStartupHook.dll
+----
 
+. Start your .NET Core application in a context where the `DOTNET_STARTUP_HOOKS` environment variable is visible.
+
+With this setup the agent will be injected into the application during startup and it will start every auto instrumentation feature. On ASP.NET Core (including gRPC), incoming requests will be automatically captured. 
+
+[NOTE]
+--
+Agent configuration can be controlled through environment variables with the startup hook feature.
+--
 
 [[setup-asp-net-core]]
 === ASP.NET Core
