@@ -246,4 +246,4 @@ module Build =
                 Versioning.CurrentVersion.AssemblyVersion.ToString()        
         
         Docker.Exec [ "build"; "--file"; "./build/docker/Dockerfile";
-                      "--tag"; sprintf "observability/apm-agent-dotnet:%s" agentVersion; "." ]
+                      "--tag"; sprintf "observability/apm-agent-dotnet:%s" agentVersion; "./build/output/ElasticApmAgent" ]
