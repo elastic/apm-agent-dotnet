@@ -13,7 +13,7 @@ On .NET Core the agent also supports auto instrumentation without any code chang
 * <<setup-asp-dot-net>>
 * <<setup-ef6>>
 * <<setup-sqlclient>>
-* <<setup-stackexhange-redis>>
+* <<setup-stackexchange-redis>>
 * <<setup-general>>
 
 [float]
