@@ -409,8 +409,8 @@ namespace Elastic.Apm.AspNetFullFramework
 				{
 					BuildLogger()
 						.Scoped(dbgInstanceName)
-						.Error()
-						?.LogException(ex, "The Elastic APM agent was already initialized before call to"
+						.Info()
+						?.Log("The Elastic APM agent was already initialized before call to"
 							+ $" {nameof(ElasticApmModule)}.{nameof(Init)} - {nameof(ElasticApmModule)} will use existing instance");
 				}
 				else
