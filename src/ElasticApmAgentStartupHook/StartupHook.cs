@@ -1,8 +1,14 @@
-﻿using System;
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Text.RegularExpressions;
 
 // ReSharper disable once CheckNamespace - per doc. this must be called StartupHook without a namespace with an Initialize method.
 internal class StartupHook
@@ -11,6 +17,9 @@ internal class StartupHook
 	private const string SystemDiagnosticsDiagnosticsource = "System.Diagnostics.DiagnosticSource";
 
 	private static readonly byte[] SystemDiagnosticsDiagnosticSourcePublicKeyToken = { 204, 123, 19, 255, 205, 45, 221, 81 };
+	private static readonly Regex VersionRegex = new Regex(
+		@"^(?<major>\d+)(\.(?<minor>\d+))?(\.(?<patch>\d+))?(\-(?<pre>[0-9A-Za-z]+))?$",
+		RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture);
 
 	private static StartupHookLogger _logger;
 
@@ -26,7 +35,7 @@ internal class StartupHook
 
 		var startupHookDirectory = Path.GetDirectoryName(startupHookEnvVar);
 		var startupHookLoggingEnvVar = Environment.GetEnvironmentVariable("ELASTIC_APM_STARTUP_HOOKS_LOGGING");
-		_logger = new StartupHookLogger(Path.Combine(startupHookDirectory, "StartupHook.log"), !string.IsNullOrEmpty(startupHookLoggingEnvVar));
+		_logger = new StartupHookLogger(Path.Combine(startupHookDirectory, "ElasticApmAgentStartupHook.log"), !string.IsNullOrEmpty(startupHookLoggingEnvVar));
 		_logger.WriteLine($"Check if {SystemDiagnosticsDiagnosticsource} is loaded");
 
 		var assemblies = AppDomain.CurrentDomain.GetAssemblies();
@@ -56,9 +65,15 @@ internal class StartupHook
 
 		if (diagnosticSourceAssembly is null)
 		{
-			// use current agent
+			// use agent compiled against the highest version of System.Diagnostics.DiagnosticSource
+			var highestAvailableAgent = Directory.EnumerateDirectories(startupHookDirectory)
+				.Where(d => VersionRegex.IsMatch(d))
+				.OrderByDescending(d => VersionRegex.Match(d).Groups["major"].Value)
+				.First();
+
+			var versionDirectory = Path.Combine(startupHookDirectory, highestAvailableAgent);
 			loader = AssemblyLoadContext.Default
-				.LoadFromAssemblyPath(Path.Combine(startupHookDirectory, ElasticApmStartuphookLoaderDll));
+				.LoadFromAssemblyPath(Path.Combine(versionDirectory, ElasticApmStartuphookLoaderDll));
 		}
 		else
 		{
@@ -75,17 +90,15 @@ internal class StartupHook
 			var diagnosticSourceVersion = diagnosticSourceAssemblyName.Version;
 			_logger.WriteLine($"{SystemDiagnosticsDiagnosticsource} {diagnosticSourceVersion} loaded");
 
-			if (diagnosticSourceVersion.Major == 4)
+			var versionDirectory = Path.Combine(startupHookDirectory, $"{diagnosticSourceVersion.Major}.0.0");
+			if (Directory.Exists(versionDirectory))
 			{
-				var versionDirectory = Path.Combine(startupHookDirectory, "4.0.0");
 				loader = AssemblyLoadContext.Default
 					.LoadFromAssemblyPath(Path.Combine(versionDirectory, ElasticApmStartuphookLoaderDll));
 			}
-			else if (diagnosticSourceVersion.Major == 5)
-			{
-				loader = AssemblyLoadContext.Default
-					.LoadFromAssemblyPath(Path.Combine(startupHookDirectory, ElasticApmStartuphookLoaderDll));
-			}
+			else
+				_logger.WriteLine(
+					$"No compatible agent for {SystemDiagnosticsDiagnosticsource} {diagnosticSourceVersion}. Agent not loaded");
 		}
 
 		InvokerLoaderMethod(loader);

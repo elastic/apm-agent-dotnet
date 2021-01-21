@@ -18,7 +18,12 @@ open Fake.IO
 open Fake.IO.Globbing.Operators
 open Tooling
 
-module Build =  
+module Build =
+    
+    let private oldDiagnosticSourceVersion = SemVer.parse "4.6.0"
+    
+    let mutable private currentDiagnosticSourceVersion = None
+    
     let private isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
     
     let private aspNetFullFramework = Paths.SrcProjFile "Elastic.Apm.AspNetFullFramework"
@@ -79,63 +84,46 @@ module Build =
             NoLogo = true
         }) projectOrSln
         
-    let private elasticApmDiagnosticSourceVersions = Dictionary<bool, string>()
-    
-    /// Gets the version of System.Diagnostics.DiagnosticSource referenced by Elastic.Apm    
-    let private getElasticApmDiagnosticSourceVersion useDiagnosticSourceVersionFour =
-        match elasticApmDiagnosticSourceVersions.TryGetValue useDiagnosticSourceVersionFour with
-        | true, v -> v
-        | false, _ ->        
+    /// Gets the current version of System.Diagnostics.DiagnosticSource referenced by Elastic.Apm    
+    let private getCurrentApmDiagnosticSourceVersion =
+        match currentDiagnosticSourceVersion with
+        | Some v -> v
+        | None ->        
             let manager = AnalyzerManager();
-            let analyzer = manager.GetProject(Paths.SrcProjFile "Elastic.Apm")
-            
-            if useDiagnosticSourceVersionFour then
-                analyzer.SetGlobalProperty("UseDiagnosticSourceVersionFour", "true")
-                  
+            let analyzer = manager.GetProject(Paths.SrcProjFile "Elastic.Apm")          
             let analyzeResult = analyzer.Build("netstandard2.0").First()        
-            let values = analyzeResult.PackageReferences.["System.Diagnostics.DiagnosticSource"]          
-            let version = values.["Version"]
-            elasticApmDiagnosticSourceVersions.Add(useDiagnosticSourceVersionFour, version)
+            let values = analyzeResult.PackageReferences.["System.Diagnostics.DiagnosticSource"]
+            let version = SemVer.parse values.["Version"]
+            currentDiagnosticSourceVersion <- Some(version)
             version
         
     let private majorVersions = Dictionary<SemVerInfo, SemVerInfo>()
-        
-    /// Converts a semantic version to its major version component only 
-    let private majorVersion (version: SemVerInfo) =
-        match majorVersions.TryGetValue version with
-        | true, v -> v
-        | false, _ -> 
-            let v = { version with
-                        Minor = 0u
-                        Patch = 0u
-                        PreRelease = None
-                        Original = None }
-            majorVersions.Add(version, v)
-            v
-        
+
     /// Publishes ElasticApmStartupHook against a 4.x version of System.Diagnostics.DiagnosticSource
-    let private publishElasticApmStartupHookWithDiagnosticSourceVersion () =
-        let diagnosticSourceVersion = getElasticApmDiagnosticSourceVersion true         
-        let majorVersion = SemVer.parse diagnosticSourceVersion |> majorVersion
-           
-        let projs =
+    let private publishElasticApmStartupHookWithDiagnosticSourceVersion () =                
+        let projects =
             !! (Paths.SrcProjFile "Elastic.Apm")
             ++ (Paths.SrcProjFile "Elastic.Apm.StartupHook.Loader")
         
-        projs
+        projects
         |> Seq.map getAllTargetFrameworks
         |> Seq.iter (fun (proj, frameworks) ->
             frameworks
             |> Seq.iter(fun framework ->
                 let output =
                     Path.GetFileNameWithoutExtension proj
-                    |> (fun p -> sprintf "%s_%O" p majorVersion)
+                    |> (fun p -> sprintf "%s_%i.0.0/%s" p oldDiagnosticSourceVersion.Major framework)
                     |> Paths.BuildOutput
                     |> Path.GetFullPath
                 
-                printfn "Publishing %s %s with System.Diagnostics.DiagnosticSource %s..." proj framework diagnosticSourceVersion
-                DotNet.Exec ["publish" ; proj; "\"/p:UseDiagnosticSourceVersionFour=true\""; "-c"; "Release"; "-f"; framework
-                             "-v"; "q"; "--nologo"; "--force"; "-o"; output ]
+                printfn "Publishing %s %s with System.Diagnostics.DiagnosticSource %O..." proj framework oldDiagnosticSourceVersion
+                DotNet.Exec ["publish" ; proj
+                             sprintf "\"/p:DiagnosticSourceVersion=%O\"" oldDiagnosticSourceVersion
+                             "-c"; "Release"
+                             "-f"; framework
+                             "-v"; "q"
+                             "-o"; output
+                             "--nologo"; "--force"]
             )
         )
 
@@ -212,26 +200,30 @@ module Build =
         agentDir.Create()
 
         // all files of interest are top level files in the source directory
-        let rec copyRecursive (destination: DirectoryInfo) (source: DirectoryInfo) =        
+        let copy (destination: DirectoryInfo) (source: DirectoryInfo) =        
             source.GetFiles()
             |> Seq.filter (fun file -> file.Extension = ".dll" || file.Extension = ".pdb")
             |> Seq.iter (fun file -> file.CopyTo(Path.combine destination.FullName file.Name, true) |> ignore)
             
+        // copy startup hook to root of agent directory
+        !! (Paths.BuildOutput "ElasticApmAgentStartupHook/netcoreapp2.2")
+        |> Seq.filter Path.isDirectory
+        |> Seq.map DirectoryInfo
+        |> Seq.iter (copy agentDir)
+            
         // assemblies compiled against "current" version of System.Diagnostics.DiagnosticSource    
         !! (Paths.BuildOutput "Elastic.Apm.StartupHook.Loader/netcoreapp2.2")
-        ++ (Paths.BuildOutput "ElasticApmAgentStartupHook/netcoreapp2.2")       
+        ++ (Paths.BuildOutput "Elastic.Apm/netstandard2.0")
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
-        |> Seq.iter (copyRecursive agentDir)
-        
-        let oldDiagnosticSourceVersion = getElasticApmDiagnosticSourceVersion true         
-        let oldMajorVersion = SemVer.parse oldDiagnosticSourceVersion |> majorVersion
-        
+        |> Seq.iter (copy (agentDir.CreateSubdirectory(sprintf "%i.0.0" getCurrentApmDiagnosticSourceVersion.Major)))
+                 
         // assemblies compiled against older version of System.Diagnostics.DiagnosticSource 
-        !! (sprintf "Elastic.Apm.StartupHook.Loader_%O" oldMajorVersion |> Paths.BuildOutput)
+        !! (Paths.BuildOutput (sprintf "Elastic.Apm.StartupHook.Loader_%i.0.0/netcoreapp2.2" oldDiagnosticSourceVersion.Major))
+        ++ (Paths.BuildOutput (sprintf "Elastic.Apm_%i.0.0/netstandard2.0" oldDiagnosticSourceVersion.Major))
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
-        |> Seq.iter (copyRecursive (agentDir.CreateSubdirectory(sprintf "%O" oldMajorVersion)))
+        |> Seq.iter (copy (agentDir.CreateSubdirectory(sprintf "%i.0.0" oldDiagnosticSourceVersion.Major)))
             
         // include version in the zip file name    
         ZipFile.CreateFromDirectory(agentDir.FullName, Paths.BuildOutput versionedName + ".zip")
