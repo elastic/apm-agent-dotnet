@@ -1,4 +1,9 @@
-﻿using System;
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -8,6 +13,7 @@ using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.EntityFrameworkCore;
+using Elastic.Apm.GrpcClient;
 using Elastic.Apm.SqlClient;
 
 namespace Elastic.Apm.StartupHook.Loader
@@ -54,11 +60,11 @@ namespace Elastic.Apm.StartupHook.Loader
 			if (AppDomain.CurrentDomain.GetAssemblies().Any(n => n.GetName().Name.Contains("Microsoft.AspNetCore.")))
 			{
 				Agent.Subscribe(
-					new AspNetCoreErrorDiagnosticsSubscriber(),
 					new AspNetCoreDiagnosticSubscriber(),
 					new EfCoreDiagnosticsSubscriber(),
 					new SqlClientDiagnosticSubscriber(),
-					new ElasticsearchDiagnosticsSubscriber()
+					new ElasticsearchDiagnosticsSubscriber(),
+					new GrpcClientDiagnosticSubscriber()
 				);
 			}
 		}
