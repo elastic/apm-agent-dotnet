@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -34,7 +35,8 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		[Fact]
 		public void Should_Update_Logger_That_Is_ILogLevelSwitchable()
 		{
-			var testLogger = new ConsoleLogger(LogLevel.Trace);
+			var logLevel = LogLevel.Trace;
+			var testLogger = new ConsoleLogger(logLevel);
 
 			var configSnapshotFromReader = new MockConfigSnapshot(testLogger);
 			var configStore = new ConfigStore(configSnapshotFromReader, testLogger);
@@ -58,13 +60,19 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 
 			var centralConfigFetcher = new CentralConfigFetcher(testLogger, configStore, service, handler);
 
-			using (var agent = new ApmAgent(new TestAgentComponents(testLogger,
+			using var agent = new ApmAgent(new TestAgentComponents(testLogger,
 				centralConfigFetcher: centralConfigFetcher,
-				payloadSender: new NoopPayloadSender())))
+				payloadSender: new NoopPayloadSender()));
+
+			centralConfigFetcher.IsRunning.Should().BeTrue();
+			waitHandle.WaitOne();
+
+			// wait up to 20 seconds for the log level to change. Change can often be slower in CI
+			var count = 0;
+			while (count < 20 && testLogger.LogLevelSwitch.Level == logLevel)
 			{
-				centralConfigFetcher.IsRunning.Should().BeTrue();
-				waitHandle.WaitOne();
-				Thread.Sleep(5.Seconds());
+				count++;
+				Thread.Sleep(TimeSpan.FromSeconds(1));
 			}
 
 			testLogger.LogLevelSwitch.Level.Should().Be(LogLevel.Error);

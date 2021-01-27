@@ -12,6 +12,7 @@ open Bullseye
 open Fake.IO
 open ProcNet
 open Fake.Core
+open Fake.IO.Globbing.Operators
 
 module Main =  
     let excludeBullsEyeOptions = Set.ofList [
@@ -84,11 +85,21 @@ module Main =
            
             Targets.Target("build", ["restore"; "clean"; "version"], Build.Build)
             
-            Targets.Target("publish", ["restore"; "clean"; "version"], Build.Publish)
+            Targets.Target("publish", ["restore"; "clean"; "version"], fun _ -> Build.Publish None)
             
-            Targets.Target("pack", ["build"], fun _ -> Build.Pack (cmdLine.ValueForOption<bool>("canary")))
+            Targets.Target("pack", ["agent-zip"], fun _ -> Build.Pack (cmdLine.ValueForOption<bool>("canary")))
             
-            Targets.Target("agent-zip", ["publish"], Build.AgentZip)           
+            Targets.Target("agent-zip", ["build"], fun _ ->
+                let projs = !! (Paths.SrcProjFile "Elastic.Apm")
+                            ++ (Paths.SrcProjFile "Elastic.Apm.StartupHook.Loader")
+                
+                Build.Publish (Some projs)
+                Build.AgentZip (cmdLine.ValueForOption<bool>("canary"))
+            )
+            
+            Targets.Target("agent-docker", ["agent-zip"], fun _ ->
+                Build.AgentDocker (cmdLine.ValueForOption<bool>("canary"))
+            )   
             
             Targets.Target("release-notes", fun _ ->
                 let version = cmdLine.ValueForOption<string>("version")

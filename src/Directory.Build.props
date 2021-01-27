@@ -19,6 +19,9 @@
     <!-- don't warn on missing XML documentation -->
     <NoWarn>$(NoWarn);1591</NoWarn>
     <DebugSymbols>true</DebugSymbols>
+    <PackageReleaseNotes Condition="'$(VersionSuffix)' == ''">
+      See $(PackageProjectUrl)/releases/tag/$(AssemblyVersion)
+    </PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
     <!-- Include the icon referenced by <PackageIcon> in the package -->
