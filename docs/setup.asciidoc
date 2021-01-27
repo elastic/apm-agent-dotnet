@@ -252,6 +252,36 @@ as shown in the following example:
 
 You can also configure the agent using `web.config` as described at <<configuration-on-asp-net>>.
 
+The `ElasticApmModule` instantiates the APM agent on first initialization. There are some scenarios however where
+you might want to control agent instantiatiation, such as configuring filters in application start. The
+`ElasticApmModule` exposes a `CreateAgentComponents()` method that returns agent components configured to work with
+ASP.NET Full Framework, that can then be used to instantiate the agent.
+
+For example, one might wish to add transaction filters to the agent in application start
+
+[source, c#]
+----
+public class MvcApplication : HttpApplication
+{
+    protected void Application_Start()
+    {
+        // other application startup e.g. RouteConfig, etc.
+
+        // set up agent with components
+        var agentComponents = ElasticApmModule.CreateAgentComponents();
+        Agent.Setup(agentComponents);
+
+        // add transaction filter
+        Agent.AddFilter((ITransaction t) =>
+        {
+            t.SetLabel("foo", "bar");
+            return t;
+        });
+    }
+}
+----
+
+Now, the `ElasticApmModule` will use the already instantiated APM agent instance upon initialization.
 
 [[setup-ef6]]
 === Entity Framework 6
