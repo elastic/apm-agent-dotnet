@@ -231,19 +231,6 @@ namespace Elastic.Apm.Api
 				parentId,
 				labels
 			);
-
-			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
-
-			var capturedException = new CapturedException { Message = message };
-
-			if (frames != null)
-			{
-				capturedException.StackTrace
-					= StacktraceHelper.GenerateApmStackTrace(frames, _logger, _configProvider.CurrentSnapshot, _apmServerInfo,
-						"failed capturing stacktrace");
-			}
-
-			_sender.QueueError(new Error(capturedException, null, null, _logger) { Culprit = capturedCulprit });
 		}
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null,
