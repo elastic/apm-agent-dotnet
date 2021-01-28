@@ -548,7 +548,7 @@ namespace Elastic.Apm.Model
 			return name;
 		}
 
-		public void CaptureLogAsError(ErrorLog logOnError, string parentId = null, Exception exception = null)
+		public void CaptureLogAsError(ErrorLog logOnError, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null)
 			=> ExecutionSegmentCommon.CaptureLogAsError(
 				logOnError,
 				_sender,
@@ -558,7 +558,8 @@ namespace Elastic.Apm.Model
 				this,
 				null,
 				_apmServerInfo,
-				exception
+				exception,
+				labels
 			);
 
 		public void SetLabel(string key, string value)

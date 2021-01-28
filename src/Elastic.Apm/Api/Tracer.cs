@@ -1,8 +1,10 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -207,8 +209,29 @@ namespace Elastic.Apm.Api
 			transaction.End();
 		}, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
 
-		public void CaptureError(string message, string culprit, StackFrame[] frames = null, string parentId = null)
+		public void CaptureError(string message, string culprit, StackFrame[] frames = null, string parentId = null,
+			Dictionary<string, Label> labels = null
+		)
 		{
+			var currentTransaction = CurrentExecutionSegmentsContainer.CurrentTransaction;
+
+			IExecutionSegment currentExecutionSegment = CurrentExecutionSegmentsContainer.CurrentSpan;
+			currentExecutionSegment ??= currentTransaction;
+
+			ExecutionSegmentCommon.CaptureError(
+				message,
+				culprit,
+				frames,
+				_sender,
+				_logger,
+				currentExecutionSegment,
+				_configProvider.CurrentSnapshot,
+				currentTransaction as Transaction,
+				_apmServerInfo,
+				parentId,
+				labels
+			);
+
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
 			var capturedException = new CapturedException { Message = message };
@@ -223,32 +246,49 @@ namespace Elastic.Apm.Api
 			_sender.QueueError(new Error(capturedException, null, null, _logger) { Culprit = capturedCulprit });
 		}
 
-		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null)
+		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null,
+			Dictionary<string, Label> labels = default
+		)
 		{
-			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
+			var currentTransaction = CurrentExecutionSegmentsContainer.CurrentTransaction;
 
-			var capturedException = new CapturedException { Message = exception.Message };
-			capturedException.StackTrace =
-				StacktraceHelper.GenerateApmStackTrace(exception, _logger, "CaptureException", _configProvider.CurrentSnapshot, _apmServerInfo);
+			IExecutionSegment currentExecutionSegment = CurrentExecutionSegmentsContainer.CurrentSpan;
+			currentExecutionSegment ??= currentTransaction;
 
-			_sender.QueueError(new Error(capturedException, null, parentId, _logger) { Culprit = capturedCulprit });
+			ExecutionSegmentCommon.CaptureException(
+				exception,
+				_logger,
+				_sender,
+				currentExecutionSegment,
+				_configProvider.CurrentSnapshot,
+				currentTransaction as Transaction,
+				_apmServerInfo,
+				culprit,
+				isHandled,
+				parentId,
+				labels
+			);
 		}
 
-		public void CaptureLogAsError(ErrorLog errorLog, string parentId = null, Exception exception = null)
+		public void CaptureLogAsError(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null)
 		{
-			var error = new Error(errorLog, null, parentId, _logger) { Culprit = "Log" };
+			var currentTransaction = CurrentExecutionSegmentsContainer.CurrentTransaction;
 
-			if (exception != null)
-			{
-				error.Exception = new CapturedException
-				{
-					Message = exception.Message,
-					StackTrace = StacktraceHelper.GenerateApmStackTrace(exception, _logger, "ErrorLog", _configProvider.CurrentSnapshot,
-						_apmServerInfo)
-				};
-			}
+			IExecutionSegment currentExecutionSegment = CurrentExecutionSegmentsContainer.CurrentSpan;
+			currentExecutionSegment ??= currentTransaction;
 
-			_sender.QueueError(error);
+			ExecutionSegmentCommon.CaptureLogAsError(
+				errorLog,
+				_sender,
+				_logger,
+				currentExecutionSegment,
+				_configProvider.CurrentSnapshot,
+				currentTransaction as Transaction,
+				null, //we don't pass specific parent id - it's either the current execution segments id, or null
+				_apmServerInfo,
+				exception,
+				labels
+			);
 		}
 	}
 }

@@ -1,8 +1,10 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -32,7 +34,9 @@ namespace Elastic.Apm.Api
 		/// The parent ID that is attached to the error. In case it's null the parent
 		/// will be automatically set to the current instance
 		/// </param>
-		void CaptureError(string message, string culprit, StackFrame[] frames = null, string parentId = null);
+		/// <param name="labels">Labels that will be added to the captured error</param>
+		void CaptureError(string message, string culprit, StackFrame[] frames = null, string parentId = null, Dictionary<string, Label> labels = null
+		);
 
 		/// <summary>
 		/// Captures an exception and reports it to the APM server.
@@ -44,7 +48,10 @@ namespace Elastic.Apm.Api
 		/// The parent ID that is attached to the error. In case it's null the parent
 		/// will be automatically set to the current instance
 		/// </param>
-		void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null);
+		/// <param name="labels">Labels that will be added to the captured error</param>
+		void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null,
+			Dictionary<string, Label> labels = null
+		);
 
 		/// <summary>
 		/// Captures a log line as an APM error.
@@ -52,7 +59,8 @@ namespace Elastic.Apm.Api
 		/// <param name="errorLog"> The log line itself </param>
 		/// <param name="parentId"> ParentId pointing to the parent transaction or span. </param>
 		/// <param name="exception"> Exception which was captured as part of the log. </param>
-		void CaptureLogAsError(ErrorLog errorLog, string parentId = null, Exception exception = null);
+		/// <param name="labels">Labels that will be added to the captured error</param>
+		void CaptureLogAsError(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a transaction and captures unhandled exceptions

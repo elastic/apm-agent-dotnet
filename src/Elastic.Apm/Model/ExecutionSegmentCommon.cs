@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -287,13 +288,15 @@ namespace Elastic.Apm.Model
 		/// <param name="parentId"></param>
 		/// <param name="serverInfo"></param>
 		/// <param name="exception"></param>
+		/// <param name="labels"></param>
 		internal static void CaptureLogAsError(ErrorLog logOnError, IPayloadSender payloadSender, IApmLogger logger,
 			IExecutionSegment executionSegment, IConfigSnapshot configSnapshot, Transaction enclosingTransaction, string parentId,
 			IApmServerInfo serverInfo,
-			Exception exception = null
+			Exception exception = null,
+			Dictionary<string, Label> labels = null
 		)
 		{
-			var error = new Error(logOnError, enclosingTransaction, parentId ?? executionSegment?.Id, logger)
+			var error = new Error(logOnError, enclosingTransaction, parentId ?? executionSegment?.Id, logger, labels)
 			{
 				Culprit = $"{logOnError.Level ?? "Error"} log"
 			};
