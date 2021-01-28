@@ -219,7 +219,7 @@ NOTE: The `OutgoingDistributedTracingData` property can be `null`. One such scen
 ==== `void CaptureError(string message, string culprit, StackFrame[] frames = null, string parentId = null);`
 Use this method to capture an APM error with a message and a culprit.
 
-NOTE: If there is an active transaction, the captured error will be correlated to it, otherwise the error will show up, but it won't be correlated to a transaction on the APM UI.
+NOTE: Captured errors are automatically correlated with the active transaction. If no transaction is active, the error will still appear in the APM app but will not be correlated with a transaction.
 
 Example:
 
@@ -234,7 +234,7 @@ Agent.Tracer.CaptureError("Something went wrong", "Database issue");
 
 Use this method to capture a .NET exception as an APM error.
 
-NOTE: If there is an active transaction, the captured error will be correlated to it, otherwise the error will show up, but it won't be correlated to a transaction on the APM UI.
+NOTE: Captured errors are automatically correlated with the active transaction. If no transaction is active, the error will still appear in the APM app but will not be correlated with a transaction.
 
 Example:
 
@@ -257,7 +257,7 @@ catch (Exception e)
 
 Use this method to capture a log line as an APM error.
 
-NOTE: If there is an active transaction, the captured error will be correlated to it, otherwise the error will show up, but it won't be correlated to a transaction on the APM UI.
+NOTE: Captured errors are automatically correlated with the active transaction. If no transaction is active, the error will still appear in the APM app but will not be correlated with a transaction.
 
 Example:
 
