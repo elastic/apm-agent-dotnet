@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using Elastic.Apm.Logging;
+using Timer = System.Timers.Timer;
 
 namespace Elastic.Apm.Tests.Utilities
 {
@@ -13,10 +14,13 @@ namespace Elastic.Apm.Tests.Utilities
 	{
 		private readonly List<string> _lines = new List<string>();
 		private readonly LogLevel _logLevel;
+		private readonly ManualResetEvent _waitHandle;
 
-		private readonly TaskCompletionSource<List<string>> _transactionTaskCompletionSource = new TaskCompletionSource<List<string>>();
-
-		public InMemoryBlockingLogger(LogLevel level) => _logLevel = level;
+		public InMemoryBlockingLogger(LogLevel level)
+		{
+			_logLevel = level;
+			_waitHandle = new ManualResetEvent(false);
+		}
 
 		/// <summary>
 		/// Returns the log lines that the logger collected.
@@ -26,32 +30,8 @@ namespace Elastic.Apm.Tests.Utilities
 		{
 			get
 			{
-				var timer = new Timer { Interval = 10000, Enabled = true };
-
-				try
-				{
-					timer.Elapsed += (a, b) =>
-					{
-						_transactionTaskCompletionSource.TrySetCanceled();
-						timer.Stop();
-					};
-
-					timer.Start();
-
-					try
-					{
-						_transactionTaskCompletionSource.Task.Wait();
-						return _transactionTaskCompletionSource.Task.Result;
-					}
-					catch
-					{
-						return new List<string>();
-					}
-				}
-				finally
-				{
-					timer.Dispose();
-				}
+				_waitHandle.WaitOne(TimeSpan.FromMinutes(1));
+				return _lines;
 			}
 		}
 
@@ -63,7 +43,7 @@ namespace Elastic.Apm.Tests.Utilities
 			if (!IsEnabled(level)) return;
 
 			_lines.Add(formatter(state, e));
-			_transactionTaskCompletionSource.SetResult(_lines);
+			_waitHandle.Set();
 		}
 	}
 }

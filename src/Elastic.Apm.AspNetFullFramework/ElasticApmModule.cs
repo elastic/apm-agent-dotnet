@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Reflection;
 using System.Security.Claims;
 using System.Web;
 using Elastic.Apm.Api;
@@ -19,6 +18,9 @@ using Elastic.Apm.Model;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
+	/// <summary>
+	/// Captures each request in an APM transaction
+	/// </summary>
 	public class ElasticApmModule : IHttpModule
 	{
 		private static bool _isCaptureHeadersEnabled;
@@ -29,9 +31,13 @@ namespace Elastic.Apm.AspNetFullFramework
 		private HttpApplication _application;
 		private IApmLogger _logger;
 
-		// ReSharper disable once ImpureMethodCallOnReadonlyValueField
-		public ElasticApmModule() => _dbgInstanceName = DbgInstanceNameGenerator.Generate($"{nameof(ElasticApmModule)}.#");
+		public ElasticApmModule() =>
+			// ReSharper disable once ImpureMethodCallOnReadonlyValueField
+			_dbgInstanceName = DbgInstanceNameGenerator.Generate($"{nameof(ElasticApmModule)}.#");
 
+		public void Dispose() => _application = null;
+
+		/// <inheritdoc />
 		public void Init(HttpApplication application)
 		{
 			try
@@ -47,6 +53,13 @@ namespace Elastic.Apm.AspNetFullFramework
 				);
 			}
 		}
+
+		/// <summary>
+		/// Creates a new instance of <see cref="AgentComponents"/> configured
+		/// to use with ASP.NET Full Framework.
+		/// </summary>
+		/// <returns>a new instance of <see cref="AgentComponents"/></returns>
+		public static AgentComponents CreateAgentComponents() => CreateAgentComponents($"{nameof(ElasticApmModule)}.#0");
 
 		private void InitImpl(HttpApplication application)
 		{
@@ -68,8 +81,6 @@ namespace Elastic.Apm.AspNetFullFramework
 			_application.BeginRequest += OnBeginRequest;
 			_application.EndRequest += OnEndRequest;
 		}
-
-		public void Dispose() => _application = null;
 
 		private void OnBeginRequest(object sender, EventArgs e)
 		{
@@ -352,58 +363,6 @@ namespace Elastic.Apm.AspNetFullFramework
 			_logger.Debug()?.Log("Captured user - {CapturedUser}", transaction.Context.User);
 		}
 
-		private static string FindAspNetVersion(IApmLogger logger)
-		{
-			var aspNetVersion = "N/A";
-			try
-			{
-				// We would like to report the same ASP.NET version as the one printed at the bottom of the error page
-				// (see https://github.com/microsoft/referencesource/blob/master/System.Web/ErrorFormatter.cs#L431)
-				// It is stored in VersionInfo.EngineVersion
-				// (see https://github.com/microsoft/referencesource/blob/3b1eaf5203992df69de44c783a3eda37d3d4cd10/System.Web/Util/versioninfo.cs#L91)
-				// which is unfortunately an internal property of an internal class in System.Web assembly so we use reflection to get it
-				const string versionInfoTypeName = "System.Web.Util.VersionInfo";
-				var versionInfoType = typeof(HttpRuntime).Assembly.GetType(versionInfoTypeName);
-				if (versionInfoType == null)
-				{
-					logger.Error()
-						?.Log("Type {TypeName} was not found in assembly {AssemblyFullName} - {AspNetVersion} will be used as ASP.NET version",
-							versionInfoTypeName, typeof(HttpRuntime).Assembly.FullName, aspNetVersion);
-					return aspNetVersion;
-				}
-
-				const string engineVersionPropertyName = "EngineVersion";
-				var engineVersionProperty = versionInfoType.GetProperty(engineVersionPropertyName,
-					BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-				if (engineVersionProperty == null)
-				{
-					logger.Error()
-						?.Log("Property {PropertyName} was not found in type {TypeName} - {AspNetVersion} will be used as ASP.NET version",
-							engineVersionPropertyName, versionInfoType.FullName, aspNetVersion);
-					return aspNetVersion;
-				}
-
-				var engineVersionPropertyValue = (string)engineVersionProperty.GetValue(null);
-				if (engineVersionPropertyValue == null)
-				{
-					logger.Error()
-						?.Log("Property {PropertyName} (in type {TypeName}) is of type {TypeName} and not a string as expected" +
-							" - {AspNetVersion} will be used as ASP.NET version",
-							engineVersionPropertyName, versionInfoType.FullName, engineVersionPropertyName.GetType().FullName, aspNetVersion);
-					return aspNetVersion;
-				}
-
-				aspNetVersion = engineVersionPropertyValue;
-			}
-			catch (Exception ex)
-			{
-				logger.Error()?.LogException(ex, "Failed to obtain ASP.NET version - {AspNetVersion} will be used as ASP.NET version", aspNetVersion);
-			}
-
-			logger.Debug()?.Log("Found ASP.NET version: {AspNetVersion}", aspNetVersion);
-			return aspNetVersion;
-		}
-
 		private static bool InitOnceForAllInstancesUnderLock(string dbgInstanceName) =>
 			InitOnceHelper.IfNotInited?.Init(() =>
 			{
@@ -419,24 +378,15 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		private static IApmLogger BuildLogger() => AgentDependencies.Logger ?? ConsoleLogger.Instance;
 
-		private static AgentComponents BuildAgentComponents(string dbgInstanceName)
+		private static AgentComponents CreateAgentComponents(string dbgInstanceName)
 		{
 			var rootLogger = BuildLogger();
-			var scopedLogger = rootLogger.Scoped(dbgInstanceName);
 
 			var reader = ConfigHelper.CreateReader(rootLogger) ?? new FullFrameworkConfigReader(rootLogger);
+			var agentComponents = new FullFrameworkAgentComponents(rootLogger, reader);
 
-			var agentComponents = new AgentComponents(
-				rootLogger,
-				reader,
-				null,
-				null,
-				new HttpContextCurrentExecutionSegmentsContainer(),
-				null,
-				null);
-
-			var aspNetVersion = FindAspNetVersion(scopedLogger);
-
+			var scopedLogger = rootLogger.Scoped(dbgInstanceName);
+			var aspNetVersion = AspNetVersion.GetEngineVersion(scopedLogger);
 			agentComponents.Service.Framework = new Framework { Name = "ASP.NET", Version = aspNetVersion };
 			agentComponents.Service.Language = new Language { Name = "C#" }; //TODO
 
@@ -445,7 +395,7 @@ namespace Elastic.Apm.AspNetFullFramework
 
 		private static void SafeAgentSetup(string dbgInstanceName)
 		{
-			var agentComponents = BuildAgentComponents(dbgInstanceName);
+			var agentComponents = CreateAgentComponents(dbgInstanceName);
 			try
 			{
 				if (!agentComponents.ConfigurationReader.Enabled)
@@ -455,12 +405,24 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 			catch (Agent.InstanceAlreadyCreatedException ex)
 			{
-				BuildLogger().Scoped(dbgInstanceName)
-					.Error()
-					?.LogException(ex, "The Elastic APM agent was already initialized before call to"
-						+ $" {nameof(ElasticApmModule)}.{nameof(Init)} - {nameof(ElasticApmModule)} will use existing instance"
-						+ " even though it might lead to unexpected behavior"
-						+ " (for example agent using incorrect configuration source such as environment variables instead of Web.config).");
+				if (Agent.Components is FullFrameworkAgentComponents)
+				{
+					BuildLogger()
+						.Scoped(dbgInstanceName)
+						.Info()
+						?.Log("The Elastic APM agent was already initialized before call to"
+							+ $" {nameof(ElasticApmModule)}.{nameof(Init)} - {nameof(ElasticApmModule)} will use existing instance");
+				}
+				else
+				{
+					BuildLogger()
+						.Scoped(dbgInstanceName)
+						.Error()
+						?.LogException(ex, "The Elastic APM agent was already initialized before call to"
+							+ $" {nameof(ElasticApmModule)}.{nameof(Init)} - {nameof(ElasticApmModule)} will use existing instance"
+							+ " even though it might lead to unexpected behavior"
+							+ " (for example agent using incorrect configuration source such as environment variables instead of Web.config).");
+				}
 
 				agentComponents.Dispose();
 			}

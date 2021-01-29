@@ -61,6 +61,8 @@ module Tooling =
 
     let DotNet = BuildTooling(None, "dotnet")
     
+    let Docker = BuildTooling(None, "docker")
+    
     let private restoreDotnetTools = lazy(DotNet.Exec ["tool"; "restore"])
     
     let Diff args =
