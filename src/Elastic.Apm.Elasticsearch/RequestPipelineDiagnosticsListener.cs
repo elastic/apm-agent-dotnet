@@ -1,3 +1,8 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -19,11 +24,13 @@ namespace Elastic.Apm.Elasticsearch
 		private const string SniffStart = nameof(DiagnosticSources.RequestPipeline.Sniff) + StartSuffix;
 		private const string SniffStop = nameof(DiagnosticSources.RequestPipeline.Sniff) + StopSuffix;
 
-		public RequestPipelineDiagnosticsListener(IApmAgent agent) : base(agent, DiagnosticSources.RequestPipeline.SourceName) =>
+		public RequestPipelineDiagnosticsListener(IApmAgent agent) : base(agent) =>
 			Observer = new RequestPipelineDiagnosticObserver(
 				a => OnRequestData(a.Key, a.Value),
 				a => OnResult(a.Key, a.Value)
 			);
+
+		public override string Name => DiagnosticSources.RequestPipeline.SourceName;
 
 		private void OnResult(string @event, IApiCallDetails response)
 		{

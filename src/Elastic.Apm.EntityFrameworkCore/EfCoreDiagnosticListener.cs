@@ -6,29 +6,24 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Elastic.Apm.Api;
-using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.Model;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Elastic.Apm.EntityFrameworkCore
 {
-	internal class EfCoreDiagnosticListener : IDiagnosticListener
+	internal class EfCoreDiagnosticListener : DiagnosticListenerBase
 	{
-		private readonly ApmAgent _agent;
 		private readonly ConcurrentDictionary<Guid, ISpan> _spans = new ConcurrentDictionary<Guid, ISpan>();
 
-		public EfCoreDiagnosticListener(IApmAgent agent) => _agent = (ApmAgent)agent;
+		public EfCoreDiagnosticListener(IApmAgent agent) : base(agent) { }
 
-		public string Name => "Microsoft.EntityFrameworkCore";
+		public override string Name => "Microsoft.EntityFrameworkCore";
 
-		public void OnCompleted() { }
-
-		public void OnError(Exception error) { }
-
-		public void OnNext(KeyValuePair<string, object> kv)
+		protected override void HandleOnNext(KeyValuePair<string, object> kv)
 		{
 			// check for competing instrumentation
-			if (_agent.TracerInternal.CurrentSpan is Span currentSpan)
+			if ((ApmAgent as ApmAgent)?.TracerInternal.CurrentSpan is Span currentSpan)
 			{
 				if (currentSpan.InstrumentationFlag == InstrumentationFlag.SqlClient)
 					return;
@@ -36,10 +31,10 @@ namespace Elastic.Apm.EntityFrameworkCore
 
 			switch (kv.Key)
 			{
-				case { } k when k == RelationalEventId.CommandExecuting.Name && _agent.Tracer.CurrentTransaction != null:
+				case { } k when k == RelationalEventId.CommandExecuting.Name && ApmAgent.Tracer.CurrentTransaction != null:
 					if (kv.Value is CommandEventData commandEventData)
 					{
-						var newSpan = _agent.TracerInternal.DbSpanCommon.StartSpan(_agent, commandEventData.Command, InstrumentationFlag.EfCore,
+						var newSpan = (ApmAgent as ApmAgent)?.TracerInternal.DbSpanCommon.StartSpan(ApmAgent, commandEventData.Command, InstrumentationFlag.EfCore,
 							captureStackTraceOnStart: true);
 						_spans.TryAdd(commandEventData.CommandId, newSpan);
 					}
@@ -49,7 +44,7 @@ namespace Elastic.Apm.EntityFrameworkCore
 					{
 						if (_spans.TryRemove(commandExecutedEventData.CommandId, out var span))
 						{
-							_agent.TracerInternal.DbSpanCommon.EndSpan(span, commandExecutedEventData.Command, Outcome.Success,
+							(ApmAgent as ApmAgent)?.TracerInternal.DbSpanCommon.EndSpan(span, commandExecutedEventData.Command, Outcome.Success,
 								commandExecutedEventData.Duration);
 						}
 					}
@@ -60,7 +55,7 @@ namespace Elastic.Apm.EntityFrameworkCore
 						if (_spans.TryRemove(commandErrorEventData.CommandId, out var span))
 						{
 							span.CaptureException(commandErrorEventData.Exception);
-							_agent.TracerInternal.DbSpanCommon.EndSpan(span, commandErrorEventData.Command, Outcome.Failure,
+							(ApmAgent as ApmAgent)?.TracerInternal.DbSpanCommon.EndSpan(span, commandErrorEventData.Command, Outcome.Failure,
 								commandErrorEventData.Duration);
 						}
 					}

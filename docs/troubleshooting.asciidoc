@@ -99,10 +99,16 @@ Agent.Setup(new AgentComponents(logger: new ApmLoggerBridge()));
 ----
 
 [float]
+[[double-agent-initialization-log]]
+=== Following error appears in logs: `The singleton APM agent has already been instantiated and can no longer be configured.`
+
+See "<<double-agent-initialization>>".
+
+[float]
 [[double-agent-initialization]]
 === An `InstanceAlreadyCreatedException` exception is thrown
 
-In the early stage of a monitored process, the Agent might throw an `InstanceAlreadyCreatedException` exception with the following message: "The singleton APM agent has already been instantiated and can no longer be configured." This happens when you attempt to initialize the Agent multiple times, which is prohibited. Allowing multiple Agent instances per process would open up problems, like capturing events and metrics multiple times for each instance, or having multiple background threads for event serialization and transfer to the APM Server.
+In the early stage of a monitored process, the Agent might throw an `InstanceAlreadyCreatedException` exception with the following message: "The singleton APM agent has already been instantiated and can no longer be configured.", or an error log appears with the same message. This happens when you attempt to initialize the Agent multiple times, which is prohibited. Allowing multiple Agent instances per process would open up problems, like capturing events and metrics multiple times for each instance, or having multiple background threads for event serialization and transfer to the APM Server.
 
 TIP: Take a look at the initialization section of the <<public-api,Public Agent API>> for more information on how agent initialization works.
 

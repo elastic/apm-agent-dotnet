@@ -1,5 +1,7 @@
-using System;
-using System.Diagnostics;
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
 using Elasticsearch.Net;
@@ -9,11 +11,13 @@ namespace Elastic.Apm.Elasticsearch
 {
 	public class HttpConnectionDiagnosticsListener : ElasticsearchDiagnosticsListenerBase
 	{
-		public HttpConnectionDiagnosticsListener(IApmAgent agent) : base(agent, DiagnosticSources.HttpConnection.SourceName) =>
+		public HttpConnectionDiagnosticsListener(IApmAgent agent) : base(agent) =>
 			Observer = new HttpConnectionDiagnosticObserver(
 				a => OnRequestData(a.Key, a.Value),
 				a => OnResult(a.Key, a.Value)
 			);
+
+		public override string Name => DiagnosticSources.HttpConnection.SourceName;
 
 		private void OnResult(string @event, int? statusCode)
 		{

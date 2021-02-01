@@ -403,29 +403,6 @@ namespace Elastic.Apm.AspNetFullFramework
 
 				Agent.Setup(agentComponents);
 			}
-			catch (Agent.InstanceAlreadyCreatedException ex)
-			{
-				if (Agent.Components is FullFrameworkAgentComponents)
-				{
-					BuildLogger()
-						.Scoped(dbgInstanceName)
-						.Info()
-						?.Log("The Elastic APM agent was already initialized before call to"
-							+ $" {nameof(ElasticApmModule)}.{nameof(Init)} - {nameof(ElasticApmModule)} will use existing instance");
-				}
-				else
-				{
-					BuildLogger()
-						.Scoped(dbgInstanceName)
-						.Error()
-						?.LogException(ex, "The Elastic APM agent was already initialized before call to"
-							+ $" {nameof(ElasticApmModule)}.{nameof(Init)} - {nameof(ElasticApmModule)} will use existing instance"
-							+ " even though it might lead to unexpected behavior"
-							+ " (for example agent using incorrect configuration source such as environment variables instead of Web.config).");
-				}
-
-				agentComponents.Dispose();
-			}
 		}
 	}
 }

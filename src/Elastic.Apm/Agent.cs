@@ -252,7 +252,7 @@ namespace Elastic.Apm
 		public static void Setup(AgentComponents agentComponents)
 		{
 			if (LazyApmAgent.IsValueCreated)
-				throw new InstanceAlreadyCreatedException("The singleton APM agent has already been instantiated and can no longer be configured.");
+				agentComponents?.Logger?.Error()?.Log("The singleton APM agent has already been instantiated and can no longer be configured.");
 
 			Components = agentComponents;
 			_isConfigured = true;
@@ -262,11 +262,6 @@ namespace Elastic.Apm
 		{
 			if (!LazyApmAgent.IsValueCreated)
 				Setup(apmAgent.Components);
-		}
-
-		internal class InstanceAlreadyCreatedException : Exception
-		{
-			internal InstanceAlreadyCreatedException(string message) : base(message) { }
 		}
 	}
 }
