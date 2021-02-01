@@ -109,7 +109,7 @@ namespace Elastic.Apm.SqlClient
 					Type = Database.TypeSql
 				};
 
-				span.Context.Destination = _apmAgent.TracerInternal.DbSpanCommon.GetDestination($"Data Source={dataSource}", false, null);
+				span.Context.Destination = _apmAgent.TracerInternal.DbSpanCommon.GetDestination($"Data Source={dataSource}", null);
 
 				// At the moment only System.Data.SqlClient and Microsoft.Data.SqlClient spread events via EventSource with Microsoft-AdoNet-SystemData name
 				span.Subtype = ApiConstants.SubtypeMssql;
