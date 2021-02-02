@@ -47,7 +47,7 @@ NOTE: In the case of ASP.NET Core, when you register the agent, the `UseElasticA
 [[auto-instrumentation-and-agent-api]]
 == Auto instrumentation in combination with the Public Agent API
 
-With the `Elastic.ApmAgent.Subscribe(params IDiagnosticsSubscriber[] subscribers)` method you can turn on auto instrumentation for supported libraries.
+With the `Elastic.Apm.Agent.Subscribe(params IDiagnosticsSubscriber[] subscribers)` method you can turn on auto instrumentation for supported libraries.
 
 In the case of ASP.NET Core, when you turn on the agent with the `UseAllElasticApm` method, the agent will do this automatically.
 
