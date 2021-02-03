@@ -60,7 +60,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 					span.Context.Db.Statement.Should().StartWith(dbStatements[i]);
 
-					span.Context.Destination.Should().BeNull("because SQLite is an embedded DB");
+					span.Context.Destination.Should().NotBeNull();
 
 					span.TraceId.Should().Be(transaction.TraceId);
 					span.TransactionId.Should().Be(transaction.Id);
@@ -166,7 +166,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 						dbSpan.Context.Db.Statement.Should().StartWith(dbStatements[i]);
 
-						dbSpan.Context.Destination.Should().BeNull("because SQLite is an embedded DB");
+						dbSpan.Context.Destination.Should().NotBeNull();
 
 						dbSpan.TraceId.Should().Be(transaction.TraceId);
 						dbSpan.TransactionId.Should().Be(transaction.Id);
