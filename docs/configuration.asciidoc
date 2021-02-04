@@ -1016,7 +1016,7 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-flush-interval,`FlushInterval`>> | No | Reporter
 | <<config-global-labels,`GlobalLabels`>> | No | Core
 | <<config-hostname,`HostName`>> | No | Core
-| <<config-log-level,`LogLevel`>> | No | Supportability
+| <<config-log-level,`LogLevel`>> | Yes | Supportability
 | <<config-max-batch-event-count,`MaxBatchEventCount`>> | No | Reporter
 | <<config-max-queue-event-count,`MaxQueueEventCount`>> | No | Reporter
 | <<config-metrics-interval,`MetricsInterval`>> | No | Reporter
