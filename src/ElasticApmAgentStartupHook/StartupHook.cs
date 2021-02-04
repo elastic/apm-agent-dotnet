@@ -30,6 +30,7 @@ internal class StartupHook
 	public static void Initialize()
 	{
 		var startupHookEnvVar = Environment.GetEnvironmentVariable("DOTNET_STARTUP_HOOKS");
+		var startupHookDirectory = Path.GetDirectoryName(startupHookEnvVar);
 
 		if (string.IsNullOrEmpty(startupHookEnvVar) || !File.Exists(startupHookEnvVar))
 			return;
