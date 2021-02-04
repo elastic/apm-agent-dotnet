@@ -5,7 +5,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
@@ -15,6 +14,7 @@ using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.GrpcClient;
 using Elastic.Apm.SqlClient;
+using Elastic.Apm.StartupHook.Common;
 
 namespace Elastic.Apm.StartupHook.Loader
 {
@@ -40,7 +40,7 @@ namespace Elastic.Apm.StartupHook.Loader
 		/// </summary>
 		public static void Initialize()
 		{
-			var agentLibsToLoad =  new[]{ "Elastic.Apm", "Elastic.Apm.Extensions.Hosting", "Elastic.Apm.AspNetCore", "Elastic.Apm.EntityFrameworkCore", "Elastic.Apm.SqlClient", "Elastic.Apm.GrpcClient", "Elastic.Apm.Elasticsearch" };
+			var agentLibsToLoad = new[] { "Elastic.Apm", "Elastic.Apm.Extensions.Hosting", "Elastic.Apm.AspNetCore", "Elastic.Apm.EntityFrameworkCore", "Elastic.Apm.SqlClient", "Elastic.Apm.GrpcClient", "Elastic.Apm.Elasticsearch" };
 			var agentDependencyLibsToLoad = new[] { "System.Diagnostics.PerformanceCounter", "Microsoft.Diagnostics.Tracing.TraceEvent", "Newtonsoft.Json", "Elasticsearch.Net" };
 
 			foreach (var libToLoad in agentDependencyLibsToLoad)
@@ -57,15 +57,24 @@ namespace Elastic.Apm.StartupHook.Loader
 			Agent.Setup(new AgentComponents());
 			Agent.Subscribe(new HttpDiagnosticsSubscriber());
 
-			if (AppDomain.CurrentDomain.GetAssemblies().Any(n => n.GetName().Name.Contains("Microsoft.AspNetCore.")))
+			LoadDiagnosticSource(new AspNetCoreDiagnosticSubscriber());
+			LoadDiagnosticSource(new EfCoreDiagnosticsSubscriber());
+			LoadDiagnosticSource(new SqlClientDiagnosticSubscriber());
+			LoadDiagnosticSource(new ElasticsearchDiagnosticsSubscriber());
+			LoadDiagnosticSource(new GrpcClientDiagnosticSubscriber());
+
+			void LoadDiagnosticSource(IDiagnosticsSubscriber diagnosticsSubscriber)
 			{
-				Agent.Subscribe(
-					new AspNetCoreDiagnosticSubscriber(),
-					new EfCoreDiagnosticsSubscriber(),
-					new SqlClientDiagnosticSubscriber(),
-					new ElasticsearchDiagnosticsSubscriber(),
-					new GrpcClientDiagnosticSubscriber()
-				);
+				var logger = StartupHookLogger.CreateLogger();
+				try
+				{
+					Agent.Subscribe(diagnosticsSubscriber);
+				}
+				catch (Exception e)
+				{
+					logger.WriteLine($"Failed subscribing to {diagnosticsSubscriber.GetType().Name}, " +
+						$"Exception type: {e.GetType().Name}, message: {e.Message}");
+				}
 			}
 		}
 	}

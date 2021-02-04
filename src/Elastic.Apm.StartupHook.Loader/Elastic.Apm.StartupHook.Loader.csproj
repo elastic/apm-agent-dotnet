@@ -14,4 +14,6 @@
       <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
     </ItemGroup>
 
+    <Import Project="..\Elastic.Apm.StartupHook.Common\Elastic.Apm.StartupHook.Common.projitems" Label="Shared" />
+
 </Project>
