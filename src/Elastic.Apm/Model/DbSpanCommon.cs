@@ -37,10 +37,9 @@ namespace Elastic.Apm.Model
 		{
 			if (span is Span capturedSpan)
 			{
-
 				if (duration.HasValue) capturedSpan.Duration = duration.Value.TotalMilliseconds;
 
-				GetDefaultProperties(dbCommand.Connection.GetType().FullName, out var spanSubtype, out var isEmbeddedDb, out var defaultPort);
+				GetDefaultProperties(dbCommand.Connection.GetType().FullName, out var spanSubtype, out var defaultPort);
 				capturedSpan.Subtype = spanSubtype;
 				capturedSpan.Action = GetSpanAction(dbCommand.CommandType);
 
@@ -53,7 +52,7 @@ namespace Elastic.Apm.Model
 						Type = Database.TypeSql
 					};
 
-					capturedSpan.Context.Destination = GetDestination(dbCommand.Connection?.ConnectionString, isEmbeddedDb, defaultPort);
+					capturedSpan.Context.Destination = GetDestination(dbCommand.Connection?.ConnectionString, defaultPort);
 				}
 
 				capturedSpan.Outcome = outcome;
@@ -63,14 +62,12 @@ namespace Elastic.Apm.Model
 			span.End();
 		}
 
-		private static void GetDefaultProperties(string dbConnectionClassName, out string spanSubtype, out bool isEmbeddedDb, out int? defaultPort)
+		private static void GetDefaultProperties(string dbConnectionClassName, out string spanSubtype, out int? defaultPort)
 		{
-			isEmbeddedDb = false;
 			switch (dbConnectionClassName)
 			{
 				case { } str when str.ContainsOrdinalIgnoreCase("SQLite"):
 					spanSubtype = ApiConstants.SubtypeSqLite;
-					isEmbeddedDb = true;
 					defaultPort = null;
 					break;
 				case { } str when str.ContainsOrdinalIgnoreCase("MySQL"):
@@ -113,9 +110,9 @@ namespace Elastic.Apm.Model
 				_ => dbCommandType.ToString()
 			};
 
-		internal Destination GetDestination(string dbConnectionString, bool isEmbeddedDb, int? defaultPort)
+		internal Destination GetDestination(string dbConnectionString, int? defaultPort)
 		{
-			if (isEmbeddedDb || dbConnectionString == null) return null;
+			if (dbConnectionString == null) return null;
 
 			var destination = _dbConnectionStringParser.ExtractDestination(dbConnectionString);
 			if (destination == null) return null;
