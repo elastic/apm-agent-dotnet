@@ -2,9 +2,10 @@
 # This script installs the required test tools to be used during the tests execution
 #
 
-dotnet tool install -g Codecov.Tool --version 1.2.0
-if ($LASTEXITCODE) {
-    Write-Host "codecov.tool installation failed."
-    exit 1
+# Install codecov.tool if not already installed
+$tools = dotnet tool list -g
+$codecov = $tools -match "codecov.tool"
+if (!$codecov) {
+    dotnet tool install -g Codecov.Tool --version 1.2.0
 }
 
