@@ -6,10 +6,12 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 using static Elastic.Apm.Metrics.MetricsProvider.CgroupMetricsProvider;
 
 namespace Elastic.Apm.Tests.Metrics
@@ -20,8 +22,8 @@ namespace Elastic.Apm.Tests.Metrics
 
 		public CgroupMetricsProviderTests()
 		{
-			var appRoot = new DirectoryInfo(AppContext.BaseDirectory);
-			_projectRoot = appRoot.FullName;
+			var assemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+			_projectRoot = assemblyDirectory;
 		}
 
 		[Theory]
