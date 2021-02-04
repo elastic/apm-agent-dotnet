@@ -57,13 +57,13 @@ namespace Elastic.Apm.StartupHook.Loader
 			Agent.Setup(new AgentComponents());
 			Agent.Subscribe(new HttpDiagnosticsSubscriber());
 
-			LoadDiagnosticSource(new AspNetCoreDiagnosticSubscriber());
-			LoadDiagnosticSource(new EfCoreDiagnosticsSubscriber());
-			LoadDiagnosticSource(new SqlClientDiagnosticSubscriber());
-			LoadDiagnosticSource(new ElasticsearchDiagnosticsSubscriber());
-			LoadDiagnosticSource(new GrpcClientDiagnosticSubscriber());
+			LoadDiagnosticSubscriber(new AspNetCoreDiagnosticSubscriber());
+			LoadDiagnosticSubscriber(new EfCoreDiagnosticsSubscriber());
+			LoadDiagnosticSubscriber(new SqlClientDiagnosticSubscriber());
+			LoadDiagnosticSubscriber(new ElasticsearchDiagnosticsSubscriber());
+			LoadDiagnosticSubscriber(new GrpcClientDiagnosticSubscriber());
 
-			void LoadDiagnosticSource(IDiagnosticsSubscriber diagnosticsSubscriber)
+			void LoadDiagnosticSubscriber(IDiagnosticsSubscriber diagnosticsSubscriber)
 			{
 				var logger = StartupHookLogger.CreateLogger();
 				try
