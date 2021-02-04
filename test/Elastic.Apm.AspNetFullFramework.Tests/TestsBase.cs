@@ -348,9 +348,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				{
 					var messageBuilder = new StringBuilder();
 					messageBuilder.AppendLine("There is at least one invalid payload error - the test is considered as failed.");
-					messageBuilder.AppendLine(TextUtils.Indent("Invalid payload error(s):", 1));
+					messageBuilder.AppendLine("Invalid payload error(s):".Indent(1));
 					foreach (var invalidPayloadError in MockApmServer.ReceivedData.InvalidPayloadErrors)
-						messageBuilder.AppendLine(TextUtils.Indent(invalidPayloadError, 2));
+						messageBuilder.AppendLine(invalidPayloadError.Indent(2));
 					throw new XunitException(messageBuilder.ToString());
 				}
 

@@ -29,17 +29,11 @@ namespace Elastic.Apm.StartupHook.Sample
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-#if NET5_0 || NETCOREAPP3_0 || NETCOREAPP3_1
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-#else
-		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
-#endif
 		{
 			app.UseDeveloperExceptionPage();
 			app.UseStaticFiles();
 			app.UseCookiePolicy();
-
-#if NET5_0 || NETCOREAPP3_0 || NETCOREAPP3_1
 			app.UseRouting();
 			app.UseAuthorization();
 			app.UseEndpoints(endpoints =>
@@ -48,15 +42,6 @@ namespace Elastic.Apm.StartupHook.Sample
 					name: "default",
 					pattern: "{controller=Home}/{action=Index}/{id?}");
 			});
-#else
-			app.UseAuthentication();
-			app.UseMvc(routes =>
-			{
-				routes.MapRoute(
-					"default",
-					"{controller=Home}/{action=Index}/{id?}");
-			});
-#endif
 		}
 	}
 }

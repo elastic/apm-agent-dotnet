@@ -63,7 +63,7 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 			}
 			catch (ArgumentException ex)
 			{
-				_mockApmServer.ReceivedData.InvalidPayloadErrors = _mockApmServer.ReceivedData.InvalidPayloadErrors.Add(ex.ToString());
+				_mockApmServer.AddInvalidPayload(ex.ToString());
 				return BadRequest(ex.ToString());
 			}
 
@@ -115,15 +115,15 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 					}
 				});
 
-			_mockApmServer.ReceivedData.Errors = await HandleParsed(nameof(lineDto.Error), lineDto.Error, _mockApmServer.ReceivedData.Errors);
-			_mockApmServer.ReceivedData.Metadata = await HandleParsed(nameof(lineDto.Metadata), lineDto.Metadata, _mockApmServer.ReceivedData.Metadata);
-			_mockApmServer.ReceivedData.Metrics = await HandleParsed(nameof(lineDto.MetricSet), lineDto.MetricSet, _mockApmServer.ReceivedData.Metrics);
-			_mockApmServer.ReceivedData.Spans = await HandleParsed(nameof(lineDto.Span), lineDto.Span, _mockApmServer.ReceivedData.Spans);
-			_mockApmServer.ReceivedData.Transactions = await HandleParsed(nameof(lineDto.Transaction), lineDto.Transaction, _mockApmServer.ReceivedData.Transactions);
+			_mockApmServer.ReceivedData.Errors = await HandleParsed(nameof(lineDto.Error), lineDto.Error, _mockApmServer.ReceivedData.Errors, _mockApmServer.AddError);
+			_mockApmServer.ReceivedData.Metadata = await HandleParsed(nameof(lineDto.Metadata), lineDto.Metadata, _mockApmServer.ReceivedData.Metadata, _mockApmServer.AddMetadata);
+			_mockApmServer.ReceivedData.Metrics = await HandleParsed(nameof(lineDto.MetricSet), lineDto.MetricSet, _mockApmServer.ReceivedData.Metrics, _mockApmServer.AddMetricSet);
+			_mockApmServer.ReceivedData.Spans = await HandleParsed(nameof(lineDto.Span), lineDto.Span, _mockApmServer.ReceivedData.Spans, _mockApmServer.AddSpan);
+			_mockApmServer.ReceivedData.Transactions = await HandleParsed(nameof(lineDto.Transaction), lineDto.Transaction, _mockApmServer.ReceivedData.Transactions, _mockApmServer.AddTransaction);
 
 			foundDto.Should().BeTrue($"There should be exactly one object per line: `{line}'");
 
-			async Task<ImmutableList<TDto>> HandleParsed<TDto>(string dtoType, TDto dto, ImmutableList<TDto> accumulatingList) where TDto : IDto
+			async Task<ImmutableList<TDto>> HandleParsed<TDto>(string dtoType, TDto dto, ImmutableList<TDto> accumulatingList, Func<TDto, ImmutableList<TDto>> action) where TDto : IDto
 			{
 				if (dto == null) return accumulatingList;
 
@@ -159,7 +159,7 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 								"Parsed object:\n".Indent() + "{EventDtoParsed}",
 								dtoType, accumulatingList.Count + 1,
 								line.PrettyFormat().Indent(2), dto.ToString().Indent(2));
-						_mockApmServer.ReceivedData.InvalidPayloadErrors = _mockApmServer.ReceivedData.InvalidPayloadErrors.Add(ex.ToString());
+						_mockApmServer.AddInvalidPayload(ex.ToString());
 						return accumulatingList;
 					}
 
@@ -181,7 +181,7 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 						dtoType, accumulatingList.Count + 1,
 						line.PrettyFormat().Indent(2), dto.ToString().Indent(2));
 
-				return accumulatingList.Add(dto);
+				return action(dto);
 			}
 		}
 
