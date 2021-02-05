@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using ProcNet;
@@ -19,52 +18,10 @@ namespace Elastic.Apm.StartupHook.Tests
 	/// </summary>
 	public class SampleApplication : IDisposable
 	{
-		private static readonly string SolutionRoot;
-
-		private static string FindSolutionRoot()
-		{
-			var solutionFileName = "ElasticApmAgent.sln";
-			var currentDirectory = Directory.GetCurrentDirectory();
-			var candidateDirectory = new DirectoryInfo(currentDirectory);
-			do
-			{
-				if (File.Exists(Path.Combine(candidateDirectory.FullName, solutionFileName)))
-					return candidateDirectory.FullName;
-
-				candidateDirectory = candidateDirectory.Parent;
-			} while (candidateDirectory != null);
-
-			throw new InvalidOperationException($"Could not find solution root directory from the current directory `{currentDirectory}'");
-		}
-
-		private static string FindVersionedAgentZip()
-		{
-			var buildOutputDir = Path.Combine(SolutionRoot, "build/output");
-			if (!Directory.Exists(buildOutputDir))
-			{
-				throw new DirectoryNotFoundException(
-					$"build output directory does not exist at {buildOutputDir}. "
-					+ $"Run the build script in the solution root with agent-zip target to build");
-			}
-
-			var agentZip = Directory.EnumerateFiles(buildOutputDir, "ElasticApmAgent_*.zip", SearchOption.TopDirectoryOnly)
-				.FirstOrDefault();
-
-			if (agentZip is null)
-			{
-				throw new FileNotFoundException($"ElasticApmAgent_*.zip file not found in {buildOutputDir}. "
-					+ $"Run the build script in the solution root with agent-zip target to build");
-			}
-
-			return agentZip;
-		}
-
-		static SampleApplication() => SolutionRoot = FindSolutionRoot();
-
 		private readonly string _startupHookZipPath;
 		private ObservableProcess _process;
 
-		public SampleApplication() : this(FindVersionedAgentZip())
+		public SampleApplication() : this(SolutionPaths.AgentZip)
 		{
 		}
 
@@ -93,7 +50,7 @@ namespace Elastic.Apm.StartupHook.Tests
 			environmentVariables["DOTNET_STARTUP_HOOKS"] = startupHookAssembly;
 			var arguments = new StartArguments("dotnet", "run", "-f", targetFramework)
 			{
-				WorkingDirectory = Path.Combine(SolutionRoot, "sample", "Elastic.Apm.StartupHook.Sample"),
+				WorkingDirectory = Path.Combine(SolutionPaths.Root, "sample", "Elastic.Apm.StartupHook.Sample"),
 				SendControlCFirst = true,
 				Environment = environmentVariables
 			};

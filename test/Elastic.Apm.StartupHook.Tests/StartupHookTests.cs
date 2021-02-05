@@ -7,6 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.ExceptionServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Tests.MockApmServer;
@@ -59,7 +61,6 @@ namespace Elastic.Apm.StartupHook.Tests
 					waitHandle.Set();
 			};
 
-			// block until a transaction is received, or 2 minute timeout
 			waitHandle.WaitOne(TimeSpan.FromMinutes(2));
 			apmServer.ReceivedData.Transactions.Should().HaveCount(1);
 
@@ -106,7 +107,6 @@ namespace Elastic.Apm.StartupHook.Tests
 					waitHandle.Set();
 			};
 
-			// block until a transaction is received, or 2 minute timeout
 			waitHandle.WaitOne(TimeSpan.FromMinutes(2));
 			apmServer.ReceivedData.Metadata.Should().HaveCount(1);
 
@@ -116,6 +116,101 @@ namespace Elastic.Apm.StartupHook.Tests
 			metadata.Service.Framework.Version.Should().Be(expectedFrameworkVersion);
 
 			sampleApp.Stop();
+			await apmServer.StopAsync();
+		}
+
+		[Theory]
+		[InlineData("webapi", "WebApi30", "netcoreapp3.0", "weatherforecast")]
+		[InlineData("webapi", "WebApi31", "netcoreapp3.1", "weatherforecast")]
+		[InlineData("webapi", "WebApi50", "net5.0", "weatherforecast")]
+		[InlineData("webapp", "WebApp30", "netcoreapp3.0", "")]
+		[InlineData("webapp", "WebApp31", "netcoreapp3.1", "")]
+		[InlineData("webapp", "WebApp50", "net5.0", "")]
+		[InlineData("mvc", "Mvc30", "netcoreapp3.0", "")]
+		[InlineData("mvc", "Mvc31", "netcoreapp3.1", "")]
+		[InlineData("mvc", "Mvc50", "net5.0", "")]
+		public async Task Auto_Instrument_With_StartupHook(string template, string name, string targetFramework, string path)
+		{
+			var apmLogger = new InMemoryBlockingLogger(LogLevel.Trace);
+			var apmServer = new MockApmServer(apmLogger, nameof(Auto_Instrument_With_StartupHook));
+			var port = apmServer.FindAvailablePortToListen();
+			apmServer.RunInBackground(port);
+
+			using var project = DotnetProject.Create(name, template, "--framework", targetFramework, "--no-https");
+			var environmentVariables = new Dictionary<string, string>
+			{
+				[EnvVarNames.ServerUrl] = $"http://localhost:{port}",
+				[EnvVarNames.CloudProvider] = "none"
+			};
+
+			var process = project.CreateProcess(SolutionPaths.AgentZip, environmentVariables);
+			var startHandle = new ManualResetEvent(false);
+			Uri uri = null;
+			ExceptionDispatchInfo e = null;
+			var capturedLines = new List<string>();
+			var endpointRegex = new Regex(@"\s*Now listening on:\s*(?<endpoint>[^\s]*)");
+
+			process.SubscribeLines(
+				line =>
+				{
+					capturedLines.Add(line.Line);
+					var match = endpointRegex.Match(line.Line);
+					if (match.Success)
+					{
+						try
+						{
+							var endpoint = match.Groups["endpoint"].Value.Trim();
+							uri = new UriBuilder(endpoint) { Path = path }.Uri;
+						}
+						catch (Exception exception)
+						{
+							e = ExceptionDispatchInfo.Capture(exception);
+						}
+
+						startHandle.Set();
+					}
+				},
+				exception => e = ExceptionDispatchInfo.Capture(exception));
+
+			var timeout = TimeSpan.FromMinutes(2);
+			var signalled = startHandle.WaitOne(timeout);
+			if (!signalled)
+			{
+				throw new Exception($"Could not start dotnet project within timeout {timeout}: "
+					+ string.Join(Environment.NewLine, capturedLines));
+			}
+
+			e?.Throw();
+
+			var client = new HttpClient();
+			var response = await client.GetAsync(uri);
+
+			response.IsSuccessStatusCode.Should().BeTrue();
+
+			var waitHandle = new ManualResetEvent(false);
+
+			apmServer.OnReceive += o =>
+			{
+				if (o is TransactionDto)
+					waitHandle.Set();
+			};
+
+			// block until a transaction is received, or 2 minute timeout
+			signalled = waitHandle.WaitOne(timeout);
+			if (!signalled)
+			{
+				throw new Exception($"Did not receive transaction within timeout {timeout}: "
+					+ string.Join(Environment.NewLine, capturedLines)
+					+ Environment.NewLine
+					+ string.Join(Environment.NewLine, apmLogger.Lines));
+			}
+
+			apmServer.ReceivedData.Transactions.Should().HaveCount(1);
+
+			var transaction = apmServer.ReceivedData.Transactions.First();
+			transaction.Name.Should().NotBeNullOrEmpty();
+
+			project.Stop();
 			await apmServer.StopAsync();
 		}
 	}
