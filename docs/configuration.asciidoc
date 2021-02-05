@@ -35,7 +35,7 @@ public class Startup
 {
 
     private readonly IConfiguration _configuration;
-    
+
     public Startup(IConfiguration configuration)
     {
         _configuration = configuration;
@@ -186,7 +186,7 @@ A boolean specifying if the agent should be recording or not.
 When recording, the agent captures HTTP requests, tracks errors, and collects and sends metrics.
 When not recording, the agent works as a noop, not collecting data and not communicating with the APM server,
 except for polling the central configuration endpoint.
-As this is a reversible switch, agent threads are not being killed when inactivated, but they will be 
+As this is a reversible switch, agent threads are not being killed when inactivated, but they will be
 mostly idle in this state, so the overhead should be negligible.
 
 You can use this setting to dynamically disable Elastic APM at runtime.
@@ -475,6 +475,10 @@ NOTE: This option requires APM Server 7.2 or later. It will have no effect on ol
 [[config-server-url]]
 ==== `ServerUrl`
 
+The URL for your APM Server. The URL must be fully qualified, including protocol (`http` or `https`) and port.
+
+IMPORTANT: Use of `ServerUrls` is deprecated. Use `ServerUrl`.
+
 [options="header"]
 |============
 | Environment variable name | IConfiguration or Web.config key
@@ -487,13 +491,17 @@ NOTE: This option requires APM Server 7.2 or later. It will have no effect on ol
 | `http://localhost:8200` | String
 |============
 
-The URL for your APM Server. The URL must be fully qualified, including protocol (`http` or `https`) and port.
-
-IMPORTANT: Use of `ServerUrls` is deprecated. Use `ServerUrl`.
-
 [float]
 [[config-secret-token]]
 ==== `SecretToken`
+
+This string is used to ensure that only your agents can send data to your APM server.
+
+Both the agents and the APM server have to be configured with the same secret token.
+Use this setting in case the APM Server requires a token (e.g. APM Server in Elastic Cloud).
+
+WARNING: the `SecretToken` is sent as plain-text in every request to the server, so you should also secure
+your communications using HTTPS. Unless you do so, your API Key could be observed by an attacker.
 
 [options="header"]
 |============
@@ -507,17 +515,17 @@ IMPORTANT: Use of `ServerUrls` is deprecated. Use `ServerUrl`.
 | `<none>`                | String
 |============
 
-This string is used to ensure that only your agents can send data to your APM server.
-
-Both the agents and the APM server have to be configured with the same secret token.
-Use this setting in case the APM Server requires a token (e.g. APM Server in Elastic Cloud).
-
-WARNING: the `SecretToken` is sent as plain-text in every request to the server, so you should also secure
-your communications using HTTPS. Unless you do so, your API Key could be observed by an attacker.
-
 [float]
 [[config-api-key]]
 ==== `ApiKey` (added[1.4])
+
+This base64-encoded string is used to ensure that only your agents can send data to your APM server.
+You must have created the API key using the APM server's {apm-server-ref-v}/api-key.html[command line tool].
+
+NOTE: This feature is fully supported in the APM Server versions >= 7.6.
+
+WARNING: the `APIKey` is sent as plain-text in every request to the server, so you should also secure
+your communications using HTTPS. Unless you do so, your API Key could be observed by an attacker.
 
 [options="header"]
 |============
@@ -531,18 +539,13 @@ your communications using HTTPS. Unless you do so, your API Key could be observe
 | `<none>`                | A base64-encoded string
 |============
 
-This base64-encoded string is used to ensure that only your agents can send data to your APM server.
-You must have created the API key using the APM server's {apm-server-ref-v}/api-key.html[command line tool].
-
-
-NOTE: This feature is fully supported in the APM Server versions >= 7.6.
-
-WARNING: the `APIKey` is sent as plain-text in every request to the server, so you should also secure
-your communications using HTTPS. Unless you do so, your API Key could be observed by an attacker.
-
 [float]
 [[config-verify-server-cert]]
 ==== `VerifyServerCert` (added[1.3])
+
+By default, the agent verifies the SSL certificate if you use an HTTPS connection to the APM server.
+
+Verification can be disabled by changing this setting to false.
 
 [options="header"]
 |============
@@ -556,25 +559,9 @@ your communications using HTTPS. Unless you do so, your API Key could be observe
 | `true`                  | Boolean
 |============
 
-By default, the agent verifies the SSL certificate if you use an HTTPS connection to the APM server.
-
-Verification can be disabled by changing this setting to false.
-
 [float]
 [[config-flush-interval]]
 ==== `FlushInterval` (added[1.1])
-
-[options="header"]
-|============
-| Environment variable name | IConfiguration or Web.config key
-| `ELASTIC_APM_FLUSH_INTERVAL` | `ElasticApm:FlushInterval`
-|============
-
-[options="header"]
-|============
-| Default                 | Type
-| `10s`                   | TimeDuration
-|============
 
 The maximal amount of time events are held in the queue until there is enough to send a batch.
 It's possible for a batch to contain less than <<config-max-batch-event-count,`MaxBatchEventCount`>> events
@@ -594,9 +581,29 @@ then the Agent won't hold events in the queue and instead will send them immedia
 Setting `FlushInterval` to a negative value (for example `-1`, `-54s`, `-89ms`, etc.) is invalid and
 in that case agent uses the default value instead.
 
+[options="header"]
+|============
+| Environment variable name | IConfiguration or Web.config key
+| `ELASTIC_APM_FLUSH_INTERVAL` | `ElasticApm:FlushInterval`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `10s`                   | TimeDuration
+|============
+
 [float]
 [[config-max-batch-event-count]]
 ==== `MaxBatchEventCount` (added[1.1])
+
+The maximal number of events to send in a batch.
+It's possible for a batch to contain less then the maximum events
+if there are events that need to be sent out because they were held for too long
+ (see <<config-flush-interval,`FlushInterval`>>).
+
+Setting `MaxBatchEventCount` to 0 or a negative value is invalid and
+in that case the Agent will use the default value instead.
 
 [options="header"]
 |============
@@ -610,17 +617,16 @@ in that case agent uses the default value instead.
 | 10                      | Integer
 |============
 
-The maximal number of events to send in a batch.
-It's possible for a batch to contain less then the maximum events
-if there are events that need to be sent out because they were held for too long
- (see <<config-flush-interval,`FlushInterval`>>).
-
-Setting `MaxBatchEventCount` to 0 or a negative value is invalid and
-in that case the Agent will use the default value instead.
-
 [float]
 [[config-max-queue-event-count]]
 ==== `MaxQueueEventCount` (added[1.1])
+
+The maximal number of events to hold in the queue as candidates to be sent.
+If the queue is at its maximum capacity then the agent discards the new events
+until the queue has free space.
+
+Setting `MaxQueueEventCount` to 0 or a negative value is invalid and
+in that case the Agent will use the default value instead.
 
 [options="header"]
 |============
@@ -633,13 +639,6 @@ in that case the Agent will use the default value instead.
 | Default                 | Type
 | 1000                    | Integer
 |============
-
-The maximal number of events to hold in the queue as candidates to be sent.
-If the queue is at its maximum capacity then the agent discards the new events
-until the queue has free space.
-
-Setting `MaxQueueEventCount` to 0 or a negative value is invalid and
-in that case the Agent will use the default value instead.
 
 [float]
 [[config-metrics-interval]]
@@ -694,7 +693,7 @@ This option supports the wildcard `*`, which matches zero or more characters. Ex
 Allows you to specify which cloud provider should be assumed for metadata collection. By default, the agent will attempt to detect the cloud provider and, if that fails, use trial and error to collect the metadata.
 
 Valid options are `"auto"`, `"aws"`, `"gcp"`, `"azure"`, and `"none"`. If this config value is set to `"none"`, no cloud metadata will be collected. If set to any of
-`"aws"`, `"gcp"`, or `"azure"`, attempts to collect metadata will only be performed 
+`"aws"`, `"gcp"`, or `"azure"`, attempts to collect metadata will only be performed
 from the chosen provider.
 
 [options="header"]
@@ -725,11 +724,11 @@ This option is case-insensitive.
 [IMPORTANT]
 ====
 To allow capturing request bodies, the agent sets `AllowSynchronousIO` to `true` on a per
-request basis in ASP.NET Core, since capturing can occur in synchronous code paths. 
+request basis in ASP.NET Core, since capturing can occur in synchronous code paths.
 
-https://docs.microsoft.com/en-us/aspnet/core/migration/22-to-30?#allowsynchronousio-disabled[With ASP.NET Core 3.0 onwards, `AllowSynchronousIO` is `false` by default] 
-because a large number of blocking synchronous I/O operations can lead to thread pool starvation, 
-which makes the application unresponsive. If your application becomes unresponsive with this 
+https://docs.microsoft.com/en-us/aspnet/core/migration/22-to-30?#allowsynchronousio-disabled[With ASP.NET Core 3.0 onwards, `AllowSynchronousIO` is `false` by default]
+because a large number of blocking synchronous I/O operations can lead to thread pool starvation,
+which makes the application unresponsive. If your application becomes unresponsive with this
 feature enabled, consider disabling capturing.
 ====
 
@@ -737,7 +736,7 @@ feature enabled, consider disabling capturing.
 ====
 Request bodies often contain sensitive values like passwords, credit card numbers, etc.
 If your service handles data like this, we advise to only enable this feature with care.
-Turning on body capturing can also significantly increase the overhead in terms of heap usage, 
+Turning on body capturing can also significantly increase the overhead in terms of heap usage,
 network utilization, and Elasticsearch index size.
 ====
 
@@ -792,6 +791,11 @@ This setting can be changed after agent's start.
 
 <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
+If set to `true`,
+the agent will capture request and response headers, including cookies.
+
+NOTE: Setting this to `false` reduces memory allocations, network bandwidth and disk space used by Elasticsearch.
+
 [options="header"]
 |============
 | Environment variable name     | IConfiguration or Web.config key
@@ -804,28 +808,11 @@ This setting can be changed after agent's start.
 | `true`                  | Boolean
 |============
 
-If set to `true`,
-the agent will capture request and response headers, including cookies.
-
-NOTE: Setting this to `false` reduces memory allocations, network bandwidth and disk space used by Elasticsearch.
-
 [float]
 [[config-transaction-ignore-urls]]
 ==== `TransactionIgnoreUrls` (performance)
 
 <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
-
-[options="header"]
-|============
-| Environment variable name             | IConfiguration or Web.config key
-| `ELASTIC_APM_TRANSACTION_IGNORE_URLS` | `ElasticApm:TransactionIgnoreUrls`
-|============
-
-[options="header"]
-|============
-| Default                                                                                                                    | Type
-| `/VAADIN/*, /heartbeat*, /favicon.ico", *.js", *.css", *.jpg", *.jpeg", *.png", *.gif", *.webp", *.svg", *.woff", *.woff2` | List<string>
-|============
 
 Used to restrict requests to certain URLs from being instrumented.
 
@@ -847,9 +834,25 @@ Prepending an element with `(?-i)` makes the matching case sensitive.
 
 NOTE: All errors that are captured during a request to an ignored URL are still sent to the APM Server regardless of this setting.
 
+[options="header"]
+|============
+| Environment variable name             | IConfiguration or Web.config key
+| `ELASTIC_APM_TRANSACTION_IGNORE_URLS` | `ElasticApm:TransactionIgnoreUrls`
+|============
+
+[options="header"]
+|============
+| Default                                                                                                                    | Type
+| `/VAADIN/*, /heartbeat*, /favicon.ico", *.js", *.css", *.jpg", *.jpeg", *.png", *.gif", *.webp", *.svg", *.woff", *.woff2` | List<string>
+|============
+
 [float]
 [[config-use-elastic-apm-traceparent-header]]
 ==== `UseElasticTraceparentHeader` (added[1.3.0])
+
+To enable {apm-overview-ref-v}/distributed-tracing.html[distributed tracing], the agent adds trace context headers to outgoing HTTP requests made with the `HttpClient` type. These headers (`traceparent` and `tracestate`) are defined in the https://www.w3.org/TR/trace-context-1/[W3C Trace Context] specification.
+
+When this setting is `true`, the agent will also add the header `elasticapm-traceparent` for backwards compatibility with older versions of Elastic APM agents. Versions prior to `1.3.0` only read the `elasticapm-traceparent` header.
 
 [options="header"]
 |============
@@ -863,18 +866,12 @@ NOTE: All errors that are captured during a request to an ignored URL are still 
 | `true`                  | Boolean
 |============
 
-
-To enable {apm-overview-ref-v}/distributed-tracing.html[distributed tracing], the agent adds trace context headers to outgoing HTTP requests made with the `HttpClient` type. These headers (`traceparent` and `tracestate`) are defined in the https://www.w3.org/TR/trace-context-1/[W3C Trace Context] specification.
-
-When this setting is `true`, the agent will also add the header `elasticapm-traceparent` for backwards compatibility with older versions of Elastic APM agents. Versions prior to `1.3.0` only read the `elasticapm-traceparent` header.
-
-
 [[config-stacktrace]]
 === Stacktrace configuration options
 [float]
 
 [[config-application-namespaces]]
-==== `ApplicationNamespaces (added[1.5])`
+==== `ApplicationNamespaces` (added[1.5])
 
 Used to determine whether a stack trace frame is an in-app frame or a library frame. When defined, all namespaces that do not start with one of the values of this collection are ignored when determining error culprit.
 
@@ -896,7 +893,7 @@ This suppresses any configuration of `ExcludedNamespaces`.
 
 [float]
 [[config-excluded-namespaces]]
-==== `ExcludedNamespaces (added[1.5])`
+==== `ExcludedNamespaces` (added[1.5])
 
 A list of namespaces to exclude when reading an exception's StackTrace to determine the culprit.
 
@@ -976,6 +973,14 @@ The default unit for this option is `ms`
 
 <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
+Sets the logging level for the agent.
+
+Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `None` (`None` disables the logging).
+
+IMPORTANT: The `UseElasticApm()` extension offers an overload to pass an `IConfiguration` instance to the agent.
+When configuring your agent in this way, as is typical in an ASP.NET Core application,
+you must instead set the `LogLevel` for the internal APM logger under the `Logging` section of `appsettings.json`. More details, including a <<sample-config,sample configuration file>> are available in <<configuration-on-asp-net-core>>.
+
 [options="header"]
 |============
 | Environment variable name | IConfiguration or Web.config key
@@ -987,14 +992,6 @@ The default unit for this option is `ms`
 | Default                 | Type
 | `Error`                 | String
 |============
-
-Sets the logging level for the agent.
-
-Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `None` (`None` disables the logging).
-
-IMPORTANT: The `UseElasticApm()` extension offers an overload to pass an `IConfiguration` instance to the agent.
-When configuring your agent in this way, as is typical in an ASP.NET Core application,
-you must instead set the `LogLevel` for the internal APM logger under the `Logging` section of `appsettings.json`. More details, including a <<sample-config,sample configuration file>> are available in <<configuration-on-asp-net-core>>.
 
 [[config-all-options-summary]]
 === All options summary
@@ -1010,8 +1007,8 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-central-config,`CentralConfig`>> | No | Core
 | <<config-cloud-provider,`CloudProvider`>> | No | Reporter
 | <<config-disable-metrics,`DisableMetrics`>> | No | Reporter
-| <<config-environment,`Environment`>> | No | Core
 | <<config-enabled,`Enabled`>> | No | Core
+| <<config-environment,`Environment`>> | No | Core
 | <<config-excluded-namespaces,`ExcludedNamespaces`>> | No | Stacktrace
 | <<config-flush-interval,`FlushInterval`>> | No | Reporter
 | <<config-global-labels,`GlobalLabels`>> | No | Core
