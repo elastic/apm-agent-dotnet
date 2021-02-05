@@ -3,7 +3,6 @@
 This sample application is a default ASP.NET (Core) application
 configured to run with 
 
-- `netcoreapp2.2`
 - `netcoreapp3.0`
 - `netcoreapp3.1`
 - `net5.0` 
