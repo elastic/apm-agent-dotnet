@@ -15,10 +15,15 @@ open Buildalyzer
 open Fake.Core
 open Fake.DotNet
 open Fake.IO
+open Fake.IO
 open Fake.IO.Globbing.Operators
+open Fake.SystemHelper
+open Fake.SystemHelper
 open Tooling
 
 module Build =
+    
+    let private isCI = Environment.hasEnvironVar "BUILD_ID"
     
     let private oldDiagnosticSourceVersion = SemVer.parse "4.6.0"
     
@@ -69,20 +74,28 @@ module Build =
     let private dotnet target projectOrSln =
         DotNet.Exec [target; projectOrSln; "-c"; "Release"; "-v"; "q"; "--nologo"]
         
-    let private msBuild target projectOrSln =     
-        MSBuild.build (fun p -> {
-           p with
-            Verbosity = Some(Quiet)
-            Targets = [target]
-            Properties = [
-                "Configuration", "Release"
-                "Optimize", "True"
-            ]
-            // current version of Fake MSBuild module does not support latest bin log file
-            // version of MSBuild in VS 16.8, so disable for now.
-            DisableInternalBinLog = true
-            NoLogo = true
-        }) projectOrSln
+    let private msBuild target projectOrSln =
+        MSBuild.build (fun p ->
+            let updated =
+                { p with
+                    Verbosity = Some(Quiet)
+                    Targets = [target]
+                    Properties = [
+                        "Configuration", "Release"
+                        "Optimize", "True"
+                    ]
+                    // current version of Fake MSBuild module does not support latest bin log file
+                    // version of MSBuild in VS 16.8, so disable for now.
+                    DisableInternalBinLog = true
+                    NoLogo = true
+                }
+            
+            // ensure MsBuild from VS 2019 Professional is used on CI, which can resolve .NET Core SDKs.
+            if isCI then
+                { updated with
+                    ToolPath = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin\MSBuild.exe"
+                }
+            else updated) projectOrSln
         
     /// Gets the current version of System.Diagnostics.DiagnosticSource referenced by Elastic.Apm    
     let private getCurrentApmDiagnosticSourceVersion =
