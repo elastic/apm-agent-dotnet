@@ -147,10 +147,10 @@ module Build =
         |> Seq.iter (fun proj -> DotNet.Exec ["sln" ; Paths.SolutionNetCore; "remove"; proj])
         
     /// Runs dotnet build on all .NET core projects in the solution.
-    /// When running on Windows, also runs MSBuild Build on .NET Framework
+    /// When running on Windows and not CI, also runs MSBuild Build on .NET Framework
     let Build () =
         dotnet "build" Paths.SolutionNetCore
-        if isWindows then msBuild "Build" aspNetFullFramework
+        if isWindows && not isCI then msBuild "Build" aspNetFullFramework
         copyBinRelease()
                               
     /// Publishes all projects with framework versions
