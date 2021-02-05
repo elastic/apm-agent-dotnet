@@ -129,7 +129,7 @@ We care both about memory and CPU overhead and both should be measured. The `tes
 
 The agent must never crash the monitored application.
 
-One aspect of this is that the agent code itself never throws exceptions. Instead, the agent uses the logger to log errors and it either skips specific events or completely stops collecting events. Skipping events must be preferred over unhandled exceptions in agent code.
+One aspect of this is that the agent code itself must never throws exceptions. Instead, the agent uses the logger to log errors and it either skips specific events or completely stops collecting events. Skipping events must be preferred over unhandled exceptions in agent code.
 
 The other aspect of this is that each time the agent calls other libraries, it makes sure no call causes an exception or an case an exception is thrown the agent handles it and makes sure these exceptions never bubble up to the monitored application.
 
