@@ -6,6 +6,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
+using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using ProcNet;
@@ -35,24 +37,46 @@ namespace Elastic.Apm.StartupHook.Tests
 			throw new InvalidOperationException($"Could not find solution root directory from the current directory `{currentDirectory}'");
 		}
 
+		private static string FindVersionedAgentZip()
+		{
+			var buildOutputDir = Path.Combine(SolutionRoot, "build/output");
+			if (!Directory.Exists(buildOutputDir))
+			{
+				throw new DirectoryNotFoundException(
+					$"build output directory does not exist at {buildOutputDir}. "
+					+ $"Run the build script in the solution root with agent-zip target to build");
+			}
+
+			var agentZip = Directory.EnumerateFiles(buildOutputDir, "ElasticApmAgent_*.zip", SearchOption.TopDirectoryOnly)
+				.FirstOrDefault();
+
+			if (agentZip is null)
+			{
+				throw new FileNotFoundException($"ElasticApmAgent_*.zip file not found in {buildOutputDir}. "
+					+ $"Run the build script in the solution root with agent-zip target to build");
+			}
+
+			return agentZip;
+		}
+
 		static SampleApplication() => SolutionRoot = FindSolutionRoot();
 
-		private readonly string _startupHookPath;
+		private readonly string _startupHookZipPath;
 		private ObservableProcess _process;
 
-		public SampleApplication() : this(Path.Combine(SolutionRoot, "build/output/ElasticApmAgent", "ElasticApmAgentStartupHook.dll"))
+		public SampleApplication() : this(FindVersionedAgentZip())
 		{
 		}
 
-		public SampleApplication(string startupHookPath)
+		public SampleApplication(string startupHookZipPath)
 		{
-			if (startupHookPath is null)
-				throw new ArgumentNullException(nameof(startupHookPath));
+			if (startupHookZipPath is null)
+				throw new ArgumentNullException(nameof(startupHookZipPath));
 
-			if (!File.Exists(startupHookPath))
-				throw new FileNotFoundException($"startup hook could not be found at {startupHookPath}", startupHookPath);
+			if (!File.Exists(startupHookZipPath))
+				throw new FileNotFoundException($"startup hook zip file could not be found at {startupHookZipPath}", startupHookZipPath);
 
-			_startupHookPath = startupHookPath;
+			_startupHookZipPath = startupHookZipPath;
 		}
 
 		/// <summary>
@@ -64,8 +88,9 @@ namespace Elastic.Apm.StartupHook.Tests
 		/// <returns></returns>
 		public Uri Start(string targetFramework, IDictionary<string, string> environmentVariables = null)
 		{
+			var startupHookAssembly = UnzipStartupHook();
 			environmentVariables ??= new Dictionary<string, string>();
-			environmentVariables["DOTNET_STARTUP_HOOKS"] = _startupHookPath;
+			environmentVariables["DOTNET_STARTUP_HOOKS"] = startupHookAssembly;
 			var arguments = new StartArguments("dotnet", "run", "-f", targetFramework)
 			{
 				WorkingDirectory = Path.Combine(SolutionRoot, "sample", "Elastic.Apm.StartupHook.Sample"),
@@ -75,14 +100,16 @@ namespace Elastic.Apm.StartupHook.Tests
 
 			var startHandle = new ManualResetEvent(false);
 			ExceptionDispatchInfo e = null;
-
 			Uri uri = null;
+
+			var capturedLines = new List<string>();
 
 			_process = new ObservableProcess(arguments);
 			_process.SubscribeLines(
 				onNext: line =>
 				{
-					if (line.Line.StartsWith("Now listening on:"))
+					capturedLines.Add(line.Line);
+					if (line.Line.StartsWith("Now listening on: http:"))
 					{
 						try
 						{
@@ -99,11 +126,40 @@ namespace Elastic.Apm.StartupHook.Tests
 				},
 				onError: exception => e = ExceptionDispatchInfo.Capture(exception));
 
-			startHandle.WaitOne();
+			var timeout = TimeSpan.FromMinutes(2);
+			var signalled = startHandle.WaitOne(timeout);
+			if (!signalled)
+			{
+				throw new Exception($"Could not start sample application within timeout {timeout}: "
+					+ string.Join(Environment.NewLine, capturedLines));
+			}
+
 			_process.CancelAsyncReads();
 			e?.Throw();
 
 			return uri;
+		}
+
+		/// <summary>
+		/// Unzips the agent startup hook zip file to the temp directory, and returns
+		/// the path to the startup hook assembly.
+		/// </summary>
+		/// <returns></returns>
+		/// <exception cref="FileNotFoundException">
+		///	Startup hook assembly not found in the extracted files.
+		/// </exception>
+		private string UnzipStartupHook()
+		{
+			var tempDirectory = Path.GetTempPath();
+			var destination = Path.Combine(tempDirectory, Guid.NewGuid().ToString());
+
+			ZipFile.ExtractToDirectory(_startupHookZipPath, destination);
+			var startupHookAssembly = Path.Combine(destination, "ElasticApmAgentStartupHook.dll");
+
+			if (!File.Exists(startupHookAssembly))
+				throw new FileNotFoundException($"startup hook assembly does not exist at {startupHookAssembly}", startupHookAssembly);
+
+			return startupHookAssembly;
 		}
 
 		public void Stop()
