@@ -33,38 +33,44 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		internal ImmutableList<string> AddInvalidPayload(string payload)
 		{
+			var list = ReceivedData.InvalidPayloadErrors.Add(payload);
 			OnReceive?.Invoke(payload);
-			return ReceivedData.InvalidPayloadErrors.Add(payload);
+			return list;
 		}
 
 		internal ImmutableList<ErrorDto> AddError(ErrorDto error)
 		{
+			var list = ReceivedData.Errors.Add(error);
 			OnReceive?.Invoke(error);
-			return ReceivedData.Errors.Add(error);
+			return list;
 		}
 
 		internal ImmutableList<TransactionDto> AddTransaction(TransactionDto transaction)
 		{
+			var list = ReceivedData.Transactions.Add(transaction);
 			OnReceive?.Invoke(transaction);
-			return ReceivedData.Transactions.Add(transaction);
+			return list;
 		}
 
 		internal ImmutableList<SpanDto> AddSpan(SpanDto span)
 		{
+			var list = ReceivedData.Spans.Add(span);
 			OnReceive?.Invoke(span);
-			return ReceivedData.Spans.Add(span);
+			return list;
 		}
 
 		internal ImmutableList<MetricSetDto> AddMetricSet(MetricSetDto metricSet)
 		{
+			var list = ReceivedData.Metrics.Add(metricSet);
 			OnReceive?.Invoke(metricSet);
-			return ReceivedData.Metrics.Add(metricSet);
+			return list;
 		}
 
 		internal ImmutableList<MetadataDto> AddMetadata(MetadataDto metadata)
 		{
+			var list = ReceivedData.Metadata.Add(metadata);
 			OnReceive?.Invoke(metadata);
-			return ReceivedData.Metadata.Add(metadata);
+			return list;
 		}
 
 		public MockApmServer(IApmLogger logger, string dbgCurrentTestName)
