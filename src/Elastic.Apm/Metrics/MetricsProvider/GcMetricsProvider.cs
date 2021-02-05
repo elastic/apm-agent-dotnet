@@ -63,8 +63,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			_collectGcGen1Size = collectGcGen1Size;
 			_collectGcGen2Size = collectGcGen2Size;
 			_collectGcGen3Size = collectGcGen3Size;
+			_logger = logger.Scoped(DbgName);
 
-			_logger = logger.Scoped(nameof(SystemTotalCpuProvider));
 			if (PlatformDetection.IsDotNetFullFramework)
 			{
 				TraceEventSessionName = SessionNamePrefix + Guid.NewGuid();
@@ -97,7 +97,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		}
 
 		public int ConsecutiveNumberOfFailedReads { get; set; }
-		public string DbgName => "GcMetricsProvider";
+		public string DbgName => nameof(GcMetricsProvider);
 
 		public bool IsMetricAlreadyCaptured
 		{
