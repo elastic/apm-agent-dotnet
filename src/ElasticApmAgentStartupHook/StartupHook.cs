@@ -9,7 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Text.RegularExpressions;
-using Elastic.Apm.StartupHook.Common;
+using ElasticApmStartupHook;
 
 // ReSharper disable once CheckNamespace - per doc. this must be called StartupHook without a namespace with an Initialize method.
 internal class StartupHook
@@ -35,7 +35,7 @@ internal class StartupHook
 		if (string.IsNullOrEmpty(startupHookEnvVar) || !File.Exists(startupHookEnvVar))
 			return;
 
-		_logger = StartupHookLogger.CreateLogger();
+		_logger = StartupHookLogger.Create();
 		_logger.WriteLine($"Check if {SystemDiagnosticsDiagnosticsource} is loaded");
 
 		var assemblies = AppDomain.CurrentDomain.GetAssemblies();
@@ -97,8 +97,10 @@ internal class StartupHook
 					.LoadFromAssemblyPath(Path.Combine(versionDirectory, ElasticApmStartuphookLoaderDll));
 			}
 			else
+			{
 				_logger.WriteLine(
 					$"No compatible agent for {SystemDiagnosticsDiagnosticsource} {diagnosticSourceVersion}. Agent not loaded");
+			}
 		}
 
 		InvokerLoaderMethod(loader);

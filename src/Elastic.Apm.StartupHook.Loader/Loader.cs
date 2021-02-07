@@ -14,7 +14,7 @@ using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.GrpcClient;
 using Elastic.Apm.SqlClient;
-using Elastic.Apm.StartupHook.Common;
+using ElasticApmStartupHook;
 
 namespace Elastic.Apm.StartupHook.Loader
 {
@@ -55,17 +55,17 @@ namespace Elastic.Apm.StartupHook.Loader
 		private static void StartAgent()
 		{
 			Agent.Setup(new AgentComponents());
-			Agent.Subscribe(new HttpDiagnosticsSubscriber());
 
+			LoadDiagnosticSubscriber(new HttpDiagnosticsSubscriber());
 			LoadDiagnosticSubscriber(new AspNetCoreDiagnosticSubscriber());
 			LoadDiagnosticSubscriber(new EfCoreDiagnosticsSubscriber());
 			LoadDiagnosticSubscriber(new SqlClientDiagnosticSubscriber());
 			LoadDiagnosticSubscriber(new ElasticsearchDiagnosticsSubscriber());
 			LoadDiagnosticSubscriber(new GrpcClientDiagnosticSubscriber());
 
-			void LoadDiagnosticSubscriber(IDiagnosticsSubscriber diagnosticsSubscriber)
+			static void LoadDiagnosticSubscriber(IDiagnosticsSubscriber diagnosticsSubscriber)
 			{
-				var logger = StartupHookLogger.CreateLogger();
+				var logger = StartupHookLogger.Create();
 				try
 				{
 					Agent.Subscribe(diagnosticsSubscriber);

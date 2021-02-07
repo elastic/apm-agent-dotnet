@@ -123,8 +123,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StaticImplicitI
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StaticExplicitInitialization.Tests", "test\Elastic.Apm.StaticExplicitInitialization.Tests\Elastic.Apm.StaticExplicitInitialization.Tests.csproj", "{DC879845-353B-4C62-9640-6EA3008326F7}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Elastic.Apm.StartupHook.Common", "src\Elastic.Apm.StartupHook.Common\Elastic.Apm.StartupHook.Common.shproj", "{5C5C19E2-A35B-4F5F-809C-4CA797C886D9}"
-EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\Elastic.Apm.StartupHook.Common\Elastic.Apm.StartupHook.Common.projitems*{5c5c19e2-a35b-4f5f-809c-4ca797c886d9}*SharedItemsImports = 13
@@ -352,7 +350,6 @@ Global
 		{B5200DC5-5E48-4F72-ADA9-96D0380A00CB} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{CE0120A5-A094-40A3-905E-8E14526800D3} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{DC879845-353B-4C62-9640-6EA3008326F7} = {267A241E-571F-458F-B04C-B6C4DE79E735}
-		{5C5C19E2-A35B-4F5F-809C-4CA797C886D9} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}
