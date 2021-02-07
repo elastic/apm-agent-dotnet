@@ -40,19 +40,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "files", "files", "{B406113B
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
+		build.bat = build.bat
+		build.sh = build.sh
 		CHANGELOG.asciidoc = CHANGELOG.asciidoc
 		codecov.yml = codecov.yml
 		CONTRIBUTING.md = CONTRIBUTING.md
+		coverlet.runsettings = coverlet.runsettings
 		Directory.Build.props = Directory.Build.props
+		dotnet-tools.json = dotnet-tools.json
 		global.json = global.json
 		LICENSE = LICENSE
 		README.md = README.md
 		RELEASING.md = RELEASING.md
-		build.bat = build.bat
-		build.sh = build.sh
-		dotnet-tools.json = dotnet-tools.json
 		xunit.runner.json = xunit.runner.json
-		coverlet.runsettings = coverlet.runsettings
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Benchmarks", "test\Elastic.Apm.Benchmarks\Elastic.Apm.Benchmarks.csproj", "{F069CE99-F418-4BC2-9E44-8F03497D8DA8}"
@@ -101,31 +101,34 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.GrpcClient", "s
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Grpc.Tests", "test\Elastic.Apm.Grpc.Tests\Elastic.Apm.Grpc.Tests.csproj", "{3AD5584E-057A-4C52-84EA-32A9BBE12F03}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Extensions.Hosting.Tests", "test\Elastic.Apm.Extensions.Hosting.Tests\Elastic.Apm.Extensions.Hosting.Tests.csproj", "{3CCB9193-8416-49AF-A1A3-8D1118CFB25B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Extensions.Hosting.Tests", "test\Elastic.Apm.Extensions.Hosting.Tests\Elastic.Apm.Extensions.Hosting.Tests.csproj", "{3CCB9193-8416-49AF-A1A3-8D1118CFB25B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.StackExchange.Redis", "src\Elastic.Apm.StackExchange.Redis\Elastic.Apm.StackExchange.Redis.csproj", "{38227C61-EFFB-4B00-814B-A158000A5F55}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StackExchange.Redis", "src\Elastic.Apm.StackExchange.Redis\Elastic.Apm.StackExchange.Redis.csproj", "{38227C61-EFFB-4B00-814B-A158000A5F55}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StackExchangeRedisSample", "sample\StackExchangeRedisSample\StackExchangeRedisSample.csproj", "{9FBC8D8C-E600-464D-AE4E-AC1FB59485F6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StackExchangeRedisSample", "sample\StackExchangeRedisSample\StackExchangeRedisSample.csproj", "{9FBC8D8C-E600-464D-AE4E-AC1FB59485F6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.StackExchange.Redis.Tests", "test\Elastic.Apm.StackExchange.Redis.Tests\Elastic.Apm.StackExchange.Redis.Tests.csproj", "{6D413E0A-1CB7-4A2D-8E99-DB4F58D3463E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StackExchange.Redis.Tests", "test\Elastic.Apm.StackExchange.Redis.Tests\Elastic.Apm.StackExchange.Redis.Tests.csproj", "{6D413E0A-1CB7-4A2D-8E99-DB4F58D3463E}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "scripts", "build\scripts\scripts.fsproj", "{CB623206-F69E-4004-8527-D4B971AA981A}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "scripts", "build\scripts\scripts.fsproj", "{CB623206-F69E-4004-8527-D4B971AA981A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Specification", "src\Elastic.Apm.Specification\Elastic.Apm.Specification.csproj", "{5D076C7F-1F8B-4B11-9910-48717D133963}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Specification", "src\Elastic.Apm.Specification\Elastic.Apm.Specification.csproj", "{5D076C7F-1F8B-4B11-9910-48717D133963}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.AspNetCore.Static.Tests", "test\Elastic.Apm.AspNetCore.Static.Tests\Elastic.Apm.AspNetCore.Static.Tests.csproj", "{2250D888-E4CC-4B2B-AF31-5C78D76EC73D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.AspNetCore.Static.Tests", "test\Elastic.Apm.AspNetCore.Static.Tests\Elastic.Apm.AspNetCore.Static.Tests.csproj", "{2250D888-E4CC-4B2B-AF31-5C78D76EC73D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Tests.Utilities", "test\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj", "{43F9247D-544B-49FB-9E50-FC236D90DE1A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Tests.Utilities", "test\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj", "{43F9247D-544B-49FB-9E50-FC236D90DE1A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.StartupHook.Loader", "src\Elastic.Apm.StartupHook.Loader\Elastic.Apm.StartupHook.Loader.csproj", "{B5200DC5-5E48-4F72-ADA9-96D0380A00CB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StartupHook.Loader", "src\Elastic.Apm.StartupHook.Loader\Elastic.Apm.StartupHook.Loader.csproj", "{B5200DC5-5E48-4F72-ADA9-96D0380A00CB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.StaticImplicitInitialization.Tests", "test\Elastic.Apm.StaticImplicitInitialization.Tests\Elastic.Apm.StaticImplicitInitialization.Tests.csproj", "{CE0120A5-A094-40A3-905E-8E14526800D3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StaticImplicitInitialization.Tests", "test\Elastic.Apm.StaticImplicitInitialization.Tests\Elastic.Apm.StaticImplicitInitialization.Tests.csproj", "{CE0120A5-A094-40A3-905E-8E14526800D3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.StaticExplicitInitialization.Tests", "test\Elastic.Apm.StaticExplicitInitialization.Tests\Elastic.Apm.StaticExplicitInitialization.Tests.csproj", "{DC879845-353B-4C62-9640-6EA3008326F7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StaticExplicitInitialization.Tests", "test\Elastic.Apm.StaticExplicitInitialization.Tests\Elastic.Apm.StaticExplicitInitialization.Tests.csproj", "{DC879845-353B-4C62-9640-6EA3008326F7}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		src\Elastic.Apm.StartupHook.Common\Elastic.Apm.StartupHook.Common.projitems*{5c5c19e2-a35b-4f5f-809c-4ca797c886d9}*SharedItemsImports = 13
+		src\Elastic.Apm.StartupHook.Common\Elastic.Apm.StartupHook.Common.projitems*{7b18c4c5-099b-41d1-8cc2-2d2c412b80cd}*SharedItemsImports = 5
 		test\Elastic.Apm.DatabaseTests.Common\Elastic.Apm.DatabaseTests.Common.projitems*{968e1e85-e996-42de-9845-d20dae16165a}*SharedItemsImports = 5
+		src\Elastic.Apm.StartupHook.Common\Elastic.Apm.StartupHook.Common.projitems*{b5200dc5-5e48-4f72-ada9-96d0380a00cb}*SharedItemsImports = 5
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Text.RegularExpressions;
+using ElasticApmStartupHook;
 
 // ReSharper disable once CheckNamespace - per doc. this must be called StartupHook without a namespace with an Initialize method.
 internal class StartupHook
@@ -29,13 +30,12 @@ internal class StartupHook
 	public static void Initialize()
 	{
 		var startupHookEnvVar = Environment.GetEnvironmentVariable("DOTNET_STARTUP_HOOKS");
+		var startupHookDirectory = Path.GetDirectoryName(startupHookEnvVar);
 
 		if (string.IsNullOrEmpty(startupHookEnvVar) || !File.Exists(startupHookEnvVar))
 			return;
 
-		var startupHookDirectory = Path.GetDirectoryName(startupHookEnvVar);
-		var startupHookLoggingEnvVar = Environment.GetEnvironmentVariable("ELASTIC_APM_STARTUP_HOOKS_LOGGING");
-		_logger = new StartupHookLogger(Path.Combine(startupHookDirectory, "ElasticApmAgentStartupHook.log"), !string.IsNullOrEmpty(startupHookLoggingEnvVar));
+		_logger = StartupHookLogger.Create();
 		_logger.WriteLine($"Check if {SystemDiagnosticsDiagnosticsource} is loaded");
 
 		var assemblies = AppDomain.CurrentDomain.GetAssemblies();
@@ -97,8 +97,10 @@ internal class StartupHook
 					.LoadFromAssemblyPath(Path.Combine(versionDirectory, ElasticApmStartuphookLoaderDll));
 			}
 			else
+			{
 				_logger.WriteLine(
 					$"No compatible agent for {SystemDiagnosticsDiagnosticsource} {diagnosticSourceVersion}. Agent not loaded");
+			}
 		}
 
 		InvokerLoaderMethod(loader);
@@ -148,38 +150,5 @@ internal class StartupHook
 
 		_logger.WriteLine($"Invoke {loaderTypeName}.{loaderTypeMethod} method");
 		initializeMethod.Invoke(null, null);
-	}
-
-	/// <summary>
-	/// Logs startup hook process, useful for debugging purposes.
-	/// </summary>
-	private class StartupHookLogger
-	{
-		private readonly string _logPath;
-		private readonly bool _enabled;
-
-		public StartupHookLogger(string logPath, bool enabled)
-		{
-			_logPath = logPath;
-			_enabled = enabled;
-		}
-
-		public void WriteLine(string message)
-		{
-			if (_enabled)
-			{
-				try
-				{
-					var log = $"[{DateTime.Now:u}] {message}";
-					Console.Out.WriteLine(log);
-					Console.Out.Flush();
-					File.AppendAllLines(_logPath, new[] { log });
-				}
-				catch
-				{
-					// if we can't log a log message, there's not much that can be done, so ignore
-				}
-			}
-		}
 	}
 }
