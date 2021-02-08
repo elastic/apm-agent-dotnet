@@ -39,35 +39,35 @@ namespace Elastic.Apm.StartupHook.Tests
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
 
-			using var sampleApp = new SampleApplication();
-
-			var environmentVariables = new Dictionary<string, string>
+			using (var sampleApp = new SampleApplication())
 			{
-				[EnvVarNames.ServerUrl] = $"http://localhost:{port}",
-				[EnvVarNames.CloudProvider] = "none"
-			};
+				var environmentVariables = new Dictionary<string, string>
+				{
+					[EnvVarNames.ServerUrl] = $"http://localhost:{port}",
+					[EnvVarNames.CloudProvider] = "none"
+				};
 
-			var uri = sampleApp.Start(targetFramework, environmentVariables);
-			var client = new HttpClient();
-			var response = await client.GetAsync(uri);
+				var uri = sampleApp.Start(targetFramework, environmentVariables);
+				var client = new HttpClient();
+				var response = await client.GetAsync(uri);
 
-			response.IsSuccessStatusCode.Should().BeTrue();
+				response.IsSuccessStatusCode.Should().BeTrue();
 
-			var waitHandle = new ManualResetEvent(false);
+				var waitHandle = new ManualResetEvent(false);
 
-			apmServer.OnReceive += o =>
-			{
-				if (o is TransactionDto)
-					waitHandle.Set();
-			};
+				apmServer.OnReceive += o =>
+				{
+					if (o is TransactionDto)
+						waitHandle.Set();
+				};
 
-			waitHandle.WaitOne(TimeSpan.FromMinutes(2));
-			apmServer.ReceivedData.Transactions.Should().HaveCount(1);
+				waitHandle.WaitOne(TimeSpan.FromMinutes(2));
+				apmServer.ReceivedData.Transactions.Should().HaveCount(1);
 
-			var transaction = apmServer.ReceivedData.Transactions.First();
-			transaction.Name.Should().Be("GET Home/Index");
+				var transaction = apmServer.ReceivedData.Transactions.First();
+				transaction.Name.Should().Be("GET Home/Index");
+			}
 
-			sampleApp.Stop();
 			await apmServer.StopAsync();
 		}
 
@@ -81,41 +81,41 @@ namespace Elastic.Apm.StartupHook.Tests
 			string expectedFrameworkVersion)
 		{
 			var apmLogger = new InMemoryBlockingLogger(LogLevel.Error);
-			var apmServer = new MockApmServer(apmLogger, nameof(Auto_Instrument_With_StartupHook_Should_Capture_Transaction));
+			var apmServer = new MockApmServer(apmLogger, nameof(Auto_Instrument_With_StartupHook_Should_Capture_Metadata));
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
 
-			using var sampleApp = new SampleApplication();
-
-			var environmentVariables = new Dictionary<string, string>
+			using (var sampleApp = new SampleApplication())
 			{
-				[EnvVarNames.ServerUrl] = $"http://localhost:{port}",
-				[EnvVarNames.CloudProvider] = "none"
-			};
+				var environmentVariables = new Dictionary<string, string>
+				{
+					[EnvVarNames.ServerUrl] = $"http://localhost:{port}",
+					[EnvVarNames.CloudProvider] = "none"
+				};
 
-			var uri = sampleApp.Start(targetFramework, environmentVariables);
-			var client = new HttpClient();
-			var response = await client.GetAsync(uri);
+				var uri = sampleApp.Start(targetFramework, environmentVariables);
+				var client = new HttpClient();
+				var response = await client.GetAsync(uri);
 
-			response.IsSuccessStatusCode.Should().BeTrue();
+				response.IsSuccessStatusCode.Should().BeTrue();
 
-			var waitHandle = new ManualResetEvent(false);
+				var waitHandle = new ManualResetEvent(false);
 
-			apmServer.OnReceive += o =>
-			{
-				if (o is MetadataDto)
-					waitHandle.Set();
-			};
+				apmServer.OnReceive += o =>
+				{
+					if (o is MetadataDto)
+						waitHandle.Set();
+				};
 
-			waitHandle.WaitOne(TimeSpan.FromMinutes(2));
-			apmServer.ReceivedData.Metadata.Should().HaveCount(1);
+				waitHandle.WaitOne(TimeSpan.FromMinutes(2));
+				apmServer.ReceivedData.Metadata.Should().HaveCount(1);
 
-			var metadata = apmServer.ReceivedData.Metadata.First();
-			metadata.Service.Runtime.Name.Should().Be(expectedRuntimeName);
-			metadata.Service.Framework.Name.Should().Be("ASP.NET Core");
-			metadata.Service.Framework.Version.Should().Be(expectedFrameworkVersion);
+				var metadata = apmServer.ReceivedData.Metadata.First();
+				metadata.Service.Runtime.Name.Should().Be(expectedRuntimeName);
+				metadata.Service.Framework.Name.Should().Be("ASP.NET Core");
+				metadata.Service.Framework.Version.Should().Be(expectedFrameworkVersion);
+			}
 
-			sampleApp.Stop();
 			await apmServer.StopAsync();
 		}
 
@@ -143,74 +143,92 @@ namespace Elastic.Apm.StartupHook.Tests
 				[EnvVarNames.CloudProvider] = "none"
 			};
 
-			var process = project.CreateProcess(SolutionPaths.AgentZip, environmentVariables);
-			var startHandle = new ManualResetEvent(false);
-			Uri uri = null;
-			ExceptionDispatchInfo e = null;
-			var capturedLines = new List<string>();
-			var endpointRegex = new Regex(@"\s*Now listening on:\s*(?<endpoint>[^\s]*)");
+			using (var process = project.CreateProcess(SolutionPaths.AgentZip, environmentVariables))
+			{
+				var startHandle = new ManualResetEvent(false);
+				Uri uri = null;
+				ExceptionDispatchInfo e = null;
+				var capturedLines = new List<string>();
+				var endpointRegex = new Regex(@"\s*Now listening on:\s*(?<endpoint>[^\s]*)");
 
-			process.SubscribeLines(
-				line =>
-				{
-					capturedLines.Add(line.Line);
-					var match = endpointRegex.Match(line.Line);
-					if (match.Success)
+				process.SubscribeLines(
+					line =>
 					{
-						try
+						capturedLines.Add(line.Line);
+						var match = endpointRegex.Match(line.Line);
+						if (match.Success)
 						{
-							var endpoint = match.Groups["endpoint"].Value.Trim();
-							uri = new UriBuilder(endpoint) { Path = path }.Uri;
-						}
-						catch (Exception exception)
-						{
-							e = ExceptionDispatchInfo.Capture(exception);
-						}
+							try
+							{
+								var endpoint = match.Groups["endpoint"].Value.Trim();
+								uri = new UriBuilder(endpoint) { Path = path }.Uri;
+							}
+							catch (Exception exception)
+							{
+								e = ExceptionDispatchInfo.Capture(exception);
+							}
 
-						startHandle.Set();
-					}
-				},
-				exception => e = ExceptionDispatchInfo.Capture(exception));
+							startHandle.Set();
+						}
+					},
+					exception => e = ExceptionDispatchInfo.Capture(exception));
 
-			var timeout = TimeSpan.FromMinutes(2);
-			var signalled = startHandle.WaitOne(timeout);
-			if (!signalled)
-			{
-				throw new Exception($"Could not start dotnet project within timeout {timeout}: "
-					+ string.Join(Environment.NewLine, capturedLines));
+				var timeout = TimeSpan.FromMinutes(2);
+				var signalled = startHandle.WaitOne(timeout);
+				if (!signalled)
+				{
+					throw new Exception($"Could not start dotnet project within timeout {timeout}: "
+						+ string.Join(Environment.NewLine, capturedLines));
+				}
+
+				e?.Throw();
+
+				var client = new HttpClient();
+				var response = await client.GetAsync(uri);
+
+				response.IsSuccessStatusCode.Should().BeTrue();
+
+				var transactionWaitHandle = new ManualResetEvent(false);
+				var metadataWaitHandle = new ManualResetEvent(false);
+
+				apmServer.OnReceive += o =>
+				{
+					if (o is TransactionDto)
+						transactionWaitHandle.Set();
+					else if (o is MetadataDto)
+						metadataWaitHandle.Set();
+				};
+
+				signalled = transactionWaitHandle.WaitOne(timeout);
+				if (!signalled)
+				{
+					throw new Exception($"Did not receive transaction within timeout {timeout}: "
+						+ string.Join(Environment.NewLine, capturedLines)
+						+ Environment.NewLine
+						+ string.Join(Environment.NewLine, apmLogger.Lines));
+				}
+
+				apmServer.ReceivedData.Transactions.Should().HaveCount(1);
+
+				var transaction = apmServer.ReceivedData.Transactions.First();
+				transaction.Name.Should().NotBeNullOrEmpty();
+
+				signalled = metadataWaitHandle.WaitOne(timeout);
+				if (!signalled)
+				{
+					throw new Exception($"Did not receive metadata within timeout {timeout}: "
+						+ string.Join(Environment.NewLine, capturedLines)
+						+ Environment.NewLine
+						+ string.Join(Environment.NewLine, apmLogger.Lines));
+				}
+
+				apmServer.ReceivedData.Transactions.Should().HaveCount(1);
+				var metadata = apmServer.ReceivedData.Metadata.First();
+				metadata.Service.Runtime.Name.Should().NotBeNullOrEmpty();
+				metadata.Service.Framework.Name.Should().Be("ASP.NET Core");
+				metadata.Service.Framework.Version.Should().NotBeNullOrEmpty();
 			}
 
-			e?.Throw();
-
-			var client = new HttpClient();
-			var response = await client.GetAsync(uri);
-
-			response.IsSuccessStatusCode.Should().BeTrue();
-
-			var waitHandle = new ManualResetEvent(false);
-
-			apmServer.OnReceive += o =>
-			{
-				if (o is TransactionDto)
-					waitHandle.Set();
-			};
-
-			// block until a transaction is received, or 2 minute timeout
-			signalled = waitHandle.WaitOne(timeout);
-			if (!signalled)
-			{
-				throw new Exception($"Did not receive transaction within timeout {timeout}: "
-					+ string.Join(Environment.NewLine, capturedLines)
-					+ Environment.NewLine
-					+ string.Join(Environment.NewLine, apmLogger.Lines));
-			}
-
-			apmServer.ReceivedData.Transactions.Should().HaveCount(1);
-
-			var transaction = apmServer.ReceivedData.Transactions.First();
-			transaction.Name.Should().NotBeNullOrEmpty();
-
-			project.Stop();
 			await apmServer.StopAsync();
 		}
 	}

@@ -63,7 +63,7 @@ namespace Elastic.Apm.StartupHook.Tests
 
 			_process = new ObservableProcess(arguments);
 			_process.SubscribeLines(
-				onNext: line =>
+				line =>
 				{
 					capturedLines.Add(line.Line);
 					if (line.Line.StartsWith("Now listening on: http:"))
@@ -81,7 +81,7 @@ namespace Elastic.Apm.StartupHook.Tests
 						startHandle.Set();
 					}
 				},
-				onError: exception => e = ExceptionDispatchInfo.Capture(exception));
+				exception => e = ExceptionDispatchInfo.Capture(exception));
 
 			var timeout = TimeSpan.FromMinutes(2);
 			var signalled = startHandle.WaitOne(timeout);
@@ -119,15 +119,6 @@ namespace Elastic.Apm.StartupHook.Tests
 			return startupHookAssembly;
 		}
 
-		public void Stop()
-		{
-			if (_process?.ProcessId != null)
-			{
-				_process.SendControlC();
-				_process.Dispose();
-			}
-		}
-
-		public void Dispose() => Stop();
+		public void Dispose() => _process?.Dispose();
 	}
 }

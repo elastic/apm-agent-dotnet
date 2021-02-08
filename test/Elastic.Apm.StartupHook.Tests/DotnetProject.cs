@@ -76,17 +76,7 @@ namespace Elastic.Apm.StartupHook.Tests
 			return startupHookAssembly;
 		}
 
-		public void Stop()
-		{
-			if (_process?.ProcessId != null)
-			{
-				_process.SendControlC();
-				_process.Dispose();
-			}
-		}
-
-		public void Dispose() => Stop();
-
+		public void Dispose() => _process?.Dispose();
 
 		public static DotnetProject Create(string name, string template, params string[] arguments)
 		{
