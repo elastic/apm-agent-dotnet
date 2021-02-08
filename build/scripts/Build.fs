@@ -76,7 +76,6 @@ module Build =
         
     let private msBuild target projectOrSln =
         MSBuild.build (fun p ->
-            let updated =
                 { p with
                     Verbosity = Some(Quiet)
                     Targets = [target]
@@ -88,14 +87,7 @@ module Build =
                     // version of MSBuild in VS 16.8, so disable for now.
                     DisableInternalBinLog = true
                     NoLogo = true
-                }
-            
-            // ensure MsBuild from VS 2019 Professional is used on CI, which can resolve .NET Core SDKs.
-            if isCI then
-                { updated with
-                    ToolPath = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin\MSBuild.exe"
-                }
-            else updated) projectOrSln
+                }) projectOrSln
         
     /// Gets the current version of System.Diagnostics.DiagnosticSource referenced by Elastic.Apm    
     let private getCurrentApmDiagnosticSourceVersion =
@@ -193,7 +185,7 @@ module Build =
     let Clean () =
         Shell.cleanDir Paths.BuildOutputFolder
         dotnet "clean" Paths.SolutionNetCore       
-        if isWindows then msBuild "Clean" aspNetFullFramework
+        if isWindows && not isCI then msBuild "Clean" aspNetFullFramework
 
     /// Restores all packages for the solution
     let Restore () =
