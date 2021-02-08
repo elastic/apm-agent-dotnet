@@ -14,4 +14,10 @@
       <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Include="..\ElasticApmAgentStartupHook\StartupHookLogger.cs">
+        <Link>StartupHookLogger.cs</Link>
+      </Compile>
+    </ItemGroup>
+  
 </Project>
