@@ -136,7 +136,7 @@ namespace Elastic.Apm.StartupHook.Tests
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
 
-			using var project = DotnetProject.Create(name, template, "--framework", targetFramework, "--no-https");
+			using var project = DotnetProject.Create(name, template, targetFramework, "--no-https");
 			var environmentVariables = new Dictionary<string, string>
 			{
 				[EnvVarNames.ServerUrl] = $"http://localhost:{port}",
@@ -149,7 +149,7 @@ namespace Elastic.Apm.StartupHook.Tests
 				Uri uri = null;
 				ExceptionDispatchInfo e = null;
 				var capturedLines = new List<string>();
-				var endpointRegex = new Regex(@"\s*Now listening on:\s*(?<endpoint>[^\s]*)");
+				var endpointRegex = new Regex(@"\s*Now listening on:\s*(?<endpoint>http\:[^\s]*)");
 
 				process.SubscribeLines(
 					line =>

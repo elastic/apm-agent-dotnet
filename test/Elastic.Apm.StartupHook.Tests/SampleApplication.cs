@@ -5,9 +5,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.ExceptionServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using ProcNet;
 
@@ -18,22 +20,32 @@ namespace Elastic.Apm.StartupHook.Tests
 	/// </summary>
 	public class SampleApplication : IDisposable
 	{
+		private const string ElasticApmStartuphookSampleProjectName = "Elastic.Apm.StartupHook.Sample";
 		private readonly string _startupHookZipPath;
 		private ObservableProcess _process;
+		private readonly string _publishDirectory;
 
-		public SampleApplication() : this(SolutionPaths.AgentZip)
+		public SampleApplication()
 		{
+			if (!File.Exists(SolutionPaths.AgentZip))
+				throw new FileNotFoundException($"startup hook zip file could not be found at {SolutionPaths.AgentZip}", SolutionPaths.AgentZip);
+
+			_startupHookZipPath = SolutionPaths.AgentZip;
+			_publishDirectory = Path.Combine("bin", "Publish");
 		}
 
-		public SampleApplication(string startupHookZipPath)
+		private void Publish(string projectDirectory, string targetFramework)
 		{
-			if (startupHookZipPath is null)
-				throw new ArgumentNullException(nameof(startupHookZipPath));
+			var processInfo = new ProcessStartInfo
+			{
+				FileName = "dotnet",
+				Arguments = $"publish -c Release -f {targetFramework} -o {Path.Combine(_publishDirectory, targetFramework)}",
+				WorkingDirectory = projectDirectory
+			};
 
-			if (!File.Exists(startupHookZipPath))
-				throw new FileNotFoundException($"startup hook zip file could not be found at {startupHookZipPath}", startupHookZipPath);
-
-			_startupHookZipPath = startupHookZipPath;
+			using var process = new Process { StartInfo = processInfo };
+			process.Start();
+			process.WaitForExit();
 		}
 
 		/// <summary>
@@ -45,12 +57,16 @@ namespace Elastic.Apm.StartupHook.Tests
 		/// <returns></returns>
 		public Uri Start(string targetFramework, IDictionary<string, string> environmentVariables = null)
 		{
+			var projectDirectory = Path.Combine(SolutionPaths.Root, "sample", ElasticApmStartuphookSampleProjectName);
+			Publish(projectDirectory, targetFramework);
+
 			var startupHookAssembly = UnzipStartupHook();
 			environmentVariables ??= new Dictionary<string, string>();
 			environmentVariables["DOTNET_STARTUP_HOOKS"] = startupHookAssembly;
-			var arguments = new StartArguments("dotnet", "run", "-f", targetFramework)
+
+			var arguments = new StartArguments("dotnet", $"{ElasticApmStartuphookSampleProjectName}.dll")
 			{
-				WorkingDirectory = Path.Combine(SolutionPaths.Root, "sample", "Elastic.Apm.StartupHook.Sample"),
+				WorkingDirectory = Path.Combine(projectDirectory, _publishDirectory, targetFramework),
 				SendControlCFirst = true,
 				Environment = environmentVariables
 			};
@@ -60,17 +76,19 @@ namespace Elastic.Apm.StartupHook.Tests
 			Uri uri = null;
 
 			var capturedLines = new List<string>();
+			var endpointRegex = new Regex(@"\s*Now listening on:\s*(?<endpoint>http\:[^\s]*)");
 
 			_process = new ObservableProcess(arguments);
 			_process.SubscribeLines(
 				line =>
 				{
 					capturedLines.Add(line.Line);
-					if (line.Line.StartsWith("Now listening on: http:"))
+					var match = endpointRegex.Match(line.Line);
+					if (match.Success)
 					{
 						try
 						{
-							var endpoint = line.Line.Substring("Now listening on:".Length).Trim();
+							var endpoint = match.Groups["endpoint"].Value.Trim();
 							uri = new Uri(endpoint);
 						}
 						catch (Exception exception)

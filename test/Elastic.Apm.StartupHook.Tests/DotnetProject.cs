@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -15,22 +16,55 @@ using ProcNet.Std;
 
 namespace Elastic.Apm.StartupHook.Tests
 {
+	/// <summary>
+	/// Creates new dotnet projects from templates, providing the ability to run them
+	/// </summary>
 	public class DotnetProject : IDisposable
 	{
+		private readonly string _publishDirectory = "publish";
 		private ObservableProcess _process;
 
-		private DotnetProject(string name, string template, string directory)
+		private DotnetProject(string name, string template, string framework, string directory)
 		{
 			Name = name;
 			Template = template;
+			Framework = framework;
 			Directory = directory;
 		}
 
+		/// <summary>
+		/// The directory in which the project is created
+		/// </summary>
 		public string Directory { get; }
 
+		/// <summary>
+		/// The dotnet template used to create the project
+		/// </summary>
 		public string Template { get; }
 
+		/// <summary>
+		/// The project target framework
+		/// </summary>
+		public string Framework { get; }
+
+		/// <summary>
+		/// The name of the project
+		/// </summary>
 		public string Name { get; }
+
+		private void Publish()
+		{
+			var processInfo = new ProcessStartInfo
+			{
+				FileName = "dotnet",
+				Arguments = $"publish -c Release -o {_publishDirectory}",
+				WorkingDirectory = Directory
+			};
+
+			using var process = new Process { StartInfo = processInfo };
+			process.Start();
+			process.WaitForExit();
+		}
 
 		/// <summary>
 		/// Creates a process to run the dotnet project that will start when subscribed to.
@@ -40,12 +74,14 @@ namespace Elastic.Apm.StartupHook.Tests
 		/// <returns></returns>
 		public ObservableProcess CreateProcess(string startupHookZipPath, IDictionary<string, string> environmentVariables = null)
 		{
+			Publish();
+
 			var startupHookAssembly = UnzipStartupHook(startupHookZipPath);
 			environmentVariables ??= new Dictionary<string, string>();
 			environmentVariables["DOTNET_STARTUP_HOOKS"] = startupHookAssembly;
-			var arguments = new StartArguments("dotnet", "run")
+			var arguments = new StartArguments("dotnet", $"{Name}.dll")
 			{
-				WorkingDirectory = Directory,
+				WorkingDirectory = Path.Combine(Directory, _publishDirectory),
 				SendControlCFirst = true,
 				Environment = environmentVariables
 			};
@@ -78,7 +114,7 @@ namespace Elastic.Apm.StartupHook.Tests
 
 		public void Dispose() => _process?.Dispose();
 
-		public static DotnetProject Create(string name, string template, params string[] arguments)
+		public static DotnetProject Create(string name, string template, string framework, params string[] arguments)
 		{
 			var directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
@@ -86,7 +122,8 @@ namespace Elastic.Apm.StartupHook.Tests
 			{
 				"new", template,
 				"--name", name,
-				"--output", directory
+				"--output", directory,
+				"--framework", framework
 			}.Concat(arguments);
 
 			var result = Proc.Start(new StartArguments("dotnet", args));
@@ -107,7 +144,7 @@ namespace Elastic.Apm.StartupHook.Tests
 					+ $"output: {string.Join(Environment.NewLine, result.ConsoleOut.Select(c => c.Line))}");
 			}
 
-			return new DotnetProject(name, template, directory);
+			return new DotnetProject(name, template, framework, directory);
 		}
 	}
 }
