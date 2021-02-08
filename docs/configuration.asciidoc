@@ -186,7 +186,7 @@ A boolean specifying if the agent should be recording or not.
 When recording, the agent captures HTTP requests, tracks errors, and collects and sends metrics.
 When not recording, the agent works as a noop, not collecting data and not communicating with the APM server,
 except for polling the central configuration endpoint.
-As this is a reversible switch, agent threads are not being killed when inactivated, but they will be
+As this is a reversible switch, agent threads are not killed when inactivated, but they will be
 mostly idle in this state, so the overhead should be negligible.
 
 You can use this setting to dynamically disable Elastic APM at runtime.
@@ -495,7 +495,7 @@ IMPORTANT: Use of `ServerUrls` is deprecated. Use `ServerUrl`.
 [[config-secret-token]]
 ==== `SecretToken`
 
-This string is used to ensure that only your agents can send data to your APM server.
+A string used to ensure that only your agents can send data to your APM server.
 
 Both the agents and the APM server have to be configured with the same secret token.
 Use this setting in case the APM Server requires a token (e.g. APM Server in Elastic Cloud).
@@ -519,7 +519,7 @@ your communications using HTTPS. Unless you do so, your API Key could be observe
 [[config-api-key]]
 ==== `ApiKey` (added[1.4])
 
-This base64-encoded string is used to ensure that only your agents can send data to your APM server.
+A base64-encoded string used to ensure that only your agents can send data to your APM server.
 You must have created the API key using the APM server's {apm-server-ref-v}/api-key.html[command line tool].
 
 NOTE: This feature is fully supported in the APM Server versions >= 7.6.
@@ -621,7 +621,7 @@ in that case the Agent will use the default value instead.
 [[config-max-queue-event-count]]
 ==== `MaxQueueEventCount` (added[1.1])
 
-The maximal number of events to hold in the queue as candidates to be sent.
+The maximum number of events to hold in the queue as candidates to be sent.
 If the queue is at its maximum capacity then the agent discards the new events
 until the queue has free space.
 
