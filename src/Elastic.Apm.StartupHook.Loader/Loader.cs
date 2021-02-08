@@ -56,16 +56,16 @@ namespace Elastic.Apm.StartupHook.Loader
 		{
 			Agent.Setup(new AgentComponents());
 
-			LoadDiagnosticSubscriber(new HttpDiagnosticsSubscriber());
-			LoadDiagnosticSubscriber(new AspNetCoreDiagnosticSubscriber());
-			LoadDiagnosticSubscriber(new EfCoreDiagnosticsSubscriber());
-			LoadDiagnosticSubscriber(new SqlClientDiagnosticSubscriber());
-			LoadDiagnosticSubscriber(new ElasticsearchDiagnosticsSubscriber());
-			LoadDiagnosticSubscriber(new GrpcClientDiagnosticSubscriber());
+			var logger = StartupHookLogger.Create();
+			LoadDiagnosticSubscriber(new HttpDiagnosticsSubscriber(), logger);
+			LoadDiagnosticSubscriber(new AspNetCoreDiagnosticSubscriber(), logger);
+			LoadDiagnosticSubscriber(new EfCoreDiagnosticsSubscriber(), logger);
+			LoadDiagnosticSubscriber(new SqlClientDiagnosticSubscriber(), logger);
+			LoadDiagnosticSubscriber(new ElasticsearchDiagnosticsSubscriber(), logger);
+			LoadDiagnosticSubscriber(new GrpcClientDiagnosticSubscriber(), logger);
 
-			static void LoadDiagnosticSubscriber(IDiagnosticsSubscriber diagnosticsSubscriber)
+			static void LoadDiagnosticSubscriber(IDiagnosticsSubscriber diagnosticsSubscriber, StartupHookLogger logger)
 			{
-				var logger = StartupHookLogger.Create();
 				try
 				{
 					Agent.Subscribe(diagnosticsSubscriber);

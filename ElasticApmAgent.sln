@@ -125,10 +125,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StaticExplicitI
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		src\Elastic.Apm.StartupHook.Common\Elastic.Apm.StartupHook.Common.projitems*{5c5c19e2-a35b-4f5f-809c-4ca797c886d9}*SharedItemsImports = 13
-		src\Elastic.Apm.StartupHook.Common\Elastic.Apm.StartupHook.Common.projitems*{7b18c4c5-099b-41d1-8cc2-2d2c412b80cd}*SharedItemsImports = 5
 		test\Elastic.Apm.DatabaseTests.Common\Elastic.Apm.DatabaseTests.Common.projitems*{968e1e85-e996-42de-9845-d20dae16165a}*SharedItemsImports = 5
-		src\Elastic.Apm.StartupHook.Common\Elastic.Apm.StartupHook.Common.projitems*{b5200dc5-5e48-4f72-ada9-96d0380a00cb}*SharedItemsImports = 5
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
