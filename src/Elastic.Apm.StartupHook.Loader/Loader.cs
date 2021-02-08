@@ -20,50 +20,13 @@ using ElasticApmStartupHook;
 
 namespace Elastic.Apm.StartupHook.Loader
 {
-
-	internal class AgentLoadContext : AssemblyLoadContext
-	{
-		public static string[] agentLibsToLoad = new[] { "Elastic.Apm", "Elastic.Apm.Extensions.Hosting", "Elastic.Apm.AspNetCore", "Elastic.Apm.EntityFrameworkCore", "Elastic.Apm.SqlClient", "Elastic.Apm.GrpcClient", "Elastic.Apm.Elasticsearch" };
-		public static string[] agentDependencyLibsToLoad = new[] { "System.Diagnostics.PerformanceCounter", "Microsoft.Diagnostics.Tracing.TraceEvent", "Newtonsoft.Json", "Elasticsearch.Net" };
-
-		private readonly StartupHookLogger _logger;
-		private readonly string _asssemblyDir;
-
-		public AgentLoadContext(string assemblyDir, StartupHookLogger logger) => (_asssemblyDir, _logger) = (assemblyDir, logger);
-
-		protected override Assembly Load(AssemblyName assemblyName)
-		{
-			try
-			{
-				if (agentLibsToLoad.Contains(assemblyName.Name) || agentDependencyLibsToLoad.Contains(assemblyName.Name))
-				{
-					var path = Path.Combine(_asssemblyDir, assemblyName.Name + ".dll");
-					return LoadFromAssemblyPath(path);
-				}
-				else
-				{
-					// If it's not an agent assembly or an agent dependency, let's just reuse it from the default load context
-					return Default.LoadFromAssemblyName(assemblyName);
-				}
-
-			}
-			catch (Exception e)
-			{
-				_logger.WriteLine($"{nameof(AgentLoadContext)} Failed loading {assemblyName.Name}, exception: {e}");
-			}
-
-			return null;
-		}
-	}
-
 	/// <summary>
 	/// Loads the agent assemblies, its dependent assemblies and starts it
 	/// </summary>
 	internal class Loader
 	{
-		private static readonly StartupHookLogger _logger = StartupHookLogger.Create();
-
 		private static AgentLoadContext _agentLoadContext;
+		private static readonly StartupHookLogger Logger = StartupHookLogger.Create();
 
 		/// <summary>
 		/// The directory in which the executing assembly is located
@@ -82,16 +45,17 @@ namespace Elastic.Apm.StartupHook.Loader
 		/// </summary>
 		public static void Initialize()
 		{
-			_agentLoadContext = new AgentLoadContext(AssemblyDirectory, _logger);
+			_agentLoadContext = new AgentLoadContext(AssemblyDirectory, Logger);
 
-			foreach (var libToLoad in AgentLoadContext.agentDependencyLibsToLoad)
+			foreach (var libToLoad in AgentLoadContext.AgentDependencyLibsToLoad)
 				LoadAssembly(libToLoad);
-			foreach (var libToLoad in AgentLoadContext.agentLibsToLoad)
+			foreach (var libToLoad in AgentLoadContext.AgentLibsToLoad)
 				LoadAssembly(libToLoad);
 
 			AssemblyLoadContext.Default.Resolving += (context, assemblyName) =>
 			{
-				if (AgentLoadContext.agentDependencyLibsToLoad.Contains(assemblyName.Name) || AgentLoadContext.agentLibsToLoad.Contains(assemblyName.Name))
+				if (AgentLoadContext.AgentDependencyLibsToLoad.Contains(assemblyName.Name)
+					|| AgentLoadContext.AgentLibsToLoad.Contains(assemblyName.Name))
 				{
 					// If AssemblyLoadContext.Default tries to load an agent assembly or one of its dependencies, we return it from _agentLoadContext
 					return _agentLoadContext.LoadFromAssemblyName(new AssemblyName(assemblyName.Name));
@@ -107,21 +71,21 @@ namespace Elastic.Apm.StartupHook.Loader
 		{
 			if (AppDomain.CurrentDomain.GetAssemblies().Any(n => n.FullName == assemblyName))
 			{
-				_logger.WriteLine($"{assemblyName} is alrady loaded - we don't try to load it");
+				Logger.WriteLine($"{assemblyName} is alrady loaded - we don't try to load it");
 				return;
 			}
 
 			try
 			{
 				var path = Path.Combine(AssemblyDirectory, assemblyName + ".dll");
-				_logger.WriteLine($"Try loading: {path}");
+				Logger.WriteLine($"Try loading: {path}");
 				_agentLoadContext.LoadFromAssemblyName(new AssemblyName(assemblyName));
 
-				_logger.WriteLine($"Loaded {path}");
+				Logger.WriteLine($"Loaded {path}");
 			}
 			catch (Exception e)
 			{
-				_logger.WriteLine($"Failed loading {assemblyName} - Exception: {e.GetType()}, message: {e.Message}");
+				Logger.WriteLine($"Failed loading {assemblyName} - Exception: {e.GetType()}, message: {e.Message}");
 			}
 		}
 
@@ -142,11 +106,11 @@ namespace Elastic.Apm.StartupHook.Loader
 				try
 				{
 					Agent.Subscribe(diagnosticsSubscriber);
-					_logger.WriteLine($"Successfully Subscribed to {diagnosticsSubscriber.GetType().Name}");
+					Logger.WriteLine($"Successfully Subscribed to {diagnosticsSubscriber.GetType().Name}");
 				}
 				catch (Exception e)
 				{
-					_logger.WriteLine($"Failed subscribing to {diagnosticsSubscriber.GetType().Name}, " +
+					Logger.WriteLine($"Failed subscribing to {diagnosticsSubscriber.GetType().Name}, " +
 						$"Exception {e}");
 				}
 			}
