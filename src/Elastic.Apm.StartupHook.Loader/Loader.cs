@@ -69,7 +69,7 @@ namespace Elastic.Apm.StartupHook.Loader
 
 		public static void LoadAssembly(string assemblyName)
 		{
-			if (AppDomain.CurrentDomain.GetAssemblies().Any(n => n.FullName == assemblyName))
+			if (AppDomain.CurrentDomain.GetAssemblies().Any(n => n.FullName.Equals(assemblyName, StringComparison.Ordinal)))
 			{
 				Logger.WriteLine($"{assemblyName} is alrady loaded - we don't try to load it");
 				return;
@@ -80,7 +80,6 @@ namespace Elastic.Apm.StartupHook.Loader
 				var path = Path.Combine(AssemblyDirectory, assemblyName + ".dll");
 				Logger.WriteLine($"Try loading: {path}");
 				_agentLoadContext.LoadFromAssemblyName(new AssemblyName(assemblyName));
-
 				Logger.WriteLine($"Loaded {path}");
 			}
 			catch (Exception e)
