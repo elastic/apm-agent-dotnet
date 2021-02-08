@@ -54,16 +54,23 @@ namespace Elastic.Apm.StartupHook.Tests
 
 		private void Publish()
 		{
-			var processInfo = new ProcessStartInfo
+			try
 			{
-				FileName = "dotnet",
-				Arguments = $"publish -c Release -o {_publishDirectory}",
-				WorkingDirectory = Directory
-			};
+				var processInfo = new ProcessStartInfo
+				{
+					FileName = "dotnet",
+					Arguments = $"publish -c Release -o {_publishDirectory}",
+					WorkingDirectory = Directory
+				};
 
-			using var process = new Process { StartInfo = processInfo };
-			process.Start();
-			process.WaitForExit();
+				using var process = new Process { StartInfo = processInfo };
+				process.Start();
+				process.WaitForExit();
+			}
+			catch (Exception e)
+			{
+				throw new Exception($"Problem running dotnet publish in {Directory} to output to {_publishDirectory}", e);
+			}
 		}
 
 		/// <summary>
