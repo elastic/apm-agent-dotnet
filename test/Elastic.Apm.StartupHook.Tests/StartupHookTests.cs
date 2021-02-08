@@ -222,7 +222,7 @@ namespace Elastic.Apm.StartupHook.Tests
 						+ string.Join(Environment.NewLine, apmLogger.Lines));
 				}
 
-				apmServer.ReceivedData.Transactions.Should().HaveCount(1);
+				apmServer.ReceivedData.Metadata.Should().HaveCount(1);
 				var metadata = apmServer.ReceivedData.Metadata.First();
 				metadata.Service.Runtime.Name.Should().NotBeNullOrEmpty();
 				metadata.Service.Framework.Name.Should().Be("ASP.NET Core");
