@@ -106,7 +106,7 @@ namespace Elastic.Apm.StartupHook.Tests
 				response.IsSuccessStatusCode.Should().BeTrue();
 
 				waitHandle.WaitOne(TimeSpan.FromMinutes(2));
-				apmServer.ReceivedData.Metadata.Should().HaveCount(1);
+				apmServer.ReceivedData.Metadata.Should().HaveCountGreaterOrEqualTo(1);
 
 				var metadata = apmServer.ReceivedData.Metadata.First();
 				metadata.Service.Runtime.Name.Should().Be(expectedRuntimeName);
@@ -221,7 +221,7 @@ namespace Elastic.Apm.StartupHook.Tests
 						+ string.Join(Environment.NewLine, apmLogger.Lines));
 				}
 
-				apmServer.ReceivedData.Metadata.Should().HaveCount(1);
+				apmServer.ReceivedData.Metadata.Should().HaveCountGreaterOrEqualTo(1);
 				var metadata = apmServer.ReceivedData.Metadata.First();
 				metadata.Service.Runtime.Name.Should().NotBeNullOrEmpty();
 				metadata.Service.Framework.Name.Should().Be("ASP.NET Core");

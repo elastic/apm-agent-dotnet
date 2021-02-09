@@ -38,39 +38,34 @@ namespace Elastic.Apm.Tests.MockApmServer
 			return list;
 		}
 
-		internal ImmutableList<ErrorDto> AddError(ErrorDto error)
+		internal void AddError(ErrorDto error)
 		{
-			var list = ReceivedData.Errors.Add(error);
+			ReceivedData.Errors = ReceivedData.Errors.Add(error);
 			OnReceive?.Invoke(error);
-			return list;
 		}
 
-		internal ImmutableList<TransactionDto> AddTransaction(TransactionDto transaction)
+		internal void AddTransaction(TransactionDto transaction)
 		{
-			var list = ReceivedData.Transactions.Add(transaction);
+			ReceivedData.Transactions = ReceivedData.Transactions.Add(transaction);
 			OnReceive?.Invoke(transaction);
-			return list;
 		}
 
-		internal ImmutableList<SpanDto> AddSpan(SpanDto span)
+		internal void AddSpan(SpanDto span)
 		{
-			var list = ReceivedData.Spans.Add(span);
+			ReceivedData.Spans = ReceivedData.Spans.Add(span);
 			OnReceive?.Invoke(span);
-			return list;
 		}
 
-		internal ImmutableList<MetricSetDto> AddMetricSet(MetricSetDto metricSet)
+		internal void AddMetricSet(MetricSetDto metricSet)
 		{
-			var list = ReceivedData.Metrics.Add(metricSet);
+			ReceivedData.Metrics = ReceivedData.Metrics.Add(metricSet);
 			OnReceive?.Invoke(metricSet);
-			return list;
 		}
 
-		internal ImmutableList<MetadataDto> AddMetadata(MetadataDto metadata)
+		internal void AddMetadata(MetadataDto metadata)
 		{
-			var list = ReceivedData.Metadata.Add(metadata);
+			ReceivedData.Metadata = ReceivedData.Metadata.Add(metadata);
 			OnReceive?.Invoke(metadata);
-			return list;
 		}
 
 		public MockApmServer(IApmLogger logger, string dbgCurrentTestName)
