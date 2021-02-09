@@ -38,6 +38,13 @@ namespace Elastic.Apm.StartupHook.Tests
 			var apmServer = new MockApmServer(apmLogger, nameof(Auto_Instrument_With_StartupHook_Should_Capture_Transaction));
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
+			var waitHandle = new ManualResetEvent(false);
+
+			apmServer.OnReceive += o =>
+			{
+				if (o is TransactionDto)
+					waitHandle.Set();
+			};
 
 			using (var sampleApp = new SampleApplication())
 			{
@@ -52,14 +59,6 @@ namespace Elastic.Apm.StartupHook.Tests
 				var response = await client.GetAsync(uri);
 
 				response.IsSuccessStatusCode.Should().BeTrue();
-
-				var waitHandle = new ManualResetEvent(false);
-
-				apmServer.OnReceive += o =>
-				{
-					if (o is TransactionDto)
-						waitHandle.Set();
-				};
 
 				waitHandle.WaitOne(TimeSpan.FromMinutes(2));
 				apmServer.ReceivedData.Transactions.Should().HaveCount(1);
@@ -85,6 +84,13 @@ namespace Elastic.Apm.StartupHook.Tests
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
 
+			var waitHandle = new ManualResetEvent(false);
+			apmServer.OnReceive += o =>
+			{
+				if (o is MetadataDto)
+					waitHandle.Set();
+			};
+
 			using (var sampleApp = new SampleApplication())
 			{
 				var environmentVariables = new Dictionary<string, string>
@@ -98,14 +104,6 @@ namespace Elastic.Apm.StartupHook.Tests
 				var response = await client.GetAsync(uri);
 
 				response.IsSuccessStatusCode.Should().BeTrue();
-
-				var waitHandle = new ManualResetEvent(false);
-
-				apmServer.OnReceive += o =>
-				{
-					if (o is MetadataDto)
-						waitHandle.Set();
-				};
 
 				waitHandle.WaitOne(TimeSpan.FromMinutes(2));
 				apmServer.ReceivedData.Metadata.Should().HaveCount(1);
@@ -135,6 +133,18 @@ namespace Elastic.Apm.StartupHook.Tests
 			var apmServer = new MockApmServer(apmLogger, nameof(Auto_Instrument_With_StartupHook));
 			var port = apmServer.FindAvailablePortToListen();
 			apmServer.RunInBackground(port);
+
+			var transactionWaitHandle = new ManualResetEvent(false);
+			var metadataWaitHandle = new ManualResetEvent(false);
+
+			apmServer.OnReceive += o =>
+			{
+				if (o is TransactionDto)
+					transactionWaitHandle.Set();
+				else if (o is MetadataDto)
+					metadataWaitHandle.Set();
+			};
+
 
 			using var project = DotnetProject.Create(name, template, targetFramework, "--no-https");
 			var environmentVariables = new Dictionary<string, string>
@@ -187,17 +197,6 @@ namespace Elastic.Apm.StartupHook.Tests
 				var response = await client.GetAsync(uri);
 
 				response.IsSuccessStatusCode.Should().BeTrue();
-
-				var transactionWaitHandle = new ManualResetEvent(false);
-				var metadataWaitHandle = new ManualResetEvent(false);
-
-				apmServer.OnReceive += o =>
-				{
-					if (o is TransactionDto)
-						transactionWaitHandle.Set();
-					else if (o is MetadataDto)
-						metadataWaitHandle.Set();
-				};
 
 				signalled = transactionWaitHandle.WaitOne(timeout);
 				if (!signalled)
