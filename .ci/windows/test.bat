@@ -3,7 +3,7 @@
 :: LogFilePath property
 ::
 dotnet test -c Release --no-build ^
- --verbosity normal ^
+ --verbosity diagnostic ^
  --results-directory target ^
  --diag target\diag.log ^
  --logger:"junit;LogFilePath=junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" ^
