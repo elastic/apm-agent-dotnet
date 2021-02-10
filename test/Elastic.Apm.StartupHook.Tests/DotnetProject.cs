@@ -21,7 +21,7 @@ namespace Elastic.Apm.StartupHook.Tests
 	/// </summary>
 	public class DotnetProject : IDisposable
 	{
-		private readonly string _publishDirectory = "publish";
+		private readonly string _publishDirectory = Path.Combine("bin", "Publish");
 		private ObservableProcess _process;
 
 		private DotnetProject(string name, string template, string framework, string directory)
@@ -105,7 +105,7 @@ namespace Elastic.Apm.StartupHook.Tests
 		/// <exception cref="FileNotFoundException">
 		///	Startup hook assembly not found in the extracted files.
 		/// </exception>
-		private string UnzipStartupHook(string startupHookZipPath)
+		private static string UnzipStartupHook(string startupHookZipPath)
 		{
 			var tempDirectory = Path.GetTempPath();
 			var destination = Path.Combine(tempDirectory, Guid.NewGuid().ToString());

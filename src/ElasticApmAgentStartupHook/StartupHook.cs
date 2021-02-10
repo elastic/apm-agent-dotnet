@@ -42,10 +42,6 @@ internal class StartupHook
 
 		_logger.WriteLine($"Assemblies loaded:{Environment.NewLine}{string.Join(",", assemblies.Select(a => a.GetName()))}");
 
-		// _logger.WriteLine($"Platform and application assembly file paths: {AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")}");
-		// _logger.WriteLine($"App paths: {AppContext.GetData("APP_PATHS")}");
-		// _logger.WriteLine($"Dependency files: {AppContext.GetData("APP_CONTEXT_DEPS_FILES")}");
-
 		var diagnosticSourceAssemblies = assemblies
 			.Where(a => a.GetName().Name.Equals(SystemDiagnosticsDiagnosticsource, StringComparison.Ordinal))
 			.ToList();
@@ -68,7 +64,6 @@ internal class StartupHook
 		}
 
 		Assembly loader = null;
-
 		if (diagnosticSourceAssembly is null)
 		{
 			// use agent compiled against the highest version of System.Diagnostics.DiagnosticSource

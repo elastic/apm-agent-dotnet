@@ -31,11 +31,10 @@ namespace Elastic.Apm.Tests.MockApmServer
 		/// </summary>
 		public event Action<object> OnReceive;
 
-		internal ImmutableList<string> AddInvalidPayload(string payload)
+		internal void AddInvalidPayload(string payload)
 		{
-			var list = ReceivedData.InvalidPayloadErrors.Add(payload);
+			ReceivedData.InvalidPayloadErrors = ReceivedData.InvalidPayloadErrors.Add(payload);
 			OnReceive?.Invoke(payload);
-			return list;
 		}
 
 		internal void AddError(ErrorDto error)

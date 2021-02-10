@@ -20,7 +20,7 @@ using ElasticApmStartupHook;
 namespace Elastic.Apm.StartupHook.Loader
 {
 	/// <summary>
-	/// Loads the agent assemblies and its dependent assemblies and starts it
+	/// Loads the agent assemblies, its dependent assemblies and starts it
 	/// </summary>
 	internal class Loader
 	{
@@ -64,7 +64,7 @@ namespace Elastic.Apm.StartupHook.Loader
 			LoadDiagnosticSubscriber(new SqlClientDiagnosticSubscriber(), logger);
 			LoadDiagnosticSubscriber(new ElasticsearchDiagnosticsSubscriber(), logger);
 			LoadDiagnosticSubscriber(new GrpcClientDiagnosticSubscriber(), logger);
-			
+
 			HostBuilderExtensions.UpdateServiceInformation(Agent.Instance.Service);
 
 			static void LoadDiagnosticSubscriber(IDiagnosticsSubscriber diagnosticsSubscriber, StartupHookLogger logger)
@@ -74,11 +74,11 @@ namespace Elastic.Apm.StartupHook.Loader
 					Agent.Subscribe(diagnosticsSubscriber);
 				}
 				catch (Exception e)
-			    {
+				{
 					logger.WriteLine($"Failed subscribing to {diagnosticsSubscriber.GetType().Name}, " +
 						$"Exception type: {e.GetType().Name}, message: {e.Message}");
-			    }
-		    }
+				}
+			}
 		}
 	}
 }
