@@ -19,16 +19,11 @@
   </ItemGroup>
   
   <ItemGroup>
-    <!-- Add coverlet MSBuild only for Windows -->
-    <PackageReference Include="coverlet.msbuild" Version="2.9.0" Condition="'$(IsTestProject)' == 'true' AND '$(OS)' == 'WINDOWS_NT'">
+    <!-- Add coverlet collector for all platforms and frameworks, except net461 -->
+    <PackageReference Include="coverlet.collector" Version="3.0.2" Condition="'$(IsTestProject)' == 'true' AND '$(TargetFramework)' != 'net461'">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <!-- Add coverlet collector for all platforms -->
-    <PackageReference Include="coverlet.collector" Version="1.3.0" Condition="'$(IsTestProject)' == 'true'">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="JunitXml.TestLogger" Version="2.1.78" Condition="'$(IsTestProject)' == 'true'" />
+    <PackageReference Include="JunitXml.TestLogger" Version="2.1.81" Condition="'$(IsTestProject)' == 'true'" />
   </ItemGroup>
 </Project>
