@@ -8,3 +8,4 @@ $codecov = $tools -match "codecov.tool"
 if (!$codecov) {
     dotnet tool install -g Codecov.Tool --version 1.2.0
 }
+

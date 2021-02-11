@@ -122,6 +122,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StaticImplicitI
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StaticExplicitInitialization.Tests", "test\Elastic.Apm.StaticExplicitInitialization.Tests\Elastic.Apm.StaticExplicitInitialization.Tests.csproj", "{DC879845-353B-4C62-9640-6EA3008326F7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.StartupHook.Sample", "sample\Elastic.Apm.StartupHook.Sample\Elastic.Apm.StartupHook.Sample.csproj", "{B168C594-0314-4201-A55B-13DBBE2796FE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.StartupHook.Tests", "test\Elastic.Apm.StartupHook.Tests\Elastic.Apm.StartupHook.Tests.csproj", "{9AE4805D-2586-4FA5-A0D0-885264EBC565}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		test\Elastic.Apm.DatabaseTests.Common\Elastic.Apm.DatabaseTests.Common.projitems*{968e1e85-e996-42de-9845-d20dae16165a}*SharedItemsImports = 5
@@ -299,6 +303,14 @@ Global
 		{DC879845-353B-4C62-9640-6EA3008326F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DC879845-353B-4C62-9640-6EA3008326F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DC879845-353B-4C62-9640-6EA3008326F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B168C594-0314-4201-A55B-13DBBE2796FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B168C594-0314-4201-A55B-13DBBE2796FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B168C594-0314-4201-A55B-13DBBE2796FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B168C594-0314-4201-A55B-13DBBE2796FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9AE4805D-2586-4FA5-A0D0-885264EBC565}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9AE4805D-2586-4FA5-A0D0-885264EBC565}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9AE4805D-2586-4FA5-A0D0-885264EBC565}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9AE4805D-2586-4FA5-A0D0-885264EBC565}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -346,6 +358,8 @@ Global
 		{B5200DC5-5E48-4F72-ADA9-96D0380A00CB} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{CE0120A5-A094-40A3-905E-8E14526800D3} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{DC879845-353B-4C62-9640-6EA3008326F7} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{B168C594-0314-4201-A55B-13DBBE2796FE} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
+		{9AE4805D-2586-4FA5-A0D0-885264EBC565} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}

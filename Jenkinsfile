@@ -313,6 +313,29 @@ pipeline {
                     }
                   }
                 }
+                stage('Startup Hook Tests') {
+                  steps {
+                    withGithubNotify(context: 'Test startup hooks - Windows', tab: 'tests') {
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                        retry(3) {
+                          bat label: 'Build', script: '.ci/windows/zip.bat'
+                        }
+                        bat label: 'Test & coverage', script: '.ci/windows/test-zip.bat'
+                      }
+                    }
+                  }
+                  post {
+                    always {
+                      reportTests()
+                    }
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                    }
+                  }
+                }
               }
               post {
                 always {

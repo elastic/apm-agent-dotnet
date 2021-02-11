@@ -28,7 +28,8 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 	[ApiController]
 	public class IntakeV2EventsController : ControllerBase
 	{
-		private static readonly ConcurrentDictionary<Type, Lazy<Task<JsonSchema>>> Schemata = new ConcurrentDictionary<Type, Lazy<Task<JsonSchema>>>();
+		private static readonly ConcurrentDictionary<Type, Lazy<Task<JsonSchema>>> Schemata =
+			new ConcurrentDictionary<Type, Lazy<Task<JsonSchema>>>();
 
 		private const string ExpectedContentType = "application/x-ndjson; charset=utf-8";
 		private const string ThisClassName = nameof(IntakeV2EventsController);
@@ -41,7 +42,6 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 			_mockApmServer = mockApmServer;
 			_validator = validator;
 			_logger = mockApmServer.InternalLogger.Scoped(ThisClassName + "#" + RuntimeHelpers.GetHashCode(this).ToString("X"));
-
 			_logger.Debug()?.Log("Constructed with mock APM Server: {MockApmServer}", _mockApmServer);
 		}
 
@@ -63,7 +63,7 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 			}
 			catch (ArgumentException ex)
 			{
-				_mockApmServer.ReceivedData.InvalidPayloadErrors = _mockApmServer.ReceivedData.InvalidPayloadErrors.Add(ex.ToString());
+				_mockApmServer.AddInvalidPayload(ex.ToString());
 				return BadRequest(ex.ToString());
 			}
 
@@ -101,7 +101,7 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 		{
 			var foundDto = false;
 
-			var lineDto = JsonConvert.DeserializeObject<PayloadLineDto>(
+			var payload = JsonConvert.DeserializeObject<PayloadLineDto>(
 				line,
 				new JsonSerializerSettings
 				{
@@ -115,17 +115,17 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 					}
 				});
 
-			_mockApmServer.ReceivedData.Errors = await HandleParsed(nameof(lineDto.Error), lineDto.Error, _mockApmServer.ReceivedData.Errors);
-			_mockApmServer.ReceivedData.Metadata = await HandleParsed(nameof(lineDto.Metadata), lineDto.Metadata, _mockApmServer.ReceivedData.Metadata);
-			_mockApmServer.ReceivedData.Metrics = await HandleParsed(nameof(lineDto.MetricSet), lineDto.MetricSet, _mockApmServer.ReceivedData.Metrics);
-			_mockApmServer.ReceivedData.Spans = await HandleParsed(nameof(lineDto.Span), lineDto.Span, _mockApmServer.ReceivedData.Spans);
-			_mockApmServer.ReceivedData.Transactions = await HandleParsed(nameof(lineDto.Transaction), lineDto.Transaction, _mockApmServer.ReceivedData.Transactions);
+			await HandleParsed(nameof(payload.Error), payload.Error, _mockApmServer.ReceivedData.Errors, _mockApmServer.AddError);
+			await HandleParsed(nameof(payload.Metadata), payload.Metadata, _mockApmServer.ReceivedData.Metadata, _mockApmServer.AddMetadata);
+			await HandleParsed(nameof(payload.MetricSet), payload.MetricSet, _mockApmServer.ReceivedData.Metrics, _mockApmServer.AddMetricSet);
+			await HandleParsed(nameof(payload.Span), payload.Span, _mockApmServer.ReceivedData.Spans, _mockApmServer.AddSpan);
+			await HandleParsed(nameof(payload.Transaction), payload.Transaction, _mockApmServer.ReceivedData.Transactions, _mockApmServer.AddTransaction);
 
 			foundDto.Should().BeTrue($"There should be exactly one object per line: `{line}'");
 
-			async Task<ImmutableList<TDto>> HandleParsed<TDto>(string dtoType, TDto dto, ImmutableList<TDto> accumulatingList) where TDto : IDto
+			async Task HandleParsed<TDto>(string dtoType, TDto dto, ImmutableList<TDto> accumulatingList, Action<TDto> action) where TDto : IDto
 			{
-				if (dto == null) return accumulatingList;
+				if (dto == null) return;
 
 				foundDto.Should().BeFalse($"There should be exactly one object per line: `{line}'");
 				foundDto = true;
@@ -159,8 +159,8 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 								"Parsed object:\n".Indent() + "{EventDtoParsed}",
 								dtoType, accumulatingList.Count + 1,
 								line.PrettyFormat().Indent(2), dto.ToString().Indent(2));
-						_mockApmServer.ReceivedData.InvalidPayloadErrors = _mockApmServer.ReceivedData.InvalidPayloadErrors.Add(ex.ToString());
-						return accumulatingList;
+						_mockApmServer.AddInvalidPayload(ex.ToString());
+						return;
 					}
 
 					_logger.Error()
@@ -181,7 +181,7 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 						dtoType, accumulatingList.Count + 1,
 						line.PrettyFormat().Indent(2), dto.ToString().Indent(2));
 
-				return accumulatingList.Add(dto);
+				action(dto);
 			}
 		}
 

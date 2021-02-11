@@ -19,6 +19,6 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="JunitXml.TestLogger" Version="2.1.78" Condition="'$(IsTestProject)' == 'true'" />
+    <PackageReference Include="JunitXml.TestLogger" Version="2.1.81" Condition="'$(IsTestProject)' == 'true'" />
   </ItemGroup>
 </Project>

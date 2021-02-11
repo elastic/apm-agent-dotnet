@@ -15,10 +15,15 @@ open Buildalyzer
 open Fake.Core
 open Fake.DotNet
 open Fake.IO
+open Fake.IO
 open Fake.IO.Globbing.Operators
+open Fake.SystemHelper
+open Fake.SystemHelper
 open Tooling
 
 module Build =
+    
+    let private isCI = Environment.hasEnvironVar "BUILD_ID"
     
     let private oldDiagnosticSourceVersion = SemVer.parse "4.6.0"
     
@@ -69,20 +74,20 @@ module Build =
     let private dotnet target projectOrSln =
         DotNet.Exec [target; projectOrSln; "-c"; "Release"; "-v"; "q"; "--nologo"]
         
-    let private msBuild target projectOrSln =     
-        MSBuild.build (fun p -> {
-           p with
-            Verbosity = Some(Quiet)
-            Targets = [target]
-            Properties = [
-                "Configuration", "Release"
-                "Optimize", "True"
-            ]
-            // current version of Fake MSBuild module does not support latest bin log file
-            // version of MSBuild in VS 16.8, so disable for now.
-            DisableInternalBinLog = true
-            NoLogo = true
-        }) projectOrSln
+    let private msBuild target projectOrSln =
+        MSBuild.build (fun p ->
+                { p with
+                    Verbosity = Some(Quiet)
+                    Targets = [target]
+                    Properties = [
+                        "Configuration", "Release"
+                        "Optimize", "True"
+                    ]
+                    // current version of Fake MSBuild module does not support latest bin log file
+                    // version of MSBuild in VS 16.8, so disable for now.
+                    DisableInternalBinLog = true
+                    NoLogo = true
+                }) projectOrSln
         
     /// Gets the current version of System.Diagnostics.DiagnosticSource referenced by Elastic.Apm    
     let private getCurrentApmDiagnosticSourceVersion =
@@ -134,10 +139,10 @@ module Build =
         |> Seq.iter (fun proj -> DotNet.Exec ["sln" ; Paths.SolutionNetCore; "remove"; proj])
         
     /// Runs dotnet build on all .NET core projects in the solution.
-    /// When running on Windows, also runs MSBuild Build on .NET Framework
+    /// When running on Windows and not CI, also runs MSBuild Build on .NET Framework
     let Build () =
         dotnet "build" Paths.SolutionNetCore
-        if isWindows then msBuild "Build" aspNetFullFramework
+        if isWindows && not isCI then msBuild "Build" aspNetFullFramework
         copyBinRelease()
                               
     /// Publishes all projects with framework versions
@@ -180,7 +185,7 @@ module Build =
     let Clean () =
         Shell.cleanDir Paths.BuildOutputFolder
         dotnet "clean" Paths.SolutionNetCore       
-        if isWindows then msBuild "Clean" aspNetFullFramework
+        if isWindows && not isCI then msBuild "Clean" aspNetFullFramework
 
     /// Restores all packages for the solution
     let Restore () =

@@ -41,6 +41,7 @@ internal class StartupHook
 		var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
 		_logger.WriteLine($"Assemblies loaded:{Environment.NewLine}{string.Join(",", assemblies.Select(a => a.GetName()))}");
+
 		var diagnosticSourceAssemblies = assemblies
 			.Where(a => a.GetName().Name.Equals(SystemDiagnosticsDiagnosticsource, StringComparison.Ordinal))
 			.ToList();
@@ -50,6 +51,7 @@ internal class StartupHook
 		{
 			case 0:
 				_logger.WriteLine($"No {SystemDiagnosticsDiagnosticsource} loaded. Load using AssemblyLoadContext.Default");
+
 				diagnosticSourceAssembly = AssemblyLoadContext.Default.LoadFromAssemblyName(new AssemblyName(SystemDiagnosticsDiagnosticsource));
 				break;
 			case 1:
@@ -62,7 +64,6 @@ internal class StartupHook
 		}
 
 		Assembly loader = null;
-
 		if (diagnosticSourceAssembly is null)
 		{
 			// use agent compiled against the highest version of System.Diagnostics.DiagnosticSource
