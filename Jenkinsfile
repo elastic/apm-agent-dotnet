@@ -550,7 +550,7 @@ def reportTests() {
 }
 
 def notifyStatus(def args = [:]) {
-  releaseNotification(slackChannel: "${env.env.SLACK_CHANNEL}",
+  releaseNotification(slackChannel: "${env.SLACK_CHANNEL}",
                       slackColor: args.slackStatus,
                       slackCredentialsId: 'jenkins-slack-integration-token',
                       to: "${env.NOTIFY_TO}",
