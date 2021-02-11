@@ -75,8 +75,8 @@ namespace Elastic.Apm.Extensions.Hosting
 				if (!Agent.IsConfigured || !apmAgent.ConfigurationReader.Enabled) return;
 
 				// Only add ElasticApmErrorLoggingProvider after the agent is created, because it depends on the agent
-				services.AddSingleton<ILoggerProvider, ElasticApmErrorLoggingProvider>(sp =>
-					new ElasticApmErrorLoggingProvider(sp.GetService<IApmAgent>()));
+				services.AddSingleton<ILoggerProvider, ApmErrorLoggingProvider>(sp =>
+					new ApmErrorLoggingProvider(sp.GetService<IApmAgent>()));
 
 				if (subscribers != null && subscribers.Any() && Agent.IsConfigured)
 					apmAgent.Subscribe(subscribers);

@@ -526,7 +526,9 @@ namespace Elastic.Apm.Tests.ApiTests
 							new Request("GET",
 								new Url { Full = "https://elastic.co", Raw = "https://elastic.co", HostName = "elastic", Protocol = "HTTP" })
 							{
-								HttpVersion = "2.0", Socket = new Socket { Encrypted = true, RemoteAddress = "127.0.0.1" }, Body = "123"
+								HttpVersion = "2.0",
+								Socket = new Socket { Encrypted = true, RemoteAddress = "127.0.0.1" },
+								Body = "123"
 							};
 					});
 				});
@@ -648,7 +650,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			var errorLog = new ErrorLog("foo") { Level = "error", ParamMessage = "42" };
 
-			agent.Tracer.CaptureTransaction("foo", "bar", t => { t.CaptureLogAsError(errorLog); });
+			agent.Tracer.CaptureTransaction("foo", "bar", t => { t.CaptureErrorLog(errorLog); });
 
 			payloadSender.WaitForAny();
 

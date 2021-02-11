@@ -12,14 +12,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Elastic.Apm.Extensions.Logging
 {
-	internal class ElasticApmErrorLoggingProvider : ILoggerProvider
+	internal class ApmErrorLoggingProvider : ILoggerProvider
 	{
 		private readonly IApmAgent _apmAgent;
 
-		public ElasticApmErrorLoggingProvider(IApmAgent apmAgent) => _apmAgent = apmAgent;
+		public ApmErrorLoggingProvider(IApmAgent apmAgent) => _apmAgent = apmAgent;
 
 		public ILogger CreateLogger(string categoryName)
-			=> new ElasticApmErrorLogger(_apmAgent);
+			=> new ApmErrorLogger(_apmAgent);
 
 		public void Dispose() { }
 	}

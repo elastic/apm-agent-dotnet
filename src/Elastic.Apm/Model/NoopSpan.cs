@@ -91,7 +91,7 @@ namespace Elastic.Apm.Model
 			Dictionary<string, Label> labels = null
 		) { }
 
-		public void CaptureLogAsError(ErrorLog logOnError, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null
+		public void CaptureErrorLog(ErrorLog logOnError, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null
 		) { }
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)

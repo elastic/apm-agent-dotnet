@@ -252,8 +252,8 @@ catch (Exception e)
 ----
 
 [float]
-[[api-start-capture-log-as-error]]
-==== `void CaptureLogAsError(ErrorLog logOnError, string parentId = null, Exception exception = null);`
+[[api-start-capture-error-log]]
+==== `void CaptureErrorLog(ErrorLog logOnError, string parentId = null, Exception exception = null);`
 
 Use this method to capture a log line as an APM error.
 
@@ -269,7 +269,7 @@ var errorLog = new ErrorLog("Error message")
 	ParamMessage = "42"
 };
 
-Agent.Tracer.CaptureLogAsError(errorLog);
+Agent.Tracer.CaptureErrorLog(errorLog);
 ----
 
 //----------------------------
@@ -423,8 +423,8 @@ Captures a custom error and reports it to the APM server.
 This method is typically used when you want to report an error, but you don't have an `Exception` instance.
 
 [float]
-[[api-transaction-capture-log-as-error]]
-==== `void CaptureLogAsError(ErrorLog logOnError, string parentId = null, Exception exception = null);`
+[[api-transaction-capture-error-log]]
+==== `void CaptureErrorLog(ErrorLog logOnError, string parentId = null, Exception exception = null);`
 Captures a custom error and reports it to the APM server with a log attached to it.
 
 This method is typically used when you already log errors in your code and you want to attach this error to an APM transaction. The log will show up on the APM UI as part of the error and it will be correlated to the transaction.
@@ -709,8 +709,8 @@ Captures a custom error and reports it to the APM server.
 This method is typically used when you want to report an error, but you don't have an `Exception` instance.
 
 [float]
-[[api-span-capture-log-as-error]]
-==== `void CaptureLogAsError(ErrorLog logOnError, string parentId = null, Exception exception = null);`
+[[api-span-capture-error-log]]
+==== `void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null);`
 Captures a custom error and reports it to the APM server with a log attached to it.
 
 This method is typically used when you already log errors in your code and you want to attach this error to an APM transaction. The log will show up on the APM UI as part of the error and it will be correlated to the transaction of the given span.

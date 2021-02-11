@@ -6,13 +6,13 @@
     <AssemblyName>Elastic.Apm.Extensions.Logging</AssemblyName>
     <PackageId>Elastic.Apm.Extensions.Logging</PackageId>
     <Description>Elastic APM integration with Microsoft.Extensions.Logging.Configuration.
-      This package automatically captures logs on error level as APM logs and correlates those to APM traces.
+      This package automatically captures logs on error level as APM errors and correlates those to APM traces when the APM agent is active.
     </Description>
     <PackageTags>apm, monitoring, elastic, elasticapm, logging, tracing</PackageTags>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj"/>
+    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net5.0' ">

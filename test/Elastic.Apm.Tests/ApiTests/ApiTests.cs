@@ -1078,7 +1078,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var transaction = agent.Tracer.StartTransaction("Transaction1", "test");
 
 			var errorLog = new ErrorLog("foo");
-			agent.Tracer.CaptureLogAsError(errorLog);
+			agent.Tracer.CaptureErrorLog(errorLog);
 
 			transaction.End();
 
@@ -1099,7 +1099,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var span = transaction.StartSpan("Span1", "test");
 
 			var errorLog = new ErrorLog("foo");
-			agent.Tracer.CaptureLogAsError(errorLog);
+			agent.Tracer.CaptureErrorLog(errorLog);
 
 			transaction.End();
 			span.End();
@@ -1144,7 +1144,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			var errorLog = new ErrorLog("foo") { Level = "error", ParamMessage = "42" };
 
-			agent.Tracer.CaptureLogAsError(errorLog);
+			agent.Tracer.CaptureErrorLog(errorLog);
 
 			payloadSender.WaitForAny();
 

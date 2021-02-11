@@ -257,7 +257,7 @@ namespace Elastic.Apm.Api
 			);
 		}
 
-		public void CaptureLogAsError(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null)
+		public void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null)
 		{
 			var currentTransaction = CurrentExecutionSegmentsContainer.CurrentTransaction;
 

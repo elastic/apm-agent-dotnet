@@ -11,11 +11,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Elastic.Apm.Extensions.Logging
 {
-	internal class ElasticApmErrorLogger : ILogger
+	/// <summary>
+	/// Captures logs on error level as APM errors
+	/// </summary>
+	internal class ApmErrorLogger : ILogger
 	{
 		private readonly IApmAgent _agent;
 
-		public ElasticApmErrorLogger(IApmAgent agent) => _agent = agent;
+		public ApmErrorLogger(IApmAgent agent) => _agent = agent;
 
 		public IDisposable BeginScope<TState>(TState state) =>
 			null;
@@ -30,30 +33,30 @@ namespace Elastic.Apm.Extensions.Logging
 			if (!_agent.ConfigurationReader.Enabled || !_agent.ConfigurationReader.Recording) return;
 
 			var logLine = formatter(state, exception);
-			var logOnError = new ErrorLog(logLine);
+			var errorLog = new ErrorLog(logLine);
 
 			if (_agent is ApmAgent apmAgent && exception != null)
 			{
-				logOnError.StackTrace = StacktraceHelper.GenerateApmStackTrace(exception, null, "CaptureErrorLogsAsApmError",
+				errorLog.StackTrace = StacktraceHelper.GenerateApmStackTrace(exception, null, "CaptureErrorLogsAsApmError",
 					apmAgent.ConfigurationReader, apmAgent.Components.ApmServerInfo);
 			}
 
-			logOnError.Level = logLevel.ToString();
+			errorLog.Level = logLevel.ToString();
 
 			if (state is IEnumerable<KeyValuePair<string, object>> stateValues)
 			{
 				foreach (var item in stateValues)
 				{
-					if (item.Key == "{OriginalFormat}") logOnError.ParamMessage = item.Value.ToString();
+					if (item.Key == "{OriginalFormat}") errorLog.ParamMessage = item.Value.ToString();
 				}
 			}
 
 			if (_agent.Tracer.CurrentSpan != null)
-				_agent.Tracer.CurrentSpan.CaptureLogAsError(logOnError);
+				_agent.Tracer.CurrentSpan.CaptureErrorLog(errorLog);
 			else if (_agent.Tracer.CurrentTransaction != null)
-				_agent.Tracer.CurrentTransaction.CaptureLogAsError(logOnError);
+				_agent.Tracer.CurrentTransaction.CaptureErrorLog(errorLog);
 			else
-				_agent.Tracer.CaptureLogAsError(logOnError);
+				_agent.Tracer.CaptureErrorLog(errorLog);
 		}
 	}
 }

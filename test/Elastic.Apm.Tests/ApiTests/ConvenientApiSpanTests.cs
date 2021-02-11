@@ -735,7 +735,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			var errorLog = new ErrorLog("foo") { Level = "error", ParamMessage = "42" };
 
-			agent.Tracer.CaptureTransaction("foo", "bar", t => { t.CaptureSpan("foo", "bar", s => { s.CaptureLogAsError(errorLog); }); });
+			agent.Tracer.CaptureTransaction("foo", "bar", t => { t.CaptureSpan("foo", "bar", s => { s.CaptureErrorLog(errorLog); }); });
 
 			payloadSender.WaitForAny();
 
