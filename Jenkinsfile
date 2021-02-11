@@ -550,9 +550,10 @@ def reportTests() {
 }
 
 def notifyStatus(def args = [:]) {
-  slackSend(channel: env.SLACK_CHANNEL, color: args.slackStatus, message: "${args.subject}. ${args.body}",
-            tokenCredentialId: 'jenkins-slack-integration-token')
-  // transform slack URL format '(<URL|description>)' to 'URL'.
-  def bodyEmail = args.body.replaceAll('\\(<', '').replaceAll('\\|.*>\\)', '')
-  emailext(subject: args.subject, to: "${env.NOTIFY_TO}", body: bodyEmail)
+  releaseNotification(slackChannel: "${env.env.SLACK_CHANNEL}",
+                      slackColor: args.slackStatus,
+                      slackCredentialsId: 'jenkins-slack-integration-token',
+                      to: "${env.NOTIFY_TO}",
+                      subject: args.subject, 
+                      body: args.body)
 }
