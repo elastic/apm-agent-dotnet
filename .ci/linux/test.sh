@@ -8,6 +8,9 @@ set -euxo pipefail
 # Remove Full Framework projects
 .ci/linux/remove-projects.sh
 
+# Build agent zip file
+./build.sh agent-zip
+
 # Run tests for all solution
 dotnet test -c Release ElasticApmAgent.sln \
 	--verbosity normal \

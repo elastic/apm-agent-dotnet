@@ -97,6 +97,9 @@ using Elastic.Apm.Report;
 [assembly:
 	InternalsVisibleTo(
 		"Elastic.Apm.Tests.Utilities, PublicKey=" + Signing.PublicKey)]
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.StartupHook.Loader, PublicKey=" + Signing.PublicKey)]
 
 internal static class Signing
 {
