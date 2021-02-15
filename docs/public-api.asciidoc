@@ -211,6 +211,7 @@ var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransactio
      DistributedTracingData.TryDeserializeFromString(serializedDistributedTracingData));
 ----
 
+NOTE: The `OutgoingDistributedTracingData` property can be `null`. One such scenario is when the agent is disabled.
 
 //----------------------------
 [float]
