@@ -191,7 +191,7 @@ mostly idle in this state, so the overhead should be negligible.
 
 You can use this setting to dynamically disable Elastic APM at runtime.
 
-NOTE: Setting `Recording` to `false` influences the behavior of the <<public-api>>. When the agent is not active it won't keep track of transactions, spans and any related properties on those.
+WARNING: Setting `Recording` to `false` influences the behavior of the <<public-api>>. When the agent is not active it won't keep track of transactions, spans and any related properties on those.
 
 [options="header"]
 |============
@@ -214,7 +214,7 @@ NOTE: Setting `Recording` to `false` influences the behavior of the <<public-api
 Setting to false will completely disable the agent, including instrumentation and remote config polling.
 If you want to dynamically change the status of the agent, use <<config-recording,`recording`>> instead.
 
-NOTE: Setting `Enabled` to `false` influences the behavior of the <<public-api>>. When the agent is not active it won't keep track of transactions, spans and any related properties on those.
+WARNING: Setting `Enabled` to `false` influences the behavior of the <<public-api>>. When the agent is not active it won't keep track of transactions, spans and any related properties on those.
 
 [options="header"]
 |============
