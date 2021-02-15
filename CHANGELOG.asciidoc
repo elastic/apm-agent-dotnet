@@ -30,7 +30,21 @@ endif::[]
 ===== Features
 - {pull}1063[#1063] Add support for capturing redis commands from StackExchange.Redis
 (<<setup-stackexchange-redis,documentation>>) (issue: {issue}874[#874])
+- {pull}1065[#1065] Introduce `ServerUrl` - (`ServerUrls` is still working but will be removed in the future) (issue: {issue}1035[#1035])
+- {pull}1048[#1048] Support for more k8s cgroup path patterns (issue: {issue}968[#968])
+- {pull}1082[#1082] `SanitizeFieldNames` config became changeable though Kibana central config
+- {pull}1083[#1083] Azure App Service cloud metadata collection
+- {pull}1135[#1135] Capture error logs as APM error from `Microsoft.Extensions.Logging` automatically and extend the Public API to capture custom logs as APM errors (issue: {issue}894[#894])
 
+[float]
+===== Bug fixes
+- {pull}1081[#1081] `NullReferenceException` with disabled agent on `Transaction.Custom` (issue: {issue}1080[#1080])
+- {pull}1078[#1078] ASP.NET Core, enabled=false in `appsettings.json` does not disable public Agent API (issue: {issue}1077[#1077])
+- {pull}1115[#1115] `System.IO.IOException` on ASP.NET Classic (issue: {issue}1113[#1113])
+- {pull}1118[#1118] Memory issue with gRPC  (issue: {issue}1116[#1116])
+- {pull}1124][#1124] Ensuring ETW sessions are terminated on agent shutdown (issue: {issue}897[#897])
+- {pull}1109][#1109] `NullReferenceException` with custom `IConfigurationReader` implementation in `MetricsCollector`
+- {pull}1138][#1138] and {pull}1165][#1165] Fixes around zero code change agent setup with `DOTNET_STARTUP_HOOKS`
 
 [[release-notes-1.7.1]]
 ==== 1.7.1
