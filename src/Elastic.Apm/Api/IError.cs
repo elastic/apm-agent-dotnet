@@ -87,6 +87,7 @@ namespace Elastic.Apm.Api
 		[MaxLength]
 		public string ParamMessage { get; set; }
 
+		[JsonProperty("stacktrace")]
 		public List<CapturedStackFrame> StackTrace { get; set; }
 	}
 }

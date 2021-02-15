@@ -279,7 +279,7 @@ namespace Elastic.Apm.Model
 		/// <summary>
 		/// Captures an error based on a log
 		/// </summary>
-		/// <param name="logOnError"></param>
+		/// <param name="errorLog"></param>
 		/// <param name="payloadSender"></param>
 		/// <param name="logger"></param>
 		/// <param name="executionSegment"></param>
@@ -289,16 +289,16 @@ namespace Elastic.Apm.Model
 		/// <param name="serverInfo"></param>
 		/// <param name="exception"></param>
 		/// <param name="labels"></param>
-		internal static void CaptureLogAsError(ErrorLog logOnError, IPayloadSender payloadSender, IApmLogger logger,
+		internal static void CaptureLogAsError(ErrorLog errorLog, IPayloadSender payloadSender, IApmLogger logger,
 			IExecutionSegment executionSegment, IConfigSnapshot configSnapshot, Transaction enclosingTransaction, string parentId,
 			IApmServerInfo serverInfo,
 			Exception exception = null,
 			Dictionary<string, Label> labels = null
 		)
 		{
-			var error = new Error(logOnError, enclosingTransaction, parentId ?? executionSegment?.Id, logger, labels)
+			var error = new Error(errorLog, enclosingTransaction, parentId ?? executionSegment?.Id, logger, labels)
 			{
-				Culprit = $"{logOnError.Level ?? "Error"} log"
+				Culprit = $"{errorLog.Level ?? "Error"} log"
 			};
 
 			if (exception != null)

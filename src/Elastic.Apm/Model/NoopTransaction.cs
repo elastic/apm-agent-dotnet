@@ -128,7 +128,7 @@ namespace Elastic.Apm.Model
 			return false;
 		}
 
-		public void CaptureErrorLog(ErrorLog logOnError, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null
+		public void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null
 		) { }
 	}
 }

@@ -253,9 +253,9 @@ catch (Exception e)
 
 [float]
 [[api-start-capture-error-log]]
-==== `void CaptureErrorLog(ErrorLog logOnError, string parentId = null, Exception exception = null);`
+==== `void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null);`
 
-Use this method to capture a log line as an APM error.
+Use this method to capture a log event as an APM error.
 
 NOTE: Captured errors are automatically correlated with the active transaction. If no transaction is active, the error will still appear in the APM app but will not be correlated with a transaction.
 
@@ -424,7 +424,7 @@ This method is typically used when you want to report an error, but you don't ha
 
 [float]
 [[api-transaction-capture-error-log]]
-==== `void CaptureErrorLog(ErrorLog logOnError, string parentId = null, Exception exception = null);`
+==== `void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null);`
 Captures a custom error and reports it to the APM server with a log attached to it.
 
 This method is typically used when you already log errors in your code and you want to attach this error to an APM transaction. The log will show up on the APM UI as part of the error and it will be correlated to the transaction.

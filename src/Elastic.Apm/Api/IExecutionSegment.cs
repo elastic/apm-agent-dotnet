@@ -105,11 +105,11 @@ namespace Elastic.Apm.Api
 		/// <summary>
 		/// Captures a log event as an APM error.
 		/// </summary>
-		/// <param name="logOnError"> The log line itself </param>
+		/// <param name="errorLog"> The log line itself </param>
 		/// <param name="parentId"> ParentId pointing to the parent transaction or span. </param>
 		/// <param name="exception"> Exception which was captured as part of the log. </param>
 		/// <param name="labels">Labels that will be added to the captured error</param>
-		void CaptureErrorLog(ErrorLog logOnError, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null);
+		void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
