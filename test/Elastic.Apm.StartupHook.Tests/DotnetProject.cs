@@ -129,7 +129,7 @@ namespace Elastic.Apm.StartupHook.Tests
 			{
 				"new", template,
 				"--name", name,
-				"--output", directory,
+				"--output", $"\"{directory}\"",
 				"--framework", framework
 			}.Concat(arguments);
 
