@@ -9,13 +9,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
-using Elastic.Apm.AspNetCore.DiagnosticListener;
-using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.Elasticsearch;
-using Elastic.Apm.EntityFrameworkCore;
-using Elastic.Apm.Extensions.Hosting;
-using Elastic.Apm.GrpcClient;
-using Elastic.Apm.SqlClient;
 using ElasticApmStartupHook;
 
 namespace Elastic.Apm.StartupHook.Loader
@@ -52,26 +45,28 @@ namespace Elastic.Apm.StartupHook.Loader
 			foreach (var libToLoad in AgentLoadContext.AgentLibsToLoad)
 				LoadAssembly(libToLoad);
 
+
 			AssemblyLoadContext.Default.Resolving += (context, assemblyName) =>
 			{
-				if (AgentLoadContext.AgentDependencyLibsToLoad.Contains(assemblyName.Name)
-					|| AgentLoadContext.AgentLibsToLoad.Contains(assemblyName.Name))
-				{
-					// If AssemblyLoadContext.Default tries to load an agent assembly or one of its dependencies, we return it from _agentLoadContext
-					return _agentLoadContext.LoadFromAssemblyName(new AssemblyName(assemblyName.Name));
-				}
-
-				return context.LoadFromAssemblyName(assemblyName);
+				Logger.WriteLine($"Default load context resolver, resolving {assemblyName.Name} from AgentLoadContext");
+				return _agentLoadContext.LoadFromAssemblyName(new AssemblyName(assemblyName.Name));
 			};
 
-			StartAgent();
+			try
+			{
+				StartAgent();
+			}
+			catch (Exception e)
+			{
+				Logger.WriteLine($"Failed laoding the agent, exception: {e}");
+			}
 		}
 
 		public static void LoadAssembly(string assemblyName)
 		{
 			if (AppDomain.CurrentDomain.GetAssemblies().Any(n => n.FullName.Equals(assemblyName, StringComparison.Ordinal)))
 			{
-				Logger.WriteLine($"{assemblyName} is alrady loaded - we don't try to load it");
+				Logger.WriteLine($"{assemblyName} is already loaded - we don't try to load it");
 				return;
 			}
 
@@ -88,29 +83,53 @@ namespace Elastic.Apm.StartupHook.Loader
 			}
 		}
 
+		/// <summary>
+		/// Calls <code>Agent.Setup</code> and subscribs to all diagnostic subscribers.
+		/// To avoid loading any agent type into the default AssemblyLoadContext everything is done through reflection.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		private static void StartAgent()
 		{
-			Agent.Setup(new AgentComponents());
+			var apmAssembly = _agentLoadContext.LoadFromAssemblyName(new AssemblyName("Elastic.Apm"));
+			var agentType = apmAssembly.GetType("Elastic.Apm.Agent");
 
-			LoadDiagnosticSubscriber(new HttpDiagnosticsSubscriber());
-			LoadDiagnosticSubscriber(new AspNetCoreDiagnosticSubscriber());
-			LoadDiagnosticSubscriber(new EfCoreDiagnosticsSubscriber());
-			LoadDiagnosticSubscriber(new SqlClientDiagnosticSubscriber());
-			LoadDiagnosticSubscriber(new ElasticsearchDiagnosticsSubscriber());
-			LoadDiagnosticSubscriber(new GrpcClientDiagnosticSubscriber());
+			var AgentComponentsType = apmAssembly.GetType("Elastic.Apm.AgentComponents");
+			var agentComponentsInstance = Activator.CreateInstance(AgentComponentsType, null, null, null);
 
-			static void LoadDiagnosticSubscriber(IDiagnosticsSubscriber diagnosticsSubscriber)
+			var setupMethod = agentType.GetMethod("Setup", BindingFlags.Public | BindingFlags.Static);
+			setupMethod.Invoke(null, new[] { agentComponentsInstance });
+
+			var subscribers = new (string subscriberName, string containingSssemblyName)[]
 			{
+				("Elastic.Apm.DiagnosticSource.HttpDiagnosticsSubscriber", "Elastic.Apm"),
+				("Elastic.Apm.AspNetCore.DiagnosticListener.AspNetCoreDiagnosticSubscriber", "Elastic.Apm.AspNetCore"),
+				("Elastic.Apm.EntityFrameworkCore.EfCoreDiagnosticsSubscriber", "Elastic.Apm.EntityFrameworkCore"),
+				("Elastic.Apm.SqlClient.SqlClientDiagnosticSubscriber", "Elastic.Apm.SqlClient"),
+				("Elastic.Apm.Elasticsearch.ElasticsearchDiagnosticsSubscriber", "Elastic.Apm.Elasticsearch"),
+				("Elastic.Apm.GrpcClient.GrpcClientDiagnosticSubscriber", "Elastic.Apm.GrpcClient")
+			};
+
+			var subscribeMethod = agentType.GetMethod("Subscribe", BindingFlags.Public | BindingFlags.Static);
+
+			var subscriberType = apmAssembly.GetType("Elastic.Apm.DiagnosticSource.IDiagnosticsSubscriber");
+			var subscriberArray = Array.CreateInstance(subscriberType, 1);
+
+			foreach (var (subscriberName, containingAssemblyName) in subscribers)
+			{
+				var assembly = _agentLoadContext.LoadFromAssemblyName(new AssemblyName(containingAssemblyName));
+				var subscriberInstance = Activator.CreateInstance(assembly.GetType(subscriberName));
+
+				subscriberArray.SetValue(subscriberInstance, 0);
+
 				try
 				{
-					Agent.Subscribe(diagnosticsSubscriber);
-					Logger.WriteLine($"Successfully Subscribed to {diagnosticsSubscriber.GetType().Name}");
+					subscribeMethod.Invoke(null, new object[] { subscriberArray });
+					Logger.WriteLine($"Successfully Subscribed to {subscriberName}");
 				}
 				catch (Exception e)
 				{
-					Logger.WriteLine($"Failed subscribing to {diagnosticsSubscriber.GetType().Name}, " +
-						$"Exception {e}");
+					Logger.WriteLine($"Failed subscribing to {subscriberName}, " +
+						$"Exception: {e}");
 				}
 			}
 		}

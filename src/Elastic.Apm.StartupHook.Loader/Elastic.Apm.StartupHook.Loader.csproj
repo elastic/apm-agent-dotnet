@@ -1,18 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFramework>netcoreapp2.1</TargetFramework>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\Elastic.Apm.AspNetCore\Elastic.Apm.AspNetCore.csproj" />
-      <ProjectReference Include="..\Elastic.Apm.Elasticsearch\Elastic.Apm.Elasticsearch.csproj" />
-      <ProjectReference Include="..\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj" />
-      <ProjectReference Include="..\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj" />
-      <ProjectReference Include="..\Elastic.Apm.GrpcClient\Elastic.Apm.GrpcClient.csproj" />
-      <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
-    </ItemGroup>
 
     <ItemGroup>
       <Compile Include="..\ElasticApmAgentStartupHook\StartupHookLogger.cs">
