@@ -18,10 +18,12 @@ namespace Elastic.Apm.Extensions.Logging
 	{
 		private readonly IApmAgent _agent;
 
-		public ApmErrorLogger(IApmAgent agent) => _agent = agent;
+		private readonly NullScope _nullScope;
+
+		public ApmErrorLogger(IApmAgent agent) => (_agent, _nullScope) = (agent, new NullScope());
 
 		public IDisposable BeginScope<TState>(TState state) =>
-			null;
+			_nullScope;
 
 		public bool IsEnabled(LogLevel logLevel)
 			=> logLevel >= LogLevel.Error;
@@ -47,7 +49,8 @@ namespace Elastic.Apm.Extensions.Logging
 			{
 				foreach (var item in stateValues)
 				{
-					if (item.Key == "{OriginalFormat}") errorLog.ParamMessage = item.Value.ToString();
+					if (item.Key == "{OriginalFormat}")
+						errorLog.ParamMessage = item.Value.ToString();
 				}
 			}
 
@@ -57,6 +60,11 @@ namespace Elastic.Apm.Extensions.Logging
 				_agent.Tracer.CurrentTransaction.CaptureErrorLog(errorLog);
 			else
 				_agent.Tracer.CaptureErrorLog(errorLog);
+		}
+
+		private class NullScope : IDisposable
+		{
+			public void Dispose() { }
 		}
 	}
 }

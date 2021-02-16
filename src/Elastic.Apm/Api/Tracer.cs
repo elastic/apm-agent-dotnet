@@ -264,7 +264,7 @@ namespace Elastic.Apm.Api
 			IExecutionSegment currentExecutionSegment = CurrentExecutionSegmentsContainer.CurrentSpan;
 			currentExecutionSegment ??= currentTransaction;
 
-			ExecutionSegmentCommon.CaptureLogAsError(
+			ExecutionSegmentCommon.CaptureErrorLog(
 				errorLog,
 				_sender,
 				_logger,

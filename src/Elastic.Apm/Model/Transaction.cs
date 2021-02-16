@@ -549,7 +549,7 @@ namespace Elastic.Apm.Model
 		}
 
 		public void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null)
-			=> ExecutionSegmentCommon.CaptureLogAsError(
+			=> ExecutionSegmentCommon.CaptureErrorLog(
 				errorLog,
 				_sender,
 				_logger,

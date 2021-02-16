@@ -728,7 +728,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		}
 
 		[Fact]
-		public void CaptureLogAsErrorOnSpan()
+		public void CaptureErrorLogOnSpan()
 		{
 			var payloadSender = new MockPayloadSender();
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));

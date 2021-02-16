@@ -1071,7 +1071,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		}
 
 		[Fact]
-		public void CaptureLogOnTracerWithActiveTransaction()
+		public void CaptureErrorLogOnTracerWithActiveTransaction()
 		{
 			var payloadSender = new MockPayloadSender();
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
@@ -1091,7 +1091,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		}
 
 		[Fact]
-		public void CaptureLogOnTracerWithActiveSpan()
+		public void CaptureErrorLogOnTracerWithActiveSpan()
 		{
 			var payloadSender = new MockPayloadSender();
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
@@ -1137,7 +1137,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		}
 
 		[Fact]
-		public void CaptureLogAsErrorOnTracer()
+		public void CaptureErrorLogOnTracer()
 		{
 			var payloadSender = new MockPayloadSender();
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));

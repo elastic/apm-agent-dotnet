@@ -643,7 +643,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		}
 
 		[Fact]
-		public void CaptureLogAsErrorOnTransaction()
+		public void CaptureErrorLogOnTransaction()
 		{
 			var payloadSender = new MockPayloadSender();
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));

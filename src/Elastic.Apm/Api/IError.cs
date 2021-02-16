@@ -52,7 +52,7 @@ namespace Elastic.Apm.Api
 	}
 
 	/// <summary>
-	/// Represents a log line which is captured as part of an APM error.
+	/// Represents a log event which is captured as part of an APM error.
 	/// </summary>
 	public class ErrorLog
 	{
@@ -78,10 +78,10 @@ namespace Elastic.Apm.Api
 		public string Message { get; set; }
 
 		/// <summary>
-		/// A parametrized message. E.g. 'Could not connect to %s'. The property message is still required, and should be equal
+		/// A parameterized message. E.g. 'Could not connect to %s'. The property message is still required, and should be equal
 		/// to the param_message, but with placeholders replaced. In some situations the param_message is used to group errors
 		/// together.
-		/// The string is not interpreted, so feel free to use whichever placeholders makes sense in the client languange."
+		/// The string is not interpreted, so feel free to use whichever placeholders makes sense in the client language."
 		/// </summary>
 		[JsonProperty("param_message")]
 		[MaxLength]
