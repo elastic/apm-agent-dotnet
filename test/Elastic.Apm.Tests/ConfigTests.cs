@@ -956,6 +956,17 @@ namespace Elastic.Apm.Tests
 				.Contain(n => n.KeyValue.Key.Equals("system.process.memory.rss.bytes", StringComparison.InvariantCultureIgnoreCase));
 		}
 
+		[Theory]
+		[InlineData(@"C:\path\to\server\cert", @"C:\path\to\server\cert")]
+		[InlineData(@"/path/to/server/cert", @"/path/to/server/cert")]
+		[InlineData("", null)]
+		[InlineData(null, null)]
+		public void Set_ServerCert(string serverCert, string expected)
+		{
+			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(serverCert: serverCert)));
+			agent.ConfigurationReader.ServerCert.Should().Be(expected);
+		}
+
 		[Fact]
 		public void DefaultVerifyServerCertIsTrue()
 		{

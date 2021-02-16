@@ -560,6 +560,28 @@ Verification can be disabled by changing this setting to false.
 |============
 
 [float]
+[[config-server-cert]]
+==== `ServerCert` (added[1.9])
+
+The path to a PEM-encoded certificate used for SSL/TLS by APM server, used to perform validation 
+through certificate pinning. 
+
+This can be specified when using a certificate signed by a Certificate Authority (CA) that is not in 
+the trust store, such as a self-signed certificate.
+
+[options="header"]
+|============
+| Environment variable name | IConfiguration or Web.config key
+| `ELASTIC_APM_SERVER_CERT` | `ElasticApm:ServerCert`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `<none>`                  | Boolean
+|============
+
+[float]
 [[config-flush-interval]]
 ==== `FlushInterval` (added[1.1])
 
@@ -1020,6 +1042,7 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-recording,`Recording`>> | Yes | Core
 | <<config-sanitize-field-names,`SanitizeFieldNames`>> | Yes | Core
 | <<config-secret-token,`SecretToken`>> | No | Reporter
+| <<config-server-cert,`ServerCert`>> | No | Reporter
 | <<config-server-url,`ServerUrl`>> | No | Reporter
 | <<config-service-name,`ServiceName`>> | No | Core
 | <<config-service-node-name, `ServiceNodeName`>> | No | Core

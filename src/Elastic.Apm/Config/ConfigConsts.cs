@@ -126,8 +126,10 @@ namespace Elastic.Apm.Config
 			public const string MaxBatchEventCount = Prefix + "MAX_BATCH_EVENT_COUNT";
 			public const string MaxQueueEventCount = Prefix + "MAX_QUEUE_EVENT_COUNT";
 			public const string MetricsInterval = Prefix + "METRICS_INTERVAL";
+			public const string Recording = Prefix + "RECORDING";
 			public const string SanitizeFieldNames = Prefix + "SANITIZE_FIELD_NAMES";
 			public const string SecretToken = Prefix + "SECRET_TOKEN";
+			public const string ServerCert = Prefix + "SERVER_CERT";
 			public const string ServerUrls = Prefix + "SERVER_URLS";
 			public const string ServerUrl = Prefix + "SERVER_URL";
 			public const string ServiceName = Prefix + "SERVICE_NAME";
@@ -135,12 +137,11 @@ namespace Elastic.Apm.Config
 			public const string ServiceVersion = Prefix + "SERVICE_VERSION";
 			public const string SpanFramesMinDuration = Prefix + "SPAN_FRAMES_MIN_DURATION";
 			public const string StackTraceLimit = Prefix + "STACK_TRACE_LIMIT";
+			public const string TransactionIgnoreUrls = Prefix + "TRANSACTION_IGNORE_URLS";
 			public const string TransactionMaxSpans = Prefix + "TRANSACTION_MAX_SPANS";
 			public const string TransactionSampleRate = Prefix + "TRANSACTION_SAMPLE_RATE";
 			public const string UseElasticTraceparentHeader = Prefix + "USE_ELASTIC_TRACEPARENT_HEADER";
 			public const string VerifyServerCert = Prefix + "VERIFY_SERVER_CERT";
-			public static string TransactionIgnoreUrls = Prefix + "TRANSACTION_IGNORE_URLS";
-			public static string Recording = Prefix + "RECORDING";
 		}
 
 		public static class KeyNames
@@ -166,8 +167,10 @@ namespace Elastic.Apm.Config
 			public const string MaxBatchEventCount = Prefix + nameof(MaxBatchEventCount);
 			public const string MaxQueueEventCount = Prefix + nameof(MaxQueueEventCount);
 			public const string MetricsInterval = Prefix + nameof(MetricsInterval);
+			public const string Recording = Prefix + nameof(Recording);
 			public const string SanitizeFieldNames = Prefix + nameof(SanitizeFieldNames);
 			public const string SecretToken = Prefix + nameof(SecretToken);
+			public const string ServerCert = Prefix + nameof(ServerCert);
 			public const string ServerUrls = Prefix + nameof(ServerUrls);
 			public const string ServerUrl = Prefix + nameof(ServerUrl);
 			public const string ServiceName = Prefix + nameof(ServiceName);
@@ -175,12 +178,11 @@ namespace Elastic.Apm.Config
 			public const string ServiceVersion = Prefix + nameof(ServiceVersion);
 			public const string SpanFramesMinDuration = Prefix + nameof(SpanFramesMinDuration);
 			public const string StackTraceLimit = Prefix + nameof(StackTraceLimit);
+			public const string TransactionIgnoreUrls = Prefix + nameof(TransactionIgnoreUrls);
 			public const string TransactionMaxSpans = Prefix + nameof(TransactionMaxSpans);
 			public const string TransactionSampleRate = Prefix + nameof(TransactionSampleRate);
 			public const string UseElasticTraceparentHeader = Prefix + nameof(UseElasticTraceparentHeader);
 			public const string VerifyServerCert = Prefix + nameof(VerifyServerCert);
-			public static string TransactionIgnoreUrls = Prefix + nameof(TransactionIgnoreUrls);
-			public static string Recording = Prefix + nameof(Recording);
 		}
 
 		public static class SupportedValues

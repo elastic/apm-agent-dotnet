@@ -28,6 +28,11 @@
     <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
   </ItemGroup>
   
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
+    <ProjectReference Include="..\Elastic.Apm.Tests.MockApmServer\Elastic.Apm.Tests.MockApmServer.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  
   <ItemGroup>
     <Content Include="TestResources\proc\**\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

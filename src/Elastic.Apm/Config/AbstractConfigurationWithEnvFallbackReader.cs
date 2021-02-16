@@ -88,6 +88,8 @@ namespace Elastic.Apm.Config
 
 		public virtual string SecretToken => ParseSecretToken(Read(KeyNames.SecretToken, EnvVarNames.SecretToken));
 
+		public virtual string ServerCert => ParseServerCert(Read(KeyNames.ServerCert, EnvVarNames.ServerCert));
+
 		/// <inheritdoc />
 		[Obsolete("Use ServerUrl")]
 		public virtual IReadOnlyList<Uri> ServerUrls
