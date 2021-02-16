@@ -16,7 +16,8 @@ declare -a projectsToPublish=(
 "Elastic.Apm.SqlClient"
 "Elastic.Apm.Elasticsearch"
 "Elastic.Apm.Extensions.Hosting"
-"Elastic.Apm.GrpcClient")
+"Elastic.Apm.GrpcClient"
+"Elastic.Apm.StackExchange.Redis")
 
 for project in  "${projectsToPublish[@]}"
 do

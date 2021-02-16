@@ -19,7 +19,8 @@ Official NuGet packages can be referenced from [NuGet.org](https://www.nuget.org
 | `Elastic.Apm.AspNetFullFramework` | ASP.NET (classic) auto instrumentation with an IIS Module. | [![NuGet Release][Elastic.Apm.AspNetFullFramework-image]][Elastic.Apm.AspNetFullFramework-nuget-url] |
 | `Elastic.Apm.EntityFramework6` | Entity Framework 6 auto instrumentation. | [![NuGet Release][Elastic.Apm.EntityFramework6-image]][Elastic.Apm.EntityFramework6-nuget-url] |
 | `Elastic.Apm.SqlClient` | `System.Data.SqlClient` and `Microsoft.Data.SqlClient` auto instrumentation. [More details](/src/Elastic.Apm.SqlClient/README.md) | [![NuGet Release][Elastic.Apm.SqlClient-image]][Elastic.Apm.SqlClient-nuget-url] |
-| `Elastic.Apm.Elasticsearch` | Integration with the .NET clients for Elasticsearch. | [![NuGet Release][Elastic.Apm.EntityFramework6-image]][Elastic.Apm.EntityFramework6-nuget-url] |
+| `Elastic.Apm.Elasticsearch` | Integration with the .NET clients for Elasticsearch. | [![NuGet Release][Elastic.Apm.Elasticsearch-image]][Elastic.Apm.Elasticsearch-nuget-url] |
+| `Elastic.Apm.StackExchange.Redis` | Integration with the StackExchange.Redis client for Redis. | [![NuGet Release][Elastic.Apm.StackExchange.Redis-image]][Elastic.Apm.StackExchange.Redis-nuget-url] |
 
 ## Documentation
 
@@ -54,6 +55,7 @@ These are the main folders within the repository:
   * `Elastic.Apm.EntityFramework6`: Auto-instrumentation for Entity Framework 6.
   * `Elastic.Apm.SqlClient`: Auto-instrumentation for `System.Data.SqlClient` and `Microsoft.Data.SqlClient`.
   * `Elastic.Apm.Elasticsearch`: Auto-instrumentation for the official .NET clients for Elasticsearch.
+  * `Elastic.Apm.StackExchange.Redis`: Auto-instrumentation for the StackExchange.Redis client for Redis.
 * `test`: This folder contains test projects. Typically each project from the `src` folder has a corresponding test project.
   * `Elastic.Apm.Tests`: Tests the `Elastic.Apm` project.
   * `Elastic.Apm.AspNetCore.Tests`: Tests the `Elastic.Apm.AspNetCore` project.
@@ -100,3 +102,7 @@ https://img.shields.io/nuget/v/Elastic.Apm.SqlClient.svg
 [Elastic.Apm.Elasticsearch-nuget-url]:https://www.nuget.org/packages/Elastic.Apm.Elasticsearch/
 [Elastic.Apm.Elasticsearch-image]:
 https://img.shields.io/nuget/v/Elastic.Apm.Elasticsearch.svg
+
+[Elastic.Apm.StackExchange.Redis-nuget-url]:https://www.nuget.org/packages/Elastic.Apm.StackExchange.Redis/
+[Elastic.Apm.StackExchange.Redis-image]:
+https://img.shields.io/nuget/v/Elastic.Apm.StackExchange.Redis.svg
