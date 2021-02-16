@@ -213,7 +213,6 @@ var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransactio
 
 NOTE: The `OutgoingDistributedTracingData` property can be `null`. One such scenario is when the agent is disabled.
 
-=======
 [float]
 [[api-start-capture-error]]
 ==== `void CaptureError(string message, string culprit, StackFrame[] frames = null, string parentId = null);`
