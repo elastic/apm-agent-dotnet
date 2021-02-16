@@ -123,11 +123,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StaticImplicitI
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StaticExplicitInitialization.Tests", "test\Elastic.Apm.StaticExplicitInitialization.Tests\Elastic.Apm.StaticExplicitInitialization.Tests.csproj", "{DC879845-353B-4C62-9640-6EA3008326F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.StartupHook.Sample", "sample\Elastic.Apm.StartupHook.Sample\Elastic.Apm.StartupHook.Sample.csproj", "{B168C594-0314-4201-A55B-13DBBE2796FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StartupHook.Sample", "sample\Elastic.Apm.StartupHook.Sample\Elastic.Apm.StartupHook.Sample.csproj", "{B168C594-0314-4201-A55B-13DBBE2796FE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.StartupHook.Tests", "test\Elastic.Apm.StartupHook.Tests\Elastic.Apm.StartupHook.Tests.csproj", "{9AE4805D-2586-4FA5-A0D0-885264EBC565}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StartupHook.Tests", "test\Elastic.Apm.StartupHook.Tests\Elastic.Apm.StartupHook.Tests.csproj", "{9AE4805D-2586-4FA5-A0D0-885264EBC565}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Extensions.Logging", "src\Elastic.Apm.Extensions.Logging\Elastic.Apm.Extensions.Logging.csproj", "{9BAEEF56-4061-488A-8FB8-28BDBBB26C3D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Extensions.Logging", "src\Elastic.Apm.Extensions.Logging\Elastic.Apm.Extensions.Logging.csproj", "{9BAEEF56-4061-488A-8FB8-28BDBBB26C3D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Extensions.Logging.Tests", "test\Elastic.Apm.Extensions.Logging.Tests\Elastic.Apm.Extensions.Logging.Tests.csproj", "{B235B13F-42AE-42DA-A3C8-20D047F38685}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -318,6 +320,10 @@ Global
 		{9BAEEF56-4061-488A-8FB8-28BDBBB26C3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9BAEEF56-4061-488A-8FB8-28BDBBB26C3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9BAEEF56-4061-488A-8FB8-28BDBBB26C3D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B235B13F-42AE-42DA-A3C8-20D047F38685}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B235B13F-42AE-42DA-A3C8-20D047F38685}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B235B13F-42AE-42DA-A3C8-20D047F38685}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B235B13F-42AE-42DA-A3C8-20D047F38685}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -368,6 +374,7 @@ Global
 		{B168C594-0314-4201-A55B-13DBBE2796FE} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{9AE4805D-2586-4FA5-A0D0-885264EBC565} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{9BAEEF56-4061-488A-8FB8-28BDBBB26C3D} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
+		{B235B13F-42AE-42DA-A3C8-20D047F38685} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}

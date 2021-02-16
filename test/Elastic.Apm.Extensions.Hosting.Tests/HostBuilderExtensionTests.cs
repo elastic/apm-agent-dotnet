@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SampleConsoleNetCoreApp;
 using Xunit;
+using Microsoft.Extensions.Logging;
 
 namespace Elastic.Apm.Extensions.Hosting.Tests
 {
@@ -20,30 +21,13 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 		[Fact]
 		public async Task TwoHostBuildersNoException()
 		{
-			var hostBuilder1 = CreateHostBuilder().Build();
-			var hostBuilder2 = CreateHostBuilder().Build();
+			using var hostBuilder1 = CreateHostBuilder().Build();
+			using var hostBuilder2 = CreateHostBuilder().Build();
 			var builder1Task = hostBuilder1.StartAsync();
 			var builder2Task = hostBuilder2.StartAsync();
 
 			await Task.WhenAll(builder1Task, builder2Task);
 			await Task.WhenAll(hostBuilder1.StopAsync(), hostBuilder2.StopAsync());
-		}
-
-		[Fact]
-		public async Task CaptureErrorLogsAsApmError()
-		{
-			var payloadSender = new MockPayloadSender();
-			var hostBuilder = CreateHostBuilder(payloadSender).Build();
-
-			await hostBuilder.StartAsync();
-
-			payloadSender.WaitForErrors();
-			payloadSender.Errors.Should().NotBeEmpty();
-
-			payloadSender.FirstError.Log.Message.Should().Be("This is a sample error log message, with a sample value: 42");
-			payloadSender.FirstError.Log.ParamMessage.Should().Be("This is a sample error log message, with a sample value: {intParam}");
-
-			await hostBuilder.StopAsync();
 		}
 
 		/// <summary>
@@ -53,7 +37,7 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 		[Fact]
 		public void IsAgentInitializedAfterUseElasticApm()
 		{
-			var _ = CreateHostBuilder().Build();
+			using var _ = CreateHostBuilder().Build();
 			Agent.IsConfigured.Should().BeTrue();
 		}
 
@@ -67,7 +51,7 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 			var fakeSubscriber = new FakeSubscriber();
 			fakeSubscriber.IsSubscribed.Should().BeFalse();
 
-			Host.CreateDefaultBuilder()
+			using var _ = Host.CreateDefaultBuilder()
 				.ConfigureServices((context, services) => { services.AddHostedService<HostedService>(); })
 				.UseElasticApm(fakeSubscriber)
 				.Build();
@@ -89,7 +73,7 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 
 			try
 			{
-				Host.CreateDefaultBuilder()
+				using var _ = Host.CreateDefaultBuilder()
 					.ConfigureServices((context, services) => { services.AddHostedService<HostedService>(); })
 					.UseElasticApm(fakeSubscriber)
 					.Build();
@@ -102,12 +86,10 @@ namespace Elastic.Apm.Extensions.Hosting.Tests
 			}
 		}
 
-		private static IHostBuilder CreateHostBuilder(MockPayloadSender payloadSender = null) =>
+		private static IHostBuilder CreateHostBuilder() =>
 			Host.CreateDefaultBuilder()
-				.ConfigureServices(n => n.AddSingleton<IPayloadSender, MockPayloadSender>(serviceProvider => payloadSender))
 				.ConfigureServices((context, services) => { services.AddHostedService<HostedService>(); })
 				.UseElasticApm();
-
 
 		public class FakeSubscriber : IDiagnosticsSubscriber
 		{

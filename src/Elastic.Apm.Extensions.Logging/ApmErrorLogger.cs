@@ -8,6 +8,9 @@ using System.Collections.Generic;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Microsoft.Extensions.Logging;
+using Elastic.Apm.Logging;
+
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace Elastic.Apm.Extensions.Logging
 {
@@ -54,12 +57,19 @@ namespace Elastic.Apm.Extensions.Logging
 				}
 			}
 
-			if (_agent.Tracer.CurrentSpan != null)
-				_agent.Tracer.CurrentSpan.CaptureErrorLog(errorLog);
-			else if (_agent.Tracer.CurrentTransaction != null)
-				_agent.Tracer.CurrentTransaction.CaptureErrorLog(errorLog);
-			else
-				_agent.Tracer.CaptureErrorLog(errorLog);
+			try
+			{
+				if (_agent.Tracer.CurrentSpan != null)
+					_agent.Tracer.CurrentSpan.CaptureErrorLog(errorLog);
+				else if (_agent.Tracer.CurrentTransaction != null)
+					_agent.Tracer.CurrentTransaction.CaptureErrorLog(errorLog);
+				else
+					_agent.Tracer.CaptureErrorLog(errorLog);
+			}
+			catch(Exception e)
+			{
+				_agent.Logger.Warning()?.LogException(e, "Failed capturing APM Error based on log");
+			}
 		}
 
 		private class NullScope : IDisposable

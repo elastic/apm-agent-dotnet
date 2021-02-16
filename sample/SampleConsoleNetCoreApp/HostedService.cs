@@ -27,6 +27,19 @@ namespace SampleConsoleNetCoreApp
 
 				_logger.LogError("This is a sample error log message, with a sample value: {intParam}", 42);
 
+				// We test the ApmErrorLogger with this code - this covers multiple scopes
+				using (_logger.BeginScope("foo"))
+				{
+					_logger.LogError("Yet another sample error log");
+
+					using (_logger.BeginScope("bar"))
+					{
+						_logger.LogError("And a 3. sample error log");
+					}
+				}
+
+				var fooScope = _logger.BeginScope("foo");
+
 				// Make sure Agent.Tracer.CurrentTransaction is not null
 				var currentTransaction = Agent.Tracer.CurrentTransaction;
 				if (currentTransaction == null) throw new Exception("Agent.Tracer.CurrentTransaction returns null");
