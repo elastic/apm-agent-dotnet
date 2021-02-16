@@ -727,6 +727,27 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.Spans[1].Context.Db.Instance.Should().Be("MyInstance");
 		}
 
+		[Fact]
+		public void CaptureErrorLogOnSpan()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var errorLog = new ErrorLog("foo") { Level = "error", ParamMessage = "42" };
+
+			agent.Tracer.CaptureTransaction("foo", "bar", t => { t.CaptureSpan("foo", "bar", s => { s.CaptureErrorLog(errorLog); }); });
+
+			payloadSender.WaitForAny();
+
+			payloadSender.Transactions.Should().HaveCount(1);
+			payloadSender.Spans.Should().HaveCount(1);
+			payloadSender.Errors.Should().HaveCount(1);
+			payloadSender.FirstError.Log.Message.Should().Be("foo");
+			payloadSender.FirstError.Log.Level.Should().Be("error");
+			payloadSender.FirstError.Log.ParamMessage.Should().Be("42");
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstSpan.Id);
+		}
+
 		/// <summary>
 		/// Asserts on 1 transaction with 1 async span and 1 error
 		/// </summary>

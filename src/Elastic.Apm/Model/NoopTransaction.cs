@@ -40,24 +40,33 @@ namespace Elastic.Apm.Model
 
 		public Dictionary<string, string> Custom => _custom.Value;
 		public double? Duration { get; set; }
+
 		[MaxLength]
 		public string Id { get; }
+
 		public bool IsSampled => false;
 		public Dictionary<string, string> Labels => _labels.Value;
+
 		[MaxLength]
 		public string Name { get; set; }
+
 		public Outcome Outcome { get; set; }
 		public DistributedTracingData OutgoingDistributedTracingData { get; }
+
 		[JsonProperty("parent_id")]
 		[MaxLength]
 		public string ParentId { get; }
+
 		[MaxLength]
 		public string Result { get; set; }
+
 		[JsonProperty("span_count")]
 		public SpanCount SpanCount { get; }
+
 		[JsonProperty("trace_id")]
 		[MaxLength]
 		public string TraceId { get; }
+
 		[MaxLength]
 		public string Type { get; set; }
 
@@ -118,5 +127,8 @@ namespace Elastic.Apm.Model
 			value = default;
 			return false;
 		}
+
+		public void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null
+		) { }
 	}
 }

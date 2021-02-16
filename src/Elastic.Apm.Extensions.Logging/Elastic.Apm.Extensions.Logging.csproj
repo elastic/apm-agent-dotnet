@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netcoreapp3.0;net5.0</TargetFrameworks>
+    <RootNamespace>Elastic.Apm.Extensions.Logging</RootNamespace>
+    <AssemblyName>Elastic.Apm.Extensions.Logging</AssemblyName>
+    <PackageId>Elastic.Apm.Extensions.Logging</PackageId>
+    <Description>Elastic APM integration with Microsoft.Extensions.Logging.Configuration.
+      This package automatically captures logs on error level as APM errors and correlates those to APM traces when the APM agent is active.
+    </Description>
+    <PackageTags>apm, monitoring, elastic, elasticapm, logging, tracing</PackageTags>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net5.0' ">
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="5.0.0">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.0' ">
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="3.0.0">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="2.0.0">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

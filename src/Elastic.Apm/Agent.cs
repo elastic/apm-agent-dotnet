@@ -99,7 +99,17 @@ using Elastic.Apm.Report;
 		"Elastic.Apm.Tests.Utilities, PublicKey=" + Signing.PublicKey)]
 [assembly:
 	InternalsVisibleTo(
+
 		"Elastic.Apm.StartupHook.Loader, PublicKey=" + Signing.PublicKey)]
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.Extensions.Logging, PublicKey=" + Signing.PublicKey)]
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.Extensions.Hosting.Tests, PublicKey=" + Signing.PublicKey)]
+[assembly:
+	InternalsVisibleTo(
+		"Elastic.Apm.Extensions.Logging.Tests, PublicKey=" + Signing.PublicKey)]
 
 internal static class Signing
 {
@@ -157,6 +167,7 @@ namespace Elastic.Apm
 
 		private static volatile bool _isConfigured;
 
+
 		internal static AgentComponents Components { get; private set; }
 
 		public static IConfigurationReader Config => Instance.ConfigurationReader;
@@ -166,7 +177,7 @@ namespace Elastic.Apm
 		public static bool IsConfigured => _isConfigured;
 
 		/// <summary>
-		/// The entry point for manual instrumentation. Gets an <see cref="ITracer"/> from
+		/// The entry point for manual instrumentation. Gets an <see cref="ITracer" /> from
 		/// which the currently active transaction and span can be accessed, and enables starting
 		/// or capturing a new transaction.
 		/// </summary>

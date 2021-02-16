@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
@@ -34,7 +35,8 @@ namespace Elastic.Apm.Tests.ApiTests
 		private const string TransactionName = "ConvenientApiTest";
 		private const string TransactionType = "Test";
 
-		public ConvenientApiTransactionTests(ITestOutputHelper testOutputHelper) => testOutputHelper.WriteLine($" Stopwatch.Frequency: {Stopwatch.Frequency}");
+		public ConvenientApiTransactionTests(ITestOutputHelper testOutputHelper) =>
+			testOutputHelper.WriteLine($" Stopwatch.Frequency: {Stopwatch.Frequency}");
 
 		/// <summary>
 		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,Action, DistributedTracingData)" /> method.
@@ -628,7 +630,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, (transaction) =>
+				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, transaction =>
 				{
 					transaction.Custom.Add(customKey, customValue);
 					transaction.End();
@@ -638,6 +640,27 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.WaitForTransactions();
 			payloadSender.FirstTransaction.Should().NotBeNull();
 			payloadSender.FirstTransaction.Custom[customKey].Should().Be(customValue);
+		}
+
+		[Fact]
+		public void CaptureErrorLogOnTransaction()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var errorLog = new ErrorLog("foo") { Level = "error", ParamMessage = "42" };
+
+			agent.Tracer.CaptureTransaction("foo", "bar", t => { t.CaptureErrorLog(errorLog); });
+
+			payloadSender.WaitForAny();
+
+			payloadSender.Transactions.Should().HaveCount(1);
+			payloadSender.Spans.Should().BeNullOrEmpty();
+			payloadSender.Errors.Should().HaveCount(1);
+			payloadSender.FirstError.Log.Message.Should().Be("foo");
+			payloadSender.FirstError.Log.Level.Should().Be("error");
+			payloadSender.FirstError.Log.ParamMessage.Should().Be("42");
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstTransaction.Id);
 		}
 
 		/// <summary>
