@@ -6,7 +6,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.GrpcClient;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Grpc.Net.Client;
 using GrpcServiceSample;
@@ -19,6 +19,9 @@ namespace Elastic.Apm.Grpc.Tests
 {
 	public class GrpcTests
 	{
+		public GrpcTests() =>
+			AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
 		/// <summary>
 		/// Creates a call to a simple gRPC service and asserts that all transactions, spans are captured
 		/// and gRPC related fields are filled.
@@ -43,12 +46,10 @@ namespace Elastic.Apm.Grpc.Tests
 			else
 				sampleAppHost = new SampleAppHostBuilder().BuildHostWithMiddleware(apmAgent);
 
-			apmAgent.Subscribe(new GrpcClientDiagnosticSubscriber(), new HttpDiagnosticsSubscriber());
+			var grpcClientDiagnosticSubscriber = new GrpcClientDiagnosticSubscriber();
+			apmAgent.Subscribe(grpcClientDiagnosticSubscriber, new HttpDiagnosticsSubscriber());
 
 			await sampleAppHost.StartAsync();
-
-			AppContext.SetSwitch(
-				"System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
 			var channel = GrpcChannel.ForAddress(SampleAppHostBuilder.SampleAppUrl);
 			var client = new Greeter.GreeterClient(channel);
@@ -83,7 +84,10 @@ namespace Elastic.Apm.Grpc.Tests
 					&& span.Context.Destination.Service.Resource == $"localhost:{SampleAppHostBuilder.SampleAppPort}"
 				);
 
+			grpcClientDiagnosticSubscriber.Listener.ProcessingRequests.Should().BeEmpty();
+
 			await sampleAppHost.StopAsync();
+			sampleAppHost.Dispose();
 		}
 
 		/// <summary>
@@ -99,16 +103,13 @@ namespace Elastic.Apm.Grpc.Tests
 		{
 			var payloadSender = new MockPayloadSender();
 			using var apmAgent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
-
-			var sampleAppHost = withDiagnosticSource
+			var grpcClientDiagnosticSubscriber = new GrpcClientDiagnosticSubscriber();
+			using var sampleAppHost = withDiagnosticSource
 				? new SampleAppHostBuilder().BuildHost()
 				: new SampleAppHostBuilder().BuildHostWithMiddleware(apmAgent);
-			apmAgent.Subscribe(new AspNetCoreDiagnosticSubscriber(), new GrpcClientDiagnosticSubscriber(), new HttpDiagnosticsSubscriber());
+			apmAgent.Subscribe(new AspNetCoreDiagnosticSubscriber(), grpcClientDiagnosticSubscriber, new HttpDiagnosticsSubscriber());
 
 			await sampleAppHost.StartAsync();
-
-			AppContext.SetSwitch(
-				"System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
 			var channel = GrpcChannel.ForAddress(SampleAppHostBuilder.SampleAppUrl);
 			var client = new Greeter.GreeterClient(channel);
@@ -147,6 +148,8 @@ namespace Elastic.Apm.Grpc.Tests
 					&& span.Context.Destination.Service.Name == SampleAppHostBuilder.SampleAppUrl
 					&& span.Context.Destination.Service.Resource == $"localhost:{SampleAppHostBuilder.SampleAppPort}"
 				);
+
+			grpcClientDiagnosticSubscriber.Listener.ProcessingRequests.Should().BeEmpty();
 
 			await sampleAppHost.StopAsync();
 		}

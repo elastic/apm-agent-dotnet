@@ -113,3 +113,19 @@ Another example might be when you use the Public Agent API in combination with t
 You may use the Public Agent API with the `Elastic.Apm.Agent` class in code that can potentially execute before the IIS module initializes or the `UseElasticApm`/`UseAllElasticApm` calls execute. If that happens, those will fail, as the Agent has been implicitly initialized already.
 
 To prevent the `InstanceAlreadyCreatedException` in these scenarios, first use the `Elastic.Apm.Agent.IsConfigured` method to check if the agent is already initialized. After the check, you can safely use other methods in the Public Agent API. This will prevent accidental implicit agent initialization.
+
+[float]
+[[startup-hook-failure]]
+=== Startup hooks failure
+
+If the <<zero-code-change-setup, startup hook>> integration throws an exception, additional detail can be obtained by 
+setting the `ELASTIC_APM_STARTUP_HOOKS_LOGGING` environment variable before starting the application
+
+[source,sh]
+----
+set ELASTIC_APM_STARTUP_HOOKS_LOGGING=1
+----
+
+and then running the application in a context where the environment variable will be visible. In setting this value,
+an `ElasticApmAgentStartupHook.log` file is written to in the directory containing the startup hook assembly, in addition to
+writing to standard output.

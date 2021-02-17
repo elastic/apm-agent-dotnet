@@ -121,9 +121,17 @@ The agent is designed to monitor production applications. Therefore it's very im
 
 It's not uncommon that you write or change code that can potentially change the performance characteristics of the agent and therefore also of the application's of our users.
 
-If this is the case then a perf. test should be added to the `test\Elastic.Apm.PerfTests` project which proves that the new code does not make the performance of the agent worse than it was before your PR.
+If this is the case then a perf. test should be added to the `test\Elastic.Apm.Benchmarks` project which proves that the new code does not make the performance of the agent worse than it was before your PR.
 
-We care both about memory and CPU overhead and both should be measured. The `test\Elastic.Apm.PerfTests` is configured to measure both.
+We care both about memory and CPU overhead and both should be measured. The `test\Elastic.Apm.Benchmarks` is configured to measure both.
+
+#### Do not crash the monitored process
+
+The agent must never crash the monitored application.
+
+One aspect of this is that the agent code itself must never throws exceptions. Instead, the agent uses the logger to log errors and it either skips specific events or completely stops collecting events. Skipping events must be preferred over unhandled exceptions in agent code.
+
+The other aspect of this is that each time the agent calls other libraries, it makes sure no call causes an exception or an case an exception is thrown the agent handles it and makes sure these exceptions never bubble up to the monitored application.
 
 #### Compatibility
 

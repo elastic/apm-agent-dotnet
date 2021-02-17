@@ -10,8 +10,8 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
-using Elastic.Apm.Tests.Data;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.Data;
 using FluentAssertions;
 using Xunit;
 using static Elastic.Apm.Config.ConfigConsts;
@@ -48,31 +48,44 @@ namespace Elastic.Apm.Tests
 			{ "key1=value1,=,key3=value3", new Dictionary<string, string> { { "key1", "value1" }, { "", "" }, { "key3", "value3" } } }
 		};
 
+#pragma warning disable 618
 		[Fact]
 		public void ServerUrlsSimpleTest()
 		{
 			var serverUrl = "http://myServer.com:1234";
 			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(serverUrls: serverUrl)));
 			agent.ConfigurationReader.ServerUrls[0].OriginalString.Should().Be(serverUrl);
+			agent.ConfigurationReader.ServerUrl.OriginalString.Should().Be(serverUrl);
 			var rootedUrl = serverUrl + "/";
 			rootedUrl.Should().BeEquivalentTo(agent.ConfigurationReader.ServerUrls[0].AbsoluteUri);
+			rootedUrl.Should().BeEquivalentTo(agent.ConfigurationReader.ServerUrl.AbsoluteUri);
 		}
 
 		[Fact]
-		public void ServerUrlsInvalidUrlTest()
+		public void ServerUrls_Should_Use_Default_Value_When_Invalid_Url()
 		{
 			var serverUrl = "InvalidUrl";
 			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(serverUrls: serverUrl)));
 			agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultValues.ServerUri);
+			agent.ConfigurationReader.ServerUrl.Should().Be(DefaultValues.ServerUri);
 		}
 
 		[Fact]
-		public void ServerUrlInvalidUrlLogTest()
+		public void ServerUrls_Should_Use_ServerUrl_When_Specified()
+		{
+			var serverUrl = "http://myServer.com:1234";
+			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(serverUrl: serverUrl)));
+			agent.ConfigurationReader.ServerUrls[0].OriginalString.Should().Be(serverUrl);
+		}
+
+		[Fact]
+		public void ServerUrls_Should_Log_Error_When_Invalid_Url()
 		{
 			var serverUrl = "InvalidUrl";
 			var logger = new TestLogger();
 			var agent = new ApmAgent(new TestAgentComponents(logger, new MockConfigSnapshot(logger, serverUrls: serverUrl)));
 			agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultValues.ServerUri);
+			agent.ConfigurationReader.ServerUrl.Should().Be(DefaultValues.ServerUri);
 
 			logger.Lines.Should().NotBeEmpty();
 			logger.Lines[0]
@@ -85,6 +98,65 @@ namespace Elastic.Apm.Tests
 					serverUrl
 				);
 		}
+
+		[Fact]
+		public void ServerUrls_Should_Log_Info_Deprecated()
+		{
+			var serverUrl = DefaultValues.ServerUri.ToString();
+			var logger = new TestLogger(LogLevel.Information);
+			var agent = new ApmAgent(new TestAgentComponents(logger, new MockConfigSnapshot(logger, serverUrls: serverUrl)));
+			agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultValues.ServerUri);
+			agent.ConfigurationReader.ServerUrl.Should().Be(DefaultValues.ServerUri);
+
+			logger.Lines.Should().NotBeEmpty();
+			// ReSharper disable once UseIndexFromEndExpression
+			logger.Lines[logger.Lines.Count - 1]
+				.Should()
+				.Contain($"{EnvVarNames.ServerUrls} is deprecated. Use {EnvVarNames.ServerUrl}");
+		}
+
+		[Fact]
+		public void ServerUrl_Should_Be_Set_To_ServerUrl_EnvironmentVariable()
+		{
+			var serverUrl = "http://myServer.com:1234";
+			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(serverUrl: serverUrl)));
+			agent.ConfigurationReader.ServerUrls[0].OriginalString.Should().Be(serverUrl);
+			agent.ConfigurationReader.ServerUrl.OriginalString.Should().Be(serverUrl);
+			var rootedUrl = serverUrl + "/";
+			rootedUrl.Should().BeEquivalentTo(agent.ConfigurationReader.ServerUrls[0].AbsoluteUri);
+			rootedUrl.Should().BeEquivalentTo(agent.ConfigurationReader.ServerUrl.AbsoluteUri);
+		}
+
+		[Fact]
+		public void ServerUrl_Should_Be_Default_Value_When_Invalid()
+		{
+			var serverUrl = "InvalidUrl";
+			var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(serverUrl: serverUrl)));
+			agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultValues.ServerUri);
+			agent.ConfigurationReader.ServerUrl.Should().Be(DefaultValues.ServerUri);
+		}
+
+		[Fact]
+		public void ServerUrl_Should_Log_When_Invalid()
+		{
+			var serverUrl = "InvalidUrl";
+			var logger = new TestLogger();
+			var agent = new ApmAgent(new TestAgentComponents(logger, new MockConfigSnapshot(logger, serverUrl: serverUrl)));
+			agent.ConfigurationReader.ServerUrls[0].Should().Be(DefaultValues.ServerUri);
+			agent.ConfigurationReader.ServerUrl.Should().Be(DefaultValues.ServerUri);
+
+			logger.Lines.Should().NotBeEmpty();
+			logger.Lines[0]
+				.Should()
+				.ContainAll(
+					nameof(MockConfigSnapshot),
+					"Failed parsing server URL from",
+					MockConfigSnapshot.Origin,
+					EnvVarNames.ServerUrl,
+					serverUrl
+				);
+		}
+#pragma warning restore 618
 
 		/// <summary>
 		/// Makes sure that empty string means sanitization is turned off
@@ -158,6 +230,7 @@ namespace Elastic.Apm.Tests
 			agent.ConfigurationReader.Enabled.Should().BeTrue();
 		}
 
+#pragma warning disable 618
 		/// <summary>
 		/// Sets 2 servers and makes sure that they are all parsed
 		/// </summary>
@@ -171,6 +244,7 @@ namespace Elastic.Apm.Tests
 			var logger = new TestLogger();
 			var agent = new ApmAgent(new TestAgentComponents(logger,
 				new MockConfigSnapshot(logger, serverUrls: serverUrls)));
+
 
 			var parsedUrls = agent.ConfigurationReader.ServerUrls;
 			parsedUrls[0].OriginalString.Should().Be(serverUrl1);
@@ -199,6 +273,8 @@ namespace Elastic.Apm.Tests
 			parsedUrls.Should().NotBeEmpty().And.HaveCount(2, "seeded 3 but one was invalid");
 			parsedUrls[0].OriginalString.Should().Be(serverUrl1);
 			parsedUrls[0].AbsoluteUri.Should().BeEquivalentTo($"{serverUrl1}/");
+			agent.ConfigurationReader.ServerUrl.OriginalString.Should().Be(serverUrl1);
+			agent.ConfigurationReader.ServerUrl.AbsoluteUri.Should().BeEquivalentTo($"{serverUrl1}/");
 
 			parsedUrls[1].OriginalString.Should().Be(serverUrl3);
 			parsedUrls[1].AbsoluteUri.Should().BeEquivalentTo($"{serverUrl3}/");
@@ -228,10 +304,13 @@ namespace Elastic.Apm.Tests
 			{
 #if !NETCOREAPP3_0 && !NETCOREAPP3_1 && !NET5_0
 				agent.ConfigurationReader.ServerUrls.First().Should().NotBe(serverUrlsWithSpace);
+				agent.ConfigurationReader.ServerUrl.Should().NotBe(serverUrlsWithSpace);
 #endif
 				agent.ConfigurationReader.ServerUrls.First().Should().Be("http://myServer:1234");
+				agent.ConfigurationReader.ServerUrl.Should().Be("http://myServer:1234");
 			}
 		}
+#pragma warning restore 618
 
 		[Fact]
 		public void SecretTokenSimpleTest()
@@ -605,8 +684,9 @@ namespace Elastic.Apm.Tests
 			Environment.SetEnvironmentVariable(EnvVarNames.ServerUrls, "localhost"); //invalid, it should be "http://localhost"
 			var testLogger = new TestLogger();
 			var config = new EnvironmentConfigurationReader(testLogger);
+#pragma warning disable 618
 			var serverUrl = config.ServerUrls.FirstOrDefault();
-
+#pragma warning restore 618
 			serverUrl.Should().NotBeNull();
 			testLogger.Lines.Should().NotBeEmpty();
 		}

@@ -5,7 +5,7 @@
 using Elastic.Apm.Helpers;
 using FluentAssertions;
 using Xunit;
-using static Elastic.Apm.Tests.TestHelpers.FluentAssertionsUtils;
+using static Elastic.Apm.Tests.Utilities.FluentAssertionsUtils;
 
 // ReSharper disable ImplicitlyCapturedClosure
 

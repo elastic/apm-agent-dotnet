@@ -9,13 +9,11 @@ namespace Elastic.Apm.AspNetCore.Extensions
 	internal static class ListExtensions
 	{
 		/// <summary>
-		/// Similar to List
-		/// <T>
-		/// .Contains but matches the string using a 'like' operator instead
-		/// of an exact match
+		/// Similar to <see cref="List{T}.Contains"/> but matches the string using
+		/// a 'like' operator instead of an exact match
 		/// </summary>
-		/// <param name="list"></param>
-		/// <param name="matchedString"></param>
+		/// <param name="list">The list in which to find the match</param>
+		/// <param name="matchedString">The string to match</param>
 		/// <returns></returns>
 		public static bool ContainsLike(this List<string> list, string matchedString)
 		{

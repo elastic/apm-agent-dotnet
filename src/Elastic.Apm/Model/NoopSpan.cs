@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Api.Constraints;
+using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model
 {
@@ -21,6 +23,8 @@ namespace Elastic.Apm.Model
 		private static readonly SpanContext ReusableContextInstance = new SpanContext();
 
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
+
+		private readonly Lazy<Dictionary<string, string>> _labels = new Lazy<Dictionary<string, string>>();
 
 		private readonly ISpan _parentSpan;
 
@@ -41,22 +45,43 @@ namespace Elastic.Apm.Model
 			_parentSpan = parentSpan;
 		}
 
+		[MaxLength]
 		public string Action { get; set; }
+
 		public SpanContext Context => ReusableContextInstance;
 
 		public double? Duration { get; set; }
+
+		[MaxLength]
 		public string Id { get; }
-		public bool IsSampled { get; }
-		public Dictionary<string, string> Labels { get; }
+
+		public bool IsSampled => false;
+		public Dictionary<string, string> Labels => _labels.Value;
+
+		[MaxLength]
 		public string Name { get; set; }
+
 		public Outcome Outcome { get; set; }
 		public DistributedTracingData OutgoingDistributedTracingData => null;
+
+		[JsonProperty("parent_id")]
+		[MaxLength]
 		public string ParentId { get; }
+
 		public List<CapturedStackFrame> StackTrace { get; }
+
+		[MaxLength]
 		public string Subtype { get; set; }
+
 		public long Timestamp { get; }
+
+		[JsonProperty("trace_id")]
+		[MaxLength]
 		public string TraceId { get; }
+
 		public string TransactionId { get; }
+
+		[MaxLength]
 		public string Type { get; set; }
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null, Dictionary<string, Label> labels = null
@@ -64,6 +89,9 @@ namespace Elastic.Apm.Model
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null,
 			Dictionary<string, Label> labels = null
+		) { }
+
+		public void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null
 		) { }
 
 		public void CaptureSpan(string name, string type, Action<ISpan> capturedAction, string subType = null, string action = null)

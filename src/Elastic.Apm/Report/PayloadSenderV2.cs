@@ -4,8 +4,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,7 +27,7 @@ using Elastic.Apm.ServerInfo;
 namespace Elastic.Apm.Report
 {
 	/// <summary>
-	/// Responsible for sending the data to the server. Implements Intake V2.
+	/// Responsible for sending the data to APM server. Implements Intake V2.
 	/// Each instance creates its own thread to do the work. Therefore, instances should be reused if possible.
 	/// </summary>
 	internal class PayloadSenderV2 : BackendCommComponentBase, IPayloadSender
@@ -33,25 +35,23 @@ namespace Elastic.Apm.Report
 		private const string ThisClassName = nameof(PayloadSenderV2);
 		internal readonly List<Func<IError, IError>> ErrorFilters = new List<Func<IError, IError>>();
 		internal readonly List<Func<ISpan, ISpan>> SpanFilters = new List<Func<ISpan, ISpan>>();
-
-		internal readonly Api.System System;
-
 		internal readonly List<Func<ITransaction, ITransaction>> TransactionFilters = new List<Func<ITransaction, ITransaction>>();
 
 		private readonly IApmServerInfo _apmServerInfo;
 		private readonly CloudMetadataProviderCollection _cloudMetadataProviderCollection;
+		internal readonly Api.System System;
 		private readonly IConfigSnapshot _configSnapshot;
 
 		private readonly BatchBlock<object> _eventQueue;
-
 		private readonly TimeSpan _flushInterval;
 		private readonly Uri _intakeV2EventsAbsoluteUrl;
-
 		private readonly IApmLogger _logger;
 		private readonly int _maxQueueEventCount;
 		private readonly Metadata _metadata;
-
 		private readonly PayloadItemSerializer _payloadItemSerializer;
+
+		private string _cachedMetadataJsonLine;
+		private long _eventQueueCount;
 
 		public PayloadSenderV2(
 			IApmLogger logger,
@@ -69,10 +69,10 @@ namespace Elastic.Apm.Report
 				return;
 
 			_logger = logger?.Scoped(ThisClassName + (dbgName == null ? "" : $" (dbgName: `{dbgName}')"));
-			_payloadItemSerializer = new PayloadItemSerializer(config);
+			_payloadItemSerializer = new PayloadItemSerializer();
 			_configSnapshot = config;
 
-			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(config.ServerUrls.First());
+			_intakeV2EventsAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildIntakeV2EventsAbsoluteUrl(config.ServerUrl);
 
 			System = system;
 
@@ -107,17 +107,36 @@ namespace Elastic.Apm.Report
 					, _intakeV2EventsAbsoluteUrl, _flushInterval.ToHms(), config.MaxBatchEventCount, _maxQueueEventCount);
 
 			_eventQueue = new BatchBlock<object>(config.MaxBatchEventCount);
-			TransactionFilters.Add(new TransactionIgnoreUrlsFilter(config).Filter);
-			// with this, stack trace demystification and conversion to the intake API model happens on a non-application thread:
-			SpanFilters.Add(new SpanStackTraceCapturingFilter(_logger, apmServerInfo).Filter);
+
+			SetUpFilters(TransactionFilters, SpanFilters, apmServerInfo, logger);
 			StartWorkLoop();
 		}
 
-		private string _cachedMetadataJsonLine;
+		internal static void SetUpFilters(
+			List<Func<ITransaction, ITransaction>> transactionFilters,
+			List<Func<ISpan, ISpan>> spanFilters,
+			IApmServerInfo apmServerInfo,
+			IApmLogger logger)
+		{
+			transactionFilters.Add(new TransactionIgnoreUrlsFilter().Filter);
+			transactionFilters.Add(new HeaderDictionarySanitizerFilter().Filter);
+			// with this, stack trace demystification and conversion to the intake API model happens on a non-application thread:
+			spanFilters.Add(new SpanStackTraceCapturingFilter(logger, apmServerInfo).Filter);
+		}
 
-		private long _eventQueueCount;
 		private bool _getApmServerVersion;
 		private bool _getCloudMetadata;
+		private static readonly UTF8Encoding Utf8Encoding;
+		private static readonly MediaTypeHeaderValue MediaTypeHeaderValue;
+
+		static PayloadSenderV2()
+		{
+			Utf8Encoding = new UTF8Encoding(false);
+			MediaTypeHeaderValue = new MediaTypeHeaderValue("application/x-ndjson")
+			{
+				CharSet = Utf8Encoding.WebName
+			};
+		}
 
 		public void QueueTransaction(ITransaction transaction) => EnqueueEvent(transaction, "Transaction");
 
@@ -185,16 +204,17 @@ namespace Elastic.Apm.Report
 
 			if (!_getApmServerVersion && _apmServerInfo?.Version is null)
 			{
-				await ApmServerInfoProvider.FillApmServerInfo(_apmServerInfo, _logger, _configSnapshot, HttpClientInstance).ConfigureAwait(false);
+				await ApmServerInfoProvider.FillApmServerInfo(_apmServerInfo, _logger, _configSnapshot, HttpClient).ConfigureAwait(false);
 				_getApmServerVersion = true;
 			}
 
-			await ProcessQueueItems(await ReceiveBatchAsync());
+			var batch = await ReceiveBatchAsync().ConfigureAwait(false);
+			await ProcessQueueItems(batch).ConfigureAwait(false);
 		}
 
 		private async Task<object[]> ReceiveBatchAsync()
 		{
-			var receiveAsyncTask = _eventQueue.ReceiveAsync(CtsInstance.Token);
+			var receiveAsyncTask = _eventQueue.ReceiveAsync(CancellationTokenSource.Token);
 
 			if (_flushInterval == TimeSpan.Zero)
 				_logger.Trace()?.Log("Waiting for data to send... (not using FlushInterval timer because FlushInterval is 0)");
@@ -203,13 +223,14 @@ namespace Elastic.Apm.Report
 				_logger.Trace()?.Log("Waiting for data to send... FlushInterval: {FlushInterval}", _flushInterval.ToHms());
 				while (true)
 				{
-					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, CtsInstance.Token)) break;
+					if (await TryAwaitOrTimeout(receiveAsyncTask, _flushInterval, CancellationTokenSource.Token).ConfigureAwait(false))
+						break;
 
 					_eventQueue.TriggerBatch();
 				}
 			}
 
-			var eventBatchToSend = await receiveAsyncTask;
+			var eventBatchToSend = await receiveAsyncTask.ConfigureAwait(false);
 			var newEventQueueCount = Interlocked.Add(ref _eventQueueCount, -eventBatchToSend.Length);
 			_logger.Trace()
 				?.Log("There's data to be sent. Batch size: {BatchSize}. newEventQueueCount: {newEventQueueCount}. First event: {Event}."
@@ -231,10 +252,10 @@ namespace Elastic.Apm.Report
 			var timeoutDelayTask = Task.Delay(timeout, timeoutDelayCts.Token);
 			try
 			{
-				var completedTask = await Task.WhenAny(taskToAwait, timeoutDelayTask);
+				var completedTask = await Task.WhenAny(taskToAwait, timeoutDelayTask).ConfigureAwait(false);
 				if (completedTask == taskToAwait)
 				{
-					await taskToAwait;
+					await taskToAwait.ConfigureAwait(false);
 					return true;
 				}
 
@@ -253,62 +274,64 @@ namespace Elastic.Apm.Report
 
 		private async Task ProcessQueueItems(object[] queueItems)
 		{
+			// can reuse underlying buffers from a pool in future.
+			using var stream = new MemoryStream(1024);
+
 			try
 			{
-				var ndjson = new StringBuilder();
-				if (_cachedMetadataJsonLine == null)
-					_cachedMetadataJsonLine = "{\"metadata\": " + _payloadItemSerializer.SerializeObject(_metadata) + "}";
+				_cachedMetadataJsonLine ??= _payloadItemSerializer.Serialize(_metadata);
 
-				ndjson.AppendLine(_cachedMetadataJsonLine);
-
-				// Apply filters
-				foreach (var item in queueItems)
+				using (var writer = new StreamWriter(stream, Utf8Encoding, 1024, true))
 				{
-					switch (item)
+					writer.Write("{\"metadata\":");
+					writer.Write(_cachedMetadataJsonLine);
+					writer.Write("}\n");
+
+					foreach (var item in queueItems)
 					{
-						case Transaction transaction:
-							if (TryExecuteFilter(TransactionFilters, transaction) != null) SerializeAndSend(item, "transaction");
-							break;
-						case Span span:
-							if (TryExecuteFilter(SpanFilters, span) != null) SerializeAndSend(item, "span");
-							break;
-						case Error error:
-							if (TryExecuteFilter(ErrorFilters, error) != null) SerializeAndSend(item, "error");
-							break;
-						case MetricSet _:
-							SerializeAndSend(item, "metricset");
-							break;
+						switch (item)
+						{
+							case Transaction transaction:
+								if (TryExecuteFilter(TransactionFilters, transaction) != null) Serialize(item, "transaction", writer);
+								break;
+							case Span span:
+								if (TryExecuteFilter(SpanFilters, span) != null) Serialize(item, "span", writer);
+								break;
+							case Error error:
+								if (TryExecuteFilter(ErrorFilters, error) != null) Serialize(item, "error", writer);
+								break;
+							case MetricSet _:
+								Serialize(item, "metricset", writer);
+								break;
+						}
 					}
 				}
 
-				var content = new StringContent(ndjson.ToString(), Encoding.UTF8, "application/x-ndjson");
-
-				var result = await HttpClientInstance.PostAsync(_intakeV2EventsAbsoluteUrl, content, CtsInstance.Token);
-
-				if (result != null && !result.IsSuccessStatusCode)
+				stream.Position = 0;
+				using (var content = new StreamContent(stream))
 				{
-					_logger?.Error()
-						?.Log("Failed sending event."
-							+ " Events intake API absolute URL: {EventsIntakeAbsoluteUrl}."
-							+ " APM Server response: status code: {ApmServerResponseStatusCode}"
-							+ ", content: \n{ApmServerResponseContent}"
-							, Http.Sanitize(_intakeV2EventsAbsoluteUrl, out var sanitizedServerUrl)
-								? sanitizedServerUrl
-								: _intakeV2EventsAbsoluteUrl.ToString()
-							, result.StatusCode, await result.Content.ReadAsStringAsync());
-				}
-				else
-				{
-					_logger?.Debug()
-						?.Log("Sent items to server:\n{SerializedItems}",
-							TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray())));
-				}
+					content.Headers.ContentType = MediaTypeHeaderValue;
+					var result = await HttpClient.PostAsync(_intakeV2EventsAbsoluteUrl, content, CancellationTokenSource.Token)
+			.ConfigureAwait(false);
 
-				void SerializeAndSend(object item, string eventType)
-				{
-					var serialized = _payloadItemSerializer.SerializeObject(item);
-					ndjson.AppendLine($"{{\"{eventType}\": " + serialized + "}");
-					_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItem}", item, serialized);
+					if (result != null && !result.IsSuccessStatusCode)
+					{
+						_logger?.Error()
+							?.Log("Failed sending event."
+								+ " Events intake API absolute URL: {EventsIntakeAbsoluteUrl}."
+								+ " APM Server response: status code: {ApmServerResponseStatusCode}"
+								+ ", content: \n{ApmServerResponseContent}"
+								, Http.Sanitize(_intakeV2EventsAbsoluteUrl, out var sanitizedServerUrl)
+									? sanitizedServerUrl
+									: _intakeV2EventsAbsoluteUrl.ToString()
+								, result.StatusCode, await result.Content.ReadAsStringAsync().ConfigureAwait(false));
+					}
+					else
+					{
+						_logger?.Debug()
+							?.Log("Sent items to server:\n{SerializedItems}",
+								TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray())));
+					}
 				}
 			}
 			catch (Exception e)
@@ -317,50 +340,65 @@ namespace Elastic.Apm.Report
 					?.LogException(
 						e,
 						"Failed sending events. Following events were not transferred successfully to the server ({ApmServerUrl}):\n{SerializedItems}"
-						, Http.Sanitize(HttpClientInstance.BaseAddress, out var sanitizedServerUrl)
+						, Http.Sanitize(HttpClient.BaseAddress, out var sanitizedServerUrl)
 							? sanitizedServerUrl
-							: HttpClientInstance.BaseAddress.ToString()
+							: HttpClient.BaseAddress.ToString()
 						, TextUtils.Indent(string.Join($",{Environment.NewLine}", queueItems.ToArray()))
 					);
 			}
+		}
 
-			// Executes filters for the given filter collection and handles return value and errors
-			T TryExecuteFilter<T>(IEnumerable<Func<T, T>> filters, T item) where T : class
-			{
-				var enumerable = filters as Func<T, T>[] ?? filters.ToArray();
-				if (!enumerable.Any()) return item;
+		private void Serialize(object item, string eventType, TextWriter writer)
+		{
+			writer.Write("{\"");
+			writer.Write(eventType);
+			writer.Write("\":");
+			// TODO: could write to the writer directly
+			var serialized = _payloadItemSerializer.Serialize(item);
+			writer.Write(serialized);
+			writer.Write("}\n");
+			_logger?.Trace()?.Log("Serialized item to send: {ItemToSend} as {SerializedItem}", item, serialized);
+		}
 
-				foreach (var filter in enumerable)
-				{
-					try
-					{
-						_logger?.Trace()?.Log("Start executing filter on transaction");
-						var itemAfterFilter = filter(item);
-						if (itemAfterFilter != null)
-						{
-							item = itemAfterFilter;
-							continue;
-						}
-
-						_logger?.Debug()?.Log("Filter returns false, item won't be sent, {filteredItem}", item);
-						return null;
-					}
-					catch (Exception e)
-					{
-						_logger.Warning()?.LogException(e, "Exception during execution of the filter on transaction");
-					}
-				}
-
+		// Executes filters for the given filter collection and handles return value and errors
+		// ReSharper disable once SuggestBaseTypeForParameter
+		// internal code, no need to use base type for parameter as ReSharper suggests
+		private T TryExecuteFilter<T>(List<Func<T, T>> filters, T item) where T : class
+		{
+			if (filters.Count == 0)
 				return item;
+
+			foreach (var filter in filters)
+			{
+				try
+				{
+					_logger?.Trace()?.Log("Start executing filter on transaction");
+					var itemAfterFilter = filter(item);
+					if (itemAfterFilter != null)
+					{
+						item = itemAfterFilter;
+						continue;
+					}
+
+					_logger?.Debug()?.Log("Filter returns false, item won't be sent, {filteredItem}", item);
+					return null;
+				}
+				catch (Exception e)
+				{
+					_logger.Warning()?.LogException(e, "Exception during execution of the filter on transaction");
+				}
 			}
+
+			return item;
 		}
 	}
 
+	[Specification("docs/spec/v2/metadata.json")]
 	internal class Metadata
 	{
-		/// <inheritdoc cref="Api.Cloud" />
-		public Api.Cloud Cloud { get; set; }
 
+		/// <inheritdoc cref="Api.Cloud"/>
+		public Api.Cloud Cloud { get; set; }
 		public LabelsDictionary Labels { get; set; } = new LabelsDictionary();
 
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global - used by Json.Net

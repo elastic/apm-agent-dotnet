@@ -1,26 +1,66 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Elastic.Apm.Api
 {
 	public interface ITracer
 	{
 		/// <summary>
-		/// Returns the currently active span.
+		/// Gets the currently active span.
 		/// Returns <c>null</c> if there's no currently active span.
 		/// </summary>
 		ISpan CurrentSpan { get; }
 
 		/// <summary>
-		/// Returns the currently active transaction.
+		/// Gets the currently active transaction.
 		/// Returns <c>null</c> if there's no currently active transaction.
 		/// </summary>
 		ITransaction CurrentTransaction { get; }
+
+		/// <summary>
+		/// Captures a custom error and reports it to the APM server.
+		/// </summary>
+		/// <param name="message">The error message.</param>
+		/// <param name="culprit">The culprit of the error.</param>
+		/// <param name="frames">The stack trace when the error occured.</param>
+		/// <param name="parentId">
+		/// The parent ID that is attached to the error. In case it's null the parent
+		/// will be automatically set to the current instance
+		/// </param>
+		/// <param name="labels">Labels that will be added to the captured error</param>
+		void CaptureError(string message, string culprit, StackFrame[] frames = null, string parentId = null, Dictionary<string, Label> labels = null
+		);
+
+		/// <summary>
+		/// Captures an exception and reports it to the APM server.
+		/// </summary>
+		/// <param name="exception">The exception to capture.</param>
+		/// <param name="culprit">The value of this parameter is shown as 'Culprit' on the APM UI.</param>
+		/// <param name="isHandled">Indicates whether the exception is handled or not.</param>
+		/// <param name="parentId">
+		/// The parent ID that is attached to the error. In case it's null the parent
+		/// will be automatically set to the current instance
+		/// </param>
+		/// <param name="labels">Labels that will be added to the captured error</param>
+		void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null,
+			Dictionary<string, Label> labels = null
+		);
+
+		/// <summary>
+		/// Captures a log event as an APM error.
+		/// </summary>
+		/// <param name="errorLog"> The log event itself </param>
+		/// <param name="parentId"> ParentId pointing to the parent transaction or span. </param>
+		/// <param name="exception"> Exception which was captured as part of the log. </param>
+		/// <param name="labels">Labels that will be added to the captured error</param>
+		void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null);
 
 		/// <summary>
 		/// This is a convenient method which starts and ends a transaction and captures unhandled exceptions
@@ -36,7 +76,8 @@ namespace Elastic.Apm.Api
 		/// In case of a distributed trace, you can pass distributed tracing data to the API. By doing so, the new transaction will
 		/// be
 		/// automatically part of a distributed trace.
-		/// Use <see cref="ISpan.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller side.
+		/// Use <see cref="IExecutionSegment.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller
+		/// side.
 		/// </param>
 		void CaptureTransaction(string name, string type, Action<ITransaction> action, DistributedTracingData distributedTracingData = null);
 
@@ -54,7 +95,8 @@ namespace Elastic.Apm.Api
 		/// In case of a distributed trace, you can pass distributed tracing data to the API. By doing so, the new transaction will
 		/// be
 		/// automatically part of a distributed trace.
-		/// Use <see cref="ISpan.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller side.
+		/// Use <see cref="IExecutionSegment.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller
+		/// side.
 		/// </param>
 		void CaptureTransaction(string name, string type, Action action, DistributedTracingData distributedTracingData = null);
 
@@ -73,12 +115,11 @@ namespace Elastic.Apm.Api
 		/// In case of a distributed trace, you can pass distributed tracing data to the API. By doing so, the new transaction will
 		/// be
 		/// automatically part of a distributed trace.
-		/// Use <see cref="ISpan.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller side.
+		/// Use <see cref="IExecutionSegment.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller
+		/// side.
 		/// </param>
 		/// <returns>
-		/// The result of the
-		/// <param name="func"></param>
-		/// .
+		/// The result of the <paramref name="func" />.
 		/// </returns>
 		T CaptureTransaction<T>(string name, string type, Func<ITransaction, T> func, DistributedTracingData distributedTracingData = null);
 
@@ -93,17 +134,16 @@ namespace Elastic.Apm.Api
 		/// transaction.
 		/// </param>
 		/// <typeparam name="T">The return type of the code that you want to capture as transaction.</typeparam>
-		/// <returns>
-		/// The result of the
-		/// <param name="func"></param>
-		/// .
-		/// </returns>
 		/// <param name="distributedTracingData">
 		/// In case of a distributed trace, you can pass distributed tracing data to the API. By doing so, the new transaction will
 		/// be
 		/// automatically part of a distributed trace.
-		/// Use <see cref="ISpan.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller side.
+		/// Use <see cref="IExecutionSegment.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller
+		/// side.
 		/// </param>
+		/// <returns>
+		/// The result of the <paramref name="func" />.
+		/// </returns>
 		T CaptureTransaction<T>(string name, string type, Func<T> func, DistributedTracingData distributedTracingData = null);
 
 		/// <summary>
@@ -120,9 +160,10 @@ namespace Elastic.Apm.Api
 		/// In case of a distributed trace, you can pass distributed tracing data to the API. By doing so, the new transaction will
 		/// be
 		/// automatically part of a distributed trace.
-		/// Use <see cref="ISpan.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller side.
+		/// Use <see cref="IExecutionSegment.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller
+		/// side.
 		/// </param>
-		/// <returns>The <see cref="Task" /> that you can await on.</returns>
+		/// <returns>A <see cref="Task" /> that can be awaited</returns>
 		Task CaptureTransaction(string name, string type, Func<Task> func, DistributedTracingData distributedTracingData = null);
 
 		/// <summary>
@@ -139,9 +180,10 @@ namespace Elastic.Apm.Api
 		/// In case of a distributed trace, you can pass distributed tracing data to the API. By doing so, the new transaction will
 		/// be
 		/// automatically part of a distributed trace.
-		/// Use <see cref="ISpan.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller side.
+		/// Use <see cref="IExecutionSegment.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller
+		/// side.
 		/// </param>
-		/// <returns>The <see cref="Task" /> that you can await on.</returns>
+		/// <returns>A <see cref="Task" /> that can be awaited</returns>
 		Task CaptureTransaction(string name, string type, Func<ITransaction, Task> func, DistributedTracingData distributedTracingData = null);
 
 		/// <summary>
@@ -159,9 +201,10 @@ namespace Elastic.Apm.Api
 		/// In case of a distributed trace, you can pass distributed tracing data to the API. By doing so, the new transaction will
 		/// be
 		/// automatically part of a distributed trace.
-		/// Use <see cref="ISpan.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller side.
+		/// Use <see cref="IExecutionSegment.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller
+		/// side.
 		/// </param>
-		/// <returns>The <see cref="Task{T}" /> that you can await on.</returns>
+		/// <returns>A <see cref="Task{T}" /> that can be awaited</returns>
 		Task<T> CaptureTransaction<T>(string name, string type, Func<Task<T>> func, DistributedTracingData distributedTracingData = null);
 
 		/// <summary>
@@ -180,9 +223,10 @@ namespace Elastic.Apm.Api
 		/// In case of a distributed trace, you can pass distributed tracing data to the API. By doing so, the new transaction will
 		/// be
 		/// automatically part of a distributed trace.
-		/// Use <see cref="ISpan.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller side.
+		/// Use <see cref="IExecutionSegment.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller
+		/// side.
 		/// </param>
-		/// <returns>The <see cref="Task{T}" /> that you can await on.</returns>
+		/// <returns>A <see cref="Task{T}" /> that can be awaited.</returns>
 		Task<T> CaptureTransaction<T>(string name, string type, Func<ITransaction, Task<T>> func, DistributedTracingData distributedTracingData = null
 		);
 
@@ -195,11 +239,14 @@ namespace Elastic.Apm.Api
 		/// In case of a distributed trace, you can pass distributed tracing data to the API. By doing so, the new transaction will
 		/// be
 		/// automatically part of a distributed trace.
-		/// Use <see cref="ISpan.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller side.
+		/// Use <see cref="IExecutionSegment.OutgoingDistributedTracingData" /> to obtain distributed tracing data on the caller
+		/// side.
 		/// </param>
-		/// <param name="tyignoreActivitype">
-		/// The agent by default does a best effort to keep <see cref="Activity.TraceId"/> in sync with the trace id which is used in Elasitc APM.
-		/// By setting <paramref name="ignoreActivity"/> to false you can turn off this functionality. </param>
+		/// <param name="ignoreActivity">
+		/// The agent by default does a best effort to keep <see cref="Activity.TraceId" /> in sync with the trace id used in
+		/// Elastic APM.
+		/// By setting <paramref name="ignoreActivity" /> to <c>false</c> you can turn off this functionality.
+		/// </param>
 		/// <returns>The transaction that is created based on the parameters. This transaction is already active.</returns>
 		ITransaction StartTransaction(string name, string type, DistributedTracingData distributedTracingData = null, bool ignoreActivity = false);
 	}

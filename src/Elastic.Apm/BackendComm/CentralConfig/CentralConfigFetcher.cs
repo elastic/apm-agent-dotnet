@@ -1,10 +1,10 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -20,7 +20,6 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		private const string ThisClassName = nameof(CentralConfigFetcher);
 
 		internal static readonly TimeSpan GetConfigHttpRequestTimeout = TimeSpan.FromMinutes(5);
-
 		internal static readonly TimeSpan WaitTimeIfAnyError = TimeSpan.FromMinutes(5);
 
 		private readonly IAgentTimer _agentTimer;
@@ -29,6 +28,10 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		private readonly Uri _getConfigAbsoluteUrl;
 		private readonly IConfigSnapshot _initialSnapshot;
 		private readonly IApmLogger _logger;
+		private readonly Action<CentralConfigReader> _onResponse;
+
+		private long _dbgIterationsCount;
+		private EntityTagHeaderValue _eTag;
 
 		internal CentralConfigFetcher(IApmLogger logger, IConfigStore configStore, ICentralConfigResponseParser centralConfigResponseParser,
 			Service service,
@@ -63,23 +66,28 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 					+ " (default value is {CentralConfigOptionDefaultValue})"
 					, centralConfigStatus, _initialSnapshot.CentralConfig, ConfigConsts.DefaultValues.CentralConfig);
 
+			// if the logger supports switching the log level at runtime, allow it to be updated by central configuration
+			if (_initialSnapshot.CentralConfig && logger is ILogLevelSwitchable switchable)
+				_onResponse += reader =>
+				{
+					var currentLevel = switchable.LogLevelSwitch.Level;
+					if (reader.LogLevel != null && reader.LogLevel != currentLevel)
+						switchable.LogLevelSwitch.Level = reader.LogLevel.Value;
+				};
+
 			if (!_initialSnapshot.CentralConfig) return;
 
 			_configStore = configStore;
 
 			_agentTimer = agentTimer ?? new AgentTimer();
 
-			_getConfigAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildGetConfigAbsoluteUrl(initialConfigSnapshot.ServerUrls.First(), service);
+			_getConfigAbsoluteUrl = BackendCommUtils.ApmServerEndpoints.BuildGetConfigAbsoluteUrl(initialConfigSnapshot.ServerUrl, service);
 			_logger.Debug()
 				?.Log("Combined absolute URL for APM Server get central configuration endpoint: `{Url}'. Service: {Service}."
 					, _getConfigAbsoluteUrl, service);
 
 			StartWorkLoop();
 		}
-
-		private long _dbgIterationsCount;
-
-		private EntityTagHeaderValue _eTag;
 
 		protected override async Task WorkLoopIteration()
 		{
@@ -93,12 +101,13 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			{
 				httpRequest = BuildHttpRequest(_eTag);
 
-				(httpResponse, httpResponseBody) = await FetchConfigHttpResponseAsync(httpRequest);
+				(httpResponse, httpResponseBody) = await FetchConfigHttpResponseAsync(httpRequest).ConfigureAwait(false);
 
 				CentralConfigReader centralConfigReader;
 				(centralConfigReader, waitInfo) = _centralConfigResponseParser.ParseHttpResponse(httpResponse, httpResponseBody);
 				if (centralConfigReader != null)
 				{
+					_onResponse?.Invoke(centralConfigReader);
 					UpdateConfigStore(centralConfigReader);
 					_eTag = httpResponse.Headers.ETag;
 				}
@@ -133,9 +142,9 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 						+ Environment.NewLine + "+-> Response body [length: {HttpResponseBodyLength}]:{HttpResponseBody}"
 						, _eTag.AsNullableToString()
 						, Http.Sanitize(_getConfigAbsoluteUrl, out var sanitizedAbsoluteUrl) ? sanitizedAbsoluteUrl : _getConfigAbsoluteUrl.ToString()
-						, Http.Sanitize(HttpClientInstance.BaseAddress, out var sanitizedBaseAddress)
+						, Http.Sanitize(HttpClient.BaseAddress, out var sanitizedBaseAddress)
 							? sanitizedBaseAddress
-							: HttpClientInstance.BaseAddress.ToString()
+							: HttpClient.BaseAddress.ToString()
 						, waitInfo.Interval.ToHms(),
 						_dbgIterationsCount
 						, httpRequest == null ? " N/A" : Environment.NewLine + TextUtils.Indent(Http.HttpRequestSanitizedToString(httpRequest))
@@ -152,7 +161,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			_logger.IfLevel(waitingLogSeverity)
 				?.Log("Waiting {WaitInterval}... {WaitReason}. dbgIterationsCount: {dbgIterationsCount}."
 					, waitInfo.Interval.ToHms(), waitInfo.Reason, _dbgIterationsCount);
-			await _agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, CtsInstance.Token);
+			await _agentTimer.Delay(_agentTimer.Now + waitInfo.Interval, CancellationTokenSource.Token).ConfigureAwait(false);
 		}
 
 		private HttpRequestMessage BuildHttpRequest(EntityTagHeaderValue eTag)
@@ -166,7 +175,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		{
 			_logger.Trace()?.Log("Making HTTP request to APM Server... Request: {HttpRequest}.", httpRequest);
 
-			var httpResponse = await HttpClientInstance.SendAsync(httpRequest, HttpCompletionOption.ResponseContentRead, CtsInstance.Token);
+			var httpResponse = await HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseContentRead, CancellationTokenSource.Token)
+				.ConfigureAwait(false);
 			// ReSharper disable once InvertIf
 			if (httpResponse == null)
 			{
@@ -176,14 +186,14 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			}
 
 			_logger.Trace()?.Log("Reading HTTP response body... Response: {HttpResponse}.", httpResponse);
-			var httpResponseBody = await httpResponse.Content.ReadAsStringAsync();
+			var httpResponseBody = await httpResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
 
 			return (httpResponse, httpResponseBody);
 		}
 
 		private async Task<(HttpResponseMessage, string)> FetchConfigHttpResponseAsync(HttpRequestMessage httpRequest) =>
 			await _agentTimer.AwaitOrTimeout(FetchConfigHttpResponseImplAsync(httpRequest)
-				, _agentTimer.Now + GetConfigHttpRequestTimeout, CtsInstance.Token);
+				, _agentTimer.Now + GetConfigHttpRequestTimeout, CancellationTokenSource.Token).ConfigureAwait(false);
 
 		private void UpdateConfigStore(CentralConfigReader centralConfigReader)
 		{
@@ -265,10 +275,13 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public double MetricsIntervalInMilliseconds => _wrapped.MetricsIntervalInMilliseconds;
 			public bool Recording => _centralConfig.Recording ?? _wrapped.Recording;
 
-			public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _wrapped.SanitizeFieldNames;
+			public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _centralConfig.SanitizeFieldNames ?? _wrapped.SanitizeFieldNames;
 
 			public string SecretToken => _wrapped.SecretToken;
 
+			public Uri ServerUrl => _wrapped.ServerUrl;
+
+			[Obsolete("Use ServerUrl")]
 			public IReadOnlyList<Uri> ServerUrls => _wrapped.ServerUrls;
 
 			public string ServiceName => _wrapped.ServiceName;
@@ -280,7 +293,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				_centralConfig.SpanFramesMinDurationInMilliseconds ?? _wrapped.SpanFramesMinDurationInMilliseconds;
 
 			public int StackTraceLimit => _centralConfig.StackTraceLimit ?? _wrapped.StackTraceLimit;
-			public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => _wrapped.TransactionIgnoreUrls;
+			public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => _centralConfig.TransactionIgnoreUrls ?? _wrapped.TransactionIgnoreUrls;
 
 			public int TransactionMaxSpans => _centralConfig.TransactionMaxSpans ?? _wrapped.TransactionMaxSpans;
 

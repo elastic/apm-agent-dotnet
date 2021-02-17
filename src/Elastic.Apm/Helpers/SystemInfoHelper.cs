@@ -16,12 +16,16 @@ namespace Elastic.Apm.Helpers
 	{
 		private const string ContainerUidRegexString = "^[0-9a-fA-F]{64}$";
 
+		private const string ShortenedUuidPattern = "^[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4,}";
+
 		private const string PodRegexString = @"(?:^/kubepods[\S]*/pod([^/]+)$)|"
-			+ @"(?:^/kubepods\.slice/kubepods-[^/]+\.slice/kubepods-[^/]+-pod([^/]+)\.slice$)";
+			+ @"(?:^/kubepods\.slice/(kubepods-[^/]+\.slice/)?kubepods[^/]*-pod([^/]+)\.slice$)";
 
 		private readonly Regex _containerUidRegex = new Regex(ContainerUidRegexString);
-		private readonly IApmLogger _logger;
+		private readonly Regex _shortenedUuidRegex = new Regex(ShortenedUuidPattern);
 		private readonly Regex _podRegex = new Regex(PodRegexString);
+
+		private readonly IApmLogger _logger;
 
 		public SystemInfoHelper(IApmLogger logger)
 			=> _logger = logger.Scoped(nameof(SystemInfoHelper));
@@ -42,7 +46,10 @@ namespace Elastic.Apm.Helpers
 
 			// Legacy, e.g.: /system.slice/docker-<CID>.scope
 			if (idPart.EndsWith(".scope"))
-				idPart = idPart.Substring(0, idPart.Length - ".scope".Length).Substring(idPart.IndexOf("-", StringComparison.Ordinal) + 1);
+			{
+				idPart = idPart.Substring(0, idPart.Length - ".scope".Length)
+					.Substring(idPart.IndexOf("-", StringComparison.Ordinal) + 1);
+			}
 
 			// Looking for kubernetes info
 			var dirPathPart = Path.GetDirectoryName(cGroupPath);
@@ -57,18 +64,26 @@ namespace Elastic.Apm.Helpers
 					for (var i = 1; i <= matcher.Groups.Count; i++)
 					{
 						var podUid = matcher.Groups[i].Value;
-						if (string.IsNullOrWhiteSpace(podUid)) continue;
+						if (!string.IsNullOrWhiteSpace(podUid))
+						{
+							if (i == 2)
+								continue;
 
-						_logger.Debug()?.Log("Found Kubernetes pod UID: {podUid}", podUid);
-						kubernetesPodUid = podUid;
-						break;
+							if (i == 3)
+								kubernetesPodUid = podUid.Replace('_', '-');
+							else
+								kubernetesPodUid = podUid;
+
+							_logger.Debug()?.Log("Found Kubernetes pod UID: {podUid}", kubernetesPodUid);
+							break;
+						}
 					}
 				}
 			}
 
 			// If the line matched the one of the kubernetes patterns, we assume that the last part is always the container ID.
 			// Otherwise we validate that it is a 64-length hex string
-			if (!string.IsNullOrWhiteSpace(kubernetesPodUid) || _containerUidRegex.Match(idPart).Success)
+			if (!string.IsNullOrWhiteSpace(kubernetesPodUid) || _containerUidRegex.IsMatch(idPart) || _shortenedUuidRegex.IsMatch(idPart))
 				return new Container { Id = idPart };
 
 			_logger.Debug()?.Log("Could not parse container ID from '/proc/self/cgroup' line: {line}", line);

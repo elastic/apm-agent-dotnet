@@ -7,6 +7,7 @@ using Elastic.Apm.Api.Constraints;
 using System.Linq;
 using Elastic.Apm.Helpers;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Api
 {
@@ -19,10 +20,11 @@ namespace Elastic.Apm.Api
 	{
 		public Request(string method, Url url) => (Method, Url) = (method, url);
 
-		[Sanitize]
 		public object Body { get; set; }
 
-		[Sanitize]
+		/// <summary>
+		/// This field is sanitized by a filter
+		/// </summary>
 		public Dictionary<string, string> Headers { get; set; }
 
 		[JsonProperty("http_version")]

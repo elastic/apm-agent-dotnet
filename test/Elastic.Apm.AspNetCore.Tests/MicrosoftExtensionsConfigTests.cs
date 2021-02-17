@@ -12,8 +12,8 @@ using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.Extensions.Hosting.Config;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Tests.Data;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.Data;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -40,7 +40,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_valid.json"),
 				new NoopLogger(), "test");
 			config.LogLevel.Should().Be(LogLevel.Debug);
+#pragma warning disable 618
 			config.ServerUrls[0].Should().Be(new Uri("http://myServerFromTheConfigFile:8080"));
+#pragma warning restore 618
+			config.ServerUrl.Should().Be(new Uri("http://myServerFromTheConfigFile:8080"));
 			config.ServiceName.Should().Be("My_Test_Application");
 			config.ServiceNodeName.Should().Be("Instance1");
 			config.ServiceVersion.Should().Be("2.1.0.5");
@@ -137,7 +140,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var config = new MicrosoftExtensionsConfig(configBuilder, new NoopLogger(), "test");
 			config.LogLevel.Should().Be(LogLevel.Debug);
+#pragma warning disable 618
 			config.ServerUrls[0].Should().Be(new Uri(serverUrl));
+#pragma warning restore 618
+			config.ServerUrl.Should().Be(new Uri(serverUrl));
 			config.ServiceName.Should().Be(serviceName);
 			config.ServiceNodeName.Should().Be(serviceNodeName);
 			config.ServiceVersion.Should().Be(serviceVersion);
@@ -158,8 +164,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var testLogger = new TestLogger();
 			var config = new MicrosoftExtensionsConfig(GetConfig($"TestConfigs{Path.DirectorySeparatorChar}appsettings_invalid.json"), testLogger,
 				"test");
+#pragma warning disable 618
 			var serverUrl = config.ServerUrls.FirstOrDefault();
+#pragma warning restore 618
 			serverUrl.Should().NotBeNull();
+
+			serverUrl = config.ServerUrl;
+			serverUrl.Should().NotBeNull();
+
 			testLogger.Lines.Should().NotBeEmpty();
 		}
 

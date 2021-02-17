@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <NoWarn>$(NoWarn);NU1701</NoWarn>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Paths.fs" />
+    <Compile Include="Versioning.fs" />
+    <Compile Include="Tooling.fs" />
+    <Compile Include="ReleaseNotes.fs" />
+    <Compile Include="Build.fs" />
+    <Compile Include="Targets.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Buildalyzer" Version="3.2.0" />
+    <PackageReference Include="FSharp.Core" Version="4.7.2" />
+    <PackageReference Include="Bullseye" Version="3.5.0" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20427.1" />
+    
+    <PackageReference Include="Fake.Core.Environment" Version="5.15.0" />
+    <PackageReference Include="Fake.Core.SemVer" Version="5.15.0" />
+    <PackageReference Include="Fake.DotNet.MsBuild" Version="5.15.0" />
+    <PackageReference Include="Fake.IO.FileSystem" Version="5.15.0" />
+    <PackageReference Include="Fake.IO.Zip" Version="5.15.0" />
+    <PackageReference Include="Fake.Tools.Git" Version="5.15.0" />
+    
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+
+    <PackageReference Include="Octokit" Version="0.32.0" />
+    <PackageReference Include="Proc" Version="0.6.1" />
+  </ItemGroup>
+</Project>

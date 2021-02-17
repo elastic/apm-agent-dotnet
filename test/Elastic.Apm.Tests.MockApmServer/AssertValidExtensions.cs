@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using Elastic.Apm.Api;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Model;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 
 namespace Elastic.Apm.Tests.MockApmServer
@@ -28,7 +28,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			thisObj.Should().NotBeNull();
 
 			thisObj.Name.Should().Be(Consts.AgentName);
-			thisObj.Version.Should().Be(Service.GetDefaultService(new MockConfigSnapshot(new NoopLogger()), new NoopLogger()).Agent.Version);
+			thisObj.Version.Should().MatchRegex(@"^\d+\.\d+\.\d+");
 		}
 
 		private static void AssertValid(this Framework thisObj)

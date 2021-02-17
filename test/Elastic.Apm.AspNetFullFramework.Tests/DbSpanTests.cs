@@ -7,9 +7,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using AspNetFullFrameworkSampleApp.Controllers;
 using Elastic.Apm.Api;
-using Elastic.Apm.Tests.Extensions;
 using Elastic.Apm.Tests.MockApmServer;
-using Elastic.Apm.Tests.TestHelpers;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -61,7 +60,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 					span.Context.Db.Statement.Should().StartWith(dbStatements[i]);
 
-					span.Context.Destination.Should().BeNull("because SQLite is an embedded DB");
+					span.Context.Destination.Should().NotBeNull();
 
 					span.TraceId.Should().Be(transaction.TraceId);
 					span.TransactionId.Should().Be(transaction.Id);
@@ -167,7 +166,7 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 
 						dbSpan.Context.Db.Statement.Should().StartWith(dbStatements[i]);
 
-						dbSpan.Context.Destination.Should().BeNull("because SQLite is an embedded DB");
+						dbSpan.Context.Destination.Should().NotBeNull();
 
 						dbSpan.TraceId.Should().Be(transaction.TraceId);
 						dbSpan.TransactionId.Should().Be(transaction.Id);

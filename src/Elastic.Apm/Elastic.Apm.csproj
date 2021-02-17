@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
   <PropertyGroup>
     <RootNamespace>Elastic.Apm</RootNamespace>
@@ -13,8 +14,17 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.5.0" />
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(DiagnosticSourceVersion)' == ''">
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="5.0.0" />
+  </ItemGroup>
+  <!-- DiagnosticSourceVersion MsBuild property can be used to compile the agent against a specific version of
+       System.Diagnostics.DiagnosticSource. Used when creating the ElasticApmAgentStartupHook zip file to
+       compile multiple versions of the agent.
+   -->
+  <ItemGroup Condition="'$(DiagnosticSourceVersion)' != ''">
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="$(DiagnosticSourceVersion)" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="2.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />

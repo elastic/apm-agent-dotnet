@@ -15,6 +15,7 @@ pipeline {
     ITS_PIPELINE = 'apm-integration-tests-selector-mbp/master'
     OPBEANS_REPO = 'opbeans-dotnet'
     BENCHMARK_SECRET  = 'secret/apm-team/ci/benchmark-cloud'
+    SLACK_CHANNEL = '#apm-agent-dotnet'
   }
   options {
     timeout(time: 2, unit: 'HOURS')
@@ -34,7 +35,6 @@ pipeline {
   }
   stages {
     stage('Initializing'){
-      options { timeout(time: 75, unit: 'MINUTES') }
       stages{
         stage('Checkout') {
           options { skipDefaultCheckout() }
@@ -50,7 +50,7 @@ pipeline {
 
                  // Look for changes related to the benchmark, if so then set the env variable.
                 def patternList = [
-                  '^test/Elastic.Apm.PerfTests/.*'
+                  '^test/Elastic.Apm.Benchmarks/.*'
                 ]
                 env.BENCHMARK_UPDATED = isGitRegionMatch(patterns: patternList)
               }
@@ -111,7 +111,7 @@ pipeline {
                     }
                     success {
                       whenTrue(isPR()) {
-                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/**/bin/Release/**/*.nupkg")
+                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/_packages/*.nupkg,${BASE_DIR}/build/output/*.zip")
                       }
                     }
                   }
@@ -313,6 +313,29 @@ pipeline {
                     }
                   }
                 }
+                stage('Startup Hook Tests') {
+                  steps {
+                    withGithubNotify(context: 'Test startup hooks - Windows', tab: 'tests') {
+                      cleanDir("${WORKSPACE}/${BASE_DIR}")
+                      unstash 'source'
+                      dir("${BASE_DIR}"){
+                        powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
+                        retry(3) {
+                          bat label: 'Build', script: '.ci/windows/zip.bat'
+                        }
+                        bat label: 'Test & coverage', script: '.ci/windows/test-zip.bat'
+                      }
+                    }
+                  }
+                  post {
+                    always {
+                      reportTests()
+                    }
+                    unsuccessful {
+                      archiveArtifacts(allowEmptyArchive: true, artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                    }
+                  }
+                }
               }
               post {
                 always {
@@ -406,7 +429,7 @@ pipeline {
       post{
         success {
           archiveArtifacts(allowEmptyArchive: true,
-            artifacts: "${BASE_DIR}/**/bin/Release/**/*.nupkg")
+            artifacts: "${BASE_DIR}/build/output/_packages/*.nupkg")
         }
       }
     }
@@ -423,9 +446,8 @@ pipeline {
       stages {
         stage('Notify') {
           steps {
-            emailext subject: '[apm-agent-dotnet] Release ready to be pushed',
-                      to: "${NOTIFY_TO}",
-                      body: "Please go to ${env.BUILD_URL}input to approve or reject within 12 hours."
+            notifyStatus(slackStatus: 'warning', subject: "[${env.REPO}] Release ready to be pushed",
+                         body: "Please (<${env.BUILD_URL}input|approve>) it or reject within 12 hours.\n Changes: ${env.TAG_NAME}")
           }
         }
         stage('Release to NuGet') {
@@ -433,11 +455,22 @@ pipeline {
             message 'Should we release a new version?'
             ok 'Yes, we should.'
           }
+          environment {
+            RELEASE_URL_MESSAGE = "(<https://github.com/elastic/apm-agent-dotnet/releases/tag/${env.TAG_NAME}|${env.TAG_NAME}>)"
+          }
           steps {
             deleteDir()
             unstash 'source'
             dir("${BASE_DIR}") {
               release(secret: 'secret/apm-team/ci/elastic-observability-nuget')
+            }
+          }
+          post {
+            failure {
+              notifyStatus(slackStatus: 'danger', subject: "[${env.REPO}] Release *${env.TAG_NAME}* failed", body: "Build: (<${env.RUN_DISPLAY_URL}|here>)")
+            }
+            success {
+              notifyStatus(slackStatus: 'good', subject: "[${env.REPO}] Release *${env.TAG_NAME}* published", body: "Build: (<${env.RUN_DISPLAY_URL}|here>)\nRelease URL: ${env.RELEASE_URL_MESSAGE}")
             }
           }
         }
@@ -514,4 +547,13 @@ def reportTests() {
     archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag-*.log,test/**/junit-*.xml,target/**/*coverage.cobertura.xml')
     junit(allowEmptyResults: true, keepLongStdio: true, testResults: 'test/**/junit-*.xml')
   }
+}
+
+def notifyStatus(def args = [:]) {
+  releaseNotification(slackChannel: "${env.SLACK_CHANNEL}",
+                      slackColor: args.slackStatus,
+                      slackCredentialsId: 'jenkins-slack-integration-token',
+                      to: "${env.NOTIFY_TO}",
+                      subject: args.subject, 
+                      body: args.body)
 }

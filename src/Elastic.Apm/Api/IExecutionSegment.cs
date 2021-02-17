@@ -12,7 +12,7 @@ namespace Elastic.Apm.Api
 {
 	/// <summary>
 	/// A base interface that encapsulates basic functionality of a piece of work that the agent can measure (e.g.
-	/// <see cref="ISpan" /> and <see cref="ITracer" />)
+	/// <see cref="ISpan" /> and <see cref="ITransaction" />)
 	/// </summary>
 	public interface IExecutionSegment
 	{
@@ -103,6 +103,15 @@ namespace Elastic.Apm.Api
 		);
 
 		/// <summary>
+		/// Captures a log event as an APM error.
+		/// </summary>
+		/// <param name="errorLog"> The log event itself </param>
+		/// <param name="parentId"> ParentId pointing to the parent transaction or span. </param>
+		/// <param name="exception"> Exception which was captured as part of the log. </param>
+		/// <param name="labels">Labels that will be added to the captured error</param>
+		void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null);
+
+		/// <summary>
 		/// This is a convenient method which starts and ends a span on the given execution segment and captures unhandled
 		/// exceptions
 		/// and schedules it to be reported to the APM Server.
@@ -147,9 +156,7 @@ namespace Elastic.Apm.Api
 		/// <param name="action">The action of the span.</param>
 		/// <typeparam name="T">The return type of the code that you want to capture as span.</typeparam>
 		/// <returns>
-		/// The result of the
-		/// <param name="func"></param>
-		/// .
+		/// The result of the <paramref name="func" />.
 		/// </returns>
 		T CaptureSpan<T>(string name, string type, Func<ISpan, T> func, string subType = null, string action = null);
 
@@ -169,9 +176,7 @@ namespace Elastic.Apm.Api
 		/// <param name="action">The action of the span.</param>
 		/// <typeparam name="T">The return type of the code that you want to capture as span.</typeparam>
 		/// <returns>
-		/// The result of the
-		/// <param name="func"></param>
-		/// .
+		/// The result of the <paramref name="func" />.
 		/// </returns>
 		T CaptureSpan<T>(string name, string type, Func<T> func, string subType = null, string action = null);
 

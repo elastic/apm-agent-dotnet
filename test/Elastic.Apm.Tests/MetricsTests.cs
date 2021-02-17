@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -15,16 +16,13 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
-using Elastic.Apm.Tests.Mocks;
-using Elastic.Apm.Tests.TestHelpers;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
+using Microsoft.Diagnostics.Tracing.Session;
 using Moq;
 using Xunit;
 using Xunit.Abstractions;
-#if !NETCOREAPP2_1
 using Elastic.Apm.Helpers;
-
-#endif
 
 namespace Elastic.Apm.Tests
 {
@@ -33,8 +31,13 @@ namespace Elastic.Apm.Tests
 		private const string ThisClassName = nameof(MetricsTests);
 
 		private readonly IApmLogger _logger;
+		private ITestOutputHelper _output;
 
-		public MetricsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper) => _logger = LoggerBase.Scoped(ThisClassName);
+		public MetricsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper)
+		{
+			_output = xUnitOutputHelper;
+			_logger = LoggerBase.Scoped(ThisClassName);
+		}
 
 		public static IEnumerable<object[]> DisableProviderTestData
 		{
@@ -111,7 +114,7 @@ namespace Elastic.Apm.Tests
 					.Should()
 					.Be(MetricsCollector.MaxTryWithoutSuccess);
 
-				testLogger.Lines[1].Should().Contain($"Failed reading {providerWithException.DbgName} 1 times");
+				testLogger.Lines.Select(l => l.Contains($"Failed reading {providerWithException.DbgName} 1 times")).Should().HaveCountGreaterThan(0);
 				testLogger.Lines.Last(line => line.Contains("Failed reading"))
 					.Should()
 					.Contain(
@@ -274,8 +277,10 @@ namespace Elastic.Apm.Tests
 		public void CollectGcMetrics()
 		{
 			var logger = new TestLogger(LogLevel.Trace);
+			string traceEventSessionName;
 			using (var gcMetricsProvider = new GcMetricsProvider(logger))
 			{
+				traceEventSessionName = gcMetricsProvider.TraceEventSessionName;
 				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeFalse();
 
 #if !NETCOREAPP2_1
@@ -304,7 +309,7 @@ namespace Elastic.Apm.Tests
 
 					var samples = gcMetricsProvider.GetSamples();
 
-					containsValue = samples != null && samples.Count() != 0;
+					containsValue = samples != null && samples.Any();
 
 					if (containsValue)
 						break;
@@ -312,18 +317,20 @@ namespace Elastic.Apm.Tests
 
 				if (PlatformDetection.IsDotNetFullFramework)
 				{
-					if (logger.Lines.Where(n => n.Contains("TraceEventSession initialization failed - GC metrics won't be collected")).Any())
+					if (logger.Lines.Any(n => n.Contains("TraceEventSession initialization failed - GC metrics won't be collected")))
 					{
 						// If initialization fails, (e.g. because ETW session initalization fails) we don't assert
+						_output.WriteLine("Initialization failed. don't make assertions");
 						return;
 					}
 				}
 
 				if (PlatformDetection.IsDotNetCore || PlatformDetection.IsDotNet5)
 				{
-					if (!logger.Lines.Where(n => n.Contains("OnEventWritten with GC")).Any())
+					if (!logger.Lines.Any(n => n.Contains("OnEventWritten with GC")))
 					{
 						// If no OnWritten with a GC event was called then initialization failed -> we don't assert
+						_output.WriteLine("Initialization failed. don't make assertions");
 						return;
 					}
 				}
@@ -331,6 +338,27 @@ namespace Elastic.Apm.Tests
 				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeTrue();
 #endif
 			}
+
+			if (PlatformDetection.IsDotNetFullFramework)
+			{
+				var traceEventSession = TraceEventSession.GetActiveSession(traceEventSessionName);
+				traceEventSession.Should().BeNull();
+			}
+		}
+
+		/// <summary>
+		/// Makes sure that <see cref="MetricsCollector" /> does not throw an exception when <see cref="IConfigurationReader" />
+		/// returns <code>null</code> for <see cref="IConfigurationReader.DisableMetrics"/>.
+		/// From https://discuss.elastic.co/t/elastic-apm-object-reference-not-set-to-an-instance-of-an-object
+		/// </summary>
+		[Fact]
+		public void MetricsCollectorWithNoopConfigReader()
+		{
+			var noopConfigReader = new Mock<IConfigurationReader>();
+			noopConfigReader.SetupGet(n => n.MetricsIntervalInMilliseconds).Returns(1);
+
+			var _ = new MetricsCollector(new NoopLogger(), new NoopPayloadSender(),
+				new ConfigStore(new ConfigSnapshotFromReader(noopConfigReader.Object, ""), new NoopLogger()));
 		}
 
 		internal class MetricsProviderWithException : IMetricsProvider

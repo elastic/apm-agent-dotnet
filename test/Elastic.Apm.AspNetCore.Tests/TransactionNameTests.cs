@@ -5,8 +5,8 @@
 using System;
 using System.Threading.Tasks;
 using Elastic.Apm.Extensions.Hosting;
-using Elastic.Apm.Tests.Mocks;
-using Elastic.Apm.Tests.TestHelpers;
+using Elastic.Apm.Logging;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SampleAspNetCoreApp;
@@ -33,14 +33,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var logger = new LineWriterToLoggerAdaptor(new XunitOutputToLineWriterAdaptor(testOutputHelper))
 			{
-				Level = Logging.LogLevel.Trace
+				LogLevelSwitch = { Level = LogLevel.Trace }
 			};
 
 			_agent = new ApmAgent(new TestAgentComponents(payloadSender: _payloadSender,
 				logger: logger,
 				// _agent needs to share CurrentExecutionSegmentsContainer with Agent.Instance
 				// because the sample application used by the tests (SampleAspNetCoreApp) uses Agent.Instance.Tracer.CurrentTransaction/CurrentSpan
-				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer));;
+				currentExecutionSegmentsContainer: Agent.Instance.TracerInternal.CurrentExecutionSegmentsContainer));
 			HostBuilderExtensions.UpdateServiceInformation(_agent.Service);
 		}
 
@@ -72,6 +72,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
 			await httpClient.GetAsync("home/TransactionWithCustomName");
 
+			_payloadSender.WaitForTransactions();
 			_payloadSender.Transactions.Should().OnlyContain(n => n.Name == "custom");
 		}
 
@@ -89,6 +90,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
 			await httpClient.GetAsync("home/TransactionWithCustomNameUsingRequestInfo");
 
+			_payloadSender.WaitForTransactions();
 			_payloadSender.Transactions.Should().OnlyContain(n => n.Name == "GET /home/TransactionWithCustomNameUsingRequestInfo");
 		}
 
@@ -104,6 +106,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
 			await httpClient.GetAsync("home/sample");
 
+			_payloadSender.WaitForTransactions();
 			_payloadSender.Transactions.Should().OnlyContain(n => n.Name.Equals("GET home/sample", StringComparison.OrdinalIgnoreCase));
 		}
 
@@ -119,6 +122,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
 			await httpClient.GetAsync("/");
 
+			_payloadSender.WaitForTransactions();
 			_payloadSender.FirstTransaction.Name.Should().Be("GET Home/Index");
 			_payloadSender.FirstTransaction.Context.Request.Url.Full.Should().Be("http://localhost/");
 		}
@@ -135,6 +139,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
 			await httpClient.GetAsync("/MyArea");
 
+			_payloadSender.WaitForTransactions();
 			_payloadSender.FirstTransaction.Name.Should().Be("GET MyArea/Home/Index");
 			_payloadSender.FirstTransaction.Context.Request.Url.Full.Should().Be("http://localhost/MyArea");
 		}
@@ -151,6 +156,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
 			await httpClient.GetAsync("/MyOtherArea");
 
+			_payloadSender.WaitForTransactions();
 			_payloadSender.FirstTransaction.Name.Should().Be("GET MyOtherArea/Home/Index");
 			_payloadSender.FirstTransaction.Context.Request.Url.Full.Should().Be("http://localhost/MyOtherArea");
 		}
@@ -168,6 +174,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var httpClient = Helper.GetClient(_agent, _factory, diagnosticSourceOnly);
 			await httpClient.GetAsync(url);
 
+			_payloadSender.WaitForTransactions();
 			_payloadSender.Transactions.Should().OnlyContain(n => n.Name.Equals("GET unknown route", StringComparison.OrdinalIgnoreCase));
 			_payloadSender.Transactions.Should().HaveCount(1);
 		}

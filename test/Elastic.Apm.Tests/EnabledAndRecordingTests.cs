@@ -6,15 +6,29 @@
 using System;
 using System.Diagnostics;
 using Elastic.Apm.Api;
+using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Model;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
+using Moq;
 using Xunit;
 
 namespace Elastic.Apm.Tests
 {
 	public class EnabledAndRecordingTests
 	{
+		[Fact]
+		public void Subscribers_Not_Subscribed_When_Agent_Disabled()
+		{
+			var payloadSender = new NoopPayloadSender();
+			var configReader = new MockConfigSnapshot(enabled: "false");
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, config: configReader));
+
+			var subscriber = new Mock<IDiagnosticsSubscriber>();
+			agent.Subscribe(subscriber.Object);
+			subscriber.Verify(s => s.Subscribe(It.IsAny<IApmAgent>()), Times.Never);
+		}
+
 		/// <summary>
 		/// Starts the agent with enabled=false and uses the API to capture 1 transaction.
 		/// Makes sure that the Tracer returns a NoopTransaction and no Transaction is captured by the PayloadSender
@@ -34,7 +48,9 @@ namespace Elastic.Apm.Tests
 
 			transaction.End();
 
+			payloadSender.SignalEndTransactions();
 			agent.Tracer.CurrentTransaction.Should().BeNull();
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().BeNullOrEmpty();
 		}
 
@@ -61,6 +77,8 @@ namespace Elastic.Apm.Tests
 			});
 
 			codeExecuted.Should().BeTrue();
+			payloadSender.SignalEndTransactions();
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().BeNullOrEmpty();
 		}
 
@@ -92,6 +110,9 @@ namespace Elastic.Apm.Tests
 			span2.End();
 
 			transaction.End();
+
+			payloadSender.SignalEndTransactions();
+			payloadSender.WaitForAny();
 			payloadSender.Transactions.Should().BeNullOrEmpty();
 			payloadSender.Spans.Should().BeNullOrEmpty();
 		}
@@ -134,6 +155,9 @@ namespace Elastic.Apm.Tests
 			block1Ran.Should().BeTrue();
 			block2Ran.Should().BeTrue();
 			block3Ran.Should().BeTrue();
+
+			payloadSender.SignalEndTransactions();
+			payloadSender.WaitForAny();
 			payloadSender.Transactions.Should().BeNullOrEmpty();
 			payloadSender.Spans.Should().BeNullOrEmpty();
 		}
@@ -195,6 +219,7 @@ namespace Elastic.Apm.Tests
 				});
 			});
 
+			payloadSender.WaitForAny(TimeSpan.FromSeconds(5));
 			payloadSender.Transactions.Should().BeNullOrEmpty();
 			payloadSender.Spans.Should().BeNullOrEmpty();
 		}
@@ -208,10 +233,11 @@ namespace Elastic.Apm.Tests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var mockConfigSnapshot = new MockConfigSnapshot(enabled: "false");
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender, configurationReader: mockConfigSnapshot));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender, config: mockConfigSnapshot));
 
 			CreateTransactionsAndSpans(agent);
 
+			mockPayloadSender.WaitForAny(TimeSpan.FromSeconds(5));
 			mockPayloadSender.Transactions.Should().BeEmpty();
 			mockPayloadSender.Spans.Should().BeEmpty();
 			mockPayloadSender.Errors.Should().BeEmpty();
@@ -227,13 +253,39 @@ namespace Elastic.Apm.Tests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var mockConfigSnapshot = new MockConfigSnapshot(recording: "false");
-			using var agent = new ApmAgent(new AgentComponents(payloadSender: mockPayloadSender, configurationReader: mockConfigSnapshot));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender, config: mockConfigSnapshot));
 
 			CreateTransactionsAndSpans(agent);
 
+			mockPayloadSender.WaitForAny(TimeSpan.FromSeconds(5));
 			mockPayloadSender.Transactions.Should().BeEmpty();
 			mockPayloadSender.Spans.Should().BeEmpty();
 			mockPayloadSender.Errors.Should().BeEmpty();
+		}
+
+		/// <summary>
+		/// Makes sure <see cref="IExecutionSegment.Labels" /> and <see cref="ITransaction.Custom" /> don't show
+		/// <see cref="NullReferenceException" /> with `enabled=false`.
+		/// From https://github.com/elastic/apm-agent-dotnet/issues/1080
+		/// </summary>
+		[Fact]
+		public void CustomAndLabelDontThrowNullRef()
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			var mockConfigSnapshot = new MockConfigSnapshot(enabled: "false");
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender, config: mockConfigSnapshot));
+
+			var transaction = agent.Tracer.StartTransaction("foo", "bar");
+			transaction.Should().BeOfType<NoopTransaction>();
+			transaction.Custom["foo"] = "bar";
+#pragma warning disable 618
+			transaction.Labels["foo"] = "bar";
+			var span = transaction.StartSpan("foo", "bar");
+			span.Should().BeOfType<NoopSpan>();
+			span.Labels["foo"] = "bar";
+			span.End();
+			transaction.End();
+#pragma warning restore 618
 		}
 
 		private void CreateTransactionsAndSpans(ApmAgent agent)

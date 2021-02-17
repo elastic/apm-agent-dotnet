@@ -6,11 +6,12 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Elastic.Apm.Metrics.MetricsProvider;
-using Elastic.Apm.Tests.Mocks;
-using Elastic.Apm.Tests.TestHelpers;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 using static Elastic.Apm.Metrics.MetricsProvider.CgroupMetricsProvider;
 
 namespace Elastic.Apm.Tests.Metrics
@@ -21,8 +22,8 @@ namespace Elastic.Apm.Tests.Metrics
 
 		public CgroupMetricsProviderTests()
 		{
-			var appRoot = new DirectoryInfo(AppContext.BaseDirectory);
-			_projectRoot = appRoot.FullName;
+			var assemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+			_projectRoot = assemblyDirectory;
 		}
 
 		[Theory]
@@ -83,7 +84,7 @@ namespace Elastic.Apm.Tests.Metrics
 		[Fact]
 		public void TestUnlimitedCgroup1()
 		{
-			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider();
+			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider("/proc/cgroup","/proc/unlimited/memory", "cgroup cgroup");
 			var samples = cgroupMetrics.GetSamples().ToList();
 
 			var memLimitSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
@@ -97,7 +98,7 @@ namespace Elastic.Apm.Tests.Metrics
 		[Fact]
 		public void TestUnlimitedCgroup2()
 		{
-			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider();
+			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider("/proc/cgroup2","/proc/sys_cgroup2_unlimited", "cgroup2 cgroup");
 			var samples = cgroupMetrics.GetSamples().ToList();
 
 			var memLimitSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
@@ -113,13 +114,13 @@ namespace Elastic.Apm.Tests.Metrics
 		/// </summary>
 		private string GetTestFilePath(string linuxPath) => Path.GetFullPath(Path.Combine(_projectRoot, "TestResources" + linuxPath));
 
-		private CgroupMetricsProvider CreateUnlimitedSystemCgroupMetricsProvider()
+		private CgroupMetricsProvider CreateUnlimitedSystemCgroupMetricsProvider(string cGroupPath, string mountPath, string cgroup)
 		{
-			var mountInfo = GetTestFilePath("/proc/unlimited/memory");
+			var mountInfo = GetTestFilePath(mountPath).Replace("\\", "/");
 			var tempFile = TempFile.CreateWithContents(
-				$"39 30 0:35 / {mountInfo} rw,nosuid,nodev,noexec,relatime shared:10 - cgroup cgroup rw,seclabel,memory\n");
+				$"39 30 0:35 / {mountInfo} rw,nosuid,nodev,noexec,relatime shared:10 - {cgroup} rw,seclabel,memory\n");
 
-			return new CgroupMetricsProvider(GetTestFilePath("/proc/cgroup"), tempFile.Path, new NoopLogger());
+			return new CgroupMetricsProvider(GetTestFilePath(cGroupPath), tempFile.Path, new NoopLogger());
 		}
 	}
 }

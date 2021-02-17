@@ -5,13 +5,12 @@
 using System;
 using System.Collections.Generic;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Tests.Mocks;
-using Elastic.Apm.Tests.TestHelpers;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using Xunit;
 using Xunit.Abstractions;
-using static Elastic.Apm.Tests.TestHelpers.FluentAssertionsUtils;
+using static Elastic.Apm.Tests.Utilities.FluentAssertionsUtils;
 
 namespace Elastic.Apm.Tests.HelpersTests
 {
@@ -35,7 +34,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 			var longTimeSpans = new[]
 			{
 				0.Days() + 9.Hours() + 8.Minutes() + 7.Seconds() + 6.Milliseconds(),
-				1.Day() + 2.Hours() + 3.Minutes() + 4.Seconds() + 5.Milliseconds()
+				1.Days() + 2.Hours() + 3.Minutes() + 4.Seconds() + 5.Milliseconds()
 			};
 
 			foreach (var timeSpan in longTimeSpans) yield return new[] { (object)new MockAgentTimer(), timeSpan };

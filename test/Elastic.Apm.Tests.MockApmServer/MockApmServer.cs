@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Immutable;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,11 +20,54 @@ namespace Elastic.Apm.Tests.MockApmServer
 	public class MockApmServer
 	{
 		private const string ThisClassName = nameof(MockApmServer);
-		internal readonly ReceivedData ReceivedData = new ReceivedData();
+
 		private readonly string _dbgCurrentTestName;
 		private readonly object _lock = new object();
 
-		internal MockApmServer(IApmLogger logger, string dbgCurrentTestName)
+		public ReceivedData ReceivedData { get; } = new ReceivedData();
+
+		/// <summary>
+		/// Raised when the APM server received data
+		/// </summary>
+		public event Action<object> OnReceive;
+
+		internal void AddInvalidPayload(string payload)
+		{
+			ReceivedData.InvalidPayloadErrors = ReceivedData.InvalidPayloadErrors.Add(payload);
+			OnReceive?.Invoke(payload);
+		}
+
+		internal void AddError(ErrorDto error)
+		{
+			ReceivedData.Errors = ReceivedData.Errors.Add(error);
+			OnReceive?.Invoke(error);
+		}
+
+		internal void AddTransaction(TransactionDto transaction)
+		{
+			ReceivedData.Transactions = ReceivedData.Transactions.Add(transaction);
+			OnReceive?.Invoke(transaction);
+		}
+
+		internal void AddSpan(SpanDto span)
+		{
+			ReceivedData.Spans = ReceivedData.Spans.Add(span);
+			OnReceive?.Invoke(span);
+		}
+
+		internal void AddMetricSet(MetricSetDto metricSet)
+		{
+			ReceivedData.Metrics = ReceivedData.Metrics.Add(metricSet);
+			OnReceive?.Invoke(metricSet);
+		}
+
+		internal void AddMetadata(MetadataDto metadata)
+		{
+			ReceivedData.Metadata = ReceivedData.Metadata.Add(metadata);
+			OnReceive?.Invoke(metadata);
+		}
+
+		public MockApmServer(IApmLogger logger, string dbgCurrentTestName)
 		{
 			InternalLogger = logger.Scoped(ThisClassName);
 			_dbgCurrentTestName = dbgCurrentTestName;
@@ -48,7 +92,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 		internal IApmLogger InternalLogger { get; }
 
-		internal int FindAvailablePortToListen()
+		public int FindAvailablePortToListen()
 		{
 			var numberOfPortsTried = 0;
 			const int numberOfPortsInScanRange = PortScanRange.End - PortScanRange.Begin;
@@ -84,7 +128,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			}
 		}
 
-		internal void RunInBackground(int port)
+		public void RunInBackground(int port)
 		{
 			Assertion.IfEnabled?.That(_cancellationTokenSource == null, "");
 			Assertion.IfEnabled?.That(_runningTask == null, "");
@@ -95,7 +139,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			InternalLogger.Info()?.Log("Started: {MockApmServer}", this);
 		}
 
-		internal void Run(int port)
+		public void Run(int port)
 		{
 			_port = port;
 			var webHost = CreateWebHostBuilder().Build();
@@ -113,7 +157,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 			lock (_lock) return asyncFunc();
 		}
 
-		internal async Task StopAsync()
+		public async Task StopAsync()
 		{
 			Assertion.IfEnabled?.That(_cancellationTokenSource != null, "");
 			Assertion.IfEnabled?.That(_runningTask != null, "");

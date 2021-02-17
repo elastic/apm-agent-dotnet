@@ -9,8 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Tests.Mocks;
-using Elastic.Apm.Tests.TestHelpers;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using Xunit;
@@ -23,7 +22,7 @@ namespace Elastic.Apm.Tests.HelpersTests
 		private const string ThisClassName = nameof(AgentTimerTests);
 
 		private static readonly TimeSpan ShortTimeAfterTaskStarted = 10.Milliseconds();
-		private static readonly TimeSpan VeryLongTimeout = 1.Day();
+		private static readonly TimeSpan VeryLongTimeout = 1.Days();
 
 		private static readonly TimeSpan VeryShortTimeout = 20.Milliseconds();
 		private readonly IApmLogger _logger;

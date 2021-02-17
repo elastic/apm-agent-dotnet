@@ -13,6 +13,7 @@ On .NET Core the agent also supports auto instrumentation without any code chang
 * <<setup-asp-dot-net>>
 * <<setup-ef6>>
 * <<setup-sqlclient>>
+* <<setup-stackexchange-redis>>
 * <<setup-general>>
 
 [float]
@@ -145,17 +146,27 @@ The following example only turns on outgoing HTTP monitoring (so, for instance, 
 [[zero-code-change-setup]]
 ==== Zero code change setup on .NET Core (added[1.7])
 
-If you can't or don't want to reference NuGet packages in your application, you can also inject the agent during startup if your application runs on .NET Core. This feature is supported on .NET Core 2.2 and newer versions.
+If you can't or don't want to reference NuGet packages in your application, you can use the startup hook feature to inject the agent during startup, if your application runs on .NET Core. This feature is supported on .NET Core 2.2 and newer versions.
 
 Steps:
 
-1. Download the `ElasticApmAgent_[version].zip` file from the https://github.com/elastic/apm-agent-dotnet/releases[Release] page of the .NET APM Agent GitHub repository. You can find the file under Assets.
-2. Unzip the folder into a folder.
-3. Set the `DOTNET_STARTUP_HOOKS` environment variable to point to the `ElasticApmAgentStartupHook.dll` file from the unzipped folder: `set DOTNET_STARTUP_HOOKS=[pathToAgent]\ElasticApmAgentStartupHook.dll`.
-4. Start your .NET Core application in a context where the `DOTNET_STARTUP_HOOKS` environment variable is visible.
+. Download the `ElasticApmAgent_[version].zip` file from the https://github.com/elastic/apm-agent-dotnet/releases[Releases] page of the .NET APM Agent GitHub repository. You can find the file under Assets.
+. Unzip the zip file into a folder.
+. Set the `DOTNET_STARTUP_HOOKS` environment variable to point to the `ElasticApmAgentStartupHook.dll` file in the unzipped folder
 
-With this setup the agent will be injected into the application during startup and it will start every auto instrumentation feature. On ASP.NET Core (including gRPC), incoming requests will be automatically captured.
+[source,sh]
+----
+set DOTNET_STARTUP_HOOKS=[pathToAgent]\ElasticApmAgentStartupHook.dll
+----
 
+. Start your .NET Core application in a context where the `DOTNET_STARTUP_HOOKS` environment variable is visible.
+
+With this setup the agent will be injected into the application during startup and it will start every auto instrumentation feature. On ASP.NET Core (including gRPC), incoming requests will be automatically captured. 
+
+[NOTE]
+--
+Agent configuration can be controlled through environment variables with the startup hook feature.
+--
 
 [[setup-asp-net-core]]
 === ASP.NET Core
@@ -241,6 +252,36 @@ as shown in the following example:
 
 You can also configure the agent using `web.config` as described at <<configuration-on-asp-net>>.
 
+The `ElasticApmModule` instantiates the APM agent on first initialization. There are some scenarios however where
+you might want to control agent instantiatiation, such as configuring filters in application start. The
+`ElasticApmModule` exposes a `CreateAgentComponents()` method that returns agent components configured to work with
+ASP.NET Full Framework, that can then be used to instantiate the agent.
+
+For example, one might wish to add transaction filters to the agent in application start
+
+[source, c#]
+----
+public class MvcApplication : HttpApplication
+{
+    protected void Application_Start()
+    {
+        // other application startup e.g. RouteConfig, etc.
+
+        // set up agent with components
+        var agentComponents = ElasticApmModule.CreateAgentComponents();
+        Agent.Setup(agentComponents);
+
+        // add transaction filter
+        Agent.AddFilter((ITransaction t) =>
+        {
+            t.SetLabel("foo", "bar");
+            return t;
+        });
+    }
+}
+----
+
+Now, the `ElasticApmModule` will use the already instantiated APM agent instance upon initialization.
 
 [[setup-ef6]]
 === Entity Framework 6
@@ -299,6 +340,26 @@ if (Agent.IsConfigured) Agent.Subscribe(new SqlClientDiagnosticSubscriber());  /
 
 NOTE: Auto instrumentation  for `System.Data.SqlClient` is available for both, .NET Core and .NET Framework applications, however, support of .NET Framework has one limitation:
 command text cannot be captured. In case of auto instrumentation for `Microsoft.Data.SqlClient`, only .NET Core is supported, at the moment.
+
+[[setup-stackexchange-redis]]
+=== StackExchange.Redis
+
+[float]
+==== Quick start
+
+Instrumentation can be enabled for `StackExchange.Redis` by referencing https://www.nuget.org/packages/Elastic.Apm.StackExchange.Redis[`Elastic.Apm.StackExchange.Redis`] package
+and calling the `UseElasticApm()` extension method defined in `Elastic.Apm.StackExchange.Redis`, on `IConnectionMultiplexer`
+
+[source,csharp]
+----
+// using Elastic.Apm.StackExchange.Redis;
+
+var connection = await ConnectionMultiplexer.ConnectAsync("<redis connection>");
+connection.UseElasticApm();
+----
+
+A callback is registered with the `IConnectionMultiplexer` to provide a profiling session for each transaction and span that captures redis commands
+sent with `IConnectionMultiplexer`.
 
 [[setup-general]]
 === Other .NET applications

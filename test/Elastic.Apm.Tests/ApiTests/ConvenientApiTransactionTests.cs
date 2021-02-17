@@ -3,16 +3,17 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Extensions;
-using Elastic.Apm.Tests.Mocks;
 using FluentAssertions;
 using Xunit;
 using System.Diagnostics;
+using Elastic.Apm.Tests.Utilities;
 using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests.ApiTests
@@ -34,10 +35,11 @@ namespace Elastic.Apm.Tests.ApiTests
 		private const string TransactionName = "ConvenientApiTest";
 		private const string TransactionType = "Test";
 
-		public ConvenientApiTransactionTests(ITestOutputHelper testOutputHelper) => testOutputHelper.WriteLine($" Stopwatch.Frequency: {Stopwatch.Frequency}");
+		public ConvenientApiTransactionTests(ITestOutputHelper testOutputHelper) =>
+			testOutputHelper.WriteLine($" Stopwatch.Frequency: {Stopwatch.Frequency}");
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action, DistributedTracingData)" /> method.
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,Action, DistributedTracingData)" /> method.
 		/// It wraps a fake transaction (Thread.Sleep) into the CaptureTransaction method
 		/// and it makes sure that the transaction is captured by the agent.
 		/// </summary>
@@ -49,7 +51,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action, DistributedTracingData)" /> method with an
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,Action, DistributedTracingData)" /> method with an
 		/// exception.
 		/// It wraps a fake transaction (Thread.Sleep) that throws an exception into the CaptureTransaction method
 		/// and it makes sure that the transaction and the exception are captured by the agent.
@@ -69,7 +71,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action{ITransaction}, DistributedTracingData)" />
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,Action, DistributedTracingData)" />
 		/// method.
 		/// It wraps a fake transaction (Thread.Sleep) into the CaptureTransaction method with an <see cref="Action{T}" />
 		/// parameter
@@ -88,7 +90,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Action{ITransaction}, DistributedTracingData)" />
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,Action, DistributedTracingData)" />
 		/// method with an exception.
 		/// It wraps a fake transaction (Thread.Sleep) that throws an exception into the CaptureTransaction method with an
 		/// <see cref="Action{ITransaction}" /> parameter
@@ -111,7 +113,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{T}, DistributedTracingData)" /> method.
+		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,Func{TResult}, DistributedTracingData)" /> method.
 		/// It wraps a fake transaction (Thread.Sleep) with a return value into the CaptureTransaction method
 		/// and it makes sure that the transaction is captured by the agent and the return value is correct.
 		/// </summary>
@@ -129,7 +131,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		/// <summary>
 		/// Tests the
-		/// <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,T}, DistributedTracingData)" /> method.
+		/// <see cref="Tracer.CaptureTransaction{T}(string,string,Func{TResult}, DistributedTracingData)" /> method.
 		/// It wraps a fake transaction (Thread.Sleep) with a return value into the CaptureTransaction method with an
 		/// <see cref="Action{ITransaction}" /> parameter
 		/// and it makes sure that the transaction is captured by the agent and the return value is correct and the
@@ -151,7 +153,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		/// <summary>
 		/// Tests the
-		/// <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,T}, DistributedTracingData)" /> method
+		/// <see cref="Tracer.CaptureTransaction{T}(string,string,Func{TResult}, DistributedTracingData)" /> method
 		/// with an
 		/// exception.
 		/// It wraps a fake transaction (Thread.Sleep) with a return value that throws an exception into the CaptureTransaction
@@ -180,7 +182,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{T}, DistributedTracingData)" /> method with
+		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,Func{TResult}, DistributedTracingData)" /> method with
 		/// an exception.
 		/// It wraps a fake transaction (Thread.Sleep) with a return value that throws an exception into the CaptureTransaction
 		/// method
@@ -206,7 +208,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Func{Task}, DistributedTracingData)" /> method.
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,Func{TResult}, DistributedTracingData)" /> method.
 		/// It wraps a fake async transaction (Task.Delay) into the CaptureTransaction method
 		/// and it makes sure that the transaction is captured.
 		/// </summary>
@@ -218,7 +220,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,System.Func{Task}, DistributedTracingData)" /> method with
+		/// Tests the <see cref="Tracer.CaptureTransaction(string,string,Func{TResult}, DistributedTracingData)" /> method with
 		/// an exception
 		/// It wraps a fake async transaction (Task.Delay) that throws an exception into the CaptureTransaction method
 		/// and it makes sure that the transaction and the error are captured.
@@ -239,7 +241,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		/// <summary>
 		/// Tests the
-		/// <see cref="Tracer.CaptureTransaction(string,string,System.Func{ITransaction, Task}, DistributedTracingData)" /> method.
+		/// <see cref="Tracer.CaptureTransaction(string,string,Func{TResult}, DistributedTracingData)" /> method.
 		/// It wraps a fake async transaction (Task.Delay) into the CaptureTransaction method with an
 		/// <see cref="Action{ITransaction}" /> parameter
 		/// and it makes sure that the transaction is captured and the <see cref="Action{ITransaction}" /> parameter is not null.
@@ -257,7 +259,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		/// <summary>
 		/// Tests the
-		/// <see cref="Tracer.CaptureTransaction(string,string,System.Func{ITransaction, Task}, DistributedTracingData)" /> method
+		/// <see cref="Tracer.CaptureTransaction(string,string,Func{TResult}, DistributedTracingData)" /> method
 		/// with an
 		/// exception.
 		/// It wraps a fake async transaction (Task.Delay) that throws an exception into the CaptureTransaction method with an
@@ -281,7 +283,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{Task{T}}, DistributedTracingData)" />
+		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,Func{TResult}, DistributedTracingData)" />
 		/// method.
 		/// It wraps a fake async transaction (Task.Delay) with a return value into the CaptureTransaction method
 		/// and it makes sure that the transaction is captured by the agent and the return value is correct.
@@ -299,7 +301,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		/// <summary>
 		/// Tests the
-		/// <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,Task{T}}, DistributedTracingData)" />
+		/// <see cref="Tracer.CaptureTransaction{T}(string,string,Func{TResult}, DistributedTracingData)" />
 		/// method.
 		/// It wraps a fake async transaction (Task.Delay) with a return value into the CaptureTransaction method with an
 		/// <see cref="Action{ITransaction}" /> parameter
@@ -322,7 +324,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		/// <summary>
 		/// Tests the
-		/// <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{ITransaction,Task{T}}, DistributedTracingData)" />
+		/// <see cref="Tracer.CaptureTransaction{T}(string,string,Func{TResult}, DistributedTracingData)" />
 		/// method with an
 		/// exception.
 		/// It wraps a fake async transaction (Task.Delay) with a return value that throws an exception into the CaptureTransaction
@@ -350,7 +352,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		});
 
 		/// <summary>
-		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,System.Func{Task{T}}, DistributedTracingData)" />
+		/// Tests the <see cref="Tracer.CaptureTransaction{T}(string,string,Func{TResult}, DistributedTracingData)" />
 		/// method with an exception.
 		/// It wraps a fake async transaction (Task.Delay) with a return value that throws an exception into the CaptureTransaction
 		/// method
@@ -400,6 +402,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			};
 			await act.Should().ThrowAsync<OperationCanceledException>();
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().NotBeEmpty();
 
 			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
@@ -408,6 +411,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var duration = payloadSender.FirstTransaction.Duration;
 			duration.Should().BeGreaterOrEqualToMinimumSleepLength();
 
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Should().NotBeEmpty();
 
 			payloadSender.FirstError.Culprit.Should().Be("A task was canceled");
@@ -626,15 +630,37 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			using (var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender)))
 			{
-				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, (transaction) =>
+				agent.Tracer.CaptureTransaction(TransactionName, TransactionType, transaction =>
 				{
 					transaction.Custom.Add(customKey, customValue);
 					transaction.End();
 				});
 			}
 
+			payloadSender.WaitForTransactions();
 			payloadSender.FirstTransaction.Should().NotBeNull();
 			payloadSender.FirstTransaction.Custom[customKey].Should().Be(customValue);
+		}
+
+		[Fact]
+		public void CaptureErrorLogOnTransaction()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var errorLog = new ErrorLog("foo") { Level = "error", ParamMessage = "42" };
+
+			agent.Tracer.CaptureTransaction("foo", "bar", t => { t.CaptureErrorLog(errorLog); });
+
+			payloadSender.WaitForAny();
+
+			payloadSender.Transactions.Should().HaveCount(1);
+			payloadSender.Spans.Should().BeNullOrEmpty();
+			payloadSender.Errors.Should().HaveCount(1);
+			payloadSender.FirstError.Log.Message.Should().Be("foo");
+			payloadSender.FirstError.Log.Level.Should().Be("error");
+			payloadSender.FirstError.Log.ParamMessage.Should().Be("42");
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstTransaction.Id);
 		}
 
 		/// <summary>
@@ -647,7 +673,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			await func(agent);
 
-			payloadSender.Transactions.Should().NotBeEmpty();
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().NotBeEmpty();
 
 			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
@@ -669,7 +695,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			await func(agent);
 
-			payloadSender.Transactions.Should().NotBeEmpty();
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().NotBeEmpty();
 
 			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
@@ -678,7 +704,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var duration = payloadSender.FirstTransaction.Duration;
 			duration.Should().BeGreaterOrEqualToMinimumSleepLength();
 
-			payloadSender.Errors.Should().NotBeEmpty();
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Should().NotBeEmpty();
 
 			payloadSender.FirstError.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);
@@ -696,6 +722,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			action(agent);
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().NotBeEmpty();
 			payloadSender.Transactions.Should().NotBeEmpty();
 
@@ -718,7 +745,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 			action(agent);
 
-			payloadSender.Transactions.Should().NotBeEmpty();
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().NotBeEmpty();
 
 			payloadSender.FirstTransaction.Name.Should().Be(TransactionName);
@@ -727,7 +754,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var duration = payloadSender.FirstTransaction.Duration;
 			duration.Should().BeGreaterOrEqualToMinimumSleepLength();
 
-			payloadSender.Errors.Should().NotBeEmpty();
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Should().NotBeEmpty();
 
 			payloadSender.FirstError.Exception.Type.Should().Be(typeof(InvalidOperationException).FullName);

@@ -12,8 +12,10 @@ namespace Elastic.Apm
 	public static class ApmAgentExtensions
 	{
 		/// <summary>
-		/// Sets up multiple <see cref="IDiagnosticsSubscriber" />'s to start listening to one or more
-		/// <see cref="IDiagnosticListener" />'s
+		/// Sets up multiple <see cref="IDiagnosticsSubscriber" />s to start listening to one or more
+		/// <see cref="IDiagnosticListener" />s.
+		/// <para />
+		/// If the agent is not enabled, subscribers are not subscribed.
 		/// </summary>
 		/// <param name="agent">The agent to report diagnostics over</param>
 		/// <param name="subscribers">
@@ -21,21 +23,28 @@ namespace Elastic.Apm
 		/// <see cref="IDiagnosticListener" /> subscriptions
 		/// </param>
 		/// <returns>
-		/// A disposable referencing all the subscriptions, disposing this is not necessary for clean up, only to
-		/// unsubscribe if desired.
+		/// A disposable referencing all the subscriptions. Disposing this is not necessary for clean up, only to unsubscribe if
+		/// desired.
 		/// </returns>
 		public static IDisposable Subscribe(this IApmAgent agent, params IDiagnosticsSubscriber[] subscribers)
 		{
-			var subs = subscribers ?? Array.Empty<IDiagnosticsSubscriber>();
-			var retVal = subs.Aggregate(new CompositeDisposable(), (d, s) => d.Add(s.Subscribe(agent)));
+			var disposable = new CompositeDisposable();
+			if (!agent.ConfigurationReader.Enabled || subscribers is null || subscribers.Length == 0)
+				return disposable;
+
+			foreach (var subscriber in subscribers)
+				disposable.Add(subscriber.Subscribe(agent));
 
 			if (agent is ApmAgent apmAgent)
-				apmAgent.Disposables.Add(retVal);
+				apmAgent.Disposables.Add(disposable);
 
-			return retVal;
+			return disposable;
 		}
 	}
 
+	/// <summary>
+	/// A collection of <see cref="IDisposable"/> instances
+	/// </summary>
 	internal class CompositeDisposable : IDisposable
 	{
 		private readonly List<IDisposable> _disposables = new List<IDisposable>();
@@ -43,6 +52,11 @@ namespace Elastic.Apm
 
 		private bool _isDisposed;
 
+		/// <summary>
+		/// Adds an instance of <see cref="IDisposable"/> to the collection
+		/// </summary>
+		/// <param name="disposable">A disposable</param>
+		/// <returns>This instance of <see cref="CompositeDisposable"/></returns>
 		public CompositeDisposable Add(IDisposable disposable)
 		{
 			if (_isDisposed) throw new ObjectDisposedException(nameof(CompositeDisposable));
@@ -60,7 +74,7 @@ namespace Elastic.Apm
 				if (_isDisposed) return;
 
 				_isDisposed = true;
-				foreach (var d in _disposables) d.Dispose();
+				foreach (var d in _disposables) d?.Dispose();
 			}
 		}
 	}

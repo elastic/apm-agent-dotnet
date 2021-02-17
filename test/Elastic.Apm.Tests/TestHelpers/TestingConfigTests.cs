@@ -9,11 +9,11 @@ using System.Linq;
 using System.Reflection;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Tests.Extensions;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
-using static Elastic.Apm.Tests.TestHelpers.TestingConfig;
+using static Elastic.Apm.Tests.Utilities.TestingConfig;
 
 namespace Elastic.Apm.Tests.TestHelpers
 {
@@ -212,7 +212,7 @@ namespace Elastic.Apm.Tests.TestHelpers
 			}
 		}
 
-		private class MockRawConfigSnapshot : IRawConfigSnapshot
+		private class MockRawConfigSnapshot : TestingConfig.IRawConfigSnapshot
 		{
 			private readonly IReadOnlyDictionary<string, string> _dictionary;
 

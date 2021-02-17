@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
+using Elastic.Apm.Api.Constraints;
+using Newtonsoft.Json;
 
 namespace Elastic.Apm.Model
 {
@@ -21,6 +23,10 @@ namespace Elastic.Apm.Model
 		private static readonly Context ReusableContextInstance = new Context();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 
+		private readonly Lazy<Dictionary<string, string>> _custom = new Lazy<Dictionary<string, string>>();
+
+		private readonly Lazy<Dictionary<string, string>> _labels = new Lazy<Dictionary<string, string>>();
+
 		public NoopTransaction(string name, string type, ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer)
 		{
 			Name = name;
@@ -32,20 +38,36 @@ namespace Elastic.Apm.Model
 		public Context Context =>
 			ReusableContextInstance;
 
-		public Dictionary<string, string> Custom { get; }
+		public Dictionary<string, string> Custom => _custom.Value;
 		public double? Duration { get; set; }
+
+		[MaxLength]
 		public string Id { get; }
-		public bool IsSampled { get; }
-		public Dictionary<string, string> Labels { get; } = new Dictionary<string, string>();
+
+		public bool IsSampled => false;
+		public Dictionary<string, string> Labels => _labels.Value;
+
+		[MaxLength]
 		public string Name { get; set; }
+
 		public Outcome Outcome { get; set; }
 		public DistributedTracingData OutgoingDistributedTracingData { get; }
+
+		[JsonProperty("parent_id")]
+		[MaxLength]
 		public string ParentId { get; }
+
+		[MaxLength]
 		public string Result { get; set; }
 
+		[JsonProperty("span_count")]
 		public SpanCount SpanCount { get; }
+
+		[JsonProperty("trace_id")]
+		[MaxLength]
 		public string TraceId { get; }
 
+		[MaxLength]
 		public string Type { get; set; }
 
 		public void CaptureError(string message, string culprit, StackFrame[] frames, string parentId = null, Dictionary<string, Label> labels = null
@@ -105,5 +127,8 @@ namespace Elastic.Apm.Model
 			value = default;
 			return false;
 		}
+
+		public void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null
+		) { }
 	}
 }

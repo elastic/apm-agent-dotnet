@@ -1,4 +1,5 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -12,7 +13,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.HelpersTests;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 
@@ -51,7 +52,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 				transaction.End();
 
-
+				payloadSender.WaitForTransactions();
 				payloadSender.Transactions.Should().ContainSingle();
 
 				var capturedTransaction = payloadSender.Transactions[0];
@@ -79,6 +80,9 @@ namespace Elastic.Apm.Tests.ApiTests
 			{
 				var unused = agent.Tracer.StartTransaction(transactionName, transactionType);
 			}
+
+			payloadSender.SignalEndTransactions();
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().BeEmpty();
 		}
 
@@ -100,6 +104,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				transaction.Result = result;
 				transaction.End();
 
+				payloadSender.WaitForTransactions();
 				payloadSender.Transactions[0].Result.Should().Be(result);
 			}
 		}
@@ -290,7 +295,11 @@ namespace Elastic.Apm.Tests.ApiTests
 
 				span.End();
 				transaction.End();
+
+				payloadSender.WaitForTransactions();
 				payloadSender.Transactions.Should().NotBeEmpty();
+
+				payloadSender.WaitForSpans();
 				payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
 				payloadSender.SpansOnFirstTransaction[0].Name.Should().Be(spanName);
@@ -320,7 +329,12 @@ namespace Elastic.Apm.Tests.ApiTests
 				Thread.Sleep(5); //Make sure we have duration > 0
 
 				transaction.End(); //Ends transaction, but doesn't end span.
+
+				payloadSender.WaitForTransactions();
 				payloadSender.Transactions.Should().NotBeEmpty();
+
+				payloadSender.SignalEndSpans();
+				payloadSender.WaitForSpans();
 				payloadSender.SpansOnFirstTransaction.Should().BeEmpty();
 
 				agent.Service.Should().NotBeNull();
@@ -345,7 +359,9 @@ namespace Elastic.Apm.Tests.ApiTests
 				span.End();
 				transaction.End();
 
+				payloadSender.WaitForTransactions();
 				payloadSender.Transactions.Should().NotBeEmpty();
+				payloadSender.WaitForSpans();
 				payloadSender.SpansOnFirstTransaction.Should().NotBeEmpty();
 
 				payloadSender.SpansOnFirstTransaction[0].Type.Should().Be(ApiConstants.TypeDb);
@@ -399,7 +415,9 @@ namespace Elastic.Apm.Tests.ApiTests
 				transaction.End();
 			}
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().ContainSingle();
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Should().ContainSingle();
 			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
@@ -440,7 +458,9 @@ namespace Elastic.Apm.Tests.ApiTests
 				transaction.End();
 			}
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().ContainSingle();
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Should().ContainSingle();
 			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 		}
@@ -482,13 +502,16 @@ namespace Elastic.Apm.Tests.ApiTests
 				transaction.End();
 			}
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Should().ContainSingle();
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Should().ContainSingle();
 			payloadSender.FirstError.Exception.Message.Should().Be(exceptionMessage);
 
 			payloadSender.FirstTransaction.Context.InternalLabels.Value.MergedDictionary["fooTransaction1"].Value.Should().Be("barTransaction1");
 			payloadSender.FirstTransaction.Context.InternalLabels.Value.MergedDictionary["fooTransaction2"].Value.Should().Be("barTransaction2");
 
+			payloadSender.WaitForSpans();
 			payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.Value.MergedDictionary["fooSpan1"].Value.Should().Be("barSpan1");
 			payloadSender.SpansOnFirstTransaction[0].Context.InternalLabels.Value.MergedDictionary["fooSpan2"].Value.Should().Be("barSpan2");
 		}
@@ -600,16 +623,25 @@ namespace Elastic.Apm.Tests.ApiTests
 
 				payloadSender.Spans.Should().HaveCount(0);
 				span.End();
+
+				payloadSender.SignalEndSpans();
+				payloadSender.WaitForSpans();
 				payloadSender.Spans.Should().HaveCount(expectedSpansCount);
 				if (isSampled) payloadSender.FirstSpan.Name.Should().Be(TestSpan1);
 				span.End();
+
+				payloadSender.SignalEndSpans();
+				payloadSender.WaitForSpans();
 				payloadSender.Spans.Should().HaveCount(expectedSpansCount);
 
 				payloadSender.Transactions.Should().HaveCount(0);
 				transaction.End();
+				payloadSender.WaitForTransactions();
 				payloadSender.Transactions.Should().HaveCount(1);
 				payloadSender.FirstTransaction.Name.Should().Be(TestTransaction);
 				transaction.End();
+				payloadSender.SignalEndTransactions();
+				payloadSender.WaitForTransactions();
 				payloadSender.Transactions.Should().HaveCount(1);
 			}
 		}
@@ -635,12 +667,17 @@ namespace Elastic.Apm.Tests.ApiTests
 				payloadSender.Spans.Should().HaveCount(0);
 				span.Duration = 123456.789;
 				span.End();
+
+				payloadSender.SignalEndSpans();
+				payloadSender.WaitForSpans();
 				payloadSender.Spans.Should().HaveCount(expectedSpansCount);
 				if (isSampled) payloadSender.FirstSpan.Duration.Should().Be(123456.789);
 
 				payloadSender.Transactions.Should().HaveCount(0);
 				transaction.Duration = 987654.321;
 				transaction.End();
+				payloadSender.SignalEndTransactions();
+				payloadSender.WaitForTransactions();
 				payloadSender.Transactions.Should().HaveCount(1);
 				payloadSender.FirstTransaction.Duration.Should().Be(987654.321);
 			}
@@ -707,6 +744,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				});
 			}
 
+			payloadSender.WaitForErrors();
 			payloadSender.Errors.Count.Should().Be(1);
 			payloadSender.FirstError.Transaction.IsSampled.Should().Be(isSampled);
 			payloadSender.FirstError.Transaction.Type.Should().Be(CustomTransactionTypeForTests);
@@ -739,6 +777,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				transaction.End();
 			}
 
+			payloadSender.WaitForTransactions();
 			payloadSender.FirstTransaction.Should().NotBeNull();
 			payloadSender.FirstTransaction.Custom[customKey].Should().Be(customValue);
 		}
@@ -778,6 +817,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				});
 			}
 
+			payloadSender.WaitForSpans(count: 4);
 			var manualAddressSpan = payloadSender.Spans.Single(s => s.Name == "manually set destination address");
 			manualAddressSpan.Context.Destination.Address.Should().Be(manualAddress);
 			manualAddressSpan.Context.Destination.Port.Should().Be(url.Port);
@@ -806,6 +846,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					tx => { tx.CaptureSpan("test span name", "test_span_subtype", () => { }); });
 			}
 
+			payloadSender.WaitForSpans();
 			payloadSender.Spans.Single().Context.Destination.Should().BeNull();
 		}
 
@@ -824,6 +865,7 @@ namespace Elastic.Apm.Tests.ApiTests
 					});
 			}
 
+			payloadSender.WaitForSpans();
 			payloadSender.Spans.Single().Context.Destination.Should().BeNull();
 			mockLogger.Lines.Should()
 				.Contain(line => line.Contains("destination")
@@ -832,7 +874,7 @@ namespace Elastic.Apm.Tests.ApiTests
 
 		/// <summary>
 		/// Makes sure that <see cref="ITransaction.EnsureParentId" /> creates a new parent id, sets it to the transaction and
-		/// returrns it.
+		/// returns it.
 		/// </summary>
 		[Fact]
 		public void EnsureParentIdWithNoParentId()
@@ -893,6 +935,7 @@ namespace Elastic.Apm.Tests.ApiTests
 			var transaction3 = agent.Tracer.StartTransaction("Transaction3", "test");
 			transaction3.End();
 
+			payloadSender.WaitForTransactions();
 			payloadSender.Transactions.Count.Should().Be(3);
 
 			var recordedTransaction1 = payloadSender.Transactions.FirstOrDefault(t => t.Name == "Transaction1");
@@ -926,9 +969,191 @@ namespace Elastic.Apm.Tests.ApiTests
 			transaction1.SetService("Service2", "1.0-beta2");
 			transaction1.End();
 
+			payloadSender.WaitForTransactions();
 			payloadSender.FirstTransaction.Should().NotBeNull();
 			payloadSender.FirstTransaction?.Context.Service.Name.Should().Be("Service2");
 			payloadSender.FirstTransaction?.Context.Service.Version.Should().Be("1.0-beta2");
+		}
+
+		[Fact]
+		public void CaptureErrorOnTracer()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			agent.Tracer.CaptureError("foo", "bar");
+
+			payloadSender.WaitForAny();
+
+			payloadSender.Transactions.Should().BeNullOrEmpty();
+			payloadSender.Spans.Should().BeNullOrEmpty();
+			payloadSender.Errors.Should().HaveCount(1);
+			payloadSender.FirstError.Culprit.Should().Be("bar");
+			payloadSender.FirstError.Exception.Message.Should().Be("foo");
+		}
+
+		[Fact]
+		public void CaptureErrorOnTracerWithActiveTransaction()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			var transaction = agent.Tracer.StartTransaction("Transaction1", "test");
+
+			agent.Tracer.CaptureError("foo", "bar");
+
+			transaction.End();
+
+			payloadSender.WaitForErrors();
+			payloadSender.WaitForTransactions();
+
+			payloadSender.FirstError.TransactionId.Should().Be(payloadSender.FirstTransaction.Id);
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstTransaction.Id);
+		}
+
+		[Fact]
+		public void CaptureErrorOnTracerWithActiveSpan()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			var transaction = agent.Tracer.StartTransaction("Transaction1", "test");
+			var span = transaction.StartSpan("Span1", "test");
+
+			agent.Tracer.CaptureError("foo", "bar");
+
+			transaction.End();
+			span.End();
+
+			payloadSender.WaitForErrors();
+			payloadSender.WaitForTransactions();
+			payloadSender.WaitForSpans();
+
+			payloadSender.FirstError.TransactionId.Should().Be(payloadSender.FirstTransaction.Id);
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstSpan.Id);
+		}
+
+		[Fact]
+		public void CaptureExceptionOnTracerWithActiveTransaction()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			var transaction = agent.Tracer.StartTransaction("Transaction1", "test");
+
+			agent.Tracer.CaptureException(new Exception("foo"), "test");
+
+			transaction.End();
+
+			payloadSender.WaitForErrors();
+			payloadSender.WaitForTransactions();
+
+			payloadSender.FirstError.TransactionId.Should().Be(payloadSender.FirstTransaction.Id);
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstTransaction.Id);
+		}
+
+		[Fact]
+		public void CaptureExceptionOnTracerWithActiveSpan()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			var transaction = agent.Tracer.StartTransaction("Transaction1", "test");
+			var span = transaction.StartSpan("Span1", "test");
+
+			agent.Tracer.CaptureException(new Exception("foo"), "test");
+
+			transaction.End();
+			span.End();
+
+			payloadSender.WaitForErrors();
+			payloadSender.WaitForTransactions();
+			payloadSender.WaitForSpans();
+
+			payloadSender.FirstError.TransactionId.Should().Be(payloadSender.FirstTransaction.Id);
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstSpan.Id);
+		}
+
+		[Fact]
+		public void CaptureErrorLogOnTracerWithActiveTransaction()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			var transaction = agent.Tracer.StartTransaction("Transaction1", "test");
+
+			var errorLog = new ErrorLog("foo");
+			agent.Tracer.CaptureErrorLog(errorLog);
+
+			transaction.End();
+
+			payloadSender.WaitForErrors();
+			payloadSender.WaitForTransactions();
+
+			payloadSender.FirstError.TransactionId.Should().Be(payloadSender.FirstTransaction.Id);
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstTransaction.Id);
+			payloadSender.FirstError.Log.Message.Should().Be("foo");
+		}
+
+		[Fact]
+		public void CaptureErrorLogOnTracerWithActiveSpan()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			var transaction = agent.Tracer.StartTransaction("Transaction1", "test");
+			var span = transaction.StartSpan("Span1", "test");
+
+			var errorLog = new ErrorLog("foo");
+			agent.Tracer.CaptureErrorLog(errorLog);
+
+			transaction.End();
+			span.End();
+
+			payloadSender.WaitForErrors();
+			payloadSender.WaitForTransactions();
+			payloadSender.WaitForSpans();
+
+			payloadSender.FirstError.TransactionId.Should().Be(payloadSender.FirstTransaction.Id);
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstSpan.Id);
+			payloadSender.FirstError.Log.Message.Should().Be("foo");
+		}
+
+		[Fact]
+		public void CaptureExceptionOnTracer()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			try
+			{
+				throw new Exception("foo");
+			}
+			catch (Exception e)
+			{
+				agent.Tracer.CaptureException(e);
+			}
+
+			payloadSender.WaitForAny();
+
+			payloadSender.Transactions.Should().BeNullOrEmpty();
+			payloadSender.Spans.Should().BeNullOrEmpty();
+			payloadSender.Errors.Should().HaveCount(1);
+			payloadSender.FirstError.Exception.Message.Should().Be("foo");
+		}
+
+		[Fact]
+		public void CaptureErrorLogOnTracer()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var errorLog = new ErrorLog("foo") { Level = "error", ParamMessage = "42" };
+
+			agent.Tracer.CaptureErrorLog(errorLog);
+
+			payloadSender.WaitForAny();
+
+			payloadSender.Transactions.Should().BeNullOrEmpty();
+			payloadSender.Spans.Should().BeNullOrEmpty();
+			payloadSender.Errors.Should().HaveCount(1);
+			payloadSender.FirstError.Log.Message.Should().Be("foo");
+			payloadSender.FirstError.Log.Level.Should().Be("error");
+			payloadSender.FirstError.Log.ParamMessage.Should().Be("42");
 		}
 
 		private class TestException : Exception

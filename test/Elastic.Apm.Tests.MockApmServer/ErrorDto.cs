@@ -4,7 +4,6 @@
 
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Model;
 using FluentAssertions;
 using Newtonsoft.Json;
 
@@ -13,6 +12,7 @@ using Newtonsoft.Json;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
+	[Specification("docs/spec/v2/error.json")]
 	internal class ErrorDto : ITimestampedDto
 	{
 		public ContextDto Context { get; set; }
@@ -73,7 +73,11 @@ namespace Elastic.Apm.Tests.MockApmServer
 
 			public string Type { get; set; }
 
-			public override string ToString() => new ToStringBuilder(nameof(ErrorDto)) { { "Type", Type }, { "IsSampled", IsSampled } }.ToString();
+			public override string ToString() => new ToStringBuilder(nameof(ErrorDto))
+			{
+				{ nameof(Type), Type },
+				{ nameof(IsSampled), IsSampled }
+			}.ToString();
 
 			public void AssertValid() => Type?.AssertValid();
 		}

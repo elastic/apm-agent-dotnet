@@ -17,8 +17,8 @@ namespace Elastic.Apm.BackendComm
 	{
 		private const string ThisClassName = nameof(BackendCommComponentBase);
 
-		protected readonly CancellationTokenSource CtsInstance;
-		protected readonly HttpClient HttpClientInstance;
+		protected CancellationTokenSource CancellationTokenSource { get; }
+		protected HttpClient HttpClient { get; }
 
 		private readonly string _dbgName;
 		private readonly DisposableHelper _disposableHelper;
@@ -42,14 +42,14 @@ namespace Elastic.Apm.BackendComm
 				return;
 			}
 
-			CtsInstance = new CancellationTokenSource();
+			CancellationTokenSource = new CancellationTokenSource();
 
 			_disposableHelper = new DisposableHelper();
 
 			_loopStarted = new ManualResetEventSlim();
 			_loopCompleted = new ManualResetEventSlim();
 
-			HttpClientInstance = BackendCommUtils.BuildHttpClient(logger, config, service, _dbgName, httpMessageHandler);
+			HttpClient = BackendCommUtils.BuildHttpClient(logger, config, service, _dbgName, httpMessageHandler);
 
 			_singleThreadTaskScheduler = new SingleThreadTaskScheduler($"ElasticApm{dbgDerivedClassName}", logger);
 		}
@@ -86,10 +86,11 @@ namespace Elastic.Apm.BackendComm
 
 			await ExceptionUtils.DoSwallowingExceptions(_logger, async () =>
 				{
-					while (true) await WorkLoopIteration();
+					while (!CancellationTokenSource.IsCancellationRequested)
+						await WorkLoopIteration().ConfigureAwait(false);
 					// ReSharper disable once FunctionNeverReturns
 				}
-				, dbgCallerMethodName: ThisClassName + "." + DbgUtils.CurrentMethodName());
+				, dbgCallerMethodName: ThisClassName + "." + DbgUtils.CurrentMethodName()).ConfigureAwait(false);
 
 			_logger.Debug()?.Log("Signaling work loop completed event...");
 			_loopCompleted.Set();
@@ -105,29 +106,23 @@ namespace Elastic.Apm.BackendComm
 
 			_disposableHelper.DoOnce(_logger, _dbgName, () =>
 			{
-				_logger.Debug()?.Log("Posting CtsInstance.Cancel() to internal TaskScheduler...");
-				Task.Run(() =>
-				{
-					_logger.Debug()?.Log("Calling CtsInstance.Cancel()...");
-					// ReSharper disable once AccessToDisposedClosure
-					CtsInstance.Cancel();
-					_logger.Debug()?.Log("Called CtsInstance.Cancel()");
-				});
-				_logger.Debug()?.Log("Posted CtsInstance.Cancel() to default (ThreadPool) TaskScheduler");
+				_logger.Debug()?.Log("Calling CancellationTokenSource.Cancel()...");
+				CancellationTokenSource.Cancel();
+				_logger.Debug()?.Log("Called CancellationTokenSource.Cancel()");
 
 				_logger.Debug()
-					?.Log("Waiting for loop to exit... Is cancellation token signaled: {IsCancellationRequested}"
-						, CtsInstance.Token.IsCancellationRequested);
+					?.Log("Waiting for loop to exit... Is cancellation token signaled: {IsCancellationRequested}",
+						CancellationTokenSource.IsCancellationRequested);
 				_loopCompleted.Wait();
 
 				_logger.Debug()?.Log("Disposing _singleThreadTaskScheduler ...");
 				_singleThreadTaskScheduler.Dispose();
 
-				_logger.Debug()?.Log("Disposing HttpClientInstance...");
-				HttpClientInstance.Dispose();
+				_logger.Debug()?.Log("Disposing HttpClient...");
+				HttpClient.Dispose();
 
-				_logger.Debug()?.Log("Disposing CtsInstance...");
-				CtsInstance.Dispose();
+				_logger.Debug()?.Log("Disposing CancellationTokenSource...");
+				CancellationTokenSource.Dispose();
 
 				_logger.Debug()?.Log("Exiting...");
 			});

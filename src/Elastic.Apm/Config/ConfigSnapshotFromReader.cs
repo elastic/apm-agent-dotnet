@@ -42,7 +42,9 @@ namespace Elastic.Apm.Config
 		public bool Recording => _content.Recording;
 		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _content.SanitizeFieldNames;
 		public string SecretToken => _content.SecretToken;
+		[Obsolete("Use ServerUrl")]
 		public IReadOnlyList<Uri> ServerUrls => _content.ServerUrls;
+		public Uri ServerUrl => _content.ServerUrl;
 		public string ServiceName => _content.ServiceName;
 		public string ServiceNodeName => _content.ServiceNodeName;
 		public string ServiceVersion => _content.ServiceVersion;

@@ -346,6 +346,11 @@ namespace Elastic.Apm.Model
 			{ nameof(IsSampled), IsSampled }
 		}.ToString();
 
+		/// <summary>
+		/// When the transaction has ended and before being queued to send to APM server
+		/// </summary>
+		public event EventHandler Ended;
+
 		public void End()
 		{
 			if (Duration.HasValue)
@@ -377,6 +382,10 @@ namespace Elastic.Apm.Model
 			var isFirstEndCall = !_isEnded;
 			_isEnded = true;
 			if (!isFirstEndCall) return;
+
+			var handler = Ended;
+			handler?.Invoke(this, EventArgs.Empty);
+			Ended = null;
 
 			_sender.QueueTransaction(this);
 			_currentExecutionSegmentsContainer.CurrentTransaction = null;
@@ -538,6 +547,20 @@ namespace Elastic.Apm.Model
 
 			return name;
 		}
+
+		public void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null)
+			=> ExecutionSegmentCommon.CaptureErrorLog(
+				errorLog,
+				_sender,
+				_logger,
+				this,
+				ConfigSnapshot,
+				this,
+				null,
+				_apmServerInfo,
+				exception,
+				labels
+			);
 
 		public void SetLabel(string key, string value)
 			=> _context.Value.InternalLabels.Value.InnerDictionary[key] = value;

@@ -13,16 +13,16 @@ namespace Elastic.Apm.Report.Serialization
 	/// </summary>
 	internal class TruncateJsonConverter : JsonConverter<string>
 	{
-		private readonly int _maxLength;
+		public int MaxLength { get; }
 
 		// ReSharper disable once UnusedMember.Global
 		public TruncateJsonConverter() : this(Consts.PropertyMaxLength) { }
 
 		// ReSharper disable once MemberCanBePrivate.Global
-		public TruncateJsonConverter(int maxLength) => _maxLength = maxLength;
+		public TruncateJsonConverter(int maxLength) => MaxLength = maxLength;
 
 		public override void WriteJson(JsonWriter writer, string value, JsonSerializer serializer) =>
-			writer.WriteValue(value.Truncate(_maxLength));
+			writer.WriteValue(value.Truncate(MaxLength));
 
 		public override string ReadJson(JsonReader reader, Type objectType, string existingValue, bool hasExistingValue, JsonSerializer serializer) =>
 			reader.Value as string;

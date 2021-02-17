@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.Extensions.Hosting;
-using Elastic.Apm.Tests.Mocks;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
@@ -50,6 +50,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			Activity.DefaultIdFormat = ActivityIdFormat.W3C;
 			var res = await _client.GetAsync("Home/TraceId");
 			var activityId = await res.Content.ReadAsStringAsync();
+			_payloadSender.WaitForTransactions();
 			_payloadSender.FirstTransaction.TraceId.Should().Be(activityId);
 		}
 	}

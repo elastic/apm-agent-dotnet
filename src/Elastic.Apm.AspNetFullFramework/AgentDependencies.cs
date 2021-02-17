@@ -6,8 +6,14 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
+	/// <summary>
+	/// Dependencies to initialize the APM agent with
+	/// </summary>
 	public static class AgentDependencies
 	{
+		/// <summary>
+		/// The logger
+		/// </summary>
 		public static IApmLogger Logger { get; set; }
 	}
 }

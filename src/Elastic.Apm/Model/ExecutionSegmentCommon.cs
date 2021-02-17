@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -168,7 +169,7 @@ namespace Elastic.Apm.Model
 			capturedException.StackTrace = StacktraceHelper.GenerateApmStackTrace(exception, logger,
 				$"{nameof(Transaction)}.{nameof(CaptureException)}", configurationReader, apmServerInfo);
 
-			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger, labels)
+			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment?.Id, logger, labels)
 			{
 				Culprit = capturedCulprit
 			});
@@ -245,7 +246,7 @@ namespace Elastic.Apm.Model
 					= StacktraceHelper.GenerateApmStackTrace(frames, logger, configurationReader, apmServerInfo, "failed capturing stacktrace");
 			}
 
-			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment.Id, logger, labels)
+			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment?.Id, logger, labels)
 			{
 				Culprit = capturedCulprit
 			});
@@ -273,6 +274,47 @@ namespace Elastic.Apm.Model
 				ITransaction iTransaction => iTransaction.StartSpan(spanName, spanType, subType),
 				_ => null
 			};
+		}
+
+		/// <summary>
+		/// Captures an error based on a log
+		/// </summary>
+		/// <param name="errorLog"></param>
+		/// <param name="payloadSender"></param>
+		/// <param name="logger"></param>
+		/// <param name="executionSegment"></param>
+		/// <param name="configSnapshot"></param>
+		/// <param name="enclosingTransaction"></param>
+		/// <param name="parentId"></param>
+		/// <param name="serverInfo"></param>
+		/// <param name="exception"></param>
+		/// <param name="labels"></param>
+		internal static void CaptureErrorLog(ErrorLog errorLog, IPayloadSender payloadSender, IApmLogger logger,
+			IExecutionSegment executionSegment, IConfigSnapshot configSnapshot, Transaction enclosingTransaction, string parentId,
+			IApmServerInfo serverInfo,
+			Exception exception = null,
+			Dictionary<string, Label> labels = null
+		)
+		{
+			var error = new Error(errorLog, enclosingTransaction, parentId ?? executionSegment?.Id, logger, labels)
+			{
+				Culprit = $"{errorLog.Level ?? "Error"} log"
+			};
+
+			if (exception != null)
+			{
+				error.Exception = new CapturedException { Message = exception.Message, Type = exception.GetType().FullName };
+
+				if (exception.StackTrace != null)
+				{
+					error.Exception.StackTrace
+						= StacktraceHelper
+							.GenerateApmStackTrace(exception, logger, $"Exception callstack for {nameof(CaptureErrorLog)}", configSnapshot,
+								serverInfo);
+				}
+			}
+
+			payloadSender.QueueError(error);
 		}
 	}
 }

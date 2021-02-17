@@ -3,7 +3,27 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <!-- Suppress warnings when a proj is marked <IsPackable>false</IsPackable> 
+     but dotnet pack expects to pack it e.g. Microsoft.NET.Sdk.Web test and sample projects. -->
+    <WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
     <!-- Always generate debug symbols this allows fluent symbols exception messages to include variable names -->
     <DebugSymbols>True</DebugSymbols>
+    <!-- All projects in this directory are assumed to be Test projects by default i.e. containing tests. Some may not
+     be however, so they can override this setting so that common test components are not added.
+     -->
+    <IsTestProject>true</IsTestProject>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- use xunit config for all test files. Allow assemblies to run in parallel -->
+    <Content Include="$(SolutionRoot)/xunit.runner.json" CopyToOutputDirectory="PreserveNewest" Condition="'$(IsTestProject)' == 'true'" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <!-- Add coverlet collector for all platforms and frameworks, except net461 -->
+    <PackageReference Include="coverlet.collector" Version="3.0.2" Condition="'$(IsTestProject)' == 'true' AND '$(TargetFramework)' != 'net461'">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="JunitXml.TestLogger" Version="2.1.81" Condition="'$(IsTestProject)' == 'true'" />
+  </ItemGroup>
 </Project>

@@ -4,6 +4,7 @@
 
 using System;
 using Elastic.Apm.Tests.Extensions;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 

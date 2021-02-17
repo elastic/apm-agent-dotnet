@@ -79,9 +79,8 @@ namespace Elastic.Apm.Helpers
 		/// <summary>
 		/// Converts time duration to "9d 8h 7m 6s" (seconds resolution) string representation.
 		/// If time duration has non-integer number of seconds the fractional part is truncated.
-		/// If time duration is [0, 1s) range it is converted to "
-		/// <1s".
-		/// If time duration is (-1s, 0] range it is converted to ">-1s".
+		/// If time duration is [0, 1s) range it is converted to "&lt;1s".
+		/// If time duration is (-1s, 0] range it is converted to "&gt;-1s".
 		/// </summary>
 		internal static string ToHmsInSeconds(this TimeSpan timeSpan)
 		{
