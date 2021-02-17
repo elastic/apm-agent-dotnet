@@ -37,7 +37,11 @@ namespace Elastic.Apm.Extensions.Logging.Tests
 			.ConfigureLogging((hostingContext, logging) =>
 			{
 				logging.ClearProviders();
+#if NET5_0
+				logging.AddSimpleConsole(o => o.IncludeScopes = true);
+#else
 				logging.AddConsole(options => options.IncludeScopes = true);
+#endif
 			})
 			.UseElasticApm();
 	}

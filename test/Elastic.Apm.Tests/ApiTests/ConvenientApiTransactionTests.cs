@@ -10,10 +10,9 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
 using Elastic.Apm.Tests.Extensions;
+using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
-using System.Diagnostics;
-using Elastic.Apm.Tests.Utilities;
 using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests.ApiTests
