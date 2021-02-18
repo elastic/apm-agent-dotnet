@@ -17,6 +17,7 @@ namespace ElasticsearchSample
 		}
 
 		private static ConnectionSettings DefaultConnectionSettings(ConnectionSettings s) => s
+			.PingTimeout(TimeSpan.FromSeconds(5))
 			.DefaultIndex("index")
 			.DisableDirectStreaming();
 
