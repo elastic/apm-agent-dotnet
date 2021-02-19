@@ -578,7 +578,7 @@ the trust store, such as a self-signed certificate.
 [options="header"]
 |============
 | Default                 | Type
-| `<none>`                  | Boolean
+| `<none>`                  | String
 |============
 
 [float]
