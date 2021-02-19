@@ -142,6 +142,7 @@
     <Compile Include="Mvc\JsonBadRequestResult.cs" />
     <Compile Include="Mvc\JsonNetValueProviderFactory.cs" />
     <Compile Include="Mvc\StreamResult.cs" />
+    <Compile Include="Controllers\AttributeRoutingWebApiController.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(OS)' == 'WINDOWS_NT'">
     <Content Include="Content\bootstrap-grid.css" />
