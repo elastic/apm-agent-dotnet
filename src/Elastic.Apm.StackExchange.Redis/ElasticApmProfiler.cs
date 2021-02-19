@@ -26,10 +26,10 @@ namespace Elastic.Apm.StackExchange.Redis
 		private readonly Lazy<IApmLogger> _logger;
 		private readonly Lazy<IApmAgent> _agent;
 
-		public ElasticApmProfiler(Lazy<IApmAgent> agent)
+		public ElasticApmProfiler(Func<IApmAgent> agentGetter)
 		{
-			_agent = agent;
-			_logger = new Lazy<IApmLogger>(() => agent.Value.Logger.Scoped(nameof(ElasticApmProfiler)));
+			_agent = new Lazy<IApmAgent>(agentGetter);
+			_logger = new Lazy<IApmLogger>(() => _agent.Value.Logger.Scoped(nameof(ElasticApmProfiler)));
 		}
 
 		/// <summary>
