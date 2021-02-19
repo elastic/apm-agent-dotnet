@@ -544,7 +544,7 @@ def release(Map args = [:]){
 
 def reportTests() {
   dir("${BASE_DIR}"){
-    archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag-*.log,test/**/junit-*.xml,target/**/*coverage.cobertura.xml')
+    archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag-*.log,test/**/junit-*.xml,target/**/*coverage.cobertura.xml,TestResults/**/Sequence_*.xml,TestResults/**/testhost*.dmp')
     junit(allowEmptyResults: true, keepLongStdio: true, testResults: 'test/**/junit-*.xml')
   }
 }
