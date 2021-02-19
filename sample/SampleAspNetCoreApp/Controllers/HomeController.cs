@@ -19,6 +19,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SampleAspNetCoreApp.Data;
 using SampleAspNetCoreApp.Models;
+using StackExchange.Redis;
 
 namespace SampleAspNetCoreApp.Controllers
 {
@@ -26,8 +27,15 @@ namespace SampleAspNetCoreApp.Controllers
 	{
 		public const string PostResponseBody = "somevalue";
 		private readonly SampleDataContext _sampleDataContext;
+		private readonly ConnectionMultiplexer _redisConnection;
+		private readonly IBackgroundTaskQueue _backgroundTaskQueue;
 
-		public HomeController(SampleDataContext sampleDataContext) => _sampleDataContext = sampleDataContext;
+		public HomeController(SampleDataContext sampleDataContext, ConnectionMultiplexer redisConnection, IBackgroundTaskQueue backgroundTaskQueue)
+		{
+			_sampleDataContext = sampleDataContext;
+			_redisConnection = redisConnection;
+			_backgroundTaskQueue = backgroundTaskQueue;
+		}
 
 		private bool GetCaptureControllerActionAsSpanFromQueryString()
 		{
@@ -138,6 +146,13 @@ namespace SampleAspNetCoreApp.Controllers
 			var historicalData =
 				// ReSharper disable once StringLiteralTypo
 				await Agent.Tracer.CurrentTransaction.CaptureSpan("ReadData", "csvRead", async () => await csvDataReader.GetHistoricalQuotes("ESTC"));
+
+			_backgroundTaskQueue.QueueBackgroundWorkItem(async ct =>
+			{
+				await _redisConnection.GetDatabase().StringSetAsync("MyKey", "MyValue");
+				await Task.Delay(1000);
+				var value = await _redisConnection.GetDatabase().StringGetAsync("MyKey");
+			});
 
 			return View(historicalData);
 		}

@@ -2,17 +2,16 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using Elastic.Apm;
-using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.NetCoreAll;
+using Elastic.Apm.StackExchange.Redis;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SampleAspNetCoreApp.Data;
+using StackExchange.Redis;
 
 namespace SampleAspNetCoreApp
 {
@@ -34,6 +33,16 @@ namespace SampleAspNetCoreApp
 			const string connection = @"Data Source=blogging.db";
 			services.AddDbContext<SampleDataContext>
 				(options => options.UseSqlite(connection));
+
+			const string redisConnection = @"localhost,abortConnect=false";
+			services.AddSingleton(sp => {
+				var redisConnectionMultiplexer = ConnectionMultiplexer.Connect(redisConnection);
+				redisConnectionMultiplexer.UseElasticApm();
+				return redisConnectionMultiplexer;
+			});
+
+			services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
+			services.AddHostedService<QueuedHostedService>();
 
 			services.AddDefaultIdentity<IdentityUser>()
 				.AddEntityFrameworkStores<SampleDataContext>();
