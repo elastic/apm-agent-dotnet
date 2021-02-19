@@ -42,7 +42,8 @@ namespace SampleAspNetCoreApp
 
 				try
 				{
-					await Agent.Tracer.CaptureTransaction("Background Task", ApiConstants.TypeExternal, () => workItem(stoppingToken));
+					var tracingData = DistributedTracingData.TryDeserializeFromString(workItem.CorrelationId);
+					await Agent.Tracer.CaptureTransaction("Background Task", ApiConstants.TypeExternal, () => workItem.Task(stoppingToken), tracingData);
 				}
 				catch (Exception ex)
 				{
@@ -62,12 +63,12 @@ namespace SampleAspNetCoreApp
 	public interface IBackgroundTaskQueue
 	{
 		void QueueBackgroundWorkItem(Func<CancellationToken, Task> workItem);
-		Task<Func<CancellationToken, Task>> DequeueAsync(CancellationToken cancellationToken);
+		Task<WorkItem> DequeueAsync(CancellationToken cancellationToken);
 	}
 
 	public class BackgroundTaskQueue : IBackgroundTaskQueue
 	{
-		private readonly ConcurrentQueue<Func<CancellationToken, Task>> _workItems = new();
+		private readonly ConcurrentQueue<WorkItem> _workItems = new();
 		private readonly SemaphoreSlim _signal = new(0);
 
 		public void QueueBackgroundWorkItem(Func<CancellationToken, Task> workItem)
@@ -77,16 +78,25 @@ namespace SampleAspNetCoreApp
 				throw new ArgumentNullException(nameof(workItem));
 			}
 
-			_workItems.Enqueue(workItem);
+			_workItems.Enqueue(new WorkItem {
+				Task = workItem,
+				CorrelationId = Agent.Tracer.CurrentTransaction.OutgoingDistributedTracingData.SerializeToString()
+			});
 			_signal.Release();
 		}
 
-		public async Task<Func<CancellationToken, Task>> DequeueAsync(CancellationToken cancellationToken)
+		public async Task<WorkItem> DequeueAsync(CancellationToken cancellationToken)
 		{
 			await _signal.WaitAsync(cancellationToken);
 			_workItems.TryDequeue(out var workItem);
 
 			return workItem;
 		}
+	}
+
+	public class WorkItem
+	{
+		public Func<CancellationToken, Task> Task { get; set; }
+		public string CorrelationId { get; set; }
 	}
 }
