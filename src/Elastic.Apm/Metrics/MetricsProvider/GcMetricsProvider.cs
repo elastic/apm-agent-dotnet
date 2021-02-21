@@ -236,6 +236,22 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					}
 				}
 
+				if (eventData.EventName.Contains("GCHeapStats_V2"))
+				{
+					_logger?.Trace()?.Log("OnEventWritten with GCHeapStats_V2");
+
+					SetValue("GenerationSize0", ref _gcMetricsProvider._gen0Size);
+					SetValue("GenerationSize1", ref _gcMetricsProvider._gen1Size);
+					SetValue("GenerationSize2", ref _gcMetricsProvider._gen2Size);
+					SetValue("GenerationSize3", ref _gcMetricsProvider._gen3Size);
+
+					if (!_gcMetricsProvider._isMetricAlreadyCaptured)
+					{
+						lock (_gcMetricsProvider._lock)
+							_gcMetricsProvider._isMetricAlreadyCaptured = true;
+					}
+				}
+
 				// Collect GC count
 				if (eventData.EventName.Contains("GCEnd"))
 				{
