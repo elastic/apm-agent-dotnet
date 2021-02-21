@@ -208,7 +208,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			if (!PreventStartingActivity)
 			{
 				activity = new Activity("foo").Start();
-				activity.ActivityTraceFlags = ActivityTraceFlags.Recorded;
+				activity.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
 			}
 #endif
 			var client = new HttpClient();
