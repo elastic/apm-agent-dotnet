@@ -31,7 +31,7 @@ namespace Elastic.Apm.Tests
 		private const string ThisClassName = nameof(MetricsTests);
 
 		private readonly IApmLogger _logger;
-		private ITestOutputHelper _output;
+		private readonly ITestOutputHelper _output;
 
 		public MetricsTests(ITestOutputHelper xUnitOutputHelper) : base(xUnitOutputHelper)
 		{
@@ -290,6 +290,7 @@ namespace Elastic.Apm.Tests
 				// ReSharper disable once TooWideLocalVariableScope
 				// ReSharper disable once RedundantAssignment
 				var containsValue = false;
+				var hasGenSize = false;
 
 				for (var j = 0; j < 1000; j++)
 				{
@@ -310,8 +311,12 @@ namespace Elastic.Apm.Tests
 					var samples = gcMetricsProvider.GetSamples();
 
 					containsValue = samples != null && samples.Any();
+					hasGenSize = samples != null && samples
+						.Any(n => (n.KeyValue.Key.Contains("gen0size") || n.KeyValue.Key.Contains("gen1size")
+						|| n.KeyValue.Key.Contains("gen2size") || n.KeyValue.Key.Contains("gen3size"))
+						&& n.KeyValue.Value > 0);
 
-					if (containsValue)
+					if (containsValue && hasGenSize)
 						break;
 				}
 
@@ -334,7 +339,10 @@ namespace Elastic.Apm.Tests
 						return;
 					}
 				}
+
 				containsValue.Should().BeTrue();
+				hasGenSize.Should().BeTrue();
+
 				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeTrue();
 #endif
 			}
@@ -381,7 +389,8 @@ namespace Elastic.Apm.Tests
 		internal class TestSystemTotalCpuProvider : SystemTotalCpuProvider
 		{
 			public TestSystemTotalCpuProvider(string procStatContent) : base(new NoopLogger(),
-				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent)))) { }
+				new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(procStatContent))))
+			{ }
 		}
 	}
 }
