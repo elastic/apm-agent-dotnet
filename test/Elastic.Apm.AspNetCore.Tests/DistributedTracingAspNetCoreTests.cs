@@ -145,7 +145,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			_agent1.ConfigStore.CurrentSnapshot = new MockConfigSnapshot(transactionSampleRate: "0");
 
-			await ExecuteAndCheckDistributedCall(true);
+			await ExecuteAndCheckDistributedCall(false);
 
 			// Since the trace is non-sampled both transactions should me marked as not sampled
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeFalse();
@@ -195,9 +195,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// <summary>
 		/// Executes the distributed tracing call between the 2 services.
 		/// </summary>
-		/// <param name="PreventStartingActivity">If true, we'll create an actvity on .NET 5</param>
+		/// <param name="startActivityBeforeHttpCall ">If true, we'll create an actvity on .NET 5</param>
 		/// <returns></returns>
-		private async Task ExecuteAndCheckDistributedCall(bool PreventStartingActivity = false)
+		private async Task ExecuteAndCheckDistributedCall(bool startActivityBeforeHttpCall = true)
 		{
 #if NET5_0
 			// .NET 5 has built-in W3C TraceContext support and Activity uses the W3C id format by default (pre .NET 5 it was opt-in)
@@ -205,7 +205,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			// a flag recorded=false. The agent would pick this up on the incoming call and start an unsampled transaction.
 			// To prevent this we start an activity and set the recorded flag to true.
 			Activity activity = null;
-			if (!PreventStartingActivity)
+			if (startActivityBeforeHttpCall)
 			{
 				activity = new Activity("foo").Start();
 				activity.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
@@ -221,7 +221,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			//make sure the 2 transactions have the same traceid:
 			_payloadSender2.FirstTransaction.TraceId.Should().Be(_payloadSender1.FirstTransaction.TraceId);
 #if NET5_0
-			if (!PreventStartingActivity)
+			if (startActivityBeforeHttpCall)
 				activity.Dispose();
 #endif
 		}
