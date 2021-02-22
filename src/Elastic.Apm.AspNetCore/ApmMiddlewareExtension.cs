@@ -88,7 +88,7 @@ namespace Elastic.Apm.AspNetCore
 		}
 
 		internal static string GetEnvironmentName(this IServiceProvider serviceProvider) =>
-#if NETCOREAPP3_0
+#if NETCOREAPP3_0 || NET5_0
 			(serviceProvider.GetService(typeof(IWebHostEnvironment)) as IWebHostEnvironment)?.EnvironmentName;
 #else
 			(serviceProvider.GetService(typeof(IHostingEnvironment)) as IHostingEnvironment)?.EnvironmentName;

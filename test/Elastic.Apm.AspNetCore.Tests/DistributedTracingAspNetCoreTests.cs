@@ -2,6 +2,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
@@ -144,7 +145,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			_agent1.ConfigStore.CurrentSnapshot = new MockConfigSnapshot(transactionSampleRate: "0");
 
-			await ExecuteAndCheckDistributedCall();
+			await ExecuteAndCheckDistributedCall(false);
 
 			// Since the trace is non-sampled both transactions should me marked as not sampled
 			_payloadSender1.FirstTransaction.IsSampled.Should().BeFalse();
@@ -191,8 +192,25 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_agent2?.Dispose();
 		}
 
-		private async Task ExecuteAndCheckDistributedCall()
+		/// <summary>
+		/// Executes the distributed tracing call between the 2 services.
+		/// </summary>
+		/// <param name="startActivityBeforeHttpCall ">If true, we'll create an actvity on .NET 5</param>
+		/// <returns></returns>
+		private async Task ExecuteAndCheckDistributedCall(bool startActivityBeforeHttpCall = true)
 		{
+#if NET5_0
+			// .NET 5 has built-in W3C TraceContext support and Activity uses the W3C id format by default (pre .NET 5 it was opt-in)
+			// This means if there is no active activity, the outgoing HTTP request on HttpClient will add the traceparent header with
+			// a flag recorded=false. The agent would pick this up on the incoming call and start an unsampled transaction.
+			// To prevent this we start an activity and set the recorded flag to true.
+			Activity activity = null;
+			if (startActivityBeforeHttpCall)
+			{
+				activity = new Activity("foo").Start();
+				activity.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
+			}
+#endif
 			var client = new HttpClient();
 			var res = await client.GetAsync("http://localhost:5901/Home/DistributedTracingMiniSample");
 			res.IsSuccessStatusCode.Should().BeTrue();
@@ -202,6 +220,10 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			//make sure the 2 transactions have the same traceid:
 			_payloadSender2.FirstTransaction.TraceId.Should().Be(_payloadSender1.FirstTransaction.TraceId);
+#if NET5_0
+			if (startActivityBeforeHttpCall)
+				activity.Dispose();
+#endif
 		}
 	}
 }
