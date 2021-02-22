@@ -544,7 +544,7 @@ def release(Map args = [:]){
 
 def reportTests() {
   dir("${BASE_DIR}"){
-    archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag-*.log,test/**/junit-*.xml,target/**/*coverage.cobertura.xml,TestResults/**/Sequence_*.xml,TestResults/**/testhost*.dmp')
+    archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag-*.log,test/**/junit-*.xml,target/**/*coverage.cobertura.xml,target/**/Sequence_*.xml,target/**/testhost*.dmp')
     junit(allowEmptyResults: true, keepLongStdio: true, testResults: 'test/**/junit-*.xml')
   }
 }
@@ -554,6 +554,6 @@ def notifyStatus(def args = [:]) {
                       slackColor: args.slackStatus,
                       slackCredentialsId: 'jenkins-slack-integration-token',
                       to: "${env.NOTIFY_TO}",
-                      subject: args.subject, 
+                      subject: args.subject,
                       body: args.body)
 }
