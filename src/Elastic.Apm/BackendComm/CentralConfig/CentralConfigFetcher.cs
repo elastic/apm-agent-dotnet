@@ -279,6 +279,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			public string SecretToken => _wrapped.SecretToken;
 
+			public string ServerCert => _wrapped.ServerCert;
+
 			public Uri ServerUrl => _wrapped.ServerUrl;
 
 			[Obsolete("Use ServerUrl")]

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -111,17 +112,71 @@ namespace Elastic.Apm.BackendComm
 				servicePoint.ConnectionLimit = 20;
 			});
 
-		private static HttpClientHandler CreateHttpClientHandler(bool verifyServerCert, IApmLogger logger)
+		private static HttpClientHandler CreateHttpClientHandler(IConfigSnapshot config, IApmLogger logger)
 		{
-			bool ServerCertificateCustomValidationCallback(HttpRequestMessage message, X509Certificate2 certificate, X509Chain chain, SslPolicyErrors policyError)
-			{
-				if (policyError == SslPolicyErrors.None) return true;
+			Func<HttpRequestMessage, X509Certificate2, X509Chain, SslPolicyErrors, bool> serverCertificateCustomValidationCallback = null;
 
-				logger.Trace()?.Log("Certificate validation failed. Policy error {PolicyError}", policyError);
-				return !verifyServerCert;
+			if (!config.VerifyServerCert)
+			{
+				serverCertificateCustomValidationCallback = (_, _, _, policyError) =>
+				{
+					if (policyError == SslPolicyErrors.None) return true;
+
+					logger.Trace()?.Log("Certificate validation failed. Policy error {PolicyError}", policyError);
+					return true;
+				};
+			} else if (!string.IsNullOrEmpty(config.ServerCert))
+			{
+				try
+				{
+					var serverCertificate = new X509Certificate2(config.ServerCert);
+					var publicKey = serverCertificate.GetPublicKeyString();
+
+					serverCertificateCustomValidationCallback = (_, certificate, _, policyError) =>
+					{
+						if (policyError == SslPolicyErrors.None) return true;
+
+						if (certificate is null)
+						{
+							logger.Trace()?.Log("Certificate validation failed. No certificate to validate");
+							return false;
+						}
+
+						var publicKeyToValidate = certificate.GetPublicKeyString();
+						if (string.Equals(publicKey, publicKeyToValidate, StringComparison.Ordinal))
+							return true;
+
+						logger.Trace()
+							?.Log(
+								"Certificate validation failed. Public key {PublicKey} does not match {ServerCert} public key",
+								publicKeyToValidate,
+								nameof(config.ServerCert));
+
+						return false;
+					};
+				}
+				catch (Exception e)
+				{
+					logger.Error()?.LogException(
+						e,
+						"Could not configure {ConfigServerCert} at path {Path} for certificate pinning",
+						nameof(config.ServerCert),
+						config.ServerCert);
+				}
+			}
+			else
+			{
+				// set a default callback to log the policy error
+				serverCertificateCustomValidationCallback = (_, _, _, policyError) =>
+				{
+					if (policyError == SslPolicyErrors.None) return true;
+
+					logger.Trace()?.Log("Certificate validation failed. Policy error {PolicyError}", policyError);
+					return false;
+				};
 			}
 
-			return new HttpClientHandler { ServerCertificateCustomValidationCallback = ServerCertificateCustomValidationCallback };
+			return new HttpClientHandler { ServerCertificateCustomValidationCallback = serverCertificateCustomValidationCallback };
 		}
 
 		internal static HttpClient BuildHttpClient(IApmLogger loggerArg, IConfigSnapshot config, Service service, string dbgCallerDesc
@@ -137,7 +192,7 @@ namespace Elastic.Apm.BackendComm
 				?.Log("Building HTTP client with BaseAddress: {ApmServerUrl} for {dbgCallerDesc}..."
 					, serverUrlBase, dbgCallerDesc);
 			var httpClient =
-				new HttpClient(httpMessageHandler ?? CreateHttpClientHandler(config.VerifyServerCert, loggerArg)) { BaseAddress = serverUrlBase };
+				new HttpClient(httpMessageHandler ?? CreateHttpClientHandler(config, loggerArg)) { BaseAddress = serverUrlBase };
 			httpClient.DefaultRequestHeaders.UserAgent.Add(
 				new ProductInfoHeaderValue($"elasticapm-{Consts.AgentName}", AdaptUserAgentValue(service.Agent.Version)));
 			httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("System.Net.Http",

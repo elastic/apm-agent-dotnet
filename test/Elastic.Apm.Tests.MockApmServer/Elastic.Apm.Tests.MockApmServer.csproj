@@ -15,4 +15,8 @@
     <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="cert.pfx" />
+  </ItemGroup>
+
 </Project>
