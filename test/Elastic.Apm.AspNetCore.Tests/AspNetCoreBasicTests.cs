@@ -96,8 +96,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			var aspNetCoreVersion = Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString();
 			_agent.Service.Framework.Version.Should().Be(aspNetCoreVersion);
-
+#if NET5_0
+			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNet5Name);
+#else
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
+#endif
 			_agent.Service.Runtime.Version.Should().Be(Directory.GetParent(typeof(object).Assembly.Location).Name);
 
 			var transaction = _capturedPayload.FirstTransaction;
@@ -122,7 +125,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			}
 
 			//test transaction.context.request
-#if NETCOREAPP3_0 || NETCOREAPP3_1
+#if NET5_0
+			transaction.Context.Request.HttpVersion.Should().Be("1.1");
+#elif NETCOREAPP3_0 || NETCOREAPP3_1
 			transaction.Context.Request.HttpVersion.Should().Be("2");
 #else
 			transaction.Context.Request.HttpVersion.Should().Be("2.0");
@@ -242,7 +247,12 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var aspNetCoreVersion = Assembly.Load("Microsoft.AspNetCore").GetName().Version.ToString();
 			_agent.Service.Framework.Version.Should().Be(aspNetCoreVersion);
 
+#if NET5_0
+			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNet5Name);
+#else
 			_agent.Service.Runtime.Name.Should().Be(Runtime.DotNetCoreName);
+#endif
+
 			_agent.Service.Runtime.Version.Should().Be(Directory.GetParent(typeof(object).Assembly.Location).Name);
 
 
@@ -271,7 +281,9 @@ namespace Elastic.Apm.AspNetCore.Tests
 			}
 
 			//test transaction.context.request
-#if NETCOREAPP3_0 || NETCOREAPP3_1
+#if NET5_0
+			transaction.Context.Request.HttpVersion.Should().Be("1.1");
+#elif NETCOREAPP3_0 || NETCOREAPP3_1 
 			transaction.Context.Request.HttpVersion.Should().Be("2");
 #else
 			transaction.Context.Request.HttpVersion.Should().Be("2.0");
@@ -310,7 +322,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 
 			response.IsSuccessStatusCode.Should().BeTrue();
 
-			_capturedPayload.WaitForSpans(count:5);
+			_capturedPayload.WaitForSpans(count: 5);
 			_capturedPayload.WaitForTransactions();
 			_capturedPayload.SpansOnFirstTransaction.Should().NotBeEmpty().And.Contain(n => n.Context.Db != null);
 		}
@@ -366,7 +378,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			response.IsSuccessStatusCode.Should().BeTrue();
 
 			_capturedPayload.WaitForTransactions();
-			_capturedPayload.WaitForSpans(count:6);
+			_capturedPayload.WaitForSpans(count: 6);
 			var spans = _capturedPayload.SpansOnFirstTransaction;
 			spans.Should().NotBeEmpty();
 			var controllerActionSpan = spans.Last();
