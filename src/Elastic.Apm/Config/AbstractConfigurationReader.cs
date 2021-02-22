@@ -136,6 +136,13 @@ namespace Elastic.Apm.Config
 			return kv.Value;
 		}
 
+		protected string ParseServerCert(ConfigurationKeyValue kv)
+		{
+			if (kv == null || string.IsNullOrEmpty(kv.Value)) return null;
+
+			return kv.Value;
+		}
+
 		protected string ParseApiKey(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return null;
