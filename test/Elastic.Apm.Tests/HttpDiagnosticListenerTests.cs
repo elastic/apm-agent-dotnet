@@ -18,12 +18,15 @@ using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.HelpersTests;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Xunit;
 
 namespace Elastic.Apm.Tests
 {
+	[Collection("ActivityIdFormat")]
+	[CaptureRestoreActivityIdFormat]
 	public class HttpDiagnosticListenerTests
 	{
 		private static TResult DispatchToImpl<TResult>(
