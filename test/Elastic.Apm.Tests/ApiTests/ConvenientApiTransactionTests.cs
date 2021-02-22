@@ -383,7 +383,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		public async Task CancelledAsyncTask()
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			var cancellationTokenSource = new CancellationTokenSource();
 			var token = cancellationTokenSource.Token;
@@ -668,7 +668,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private async Task<MockPayloadSender> AssertWith1TransactionAsync(Func<ApmAgent, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			await func(agent);
 
@@ -690,7 +690,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private async Task<MockPayloadSender> AssertWith1TransactionAnd1ErrorAsync(Func<ApmAgent, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			await func(agent);
 
@@ -717,7 +717,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private MockPayloadSender AssertWith1Transaction(Action<ApmAgent> action)
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			action(agent);
 
@@ -740,7 +740,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private void AssertWith1TransactionAnd1Error(Action<ApmAgent> action)
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			action(agent);
 
