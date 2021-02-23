@@ -1,4 +1,5 @@
-﻿using StackExchange.Redis;
+﻿using System;
+using StackExchange.Redis;
 
 namespace Elastic.Apm.StackExchange.Redis
 {
@@ -14,7 +15,7 @@ namespace Elastic.Apm.StackExchange.Redis
 		/// <param name="agent">The APM agent instance to register.</param>
 		public static void UseElasticApm(this IConnectionMultiplexer connection, IApmAgent agent)
 		{
-			var profiler = new ElasticApmProfiler(agent);
+			var profiler = new ElasticApmProfiler(() => agent);
 			connection.RegisterProfiler(profiler.GetProfilingSession);
 		}
 
@@ -24,7 +25,7 @@ namespace Elastic.Apm.StackExchange.Redis
 		/// <param name="connection">The connection to capture profiled commands for.</param>
 		public static void UseElasticApm(this IConnectionMultiplexer connection)
 		{
-			var profiler = new ElasticApmProfiler(Agent.Instance);
+			var profiler = new ElasticApmProfiler(() => Agent.Instance);
 			connection.RegisterProfiler(profiler.GetProfilingSession);
 		}
 	}
