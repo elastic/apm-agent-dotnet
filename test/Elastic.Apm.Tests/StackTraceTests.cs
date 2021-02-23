@@ -137,7 +137,7 @@ namespace Elastic.Apm.Tests
 			Action action = () => { TestMethod(); };
 
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			Assert.Throws<Exception>(() => { agent.Tracer.CaptureTransaction("TestTransaction", "Test", () => { action(); }); });
 

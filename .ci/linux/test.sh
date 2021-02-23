@@ -19,6 +19,8 @@ dotnet test -c Release ElasticApmAgent.sln \
 	--logger:"junit;LogFilePath=junit-{framework}-{assembly}.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
 	--collect:"XPlat Code Coverage" \
 	--settings coverlet.runsettings \
+	--blame-hang \
+	--blame-hang-timeout 5m \
 	/p:CollectCoverage=true \
 	/p:CoverletOutputFormat=cobertura \
 	/p:CoverletOutput=target/Coverage/ \
