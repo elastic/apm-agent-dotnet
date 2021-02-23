@@ -564,7 +564,8 @@ namespace Elastic.Apm.Tests
 				var httpClient = new HttpClient();
 				try
 				{
-					await httpClient.GetAsync(localServer.Uri);
+					var response = await httpClient.GetAsync(localServer.Uri);
+					response.IsSuccessStatusCode.Should().BeTrue();
 				}
 				catch (Exception e)
 				{
@@ -669,7 +670,8 @@ namespace Elastic.Apm.Tests
 					var httpClient = new HttpClient();
 					try
 					{
-						await httpClient.GetAsync(url);
+						var response = await httpClient.GetAsync(url);
+						response.IsSuccessStatusCode.Should().BeTrue();
 					}
 					catch (Exception e)
 					{
@@ -708,7 +710,8 @@ namespace Elastic.Apm.Tests
 					Thread.Sleep(5);
 					try
 					{
-						await httpClient.GetAsync(url);
+						var response = await httpClient.GetAsync(url);
+						response.IsSuccessStatusCode.Should().BeTrue();
 					}
 					catch (Exception e)
 					{
@@ -725,7 +728,8 @@ namespace Elastic.Apm.Tests
 				Thread.Sleep(5);
 				try
 				{
-					await httpClient.GetAsync(url);
+					var response = await httpClient.GetAsync(url);
+					response.IsSuccessStatusCode.Should().BeTrue();
 				}
 				catch (Exception e)
 				{
@@ -757,7 +761,8 @@ namespace Elastic.Apm.Tests
 			try
 			{
 				using var httpClient = new HttpClient();
-				await (await httpClient.GetAsync("https://elastic.co")).Content.ReadAsStringAsync();
+				var response = await httpClient.GetAsync("https://elastic.co");
+				(await response.Content.ReadAsStringAsync()).Should().NotBeNullOrEmpty();
 			}
 			catch
 			{
@@ -780,7 +785,8 @@ namespace Elastic.Apm.Tests
 				{
 					using var localServer = LocalServer.Create();
 					using var httpClient = new HttpClient();
-					await httpClient.GetAsync(localServer.Uri);
+					var response = await httpClient.GetAsync(localServer.Uri);
+					response.IsSuccessStatusCode.Should().BeTrue();
 				}
 				catch (Exception)
 				{
@@ -809,7 +815,8 @@ namespace Elastic.Apm.Tests
 				using var httpClient = new HttpClient();
 				try
 				{
-					await httpClient.GetAsync(localServer.Uri);
+					var response = await httpClient.GetAsync(localServer.Uri);
+					response.IsSuccessStatusCode.Should().BeTrue();
 				}
 				catch
 				{
