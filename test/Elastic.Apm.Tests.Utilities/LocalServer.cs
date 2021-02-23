@@ -26,19 +26,19 @@ namespace Elastic.Apm.Tests.Utilities
 			_httpListener = httpListener;
 			Uri = _httpListener.Prefixes.First();
 			_tokenSource = new CancellationTokenSource();
-			_task = Task.Run(() =>
+			_task = Task.Run(async () =>
 			{
 				do
 				{
-					var context = _httpListener.GetContext();
-					Interlocked.Increment(ref _seenRequests);
-					if (testAction == null)
-						context.Response.StatusCode = 200;
-					else
-						testAction(context);
-
-					context.Response.OutputStream.Close();
-					context.Response.Close();
+					var context = await _httpListener.GetContextAsync();
+					using (context.Response)
+					{
+						Interlocked.Increment(ref _seenRequests);
+						if (testAction == null)
+							context.Response.StatusCode = 200;
+						else
+							testAction(context);
+					}
 				} while (!_tokenSource.IsCancellationRequested);
 			}, _tokenSource.Token);
 		}
