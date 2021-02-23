@@ -809,7 +809,8 @@ namespace Elastic.Apm.Tests
 			var mockPayloadSender = new MockPayloadSender();
 			using var localServer = LocalServer.Create();
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
-			agent.Subscribe(new HttpDiagnosticsSubscriber());
+			using var subscriber = agent.Subscribe(new HttpDiagnosticsSubscriber());
+
 			await agent.Tracer.CaptureTransaction("Test", "Test", async () =>
 			{
 				using var httpClient = new HttpClient();
@@ -818,9 +819,9 @@ namespace Elastic.Apm.Tests
 					var response = await httpClient.GetAsync(localServer.Uri);
 					response.IsSuccessStatusCode.Should().BeTrue();
 				}
-				catch
+				catch (Exception e)
 				{
-					//ignore - we don't care about the result
+					_output.WriteLine($"Unsuccessful request: {e}");
 				}
 			});
 
