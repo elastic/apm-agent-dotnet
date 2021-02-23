@@ -1,8 +1,9 @@
-﻿// Sample taken from here:
+// Sample taken from here:
 // https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/hosted-services?view=aspnetcore-5.0&tabs=visual-studio#queued-background-tasks
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm;
@@ -78,9 +79,11 @@ namespace SampleAspNetCoreApp
 				throw new ArgumentNullException(nameof(workItem));
 			}
 
+			var activityId = Activity.Current?.Id;
+
 			_workItems.Enqueue(new WorkItem {
 				Task = workItem,
-				CorrelationId = Agent.Tracer.CurrentTransaction.OutgoingDistributedTracingData.SerializeToString()
+				CorrelationId = activityId
 			});
 			_signal.Release();
 		}

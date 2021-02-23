@@ -152,6 +152,11 @@ namespace SampleAspNetCoreApp.Controllers
 				await _redisConnection.GetDatabase().StringSetAsync("MyKey", "MyValue");
 				await Task.Delay(1000);
 				var value = await _redisConnection.GetDatabase().StringGetAsync("MyKey");
+
+				var httpClient = new HttpClient();
+				var retVal = await httpClient.GetAsync("https://localhost:5001/");
+
+				var resultInStr = await retVal.Content.ReadAsStringAsync();
 			});
 
 			return View(historicalData);
