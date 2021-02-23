@@ -49,116 +49,93 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly AutoResetEvent _errorWaitHandle;
 		private readonly AutoResetEvent _metricSetWaitHandle;
 		private readonly AutoResetEvent[] _waitHandles;
+		private static readonly TimeSpan DefaultTimeout = TimeSpan.FromMinutes(1);
 
 		/// <summary>
 		/// Waits for any events to be queued
 		/// </summary>
-		/// <param name="timeout">Optional timeout to wait</param>
-		public void WaitForAny(TimeSpan? timeout = null)
-		{
-			if (timeout is null)
-				WaitHandle.WaitAny(_waitHandles);
-			else
-				WaitHandle.WaitAny(_waitHandles, timeout.Value);
-		}
+		/// <param name="timeout">Optional timeout to wait. If unspecified, will wait up to <see cref="DefaultTimeout"/></param>
+		public void WaitForAny(TimeSpan? timeout = null) =>
+			WaitHandle.WaitAny(_waitHandles, timeout ?? DefaultTimeout);
 
 		/// <summary>
 		/// Waits for transactions to be queued
 		/// </summary>
-		/// <param name="timeout">Optional timeout to wait</param>
+		/// <param name="timeout">Optional timeout to wait. If unspecified, will wait up to <see cref="DefaultTimeout"/></param>
 		/// <param name="count"></param>
 		/// <returns><c>true</c> if the event was signalled, <c>false</c> otherwise.</returns>
-		public void WaitForTransactions(TimeSpan? timeout = null, int? count = null)
+		public bool WaitForTransactions(TimeSpan? timeout = null, int? count = null)
 		{
 			if (count != null)
 			{
+				var signalled = true;
 				if (timeout is null)
 				{
-					while (_transactions.Count < count)
-						_transactionWaitHandle.WaitOne();
-
-					return;
+					while (_transactions.Count < count && signalled)
+						signalled = _transactionWaitHandle.WaitOne(DefaultTimeout);
 				}
-
-				var stopWatch = Stopwatch.StartNew();
-				while (_transactions.Count < count)
+				else
 				{
-					var elapsedMilliseconds = Convert.ToInt32(timeout.Value.TotalMilliseconds - stopWatch.ElapsedMilliseconds);
-					var signalled = _transactionWaitHandle.WaitOne(elapsedMilliseconds);
-
-					if (!signalled) return;
+					var stopWatch = Stopwatch.StartNew();
+					while (_transactions.Count < count && signalled)
+					{
+						var elapsedMilliseconds = Convert.ToInt32(timeout.Value.TotalMilliseconds - stopWatch.ElapsedMilliseconds);
+						signalled = _transactionWaitHandle.WaitOne(elapsedMilliseconds);
+					}
 				}
 
-				return;
+				return signalled;
 			}
 
-			if (timeout is null)
-				_transactionWaitHandle.WaitOne();
-			else
-				_transactionWaitHandle.WaitOne(timeout.Value);
+			return _transactionWaitHandle.WaitOne(timeout ?? DefaultTimeout);
 		}
 
 		/// <summary>
 		/// Waits for spans to be queued
 		/// </summary>
-		/// <param name="timeout">Optional timeout to wait</param>
+		/// <param name="timeout">Optional timeout to wait. If unspecified, will wait up to <see cref="DefaultTimeout"/></param>
 		/// <returns><c>true</c> if the event was signalled, <c>false</c> otherwise.</returns>
-		public void WaitForSpans(TimeSpan? timeout = null, int? count = null)
+		public bool WaitForSpans(TimeSpan? timeout = null, int? count = null)
 		{
 			if (count != null)
 			{
+				var signalled = true;
 				if (timeout is null)
 				{
-					while (_spans.Count < count)
-						_spanWaitHandle.WaitOne();
-
-					return;
+					while (_spans.Count < count && signalled)
+						signalled = _spanWaitHandle.WaitOne(DefaultTimeout);
 				}
-
-				var stopWatch = Stopwatch.StartNew();
-				while (_spans.Count < count)
+				else
 				{
-					var elapsedMilliseconds = Convert.ToInt32(timeout.Value.TotalMilliseconds - stopWatch.ElapsedMilliseconds);
-					var signalled = _spanWaitHandle.WaitOne(elapsedMilliseconds);
-
-					if (!signalled)
-						return;
+					var stopWatch = Stopwatch.StartNew();
+					while (_spans.Count < count && signalled)
+					{
+						var elapsedMilliseconds = Convert.ToInt32(timeout.Value.TotalMilliseconds - stopWatch.ElapsedMilliseconds);
+						signalled = _spanWaitHandle.WaitOne(elapsedMilliseconds);
+					}
 				}
 
-				return;
+				return signalled;
 			}
 
-			if (timeout is null)
-				_spanWaitHandle.WaitOne();
-			else
-				_spanWaitHandle.WaitOne(timeout.Value);
+			return _spanWaitHandle.WaitOne(timeout ?? DefaultTimeout);
 		}
 
 		/// <summary>
 		/// Waits for errors to be queued
 		/// </summary>
-		/// <param name="timeout">Optional timeout to wait</param>
+		/// <param name="timeout">Optional timeout to wait. If unspecified, will wait up to <see cref="DefaultTimeout"/></param>
 		/// <returns><c>true</c> if the event was signalled, <c>false</c> otherwise.</returns>
-		public void WaitForErrors(TimeSpan? timeout = null)
-		{
-			if (timeout is null)
-				_errorWaitHandle.WaitOne();
-			else
-				_errorWaitHandle.WaitOne(timeout.Value);
-		}
+		public bool WaitForErrors(TimeSpan? timeout = null) =>
+			_errorWaitHandle.WaitOne(timeout ?? DefaultTimeout);
 
 		/// <summary>
 		/// Waits for metrics to be queued
 		/// </summary>
-		/// <param name="timeout">Optional timeout to wait</param>
+		/// <param name="timeout">Optional timeout to wait. If unspecified, will wait up to <see cref="DefaultTimeout"/></param>
 		/// <returns><c>true</c> if the event was signalled, <c>false</c> otherwise.</returns>
-		public void WaitForMetrics(TimeSpan? timeout = null)
-		{
-			if (timeout is null)
-				_metricSetWaitHandle.WaitOne();
-			else
-				_metricSetWaitHandle.WaitOne(timeout.Value);
-		}
+		public bool WaitForMetrics(TimeSpan? timeout = null) =>
+			_metricSetWaitHandle.WaitOne(timeout ?? DefaultTimeout);
 
 		/// <summary>
 		/// Sets transaction wait handle to signalled, allowing threads to proceed.

@@ -810,7 +810,7 @@ namespace Elastic.Apm.Tests
 				}
 			});
 
-			mockPayloadSender.WaitForSpans(TimeSpan.FromMinutes(1));
+			mockPayloadSender.WaitForSpans();
 			mockPayloadSender.Spans.Should().HaveCount(1);
 		}
 
