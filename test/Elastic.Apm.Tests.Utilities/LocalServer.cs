@@ -74,6 +74,7 @@ namespace Elastic.Apm.Tests.Utilities
 			}
 			catch
 			{
+				((IDisposable)httpListener).Dispose();
 				server = null;
 				return false;
 			}
@@ -88,9 +89,9 @@ namespace Elastic.Apm.Tests.Utilities
 
 		public void Dispose()
 		{
+			_tokenSource.Cancel();
 			_httpListener.Abort();
 			((IDisposable)_httpListener).Dispose();
-			_tokenSource.Cancel();
 			_tokenSource.Dispose();
 
 			if (_task.IsCompleted || _task.IsFaulted || _task.IsCanceled)
