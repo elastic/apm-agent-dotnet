@@ -22,6 +22,7 @@ using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Tests
 {
@@ -29,6 +30,10 @@ namespace Elastic.Apm.Tests
 	[CaptureRestoreActivityIdFormat]
 	public class HttpDiagnosticListenerTests
 	{
+		private readonly ITestOutputHelper _output;
+
+		public HttpDiagnosticListenerTests(ITestOutputHelper output) => _output = output;
+
 		private static TResult DispatchToImpl<TResult>(
 			IDiagnosticListener listener,
 			Func<HttpDiagnosticListenerCoreImpl, TResult> coreImplFunc,
@@ -791,6 +796,8 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task HttpCallWithW3CActivityFormat()
 		{
+			_output.WriteLine($"System.Diagnostics.DiagnosticSource version is {typeof(Activity).Assembly.GetName()}");
+
 			Activity.DefaultIdFormat = ActivityIdFormat.W3C;
 
 			var mockPayloadSender = new MockPayloadSender();
