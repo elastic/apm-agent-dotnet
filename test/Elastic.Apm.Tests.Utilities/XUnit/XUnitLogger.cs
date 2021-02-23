@@ -22,7 +22,7 @@ namespace Elastic.Apm.Tests.Utilities.XUnit
 			_scope = scope;
 		}
 
-		public bool IsEnabled(LogLevel level) => level <= _level;
+		public bool IsEnabled(LogLevel level) => level >= _level;
 
 		public void Log<TState>(LogLevel level, TState state, Exception e, Func<TState, Exception, string> formatter)
 		{

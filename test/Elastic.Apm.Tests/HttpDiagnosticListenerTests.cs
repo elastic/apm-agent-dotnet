@@ -809,7 +809,7 @@ namespace Elastic.Apm.Tests
 			var mockPayloadSender = new MockPayloadSender();
 			using var localServer = LocalServer.Create();
 
-			var logger = new XUnitLogger(LogLevel.Debug, _output, nameof(HttpCallWithW3CActivityFormat));
+			var logger = new XUnitLogger(LogLevel.Trace, _output, nameof(HttpCallWithW3CActivityFormat));
 			using var agent = new ApmAgent(new TestAgentComponents(logger: logger, payloadSender: mockPayloadSender));
 			using var subscriber = agent.Subscribe(new HttpDiagnosticsSubscriber());
 
@@ -818,6 +818,7 @@ namespace Elastic.Apm.Tests
 				using var httpClient = new HttpClient();
 				try
 				{
+					_output.WriteLine($"Making request to: {localServer.Uri}");
 					var response = await httpClient.GetAsync(localServer.Uri);
 					response.IsSuccessStatusCode.Should().BeTrue();
 				}
@@ -827,6 +828,7 @@ namespace Elastic.Apm.Tests
 				}
 			});
 
+			localServer.SeenRequests.Should().Be(1);
 			mockPayloadSender.WaitForSpans();
 			mockPayloadSender.Spans.Should().HaveCount(1);
 		}
