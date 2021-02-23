@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
@@ -45,6 +46,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 		/// Makes sure that for the HTTP request in ASP.NET Core the generated transaction has the same trace id as Activity.Current.TraceId
 		/// </summary>
 		[Fact]
+		[CaptureRestoreActivityIdFormat]
 		public async Task ActivityFromAspNetCoreAndTransactionWithSameTraceId()
 		{
 			Activity.DefaultIdFormat = ActivityIdFormat.W3C;
