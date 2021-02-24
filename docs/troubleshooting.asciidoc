@@ -129,3 +129,17 @@ set ELASTIC_APM_STARTUP_HOOKS_LOGGING=1
 and then running the application in a context where the environment variable will be visible. In setting this value,
 an `ElasticApmAgentStartupHook.log` file is written to in the directory containing the startup hook assembly, in addition to
 writing to standard output.
+
+[float]
+[[agent-overhead]]
+=== The agent causes too much overhead
+
+A good place to start is our <<config-all-options-summary>>. There are multiple settings there with the `Performance` keyword which help you to tweak the agent for your needs.
+
+The most expensive operation in the agent is typically stack trace capturing. The agent, by default only captures stack traces for spans with a duration of 5ms or more, and with a limit of 50 stack frames.
+
+If this is too much in your environment, the <<config-span-frames-min-duration>> and the <<config-stack-trace-limit>> are two configuration worth looking at.
+
+By setting <<config-stack-trace-limit>> to `0` you can disable stack trace capturing completely which in most applications reduces the agent overhead dramatically.
+
+If you would like to capture stack traces for errors but skip stack trace capturing for spans, you can set the <<config-span-frames-min-duration>> to `0` and leave the <<config-stack-trace-limit>> on default.
