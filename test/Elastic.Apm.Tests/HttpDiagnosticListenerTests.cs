@@ -3,12 +3,14 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -807,11 +809,26 @@ namespace Elastic.Apm.Tests
 			Activity.DefaultIdFormat = ActivityIdFormat.W3C;
 
 			var mockPayloadSender = new MockPayloadSender();
-			using var localServer = LocalServer.Create();
-
 			var logger = new XUnitLogger(LogLevel.Trace, _output, nameof(HttpCallWithW3CActivityFormat));
 			using var agent = new ApmAgent(new TestAgentComponents(logger: logger, payloadSender: mockPayloadSender));
 			using var subscriber = agent.Subscribe(new HttpDiagnosticsSubscriber());
+
+			using var localServer = LocalServer.Create();
+
+#if NET461
+			var servicePointTableField = typeof(ServicePointManager)
+				.GetField("s_ServicePointTable", BindingFlags.Static | BindingFlags.NonPublic);
+
+			if (servicePointTableField is null)
+			{
+				_output.WriteLine($"ServicePointManager table field is null");
+			}
+			else
+			{
+				var table = servicePointTableField.GetValue(null);
+				_output.WriteLine($"ServicePointManager table type is {table.GetType().FullName}");
+			}
+#endif
 
 			await agent.Tracer.CaptureTransaction("Test", "Test", async () =>
 			{
