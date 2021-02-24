@@ -8,6 +8,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using Elastic.Apm.Api;
+using Elastic.Apm.DiagnosticListeners.Parsers;
+using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
@@ -32,6 +34,10 @@ namespace Elastic.Apm.DiagnosticListeners
 		internal readonly ConcurrentDictionary<TRequest, ISpan> ProcessingRequests = new ConcurrentDictionary<TRequest, ISpan>();
 
 		protected HttpDiagnosticListenerImplBase(IApmAgent agent) : base(agent) { }
+		/// <summary>
+		/// Keeps track of ongoing CosmosDb calls
+		/// </summary>
+		internal readonly ConcurrentDictionary<TRequest, ISpan> CosmosDbSpans = new ConcurrentDictionary<TRequest, ISpan>();
 
 		protected abstract string RequestGetMethod(TRequest request);
 
@@ -128,6 +134,18 @@ namespace Elastic.Apm.DiagnosticListeners
 			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(ApmAgent, $"{RequestGetMethod(request)} {requestUrl.Host}",
 				ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient, true);
 
+			var cosmosDbSpan = DocumentDbHttpParser.TryCreateCosmosDbSpan(requestUrl.Host, requestUrl.AbsoluteUri, requestUrl.PathAndQuery, Agent.Tracer);
+
+			if (cosmosDbSpan != null)
+			{
+				if (!CosmosDbSpans.TryAdd(request, cosmosDbSpan))
+				{
+					// Consider improving error reporting - see https://github.com/elastic/apm-agent-dotnet/issues/280
+					Logger.Error()?.Log("Failed to add to CosmosDbSpans - ???");
+					return;
+				}
+			}
+
 			if (!ProcessingRequests.TryAdd(request, span))
 			{
 				// Consider improving error reporting - see https://github.com/elastic/apm-agent-dotnet/issues/280
@@ -196,6 +214,7 @@ namespace Elastic.Apm.DiagnosticListeners
 				return;
 			}
 
+
 			// if span.Context.Http == null that means the transaction is not sampled (see ProcessStartEvent)
 			if (span.Context.Http != null)
 			{
@@ -218,6 +237,16 @@ namespace Elastic.Apm.DiagnosticListeners
 								responseObject.GetType().FullName, EventResponsePropertyName, typeof(TResponse).FullName);
 					}
 				}
+			}
+
+			if (CosmosDbSpans.TryRemove(request, out var cosmosDbSpan))
+			{
+				cosmosDbSpan.Outcome = span.Outcome;
+				cosmosDbSpan.End();
+			}
+			else
+			{
+				//log
 			}
 
 			span.End();
