@@ -818,8 +818,9 @@ namespace Elastic.Apm.Tests
 				using var httpClient = new HttpClient();
 				try
 				{
-					_output.WriteLine($"Making request to: {localServer.Uri}");
+					_output.WriteLine($"Making request to: {localServer.Uri}. Activity id format is {Activity.DefaultIdFormat}");
 					var response = await httpClient.GetAsync(localServer.Uri);
+					_output.WriteLine($"Made request to: {localServer.Uri}. Activity id format is {Activity.DefaultIdFormat}");
 					response.IsSuccessStatusCode.Should().BeTrue();
 				}
 				catch (Exception e)
