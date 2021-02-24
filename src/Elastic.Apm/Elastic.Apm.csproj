@@ -11,8 +11,39 @@
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, sdk</PackageTags>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.5.0" />
+  <ItemGroup>
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="0024000004800000940000000602000000240000525341310004000001000100c547cac37abd99c8db225ef2f6c8a3602f3b3606cc9891605d02baa56104f4cfc0734aa39b93bf7852f7d9266654753cc297e7d2edfe0bac1cdcf9f717241550e0a7b191195b7667bb4f64bcb8e2121380fd1d9d46ad2d92d2d15605093924cceaf74c4861eff62abf69b9291ed0a340e113be11e6a7d3113e92484cf7045cc7" />
+    <InternalsVisibleTo Include="Elastic.Apm.Extensions.Hosting" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.AspNetCore" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.AspNetCore.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.EntityFrameworkCore" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.EntityFrameworkCore.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.EntityFramework6" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.EntityFramework6.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.SqlClient" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.SqlClient.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.NetCoreAll" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.NetCoreAll.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.AspNetCore.Static.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Benchmarks" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Docker.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.AspNetFullFramework" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.AspNetFullFramework.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Tests.MockApmServer" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Elasticsearch" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Elasticsearch.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Feature.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.GrpcClient" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Grpc.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Specification" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.StackExchange.Redis" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.StackExchange.Redis.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Tests.Utilities" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.StartupHook.Loader" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Extensions.Logging" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Extensions.Logging.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Extensions.Hosting.Tests" Key="$(ExposedPublicKey)" />
   </ItemGroup>
   <ItemGroup Condition="'$(DiagnosticSourceVersion)' == ''">
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="5.0.0" />
@@ -23,6 +54,9 @@
    -->
   <ItemGroup Condition="'$(DiagnosticSourceVersion)' != ''">
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="$(DiagnosticSourceVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="2.0.2" />

@@ -15,6 +15,10 @@
     <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Elastic.Apm.Extensions.Hosting" Key="$(ExposedPublicKey)" />
+  </ItemGroup>
+
   <ItemGroup Condition=" '$(TargetFramework)' == 'net5.0' ">
     <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="5.0.0">
       <PrivateAssets>all</PrivateAssets>
