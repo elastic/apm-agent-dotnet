@@ -14,7 +14,7 @@ endif::[]
 
 [float]
 ===== Features
-* Cool new feature: {pull}2526[#2526]
+- Cool new feature: {pull}2526[#2526]
 
 [float]
 ===== Bug fixes
@@ -22,6 +22,18 @@ endif::[]
 
 [[release-notes-1.x]]
 === .NET Agent version 1.x
+
+[[release-notes-1.8.1]]
+==== 1.8.1
+
+[float]
+===== Features
+- {pull}1196[#1196] Add GC Heap Stats capturing for .NET 5.0 (issue: {issue}1195[#1195])
+
+[float]
+===== Bug fixes
+- {pull}1192[#1192] Lazily access the agent in ElasticApmProfiler redis integration (issue: {issue}1190[#1190])
+- {pull}1198[#1198] Add TargetFramework NET5.0 to Elastic.Apm.AspNetCore and related packages (issue: {issue}1194[#1194])
 
 [[release-notes-1.8.0]]
 ==== 1.8.0
