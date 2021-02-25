@@ -4,6 +4,26 @@
       <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
       <IsTestProject>false</IsTestProject>
     </PropertyGroup>
+
+    <ItemGroup>
+      <InternalsVisibleTo Include="Elastic.Apm.AspNetCore.Tests" Key="$(ExposedPublicKey)" />
+      <InternalsVisibleTo Include="Elastic.Apm.AspNetCore.Static.Tests" Key="$(ExposedPublicKey)" />
+      <InternalsVisibleTo Include="Elastic.Apm.EntityFrameworkCore.Tests" Key="$(ExposedPublicKey)" />
+      <InternalsVisibleTo Include="Elastic.Apm.Benchmarks" Key="$(ExposedPublicKey)" />
+      <InternalsVisibleTo Include="Elastic.Apm.Docker.Tests" Key="$(ExposedPublicKey)" />
+      <InternalsVisibleTo Include="Elastic.Apm.AspNetFullFramework.Tests" Key="$(ExposedPublicKey)" />
+      <InternalsVisibleTo Include="Elastic.Apm.Tests.MockApmServer" Key="$(ExposedPublicKey)" />
+      <InternalsVisibleTo Include="Elastic.Apm.SqlClient.Tests" Key="$(ExposedPublicKey)" />
+      <InternalsVisibleTo Include="Elastic.Apm.Feature.Tests" Key="$(ExposedPublicKey)" />
+      <InternalsVisibleTo Include="Elastic.Apm.Elasticsearch.Tests" Key="$(ExposedPublicKey)" />
+      <InternalsVisibleTo Include="Elastic.Apm.EntityFramework6.Tests" Key="$(ExposedPublicKey)" />
+      <InternalsVisibleTo Include="Elastic.Apm.Grpc.Tests" Key="$(ExposedPublicKey)" />
+      <InternalsVisibleTo Include="Elastic.Apm.StackExchange.Redis.Tests" Key="$(ExposedPublicKey)" />
+      <InternalsVisibleTo Include="Elastic.Apm.Tests" Key="$(ExposedPublicKey)" />
+      <InternalsVisibleTo Include="Elastic.Apm.StaticImplicitInitialization.Tests" Key="$(ExposedPublicKey)" />
+      <InternalsVisibleTo Include="Elastic.Apm.Extensions.Hosting.Tests" Key="$(ExposedPublicKey)" />
+      <InternalsVisibleTo Include="Elastic.Apm.Extensions.Logging.Tests" Key="$(ExposedPublicKey)" />
+    </ItemGroup>
   
     <ItemGroup>
       <PackageReference Include="FluentAssertions" Version="5.6.0" />
