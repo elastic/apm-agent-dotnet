@@ -11,6 +11,13 @@
   <ItemGroup>
     <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <InternalsVisibleTo Include="Elastic.Apm.AspNetCore" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.StartupHook.Loader" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.AspNetCore.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.AspNetCore.Static.Tests" Key="$(ExposedPublicKey)" />
+  </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.1.0" />
