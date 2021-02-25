@@ -397,9 +397,10 @@ namespace Elastic.Apm.Tests
 		[NetCoreFact] //see: https://github.com/elastic/apm-agent-dotnet/issues/516
 		public async Task SpanTypeAndSubtype()
 		{
-			var (_, payloadSender, agent) = RegisterSubscriberAndStartTransaction();
+			var (subscriber, payloadSender, agent) = RegisterSubscriberAndStartTransaction();
 
 			using (agent)
+			using (subscriber)
 			using (var localServer = LocalServer.Create())
 			{
 				var httpClient = new HttpClient();
@@ -593,23 +594,25 @@ namespace Elastic.Apm.Tests
 			var logger = new TestLogger(LogLevel.Trace);
 
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, logger: logger));
-			agent.Subscribe(new HttpDiagnosticsSubscriber());
-			StartTransaction(agent);
+			using (agent.Subscribe(new HttpDiagnosticsSubscriber()))
+			{
+				StartTransaction(agent);
 
-			using var localServer = LocalServer.Create();
-			using var httpClient = new HttpClient();
-			var uriBuilder = new UriBuilder(localServer.Uri) { UserName = "TestUser289421", Password = "Password973243" };
+				using var localServer = LocalServer.Create();
+				using var httpClient = new HttpClient();
+				var uriBuilder = new UriBuilder(localServer.Uri) { UserName = "TestUser289421", Password = "Password973243" };
 
-			var res = await httpClient.GetAsync(uriBuilder.Uri);
-			res.IsSuccessStatusCode.Should().BeTrue();
-			logger.Lines.Should().NotBeEmpty();
+				var res = await httpClient.GetAsync(uriBuilder.Uri);
+				res.IsSuccessStatusCode.Should().BeTrue();
+				logger.Lines.Should().NotBeEmpty();
 
-			logger.Lines.Should().NotContain(n => n.Contains("TestUser289421"));
-			logger.Lines.Should().NotContain(n => n.Contains("Password973243"));
+				logger.Lines.Should().NotContain(n => n.Contains("TestUser289421"));
+				logger.Lines.Should().NotContain(n => n.Contains("Password973243"));
 
-			// looking for lines with "localhost:8082" and asserting that those contain [REDACTED].
-			foreach (var lineWithHttpLog in logger.Lines.Where(n => n.Contains($"{uriBuilder.Host}:{uriBuilder.Port}")))
-				lineWithHttpLog.Should().Contain("[REDACTED]");
+				// looking for lines with "localhost:8082" and asserting that those contain [REDACTED].
+				foreach (var lineWithHttpLog in logger.Lines.Where(n => n.Contains($"{uriBuilder.Host}:{uriBuilder.Port}")))
+					lineWithHttpLog.Should().Contain("[REDACTED]");
+			}
 		}
 
 		/// <summary>
@@ -780,8 +783,10 @@ namespace Elastic.Apm.Tests
 		[NetCoreFact]
 		public async Task CallStackContainsCallerMethod()
 		{
-			var (_, payloadSender, agent) = RegisterSubscriberAndStartTransaction();
+			var (subscriber, payloadSender, agent) = RegisterSubscriberAndStartTransaction();
+
 			using (agent)
+			using (subscriber)
 			{
 				try
 				{
@@ -810,16 +815,7 @@ namespace Elastic.Apm.Tests
 			var logger = new XUnitLogger(LogLevel.Trace, _output, nameof(HttpCallWithW3CActivityFormat));
 			using var agent = new ApmAgent(new TestAgentComponents(logger: logger, payloadSender: mockPayloadSender));
 			using var subscriber = agent.Subscribe(new HttpDiagnosticsSubscriber());
-			using var localServer = LocalServer.Create(context =>
-			{
-				Thread.Sleep(TimeSpan.FromMilliseconds(100));
-				var content = Encoding.UTF8.GetBytes("ok");
-				var response = context.Response;
-				response.ContentType = "text/plain";
-				response.ContentLength64 = content.Length;
-				response.OutputStream.Write(content, 0, content.Length);
-				response.OutputStream.Flush();
-			});
+			using var localServer = LocalServer.Create();
 
 			await agent.Tracer.CaptureTransaction("Test", "Test", async () =>
 			{
