@@ -536,7 +536,7 @@ def release(Map args = [:]){
       [var: 'REPO_API_URL', password: repo.data.url],
       ]]) {
       withEnv(["REPO_API_KEY=${repo.data.apiKey}", "REPO_API_URL=${repo.data.url}"]) {
-        sh(label: 'Deploy', script: ".ci/linux/deploy.sh ${REPO_API_KEY} ${REPO_API_URL}")
+        sh(label: 'Deploy', script: '.ci/linux/deploy.sh ${REPO_API_KEY} ${REPO_API_URL}')
       }
     }
   }
