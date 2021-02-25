@@ -804,31 +804,22 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public async Task HttpCallWithW3CActivityFormat()
 		{
-			_output.WriteLine($"System.Diagnostics.DiagnosticSource version is {typeof(Activity).Assembly.GetName()}");
-
 			Activity.DefaultIdFormat = ActivityIdFormat.W3C;
 
 			var mockPayloadSender = new MockPayloadSender();
 			var logger = new XUnitLogger(LogLevel.Trace, _output, nameof(HttpCallWithW3CActivityFormat));
 			using var agent = new ApmAgent(new TestAgentComponents(logger: logger, payloadSender: mockPayloadSender));
 			using var subscriber = agent.Subscribe(new HttpDiagnosticsSubscriber());
-
-			using var localServer = LocalServer.Create();
-
-#if NET461
-			var servicePointTableField = typeof(ServicePointManager)
-				.GetField("s_ServicePointTable", BindingFlags.Static | BindingFlags.NonPublic);
-
-			if (servicePointTableField is null)
+			using var localServer = LocalServer.Create(context =>
 			{
-				_output.WriteLine($"ServicePointManager table field is null");
-			}
-			else
-			{
-				var table = servicePointTableField.GetValue(null);
-				_output.WriteLine($"ServicePointManager table type is {table.GetType().FullName}");
-			}
-#endif
+				Thread.Sleep(TimeSpan.FromMilliseconds(100));
+				var content = Encoding.UTF8.GetBytes("ok");
+				var response = context.Response;
+				response.ContentType = "text/plain";
+				response.ContentLength64 = content.Length;
+				response.OutputStream.Write(content, 0, content.Length);
+				response.OutputStream.Flush();
+			});
 
 			await agent.Tracer.CaptureTransaction("Test", "Test", async () =>
 			{
