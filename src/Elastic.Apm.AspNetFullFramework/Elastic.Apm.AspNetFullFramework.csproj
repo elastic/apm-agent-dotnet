@@ -8,6 +8,11 @@
     <PackageTags>apm, monitoring, elastic, elasticapm, analytics, aspnet</PackageTags>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <InternalsVisibleTo Include="Elastic.Apm.AspNetFullFramework.Tests" Key="$(ExposedPublicKey)" />
+  </ItemGroup>
+  
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
