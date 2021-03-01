@@ -162,6 +162,7 @@ namespace Elastic.Apm.Model
 			Dictionary<string, Label> labels = null
 		)
 		{
+			executionSegment.Outcome = Outcome.Failure;
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? GetCulprit(exception, configurationReader) : culprit;
 
 			var capturedException = new CapturedException { Message = exception.Message, Type = exception.GetType().FullName, Handled = isHandled };
@@ -236,6 +237,7 @@ namespace Elastic.Apm.Model
 			Dictionary<string, Label> labels = null
 		)
 		{
+			executionSegment.Outcome = Outcome.Failure;
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? "PublicAPI-CaptureException" : culprit;
 
 			var capturedException = new CapturedException { Message = message };
@@ -296,6 +298,7 @@ namespace Elastic.Apm.Model
 			Dictionary<string, Label> labels = null
 		)
 		{
+			executionSegment.Outcome = Outcome.Failure;
 			var error = new Error(errorLog, enclosingTransaction, parentId ?? executionSegment?.Id, logger, labels)
 			{
 				Culprit = $"{errorLog.Level ?? "Error"} log"

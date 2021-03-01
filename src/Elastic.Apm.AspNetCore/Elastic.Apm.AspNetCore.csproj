@@ -13,6 +13,7 @@
     <InternalsVisibleTo Include="Elastic.Apm.AspNetCore.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Benchmarks" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Grpc.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Feature.Tests" Key="$(ExposedPublicKey)" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.1.0" />

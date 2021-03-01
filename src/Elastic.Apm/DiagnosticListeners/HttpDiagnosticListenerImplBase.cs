@@ -163,7 +163,7 @@ namespace Elastic.Apm.DiagnosticListeners
 					TraceContext.BuildTraceState(transaction.OutgoingDistributedTracingData));
 			}
 
-			if(span is Span spanInstance)
+			if (span is Span spanInstance)
 			{
 				if (!spanInstance.ShouldBeSentToApmServer)
 					return;
@@ -211,11 +211,7 @@ namespace Elastic.Apm.DiagnosticListeners
 					if (responseObject is TResponse response)
 					{
 						span.Context.Http.StatusCode = ResponseGetStatusCode(response);
-
-						if (span.Context.Http.StatusCode < 400)
-							span.Outcome = Outcome.Success;
-						else
-							span.Outcome = Outcome.Failure;
+						SetOutcome(span, span.Context.Http.StatusCode);
 					}
 					else
 					{
@@ -228,6 +224,14 @@ namespace Elastic.Apm.DiagnosticListeners
 			}
 
 			span.End();
+		}
+
+		internal static void SetOutcome(ISpan span, int statusCode)
+		{
+			if (statusCode >= 400 || statusCode < 100)
+				span.Outcome = Outcome.Failure;
+			else
+				span.Outcome = Outcome.Success;
 		}
 
 		protected virtual void ProcessExceptionEvent(object eventValue, Uri requestUrl)
