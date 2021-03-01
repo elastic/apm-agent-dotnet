@@ -160,8 +160,8 @@ namespace Elastic.Apm.Feature.Tests
 				if (enumMemberAttribute.Value == str)
 					return (T)Enum.Parse(enumType, name);
 			}
-			//throw exception or whatever handling you want or
-			return default(T);
+
+			throw new Exception($"Failed parsing {str}");
 		}
 	}
 

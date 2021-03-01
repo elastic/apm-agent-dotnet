@@ -32,7 +32,7 @@ namespace Elastic.Apm.Helpers
 			};
 		}
 
-		internal static Outcome GrpcServerReturnCodeToOutcome(string returnCode) => returnCode switch
+		internal static Outcome GrpcServerReturnCodeToOutcome(string returnCode) => returnCode.ToUpper() switch
 		{
 			"OK" => Outcome.Success,
 			"CANCELLED" => Outcome.Success,
@@ -54,7 +54,7 @@ namespace Elastic.Apm.Helpers
 			_ => Outcome.Failure,
 		};
 
-		internal static Outcome GrpcClientReturnCodeToOutcome(string returnCode) => returnCode switch
+		internal static Outcome GrpcClientReturnCodeToOutcome(string returnCode) => returnCode.ToUpper() switch
 		{
 			"OK" => Outcome.Success,
 			"CANCELLED" => Outcome.Failure,

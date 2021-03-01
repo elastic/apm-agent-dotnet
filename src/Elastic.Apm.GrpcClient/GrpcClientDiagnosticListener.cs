@@ -55,13 +55,14 @@ namespace Elastic.Apm.GrpcClient
 				if (kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Request")?.GetValue(kv.Value) is not HttpRequestMessage requestObject)
 					return;
 
-				if (!ProcessingRequests.TryRemove(requestObject, out var span)) return;
+				if (!ProcessingRequests.TryRemove(requestObject, out var span))
+					return;
 
 				_agent?.Logger.Trace()?.Log("Ending span for gRPC call, span:{span}", span);
 
 				var grpcStatusCode = currentActivity?.Tags?.Where(n => n.Key == "grpc.status_code").FirstOrDefault().Value;
 				if (grpcStatusCode != null)
-					span.Outcome =  GrpcHelper.GrpcClientReturnCodeToOutcome(grpcStatusCode);
+					span.Outcome = GrpcHelper.GrpcClientReturnCodeToOutcome(GrpcHelper.GrpcReturnCodeToString(grpcStatusCode));
 
 				span.Context.Destination = UrlUtils.ExtractDestination(requestObject.RequestUri, _agent?.Logger);
 				span.Context.Destination.Service = UrlUtils.ExtractService(requestObject.RequestUri, span);

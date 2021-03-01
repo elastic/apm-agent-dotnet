@@ -210,7 +210,7 @@ namespace Elastic.Apm.AspNetCore
 				{
 					transaction.Name = grpcCallInfo.methodname;
 					transaction.Result = GrpcHelper.GrpcReturnCodeToString(grpcCallInfo.result);
-					transaction.Outcome = GrpcHelper.GrpcServerReturnCodeToOutcome(grpcCallInfo.result);
+					transaction.Outcome = GrpcHelper.GrpcServerReturnCodeToOutcome(transaction.Result);
 				}
 
 				if (transaction.IsSampled)
