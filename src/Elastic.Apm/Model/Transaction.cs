@@ -53,7 +53,8 @@ namespace Elastic.Apm.Model
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigStore.CurrentSnapshot,
-				agent.TracerInternal.CurrentExecutionSegmentsContainer, null) { }
+				agent.TracerInternal.CurrentExecutionSegmentsContainer, null)
+		{ }
 
 		/// <summary>
 		/// Creates a new transaction
@@ -263,7 +264,23 @@ namespace Elastic.Apm.Model
 		/// This field can be used for calculating error rates for incoming requests.
 		/// </summary>
 		[JsonConverter(typeof(StringEnumConverter))]
-		public Outcome Outcome { get; set; }
+		public Outcome Outcome
+		{
+			get => _outcome; set
+			{
+				_outcomeChangedThroughApi = true;
+				_outcome = value;
+			}
+		}
+
+		/// <summary>
+		/// In general if there is an error on the span, the outcome will be <see cref="Outcome.Failure"/>, otherwise it'll be <see cref="Outcome.Success"/>.
+		/// There are some exceptions to this (see spec: https://github.com/elastic/apm/blob/master/specs/agents/tracing-spans.md#span-outcome) when it can be <see cref="Outcome.Unknown"/>.
+		/// Use <see cref="_outcomeChangedThroughApi"/> to check if it was specifically set to <see cref="Outcome.Unknown"/>, or if it's just the default value.
+		/// </summary>
+		internal Outcome _outcome;
+
+		private bool _outcomeChangedThroughApi;
 
 		[JsonIgnore]
 		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(TraceId, Id, IsSampled, _traceState);
@@ -353,6 +370,10 @@ namespace Elastic.Apm.Model
 
 		public void End()
 		{
+			// If the outcome is still unknown and it was not specifically set to unknown, then it's success
+			if (Outcome == Outcome.Unknown && !_outcomeChangedThroughApi)
+				Outcome = Outcome.Success;
+
 			if (Duration.HasValue)
 			{
 				_logger.Trace()
@@ -381,7 +402,8 @@ namespace Elastic.Apm.Model
 
 			var isFirstEndCall = !_isEnded;
 			_isEnded = true;
-			if (!isFirstEndCall) return;
+			if (!isFirstEndCall)
+				return;
 
 			var handler = Ended;
 			handler?.Invoke(this, EventArgs.Empty);
@@ -421,9 +443,11 @@ namespace Elastic.Apm.Model
 			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, _apmServerInfo,
 				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart);
 
-			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
+			if (!string.IsNullOrEmpty(subType))
+				retVal.Subtype = subType;
 
-			if (!string.IsNullOrEmpty(action)) retVal.Action = action;
+			if (!string.IsNullOrEmpty(action))
+				retVal.Action = action;
 
 			_logger.Trace()?.Log("Starting {SpanDetails}", retVal.ToString());
 			return retVal;
@@ -495,7 +519,8 @@ namespace Elastic.Apm.Model
 		/// </remarks>
 		internal static string GetNameFromRouteContext(IDictionary<string, object> routeValues)
 		{
-			if (routeValues.Count <= 0) return null;
+			if (routeValues.Count <= 0)
+				return null;
 
 			string name = null;
 			var count = routeValues.TryGetValue("controller", out var controller) ? 1 : 0;
@@ -518,10 +543,12 @@ namespace Elastic.Apm.Model
 				count = routeValues.TryGetValue("action", out var action) ? count + 1 : count;
 				var actionString = action == null ? string.Empty : action.ToString();
 
-				if (!string.IsNullOrEmpty(actionString)) name += "/" + actionString;
+				if (!string.IsNullOrEmpty(actionString))
+					name += "/" + actionString;
 
 				// if there are no other key/values other than area/controller/action, skip parsing parameters
-				if (routeValues.Keys.Count == count) return name;
+				if (routeValues.Keys.Count == count)
+					return name;
 
 				// Add parameters
 				var sortedKeys = routeValues.Keys
@@ -533,7 +560,8 @@ namespace Elastic.Apm.Model
 					.OrderBy(key => key, StringComparer.OrdinalIgnoreCase)
 					.ToArray();
 
-				if (sortedKeys.Length <= 0) return name;
+				if (sortedKeys.Length <= 0)
+					return name;
 
 				var arguments = string.Join(@"/", sortedKeys);
 				name += " {" + arguments + "}";
@@ -542,7 +570,8 @@ namespace Elastic.Apm.Model
 			{
 				routeValues.TryGetValue("page", out var page);
 				var pageString = page == null ? string.Empty : page.ToString();
-				if (!string.IsNullOrEmpty(pageString)) name = pageString;
+				if (!string.IsNullOrEmpty(pageString))
+					name = pageString;
 			}
 
 			return name;

@@ -33,8 +33,7 @@ namespace Elastic.Apm.GrpcClient
 			var currentActivity = Activity.Current;
 			if (kv.Key == "Grpc.Net.Client.GrpcOut.Start")
 			{
-				var requestObject = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Request")?.GetValue(kv.Value) as HttpRequestMessage;
-				if (requestObject != null)
+				if (kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Request")?.GetValue(kv.Value) is HttpRequestMessage requestObject)
 				{
 					var currentTransaction = _agent?.Tracer.CurrentTransaction;
 
@@ -53,17 +52,17 @@ namespace Elastic.Apm.GrpcClient
 			}
 			if (kv.Key == "Grpc.Net.Client.GrpcOut.Stop")
 			{
-				var requestObject = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Request")?.GetValue(kv.Value) as HttpRequestMessage;
+				if (kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Request")?.GetValue(kv.Value) is not HttpRequestMessage requestObject)
+					return;
 
-				if (requestObject == null) return;
-
-				if (!ProcessingRequests.TryRemove(requestObject, out var span)) return;
+				if (!ProcessingRequests.TryRemove(requestObject, out var span))
+					return;
 
 				_agent?.Logger.Trace()?.Log("Ending span for gRPC call, span:{span}", span);
 
 				var grpcStatusCode = currentActivity?.Tags?.Where(n => n.Key == "grpc.status_code").FirstOrDefault().Value;
 				if (grpcStatusCode != null)
-					span.Outcome = GrpcHelper.GrpcReturnCodeToString(grpcStatusCode) == "OK" ? Outcome.Success : Outcome.Failure;
+					span.Outcome = GrpcHelper.GrpcClientReturnCodeToOutcome(GrpcHelper.GrpcReturnCodeToString(grpcStatusCode));
 
 				span.Context.Destination = UrlUtils.ExtractDestination(requestObject.RequestUri, _agent?.Logger);
 				span.Context.Destination.Service = UrlUtils.ExtractService(requestObject.RequestUri, span);
