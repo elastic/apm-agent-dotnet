@@ -18,12 +18,12 @@ namespace Elastic.Apm.DiagnosticListeners
 		/// <summary>
 		/// A logger scoped to the child class.
 		/// </summary>
-		protected readonly IApmLogger Logger;
+		protected IApmLogger Logger { get; }
 
 		/// <summary>
 		/// Current Agent instance.
 		/// </summary>
-		protected readonly IApmAgent ApmAgent;
+		protected IApmAgent ApmAgent { get; }
 
 		protected DiagnosticListenerBase(IApmAgent apmAgent)
 		{
@@ -40,7 +40,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		public abstract string Name { get; }
 
-		public void OnCompleted() { }
+		public virtual void OnCompleted() { }
 
 		public virtual void OnError(Exception error) { }
 
