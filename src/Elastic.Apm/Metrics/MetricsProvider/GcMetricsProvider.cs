@@ -57,8 +57,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private ulong _gen1Size;
 		private ulong _gen2Size;
 		private ulong _gen3Size;
-		private double _gcTime;
 		private long _gcTimeInTicks;
+		private long _gcStartTime;
 
 		public GcMetricsProvider(IApmLogger logger, bool collectGcCount = true, bool collectGcGen0Size = true, bool collectGcGen1Size = true,
 			bool collectGcGen2Size = true, bool collectGcGen3Size = true, bool collectGcTime = true
@@ -96,48 +96,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 					_traceEventSession.Source.Clr.GCStop += ClrOnGCStop;
 					_traceEventSession.Source.Clr.GCHeapStats += ClrOnGCHeapStats;
-					_traceEventSession.Source.Process();
-
-
-					_traceEventSession.Source.AddCallbackOnProcessStart(process =>
-					{
-						process.AddCallbackOnDotNetRuntimeLoad(runtime =>
-						{
-							runtime.GCEnd += (traceProcess, gc) =>
-							{
-								if (traceProcess.ProcessID == Process.GetCurrentProcess().Id)
-								{
-									if (!_isMetricAlreadyCaptured)
-									{
-										lock (_lock)
-											_isMetricAlreadyCaptured = true;
-
-										var durationInTicks = (long)(gc.DurationMSec * 10_000);
-										Interlocked.Exchange(ref _gcTimeInTicks, _gcTimeInTicks + durationInTicks);
-										_gcCount = (uint)gc.Number;
-									}
-									_gcTime = gc.DurationMSec;
-									_gcCount = (uint)gc.Number;
-								}
-							};
-						});
-					});
-
-					_traceEventSession.Source.Clr.GCHeapStats += (a) =>
-					{
-						if (a.ProcessID == Process.GetCurrentProcess().Id)
-						{
-							if (!_isMetricAlreadyCaptured)
-							{
-								lock (_lock)
-									_isMetricAlreadyCaptured = true;
-							}
-							_gen0Size = (ulong)a.GenerationSize0;
-							_gen1Size = (ulong)a.GenerationSize1;
-							_gen2Size = (ulong)a.GenerationSize2;
-							_gen3Size = (ulong)a.GenerationSize3;
-						}
-					};
+					_traceEventSession.Source.Clr.GCStart += ClrOnStart;
 
 					_traceEventSession.Source.Process();
 				});
@@ -204,6 +163,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			{
 				_traceEventSession.Source.Clr.GCStop -= ClrOnGCStop;
 				_traceEventSession.Source.Clr.GCHeapStats -= ClrOnGCHeapStats;
+				_traceEventSession.Source.Clr.GCStart -= ClrOnStart;
 				_traceEventSession.Dispose();
 
 				if (_traceEventSessionTask.IsCompleted || _traceEventSessionTask.IsFaulted || _traceEventSessionTask.IsCanceled)
@@ -227,6 +187,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			}
 		}
 
+		private void ClrOnStart(GCStartTraceData obj) => Interlocked.Exchange(ref _gcStartTime, DateTime.UtcNow.Ticks);
+
 		private void ClrOnGCStop(GCEndTraceData a)
 		{
 			if (a.ProcessID == _currentProcessId)
@@ -236,6 +198,10 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					lock (_lock)
 						_isMetricAlreadyCaptured = true;
 				}
+
+				var durationInTicks = DateTime.UtcNow.Ticks - Interlocked.Read(ref _gcStartTime);
+				Interlocked.Exchange(ref _gcTimeInTicks, Interlocked.Read(ref _gcTimeInTicks) + durationInTicks);
+
 				_gcCount = (uint)a.Count;
 			}
 		}
