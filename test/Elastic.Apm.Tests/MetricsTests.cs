@@ -296,6 +296,7 @@ namespace Elastic.Apm.Tests
 				// ReSharper disable once RedundantAssignment
 				var containsValue = false;
 				var hasGenSize = false;
+				var hasGcTime = false;
 
 
 				for (var j = 0; j < 1000; j++)
@@ -321,10 +322,11 @@ namespace Elastic.Apm.Tests
 						.Any(n => (n.KeyValue.Key.Contains("gen0size") || n.KeyValue.Key.Contains("gen1size")
 						|| n.KeyValue.Key.Contains("gen2size") || n.KeyValue.Key.Contains("gen3size"))
 						&& n.KeyValue.Value > 0);
+					hasGcTime = samples != null && samples
+						.Any(n => n.KeyValue.Key.Contains("clr.gc.time") && n.KeyValue.Value > 0);
 
-					if (containsValue && hasGenSize)
+					if (containsValue && hasGenSize && hasGcTime)
 						break;
-
 				}
 
 				if (PlatformDetection.IsDotNetFullFramework)
@@ -349,6 +351,7 @@ namespace Elastic.Apm.Tests
 
 				containsValue.Should().BeTrue();
 				hasGenSize.Should().BeTrue();
+				hasGcTime.Should().BeTrue();
 
 				gcMetricsProvider.IsMetricAlreadyCaptured.Should().BeTrue();
 #endif
