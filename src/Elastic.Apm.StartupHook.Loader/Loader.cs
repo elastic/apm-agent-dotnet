@@ -45,7 +45,7 @@ namespace Elastic.Apm.StartupHook.Loader
 			foreach (var libToLoad in AgentLoadContext.AgentLibsToLoad)
 				LoadAssembly(libToLoad);
 
-
+			// Under testing - This seems to lead to stackoverflow when an assembly cannot be found.
 			//AssemblyLoadContext.Default.Resolving += (context, assemblyName) =>
 			//{
 			//	Logger.WriteLine($"Default load context resolver, resolving {assemblyName.Name} from AgentLoadContext");

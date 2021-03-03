@@ -51,6 +51,7 @@ namespace Elastic.Apm.StartupHook.Loader
 					return LoadFromAssemblyPath(path);
 				}
 				// If it's not an agent assembly or an agent dependency, let's just reuse it from the default load context
+				// Follow-up: maybe not a good idea... 
 				//return Default.LoadFromAssemblyName(assemblyName);
 			}
 			catch (Exception e)
