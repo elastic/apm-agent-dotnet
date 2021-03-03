@@ -46,11 +46,18 @@ namespace Elastic.Apm.StartupHook.Loader
 				LoadAssembly(libToLoad);
 
 
-			AssemblyLoadContext.Default.Resolving += (context, assemblyName) =>
-			{
-				Logger.WriteLine($"Default load context resolver, resolving {assemblyName.Name} from AgentLoadContext");
-				return _agentLoadContext.LoadFromAssemblyName(new AssemblyName(assemblyName.Name));
-			};
+			//AssemblyLoadContext.Default.Resolving += (context, assemblyName) =>
+			//{
+			//	Logger.WriteLine($"Default load context resolver, resolving {assemblyName.Name} from AgentLoadContext");
+			//	var assembly = _agentLoadContext.LoadFromAssemblyName(new AssemblyName(assemblyName.Name));
+
+
+			//	Logger.WriteLine($"Found assembly: {assembly}");
+			//	if (assembly == null)
+			//		throw new Exception($"{assembly} could not be found in AgentLoadContext");
+
+			//	return assembly;
+			//};
 
 			try
 			{
@@ -60,6 +67,35 @@ namespace Elastic.Apm.StartupHook.Loader
 			{
 				Logger.WriteLine($"Failed laoding the agent, exception: {e}");
 			}
+
+
+			try
+			{
+				UpdateServiceInfo();
+				Logger.WriteLine($"Service info updated succesfully");
+			}
+			catch (Exception e)
+			{
+				Logger.WriteLine($"Failed updating service info, exception: {e}");
+			}
+		}
+
+		public static void UpdateServiceInfo()
+		{
+			var extensionsHostingAssemply = _agentLoadContext.LoadFromAssemblyName(new AssemblyName("Elastic.Apm.Extensions.Hosting"));
+			var updateServiceInfoMethod = extensionsHostingAssemply.GetType("Elastic.Apm.Extensions.Hosting.HostBuilderExtensions").GetMethod("UpdateServiceInformation", BindingFlags.NonPublic | BindingFlags.Static);
+
+			var apmAssembly = _agentLoadContext.LoadFromAssemblyName(new AssemblyName("Elastic.Apm"));
+			var agentType = apmAssembly.GetType("Elastic.Apm.Agent");
+
+			var staticAgentInstance = agentType.GetProperty("Instance", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
+
+			var apmAgentType = apmAssembly.GetType("Elastic.Apm.ApmAgent");
+			var serviceProperty = apmAgentType.GetProperty("Service", BindingFlags.Public | BindingFlags.Instance);
+
+			var serviceValue = serviceProperty.GetValue(staticAgentInstance);
+
+			updateServiceInfoMethod.Invoke(null, new object[] { serviceValue });
 		}
 
 		public static void LoadAssembly(string assemblyName)

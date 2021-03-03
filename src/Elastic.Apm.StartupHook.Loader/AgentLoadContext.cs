@@ -19,7 +19,8 @@ namespace Elastic.Apm.StartupHook.Loader
 	{
 		public static HashSet<string> AgentDependencyLibsToLoad = new HashSet<string>
 		{
-			"System.Diagnostics.PerformanceCounter", "Microsoft.Diagnostics.Tracing.TraceEvent", "Newtonsoft.Json", "Elasticsearch.Net"
+			"System.Diagnostics.PerformanceCounter", "Microsoft.Diagnostics.Tracing.TraceEvent", "Newtonsoft.Json", "Elasticsearch.Net",
+			"Microsoft.AspNetCore.Http.Abstractions"
 		};
 
 		public static HashSet<string> AgentLibsToLoad = new HashSet<string>
@@ -41,6 +42,7 @@ namespace Elastic.Apm.StartupHook.Loader
 
 		protected override Assembly Load(AssemblyName assemblyName)
 		{
+			_logger.WriteLine($"AgentLoadContext tries loading: {assemblyName}");
 			try
 			{
 				if (AgentLibsToLoad.Contains(assemblyName.Name) || AgentDependencyLibsToLoad.Contains(assemblyName.Name))
@@ -49,7 +51,7 @@ namespace Elastic.Apm.StartupHook.Loader
 					return LoadFromAssemblyPath(path);
 				}
 				// If it's not an agent assembly or an agent dependency, let's just reuse it from the default load context
-				return Default.LoadFromAssemblyName(assemblyName);
+				//return Default.LoadFromAssemblyName(assemblyName);
 			}
 			catch (Exception e)
 			{
