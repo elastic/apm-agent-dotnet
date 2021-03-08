@@ -814,8 +814,16 @@ namespace Elastic.Apm.Tests
 			var mockPayloadSender = new MockPayloadSender();
 			var logger = new XUnitLogger(LogLevel.Trace, _output, nameof(HttpCallWithW3CActivityFormat));
 			using var agent = new ApmAgent(new TestAgentComponents(logger: logger, payloadSender: mockPayloadSender));
-			using var subscriber = agent.Subscribe(new HttpDiagnosticsSubscriber());
+
 			using var localServer = LocalServer.Create();
+
+			#if NET461
+			var servicePoint = ServicePointManager.FindServicePoint(new Uri(localServer.Uri), WebProxy.GetDefaultProxy());
+			servicePoint.ConnectionLimit = 2;
+			servicePoint = null;
+			#endif
+
+			using var subscriber = agent.Subscribe(new HttpDiagnosticsSubscriber());
 
 			await agent.Tracer.CaptureTransaction("Test", "Test", async () =>
 			{
