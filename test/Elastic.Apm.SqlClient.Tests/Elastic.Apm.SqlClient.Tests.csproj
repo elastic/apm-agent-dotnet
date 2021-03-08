@@ -17,7 +17,7 @@
     <PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
     <PackageReference Include="StrongNamer" Version="0.2.5" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.7.0" />teste
+    <PackageReference Include="System.Data.SqlClient" Version="4.7.0" />
     <PackageReference Include="TestEnvironment.Docker" Version="1.2.2" />
     <PackageReference Include="TestEnvironment.Docker.Containers.Mssql" Version="1.0.3" />
     <PackageReference Include="xunit" Version="2.4.1" />
