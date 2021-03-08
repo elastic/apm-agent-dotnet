@@ -14,8 +14,8 @@ namespace Elastic.Apm.Mongo.IntegrationTests.Fixture.TestEnvironment.Docker
 			string userPassword = "example",
 			string imageName = "mongo",
 			string tag = "latest",
-			IDictionary<string, string>? environmentVariables = null,
-			IDictionary<ushort, ushort>? ports = null,
+			IDictionary<string, string> environmentVariables = null,
+			IDictionary<ushort, ushort> ports = null,
 			bool reuseContainer = false) =>
 			builder.AddDependency(
 				new MongoContainer(

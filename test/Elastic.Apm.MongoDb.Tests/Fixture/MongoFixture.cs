@@ -18,13 +18,14 @@ namespace Elastic.Apm.Mongo.IntegrationTests.Fixture
 		{
 			_configuration = new TConfiguration();
 
+			// BUILD_ID env variable is passed from the CI, therefore DockerInDocker is enabled.
 			_environment = new DockerEnvironmentBuilder()
-				//.DockerInDocker(Environment.GetEnvironmentVariable("TF_BUILD") != null)
+				.DockerInDocker(Environment.GetEnvironmentVariable("BUILD_ID") != null)
 				.AddMongoContainer("mongo")
 				.Build();
 		}
 
-		public IMongoCollection<TDocument>? Collection { get; private set; }
+		public IMongoCollection<TDocument> Collection { get; private set; }
 
 		public async Task InitializeAsync()
 		{

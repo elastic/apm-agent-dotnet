@@ -12,9 +12,9 @@ namespace Elastic.Apm.Mongo.IntegrationTests.Fixture.TestEnvironment.Docker
 	{
 		private readonly ILogger _logger;
 
-		public MongoContainerWaiter(ILogger? logger = null) => _logger = logger;
+		public MongoContainerWaiter(ILogger logger = null) => _logger = logger;
 
-		public async Task<bool> Wait(MongoContainer? container, CancellationToken cancellationToken)
+		public async Task<bool> Wait(MongoContainer container, CancellationToken cancellationToken)
 		{
 			if (container == null)
 				throw new ArgumentNullException(nameof(container));

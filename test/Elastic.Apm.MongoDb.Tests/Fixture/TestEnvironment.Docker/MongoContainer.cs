@@ -23,9 +23,9 @@ namespace Elastic.Apm.Mongo.IntegrationTests.Fixture.TestEnvironment.Docker
 			IDictionary<ushort, ushort> ports = null,
 			bool isDockerInDocker = false,
 			bool reuseContainer = false,
-			IContainerWaiter? containerWaiter = null,
-			IContainerCleaner? containerCleaner = null,
-			ILogger? logger = null)
+			IContainerWaiter containerWaiter = null,
+			IContainerCleaner containerCleaner = null,
+			ILogger logger = null)
 			: base(dockerClient, name, imageName, tag, environmentVariables, ports, isDockerInDocker, reuseContainer, containerWaiter, containerCleaner, logger)
 		{
 			_userName = userName;
