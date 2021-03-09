@@ -8,7 +8,7 @@ using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.GrpcClient;
-using Elastic.Apm.Mongo;
+using Elastic.Apm.MongoDb;
 using Elastic.Apm.SqlClient;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
