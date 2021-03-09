@@ -11,6 +11,7 @@ using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.Extensions.Hosting;
 using Elastic.Apm.GrpcClient;
+using Elastic.Apm.Mongo;
 using Elastic.Apm.SqlClient;
 using Microsoft.Extensions.Hosting;
 
@@ -44,6 +45,7 @@ namespace Elastic.Apm.NetCoreAll
 			new MicrosoftAzureServiceBusDiagnosticsSubscriber(),
 			new AzureBlobStorageDiagnosticsSubscriber(),
 			new AzureQueueStorageDiagnosticsSubscriber(),
-			new AzureFileShareStorageDiagnosticsSubscriber());
+			new AzureFileShareStorageDiagnosticsSubscriber(),
+			new MongoDbDiagnosticsSubscriber());
 	}
 }

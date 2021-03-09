@@ -36,13 +36,7 @@ namespace Elastic.Apm.Mongo.IntegrationTests
 			var config = new AgentComponents(configurationReader: configurationReaderMock.Object,
 				payloadSender: _payloadSender);
 
-			var apmAgentType = typeof(IApmAgent).Assembly.GetType("Elastic.Apm.ApmAgent");
-
-			if (apmAgentType == null)
-				throw new InvalidOperationException("Cannot get `Elastic.Apm.ApmAgent` type with reflection");
-
-			_agent = (IApmAgent)apmAgentType.GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance).First()
-				.Invoke(new object[] { config });
+			_agent = new ApmAgent(config);
 			_agent.Subscribe(new MongoDbDiagnosticsSubscriber());
 		}
 

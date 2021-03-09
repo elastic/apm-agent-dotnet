@@ -4,31 +4,26 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using Elastic.Apm.Api;
+using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
 using MongoDB.Driver.Core.Events;
 
 namespace Elastic.Apm.Mongo.DiagnosticSource
 {
 	internal class MongoDiagnosticListener
-		: IObserver<KeyValuePair<string, object>>
+		: IDiagnosticListener
 	{
 		private readonly IApmAgent _apmAgent;
 		private readonly IApmLogger _logger;
 
 		private readonly ConcurrentDictionary<int, ISpan> _processingQueries = new ConcurrentDictionary<int, ISpan>();
 
+		public string Name => "Elastic.Apm.MongoDb";
+
 		public MongoDiagnosticListener(IApmAgent apmAgent)
 		{
 			_apmAgent = apmAgent;
-			_logger = _apmAgent.Logger;
-
-			//_apmAgent.Logger?.Scoped();
-			// LoggingExtensions is internal
-
-			// {"@timestamp":"2019-08-26T22:06:29.6053995+03:00","level":"Information",
-			// "messageTemplate":"{{{Scope}}} The agent was started without a service name. The automatically discovered service name is {ServiceName}",
-			// "message":"{{Scope}} The agent was started without a service name. The automatically discovered service name is \"ServiceName\"",
-			// "{Scope}":"MicrosoftExtensionsConfig","ServiceName":"ServiceName","SourceContext":"Elastic.Apm"}
+			_logger = _apmAgent.Logger.Scoped(nameof(MongoDiagnosticListener));
 		}
 
 		public void OnNext(KeyValuePair<string, object> value)

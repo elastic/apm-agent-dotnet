@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
+    <RootNamespace>Elastic.Apm.MongoDb</RootNamespace>
+    <AssemblyName>Elastic.Apm.MongoDb</AssemblyName>
+    <PackageId>Elastic.Apm.MongoDb</PackageId>
+    <Description>
+      Elastic APM integration with the MongoDB.Driver package.
+    </Description>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
 
