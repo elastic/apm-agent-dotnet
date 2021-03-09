@@ -1,9 +1,9 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
-using Elastic.Apm.Mongo.IntegrationTests.Fixture.TestEnvironment.Docker;
 using MongoDB.Driver;
 using TestEnvironment.Docker;
+using TestEnvironment.Docker.Containers.Mongo;
 using Xunit;
 
 namespace Elastic.Apm.Mongo.IntegrationTests.Fixture
