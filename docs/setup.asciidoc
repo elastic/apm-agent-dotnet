@@ -16,6 +16,7 @@ On .NET Core the agent also supports auto instrumentation without any code chang
 * <<setup-stackexchange-redis>>
 * <<setup-azure-servicebus>>
 * <<setup-azure-storage>>
+* <<setup-mongo-db>>
 * <<setup-general>>
 
 [float]
@@ -55,6 +56,7 @@ https://www.nuget.org/packages/Elastic.Apm.SqlClient[**Elastic.Apm.SqlClient**]:
 
 This package contains https://www.nuget.org/packages/System.Data.SqlClient[System.Data.SqlClient] and https://www.nuget.org/packages/Microsoft.Data.SqlClient[Microsoft.Data.SqlClient] monitoring related code.
 
+
 https://www.nuget.org/packages/Elastic.Apm.StackExchange.Redis[**Elastic.Apm.StackExchange.Redis**]::
 
 This packages contains instrumentation to capture spans for commands sent to redis with https://www.nuget.org/packages/StackExchange.Redis/[StackExchange.Redis] package.
@@ -63,9 +65,15 @@ https://www.nuget.org/packages/Elastic.Apm.Azure.ServiceBus[**Elastic.Apm.Azure.
 
 This packages contains instrumentation to capture transactions and spans for messages sent and received from Azure Service Bus with https://www.nuget.org/packages/Microsoft.Azure.ServiceBus/[Microsoft.Azure.ServiceBus] and https://www.nuget.org/packages/Azure.Messaging.ServiceBus/[Azure.Messaging.ServiceBus] packages.
 
+
 https://www.nuget.org/packages/Elastic.Apm.Azure.Storage[**Elastic.Apm.Azure.Storage**]::
 
 This packages contains instrumentation to capture spans for interaction with Azure Storage with https://www.nuget.org/packages/azure.storage.queues/[Azure.Storage.Queues], https://www.nuget.org/packages/azure.storage.blobs/[Azure.Storage.Blobs] and https://www.nuget.org/packages/azure.storage.files.shares/[Azure.Storage.Files.Shares] packages.
+
+
+https://www.nuget.org/packages/Elastic.Apm.MongoDb[**Elastic.Apm.MongoDb**]
+
+This package contains support for https://www.nuget.org/packages/MongoDB.Driver/[MongoDB.Driver].
 
 
 [[setup-dotnet-net-core]]
@@ -453,6 +461,24 @@ For Azure File Share storage, a new span is crated when there is a current trans
 * A directory is created or deleted
 * A file is created, uploaded, or deleted.
 
+[[setup-mongo-db]]
+=== MongoDB.Driver
+
+A prerequisite for auto instrumentation with [`MondoDb.Driver`] is to configure the `MongoClient` with `MongoDbEventSubscriber`:
+
+```
+var settings = MongoClientSettings.FromConnectionString(mongoConnectionString);
+
+settings.ClusterConfigurator = builder => builder.Subscribe(new MongoEventSubscriber());
+var mongoClient = new MongoClient(settings);
+```
+
+If the agent is activated with the `Elastic.Apm.NetCoreAll`, the agent will automatically capture calls to MongoDb on every active transaction.
+
+Otherwise you can manually activate auto instrumentation from the `Elastic.Apm.MongoDb` package by calling `Agent.Subscribe(new MongoDbDiagnosticsSubscriber());`.
+
+[float]
+==== Quick start
 
 [[setup-general]]
 === Other .NET applications
