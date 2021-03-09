@@ -806,7 +806,24 @@ namespace Elastic.Apm.Tests
 			}
 		}
 
-		[Fact]
+		// Don't run this test on NET461 as it can intermittently fail-
+		// NET Framework's instrumentation to capture HTTP client calls in HttpHandlerDiagnosticListener is achieved through reflection to replace
+		// the ServicePointManager.s_ServicePointTable static non-public field, in order to provide own implementations of the ServicePointHashtable,
+		// ConnectionGroupHashtable, ConnectionArrayList and HttpWebRequestArrayList, such that diagnostic source events can be raised when new
+		// HttpWebRequest are added and removed. See https://github.com/dotnet/runtime/blob/7565d60891e43415f5e81b59e50c52dba46ee0d7/src/libraries/System.Diagnostics.DiagnosticSource/src/System/Diagnostics/HttpHandlerDiagnosticListener.cs#L64-L87
+		//
+		// A problem with this approach is that operating with ServicePointManager.s_ServicePointTable using
+		// reflection bypasses locking on ServicePointManager.s_ServicePointTable field performed when ServicePointManager.FindServicePoint(...)
+		// is called: https://referencesource.microsoft.com/#system/net/system/Net/ServicePointManager.cs,766
+		//
+		// which happens when configuring Central Config and PayloadSender, and also when an endpoint is used for the first time. Since
+		// ServicePointManager.s_ServicePointTable is a static non-public field, and tests run concurrently, a race condition can occur whereby
+		// the setup of HttpHandlerDiagnosticListener to track HttpWebRequest clashes with ServicePointManager.FindServicePoint(...), resulting
+		// in HttpHandlerDiagnosticListener's instrumentation not wrapping the original Hashtable to which the ServicePoint for localServer is added,
+		// and not raising diganostic events and not capturing a span for it.
+		//
+		// This problem is unlikely to occur in production usage of HttpHandlerDiagnosticListener.
+		[NetCoreFact]
 		public async Task HttpCallWithW3CActivityFormat()
 		{
 			Activity.DefaultIdFormat = ActivityIdFormat.W3C;
@@ -816,13 +833,6 @@ namespace Elastic.Apm.Tests
 			using var agent = new ApmAgent(new TestAgentComponents(logger: logger, payloadSender: mockPayloadSender));
 
 			using var localServer = LocalServer.Create();
-
-			#if NET461
-			var servicePoint = ServicePointManager.FindServicePoint(new Uri(localServer.Uri), WebProxy.GetDefaultProxy());
-			servicePoint.ConnectionLimit = 2;
-			servicePoint = null;
-			#endif
-
 			using var subscriber = agent.Subscribe(new HttpDiagnosticsSubscriber());
 
 			await agent.Tracer.CaptureTransaction("Test", "Test", async () =>
@@ -830,9 +840,7 @@ namespace Elastic.Apm.Tests
 				using var httpClient = new HttpClient();
 				try
 				{
-					_output.WriteLine($"Making request to: {localServer.Uri}. Activity id format is {Activity.DefaultIdFormat}");
 					var response = await httpClient.GetAsync(localServer.Uri);
-					_output.WriteLine($"Made request to: {localServer.Uri}. Activity id format is {Activity.DefaultIdFormat}");
 					response.IsSuccessStatusCode.Should().BeTrue();
 				}
 				catch (Exception e)
