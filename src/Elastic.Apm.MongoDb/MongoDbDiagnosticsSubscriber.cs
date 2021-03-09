@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.Mongo.DiagnosticSource;
-using Elastic.Apm;
+using Elastic.Apm.MongoDb.DiagnosticSource;
 
 // ReSharper disable UnusedMember.Global
 
-namespace Elastic.Apm.Mongo
+namespace Elastic.Apm.MongoDb
 {
 	/// <summary>
 	///     A subscriber to events from mongoDB driver diagnostic source.

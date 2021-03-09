@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using MongoDB.Driver;
 
-namespace Elastic.Apm.Mongo.IntegrationTests.Fixture
+namespace Elastic.Apm.MongoDb.Tests.Fixture
 {
 	public interface IMongoConfiguration<TDocument>
 	{

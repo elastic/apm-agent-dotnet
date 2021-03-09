@@ -1,4 +1,4 @@
-namespace Elastic.Apm.Mongo
+namespace Elastic.Apm.MongoDb
 {
 	internal class EventPayload<T>
 	{

@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Elastic.Apm.Mongo.DiagnosticSource
+namespace Elastic.Apm.MongoDb.DiagnosticSource
 {
 	internal sealed class MongoDbDiagnosticInitializer : IObserver<DiagnosticListener>, IDisposable
 	{

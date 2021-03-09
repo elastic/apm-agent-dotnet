@@ -3,7 +3,7 @@ using MongoDB.Driver.Core.Events;
 
 // ReSharper disable UnusedMember.Global
 
-namespace Elastic.Apm.Mongo
+namespace Elastic.Apm.MongoDb
 {
 	internal class MongoListener
 	{

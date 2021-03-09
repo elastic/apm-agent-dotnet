@@ -1,7 +1,7 @@
 using System;
 using MongoDB.Driver.Core.Events;
 
-namespace Elastic.Apm.Mongo
+namespace Elastic.Apm.MongoDb
 {
 	/// <inheritdoc cref="IEventSubscriber" />
 	// ReSharper disable once UnusedMember.Global

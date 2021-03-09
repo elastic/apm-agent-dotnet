@@ -1,12 +1,11 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using MongoDB.Driver;
 using TestEnvironment.Docker;
 using TestEnvironment.Docker.Containers.Mongo;
 using Xunit;
 
-namespace Elastic.Apm.Mongo.IntegrationTests.Fixture
+namespace Elastic.Apm.MongoDb.Tests.Fixture
 {
 	public class MongoFixture<TConfiguration, TDocument> : IAsyncLifetime, IDisposable
 		where TConfiguration : IMongoConfiguration<TDocument>, new()

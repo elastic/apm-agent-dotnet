@@ -8,7 +8,7 @@ using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
 using MongoDB.Driver.Core.Events;
 
-namespace Elastic.Apm.Mongo.DiagnosticSource
+namespace Elastic.Apm.MongoDb.DiagnosticSource
 {
 	internal class MongoDiagnosticListener
 		: IDiagnosticListener

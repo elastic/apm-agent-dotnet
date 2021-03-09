@@ -1,11 +1,9 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
-using Elastic.Apm.Mongo.IntegrationTests.Fixture;
+using Elastic.Apm.MongoDb.Tests.Fixture;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using MongoDB.Bson;
@@ -13,7 +11,7 @@ using MongoDB.Driver;
 using Moq;
 using Xunit;
 
-namespace Elastic.Apm.Mongo.IntegrationTests
+namespace Elastic.Apm.MongoDb.Tests
 {
 	public class MongoApmTests : IClassFixture<MongoFixture<MongoApmTests.MongoConfiguration, BsonDocument>>,
 		IDisposable
