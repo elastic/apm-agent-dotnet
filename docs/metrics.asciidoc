@@ -163,3 +163,15 @@ Platform: all.
 
 The size of the generation 3 heap - also known as Large Object Heap (LOH).
 --
+
+*`clr.gc.time`*::
++
+--
+type: long
+
+format: ticks
+
+Platform: all.
+
+The approximate accumulated collection elapsed time in https://docs.microsoft.com/en-us/dotnet/api/system.datetime.ticks[ticks].
+--
