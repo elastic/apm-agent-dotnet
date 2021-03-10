@@ -169,9 +169,9 @@ The size of the generation 3 heap - also known as Large Object Heap (LOH).
 --
 type: long
 
-format: ticks
+format: ms
 
 Platform: all.
 
-The approximate accumulated collection elapsed time in https://docs.microsoft.com/en-us/dotnet/api/system.datetime.ticks[ticks].
+The approximate accumulated collection elapsed time in milliseconds.
 --
