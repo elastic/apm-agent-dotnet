@@ -101,7 +101,7 @@ namespace Elastic.Apm.Tests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var testLogger = new TestLogger(LogLevel.Information);
-			using (var mc = new MetricsCollector(testLogger, mockPayloadSender, new ConfigStore(new MockConfigSnapshot(), testLogger)))
+			using (var mc = new MetricsCollector(testLogger, mockPayloadSender, new ConfigStore(new MockConfigSnapshot(disableMetrics: "*"), testLogger)))
 			{
 				mc.MetricsProviders.Clear();
 				var providerWithException = new MetricsProviderWithException();
@@ -301,19 +301,23 @@ namespace Elastic.Apm.Tests
 
 				for (var j = 0; j < 1000; j++)
 				{
-					for (var i = 0; i < 300_000; i++)
+					for (var i = 0; i < 500; i++)
 					{
-						var _ = new int[100];
+						var _ = new int[10000000];
 					}
 
-					GC.Collect();
+					GC.Collect(2, GCCollectionMode.Forced, true, true);
+					GC.WaitForFullGCComplete();
+					GC.Collect(2, GCCollectionMode.Forced, true, true);
 
-					for (var i = 0; i < 300_000; i++)
+					for (var i = 0; i < 500; i++)
 					{
-						var _ = new int[100];
+						var _ = new int[10000000];
 					}
 
-					GC.Collect();
+					GC.Collect(2, GCCollectionMode.Forced, true, true);
+					GC.WaitForFullGCComplete();
+					GC.Collect(2, GCCollectionMode.Forced, true, true);
 
 					var samples = gcMetricsProvider.GetSamples()?.ToArray();
 
