@@ -50,6 +50,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private readonly TraceEventSession _traceEventSession;
 		private readonly Task _traceEventSessionTask;
 		private readonly int _currentProcessId;
+		private TraceLoadedDotNetRuntime _traceLoadedDotNetRuntime;
 
 		private volatile bool _isMetricAlreadyCaptured;
 		private uint _gcCount;
@@ -58,7 +59,6 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		private ulong _gen2Size;
 		private ulong _gen3Size;
 		private long _gcTimeInTicks;
-		private long _gcStartTime;
 
 		public GcMetricsProvider(IApmLogger logger, bool collectGcCount = true, bool collectGcGen0Size = true, bool collectGcGen1Size = true,
 			bool collectGcGen2Size = true, bool collectGcGen3Size = true, bool collectGcTime = true
@@ -78,27 +78,35 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				_traceEventSession = new TraceEventSession(TraceEventSessionName);
 				_currentProcessId = Process.GetCurrentProcess().Id;
 
-				try
-				{
-					_traceEventSession.Source.NeedLoadedDotNetRuntimes();
-					_traceEventSession.EnableProvider(
-						ClrTraceEventParser.ProviderGuid,
-						TraceEventLevel.Informational,
-						(ulong)ClrTraceEventParser.Keywords.GC // garbage collector details
-					);
-				}
-				catch (Exception e)
-				{
-					_logger.Warning()?.LogException(e, "TraceEventSession initialization failed - GC metrics won't be collected");
-					return;
-				}
-
-				_traceEventSession.Source.Clr.GCStop += ClrOnGCStop;
-				_traceEventSession.Source.Clr.GCHeapStats += ClrOnGCHeapStats;
-				_traceEventSession.Source.Clr.GCStart += ClrOnStart;
-
 				_traceEventSessionTask = Task.Run(() =>
 				{
+					try
+					{
+						_traceEventSession.Source.NeedLoadedDotNetRuntimes();
+						_traceEventSession.EnableProvider(
+							ClrTraceEventParser.ProviderGuid,
+							TraceEventLevel.Informational,
+							(ulong)ClrTraceEventParser.Keywords.GC // garbage collector details
+						);
+					}
+					catch (Exception e)
+					{
+						_logger.Warning()?.LogException(e, "TraceEventSession initialization failed - GC metrics won't be collected");
+						return;
+					}
+
+					_traceEventSession.Source.AddCallbackOnProcessStart(process =>
+					{
+						process.AddCallbackOnDotNetRuntimeLoad(runtime =>
+						{
+							_traceLoadedDotNetRuntime = runtime;
+							runtime.GCEnd += RuntimeGCEnd;
+						});
+					});
+
+
+					_traceEventSession.Source.Clr.GCHeapStats += ClrOnGCHeapStats;
+
 					_traceEventSession.Source.Process();
 				});
 			}
@@ -162,9 +170,10 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			_eventListener?.Dispose();
 			if (_traceEventSession != null)
 			{
-				_traceEventSession.Source.Clr.GCStop -= ClrOnGCStop;
 				_traceEventSession.Source.Clr.GCHeapStats -= ClrOnGCHeapStats;
-				_traceEventSession.Source.Clr.GCStart -= ClrOnStart;
+				if (_traceLoadedDotNetRuntime != null)
+					_traceLoadedDotNetRuntime.GCEnd -= RuntimeGCEnd;
+
 				_traceEventSession.Stop(true);
 				_traceEventSession.Source.Dispose();
 				_traceEventSession.Dispose();
@@ -190,22 +199,17 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			}
 		}
 
-		private void ClrOnStart(GCStartTraceData obj) => Interlocked.Exchange(ref _gcStartTime, DateTime.UtcNow.Ticks);
-
-		private void ClrOnGCStop(GCEndTraceData a)
+		private void RuntimeGCEnd(TraceProcess traceProcess, Microsoft.Diagnostics.Tracing.Analysis.GC.TraceGC gc)
 		{
-			if (a.ProcessID == _currentProcessId)
+			if (traceProcess.ProcessID == Process.GetCurrentProcess().Id)
 			{
 				if (!_isMetricAlreadyCaptured)
 				{
 					lock (_lock)
 						_isMetricAlreadyCaptured = true;
 				}
-
-				var durationInTicks = DateTime.UtcNow.Ticks - Interlocked.Read(ref _gcStartTime);
-				Interlocked.Exchange(ref _gcTimeInTicks, Interlocked.Read(ref _gcTimeInTicks) + durationInTicks);
-
-				_gcCount = (uint)a.Count;
+				_gcTimeInTicks = (long)gc.DurationMSec * 10_000;
+				_gcCount = (uint)gc.Number;
 			}
 		}
 
