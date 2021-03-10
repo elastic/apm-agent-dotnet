@@ -164,6 +164,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				_traceEventSession.Source.Clr.GCStop -= ClrOnGCStop;
 				_traceEventSession.Source.Clr.GCHeapStats -= ClrOnGCHeapStats;
 				_traceEventSession.Source.Clr.GCStart -= ClrOnStart;
+				_traceEventSession.Stop(true);
 				_traceEventSession.Dispose();
 
 				if (_traceEventSessionTask.IsCompleted || _traceEventSessionTask.IsFaulted || _traceEventSessionTask.IsCanceled)
