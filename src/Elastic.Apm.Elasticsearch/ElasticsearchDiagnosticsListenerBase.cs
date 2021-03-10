@@ -50,7 +50,7 @@ namespace Elastic.Apm.Elasticsearch
 			if (transaction == null)
 				return false;
 
-			span = (Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(ApmAgent)
+			span = (Span)_agent.GetCurrentExecutionSegment()
 				.StartSpan(
 					name,
 					ApiConstants.TypeDb,
