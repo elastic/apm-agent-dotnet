@@ -77,27 +77,28 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				TraceEventSessionName = SessionNamePrefix + Guid.NewGuid();
 				_traceEventSession = new TraceEventSession(TraceEventSessionName);
 				_currentProcessId = Process.GetCurrentProcess().Id;
+
+				try
+				{
+					_traceEventSession.Source.NeedLoadedDotNetRuntimes();
+					_traceEventSession.EnableProvider(
+						ClrTraceEventParser.ProviderGuid,
+						TraceEventLevel.Informational,
+						(ulong)ClrTraceEventParser.Keywords.GC // garbage collector details
+					);
+				}
+				catch (Exception e)
+				{
+					_logger.Warning()?.LogException(e, "TraceEventSession initialization failed - GC metrics won't be collected");
+					return;
+				}
+
+				_traceEventSession.Source.Clr.GCStop += ClrOnGCStop;
+				_traceEventSession.Source.Clr.GCHeapStats += ClrOnGCHeapStats;
+				_traceEventSession.Source.Clr.GCStart += ClrOnStart;
+
 				_traceEventSessionTask = Task.Run(() =>
 				{
-					try
-					{
-						_traceEventSession.Source.NeedLoadedDotNetRuntimes();
-						_traceEventSession.EnableProvider(
-							ClrTraceEventParser.ProviderGuid,
-							TraceEventLevel.Informational,
-							(ulong)ClrTraceEventParser.Keywords.GC // garbage collector details
-						);
-					}
-					catch (Exception e)
-					{
-						_logger.Warning()?.LogException(e, "TraceEventSession initialization failed - GC metrics won't be collected");
-						return;
-					}
-
-					_traceEventSession.Source.Clr.GCStop += ClrOnGCStop;
-					_traceEventSession.Source.Clr.GCHeapStats += ClrOnGCHeapStats;
-					_traceEventSession.Source.Clr.GCStart += ClrOnStart;
-
 					_traceEventSession.Source.Process();
 				});
 			}
@@ -165,6 +166,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				_traceEventSession.Source.Clr.GCHeapStats -= ClrOnGCHeapStats;
 				_traceEventSession.Source.Clr.GCStart -= ClrOnStart;
 				_traceEventSession.Stop(true);
+				_traceEventSession.Source.Dispose();
 				_traceEventSession.Dispose();
 
 				if (_traceEventSessionTask.IsCompleted || _traceEventSessionTask.IsFaulted || _traceEventSessionTask.IsCanceled)
