@@ -3,12 +3,14 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -395,9 +397,10 @@ namespace Elastic.Apm.Tests
 		[NetCoreFact] //see: https://github.com/elastic/apm-agent-dotnet/issues/516
 		public async Task SpanTypeAndSubtype()
 		{
-			var (_, payloadSender, agent) = RegisterSubscriberAndStartTransaction();
+			var (subscriber, payloadSender, agent) = RegisterSubscriberAndStartTransaction();
 
 			using (agent)
+			using (subscriber)
 			using (var localServer = LocalServer.Create())
 			{
 				var httpClient = new HttpClient();
@@ -591,23 +594,25 @@ namespace Elastic.Apm.Tests
 			var logger = new TestLogger(LogLevel.Trace);
 
 			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender, logger: logger));
-			agent.Subscribe(new HttpDiagnosticsSubscriber());
-			StartTransaction(agent);
+			using (agent.Subscribe(new HttpDiagnosticsSubscriber()))
+			{
+				StartTransaction(agent);
 
-			using var localServer = LocalServer.Create();
-			using var httpClient = new HttpClient();
-			var uriBuilder = new UriBuilder(localServer.Uri) { UserName = "TestUser289421", Password = "Password973243" };
+				using var localServer = LocalServer.Create();
+				using var httpClient = new HttpClient();
+				var uriBuilder = new UriBuilder(localServer.Uri) { UserName = "TestUser289421", Password = "Password973243" };
 
-			var res = await httpClient.GetAsync(uriBuilder.Uri);
-			res.IsSuccessStatusCode.Should().BeTrue();
-			logger.Lines.Should().NotBeEmpty();
+				var res = await httpClient.GetAsync(uriBuilder.Uri);
+				res.IsSuccessStatusCode.Should().BeTrue();
+				logger.Lines.Should().NotBeEmpty();
 
-			logger.Lines.Should().NotContain(n => n.Contains("TestUser289421"));
-			logger.Lines.Should().NotContain(n => n.Contains("Password973243"));
+				logger.Lines.Should().NotContain(n => n.Contains("TestUser289421"));
+				logger.Lines.Should().NotContain(n => n.Contains("Password973243"));
 
-			// looking for lines with "localhost:8082" and asserting that those contain [REDACTED].
-			foreach (var lineWithHttpLog in logger.Lines.Where(n => n.Contains($"{uriBuilder.Host}:{uriBuilder.Port}")))
-				lineWithHttpLog.Should().Contain("[REDACTED]");
+				// looking for lines with "localhost:8082" and asserting that those contain [REDACTED].
+				foreach (var lineWithHttpLog in logger.Lines.Where(n => n.Contains($"{uriBuilder.Host}:{uriBuilder.Port}")))
+					lineWithHttpLog.Should().Contain("[REDACTED]");
+			}
 		}
 
 		/// <summary>
@@ -778,8 +783,10 @@ namespace Elastic.Apm.Tests
 		[NetCoreFact]
 		public async Task CallStackContainsCallerMethod()
 		{
-			var (_, payloadSender, agent) = RegisterSubscriberAndStartTransaction();
+			var (subscriber, payloadSender, agent) = RegisterSubscriberAndStartTransaction();
+
 			using (agent)
+			using (subscriber)
 			{
 				try
 				{
@@ -799,18 +806,33 @@ namespace Elastic.Apm.Tests
 			}
 		}
 
-		[Fact]
+		// Don't run this test on NET461 as it can intermittently fail-
+		// NET Framework's instrumentation to capture HTTP client calls in HttpHandlerDiagnosticListener is achieved through reflection to replace
+		// the ServicePointManager.s_ServicePointTable static non-public field, in order to provide own implementations of the ServicePointHashtable,
+		// ConnectionGroupHashtable, ConnectionArrayList and HttpWebRequestArrayList, such that diagnostic source events can be raised when new
+		// HttpWebRequest are added and removed. See https://github.com/dotnet/runtime/blob/7565d60891e43415f5e81b59e50c52dba46ee0d7/src/libraries/System.Diagnostics.DiagnosticSource/src/System/Diagnostics/HttpHandlerDiagnosticListener.cs#L64-L87
+		//
+		// A problem with this approach is that operating with ServicePointManager.s_ServicePointTable using
+		// reflection bypasses locking on ServicePointManager.s_ServicePointTable field performed when ServicePointManager.FindServicePoint(...)
+		// is called: https://referencesource.microsoft.com/#system/net/system/Net/ServicePointManager.cs,766
+		//
+		// which happens when configuring Central Config and PayloadSender, and also when an endpoint is used for the first time. Since
+		// ServicePointManager.s_ServicePointTable is a static non-public field, and tests run concurrently, a race condition can occur whereby
+		// the setup of HttpHandlerDiagnosticListener to track HttpWebRequest clashes with ServicePointManager.FindServicePoint(...), resulting
+		// in HttpHandlerDiagnosticListener's instrumentation not wrapping the original Hashtable to which the ServicePoint for localServer is added,
+		// and not raising diganostic events and not capturing a span for it.
+		//
+		// This problem is unlikely to occur in production usage of HttpHandlerDiagnosticListener.
+		[NetCoreFact]
 		public async Task HttpCallWithW3CActivityFormat()
 		{
-			_output.WriteLine($"System.Diagnostics.DiagnosticSource version is {typeof(Activity).Assembly.GetName()}");
-
 			Activity.DefaultIdFormat = ActivityIdFormat.W3C;
 
 			var mockPayloadSender = new MockPayloadSender();
-			using var localServer = LocalServer.Create();
-
 			var logger = new XUnitLogger(LogLevel.Trace, _output, nameof(HttpCallWithW3CActivityFormat));
 			using var agent = new ApmAgent(new TestAgentComponents(logger: logger, payloadSender: mockPayloadSender));
+
+			using var localServer = LocalServer.Create();
 			using var subscriber = agent.Subscribe(new HttpDiagnosticsSubscriber());
 
 			await agent.Tracer.CaptureTransaction("Test", "Test", async () =>
@@ -818,7 +840,6 @@ namespace Elastic.Apm.Tests
 				using var httpClient = new HttpClient();
 				try
 				{
-					_output.WriteLine($"Making request to: {localServer.Uri}");
 					var response = await httpClient.GetAsync(localServer.Uri);
 					response.IsSuccessStatusCode.Should().BeTrue();
 				}
