@@ -54,9 +54,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			span.Context.Destination.Should().NotBeNull();
 			var destination = span.Context.Destination;
 
-			var properties = ServiceBusConnectionStringProperties.Parse(_environment.ServiceBusConnectionString);
-
-			destination.Address.Should().Be(properties.FullyQualifiedNamespace);
+			destination.Address.Should().Be(_environment.ServiceBusConnectionStringProperties.FullyQualifiedNamespace);
 			destination.Service.Name.Should().Be("azureservicebus");
 			destination.Service.Resource.Should().Be($"azureservicebus/{scope.QueueName}");
 			destination.Service.Type.Should().Be("messaging");
@@ -85,8 +83,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			span.Context.Destination.Should().NotBeNull();
 			var destination = span.Context.Destination;
 
-			var properties = ServiceBusConnectionStringProperties.Parse(_environment.ServiceBusConnectionString);
-			destination.Address.Should().Be(properties.FullyQualifiedNamespace);
+			destination.Address.Should().Be(_environment.ServiceBusConnectionStringProperties.FullyQualifiedNamespace);
 			destination.Service.Name.Should().Be("azureservicebus");
 			destination.Service.Resource.Should().Be($"azureservicebus/{scope.TopicName}");
 			destination.Service.Type.Should().Be("messaging");

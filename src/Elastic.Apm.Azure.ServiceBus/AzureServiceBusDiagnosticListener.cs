@@ -1,18 +1,24 @@
-﻿using System;
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Azure.ServiceBus
 {
+	/// <summary>
+	/// Creates spans for diagnostic events from Azure.Messaging.ServiceBus
+	/// </summary>
 	public class AzureServiceBusDiagnosticListener: IDiagnosticListener
 	{
 		private readonly IApmAgent _agent;
-
 		private readonly ConcurrentDictionary<string, ISpan> _sendSpans = new ConcurrentDictionary<string, ISpan>();
 
 		internal IApmLogger Logger { get; }
@@ -23,7 +29,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 			Logger = _agent.Logger.Scoped(nameof(AzureServiceBusDiagnosticListener));
 		}
 
-		public void OnCompleted() { }
+		public void OnCompleted() => Logger.Trace()?.Log("Completed");
 
 		public void OnError(Exception error) => Logger.Error()?.LogExceptionWithCaller(error, nameof(OnError));
 
@@ -46,6 +52,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 					OnSendStop();
 					break;
 				case "ServiceBusSender.Send.Exception":
+					OnSendException(kv);
 					break;
 				case "ServiceBusSender.Schedule.Start":
 					break;
@@ -106,7 +113,9 @@ namespace Elastic.Apm.Azure.ServiceBus
 			var spanName = queueName is null
 				? "AzureServiceBus SEND"
 				: $"AzureServiceBus SEND to {queueName}";
+
 			var span = currentSegment.StartSpan(spanName, "messaging", "azureservicebus", "send");
+
 			span.Context.Destination = new Destination
 			{
 				Address = destinationAddress,
@@ -141,9 +150,32 @@ namespace Elastic.Apm.Azure.ServiceBus
 				return;
 			}
 
+			span.Outcome = Outcome.Success;
 			span.End();
 		}
 
+		private void OnSendException(KeyValuePair<string,object> kv)
+		{
+			var activity = Activity.Current;
+			if (activity is null)
+			{
+				Logger.Trace()?.Log("Current activity is null - exiting");
+				return;
+			}
+
+			if (!_sendSpans.TryRemove(activity.Id, out var span))
+			{
+				Logger.Error()?
+					.Log("Could not get span for activity {ActivityId} from tracked spans", activity.Id);
+				return;
+			}
+
+			if (kv.Value is Exception e)
+				span.CaptureException(e);
+
+			span.Outcome = Outcome.Failure;
+			span.End();
+		}
 
 		public string Name { get; } = "Azure.Messaging.ServiceBus";
 	}

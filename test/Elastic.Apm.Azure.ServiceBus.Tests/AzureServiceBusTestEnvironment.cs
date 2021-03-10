@@ -4,6 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using Azure.Messaging.ServiceBus;
 
 namespace Elastic.Apm.Azure.ServiceBus.Tests
 {
@@ -19,8 +20,11 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			}
 
 			ServiceBusConnectionString = serviceBusConnectionString;
+			ServiceBusConnectionStringProperties = ServiceBusConnectionStringProperties.Parse(serviceBusConnectionString);
 		}
-		
+
 		public string ServiceBusConnectionString { get; }
+
+		public ServiceBusConnectionStringProperties ServiceBusConnectionStringProperties { get; }
 	}
 }

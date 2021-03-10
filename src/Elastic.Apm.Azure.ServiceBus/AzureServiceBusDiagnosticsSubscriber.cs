@@ -5,7 +5,6 @@
 
 using System;
 using System.Diagnostics;
-using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.DiagnosticSource;
 
 namespace Elastic.Apm.Azure.ServiceBus
