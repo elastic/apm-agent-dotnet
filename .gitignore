@@ -341,3 +341,10 @@ build/output/
 
 # Generated .NET core sln file
 ElasticApmAgent.NetCore.sln
+
+.credentials.json
+
+.terraform
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup

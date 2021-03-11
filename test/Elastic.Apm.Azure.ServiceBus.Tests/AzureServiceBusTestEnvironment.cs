@@ -4,27 +4,50 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Generic;
+using System.IO;
 using Azure.Messaging.ServiceBus;
+using Elastic.Apm.Tests.Utilities;
+using Xunit.Abstractions;
 
 namespace Elastic.Apm.Azure.ServiceBus.Tests
 {
-	public class AzureServiceBusTestEnvironment
+	/// <summary>
+	/// A test environment for Azure Service Bus that deploys and configures an Azure Service Bus namespace
+	/// in a given region and location
+	/// </summary>
+	public class AzureServiceBusTestEnvironment : IDisposable
 	{
-		public AzureServiceBusTestEnvironment()
-		{
-			var serviceBusConnectionString = Environment.GetEnvironmentVariable("AZURE_SERVICE_BUS_CONNECTION_STRING");
-			if (string.IsNullOrEmpty(serviceBusConnectionString))
-			{
-				throw new ArgumentException(
-					"connection string for Azure Service Bus required. A connection string can be passed with AZURE_SERVICE_BUS_CONNECTION_STRING environment variable");
-			}
+		private readonly TerraformResources _terraform;
+		private readonly Dictionary<string, string> _variables;
 
-			ServiceBusConnectionString = serviceBusConnectionString;
-			ServiceBusConnectionStringProperties = ServiceBusConnectionStringProperties.Parse(serviceBusConnectionString);
+		public AzureServiceBusTestEnvironment(IMessageSink messageSink)
+		{
+			var solutionRoot = SolutionPaths.Root;
+			var terraformResourceDirectory = Path.Combine(solutionRoot, "build", "terraform", "azure", "service_bus");
+			var credentials = AzureCredentials.Instance;
+
+			_terraform = new TerraformResources(terraformResourceDirectory, credentials, messageSink);
+
+			// TODO: source resource group and location from somewhere
+			_variables = new Dictionary<string, string>
+			{
+				["location"] = "australiasoutheast",
+				["resource_group"] = "russ-service-bus-test",
+				["servicebus_namespace"] = "dotnet-" + Guid.NewGuid()
+			};
+
+			_terraform.Init();
+			_terraform.Apply(_variables);
+
+			ServiceBusConnectionString = _terraform.Output("connection_string");
+			ServiceBusConnectionStringProperties = ServiceBusConnectionStringProperties.Parse(ServiceBusConnectionString);
 		}
 
 		public string ServiceBusConnectionString { get; }
 
 		public ServiceBusConnectionStringProperties ServiceBusConnectionStringProperties { get; }
+
+		public void Dispose() => _terraform.Destroy(_variables);
 	}
 }
