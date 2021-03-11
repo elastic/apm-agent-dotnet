@@ -15,15 +15,16 @@ namespace Elastic.Apm.EntityFrameworkCore
 	internal class EfCoreDiagnosticListener : DiagnosticListenerBase
 	{
 		private readonly ConcurrentDictionary<Guid, ISpan> _spans = new ConcurrentDictionary<Guid, ISpan>();
+		private ApmAgent _agent;
 
-		public EfCoreDiagnosticListener(IApmAgent agent) : base(agent) { }
+		public EfCoreDiagnosticListener(IApmAgent agent) : base(agent) => _agent = agent as ApmAgent;
 
 		public override string Name => "Microsoft.EntityFrameworkCore";
 
 		protected override void HandleOnNext(KeyValuePair<string, object> kv)
 		{
 			// check for competing instrumentation
-			if ((ApmAgent as ApmAgent)?.TracerInternal.CurrentSpan is Span currentSpan)
+			if (_agent?.TracerInternal.CurrentSpan is Span currentSpan)
 			{
 				if (currentSpan.InstrumentationFlag == InstrumentationFlag.SqlClient)
 					return;
@@ -34,7 +35,7 @@ namespace Elastic.Apm.EntityFrameworkCore
 				case { } k when k == RelationalEventId.CommandExecuting.Name && ApmAgent.Tracer.CurrentTransaction != null:
 					if (kv.Value is CommandEventData commandEventData)
 					{
-						var newSpan = (ApmAgent as ApmAgent)?.TracerInternal.DbSpanCommon.StartSpan(ApmAgent, commandEventData.Command, InstrumentationFlag.EfCore,
+						var newSpan = _agent?.TracerInternal.DbSpanCommon.StartSpan(ApmAgent, commandEventData.Command, InstrumentationFlag.EfCore,
 							captureStackTraceOnStart: true);
 						_spans.TryAdd(commandEventData.CommandId, newSpan);
 					}
@@ -44,7 +45,7 @@ namespace Elastic.Apm.EntityFrameworkCore
 					{
 						if (_spans.TryRemove(commandExecutedEventData.CommandId, out var span))
 						{
-							(ApmAgent as ApmAgent)?.TracerInternal.DbSpanCommon.EndSpan(span, commandExecutedEventData.Command, Outcome.Success,
+							_agent?.TracerInternal.DbSpanCommon.EndSpan(span, commandExecutedEventData.Command, Outcome.Success,
 								commandExecutedEventData.Duration);
 						}
 					}
@@ -55,7 +56,7 @@ namespace Elastic.Apm.EntityFrameworkCore
 						if (_spans.TryRemove(commandErrorEventData.CommandId, out var span))
 						{
 							span.CaptureException(commandErrorEventData.Exception);
-							(ApmAgent as ApmAgent)?.TracerInternal.DbSpanCommon.EndSpan(span, commandErrorEventData.Command, Outcome.Failure,
+							_agent?.TracerInternal.DbSpanCommon.EndSpan(span, commandErrorEventData.Command, Outcome.Failure,
 								commandErrorEventData.Duration);
 						}
 					}

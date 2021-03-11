@@ -17,13 +17,14 @@ namespace Elastic.Apm.SqlClient
 {
 	internal class SqlClientDiagnosticListener : DiagnosticListenerBase
 	{
+		private ApmAgent _agent;
 		private readonly PropertyFetcherSet _microsoftPropertyFetcherSet = new PropertyFetcherSet();
 
 		private readonly ConcurrentDictionary<Guid, ISpan> _spans = new ConcurrentDictionary<Guid, ISpan>();
 
 		private readonly PropertyFetcherSet _systemPropertyFetcherSet = new PropertyFetcherSet();
 
-		public SqlClientDiagnosticListener(IApmAgent apmAgent) : base(apmAgent) { }
+		public SqlClientDiagnosticListener(IApmAgent apmAgent) : base(apmAgent) => _agent = apmAgent as ApmAgent;
 
 		public override string Name => "SqlClientDiagnosticListener";
 
@@ -60,7 +61,7 @@ namespace Elastic.Apm.SqlClient
 				if (propertyFetcherSet.StartCorrelationId.Fetch(payloadData) is Guid operationId
 					&& propertyFetcherSet.StartCommand.Fetch(payloadData) is IDbCommand dbCommand)
 				{
-					var span = (ApmAgent as ApmAgent)?.TracerInternal.DbSpanCommon.StartSpan(ApmAgent, dbCommand, InstrumentationFlag.SqlClient,
+					var span = _agent?.TracerInternal.DbSpanCommon.StartSpan(ApmAgent, dbCommand, InstrumentationFlag.SqlClient,
 						ApiConstants.SubtypeMssql);
 					_spans.TryAdd(operationId, span);
 				}
@@ -87,7 +88,7 @@ namespace Elastic.Apm.SqlClient
 						statistics.ContainsKey("ExecutionTime") && statistics["ExecutionTime"] is long durationInMs && durationInMs > 0)
 						duration = TimeSpan.FromMilliseconds(durationInMs);
 
-					(ApmAgent as ApmAgent)?.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand, Outcome.Success, duration);
+					_agent?.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand, Outcome.Success, duration);
 				}
 			}
 			catch (Exception ex)
@@ -108,7 +109,7 @@ namespace Elastic.Apm.SqlClient
 					if (propertyFetcherSet.Exception.Fetch(payloadData) is Exception exception) span.CaptureException(exception);
 
 					if (propertyFetcherSet.ErrorCommand.Fetch(payloadData) is IDbCommand dbCommand)
-						(ApmAgent as ApmAgent)?.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand, Outcome.Failure);
+						_agent?.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand, Outcome.Failure);
 					else
 					{
 						Logger.Warning()?.Log("Cannot extract database command from {PayloadData}", payloadData);

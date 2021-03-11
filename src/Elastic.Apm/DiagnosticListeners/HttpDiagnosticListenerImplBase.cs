@@ -118,7 +118,7 @@ namespace Elastic.Apm.DiagnosticListeners
 		{
 			Logger.Trace()?.Log("Processing start event... Request URL: {RequestUrl}", Http.Sanitize(requestUrl));
 
-			var transaction = Agent.Tracer.CurrentTransaction;
+			var transaction = ApmAgent.Tracer.CurrentTransaction;
 			if (transaction == null)
 			{
 				Logger.Debug()?.Log("No current transaction, skip creating span for outgoing HTTP request");
