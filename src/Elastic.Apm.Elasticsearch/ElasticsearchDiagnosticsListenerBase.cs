@@ -1,43 +1,33 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.Api;
-using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Elasticsearch
 {
-	public abstract class ElasticsearchDiagnosticsListenerBase : IDiagnosticListener
+	public abstract class ElasticsearchDiagnosticsListenerBase : DiagnosticListenerBase
 	{
 		protected const string StartSuffix = ".Start";
 		protected const string StopSuffix = ".Stop";
 
 		internal readonly ConcurrentDictionary<string, Span> Spans = new ConcurrentDictionary<string, Span>();
-		private readonly IApmAgent _agent;
 
-		protected ElasticsearchDiagnosticsListenerBase(IApmAgent agent, string name)
-		{
-			_agent = agent;
-			Name = name;
-			Logger = agent.Logger.Scoped(GetType().Name);
-		}
-
-		protected IApmLogger Logger { get; }
-
-		public string Name { get; }
+		protected ElasticsearchDiagnosticsListenerBase(IApmAgent agent) : base(agent) { }
 
 		protected IObserver<KeyValuePair<string, object>> Observer { get; set; }
 
-		void IObserver<KeyValuePair<string, object>>.OnCompleted() => Observer.OnCompleted();
-
-		void IObserver<KeyValuePair<string, object>>.OnError(Exception error) => Observer.OnError(error);
-
-		void IObserver<KeyValuePair<string, object>>.OnNext(KeyValuePair<string, object> kv)
+		protected override void HandleOnNext(KeyValuePair<string, object> kv)
 		{
 			Logger.Trace()?.Log("Called with key: `{DiagnosticEventKey}'", kv.Key);
-			if (_agent.Tracer.CurrentTransaction == null)
+			if (ApmAgent.Tracer.CurrentTransaction == null)
 			{
 				Logger.Debug()?.Log("No active transaction, skip creating span for outgoing HTTP request");
 				return;
@@ -56,11 +46,11 @@ namespace Elastic.Apm.Elasticsearch
 		internal bool TryStartElasticsearchSpan(string name, out Span span, Uri instanceUri = null)
 		{
 			span = null;
-			var transaction = _agent.Tracer.CurrentTransaction;
+			var transaction = ApmAgent.Tracer.CurrentTransaction;
 			if (transaction == null)
 				return false;
 
-			span = (Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(_agent)
+			span = (Span)ExecutionSegmentCommon.GetCurrentExecutionSegment(ApmAgent)
 				.StartSpan(
 					name,
 					ApiConstants.TypeDb,

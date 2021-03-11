@@ -22,11 +22,11 @@ namespace Elastic.Apm.AspNetCore
 	/// </summary>
 	internal static class WebRequestTransactionCreator
 	{
-		internal static ITransaction StartTransactionAsync(HttpContext context, IApmLogger logger, Tracer tracer, IConfigSnapshot configSnapshot)
+		internal static ITransaction StartTransactionAsync(HttpContext context, IApmLogger logger, ITracer tracer, IConfigSnapshot configSnapshot)
 		{
 			try
 			{
-				if (WildcardMatcher.IsAnyMatch(configSnapshot.TransactionIgnoreUrls, context.Request.Path))
+				if (WildcardMatcher.IsAnyMatch(configSnapshot?.TransactionIgnoreUrls, context.Request.Path))
 				{
 					logger.Debug()?.Log("Request ignored based on TransactionIgnoreUrls, url: {urlPath}", context.Request.Path);
 					return null;

@@ -1,14 +1,13 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Elastic.Apm.Api;
-using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
@@ -19,27 +18,20 @@ namespace Elastic.Apm.DiagnosticListeners
 	/// <summary>
 	/// Captures web requests initiated by <see cref="T:System.Net.Http.HttpClient" />
 	/// </summary>
-	internal abstract class HttpDiagnosticListenerImplBase<TRequest, TResponse> : IDiagnosticListener
+	internal abstract class HttpDiagnosticListenerImplBase<TRequest, TResponse> : DiagnosticListenerBase
 		where TRequest : class
 		where TResponse : class
 	{
 		private const string EventExceptionPropertyName = "Exception";
 		protected const string EventRequestPropertyName = "Request";
 		private const string EventResponsePropertyName = "Response";
-		protected readonly ScopedLogger Logger;
 
 		/// <summary>
 		/// Keeps track of ongoing requests
 		/// </summary>
 		internal readonly ConcurrentDictionary<TRequest, ISpan> ProcessingRequests = new ConcurrentDictionary<TRequest, ISpan>();
 
-		private readonly IApmAgent _agent;
-
-		protected HttpDiagnosticListenerImplBase(IApmAgent agent)
-		{
-			_agent = agent;
-			Logger = _agent.Logger?.Scoped("HttpDiagnosticListenerImplBase");
-		}
+		protected HttpDiagnosticListenerImplBase(IApmAgent agent) : base(agent) { }
 
 		protected abstract string RequestGetMethod(TRequest request);
 
@@ -51,85 +43,89 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		protected abstract int ResponseGetStatusCode(TResponse response);
 
-		internal abstract string ExceptionEventKey { get; }
+		protected abstract string ExceptionEventKey { get; }
 
-		public abstract string Name { get; }
 		internal abstract string StartEventKey { get; }
 		internal abstract string StopEventKey { get; }
 
-		public void OnCompleted() { }
+		public override void OnError(Exception error) => Logger.Error()?.LogExceptionWithCaller(error, nameof(OnError));
 
-		public void OnError(Exception error) => Logger.Error()?.LogExceptionWithCaller(error, nameof(OnError));
-
-		public void OnNext(KeyValuePair<string, object> kv)
+		protected override void HandleOnNext(KeyValuePair<string, object> kv)
 		{
-			// We only print the key, we don't print the value, because it can contain a http request object, and its ToString prints
-			// the URL, which can contain username and password. See: https://github.com/elastic/apm-agent-dotnet/issues/515
-			Logger.Trace()?.Log("Called with key: `{DiagnosticEventKey}'", kv.Key);
-
-			if (string.IsNullOrEmpty(kv.Key))
+			try
 			{
-				Logger.Trace()?.Log($"Key is {(kv.Key == null ? "null" : "an empty string")} - exiting");
-				return;
-			}
+				// We only print the key, we don't print the value, because it can contain a http request object, and its ToString prints
+				// the URL, which can contain username and password. See: https://github.com/elastic/apm-agent-dotnet/issues/515
+				Logger.Trace()?.Log("Called with key: `{DiagnosticEventKey}'", kv.Key);
 
-			if (kv.Value == null)
+				if (string.IsNullOrEmpty(kv.Key))
+				{
+					Logger.Trace()?.Log($"Key is {(kv.Key == null ? "null" : "an empty string")} - exiting");
+					return;
+				}
+
+				if (kv.Value == null)
+				{
+					Logger.Trace()?.Log("Value is null - exiting");
+					return;
+				}
+
+				var requestObject = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty(EventRequestPropertyName)?.GetValue(kv.Value);
+				if (requestObject == null)
+				{
+					Logger.Trace()?.Log("Event's {EventRequestPropertyName} property is null - exiting", EventRequestPropertyName);
+					return;
+				}
+
+				if (!(requestObject is TRequest request))
+				{
+					Logger.Trace()
+						?.Log("Actual type of object ({EventRequestPropertyActualType}) in event's {EventRequestPropertyName} property " +
+							"doesn't match the expected type ({EventRequestPropertyExpectedType}) - exiting",
+							requestObject.GetType().FullName, EventRequestPropertyName, typeof(TRequest).FullName);
+					return;
+				}
+
+				var requestUrl = RequestGetUri(request);
+				if (requestUrl == null)
+				{
+					Logger.Trace()?.Log("Request URL is null - exiting", EventRequestPropertyName);
+					return;
+				}
+
+				if (IsRequestFilteredOut(requestUrl))
+				{
+					Logger.Trace()?.Log("Request URL ({RequestUrl}) is filtered out - exiting", Http.Sanitize(requestUrl));
+					return;
+				}
+
+				if (kv.Key.Equals(StartEventKey))
+					ProcessStartEvent(request, requestUrl);
+				else if (kv.Key.Equals(StopEventKey))
+					ProcessStopEvent(kv.Value, request, requestUrl);
+				else if (kv.Key.Equals(ExceptionEventKey))
+					ProcessExceptionEvent(kv.Value, requestUrl);
+				else
+					Logger.Trace()?.Log("Unrecognized key `{DiagnosticEventKey}'", kv.Key);
+			}
+			catch (Exception e)
 			{
-				Logger.Trace()?.Log("Value is null - exiting");
-				return;
+				Logger.Error()?.LogException(e, "Exception during capturing outgoing HTTP request");
 			}
-
-			var requestObject = kv.Value.GetType().GetTypeInfo().GetDeclaredProperty(EventRequestPropertyName)?.GetValue(kv.Value);
-			if (requestObject == null)
-			{
-				Logger.Trace()?.Log("Event's {EventRequestPropertyName} property is null - exiting", EventRequestPropertyName);
-				return;
-			}
-
-			if (!(requestObject is TRequest request))
-			{
-				Logger.Trace()
-					?.Log("Actual type of object ({EventRequestPropertyActualType}) in event's {EventRequestPropertyName} property " +
-						"doesn't match the expected type ({EventRequestPropertyExpectedType}) - exiting",
-						requestObject.GetType().FullName, EventRequestPropertyName, typeof(TRequest).FullName);
-				return;
-			}
-
-			var requestUrl = RequestGetUri(request);
-			if (requestUrl == null)
-			{
-				Logger.Trace()?.Log("Request URL is null - exiting", EventRequestPropertyName);
-				return;
-			}
-
-			if (IsRequestFilteredOut(requestUrl))
-			{
-				Logger.Trace()?.Log("Request URL ({RequestUrl}) is filtered out - exiting", Http.Sanitize(requestUrl));
-				return;
-			}
-
-			if (kv.Key.Equals(StartEventKey))
-				ProcessStartEvent(request, requestUrl);
-			else if (kv.Key.Equals(StopEventKey))
-				ProcessStopEvent(kv.Value, request, requestUrl);
-			else if (kv.Key.Equals(ExceptionEventKey))
-				ProcessExceptionEvent(kv.Value, requestUrl);
-			else
-				Logger.Trace()?.Log("Unrecognized key `{DiagnosticEventKey}'", kv.Key);
 		}
 
 		private void ProcessStartEvent(TRequest request, Uri requestUrl)
 		{
 			Logger.Trace()?.Log("Processing start event... Request URL: {RequestUrl}", Http.Sanitize(requestUrl));
 
-			var transaction = _agent.Tracer.CurrentTransaction;
+			var transaction = ApmAgent.Tracer.CurrentTransaction;
 			if (transaction == null)
 			{
 				Logger.Debug()?.Log("No current transaction, skip creating span for outgoing HTTP request");
 				return;
 			}
 
-			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(_agent, $"{RequestGetMethod(request)} {requestUrl.Host}",
+			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(ApmAgent, $"{RequestGetMethod(request)} {requestUrl.Host}",
 				ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient, true);
 
 			if (!ProcessingRequests.TryAdd(request, span))
@@ -157,7 +153,8 @@ namespace Elastic.Apm.DiagnosticListeners
 				}
 			}
 
-			if (!RequestHeadersContain(request, TraceContext.TraceStateHeaderName) && transaction.OutgoingDistributedTracingData != null && transaction.OutgoingDistributedTracingData.HasTraceState)
+			if (!RequestHeadersContain(request, TraceContext.TraceStateHeaderName) && transaction.OutgoingDistributedTracingData != null
+				&& transaction.OutgoingDistributedTracingData.HasTraceState)
 			{
 				RequestHeadersAdd(request, TraceContext.TraceStateHeaderName,
 					TraceContext.BuildTraceState(transaction.OutgoingDistributedTracingData));
@@ -181,7 +178,7 @@ namespace Elastic.Apm.DiagnosticListeners
 			{
 				// if we don't find the request in the dictionary and current transaction is null, then this is not a big deal -
 				// it was probably not captured in Start either - so we skip with a debug log
-				if (_agent.Tracer.CurrentTransaction == null)
+				if (ApmAgent.Tracer.CurrentTransaction == null)
 				{
 					Logger.Debug()
 						?.Log("{eventName} called with no active current transaction, url: {url} - skipping event", nameof(ProcessStopEvent),
@@ -244,7 +241,7 @@ namespace Elastic.Apm.DiagnosticListeners
 				return;
 			}
 
-			var transaction = _agent.Tracer.CurrentTransaction;
+			var transaction = ApmAgent.Tracer.CurrentTransaction;
 
 			transaction?.CaptureException(exception, "Failed outgoing HTTP request");
 			//TODO: we don't know if exception is handled, currently reports handled = false
@@ -255,6 +252,6 @@ namespace Elastic.Apm.DiagnosticListeners
 		/// </summary>
 		/// <returns><c>true</c>, if request should not be captured, <c>false</c> otherwise.</returns>
 		/// <param name="requestUri">Request URI. It cannot be null</param>
-		private bool IsRequestFilteredOut(Uri requestUri) => _agent.ConfigurationReader.ServerUrl.IsBaseOf(requestUri);
+		private bool IsRequestFilteredOut(Uri requestUri) => ApmAgent.ConfigurationReader.ServerUrl.IsBaseOf(requestUri);
 	}
 }

@@ -1,9 +1,14 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.Extensions;
-using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
@@ -11,46 +16,39 @@ using Microsoft.AspNetCore.Http;
 
 namespace Elastic.Apm.AspNetCore.DiagnosticListener
 {
-	internal class AspNetCoreDiagnosticListener : IDiagnosticListener
+	internal class AspNetCoreDiagnosticListener : DiagnosticListenerBase
 	{
-		private readonly ApmAgent _agent;
 		private readonly PropertyFetcher _defaultHttpContextFetcher = new PropertyFetcher("HttpContext");
 		private readonly PropertyFetcher _exceptionContextPropertyFetcher = new PropertyFetcher("Exception");
 		private readonly PropertyFetcher _httpContextPropertyFetcher = new PropertyFetcher("HttpContext");
-		private readonly IApmLogger _logger;
 
 		/// <summary>
 		/// Keeps track of ongoing transactions
 		/// </summary>
 		private readonly ConcurrentDictionary<HttpContext, ITransaction> _processingRequests = new ConcurrentDictionary<HttpContext, ITransaction>();
 
-		public AspNetCoreDiagnosticListener(ApmAgent agent) =>
-			(_agent, _logger) = (agent, agent.Logger.Scoped(nameof(AspNetCoreDiagnosticListener)));
+		public AspNetCoreDiagnosticListener(ApmAgent agent) : base(agent) { }
 
-		public string Name => "Microsoft.AspNetCore";
+		public override string Name => "Microsoft.AspNetCore";
 
-		public void OnCompleted() { }
-
-		public void OnError(Exception error) { }
-
-		public void OnNext(KeyValuePair<string, object> kv)
+		protected override void HandleOnNext(KeyValuePair<string, object> kv)
 		{
-			_logger.Trace()?.Log("Called with key: `{DiagnosticEventKey}'", kv.Key);
+			Logger.Trace()?.Log("Called with key: `{DiagnosticEventKey}'", kv.Key);
 
 			switch (kv.Key)
 			{
 				case "Microsoft.AspNetCore.Hosting.HttpRequestIn.Start":
 					if (_httpContextPropertyFetcher.Fetch(kv.Value) is HttpContext httpContextStart)
 					{
-						var createdTransaction = WebRequestTransactionCreator.StartTransactionAsync(httpContextStart, _logger, _agent.TracerInternal,
-							_agent.ConfigStore.CurrentSnapshot);
+						var createdTransaction = WebRequestTransactionCreator.StartTransactionAsync(httpContextStart, Logger, ApmAgent.Tracer,
+							(ApmAgent as ApmAgent)?.ConfigStore.CurrentSnapshot);
 
 						Transaction transaction = null;
 						if (createdTransaction is Transaction t)
 							transaction = t;
 
 						if (transaction != null)
-							WebRequestTransactionCreator.FillSampledTransactionContextRequest(transaction, httpContextStart, _logger);
+							WebRequestTransactionCreator.FillSampledTransactionContextRequest(transaction, httpContextStart, Logger);
 
 						if (createdTransaction != null)
 							_processingRequests[httpContextStart] = createdTransaction;
@@ -62,7 +60,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 						if (_processingRequests.TryRemove(httpContextStop, out var createdTransaction))
 						{
 							if (createdTransaction is Transaction transaction)
-								WebRequestTransactionCreator.StopTransaction(transaction, httpContextStop, _logger);
+								WebRequestTransactionCreator.StopTransaction(transaction, httpContextStop, Logger);
 							else
 								createdTransaction.End();
 						}
@@ -76,7 +74,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 					if (iDiagnosticsTransaction is Transaction diagnosticsTransaction)
 					{
-						diagnosticsTransaction.CollectRequestBody(true, httpContextDiagnosticsUnhandledException.Request, _logger);
+						diagnosticsTransaction.CollectRequestBody(true, httpContextDiagnosticsUnhandledException.Request, Logger);
 						diagnosticsTransaction.CaptureException(diagnosticsException);
 					}
 
@@ -88,7 +86,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 
 					if (iCurrentTransaction is Transaction currentTransaction)
 					{
-						currentTransaction.CollectRequestBody(true, httpContextUnhandledException.Request, _logger);
+						currentTransaction.CollectRequestBody(true, httpContextUnhandledException.Request, Logger);
 						currentTransaction.CaptureException(exception);
 					}
 					break;

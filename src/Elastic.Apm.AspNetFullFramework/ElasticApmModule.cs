@@ -172,7 +172,8 @@ namespace Elastic.Apm.AspNetFullFramework
 				{
 					_logger.Debug()
 						?.Log("Incoming request doesn't have {TraceParentHeaderName} header - " +
-							"it means request doesn't have incoming distributed tracing data", DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed);
+							"it means request doesn't have incoming distributed tracing data",
+							DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed);
 					return null;
 				}
 			}
@@ -320,8 +321,10 @@ namespace Elastic.Apm.AspNetFullFramework
 					else
 					{
 						// dealing with a 404 HttpException that came from System.Web.Mvc
-						_logger?.Trace()?
-							.Log("Route data found but a HttpException with 404 status code was thrown from System.Web.Mvc - setting transaction name to 'unknown route");
+						_logger?.Trace()
+							?
+							.Log(
+								"Route data found but a HttpException with 404 status code was thrown from System.Web.Mvc - setting transaction name to 'unknown route");
 						transaction.Name = $"{context.Request.HttpMethod} unknown route";
 					}
 				}
@@ -360,9 +363,7 @@ namespace Elastic.Apm.AspNetFullFramework
 		private static void FillSampledTransactionContextResponse(HttpResponse response, ITransaction transaction) =>
 			transaction.Context.Response = new Response
 			{
-				Finished = true,
-				StatusCode = response.StatusCode,
-				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(response.Headers) : null
+				Finished = true, StatusCode = response.StatusCode, Headers = _isCaptureHeadersEnabled ? ConvertHeaders(response.Headers) : null
 			};
 
 		private void FillSampledTransactionContextUser(HttpContext context, ITransaction transaction)
@@ -424,36 +425,10 @@ namespace Elastic.Apm.AspNetFullFramework
 		private static void SafeAgentSetup(string dbgInstanceName)
 		{
 			var agentComponents = CreateAgentComponents(dbgInstanceName);
-			try
-			{
-				if (!agentComponents.ConfigurationReader.Enabled)
-					return;
+			if (!agentComponents.ConfigurationReader.Enabled)
+				return;
 
-				Agent.Setup(agentComponents);
-			}
-			catch (Agent.InstanceAlreadyCreatedException ex)
-			{
-				if (Agent.Components is FullFrameworkAgentComponents)
-				{
-					BuildLogger()
-						.Scoped(dbgInstanceName)
-						.Info()
-						?.Log("The Elastic APM agent was already initialized before call to"
-							+ $" {nameof(ElasticApmModule)}.{nameof(Init)} - {nameof(ElasticApmModule)} will use existing instance");
-				}
-				else
-				{
-					BuildLogger()
-						.Scoped(dbgInstanceName)
-						.Error()
-						?.LogException(ex, "The Elastic APM agent was already initialized before call to"
-							+ $" {nameof(ElasticApmModule)}.{nameof(Init)} - {nameof(ElasticApmModule)} will use existing instance"
-							+ " even though it might lead to unexpected behavior"
-							+ " (for example agent using incorrect configuration source such as environment variables instead of Web.config).");
-				}
-
-				agentComponents.Dispose();
-			}
+			Agent.Setup(agentComponents);
 		}
 
 		/// <summary>

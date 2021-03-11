@@ -1,4 +1,5 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -6,25 +7,19 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Elastic.Apm.AspNetCore.Extensions;
-using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.Model;
 using Microsoft.AspNetCore.Http;
 
 namespace Elastic.Apm.AspNetCore.DiagnosticListener
 {
-	internal class AspNetCoreErrorDiagnosticListener : IDiagnosticListener
+	internal class AspNetCoreErrorDiagnosticListener : DiagnosticListenerBase
 	{
-		private readonly IApmAgent _agent;
+		public AspNetCoreErrorDiagnosticListener(IApmAgent agent) : base(agent) { }
 
-		public AspNetCoreErrorDiagnosticListener(IApmAgent agent) => _agent = agent;
+		public override string Name => "Microsoft.AspNetCore";
 
-		public string Name => "Microsoft.AspNetCore";
-
-		public void OnCompleted() { }
-
-		public void OnError(Exception error) { }
-
-		public void OnNext(KeyValuePair<string, object> kv)
+		protected override void HandleOnNext(KeyValuePair<string, object> kv)
 		{
 			if (kv.Key != "Microsoft.AspNetCore.Diagnostics.UnhandledException"
 				&& kv.Key != "Microsoft.AspNetCore.Diagnostics.HandledException") return;
@@ -33,8 +28,8 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 			var httpContextUnhandledException =
 				kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("httpContext")?.GetValue(kv.Value) as DefaultHttpContext;
 
-			var transaction = _agent.Tracer.CurrentTransaction as Transaction;
-			transaction?.CollectRequestBody(true, httpContextUnhandledException?.Request, _agent.Logger);
+			var transaction = ApmAgent.Tracer.CurrentTransaction as Transaction;
+			transaction?.CollectRequestBody(true, httpContextUnhandledException?.Request, Logger);
 			transaction?.CaptureException(exception, "ASP.NET Core Unhandled Exception",
 				kv.Key == "Microsoft.AspNetCore.Diagnostics.HandledException");
 		}

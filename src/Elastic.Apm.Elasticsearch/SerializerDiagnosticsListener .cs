@@ -1,3 +1,7 @@
+// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using Elastic.Apm.Logging;
 using Elasticsearch.Net;
 using Elasticsearch.Net.Diagnostics;
@@ -6,8 +10,10 @@ namespace Elastic.Apm.Elasticsearch
 {
 	public class SerializerDiagnosticsListener : ElasticsearchDiagnosticsListenerBase
 	{
-		public SerializerDiagnosticsListener(IApmAgent agent) : base(agent, DiagnosticSources.Serializer.SourceName) =>
+		public SerializerDiagnosticsListener(IApmAgent agent) : base(agent) =>
 			Observer = new SerializerDiagnosticObserver(a => OnSerializer(a.Key, a.Value));
+
+		public override string Name => DiagnosticSources.Serializer.SourceName;
 
 		private void OnSerializer(string @event, SerializerRegistrationInformation serializerInfo)
 		{

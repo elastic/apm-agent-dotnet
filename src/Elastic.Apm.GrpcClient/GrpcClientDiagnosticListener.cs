@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,28 +10,23 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using Elastic.Apm.Api;
-using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.GrpcClient
 {
-	public class GrpcClientDiagnosticListener : IDiagnosticListener
+	public class GrpcClientDiagnosticListener : DiagnosticListenerBase
 	{
-		private readonly IApmAgent _agent;
 		internal readonly ConcurrentDictionary<HttpRequestMessage, ISpan> ProcessingRequests = new ConcurrentDictionary<HttpRequestMessage, ISpan>();
 
-		public GrpcClientDiagnosticListener(IApmAgent apmAgent) => _agent = apmAgent;
+		public GrpcClientDiagnosticListener(IApmAgent apmAgent) : base(apmAgent) { }
 
-		public string Name => "Grpc.Net.Client";
+		public override string Name => "Grpc.Net.Client";
 
-		public void OnCompleted() { }
-
-		public void OnError(Exception error) { }
-
-		public void OnNext(KeyValuePair<string, object> kv)
+		protected override void HandleOnNext(KeyValuePair<string, object> kv)
 		{
-			_agent?.Logger.Trace()
+			Logger.Trace()
 				?.Log("{currentClassName} received diagnosticsource event: {eventKey}", nameof(GrpcClientDiagnosticListener), kv.Key);
 
 			var currentActivity = Activity.Current;
@@ -35,16 +34,16 @@ namespace Elastic.Apm.GrpcClient
 			{
 				if (kv.Value.GetType().GetTypeInfo().GetDeclaredProperty("Request")?.GetValue(kv.Value) is HttpRequestMessage requestObject)
 				{
-					var currentTransaction = _agent?.Tracer.CurrentTransaction;
+					var currentTransaction = ApmAgent?.Tracer.CurrentTransaction;
 
 					if (currentTransaction != null)
 					{
-						var grpcMethodName = currentActivity?.Tags?.FirstOrDefault(n => n.Key == "grpc.method").Value;
+						var grpcMethodName = currentActivity?.Tags.FirstOrDefault(n => n.Key == "grpc.method").Value;
 
 						if (string.IsNullOrEmpty(grpcMethodName))
 							grpcMethodName = "unknown";
 
-						_agent?.Logger.Trace()?.Log("Starting span for gRPC call, method:{methodName}", grpcMethodName);
+						Logger.Trace()?.Log("Starting span for gRPC call, method:{methodName}", grpcMethodName);
 						var newSpan = currentTransaction.StartSpan(grpcMethodName, ApiConstants.TypeExternal, ApiConstants.SubTypeGrpc);
 						ProcessingRequests.TryAdd(requestObject, newSpan);
 					}
@@ -58,13 +57,13 @@ namespace Elastic.Apm.GrpcClient
 				if (!ProcessingRequests.TryRemove(requestObject, out var span))
 					return;
 
-				_agent?.Logger.Trace()?.Log("Ending span for gRPC call, span:{span}", span);
+				Logger.Trace()?.Log("Ending span for gRPC call, span:{span}", span);
 
 				var grpcStatusCode = currentActivity?.Tags?.Where(n => n.Key == "grpc.status_code").FirstOrDefault().Value;
 				if (grpcStatusCode != null)
 					span.Outcome = GrpcHelper.GrpcClientReturnCodeToOutcome(GrpcHelper.GrpcReturnCodeToString(grpcStatusCode));
 
-				span.Context.Destination = UrlUtils.ExtractDestination(requestObject.RequestUri, _agent?.Logger);
+				span.Context.Destination = UrlUtils.ExtractDestination(requestObject.RequestUri, Logger);
 				span.Context.Destination.Service = UrlUtils.ExtractService(requestObject.RequestUri, span);
 
 				span.End();
