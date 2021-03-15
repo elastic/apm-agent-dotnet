@@ -74,26 +74,18 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 			if (PlatformDetection.IsDotNetFullFramework)
 			{
-				TraceEventSessionName = SessionNamePrefix + Guid.NewGuid();
-				_traceEventSession = new TraceEventSession(TraceEventSessionName);
-				_currentProcessId = Process.GetCurrentProcess().Id;
-
-				_traceEventSessionTask = Task.Run(() =>
+				try
 				{
-					try
-					{
-						_traceEventSession.Source.NeedLoadedDotNetRuntimes();
-						_traceEventSession.EnableProvider(
-							ClrTraceEventParser.ProviderGuid,
-							TraceEventLevel.Informational,
-							(ulong)ClrTraceEventParser.Keywords.GC // garbage collector details
-						);
-					}
-					catch (Exception e)
-					{
-						_logger.Warning()?.LogException(e, "TraceEventSession initialization failed - GC metrics won't be collected");
-						return;
-					}
+					TraceEventSessionName = SessionNamePrefix + Guid.NewGuid();
+					_traceEventSession = new TraceEventSession(TraceEventSessionName);
+					_currentProcessId = Process.GetCurrentProcess().Id;
+
+					_traceEventSession.Source.NeedLoadedDotNetRuntimes();
+					_traceEventSession.EnableProvider(
+						ClrTraceEventParser.ProviderGuid,
+						TraceEventLevel.Informational,
+						(ulong)ClrTraceEventParser.Keywords.GC // garbage collector details
+					);
 
 					_traceEventSession.Source.AddCallbackOnProcessStart(process =>
 					{
@@ -104,13 +96,19 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 						});
 					});
 
-
 					_traceEventSession.Source.Clr.GCHeapStats += ClrOnGCHeapStats;
 
-					_traceEventSession.Source.Process();
-				});
+					_traceEventSessionTask = Task.Run(() =>
+					{
+						_traceEventSession.Source.Process();
+					});
+				}
+				catch (Exception e)
+				{
+					_logger.Warning()?.LogException(e, "TraceEventSession initialization failed - GC metrics won't be collected");
+					return;
+				}
 			}
-
 
 			if (PlatformDetection.IsDotNetCore || PlatformDetection.IsDotNet5)
 				_eventListener = new GcEventListener(this, logger);
