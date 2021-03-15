@@ -1,14 +1,17 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.Config;
 using Elastic.Apm.MongoDb.Tests.Fixture;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Moq;
 using Xunit;
 
 namespace Elastic.Apm.MongoDb.Tests
@@ -21,17 +24,8 @@ namespace Elastic.Apm.MongoDb.Tests
 			_documents = fixture.Collection ?? throw new ArgumentNullException(nameof(fixture.Collection));
 			_payloadSender = new MockPayloadSender();
 
-			var configurationReaderMock = new Mock<IConfigurationReader>();
-			configurationReaderMock.Setup(x => x.TransactionSampleRate)
-				.Returns(() => 1.0);
-			configurationReaderMock.Setup(x => x.TransactionMaxSpans)
-				.Returns(() => 50);
-			configurationReaderMock.Setup(x => x.Enabled)
-				.Returns(() => true);
-			configurationReaderMock.Setup(x => x.Recording)
-				.Returns(() => true);
-
-			var config = new AgentComponents(configurationReader: configurationReaderMock.Object,
+			var config = new TestAgentComponents(config:
+				new MockConfigSnapshot(transactionSampleRate: "1.0", transactionMaxSpans: "50"),
 				payloadSender: _payloadSender);
 
 			_agent = new ApmAgent(config);
@@ -88,6 +82,7 @@ namespace Elastic.Apm.MongoDb.Tests
 
 			var (address, port) = GetDestination(_documents.Database.Client);
 
+			_payloadSender.Spans.Should().NotBeEmpty();
 			_payloadSender.Spans.ForEach(span =>
 			{
 				span.TransactionId.Should().Be(_payloadSender.FirstTransaction.Id);

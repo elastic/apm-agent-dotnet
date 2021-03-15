@@ -464,21 +464,21 @@ For Azure File Share storage, a new span is crated when there is a current trans
 [[setup-mongo-db]]
 === MongoDB.Driver
 
-A prerequisite for auto instrumentation with [`MondoDb.Driver`] is to configure the `MongoClient` with `MongoDbEventSubscriber`:
+[float]
+==== Quick start
 
-```
+A prerequisite for auto instrumentation with [`MongoDb.Driver`] is to configure the `MongoClient` with `MongoDbEventSubscriber`:
+
+[source,csharp]
+----
 var settings = MongoClientSettings.FromConnectionString(mongoConnectionString);
 
 settings.ClusterConfigurator = builder => builder.Subscribe(new MongoEventSubscriber());
 var mongoClient = new MongoClient(settings);
-```
+----
 
-If the agent is activated with the `Elastic.Apm.NetCoreAll`, the agent will automatically capture calls to MongoDb on every active transaction.
-
-Otherwise you can manually activate auto instrumentation from the `Elastic.Apm.MongoDb` package by calling `Agent.Subscribe(new MongoDbDiagnosticsSubscriber());`.
-
-[float]
-==== Quick start
+If the agent is included by referencing the `Elastic.Apm.NetCoreAll` package, it will automatically capture calls to MongoDB on every active transaction.
+Otherwise, you can manually activate auto instrumentation from the `Elastic.Apm.MongoDb` package by calling `Agent.Subscribe(new MongoDbDiagnosticsSubscriber());`.
 
 [[setup-general]]
 === Other .NET applications

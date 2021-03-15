@@ -7,7 +7,6 @@
     <PackageReference Include="coverlet.msbuild" Version="2.9.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.0" />
     <PackageReference Include="MongoDB.Driver" Version="2.4.4" />
-    <PackageReference Include="Moq" Version="4.15.2" />
     <PackageReference Include="TestEnvironment.Docker" Version="1.3.9" />
     <PackageReference Include="TestEnvironment.Docker.Containers.Mongo" Version="1.2.2" />
     <PackageReference Include="xunit" Version="2.4.1" />

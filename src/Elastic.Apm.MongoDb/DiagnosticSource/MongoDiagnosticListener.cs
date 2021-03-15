@@ -1,73 +1,67 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using Elastic.Apm.Api;
-using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Model;
 using MongoDB.Driver.Core.Events;
 
 namespace Elastic.Apm.MongoDb.DiagnosticSource
 {
-	internal class MongoDiagnosticListener
-		: IDiagnosticListener
+	internal class MongoDiagnosticListener : DiagnosticListenerBase
 	{
-		private readonly IApmAgent _apmAgent;
-		private readonly IApmLogger _logger;
 
 		private readonly ConcurrentDictionary<int, ISpan> _processingQueries = new ConcurrentDictionary<int, ISpan>();
 
-		public string Name => "Elastic.Apm.MongoDb";
+		public override string Name => Constants.MongoDiagnosticName;
 
-		public MongoDiagnosticListener(IApmAgent apmAgent)
-		{
-			_apmAgent = apmAgent;
-			_logger = _apmAgent.Logger.Scoped(nameof(MongoDiagnosticListener));
-		}
+		public MongoDiagnosticListener(IApmAgent apmAgent) : base(apmAgent) { }
 
-		public void OnNext(KeyValuePair<string, object> value)
+		protected override void HandleOnNext(KeyValuePair<string, object> kv)
 		{
-			switch (value.Key)
+			Logger.Debug()?.Log("called with key: {eventKey}", kv.Key);
+
+			switch (kv.Key)
 			{
-				case Constants.Events.CommandStart when value.Value is EventPayload<CommandStartedEvent> payload &&
-														_apmAgent.Tracer.CurrentTransaction != null:
-					HandleCommandStartEvent(payload.Event);
+				case Constants.Events.CommandStart when kv.Value is EventPayload<CommandStartedEvent> payload:
+					if (ApmAgent.Tracer.CurrentTransaction != null)
+						HandleCommandStartEvent(payload.Event);
+					else
+						Logger.Debug()?.Log("No current transaction, skip creating span for MongoDB call.");
 					return;
-				case Constants.Events.CommandEnd when value.Value is EventPayload<CommandSucceededEvent> payload:
+				case Constants.Events.CommandEnd when kv.Value is EventPayload<CommandSucceededEvent> payload:
 					HandleCommandSucceededEvent(payload.Event);
 					return;
-				case Constants.Events.CommandFail when value.Value is EventPayload<CommandFailedEvent> payload:
+				case Constants.Events.CommandFail when kv.Value is EventPayload<CommandFailedEvent> payload:
 					HandleCommandFailedEvent(payload.Event);
 					return;
 			}
-		}
-
-		[ExcludeFromCodeCoverage]
-		public void OnError(Exception error)
-		{
-			// do nothing because it's not necessary to handle such event from provider
-		}
-
-		[ExcludeFromCodeCoverage]
-		public void OnCompleted()
-		{
-			// do nothing because it's not necessary to handle such event from provider
 		}
 
 		private void HandleCommandStartEvent(CommandStartedEvent @event)
 		{
 			try
 			{
-				var transaction = _apmAgent.Tracer.CurrentTransaction;
-				var currentExecutionSegment = _apmAgent.Tracer.CurrentSpan ?? (IExecutionSegment)transaction;
+				Logger.Trace()?.Log(nameof(HandleCommandStartEvent));
+				var currentExecutionSegment = ExecutionSegmentCommon.GetCurrentExecutionSegment(ApmAgent);
 				var span = currentExecutionSegment.StartSpan(
 					@event.CommandName,
 					ApiConstants.TypeDb,
 					"mongo");
 
 				if (!_processingQueries.TryAdd(@event.RequestId, span))
+				{
+					Logger.Debug()?.Log("Failed adding item to _processingQueries with RequestId: {RequestId}",
+						@event.RequestId);
 					return;
+				}
 
 				span.Action = ApiConstants.ActionQuery;
 
@@ -95,7 +89,7 @@ namespace Elastic.Apm.MongoDb.DiagnosticSource
 			catch (Exception ex)
 			{
 				//ignore
-				_logger.Log(LogLevel.Error, "Exception was thrown while handling 'command started event'", ex, null);
+				Logger.Log(LogLevel.Error, "Exception was thrown while handling 'command started event'", ex, null);
 			}
 		}
 
@@ -103,15 +97,21 @@ namespace Elastic.Apm.MongoDb.DiagnosticSource
 		{
 			try
 			{
+				Logger.Trace()?.Log(nameof(HandleCommandSucceededEvent));
+
 				if (!_processingQueries.TryRemove(@event.RequestId, out var span))
+				{
+					Logger.Debug()?.Log("Failed removing item from _processingQueries for RequestId: {RequestId}", @event.RequestId);
 					return;
+				}
+
 				span.Duration = @event.Duration.TotalMilliseconds;
 				span.End();
 			}
 			catch (Exception ex)
 			{
 				// ignore
-				_logger.Log(LogLevel.Error, "Exception was thrown while handling 'command succeeded event'", ex, null);
+				Logger.Log(LogLevel.Error, "Exception was thrown while handling 'command succeeded event'", ex, null);
 			}
 		}
 
@@ -119,8 +119,15 @@ namespace Elastic.Apm.MongoDb.DiagnosticSource
 		{
 			try
 			{
+				Logger.Trace()?.Log(nameof(HandleCommandFailedEvent));
+
 				if (!_processingQueries.TryRemove(@event.RequestId, out var span))
+				{
+					Logger.Debug()?.Log("Failed removing item from _processingQueries for RequestId: {RequestId}", @event.RequestId);
 					return;
+				}
+
+
 				span.Duration = @event.Duration.TotalMilliseconds;
 				span.CaptureException(@event.Failure);
 				span.End();
@@ -128,7 +135,7 @@ namespace Elastic.Apm.MongoDb.DiagnosticSource
 			catch (Exception ex)
 			{
 				// ignore
-				_logger.Log(LogLevel.Error, "Exception was thrown while handling 'command failed event'", ex, null);
+				Logger.Log(LogLevel.Error, "Exception was thrown while handling 'command failed event'", ex, null);
 			}
 		}
 	}
