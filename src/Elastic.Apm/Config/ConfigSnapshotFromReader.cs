@@ -35,6 +35,7 @@ namespace Elastic.Apm.Config
 		public TimeSpan FlushInterval => _content.FlushInterval;
 		public IReadOnlyDictionary<string, string> GlobalLabels => _content.GlobalLabels;
 		public string HostName => _content.HostName;
+		public IReadOnlyList<WildcardMatcher> IgnoreMessageQueues => _content.IgnoreMessageQueues;
 		public LogLevel LogLevel => _content.LogLevel;
 		public int MaxBatchEventCount => _content.MaxBatchEventCount;
 		public int MaxQueueEventCount => _content.MaxQueueEventCount;

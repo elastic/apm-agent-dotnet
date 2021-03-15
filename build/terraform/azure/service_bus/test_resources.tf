@@ -22,30 +22,24 @@ provider "azurerm" {
 data "azurerm_client_config" "current" {
 }
 
+resource "random_uuid" "variables" {
+}
+
 variable "resource_group" {
 	type = string
 	description = "The name of the resource group to create"
-
-	# TODO validation
 }
 
 variable "location" {
 	type = string
 	description = "The Azure location in which to deploy resources"
-	
-	# TODO validation
+	default = "westus"
 }
 
 variable "servicebus_namespace" {
 	type = string
 	description = "The name of the servicebus namespace to create"
-	
-//	validation {
-//		condition = can(regex("^[a-zA-Z][a-zA-Z0-9-]{5,49}$", var.servicebus_namespace)) && can(regex("[^\\-|\\-sb|\\-mgmt]$", var.servicebus_namespace))
-//		error_message = "The value must be a valid service bus namespace. See https://docs.microsoft.com/en-us/rest/api/servicebus/create-namespace."
-//	}
 }
-
 
 resource "azurerm_resource_group" "servicebus_resource_group" {
 	name     = var.resource_group
@@ -56,7 +50,7 @@ resource "azurerm_servicebus_namespace" "servicebus_namespace" {
 	location = azurerm_resource_group.servicebus_resource_group.location
 	name = var.servicebus_namespace
 	resource_group_name = azurerm_resource_group.servicebus_resource_group.name
-	sku = "Basic"
+	sku = "Standard"
 	depends_on = [azurerm_resource_group.servicebus_resource_group]
 }
 

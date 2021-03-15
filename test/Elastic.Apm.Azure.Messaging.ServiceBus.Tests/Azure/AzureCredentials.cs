@@ -10,7 +10,7 @@ using System.Threading;
 using Elastic.Apm.Tests.Utilities;
 using Newtonsoft.Json;
 
-namespace Elastic.Apm.Azure.ServiceBus.Tests
+namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests.Azure
 {
 	public class AzureCredentials
 	{
@@ -42,10 +42,10 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			var runningInCi = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_ID"));
 			if (runningInCi)
 			{
-				var clientId = Environment.GetEnvironmentVariable(ARM_CLIENT_ID);
-				var clientSecret = Environment.GetEnvironmentVariable(ARM_CLIENT_SECRET);
-				var tenantId = Environment.GetEnvironmentVariable(ARM_TENANT_ID);
-				var subscriptionId = Environment.GetEnvironmentVariable(ARM_SUBSCRIPTION_ID);
+				var clientId = GetEnvironmentVariable(ARM_CLIENT_ID);
+				var clientSecret = GetEnvironmentVariable(ARM_CLIENT_SECRET);
+				var tenantId = GetEnvironmentVariable(ARM_TENANT_ID);
+				var subscriptionId = GetEnvironmentVariable(ARM_SUBSCRIPTION_ID);
 				return new AzureCredentials(clientId, clientSecret, tenantId, subscriptionId);
 			}
 
@@ -67,7 +67,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			return serializer.Deserialize<AzureCredentials>(jsonTextReader);
 		}
 
-		private string GetEnvironmentVariable(string name)
+		private static string GetEnvironmentVariable(string name)
 		{
 			var value = Environment.GetEnvironmentVariable(name);
 			if (string.IsNullOrEmpty(value))

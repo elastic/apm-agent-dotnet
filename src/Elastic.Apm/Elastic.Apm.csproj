@@ -44,8 +44,8 @@
     <InternalsVisibleTo Include="Elastic.Apm.Extensions.Logging" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Extensions.Logging.Tests" Key="$(ExposedPublicKey)" />
     <InternalsVisibleTo Include="Elastic.Apm.Extensions.Hosting.Tests" Key="$(ExposedPublicKey)" />
-    <InternalsVisibleTo Include="Elastic.Apm.Azure.ServiceBus" Key="$(ExposedPublicKey)" />
-    <InternalsVisibleTo Include="Elastic.Apm.Azure.ServiceBus.Tests" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Azure.Messaging.ServiceBus" Key="$(ExposedPublicKey)" />
+    <InternalsVisibleTo Include="Elastic.Apm.Azure.Messaging.ServiceBus.Tests" Key="$(ExposedPublicKey)" />
   </ItemGroup>
   <ItemGroup Condition="'$(DiagnosticSourceVersion)' == ''">
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="5.0.0" />

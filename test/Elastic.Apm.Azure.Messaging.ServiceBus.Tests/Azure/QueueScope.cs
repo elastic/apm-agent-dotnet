@@ -7,7 +7,7 @@ using System;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus.Administration;
 
-namespace Elastic.Apm.Azure.ServiceBus.Tests
+namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests.Azure
 {
 	public class QueueScope : IAsyncDisposable
 	{

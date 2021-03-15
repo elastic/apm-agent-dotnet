@@ -7,15 +7,20 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Azure.Messaging.ServiceBus;
+using Elastic.Apm.Azure.Messaging.ServiceBus.Tests.Terraform;
 using Elastic.Apm.Tests.Utilities;
 using Xunit.Abstractions;
 
-namespace Elastic.Apm.Azure.ServiceBus.Tests
+namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests.Azure
 {
 	/// <summary>
 	/// A test environment for Azure Service Bus that deploys and configures an Azure Service Bus namespace
 	/// in a given region and location
 	/// </summary>
+	/// <remarks>
+	/// Resource name rules
+	/// https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules
+	/// </remarks>
 	public class AzureServiceBusTestEnvironment : IDisposable
 	{
 		private readonly TerraformResources _terraform;
@@ -29,11 +34,13 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 
 			_terraform = new TerraformResources(terraformResourceDirectory, credentials, messageSink);
 
-			// TODO: source resource group and location from somewhere
+			var machineName = Environment.MachineName.ToLowerInvariant();
+			if (machineName.Length > 66)
+				machineName = machineName.Substring(0, 66);
+
 			_variables = new Dictionary<string, string>
 			{
-				["location"] = "australiasoutheast",
-				["resource_group"] = "russ-service-bus-test",
+				["resource_group"] = $"dotnet-{machineName}-service-bus-test",
 				["servicebus_namespace"] = "dotnet-" + Guid.NewGuid()
 			};
 

@@ -266,6 +266,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			public string HostName => _wrapped.HostName;
 
+			public IReadOnlyList<WildcardMatcher> IgnoreMessageQueues => _wrapped.IgnoreMessageQueues;
+
 			public LogLevel LogLevel => _centralConfig.LogLevel ?? _wrapped.LogLevel;
 
 			public int MaxBatchEventCount => _wrapped.MaxBatchEventCount;

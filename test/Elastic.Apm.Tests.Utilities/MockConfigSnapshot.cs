@@ -30,6 +30,7 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly string _flushInterval;
 		private readonly string _globalLabels;
 		private readonly string _hostName;
+		private readonly string _ignoreMessageQueues;
 		private readonly string _logLevel;
 		private readonly string _maxBatchEventCount;
 		private readonly string _maxQueueEventCount;
@@ -87,7 +88,8 @@ namespace Elastic.Apm.Tests.Utilities
 			string enabled = null,
 			string recording = null,
 			string serverUrl = null,
-			string serverCert = null
+			string serverCert = null,
+			string ignoreMessageQueues = null
 		) : base(logger, ThisClassName)
 		{
 			_serverUrls = serverUrls;
@@ -125,6 +127,7 @@ namespace Elastic.Apm.Tests.Utilities
 			_recording = recording;
 			_serverUrl = serverUrl;
 			_serverCert = serverCert;
+			_ignoreMessageQueues = ignoreMessageQueues;
 		}
 
 		public string ApiKey => ParseApiKey(Kv(EnvVarNames.ApiKey, _apiKey, Origin));
@@ -159,6 +162,9 @@ namespace Elastic.Apm.Tests.Utilities
 			ParseGlobalLabels(Kv(EnvVarNames.GlobalLabels, _globalLabels, Origin));
 
 		public string HostName => ParseHostName(Kv(EnvVarNames.HostName, _hostName, Origin));
+
+		public IReadOnlyList<WildcardMatcher> IgnoreMessageQueues =>
+			ParseIgnoreMessageQueues(Kv(EnvVarNames.IgnoreMessageQueues, _ignoreMessageQueues, Origin));
 
 		public LogLevel LogLevel => ParseLogLevel(Kv(EnvVarNames.LogLevel, _logLevel, Origin));
 		public int MaxBatchEventCount => ParseMaxBatchEventCount(Kv(EnvVarNames.MaxBatchEventCount, _maxBatchEventCount, Origin));

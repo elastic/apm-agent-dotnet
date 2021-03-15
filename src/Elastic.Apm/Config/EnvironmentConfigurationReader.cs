@@ -55,6 +55,8 @@ namespace Elastic.Apm.Config
 
 		public string HostName => ParseHostName(Read(ConfigConsts.EnvVarNames.HostName));
 
+		public IReadOnlyList<WildcardMatcher> IgnoreMessageQueues => ParseIgnoreMessageQueues(Read(ConfigConsts.EnvVarNames.IgnoreMessageQueues));
+
 		public LogLevel LogLevel => ParseLogLevel(Read(ConfigConsts.EnvVarNames.LogLevel));
 
 		public int MaxBatchEventCount => ParseMaxBatchEventCount(Read(ConfigConsts.EnvVarNames.MaxBatchEventCount));

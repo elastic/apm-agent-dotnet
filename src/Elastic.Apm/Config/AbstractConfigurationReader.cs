@@ -27,6 +27,9 @@ namespace Elastic.Apm.Config
 		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersDisableMetrics =
 			new LazyContextualInit<IReadOnlyList<WildcardMatcher>>();
 
+		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersIgnoreMessageQueues =
+			new LazyContextualInit<IReadOnlyList<WildcardMatcher>>();
+
 		private readonly LazyContextualInit<IReadOnlyList<WildcardMatcher>> _cachedWildcardMatchersSanitizeFieldNames =
 			new LazyContextualInit<IReadOnlyList<WildcardMatcher>>();
 
@@ -108,7 +111,6 @@ namespace Elastic.Apm.Config
 			_cachedWildcardMatchersDisableMetrics.IfNotInited?.InitOrGet(() => ParseDisableMetricsImpl(kv))
 			?? _cachedWildcardMatchersDisableMetrics.Value;
 
-
 		private IReadOnlyList<WildcardMatcher> ParseDisableMetricsImpl(ConfigurationKeyValue kv)
 		{
 			if (kv?.Value == null) return DefaultValues.DisableMetrics;
@@ -126,6 +128,30 @@ namespace Elastic.Apm.Config
 			{
 				_logger?.Error()?.LogException(e, "Failed parsing DisableMetrics, values in the config: {DisableMetricsNamesValues}", kv.Value);
 				return DefaultValues.DisableMetrics;
+			}
+		}
+
+		protected IReadOnlyList<WildcardMatcher> ParseIgnoreMessageQueues(ConfigurationKeyValue kv) =>
+			_cachedWildcardMatchersIgnoreMessageQueues.IfNotInited?.InitOrGet(() => ParseIgnoreMessageQueuesImpl(kv))
+			?? _cachedWildcardMatchersIgnoreMessageQueues.Value;
+
+		private IReadOnlyList<WildcardMatcher> ParseIgnoreMessageQueuesImpl(ConfigurationKeyValue kv)
+		{
+			if (kv?.Value == null) return DefaultValues.IgnoreMessageQueues;
+
+			try
+			{
+				_logger?.Trace()?.Log("Try parsing IgnoreMessageQueues, values: {IgnoreMessageQueues}", kv.Value);
+				var ignoreMessageQueues = kv.Value.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
+
+				var retVal = new List<WildcardMatcher>(ignoreMessageQueues.Count);
+				foreach (var item in ignoreMessageQueues) retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
+				return retVal;
+			}
+			catch (Exception e)
+			{
+				_logger?.Error()?.LogException(e, "Failed parsing IgnoreMessageQueues, values in the config: {IgnoreMessageQueues}", kv.Value);
+				return DefaultValues.IgnoreMessageQueues;
 			}
 		}
 
