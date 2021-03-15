@@ -176,7 +176,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				_traceEventSession.Source.Dispose();
 				_traceEventSession.Dispose();
 
-				if (_traceEventSessionTask.IsCompleted || _traceEventSessionTask.IsFaulted || _traceEventSessionTask.IsCanceled)
+				if (_traceEventSessionTask != null && (_traceEventSessionTask.IsCompleted || _traceEventSessionTask.IsFaulted || _traceEventSessionTask.IsCanceled))
 					_traceEventSessionTask.Dispose();
 			}
 		}
