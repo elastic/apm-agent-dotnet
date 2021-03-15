@@ -9,7 +9,7 @@ using Elastic.Apm.DiagnosticSource;
 
 namespace Elastic.Apm.Azure.Messaging.ServiceBus
 {
-	public class AzureMessagingServiceBusDiagnosticsSubscriber : IDiagnosticsSubscriber
+	public class MicrosoftAzureServiceBusDiagnosticsSubscriber : IDiagnosticsSubscriber
 	{
 		/// <summary>
 		/// Start listening for Azure.Messaging.ServiceBus diagnostic source events.
@@ -18,7 +18,7 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus
 		{
 			var retVal = new CompositeDisposable();
 
-			var initializer = new DiagnosticInitializer(agent.Logger, new[] { new AzureMessagingServiceBusDiagnosticListener(agent) });
+			var initializer = new DiagnosticInitializer(agent.Logger, new[] { new MicrosoftAzureServiceBusDiagnosticListener(agent) });
 			retVal.Add(initializer);
 
 			retVal.Add(DiagnosticListener

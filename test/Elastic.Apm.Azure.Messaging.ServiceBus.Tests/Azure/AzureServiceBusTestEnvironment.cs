@@ -9,10 +9,17 @@ using System.IO;
 using Azure.Messaging.ServiceBus;
 using Elastic.Apm.Azure.Messaging.ServiceBus.Tests.Terraform;
 using Elastic.Apm.Tests.Utilities;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests.Azure
 {
+	[CollectionDefinition("AzureServiceBus")]
+	public class AzureServiceBusTestEnvironmentCollection : ICollectionFixture<AzureServiceBusTestEnvironment>
+	{
+
+	}
+
 	/// <summary>
 	/// A test environment for Azure Service Bus that deploys and configures an Azure Service Bus namespace
 	/// in a given region and location

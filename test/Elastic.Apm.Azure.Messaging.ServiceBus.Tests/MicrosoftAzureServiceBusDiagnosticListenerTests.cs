@@ -1,47 +1,47 @@
 ﻿using System;
+using System.Text;
 using System.Threading.Tasks;
-using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 using Elastic.Apm.Azure.Messaging.ServiceBus.Tests.Azure;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
+using Microsoft.Azure.ServiceBus;
+using Microsoft.Azure.ServiceBus.Core;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests
 {
 	[Collection("AzureServiceBus")]
-	public class AzureMessagingServiceBusDiagnosticListenerTests : IDisposable, IAsyncDisposable
+	public class MicrosoftAzureServiceBusDiagnosticListenerTests : IDisposable
 	{
 		private readonly AzureServiceBusTestEnvironment _environment;
 		private readonly ApmAgent _agent;
 		private readonly MockPayloadSender _sender;
-		private readonly ServiceBusClient _client;
 		private readonly ServiceBusAdministrationClient _adminClient;
 
-		public AzureMessagingServiceBusDiagnosticListenerTests(AzureServiceBusTestEnvironment environment, ITestOutputHelper output)
+		public MicrosoftAzureServiceBusDiagnosticListenerTests(AzureServiceBusTestEnvironment environment, ITestOutputHelper output)
 		{
 			_environment = environment;
 
 			var logger = new XUnitLogger(LogLevel.Trace, output);
 			_sender = new MockPayloadSender(logger);
 			_agent = new ApmAgent(new TestAgentComponents(logger: logger, payloadSender: _sender));
-			_agent.Subscribe(new AzureMessagingServiceBusDiagnosticsSubscriber());
-
+			_agent.Subscribe(new MicrosoftAzureServiceBusDiagnosticsSubscriber());
 			_adminClient = new ServiceBusAdministrationClient(environment.ServiceBusConnectionString);
-			_client = new ServiceBusClient(environment.ServiceBusConnectionString);
 		}
 
 		[Fact]
 		public async Task Capture_Span_When_Send_To_Queue()
 		{
 			await using var scope = await QueueScope.CreateWithQueue(_adminClient);
-			var sender = _client.CreateSender(scope.QueueName);
+			var sender = new MessageSender(_environment.ServiceBusConnectionString, scope.QueueName);
+
 			await _agent.Tracer.CaptureTransaction("Send AzureServiceBus Message", "message", async () =>
 			{
-				await sender.SendMessageAsync(new ServiceBusMessage("test message")).ConfigureAwait(false);
+				await sender.SendAsync(new Message(Encoding.UTF8.GetBytes("test message"))).ConfigureAwait(false);
 			});
 
 			if (!_sender.WaitForSpans())
@@ -57,7 +57,7 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests
 			span.Context.Destination.Should().NotBeNull();
 			var destination = span.Context.Destination;
 
-			destination.Address.Should().Be(_environment.ServiceBusConnectionStringProperties.FullyQualifiedNamespace);
+			destination.Address.Should().Be($"sb://{_environment.ServiceBusConnectionStringProperties.FullyQualifiedNamespace}/");
 			destination.Service.Name.Should().Be("azureservicebus");
 			destination.Service.Resource.Should().Be($"azureservicebus/{scope.QueueName}");
 			destination.Service.Type.Should().Be("messaging");
@@ -67,10 +67,10 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests
 		public async Task Capture_Span_When_Send_To_Topic()
 		{
 			await using var scope = await TopicScope.CreateWithTopic(_adminClient);
-			var sender = _client.CreateSender(scope.TopicName);
+			var sender = new MessageSender(_environment.ServiceBusConnectionString, scope.TopicName);
 			await _agent.Tracer.CaptureTransaction("Send AzureServiceBus Message", "message", async () =>
 			{
-				await sender.SendMessageAsync(new ServiceBusMessage("test message")).ConfigureAwait(false);
+				await sender.SendAsync(new Message(Encoding.UTF8.GetBytes("test message"))).ConfigureAwait(false);
 			});
 
 			if (!_sender.WaitForSpans())
@@ -86,7 +86,7 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests
 			span.Context.Destination.Should().NotBeNull();
 			var destination = span.Context.Destination;
 
-			destination.Address.Should().Be(_environment.ServiceBusConnectionStringProperties.FullyQualifiedNamespace);
+			destination.Address.Should().Be($"sb://{_environment.ServiceBusConnectionStringProperties.FullyQualifiedNamespace}/");
 			destination.Service.Name.Should().Be("azureservicebus");
 			destination.Service.Resource.Should().Be($"azureservicebus/{scope.TopicName}");
 			destination.Service.Type.Should().Be("messaging");
@@ -96,11 +96,11 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests
 		public async Task Capture_Span_When_Schedule_To_Queue()
 		{
 			await using var scope = await QueueScope.CreateWithQueue(_adminClient);
-			var sender = _client.CreateSender(scope.QueueName);
+			var sender = new MessageSender(_environment.ServiceBusConnectionString, scope.QueueName);
 			await _agent.Tracer.CaptureTransaction("Schedule AzureServiceBus Message", "message", async () =>
 			{
 				await sender.ScheduleMessageAsync(
-					new ServiceBusMessage("test message"),
+					new Message(Encoding.UTF8.GetBytes("test message")),
 					DateTimeOffset.Now.AddSeconds(10)).ConfigureAwait(false);
 			});
 
@@ -117,7 +117,7 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests
 			span.Context.Destination.Should().NotBeNull();
 			var destination = span.Context.Destination;
 
-			destination.Address.Should().Be(_environment.ServiceBusConnectionStringProperties.FullyQualifiedNamespace);
+			destination.Address.Should().Be($"sb://{_environment.ServiceBusConnectionStringProperties.FullyQualifiedNamespace}/");
 			destination.Service.Name.Should().Be("azureservicebus");
 			destination.Service.Resource.Should().Be($"azureservicebus/{scope.QueueName}");
 			destination.Service.Type.Should().Be("messaging");
@@ -127,11 +127,11 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests
 		public async Task Capture_Span_When_Schedule_To_Topic()
 		{
 			await using var scope = await TopicScope.CreateWithTopic(_adminClient);
-			var sender = _client.CreateSender(scope.TopicName);
+			var sender = new MessageSender(_environment.ServiceBusConnectionString, scope.TopicName);
 			await _agent.Tracer.CaptureTransaction("Schedule AzureServiceBus Message", "message", async () =>
 			{
 				await sender.ScheduleMessageAsync(
-					new ServiceBusMessage("test message"),
+					new Message(Encoding.UTF8.GetBytes("test message")),
 					DateTimeOffset.Now.AddSeconds(10)).ConfigureAwait(false);
 			});
 
@@ -148,7 +148,7 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests
 			span.Context.Destination.Should().NotBeNull();
 			var destination = span.Context.Destination;
 
-			destination.Address.Should().Be(_environment.ServiceBusConnectionStringProperties.FullyQualifiedNamespace);
+			destination.Address.Should().Be($"sb://{_environment.ServiceBusConnectionStringProperties.FullyQualifiedNamespace}/");
 			destination.Service.Name.Should().Be("azureservicebus");
 			destination.Service.Resource.Should().Be($"azureservicebus/{scope.TopicName}");
 			destination.Service.Type.Should().Be("messaging");
@@ -158,13 +158,13 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests
 		public async Task Capture_Transaction_When_Receive_From_Queue()
 		{
 			await using var scope = await QueueScope.CreateWithQueue(_adminClient);
-			var sender = _client.CreateSender(scope.QueueName);
-			var receiver = _client.CreateReceiver(scope.QueueName);
+			var sender = new MessageSender(_environment.ServiceBusConnectionString, scope.QueueName);
+			var receiver = new MessageReceiver(_environment.ServiceBusConnectionString, scope.QueueName, ReceiveMode.PeekLock);
 
-			await sender.SendMessageAsync(
-				new ServiceBusMessage("test message")).ConfigureAwait(false);
+			await sender.SendAsync(
+				new Message(Encoding.UTF8.GetBytes("test message"))).ConfigureAwait(false);
 
-			await receiver.ReceiveMessageAsync(TimeSpan.FromSeconds(30)).ConfigureAwait(false);
+			await receiver.ReceiveAsync(TimeSpan.FromSeconds(30)).ConfigureAwait(false);
 
 			if (!_sender.WaitForTransactions(TimeSpan.FromMinutes(2)))
 				throw new Exception("No transaction received in timeout");
@@ -181,13 +181,14 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests
 		{
 			await using var scope = await TopicScope.CreateWithTopicAndSubscription(_adminClient);
 
-			var sender = _client.CreateSender(scope.TopicName);
-			var receiver = _client.CreateReceiver(scope.TopicName, scope.SubscriptionName);
+			var sender = new MessageSender(_environment.ServiceBusConnectionString, scope.TopicName);
+			var receiver = new MessageReceiver(_environment.ServiceBusConnectionString,
+				EntityNameHelper.FormatSubscriptionPath(scope.TopicName, scope.SubscriptionName));
 
-			await sender.SendMessageAsync(
-				new ServiceBusMessage("test message")).ConfigureAwait(false);
+			await sender.SendAsync(
+				new Message(Encoding.UTF8.GetBytes("test message"))).ConfigureAwait(false);
 
-			await receiver.ReceiveMessageAsync(TimeSpan.FromSeconds(30)).ConfigureAwait(false);
+			await receiver.ReceiveAsync(TimeSpan.FromSeconds(30)).ConfigureAwait(false);
 
 			if (!_sender.WaitForTransactions(TimeSpan.FromMinutes(2)))
 				throw new Exception("No transaction received in timeout");
@@ -203,18 +204,16 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests
 		public async Task Capture_Transaction_When_ReceiveDeferred_From_Queue()
 		{
 			await using var scope = await QueueScope.CreateWithQueue(_adminClient);
-			var sender = _client.CreateSender(scope.QueueName);
-			var receiver = _client.CreateReceiver(scope.QueueName);
+			var sender = new MessageSender(_environment.ServiceBusConnectionString, scope.QueueName);
+			var receiver = new MessageReceiver(_environment.ServiceBusConnectionString, scope.QueueName, ReceiveMode.PeekLock);
 
-			await sender.SendMessageAsync(
-				new ServiceBusMessage("test message")).ConfigureAwait(false);
+			await sender.SendAsync(
+				new Message(Encoding.UTF8.GetBytes("test message"))).ConfigureAwait(false);
 
+			var message = await receiver.ReceiveAsync(TimeSpan.FromSeconds(30)).ConfigureAwait(false);
+			await receiver.DeferAsync(message.SystemProperties.LockToken).ConfigureAwait(false);
 
-			var message = await receiver.ReceiveMessageAsync(TimeSpan.FromSeconds(30)).ConfigureAwait(false);
-			await receiver.DeferMessageAsync(message).ConfigureAwait(false);
-
-
-			await receiver.ReceiveDeferredMessageAsync(message.SequenceNumber).ConfigureAwait(false);
+			await receiver.ReceiveDeferredMessageAsync(message.SystemProperties.SequenceNumber).ConfigureAwait(false);
 
 			if (!_sender.WaitForTransactions(TimeSpan.FromMinutes(2), count: 2))
 				throw new Exception("No transaction received in timeout");
@@ -235,16 +234,17 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests
 		{
 			await using var scope = await TopicScope.CreateWithTopicAndSubscription(_adminClient);
 
-			var sender = _client.CreateSender(scope.TopicName);
-			var receiver = _client.CreateReceiver(scope.TopicName, scope.SubscriptionName);
+			var sender = new MessageSender(_environment.ServiceBusConnectionString, scope.TopicName);
+			var receiver = new MessageReceiver(_environment.ServiceBusConnectionString,
+				EntityNameHelper.FormatSubscriptionPath(scope.TopicName, scope.SubscriptionName));
 
-			await sender.SendMessageAsync(
-				new ServiceBusMessage("test message")).ConfigureAwait(false);
+			await sender.SendAsync(
+				new Message(Encoding.UTF8.GetBytes("test message"))).ConfigureAwait(false);
 
-			var message = await receiver.ReceiveMessageAsync(TimeSpan.FromSeconds(30)).ConfigureAwait(false);
-			await receiver.DeferMessageAsync(message).ConfigureAwait(false);
+			var message = await receiver.ReceiveAsync(TimeSpan.FromSeconds(30)).ConfigureAwait(false);
+			await receiver.DeferAsync(message.SystemProperties.LockToken).ConfigureAwait(false);
 
-			await receiver.ReceiveDeferredMessageAsync(message.SequenceNumber).ConfigureAwait(false);
+			await receiver.ReceiveDeferredMessageAsync(message.SystemProperties.SequenceNumber).ConfigureAwait(false);
 
 			if (!_sender.WaitForTransactions(TimeSpan.FromMinutes(2), count: 2))
 				throw new Exception("No transaction received in timeout");
@@ -264,12 +264,12 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests
 		public async Task Does_Not_Capture_Span_When_QueueName_Matches_IgnoreMessageQueues()
 		{
 			await using var scope = await QueueScope.CreateWithQueue(_adminClient);
-			var sender = _client.CreateSender(scope.QueueName);
+			var sender = new MessageSender(_environment.ServiceBusConnectionString, scope.QueueName);
 			_agent.ConfigStore.CurrentSnapshot = new MockConfigSnapshot(ignoreMessageQueues: scope.QueueName);
 
 			await _agent.Tracer.CaptureTransaction("Send AzureServiceBus Message", "message", async () =>
 			{
-				await sender.SendMessageAsync(new ServiceBusMessage("test message")).ConfigureAwait(false);
+				await sender.SendAsync(new Message(Encoding.UTF8.GetBytes("test message"))).ConfigureAwait(false);
 			});
 
 			_sender.SignalEndSpans();
@@ -278,7 +278,5 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests
 		}
 
 		public void Dispose() => _agent.Dispose();
-
-		public ValueTask DisposeAsync() => _client.DisposeAsync();
 	}
 }
