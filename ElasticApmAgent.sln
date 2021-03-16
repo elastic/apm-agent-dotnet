@@ -131,9 +131,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Extensions.Logg
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Extensions.Logging.Tests", "test\Elastic.Apm.Extensions.Logging.Tests\Elastic.Apm.Extensions.Logging.Tests.csproj", "{B235B13F-42AE-42DA-A3C8-20D047F38685}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.Messaging.ServiceBus", "src\Elastic.Apm.Azure.Messaging.ServiceBus\Elastic.Apm.Azure.Messaging.ServiceBus.csproj", "{1D43C8C5-4116-45C5-9F4B-56C1D926ED29}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.ServiceBus", "src\Elastic.Apm.Azure.ServiceBus\Elastic.Apm.Azure.ServiceBus.csproj", "{1D43C8C5-4116-45C5-9F4B-56C1D926ED29}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.Messaging.ServiceBus.Tests", "test\Elastic.Apm.Azure.Messaging.ServiceBus.Tests\Elastic.Apm.Azure.Messaging.ServiceBus.Tests.csproj", "{D9CC53B2-5F6B-434B-8689-2350F3A9FB2D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.ServiceBus.Tests", "test\Elastic.Apm.Azure.ServiceBus.Tests\Elastic.Apm.Azure.ServiceBus.Tests.csproj", "{D9CC53B2-5F6B-434B-8689-2350F3A9FB2D}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

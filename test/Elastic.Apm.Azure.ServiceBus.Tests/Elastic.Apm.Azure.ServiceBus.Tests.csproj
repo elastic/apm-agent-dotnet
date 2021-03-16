@@ -3,7 +3,7 @@
     <PropertyGroup>
       <TargetFramework>net5.0</TargetFramework>
       <IsPackable>false</IsPackable>
-      <RootNamespace>Elastic.Apm.Azure.Messaging.ServiceBus.Tests</RootNamespace>
+      <RootNamespace>Elastic.Apm.Azure.ServiceBus.Tests</RootNamespace>
     </PropertyGroup>
 
   <ItemGroup>
@@ -22,7 +22,7 @@
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Elastic.Apm.Azure.Messaging.ServiceBus\Elastic.Apm.Azure.Messaging.ServiceBus.csproj" />
+    <ProjectReference Include="..\..\src\Elastic.Apm.Azure.ServiceBus\Elastic.Apm.Azure.ServiceBus.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
   </ItemGroup>
 
