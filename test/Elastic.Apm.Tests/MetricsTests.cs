@@ -101,7 +101,7 @@ namespace Elastic.Apm.Tests
 		{
 			var mockPayloadSender = new MockPayloadSender();
 			var testLogger = new TestLogger(LogLevel.Information);
-			using (var mc = new MetricsCollector(testLogger, mockPayloadSender, new ConfigStore(new MockConfigSnapshot(), testLogger)))
+			using (var mc = new MetricsCollector(testLogger, mockPayloadSender, new ConfigStore(new MockConfigSnapshot(disableMetrics: "*"), testLogger)))
 			{
 				mc.MetricsProviders.Clear();
 				var providerWithException = new MetricsProviderWithException();
@@ -298,22 +298,29 @@ namespace Elastic.Apm.Tests
 				var hasGenSize = false;
 				var hasGcTime = false;
 
-
-				for (var j = 0; j < 1000; j++)
+				for (var j = 0; j < 10; j++)
 				{
-					for (var i = 0; i < 300_000; i++)
+					for (var i = 0; i < 500; i++)
 					{
-						var _ = new int[100];
+						var array = new int[10000000];
+						// In order to make sure the line above is not optimized away, let's use the array:
+						Console.WriteLine($"GC test, int[] allocated with length: {array.Length}");
 					}
 
-					GC.Collect();
+					GC.Collect(2, GCCollectionMode.Forced, true, true);
+					GC.WaitForFullGCComplete();
+					GC.Collect(2, GCCollectionMode.Forced, true, true);
 
-					for (var i = 0; i < 300_000; i++)
+					for (var i = 0; i < 500; i++)
 					{
-						var _ = new int[100];
+						var array = new int[10000000];
+						// In order to make sure the line above is not optimized away, let's use the array:
+						Console.WriteLine($"GC test, int[] allocated with length: {array.Length}");
 					}
 
-					GC.Collect();
+					GC.Collect(2, GCCollectionMode.Forced, true, true);
+					GC.WaitForFullGCComplete();
+					GC.Collect(2, GCCollectionMode.Forced, true, true);
 
 					var samples = gcMetricsProvider.GetSamples()?.ToArray();
 

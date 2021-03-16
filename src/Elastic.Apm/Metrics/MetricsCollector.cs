@@ -97,8 +97,15 @@ namespace Elastic.Apm.Metrics
 				GcMetricsProvider.GcTimeName);
 			if (collectGcCount || collectGen0Size || collectGen1Size || collectGen2Size || collectGen3Size)
 			{
-				MetricsProviders.Add(new GcMetricsProvider(_logger, collectGcCount, collectGen0Size, collectGen1Size, collectGen2Size,
-					collectGen3Size, collectGcTime));
+				try
+				{
+					MetricsProviders.Add(new GcMetricsProvider(_logger, collectGcCount, collectGen0Size, collectGen1Size, collectGen2Size,
+						collectGen3Size, collectGcTime));
+				}
+				catch (Exception e)
+				{
+					_logger.Warning()?.LogException(e, "Failed loading {ProviderName}", nameof(GcMetricsProvider));
+				}
 			}
 
 			var collectCgroupMemLimitBytes = !WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics,
