@@ -7,12 +7,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Azure.Messaging.ServiceBus;
-using Elastic.Apm.Azure.Messaging.ServiceBus.Tests.Terraform;
+using Elastic.Apm.Azure.ServiceBus.Tests.Terraform;
 using Elastic.Apm.Tests.Utilities;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests.Azure
+namespace Elastic.Apm.Azure.ServiceBus.Tests.Azure
 {
 	[CollectionDefinition("AzureServiceBus")]
 	public class AzureServiceBusTestEnvironmentCollection : ICollectionFixture<AzureServiceBusTestEnvironment>

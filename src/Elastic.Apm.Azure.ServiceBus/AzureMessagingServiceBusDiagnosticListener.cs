@@ -12,7 +12,7 @@ using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
-namespace Elastic.Apm.Azure.Messaging.ServiceBus
+namespace Elastic.Apm.Azure.ServiceBus
 {
 	/// <summary>
 	/// Creates spans for diagnostic events from Azure.Messaging.ServiceBus
@@ -213,7 +213,7 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus
 
 			if (!_processingSegments.TryAdd(activity.Id, span))
 			{
-				Logger.Error()?.Log(
+				Logger.Trace()?.Log(
 					"Could not add {Action} span {SpanId} for activity {ActivityId} to tracked spans",
 					action,
 					span.Id,
@@ -231,17 +231,14 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus
 			}
 
 			if (!_processingSegments.TryRemove(activity.Id, out var segment))
-				return;
-
-			// TODO: Get from current activity when current activity is reused when starting transaction.
-			var parent = activity.Parent;
-			if (parent?.Links != null)
 			{
-				foreach (var link in parent.Links)
-				{
-					// Do something with links
-				}
+				Logger.Trace()?.Log(
+					"Could not find segment for activity {ActivityId} in tracked segments",
+					activity.Id);
+				return;
 			}
+
+			// TODO: Get the linked Activit(y/ies) from DiagnosticActivity when https://github.com/elastic/apm/issues/122 is finalized
 
 			segment.Outcome = Outcome.Success;
 			segment.End();
@@ -257,7 +254,12 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus
 			}
 
 			if (!_processingSegments.TryRemove(activity.Id, out var segment))
+			{
+				Logger.Trace()?.Log(
+					"Could not find segment for activity {ActivityId} in tracked segments",
+					activity.Id);
 				return;
+			}
 
 			if (kv.Value is Exception e)
 				segment.CaptureException(e);

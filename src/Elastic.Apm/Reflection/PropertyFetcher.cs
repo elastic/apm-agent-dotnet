@@ -6,11 +6,11 @@ using System;
 using System.Linq;
 using System.Reflection;
 
-namespace Elastic.Apm.Helpers
+namespace Elastic.Apm.Reflection
 {
 	internal class PropertyFetcher
 	{
-		private readonly string _propertyName;
+		public string PropertyName { get; }
 		private PropertyFetch _innerFetcher;
 
 		public PropertyFetcher(string propertyName)
@@ -18,7 +18,7 @@ namespace Elastic.Apm.Helpers
 			if (string.IsNullOrWhiteSpace(propertyName))
 				throw new ArgumentException("The value must be non-empty, non-null or non-whitespace", nameof(propertyName));
 
-			_propertyName = propertyName;
+			PropertyName = propertyName;
 		}
 
 		public virtual object Fetch(object obj)
@@ -26,10 +26,10 @@ namespace Elastic.Apm.Helpers
 			if (_innerFetcher == null)
 			{
 				var type = obj.GetType().GetTypeInfo();
-				var property = type.DeclaredProperties.FirstOrDefault(p => string.Equals(p.Name, _propertyName, StringComparison.OrdinalIgnoreCase));
+				var property = type.DeclaredProperties.FirstOrDefault(p => string.Equals(p.Name, PropertyName, StringComparison.OrdinalIgnoreCase));
 				if (property == null)
 				{
-					property = type.GetProperty(_propertyName);
+					property = type.GetProperty(PropertyName);
 				}
 
 				_innerFetcher = PropertyFetch.FetcherForProperty(property);

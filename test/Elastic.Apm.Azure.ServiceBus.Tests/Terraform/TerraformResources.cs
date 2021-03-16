@@ -8,13 +8,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.ExceptionServices;
 using System.Text;
-using Elastic.Apm.Azure.Messaging.ServiceBus.Tests.Azure;
+using Elastic.Apm.Azure.ServiceBus.Tests.Azure;
 using ProcNet;
 using ProcNet.Std;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests.Terraform
+namespace Elastic.Apm.Azure.ServiceBus.Tests.Terraform
 {
 	/// <summary>
 	/// Interact with Terraform templates to apply and destroy resources

@@ -14,7 +14,7 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Reflection;
 
-namespace Elastic.Apm.Azure.Messaging.ServiceBus
+namespace Elastic.Apm.Azure.ServiceBus
 {
 	/// <summary>
 	/// Creates spans for diagnostic events from Microsoft.Azure.ServiceBus
@@ -23,23 +23,12 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus
 	{
 		private readonly IApmAgent _agent;
 		private readonly ApmAgent _realAgent;
-		private readonly ConcurrentDictionary<string, IExecutionSegment> _processingSegments =
-			new ConcurrentDictionary<string, IExecutionSegment>();
-
-		private readonly ConcurrentDictionary<string, Func<object, object>> _sendProperties =
-			new ConcurrentDictionary<string, Func<object, object>>();
-
-		private readonly ConcurrentDictionary<string, Func<object, object>> _scheduleProperties =
-			new ConcurrentDictionary<string, Func<object, object>>();
-
-		private readonly ConcurrentDictionary<string, Func<object, object>> _receiveProperties =
-			new ConcurrentDictionary<string, Func<object, object>>();
-
-		private readonly ConcurrentDictionary<string, Func<object, object>> _receiveDeferredProperties =
-			new ConcurrentDictionary<string, Func<object, object>>();
-
-		private readonly ConcurrentDictionary<string, Func<object, object>> _exceptionProperties =
-			new ConcurrentDictionary<string, Func<object, object>>();
+		private readonly ConcurrentDictionary<string, IExecutionSegment> _processingSegments = new ConcurrentDictionary<string, IExecutionSegment>();
+		private readonly PropertyFetcherCollection _sendProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
+		private readonly PropertyFetcherCollection _scheduleProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
+		private readonly PropertyFetcherCollection _receiveProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
+		private readonly PropertyFetcherCollection _receiveDeferredProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
+		private readonly PropertyFetcher _exceptionProperty = new PropertyFetcher("Exception");
 
 		internal IApmLogger Logger { get; }
 
@@ -93,7 +82,7 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus
 					OnStop(kv, _receiveDeferredProperties);
 					break;
 				case "Microsoft.Azure.ServiceBus.Exception":
-					OnException(kv, _exceptionProperties);
+					OnException(kv);
 					break;
 				default:
 					Logger.Trace()?.Log("`{DiagnosticEventKey}' key is not a traced diagnostic event", kv.Key);
@@ -104,7 +93,7 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus
 		private void OnReceiveStart(
 			KeyValuePair<string, object> kv,
 			string action,
-			ConcurrentDictionary<string, Func<object, object>> cachedProperties)
+			PropertyFetcherCollection cachedProperties)
 		{
 			if (kv.Value is null)
 			{
@@ -113,15 +102,7 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus
 			}
 
 			var activity = Activity.Current;
-			var entityGetter = cachedProperties.GetOrAdd(
-				"Entity",
-				k => ExpressionBuilder.BuildPropertyGetter(kv.Value.GetType(), k));
-			var endpointGetter = cachedProperties.GetOrAdd(
-				"Endpoint",
-				k => ExpressionBuilder.BuildPropertyGetter(kv.Value.GetType(), k));
-
-			var queueName = entityGetter(kv.Value) as string;
-			var destinationAddress = endpointGetter(kv.Value) as Uri;
+			var queueName = cachedProperties.Fetch(kv.Value,"Entity") as string;
 
 			if (MatchesIgnoreMessageQueues(queueName))
 				return;
@@ -130,6 +111,7 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus
 				? $"AzureServiceBus {action}"
 				: $"AzureServiceBus {action} from {queueName}";
 
+			// TODO: initialize tracing data from linked messages, once https://github.com/elastic/apm/issues/122 is finalized
 			DistributedTracingData tracingData = null;
 
 			var transaction = _agent.Tracer.StartTransaction(transactionName, "messaging", tracingData);
@@ -143,7 +125,7 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus
 
 			if (!_processingSegments.TryAdd(activityId, transaction))
 			{
-				Logger.Error()?.Log(
+				Logger.Trace()?.Log(
 					"Could not add {Action} transaction {TransactionId} for activity {ActivityId} to tracked segments",
 					action,
 					transaction.Id,
@@ -172,7 +154,7 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus
 		private void OnSendStart(
 			KeyValuePair<string, object> kv,
 			string action,
-			ConcurrentDictionary<string, Func<object, object>> cachedProperties
+			PropertyFetcherCollection cachedProperties
 		)
 		{
 			var currentSegment = _agent.GetCurrentExecutionSegment();
@@ -189,16 +171,8 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus
 			}
 
 			var activity = Activity.Current;
-
-			var entityGetter = cachedProperties.GetOrAdd(
-				"Entity",
-				k => ExpressionBuilder.BuildPropertyGetter(kv.Value.GetType(), k));
-			var endpointGetter = cachedProperties.GetOrAdd(
-				"Endpoint",
-				k => ExpressionBuilder.BuildPropertyGetter(kv.Value.GetType(), k));
-
-			var queueName = entityGetter(kv.Value) as string;
-			var destinationAddress = endpointGetter(kv.Value) as Uri;
+			var queueName = cachedProperties.Fetch(kv.Value,"Entity") as string;
+			var destinationAddress = cachedProperties.Fetch(kv.Value, "Endpoint") as Uri;
 
 			if (MatchesIgnoreMessageQueues(queueName))
 				return;
@@ -222,8 +196,8 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus
 
 			if (!_processingSegments.TryAdd(activity.Id, span))
 			{
-				Logger.Error()?.Log(
-					"Could not add {Action} span {SpanId} for activity {ActivityId} to tracked spans",
+				Logger.Trace()?.Log(
+					"Could not add {Action} span {SpanId} for activity {ActivityId} to tracked segments",
 					action,
 					span.Id,
 					activity.Id);
@@ -232,7 +206,7 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus
 
 		private void OnStop(
 			KeyValuePair<string, object> kv,
-			ConcurrentDictionary<string, Func<object, object>> cachedProperties)
+			PropertyFetcherCollection cachedProperties)
 		{
 			var activity = Activity.Current;
 			if (activity is null)
@@ -242,13 +216,14 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus
 			}
 
 			if (!_processingSegments.TryRemove(activity.Id, out var segment))
+			{
+				Logger.Trace()?.Log(
+					"Could not find segment for activity {ActivityId} in tracked segments",
+					activity.Id);
 				return;
+			}
 
-			var statusGetter = cachedProperties.GetOrAdd(
-				"Status",
-				k => ExpressionBuilder.BuildPropertyGetter(kv.Value.GetType(), k));
-
-			var status = statusGetter(kv.Value) as TaskStatus?;
+			var status = cachedProperties.Fetch(kv.Value, "Status") as TaskStatus?;
 			var outcome = status switch
 			{
 				TaskStatus.RanToCompletion => Outcome.Success,
@@ -262,8 +237,7 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus
 		}
 
 		private void OnException(
-			KeyValuePair<string, object> kv,
-			ConcurrentDictionary<string, Func<object, object>> cachedProperties)
+			KeyValuePair<string, object> kv)
 		{
 			var activity = Activity.Current;
 			if (activity is null)
@@ -273,13 +247,14 @@ namespace Elastic.Apm.Azure.Messaging.ServiceBus
 			}
 
 			if (!_processingSegments.TryRemove(activity.Id, out var segment))
+			{
+				Logger.Trace()?.Log(
+					"Could not find segment for activity {ActivityId} in tracked segments",
+					activity.Id);
 				return;
+			}
 
-			var exceptionGetter = cachedProperties.GetOrAdd(
-				"Exception",
-				k => ExpressionBuilder.BuildPropertyGetter(kv.Value.GetType(), k));
-
-			if (exceptionGetter(kv.Value) is Exception exception)
+			if (_exceptionProperty.Fetch(kv.Value) is Exception exception)
 				segment.CaptureException(exception);
 
 			segment.Outcome = Outcome.Failure;

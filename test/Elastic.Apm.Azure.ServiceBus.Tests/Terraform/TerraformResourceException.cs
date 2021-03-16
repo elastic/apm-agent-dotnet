@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests.Terraform
+namespace Elastic.Apm.Azure.ServiceBus.Tests.Terraform
 {
 	/// <summary>
 	/// An exception from interacting with terraform resources.

@@ -7,12 +7,15 @@ using System;
 using System.Diagnostics;
 using Elastic.Apm.DiagnosticSource;
 
-namespace Elastic.Apm.Azure.Messaging.ServiceBus
+namespace Elastic.Apm.Azure.ServiceBus
 {
+	/// <summary>
+	/// Subscribes to diagnostic source events from Microsoft.Azure.ServiceBus
+	/// </summary>
 	public class MicrosoftAzureServiceBusDiagnosticsSubscriber : IDiagnosticsSubscriber
 	{
 		/// <summary>
-		/// Start listening for Azure.Messaging.ServiceBus diagnostic source events.
+		/// Subscribes diagnostic source events.
 		/// </summary>
 		public IDisposable Subscribe(IApmAgent agent)
 		{

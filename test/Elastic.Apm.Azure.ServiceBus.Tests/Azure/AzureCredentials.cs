@@ -10,7 +10,7 @@ using System.Threading;
 using Elastic.Apm.Tests.Utilities;
 using Newtonsoft.Json;
 
-namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests.Azure
+namespace Elastic.Apm.Azure.ServiceBus.Tests.Azure
 {
 	public class AzureCredentials
 	{

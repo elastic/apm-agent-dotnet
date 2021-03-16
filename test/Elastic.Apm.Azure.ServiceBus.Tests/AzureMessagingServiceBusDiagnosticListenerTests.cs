@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
-using Elastic.Apm.Azure.Messaging.ServiceBus.Tests.Azure;
+using Elastic.Apm.Azure.ServiceBus.Tests.Azure;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.XUnit;
@@ -10,7 +10,7 @@ using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Elastic.Apm.Azure.Messaging.ServiceBus.Tests
+namespace Elastic.Apm.Azure.ServiceBus.Tests
 {
 	[Collection("AzureServiceBus")]
 	public class AzureMessagingServiceBusDiagnosticListenerTests : IDisposable, IAsyncDisposable
