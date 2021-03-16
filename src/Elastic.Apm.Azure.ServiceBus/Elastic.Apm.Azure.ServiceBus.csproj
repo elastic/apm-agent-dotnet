@@ -1,8 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
-        <RootNamespace>Elastic.Apm.Azure.ServiceBus</RootNamespace>
+      <TargetFramework>netstandard2.0</TargetFramework>
+      <AssemblyName>Elastic.Apm.Azure.ServiceBus</AssemblyName>
+      <RootNamespace>Elastic.Apm.Azure.ServiceBus</RootNamespace>
+      <PackageId>Elastic.Apm.Azure.ServiceBus</PackageId>
+      <Description>Elastic APM for Azure Service Bus. This package contains auto instrumentation for Azure.Messaging.ServiceBus 
+        and Microsoft.Azure.ServiceBus packages.</Description>
+      <PackageTags>apm, monitoring, elastic, elasticapm, analytics, azure, service, bus, servicebus</PackageTags>
+      <IsPackable>true</IsPackable>
     </PropertyGroup>
   
     <ItemGroup>
