@@ -302,7 +302,9 @@ namespace Elastic.Apm.Tests
 				{
 					for (var i = 0; i < 500; i++)
 					{
-						var _ = new int[10000000];
+						var array = new int[10000000];
+						// In order to make sure the line above is not optimized away, let's use the array:
+						Console.WriteLine($"GC test, int[] allocated with length: {array.Length}");
 					}
 
 					GC.Collect(2, GCCollectionMode.Forced, true, true);
@@ -311,7 +313,9 @@ namespace Elastic.Apm.Tests
 
 					for (var i = 0; i < 500; i++)
 					{
-						var _ = new int[10000000];
+						var array = new int[10000000];
+						// In order to make sure the line above is not optimized away, let's use the array:
+						Console.WriteLine($"GC test, int[] allocated with length: {array.Length}");
 					}
 
 					GC.Collect(2, GCCollectionMode.Forced, true, true);

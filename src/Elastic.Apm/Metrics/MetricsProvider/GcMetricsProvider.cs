@@ -199,7 +199,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		private void RuntimeGCEnd(TraceProcess traceProcess, Microsoft.Diagnostics.Tracing.Analysis.GC.TraceGC gc)
 		{
-			if (traceProcess.ProcessID == Process.GetCurrentProcess().Id)
+			if (traceProcess.ProcessID == _currentProcessId)
 			{
 				if (!_isMetricAlreadyCaptured)
 				{
