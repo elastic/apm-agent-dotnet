@@ -14,6 +14,7 @@ On .NET Core the agent also supports auto instrumentation without any code chang
 * <<setup-ef6>>
 * <<setup-sqlclient>>
 * <<setup-stackexchange-redis>>
+* <<setup-azure-servicebus>>
 * <<setup-general>>
 
 [float]
@@ -52,6 +53,14 @@ This package contains an interceptor that automatically creates spans for DB ope
 https://www.nuget.org/packages/Elastic.Apm.SqlClient[**Elastic.Apm.SqlClient**]::
 
 This package contains https://www.nuget.org/packages/System.Data.SqlClient[System.Data.SqlClient] and https://www.nuget.org/packages/Microsoft.Data.SqlClient[Microsoft.Data.SqlClient] monitoring related code.
+
+https://www.nuget.org/packages/Elastic.Apm.StackExchange.Redis[**Elastic.Apm.StackExchange.Redis**]::
+
+This packages contains instrumentation to capture spans for commands sent to redis with https://www.nuget.org/packages/StackExchange.Redis/[StackExchange.Redis] package.
+
+https://www.nuget.org/packages/Elastic.Apm.StackExchange.Redis[**Elastic.Apm.Azure.ServiceBus**]::
+
+This packages contains instrumentation to capture transactions and spans for messages sent and received from Azure Service Bus with https://www.nuget.org/packages/Microsoft.Azure.ServiceBus/[Microsoft.Azure.ServiceBus] and https://www.nuget.org/packages/Azure.Messaging.ServiceBus/[Azure.Messaging.ServiceBus] packages.
 
 
 [[setup-dotnet-net-core]]
@@ -360,6 +369,39 @@ connection.UseElasticApm();
 
 A callback is registered with the `IConnectionMultiplexer` to provide a profiling session for each transaction and span that captures redis commands
 sent with `IConnectionMultiplexer`.
+
+[[setup-azure-servicebus]]
+=== Azure Service Bus
+
+[float]
+==== Quick start
+
+Instrumentation can be enabled for Azure Service Bus by referencing https://www.nuget.org/packages/Elastic.Apm.Azure.ServiceBus[`Elastic.Apm.Azure.ServiceBus`] package and subscribing to diagnostic events
+using one of the subscribers:
+
+. If the agent is included by referencing the `Elastic.Apm.NetCoreAll` package, the subscribers will be automatically subscribed with the agent, and no further action is required.
+. If you're using `Microsoft.Azure.ServiceBus`, subscribe `MicrosoftAzureServiceBusDiagnosticsSubscriber` with the agent
++
+[source, csharp]
+----
+Agent.Subscribe(new MicrosoftAzureServiceBusDiagnosticsSubscriber());
+----
+. If you're using `Azure.Messaging.ServiceBus`, subscribe `AzureMessagingServiceBusDiagnosticsSubscriber` with the agent
++
+[source, csharp]
+----
+Agent.Subscribe(new AzureMessagingServiceBusDiagnosticsSubscriber());
+----
+
+A new transaction is created when
+
+* one or more messages are received from a queue or topic subscription.
+* a message is receive deferred from a queue or topic subscription.
+
+A new span is created when there is a current transaction, and when
+
+* one or more messages are sent to a queue or topic.
+* one or more messages are scheduled to a queue or a topic.
 
 [[setup-general]]
 === Other .NET applications

@@ -64,7 +64,7 @@ Streaming is not supported. In practice this means for streaming use-cases the a
 |Framework |Supported versions |Supported since agent's version
 
 |gRPC on .NET Core
-|2.23.2 and later
+|2.23.2+
 |1.7
 |===
 
@@ -78,24 +78,24 @@ We support automatic instrumentation for the following data access technologies.
 |Data access technology |Supported versions |Notes |Supported since agent's version
 
 |Entity Framework (EF) Core
-|2.x
+|2.x+
 |A DB span is automatically created for each access to underlying database performed by Entity Framework Core.
 |1.0
 
 |Entity Framework (EF) 6
-|6.2 and later
+|6.2+
 |A DB span is automatically created for each access to underlying database performed by Entity Framework 6.
 |1.2
 
 | Elasticsearch (Elasticsearch.Net and NEST)
-| 7.6.0
+| 7.6.0+
 | __If you're using 7.10.1 or 7.11.0, upgrade to at least 7.11.1 which fixes a bug in capture__
-| 1.6.0
+| 1.6
 
 | Redis (StackExchange.Redis)
-| 2.0.495
+| 2.0.495+
 | A DB span is automatically created for each profiled redis command peformed by StackExchange.Redis 
-| 1.8.0
+| 1.8
 |===
 
 [float]
@@ -118,3 +118,19 @@ The spans are named after the schema `<method> <host>`, for example `GET elastic
 |1.1
 
 |===
+
+[float]
+[[supported-cloud-services]]
+=== Cloud services
+
+Automatic instrumentation for the following cloud services
+
+|===
+| Cloud services | Supported versions | Notes | Supported since agent's version
+
+| Azure Service Bus
+| 3.0.0+ for Microsoft.Azure.ServiceBus,
+  7.0.0+ for Azure.Messaging.ServiceBus
+| A new transaction is created for received and
+receive deferred messages. A new span is created for sent and scheduled messages if there's a current transaction.
+| 1.9

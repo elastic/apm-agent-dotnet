@@ -892,10 +892,39 @@ When this setting is `true`, the agent will also add the header `elasticapm-trac
 | `true`                  | Boolean
 |============
 
+[[config-messaging]]
+=== Messaging configuration options
+
+[float]
+[[config-ignore-message-queues]]
+==== `IgnoreMessageQueues` (added[1.9])
+
+Used to filter out specific messaging queues/topics/exchanges from being traced. When set, sends-to and receives-from the 
+specified queues/topics/exchanges will be ignored.
+
+This config accepts a comma separated string of wildcard patterns of queues/topics/exchange names which should be ignored.
+
+The wildcard, `*`, matches zero or more characters, and matching is case insensitive by default.
+Prepending an element with `(?-i)` makes the matching case sensitive.
+Examples: `/foo/*/bar/*/baz*`, `*foo*`.
+
+[options="header"]
+|============
+| Default        | Type
+| <empty string> | String
+|============
+
+[options="header"]
+|============
+| Environment variable name            | IConfiguration or Web.config key
+| `ELASTIC_APM_IGNORE_MESSAGE_QUEUES` | `ElasticApm:IgnoreMessageQueues`
+|============
+
+
 [[config-stacktrace]]
 === Stacktrace configuration options
-[float]
 
+[float]
 [[config-application-namespaces]]
 ==== `ApplicationNamespaces` (added[1.5])
 
@@ -1040,6 +1069,7 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-excluded-namespaces,`ExcludedNamespaces`>> | No | Stacktrace
 | <<config-flush-interval,`FlushInterval`>> | No | Reporter
 | <<config-global-labels,`GlobalLabels`>> | No | Core
+| <<config-ignore-message-queues,`IgnoreMessageQueues`>> | Yes | Messaging, Performance
 | <<config-hostname,`HostName`>> | No | Core
 | <<config-log-level,`LogLevel`>> | Yes | Supportability
 | <<config-max-batch-event-count,`MaxBatchEventCount`>> | No | Reporter
