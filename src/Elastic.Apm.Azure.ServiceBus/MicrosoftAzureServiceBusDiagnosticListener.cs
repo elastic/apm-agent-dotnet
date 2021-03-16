@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Reflection;
@@ -19,9 +19,8 @@ namespace Elastic.Apm.Azure.ServiceBus
 	/// <summary>
 	/// Creates spans for diagnostic events from Microsoft.Azure.ServiceBus
 	/// </summary>
-	public class MicrosoftAzureServiceBusDiagnosticListener: IDiagnosticListener
+	public class MicrosoftAzureServiceBusDiagnosticListener: DiagnosticListenerBase
 	{
-		private readonly IApmAgent _agent;
 		private readonly ApmAgent _realAgent;
 		private readonly ConcurrentDictionary<string, IExecutionSegment> _processingSegments = new ConcurrentDictionary<string, IExecutionSegment>();
 		private readonly PropertyFetcherCollection _sendProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
@@ -30,22 +29,11 @@ namespace Elastic.Apm.Azure.ServiceBus
 		private readonly PropertyFetcherCollection _receiveDeferredProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
 		private readonly PropertyFetcher _exceptionProperty = new PropertyFetcher("Exception");
 
-		internal IApmLogger Logger { get; }
+		public override string Name { get; } = "Microsoft.Azure.ServiceBus";
 
-		public string Name { get; } = "Microsoft.Azure.ServiceBus";
+		public MicrosoftAzureServiceBusDiagnosticListener(IApmAgent agent) : base(agent) => _realAgent = agent as ApmAgent;
 
-		public MicrosoftAzureServiceBusDiagnosticListener(IApmAgent agent)
-		{
-			_agent = agent;
-			_realAgent = agent as ApmAgent;
-			Logger = _agent.Logger.Scoped(nameof(AzureMessagingServiceBusDiagnosticListener));
-		}
-
-		public void OnCompleted() => Logger.Trace()?.Log("Completed");
-
-		public void OnError(Exception error) => Logger.Error()?.LogExceptionWithCaller(error, nameof(OnError));
-
-		public void OnNext(KeyValuePair<string, object> kv)
+		protected override void HandleOnNext(KeyValuePair<string, object> kv)
 		{
 			Logger.Trace()?.Log("Called with key: `{DiagnosticEventKey}'", kv.Key);
 
@@ -114,13 +102,13 @@ namespace Elastic.Apm.Azure.ServiceBus
 			// TODO: initialize tracing data from linked messages, once https://github.com/elastic/apm/issues/122 is finalized
 			DistributedTracingData tracingData = null;
 
-			var transaction = _agent.Tracer.StartTransaction(transactionName, "messaging", tracingData);
+			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, "messaging", tracingData);
 
 			// transaction creation will create an activity, so use this as the key.
 			// TODO: change when existing activity is used.
 			var activityId = Activity.Current.Id;
 
-			transaction.Context.Service = Service.GetDefaultService(_agent.ConfigurationReader, _agent.Logger);
+			transaction.Context.Service = Service.GetDefaultService(ApmAgent.ConfigurationReader, ApmAgent.Logger);
 			transaction.Context.Service.Framework = new Framework { Name = "AzureServiceBus" };
 
 			if (!_processingSegments.TryAdd(activityId, transaction))
@@ -157,7 +145,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 			PropertyFetcherCollection cachedProperties
 		)
 		{
-			var currentSegment = _agent.GetCurrentExecutionSegment();
+			var currentSegment = ApmAgent.GetCurrentExecutionSegment();
 			if (currentSegment is null)
 			{
 				Logger.Trace()?.Log("No current transaction or span - exiting");

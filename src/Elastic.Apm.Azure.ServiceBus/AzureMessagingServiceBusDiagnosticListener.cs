@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.Api;
+using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -17,28 +18,16 @@ namespace Elastic.Apm.Azure.ServiceBus
 	/// <summary>
 	/// Creates spans for diagnostic events from Azure.Messaging.ServiceBus
 	/// </summary>
-	public class AzureMessagingServiceBusDiagnosticListener: IDiagnosticListener
+	public class AzureMessagingServiceBusDiagnosticListener: DiagnosticListenerBase
 	{
-		private readonly IApmAgent _agent;
 		private readonly ApmAgent _realAgent;
 		private readonly ConcurrentDictionary<string, IExecutionSegment> _processingSegments = new ConcurrentDictionary<string, IExecutionSegment>();
 
-		internal IApmLogger Logger { get; }
+		public override string Name { get; } = "Azure.Messaging.ServiceBus";
 
-		public string Name { get; } = "Azure.Messaging.ServiceBus";
+		public AzureMessagingServiceBusDiagnosticListener(IApmAgent agent) : base(agent) => _realAgent = agent as ApmAgent;
 
-		public AzureMessagingServiceBusDiagnosticListener(IApmAgent agent)
-		{
-			_agent = agent;
-			_realAgent = agent as ApmAgent;
-			Logger = _agent.Logger.Scoped(nameof(AzureMessagingServiceBusDiagnosticListener));
-		}
-
-		public void OnCompleted() => Logger.Trace()?.Log("Completed");
-
-		public void OnError(Exception error) => Logger.Error()?.LogExceptionWithCaller(error, nameof(OnError));
-
-		public void OnNext(KeyValuePair<string, object> kv)
+		protected override void HandleOnNext(KeyValuePair<string, object> kv)
 		{
 			Logger.Trace()?.Log("Called with key: `{DiagnosticEventKey}'", kv.Key);
 
@@ -122,13 +111,13 @@ namespace Elastic.Apm.Azure.ServiceBus
 
 			DistributedTracingData tracingData = null;
 
-			var transaction = _agent.Tracer.StartTransaction(transactionName, "messaging", tracingData);
+			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, "messaging", tracingData);
 
 			// transaction creation will create an activity, so use this as the key.
 			// TODO: change when existing activity is used.
 			var activityId = Activity.Current.Id;
 
-			transaction.Context.Service = Service.GetDefaultService(_agent.ConfigurationReader, _agent.Logger);
+			transaction.Context.Service = Service.GetDefaultService(ApmAgent.ConfigurationReader, ApmAgent.Logger);
 			transaction.Context.Service.Framework = new Framework { Name = "AzureServiceBus" };
 
 			if (!_processingSegments.TryAdd(activityId, transaction))
@@ -161,7 +150,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 
 		private void OnSendStart(KeyValuePair<string, object> kv, string action)
 		{
-			var currentSegment = _agent.GetCurrentExecutionSegment();
+			var currentSegment = ApmAgent.GetCurrentExecutionSegment();
 			if (currentSegment is null)
 			{
 				Logger.Trace()?.Log("No current transaction or span - exiting");
