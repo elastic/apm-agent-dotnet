@@ -58,7 +58,7 @@ namespace Elastic.Apm.MongoDb.DiagnosticSource
 
 				if (!_processingQueries.TryAdd(@event.RequestId, span))
 				{
-					Logger.Debug()?.Log("Failed adding item to _processingQueries with RequestId: {RequestId}",
+					Logger.Trace()?.Log("Failed adding item to _processingQueries with RequestId: {RequestId}",
 						@event.RequestId);
 					return;
 				}
@@ -101,7 +101,7 @@ namespace Elastic.Apm.MongoDb.DiagnosticSource
 
 				if (!_processingQueries.TryRemove(@event.RequestId, out var span))
 				{
-					Logger.Debug()?.Log("Failed removing item from _processingQueries for RequestId: {RequestId}", @event.RequestId);
+					Logger.Trace()?.Log("Failed removing item from _processingQueries for RequestId: {RequestId}", @event.RequestId);
 					return;
 				}
 
@@ -123,7 +123,7 @@ namespace Elastic.Apm.MongoDb.DiagnosticSource
 
 				if (!_processingQueries.TryRemove(@event.RequestId, out var span))
 				{
-					Logger.Debug()?.Log("Failed removing item from _processingQueries for RequestId: {RequestId}", @event.RequestId);
+					Logger.Trace()?.Log("Failed removing item from _processingQueries for RequestId: {RequestId}", @event.RequestId);
 					return;
 				}
 
