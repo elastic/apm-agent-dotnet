@@ -21,10 +21,11 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests.Terraform
 	/// </summary>
 	public class TerraformResources
 	{
-		private readonly string _resourceDirectory;
-		private readonly IDictionary<string, string> _environment;
 		private static readonly TimeSpan _defaultTimeout = TimeSpan.FromMinutes(10);
-		private IMessageSink _messageSink;
+
+		private readonly string _resourceDirectory;
+		private readonly IMessageSink _messageSink;
+		private readonly AzureCredentials _credentials;
 
 		public TerraformResources(string resourceDirectory, AzureCredentials credentials, IMessageSink messageSink = null)
 		{
@@ -35,7 +36,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests.Terraform
 				throw new DirectoryNotFoundException($"Directory does not exist {resourceDirectory}");
 
 			_resourceDirectory = resourceDirectory;
-			_environment = credentials.ToTerraformEnvironmentVariables();
+			_credentials = credentials;
 			_messageSink = messageSink;
 		}
 
@@ -43,9 +44,9 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests.Terraform
 		{
 			var startArguments = new StartArguments("terraform", arguments)
 			{
-				WorkingDirectory = _resourceDirectory,
-				Environment = _environment
+				WorkingDirectory = _resourceDirectory
 			};
+			_credentials.AddToArguments(startArguments);
 
 			return new ObservableProcess(startArguments);
 		}

@@ -33,7 +33,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			_adminClient = new ServiceBusAdministrationClient(environment.ServiceBusConnectionString);
 		}
 
-		[Fact]
+		[AzureCredentialsFact]
 		public async Task Capture_Span_When_Send_To_Queue()
 		{
 			await using var scope = await QueueScope.CreateWithQueue(_adminClient);
@@ -63,7 +63,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			destination.Service.Type.Should().Be("messaging");
 		}
 
-		[Fact]
+		[AzureCredentialsFact]
 		public async Task Capture_Span_When_Send_To_Topic()
 		{
 			await using var scope = await TopicScope.CreateWithTopic(_adminClient);
@@ -92,7 +92,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			destination.Service.Type.Should().Be("messaging");
 		}
 
-		[Fact]
+		[AzureCredentialsFact]
 		public async Task Capture_Span_When_Schedule_To_Queue()
 		{
 			await using var scope = await QueueScope.CreateWithQueue(_adminClient);
@@ -123,7 +123,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			destination.Service.Type.Should().Be("messaging");
 		}
 
-		[Fact]
+		[AzureCredentialsFact]
 		public async Task Capture_Span_When_Schedule_To_Topic()
 		{
 			await using var scope = await TopicScope.CreateWithTopic(_adminClient);
@@ -154,7 +154,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			destination.Service.Type.Should().Be("messaging");
 		}
 
-		[Fact]
+		[AzureCredentialsFact]
 		public async Task Capture_Transaction_When_Receive_From_Queue()
 		{
 			await using var scope = await QueueScope.CreateWithQueue(_adminClient);
@@ -176,7 +176,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			transaction.Type.Should().Be("messaging");
 		}
 
-		[Fact]
+		[AzureCredentialsFact]
 		public async Task Capture_Transaction_When_Receive_From_Topic_Subscription()
 		{
 			await using var scope = await TopicScope.CreateWithTopicAndSubscription(_adminClient);
@@ -200,7 +200,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			transaction.Type.Should().Be("messaging");
 		}
 
-		[Fact]
+		[AzureCredentialsFact]
 		public async Task Capture_Transaction_When_ReceiveDeferred_From_Queue()
 		{
 			await using var scope = await QueueScope.CreateWithQueue(_adminClient);
@@ -229,7 +229,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			secondTransaction.Type.Should().Be("messaging");
 		}
 
-		[Fact]
+		[AzureCredentialsFact]
 		public async Task Capture_Transaction_When_ReceiveDeferred_From_Topic_Subscription()
 		{
 			await using var scope = await TopicScope.CreateWithTopicAndSubscription(_adminClient);
@@ -260,7 +260,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			secondTransaction.Type.Should().Be("messaging");
 		}
 
-		[Fact]
+		[AzureCredentialsFact]
 		public async Task Does_Not_Capture_Span_When_QueueName_Matches_IgnoreMessageQueues()
 		{
 			await using var scope = await QueueScope.CreateWithQueue(_adminClient);

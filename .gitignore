@@ -342,9 +342,9 @@ build/output/
 # Generated .NET core sln file
 ElasticApmAgent.NetCore.sln
 
-.credentials.json
-
+# Terraform configuration state files
 .terraform
 .terraform.lock.hcl
 terraform.tfstate
 terraform.tfstate.backup
+.terraform.tfstate.lock.info
