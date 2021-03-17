@@ -69,3 +69,10 @@ module Tooling =
         restoreDotnetTools.Force()    
         let args = args |> String.concat " "
         DotNet.Exec ["assembly-differ"; args]
+
+    let restoreOnce = lazy(DotNet.Exec ["tool"; "restore"])
+
+    let Rewriter args =
+        restoreDotnetTools.Force()
+        let args = args |> String.concat " "
+        DotNet.Exec ["assembly-rewriter"; args]

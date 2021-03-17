@@ -15,9 +15,7 @@ open Buildalyzer
 open Fake.Core
 open Fake.DotNet
 open Fake.IO
-open Fake.IO
 open Fake.IO.Globbing.Operators
-open Fake.SystemHelper
 open Fake.SystemHelper
 open Tooling
 
@@ -200,39 +198,58 @@ module Build =
                 sprintf "%s_%s-%s" name (Versioning.CurrentVersion.AssemblyVersion.ToString()) versionSuffix
             else
                 sprintf "%s_%s" name (Versioning.CurrentVersion.AssemblyVersion.ToString())
-                
-        let agentDir = Paths.BuildOutput name |> DirectoryInfo                    
+
+        let agentDir = Paths.BuildOutput name |> DirectoryInfo
+
+        let internalizeJsonDotNet pathToDlls = 
+            let agentDllPath = pathToDlls + new string([|Path.DirectorySeparatorChar|]) + "Elastic.Apm.dll"
+            let newtonsoftJsonDllPath = pathToDlls + new string([|Path.DirectorySeparatorChar|]) + "Newtonsoft.Json.dll"
+            let newNewtonsoftJsonDllPath = pathToDlls + new string([|Path.DirectorySeparatorChar|]) + "ApmNewtonsoft.Json.dll"
+            let args = ["-i"; agentDllPath; "-o "; agentDllPath; "-i "; newtonsoftJsonDllPath;  "-o"; newNewtonsoftJsonDllPath]
+            Tooling.Rewriter args
+
         agentDir.Create()
 
         // all files of interest are top level files in the source directory
-        let copy (destination: DirectoryInfo) (source: DirectoryInfo) =        
+        let copy (destination: DirectoryInfo) (source: DirectoryInfo) =
             source.GetFiles()
             |> Seq.filter (fun file -> file.Extension = ".dll" || file.Extension = ".pdb")
             |> Seq.iter (fun file -> file.CopyTo(Path.combine destination.FullName file.Name, true) |> ignore)
-            
+
         // copy startup hook to root of agent directory
         !! (Paths.BuildOutput "ElasticApmAgentStartupHook/netcoreapp2.2")
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
         |> Seq.iter (copy agentDir)
-            
+       
         // assemblies compiled against "current" version of System.Diagnostics.DiagnosticSource    
+        let subdirForCurrentDiagnosticSourceVersion = 
+            (agentDir.CreateSubdirectory(sprintf "%i.0.0" getCurrentApmDiagnosticSourceVersion.Major))
+
         !! (Paths.BuildOutput "Elastic.Apm.StartupHook.Loader/netcoreapp2.2")
         ++ (Paths.BuildOutput "Elastic.Apm/netstandard2.0")
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
-        |> Seq.iter (copy (agentDir.CreateSubdirectory(sprintf "%i.0.0" getCurrentApmDiagnosticSourceVersion.Major)))
-                 
+        |> Seq.iter (copy subdirForCurrentDiagnosticSourceVersion)
+
+        internalizeJsonDotNet (subdirForCurrentDiagnosticSourceVersion.ToString())
+        subdirForCurrentDiagnosticSourceVersion.GetFiles("Newtonsoft.Json.dll").FirstOrDefault().Delete()
+      
         // assemblies compiled against older version of System.Diagnostics.DiagnosticSource 
+        let subdirForOlderDiagnosticSourceVersion = 
+            (agentDir.CreateSubdirectory(sprintf "%i.0.0" oldDiagnosticSourceVersion.Major))
+
         !! (Paths.BuildOutput (sprintf "Elastic.Apm.StartupHook.Loader_%i.0.0/netcoreapp2.2" oldDiagnosticSourceVersion.Major))
         ++ (Paths.BuildOutput (sprintf "Elastic.Apm_%i.0.0/netstandard2.0" oldDiagnosticSourceVersion.Major))
         |> Seq.filter Path.isDirectory
         |> Seq.map DirectoryInfo
-        |> Seq.iter (copy (agentDir.CreateSubdirectory(sprintf "%i.0.0" oldDiagnosticSourceVersion.Major)))
-            
+        |> Seq.iter (copy subdirForOlderDiagnosticSourceVersion)
+
+        internalizeJsonDotNet (subdirForOlderDiagnosticSourceVersion.ToString())
+        subdirForOlderDiagnosticSourceVersion.GetFiles("Newtonsoft.Json.dll").FirstOrDefault().Delete()
+
         // include version in the zip file name    
         ZipFile.CreateFromDirectory(agentDir.FullName, Paths.BuildOutput versionedName + ".zip")
-      
       
     /// Builds docker image including the ElasticApmAgent  
     let AgentDocker (canary:bool) =

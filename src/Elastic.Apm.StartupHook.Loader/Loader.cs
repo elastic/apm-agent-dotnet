@@ -42,7 +42,7 @@ namespace Elastic.Apm.StartupHook.Loader
 		public static void Initialize()
 		{
 			var agentLibsToLoad =  new[]{ "Elastic.Apm", "Elastic.Apm.Extensions.Hosting", "Elastic.Apm.AspNetCore", "Elastic.Apm.EntityFrameworkCore", "Elastic.Apm.SqlClient", "Elastic.Apm.GrpcClient", "Elastic.Apm.Elasticsearch" };
-			var agentDependencyLibsToLoad = new[] { "System.Diagnostics.PerformanceCounter", "Microsoft.Diagnostics.Tracing.TraceEvent", "Newtonsoft.Json", "Elasticsearch.Net" };
+			var agentDependencyLibsToLoad = new[] { "System.Diagnostics.PerformanceCounter", "Microsoft.Diagnostics.Tracing.TraceEvent", "ApmNewtonsoft.Json", "Elasticsearch.Net" };
 
 			foreach (var libToLoad in agentDependencyLibsToLoad)
 				AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.Combine(AssemblyDirectory, libToLoad + ".dll"));
