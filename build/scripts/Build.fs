@@ -202,9 +202,9 @@ module Build =
         let agentDir = Paths.BuildOutput name |> DirectoryInfo
 
         let internalizeJsonDotNet pathToDlls = 
-            let agentDllPath = pathToDlls + new string([|Path.DirectorySeparatorChar|]) + "Elastic.Apm.dll"
-            let newtonsoftJsonDllPath = pathToDlls + new string([|Path.DirectorySeparatorChar|]) + "Newtonsoft.Json.dll"
-            let newNewtonsoftJsonDllPath = pathToDlls + new string([|Path.DirectorySeparatorChar|]) + "ApmNewtonsoft.Json.dll"
+            let agentDllPath = sprintf "%s%c%s" pathToDlls Path.DirectorySeparatorChar "Elastic.Apm.dll" 
+            let newtonsoftJsonDllPath = sprintf "%s%c%s" pathToDlls Path.DirectorySeparatorChar "Newtonsoft.Json.dll"
+            let newNewtonsoftJsonDllPath = sprintf "%s%c%s" pathToDlls Path.DirectorySeparatorChar "ApmNewtonsoft.Json.dll"
             let args = ["-i"; agentDllPath; "-o "; agentDllPath; "-i "; newtonsoftJsonDllPath;  "-o"; newNewtonsoftJsonDllPath]
             Tooling.Rewriter args
 
