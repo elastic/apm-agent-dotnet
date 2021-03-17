@@ -22,10 +22,16 @@ namespace Elastic.Apm.Azure.ServiceBus
 	{
 		private readonly ApmAgent _realAgent;
 		private readonly ConcurrentDictionary<string, IExecutionSegment> _processingSegments = new ConcurrentDictionary<string, IExecutionSegment>();
+		private readonly Service _service;
 
 		public override string Name { get; } = "Azure.Messaging.ServiceBus";
 
-		public AzureMessagingServiceBusDiagnosticListener(IApmAgent agent) : base(agent) => _realAgent = agent as ApmAgent;
+		public AzureMessagingServiceBusDiagnosticListener(IApmAgent agent) : base(agent)
+		{
+			_realAgent = agent as ApmAgent;
+			_service = Service.GetDefaultService(agent.ConfigurationReader, agent.Logger);
+			_service.Framework = new Framework { Name = "AzureServiceBus" };
+		}
 
 		protected override void HandleOnNext(KeyValuePair<string, object> kv)
 		{
@@ -109,16 +115,12 @@ namespace Elastic.Apm.Azure.ServiceBus
 				? $"AzureServiceBus {action}"
 				: $"AzureServiceBus {action} from {queueName}";
 
-			DistributedTracingData tracingData = null;
-
-			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, "messaging", tracingData);
+			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, "messaging");
+			transaction.Context.Service = _service;
 
 			// transaction creation will create an activity, so use this as the key.
 			// TODO: change when existing activity is used.
 			var activityId = Activity.Current.Id;
-
-			transaction.Context.Service = Service.GetDefaultService(ApmAgent.ConfigurationReader, ApmAgent.Logger);
-			transaction.Context.Service.Framework = new Framework { Name = "AzureServiceBus" };
 
 			if (!_processingSegments.TryAdd(activityId, transaction))
 			{
@@ -188,7 +190,6 @@ namespace Elastic.Apm.Azure.ServiceBus
 				: $"AzureServiceBus {action} to {queueName}";
 
 			var span = currentSegment.StartSpan(spanName, "messaging", "azureservicebus", action.ToLowerInvariant());
-
 			span.Context.Destination = new Destination
 			{
 				Address = destinationAddress,
@@ -226,8 +227,6 @@ namespace Elastic.Apm.Azure.ServiceBus
 					activity.Id);
 				return;
 			}
-
-			// TODO: Get the linked Activit(y/ies) from DiagnosticActivity when https://github.com/elastic/apm/issues/122 is finalized
 
 			segment.Outcome = Outcome.Success;
 			segment.End();

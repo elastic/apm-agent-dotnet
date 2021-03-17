@@ -28,10 +28,16 @@ namespace Elastic.Apm.Azure.ServiceBus
 		private readonly PropertyFetcherCollection _receiveProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
 		private readonly PropertyFetcherCollection _receiveDeferredProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
 		private readonly PropertyFetcher _exceptionProperty = new PropertyFetcher("Exception");
+		private readonly Service _service;
 
 		public override string Name { get; } = "Microsoft.Azure.ServiceBus";
 
-		public MicrosoftAzureServiceBusDiagnosticListener(IApmAgent agent) : base(agent) => _realAgent = agent as ApmAgent;
+		public MicrosoftAzureServiceBusDiagnosticListener(IApmAgent agent) : base(agent)
+		{
+			_realAgent = agent as ApmAgent;
+			_service = Service.GetDefaultService(agent.ConfigurationReader, agent.Logger);
+			_service.Framework = new Framework { Name = "AzureServiceBus" };
+		}
 
 		protected override void HandleOnNext(KeyValuePair<string, object> kv)
 		{
@@ -78,10 +84,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 			}
 		}
 
-		private void OnReceiveStart(
-			KeyValuePair<string, object> kv,
-			string action,
-			PropertyFetcherCollection cachedProperties)
+		private void OnReceiveStart(KeyValuePair<string, object> kv, string action, PropertyFetcherCollection cachedProperties)
 		{
 			if (kv.Value is null)
 			{
@@ -99,17 +102,12 @@ namespace Elastic.Apm.Azure.ServiceBus
 				? $"AzureServiceBus {action}"
 				: $"AzureServiceBus {action} from {queueName}";
 
-			// TODO: initialize tracing data from linked messages, once https://github.com/elastic/apm/issues/122 is finalized
-			DistributedTracingData tracingData = null;
-
-			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, "messaging", tracingData);
+			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, "messaging");
+			transaction.Context.Service = _service;
 
 			// transaction creation will create an activity, so use this as the key.
 			// TODO: change when existing activity is used.
 			var activityId = Activity.Current.Id;
-
-			transaction.Context.Service = Service.GetDefaultService(ApmAgent.ConfigurationReader, ApmAgent.Logger);
-			transaction.Context.Service.Framework = new Framework { Name = "AzureServiceBus" };
 
 			if (!_processingSegments.TryAdd(activityId, transaction))
 			{
@@ -139,11 +137,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 			return false;
 		}
 
-		private void OnSendStart(
-			KeyValuePair<string, object> kv,
-			string action,
-			PropertyFetcherCollection cachedProperties
-		)
+		private void OnSendStart(KeyValuePair<string, object> kv, string action, PropertyFetcherCollection cachedProperties)
 		{
 			var currentSegment = ApmAgent.GetCurrentExecutionSegment();
 			if (currentSegment is null)
@@ -192,9 +186,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 			}
 		}
 
-		private void OnStop(
-			KeyValuePair<string, object> kv,
-			PropertyFetcherCollection cachedProperties)
+		private void OnStop(KeyValuePair<string, object> kv, PropertyFetcherCollection cachedProperties)
 		{
 			var activity = Activity.Current;
 			if (activity is null)
@@ -224,8 +216,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 			segment.End();
 		}
 
-		private void OnException(
-			KeyValuePair<string, object> kv)
+		private void OnException(KeyValuePair<string, object> kv)
 		{
 			var activity = Activity.Current;
 			if (activity is null)
