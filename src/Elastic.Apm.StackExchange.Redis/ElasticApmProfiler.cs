@@ -18,7 +18,7 @@ namespace Elastic.Apm.StackExchange.Redis
 	/// <summary>
 	/// Captures redis commands sent with StackExchange.Redis client
 	/// </summary>
-	internal class ElasticApmProfiler
+	public class ElasticApmProfiler
 	{
 		private readonly ConcurrentDictionary<string, ProfilingSession> _executionSegmentSessions =
 			new ConcurrentDictionary<string, ProfilingSession>();
