@@ -4,5 +4,5 @@
 
 namespace Elastic.Apm.Config
 {
-	internal interface IConfigSnapshotOptions : IConfigurationReader { }
+	public interface IConfigSnapshotOptions : IConfigurationReader { }
 }

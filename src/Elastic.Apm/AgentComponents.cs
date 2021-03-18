@@ -74,6 +74,8 @@ namespace Elastic.Apm
 
 		internal IConfigStore ConfigStore { get; }
 
+		public IConfigSnapshotProvider ConfigurationSnapshot => ConfigStore;
+
 		public IConfigurationReader ConfigurationReader { get; }
 
 		public IApmLogger Logger { get; }
