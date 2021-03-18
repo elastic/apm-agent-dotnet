@@ -134,3 +134,5 @@ Automatic instrumentation for the following cloud services
 | A new transaction is created for received and
 receive deferred messages. A new span is created for sent and scheduled messages if there's a current transaction.
 | 1.9
+
+|===
