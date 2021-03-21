@@ -248,7 +248,7 @@ namespace Elastic.Apm.AspNetCore
 			// Activity.Current can e.g. be the `ElasticApm.Transaction` Activity, so we need to go up the activity chain.
 			var httpRequestInActivity = Activity.Current;
 
-			while (httpRequestInActivity?.DisplayName != "Microsoft.AspNetCore.Hosting.HttpRequestIn" && httpRequestInActivity != null)
+			while (httpRequestInActivity?.OperationName != "Microsoft.AspNetCore.Hosting.HttpRequestIn" && httpRequestInActivity != null)
 				httpRequestInActivity = httpRequestInActivity.Parent;
 
 			(string methodname, string result) grpcCallInfo = default;
