@@ -7,8 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Azure.Messaging.ServiceBus;
-using Elastic.Apm.Azure.ServiceBus.Tests.Terraform;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.Azure;
+using Elastic.Apm.Tests.Utilities.Terraform;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -17,7 +18,6 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests.Azure
 	[CollectionDefinition("AzureServiceBus")]
 	public class AzureServiceBusTestEnvironmentCollection : ICollectionFixture<AzureServiceBusTestEnvironment>
 	{
-
 	}
 
 	/// <summary>
@@ -38,6 +38,10 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests.Azure
 			var solutionRoot = SolutionPaths.Root;
 			var terraformResourceDirectory = Path.Combine(solutionRoot, "build", "terraform", "azure", "service_bus");
 			var credentials = AzureCredentials.Instance;
+
+			// don't try to run terraform if not authenticated.
+			if (credentials is Unauthenticated)
+				return;
 
 			_terraform = new TerraformResources(terraformResourceDirectory, credentials, messageSink);
 
@@ -62,6 +66,6 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests.Azure
 
 		public ServiceBusConnectionStringProperties ServiceBusConnectionStringProperties { get; }
 
-		public void Dispose() => _terraform.Destroy(_variables);
+		public void Dispose() => _terraform?.Destroy(_variables);
 	}
 }

@@ -6,6 +6,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Azure.ServiceBus.Tests.Azure;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.Azure;
 using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;

@@ -8,13 +8,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.ExceptionServices;
 using System.Text;
-using Elastic.Apm.Azure.ServiceBus.Tests.Azure;
+using Elastic.Apm.Tests.Utilities.Azure;
 using ProcNet;
 using ProcNet.Std;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace Elastic.Apm.Azure.ServiceBus.Tests.Terraform
+namespace Elastic.Apm.Tests.Utilities.Terraform
 {
 	/// <summary>
 	/// Interact with Terraform templates to apply and destroy resources
@@ -139,7 +139,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests.Terraform
 		/// <summary>
 		/// Destroys the terraform managed infrastructure
 		/// </summary>
-		/// <exception cref="Exception"></exception>
+		/// <exception cref="System.Exception"></exception>
 		public void Destroy(IDictionary<string, string> variables = null)
 		{
 			var args = new List<string>
