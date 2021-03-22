@@ -20,6 +20,7 @@ namespace Elastic.Apm.Api
 		public const string SubtypePostgreSql = "postgresql";
 		public const string SubTypeGrpc = "grpc";
 		public const string SubTypeRedis = "redis";
+		public const string SubTypeCosmosDb = "CosmosDb";
 
 		public const string TypeDb = "db";
 		public const string TypeExternal = "external";

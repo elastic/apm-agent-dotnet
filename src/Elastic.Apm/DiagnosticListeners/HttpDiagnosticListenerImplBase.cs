@@ -134,16 +134,20 @@ namespace Elastic.Apm.DiagnosticListeners
 			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(ApmAgent, $"{RequestGetMethod(request)} {requestUrl.Host}",
 				ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient, true);
 
-			var cosmosDbSpan = DocumentDbHttpParser.TryCreateCosmosDbSpan(requestUrl.Host, requestUrl.AbsoluteUri, requestUrl.PathAndQuery, Agent.Tracer);
+			var cosmosDbSpan = DocumentDbHttpParser.TryCreateCosmosDbSpan(requestUrl.Host,
+				requestUrl.PathAndQuery, RequestGetMethod(request), Agent.Tracer, Logger);
 
 			if (cosmosDbSpan != null)
 			{
-				if (!CosmosDbSpans.TryAdd(request, cosmosDbSpan))
+				if (!ProcessingRequests.TryAdd(request, cosmosDbSpan))
 				{
 					// Consider improving error reporting - see https://github.com/elastic/apm-agent-dotnet/issues/280
-					Logger.Error()?.Log("Failed to add to CosmosDbSpans - ???");
+					Logger.Error()?.Log("Failed to add Cosmos Db span to ProcessingRequests");
 					return;
 				}
+
+				Logger.Trace()?.Log("Added Cosmos Db span to ProcessingRequests, span: {span}", cosmosDbSpan);
+				return;
 			}
 
 			if (!ProcessingRequests.TryAdd(request, span))
@@ -214,6 +218,12 @@ namespace Elastic.Apm.DiagnosticListeners
 				return;
 			}
 
+			if (span.Context.Db != null)
+			{
+				Logger.Trace()?.Log("Cosmos DB span removed from ProcessingRequests, ready to call .End on it, span: {span}", span);
+				span.End();
+				return;
+			}
 
 			// if span.Context.Http == null that means the transaction is not sampled (see ProcessStartEvent)
 			if (span.Context.Http != null)
@@ -239,15 +249,15 @@ namespace Elastic.Apm.DiagnosticListeners
 				}
 			}
 
-			if (CosmosDbSpans.TryRemove(request, out var cosmosDbSpan))
-			{
-				cosmosDbSpan.Outcome = span.Outcome;
-				cosmosDbSpan.End();
-			}
-			else
-			{
-				//log
-			}
+			//if (CosmosDbSpans.TryRemove(request, out var cosmosDbSpan))
+			//{
+			//	cosmosDbSpan.Outcome = span.Outcome;
+			//	cosmosDbSpan.End();
+			//}
+			//else
+			//{
+			//	//log
+			//}
 
 			span.End();
 		}

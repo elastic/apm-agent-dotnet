@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
 
 namespace Elastic.Apm.DiagnosticListeners.Parsers
 {
-
 	using System.Collections.Generic;
 	using Elastic.Apm.Api;
+	using Elastic.Apm.Logging;
 
 	/// <summary>
 	/// HTTP Dependency parser that attempts to parse dependency as Azure DocumentDB call.
@@ -46,6 +46,13 @@ namespace Elastic.Apm.DiagnosticListeners.Parsers
 			["GET /dbs/*/colls/*/docs/*"] = "Get document",
 			["PUT /dbs/*/colls/*/docs/*"] = "Replace document",
 			["DELETE /dbs/*/colls/*/docs/*"] = "Delete document",
+
+			// partition key operations
+			["POST /dbs/*/colls/*/pkranges"] = "Create partition key ranges",
+			["GET /dbs/*/colls/*/pkranges"] = "List partition key ranges",
+			["GET /dbs/*/colls/*/pkranges"] = "Get partition key ranges",
+			["PUT /dbs/*/colls/*/pkranges"] = "Replace partition key ranges",
+			["DELETE /dbs/*/colls/*/pkranges"] = "Delete partition key ranges",
 
 			// Attachment operations
 			["POST /dbs/*/colls/*/docs/*/attachments"] = "Create attachment",
@@ -95,16 +102,18 @@ namespace Elastic.Apm.DiagnosticListeners.Parsers
 		};
 
 		/// <summary>
-		/// Tries parsing given dependency telemetry item. 
+		/// Tries parsing URL info. If the url matches well known Cosmos Db urls, it'll create a span with the collected information.
 		/// </summary>
-		/// <param name="httpDependency">Dependency item to parse. It is expected to be of HTTP type.</param>
-		/// <returns><code>true</code> if successfully parsed dependency.</returns>
-		internal static ISpan TryCreateCosmosDbSpan(string host, string fullUrl, string pathAndQuery, ITracer tracer)
+		/// <param name="host">Host of the URL</param>
+		/// <param name="pathAndQuery">The path and query string part of the URL</param>
+		/// <param name="verb">The HTTP verb for the HTTP request</param>
+		/// <param name="tracer">A tracer to start the span</param>
+		/// <param name="logger">A logger to log</param>
+		/// <returns>A span populated with CosmosDB info if successfully parsed the URL, <code>null</code> otherwise</returns>
+		internal static ISpan TryCreateCosmosDbSpan(string host, string pathAndQuery, string verb, ITracer tracer, IApmLogger logger)
 		{
-			
-			//var url = iUrl;// httpDependency.Data;
 
-			if (/*name == null || */ host == null || fullUrl == null)
+			if (host == null )
 			{
 				return null;
 			}
@@ -118,52 +127,39 @@ namespace Elastic.Apm.DiagnosticListeners.Parsers
 			//// DocumentDB REST API: https://docs.microsoft.com/en-us/rest/api/documentdb/
 			////
 
-
-			// try to parse out the verb
-		//	HttpParsingHelper.ExtractVerb(name, out var verb, out var nameWithoutVerb, DocumentDbSupportedVerbs);
+			logger.Debug()?.Log("Host of the HTTP Request matches Cosmos DB - start parsing URL");
 
 			var resourcePath = HttpParsingHelper.ParseResourcePath(pathAndQuery);
+		
+			var operation = HttpParsingHelper.BuildOperationMoniker(verb, resourcePath);
+			var operationName = GetOperationName(null, operation);
 
-			var span = tracer.CurrentTransaction?.StartSpan("CosmosDb", ApiConstants.TypeDb, "CosmosDb");
-
-			// populate properties
-			foreach (var resource in resourcePath)
-			{
-				if (resource.Value != null)
-				{
-					var propertyName = GetPropertyNameForResource(resource.Key);
-					if (propertyName != null)
-					{
-						//httpDependency.Properties[propertyName] = resource.Value;
-					}
-				}
-			}
+			var spanName = "Cosmos DB" + (operationName.Length > 4 ? (" " + operationName) : string.Empty);
+			var span = tracer.CurrentTransaction?.StartSpan(spanName, ApiConstants.TypeDb, "CosmosDb");
 
 			if (span != null)
 			{
+				span.Type = ApiConstants.TypeDb;
+				span.Subtype = ApiConstants.SubTypeCosmosDb;
 				span.Context.Db = new Database();
 
 				foreach (var resource in resourcePath)
 				{
 					if (resource.Value != null)
 					{
-						if(resource.Key == "db")
+						if (resource.Key == "dbs")
 						{
 							span.Context.Db.Instance = resource.Value;
 						}
-						else
-						{
-							span.SetLabel(resource.Key, resource.Value);
-						}
+
+						var propertyName = GetPropertyNameForResource(resource.Key);
+
+						if (!string.IsNullOrEmpty(propertyName))
+							span.Name += $" {resource.Value}";
+
 					}
 				}
 			}
-
-			//var operation = HttpParsingHelper.BuildOperationMoniker(verb, resourcePath);
-			//var operationName = GetOperationName(resultCode, operation);
-
-			//httpDependency.Type = "CosmosDb"; // RemoteDependencyConstants.AzureDocumentDb;
-			//httpDependency.Name = string.IsNullOrEmpty(operationName) ? httpDependency.Target : operationName;
 
 			return span;
 		}
@@ -195,31 +191,7 @@ namespace Elastic.Apm.DiagnosticListeners.Parsers
 				return operation;
 			}
 
-			// "Create document" and "Query documents" share the same moniker
-			// but we can try to distinguish them by response code
-			if (operationName == CreateOrQueryDocumentOperationName)
-			{
-				switch (resultCode)
-				{
-					case "200":
-						{
-							operationName = "Query documents";
-							break;
-						}
-
-					case "201":
-					case "403":
-					case "409":
-					case "413":
-						{
-							operationName = "Create document";
-							break;
-						}
-				}
-			}
-
 			return operationName;
 		}
 	}
-
 }
