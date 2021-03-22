@@ -249,16 +249,6 @@ namespace Elastic.Apm.DiagnosticListeners
 				}
 			}
 
-			//if (CosmosDbSpans.TryRemove(request, out var cosmosDbSpan))
-			//{
-			//	cosmosDbSpan.Outcome = span.Outcome;
-			//	cosmosDbSpan.End();
-			//}
-			//else
-			//{
-			//	//log
-			//}
-
 			span.End();
 		}
 
