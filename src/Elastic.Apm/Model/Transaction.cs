@@ -29,6 +29,8 @@ namespace Elastic.Apm.Model
 		private readonly IPayloadSender _sender;
 		private readonly string _traceState;
 
+		// Flags whether the agent created a new Activity for this transaction.
+		// If there is an existing Activity using W3C format, no Activity will be created and this remains false.
 		private bool _createdActivity;
 
 		// This constructor is meant for serialization
@@ -171,7 +173,7 @@ namespace Elastic.Apm.Model
 			}
 
 			// Also mark the sampling decision on the Activity
-			if (IsSampled && _activity != null && !ignoreActivity && _createdActivity)
+			if (IsSampled && _activity != null && !ignoreActivity)
 				_activity.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
 
 			SampleRate = IsSampled ? sampler.Rate : 0;
