@@ -948,13 +948,13 @@ namespace Elastic.Apm.Tests
 			var firstMetrics = mockPayloadSender.Metrics.First();
 			firstMetrics.Should().NotBeNull();
 
-			firstMetrics.Samples.Should().NotContain(n => n.KeyValue.Key.Contains("cpu"));
+			firstMetrics.Samples.Should().NotContain(n => n.Key.Contains("cpu"));
 
 			//These are collected on all platforms, with the given config they always should be there
 			firstMetrics.Samples.Should()
-				.Contain(n => n.KeyValue.Key.Equals("system.process.memory.size", StringComparison.InvariantCultureIgnoreCase));
+				.Contain(n => n.Key.Equals("system.process.memory.size", StringComparison.InvariantCultureIgnoreCase));
 			firstMetrics.Samples.Should()
-				.Contain(n => n.KeyValue.Key.Equals("system.process.memory.rss.bytes", StringComparison.InvariantCultureIgnoreCase));
+				.Contain(n => n.Key.Equals("system.process.memory.rss.bytes", StringComparison.InvariantCultureIgnoreCase));
 		}
 
 		[Theory]

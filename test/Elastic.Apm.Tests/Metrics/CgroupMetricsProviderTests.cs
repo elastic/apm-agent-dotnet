@@ -49,18 +49,18 @@ namespace Elastic.Apm.Tests.Metrics
 
 				samples.Should().HaveCountGreaterOrEqualTo(2);
 
-				var inactiveFileBytesSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryStatsInactiveFileBytes);
+				var inactiveFileBytesSample = samples.SingleOrDefault(s => s.Key == SystemProcessCgroupMemoryStatsInactiveFileBytes);
 				inactiveFileBytesSample.Should().NotBeNull();
 
-				var memUsageSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
+				var memUsageSample = samples.SingleOrDefault(s => s.Key == SystemProcessCgroupMemoryMemUsageBytes);
 				memUsageSample.Should().NotBeNull();
-				memUsageSample?.KeyValue.Value.Should().Be(value);
+				memUsageSample.Value.Should().Be(value);
 
 				if (memLimit.HasValue)
 				{
-					var memLimitSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
+					var memLimitSample = samples.SingleOrDefault(s => s.Key == SystemProcessCgroupMemoryMemLimitBytes);
 					memLimitSample.Should().NotBeNull();
-					memLimitSample?.KeyValue.Value.Should().Be(memLimit);
+					memLimitSample.Value.Should().Be(memLimit);
 				}
 			}
 		}
@@ -87,12 +87,12 @@ namespace Elastic.Apm.Tests.Metrics
 			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider("/proc/cgroup","/proc/unlimited/memory", "cgroup cgroup");
 			var samples = cgroupMetrics.GetSamples().ToList();
 
-			var memLimitSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
+			var memLimitSample = samples.SingleOrDefault(s => s.Key == SystemProcessCgroupMemoryMemLimitBytes);
 			memLimitSample.Should().BeNull();
 
-			var memUsageSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
+			var memUsageSample = samples.SingleOrDefault(s => s.Key == SystemProcessCgroupMemoryMemUsageBytes);
 			memUsageSample.Should().NotBeNull();
-			memUsageSample?.KeyValue.Value.Should().Be(964778496);
+			memUsageSample.Value.Should().Be(964778496);
 		}
 
 		[Fact]
@@ -101,12 +101,12 @@ namespace Elastic.Apm.Tests.Metrics
 			var cgroupMetrics = CreateUnlimitedSystemCgroupMetricsProvider("/proc/cgroup2","/proc/sys_cgroup2_unlimited", "cgroup2 cgroup");
 			var samples = cgroupMetrics.GetSamples().ToList();
 
-			var memLimitSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemLimitBytes);
+			var memLimitSample = samples.SingleOrDefault(s => s.Key == SystemProcessCgroupMemoryMemLimitBytes);
 			memLimitSample.Should().BeNull();
 
-			var memUsageSample = samples.SingleOrDefault(s => s.KeyValue.Key == SystemProcessCgroupMemoryMemUsageBytes);
+			var memUsageSample = samples.SingleOrDefault(s => s.Key == SystemProcessCgroupMemoryMemUsageBytes);
 			memUsageSample.Should().NotBeNull();
-			memUsageSample?.KeyValue.Value.Should().Be(964778496);
+			memUsageSample.Value.Should().Be(964778496);
 		}
 
 		/// <summary>

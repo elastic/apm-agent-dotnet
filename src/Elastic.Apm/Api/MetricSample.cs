@@ -10,13 +10,17 @@ namespace Elastic.Apm.Api
 	/// <summary>
 	/// A single metric sample.
 	/// </summary>
-	public class MetricSample
+	public readonly struct MetricSample
 	{
 		public MetricSample(string key, double value)
-			=> KeyValue = new KeyValuePair<string, double>(key, value);
+		{
+			Key = key;
+			Value = value;
+		}
 
-		internal KeyValuePair<string, double> KeyValue { get; }
+		internal string Key { get; }
+		internal double Value { get; }
 
-		public override string ToString() => new ToStringBuilder(nameof(MetricSample)) { { KeyValue.Key, KeyValue.Value } }.ToString();
+		public override string ToString() => new ToStringBuilder(nameof(MetricSample)) { { Key, Value } }.ToString();
 	}
 }

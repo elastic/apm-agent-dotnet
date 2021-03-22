@@ -421,8 +421,8 @@ namespace Elastic.Apm.Tests
 			var count = 0;
 			foreach (var sample in deserialized.Samples)
 			{
-				sample.KeyValue.Key.Should().Be(samples[count].KeyValue.Key.Replace("*", "_").Replace("\"", "_"));
-				sample.KeyValue.Value.Should().Be(samples[count].KeyValue.Value);
+				sample.Key.Should().Be(samples[count].Key.Replace("*", "_").Replace("\"", "_"));
+				sample.Value.Should().Be(samples[count].Value);
 				++count;
 			}
 		}

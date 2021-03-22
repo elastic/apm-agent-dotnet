@@ -72,8 +72,8 @@ namespace Elastic.Apm.Tests
 			var retVal = systemTotalCpuProvider.GetSamples();
 			var metricSamples = retVal as MetricSample[] ?? retVal.ToArray();
 
-			metricSamples.First().KeyValue.Value.Should().BeGreaterOrEqualTo(0);
-			metricSamples.First().KeyValue.Value.Should().BeLessOrEqualTo(1);
+			metricSamples.First().Value.Should().BeGreaterOrEqualTo(0);
+			metricSamples.First().Value.Should().BeLessOrEqualTo(1);
 		}
 
 		[Fact]
@@ -82,7 +82,7 @@ namespace Elastic.Apm.Tests
 			var processTotalCpuProvider = new ProcessTotalCpuTimeProvider(new NoopLogger());
 			Thread.Sleep(1000); //See https://github.com/elastic/apm-agent-dotnet/pull/264#issuecomment-499778288
 			var retVal = processTotalCpuProvider.GetSamples();
-			retVal.First().KeyValue.Value.Should().BeInRange(0, 1);
+			retVal.First().Value.Should().BeInRange(0, 1);
 		}
 
 		[Fact]
@@ -93,7 +93,7 @@ namespace Elastic.Apm.Tests
 
 			var enumerable = retVal as MetricSample[] ?? retVal.ToArray();
 			enumerable.Should().NotBeEmpty();
-			enumerable.First().KeyValue.Value.Should().BeGreaterThan(0);
+			enumerable.First().Value.Should().BeGreaterThan(0);
 		}
 
 		[Fact]
@@ -326,11 +326,11 @@ namespace Elastic.Apm.Tests
 
 					containsValue = samples != null && samples.Any();
 					hasGenSize = samples != null && samples
-						.Any(n => (n.KeyValue.Key.Contains("gen0size") || n.KeyValue.Key.Contains("gen1size")
-						|| n.KeyValue.Key.Contains("gen2size") || n.KeyValue.Key.Contains("gen3size"))
-						&& n.KeyValue.Value > 0);
+						.Any(n => (n.Key.Contains("gen0size") || n.Key.Contains("gen1size")
+						|| n.Key.Contains("gen2size") || n.Key.Contains("gen3size"))
+						&& n.Value > 0);
 					hasGcTime = samples != null && samples
-						.Any(n => n.KeyValue.Key.Contains("clr.gc.time") && n.KeyValue.Value > 0);
+						.Any(n => n.Key.Contains("clr.gc.time") && n.Value > 0);
 
 					if (containsValue && hasGenSize && hasGcTime)
 						break;

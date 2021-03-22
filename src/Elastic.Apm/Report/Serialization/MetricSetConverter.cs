@@ -23,14 +23,14 @@ namespace Elastic.Apm.Report.Serialization
 			var addedKeys = new HashSet<string>();
 			foreach (var item in value.Samples)
 			{
-				if (addedKeys.Add(item.KeyValue.Key))
+				if (addedKeys.Add(item.Key))
 				{
-					writer.WritePropertyName(item.KeyValue.Key
+					writer.WritePropertyName(item.Key
 						.Replace('*', '_')
 						.Replace('"', '_'));
 					writer.WriteStartObject();
 					writer.WritePropertyName("value");
-					writer.WriteValue(item.KeyValue.Value);
+					writer.WriteValue(item.Value);
 					writer.WriteEndObject();
 				}
 			}

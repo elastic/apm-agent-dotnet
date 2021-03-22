@@ -210,7 +210,7 @@ namespace Elastic.Apm.Metrics
 					_logger.Trace()?.Log("Start collecting {MetricsProviderName}", metricsProvider.DbgName);
 
 					var samplesFromProvider = metricsProvider.GetSamples()
-						?.Where(x => !double.IsNaN(x.KeyValue.Value) && !double.IsInfinity(x.KeyValue.Value))
+						?.Where(x => !double.IsNaN(x.Value) && !double.IsInfinity(x.Value))
 						.ToArray();
 
 					if (samplesFromProvider != null && samplesFromProvider.Length > 0)
