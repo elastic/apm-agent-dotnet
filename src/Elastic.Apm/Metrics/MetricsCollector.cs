@@ -168,7 +168,7 @@ namespace Elastic.Apm.Metrics
 				return;
 			}
 
-			var metricSet = new MetricSet(TimeUtils.TimestampNow(), samplesFromAllProviders);
+			var metricSet = new MetricSet(samplesFromAllProviders);
 
 			try
 			{

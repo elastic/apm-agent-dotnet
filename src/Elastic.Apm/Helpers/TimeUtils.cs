@@ -6,7 +6,7 @@ using System;
 
 namespace Elastic.Apm.Helpers
 {
-	public static class TimeUtils
+	internal static class TimeUtils
 	{
 		/// <summary>
 		/// DateTime.UnixEpoch Field does not exist in .NET Standard 2.0
@@ -14,7 +14,7 @@ namespace Elastic.Apm.Helpers
 		/// </summary>
 		internal static readonly DateTime UnixEpochDateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-		public static long TimestampNow() => ToTimestamp(DateTime.UtcNow);
+		internal static long TimestampNow() => ToTimestamp(DateTime.UtcNow);
 
 		/// <summary>
 		/// UTC based and formatted as microseconds since Unix epoch.

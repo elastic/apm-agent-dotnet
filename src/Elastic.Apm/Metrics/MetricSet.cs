@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Report.Serialization;
 using Newtonsoft.Json;
 
@@ -12,6 +13,9 @@ namespace Elastic.Apm.Metrics
 	[JsonConverter(typeof(MetricSetConverter))]
 	public class MetricSet : IMetricSet
 	{
+		public MetricSet(IEnumerable<MetricSample> samples)
+			: this(TimeUtils.TimestampNow(), samples)  { }
+
 		public MetricSet(long timestamp, IEnumerable<MetricSample> samples)
 			=> (Timestamp, Samples) = (timestamp, samples);
 
