@@ -243,13 +243,20 @@ namespace Elastic.Apm.AspNetCore
 		/// <returns>default if it's not a grpc call, otherwise the Grpc method name and result as a tuple </returns>
 		private static (string methodname, string result) CollectGrpcInfo()
 		{
-			var parentActivity = Activity.Current?.Parent;
+			// gRPC info is stored on the Activity with name `Microsoft.AspNetCore.Hosting.HttpRequestIn`.
+			// Therefore we follow parent activities as long as we reach this activity.
+			// Activity.Current can e.g. be the `ElasticApm.Transaction` Activity, so we need to go up the activity chain.
+			var httpRequestInActivity = Activity.Current;
+
+			while (httpRequestInActivity != null && httpRequestInActivity.OperationName != "Microsoft.AspNetCore.Hosting.HttpRequestIn")
+				httpRequestInActivity = httpRequestInActivity.Parent;
+
 			(string methodname, string result) grpcCallInfo = default;
 
-			if (parentActivity != null)
+			if (httpRequestInActivity != null)
 			{
-				var grpcMethodName = parentActivity.Tags.FirstOrDefault(n => n.Key == "grpc.method").Value;
-				var grpcStatusCode = parentActivity.Tags.FirstOrDefault(n => n.Key == "grpc.status_code").Value;
+				var grpcMethodName = httpRequestInActivity.Tags.FirstOrDefault(n => n.Key == "grpc.method").Value;
+				var grpcStatusCode = httpRequestInActivity.Tags.FirstOrDefault(n => n.Key == "grpc.status_code").Value;
 
 				if (!string.IsNullOrEmpty(grpcMethodName) && !string.IsNullOrEmpty(grpcStatusCode))
 					grpcCallInfo = (grpcMethodName, grpcStatusCode);
