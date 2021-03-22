@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 namespace Elastic.Apm.Metrics
 {
 	[JsonConverter(typeof(MetricSetConverter))]
-	internal class MetricSet : IMetricSet
+	public class MetricSet : IMetricSet
 	{
 		public MetricSet(long timestamp, IEnumerable<MetricSample> samples)
 			=> (Timestamp, Samples) = (timestamp, samples);
