@@ -51,6 +51,8 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities.LinqBridge;
 using System.Linq;
 #endif
 
+#nullable enable
+
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 {
 	/// <summary>
@@ -1489,7 +1491,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 
 			var specifiedPropertyGet = JsonTypeReflector.ReflectionDelegateFactory.CreateGet<object>(specifiedMember)!;
 
-			property.GetIsSpecified = o => (bool)specifiedPropertyGet(o);
+			property.GetIsSpecified = o => (bool)(specifiedPropertyGet(o) ?? false);
 
 			if (ReflectionUtils.CanSetMemberValue(specifiedMember, allowNonPublicAccess, false))
 				property.SetIsSpecified = JsonTypeReflector.ReflectionDelegateFactory.CreateSet<object>(specifiedMember);

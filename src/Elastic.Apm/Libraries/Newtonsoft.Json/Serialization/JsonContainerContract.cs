@@ -34,6 +34,7 @@ using System.Linq;
 
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 {
 	/// <summary>

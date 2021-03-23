@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Converters
 {
 	/// <summary>

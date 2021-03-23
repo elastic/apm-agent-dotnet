@@ -33,6 +33,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 {
 	internal class ExpressionReflectionDelegateFactory : ReflectionDelegateFactory

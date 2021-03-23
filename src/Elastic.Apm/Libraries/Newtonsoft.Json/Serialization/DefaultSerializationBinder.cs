@@ -32,6 +32,7 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 {
 	/// <summary>
@@ -185,11 +186,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 		/// <param name="serializedType">The type of the object the formatter creates a new instance of.</param>
 		/// <param name="assemblyName">Specifies the <see cref="Assembly" /> name of the serialized object.</param>
 		/// <param name="typeName">Specifies the <see cref="System.Type" /> name of the serialized object.</param>
-		public
-#if HAVE_SERIALIZATION_BINDER_BIND_TO_NAME
-        override
-#endif
-			void BindToName(Type serializedType, out string? assemblyName, out string? typeName)
+		public override void BindToName(Type serializedType, out string? assemblyName, out string? typeName)
 		{
 #if !HAVE_FULL_REFLECTION
 			assemblyName = serializedType.GetTypeInfo().Assembly.FullName;

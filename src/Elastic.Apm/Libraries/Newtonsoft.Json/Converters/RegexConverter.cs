@@ -32,6 +32,7 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Bson;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Converters
 {
 	/// <summary>
@@ -72,10 +73,10 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Converters
 		private void WriteBson(BsonWriter writer, Regex regex)
 		{
 			// Regular expression - The first cstring is the regex pattern, the second
-			// is the regex options string. Options are identified by characters, which 
-			// must be stored in alphabetical order. Valid options are 'i' for case 
-			// insensitive matching, 'm' for multiline matching, 'x' for verbose mode, 
-			// 'l' to make \w, \W, etc. locale dependent, 's' for dotall mode 
+			// is the regex options string. Options are identified by characters, which
+			// must be stored in alphabetical order. Valid options are 'i' for case
+			// insensitive matching, 'm' for multiline matching, 'x' for verbose mode,
+			// 'l' to make \w, \W, etc. locale dependent, 's' for dotall mode
 			// ('.' matches everything), and 'u' to make \w, \W, etc. match unicode.
 
 			string? options = null;

@@ -34,6 +34,7 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 {
 	internal abstract class ReflectionDelegateFactory

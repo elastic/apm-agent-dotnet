@@ -33,6 +33,7 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 using System.Numerics;
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json
 {
 	internal enum ReadType
@@ -2074,7 +2075,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
 #if HAVE_BIG_INTEGER
         // By using the BigInteger type in a separate method,
-        // the runtime can execute the ParseNumber even if 
+        // the runtime can execute the ParseNumber even if
         // the System.Numerics.BigInteger.Parse method is
         // missing, which happens in some versions of Mono
         [MethodImpl(MethodImplOptions.NoInlining)]

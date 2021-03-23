@@ -27,6 +27,7 @@
 
 using System.Collections.ObjectModel;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json
 {
 	/// <summary>

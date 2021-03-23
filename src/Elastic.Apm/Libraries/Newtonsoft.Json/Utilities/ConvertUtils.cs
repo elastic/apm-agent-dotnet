@@ -45,6 +45,7 @@ using System.Data.SqlTypes;
 
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 {
 	internal enum PrimitiveTypeCode
@@ -170,23 +171,23 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
         private static readonly TypeInformation[] PrimitiveTypeCodes =
         {
             // need all of these. lookup against the index with TypeCode value
-            new TypeInformation(typeof(object), PrimitiveTypeCode.Empty), 
-            new TypeInformation(typeof(object), PrimitiveTypeCode.Object), 
-            new TypeInformation(typeof(object), PrimitiveTypeCode.DBNull), 
-            new TypeInformation(typeof(bool), PrimitiveTypeCode.Boolean), 
-            new TypeInformation(typeof(char), PrimitiveTypeCode.Char), 
-            new TypeInformation(typeof(sbyte), PrimitiveTypeCode.SByte), 
-            new TypeInformation(typeof(byte), PrimitiveTypeCode.Byte), 
-            new TypeInformation(typeof(short), PrimitiveTypeCode.Int16), 
-            new TypeInformation(typeof(ushort), PrimitiveTypeCode.UInt16), 
-            new TypeInformation(typeof(int), PrimitiveTypeCode.Int32), 
-            new TypeInformation(typeof(uint), PrimitiveTypeCode.UInt32), 
-            new TypeInformation(typeof(long), PrimitiveTypeCode.Int64), 
-            new TypeInformation(typeof(ulong), PrimitiveTypeCode.UInt64), 
-            new TypeInformation(typeof(float), PrimitiveTypeCode.Single), 
-            new TypeInformation(typeof(double), PrimitiveTypeCode.Double), 
-            new TypeInformation(typeof(decimal), PrimitiveTypeCode.Decimal), 
-            new TypeInformation(typeof(DateTime), PrimitiveTypeCode.DateTime), 
+            new TypeInformation(typeof(object), PrimitiveTypeCode.Empty),
+            new TypeInformation(typeof(object), PrimitiveTypeCode.Object),
+            new TypeInformation(typeof(object), PrimitiveTypeCode.DBNull),
+            new TypeInformation(typeof(bool), PrimitiveTypeCode.Boolean),
+            new TypeInformation(typeof(char), PrimitiveTypeCode.Char),
+            new TypeInformation(typeof(sbyte), PrimitiveTypeCode.SByte),
+            new TypeInformation(typeof(byte), PrimitiveTypeCode.Byte),
+            new TypeInformation(typeof(short), PrimitiveTypeCode.Int16),
+            new TypeInformation(typeof(ushort), PrimitiveTypeCode.UInt16),
+            new TypeInformation(typeof(int), PrimitiveTypeCode.Int32),
+            new TypeInformation(typeof(uint), PrimitiveTypeCode.UInt32),
+            new TypeInformation(typeof(long), PrimitiveTypeCode.Int64),
+            new TypeInformation(typeof(ulong), PrimitiveTypeCode.UInt64),
+            new TypeInformation(typeof(float), PrimitiveTypeCode.Single),
+            new TypeInformation(typeof(double), PrimitiveTypeCode.Double),
+            new TypeInformation(typeof(decimal), PrimitiveTypeCode.Decimal),
+            new TypeInformation(typeof(DateTime), PrimitiveTypeCode.DateTime),
             new TypeInformation(typeof(object), PrimitiveTypeCode.Empty), // no 17 in TypeCode for some reason
             new TypeInformation(typeof(string), PrimitiveTypeCode.String)
         };
@@ -1269,7 +1270,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 
 						if (i == numDecimalStart)
 						{
-							// E follows decimal point		
+							// E follows decimal point
 							return ParseResult.Invalid;
 						}
 						i++;
@@ -1290,7 +1291,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 								break;
 						}
 
-						// parse 3 digit 
+						// parse 3 digit
 						for (; i < end; i++)
 						{
 							c = chars[i];

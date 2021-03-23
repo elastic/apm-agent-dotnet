@@ -29,6 +29,7 @@ using System;
 using System.Runtime.Serialization;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json
 {
 	/// <summary>

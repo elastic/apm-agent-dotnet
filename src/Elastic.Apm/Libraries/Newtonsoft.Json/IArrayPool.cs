@@ -1,4 +1,5 @@
-﻿namespace Elastic.Apm.Libraries.Newtonsoft.Json
+﻿#nullable enable
+namespace Elastic.Apm.Libraries.Newtonsoft.Json
 {
 	/// <summary>
 	/// Provides an interface for using pooled arrays.

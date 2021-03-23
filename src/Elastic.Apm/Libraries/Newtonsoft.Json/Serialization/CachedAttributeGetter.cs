@@ -28,6 +28,7 @@
 using System;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 {
 	internal static class CachedAttributeGetter<T> where T : Attribute

@@ -1,4 +1,5 @@
-﻿namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
+﻿#nullable enable
+namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 {
 	/// <summary>
 	/// Specifies the settings used when selecting JSON.

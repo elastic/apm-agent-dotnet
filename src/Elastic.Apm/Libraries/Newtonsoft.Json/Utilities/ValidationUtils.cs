@@ -28,6 +28,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 {
 	internal static class ValidationUtils

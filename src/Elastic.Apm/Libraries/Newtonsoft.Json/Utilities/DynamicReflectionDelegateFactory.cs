@@ -34,6 +34,7 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 #if !HAVE_LINQ
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 {
 	internal class DynamicReflectionDelegateFactory : ReflectionDelegateFactory

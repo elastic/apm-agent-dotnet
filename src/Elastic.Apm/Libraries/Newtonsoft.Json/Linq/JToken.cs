@@ -47,6 +47,7 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities.LinqBridge;
 using System.Linq;
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 {
 	/// <summary>
@@ -703,7 +704,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// </summary>
 		/// <param name="value">The value.</param>
 		/// <returns>The result of the conversion.</returns>
-		[CLSCompliant(false)]
+		
 		public static explicit operator ushort(JToken value)
 		{
 			var v = EnsureValue(value);
@@ -725,7 +726,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// </summary>
 		/// <param name="value">The value.</param>
 		/// <returns>The result of the conversion.</returns>
-		[CLSCompliant(false)]
+		
 		public static explicit operator char(JToken value)
 		{
 			var v = EnsureValue(value);
@@ -768,7 +769,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// </summary>
 		/// <param name="value">The value.</param>
 		/// <returns>The result of the conversion.</returns>
-		[CLSCompliant(false)]
+		
 		public static explicit operator sbyte(JToken value)
 		{
 			var v = EnsureValue(value);
@@ -836,7 +837,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// </summary>
 		/// <param name="value">The value.</param>
 		/// <returns>The result of the conversion.</returns>
-		[CLSCompliant(false)]
+		
 		public static explicit operator ushort?(JToken? value)
 		{
 			if (value == null) return null;
@@ -883,7 +884,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// </summary>
 		/// <param name="value">The value.</param>
 		/// <returns>The result of the conversion.</returns>
-		[CLSCompliant(false)]
+		
 		public static explicit operator sbyte?(JToken? value)
 		{
 			if (value == null) return null;
@@ -995,7 +996,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// </summary>
 		/// <param name="value">The value.</param>
 		/// <returns>The result of the conversion.</returns>
-		[CLSCompliant(false)]
+		
 		public static explicit operator uint?(JToken? value)
 		{
 			if (value == null) return null;
@@ -1019,7 +1020,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// </summary>
 		/// <param name="value">The value.</param>
 		/// <returns>The result of the conversion.</returns>
-		[CLSCompliant(false)]
+		
 		public static explicit operator ulong?(JToken? value)
 		{
 			if (value == null) return null;
@@ -1112,7 +1113,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// </summary>
 		/// <param name="value">The value.</param>
 		/// <returns>The result of the conversion.</returns>
-		[CLSCompliant(false)]
+		
 		public static explicit operator uint(JToken value)
 		{
 			var v = EnsureValue(value);
@@ -1134,7 +1135,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// </summary>
 		/// <param name="value">The value.</param>
 		/// <returns>The result of the conversion.</returns>
-		[CLSCompliant(false)]
+		
 		public static explicit operator ulong(JToken value)
 		{
 			var v = EnsureValue(value);
@@ -1334,7 +1335,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// </summary>
 		/// <param name="value">The value to create a <see cref="JValue" /> from.</param>
 		/// <returns>The <see cref="JValue" /> initialized with the specified value.</returns>
-		[CLSCompliant(false)]
+		
 		public static implicit operator JToken(sbyte value) => new JValue(value);
 
 		/// <summary>
@@ -1342,7 +1343,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// </summary>
 		/// <param name="value">The value to create a <see cref="JValue" /> from.</param>
 		/// <returns>The <see cref="JValue" /> initialized with the specified value.</returns>
-		[CLSCompliant(false)]
+		
 		public static implicit operator JToken(sbyte? value) => new JValue(value);
 
 		/// <summary>
@@ -1397,7 +1398,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// </summary>
 		/// <param name="value">The value to create a <see cref="JValue" /> from.</param>
 		/// <returns>The <see cref="JValue" /> initialized with the specified value.</returns>
-		[CLSCompliant(false)]
+		
 		public static implicit operator JToken(short value) => new JValue(value);
 
 		/// <summary>
@@ -1405,7 +1406,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// </summary>
 		/// <param name="value">The value to create a <see cref="JValue" /> from.</param>
 		/// <returns>The <see cref="JValue" /> initialized with the specified value.</returns>
-		[CLSCompliant(false)]
+		
 		public static implicit operator JToken(ushort value) => new JValue(value);
 
 		/// <summary>
@@ -1455,7 +1456,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// </summary>
 		/// <param name="value">The value to create a <see cref="JValue" /> from.</param>
 		/// <returns>The <see cref="JValue" /> initialized with the specified value.</returns>
-		[CLSCompliant(false)]
+		
 		public static implicit operator JToken(short? value) => new JValue(value);
 
 		/// <summary>
@@ -1463,7 +1464,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// </summary>
 		/// <param name="value">The value to create a <see cref="JValue" /> from.</param>
 		/// <returns>The <see cref="JValue" /> initialized with the specified value.</returns>
-		[CLSCompliant(false)]
+		
 		public static implicit operator JToken(ushort? value) => new JValue(value);
 
 		/// <summary>
@@ -1471,7 +1472,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// </summary>
 		/// <param name="value">The value to create a <see cref="JValue" /> from.</param>
 		/// <returns>The <see cref="JValue" /> initialized with the specified value.</returns>
-		[CLSCompliant(false)]
+		
 		public static implicit operator JToken(uint? value) => new JValue(value);
 
 		/// <summary>
@@ -1479,7 +1480,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// </summary>
 		/// <param name="value">The value to create a <see cref="JValue" /> from.</param>
 		/// <returns>The <see cref="JValue" /> initialized with the specified value.</returns>
-		[CLSCompliant(false)]
+		
 		public static implicit operator JToken(ulong? value) => new JValue(value);
 
 		/// <summary>
@@ -1508,7 +1509,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// </summary>
 		/// <param name="value">The value to create a <see cref="JValue" /> from.</param>
 		/// <returns>The <see cref="JValue" /> initialized with the specified value.</returns>
-		[CLSCompliant(false)]
+		
 		public static implicit operator JToken(uint value) => new JValue(value);
 
 		/// <summary>
@@ -1516,7 +1517,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// </summary>
 		/// <param name="value">The value to create a <see cref="JValue" /> from.</param>
 		/// <returns>The <see cref="JValue" /> initialized with the specified value.</returns>
-		[CLSCompliant(false)]
+		
 		public static implicit operator JToken(ulong value) => new JValue(value);
 
 		/// <summary>

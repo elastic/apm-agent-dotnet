@@ -28,6 +28,7 @@
 using System;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 {
 	/// <summary>

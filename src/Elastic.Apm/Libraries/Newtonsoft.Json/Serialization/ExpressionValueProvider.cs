@@ -34,6 +34,7 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 #if !HAVE_LINQ
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 {
 	/// <summary>

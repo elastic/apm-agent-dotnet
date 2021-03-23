@@ -35,6 +35,7 @@ using System.Diagnostics;
 using System.Data.SqlTypes;
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Converters
 {
     /// <summary>

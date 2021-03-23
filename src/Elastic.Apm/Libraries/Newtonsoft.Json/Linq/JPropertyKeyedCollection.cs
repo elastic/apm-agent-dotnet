@@ -31,6 +31,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 {
 	internal class JPropertyKeyedCollection : Collection<JToken>

@@ -28,6 +28,7 @@
 using System;
 using System.ComponentModel;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json
 {
 	/// <summary>

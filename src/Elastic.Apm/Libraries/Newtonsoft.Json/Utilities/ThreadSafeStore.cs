@@ -34,6 +34,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 {
 	internal class ThreadSafeStore<TKey, TValue>

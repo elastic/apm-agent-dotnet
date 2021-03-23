@@ -1,4 +1,5 @@
-﻿namespace Elastic.Apm.Libraries.Newtonsoft.Json
+﻿#nullable enable
+namespace Elastic.Apm.Libraries.Newtonsoft.Json
 {
 	/// <summary>
 	/// Base class for a table of atomized string objects.

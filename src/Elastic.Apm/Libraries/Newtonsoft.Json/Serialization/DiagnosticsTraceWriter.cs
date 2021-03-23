@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using DiagnosticsTrace = System.Diagnostics.Trace;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 {
     /// <summary>

@@ -38,6 +38,7 @@ using System.Linq;
 
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 {
 	internal class ReflectionMember

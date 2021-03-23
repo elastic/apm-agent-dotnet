@@ -31,6 +31,7 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 {
 	/// <summary>

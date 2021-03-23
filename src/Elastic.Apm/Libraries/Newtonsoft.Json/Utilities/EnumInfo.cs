@@ -25,6 +25,7 @@
 
 #endregion
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 {
 	internal class EnumInfo

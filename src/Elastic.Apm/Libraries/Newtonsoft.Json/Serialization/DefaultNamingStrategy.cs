@@ -1,4 +1,5 @@
-﻿namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
+﻿#nullable enable
+namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 {
 	/// <summary>
 	/// The default naming strategy. Property names and dictionary keys are unchanged.

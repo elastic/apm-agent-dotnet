@@ -30,6 +30,7 @@ using System.Globalization;
 using System.IO;
 using System.Xml;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 {
 	internal static class DateTimeUtils
@@ -51,14 +52,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 			DaysToMonth366 = new[] { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
 		}
 
-		public static TimeSpan GetUtcOffset(this DateTime d)
-		{
-#if !HAVE_TIME_ZONE_INFO
-			return TimeZone.CurrentTimeZone.GetUtcOffset(d);
-#else
-            return TimeZoneInfo.Local.GetUtcOffset(d);
-#endif
-		}
+		public static TimeSpan GetUtcOffset(this DateTime d) => TimeZoneInfo.Local.GetUtcOffset(d);
 
 #if !(PORTABLE40 || PORTABLE) || NETSTANDARD1_3
 		public static XmlDateTimeSerializationMode ToSerializationMode(DateTimeKind kind)

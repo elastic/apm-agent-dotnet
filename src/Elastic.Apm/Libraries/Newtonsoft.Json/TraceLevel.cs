@@ -1,6 +1,7 @@
 ﻿#if !HAVE_TRACE_WRITER
 using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json
 {
 	/// <summary>

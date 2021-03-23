@@ -34,6 +34,7 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 using System.Numerics;
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json
 {
 	/// <summary>

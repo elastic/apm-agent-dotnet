@@ -40,6 +40,7 @@ using System.Numerics;
 using System.Xml.Linq;
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json
 {
 	/// <summary>
@@ -192,7 +193,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 		/// </summary>
 		/// <param name="value">The value to convert.</param>
 		/// <returns>A JSON string representation of the <see cref="UInt16" />.</returns>
-		[CLSCompliant(false)]
+		
 		public static string ToString(ushort value) => value.ToString(null, CultureInfo.InvariantCulture);
 
 		/// <summary>
@@ -200,7 +201,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 		/// </summary>
 		/// <param name="value">The value to convert.</param>
 		/// <returns>A JSON string representation of the <see cref="UInt32" />.</returns>
-		[CLSCompliant(false)]
+		
 		public static string ToString(uint value) => value.ToString(null, CultureInfo.InvariantCulture);
 
 		/// <summary>
@@ -222,7 +223,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 		/// </summary>
 		/// <param name="value">The value to convert.</param>
 		/// <returns>A JSON string representation of the <see cref="UInt64" />.</returns>
-		[CLSCompliant(false)]
+		
 		public static string ToString(ulong value) => value.ToString(null, CultureInfo.InvariantCulture);
 
 		/// <summary>
@@ -281,7 +282,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 		/// </summary>
 		/// <param name="value">The value to convert.</param>
 		/// <returns>A JSON string representation of the <see cref="SByte" />.</returns>
-		[CLSCompliant(false)]
+		
 		public static string ToString(sbyte value) => value.ToString(null, CultureInfo.InvariantCulture);
 
 		/// <summary>

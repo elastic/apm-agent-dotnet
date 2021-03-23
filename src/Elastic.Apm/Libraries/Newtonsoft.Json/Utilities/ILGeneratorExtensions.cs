@@ -30,6 +30,7 @@ using System;
 using System.Reflection;
 using System.Reflection.Emit;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 {
 	internal static class ILGeneratorExtensions

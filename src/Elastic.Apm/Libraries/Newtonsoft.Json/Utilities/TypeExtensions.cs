@@ -36,6 +36,7 @@ using System.Reflection;
 using System.Linq;
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 {
 	internal static class TypeExtensions
@@ -277,7 +278,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
         }
 
 #if !DOTNET
-        
+
         public static MethodInfo GetMethod(this Type type, string name)
         {
             return type.GetMethod(name, DefaultFlags);
@@ -312,7 +313,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
         {
             return type.GetTypeInfo().DeclaredConstructors.Where(c => TestAccessibility(c, bindingFlags));
         }
-        
+
         public static ConstructorInfo GetConstructor(this Type type, IList<Type> parameterTypes)
         {
             return type.GetConstructor(DefaultFlags, null, parameterTypes, null);
@@ -322,7 +323,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
         {
             return MethodBinder.SelectMethod(type.GetConstructors(bindingFlags), parameterTypes);
         }
-        
+
         public static MemberInfo[] GetMember(this Type type, string member)
         {
             return type.GetMemberInternal(member, null, DefaultFlags);
@@ -354,7 +355,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
             {
                 return null;
             }
-            
+
             return field;
         }
 
@@ -454,7 +455,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
             {
                 return null;
             }
-            
+
             return property;
         }
 

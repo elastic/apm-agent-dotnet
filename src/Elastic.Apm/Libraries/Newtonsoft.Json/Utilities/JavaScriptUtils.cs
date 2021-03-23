@@ -40,6 +40,7 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities.LinqBridge;
 using System.Linq;
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 {
 	internal static class BufferUtils
@@ -341,7 +342,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
             }
 
             return WriteCharAsync(task, writer, delimiter, cancellationToken);
-            
+
         }
 
         private static async Task WriteEscapedJavaScriptStringWithDelimitersAsync(Task task, TextWriter writer, string s, char delimiter,

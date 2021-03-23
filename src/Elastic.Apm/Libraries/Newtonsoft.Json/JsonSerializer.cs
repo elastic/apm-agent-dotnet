@@ -37,6 +37,7 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 using ErrorEventArgs = Elastic.Apm.Libraries.Newtonsoft.Json.Serialization.ErrorEventArgs;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json
 {
 	/// <summary>

@@ -38,6 +38,7 @@ using System.Linq.Expressions;
 using System.Numerics;
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 {
 	/// <summary>
@@ -90,7 +91,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// Initializes a new instance of the <see cref="JValue" /> class with the given value.
 		/// </summary>
 		/// <param name="value">The value.</param>
-		[CLSCompliant(false)]
+		
 		public JValue(ulong value)
 			: this(value, JTokenType.Integer) { }
 

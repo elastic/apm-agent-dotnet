@@ -1,3 +1,4 @@
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 {
 	/// <summary>

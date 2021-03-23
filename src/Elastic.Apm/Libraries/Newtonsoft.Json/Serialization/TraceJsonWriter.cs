@@ -33,6 +33,7 @@ using System.IO;
 using System.Numerics;
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 {
 	internal class TraceJsonWriter : JsonWriter

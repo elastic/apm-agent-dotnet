@@ -31,6 +31,7 @@ using System.Globalization;
 using System.Text;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq.JsonPath
 {
 	internal class JPath

@@ -39,6 +39,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 {
 	internal static class CollectionUtils

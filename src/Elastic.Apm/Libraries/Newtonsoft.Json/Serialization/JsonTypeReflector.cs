@@ -38,6 +38,7 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities.LinqBridge;
 using System.Linq;
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 {
 	internal static class JsonTypeReflector

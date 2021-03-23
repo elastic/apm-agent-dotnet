@@ -29,6 +29,7 @@ using System;
 using System.Globalization;
 using System.IO;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 {
 	internal class TraceJsonReader : JsonReader, IJsonLineInfo

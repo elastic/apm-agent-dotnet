@@ -34,6 +34,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json
 {
 	/// <summary>

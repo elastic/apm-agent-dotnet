@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq.JsonPath
 {
 	internal class ScanFilter : PathFilter

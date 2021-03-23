@@ -31,6 +31,7 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 using System.Numerics;
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 {
 	/// <summary>
@@ -276,7 +277,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// Writes a <see cref="uint" /> value.
 		/// </summary>
 		/// <param name="value">The <see cref="uint" /> value to write.</param>
-		[CLSCompliant(false)]
+		
 		public override void WriteValue(uint value)
 		{
 			base.WriteValue(value);
@@ -297,7 +298,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// Writes a <see cref="ulong" /> value.
 		/// </summary>
 		/// <param name="value">The <see cref="ulong" /> value to write.</param>
-		[CLSCompliant(false)]
+		
 		public override void WriteValue(ulong value)
 		{
 			base.WriteValue(value);
@@ -348,7 +349,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// Writes a <see cref="ushort" /> value.
 		/// </summary>
 		/// <param name="value">The <see cref="ushort" /> value to write.</param>
-		[CLSCompliant(false)]
+		
 		public override void WriteValue(ushort value)
 		{
 			base.WriteValue(value);
@@ -385,7 +386,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// Writes a <see cref="sbyte" /> value.
 		/// </summary>
 		/// <param name="value">The <see cref="sbyte" /> value to write.</param>
-		[CLSCompliant(false)]
+		
 		public override void WriteValue(sbyte value)
 		{
 			base.WriteValue(value);

@@ -32,6 +32,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 {
 	internal class JsonSerializerProxy : JsonSerializer

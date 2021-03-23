@@ -10,20 +10,20 @@
 //
 //      Atif Aziz, http://www.raboof.com
 //
-// This library is free software; you can redistribute it and/or modify it 
-// under the terms of the New BSD License, a copy of which should have 
+// This library is free software; you can redistribute it and/or modify it
+// under the terms of the New BSD License, a copy of which should have
 // been delivered along with this distribution.
 //
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
-// PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+// PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
@@ -1520,7 +1520,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities.LinqBridge
 				flags[item] = flag;
 
 			//
-			// As per docs, "the marked elements are yielded in the order in 
+			// As per docs, "the marked elements are yielded in the order in
 			// which they were collected.
 			//
 
@@ -1625,8 +1625,8 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities.LinqBridge
 			foreach (var item in source)
 				//
 				// ToDictionary is meant to throw ArgumentNullException if
-				// keySelector produces a key that is null and 
-				// Argument exception if keySelector produces duplicate keys 
+				// keySelector produces a key that is null and
+				// Argument exception if keySelector produces duplicate keys
 				// for two elements. Incidentally, the documentation for
 				// IDictionary<TKey, TValue>.Add says that the Add method
 				// throws the same exceptions under the same circumstances
@@ -2777,11 +2777,11 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities.LinqBridge
 		public IEnumerator<T> GetEnumerator()
 		{
 			//
-			// We sort using List<T>.Sort, but docs say that it performs an 
-			// unstable sort. LINQ, on the other hand, says OrderBy performs 
-			// a stable sort. So convert the source sequence into a sequence 
-			// of tuples where the second element tags the position of the 
-			// element from the source sequence (First). The position is 
+			// We sort using List<T>.Sort, but docs say that it performs an
+			// unstable sort. LINQ, on the other hand, says OrderBy performs
+			// a stable sort. So convert the source sequence into a sequence
+			// of tuples where the second element tags the position of the
+			// element from the source sequence (First). The position is
 			// then used as a tie breaker when all keys compare equal,
 			// thus making the sort stable.
 			//

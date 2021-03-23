@@ -43,6 +43,7 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities.LinqBridge;
 using System.Linq;
 #endif
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 {
 #if (DOTNET || PORTABLE || PORTABLE40) && !NETSTANDARD2_0

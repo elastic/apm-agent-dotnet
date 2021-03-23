@@ -27,6 +27,7 @@
 
 using System;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 {
 	internal static class MathUtils

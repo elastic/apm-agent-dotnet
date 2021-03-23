@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 {
 	/// <summary>
