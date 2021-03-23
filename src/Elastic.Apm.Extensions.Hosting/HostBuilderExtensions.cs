@@ -1,13 +1,15 @@
 using System;
 using System.Linq;
-using System.Reflection;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Extensions.Hosting.Config;
+using Elastic.Apm.Extensions.Logging;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Report;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Elastic.Apm.Extensions.Hosting
 {
@@ -47,7 +49,9 @@ namespace Elastic.Apm.Extensions.Hosting
 					var logger = sp.GetService<IApmLogger>();
 					var configReader = sp.GetService<IConfigurationReader>();
 
-					var components = new AgentComponents(logger, configReader);
+					var payloadSender = sp.GetService<IPayloadSender>();
+
+					var components = new AgentComponents(logger, configReader, payloadSender);
 					UpdateServiceInformation(components.Service);
 					return components;
 				});
@@ -55,18 +59,24 @@ namespace Elastic.Apm.Extensions.Hosting
 				services.AddSingleton<IApmAgent, ApmAgent>(sp =>
 				{
 					if (Agent.IsConfigured) return Agent.Instance;
+
 					Agent.Setup(sp.GetService<AgentComponents>());
 					return Agent.Instance;
 				});
 
 				services.AddSingleton(sp => sp.GetRequiredService<IApmAgent>().Tracer);
 
+				// Force to create agent
 				var serviceProvider = services.BuildServiceProvider();
 				var agent = serviceProvider.GetService<IApmAgent>();
 
 				if (!(agent is ApmAgent apmAgent)) return;
 
 				if (!Agent.IsConfigured || !apmAgent.ConfigurationReader.Enabled) return;
+
+				// Only add ElasticApmErrorLoggingProvider after the agent is created, because it depends on the agent
+				services.AddSingleton<ILoggerProvider, ApmErrorLoggingProvider>(sp =>
+					new ApmErrorLoggingProvider(sp.GetService<IApmAgent>()));
 
 				if (subscribers != null && subscribers.Any() && Agent.IsConfigured)
 					apmAgent.Subscribe(subscribers);

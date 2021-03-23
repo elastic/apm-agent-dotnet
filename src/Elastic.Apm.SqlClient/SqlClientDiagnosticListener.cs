@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -7,36 +8,31 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using Elastic.Apm.Api;
-using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 
 namespace Elastic.Apm.SqlClient
 {
-	internal class SqlClientDiagnosticListener : IDiagnosticListener
+	internal class SqlClientDiagnosticListener : DiagnosticListenerBase
 	{
-		private readonly ApmAgent _apmAgent;
-		private readonly IApmLogger _logger;
+		private ApmAgent _agent;
 		private readonly PropertyFetcherSet _microsoftPropertyFetcherSet = new PropertyFetcherSet();
 
 		private readonly ConcurrentDictionary<Guid, ISpan> _spans = new ConcurrentDictionary<Guid, ISpan>();
 
 		private readonly PropertyFetcherSet _systemPropertyFetcherSet = new PropertyFetcherSet();
 
-		public SqlClientDiagnosticListener(IApmAgent apmAgent)
-		{
-			_apmAgent = (ApmAgent)apmAgent;
-			_logger = _apmAgent.Logger.Scoped(nameof(SqlClientDiagnosticListener));
-		}
+		public SqlClientDiagnosticListener(IApmAgent apmAgent) : base(apmAgent) => _agent = apmAgent as ApmAgent;
 
-		public string Name => "SqlClientDiagnosticListener";
+		public override string Name => "SqlClientDiagnosticListener";
 
 		// prefix - Microsoft.Data.SqlClient. or System.Data.SqlClient.
-		public void OnNext(KeyValuePair<string, object> value)
+		protected override void HandleOnNext(KeyValuePair<string, object> value)
 		{
 			// check for competing instrumentation
-			if (_apmAgent.TracerInternal.CurrentSpan is Span span)
+			if (ApmAgent.Tracer.CurrentSpan is Span span)
 			{
 				if (span.InstrumentationFlag == InstrumentationFlag.EfCore || span.InstrumentationFlag == InstrumentationFlag.EfClassic)
 					return;
@@ -46,7 +42,7 @@ namespace Elastic.Apm.SqlClient
 
 			switch (value.Key)
 			{
-				case { } s when s.EndsWith("WriteCommandBefore") && _apmAgent.Tracer.CurrentTransaction != null:
+				case { } s when s.EndsWith("WriteCommandBefore") && ApmAgent.Tracer.CurrentTransaction != null:
 					HandleStartCommand(value.Value, value.Key.StartsWith("System") ? _systemPropertyFetcherSet : _microsoftPropertyFetcherSet);
 					break;
 				case { } s when s.EndsWith("WriteCommandAfter"):
@@ -65,7 +61,7 @@ namespace Elastic.Apm.SqlClient
 				if (propertyFetcherSet.StartCorrelationId.Fetch(payloadData) is Guid operationId
 					&& propertyFetcherSet.StartCommand.Fetch(payloadData) is IDbCommand dbCommand)
 				{
-					var span = _apmAgent.TracerInternal.DbSpanCommon.StartSpan(_apmAgent, dbCommand, InstrumentationFlag.SqlClient,
+					var span = _agent?.TracerInternal.DbSpanCommon.StartSpan(ApmAgent, dbCommand, InstrumentationFlag.SqlClient,
 						ApiConstants.SubtypeMssql);
 					_spans.TryAdd(operationId, span);
 				}
@@ -73,7 +69,7 @@ namespace Elastic.Apm.SqlClient
 			catch (Exception ex)
 			{
 				//ignore
-				_logger.Error()?.LogException(ex, "Exception was thrown while handling 'command started event'");
+				Logger.Error()?.LogException(ex, "Exception was thrown while handling 'command started event'");
 			}
 		}
 
@@ -92,13 +88,13 @@ namespace Elastic.Apm.SqlClient
 						statistics.ContainsKey("ExecutionTime") && statistics["ExecutionTime"] is long durationInMs && durationInMs > 0)
 						duration = TimeSpan.FromMilliseconds(durationInMs);
 
-					_apmAgent.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand, Outcome.Success, duration);
+					_agent?.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand, Outcome.Success, duration);
 				}
 			}
 			catch (Exception ex)
 			{
 				// ignore
-				_logger.Error()?.LogException(ex, "Exception was thrown while handling 'command succeeded event'");
+				Logger.Error()?.LogException(ex, "Exception was thrown while handling 'command succeeded event'");
 			}
 		}
 
@@ -113,10 +109,10 @@ namespace Elastic.Apm.SqlClient
 					if (propertyFetcherSet.Exception.Fetch(payloadData) is Exception exception) span.CaptureException(exception);
 
 					if (propertyFetcherSet.ErrorCommand.Fetch(payloadData) is IDbCommand dbCommand)
-						_apmAgent.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand, Outcome.Failure);
+						_agent?.TracerInternal.DbSpanCommon.EndSpan(span, dbCommand, Outcome.Failure);
 					else
 					{
-						_logger.Warning()?.Log("Cannot extract database command from {PayloadData}", payloadData);
+						Logger.Warning()?.Log("Cannot extract database command from {PayloadData}", payloadData);
 						span.Outcome = Outcome.Failure;
 						span.End();
 					}
@@ -125,18 +121,8 @@ namespace Elastic.Apm.SqlClient
 			catch (Exception ex)
 			{
 				// ignore
-				_logger.Error()?.LogException(ex, "Exception was thrown while handling 'command failed event'");
+				Logger.Error()?.LogException(ex, "Exception was thrown while handling 'command failed event'");
 			}
-		}
-
-		public void OnError(Exception error)
-		{
-			// do nothing because it's not necessary to handle such event from provider
-		}
-
-		public void OnCompleted()
-		{
-			// do nothing because it's not necessary to handle such event from provider
 		}
 
 		private class PropertyFetcherSet

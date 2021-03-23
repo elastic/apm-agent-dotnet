@@ -5,11 +5,14 @@
 using System.Diagnostics;
 using System.Threading;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.XUnit;
 using FluentAssertions;
 using Xunit;
 
 namespace Elastic.Apm.Tests
 {
+	[Collection("ActivityIdFormat")]
+	[CaptureRestoreActivityIdFormat]
 	public class ActivityIntegrationTests
 	{
 		/// <summary>

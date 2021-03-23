@@ -198,6 +198,13 @@ namespace Elastic.Apm.Config
 		string SecretToken { get; }
 
 		/// <summary>
+		/// The path to the PEM-encoded certificate used by APM server. This can be used when using a certificate
+		/// signed by a Certificate Authority (CA) that is not in the trust store, such as a self-signed certificate,
+		/// to perform validation through certificate pinning.
+		/// </summary>
+		string ServerCert { get; }
+
+		/// <summary>
 		/// The URLs for APM server.
 		/// </summary>
 		[Obsolete("Use ServerUrl")]

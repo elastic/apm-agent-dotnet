@@ -1,8 +1,10 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,10 +19,10 @@ namespace Elastic.Apm.Api
 {
 	internal class Tracer : ITracer
 	{
+		private readonly IApmServerInfo _apmServerInfo;
 		private readonly IConfigSnapshotProvider _configProvider;
 		private readonly ScopedLogger _logger;
 		private readonly IPayloadSender _sender;
-		private readonly IApmServerInfo _apmServerInfo;
 		private readonly Service _service;
 
 		public Tracer(
@@ -206,5 +208,74 @@ namespace Elastic.Apm.Api
 
 			transaction.End();
 		}, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+
+		public void CaptureError(string message, string culprit, StackFrame[] frames = null, string parentId = null,
+			Dictionary<string, Label> labels = null
+		)
+		{
+			var currentTransaction = CurrentExecutionSegmentsContainer.CurrentTransaction;
+
+			IExecutionSegment currentExecutionSegment = CurrentExecutionSegmentsContainer.CurrentSpan;
+			currentExecutionSegment ??= currentTransaction;
+
+			ExecutionSegmentCommon.CaptureError(
+				message,
+				culprit,
+				frames,
+				_sender,
+				_logger,
+				currentExecutionSegment,
+				_configProvider.CurrentSnapshot,
+				currentTransaction as Transaction,
+				_apmServerInfo,
+				parentId,
+				labels
+			);
+		}
+
+		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null,
+			Dictionary<string, Label> labels = default
+		)
+		{
+			var currentTransaction = CurrentExecutionSegmentsContainer.CurrentTransaction;
+
+			IExecutionSegment currentExecutionSegment = CurrentExecutionSegmentsContainer.CurrentSpan;
+			currentExecutionSegment ??= currentTransaction;
+
+			ExecutionSegmentCommon.CaptureException(
+				exception,
+				_logger,
+				_sender,
+				currentExecutionSegment,
+				_configProvider.CurrentSnapshot,
+				currentTransaction as Transaction,
+				_apmServerInfo,
+				culprit,
+				isHandled,
+				parentId,
+				labels
+			);
+		}
+
+		public void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null)
+		{
+			var currentTransaction = CurrentExecutionSegmentsContainer.CurrentTransaction;
+
+			IExecutionSegment currentExecutionSegment = CurrentExecutionSegmentsContainer.CurrentSpan;
+			currentExecutionSegment ??= currentTransaction;
+
+			ExecutionSegmentCommon.CaptureErrorLog(
+				errorLog,
+				_sender,
+				_logger,
+				currentExecutionSegment,
+				_configProvider.CurrentSnapshot,
+				currentTransaction as Transaction,
+				null, //we don't pass specific parent id - it's either the current execution segments id, or null
+				_apmServerInfo,
+				exception,
+				labels
+			);
+		}
 	}
 }

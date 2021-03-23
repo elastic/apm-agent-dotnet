@@ -22,7 +22,7 @@ namespace Elastic.Apm.Tests
 		public void Compose()
 		{
 			//build AgentComponents manually so we can disable metrics collection. reason: creating metrics collector pro test and disposing it makes test failing (ETW or EventSource subscribe unsubscribe in each test in parallel if all tests are running)
-			var agent = new ApmAgent(new AgentComponents(null, new LogConfig(LogLevel.Warning), null, null,
+			using var agent = new ApmAgent(new AgentComponents(null, new LogConfig(LogLevel.Warning), null, null,
 				null, null, null));
 			var logger = agent.Logger as ConsoleLogger;
 
@@ -57,6 +57,7 @@ namespace Elastic.Apm.Tests
 			public int MaxQueueEventCount => ConfigConsts.DefaultValues.MaxQueueEventCount;
 			public double MetricsIntervalInMilliseconds => ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds;
 			public string SecretToken { get; }
+			public string ServerCert { get; }
 			public string ApiKey { get; }
 			public IReadOnlyList<Uri> ServerUrls => new List<Uri> { ConfigConsts.DefaultValues.ServerUri };
 			public Uri ServerUrl => ConfigConsts.DefaultValues.ServerUri;

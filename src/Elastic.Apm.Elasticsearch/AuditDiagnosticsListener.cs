@@ -1,3 +1,8 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
 using Elastic.Apm.Logging;
 using Elasticsearch.Net;
 using Elasticsearch.Net.Diagnostics;
@@ -6,8 +11,10 @@ namespace Elastic.Apm.Elasticsearch
 {
 	public class AuditDiagnosticsListener : ElasticsearchDiagnosticsListenerBase
 	{
-		public AuditDiagnosticsListener(IApmAgent agent) : base(agent, DiagnosticSources.AuditTrailEvents.SourceName) =>
+		public AuditDiagnosticsListener(IApmAgent agent) : base(agent) =>
 			Observer = new AuditDiagnosticObserver(a => OnAudit(a.Key, a.Value));
+
+		public override string Name => DiagnosticSources.AuditTrailEvents.SourceName;
 
 		private void OnAudit(string @event, Audit audit)
 		{
@@ -21,6 +28,5 @@ namespace Elastic.Apm.Elasticsearch
 				span.End();
 			}
 		}
-
 	}
 }

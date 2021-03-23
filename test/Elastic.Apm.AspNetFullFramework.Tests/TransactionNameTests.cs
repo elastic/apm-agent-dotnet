@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using AspNetFullFrameworkSampleApp.Controllers;
 using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -115,6 +116,20 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 				receivedData.Transactions.Count.Should().Be(1);
 				var transaction = receivedData.Transactions.Single();
 				transaction.Name.Should().Be("GET WebApi");
+			});
+		}
+
+		[AspNetFullFrameworkFact]
+		public async Task Name_Should_Be_RouteTemplate_When_WebApi_Attribute_Routing()
+		{
+			var pathData = SampleAppUrlPaths.AttributeRoutingWebApiPage("foo");
+			await SendGetRequestToSampleAppAndVerifyResponse(pathData.Uri, pathData.StatusCode);
+
+			await WaitAndCustomVerifyReceivedData(receivedData =>
+			{
+				receivedData.Transactions.Count.Should().Be(1);
+				var transaction = receivedData.Transactions.Single();
+				transaction.Name.Should().Be($"GET {AttributeRoutingWebApiController.RoutePrefix}/{AttributeRoutingWebApiController.Route}");
 			});
 		}
 

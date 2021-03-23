@@ -151,7 +151,23 @@ namespace Elastic.Apm.Model
 		/// This field can be used for calculating error rates for outgoing requests.
 		/// </summary>
 		[JsonConverter(typeof(StringEnumConverter))]
-		public Outcome Outcome { get; set; }
+		public Outcome Outcome
+		{
+			get => _outcome; set
+			{
+				_outcomeChangedThroughApi = true;
+				_outcome = value;
+			}
+		}
+
+		/// <summary>
+		/// In general if there is an error on the span, the outcome will be <see cref="Outcome.Failure"/>, otherwise it'll be <see cref="Outcome.Success"/>.
+		/// There are some exceptions to this (see spec: https://github.com/elastic/apm/blob/master/specs/agents/tracing-spans.md#span-outcome) when it can be <see cref="Outcome.Unknown"/>.
+		/// Use <see cref="_outcomeChangedThroughApi"/> to check if it was specifically set to <see cref="Outcome.Unknown"/>, or if it's just the default value.
+		/// </summary>
+		internal Outcome _outcome;
+
+		private bool _outcomeChangedThroughApi;
 
 		[JsonIgnore]
 		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(
@@ -257,9 +273,11 @@ namespace Elastic.Apm.Model
 				_apmServerInfo, this,
 				instrumentationFlag, captureStackTraceOnStart);
 
-			if (!string.IsNullOrEmpty(subType)) retVal.Subtype = subType;
+			if (!string.IsNullOrEmpty(subType))
+				retVal.Subtype = subType;
 
-			if (!string.IsNullOrEmpty(action)) retVal.Action = action;
+			if (!string.IsNullOrEmpty(action))
+				retVal.Action = action;
 
 			_logger.Trace()?.Log("Starting {SpanDetails}", retVal.ToString());
 			return retVal;
@@ -272,6 +290,11 @@ namespace Elastic.Apm.Model
 
 		public void End()
 		{
+
+			// If the outcome is still unknown and it was not specifically set to unknown, then it's success
+			if (Outcome == Outcome.Unknown && !_outcomeChangedThroughApi)
+				Outcome = Outcome.Success;
+
 			if (Duration.HasValue)
 			{
 				_logger.Trace()
@@ -324,7 +347,8 @@ namespace Elastic.Apm.Model
 				_payloadSender.QueueSpan(this);
 			}
 
-			if (isFirstEndCall) _currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
+			if (isFirstEndCall)
+				_currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
 		}
 
 		public void CaptureException(Exception exception, string culprit = null, bool isHandled = false, string parentId = null,
@@ -385,7 +409,8 @@ namespace Elastic.Apm.Model
 
 		private void DeduceDestination()
 		{
-			if (!_context.IsValueCreated) return;
+			if (!_context.IsValueCreated)
+				return;
 
 			if (Context.Http != null)
 			{
@@ -433,7 +458,8 @@ namespace Elastic.Apm.Model
 
 			void CopyMissingProperties(Destination src)
 			{
-				if (src == null) return;
+				if (src == null)
+					return;
 
 				if (Context.Destination == null)
 					Context.Destination = src;
@@ -475,5 +501,19 @@ namespace Elastic.Apm.Model
 
 		public void SetLabel(string key, decimal value)
 			=> Context.InternalLabels.Value.InnerDictionary[key] = value;
+
+		public void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null)
+			=> ExecutionSegmentCommon.CaptureErrorLog(
+				errorLog,
+				_payloadSender,
+				_logger,
+				this,
+				ConfigSnapshot,
+				_enclosingTransaction,
+				parentId ?? (ShouldBeSentToApmServer ? null : _enclosingTransaction.Id),
+				_apmServerInfo,
+				exception,
+				labels
+			);
 	}
 }

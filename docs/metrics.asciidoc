@@ -163,3 +163,15 @@ Platform: all.
 
 The size of the generation 3 heap - also known as Large Object Heap (LOH).
 --
+
+*`clr.gc.time`*::
++
+--
+type: long
+
+format: ms
+
+Platform: all.
+
+The approximate accumulated collection elapsed time in milliseconds.
+--

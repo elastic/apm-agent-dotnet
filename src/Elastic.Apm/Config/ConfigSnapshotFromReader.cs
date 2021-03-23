@@ -44,6 +44,7 @@ namespace Elastic.Apm.Config
 		public string SecretToken => _content.SecretToken;
 		[Obsolete("Use ServerUrl")]
 		public IReadOnlyList<Uri> ServerUrls => _content.ServerUrls;
+		public string ServerCert => _content.ServerCert;
 		public Uri ServerUrl => _content.ServerUrl;
 		public string ServiceName => _content.ServiceName;
 		public string ServiceNodeName => _content.ServiceNodeName;

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -16,6 +17,7 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using TraceContext = Elastic.Apm.DistributedTracing.TraceContext;
+using Elastic.Apm.Reflection;
 
 namespace Elastic.Apm.AspNetFullFramework
 {
@@ -31,6 +33,8 @@ namespace Elastic.Apm.AspNetFullFramework
 		private readonly string _dbgInstanceName;
 		private HttpApplication _application;
 		private IApmLogger _logger;
+		private Type _httpRouteDataInterfaceType;
+		private Func<object, string> _routeDataTemplateGetter;
 
 		public ElasticApmModule() =>
 			// ReSharper disable once ImpureMethodCallOnReadonlyValueField
@@ -78,6 +82,7 @@ namespace Elastic.Apm.AspNetFullFramework
 						PlatformDetection.DotNetRuntimeDescription, HttpRuntime.IISVersion);
 			}
 
+			_routeDataTemplateGetter = CreateWebApiAttributeRouteTemplateGetter();
 			_application = application;
 			_application.BeginRequest += OnBeginRequest;
 			_application.EndRequest += OnEndRequest;
@@ -283,15 +288,40 @@ namespace Elastic.Apm.AspNetFullFramework
 						else
 							routeData = values;
 
-						_logger?.Trace()?.Log("Calculating transaction name based on route data");
-						var name = Transaction.GetNameFromRouteContext(routeData);
+						string name = null;
+
+						// if we're dealing with Web API attribute routing, get transaction name from the route template
+						if (routeData.TryGetValue("MS_SubRoutes", out var template) && _httpRouteDataInterfaceType != null)
+						{
+							if (template is IEnumerable enumerable)
+							{
+								var enumerator = enumerable.GetEnumerator();
+								if (enumerator.MoveNext())
+								{
+									var subRoute = enumerator.Current;
+									if (subRoute != null && _httpRouteDataInterfaceType.IsInstanceOfType(subRoute))
+									{
+										_logger?.Trace()?.Log("Calculating transaction name from web api attribute routing");
+										name = _routeDataTemplateGetter(subRoute);
+									}
+								}
+							}
+						}
+						else
+						{
+							_logger?.Trace()?.Log("Calculating transaction name based on route data");
+							name = Transaction.GetNameFromRouteContext(routeData);
+						}
+
 						if (!string.IsNullOrWhiteSpace(name)) transaction.Name = $"{context.Request.HttpMethod} {name}";
 					}
 					else
 					{
 						// dealing with a 404 HttpException that came from System.Web.Mvc
-						_logger?.Trace()?
-							.Log("Route data found but a HttpException with 404 status code was thrown from System.Web.Mvc - setting transaction name to 'unknown route");
+						_logger?.Trace()
+							?
+							.Log(
+								"Route data found but a HttpException with 404 status code was thrown from System.Web.Mvc - setting transaction name to 'unknown route");
 						transaction.Name = $"{context.Request.HttpMethod} unknown route";
 					}
 				}
@@ -330,9 +360,7 @@ namespace Elastic.Apm.AspNetFullFramework
 		private static void FillSampledTransactionContextResponse(HttpResponse response, ITransaction transaction) =>
 			transaction.Context.Response = new Response
 			{
-				Finished = true,
-				StatusCode = response.StatusCode,
-				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(response.Headers) : null
+				Finished = true, StatusCode = response.StatusCode, Headers = _isCaptureHeadersEnabled ? ConvertHeaders(response.Headers) : null
 			};
 
 		private void FillSampledTransactionContextUser(HttpContext context, ITransaction transaction)
@@ -394,36 +422,42 @@ namespace Elastic.Apm.AspNetFullFramework
 		private static void SafeAgentSetup(string dbgInstanceName)
 		{
 			var agentComponents = CreateAgentComponents(dbgInstanceName);
-			try
-			{
-				if (!agentComponents.ConfigurationReader.Enabled)
-					return;
+			if (!agentComponents.ConfigurationReader.Enabled)
+				return;
 
-				Agent.Setup(agentComponents);
-			}
-			catch (Agent.InstanceAlreadyCreatedException ex)
-			{
-				if (Agent.Components is FullFrameworkAgentComponents)
-				{
-					BuildLogger()
-						.Scoped(dbgInstanceName)
-						.Info()
-						?.Log("The Elastic APM agent was already initialized before call to"
-							+ $" {nameof(ElasticApmModule)}.{nameof(Init)} - {nameof(ElasticApmModule)} will use existing instance");
-				}
-				else
-				{
-					BuildLogger()
-						.Scoped(dbgInstanceName)
-						.Error()
-						?.LogException(ex, "The Elastic APM agent was already initialized before call to"
-							+ $" {nameof(ElasticApmModule)}.{nameof(Init)} - {nameof(ElasticApmModule)} will use existing instance"
-							+ " even though it might lead to unexpected behavior"
-							+ " (for example agent using incorrect configuration source such as environment variables instead of Web.config).");
-				}
+			Agent.Setup(agentComponents);
+		}
 
-				agentComponents.Dispose();
+		/// <summary>
+		/// Compiles a delegate from a lambda expression to get the route template from HttpRouteData when
+		/// System.Web.Http is referenced.
+		/// </summary>
+		private Func<object, string> CreateWebApiAttributeRouteTemplateGetter()
+		{
+			_httpRouteDataInterfaceType = Type.GetType("System.Web.Http.Routing.IHttpRouteData,System.Web.Http");
+			if (_httpRouteDataInterfaceType != null)
+			{
+				var routePropertyInfo = _httpRouteDataInterfaceType.GetProperty("Route");
+				if (routePropertyInfo != null)
+				{
+					var routeType = routePropertyInfo.PropertyType;
+					var routeTemplatePropertyInfo = routeType.GetProperty("RouteTemplate");
+					if (routeTemplatePropertyInfo != null)
+					{
+						var routePropertyGetter = ExpressionBuilder.BuildPropertyGetter(_httpRouteDataInterfaceType, routePropertyInfo);
+						var routeTemplatePropertyGetter = ExpressionBuilder.BuildPropertyGetter(routeType, routeTemplatePropertyInfo);
+						return routeData =>
+						{
+							var route = routePropertyGetter(routeData);
+							return route is null
+								? null
+								: routeTemplatePropertyGetter(route) as string;
+						};
+					}
+				}
 			}
+
+			return null;
 		}
 	}
 }

@@ -191,6 +191,8 @@ mostly idle in this state, so the overhead should be negligible.
 
 You can use this setting to dynamically disable Elastic APM at runtime.
 
+WARNING: Setting `Recording` to `false` influences the behavior of the <<public-api>>. When the agent is not active it won't keep track of transactions, spans and any related properties on those.
+
 [options="header"]
 |============
 | Environment variable name       | IConfiguration or Web.config key
@@ -211,6 +213,8 @@ You can use this setting to dynamically disable Elastic APM at runtime.
 
 Setting to false will completely disable the agent, including instrumentation and remote config polling.
 If you want to dynamically change the status of the agent, use <<config-recording,`recording`>> instead.
+
+WARNING: Setting `Enabled` to `false` influences the behavior of the <<public-api>>. When the agent is not active it won't keep track of transactions, spans and any related properties on those.
 
 [options="header"]
 |============
@@ -557,6 +561,28 @@ Verification can be disabled by changing this setting to false.
 |============
 | Default                 | Type
 | `true`                  | Boolean
+|============
+
+[float]
+[[config-server-cert]]
+==== `ServerCert` (added[1.9])
+
+The path to a PEM-encoded certificate used for SSL/TLS by APM server, used to perform validation 
+through certificate pinning. 
+
+This can be specified when using a certificate signed by a Certificate Authority (CA) that is not in 
+the trust store, such as a self-signed certificate.
+
+[options="header"]
+|============
+| Environment variable name | IConfiguration or Web.config key
+| `ELASTIC_APM_SERVER_CERT` | `ElasticApm:ServerCert`
+|============
+
+[options="header"]
+|============
+| Default                 | Type
+| `<none>`                  | String
 |============
 
 [float]
@@ -930,6 +956,8 @@ Setting it to 0 will disable stack trace collection. Any positive integer value 
 | `ELASTIC_APM_STACK_TRACE_LIMIT` | `ElasticApm:StackTraceLimit`
 |============
 
+NOTE: If you would like to disable stack trace capturing only for spans, but still capture stack traces for errors, set the <<config-span-frames-min-duration>> config to `0`.
+
 [float]
 [[config-span-frames-min-duration]]
 ==== `SpanFramesMinDuration` (performance)
@@ -1020,6 +1048,7 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 | <<config-recording,`Recording`>> | Yes | Core
 | <<config-sanitize-field-names,`SanitizeFieldNames`>> | Yes | Core
 | <<config-secret-token,`SecretToken`>> | No | Reporter
+| <<config-server-cert,`ServerCert`>> | No | Reporter
 | <<config-server-url,`ServerUrl`>> | No | Reporter
 | <<config-service-name,`ServiceName`>> | No | Core
 | <<config-service-node-name, `ServiceNodeName`>> | No | Core

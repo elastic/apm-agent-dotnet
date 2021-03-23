@@ -37,6 +37,7 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly string _recording;
 		private readonly string _sanitizeFieldNames;
 		private readonly string _secretToken;
+		private readonly string _serverCert;
 		private readonly string _serverUrl;
 		private readonly string _serverUrls;
 		private readonly string _serviceName;
@@ -85,7 +86,8 @@ namespace Elastic.Apm.Tests.Utilities
 			string cloudProvider = SupportedValues.CloudProviderNone,
 			string enabled = null,
 			string recording = null,
-			string serverUrl = null
+			string serverUrl = null,
+			string serverCert = null
 		) : base(logger, ThisClassName)
 		{
 			_serverUrls = serverUrls;
@@ -122,6 +124,7 @@ namespace Elastic.Apm.Tests.Utilities
 			_enabled = enabled;
 			_recording = recording;
 			_serverUrl = serverUrl;
+			_serverCert = serverCert;
 		}
 
 		public string ApiKey => ParseApiKey(Kv(EnvVarNames.ApiKey, _apiKey, Origin));
@@ -167,6 +170,8 @@ namespace Elastic.Apm.Tests.Utilities
 			ParseSanitizeFieldNames(Kv(EnvVarNames.SanitizeFieldNames, _sanitizeFieldNames, Origin));
 
 		public string SecretToken => ParseSecretToken(Kv(EnvVarNames.SecretToken, _secretToken, Origin));
+
+		public string ServerCert => ParseServerCert(Kv(EnvVarNames.ServerCert, _serverCert, Origin));
 
 		[Obsolete("Use ServerUrl")]
 		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(_serverUrls != null

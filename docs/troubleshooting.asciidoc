@@ -99,10 +99,16 @@ Agent.Setup(new AgentComponents(logger: new ApmLoggerBridge()));
 ----
 
 [float]
+[[double-agent-initialization-log]]
+=== Following error appears in logs: `The singleton APM agent has already been instantiated and can no longer be configured.`
+
+See "<<double-agent-initialization>>".
+
+[float]
 [[double-agent-initialization]]
 === An `InstanceAlreadyCreatedException` exception is thrown
 
-In the early stage of a monitored process, the Agent might throw an `InstanceAlreadyCreatedException` exception with the following message: "The singleton APM agent has already been instantiated and can no longer be configured." This happens when you attempt to initialize the Agent multiple times, which is prohibited. Allowing multiple Agent instances per process would open up problems, like capturing events and metrics multiple times for each instance, or having multiple background threads for event serialization and transfer to the APM Server.
+In the early stage of a monitored process, the Agent might throw an `InstanceAlreadyCreatedException` exception with the following message: "The singleton APM agent has already been instantiated and can no longer be configured.", or an error log appears with the same message. This happens when you attempt to initialize the Agent multiple times, which is prohibited. Allowing multiple Agent instances per process would open up problems, like capturing events and metrics multiple times for each instance, or having multiple background threads for event serialization and transfer to the APM Server.
 
 TIP: Take a look at the initialization section of the <<public-api,Public Agent API>> for more information on how agent initialization works.
 
@@ -129,3 +135,15 @@ set ELASTIC_APM_STARTUP_HOOKS_LOGGING=1
 and then running the application in a context where the environment variable will be visible. In setting this value,
 an `ElasticApmAgentStartupHook.log` file is written to in the directory containing the startup hook assembly, in addition to
 writing to standard output.
+
+[float]
+[[agent-overhead]]
+=== The agent causes too much overhead
+
+A good place to start is [config-all-options-summary]. There are multiple settings with the `Performance` keyword which can help you tweak the agent for your needs.
+
+The most expensive operation in the agent is typically stack trace capturing. The agent, by default, only captures stack traces for spans with a duration of 5ms or more, and with a limit of 50 stack frames.
+If this is too much in your environment, consider disabling stack trace capturing either partially or entirely:
+
+- To disable stack trace capturing for spans, but continue to capture stack traces for errors, set the [config-span-frames-min-duration] to `0` and leave the [config-stack-trace-limit] on its default.
+- To disable stack trace capturing entirely –which in most applications reduces the agent overhead dramatically– set [config-stack-trace-limit] to `0`.

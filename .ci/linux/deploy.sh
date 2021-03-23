@@ -16,7 +16,9 @@ declare -a projectsToPublish=(
 "Elastic.Apm.SqlClient"
 "Elastic.Apm.Elasticsearch"
 "Elastic.Apm.Extensions.Hosting"
-"Elastic.Apm.GrpcClient")
+"Elastic.Apm.GrpcClient"
+"Elastic.Apm.Extensions.Logging"
+"Elastic.Apm.StackExchange.Redis")
 
 for project in  "${projectsToPublish[@]}"
 do
@@ -26,7 +28,7 @@ do
 		if [[ $nupkg =~ $pattern ]]
 		then
 			echo "dotnet nuget push ${nupkg}"
-			dotnet nuget push ${nupkg} -k ${1} -s ${2}
+			dotnet nuget push ${nupkg} -k ${1} -s ${2} --skip-duplicate
 		fi
 	done
 done

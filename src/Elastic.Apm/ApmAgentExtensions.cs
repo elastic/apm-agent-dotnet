@@ -74,7 +74,7 @@ namespace Elastic.Apm
 				if (_isDisposed) return;
 
 				_isDisposed = true;
-				foreach (var d in _disposables) d.Dispose();
+				foreach (var d in _disposables) d?.Dispose();
 			}
 		}
 	}

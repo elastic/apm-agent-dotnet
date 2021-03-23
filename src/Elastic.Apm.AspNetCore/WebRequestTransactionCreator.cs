@@ -23,11 +23,11 @@ namespace Elastic.Apm.AspNetCore
 	/// </summary>
 	internal static class WebRequestTransactionCreator
 	{
-		internal static ITransaction StartTransactionAsync(HttpContext context, IApmLogger logger, Tracer tracer, IConfigSnapshot configSnapshot)
+		internal static ITransaction StartTransactionAsync(HttpContext context, IApmLogger logger, ITracer tracer, IConfigSnapshot configSnapshot)
 		{
 			try
 			{
-				if (WildcardMatcher.IsAnyMatch(configSnapshot.TransactionIgnoreUrls, context.Request.Path))
+				if (WildcardMatcher.IsAnyMatch(configSnapshot?.TransactionIgnoreUrls, context.Request.Path))
 				{
 					logger.Debug()?.Log("Request ignored based on TransactionIgnoreUrls, url: {urlPath}", context.Request.Path);
 					return null;
@@ -207,21 +207,13 @@ namespace Elastic.Apm.AspNetCore
 				if (grpcCallInfo == default)
 				{
 					transaction.Result = Transaction.StatusCodeToResult(GetProtocolName(context.Request.Protocol), context.Response.StatusCode);
-
-					if (context.Response.StatusCode >= 500)
-						transaction.Outcome = Outcome.Failure;
-					else
-						transaction.Outcome = Outcome.Success;
+					SetOutcomeForHttpResult(transaction, context.Response.StatusCode);
 				}
 				else
 				{
 					transaction.Name = grpcCallInfo.methodname;
 					transaction.Result = GrpcHelper.GrpcReturnCodeToString(grpcCallInfo.result);
-
-					if (transaction.Result == "OK")
-						transaction.Outcome = Outcome.Success;
-					else
-						transaction.Outcome = Outcome.Failure;
+					transaction.Outcome = GrpcHelper.GrpcServerReturnCodeToOutcome(transaction.Result);
 				}
 
 				if (transaction.IsSampled)
@@ -238,6 +230,14 @@ namespace Elastic.Apm.AspNetCore
 			{
 				transaction.End();
 			}
+		}
+
+		internal static void SetOutcomeForHttpResult(ITransaction transaction, int HttpReturnCode)
+		{
+			if (HttpReturnCode >= 500 || HttpReturnCode < 100)
+				transaction.Outcome = Outcome.Failure;
+			else
+				transaction.Outcome = Outcome.Success;
 		}
 
 		/// <summary>

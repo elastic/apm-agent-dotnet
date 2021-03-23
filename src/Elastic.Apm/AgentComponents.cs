@@ -32,33 +32,42 @@ namespace Elastic.Apm
 			IApmServerInfo apmServerInfo
 		)
 		{
-			var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
-			ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(tempLogger);
-			Logger = logger ?? ConsoleLogger.LoggerOrDefault(ConfigurationReader.LogLevel);
-			Service = Service.GetDefaultService(ConfigurationReader, Logger);
-
-			var systemInfoHelper = new SystemInfoHelper(Logger);
-			var system = systemInfoHelper.ParseSystemInfo(ConfigurationReader.HostName);
-
-			ConfigStore = new ConfigStore(new ConfigSnapshotFromReader(ConfigurationReader, "local"), Logger);
-
-			ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
-
-			PayloadSender = payloadSender
-				?? new PayloadSenderV2(Logger, ConfigStore.CurrentSnapshot, Service, system, ApmServerInfo, isEnabled: ConfigurationReader.Enabled);
-
-			if (ConfigurationReader.Enabled)
+			try
 			{
-				CentralConfigFetcher = centralConfigFetcher ?? new CentralConfigFetcher(Logger, ConfigStore, Service);
-				MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigStore);
-				MetricsCollector.StartCollecting();
+
+				var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
+				ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(tempLogger);
+				Logger = logger ?? ConsoleLogger.LoggerOrDefault(ConfigurationReader.LogLevel);
+				Service = Service.GetDefaultService(ConfigurationReader, Logger);
+
+				var systemInfoHelper = new SystemInfoHelper(Logger);
+				var system = systemInfoHelper.ParseSystemInfo(ConfigurationReader.HostName);
+
+				ConfigStore = new ConfigStore(new ConfigSnapshotFromReader(ConfigurationReader, "local"), Logger);
+
+				ApmServerInfo = apmServerInfo ?? new ApmServerInfo();
+
+				PayloadSender = payloadSender
+					?? new PayloadSenderV2(Logger, ConfigStore.CurrentSnapshot, Service, system, ApmServerInfo,
+						isEnabled: ConfigurationReader.Enabled);
+
+				if (ConfigurationReader.Enabled)
+				{
+					CentralConfigFetcher = centralConfigFetcher ?? new CentralConfigFetcher(Logger, ConfigStore, Service);
+					MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigStore);
+					MetricsCollector.StartCollecting();
+				}
+
+				TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigStore,
+					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo);
+
+				if (!ConfigurationReader.Enabled)
+					Logger?.Info()?.Log("The Elastic APM .NET Agent is disabled - the agent won't capture traces and metrics.");
 			}
-
-			TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigStore,
-				currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo);
-
-			if (!ConfigurationReader.Enabled)
-				Logger?.Info()?.Log("The Elastic APM .NET Agent is disabled - the agent won't capture traces and metrics.");
+			catch (Exception e)
+			{
+				logger?.Error()?.LogException(e, "Failed initializing agent.");
+			}
 		}
 
 		internal ICentralConfigFetcher CentralConfigFetcher { get; }

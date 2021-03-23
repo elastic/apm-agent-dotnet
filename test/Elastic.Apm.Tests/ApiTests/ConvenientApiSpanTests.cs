@@ -601,7 +601,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		[Fact]
 		public async Task CancelledAsyncTask()
 		{
-			var agent = new ApmAgent(new TestAgentComponents());
+			using var agent = new ApmAgent(new TestAgentComponents());
 
 			var cancellationTokenSource = new CancellationTokenSource();
 			var token = cancellationTokenSource.Token;
@@ -699,7 +699,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		public void FillSpanContext()
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 			{
@@ -727,13 +727,34 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.Spans[1].Context.Db.Instance.Should().Be("MyInstance");
 		}
 
+		[Fact]
+		public void CaptureErrorLogOnSpan()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var errorLog = new ErrorLog("foo") { Level = "error", ParamMessage = "42" };
+
+			agent.Tracer.CaptureTransaction("foo", "bar", t => { t.CaptureSpan("foo", "bar", s => { s.CaptureErrorLog(errorLog); }); });
+
+			payloadSender.WaitForAny();
+
+			payloadSender.Transactions.Should().HaveCount(1);
+			payloadSender.Spans.Should().HaveCount(1);
+			payloadSender.Errors.Should().HaveCount(1);
+			payloadSender.FirstError.Log.Message.Should().Be("foo");
+			payloadSender.FirstError.Log.Level.Should().Be("error");
+			payloadSender.FirstError.Log.ParamMessage.Should().Be("42");
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstSpan.Id);
+		}
+
 		/// <summary>
 		/// Asserts on 1 transaction with 1 async span and 1 error
 		/// </summary>
 		private async Task<MockPayloadSender> AssertWith1TransactionAnd1ErrorAnd1SpanAsync(Func<ITransaction, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 			{
@@ -768,7 +789,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private async Task<MockPayloadSender> AssertWith1TransactionAnd1ErrorAnd1SpanAsyncOnSubSpan(Func<ISpan, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 			{
@@ -823,7 +844,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private async Task<MockPayloadSender> AssertWith1TransactionAnd1SpanAsync(Func<ITransaction, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 			{
@@ -852,7 +873,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private async Task<MockPayloadSender> AssertWith1TransactionAnd1SpanAsyncOnSubSpan(Func<ISpan, Task> func)
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			await agent.Tracer.CaptureTransaction(TransactionName, TransactionType, async t =>
 			{
@@ -900,7 +921,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private MockPayloadSender AssertWith1TransactionAnd1Span(Action<ITransaction> action)
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>
 			{
@@ -929,7 +950,7 @@ namespace Elastic.Apm.Tests.ApiTests
 		private void AssertWith1TransactionAnd1SpanOnSubSpan(Action<ISpan> action)
 		{
 			var payloadSender = new MockPayloadSender();
-			var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
 
 			WaitHelpers.SleepMinimum();
 			agent.Tracer.CaptureTransaction(TransactionName, TransactionType, t =>

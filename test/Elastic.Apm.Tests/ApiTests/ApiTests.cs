@@ -1,4 +1,5 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -816,7 +817,7 @@ namespace Elastic.Apm.Tests.ApiTests
 				});
 			}
 
-			payloadSender.WaitForSpans(count:4);
+			payloadSender.WaitForSpans(count: 4);
 			var manualAddressSpan = payloadSender.Spans.Single(s => s.Name == "manually set destination address");
 			manualAddressSpan.Context.Destination.Address.Should().Be(manualAddress);
 			manualAddressSpan.Context.Destination.Port.Should().Be(url.Port);
@@ -972,6 +973,187 @@ namespace Elastic.Apm.Tests.ApiTests
 			payloadSender.FirstTransaction.Should().NotBeNull();
 			payloadSender.FirstTransaction?.Context.Service.Name.Should().Be("Service2");
 			payloadSender.FirstTransaction?.Context.Service.Version.Should().Be("1.0-beta2");
+		}
+
+		[Fact]
+		public void CaptureErrorOnTracer()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			agent.Tracer.CaptureError("foo", "bar");
+
+			payloadSender.WaitForAny();
+
+			payloadSender.Transactions.Should().BeNullOrEmpty();
+			payloadSender.Spans.Should().BeNullOrEmpty();
+			payloadSender.Errors.Should().HaveCount(1);
+			payloadSender.FirstError.Culprit.Should().Be("bar");
+			payloadSender.FirstError.Exception.Message.Should().Be("foo");
+		}
+
+		[Fact]
+		public void CaptureErrorOnTracerWithActiveTransaction()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			var transaction = agent.Tracer.StartTransaction("Transaction1", "test");
+
+			agent.Tracer.CaptureError("foo", "bar");
+
+			transaction.End();
+
+			payloadSender.WaitForErrors();
+			payloadSender.WaitForTransactions();
+
+			payloadSender.FirstError.TransactionId.Should().Be(payloadSender.FirstTransaction.Id);
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstTransaction.Id);
+		}
+
+		[Fact]
+		public void CaptureErrorOnTracerWithActiveSpan()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			var transaction = agent.Tracer.StartTransaction("Transaction1", "test");
+			var span = transaction.StartSpan("Span1", "test");
+
+			agent.Tracer.CaptureError("foo", "bar");
+
+			transaction.End();
+			span.End();
+
+			payloadSender.WaitForErrors();
+			payloadSender.WaitForTransactions();
+			payloadSender.WaitForSpans();
+
+			payloadSender.FirstError.TransactionId.Should().Be(payloadSender.FirstTransaction.Id);
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstSpan.Id);
+		}
+
+		[Fact]
+		public void CaptureExceptionOnTracerWithActiveTransaction()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			var transaction = agent.Tracer.StartTransaction("Transaction1", "test");
+
+			agent.Tracer.CaptureException(new Exception("foo"), "test");
+
+			transaction.End();
+
+			payloadSender.WaitForErrors();
+			payloadSender.WaitForTransactions();
+
+			payloadSender.FirstError.TransactionId.Should().Be(payloadSender.FirstTransaction.Id);
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstTransaction.Id);
+		}
+
+		[Fact]
+		public void CaptureExceptionOnTracerWithActiveSpan()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			var transaction = agent.Tracer.StartTransaction("Transaction1", "test");
+			var span = transaction.StartSpan("Span1", "test");
+
+			agent.Tracer.CaptureException(new Exception("foo"), "test");
+
+			transaction.End();
+			span.End();
+
+			payloadSender.WaitForErrors();
+			payloadSender.WaitForTransactions();
+			payloadSender.WaitForSpans();
+
+			payloadSender.FirstError.TransactionId.Should().Be(payloadSender.FirstTransaction.Id);
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstSpan.Id);
+		}
+
+		[Fact]
+		public void CaptureErrorLogOnTracerWithActiveTransaction()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			var transaction = agent.Tracer.StartTransaction("Transaction1", "test");
+
+			var errorLog = new ErrorLog("foo");
+			agent.Tracer.CaptureErrorLog(errorLog);
+
+			transaction.End();
+
+			payloadSender.WaitForErrors();
+			payloadSender.WaitForTransactions();
+
+			payloadSender.FirstError.TransactionId.Should().Be(payloadSender.FirstTransaction.Id);
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstTransaction.Id);
+			payloadSender.FirstError.Log.Message.Should().Be("foo");
+		}
+
+		[Fact]
+		public void CaptureErrorLogOnTracerWithActiveSpan()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+			var transaction = agent.Tracer.StartTransaction("Transaction1", "test");
+			var span = transaction.StartSpan("Span1", "test");
+
+			var errorLog = new ErrorLog("foo");
+			agent.Tracer.CaptureErrorLog(errorLog);
+
+			transaction.End();
+			span.End();
+
+			payloadSender.WaitForErrors();
+			payloadSender.WaitForTransactions();
+			payloadSender.WaitForSpans();
+
+			payloadSender.FirstError.TransactionId.Should().Be(payloadSender.FirstTransaction.Id);
+			payloadSender.FirstError.ParentId.Should().Be(payloadSender.FirstSpan.Id);
+			payloadSender.FirstError.Log.Message.Should().Be("foo");
+		}
+
+		[Fact]
+		public void CaptureExceptionOnTracer()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			try
+			{
+				throw new Exception("foo");
+			}
+			catch (Exception e)
+			{
+				agent.Tracer.CaptureException(e);
+			}
+
+			payloadSender.WaitForAny();
+
+			payloadSender.Transactions.Should().BeNullOrEmpty();
+			payloadSender.Spans.Should().BeNullOrEmpty();
+			payloadSender.Errors.Should().HaveCount(1);
+			payloadSender.FirstError.Exception.Message.Should().Be("foo");
+		}
+
+		[Fact]
+		public void CaptureErrorLogOnTracer()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: payloadSender));
+
+			var errorLog = new ErrorLog("foo") { Level = "error", ParamMessage = "42" };
+
+			agent.Tracer.CaptureErrorLog(errorLog);
+
+			payloadSender.WaitForAny();
+
+			payloadSender.Transactions.Should().BeNullOrEmpty();
+			payloadSender.Spans.Should().BeNullOrEmpty();
+			payloadSender.Errors.Should().HaveCount(1);
+			payloadSender.FirstError.Log.Message.Should().Be("foo");
+			payloadSender.FirstError.Log.Level.Should().Be("error");
+			payloadSender.FirstError.Log.ParamMessage.Should().Be("42");
 		}
 
 		private class TestException : Exception

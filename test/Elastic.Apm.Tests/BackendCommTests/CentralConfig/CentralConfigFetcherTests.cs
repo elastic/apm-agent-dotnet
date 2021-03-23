@@ -38,7 +38,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			var logLevel = LogLevel.Trace;
 			var testLogger = new ConsoleLogger(logLevel);
 
-			var configSnapshotFromReader = new MockConfigSnapshot(testLogger);
+			var configSnapshotFromReader = new MockConfigSnapshot(testLogger, logLevel: "Trace");
 			var configStore = new ConfigStore(configSnapshotFromReader, testLogger);
 			var service = Service.GetDefaultService(configSnapshotFromReader, testLogger);
 
@@ -67,9 +67,9 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			centralConfigFetcher.IsRunning.Should().BeTrue();
 			waitHandle.WaitOne();
 
-			// wait up to 20 seconds for the log level to change. Change can often be slower in CI
+			// wait up to 60 seconds for the log level to change. Change can often be slower in CI
 			var count = 0;
-			while (count < 20 && testLogger.LogLevelSwitch.Level == logLevel)
+			while (count < 60 && testLogger.LogLevelSwitch.Level == logLevel)
 			{
 				count++;
 				Thread.Sleep(TimeSpan.FromSeconds(1));
@@ -99,7 +99,7 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 		{
 			var testLogger = new UnswitchableLogger(new LogLevelSwitch(LogLevel.Trace));
 
-			var configSnapshotFromReader = new MockConfigSnapshot(testLogger);
+			var configSnapshotFromReader = new MockConfigSnapshot(testLogger, logLevel: "Trace");
 			var configStore = new ConfigStore(configSnapshotFromReader, testLogger);
 			var service = Service.GetDefaultService(configSnapshotFromReader, testLogger);
 

@@ -18,18 +18,18 @@ namespace Elastic.Apm.StackExchange.Redis
 	/// <summary>
 	/// Captures redis commands sent with StackExchange.Redis client
 	/// </summary>
-	internal class ElasticApmProfiler
+	public class ElasticApmProfiler
 	{
 		private readonly ConcurrentDictionary<string, ProfilingSession> _executionSegmentSessions =
 			new ConcurrentDictionary<string, ProfilingSession>();
 
-		private readonly IApmLogger _logger;
-		private readonly IApmAgent _agent;
+		private readonly Lazy<IApmLogger> _logger;
+		private readonly Lazy<IApmAgent> _agent;
 
-		public ElasticApmProfiler(IApmAgent agent)
+		public ElasticApmProfiler(Func<IApmAgent> agentGetter)
 		{
-			_logger = agent.Logger.Scoped(nameof(ElasticApmProfiler));
-			_agent = agent;
+			_agent = new Lazy<IApmAgent>(agentGetter);
+			_logger = new Lazy<IApmLogger>(() => _agent.Value.Logger.Scoped(nameof(ElasticApmProfiler)));
 		}
 
 		/// <summary>
@@ -45,7 +45,7 @@ namespace Elastic.Apm.StackExchange.Redis
 			if (!Agent.Config.Enabled || !Agent.Config.Recording)
 				return null;
 
-			var executionSegment = ExecutionSegmentCommon.GetCurrentExecutionSegment(_agent);
+			var executionSegment = ExecutionSegmentCommon.GetCurrentExecutionSegment(_agent.Value);
 			var realSpan = executionSegment as Span;
 			Transaction realTransaction = null;
 
@@ -60,7 +60,7 @@ namespace Elastic.Apm.StackExchange.Redis
 			var isSpan = realSpan != null;
 			if (!_executionSegmentSessions.TryGetValue(executionSegment.Id, out var session))
 			{
-				_logger.Trace()?.Log("Creating profiling session for {ExecutionSegment} {Id}",
+				_logger.Value.Trace()?.Log("Creating profiling session for {ExecutionSegment} {Id}",
 					isSpan ? "span" : "transaction",
 					executionSegment.Id);
 
@@ -68,7 +68,7 @@ namespace Elastic.Apm.StackExchange.Redis
 
 				if (!_executionSegmentSessions.TryAdd(executionSegment.Id, session))
 				{
-					_logger.Debug()?.Log("could not add profiling session to tracked sessions for {ExecutionSegment} {Id}",
+					_logger.Value.Debug()?.Log("could not add profiling session to tracked sessions for {ExecutionSegment} {Id}",
 						isSpan ? "span" : "transaction",
 						executionSegment.Id);
 				}
@@ -103,25 +103,25 @@ namespace Elastic.Apm.StackExchange.Redis
 				// there was an issue in adding or removing the session
 				if (!_executionSegmentSessions.TryRemove(executionSegment.Id, out _))
 				{
-					_logger.Debug()?.Log(
+					_logger.Value.Debug()?.Log(
 						"could not remove profiling session from tracked sessions for {ExecutionSegment} {Id}",
 						segmentType, executionSegment.Id);
 				}
 
 				var profiledCommands = session.FinishProfiling();
-				_logger.Trace()?.Log(
+				_logger.Value.Trace()?.Log(
 					"Finished profiling session for {ExecutionSegment}. Collected {ProfiledCommandCount} commands",
 					executionSegment, profiledCommands.Count());
 
 				foreach (var profiledCommand in profiledCommands) ProcessCommand(profiledCommand, executionSegment);
 
-				_logger.Trace()?.Log(
+				_logger.Value.Trace()?.Log(
 					"End profiling session for {ExecutionSegment} {Id}",
 					segmentType, executionSegment.Id);
 			}
 			catch (Exception e)
 			{
-				_logger.Error()?.LogException(e,
+				_logger.Value.Error()?.LogException(e,
 					"Exception ending profiling session for {ExecutionSegment} {Id}",
 					segmentType, executionSegment.Id);
 			}

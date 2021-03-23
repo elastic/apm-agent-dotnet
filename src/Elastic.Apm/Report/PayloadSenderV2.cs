@@ -312,7 +312,7 @@ namespace Elastic.Apm.Report
 				{
 					content.Headers.ContentType = MediaTypeHeaderValue;
 					var result = await HttpClient.PostAsync(_intakeV2EventsAbsoluteUrl, content, CancellationTokenSource.Token)
-            .ConfigureAwait(false);
+			.ConfigureAwait(false);
 
 					if (result != null && !result.IsSuccessStatusCode)
 					{

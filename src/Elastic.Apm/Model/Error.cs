@@ -13,24 +13,39 @@ namespace Elastic.Apm.Model
 {
 	internal class Error : IError
 	{
-		public Error(CapturedException capturedException, Transaction transaction, string parentId, IApmLogger loggerArg, Dictionary<string, Label> labels = null)
+		public Error(CapturedException capturedException, Transaction transaction, string parentId, IApmLogger loggerArg,
+			Dictionary<string, Label> labels = null
+		)
+			: this(transaction, parentId, loggerArg, labels) => Exception = capturedException;
+
+		public Error(ErrorLog errorLog, Transaction transaction, string parentId, IApmLogger loggerArg, Dictionary<string, Label> labels = null) :
+			this(transaction, parentId, loggerArg, labels)
+			=> Log = errorLog;
+
+
+		private Error(Transaction transaction, string parentId, IApmLogger loggerArg, Dictionary<string, Label> labels = null)
 		{
 			Timestamp = TimeUtils.TimestampNow();
 			Id = RandomGenerator.GenerateRandomBytesAsString(new byte[16]);
 
-			Exception = capturedException;
+			if (transaction != null)
+			{
+				TraceId = transaction.TraceId;
+				TransactionId = transaction.Id;
+				Transaction = new TransactionData(transaction.IsSampled, transaction.Type);
+			}
 
-			TraceId = transaction.TraceId;
-			TransactionId = transaction.Id;
 			ParentId = parentId;
-			Transaction = new TransactionData(transaction.IsSampled, transaction.Type);
 
-			if (transaction.IsSampled)
+			if (transaction != null && transaction.IsSampled)
 			{
 				Context = transaction.Context.DeepCopy();
 
 				if (labels != null)
-					foreach (var item in labels) Context.InternalLabels.Value.InnerDictionary[item.Key] = item.Value;
+				{
+					foreach (var item in labels)
+						Context.InternalLabels.Value.InnerDictionary[item.Key] = item.Value;
+				}
 			}
 
 			IApmLogger logger = loggerArg?.Scoped($"{nameof(Error)}.{Id}");
@@ -68,6 +83,8 @@ namespace Elastic.Apm.Model
 		[MaxLength]
 		public string Id { get; }
 
+		public ErrorLog Log { get; set; }
+
 		[MaxLength]
 		[JsonProperty("parent_id")]
 		public string ParentId { get; set; }
@@ -93,7 +110,7 @@ namespace Elastic.Apm.Model
 		/// See
 		/// <a href="https://www.newtonsoft.com/json/help/html/ConditionalProperties.htm">the relevant Json.NET Documentation</a>
 		/// </summary>
-		public bool ShouldSerializeContext() => Transaction.IsSampled;
+		public bool ShouldSerializeContext() => Transaction != null && Transaction.IsSampled;
 
 		public override string ToString() => new ToStringBuilder(nameof(Error))
 		{

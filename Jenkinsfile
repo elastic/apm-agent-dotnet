@@ -536,7 +536,7 @@ def release(Map args = [:]){
       [var: 'REPO_API_URL', password: repo.data.url],
       ]]) {
       withEnv(["REPO_API_KEY=${repo.data.apiKey}", "REPO_API_URL=${repo.data.url}"]) {
-        sh(label: 'Deploy', script: ".ci/linux/deploy.sh ${REPO_API_KEY} ${REPO_API_URL}")
+        sh(label: 'Deploy', script: '.ci/linux/deploy.sh ${REPO_API_KEY} ${REPO_API_URL}')
       }
     }
   }
@@ -544,15 +544,16 @@ def release(Map args = [:]){
 
 def reportTests() {
   dir("${BASE_DIR}"){
-    archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag-*.log,test/**/junit-*.xml,target/**/*coverage.cobertura.xml')
+    archiveArtifacts(allowEmptyArchive: true, artifacts: 'target/diag-*.log,test/**/junit-*.xml,target/**/*coverage.cobertura.xml,target/**/Sequence_*.xml,target/**/testhost*.dmp')
     junit(allowEmptyResults: true, keepLongStdio: true, testResults: 'test/**/junit-*.xml')
   }
 }
 
 def notifyStatus(def args = [:]) {
-  slackSend(channel: env.SLACK_CHANNEL, color: args.slackStatus, message: "${args.subject}. ${args.body}",
-            tokenCredentialId: 'jenkins-slack-integration-token')
-  // transform slack URL format '(<URL|description>)' to 'URL'.
-  def bodyEmail = args.body.replaceAll('\\(<', '').replaceAll('\\|.*>\\)', '')
-  emailext(subject: args.subject, to: "${env.NOTIFY_TO}", body: bodyEmail)
+  releaseNotification(slackChannel: "${env.SLACK_CHANNEL}",
+                      slackColor: args.slackStatus,
+                      slackCredentialsId: 'jenkins-slack-integration-token',
+                      to: "${env.NOTIFY_TO}",
+                      subject: args.subject,
+                      body: args.body)
 }

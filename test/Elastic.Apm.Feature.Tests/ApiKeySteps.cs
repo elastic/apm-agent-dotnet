@@ -27,8 +27,8 @@ namespace Elastic.Apm.Feature.Tests
 		[When(@"^an api key is set in the config$")]
 		public void WhenApiKeyIsSet() => _apiKeyFeatureContext.SetApiKey(ApiKey);
 
-		[When(@"^a secret_token is set in the config$")]
-		public void WhenSecretTokenIsSet() => _apiKeyFeatureContext.SetSecretToken(SecretToken);
+		[When(@"a secret_token is set to '(.*)' in the config")]
+		public void WhenSecretTokenIsSet(string secretToken) => _apiKeyFeatureContext.SetSecretToken(secretToken);
 
 		[When(@"^an api key is not set in the config$")]
 		public void WhenApiKeyIsNotSet() { }

@@ -3,8 +3,9 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Collections.Immutable;
+using System.IO;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Helpers;
@@ -22,6 +23,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 		private const string ThisClassName = nameof(MockApmServer);
 
 		private readonly string _dbgCurrentTestName;
+		private readonly bool _useHttps;
 		private readonly object _lock = new object();
 
 		public ReceivedData ReceivedData { get; } = new ReceivedData();
@@ -67,10 +69,19 @@ namespace Elastic.Apm.Tests.MockApmServer
 			OnReceive?.Invoke(metadata);
 		}
 
-		public MockApmServer(IApmLogger logger, string dbgCurrentTestName)
+		public MockApmServer(IApmLogger logger, string dbgCurrentTestName, bool useHttps = false)
 		{
 			InternalLogger = logger.Scoped(ThisClassName);
 			_dbgCurrentTestName = dbgCurrentTestName;
+			_useHttps = useHttps;
+
+			if (useHttps)
+			{
+				using var ms = new MemoryStream();
+				using var certStream = typeof(MockApmServer).Assembly.GetManifestResourceStream("Elastic.Apm.Tests.MockApmServer.cert.pfx");
+				certStream.CopyTo(ms);
+				_serverCertificate = ms.ToArray();
+			}
 		}
 
 		private static class PortScanRange
@@ -83,6 +94,7 @@ namespace Elastic.Apm.Tests.MockApmServer
 		private volatile Func<HttpRequest, HttpResponse, IActionResult> _getAgentsConfig;
 		private int _port;
 		private Task _runningTask;
+		private readonly byte[] _serverCertificate;
 
 		internal Func<HttpRequest, HttpResponse, IActionResult> GetAgentsConfig
 		{
@@ -186,7 +198,17 @@ namespace Elastic.Apm.Tests.MockApmServer
 					services.AddSingleton(this);
 				})
 				.UseStartup<Startup>()
-				.UseUrls($"http://localhost:{_port}");
+				.UseKestrel(k =>
+				{
+					if (_useHttps)
+					{
+						k.ConfigureHttpsDefaults(h =>
+						{
+							h.ServerCertificate = new X509Certificate2(_serverCertificate, "password");
+						});
+					}
+				})
+				.UseUrls(_useHttps ? $"https://localhost:{_port}" : $"http://localhost:{_port}");
 
 		public override string ToString() =>
 			new ToStringBuilder(ThisClassName) { { "port", _port }, { "current test", _dbgCurrentTestName } }.ToString();
