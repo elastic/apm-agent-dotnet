@@ -29,10 +29,6 @@ namespace Elastic.Apm.Model
 		private readonly IPayloadSender _sender;
 		private readonly string _traceState;
 
-		// Flags whether the agent created a new Activity for this transaction.
-		// If there is an existing Activity using W3C format, no Activity will be created and this remains false.
-		private bool _createdActivity;
-
 		// This constructor is meant for serialization
 		[JsonConstructor]
 		private Transaction(Context context, string name, string type, double duration, long timestamp, string id, string traceId, string parentId,
@@ -101,36 +97,21 @@ namespace Elastic.Apm.Model
 			HasCustomName = false;
 			Type = type;
 
-			// For each transaction start, fire an Activity if we're not ignoring them.
-			// If Activity.Current is null, then we create one with this and set its traceid, which will flow to all child activities,
-			// and we also reuse it in Elastic APM, so it'll be the same on all Activities.
-			// If Activity.Current is not null and using W3C id format, use its traceid and apply it in Elastic APM
+			// For each new transaction, start an Activity if we're not ignoring them.
+			// If Activity.Current is not null, the started activity will be a child activity,
+			// so the traceid and tracestate of the parent will flow to it.
 			if (!ignoreActivity)
-			{
-				var currentActivity = Activity.Current;
-				if (currentActivity != null && currentActivity.IdFormat == ActivityIdFormat.W3C)
-					_activity = currentActivity;
-				else
-					_activity = StartActivity();
-			}
+				_activity = StartActivity();
 
 			var isSamplingFromDistributedTracingData = false;
 			if (distributedTracingData == null)
 			{
-				// Here we ignore Activity.Current.ActivityTraceFlags because it starts out without setting the IsSampled flag,
+				// ignore the created activity ActivityTraceFlags because it starts out without setting the IsSampled flag,
 				// so relying on that would mean a transaction is never sampled.
-				// To be sure activity creation was successful let's check on it
 				if (_activity != null)
 				{
-					// If an activity was created, reuse its id, otherwise generate a new one.
-					if (_createdActivity)
-						Id = _activity.SpanId.ToHexString();
-					else
-					{
-						var idBytes = new byte[8];
-						Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
-					}
-
+					// If an activity was created, reuse its id
+					Id = _activity.SpanId.ToHexString();
 					TraceId = _activity.TraceId.ToHexString();
 					_traceState = _activity.TraceStateString;
 
@@ -144,7 +125,7 @@ namespace Elastic.Apm.Model
 				}
 				else
 				{
-					// In case from some reason the activity creation was not successful, let's create new random ids
+					// If no activity is created, create new random ids
 					var idBytes = new byte[8];
 					Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 					IsSampled = sampler.DecideIfToSample(idBytes);
@@ -158,13 +139,31 @@ namespace Elastic.Apm.Model
 			}
 			else
 			{
-				if (_activity != null && _createdActivity)
+				if (_activity != null)
+				{
 					Id = _activity.SpanId.ToHexString();
+
+					// try to set the parent id and tracestate on the created activity, based on passed distributed tracing data.
+					// This is so that the distributed tracing data will flow to any child activities
+					try
+					{
+						_activity.SetParentId(
+							ActivityTraceId.CreateFromString(distributedTracingData.TraceId.AsSpan()),
+							ActivitySpanId.CreateFromString(distributedTracingData.ParentId.AsSpan()),
+							distributedTracingData.FlagRecorded ? ActivityTraceFlags.Recorded : ActivityTraceFlags.None);
+						_activity.TraceStateString = distributedTracingData.TraceState;
+					}
+					catch (Exception e)
+					{
+						_logger.Error()?.LogException(e, "Error setting trace context on created activity");
+					}
+				}
 				else
 				{
 					var idBytes = new byte[8];
 					Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 				}
+
 				TraceId = distributedTracingData.TraceId;
 				ParentId = distributedTracingData.ParentId;
 				IsSampled = distributedTracingData.FlagRecorded;
@@ -173,7 +172,7 @@ namespace Elastic.Apm.Model
 			}
 
 			// Also mark the sampling decision on the Activity
-			if (IsSampled && _activity != null && !ignoreActivity)
+			if (IsSampled && _activity != null)
 				_activity.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
 
 			SampleRate = IsSampled ? sampler.Rate : 0;
@@ -204,7 +203,6 @@ namespace Elastic.Apm.Model
 			var activity = new Activity(ApmTransactionActivityName);
 			activity.SetIdFormat(ActivityIdFormat.W3C);
 			activity.Start();
-			_createdActivity = true;
 			return activity;
 		}
 
@@ -421,8 +419,7 @@ namespace Elastic.Apm.Model
 						TimeUtils.FormatTimestampForLog(endTimestamp), endTimestamp, Duration);
 			}
 
-			if (_createdActivity)
-				_activity?.Stop();
+			_activity?.Stop();
 
 			var isFirstEndCall = !_isEnded;
 			_isEnded = true;
