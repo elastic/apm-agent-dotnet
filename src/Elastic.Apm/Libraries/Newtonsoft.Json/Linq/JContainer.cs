@@ -46,7 +46,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 	/// <summary>
 	/// Represents a token that can contain other tokens.
 	/// </summary>
-	public abstract class JContainer
+	internal abstract class JContainer
 		: JToken, IList<JToken>
 #if HAVE_COMPONENT_MODEL
         , ITypedList, IBindingList

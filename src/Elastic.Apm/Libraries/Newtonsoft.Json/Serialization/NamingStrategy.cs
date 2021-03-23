@@ -30,7 +30,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 	/// <summary>
 	/// A base class for resolving how property names and dictionary keys are serialized.
 	/// </summary>
-	public abstract class NamingStrategy
+	internal abstract class NamingStrategy
 	{
 		/// <summary>
 		/// Resolves the specified property name.

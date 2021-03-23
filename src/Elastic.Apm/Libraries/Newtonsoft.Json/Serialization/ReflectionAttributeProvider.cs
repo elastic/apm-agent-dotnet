@@ -36,7 +36,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 	/// Provides methods to get attributes from a <see cref="System.Type" />, <see cref="MemberInfo" />,
 	/// <see cref="ParameterInfo" /> or <see cref="Assembly" />.
 	/// </summary>
-	public class ReflectionAttributeProvider : IAttributeProvider
+	internal class ReflectionAttributeProvider : IAttributeProvider
 	{
 		private readonly object _attributeProvider;
 

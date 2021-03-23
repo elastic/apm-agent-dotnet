@@ -30,7 +30,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 	/// <summary>
 	/// Indicates the method that will be used during deserialization for locating and loading assemblies.
 	/// </summary>
-	public enum TypeNameAssemblyFormatHandling
+	internal enum TypeNameAssemblyFormatHandling
 	{
 		/// <summary>
 		/// In simple mode, the assembly used during deserialization need not match exactly the assembly used during serialization.

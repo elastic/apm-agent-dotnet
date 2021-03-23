@@ -30,7 +30,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 	/// <summary>
 	/// Provides methods to get and set values.
 	/// </summary>
-	public interface IValueProvider
+	internal interface IValueProvider
 	{
 		/// <summary>
 		/// Gets the value.

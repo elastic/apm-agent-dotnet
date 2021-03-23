@@ -42,7 +42,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 	/// <summary>
 	/// Contains the LINQ to JSON extension methods.
 	/// </summary>
-	public static class Extensions
+	internal static class Extensions
 	{
 		/// <summary>
 		/// Returns a collection of tokens that contains the ancestors of every token in the source collection.

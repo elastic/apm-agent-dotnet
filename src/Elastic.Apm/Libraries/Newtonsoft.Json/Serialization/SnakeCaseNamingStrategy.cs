@@ -32,7 +32,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 	/// <summary>
 	/// A snake case naming strategy.
 	/// </summary>
-	public class SnakeCaseNamingStrategy : NamingStrategy
+	internal class SnakeCaseNamingStrategy : NamingStrategy
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="SnakeCaseNamingStrategy" /> class.

@@ -35,7 +35,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 	/// <summary>
 	/// Get and set values for a <see cref="MemberInfo" /> using reflection.
 	/// </summary>
-	public class ReflectionValueProvider : IValueProvider
+	internal class ReflectionValueProvider : IValueProvider
 	{
 		private readonly MemberInfo _memberInfo;
 

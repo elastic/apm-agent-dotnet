@@ -3,7 +3,7 @@
 	/// <summary>
 	/// Specifies the settings used when selecting JSON.
 	/// </summary>
-	public class JsonSelectSettings
+	internal class JsonSelectSettings
 	{
 #if HAVE_REGEX_TIMEOUTS
         /// <summary>

@@ -30,7 +30,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 	/// <summary>
 	/// Provides an interface to enable a class to return line and position information.
 	/// </summary>
-	public interface IJsonLineInfo
+	internal interface IJsonLineInfo
 	{
 		/// <summary>
 		/// Gets the current line number.

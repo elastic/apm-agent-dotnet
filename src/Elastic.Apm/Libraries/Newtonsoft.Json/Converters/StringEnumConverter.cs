@@ -41,7 +41,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Converters
 	/// <summary>
 	/// Converts an <see cref="Enum" /> to and from its name string value.
 	/// </summary>
-	public class StringEnumConverter : JsonConverter
+	internal class StringEnumConverter : JsonConverter
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="StringEnumConverter" /> class.

@@ -43,7 +43,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 	/// <summary>
 	/// Represents a value in JSON (string, integer, date, etc).
 	/// </summary>
-	public class JValue : JToken, IEquatable<JValue>, IFormattable, IComparable, IComparable<JValue>
+	internal class JValue : JToken, IEquatable<JValue>, IFormattable, IComparable, IComparable<JValue>
 #if HAVE_ICONVERTIBLE
         , IConvertible
 #endif

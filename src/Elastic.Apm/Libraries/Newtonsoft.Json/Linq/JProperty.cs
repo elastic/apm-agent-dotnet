@@ -37,7 +37,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 	/// <summary>
 	/// Represents a JSON property.
 	/// </summary>
-	public class JProperty : JContainer
+	internal class JProperty : JContainer
 	{
 		private readonly JPropertyList _content = new();
 

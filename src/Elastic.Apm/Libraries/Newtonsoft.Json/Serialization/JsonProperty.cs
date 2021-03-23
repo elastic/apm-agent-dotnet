@@ -36,7 +36,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 	/// <summary>
 	/// Maps a JSON property to a .NET member or constructor parameter.
 	/// </summary>
-	public class JsonProperty
+	internal class JsonProperty
 	{
 		private object? _defaultValue;
 		internal bool _hasExplicitDefaultValue;

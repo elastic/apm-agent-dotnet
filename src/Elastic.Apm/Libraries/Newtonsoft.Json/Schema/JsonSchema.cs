@@ -46,7 +46,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Schema
 	/// </note>
 	/// </summary>
 	[Obsolete("JSON Schema validation has been moved to its own package. See https://www.newtonsoft.com/jsonschema for more details.")]
-	public class JsonSchema
+	internal class JsonSchema
 	{
 #pragma warning disable CA1305 // Specify IFormatProvider
 #pragma warning restore CA1305 // Specify IFormatProvider

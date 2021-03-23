@@ -49,7 +49,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Schema
 	/// </note>
 	/// </summary>
 	[Obsolete("JSON Schema validation has been moved to its own package. See https://www.newtonsoft.com/jsonschema for more details.")]
-	public class JsonSchemaResolver
+	internal class JsonSchemaResolver
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="JsonSchemaResolver" /> class.

@@ -52,7 +52,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 	/// <summary>
 	/// Represents an abstract JSON token.
 	/// </summary>
-	public abstract class JToken : IJEnumerable<JToken>, IJsonLineInfo
+	internal abstract class JToken : IJEnumerable<JToken>, IJsonLineInfo
 #if HAVE_ICLONEABLE
         , ICloneable
 #endif

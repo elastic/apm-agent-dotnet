@@ -33,7 +33,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Converters
 	/// Creates a custom object.
 	/// </summary>
 	/// <typeparam name="T">The object type to convert.</typeparam>
-	public abstract class CustomCreationConverter<T> : JsonConverter
+	internal abstract class CustomCreationConverter<T> : JsonConverter
 	{
 		/// <summary>
 		/// Creates an object which will then be populated by the serializer.

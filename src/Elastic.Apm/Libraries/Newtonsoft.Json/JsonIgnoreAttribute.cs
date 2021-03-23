@@ -33,5 +33,5 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 	/// Instructs the <see cref="JsonSerializer" /> not to serialize the public field or public read/write property value.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-	public sealed class JsonIgnoreAttribute : Attribute { }
+	internal sealed class JsonIgnoreAttribute : Attribute { }
 }

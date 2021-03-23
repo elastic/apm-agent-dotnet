@@ -37,7 +37,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 	/// <summary>
 	/// The default serialization binder used when resolving and loading classes from type names.
 	/// </summary>
-	public class DefaultSerializationBinder
+	internal class DefaultSerializationBinder
 		:
 #pragma warning disable 618
 			SerializationBinder,

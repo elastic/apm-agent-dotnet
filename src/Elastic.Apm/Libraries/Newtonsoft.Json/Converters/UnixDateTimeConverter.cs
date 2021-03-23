@@ -34,7 +34,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Converters
 	/// <summary>
 	/// Converts a <see cref="DateTime" /> to and from Unix epoch time
 	/// </summary>
-	public class UnixDateTimeConverter : DateTimeConverterBase
+	internal class UnixDateTimeConverter : DateTimeConverterBase
 	{
 		internal static readonly DateTime UnixEpoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 

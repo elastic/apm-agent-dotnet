@@ -30,7 +30,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 	/// <summary>
 	/// Specifies how JSON comments are handled when loading JSON.
 	/// </summary>
-	public enum CommentHandling
+	internal enum CommentHandling
 	{
 		/// <summary>
 		/// Ignore comments.

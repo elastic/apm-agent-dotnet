@@ -38,7 +38,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 	///   <code lang="cs" source="..\Src\Newtonsoft.Json.Tests\Documentation\SerializationTests.cs"
 	///       region="ReducingSerializedJsonSizeContractResolverExample" title="IContractResolver Example" />
 	/// </example>
-	public interface IContractResolver
+	internal interface IContractResolver
 	{
 		/// <summary>
 		/// Resolves the contract for a given type.

@@ -39,7 +39,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Converters
 	/// </summary>
 	[Obsolete(
 		"BSON reading and writing has been moved to its own package. See https://www.nuget.org/packages/Newtonsoft.Json.Bson for more details.")]
-	public class BsonObjectIdConverter : JsonConverter
+	internal class BsonObjectIdConverter : JsonConverter
 	{
 		/// <summary>
 		/// Writes the JSON representation of the object.

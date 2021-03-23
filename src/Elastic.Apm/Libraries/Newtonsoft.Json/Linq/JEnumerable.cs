@@ -41,7 +41,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 	/// Represents a collection of <see cref="JToken" /> objects.
 	/// </summary>
 	/// <typeparam name="T">The type of token.</typeparam>
-	public readonly struct JEnumerable<T> : IJEnumerable<T>, IEquatable<JEnumerable<T>> where T : JToken
+	internal readonly struct JEnumerable<T> : IJEnumerable<T>, IEquatable<JEnumerable<T>> where T : JToken
 	{
 		/// <summary>
 		/// An empty collection of <see cref="JToken" /> objects.

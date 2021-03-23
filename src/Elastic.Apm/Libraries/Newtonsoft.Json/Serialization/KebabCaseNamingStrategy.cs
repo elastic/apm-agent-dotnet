@@ -32,7 +32,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 	/// <summary>
 	/// A kebab case naming strategy.
 	/// </summary>
-	public class KebabCaseNamingStrategy : NamingStrategy
+	internal class KebabCaseNamingStrategy : NamingStrategy
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="KebabCaseNamingStrategy" /> class.

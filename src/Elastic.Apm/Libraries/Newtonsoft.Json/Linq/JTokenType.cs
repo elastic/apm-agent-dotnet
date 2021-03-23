@@ -30,7 +30,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 	/// <summary>
 	/// Specifies the type of token.
 	/// </summary>
-	public enum JTokenType
+	internal enum JTokenType
 	{
 		/// <summary>
 		/// No token type has been set.

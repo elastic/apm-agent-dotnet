@@ -56,7 +56,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 	///   <code lang="cs" source="..\Src\Newtonsoft.Json.Tests\Documentation\LinqToJsonTests.cs" region="LinqToJsonCreateParse"
 	///       title="Parsing a JSON Object from Text" />
 	/// </example>
-	public class JObject : JContainer, IDictionary<string, JToken?>, INotifyPropertyChanged
+	internal class JObject : JContainer, IDictionary<string, JToken?>, INotifyPropertyChanged
 #if HAVE_COMPONENT_MODEL
         , ICustomTypeDescriptor
 #endif

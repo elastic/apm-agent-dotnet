@@ -34,7 +34,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 	/// <summary>
 	/// Resolves member mappings for a type, camel casing property names.
 	/// </summary>
-	public class CamelCasePropertyNamesContractResolver : DefaultContractResolver
+	internal class CamelCasePropertyNamesContractResolver : DefaultContractResolver
 	{
 		private static Dictionary<StructMultiKey<Type, Type>, JsonContract>? _contractCache;
 		private static readonly DefaultJsonNameTable NameTable = new();

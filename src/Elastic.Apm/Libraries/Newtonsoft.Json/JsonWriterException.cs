@@ -35,7 +35,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 #if HAVE_BINARY_EXCEPTION_SERIALIZATION
     [Serializable]
 #endif
-	public class JsonWriterException : JsonException
+	internal class JsonWriterException : JsonException
 	{
 		/// <summary>
 		/// Gets the path to the JSON where the error occurred.

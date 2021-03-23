@@ -8,7 +8,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 	/// and write values during serialization.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-	public class JsonExtensionDataAttribute : Attribute
+	internal class JsonExtensionDataAttribute : Attribute
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="JsonExtensionDataAttribute" /> class.

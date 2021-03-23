@@ -37,7 +37,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Bson
 	/// </summary>
 	[Obsolete(
 		"BSON reading and writing has been moved to its own package. See https://www.nuget.org/packages/Newtonsoft.Json.Bson for more details.")]
-	public class BsonObjectId
+	internal class BsonObjectId
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="BsonObjectId" /> class.

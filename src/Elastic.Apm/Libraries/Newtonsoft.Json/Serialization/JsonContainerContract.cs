@@ -39,7 +39,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 	/// <summary>
 	/// Contract details for a <see cref="System.Type" /> used by the <see cref="JsonSerializer" />.
 	/// </summary>
-	public class JsonContainerContract : JsonContract
+	internal class JsonContainerContract : JsonContract
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="JsonContainerContract" /> class.

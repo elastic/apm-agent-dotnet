@@ -35,7 +35,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Converters
 	/// <summary>
 	/// Converts a <see cref="KeyValuePair{TKey,TValue}" /> to and from JSON.
 	/// </summary>
-	public class KeyValuePairConverter : JsonConverter
+	internal class KeyValuePairConverter : JsonConverter
 	{
 		private const string KeyName = "Key";
 		private const string ValueName = "Value";

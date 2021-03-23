@@ -39,7 +39,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 	/// <summary>
 	/// Specifies the settings on a <see cref="JsonSerializer" /> object.
 	/// </summary>
-	public class JsonSerializerSettings
+	internal class JsonSerializerSettings
 	{
 		internal const bool DefaultCheckAdditionalContent = false;
 		internal const ConstructorHandling DefaultConstructorHandling = ConstructorHandling.Default;

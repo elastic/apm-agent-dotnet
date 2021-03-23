@@ -32,7 +32,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 	/// <summary>
 	/// Provides data for the Error event.
 	/// </summary>
-	public class ErrorEventArgs : EventArgs
+	internal class ErrorEventArgs : EventArgs
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ErrorEventArgs" /> class.

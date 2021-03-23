@@ -44,7 +44,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Schema
     [Serializable]
 #endif
 	[Obsolete("JSON Schema validation has been moved to its own package. See https://www.newtonsoft.com/jsonschema for more details.")]
-	public class JsonSchemaException : JsonException
+	internal class JsonSchemaException : JsonException
 	{
 		/// <summary>
 		/// Gets the line number indicating where the error occurred.

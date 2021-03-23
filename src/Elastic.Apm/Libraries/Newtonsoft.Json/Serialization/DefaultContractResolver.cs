@@ -56,7 +56,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 	/// <summary>
 	/// Used by <see cref="JsonSerializer" /> to resolve a <see cref="JsonContract" /> for a given <see cref="System.Type" />.
 	/// </summary>
-	public class DefaultContractResolver : IContractResolver
+	internal class DefaultContractResolver : IContractResolver
 	{
 		// Json.NET Schema requires a property
 		internal static IContractResolver Instance { get; } = new DefaultContractResolver();
@@ -538,7 +538,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 		{
 			private readonly IEnumerable<KeyValuePair<TEnumeratorKey, TEnumeratorValue>> _e;
 
-			public EnumerableDictionaryWrapper(IEnumerable<KeyValuePair<TEnumeratorKey, TEnumeratorValue>> e)
+			internal EnumerableDictionaryWrapper(IEnumerable<KeyValuePair<TEnumeratorKey, TEnumeratorValue>> e)
 			{
 				ValidationUtils.ArgumentNotNull(e, nameof(e));
 				_e = e;

@@ -5,7 +5,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 	/// <summary>
 	/// Specifies the settings used when loading JSON.
 	/// </summary>
-	public class JsonLoadSettings
+	internal class JsonLoadSettings
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="JsonLoadSettings" /> class.

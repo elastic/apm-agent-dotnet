@@ -39,7 +39,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 	///       region="PreservingObjectReferencesOn" title="Preserve Object References" />
 	/// </example>
 	[Flags]
-	public enum PreserveReferencesHandling
+	internal enum PreserveReferencesHandling
 	{
 		/// <summary>
 		/// Do not preserve references when serializing types.

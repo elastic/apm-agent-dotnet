@@ -34,7 +34,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Converters
 	/// <summary>
 	/// Converts a <see cref="Version" /> to and from a string (e.g. <c>"1.2.3.4"</c>).
 	/// </summary>
-	public class VersionConverter : JsonConverter
+	internal class VersionConverter : JsonConverter
 	{
 		/// <summary>
 		/// Writes the JSON representation of the object.

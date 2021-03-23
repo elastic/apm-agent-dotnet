@@ -34,7 +34,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 	/// <summary>
 	/// Converts an object to and from JSON.
 	/// </summary>
-	public abstract class JsonConverter
+	internal abstract class JsonConverter
 	{
 		/// <summary>
 		/// Determines whether this instance can convert the specified object type.
@@ -80,7 +80,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 	/// Converts an object to and from JSON.
 	/// </summary>
 	/// <typeparam name="T">The object type to convert.</typeparam>
-	public abstract class JsonConverter<T> : JsonConverter
+	internal abstract class JsonConverter<T> : JsonConverter
 	{
 		/// <summary>
 		/// Reads the JSON representation of the object.

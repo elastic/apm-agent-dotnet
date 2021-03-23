@@ -30,7 +30,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 	/// <summary>
 	/// Specifies how line information is handled when loading JSON.
 	/// </summary>
-	public enum LineInfoHandling
+	internal enum LineInfoHandling
 	{
 		/// <summary>
 		/// Ignore line information.

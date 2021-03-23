@@ -36,7 +36,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 	/// <summary>
 	/// Represents a writer that provides a fast, non-cached, forward-only way of generating JSON data.
 	/// </summary>
-	public class JTokenWriter : JsonWriter
+	internal class JTokenWriter : JsonWriter
 	{
 		private JContainer? _token;
 

@@ -33,5 +33,5 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 	/// Instructs the <see cref="JsonSerializer" /> to always serialize the member, and to require that the member has a value.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-	public sealed class JsonRequiredAttribute : Attribute { }
+	internal sealed class JsonRequiredAttribute : Attribute { }
 }

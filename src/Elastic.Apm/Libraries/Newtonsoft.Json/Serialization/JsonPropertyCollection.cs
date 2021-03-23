@@ -37,7 +37,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 	/// <summary>
 	/// A collection of <see cref="JsonProperty" /> objects.
 	/// </summary>
-	public class JsonPropertyCollection : KeyedCollection<string, JsonProperty>
+	internal class JsonPropertyCollection : KeyedCollection<string, JsonProperty>
 	{
 		private readonly List<JsonProperty> _list;
 		private readonly Type _type;

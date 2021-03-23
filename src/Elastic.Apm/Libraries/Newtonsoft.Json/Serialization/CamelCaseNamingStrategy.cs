@@ -32,7 +32,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 	/// <summary>
 	/// A camel case naming strategy.
 	/// </summary>
-	public class CamelCaseNamingStrategy : NamingStrategy
+	internal class CamelCaseNamingStrategy : NamingStrategy
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CamelCaseNamingStrategy" /> class.

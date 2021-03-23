@@ -34,7 +34,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 	/// Instructs the <see cref="JsonSerializer" /> how to serialize the object.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
-	public abstract class JsonContainerAttribute : Attribute
+	internal abstract class JsonContainerAttribute : Attribute
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="JsonContainerAttribute" /> class.

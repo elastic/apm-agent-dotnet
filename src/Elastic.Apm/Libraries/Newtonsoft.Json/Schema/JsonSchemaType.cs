@@ -42,7 +42,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Schema
 	/// </summary>
 	[Flags]
 	[Obsolete("JSON Schema validation has been moved to its own package. See https://www.newtonsoft.com/jsonschema for more details.")]
-	public enum JsonSchemaType
+	internal enum JsonSchemaType
 	{
 		/// <summary>
 		/// No type specified.

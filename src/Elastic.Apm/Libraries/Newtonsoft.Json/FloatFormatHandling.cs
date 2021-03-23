@@ -33,7 +33,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 	/// Specifies float format handling options when writing special floating point numbers, e.g. <see cref="double.NaN" />,
 	/// <see cref="double.PositiveInfinity" /> and <see cref="double.NegativeInfinity" /> with <see cref="JsonWriter" />.
 	/// </summary>
-	public enum FloatFormatHandling
+	internal enum FloatFormatHandling
 	{
 		/// <summary>
 		/// Write special floating point values as strings in JSON, e.g. <c>"NaN"</c>, <c>"Infinity"</c>, <c>"-Infinity"</c>.

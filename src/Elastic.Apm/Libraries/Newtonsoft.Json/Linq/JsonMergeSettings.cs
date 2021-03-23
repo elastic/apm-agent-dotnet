@@ -32,7 +32,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 	/// <summary>
 	/// Specifies the settings used when merging JSON.
 	/// </summary>
-	public class JsonMergeSettings
+	internal class JsonMergeSettings
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="JsonMergeSettings" /> class.

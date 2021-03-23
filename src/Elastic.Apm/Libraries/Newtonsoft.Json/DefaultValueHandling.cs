@@ -40,7 +40,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 	///       region="ReducingSerializedJsonSizeDefaultValueHandlingExample" title="DefaultValueHandling Ignore Example" />
 	/// </example>
 	[Flags]
-	public enum DefaultValueHandling
+	internal enum DefaultValueHandling
 	{
 		/// <summary>
 		/// Include members where the member value is the same as the member's default value when serializing objects.

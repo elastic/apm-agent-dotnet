@@ -30,7 +30,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 	/// <summary>
 	/// Used to resolve references when serializing and deserializing JSON by the <see cref="JsonSerializer" />.
 	/// </summary>
-	public interface IReferenceResolver
+	internal interface IReferenceResolver
 	{
 		/// <summary>
 		/// Adds a reference to the specified object.

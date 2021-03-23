@@ -35,7 +35,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface
 		| AttributeTargets.Enum | AttributeTargets.Parameter)]
-	public sealed class JsonConverterAttribute : Attribute
+	internal sealed class JsonConverterAttribute : Attribute
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="JsonConverterAttribute" /> class.

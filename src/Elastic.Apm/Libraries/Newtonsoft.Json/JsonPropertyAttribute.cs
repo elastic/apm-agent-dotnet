@@ -34,7 +34,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 	/// Instructs the <see cref="JsonSerializer" /> to always serialize the member with the specified name.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Parameter)]
-	public sealed class JsonPropertyAttribute : Attribute
+	internal sealed class JsonPropertyAttribute : Attribute
 	{
 		/// <summary>
 		/// Initializes a new instance of the <see cref="JsonPropertyAttribute" /> class.

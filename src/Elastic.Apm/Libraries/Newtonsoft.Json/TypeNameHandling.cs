@@ -39,7 +39,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 	/// when deserializing with a value other than <see cref="TypeNameHandling.None" />.
 	/// </remarks>
 	[Flags]
-	public enum TypeNameHandling
+	internal enum TypeNameHandling
 	{
 		/// <summary>
 		/// Do not include the .NET type name when serializing types.

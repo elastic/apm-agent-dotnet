@@ -41,7 +41,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Schema
 	/// </note>
 	/// </summary>
 	[Obsolete("JSON Schema validation has been moved to its own package. See https://www.newtonsoft.com/jsonschema for more details.")]
-	public enum UndefinedSchemaIdHandling
+	internal enum UndefinedSchemaIdHandling
 	{
 		/// <summary>
 		/// Do not infer a schema Id.

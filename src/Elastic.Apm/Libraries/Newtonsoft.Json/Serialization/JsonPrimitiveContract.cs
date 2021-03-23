@@ -34,7 +34,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 	/// <summary>
 	/// Contract details for a <see cref="Type" /> used by the <see cref="JsonSerializer" />.
 	/// </summary>
-	public class JsonPrimitiveContract : JsonContract
+	internal class JsonPrimitiveContract : JsonContract
 	{
 		private static readonly Dictionary<Type, ReadType> ReadTypeMap = new()
 		{
