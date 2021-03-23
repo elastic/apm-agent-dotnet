@@ -26,7 +26,6 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			_sender = new MockPayloadSender(logger);
 			_agent = new ApmAgent(new TestAgentComponents(logger: logger, payloadSender: _sender));
 			_agent.Subscribe(new AzureQueueStorageDiagnosticsSubscriber());
-
 		}
 
 		[AzureCredentialsFact]

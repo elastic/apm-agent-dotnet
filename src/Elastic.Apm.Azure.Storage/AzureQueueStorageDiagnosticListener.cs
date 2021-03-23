@@ -15,8 +15,16 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Azure.Storage
 {
+	internal static class AzureQueueStorage
+	{
+		internal const string SpanName = "AzureQueue";
+		internal const string Type = "messaging";
+		internal const string SubType = "azurequeue";
+
+	}
+
 	/// <summary>
-	/// Creates transactions and spans for diagnostic events from Azure.Storage.Queues
+	/// Creates transactions and spans for Azure Queue Storage diagnostic events from Azure.Storage.Queues
 	/// </summary>
 	public class AzureQueueStorageDiagnosticListener : DiagnosticListenerBase
 	{
@@ -29,7 +37,7 @@ namespace Elastic.Apm.Azure.Storage
 		{
 			_realAgent = agent as ApmAgent;
 			_service = Service.GetDefaultService(agent.ConfigurationReader, agent.Logger);
-			_service.Framework = new Framework { Name = "AzureQueue" };
+			_service.Framework = new Framework { Name = AzureQueueStorage.SpanName };
 		}
 
 		public override string Name { get; } = "Azure.Storage.Queues";
@@ -100,18 +108,18 @@ namespace Elastic.Apm.Azure.Storage
 				return;
 
 			var spanName = queueName is null
-				? $"AzureQueue SEND"
-				: $"AzureQueue SEND to {queueName}";
+				? $"{AzureQueueStorage.SpanName} SEND"
+				: $"{AzureQueueStorage.SpanName} SEND to {queueName}";
 
-			var span = currentSegment.StartSpan(spanName, "messaging", "azurequeue", "send");
+			var span = currentSegment.StartSpan(spanName, AzureQueueStorage.Type, AzureQueueStorage.SubType, "send");
 			span.Context.Destination = new Destination
 			{
 				Address = destinationAddress,
 				Service = new Destination.DestinationService
 				{
-					Name = "azurequeue",
-					Resource = queueName is null ? "azurequeue" : $"azurequeue/{queueName}",
-					Type = "messaging"
+					Name = AzureQueueStorage.SubType,
+					Resource = queueName is null ? AzureQueueStorage.SubType : $"{AzureQueueStorage.SubType}/{queueName}",
+					Type = AzureQueueStorage.Type
 				}
 			};
 
@@ -142,10 +150,10 @@ namespace Elastic.Apm.Azure.Storage
 				return;
 
 			var transactionName = queueName is null
-				? $"AzureQueue RECEIVE"
-				: $"AzureQueue RECEIVE from {queueName}";
+				? $"{AzureQueueStorage.SpanName} RECEIVE"
+				: $"{AzureQueueStorage.SpanName} RECEIVE from {queueName}";
 
-			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, "messaging");
+			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, AzureQueueStorage.Type);
 			transaction.Context.Service = _service;
 
 			// transaction creation will create an activity, so use this as the key.
@@ -230,15 +238,20 @@ namespace Elastic.Apm.Azure.Storage
 		/// </summary>
 		private class QueueUrl
 		{
-			private readonly UriBuilder _builder;
+			public QueueUrl(string url)
+			{
+				var builder = new UriBuilder(url);
 
-			public QueueUrl(string url) => _builder = new UriBuilder(url);
+				FullyQualifiedNamespace = builder.Uri.GetLeftPart(UriPartial.Authority) + "/";
 
-			public string QueueName => _builder.Uri.Segments.Length > 2
-				? _builder.Uri.Segments[1].TrimEnd('/')
-				: null;
+				QueueName = builder.Uri.Segments.Length > 1
+					? builder.Uri.Segments[1].TrimEnd('/')
+					: null;
+			}
 
-			public string FullyQualifiedNamespace => _builder.Uri.GetLeftPart(UriPartial.Authority) + "/";
+			public string QueueName { get; }
+
+			public string FullyQualifiedNamespace { get; }
 		}
 	}
 

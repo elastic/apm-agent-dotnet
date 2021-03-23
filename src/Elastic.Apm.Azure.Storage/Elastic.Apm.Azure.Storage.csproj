@@ -1,9 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
+      <TargetFramework>netstandard2.0</TargetFramework>
+
+      <AssemblyName>Elastic.Apm.Azure.Storage</AssemblyName>
+      <RootNamespace>Elastic.Apm.Azure.Storage</RootNamespace>
+      <PackageId>Elastic.Apm.Azure.Storage</PackageId>
+      <Description>Elastic APM for Azure Storage. This package contains auto instrumentation for Azure.Storage.Queues,
+        and Azure.Storage.Blobs packages.</Description>
+      <PackageTags>apm, monitoring, elastic, elasticapm, analytics, azure, storage, queue, blob</PackageTags>
+      <IsPackable>true</IsPackable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <InternalsVisibleTo Include="Elastic.Apm.Azure.Storage.Tests" Key="$(ExposedPublicKey)" />
+    </ItemGroup>
+  
     <ItemGroup>
       <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
     </ItemGroup>
