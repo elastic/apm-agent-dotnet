@@ -13,8 +13,8 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json.Converters;
 
 namespace Elastic.Apm.Model
 {

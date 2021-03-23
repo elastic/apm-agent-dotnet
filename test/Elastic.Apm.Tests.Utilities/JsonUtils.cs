@@ -5,8 +5,8 @@
 using System.Globalization;
 using System.IO;
 using Elastic.Apm.Helpers;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 
 namespace Elastic.Apm.Tests.Utilities
 {
@@ -15,10 +15,12 @@ namespace Elastic.Apm.Tests.Utilities
 		public static string PrettyFormat(this string inputJson)
 		{
 			using var stringWriter = new StringWriter(CultureInfo.InvariantCulture);
-			using var jsonTextWriter = new JsonTextWriter(stringWriter);
-			jsonTextWriter.Formatting = Formatting.Indented;
-			jsonTextWriter.Indentation = TextUtils.IndentationLength;
-			jsonTextWriter.IndentChar = TextUtils.IndentationChar;
+			using var jsonTextWriter = new JsonTextWriter(stringWriter)
+			{
+				Formatting = Formatting.Indented,
+				Indentation = TextUtils.IndentationLength,
+				IndentChar = TextUtils.IndentationChar
+			};
 			JToken.Parse(inputJson).WriteTo(jsonTextWriter);
 			return stringWriter.ToString();
 		}

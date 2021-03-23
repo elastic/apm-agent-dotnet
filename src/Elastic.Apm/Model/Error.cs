@@ -7,7 +7,7 @@ using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Model
 {

@@ -6,7 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using Elastic.Apm.Config;
-using Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Report.Serialization
 {

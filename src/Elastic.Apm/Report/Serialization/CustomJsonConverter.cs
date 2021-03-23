@@ -4,7 +4,7 @@
 
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Report.Serialization
 {
