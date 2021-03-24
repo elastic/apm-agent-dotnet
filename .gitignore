@@ -348,3 +348,6 @@ ElasticApmAgent.NetCore.sln
 terraform.tfstate
 terraform.tfstate.backup
 .terraform.tfstate.lock.info
+
+# Azure credentials file
+.credentials.json

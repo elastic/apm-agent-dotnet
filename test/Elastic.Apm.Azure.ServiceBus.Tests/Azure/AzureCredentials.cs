@@ -5,8 +5,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Elastic.Apm.Tests.Utilities;
 using Newtonsoft.Json;
 using ProcNet;
 
@@ -25,16 +27,16 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests.Azure
 		[JsonConstructor]
 		private ServicePrincipal() { }
 
-		[JsonProperty]
+		[JsonProperty("clientId")]
 		public string ClientId { get; private set; }
 
-		[JsonProperty]
+		[JsonProperty("clientSecret")]
 		public string ClientSecret { get; private set; }
 
-		[JsonProperty]
+		[JsonProperty("tenantId")]
 		public string TenantId { get; private set; }
 
-		[JsonProperty]
+		[JsonProperty("subscriptionId")]
 		public string SubscriptionId { get; private set; }
 
 		public ServicePrincipal(string clientId, string clientSecret, string tenantId, string subscriptionId)
@@ -71,21 +73,28 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests.Azure
 			var runningInCi = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_ID"));
 			if (runningInCi)
 			{
-				var clientId = Environment.GetEnvironmentVariable(ARM_CLIENT_ID);
-				var clientSecret = Environment.GetEnvironmentVariable(ARM_CLIENT_SECRET);
-				var tenantId = Environment.GetEnvironmentVariable(ARM_TENANT_ID);
-				var subscriptionId = Environment.GetEnvironmentVariable(ARM_SUBSCRIPTION_ID);
-
-				if (string.IsNullOrEmpty(clientId) ||
-					string.IsNullOrEmpty(clientSecret) ||
-					string.IsNullOrEmpty(tenantId) ||
-					string.IsNullOrEmpty(subscriptionId))
+				var credentialsFile = Path.Combine(SolutionPaths.Root, ".credentials.json");
+				if (!File.Exists(credentialsFile))
 					return new Unauthenticated();
 
-				return new ServicePrincipal(clientId, clientSecret, tenantId, subscriptionId);
+				try
+				{
+					using var fileStream = new FileStream(credentialsFile, FileMode.Open, FileAccess.Read, FileShare.Read);
+					using var streamReader = new StreamReader(fileStream);
+					using var jsonTextReader = new JsonTextReader(streamReader);
+					var serializer = new JsonSerializer();
+					return serializer.Deserialize<ServicePrincipal>(jsonTextReader);
+				}
+				catch (Exception e)
+				{
+					Console.WriteLine(e);
+					return new Unauthenticated();
+				}
 			}
 
-			return LoggedIntoAccountWithAzureCli() ? new AzureUserAccount() : new Unauthenticated();
+			return LoggedIntoAccountWithAzureCli()
+				? new AzureUserAccount()
+				: new Unauthenticated();
 		}
 
 		/// <summary>
