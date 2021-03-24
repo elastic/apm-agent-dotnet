@@ -25,10 +25,8 @@ namespace Elastic.Apm.Model
 		private readonly IApmServerInfo _apmServerInfo;
 		private readonly Lazy<Context> _context = new Lazy<Context>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
-
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
-
 		private readonly string _traceState;
 
 		// This constructor is meant for serialization
@@ -99,32 +97,35 @@ namespace Elastic.Apm.Model
 			HasCustomName = false;
 			Type = type;
 
-			// For each transaction start, we fire an Activity
-			// If Activity.Current is null, then we create one with this and set its traceid, which will flow to all child activities and we also reuse it in Elastic APM, so it'll be the same on all Activities and in Elastic
-			// If Activity.Current is not null, we pick up its traceid and apply it in Elastic APM
+			// For each new transaction, start an Activity if we're not ignoring them.
+			// If Activity.Current is not null, the started activity will be a child activity,
+			// so the traceid and tracestate of the parent will flow to it.
 			if (!ignoreActivity)
-				StartActivity();
+				_activity = StartActivity();
 
 			var isSamplingFromDistributedTracingData = false;
 			if (distributedTracingData == null)
 			{
-				// Here we ignore Activity.Current.ActivityTraceFlags because it starts out without setting the IsSampled flag, so relying on that would mean a transaction is never sampled.
-				// To be sure activity creation was successful let's check on it
+				// ignore the created activity ActivityTraceFlags because it starts out without setting the IsSampled flag,
+				// so relying on that would mean a transaction is never sampled.
 				if (_activity != null)
 				{
-					// In case activity creation was successful, let's reuse the ids
+					// If an activity was created, reuse its id
 					Id = _activity.SpanId.ToHexString();
 					TraceId = _activity.TraceId.ToHexString();
+					_traceState = _activity.TraceStateString;
 
 					var idBytesFromActivity = new Span<byte>(new byte[16]);
 					_activity.TraceId.CopyTo(idBytesFromActivity);
-					// Read right most bits. From W3C TraceContext: "it is important for trace-id to carry "uniqueness" and "randomness" in the right part of the trace-id..."
+
+					// Read right most bits. From W3C TraceContext: "it is important for trace-id to carry "uniqueness" and "randomness"
+					// in the right part of the trace-id..."
 					idBytesFromActivity = idBytesFromActivity.Slice(8);
 					IsSampled = sampler.DecideIfToSample(idBytesFromActivity.ToArray());
 				}
 				else
 				{
-					// In case from some reason the activity creation was not successful, let's create new random ids
+					// If no activity is created, create new random ids
 					var idBytes = new byte[8];
 					Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 					IsSampled = sampler.DecideIfToSample(idBytes);
@@ -133,18 +134,36 @@ namespace Elastic.Apm.Model
 					TraceId = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 				}
 
-				// PrentId could be also set here, but currently in the UI each trace must start with a transaction where the ParentId is null,
+				// ParentId could be also set here, but currently in the UI each trace must start with a transaction where the ParentId is null,
 				// so to avoid https://github.com/elastic/apm-agent-dotnet/issues/883 we don't set it yet.
 			}
 			else
 			{
 				if (_activity != null)
+				{
 					Id = _activity.SpanId.ToHexString();
+
+					// try to set the parent id and tracestate on the created activity, based on passed distributed tracing data.
+					// This is so that the distributed tracing data will flow to any child activities
+					try
+					{
+						_activity.SetParentId(
+							ActivityTraceId.CreateFromString(distributedTracingData.TraceId.AsSpan()),
+							ActivitySpanId.CreateFromString(distributedTracingData.ParentId.AsSpan()),
+							distributedTracingData.FlagRecorded ? ActivityTraceFlags.Recorded : ActivityTraceFlags.None);
+						_activity.TraceStateString = distributedTracingData.TraceState;
+					}
+					catch (Exception e)
+					{
+						_logger.Error()?.LogException(e, "Error setting trace context on created activity");
+					}
+				}
 				else
 				{
 					var idBytes = new byte[8];
 					Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 				}
+
 				TraceId = distributedTracingData.TraceId;
 				ParentId = distributedTracingData.ParentId;
 				IsSampled = distributedTracingData.FlagRecorded;
@@ -153,7 +172,7 @@ namespace Elastic.Apm.Model
 			}
 
 			// Also mark the sampling decision on the Activity
-			if (IsSampled && _activity != null && !ignoreActivity)
+			if (IsSampled && _activity != null)
 				_activity.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
 
 			SampleRate = IsSampled ? sampler.Rate : 0;
@@ -177,13 +196,14 @@ namespace Elastic.Apm.Model
 						" Start time: {Time} (as timestamp: {Timestamp})",
 						this, IsSampled, sampler, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 			}
+		}
 
-			void StartActivity()
-			{
-				_activity = new Activity(ApmTransactionActivityName);
-				_activity.SetIdFormat(ActivityIdFormat.W3C);
-				_activity.Start();
-			}
+		private Activity StartActivity()
+		{
+			var activity = new Activity(ApmTransactionActivityName);
+			activity.SetIdFormat(ActivityIdFormat.W3C);
+			activity.Start();
+			return activity;
 		}
 
 		/// <summary>
@@ -192,7 +212,7 @@ namespace Elastic.Apm.Model
 		/// With this, in case Activity.Current is null, the agent will set it and when the next Activity gets created it'll
 		/// have this activity as its parent and the TraceId will flow to all Activity instances.
 		/// </summary>
-		private Activity _activity;
+		private readonly Activity _activity;
 
 		private bool _isEnded;
 
@@ -305,6 +325,7 @@ namespace Elastic.Apm.Model
 		internal double SampleRate { get; }
 
 		internal Service Service;
+
 
 		[JsonProperty("span_count")]
 		public SpanCount SpanCount { get; set; }
