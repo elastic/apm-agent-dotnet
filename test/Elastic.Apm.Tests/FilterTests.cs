@@ -217,7 +217,7 @@ namespace Elastic.Apm.Tests
 
 				foreach (var receivedEvent in payloadStrings)
 				{
-					var jObject = serializer.Deserialize<JObject>(receivedEvent);
+					var jObject = JObject.Parse(receivedEvent);
 					var property = jObject.Properties().First();
 
 					switch (property.Name)
