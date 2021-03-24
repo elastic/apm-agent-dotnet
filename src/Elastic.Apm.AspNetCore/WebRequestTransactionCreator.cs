@@ -255,16 +255,16 @@ namespace Elastic.Apm.AspNetCore
 		private static RequestInfo? CollectGraphQlInfo(Activity activity)
 		{
 			RequestInfo? requestInfo = default;
-			var operationName = activity.Tags.FirstOrDefault(n => n.Key == "graphql.operation").Value;
-			var operationResult = activity.Tags.FirstOrDefault(n => n.Key == "graphql.result").Value;
-			var operationOutcome = activity.Tags.FirstOrDefault(n => n.Key == "graphql.outcome").Value;
+			var name = activity.Tags.FirstOrDefault(n => n.Key == "graphql.operation").Value;
+			var result = activity.Tags.FirstOrDefault(n => n.Key == "graphql.result").Value;
+			var rawOutcome = activity.Tags.FirstOrDefault(n => n.Key == "graphql.outcome").Value;
 
-			if (!string.IsNullOrEmpty(operationName) && !string.IsNullOrEmpty(operationResult))
+			if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(result) && !string.IsNullOrEmpty(rawOutcome))
 			{
-				if (!Enum.TryParse(operationOutcome, true, out Outcome outcome))
+				if (!Enum.TryParse(rawOutcome, true, out Outcome outcome))
 					outcome = Outcome.Unknown;
 
-				requestInfo = new RequestInfo(operationName, operationResult, outcome);
+				requestInfo = new RequestInfo(name, result, outcome);
 			}
 
 			return requestInfo;
