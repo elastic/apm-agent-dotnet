@@ -49,6 +49,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "files", "files", "{B406113B
 		dotnet-tools.json = dotnet-tools.json
 		global.json = global.json
 		LICENSE = LICENSE
+		NOTICE.txt = NOTICE.txt
 		README.md = README.md
 		RELEASING.md = RELEASING.md
 		xunit.runner.json = xunit.runner.json
@@ -128,7 +129,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.StartupHook.Tes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Extensions.Logging", "src\Elastic.Apm.Extensions.Logging\Elastic.Apm.Extensions.Logging.csproj", "{9BAEEF56-4061-488A-8FB8-28BDBBB26C3D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Extensions.Logging.Tests", "test\Elastic.Apm.Extensions.Logging.Tests\Elastic.Apm.Extensions.Logging.Tests.csproj", "{B235B13F-42AE-42DA-A3C8-20D047F38685}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Extensions.Logging.Tests", "test\Elastic.Apm.Extensions.Logging.Tests\Elastic.Apm.Extensions.Logging.Tests.csproj", "{B235B13F-42AE-42DA-A3C8-20D047F38685}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.ServiceBus", "src\Elastic.Apm.Azure.ServiceBus\Elastic.Apm.Azure.ServiceBus.csproj", "{1D43C8C5-4116-45C5-9F4B-56C1D926ED29}"
 EndProject
