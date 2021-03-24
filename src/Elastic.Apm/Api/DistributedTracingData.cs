@@ -2,7 +2,6 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using System;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 
@@ -42,24 +41,7 @@ namespace Elastic.Apm.Api
 		/// <returns>
 		/// String containing the instance in serialized form.
 		/// </returns>
-		[Obsolete("Use " + nameof(TraceparentTextHeader))]
 		public string SerializeToString() => TraceContext.BuildTraceparent(this);
-
-		/// <summary>
-		/// Gets the traceparent text header from this instance of <see cref="DistributedTracingData"/>.
-		/// The traceparent header should be passed to the callee.
-		/// <see cref="FromTraceContext" /> should be used to instantiate <see cref="DistributedTracingData"/> at the callee side.
-		/// </summary>
-		/// <returns>A new instance of the traceparent header</returns>
-		public string TraceparentTextHeader => TraceContext.BuildTraceparent(this);
-
-		/// <summary>
-		/// Gets the tracestate text header from this instance of <see cref="DistributedTracingData"/>.
-		/// The tracestate header should be passed to the callee.
-		/// <see cref="FromTraceContext" /> should be used to instantiate <see cref="DistributedTracingData"/> at the callee side.
-		/// </summary>
-		/// <returns>A new instance of the tracestate header</returns>
-		public string TracestateTextHeader => TraceState?.ToTextHeader();
 
 		/// <summary>
 		/// Deserializes an instance from a string.
@@ -70,25 +52,14 @@ namespace Elastic.Apm.Api
 		/// <returns>
 		/// Instance deserialized from <paramref name="serialized" />.
 		/// </returns>
-		[Obsolete("Use " + nameof(FromTraceContext))]
 		public static DistributedTracingData TryDeserializeFromString(string serialized) => TraceContext.TryExtractTracingData(serialized);
-
-		/// <summary>
-		/// Creates an instance of <see cref="DistributedTracingData"/> from Trace Context headers
-		/// </summary>
-		/// <param name="traceParent">The traceparent header value</param>
-		/// <param name="traceState">The tracestate header value. If there are multiple header values, join as comma-separated</param>
-		/// <returns>A new instance of <see cref="DistributedTracingData"/> if the header values represent a valid trace context, otherwise null
-		/// </returns>
-		public static DistributedTracingData FromTraceContext(string traceParent, string traceState = null) =>
-			TraceContext.TryExtractTracingData(traceParent, traceState);
 
 		public override string ToString() => new ToStringBuilder(nameof(DistributedTracingData))
 		{
 			{ nameof(TraceId), TraceId },
 			{ nameof(ParentId), ParentId },
 			{ nameof(FlagRecorded), FlagRecorded },
-			{ nameof(TraceState), TracestateTextHeader }
+			{ nameof(TraceState), TraceState?.ToTextHeader() }
 		}.ToString();
 	}
 }

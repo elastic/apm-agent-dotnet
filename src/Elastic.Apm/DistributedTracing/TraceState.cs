@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -25,9 +26,10 @@ namespace Elastic.Apm.DistributedTracing
 
 		public double? SampleRate { get; private set; }
 
-		private List<string> _tracestate;
+		private readonly List<string> _tracestate;
 		private StringBuilder _rewriteBuffer;
 		private int _sizeLimit;
+		private int _headerIndex = -1;
 
 		public int SizeLimit
 		{
@@ -50,24 +52,88 @@ namespace Elastic.Apm.DistributedTracing
 		}
 
 		/// <summary>
-		/// Sets the sample rate
+		/// Sets the sample rate. If a sample rate has already been set, the existing sample rate is removed
+		/// and the new sample rate appended to the front of tracestate.
 		/// </summary>
 		/// <param name="sampleRate">The sample rate</param>
-		/// <exception cref="InvalidOperationException">
-		/// thrown if the sample rate has already been set
-		/// </exception>
 		internal void SetSampleRate(double sampleRate)
 		{
-			if (SampleRate.HasValue)
-			{
-				// sample rate is set either explicitly from this method (for root transactions)
-				// or through upstream header, thus there is no need to change after. This allows to only
-				// write/rewrite headers once
-				throw new InvalidOperationException("sample rate has already been set from headers");
-			}
+			var rounded = Sampler.RoundToPrecision(sampleRate);
+
+			var headerValue =
+				_headerIndex > -1
+					? MutateTracestate(rounded)
+					: GetHeaderValue(rounded);
+
+			const int headerIndex = 0;
+			_tracestate.Insert(headerIndex, headerValue);
+			_headerIndex = headerIndex;
 
 			SampleRate = sampleRate;
-			_tracestate.Add(GetHeaderValue(sampleRate));
+		}
+
+		private string MutateTracestate(double sampleRate)
+		{
+			var headerValue = _tracestate[_headerIndex];
+			var vendorIndex = headerValue.IndexOf(VendorPrefix, StringComparison.Ordinal);
+
+			if (vendorIndex > -1)
+			{
+				var start = vendorIndex;
+				var end = start;
+				var c = headerValue[end];
+				while (end < headerValue.Length && c != VendorSeparator)
+					c = headerValue[end++];
+
+				if (end < headerValue.Length)
+					end--;
+
+				// Get the elastic vendor from the header value
+				var elasticVendor = headerValue.Substring(start, end - start);
+
+				// if the character before the vendor is a separator, remove it
+				if (start > 0 && headerValue[start - 1] == VendorSeparator)
+					start--;
+
+				// if the character after the vendor is a separator, remove it
+				if (start == 0 && end < headerValue.Length && headerValue[end] == VendorSeparator)
+					end++;
+
+				// Remove the elastic vendor from the header value
+				headerValue = headerValue.Remove(start, end - start);
+
+				// if the header is now an empty string, simply remove it
+				if (headerValue == string.Empty)
+					_tracestate.RemoveAt(_headerIndex);
+				else
+					_tracestate[_headerIndex] = headerValue;
+
+				// now replace the sample rate in the elastic vendor
+				var sampleRateIndex = elasticVendor.IndexOf(SampleRatePrefix, StringComparison.Ordinal);
+				if (sampleRateIndex > -1)
+				{
+					start = sampleRateIndex + SampleRatePrefix.Length;
+					end = start;
+					if (end < elasticVendor.Length)
+					{
+						c = elasticVendor[end];
+						while (end < elasticVendor.Length && c != EntrySeparator)
+							c = elasticVendor[end++];
+
+						if (end < elasticVendor.Length)
+							end--;
+					}
+
+					elasticVendor = elasticVendor.Remove(start, end - start)
+						.Insert(start, sampleRate.ToString(CultureInfo.InvariantCulture));
+				}
+				else
+					elasticVendor += EntrySeparator + SampleRatePrefix + sampleRate.ToString(CultureInfo.InvariantCulture);
+
+				return elasticVendor;
+			}
+
+			return GetHeaderValue(sampleRate);
 		}
 
 		/// <summary>
@@ -77,9 +143,12 @@ namespace Elastic.Apm.DistributedTracing
 		public void AddTextHeader(string headerValue)
 		{
 			var elasticVendorIndex = headerValue.IndexOf(VendorPrefix, StringComparison.Ordinal);
+			var esVendorPresent = false;
 
 			if (elasticVendorIndex != -1)
 			{
+				esVendorPresent = true;
+
 				var entriesStart = headerValue.IndexOf(SampleRatePrefix, elasticVendorIndex, StringComparison.Ordinal);
 				if (entriesStart != -1)
 				{
@@ -115,7 +184,7 @@ namespace Elastic.Apm.DistributedTracing
 									_rewriteBuffer.Clear();
 
 								_rewriteBuffer.Append(headerValue, 0, valueStart);
-								_rewriteBuffer.Append(rounded);
+								_rewriteBuffer.Append(rounded.ToString(CultureInfo.InvariantCulture));
 								_rewriteBuffer.Append(headerValue, valueEnd, headerValue.Length - valueEnd);
 								headerValue = _rewriteBuffer.ToString();
 							}
@@ -126,6 +195,9 @@ namespace Elastic.Apm.DistributedTracing
 			}
 
 			_tracestate.Add(headerValue);
+
+			if (esVendorPresent)
+				_headerIndex = _tracestate.Count - 1;
 		}
 
 		/// <summary>
@@ -229,7 +301,7 @@ namespace Elastic.Apm.DistributedTracing
 		/// </summary>
 		/// <param name="sampleRate">The sample rate</param>
 		/// <returns>The tracestate header</returns>
-		public static string GetHeaderValue(double sampleRate) => FullPrefix + sampleRate;
+		public static string GetHeaderValue(double sampleRate) => FullPrefix + sampleRate.ToString(CultureInfo.InvariantCulture);
 
 		/// <summary>
 		/// Creates the tracestate text header to send in outgoing requests

@@ -89,9 +89,8 @@ namespace Elastic.Apm.Model
 			ConfigSnapshot = configSnapshot;
 			Timestamp = TimeUtils.TimestampNow();
 
-			_logger = logger?.Scoped($"{nameof(Transaction)}");
+			_logger = logger?.Scoped(nameof(Transaction));
 			_apmServerInfo = apmServerInfo;
-
 			_sender = sender;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
 
@@ -108,6 +107,9 @@ namespace Elastic.Apm.Model
 			var isSamplingFromDistributedTracingData = false;
 			if (distributedTracingData == null)
 			{
+				// We consider a newly created transaction **without** explicitly passed distributed tracing data
+				// to be a root transaction
+
 				// Here we ignore Activity.Current.ActivityTraceFlags because it starts out without setting the IsSampled flag, so relying on that would mean a transaction is never sampled.
 				// To be sure activity creation was successful let's check on it
 				if (_activity != null)
@@ -120,28 +122,50 @@ namespace Elastic.Apm.Model
 					_activity.TraceId.CopyTo(idBytesFromActivity);
 					// Read right most bits. From W3C TraceContext: "it is important for trace-id to carry "uniqueness" and "randomness" in the right part of the trace-id..."
 					idBytesFromActivity = idBytesFromActivity.Slice(8);
+
+					_traceState = new TraceState();
+
+					// If activity has a tracestate, populate the transaction tracestate with it.
+					if (!string.IsNullOrEmpty(_activity.TraceStateString))
+						_traceState.AddTextHeader(_activity.TraceStateString);
+
 					IsSampled = sampler.DecideIfToSample(idBytesFromActivity.ToArray());
+
+					// In the unlikely event that tracestate populated from activity contains an es vendor key, the tracestate
+					// is mutated to set the sample rate defined by the sampler, because we consider a transaction without
+					// explicitly passed distributedTracingData to be a **root** transaction. The end result
+					// is that activity tracestate will be propagated, along with the sample rate defined by this transaction.
+					if (IsSampled)
+					{
+						SampleRate = sampler.Rate;
+						_traceState.SetSampleRate(sampler.Rate);
+					}
+					else
+					{
+						SampleRate = 0;
+						_traceState.SetSampleRate(0);
+					}
 				}
 				else
 				{
-					// In case from some reason the activity creation was not successful, let's create new random ids
+					// If an activity wasn't created, generate values
 					var idBytes = new byte[8];
 					Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 					IsSampled = sampler.DecideIfToSample(idBytes);
 
 					idBytes = new byte[16];
 					TraceId = RandomGenerator.GenerateRandomBytesAsString(idBytes);
-				}
 
-				if (IsSampled)
-				{
-					_traceState = new TraceState(sampler.Rate);
-					SampleRate = sampler.Rate;
-				}
-				else
-				{
-					_traceState = new TraceState(0);
-					SampleRate = 0;
+					if (IsSampled)
+					{
+						_traceState = new TraceState(sampler.Rate);
+						SampleRate = sampler.Rate;
+					}
+					else
+					{
+						_traceState = new TraceState(0);
+						SampleRate = 0;
+					}
 				}
 
 				// ParentId could be also set here, but currently in the UI each trace must start with a transaction where the ParentId is null,
@@ -150,20 +174,24 @@ namespace Elastic.Apm.Model
 			else
 			{
 				if (_activity != null)
+				{
 					Id = _activity.SpanId.ToHexString();
+					// TODO: should _activity's trace context be populated with values from distributedTracingData?
+				}
 				else
 				{
 					var idBytes = new byte[8];
 					Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
 				}
+
 				TraceId = distributedTracingData.TraceId;
 				ParentId = distributedTracingData.ParentId;
 				IsSampled = distributedTracingData.FlagRecorded;
 				isSamplingFromDistributedTracingData = true;
 				_traceState = distributedTracingData.TraceState;
 
-				// If there is no tracestate or no valid es entry with an s attribute, then the agent must
-				// omit sample_rate from non-root transactions and their spans.
+				// If there is no tracestate or no valid "es" vendor entry with an "s" (sample rate) attribute, then the agent must
+				// omit sample rate from non-root transactions and their spans.
 				// See https://github.com/elastic/apm/blob/master/specs/agents/tracing-sampling.md#propagation
 				if (_traceState?.SampleRate is null)
 					SampleRate = null;

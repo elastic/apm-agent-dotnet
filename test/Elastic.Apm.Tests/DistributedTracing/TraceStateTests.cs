@@ -49,7 +49,7 @@ namespace Elastic.Apm.Tests.DistributedTracing
 		}
 
 		[Fact]
-		public void AddSampleRate()
+		public void Added_Sample_Rate_Should_Be_Set_On_TraceState()
 		{
 			var sampleRate = 0.5;
 			var headerValue = TraceState.GetHeaderValue(sampleRate);
@@ -95,7 +95,22 @@ namespace Elastic.Apm.Tests.DistributedTracing
 
 			_traceState.SetSampleRate(0.444);
 			_traceState.SampleRate.Should().Be(0.444);
-			_traceState.ToTextHeader().Should().Be("aa=1|2|3,bb=4|5|6,es=s:0.444");
+			_traceState.ToTextHeader().Should().Be("es=s:0.444,aa=1|2|3,bb=4|5|6");
+		}
+
+		[Theory]
+		[InlineData("es=s:0.5", 0.55554, "es=s:0.5555")]
+		[InlineData("aa=1;2,es=s:0.5", 0.444, "es=s:0.444,aa=1;2")]
+		[InlineData("aa=1;2,es=s:0.5,bb=4|5|6,", 0.444, "es=s:0.444,aa=1;2,bb=4|5|6,")]
+		[InlineData("aa=1;2,bb=4|5|6,", 0.55554, "es=s:0.5555,aa=1;2,bb=4|5|6,")]
+		[InlineData("es=f:1,aa=1;2,bb=4|5|6,", 0.55554, "es=f:1;s:0.5555,aa=1;2,bb=4|5|6,")]
+		[InlineData("aa=1;2,es=f:1,bb=4|5|6,", 0.55554, "es=f:1;s:0.5555,aa=1;2,bb=4|5|6,")]
+		public void SampleRate_Should_Mutate_ElasticVendor_Set_From_Header(string header, double sampleRate, string expected)
+		{
+			_traceState.AddTextHeader(header);
+			_traceState.SetSampleRate(sampleRate);
+			_traceState.SampleRate.Should().Be(sampleRate);
+			_traceState.ToTextHeader().Should().Be(expected);
 		}
 
 		[Theory]

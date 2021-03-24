@@ -19,10 +19,9 @@ namespace ApiSamples
 	{
 		private static void Main(string[] args)
 		{
-			if (args.Length == 2) //in case it's started with arguments, parse DistributedTracingData from them
+			if (args.Length == 1) //in case it's started with arguments, parse DistributedTracingData from them
 			{
-				var distributedTracingData =
-					DistributedTracingData.FromTraceContext(args[0], args[1]);
+				var distributedTracingData = DistributedTracingData.TryDeserializeFromString(args[0]);
 
 				WriteLineToConsole($"Callee process started - continuing trace with distributed tracing data: {distributedTracingData}");
 				var transaction2 = Agent.Tracer.StartTransaction("Transaction2", "TestTransaction", distributedTracingData);
@@ -165,16 +164,15 @@ namespace ApiSamples
 				var distributedTracingData = Agent.Tracer.CurrentSpan?.OutgoingDistributedTracingData
 					?? Agent.Tracer.CurrentTransaction?.OutgoingDistributedTracingData;
 
-				var traceParent = distributedTracingData?.TraceparentTextHeader;
-				var traceState = distributedTracingData?.TracestateTextHeader;
+				var traceParent = distributedTracingData?.SerializeToString();
 				var assembly = Assembly.GetExecutingAssembly().Location;
 
 				WriteLineToConsole(
-					$"Spawning callee process and passing outgoing distributed tracing data: {traceParent} {traceState} to it...");
+					$"Spawning callee process and passing outgoing distributed tracing data: {traceParent} to it...");
 				var startInfo = new ProcessStartInfo
 				{
 					FileName = "dotnet",
-					Arguments = $"{assembly} {traceParent} {traceState}"
+					Arguments = $"{assembly} {traceParent}"
 				};
 
 				startInfo.Environment["ELASTIC_APM_SERVICE_NAME"] = "Service2";
