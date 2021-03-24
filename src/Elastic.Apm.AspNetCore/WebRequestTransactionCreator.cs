@@ -238,15 +238,13 @@ namespace Elastic.Apm.AspNetCore
 
 		private static RequestInfo? CollectRequestInfo(Transaction transaction)
 		{
-			switch (Activity.Current?.Parent?.OperationName)
-			{
-				case "Grpc.Net.Client.GrpcOut":
-					return CollectGrpcInfo(Activity.Current, transaction);
-				case "GraphQL":
-					return CollectGraphQlInfo(Activity.Current);
-				default:
-					return default;
-			}
+			if (Activity.Current?.Parent?.OperationName == "Grpc.Net.Client.GrpcOut")
+				return CollectGrpcInfo(Activity.Current?.Parent, transaction);
+
+			if (Activity.Current?.OperationName == "GraphQL")
+				return CollectGraphQlInfo(Activity.Current);
+
+			return default;
 		}
 
 		/// <summary>
