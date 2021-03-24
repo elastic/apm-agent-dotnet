@@ -176,8 +176,6 @@ namespace Elastic.Apm.AspNetCore
 		{
 			if (transaction == null) return;
 
-			var grpcCallInfo = CollectGrpcInfo();
-
 			try
 			{
 				if (!transaction.HasCustomName)
@@ -201,16 +199,17 @@ namespace Elastic.Apm.AspNetCore
 					}
 				}
 
-				if (grpcCallInfo == default)
+				var requestInfo = CollectRequestInfo(transaction);
+				if (!requestInfo.HasValue)
 				{
 					transaction.Result = Transaction.StatusCodeToResult(GetProtocolName(context.Request.Protocol), context.Response.StatusCode);
 					SetOutcomeForHttpResult(transaction, context.Response.StatusCode);
 				}
 				else
 				{
-					transaction.Name = grpcCallInfo.methodname;
-					transaction.Result = GrpcHelper.GrpcReturnCodeToString(grpcCallInfo.result);
-					transaction.Outcome = GrpcHelper.GrpcServerReturnCodeToOutcome(transaction.Result);
+					transaction.Name = requestInfo.Value.Name;
+					transaction.Result = requestInfo.Value.Result;
+					transaction.Outcome = requestInfo.Value.Outcome;
 				}
 
 				if (transaction.IsSampled)
@@ -237,25 +236,57 @@ namespace Elastic.Apm.AspNetCore
 				transaction.Outcome = Outcome.Success;
 		}
 
+		private static RequestInfo? CollectRequestInfo(Transaction transaction)
+		{
+			switch (Activity.Current?.Parent?.OperationName)
+			{
+				case "Grpc.Net.Client.GrpcOut":
+					return CollectGrpcInfo(Activity.Current, transaction);
+				case "GraphQL":
+					return CollectGraphQlInfo(Activity.Current);
+				default:
+					return default;
+			}
+		}
+
+		/// <summary>
+		/// Collects GraphQL info for the given request
+		/// </summary>
+		private static RequestInfo? CollectGraphQlInfo(Activity activity)
+		{
+			RequestInfo? requestInfo = default;
+			var operationName = activity.Tags.FirstOrDefault(n => n.Key == "graphql.operation").Value;
+			var operationResult = activity.Tags.FirstOrDefault(n => n.Key == "graphql.result").Value;
+			var operationOutcome = activity.Tags.FirstOrDefault(n => n.Key == "graphql.outcome").Value;
+
+			if (!string.IsNullOrEmpty(operationName) && !string.IsNullOrEmpty(operationResult))
+			{
+				if (!Enum.TryParse(operationOutcome, true, out Outcome outcome))
+					outcome = Outcome.Unknown;
+
+				requestInfo = new RequestInfo(operationName, operationResult, outcome);
+			}
+
+			return requestInfo;
+		}
+
 		/// <summary>
 		/// Collects gRPC info for the given request
 		/// </summary>
-		/// <returns>default if it's not a grpc call, otherwise the Grpc method name and result as a tuple </returns>
-		private static (string methodname, string result) CollectGrpcInfo()
+		private static RequestInfo? CollectGrpcInfo(Activity activity, Transaction transaction)
 		{
-			var parentActivity = Activity.Current?.Parent;
-			(string methodname, string result) grpcCallInfo = default;
+			RequestInfo? requestInfo = default;
+			var grpcMethodName = activity.Tags.FirstOrDefault(n => n.Key == "grpc.method").Value;
+			var grpcStatusCode = activity.Tags.FirstOrDefault(n => n.Key == "grpc.status_code").Value;
 
-			if (parentActivity != null)
+			if (!string.IsNullOrEmpty(grpcMethodName) && !string.IsNullOrEmpty(grpcStatusCode))
 			{
-				var grpcMethodName = parentActivity.Tags.FirstOrDefault(n => n.Key == "grpc.method").Value;
-				var grpcStatusCode = parentActivity.Tags.FirstOrDefault(n => n.Key == "grpc.status_code").Value;
-
-				if (!string.IsNullOrEmpty(grpcMethodName) && !string.IsNullOrEmpty(grpcStatusCode))
-					grpcCallInfo = (grpcMethodName, grpcStatusCode);
+				var result = GrpcHelper.GrpcReturnCodeToString(grpcStatusCode);
+				var outcome = GrpcHelper.GrpcServerReturnCodeToOutcome(transaction.Result);
+				requestInfo = new RequestInfo(grpcMethodName, result, outcome);
 			}
 
-			return grpcCallInfo;
+			return requestInfo;
 		}
 
 		private static void FillSampledTransactionContextResponse(HttpContext context, Transaction transaction, IApmLogger logger)
@@ -310,6 +341,20 @@ namespace Elastic.Apm.AspNetCore
 				var enumerable = idClaims.ToList();
 				return enumerable.Any() ? enumerable.First().Value : string.Empty;
 			}
+		}
+
+		private readonly struct RequestInfo
+		{
+			public RequestInfo(string name, string result, Outcome outcome)
+			{
+				Name = name;
+				Result = result;
+				Outcome = outcome;
+			}
+
+			public string Name { get; }
+			public string Result { get; }
+			public Outcome Outcome { get; }
 		}
 	}
 }
