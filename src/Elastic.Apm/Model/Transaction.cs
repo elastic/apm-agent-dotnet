@@ -145,6 +145,9 @@ namespace Elastic.Apm.Model
 						SampleRate = 0;
 						_traceState.SetSampleRate(0);
 					}
+
+					// sync the activity tracestate with the tracestate of the transaction
+					_activity.TraceStateString = _traceState.ToTextHeader();
 				}
 				else
 				{
