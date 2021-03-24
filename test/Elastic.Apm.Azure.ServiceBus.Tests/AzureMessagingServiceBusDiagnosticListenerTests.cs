@@ -50,17 +50,17 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			_sender.Spans.Should().HaveCount(1);
 			var span = _sender.FirstSpan;
 
-			span.Name.Should().Be($"AzureServiceBus SEND to {scope.QueueName}");
-			span.Type.Should().Be("messaging");
-			span.Subtype.Should().Be("azureservicebus");
+			span.Name.Should().Be($"{ServiceBus.SegmentName} SEND to {scope.QueueName}");
+			span.Type.Should().Be(ServiceBus.Type);
+			span.Subtype.Should().Be(ServiceBus.SubType);
 			span.Action.Should().Be("send");
 			span.Context.Destination.Should().NotBeNull();
 			var destination = span.Context.Destination;
 
 			destination.Address.Should().Be(_environment.ServiceBusConnectionStringProperties.FullyQualifiedNamespace);
-			destination.Service.Name.Should().Be("azureservicebus");
-			destination.Service.Resource.Should().Be($"azureservicebus/{scope.QueueName}");
-			destination.Service.Type.Should().Be("messaging");
+			destination.Service.Name.Should().Be(ServiceBus.SubType);
+			destination.Service.Resource.Should().Be($"{ServiceBus.SubType}/{scope.QueueName}");
+			destination.Service.Type.Should().Be(ServiceBus.Type);
 		}
 
 		[AzureCredentialsFact]
@@ -79,17 +79,17 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			_sender.Spans.Should().HaveCount(1);
 			var span = _sender.FirstSpan;
 
-			span.Name.Should().Be($"AzureServiceBus SEND to {scope.TopicName}");
-			span.Type.Should().Be("messaging");
-			span.Subtype.Should().Be("azureservicebus");
+			span.Name.Should().Be($"{ServiceBus.SegmentName} SEND to {scope.TopicName}");
+			span.Type.Should().Be(ServiceBus.Type);
+			span.Subtype.Should().Be(ServiceBus.SubType);
 			span.Action.Should().Be("send");
 			span.Context.Destination.Should().NotBeNull();
 			var destination = span.Context.Destination;
 
 			destination.Address.Should().Be(_environment.ServiceBusConnectionStringProperties.FullyQualifiedNamespace);
-			destination.Service.Name.Should().Be("azureservicebus");
-			destination.Service.Resource.Should().Be($"azureservicebus/{scope.TopicName}");
-			destination.Service.Type.Should().Be("messaging");
+			destination.Service.Name.Should().Be(ServiceBus.SubType);
+			destination.Service.Resource.Should().Be($"{ServiceBus.SubType}/{scope.TopicName}");
+			destination.Service.Type.Should().Be(ServiceBus.Type);
 		}
 
 		[AzureCredentialsFact]
@@ -110,17 +110,17 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			_sender.Spans.Should().HaveCount(1);
 			var span = _sender.FirstSpan;
 
-			span.Name.Should().Be($"AzureServiceBus SCHEDULE to {scope.QueueName}");
-			span.Type.Should().Be("messaging");
-			span.Subtype.Should().Be("azureservicebus");
+			span.Name.Should().Be($"{ServiceBus.SegmentName} SCHEDULE to {scope.QueueName}");
+			span.Type.Should().Be(ServiceBus.Type);
+			span.Subtype.Should().Be(ServiceBus.SubType);
 			span.Action.Should().Be("schedule");
 			span.Context.Destination.Should().NotBeNull();
 			var destination = span.Context.Destination;
 
 			destination.Address.Should().Be(_environment.ServiceBusConnectionStringProperties.FullyQualifiedNamespace);
-			destination.Service.Name.Should().Be("azureservicebus");
-			destination.Service.Resource.Should().Be($"azureservicebus/{scope.QueueName}");
-			destination.Service.Type.Should().Be("messaging");
+			destination.Service.Name.Should().Be(ServiceBus.SubType);
+			destination.Service.Resource.Should().Be($"{ServiceBus.SubType}/{scope.QueueName}");
+			destination.Service.Type.Should().Be(ServiceBus.Type);
 		}
 
 		[AzureCredentialsFact]
@@ -141,17 +141,17 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			_sender.Spans.Should().HaveCount(1);
 			var span = _sender.FirstSpan;
 
-			span.Name.Should().Be($"AzureServiceBus SCHEDULE to {scope.TopicName}");
-			span.Type.Should().Be("messaging");
-			span.Subtype.Should().Be("azureservicebus");
+			span.Name.Should().Be($"{ServiceBus.SegmentName} SCHEDULE to {scope.TopicName}");
+			span.Type.Should().Be(ServiceBus.Type);
+			span.Subtype.Should().Be(ServiceBus.SubType);
 			span.Action.Should().Be("schedule");
 			span.Context.Destination.Should().NotBeNull();
 			var destination = span.Context.Destination;
 
 			destination.Address.Should().Be(_environment.ServiceBusConnectionStringProperties.FullyQualifiedNamespace);
-			destination.Service.Name.Should().Be("azureservicebus");
-			destination.Service.Resource.Should().Be($"azureservicebus/{scope.TopicName}");
-			destination.Service.Type.Should().Be("messaging");
+			destination.Service.Name.Should().Be(ServiceBus.SubType);
+			destination.Service.Resource.Should().Be($"{ServiceBus.SubType}/{scope.TopicName}");
+			destination.Service.Type.Should().Be(ServiceBus.Type);
 		}
 
 		[AzureCredentialsFact]
@@ -172,8 +172,8 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			_sender.Transactions.Should().HaveCount(1);
 			var transaction = _sender.FirstTransaction;
 
-			transaction.Name.Should().Be($"AzureServiceBus RECEIVE from {scope.QueueName}");
-			transaction.Type.Should().Be("messaging");
+			transaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {scope.QueueName}");
+			transaction.Type.Should().Be(ServiceBus.Type);
 		}
 
 		[AzureCredentialsFact]
@@ -195,8 +195,8 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			_sender.Transactions.Should().HaveCount(1);
 			var transaction = _sender.FirstTransaction;
 
-			transaction.Name.Should().Be($"AzureServiceBus RECEIVE from {scope.TopicName}/Subscriptions/{scope.SubscriptionName}");
-			transaction.Type.Should().Be("messaging");
+			transaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {scope.TopicName}/Subscriptions/{scope.SubscriptionName}");
+			transaction.Type.Should().Be(ServiceBus.Type);
 		}
 
 		[AzureCredentialsFact]
@@ -222,12 +222,12 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			_sender.Transactions.Should().HaveCount(2);
 
 			var transaction = _sender.FirstTransaction;
-			transaction.Name.Should().Be($"AzureServiceBus RECEIVE from {scope.QueueName}");
-			transaction.Type.Should().Be("messaging");
+			transaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {scope.QueueName}");
+			transaction.Type.Should().Be(ServiceBus.Type);
 
 			var secondTransaction = _sender.Transactions[1];
-			secondTransaction.Name.Should().Be($"AzureServiceBus RECEIVEDEFERRED from {scope.QueueName}");
-			secondTransaction.Type.Should().Be("messaging");
+			secondTransaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVEDEFERRED from {scope.QueueName}");
+			secondTransaction.Type.Should().Be(ServiceBus.Type);
 		}
 
 		[AzureCredentialsFact]
@@ -252,12 +252,12 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			_sender.Transactions.Should().HaveCount(2);
 
 			var transaction = _sender.FirstTransaction;
-			transaction.Name.Should().Be($"AzureServiceBus RECEIVE from {scope.TopicName}/Subscriptions/{scope.SubscriptionName}");
-			transaction.Type.Should().Be("messaging");
+			transaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {scope.TopicName}/Subscriptions/{scope.SubscriptionName}");
+			transaction.Type.Should().Be(ServiceBus.Type);
 
 			var secondTransaction = _sender.Transactions[1];
-			secondTransaction.Name.Should().Be($"AzureServiceBus RECEIVEDEFERRED from {scope.TopicName}/Subscriptions/{scope.SubscriptionName}");
-			secondTransaction.Type.Should().Be("messaging");
+			secondTransaction.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVEDEFERRED from {scope.TopicName}/Subscriptions/{scope.SubscriptionName}");
+			secondTransaction.Type.Should().Be(ServiceBus.Type);
 		}
 
 		[AzureCredentialsFact]

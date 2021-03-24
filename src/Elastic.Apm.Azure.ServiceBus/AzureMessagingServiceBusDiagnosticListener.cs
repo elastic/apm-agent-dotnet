@@ -30,7 +30,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 		{
 			_realAgent = agent as ApmAgent;
 			_service = Service.GetDefaultService(agent.ConfigurationReader, agent.Logger);
-			_service.Framework = new Framework { Name = "AzureServiceBus" };
+			_service.Framework = new Framework { Name = ServiceBus.SegmentName };
 		}
 
 		protected override void HandleOnNext(KeyValuePair<string, object> kv)
@@ -48,36 +48,24 @@ namespace Elastic.Apm.Azure.ServiceBus
 				case "ServiceBusSender.Send.Start":
 					OnSendStart(kv, "SEND");
 					break;
-				case "ServiceBusSender.Send.Stop":
-					OnStop();
-					break;
-				case "ServiceBusSender.Send.Exception":
-					OnException(kv);
-					break;
 				case "ServiceBusSender.Schedule.Start":
 					OnSendStart(kv, "SCHEDULE");
-					break;
-				case "ServiceBusSender.Schedule.Stop":
-					OnStop();
-					break;
-				case "ServiceBusSender.Schedule.Exception":
-					OnException(kv);
 					break;
 				case "ServiceBusReceiver.Receive.Start":
 					OnReceiveStart(kv, "RECEIVE");
 					break;
-				case "ServiceBusReceiver.Receive.Stop":
-					OnStop();
-					break;
-				case "ServiceBusReceiver.Receive.Exception":
-					OnException(kv);
-					break;
 				case "ServiceBusReceiver.ReceiveDeferred.Start":
 					OnReceiveStart(kv, "RECEIVEDEFERRED");
 					break;
+				case "ServiceBusSender.Send.Stop":
+				case "ServiceBusSender.Schedule.Stop":
+				case "ServiceBusReceiver.Receive.Stop":
 				case "ServiceBusReceiver.ReceiveDeferred.Stop":
 					OnStop();
 					break;
+				case "ServiceBusSender.Send.Exception":
+				case "ServiceBusSender.Schedule.Exception":
+				case "ServiceBusReceiver.Receive.Exception":
 				case "ServiceBusReceiver.ReceiveDeferred.Exception":
 					OnException(kv);
 					break;
@@ -112,14 +100,13 @@ namespace Elastic.Apm.Azure.ServiceBus
 				return;
 
 			var transactionName = queueName is null
-				? $"AzureServiceBus {action}"
-				: $"AzureServiceBus {action} from {queueName}";
+				? $"{ServiceBus.SegmentName} {action}"
+				: $"{ServiceBus.SegmentName} {action} from {queueName}";
 
-			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, "messaging");
+			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, ServiceBus.Type);
 			transaction.Context.Service = _service;
 
 			// transaction creation will create an activity, so use this as the key.
-			// TODO: change when existing activity is used.
 			var activityId = Activity.Current.Id;
 
 			if (!_processingSegments.TryAdd(activityId, transaction))
@@ -128,7 +115,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 					"Could not add {Action} transaction {TransactionId} for activity {ActivityId} to tracked segments",
 					action,
 					transaction.Id,
-					activity.Id);
+					activityId);
 			}
 		}
 
@@ -186,18 +173,18 @@ namespace Elastic.Apm.Azure.ServiceBus
 				return;
 
 			var spanName = queueName is null
-				? $"AzureServiceBus {action}"
-				: $"AzureServiceBus {action} to {queueName}";
+				? $"{ServiceBus.SegmentName} {action}"
+				: $"{ServiceBus.SegmentName} {action} to {queueName}";
 
-			var span = currentSegment.StartSpan(spanName, "messaging", "azureservicebus", action.ToLowerInvariant());
+			var span = currentSegment.StartSpan(spanName, ServiceBus.Type, ServiceBus.SubType, action.ToLowerInvariant());
 			span.Context.Destination = new Destination
 			{
 				Address = destinationAddress,
 				Service = new Destination.DestinationService
 				{
-					Name = "azureservicebus",
-					Resource = queueName is null ? "azureservicebus" : $"azureservicebus/{queueName}",
-					Type = "messaging"
+					Name = ServiceBus.SubType,
+					Resource = queueName is null ? ServiceBus.SubType : $"{ServiceBus.SubType}/{queueName}",
+					Type = ServiceBus.Type
 				}
 			};
 

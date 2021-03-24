@@ -12,6 +12,10 @@
     </PropertyGroup>
   
     <ItemGroup>
+      <InternalsVisibleTo Include="Elastic.Apm.Azure.ServiceBus.Tests" Key="$(ExposedPublicKey)" />
+    </ItemGroup>
+  
+    <ItemGroup>
       <ProjectReference Include="..\Elastic.Apm\Elastic.Apm.csproj" />
     </ItemGroup>
 

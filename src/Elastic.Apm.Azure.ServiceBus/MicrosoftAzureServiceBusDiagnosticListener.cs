@@ -36,7 +36,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 		{
 			_realAgent = agent as ApmAgent;
 			_service = Service.GetDefaultService(agent.ConfigurationReader, agent.Logger);
-			_service.Framework = new Framework { Name = "AzureServiceBus" };
+			_service.Framework = new Framework { Name = ServiceBus.SegmentName };
 		}
 
 		protected override void HandleOnNext(KeyValuePair<string, object> kv)
@@ -92,21 +92,18 @@ namespace Elastic.Apm.Azure.ServiceBus
 				return;
 			}
 
-			var activity = Activity.Current;
 			var queueName = cachedProperties.Fetch(kv.Value,"Entity") as string;
-
 			if (MatchesIgnoreMessageQueues(queueName))
 				return;
 
 			var transactionName = queueName is null
-				? $"AzureServiceBus {action}"
-				: $"AzureServiceBus {action} from {queueName}";
+				? $"{ServiceBus.SegmentName} {action}"
+				: $"{ServiceBus.SegmentName} {action} from {queueName}";
 
-			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, "messaging");
+			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, ServiceBus.Type);
 			transaction.Context.Service = _service;
 
 			// transaction creation will create an activity, so use this as the key.
-			// TODO: change when existing activity is used.
 			var activityId = Activity.Current.Id;
 
 			if (!_processingSegments.TryAdd(activityId, transaction))
@@ -115,7 +112,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 					"Could not add {Action} transaction {TransactionId} for activity {ActivityId} to tracked segments",
 					action,
 					transaction.Id,
-					activity.Id);
+					activityId);
 			}
 		}
 
@@ -160,19 +157,19 @@ namespace Elastic.Apm.Azure.ServiceBus
 				return;
 
 			var spanName = queueName is null
-				? $"AzureServiceBus {action}"
-				: $"AzureServiceBus {action} to {queueName}";
+				? $"{ServiceBus.SegmentName} {action}"
+				: $"{ServiceBus.SegmentName} {action} to {queueName}";
 
-			var span = currentSegment.StartSpan(spanName, "messaging", "azureservicebus", action.ToLowerInvariant());
+			var span = currentSegment.StartSpan(spanName, ServiceBus.Type, ServiceBus.SubType, action.ToLowerInvariant());
 
 			span.Context.Destination = new Destination
 			{
 				Address = destinationAddress?.AbsoluteUri,
 				Service = new Destination.DestinationService
 				{
-					Name = "azureservicebus",
-					Resource = queueName is null ? "azureservicebus" : $"azureservicebus/{queueName}",
-					Type = "messaging"
+					Name = ServiceBus.SubType,
+					Resource = queueName is null ? ServiceBus.SubType : $"{ServiceBus.SubType}/{queueName}",
+					Type = ServiceBus.Type
 				}
 			};
 
