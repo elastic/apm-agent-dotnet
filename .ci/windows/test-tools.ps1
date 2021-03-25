@@ -9,3 +9,9 @@ if (!$codecov) {
     dotnet tool install -g Codecov.Tool --version 1.2.0
 }
 
+# Install terraform
+choco install terraform -m -y --no-progress --force -r --version=0.14.8
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "terraform installation failed."
+    exit 1
+}

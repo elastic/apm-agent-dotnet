@@ -11,6 +11,11 @@ RUN /bin/bash ./dotnet-install.sh --install-dir "${DOTNET_ROOT}" -version "2.1.5
 RUN /bin/bash ./dotnet-install.sh --install-dir "${DOTNET_ROOT}" -version "3.0.103"
 RUN /bin/bash ./dotnet-install.sh --install-dir "${DOTNET_ROOT}" -version "3.1.100"
 
+# Install terraform
+RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add - \
+	&& apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
+	&& apt-get update \
+	&& apt-get install terraform
 
 # Install docker
 RUN apt update \
