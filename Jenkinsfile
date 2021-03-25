@@ -300,7 +300,9 @@ pipeline {
                         retry(3) {
                           bat label: 'Build', script: '.ci/windows/dotnet.bat'
                         }
-                        bat label: 'Test & coverage', script: '.ci/windows/test.bat'
+                        withAzureCredentials(path: "${HOME}", credentialsFile: '.credentials.json') {
+                          bat label: 'Test & coverage', script: '.ci/windows/test.bat'
+                        }
                       }
                     }
                   }
@@ -520,8 +522,11 @@ def cleanDir(path){
 def dotnet(Closure body){
   def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-sdk-linux:latest'
   sh label: 'Docker build', script: "docker build --tag ${dockerTagName} .ci/docker/sdk-linux"
-  docker.image("${dockerTagName}").inside("-e HOME='${env.WORKSPACE}/${env.BASE_DIR}' -v /var/run/docker.sock:/var/run/docker.sock"){
-    body()
+  def homePath = "${env.WORKSPACE}/${env.BASE_DIR}"
+  docker.image("${dockerTagName}").inside("-e HOME='${homePath}' -v /var/run/docker.sock:/var/run/docker.sock"){
+    withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
+      body()
+    }
   }
 }
 
