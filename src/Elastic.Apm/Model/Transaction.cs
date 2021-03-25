@@ -17,6 +17,7 @@ using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Converters;
+using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Model
 {
@@ -329,7 +330,7 @@ namespace Elastic.Apm.Model
 		/// transaction from the service's perspective.
 		/// This field can be used for calculating error rates for incoming requests.
 		/// </summary>
-		[JsonConverter(typeof(StringEnumConverter))]
+		[JsonConverter(typeof(StringEnumConverter), typeof(CamelCaseNamingStrategy))]
 		public Outcome Outcome
 		{
 			get => _outcome; set

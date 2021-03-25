@@ -5,7 +5,6 @@
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Api.Kubernetes;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Report.Serialization;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Api

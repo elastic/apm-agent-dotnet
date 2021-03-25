@@ -19,8 +19,8 @@ namespace Elastic.Apm.Tests.MockApmServer
 			thisObj.Should().NotBeNull();
 
 			thisObj.Agent.AssertValid();
-			thisObj.Framework.AssertValid();
-			thisObj.Language.AssertValid();
+			thisObj.Framework?.AssertValid();
+			thisObj.Language?.AssertValid();
 		}
 
 		internal static void AssertValid(this Service.AgentC thisObj)

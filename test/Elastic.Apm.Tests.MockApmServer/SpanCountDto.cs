@@ -4,7 +4,6 @@
 
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
-using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Tests.MockApmServer
 {
