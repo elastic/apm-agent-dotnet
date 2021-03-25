@@ -158,13 +158,6 @@ namespace Elastic.Apm.DiagnosticListeners
 			if (!RequestHeadersContain(request, TraceContext.TraceStateHeaderName) && span.OutgoingDistributedTracingData != null && span.OutgoingDistributedTracingData.HasTraceState)
 				RequestHeadersAdd(request, TraceContext.TraceStateHeaderName, span.OutgoingDistributedTracingData.TraceState.ToTextHeader());
 
-			//if (!RequestHeadersContain(request, TraceContext.TraceStateHeaderName) && transaction.OutgoingDistributedTracingData != null
-			//	&& transaction.OutgoingDistributedTracingData.HasTraceState)
-			//{
-			//	RequestHeadersAdd(request, TraceContext.TraceStateHeaderName,
-			//		TraceContext.BuildTraceState(transaction.OutgoingDistributedTracingData));
-			//}
-
 			if (span is Span spanInstance)
 			{
 				if (!spanInstance.ShouldBeSentToApmServer)
