@@ -2,6 +2,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using Elastic.Apm.Azure.ServiceBus;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.EntityFrameworkCore;
@@ -15,8 +16,14 @@ namespace Elastic.Apm.NetCoreAll
 	public static class ApmMiddlewareExtension
 	{
 		/// <summary>
-		/// Adds the Elastic APM Middleware to the ASP.NET Core pipeline and enables <see cref="HttpDiagnosticsSubscriber" />,
-		/// <see cref="EfCoreDiagnosticsSubscriber" />, and <see cref="SqlClientDiagnosticSubscriber"/>.
+		/// Adds the Elastic APM Middleware to the ASP.NET Core pipeline and enables
+		/// <see cref="HttpDiagnosticsSubscriber" />,
+		/// <see cref="EfCoreDiagnosticsSubscriber" />,
+		/// <see cref="SqlClientDiagnosticSubscriber"/>,
+		/// <see cref="ElasticsearchDiagnosticsSubscriber"/>.
+		/// <see cref="GrpcClientDiagnosticSubscriber"/>,
+		/// <see cref="AzureMessagingServiceBusDiagnosticsSubscriber"/>,
+		/// and <see cref="MicrosoftAzureServiceBusDiagnosticsSubscriber"/>
 		/// This method turns on ASP.NET Core monitoring with every other related monitoring components, for example the agent
 		/// will also automatically trace outgoing HTTP requests and database statements.
 		/// </summary>
@@ -31,7 +38,13 @@ namespace Elastic.Apm.NetCoreAll
 			this IApplicationBuilder builder,
 			IConfiguration configuration = null
 		) => AspNetCore.ApmMiddlewareExtension
-			.UseElasticApm(builder, configuration, new HttpDiagnosticsSubscriber(), new EfCoreDiagnosticsSubscriber(),
-				new SqlClientDiagnosticSubscriber(), new ElasticsearchDiagnosticsSubscriber(), new GrpcClientDiagnosticSubscriber());
+			.UseElasticApm(builder, configuration,
+				new HttpDiagnosticsSubscriber(),
+				new EfCoreDiagnosticsSubscriber(),
+				new SqlClientDiagnosticSubscriber(),
+				new ElasticsearchDiagnosticsSubscriber(),
+				new GrpcClientDiagnosticSubscriber(),
+				new AzureMessagingServiceBusDiagnosticsSubscriber(),
+				new MicrosoftAzureServiceBusDiagnosticsSubscriber());
 	}
 }
