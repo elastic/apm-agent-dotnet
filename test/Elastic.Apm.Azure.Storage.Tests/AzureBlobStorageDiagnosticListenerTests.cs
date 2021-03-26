@@ -47,23 +47,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 				var containerCreateResponse = await client.CreateAsync();
 			});
 
-			if (!_sender.WaitForSpans())
-				throw new Exception("No span received in timeout");
-
-			_sender.Spans.Should().HaveCount(1);
-			var span = _sender.FirstSpan;
-
-			span.Name.Should().Be($"{AzureBlobStorage.SpanName} Create {containerName}");
-			span.Type.Should().Be(AzureBlobStorage.Type);
-			span.Subtype.Should().Be(AzureBlobStorage.SubType);
-			span.Action.Should().Be("Create");
-			span.Context.Destination.Should().NotBeNull();
-			var destination = span.Context.Destination;
-
-			destination.Address.Should().Be(_environment.StorageAccountConnectionStringProperties.BlobUrl);
-			destination.Service.Name.Should().Be(AzureBlobStorage.SubType);
-			destination.Service.Resource.Should().Be($"{AzureBlobStorage.SubType}/{containerName}");
-			destination.Service.Type.Should().Be(AzureBlobStorage.Type);
+			AssertSpan("Create", containerName);
 		}
 
 		[AzureCredentialsFact]
@@ -76,23 +60,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 				var containerDeleteResponse = await scope.ContainerClient.DeleteAsync();
 			});
 
-			if (!_sender.WaitForSpans())
-				throw new Exception("No span received in timeout");
-
-			_sender.Spans.Should().HaveCount(1);
-			var span = _sender.FirstSpan;
-
-			span.Name.Should().Be($"{AzureBlobStorage.SpanName} Delete {scope.ContainerName}");
-			span.Type.Should().Be(AzureBlobStorage.Type);
-			span.Subtype.Should().Be(AzureBlobStorage.SubType);
-			span.Action.Should().Be("Delete");
-			span.Context.Destination.Should().NotBeNull();
-			var destination = span.Context.Destination;
-
-			destination.Address.Should().Be(_environment.StorageAccountConnectionStringProperties.BlobUrl);
-			destination.Service.Name.Should().Be(AzureBlobStorage.SubType);
-			destination.Service.Resource.Should().Be($"{AzureBlobStorage.SubType}/{scope.ContainerName}");
-			destination.Service.Type.Should().Be(AzureBlobStorage.Type);
+			AssertSpan("Delete", scope.ContainerName);
 		}
 
 		[AzureCredentialsFact]
@@ -108,23 +76,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 				var blobCreateResponse = await client.CreateAsync(1024);
 			});
 
-			if (!_sender.WaitForSpans())
-				throw new Exception("No span received in timeout");
-
-			_sender.Spans.Should().HaveCount(1);
-			var span = _sender.FirstSpan;
-
-			span.Name.Should().Be($"{AzureBlobStorage.SpanName} Create {scope.ContainerName}/{blobName}");
-			span.Type.Should().Be(AzureBlobStorage.Type);
-			span.Subtype.Should().Be(AzureBlobStorage.SubType);
-			span.Action.Should().Be("Create");
-			span.Context.Destination.Should().NotBeNull();
-			var destination = span.Context.Destination;
-
-			destination.Address.Should().Be(_environment.StorageAccountConnectionStringProperties.BlobUrl);
-			destination.Service.Name.Should().Be(AzureBlobStorage.SubType);
-			destination.Service.Resource.Should().Be($"{AzureBlobStorage.SubType}/{scope.ContainerName}/{blobName}");
-			destination.Service.Type.Should().Be(AzureBlobStorage.Type);
+			AssertSpan("Create", $"{scope.ContainerName}/{blobName}");
 		}
 
 		[AzureCredentialsFact]
@@ -146,23 +98,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 				var uploadPagesResponse = await client.UploadPagesAsync(stream, 0);
 			});
 
-			if (!_sender.WaitForSpans())
-				throw new Exception("No span received in timeout");
-
-			_sender.Spans.Should().HaveCount(1);
-			var span = _sender.FirstSpan;
-
-			span.Name.Should().Be($"{AzureBlobStorage.SpanName} Upload {scope.ContainerName}/{blobName}");
-			span.Type.Should().Be(AzureBlobStorage.Type);
-			span.Subtype.Should().Be(AzureBlobStorage.SubType);
-			span.Action.Should().Be("Upload");
-			span.Context.Destination.Should().NotBeNull();
-			var destination = span.Context.Destination;
-
-			destination.Address.Should().Be(_environment.StorageAccountConnectionStringProperties.BlobUrl);
-			destination.Service.Name.Should().Be(AzureBlobStorage.SubType);
-			destination.Service.Resource.Should().Be($"{AzureBlobStorage.SubType}/{scope.ContainerName}/{blobName}");
-			destination.Service.Type.Should().Be(AzureBlobStorage.Type);
+			AssertSpan("Upload", $"{scope.ContainerName}/{blobName}");
 		}
 
 		[AzureCredentialsFact]
@@ -179,23 +115,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 				var blobUploadResponse = await client.UploadAsync(stream);
 			});
 
-			if (!_sender.WaitForSpans())
-				throw new Exception("No span received in timeout");
-
-			_sender.Spans.Should().HaveCount(1);
-			var span = _sender.FirstSpan;
-
-			span.Name.Should().Be($"{AzureBlobStorage.SpanName} Upload {scope.ContainerName}/{blobName}");
-			span.Type.Should().Be(AzureBlobStorage.Type);
-			span.Subtype.Should().Be(AzureBlobStorage.SubType);
-			span.Action.Should().Be("Upload");
-			span.Context.Destination.Should().NotBeNull();
-			var destination = span.Context.Destination;
-
-			destination.Address.Should().Be(_environment.StorageAccountConnectionStringProperties.BlobUrl);
-			destination.Service.Name.Should().Be(AzureBlobStorage.SubType);
-			destination.Service.Resource.Should().Be($"{AzureBlobStorage.SubType}/{scope.ContainerName}/{blobName}");
-			destination.Service.Type.Should().Be(AzureBlobStorage.Type);
+			AssertSpan("Upload", $"{scope.ContainerName}/{blobName}");
 		}
 
 		[AzureCredentialsFact]
@@ -214,23 +134,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 				var downloadResponse = await client.DownloadAsync();
 			});
 
-			if (!_sender.WaitForSpans())
-				throw new Exception("No span received in timeout");
-
-			_sender.Spans.Should().HaveCount(1);
-			var span = _sender.FirstSpan;
-
-			span.Name.Should().Be($"{AzureBlobStorage.SpanName} Download {scope.ContainerName}/{blobName}");
-			span.Type.Should().Be(AzureBlobStorage.Type);
-			span.Subtype.Should().Be(AzureBlobStorage.SubType);
-			span.Action.Should().Be("Download");
-			span.Context.Destination.Should().NotBeNull();
-			var destination = span.Context.Destination;
-
-			destination.Address.Should().Be(_environment.StorageAccountConnectionStringProperties.BlobUrl);
-			destination.Service.Name.Should().Be(AzureBlobStorage.SubType);
-			destination.Service.Resource.Should().Be($"{AzureBlobStorage.SubType}/{scope.ContainerName}/{blobName}");
-			destination.Service.Type.Should().Be(AzureBlobStorage.Type);
+			AssertSpan("Download", $"{scope.ContainerName}/{blobName}");
 		}
 
 		[AzureCredentialsFact]
@@ -250,23 +154,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 				var downloadResponse = await client.DownloadToAsync(stream);
 			});
 
-			if (!_sender.WaitForSpans())
-				throw new Exception("No span received in timeout");
-
-			_sender.Spans.Should().HaveCount(1);
-			var span = _sender.FirstSpan;
-
-			span.Name.Should().Be($"{AzureBlobStorage.SpanName} Download {scope.ContainerName}/{blobName}");
-			span.Type.Should().Be(AzureBlobStorage.Type);
-			span.Subtype.Should().Be(AzureBlobStorage.SubType);
-			span.Action.Should().Be("Download");
-			span.Context.Destination.Should().NotBeNull();
-			var destination = span.Context.Destination;
-
-			destination.Address.Should().Be(_environment.StorageAccountConnectionStringProperties.BlobUrl);
-			destination.Service.Name.Should().Be(AzureBlobStorage.SubType);
-			destination.Service.Resource.Should().Be($"{AzureBlobStorage.SubType}/{scope.ContainerName}/{blobName}");
-			destination.Service.Type.Should().Be(AzureBlobStorage.Type);
+			AssertSpan("Download", $"{scope.ContainerName}/{blobName}");
 		}
 
 		[AzureCredentialsFact]
@@ -283,23 +171,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 				var containerDeleteResponse = await scope.ContainerClient.DeleteBlobAsync(blobName);
 			});
 
-			if (!_sender.WaitForSpans())
-				throw new Exception("No span received in timeout");
-
-			_sender.Spans.Should().HaveCount(1);
-			var span = _sender.FirstSpan;
-
-			span.Name.Should().Be($"{AzureBlobStorage.SpanName} Delete {scope.ContainerName}/{blobName}");
-			span.Type.Should().Be(AzureBlobStorage.Type);
-			span.Subtype.Should().Be(AzureBlobStorage.SubType);
-			span.Action.Should().Be("Delete");
-			span.Context.Destination.Should().NotBeNull();
-			var destination = span.Context.Destination;
-
-			destination.Address.Should().Be(_environment.StorageAccountConnectionStringProperties.BlobUrl);
-			destination.Service.Name.Should().Be(AzureBlobStorage.SubType);
-			destination.Service.Resource.Should().Be($"{AzureBlobStorage.SubType}/{scope.ContainerName}/{blobName}");
-			destination.Service.Type.Should().Be(AzureBlobStorage.Type);
+			AssertSpan("Delete", $"{scope.ContainerName}/{blobName}");
 		}
 
 		[AzureCredentialsFact]
@@ -321,23 +193,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 				await operation.WaitForCompletionAsync();
 			});
 
-			if (!_sender.WaitForSpans())
-				throw new Exception("No span received in timeout");
-
-			_sender.Spans.Should().HaveCount(1);
-			var span = _sender.FirstSpan;
-
-			span.Name.Should().Be($"{AzureBlobStorage.SpanName} CopyFromUri {scope.ContainerName}/{destinationBlobName}");
-			span.Type.Should().Be(AzureBlobStorage.Type);
-			span.Subtype.Should().Be(AzureBlobStorage.SubType);
-			span.Action.Should().Be("CopyFromUri");
-			span.Context.Destination.Should().NotBeNull();
-			var destination = span.Context.Destination;
-
-			destination.Address.Should().Be(_environment.StorageAccountConnectionStringProperties.BlobUrl);
-			destination.Service.Name.Should().Be(AzureBlobStorage.SubType);
-			destination.Service.Resource.Should().Be($"{AzureBlobStorage.SubType}/{scope.ContainerName}/{destinationBlobName}");
-			destination.Service.Type.Should().Be(AzureBlobStorage.Type);
+			AssertSpan("CopyFromUri", $"{scope.ContainerName}/{destinationBlobName}");
 		}
 
 		[AzureCredentialsFact]
@@ -364,22 +220,27 @@ namespace Elastic.Apm.Azure.Storage.Tests
 				}
 			});
 
+			AssertSpan("GetBlobs", scope.ContainerName);
+		}
+
+		private void AssertSpan(string action, string resource)
+		{
 			if (!_sender.WaitForSpans())
 				throw new Exception("No span received in timeout");
 
 			_sender.Spans.Should().HaveCount(1);
 			var span = _sender.FirstSpan;
 
-			span.Name.Should().Be($"{AzureBlobStorage.SpanName} GetBlobs {scope.ContainerName}");
+			span.Name.Should().Be($"{AzureBlobStorage.SpanName} {action} {resource}");
 			span.Type.Should().Be(AzureBlobStorage.Type);
 			span.Subtype.Should().Be(AzureBlobStorage.SubType);
-			span.Action.Should().Be("GetBlobs");
+			span.Action.Should().Be(action);
 			span.Context.Destination.Should().NotBeNull();
 			var destination = span.Context.Destination;
 
 			destination.Address.Should().Be(_environment.StorageAccountConnectionStringProperties.BlobUrl);
 			destination.Service.Name.Should().Be(AzureBlobStorage.SubType);
-			destination.Service.Resource.Should().Be($"{AzureBlobStorage.SubType}/{scope.ContainerName}");
+			destination.Service.Resource.Should().Be($"{AzureBlobStorage.SubType}/{resource}");
 			destination.Service.Type.Should().Be(AzureBlobStorage.Type);
 		}
 	}

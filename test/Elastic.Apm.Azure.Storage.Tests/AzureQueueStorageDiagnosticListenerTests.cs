@@ -36,17 +36,9 @@ namespace Elastic.Apm.Azure.Storage.Tests
 
 			var createResponse = await client.CreateAsync();
 			var sendResponse = await client.SendMessageAsync(nameof(Capture_Span_When_Receives_From_Queue));
-
 			var receiveResponse = await client.ReceiveMessagesAsync(1);
 
-			if (!_sender.WaitForTransactions())
-				throw new Exception("No transaction received in timeout");
-
-			_sender.Transactions.Should().HaveCount(1);
-			var transaction = _sender.FirstTransaction;
-
-			transaction.Name.Should().Be($"AzureQueue RECEIVE from {queueName}");
-			transaction.Type.Should().Be("messaging");
+			AssertTransaction("RECEIVE", queueName);
 		}
 
 		[AzureCredentialsFact]
@@ -60,14 +52,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 
 			var receiveResponse = await client.ReceiveMessageAsync();
 
-			if (!_sender.WaitForTransactions())
-				throw new Exception("No transaction received in timeout");
-
-			_sender.Transactions.Should().HaveCount(1);
-			var transaction = _sender.FirstTransaction;
-
-			transaction.Name.Should().Be($"AzureQueue RECEIVE from {queueName}");
-			transaction.Type.Should().Be("messaging");
+			AssertTransaction("RECEIVE", queueName);
 		}
 
 		[AzureCredentialsFact]
@@ -75,7 +60,6 @@ namespace Elastic.Apm.Azure.Storage.Tests
 		{
 			var queueName = Guid.NewGuid().ToString();
 			var client = new QueueClient(_environment.StorageAccountConnectionString, queueName);
-
 			var createResponse = await client.CreateAsync();
 
 			await _agent.Tracer.CaptureTransaction("Send Azure Queue Message", "message", async () =>
@@ -83,23 +67,40 @@ namespace Elastic.Apm.Azure.Storage.Tests
 				var sendResponse = await client.SendMessageAsync(nameof(Capture_Span_When_Send_To_Queue));
 			});
 
+			AssertSpan("SEND", queueName);
+		}
+
+		private void AssertTransaction(string action, string queueName)
+		{
+			if (!_sender.WaitForTransactions())
+				throw new Exception("No transaction received in timeout");
+
+			_sender.Transactions.Should().HaveCount(1);
+			var transaction = _sender.FirstTransaction;
+
+			transaction.Name.Should().Be($"{AzureQueueStorage.SpanName} {action} from {queueName}");
+			transaction.Type.Should().Be(AzureQueueStorage.Type);
+		}
+
+		private void AssertSpan(string action, string queueName)
+		{
 			if (!_sender.WaitForSpans())
 				throw new Exception("No span received in timeout");
 
 			_sender.Spans.Should().HaveCount(1);
 			var span = _sender.FirstSpan;
 
-			span.Name.Should().Be($"AzureQueue SEND to {queueName}");
-			span.Type.Should().Be("messaging");
-			span.Subtype.Should().Be("azurequeue");
-			span.Action.Should().Be("send");
+			span.Name.Should().Be($"{AzureQueueStorage.SpanName} {action} to {queueName}");
+			span.Type.Should().Be(AzureQueueStorage.Type);
+			span.Subtype.Should().Be(AzureQueueStorage.SubType);
+			span.Action.Should().Be(action.ToLowerInvariant());
 			span.Context.Destination.Should().NotBeNull();
 			var destination = span.Context.Destination;
 
 			destination.Address.Should().Be(_environment.StorageAccountConnectionStringProperties.QueueUrl);
-			destination.Service.Name.Should().Be("azurequeue");
-			destination.Service.Resource.Should().Be($"azurequeue/{queueName}");
-			destination.Service.Type.Should().Be("messaging");
+			destination.Service.Name.Should().Be(AzureQueueStorage.SubType);
+			destination.Service.Resource.Should().Be($"{AzureQueueStorage.SubType}/{queueName}");
+			destination.Service.Type.Should().Be(AzureQueueStorage.Type);
 		}
 	}
 }

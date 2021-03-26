@@ -10,29 +10,28 @@ using System.Diagnostics;
 using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticListeners;
-using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Azure.Storage
 {
-	internal static class AzureBlobStorage
+	internal static class AzureFileStorage
 	{
-		internal const string SpanName = "AzureBlob";
-		internal const string SubType = "azureblob";
+		internal const string SpanName = "AzureFile";
+		internal const string SubType = "azurefile";
 		internal const string Type = "storage";
 	}
 
 	/// <summary>
-	/// Creates transactions and spans for Azure Blob Storage diagnostic events from Azure.Storage.Blobs
+	/// Creates transactions and spans for Azure File Share Storage diagnostic events from Azure.Storage.Files.Shares
 	/// </summary>
-	public class AzureBlobStorageDiagnosticListener : DiagnosticListenerBase
+	public class AzureFileShareStorageDiagnosticListener : DiagnosticListenerBase
 	{
 		private readonly ConcurrentDictionary<string, IExecutionSegment> _processingSegments =
 			new ConcurrentDictionary<string, IExecutionSegment>();
 
-		public AzureBlobStorageDiagnosticListener(IApmAgent agent) : base(agent) { }
+		public AzureFileShareStorageDiagnosticListener(IApmAgent agent) : base(agent) { }
 
-		public override string Name { get; } = "Azure.Storage.Blobs";
+		public override string Name { get; } = "Azure.Storage.Files.Shares";
 
 		protected override void HandleOnNext(KeyValuePair<string, object> kv)
 		{
@@ -46,53 +45,36 @@ namespace Elastic.Apm.Azure.Storage
 
 			switch (kv.Key)
 			{
-				case "BlobContainerClient.Create.Start":
-				case "PageBlobClient.Create.Start":
+				case "ShareClient.Create.Start":
+				case "ShareDirectoryClient.Create.Start":
+				case "ShareFileClient.Create.Start":
 					OnStart(kv, "Create");
 					break;
-				case "BlobContainerClient.Delete.Start":
-				case "BlobBaseClient.Delete.Start":
+				case "ShareClient.Delete.Start":
+				case "ShareDirectoryClient.Delete.Start":
+				case "ShareFileClient.Delete.Start":
 					OnStart(kv, "Delete");
 					break;
-				case "BlobContainerClient.GetBlobs.Start":
-					OnStart(kv, "GetBlobs");
-					break;
-				case "BlockBlobClient.Upload.Start":
-				case "PageBlobClient.UploadPages.Start":
+				case "ShareFileClient.UploadRange.Start":
+				case "ShareFileClient.Upload.Start":
 					OnStart(kv, "Upload");
 					break;
-				case "BlobBaseClient.Download.Start":
-				case "BlobBaseClient.DownloadContent.Start":
-				case "BlobBaseClient.DownloadStreaming.Start":
-					OnStart(kv, "Download");
-					break;
-				case "BlobBaseClient.StartCopyFromUri.Start":
-					OnStart(kv, "CopyFromUri");
-					break;
-				case "BlobContainerClient.Create.Stop":
-				case "BlobContainerClient.Delete.Stop":
-				case "BlobBaseClient.Delete.Stop":
-				case "PageBlobClient.Create.Stop":
-				case "BlockBlobClient.Upload.Stop":
-				case "BlobBaseClient.Download.Stop":
-				case "BlobBaseClient.DownloadContent.Stop":
-				case "BlobBaseClient.DownloadStreaming.Stop":
-				case "PageBlobClient.UploadPages.Stop":
-				case "BlobContainerClient.GetBlobs.Stop":
-				case "BlobBaseClient.StartCopyFromUri.Stop":
+				case "ShareClient.Create.Stop":
+				case "ShareClient.Delete.Stop":
+				case "ShareDirectoryClient.Create.Stop":
+				case "ShareDirectoryClient.Delete.Stop":
+				case "ShareFileClient.Create.Stop":
+				case "ShareFileClient.Delete.Stop":
+				case "ShareFileClient.UploadRange.Stop":
 					OnStop();
 					break;
-				case "BlobContainerClient.Create.Exception":
-				case "BlobContainerClient.Delete.Exception":
-				case "BlobBaseClient.Delete.Exception":
-				case "PageBlobClient.Create.Exception":
-				case "BlockBlobClient.Upload.Exception":
-				case "BlobBaseClient.Download.Exception":
-				case "BlobBaseClient.DownloadContent.Exception":
-				case "BlobBaseClient.DownloadStreaming.Exception":
-				case "PageBlobClient.UploadPages.Exception":
-				case "BlobContainerClient.GetBlobs.Exception":
-				case "BlobBaseClient.StartCopyFromUri.Exception":
+				case "ShareClient.Create.Exception":
+				case "ShareClient.Delete.Exception":
+				case "ShareDirectoryClient.Create.Exception":
+				case "ShareDirectoryClient.Delete.Exception":
+				case "ShareFileClient.Create.Exception":
+				case "ShareFileClient.Delete.Exception":
+				case "ShareFileClient.UploadRange.Exception":
 					OnException(kv);
 					break;
 				default:
@@ -117,19 +99,18 @@ namespace Elastic.Apm.Azure.Storage
 			}
 
 			var urlTag = activity.Tags.FirstOrDefault(t => t.Key == "url").Value;
-			var blobUrl = new BlobUrl(urlTag);
+			var fileShareUrl = new FileShareUrl(urlTag);
+			var spanName = $"{AzureFileStorage.SpanName} {action} {fileShareUrl.ResourceName}";
 
-			var spanName = $"{AzureBlobStorage.SpanName} {action} {blobUrl.ResourceName}";
-
-			var span = currentSegment.StartSpan(spanName, AzureBlobStorage.Type, AzureBlobStorage.SubType, action);
+			var span = currentSegment.StartSpan(spanName, AzureFileStorage.Type, AzureFileStorage.SubType, action);
 			span.Context.Destination = new Destination
 			{
-				Address = blobUrl.FullyQualifiedNamespace,
+				Address = fileShareUrl.FullyQualifiedNamespace,
 				Service = new Destination.DestinationService
 				{
-					Name = AzureBlobStorage.SubType,
-					Resource = $"{AzureBlobStorage.SubType}/{blobUrl.ResourceName}",
-					Type = AzureBlobStorage.Type
+					Name = AzureFileStorage.SubType,
+					Resource = $"{AzureFileStorage.SubType}/{fileShareUrl.ResourceName}",
+					Type = AzureFileStorage.Type
 				}
 			};
 
@@ -188,9 +169,9 @@ namespace Elastic.Apm.Azure.Storage
 			segment.End();
 		}
 
-		private class BlobUrl
+		private class FileShareUrl
 		{
-			public BlobUrl(string url)
+			public FileShareUrl(string url)
 			{
 				var builder = new UriBuilder(url);
 

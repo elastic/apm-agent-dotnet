@@ -112,9 +112,10 @@ namespace Elastic.Apm.Azure.Storage.Tests
 
 		public string DefaultEndpointsProtocol { get; }
 
-		// https://[storage account name].queue.core.windows.net/[queue name]/messages";
 		public string QueueUrl => $"{DefaultEndpointsProtocol}://{AccountName}.queue.{EndpointSuffix}/";
 
 		public string BlobUrl => $"{DefaultEndpointsProtocol}://{AccountName}.blob.{EndpointSuffix}/";
+
+		public string FileUrl => $"{DefaultEndpointsProtocol}://{AccountName}.file.{EndpointSuffix}/";
 	}
 }

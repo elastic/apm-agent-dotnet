@@ -13,25 +13,23 @@ namespace Elastic.Apm.Azure.Storage.Tests
 	public class BlobContainerScope : IAsyncDisposable
 	{
 		public string ContainerName { get; }
-		private readonly BlobContainerInfo _properties;
 		public BlobContainerClient ContainerClient { get; }
 
-		private BlobContainerScope(BlobContainerClient adminClient, string containerName, BlobContainerInfo properties)
+		private BlobContainerScope(BlobContainerClient adminClient, string containerName)
 		{
 			ContainerClient = adminClient;
 			ContainerName = containerName;
-			_properties = properties;
 		}
 
 		public static async Task<BlobContainerScope> CreateContainer(string connectionString)
 		{
 			var containerName = Guid.NewGuid().ToString("D");
 			var containerClient = new BlobContainerClient(connectionString, containerName);
-			var response = await containerClient.CreateAsync().ConfigureAwait(false);
-			return new BlobContainerScope(containerClient, containerName, response.Value);
+			await containerClient.CreateAsync().ConfigureAwait(false);
+			return new BlobContainerScope(containerClient, containerName);
 		}
 
 		public async ValueTask DisposeAsync() =>
-			await ContainerClient.DeleteAsync().ConfigureAwait(false);
+			await ContainerClient.DeleteIfExistsAsync().ConfigureAwait(false);
 	}
 }
