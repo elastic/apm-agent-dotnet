@@ -175,7 +175,8 @@ namespace Elastic.Apm.Model
 			// When transaction is not sampled then outgoing distributed tracing data should have transaction ID for parent-id part
 			// and not span ID as it does for sampled case.
 			ShouldBeSentToApmServer ? Id : TransactionId,
-			IsSampled);
+			IsSampled,
+			_enclosingTransaction._traceState);
 
 		[MaxLength]
 		[JsonProperty("parent_id")]
@@ -192,7 +193,7 @@ namespace Elastic.Apm.Model
 		/// Captures the sample rate of the agent when this span was created.
 		/// </summary>
 		[JsonProperty("sample_rate")]
-		internal double SampleRate { get; }
+		internal double? SampleRate { get; }
 
 		[JsonIgnore]
 		internal bool ShouldBeSentToApmServer => IsSampled && !_isDropped;

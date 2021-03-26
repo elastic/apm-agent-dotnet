@@ -8,15 +8,17 @@ using Elastic.Apm.Helpers;
 namespace Elastic.Apm.Api
 {
 	/// <summary>
-	/// An object encapsulating data passed from the caller to the callee in distributed tracing in order to correlate between
-	/// them.
-	/// Its purpose is similar to that of "traceparent" header described at https://www.w3.org/TR/trace-context/
-	/// See samples/ApiSamples/Program.cs for an example on how to manually pass distributed tracing data between the caller
-	/// and the callee.
+	/// Encapsulates distributed tracing data passed from the caller to the callee in order to correlate calls between them.
+	/// Its purpose is similar to that of traceparent and tracestate headers described in the
+	/// <a href="https://www.w3.org/TR/trace-context/">Trace Context specification</a>
 	/// </summary>
+	/// <example>
+	/// See sample/ApiSamples/Program.cs for an example on how to manually pass distributed tracing data between the caller
+	/// and the callee
+	/// </example>
 	public class DistributedTracingData
 	{
-		internal DistributedTracingData(string traceId, string parentId, bool flagRecorded, string traceState = null)
+		internal DistributedTracingData(string traceId, string parentId, bool flagRecorded, TraceState traceState = null)
 		{
 			TraceId = traceId;
 			ParentId = parentId;
@@ -25,11 +27,10 @@ namespace Elastic.Apm.Api
 		}
 
 		internal bool FlagRecorded { get; }
-
-		internal bool HasTraceState => !string.IsNullOrEmpty(TraceState);
+		internal bool HasTraceState => TraceState != null;
 		internal string ParentId { get; }
 		internal string TraceId { get; }
-		internal string TraceState { get; }
+		internal TraceState TraceState { get; }
 
 		/// <summary>
 		/// Serializes this instance to a string.
@@ -55,7 +56,10 @@ namespace Elastic.Apm.Api
 
 		public override string ToString() => new ToStringBuilder(nameof(DistributedTracingData))
 		{
-			{ "TraceId", TraceId }, { "ParentId", ParentId }, { "FlagRecorded", FlagRecorded }
+			{ nameof(TraceId), TraceId },
+			{ nameof(ParentId), ParentId },
+			{ nameof(FlagRecorded), FlagRecorded },
+			{ nameof(TraceState), TraceState?.ToTextHeader() }
 		}.ToString();
 	}
 }
