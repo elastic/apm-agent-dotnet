@@ -33,10 +33,13 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			_logger = logger?.Scoped(nameof(IisAdministration));
 			_policy = Policy
 				.Handle<FileLoadException>()
-				.Retry(3, (exception, retryCount) =>
-				{
-					_logger.Debug()?.LogException(exception, "Error commiting changes. retry {RetryCount}", retryCount);
-				});
+				.WaitAndRetry(
+					20,
+					(_, _) => TimeSpan.FromMilliseconds(500),
+					(exception, _, ctx) =>
+					{
+						_logger.Debug()?.LogException(exception, "Error commiting changes. retry {RetryCount}", ctx.Count);
+					});
 		}
 
 		internal void SetupSampleAppInCleanState(Dictionary<string, string> envVarsToSetForSampleAppPool,
