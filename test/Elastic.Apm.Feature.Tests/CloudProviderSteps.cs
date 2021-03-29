@@ -120,7 +120,6 @@ namespace Elastic.Apm.Feature.Tests
 			cloudMetadata.Should().BeNull();
 		}
 
-
 		[Then("^cloud metadata '(.*?)' is '(.*?)'$")]
 		public void CloudMetadataKeyEqualsValue(string key, string value)
 		{

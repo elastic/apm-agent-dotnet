@@ -9,7 +9,7 @@ using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Helpers
 {
-	public interface IEnvironmentVariables
+	internal interface IEnvironmentVariables
 	{
 		IDictionary GetEnvironmentVariables();
 	}
