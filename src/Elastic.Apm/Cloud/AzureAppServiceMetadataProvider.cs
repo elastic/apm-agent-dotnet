@@ -88,7 +88,7 @@ namespace Elastic.Apm.Cloud
 
 			var subscriptionId = websiteOwnerNameParts[0];
 
-			var webspaceIndex = websiteOwnerNameParts[1].IndexOf(Webspace, StringComparison.Ordinal);
+			var webspaceIndex = websiteOwnerNameParts[1].LastIndexOf(Webspace, StringComparison.Ordinal);
 			if (webspaceIndex != -1)
 				websiteOwnerNameParts[1] = websiteOwnerNameParts[1].Substring(0, webspaceIndex);
 
