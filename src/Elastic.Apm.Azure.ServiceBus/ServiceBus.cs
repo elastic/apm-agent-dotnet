@@ -9,6 +9,5 @@ namespace Elastic.Apm.Azure.ServiceBus
 	{
 		public const string SegmentName = "AzureServiceBus";
 		public const string SubType = "azureservicebus";
-		public const string Type = "messaging";
 	}
 }

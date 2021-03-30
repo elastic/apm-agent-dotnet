@@ -22,15 +22,14 @@ namespace Elastic.Apm.Azure.ServiceBus
 	{
 		private readonly ApmAgent _realAgent;
 		private readonly ConcurrentDictionary<string, IExecutionSegment> _processingSegments = new ConcurrentDictionary<string, IExecutionSegment>();
-		private readonly Service _service;
+		private readonly Framework _framework;
 
 		public override string Name { get; } = "Azure.Messaging.ServiceBus";
 
 		public AzureMessagingServiceBusDiagnosticListener(IApmAgent agent) : base(agent)
 		{
 			_realAgent = agent as ApmAgent;
-			_service = Service.GetDefaultService(agent.ConfigurationReader, agent.Logger);
-			_service.Framework = new Framework { Name = ServiceBus.SegmentName };
+			_framework = new Framework { Name = ServiceBus.SegmentName };
 		}
 
 		protected override void HandleOnNext(KeyValuePair<string, object> kv)
@@ -103,8 +102,8 @@ namespace Elastic.Apm.Azure.ServiceBus
 				? $"{ServiceBus.SegmentName} {action}"
 				: $"{ServiceBus.SegmentName} {action} from {queueName}";
 
-			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, ServiceBus.Type);
-			transaction.Context.Service = _service;
+			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, ApiConstants.TypeMessaging);
+			transaction.Context.Service = new Service(null, null) { Framework = _framework };
 
 			// transaction creation will create an activity, so use this as the key.
 			var activityId = Activity.Current.Id;
@@ -176,7 +175,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 				? $"{ServiceBus.SegmentName} {action}"
 				: $"{ServiceBus.SegmentName} {action} to {queueName}";
 
-			var span = currentSegment.StartSpan(spanName, ServiceBus.Type, ServiceBus.SubType, action.ToLowerInvariant());
+			var span = currentSegment.StartSpan(spanName, ApiConstants.TypeMessaging, ServiceBus.SubType, action.ToLowerInvariant());
 			span.Context.Destination = new Destination
 			{
 				Address = destinationAddress,
@@ -184,7 +183,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 				{
 					Name = ServiceBus.SubType,
 					Resource = queueName is null ? ServiceBus.SubType : $"{ServiceBus.SubType}/{queueName}",
-					Type = ServiceBus.Type
+					Type = ApiConstants.TypeMessaging
 				}
 			};
 

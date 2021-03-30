@@ -266,7 +266,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 			public string HostName => _wrapped.HostName;
 
-			public IReadOnlyList<WildcardMatcher> IgnoreMessageQueues => _wrapped.IgnoreMessageQueues;
+			public IReadOnlyList<WildcardMatcher> IgnoreMessageQueues => _centralConfig.IgnoreMessageQueues ?? _wrapped.IgnoreMessageQueues;
 
 			public LogLevel LogLevel => _centralConfig.LogLevel ?? _wrapped.LogLevel;
 

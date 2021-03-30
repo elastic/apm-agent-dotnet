@@ -100,7 +100,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 				? $"{ServiceBus.SegmentName} {action}"
 				: $"{ServiceBus.SegmentName} {action} from {queueName}";
 
-			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, ServiceBus.Type);
+			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, ApiConstants.TypeMessaging);
 			transaction.Context.Service = _service;
 
 			// transaction creation will create an activity, so use this as the key.
@@ -160,7 +160,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 				? $"{ServiceBus.SegmentName} {action}"
 				: $"{ServiceBus.SegmentName} {action} to {queueName}";
 
-			var span = currentSegment.StartSpan(spanName, ServiceBus.Type, ServiceBus.SubType, action.ToLowerInvariant());
+			var span = currentSegment.StartSpan(spanName, ApiConstants.TypeMessaging, ServiceBus.SubType, action.ToLowerInvariant());
 
 			span.Context.Destination = new Destination
 			{
@@ -169,7 +169,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 				{
 					Name = ServiceBus.SubType,
 					Resource = queueName is null ? ServiceBus.SubType : $"{ServiceBus.SubType}/{queueName}",
-					Type = ServiceBus.Type
+					Type = ApiConstants.TypeMessaging
 				}
 			};
 

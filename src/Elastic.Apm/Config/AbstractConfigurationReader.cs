@@ -135,14 +135,15 @@ namespace Elastic.Apm.Config
 			_cachedWildcardMatchersIgnoreMessageQueues.IfNotInited?.InitOrGet(() => ParseIgnoreMessageQueuesImpl(kv))
 			?? _cachedWildcardMatchersIgnoreMessageQueues.Value;
 
-		private IReadOnlyList<WildcardMatcher> ParseIgnoreMessageQueuesImpl(ConfigurationKeyValue kv)
+		internal IReadOnlyList<WildcardMatcher> ParseIgnoreMessageQueuesImpl(ConfigurationKeyValue kv)
 		{
-			if (kv?.Value == null) return DefaultValues.IgnoreMessageQueues;
+			if (kv?.Value == null || string.IsNullOrWhiteSpace(kv.Value))
+				return DefaultValues.IgnoreMessageQueues;
 
 			try
 			{
 				_logger?.Trace()?.Log("Try parsing IgnoreMessageQueues, values: {IgnoreMessageQueues}", kv.Value);
-				var ignoreMessageQueues = kv.Value.Split(',').Where(n => !string.IsNullOrEmpty(n)).ToList();
+				var ignoreMessageQueues = kv.Value.Split(',').Where(n => !string.IsNullOrWhiteSpace(n)).ToList();
 
 				var retVal = new List<WildcardMatcher>(ignoreMessageQueues.Count);
 				foreach (var item in ignoreMessageQueues) retVal.Add(WildcardMatcher.ValueOf(item.Trim()));
