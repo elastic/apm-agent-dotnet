@@ -97,7 +97,7 @@ namespace Elastic.Apm.Feature.Tests
 			// wait for the wait handle to be signalled
 			var timeout = TimeSpan.FromSeconds(30);
 			if (!payloadCollector.WaitHandle.Wait(timeout))
-				throw new Exception($"Did receive payload within {timeout}");
+				throw new Exception($"Did not receive payload within {timeout}");
 		}
 
 		[Then("^cloud metadata is not null$")]
