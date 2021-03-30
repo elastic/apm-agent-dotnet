@@ -6,6 +6,7 @@ using System;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
+using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
@@ -40,6 +41,8 @@ namespace Elastic.Apm
 		public IPayloadSender PayloadSender => Components.PayloadSender;
 		public Service Service => Components.Service;
 		public ITracer Tracer => Components.Tracer;
+
+		internal HttpEnrichableDiagnosticListener HttpDiagnosticListener { get; set; }
 
 		internal Tracer TracerInternal => Components.TracerInternal;
 
@@ -132,6 +135,15 @@ namespace Elastic.Apm
 		/// returns <code>false</code> the filter won't be called.
 		/// </returns>
 		public static bool AddFilter(Func<IError, IError> filter) => CheckAndAddFilter(p => p.ErrorFilters.Add(filter));
+
+		internal static void AddHttpSpanEnricher(IHttpSpanEnricher enricher)
+		{
+			// subscribing HttpDiagnosticsSubscriber assigns the listener to the agent
+			if (Instance.HttpDiagnosticListener is null)
+				Instance.Subscribe(new HttpDiagnosticsSubscriber());
+
+			Instance.HttpDiagnosticListener.AddEnricher(enricher);
+		}
 
 		private static bool CheckAndAddFilter(Action<PayloadSenderV2> action)
 		{
