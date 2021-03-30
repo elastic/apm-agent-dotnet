@@ -18,7 +18,7 @@ namespace Elastic.Apm.DiagnosticListeners
 	/// <summary>
 	/// Captures web requests initiated by <see cref="T:System.Net.Http.HttpClient" />
 	/// </summary>
-	internal abstract class HttpDiagnosticListenerImplBase<TRequest, TResponse> : DiagnosticListenerBase
+	internal abstract class HttpDiagnosticListenerImplBase<TRequest, TResponse> : HttpEnrichableDiagnosticListener
 		where TRequest : class
 		where TResponse : class
 	{
@@ -127,8 +127,18 @@ namespace Elastic.Apm.DiagnosticListeners
 				return;
 			}
 
-			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(ApmAgent, $"{RequestGetMethod(request)} {requestUrl.Host}",
+			var method = RequestGetMethod(request);
+			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(ApmAgent, $"{method} {requestUrl.Host}",
 				ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient, true);
+
+			using (var enrichers = GetEnrichers())
+			{
+				foreach (var enricher in enrichers)
+				{
+					if (enricher.IsMatch(method, requestUrl))
+						enricher.Enrich(method, requestUrl, span);
+				}
+			}
 
 			if (!ProcessingRequests.TryAdd(request, span))
 			{
@@ -164,7 +174,7 @@ namespace Elastic.Apm.DiagnosticListeners
 					return;
 			}
 
-			span.Context.Http = new Http { Method = RequestGetMethod(request) };
+			span.Context.Http = new Http { Method = method };
 			span.Context.Http.SetUrl(requestUrl);
 		}
 

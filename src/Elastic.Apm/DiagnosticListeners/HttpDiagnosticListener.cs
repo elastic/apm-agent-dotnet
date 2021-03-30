@@ -14,7 +14,7 @@ namespace Elastic.Apm.DiagnosticListeners
 	/// </summary>
 	internal static class HttpDiagnosticListener
 	{
-		internal static IDiagnosticListener New(IApmAgent components)
+		internal static HttpEnrichableDiagnosticListener New(IApmAgent components)
 		{
 			var logger = components.Logger.Scoped(nameof(HttpDiagnosticListener));
 
