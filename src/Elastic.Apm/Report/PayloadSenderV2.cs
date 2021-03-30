@@ -61,7 +61,8 @@ namespace Elastic.Apm.Report
 			IApmServerInfo apmServerInfo,
 			HttpMessageHandler httpMessageHandler = null,
 			string dbgName = null,
-			bool isEnabled = true
+			bool isEnabled = true,
+			IEnvironmentVariables environmentVariables = null
 		)
 			: base(isEnabled, logger, ThisClassName, service, config, httpMessageHandler)
 		{
@@ -76,7 +77,7 @@ namespace Elastic.Apm.Report
 
 			System = system;
 
-			_cloudMetadataProviderCollection = new CloudMetadataProviderCollection(config.CloudProvider, _logger);
+			_cloudMetadataProviderCollection = new CloudMetadataProviderCollection(config.CloudProvider, _logger, environmentVariables);
 			_apmServerInfo = apmServerInfo;
 			_metadata = new Metadata { Service = service, System = System };
 			foreach (var globalLabelKeyValue in config.GlobalLabels) _metadata.Labels.Add(globalLabelKeyValue.Key, globalLabelKeyValue.Value);
