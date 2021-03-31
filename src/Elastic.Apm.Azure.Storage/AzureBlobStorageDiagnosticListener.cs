@@ -153,10 +153,9 @@ namespace Elastic.Apm.Azure.Storage
 
 			if (!_processingSegments.TryRemove(activity.Id, out var segment))
 			{
-				Logger.Trace()
-					?.Log(
-						"Could not find segment for activity {ActivityId} in tracked segments",
-						activity.Id);
+				Logger.Trace()?.Log(
+					"Could not find segment for activity {ActivityId} in tracked segments",
+					activity.Id);
 				return;
 			}
 
@@ -175,10 +174,9 @@ namespace Elastic.Apm.Azure.Storage
 
 			if (!_processingSegments.TryRemove(activity.Id, out var segment))
 			{
-				Logger.Trace()
-					?.Log(
-						"Could not find segment for activity {ActivityId} in tracked segments",
-						activity.Id);
+				Logger.Trace()?.Log(
+					"Could not find segment for activity {ActivityId} in tracked segments",
+					activity.Id);
 				return;
 			}
 
@@ -187,21 +185,6 @@ namespace Elastic.Apm.Azure.Storage
 
 			segment.Outcome = Outcome.Failure;
 			segment.End();
-		}
-
-		private class BlobUrl
-		{
-			public BlobUrl(string url)
-			{
-				var builder = new UriBuilder(url);
-
-				FullyQualifiedNamespace = builder.Uri.GetLeftPart(UriPartial.Authority) + "/";
-				ResourceName = builder.Uri.AbsolutePath.TrimStart('/');
-			}
-
-			public string FullyQualifiedNamespace { get; }
-
-			public string ResourceName { get; }
 		}
 	}
 }
