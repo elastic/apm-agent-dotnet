@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 
 namespace Elastic.Apm.DiagnosticListeners
@@ -34,6 +35,9 @@ namespace Elastic.Apm.DiagnosticListeners
 				: null;
 			return contains;
 		}
+
+		protected override string[] RequestHeadersGet(HttpRequestMessage request, string headerName) =>
+			request.Headers.TryGetValues(headerName, out var values) ? values.ToArray() : Array.Empty<string>();
 
 		protected override void RequestHeadersAdd(HttpRequestMessage request, string headerName, string headerValue)
 		{

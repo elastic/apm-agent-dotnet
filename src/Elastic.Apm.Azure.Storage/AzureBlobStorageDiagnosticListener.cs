@@ -25,7 +25,7 @@ namespace Elastic.Apm.Azure.Storage
 	/// <summary>
 	/// Creates transactions and spans for Azure Blob Storage diagnostic events from Azure.Storage.Blobs
 	/// </summary>
-	public class AzureBlobStorageDiagnosticListener : DiagnosticListenerBase
+	internal class AzureBlobStorageDiagnosticListener : DiagnosticListenerBase
 	{
 		private readonly ConcurrentDictionary<string, IExecutionSegment> _processingSegments =
 			new ConcurrentDictionary<string, IExecutionSegment>();
@@ -186,21 +186,6 @@ namespace Elastic.Apm.Azure.Storage
 
 			segment.Outcome = Outcome.Failure;
 			segment.End();
-		}
-
-		private class BlobUrl
-		{
-			public BlobUrl(string url)
-			{
-				var builder = new UriBuilder(url);
-
-				FullyQualifiedNamespace = builder.Uri.GetLeftPart(UriPartial.Authority) + "/";
-				ResourceName = builder.Uri.AbsolutePath.TrimStart('/');
-			}
-
-			public string ResourceName { get; }
-
-			public string FullyQualifiedNamespace { get; }
 		}
 	}
 }

@@ -41,6 +41,8 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		protected abstract bool RequestHeadersContain(TRequest request, string headerName);
 
+		protected abstract string[] RequestHeadersGet(TRequest request, string headerName);
+
 		protected abstract int ResponseGetStatusCode(TResponse response);
 
 		protected abstract bool RequestTryGetHeader(TRequest request, string headerName, out string value);
@@ -118,6 +120,12 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		private void ProcessStartEvent(TRequest request, Uri requestUrl)
 		{
+			if (ApmAgent is ApmAgent realAgent && realAgent.TracerInternal.CurrentSpan is Span currentSpan)
+			{
+				if (currentSpan.InstrumentationFlag == InstrumentationFlag.Azure)
+					return;
+			}
+
 			Logger.Trace()?.Log("Processing start event... Request URL: {RequestUrl}", Http.Sanitize(requestUrl));
 
 			var transaction = ApmAgent.Tracer.CurrentTransaction;
@@ -136,7 +144,7 @@ namespace Elastic.Apm.DiagnosticListeners
 				foreach (var enricher in enrichers)
 				{
 					if (enricher.IsMatch(method, requestUrl))
-						enricher.Enrich(method, requestUrl, span);
+						enricher.Enrich(method, requestUrl, header => RequestHeadersGet(request, header),  span);
 				}
 			}
 
