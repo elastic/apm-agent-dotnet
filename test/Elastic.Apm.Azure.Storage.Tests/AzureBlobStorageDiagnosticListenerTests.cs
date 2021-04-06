@@ -80,7 +80,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 				var uploadPagesResponse = await client.UploadPagesAsync(stream, 0);
 			});
 
-			AssertSpan("Upload", $"{scope.ContainerName}/{blobName}");
+			AssertSpan("Upload", $"{scope.ContainerName}/{blobName}", 1);
 		}
 
 		[AzureCredentialsFact]
@@ -175,7 +175,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 				await operation.WaitForCompletionAsync();
 			});
 
-			AssertSpan("CopyFromUri", $"{scope.ContainerName}/{destinationBlobName}");
+			AssertSpan("CopyFromUri", $"{scope.ContainerName}/{destinationBlobName}", 1);
 		}
 
 		[AzureCredentialsFact]

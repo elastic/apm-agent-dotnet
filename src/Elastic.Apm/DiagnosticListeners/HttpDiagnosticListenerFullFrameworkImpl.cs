@@ -28,9 +28,6 @@ namespace Elastic.Apm.DiagnosticListeners
 		protected override bool RequestHeadersContain(HttpWebRequest request, string headerName) =>
 			RequestTryGetHeader(request, headerName, out _);
 
-		protected override string[] RequestHeadersGet(HttpWebRequest request, string headerName) =>
-			request.Headers.GetValues(headerName) ?? Array.Empty<string>();
-
 		protected override void RequestHeadersAdd(HttpWebRequest request, string headerName, string headerValue)
 		{
 			if(!string.IsNullOrEmpty(headerValue))

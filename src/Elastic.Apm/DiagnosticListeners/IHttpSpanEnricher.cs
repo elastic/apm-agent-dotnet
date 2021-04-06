@@ -12,6 +12,6 @@ namespace Elastic.Apm.DiagnosticListeners
 	{
 		bool IsMatch(string method, Uri requestUrl);
 
-		void Enrich(string method, Uri requestUrl, Func<string, string[]> headerGetter, ISpan span);
+		void Enrich(string method, Uri requestUrl, Func<string, string> headerGetter, ISpan span);
 	}
 }
