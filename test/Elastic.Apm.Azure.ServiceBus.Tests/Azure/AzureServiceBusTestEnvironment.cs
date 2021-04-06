@@ -10,7 +10,6 @@ using Azure.Messaging.ServiceBus;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.Azure;
 using Elastic.Apm.Tests.Utilities.Terraform;
-using Elastic.Apm.Azure.ServiceBus.Tests.Terraform;
 using Xunit;
 using Xunit.Abstractions;
 
