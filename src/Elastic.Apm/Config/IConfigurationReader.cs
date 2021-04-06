@@ -121,6 +121,13 @@ namespace Elastic.Apm.Config
 		string HostName { get; }
 
 		/// <summary>
+		/// Disables the tracing of messages from certain queues, topics exchanges.
+		/// If the name of a queue, topic or exchange matches any of the wildcard expressions, it will
+		/// not be traced
+		/// </summary>
+		IReadOnlyList<WildcardMatcher> IgnoreMessageQueues { get; }
+
+		/// <summary>
 		/// The logging level for the agent.
 		/// </summary>
 		LogLevel LogLevel { get; }

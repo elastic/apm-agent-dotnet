@@ -23,5 +23,6 @@ namespace Elastic.Apm.Api
 
 		public const string TypeDb = "db";
 		public const string TypeExternal = "external";
+		public const string TypeMessaging = "messaging";
 	}
 }

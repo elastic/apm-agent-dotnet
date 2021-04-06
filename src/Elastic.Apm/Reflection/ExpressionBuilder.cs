@@ -34,5 +34,18 @@ namespace Elastic.Apm.Reflection
 			var returnCastExpression = Expression.Convert(memberExpression, typeof(object));
 			return Expression.Lambda<Func<object, object>>(returnCastExpression, parameterExpression).Compile();
 		}
+
+		/// <summary>
+		/// Builds a delegate to get a property from an object. <paramref name="type"/> is cast to <see cref="Object"/>,
+		/// with the returned property cast to <see cref="Object"/>.
+		/// </summary>
+		public static Func<object, object> BuildPropertyGetter(Type type, string propertyName)
+		{
+			var parameterExpression = Expression.Parameter(typeof(object), "value");
+			var parameterCastExpression = Expression.Convert(parameterExpression, type);
+			var memberExpression = Expression.Property(parameterCastExpression, propertyName);
+			var returnCastExpression = Expression.Convert(memberExpression, typeof(object));
+			return Expression.Lambda<Func<object, object>>(returnCastExpression, parameterExpression).Compile();
+		}
 	}
 }

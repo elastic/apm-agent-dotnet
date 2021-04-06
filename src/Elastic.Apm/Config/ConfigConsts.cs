@@ -55,6 +55,8 @@ namespace Elastic.Apm.Config
 
 			public static List<WildcardMatcher> DisableMetrics = new List<WildcardMatcher>();
 
+			public static List<WildcardMatcher> IgnoreMessageQueues = new List<WildcardMatcher>();
+
 			public static List<WildcardMatcher> SanitizeFieldNames;
 
 			public static List<WildcardMatcher> TransactionIgnoreUrls;
@@ -122,6 +124,7 @@ namespace Elastic.Apm.Config
 			public const string FullFrameworkConfigurationReaderType = Prefix + "FULL_FRAMEWORK_CONFIGURATION_READER_TYPE";
 			public const string GlobalLabels = Prefix + "GLOBAL_LABELS";
 			public const string HostName = Prefix + "HOSTNAME";
+			public const string IgnoreMessageQueues = Prefix + "IGNORE_MESSAGE_QUEUES";
 			public const string LogLevel = Prefix + "LOG_LEVEL";
 			public const string MaxBatchEventCount = Prefix + "MAX_BATCH_EVENT_COUNT";
 			public const string MaxQueueEventCount = Prefix + "MAX_QUEUE_EVENT_COUNT";
@@ -163,6 +166,7 @@ namespace Elastic.Apm.Config
 			public const string FullFrameworkConfigurationReaderType = Prefix + nameof(FullFrameworkConfigurationReaderType);
 			public const string GlobalLabels = Prefix + nameof(GlobalLabels);
 			public const string HostName = Prefix + nameof(HostName);
+			public const string IgnoreMessageQueues = Prefix + nameof(IgnoreMessageQueues);
 			public const string LogLevel = Prefix + nameof(LogLevel);
 			public const string MaxBatchEventCount = Prefix + nameof(MaxBatchEventCount);
 			public const string MaxQueueEventCount = Prefix + nameof(MaxQueueEventCount);

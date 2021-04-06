@@ -258,14 +258,11 @@ namespace Elastic.Apm.Model
 			});
 		}
 
-		internal static IExecutionSegment GetCurrentExecutionSegment(IApmAgent agent) =>
-			agent.Tracer.CurrentSpan ?? (IExecutionSegment)agent.Tracer.CurrentTransaction;
-
 		internal static ISpan StartSpanOnCurrentExecutionSegment(IApmAgent agent, string spanName, string spanType, string subType = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false
 		)
 		{
-			var currentExecutionSegment = GetCurrentExecutionSegment(agent);
+			var currentExecutionSegment = agent.GetCurrentExecutionSegment();
 
 			if (currentExecutionSegment == null)
 				return null;
