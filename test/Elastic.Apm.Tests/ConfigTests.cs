@@ -218,6 +218,19 @@ namespace Elastic.Apm.Tests
 			agent.ConfigurationReader.Recording.Should().BeTrue();
 		}
 
+		[Theory]
+		[InlineData("true", true)]
+		[InlineData("false", false)]
+		[InlineData("True", true)]
+		[InlineData("False", false)]
+		[InlineData("       True         ", true)]
+		[InlineData("       False        ", false)]
+		public void RecordingTestWithValidValue(string value, bool expected)
+		{
+			using var agent = new ApmAgent(new TestAgentComponents(config: new MockConfigSnapshot(recording: value)));
+			agent.ConfigurationReader.Recording.Should().Be(expected);
+		}
+
 		/// <summary>
 		/// Makes sure that in case Enabled is set to invalid value, the agent uses true as default value
 		/// </summary>
