@@ -41,8 +41,6 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		protected abstract bool RequestHeadersContain(TRequest request, string headerName);
 
-		protected abstract string[] RequestHeadersGet(TRequest request, string headerName);
-
 		protected abstract int ResponseGetStatusCode(TResponse response);
 
 		protected abstract bool RequestTryGetHeader(TRequest request, string headerName, out string value);
@@ -122,6 +120,8 @@ namespace Elastic.Apm.DiagnosticListeners
 		{
 			if (ApmAgent is ApmAgent realAgent && realAgent.TracerInternal.CurrentSpan is Span currentSpan)
 			{
+				// if there's a current span that has been instrumented for Azure, don't create a span for
+				// the current request
 				if (currentSpan.InstrumentationFlag == InstrumentationFlag.Azure)
 					return;
 			}
@@ -144,7 +144,7 @@ namespace Elastic.Apm.DiagnosticListeners
 				foreach (var enricher in enrichers)
 				{
 					if (enricher.IsMatch(method, requestUrl))
-						enricher.Enrich(method, requestUrl, header => RequestHeadersGet(request, header),  span);
+						enricher.Enrich(method, requestUrl, header => RequestTryGetHeader(request, header, out var value) ? value : null,  span);
 				}
 			}
 

@@ -21,7 +21,7 @@ namespace Elastic.Apm.Azure.Storage
 			requestUrl.Host.EndsWith(".blob.core.usgovcloudapi.net", StringComparison.Ordinal) ||
 			requestUrl.Host.EndsWith(".blob.core.chinacloudapi.cn", StringComparison.Ordinal);
 
-		public void Enrich(string method, Uri requestUrl, Func<string, string[]> headerGetter, ISpan span)
+		public void Enrich(string method, Uri requestUrl, Func<string, string> headerGetter, ISpan span)
 		{
 			var blobUrl = new BlobUrl(requestUrl);
 
@@ -46,7 +46,7 @@ namespace Elastic.Apm.Azure.Storage
 				case "PUT":
 				{
 					var blobType = headerGetter("x-ms-blob-type");
-					var action = blobType.Length > 0 && blobType[0] == "BlockBlob" ? "Upload" : "Create";
+					var action = !string.IsNullOrEmpty(blobType) && blobType == "BlockBlob" ? "Upload" : "Create";
 					span.Name = $"{AzureBlobStorage.SpanName} {action} {blobUrl.ResourceName}";
 					span.Action = action;
 				}
