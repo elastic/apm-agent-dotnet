@@ -897,7 +897,7 @@ When this setting is `true`, the agent will also add the header `elasticapm-trac
 
 [float]
 [[config-ignore-message-queues]]
-==== `IgnoreMessageQueues` (added[1.9])
+==== `IgnoreMessageQueues` (added[1.10])
 
 Used to filter out specific messaging queues/topics/exchanges from being traced. When set, sends-to and receives-from the 
 specified queues/topics/exchanges will be ignored.

@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -130,6 +130,51 @@ namespace Elastic.Apm.Tests.BackendCommTests.CentralConfig
 			}
 
 			testLogger.LogLevelSwitch.Level.Should().Be(LogLevel.Trace);
+		}
+
+		[Fact]
+		public void Should_Update_IgnoreMessageQueues_Configuration()
+		{
+			var configSnapshotFromReader = new MockConfigSnapshot(LoggerBase, ignoreMessageQueues: "");
+			var configStore = new ConfigStore(configSnapshotFromReader, LoggerBase);
+
+			configStore.CurrentSnapshot.IgnoreMessageQueues.Should().BeEmpty();
+
+			var service = Service.GetDefaultService(configSnapshotFromReader, LoggerBase);
+			var waitHandle = new ManualResetEvent(false);
+			var handler = new MockHttpMessageHandler();
+			var configUrl = BackendCommUtils.ApmServerEndpoints
+				.BuildGetConfigAbsoluteUrl(configSnapshotFromReader.ServerUrl, service);
+
+			handler.When(configUrl.AbsoluteUri)
+				.Respond(_ =>
+				{
+					waitHandle.Set();
+					return new HttpResponseMessage(HttpStatusCode.OK)
+					{
+						Headers = { ETag = new EntityTagHeaderValue("\"etag\"") },
+						Content = new StringContent("{ \"ignore_message_queues\": \"foo\" }", Encoding.UTF8)
+					};
+				});
+
+			var centralConfigFetcher = new CentralConfigFetcher(LoggerBase, configStore, service, handler);
+
+			using var agent = new ApmAgent(new TestAgentComponents(LoggerBase,
+				centralConfigFetcher: centralConfigFetcher,
+				payloadSender: new NoopPayloadSender()));
+
+			centralConfigFetcher.IsRunning.Should().BeTrue();
+			waitHandle.WaitOne();
+
+			// wait up to 60 seconds for configuration to change. Change can often be slower in CI
+			var count = 0;
+			while (count < 60 && !configStore.CurrentSnapshot.IgnoreMessageQueues.Any())
+			{
+				count++;
+				Thread.Sleep(TimeSpan.FromSeconds(1));
+			}
+
+			configStore.CurrentSnapshot.IgnoreMessageQueues.Should().NotBeEmpty().And.Contain(m => m.GetMatcher() == "foo");
 		}
 
 		[Fact]

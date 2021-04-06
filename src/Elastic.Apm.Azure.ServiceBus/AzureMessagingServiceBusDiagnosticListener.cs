@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticListeners;
-using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
@@ -18,7 +17,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 	/// <summary>
 	/// Creates spans for diagnostic events from Azure.Messaging.ServiceBus
 	/// </summary>
-	public class AzureMessagingServiceBusDiagnosticListener: DiagnosticListenerBase
+	internal class AzureMessagingServiceBusDiagnosticListener: DiagnosticListenerBase
 	{
 		private readonly ApmAgent _realAgent;
 		private readonly ConcurrentDictionary<string, IExecutionSegment> _processingSegments = new ConcurrentDictionary<string, IExecutionSegment>();

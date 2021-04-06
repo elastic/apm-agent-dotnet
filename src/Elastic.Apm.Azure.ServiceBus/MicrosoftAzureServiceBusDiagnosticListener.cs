@@ -19,7 +19,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 	/// <summary>
 	/// Creates spans for diagnostic events from Microsoft.Azure.ServiceBus
 	/// </summary>
-	public class MicrosoftAzureServiceBusDiagnosticListener: DiagnosticListenerBase
+	internal class MicrosoftAzureServiceBusDiagnosticListener: DiagnosticListenerBase
 	{
 		private readonly ApmAgent _realAgent;
 		private readonly ConcurrentDictionary<string, IExecutionSegment> _processingSegments = new ConcurrentDictionary<string, IExecutionSegment>();
@@ -28,15 +28,14 @@ namespace Elastic.Apm.Azure.ServiceBus
 		private readonly PropertyFetcherCollection _receiveProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
 		private readonly PropertyFetcherCollection _receiveDeferredProperties = new PropertyFetcherCollection { "Entity", "Endpoint", "Status" };
 		private readonly PropertyFetcher _exceptionProperty = new PropertyFetcher("Exception");
-		private readonly Service _service;
+		private readonly Framework _framework;
 
 		public override string Name { get; } = "Microsoft.Azure.ServiceBus";
 
 		public MicrosoftAzureServiceBusDiagnosticListener(IApmAgent agent) : base(agent)
 		{
 			_realAgent = agent as ApmAgent;
-			_service = Service.GetDefaultService(agent.ConfigurationReader, agent.Logger);
-			_service.Framework = new Framework { Name = ServiceBus.SegmentName };
+			_framework = new Framework { Name = ServiceBus.SegmentName };
 		}
 
 		protected override void HandleOnNext(KeyValuePair<string, object> kv)
@@ -101,7 +100,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 				: $"{ServiceBus.SegmentName} {action} from {queueName}";
 
 			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, ApiConstants.TypeMessaging);
-			transaction.Context.Service = _service;
+			transaction.Context.Service = new Service(null, null) { Framework = _framework };
 
 			// transaction creation will create an activity, so use this as the key.
 			var activityId = Activity.Current.Id;
