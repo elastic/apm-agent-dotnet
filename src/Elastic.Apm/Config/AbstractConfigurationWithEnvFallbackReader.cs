@@ -84,7 +84,7 @@ namespace Elastic.Apm.Config
 			ParseMetricsInterval(Read(KeyNames.MetricsInterval, EnvVarNames.MetricsInterval));
 
 		public bool Recording =>
-			ParseEnabled(Read(KeyNames.Enabled, EnvVarNames.Enabled));
+			ParseEnabled(Read(KeyNames.Recording, EnvVarNames.Recording));
 
 		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames =>
 			ParseSanitizeFieldNames(Read(KeyNames.SanitizeFieldNames, EnvVarNames.SanitizeFieldNames));
