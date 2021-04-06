@@ -16,6 +16,7 @@ using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
+using TraceContext = Elastic.Apm.DistributedTracing.TraceContext;
 using Elastic.Apm.Reflection;
 
 namespace Elastic.Apm.AspNetFullFramework
@@ -138,7 +139,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				_logger.Debug()
 					?.Log(
 						"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData} - continuing trace",
-						DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed, distributedTracingData);
+						TraceContext.TraceParentHeaderName, distributedTracingData);
 
 				// we set ignoreActivity to true to avoid the HttpContext W3C DiagnosticSource issue (see https://github.com/elastic/apm-agent-dotnet/issues/867#issuecomment-650170150)
 				transaction = Agent.Instance.Tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, distributedTracingData, true);
@@ -162,27 +163,23 @@ namespace Elastic.Apm.AspNetFullFramework
 		/// <returns>Null if traceparent is not set, otherwise the filled DistributedTracingData instance</returns>
 		private DistributedTracingData ExtractIncomingDistributedTracingData(HttpRequest request)
 		{
-			var traceParentHeaderValue = request.Unvalidated.Headers.Get(DistributedTracing.TraceContext.TraceParentHeaderName);
+			var traceParentHeaderValue = request.Unvalidated.Headers.Get(TraceContext.TraceParentHeaderName);
 			// ReSharper disable once InvertIf
 			if (traceParentHeaderValue == null)
 			{
-				traceParentHeaderValue = request.Unvalidated.Headers.Get(DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed);
+				traceParentHeaderValue = request.Unvalidated.Headers.Get(TraceContext.TraceParentHeaderNamePrefixed);
 
 				if (traceParentHeaderValue == null)
 				{
 					_logger.Debug()
 						?.Log("Incoming request doesn't have {TraceParentHeaderName} header - " +
-							"it means request doesn't have incoming distributed tracing data",
-							DistributedTracing.TraceContext.TraceParentHeaderNamePrefixed);
+							"it means request doesn't have incoming distributed tracing data", TraceContext.TraceParentHeaderNamePrefixed);
 					return null;
 				}
 			}
 
-			var traceStateHeaderValue = request.Unvalidated.Headers.Get(DistributedTracing.TraceContext.TraceStateHeaderName);
-
-			return traceStateHeaderValue != null
-				? DistributedTracing.TraceContext.TryExtractTracingData(traceParentHeaderValue, traceStateHeaderValue)
-				: DistributedTracing.TraceContext.TryExtractTracingData(traceParentHeaderValue);
+			var traceStateHeaderValue = request.Unvalidated.Headers.Get(TraceContext.TraceStateHeaderName);
+			return TraceContext.TryExtractTracingData(traceParentHeaderValue, traceStateHeaderValue);
 		}
 
 		private static void FillSampledTransactionContextRequest(HttpRequest request, ITransaction transaction)

@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
+using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
@@ -27,7 +28,8 @@ namespace Elastic.Apm.Model
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
-		private readonly string _traceState;
+
+		internal readonly TraceState _traceState;
 
 		// This constructor is meant for serialization
 		[JsonConstructor]
@@ -87,9 +89,8 @@ namespace Elastic.Apm.Model
 			ConfigSnapshot = configSnapshot;
 			Timestamp = TimeUtils.TimestampNow();
 
-			_logger = logger?.Scoped($"{nameof(Transaction)}");
+			_logger = logger?.Scoped(nameof(Transaction));
 			_apmServerInfo = apmServerInfo;
-
 			_sender = sender;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
 
@@ -106,14 +107,15 @@ namespace Elastic.Apm.Model
 			var isSamplingFromDistributedTracingData = false;
 			if (distributedTracingData == null)
 			{
-				// ignore the created activity ActivityTraceFlags because it starts out without setting the IsSampled flag,
+				// We consider a newly created transaction **without** explicitly passed distributed tracing data
+				// to be a root transaction.
+				// Ignore the created activity ActivityTraceFlags because it starts out without setting the IsSampled flag,
 				// so relying on that would mean a transaction is never sampled.
 				if (_activity != null)
 				{
 					// If an activity was created, reuse its id
 					Id = _activity.SpanId.ToHexString();
 					TraceId = _activity.TraceId.ToHexString();
-					_traceState = _activity.TraceStateString;
 
 					var idBytesFromActivity = new Span<byte>(new byte[16]);
 					_activity.TraceId.CopyTo(idBytesFromActivity);
@@ -121,7 +123,32 @@ namespace Elastic.Apm.Model
 					// Read right most bits. From W3C TraceContext: "it is important for trace-id to carry "uniqueness" and "randomness"
 					// in the right part of the trace-id..."
 					idBytesFromActivity = idBytesFromActivity.Slice(8);
+
+					_traceState = new TraceState();
+
+					// If activity has a tracestate, populate the transaction tracestate with it.
+					if (!string.IsNullOrEmpty(_activity.TraceStateString))
+						_traceState.AddTextHeader(_activity.TraceStateString);
+
 					IsSampled = sampler.DecideIfToSample(idBytesFromActivity.ToArray());
+
+					// In the unlikely event that tracestate populated from activity contains an es vendor key, the tracestate
+					// is mutated to set the sample rate defined by the sampler, because we consider a transaction without
+					// explicitly passed distributedTracingData to be a **root** transaction. The end result
+					// is that activity tracestate will be propagated, along with the sample rate defined by this transaction.
+					if (IsSampled)
+					{
+						SampleRate = sampler.Rate;
+						_traceState.SetSampleRate(sampler.Rate);
+					}
+					else
+					{
+						SampleRate = 0;
+						_traceState.SetSampleRate(0);
+					}
+
+					// sync the activity tracestate with the tracestate of the transaction
+					_activity.TraceStateString = _traceState.ToTextHeader();
 				}
 				else
 				{
@@ -132,6 +159,17 @@ namespace Elastic.Apm.Model
 
 					idBytes = new byte[16];
 					TraceId = RandomGenerator.GenerateRandomBytesAsString(idBytes);
+
+					if (IsSampled)
+					{
+						_traceState = new TraceState(sampler.Rate);
+						SampleRate = sampler.Rate;
+					}
+					else
+					{
+						_traceState = new TraceState(0);
+						SampleRate = 0;
+					}
 				}
 
 				// ParentId could be also set here, but currently in the UI each trace must start with a transaction where the ParentId is null,
@@ -151,7 +189,9 @@ namespace Elastic.Apm.Model
 							ActivityTraceId.CreateFromString(distributedTracingData.TraceId.AsSpan()),
 							ActivitySpanId.CreateFromString(distributedTracingData.ParentId.AsSpan()),
 							distributedTracingData.FlagRecorded ? ActivityTraceFlags.Recorded : ActivityTraceFlags.None);
-						_activity.TraceStateString = distributedTracingData.TraceState;
+
+						if (distributedTracingData.HasTraceState)
+							_activity.TraceStateString = distributedTracingData.TraceState.ToTextHeader();
 					}
 					catch (Exception e)
 					{
@@ -169,13 +209,19 @@ namespace Elastic.Apm.Model
 				IsSampled = distributedTracingData.FlagRecorded;
 				isSamplingFromDistributedTracingData = true;
 				_traceState = distributedTracingData.TraceState;
+
+				// If there is no tracestate or no valid "es" vendor entry with an "s" (sample rate) attribute, then the agent must
+				// omit sample rate from non-root transactions and their spans.
+				// See https://github.com/elastic/apm/blob/master/specs/agents/tracing-sampling.md#propagation
+				if (_traceState?.SampleRate is null)
+					SampleRate = null;
+				else
+					SampleRate = _traceState.SampleRate.Value;
 			}
 
 			// Also mark the sampling decision on the Activity
 			if (IsSampled && _activity != null)
 				_activity.ActivityTraceFlags |= ActivityTraceFlags.Recorded;
-
-			SampleRate = IsSampled ? sampler.Rate : 0;
 
 			SpanCount = new SpanCount();
 			_currentExecutionSegmentsContainer.CurrentTransaction = this;
@@ -184,9 +230,9 @@ namespace Elastic.Apm.Model
 			{
 				_logger.Trace()
 					?.Log("New Transaction instance created: {Transaction}. " +
-						"IsSampled ({IsSampled}) is based on incoming distributed tracing data ({DistributedTracingData})." +
+						"IsSampled ({IsSampled}) and SampleRate ({SampleRate}) is based on incoming distributed tracing data ({DistributedTracingData})." +
 						" Start time: {Time} (as timestamp: {Timestamp})",
-						this, IsSampled, distributedTracingData, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
+						this, IsSampled, SampleRate, distributedTracingData, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 			}
 			else
 			{
@@ -322,7 +368,7 @@ namespace Elastic.Apm.Model
 		/// Captures the sample rate of the agent when this transaction was created.
 		/// </summary>
 		[JsonProperty("sample_rate")]
-		internal double SampleRate { get; }
+		internal double? SampleRate { get; }
 
 		internal Service Service;
 

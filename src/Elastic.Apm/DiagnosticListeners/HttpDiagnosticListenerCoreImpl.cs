@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 
 namespace Elastic.Apm.DiagnosticListeners
@@ -24,6 +25,15 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		protected override bool RequestHeadersContain(HttpRequestMessage request, string headerName)
 			=> request.Headers.Contains(headerName);
+
+		protected override bool RequestTryGetHeader(HttpRequestMessage request, string headerName, out string value)
+		{
+			var contains = request.Headers.TryGetValues(headerName, out var values);
+			value = contains
+				? string.Join(",", values)
+				: null;
+			return contains;
+		}
 
 		protected override void RequestHeadersAdd(HttpRequestMessage request, string headerName, string headerValue)
 		{

@@ -43,6 +43,8 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		protected abstract int ResponseGetStatusCode(TResponse response);
 
+		protected abstract bool RequestTryGetHeader(TRequest request, string headerName, out string value);
+
 		protected abstract string ExceptionEventKey { get; }
 
 		internal abstract string StartEventKey { get; }
@@ -153,12 +155,8 @@ namespace Elastic.Apm.DiagnosticListeners
 				}
 			}
 
-			if (!RequestHeadersContain(request, TraceContext.TraceStateHeaderName) && transaction.OutgoingDistributedTracingData != null
-				&& transaction.OutgoingDistributedTracingData.HasTraceState)
-			{
-				RequestHeadersAdd(request, TraceContext.TraceStateHeaderName,
-					TraceContext.BuildTraceState(transaction.OutgoingDistributedTracingData));
-			}
+			if (!RequestHeadersContain(request, TraceContext.TraceStateHeaderName) && span.OutgoingDistributedTracingData != null && span.OutgoingDistributedTracingData.HasTraceState)
+				RequestHeadersAdd(request, TraceContext.TraceStateHeaderName, span.OutgoingDistributedTracingData.TraceState.ToTextHeader());
 
 			if (span is Span spanInstance)
 			{

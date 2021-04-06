@@ -197,6 +197,11 @@ namespace Elastic.Apm.Config
 		/// These apply for example to HTTP headers and application/x-www-form-urlencoded data.
 		/// </summary>
 		IReadOnlyList<WildcardMatcher> SanitizeFieldNames { get; }
+
+		/// <summary>
+		/// A secret token to ensure that only your agents can send data to your APM server.
+		/// Both agents and APM server have to be configured with the same secret token.
+		/// </summary>
 		string SecretToken { get; }
 
 		/// <summary>
@@ -213,7 +218,7 @@ namespace Elastic.Apm.Config
 		IReadOnlyList<Uri> ServerUrls { get; }
 
 		/// <summary>
-		/// The URL for APM server
+		/// The URL for APM server.
 		/// </summary>
 		Uri ServerUrl { get; }
 
@@ -276,12 +281,17 @@ namespace Elastic.Apm.Config
 		/// </summary>
 		int TransactionMaxSpans { get; }
 
+		/// <summary>
+		/// The sample rate for transactions.
+		/// By default, the agent will sample every transaction (e.g. a request to your service). To reduce overhead and storage requirements,
+		/// the sample rate can be set to a value between 0.0 and 1.0. The agent still records the overall time and result for unsampled
+		/// transactions, but no context information, labels, or spans are recorded.
+		/// </summary>
 		double TransactionSampleRate { get; }
 
 		/// <summary>
-		/// If true, for all outgoing HTTP requests the agent stores the traceparent in a header prefixed with elastic-apm
-		/// (elastic-apm-traceparent)
-		/// otherwise it'll use the official header name from w3c, which is "traceparewnt".
+		/// If <c>true</c>, for all outgoing HTTP requests the agent stores the traceparent in a "elastic-apm-traceparent" header name.
+		/// Otherwise, it'll use the official w3c "traceparent" header name.
 		/// </summary>
 		bool UseElasticTraceparentHeader { get; }
 

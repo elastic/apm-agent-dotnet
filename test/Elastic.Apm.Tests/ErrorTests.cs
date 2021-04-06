@@ -120,6 +120,8 @@ namespace Elastic.Apm.Tests
 			});
 
 			mockPayloadSender.WaitForErrors();
+			mockPayloadSender.FirstError.Should().NotBeNull();
+			mockPayloadSender.FirstError.Context.Should().NotBeNull();
 			mockPayloadSender.FirstError.Context.Request.Should().NotBeNull();
 			mockPayloadSender.FirstError.Context.Request.Headers.Should().BeNull();
 			mockPayloadSender.FirstError.Context.Response.Should().NotBeNull();
