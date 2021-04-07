@@ -1,0 +1,7 @@
+==========
+Notice for: elastic-apm-mongo
+----------
+Based on the elastic-apm-mongo project by Vadim Hatsura (@vhatsura),
+licensed under the Apache 2.0 License. https://github.com/vhatsura/elastic-apm-mongo
+
+<text of the Apache 2.0 License>

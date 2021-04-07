@@ -1,7 +1,8 @@
-// Licensed to Elasticsearch B.V under
-// one or more agreements.
-// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
-// See the LICENSE file in the project root for more information
+// Based on the elastic-apm-mongo project by Vadim Hatsura (@vhatsura)
+// https://github.com/vhatsura/elastic-apm-mongo
+// Licensed to Elasticsearch B.V under the Apache 2.0 License.
+// Elasticsearch B.V licenses this file, including any modifications, to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Concurrent;
