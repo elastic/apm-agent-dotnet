@@ -35,9 +35,10 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json
 {
-    public abstract partial class JsonWriter
+    internal abstract partial class JsonWriter
     {
         internal Task AutoCompleteAsync(JsonToken tokenBeingWritten, CancellationToken cancellationToken)
         {
@@ -1310,7 +1311,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
         /// <remarks>The default behaviour is to execute synchronously, returning an already-completed task. Derived
         /// classes can override this behaviour for true asynchronicity.</remarks>
-        
+
         public virtual Task WriteValueAsync(sbyte value, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -1330,7 +1331,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
         /// <remarks>The default behaviour is to execute synchronously, returning an already-completed task. Derived
         /// classes can override this behaviour for true asynchronicity.</remarks>
-        
+
         public virtual Task WriteValueAsync(sbyte? value, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -1445,7 +1446,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
         /// <remarks>The default behaviour is to execute synchronously, returning an already-completed task. Derived
         /// classes can override this behaviour for true asynchronicity.</remarks>
-        
+
         public virtual Task WriteValueAsync(uint value, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -1465,7 +1466,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
         /// <remarks>The default behaviour is to execute synchronously, returning an already-completed task. Derived
         /// classes can override this behaviour for true asynchronicity.</remarks>
-        
+
         public virtual Task WriteValueAsync(uint? value, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -1485,7 +1486,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
         /// <remarks>The default behaviour is to execute synchronously, returning an already-completed task. Derived
         /// classes can override this behaviour for true asynchronicity.</remarks>
-        
+
         public virtual Task WriteValueAsync(ulong value, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -1505,7 +1506,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
         /// <remarks>The default behaviour is to execute synchronously, returning an already-completed task. Derived
         /// classes can override this behaviour for true asynchronicity.</remarks>
-        
+
         public virtual Task WriteValueAsync(ulong? value, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -1544,7 +1545,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
         /// <remarks>The default behaviour is to execute synchronously, returning an already-completed task. Derived
         /// classes can override this behaviour for true asynchronicity.</remarks>
-        
+
         public virtual Task WriteValueAsync(ushort value, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -1564,7 +1565,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
         /// <remarks>The default behaviour is to execute synchronously, returning an already-completed task. Derived
         /// classes can override this behaviour for true asynchronicity.</remarks>
-        
+
         public virtual Task WriteValueAsync(ushort? value, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)

@@ -34,7 +34,7 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 #nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 {
-    public partial class JArray
+    internal partial class JArray
     {
         /// <summary>
         /// Writes this token to a <see cref="JsonWriter"/> asynchronously.

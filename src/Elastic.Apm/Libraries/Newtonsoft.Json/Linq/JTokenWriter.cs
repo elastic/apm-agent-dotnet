@@ -26,6 +26,7 @@
 #endregion
 
 using System;
+using System.Globalization;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 #if HAVE_BIG_INTEGER
 using System.Numerics;
@@ -37,7 +38,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 	/// <summary>
 	/// Represents a writer that provides a fast, non-cached, forward-only way of generating JSON data.
 	/// </summary>
-	internal class JTokenWriter : JsonWriter
+	internal partial class JTokenWriter : JsonWriter
 	{
 		private JContainer? _token;
 
@@ -277,7 +278,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// Writes a <see cref="uint" /> value.
 		/// </summary>
 		/// <param name="value">The <see cref="uint" /> value to write.</param>
-		
+
 		public override void WriteValue(uint value)
 		{
 			base.WriteValue(value);
@@ -298,7 +299,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// Writes a <see cref="ulong" /> value.
 		/// </summary>
 		/// <param name="value">The <see cref="ulong" /> value to write.</param>
-		
+
 		public override void WriteValue(ulong value)
 		{
 			base.WriteValue(value);
@@ -349,7 +350,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// Writes a <see cref="ushort" /> value.
 		/// </summary>
 		/// <param name="value">The <see cref="ushort" /> value to write.</param>
-		
+
 		public override void WriteValue(ushort value)
 		{
 			base.WriteValue(value);
@@ -386,7 +387,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// Writes a <see cref="sbyte" /> value.
 		/// </summary>
 		/// <param name="value">The <see cref="sbyte" /> value to write.</param>
-		
+
 		public override void WriteValue(sbyte value)
 		{
 			base.WriteValue(value);

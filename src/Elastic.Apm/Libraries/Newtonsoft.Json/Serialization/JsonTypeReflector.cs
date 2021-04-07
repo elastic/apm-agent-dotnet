@@ -29,8 +29,11 @@
 using System.Security.Permissions;
 #endif
 using System;
+using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.Serialization;
+using System.Security;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 #if !HAVE_LINQ
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities.LinqBridge;

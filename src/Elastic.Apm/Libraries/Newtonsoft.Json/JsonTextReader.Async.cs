@@ -37,9 +37,10 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 using System.Diagnostics;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json
 {
-    public partial class JsonTextReader
+    internal partial class JsonTextReader
     {
         // It's not safe to perform the async methods here in a derived class as if the synchronous equivalent
         // has been overriden then the asychronous method will no longer be doing the same operation
@@ -112,16 +113,16 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
         private async Task<bool> ParsePostValueAsync(bool ignoreComments, CancellationToken cancellationToken)
         {
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
             while (true)
             {
-                char currentChar = _chars[_charPos];
+                char currentChar = CharBuffer[CharPos];
 
                 switch (currentChar)
                 {
                     case '\0':
-                        if (_charsUsed == _charPos)
+                        if (_charsUsed == CharPos)
                         {
                             if (await ReadDataAsync(false, cancellationToken).ConfigureAwait(false) == 0)
                             {
@@ -131,20 +132,20 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                         }
                         else
                         {
-                            _charPos++;
+							CharPos++;
                         }
 
                         break;
                     case '}':
-                        _charPos++;
+						CharPos++;
                         SetToken(JsonToken.EndObject);
                         return true;
                     case ']':
-                        _charPos++;
+						CharPos++;
                         SetToken(JsonToken.EndArray);
                         return true;
                     case ')':
-                        _charPos++;
+						CharPos++;
                         SetToken(JsonToken.EndConstructor);
                         return true;
                     case '/':
@@ -155,7 +156,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                         }
                         break;
                     case ',':
-                        _charPos++;
+						CharPos++;
 
                         // finished parsing
                         SetStateBasedOnCurrent();
@@ -164,7 +165,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                     case StringUtils.Tab:
 
                         // eat
-                        _charPos++;
+						CharPos++;
                         break;
                     case StringUtils.CarriageReturn:
                         await ProcessCarriageReturnAsync(false, cancellationToken).ConfigureAwait(false);
@@ -176,7 +177,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                         if (char.IsWhiteSpace(currentChar))
                         {
                             // eat
-                            _charPos++;
+							CharPos++;
                         }
                         else
                         {
@@ -197,7 +198,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
         private async Task<bool> ReadFromFinishedAsync(CancellationToken cancellationToken)
         {
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
             if (await EnsureCharsAsync(0, false, cancellationToken).ConfigureAwait(false))
             {
@@ -208,13 +209,13 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                     return false;
                 }
 
-                if (_chars[_charPos] == '/')
+                if (CharBuffer[CharPos] == '/')
                 {
                     await ParseCommentAsync(true, cancellationToken).ConfigureAwait(false);
                     return true;
                 }
 
-                throw JsonReaderException.Create(this, "Additional text encountered after finished reading JSON content: {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
+                throw JsonReaderException.Create(this, "Additional text encountered after finished reading JSON content: {0}.".FormatWith(CultureInfo.InvariantCulture, CharBuffer[CharPos]));
             }
 
             SetToken(JsonToken.None);
@@ -228,7 +229,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
         private async Task<int> ReadDataAsync(bool append, int charsRequired, CancellationToken cancellationToken)
         {
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
             if (_isEndOfFile)
             {
@@ -237,7 +238,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
             PrepareBufferForReadData(append, charsRequired);
 
-            int charsRead = await _reader.ReadAsync(_chars, _charsUsed, _chars.Length - _charsUsed - 1, cancellationToken).ConfigureAwait(false);
+            int charsRead = await _reader.ReadAsync(CharBuffer, _charsUsed, CharBuffer.Length - _charsUsed - 1, cancellationToken).ConfigureAwait(false);
 
             _charsUsed += charsRead;
 
@@ -246,22 +247,22 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                 _isEndOfFile = true;
             }
 
-            _chars[_charsUsed] = '\0';
+            CharBuffer[_charsUsed] = '\0';
             return charsRead;
         }
 
         private async Task<bool> ParseValueAsync(CancellationToken cancellationToken)
         {
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
             while (true)
             {
-                char currentChar = _chars[_charPos];
+                char currentChar = CharBuffer[CharPos];
 
                 switch (currentChar)
                 {
                     case '\0':
-                        if (_charsUsed == _charPos)
+                        if (_charsUsed == CharPos)
                         {
                             if (await ReadDataAsync(false, cancellationToken).ConfigureAwait(false) == 0)
                             {
@@ -270,7 +271,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                         }
                         else
                         {
-                            _charPos++;
+							CharPos++;
                         }
 
                         break;
@@ -287,7 +288,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                     case 'n':
                         if (await EnsureCharsAsync(1, true, cancellationToken).ConfigureAwait(false))
                         {
-                            switch (_chars[_charPos + 1])
+                            switch (CharBuffer[CharPos + 1])
                             {
                                 case 'u':
                                     await ParseNullAsync(cancellationToken).ConfigureAwait(false);
@@ -296,12 +297,12 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                                     await ParseConstructorAsync(cancellationToken).ConfigureAwait(false);
                                     break;
                                 default:
-                                    throw CreateUnexpectedCharacterException(_chars[_charPos]);
+                                    throw CreateUnexpectedCharacterException(CharBuffer[CharPos]);
                             }
                         }
                         else
                         {
-                            _charPos++;
+							CharPos++;
                             throw CreateUnexpectedEndException();
                         }
 
@@ -313,7 +314,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                         await ParseNumberPositiveInfinityAsync(ReadType.Read, cancellationToken).ConfigureAwait(false);
                         return true;
                     case '-':
-                        if (await EnsureCharsAsync(1, true, cancellationToken).ConfigureAwait(false) && _chars[_charPos + 1] == 'I')
+                        if (await EnsureCharsAsync(1, true, cancellationToken).ConfigureAwait(false) && CharBuffer[CharPos + 1] == 'I')
                         {
                             await ParseNumberNegativeInfinityAsync(ReadType.Read, cancellationToken).ConfigureAwait(false);
                         }
@@ -329,15 +330,15 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                         await ParseUndefinedAsync(cancellationToken).ConfigureAwait(false);
                         return true;
                     case '{':
-                        _charPos++;
+						CharPos++;
                         SetToken(JsonToken.StartObject);
                         return true;
                     case '[':
-                        _charPos++;
+						CharPos++;
                         SetToken(JsonToken.StartArray);
                         return true;
                     case ']':
-                        _charPos++;
+						CharPos++;
                         SetToken(JsonToken.EndArray);
                         return true;
                     case ',':
@@ -347,7 +348,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                         SetToken(JsonToken.Undefined);
                         return true;
                     case ')':
-                        _charPos++;
+						CharPos++;
                         SetToken(JsonToken.EndConstructor);
                         return true;
                     case StringUtils.CarriageReturn:
@@ -360,13 +361,13 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                     case StringUtils.Tab:
 
                         // eat
-                        _charPos++;
+						CharPos++;
                         break;
                     default:
                         if (char.IsWhiteSpace(currentChar))
                         {
                             // eat
-                            _charPos++;
+							CharPos++;
                             break;
                         }
 
@@ -383,16 +384,16 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
         private async Task ReadStringIntoBufferAsync(char quote, CancellationToken cancellationToken)
         {
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
-            int charPos = _charPos;
-            int initialPosition = _charPos;
-            int lastWritePosition = _charPos;
+            int charPos = CharPos;
+            int initialPosition = CharPos;
+            int lastWritePosition = CharPos;
             _stringBuffer.Position = 0;
 
             while (true)
             {
-                switch (_chars[charPos++])
+                switch (CharBuffer[charPos++])
                 {
                     case '\0':
                         if (_charsUsed == charPos - 1)
@@ -401,14 +402,14 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
                             if (await ReadDataAsync(true, cancellationToken).ConfigureAwait(false) == 0)
                             {
-                                _charPos = charPos;
+                                CharPos = charPos;
                                 throw JsonReaderException.Create(this, "Unterminated string. Expected delimiter: {0}.".FormatWith(CultureInfo.InvariantCulture, quote));
                             }
                         }
 
                         break;
                     case '\\':
-                        _charPos = charPos;
+                        CharPos = charPos;
                         if (!await EnsureCharsAsync(0, true, cancellationToken).ConfigureAwait(false))
                         {
                             throw JsonReaderException.Create(this, "Unterminated string. Expected delimiter: {0}.".FormatWith(CultureInfo.InvariantCulture, quote));
@@ -417,7 +418,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                         // start of escape sequence
                         int escapeStartPos = charPos - 1;
 
-                        char currentChar = _chars[charPos];
+                        char currentChar = CharBuffer[charPos];
                         charPos++;
 
                         char writeChar;
@@ -448,7 +449,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                                 writeChar = currentChar;
                                 break;
                             case 'u':
-                                _charPos = charPos;
+                                CharPos = charPos;
                                 writeChar = await ParseUnicodeAsync(cancellationToken).ConfigureAwait(false);
 
                                 if (StringUtils.IsLowSurrogate(writeChar))
@@ -466,11 +467,11 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                                         anotherHighSurrogate = false;
 
                                         // potential start of a surrogate pair
-                                        if (await EnsureCharsAsync(2, true, cancellationToken).ConfigureAwait(false) && _chars[_charPos] == '\\' && _chars[_charPos + 1] == 'u')
+                                        if (await EnsureCharsAsync(2, true, cancellationToken).ConfigureAwait(false) && CharBuffer[CharPos] == '\\' && CharBuffer[CharPos + 1] == 'u')
                                         {
                                             char highSurrogate = writeChar;
 
-                                            _charPos += 2;
+                                            CharPos += 2;
                                             writeChar = await ParseUnicodeAsync(cancellationToken).ConfigureAwait(false);
 
                                             if (StringUtils.IsLowSurrogate(writeChar))
@@ -492,7 +493,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                                             EnsureBufferNotEmpty();
 
                                             WriteCharToBuffer(highSurrogate, lastWritePosition, escapeStartPos);
-                                            lastWritePosition = _charPos;
+                                            lastWritePosition = CharPos;
                                         }
                                         else
                                         {
@@ -503,10 +504,10 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                                     } while (anotherHighSurrogate);
                                 }
 
-                                charPos = _charPos;
+                                charPos = CharPos;
                                 break;
                             default:
-                                _charPos = charPos;
+                                CharPos = charPos;
                                 throw JsonReaderException.Create(this, "Bad JSON escape sequence: {0}.".FormatWith(CultureInfo.InvariantCulture, @"\" + currentChar));
                         }
 
@@ -516,18 +517,18 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                         lastWritePosition = charPos;
                         break;
                     case StringUtils.CarriageReturn:
-                        _charPos = charPos - 1;
+                        CharPos = charPos - 1;
                         await ProcessCarriageReturnAsync(true, cancellationToken).ConfigureAwait(false);
-                        charPos = _charPos;
+                        charPos = CharPos;
                         break;
                     case StringUtils.LineFeed:
-                        _charPos = charPos - 1;
+                        CharPos = charPos - 1;
                         ProcessLineFeed();
-                        charPos = _charPos;
+                        charPos = CharPos;
                         break;
                     case '"':
                     case '\'':
-                        if (_chars[charPos - 1] == quote)
+                        if (CharBuffer[charPos - 1] == quote)
                         {
                             FinishReadStringIntoBuffer(charPos - 1, initialPosition, lastWritePosition);
                             return;
@@ -540,7 +541,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
         private Task ProcessCarriageReturnAsync(bool append, CancellationToken cancellationToken)
         {
-            _charPos++;
+            CharPos++;
 
             Task<bool> task = EnsureCharsAsync(1, append, cancellationToken);
             if (task.IsCompletedSucessfully())
@@ -564,7 +565,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
         private Task<bool> EnsureCharsAsync(int relativePosition, bool append, CancellationToken cancellationToken)
         {
-            if (_charPos + relativePosition < _charsUsed)
+            if (CharPos + relativePosition < _charsUsed)
             {
                 return AsyncUtils.True;
             }
@@ -579,7 +580,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
         private async Task<bool> ReadCharsAsync(int relativePosition, bool append, CancellationToken cancellationToken)
         {
-            int charsRequired = _charPos + relativePosition - _charsUsed + 1;
+            int charsRequired = CharPos + relativePosition - _charsUsed + 1;
 
             // it is possible that the TextReader doesn't return all data at once
             // repeat read until the required text is returned or the reader is out of content
@@ -601,16 +602,16 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
         private async Task<bool> ParseObjectAsync(CancellationToken cancellationToken)
         {
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
             while (true)
             {
-                char currentChar = _chars[_charPos];
+                char currentChar = CharBuffer[CharPos];
 
                 switch (currentChar)
                 {
                     case '\0':
-                        if (_charsUsed == _charPos)
+                        if (_charsUsed == CharPos)
                         {
                             if (await ReadDataAsync(false, cancellationToken).ConfigureAwait(false) == 0)
                             {
@@ -619,13 +620,13 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                         }
                         else
                         {
-                            _charPos++;
+                            CharPos++;
                         }
 
                         break;
                     case '}':
                         SetToken(JsonToken.EndObject);
-                        _charPos++;
+                        CharPos++;
                         return true;
                     case '/':
                         await ParseCommentAsync(true, cancellationToken).ConfigureAwait(false);
@@ -640,13 +641,13 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                     case StringUtils.Tab:
 
                         // eat
-                        _charPos++;
+                        CharPos++;
                         break;
                     default:
                         if (char.IsWhiteSpace(currentChar))
                         {
                             // eat
-                            _charPos++;
+                            CharPos++;
                         }
                         else
                         {
@@ -660,10 +661,10 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
         private async Task ParseCommentAsync(bool setToken, CancellationToken cancellationToken)
         {
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
             // should have already parsed / character before reaching this method
-            _charPos++;
+            CharPos++;
 
             if (!await EnsureCharsAsync(1, false, cancellationToken).ConfigureAwait(false))
             {
@@ -672,29 +673,29 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
             bool singlelineComment;
 
-            if (_chars[_charPos] == '*')
+            if (CharBuffer[CharPos] == '*')
             {
                 singlelineComment = false;
             }
-            else if (_chars[_charPos] == '/')
+            else if (CharBuffer[CharPos] == '/')
             {
                 singlelineComment = true;
             }
             else
             {
-                throw JsonReaderException.Create(this, "Error parsing comment. Expected: *, got {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
+                throw JsonReaderException.Create(this, "Error parsing comment. Expected: *, got {0}.".FormatWith(CultureInfo.InvariantCulture, CharBuffer[CharPos]));
             }
 
-            _charPos++;
+            CharPos++;
 
-            int initialPosition = _charPos;
+            int initialPosition = CharPos;
 
             while (true)
             {
-                switch (_chars[_charPos])
+                switch (CharBuffer[CharPos])
                 {
                     case '\0':
-                        if (_charsUsed == _charPos)
+                        if (_charsUsed == CharPos)
                         {
                             if (await ReadDataAsync(true, cancellationToken).ConfigureAwait(false) == 0)
                             {
@@ -703,28 +704,28 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                                     throw JsonReaderException.Create(this, "Unexpected end while parsing comment.");
                                 }
 
-                                EndComment(setToken, initialPosition, _charPos);
+                                EndComment(setToken, initialPosition, CharPos);
                                 return;
                             }
                         }
                         else
                         {
-                            _charPos++;
+                            CharPos++;
                         }
 
                         break;
                     case '*':
-                        _charPos++;
+                        CharPos++;
 
                         if (!singlelineComment)
                         {
                             if (await EnsureCharsAsync(0, true, cancellationToken).ConfigureAwait(false))
                             {
-                                if (_chars[_charPos] == '/')
+                                if (CharBuffer[CharPos] == '/')
                                 {
-                                    EndComment(setToken, initialPosition, _charPos - 1);
+                                    EndComment(setToken, initialPosition, CharPos - 1);
 
-                                    _charPos++;
+                                    CharPos++;
                                     return;
                                 }
                             }
@@ -734,7 +735,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                     case StringUtils.CarriageReturn:
                         if (singlelineComment)
                         {
-                            EndComment(setToken, initialPosition, _charPos);
+                            EndComment(setToken, initialPosition, CharPos);
                             return;
                         }
 
@@ -743,14 +744,14 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                     case StringUtils.LineFeed:
                         if (singlelineComment)
                         {
-                            EndComment(setToken, initialPosition, _charPos);
+                            EndComment(setToken, initialPosition, CharPos);
                             return;
                         }
 
                         ProcessLineFeed();
                         break;
                     default:
-                        _charPos++;
+                        CharPos++;
                         break;
                 }
             }
@@ -758,16 +759,16 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
         private async Task EatWhitespaceAsync(CancellationToken cancellationToken)
         {
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
             while (true)
             {
-                char currentChar = _chars[_charPos];
+                char currentChar = CharBuffer[CharPos];
 
                 switch (currentChar)
                 {
                     case '\0':
-                        if (_charsUsed == _charPos)
+                        if (_charsUsed == CharPos)
                         {
                             if (await ReadDataAsync(false, cancellationToken).ConfigureAwait(false) == 0)
                             {
@@ -776,7 +777,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                         }
                         else
                         {
-                            _charPos++;
+                            CharPos++;
                         }
                         break;
                     case StringUtils.CarriageReturn:
@@ -788,7 +789,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                     default:
                         if (currentChar == ' ' || char.IsWhiteSpace(currentChar))
                         {
-                            _charPos++;
+                            CharPos++;
                         }
                         else
                         {
@@ -802,7 +803,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         private async Task ParseStringAsync(char quote, ReadType readType, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            _charPos++;
+            CharPos++;
 
             ShiftBufferIfNeeded();
             await ReadStringIntoBufferAsync(quote, cancellationToken).ConfigureAwait(false);
@@ -816,7 +817,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
         private async Task<bool> MatchValueWithTrailingSeparatorAsync(string value, CancellationToken cancellationToken)
         {
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
             // will match value and then move to the next character, checking that it is a separator character
             if (!await MatchValueAsync(value, cancellationToken).ConfigureAwait(false))
@@ -829,7 +830,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                 return true;
             }
 
-            return IsSeparator(_chars[_charPos]) || _chars[_charPos] == '\0';
+            return IsSeparator(CharBuffer[CharPos]) || CharBuffer[CharPos] == '\0';
         }
 
         private async Task MatchAndSetAsync(string value, JsonToken newToken, object? tokenValue, CancellationToken cancellationToken)
@@ -861,21 +862,21 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
         private async Task ParseConstructorAsync(CancellationToken cancellationToken)
         {
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
             if (await MatchValueWithTrailingSeparatorAsync("new", cancellationToken).ConfigureAwait(false))
             {
                 await EatWhitespaceAsync(cancellationToken).ConfigureAwait(false);
 
-                int initialPosition = _charPos;
+                int initialPosition = CharPos;
                 int endPosition;
 
                 while (true)
                 {
-                    char currentChar = _chars[_charPos];
+                    char currentChar = CharBuffer[CharPos];
                     if (currentChar == '\0')
                     {
-                        if (_charsUsed == _charPos)
+                        if (_charsUsed == CharPos)
                         {
                             if (await ReadDataAsync(true, cancellationToken).ConfigureAwait(false) == 0)
                             {
@@ -884,36 +885,36 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                         }
                         else
                         {
-                            endPosition = _charPos;
-                            _charPos++;
+                            endPosition = CharPos;
+                            CharPos++;
                             break;
                         }
                     }
                     else if (char.IsLetterOrDigit(currentChar))
                     {
-                        _charPos++;
+                        CharPos++;
                     }
                     else if (currentChar == StringUtils.CarriageReturn)
                     {
-                        endPosition = _charPos;
+                        endPosition = CharPos;
                         await ProcessCarriageReturnAsync(true, cancellationToken).ConfigureAwait(false);
                         break;
                     }
                     else if (currentChar == StringUtils.LineFeed)
                     {
-                        endPosition = _charPos;
+                        endPosition = CharPos;
                         ProcessLineFeed();
                         break;
                     }
                     else if (char.IsWhiteSpace(currentChar))
                     {
-                        endPosition = _charPos;
-                        _charPos++;
+                        endPosition = CharPos;
+                        CharPos++;
                         break;
                     }
                     else if (currentChar == '(')
                     {
-                        endPosition = _charPos;
+                        endPosition = CharPos;
                         break;
                     }
                     else
@@ -922,17 +923,17 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                     }
                 }
 
-                _stringReference = new StringReference(_chars, initialPosition, endPosition - initialPosition);
+                _stringReference = new StringReference(CharBuffer, initialPosition, endPosition - initialPosition);
                 string constructorName = _stringReference.ToString();
 
                 await EatWhitespaceAsync(cancellationToken).ConfigureAwait(false);
 
-                if (_chars[_charPos] != '(')
+                if (CharBuffer[CharPos] != '(')
                 {
-                    throw JsonReaderException.Create(this, "Unexpected character while parsing constructor: {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
+                    throw JsonReaderException.Create(this, "Unexpected character while parsing constructor: {0}.".FormatWith(CultureInfo.InvariantCulture, CharBuffer[CharPos]));
                 }
 
-                _charPos++;
+                CharPos++;
 
                 ClearRecentString();
 
@@ -961,12 +962,12 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
         private async Task ParseNumberAsync(ReadType readType, CancellationToken cancellationToken)
         {
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
             ShiftBufferIfNeeded();
 
-            char firstChar = _chars[_charPos];
-            int initialPosition = _charPos;
+            char firstChar = CharBuffer[CharPos];
+            int initialPosition = CharPos;
 
             await ReadNumberIntoBufferAsync(cancellationToken).ConfigureAwait(false);
 
@@ -980,14 +981,14 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
         private async Task<bool> ParsePropertyAsync(CancellationToken cancellationToken)
         {
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
-            char firstChar = _chars[_charPos];
+            char firstChar = CharBuffer[CharPos];
             char quoteChar;
 
             if (firstChar == '"' || firstChar == '\'')
             {
-                _charPos++;
+                CharPos++;
                 quoteChar = firstChar;
                 ShiftBufferIfNeeded();
                 await ReadStringIntoBufferAsync(quoteChar, cancellationToken).ConfigureAwait(false);
@@ -1000,7 +1001,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
             }
             else
             {
-                throw JsonReaderException.Create(this, "Invalid property identifier character: {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
+                throw JsonReaderException.Create(this, "Invalid property identifier character: {0}.".FormatWith(CultureInfo.InvariantCulture, CharBuffer[CharPos]));
             }
 
             string propertyName;
@@ -1018,12 +1019,12 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
             await EatWhitespaceAsync(cancellationToken).ConfigureAwait(false);
 
-            if (_chars[_charPos] != ':')
+            if (CharBuffer[CharPos] != ':')
             {
-                throw JsonReaderException.Create(this, "Invalid character after parsing property name. Expected ':' but got: {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
+                throw JsonReaderException.Create(this, "Invalid character after parsing property name. Expected ':' but got: {0}.".FormatWith(CultureInfo.InvariantCulture, CharBuffer[CharPos]));
             }
 
-            _charPos++;
+            CharPos++;
 
             SetToken(JsonToken.PropertyName, propertyName);
             _quoteChar = quoteChar;
@@ -1034,16 +1035,16 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
         private async Task ReadNumberIntoBufferAsync(CancellationToken cancellationToken)
         {
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
-            int charPos = _charPos;
+            int charPos = CharPos;
 
             while (true)
             {
-                char currentChar = _chars[charPos];
+                char currentChar = CharBuffer[charPos];
                 if (currentChar == '\0')
                 {
-                    _charPos = charPos;
+                    CharPos = charPos;
 
                     if (_charsUsed == charPos)
                     {
@@ -1070,17 +1071,17 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
         private async Task ParseUnquotedPropertyAsync(CancellationToken cancellationToken)
         {
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
-            int initialPosition = _charPos;
+            int initialPosition = CharPos;
 
             // parse unquoted property name until whitespace or colon
             while (true)
             {
-                char currentChar = _chars[_charPos];
+                char currentChar = CharBuffer[CharPos];
                 if (currentChar == '\0')
                 {
-                    if (_charsUsed == _charPos)
+                    if (_charsUsed == CharPos)
                     {
                         if (await ReadDataAsync(true, cancellationToken).ConfigureAwait(false) == 0)
                         {
@@ -1090,7 +1091,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                         continue;
                     }
 
-                    _stringReference = new StringReference(_chars, initialPosition, _charPos - initialPosition);
+                    _stringReference = new StringReference(CharBuffer, initialPosition, CharPos - initialPosition);
                     return;
                 }
 
@@ -1103,7 +1104,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
         private async Task<bool> ReadNullCharAsync(CancellationToken cancellationToken)
         {
-            if (_charsUsed == _charPos)
+            if (_charsUsed == CharPos)
             {
                 if (await ReadDataAsync(false, cancellationToken).ConfigureAwait(false) == 0)
                 {
@@ -1113,7 +1114,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
             }
             else
             {
-                _charPos++;
+                CharPos++;
             }
 
             return false;
@@ -1121,27 +1122,27 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
         private async Task HandleNullAsync(CancellationToken cancellationToken)
         {
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
             if (await EnsureCharsAsync(1, true, cancellationToken).ConfigureAwait(false))
             {
-                if (_chars[_charPos + 1] == 'u')
+                if (CharBuffer[CharPos + 1] == 'u')
                 {
                     await ParseNullAsync(cancellationToken).ConfigureAwait(false);
                     return;
                 }
 
-                _charPos += 2;
-                throw CreateUnexpectedCharacterException(_chars[_charPos - 1]);
+                CharPos += 2;
+                throw CreateUnexpectedCharacterException(CharBuffer[CharPos - 1]);
             }
 
-            _charPos = _charsUsed;
+            CharPos = _charsUsed;
             throw CreateUnexpectedEndException();
         }
 
         private async Task ReadFinishedAsync(CancellationToken cancellationToken)
         {
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
             if (await EnsureCharsAsync(0, false, cancellationToken).ConfigureAwait(false))
             {
@@ -1152,13 +1153,13 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                     return;
                 }
 
-                if (_chars[_charPos] == '/')
+                if (CharBuffer[CharPos] == '/')
                 {
                     await ParseCommentAsync(false, cancellationToken).ConfigureAwait(false);
                 }
                 else
                 {
-                    throw JsonReaderException.Create(this, "Additional text encountered after finished reading JSON content: {0}.".FormatWith(CultureInfo.InvariantCulture, _chars[_charPos]));
+                    throw JsonReaderException.Create(this, "Additional text encountered after finished reading JSON content: {0}.".FormatWith(CultureInfo.InvariantCulture, CharBuffer[CharPos]));
                 }
             }
 
@@ -1168,7 +1169,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         private async Task<object?> ReadStringValueAsync(ReadType readType, CancellationToken cancellationToken)
         {
             EnsureBuffer();
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
             switch (_currentState)
             {
@@ -1186,7 +1187,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                 case State.ConstructorStart:
                     while (true)
                     {
-                        char currentChar = _chars[_charPos];
+                        char currentChar = CharBuffer[CharPos];
 
                         switch (currentChar)
                         {
@@ -1203,7 +1204,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                                 await ParseStringAsync(currentChar, readType, cancellationToken).ConfigureAwait(false);
                                 return FinishReadQuotedStringValue(readType);
                             case '-':
-                                if (await EnsureCharsAsync(1, true, cancellationToken).ConfigureAwait(false) && _chars[_charPos + 1] == 'I')
+                                if (await EnsureCharsAsync(1, true, cancellationToken).ConfigureAwait(false) && CharBuffer[CharPos + 1] == 'I')
                                 {
                                     return ParseNumberNegativeInfinity(readType);
                                 }
@@ -1225,7 +1226,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                             case '9':
                                 if (readType != ReadType.ReadAsString)
                                 {
-                                    _charPos++;
+                                    CharPos++;
                                     throw CreateUnexpectedCharacterException(currentChar);
                                 }
 
@@ -1235,14 +1236,14 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                             case 'f':
                                 if (readType != ReadType.ReadAsString)
                                 {
-                                    _charPos++;
+                                    CharPos++;
                                     throw CreateUnexpectedCharacterException(currentChar);
                                 }
 
                                 string expected = currentChar == 't' ? JsonConvert.True : JsonConvert.False;
                                 if (!await MatchValueWithTrailingSeparatorAsync(expected, cancellationToken).ConfigureAwait(false))
                                 {
-                                    throw CreateUnexpectedCharacterException(_chars[_charPos]);
+                                    throw CreateUnexpectedCharacterException(CharBuffer[CharPos]);
                                 }
 
                                 SetToken(JsonToken.String, expected);
@@ -1261,7 +1262,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                                 ProcessValueComma();
                                 break;
                             case ']':
-                                _charPos++;
+                                CharPos++;
                                 if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue)
                                 {
                                     SetToken(JsonToken.EndArray);
@@ -1279,10 +1280,10 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                             case StringUtils.Tab:
 
                                 // eat
-                                _charPos++;
+                                CharPos++;
                                 break;
                             default:
-                                _charPos++;
+                                CharPos++;
 
                                 if (!char.IsWhiteSpace(currentChar))
                                 {
@@ -1304,7 +1305,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         private async Task<object?> ReadNumberValueAsync(ReadType readType, CancellationToken cancellationToken)
         {
             EnsureBuffer();
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
             switch (_currentState)
             {
@@ -1322,7 +1323,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                 case State.ConstructorStart:
                     while (true)
                     {
-                        char currentChar = _chars[_charPos];
+                        char currentChar = CharBuffer[CharPos];
 
                         switch (currentChar)
                         {
@@ -1346,7 +1347,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                             case 'I':
                                 return await ParseNumberPositiveInfinityAsync(readType, cancellationToken).ConfigureAwait(false);
                             case '-':
-                                if (await EnsureCharsAsync(1, true, cancellationToken).ConfigureAwait(false) && _chars[_charPos + 1] == 'I')
+                                if (await EnsureCharsAsync(1, true, cancellationToken).ConfigureAwait(false) && CharBuffer[CharPos + 1] == 'I')
                                 {
                                     return await ParseNumberNegativeInfinityAsync(readType, cancellationToken).ConfigureAwait(false);
                                 }
@@ -1375,7 +1376,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                                 ProcessValueComma();
                                 break;
                             case ']':
-                                _charPos++;
+                                CharPos++;
                                 if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue)
                                 {
                                     SetToken(JsonToken.EndArray);
@@ -1393,10 +1394,10 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                             case StringUtils.Tab:
 
                                 // eat
-                                _charPos++;
+                                CharPos++;
                                 break;
                             default:
-                                _charPos++;
+                                CharPos++;
 
                                 if (!char.IsWhiteSpace(currentChar))
                                 {
@@ -1431,7 +1432,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         internal async Task<bool?> DoReadAsBooleanAsync(CancellationToken cancellationToken)
         {
             EnsureBuffer();
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
             switch (_currentState)
             {
@@ -1449,7 +1450,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                 case State.ConstructorStart:
                     while (true)
                     {
-                        char currentChar = _chars[_charPos];
+                        char currentChar = CharBuffer[CharPos];
 
                         switch (currentChar)
                         {
@@ -1499,7 +1500,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                                 bool isTrue = currentChar == 't';
                                 if (!await MatchValueWithTrailingSeparatorAsync(isTrue ? JsonConvert.True : JsonConvert.False, cancellationToken).ConfigureAwait(false))
                                 {
-                                    throw CreateUnexpectedCharacterException(_chars[_charPos]);
+                                    throw CreateUnexpectedCharacterException(CharBuffer[CharPos]);
                                 }
 
                                 SetToken(JsonToken.Boolean, isTrue);
@@ -1511,7 +1512,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                                 ProcessValueComma();
                                 break;
                             case ']':
-                                _charPos++;
+                                CharPos++;
                                 if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue)
                                 {
                                     SetToken(JsonToken.EndArray);
@@ -1529,10 +1530,10 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                             case StringUtils.Tab:
 
                                 // eat
-                                _charPos++;
+                                CharPos++;
                                 break;
                             default:
-                                _charPos++;
+                                CharPos++;
 
                                 if (!char.IsWhiteSpace(currentChar))
                                 {
@@ -1567,7 +1568,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         internal async Task<byte[]?> DoReadAsBytesAsync(CancellationToken cancellationToken)
         {
             EnsureBuffer();
-            MiscellaneousUtils.Assert(_chars != null);
+            MiscellaneousUtils.Assert(CharBuffer != null);
 
             bool isWrapped = false;
 
@@ -1587,7 +1588,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                 case State.ConstructorStart:
                     while (true)
                     {
-                        char currentChar = _chars[_charPos];
+                        char currentChar = CharBuffer[CharPos];
 
                         switch (currentChar)
                         {
@@ -1616,13 +1617,13 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
                                 return data;
                             case '{':
-                                _charPos++;
+                                CharPos++;
                                 SetToken(JsonToken.StartObject);
                                 await ReadIntoWrappedTypeObjectAsync(cancellationToken).ConfigureAwait(false);
                                 isWrapped = true;
                                 break;
                             case '[':
-                                _charPos++;
+                                CharPos++;
                                 SetToken(JsonToken.StartArray);
                                 return await ReadArrayIntoByteArrayAsync(cancellationToken).ConfigureAwait(false);
                             case 'n':
@@ -1635,7 +1636,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                                 ProcessValueComma();
                                 break;
                             case ']':
-                                _charPos++;
+                                CharPos++;
                                 if (_currentState == State.Array || _currentState == State.ArrayStart || _currentState == State.PostValue)
                                 {
                                     SetToken(JsonToken.EndArray);
@@ -1653,10 +1654,10 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                             case StringUtils.Tab:
 
                                 // eat
-                                _charPos++;
+                                CharPos++;
                                 break;
                             default:
-                                _charPos++;
+                                CharPos++;
 
                                 if (!char.IsWhiteSpace(currentChar))
                                 {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 #nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization

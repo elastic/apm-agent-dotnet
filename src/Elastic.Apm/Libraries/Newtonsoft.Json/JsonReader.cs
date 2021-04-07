@@ -40,7 +40,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 	/// <summary>
 	/// Represents a reader that provides fast, non-cached, forward-only access to serialized JSON data.
 	/// </summary>
-	internal abstract class JsonReader : IDisposable
+	internal abstract partial class JsonReader : IDisposable
 	{
 		/// <summary>
 		/// Specifies the state of the reader.
@@ -857,7 +857,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                 return null;
             }
 
-            if (DateTimeUtils.TryParseDateTimeOffset(s, _dateFormatString, Culture, out DateTimeOffset dt))
+            if (DateTimeUtils.TryParseDateTimeOffset(s, DateFormatString, Culture, out DateTimeOffset dt))
             {
                 SetToken(JsonToken.Date, dt, false);
                 return dt;

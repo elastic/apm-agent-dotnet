@@ -28,9 +28,11 @@
 #if NET461
 using System;
 using System.Collections.Generic;
-//#if !HAVE_LINQ
+#if !HAVE_LINQ
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities.LinqBridge;
-//#endif
+#else
+using System.Linq;
+#endif
 using System.Text;
 using System.Reflection;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;

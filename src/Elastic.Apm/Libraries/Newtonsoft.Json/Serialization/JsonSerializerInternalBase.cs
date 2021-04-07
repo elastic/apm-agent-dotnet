@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 

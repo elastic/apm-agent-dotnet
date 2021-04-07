@@ -28,6 +28,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Threading;
@@ -47,7 +48,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 	/// <summary>
 	/// Represents a token that can contain other tokens.
 	/// </summary>
-	internal abstract class JContainer
+	internal abstract partial class JContainer
 		: JToken, IList<JToken>
 #if HAVE_COMPONENT_MODEL
         , ITypedList, IBindingList

@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 #if !HAVE_LINQ

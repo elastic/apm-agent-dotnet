@@ -150,10 +150,10 @@ namespace Elastic.Apm.Model
 		/// Outcome may be one of a limited set of permitted values describing the success or failure of the span.
 		/// This field can be used for calculating error rates for outgoing requests.
 		/// </summary>
-		[JsonConverter(typeof(StringEnumConverter))]
 		public Outcome Outcome
 		{
-			get => _outcome; set
+			get => _outcome;
+			set
 			{
 				_outcomeChangedThroughApi = true;
 				_outcome = value;

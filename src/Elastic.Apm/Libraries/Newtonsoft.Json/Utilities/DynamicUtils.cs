@@ -42,6 +42,7 @@ using System.Globalization;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 using System.Diagnostics;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 {
     internal static class DynamicUtils

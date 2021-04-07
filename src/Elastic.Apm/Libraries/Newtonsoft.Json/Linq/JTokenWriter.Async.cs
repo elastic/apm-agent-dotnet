@@ -32,7 +32,7 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 {
-    public partial class JTokenWriter
+    internal partial class JTokenWriter
     {
         // This is the only method that can benefit from Task-based asynchronicity, and that only when
         // the reader provides it.

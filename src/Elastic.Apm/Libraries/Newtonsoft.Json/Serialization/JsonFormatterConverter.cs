@@ -32,6 +32,7 @@ using System.Runtime.Serialization;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization
 {
     internal class JsonFormatterConverter : IFormatterConverter

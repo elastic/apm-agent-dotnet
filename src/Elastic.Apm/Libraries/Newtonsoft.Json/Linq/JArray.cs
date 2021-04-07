@@ -42,7 +42,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 	///   <code lang="cs" source="..\Src\Newtonsoft.Json.Tests\Documentation\LinqToJsonTests.cs"
 	///       region="LinqToJsonCreateParseArray" title="Parsing a JSON Array from Text" />
 	/// </example>
-	internal class JArray : JContainer, IList<JToken>
+	internal partial class JArray : JContainer, IList<JToken>
 	{
 		private readonly List<JToken> _values = new();
 

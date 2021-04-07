@@ -30,6 +30,7 @@ using System.Numerics;
 #endif
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
@@ -235,7 +236,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 
 		public static bool IsConvertible(Type t) =>
 #if HAVE_ICONVERTIBLE
-            return typeof(IConvertible).IsAssignableFrom(t);
+            typeof(IConvertible).IsAssignableFrom(t);
 #else
 			t == typeof(bool) || t == typeof(byte) || t == typeof(char) || t == typeof(DateTime) || t == typeof(decimal) || t == typeof(double)
 			|| t == typeof(short) || t == typeof(int) ||
@@ -246,7 +247,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 
 		public static TimeSpan ParseTimeSpan(string input) =>
 #if HAVE_TIME_SPAN_PARSE_WITH_CULTURE
-            return TimeSpan.Parse(input, CultureInfo.InvariantCulture);
+            TimeSpan.Parse(input, CultureInfo.InvariantCulture);
 #else
 			TimeSpan.Parse(input);
 #endif

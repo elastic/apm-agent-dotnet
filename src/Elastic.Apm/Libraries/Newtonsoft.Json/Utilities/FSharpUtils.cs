@@ -35,6 +35,7 @@ using System.Text;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 using System.Diagnostics;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 {
     internal class FSharpFunction

@@ -28,6 +28,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Reflection;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 #if !HAVE_LINQ

@@ -36,7 +36,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 	/// <summary>
 	/// Represents a JSON constructor.
 	/// </summary>
-	internal class JConstructor : JContainer
+	internal partial class JConstructor : JContainer
 	{
 		private readonly List<JToken> _values = new();
 

@@ -28,6 +28,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Runtime.CompilerServices;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 #if HAVE_BIG_INTEGER
 using System.Numerics;
@@ -55,7 +56,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 	/// <summary>
 	/// Represents a reader that provides fast, non-cached, forward-only access to JSON text data.
 	/// </summary>
-	internal class JsonTextReader : JsonReader, IJsonLineInfo
+	internal partial class JsonTextReader : JsonReader, IJsonLineInfo
 	{
 		private const char UnicodeReplacementChar = '\uFFFD';
 #if HAVE_BIG_INTEGER

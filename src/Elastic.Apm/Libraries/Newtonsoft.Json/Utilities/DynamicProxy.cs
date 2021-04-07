@@ -29,6 +29,7 @@
 using System.Collections.Generic;
 using System.Dynamic;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Utilities
 {
     internal class DynamicProxy<T>

@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 
@@ -44,7 +45,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 	/// <summary>
 	/// Represents a value in JSON (string, integer, date, etc).
 	/// </summary>
-	internal class JValue : JToken, IEquatable<JValue>, IFormattable, IComparable, IComparable<JValue>
+	internal partial class JValue : JToken, IEquatable<JValue>, IFormattable, IComparable, IComparable<JValue>
 #if HAVE_ICONVERTIBLE
         , IConvertible
 #endif
@@ -91,7 +92,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 		/// Initializes a new instance of the <see cref="JValue" /> class with the given value.
 		/// </summary>
 		/// <param name="value">The value.</param>
-		
+
 		public JValue(ulong value)
 			: this(value, JTokenType.Integer) { }
 

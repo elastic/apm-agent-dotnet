@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;

@@ -32,9 +32,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 {
-    public partial class JObject
+    internal partial class JObject
     {
         /// <summary>
         /// Writes this token to a <see cref="JsonWriter"/> asynchronously.

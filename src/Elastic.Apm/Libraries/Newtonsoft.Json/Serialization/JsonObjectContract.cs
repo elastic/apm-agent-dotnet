@@ -26,7 +26,11 @@
 #endregion
 
 using System;
+using System.Globalization;
+using System.Runtime.Serialization;
+using System.Security;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
+using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 
 #nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Serialization

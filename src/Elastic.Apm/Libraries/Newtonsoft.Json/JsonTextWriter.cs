@@ -26,6 +26,7 @@
 #endregion
 
 using System;
+using System.Globalization;
 using System.IO;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 #if HAVE_BIG_INTEGER
@@ -38,7 +39,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 	/// <summary>
 	/// Represents a writer that provides a fast, non-cached, forward-only way of generating JSON data.
 	/// </summary>
-	internal class JsonTextWriter : JsonWriter
+	internal partial class JsonTextWriter : JsonWriter
 	{
 		private const int IndentCharBufferSize = 12;
 		private readonly TextWriter _writer;
@@ -423,7 +424,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 		/// Writes a <see cref="uint" /> value.
 		/// </summary>
 		/// <param name="value">The <see cref="uint" /> value to write.</param>
-		
+
 		public override void WriteValue(uint value)
 		{
 			InternalWriteValue(JsonToken.Integer);
@@ -444,7 +445,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 		/// Writes a <see cref="ulong" /> value.
 		/// </summary>
 		/// <param name="value">The <see cref="ulong" /> value to write.</param>
-		
+
 		public override void WriteValue(ulong value)
 		{
 			InternalWriteValue(JsonToken.Integer);
@@ -525,7 +526,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 		/// Writes a <see cref="UInt16" /> value.
 		/// </summary>
 		/// <param name="value">The <see cref="UInt16" /> value to write.</param>
-		
+
 		public override void WriteValue(ushort value)
 		{
 			InternalWriteValue(JsonToken.Integer);
@@ -556,7 +557,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 		/// Writes a <see cref="SByte" /> value.
 		/// </summary>
 		/// <param name="value">The <see cref="SByte" /> value to write.</param>
-		
+
 		public override void WriteValue(sbyte value)
 		{
 			InternalWriteValue(JsonToken.Integer);

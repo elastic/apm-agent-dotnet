@@ -35,7 +35,7 @@ using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 #nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json
 {
-    public abstract partial class JsonReader
+    internal abstract partial class JsonReader
     {
         /// <summary>
         /// Asynchronously reads the next JSON token from the source.

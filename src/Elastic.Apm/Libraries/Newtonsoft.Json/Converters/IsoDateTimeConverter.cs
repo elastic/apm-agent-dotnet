@@ -88,8 +88,8 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Converters
 #if HAVE_DATE_TIME_OFFSET
             else if (value is DateTimeOffset dateTimeOffset)
             {
-                if ((_dateTimeStyles & DateTimeStyles.AdjustToUniversal) == DateTimeStyles.AdjustToUniversal
-                    || (_dateTimeStyles & DateTimeStyles.AssumeUniversal) == DateTimeStyles.AssumeUniversal)
+                if ((DateTimeStyles & DateTimeStyles.AdjustToUniversal) == DateTimeStyles.AdjustToUniversal
+                    || (DateTimeStyles & DateTimeStyles.AssumeUniversal) == DateTimeStyles.AssumeUniversal)
                 {
                     dateTimeOffset = dateTimeOffset.ToUniversalTime();
                 }
@@ -162,11 +162,11 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Converters
             {
                 if (!StringUtils.IsNullOrEmpty(_dateTimeFormat))
                 {
-                    return DateTimeOffset.ParseExact(dateText, _dateTimeFormat, Culture, _dateTimeStyles);
+                    return DateTimeOffset.ParseExact(dateText, _dateTimeFormat, Culture, DateTimeStyles);
                 }
                 else
                 {
-                    return DateTimeOffset.Parse(dateText, Culture, _dateTimeStyles);
+                    return DateTimeOffset.Parse(dateText, Culture, DateTimeStyles);
                 }
             }
 #endif

@@ -31,9 +31,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
 {
-    public partial class JProperty
+    internal partial class JProperty
     {
         /// <summary>
         /// Writes this token to a <see cref="JsonWriter"/> asynchronously.
@@ -44,7 +45,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json.Linq
         /// <returns>A <see cref="Task"/> that represents the asynchronous write operation.</returns>
         public override Task WriteToAsync(JsonWriter writer, CancellationToken cancellationToken, params JsonConverter[] converters)
         {
-            Task task = writer.WritePropertyNameAsync(_name, cancellationToken);
+            Task task = writer.WritePropertyNameAsync(Name, cancellationToken);
             if (task.IsCompletedSucessfully())
             {
                 return WriteValueAsync(writer, cancellationToken, converters);

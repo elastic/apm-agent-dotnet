@@ -437,7 +437,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         /// <returns>A <see cref="Nullable{T}"/> of <see cref="DateTimeOffset"/>.</returns>
         public override DateTimeOffset? ReadAsDateTimeOffset()
         {
-            DateTimeOffset? dateTimeOffset = _reader.ReadAsDateTimeOffset();
+            DateTimeOffset? dateTimeOffset = Reader.ReadAsDateTimeOffset();
 
             ValidateCurrentToken();
             return dateTimeOffset;

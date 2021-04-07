@@ -19,6 +19,7 @@ using NJsonSchema;
 using Xunit.Sdk;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
+using Elastic.Apm.Report.Serialization;
 using NJsonSchema.Validation.FormatValidators;
 using NJsonSchema.Validation;
 
@@ -102,7 +103,6 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 		private async Task ParsePayloadLineAndAddToReceivedData(string line)
 		{
 			var foundDto = false;
-
 			var deserializedPayload = JsonConvert.DeserializeObject<PayloadLineDto>(
 				line,
 				new JsonSerializerSettings

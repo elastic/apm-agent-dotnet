@@ -330,10 +330,10 @@ namespace Elastic.Apm.Model
 		/// transaction from the service's perspective.
 		/// This field can be used for calculating error rates for incoming requests.
 		/// </summary>
-		[JsonConverter(typeof(StringEnumConverter), typeof(CamelCaseNamingStrategy))]
 		public Outcome Outcome
 		{
-			get => _outcome; set
+			get => _outcome;
+			set
 			{
 				_outcomeChangedThroughApi = true;
 				_outcome = value;

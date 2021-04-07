@@ -31,9 +31,13 @@ using System.Dynamic;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
+using System.Runtime.Serialization;
+using System.Security;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 #if !HAVE_LINQ

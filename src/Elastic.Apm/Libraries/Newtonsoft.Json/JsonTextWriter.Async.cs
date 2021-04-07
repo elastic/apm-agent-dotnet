@@ -36,9 +36,10 @@ using System.Threading.Tasks;
 using Elastic.Apm.Libraries.Newtonsoft.Json.Utilities;
 using System.Diagnostics;
 
+#nullable enable
 namespace Elastic.Apm.Libraries.Newtonsoft.Json
 {
-    public partial class JsonTextWriter
+    internal partial class JsonTextWriter
     {
         // It's not safe to perform the async methods here in a derived class as if the synchronous equivalent
         // has been overriden then the asychronous method will no longer be doing the same operation.
@@ -327,7 +328,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
                 return DoWritePropertyNameAsync(task, name, cancellationToken);
             }
 
-            task = WriteEscapedStringAsync(name, _quoteName, cancellationToken);
+            task = WriteEscapedStringAsync(name, QuoteName, cancellationToken);
             if (task.IsCompletedSucessfully())
             {
                 return _writer.WriteAsync(':', cancellationToken);
@@ -340,7 +341,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         {
             await task.ConfigureAwait(false);
 
-            await WriteEscapedStringAsync(name, _quoteName, cancellationToken).ConfigureAwait(false);
+            await WriteEscapedStringAsync(name, QuoteName, cancellationToken).ConfigureAwait(false);
 
             await _writer.WriteAsync(':').ConfigureAwait(false);
         }
@@ -365,18 +366,18 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
 
             if (escape)
             {
-                await WriteEscapedStringAsync(name, _quoteName, cancellationToken).ConfigureAwait(false);
+                await WriteEscapedStringAsync(name, QuoteName, cancellationToken).ConfigureAwait(false);
             }
             else
             {
-                if (_quoteName)
+                if (QuoteName)
                 {
                     await _writer.WriteAsync(_quoteChar).ConfigureAwait(false);
                 }
 
                 await _writer.WriteAsync(name, cancellationToken).ConfigureAwait(false);
 
-                if (_quoteName)
+                if (QuoteName)
                 {
                     await _writer.WriteAsync(_quoteChar).ConfigureAwait(false);
                 }
@@ -987,7 +988,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
         /// <remarks>Derived classes must override this method to get asynchronous behaviour. Otherwise it will
         /// execute synchronously, returning an already-completed task.</remarks>
-        
+
         public override Task WriteValueAsync(sbyte value, CancellationToken cancellationToken = default)
         {
             return _safeAsync ? WriteIntegerValueAsync(value, cancellationToken) : base.WriteValueAsync(value, cancellationToken);
@@ -1001,7 +1002,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
         /// <remarks>Derived classes must override this method to get asynchronous behaviour. Otherwise it will
         /// execute synchronously, returning an already-completed task.</remarks>
-        
+
         public override Task WriteValueAsync(sbyte? value, CancellationToken cancellationToken = default)
         {
             return _safeAsync ? DoWriteValueAsync(value, cancellationToken) : base.WriteValueAsync(value, cancellationToken);
@@ -1120,7 +1121,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
         /// <remarks>Derived classes must override this method to get asynchronous behaviour. Otherwise it will
         /// execute synchronously, returning an already-completed task.</remarks>
-        
+
         public override Task WriteValueAsync(uint value, CancellationToken cancellationToken = default)
         {
             return _safeAsync ? WriteIntegerValueAsync(value, cancellationToken) : base.WriteValueAsync(value, cancellationToken);
@@ -1134,7 +1135,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
         /// <remarks>Derived classes must override this method to get asynchronous behaviour. Otherwise it will
         /// execute synchronously, returning an already-completed task.</remarks>
-        
+
         public override Task WriteValueAsync(uint? value, CancellationToken cancellationToken = default)
         {
             return _safeAsync ? DoWriteValueAsync(value, cancellationToken) : base.WriteValueAsync(value, cancellationToken);
@@ -1153,7 +1154,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
         /// <remarks>Derived classes must override this method to get asynchronous behaviour. Otherwise it will
         /// execute synchronously, returning an already-completed task.</remarks>
-        
+
         public override Task WriteValueAsync(ulong value, CancellationToken cancellationToken = default)
         {
             return _safeAsync ? WriteIntegerValueAsync(value, cancellationToken) : base.WriteValueAsync(value, cancellationToken);
@@ -1167,7 +1168,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
         /// <remarks>Derived classes must override this method to get asynchronous behaviour. Otherwise it will
         /// execute synchronously, returning an already-completed task.</remarks>
-        
+
         public override Task WriteValueAsync(ulong? value, CancellationToken cancellationToken = default)
         {
             return _safeAsync ? DoWriteValueAsync(value, cancellationToken) : base.WriteValueAsync(value, cancellationToken);
@@ -1216,7 +1217,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
         /// <remarks>Derived classes must override this method to get asynchronous behaviour. Otherwise it will
         /// execute synchronously, returning an already-completed task.</remarks>
-        
+
         public override Task WriteValueAsync(ushort value, CancellationToken cancellationToken = default)
         {
             return _safeAsync ? WriteIntegerValueAsync(value, cancellationToken) : base.WriteValueAsync(value, cancellationToken);
@@ -1230,7 +1231,7 @@ namespace Elastic.Apm.Libraries.Newtonsoft.Json
         /// <returns>A <see cref="Task"/> that represents the asynchronous operation.</returns>
         /// <remarks>Derived classes must override this method to get asynchronous behaviour. Otherwise it will
         /// execute synchronously, returning an already-completed task.</remarks>
-        
+
         public override Task WriteValueAsync(ushort? value, CancellationToken cancellationToken = default)
         {
             return _safeAsync ? DoWriteValueAsync(value, cancellationToken) : base.WriteValueAsync(value, cancellationToken);
