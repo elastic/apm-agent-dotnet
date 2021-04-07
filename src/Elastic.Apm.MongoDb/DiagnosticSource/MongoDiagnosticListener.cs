@@ -51,7 +51,7 @@ namespace Elastic.Apm.MongoDb.DiagnosticSource
 			try
 			{
 				Logger.Trace()?.Log(nameof(HandleCommandStartEvent));
-				var currentExecutionSegment = ExecutionSegmentCommon.GetCurrentExecutionSegment(ApmAgent);
+				var currentExecutionSegment = ApmAgent.GetCurrentExecutionSegment();
 				var span = currentExecutionSegment.StartSpan(
 					@event.CommandName,
 					ApiConstants.TypeDb,
