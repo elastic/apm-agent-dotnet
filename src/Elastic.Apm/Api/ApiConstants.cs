@@ -6,8 +6,6 @@ namespace Elastic.Apm.Api
 {
 	public struct ApiConstants
 	{
-		public const string TypeRequest = "request";
-
 		public const string ActionExec = "exec";
 		public const string ActionQuery = "query";
 
@@ -21,8 +19,10 @@ namespace Elastic.Apm.Api
 		public const string SubTypeGrpc = "grpc";
 		public const string SubTypeRedis = "redis";
 
+		public const string TypeRequest = "request";
 		public const string TypeDb = "db";
 		public const string TypeExternal = "external";
 		public const string TypeMessaging = "messaging";
+		public const string TypeStorage = "storage";
 	}
 }

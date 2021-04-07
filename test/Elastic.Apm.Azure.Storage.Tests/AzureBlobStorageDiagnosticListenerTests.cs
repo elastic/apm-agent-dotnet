@@ -6,6 +6,7 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
 using Azure.Storage.Queues;
+using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.Azure;
@@ -42,7 +43,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var containerName = Guid.NewGuid().ToString();
 			var client = new BlobContainerClient(_environment.StorageAccountConnectionString, containerName);
 
-			await _agent.Tracer.CaptureTransaction("Create Azure Container", AzureBlobStorage.Type, async () =>
+			await _agent.Tracer.CaptureTransaction("Create Azure Container", ApiConstants.TypeStorage, async () =>
 			{
 				var containerCreateResponse = await client.CreateAsync();
 			});
@@ -55,7 +56,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 		{
 			await using var scope = await BlobContainerScope.CreateContainer(_environment.StorageAccountConnectionString);
 
-			await _agent.Tracer.CaptureTransaction("Delete Azure Container", AzureBlobStorage.Type, async () =>
+			await _agent.Tracer.CaptureTransaction("Delete Azure Container", ApiConstants.TypeStorage, async () =>
 			{
 				var containerDeleteResponse = await scope.ContainerClient.DeleteAsync();
 			});
@@ -71,7 +72,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var blobName = Guid.NewGuid().ToString();
 			var client = new PageBlobClient(_environment.StorageAccountConnectionString, scope.ContainerName, blobName);
 
-			await _agent.Tracer.CaptureTransaction("Create Azure Page Blob", AzureBlobStorage.Type, async () =>
+			await _agent.Tracer.CaptureTransaction("Create Azure Page Blob", ApiConstants.TypeStorage, async () =>
 			{
 				var blobCreateResponse = await client.CreateAsync(1024);
 			});
@@ -88,7 +89,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var client = new PageBlobClient(_environment.StorageAccountConnectionString, scope.ContainerName, blobName);
 			var blobCreateResponse = await client.CreateAsync(1024);
 
-			await _agent.Tracer.CaptureTransaction("Upload Azure Page Blob", AzureBlobStorage.Type, async () =>
+			await _agent.Tracer.CaptureTransaction("Upload Azure Page Blob", ApiConstants.TypeStorage, async () =>
 			{
 				var random = new Random();
 				var bytes = new byte[512];
@@ -109,7 +110,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var blobName = Guid.NewGuid().ToString();
 			var client = new BlockBlobClient(_environment.StorageAccountConnectionString, scope.ContainerName, blobName);
 
-			await _agent.Tracer.CaptureTransaction("Upload Azure Block Blob", AzureBlobStorage.Type, async () =>
+			await _agent.Tracer.CaptureTransaction("Upload Azure Block Blob", ApiConstants.TypeStorage, async () =>
 			{
 				var stream = new MemoryStream(Encoding.UTF8.GetBytes("block blob"));
 				var blobUploadResponse = await client.UploadAsync(stream);
@@ -129,7 +130,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			await using var stream = new MemoryStream(Encoding.UTF8.GetBytes("block blob"));
 			var blobUploadResponse = await client.UploadAsync(stream);
 
-			await _agent.Tracer.CaptureTransaction("Download Azure Block Blob", AzureBlobStorage.Type, async () =>
+			await _agent.Tracer.CaptureTransaction("Download Azure Block Blob", ApiConstants.TypeStorage, async () =>
 			{
 				var downloadResponse = await client.DownloadAsync();
 			});
@@ -148,7 +149,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			await using var stream = new MemoryStream(Encoding.UTF8.GetBytes("block blob"));
 			var blobUploadResponse = await client.UploadAsync(stream);
 
-			await _agent.Tracer.CaptureTransaction("Download Azure Block Blob", AzureBlobStorage.Type, async () =>
+			await _agent.Tracer.CaptureTransaction("Download Azure Block Blob", ApiConstants.TypeStorage, async () =>
 			{
 				stream.Position = 0;
 				var downloadResponse = await client.DownloadToAsync(stream);
@@ -166,7 +167,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			await using var stream = new MemoryStream(Encoding.UTF8.GetBytes("block blob"));
 			var blobUploadResponse = await scope.ContainerClient.UploadBlobAsync(blobName, stream);
 
-			await _agent.Tracer.CaptureTransaction("Delete Azure Blob", AzureBlobStorage.Type, async () =>
+			await _agent.Tracer.CaptureTransaction("Delete Azure Blob", ApiConstants.TypeStorage, async () =>
 			{
 				var containerDeleteResponse = await scope.ContainerClient.DeleteBlobAsync(blobName);
 			});
@@ -186,7 +187,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var blobUploadResponse = await client.UploadAsync(stream);
 
 			var destinationBlobName = Guid.NewGuid().ToString();
-			await _agent.Tracer.CaptureTransaction("Copy Azure Blob", AzureBlobStorage.Type, async () =>
+			await _agent.Tracer.CaptureTransaction("Copy Azure Blob", ApiConstants.TypeStorage, async () =>
 			{
 				var otherClient = scope.ContainerClient.GetBlobClient(destinationBlobName);
 				var operation = await otherClient.StartCopyFromUriAsync(client.Uri);
@@ -210,7 +211,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 				var blobUploadResponse = await scope.ContainerClient.UploadBlobAsync(blobName, stream);
 			}
 
-			await _agent.Tracer.CaptureTransaction("Get Blobs", AzureBlobStorage.Type, async () =>
+			await _agent.Tracer.CaptureTransaction("Get Blobs", ApiConstants.TypeStorage, async () =>
 			{
 				var asyncPageable = scope.ContainerClient.GetBlobsAsync();
 				await foreach (var blob in asyncPageable)
@@ -232,7 +233,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var span = _sender.FirstSpan;
 
 			span.Name.Should().Be($"{AzureBlobStorage.SpanName} {action} {resource}");
-			span.Type.Should().Be(AzureBlobStorage.Type);
+			span.Type.Should().Be(ApiConstants.TypeStorage);
 			span.Subtype.Should().Be(AzureBlobStorage.SubType);
 			span.Action.Should().Be(action);
 			span.Context.Destination.Should().NotBeNull();
@@ -241,7 +242,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			destination.Address.Should().Be(_environment.StorageAccountConnectionStringProperties.BlobUrl);
 			destination.Service.Name.Should().Be(AzureBlobStorage.SubType);
 			destination.Service.Resource.Should().Be($"{AzureBlobStorage.SubType}/{resource}");
-			destination.Service.Type.Should().Be(AzureBlobStorage.Type);
+			destination.Service.Type.Should().Be(ApiConstants.TypeStorage);
 		}
 	}
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Azure.Storage.Queues;
+using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.Azure;
@@ -79,7 +80,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var transaction = _sender.FirstTransaction;
 
 			transaction.Name.Should().Be($"{AzureQueueStorage.SpanName} {action} from {queueName}");
-			transaction.Type.Should().Be(AzureQueueStorage.Type);
+			transaction.Type.Should().Be(ApiConstants.TypeMessaging);
 		}
 
 		private void AssertSpan(string action, string queueName)
@@ -91,7 +92,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var span = _sender.FirstSpan;
 
 			span.Name.Should().Be($"{AzureQueueStorage.SpanName} {action} to {queueName}");
-			span.Type.Should().Be(AzureQueueStorage.Type);
+			span.Type.Should().Be(ApiConstants.TypeMessaging);
 			span.Subtype.Should().Be(AzureQueueStorage.SubType);
 			span.Action.Should().Be(action.ToLowerInvariant());
 			span.Context.Destination.Should().NotBeNull();
@@ -100,7 +101,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			destination.Address.Should().Be(_environment.StorageAccountConnectionStringProperties.QueueUrl);
 			destination.Service.Name.Should().Be(AzureQueueStorage.SubType);
 			destination.Service.Resource.Should().Be($"{AzureQueueStorage.SubType}/{queueName}");
-			destination.Service.Type.Should().Be(AzureQueueStorage.Type);
+			destination.Service.Type.Should().Be(ApiConstants.TypeMessaging);
 		}
 	}
 }

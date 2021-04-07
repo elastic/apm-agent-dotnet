@@ -19,13 +19,12 @@ namespace Elastic.Apm.Azure.Storage
 	{
 		internal const string SpanName = "AzureBlob";
 		internal const string SubType = "azureblob";
-		internal const string Type = "storage";
 	}
 
 	/// <summary>
 	/// Creates transactions and spans for Azure Blob Storage diagnostic events from Azure.Storage.Blobs
 	/// </summary>
-	public class AzureBlobStorageDiagnosticListener : DiagnosticListenerBase
+	internal class AzureBlobStorageDiagnosticListener : DiagnosticListenerBase
 	{
 		private readonly ConcurrentDictionary<string, IExecutionSegment> _processingSegments =
 			new ConcurrentDictionary<string, IExecutionSegment>();
@@ -121,7 +120,7 @@ namespace Elastic.Apm.Azure.Storage
 
 			var spanName = $"{AzureBlobStorage.SpanName} {action} {blobUrl.ResourceName}";
 
-			var span = currentSegment.StartSpan(spanName, AzureBlobStorage.Type, AzureBlobStorage.SubType, action);
+			var span = currentSegment.StartSpan(spanName, ApiConstants.TypeStorage, AzureBlobStorage.SubType, action);
 			span.Context.Destination = new Destination
 			{
 				Address = blobUrl.FullyQualifiedNamespace,
@@ -129,7 +128,7 @@ namespace Elastic.Apm.Azure.Storage
 				{
 					Name = AzureBlobStorage.SubType,
 					Resource = $"{AzureBlobStorage.SubType}/{blobUrl.ResourceName}",
-					Type = AzureBlobStorage.Type
+					Type = ApiConstants.TypeStorage
 				}
 			};
 

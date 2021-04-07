@@ -5,6 +5,7 @@
 
 using Elastic.Apm.AspNetCore.DiagnosticListener;
 using Elastic.Apm.Azure.ServiceBus;
+using Elastic.Apm.Azure.Storage;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.EntityFrameworkCore;
@@ -26,7 +27,10 @@ namespace Elastic.Apm.NetCoreAll
 		/// <see cref="ElasticsearchDiagnosticsSubscriber"/>.
 		/// <see cref="GrpcClientDiagnosticSubscriber"/>,
 		/// <see cref="AzureMessagingServiceBusDiagnosticsSubscriber"/>,
-		/// and <see cref="MicrosoftAzureServiceBusDiagnosticsSubscriber"/>
+		/// <see cref="MicrosoftAzureServiceBusDiagnosticsSubscriber"/>,
+		/// <see cref="AzureBlobStorageDiagnosticsSubscriber"/>,
+		/// <see cref="AzureQueueStorageDiagnosticsSubscriber"/>,
+		/// and <see cref="AzureFileShareStorageDiagnosticsSubscriber"/>.
 		/// </summary>
 		/// <param name="builder">Builder.</param>
 		public static IHostBuilder UseAllElasticApm(this IHostBuilder builder) => builder.UseElasticApm(
@@ -37,6 +41,9 @@ namespace Elastic.Apm.NetCoreAll
 			new ElasticsearchDiagnosticsSubscriber(),
 			new GrpcClientDiagnosticSubscriber(),
 			new AzureMessagingServiceBusDiagnosticsSubscriber(),
-			new MicrosoftAzureServiceBusDiagnosticsSubscriber());
+			new MicrosoftAzureServiceBusDiagnosticsSubscriber(),
+			new AzureBlobStorageDiagnosticsSubscriber(),
+			new AzureQueueStorageDiagnosticsSubscriber(),
+			new AzureFileShareStorageDiagnosticsSubscriber());
 	}
 }

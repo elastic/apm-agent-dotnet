@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using Elastic.Apm.Azure.ServiceBus;
+using Elastic.Apm.Azure.Storage;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Elasticsearch;
 using Elastic.Apm.EntityFrameworkCore;
@@ -23,7 +24,10 @@ namespace Elastic.Apm.NetCoreAll
 		/// <see cref="ElasticsearchDiagnosticsSubscriber"/>.
 		/// <see cref="GrpcClientDiagnosticSubscriber"/>,
 		/// <see cref="AzureMessagingServiceBusDiagnosticsSubscriber"/>,
-		/// and <see cref="MicrosoftAzureServiceBusDiagnosticsSubscriber"/>
+		/// <see cref="MicrosoftAzureServiceBusDiagnosticsSubscriber"/>,
+		/// <see cref="AzureBlobStorageDiagnosticsSubscriber"/>,
+		/// <see cref="AzureQueueStorageDiagnosticsSubscriber"/>,
+		/// and <see cref="AzureFileShareStorageDiagnosticsSubscriber"/>.
 		/// This method turns on ASP.NET Core monitoring with every other related monitoring components, for example the agent
 		/// will also automatically trace outgoing HTTP requests and database statements.
 		/// </summary>
@@ -45,6 +49,9 @@ namespace Elastic.Apm.NetCoreAll
 				new ElasticsearchDiagnosticsSubscriber(),
 				new GrpcClientDiagnosticSubscriber(),
 				new AzureMessagingServiceBusDiagnosticsSubscriber(),
-				new MicrosoftAzureServiceBusDiagnosticsSubscriber());
+				new MicrosoftAzureServiceBusDiagnosticsSubscriber(),
+				new AzureBlobStorageDiagnosticsSubscriber(),
+				new AzureQueueStorageDiagnosticsSubscriber(),
+				new AzureFileShareStorageDiagnosticsSubscriber());
 	}
 }

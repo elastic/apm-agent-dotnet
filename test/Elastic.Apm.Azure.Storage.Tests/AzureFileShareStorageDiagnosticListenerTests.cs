@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Azure;
 using Azure.Storage.Files.Shares;
 using Azure.Storage.Queues;
+using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Tests.Utilities.Azure;
@@ -38,7 +39,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var shareName = Guid.NewGuid().ToString();
 			var client = new ShareClient(_environment.StorageAccountConnectionString, shareName);
 
-			await _agent.Tracer.CaptureTransaction("Create Azure File Share", AzureFileStorage.Type, async () =>
+			await _agent.Tracer.CaptureTransaction("Create Azure File Share", ApiConstants.TypeStorage, async () =>
 			{
 				var response = await client.CreateAsync();
 			});
@@ -52,7 +53,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 		{
 			await using var scope = await FileShareScope.CreateShare(_environment.StorageAccountConnectionString);
 
-			await _agent.Tracer.CaptureTransaction("Delete Azure File Share", AzureFileStorage.Type, async () =>
+			await _agent.Tracer.CaptureTransaction("Delete Azure File Share", ApiConstants.TypeStorage, async () =>
 			{
 				var deleteResponse = await scope.ShareClient.DeleteAsync();
 			});
@@ -67,7 +68,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var directoryName = Guid.NewGuid().ToString();
 			var client = scope.ShareClient.GetDirectoryClient(directoryName);
 
-			await _agent.Tracer.CaptureTransaction("Create Azure File Share Directory", AzureFileStorage.Type, async () =>
+			await _agent.Tracer.CaptureTransaction("Create Azure File Share Directory", ApiConstants.TypeStorage, async () =>
 			{
 				var response = await client.CreateAsync();
 			});
@@ -83,7 +84,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var client = scope.ShareClient.GetDirectoryClient(directoryName);
 			var createResponse = await client.CreateAsync();
 
-			await _agent.Tracer.CaptureTransaction("Delete Azure File Share Directory", AzureFileStorage.Type, async () =>
+			await _agent.Tracer.CaptureTransaction("Delete Azure File Share Directory", ApiConstants.TypeStorage, async () =>
 			{
 				var deleteResponse = await client.DeleteAsync();
 			});
@@ -98,7 +99,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var fileName = Guid.NewGuid().ToString();
 			var client = scope.DirectoryClient.GetFileClient(fileName);
 
-			await _agent.Tracer.CaptureTransaction("Create Azure File Share File", AzureFileStorage.Type, async () =>
+			await _agent.Tracer.CaptureTransaction("Create Azure File Share File", ApiConstants.TypeStorage, async () =>
 			{
 				await client.CreateAsync(1024);
 			});
@@ -114,7 +115,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var client = scope.DirectoryClient.GetFileClient(fileName);
 			var createResponse = await client.CreateAsync(1024);
 
-			await _agent.Tracer.CaptureTransaction("Delete Azure File Share File", AzureFileStorage.Type, async () =>
+			await _agent.Tracer.CaptureTransaction("Delete Azure File Share File", ApiConstants.TypeStorage, async () =>
 			{
 				var response = await client.DeleteAsync();
 			});
@@ -132,7 +133,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var bytes = Encoding.UTF8.GetBytes("temp file");
 			var createResponse = await client.CreateAsync(bytes.Length);
 
-			await _agent.Tracer.CaptureTransaction("Delete Azure File Share File", AzureFileStorage.Type, async () =>
+			await _agent.Tracer.CaptureTransaction("Delete Azure File Share File", ApiConstants.TypeStorage, async () =>
 			{
 				await using var stream = new MemoryStream(bytes);
 				var response = await client.UploadRangeAsync(new HttpRange(0, bytes.Length), stream);
@@ -151,7 +152,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var bytes = Encoding.UTF8.GetBytes("temp file");
 			var createResponse = await client.CreateAsync(bytes.Length);
 
-			await _agent.Tracer.CaptureTransaction("Delete Azure File Share File", AzureFileStorage.Type, async () =>
+			await _agent.Tracer.CaptureTransaction("Delete Azure File Share File", ApiConstants.TypeStorage, async () =>
 			{
 				await using var stream = new MemoryStream(bytes);
 				var response = await client.UploadAsync(stream);
@@ -169,7 +170,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var span = _sender.FirstSpan;
 
 			span.Name.Should().Be($"{AzureFileStorage.SpanName} {action} {resource}");
-			span.Type.Should().Be(AzureFileStorage.Type);
+			span.Type.Should().Be(ApiConstants.TypeStorage);
 			span.Subtype.Should().Be(AzureFileStorage.SubType);
 			span.Action.Should().Be(action);
 			span.Context.Destination.Should().NotBeNull();
@@ -178,7 +179,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			destination.Address.Should().Be(_environment.StorageAccountConnectionStringProperties.FileUrl);
 			destination.Service.Name.Should().Be(AzureFileStorage.SubType);
 			destination.Service.Resource.Should().Be($"{AzureFileStorage.SubType}/{resource}");
-			destination.Service.Type.Should().Be(AzureFileStorage.Type);
+			destination.Service.Type.Should().Be(ApiConstants.TypeStorage);
 		}
 	}
 }

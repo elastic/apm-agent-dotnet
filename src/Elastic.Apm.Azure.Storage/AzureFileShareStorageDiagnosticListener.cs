@@ -18,13 +18,12 @@ namespace Elastic.Apm.Azure.Storage
 	{
 		internal const string SpanName = "AzureFile";
 		internal const string SubType = "azurefile";
-		internal const string Type = "storage";
 	}
 
 	/// <summary>
 	/// Creates transactions and spans for Azure File Share Storage diagnostic events from Azure.Storage.Files.Shares
 	/// </summary>
-	public class AzureFileShareStorageDiagnosticListener : DiagnosticListenerBase
+	internal class AzureFileShareStorageDiagnosticListener : DiagnosticListenerBase
 	{
 		private readonly ConcurrentDictionary<string, IExecutionSegment> _processingSegments =
 			new ConcurrentDictionary<string, IExecutionSegment>();
@@ -102,7 +101,7 @@ namespace Elastic.Apm.Azure.Storage
 			var fileShareUrl = new FileShareUrl(urlTag);
 			var spanName = $"{AzureFileStorage.SpanName} {action} {fileShareUrl.ResourceName}";
 
-			var span = currentSegment.StartSpan(spanName, AzureFileStorage.Type, AzureFileStorage.SubType, action);
+			var span = currentSegment.StartSpan(spanName, ApiConstants.TypeStorage, AzureFileStorage.SubType, action);
 			span.Context.Destination = new Destination
 			{
 				Address = fileShareUrl.FullyQualifiedNamespace,
@@ -110,7 +109,7 @@ namespace Elastic.Apm.Azure.Storage
 				{
 					Name = AzureFileStorage.SubType,
 					Resource = $"{AzureFileStorage.SubType}/{fileShareUrl.ResourceName}",
-					Type = AzureFileStorage.Type
+					Type = ApiConstants.TypeStorage
 				}
 			};
 
