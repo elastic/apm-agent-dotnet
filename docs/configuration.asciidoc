@@ -455,7 +455,7 @@ See https://www.owasp.org/index.php/Information_exposure_through_query_strings_i
 [[config-global-labels]]
 ==== `GlobalLabels` (added[1.2])
 
-Labels added to all events, with the format `key=value[,key=value[,...]]`.
+Labels added to all events. Labels are `key=value` pairs, where `key` is the label name and `value` is the label value. Separate multiple labels with a comma. For example, `label1=value1,label2=value2`.
 Any labels set by the application via the agent's public API will override global labels with the same keys.
 
 [options="header"]
