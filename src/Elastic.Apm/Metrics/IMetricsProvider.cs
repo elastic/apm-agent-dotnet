@@ -32,7 +32,7 @@ namespace Elastic.Apm.Metrics
 		/// method.
 		/// </summary>
 		/// <returns>The key and the value of the metric(s)</returns>
-		IEnumerable<MetricSample> GetSamples();
+		IEnumerable<MetricSet> GetSamples();
 
 		/// <summary>
 		/// Indicates if metrics were already collected - or there was an attempt to collect them.

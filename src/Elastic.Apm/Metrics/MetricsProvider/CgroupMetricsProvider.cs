@@ -9,6 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Metrics.MetricsProvider
@@ -212,7 +213,8 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				: null;
 		}
 
-		private string GetMaxMemoryFile(string maxMemoryFile, string cgroupUnlimitedConstant) {
+		private string GetMaxMemoryFile(string maxMemoryFile, string cgroupUnlimitedConstant)
+		{
 			try
 			{
 				using var reader = new StreamReader(maxMemoryFile);
@@ -235,7 +237,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 		public string DbgName { get; } = nameof(CgroupMetricsProvider);
 
-		public IEnumerable<MetricSample> GetSamples()
+		public IEnumerable<MetricSet> GetSamples()
 		{
 			if (_cGroupFiles is null)
 				return null;
@@ -251,7 +253,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			if (_collectMemLimitBytes)
 				GetMemoryMemLimitBytes(samples);
 
-			return samples;
+			return new List<MetricSet> { new MetricSet(TimeUtils.TimestampNow(), samples) };
 		}
 
 		// ReSharper disable once SuggestBaseTypeForParameter

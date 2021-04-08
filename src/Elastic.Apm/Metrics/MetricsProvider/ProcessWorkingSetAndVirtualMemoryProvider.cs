@@ -5,6 +5,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Metrics.MetricsProvider
 {
@@ -25,27 +26,27 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		public bool IsMetricAlreadyCaptured { get; }
 
-		public IEnumerable<MetricSample> GetSamples()
+		public IEnumerable<MetricSet> GetSamples()
 		{
 			var process = Process.GetCurrentProcess();
 			var virtualMemory = process.VirtualMemorySize64;
 			var workingSet = process.WorkingSet64;
 
-			var retVal = new List<MetricSample>();
+			var samples = new List<MetricSample>();
 
 			if (_collectProcessVirtualMemory)
 			{
 				if (virtualMemory != 0)
-					retVal.Add(new MetricSample(ProcessVirtualMemory, virtualMemory));
+					samples.Add(new MetricSample(ProcessVirtualMemory, virtualMemory));
 			}
 
 			if (_collectProcessWorkingSetMemory)
 			{
 				if (workingSet != 0)
-					retVal.Add(new MetricSample(ProcessWorkingSetMemory, workingSet));
+					samples.Add(new MetricSample(ProcessWorkingSetMemory, workingSet));
 			}
 
-			return retVal;
+			return new List<MetricSet> { new MetricSet(TimeUtils.TimestampNow(), samples) };
 		}
 	}
 }
