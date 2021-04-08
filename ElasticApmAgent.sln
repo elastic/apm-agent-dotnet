@@ -1,4 +1,3 @@
-﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30309.148
@@ -136,6 +135,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.ServiceBus.Tests", "test\Elastic.Apm.Azure.ServiceBus.Tests\Elastic.Apm.Azure.ServiceBus.Tests.csproj", "{D9CC53B2-5F6B-434B-8689-2350F3A9FB2D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.ServiceBus.Sample", "sample\Elastic.Apm.Azure.ServiceBus.Sample\Elastic.Apm.Azure.ServiceBus.Sample.csproj", "{27563B4E-ECB1-4F1B-B9F1-22C2C165B270}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.Storage", "src\Elastic.Apm.Azure.Storage\Elastic.Apm.Azure.Storage.csproj", "{E9C84C9D-7BEB-49E2-A955-04AD999C4266}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.Storage.Tests", "test\Elastic.Apm.Azure.Storage.Tests\Elastic.Apm.Azure.Storage.Tests.csproj", "{37BD6194-A47B-4D17-BB9A-642E8909DED9}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -342,6 +345,14 @@ Global
 		{27563B4E-ECB1-4F1B-B9F1-22C2C165B270}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{27563B4E-ECB1-4F1B-B9F1-22C2C165B270}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{27563B4E-ECB1-4F1B-B9F1-22C2C165B270}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E9C84C9D-7BEB-49E2-A955-04AD999C4266}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9C84C9D-7BEB-49E2-A955-04AD999C4266}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E9C84C9D-7BEB-49E2-A955-04AD999C4266}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9C84C9D-7BEB-49E2-A955-04AD999C4266}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37BD6194-A47B-4D17-BB9A-642E8909DED9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37BD6194-A47B-4D17-BB9A-642E8909DED9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37BD6194-A47B-4D17-BB9A-642E8909DED9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37BD6194-A47B-4D17-BB9A-642E8909DED9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -396,6 +407,8 @@ Global
 		{1D43C8C5-4116-45C5-9F4B-56C1D926ED29} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{D9CC53B2-5F6B-434B-8689-2350F3A9FB2D} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 		{27563B4E-ECB1-4F1B-B9F1-22C2C165B270} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
+		{E9C84C9D-7BEB-49E2-A955-04AD999C4266} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
+		{37BD6194-A47B-4D17-BB9A-642E8909DED9} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}

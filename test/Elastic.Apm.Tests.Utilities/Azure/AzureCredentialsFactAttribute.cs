@@ -5,7 +5,7 @@
 
 using Xunit;
 
-namespace Elastic.Apm.Azure.ServiceBus.Tests.Azure
+namespace Elastic.Apm.Tests.Utilities.Azure
 {
 	/// <summary>
 	/// Attribute applied to a test that should be run by the test runner if Azure credentials are available

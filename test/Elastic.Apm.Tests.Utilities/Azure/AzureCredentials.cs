@@ -12,16 +12,25 @@ using Elastic.Apm.Tests.Utilities;
 using Newtonsoft.Json;
 using ProcNet;
 
-namespace Elastic.Apm.Azure.ServiceBus.Tests.Azure
+namespace Elastic.Apm.Tests.Utilities.Azure
 {
+	/// <summary>
+	/// Unauthenticated Azure credentials
+	/// </summary>
 	public class Unauthenticated : AzureCredentials
 	{
 	}
 
+	/// <summary>
+	/// Azure credentials authentication with a User account.
+	/// </summary>
 	public class AzureUserAccount : AzureCredentials
 	{
 	}
 
+	/// <summary>
+	/// Azure credentials authenticated with a Service Principal
+	/// </summary>
 	public class ServicePrincipal : AzureCredentials
 	{
 		[JsonConstructor]
@@ -125,7 +134,8 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests.Azure
 		}
 
 		/// <summary>
-		/// A set of Azure credentials obtained from environment variables or a .credentials.json configuration file
+		/// A set of Azure credentials obtained from environment variables or account authenticated with Azure CLI 2.0.
+		/// If no credentials are found, an unauthenticated credential is returned.
 		/// </summary>
 		public static AzureCredentials Instance => _lazyCredentials.Value;
 

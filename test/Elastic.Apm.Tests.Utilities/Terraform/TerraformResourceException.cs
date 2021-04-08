@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Elastic.Apm.Azure.ServiceBus.Tests.Terraform
+namespace Elastic.Apm.Tests.Utilities.Terraform
 {
 	/// <summary>
 	/// An exception from interacting with terraform resources.
@@ -15,7 +15,7 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests.Terraform
 	public class TerraformResourceException : Exception
 	{
 		public TerraformResourceException(string message, int exitCode, List<string> output)
-			: base(string.Join(Environment.NewLine, new [] { message, $"exit code: {exitCode}", "output:" }.Concat(output)))
+			: base(string.Join(Environment.NewLine, new [] { message, $"exit code: {exitCode}", "output:" }.Concat<string>(output)))
 		{
 		}
 

@@ -133,6 +133,12 @@ Automatic instrumentation for the following cloud services
   7.0.0+ for Azure.Messaging.ServiceBus
 | A new transaction is created for received and
 receive deferred messages. A new span is created for sent and scheduled messages if there's a current transaction.
-| 1.9
+| 1.10
+
+| Azure Storage
+| 12.8.0+ for Azure.Storage.Blobs
+  12.6.0+ for Azure.Storage.Queues and Azure.Storage.Files.Shares
+| 
+| 1.10
 
 |===

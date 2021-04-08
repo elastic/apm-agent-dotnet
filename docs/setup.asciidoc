@@ -15,6 +15,7 @@ On .NET Core the agent also supports auto instrumentation without any code chang
 * <<setup-sqlclient>>
 * <<setup-stackexchange-redis>>
 * <<setup-azure-servicebus>>
+* <<setup-azure-storage>>
 * <<setup-general>>
 
 [float]
@@ -58,9 +59,13 @@ https://www.nuget.org/packages/Elastic.Apm.StackExchange.Redis[**Elastic.Apm.Sta
 
 This packages contains instrumentation to capture spans for commands sent to redis with https://www.nuget.org/packages/StackExchange.Redis/[StackExchange.Redis] package.
 
-https://www.nuget.org/packages/Elastic.Apm.StackExchange.Redis[**Elastic.Apm.Azure.ServiceBus**]::
+https://www.nuget.org/packages/Elastic.Apm.Azure.ServiceBus[**Elastic.Apm.Azure.ServiceBus**]::
 
 This packages contains instrumentation to capture transactions and spans for messages sent and received from Azure Service Bus with https://www.nuget.org/packages/Microsoft.Azure.ServiceBus/[Microsoft.Azure.ServiceBus] and https://www.nuget.org/packages/Azure.Messaging.ServiceBus/[Azure.Messaging.ServiceBus] packages.
+
+https://www.nuget.org/packages/Elastic.Apm.Azure.Storage[**Elastic.Apm.Azure.Storage**]::
+
+This packages contains instrumentation to capture spans for interaction with Azure Storage with https://www.nuget.org/packages/azure.storage.queues/[Azure.Storage.Queues], https://www.nuget.org/packages/azure.storage.blobs/[Azure.Storage.Blobs] and https://www.nuget.org/packages/azure.storage.files.shares/[Azure.Storage.Files.Shares] packages.
 
 
 [[setup-dotnet-net-core]]
@@ -402,6 +407,52 @@ A new span is created when there is a current transaction, and when
 
 * one or more messages are sent to a queue or topic.
 * one or more messages are scheduled to a queue or a topic.
+
+[[setup-azure-storage]]
+=== Azure Storage
+
+[float]
+==== Quick start
+
+Instrumentation can be enabled for Azure Storage by referencing https://www.nuget.org/packages/Elastic.Apm.Azure.Storage[`Elastic.Apm.Azure.Storage`] package and subscribing to diagnostic events using one of the subscribers:
+
+. If the agent is included by referencing the `Elastic.Apm.NetCoreAll` package, the subscribers will be automatically subscribed with the agent, and no further action is required.
+. If you're using `Azure.Storage.Blobs`, subscribe `AzureBlobStorageDiagnosticsSubscriber` with the agent
++
+[source, csharp]
+----
+Agent.Subscribe(new AzureBlobStorageDiagnosticsSubscriber());
+----
+. If you're using `Azure.Storage.Queues`, subscribe `AzureQueueStorageDiagnosticsSubscriber` with the agent
++
+[source, csharp]
+----
+Agent.Subscribe(new AzureQueueStorageDiagnosticsSubscriber());
+----
+. If you're using `Azure.Storage.Files.Shares`, subscribe `AzureFileShareStorageDiagnosticsSubscriber` with the agent
++
+[source, csharp]
+----
+Agent.Subscribe(new AzureFileShareStorageDiagnosticsSubscriber());
+----
+
+For Azure Queue storage, 
+
+* A new transaction is created when one or more messages are received from a queue
+* A new span is created when there is a current transaction, and when a message is sent to a queue
+
+For Azure Blob storage, a new span is created when there is a current transaction and when
+
+* A container is created, enumerated, or deleted
+* A page blob is created, uploaded, downloaded, or deleted
+* A block blob is created, copied, uploaded, downloaded or deleted
+
+For Azure File Share storage, a new span is crated when there is a current transaction and when
+
+* A share is created or deleted
+* A directory is created or deleted
+* A file is created, uploaded, or deleted.
+
 
 [[setup-general]]
 === Other .NET applications
