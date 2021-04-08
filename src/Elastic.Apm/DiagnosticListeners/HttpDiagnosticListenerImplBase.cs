@@ -31,7 +31,7 @@ namespace Elastic.Apm.DiagnosticListeners
 		/// </summary>
 		internal readonly ConcurrentDictionary<TRequest, ISpan> ProcessingRequests = new ConcurrentDictionary<TRequest, ISpan>();
 
-		protected HttpDiagnosticListenerImplBase(IApmAgent agent) : base(agent) { }
+		protected HttpDiagnosticListenerImplBase(IApmAgent agent, bool createSpan) : base(agent, createSpan) { }
 
 		protected abstract string RequestGetMethod(TRequest request);
 
@@ -136,16 +136,26 @@ namespace Elastic.Apm.DiagnosticListeners
 			}
 
 			var method = RequestGetMethod(request);
-			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(ApmAgent, $"{method} {requestUrl.Host}",
-				ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient, true);
+			string HeaderGetter(string header) => RequestTryGetHeader(request, header, out var value) ? value : null;
 
-			using (var enrichers = GetEnrichers())
+			ISpan span = null;
+			using (var creators = GetCreators())
 			{
-				foreach (var enricher in enrichers)
+				foreach (var creator in creators)
 				{
-					if (enricher.IsMatch(method, requestUrl))
-						enricher.Enrich(method, requestUrl, header => RequestTryGetHeader(request, header, out var value) ? value : null,  span);
+					if (creator.IsMatch(method, requestUrl, HeaderGetter))
+					{
+						span = creator.Create(ApmAgent, method, requestUrl, HeaderGetter);
+						if (span != null)
+							break;
+					}
 				}
+			}
+
+			if (span is null && CreateSpan)
+			{
+				span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(ApmAgent, $"{method} {requestUrl.Host}",
+					ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient, true);
 			}
 
 			if (!ProcessingRequests.TryAdd(request, span))

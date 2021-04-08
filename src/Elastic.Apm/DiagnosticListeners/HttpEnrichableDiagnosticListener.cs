@@ -13,29 +13,36 @@ namespace Elastic.Apm.DiagnosticListeners
 	internal abstract class HttpEnrichableDiagnosticListener : DiagnosticListenerBase
 	{
 		private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
-		private readonly List<IHttpSpanEnricher> _enrichers = new List<IHttpSpanEnricher>();
+		private readonly List<IHttpSpanCreator> _creators = new List<IHttpSpanCreator>();
+		private volatile bool _createSpan;
 
-		/// <summary>
-		/// Gets the enrichers, entering a read lock that is exited when the
-		/// <see cref="Enrichers"/> is disposed.
-		/// </summary>
-		/// <returns>a new instance of <see cref="Enrichers"/></returns>
-		protected Enrichers GetEnrichers()
+		public bool CreateSpan
 		{
-			_lock.EnterReadLock();
-			return new Enrichers(_enrichers, _lock);
+			get => _createSpan;
+			set => _createSpan = value;
 		}
 
 		/// <summary>
-		/// Adds an enricher to the collection, within a write lock
+		/// Gets the enrichers, entering a read lock that is exited when the
+		/// <see cref="Creators"/> is disposed.
 		/// </summary>
-		/// <param name="enricher"></param>
-		public void AddEnricher(IHttpSpanEnricher enricher)
+		/// <returns>a new instance of <see cref="Creators"/></returns>
+		protected Creators GetCreators()
+		{
+			_lock.EnterReadLock();
+			return new Creators(_creators, _lock);
+		}
+
+		/// <summary>
+		/// Adds a http span creator to the collection, within a write lock
+		/// </summary>
+		/// <param name="creator"></param>
+		public void AddCreator(IHttpSpanCreator creator)
 		{
 			_lock.EnterWriteLock();
 			try
 			{
-				_enrichers.Add(enricher);
+				_creators.Add(creator);
 			}
 			finally
 			{
@@ -43,25 +50,26 @@ namespace Elastic.Apm.DiagnosticListeners
 			}
 		}
 
-		protected HttpEnrichableDiagnosticListener(IApmAgent apmAgent) : base(apmAgent) { }
+		protected HttpEnrichableDiagnosticListener(IApmAgent apmAgent, bool createSpan) : base(apmAgent) =>
+			_createSpan = createSpan;
 
 		/// <summary>
-		/// A collection of enrichers to enumerate
+		/// A collection of creators to enumerate
 		/// </summary>
-		protected class Enrichers : IDisposable, IEnumerable<IHttpSpanEnricher>
+		protected class Creators : IDisposable, IEnumerable<IHttpSpanCreator>
 		{
-			private readonly List<IHttpSpanEnricher> _enrichers;
+			private readonly List<IHttpSpanCreator> _creators;
 			private readonly ReaderWriterLockSlim _readerWriterLockSlim;
 
-			public Enrichers(List<IHttpSpanEnricher> enrichers, ReaderWriterLockSlim readerWriterLockSlim)
+			public Creators(List<IHttpSpanCreator> creators, ReaderWriterLockSlim readerWriterLockSlim)
 			{
-				_enrichers = enrichers;
+				_creators = creators;
 				_readerWriterLockSlim = readerWriterLockSlim;
 			}
 
 			public void Dispose() => _readerWriterLockSlim.ExitReadLock();
 
-			public IEnumerator<IHttpSpanEnricher> GetEnumerator() => _enrichers.GetEnumerator();
+			public IEnumerator<IHttpSpanCreator> GetEnumerator() => _creators.GetEnumerator();
 
 			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 		}

@@ -8,10 +8,10 @@ using Elastic.Apm.Api;
 
 namespace Elastic.Apm.DiagnosticListeners
 {
-	internal interface IHttpSpanEnricher
+	internal interface IHttpSpanCreator
 	{
-		bool IsMatch(string method, Uri requestUrl);
+		bool IsMatch(string method, Uri requestUrl, Func<string, string> headerGetter);
 
-		void Enrich(string method, Uri requestUrl, Func<string, string> headerGetter, ISpan span);
+		ISpan Create(IApmAgent agent, string method, Uri requestUrl, Func<string, string> headerGetter);
 	}
 }

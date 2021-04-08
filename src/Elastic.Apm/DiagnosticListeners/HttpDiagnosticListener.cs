@@ -14,7 +14,7 @@ namespace Elastic.Apm.DiagnosticListeners
 	/// </summary>
 	internal static class HttpDiagnosticListener
 	{
-		internal static HttpEnrichableDiagnosticListener New(IApmAgent components)
+		internal static HttpEnrichableDiagnosticListener New(IApmAgent components, bool captureSpans = true)
 		{
 			var logger = components.Logger.Scoped(nameof(HttpDiagnosticListener));
 
@@ -24,14 +24,14 @@ namespace Elastic.Apm.DiagnosticListeners
 					?.Log("Current runtime is detected as Full Framework. " +
 						"RuntimeInformation.FrameworkDescription: {RuntimeInformation.FrameworkDescription}",
 						RuntimeInformation.FrameworkDescription);
-				return new HttpDiagnosticListenerFullFrameworkImpl(components);
+				return new HttpDiagnosticListenerFullFrameworkImpl(components, captureSpans);
 			}
 
 			logger.Debug()
 				?.Log("Current runtime is not detected as Full Framework - returning implementation for Core. " +
 					"RuntimeInformation.FrameworkDescription: {RuntimeInformation.FrameworkDescription}",
 					RuntimeInformation.FrameworkDescription);
-			return new HttpDiagnosticListenerCoreImpl(components);
+			return new HttpDiagnosticListenerCoreImpl(components, captureSpans);
 		}
 	}
 }

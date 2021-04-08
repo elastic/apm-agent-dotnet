@@ -31,9 +31,9 @@ namespace Elastic.Apm.Azure.Storage
 			if (agent is ApmAgent realAgent)
 			{
 				if (realAgent.HttpDiagnosticListener is null)
-					realAgent.Subscribe(new HttpDiagnosticsSubscriber());
+					realAgent.Subscribe(new HttpDiagnosticsSubscriber(false));
 
-				realAgent.HttpDiagnosticListener.AddEnricher(new MicrosoftAzureBlobStorageEnricher());
+				realAgent.HttpDiagnosticListener.AddCreator(new MicrosoftAzureBlobStorageCreator());
 			}
 
 			return retVal;

@@ -136,13 +136,13 @@ namespace Elastic.Apm
 		/// </returns>
 		public static bool AddFilter(Func<IError, IError> filter) => CheckAndAddFilter(p => p.ErrorFilters.Add(filter));
 
-		internal static void AddHttpSpanEnricher(IHttpSpanEnricher enricher)
+		internal static void AddHttpSpanCreator(IHttpSpanCreator creator)
 		{
 			// subscribing HttpDiagnosticsSubscriber assigns the listener to the agent
 			if (Instance.HttpDiagnosticListener is null)
-				Instance.Subscribe(new HttpDiagnosticsSubscriber());
+				Instance.Subscribe(new HttpDiagnosticsSubscriber(false));
 
-			Instance.HttpDiagnosticListener.AddEnricher(enricher);
+			Instance.HttpDiagnosticListener.AddCreator(creator);
 		}
 
 		private static bool CheckAndAddFilter(Action<PayloadSenderV2> action)

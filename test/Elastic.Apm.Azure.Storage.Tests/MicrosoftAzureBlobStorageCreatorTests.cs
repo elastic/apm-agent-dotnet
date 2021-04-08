@@ -17,11 +17,11 @@ using Xunit.Abstractions;
 namespace Elastic.Apm.Azure.Storage.Tests
 {
 	[Collection("AzureStorage")]
-	public class MicrosoftAzureBlobStorageEnricherTests : BlobStorageTestsBase
+	public class MicrosoftAzureBlobStorageCreatorTests : BlobStorageTestsBase
 	{
 		private readonly CloudStorageAccount _account;
 
-		public MicrosoftAzureBlobStorageEnricherTests(AzureStorageTestEnvironment environment, ITestOutputHelper output)
+		public MicrosoftAzureBlobStorageCreatorTests(AzureStorageTestEnvironment environment, ITestOutputHelper output)
 			:base(environment, output) =>
 			_account = CloudStorageAccount.Parse(Environment.StorageAccountConnectionString);
 
