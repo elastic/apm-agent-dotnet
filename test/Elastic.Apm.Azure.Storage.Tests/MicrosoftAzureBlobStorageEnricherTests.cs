@@ -7,6 +7,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Utilities.Azure;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
@@ -30,7 +31,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var containerName = Guid.NewGuid().ToString();
 			var client = _account.CreateCloudBlobClient();
 
-			await Agent.Tracer.CaptureTransaction("Create Azure Container", AzureBlobStorage.Type, async () =>
+			await Agent.Tracer.CaptureTransaction("Create Azure Container", ApiConstants.TypeStorage, async () =>
 			{
 				await client.GetContainerReference(containerName).CreateAsync();
 			});
@@ -44,7 +45,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			await using var scope = await BlobContainerScope.CreateContainer(Environment.StorageAccountConnectionString);
 			var client = _account.CreateCloudBlobClient();
 
-			await Agent.Tracer.CaptureTransaction("Delete Azure Container", AzureBlobStorage.Type, async () =>
+			await Agent.Tracer.CaptureTransaction("Delete Azure Container", ApiConstants.TypeStorage, async () =>
 			{
 				await client.GetContainerReference(scope.ContainerName).DeleteAsync();
 			});
@@ -61,7 +62,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var blobName = Guid.NewGuid().ToString();
 			var blobReference = containerReference.GetBlockBlobReference(blobName);
 
-			await Agent.Tracer.CaptureTransaction("Upload Azure Block Blob", AzureBlobStorage.Type, async () =>
+			await Agent.Tracer.CaptureTransaction("Upload Azure Block Blob", ApiConstants.TypeStorage, async () =>
 			{
 				var stream = new MemoryStream(Encoding.UTF8.GetBytes("block blob"));
 				await blobReference.UploadFromStreamAsync(stream);
@@ -81,7 +82,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			await using var stream = new MemoryStream(Encoding.UTF8.GetBytes("block blob"));
 			var blobUploadResponse = await scope.ContainerClient.UploadBlobAsync(blobName, stream);
 
-			await Agent.Tracer.CaptureTransaction("Download Azure Block Blob", AzureBlobStorage.Type, async () =>
+			await Agent.Tracer.CaptureTransaction("Download Azure Block Blob", ApiConstants.TypeStorage, async () =>
 			{
 				var blobReference = containerReference.GetBlockBlobReference(blobName);
 				var downloadResponse = await blobReference.DownloadTextAsync();
@@ -102,7 +103,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var client = _account.CreateCloudBlobClient();
 			var containerReference = client.GetContainerReference(scope.ContainerName);
 
-			await Agent.Tracer.CaptureTransaction("Delete Azure Blob", AzureBlobStorage.Type, async () =>
+			await Agent.Tracer.CaptureTransaction("Delete Azure Blob", ApiConstants.TypeStorage, async () =>
 			{
 				var blobReference = containerReference.GetBlockBlobReference(blobName);
 				await blobReference.DeleteAsync();
@@ -126,7 +127,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var client = _account.CreateCloudBlobClient();
 			var containerReference = client.GetContainerReference(scope.ContainerName);
 
-			await Agent.Tracer.CaptureTransaction("Get Blobs", AzureBlobStorage.Type, async () =>
+			await Agent.Tracer.CaptureTransaction("Get Blobs", ApiConstants.TypeStorage, async () =>
 			{
 				var segment = await containerReference.ListBlobsSegmentedAsync(null);
 			});

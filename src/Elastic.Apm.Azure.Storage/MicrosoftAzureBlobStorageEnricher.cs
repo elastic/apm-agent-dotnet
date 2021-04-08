@@ -28,7 +28,7 @@ namespace Elastic.Apm.Azure.Storage
 			if (span is Span realSpan)
 				realSpan.InstrumentationFlag = InstrumentationFlag.Azure;
 
-			span.Type = AzureBlobStorage.Type;
+			span.Type = ApiConstants.TypeStorage;
 			span.Subtype = AzureBlobStorage.SubType;
 			span.Context.Destination = new Destination
 			{
@@ -37,7 +37,7 @@ namespace Elastic.Apm.Azure.Storage
 				{
 					Name = AzureBlobStorage.SubType,
 					Resource = $"{AzureBlobStorage.SubType}/{blobUrl.ResourceName}",
-					Type = AzureBlobStorage.Type
+					Type = ApiConstants.TypeStorage
 				}
 			};
 
