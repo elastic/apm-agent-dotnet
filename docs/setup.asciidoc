@@ -65,7 +65,7 @@ This packages contains instrumentation to capture transactions and spans for mes
 
 https://www.nuget.org/packages/Elastic.Apm.Azure.Storage[**Elastic.Apm.Azure.Storage**]::
 
-This packages contains instrumentation to capture spans for interation with Azure Storage with https://www.nuget.org/packages/azure.storage.queues/[Azure.Storage.Queues], https://www.nuget.org/packages/azure.storage.blobs/[Azure.Storage.Blobs] and https://www.nuget.org/packages/azure.storage.files.shares/[Azure.Storage.Files.Shares] packages.
+This packages contains instrumentation to capture spans for interaction with Azure Storage with https://www.nuget.org/packages/azure.storage.queues/[Azure.Storage.Queues], https://www.nuget.org/packages/azure.storage.blobs/[Azure.Storage.Blobs] and https://www.nuget.org/packages/azure.storage.files.shares/[Azure.Storage.Files.Shares] packages.
 
 
 [[setup-dotnet-net-core]]

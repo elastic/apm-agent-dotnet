@@ -115,11 +115,12 @@ namespace Elastic.Apm.Azure.Storage
 
 			if (!_processingSegments.TryAdd(activity.Id, span))
 			{
-				Logger.Trace()?.Log(
-					"Could not add {Action} span {SpanId} for activity {ActivityId} to tracked spans",
-					action,
-					span.Id,
-					activity.Id);
+				Logger.Trace()
+					?.Log(
+						"Could not add {Action} span {SpanId} for activity {ActivityId} to tracked spans",
+						action,
+						span.Id,
+						activity.Id);
 			}
 		}
 
@@ -134,9 +135,10 @@ namespace Elastic.Apm.Azure.Storage
 
 			if (!_processingSegments.TryRemove(activity.Id, out var segment))
 			{
-				Logger.Trace()?.Log(
-					"Could not find segment for activity {ActivityId} in tracked segments",
-					activity.Id);
+				Logger.Trace()
+					?.Log(
+						"Could not find segment for activity {ActivityId} in tracked segments",
+						activity.Id);
 				return;
 			}
 
@@ -155,9 +157,10 @@ namespace Elastic.Apm.Azure.Storage
 
 			if (!_processingSegments.TryRemove(activity.Id, out var segment))
 			{
-				Logger.Trace()?.Log(
-					"Could not find segment for activity {ActivityId} in tracked segments",
-					activity.Id);
+				Logger.Trace()
+					?.Log(
+						"Could not find segment for activity {ActivityId} in tracked segments",
+						activity.Id);
 				return;
 			}
 
@@ -178,9 +181,9 @@ namespace Elastic.Apm.Azure.Storage
 				ResourceName = builder.Uri.AbsolutePath.TrimStart('/');
 			}
 
-			public string ResourceName { get; }
-
 			public string FullyQualifiedNamespace { get; }
+
+			public string ResourceName { get; }
 		}
 	}
 }

@@ -19,7 +19,6 @@ namespace Elastic.Apm.Azure.Storage
 	{
 		internal const string SpanName = "AzureQueue";
 		internal const string SubType = "azurequeue";
-
 	}
 
 	/// <summary>
@@ -27,10 +26,12 @@ namespace Elastic.Apm.Azure.Storage
 	/// </summary>
 	internal class AzureQueueStorageDiagnosticListener : DiagnosticListenerBase
 	{
-		private readonly ApmAgent _realAgent;
 		private readonly Framework _framework;
+
 		private readonly ConcurrentDictionary<string, IExecutionSegment> _processingSegments =
 			new ConcurrentDictionary<string, IExecutionSegment>();
+
+		private readonly ApmAgent _realAgent;
 
 		public AzureQueueStorageDiagnosticListener(IApmAgent agent) : base(agent)
 		{
@@ -123,11 +124,12 @@ namespace Elastic.Apm.Azure.Storage
 
 			if (!_processingSegments.TryAdd(activity.Id, span))
 			{
-				Logger.Trace()?.Log(
-					"Could not add {Action} span {SpanId} for activity {ActivityId} to tracked spans",
-					"SEND",
-					span.Id,
-					activity.Id);
+				Logger.Trace()
+					?.Log(
+						"Could not add {Action} span {SpanId} for activity {ActivityId} to tracked spans",
+						"SEND",
+						span.Id,
+						activity.Id);
 			}
 		}
 
@@ -159,11 +161,12 @@ namespace Elastic.Apm.Azure.Storage
 
 			if (!_processingSegments.TryAdd(activityId, transaction))
 			{
-				Logger.Error()?.Log(
-					"Could not add {Action} transaction {TransactionId} for activity {ActivityId} to tracked segments",
-					"RECEIVE",
-					transaction.Id,
-					activity.Id);
+				Logger.Error()
+					?.Log(
+						"Could not add {Action} transaction {TransactionId} for activity {ActivityId} to tracked segments",
+						"RECEIVE",
+						transaction.Id,
+						activity.Id);
 			}
 		}
 
@@ -174,10 +177,11 @@ namespace Elastic.Apm.Azure.Storage
 				var matcher = WildcardMatcher.AnyMatch(_realAgent.ConfigStore.CurrentSnapshot.IgnoreMessageQueues, name);
 				if (matcher != null)
 				{
-					Logger.Debug()?.Log(
-						"Not tracing message from {QueueName} because it matched IgnoreMessageQueues pattern {Matcher}",
-						name,
-						matcher.GetMatcher());
+					Logger.Debug()
+						?.Log(
+							"Not tracing message from {QueueName} because it matched IgnoreMessageQueues pattern {Matcher}",
+							name,
+							matcher.GetMatcher());
 					return true;
 				}
 			}
@@ -196,9 +200,10 @@ namespace Elastic.Apm.Azure.Storage
 
 			if (!_processingSegments.TryRemove(activity.Id, out var segment))
 			{
-				Logger.Trace()?.Log(
-					"Could not find segment for activity {ActivityId} in tracked segments",
-					activity.Id);
+				Logger.Trace()
+					?.Log(
+						"Could not find segment for activity {ActivityId} in tracked segments",
+						activity.Id);
 				return;
 			}
 
@@ -217,9 +222,10 @@ namespace Elastic.Apm.Azure.Storage
 
 			if (!_processingSegments.TryRemove(activity.Id, out var segment))
 			{
-				Logger.Trace()?.Log(
-					"Could not find segment for activity {ActivityId} in tracked segments",
-					activity.Id);
+				Logger.Trace()
+					?.Log(
+						"Could not find segment for activity {ActivityId} in tracked segments",
+						activity.Id);
 				return;
 			}
 
@@ -246,11 +252,9 @@ namespace Elastic.Apm.Azure.Storage
 					: null;
 			}
 
-			public string QueueName { get; }
-
 			public string FullyQualifiedNamespace { get; }
+
+			public string QueueName { get; }
 		}
 	}
-
-
 }
