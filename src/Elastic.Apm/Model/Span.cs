@@ -11,6 +11,7 @@ using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
@@ -22,6 +23,7 @@ namespace Elastic.Apm.Model
 	internal class Span : ISpan
 	{
 		private readonly IApmServerInfo _apmServerInfo;
+		private readonly BreakdownMetricsProvider _breakdownMetricsProvider;
 		private readonly Lazy<SpanContext> _context = new Lazy<SpanContext>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly Transaction _enclosingTransaction;
@@ -30,6 +32,8 @@ namespace Elastic.Apm.Model
 		private readonly IApmLogger _logger;
 		private readonly Span _parentSpan;
 		private readonly IPayloadSender _payloadSender;
+
+		private readonly ChildDurationTimer _childDurationTimer = new ChildDurationTimer();
 
 		// This constructor is meant for deserialization
 		[JsonConstructor]
@@ -51,6 +55,7 @@ namespace Elastic.Apm.Model
 			IApmLogger logger,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
 			IApmServerInfo apmServerInfo,
+			BreakdownMetricsProvider breakdownMetricsProvider,
 			Span parentSpan = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None,
 			bool captureStackTraceOnStart = false
@@ -66,8 +71,12 @@ namespace Elastic.Apm.Model
 			_parentSpan = parentSpan;
 			_enclosingTransaction = enclosingTransaction;
 			_apmServerInfo = apmServerInfo;
+			_breakdownMetricsProvider = breakdownMetricsProvider;
 			Name = name;
 			Type = type;
+
+			if (_parentSpan != null)
+				_parentSpan._childDurationTimer.OnChildStart(Timestamp);
 
 			ParentId = parentId;
 			TraceId = traceId;
@@ -136,6 +145,9 @@ namespace Elastic.Apm.Model
 
 		[JsonIgnore]
 		public bool IsSampled => _enclosingTransaction.IsSampled;
+
+		[JsonIgnore]
+		public double SelfDuration => Duration.HasValue ? Duration.Value - _childDurationTimer.Duration : 0;
 
 		[JsonIgnore]
 		[Obsolete(
@@ -270,8 +282,7 @@ namespace Elastic.Apm.Model
 		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer,
-				_apmServerInfo, this,
-				instrumentationFlag, captureStackTraceOnStart);
+				_apmServerInfo, _breakdownMetricsProvider, this, instrumentationFlag, captureStackTraceOnStart);
 
 			if (!string.IsNullOrEmpty(subType))
 				retVal.Subtype = subType;
@@ -312,6 +323,11 @@ namespace Elastic.Apm.Model
 
 				var endTimestamp = TimeUtils.TimestampNow();
 				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
+
+				if (_parentSpan != null)
+					_parentSpan._childDurationTimer.OnChildEnd(endTimestamp);
+
+				_childDurationTimer.OnSpanEnd(endTimestamp);
 				_logger.Trace()
 					?.Log("Ended {Span}. Start time: {Time} (as timestamp: {Timestamp})," +
 						" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
@@ -346,6 +362,12 @@ namespace Elastic.Apm.Model
 
 				_payloadSender.QueueSpan(this);
 			}
+
+			// TODO: this can be done shorter
+			if (_enclosingTransaction.SpanTimings.ContainsKey((Type, Subtype)))
+				_enclosingTransaction.SpanTimings[(Type, Subtype)].IncrementTimer(SelfDuration); //  = _enclosingTransaction.SpanTimings[(Type, Subtype)] + SelfDuration;
+			else
+				_enclosingTransaction.SpanTimings.TryAdd((Type, Subtype), new SpanTimer(SelfDuration));
 
 			if (isFirstEndCall)
 				_currentExecutionSegmentsContainer.CurrentSpan = _parentSpan;
@@ -515,5 +537,91 @@ namespace Elastic.Apm.Model
 				exception,
 				labels
 			);
+	}
+
+	internal class SpanTimer
+	{
+		public int Count { get; set; }
+
+		public double TotalDuration { get; set; }
+
+		public SpanTimer(double duration)
+		{
+			TotalDuration = duration;
+			Count = 1;
+		}
+
+		public void IncrementTimer(double duration)
+		{
+			Count++;
+			TotalDuration += duration;
+		}
+	}
+
+	internal class ChildDurationTimer
+	{
+
+
+		private int _activeChildren;
+		private long _start;
+		private double _duration;
+
+
+		/// <summary>
+		/// Starts the timer if it has not been started already.
+		/// </summary>
+		/// <param name="startTimestamp"></param>
+		public void OnChildStart(long startTimestamp)
+		{
+			if (++_activeChildren == 1)
+			{
+				_start = startTimestamp;
+			}
+		}
+
+		/// <summary>
+		/// Stops the timer and increments the duration if no other direct children are still running
+		/// </summary>
+		/// <param name="endTimestamp"></param>
+		public void OnChildEnd(long endTimestamp)
+		{
+			if (--_activeChildren == 0)
+			{
+				IncrementDuration(endTimestamp);
+			}
+		}
+
+		/// <summary>
+		/// Stops the timer and increments the duration even if there are direct children which are still running
+		/// </summary>
+		/// <param name="endTimestamp"></param>
+		public void OnSpanEnd(long endTimestamp)
+		{
+			if (_activeChildren != 0)
+			{
+				IncrementDuration(endTimestamp);
+				_activeChildren = 0;
+			}
+		}
+
+		public double Duration => _duration;
+
+		private void IncrementDuration(long epochMicros)
+		 => _duration = TimeUtils.DurationBetweenTimestamps(_start, epochMicros);
+		//duration.addAndGet(epochMicros - start.get());
+
+
+		//@Override
+		//public void resetState()
+		//{
+		//	activeChildren.set(0);
+		//	start.set(0);
+		//	duration.set(0);
+		//}
+
+		//public long getDuration()
+		//{
+		//	return duration.get();
+		//}
 	}
 }

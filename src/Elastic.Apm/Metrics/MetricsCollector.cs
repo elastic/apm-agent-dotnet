@@ -45,7 +45,7 @@ namespace Elastic.Apm.Metrics
 
 		private readonly Timer _timer;
 
-		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender, IConfigSnapshotProvider configSnapshotProvider)
+		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender, IConfigSnapshotProvider configSnapshotProvider, params IMetricsProvider[] metricsProvider)
 		{
 			_logger = logger.Scoped(nameof(MetricsCollector));
 			_payloadSender = payloadSender;
@@ -63,6 +63,17 @@ namespace Elastic.Apm.Metrics
 			}
 
 			MetricsProviders = new List<IMetricsProvider>();
+
+			//TODO check if disabled
+			if (metricsProvider != null)
+			{
+				foreach (var item in metricsProvider)
+				{
+					if(item != null)
+						MetricsProviders.Add(item);
+				}
+			}
+			
 
 			if (!WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics, ProcessTotalCpuTimeProvider.ProcessCpuTotalPct))
 				MetricsProviders.Add(new ProcessTotalCpuTimeProvider(_logger));
@@ -168,11 +179,16 @@ namespace Elastic.Apm.Metrics
 				return;
 			}
 
-			var metricSet = new MetricSet(TimeUtils.TimestampNow(), samplesFromAllProviders);
+			var metricSet = samplesFromAllProviders; // new MetricSet(TimeUtils.TimestampNow(), samplesFromAllProviders);
 
 			try
 			{
-				_payloadSender.QueueMetrics(metricSet);
+				//TODO: it'd be nice to do this in 1 call
+				foreach (var item in metricSet)
+				{
+					_payloadSender.QueueMetrics(item);
+				}
+
 				_logger.Debug()
 					?.Log("Metrics collected: {data}",
 						samplesFromAllProviders.Any()
@@ -188,9 +204,9 @@ namespace Elastic.Apm.Metrics
 			}
 		}
 
-		private List<MetricSample> CollectMetricsFromProviders()
+		private List<IMetricSet> CollectMetricsFromProviders()
 		{
-			var samples = new List<MetricSample>();
+			var samples = new List<IMetricSet>();
 			// ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
 			foreach (var metricsProvider in MetricsProviders)
 			{
@@ -209,14 +225,17 @@ namespace Elastic.Apm.Metrics
 				{
 					_logger.Trace()?.Log("Start collecting {MetricsProviderName}", metricsProvider.DbgName);
 
-					var samplesFromProvider = metricsProvider.GetSamples()
-						?.Where(x => !double.IsNaN(x.KeyValue.Value) && !double.IsInfinity(x.KeyValue.Value))
-						.ToArray();
+					var samplesFromProvider = metricsProvider.GetSamples();
+						//?.Where(x => !double.IsNaN(x.KeyValue.Value) && !double.IsInfinity(x.KeyValue.Value)) //TODO
+						//.ToArray();
 
-					if (samplesFromProvider != null && samplesFromProvider.Length > 0)
+					if (samplesFromProvider != null && samplesFromProvider.Count() > 0)
 					{
 						_logger.Trace()?.Log("Collected {MetricsProviderName} - adding it to MetricSet", metricsProvider.DbgName);
+
 						samples.AddRange(samplesFromProvider);
+
+
 						metricsProvider.ConsecutiveNumberOfFailedReads = 0;
 					}
 					else

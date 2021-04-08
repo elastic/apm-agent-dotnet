@@ -132,29 +132,29 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		/// </summary>
 		internal string TraceEventSessionName { get; }
 
-		public IEnumerable<MetricSample> GetSamples()
+		public IEnumerable<MetricSet> GetSamples()
 		{
 			var gcTimeInMs = Interlocked.Read(ref _gcTimeInTicks) / 10_000.0;
 			Interlocked.Exchange(ref _gcTimeInTicks, 0);
 
 			if (_gcCount != 0 || _gen0Size != 0 || _gen2Size != 0 || _gen3Size != 0 || gcTimeInMs > 0)
 			{
-				var retVal = new List<MetricSample>(5);
+				var samples = new List<MetricSample>(5);
 
 				if (_collectGcCount)
-					retVal.Add(new MetricSample(GcCountName, _gcCount));
+					samples.Add(new MetricSample(GcCountName, _gcCount));
 				if (_collectGcTime)
-					retVal.Add(new MetricSample(GcTimeName, Math.Round(gcTimeInMs, 6)));
+					samples.Add(new MetricSample(GcTimeName, Math.Round(gcTimeInMs, 6)));
 				if (_collectGcGen0Size)
-					retVal.Add(new MetricSample(GcGen0SizeName, _gen0Size));
+					samples.Add(new MetricSample(GcGen0SizeName, _gen0Size));
 				if (_collectGcGen1Size)
-					retVal.Add(new MetricSample(GcGen1SizeName, _gen1Size));
+					samples.Add(new MetricSample(GcGen1SizeName, _gen1Size));
 				if (_collectGcGen2Size)
-					retVal.Add(new MetricSample(GcGen2SizeName, _gen2Size));
+					samples.Add(new MetricSample(GcGen2SizeName, _gen2Size));
 				if (_collectGcGen3Size)
-					retVal.Add(new MetricSample(GcGen3SizeName, _gen3Size));
+					samples.Add(new MetricSample(GcGen3SizeName, _gen3Size));
 
-				return retVal;
+				return new List<MetricSet> { new MetricSet(TimeUtils.TimestampNow(), samples) };
 			}
 			_logger.Trace()
 				?.Log(

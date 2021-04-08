@@ -17,6 +17,39 @@ namespace Elastic.Apm.Report.Serialization
 		public override void WriteJson(JsonWriter writer, MetricSet value, JsonSerializer serializer)
 		{
 			writer.WriteStartObject();
+			if (value.Transaction != null)
+			{
+				
+				writer.WritePropertyName("transaction");
+
+				writer.WriteStartObject();
+
+				writer.WritePropertyName("name");
+				writer.WriteValue(value.Transaction.Name);
+
+				writer.WritePropertyName("type");
+				writer.WriteValue(value.Transaction.Type);
+
+				writer.WriteEndObject();
+			}
+
+			if (value.Span != null)
+			{
+
+				writer.WritePropertyName("span");
+
+				writer.WriteStartObject();
+
+				writer.WritePropertyName("type");
+				writer.WriteValue(value.Span.Type);
+
+				writer.WritePropertyName("subtype");
+				writer.WriteValue(value.Span.SybType);
+
+				writer.WriteEndObject();
+			}
+
+
 			writer.WritePropertyName("samples");
 			writer.WriteStartObject();
 

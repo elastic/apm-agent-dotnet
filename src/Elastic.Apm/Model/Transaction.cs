@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -13,6 +14,8 @@ using Elastic.Apm.Config;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Metrics;
+using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
@@ -23,12 +26,16 @@ namespace Elastic.Apm.Model
 	{
 		private static readonly string ApmTransactionActivityName = "ElasticApm.Transaction";
 		private readonly IApmServerInfo _apmServerInfo;
+		private readonly BreakdownMetricsProvider _breakdownMetricsProvider;
 		private readonly Lazy<Context> _context = new Lazy<Context>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
+		private readonly ChildDurationTimer _childDurationTimer = new ChildDurationTimer();
 
 		internal readonly TraceState _traceState;
+
+		internal ConcurrentDictionary<(string, string), SpanTimer> SpanTimings = new ConcurrentDictionary<(string, string), SpanTimer>();
 
 		// This constructor is meant for serialization
 		[JsonConstructor]
@@ -51,9 +58,10 @@ namespace Elastic.Apm.Model
 		}
 
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
-		internal Transaction(ApmAgent agent, string name, string type)
+		internal Transaction(ApmAgent agent, string name, string type, BreakdownMetricsProvider breakdownMetricsProvider)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigStore.CurrentSnapshot,
-				agent.TracerInternal.CurrentExecutionSegmentsContainer, null) { }
+				agent.TracerInternal.CurrentExecutionSegmentsContainer, null, breakdownMetricsProvider)
+		{ }
 
 		/// <summary>
 		/// Creates a new transaction
@@ -82,6 +90,7 @@ namespace Elastic.Apm.Model
 			IConfigSnapshot configSnapshot,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
 			IApmServerInfo apmServerInfo,
+			BreakdownMetricsProvider breakdownMetricsProvider,
 			bool ignoreActivity = false
 		)
 		{
@@ -90,6 +99,7 @@ namespace Elastic.Apm.Model
 
 			_logger = logger?.Scoped(nameof(Transaction));
 			_apmServerInfo = apmServerInfo;
+			_breakdownMetricsProvider = breakdownMetricsProvider;
 			_sender = sender;
 			_currentExecutionSegmentsContainer = currentExecutionSegmentsContainer;
 
@@ -284,6 +294,10 @@ namespace Elastic.Apm.Model
 		[JsonIgnore]
 		internal IConfigSnapshot ConfigSnapshot { get; }
 
+		[JsonIgnore]
+		public double SelfDuration => Duration.HasValue ? Duration.Value - _childDurationTimer.Duration : 0;
+
+
 		/// <summary>
 		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
 		/// <seealso cref="ShouldSerializeContext" />
@@ -468,6 +482,7 @@ namespace Elastic.Apm.Model
 					$" Context: this: {this}; {nameof(_isEnded)}: {_isEnded}");
 
 				var endTimestamp = TimeUtils.TimestampNow();
+				_childDurationTimer.OnSpanEnd(endTimestamp);
 				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
 				_logger.Trace()
 					?.Log("Ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp})," +
@@ -486,6 +501,44 @@ namespace Elastic.Apm.Model
 			var handler = Ended;
 			handler?.Invoke(this, EventArgs.Empty);
 			Ended = null;
+
+			SpanTimings.TryAdd(("app", null), new SpanTimer(SelfDuration));
+
+			var timestampNow = TimeUtils.TimestampNow();
+
+			var metricSetList = new List<MetricSet>();
+
+			if (_breakdownMetricsProvider != null)
+			{
+				foreach (var item in SpanTimings)
+				{
+					var metricSet = new MetricSet(timestampNow, new List<MetricSample>
+					{
+						new MetricSample("span.self_time.count", item.Value.Count),
+						new MetricSample("span.self_time.sum.us", item.Value.TotalDuration)
+					})
+					{
+						Span = new SpanInfo { Type = item.Key.Item1, SybType = item.Key.Item2 },
+						Transaction = new TransactionInfo { Name = Name, Type = Type }
+					};
+
+					metricSetList.Add(metricSet);
+				}
+				//new MetricSet(TimeUtils.TimestampNow(), new List<MetricSample> { new MetricSample("")})
+
+				var transactionMetric = new MetricSet(timestampNow, new List<MetricSample>
+				{
+					new MetricSample("transaction.duration.count", 1), //TODO
+					new MetricSample("transaction.duration.sum.us", Duration.Value),
+					new MetricSample("transaction.breakdown.count", 1),
+				})
+				{
+					Transaction = new TransactionInfo { Name = Name, Type = Type }
+				};
+
+				metricSetList.Add(transactionMetric);
+				_breakdownMetricsProvider.ItemsToSend.AddRange(metricSetList);
+			}
 
 			_sender.QueueTransaction(this);
 			_currentExecutionSegmentsContainer.CurrentTransaction = null;
@@ -518,9 +571,10 @@ namespace Elastic.Apm.Model
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false
 		)
 		{
-			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, _apmServerInfo,
+			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, _apmServerInfo, _breakdownMetricsProvider,
 				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart);
 
+			_childDurationTimer.OnChildStart(retVal.Timestamp);
 			if (!string.IsNullOrEmpty(subType))
 				retVal.Subtype = subType;
 

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using Elastic.Apm.Api;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Metrics.Windows;
 
 namespace Elastic.Apm.Metrics.MetricsProvider
@@ -31,7 +32,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 		public bool IsMetricAlreadyCaptured { get; }
 
-		public IEnumerable<MetricSample> GetSamples()
+		public IEnumerable<MetricSet> GetSamples()
 		{
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
@@ -40,20 +41,20 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 				if (!success || totalMemory == 0 || freeMemory == 0)
 					return null;
 
-				var retVal = new List<MetricSample>();
+				var samples = new List<MetricSample>();
 
 				if (_collectFreeMemory)
-					retVal.Add(new MetricSample(FreeMemory, freeMemory));
+					samples.Add(new MetricSample(FreeMemory, freeMemory));
 
 				if (_collectTotalMemory)
-					retVal.Add(new MetricSample(TotalMemory, totalMemory));
+					samples.Add(new MetricSample(TotalMemory, totalMemory));
 
-				return retVal;
+				return new List<MetricSet> { new MetricSet(TimeUtils.TimestampNow(), samples) };
 			}
 
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 			{
-				var retVal = new List<MetricSample>();
+				var samples = new List<MetricSample>();
 
 				using (var sr = new StreamReader("/proc/meminfo"))
 				{
@@ -62,19 +63,19 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 					var line = sr.ReadLine();
 
-					while (line != null || retVal.Count != 2)
+					while (line != null || samples.Count != 2)
 					{
 						//See: https://github.com/elastic/beats/issues/4202
 						if (line != null && line.Contains("MemAvailable:") && _collectFreeMemory)
 						{
 							var (suc, res) = GetEntry(line, "MemAvailable:");
-							if (suc) retVal.Add(new MetricSample(FreeMemory, res));
+							if (suc) samples.Add(new MetricSample(FreeMemory, res));
 							hasMemFree = true;
 						}
 						if (line != null && line.Contains("MemTotal:") && _collectTotalMemory)
 						{
 							var (suc, res) = GetEntry(line, "MemTotal:");
-							if (suc) retVal.Add(new MetricSample(TotalMemory, res));
+							if (suc) samples.Add(new MetricSample(TotalMemory, res));
 							hasMemTotal = true;
 						}
 
@@ -87,7 +88,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 
 				ConsecutiveNumberOfFailedReads = 0;
 
-				return retVal;
+				return new List<MetricSet> { new MetricSet(TimeUtils.TimestampNow(), samples) };
 			}
 
 			(bool, ulong) GetEntry(string line, string name)

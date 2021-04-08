@@ -20,5 +20,21 @@ namespace Elastic.Apm.Metrics
 
 		/// <inheritdoc />
 		public long Timestamp { get; set; }
+
+		public TransactionInfo Transaction { get; set; }
+
+		public SpanInfo Span { get; set; }
+	}
+
+	public class TransactionInfo
+	{
+		public string Name { get; set; }
+		public string Type { get; set; }
+	}
+
+	public class SpanInfo
+	{
+		public string Type { get; set; }
+		public string SybType { get; set; }
 	}
 }
