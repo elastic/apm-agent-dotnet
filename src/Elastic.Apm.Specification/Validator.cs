@@ -18,7 +18,7 @@ using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Config;
 using Elastic.Apm.Report.Serialization;
 using ICSharpCode.SharpZipLib.Tar;
-using Newtonsoft.Json.Serialization;
+using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 using NJsonSchema;
 
 namespace Elastic.Apm.Specification

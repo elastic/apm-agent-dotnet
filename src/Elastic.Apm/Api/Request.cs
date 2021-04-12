@@ -6,8 +6,8 @@ using System.Collections.Generic;
 using Elastic.Apm.Api.Constraints;
 using System.Linq;
 using Elastic.Apm.Helpers;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Api
 {

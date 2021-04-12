@@ -5,8 +5,8 @@
 
 using System.Reflection;
 using Elastic.Apm.Api.Constraints;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Report.Serialization
 {

@@ -8,8 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Elastic.Apm.Tests.Utilities;
-using Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
 using ProcNet;
 
 namespace Elastic.Apm.Tests.Utilities.Azure

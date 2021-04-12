@@ -15,8 +15,9 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json.Converters;
+using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Model
 {
@@ -329,10 +330,10 @@ namespace Elastic.Apm.Model
 		/// transaction from the service's perspective.
 		/// This field can be used for calculating error rates for incoming requests.
 		/// </summary>
-		[JsonConverter(typeof(StringEnumConverter))]
 		public Outcome Outcome
 		{
-			get => _outcome; set
+			get => _outcome;
+			set
 			{
 				_outcomeChangedThroughApi = true;
 				_outcome = value;

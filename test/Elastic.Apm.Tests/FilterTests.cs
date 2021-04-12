@@ -12,14 +12,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Config;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report;
 using Elastic.Apm.Report.Serialization;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
 using Timer = System.Timers.Timer;
@@ -217,7 +217,7 @@ namespace Elastic.Apm.Tests
 
 				foreach (var receivedEvent in payloadStrings)
 				{
-					var jObject = serializer.Deserialize<JObject>(receivedEvent);
+					var jObject = JObject.Parse(receivedEvent);
 					var property = jObject.Properties().First();
 
 					switch (property.Name)

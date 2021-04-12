@@ -4,7 +4,7 @@
 
 using Elastic.Apm.Api.Constraints;
 using Elastic.Apm.Helpers;
-using Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Api
 {
