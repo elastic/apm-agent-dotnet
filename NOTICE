@@ -1,7 +1,7 @@
 ==========
-Notice for: Elastic.Apm.Libraries.Newtonsoft.Json
+Notice for: Elastic.Apm
 ----------
-Copy of the Newtonsoft.Json project version 13.0.1 by @JamesNK,
+The source code in src/Elastic.Apm/Libraries/Newtonsoft.Json is copied from Newtonsoft.Json by @JamesNK,
 licensed under the MIT License (MIT) License. https://github.com/JamesNK/Newtonsoft.Json
 
 The MIT License (MIT)
