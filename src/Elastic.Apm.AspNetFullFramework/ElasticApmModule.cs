@@ -86,6 +86,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			_application = application;
 			_application.BeginRequest += OnBeginRequest;
 			_application.EndRequest += OnEndRequest;
+			_application.Error += OnError;
 		}
 
 		private void OnBeginRequest(object sender, EventArgs e)
@@ -99,6 +100,18 @@ namespace Elastic.Apm.AspNetFullFramework
 			catch (Exception ex)
 			{
 				_logger.Error()?.LogException(ex, "Processing BeginRequest event failed");
+			}
+		}
+
+		private void OnError(object sender, EventArgs e)
+		{
+			try
+			{
+				ProcessError(sender);
+			}
+			catch (Exception ex)
+			{
+				_logger.Error()?.LogException(ex, "Processing Error event failed");
 			}
 		}
 
@@ -245,16 +258,31 @@ namespace Elastic.Apm.AspNetFullFramework
 			return convertedHeaders;
 		}
 
+		private void ProcessError(object sender)
+		{
+			var transaction = Agent.Instance.Tracer.CurrentTransaction;
+			if (transaction is null) return;
+
+			var application = (HttpApplication)sender;
+			var exception = application.Server.GetLastError();
+			if (exception != null)
+			{
+				if (exception is HttpUnhandledException unhandledException && unhandledException.InnerException != null)
+					exception = unhandledException.InnerException;
+
+				var segment = (IExecutionSegment)Agent.Instance.Tracer.CurrentSpan ?? transaction;
+				segment.CaptureException(exception);
+			}
+		}
+
 		private void ProcessEndRequest(object sender)
 		{
 			var transaction = Agent.Instance.Tracer.CurrentTransaction;
-			if (transaction == null) return;
+			if (transaction is null) return;
 
 			var application = (HttpApplication)sender;
 			var context = application.Context;
 			var response = context.Response;
-
-			CaptureException(application, transaction);
 
 			// update the transaction name based on route values, if applicable
 			if (transaction is Transaction t && !t.HasCustomName)
@@ -342,25 +370,12 @@ namespace Elastic.Apm.AspNetFullFramework
 			transaction = null;
 		}
 
-		/// <summary>
-		/// Captures the last exception, if present
-		/// </summary>
-		private static void CaptureException(HttpApplication application, ITransaction transaction)
-		{
-			var exception = application.Server.GetLastError();
-			if (exception != null)
-			{
-				if (exception is HttpUnhandledException unhandledException && unhandledException.InnerException != null)
-					exception = unhandledException.InnerException;
-
-				transaction.CaptureException(exception);
-			}
-		}
-
 		private static void FillSampledTransactionContextResponse(HttpResponse response, ITransaction transaction) =>
 			transaction.Context.Response = new Response
 			{
-				Finished = true, StatusCode = response.StatusCode, Headers = _isCaptureHeadersEnabled ? ConvertHeaders(response.Headers) : null
+				Finished = true,
+				StatusCode = response.StatusCode,
+				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(response.Headers) : null
 			};
 
 		private void FillSampledTransactionContextUser(HttpContext context, ITransaction transaction)
