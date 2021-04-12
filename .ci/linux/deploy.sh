@@ -23,7 +23,6 @@ declare -a projectsToPublish=(
 "Elastic.Apm.Azure.Storage"
 "Elastic.Apm.MongoDb"
 )
->>>>>>> Update CI scripts for MongoDb
 
 for project in  "${projectsToPublish[@]}"
 do
