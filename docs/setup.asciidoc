@@ -478,7 +478,12 @@ var mongoClient = new MongoClient(settings);
 ----
 
 Once the above configuration is in place, and if the agent is included by referencing the `Elastic.Apm.NetCoreAll` package, it will automatically capture calls to MongoDB on every active transaction.
-Otherwise, you can manually activate auto instrumentation from the `Elastic.Apm.MongoDb` package by calling `Agent.Subscribe(new MongoDbDiagnosticsSubscriber());`.
+Otherwise, you can manually activate auto instrumentation from the `Elastic.Apm.MongoDb` package by calling
+
+[source,csharp]
+----
+Agent.Subscribe(new MongoDbDiagnosticsSubscriber());
+----
 
 [[setup-general]]
 === Other .NET applications

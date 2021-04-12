@@ -12,9 +12,9 @@ namespace Elastic.Apm.MongoDb
 
 		public static class Events
 		{
-			internal const string CommandStart = "CommandStart";
-			internal const string CommandEnd = "CommandEnd";
-			internal const string CommandFail = "CommandFail";
+			internal const string CommandStart = nameof(CommandStart);
+			internal const string CommandEnd = nameof(CommandEnd);
+			internal const string CommandFail = nameof(CommandFail);
 		}
 	}
 }
