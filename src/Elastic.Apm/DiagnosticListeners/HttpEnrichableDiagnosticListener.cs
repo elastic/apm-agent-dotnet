@@ -23,7 +23,7 @@ namespace Elastic.Apm.DiagnosticListeners
 		}
 
 		/// <summary>
-		/// Gets the enrichers, entering a read lock that is exited when the
+		/// Gets the span creators, entering a read lock that is exited when the
 		/// <see cref="Creators"/> is disposed.
 		/// </summary>
 		/// <returns>a new instance of <see cref="Creators"/></returns>
