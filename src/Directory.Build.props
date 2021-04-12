@@ -34,6 +34,11 @@
       <Pack>True</Pack>
       <PackagePath>.</PackagePath>
     </None>
+    <!-- Includes NOTICE -->
+    <None Include="$(SolutionRoot)/NOTICE">
+      <Pack>True</Pack>
+      <PackagePath>.</PackagePath>
+    </None>
     <!-- Configure SourceLink for packages -->
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
   </ItemGroup>

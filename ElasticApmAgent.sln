@@ -49,10 +49,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "files", "files", "{B406113B
 		dotnet-tools.json = dotnet-tools.json
 		global.json = global.json
 		LICENSE = LICENSE
-		NOTICE.txt = NOTICE.txt
 		README.md = README.md
 		RELEASING.md = RELEASING.md
 		xunit.runner.json = xunit.runner.json
+		NOTICE = NOTICE
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elastic.Apm.Benchmarks", "test\Elastic.Apm.Benchmarks\Elastic.Apm.Benchmarks.csproj", "{F069CE99-F418-4BC2-9E44-8F03497D8DA8}"
