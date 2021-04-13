@@ -270,8 +270,7 @@ namespace Elastic.Apm.AspNetFullFramework
 				if (exception is HttpUnhandledException unhandledException && unhandledException.InnerException != null)
 					exception = unhandledException.InnerException;
 
-				var segment = (IExecutionSegment)Agent.Instance.Tracer.CurrentSpan ?? transaction;
-				segment.CaptureException(exception);
+				transaction.CaptureException(exception);
 			}
 		}
 
