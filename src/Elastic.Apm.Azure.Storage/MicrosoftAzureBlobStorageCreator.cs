@@ -19,36 +19,96 @@ namespace Elastic.Apm.Azure.Storage
 		public bool IsMatch(string method, Uri requestUrl, Func<string, string> headerGetter) =>
 			requestUrl.Host.EndsWith(".blob.core.windows.net", StringComparison.Ordinal) ||
 			requestUrl.Host.EndsWith(".blob.core.usgovcloudapi.net", StringComparison.Ordinal) ||
-			requestUrl.Host.EndsWith(".blob.core.chinacloudapi.cn", StringComparison.Ordinal);
+			requestUrl.Host.EndsWith(".blob.core.chinacloudapi.cn", StringComparison.Ordinal) ||
+			requestUrl.Host.EndsWith(".blob.core.cloudapi.de", StringComparison.Ordinal);
 
 		public ISpan Create(IApmAgent agent, string method, Uri requestUrl, Func<string, string> headerGetter)
 		{
 			var blobUrl = new BlobUrl(requestUrl);
-			string name = null;
 			string action = null;
 
 			switch (method)
 			{
-				case "PUT":
-					var blobType = headerGetter("x-ms-blob-type");
-					action = !string.IsNullOrEmpty(blobType) && blobType == "BlockBlob" ? "Upload" : "Create";
-					name = $"{AzureBlobStorage.SpanName} {action} {blobUrl.ResourceName}";
-					break;
 				case "DELETE":
 					action = "Delete";
-					name = $"{AzureBlobStorage.SpanName} {action} {blobUrl.ResourceName}";
 					break;
 				case "GET":
-					action = requestUrl.Query.Contains("restype=container") && requestUrl.Query.Contains("comp=list")
-						? "GetBlobs"
-						: "Download";
-					name = $"{AzureBlobStorage.SpanName} {action} {blobUrl.ResourceName}";
+					if (requestUrl.Query.Contains("restype=container"))
+					{
+						if (requestUrl.Query.Contains("comp=list"))
+							action = "ListBlobs";
+						else if (requestUrl.Query.Contains("comp=acl"))
+							action = "GetAcl";
+						else
+							action = "GetProperties";
+					}
+					else
+					{
+						if (requestUrl.Query.Contains("comp=metadata"))
+							action = "GetMetadata";
+						else if (requestUrl.Query.Contains("comp=list"))
+							action = "ListContainers";
+						else if (requestUrl.Query.Contains("comp=tags"))
+							action = requestUrl.Query.Contains("where=") ? "FindTags" : "GetTags";
+						else
+							action = "Download";
+					}
+					break;
+				case "HEAD":
+					if (requestUrl.Query.Contains("comp=metadata"))
+						action = "GetMetadata";
+					else if (requestUrl.Query.Contains("comp=acl"))
+						action = "GetAcl";
+					else
+						action = "GetProperties";
+					break;
+				case "POST":
+					if (requestUrl.Query.Contains("comp=batch"))
+						action = "Batch";
+					else if (requestUrl.Query.Contains("comp=query"))
+						action = "Query";
+					break;
+				case "PUT":
+					if (!string.IsNullOrEmpty(headerGetter("x-ms-copy-source")))
+						action = "Copy";
+					else if (requestUrl.Query.Contains("comp=copy"))
+						action = "Abort";
+					else if (!string.IsNullOrEmpty(headerGetter("x-ms-blob-type")) ||
+						requestUrl.Query.Contains("comp=block") ||
+						requestUrl.Query.Contains("comp=blocklist") ||
+						requestUrl.Query.Contains("comp=page") ||
+						requestUrl.Query.Contains("comp=appendblock"))
+						action = "Upload";
+					else if (requestUrl.Query.Contains("comp=metadata"))
+						action = "SetMetadata";
+					else if (requestUrl.Query.Contains("comp=acl"))
+						action = "SetAcl";
+					else if (requestUrl.Query.Contains("comp=properties"))
+						action = "SetProperties";
+					else if (requestUrl.Query.Contains("comp=lease"))
+						action = "Lease";
+					else if (requestUrl.Query.Contains("comp=snapshot"))
+						action = "Snapshot";
+					else if (requestUrl.Query.Contains("comp=undelete"))
+						action = "Undelete";
+					else if (requestUrl.Query.Contains("comp=tags"))
+						action = "SetTags";
+					else if (requestUrl.Query.Contains("comp=tier"))
+						action = "SetTier";
+					else if (requestUrl.Query.Contains("comp=expiry"))
+						action = "SetExpiry";
+					else if (requestUrl.Query.Contains("comp=seal"))
+						action = "Seal";
+					else
+						action = "Create";
+
 					break;
 			}
 
-			// if this isn't a storage operation that we capture, don't create a span for it
-			if (name == null)
+			if (action is null)
 				return null;
+
+			var name = $"{AzureBlobStorage.SpanName} {action} {blobUrl.ResourceName}";
 
 			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(agent, name,
 				ApiConstants.TypeStorage, AzureBlobStorage.SubType, InstrumentationFlag.Azure, true);

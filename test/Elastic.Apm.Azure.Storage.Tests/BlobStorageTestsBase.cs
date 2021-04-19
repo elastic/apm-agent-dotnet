@@ -28,12 +28,12 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			Agent.Subscribe(new AzureBlobStorageDiagnosticsSubscriber());
 		}
 
-		protected void AssertSpan(string action, string resource)
+		protected void AssertSpan(string action, string resource, int count = 1)
 		{
 			if (!_sender.WaitForSpans())
 				throw new Exception("No span received in timeout");
 
-			_sender.Spans.Should().HaveCount(1);
+			_sender.Spans.Should().HaveCount(count);
 			var span = _sender.FirstSpan;
 
 			span.Name.Should().Be($"{AzureBlobStorage.SpanName} {action} {resource}");

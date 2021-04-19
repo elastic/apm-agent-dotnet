@@ -176,7 +176,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 				await operation.WaitForCompletionAsync();
 			});
 
-			AssertSpan("CopyFromUri", $"{scope.ContainerName}/{destinationBlobName}");
+			AssertSpan("Copy", $"{scope.ContainerName}/{destinationBlobName}", count: 2);
 		}
 
 		[AzureCredentialsFact]
@@ -201,7 +201,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 				}
 			});
 
-			AssertSpan("GetBlobs", scope.ContainerName);
+			AssertSpan("ListBlobs", scope.ContainerName);
 		}
 	}
 }

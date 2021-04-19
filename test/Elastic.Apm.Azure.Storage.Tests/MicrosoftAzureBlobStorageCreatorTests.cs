@@ -132,7 +132,39 @@ namespace Elastic.Apm.Azure.Storage.Tests
 				var segment = await containerReference.ListBlobsSegmentedAsync(null);
 			});
 
-			AssertSpan("GetBlobs", scope.ContainerName);
+			AssertSpan("ListBlobs", scope.ContainerName);
+		}
+
+		[AzureCredentialsFact]
+		public async Task Capture_Span_When_Copy_From_Uri()
+		{
+			await using var scope = await BlobContainerScope.CreateContainer(Environment.StorageAccountConnectionString);
+
+			var sourceBlobName = Guid.NewGuid().ToString();
+			var client = _account.CreateCloudBlobClient();
+			var containerReference = client.GetContainerReference(scope.ContainerName);
+			var sourceBlobReference = containerReference.GetBlockBlobReference(sourceBlobName);
+
+			await using var stream = new MemoryStream(Encoding.UTF8.GetBytes("block blob"));
+				await sourceBlobReference.UploadFromStreamAsync(stream);
+
+
+			var destinationBlobName = Guid.NewGuid().ToString();
+			var blobReference = containerReference.GetBlockBlobReference(destinationBlobName);
+
+			await Agent.Tracer.CaptureTransaction("Copy Azure Blob", ApiConstants.TypeStorage, async () =>
+			{
+				var copyId = await blobReference.StartCopyAsync(sourceBlobReference);
+			});
+
+			CopyStatus status;
+			do
+			{
+				await blobReference.FetchAttributesAsync();
+				status = blobReference.CopyState.Status;
+			} while (status != CopyStatus.Success);
+
+			AssertSpan("Copy", $"{scope.ContainerName}/{destinationBlobName}", count: 2);
 		}
 	}
 }
