@@ -6,9 +6,9 @@ endif::[]
 [[configuration]]
 == Configuration
 
-Utilize configuration options to adapt the Elastic APM {agent} to your needs. There are multiple configuration sources, each with different naming conventions for the property key.
+Utilize configuration options to adapt the Elastic APM agent to your needs. There are multiple configuration sources, each with different naming conventions for the property key.
 
-By default, the {agent} uses environment variables. Additionally, on ASP.NET Core, the {agent} can plug into the https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-2.2[Microsoft.Extensions.Configuration] infrastructure.
+By default, the agent uses environment variables. Additionally, on ASP.NET Core, the agent can plug into the https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-2.2[Microsoft.Extensions.Configuration] infrastructure.
 
 [float]
 [[dynamic-configuration]]
@@ -57,7 +57,7 @@ For example, any configuration source that has been configured on the `IConfigur
 More information is available in the official https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-3.1[Microsoft .NET Core configuration docs]
 You can find the key for each APM configuration option in this documentation, under the `IConfiguration or Web.config key` column of the option's description.
 
-NOTE: It is also possible to call `UseElasticApm()` without the overload. In this case, the {agent} will only read configurations from environment variables.
+NOTE: It is also possible to call `UseElasticApm()` without the overload. In this case, the agent will only read configurations from environment variables.
 
 NOTE: The `UseElasticApm` method only turns on ASP.NET Core monitoring. To turn on tracing for everything supported by the Agent on .NET Core, including HTTP and database monitoring, use the `UseAllElasticApm` method from the `Elastic.Apm NetCoreAll` package. Learn more in <<setup-asp-net-core,ASP.NET Core setup>>.
 
@@ -86,9 +86,9 @@ Here is a sample `appsettings.json` configuration file for a typical ASP.NET Cor
 }
 ----
 <1> With ASP.NET Core, you must set `LogLevel` for the internal APM logger in the standard `Logging` section with the `Elastic.Apm` category name.
-<2> The configurations below `ElasticApm` are fetched by the {agent} if the corresponding `IConfiguration` is passed to the agent.
+<2> The configurations below `ElasticApm` are fetched by the agent if the corresponding `IConfiguration` is passed to the agent.
 
-In certain scenarios--like when you're not using ASP.NET Core, the {agent} won't be activated with the `UseElasticApm()` method.
+In certain scenarios--like when you're not using ASP.NET Core, the agent won't be activated with the `UseElasticApm()` method.
 In this case, set the agents log level with <<config-log-level,`ElasticApm:LogLevel`>>, as shown in the following `appsettings.json` file:
 
 [source,js]
@@ -113,11 +113,11 @@ In this case, set the agents log level with <<config-log-level,`ElasticApm:LogLe
 [[configuration-on-asp-net]]
 === Configuration on ASP.NET
 
-When monitoring ASP.NET applications the {agent} uses two sources of configuration:
+When monitoring ASP.NET applications the agent uses two sources of configuration:
 Web.config and environment variables.
 Web.config has precedence over environment variables which means that
-the {agent} tries first to find a configuration option value by its key in Web.config.
-If it's not present, then the {agent} tries to look for it among environment variables. If it's not present, the {agent} falls back to the options default value.
+the agent tries first to find a configuration option value by its key in Web.config.
+If it's not present, then the agent tries to look for it among environment variables. If it's not present, the agent falls back to the options default value.
 
 You can find the key of each configuration option
 in the `IConfiguration or Web.config key` column of the corresponding option's description.
@@ -153,7 +153,7 @@ Once implemented, use the <<config-full-framework-configuration-reader-type, `Fu
 
 This setting is .NET Full Framework only.
 
-This setting can point an {agent} to a custom `IConfigurationReader` implementation and the {agent} will read configuration from your `IConfigurationReader` implementation.
+This setting can point an agent to a custom `IConfigurationReader` implementation and the agent will read configuration from your `IConfigurationReader` implementation.
 
 Use type name in  https://docs.microsoft.com/en-us/dotnet/api/system.type.assemblyqualifiedname?view=netcore-3.1#System_Type_AssemblyQualifiedName[AssemblyQualifiedName] format (e.g: `MyClass, MyNamespace`).
 
@@ -181,16 +181,16 @@ If this setting is set in both the web.config file and as an environment variabl
 
 <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
-A Boolean specifying if the {agent} should be recording or not.
-When recording, the {agent} captures HTTP requests, tracks errors, and collects and sends metrics.
-When not recording, the {agent} works as a noop, where it does not collect data or communicate with the APM server,
+A Boolean specifying if the agent should be recording or not.
+When recording, the agent captures HTTP requests, tracks errors, and collects and sends metrics.
+When not recording, the agent works as a noop, where it does not collect data or communicate with the APM server,
 except for polling the central configuration endpoint.
-This is a reversible switch, so the {agent} threads are not killed when deactivated, but they will be
+This is a reversible switch, so the agent threads are not killed when deactivated, but they will be
 mostly idle in this state, so the overhead should be negligible.
 
 Use this setting to dynamically disable Elastic APM at runtime.
 
-WARNING: Setting `Recording` to `false` influences the behavior of the <<public-api>>. When the {agent} is not active, it won't keep track of transactions, spans, and any related properties.
+WARNING: Setting `Recording` to `false` influences the behavior of the <<public-api>>. When the agent is not active, it won't keep track of transactions, spans, and any related properties.
 
 [options="header"]
 |============
@@ -210,10 +210,10 @@ WARNING: Setting `Recording` to `false` influences the behavior of the <<public-
 [[config-enabled]]
 ==== `Enabled` (added[1.7.0])
 
-Setting this to `false` will completely disable the {agent}, including instrumentation and remote config polling.
-If you want to dynamically change the status of the {agent}, use <<config-recording,`recording`>> instead.
+Setting this to `false` will completely disable the agent, including instrumentation and remote config polling.
+If you want to dynamically change the status of the agent, use <<config-recording,`recording`>> instead.
 
-WARNING: Setting `Enabled` to `false` influences the behavior of the <<public-api>>. When the {agent} is not active, it won't keep track of transactions, spans, and any related properties.
+WARNING: Setting `Enabled` to `false` influences the behavior of the <<public-api>>. When the agent is not active, it won't keep track of transactions, spans, and any related properties.
 
 [options="header"]
 |============
@@ -317,7 +317,7 @@ This allows for the reported hostname to be manually specified. If this is not s
 The name of the environment that this service is deployed in, e.g. "production" or "staging".
 
 Environments allow you to easily filter data on a global level in the APM app.
-It's important to be consistent when naming environments across {agent}s.
+It's important to be consistent when naming environments across agents.
 See {apm-app-ref}/filters.html#environment-selector[environment selector] in the Kibana UI for more information.
 
 NOTE: This feature is fully supported in the APM app in Kibana versions >= 7.2.
@@ -335,7 +335,7 @@ You must use the query bar to filter for a specific environment in versions prio
 | See note below | String
 |============
 
-NOTE: On ASP.NET Core application the {agent} uses https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.hosting.ihostingenvironment.environmentname?view=aspnetcore-2.2#Microsoft_AspNetCore_Hosting_IHostingEnvironment_EnvironmentName[EnvironmentName from IHostingEnvironment] as default environment name.
+NOTE: On ASP.NET Core application the agent uses https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.hosting.ihostingenvironment.environmentname?view=aspnetcore-2.2#Microsoft_AspNetCore_Hosting_IHostingEnvironment_EnvironmentName[EnvironmentName from IHostingEnvironment] as default environment name.
 
 [float]
 [[config-transaction-sample-rate]]
@@ -343,15 +343,15 @@ NOTE: On ASP.NET Core application the {agent} uses https://docs.microsoft.com/en
 
 <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
-By default, the {agent} samples every transaction (e.g. a request to your service).
+By default, the agent samples every transaction (e.g. a request to your service).
 To reduce overhead and storage requirements, set the sample rate to a value between 0.0 and 1.0.
-The {agent} will still record the overall time and result for unsampled transactions,
+The agent will still record the overall time and result for unsampled transactions,
 but no context information, labels, or spans will be recorded.
 
-NOTE: When parsing the value for this option, the {agent} doesn't consider the current culture.
+NOTE: When parsing the value for this option, the agent doesn't consider the current culture.
 It also expects that a period (`.`) is used to separate the integer and the fraction of a floating-point number.
 
-This setting can be changed after the {agent} is started.
+This setting can be changed after the agent is started.
 
 [options="header"]
 |============
@@ -380,7 +380,7 @@ NOTE: A value of `0` means that spans will never be collected.
 Setting `-1` means that spans will never be dropped.
 The Agent will revert to the default value if the value is set below `-1`.
 
-This setting can be changed after {agent} is started.
+This setting can be changed after agent is started.
 
 [options="header"]
 |============
@@ -398,7 +398,7 @@ This setting can be changed after {agent} is started.
 [[config-central-config]]
 ==== `CentralConfig` (added[1.1])
 
-If set to `true`, the {agent} makes periodic requests to the APM Server to fetch
+If set to `true`, the agent makes periodic requests to the APM Server to fetch
 the latest {apm-app-ref}/agent-configuration.html[APM Agent configuration].
 
 [options="header"]
@@ -423,7 +423,7 @@ Sometimes it is necessary to sanitize, i.e., remove, sensitive data sent to Elas
 This config accepts a list of wildcard patterns of field names which should be sanitized.
 These apply to HTTP headers and `application/x-www-form-urlencoded` data.
 
-IMPORTANT: This setting only applies to values that are captured automatically by the {agent}. If you capture the request body manually with the public API, this configuration doesn't apply, and the {agent} won't sanitize the body.
+IMPORTANT: This setting only applies to values that are captured automatically by the agent. If you capture the request body manually with the public API, this configuration doesn't apply, and the agent won't sanitize the body.
 
 The wildcard, `*`, matches zero or more characters, and matching is case insensitive by default.
 Prepending an element with `(?-i)` makes the matching case sensitive.
@@ -453,7 +453,7 @@ See https://www.owasp.org/index.php/Information_exposure_through_query_strings_i
 ==== `GlobalLabels` (added[1.2])
 
 These are labels that are added to all events with the format `key=value[,key=value[,...]]`.
-Any labels set by the application via the {agent}'s public API will override global labels with the same keys.
+Any labels set by the application via the agent's public API will override global labels with the same keys.
 
 [options="header"]
 |============
@@ -496,9 +496,9 @@ IMPORTANT: Use of `ServerUrls` is deprecated. Use `ServerUrl`.
 [[config-secret-token]]
 ==== `SecretToken`
 
-A string used to ensure that only your {agent}s can send data to your APM server.
+A string used to ensure that only your agents can send data to your APM server.
 
-Both the {agent}s and the APM server have to be configured with the same secret token.
+Both the agents and the APM server have to be configured with the same secret token.
 Use this setting if the APM Server requires a token (e.g. APM Server in Elastic Cloud).
 
 WARNING: The `SecretToken` is sent as plain-text in every request to the server, so you should also secure
@@ -520,7 +520,7 @@ your communications using HTTPS. Unless you do so, your API Key could be observe
 [[config-api-key]]
 ==== `ApiKey` (added[1.4])
 
-A base64-encoded string used to ensure that only your {agent}s can send data to your APM server.
+A base64-encoded string used to ensure that only your agents can send data to your APM server.
 You must have created the API key using the APM server's {apm-server-ref-v}/api-key.html[command line tool].
 
 NOTE: This feature is fully supported in the APM Server versions >= 7.6.
@@ -544,7 +544,7 @@ your communications using HTTPS. Unless you do so, your API Key could be observe
 [[config-verify-server-cert]]
 ==== `VerifyServerCert` (added[1.3])
 
-By default, the {agent} verifies the SSL certificate if you use an HTTPS connection to the APM server.
+By default, the agent verifies the SSL certificate if you use an HTTPS connection to the APM server.
 
 Verification can be disabled by changing this setting to false.
 
@@ -602,7 +602,7 @@ there's no event sending operation still in progress,
 then the Agent won't hold events in the queue and will send them immediately.
 
 Setting `FlushInterval` to a negative value (for example `-1`, `-54s`, `-89ms`, etc.) is invalid and
-in that case {agent} uses the default value instead.
+in that case agent uses the default value instead.
 
 [options="header"]
 |============
@@ -645,7 +645,7 @@ the Agent will use the default value instead.
 ==== `MaxQueueEventCount` (added[1.1])
 
 The maximum number of events to hold in the queue as candidates to be sent.
-If the queue is at its maximum capacity then the {agent} discards the new events
+If the queue is at its maximum capacity then the agent discards the new events
 until the queue has free space.
 
 Setting `MaxQueueEventCount` to `0` or a negative value is invalid and the Agent will use the default value instead.
@@ -666,7 +666,7 @@ Setting `MaxQueueEventCount` to `0` or a negative value is invalid and the Agent
 [[config-metrics-interval]]
 ==== `MetricsInterval` (added[1.0.0-beta1])
 
-The interval at which the {agent} sends metrics to the APM Server.
+The interval at which the agent sends metrics to the APM Server.
 This must be at least `1s`.
 Set this to `0s` to deactivate.
 
@@ -712,7 +712,7 @@ This option supports the wildcard `*`, which matches zero or more characters. Ex
 [[config-cloud-provider]]
 ==== `CloudProvider` (added[1.7.0])
 
-Specify which cloud provider should be assumed for metadata collection. By default, the {agent} attempts to detect the cloud provider and, if that fails, uses trial and error to collect the metadata.
+Specify which cloud provider should be assumed for metadata collection. By default, the agent attempts to detect the cloud provider and, if that fails, uses trial and error to collect the metadata.
 
 Valid options are `"auto"`, `"aws"`, `"gcp"`, `"azure"`, and `"none"`. If this config value is set to `"none"`, no cloud metadata will be collected. If set to any of
 `"aws"`, `"gcp"`, or `"azure"`, attempts to collect metadata will only be performed
@@ -739,13 +739,13 @@ from the chosen provider.
 
 <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
-For transactions that are HTTP requests, the {agent} can optionally capture the request body, e.g., POST variables.
+For transactions that are HTTP requests, the agent can optionally capture the request body, e.g., POST variables.
 If the request has a body and this setting is disabled, the body will be shown as [REDACTED].
 This option is case-insensitive.
 
 [IMPORTANT]
 ====
-To allow capturing request bodies, the {agent} sets `AllowSynchronousIO` to `true` on a per
+To allow capturing request bodies, the agent sets `AllowSynchronousIO` to `true` on a per
 request basis in ASP.NET Core, since capturing can occur in synchronous code paths.
 
 https://docs.microsoft.com/en-us/aspnet/core/migration/22-to-30?#allowsynchronousio-disabled[With ASP.NET Core 3.0 onwards, `AllowSynchronousIO` is `false` by default]
@@ -769,7 +769,7 @@ Possible options are `off`, `errors`, `transactions` and `all`:
 * `transactions` - request bodies will only be reported with request transactions
 * `all` - request bodies will be reported with both errors and request transactions
 
-This setting can be changed after the {agent} is started.
+This setting can be changed after the agent is started.
 
 [options="header"]
 |============
@@ -793,7 +793,7 @@ This option supports the wildcard `*`, which matches zero or more characters.
 Examples: `/foo/*/bar/*/baz*`, `*foo*`.
 Matching is case insensitive.
 
-This setting can be changed after the {agent} is started.
+This setting can be changed after the agent is started.
 
 [options="header"]
 |============
@@ -814,7 +814,7 @@ This setting can be changed after the {agent} is started.
 <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
 If set to `true`,
-the {agent} will capture request and response headers, including cookies.
+the agent will capture request and response headers, including cookies.
 
 NOTE: Setting this to `false` reduces memory allocations, network bandwidth, and disk space used by Elasticsearch.
 
@@ -872,9 +872,9 @@ NOTE: All errors that are captured during a request to an ignored URL are still 
 [[config-use-elastic-apm-traceparent-header]]
 ==== `UseElasticTraceparentHeader` (added[1.3.0])
 
-To enable {apm-overview-ref-v}/distributed-tracing.html[distributed tracing], the {agent} adds trace context headers to outgoing HTTP requests made with the `HttpClient` type. These headers (`traceparent` and `tracestate`) are defined in the https://www.w3.org/TR/trace-context-1/[W3C Trace Context] specification.
+To enable {apm-overview-ref-v}/distributed-tracing.html[distributed tracing], the agent adds trace context headers to outgoing HTTP requests made with the `HttpClient` type. These headers (`traceparent` and `tracestate`) are defined in the https://www.w3.org/TR/trace-context-1/[W3C Trace Context] specification.
 
-When this setting is `true`, the {agent} also adds the header `elasticapm-traceparent` for backwards compatibility with older versions of Elastic APM {agent}s. Versions prior to `1.3.0` only read the `elasticapm-traceparent` header.
+When this setting is `true`, the agent also adds the header `elasticapm-traceparent` for backwards compatibility with older versions of Elastic APM agents. Versions prior to `1.3.0` only read the `elasticapm-traceparent` header.
 
 [options="header"]
 |============
@@ -961,7 +961,7 @@ NOTE: If you would like to disable stack trace capturing only for spans, but sti
 <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
 In its default settings,
-the APM {agent} collects a stack trace for every recorded span with duration longer than `5ms`.
+the APM agent collects a stack trace for every recorded span with duration longer than `5ms`.
 While this is very helpful to find the exact place in your code that causes the span,
 collecting this stack trace does have some overhead.
 When setting this option to a negative value, like `-1ms`, stack traces are collected for all spans.
@@ -997,12 +997,12 @@ The default unit for this option is `ms`
 
 <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
-Sets the logging level for the {agent}.
+Sets the logging level for the agent.
 
 Valid options: `Critical`, `Error`, `Warning`, `Info`, `Debug`, `Trace` and `None` (`None` disables the logging).
 
-IMPORTANT: The `UseElasticApm()` extension offers an overload to pass an `IConfiguration` instance to the {agent}.
-When configuring your {agent} in this way, as is typical in an ASP.NET Core application,
+IMPORTANT: The `UseElasticApm()` extension offers an overload to pass an `IConfiguration` instance to the agent.
+When configuring your agent in this way, as is typical in an ASP.NET Core application,
 you must instead set the `LogLevel` for the internal APM logger under the `Logging` section of `appsettings.json`. More details, including a <<sample-config,sample configuration file>> are available in <<configuration-on-asp-net-core>>.
 
 [options="header"]
