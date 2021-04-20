@@ -25,7 +25,7 @@ This feature is enabled in the Agent by default, with <<config-central-config>>.
 === Configuration on ASP.NET Core
 
 The `UseElasticApm()` extension method offers an overload to pass an `IConfiguration` instance to the APM Agent.
-To use this type of setup, which is typical in an ASP.NET Core application, your applications `Startup.cs` file should contain code similar to the following:
+To use this type of setup, which is typical in an ASP.NET Core application, your application's `Startup.cs` file should contain code similar to the following:
 
 [source,csharp]
 ----
@@ -88,8 +88,8 @@ Here is a sample `appsettings.json` configuration file for a typical ASP.NET Cor
 <1> With ASP.NET Core, you must set `LogLevel` for the internal APM logger in the standard `Logging` section with the `Elastic.Apm` category name.
 <2> The configurations below `ElasticApm` are fetched by the agent if the corresponding `IConfiguration` is passed to the agent.
 
-In certain scenarios--like when you're not using ASP.NET Core, the agent won't be activated with the `UseElasticApm()` method.
-In this case, set the agents log level with <<config-log-level,`ElasticApm:LogLevel`>>, as shown in the following `appsettings.json` file:
+In certain scenarios--you won't activate the agent with the `UseElasticApm()` method.
+In this case, set the agent log level with <<config-log-level,`ElasticApm:LogLevel`>>, as shown in the following `appsettings.json` file:
 
 [source,js]
 ----
@@ -145,7 +145,7 @@ Below is a sample `Web.config` configuration file for a ASP.NET application.
 ----
 
 Additionally, on ASP.NET, you can implement your own configuration reader. To do this, implement the `IConfigurationReader` interface from the `Elastic.Apm.Config` namespace.
-Once implemented, use the <<config-full-framework-configuration-reader-type, `FullFrameworkConfigurationReaderType`>> setting.
+Once implemented, you can use the <<config-full-framework-configuration-reader-type, `FullFrameworkConfigurationReaderType`>> setting.
 
 [float]
 [[config-full-framework-configuration-reader-type]]
@@ -235,7 +235,7 @@ WARNING: Setting `Enabled` to `false` influences the behavior of the <<public-ap
 This is used to keep all the errors and transactions of your service together
 and is the primary filter in the Elastic APM user interface.
 
-NOTE: The service name must conform to this regular expression: `^[a-zA-Z0-9 _-]+$`. Your service name must only contain characters from the ASCII alphabet, numbers, dashes, underscores, and spaces. Characters in service name that don't match regular expression will be replaced by `_` symbol. 
+NOTE: The service name must conform to this regular expression: `^[a-zA-Z0-9 _-]+$`. In other words, your service name must only contain characters from the ASCII alphabet, numbers, dashes, underscores, and spaces. Characters in service names that don't match the regular expression will be replaced with the `_` symbol. 
 
 [options="header"]
 |============
@@ -276,7 +276,7 @@ NOTE: This feature requires APM Server versions >= 7.5
 
 A version string for the currently deployed version of the service. If you don’t
 version your deployments, the recommended value for this field is the commit identifier
-of the deployed revision, e.g. the output of git rev-parse HEAD. 
+of the deployed revision, e.g. the output of `git rev-parse HEAD`. 
 
 [options="header"]
 |============
@@ -351,7 +351,7 @@ but no context information, labels, or spans will be recorded.
 NOTE: When parsing the value for this option, the agent doesn't consider the current culture.
 It also expects that a period (`.`) is used to separate the integer and the fraction of a floating-point number.
 
-This setting can be changed after the agent is started.
+This setting can be changed after the agent starts.
 
 [options="header"]
 |============
@@ -380,7 +380,7 @@ NOTE: A value of `0` means that spans will never be collected.
 Setting `-1` means that spans will never be dropped.
 The Agent will revert to the default value if the value is set below `-1`.
 
-This setting can be changed after agent is started.
+This setting can be changed after agent starts.
 
 [options="header"]
 |============
@@ -430,7 +430,7 @@ Prepending an element with `(?-i)` makes the matching case sensitive.
 Examples: `/foo/*/bar/*/baz*`, `*foo*`.
 
 Please be sure to review the data captured by Elastic APM carefully to make sure it does not contain sensitive information.
-If you do find sensitive data in your Elasticsearch index, add an additional entry to this list.
+If you do find sensitive data in your {es} index, add an additional entry to this list.
 Setting a value here will overwrite the defaults, so be sure to include the default entries as well.
 
 NOTE: Sensitive information should not be sent in the query string. Data in the query string is considered non-sensitive.
@@ -452,7 +452,7 @@ See https://www.owasp.org/index.php/Information_exposure_through_query_strings_i
 [[config-global-labels]]
 ==== `GlobalLabels` (added[1.2])
 
-These are labels that are added to all events with the format `key=value[,key=value[,...]]`.
+Labels are added to all events with the format `key=value[,key=value[,...]]`.
 Any labels set by the application via the agent's public API will override global labels with the same keys.
 
 [options="header"]
@@ -499,7 +499,7 @@ IMPORTANT: Use of `ServerUrls` is deprecated. Use `ServerUrl`.
 A string used to ensure that only your agents can send data to your APM server.
 
 Both the agents and the APM server have to be configured with the same secret token.
-Use this setting if the APM Server requires a token (e.g. APM Server in Elastic Cloud).
+Use this setting if the APM Server requires a secret token, for example, when using our hosted {es} Service on Elastic Cloud.
 
 WARNING: The `SecretToken` is sent as plain-text in every request to the server, so you should also secure
 your communications using HTTPS. Unless you do so, your API Key could be observed by an attacker.
@@ -564,7 +564,7 @@ Verification can be disabled by changing this setting to false.
 [[config-server-cert]]
 ==== `ServerCert` (added[1.9])
 
-The path to a PEM-encoded certificate used for SSL/TLS by APM server, is used to perform validation 
+The path to a PEM-encoded certificate used for SSL/TLS by APM server. Used to perform validation 
 through certificate pinning. 
 
 This can be specified when using a certificate signed by a Certificate Authority (CA) that is not in 
@@ -769,7 +769,7 @@ Possible options are `off`, `errors`, `transactions` and `all`:
 * `transactions` - request bodies will only be reported with request transactions
 * `all` - request bodies will be reported with both errors and request transactions
 
-This setting can be changed after the agent is started.
+This setting can be changed after the agent starts.
 
 [options="header"]
 |============
@@ -787,13 +787,13 @@ This setting can be changed after the agent is started.
 [[config-capture-body-content-types]]
 ==== `CaptureBodyContentTypes` (performance) (added[1.0.1])
 
-This determines which content types should be captured.
+Configures the content types to be captured.
 
 This option supports the wildcard `*`, which matches zero or more characters.
 Examples: `/foo/*/bar/*/baz*`, `*foo*`.
 Matching is case insensitive.
 
-This setting can be changed after the agent is started.
+This setting can be changed after the agent starts.
 
 [options="header"]
 |============
@@ -816,7 +816,7 @@ This setting can be changed after the agent is started.
 If set to `true`,
 the agent will capture request and response headers, including cookies.
 
-NOTE: Setting this to `false` reduces memory allocations, network bandwidth, and disk space used by Elasticsearch.
+NOTE: Setting this to `false` reduces memory allocations, network bandwidth, and disk space used by {es}.
 
 [options="header"]
 |============
@@ -839,7 +839,7 @@ NOTE: Setting this to `false` reduces memory allocations, network bandwidth, and
 This is used to restrict requests to certain URLs from being instrumented.
 
 This property should be set to a list containing one or more strings.
-When an incoming HTTP request is detected, the request path will be tested against each element in this list.
+When an incoming HTTP request is detected, its request path will be tested against each element in this list.
 For example, adding `/home/index` to this list would match and remove instrumentation from the following URLs:
 
 [source,txt]
@@ -917,7 +917,7 @@ This suppresses any configuration of `ExcludedNamespaces`.
 [[config-excluded-namespaces]]
 ==== `ExcludedNamespaces` (added[1.5])
 
-A list of namespaces to exclude when reading an exceptions StackTrace to determine the culprit.
+A list of namespaces to exclude when reading an exception StackTrace to determine the culprit.
 
 Namespaces are checked with `string.StartsWith()`, so "System." matches all System namespaces.
 
@@ -938,7 +938,7 @@ Namespaces are checked with `string.StartsWith()`, so "System." matches all Syst
 
 <<dynamic-configuration, image:./images/dynamic-config.svg[] >>
 
-Setting this to `0` disables the stack trace collection. Any positive integer value will be used as the maximum number of frames to collect. Setting it to -1 means that all frames will be collected.
+Setting this to `0` disables stack trace collection. Any positive integer value will be used as the maximum number of frames to collect. Setting it to -1 means that all frames will be collected.
 
 [options="header"]
 |============
