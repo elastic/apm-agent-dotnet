@@ -21,7 +21,7 @@ namespace Elastic.Apm.Azure.Storage
 		{
 			var retVal = new CompositeDisposable();
 
-			var initializer = new DiagnosticInitializer(agent.Logger, new[] { new AzureFileShareStorageDiagnosticListener(agent) });
+			var initializer = new DiagnosticInitializer(agent.Logger, new AzureFileShareStorageDiagnosticListener(agent));
 			retVal.Add(initializer);
 
 			retVal.Add(DiagnosticListener

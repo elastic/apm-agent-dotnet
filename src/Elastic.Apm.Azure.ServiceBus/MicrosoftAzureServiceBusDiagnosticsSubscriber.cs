@@ -21,7 +21,7 @@ namespace Elastic.Apm.Azure.ServiceBus
 		{
 			var retVal = new CompositeDisposable();
 
-			var initializer = new DiagnosticInitializer(agent.Logger, new[] { new MicrosoftAzureServiceBusDiagnosticListener(agent) });
+			var initializer = new DiagnosticInitializer(agent.Logger, new MicrosoftAzureServiceBusDiagnosticListener(agent));
 			retVal.Add(initializer);
 
 			retVal.Add(DiagnosticListener
