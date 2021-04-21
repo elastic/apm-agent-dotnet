@@ -26,15 +26,15 @@ namespace Elastic.Apm.Metrics
 		public SpanInfo Span { get; set; }
 	}
 
-	public class TransactionInfo
+	internal class TransactionInfo
 	{
 		public string Name { get; set; }
 		public string Type { get; set; }
 	}
 
-	public class SpanInfo
+	internal class SpanInfo
 	{
 		public string Type { get; set; }
-		public string SybType { get; set; }
+		public string SubType { get; set; }
 	}
 }
