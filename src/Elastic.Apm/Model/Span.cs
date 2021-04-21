@@ -559,12 +559,9 @@ namespace Elastic.Apm.Model
 
 	internal class ChildDurationTimer
 	{
-
-
 		private int _activeChildren;
 		private long _start;
 		private double _duration;
-
 
 		/// <summary>
 		/// Starts the timer if it has not been started already.
@@ -607,20 +604,5 @@ namespace Elastic.Apm.Model
 
 		private void IncrementDuration(long epochMicros)
 		 => _duration = TimeUtils.DurationBetweenTimestamps(_start, epochMicros);
-		//duration.addAndGet(epochMicros - start.get());
-
-
-		//@Override
-		//public void resetState()
-		//{
-		//	activeChildren.set(0);
-		//	start.set(0);
-		//	duration.set(0);
-		//}
-
-		//public long getDuration()
-		//{
-		//	return duration.get();
-		//}
 	}
 }
