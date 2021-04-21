@@ -14,7 +14,7 @@ namespace Elastic.Apm.Azure.Storage
 	/// <summary>
 	/// Creates HTTP spans wth Azure Blob storage details from Microsoft.Azure.Storage.Blob
 	/// </summary>
-	public class MicrosoftAzureBlobStorageCreator : IHttpSpanCreator
+	public class MicrosoftAzureBlobStorageTracer : IHttpSpanTracer
 	{
 		public bool IsMatch(string method, Uri requestUrl, Func<string, string> headerGetter) =>
 			requestUrl.Host.EndsWith(".blob.core.windows.net", StringComparison.Ordinal) ||
@@ -22,7 +22,7 @@ namespace Elastic.Apm.Azure.Storage
 			requestUrl.Host.EndsWith(".blob.core.chinacloudapi.cn", StringComparison.Ordinal) ||
 			requestUrl.Host.EndsWith(".blob.core.cloudapi.de", StringComparison.Ordinal);
 
-		public ISpan Create(IApmAgent agent, string method, Uri requestUrl, Func<string, string> headerGetter)
+		public ISpan StartSpan(IApmAgent agent, string method, Uri requestUrl, Func<string, string> headerGetter)
 		{
 			var blobUrl = new BlobUrl(requestUrl);
 			string action = null;

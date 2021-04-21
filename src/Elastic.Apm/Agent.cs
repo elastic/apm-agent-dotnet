@@ -42,7 +42,7 @@ namespace Elastic.Apm
 		public Service Service => Components.Service;
 		public ITracer Tracer => Components.Tracer;
 
-		internal HttpEnrichableDiagnosticListener HttpDiagnosticListener { get; set; }
+		internal TraceableHttpDiagnosticListener HttpDiagnosticListener { get; set; }
 
 		internal Tracer TracerInternal => Components.TracerInternal;
 
@@ -136,13 +136,17 @@ namespace Elastic.Apm
 		/// </returns>
 		public static bool AddFilter(Func<IError, IError> filter) => CheckAndAddFilter(p => p.ErrorFilters.Add(filter));
 
-		internal static void AddHttpSpanCreator(IHttpSpanCreator creator)
+		/// <summary>
+		/// Adds a HTTP span tracer to capture spans for HTTP requests to known services
+		/// </summary>
+		/// <param name="tracer">The tracer to add</param>
+		internal static void AddHttpSpanTracer(IHttpSpanTracer tracer)
 		{
 			// subscribing HttpDiagnosticsSubscriber assigns the listener to the agent
 			if (Instance.HttpDiagnosticListener is null)
 				Instance.Subscribe(new HttpDiagnosticsSubscriber(false));
 
-			Instance.HttpDiagnosticListener.AddCreator(creator);
+			Instance.Components.AddHttpSpanTracer(tracer);
 		}
 
 		private static bool CheckAndAddFilter(Action<PayloadSenderV2> action)

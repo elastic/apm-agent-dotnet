@@ -18,20 +18,21 @@ namespace Elastic.Apm.DiagnosticListeners
 	/// <summary>
 	/// Captures web requests initiated by <see cref="T:System.Net.Http.HttpClient" />
 	/// </summary>
-	internal abstract class HttpDiagnosticListenerImplBase<TRequest, TResponse> : HttpEnrichableDiagnosticListener
+	internal abstract class HttpDiagnosticListenerImplBase<TRequest, TResponse> : TraceableHttpDiagnosticListener
 		where TRequest : class
 		where TResponse : class
 	{
 		private const string EventExceptionPropertyName = "Exception";
 		protected const string EventRequestPropertyName = "Request";
 		private const string EventResponsePropertyName = "Response";
+		private readonly ApmAgent _realAgent;
 
 		/// <summary>
 		/// Keeps track of ongoing requests
 		/// </summary>
 		internal readonly ConcurrentDictionary<TRequest, ISpan> ProcessingRequests = new ConcurrentDictionary<TRequest, ISpan>();
 
-		protected HttpDiagnosticListenerImplBase(IApmAgent agent, bool createSpan) : base(agent, createSpan) { }
+		protected HttpDiagnosticListenerImplBase(IApmAgent agent, bool startHttpSpan) : base(agent, startHttpSpan) => _realAgent = agent as ApmAgent;
 
 		protected abstract string RequestGetMethod(TRequest request);
 
@@ -118,7 +119,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		private void ProcessStartEvent(TRequest request, Uri requestUrl)
 		{
-			if (ApmAgent is ApmAgent realAgent && realAgent.TracerInternal.CurrentSpan is Span currentSpan)
+			if (_realAgent?.TracerInternal.CurrentSpan is Span currentSpan)
 			{
 				// if there's a current span that has been instrumented for Azure, don't create a span for
 				// the current request
@@ -139,20 +140,24 @@ namespace Elastic.Apm.DiagnosticListeners
 			string HeaderGetter(string header) => RequestTryGetHeader(request, header, out var value) ? value : null;
 
 			ISpan span = null;
-			using (var creators = GetCreators())
+
+			if (_realAgent != null)
 			{
-				foreach (var creator in creators)
+				using (var httpTracers = _realAgent.Components.GetHttpTracers())
 				{
-					if (creator.IsMatch(method, requestUrl, HeaderGetter))
+					foreach (var httpSpanTracer in httpTracers)
 					{
-						span = creator.Create(ApmAgent, method, requestUrl, HeaderGetter);
-						if (span != null)
-							break;
+						if (httpSpanTracer.IsMatch(method, requestUrl, HeaderGetter))
+						{
+							span = httpSpanTracer.StartSpan(ApmAgent, method, requestUrl, HeaderGetter);
+							if (span != null)
+								break;
+						}
 					}
 				}
 			}
 
-			if (span is null && CreateSpan)
+			if (span is null && StartHttpSpan)
 			{
 				span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(ApmAgent, $"{method} {requestUrl.Host}",
 					ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient, true);

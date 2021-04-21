@@ -17,11 +17,11 @@ using Xunit.Abstractions;
 namespace Elastic.Apm.Azure.Storage.Tests
 {
 	[Collection("AzureStorage")]
-	public class MicrosoftAzureBlobStorageCreatorTests : BlobStorageTestsBase
+	public class MicrosoftAzureBlobStorageTracerTests : BlobStorageTestsBase
 	{
 		private readonly CloudStorageAccount _account;
 
-		public MicrosoftAzureBlobStorageCreatorTests(AzureStorageTestEnvironment environment, ITestOutputHelper output)
+		public MicrosoftAzureBlobStorageTracerTests(AzureStorageTestEnvironment environment, ITestOutputHelper output)
 			:base(environment, output) =>
 			_account = CloudStorageAccount.Parse(Environment.StorageAccountConnectionString);
 
@@ -127,7 +127,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			var client = _account.CreateCloudBlobClient();
 			var containerReference = client.GetContainerReference(scope.ContainerName);
 
-			await Agent.Tracer.CaptureTransaction("Get Blobs", ApiConstants.TypeStorage, async () =>
+			await Agent.Tracer.CaptureTransaction("List Blobs", ApiConstants.TypeStorage, async () =>
 			{
 				var segment = await containerReference.ListBlobsSegmentedAsync(null);
 			});

@@ -33,7 +33,7 @@ namespace Elastic.Apm.Azure.Storage
 				if (realAgent.HttpDiagnosticListener is null)
 					realAgent.Subscribe(new HttpDiagnosticsSubscriber(false));
 
-				realAgent.HttpDiagnosticListener.AddCreator(new MicrosoftAzureBlobStorageCreator());
+				realAgent.Components.AddHttpSpanTracer(new MicrosoftAzureBlobStorageTracer());
 			}
 
 			return retVal;

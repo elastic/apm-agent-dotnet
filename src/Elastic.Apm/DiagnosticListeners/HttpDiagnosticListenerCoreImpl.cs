@@ -11,8 +11,8 @@ namespace Elastic.Apm.DiagnosticListeners
 {
 	internal class HttpDiagnosticListenerCoreImpl : HttpDiagnosticListenerImplBase<HttpRequestMessage, HttpResponseMessage>
 	{
-		public HttpDiagnosticListenerCoreImpl(IApmAgent agent, bool createSpan)
-			: base(agent, createSpan) { }
+		public HttpDiagnosticListenerCoreImpl(IApmAgent agent, bool startHttpSpan)
+			: base(agent, startHttpSpan) { }
 
 		protected override string ExceptionEventKey => "System.Net.Http.Exception";
 
