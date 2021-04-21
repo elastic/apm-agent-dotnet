@@ -363,9 +363,8 @@ namespace Elastic.Apm.Model
 				_payloadSender.QueueSpan(this);
 			}
 
-			// TODO: this can be done shorter
 			if (_enclosingTransaction.SpanTimings.ContainsKey((Type, Subtype)))
-				_enclosingTransaction.SpanTimings[(Type, Subtype)].IncrementTimer(SelfDuration); //  = _enclosingTransaction.SpanTimings[(Type, Subtype)] + SelfDuration;
+				_enclosingTransaction.SpanTimings[(Type, Subtype)].IncrementTimer(SelfDuration);
 			else
 				_enclosingTransaction.SpanTimings.TryAdd((Type, Subtype), new SpanTimer(SelfDuration));
 

@@ -44,7 +44,7 @@ namespace Elastic.Apm.Report.Serialization
 				writer.WriteValue(value.Span.Type);
 
 				writer.WritePropertyName("subtype");
-				writer.WriteValue(value.Span.SybType);
+				writer.WriteValue(value.Span.SubType);
 
 				writer.WriteEndObject();
 			}

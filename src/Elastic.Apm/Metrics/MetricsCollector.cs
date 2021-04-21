@@ -45,7 +45,9 @@ namespace Elastic.Apm.Metrics
 
 		private readonly Timer _timer;
 
-		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender, IConfigSnapshotProvider configSnapshotProvider, params IMetricsProvider[] metricsProvider)
+		public MetricsCollector(IApmLogger logger, IPayloadSender payloadSender, IConfigSnapshotProvider configSnapshotProvider,
+			params IMetricsProvider[] metricsProvider
+		)
 		{
 			_logger = logger.Scoped(nameof(MetricsCollector));
 			_payloadSender = payloadSender;
@@ -69,11 +71,11 @@ namespace Elastic.Apm.Metrics
 			{
 				foreach (var item in metricsProvider)
 				{
-					if(item != null)
+					if (item != null)
 						MetricsProviders.Add(item);
 				}
 			}
-			
+
 
 			if (!WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics, ProcessTotalCpuTimeProvider.ProcessCpuTotalPct))
 				MetricsProviders.Add(new ProcessTotalCpuTimeProvider(_logger));
@@ -141,30 +143,28 @@ namespace Elastic.Apm.Metrics
 
 		internal void CollectAllMetrics()
 		{
-			using (var acq = _isCollectionInProgress.TryAcquireWithDisposable())
+			using var acq = _isCollectionInProgress.TryAcquireWithDisposable();
+			if (!acq.IsAcquired)
 			{
-				if (!acq.IsAcquired)
-				{
-					_logger.Trace()?.Log("Previous CollectAllMetrics call is still in progress - skipping this one");
-					return;
-				}
+				_logger.Trace()?.Log("Previous CollectAllMetrics call is still in progress - skipping this one");
+				return;
+			}
 
-				if (!_configSnapshotProvider.CurrentSnapshot.Recording)
-				{
-					//We only handle the Recording=false here. If Enabled=false, then the MetricsCollector is not started at all.
-					_logger.Trace()?.Log("Skip collecting metrics - Recording is set to false");
-					return;
-				}
+			if (!_configSnapshotProvider.CurrentSnapshot.Recording)
+			{
+				//We only handle the Recording=false here. If Enabled=false, then the MetricsCollector is not started at all.
+				_logger.Trace()?.Log("Skip collecting metrics - Recording is set to false");
+				return;
+			}
 
-				try
-				{
-					CollectAllMetricsImpl();
-				}
-				catch (Exception e)
-				{
-					_logger.Error()
-						?.LogExceptionWithCaller(e);
-				}
+			try
+			{
+				CollectAllMetricsImpl();
+			}
+			catch (Exception e)
+			{
+				_logger.Error()
+					?.LogExceptionWithCaller(e);
 			}
 		}
 
@@ -179,12 +179,10 @@ namespace Elastic.Apm.Metrics
 				return;
 			}
 
-			var metricSet = samplesFromAllProviders; // new MetricSet(TimeUtils.TimestampNow(), samplesFromAllProviders);
-
 			try
 			{
 				//TODO: it'd be nice to do this in 1 call
-				foreach (var item in metricSet)
+				foreach (var item in samplesFromAllProviders)
 				{
 					_payloadSender.QueueMetrics(item);
 				}
@@ -225,26 +223,28 @@ namespace Elastic.Apm.Metrics
 				{
 					_logger.Trace()?.Log("Start collecting {MetricsProviderName}", metricsProvider.DbgName);
 
-					var samplesFromProvider = metricsProvider.GetSamples();
-						//?.Where(x => !double.IsNaN(x.KeyValue.Value) && !double.IsInfinity(x.KeyValue.Value)) //TODO
-						//.ToArray();
+					var samplesFromProvider = metricsProvider.GetSamples()?.ToArray();
 
-					if (samplesFromProvider != null && samplesFromProvider.Count() > 0)
+					if (samplesFromProvider != null && samplesFromProvider.Any())
 					{
 						_logger.Trace()?.Log("Collected {MetricsProviderName} - adding it to MetricSet", metricsProvider.DbgName);
 
-						samples.AddRange(samplesFromProvider);
+						foreach (var item in samplesFromProvider)
+						{
+							// filter out NaN and infinity
+							item.Samples = item.Samples.Where(x => !double.IsNaN(x.KeyValue.Value) && !double.IsInfinity(x.KeyValue.Value)).ToArray();
 
-
-						metricsProvider.ConsecutiveNumberOfFailedReads = 0;
+							if (item.Samples.Any())
+							{
+								samples.Add(item);
+								metricsProvider.ConsecutiveNumberOfFailedReads = 0;
+							}
+							else
+								ProcessFailedReading(metricsProvider);
+						}
 					}
 					else
-					{
-						metricsProvider.ConsecutiveNumberOfFailedReads++;
-						_logger.Warning()
-							?.Log("Failed reading {MetricsProviderName} {NumberOfFails} times: no valid samples", metricsProvider.DbgName,
-								metricsProvider.ConsecutiveNumberOfFailedReads);
-					}
+						ProcessFailedReading(metricsProvider);
 				}
 				catch (Exception e)
 				{
@@ -262,6 +262,14 @@ namespace Elastic.Apm.Metrics
 			}
 
 			return samples;
+
+			void ProcessFailedReading(IMetricsProvider metricsProvider)
+			{
+				metricsProvider.ConsecutiveNumberOfFailedReads++;
+				_logger.Warning()
+					?.Log("Failed reading {MetricsProviderName} {NumberOfFails} times: no valid samples", metricsProvider.DbgName,
+						metricsProvider.ConsecutiveNumberOfFailedReads);
+			}
 		}
 
 		public void Dispose()
