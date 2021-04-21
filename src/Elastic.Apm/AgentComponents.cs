@@ -108,7 +108,7 @@ namespace Elastic.Apm
 		}
 
 		/// <summary>
-		/// Gets the span creators, entering a read lock that is exited when the
+		/// Gets the HTTP span tracers, entering a read lock that is exited when the
 		/// <see cref="HttpTracers"/> is disposed.
 		/// </summary>
 		/// <returns>a new instance of <see cref="HttpTracers"/></returns>

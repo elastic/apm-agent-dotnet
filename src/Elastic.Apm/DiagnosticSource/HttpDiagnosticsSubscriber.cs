@@ -30,7 +30,7 @@ namespace Elastic.Apm.DiagnosticSource
 			var retVal = new CompositeDisposable();
 			var realAgent = agent as ApmAgent;
 
-			if (realAgent != null && realAgent.HttpDiagnosticListener != null)
+			if (realAgent?.HttpDiagnosticListener != null)
 			{
 				realAgent.HttpDiagnosticListener.StartHttpSpan = true;
 				return retVal;

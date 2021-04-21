@@ -23,8 +23,8 @@ namespace Elastic.Apm.DiagnosticListeners
 		where TResponse : class
 	{
 		private const string EventExceptionPropertyName = "Exception";
-		protected const string EventRequestPropertyName = "Request";
 		private const string EventResponsePropertyName = "Response";
+		protected const string EventRequestPropertyName = "Request";
 		private readonly ApmAgent _realAgent;
 
 		/// <summary>
@@ -157,10 +157,24 @@ namespace Elastic.Apm.DiagnosticListeners
 				}
 			}
 
-			if (span is null && StartHttpSpan)
+			if (span is null)
 			{
-				span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(ApmAgent, $"{method} {requestUrl.Host}",
-					ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient, true);
+				if (StartHttpSpan)
+				{
+					span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(ApmAgent, $"{method} {requestUrl.Host}",
+						ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient, true);
+
+					if (span is null)
+					{
+						Logger.Trace()?.Log("Could not create span for outgoing HTTP request to {RequestUrl}", Http.Sanitize(requestUrl));
+						return;
+					}
+				}
+				else
+				{
+					Logger.Trace()?.Log("Skip creating span for outgoing HTTP request to {RequestUrl} as not to known service", Http.Sanitize(requestUrl));
+					return;
+				}
 			}
 
 			if (!ProcessingRequests.TryAdd(request, span))
@@ -191,9 +205,9 @@ namespace Elastic.Apm.DiagnosticListeners
 			if (!RequestHeadersContain(request, TraceContext.TraceStateHeaderName) && span.OutgoingDistributedTracingData != null && span.OutgoingDistributedTracingData.HasTraceState)
 				RequestHeadersAdd(request, TraceContext.TraceStateHeaderName, span.OutgoingDistributedTracingData.TraceState.ToTextHeader());
 
-			if (span is Span spanInstance)
+			if (span is Span realSpan)
 			{
-				if (!spanInstance.ShouldBeSentToApmServer)
+				if (!realSpan.ShouldBeSentToApmServer)
 					return;
 			}
 
