@@ -22,7 +22,7 @@ namespace Elastic.Apm.EntityFrameworkCore
 			if (!agentComponents.ConfigurationReader.Enabled)
 				return retVal;
 
-			var subscriber = new DiagnosticInitializer(agentComponents.Logger, new[] { new EfCoreDiagnosticListener(agentComponents) });
+			var subscriber = new DiagnosticInitializer(agentComponents.Logger, new EfCoreDiagnosticListener(agentComponents));
 			retVal.Add(subscriber);
 
 			retVal.Add(DiagnosticListener

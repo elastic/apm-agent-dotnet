@@ -22,7 +22,7 @@ namespace Elastic.Apm.DiagnosticSource
 		{
 			var retVal = new CompositeDisposable();
 
-			var initializer = new DiagnosticInitializer(agent.Logger, new[] { HttpDiagnosticListener.New(agent) });
+			var initializer = new DiagnosticInitializer(agent.Logger, HttpDiagnosticListener.New(agent));
 			retVal.Add(initializer);
 
 			retVal.Add(DiagnosticListener

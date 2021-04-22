@@ -13,7 +13,9 @@ namespace Elastic.Apm.DiagnosticSource
 	internal class DiagnosticInitializer : IObserver<DiagnosticListener>, IDisposable
 	{
 		private readonly IEnumerable<IDiagnosticListener> _listeners;
+		private readonly IDiagnosticListener _listener;
 		private readonly ScopedLogger _logger;
+		private IDisposable _sourceSubscription;
 
 		internal DiagnosticInitializer(IApmLogger baseLogger, IEnumerable<IDiagnosticListener> listeners)
 		{
@@ -21,7 +23,11 @@ namespace Elastic.Apm.DiagnosticSource
 			_listeners = listeners;
 		}
 
-		private IDisposable _sourceSubscription;
+		internal DiagnosticInitializer(IApmLogger baseLogger, IDiagnosticListener listener)
+		{
+			_logger = baseLogger.Scoped(nameof(DiagnosticInitializer));
+			_listener = listener;
+		}
 
 		public void OnCompleted() { }
 
@@ -30,24 +36,43 @@ namespace Elastic.Apm.DiagnosticSource
 		public void OnNext(DiagnosticListener value)
 		{
 			var subscribedAny = false;
-			foreach (var listener in _listeners)
+
+			if (_listener != null)
 			{
-				if (value.Name == listener.Name)
+				if (value.Name == _listener.Name)
 				{
-					_sourceSubscription = value.Subscribe(listener);
+					_sourceSubscription = value.Subscribe(_listener);
 					_logger.Debug()
 						?.Log("Subscribed {DiagnosticListenerType} to `{DiagnosticListenerName}' events source",
-							listener.GetType().FullName, value.Name);
+							_listener.GetType().FullName, value.Name);
 					subscribedAny = true;
+				}
+			}
+			else
+			{
+				foreach (var listener in _listeners)
+				{
+					if (value.Name == listener.Name)
+					{
+						_sourceSubscription = value.Subscribe(listener);
+						_logger.Debug()
+							?.Log("Subscribed {DiagnosticListenerType} to `{DiagnosticListenerName}' events source",
+								listener.GetType().FullName, value.Name);
+						subscribedAny = true;
+					}
 				}
 			}
 
 			if (!subscribedAny)
 			{
+				var listenerTypes = _listener != null
+					? _listener.GetType().FullName
+					: string.Join(", ", _listeners.Select(listener => listener.GetType().FullName));
+
 				_logger.Trace()
 					?.Log(
 						"There are no listeners in the current batch ({DiagnosticListeners}) that would like to subscribe to `{DiagnosticListenerName}' events source",
-						string.Join(", ", _listeners.Select(listener => listener.GetType().FullName)),
+						listenerTypes,
 						value.Name);
 			}
 		}

@@ -21,7 +21,7 @@ namespace Elastic.Apm.GrpcClient
 				return retVal;
 
 			Listener = new GrpcClientDiagnosticListener(agent as ApmAgent);
-			var subscriber = new DiagnosticInitializer(agent.Logger, new[] { Listener });
+			var subscriber = new DiagnosticInitializer(agent.Logger, Listener);
 			retVal.Add(subscriber);
 
 			retVal.Add(DiagnosticListener
