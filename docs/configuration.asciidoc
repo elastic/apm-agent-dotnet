@@ -88,7 +88,7 @@ Here is a sample `appsettings.json` configuration file for a typical ASP.NET Cor
 <1> With ASP.NET Core, you must set `LogLevel` for the internal APM logger in the standard `Logging` section with the `Elastic.Apm` category name.
 <2> The configurations below `ElasticApm` are fetched by the agent if the corresponding `IConfiguration` is passed to the agent.
 
-In certain scenarios--you won't activate the agent with the `UseElasticApm()` method.
+In certain scenarios--like when you're not using ASP.NET Core--you won't activate the agent with the `UseElasticApm()` method.
 In this case, set the agent log level with <<config-log-level,`ElasticApm:LogLevel`>>, as shown in the following `appsettings.json` file:
 
 [source,js]
