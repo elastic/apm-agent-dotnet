@@ -20,13 +20,14 @@ namespace Elastic.Apm.SqlClient.Tests
 	/// same database calls causing db spans being captured twice.
 	/// This class creates such a setup, and tests if double-capturing of the same db call does not happen.
 	/// </summary>
-	public class EfCoreWithMsSqlTests : IDisposable, IClassFixture<DatabaseFixture>
+	[Collection("SqlServer")]
+	public class EfCoreWithMsSqlTests : IDisposable
 	{
 		private readonly ApmAgent _apmAgent;
 		private readonly string _connectionString;
 		private readonly MockPayloadSender _payloadSender;
 
-		public EfCoreWithMsSqlTests(ITestOutputHelper testOutputHelper, DatabaseFixture sqlClientListenerFixture)
+		public EfCoreWithMsSqlTests(ITestOutputHelper testOutputHelper, SqlServerFixture sqlClientListenerFixture)
 		{
 			_connectionString = sqlClientListenerFixture.ConnectionString;
 

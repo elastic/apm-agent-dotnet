@@ -16,7 +16,8 @@ using Xunit.Abstractions;
 
 namespace Elastic.Apm.SqlClient.Tests
 {
-	public class SqlClientListenerTests : IDisposable, IClassFixture<DatabaseFixture>
+	[Collection("SqlServer")]
+	public class SqlClientListenerTests : IDisposable
 	{
 		private readonly ApmAgent _apmAgent;
 
@@ -26,7 +27,7 @@ namespace Elastic.Apm.SqlClient.Tests
 		private readonly MockPayloadSender _payloadSender;
 		private readonly ITestOutputHelper _testOutputHelper;
 
-		public SqlClientListenerTests(ITestOutputHelper testOutputHelper, DatabaseFixture sqlClientListenerFixture)
+		public SqlClientListenerTests(ITestOutputHelper testOutputHelper, SqlServerFixture sqlClientListenerFixture)
 		{
 			_connectionString = sqlClientListenerFixture.ConnectionString;
 
