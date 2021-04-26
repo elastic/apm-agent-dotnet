@@ -1,6 +1,6 @@
 <Project>
-  <!-- If a project contains a LICENSE_LOCAL this target concatenates the main LICENSE file with the project's LICENSE_LOCAL
-   and outputs the concatenated string int a LICENSE file which will be included in the published NuGet package -->
+  <!-- If a project contains a LICENSE_LOCAL file, this target concatenates the main LICENSE file with the project's LICENSE_LOCAL
+   and outputs the concatenated string into a LICENSE file which will be included in the published NuGet package -->
   <Target Name="ConcatenateLicenseFiles" Condition="Exists('LICENSE_LOCAL')">
     <!-- List all the files to concatenate. -->
     <ItemGroup>
