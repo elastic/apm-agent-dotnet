@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Elastic.Apm.MongoDb</RootNamespace>
     <AssemblyName>Elastic.Apm.MongoDb</AssemblyName>
     <PackageId>Elastic.Apm.MongoDb</PackageId>
@@ -10,6 +10,20 @@
     </Description>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <None Include="LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>.</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="NOTICE">
+      <Pack>True</Pack>
+      <PackagePath>.</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MongoDB.Driver.Core" Version="2.4.4" />
