@@ -523,7 +523,7 @@ def dotnet(Closure body){
   def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-sdk-linux:latest'
   sh label: 'Docker build', script: "docker build --tag ${dockerTagName} .ci/docker/sdk-linux"
   def homePath = "${env.WORKSPACE}/${env.BASE_DIR}"
-  docker.image("${dockerTagName}").inside("-e HOME='${homePath}' -v /var/run/docker.sock:/var/run/docker.sock"){
+  docker.image("${dockerTagName}").inside("-e BUILD_ID=${BUILD_ID} -e HOME='${homePath}' -v /var/run/docker.sock:/var/run/docker.sock"){
     withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
       body()
     }
