@@ -381,7 +381,9 @@ namespace Elastic.Apm.Tests
 
 			payloadSender.FirstError.Should().NotBeNull();
 			payloadSender.FirstError.Exception.StackTrace.Should().NotBeNullOrEmpty();
-			payloadSender.FirstError.Exception.StackTrace.Should().HaveCount(ConfigConsts.DefaultValues.StackTraceLimit);
+
+			payloadSender.FirstError.Exception.StackTrace.Should().HaveCount(3);
+			payloadSender.FirstError.Exception.StackTrace[0].Function.Should().Be("RecursiveCall100XAndThrow x 100");
 		}
 
 		[MethodImpl(MethodImplOptions.NoInlining)]

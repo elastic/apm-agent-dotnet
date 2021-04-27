@@ -60,6 +60,9 @@ namespace Elastic.Apm.Helpers
 						?.DeclaringType?.FullName; //see: https://github.com/elastic/apm-agent-dotnet/pull/240#discussion_r289619196
 
 					var functionName = GetRealMethodName(frame?.GetMethod());
+					if(frame is EnhancedStackFrame enhancedStackFrame && enhancedStackFrame.IsRecursive)
+						functionName += $" x {enhancedStackFrame.MethodInfo.RecurseCount}";
+
 					var fileName = frame?.GetFileName();
 
 					logger.Trace()?.Log("{MethodName}, {lineNo}", functionName, frame?.GetFileLineNumber());
