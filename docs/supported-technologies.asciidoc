@@ -97,7 +97,7 @@ We support automatic instrumentation for the following data access technologies.
 | A DB span is automatically created for each profiled redis command performed by StackExchange.Redis 
 | 1.8
 
-| MondoDb (MondoDB.Driver)
+| MongoDb (MongoDB.Driver)
 | 2.4.4+
 | A DB span is automatically created for each profiled call to MondoDB.
 | 1.9.0

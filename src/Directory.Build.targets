@@ -2,20 +2,17 @@
   <!-- If a project contains a LICENSE_LOCAL file, this target concatenates the main LICENSE file with the project's LICENSE_LOCAL
    and outputs the concatenated string into a LICENSE file which will be included in the published NuGet package -->
   <Target Name="ConcatenateLicenseFiles" Condition="Exists('LICENSE_LOCAL')">
-    <!-- List all the files to concatenate. -->
-    <ItemGroup>
-      <ConcatFiles Include="
-        $(SolutionRoot)/LICENSE; 
-        LICENSE_LOCAL" />
-    </ItemGroup>
-
     <!-- Read the contents of the files (preserving tabs/spaces). -->
     <ItemGroup>
-      <FileContents Include="$([System.IO.File]::ReadAllText(%(ConcatFiles.Identity)))" />
+      <FileContents Include="$([System.IO.File]::ReadAllText($(SolutionRoot)/LICENSE))" />
+      <!--  Add a new line between the files-->
+      <FileContents Include="%0d" />
+      
+      <FileContents Include="$([System.IO.File]::ReadAllText(LICENSE_LOCAL))" />
     </ItemGroup>
 
     <!-- Write the result to the LICENSE file. -->
-    <WriteLinesToFile File="LICENSE" Lines="@(FileContents)" Overwrite="true" />
+    <WriteLinesToFile File="LICENSE" Lines="@(FileContents)" Overwrite="true" WriteOnlyWhenDifferent="true" />
   </Target>
 
   <!-- Concatenate License files on AfterBuild. -->
