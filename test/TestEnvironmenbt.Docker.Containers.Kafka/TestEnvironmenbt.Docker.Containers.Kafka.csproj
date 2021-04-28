@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <AssemblyName>TestEnvironment.Docker.Containers.Kafka</AssemblyName>
+        <RootNamespace>TestEnvironment.Docker.Containers.Kafka</RootNamespace>
+        <Version>1.0.2</Version>
+        <PackageId>TestEnvironment.Docker.Containers.Kafka</PackageId>
+        <Authors>Oğuzhan Eren</Authors>
+        <Description>Add Kafka container specific functionality.</Description>
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+        <PackageTags>docker tests kafka container</PackageTags>
+        <PackageReleaseNotes>Update to the latest nugets.</PackageReleaseNotes>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Confluent.Kafka" Version="1.5.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\TestEnvironment.Docker\TestEnvironment.Docker.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -18,8 +18,6 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
     <PackageReference Include="StrongNamer" Version="0.2.5" />
     <PackageReference Include="System.Data.SqlClient" Version="4.7.0" />
-    <PackageReference Include="TestEnvironment.Docker" Version="1.2.2" />
-    <PackageReference Include="TestEnvironment.Docker.Containers.Mssql" Version="1.0.3" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
       <PrivateAssets>all</PrivateAssets>
@@ -33,6 +31,8 @@
     <ProjectReference Include="..\..\src\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\..\src\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Tests.Utilities\Elastic.Apm.Tests.Utilities.csproj" />
+    <ProjectReference Include="..\TestEnvironment.Docker\TestEnvironment.Docker.csproj" />
+    <ProjectReference Include="..\TestEnvironment.Docker.Containers.Mssql\TestEnvironment.Docker.Containers.Mssql.csproj" />
   </ItemGroup>
 
   <Import Project="..\Elastic.Apm.DatabaseTests.Common\Elastic.Apm.DatabaseTests.Common.projitems" Label="Shared" />

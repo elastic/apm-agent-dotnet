@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>TestEnvironment.Docker.Containers.Mongo</AssemblyName>
+    <RootNamespace>TestEnvironment.Docker.Containers.Mongo</RootNamespace>
+    <Version>1.2.2</Version>
+    <PackageId>TestEnvironment.Docker.Containers.Mongo</PackageId>
+    <Authors>Uladzimir Lashkevich, Aliaksei Harshkalep, vhatsura</Authors>
+    <Description>Add MongoDB container specific functionality.</Description>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageTags>docker tests mongo mongodb container</PackageTags>
+    <PackageReleaseNotes>Add ability to start mongo single replica set.</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MongoDB.Driver" Version="2.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TestEnvironment.Docker\TestEnvironment.Docker.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,4 +1,4 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30309.148
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -140,6 +140,24 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.Storage", "src\Elastic.Apm.Azure.Storage\Elastic.Apm.Azure.Storage.csproj", "{E9C84C9D-7BEB-49E2-A955-04AD999C4266}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elastic.Apm.Azure.Storage.Tests", "test\Elastic.Apm.Azure.Storage.Tests\Elastic.Apm.Azure.Storage.Tests.csproj", "{37BD6194-A47B-4D17-BB9A-642E8909DED9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestEnvironmenbt.Docker.Containers.Kafka", "test\TestEnvironmenbt.Docker.Containers.Kafka\TestEnvironmenbt.Docker.Containers.Kafka.csproj", "{A9936CFB-4263-426B-B0CE-F131AF9C49FB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestEnvironment.Docker", "test\TestEnvironment.Docker\TestEnvironment.Docker.csproj", "{B194233D-C36D-440E-9267-B03835FDBBFC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestEnvironment.Docker.Containers.Elasticsearch", "test\TestEnvironment.Docker.Containers.Elasticsearch\TestEnvironment.Docker.Containers.Elasticsearch.csproj", "{D0AF7407-4979-4727-A8D9-A9584BFCD69F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestEnvironment.Docker.Containers.Ftp", "test\TestEnvironment.Docker.Containers.Ftp\TestEnvironment.Docker.Containers.Ftp.csproj", "{C055C4A5-CD9A-44E2-94DA-A97C251FFC83}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestEnvironment.Docker.Containers.Mail", "test\TestEnvironment.Docker.Containers.Mail\TestEnvironment.Docker.Containers.Mail.csproj", "{043D5CBF-43DA-46FA-BB2A-BF396D25224E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestEnvironment.Docker.Containers.MariaDB", "test\TestEnvironment.Docker.Containers.MariaDB\TestEnvironment.Docker.Containers.MariaDB.csproj", "{0126FCD9-0D38-46ED-9073-1AF583AFC900}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestEnvironment.Docker.Containers.Mongo", "test\TestEnvironment.Docker.Containers.Mongo\TestEnvironment.Docker.Containers.Mongo.csproj", "{F54EC83A-3097-461C-850E-F53BFAD21DDF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestEnvironment.Docker.Containers.Mssql", "test\TestEnvironment.Docker.Containers.Mssql\TestEnvironment.Docker.Containers.Mssql.csproj", "{AD9EEA7A-A55C-4217-92B3-F055128D5B63}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestEnvironment.Docker.Containers.Postgres", "test\TestEnvironment.Docker.Containers.Postgres\TestEnvironment.Docker.Containers.Postgres.csproj", "{0285BEDF-440D-4FCD-83A4-A1CC9DE5A3CF}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -354,6 +372,42 @@ Global
 		{37BD6194-A47B-4D17-BB9A-642E8909DED9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37BD6194-A47B-4D17-BB9A-642E8909DED9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37BD6194-A47B-4D17-BB9A-642E8909DED9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9936CFB-4263-426B-B0CE-F131AF9C49FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9936CFB-4263-426B-B0CE-F131AF9C49FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9936CFB-4263-426B-B0CE-F131AF9C49FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9936CFB-4263-426B-B0CE-F131AF9C49FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B194233D-C36D-440E-9267-B03835FDBBFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B194233D-C36D-440E-9267-B03835FDBBFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B194233D-C36D-440E-9267-B03835FDBBFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B194233D-C36D-440E-9267-B03835FDBBFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0AF7407-4979-4727-A8D9-A9584BFCD69F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0AF7407-4979-4727-A8D9-A9584BFCD69F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0AF7407-4979-4727-A8D9-A9584BFCD69F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0AF7407-4979-4727-A8D9-A9584BFCD69F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C055C4A5-CD9A-44E2-94DA-A97C251FFC83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C055C4A5-CD9A-44E2-94DA-A97C251FFC83}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C055C4A5-CD9A-44E2-94DA-A97C251FFC83}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C055C4A5-CD9A-44E2-94DA-A97C251FFC83}.Release|Any CPU.Build.0 = Release|Any CPU
+		{043D5CBF-43DA-46FA-BB2A-BF396D25224E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{043D5CBF-43DA-46FA-BB2A-BF396D25224E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{043D5CBF-43DA-46FA-BB2A-BF396D25224E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{043D5CBF-43DA-46FA-BB2A-BF396D25224E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0126FCD9-0D38-46ED-9073-1AF583AFC900}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0126FCD9-0D38-46ED-9073-1AF583AFC900}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0126FCD9-0D38-46ED-9073-1AF583AFC900}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0126FCD9-0D38-46ED-9073-1AF583AFC900}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F54EC83A-3097-461C-850E-F53BFAD21DDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F54EC83A-3097-461C-850E-F53BFAD21DDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F54EC83A-3097-461C-850E-F53BFAD21DDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F54EC83A-3097-461C-850E-F53BFAD21DDF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD9EEA7A-A55C-4217-92B3-F055128D5B63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD9EEA7A-A55C-4217-92B3-F055128D5B63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD9EEA7A-A55C-4217-92B3-F055128D5B63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD9EEA7A-A55C-4217-92B3-F055128D5B63}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0285BEDF-440D-4FCD-83A4-A1CC9DE5A3CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0285BEDF-440D-4FCD-83A4-A1CC9DE5A3CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0285BEDF-440D-4FCD-83A4-A1CC9DE5A3CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0285BEDF-440D-4FCD-83A4-A1CC9DE5A3CF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -410,6 +464,15 @@ Global
 		{27563B4E-ECB1-4F1B-B9F1-22C2C165B270} = {3C791D9C-6F19-4F46-B367-2EC0F818762D}
 		{E9C84C9D-7BEB-49E2-A955-04AD999C4266} = {3734A52F-2222-454B-BF58-1BA5C1F29D77}
 		{37BD6194-A47B-4D17-BB9A-642E8909DED9} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{A9936CFB-4263-426B-B0CE-F131AF9C49FB} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{B194233D-C36D-440E-9267-B03835FDBBFC} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{D0AF7407-4979-4727-A8D9-A9584BFCD69F} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{C055C4A5-CD9A-44E2-94DA-A97C251FFC83} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{043D5CBF-43DA-46FA-BB2A-BF396D25224E} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{0126FCD9-0D38-46ED-9073-1AF583AFC900} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{F54EC83A-3097-461C-850E-F53BFAD21DDF} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{AD9EEA7A-A55C-4217-92B3-F055128D5B63} = {267A241E-571F-458F-B04C-B6C4DE79E735}
+		{0285BEDF-440D-4FCD-83A4-A1CC9DE5A3CF} = {267A241E-571F-458F-B04C-B6C4DE79E735}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69E02FD9-C9DE-412C-AB6B-5B8BECC6BFA5}

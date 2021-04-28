@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>TestEnvironment.Docker</AssemblyName>
+    <RootNamespace>TestEnvironment.Docker</RootNamespace>
+    <Version>1.3.9</Version>
+    <PackageId>TestEnvironment.Docker</PackageId>
+    <Authors>Aliaksei Harshkalep</Authors>
+    <Description>Testing framework for setting up real dependencies as Docker containers.</Description>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageTags>docker tests</PackageTags>
+    <PackageReleaseNotes>Add IAsyncDisposable implementation.</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Docker.DotNet" Version="3.125.2" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.1.0" />
+    <PackageReference Include="SharpCompress" Version="0.24.0" />
+  </ItemGroup>
+
+</Project>

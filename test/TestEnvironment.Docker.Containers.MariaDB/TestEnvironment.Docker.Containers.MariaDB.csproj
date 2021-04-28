@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>TestEnvironment.Docker.Containers.MariaDB</AssemblyName>
+    <RootNamespace>TestEnvironment.Docker.Containers.MariaDB</RootNamespace>
+    <Version>1.1.0</Version>
+    <PackageId>TestEnvironment.Docker.Containers.MariaDB</PackageId>
+    <Authors>Aliaksei Harshkalep</Authors>
+    <Description>Add MariaDB container specific functionality.</Description>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageTags>docker tests mariadb mysql container</PackageTags>
+    <PackageReleaseNotes>Initial release.</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MySqlConnector" Version="1.3.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TestEnvironment.Docker\TestEnvironment.Docker.csproj" />
+  </ItemGroup>
+
+</Project>

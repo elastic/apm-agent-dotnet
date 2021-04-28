@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>TestEnvironment.Docker.Containers.Elasticsearch</AssemblyName>
+    <RootNamespace>TestEnvironment.Docker.Containers.Elasticsearch</RootNamespace>
+    <Version>1.1.10</Version>
+    <PackageId>TestEnvironment.Docker.Containers.Elasticsearch</PackageId>
+    <Authors>Aliaksei Harshkalep</Authors>
+    <Description>Add Elasticsearch container specific functionality.</Description>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageTags>docker tests elasticsearch container</PackageTags>
+    <PackageReleaseNotes>Update to the latest version of NEST client. Please consider using lower versions of this package if you are on NEST 6.x.x.</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NEST" Version="7.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TestEnvironment.Docker\TestEnvironment.Docker.csproj" />
+  </ItemGroup>
+
+</Project>

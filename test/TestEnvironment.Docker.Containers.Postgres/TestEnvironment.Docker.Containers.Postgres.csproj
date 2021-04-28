@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>TestEnvironment.Docker.Containers.Postgres</AssemblyName>
+    <RootNamespace>TestEnvironment.Docker.Containers.Postgres</RootNamespace>
+    <Version>1.0.9</Version>
+    <PackageId>TestEnvironment.Docker.Containers.Postgres</PackageId>
+    <Authors>Kiryl Kiryanchykau</Authors>
+    <Description>Add Postgres container specific functionality.</Description>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageTags>docker tests postgres container</PackageTags>
+    <PackageReleaseNotes>Update to the latest nugets.</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" Version="4.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TestEnvironment.Docker\TestEnvironment.Docker.csproj" />
+  </ItemGroup>
+
+</Project>
