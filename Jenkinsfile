@@ -520,10 +520,23 @@ def cleanDir(path){
 }
 
 def dotnet(Closure body){
-  def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-sdk-linux:latest'
-  sh label: 'Docker build', script: "docker build --tag ${dockerTagName} .ci/docker/sdk-linux"
-  def homePath = "${env.WORKSPACE}/${env.BASE_DIR}"
-  docker.image("${dockerTagName}").inside("-e HOME='${homePath}' -v /var/run/docker.sock:/var/run/docker.sock"){
+  // def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-sdk-linux:latest'
+  // sh label: 'Docker build', script: "docker build --tag ${dockerTagName} .ci/docker/sdk-linux"
+  // def homePath = "${env.WORKSPACE}/${env.BASE_DIR}"
+  // docker.image("${dockerTagName}").inside("-e HOME='${homePath}' -v /var/run/docker.sock:/var/run/docker.sock"){
+  //   withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
+  //     body()
+  //   }
+  // }
+
+  sh(label: 'Install dotnet SDK', sh: '''
+    curl -sSf -L -o dotnet_sdk.tgz https://download.visualstudio.microsoft.com/download/pr/5f0f07ab-cd9a-4498-a9f7-67d90d582180/2a3db6698751e6cbb93ec244cb81cc5f/dotnet-sdk-5.0.202-linux-x64.tar.gz
+    mkdir -p $HOME/dotnet && tar zxf dotnet-sdk-5.0.202-linux-x64.tar.gz -C $HOME/dotnet
+  ''')
+  setEnvVar("DOTNET_ROOT","${HOME}/dotnet")
+  withEnv([
+    "PATH+DOTNET=${HOME}/dotnet"
+    ]){
     withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
       body()
     }
