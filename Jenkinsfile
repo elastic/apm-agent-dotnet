@@ -538,7 +538,8 @@ def dotnet(Closure body){
   """)
   withEnv([
     "PATH+DOTNET=${homePath}/dotnet",
-    "DOTNET_ROOT=${homePath}/dotnet"
+    "DOTNET_ROOT=${homePath}/dotnet",
+    "HOME=${env.WORKSPACE}"
     ]){
     withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
       body()
