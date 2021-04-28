@@ -529,13 +529,16 @@ def dotnet(Closure body){
   //   }
   // }
 
-  sh(label: 'Install dotnet SDK', script: '''
+  def homePath = "${env.WORKSPACE}/${env.BASE_DIR}"
+  sh(label: 'Install dotnet SDK', script: """#!/bin/bash
+    set -eux
     curl -sSf -L -o dotnet_sdk.tgz https://download.visualstudio.microsoft.com/download/pr/5f0f07ab-cd9a-4498-a9f7-67d90d582180/2a3db6698751e6cbb93ec244cb81cc5f/dotnet-sdk-5.0.202-linux-x64.tar.gz
-    mkdir -p $HOME/dotnet && tar zxf dotnet_sdk.tgz -C $HOME/dotnet
-  ''')
-  setEnvVar("DOTNET_ROOT","${HOME}/dotnet")
+    mkdir -p ${homePath}/dotnet
+    tar zxf dotnet_sdk.tgz -C ${homePath}/dotnet
+  """)
   withEnv([
-    "PATH+DOTNET=${HOME}/dotnet"
+    "PATH+DOTNET=${homePath}/dotnet",
+    "DOTNET_ROOT=${homePath}/dotnet"
     ]){
     withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
       body()
