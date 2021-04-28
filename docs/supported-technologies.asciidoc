@@ -99,7 +99,7 @@ We support automatic instrumentation for the following data access technologies.
 
 | MongoDb (MongoDB.Driver)
 | 2.4.4+
-| A DB span is automatically created for each profiled call to MondoDB.
+| A DB span is automatically created for each profiled call to MongoDB.
 | 1.9.0
 |===
 
