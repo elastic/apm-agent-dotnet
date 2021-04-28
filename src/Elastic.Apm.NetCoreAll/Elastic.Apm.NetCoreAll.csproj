@@ -12,6 +12,7 @@
     <ProjectReference Include="..\Elastic.Apm.Elasticsearch\Elastic.Apm.Elasticsearch.csproj" />
     <ProjectReference Include="..\Elastic.Apm.EntityFrameworkCore\Elastic.Apm.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\Elastic.Apm.GrpcClient\Elastic.Apm.GrpcClient.csproj" />
+    <ProjectReference Include="..\Elastic.Apm.MongoDb\Elastic.Apm.MongoDb.csproj" />
     <ProjectReference Include="..\Elastic.Apm.SqlClient\Elastic.Apm.SqlClient.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Azure.ServiceBus\Elastic.Apm.Azure.ServiceBus.csproj" />
     <ProjectReference Include="..\Elastic.Apm.Azure.Storage\Elastic.Apm.Azure.Storage.csproj" />
