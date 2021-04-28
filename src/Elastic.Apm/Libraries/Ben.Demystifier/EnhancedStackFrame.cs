@@ -1,26 +1,17 @@
 ﻿// Copyright (c) Ben A Adams. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System.Diagnostics;
 using System.Reflection;
 
 #nullable enable
-namespace System.Diagnostics
+namespace Elastic.Apm.Ben.Demystifier.System.Diagnostics
 {
-	public class EnhancedStackFrame : StackFrame
+	internal class EnhancedStackFrame : StackFrame
 	{
+		private readonly int _colNumber;
 		private readonly string? _fileName;
 		private readonly int _lineNumber;
-		private readonly int _colNumber;
-
-		public StackFrame StackFrame { get; }
-
-		public bool IsRecursive
-		{
-			get => MethodInfo.RecurseCount > 0;
-			internal set => MethodInfo.RecurseCount++;
-		}
-
-		public ResolvedMethod MethodInfo { get; }
 
 		internal EnhancedStackFrame(StackFrame stackFrame, ResolvedMethod methodInfo, string? fileName, int lineNumber, int colNumber)
 			: base(fileName, lineNumber, colNumber)
@@ -32,6 +23,16 @@ namespace System.Diagnostics
 			_lineNumber = lineNumber;
 			_colNumber = colNumber;
 		}
+
+		public bool IsRecursive
+		{
+			get => MethodInfo.RecurseCount > 0;
+			internal set => MethodInfo.RecurseCount++;
+		}
+
+		public ResolvedMethod MethodInfo { get; }
+
+		public StackFrame StackFrame { get; }
 
 		internal bool IsEquivalent(ResolvedMethod methodInfo, string? fileName, int lineNumber, int colNumber) =>
 			_lineNumber == lineNumber &&

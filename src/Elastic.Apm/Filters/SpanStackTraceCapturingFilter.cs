@@ -9,6 +9,7 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.ServerInfo;
+using Elastic.Apm.Ben.Demystifier.System.Diagnostics;
 
 namespace Elastic.Apm.Filters
 {

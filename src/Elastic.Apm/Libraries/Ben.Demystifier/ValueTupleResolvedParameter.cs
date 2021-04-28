@@ -1,29 +1,28 @@
 // Copyright (c) Ben A Adams. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
-using System.Diagnostics.Internal;
 using System.Text;
+using Elastic.Apm.Ben.Demystifier.Diagnostics.Internal;
 
 #nullable enable
-namespace System.Diagnostics
+namespace Elastic.Apm.Ben.Demystifier.System.Diagnostics
 {
 	internal class ValueTupleResolvedParameter : ResolvedParameter
 	{
-		public IList<string> TupleNames { get; }
-
 		public ValueTupleResolvedParameter(Type resolvedType, IList<string> tupleNames)
 			: base(resolvedType)
 			=> TupleNames = tupleNames;
+
+		public IList<string> TupleNames { get; }
 
 		protected override void AppendTypeName(StringBuilder sb)
 		{
 			if (ResolvedType is not null)
 			{
 				if (ResolvedType.IsValueTuple())
-				{
 					AppendValueTupleParameterName(sb, ResolvedType);
-				}
 				else
 				{
 					// Need to unwrap the first generic argument first.
@@ -41,23 +40,14 @@ namespace System.Diagnostics
 			var args = parameterType.GetGenericArguments();
 			for (var i = 0; i < args.Length; i++)
 			{
-				if (i > 0)
-				{
-					sb.Append(", ");
-				}
+				if (i > 0) sb.Append(", ");
 
-				sb.AppendTypeDisplayName(args[i], fullName: false, includeGenericParameterNames: true);
+				sb.AppendTypeDisplayName(args[i], false, true);
 
-				if (i >= TupleNames.Count)
-				{
-					continue;
-				}
+				if (i >= TupleNames.Count) continue;
 
 				var argName = TupleNames[i];
-				if (argName == null)
-				{
-					continue;
-				}
+				if (argName == null) continue;
 
 				sb.Append(" ");
 				sb.Append(argName);

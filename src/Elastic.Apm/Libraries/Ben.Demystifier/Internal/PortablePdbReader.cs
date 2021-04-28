@@ -1,7 +1,9 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Reflection.Metadata;
@@ -9,7 +11,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 
 #nullable enable
-namespace System.Diagnostics.Internal
+namespace Elastic.Apm.Ben.Demystifier.Diagnostics.Internal
 {
 	// Adapted from https://github.com/aspnet/Common/blob/dev/shared/Microsoft.Extensions.StackTrace.Sources/StackFrame/PortablePdbReader.cs
 	internal class PortablePdbReader : IDisposable
@@ -23,17 +25,11 @@ namespace System.Diagnostics.Internal
 			row = 0;
 			column = 0;
 
-			if (method.Module.Assembly.IsDynamic)
-			{
-				return;
-			}
+			if (method.Module.Assembly.IsDynamic) return;
 
 			var metadataReader = GetMetadataReader(method.Module.Assembly.Location);
 
-			if (metadataReader == null)
-			{
-				return;
-			}
+			if (metadataReader == null) return;
 
 			var methodToken = MetadataTokens.Handle(method.MetadataToken);
 
@@ -49,15 +45,9 @@ namespace System.Diagnostics.Internal
 
 				foreach (var point in sequencePoints)
 				{
-					if (point.Offset > IlOffset)
-					{
-						break;
-					}
+					if (point.Offset > IlOffset) break;
 
-					if (point.StartLine != SequencePoint.HiddenLine)
-					{
-						bestPointSoFar = point;
-					}
+					if (point.StartLine != SequencePoint.HiddenLine) bestPointSoFar = point;
 				}
 
 				if (bestPointSoFar.HasValue)
@@ -89,10 +79,7 @@ namespace System.Diagnostics.Internal
 
 		private static string? GetPdbPath(string assemblyPath)
 		{
-			if (string.IsNullOrEmpty(assemblyPath))
-			{
-				return null;
-			}
+			if (string.IsNullOrEmpty(assemblyPath)) return null;
 
 			if (File.Exists(assemblyPath))
 			{
@@ -126,10 +113,7 @@ namespace System.Diagnostics.Internal
 
 		public void Dispose()
 		{
-			foreach (var entry in _cache)
-			{
-				entry.Value?.Dispose();
-			}
+			foreach (var entry in _cache) entry.Value?.Dispose();
 
 			_cache.Clear();
 		}

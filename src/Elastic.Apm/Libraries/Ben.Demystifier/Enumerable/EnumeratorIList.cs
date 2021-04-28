@@ -1,10 +1,13 @@
 ﻿// Copyright (c) Ben A Adams. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System.Collections;
+using System.Collections.Generic;
+
 #nullable enable
-namespace System.Collections.Generic.Enumerable
+namespace Elastic.Apm.Ben.Demystifier.Collections.Generic.Enumerable
 {
-	public struct EnumeratorIList<T> : IEnumerator<T>
+	internal struct EnumeratorIList<T> : IEnumerator<T>
 	{
 		private readonly IList<T> _list;
 		private int _index;

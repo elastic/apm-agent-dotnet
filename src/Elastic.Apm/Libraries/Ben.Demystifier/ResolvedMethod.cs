@@ -1,41 +1,41 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System.Collections.Generic.Enumerable;
+using System;
 using System.Reflection;
 using System.Text;
+using Elastic.Apm.Ben.Demystifier.System.Collections.Generic.Enumerable;
 
 #nullable enable
-namespace System.Diagnostics
+namespace Elastic.Apm.Ben.Demystifier.System.Diagnostics
 {
-	public class ResolvedMethod
+	internal class ResolvedMethod
 	{
-		public MethodBase? MethodBase { get; set; }
-
 		public Type? DeclaringType { get; set; }
+
+		public string? GenericArguments { get; set; }
 
 		public bool IsAsync { get; set; }
 
 		public bool IsLambda { get; set; }
-
-		public ResolvedParameter? ReturnParameter { get; set; }
+		public MethodBase? MethodBase { get; set; }
 
 		public string? Name { get; set; }
 
 		public int? Ordinal { get; set; }
 
-		public string? GenericArguments { get; set; }
+		public EnumerableIList<ResolvedParameter> Parameters { get; set; }
+		public int RecurseCount { get; internal set; }
 
 		public Type[]? ResolvedGenericArguments { get; set; }
 
-		public MethodBase? SubMethodBase { get; set; }
+		public ResolvedParameter? ReturnParameter { get; set; }
 
 		public string? SubMethod { get; set; }
 
-		public EnumerableIList<ResolvedParameter> Parameters { get; set; }
+		public MethodBase? SubMethodBase { get; set; }
 
 		public EnumerableIList<ResolvedParameter> SubMethodParameters { get; set; }
-		public int RecurseCount { get; internal set; }
 
 		internal bool IsSequentialEquivalent(ResolvedMethod obj) =>
 			IsAsync == obj.IsAsync &&
@@ -53,10 +53,7 @@ namespace System.Diagnostics
 
 		public StringBuilder Append(StringBuilder builder, bool fullName)
 		{
-			if (IsAsync)
-			{
-				builder.Append("async ");
-			}
+			if (IsAsync) builder.Append("async ");
 
 			if (ReturnParameter != null)
 			{
@@ -86,9 +83,7 @@ namespace System.Diagnostics
 				}
 			}
 			else
-			{
 				builder.Append(Name);
-			}
 			builder.Append(GenericArguments);
 
 			builder.Append("(");
@@ -98,20 +93,14 @@ namespace System.Diagnostics
 				foreach (var param in Parameters)
 				{
 					if (isFirst)
-					{
 						isFirst = false;
-					}
 					else
-					{
 						builder.Append(", ");
-					}
 					param.Append(builder);
 				}
 			}
 			else
-			{
 				builder.Append("?");
-			}
 			builder.Append(")");
 
 			if (!string.IsNullOrEmpty(SubMethod) || IsLambda)
@@ -125,20 +114,14 @@ namespace System.Diagnostics
 					foreach (var param in SubMethodParameters)
 					{
 						if (isFirst)
-						{
 							isFirst = false;
-						}
 						else
-						{
 							builder.Append(", ");
-						}
 						param.Append(builder);
 					}
 				}
 				else
-				{
 					builder.Append("?");
-				}
 				builder.Append(")");
 				if (IsLambda)
 				{
@@ -153,17 +136,14 @@ namespace System.Diagnostics
 				}
 			}
 
-			if (RecurseCount > 0)
-			{
-				builder.Append($" x {RecurseCount + 1:0}");
-			}
+			if (RecurseCount > 0) builder.Append($" x {RecurseCount + 1:0}");
 
 			return builder;
 		}
 
 		private StringBuilder AppendDeclaringTypeName(StringBuilder builder, bool fullName = true) =>
 			DeclaringType != null
-				? builder.AppendTypeDisplayName(DeclaringType, fullName: fullName, includeGenericParameterNames: true)
+				? builder.AppendTypeDisplayName(DeclaringType, fullName, true)
 				: builder;
 	}
 }

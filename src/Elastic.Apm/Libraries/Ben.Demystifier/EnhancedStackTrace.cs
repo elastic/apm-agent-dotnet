@@ -1,19 +1,18 @@
 // Copyright (c) Ben A Adams. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Generic.Enumerable;
-using System.IO;
+using System.Diagnostics;
 using System.Text;
+using Elastic.Apm.Ben.Demystifier.System.Collections.Generic.Enumerable;
 
 #nullable enable
-namespace System.Diagnostics
+namespace Elastic.Apm.Ben.Demystifier.System.Diagnostics
 {
-	public partial class EnhancedStackTrace : StackTrace, IEnumerable<EnhancedStackFrame>
+	internal partial class EnhancedStackTrace : StackTrace, IEnumerable<EnhancedStackFrame>
 	{
-		public static EnhancedStackTrace Current() => new EnhancedStackTrace(new StackTrace(1 /* skip this one frame */, true));
-
 		private readonly List<EnhancedStackFrame> _frames;
 
 		// Summary:
@@ -29,10 +28,7 @@ namespace System.Diagnostics
 		//     The parameter e is null.
 		public EnhancedStackTrace(Exception e)
 		{
-			if (e == null)
-			{
-				throw new ArgumentNullException(nameof(e));
-			}
+			if (e == null) throw new ArgumentNullException(nameof(e));
 
 			_frames = GetFrames(e);
 		}
@@ -40,10 +36,7 @@ namespace System.Diagnostics
 
 		public EnhancedStackTrace(StackTrace stackTrace)
 		{
-			if (stackTrace == null)
-			{
-				throw new ArgumentNullException(nameof(stackTrace));
-			}
+			if (stackTrace == null) throw new ArgumentNullException(nameof(stackTrace));
 
 			_frames = GetFrames(stackTrace);
 		}
@@ -53,6 +46,8 @@ namespace System.Diagnostics
 		/// </summary>
 		/// <returns>The number of frames in the stack trace.</returns>
 		public override int FrameCount => _frames.Count;
+
+		public static EnhancedStackTrace Current() => new EnhancedStackTrace(new StackTrace(1 /* skip this one frame */, true));
 
 		/// <summary>
 		/// Gets the specified stack frame.
@@ -93,10 +88,7 @@ namespace System.Diagnostics
 
 			for (var i = 0; i < count; i++)
 			{
-				if (i > 0)
-				{
-					sb.Append(Environment.NewLine);
-				}
+				if (i > 0) sb.Append(Environment.NewLine);
 
 				var frame = frames[i];
 
@@ -127,15 +119,12 @@ namespace System.Diagnostics
 		IEnumerator IEnumerable.GetEnumerator() => _frames.GetEnumerator();
 
 		/// <summary>
-		/// Tries to convert a given <paramref name="filePath"/> to a full path.
+		/// Tries to convert a given <paramref name="filePath" /> to a full path.
 		/// Returns original value if the conversion isn't possible or a given path is relative.
 		/// </summary>
 		public static string TryGetFullPath(string filePath)
 		{
-			if (Uri.TryCreate(filePath, UriKind.Absolute, out var uri) && uri.IsFile)
-			{
-				return Uri.UnescapeDataString(uri.AbsolutePath);
-			}
+			if (Uri.TryCreate(filePath, UriKind.Absolute, out var uri) && uri.IsFile) return Uri.UnescapeDataString(uri.AbsolutePath);
 
 			return filePath;
 		}

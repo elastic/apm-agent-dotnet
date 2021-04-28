@@ -3,10 +3,10 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Generic.Enumerable;
-using System.Diagnostics.Internal;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -14,20 +14,19 @@ using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Elastic.Apm.Ben.Demystifier.Diagnostics.Internal;
+using Elastic.Apm.Ben.Demystifier.System.Collections.Generic.Enumerable;
 
 #nullable enable
-namespace System.Diagnostics
+namespace Elastic.Apm.Ben.Demystifier.System.Diagnostics
 {
-	public partial class EnhancedStackTrace
+	internal partial class EnhancedStackTrace
 	{
 		private static readonly Type? StackTraceHiddenAttributeType = Type.GetType("System.Diagnostics.StackTraceHiddenAttribute", false);
 
 		private static List<EnhancedStackFrame> GetFrames(Exception exception)
 		{
-			if (exception == null)
-			{
-				return new List<EnhancedStackFrame>();
-			}
+			if (exception == null) return new List<EnhancedStackFrame>();
 
 			var needFileInfo = true;
 			var stackTrace = new StackTrace(exception, needFileInfo);
@@ -40,10 +39,7 @@ namespace System.Diagnostics
 			var frames = new List<EnhancedStackFrame>();
 			var stackFrames = stackTrace.GetFrames();
 
-			if (stackFrames == null)
-			{
-				return frames;
-			}
+			if (stackFrames == null) return frames;
 
 			EnhancedStackFrame? lastFrame = null;
 			PortablePdbReader? portablePdbReader = null;
@@ -52,17 +48,12 @@ namespace System.Diagnostics
 				for (var i = 0; i < stackFrames.Length; i++)
 				{
 					var frame = stackFrames[i];
-					if (frame is null)
-					{
-						continue;
-					}
+					if (frame is null) continue;
+
 					var method = frame.GetMethod();
 
 					// Always show last stackFrame
-					if (method != null && !ShowInStackTrace(method) && i < stackFrames.Length - 1)
-					{
-						continue;
-					}
+					if (method != null && !ShowInStackTrace(method) && i < stackFrames.Length - 1) continue;
 
 					var fileName = frame.GetFileName();
 					var row = frame.GetFileLineNumber();
@@ -84,9 +75,7 @@ namespace System.Diagnostics
 
 					var resolvedMethod = GetMethodDisplayString(method);
 					if (lastFrame?.IsEquivalent(resolvedMethod, fileName, row, column) ?? false)
-					{
 						lastFrame.IsRecursive = true;
-					}
 					else
 					{
 						var stackFrame = new EnhancedStackFrame(frame, resolvedMethod, fileName, row, column);
@@ -150,11 +139,9 @@ namespace System.Diagnostics
 					methodDisplayInfo.Ordinal = ordinal;
 				}
 				else
-				{
 					methodDisplayInfo.MethodBase = null;
-				}
 
-				methodDisplayInfo.IsLambda = (kind == GeneratedNameKind.LambdaMethod);
+				methodDisplayInfo.IsLambda = kind == GeneratedNameKind.LambdaMethod;
 
 				if (methodDisplayInfo.IsLambda && type != null)
 				{
@@ -187,35 +174,24 @@ namespace System.Diagnostics
 				}
 			}
 
-			if (subMethodName != methodName)
-			{
-				methodDisplayInfo.SubMethod = subMethodName;
-			}
+			if (subMethodName != methodName) methodDisplayInfo.SubMethod = subMethodName;
 
 			// ResolveStateMachineMethod may have set declaringType to null
-			if (type != null)
-			{
-				methodDisplayInfo.DeclaringType = type;
-			}
+			if (type != null) methodDisplayInfo.DeclaringType = type;
 
 			if (method is MethodInfo mi)
 			{
 				var returnParameter = mi.ReturnParameter;
 				if (returnParameter != null)
-				{
 					methodDisplayInfo.ReturnParameter = GetParameter(mi.ReturnParameter);
-				}
-				else if (mi.ReturnType != null)
-				{
-					methodDisplayInfo.ReturnParameter = new ResolvedParameter(mi.ReturnType) { Prefix = "", Name = "", };
-				}
+				else if (mi.ReturnType != null) methodDisplayInfo.ReturnParameter = new ResolvedParameter(mi.ReturnType) { Prefix = "", Name = "", };
 			}
 
 			if (method.IsGenericMethod)
 			{
 				var genericArguments = method.GetGenericArguments();
 				var genericArgumentsString = string.Join(", ", genericArguments
-					.Select(arg => TypeNameHelper.GetTypeDisplayName(arg, fullName: false, includeGenericParameterNames: true)));
+					.Select(arg => TypeNameHelper.GetTypeDisplayName(arg, false, true)));
 				methodDisplayInfo.GenericArguments += "<" + genericArgumentsString + ">";
 				methodDisplayInfo.ResolvedGenericArguments = genericArguments;
 			}
@@ -225,18 +201,13 @@ namespace System.Diagnostics
 			if (parameters.Length > 0)
 			{
 				var parameterList = new List<ResolvedParameter>(parameters.Length);
-				foreach (var parameter in parameters)
-				{
-					parameterList.Add(GetParameter(parameter));
-				}
+				foreach (var parameter in parameters) parameterList.Add(GetParameter(parameter));
 
 				methodDisplayInfo.Parameters = parameterList;
 			}
 
 			if (methodDisplayInfo.SubMethodBase == methodDisplayInfo.MethodBase)
-			{
 				methodDisplayInfo.SubMethodBase = null;
-			}
 			else if (methodDisplayInfo.SubMethodBase != null)
 			{
 				parameters = methodDisplayInfo.SubMethodBase.GetParameters();
@@ -263,10 +234,7 @@ namespace System.Diagnostics
 			if (method is MethodInfo minfo)
 			{
 				var returnType = minfo.ReturnType;
-				if (returnType.Namespace == "Microsoft.FSharp.Control" && returnType.Name == "FSharpAsync`1")
-				{
-					return true;
-				}
+				if (returnType.Namespace == "Microsoft.FSharp.Control" && returnType.Name == "FSharpAsync`1") return true;
 			}
 
 			return false;
@@ -284,10 +252,7 @@ namespace System.Diagnostics
 
 			var generatedName = methodName;
 
-			if (!TryParseGeneratedName(generatedName, out kind, out var openBracketOffset, out var closeBracketOffset))
-			{
-				return false;
-			}
+			if (!TryParseGeneratedName(generatedName, out kind, out var openBracketOffset, out var closeBracketOffset)) return false;
 
 			methodName = generatedName.Substring(openBracketOffset + 1, closeBracketOffset - openBracketOffset - 1);
 
@@ -303,10 +268,7 @@ namespace System.Diagnostics
 					if (localNameStart < generatedName.Length)
 					{
 						var localNameEnd = generatedName.IndexOf("|", localNameStart);
-						if (localNameEnd > 0)
-						{
-							subMethodName = generatedName.Substring(localNameStart, localNameEnd - localNameStart);
-						}
+						if (localNameEnd > 0) subMethodName = generatedName.Substring(localNameStart, localNameEnd - localNameStart);
 					}
 					break;
 				}
@@ -316,10 +278,7 @@ namespace System.Diagnostics
 			}
 
 			var dt = method.DeclaringType;
-			if (dt == null)
-			{
-				return false;
-			}
+			if (dt == null) return false;
 
 			var matchHint = GetMatchHint(kind, method);
 
@@ -340,10 +299,7 @@ namespace System.Diagnostics
 			for (var i = 0; i < MaxResolveDepth; i++)
 			{
 				dt = dt.DeclaringType;
-				if (dt == null)
-				{
-					return false;
-				}
+				if (dt == null) return false;
 
 				candidateMethods =
 					dt.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance
@@ -381,18 +337,13 @@ namespace System.Diagnostics
 			ordinal = null;
 			foreach (var candidateMethod in candidateMethods)
 			{
-				if (candidateMethod.GetMethodBody() is not { } methodBody)
-				{
-					continue;
-				}
+				if (candidateMethod.GetMethodBody() is not { } methodBody) continue;
+
 				if (kind == GeneratedNameKind.LambdaMethod)
 				{
 					foreach (var v in EnumerableIList.Create(methodBody.LocalVariables))
 					{
-						if (v.LocalType == type)
-						{
-							GetOrdinal(method, ref ordinal);
-						}
+						if (v.LocalType == type) GetOrdinal(method, ref ordinal);
 						method = candidateMethod;
 						type = method.DeclaringType;
 						return true;
@@ -402,10 +353,8 @@ namespace System.Diagnostics
 				try
 				{
 					var rawIl = methodBody.GetILAsByteArray();
-					if (rawIl is null)
-					{
-						continue;
-					}
+					if (rawIl is null) continue;
+
 					var reader = new ILReader(rawIl);
 					while (reader.Read(candidateMethod))
 					{
@@ -413,10 +362,7 @@ namespace System.Diagnostics
 						{
 							if (method == mb || matchHint != null && method.Name.Contains(matchHint))
 							{
-								if (kind == GeneratedNameKind.LambdaMethod)
-								{
-									GetOrdinal(method, ref ordinal);
-								}
+								if (kind == GeneratedNameKind.LambdaMethod) GetOrdinal(method, ref ordinal);
 
 								method = candidateMethod;
 								type = method.DeclaringType;
@@ -441,10 +387,7 @@ namespace System.Diagnostics
 			if (lamdaStart > 3)
 			{
 				var secondStart = method.Name.IndexOf("_", lamdaStart) + 1;
-				if (secondStart > 0)
-				{
-					lamdaStart = secondStart;
-				}
+				if (secondStart > 0) lamdaStart = secondStart;
 
 				if (!int.TryParse(method.Name.Substring(lamdaStart), out var foundOrdinal))
 				{
@@ -467,18 +410,12 @@ namespace System.Diagnostics
 						{
 							count++;
 
-							if (count > 1)
-							{
-								break;
-							}
+							if (count > 1) break;
 						}
 					}
 				}
 
-				if (count <= 1)
-				{
-					ordinal = null;
-				}
+				if (count <= 1) ordinal = null;
 			}
 		}
 
@@ -514,13 +451,8 @@ namespace System.Diagnostics
 		{
 			openBracketOffset = -1;
 			if (name.StartsWith("CS$<", StringComparison.Ordinal))
-			{
 				openBracketOffset = 3;
-			}
-			else if (name.StartsWith("<", StringComparison.Ordinal))
-			{
-				openBracketOffset = 0;
-			}
+			else if (name.StartsWith("<", StringComparison.Ordinal)) openBracketOffset = 0;
 
 			if (openBracketOffset >= 0)
 			{
@@ -528,7 +460,7 @@ namespace System.Diagnostics
 				if (closeBracketOffset >= 0 && closeBracketOffset + 1 < name.Length)
 				{
 					int c = name[closeBracketOffset + 1];
-					if ((c >= '1' && c <= '9') || (c >= 'a' && c <= 'z')) // Note '0' is not special.
+					if (c >= '1' && c <= '9' || c >= 'a' && c <= 'z') // Note '0' is not special.
 					{
 						kind = (GeneratedNameKind)c;
 						return true;
@@ -552,16 +484,11 @@ namespace System.Diagnostics
 			{
 				var c = str[i];
 				if (c == opening)
-				{
 					depth++;
-				}
 				else if (c == closing)
 				{
 					depth--;
-					if (depth == 0)
-					{
-						return i;
-					}
+					if (depth == 0) return i;
 				}
 			}
 
@@ -570,25 +497,13 @@ namespace System.Diagnostics
 
 		private static string GetPrefix(ParameterInfo parameter)
 		{
-			if (Attribute.IsDefined(parameter, typeof(ParamArrayAttribute), false))
-			{
-				return "params";
-			}
+			if (Attribute.IsDefined(parameter, typeof(ParamArrayAttribute), false)) return "params";
 
-			if (parameter.IsOut)
-			{
-				return "out";
-			}
+			if (parameter.IsOut) return "out";
 
-			if (parameter.IsIn)
-			{
-				return "in";
-			}
+			if (parameter.IsIn) return "in";
 
-			if (parameter.ParameterType.IsByRef)
-			{
-				return "ref";
-			}
+			if (parameter.ParameterType.IsByRef) return "ref";
 
 			return string.Empty;
 		}
@@ -600,16 +515,13 @@ namespace System.Diagnostics
 
 			if (parameterType.IsGenericType)
 			{
-				var customAttribs = parameter.GetCustomAttributes(inherit: false);
+				var customAttribs = parameter.GetCustomAttributes(false);
 
 				var tupleNameAttribute = customAttribs.OfType<Attribute>().FirstOrDefault(a => a.IsTupleElementNameAttribue());
 
 				var tupleNames = tupleNameAttribute?.GetTransformerNames();
 
-				if (tupleNames?.Count > 0)
-				{
-					return GetValueTupleParameter(tupleNames, prefix, parameter.Name, parameterType);
-				}
+				if (tupleNames?.Count > 0) return GetValueTupleParameter(tupleNames, prefix, parameter.Name, parameterType);
 			}
 
 			if (parameterType.IsByRef && parameterType.GetElementType() is { } elementType) parameterType = elementType;
@@ -630,23 +542,14 @@ namespace System.Diagnostics
 			var args = parameterType.GetGenericArguments();
 			for (var i = 0; i < args.Length; i++)
 			{
-				if (i > 0)
-				{
-					sb.Append(", ");
-				}
+				if (i > 0) sb.Append(", ");
 
-				sb.Append(TypeNameHelper.GetTypeDisplayName(args[i], fullName: false, includeGenericParameterNames: true));
+				sb.Append(TypeNameHelper.GetTypeDisplayName(args[i], false, true));
 
-				if (i >= tupleNames.Count)
-				{
-					continue;
-				}
+				if (i >= tupleNames.Count) continue;
 
 				var argName = tupleNames[i];
-				if (argName == null)
-				{
-					continue;
-				}
+				if (argName == null) continue;
 
 				sb.Append(" ");
 				sb.Append(argName);
@@ -674,48 +577,30 @@ namespace System.Diagnostics
 			{
 				// Don't show any methods marked with the StackTraceHiddenAttribute
 				// https://github.com/dotnet/coreclr/pull/14652
-				if (IsStackTraceHidden(method))
-				{
-					return false;
-				}
+				if (IsStackTraceHidden(method)) return false;
 			}
 
 			var type = method.DeclaringType;
 
-			if (type == null)
-			{
-				return true;
-			}
+			if (type == null) return true;
 
 			// Since .NET Core 2:
 			if (StackTraceHiddenAttributeType != null)
 			{
 				// Don't show any methods marked with the StackTraceHiddenAttribute
 				// https://github.com/dotnet/coreclr/pull/14652
-				if (IsStackTraceHidden(type))
-				{
-					return false;
-				}
+				if (IsStackTraceHidden(type)) return false;
 			}
 
-			if (type == typeof(Task<>) && method.Name == "InnerInvoke")
-			{
-				return false;
-			}
-			if (type == typeof(ValueTask<>) && method.Name == "get_Result")
-			{
-				return false;
-			}
-			if (method.Name.StartsWith("System.Threading.Tasks.Sources.IValueTaskSource") && method.Name.EndsWith(".GetResult"))
-			{
-				return false;
-			}
+			if (type == typeof(Task<>) && method.Name == "InnerInvoke") return false;
+
+			if (type == typeof(ValueTask<>) && method.Name == "get_Result") return false;
+
+			if (method.Name.StartsWith("System.Threading.Tasks.Sources.IValueTaskSource") && method.Name.EndsWith(".GetResult")) return false;
+
 			if (type == typeof(Task) || type.DeclaringType == typeof(Task))
 			{
-				if (method.Name.Contains(".cctor"))
-				{
-					return false;
-				}
+				if (method.Name.Contains(".cctor")) return false;
 
 				switch (method.Name)
 				{
@@ -731,10 +616,7 @@ namespace System.Diagnostics
 			}
 			if (type == typeof(ExecutionContext))
 			{
-				if (method.Name.Contains(".cctor"))
-				{
-					return false;
-				}
+				if (method.Name.Contains(".cctor")) return false;
 
 				switch (method.Name)
 				{
@@ -762,17 +644,11 @@ namespace System.Diagnostics
 
 			if (type.Namespace == "Ply")
 			{
-				if (type.DeclaringType?.Name == "TplPrimitives")
-				{
-					return false;
-				}
+				if (type.DeclaringType?.Name == "TplPrimitives") return false;
 			}
 
 			// Fallbacks for runtime pre-StackTraceHiddenAttribute
-			if (type == typeof(ExceptionDispatchInfo) && method.Name == "Throw")
-			{
-				return false;
-			}
+			if (type == typeof(ExceptionDispatchInfo) && method.Name == "Throw") return false;
 
 			if (type == typeof(TaskAwaiter) ||
 				type == typeof(TaskAwaiter<>) ||
@@ -792,10 +668,7 @@ namespace System.Diagnostics
 						return false;
 				}
 			}
-			else if (type.FullName == "System.ThrowHelper")
-			{
-				return false;
-			}
+			else if (type.FullName == "System.ThrowHelper") return false;
 
 			return true;
 		}
@@ -803,9 +676,7 @@ namespace System.Diagnostics
 		private static bool IsStackTraceHidden(MemberInfo memberInfo)
 		{
 			if (StackTraceHiddenAttributeType is not null && !memberInfo.Module.Assembly.ReflectionOnly)
-			{
 				return memberInfo.GetCustomAttributes(StackTraceHiddenAttributeType, false).Length != 0;
-			}
 
 			EnumerableIList<CustomAttributeData> attributes;
 			try
@@ -820,10 +691,7 @@ namespace System.Diagnostics
 			foreach (var attribute in attributes)
 			{
 				// reflection-only attribute, match on name
-				if (attribute.AttributeType.FullName == StackTraceHiddenAttributeType?.FullName)
-				{
-					return true;
-				}
+				if (attribute.AttributeType.FullName == StackTraceHiddenAttributeType?.FullName) return true;
 			}
 
 			return false;
@@ -840,29 +708,22 @@ namespace System.Diagnostics
 			declaringType = method.DeclaringType;
 
 			var parentType = declaringType.DeclaringType;
-			if (parentType is null)
-			{
-				return false;
-			}
+			if (parentType is null) return false;
 
-			static MethodInfo[] GetDeclaredMethods(Type type) =>
-				type.GetMethods(
+			static MethodInfo[] GetDeclaredMethods(Type type)
+			{
+				return type.GetMethods(
 					BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+			}
 
 			var methods = GetDeclaredMethods(parentType);
-			if (methods == null)
-			{
-				return false;
-			}
+			if (methods == null) return false;
 
 			foreach (var candidateMethod in methods)
 			{
-				var attributes = candidateMethod.GetCustomAttributes<StateMachineAttribute>(inherit: false);
+				var attributes = candidateMethod.GetCustomAttributes<StateMachineAttribute>(false);
 				// ReSharper disable once ConditionIsAlwaysTrueOrFalse - Taken from CoreFX
-				if (attributes is null)
-				{
-					continue;
-				}
+				if (attributes is null) continue;
 
 				bool foundAttribute = false, foundIteratorAttribute = false;
 				foreach (var asma in attributes)

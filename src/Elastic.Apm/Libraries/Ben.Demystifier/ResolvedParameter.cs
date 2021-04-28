@@ -1,21 +1,22 @@
 // Copyright (c) Ben A Adams. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.Text;
 
 #nullable enable
-namespace System.Diagnostics
+namespace Elastic.Apm.Ben.Demystifier.System.Diagnostics
 {
-	public class ResolvedParameter
+	internal class ResolvedParameter
 	{
+		public ResolvedParameter(Type resolvedType) => ResolvedType = resolvedType;
+
+		public bool IsDynamicType { get; set; }
 		public string? Name { get; set; }
 
-		public Type ResolvedType { get; set; }
-
 		public string? Prefix { get; set; }
-		public bool IsDynamicType { get; set; }
 
-		public ResolvedParameter(Type resolvedType) => ResolvedType = resolvedType;
+		public Type ResolvedType { get; set; }
 
 		public override string ToString() => Append(new StringBuilder()).ToString();
 
@@ -31,17 +32,11 @@ namespace System.Diagnostics
 			}
 
 			if (IsDynamicType)
-			{
 				sb.Append("dynamic");
-			}
 			else if (ResolvedType != null)
-			{
 				AppendTypeName(sb);
-			}
 			else
-			{
 				sb.Append("?");
-			}
 
 			if (!string.IsNullOrEmpty(Name))
 			{
@@ -53,6 +48,6 @@ namespace System.Diagnostics
 		}
 
 		protected virtual void AppendTypeName(StringBuilder sb) =>
-			sb.AppendTypeDisplayName(ResolvedType, fullName: false, includeGenericParameterNames: true);
+			sb.AppendTypeDisplayName(ResolvedType, false, true);
 	}
 }
