@@ -14,11 +14,12 @@ using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Elastic.Apm.Ben.Demystifier.Diagnostics.Internal;
-using Elastic.Apm.Ben.Demystifier.System.Collections.Generic.Enumerable;
+using Elastic.Apm.Libraries.Ben.Demystifier;
+using Elastic.Apm.Libraries.Ben.Demystifier.Enumerable;
+using Elastic.Apm.Libraries.Ben.Demystifier.Internal;
 
 #nullable enable
-namespace Elastic.Apm.Ben.Demystifier.System.Diagnostics
+namespace Elastic.Apm.Ben.Demystifier
 {
 	internal partial class EnhancedStackTrace
 	{

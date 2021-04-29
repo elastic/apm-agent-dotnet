@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 
 #nullable enable
-namespace Elastic.Apm.Ben.Demystifier.System.Diagnostics
+namespace Elastic.Apm.Libraries.Ben.Demystifier
 {
 	// Adapted from https://github.com/aspnet/Common/blob/dev/shared/Microsoft.Extensions.TypeNameHelper.Sources/TypeNameHelper.cs
 	internal static class TypeNameHelper

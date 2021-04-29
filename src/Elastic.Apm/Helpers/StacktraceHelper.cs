@@ -9,10 +9,10 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Elastic.Apm.Api;
+using Elastic.Apm.Ben.Demystifier;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
 using Elastic.Apm.ServerInfo;
-using Elastic.Apm.Ben.Demystifier.System.Diagnostics;
 
 namespace Elastic.Apm.Helpers
 {

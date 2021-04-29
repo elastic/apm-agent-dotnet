@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Threading;
 
 #nullable enable
-namespace Elastic.Apm.Ben.Demystifier.Diagnostics.Internal
+namespace Elastic.Apm.Libraries.Ben.Demystifier.Internal
 {
 	/// <summary>
 	/// A helper class that contains utilities methods for dealing with reflection.

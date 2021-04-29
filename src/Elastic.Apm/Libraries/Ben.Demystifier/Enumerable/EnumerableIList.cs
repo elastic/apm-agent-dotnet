@@ -3,10 +3,9 @@
 
 using System.Collections;
 using System.Collections.Generic;
-using Elastic.Apm.Ben.Demystifier.Collections.Generic.Enumerable;
 
 #nullable enable
-namespace Elastic.Apm.Ben.Demystifier.System.Collections.Generic.Enumerable
+namespace Elastic.Apm.Libraries.Ben.Demystifier.Enumerable
 {
 	internal static class EnumerableIList
 	{

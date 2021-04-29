@@ -3,10 +3,11 @@
 
 using System;
 using System.Text;
-using Elastic.Apm.Ben.Demystifier.System.Collections.Generic.Enumerable;
+using Elastic.Apm.Ben.Demystifier;
+using Elastic.Apm.Libraries.Ben.Demystifier.Enumerable;
 
 #nullable enable
-namespace Elastic.Apm.Ben.Demystifier.System.Diagnostics
+namespace Elastic.Apm.Libraries.Ben.Demystifier
 {
 	internal static class StringBuilderExtentions
 	{

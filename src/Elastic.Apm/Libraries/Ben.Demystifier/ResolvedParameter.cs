@@ -5,7 +5,7 @@ using System;
 using System.Text;
 
 #nullable enable
-namespace Elastic.Apm.Ben.Demystifier.System.Diagnostics
+namespace Elastic.Apm.Libraries.Ben.Demystifier
 {
 	internal class ResolvedParameter
 	{

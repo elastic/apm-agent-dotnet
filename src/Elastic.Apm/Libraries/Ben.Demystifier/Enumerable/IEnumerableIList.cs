@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 
 #nullable enable
-namespace Elastic.Apm.Ben.Demystifier.Collections.Generic.Enumerable
+namespace Elastic.Apm.Libraries.Ben.Demystifier.Enumerable
 {
 	internal interface IEnumerableIList<T> : IEnumerable<T>
 	{

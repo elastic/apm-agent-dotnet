@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 
 #nullable enable
-namespace Elastic.Apm.Ben.Demystifier.Diagnostics.Internal
+namespace Elastic.Apm.Libraries.Ben.Demystifier.Internal
 {
 	internal class ILReader
 	{

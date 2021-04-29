@@ -11,7 +11,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 
 #nullable enable
-namespace Elastic.Apm.Ben.Demystifier.Diagnostics.Internal
+namespace Elastic.Apm.Libraries.Ben.Demystifier.Internal
 {
 	// Adapted from https://github.com/aspnet/Common/blob/dev/shared/Microsoft.Extensions.StackTrace.Sources/StackFrame/PortablePdbReader.cs
 	internal class PortablePdbReader : IDisposable

@@ -6,10 +6,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
-using Elastic.Apm.Ben.Demystifier.System.Collections.Generic.Enumerable;
+using Elastic.Apm.Libraries.Ben.Demystifier.Enumerable;
 
 #nullable enable
-namespace Elastic.Apm.Ben.Demystifier.System.Diagnostics
+namespace Elastic.Apm.Ben.Demystifier
 {
 	internal partial class EnhancedStackTrace : StackTrace, IEnumerable<EnhancedStackFrame>
 	{

@@ -4,10 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Elastic.Apm.Ben.Demystifier.Diagnostics.Internal;
+using Elastic.Apm.Libraries.Ben.Demystifier.Internal;
 
 #nullable enable
-namespace Elastic.Apm.Ben.Demystifier.System.Diagnostics
+namespace Elastic.Apm.Libraries.Ben.Demystifier
 {
 	internal class ValueTupleResolvedParameter : ResolvedParameter
 	{

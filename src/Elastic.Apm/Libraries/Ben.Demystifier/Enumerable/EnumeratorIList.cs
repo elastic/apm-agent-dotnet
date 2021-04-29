@@ -5,7 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 #nullable enable
-namespace Elastic.Apm.Ben.Demystifier.Collections.Generic.Enumerable
+namespace Elastic.Apm.Libraries.Ben.Demystifier.Enumerable
 {
 	internal struct EnumeratorIList<T> : IEnumerator<T>
 	{
