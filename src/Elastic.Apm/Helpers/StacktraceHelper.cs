@@ -38,24 +38,22 @@ namespace Elastic.Apm.Helpers
 		)
 		{
 			var stackTraceLimit = configurationReader.StackTraceLimit;
-
 			if (stackTraceLimit == 0)
 				return null;
 
-			if (stackTraceLimit > 0)
-				// new StackTrace(skipFrames: n) skips frames from the top of the stack (currently executing method is top)
-				// the StackTraceLimit feature takes the top n frames, so unfortunately we currently capture the whole stack trace and just take
-				// the top `configurationReader.StackTraceLimit` frames. - This could be optimized.
-				frames = frames.Take(stackTraceLimit).ToArray();
-
-			var retVal = new List<CapturedStackFrame>(frames.Length);
+			// new StackTrace(skipFrames: n) skips frames from the top of the stack (currently executing method is top)
+			// the StackTraceLimit feature takes the top n frames, so unfortunately we currently capture the whole stack trace and just take
+			// the top `configurationReader.StackTraceLimit` frames.
+			var len = stackTraceLimit == -1 ? frames.Length : stackTraceLimit;
+			var retVal = new List<CapturedStackFrame>(len);
 
 			logger.Trace()?.Log("transform stack frames");
 
 			try
 			{
-				foreach (var frame in frames)
+				for (var index = 0; index < len; index++)
 				{
+					var frame = frames[index];
 					var className = frame?.GetMethod()
 						?.DeclaringType?.FullName; //see: https://github.com/elastic/apm-agent-dotnet/pull/240#discussion_r289619196
 
