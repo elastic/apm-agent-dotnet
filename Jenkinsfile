@@ -151,6 +151,9 @@ pipeline {
             }
             stage('Windows .NET Framework'){
               agent { label 'windows-2019-immutable' }
+              when {
+                expression { return false }
+              }
               options { skipDefaultCheckout() }
               environment {
                 HOME = "${env.WORKSPACE}"
