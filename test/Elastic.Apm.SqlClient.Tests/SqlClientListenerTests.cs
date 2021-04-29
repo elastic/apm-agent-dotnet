@@ -8,7 +8,6 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
-using Elastic.Apm.DatabaseTests.Common;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
