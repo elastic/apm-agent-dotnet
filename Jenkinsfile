@@ -3,7 +3,7 @@
 @Library('apm@current') _
 
 pipeline {
-  agent { label 'linux && immutable' }
+  agent { label 'debian-9' }
   environment {
     REPO = 'apm-agent-dotnet'
     // keep it short to avoid the 248 characters PATH limit in Windows
@@ -129,9 +129,7 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         dotnet(){
-                          retryWithSleep(retries: 10, seconds: 10, backoff: true) {
-                            sh label: 'Test & coverage', script: '.ci/linux/test.sh'
-                          }
+                          sh label: 'Test & coverage', script: '.ci/linux/test.sh'
                         }
                       }
                     }
