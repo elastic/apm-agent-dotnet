@@ -10,6 +10,7 @@ using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Xunit.Abstractions;
+using static Elastic.Apm.Config.ConfigConsts;
 
 namespace Elastic.Apm.Tests.Utilities
 {
@@ -23,10 +24,10 @@ namespace Elastic.Apm.Tests.Utilities
 			private const string SharedPrefix = "Elastic APM .NET Tests> {0}> ";
 
 			internal static LogLevelOptionMetadata LogLevel = new LogLevelOptionMetadata(
-				"ELASTIC_APM_TESTS_LOG_LEVEL", ConsoleLogger.DefaultLogLevel, x => x.LogLevel);
+				"ELASTIC_APM_TESTS_LOG_LEVEL", DefaultValues.LogLevel, x => x.LogLevel);
 
 			internal static LogLevelOptionMetadata LogLevelForTestingConfigParsing = new LogLevelOptionMetadata(
-				"ELASTIC_APM_TESTS_LOG_LEVEL_FOR_TESTING_CONFIG_PARSING", ConsoleLogger.DefaultLogLevel, x => x.LogLevelForTestingConfigParsing);
+				"ELASTIC_APM_TESTS_LOG_LEVEL_FOR_TESTING_CONFIG_PARSING", DefaultValues.LogLevel, x => x.LogLevelForTestingConfigParsing);
 
 			internal static BoolOptionMetadata LogToConsoleEnabled = new BoolOptionMetadata(
 				"ELASTIC_APM_TESTS_LOG_CONSOLE_ENABLED", !IsRunningInIde, x => x.LogToConsoleEnabled);
@@ -238,7 +239,7 @@ namespace Elastic.Apm.Tests.Utilities
 
 			internal MutableSnapshot(IRawConfigSnapshot rawConfigSnapshot, ITestOutputHelper xUnitOutputHelper)
 			{
-				var tempLogger = BuildXunitOutputLogger(ConsoleLogger.DefaultLogLevel);
+				var tempLogger = BuildXunitOutputLogger(DefaultValues.LogLevel);
 				Options.LogLevelForTestingConfigParsing.ParseAndSetProperty(rawConfigSnapshot, this, tempLogger);
 				var parsingLogger = BuildXunitOutputLogger(LogLevelForTestingConfigParsing);
 

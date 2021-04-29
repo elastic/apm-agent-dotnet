@@ -6,12 +6,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Configuration;
 using System.Linq;
 using System.Security.Claims;
 using System.Web;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetFullFramework.Extensions;
 using Elastic.Apm.AspNetFullFramework.Helper;
+using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -416,12 +418,22 @@ namespace Elastic.Apm.AspNetFullFramework
 				Agent.Instance.Subscribe(new HttpDiagnosticsSubscriber());
 			}) ?? false;
 
-		private static IApmLogger BuildLogger() => AgentDependencies.Logger ?? ConsoleLogger.Instance;
+		private static IApmLogger CreateDefaultLogger()
+		{
+			var logLevel = ConfigurationManager.AppSettings[ConfigConsts.KeyNames.LogLevel];
+			if (string.IsNullOrEmpty(logLevel))
+				logLevel = Environment.GetEnvironmentVariable(ConfigConsts.EnvVarNames.LogLevel);
+
+			var level = ConfigConsts.DefaultValues.LogLevel;
+			if (!string.IsNullOrEmpty(logLevel))
+				Enum.TryParse(logLevel, true, out level);
+
+			return new TraceLogger(level);
+		}
 
 		private static AgentComponents CreateAgentComponents(string dbgInstanceName)
 		{
-			var rootLogger = BuildLogger();
-
+			var rootLogger = AgentDependencies.Logger ?? CreateDefaultLogger();
 			var reader = ConfigHelper.CreateReader(rootLogger) ?? new FullFrameworkConfigReader(rootLogger);
 			var agentComponents = new FullFrameworkAgentComponents(rootLogger, reader);
 
