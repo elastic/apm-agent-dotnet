@@ -11,7 +11,8 @@ namespace Elastic.Apm.DiagnosticListeners
 	internal interface IHttpSpanTracer
 	{
 		/// <summary>
-		/// Determines if a HTTP request is a match for this tracer.
+		/// Determines if a HTTP request is a match for this tracer. This should be
+		/// a quick check
 		/// </summary>
 		/// <param name="method">the HTTP method</param>
 		/// <param name="requestUrl">the HTTP request url</param>

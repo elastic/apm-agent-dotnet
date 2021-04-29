@@ -14,13 +14,13 @@ namespace Elastic.Apm.DiagnosticSource
 	/// </summary>
 	public class HttpDiagnosticsSubscriber : IDiagnosticsSubscriber
 	{
-		private readonly bool _startHttpSpan;
+		private readonly bool _captureSpan;
 
 		public HttpDiagnosticsSubscriber() : this(true)
 		{
 		}
 
-		internal HttpDiagnosticsSubscriber(bool startHttpSpan) => _startHttpSpan = startHttpSpan;
+		internal HttpDiagnosticsSubscriber(bool captureSpan) => _captureSpan = captureSpan;
 
 		/// <summary>
 		/// Start listening for HttpClient diagnostic source events.
@@ -28,24 +28,25 @@ namespace Elastic.Apm.DiagnosticSource
 		public IDisposable Subscribe(IApmAgent agent)
 		{
 			var retVal = new CompositeDisposable();
-			var realAgent = agent as ApmAgent;
 
-			if (realAgent?.HttpDiagnosticListener != null)
+			if (agent is ApmAgent realAgent)
 			{
-				realAgent.HttpDiagnosticListener.StartHttpSpan = true;
-				return retVal;
+				var configuration = realAgent.HttpTraceConfiguration;
+				configuration.CaptureSpan |= _captureSpan;
+
+				// if a Http Diagnostic listener has already subscribed, don't subscribe again.
+				if (configuration.Subscribed)
+					return retVal;
+
+				configuration.Subscribed = true;
 			}
 
-			var diagnosticListener = HttpDiagnosticListener.New(agent, _startHttpSpan);
-			var initializer = new DiagnosticInitializer(agent.Logger, new[] { diagnosticListener });
+			var initializer = new DiagnosticInitializer(agent.Logger, new[] { HttpDiagnosticListener.New(agent) });
 			retVal.Add(initializer);
 
 			retVal.Add(DiagnosticListener
 				.AllListeners
 				.Subscribe(initializer));
-
-			if (realAgent != null)
-				realAgent.HttpDiagnosticListener = diagnosticListener;
 
 			return retVal;
 		}

@@ -41,10 +41,8 @@ namespace Elastic.Apm
 		public IPayloadSender PayloadSender => Components.PayloadSender;
 		public Service Service => Components.Service;
 		public ITracer Tracer => Components.Tracer;
-
-		internal TraceableHttpDiagnosticListener HttpDiagnosticListener { get; set; }
-
 		internal Tracer TracerInternal => Components.TracerInternal;
+		internal HttpTraceConfiguration HttpTraceConfiguration => Components.HttpTraceConfiguration;
 
 		public void Dispose()
 		{
@@ -135,19 +133,6 @@ namespace Elastic.Apm
 		/// returns <code>false</code> the filter won't be called.
 		/// </returns>
 		public static bool AddFilter(Func<IError, IError> filter) => CheckAndAddFilter(p => p.ErrorFilters.Add(filter));
-
-		/// <summary>
-		/// Adds a HTTP span tracer to capture spans for HTTP requests to known services
-		/// </summary>
-		/// <param name="tracer">The tracer to add</param>
-		internal static void AddHttpSpanTracer(IHttpSpanTracer tracer)
-		{
-			// subscribing HttpDiagnosticsSubscriber assigns the listener to the agent
-			if (Instance.HttpDiagnosticListener is null)
-				Instance.Subscribe(new HttpDiagnosticsSubscriber(false));
-
-			Instance.Components.AddHttpSpanTracer(tracer);
-		}
 
 		private static bool CheckAndAddFilter(Action<PayloadSenderV2> action)
 		{

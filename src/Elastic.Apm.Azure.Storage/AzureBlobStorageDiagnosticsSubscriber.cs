@@ -30,10 +30,10 @@ namespace Elastic.Apm.Azure.Storage
 
 			if (agent is ApmAgent realAgent)
 			{
-				if (realAgent.HttpDiagnosticListener is null)
-					realAgent.Subscribe(new HttpDiagnosticsSubscriber(false));
+				realAgent.HttpTraceConfiguration.AddTracer(new MicrosoftAzureBlobStorageTracer());
 
-				realAgent.Components.AddHttpSpanTracer(new MicrosoftAzureBlobStorageTracer());
+				if (!realAgent.HttpTraceConfiguration.Subscribed)
+					realAgent.Subscribe(new HttpDiagnosticsSubscriber(false));
 			}
 
 			return retVal;

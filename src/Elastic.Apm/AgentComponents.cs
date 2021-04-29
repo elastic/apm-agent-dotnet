@@ -3,9 +3,6 @@
 // See the LICENSE file in the project root for more information
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
@@ -20,9 +17,6 @@ namespace Elastic.Apm
 {
 	public class AgentComponents : IApmAgent, IDisposable
 	{
-		private readonly ReaderWriterLockSlim _tracersLock = new ReaderWriterLockSlim();
-		private readonly List<IHttpSpanTracer> _tracers = new List<IHttpSpanTracer>();
-
 		public AgentComponents(
 			IApmLogger logger = null,
 			IConfigurationReader configurationReader = null,
@@ -57,6 +51,8 @@ namespace Elastic.Apm
 					?? new PayloadSenderV2(Logger, ConfigStore.CurrentSnapshot, Service, system, ApmServerInfo,
 						isEnabled: ConfigurationReader.Enabled);
 
+				HttpTraceConfiguration = new HttpTraceConfiguration();
+
 				if (ConfigurationReader.Enabled)
 				{
 					CentralConfigFetcher = centralConfigFetcher ?? new CentralConfigFetcher(Logger, ConfigStore, Service);
@@ -90,33 +86,7 @@ namespace Elastic.Apm
 
 		internal IApmServerInfo ApmServerInfo { get; }
 
-		/// <summary>
-		/// Adds a http span tracer to the collection, within a write lock
-		/// </summary>
-		/// <param name="tracer">The tracer to add</param>
-		internal void AddHttpSpanTracer(IHttpSpanTracer tracer)
-		{
-			_tracersLock.EnterWriteLock();
-			try
-			{
-				_tracers.Add(tracer);
-			}
-			finally
-			{
-				_tracersLock.ExitWriteLock();
-			}
-		}
-
-		/// <summary>
-		/// Gets the HTTP span tracers, entering a read lock that is exited when the
-		/// <see cref="HttpTracers"/> is disposed.
-		/// </summary>
-		/// <returns>a new instance of <see cref="HttpTracers"/></returns>
-		internal HttpTracers GetHttpTracers()
-		{
-			_tracersLock.EnterReadLock();
-			return new HttpTracers(_tracers, _tracersLock);
-		}
+		internal HttpTraceConfiguration HttpTraceConfiguration { get; }
 
 		/// <summary>
 		/// Identifies the monitored service. If this remains unset the agent
@@ -136,27 +106,6 @@ namespace Elastic.Apm
 			if (PayloadSender is IDisposable disposablePayloadSender) disposablePayloadSender.Dispose();
 
 			CentralConfigFetcher?.Dispose();
-		}
-
-		/// <summary>
-		/// A collection of http tracers to enumerate
-		/// </summary>
-		internal class HttpTracers : IDisposable, IEnumerable<IHttpSpanTracer>
-		{
-			private readonly List<IHttpSpanTracer> _tracers;
-			private readonly ReaderWriterLockSlim _readerWriterLockSlim;
-
-			public HttpTracers(List<IHttpSpanTracer> tracers, ReaderWriterLockSlim readerWriterLockSlim)
-			{
-				_tracers = tracers;
-				_readerWriterLockSlim = readerWriterLockSlim;
-			}
-
-			public void Dispose() => _readerWriterLockSlim.ExitReadLock();
-
-			public IEnumerator<IHttpSpanTracer> GetEnumerator() => _tracers.GetEnumerator();
-
-			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 		}
 	}
 }

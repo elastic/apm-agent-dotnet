@@ -18,7 +18,7 @@ namespace Elastic.Apm.DiagnosticListeners
 	/// <summary>
 	/// Captures web requests initiated by <see cref="T:System.Net.Http.HttpClient" />
 	/// </summary>
-	internal abstract class HttpDiagnosticListenerImplBase<TRequest, TResponse> : TraceableHttpDiagnosticListener
+	internal abstract class HttpDiagnosticListenerImplBase<TRequest, TResponse> : DiagnosticListenerBase
 		where TRequest : class
 		where TResponse : class
 	{
@@ -26,13 +26,18 @@ namespace Elastic.Apm.DiagnosticListeners
 		private const string EventResponsePropertyName = "Response";
 		protected const string EventRequestPropertyName = "Request";
 		private readonly ApmAgent _realAgent;
+		private readonly HttpTraceConfiguration _configuration;
 
 		/// <summary>
 		/// Keeps track of ongoing requests
 		/// </summary>
 		internal readonly ConcurrentDictionary<TRequest, ISpan> ProcessingRequests = new ConcurrentDictionary<TRequest, ISpan>();
 
-		protected HttpDiagnosticListenerImplBase(IApmAgent agent, bool startHttpSpan) : base(agent, startHttpSpan) => _realAgent = agent as ApmAgent;
+		protected HttpDiagnosticListenerImplBase(IApmAgent agent) : base(agent)
+		{
+			_realAgent = agent as ApmAgent;
+			_configuration = _realAgent?.HttpTraceConfiguration;
+		}
 
 		protected abstract string RequestGetMethod(TRequest request);
 
@@ -140,10 +145,9 @@ namespace Elastic.Apm.DiagnosticListeners
 			string HeaderGetter(string header) => RequestTryGetHeader(request, header, out var value) ? value : null;
 
 			ISpan span = null;
-
-			if (_realAgent != null)
+			if (_configuration != null)
 			{
-				using (var httpTracers = _realAgent.Components.GetHttpTracers())
+				using (var httpTracers = _configuration.GetTracers())
 				{
 					foreach (var httpSpanTracer in httpTracers)
 					{
@@ -159,7 +163,7 @@ namespace Elastic.Apm.DiagnosticListeners
 
 			if (span is null)
 			{
-				if (StartHttpSpan)
+				if (_configuration?.CaptureSpan ?? false)
 				{
 					span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(ApmAgent, $"{method} {requestUrl.Host}",
 						ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient, true);
@@ -223,18 +227,16 @@ namespace Elastic.Apm.DiagnosticListeners
 			{
 				// if we don't find the request in the dictionary and current transaction is null, then this is not a big deal -
 				// it was probably not captured in Start either - so we skip with a debug log
-				if (ApmAgent.Tracer.CurrentTransaction == null)
+				if (ApmAgent.Tracer.CurrentTransaction is null)
 				{
 					Logger.Debug()
 						?.Log("{eventName} called with no active current transaction, url: {url} - skipping event", nameof(ProcessStopEvent),
 							Http.Sanitize(requestUrl));
 				}
-				// otherwise it's strange and it deserves a warning
 				else
 				{
-					Logger.Warning()
-						?.Log("Failed capturing request (failed to remove from ProcessingRequests) - " +
-							"This Span will be skipped in case it wasn't captured before. " +
+					Logger.Debug()
+						?.Log("Could not remove request from processing requests. This likely means it was not captured to begin with." +
 							"Request: method: {HttpMethod}, URL: {RequestUrl}", RequestGetMethod(request), Http.Sanitize(requestUrl));
 				}
 
@@ -268,13 +270,8 @@ namespace Elastic.Apm.DiagnosticListeners
 			span.End();
 		}
 
-		internal static void SetOutcome(ISpan span, int statusCode)
-		{
-			if (statusCode >= 400 || statusCode < 100)
-				span.Outcome = Outcome.Failure;
-			else
-				span.Outcome = Outcome.Success;
-		}
+		internal static void SetOutcome(ISpan span, int statusCode) =>
+			span.Outcome = statusCode >= 400 || statusCode < 100 ? Outcome.Failure : Outcome.Success;
 
 		protected virtual void ProcessExceptionEvent(object eventValue, Uri requestUrl)
 		{
