@@ -5,8 +5,8 @@
 
 using System.Diagnostics;
 using Elastic.Apm.Api;
-using Elastic.Apm.Ben.Demystifier;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Libraries.Ben.Demystifier;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
 using Elastic.Apm.ServerInfo;

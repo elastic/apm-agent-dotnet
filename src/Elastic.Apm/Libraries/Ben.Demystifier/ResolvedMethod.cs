@@ -4,7 +4,6 @@
 using System;
 using System.Reflection;
 using System.Text;
-using Elastic.Apm.Ben.Demystifier;
 using Elastic.Apm.Libraries.Ben.Demystifier.Enumerable;
 
 #nullable enable

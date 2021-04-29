@@ -4,11 +4,10 @@
 using System;
 using System.Reflection;
 using System.Text;
-using Elastic.Apm.Libraries.Ben.Demystifier;
 using Elastic.Apm.Libraries.Ben.Demystifier.Enumerable;
 
 #nullable enable
-namespace Elastic.Apm.Ben.Demystifier
+namespace Elastic.Apm.Libraries.Ben.Demystifier
 {
 	internal static class ExceptionExtensions
 	{
@@ -25,7 +24,7 @@ namespace Elastic.Apm.Ben.Demystifier
 		{
 			try
 			{
-				var stackTrace = new EnhancedStackTrace(exception);
+				var stackTrace = new Libraries.Ben.Demystifier.EnhancedStackTrace(exception);
 
 				if (stackTrace.FrameCount > 0) exception.SetStackTracesString(stackTrace.ToString());
 

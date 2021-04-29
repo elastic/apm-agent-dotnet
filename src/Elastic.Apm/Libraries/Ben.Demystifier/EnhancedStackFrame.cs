@@ -3,10 +3,9 @@
 
 using System.Diagnostics;
 using System.Reflection;
-using Elastic.Apm.Libraries.Ben.Demystifier;
 
 #nullable enable
-namespace Elastic.Apm.Ben.Demystifier
+namespace Elastic.Apm.Libraries.Ben.Demystifier
 {
 	internal class EnhancedStackFrame : StackFrame
 	{

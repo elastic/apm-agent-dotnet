@@ -9,7 +9,7 @@ using System.Text;
 using Elastic.Apm.Libraries.Ben.Demystifier.Enumerable;
 
 #nullable enable
-namespace Elastic.Apm.Ben.Demystifier
+namespace Elastic.Apm.Libraries.Ben.Demystifier
 {
 	internal partial class EnhancedStackTrace : StackTrace, IEnumerable<EnhancedStackFrame>
 	{
@@ -38,7 +38,7 @@ namespace Elastic.Apm.Ben.Demystifier
 		{
 			if (stackTrace == null) throw new ArgumentNullException(nameof(stackTrace));
 
-			_frames = GetFrames(stackTrace);
+			_frames = EnhancedStackTrace.GetFrames(stackTrace);
 		}
 
 		/// <summary>
