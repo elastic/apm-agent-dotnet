@@ -11,6 +11,7 @@ using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Azure.Storage
 {
@@ -38,64 +39,146 @@ namespace Elastic.Apm.Azure.Storage
 
 			if (string.IsNullOrEmpty(kv.Key))
 			{
-				Logger.Trace()?.Log($"Key is {(kv.Key == null ? "null" : "an empty string")} - exiting");
+				Logger.Trace()?.Log($"Key is {(kv.Key is null ? "null" : "an empty string")} - exiting");
 				return;
 			}
 
-			switch (kv.Key)
+			if (kv.Key.EndsWith(".Stop", StringComparison.Ordinal))
+				OnStop();
+			else if (kv.Key.EndsWith(".Exception", StringComparison.Ordinal))
+				OnException(kv);
+			else
 			{
-				case "BlobContainerClient.Create.Start":
-				case "PageBlobClient.Create.Start":
-					OnStart(kv, "Create");
-					break;
-				case "BlobContainerClient.Delete.Start":
-				case "BlobBaseClient.Delete.Start":
-					OnStart(kv, "Delete");
-					break;
-				case "BlobContainerClient.GetBlobs.Start":
-					OnStart(kv, "GetBlobs");
-					break;
-				case "BlockBlobClient.Upload.Start":
-				case "PageBlobClient.UploadPages.Start":
-					OnStart(kv, "Upload");
-					break;
-				case "BlobBaseClient.Download.Start":
-				case "BlobBaseClient.DownloadContent.Start":
-				case "BlobBaseClient.DownloadStreaming.Start":
-					OnStart(kv, "Download");
-					break;
-				case "BlobBaseClient.StartCopyFromUri.Start":
-					OnStart(kv, "CopyFromUri");
-					break;
-				case "BlobContainerClient.Create.Stop":
-				case "BlobContainerClient.Delete.Stop":
-				case "BlobBaseClient.Delete.Stop":
-				case "PageBlobClient.Create.Stop":
-				case "BlockBlobClient.Upload.Stop":
-				case "BlobBaseClient.Download.Stop":
-				case "BlobBaseClient.DownloadContent.Stop":
-				case "BlobBaseClient.DownloadStreaming.Stop":
-				case "PageBlobClient.UploadPages.Stop":
-				case "BlobContainerClient.GetBlobs.Stop":
-				case "BlobBaseClient.StartCopyFromUri.Stop":
-					OnStop();
-					break;
-				case "BlobContainerClient.Create.Exception":
-				case "BlobContainerClient.Delete.Exception":
-				case "BlobBaseClient.Delete.Exception":
-				case "PageBlobClient.Create.Exception":
-				case "BlockBlobClient.Upload.Exception":
-				case "BlobBaseClient.Download.Exception":
-				case "BlobBaseClient.DownloadContent.Exception":
-				case "BlobBaseClient.DownloadStreaming.Exception":
-				case "PageBlobClient.UploadPages.Exception":
-				case "BlobContainerClient.GetBlobs.Exception":
-				case "BlobBaseClient.StartCopyFromUri.Exception":
-					OnException(kv);
-					break;
-				default:
-					Logger.Trace()?.Log("`{DiagnosticEventKey}' key is not a traced diagnostic event", kv.Key);
-					break;
+				switch (kv.Key)
+				{
+					case "BlobContainerClient.Create.Start":
+					case "PageBlobClient.Create.Start":
+						OnStart(kv, "Create");
+						break;
+					case "BlobContainerClient.Delete.Start":
+					case "BlobBaseClient.Delete.Start":
+					case "BlobBaseClient.DeleteIfExists.Start":
+						OnStart(kv, "Delete");
+						break;
+					case "BlobContainerClient.GetBlobs.Start":
+					case "BlobContainerClient.GetBlobsByHierarchy.Start":
+						OnStart(kv, "ListBlobs");
+						break;
+					case "BlockBlobClient.Upload.Start":
+					case "BlockBlobClient.StageBlock.Start":
+					case "BlockBlobClient.CommitBlockList.Start":
+					case "PageBlobClient.UploadPages.Start":
+					case "AppendBlobClient.AppendBlock.Start":
+					case "AppendBlobClient.Create.Start":
+					case "AppendBlobClient.CreateIfNotExists.Start":
+					case "AppendBlobClient.OpenWrite.Start":
+					case "BlockBlobClient.OpenWrite.Start":
+					case "PageBlobClient.OpenWrite.Start":
+					case "BlobClient.Upload.Start":
+						OnStart(kv, "Upload");
+						break;
+					case "BlobBaseClient.Download.Start":
+					case "BlobBaseClient.DownloadContent.Start":
+					case "BlobBaseClient.DownloadStreaming.Start":
+					case "BlobBaseClient.DownloadTo.Start":
+					case "BlobBaseClient.OpenRead.Start":
+					case "BlockBlobClient.GetBlockList.Start":
+						OnStart(kv, "Download");
+						break;
+					case "BlobBaseClient.StartCopyFromUri.Start":
+					case "AppendBlobClient.AppendBlockFromUri.Start":
+					case "BlobBaseClient.SyncCopyFromUri.Start":
+					case "BlockBlobClient.StageBlockFromUri.Start":
+					case "BlockBlobClient.SyncUploadFromUri.Start":
+					case "PageBlobClient.StartCopyIncremental.Start":
+					case "PageBlobClient.UploadPagesFromUri.Start":
+						OnStart(kv, "Copy");
+						break;
+					case "BlobBatchClient.SubmitBatch.Start":
+						OnStart(kv, "Batch");
+						break;
+					case "BlobLeaseClient.Acquire.Start":
+					case "BlobLeaseClient.Renew.Start":
+					case "BlobLeaseClient.Release.Start":
+					case "BlobLeaseClient.Change.Start":
+					case "BlobLeaseClient.Break.Start":
+						OnStart(kv, "Lease");
+						break;
+					case "AppendBlobClient.Seal.Start":
+						OnStart(kv, "Seal");
+						break;
+					case "BlobBaseClient.GetProperties.Start":
+					case "BlobContainerClient.GetProperties.Start":
+					case "BlobServiceClient.GetAccountInfo.Start":
+					case "BlobServiceClient.GetProperties.Start":
+						OnStart(kv, "GetProperties");
+						break;
+					case "BlobBaseClient.AbortCopyFromUri.Start":
+						OnStart(kv, "Abort");
+						break;
+					case "BlobBaseClient.Undelete.Start":
+					case "BlobServiceClient.UndeleteBlobContainer.Start":
+						OnStart(kv, "Undelete");
+						break;
+					case "BlobBaseClient.SetHttpHeaders.Start":
+					case "BlobServiceClient.SetProperties.Start":
+					case "PageBlobClient.Resize.Start":
+					case "PageBlobClient.UpdateSequenceNumber.Start":
+						OnStart(kv, "SetProperties");
+						break;
+					case "BlobBaseClient.SetMetadata.Start":
+					case "BlobContainerClient.SetMetadata.Start":
+						OnStart(kv, "SetMetadata");
+						break;
+					case "BlobBaseClient.CreateSnapshot.Start":
+						OnStart(kv, "Snapshot");
+						break;
+					case "BlobBaseClient.SetAccessTier.Start":
+						OnStart(kv, "SetTier");
+						break;
+					case "BlobBaseClient.GetTags.Start":
+						OnStart(kv, "GetTags");
+						break;
+					case "BlobBaseClient.SetTags.Start":
+						OnStart(kv, "SetTags");
+						break;
+					case "BlobContainerClient.GetAccessPolicy.Start":
+						OnStart(kv, "GetAcl");
+						break;
+					case "BlobContainerClient.SetAccessPolicy.Start":
+						OnStart(kv, "SetAcl");
+						break;
+					case "BlobContainerClient.Rename.Start":
+					case "BlobServiceClient.RenameBlobContainer.Start":
+						OnStart(kv, "Rename");
+						break;
+					case "BlobServiceClient.GetBlobContainers.Start":
+						OnStart(kv, "ListContainers");
+						break;
+					case "BlobServiceClient.GetStatistics.Start":
+						OnStart(kv, "Stats");
+						break;
+					case "BlobServiceClient.GetUserDelegationKey.Start":
+						OnStart(kv, "GetUserDelegationKey");
+						break;
+					case "BlobServiceClient.FindBlobsByTags.Start":
+						OnStart(kv, "FilterBlobs");
+						break;
+					case "BlockBlobClient.Query.Start":
+						OnStart(kv, "Query");
+						break;
+					case "PageBlobClient.ClearPages.Start":
+						OnStart(kv, "Clear");
+						break;
+					case "PageBlobClient.GetPageRanges.Start":
+					case "PageBlobClient.GetPageRangesDiff.Start":
+					case "PageBlobClient.GetManagedDiskPageRangesDiff.Start":
+						OnStart(kv, "GetPageRanges");
+						break;
+					default:
+						Logger.Trace()?.Log("`{DiagnosticEventKey}' key is not a traced diagnostic event", kv.Key);
+						break;
+				}
 			}
 		}
 
@@ -120,6 +203,9 @@ namespace Elastic.Apm.Azure.Storage
 			var spanName = $"{AzureBlobStorage.SpanName} {action} {blobUrl.ResourceName}";
 
 			var span = currentSegment.StartSpan(spanName, ApiConstants.TypeStorage, AzureBlobStorage.SubType, action);
+			if (span is Span realSpan)
+				realSpan.InstrumentationFlag = InstrumentationFlag.Azure;
+
 			span.Context.Destination = new Destination
 			{
 				Address = blobUrl.FullyQualifiedNamespace,
@@ -153,10 +239,9 @@ namespace Elastic.Apm.Azure.Storage
 
 			if (!_processingSegments.TryRemove(activity.Id, out var segment))
 			{
-				Logger.Trace()
-					?.Log(
-						"Could not find segment for activity {ActivityId} in tracked segments",
-						activity.Id);
+				Logger.Trace()?.Log(
+					"Could not find segment for activity {ActivityId} in tracked segments",
+					activity.Id);
 				return;
 			}
 
@@ -175,10 +260,9 @@ namespace Elastic.Apm.Azure.Storage
 
 			if (!_processingSegments.TryRemove(activity.Id, out var segment))
 			{
-				Logger.Trace()
-					?.Log(
-						"Could not find segment for activity {ActivityId} in tracked segments",
-						activity.Id);
+				Logger.Trace()?.Log(
+					"Could not find segment for activity {ActivityId} in tracked segments",
+					activity.Id);
 				return;
 			}
 
@@ -187,21 +271,6 @@ namespace Elastic.Apm.Azure.Storage
 
 			segment.Outcome = Outcome.Failure;
 			segment.End();
-		}
-
-		private class BlobUrl
-		{
-			public BlobUrl(string url)
-			{
-				var builder = new UriBuilder(url);
-
-				FullyQualifiedNamespace = builder.Uri.GetLeftPart(UriPartial.Authority) + "/";
-				ResourceName = builder.Uri.AbsolutePath.TrimStart('/');
-			}
-
-			public string FullyQualifiedNamespace { get; }
-
-			public string ResourceName { get; }
 		}
 	}
 }

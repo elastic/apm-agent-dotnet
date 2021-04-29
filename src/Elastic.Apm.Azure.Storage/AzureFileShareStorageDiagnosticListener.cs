@@ -11,6 +11,7 @@ using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.Logging;
+using Elastic.Apm.Model;
 
 namespace Elastic.Apm.Azure.Storage
 {
@@ -102,6 +103,9 @@ namespace Elastic.Apm.Azure.Storage
 			var spanName = $"{AzureFileStorage.SpanName} {action} {fileShareUrl.ResourceName}";
 
 			var span = currentSegment.StartSpan(spanName, ApiConstants.TypeStorage, AzureFileStorage.SubType, action);
+			if (span is Span realSpan)
+				realSpan.InstrumentationFlag = InstrumentationFlag.Azure;
+
 			span.Context.Destination = new Destination
 			{
 				Address = fileShareUrl.FullyQualifiedNamespace,

@@ -132,7 +132,7 @@ namespace Elastic.Apm.Model
 		[MaxLength]
 		public string Id { get; set; }
 
-		internal InstrumentationFlag InstrumentationFlag { get; }
+		internal InstrumentationFlag InstrumentationFlag { get; set; }
 
 		[JsonIgnore]
 		public bool IsSampled => _enclosingTransaction.IsSampled;

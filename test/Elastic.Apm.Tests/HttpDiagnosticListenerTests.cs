@@ -104,6 +104,7 @@ namespace Elastic.Apm.Tests
 		{
 			var logger = new TestLogger();
 			var agent = new ApmAgent(new TestAgentComponents(logger));
+			agent.HttpTraceConfiguration.CaptureSpan = true;
 			StartTransaction(agent);
 			var listener = HttpDiagnosticListener.New(agent);
 
@@ -132,6 +133,7 @@ namespace Elastic.Apm.Tests
 			var logger = new TestLogger();
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(logger, payloadSender: payloadSender));
+			agent.HttpTraceConfiguration.CaptureSpan = true;
 			StartTransaction(agent);
 			var listener = HttpDiagnosticListener.New(agent);
 
@@ -161,9 +163,10 @@ namespace Elastic.Apm.Tests
 		[NetCoreAndNet5Fact] //see: https://github.com/elastic/apm-agent-dotnet/issues/516
 		public void OnNextWithStartAndStopTwice()
 		{
-			var logger = new TestLogger(LogLevel.Warning);
+			var logger = new TestLogger(LogLevel.Debug);
 			var payloadSender = new MockPayloadSender();
 			var agent = new ApmAgent(new TestAgentComponents(logger, payloadSender: payloadSender));
+			agent.HttpTraceConfiguration.CaptureSpan = true;
 			StartTransaction(agent);
 			var listener = HttpDiagnosticListener.New(agent);
 
@@ -181,7 +184,7 @@ namespace Elastic.Apm.Tests
 			logger.Lines
 				.Should()
 				.Contain(
-					line => line.Contains("HttpDiagnosticListener") && line.Contains("Failed capturing request")
+					line => line.Contains("HttpDiagnosticListener") && line.Contains("Could not remove request from processing requests.")
 						&& line.Contains(HttpMethod.Get.Method)
 						&& line.Contains(request.RequestUri.AbsoluteUri));
 
@@ -368,6 +371,7 @@ namespace Elastic.Apm.Tests
 		public void CaptureErrorOnFailingHttpCall_DirectCall()
 		{
 			var (subscriber, payloadSender, agent) = RegisterSubscriberAndStartTransaction();
+			agent.HttpTraceConfiguration.Subscribed = true;
 
 			using (agent)
 			using (subscriber)

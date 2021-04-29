@@ -23,15 +23,21 @@ namespace Elastic.Apm.DiagnosticListeners
 		where TResponse : class
 	{
 		private const string EventExceptionPropertyName = "Exception";
-		protected const string EventRequestPropertyName = "Request";
 		private const string EventResponsePropertyName = "Response";
+		protected const string EventRequestPropertyName = "Request";
+		private readonly ApmAgent _realAgent;
+		private readonly HttpTraceConfiguration _configuration;
 
 		/// <summary>
 		/// Keeps track of ongoing requests
 		/// </summary>
 		internal readonly ConcurrentDictionary<TRequest, ISpan> ProcessingRequests = new ConcurrentDictionary<TRequest, ISpan>();
 
-		protected HttpDiagnosticListenerImplBase(IApmAgent agent) : base(agent) { }
+		protected HttpDiagnosticListenerImplBase(IApmAgent agent) : base(agent)
+		{
+			_realAgent = agent as ApmAgent;
+			_configuration = _realAgent?.HttpTraceConfiguration;
+		}
 
 		protected abstract string RequestGetMethod(TRequest request);
 
@@ -118,6 +124,14 @@ namespace Elastic.Apm.DiagnosticListeners
 
 		private void ProcessStartEvent(TRequest request, Uri requestUrl)
 		{
+			if (_realAgent?.TracerInternal.CurrentSpan is Span currentSpan)
+			{
+				// if there's a current span that has been instrumented for Azure, don't create a span for
+				// the current request
+				if (currentSpan.InstrumentationFlag == InstrumentationFlag.Azure)
+					return;
+			}
+
 			Logger.Trace()?.Log("Processing start event... Request URL: {RequestUrl}", Http.Sanitize(requestUrl));
 
 			var transaction = ApmAgent.Tracer.CurrentTransaction;
@@ -127,8 +141,45 @@ namespace Elastic.Apm.DiagnosticListeners
 				return;
 			}
 
-			var span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(ApmAgent, $"{RequestGetMethod(request)} {requestUrl.Host}",
-				ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient, true);
+			var method = RequestGetMethod(request);
+			string HeaderGetter(string header) => RequestTryGetHeader(request, header, out var value) ? value : null;
+
+			ISpan span = null;
+			if (_configuration?.HasTracers ?? false)
+			{
+				using (var httpTracers = _configuration.GetTracers())
+				{
+					foreach (var httpSpanTracer in httpTracers)
+					{
+						if (httpSpanTracer.IsMatch(method, requestUrl, HeaderGetter))
+						{
+							span = httpSpanTracer.StartSpan(ApmAgent, method, requestUrl, HeaderGetter);
+							if (span != null)
+								break;
+						}
+					}
+				}
+			}
+
+			if (span is null)
+			{
+				if (_configuration?.CaptureSpan ?? false)
+				{
+					span = ExecutionSegmentCommon.StartSpanOnCurrentExecutionSegment(ApmAgent, $"{method} {requestUrl.Host}",
+						ApiConstants.TypeExternal, ApiConstants.SubtypeHttp, InstrumentationFlag.HttpClient, true);
+
+					if (span is null)
+					{
+						Logger.Trace()?.Log("Could not create span for outgoing HTTP request to {RequestUrl}", Http.Sanitize(requestUrl));
+						return;
+					}
+				}
+				else
+				{
+					Logger.Trace()?.Log("Skip creating span for outgoing HTTP request to {RequestUrl} as not to known service", Http.Sanitize(requestUrl));
+					return;
+				}
+			}
 
 			if (!ProcessingRequests.TryAdd(request, span))
 			{
@@ -158,13 +209,13 @@ namespace Elastic.Apm.DiagnosticListeners
 			if (!RequestHeadersContain(request, TraceContext.TraceStateHeaderName) && span.OutgoingDistributedTracingData != null && span.OutgoingDistributedTracingData.HasTraceState)
 				RequestHeadersAdd(request, TraceContext.TraceStateHeaderName, span.OutgoingDistributedTracingData.TraceState.ToTextHeader());
 
-			if (span is Span spanInstance)
+			if (span is Span realSpan)
 			{
-				if (!spanInstance.ShouldBeSentToApmServer)
+				if (!realSpan.ShouldBeSentToApmServer)
 					return;
 			}
 
-			span.Context.Http = new Http { Method = RequestGetMethod(request) };
+			span.Context.Http = new Http { Method = method };
 			span.Context.Http.SetUrl(requestUrl);
 		}
 
@@ -176,18 +227,16 @@ namespace Elastic.Apm.DiagnosticListeners
 			{
 				// if we don't find the request in the dictionary and current transaction is null, then this is not a big deal -
 				// it was probably not captured in Start either - so we skip with a debug log
-				if (ApmAgent.Tracer.CurrentTransaction == null)
+				if (ApmAgent.Tracer.CurrentTransaction is null)
 				{
 					Logger.Debug()
 						?.Log("{eventName} called with no active current transaction, url: {url} - skipping event", nameof(ProcessStopEvent),
 							Http.Sanitize(requestUrl));
 				}
-				// otherwise it's strange and it deserves a warning
 				else
 				{
-					Logger.Warning()
-						?.Log("Failed capturing request (failed to remove from ProcessingRequests) - " +
-							"This Span will be skipped in case it wasn't captured before. " +
+					Logger.Debug()
+						?.Log("Could not remove request from processing requests. This likely means it was not captured to begin with." +
 							"Request: method: {HttpMethod}, URL: {RequestUrl}", RequestGetMethod(request), Http.Sanitize(requestUrl));
 				}
 
@@ -221,13 +270,8 @@ namespace Elastic.Apm.DiagnosticListeners
 			span.End();
 		}
 
-		internal static void SetOutcome(ISpan span, int statusCode)
-		{
-			if (statusCode >= 400 || statusCode < 100)
-				span.Outcome = Outcome.Failure;
-			else
-				span.Outcome = Outcome.Success;
-		}
+		internal static void SetOutcome(ISpan span, int statusCode) =>
+			span.Outcome = statusCode >= 400 || statusCode < 100 ? Outcome.Failure : Outcome.Success;
 
 		protected virtual void ProcessExceptionEvent(object eventValue, Uri requestUrl)
 		{
