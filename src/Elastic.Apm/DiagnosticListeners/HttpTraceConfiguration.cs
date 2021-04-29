@@ -69,7 +69,7 @@ namespace Elastic.Apm.DiagnosticListeners
 		/// <summary>
 		/// A collection of http tracers to enumerate
 		/// </summary>
-		internal class HttpTracers : IDisposable, IEnumerable<IHttpSpanTracer>
+		internal sealed class HttpTracers : IDisposable, IEnumerable<IHttpSpanTracer>
 		{
 			private readonly List<IHttpSpanTracer> _tracers;
 			private readonly ReaderWriterLockSlim _readerWriterLockSlim;
@@ -82,7 +82,9 @@ namespace Elastic.Apm.DiagnosticListeners
 
 			public void Dispose() => _readerWriterLockSlim.ExitReadLock();
 
-			public IEnumerator<IHttpSpanTracer> GetEnumerator() => _tracers.GetEnumerator();
+			public List<IHttpSpanTracer>.Enumerator GetEnumerator() => _tracers.GetEnumerator();
+
+			IEnumerator<IHttpSpanTracer> IEnumerable<IHttpSpanTracer>.GetEnumerator() => GetEnumerator();
 
 			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 		}
