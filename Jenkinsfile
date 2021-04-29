@@ -90,6 +90,9 @@ pipeline {
                 Build the project from code..
                 */
                 stage('Build') {
+                  when {
+                    expression { return false }
+                  }
                   steps {
                     withGithubNotify(context: 'Build - Linux') {
                       deleteDir()
@@ -126,7 +129,9 @@ pipeline {
                       unstash 'source'
                       dir("${BASE_DIR}"){
                         dotnet(){
-                          sh label: 'Test & coverage', script: '.ci/linux/test.sh'
+                          retryWithSleep(retries: 10, seconds: 10, backoff: true) {
+                            sh label: 'Test & coverage', script: '.ci/linux/test.sh'
+                          }
                         }
                       }
                     }
@@ -173,6 +178,9 @@ pipeline {
                 Build the project from code..
                 */
                 stage('Build - MSBuild') {
+                  when {
+                    expression { return false }
+                  }
                   steps {
                     withGithubNotify(context: 'Build MSBuild - Windows') {
                       cleanDir("${WORKSPACE}/${BASE_DIR}")
@@ -193,6 +201,9 @@ pipeline {
                 Execute unit tests.
                 */
                 stage('Test') {
+                  when {
+                    expression { return false }
+                  }
                   steps {
                     withGithubNotify(context: 'Test MSBuild - Windows', tab: 'tests') {
                       cleanDir("${WORKSPACE}/${BASE_DIR}")
@@ -226,7 +237,9 @@ pipeline {
                       dir("${BASE_DIR}"){
                         powershell label: 'Install test tools', script: '.ci\\windows\\test-tools.ps1'
                         bat label: 'Build', script: '.ci/windows/msbuild.bat'
-                        bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
+                        retryWithSleep(retries: 10, seconds: 10, backoff: true) {
+                          bat label: 'Test IIS', script: '.ci/windows/test-iis.bat'
+                        }
                       }
                     }
                   }
@@ -245,6 +258,9 @@ pipeline {
             }
             stage('Windows .NET Core'){
               agent { label 'windows-2019-immutable' }
+              when {
+                expression { return false }
+              }
               options { skipDefaultCheckout() }
               environment {
                 HOME = "${env.WORKSPACE}"
