@@ -39,6 +39,12 @@ namespace Elastic.Apm.DiagnosticListeners
 		}
 
 		/// <summary>
+		/// Determines if there are any HTTP span tracers registered.
+		/// Avoids allocating a <see cref="HttpTracers"/> if there are none to enumerate
+		/// </summary>
+		public bool HasTracers => _tracers.Count > 0;
+
+		/// <summary>
 		/// Gets the HTTP span tracers, entering a read lock that is exited when the
 		/// <see cref="HttpTracers"/> is disposed.
 		/// </summary>

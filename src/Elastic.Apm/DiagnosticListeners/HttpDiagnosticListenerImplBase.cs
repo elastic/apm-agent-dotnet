@@ -145,7 +145,7 @@ namespace Elastic.Apm.DiagnosticListeners
 			string HeaderGetter(string header) => RequestTryGetHeader(request, header, out var value) ? value : null;
 
 			ISpan span = null;
-			if (_configuration != null)
+			if (_configuration?.HasTracers ?? false)
 			{
 				using (var httpTracers = _configuration.GetTracers())
 				{
