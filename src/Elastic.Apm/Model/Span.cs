@@ -13,8 +13,8 @@ using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json.Converters;
 
 namespace Elastic.Apm.Model
 {
@@ -150,10 +150,10 @@ namespace Elastic.Apm.Model
 		/// Outcome may be one of a limited set of permitted values describing the success or failure of the span.
 		/// This field can be used for calculating error rates for outgoing requests.
 		/// </summary>
-		[JsonConverter(typeof(StringEnumConverter))]
 		public Outcome Outcome
 		{
-			get => _outcome; set
+			get => _outcome;
+			set
 			{
 				_outcomeChangedThroughApi = true;
 				_outcome = value;

@@ -3,6 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Elastic.Apm.Api;
@@ -127,6 +128,40 @@ namespace Elastic.Apm.Tests
 			mockPayloadSender.FirstError.Context.Response.Should().NotBeNull();
 			mockPayloadSender.FirstError.Context.Response.Headers.Should().BeNull();
 			mockPayloadSender.FirstError.Context.InternalLabels.Value.InnerDictionary.Should().BeEmpty();
+		}
+
+		[Fact]
+		public void Includes_Cause_When_Exception_Has_InnerException()
+		{
+			var mockPayloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
+
+			agent.Tracer.CaptureTransaction("Test", "Test", t =>
+			{
+				var exception = new Exception(
+					"Outer exception",
+					new Exception("Inner exception", new Exception("Inner inner exception")));
+
+				t.CaptureException(exception);
+			});
+
+			mockPayloadSender.WaitForErrors();
+			var error = mockPayloadSender.FirstError;
+
+			error.Should().NotBeNull();
+			var capturedException = error.Exception;
+
+			capturedException.Should().NotBeNull();
+			capturedException.Message.Should().Be("Outer exception");
+			capturedException.Cause.Should().NotBeNull().And.HaveCount(2);
+
+			var firstCause = capturedException.Cause[0];
+			firstCause.Message.Should().Be("Inner exception");
+			firstCause.Type.Should().Be("System.Exception");
+
+			var secondCause = capturedException.Cause[1];
+			secondCause.Message.Should().Be("Inner inner exception");
+			secondCause.Type.Should().Be("System.Exception");
 		}
 	}
 }

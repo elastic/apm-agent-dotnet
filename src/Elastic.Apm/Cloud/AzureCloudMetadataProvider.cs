@@ -11,8 +11,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 
 namespace Elastic.Apm.Cloud
 {

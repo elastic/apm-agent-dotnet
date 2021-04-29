@@ -15,10 +15,13 @@ using Elastic.Apm.Tests.Utilities;
 using Elastic.Apm.Specification;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NJsonSchema;
 using Xunit.Sdk;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
+using Elastic.Apm.Report.Serialization;
+using NJsonSchema.Validation.FormatValidators;
+using NJsonSchema.Validation;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Local
 
@@ -100,8 +103,7 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 		private async Task ParsePayloadLineAndAddToReceivedData(string line)
 		{
 			var foundDto = false;
-
-			var payload = JsonConvert.DeserializeObject<PayloadLineDto>(
+			var deserializedPayload = JsonConvert.DeserializeObject<PayloadLineDto>(
 				line,
 				new JsonSerializerSettings
 				{
@@ -114,6 +116,12 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 						throw new ArgumentException(errorEventArgs.ErrorContext.Error.Message);
 					}
 				});
+
+			PayloadLineDto payload = null;
+			if (deserializedPayload != null)
+				payload = (PayloadLineDto)deserializedPayload;
+			else
+				throw new ArgumentException("Deserialization failed");
 
 			await HandleParsed(nameof(payload.Error), payload.Error, _mockApmServer.ReceivedData.Errors, _mockApmServer.AddError);
 			await HandleParsed(nameof(payload.Metadata), payload.Metadata, _mockApmServer.ReceivedData.Metadata, _mockApmServer.AddMetadata);
@@ -145,7 +153,9 @@ namespace Elastic.Apm.Tests.MockApmServer.Controllers
 
 					var jObject = JObject.Parse(line);
 					var value = jObject.GetValue(dtoType, StringComparison.OrdinalIgnoreCase);
-					var validationErrors = schema.Validate(value);
+
+					var validationErrors = schema.Validate(value.ToString());
+
 					validationErrors.Should().BeEmpty();
 				}
 				catch (Exception ex)

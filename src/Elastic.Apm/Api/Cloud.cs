@@ -4,7 +4,7 @@
 // See the LICENSE file in the project root for more information
 
 using Elastic.Apm.Api.Constraints;
-using Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Api
 {

@@ -4,8 +4,8 @@
 
 using Elastic.Apm.Api;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
 using Elastic.Apm.Model;
-using Newtonsoft.Json;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBePrivate.Global

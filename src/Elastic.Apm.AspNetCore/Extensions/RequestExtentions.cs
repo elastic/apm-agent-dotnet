@@ -1,4 +1,4 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+﻿// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -32,6 +32,9 @@ namespace Elastic.Apm.AspNetCore.Extensions
 
 			try
 			{
+				//Ensure the request Microsoft.AspNetCore.Http.HttpRequest.Body can be read multiple times
+				request.EnableBuffering();
+
 				if (request.HasFormContentType)
 				{
 					var form = request.Form;
@@ -73,7 +76,6 @@ namespace Elastic.Apm.AspNetCore.Extensions
 					if (bodyControlFeature != null)
 						bodyControlFeature.AllowSynchronousIO = true;
 
-					request.EnableBuffering();
 					var requestBody = request.Body;
 					requestBody.Position = 0;
 					var arrayPool = ArrayPool<char>.Shared;

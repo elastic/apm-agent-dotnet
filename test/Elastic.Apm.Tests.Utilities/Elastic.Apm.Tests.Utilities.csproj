@@ -25,6 +25,7 @@
       <InternalsVisibleTo Include="Elastic.Apm.Extensions.Logging.Tests" Key="$(ExposedPublicKey)" />
       <InternalsVisibleTo Include="Elastic.Apm.Azure.ServiceBus.Tests" Key="$(ExposedPublicKey)" />
       <InternalsVisibleTo Include="Elastic.Apm.Azure.Storage.Tests" Key="$(ExposedPublicKey)" />
+      <InternalsVisibleTo Include="Elastic.Apm.MongoDb.Tests" Key="$(ExposedPublicKey)" />
     </ItemGroup>
   
     <ItemGroup>

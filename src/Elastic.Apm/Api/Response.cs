@@ -4,7 +4,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Api
 {

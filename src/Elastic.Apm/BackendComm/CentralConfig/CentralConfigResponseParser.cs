@@ -10,7 +10,7 @@ using System.Net;
 using System.Net.Http;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.BackendComm.CentralConfig
 {

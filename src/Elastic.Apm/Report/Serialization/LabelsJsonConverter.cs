@@ -5,7 +5,7 @@
 using System;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Model;
-using Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Report.Serialization
 {

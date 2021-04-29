@@ -283,7 +283,7 @@ namespace Elastic.Apm.AspNetCore.Tests
 			//test transaction.context.request
 #if NET5_0
 			transaction.Context.Request.HttpVersion.Should().Be("1.1");
-#elif NETCOREAPP3_0 || NETCOREAPP3_1 
+#elif NETCOREAPP3_0 || NETCOREAPP3_1
 			transaction.Context.Request.HttpVersion.Should().Be("2");
 #else
 			transaction.Context.Request.HttpVersion.Should().Be("2.0");
@@ -498,11 +498,14 @@ namespace Elastic.Apm.AspNetCore.Tests
 			var disposables = disposablesField.GetValue(_agent.Disposables) as List<IDisposable>;
 			disposables.Should().NotBeNull("_disposables should be a List<IDisposable>");
 
-			var listenersField = typeof(DiagnosticInitializer).GetField("_listeners", BindingFlags.Instance | BindingFlags.NonPublic);
-			listenersField.Should().NotBeNull("_listeners field is not null");
+			var field = typeof(DiagnosticInitializer).GetField("_listeners", BindingFlags.Instance | BindingFlags.NonPublic);
+			if (field is null)
+				field = typeof(DiagnosticInitializer).GetField("_listener", BindingFlags.Instance | BindingFlags.NonPublic);
+
+			field.Should().NotBeNull("_listeners or _listener should not be null");
 
 			var count = UnwrapCompositeDisposable(disposables, disposablesField)
-				.Sum(disposable => CountAspNetCoreErrorDiagnosticsSubscriber(disposable, listenersField));
+				.Sum(disposable => CountAspNetCoreErrorDiagnosticsSubscriber(disposable, field));
 
 			count.Should().Be(1, "One AspNetCoreErrorDiagnosticListener is registered");
 		}
@@ -526,8 +529,11 @@ namespace Elastic.Apm.AspNetCore.Tests
 		{
 			if (disposable is DiagnosticInitializer diagnosticInitializer)
 			{
-				var listeners = (IEnumerable<IDiagnosticListener>)field.GetValue(diagnosticInitializer);
-				return listeners.Count(l => l is AspNetCoreErrorDiagnosticListener);
+				var value = field.GetValue(diagnosticInitializer);
+				if (value is IEnumerable<IDiagnosticListener> listeners)
+					return listeners.Count(l => l is AspNetCoreErrorDiagnosticListener);
+
+				return 1;
 			}
 
 			return 0;

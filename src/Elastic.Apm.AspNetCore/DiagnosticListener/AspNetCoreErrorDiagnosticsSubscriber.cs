@@ -23,7 +23,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 			if (!agent.ConfigurationReader.Enabled)
 				return retVal;
 
-			var subscriber = new DiagnosticInitializer(agent.Logger, new[] { new AspNetCoreErrorDiagnosticListener(agent) });
+			var subscriber = new DiagnosticInitializer(agent.Logger, new AspNetCoreErrorDiagnosticListener(agent));
 			retVal.Add(subscriber);
 
 			retVal.Add(System.Diagnostics.DiagnosticListener

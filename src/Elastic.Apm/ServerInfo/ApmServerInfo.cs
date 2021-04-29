@@ -10,8 +10,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Elastic.Apm.Config;
 using Elastic.Apm.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 
 namespace Elastic.Apm.ServerInfo
 {

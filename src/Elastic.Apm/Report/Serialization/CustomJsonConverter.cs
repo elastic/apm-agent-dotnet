@@ -4,11 +4,11 @@
 
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Report.Serialization
 {
-	public class CustomJsonConverter : JsonConverter<Dictionary<string, string>>
+	internal class CustomJsonConverter : JsonConverter<Dictionary<string, string>>
 	{
 		public override void WriteJson(JsonWriter writer, Dictionary<string, string> custom, JsonSerializer serializer)
 		{
