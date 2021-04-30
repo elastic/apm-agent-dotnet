@@ -178,7 +178,7 @@ namespace Elastic.Apm.Azure.Storage.Tests
 
 			destination.Address.Should().Be(_environment.StorageAccountConnectionStringProperties.FileUrl);
 			destination.Service.Name.Should().Be(AzureFileStorage.SubType);
-			destination.Service.Resource.Should().Be($"{AzureFileStorage.SubType}/{resource}");
+			destination.Service.Resource.Should().Be($"{AzureFileStorage.SubType}/{_environment.StorageAccountConnectionStringProperties.AccountName}");
 			destination.Service.Type.Should().Be(ApiConstants.TypeStorage);
 		}
 	}
