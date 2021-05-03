@@ -5,6 +5,7 @@
 using System.Collections.Generic;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
+using Elastic.Apm.Config;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
@@ -13,8 +14,10 @@ namespace Elastic.Apm.Model
 {
 	internal class Error : IError
 	{
-		public Error(CapturedException capturedException, Transaction transaction, string parentId, IApmLogger loggerArg,
-			Dictionary<string, Label> labels = null
+		[JsonIgnore]
+		internal IConfigSnapshot ConfigSnapshot { get; }
+
+		public Error(CapturedException capturedException, Transaction transaction, string parentId, IApmLogger loggerArg, Dictionary<string, Label> labels = null
 		)
 			: this(transaction, parentId, loggerArg, labels) => Exception = capturedException;
 
@@ -33,6 +36,7 @@ namespace Elastic.Apm.Model
 				TraceId = transaction.TraceId;
 				TransactionId = transaction.Id;
 				Transaction = new TransactionData(transaction.IsSampled, transaction.Type);
+				ConfigSnapshot = transaction.ConfigSnapshot;
 			}
 
 			ParentId = parentId;

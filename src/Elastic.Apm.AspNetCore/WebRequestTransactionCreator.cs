@@ -54,7 +54,8 @@ namespace Elastic.Apm.AspNetCore
 						logger.Debug()
 							?.Log(
 								"Incoming request with {TraceParentHeaderName} header. DistributedTracingData: {DistributedTracingData}. Continuing trace.",
-								containsPrefixedTraceParentHeader? TraceContext.TraceParentHeaderNamePrefixed : TraceContext.TraceParentHeaderName, tracingData);
+								containsPrefixedTraceParentHeader ? TraceContext.TraceParentHeaderNamePrefixed : TraceContext.TraceParentHeaderName,
+								tracingData);
 
 						transaction = tracer.StartTransaction(transactionName, ApiConstants.TypeRequest, tracingData);
 					}
@@ -63,7 +64,8 @@ namespace Elastic.Apm.AspNetCore
 						logger.Debug()
 							?.Log(
 								"Incoming request with invalid {TraceParentHeaderName} header (received value: {TraceParentHeaderValue}). Starting trace with new trace id.",
-								containsPrefixedTraceParentHeader? TraceContext.TraceParentHeaderNamePrefixed : TraceContext.TraceParentHeaderName, traceParentHeader);
+								containsPrefixedTraceParentHeader ? TraceContext.TraceParentHeaderNamePrefixed : TraceContext.TraceParentHeaderName,
+								traceParentHeader);
 
 						transaction = tracer.StartTransaction(transactionName, ApiConstants.TypeRequest);
 					}
@@ -124,7 +126,10 @@ namespace Elastic.Apm.AspNetCore
 
 		private static Dictionary<string, string> GetHeaders(IHeaderDictionary headers, IConfigSnapshot configSnapshot) =>
 			configSnapshot.CaptureHeaders && headers != null
-				? headers.ToDictionary(header => header.Key, header => header.Value.ToString())
+				? headers.ToDictionary(header => header.Key,
+					header => WildcardMatcher.IsAnyMatch(configSnapshot.SanitizeFieldNames, header.Key)
+						? Apm.Consts.Redacted
+						: header.Value.ToString())
 				: null;
 
 		private static string GetRawUrl(HttpRequest httpRequest, IApmLogger logger)
