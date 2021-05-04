@@ -70,9 +70,9 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			StackTraceLimit = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.StackTraceLimitKey, ParseStackTraceLimit);
 			Recording = GetSimpleConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.Recording, ParseRecording);
 			SanitizeFieldNames =
-				GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.SanitizeFieldNames, ParseSanitizeFieldNames);
+				GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.SanitizeFieldNames, ParseSanitizeFieldNamesImpl);
 			TransactionIgnoreUrls =
-				GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.TransactionIgnoreUrls, ParseTransactionIgnoreUrls);
+				GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.TransactionIgnoreUrls, ParseTransactionIgnoreUrlsImpl);
 			IgnoreMessageQueues =
 				GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.IgnoreMessageQueues, ParseIgnoreMessageQueuesImpl);
 		}
