@@ -12,6 +12,7 @@ using System.Web;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetFullFramework.Extensions;
 using Elastic.Apm.AspNetFullFramework.Helper;
+using Elastic.Apm.Config;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
@@ -227,7 +228,9 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				Socket = new Socket { Encrypted = request.IsSecureConnection, RemoteAddress = request.UserHostAddress },
 				HttpVersion = GetHttpVersion(request.ServerVariables["SERVER_PROTOCOL"]),
-				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(request.Unvalidated.Headers) : null
+				Headers = _isCaptureHeadersEnabled
+					? ConvertHeaders(request.Unvalidated.Headers, (transaction as Transaction)?.ConfigSnapshot)
+					: null
 			};
 		}
 
@@ -246,14 +249,17 @@ namespace Elastic.Apm.AspNetFullFramework
 			}
 		}
 
-		private static Dictionary<string, string> ConvertHeaders(NameValueCollection headers)
+		private static Dictionary<string, string> ConvertHeaders(NameValueCollection headers, IConfigSnapshot configSnapshot)
 		{
 			var convertedHeaders = new Dictionary<string, string>(headers.Count);
 			foreach (var key in headers.AllKeys)
 			{
 				var value = headers.Get(key);
 				if (value != null)
-					convertedHeaders.Add(key, value);
+				{
+					convertedHeaders.Add(key,
+						WildcardMatcher.IsAnyMatch(configSnapshot?.SanitizeFieldNames, key) ? Consts.Redacted : value);
+				}
 			}
 			return convertedHeaders;
 		}
@@ -374,7 +380,7 @@ namespace Elastic.Apm.AspNetFullFramework
 			{
 				Finished = true,
 				StatusCode = response.StatusCode,
-				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(response.Headers) : null
+				Headers = _isCaptureHeadersEnabled ? ConvertHeaders(response.Headers, (transaction as Transaction)?.ConfigSnapshot) : null
 			};
 
 		private void FillSampledTransactionContextUser(HttpContext context, ITransaction transaction)

@@ -109,13 +109,14 @@ namespace Elastic.Apm.Report
 
 			_eventQueue = new BatchBlock<object>(config.MaxBatchEventCount);
 
-			SetUpFilters(TransactionFilters, SpanFilters, apmServerInfo, logger);
+			SetUpFilters(TransactionFilters, SpanFilters, ErrorFilters, apmServerInfo, logger);
 			StartWorkLoop();
 		}
 
 		internal static void SetUpFilters(
 			List<Func<ITransaction, ITransaction>> transactionFilters,
 			List<Func<ISpan, ISpan>> spanFilters,
+			List<Func<IError, IError>> errorFilters,
 			IApmServerInfo apmServerInfo,
 			IApmLogger logger)
 		{
@@ -123,6 +124,7 @@ namespace Elastic.Apm.Report
 			transactionFilters.Add(new HeaderDictionarySanitizerFilter().Filter);
 			// with this, stack trace demystification and conversion to the intake API model happens on a non-application thread:
 			spanFilters.Add(new SpanStackTraceCapturingFilter(logger, apmServerInfo).Filter);
+			errorFilters.Add(new ErrorContextSanitizerFilter().Filter);
 		}
 
 		private bool _getApmServerVersion;

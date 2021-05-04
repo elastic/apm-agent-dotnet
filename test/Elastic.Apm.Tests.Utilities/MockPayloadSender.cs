@@ -19,6 +19,7 @@ namespace Elastic.Apm.Tests.Utilities
 	internal class MockPayloadSender : IPayloadSender
 	{
 		private readonly List<IError> _errors = new List<IError>();
+		private readonly List<Func<IError, IError>> _errorFilters = new List<Func<IError, IError>>();
 		private readonly object _lock = new object();
 		private readonly List<IMetricSet> _metrics = new List<IMetricSet>();
 		private readonly List<Func<ISpan, ISpan>> _spanFilters = new List<Func<ISpan, ISpan>>();
@@ -41,7 +42,7 @@ namespace Elastic.Apm.Tests.Utilities
 			_errorWaitHandle = _waitHandles[2];
 			_metricSetWaitHandle = _waitHandles[3];
 
-			PayloadSenderV2.SetUpFilters(_transactionFilters, _spanFilters, MockApmServerInfo.Version710, logger ?? new NoopLogger());
+			PayloadSenderV2.SetUpFilters(_transactionFilters, _spanFilters, _errorFilters, MockApmServerInfo.Version710, logger ?? new NoopLogger());
 		}
 
 		private readonly AutoResetEvent _transactionWaitHandle;

@@ -299,6 +299,34 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_capturedPayload.FirstTransaction.Context.Request.Headers[headerName].Should().Be("[REDACTED]");
 		}
 
+		/// <summary>
+		/// Asserts that context on error is sanitized in case of HTTP calls.
+		/// </summary>
+		/// <param name="headerName"></param>
+		/// <param name="useOnlyDiagnosticSource"></param>
+		[Theory]
+		[MemberData(nameof(GetData), Tests.DefaultsWithHeaders)]
+		public async Task SanitizeHeadersOnError(string headerName, bool useOnlyDiagnosticSource)
+		{
+			CreateAgent(useOnlyDiagnosticSource);
+			_client.DefaultRequestHeaders.Add(headerName, "123");
+			await _client.GetAsync("/Home/TriggerError");
+
+			_capturedPayload.WaitForTransactions();
+			_capturedPayload.Transactions.Should().ContainSingle();
+			_capturedPayload.FirstTransaction.Context.Should().NotBeNull();
+			_capturedPayload.FirstTransaction.Context.Request.Should().NotBeNull();
+			_capturedPayload.FirstTransaction.Context.Request.Headers.Should().NotBeNull();
+			_capturedPayload.FirstTransaction.Context.Request.Headers[headerName].Should().Be("[REDACTED]");
+
+			_capturedPayload.WaitForErrors();
+			_capturedPayload.Errors.Should().ContainSingle();
+			_capturedPayload.FirstError.Context.Should().NotBeNull();
+			_capturedPayload.FirstError.Context.Request.Should().NotBeNull();
+			_capturedPayload.FirstError.Context.Request.Headers.Should().NotBeNull();
+			_capturedPayload.FirstError.Context.Request.Headers[headerName].Should().Be("[REDACTED]");
+		}
+
 		///// <summary>
 		///// ASP.NET Core seems to rewrite the name of these headers (so <code>authorization</code> becomes <code>Authorization</code>).
 		///// Our "by default case insensitivity" still works, the only difference is that if we send a header with name
