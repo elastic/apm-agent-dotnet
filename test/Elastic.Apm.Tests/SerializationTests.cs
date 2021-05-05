@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Metrics;
 using Elastic.Apm.Model;
 using Elastic.Apm.Report.Serialization;
@@ -433,8 +434,7 @@ namespace Elastic.Apm.Tests
 		[Fact]
 		public void CustomServiceName_ShouldBeOnTransaction()
 		{
-			var mockPayloadSender = new MockPayloadSender();
-			var apmAgent = new ApmAgent(new TestAgentComponents(payloadSender: mockPayloadSender));
+			using var apmAgent = new ApmAgent(new TestAgentComponents());
 
 			var transaction = apmAgent.Tracer.StartTransaction("Transaction1", "Test");
 			transaction.SetService("CustomService", "1.0-beta1");
@@ -442,6 +442,25 @@ namespace Elastic.Apm.Tests
 			var serializedTransaction = _payloadItemSerializer.Serialize(transaction);
 
 			serializedTransaction.Should().Contain("\"service\":{\"name\":\"CustomService\",\"version\":\"1.0-beta1\"");
+		}
+
+		[Fact]
+		public void System_Should_Serialize_ConfiguredHostName_And_DetectedHostName()
+		{
+			var systemHelper = new SystemInfoHelper(new NoopLogger());
+
+			var hostName = "this_is_my_hostname";
+			var system = systemHelper.ParseSystemInfo(hostName);
+
+			var json = _payloadItemSerializer.Serialize(system);
+			var jObject = JObject.Parse(json);
+
+			var configuredHostName = jObject.Property("configured_hostname");
+			configuredHostName.Should().NotBeNull();
+			configuredHostName.Value.Value<string>().Should().Be(hostName);
+
+			var detectedHostName = jObject.Property("detected_hostname");
+			detectedHostName.Should().NotBeNull();
 		}
 
 		/// <summary>
