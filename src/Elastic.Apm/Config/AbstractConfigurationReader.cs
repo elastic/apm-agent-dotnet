@@ -373,7 +373,7 @@ namespace Elastic.Apm.Config
 			_cachedWildcardMatchersTransactionIgnoreUrls.IfNotInited?.InitOrGet(() => ParseTransactionIgnoreUrlsImpl(kv))
 			?? _cachedWildcardMatchersTransactionIgnoreUrls.Value;
 
-		private IReadOnlyList<WildcardMatcher> ParseTransactionIgnoreUrlsImpl(ConfigurationKeyValue kv)
+		internal IReadOnlyList<WildcardMatcher> ParseTransactionIgnoreUrlsImpl(ConfigurationKeyValue kv)
 		{
 			if (kv?.Value == null) return DefaultValues.TransactionIgnoreUrls;
 
