@@ -66,7 +66,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 						}
 					}
 					break;
-				case "Microsoft.AspNetCore.Diagnostics.UnhandledException": //Called when exception handler is registrered
+				case "Microsoft.AspNetCore.Diagnostics.UnhandledException": //Called when exception handler is registered
 				case "Microsoft.AspNetCore.Diagnostics.HandledException":
 					if (!(_defaultHttpContextFetcher.Fetch(kv.Value) is DefaultHttpContext httpContextDiagnosticsUnhandledException)) return;
 					if (!(_exceptionContextPropertyFetcher.Fetch(kv.Value) is Exception diagnosticsException)) return;

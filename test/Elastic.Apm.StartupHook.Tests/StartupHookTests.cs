@@ -71,6 +71,58 @@ namespace Elastic.Apm.StartupHook.Tests
 		}
 
 		[Theory]
+		[InlineData("netcoreapp3.0")]
+		[InlineData("netcoreapp3.1")]
+		[InlineData("net5.0")]
+		public async Task Auto_Instrument_With_StartupHook_Should_Capture_Error(string targetFramework)
+		{
+			var apmLogger = new InMemoryBlockingLogger(LogLevel.Error);
+			var apmServer = new MockApmServer(apmLogger, nameof(Auto_Instrument_With_StartupHook_Should_Capture_Error));
+			var port = apmServer.FindAvailablePortToListen();
+			apmServer.RunInBackground(port);
+			var transactionWaitHandle = new ManualResetEvent(false);
+			var errorWaitHandle = new ManualResetEvent(false);
+
+			apmServer.OnReceive += o =>
+			{
+				if (o is TransactionDto)
+					transactionWaitHandle.Set();
+				if (o is ErrorDto)
+					errorWaitHandle.Set();
+			};
+
+			using (var sampleApp = new SampleApplication())
+			{
+				var environmentVariables = new Dictionary<string, string>
+				{
+					[EnvVarNames.ServerUrl] = $"http://localhost:{port}",
+					[EnvVarNames.CloudProvider] = "none"
+				};
+
+				var uri = sampleApp.Start(targetFramework, environmentVariables);
+				var builder = new UriBuilder(uri) { Path = "Home/Exception" };
+				var client = new HttpClient();
+				var response = await client.GetAsync(builder.Uri);
+
+				response.IsSuccessStatusCode.Should().BeFalse();
+
+				transactionWaitHandle.WaitOne(TimeSpan.FromMinutes(2));
+				apmServer.ReceivedData.Transactions.Should().HaveCount(1);
+
+				var transaction = apmServer.ReceivedData.Transactions.First();
+				transaction.Name.Should().Be("GET Home/Exception");
+
+				errorWaitHandle.WaitOne(TimeSpan.FromMinutes(2));
+				apmServer.ReceivedData.Errors.Should().HaveCount(1);
+
+				var error = apmServer.ReceivedData.Errors.First();
+				error.Culprit.Should().Be("Elastic.Apm.StartupHook.Sample.Controllers.HomeController");
+			}
+
+			await apmServer.StopAsync();
+		}
+
+		[Theory]
 		[InlineData("netcoreapp3.0", ".NET Core", "3.0.0.0")]
 		[InlineData("netcoreapp3.1", ".NET Core", "3.1.0.0")]
 		[InlineData("net5.0", ".NET 5", "5.0.0.0")]

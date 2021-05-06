@@ -4,7 +4,7 @@ using Elastic.Apm.DiagnosticSource;
 namespace Elastic.Apm.AspNetCore.DiagnosticListener
 {
 	/// <summary>
-	/// A Diagnostic listner to create transactions based on diagnostic source events for ASP.NET Core.
+	/// A Diagnostic listener to create transactions based on diagnostic source events for ASP.NET Core.
 	/// This itself manages all transaction and error capturing without the need for a middleware.
 	/// </summary>
 	public class AspNetCoreDiagnosticSubscriber : IDiagnosticsSubscriber

@@ -5,13 +5,20 @@
 
 using System;
 using System.IO;
+using System.Reflection;
+using System.Runtime.Loader;
 
 namespace ElasticApmStartupHook
 {
+	internal class ElasticApmAssemblyLoadContext : AssemblyLoadContext
+	{
+		protected override Assembly Load(AssemblyName assemblyName) => null;
+	}
+
 	/// <summary>
 	/// Logs startup hook process, useful for debugging purposes.
 	/// </summary>
-	public class StartupHookLogger
+	internal class StartupHookLogger
 	{
 		private readonly bool _enabled;
 		private readonly string _logPath;
