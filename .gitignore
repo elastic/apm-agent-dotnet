@@ -351,3 +351,6 @@ terraform.tfstate.backup
 
 # Azure credentials file
 .credentials.json
+
+# This file is generated on build
+src/Elastic.Apm.MongoDb/LICENSE
