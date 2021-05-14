@@ -124,7 +124,7 @@ pipeline {
                     withGithubNotify(context: 'Test - Linux', tab: 'tests') {
                       deleteDir()
                       unstash 'source'
-                      filebeat(output: "docker.log", archiveOnlyOnFail: true){
+                      filebeat(output: "docker.log"){
                         dir("${BASE_DIR}"){
                           dotnet(){
                             sh label: 'Test & coverage', script: '.ci/linux/test.sh'
