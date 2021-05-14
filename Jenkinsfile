@@ -522,13 +522,51 @@ def cleanDir(path){
 }
 
 def dotnet(Closure body){
-  def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-sdk-linux:latest'
-  sh label: 'Docker build', script: "docker build --tag ${dockerTagName} .ci/docker/sdk-linux"
+  // def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-sdk-linux:latest'
+  // sh label: 'Docker build', script: "docker build --tag ${dockerTagName} .ci/docker/sdk-linux"
+  // def homePath = "${env.WORKSPACE}/${env.BASE_DIR}"
+  // docker.image("${dockerTagName}").inside("-e HOME='${homePath}' -v /var/run/docker.sock:/var/run/docker.sock"){
+  //   withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
+  //     body()
+  //   }
+  // }
   def homePath = "${env.WORKSPACE}/${env.BASE_DIR}"
-  docker.image("${dockerTagName}").inside("-e HOME='${homePath}' -v /var/run/docker.sock:/var/run/docker.sock"){
+  withEnv([
+    "HOME=${homePath}",
+    "DOTNET_ROOT=${homePath}/.dotnet",
+    "PATH+DOTNET=${homePath}/tools:${homePath}"
+    ]){
+    sh(label: 'Install dotnet SDK', script: """
+    mkdir -p \${DOTNET_ROOT}
+    # Download .Net SDK installer script
+    curl -s -O -L https://dotnet.microsoft.com/download/dotnet-core/scripts/v1/dotnet-install.sh
+    chmod ugo+rx dotnet-install.sh
+
+    # Install .Net SDKs
+    ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '2.1.505'
+    ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '3.0.103'
+    ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '3.1.100'
+    """)
     withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
-      body()
+      withTerraform(){
+        body()
+      }
     }
+  }
+}
+
+def withTerraform(Closure body){
+  def binDir = "${HOME}/bin"
+  withEnv([
+    "PATH+TERRAFORM=${binDir}"
+    ]){
+      sh(label:'Install Terraform', script: """
+        mkdir -p ${binDir}
+        cd ${binDir}
+        curl -sSL -o terraform.zip https://releases.hashicorp.com/terraform/0.15.3/terraform_0.15.3_linux_amd64.zip
+        unzip terraform.zip
+      """)
+      body()
   }
 }
 
