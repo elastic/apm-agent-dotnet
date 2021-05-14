@@ -59,7 +59,7 @@ namespace Elastic.Apm.SqlClient.Tests
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
 				UseShellExecute = false,
-			}
+			};
 
 			var process = new Process()
 			{
@@ -70,7 +70,7 @@ namespace Elastic.Apm.SqlClient.Tests
 			while (!process.StandardOutput.EndOfStream)
 			{
 				Console.WriteLine(process.StandardOutput.ReadLine());
-			}
+			};
 
 			context.SampleTable.Add(new DbItem { StrField = "abc" });
 			context.SaveChanges();
