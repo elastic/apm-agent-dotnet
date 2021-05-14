@@ -53,13 +53,13 @@ namespace Elastic.Apm.SqlClient.Tests
 			context.Database.EnsureCreated();
 
 			var processInfo = new ProcessStartInfo()
-            {
-                FileName = "/bin/bash",
-                Arguments = "-c 'docker ps -a'",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-            }
+			{
+				FileName = "/bin/bash",
+				Arguments = "-c 'docker ps -a'",
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				UseShellExecute = false,
+			}
 
 			var process = new Process()
 			{
