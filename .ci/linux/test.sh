@@ -13,6 +13,7 @@ set -euxo pipefail
 
 # Run tests for all solution
 dotnet test -c Release test/Elastic.Apm.SqlClient.Tests \
+	--filter EfCoreWithMsSqlTests \
 	--verbosity normal \
 	--results-directory target \
 	--diag "target/diag-ElasticApmAgent.log" \
