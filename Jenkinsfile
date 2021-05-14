@@ -89,33 +89,33 @@ pipeline {
                 /**
                 Build the project from code..
                 */
-                stage('Build') {
-                  steps {
-                    withGithubNotify(context: 'Build - Linux') {
-                      deleteDir()
-                      unstash 'source'
-                      dir("${BASE_DIR}"){
-                        dotnet(){
-                          sh '.ci/linux/build.sh'
-                          whenTrue(isPR()) {
-                            sh(label: 'Package', script: '.ci/linux/release.sh true')
-                          }
-                        }
-                      }
-                    }
-                  }
-                  post {
-                    unsuccessful {
-                      archiveArtifacts(allowEmptyArchive: true,
-                        artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
-                    }
-                    success {
-                      whenTrue(isPR()) {
-                        archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/_packages/*.nupkg,${BASE_DIR}/build/output/*.zip")
-                      }
-                    }
-                  }
-                }
+                // stage('Build') {
+                //   steps {
+                //     withGithubNotify(context: 'Build - Linux') {
+                //       deleteDir()
+                //       unstash 'source'
+                //       dir("${BASE_DIR}"){
+                //         dotnet(){
+                //           sh '.ci/linux/build.sh'
+                //           whenTrue(isPR()) {
+                //             sh(label: 'Package', script: '.ci/linux/release.sh true')
+                //           }
+                //         }
+                //       }
+                //     }
+                //   }
+                //   post {
+                //     unsuccessful {
+                //       archiveArtifacts(allowEmptyArchive: true,
+                //         artifacts: "${MSBUILDDEBUGPATH}/**/MSBuild_*.failure.txt")
+                //     }
+                //     success {
+                //       whenTrue(isPR()) {
+                //         archiveArtifacts(allowEmptyArchive: true, artifacts: "${BASE_DIR}/build/output/_packages/*.nupkg,${BASE_DIR}/build/output/*.zip")
+                //       }
+                //     }
+                //   }
+                // }
                 /**
                 Execute unit tests.
                 */

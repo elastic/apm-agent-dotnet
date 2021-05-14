@@ -47,9 +47,31 @@ namespace Elastic.Apm.SqlClient.Tests
 			var dbContextOptionsBuilder = new DbContextOptionsBuilder<TestDbContext>();
 			dbContextOptionsBuilder.UseSqlServer(_connectionString);
 
+			Debug.WriteLine(_connectionString);
 			// Initialize outside the transaction
 			using var context = new TestDbContext(dbContextOptionsBuilder.Options);
 			context.Database.EnsureCreated();
+
+			var processInfo = new ProcessStartInfo()
+            {
+                FileName = "/bin/bash",
+                Arguments = "-c 'docker ps -a'",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+            }
+
+			var process = new Process()
+			{
+				StartInfo = processInfo,
+			};
+			process.Start();
+
+			while (!process.StandardOutput.EndOfStream)
+			{
+				Console.WriteLine(process.StandardOutput.ReadLine());
+			}
+
 			context.SampleTable.Add(new DbItem { StrField = "abc" });
 			context.SaveChanges();
 
