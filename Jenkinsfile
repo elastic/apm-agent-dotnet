@@ -534,7 +534,7 @@ def dotnet(Closure body){
   withEnv([
     "HOME=${homePath}",
     "DOTNET_ROOT=${homePath}/.dotnet",
-    "PATH+DOTNET=${homePath}/tools:${homePath}"
+    "PATH+DOTNET=${homePath}/.dotnet/tools:${homePath}/.dotnet"
     ]){
     sh(label: 'Install dotnet SDK', script: """
     mkdir -p \${DOTNET_ROOT}
