@@ -36,12 +36,12 @@ namespace Elastic.Apm.AspNetCore
 				ITransaction transaction;
 				var transactionName = $"{context.Request.Method} {context.Request.Path}";
 
-				var containsPrefixedTraceParentHeader =
-					context.Request.Headers.TryGetValue(TraceContext.TraceParentHeaderNamePrefixed, out var traceParentHeader);
+				var containsTraceParentHeader =
+					context.Request.Headers.TryGetValue(TraceContext.TraceParentHeaderName, out var traceParentHeader);
 
-				var containsTraceParentHeader = false;
-				if (!containsPrefixedTraceParentHeader)
-					containsTraceParentHeader = context.Request.Headers.TryGetValue(TraceContext.TraceParentHeaderName, out traceParentHeader);
+				var containsPrefixedTraceParentHeader = false;
+				if (!containsTraceParentHeader)
+					containsPrefixedTraceParentHeader = context.Request.Headers.TryGetValue(TraceContext.TraceParentHeaderNamePrefixed, out traceParentHeader);
 
 				if (containsPrefixedTraceParentHeader || containsTraceParentHeader)
 				{
