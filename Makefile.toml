@@ -1,0 +1,52 @@
+[config]
+default_to_workspace = false
+
+[env]
+DOTNET_VERSION = "netcoreapp3.1"
+DOTNET_CONFIG = "Debug"
+RUST_LOG = { value = "info", condition = { env_not_set = ["RUST_LOG"] } }
+CORECLR_ENABLE_PROFILING = { value = "1", condition = { env_not_set = ["CORECLR_ENABLE_PROFILING"] } }
+CORECLR_PROFILER = { value = "{FA65FE15-F085-4681-9B20-95E04F6C03CC}", condition = { env_not_set = ["CORECLR_PROFILER"] } }
+
+[tasks.build-profiler]
+description = "Builds CLR Profiler"
+command = "cargo"
+args = ["build", "-p", "elastic_apm_profiler"]
+
+[tasks.build-dotnet]
+description = "Builds .NET project to instrument"
+command = "dotnet"
+args = ["build", "-c", "${DOTNET_CONFIG}", "./sample/Example/Example.csproj"]
+
+[tasks.build-loader]
+description = "Builds .NET loader"
+command = "dotnet"
+args = ["build", "-c", "Release", "./src/Elastic.Apm.Profiler.Managed.Loader/Elastic.Apm.Profiler.Managed.Loader.csproj"]
+
+[tasks.build]
+clear = true
+dependencies = ["build-loader", "build-profiler", "build-dotnet"]
+
+[tasks.expand]
+clear = true
+script = '''
+cargo expand --manifest-path src/elastic_apm_profiler/Cargo.toml --color never > expanded.rs
+'''
+
+[tasks.set-profiler-env]
+env = { "CORECLR_PROFILER_PATH" = "${CARGO_MAKE_WORKING_DIRECTORY}/target/debug/libelastic_apm_profiler.so" }
+run_task = "run-dotnet"
+
+[tasks.set-profiler-env.mac]
+env = { "CORECLR_PROFILER_PATH" = "${CARGO_MAKE_WORKING_DIRECTORY}/target/debug/libelastic_apm_profiler.dylib" }
+
+[tasks.set-profiler-env.windows]
+env = { "CORECLR_PROFILER_PATH" = "${CARGO_MAKE_WORKING_DIRECTORY}\\target\\debug\\elastic_apm_profiler.dll" }
+
+[tasks.run-dotnet]
+command = "dotnet"
+args = ["${CARGO_MAKE_WORKING_DIRECTORY}/sample/Example/bin/${DOTNET_CONFIG}/${DOTNET_VERSION}/Example.dll"]
+
+[tasks.test]
+clear = true
+dependencies = ["build", "set-profiler-env"]

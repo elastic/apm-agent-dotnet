@@ -67,6 +67,41 @@ These are the main folders within the repository:
 common build tasks](build/README.md).
 * `.ci`: This folder contains all the scripts used to build, test and release the agent within the CI.
 
+## APM .NET agent auto-instrumentation
+
+This repository contains an implementation of a CLR profiler in Rust for auto instrumentation
+for the Elastic APM .NET agent. It has been tested to work for both CLR (Windows) and 
+CoreCLR (Windows and Linux).
+
+[**Planning documentation**](https://docs.google.com/document/d/11UiFxrjBUc3ICH7lgElYstYW0yEyAgGIAeNdNdoztzw/edit?usp=sharing)
+
+### Getting started
+
+1. [Install Rust](https://www.rust-lang.org/tools/install)
+2. Install cargo make
+
+  ```sh
+  cargo install --force cargo-make
+  ```
+
+3. Install [.NET 5](https://dotnet.microsoft.com/download/dotnet/5.0) and [.NET Core 3.1](https://dotnet.microsoft.com/download/dotnet/3.1) SDKs
+4. Install an IDE to work with Rust
+- [CLion](https://www.jetbrains.com/clion/) with [Rust plugin](https://www.jetbrains.com/rust/)
+- [Intellij IDEA](https://www.jetbrains.com/idea/) with [Rust plugin](https://www.jetbrains.com/rust/)
+- VS Code with [Rust plugin](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust)
+
+5. Compile profiler and .NET applications, and run the Example .NET console application with profiler attached
+
+  ```sh
+  cargo make test
+  ```
+
+The log level of the profiler can be controlled with the `RUST_LOG` environment variable, which can be passed to cargo make
+
+  ```sh
+  cargo make test --env RUST_LOG=trace
+  ```
+
 ## License
 
 Elastic APM .NET Agent is licensed under Apache License, Version 2.0.
