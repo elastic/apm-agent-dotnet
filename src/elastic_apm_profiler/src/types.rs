@@ -227,6 +227,10 @@ pub struct Version {
 }
 
 impl Version {
+    const MAX: Version = Version{major:u16::MAX, minor:u16::MAX, build:u16::MAX, revision:u16::MAX};
+
+    const MIN: Version = Version{major:0, minor:0, build:0, revision:0};
+
     pub fn new(major: u16, minor: u16, build: u16, revision: u16) -> Self {
         Version {
             major,
@@ -347,7 +351,7 @@ impl PublicKey {
     }
 
     pub fn public_key(&self) -> String {
-        self.bytes.to_hex()
+        hex::encode(self.bytes.as_slice())
     }
 
     /// the low 8 bytes of the SHA-1 hash of the originator’s public key in the assembly reference
@@ -364,7 +368,7 @@ impl PublicKey {
                     let mut buf: Vec<u8> = repeat(0).take((sha1.output_bits() + 7) / 8).collect();
                     sha1.result(&mut buf);
                     buf.reverse();
-                    buf[0..8].to_hex()
+                    hex::encode(buf[0..8].as_ref())
                 }
                 _ => String::new(),
             },
@@ -381,40 +385,4 @@ pub enum HashAlgorithmType {
     Sha256 = 32780,
     Sha384 = 32781,
     Sha512 = 32782,
-}
-
-const CHARS: &'static [u8] = b"0123456789abcdef";
-
-/// A trait for converting a value to hexadecimal encoding
-pub trait ToHex {
-    /// Converts the value of `self` to a hex value, returning the owned
-    /// string.
-    fn to_hex(&self) -> String;
-}
-
-impl ToHex for [u8] {
-    /// Turn a vector of `u8` bytes into a hexadecimal string.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// #![feature(rustc_private)]
-    ///
-    /// extern crate serialize;
-    /// use serialize::hex::ToHex;
-    ///
-    /// fn main () {
-    ///     let str = [52,32].to_hex();
-    ///     println!("{}", str);
-    /// }
-    /// ```
-    fn to_hex(&self) -> String {
-        let mut v = Vec::with_capacity(self.len() * 2);
-        for &byte in self {
-            v.push(CHARS[(byte >> 4) as usize]);
-            v.push(CHARS[(byte & 0xf) as usize]);
-        }
-
-        unsafe { String::from_utf8_unchecked(v) }
-    }
 }

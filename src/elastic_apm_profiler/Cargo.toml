@@ -1,6 +1,6 @@
 [package]
 name = "elastic_apm_profiler"
-version = "0.1.0"
+version = "1.9.0-alpha.1"
 edition = "2018"
 authors = ["Elastic and Contributors"]
 description = "Elastic APM .NET agent CLR profiler"
@@ -12,12 +12,15 @@ license = "Apache-2.0"
 bitflags = "1.2.1"
 c_vec = "2.0.0"
 com = { git = "https://github.com/russcam/com-rs.git", branch = "master", features = ["production"] }
+hex = "0.4.3"
 lazy_static = "1.4.0"
 log = "0.4.14"
 num-derive = "0.3"
 num-traits = "0.2"
 rust-crypto = "^0.2"
 rust-embed = { version = "5.9.0", features = ["compression", "debug-embed"] }
+serde = { version = "1.0.126", features = ["derive"] }
+serde_json = "1.0.64"
 simple_logger = "1.11.0"
 widestring = "0.4.2"
 

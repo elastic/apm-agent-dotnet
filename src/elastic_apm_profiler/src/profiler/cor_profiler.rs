@@ -18,7 +18,7 @@ use crate::{
         imetadata_import::{IMetaDataImport, IMetaDataImport2},
     },
     profiler::managed::ManagedLoader,
-    types::{HashAlgorithmType, ModuleInfo, ToHex},
+    types::{HashAlgorithmType, ModuleInfo},
 };
 use com::{
     interfaces::iunknown::IUnknown,

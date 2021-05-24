@@ -7,4 +7,5 @@ pub enum Error {
     InvalidCilOpcode,
     PreludeTooBig,
     InvalidVersion,
+    InvalidAssemblyReference,
 }
