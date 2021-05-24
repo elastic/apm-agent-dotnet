@@ -6,6 +6,7 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Elastic.Apm.Helpers;
 
 namespace Elastic.Apm.Logging
@@ -34,25 +35,37 @@ namespace Elastic.Apm.Logging
 			if (!IsEnabled(level)) return;
 
 			var message = formatter(state, e);
+			var logLevel = LevelToString(level);
 
-			// default message size is 51 + length of loglevel (max 8), message and exception.
-			var builder = StringBuilderCache.Acquire(80);
-			builder.Append('[');
-			builder.Append(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff zzz"));
-			builder.Append("][");
-			builder.Append(LevelToString(level));
-			builder.Append("] - ");
-			builder.Append(message);
-			if (e != null)
+			StringBuilder builder;
+			string exceptionType = null;
+			var capacity = 51 + message.Length + logLevel.Length;
+
+			if (e is null)
+				builder = new StringBuilder(capacity);
+			else
 			{
-				builder.Append("+-> Exception: ");
-				builder.Append(e.GetType().FullName);
-				builder.Append(": ");
-				builder.AppendLine(e.Message);
-				builder.AppendLine(e.StackTrace);
+				exceptionType = e.GetType().FullName;
+				builder = new StringBuilder(capacity + exceptionType.Length + e.Message.Length + e.StackTrace.Length);
 			}
 
-			var logMessage = StringBuilderCache.GetStringAndRelease(builder);
+			builder.Append('[')
+				.Append(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff zzz"))
+				.Append("][")
+				.Append(logLevel)
+				.Append("] - ")
+				.Append(message);
+
+			if (e != null)
+			{
+				builder.Append("+-> Exception: ")
+					.Append(exceptionType)
+					.Append(": ")
+					.AppendLine(e.Message)
+					.AppendLine(e.StackTrace);
+			}
+
+			var logMessage = builder.ToString();
 			for (var i = 0; i < TraceSource.Listeners.Count; i++)
 			{
 				var listener = TraceSource.Listeners[i];
