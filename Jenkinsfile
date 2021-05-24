@@ -365,7 +365,6 @@ pipeline {
             }
             stage('Benchmarks') {
               agent { label 'metal' }
-              options { skipDefaultCheckout() }
               environment {
                 REPORT_FILE = 'apm-agent-benchmark-results.json'
                 HOME = "${env.WORKSPACE}"
@@ -386,6 +385,7 @@ pipeline {
               options {
                 warnError('Benchmark failed')
                 timeout(time: 1, unit: 'HOURS')
+                skipDefaultCheckout()
               }
               steps {
                 withGithubNotify(context: 'Benchmarks') {
