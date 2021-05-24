@@ -3,7 +3,7 @@
 @Library('apm@current') _
 
 pipeline {
-  agent { label 'linux && immutable' }
+  agent { label 'ubuntu-20' }
   environment {
     REPO = 'apm-agent-dotnet'
     // keep it short to avoid the 248 characters PATH limit in Windows
@@ -365,6 +365,7 @@ pipeline {
             }
             stage('Benchmarks') {
               agent { label 'metal' }
+              options { skipDefaultCheckout() }
               environment {
                 REPORT_FILE = 'apm-agent-benchmark-results.json'
                 HOME = "${env.WORKSPACE}"
