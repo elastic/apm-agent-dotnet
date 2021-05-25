@@ -23,6 +23,7 @@ namespace Elastic.Apm.Model
 		EfClassic = 1 << 3,
 		SqlClient = 1 << 4,
 		AspNetClassic = 1 << 5,
-		Azure = 1 << 6
+		Azure = 1 << 6,
+		Elasticsearch = 1 << 7,
 	}
 }
