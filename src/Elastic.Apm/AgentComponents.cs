@@ -53,22 +53,21 @@ namespace Elastic.Apm
 
 				HttpTraceConfiguration = new HttpTraceConfiguration();
 
+				TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigStore,
+					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo);
+
 				if (ConfigurationReader.Enabled)
 				{
 					CentralConfigFetcher = centralConfigFetcher ?? new CentralConfigFetcher(Logger, ConfigStore, Service);
 					MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigStore);
 					MetricsCollector.StartCollecting();
 				}
-
-				TracerInternal = new Tracer(Logger, Service, PayloadSender, ConfigStore,
-					currentExecutionSegmentsContainer ?? new CurrentExecutionSegmentsContainer(), ApmServerInfo);
-
-				if (!ConfigurationReader.Enabled)
-					Logger?.Info()?.Log("The Elastic APM .NET Agent is disabled - the agent won't capture traces and metrics.");
+				else
+					Logger.Info()?.Log("The Elastic APM .NET Agent is disabled - the agent won't capture traces and metrics.");
 			}
 			catch (Exception e)
 			{
-				logger?.Error()?.LogException(e, "Failed initializing agent.");
+				Logger.Error()?.LogException(e, "Failed initializing agent.");
 			}
 		}
 
