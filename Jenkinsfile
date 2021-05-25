@@ -18,7 +18,7 @@ pipeline {
     SLACK_CHANNEL = '#apm-agent-dotnet'
   }
   options {
-    timeout(time: 2, unit: 'HOURS')
+    timeout(time: 4, unit: 'HOURS')
     buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20', daysToKeepStr: '30'))
     timestamps()
     ansiColor('xterm')
