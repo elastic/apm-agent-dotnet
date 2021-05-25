@@ -71,7 +71,7 @@ pipeline {
               /**
               Make sure there are no code style violation in the repo.
               */
-              // stages{
+              stages{
               //   Disable until https://github.com/elastic/apm-agent-dotnet/issues/563
               //   stage('CodeStyleCheck') {
               //     steps {
