@@ -883,7 +883,7 @@ When this setting is `true`, the agent will also add the header `elasticapm-trac
 [options="header"]
 |============
 | Environment variable name                    | IConfiguration or Web.config key
-| `ELASTIC_APM_USE_ELASTIC_TRACEPARENT_HEADER` | `ElasticApm:UseElasticTraceparentHeder`
+| `ELASTIC_APM_USE_ELASTIC_TRACEPARENT_HEADER` | `ElasticApm:UseElasticTraceparentHeader`
 |============
 
 [options="header"]
