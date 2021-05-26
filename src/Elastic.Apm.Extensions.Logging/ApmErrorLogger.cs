@@ -42,7 +42,7 @@ namespace Elastic.Apm.Extensions.Logging
 
 			if (_agent is ApmAgent apmAgent && exception != null)
 			{
-				errorLog.StackTrace = StacktraceHelper.GenerateApmStackTrace(exception, null, "CaptureErrorLogsAsApmError",
+				errorLog.StackTrace = StacktraceHelper.GenerateApmStackTrace(exception, _agent.Logger, "CaptureErrorLogsAsApmError",
 					apmAgent.ConfigurationReader, apmAgent.Components.ApmServerInfo);
 			}
 

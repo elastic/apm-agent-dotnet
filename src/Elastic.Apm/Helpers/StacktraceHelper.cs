@@ -48,7 +48,7 @@ namespace Elastic.Apm.Helpers
 			var len = stackTraceLimit == -1 ? frames.Length : Math.Min(frames.Length, stackTraceLimit);
 			var retVal = new List<CapturedStackFrame>(len);
 
-			logger.Trace()?.Log("transform stack frames");
+			logger?.Trace()?.Log("transform stack frames");
 
 			try
 			{
@@ -64,7 +64,7 @@ namespace Elastic.Apm.Helpers
 
 					var fileName = frame?.GetFileName();
 
-					logger.Trace()?.Log("{MethodName}, {lineNo}", functionName, frame?.GetFileLineNumber());
+					logger?.Trace()?.Log("{MethodName}, {lineNo}", functionName, frame?.GetFileLineNumber());
 
 					var capturedStackFrame = new CapturedStackFrame
 					{
