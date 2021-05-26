@@ -126,9 +126,8 @@ namespace Elastic.Apm.DiagnosticListeners
 		{
 			if (_realAgent?.TracerInternal.CurrentSpan is Span currentSpan)
 			{
-				// if there's a current span that has been instrumented for Azure, don't create a span for
-				// the current request
-				if (currentSpan.InstrumentationFlag == InstrumentationFlag.Azure)
+				// if the current span is an exit span, don't create a span for the current request
+				if (currentSpan.InstrumentationFlag == InstrumentationFlag.Azure || currentSpan.InstrumentationFlag == InstrumentationFlag.Elasticsearch)
 					return;
 			}
 
