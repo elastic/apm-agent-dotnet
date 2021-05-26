@@ -20,6 +20,20 @@ namespace Elastic.Apm.Tests
 		public SystemInfoHelperTests() => _systemInfoHelper = new SystemInfoHelper(new NoopLogger());
 
 		[Fact]
+		public void ParseSystemInfo_Should_Use_HostName_For_ConfiguredHostName()
+		{
+			var hostName = "This_is_my_host";
+			var system = _systemInfoHelper.ParseSystemInfo(hostName);
+
+#pragma warning disable 618
+			system.HostName.Should().Be(hostName);
+#pragma warning restore 618
+
+			system.ConfiguredHostName.Should().Be(hostName);
+			system.DetectedHostName.Should().NotBe(hostName);
+		}
+
+		[Fact]
 		public void ParseKubernetesInfo_ShouldReturnNull_WhenNoEnvironmentVariablesAreSetAndContainerInfoIsNull()
 		{
 			// Arrange + Act

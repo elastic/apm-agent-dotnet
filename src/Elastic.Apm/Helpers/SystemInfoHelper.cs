@@ -100,7 +100,7 @@ namespace Elastic.Apm.Helpers
 			{
 				Container = containerInfo,
 				DetectedHostName = detectedHostName,
-				HostName = hostName,
+				ConfiguredHostName = hostName,
 				Kubernetes = kubernetesInfo
 			};
 		}
