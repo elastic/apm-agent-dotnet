@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -43,15 +44,19 @@ namespace Elastic.Apm.Config
 		public bool Recording => _content.Recording;
 		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => _content.SanitizeFieldNames;
 		public string SecretToken => _content.SecretToken;
-		[Obsolete("Use ServerUrl")]
-		public IReadOnlyList<Uri> ServerUrls => _content.ServerUrls;
 		public string ServerCert => _content.ServerCert;
 		public Uri ServerUrl => _content.ServerUrl;
+
+		[Obsolete("Use ServerUrl")]
+		public IReadOnlyList<Uri> ServerUrls => _content.ServerUrls;
+
 		public string ServiceName => _content.ServiceName;
 		public string ServiceNodeName => _content.ServiceNodeName;
 		public string ServiceVersion => _content.ServiceVersion;
 		public double SpanFramesMinDurationInMilliseconds => _content.SpanFramesMinDurationInMilliseconds;
 		public int StackTraceLimit => _content.StackTraceLimit;
+
+		public bool SuppressTraceContextHeaders => _content.SuppressTraceContextHeaders;
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => _content.TransactionIgnoreUrls;
 		public int TransactionMaxSpans => _content.TransactionMaxSpans;
 		public double TransactionSampleRate => _content.TransactionSampleRate;

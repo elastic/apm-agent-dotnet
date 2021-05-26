@@ -201,6 +201,27 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_payloadSender1.FirstTransaction.ParentId.Should().Be(expectedParentId);
 		}
 
+		/// Sets the SuppressTraceContextHeaders config and makes sure that the traceparent header is ignored
+		/// </summary>
+		[Fact]
+		public async Task SuppressTraceContextHeaders()
+		{
+			// Set suppressTraceContextHeaders (and 100% sample rate)
+			_agent1.ConfigStore.CurrentSnapshot =
+				new MockConfigSnapshot(new NoopLogger(), suppressTraceContextHeaders: "true", transactionSampleRate: "1");
+
+			var client = new HttpClient();
+
+			// Send traceparent wiht sampled=false
+			client.DefaultRequestHeaders.Add("traceparent", $"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-00");
+
+			var res = await client.GetAsync("http://localhost:5901/Home/Index");
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			// Assert that the transaction is sampled and the traceparent header was ignored
+			_payloadSender1.FirstTransaction.IsSampled.Should().BeTrue();
+		}
+
 		public async Task DisposeAsync()
 		{
 			_cancellationTokenSource.Cancel();

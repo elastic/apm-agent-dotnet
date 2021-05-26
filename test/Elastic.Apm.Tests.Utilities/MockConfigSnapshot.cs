@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -46,6 +47,7 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly string _serviceVersion;
 		private readonly string _spanFramesMinDurationInMilliseconds;
 		private readonly string _stackTraceLimit;
+		private readonly string _suppressTraceContextHeaders;
 		private readonly string _transactionIgnoreUrls;
 		private readonly string _transactionMaxSpans;
 		private readonly string _transactionSampleRate;
@@ -89,7 +91,8 @@ namespace Elastic.Apm.Tests.Utilities
 			string recording = null,
 			string serverUrl = null,
 			string serverCert = null,
-			string ignoreMessageQueues = null
+			string ignoreMessageQueues = null,
+			string suppressTraceContextHeaders = null
 		) : base(logger, ThisClassName)
 		{
 			_serverUrls = serverUrls;
@@ -128,6 +131,7 @@ namespace Elastic.Apm.Tests.Utilities
 			_serverUrl = serverUrl;
 			_serverCert = serverCert;
 			_ignoreMessageQueues = ignoreMessageQueues;
+			_suppressTraceContextHeaders = suppressTraceContextHeaders;
 		}
 
 		public string ApiKey => ParseApiKey(Kv(EnvVarNames.ApiKey, _apiKey, Origin));
@@ -179,11 +183,6 @@ namespace Elastic.Apm.Tests.Utilities
 
 		public string ServerCert => ParseServerCert(Kv(EnvVarNames.ServerCert, _serverCert, Origin));
 
-		[Obsolete("Use ServerUrl")]
-		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(_serverUrls != null
-			? Kv(EnvVarNames.ServerUrls, _serverUrls, Origin)
-			: Kv(EnvVarNames.ServerUrl, _serverUrl, Origin));
-
 		public Uri ServerUrl
 		{
 			get
@@ -196,6 +195,11 @@ namespace Elastic.Apm.Tests.Utilities
 			}
 		}
 
+		[Obsolete("Use ServerUrl")]
+		public IReadOnlyList<Uri> ServerUrls => ParseServerUrls(_serverUrls != null
+			? Kv(EnvVarNames.ServerUrls, _serverUrls, Origin)
+			: Kv(EnvVarNames.ServerUrl, _serverUrl, Origin));
+
 		public string ServiceName => ParseServiceName(Kv(EnvVarNames.ServiceName, _serviceName, Origin));
 		public string ServiceNodeName => ParseServiceNodeName(Kv(EnvVarNames.ServiceNodeName, _serviceNodeName, Origin));
 		public string ServiceVersion => ParseServiceVersion(Kv(EnvVarNames.ServiceVersion, _serviceVersion, Origin));
@@ -205,6 +209,9 @@ namespace Elastic.Apm.Tests.Utilities
 			_spanFramesMinDurationInMilliseconds, Origin));
 
 		public int StackTraceLimit => ParseStackTraceLimit(Kv(EnvVarNames.StackTraceLimit, _stackTraceLimit, Origin));
+
+		public bool SuppressTraceContextHeaders =>
+			ParseSuppressTraceContextHeaders(Kv(EnvVarNames.SuppressTraceContextHeader, _suppressTraceContextHeaders, Origin));
 
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
 			ParseTransactionIgnoreUrls(Kv(EnvVarNames.TransactionIgnoreUrls, _transactionIgnoreUrls, Origin));

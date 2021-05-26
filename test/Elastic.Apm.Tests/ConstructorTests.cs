@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -70,6 +71,9 @@ namespace Elastic.Apm.Tests
 			public double TransactionSampleRate => ConfigConsts.DefaultValues.TransactionSampleRate;
 
 			public bool VerifyServerCert => ConfigConsts.DefaultValues.VerifyServerCert;
+
+			public bool SuppressTraceContextHeaders => ConfigConsts.DefaultValues.SuppressTraceContextHeaders;
+
 			public IReadOnlyCollection<string> ExcludedNamespaces => ConfigConsts.DefaultValues.DefaultExcludedNamespaces;
 			public IReadOnlyCollection<string> ApplicationNamespaces => ConfigConsts.DefaultValues.DefaultApplicationNamespaces;
 

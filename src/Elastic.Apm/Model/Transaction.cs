@@ -106,7 +106,7 @@ namespace Elastic.Apm.Model
 				_activity = StartActivity();
 
 			var isSamplingFromDistributedTracingData = false;
-			if (distributedTracingData == null)
+			if (distributedTracingData == null || configSnapshot.SuppressTraceContextHeaders)
 			{
 				// We consider a newly created transaction **without** explicitly passed distributed tracing data
 				// to be a root transaction.
