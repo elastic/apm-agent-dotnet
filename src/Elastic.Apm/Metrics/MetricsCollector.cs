@@ -66,13 +66,15 @@ namespace Elastic.Apm.Metrics
 
 			MetricsProviders = new List<IMetricsProvider>();
 
-			//TODO check if disabled
 			if (metricsProvider != null)
 			{
 				foreach (var item in metricsProvider)
 				{
 					if (item != null)
-						MetricsProviders.Add(item);
+					{
+						if (!WildcardMatcher.IsAnyMatch(currentConfigSnapshot.DisableMetrics, BreakdownMetricsProvider.SpanSelfTime))
+							MetricsProviders.Add(item);
+					}
 				}
 			}
 
@@ -181,11 +183,7 @@ namespace Elastic.Apm.Metrics
 
 			try
 			{
-				//TODO: it'd be nice to do this in 1 call
-				foreach (var item in samplesFromAllProviders)
-				{
-					_payloadSender.QueueMetrics(item);
-				}
+				foreach (var item in samplesFromAllProviders) _payloadSender.QueueMetrics(item);
 
 				_logger.Debug()
 					?.Log("Metrics collected: {data}",
