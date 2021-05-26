@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information
 
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Reflection;
 using FluentAssertions;
 using Xunit;
 

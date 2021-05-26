@@ -6,6 +6,7 @@ using System;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
+using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Metrics;
@@ -34,7 +35,6 @@ namespace Elastic.Apm
 		{
 			try
 			{
-
 				var tempLogger = logger ?? ConsoleLogger.LoggerOrDefault(configurationReader?.LogLevel);
 				ConfigurationReader = configurationReader ?? new EnvironmentConfigurationReader(tempLogger);
 				Logger = logger ?? ConsoleLogger.LoggerOrDefault(ConfigurationReader.LogLevel);
@@ -50,6 +50,8 @@ namespace Elastic.Apm
 				PayloadSender = payloadSender
 					?? new PayloadSenderV2(Logger, ConfigStore.CurrentSnapshot, Service, system, ApmServerInfo,
 						isEnabled: ConfigurationReader.Enabled);
+
+				HttpTraceConfiguration = new HttpTraceConfiguration();
 
 				if (ConfigurationReader.Enabled)
 				{
@@ -83,6 +85,8 @@ namespace Elastic.Apm
 		public IPayloadSender PayloadSender { get; }
 
 		internal IApmServerInfo ApmServerInfo { get; }
+
+		internal HttpTraceConfiguration HttpTraceConfiguration { get; }
 
 		/// <summary>
 		/// Identifies the monitored service. If this remains unset the agent

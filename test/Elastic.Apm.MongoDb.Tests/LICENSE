@@ -1,0 +1,2 @@
+The code for Elastic.Apm.MongoDb.Tests is based on the elastic-apm-mongo project by Vadim Hatsura (@vhatsura),
+licensed under the Apache 2.0 License. https://github.com/vhatsura/elastic-apm-mongo

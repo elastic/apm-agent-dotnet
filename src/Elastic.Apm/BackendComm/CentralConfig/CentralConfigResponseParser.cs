@@ -10,7 +10,7 @@ using System.Net;
 using System.Net.Http;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.BackendComm.CentralConfig
 {
@@ -136,8 +136,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 		{
 			internal const string CaptureBodyContentTypesKey = "capture_body_content_types";
 			internal const string CaptureBodyKey = "capture_body";
-
 			internal const string CaptureHeadersKey = "capture_headers";
+			internal const string IgnoreMessageQueues = "ignore_message_queues";
 			internal const string LogLevelKey = "log_level";
 			internal const string Recording = "recording";
 			internal const string SanitizeFieldNames = "sanitize_field_names";
@@ -151,12 +151,16 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			{
 				CaptureBodyKey,
 				CaptureBodyContentTypesKey,
+				CaptureHeadersKey,
+				IgnoreMessageQueues,
+				LogLevelKey,
+				Recording,
+				SanitizeFieldNames,
+				SpanFramesMinDurationKey,
+				StackTraceLimitKey,
+				TransactionIgnoreUrls,
 				TransactionMaxSpansKey,
 				TransactionSampleRateKey,
-				CaptureHeadersKey,
-				LogLevelKey,
-				SpanFramesMinDurationKey,
-				StackTraceLimitKey
 			};
 
 			private readonly IDictionary<string, string> _keyValues;

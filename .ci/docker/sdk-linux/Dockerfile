@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:5.0.102-ca-patch-buster-slim
+FROM mcr.microsoft.com/dotnet/sdk:5.0
 
 ENV DOTNET_ROOT=/usr/share/dotnet
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${DOTNET_ROOT}/tools:${DOTNET_ROOT}
@@ -11,7 +11,6 @@ RUN /bin/bash ./dotnet-install.sh --install-dir "${DOTNET_ROOT}" -version "2.1.5
 RUN /bin/bash ./dotnet-install.sh --install-dir "${DOTNET_ROOT}" -version "3.0.103"
 RUN /bin/bash ./dotnet-install.sh --install-dir "${DOTNET_ROOT}" -version "3.1.100"
 
-
 # Install docker
 RUN apt update \
  && apt-get -qq install -y apt-transport-https ca-certificates curl \
@@ -22,3 +21,9 @@ RUN apt update \
  && apt-get -qq install -y docker-ce docker-ce-cli containerd.io \
     --no-install-recommends \
  && rm -rf /var/lib/apt/lists/*
+ 
+# Install terraform
+RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add - \
+ && apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
+ && apt-get update \
+ && apt-get install terraform

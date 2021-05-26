@@ -7,8 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Elastic.Apm.Api;
 using Elastic.Apm.Metrics;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json.Linq;
 
 namespace Elastic.Apm.Report.Serialization
 {

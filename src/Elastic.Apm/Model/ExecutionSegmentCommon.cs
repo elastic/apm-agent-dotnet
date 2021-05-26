@@ -166,11 +166,34 @@ namespace Elastic.Apm.Model
 				executionSegment.Outcome = Outcome.Failure;
 
 			var capturedCulprit = string.IsNullOrEmpty(culprit) ? GetCulprit(exception, configurationReader) : culprit;
+			var debugMessage = $"{nameof(ExecutionSegmentCommon)}.{nameof(CaptureException)}";
 
-			var capturedException = new CapturedException { Message = exception.Message, Type = exception.GetType().FullName, Handled = isHandled };
+			var capturedException = new CapturedException
+			{
+				Message = exception.Message,
+				Type = exception.GetType().FullName,
+				Handled = isHandled,
+				StackTrace = StacktraceHelper.GenerateApmStackTrace(exception, logger,
+					debugMessage, configurationReader, apmServerInfo)
+			};
 
-			capturedException.StackTrace = StacktraceHelper.GenerateApmStackTrace(exception, logger,
-				$"{nameof(Transaction)}.{nameof(CaptureException)}", configurationReader, apmServerInfo);
+			var innerException = exception.InnerException;
+			if (innerException != null)
+			{
+				capturedException.Cause = new List<CapturedException>();
+				while (innerException != null)
+				{
+					capturedException.Cause.Add(new CapturedException
+					{
+						Message = innerException.Message,
+						Type = innerException.GetType().FullName,
+						StackTrace = StacktraceHelper.GenerateApmStackTrace(innerException, logger,
+							debugMessage, configurationReader, apmServerInfo)
+					});
+
+					innerException = innerException.InnerException;
+				}
+			}
 
 			payloadSender.QueueError(new Error(capturedException, transaction, parentId ?? executionSegment?.Id, logger, labels)
 			{
@@ -258,14 +281,11 @@ namespace Elastic.Apm.Model
 			});
 		}
 
-		internal static IExecutionSegment GetCurrentExecutionSegment(IApmAgent agent) =>
-			agent.Tracer.CurrentSpan ?? (IExecutionSegment)agent.Tracer.CurrentTransaction;
-
 		internal static ISpan StartSpanOnCurrentExecutionSegment(IApmAgent agent, string spanName, string spanType, string subType = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false
 		)
 		{
-			var currentExecutionSegment = GetCurrentExecutionSegment(agent);
+			var currentExecutionSegment = agent.GetCurrentExecutionSegment();
 
 			if (currentExecutionSegment == null)
 				return null;

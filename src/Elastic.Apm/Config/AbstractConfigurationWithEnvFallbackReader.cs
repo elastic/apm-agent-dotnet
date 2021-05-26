@@ -69,6 +69,9 @@ namespace Elastic.Apm.Config
 
 		public virtual string HostName => ParseHostName(Read(KeyNames.HostName, EnvVarNames.HostName));
 
+		public IReadOnlyList<WildcardMatcher> IgnoreMessageQueues =>
+			ParseIgnoreMessageQueues(Read(KeyNames.IgnoreMessageQueues, EnvVarNames.IgnoreMessageQueues));
+
 		public virtual LogLevel LogLevel => ParseLogLevel(Read(KeyNames.LogLevel, EnvVarNames.LogLevel));
 
 		public virtual int MaxBatchEventCount =>
@@ -81,7 +84,7 @@ namespace Elastic.Apm.Config
 			ParseMetricsInterval(Read(KeyNames.MetricsInterval, EnvVarNames.MetricsInterval));
 
 		public bool Recording =>
-			ParseEnabled(Read(KeyNames.Enabled, EnvVarNames.Enabled));
+			ParseRecording(Read(KeyNames.Recording, EnvVarNames.Recording));
 
 		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames =>
 			ParseSanitizeFieldNames(Read(KeyNames.SanitizeFieldNames, EnvVarNames.SanitizeFieldNames));

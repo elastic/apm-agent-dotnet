@@ -35,6 +35,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 
 		internal string ETag { get; }
 
+		internal IReadOnlyList<WildcardMatcher> IgnoreMessageQueues { get; private set; }
+
 		internal LogLevel? LogLevel { get; private set; }
 
 		internal bool? Recording { get; private set; }
@@ -71,6 +73,8 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 				GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.SanitizeFieldNames, ParseSanitizeFieldNames);
 			TransactionIgnoreUrls =
 				GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.TransactionIgnoreUrls, ParseTransactionIgnoreUrls);
+			IgnoreMessageQueues =
+				GetConfigurationValue(CentralConfigResponseParser.CentralConfigPayload.IgnoreMessageQueues, ParseIgnoreMessageQueuesImpl);
 		}
 
 		private ConfigurationKeyValue BuildKv(string key, string value) =>

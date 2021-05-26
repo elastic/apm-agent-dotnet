@@ -64,6 +64,7 @@ namespace Elastic.Apm.Tests
 			public string ServiceName { get; }
 			public string ServiceVersion { get; }
 			public IReadOnlyList<WildcardMatcher> DisableMetrics => ConfigConsts.DefaultValues.DisableMetrics;
+			public IReadOnlyList<WildcardMatcher> IgnoreMessageQueues => ConfigConsts.DefaultValues.IgnoreMessageQueues;
 			public double SpanFramesMinDurationInMilliseconds => ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;
 			public int StackTraceLimit => ConfigConsts.DefaultValues.StackTraceLimit;
 			public double TransactionSampleRate => ConfigConsts.DefaultValues.TransactionSampleRate;

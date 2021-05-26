@@ -27,6 +27,9 @@ namespace Elastic.Apm.Tests.Utilities
 			throw new InvalidOperationException($"Could not find solution root directory from the current directory `{currentDirectory}'");
 		}
 
+		/// <summary>
+		/// The full path to the solution root
+		/// </summary>
 		public static string Root => _root.Value;
 	}
 }

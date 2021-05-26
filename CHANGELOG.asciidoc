@@ -23,6 +23,22 @@ endif::[]
 [[release-notes-1.x]]
 === .NET Agent version 1.x
 
+[[release-notes-1.9.0]]
+==== 1.9.0
+
+[float]
+===== Features
+- {pull}925[#925] Add GC time (issue: {issue}922[#922])
+- {pull}1147[#1147] Propagate sample rate through `tracestate` (issue: {issue}1021[#1021])
+
+[float]
+===== Bug fixes
+- {pull}1189[#1189] Get transaction name from Web API controller route template
+
+[float]
+===== Breaking changes
+- {pull}1161[#1161] and {pull}1162[#1162] The agent tries to never throw any exception. Specifically instead of throwing `InstanceAlreadyCreatedException`, it will print an error log.
+
 [[release-notes-1.8.1]]
 ==== 1.8.1
 

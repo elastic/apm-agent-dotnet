@@ -17,11 +17,12 @@ namespace Elastic.Apm.Model
 	internal enum InstrumentationFlag : short
 	{
 		None = 0,
-		HttpClient = 1,
-		AspNetCore = 2,
-		EfCore = 4,
-		EfClassic = 8,
-		SqlClient = 16,
-		AspNetClassic = 32
+		HttpClient = 1 << 0,
+		AspNetCore = 1 << 1,
+		EfCore = 1 << 2,
+		EfClassic = 1 << 3,
+		SqlClient = 1 << 4,
+		AspNetClassic = 1 << 5,
+		Azure = 1 << 6
 	}
 }

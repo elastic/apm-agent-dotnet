@@ -1,11 +1,10 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
 using System;
 using System.Diagnostics;
 using Elastic.Apm.DiagnosticListeners;
-using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.DiagnosticSource
 {
@@ -15,6 +14,14 @@ namespace Elastic.Apm.DiagnosticSource
 	/// </summary>
 	public class HttpDiagnosticsSubscriber : IDiagnosticsSubscriber
 	{
+		private readonly bool _captureSpan;
+
+		public HttpDiagnosticsSubscriber() : this(true)
+		{
+		}
+
+		internal HttpDiagnosticsSubscriber(bool captureSpan) => _captureSpan = captureSpan;
+
 		/// <summary>
 		/// Start listening for HttpClient diagnostic source events.
 		/// </summary>
@@ -22,7 +29,20 @@ namespace Elastic.Apm.DiagnosticSource
 		{
 			var retVal = new CompositeDisposable();
 
-			var initializer = new DiagnosticInitializer(agent.Logger, new[] { HttpDiagnosticListener.New(agent) });
+			if (agent is ApmAgent realAgent)
+			{
+				var configuration = realAgent.HttpTraceConfiguration;
+				configuration.CaptureSpan |= _captureSpan;
+
+				// if a Http Diagnostic listener has already subscribed, don't subscribe again.
+				if (configuration.Subscribed)
+					return retVal;
+
+				configuration.Subscribed = true;
+			}
+
+			var initializer = new DiagnosticInitializer(agent.Logger, HttpDiagnosticListener.New(agent));
+
 			retVal.Add(initializer);
 
 			retVal.Add(DiagnosticListener

@@ -18,7 +18,11 @@ declare -a projectsToPublish=(
 "Elastic.Apm.Extensions.Hosting"
 "Elastic.Apm.GrpcClient"
 "Elastic.Apm.Extensions.Logging"
-"Elastic.Apm.StackExchange.Redis")
+"Elastic.Apm.StackExchange.Redis"
+"Elastic.Apm.Azure.ServiceBus"
+"Elastic.Apm.Azure.Storage"
+"Elastic.Apm.MongoDb"
+)
 
 for project in  "${projectsToPublish[@]}"
 do

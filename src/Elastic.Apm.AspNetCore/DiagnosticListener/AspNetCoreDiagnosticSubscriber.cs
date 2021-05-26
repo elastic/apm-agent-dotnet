@@ -15,7 +15,7 @@ namespace Elastic.Apm.AspNetCore.DiagnosticListener
 			if (!agent.ConfigurationReader.Enabled)
 				return retVal;
 
-			var subscriber = new DiagnosticInitializer(agent.Logger, new[] { new AspNetCoreDiagnosticListener(agent as ApmAgent), });
+			var subscriber = new DiagnosticInitializer(agent.Logger, new AspNetCoreDiagnosticListener(agent as ApmAgent));
 			retVal.Add(subscriber);
 
 			retVal.Add(System.Diagnostics.DiagnosticListener

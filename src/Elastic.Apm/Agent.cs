@@ -6,6 +6,7 @@ using System;
 using Elastic.Apm.Api;
 using Elastic.Apm.BackendComm.CentralConfig;
 using Elastic.Apm.Config;
+using Elastic.Apm.DiagnosticListeners;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
@@ -40,8 +41,8 @@ namespace Elastic.Apm
 		public IPayloadSender PayloadSender => Components.PayloadSender;
 		public Service Service => Components.Service;
 		public ITracer Tracer => Components.Tracer;
-
 		internal Tracer TracerInternal => Components.TracerInternal;
+		internal HttpTraceConfiguration HttpTraceConfiguration => Components.HttpTraceConfiguration;
 
 		public void Dispose()
 		{

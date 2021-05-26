@@ -45,7 +45,7 @@ namespace Elastic.Apm.StackExchange.Redis
 			if (!Agent.Config.Enabled || !Agent.Config.Recording)
 				return null;
 
-			var executionSegment = ExecutionSegmentCommon.GetCurrentExecutionSegment(_agent.Value);
+			var executionSegment = _agent.Value.GetCurrentExecutionSegment();
 			var realSpan = executionSegment as Span;
 			Transaction realTransaction = null;
 

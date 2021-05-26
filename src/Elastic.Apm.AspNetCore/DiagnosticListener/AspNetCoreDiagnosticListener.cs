@@ -9,9 +9,9 @@ using System.Collections.Generic;
 using Elastic.Apm.Api;
 using Elastic.Apm.AspNetCore.Extensions;
 using Elastic.Apm.DiagnosticListeners;
-using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
 using Elastic.Apm.Model;
+using Elastic.Apm.Reflection;
 using Microsoft.AspNetCore.Http;
 
 namespace Elastic.Apm.AspNetCore.DiagnosticListener

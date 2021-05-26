@@ -25,6 +25,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+  <ItemGroup>
     <Folder Include="Data\" />
     <Folder Include="Data\HistoricalData" />
     <Folder Include="Migrations" />

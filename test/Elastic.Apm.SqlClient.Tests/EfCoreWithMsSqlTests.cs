@@ -5,7 +5,6 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
-using Elastic.Apm.DatabaseTests.Common;
 using Elastic.Apm.EntityFrameworkCore;
 using Elastic.Apm.Tests.Utilities;
 using FluentAssertions;
@@ -20,13 +19,14 @@ namespace Elastic.Apm.SqlClient.Tests
 	/// same database calls causing db spans being captured twice.
 	/// This class creates such a setup, and tests if double-capturing of the same db call does not happen.
 	/// </summary>
-	public class EfCoreWithMsSqlTests : IDisposable, IClassFixture<DatabaseFixture>
+	[Collection("SqlServer")]
+	public class EfCoreWithMsSqlTests : IDisposable
 	{
 		private readonly ApmAgent _apmAgent;
 		private readonly string _connectionString;
 		private readonly MockPayloadSender _payloadSender;
 
-		public EfCoreWithMsSqlTests(ITestOutputHelper testOutputHelper, DatabaseFixture sqlClientListenerFixture)
+		public EfCoreWithMsSqlTests(ITestOutputHelper testOutputHelper, SqlServerFixture sqlClientListenerFixture)
 		{
 			_connectionString = sqlClientListenerFixture.ConnectionString;
 

@@ -3,6 +3,7 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
+using System;
 using System.Collections;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
@@ -86,6 +87,11 @@ namespace Elastic.Apm.Cloud
 			}
 
 			var subscriptionId = websiteOwnerNameParts[0];
+
+			var webspaceIndex = websiteOwnerNameParts[1].LastIndexOf(Webspace, StringComparison.Ordinal);
+			if (webspaceIndex != -1)
+				websiteOwnerNameParts[1] = websiteOwnerNameParts[1].Substring(0, webspaceIndex);
+
 			var lastHyphenIndex = websiteOwnerNameParts[1].LastIndexOf('-');
 			if (lastHyphenIndex == -1)
 			{
@@ -96,11 +102,7 @@ namespace Elastic.Apm.Cloud
 				return Task.FromResult<Api.Cloud>(null);
 			}
 
-			var index = lastHyphenIndex + 1;
-
-			var region = websiteOwnerNameParts[1].EndsWith(Webspace)
-				? websiteOwnerNameParts[1].Substring(index, websiteOwnerNameParts[1].Length - (index + Webspace.Length))
-				: websiteOwnerNameParts[1].Substring(index);
+			var region = websiteOwnerNameParts[1].Substring(lastHyphenIndex + 1);
 
 			return Task.FromResult(new Api.Cloud
 			{

@@ -5,8 +5,7 @@
 using System.Globalization;
 using System.IO;
 using System.Text;
-using Elastic.Apm.Config;
-using Newtonsoft.Json;
+using Elastic.Apm.Libraries.Newtonsoft.Json;
 
 namespace Elastic.Apm.Report.Serialization
 {
@@ -18,7 +17,7 @@ namespace Elastic.Apm.Report.Serialization
 		private readonly JsonSerializer _serializer;
 
 		internal PayloadItemSerializer()
-    {
+		{
 			var settings = new JsonSerializerSettings
 			{
 				ContractResolver = new ElasticApmContractResolver(),
@@ -42,7 +41,15 @@ namespace Elastic.Apm.Report.Serialization
 		/// <param name="json">the JSON</param>
 		/// <typeparam name="T">the type to deserialize</typeparam>
 		/// <returns>a new instance of <typeparamref name="T"/></returns>
-		internal T Deserialize<T>(string json) => _serializer.Deserialize<T>(new JsonTextReader(new StringReader(json)));
+		internal T Deserialize<T>(string json)
+		{
+			var val = _serializer.Deserialize<T>(new JsonTextReader(new StringReader(json)));
+
+			if (val != null)
+				return (T)val;
+			else
+				return default;
+		}
 
 		/// <summary>
 		/// Serializes the item to JSON

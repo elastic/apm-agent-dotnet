@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Elastic.Apm.Api;
 using Elastic.Apm.DiagnosticSource;
 
 namespace Elastic.Apm
@@ -40,6 +41,19 @@ namespace Elastic.Apm
 
 			return disposable;
 		}
+
+		internal static IExecutionSegment GetCurrentExecutionSegment(this IApmAgent agent) =>
+			agent.Tracer.CurrentSpan ?? (IExecutionSegment)agent.Tracer.CurrentTransaction;
+
+	}
+
+	internal class EmptyDisposable : IDisposable
+	{
+		private EmptyDisposable() { }
+
+		public static EmptyDisposable Instance = new EmptyDisposable();
+
+		public void Dispose() { }
 	}
 
 	/// <summary>

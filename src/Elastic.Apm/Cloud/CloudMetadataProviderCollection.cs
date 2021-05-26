@@ -20,7 +20,14 @@ namespace Elastic.Apm.Cloud
 		protected override string GetKeyForItem(ICloudMetadataProvider item) => item.Provider;
 
 		public CloudMetadataProviderCollection(string cloudProvider, IApmLogger logger)
+			: this(cloudProvider, logger, new EnvironmentVariables(logger))
 		{
+		}
+
+		internal CloudMetadataProviderCollection(string cloudProvider, IApmLogger logger, IEnvironmentVariables environmentVariables)
+		{
+			environmentVariables ??= new EnvironmentVariables(logger);
+
 			switch (cloudProvider?.ToLowerInvariant())
 			{
 				case SupportedValues.CloudProviderAws:
@@ -31,7 +38,7 @@ namespace Elastic.Apm.Cloud
 					break;
 				case SupportedValues.CloudProviderAzure:
 					Add(new AzureCloudMetadataProvider(logger));
-					Add(new AzureAppServiceMetadataProvider(logger, EnvironmentHelper.GetEnvironmentVariables(logger)));
+					Add(new AzureAppServiceMetadataProvider(logger, environmentVariables.GetEnvironmentVariables()));
 					break;
 				case SupportedValues.CloudProviderNone:
 					break;
@@ -42,7 +49,7 @@ namespace Elastic.Apm.Cloud
 					Add(new AwsCloudMetadataProvider(logger));
 					Add(new GcpCloudMetadataProvider(logger));
 					Add(new AzureCloudMetadataProvider(logger));
-					Add(new AzureAppServiceMetadataProvider(logger, EnvironmentHelper.GetEnvironmentVariables(logger)));
+					Add(new AzureAppServiceMetadataProvider(logger, environmentVariables.GetEnvironmentVariables()));
 					break;
 				default:
 					throw new ArgumentException($"Unknown cloud provider {cloudProvider}", nameof(cloudProvider));

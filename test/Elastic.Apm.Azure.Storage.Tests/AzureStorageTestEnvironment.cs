@@ -1,0 +1,121 @@
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
+// Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
+// See the LICENSE file in the project root for more information
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.Azure;
+using Elastic.Apm.Tests.Utilities.Terraform;
+using Xunit;
+using Xunit.Abstractions;
+
+namespace Elastic.Apm.Azure.Storage.Tests
+{
+	[CollectionDefinition("AzureStorage")]
+	public class AzureStorageTestEnvironmentCollection : ICollectionFixture<AzureStorageTestEnvironment>
+	{
+
+	}
+
+	/// <summary>
+	/// A test environment for Azure Storage that deploys and configures an Azure Storage account
+	/// in a given region and location
+	/// </summary>
+	/// <remarks>
+	/// Resource name rules
+	/// https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules
+	/// </remarks>
+	public class AzureStorageTestEnvironment : IDisposable
+	{
+		private readonly TerraformResources _terraform;
+		private readonly Dictionary<string, string> _variables;
+
+		public AzureStorageTestEnvironment(IMessageSink messageSink)
+		{
+			var solutionRoot = SolutionPaths.Root;
+			var terraformResourceDirectory = Path.Combine(solutionRoot, "build", "terraform", "azure", "storage");
+			var credentials = AzureCredentials.Instance;
+
+			// don't try to run terraform if not authenticated.
+			if (credentials is Unauthenticated)
+				return;
+
+			_terraform = new TerraformResources(terraformResourceDirectory, credentials, messageSink);
+
+			var machineName = Environment.MachineName.ToLowerInvariant();
+			if (machineName.Length > 66)
+				machineName = machineName.Substring(0, 66);
+
+			_variables = new Dictionary<string, string>
+			{
+				["resource_group"] = $"dotnet-{machineName}-storage-test",
+				["storage_account_name"] = "dotnet" + Guid.NewGuid().ToString("N").Substring(0, 18),
+			};
+
+			_terraform.Init();
+			_terraform.Apply(_variables);
+
+			StorageAccountConnectionString = _terraform.Output("connection_string");
+			StorageAccountConnectionStringProperties = ParseConnectionString(StorageAccountConnectionString);
+		}
+
+		public StorageAccountProperties StorageAccountConnectionStringProperties { get; }
+
+		private static StorageAccountProperties ParseConnectionString(string connectionString)
+		{
+			var parts = connectionString.Split(';');
+			string accountName = null;
+			string endpointSuffix = null;
+			string defaultEndpointsProtocol = null;
+
+			foreach (var item in parts)
+			{
+				var kv = item.Split('=');
+				switch (kv[0])
+				{
+					case "AccountName":
+						accountName = kv[1];
+						break;
+					case "EndpointSuffix":
+						endpointSuffix = kv[1];
+						break;
+					case "DefaultEndpointsProtocol":
+						defaultEndpointsProtocol = kv[1];
+						break;
+				}
+			}
+
+			return new StorageAccountProperties(defaultEndpointsProtocol, accountName, endpointSuffix);
+		}
+
+		public string StorageAccountConnectionString { get; }
+
+
+		public void Dispose() => _terraform?.Destroy(_variables);
+	}
+
+	public class StorageAccountProperties
+	{
+		public StorageAccountProperties(string defaultEndpointsProtocol, string accountName, string endpointSuffix)
+		{
+			DefaultEndpointsProtocol = defaultEndpointsProtocol;
+			AccountName = accountName;
+			EndpointSuffix = endpointSuffix;
+		}
+
+		public string AccountName { get; }
+
+		public string EndpointSuffix { get; }
+
+		public string DefaultEndpointsProtocol { get; }
+
+		public string QueueUrl => $"{DefaultEndpointsProtocol}://{AccountName}.queue.{EndpointSuffix}/";
+
+		public string BlobUrl => $"{DefaultEndpointsProtocol}://{AccountName}.blob.{EndpointSuffix}/";
+
+		public string FileUrl => $"{DefaultEndpointsProtocol}://{AccountName}.file.{EndpointSuffix}/";
+	}
+}
