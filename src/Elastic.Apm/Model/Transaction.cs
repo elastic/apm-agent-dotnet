@@ -31,11 +31,11 @@ namespace Elastic.Apm.Model
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
-		private readonly ChildDurationTimer _childDurationTimer = new ChildDurationTimer();
+		internal readonly ChildDurationTimer ChildDurationTimer = new();
 
 		internal readonly TraceState _traceState;
 
-		internal ConcurrentDictionary<(string, string), SpanTimer> SpanTimings = new();
+		internal readonly ConcurrentDictionary<(string, string), SpanTimer> SpanTimings = new();
 
 		// This constructor is meant for serialization
 		[JsonConstructor]
@@ -58,9 +58,9 @@ namespace Elastic.Apm.Model
 		}
 
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
-		internal Transaction(ApmAgent agent, string name, string type)
+		internal Transaction(ApmAgent agent, string name, string type, long? timestamp = null)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigStore.CurrentSnapshot,
-				agent.TracerInternal.CurrentExecutionSegmentsContainer, null) { }
+				agent.TracerInternal.CurrentExecutionSegmentsContainer, null, timestamp: timestamp) { }
 
 		/// <summary>
 		/// Creates a new transaction
@@ -79,6 +79,8 @@ namespace Elastic.Apm.Model
 		/// If set the transaction will ignore Activity.Current and it's trace id,
 		/// otherwise the agent will try to keep ids in-sync across async work-flows
 		/// </param>
+		/// <param name="timestamp">The timestamp of the transaction. If it's <code>null</code> then the current timestamp
+		/// will be captured, which is typically the desired behaviour. Setting the timestamp to a specific value is typically useful for testing. </param>
 		internal Transaction(
 			IApmLogger logger,
 			string name,
@@ -90,11 +92,12 @@ namespace Elastic.Apm.Model
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
 			IApmServerInfo apmServerInfo,
 			BreakdownMetricsProvider breakdownMetricsProvider = null,
-			bool ignoreActivity = false
+			bool ignoreActivity = false,
+			long? timestamp = null
 		)
 		{
 			ConfigSnapshot = configSnapshot;
-			Timestamp = TimeUtils.TimestampNow();
+			Timestamp = timestamp ?? TimeUtils.TimestampNow();
 
 			_logger = logger?.Scoped(nameof(Transaction));
 			_apmServerInfo = apmServerInfo;
@@ -294,7 +297,7 @@ namespace Elastic.Apm.Model
 		internal IConfigSnapshot ConfigSnapshot { get; }
 
 		[JsonIgnore]
-		public double SelfDuration => Duration.HasValue ? Duration.Value - _childDurationTimer.Duration : 0;
+		public double SelfDuration => Duration.HasValue ? Duration.Value - ChildDurationTimer.Duration : 0;
 
 
 		/// <summary>
@@ -308,7 +311,7 @@ namespace Elastic.Apm.Model
 
 		/// <inheritdoc />
 		/// <summary>
-		/// The duration of the transaction.
+		/// The duration of the transaction in ms with 3 decimal points.
 		/// If it's not set (HasValue returns false) then the value
 		/// is automatically calculated when <see cref="End" /> is called.
 		/// </summary>
@@ -471,6 +474,9 @@ namespace Elastic.Apm.Model
 					?.Log("Ended {Transaction} (with Duration already set)." +
 						" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
 						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
+
+				//TODO: set _childDurationTimer
+				ChildDurationTimer.OnSpanEnd((long)(Timestamp + Duration.Value));
 			}
 			else
 			{
@@ -481,7 +487,7 @@ namespace Elastic.Apm.Model
 					$" Context: this: {this}; {nameof(_isEnded)}: {_isEnded}");
 
 				var endTimestamp = TimeUtils.TimestampNow();
-				_childDurationTimer.OnSpanEnd(endTimestamp);
+				ChildDurationTimer.OnSpanEnd(endTimestamp);
 				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
 				_logger.Trace()
 					?.Log("Ended {Transaction}. Start time: {Time} (as timestamp: {Timestamp})," +
@@ -533,14 +539,14 @@ namespace Elastic.Apm.Model
 		}
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
-			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false
+			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null
 		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, this, _sender, _logger, _currentExecutionSegmentsContainer, _apmServerInfo,
 				_breakdownMetricsProvider,
-				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart);
+				instrumentationFlag: instrumentationFlag, captureStackTraceOnStart: captureStackTraceOnStart, timestamp: timestamp);
 
-			_childDurationTimer.OnChildStart(retVal.Timestamp);
+			ChildDurationTimer.OnChildStart(retVal.Timestamp);
 			if (!string.IsNullOrEmpty(subType))
 				retVal.Subtype = subType;
 

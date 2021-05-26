@@ -2,8 +2,6 @@
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
-using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Elastic.Apm.Api;
@@ -17,6 +15,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 
 		private readonly object _lock = new();
+		private int _transactionCount;
 
 		public string DbgName => nameof(BreakdownMetricsProvider);
 
@@ -35,6 +34,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 		{
 			lock (_lock)
 			{
+				_transactionCount++;
 				var timestampNow = TimeUtils.TimestampNow();
 
 				foreach (var item in transaction.SpanTimings)
@@ -57,9 +57,9 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 					new MetricSet(timestampNow,
 						new List<MetricSample>
 						{
-							new("transaction.duration.count", _itemsToSend.Count + 1),
+							new("transaction.duration.count", _transactionCount),
 							new("transaction.duration.sum.us", transaction.Duration!.Value),
-							new("transaction.breakdown.count", _itemsToSend.Count + 1),
+							new("transaction.breakdown.count", _transactionCount),
 						})
 					{ Transaction = new TransactionInfo { Name = transaction.Name, Type = transaction.Type } };
 
@@ -75,6 +75,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 			{
 				retVal.AddRange(_itemsToSend.Take(1000));
 				_itemsToSend.Clear();
+				_transactionCount = 0;
 			}
 
 			return retVal;

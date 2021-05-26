@@ -31,7 +31,8 @@ namespace Elastic.Apm
 			IMetricsCollector metricsCollector,
 			ICurrentExecutionSegmentsContainer currentExecutionSegmentsContainer,
 			ICentralConfigFetcher centralConfigFetcher,
-			IApmServerInfo apmServerInfo
+			IApmServerInfo apmServerInfo,
+			BreakdownMetricsProvider breakdownMetricsProvider = null
 		)
 		{
 			try
@@ -54,11 +55,9 @@ namespace Elastic.Apm
 
 				HttpTraceConfiguration = new HttpTraceConfiguration();
 
-				BreakdownMetricsProvider breakdownMetricsProvider = null;
-
 				if (ConfigurationReader.Enabled)
 				{
-					breakdownMetricsProvider = new BreakdownMetricsProvider();
+					breakdownMetricsProvider ??= new BreakdownMetricsProvider();
 
 					CentralConfigFetcher = centralConfigFetcher ?? new CentralConfigFetcher(Logger, ConfigStore, Service);
 					MetricsCollector = metricsCollector ?? new MetricsCollector(Logger, PayloadSender, ConfigStore, breakdownMetricsProvider);

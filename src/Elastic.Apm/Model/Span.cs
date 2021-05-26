@@ -58,11 +58,12 @@ namespace Elastic.Apm.Model
 			BreakdownMetricsProvider breakdownMetricsProvider,
 			Span parentSpan = null,
 			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None,
-			bool captureStackTraceOnStart = false
+			bool captureStackTraceOnStart = false,
+			long? timestamp = null
 		)
 		{
 			InstrumentationFlag = instrumentationFlag;
-			Timestamp = TimeUtils.TimestampNow();
+			Timestamp = timestamp ?? TimeUtils.TimestampNow();
 			Id = RandomGenerator.GenerateRandomBytesAsString(new byte[8]);
 			_logger = logger?.Scoped($"{nameof(Span)}.{Id}");
 
@@ -278,11 +279,11 @@ namespace Elastic.Apm.Model
 		}
 
 		internal Span StartSpanInternal(string name, string type, string subType = null, string action = null,
-			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false
+			InstrumentationFlag instrumentationFlag = InstrumentationFlag.None, bool captureStackTraceOnStart = false, long? timestamp = null
 		)
 		{
 			var retVal = new Span(name, type, Id, TraceId, _enclosingTransaction, _payloadSender, _logger, _currentExecutionSegmentsContainer,
-				_apmServerInfo, _breakdownMetricsProvider, this, instrumentationFlag, captureStackTraceOnStart);
+				_apmServerInfo, _breakdownMetricsProvider, this, instrumentationFlag, captureStackTraceOnStart, timestamp);
 
 			if (!string.IsNullOrEmpty(subType))
 				retVal.Subtype = subType;
@@ -301,7 +302,6 @@ namespace Elastic.Apm.Model
 
 		public void End()
 		{
-
 			// If the outcome is still unknown and it was not specifically set to unknown, then it's success
 			if (Outcome == Outcome.Unknown && !_outcomeChangedThroughApi)
 				Outcome = Outcome.Success;
@@ -312,6 +312,11 @@ namespace Elastic.Apm.Model
 					?.Log("Ended {Span} (with Duration already set)." +
 						" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
 						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
+
+				//_enclosingTransaction?.SpanTimings.
+				_parentSpan?._childDurationTimer.OnChildEnd((long)(Timestamp + Duration.Value * 1000));
+				_childDurationTimer.OnSpanEnd((long)(Timestamp + Duration.Value * 1000));
+				_enclosingTransaction.ChildDurationTimer.OnChildEnd((long)(Timestamp + Duration.Value * 1000));
 			}
 			else
 			{
@@ -324,10 +329,10 @@ namespace Elastic.Apm.Model
 				var endTimestamp = TimeUtils.TimestampNow();
 				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
 
-				if (_parentSpan != null)
-					_parentSpan._childDurationTimer.OnChildEnd(endTimestamp);
-
+				_parentSpan?._childDurationTimer.OnChildEnd(endTimestamp);
 				_childDurationTimer.OnSpanEnd(endTimestamp);
+				_enclosingTransaction.ChildDurationTimer.OnChildEnd(endTimestamp);
+
 				_logger.Trace()
 					?.Log("Ended {Span}. Start time: {Time} (as timestamp: {Timestamp})," +
 						" End time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
@@ -569,10 +574,7 @@ namespace Elastic.Apm.Model
 		/// <param name="startTimestamp"></param>
 		public void OnChildStart(long startTimestamp)
 		{
-			if (++_activeChildren == 1)
-			{
-				_start = startTimestamp;
-			}
+			if (++_activeChildren == 1) _start = startTimestamp;
 		}
 
 		/// <summary>
@@ -581,10 +583,7 @@ namespace Elastic.Apm.Model
 		/// <param name="endTimestamp"></param>
 		public void OnChildEnd(long endTimestamp)
 		{
-			if (--_activeChildren == 0)
-			{
-				IncrementDuration(endTimestamp);
-			}
+			if (--_activeChildren == 0) IncrementDuration(endTimestamp);
 		}
 
 		/// <summary>
@@ -603,6 +602,6 @@ namespace Elastic.Apm.Model
 		public double Duration => _duration;
 
 		private void IncrementDuration(long epochMicros)
-		 => _duration = TimeUtils.DurationBetweenTimestamps(_start, epochMicros);
+			=> _duration += TimeUtils.DurationBetweenTimestamps(_start, epochMicros);
 	}
 }
