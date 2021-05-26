@@ -97,9 +97,9 @@ namespace Elastic.Apm.Azure.Storage
 			string destinationAddress = null;
 
 			var urlTag = activity.Tags.FirstOrDefault(t => t.Key == "url").Value;
-			if (!string.IsNullOrEmpty(urlTag))
+			if (!string.IsNullOrEmpty(urlTag) && Uri.TryCreate(urlTag, UriKind.Absolute, out var url))
 			{
-				var queueUrl = new QueueUrl(urlTag);
+				var queueUrl = new QueueUrl(url);
 				queueName = queueUrl.QueueName;
 				destinationAddress = queueUrl.FullyQualifiedNamespace;
 			}
@@ -146,8 +146,8 @@ namespace Elastic.Apm.Azure.Storage
 			}
 
 			var urlTag = activity.Tags.FirstOrDefault(t => t.Key == "url").Value;
-			var queueName = !string.IsNullOrEmpty(urlTag)
-				? new QueueUrl(urlTag).QueueName
+			var queueName = !string.IsNullOrEmpty(urlTag) && Uri.TryCreate(urlTag, UriKind.Absolute, out var url)
+				? new QueueUrl(url).QueueName
 				: null;
 
 			if (MatchesIgnoreMessageQueues(queueName))
@@ -243,20 +243,12 @@ namespace Elastic.Apm.Azure.Storage
 		/// <summary>
 		/// Working with a queue url to extract the queue name and address.
 		/// </summary>
-		private class QueueUrl
+		private class QueueUrl : StorageUrl
 		{
-			public QueueUrl(string url)
-			{
-				var builder = new UriBuilder(url);
-
-				FullyQualifiedNamespace = builder.Uri.GetLeftPart(UriPartial.Authority) + "/";
-
-				QueueName = builder.Uri.Segments.Length > 1
-					? builder.Uri.Segments[1].TrimEnd('/')
+			public QueueUrl(Uri url) : base(url) =>
+				QueueName = url.Segments.Length > 1
+					? url.Segments[1].TrimEnd('/')
 					: null;
-			}
-
-			public string FullyQualifiedNamespace { get; }
 
 			public string QueueName { get; }
 		}

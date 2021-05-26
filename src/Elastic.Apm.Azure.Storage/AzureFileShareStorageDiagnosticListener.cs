@@ -99,7 +99,7 @@ namespace Elastic.Apm.Azure.Storage
 			}
 
 			var urlTag = activity.Tags.FirstOrDefault(t => t.Key == "url").Value;
-			var fileShareUrl = new FileShareUrl(urlTag);
+			var fileShareUrl = new FileShareUrl(new Uri(urlTag));
 			var spanName = $"{AzureFileStorage.SpanName} {action} {fileShareUrl.ResourceName}";
 
 			var span = currentSegment.StartSpan(spanName, ApiConstants.TypeStorage, AzureFileStorage.SubType, action);
@@ -112,7 +112,7 @@ namespace Elastic.Apm.Azure.Storage
 				Service = new Destination.DestinationService
 				{
 					Name = AzureFileStorage.SubType,
-					Resource = $"{AzureFileStorage.SubType}/{fileShareUrl.ResourceName}",
+					Resource = $"{AzureFileStorage.SubType}/{fileShareUrl.StorageAccountName}",
 					Type = ApiConstants.TypeStorage
 				}
 			};
@@ -175,17 +175,9 @@ namespace Elastic.Apm.Azure.Storage
 			segment.End();
 		}
 
-		private class FileShareUrl
+		private class FileShareUrl : StorageUrl
 		{
-			public FileShareUrl(string url)
-			{
-				var builder = new UriBuilder(url);
-
-				FullyQualifiedNamespace = builder.Uri.GetLeftPart(UriPartial.Authority) + "/";
-				ResourceName = builder.Uri.AbsolutePath.TrimStart('/');
-			}
-
-			public string FullyQualifiedNamespace { get; }
+			public FileShareUrl(Uri url) : base(url) => ResourceName = url.AbsolutePath.TrimStart('/');
 
 			public string ResourceName { get; }
 		}

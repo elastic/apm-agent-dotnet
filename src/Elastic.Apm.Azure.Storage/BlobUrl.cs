@@ -7,22 +7,28 @@ using System;
 
 namespace Elastic.Apm.Azure.Storage
 {
-	internal class BlobUrl
+	internal class BlobUrl : StorageUrl
 	{
-		public BlobUrl(Uri url)
-		{
-			var builder = new UriBuilder(url);
-
-			FullyQualifiedNamespace = builder.Uri.GetLeftPart(UriPartial.Authority) + "/";
-			ResourceName = builder.Uri.AbsolutePath.TrimStart('/');
-		}
+		public BlobUrl(Uri url) : base(url) => ResourceName = url.AbsolutePath.TrimStart('/');
 
 		public BlobUrl(string url) : this(new Uri(url))
 		{
 		}
 
 		public string ResourceName { get; }
+	}
 
+	internal abstract class StorageUrl
+	{
+		private static char[] SplitDomain = { '.' };
+
+		protected StorageUrl(Uri url)
+		{
+			StorageAccountName = url.Host.Split(SplitDomain, 2)[0];
+			FullyQualifiedNamespace = url.GetLeftPart(UriPartial.Authority) + "/";
+		}
+
+		public string StorageAccountName { get; }
 		public string FullyQualifiedNamespace { get; }
 	}
 }
