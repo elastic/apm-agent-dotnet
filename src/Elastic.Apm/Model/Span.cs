@@ -1,4 +1,5 @@
-// Licensed to Elasticsearch B.V under one or more agreements.
+// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -24,6 +25,8 @@ namespace Elastic.Apm.Model
 	{
 		private readonly IApmServerInfo _apmServerInfo;
 		private readonly BreakdownMetricsProvider _breakdownMetricsProvider;
+
+		private readonly ChildDurationTimer _childDurationTimer = new ChildDurationTimer();
 		private readonly Lazy<SpanContext> _context = new Lazy<SpanContext>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly Transaction _enclosingTransaction;
@@ -32,8 +35,6 @@ namespace Elastic.Apm.Model
 		private readonly IApmLogger _logger;
 		private readonly Span _parentSpan;
 		private readonly IPayloadSender _payloadSender;
-
-		private readonly ChildDurationTimer _childDurationTimer = new ChildDurationTimer();
 
 		// This constructor is meant for deserialization
 		[JsonConstructor]
@@ -118,6 +119,19 @@ namespace Elastic.Apm.Model
 
 		private bool _isEnded;
 
+		/// <summary>
+		/// In general if there is an error on the span, the outcome will be <code>Outcome.Failure</code>, otherwise it'll be
+		/// <code>Outcome.Success</code>.
+		/// There are some exceptions to this (see spec:
+		/// https://github.com/elastic/apm/blob/master/specs/agents/tracing-spans.md#span-outcome) when it can be
+		/// <code>Outcome.Unknown</code>.
+		/// Use <see cref="_outcomeChangedThroughApi" /> to check if it was specifically set to <code>Outcome.Unknown</code>, or if
+		/// it's just the default value.
+		/// </summary>
+		internal Outcome _outcome;
+
+		private bool _outcomeChangedThroughApi;
+
 		[MaxLength]
 		public string Action { get; set; }
 
@@ -148,9 +162,6 @@ namespace Elastic.Apm.Model
 		public bool IsSampled => _enclosingTransaction.IsSampled;
 
 		[JsonIgnore]
-		public double SelfDuration => Duration.HasValue ? Duration.Value - _childDurationTimer.Duration : 0;
-
-		[JsonIgnore]
 		[Obsolete(
 			"Instead of this dictionary, use the `SetLabel` method which supports more types than just string. This property will be removed in a future release.")]
 		public Dictionary<string, string> Labels => Context.Labels;
@@ -172,15 +183,6 @@ namespace Elastic.Apm.Model
 				_outcome = value;
 			}
 		}
-
-		/// <summary>
-		/// In general if there is an error on the span, the outcome will be <see cref="Outcome.Failure"/>, otherwise it'll be <see cref="Outcome.Success"/>.
-		/// There are some exceptions to this (see spec: https://github.com/elastic/apm/blob/master/specs/agents/tracing-spans.md#span-outcome) when it can be <see cref="Outcome.Unknown"/>.
-		/// Use <see cref="_outcomeChangedThroughApi"/> to check if it was specifically set to <see cref="Outcome.Unknown"/>, or if it's just the default value.
-		/// </summary>
-		internal Outcome _outcome;
-
-		private bool _outcomeChangedThroughApi;
 
 		[JsonIgnore]
 		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(
@@ -207,6 +209,9 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		[JsonProperty("sample_rate")]
 		internal double? SampleRate { get; }
+
+		[JsonIgnore]
+		public double SelfDuration => Duration.HasValue ? Duration.Value - _childDurationTimer.Duration : 0;
 
 		[JsonIgnore]
 		internal bool ShouldBeSentToApmServer => IsSampled && !_isDropped;
@@ -545,15 +550,15 @@ namespace Elastic.Apm.Model
 
 	internal class SpanTimer
 	{
-		public int Count { get; set; }
-
-		public double TotalDuration { get; set; }
-
 		public SpanTimer(double duration)
 		{
 			TotalDuration = duration;
 			Count = 1;
 		}
+
+		public int Count { get; set; }
+
+		public double TotalDuration { get; set; }
 
 		public void IncrementTimer(double duration)
 		{
@@ -566,7 +571,8 @@ namespace Elastic.Apm.Model
 	{
 		private int _activeChildren;
 		private long _start;
-		private double _duration;
+
+		public double Duration { get; private set; }
 
 		/// <summary>
 		/// Starts the timer if it has not been started already.
@@ -599,9 +605,7 @@ namespace Elastic.Apm.Model
 			}
 		}
 
-		public double Duration => _duration;
-
 		private void IncrementDuration(long epochMicros)
-			=> _duration += TimeUtils.DurationBetweenTimestamps(_start, epochMicros);
+			=> Duration += TimeUtils.DurationBetweenTimestamps(_start, epochMicros);
 	}
 }

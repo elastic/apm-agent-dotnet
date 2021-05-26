@@ -12,6 +12,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 {
 	internal class BreakdownMetricsProvider : IMetricsProvider
 	{
+		internal const string SpanSelfTime = "span.self_time";
 		public int ConsecutiveNumberOfFailedReads { get; set; }
 
 		private readonly object _lock = new();
@@ -43,7 +44,7 @@ namespace Elastic.Apm.Metrics.MetricsProvider
 						new MetricSet(timestampNow,
 							new List<MetricSample>
 							{
-								new("span.self_time.count", item.Value.Count), new("span.self_time.sum.us", item.Value.TotalDuration)
+								new($"{SpanSelfTime}.count", item.Value.Count), new($"{SpanSelfTime}.sum.us", item.Value.TotalDuration)
 							})
 						{
 							Span = new SpanInfo { Type = item.Key.Item1, SubType = item.Key.Item2 },

@@ -1,4 +1,5 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -434,6 +435,33 @@ namespace Elastic.Apm.Tests
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 2)
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 10)
 				);
+		}
+
+		[Fact]
+		public void DisableSpanSelfTimeTest()
+		{
+			var payloadSender = new MockPayloadSender();
+			using var agent = new ApmAgent(
+				new AgentComponents(
+					new NoopLogger(),
+					new MockConfigSnapshot(metricsInterval: "1s", disableMetrics:"span.self_time"),
+					payloadSender,
+					null, //metricsCollector will be set in AgentComponents.ctor
+					new CurrentExecutionSegmentsContainer(),
+					new NoopCentralConfigFetcher(),
+					new MockApmServerInfo(new ElasticVersion(7, 12, 0, string.Empty))));
+
+			agent.Tracer.CaptureTransaction("Foo", "Bar", _ =>
+			{
+				Thread.Sleep(100);
+			});
+
+			payloadSender.WaitForTransactions();
+			payloadSender.WaitForMetrics();
+			payloadSender.Metrics
+				.Where(n => n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count"))).Should().BeNullOrEmpty();
+			payloadSender.Metrics
+				.Where(n => n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us"))).Should().BeNullOrEmpty();
 		}
 
 		private (ApmAgent, BreakdownMetricsProvider) SetUpAgent()

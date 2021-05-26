@@ -1,4 +1,5 @@
-﻿// Licensed to Elasticsearch B.V under one or more agreements.
+﻿// Licensed to Elasticsearch B.V under
+// one or more agreements.
 // Elasticsearch B.V licenses this file to you under the Apache 2.0 License.
 // See the LICENSE file in the project root for more information
 
@@ -14,7 +15,6 @@ using Elastic.Apm.Config;
 using Elastic.Apm.DistributedTracing;
 using Elastic.Apm.Helpers;
 using Elastic.Apm.Logging;
-using Elastic.Apm.Metrics;
 using Elastic.Apm.Metrics.MetricsProvider;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
@@ -25,17 +25,25 @@ namespace Elastic.Apm.Model
 	internal class Transaction : ITransaction
 	{
 		private static readonly string ApmTransactionActivityName = "ElasticApm.Transaction";
+
+		internal readonly TraceState _traceState;
+
+		internal readonly ConcurrentDictionary<(string, string), SpanTimer> SpanTimings = new();
+
+		/// <summary>
+		/// The agent also starts an Activity when a transaction is started and stops it when the transaction ends.
+		/// The TraceId of this activity is always the same as the TraceId of the transaction.
+		/// With this, in case Activity.Current is null, the agent will set it and when the next Activity gets created it'll
+		/// have this activity as its parent and the TraceId will flow to all Activity instances.
+		/// </summary>
+		private readonly Activity _activity;
+
 		private readonly IApmServerInfo _apmServerInfo;
 		private readonly BreakdownMetricsProvider _breakdownMetricsProvider;
 		private readonly Lazy<Context> _context = new Lazy<Context>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 		private readonly IApmLogger _logger;
 		private readonly IPayloadSender _sender;
-		internal readonly ChildDurationTimer ChildDurationTimer = new();
-
-		internal readonly TraceState _traceState;
-
-		internal readonly ConcurrentDictionary<(string, string), SpanTimer> SpanTimings = new();
 
 		// This constructor is meant for serialization
 		[JsonConstructor]
@@ -75,12 +83,16 @@ namespace Elastic.Apm.Model
 		/// <param name="currentExecutionSegmentsContainer" />
 		/// The ExecutionSegmentsContainer which makes sure this transaction flows
 		/// <param name="apmServerInfo">Component to fetch info about APM Server (e.g. APM Server version)</param>
+		/// <param name="breakdownMetricsProvider">A metric provider that tracks breakdown metrics</param>
 		/// <param name="ignoreActivity">
 		/// If set the transaction will ignore Activity.Current and it's trace id,
 		/// otherwise the agent will try to keep ids in-sync across async work-flows
 		/// </param>
-		/// <param name="timestamp">The timestamp of the transaction. If it's <code>null</code> then the current timestamp
-		/// will be captured, which is typically the desired behaviour. Setting the timestamp to a specific value is typically useful for testing. </param>
+		/// <param name="timestamp">
+		/// The timestamp of the transaction. If it's <code>null</code> then the current timestamp
+		/// will be captured, which is typically the desired behaviour. Setting the timestamp to a specific value is typically
+		/// useful for testing.
+		/// </param>
 		internal Transaction(
 			IApmLogger logger,
 			string name,
@@ -267,25 +279,23 @@ namespace Elastic.Apm.Model
 			}
 		}
 
-		private Activity StartActivity()
-		{
-			var activity = new Activity(ApmTransactionActivityName);
-			activity.SetIdFormat(ActivityIdFormat.W3C);
-			activity.Start();
-			return activity;
-		}
-
-		/// <summary>
-		/// The agent also starts an Activity when a transaction is started and stops it when the transaction ends.
-		/// The TraceId of this activity is always the same as the TraceId of the transaction.
-		/// With this, in case Activity.Current is null, the agent will set it and when the next Activity gets created it'll
-		/// have this activity as its parent and the TraceId will flow to all Activity instances.
-		/// </summary>
-		private readonly Activity _activity;
-
 		private bool _isEnded;
 
 		private string _name;
+
+		/// <summary>
+		/// In general if there is an error on the span, the outcome will be <code> Outcome.Failure </code> otherwise it'll be
+		/// <code> Outcome.Success </code>..
+		/// There are some exceptions to this (see spec:
+		/// https://github.com/elastic/apm/blob/master/specs/agents/tracing-spans.md#span-outcome) when it can be
+		/// <code>Outcome.Unknown</code>/>.
+		/// Use <see cref="_outcomeChangedThroughApi" /> to check if it was specifically set to <code>Outcome.Unknown</code>, or if
+		/// it's just the default value.
+		/// </summary>
+		private Outcome _outcome;
+
+		private bool _outcomeChangedThroughApi;
+		internal ChildDurationTimer ChildDurationTimer { get; } = new();
 
 		/// <summary>
 		/// Holds configuration snapshot (which is immutable) that was current when this transaction started.
@@ -295,9 +305,6 @@ namespace Elastic.Apm.Model
 		/// </summary>
 		[JsonIgnore]
 		internal IConfigSnapshot ConfigSnapshot { get; }
-
-		[JsonIgnore]
-		public double SelfDuration => Duration.HasValue ? Duration.Value - ChildDurationTimer.Duration : 0;
 
 
 		/// <summary>
@@ -365,16 +372,7 @@ namespace Elastic.Apm.Model
 				_outcome = value;
 			}
 		}
-
-		/// <summary>
-		/// In general if there is an error on the span, the outcome will be <see cref="Elastic.Apm.Api.Outcome.Failure"/>, otherwise it'll be <see cref="Elastic.Apm.Api.Outcome.Success"/>.
-		/// There are some exceptions to this (see spec: https://github.com/elastic/apm/blob/master/specs/agents/tracing-spans.md#span-outcome) when it can be <see cref="Elastic.Apm.Api.Outcome.Unknown"/>.
-		/// Use <see cref="_outcomeChangedThroughApi"/> to check if it was specifically set to <see cref="Elastic.Apm.Api.Outcome.Unknown"/>, or if it's just the default value.
-		/// </summary>
-		internal Outcome _outcome;
-
-		private bool _outcomeChangedThroughApi;
-
+		
 		[JsonIgnore]
 		public DistributedTracingData OutgoingDistributedTracingData => new DistributedTracingData(TraceId, Id, IsSampled, _traceState);
 
@@ -397,6 +395,9 @@ namespace Elastic.Apm.Model
 		[JsonProperty("sample_rate")]
 		internal double? SampleRate { get; }
 
+		[JsonIgnore]
+		public double SelfDuration => Duration.HasValue ? Duration.Value - ChildDurationTimer.Duration : 0;
+
 		internal Service Service;
 
 
@@ -414,6 +415,14 @@ namespace Elastic.Apm.Model
 
 		[MaxLength]
 		public string Type { get; set; }
+
+		private Activity StartActivity()
+		{
+			var activity = new Activity(ApmTransactionActivityName);
+			activity.SetIdFormat(ActivityIdFormat.W3C);
+			activity.Start();
+			return activity;
+		}
 
 		/// <inheritdoc />
 		public void SetService(string serviceName, string serviceVersion)
