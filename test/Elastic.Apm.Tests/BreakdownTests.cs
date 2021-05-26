@@ -92,9 +92,9 @@ namespace Elastic.Apm.Tests
 				);
 		}
 
-		// 								  total self type
+		//                                  total self type
 		// ██████████████████████████████    30   30 transaction
-		//			10        20        30
+		//          10        20        30
 		[Fact]
 		public void AcceptanceTest1()
 		{
@@ -129,10 +129,10 @@ namespace Elastic.Apm.Tests
 				);
 		}
 
-		//									 total self type
+		//                                  total self type
 		// ██████████░░░░░░░░░░██████████    30   20 transaction
 		// └─────────██████████              10   10 db.mysql
-		//			10        20        30
+		//          10        20        30
 		// {"metricset":{"timestamp":1556893458387000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":30},"transaction.breakdown.count":{"value":1}}}}
 		// {"metricset":{"timestamp":1556893458387000,"transaction":{"name":"test","type":"request"},"span":{"type":"db","subtype":"mysql"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":10}}}}
 		// {"metricset":{"timestamp":1556893458387000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":20}}}}
@@ -188,11 +188,11 @@ namespace Elastic.Apm.Tests
 				);
 		}
 
-		// 									total self type
+		//                                   total self type
 		// ██████████░░░░░░░░░░██████████    30   20 transaction
 		// ├─────────██████████              10   10 db.mysql
 		// └─────────██████████              10   10 db.mysql
-		//			10        20        30
+		//          10        20        30
 		// {"metricset":{"timestamp":1556893458375000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":30},"transaction.breakdown.count":{"value":1}}}}
 		// {"metricset":{"timestamp":1556893458375000,"transaction":{"name":"test","type":"request"},"span":{"type":"db","subtype":"mysql"},"samples":{"span.self_time.count":{"value":2},"span.self_time.sum.us":{"value":20}}}}
 		// {"metricset":{"timestamp":1556893458375000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{" ":{"value":1},"span.self_time.sum.us":{"value":20}}}}
@@ -251,11 +251,11 @@ namespace Elastic.Apm.Tests
 				);
 		}
 
-		// 								  total self type
+		//                                   total self type
 		// ██████████░░░░░░░░░░░░░░░█████    30   15 transaction
 		// ├─────────██████████              10   10 db.mysql
 		// └──────────────██████████         10   10 db.mysql
-		//			10        20        30
+		//          10        20        30
 		// {"metricset":{"timestamp":1556893458417000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":30},"transaction.breakdown.count":{"value":1}}}}
 		// {"metricset":{"timestamp":1556893458417000,"transaction":{"name":"test","type":"request"},"span":{"type":"db","subtype":"mysql"},"samples":{"span.self_time.count":{"value":2},"span.self_time.sum.us":{"value":20}}}}
 		// {"metricset":{"timestamp":1556893458417000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":15}}}}
@@ -313,11 +313,11 @@ namespace Elastic.Apm.Tests
 				);
 		}
 
-		//									total self type
+		//                                   total self type
 		// █████░░░░░░░░░░░░░░░░░░░░█████    30   10 transaction
 		// ├────██████████                   10   10 db.mysql
 		// └──────────────██████████         10   10 db.mysql
-		//			10        20        30
+		//          10        20        30
 		// {"metricset":{"timestamp":1556893458462000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":30},"transaction.breakdown.count":{"value":1}}}}
 		// {"metricset":{"timestamp":1556893458462000,"transaction":{"name":"test","type":"request"},"span":{"type":"db","subtype":"mysql"},"samples":{"span.self_time.count":{"value":2},"span.self_time.sum.us":{"value":20}}}}
 		// {"metricset":{"timestamp":1556893458462000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":10}}}}
@@ -379,7 +379,7 @@ namespace Elastic.Apm.Tests
 		// ██████████░░░░░█████░░░░░█████    30   20 transaction
 		// ├─────────█████                    5    5 db.mysql
 		// └───────────────────█████          5    5 db.mysql
-		//			10        20        30
+		//          10        20        30
 		// {"metricset":{"timestamp":1556893458453000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":30},"transaction.breakdown.count":{"value":1}}}}
 		// {"metricset":{"timestamp":1556893458453000,"transaction":{"name":"test","type":"request"},"span":{"type":"db","subtype":"mysql"},"samples":{"span.self_time.count":{"value":2},"span.self_time.sum.us":{"value":10}}}}
 		// {"metricset":{"timestamp":1556893458453000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":20}}}}
