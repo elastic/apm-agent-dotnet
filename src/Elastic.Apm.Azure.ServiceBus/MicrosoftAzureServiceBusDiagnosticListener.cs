@@ -99,18 +99,29 @@ namespace Elastic.Apm.Azure.ServiceBus
 				? $"{ServiceBus.SegmentName} {action}"
 				: $"{ServiceBus.SegmentName} {action} from {queueName}";
 
-			var transaction = ApmAgent.Tracer.StartTransaction(transactionName, ApiConstants.TypeMessaging);
-			transaction.Context.Service = new Service(null, null) { Framework = _framework };
+			IExecutionSegment segment;
+			if (ApmAgent.Tracer.CurrentTransaction is null)
+			{
+				var transaction = ApmAgent.Tracer.StartTransaction(transactionName, ApiConstants.TypeMessaging);
+				transaction.Context.Service = new Service(null, null) { Framework = _framework };
+				segment = transaction;
+			}
+			else
+			{
+				var span = ApmAgent.GetCurrentExecutionSegment().StartSpan(transactionName, ApiConstants.TypeMessaging, ServiceBus.SubType, action);
+				segment = span;
+			}
 
 			// transaction creation will create an activity, so use this as the key.
 			var activityId = Activity.Current.Id;
 
-			if (!_processingSegments.TryAdd(activityId, transaction))
+			if (!_processingSegments.TryAdd(activityId, segment))
 			{
 				Logger.Trace()?.Log(
-					"Could not add {Action} transaction {TransactionId} for activity {ActivityId} to tracked segments",
+					"Could not add {Action} {SegmentName} {TransactionId} for activity {ActivityId} to tracked segments",
 					action,
-					transaction.Id,
+					segment is ITransaction ? "transaction" : "span",
+					segment.Id,
 					activityId);
 			}
 		}
