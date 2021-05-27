@@ -7,7 +7,7 @@
     <FileVersion>1.10.0</FileVersion>
     <VersionPrefix>1.10.0</VersionPrefix>
     <Authors>Elastic and contributors</Authors>
-    <Copyright>2020 Elasticsearch BV</Copyright>
+    <Copyright>2021 Elasticsearch BV</Copyright>
     <PackageProjectUrl>https://github.com/elastic/apm-agent-dotnet</PackageProjectUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
