@@ -14,7 +14,9 @@ using ElasticApmStartupHook;
 // ReSharper disable once CheckNamespace - per doc. this must be called StartupHook without a namespace with an Initialize method.
 internal class StartupHook
 {
-	private const string ElasticApmStartuphookLoaderDll = "Elastic.Apm.StartupHook.Loader.dll";
+	private const string LoaderDll = "Elastic.Apm.StartupHook.Loader.dll";
+	private const string LoaderTypeName = "Elastic.Apm.StartupHook.Loader.Loader";
+	private const string LoaderTypeMethod = "Initialize";
 	private const string SystemDiagnosticsDiagnosticsource = "System.Diagnostics.DiagnosticSource";
 
 	private static readonly byte[] SystemDiagnosticsDiagnosticSourcePublicKeyToken = { 204, 123, 19, 255, 205, 45, 221, 81 };
@@ -40,7 +42,7 @@ internal class StartupHook
 
 		var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
-		_logger.WriteLine($"Assemblies loaded:{Environment.NewLine}{string.Join(",", assemblies.Select(a => a.GetName()))}");
+		_logger.WriteLine($"Assemblies loaded:{Environment.NewLine}{string.Join(Environment.NewLine, assemblies.Select(a => a.GetName()))}");
 
 		var diagnosticSourceAssemblies = assemblies
 			.Where(a => a.GetName().Name.Equals(SystemDiagnosticsDiagnosticsource, StringComparison.Ordinal))
@@ -63,7 +65,9 @@ internal class StartupHook
 				break;
 		}
 
-		Assembly loader = null;
+		Assembly loaderAssembly = null;
+		string loaderDirectory;
+
 		if (diagnosticSourceAssembly is null)
 		{
 			// use agent compiled against the highest version of System.Diagnostics.DiagnosticSource
@@ -72,9 +76,9 @@ internal class StartupHook
 				.OrderByDescending(d => VersionRegex.Match(d).Groups["major"].Value)
 				.First();
 
-			var versionDirectory = Path.Combine(startupHookDirectory, highestAvailableAgent);
-			loader = AssemblyLoadContext.Default
-				.LoadFromAssemblyPath(Path.Combine(versionDirectory, ElasticApmStartuphookLoaderDll));
+			loaderDirectory = Path.Combine(startupHookDirectory, highestAvailableAgent);
+			loaderAssembly = AssemblyLoadContext.Default
+				.LoadFromAssemblyPath(Path.Combine(loaderDirectory, LoaderDll));
 		}
 		else
 		{
@@ -91,11 +95,11 @@ internal class StartupHook
 			var diagnosticSourceVersion = diagnosticSourceAssemblyName.Version;
 			_logger.WriteLine($"{SystemDiagnosticsDiagnosticsource} {diagnosticSourceVersion} loaded");
 
-			var versionDirectory = Path.Combine(startupHookDirectory, $"{diagnosticSourceVersion.Major}.0.0");
-			if (Directory.Exists(versionDirectory))
+			loaderDirectory = Path.Combine(startupHookDirectory, $"{diagnosticSourceVersion.Major}.0.0");
+			if (Directory.Exists(loaderDirectory))
 			{
-				loader = AssemblyLoadContext.Default
-					.LoadFromAssemblyPath(Path.Combine(versionDirectory, ElasticApmStartuphookLoaderDll));
+				loaderAssembly = AssemblyLoadContext.Default
+					.LoadFromAssemblyPath(Path.Combine(loaderDirectory, LoaderDll));
 			}
 			else
 			{
@@ -104,7 +108,53 @@ internal class StartupHook
 			}
 		}
 
-		InvokerLoaderMethod(loader);
+		if (loaderAssembly is null)
+		{
+			_logger.WriteLine(
+				$"No {LoaderDll} assembly loaded. Agent not loaded");
+		}
+
+		LoadAssembliesFromLoaderDirectory(loaderDirectory);
+		InvokerLoaderMethod(loaderAssembly);
+	}
+
+	/// <summary>
+	/// Loads assemblies from the loader directory if they exist
+	/// </summary>
+	/// <param name="loaderDirectory"></param>
+	private static void LoadAssembliesFromLoaderDirectory(string loaderDirectory)
+	{
+		var context = new ElasticApmAssemblyLoadContext();
+		AssemblyLoadContext.Default.Resolving += (_, name) =>
+		{
+			var assemblyPath = Path.Combine(loaderDirectory, name.Name + ".dll");
+			if (File.Exists(assemblyPath))
+			{
+				try
+				{
+					var assemblyName = AssemblyName.GetAssemblyName(assemblyPath);
+					if (name.Version == assemblyName.Version)
+					{
+						var keyToken = name.GetPublicKeyToken();
+						var assemblyKeyToken = assemblyName.GetPublicKeyToken();
+						if (keyToken.SequenceEqual(assemblyKeyToken))
+						{
+							// load Elastic.Apm assemblies with the default assembly load context, to allow DiagnosticListeners to subscribe.
+							// For all other dependencies, load with a separate load context to not conflict with application dependencies.
+							return name.Name.StartsWith("Elastic.Apm", StringComparison.Ordinal)
+								? AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyPath)
+								: context.LoadFromAssemblyPath(assemblyPath);
+						}
+					}
+				}
+				catch (Exception e)
+				{
+					_logger.WriteLine(e.ToString());
+				}
+			}
+
+			return null;
+		};
 	}
 
 	/// <summary>
@@ -125,31 +175,25 @@ internal class StartupHook
 	/// <param name="loaderAssembly">The loader assembly</param>
 	private static void InvokerLoaderMethod(Assembly loaderAssembly)
 	{
-		if (loaderAssembly is null)
-			return;
-
-		const string loaderTypeName = "Elastic.Apm.StartupHook.Loader.Loader";
-		const string loaderTypeMethod = "Initialize";
-
-		_logger.WriteLine($"Get {loaderTypeName} type");
-		var loaderType = loaderAssembly.GetType(loaderTypeName);
+		_logger.WriteLine($"Get {LoaderTypeName} type");
+		var loaderType = loaderAssembly.GetType(LoaderTypeName);
 
 		if (loaderType is null)
 		{
-			_logger.WriteLine($"{loaderTypeName} type is null");
+			_logger.WriteLine($"{LoaderTypeName} type is null");
 			return;
 		}
 
-		_logger.WriteLine($"Get {loaderTypeName}.{loaderTypeMethod} method");
-		var initializeMethod = loaderType.GetMethod(loaderTypeMethod, BindingFlags.Public | BindingFlags.Static);
+		_logger.WriteLine($"Get {LoaderTypeName}.{LoaderTypeMethod} method");
+		var initializeMethod = loaderType.GetMethod(LoaderTypeMethod, BindingFlags.Public | BindingFlags.Static);
 
 		if (initializeMethod is null)
 		{
-			_logger.WriteLine($"{loaderTypeName}.{loaderTypeMethod} method is null");
+			_logger.WriteLine($"{LoaderTypeName}.{LoaderTypeMethod} method is null");
 			return;
 		}
 
-		_logger.WriteLine($"Invoke {loaderTypeName}.{loaderTypeMethod} method");
+		_logger.WriteLine($"Invoke {LoaderTypeName}.{LoaderTypeMethod} method");
 		initializeMethod.Invoke(null, null);
 	}
 }
