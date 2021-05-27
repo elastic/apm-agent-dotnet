@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using Elastic.Apm.Cloud;
 using Elastic.Apm.Helpers;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Config
 {
@@ -25,6 +26,7 @@ namespace Elastic.Apm.Config
 			public const bool CentralConfig = true;
 			public const string CloudProvider = SupportedValues.CloudProviderAuto;
 			public const int FlushIntervalInMilliseconds = 10_000; // 10 seconds
+			public const LogLevel LogLevel = Logging.LogLevel.Error;
 			public const int MaxBatchEventCount = 10;
 			public const int MaxQueueEventCount = 1000;
 			public const string MetricsInterval = "30s";

@@ -46,15 +46,55 @@ This means the Agent will pick up the configured logging provider and log as any
 [[collect-logs-classic]]
 ==== ASP.NET Classic
 
-Unlike ASP.NET Core, ASP.NET (classic) does not have a predefined logging system.
-However, if you have a logging system in place, like NLog, Serilog, or similar, you can direct the agent logs into your
-logging system by creating a bridge between the agent's internal logger and your logging system.
+ASP.NET (classic) does not have a predefined logging system. By default, the agent is configured to
+emit log messages to a 
+https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.tracesource[`System.Diagnostics.TraceSource`] 
+with the source name `"Elastic.Apm"`. The TraceSource adheres to the log levels defined in the
+APM agent configuration.
+
+[IMPORTANT]
+--
+System.Diagnostics.TraceSource requires the https://docs.microsoft.com/en-us/dotnet/framework/debug-trace-profile/how-to-compile-conditionally-with-trace-and-debug[`TRACE` compiler directive to be specified], which is specified
+by default for both Debug and Release build configurations.
+--
+
+https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.tracelistener[TraceListeners]
+can be configured to monitor log messages for the trace source, using the https://docs.microsoft.com/en-us/dotnet/framework/configure-apps/file-schema/trace-debug/system-diagnostics-element[`<system.diagnostics>`] section of
+web.config. For example, the following web.config section writes Elastic.Apm log messages to a file
+named my_log_file.log:
+
+[source,xml]
+----
+<configuration>
+  <!-- other sections .... -->
+<system.diagnostics>
+	<sources>
+		<source name="Elastic.Apm"> <1>
+			<listeners>
+				<add name="file" 
+					type="System.Diagnostics.TextWriterTraceListener" 
+					initializeData="my_log_file.log" />
+			</listeners>
+		</source>
+	</sources>
+</system.diagnostics>
+</configuration>  
+----
+<1> Define listeners under a source with name `"Elastic.Apm"` to capture agent logs
+
+[float]
+[[collect-logs-class-other-logging-systems]]
+===== Other logging systems
+
+If you have a logging system in place such as https://nlog-project.org/[NLog], https://serilog.net/[Serilog], 
+or similar, you can direct the agent logs into your logging system by creating an adapter between 
+the agent's internal logger and your logging system.
 
 First implement the `IApmLogger` interface from the `Elastic.Apm.Logging` namespace:
 
 [source,csharp]
 ----
-internal class ApmLoggerBridge : IApmLogger
+internal class ApmLoggerAdapter : IApmLogger
 {
 	private readonly Lazy<Logger> _logger;
 	public bool IsEnabled(ApmLogLevel level)
@@ -71,31 +111,44 @@ internal class ApmLoggerBridge : IApmLogger
 }
 ----
 
-An example implementation for NLog can be seen https://github.com/elastic/apm-agent-dotnet/blob/master/sample/AspNetFullFrameworkSampleApp/App_Start/ApmLoggerToNLog.cs[in our GitHub repository].
+An example implementation for NLog can be seen https://github.com/elastic/apm-agent-dotnet/blob/f6a33a185675b7b918af59d3333d94b32329a84a/sample/AspNetFullFrameworkSampleApp/App_Start/ApmLoggerToNLog.cs[in our GitHub repository].
 
-Then tell the agent to use the `ApmLoggerBridge`.
-
-For this in ASP.NET (classic) you need to place the following code into the `Application_Start` method in the `HttpApplication` implementation of your app which is typically in the `Global.asx.cs` file:
+Then tell the agent to use the `ApmLoggerAdapter`. For ASP.NET (classic), place the following code into the `Application_Start` 
+method in the `HttpApplication` implementation of your app which is typically in the `Global.asax.cs` file:
 
 [source,csharp]
 ----
-AgentDependencies.Logger = new ApmLoggerBridge();
+using Elastic.Apm.AspNetFullFramework;
+
+namespace MyApp
+{
+	public class MyApplication : HttpApplication
+	{
+		protected void Application_Start()
+		{
+			AgentDependencies.Logger = new ApmLoggerAdapter();
+
+			// other application setup...
+		}
+	}
+}
 ----
 
-The `AgentDependencies` class lives in the `Elastic.Apm.AspNetFullFramework` namespace.
-During initialization, the agent checks if an additional logger was configured--the agent only does this once, so it's important to set it as early in the process as possible (typically in the `Application_Start` method).
+During initialization, the agent checks if an additional logger was configured-- the agent only does this once, so it's important 
+to set it as early in the process as possible, typically in the `Application_Start` method.
 
 [float]
 [[collect-logs-general]]
 ==== General .NET applications
 
-If none of the above cases apply to your application, you can still use a bridge and redirect agent logs into a .NET logging system (like NLog, Serilog, or similar).
+If none of the above cases apply to your application, you can still use a logger adapter and redirect agent logs into a .NET 
+logging system like NLog, Serilog, or similar.
 
 For this you'll need an `IApmLogger` implementation (see above) which you need to pass to the `Setup` method during agent setup:
 
 [source,csharp]
 ----
-Agent.Setup(new AgentComponents(logger: new ApmLoggerBridge()));
+Agent.Setup(new AgentComponents(logger: new ApmLoggerAdapter()));
 ----
 
 [float]
