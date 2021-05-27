@@ -46,7 +46,7 @@ endif::[]
 
 [float]
 ===== Breaking changes
-- {pull}1311[#1311] Fix `NullReferenceException` in Elastic.Apm.Extensions.Logging(issue: {issue}1309[#1309])
+- {pull}1306[#1306] Do not capture HTTP child spans for Elasticsearch (issue: {issue}1276[#1276])
 
 [[release-notes-1.9.0]]
 ==== 1.9.0
@@ -58,7 +58,7 @@ endif::[]
 
 [float]
 ===== Bug fixes
-- {pull}1306[#1306] Do not capture HTTP child spans for Elasticsearch (issue: {issue}1276[#1276])
+- {pull}1189[#1189] Get transaction name from Web API controller route template
 
 [float]
 ===== Breaking changes
