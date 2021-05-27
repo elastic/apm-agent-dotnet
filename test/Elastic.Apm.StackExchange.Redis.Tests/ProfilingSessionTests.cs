@@ -11,6 +11,7 @@ using DotNet.Testcontainers.Containers.Configurations.Databases;
 using DotNet.Testcontainers.Containers.Modules.Databases;
 using Elastic.Apm.Api;
 using Elastic.Apm.Tests.Utilities;
+using Elastic.Apm.Tests.Utilities.Docker;
 using StackExchange.Redis;
 using FluentAssertions;
 
