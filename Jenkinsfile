@@ -18,7 +18,7 @@ pipeline {
     SLACK_CHANNEL = '#apm-agent-dotnet'
   }
   options {
-    timeout(time: 2, unit: 'HOURS')
+    timeout(time: 4, unit: 'HOURS')
     buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20', daysToKeepStr: '30'))
     timestamps()
     ansiColor('xterm')
@@ -28,7 +28,7 @@ pipeline {
     quietPeriod(10)
   }
   triggers {
-    issueCommentTrigger('(?i).*(?:jenkins\\W+)?run\\W+(?:the\\W+)?(?:benchmark\\W+)?tests(?:\\W+please)?.*')
+    issueCommentTrigger('(?i)(.*(?:jenkins\\W+)?run\\W+(?:the\\W+)?(?:benchmark\\W+)?tests(?:\\W+please)?.*|/test)')
   }
   parameters {
     booleanParam(name: 'Run_As_Master_Branch', defaultValue: false, description: 'Allow to run any steps on a PR, some steps normally only run on master branch.')
@@ -72,20 +72,20 @@ pipeline {
               Make sure there are no code style violation in the repo.
               */
               stages{
-                // Disable until https://github.com/elastic/apm-agent-dotnet/issues/563
-                // stage('CodeStyleCheck') {
-                //   steps {
-                //     withGithubNotify(context: 'CodeStyle check') {
-                //       deleteDir()
-                //       unstash 'source'
-                //       dir("${BASE_DIR}"){
-                //         dotnet(){
-                //           sh label: 'Install and run dotnet/format', script: '.ci/linux/codestyle.sh'
-                //         }
-                //       }
-                //     }
-                //   }
-                // }
+              //   Disable until https://github.com/elastic/apm-agent-dotnet/issues/563
+              //   stage('CodeStyleCheck') {
+              //     steps {
+              //       withGithubNotify(context: 'CodeStyle check') {
+              //         deleteDir()
+              //         unstash 'source'
+              //         dir("${BASE_DIR}"){
+              //           dotnet(){
+              //             sh label: 'Install and run dotnet/format', script: '.ci/linux/codestyle.sh'
+              //           }
+              //         }
+              //       }
+              //     }
+              //   }
                 /**
                 Build the project from code..
                 */
@@ -124,9 +124,11 @@ pipeline {
                     withGithubNotify(context: 'Test - Linux', tab: 'tests') {
                       deleteDir()
                       unstash 'source'
-                      dir("${BASE_DIR}"){
-                        dotnet(){
-                          sh label: 'Test & coverage', script: '.ci/linux/test.sh'
+                      filebeat(output: "docker.log"){
+                        dir("${BASE_DIR}"){
+                          dotnet(){
+                            sh label: 'Test & coverage', script: '.ci/linux/test.sh'
+                          }
                         }
                       }
                     }
@@ -520,13 +522,45 @@ def cleanDir(path){
 }
 
 def dotnet(Closure body){
-  def dockerTagName = 'docker.elastic.co/observability-ci/apm-agent-dotnet-sdk-linux:latest'
-  sh label: 'Docker build', script: "docker build --tag ${dockerTagName} .ci/docker/sdk-linux"
+
   def homePath = "${env.WORKSPACE}/${env.BASE_DIR}"
-  docker.image("${dockerTagName}").inside("-e HOME='${homePath}' -v /var/run/docker.sock:/var/run/docker.sock"){
+  withEnv([
+    "HOME=${homePath}",
+    "DOTNET_ROOT=${homePath}/.dotnet",
+    "PATH+DOTNET=${homePath}/.dotnet/tools:${homePath}/.dotnet"
+    ]){
+    sh(label: 'Install dotnet SDK', script: """
+    mkdir -p \${DOTNET_ROOT}
+    # Download .Net SDK installer script
+    curl -s -O -L https://dotnet.microsoft.com/download/dotnet-core/scripts/v1/dotnet-install.sh
+    chmod ugo+rx dotnet-install.sh
+
+    # Install .Net SDKs
+    ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '2.1.505'
+    ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '3.0.103'
+    ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '3.1.100'
+    ./dotnet-install.sh --install-dir "\${DOTNET_ROOT}" -version '5.0.203'
+    """)
     withAzureCredentials(path: "${homePath}", credentialsFile: '.credentials.json') {
-      body()
+      withTerraform(){
+        body()
+      }
     }
+  }
+}
+
+def withTerraform(Closure body){
+  def binDir = "${HOME}/bin"
+  withEnv([
+    "PATH+TERRAFORM=${binDir}"
+    ]){
+      sh(label:'Install Terraform', script: """
+        mkdir -p ${binDir}
+        cd ${binDir}
+        curl -sSL -o terraform.zip https://releases.hashicorp.com/terraform/0.15.3/terraform_0.15.3_linux_amd64.zip
+        unzip terraform.zip
+      """)
+      body()
   }
 }
 
