@@ -34,11 +34,11 @@ using Elastic.Apm.AspNetCore;
 public class Startup
 {
 
-    private readonly IConfiguration _configuration;
+    private readonly IConfiguration Configuration;
 
     public Startup(IConfiguration configuration)
     {
-        _configuration = configuration;
+        Configuration = configuration;
     }
 
     public void Configure(IApplicationBuilder app, IHostingEnvironment env)
