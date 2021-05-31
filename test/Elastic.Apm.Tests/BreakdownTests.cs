@@ -96,7 +96,7 @@ namespace Elastic.Apm.Tests
 		// ██████████████████████████████    30   30 transaction
 		//          10        20        30
 		[Fact]
-		public void AcceptanceTest1()
+		public void AcceptanceTest01()
 		{
 			var (agent, breakdownMetricsProvider) = SetUpAgent();
 			using (agent)
@@ -138,7 +138,7 @@ namespace Elastic.Apm.Tests
 		// {"metricset":{"timestamp":1556893458387000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":20}}}}
 
 		[Fact]
-		public void AcceptanceTest2()
+		public void AcceptanceTest02()
 		{
 			var (agent, breakdownMetricsProvider) = SetUpAgent();
 			using (agent)
@@ -196,7 +196,7 @@ namespace Elastic.Apm.Tests
 		//{"metricset":{"timestamp":1556893458471000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":30},"transaction.breakdown.count":{"value":1}}}}
 		//{"metricset":{"timestamp":1556893458471000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":2},"span.self_time.sum.us":{"value":30}}}}
 		[Fact]
-		public void AcceptanceTest3()
+		public void AcceptanceTest03()
 		{
 			var (agent, breakdownMetricsProvider) = SetUpAgent();
 			using (agent)
@@ -246,7 +246,7 @@ namespace Elastic.Apm.Tests
 		// {"metricset":{"timestamp":1556893458375000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{" ":{"value":1},"span.self_time.sum.us":{"value":20}}}}
 
 		[Fact]
-		public void AcceptanceTest4()
+		public void AcceptanceTest04()
 		{
 			var (agent, breakdownMetricsProvider) = SetUpAgent();
 			using (agent)
@@ -308,7 +308,7 @@ namespace Elastic.Apm.Tests
 		// {"metricset":{"timestamp":1556893458417000,"transaction":{"name":"test","type":"request"},"span":{"type":"db","subtype":"mysql"},"samples":{"span.self_time.count":{"value":2},"span.self_time.sum.us":{"value":20}}}}
 		// {"metricset":{"timestamp":1556893458417000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":15}}}}
 		[Fact]
-		public void AcceptanceTest5()
+		public void AcceptanceTest05()
 		{
 			var (agent, breakdownMetricsProvider) = SetUpAgent();
 			using (agent)
@@ -370,7 +370,7 @@ namespace Elastic.Apm.Tests
 		// {"metricset":{"timestamp":1556893458462000,"transaction":{"name":"test","type":"request"},"span":{"type":"db","subtype":"mysql"},"samples":{"span.self_time.count":{"value":2},"span.self_time.sum.us":{"value":20}}}}
 		// {"metricset":{"timestamp":1556893458462000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":10}}}}
 		[Fact]
-		public void AcceptanceTest6()
+		public void AcceptanceTest06()
 		{
 			var (agent, breakdownMetricsProvider) = SetUpAgent();
 			using (agent)
@@ -423,7 +423,7 @@ namespace Elastic.Apm.Tests
 				);
 		}
 
-		//									total self type
+		//                                  total self type
 		// ██████████░░░░░█████░░░░░█████    30   20 transaction
 		// ├─────────█████                    5    5 db.mysql
 		// └───────────────────█████          5    5 db.mysql
@@ -432,7 +432,7 @@ namespace Elastic.Apm.Tests
 		// {"metricset":{"timestamp":1556893458453000,"transaction":{"name":"test","type":"request"},"span":{"type":"db","subtype":"mysql"},"samples":{"span.self_time.count":{"value":2},"span.self_time.sum.us":{"value":10}}}}
 		// {"metricset":{"timestamp":1556893458453000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":20}}}}
 		[Fact]
-		public void AcceptanceTest7()
+		public void AcceptanceTest07()
 		{
 			var (agent, breakdownMetricsProvider) = SetUpAgent();
 			using (agent)
@@ -481,6 +481,214 @@ namespace Elastic.Apm.Tests
 						&& n.Span.Type.Equals("db")
 						&& n.Span.SubType.Equals("mysql")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 2)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 10)
+				);
+		}
+
+		//                                   total self type
+		// ██████████░░░░░░░░░░██████████    30   20 transaction
+		// └─────────█████░░░░░              10    5 app
+		//           └────██████████         10   10 db.mysql
+		//         10        20        30
+		//
+		// {"metricset":{"timestamp":1556893458398000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":30},"transaction.breakdown.count":{"value":1}}}}
+		// {"metricset":{"timestamp":1556893458398000,"transaction":{"name":"test","type":"request"},"span":{"type":"db","subtype":"mysql"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":10}}}}
+		// {"metricset":{"timestamp":1556893458398000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":2},"span.self_time.sum.us":{"value":25}}}}
+		[Fact]
+		public void AcceptanceTest08()
+		{
+			var (agent, breakdownMetricsProvider) = SetUpAgent();
+			using (agent)
+			{
+				var t = agent.TracerInternal.StartTransactionInternal("test", "request", 0);
+				t.Duration = 30;
+
+				var span = t.StartSpanInternal("foo", "app", timestamp: 10 * 1000);
+				span.Duration = 10;
+
+				var span2 = span.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 15 * 1000);
+				span2.Duration = 10;
+
+				span.End();
+				span2.End();
+
+				t.End();
+			}
+
+			var metricSets = breakdownMetricsProvider.GetSamples();
+
+			var metrics = metricSets as MetricSet[] ?? metricSets.ToArray();
+			metrics.Should().NotBeNullOrEmpty();
+			metrics.Count().Should().Be(3);
+			metrics.Should()
+				.Contain(
+					n => n.Transaction.Name.Equals("test")
+						&& n.Transaction.Type.Equals("request")
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.count") && s.KeyValue.Value == 1)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && s.KeyValue.Value == 30)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.breakdown.count") && s.KeyValue.Value == 1)
+				);
+
+			metrics.Should()
+				.Contain(
+					n => n.Transaction.Name.Equals("test")
+						&& n.Transaction.Type.Equals("request")
+						&& n.Span.Type.Equals("app")
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 2)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 25)
+				);
+
+			metrics.Should()
+				.Contain(
+					n => n.Transaction.Name.Equals("test")
+						&& n.Transaction.Type.Equals("request")
+						&& n.Span.Type.Equals("db")
+						&& n.Span.SubType.Equals("mysql")
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 1)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 10)
+				);
+		}
+
+		//                                  total self type
+		// ██████████░░░░░░░░░░              20   10 transaction
+		// └─────────██████████░░░░░░░░░░    20   10 app
+		//           └─────────██████████    10   10 db.mysql
+		//          10        20        30
+		//
+		// {"metricset":{"timestamp":1556893458444000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":20},"transaction.breakdown.count":{"value":1}}}}
+		// {"metricset":{"timestamp":1556893458444000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":10}}}}
+		[Fact]
+		public void AcceptanceTest09()
+		{
+			var (agent, breakdownMetricsProvider) = SetUpAgent();
+			using (agent)
+			{
+				var t = agent.TracerInternal.StartTransactionInternal("test", "request", 0);
+				t.Duration = 20;
+
+				var span = t.StartSpanInternal("foo", "app", timestamp: 10 * 1000);
+				span.Duration = 20;
+
+				t.End();
+				var span2 = span.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 20 * 1000);
+				span2.Duration = 10;
+
+				span.End();
+				span2.End();
+			}
+
+			var metricSets = breakdownMetricsProvider.GetSamples();
+
+			var metrics = metricSets as MetricSet[] ?? metricSets.ToArray();
+			metrics.Should().NotBeNullOrEmpty();
+			metrics.Count().Should().Be(2);
+			metrics.Should()
+				.Contain(
+					n => n.Transaction.Name.Equals("test")
+						&& n.Transaction.Type.Equals("request")
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.count") && s.KeyValue.Value == 1)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && s.KeyValue.Value == 20)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.breakdown.count") && s.KeyValue.Value == 1)
+				);
+
+			metrics.Should()
+				.Contain(
+					n => n.Transaction.Name.Equals("test")
+						&& n.Transaction.Type.Equals("request")
+						&& n.Span.Type.Equals("app")
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 1)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 10)
+				);
+		}
+
+		//                                 total self type
+		// ██████████░░░░░░░░░░              20   10 transaction
+		// └─────────████████████████████    20   20 db.mysql
+		//          10        20        30
+		// {"metricset":{"timestamp":1556893458409000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":20},"transaction.breakdown.count":{"value":1}}}}
+		// {"metricset":{"timestamp":1556893458409000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":10}}}}
+		[Fact]
+		public void AcceptanceTest10()
+		{
+			var (agent, breakdownMetricsProvider) = SetUpAgent();
+			using (agent)
+			{
+				var t = agent.TracerInternal.StartTransactionInternal("test", "request", 0);
+				t.Duration = 20;
+
+				var span = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 10 * 1000);
+				span.Duration = 30;
+				t.End();
+				span.End();
+			}
+
+			var metricSets = breakdownMetricsProvider.GetSamples();
+
+			var metrics = metricSets as MetricSet[] ?? metricSets.ToArray();
+			metrics.Should().NotBeNullOrEmpty();
+			metrics.Count().Should().Be(2);
+			metrics.Should()
+				.Contain(
+					n => n.Transaction.Name.Equals("test")
+						&& n.Transaction.Type.Equals("request")
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.count") && s.KeyValue.Value == 1)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && s.KeyValue.Value == 20)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.breakdown.count") && s.KeyValue.Value == 1)
+				);
+
+			metrics.Should()
+				.Contain(
+					n => n.Transaction.Name.Equals("test")
+						&& n.Transaction.Type.Equals("request")
+						&& n.Span.Type.Equals("app")
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 1)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 10)
+				);
+		}
+
+		//                                 total self type
+		// ██████████                        10   10 transaction
+		// └───────────────────██████████    10   10 db.mysql
+		//         10        20        30
+		//
+		// {"metricset":{"timestamp":1556893458434000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":10},"transaction.breakdown.count":{"value":1}}}}
+		// {"metricset":{"timestamp":1556893458434000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":10}}}}
+		[Fact]
+		public void AcceptanceTest11()
+		{
+			var (agent, breakdownMetricsProvider) = SetUpAgent();
+			using (agent)
+			{
+				var t = agent.TracerInternal.StartTransactionInternal("test", "request", 0);
+				t.Duration = 10;
+				t.End();
+
+				var span = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 20 * 1000);
+				span.Duration = 10;
+
+				span.End();
+			}
+
+			var metricSets = breakdownMetricsProvider.GetSamples();
+
+			var metrics = metricSets as MetricSet[] ?? metricSets.ToArray();
+			metrics.Should().NotBeNullOrEmpty();
+			metrics.Count().Should().Be(2);
+			metrics.Should()
+				.Contain(
+					n => n.Transaction.Name.Equals("test")
+						&& n.Transaction.Type.Equals("request")
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.count") && s.KeyValue.Value == 1)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && s.KeyValue.Value == 10)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.breakdown.count") && s.KeyValue.Value == 1)
+				);
+
+			metrics.Should()
+				.Contain(
+					n => n.Transaction.Name.Equals("test")
+						&& n.Transaction.Type.Equals("request")
+						&& n.Span.Type.Equals("app")
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 1)
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 10)
 				);
 		}
