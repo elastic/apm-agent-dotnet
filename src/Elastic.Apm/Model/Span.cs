@@ -318,7 +318,6 @@ namespace Elastic.Apm.Model
 						" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
 						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
 
-				//_enclosingTransaction?.SpanTimings.
 				_parentSpan?._childDurationTimer.OnChildEnd((long)(Timestamp + Duration.Value * 1000));
 				_childDurationTimer.OnSpanEnd((long)(Timestamp + Duration.Value * 1000));
 				_enclosingTransaction.ChildDurationTimer.OnChildEnd((long)(Timestamp + Duration.Value * 1000));

@@ -516,7 +516,10 @@ namespace Elastic.Apm.Model
 			handler?.Invoke(this, EventArgs.Empty);
 			Ended = null;
 
-			SpanTimings.TryAdd(("app", null), new SpanTimer(SelfDuration));
+			if (SpanTimings.ContainsKey(("app", null)))
+				SpanTimings[("app", null)].IncrementTimer(SelfDuration);
+			else
+				SpanTimings.TryAdd(("app", null), new SpanTimer(SelfDuration));
 
 			_breakdownMetricsProvider?.CaptureTransaction(this);
 
