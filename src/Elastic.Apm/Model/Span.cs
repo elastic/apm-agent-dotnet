@@ -210,8 +210,7 @@ namespace Elastic.Apm.Model
 		[JsonProperty("sample_rate")]
 		internal double? SampleRate { get; }
 
-		[JsonIgnore]
-		public double SelfDuration => Duration.HasValue ? Duration.Value - _childDurationTimer.Duration : 0;
+		private double SelfDuration => Duration.HasValue ? Duration.Value - _childDurationTimer.Duration : 0;
 
 		[JsonIgnore]
 		internal bool ShouldBeSentToApmServer => IsSampled && !_isDropped;
@@ -318,9 +317,12 @@ namespace Elastic.Apm.Model
 						" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
 						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
 
-				_parentSpan?._childDurationTimer.OnChildEnd((long)(Timestamp + Duration.Value * 1000));
+				if (_parentSpan != null)
+					_parentSpan?._childDurationTimer.OnChildEnd((long)(Timestamp + Duration.Value * 1000));
+				else
+					_enclosingTransaction.ChildDurationTimer.OnChildEnd((long)(Timestamp + Duration.Value * 1000));
+
 				_childDurationTimer.OnSpanEnd((long)(Timestamp + Duration.Value * 1000));
-				_enclosingTransaction.ChildDurationTimer.OnChildEnd((long)(Timestamp + Duration.Value * 1000));
 			}
 			else
 			{
@@ -333,9 +335,12 @@ namespace Elastic.Apm.Model
 				var endTimestamp = TimeUtils.TimestampNow();
 				Duration = TimeUtils.DurationBetweenTimestamps(Timestamp, endTimestamp);
 
-				_parentSpan?._childDurationTimer.OnChildEnd(endTimestamp);
+				if (_parentSpan != null)
+					_parentSpan?._childDurationTimer.OnChildEnd(endTimestamp);
+				else
+					_enclosingTransaction.ChildDurationTimer.OnChildEnd(endTimestamp);
+
 				_childDurationTimer.OnSpanEnd(endTimestamp);
-				_enclosingTransaction.ChildDurationTimer.OnChildEnd(endTimestamp);
 
 				_logger.Trace()
 					?.Log("Ended {Span}. Start time: {Time} (as timestamp: {Timestamp})," +

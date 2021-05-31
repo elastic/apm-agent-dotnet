@@ -395,8 +395,7 @@ namespace Elastic.Apm.Model
 		[JsonProperty("sample_rate")]
 		internal double? SampleRate { get; }
 
-		[JsonIgnore]
-		public double SelfDuration => Duration.HasValue ? Duration.Value - ChildDurationTimer.Duration : 0;
+		internal double SelfDuration => Duration.HasValue ? Duration.Value - ChildDurationTimer.Duration : 0;
 
 		internal Service Service;
 
@@ -484,8 +483,7 @@ namespace Elastic.Apm.Model
 						" Start time: {Time} (as timestamp: {Timestamp}), Duration: {Duration}ms",
 						this, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp, Duration);
 
-				//TODO: set _childDurationTimer
-				ChildDurationTimer.OnSpanEnd((long)(Timestamp + Duration.Value));
+				ChildDurationTimer.OnSpanEnd((long)(Timestamp + Duration.Value * 1000));
 			}
 			else
 			{
