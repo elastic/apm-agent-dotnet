@@ -37,7 +37,6 @@ namespace Elastic.Apm.Model
 		/// have this activity as its parent and the TraceId will flow to all Activity instances.
 		/// </summary>
 		private readonly Activity _activity;
-
 		private readonly IApmServerInfo _apmServerInfo;
 		private readonly Lazy<Context> _context = new Lazy<Context>();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
@@ -285,6 +284,7 @@ namespace Elastic.Apm.Model
 		private bool _isEnded;
 
 		private string _name;
+		internal ChildDurationTimer ChildDurationTimer { get; } = new();
 
 		/// <summary>
 		/// In general if there is an error on the span, the outcome will be <code> Outcome.Failure </code> otherwise it'll be
@@ -298,7 +298,7 @@ namespace Elastic.Apm.Model
 		private Outcome _outcome;
 
 		private bool _outcomeChangedThroughApi;
-		internal ChildDurationTimer ChildDurationTimer { get; } = new();
+
 
 		/// <summary>
 		/// Changes the <see cref="Outcome"/> by checking the <see cref="_outcomeChangedThroughApi"/> flag.
@@ -319,8 +319,7 @@ namespace Elastic.Apm.Model
 		/// and its spans is controlled by this configuration snapshot.
 		/// </summary>
 		[JsonIgnore]
-		internal IConfigSnapshot ConfigSnapshot { get; }
-
+		public IConfigSnapshot ConfigSnapshot { get; }
 
 		/// <summary>
 		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.
