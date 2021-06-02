@@ -5,11 +5,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Elastic.Apm.Api;
 using Elastic.Apm.Api.Constraints;
+using Elastic.Apm.Config;
+using Elastic.Apm.Helpers;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
+using Elastic.Apm.Logging;
 
 namespace Elastic.Apm.Model
 {
@@ -20,6 +24,7 @@ namespace Elastic.Apm.Model
 	/// </summary>
 	internal class NoopTransaction : ITransaction
 	{
+		private static DefaultConfigSnapshot _defaultConfigSnapshot = new DefaultConfigSnapshot();
 		private static readonly Context ReusableContextInstance = new Context();
 		private readonly ICurrentExecutionSegmentsContainer _currentExecutionSegmentsContainer;
 
@@ -39,6 +44,8 @@ namespace Elastic.Apm.Model
 			ReusableContextInstance;
 
 		public Dictionary<string, string> Custom => _custom.Value;
+
+		public IConfigSnapshot ConfigSnapshot => _defaultConfigSnapshot;
 		public double? Duration { get; set; }
 
 		[MaxLength]
@@ -130,5 +137,48 @@ namespace Elastic.Apm.Model
 
 		public void CaptureErrorLog(ErrorLog errorLog, string parentId = null, Exception exception = null, Dictionary<string, Label> labels = null
 		) { }
+	}
+
+	/// <summary>
+	/// A static config snapshot which contains default values
+	/// </summary>
+	internal class DefaultConfigSnapshot : IConfigSnapshot
+	{
+		public string ApiKey => string.Empty;
+		public IReadOnlyCollection<string> ApplicationNamespaces => new List<string>();
+		public string CaptureBody => ConfigConsts.DefaultValues.CaptureBody;
+		public List<string> CaptureBodyContentTypes => new();
+		public bool CaptureHeaders => ConfigConsts.DefaultValues.CaptureHeaders;
+		public bool CentralConfig => ConfigConsts.DefaultValues.CentralConfig;
+		public string CloudProvider => ConfigConsts.DefaultValues.CloudProvider;
+		public IReadOnlyList<WildcardMatcher> DisableMetrics => new List<WildcardMatcher>();
+		public bool Enabled => false;
+		public string Environment => string.Empty;
+		public IReadOnlyCollection<string> ExcludedNamespaces => new List<string>();
+		public TimeSpan FlushInterval => TimeSpan.FromMilliseconds(ConfigConsts.DefaultValues.FlushIntervalInMilliseconds);
+		public IReadOnlyDictionary<string, string> GlobalLabels => new Dictionary<string, string>();
+		public string HostName => string.Empty;
+		public IReadOnlyList<WildcardMatcher> IgnoreMessageQueues => new Collection<WildcardMatcher>();
+		public LogLevel LogLevel => LogLevel.Error;
+		public int MaxBatchEventCount => ConfigConsts.DefaultValues.MaxBatchEventCount;
+		public int MaxQueueEventCount => ConfigConsts.DefaultValues.MaxQueueEventCount;
+		public double MetricsIntervalInMilliseconds => ConfigConsts.DefaultValues.MetricsIntervalInMilliseconds;
+		public bool Recording => false;
+		public IReadOnlyList<WildcardMatcher> SanitizeFieldNames => new List<WildcardMatcher>();
+		public string SecretToken => string.Empty;
+		public string ServerCert => string.Empty;
+		public IReadOnlyList<Uri> ServerUrls => new List<Uri>();
+		public Uri ServerUrl => ConfigConsts.DefaultValues.ServerUri;
+		public string ServiceName => string.Empty;
+		public string ServiceNodeName => string.Empty;
+		public string ServiceVersion => string.Empty;
+		public double SpanFramesMinDurationInMilliseconds => ConfigConsts.DefaultValues.SpanFramesMinDurationInMilliseconds;
+		public int StackTraceLimit => ConfigConsts.DefaultValues.StackTraceLimit;
+		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => new Collection<WildcardMatcher>();
+		public int TransactionMaxSpans => ConfigConsts.DefaultValues.TransactionMaxSpans;
+		public double TransactionSampleRate => ConfigConsts.DefaultValues.TransactionSampleRate;
+		public bool UseElasticTraceparentHeader => false;
+		public bool VerifyServerCert => false;
+		public string DbgDescription => nameof(DefaultConfigSnapshot);
 	}
 }

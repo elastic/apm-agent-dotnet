@@ -54,8 +54,7 @@ namespace Elastic.Apm.Model
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigStore.CurrentSnapshot,
-				agent.TracerInternal.CurrentExecutionSegmentsContainer, null)
-		{ }
+				agent.TracerInternal.CurrentExecutionSegmentsContainer, null) { }
 
 		/// <summary>
 		/// Creates a new transaction
@@ -231,7 +230,8 @@ namespace Elastic.Apm.Model
 			{
 				_logger.Trace()
 					?.Log("New Transaction instance created: {Transaction}. " +
-						"IsSampled ({IsSampled}) and SampleRate ({SampleRate}) is based on incoming distributed tracing data ({DistributedTracingData})." +
+						"IsSampled ({IsSampled}) and SampleRate ({SampleRate}) is based on incoming distributed tracing data ({DistributedTracingData})."
+						+
 						" Start time: {Time} (as timestamp: {Timestamp})",
 						this, IsSampled, SampleRate, distributedTracingData, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 			}
@@ -265,14 +265,8 @@ namespace Elastic.Apm.Model
 
 		private string _name;
 
-		/// <summary>
-		/// Holds configuration snapshot (which is immutable) that was current when this transaction started.
-		/// We would like transaction data to be consistent and not to be affected by possible changes in agent's configuration
-		/// between the start and the end of the transaction. That is why the way all the data is collected for the transaction
-		/// and its spans is controlled by this configuration snapshot.
-		/// </summary>
 		[JsonIgnore]
-		internal IConfigSnapshot ConfigSnapshot { get; }
+		public IConfigSnapshot ConfigSnapshot { get; }
 
 		/// <summary>
 		/// Any arbitrary contextual information regarding the event, captured by the agent, optionally provided by the user.

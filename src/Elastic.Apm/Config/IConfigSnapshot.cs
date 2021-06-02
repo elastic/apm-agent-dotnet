@@ -4,7 +4,7 @@
 
 namespace Elastic.Apm.Config
 {
-	internal interface IConfigSnapshot : IConfigSnapshotOptions
+	public interface IConfigSnapshot : IConfigurationReader
 	{
 		string DbgDescription { get; }
 	}
