@@ -33,7 +33,6 @@ using Elastic.Apm.AspNetCore;
 
 public class Startup
 {
-
     private readonly IConfiguration _configuration;
 
     public Startup(IConfiguration configuration)
@@ -44,7 +43,7 @@ public class Startup
     public void Configure(IApplicationBuilder app, IHostingEnvironment env)
     {
         //Registers the agent with an IConfiguration instance:
-        app.UseElasticApm(Configuration);
+        app.UseElasticApm(_configuration);
 
         //Rest of the Configure() method...
     }
