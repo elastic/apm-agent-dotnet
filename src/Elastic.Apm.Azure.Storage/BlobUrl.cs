@@ -25,7 +25,7 @@ namespace Elastic.Apm.Azure.Storage
 		protected StorageUrl(Uri url)
 		{
 			StorageAccountName = url.Host.Split(SplitDomain, 2)[0];
-			FullyQualifiedNamespace = url.GetLeftPart(UriPartial.Authority) + "/";
+			FullyQualifiedNamespace = url.Host;
 		}
 
 		public string StorageAccountName { get; }
