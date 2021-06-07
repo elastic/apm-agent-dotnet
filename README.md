@@ -15,12 +15,15 @@ Official NuGet packages can be referenced from [NuGet.org](https://www.nuget.org
 | `Elastic.Apm`           |  The core of the Agent, Public Agent API, Auto instrumentation for libraries that are part of .NET Standard 2.0.  | [![NuGet Release][ElasticApm-image]][ElasticApm-nuget-url]  |
 | `Elastic.Apm.AspNetCore` | ASP.NET Core auto instrumentation. | [![NuGet Release][ElasticApmAspNetCore-image]][ElasticApmAspNetCore-nuget-url] |
 | `Elastic.Apm.EntityFrameworkCore` | Entity Framework Core auto instrumentation. | [![NuGet Release][Elastic.Apm.EntityFrameworkCore-image]][Elastic.Apm.EntityFrameworkCore-nuget-url] |
-| `Elastic.Apm.NetCoreAll` | References every .NET Core related elastic APM package. It can be used to simply turn on the agent with a single line and activate all auto instrumentation. | [![NuGet Release][Elastic.Apm.NetCoreAll-image]][Elastic.Apm.NetCoreAll-nuget-url] |
+| `Elastic.Apm.NetCoreAll` | References every .NET Core related Elastic APM package. It can be used to simply turn on the agent and activate all auto instrumentation. | [![NuGet Release][Elastic.Apm.NetCoreAll-image]][Elastic.Apm.NetCoreAll-nuget-url] |
 | `Elastic.Apm.AspNetFullFramework` | ASP.NET (classic) auto instrumentation with an IIS Module. | [![NuGet Release][Elastic.Apm.AspNetFullFramework-image]][Elastic.Apm.AspNetFullFramework-nuget-url] |
 | `Elastic.Apm.EntityFramework6` | Entity Framework 6 auto instrumentation. | [![NuGet Release][Elastic.Apm.EntityFramework6-image]][Elastic.Apm.EntityFramework6-nuget-url] |
 | `Elastic.Apm.SqlClient` | `System.Data.SqlClient` and `Microsoft.Data.SqlClient` auto instrumentation. [More details](/src/Elastic.Apm.SqlClient/README.md) | [![NuGet Release][Elastic.Apm.SqlClient-image]][Elastic.Apm.SqlClient-nuget-url] |
 | `Elastic.Apm.Elasticsearch` | Integration with the .NET clients for Elasticsearch. | [![NuGet Release][Elastic.Apm.Elasticsearch-image]][Elastic.Apm.Elasticsearch-nuget-url] |
 | `Elastic.Apm.StackExchange.Redis` | Integration with the StackExchange.Redis client for Redis. | [![NuGet Release][Elastic.Apm.StackExchange.Redis-image]][Elastic.Apm.StackExchange.Redis-nuget-url] |
+| `Elastic.Apm.MongoDb` | Integration with the MongoDb.Driver driver for MongoDb. | [![NuGet Release][Elastic.Apm.MongoDb-image]][Elastic.Apm.MongoDb-nuget-url] |
+| `Elastic.Apm.Azure.ServiceBus` | Integration with Azure ServiceBus | [![NuGet Release][Elastic.Apm.Azure.ServiceBus-image]][Elastic.Apm.Azure.ServiceBus-nuget-url] |
+| `Elastic.Apm.Azure.Storage` | Integration with Azure Storage | [![NuGet Release][Elastic.Apm.Azure.Storage-image]][Elastic.Apm.Azure.Storage-nuget-url] |
 
 ## Documentation
 
@@ -56,6 +59,9 @@ These are the main folders within the repository:
   * `Elastic.Apm.SqlClient`: Auto-instrumentation for `System.Data.SqlClient` and `Microsoft.Data.SqlClient`.
   * `Elastic.Apm.Elasticsearch`: Auto-instrumentation for the official .NET clients for Elasticsearch.
   * `Elastic.Apm.StackExchange.Redis`: Auto-instrumentation for the StackExchange.Redis client for Redis.
+  * `Elastic.Apm.MongoDb`: Instrumentation for the MongoDb.Driver driver for MongoDb.
+  * `Elastic.Apm.Azure.ServiceBus`: Instrumentation for Azure ServiceBus.
+  * `Elastic.Apm.Azure.Storage`: Instrumentation for Azure Storage.
 * `test`: This folder contains test projects. Typically each project from the `src` folder has a corresponding test project.
   * `Elastic.Apm.Tests`: Tests the `Elastic.Apm` project.
   * `Elastic.Apm.AspNetCore.Tests`: Tests the `Elastic.Apm.AspNetCore` project.
@@ -106,3 +112,15 @@ https://img.shields.io/nuget/v/Elastic.Apm.Elasticsearch.svg
 [Elastic.Apm.StackExchange.Redis-nuget-url]:https://www.nuget.org/packages/Elastic.Apm.StackExchange.Redis/
 [Elastic.Apm.StackExchange.Redis-image]:
 https://img.shields.io/nuget/v/Elastic.Apm.StackExchange.Redis.svg
+
+[Elastic.Apm.MongoDb-nuget-url]:https://www.nuget.org/packages/Elastic.Apm.MongoDb/
+[Elastic.Apm.MongoDb-image]:
+https://img.shields.io/nuget/v/Elastic.Apm.MongoDb.svg
+
+[Elastic.Apm.Azure.ServiceBus-nuget-url]:https://www.nuget.org/packages/Elastic.Apm.Azure.ServiceBus/
+[Elastic.Apm.Azure.ServiceBus-image]:
+https://img.shields.io/nuget/v/Elastic.Apm.Azure.ServiceBus.svg
+
+[Elastic.Apm.Azure.Storage-nuget-url]:https://www.nuget.org/packages/Elastic.Apm.Azure.Storage/
+[Elastic.Apm.Azure.Storage-image]:
+https://img.shields.io/nuget/v/Elastic.Apm.Azure.Storage.svg
