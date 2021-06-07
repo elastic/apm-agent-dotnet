@@ -42,6 +42,7 @@ use std::io::BufReader;
 
 const MANAGED_PROFILER_ASSEMBLY: &'static str = "Elastic.Apm.Profiler.Managed";
 const ELASTIC_APM_PROFILER_INTEGRATIONS: &'static str = "ELASTIC_APM_PROFILER_INTEGRATIONS";
+const ELASTIC_APM_PROFILER_CALLTARGET_ENABLED: &'static str = "ELASTIC_APM_PROFILER_CALLTARGET_ENABLED";
 
 lazy_static! {
     static ref LOCK: Mutex<i32> = Mutex::new(0);
@@ -85,6 +86,8 @@ lazy_static! {
     ];
 
     static ref PROFILER_VERSION: Version = Version::new(1,9,0,0);
+
+    static ref INTEGRATION_METHODS: Mutex<Vec<IntegrationMethod>> = Mutex::new(Vec::new());
 }
 
 static COR_LIB_MODULE_LOADED: AtomicBool = AtomicBool::new(false);
@@ -422,7 +425,7 @@ impl CorProfiler {
 
         let integrations = self.load_integrations()?;
 
-        // try to get the ICorProfilerInfo4 interface. this will be available for all CLR versions targeted
+        // get the ICorProfilerInfo4 interface, which will be available for all CLR versions targeted
         let profiler_info = unknown.query_interface::<ICorProfilerInfo4>();
         if profiler_info.is_none() {
             log::error!("could not get ICorProfilerInfo4 from IUnknown");
@@ -431,7 +434,36 @@ impl CorProfiler {
 
         let profiler_info = profiler_info.unwrap();
 
-        let integrations = self.load_integrations()?;
+        // get the integrations from file
+        let integrations: Vec<Integration> = self.load_integrations()?;
+        let calltarget_enabled = self.read_calltarget_env_var();
+
+        let mut integration_methods: Vec<IntegrationMethod> = integrations
+            .iter()
+            .flat_map(|i| i.method_replacements.iter().filter_map(move |m| {
+                if let Some(wrapper_method) = &m.wrapper {
+                    let is_calltarget = &wrapper_method.action == "CallTargetModification";
+                    if calltarget_enabled && is_calltarget {
+                        Some(IntegrationMethod { name: i.name.clone(), method_replacement: m.clone() })
+                    } else if !calltarget_enabled && !is_calltarget {
+                        Some(IntegrationMethod { name: i.name.clone(), method_replacement: m.clone() })
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }))
+            .collect();
+
+        if integration_methods.is_empty() {
+            log::warn!("Initialize: No integrations loaded. Profiler disabled.");
+            return Err(E_FAIL);
+        } else {
+            log::debug!("Initialize: loaded {} integration(s)", integration_methods.len());
+        }
+
+        INTEGRATION_METHODS.lock().unwrap().append(&mut integration_methods);
 
         // Set the event mask for CLR events we're interested in
         let event_mask = COR_PRF_MONITOR::COR_PRF_MONITOR_JIT_COMPILATION
@@ -770,5 +802,27 @@ impl CorProfiler {
         })?;
 
         Ok(integrations)
+    }
+
+    fn read_calltarget_env_var(&self) -> bool {
+        match std::env::var(ELASTIC_APM_PROFILER_CALLTARGET_ENABLED) {
+            Ok(enabled) => {
+                match enabled.as_str() {
+                    "true" => true,
+                    "True" => true,
+                    "TRUE" => true,
+                    "1" => true,
+                    "false" => false,
+                    "False" => false,
+                    "FALSE" => false,
+                    "0" => false,
+                    _ => true
+                }
+            },
+            Err(e) => {
+                log::info!("Problem reading {}: {}. Setting to true", ELASTIC_APM_PROFILER_CALLTARGET_ENABLED, e.to_string());
+                true
+            }
+        }
     }
 }

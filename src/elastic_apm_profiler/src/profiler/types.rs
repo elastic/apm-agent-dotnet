@@ -29,7 +29,7 @@ pub(crate) struct AssemblyInfo {
     pub app_domain_name: String,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct MethodSignature {
     data: Vec<BYTE>
 }
@@ -65,7 +65,7 @@ impl<'de> Deserialize<'de> for MethodSignature {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct AssemblyReference {
     name: String,
     version: Version,
@@ -73,7 +73,7 @@ pub struct AssemblyReference {
     public_key: PublicKeyToken,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct PublicKeyToken(String);
 
 impl FromStr for AssemblyReference {
@@ -139,7 +139,7 @@ impl<'de> Deserialize<'de> for AssemblyReference {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Deserialize, Clone)]
 pub struct CallerMethodReference {
     assembly: String,
     #[serde(rename = "type")]
@@ -148,19 +148,19 @@ pub struct CallerMethodReference {
     method_name: String
 }
 
-#[derive(Debug, Eq, PartialEq, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Deserialize, Clone)]
 pub struct WrapperMethodReference {
-    assembly: AssemblyReference,
+    pub (crate) assembly: AssemblyReference,
     #[serde(rename = "type")]
-    type_name: String,
+    pub (crate) type_name: String,
     #[serde(rename = "method")]
-    method_name: Option<String>,
-    action: String,
+    pub (crate) method_name: Option<String>,
+    pub (crate) action: String,
     #[serde(rename = "signature")]
-    method_signature: Option<MethodSignature>,
+    pub (crate) method_signature: Option<MethodSignature>,
 }
 
-#[derive(Debug, Eq, PartialEq, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Deserialize, Clone)]
 pub struct TargetMethodReference {
     assembly: String,
     #[serde(rename = "type")]
@@ -191,12 +191,12 @@ impl TargetMethodReference {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Deserialize, Clone)]
 pub struct MethodReplacement {
     #[serde(deserialize_with = "empty_struct_is_none")]
-    caller: Option<CallerMethodReference>,
-    target: Option<TargetMethodReference>,
-    wrapper: Option<WrapperMethodReference>,
+    pub (crate) caller: Option<CallerMethodReference>,
+    pub (crate) target: Option<TargetMethodReference>,
+    pub (crate) wrapper: Option<WrapperMethodReference>,
 }
 
 fn empty_struct_is_none<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
@@ -219,14 +219,14 @@ fn empty_struct_is_none<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Erro
 
 #[derive(Debug, Eq, PartialEq, Deserialize)]
 pub struct IntegrationMethod {
-    name: String,
-    method_replacement: MethodReplacement
+    pub(crate) name: String,
+    pub(crate) method_replacement: MethodReplacement
 }
 
 #[derive(Debug, Eq, PartialEq, Deserialize)]
 pub struct Integration {
-    name: String,
-    method_replacements: Vec<MethodReplacement>
+    pub(crate) name: String,
+    pub(crate) method_replacements: Vec<MethodReplacement>
 }
 
 #[cfg(test)]
