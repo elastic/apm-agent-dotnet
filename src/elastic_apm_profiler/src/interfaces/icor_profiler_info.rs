@@ -947,11 +947,6 @@ impl ICorProfilerInfo {
         let mut app_domain_id = MaybeUninit::uninit();
         let mut module_id = MaybeUninit::uninit();
 
-        // log::trace!(
-        //     "calling unsafe GetAssemblyInfo with assembly_id {}",
-        //     assembly_id
-        // );
-
         let hr = unsafe {
             self.GetAssemblyInfo(
                 assembly_id,
@@ -963,11 +958,8 @@ impl ICorProfilerInfo {
             )
         };
 
-        //log::trace!("called unsafe GetAssemblyInfo");
-
         match hr {
             S_OK => {
-                //let name_length = unsafe { name_length.assume_init() };
                 unsafe { name_buffer.set_len(name_length as usize) };
                 let name = U16CString::from_vec_with_nul(name_buffer)
                     .unwrap()

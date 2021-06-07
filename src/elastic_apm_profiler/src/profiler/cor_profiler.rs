@@ -18,7 +18,7 @@ use crate::{
         imetadata_import::{IMetaDataImport, IMetaDataImport2},
     },
     profiler::managed::ManagedLoader,
-    types::{HashAlgorithmType, ModuleInfo},
+    types::{HashAlgorithmType, ModuleInfo,Version,RuntimeInfo},
 };
 use com::{
     interfaces::iunknown::IUnknown,
@@ -36,11 +36,15 @@ use std::{
 use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::cli::rem_un;
 use crate::profiler::types::{IntegrationMethod, Integration};
+use std::ops::Deref;
+
+const MANAGED_PROFILER_ASSEMBLY: &'static str = "Elastic.Apm.Profiler.Managed";
 
 lazy_static! {
     static ref LOCK: Mutex<i32> = Mutex::new(0);
     static ref MODULES: Mutex<HashMap<ModuleID, crate::profiler::types::ModuleInfo>> = Mutex::new(HashMap::new());
     static ref FIRST_JIT_COMPILATION_APP_DOMAINS: Mutex<Vec<AppDomainID>> = Mutex::new(Vec::new());
+    static ref MANAGED_PROFILER_LOADED_APP_DOMAINS: Mutex<Vec<AppDomainID>> = Mutex::new(Vec::new());
 
     static ref SKIP_ASSEMBLY_PREFIXES: Vec<&'static str> = vec![
         "Elastic.Apm",
@@ -76,11 +80,14 @@ lazy_static! {
         "Anonymously Hosted DynamicMethods Assembly",
         "ISymWrapper",
     ];
+
+    static ref PROFILER_VERSION: Version = Version::new(1,9,0,0);
 }
 
 pub(crate) static IS_ATTACHED: AtomicBool = AtomicBool::new(false);
 pub(crate) static COR_LIB_MODULE_LOADED: AtomicBool = AtomicBool::new(false);
 pub(crate) static COR_APP_DOMAIN_ID: AtomicUsize = AtomicUsize::new(0);
+static MANAGED_PROFILER_LOADED_DOMAIN_NEUTRAL: AtomicBool = AtomicBool::new(false);
 
 class! {
     /// The profiler implementation
@@ -88,7 +95,8 @@ class! {
         ICorProfilerCallback9(ICorProfilerCallback8(ICorProfilerCallback7(
             ICorProfilerCallback6(ICorProfilerCallback5(ICorProfilerCallback4(
                 ICorProfilerCallback3(ICorProfilerCallback2(ICorProfilerCallback)))))))) {
-        profiler_info: RefCell<Option<ICorProfilerInfo4>>
+        profiler_info: RefCell<Option<ICorProfilerInfo4>>,
+        runtime_info: RefCell<Option<RuntimeInfo>>,
     }
 
     impl ICorProfilerCallback for CorProfiler {
@@ -442,8 +450,9 @@ impl CorProfiler {
         let runtime_info = profiler_info.get_runtime_information()?;
         log::info!("runtime {}", &runtime_info);
 
-        // Store the profiler info for later use
+        // Store the profiler and runtime info for later use
         self.profiler_info.replace(Some(profiler_info));
+        self.runtime_info.replace(Some(runtime_info));
 
         IS_ATTACHED.store(true, Ordering::SeqCst);
 
@@ -486,21 +495,47 @@ impl CorProfiler {
 
         let assembly_info = profiler_info.get_assembly_info(assembly_id)?;
         let metadata_import = profiler_info.get_module_metadata::<IMetaDataImport2>(
-            assembly_info.module_id,
-            CorOpenFlags::ofRead | CorOpenFlags::ofWrite,
-        )?;
+            assembly_info.module_id, CorOpenFlags::ofRead)?;
 
         let metadata_assembly_import = metadata_import
             .query_interface::<IMetaDataAssemblyImport>()
             .expect("unable to get meta data assembly import");
 
         let assembly_metadata = metadata_assembly_import.get_assembly_metadata()?;
-        log::info!(
-            "assembly loaded {} {} {}",
-            &assembly_metadata.name,
-            &assembly_metadata.version,
-            &assembly_metadata.public_key.public_key_token(),
-        );
+
+        let is_managed_profiler_assembly = &assembly_info.name == MANAGED_PROFILER_ASSEMBLY;
+
+        log::debug!("AssemblyLoadFinished: name={}, version={}", &assembly_metadata.name, &assembly_metadata.version);
+        if is_managed_profiler_assembly {
+            if &assembly_metadata.version == PROFILER_VERSION.deref() {
+                log::info!(
+                    "AssemblyLoadFinished: {} {} matched profiler version {}",
+                    MANAGED_PROFILER_ASSEMBLY,
+                    &assembly_metadata.version,
+                    PROFILER_VERSION.deref());
+
+                MANAGED_PROFILER_LOADED_APP_DOMAINS.lock().unwrap().push(assembly_info.app_domain_id);
+
+                let runtime_borrow = self.runtime_info.borrow();
+                let runtime_info = runtime_borrow.as_ref().unwrap();
+
+                if runtime_info.is_desktop_clr() && COR_LIB_MODULE_LOADED.load(Ordering::SeqCst) {
+                    if assembly_info.app_domain_id == COR_APP_DOMAIN_ID.load(Ordering::SeqCst) {
+                        log::info!("AssemblyLoadFinished: {} was loaded domain-neutral", MANAGED_PROFILER_ASSEMBLY);
+                        MANAGED_PROFILER_LOADED_DOMAIN_NEUTRAL.store(true, Ordering::SeqCst);
+                    } else {
+                        log::info!("AssemblyLoadFinished: {} was not loaded domain-neutral", MANAGED_PROFILER_ASSEMBLY);
+                    }
+                }
+
+
+            } else {
+                log::warn!("AssemblyLoadFinished: {} {} did not match profiler version {}",
+                           MANAGED_PROFILER_ASSEMBLY,
+                           &assembly_metadata.version,
+                           PROFILER_VERSION.deref());
+            }
+        }
 
         Ok(())
     }
