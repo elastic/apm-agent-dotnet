@@ -37,8 +37,11 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::cli::rem_un;
 use crate::profiler::types::{IntegrationMethod, Integration};
 use std::ops::Deref;
+use std::fs::File;
+use std::io::BufReader;
 
 const MANAGED_PROFILER_ASSEMBLY: &'static str = "Elastic.Apm.Profiler.Managed";
+const ELASTIC_APM_PROFILER_INTEGRATIONS: &'static str = "ELASTIC_APM_PROFILER_INTEGRATIONS";
 
 lazy_static! {
     static ref LOCK: Mutex<i32> = Mutex::new(0);
@@ -84,10 +87,11 @@ lazy_static! {
     static ref PROFILER_VERSION: Version = Version::new(1,9,0,0);
 }
 
-pub(crate) static IS_ATTACHED: AtomicBool = AtomicBool::new(false);
-pub(crate) static COR_LIB_MODULE_LOADED: AtomicBool = AtomicBool::new(false);
-pub(crate) static COR_APP_DOMAIN_ID: AtomicUsize = AtomicUsize::new(0);
+static COR_LIB_MODULE_LOADED: AtomicBool = AtomicBool::new(false);
+static COR_APP_DOMAIN_ID: AtomicUsize = AtomicUsize::new(0);
 static MANAGED_PROFILER_LOADED_DOMAIN_NEUTRAL: AtomicBool = AtomicBool::new(false);
+
+pub(crate) static IS_ATTACHED: AtomicBool = AtomicBool::new(false);
 
 class! {
     /// The profiler implementation
@@ -427,6 +431,8 @@ impl CorProfiler {
 
         let profiler_info = profiler_info.unwrap();
 
+        let integrations = self.load_integrations()?;
+
         // Set the event mask for CLR events we're interested in
         let event_mask = COR_PRF_MONITOR::COR_PRF_MONITOR_JIT_COMPILATION
             | COR_PRF_MONITOR::COR_PRF_DISABLE_TRANSPARENCY_CHECKS_UNDER_FULL_TRUST
@@ -593,6 +599,8 @@ impl CorProfiler {
                 }
             }
 
+            // TODO: filter integrations
+
 
             let mut modules = MODULES.lock().unwrap();
             modules.insert(module_id, module_info);
@@ -745,7 +753,22 @@ impl CorProfiler {
     }
 
     fn load_integrations(&self) -> Result<Vec<Integration>, HRESULT> {
-        // TODO! implement
-        Ok(Vec::new())
+        let path = std::env::var(ELASTIC_APM_PROFILER_INTEGRATIONS).map_err(|e| {
+            log::warn!("Problem reading {} environment variable: {}. profiler is disabled.", ELASTIC_APM_PROFILER_INTEGRATIONS, e.to_string());
+            E_FAIL
+        })?;
+
+        let file = File::open(&path).map_err(|e| {
+            log::warn!("Problem reading integrations file {}: {}. profiler is disabled.", &path, e.to_string());
+            E_FAIL
+        })?;
+
+        let reader = BufReader::new(file);
+        let integrations = serde_json::from_reader(reader).map_err(|e| {
+            log::warn!("Problem reading integrations file {}: {}. profiler is disabled.", &path, e.to_string());
+            E_FAIL
+        })?;
+
+        Ok(integrations)
     }
 }
