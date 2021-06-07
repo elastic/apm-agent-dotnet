@@ -438,6 +438,10 @@ impl CorProfiler {
         let integrations: Vec<Integration> = self.load_integrations()?;
         let calltarget_enabled = self.read_calltarget_env_var();
 
+        if calltarget_enabled {
+            // TODO: initialize rejit handler
+        }
+        
         let mut integration_methods: Vec<IntegrationMethod> = integrations
             .iter()
             .flat_map(|i| i.method_replacements.iter().filter_map(move |m| {
@@ -466,13 +470,20 @@ impl CorProfiler {
         INTEGRATION_METHODS.lock().unwrap().append(&mut integration_methods);
 
         // Set the event mask for CLR events we're interested in
-        let event_mask = COR_PRF_MONITOR::COR_PRF_MONITOR_JIT_COMPILATION
+        let mut event_mask = COR_PRF_MONITOR::COR_PRF_MONITOR_JIT_COMPILATION
             | COR_PRF_MONITOR::COR_PRF_DISABLE_TRANSPARENCY_CHECKS_UNDER_FULL_TRUST
-            | COR_PRF_MONITOR::COR_PRF_DISABLE_INLINING
             | COR_PRF_MONITOR::COR_PRF_MONITOR_MODULE_LOADS
             | COR_PRF_MONITOR::COR_PRF_MONITOR_ASSEMBLY_LOADS
-            | COR_PRF_MONITOR::COR_PRF_DISABLE_ALL_NGEN_IMAGES
-            | COR_PRF_MONITOR::COR_PRF_DISABLE_OPTIMIZATIONS;
+            | COR_PRF_MONITOR::COR_PRF_DISABLE_ALL_NGEN_IMAGES;
+
+        if calltarget_enabled {
+            log::info!("CallTarget instrumentation is enabled");
+            event_mask |= COR_PRF_MONITOR::COR_PRF_ENABLE_REJIT;
+        } else {
+            log::info!("CallTarget instrumentation is disabled");
+        }
+
+        // TODO: enable/disable inlining and optimizations
 
         log::trace!("set event mask to {:?}", &event_mask);
         profiler_info.set_event_mask(event_mask)?;
