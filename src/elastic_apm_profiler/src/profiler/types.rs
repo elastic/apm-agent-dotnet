@@ -138,11 +138,11 @@ impl<'de> Deserialize<'de> for AssemblyReference {
 
 #[derive(Debug, Eq, PartialEq, Deserialize, Clone)]
 pub struct CallerMethodReference {
-    assembly: String,
+    pub(crate) assembly: String,
     #[serde(rename = "type")]
-    type_name: String,
+    pub(crate) type_name: String,
     #[serde(rename = "method")]
-    method_name: String,
+    pub(crate) method_name: String,
 }
 
 #[derive(Debug, Eq, PartialEq, Deserialize, Clone)]
@@ -226,7 +226,7 @@ where
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Deserialize, Clone)]
 pub struct IntegrationMethod {
     pub(crate) name: String,
     pub(crate) method_replacement: MethodReplacement,

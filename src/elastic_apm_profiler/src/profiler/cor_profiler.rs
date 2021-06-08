@@ -13,6 +13,7 @@ use crate::{
             ICorProfilerInfo, ICorProfilerInfo2, ICorProfilerInfo3, ICorProfilerInfo4,
             ICorProfilerInfo5, ICorProfilerInfo7, IID_ICOR_PROFILER_INFO, IID_ICOR_PROFILER_INFO4,
         },
+        imetadata_assembly_emit::IMetaDataAssemblyEmit,
         imetadata_assembly_import::IMetaDataAssemblyImport,
         imetadata_emit::{IMetaDataEmit, IMetaDataEmit2},
         imetadata_import::{IMetaDataImport, IMetaDataImport2},
@@ -39,6 +40,7 @@ use std::{
     sync::{atomic::AtomicBool, Mutex},
 };
 
+const MANAGED_PROFILER_ASSEMBLY_LOADER: &'static str = "Elastic.Apm.Profiler.Managed.Loader";
 const MANAGED_PROFILER_ASSEMBLY: &'static str = "Elastic.Apm.Profiler.Managed";
 const ELASTIC_APM_PROFILER_INTEGRATIONS: &'static str = "ELASTIC_APM_PROFILER_INTEGRATIONS";
 const ELASTIC_APM_PROFILER_CALLTARGET_ENABLED: &'static str =
@@ -91,6 +93,7 @@ lazy_static! {
 static COR_LIB_MODULE_LOADED: AtomicBool = AtomicBool::new(false);
 static COR_APP_DOMAIN_ID: AtomicUsize = AtomicUsize::new(0);
 static MANAGED_PROFILER_LOADED_DOMAIN_NEUTRAL: AtomicBool = AtomicBool::new(false);
+static CALLTARGET_ENABLED: AtomicBool = AtomicBool::new(true);
 
 pub(crate) static IS_ATTACHED: AtomicBool = AtomicBool::new(false);
 
@@ -435,6 +438,7 @@ impl CorProfiler {
         // get the integrations from file
         let integrations: Vec<Integration> = self.load_integrations()?;
         let calltarget_enabled = self.read_calltarget_env_var();
+        CALLTARGET_ENABLED.store(calltarget_enabled, Ordering::SeqCst);
 
         if calltarget_enabled {
             // TODO: initialize rejit handler
@@ -620,56 +624,76 @@ impl CorProfiler {
     fn module_load_finished(&self, module_id: ModuleID, hr_status: HRESULT) -> Result<(), HRESULT> {
         if FAILED(hr_status) {
             log::error!(
-                "hr status is {} for module id {}. skipping",
+                "ModuleLoadFinished: hr status is {} for module id {}. skipping",
                 hr_status,
                 module_id
             );
             return Ok(());
         }
 
+        if !IS_ATTACHED.load(Ordering::SeqCst) {
+            log::trace!("ModuleLoadFinished: profiler not attached");
+            return Ok(());
+        }
+
         let _lock = LOCK.lock().unwrap();
+        if !IS_ATTACHED.load(Ordering::SeqCst) {
+            log::trace!("ModuleLoadFinished: profiler not attached");
+            return Ok(());
+        }
 
         if let Some(module_info) = self.get_module_info(module_id) {
             let appdomain_id = module_info.assembly.app_domain_id;
             let assembly_name = &module_info.assembly.name;
 
             log::debug!(
-                "Module loaded {}, {}, app domain {}",
-                &module_info.path,
+                "ModuleLoadFinished: {} {} app domain {} {}",
+                module_id,
                 assembly_name,
+                &module_info.assembly.app_domain_id,
                 &module_info.assembly.app_domain_name
             );
 
-            if !COR_LIB_MODULE_LOADED.load(Ordering::Relaxed) && assembly_name == "mscorlib"
+            if !COR_LIB_MODULE_LOADED.load(Ordering::SeqCst) && assembly_name == "mscorlib"
                 || assembly_name == "System.Private.CoreLib"
             {
-                COR_LIB_MODULE_LOADED.store(true, Ordering::Relaxed);
-                COR_APP_DOMAIN_ID.store(appdomain_id, Ordering::Relaxed);
+                COR_LIB_MODULE_LOADED.store(true, Ordering::SeqCst);
+                COR_APP_DOMAIN_ID.store(appdomain_id, Ordering::SeqCst);
+
                 return Ok(());
             }
 
-            if assembly_name == "Elastic.Apm.Profiler.Managed.Loader" {
+            if assembly_name == MANAGED_PROFILER_ASSEMBLY_LOADER {
                 log::info!(
-                    "ModuleLoadFinished: Elastic.Apm.Profiler.Managed.Loader loaded into AppDomain {} {}",
+                    "ModuleLoadFinished: {} loaded into AppDomain {} {}",
+                    MANAGED_PROFILER_ASSEMBLY_LOADER,
                     appdomain_id,
-                    &module_info.assembly.app_domain_name);
+                    &module_info.assembly.app_domain_name
+                );
+
                 FIRST_JIT_COMPILATION_APP_DOMAINS
                     .lock()
                     .unwrap()
                     .push(appdomain_id);
+
+                return Ok(());
             }
 
             if module_info.is_windows_runtime() {
-                log::debug!("skipping windows metadata module {}", module_id);
+                log::debug!(
+                    "ModuleLoadFinished: skipping windows metadata module {} {}",
+                    module_id,
+                    &assembly_name
+                );
                 return Ok(());
             }
 
             for pattern in SKIP_ASSEMBLY_PREFIXES.iter() {
                 if assembly_name.starts_with(pattern) {
                     log::debug!(
-                        "skipping module {} {} because it matches skip pattern {}",
-                        assembly_name,
+                        "ModuleLoadFinished: skipping module {} {} because it matches skip pattern {}",
                         module_id,
+                        assembly_name,
                         pattern
                     );
                     return Ok(());
@@ -679,16 +703,59 @@ impl CorProfiler {
             for skip in SKIP_ASSEMBLIES.iter() {
                 if assembly_name == skip {
                     log::debug!(
-                        "skipping module {} {} because it matches skip {}",
-                        assembly_name,
+                        "ModuleLoadFinished: skipping module {} {} because it matches skip {}",
                         module_id,
+                        assembly_name,
                         skip
                     );
                     return Ok(());
                 }
             }
 
-            // TODO: filter integrations
+            // TODO: Avoid cloning integration methods. Should be possible to make all filtered_integrations
+            // a collection of references
+            let filtered_integrations = if CALLTARGET_ENABLED.load(Ordering::SeqCst) {
+                INTEGRATION_METHODS.lock().unwrap().to_vec()
+            } else {
+                INTEGRATION_METHODS
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .filter(|m| {
+                        if let Some(caller) = &m.method_replacement.caller {
+                            if caller.assembly.is_empty() || &caller.assembly == assembly_name {
+                                return true;
+                            }
+                        }
+
+                        false
+                    })
+                    .cloned()
+                    .collect()
+            };
+
+            if filtered_integrations.is_empty() {
+                log::debug!(
+                    "ModuleLoadFinished: skipping module {} {} because filtered by caller",
+                    module_id,
+                    assembly_name
+                );
+            }
+
+            // get the metadata interfaces for the module
+            let profiler_borrow = self.profiler_info.borrow();
+            let profiler_info = profiler_borrow.as_ref().unwrap();
+            let metadata_import = profiler_info.get_module_metadata::<IMetaDataImport2>(
+                module_id,
+                CorOpenFlags::ofRead | CorOpenFlags::ofWrite,
+            )?;
+            let metadata_emit = metadata_import.query_interface::<IMetaDataEmit2>().unwrap();
+            let assembly_import = metadata_import
+                .query_interface::<IMetaDataAssemblyImport>()
+                .unwrap();
+            let assembly_emit = metadata_import
+                .query_interface::<IMetaDataAssemblyEmit>()
+                .unwrap();
 
             let mut modules = MODULES.lock().unwrap();
             modules.insert(module_id, module_info);
