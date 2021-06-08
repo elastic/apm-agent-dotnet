@@ -18,7 +18,8 @@ use crate::{
         imetadata_import::{IMetaDataImport, IMetaDataImport2},
     },
     profiler::managed::ManagedLoader,
-    types::{HashAlgorithmType, ModuleInfo,Version,RuntimeInfo},
+    profiler::types::{Integration, IntegrationMethod},
+    types::{HashAlgorithmType, ModuleInfo, RuntimeInfo, Version},
 };
 use com::{
     interfaces::iunknown::IUnknown,
@@ -27,29 +28,29 @@ use com::{
 };
 use rust_embed::RustEmbed;
 use simple_logger::SimpleLogger;
-use std::{
-    cell::RefCell,
-    ffi::c_void,
-    sync::{atomic::AtomicBool, Mutex},
-    collections::HashMap,
-};
-use std::sync::atomic::{AtomicUsize, Ordering};
-use crate::cli::rem_un;
-use crate::profiler::types::{IntegrationMethod, Integration};
-use std::ops::Deref;
 use std::fs::File;
 use std::io::BufReader;
+use std::ops::Deref;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::{
+    cell::RefCell,
+    collections::HashMap,
+    ffi::c_void,
+    sync::{atomic::AtomicBool, Mutex},
+};
 
 const MANAGED_PROFILER_ASSEMBLY: &'static str = "Elastic.Apm.Profiler.Managed";
 const ELASTIC_APM_PROFILER_INTEGRATIONS: &'static str = "ELASTIC_APM_PROFILER_INTEGRATIONS";
-const ELASTIC_APM_PROFILER_CALLTARGET_ENABLED: &'static str = "ELASTIC_APM_PROFILER_CALLTARGET_ENABLED";
+const ELASTIC_APM_PROFILER_CALLTARGET_ENABLED: &'static str =
+    "ELASTIC_APM_PROFILER_CALLTARGET_ENABLED";
 
 lazy_static! {
     static ref LOCK: Mutex<i32> = Mutex::new(0);
-    static ref MODULES: Mutex<HashMap<ModuleID, crate::profiler::types::ModuleInfo>> = Mutex::new(HashMap::new());
+    static ref MODULES: Mutex<HashMap<ModuleID, crate::profiler::types::ModuleInfo>> =
+        Mutex::new(HashMap::new());
     static ref FIRST_JIT_COMPILATION_APP_DOMAINS: Mutex<Vec<AppDomainID>> = Mutex::new(Vec::new());
-    static ref MANAGED_PROFILER_LOADED_APP_DOMAINS: Mutex<Vec<AppDomainID>> = Mutex::new(Vec::new());
-
+    static ref MANAGED_PROFILER_LOADED_APP_DOMAINS: Mutex<Vec<AppDomainID>> =
+        Mutex::new(Vec::new());
     static ref SKIP_ASSEMBLY_PREFIXES: Vec<&'static str> = vec![
         "Elastic.Apm",
         "MessagePack",
@@ -74,7 +75,6 @@ lazy_static! {
         "System.Xml",
         "Newtonsoft",
     ];
-
     static ref SKIP_ASSEMBLIES: Vec<&'static str> = vec![
         "mscorlib",
         "netstandard",
@@ -84,9 +84,7 @@ lazy_static! {
         "Anonymously Hosted DynamicMethods Assembly",
         "ISymWrapper",
     ];
-
-    static ref PROFILER_VERSION: Version = Version::new(1,9,0,0);
-
+    static ref PROFILER_VERSION: Version = Version::new(1, 9, 0, 0);
     static ref INTEGRATION_METHODS: Mutex<Vec<IntegrationMethod>> = Mutex::new(Vec::new());
 }
 
@@ -441,33 +439,47 @@ impl CorProfiler {
         if calltarget_enabled {
             // TODO: initialize rejit handler
         }
-        
+
         let mut integration_methods: Vec<IntegrationMethod> = integrations
             .iter()
-            .flat_map(|i| i.method_replacements.iter().filter_map(move |m| {
-                if let Some(wrapper_method) = &m.wrapper {
-                    let is_calltarget = &wrapper_method.action == "CallTargetModification";
-                    if calltarget_enabled && is_calltarget {
-                        Some(IntegrationMethod { name: i.name.clone(), method_replacement: m.clone() })
-                    } else if !calltarget_enabled && !is_calltarget {
-                        Some(IntegrationMethod { name: i.name.clone(), method_replacement: m.clone() })
+            .flat_map(|i| {
+                i.method_replacements.iter().filter_map(move |m| {
+                    if let Some(wrapper_method) = &m.wrapper {
+                        let is_calltarget = &wrapper_method.action == "CallTargetModification";
+                        if calltarget_enabled && is_calltarget {
+                            Some(IntegrationMethod {
+                                name: i.name.clone(),
+                                method_replacement: m.clone(),
+                            })
+                        } else if !calltarget_enabled && !is_calltarget {
+                            Some(IntegrationMethod {
+                                name: i.name.clone(),
+                                method_replacement: m.clone(),
+                            })
+                        } else {
+                            None
+                        }
                     } else {
                         None
                     }
-                } else {
-                    None
-                }
-            }))
+                })
+            })
             .collect();
 
         if integration_methods.is_empty() {
             log::warn!("Initialize: No integrations loaded. Profiler disabled.");
             return Err(E_FAIL);
         } else {
-            log::debug!("Initialize: loaded {} integration(s)", integration_methods.len());
+            log::debug!(
+                "Initialize: loaded {} integration(s)",
+                integration_methods.len()
+            );
         }
 
-        INTEGRATION_METHODS.lock().unwrap().append(&mut integration_methods);
+        INTEGRATION_METHODS
+            .lock()
+            .unwrap()
+            .append(&mut integration_methods);
 
         // Set the event mask for CLR events we're interested in
         let mut event_mask = COR_PRF_MONITOR::COR_PRF_MONITOR_JIT_COMPILATION
@@ -544,7 +556,9 @@ impl CorProfiler {
 
         let assembly_info = profiler_info.get_assembly_info(assembly_id)?;
         let metadata_import = profiler_info.get_module_metadata::<IMetaDataImport2>(
-            assembly_info.module_id, CorOpenFlags::ofRead)?;
+            assembly_info.module_id,
+            CorOpenFlags::ofRead,
+        )?;
 
         let metadata_assembly_import = metadata_import
             .query_interface::<IMetaDataAssemblyImport>()
@@ -554,35 +568,49 @@ impl CorProfiler {
 
         let is_managed_profiler_assembly = &assembly_info.name == MANAGED_PROFILER_ASSEMBLY;
 
-        log::debug!("AssemblyLoadFinished: name={}, version={}", &assembly_metadata.name, &assembly_metadata.version);
+        log::debug!(
+            "AssemblyLoadFinished: name={}, version={}",
+            &assembly_metadata.name,
+            &assembly_metadata.version
+        );
         if is_managed_profiler_assembly {
             if &assembly_metadata.version == PROFILER_VERSION.deref() {
                 log::info!(
                     "AssemblyLoadFinished: {} {} matched profiler version {}",
                     MANAGED_PROFILER_ASSEMBLY,
                     &assembly_metadata.version,
-                    PROFILER_VERSION.deref());
+                    PROFILER_VERSION.deref()
+                );
 
-                MANAGED_PROFILER_LOADED_APP_DOMAINS.lock().unwrap().push(assembly_info.app_domain_id);
+                MANAGED_PROFILER_LOADED_APP_DOMAINS
+                    .lock()
+                    .unwrap()
+                    .push(assembly_info.app_domain_id);
 
                 let runtime_borrow = self.runtime_info.borrow();
                 let runtime_info = runtime_borrow.as_ref().unwrap();
 
                 if runtime_info.is_desktop_clr() && COR_LIB_MODULE_LOADED.load(Ordering::SeqCst) {
                     if assembly_info.app_domain_id == COR_APP_DOMAIN_ID.load(Ordering::SeqCst) {
-                        log::info!("AssemblyLoadFinished: {} was loaded domain-neutral", MANAGED_PROFILER_ASSEMBLY);
+                        log::info!(
+                            "AssemblyLoadFinished: {} was loaded domain-neutral",
+                            MANAGED_PROFILER_ASSEMBLY
+                        );
                         MANAGED_PROFILER_LOADED_DOMAIN_NEUTRAL.store(true, Ordering::SeqCst);
                     } else {
-                        log::info!("AssemblyLoadFinished: {} was not loaded domain-neutral", MANAGED_PROFILER_ASSEMBLY);
+                        log::info!(
+                            "AssemblyLoadFinished: {} was not loaded domain-neutral",
+                            MANAGED_PROFILER_ASSEMBLY
+                        );
                     }
                 }
-
-
             } else {
-                log::warn!("AssemblyLoadFinished: {} {} did not match profiler version {}",
-                           MANAGED_PROFILER_ASSEMBLY,
-                           &assembly_metadata.version,
-                           PROFILER_VERSION.deref());
+                log::warn!(
+                    "AssemblyLoadFinished: {} {} did not match profiler version {}",
+                    MANAGED_PROFILER_ASSEMBLY,
+                    &assembly_metadata.version,
+                    PROFILER_VERSION.deref()
+                );
             }
         }
 
@@ -591,7 +619,11 @@ impl CorProfiler {
 
     fn module_load_finished(&self, module_id: ModuleID, hr_status: HRESULT) -> Result<(), HRESULT> {
         if FAILED(hr_status) {
-            log::error!("hr status is {} for module id {}. skipping", hr_status, module_id);
+            log::error!(
+                "hr status is {} for module id {}. skipping",
+                hr_status,
+                module_id
+            );
             return Ok(());
         }
 
@@ -608,8 +640,9 @@ impl CorProfiler {
                 &module_info.assembly.app_domain_name
             );
 
-            if !COR_LIB_MODULE_LOADED.load(Ordering::Relaxed) &&
-                assembly_name == "mscorlib" || assembly_name == "System.Private.CoreLib" {
+            if !COR_LIB_MODULE_LOADED.load(Ordering::Relaxed) && assembly_name == "mscorlib"
+                || assembly_name == "System.Private.CoreLib"
+            {
                 COR_LIB_MODULE_LOADED.store(true, Ordering::Relaxed);
                 COR_APP_DOMAIN_ID.store(appdomain_id, Ordering::Relaxed);
                 return Ok(());
@@ -620,7 +653,10 @@ impl CorProfiler {
                     "ModuleLoadFinished: Elastic.Apm.Profiler.Managed.Loader loaded into AppDomain {} {}",
                     appdomain_id,
                     &module_info.assembly.app_domain_name);
-                FIRST_JIT_COMPILATION_APP_DOMAINS.lock().unwrap().push(appdomain_id);
+                FIRST_JIT_COMPILATION_APP_DOMAINS
+                    .lock()
+                    .unwrap()
+                    .push(appdomain_id);
             }
 
             if module_info.is_windows_runtime() {
@@ -629,21 +665,30 @@ impl CorProfiler {
             }
 
             for pattern in SKIP_ASSEMBLY_PREFIXES.iter() {
-               if assembly_name.starts_with(pattern) {
-                   log::debug!("skipping module {} {} because it matches skip pattern {}", assembly_name, module_id, pattern);
-                   return Ok(());
-               }
+                if assembly_name.starts_with(pattern) {
+                    log::debug!(
+                        "skipping module {} {} because it matches skip pattern {}",
+                        assembly_name,
+                        module_id,
+                        pattern
+                    );
+                    return Ok(());
+                }
             }
 
             for skip in SKIP_ASSEMBLIES.iter() {
                 if assembly_name == skip {
-                    log::debug!("skipping module {} {} because it matches skip {}", assembly_name, module_id, skip);
+                    log::debug!(
+                        "skipping module {} {} because it matches skip {}",
+                        assembly_name,
+                        module_id,
+                        skip
+                    );
                     return Ok(());
                 }
             }
 
             // TODO: filter integrations
-
 
             let mut modules = MODULES.lock().unwrap();
             modules.insert(module_id, module_info);
@@ -797,18 +842,30 @@ impl CorProfiler {
 
     fn load_integrations(&self) -> Result<Vec<Integration>, HRESULT> {
         let path = std::env::var(ELASTIC_APM_PROFILER_INTEGRATIONS).map_err(|e| {
-            log::warn!("Problem reading {} environment variable: {}. profiler is disabled.", ELASTIC_APM_PROFILER_INTEGRATIONS, e.to_string());
+            log::warn!(
+                "Problem reading {} environment variable: {}. profiler is disabled.",
+                ELASTIC_APM_PROFILER_INTEGRATIONS,
+                e.to_string()
+            );
             E_FAIL
         })?;
 
         let file = File::open(&path).map_err(|e| {
-            log::warn!("Problem reading integrations file {}: {}. profiler is disabled.", &path, e.to_string());
+            log::warn!(
+                "Problem reading integrations file {}: {}. profiler is disabled.",
+                &path,
+                e.to_string()
+            );
             E_FAIL
         })?;
 
         let reader = BufReader::new(file);
         let integrations = serde_json::from_reader(reader).map_err(|e| {
-            log::warn!("Problem reading integrations file {}: {}. profiler is disabled.", &path, e.to_string());
+            log::warn!(
+                "Problem reading integrations file {}: {}. profiler is disabled.",
+                &path,
+                e.to_string()
+            );
             E_FAIL
         })?;
 
@@ -817,21 +874,23 @@ impl CorProfiler {
 
     fn read_calltarget_env_var(&self) -> bool {
         match std::env::var(ELASTIC_APM_PROFILER_CALLTARGET_ENABLED) {
-            Ok(enabled) => {
-                match enabled.as_str() {
-                    "true" => true,
-                    "True" => true,
-                    "TRUE" => true,
-                    "1" => true,
-                    "false" => false,
-                    "False" => false,
-                    "FALSE" => false,
-                    "0" => false,
-                    _ => true
-                }
+            Ok(enabled) => match enabled.as_str() {
+                "true" => true,
+                "True" => true,
+                "TRUE" => true,
+                "1" => true,
+                "false" => false,
+                "False" => false,
+                "FALSE" => false,
+                "0" => false,
+                _ => true,
             },
             Err(e) => {
-                log::info!("Problem reading {}: {}. Setting to true", ELASTIC_APM_PROFILER_CALLTARGET_ENABLED, e.to_string());
+                log::info!(
+                    "Problem reading {}: {}. Setting to true",
+                    ELASTIC_APM_PROFILER_CALLTARGET_ENABLED,
+                    e.to_string()
+                );
                 true
             }
         }

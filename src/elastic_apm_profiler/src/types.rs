@@ -227,9 +227,19 @@ pub struct Version {
 }
 
 impl Version {
-    const MAX: Version = Version{major:u16::MAX, minor:u16::MAX, build:u16::MAX, revision:u16::MAX};
+    const MAX: Version = Version {
+        major: u16::MAX,
+        minor: u16::MAX,
+        build: u16::MAX,
+        revision: u16::MAX,
+    };
 
-    const MIN: Version = Version{major:0, minor:0, build:0, revision:0};
+    const MIN: Version = Version {
+        major: 0,
+        minor: 0,
+        build: 0,
+        revision: 0,
+    };
 
     pub fn new(major: u16, minor: u16, build: u16, revision: u16) -> Self {
         Version {
