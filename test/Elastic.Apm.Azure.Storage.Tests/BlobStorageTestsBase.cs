@@ -43,9 +43,9 @@ namespace Elastic.Apm.Azure.Storage.Tests
 			span.Context.Destination.Should().NotBeNull();
 			var destination = span.Context.Destination;
 
-			destination.Address.Should().Be(Environment.StorageAccountConnectionStringProperties.BlobUrl);
+			destination.Address.Should().Be(Environment.StorageAccountConnectionStringProperties.BlobFullyQualifiedNamespace);
 			destination.Service.Name.Should().Be(AzureBlobStorage.SubType);
-			destination.Service.Resource.Should().Be($"{AzureBlobStorage.SubType}/{resource}");
+			destination.Service.Resource.Should().Be($"{AzureBlobStorage.SubType}/{Environment.StorageAccountConnectionStringProperties.AccountName}");
 			destination.Service.Type.Should().Be(ApiConstants.TypeStorage);
 		}
 

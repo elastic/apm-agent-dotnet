@@ -47,7 +47,7 @@ namespace Elastic.Apm.Elasticsearch
 		{
 			span = null;
 			var transaction = ApmAgent.Tracer.CurrentTransaction;
-			if (transaction == null)
+			if (transaction is null)
 				return false;
 
 			span = (Span)ApmAgent.GetCurrentExecutionSegment()
@@ -56,6 +56,7 @@ namespace Elastic.Apm.Elasticsearch
 					ApiConstants.TypeDb,
 					ApiConstants.SubtypeElasticsearch);
 
+			span.InstrumentationFlag = InstrumentationFlag.Elasticsearch;
 			span.Action = name;
 			SetDbContext(span, instanceUri);
 			SetDestination(span, instanceUri);

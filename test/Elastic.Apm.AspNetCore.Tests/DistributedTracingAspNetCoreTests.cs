@@ -183,6 +183,24 @@ namespace Elastic.Apm.AspNetCore.Tests
 			_payloadSender2.FirstTransaction.Context.Request.Headers["tracestate"].Should().Be("rojo=00f067aa0ba902b7,congo=t61rcWkgMzE");
 		}
 
+		/// <summary>
+		/// Makes sure that the header `traceparent` is used when both `traceparent` and `elastic-apm-traceparent` are present.
+		/// </summary>
+		[Fact]
+		public async Task PreferW3CTraceHeaderOverElasticTraceHeader()
+		{
+			var client = new HttpClient();
+			var expectedTraceId = "0af7651916cd43dd8448eb211c80319c";
+			var expectedParentId = "b7ad6b7169203331";
+			client.DefaultRequestHeaders.Add("traceparent", $"00-{expectedTraceId}-{expectedParentId}-01");
+			client.DefaultRequestHeaders.Add("elastic-apm-traceparent", "00-000000000000000000000000000019c-0000000000000001-01");
+			var res = await client.GetAsync("http://localhost:5901/Home/Index");
+			res.IsSuccessStatusCode.Should().BeTrue();
+
+			_payloadSender1.FirstTransaction.TraceId.Should().Be(expectedTraceId);
+			_payloadSender1.FirstTransaction.ParentId.Should().Be(expectedParentId);
+		}
+
 		public async Task DisposeAsync()
 		{
 			_cancellationTokenSource.Cancel();

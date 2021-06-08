@@ -601,7 +601,9 @@ namespace Elastic.Apm.AspNetFullFramework.Tests
 			system.Should().NotBeNull();
 
 			system.DetectedHostName.Should().Be(new SystemInfoHelper(LoggerBase).GetHostName());
+#pragma warning disable 618
 			system.HostName.Should().Be(AgentConfig.HostName ?? system.DetectedHostName);
+#pragma warning restore 618
 		}
 
 		private void FullFwAssertValid(ErrorDto error)

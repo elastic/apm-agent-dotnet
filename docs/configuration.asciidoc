@@ -33,7 +33,6 @@ using Elastic.Apm.AspNetCore;
 
 public class Startup
 {
-
     private readonly IConfiguration _configuration;
 
     public Startup(IConfiguration configuration)
@@ -44,7 +43,7 @@ public class Startup
     public void Configure(IApplicationBuilder app, IHostingEnvironment env)
     {
         //Registers the agent with an IConfiguration instance:
-        app.UseElasticApm(Configuration);
+        app.UseElasticApm(_configuration);
 
         //Rest of the Configure() method...
     }
@@ -879,7 +878,7 @@ When this setting is `true`, the agent also adds the header `elasticapm-tracepar
 [options="header"]
 |============
 | Environment variable name                    | IConfiguration or Web.config key
-| `ELASTIC_APM_USE_ELASTIC_TRACEPARENT_HEADER` | `ElasticApm:UseElasticTraceparentHeder`
+| `ELASTIC_APM_USE_ELASTIC_TRACEPARENT_HEADER` | `ElasticApm:UseElasticTraceparentHeader`
 |============
 
 [options="header"]

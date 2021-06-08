@@ -213,15 +213,15 @@ namespace Elastic.Apm.Config
 			if (TryParseLogLevel(kv?.Value, out var level)) return level;
 
 			if (kv?.Value == null)
-				_logger?.Debug()?.Log("No log level provided. Defaulting to log level '{DefaultLogLevel}'", ConsoleLogger.DefaultLogLevel);
+				_logger?.Debug()?.Log("No log level provided. Defaulting to log level '{DefaultLogLevel}'", DefaultValues.LogLevel);
 			else
 			{
 				_logger?.Error()
 					?.Log("Failed parsing log level from {Origin}: {Key}, value: {Value}. Defaulting to log level '{DefaultLogLevel}'",
-						kv.ReadFrom, kv.Key, kv.Value, ConsoleLogger.DefaultLogLevel);
+						kv.ReadFrom, kv.Key, kv.Value, DefaultValues.LogLevel);
 			}
 
-			return ConsoleLogger.DefaultLogLevel;
+			return DefaultValues.LogLevel;
 		}
 
 		protected Uri ParseServerUrl(ConfigurationKeyValue kv) =>

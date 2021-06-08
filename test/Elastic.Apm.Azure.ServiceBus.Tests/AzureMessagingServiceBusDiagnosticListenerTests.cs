@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
@@ -154,6 +155,33 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests
 			destination.Service.Name.Should().Be(ServiceBus.SubType);
 			destination.Service.Resource.Should().Be($"{ServiceBus.SubType}/{scope.TopicName}");
 			destination.Service.Type.Should().Be(ApiConstants.TypeMessaging);
+		}
+
+		[AzureCredentialsFact]
+		public async Task Capture_Span_When_Receive_From_Queue_Inside_Transaction()
+		{
+			await using var scope = await QueueScope.CreateWithQueue(_adminClient);
+			var sender = _client.CreateSender(scope.QueueName);
+			var receiver = _client.CreateReceiver(scope.QueueName);
+
+			await sender.SendMessageAsync(
+				new ServiceBusMessage("test message")).ConfigureAwait(false);
+
+			await _agent.Tracer.CaptureTransaction("Receive messages", ApiConstants.TypeMessaging, async t =>
+			{
+				await receiver.ReceiveMessageAsync(TimeSpan.FromSeconds(30)).ConfigureAwait(false);
+			});
+
+
+			if (!_sender.WaitForSpans(TimeSpan.FromMinutes(2)))
+				throw new Exception("No span received in timeout");
+
+			_sender.Spans.Should().HaveCount(1);
+			var span = _sender.SpansOnFirstTransaction.First();
+
+			span.Name.Should().Be($"{ServiceBus.SegmentName} RECEIVE from {scope.QueueName}");
+			span.Type.Should().Be(ApiConstants.TypeMessaging);
+			span.Subtype.Should().Be(ServiceBus.SubType);
 		}
 
 		[AzureCredentialsFact]

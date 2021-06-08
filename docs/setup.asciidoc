@@ -168,7 +168,7 @@ The following example only turns on outgoing HTTP monitoring (so, for instance, 
 [[zero-code-change-setup]]
 ==== Zero code change setup on .NET Core (added[1.7])
 
-If you can't or don't want to reference NuGet packages in your application, you can use the startup hook feature to inject the agent during startup, if your application runs on .NET Core. This feature is supported on .NET Core 2.2 and newer versions.
+If you can't or don't want to reference NuGet packages in your application, you can use the startup hook feature to inject the agent during startup, if your application runs on .NET Core. This feature is supported on .NET Core 3.0 and newer versions.
 
 Steps:
 
@@ -473,7 +473,7 @@ A prerequisite for auto instrumentation with [`MongoDb.Driver`] is to configure 
 ----
 var settings = MongoClientSettings.FromConnectionString(mongoConnectionString);
 
-settings.ClusterConfigurator = builder => builder.Subscribe(new MongoEventSubscriber());
+settings.ClusterConfigurator = builder => builder.Subscribe(new MongoDbEventSubscriber());
 var mongoClient = new MongoClient(settings);
 ----
 
