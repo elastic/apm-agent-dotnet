@@ -335,6 +335,7 @@ impl Display for Version {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct AssemblyMetaData {
     pub name: String,
     pub assembly_token: mdAssembly,

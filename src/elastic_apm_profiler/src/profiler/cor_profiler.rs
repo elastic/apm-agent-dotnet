@@ -39,6 +39,8 @@ use std::{
     ffi::c_void,
     sync::{atomic::AtomicBool, Mutex},
 };
+use crate::types::AssemblyMetaData;
+use crate::profiler::types::{MethodReplacement, TargetMethodReference};
 
 const MANAGED_PROFILER_ASSEMBLY_LOADER: &'static str = "Elastic.Apm.Profiler.Managed.Loader";
 const MANAGED_PROFILER_ASSEMBLY: &'static str = "Elastic.Apm.Profiler.Managed";
@@ -46,6 +48,7 @@ const ELASTIC_APM_PROFILER_INTEGRATIONS: &'static str = "ELASTIC_APM_PROFILER_IN
 const ELASTIC_APM_PROFILER_CALLTARGET_ENABLED: &'static str =
     "ELASTIC_APM_PROFILER_CALLTARGET_ENABLED";
 
+// TODO: Look at moving static refs that can be moved onto CorProfiler as fields.
 lazy_static! {
     static ref LOCK: Mutex<i32> = Mutex::new(0);
     static ref MODULES: Mutex<HashMap<ModuleID, crate::profiler::types::ModuleInfo>> =
@@ -422,14 +425,14 @@ impl CorProfiler {
         let _lock = LOCK.lock().unwrap();
 
         SimpleLogger::from_env().init().unwrap();
-        log::trace!("initialize");
+        log::trace!("Initialize: started");
 
         let integrations = self.load_integrations()?;
 
         // get the ICorProfilerInfo4 interface, which will be available for all CLR versions targeted
         let profiler_info = unknown.query_interface::<ICorProfilerInfo4>();
         if profiler_info.is_none() {
-            log::error!("could not get ICorProfilerInfo4 from IUnknown");
+            log::error!("Initialize: could not get ICorProfilerInfo4 from IUnknown");
             return Err(E_FAIL);
         }
 
@@ -493,27 +496,27 @@ impl CorProfiler {
             | COR_PRF_MONITOR::COR_PRF_DISABLE_ALL_NGEN_IMAGES;
 
         if calltarget_enabled {
-            log::info!("CallTarget instrumentation is enabled");
+            log::info!("Initialize: CallTarget instrumentation is enabled");
             event_mask |= COR_PRF_MONITOR::COR_PRF_ENABLE_REJIT;
         } else {
-            log::info!("CallTarget instrumentation is disabled");
+            log::info!("Initialize: CallTarget instrumentation is disabled");
         }
 
         // TODO: enable/disable inlining and optimizations
 
-        log::trace!("set event mask to {:?}", &event_mask);
+        log::trace!("Initialize: set event mask to {:?}", &event_mask);
         profiler_info.set_event_mask(event_mask)?;
 
         // if the runtime also supports ICorProfilerInfo5, set eventmask2
         if let Some(profiler_info5) = unknown.query_interface::<ICorProfilerInfo5>() {
             let event_mask2 = COR_PRF_HIGH_MONITOR::COR_PRF_HIGH_ADD_ASSEMBLY_REFERENCES;
-            log::trace!("set event mask2 to {:?}", &event_mask2);
+            log::trace!("Initialize: set event mask2 to {:?}", &event_mask2);
             profiler_info5.set_event_mask2(event_mask, event_mask2)?;
         }
 
         // get the details for the runtime
         let runtime_info = profiler_info.get_runtime_information()?;
-        log::info!("runtime {}", &runtime_info);
+        log::info!("Initialize: runtime {}", &runtime_info);
 
         // Store the profiler and runtime info for later use
         self.profiler_info.replace(Some(profiler_info));
@@ -525,7 +528,7 @@ impl CorProfiler {
     }
 
     fn shutdown(&self) -> Result<(), HRESULT> {
-        log::trace!("shutdown");
+        log::trace!("Shutdown: started");
         let _ = LOCK.lock().unwrap();
 
         self.profiler_info.replace(None);
@@ -540,18 +543,18 @@ impl CorProfiler {
         hr_status: HRESULT,
     ) -> Result<(), HRESULT> {
         if FAILED(hr_status) {
-            log::error!("hrStatus is {:X}", hr_status);
+            log::error!("AssemblyLoadFinished: hrStatus is {:X}", hr_status);
             return Ok(());
         }
 
         if !IS_ATTACHED.load(Ordering::SeqCst) {
-            log::trace!("profiler not attached");
+            log::trace!("AssemblyLoadFinished: profiler not attached");
             return Ok(());
         }
 
         let _lock = LOCK.lock().unwrap();
         if !IS_ATTACHED.load(Ordering::SeqCst) {
-            log::trace!("profiler not attached");
+            log::trace!("AssemblyLoadFinished: profiler not attached");
             return Ok(());
         }
 
@@ -566,7 +569,7 @@ impl CorProfiler {
 
         let metadata_assembly_import = metadata_import
             .query_interface::<IMetaDataAssemblyImport>()
-            .expect("unable to get meta data assembly import");
+            .expect("AssemblyLoadFinished: unable to get meta data assembly import");
 
         let assembly_metadata = metadata_assembly_import.get_assembly_metadata()?;
 
@@ -714,7 +717,9 @@ impl CorProfiler {
 
             // TODO: Avoid cloning integration methods. Should be possible to make all filtered_integrations
             // a collection of references
-            let filtered_integrations = if CALLTARGET_ENABLED.load(Ordering::SeqCst) {
+            let is_call_target_enabled = CALLTARGET_ENABLED.load(Ordering::SeqCst);
+
+            let mut filtered_integrations = if is_call_target_enabled {
                 INTEGRATION_METHODS.lock().unwrap().to_vec()
             } else {
                 INTEGRATION_METHODS
@@ -756,6 +761,61 @@ impl CorProfiler {
             let assembly_emit = metadata_import
                 .query_interface::<IMetaDataAssemblyEmit>()
                 .unwrap();
+
+            // don't skip Microsoft.AspNetCore.Hosting so we can run the startup hook and
+            // subscribe to DiagnosticSource events.
+            // don't skip Dapper: it makes ADO.NET calls even though it doesn't reference
+            // System.Data or System.Data.Common
+            if assembly_name != "Microsoft.AspNetCore.Hosting" &&
+                assembly_name != "Dapper" &&
+                !is_call_target_enabled {
+
+                fn meets_requirements(
+                    assembly_metadata: &AssemblyMetaData,
+                    method_replacement: &MethodReplacement) -> bool {
+                    match &method_replacement.target {
+                        None => false,
+                        Some(target) => {
+                            if &target.assembly != &assembly_metadata.name {
+                                return false;
+                            }
+                            if &target.minimum_version() > &assembly_metadata.version {
+                                return false;
+                            }
+                            if &target.maximum_version() < &assembly_metadata.version {
+                                return false;
+                            }
+
+                            true
+                        }
+                    }
+                }
+
+                let assembly_metadata = assembly_import.get_assembly_metadata()?;
+                let assembly_refs = assembly_import.enum_assembly_refs()?;
+                let assembly_ref_metadata: Result<Vec<AssemblyMetaData>, HRESULT> = assembly_refs
+                    .into_iter()
+                    .map(|r| assembly_import.get_referenced_assembly_metadata(r))
+                    .collect();
+                if assembly_ref_metadata.is_err() {
+                    return Err(assembly_ref_metadata.err().unwrap());
+                }
+
+                let assembly_ref_metadata = assembly_ref_metadata.unwrap();
+                filtered_integrations.retain(|i| {
+                   meets_requirements(&assembly_metadata, &i.method_replacement) ||
+                   assembly_ref_metadata
+                           .iter()
+                           .any(|m| meets_requirements(m, &i.method_replacement))
+                });
+
+                if filtered_integrations.is_empty() {
+                    log::debug!("ModuleLoadFinished: skipping module {} {} because filtered by target", module_id, assembly_name);
+                    return Ok(());
+                }
+            }
+
+            // TODO: store module and metadata and request rejit
 
             let mut modules = MODULES.lock().unwrap();
             modules.insert(module_id, module_info);

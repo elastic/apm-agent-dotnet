@@ -159,21 +159,21 @@ pub struct WrapperMethodReference {
 
 #[derive(Debug, Eq, PartialEq, Deserialize, Clone)]
 pub struct TargetMethodReference {
-    assembly: String,
+    pub(crate) assembly: String,
     #[serde(rename = "type")]
-    type_name: String,
+    pub(crate) type_name: String,
     #[serde(rename = "method")]
-    method_name: String,
-    minimum_major: u16,
-    minimum_minor: u16,
-    minimum_patch: u16,
+    pub(crate) method_name: String,
+    pub(crate) minimum_major: u16,
+    pub(crate) minimum_minor: u16,
+    pub(crate) minimum_patch: u16,
     #[serde(default = "u16_max")]
-    maximum_major: u16,
+    pub(crate) maximum_major: u16,
     #[serde(default = "u16_max")]
-    maximum_minor: u16,
+    pub(crate) maximum_minor: u16,
     #[serde(default = "u16_max")]
-    maximum_patch: u16,
-    signature_types: Option<Vec<String>>,
+    pub(crate) maximum_patch: u16,
+    pub(crate) signature_types: Option<Vec<String>>,
 }
 
 fn u16_max() -> u16 {

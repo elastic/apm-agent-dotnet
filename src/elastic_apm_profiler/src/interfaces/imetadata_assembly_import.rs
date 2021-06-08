@@ -117,7 +117,7 @@ impl IMetaDataAssemblyImport {
         }
 
         let mut name_buffer_length = MaybeUninit::uninit();
-        unsafe {
+        let hr = unsafe {
             self.GetAssemblyProps(
                 assembly_token,
                 ptr::null_mut(),
@@ -128,7 +128,11 @@ impl IMetaDataAssemblyImport {
                 name_buffer_length.as_mut_ptr(),
                 ptr::null_mut(),
                 ptr::null_mut(),
-            );
+            )
+        };
+
+        if FAILED(hr) {
+            return Err(hr);
         }
 
         let name_buffer_length = unsafe { name_buffer_length.assume_init() };
@@ -194,5 +198,151 @@ impl IMetaDataAssemblyImport {
             }
             _ => Err(hr),
         }
+    }
+
+    pub fn enum_assembly_refs(&self) -> Result<Vec<mdAssemblyRef>, HRESULT> {
+        let mut en = ptr::null_mut() as HCORENUM;
+        let max = 256;
+        let mut assembly_refs = Vec::with_capacity(max as usize);
+        let mut assembly_len = MaybeUninit::uninit();
+
+        let hr = unsafe {
+            self.EnumAssemblyRefs(
+                &mut en,
+                assembly_refs.as_mut_ptr(),
+                max,
+                assembly_len.as_mut_ptr())
+        };
+
+        if FAILED(hr) {
+            return Err(hr);
+        }
+
+        let len = unsafe {
+            let len = assembly_len.assume_init();
+            assembly_refs.set_len(len as usize);
+            len
+        };
+
+        // no more assembly refs
+        if len < max {
+            unsafe { self.CloseEnum(en) }
+            return Ok(assembly_refs);
+        }
+
+        let mut all_assembly_refs = assembly_refs;
+        loop {
+            assembly_refs = Vec::with_capacity(max as usize);
+            assembly_len = MaybeUninit::uninit();
+            let hr = unsafe {
+                self.EnumAssemblyRefs(
+                    &mut en,
+                    assembly_refs.as_mut_ptr(),
+                    max,
+                    assembly_len.as_mut_ptr())
+            };
+
+            if FAILED(hr) {
+                return Err(hr);
+            }
+
+            let len = unsafe {
+                let len = assembly_len.assume_init();
+                assembly_refs.set_len(len as usize);
+                len
+            };
+            all_assembly_refs.append(&mut assembly_refs);
+            if len < max {
+                break;
+            }
+        }
+
+        unsafe { self.CloseEnum(en) }
+        Ok(all_assembly_refs)
+    }
+
+    pub fn get_referenced_assembly_metadata(&self, assembly_ref: mdAssemblyRef) -> Result<AssemblyMetaData, HRESULT> {
+        let mut name_buffer_length = MaybeUninit::uninit();
+
+        // get the length of the name first
+        let hr = unsafe {
+            self.GetAssemblyRefProps(
+                assembly_ref,
+                ptr::null_mut(),
+                ptr::null_mut(),
+                ptr::null_mut(),
+                0,
+                name_buffer_length.as_mut_ptr(),
+                ptr::null_mut(),
+                ptr::null_mut(),
+                ptr::null_mut(),
+                ptr::null_mut()
+            )
+        };
+
+        if FAILED(hr) {
+            return Err(hr);
+        }
+
+        let name_buffer_length = unsafe { name_buffer_length.assume_init() };
+        let mut name_buffer = Vec::<WCHAR>::with_capacity(name_buffer_length as usize);
+        unsafe { name_buffer.set_len(name_buffer_length as usize) };
+
+        let mut name_length = MaybeUninit::uninit();
+        let mut assembly_metadata = MaybeUninit::uninit();
+        let mut assembly_flags = MaybeUninit::uninit();
+        let mut public_key = MaybeUninit::uninit();
+        let mut public_key_length = MaybeUninit::uninit();
+
+        let hr = unsafe {
+            self.GetAssemblyRefProps(
+                assembly_ref,
+                public_key.as_mut_ptr(),
+                public_key_length.as_mut_ptr(),
+                name_buffer.as_mut_ptr(),
+                name_buffer_length,
+                name_length.as_mut_ptr(),
+                assembly_metadata.as_mut_ptr(),
+                ptr::null_mut(),
+                ptr::null_mut(),
+                assembly_flags.as_mut_ptr()
+            )
+        };
+
+        if FAILED(hr) {
+            return Err(hr);
+        }
+
+        let name = U16CString::from_vec_with_nul(name_buffer)
+            .unwrap()
+            .to_string_lossy();
+        let public_key = unsafe {
+            let l = public_key_length.assume_init();
+            let p = public_key.assume_init();
+            if l == 0 {
+                Vec::new()
+            } else {
+                slice::from_raw_parts(p as *const u8, l as usize).to_vec()
+            }
+        };
+
+        let assembly_metadata = unsafe { assembly_metadata.assume_init() };
+        let assembly_flags = unsafe {
+            let a = assembly_flags.assume_init();
+            CorAssemblyFlags::from_bits(a).unwrap()
+        };
+
+        Ok(AssemblyMetaData {
+            name,
+            assembly_token: assembly_ref,
+            public_key: PublicKey::new(public_key, 32772),
+            version: Version::new(
+                assembly_metadata.usMajorVersion,
+                assembly_metadata.usMinorVersion,
+                assembly_metadata.usBuildNumber,
+                assembly_metadata.usRevisionNumber,
+            ),
+            assembly_flags,
+        })
     }
 }
