@@ -530,6 +530,7 @@ impl IMetaDataImport {
                 unsafe {
                     let len = method_len.assume_init();
                     method_defs.set_len(len as usize);
+                    self.CloseEnum(en);
                 }
                 Ok(method_defs)
             }
