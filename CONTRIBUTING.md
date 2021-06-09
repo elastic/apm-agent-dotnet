@@ -156,7 +156,19 @@ In case of existing dependencies we need to depend on the oldest possible versio
 
 ### Coding guidelines
 
-The repository contains a [.editorconfig file](.editorconfig) which is automatically picked up by Visual Studio and JetBrains Rider. Additionally, we also have a [.DotSettings file](ElasticApmAgent.sln.DotSettings). If you auto-format your code in Visual Studio or Rider, you will automatically confirm to our code styling. If you want to know more details about the specific conventions we use, feel free to look into the [.editorconfig file](.editorconfig). 
+The repository contains a [.editorconfig file](.editorconfig) which is automatically picked up by Visual Studio and JetBrains Rider. Additionally, we also have a [.DotSettings file](ElasticApmAgent.sln.DotSettings). If you auto-format your code in Visual Studio or Rider, you will automatically confirm to our code styling. If you want to know more details about the specific conventions we use, feel free to look into the [.editorconfig file](.editorconfig).
+
+### Third party dependencies
+
+In case an agent project depends on a NuGet package, the dependency does not have to be listed, since it's not directly shipped with the agent. 
+
+However if source code from a third party dependency is added to the agent, the following steps must be taken:
+1. Make sure the license of the third party dependency is one that is permitted to be included in the agent, based on Elastic's Open Source Policy
+1. List the dependency in the local `NOTICE` file of the project. Also include the full text of the dependency's license. One exception here is the Apache v2 license text, which does not have to be copied, since the agent itself already has that text as its own license.
+1. List the dependency in the local `LICENSE_LOCAL` file of the project including the the full text of the dependency's license (except Apache v2). This file will be [merged](https://github.com/elastic/apm-agent-dotnet/blob/master/src/Directory.Build.targets#L2) with the root [`LICENSE`](https://github.com/elastic/apm-agent-dotnet/blob/master/LICENSE) file.
+1. Make sure in the project's `.csproj` file that the `NOTICE` and the generated `LICENSE` file is packed with the project.
+
+An example of this can be seen in the [`Elastic.Apm.MongoDb`](https://github.com/elastic/apm-agent-dotnet/tree/master/src/Elastic.Apm.MongoDb) project.
 
 ### Adding support for instrumenting new libraries/frameworks/APIs
 
