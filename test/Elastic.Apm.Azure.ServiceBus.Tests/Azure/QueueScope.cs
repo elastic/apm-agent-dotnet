@@ -29,7 +29,13 @@ namespace Elastic.Apm.Azure.ServiceBus.Tests.Azure
 			return new QueueScope(adminClient, queueName, response.Value);
 		}
 
-		public async ValueTask DisposeAsync() => 
+		public static async Task<QueueScope> CreateWithQueue(ServiceBusAdministrationClient adminClient, CreateQueueOptions options)
+		{
+			var response = await adminClient.CreateQueueAsync(options).ConfigureAwait(false);
+			return new QueueScope(adminClient, options.Name, response.Value);
+		}
+
+		public async ValueTask DisposeAsync() =>
 			await _adminClient.DeleteQueueAsync(QueueName).ConfigureAwait(false);
 	}
 }
