@@ -199,7 +199,7 @@ namespace Elastic.Apm.Config
 			return true;
 		}
 
-		protected bool ParseSuppressTraceContextHeaders(ConfigurationKeyValue kv)
+		protected bool ParseTraceContextIgnoreSampledFalse(ConfigurationKeyValue kv)
 		{
 			if (kv == null || string.IsNullOrEmpty(kv.Value)) return DefaultValues.SuppressTraceContextHeaders;
 			// ReSharper disable once SimplifyConditionalTernaryExpression

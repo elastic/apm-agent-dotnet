@@ -135,8 +135,8 @@ namespace Elastic.Apm.Config
 
 		public virtual int StackTraceLimit => _stackTraceLimit.Value;
 
-		public bool SuppressTraceContextHeaders =>
-			ParseSuppressTraceContextHeaders(Read(KeyNames.SuppressTraceContextHeader, EnvVarNames.SuppressTraceContextHeader));
+		public bool TraceContextIgnoreSampledFalse =>
+			ParseTraceContextIgnoreSampledFalse(Read(KeyNames.TraceContextIgnoreSampledFalse, EnvVarNames.TraceContextIgnoreSampledFalse));
 
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
 			ParseTransactionIgnoreUrls(Read(KeyNames.TransactionIgnoreUrls, EnvVarNames.TransactionIgnoreUrls));

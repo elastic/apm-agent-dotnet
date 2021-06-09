@@ -47,7 +47,7 @@ namespace Elastic.Apm.Tests.Utilities
 		private readonly string _serviceVersion;
 		private readonly string _spanFramesMinDurationInMilliseconds;
 		private readonly string _stackTraceLimit;
-		private readonly string _suppressTraceContextHeaders;
+		private readonly string _traceContextIgnoreSampledFalse;
 		private readonly string _transactionIgnoreUrls;
 		private readonly string _transactionMaxSpans;
 		private readonly string _transactionSampleRate;
@@ -92,7 +92,7 @@ namespace Elastic.Apm.Tests.Utilities
 			string serverUrl = null,
 			string serverCert = null,
 			string ignoreMessageQueues = null,
-			string suppressTraceContextHeaders = null
+			string traceContextIgnoreSampledFalse = null
 		) : base(logger, ThisClassName)
 		{
 			_serverUrls = serverUrls;
@@ -131,7 +131,7 @@ namespace Elastic.Apm.Tests.Utilities
 			_serverUrl = serverUrl;
 			_serverCert = serverCert;
 			_ignoreMessageQueues = ignoreMessageQueues;
-			_suppressTraceContextHeaders = suppressTraceContextHeaders;
+			_traceContextIgnoreSampledFalse = traceContextIgnoreSampledFalse;
 		}
 
 		public string ApiKey => ParseApiKey(Kv(EnvVarNames.ApiKey, _apiKey, Origin));
@@ -210,8 +210,8 @@ namespace Elastic.Apm.Tests.Utilities
 
 		public int StackTraceLimit => ParseStackTraceLimit(Kv(EnvVarNames.StackTraceLimit, _stackTraceLimit, Origin));
 
-		public bool SuppressTraceContextHeaders =>
-			ParseSuppressTraceContextHeaders(Kv(EnvVarNames.SuppressTraceContextHeader, _suppressTraceContextHeaders, Origin));
+		public bool TraceContextIgnoreSampledFalse =>
+			ParseTraceContextIgnoreSampledFalse(Kv(EnvVarNames.TraceContextIgnoreSampledFalse, _traceContextIgnoreSampledFalse, Origin));
 
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls =>
 			ParseTransactionIgnoreUrls(Kv(EnvVarNames.TransactionIgnoreUrls, _transactionIgnoreUrls, Origin));

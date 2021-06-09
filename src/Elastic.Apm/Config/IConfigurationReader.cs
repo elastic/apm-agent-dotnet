@@ -262,14 +262,15 @@ namespace Elastic.Apm.Config
 		int StackTraceLimit { get; }
 
 		/// <summary>
-		/// By setting this to <code>true</code> the agent will ignore the W3C TraceContext headers.
+		/// By setting this to <code>true</code> the agent will ignore the sampled part of the W3C TraceContext traceparent header
+		/// when it's false and when the upstream transaction is not coming from an Elastic APM agent.
 		/// In practice this means that in case a caller service calls another service where this value is <code>true</code>,
-		/// the agent will ignore the known W3C headers, and it will start a new trace.
+		/// the agent will ignore the sampling decision of the upstream service, and it will make a new sampling decision.
 		///
 		/// This can be useful when a caller service always sets the sampled flag to false and the agent would have no chance to
 		/// create any sampled transaction.
 		/// </summary>
-		bool SuppressTraceContextHeaders { get; }
+		bool TraceContextIgnoreSampledFalse { get; }
 
 		/// <summary>
 		/// A list of patterns to match HTTP requests to ignore. An incoming HTTP request whose request line matches any of the

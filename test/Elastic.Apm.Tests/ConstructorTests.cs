@@ -72,7 +72,7 @@ namespace Elastic.Apm.Tests
 
 			public bool VerifyServerCert => ConfigConsts.DefaultValues.VerifyServerCert;
 
-			public bool SuppressTraceContextHeaders => ConfigConsts.DefaultValues.SuppressTraceContextHeaders;
+			public bool TraceContextIgnoreSampledFalse => ConfigConsts.DefaultValues.SuppressTraceContextHeaders;
 
 			public IReadOnlyCollection<string> ExcludedNamespaces => ConfigConsts.DefaultValues.DefaultExcludedNamespaces;
 			public IReadOnlyCollection<string> ApplicationNamespaces => ConfigConsts.DefaultValues.DefaultApplicationNamespaces;

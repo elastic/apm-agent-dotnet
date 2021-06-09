@@ -1046,21 +1046,22 @@ you must instead set the `LogLevel` for the internal APM logger under the `Loggi
 |============
 
 [float]
-[[config-suppress-tracecontext-headers]]
-==== `SuppressTraceContextHeaders`
+[[config-trace-context-ignore-sampled-false]]
+==== `TraceContextIgnoreSampledFalse`
 
-By setting this to `true` the agent will ignore the W3C TraceContext headers.
-In practice this means that in case a caller service calls another service where this value is `true`, 
-the agent will ignore the known W3C headers, and it will start a new trace.
+By setting this to `true` the agent will ignore the sampled part of the W3C TraceContext traceparent header when it's false and when the upstream transaction is not coming from a non-Elastic APM agent.
+In practice this means that in case a caller service calls another service where this value is `true`,
+the agent will ignore the sampling decision of the upstream service, and it will make a new sampling decision.
 
-This can be useful when a caller service always sets the sampled flag to false and the agent would have no chance to create any sampled transaction.
+This can be useful when a caller service always sets the sampled flag to false and the agent would have no chance to
+create any sampled transaction.
 
 NOTE: .NET 5 by default sets the W3C TraceContext headers, but without an active agent it sets the sampled flag to `false` leading to 0% sampling. If your service is called by an unmonitored .NET 5 application, setting this flag will instruct the agent to start a new trace and make a new sampling decision based on <<config-transaction-sample-rate>>.
 
 [options="header"]
 |============
-| Environment variable name | IConfiguration or Web.config key
-| `SUPPRESS_TRACECONTEXT_HEADERS`   | `ElasticApm:SuppressTraceContextHeader`
+| Environment variable name            | IConfiguration or Web.config key
+| `TRACE_CONTEXT_IGNORE_SAMPLED_FALSE` | `ElasticApm:TraceContextIgnoreSampledFalse`
 |============
 
 [options="header"]
@@ -1105,7 +1106,7 @@ NOTE: .NET 5 by default sets the W3C TraceContext headers, but without an active
 | <<config-service-version,`ServiceVersion`>> | No | Core
 | <<config-span-frames-min-duration,`SpanFramesMinDuration`>> | No | Stacktrace, Performance
 | <<config-stack-trace-limit,`StackTraceLimit`>> | No | Stacktrace, Performance
-| <<config-suppress-tracecontext-headers,`SuppressTraceContextHeaders`>> | No | Core
+| <<config-trace-context-ignore-sampled-false,`TraceContextIgnoreSampledFalse`>> | No | Core
 | <<config-transaction-ignore-urls,`TransactionIgnoreUrls`>>  | Yes | HTTP, Performance
 | <<config-transaction-max-spans,`TransactionMaxSpans`>>  | Yes | Core, Performance
 | <<config-transaction-sample-rate,`TransactionSampleRate`>> | Yes | Core, Performance

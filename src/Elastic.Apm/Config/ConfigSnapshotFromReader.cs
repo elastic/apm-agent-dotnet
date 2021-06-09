@@ -56,7 +56,7 @@ namespace Elastic.Apm.Config
 		public double SpanFramesMinDurationInMilliseconds => _content.SpanFramesMinDurationInMilliseconds;
 		public int StackTraceLimit => _content.StackTraceLimit;
 
-		public bool SuppressTraceContextHeaders => _content.SuppressTraceContextHeaders;
+		public bool TraceContextIgnoreSampledFalse => _content.TraceContextIgnoreSampledFalse;
 		public IReadOnlyList<WildcardMatcher> TransactionIgnoreUrls => _content.TransactionIgnoreUrls;
 		public int TransactionMaxSpans => _content.TransactionMaxSpans;
 		public double TransactionSampleRate => _content.TransactionSampleRate;

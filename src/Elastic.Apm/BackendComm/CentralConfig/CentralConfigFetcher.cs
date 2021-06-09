@@ -306,7 +306,7 @@ namespace Elastic.Apm.BackendComm.CentralConfig
 			public bool UseElasticTraceparentHeader => _wrapped.UseElasticTraceparentHeader;
 
 			public bool VerifyServerCert => _wrapped.VerifyServerCert;
-			public bool SuppressTraceContextHeaders => _wrapped.SuppressTraceContextHeaders;
+			public bool TraceContextIgnoreSampledFalse => _wrapped.TraceContextIgnoreSampledFalse;
 		}
 	}
 }

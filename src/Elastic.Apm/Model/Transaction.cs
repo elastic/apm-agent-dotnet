@@ -16,8 +16,6 @@ using Elastic.Apm.Logging;
 using Elastic.Apm.Report;
 using Elastic.Apm.ServerInfo;
 using Elastic.Apm.Libraries.Newtonsoft.Json;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Converters;
-using Elastic.Apm.Libraries.Newtonsoft.Json.Serialization;
 
 namespace Elastic.Apm.Model
 {
@@ -34,6 +32,7 @@ namespace Elastic.Apm.Model
 
 		// This constructor is meant for serialization
 		[JsonConstructor]
+		// ReSharper disable once UnusedMember.Local
 		private Transaction(Context context, string name, string type, double duration, long timestamp, string id, string traceId, string parentId,
 			bool isSampled, string result, SpanCount spanCount
 		)
@@ -54,8 +53,7 @@ namespace Elastic.Apm.Model
 		// This constructor is used only by tests that don't care about sampling and distributed tracing
 		internal Transaction(ApmAgent agent, string name, string type)
 			: this(agent.Logger, name, type, new Sampler(1.0), null, agent.PayloadSender, agent.ConfigStore.CurrentSnapshot,
-				agent.TracerInternal.CurrentExecutionSegmentsContainer, null)
-		{ }
+				agent.TracerInternal.CurrentExecutionSegmentsContainer, null) { }
 
 		/// <summary>
 		/// Creates a new transaction
@@ -106,7 +104,7 @@ namespace Elastic.Apm.Model
 				_activity = StartActivity();
 
 			var isSamplingFromDistributedTracingData = false;
-			if (distributedTracingData == null || configSnapshot.SuppressTraceContextHeaders)
+			if (distributedTracingData == null)
 			{
 				// We consider a newly created transaction **without** explicitly passed distributed tracing data
 				// to be a root transaction.
@@ -178,9 +176,12 @@ namespace Elastic.Apm.Model
 			}
 			else
 			{
+				var idBytes = new byte[8];
+
 				if (_activity != null)
 				{
 					Id = _activity.SpanId.ToHexString();
+					_activity.SpanId.CopyTo(new Span<byte>(idBytes));
 
 					// try to set the parent id and tracestate on the created activity, based on passed distributed tracing data.
 					// This is so that the distributed tracing data will flow to any child activities
@@ -200,16 +201,24 @@ namespace Elastic.Apm.Model
 					}
 				}
 				else
-				{
-					var idBytes = new byte[8];
 					Id = RandomGenerator.GenerateRandomBytesAsString(idBytes);
-				}
 
 				TraceId = distributedTracingData.TraceId;
 				ParentId = distributedTracingData.ParentId;
-				IsSampled = distributedTracingData.FlagRecorded;
 				isSamplingFromDistributedTracingData = true;
 				_traceState = distributedTracingData.TraceState;
+
+				// If SuppressTraceContextHeaders is set and the upstream service is not from our agent (aka no sample rate set)
+				// ignore the sampled flag and make a new sampling decision.
+				if (configSnapshot.TraceContextIgnoreSampledFalse && (distributedTracingData.TraceState == null
+					|| !distributedTracingData.TraceState.SampleRate.HasValue && !distributedTracingData.FlagRecorded))
+				{
+					IsSampled = sampler.DecideIfToSample(idBytes);
+					_traceState?.SetSampleRate(sampler.Rate);
+				}
+				else
+					IsSampled = distributedTracingData.FlagRecorded;
+
 
 				// If there is no tracestate or no valid "es" vendor entry with an "s" (sample rate) attribute, then the agent must
 				// omit sample rate from non-root transactions and their spans.
@@ -231,7 +240,8 @@ namespace Elastic.Apm.Model
 			{
 				_logger.Trace()
 					?.Log("New Transaction instance created: {Transaction}. " +
-						"IsSampled ({IsSampled}) and SampleRate ({SampleRate}) is based on incoming distributed tracing data ({DistributedTracingData})." +
+						"IsSampled ({IsSampled}) and SampleRate ({SampleRate}) is based on incoming distributed tracing data ({DistributedTracingData})."
+						+
 						" Start time: {Time} (as timestamp: {Timestamp})",
 						this, IsSampled, SampleRate, distributedTracingData, TimeUtils.FormatTimestampForLog(Timestamp), Timestamp);
 			}
@@ -341,9 +351,9 @@ namespace Elastic.Apm.Model
 		}
 
 		/// <summary>
-		/// In general if there is an error on the span, the outcome will be <see cref="Outcome.Failure"/>, otherwise it'll be <see cref="Outcome.Success"/>.
-		/// There are some exceptions to this (see spec: https://github.com/elastic/apm/blob/master/specs/agents/tracing-spans.md#span-outcome) when it can be <see cref="Outcome.Unknown"/>.
-		/// Use <see cref="_outcomeChangedThroughApi"/> to check if it was specifically set to <see cref="Outcome.Unknown"/>, or if it's just the default value.
+		/// In general if there is an error on the span, the outcome will be <see cref="Elastic.Apm.Api.Outcome.Failure"/>, otherwise it'll be <see cref="Elastic.Apm.Api.Outcome.Success"/>.
+		/// There are some exceptions to this (see spec: https://github.com/elastic/apm/blob/master/specs/agents/tracing-spans.md#span-outcome) when it can be <see cref="Elastic.Apm.Api.Outcome.Unknown"/>.
+		/// Use <see cref="_outcomeChangedThroughApi"/> to check if it was specifically set to <see cref="Elastic.Apm.Api.Outcome.Unknown"/>, or if it's just the default value.
 		/// </summary>
 		internal Outcome _outcome;
 
