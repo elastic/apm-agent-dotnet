@@ -4,6 +4,7 @@
 
 using System.IO;
 using Elastic.Apm.Report;
+using Elastic.Apm.Tests.Utilities.Docker;
 using FluentAssertions;
 using Xunit;
 
@@ -11,19 +12,15 @@ namespace Elastic.Apm.Docker.Tests
 {
 	public class BasicDockerTests
 	{
-		[Fact]
+		[RunningInDockerFact]
 		public void ContainerIdExistsTest()
 		{
-			if (!File.Exists("/proc/self/cgroup")) return; //only run in Docker
-
-			using (var agent = new ApmAgent(new AgentComponents()))
-			{
-				var payloadSender = agent.PayloadSender as PayloadSenderV2;
-				payloadSender.Should().NotBeNull();
-				payloadSender?.System.Should().NotBeNull();
-				payloadSender?.System.Container.Should().NotBeNull();
-				payloadSender?.System.Container.Id.Should().NotBeNullOrWhiteSpace();
-			}
+			using var agent = new ApmAgent(new AgentComponents());
+			var payloadSender = agent.PayloadSender as PayloadSenderV2;
+			payloadSender.Should().NotBeNull();
+			payloadSender?.System.Should().NotBeNull();
+			payloadSender?.System.Container.Should().NotBeNull();
+			payloadSender?.System.Container.Id.Should().NotBeNullOrWhiteSpace();
 		}
 	}
 }
