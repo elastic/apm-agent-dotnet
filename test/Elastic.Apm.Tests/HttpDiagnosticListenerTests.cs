@@ -778,7 +778,7 @@ namespace Elastic.Apm.Tests
 				/*ignore - result of the request does not matter */
 			}
 
-			logger.Lines.Should().NotContain(line => line.ToLower().Contains("warn"));
+			logger.Lines.Should().NotContain(line => line.ToLower().Contains("warn:"));
 		}
 
 		/// <summary>
