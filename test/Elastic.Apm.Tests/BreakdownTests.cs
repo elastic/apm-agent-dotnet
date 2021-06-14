@@ -67,7 +67,7 @@ namespace Elastic.Apm.Tests
 					n is MetricSet && ((MetricSet)n)!.Span.Type.Equals("Bar2") &&
 					string.IsNullOrEmpty(((MetricSet)n)!.Span.SubType) &&
 					((MetricSet)n)!.Samples.Any(sample =>
-						sample.KeyValue.Key.Equals("span.self_time.sum.us") && sample.KeyValue.Value == span2.Duration!.Value) &&
+						sample.KeyValue.Key.Equals("span.self_time.sum.us") && sample.KeyValue.Value == span2.Duration!.Value * 1000) &&
 					((MetricSet)n)!.Samples.Any(sample => sample.KeyValue.Key.Equals("span.self_time.count") && sample.KeyValue.Value == 1)
 				);
 
@@ -77,7 +77,7 @@ namespace Elastic.Apm.Tests
 					n is MetricSet && ((MetricSet)n)!.Span.Type.Equals("Bar") &&
 					string.IsNullOrEmpty(((MetricSet)n)!.Span.SubType) &&
 					((MetricSet)n)!.Samples.Any(sample => sample.KeyValue.Key.Equals("span.self_time.sum.us") &&
-						sample.KeyValue.Value == span1.Duration!.Value - span2.Duration!.Value) &&
+						sample.KeyValue.Value == (span1.Duration!.Value - span2.Duration!.Value) * 1000) &&
 					((MetricSet)n)!.Samples.Any(sample => sample.KeyValue.Key.Equals("span.self_time.count") && sample.KeyValue.Value == 1)
 				);
 
@@ -87,7 +87,7 @@ namespace Elastic.Apm.Tests
 					n is MetricSet && ((MetricSet)n)!.Span.Type.Equals("app") &&
 					string.IsNullOrEmpty(((MetricSet)n)!.Span.SubType) &&
 					((MetricSet)n)!.Samples.Any(sample => sample.KeyValue.Key.Equals("span.self_time.sum.us") &&
-						sample.KeyValue.Value == transaction.SelfDuration) &&
+						sample.KeyValue.Value == transaction.SelfDuration * 1000) &&
 					((MetricSet)n)!.Samples.Any(sample => sample.KeyValue.Key.Equals("span.self_time.count") && sample.KeyValue.Value == 1)
 				);
 		}
@@ -95,6 +95,8 @@ namespace Elastic.Apm.Tests
 		//                                  total self type
 		// ██████████████████████████████    30   30 transaction
 		//          10        20        30
+		// {"metricset":{"timestamp":1556893458478000,"transaction":{"name":"test","type":"request"},"samples":{"transaction.duration.count":{"value":1},"transaction.duration.sum.us":{"value":30},"transaction.breakdown.count":{"value":1}}}}
+		// {"metricset":{"timestamp":1556893458478000,"transaction":{"name":"test","type":"request"},"span":{"type":"app"},"samples":{"span.self_time.count":{"value":1},"span.self_time.sum.us":{"value":30}}}}
 		[Fact]
 		public void AcceptanceTest01()
 		{
@@ -102,7 +104,7 @@ namespace Elastic.Apm.Tests
 			using (agent)
 			{
 				var t = agent.Tracer.StartTransaction("test", "request");
-				t.Duration = 30;
+				t.Duration = 0.03;
 				t.End();
 			}
 			var metricSets = breakdownMetricsProvider.GetSamples();
@@ -144,10 +146,10 @@ namespace Elastic.Apm.Tests
 			using (agent)
 			{
 				var t = agent.TracerInternal.StartTransactionInternal("test", "request", 0);
-				t.Duration = 30;
+				t.Duration = 0.03;
 
-				var span = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 10 * 1000);
-				span.Duration = 10;
+				var span = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 10);
+				span.Duration = 0.01;
 
 				span.End();
 
@@ -174,7 +176,7 @@ namespace Elastic.Apm.Tests
 						&& n.Transaction.Type.Equals("request")
 						&& n.Span.Type.Equals("app")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 20)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && DoubleCompare(s.KeyValue.Value, 20))
 				);
 
 			metrics.Should()
@@ -184,10 +186,9 @@ namespace Elastic.Apm.Tests
 						&& n.Span.Type.Equals("db")
 						&& n.Span.SubType.Equals("mysql")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 10)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && DoubleCompare(s.KeyValue.Value, 10))
 				);
 		}
-
 
 		//                                total self type
 		// ██████████░░░░░░░░░░██████████    30   20 transaction
@@ -202,10 +203,10 @@ namespace Elastic.Apm.Tests
 			using (agent)
 			{
 				var t = agent.TracerInternal.StartTransactionInternal("test", "request", 0);
-				t.Duration = 30;
+				t.Duration = 0.03;
 
-				var span = t.StartSpanInternal("foo", "app", timestamp: 10 * 1000);
-				span.Duration = 10;
+				var span = t.StartSpanInternal("foo", "app", timestamp: 10);
+				span.Duration = 0.01;
 
 				span.End();
 
@@ -252,12 +253,12 @@ namespace Elastic.Apm.Tests
 			using (agent)
 			{
 				var t = agent.TracerInternal.StartTransactionInternal("test", "request", 0);
-				t.Duration = 30;
+				t.Duration = 0.03;
 
-				var span = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 10 * 1000);
-				var span2 = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 10 * 1000);
-				span.Duration = 10;
-				span2.Duration = 10;
+				var span = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 10);
+				var span2 = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 10);
+				span.Duration = 0.01;
+				span2.Duration = 0.01;
 
 				span.End();
 				span2.End();
@@ -285,7 +286,7 @@ namespace Elastic.Apm.Tests
 						&& n.Transaction.Type.Equals("request")
 						&& n.Span.Type.Equals("app")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 20)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && DoubleCompare(s.KeyValue.Value, 20))
 				);
 
 			metrics.Should()
@@ -295,7 +296,7 @@ namespace Elastic.Apm.Tests
 						&& n.Span.Type.Equals("db")
 						&& n.Span.SubType.Equals("mysql")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 2)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 20)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && DoubleCompare(s.KeyValue.Value, 20))
 				);
 		}
 
@@ -314,12 +315,12 @@ namespace Elastic.Apm.Tests
 			using (agent)
 			{
 				var t = agent.TracerInternal.StartTransactionInternal("test", "request", 0);
-				t.Duration = 30;
+				t.Duration = 0.03;
 
-				var span = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 10 * 1000);
-				var span2 = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 15 * 1000);
-				span.Duration = 10;
-				span2.Duration = 10;
+				var span = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 10);
+				var span2 = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 15);
+				span.Duration = 0.01;
+				span2.Duration = 0.01;
 
 				span.End();
 				span2.End();
@@ -347,7 +348,7 @@ namespace Elastic.Apm.Tests
 						&& n.Transaction.Type.Equals("request")
 						&& n.Span.Type.Equals("app")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 15)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && DoubleCompare(s.KeyValue.Value, 15))
 				);
 
 			metrics.Should()
@@ -357,7 +358,7 @@ namespace Elastic.Apm.Tests
 						&& n.Span.Type.Equals("db")
 						&& n.Span.SubType.Equals("mysql")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 2)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 20)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && DoubleCompare(s.KeyValue.Value, 20))
 				);
 		}
 
@@ -376,12 +377,12 @@ namespace Elastic.Apm.Tests
 			using (agent)
 			{
 				var t = agent.TracerInternal.StartTransactionInternal("test", "request", 0);
-				t.Duration = 30;
+				t.Duration = 0.03;
 
-				var span = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 5 * 1000);
-				var span2 = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 15 * 1000);
-				span.Duration = 10;
-				span2.Duration = 10;
+				var span = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 5);
+				var span2 = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 15);
+				span.Duration = 0.01;
+				span2.Duration = 0.01;
 
 				span.End();
 				span2.End();
@@ -409,7 +410,7 @@ namespace Elastic.Apm.Tests
 						&& n.Transaction.Type.Equals("request")
 						&& n.Span.Type.Equals("app")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 10)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && DoubleCompare(s.KeyValue.Value, 10))
 				);
 
 			metrics.Should()
@@ -419,7 +420,7 @@ namespace Elastic.Apm.Tests
 						&& n.Span.Type.Equals("db")
 						&& n.Span.SubType.Equals("mysql")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 2)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 20)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && DoubleCompare(s.KeyValue.Value, 20))
 				);
 		}
 
@@ -438,14 +439,14 @@ namespace Elastic.Apm.Tests
 			using (agent)
 			{
 				var t = agent.TracerInternal.StartTransactionInternal("test", "request", 0);
-				t.Duration = 30;
+				t.Duration = 0.03;
 
-				var span = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 10 * 1000);
-				span.Duration = 5;
+				var span = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 10);
+				span.Duration = 0.005;
 				span.End();
 
-				var span2 = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 20 * 1000);
-				span2.Duration = 5;
+				var span2 = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 20);
+				span2.Duration = 0.005;
 				span2.End();
 
 				t.End();
@@ -471,7 +472,7 @@ namespace Elastic.Apm.Tests
 						&& n.Transaction.Type.Equals("request")
 						&& n.Span.Type.Equals("app")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 20)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && DoubleCompare(s.KeyValue.Value, 20))
 				);
 
 			metrics.Should()
@@ -481,7 +482,7 @@ namespace Elastic.Apm.Tests
 						&& n.Span.Type.Equals("db")
 						&& n.Span.SubType.Equals("mysql")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 2)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 10)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && DoubleCompare(s.KeyValue.Value, 10))
 				);
 		}
 
@@ -501,13 +502,13 @@ namespace Elastic.Apm.Tests
 			using (agent)
 			{
 				var t = agent.TracerInternal.StartTransactionInternal("test", "request", 0);
-				t.Duration = 30;
+				t.Duration = 0.03;
 
-				var span = t.StartSpanInternal("foo", "app", timestamp: 10 * 1000);
-				span.Duration = 10;
+				var span = t.StartSpanInternal("foo", "app", timestamp: 10);
+				span.Duration = 0.01;
 
-				var span2 = span.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 15 * 1000);
-				span2.Duration = 10;
+				var span2 = span.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 15);
+				span2.Duration = 0.01;
 
 				span.End();
 				span2.End();
@@ -525,7 +526,7 @@ namespace Elastic.Apm.Tests
 					n => n.Transaction.Name.Equals("test")
 						&& n.Transaction.Type.Equals("request")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && s.KeyValue.Value == 30)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && DoubleCompare(s.KeyValue.Value, 30))
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.breakdown.count") && s.KeyValue.Value == 1)
 				);
 
@@ -535,7 +536,7 @@ namespace Elastic.Apm.Tests
 						&& n.Transaction.Type.Equals("request")
 						&& n.Span.Type.Equals("app")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 2)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 25)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && DoubleCompare(s.KeyValue.Value, 25))
 				);
 
 			metrics.Should()
@@ -545,7 +546,7 @@ namespace Elastic.Apm.Tests
 						&& n.Span.Type.Equals("db")
 						&& n.Span.SubType.Equals("mysql")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 10)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && DoubleCompare(s.KeyValue.Value, 10))
 				);
 		}
 
@@ -564,14 +565,14 @@ namespace Elastic.Apm.Tests
 			using (agent)
 			{
 				var t = agent.TracerInternal.StartTransactionInternal("test", "request", 0);
-				t.Duration = 20;
+				t.Duration = 0.02;
 
-				var span = t.StartSpanInternal("foo", "app", timestamp: 10 * 1000);
-				span.Duration = 20;
+				var span = t.StartSpanInternal("foo", "app", timestamp: 10);
+				span.Duration = 0.02;
 
 				t.End();
-				var span2 = span.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 20 * 1000);
-				span2.Duration = 10;
+				var span2 = span.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 20);
+				span2.Duration = 0.01;
 
 				span.End();
 				span2.End();
@@ -587,7 +588,7 @@ namespace Elastic.Apm.Tests
 					n => n.Transaction.Name.Equals("test")
 						&& n.Transaction.Type.Equals("request")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && s.KeyValue.Value == 20)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && DoubleCompare(s.KeyValue.Value, 20))
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.breakdown.count") && s.KeyValue.Value == 1)
 				);
 
@@ -597,7 +598,7 @@ namespace Elastic.Apm.Tests
 						&& n.Transaction.Type.Equals("request")
 						&& n.Span.Type.Equals("app")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 10)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && DoubleCompare(s.KeyValue.Value, 10))
 				);
 		}
 
@@ -614,10 +615,10 @@ namespace Elastic.Apm.Tests
 			using (agent)
 			{
 				var t = agent.TracerInternal.StartTransactionInternal("test", "request", 0);
-				t.Duration = 20;
+				t.Duration = 0.02;
 
-				var span = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 10 * 1000);
-				span.Duration = 30;
+				var span = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 10);
+				span.Duration = 0.03;
 				t.End();
 				span.End();
 			}
@@ -632,7 +633,7 @@ namespace Elastic.Apm.Tests
 					n => n.Transaction.Name.Equals("test")
 						&& n.Transaction.Type.Equals("request")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && s.KeyValue.Value == 20)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && DoubleCompare(s.KeyValue.Value, 20))
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.breakdown.count") && s.KeyValue.Value == 1)
 				);
 
@@ -642,7 +643,7 @@ namespace Elastic.Apm.Tests
 						&& n.Transaction.Type.Equals("request")
 						&& n.Span.Type.Equals("app")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 10)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && DoubleCompare(s.KeyValue.Value, 10))
 				);
 		}
 
@@ -660,11 +661,11 @@ namespace Elastic.Apm.Tests
 			using (agent)
 			{
 				var t = agent.TracerInternal.StartTransactionInternal("test", "request", 0);
-				t.Duration = 10;
+				t.Duration = 0.01;
 				t.End();
 
-				var span = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 20 * 1000);
-				span.Duration = 10;
+				var span = t.StartSpanInternal("db.mysql", "db", "mysql", timestamp: 20);
+				span.Duration = 0.01;
 
 				span.End();
 			}
@@ -679,7 +680,7 @@ namespace Elastic.Apm.Tests
 					n => n.Transaction.Name.Equals("test")
 						&& n.Transaction.Type.Equals("request")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && s.KeyValue.Value == 10)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.duration.sum.us") && DoubleCompare(s.KeyValue.Value, 10))
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("transaction.breakdown.count") && s.KeyValue.Value == 1)
 				);
 
@@ -689,7 +690,7 @@ namespace Elastic.Apm.Tests
 						&& n.Transaction.Type.Equals("request")
 						&& n.Span.Type.Equals("app")
 						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.count") && s.KeyValue.Value == 1)
-						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && s.KeyValue.Value == 10)
+						&& n.Samples.Any(s => s.KeyValue.Key.Equals("span.self_time.sum.us") && DoubleCompare(s.KeyValue.Value, 10))
 				);
 		}
 
@@ -723,6 +724,8 @@ namespace Elastic.Apm.Tests
 				.Should()
 				.BeNullOrEmpty();
 		}
+
+		private bool DoubleCompare(double value, double expectedValue) => Math.Abs(value - expectedValue) < 0.01;
 
 		private (ApmAgent, BreakdownMetricsProvider) SetUpAgent()
 		{
